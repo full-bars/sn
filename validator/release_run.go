@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -120,14 +121,51 @@ func classifyReleaseSnapshotRetry(err error, siblingCancellation bool) (bool, bo
 // Legacy release callers retain their prior diagnostic compatibility. New
 // evidence retry owners require typed transport origin for eof and no text match.
 func classifyReleaseSnapshotRetryMode(err error, siblingCancellation, legacyText, transportOrigin bool) (bool, bool) {
-	if err == nil {
-		return true, false
-	}
-	if _, fileError := err.(*os.PathError); fileError {
+	remaining := 512
+	return classifyReleaseSnapshotRetryBounded(err, siblingCancellation, legacyText, transportOrigin, 0, &remaining)
+}
+
+// Nil, cyclic and excessive cause trees are hard refusals. No custom Is/As
+// method can turn an opaque error into observed transport authority.
+func classifyReleaseSnapshotRetryBounded(err error, siblingCancellation, legacyText, transportOrigin bool, depth int, remaining *int) (bool, bool) {
+	return classifyReleaseRetryBounded(err, siblingCancellation, legacyText, transportOrigin, false, depth, remaining)
+}
+
+// Preparation may admit exact cut leaves alongside transport, but it must
+// inspect each original edge once. A failed transport pass cannot ask a mutable
+// wrapper for a replacement cause in a second cut pass.
+func classifyReleaseRetryBounded(err error, siblingCancellation, legacyText, transportOrigin, preparation bool, depth int, remaining *int) (bool, bool) {
+	err = releaseObservedValue(err)
+	if err == nil || depth > 32 || *remaining <= 0 {
 		return false, false
 	}
-	if _, fatal := err.(*TrailFatalError); fatal {
+	*remaining--
+	value := reflect.ValueOf(err)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		if value.IsNil() {
+			return false, false
+		}
+	}
+	switch err.(type) {
+	case *os.PathError, *os.LinkError, *TrailFatalError, *releaseObservedHard, *releaseObservedRefusal:
 		return false, false
+	}
+	switch cause := err.(type) {
+	case *releaseObservedNativeRead:
+		return cause.retryable, cause.retryable
+	case *releaseObservedNetworkRead:
+		return cause.retryable, cause.retryable
+	}
+	if crv4.IsSubstrateReadTransportCause(err) {
+		retryable := crv4.RetryableSubstrateReadTransportError(err)
+		return retryable, retryable
+	}
+	if preparation {
+		switch err {
+		case errAttemptCutPending, errAttemptCutSnapshotStale, errAttemptSettlementSnapshotStale:
+			return true, false
+		}
 	}
 	if err == context.Canceled {
 		return siblingCancellation, false
@@ -157,13 +195,35 @@ func classifyReleaseSnapshotRetryMode(err error, siblingCancellation, legacyText
 			return false, false
 		}
 	case *url.Error:
-		return classifyReleaseSnapshotRetryMode(cause.Err, siblingCancellation, legacyText, true)
+		return classifyReleaseRetryBounded(cause.Err, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
 	case *net.OpError:
-		return classifyReleaseSnapshotRetryMode(cause.Err, siblingCancellation, legacyText, true)
+		return classifyReleaseRetryBounded(cause.Err, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
+	case *net.DNSError:
+		if cause.IsNotFound {
+			return false, false
+		}
+		if cause.UnwrapErr != nil {
+			return classifyReleaseRetryBounded(cause.UnwrapErr, siblingCancellation, legacyText, true, false, depth+1, remaining)
+		}
+		// The standard resolver can report a timeout without an underlying
+		// error. Only this concrete nil-child result grants transport retry.
+		retryable := cause.IsTimeout || cause.IsTemporary
+		return retryable, retryable
 	case *attemptStreamHttpReadError:
-		return classifyReleaseSnapshotRetryMode(cause.cause, siblingCancellation, legacyText, true)
+		return classifyReleaseRetryBounded(cause.cause, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
 	case *chainRpcMissingResponseError:
-		return classifyReleaseSnapshotRetryMode(cause.cause, siblingCancellation, legacyText, true)
+		return classifyReleaseRetryBounded(cause.cause, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
+	case *artifactUnavailable:
+		// Its pending projection is not transport authority. Preserve only
+		// the complete cause retained by this package's original reader.
+		return classifyReleaseRetryBounded(cause.cause, siblingCancellation, legacyText, transportOrigin, preparation, depth+1, remaining)
+	case syscall.Errno:
+		// Standard timeout/temporary errno values retain their taxonomy;
+		// their Is method is not foreign matching authority.
+		retryable := cause.Timeout() || cause.Temporary()
+		return retryable, retryable
+	case interface{ Is(error) bool }, interface{ As(any) bool }:
+		return false, false
 	}
 	if _, observationStatus := err.(*clientKeyObservationHttpStatusError); observationStatus {
 		retryable := retryableClientKeyObservationHttpError(err)
@@ -178,11 +238,17 @@ func classifyReleaseSnapshotRetryMode(err error, siblingCancellation, legacyText
 		return retryable, retryable
 	}
 	if publication, ok := err.(*attemptReplicaPublicationError); ok {
-		return classifyReleaseSnapshotRetryCauses(publication.causes, true, legacyText, transportOrigin)
+		// This owner's sibling cancellation is scoped to actual publication
+		// transport. A preparation cut cannot borrow it as a neutral child.
+		retryable, transient := classifyReleaseRetryCauses(publication.causes, true, legacyText, transportOrigin, false, depth+1, remaining)
+		if preparation {
+			return retryable && transient, transient
+		}
+		return retryable, transient
 	}
 	if incomplete, ok := err.(*attemptStreamHTTPIncompleteError); ok {
 		if incomplete.cause != nil {
-			return classifyReleaseSnapshotRetryMode(incomplete.cause, siblingCancellation, legacyText, true)
+			return classifyReleaseRetryBounded(incomplete.cause, siblingCancellation, legacyText, true, false, depth+1, remaining)
 		}
 		// Closing an owned sibling after another sibling times out can reach
 		// this exact typed marker before the body observes cancellation. It is
@@ -190,17 +256,16 @@ func classifyReleaseSnapshotRetryMode(err error, siblingCancellation, legacyText
 		return siblingCancellation, false
 	}
 	if joined, ok := err.(interface{ Unwrap() []error }); ok {
-		return classifyReleaseSnapshotRetryCauses(joined.Unwrap(), siblingCancellation, legacyText, transportOrigin)
+		return classifyReleaseRetryCauses(joined.Unwrap(), siblingCancellation, legacyText, transportOrigin, preparation, depth+1, remaining)
 	}
 	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
 		cause := wrapped.Unwrap()
 		if cause == nil {
 			return false, false
 		}
-		return classifyReleaseSnapshotRetryMode(cause, siblingCancellation, legacyText, transportOrigin)
+		return classifyReleaseRetryBounded(cause, siblingCancellation, legacyText, transportOrigin, preparation, depth+1, remaining)
 	}
-	var netErr net.Error
-	if errors.As(err, &netErr) && (netErr.Timeout() || netErr.Temporary()) {
+	if netErr, ok := err.(net.Error); ok && (netErr.Timeout() || netErr.Temporary()) {
 		return true, true
 	}
 	statusCode := 0
@@ -246,13 +311,15 @@ func classifyReleaseSnapshotRetryMode(err error, siblingCancellation, legacyText
 	return false, false
 }
 
-func classifyReleaseSnapshotRetryCauses(causes []error, siblingCancellation, legacyText, transportOrigin bool) (bool, bool) {
-	if len(causes) == 0 {
+// Every joined original spends the same allowance and must support the exact
+// mode; a neutral sibling alone never establishes an actual transport failure.
+func classifyReleaseRetryCauses(causes []error, siblingCancellation, legacyText, transportOrigin, preparation bool, depth int, remaining *int) (bool, bool) {
+	if len(causes) == 0 || len(causes) > 128 || len(causes) > *remaining || depth > 32 {
 		return false, false
 	}
 	transient := false
 	for _, cause := range causes {
-		retryable, actualTransient := classifyReleaseSnapshotRetryMode(cause, siblingCancellation, legacyText, transportOrigin)
+		retryable, actualTransient := classifyReleaseRetryBounded(cause, siblingCancellation, legacyText, transportOrigin, preparation, depth+1, remaining)
 		if !retryable {
 			return false, false
 		}
@@ -605,11 +672,17 @@ func startReleaseOperatorWithAdmission(ctx context.Context, cfg *ReleaseConfig, 
 		return closeErr
 	}
 
+	requests, err := openReleaseProviderAttemptRequests(ctx, cfg, op, ledger, clientID, privateKey)
+	if err != nil {
+		return nil, errors.Join(err, closeResources())
+	}
+	closeConnection := closeResources
+	closeResources = func() error { return errors.Join(closeConnection(), requests.Close()) }
 	engine := NewTrailEngine(clientID, privateKey, transport, NewApiServerKeyRing(api), NewFindProvidersSeedPicker(api, clientID), stats, store, epochFn, TrailEngineConfig{
 		M:                   cfg.Policy.Verify.TrailDepth,
 		StepTimeout:         time.Duration(cfg.Policy.Verify.StepTimeoutSeconds) * time.Second,
 		SeedAttemptInterval: seedAttemptInterval,
-		AttemptLedger:       ledger, AttemptBoundaryResolver: attemptResolver,
+		AttemptLedger:       ledger, AttemptBoundaryResolver: attemptResolver, RequestJournal: requests,
 	})
 	keyHistoryReader, err := NewHTTPClientKeyHistoryReader(op.APIURL, func() string {
 		if cancelled.Load() || ctx.Err() != nil {
@@ -965,13 +1038,7 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 		settlementEpoch.Store(epoch)
 	}
 	progress.observeSettlement(progress.nextSequence(), runtimeV2.progressSettlement(settlementEpoch.Load()), nil)
-	boundaryCtx := ctx
-	if retainedSetup != nil {
-		// Scope longer reads to shared preparation; trail callers keep their
-		// original deadline and never inherit this private owner context.
-		boundaryCtx = context.WithValue(ctx, provisionalBoundaryReadBudgetKey{}, true)
-	}
-	attemptBoundaryResolver := newReleaseAttemptBoundaryResolver(boundaryCtx, chain, cfg)
+	attemptBoundaryResolver := newReleaseAttemptBoundaryResolver(ctx, chain, cfg)
 	defer attemptBoundaryResolver.close()
 	runtimeV2.publishEpoch = func(epoch uint64) {
 		attemptBoundaryResolver.invalidateLatest()
@@ -1028,6 +1095,7 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 		trailReady = runtimeV2.preparation.ready
 	}
 	return runReleaseOperatorWorkers(ctx, cancel, cfg, runtimes, releaseRuntimeOperations{
+		providerRequests: runtimeV2.runProviderRequestPublications,
 		refresh: func(ctx context.Context) error {
 			if production {
 				return steerer.runProductionPreparationAndRefresh(ctx)

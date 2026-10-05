@@ -1,0 +1,117 @@
+{
+  "author_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest475-core07-server87d-recovery7-compile-v1-author-review-20261005.json",
+    "sha256": "658f702f67116875681ef117fef56226fefb001f114f4175c630c6e32fecddbe"
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 3300,
+    "TimeoutStopSec": 10,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-latest475-core07-server87d-recovery7-compile-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-latest475-core07-server87d-recovery7-compile-v1-20261005.service"
+  },
+  "forecast": {
+    "basis": "One serial Go compiler at a time across seven selected packages and already bound offline graph/cache. Forecast4GiB applies to cumulative outputs, logs, new cache and scratch for allseven, including payoutartifact; not seven independent allowances. Enforced8GiB cumulative global-data growth floor created once beforefirstphase, plus original healthy floor. No dependency downloads or Rust/body/DB.",
+    "compiler_disk_bytes": 4294967296,
+    "compiler_memory_bytes": 4294967296,
+    "data_minimum_available_bytes": 17179869184,
+    "former_model_held_reserve_disk_bytes": 4294967296,
+    "former_model_held_reserve_memory_bytes": 4294967296,
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "type": "prospective_aggregate_estimate_not_measured_upper_bound"
+  },
+  "guards": {
+    "accounting_floor_bytes": 0,
+    "cumulative_data_growth_stop_bytes": 8589934592,
+    "data_cap_bytes": 115964116992,
+    "data_original_baseline_bytes": 113681502208,
+    "docker_active_minimum_bytes": 295833415680,
+    "docker_launch_minimum_bytes": 300128382976,
+    "healthy_data_minimum_bytes": 6307319808,
+    "healthy_memory_minimum_bytes": 103079215104,
+    "memory_max_bytes": 8589934592,
+    "memory_swap_max_bytes": 0,
+    "one_floor_assignment_outside_all_phases": true
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-job-v1.json",
+    "sha256": "18664d74669f28756e7a1b27ea6a559fbcdaa2e25e290c06adb45b213acd3eac"
+  },
+  "lease_horizon": {
+    "canonical_expiry_utc": "2026-10-05T06:00:33Z",
+    "child_seconds": [
+      600,
+      300,
+      300,
+      600,
+      300,
+      600,
+      300
+    ],
+    "gate": "Actual canonicalUSER InvocationID/PID-start/config and realremaininghorizon checked beforelaunch andeachphase.",
+    "latest_start_utc": "2026-10-05T05:05:23Z",
+    "required_remaining_seconds": 3310,
+    "runtime_max_seconds": 3300,
+    "stop_seconds": 10,
+    "sum_child_seconds": 3000
+  },
+  "metadata_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-metadata-v1.receipt.json",
+    "sha256": "957c53c501626df4809d6e492600c0ffa4bc66e4238e9bff848c03f5d929ec4f"
+  },
+  "ownership": "SolParallel only under exact USERmanager/fullcgroup. Exclusivecompiler class; no peer body admitted. Root must separately adopt any prospective jointvariant.",
+  "qualification": "Review only. No compiler, image LIST, test body, Docker, cleanup or systemd operation by reviewer.",
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_minimum_available_bytes": 17179869184,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "18664d74669f28756e7a1b27ea6a559fbcdaa2e25e290c06adb45b213acd3eac",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "model_count": 0,
+    "phase_count": 7,
+    "runner_sha256": "3afe2aeb7720e078df8f593bac2085152a727bd5d2464b3632e048ecbdfe6121",
+    "runtime_max_seconds": 3300,
+    "status": "ADOPTED_ONE_SERIAL_RECOVERY_COMPILER_BATCH",
+    "whole_owner_horizon_seconds": 3310
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest475-core07-server87d-recovery7-compile-v1-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-recovery-consumer-compiler-batch-v2.py",
+    "sha256": "3afe2aeb7720e078df8f593bac2085152a727bd5d2464b3632e048ecbdfe6121"
+  },
+  "schema": "urnetwork-recovery7-independent-resource-mechanism-review-v1",
+  "scope": "Exactly seven serial normal compile-only targets: SN ./mainnet, ./miner, ./miner/onchain, ./validator, ./crv4, ./payoutartifact; Core root package. Retain all ordinary compiler failures and successful images on this exact final tuple. No body/list/vet/DB/Rust/image publication or inherited qualification of another source.",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-compiler-source-closure-v1.json",
+    "sha256": "db288881b11cce1c2e14d3918ab75e2d1674baf1229d39626d674f40ea6e3acf"
+  },
+  "source_tuple": {
+    "core": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+    "server": "87d278f5e5f710ff6e3238892d9dcb0cc543c31a",
+    "sn": "47566b256b60cec221cca9a63f16aa56cb017b4b"
+  },
+  "status": "READY_FOR_ROOT_ADOPTION_SUBJECT_TO_FRESH_ACTUAL_ADMISSION",
+  "validation": {
+    "all_bound_files_match": true,
+    "ast_only_no_runner_import_or_execution": true,
+    "binding_count": 91,
+    "metadata_actual_phases": 7,
+    "metadata_exit0_joined_resource_errors0": true,
+    "old_expected_hashes_and_stage_censuses_preserved": true,
+    "ordinary_predecessor_failure": "Carry3 actual3RUN2PASS1FAIL0SKIP,originalexit1/treejoined/resource0; exact failed-suite terminal/readback pinned. No PASS inferred.",
+    "public_predecessor": "Historical88/07/ec3 nativefee/root/CLI PASS and controller compileFAIL retained; allfour originaljoinedwaits bound.",
+    "source_closure_files": 42196
+  }
+}

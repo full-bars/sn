@@ -1,0 +1,23 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 1073741824,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "dd1776e8ee5127499d27be530a2a790a041807f15ec4ec202fe2314c1af7eace",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 2147483648,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "network_dependency_count": 0,
+  "runner_sha256": "1a8476cfafb1d3f0ef95d7385f321b89cf4959615f69c2b97af0061a43f06f68",
+  "short_count": 0,
+  "status": "ADOPTED_INCREMENTAL_CACHED_DEFAULT_MODULE_METADATA",
+  "adopted_at": "2026-10-05T07:33:54.430302+00:00",
+  "root_review": "All256bindings andtwoASTs checked; Root inspectedstagehelper and priorreviewedrunnerdelta. Freshsiblingroot reusesunchangedsourceviahardlinks, changed36files exactGitblobs; no chmod/writeonreusedfiles. Fivecachedreadonlydefaultphases, no download/compiler. Priorfailedgraphs and original8hydrationwaits/recoveredchecker preserved. Rootreview permitslaunch; additionalAstrafocusedACK can arrive independently."
+}

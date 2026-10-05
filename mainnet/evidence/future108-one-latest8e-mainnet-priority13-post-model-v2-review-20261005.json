@@ -1,0 +1,134 @@
+{
+  "actual_compiler_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-compile-v1.receipt.json",
+    "sha256": "b0ec48b1a9cd9fe5afb188687476da004ed3062ed2e3922bfc17668756384a6b"
+  },
+  "body_mechanism": "Qualified v1 retained-image list/body/wait/guard unchanged. Narrow admission delta requires exact closed oldmodel owner+body actual waits and qualified resource/cleanup terminal, then zero live tests/compiler/running Docker, both exact prior owned IDs and owner label absent. No old suite PASS inferred. Author parsed runner and replayed both actual waits; no body/compiler/DB launched.",
+  "closed_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "cleanup_exit": "0",
+    "model_count": 0,
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    },
+    "resource_qualified": true,
+    "totals": {
+      "fail": 19,
+      "pass": 1673,
+      "run": 1703,
+      "skip": 11
+    }
+  },
+  "healthy_guards": {
+    "active_data_formula": "max(6307319808, immediate_admission_data_available-2147483648)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted_or_rebased": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-priority13-job-post-model-v2.json",
+    "sha256": "1ac6e991eec39aa0d4687b8d4d77c26a2482bc76e7837fa1e022f10c22fb2121"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "1ac6e991eec39aa0d4687b8d4d77c26a2482bc76e7837fa1e022f10c22fb2121",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 0,
+    "runner_sha256": "ac5c5f6afde1058262be7deb82823af23d927be66a6d03d0aa1286939f2b71c3",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_ONE_RETAINED_MAINNET_PRIORITY13_SHORT_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest8e-mainnet-priority13-post-model-v2-adoption-20261005.json",
+  "resource_forecasts": {
+    "basis": "Actual model_count0. Former4GiB model disk/memory forecast remains held conservatively in unchanged10GiB data/106GiB memory thresholds at2x; no baseline rebase or healthy floor reduction. Short1GiB forecast and2GiB hard memory/zeroSwap/data growth unchanged.",
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "retained_image": {
+    "bytes": 128232424,
+    "ctime_ns": 1791162600944944151,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120126878,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791162600944944151,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest8e-mainnet-normal-compile-v1.test",
+    "sha256": "70f8bbeea414ddf88b754eff01ca8d1151758e740e338d5333c1703b8ad38bf3",
+    "type": 32768,
+    "uid": 1000
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest8e-mainnet-priority13-body-post-model-v2.py",
+    "sha256": "ac5c5f6afde1058262be7deb82823af23d927be66a6d03d0aa1286939f2b71c3"
+  },
+  "schema": "latest8e-mainnet-priority13-post-model-concrete-review-v2",
+  "scope": "Exact same13 normal roots as v1 after closed oldc60 model; old actual1673PASS19FAIL11allowedSKIP is preserved. Actual model_count0; no compiler, other short or DB. Conservative10GiB data/106GiB memory admission retains the former4GiB model forecast reserve at2x.",
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-priority13-selection-v1.json",
+    "sha256": "c1b719cef98e98551855c88643e3c5ce0ac14d6345ec369e3ccd49287500ad12"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-compiler-source-closure-v1.json",
+    "sha256": "8113272ce8f48bb5a2b0b268dfbdfa7ca97e998059b15647faf44e8d55123a5d"
+  },
+  "source_scope": {
+    "count": 13,
+    "native_public_roots_excluded": true,
+    "ordinary_funding_roots": [
+      "TestEconomicFundingJointPartialClaimsExhaustOriginalObligation",
+      "TestEconomicFundingJointExpiredCarryAndLatePaymentShareOriginalSource",
+      "TestEconomicFundingJointColdAndActiveExhaustionReplaysOriginalSegments",
+      "TestEconomicFundingJointColdSuccessorKeepsLatePredecessorPayment"
+    ],
+    "owner75_complete_claimed": false,
+    "owner_priority_roots": [
+      "TestOwnerRecycleCompletedClaimCannotBecomeUnfinished",
+      "TestOwnerRecycleCustodyRecoversOnlyUnfinishedReservation",
+      "TestOwnerSigningImportAdmissionRefusalPreservesOriginalCustody",
+      "TestOwnerSigningImportPreservesOriginalCustodyAndRecovery",
+      "TestOwnerSigningReplyCannotResolveUnknownSigningCustody",
+      "TestOwnerSigningV1PortableReplyImport",
+      "TestOwnerSigningV2CannotReplaceClaimedV1",
+      "TestOwnerTrimCompletedClaimCannotBecomeUnfinished",
+      "TestOwnerTrimIncompleteExclusiveClaimRemainsRecoverable"
+    ]
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "2f8a6ee4e4042d77ca3b257c2b2eaf495ba1e97d",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

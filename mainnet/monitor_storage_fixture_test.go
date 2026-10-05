@@ -18,6 +18,11 @@ import (
 // Existing attributes are never overwritten, including negative fixtures.
 func provisionMonitorTestCustody(t testing.TB, path string) {
 	t.Helper()
+	provisionMonitorTestCustodyProfile(t, path, "mainnet-monitor-checkpoint", maxRpcReplyBytes)
+}
+
+func provisionMonitorTestCustodyProfile(t testing.TB, path, kind string, maximum int) {
+	t.Helper()
 	if path == "" || !filepath.IsAbs(path) || filepath.Clean(path) != path {
 		return
 	}
@@ -27,7 +32,7 @@ func provisionMonitorTestCustody(t testing.TB, path string) {
 		return
 	}
 	lockPath := path + ".lock"
-	attribute := durablehead.Attribute("mainnet-monitor-checkpoint", name)
+	attribute := durablehead.Attribute(kind, name)
 	if _, err := syscall.Getxattr(lockPath, attribute, nil); err == nil {
 		return
 	}
@@ -46,11 +51,11 @@ func provisionMonitorTestCustody(t testing.TB, path string) {
 	if lockStat.Mode&syscall.S_IFMT != syscall.S_IFREG || lockStat.Mode&0077 != 0 {
 		return
 	}
-	checkpoint := durablehead.Checkpoint{Schema: durablehead.Schema, Kind: "mainnet-monitor-checkpoint", Name: name, MaximumBytes: maxRpcReplyBytes, DirectoryInode: rootStat.Ino, LockName: name + ".lock", Auxiliaries: []durablehead.Auxiliary{{Name: name + ".lock", Inode: lockStat.Ino}}}
+	checkpoint := durablehead.Checkpoint{Schema: durablehead.Schema, Kind: kind, Name: name, MaximumBytes: int64(maximum), DirectoryInode: rootStat.Ino, LockName: name + ".lock", Auxiliaries: []durablehead.Auxiliary{{Name: name + ".lock", Inode: lockStat.Ino}}}
 	var stat syscall.Stat_t
 	err = syscall.Lstat(path, &stat)
 	if err == nil {
-		if stat.Mode&syscall.S_IFMT != syscall.S_IFREG || stat.Mode&0077 != 0 || stat.Size > maxRpcReplyBytes {
+		if stat.Mode&syscall.S_IFMT != syscall.S_IFREG || stat.Mode&0077 != 0 || stat.Size > int64(maximum) {
 			return
 		}
 		raw, err := os.ReadFile(path)

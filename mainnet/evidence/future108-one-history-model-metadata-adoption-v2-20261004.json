@@ -1,0 +1,89 @@
+{
+  "schema": "sn-qualification-scoped-adoption-v1",
+  "recorded_utc": "2026-10-04T22:55:21.056893+00:00",
+  "status": "ADOPTED_METADATA_ONLY",
+  "review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-history-model-bounded-compiler-prospective-review-20261004.json",
+    "sha256": "84ed5387e4a9508dc1ac0b900e1e8b989b6cc8992d6d156b93b9961b3e74c477"
+  },
+  "sources": [
+    {
+      "repository": "sn",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-provider-policy-join/sn",
+      "commit": "5aaf88a6cbcee131164dd99f670a111df4313b5d",
+      "tree": "a7f232801f9f57fe4e6ed56f6f39b4c855c209c1"
+    },
+    {
+      "repository": "connect",
+      "path": "/mnt/data/sn-testnet/mainnet-sdk-creation-custody-20261004/connect",
+      "commit": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+      "tree": "dbba7a7fff5e598f6deb44d4a26061c6276da3d5"
+    },
+    {
+      "repository": "server",
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/server-incremental-union/server",
+      "commit": "80bcc28578b177626e0080fda2d1af26932b3b6f",
+      "tree": "8d265e0fa81cffd46a0130287dbb4d97cea4c5e5"
+    }
+  ],
+  "allowed": "At most one bounded physical source staging and readonly go list -deps -test operation while one historical Claim body and the exact existing c60 model body continue.",
+  "forbidden": [
+    "Go compilation or test bodies",
+    "Rust or native engine builds",
+    "downloads",
+    "additional historical or database bodies"
+  ],
+  "source_stage_and_metadata": {
+    "disk_forecast_bytes": 4294967296,
+    "memory_forecast_bytes": 4294967296,
+    "memory_max_bytes": 4294967296,
+    "memory_swap_max_bytes": 0,
+    "whole_data_growth_cutoff_bytes": 4294967296,
+    "go_list_flags": [
+      "-deps",
+      "-test",
+      "-mod=readonly"
+    ],
+    "environment": {
+      "GOPROXY": "off",
+      "GOSUMDB": "off",
+      "GOMAXPROCS": "2"
+    }
+  },
+  "concurrent_work": {
+    "history_max_count": 1,
+    "history_disk_forecast_bytes": 4294967296,
+    "history_memory_forecast_bytes": 2147483648,
+    "history_pid": 1970944,
+    "history_start": 101917367,
+    "model_max_count": 1,
+    "model_disk_forecast_bytes": 4294967296,
+    "model_memory_forecast_bytes": 4294967296,
+    "model_pid": 2278433,
+    "model_start": 102548058,
+    "model_tuple": "Server c60 / Core 7de / SN 0fbb, exact existing protected 1703-root normal image"
+  },
+  "admission": {
+    "safety_multiplier": 2,
+    "minimum_data_available_bytes": 25769803776,
+    "minimum_memory_available_bytes": 124554051584,
+    "minimum_memory_floor_bytes": 103079215104,
+    "original_baseline_and_floor_rules": "UNCHANGED",
+    "active_healthy_process_guards": "UNCHANGED",
+    "canonical_host_flock": "same original inode, current authenticated holder; recheck actual kernel lock/PID/start before launch",
+    "require_fresh_census": true,
+    "require_actual_wait_and_tree_join": true,
+    "minimum_docker_available_bytes": 300128382976
+  },
+  "next_gate": "Compilation remains unapproved until actual staged source and complete dependency closure are independently inspected and separately adopted.",
+  "supersedes_unused_admission_sha256": "e46890ddb13375142d3fd5a5ffa62dedb2b42fd17035794350dafa551ce4d99f",
+  "concrete_stage_plan": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-physical-graph-preparation-v1.json",
+    "sha256": "59588b3a38b706b42e6b25a8667d029bb79c93526562b1a3f707705a45dccac9"
+  },
+  "metadata_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-history-model-metadata-only-review-20261004.json",
+    "sha256": "d65ba6a524af3c369972042f5ea0e6ed80941c42d1fb7e6acc7c35c1d42ca2ff"
+  },
+  "more_conservative_stage_reservation": "Concrete Sol staging plan reserves 4 GiB disk and 4 GiB memory instead of the reviewed 2 GiB estimates. Same hard 4 GiB memory limit, zero swap, 4 GiB data-growth cutoff and metadata-only operation; higher launch thresholds retain 2x margin."
+}

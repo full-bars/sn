@@ -230,12 +230,13 @@ func (self *rpcClient) readFinalizedMappingAtIdentity(ctx context.Context, ident
 			result = finalizedMapping{}
 		}
 	}()
-	finalized, err := self.readNativeFinality(sampleCtx)
+	selected := nativeFinalityPoint{Number: identity.FinalizedNumber, Hash: identity.FinalizedHash}
+	if selected.Number > identity.finalityWitness.Number {
+		return finalizedMapping{}, fmt.Errorf("%w: selected mapping exceeds its original native finality witness", errRpcIntegrity)
+	}
+	finalized, err := self.readNativeFinalityCovering(sampleCtx, selected, identity.finalityWitness)
 	if err != nil {
 		return finalizedMapping{}, err
-	}
-	if finalized.Number < identity.FinalizedNumber {
-		return finalizedMapping{}, fmt.Errorf("%w: selected mapping is no longer covered by native finality", errRpcIntegrity)
 	}
 	var nativeHeader rootReceiptHeader
 	if err := self.call(sampleCtx, "chain_getHeader", []any{identity.FinalizedHash}, &nativeHeader); err != nil {
@@ -311,16 +312,8 @@ func (self *rpcClient) readFinalizedMappingAtIdentity(ctx context.Context, ident
 	if err != nil {
 		return finalizedMapping{}, err
 	}
-	if err := self.closeNativeFinality(sampleCtx, finalized, nativeFinalityPoint{Number: identity.FinalizedNumber, Hash: identity.FinalizedHash}); err != nil {
+	if _, err := self.readNativeFinalityCovering(sampleCtx, finalized, selected, identity.finalityWitness); err != nil {
 		return finalizedMapping{}, err
-	}
-	if identity.finalityWitness != finalized {
-		if !rootCanonicalHash(identity.finalityWitness.Hash) || finalized.Number < identity.finalityWitness.Number {
-			return finalizedMapping{}, fmt.Errorf("%w: mapping lost its original native finality witness", errRpcIntegrity)
-		}
-		if err := self.checkNativeCanonical(sampleCtx, identity.finalityWitness); err != nil {
-			return finalizedMapping{}, err
-		}
 	}
 	return finalizedMapping{
 		Schema: finalizedMappingSchema, Admission: "unapproved_observation", SourceCommit: frontierMappingSourceCommit,

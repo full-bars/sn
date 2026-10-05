@@ -118,6 +118,7 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 	}
 	defer func() { sampleCancel() }()
 	renewSample()
+	startupDeadline := now().Add(*retryWindow)
 	checkPreparation := func() error {
 		if preparation == nil {
 			return ctx.Err()
@@ -128,11 +129,11 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 				return err
 			}
 			err := preparation.check()
-			if err == nil || errors.Is(err, durablevolume.ErrIdentity) || !errors.Is(err, durablevolume.ErrUnavailable) {
+			if err == nil || !errors.Is(err, durablevolume.ErrUnavailable) || !rootMonitorStartupPending(err) {
 				return err
 			}
 			if observationRetries == 64 {
-				return errors.Join(durablevolume.ErrUnavailable, errors.New("passive preparation observation budget exhausted"))
+				return mainnetDurableUnavailable("passive preparation observation budget exhausted", nil)
 			}
 			observationRetries++
 			fmt.Fprintln(stderr, "passive preparation observation unavailable; retrying retained custody")
@@ -143,12 +144,12 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 		}
 	}
 	preparationExit := func(err error) int {
-		if ctx.Err() != nil {
-			return 0
-		}
-		if errors.Is(err, durablevolume.ErrIdentity) {
+		if !rootMonitorStartupPending(err) {
 			fmt.Fprintln(stderr, "passive preparation retained custody is invalid")
 			return 3
+		}
+		if ctx.Err() != nil {
+			return 0
 		}
 		if errors.Is(err, durablevolume.ErrUnavailable) || errors.Is(err, context.DeadlineExceeded) {
 			fmt.Fprintln(stderr, "passive preparation observation remains unavailable")
@@ -163,7 +164,11 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 	var policy rootValidatorPolicy
 	policyHash, err := "", error(nil)
 	if approvedPolicy == nil {
-		policyHash, err = readEconomicInput(*policyPath, &policy)
+		if monitoring {
+			policy, policyHash, err = readRootMonitorStartupPolicy(sampleCtx, *policyPath, startupDeadline, now, hooks, stderr)
+		} else {
+			policyHash, err = readEconomicInput(*policyPath, &policy)
+		}
 	} else {
 		policy, policyHash = copyRootPassivePolicy(*approvedPolicy), approvedHash
 		if !planSha256(policyHash) || policyHash != rootObjectHash(policy) || policy.Schema != rootPassivePolicySchema {
@@ -175,6 +180,9 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 	}
 	if err != nil {
 		fmt.Fprintln(stderr, rootCommandErrorDetail(err, "root policy unavailable or invalid", monitoring))
+		if monitoring {
+			return rootMonitorStartupExit(ctx, err, 2)
+		}
 		return 2
 	}
 	client, err := newRpcClient(*rpcUrl, *retryWindow)
@@ -186,10 +194,17 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 	state := &monitorState{}
 	var checkpoint *monitorCheckpointStore
 	if *checkpointPath != "" {
-		checkpoint, err = openMonitorCheckpoint(*checkpointPath, identityExpectation{NativeChain: policy.NativeChain, GenesisHash: policy.GenesisHash, EvmChainId: policy.EvmChainId}, ctx)
+		err = retryRootMonitorStartup(sampleCtx, startupDeadline, now, hooks, stderr, func() error {
+			var openErr error
+			checkpoint, openErr = openMonitorCheckpoint(*checkpointPath, identityExpectation{NativeChain: policy.NativeChain, GenesisHash: policy.GenesisHash, EvmChainId: policy.EvmChainId}, ctx)
+			return openErr
+		})
 		if err != nil {
 			fmt.Fprintln(stderr, rootCommandErrorDetail(err, "root checkpoint admission failed", monitoring))
-			return 3
+			if checkpoint != nil {
+				err = monitorAdmissionFailure(err, checkpoint.close())
+			}
+			return rootMonitorStartupExit(ctx, err, 3)
 		}
 		defer func() {
 			file := checkpoint.lock
@@ -202,25 +217,42 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 				result = 3
 			}
 		}()
+		if hooks.afterCheckpointOpen != nil {
+			hooks.afterCheckpointOpen(ctx, "root", checkpoint.lock)
+		}
 		if hooks.syncDirectory != nil {
 			checkpoint.syncDirectory = func(file *os.File) error { return hooks.syncDirectory("root", "checkpoint", file) }
 		}
-		state, err = checkpoint.load()
+		err = retryRootMonitorStartup(sampleCtx, startupDeadline, now, hooks, stderr, func() error {
+			var loadErr error
+			state, loadErr = checkpoint.load()
+			return loadErr
+		})
 		if err != nil {
 			fmt.Fprintln(stderr, rootCommandErrorDetail(err, "root retained checkpoint invalid", monitoring))
-			return 3
+			return rootMonitorStartupExit(ctx, err, 3)
 		}
 	}
 	publication := &rootMonitorPublication{outcome: "unconfigured"}
 	if *metricsPath != "" {
-		publication.store, err = openMonitorMetrics(*metricsPath, ctx)
+		publication.admit = func() (*monitorMetricsStore, error) {
+			store, openErr := openMonitorMetrics(*metricsPath, ctx)
+			if store != nil && hooks.syncDirectory != nil {
+				store.syncDirectory = func(file *os.File) error { return hooks.syncDirectory("root", "metrics", file) }
+			}
+			return store, openErr
+		}
+		// A soft initial outage must not disable publication for the remaining
+		// finite run. Later actual samples retry only this optional admission.
+		publication.store, err = publication.admit()
 		if err != nil {
 			fmt.Fprintln(stderr, "root metrics admission failed")
-			publication.outcome, publication.disabled = "unavailable", true
+			publication.outcome, publication.disabled = "retrying", !rootMonitorStartupPending(err)
 		}
-	}
-	if publication.store != nil {
 		defer func() {
+			if publication.store == nil {
+				return
+			}
 			file := publication.store.lock
 			closeErr := publication.store.close()
 			if hooks.afterClose != nil {
@@ -231,9 +263,8 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 				result = 3
 			}
 		}()
-		if hooks.syncDirectory != nil {
-			publication.store.syncDirectory = func(file *os.File) error { return hooks.syncDirectory("root", "metrics", file) }
-		}
+	}
+	if publication.store != nil {
 		publication.outcome = "starting"
 		// Existing output retains its original age until a new sample completes.
 		if _, statErr := os.Lstat(*metricsPath); errors.Is(statErr, os.ErrNotExist) {

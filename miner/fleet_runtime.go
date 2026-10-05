@@ -50,7 +50,7 @@ func authenticateFleetRuntimeAtContext(ctx context.Context, chain *crv4.Chain, f
 	if ctx == nil || chain == nil || finalized == (types.Hash{}) {
 		return crv4.AuthenticatedRuntimeArtifact{}, errors.New("fleet runtime authentication context is incomplete")
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, chain, finalized, fleetReleaseRuntimeArtifact())
+	artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, chain, finalized, fleetReleaseRuntimeArtifact())
 	if err != nil {
 		return crv4.AuthenticatedRuntimeArtifact{}, fmt.Errorf("fleet runtime at %s is not the reviewed %s/%d/%d/%d artifact: %w", finalized.Hex(), fleetReleaseRuntimeSpecName, fleetReleaseRuntimeSpecVersion, fleetReleaseRuntimeTransactionVersion, fleetReleaseRuntimeStateVersion, err)
 	}

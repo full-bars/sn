@@ -125,7 +125,7 @@ func newReleaseClientKeyAuthorityV2Reads(ctx context.Context, chain *ChainClient
 	ownedCtx, cancel := context.WithCancel(ctx)
 	owner := &releaseClientKeyAuthorityV2Reads{
 		parent: ctx, ctx: ownedCtx, cancel: cancel, chain: chain,
-		ownedChain:    &ChainClient{client: chain.client, coordinator: chain.coordinator, chainId: new(big.Int).Set(chain.chainId), contractAddr: chain.contractAddr, release: true},
+		ownedChain:    &ChainClient{client: chain.client, coordinator: chain.coordinator, chainId: new(big.Int).Set(chain.chainId), contractAddr: chain.contractAddr, release: true, readRetryHooks: chain.readRetryHooks},
 		identity:      releaseClientKeyAuthorityV2Identity{domain: domain, request: request, validatorId: cfg.ValidatorID, selfUid: artifact.SelfUID, deployBlock: cfg.DeployBlock, runtimeSpec: cfg.RuntimeSpec, transactionVersion: cfg.TransactionVersion, stateVersion: cfg.StateVersion, runtimeCodeHash: codeHash, runtimeMetadataHash: metadataHash},
 		operatorNoIds: operators, authorityKVs: make(map[releaseClientKeyAuthorityV2Key]*releaseClientKeyAuthorityV2Entry), budget: budget,
 		maximumCaptureFiles: maximumCaptureFiles,
@@ -338,18 +338,20 @@ func (self *releaseClientKeyAuthorityV2Reads) finish(resultErr error) error {
 		}
 		return ctx.Err()
 	}
-	callCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	actualChainId, err := chain.client.ChainID(callCtx)
-	err = errors.Join(err, callCtx.Err())
-	cancel()
+	var actualChainId *big.Int
+	err := chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		actualChainId, err = chain.client.ChainID(callCtx)
+		return err
+	})
 	if err := releaseRpcObservationError(err, actualChainId != nil && actualChainId.Cmp(chain.chainId) == 0, errors.New("client-key authority final chain identity changed")); err != nil {
 		return errors.Join(err, ctx.Err())
 	}
 	var genesis *common.Hash
-	callCtx, cancel = context.WithTimeout(ctx, chainCallTimeout)
-	err = chain.client.Client().CallContext(callCtx, &genesis, "chain_getBlockHash", uint64(0))
-	err = errors.Join(err, callCtx.Err())
-	cancel()
+	err = chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		genesis = nil
+		return chain.client.Client().CallContext(callCtx, &genesis, "chain_getBlockHash", uint64(0))
+	})
 	if err := releaseRpcObservationError(err, genesis != nil && [32]byte(*genesis) == self.identity.domain.GenesisHash, errors.New("client-key authority final native genesis changed")); err != nil {
 		return errors.Join(err, ctx.Err())
 	}
@@ -367,10 +369,10 @@ func (self *releaseClientKeyAuthorityV2Reads) finish(resultErr error) error {
 			return errors.New("client-key authority final boundary is not finalized")
 		}
 		var header *chainRPCBlock
-		callCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-		err := chain.client.Client().CallContext(callCtx, &header, "eth_getBlockByNumber", hexutil.EncodeUint64(boundary.Block), false)
-		err = errors.Join(err, callCtx.Err())
-		cancel()
+		err := chain.retryChainRead(ctx, func(callCtx context.Context) error {
+			header = nil
+			return chain.client.Client().CallContext(callCtx, &header, "eth_getBlockByNumber", hexutil.EncodeUint64(boundary.Block), false)
+		})
 		if err != nil {
 			return errors.Join(err, ctx.Err())
 		}

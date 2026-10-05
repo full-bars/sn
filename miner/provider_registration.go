@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -16,12 +17,13 @@ import (
 	"github.com/urfoundation/sn/clientauth"
 )
 
-// Fault observers run only after a real attempt or complete authenticated
-// handoff. They cannot replace disk custody, an API result or identity checks.
+// Fault hooks run only after a real attempt or complete authenticated handoff.
+// An added failure cannot replace disk custody, API success or identity checks.
 type providerRegistrationHooks struct {
-	afterAttempt       func(error) error
-	afterAuthenticated func(string, connect.Id, []byte) error
-	afterApiJoined     func()
+	afterAttempt           func(error) error
+	additionalAttemptError func(error) error
+	afterAuthenticated     func(string, connect.Id, []byte) error
+	afterApiJoined         func()
 }
 
 // Hooks belong to one explicitly supplied run context, never global state.
@@ -60,27 +62,36 @@ func validateProviderRegistrationSlots(providers []*connect.ProxySettings) error
 // Only the versioned route's typed availability leaves may replay. Completed
 // refusals, malformed replies and local custody faults cannot become retries.
 func providerRegistrationRetryable(err error, depth int) bool {
-	if err == nil || depth > 32 {
+	budget := &minerReadCauseBudget{remaining: minerReadCauseMaximumNodes}
+	return providerRegistrationRetryCause(err, depth, budget)
+}
+
+// One shared work budget covers every branch. Typed availability remains the
+// route owner's verdict; no foreign Is/As or nil receiver can supply one.
+func providerRegistrationRetryCause(err error, depth int, budget *minerReadCauseBudget) bool {
+	if !budget.admit(err, depth) {
 		return false
 	}
 	switch err.(type) {
+	case *os.PathError, *os.LinkError:
+		return false
 	case *sdk.NetworkClientRegistrationUnavailableError, *clientauth.RegistrationRefreshUnavailableError:
 		return true
 	}
 	if joined, ok := err.(interface{ Unwrap() []error }); ok {
 		causes := joined.Unwrap()
-		if len(causes) == 0 || len(causes) > 32 {
+		if len(causes) == 0 || len(causes) > 32 || len(causes) > budget.remaining {
 			return false
 		}
 		for _, cause := range causes {
-			if !providerRegistrationRetryable(cause, depth+1) {
+			if !providerRegistrationRetryCause(cause, depth+1, budget) {
 				return false
 			}
 		}
 		return true
 	}
 	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		return providerRegistrationRetryable(wrapped.Unwrap(), depth+1)
+		return providerRegistrationRetryCause(wrapped.Unwrap(), depth+1, budget)
 	}
 	return false
 }
@@ -97,6 +108,9 @@ func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, client
 			if hookErr := hooks.afterAttempt(err); hookErr != nil {
 				return "", connect.Id{}, errors.Join(err, hookErr)
 			}
+		}
+		if err != nil && hooks.additionalAttemptError != nil {
+			err = errors.Join(err, hooks.additionalAttemptError(err))
 		}
 		if err == nil {
 			if hooks.afterAuthenticated != nil {

@@ -427,8 +427,8 @@ func mainnetStorageContext(contexts []context.Context) context.Context {
 	return context.Background()
 }
 
-// These commands read or advance retained local custody. Portable owner
-// inspection and public reply verification do not own deployment state.
+// Retained observations and effects require local custody. Only explicit pure
+// review modes may run before provisioning; their own parsers still bind scope.
 func mainnetRequiresDurableVolumes(args []string) bool {
 	if len(args) == 0 {
 		return false
@@ -436,9 +436,28 @@ func mainnetRequiresDurableVolumes(args []string) bool {
 	switch args[0] {
 	case "owner-signing":
 		return len(args) > 1 && args[1] == "sign"
-	case "bootstrap", "bootstrap-chain", "bootstrap-contracts", "root-service", "root-passive-service",
-		"activate-root-passive", "activate-validators", "repair-validator", "repair-active-validator", "owner-recycle",
-		"storage-inventory", "storage-verify", "storage-owner-inventory", "storage-owner-verify", "storage-inspect", "validator-capacity-preview", "monitor-native-archive", "monitor-native-catalog", "monitor-evm-archive", "monitor-evm-catalog", "monitor-claim-archive", "monitor-claim-catalog":
+	case "owner-recycle":
+		if len(args) > 1 {
+			switch args[1] {
+			case "observe", "plan", "inspect-request", "ledger-plan":
+				return false
+			}
+		}
+		return true
+	case "bootstrap-chain":
+		if len(args) > 1 {
+			switch args[1] {
+			case "plan", "contract-plan", "contract-role-plan":
+				return false
+			}
+		}
+		return true
+	case "bootstrap", "root-service", "root-passive-service":
+		return len(args) < 2 || args[1] != "plan"
+	case "bootstrap-contracts":
+		return len(args) < 2 || args[1] != "plan" && args[1] != "preview"
+	case "activate-root-passive", "activate-validators", "repair-validator", "repair-active-validator",
+		"storage-inventory", "storage-verify", "storage-owner-inventory", "storage-owner-verify", "storage-inspect", "validator-capacity-preview", "monitor-native-archive", "monitor-native-catalog", "monitor-evm-archive", "monitor-evm-catalog", "monitor-claim-archive", "monitor-claim-catalog", "observe-economic-conservation", "economic-conservation-archive":
 		return true
 	}
 	return false

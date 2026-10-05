@@ -25,7 +25,8 @@ import (
 // route/clock changes before the next command sample starts.
 type monitorMetricsTestWriter struct {
 	bytes.Buffer
-	onEvent func(monitorEvent)
+	onEvent    func(monitorEvent) error
+	eventError error
 }
 
 // The collector directory is preprovisioned with read-only group access.
@@ -46,7 +47,8 @@ func (self *monitorMetricsTestWriter) Write(raw []byte) (int, error) {
 	}
 	n, err := self.Buffer.Write(raw)
 	if err == nil {
-		self.onEvent(event)
+		err = self.onEvent(event)
+		self.eventError = err
 	}
 	return n, err
 }
@@ -54,9 +56,19 @@ func (self *monitorMetricsTestWriter) Write(raw []byte) (int, error) {
 // Parses the exact unlabeled textfile contract without sharing the renderer.
 func readMonitorTestGauges(t *testing.T, path string) map[string]float64 {
 	t.Helper()
-	raw, err := os.ReadFile(path)
+	values, err := readMonitorMetricsTestGauges(path)
 	if err != nil {
 		t.Fatal(err)
+	}
+	return values
+}
+
+// Worker callbacks return evidence failures to the joined command owner. A
+// testing.Goexit inside a worker cannot strand the command's completion signal.
+func readMonitorMetricsTestGauges(path string) (map[string]float64, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
 	}
 	values := map[string]float64{}
 	for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
@@ -68,21 +80,21 @@ func readMonitorTestGauges(t *testing.T, path string) map[string]float64 {
 			continue // The bounded stream census has independent assertions.
 		}
 		if len(fields) != 2 || !strings.HasPrefix(fields[0], "sn_mainnet_monitor_") || strings.ContainsAny(fields[0], "{}\"") {
-			t.Fatalf("invalid or labeled gauge: %q", line)
+			return nil, fmt.Errorf("invalid or labeled gauge: %q", line)
 		}
 		value, err := strconv.ParseFloat(fields[1], 64)
 		if err != nil {
-			t.Fatal(err)
+			return nil, err
 		}
 		if _, exists := values[fields[0]]; exists {
-			t.Fatalf("duplicate gauge %s", fields[0])
+			return nil, fmt.Errorf("duplicate gauge %s", fields[0])
 		}
 		values[fields[0]] = value
 	}
-	if len(values) != 11 || len(raw) > 8*1024 || !bytes.HasSuffix(raw, []byte("\n")) {
-		t.Fatalf("unexpected publication shape: %d gauges, %d bytes", len(values), len(raw))
+	if len(values) != 14 || len(raw) > 8*1024 || !bytes.HasSuffix(raw, []byte("\n")) {
+		return nil, fmt.Errorf("unexpected publication shape: %d gauges, %d bytes", len(values), len(raw))
 	}
-	return values
+	return values, nil
 }
 
 // Fresh failure samples keep the last successful read unchanged. Recovery
@@ -110,41 +122,64 @@ func TestMonitorMetricsCommandRetainsSuccessThroughOutageAndRecovery(t *testing.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	events := 0
-	stdout := &monitorMetricsTestWriter{onEvent: func(event monitorEvent) {
-		gauges := readMonitorTestGauges(t, path)
+	stdout := &monitorMetricsTestWriter{onEvent: func(event monitorEvent) error {
+		gauges, err := readMonitorMetricsTestGauges(path)
+		if err != nil {
+			cancel()
+			return err
+		}
+		for _, name := range []string{"sn_mainnet_monitor_rpc_comparison_status", "sn_mainnet_monitor_independent_rpc", "sn_mainnet_monitor_rpc_comparison_sample_timestamp_seconds"} {
+			if value, present := gauges[name]; !present || value != 0 {
+				cancel()
+				return fmt.Errorf("absent comparison authority gained a metric: %s=%v present=%v", name, value, present)
+			}
+		}
+		if event.RpcComparison == nil || event.RpcComparison.Status != "input-unknown" || event.RpcComparison.IndependentRpc || event.RpcComparison.ObservedAt != "" {
+			cancel()
+			return fmt.Errorf("absent comparison authority became a completed comparison: %+v", event.RpcComparison)
+		}
 		if gauges["sn_mainnet_monitor_sample_timestamp_seconds"] != float64(sampleTime.Unix()) {
-			t.Fatal("sample metric did not precede its event")
+			cancel()
+			return errors.New("sample metric did not precede its event")
 		}
 		switch events {
 		case 0:
 			if event.Status != "ok" || gauges["sn_mainnet_monitor_healthy"] != 1 || gauges["sn_mainnet_monitor_has_finalized_evidence"] != 1 {
-				t.Fatalf("first checked read not published: %+v %v", event, gauges)
+				cancel()
+				return fmt.Errorf("first checked read not published: %+v %v", event, gauges)
 			}
 			failing.Store(true)
 			sampleTime = base.Add(time.Minute)
 		case 1, 2:
 			if event.Status != "rpc-error" || gauges["sn_mainnet_monitor_healthy"] != 0 || gauges["sn_mainnet_monitor_last_success_timestamp_seconds"] != float64(base.Unix()) || gauges["sn_mainnet_monitor_read_outage_started_timestamp_seconds"] != float64(base.Add(time.Minute).Unix()) {
-				t.Fatalf("failure became healthy or reset history: %+v %v", event, gauges)
+				cancel()
+				return fmt.Errorf("failure became healthy or reset history: %+v %v", event, gauges)
 			}
 			if events == 1 {
 				sampleTime = base.Add(7 * time.Minute)
 			} else {
 				if event.Severity != "critical" || gauges["sn_mainnet_monitor_severity"] != 2 || gauges["sn_mainnet_monitor_read_outage_age_seconds"] != 360 {
-					t.Fatalf("outage was not critical: %+v %v", event, gauges)
+					cancel()
+					return fmt.Errorf("outage was not critical: %+v %v", event, gauges)
 				}
 				failing.Store(false)
 				sampleTime = base.Add(8 * time.Minute)
 			}
 		case 3:
 			if event.Status != "ok" || gauges["sn_mainnet_monitor_read_outage_active"] != 0 || gauges["sn_mainnet_monitor_last_success_timestamp_seconds"] != float64(sampleTime.Unix()) {
-				t.Fatalf("complete recovery did not clear outage: %+v %v", event, gauges)
+				cancel()
+				return fmt.Errorf("complete recovery did not clear outage: %+v %v", event, gauges)
 			}
 			cancel()
 		}
 		events++
+		return nil
 	}}
 	var stderr bytes.Buffer
 	exit := runMonitorTestWithClock(t, ctx, []string{"monitor", "--rpc", server.URL, "--expected-chain", "fixture-mainnet", "--expected-genesis", testGenesisHash, "--expected-evm-chain-id", "964", "--checkpoint", checkpoint, "--metrics-file", path, "--retry-window", "1s", "--interval", "1ns", "--stall-after", "20m"}, stdout, &stderr, func() time.Time { return sampleTime })
+	if stdout.eventError != nil {
+		t.Fatal(stdout.eventError)
+	}
 	if exit != 0 || events != 4 {
 		t.Fatalf("command exit=%d events=%d stderr=%s", exit, events, stderr.String())
 	}
@@ -173,32 +208,60 @@ func TestMonitorMetricsCommandStopsOnPublicationFailure(t *testing.T) {
 	defer cancel()
 	events := 0
 	var retainedBytes []byte
-	stdout := &monitorMetricsTestWriter{onEvent: func(event monitorEvent) {
+	stdout := &monitorMetricsTestWriter{onEvent: func(event monitorEvent) error {
 		events++
 		if events == 1 {
 			var err error
 			retainedBytes, err = os.ReadFile(path)
 			if err != nil {
-				t.Fatal(err)
+				cancel()
+				return err
 			}
 			if err := os.Rename(path, retained); err != nil {
-				t.Fatal(err)
+				cancel()
+				return err
 			}
 			if err := os.Symlink(retained, path); err != nil {
-				t.Fatal(err)
+				cancel()
+				return err
 			}
 		} else if event.Status != "metrics-error" || event.Severity != "critical" || !strings.Contains(event.Detail, "status=ok") {
-			t.Fatalf("publication failure disappeared: %+v", event)
+			cancel()
+			return fmt.Errorf("publication failure disappeared: %+v", event)
 		}
+		return nil
 	}}
 	var stderr bytes.Buffer
 	exit := runMonitorTest(t, ctx, []string{"monitor", "--rpc", server.URL, "--expected-chain", "fixture-mainnet", "--expected-genesis", testGenesisHash, "--expected-evm-chain-id", "964", "--metrics-file", path, "--interval", "1ns"}, stdout, &stderr)
+	if stdout.eventError != nil {
+		t.Fatal(stdout.eventError)
+	}
 	if exit != 3 || events != 2 {
 		t.Fatalf("failed publication kept running: exit=%d events=%d stderr=%s", exit, events, stderr.String())
 	}
 	after, err := os.ReadFile(retained)
 	if err != nil || !bytes.Equal(after, retainedBytes) {
 		t.Fatal("publication failure changed old evidence")
+	}
+}
+
+// A worker-side assertion failure cancels the original command and is reported
+// only after its join. No testing.Goexit can consume the completion signal.
+func TestMonitorMetricsWorkerFailureReturnsAfterOwnerCancellation(t *testing.T) {
+	server, _ := testRpcServerWithIdentity(t, "fixture-mainnet", "0x3c4", "")
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	want := errors.New("synthetic worker publication assertion")
+	events := 0
+	stdout := &monitorMetricsTestWriter{onEvent: func(monitorEvent) error {
+		events++
+		cancel()
+		return want
+	}}
+	var stderr bytes.Buffer
+	exit := runMonitorTest(t, ctx, []string{"monitor", "--rpc", server.URL, "--expected-chain", "fixture-mainnet", "--expected-genesis", testGenesisHash, "--expected-evm-chain-id", "964", "--interval", "1ns"}, stdout, &stderr)
+	if events != 1 || !errors.Is(stdout.eventError, want) || ctx.Err() != context.Canceled || exit != 0 {
+		t.Fatalf("worker failure did not return through joined owner: events=%d error=%v exit=%d stderr=%s", events, stdout.eventError, exit, stderr.String())
 	}
 }
 

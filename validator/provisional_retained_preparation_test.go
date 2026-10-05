@@ -117,7 +117,7 @@ func TestRetainedProvisionalPreparationRetriesPinnedBindingCensus(t *testing.T) 
 				if json.Unmarshal(call.Params[1], &block) != nil || block.BlockHash == nil || *block.BlockHash != common.HexToHash(fixture.measurement.artifact.EVMSnapshotHash) || !block.RequireCanonical {
 					return nil, errors.New("retry replaced the original canonical binding snapshot")
 				}
-				if interrupted.Add(1) <= chainReadMaximumAttempts*(releaseSteeringFailureLimit+2) {
+				if interrupted.Add(1) <= chainReadTestFailureAttempts*(releaseSteeringFailureLimit+2) {
 					return nil, context.DeadlineExceeded
 				}
 				break
@@ -131,7 +131,7 @@ func TestRetainedProvisionalPreparationRetriesPinnedBindingCensus(t *testing.T) 
 	}
 	t.Cleanup(client.Close)
 	fixture.steerer.chain.client = ethclient.NewClient(client)
-	fixture.steerer.chain.readRetryHooks.wait = chainReadRetryNoWait
+	fixture.steerer.chain.readRetryHooks = chainReadRetryTestHooks(chainReadTestFailureAttempts)
 	cfg := &ReleaseConfig{ChainID: 945, GenesisHash: provisionalRuntimeTestnetGenesis, StateDir: newAttemptSettlementRuntimeV2TestStateDir(t), ProvisionalRuntimeCompatibility: crv4.ProvisionalRuntimeCompatibilityProfile}
 	cfg.Policy.NetworkProfile = "testnet"
 	history := &releaseEvidenceV2StartupHistory{retainedStartup: true}
@@ -144,7 +144,7 @@ func TestRetainedProvisionalPreparationRetriesPinnedBindingCensus(t *testing.T) 
 		var err error
 		result, err = fixture.gather(t.Context(), fixture.options(t))
 		if attempts <= releaseSteeringFailureLimit+2 {
-			if interrupted.Load()-priorReads != chainReadMaximumAttempts || !errors.Is(err, context.DeadlineExceeded) || !strings.Contains(err.Error(), "compact live head binding census") || !reflect.DeepEqual(result, releaseHeadResult{}) {
+			if interrupted.Load()-priorReads != chainReadTestFailureAttempts || !errors.Is(err, context.DeadlineExceeded) || !strings.Contains(err.Error(), "compact live head binding census") || !reflect.DeepEqual(result, releaseHeadResult{}) {
 				t.Fatalf("binding interruption leaked results or lost provenance: %v", err)
 			}
 			if reads, _ := fixture.rpc.bindingCounts(); reads != 0 {
@@ -153,7 +153,7 @@ func TestRetainedProvisionalPreparationRetriesPinnedBindingCensus(t *testing.T) 
 		}
 		return classifyProvisionalNativeRead(allow, fixture.measurement.artifact.SubnetEpoch, err)
 	}, func() bool { return attempts < releaseSteeringFailureLimit+3 }, false, allow)
-	if err != nil || attempts != releaseSteeringFailureLimit+3 || interrupted.Load() <= chainReadMaximumAttempts*(releaseSteeringFailureLimit+2) || !reflect.DeepEqual(result.Weights, fixture.measurement.want.SelectedHead) || len(result.Bindings) == 0 {
+	if err != nil || attempts != releaseSteeringFailureLimit+3 || interrupted.Load() <= chainReadTestFailureAttempts*(releaseSteeringFailureLimit+2) || !reflect.DeepEqual(result.Weights, fixture.measurement.want.SelectedHead) || len(result.Bindings) == 0 {
 		t.Fatalf("retained pre-intent census did not recover: attempts=%d err=%v", attempts, err)
 	}
 	fixture.assertNoEMACommit(t)

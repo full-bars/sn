@@ -1,0 +1,84 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 1073741824,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "7ba54bbfe24f27c150699bcf54e0a01ce38602772c9aa98ad82d21eb0caefcff",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 2147483648,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "network_dependency_count": 0,
+  "runner_sha256": "ffbbe769d8999b01b2172b6b8ee6675a585f7433b6c99c8ffedc682c92867b1d",
+  "short_count": 0,
+  "status": "ADOPTED_CURRENT_COMPONENT_DELTA_CACHED_METADATA",
+  "review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/current-component-delta-metadata-concrete-review-v1.json",
+    "sha256": "e27f6008183b33db31f99a8afe491bb2dabcccb9d2436e4aaee238594ac7f26c"
+  },
+  "additional_predecessor_waits": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-release-build-normal.process-result.json",
+      "sha256": "492cd15970e60725e96762f38acaf0a711ada7f74507fdb0f8287c456314f6f3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-release-build-race.process-result.json",
+      "sha256": "35ae6222692e261b4f7ecb4960ae53c8577777863cf43e1de4828401ad41cc54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-arinshadowctl-normal.process-result.json",
+      "sha256": "089a572ae9f79173eb233f6668c0ef4b9e00374c49f13775211e24d9e35d8078"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-arinshadowctl-race.process-result.json",
+      "sha256": "e540703e3bd2fac99787e75976942aa2600310a47230a3fafc6de7018817cd02"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-replay-normal.process-result.json",
+      "sha256": "31dd7201650a03e67353ad9c15d8e957d07eb23bc202c38ad8672b521f1291ec"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-replay-race.process-result.json",
+      "sha256": "7a67090bf550c44f1283fe5ebbc3afba1bf68eae9d2f3b16b44495b54fbc60ab"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-socket4-v2-image-failure-normal.process-result.json",
+      "sha256": "8b4ab32e7f6557519909e00ed33adf5788ce16f02ba8f26fcbfaeb0e5f511c68"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-socket4-v2-image-failure-race.process-result.json",
+      "sha256": "57be25a8db0d7d086e937ffea70f93e98a4ba8f17e7b5b1d0494596282f1d00d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-socket4-v2-missing-closure-normal.process-result.json",
+      "sha256": "5efd5e2176c09de9a5b8aa4397d5fa38b0ef35f92870a6e7254cefd370b6433b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-socket4-v2-missing-closure-race.process-result.json",
+      "sha256": "a55c9d06621d65aceecfd3ed925028736503eec782c12f4df940b00bdb7cd9d6"
+    }
+  ],
+  "additional_closed_owner_readbacks": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-user-terminal-readback.json",
+      "sha256": "7359c2f0ddc889d03d096bd7d44dad8b329a3f1707c0ab3ecc0aa5e9b90de3c4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-socket4-v2-user-terminal-readback.json",
+      "sha256": "630e150362c84d9890b08b107eaa44c06db999b3aa617c543d8e66d87a69bc9f"
+    }
+  ],
+  "preserved_prebody_refusals": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-socket4-v1-prebody-refusal-readback.json",
+      "sha256": "d510b3f56168727f4e27b8301f3dce5dc6399c4de5c6c376f6b61f28eeecb8c5"
+    }
+  ],
+  "scope": "68 changed files; reuse unchanged compiler inputs; actual SN and Server graphs only. Original package failures remain retained; ten actual preceding waits joined."
+}

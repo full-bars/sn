@@ -127,13 +127,15 @@ func TestChainReadRetryBoundsEveryFailedMember(t *testing.T) {
 			calls++
 			return chainReadRetryResponse(t, http.StatusServiceUnavailable, "capacity"), nil
 		})
+		chain.readRetryHooks = chainReadRetryTestHooks(chainReadTestFailureAttempts)
+		wait := chain.readRetryHooks.wait
 		chain.readRetryHooks.wait = func(ctx context.Context, delay time.Duration) error {
 			waits++
-			minimum := chainReadRetryDelay << (waits - 1)
+			minimum := chainReadRetryDelay << min(waits-1, chainReadRetryMaximumStep)
 			if delay < minimum || delay >= minimum+minimum/2 {
 				t.Fatalf("retry lost bounded jitter: wait=%d delay=%s", waits, delay)
 			}
-			return ctx.Err()
+			return wait(ctx, delay)
 		}
 		var err error
 		if batch {
@@ -142,7 +144,7 @@ func TestChainReadRetryBoundsEveryFailedMember(t *testing.T) {
 			_, err = chain.ethCallAtHashContext(t.Context(), common.Address{1}, []byte{1}, 123, chainBatchTestBlockHash)
 		}
 		var status gethrpc.HTTPError
-		if err == nil || !errors.As(err, &status) || status.StatusCode != http.StatusServiceUnavailable || !RetryableEvidenceTransportError(err) || calls != chainReadMaximumAttempts || waits != chainReadMaximumAttempts-1 {
+		if err == nil || !errors.As(err, &status) || status.StatusCode != http.StatusServiceUnavailable || !RetryableEvidenceTransportError(err) || calls != chainReadTestFailureAttempts || waits != chainReadTestFailureAttempts {
 			t.Fatalf("retry exceeded its allowance: batch=%t calls=%d waits=%d error=%v", batch, calls, waits, err)
 		}
 	}
@@ -217,7 +219,7 @@ func TestChainReadRetrySharesOneBudgetAcrossBatchSplits(t *testing.T) {
 	})
 	chain.readRetryHooks.withTimeout = func(ctx context.Context, duration time.Duration) (context.Context, context.CancelFunc) {
 		budgets++
-		if duration != chainReadMaximumAttempts*chainCallTimeout {
+		if duration != chainReadOperationTimeout {
 			t.Fatalf("unexpected operation budget %s", duration)
 		}
 		owner = &chainReadRetryDeadline{Context: ctx, deadline: time.Now().Add(duration), done: make(chan struct{})}

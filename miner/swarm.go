@@ -32,26 +32,36 @@ import (
 
 	"github.com/urfoundation/sn/clientauth"
 	"github.com/urfoundation/sn/crv4"
+	"github.com/urfoundation/sn/protocol"
 	"github.com/urfoundation/sn/ss58"
 )
 
 const ProviderSwarmSchema = "urnetwork-provider-swarm-v1"
 
 type ProviderSwarmMember struct {
-	ID             string `json:"id"`
-	APIURL         string `json:"api_url"`
-	ConnectURL     string `json:"connect_url"`
-	DNSPumpHost    string `json:"dns_pump_host"`
-	StateDir       string `json:"state_dir"`
-	Wallet         string `json:"wallet"`
-	WalletSeedFile string `json:"wallet_seed_file"`
-	SourceIP       string `json:"source_ip"`
+	CloseReportDomain      *protocol.ClientKeyHistoryDomain `json:"close_report_domain,omitempty"`
+	ID                     string                           `json:"id"`
+	APIURL                 string                           `json:"api_url"`
+	ConnectURL             string                           `json:"connect_url"`
+	DNSPumpHost            string                           `json:"dns_pump_host"`
+	StateDir               string                           `json:"state_dir"`
+	Wallet                 string                           `json:"wallet"`
+	WalletSeedFile         string                           `json:"wallet_seed_file"`
+	SourceIP               string                           `json:"source_ip"`
+	WorkCapturePath        string                           `json:"whole_work_capture,omitempty"`
+	WorkCaptureSha256      string                           `json:"whole_work_capture_sha256,omitempty"`
+	RequireWorkCapture     bool                             `json:"require_whole_work_capture,omitempty"`
+	ContractCapturePath    string                           `json:"original_contract_capture,omitempty"`
+	ContractCaptureSha256  string                           `json:"original_contract_capture_sha256,omitempty"`
+	RequireContractCapture bool                             `json:"require_original_contract_capture,omitempty"`
 }
 
 type ProviderSwarmConfig struct {
-	Schema        string                `json:"schema"`
-	ListenAddress string                `json:"listen_address"`
-	Members       []ProviderSwarmMember `json:"members"`
+	Schema                 string                `json:"schema"`
+	ListenAddress          string                `json:"listen_address"`
+	Members                []ProviderSwarmMember `json:"members"`
+	RequireWorkCapture     bool                  `json:"require_whole_work_capture,omitempty"`
+	RequireContractCapture bool                  `json:"require_original_contract_capture,omitempty"`
 }
 
 type providerSwarmStatus struct {
@@ -125,6 +135,7 @@ func (self ProviderSwarmConfig) Validate() error {
 	seenIDs := map[string]bool{}
 	seenStates := map[string]bool{}
 	seenSources := map[string]bool{}
+	captureDirectories := map[string]bool{}
 	for index, member := range self.Members {
 		if member.ID == "" || seenIDs[member.ID] || strings.ContainsAny(member.ID, `/\\`) {
 			return fmt.Errorf("member %d has an empty, duplicate or unsafe id", index)
@@ -134,6 +145,43 @@ func (self ProviderSwarmConfig) Validate() error {
 			return fmt.Errorf("member %s state_dir must be absolute and unique", member.ID)
 		}
 		seenStates[filepath.Clean(member.StateDir)] = true
+		profile, err := ReadProviderWorkCaptureProfile(context.Background(), member.WorkCapturePath, member.WorkCaptureSha256, self.RequireWorkCapture || member.RequireWorkCapture)
+		if err != nil {
+			return fmt.Errorf("member %s whole-work capture: %w", member.ID, err)
+		}
+		var domainHash [32]byte
+		if member.CloseReportDomain != nil {
+			domainHash, _ = member.CloseReportDomain.Digest()
+		}
+		if err := profile.validateRole(member.APIURL, []string{member.ID}, domainHash); err != nil {
+			return fmt.Errorf("member %s whole-work capture: %w", member.ID, err)
+		}
+		contractProfile, err := ReadProviderContractCaptureProfile(context.Background(), member.ContractCapturePath, member.ContractCaptureSha256, self.RequireContractCapture || member.RequireContractCapture)
+		if err != nil {
+			return fmt.Errorf("member %s original contract capture: %w", member.ID, err)
+		}
+		if err := contractProfile.validateRole(member.APIURL, []string{member.ID}, domainHash, profile); err != nil {
+			return fmt.Errorf("member %s original contract capture: %w", member.ID, err)
+		}
+		var directories []string
+		if profile != nil {
+			for _, provider := range profile.Providers {
+				directories = append(directories, provider.OutboxDirectory)
+			}
+		}
+		if contractProfile != nil {
+			for _, provider := range contractProfile.Providers {
+				directories = append(directories, provider.Directory)
+			}
+		}
+		for _, directory := range directories {
+			for prior := range captureDirectories {
+				if providerCapturePathsOverlap(directory, prior) {
+					return errors.New("provider swarm original capture directories overlap")
+				}
+			}
+			captureDirectories[directory] = true
+		}
 		if err := validateApiUrl(member.APIURL); err != nil {
 			return fmt.Errorf("member %s: %w", member.ID, err)
 		}
@@ -404,6 +452,14 @@ func (self *providerSwarmInstance) close() {
 }
 
 func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed func(error)) (*providerSwarmInstance, error) {
+	workProfile, err := ReadProviderWorkCaptureProfile(ctx, member.WorkCapturePath, member.WorkCaptureSha256, member.RequireWorkCapture)
+	if err != nil {
+		return nil, err
+	}
+	contractProfile, err := ReadProviderContractCaptureProfile(ctx, member.ContractCapturePath, member.ContractCaptureSha256, member.RequireContractCapture)
+	if err != nil {
+		return nil, err
+	}
 	dialSettings, err := testEgressDialContextForIP(member.SourceIP)
 	if err != nil {
 		return nil, err
@@ -415,9 +471,6 @@ func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed fu
 	// ConnectTimeout also bounds response headers for the processed reply.
 	strategySettings.ConnectTimeout = 45 * time.Second
 	strategySettings.DialContextSettings = dialSettings
-	if err := setSwarmMemberWallet(ctx, member, strategySettings); err != nil {
-		return nil, fmt.Errorf("set wallet: %w", err)
-	}
 	byClientJWT, err := clientauth.ReadToken(filepath.Join(member.StateDir, ".provider.jwt"))
 	if err != nil {
 		return nil, err
@@ -430,6 +483,27 @@ func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed fu
 	if err != nil {
 		return nil, err
 	}
+	deviceSettings := swarmMemberDeviceSettings(
+		member, sdk.NewDeviceLocalKeyMaterial(seed, certificatePEM, keyPEM), dialSettings)
+	if err := workProfile.validateRole(member.APIURL, []string{member.ID}, deviceSettings.ContractManagerSettings.CloseReportDomainHash); err != nil {
+		return nil, err
+	}
+	if err := contractProfile.validateRole(member.APIURL, []string{member.ID}, deviceSettings.ContractManagerSettings.CloseReportDomainHash, workProfile); err != nil {
+		return nil, err
+	}
+	clientId, err := clientauth.ClientIdFromJwt(byClientJWT)
+	if err != nil {
+		return nil, err
+	}
+	if err := workProfile.apply(deviceSettings, member.ID, clientId); err != nil {
+		return nil, err
+	}
+	if err := contractProfile.apply(deviceSettings, member.ID, clientId); err != nil {
+		return nil, err
+	}
+	if err := setSwarmMemberWallet(ctx, member, strategySettings); err != nil {
+		return nil, fmt.Errorf("set wallet: %w", err)
+	}
 	memberCtx, memberCancel := context.WithCancel(ctx)
 	networkSpace := sdk.NewNetworkSpaceWithUrls(memberCtx, member.APIURL, member.ConnectURL, strategySettings)
 	api := networkSpace.GetApi()
@@ -438,9 +512,7 @@ func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed fu
 	logoutSub := api.AddAuthLogoutListener(clientauth.AuthLogoutListenerFunc(func() {
 		failed(errSwarmAuthenticationRejected)
 	}))
-	deviceSettings := swarmMemberDeviceSettings(
-		member, sdk.NewDeviceLocalKeyMaterial(seed, certificatePEM, keyPEM), dialSettings)
-	device, err := sdk.NewDeviceLocal(networkSpace, byClientJWT, "provider swarm "+runtime.GOOS+" "+RequireVersion(), "", RequireVersion(), sdk.NewId(), deviceSettings)
+	device, err := newProviderDeviceLocal(memberCtx, networkSpace, strategySettings, byClientJWT, "provider swarm "+runtime.GOOS+" "+RequireVersion(), deviceSettings, workProfile, member.ID, clientId, contractProfile)
 	if err != nil {
 		refreshSub.Close()
 		logoutSub.Close()
@@ -470,6 +542,10 @@ func swarmMemberDeviceSettings(
 ) *sdk.DeviceLocalSettings {
 	deviceSettings := sdk.DefaultDeviceLocalSettings()
 	deviceSettings.ClientSettings.ClientKeyRegistrationRequired = true
+	if member.CloseReportDomain != nil {
+		// Optional evidence never decides whether this independent provider runs.
+		deviceSettings.ClientSettings.ContractManagerSettings.CloseReportDomainHash, _ = member.CloseReportDomain.Digest()
+	}
 	// One process runs every swarm member, and a host holds one extender
 	// identity and binds the carrier ports once, so no member runs the
 	// provider extender role (connect/EXTENDER.md G1, G2). A standalone
@@ -491,6 +567,8 @@ func NewProviderSwarm(config *ProviderSwarmConfig) (*ProviderSwarm, error) {
 	members := make(map[string]ProviderSwarmMember, len(config.Members))
 	progressMembers := make([]providerProgressConfigMember, 0, len(config.Members))
 	for _, member := range config.Members {
+		member.RequireWorkCapture = config.RequireWorkCapture || member.RequireWorkCapture
+		member.RequireContractCapture = config.RequireContractCapture || member.RequireContractCapture
 		members[member.ID] = member
 		progressMembers = append(progressMembers, providerProgressConfigMember{Slot: member.ID, ApiUrl: member.APIURL, ConnectUrl: member.ConnectURL, DnsPumpHost: member.DNSPumpHost, Wallet: member.Wallet, SourceIp: member.SourceIP})
 	}

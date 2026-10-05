@@ -1,0 +1,23 @@
+{
+  "schema": "mainnet-peer-recovery-tooling-result-v1",
+  "status": "PASS_PEER_ADMISSION44",
+  "actual_tests": 44,
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-peer-admission44-v1.receipt.json",
+    "sha256": "9fc720acf0da8d836f7d0f62544a22599ed921556b916c2d96c93f2f44d4e6c4"
+  },
+  "user_terminal": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-peer-admission44-v1-user-terminal-readback.json",
+    "sha256": "a2bf32455a6eb9f445ee9411cf8a694b6439f13dfa3dfa1e829ee192c11b2f9f"
+  },
+  "actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-peer-admission44-v1.process-result.json",
+    "sha256": "3dc89b1a0e8cb4c259b7cb77818d3b15d5cca43df8b185f4b3b7eded2e344194"
+  },
+  "raw_outcomes": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-peer-admission44-v1.stderr",
+    "sha256": "7d737ebccdd3aa23aa30d717552dea93f5b759d190571f9e82ed86b371647fdb"
+  },
+  "source_fix_commit": "e49f9ce4",
+  "scope": "Independent peer release preserves original failure and missing-wait gaps;44 roots pass. No product compiler or deployment result inferred."
+}

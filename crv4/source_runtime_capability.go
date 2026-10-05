@@ -22,12 +22,19 @@ type runtimeArtifactProof struct {
 	genesisHash types.Hash
 	identity    RuntimeArtifactIdentity
 	metadata    *types.Metadata
+	transport   runtimeTransportObservation
 }
 
 // Exported artifact fields cannot transfer a proof to another tuple or owner.
 // Strict legacy callers may bind without a proof, but cannot gain a successor
 // source capability from that unproved binding.
 func (self *runtimeArtifactProof) matches(chain *Chain, artifact AuthenticatedRuntimeArtifact) bool {
+	return self.matchesIdentity(chain, artifact) && self.transport.matches(chain)
+}
+
+// Identity refusal precedes generation expiry, including a forged artifact
+// presented while its old transport also happens to have disconnected.
+func (self *runtimeArtifactProof) matchesIdentity(chain *Chain, artifact AuthenticatedRuntimeArtifact) bool {
 	return self != nil && chain != nil && self.owner == chain.runtimeMetadataArtifactCache() && self.api == chain.API &&
 		self.genesisHash == chain.GenesisHash && self.blockHash == artifact.BlockHash && self.metadata == artifact.Metadata &&
 		self.identity == (RuntimeArtifactIdentity{Version: artifact.Version, CodeHash: artifact.CodeHash, MetadataHash: artifact.MetadataHash}) &&
@@ -40,6 +47,21 @@ func (self *runtimeArtifactProof) matches(chain *Chain, artifact AuthenticatedRu
 func (self *Chain) validateSourceRuntimeCapabilityAt(block types.Hash, mecid *uint8) error {
 	if self == nil || self.Meta == nil || self.Meta.Version != 14 || self.Runtime == nil {
 		return errors.New("crv4: source runtime view is incomplete")
+	}
+	if self.runtimeArtifactProof != nil && !self.runtimeArtifactProof.transport.matches(self) {
+		proof := self.runtimeArtifactProof
+		if proof.owner != self.runtimeMetadataArtifactCache() || proof.api != self.API || proof.genesisHash != self.GenesisHash || proof.metadata != self.Meta ||
+			proof.identity.Version.SpecName != self.Runtime.SpecName || proof.identity.Version.SpecVersion != uint32(self.Runtime.SpecVersion) || proof.identity.Version.TransactionVersion != uint32(self.Runtime.TransactionVersion) {
+			return errors.New("crv4: source runtime identity differs from its retained proof")
+		}
+		return &runtimeTransportObservationError{}
+	}
+	if proof := self.runtimeCompatibilityProof; proof != nil && !proof.transport.matches(self) {
+		if !self.ProvisionalRuntimeCompatibilityEnabled() || proof.owner != self.provisionalRuntime || proof.metadata != self.Meta ||
+			proof.identity.Version.SpecName != self.Runtime.SpecName || proof.identity.Version.SpecVersion != uint32(self.Runtime.SpecVersion) || proof.identity.Version.TransactionVersion != uint32(self.Runtime.TransactionVersion) {
+			return errors.New("crv4: provisional source runtime identity differs from its retained proof")
+		}
+		return &runtimeTransportObservationError{}
 	}
 	if reviewedSourceEncodingVersion(uint32(self.Runtime.SpecVersion), uint32(self.Runtime.TransactionVersion)) || self.CurrentRuntimeCompatibilityProfile() != "" {
 		return nil

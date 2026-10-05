@@ -1,0 +1,139 @@
+{
+  "actual_joined_waits_replayed": 72,
+  "completed_owner_readbacks": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-metadata-v1-user-terminal-readback.json",
+      "sha256": "ec0f43f3029fb7ff14dff198de83f33a9bb8637fc8d3b6e73b24902672b93171"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-user-terminal-readback.json",
+      "sha256": "248101b124f23084aab69626b66749abacc7548bb2c15790737c0e589d8d4eeb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-v3-user-terminal-readback.json",
+      "sha256": "5cd66eb09c29d3a795461a6e278988a6bc183c56e1d89b50b4ca6cb5f7be7743"
+    }
+  ],
+  "execution_limits": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 3900,
+    "TimeoutStopSec": 10
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-sn-core9-normal-v1-job-v3.json",
+    "sha256": "7979dd9cbaabdeb238fb8ff5bdfc15abe8ecb1a7c4972fd874b902a0e9da1a24"
+  },
+  "numeric_class": {
+    "accounting_floor_bytes": 0,
+    "cumulative_growth_bytes": 8589934592,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_entry_bytes": 17179869184,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "healthy_data_floor_bytes": 6307319808,
+    "healthy_memory_floor_bytes": 103079215104,
+    "memory_entry_bytes": 120259084288
+  },
+  "phase_targets": [
+    [
+      "mainnet",
+      "sn",
+      "./mainnet",
+      600
+    ],
+    [
+      "nativefee",
+      "sn",
+      "./nativefee",
+      300
+    ],
+    [
+      "miner",
+      "sn",
+      "./miner",
+      300
+    ],
+    [
+      "onchain",
+      "sn",
+      "./miner/onchain",
+      300
+    ],
+    [
+      "validator",
+      "sn",
+      "./validator",
+      600
+    ],
+    [
+      "evmrpc",
+      "sn",
+      "./evmrpc",
+      300
+    ],
+    [
+      "crv4",
+      "sn",
+      "./crv4",
+      300
+    ],
+    [
+      "core",
+      "connect",
+      ".",
+      600
+    ],
+    [
+      "payoutartifact",
+      "sn",
+      "./payoutartifact",
+      300
+    ]
+  ],
+  "predecessor_exit_counts": {
+    "0": 63,
+    "1": 8,
+    "101": 1
+  },
+  "prospective_forecast": {
+    "compiler_disk_bytes": 4294967296,
+    "compiler_memory_bytes": 4294967296,
+    "held_extra_disk_bytes": 4294967296,
+    "held_extra_memory_bytes": 4294967296,
+    "margin": 2,
+    "scope": "One aggregate serial9 compiler forecast. Retained output/log/cache growth shares one8GiB enforced cutoff. Historical observations support an estimate, not a future upper bound."
+  },
+  "read_only_capacity_observation": {
+    "data_available_bytes": 18239709184,
+    "docker_available_bytes": 301026701312,
+    "fresh_executor_admission_still_required": true,
+    "lease_remaining_seconds": 26869.717637,
+    "memory_available_bytes": 128886697984,
+    "time_ns": 1791180043890183995
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-published-main-sn-core-compiler-v2.py",
+    "sha256": "0d2eb4ef40ab53acbaefe8a391e5148ea18e58fe5dce9b220101c78ce61e4980"
+  },
+  "schema": "published-main-nine-compiler-independent-review-v1",
+  "scope": "Nine normal compilers only on frozen published-main archives; qualified source/resource/wait/image mechanisms retained. Current nestedC files pinned. Ordinary predecessor failures preserved. Reviewer performed no compiler/body/DB/cleanup/launch.",
+  "sealer": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/seal-published-main-sn-core-v3.py",
+    "sha256": "2123cdd8ec5be8b3fdacd5456626e1906fe6a9538f685e9bdcfbacad736960ad"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-compiler-source-closure-v2.json",
+    "sha256": "b1dbdfd30d3744b446f094ed77fb900753f21b440cf0e121c53d4d24dcc89f76"
+  },
+  "source_tuple": {
+    "core": "7ca8e222e3496552146f2d97eb09237401662c99",
+    "server": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+    "sn": "babb0af573f6bdfe95a7db6d8888bbe9327fc39b"
+  },
+  "status": "READY_FOR_ROOT_ADOPTION",
+  "unique_binding_pins_checked": 178,
+  "whole_owner_horizon_seconds": 3910
+}

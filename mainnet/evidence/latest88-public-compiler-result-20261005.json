@@ -1,0 +1,80 @@
+{
+  "controller_failure": "Two first-partial test references access nonexistent VerifiedClosedWorkReports.UsageBytes. Source repair assigned to Astra Max; ordinary compiler failure did not stop remaining packages.",
+  "limits": [
+    "Compile-only: no normal test bodies, race, vet, causal controls or deployment qualified.",
+    "Successful current images remain retained; controller needs its reviewed source successor and recompile."
+  ],
+  "phases": [
+    {
+      "image": {
+        "bytes": 8022640,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest88-core07-serverec3-public-compile-v1-nativefee.test",
+        "sha256": "6eb30b98dc6178208414c89d7ad3625a36badbbb815b1e8ae41cfa85d3a399cd"
+      },
+      "package_id": "nativefee",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1-nativefee.receipt.json",
+        "sha256": "b2234c59ce00a13a62a8a9288c05396f2f39df72df890b9d4ac01b59ab7d4b9a"
+      },
+      "resource_errors": [],
+      "status": "COMPILE_PASS_BODY_PENDING",
+      "tree_joined": true,
+      "unix_exit": 0
+    },
+    {
+      "image": {
+        "bytes": 78725640,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest88-core07-serverec3-public-compile-v1-server-root.test",
+        "sha256": "caf8bff16ed71a6c97912099cb141f6b0d1e9546a5a522564d585bcba248d62f"
+      },
+      "package_id": "server-root",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1-server-root.receipt.json",
+        "sha256": "5484116bcb5a43fe8fe10075b994235128e33d23e95cf186978a7fd34ba46bd8"
+      },
+      "resource_errors": [],
+      "status": "COMPILE_PASS_BODY_PENDING",
+      "tree_joined": true,
+      "unix_exit": 0
+    },
+    {
+      "package_id": "controller",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1-controller.receipt.json",
+        "sha256": "ab0c0a855357ce9e6a5bb19bda4aa352efea822191b06a11b12558a032630e1d"
+      },
+      "resource_errors": [],
+      "status": "FAIL_OR_INCOMPLETE",
+      "tree_joined": true,
+      "unix_exit": 1
+    },
+    {
+      "image": {
+        "bytes": 72659160,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest88-core07-serverec3-public-compile-v1-stnativefees.test",
+        "sha256": "8492638c6e78b1002c95b161047da1c0441bfea2e1dd865f9075b1241fde0c2b"
+      },
+      "package_id": "stnativefees",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1-stnativefees.receipt.json",
+        "sha256": "72ba9b05e72a664f46e61f5521c0eb06d5adbfd70ab997bc0294d96a072d740e"
+      },
+      "resource_errors": [],
+      "status": "COMPILE_PASS_BODY_PENDING",
+      "tree_joined": true,
+      "unix_exit": 0
+    }
+  ],
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1.receipt.json",
+    "sha256": "8fe93671c654edf678762139f581fba21ba35c661ab8fff83e1e15e5decc1301"
+  },
+  "schema": "public-four-compiler-actual-result-v1",
+  "source_tuple": {
+    "core": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+    "server": "ec3feae1cb35d8718dbbf33f5d11d6ab42206e3a",
+    "sn": "88bd7956d401fe6de1f764242e75e6ddf1a3653f"
+  },
+  "status": "COMPILE_BATCH_COLLECTED_FAILURES",
+  "verified_at_utc": "2026-10-05T04:28:19.709194+00:00"
+}

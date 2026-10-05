@@ -97,8 +97,7 @@ func TestMainnetRuntimeObservationRejectsHistoricalRelabelingAndFinalityDrift(t 
 		if method == "chain_getBlockHash" && args[0] == uint64(150) {
 			canonicalReads++
 			if canonicalReads == 3 {
-				*result.(*types.Hash) = types.Hash{5}
-				return nil
+				return setReleaseHistoricalTestResult(result, (types.Hash{5}).Hex())
 			}
 		}
 		return fixture.callContext(ctx, result, method, args...)

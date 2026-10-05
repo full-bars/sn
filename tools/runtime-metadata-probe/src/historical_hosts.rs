@@ -54,6 +54,7 @@ impl Work {
 pub(super) struct Budget {
     pub work: Arc<Work>,
     pub depth: usize,
+    pub read_only: bool,
 }
 sp_externalities::decl_extension! { pub(super) struct HistoricalBudget(Budget); }
 
@@ -68,6 +69,16 @@ fn charge(mut ext: &mut dyn Externalities, bytes: usize) {
 pub(super) fn charge_active(bytes: usize) {
     sp_externalities::with_externalities(|ext| charge(ext, bytes))
         .expect("historical budget context absent");
+}
+
+fn mutable(mut ext: &mut dyn Externalities) {
+    assert!(
+        !ext.extension::<HistoricalBudget>()
+            .expect("historical budget absent")
+            .0
+            .read_only,
+        "historical principal query attempted a state mutation"
+    );
 }
 
 fn key(key: &[u8]) {
@@ -143,6 +154,7 @@ pub trait Storage {
         copy_value(value(*self, result), output, offset)
     }
     fn set(&mut self, item: PassFatPointerAndRead<&[u8]>, bytes: PassFatPointerAndRead<&[u8]>) {
+        mutable(*self);
         key(item);
         assert!(
             bytes.len() <= MAXIMUM_VALUE,
@@ -153,6 +165,7 @@ pub trait Storage {
         self.set_storage(item.to_vec(), bytes.to_vec());
     }
     fn clear(&mut self, item: PassFatPointerAndRead<&[u8]>) {
+        mutable(*self);
         key(item);
         charge(*self, item.len());
         observer::observe(*self, "clear", item, None);
@@ -162,6 +175,7 @@ pub trait Storage {
     // backend traps incomplete iterators that the generic SDK helper would log
     // and treat as partial success. A declared limit is never silently changed.
     fn clear_prefix(&mut self, prefix: PassFatPointerAndRead<&[u8]>) {
+        mutable(*self);
         key(prefix);
         charge(*self, prefix.len());
         observer::observe(*self, "clear_prefix", prefix, None);
@@ -173,6 +187,7 @@ pub trait Storage {
         prefix: PassFatPointerAndRead<&[u8]>,
         limit: PassFatPointerAndDecode<Option<u32>>,
     ) -> AllocateAndReturnByCodec<sp_io::KillStorageResult> {
+        mutable(*self);
         key(prefix);
         charge(*self, prefix.len());
         observer::observe(*self, "clear_prefix", prefix, None);
@@ -199,6 +214,7 @@ pub trait Storage {
         item: PassFatPointerAndRead<&[u8]>,
         bytes: PassFatPointerAndRead<Vec<u8>>,
     ) {
+        mutable(*self);
         key(item);
         assert!(
             bytes.len() <= MAXIMUM_VALUE,
@@ -224,6 +240,7 @@ pub trait Storage {
         self.storage_root(version)
     }
     fn start_transaction(&mut self) {
+        mutable(*self);
         charge(*self, 0);
         let budget = &mut self
             .extension::<HistoricalBudget>()
@@ -235,6 +252,7 @@ pub trait Storage {
         observer::transaction(*self, "start");
     }
     fn rollback_transaction(&mut self) {
+        mutable(*self);
         charge(*self, 0);
         let budget = &mut self
             .extension::<HistoricalBudget>()
@@ -247,6 +265,7 @@ pub trait Storage {
         observer::transaction(*self, "rollback");
     }
     fn commit_transaction(&mut self) {
+        mutable(*self);
         charge(*self, 0);
         let budget = &mut self
             .extension::<HistoricalBudget>()
@@ -292,6 +311,7 @@ pub trait DefaultChildStorage {
         item: PassFatPointerAndRead<&[u8]>,
         bytes: PassFatPointerAndRead<&[u8]>,
     ) {
+        mutable(*self);
         let child = child(owner);
         key(item);
         assert!(
@@ -302,12 +322,14 @@ pub trait DefaultChildStorage {
         self.set_child_storage(&child, item.to_vec(), bytes.to_vec());
     }
     fn clear(&mut self, owner: PassFatPointerAndRead<&[u8]>, item: PassFatPointerAndRead<&[u8]>) {
+        mutable(*self);
         let child = child(owner);
         key(item);
         charge(*self, owner.len() + item.len());
         self.clear_child_storage(&child, item);
     }
     fn storage_kill(&mut self, owner: PassFatPointerAndRead<&[u8]>) {
+        mutable(*self);
         let child = child(owner);
         charge(*self, owner.len());
         let _ = self.kill_child_storage(&child, None, None);
@@ -318,6 +340,7 @@ pub trait DefaultChildStorage {
         owner: PassFatPointerAndRead<&[u8]>,
         limit: PassFatPointerAndDecode<Option<u32>>,
     ) -> bool {
+        mutable(*self);
         let child = child(owner);
         charge(*self, owner.len());
         self.kill_child_storage(&child, limit, None)
@@ -330,6 +353,7 @@ pub trait DefaultChildStorage {
         owner: PassFatPointerAndRead<&[u8]>,
         limit: PassFatPointerAndDecode<Option<u32>>,
     ) -> AllocateAndReturnByCodec<sp_io::KillStorageResult> {
+        mutable(*self);
         let child = child(owner);
         charge(*self, owner.len());
         self.kill_child_storage(&child, limit, None).into()
@@ -339,6 +363,7 @@ pub trait DefaultChildStorage {
         owner: PassFatPointerAndRead<&[u8]>,
         prefix: PassFatPointerAndRead<&[u8]>,
     ) {
+        mutable(*self);
         let child = child(owner);
         key(prefix);
         charge(*self, owner.len() + prefix.len());
@@ -351,6 +376,7 @@ pub trait DefaultChildStorage {
         prefix: PassFatPointerAndRead<&[u8]>,
         limit: PassFatPointerAndDecode<Option<u32>>,
     ) -> AllocateAndReturnByCodec<sp_io::KillStorageResult> {
+        mutable(*self);
         let child = child(owner);
         key(prefix);
         charge(*self, owner.len() + prefix.len());

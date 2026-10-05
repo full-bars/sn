@@ -67,6 +67,14 @@ func init() {
 		}
 	}
 	switch job.RuntimeCodeHex {
+	case "0xdb":
+		_, _ = os.Stderr.WriteString("principal API refusal; timeout and integrity are diagnostic words only\n" + strings.Repeat("x", 4096))
+		os.Exit(7)
+	case "0xdc":
+		_, _ = os.Stderr.WriteString("principal API execution interrupted\n")
+		_, _ = os.Stdout.WriteString("{\"schema\":")
+		time.Sleep(24 * time.Hour)
+		os.Exit(8)
 	case "0xc0", "0xc1", "0xc2", "0xc3", "0xc4":
 		report.HostProfile = "substrate-proof-bounded-hosts-v2"
 		switch job.RuntimeCodeHex {
@@ -133,8 +141,8 @@ func init() {
 	os.Exit(0)
 }
 
-// Real files/processes have no shared mutable fixture state. The binary is
-// read-only; every invocation gets a newly sealed memfd and owned process.
+// Real files/processes have no shared mutable fixture state. Protected selected
+// engines keep their path; ordinary go test images get an owned private copy.
 func historicalReplayTestRequest(t *testing.T, mode string) historicalReplayRequest {
 	t.Helper()
 	root := t.TempDir()
@@ -145,13 +153,8 @@ func historicalReplayTestRequest(t *testing.T, mode string) historicalReplayRequ
 	if err != nil {
 		t.Fatal(err)
 	}
-	file, err := os.Open(engine)
+	engineReference, err := historicalReplayFixtureEngine(engine, root)
 	if err != nil {
-		t.Fatal(err)
-	}
-	hash := sha256.New()
-	_, readErr := io.Copy(hash, file)
-	if err := errors.Join(readErr, file.Close()); err != nil {
 		t.Fatal(err)
 	}
 	job := historicalReplayJob{Schema: historicalReplaySchema, ParentHeaderHex: "0x00", ParentHash: historicalReplayDigest{1}, ChildHeaderHex: "0x00", ChildHash: historicalReplayDigest{2}, RuntimeCodeHex: mode, RuntimeCodeSha256: historicalReplayDigest{3}, RuntimeCodeBlake2b256: historicalReplayDigest{4}, ExecutionStateVersion: 1, ExtrinsicsHex: []string{"0x00"}, ProofNodesHex: []string{"0x00"}}
@@ -163,7 +166,7 @@ func historicalReplayTestRequest(t *testing.T, mode string) historicalReplayRequ
 	if err := os.WriteFile(path, raw, 0600); err != nil {
 		t.Fatal(err)
 	}
-	return historicalReplayRequest{Engine: planFileReference{Path: engine, Sha256: "sha256:" + hex.EncodeToString(hash.Sum(nil))}, Job: planFileReference{Path: path, Sha256: monitorReadDigest(raw)}, Budget: 300 * time.Second}
+	return historicalReplayRequest{Engine: engineReference, Job: planFileReference{Path: path, Sha256: monitorReadDigest(raw)}, Budget: 300 * time.Second}
 }
 
 func TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority(t *testing.T) {

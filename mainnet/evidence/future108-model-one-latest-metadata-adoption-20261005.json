@@ -1,0 +1,26 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 12884901888,
+  "history_count": 0,
+  "job_sha256": "aba0c7f64ad34b7c14fba1f731ed7893a7fb60d6de2dabfc9e814fc90e6af82d",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 1,
+  "runner_sha256": "5441a7a85cf1a3da55017aebd055ba231a50bc29f3ba5bbca8521f65a34d183b",
+  "short_count": 0,
+  "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_METADATA_STAGE",
+  "schema": "root-model-one-metadata-adoption-v1",
+  "adopted_at_ns": 1791159193693620105,
+  "review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest-metadata-concrete-review-20261005.json",
+    "sha256": "f48623a250b638a758fd1002275cb7e38a1b6eb9f43569d0289cf019346f0ae4"
+  },
+  "scope": "Exact latest b037/Core25a/Server0f6a archives and offline Go-list metadata only; no compilation/body. Prior shorts must be actually joined, failed mainnet image initialization remains failed. Retain model unchanged; fresh runner guard/pins required."
+}

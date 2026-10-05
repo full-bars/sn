@@ -4,15 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"math/big"
-	"net"
-	"net/http"
 	"sync"
-	"syscall"
 	"time"
 
-	gethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/urnetwork/connect"
 
 	"github.com/urfoundation/sn/stabi"
@@ -41,8 +36,8 @@ type attemptBoundaryLoad struct {
 	err  error
 }
 
-// Marks only failures returned by the finalized binding rpc read. Callers may
-// retry this provenance after separately proving every cause is transient.
+// Marks failures returned by the binding or its closing finalized authority
+// read. Callers retry only after proving every cause is transient.
 type attemptBindingReadError struct {
 	cause error
 }
@@ -61,79 +56,6 @@ func (self *attemptBindingReadError) Unwrap() error {
 		return nil
 	}
 	return self.cause
-}
-
-// Requires typed binding-read provenance and rejects a joined tree as soon as
-// any branch is cancellation, integrity state, or an unknown failure.
-func retryableAttemptBindingReadError(err error) bool {
-	retryable, bindingRead := classifyAttemptBindingReadRetry(err, false)
-	return retryable && bindingRead
-}
-
-// Walks every wrapper and joined branch while carrying whether the failure
-// originated inside the binding rpc read.
-func classifyAttemptBindingReadRetry(err error, bindingRead bool) (bool, bool) {
-	if err == nil {
-		return false, false
-	}
-	if readErr, ok := err.(*attemptBindingReadError); ok {
-		if readErr.cause == nil {
-			return false, true
-		}
-		return classifyAttemptBindingReadRetry(readErr.cause, true)
-	}
-	if joined, ok := err.(interface{ Unwrap() []error }); ok {
-		causes := joined.Unwrap()
-		if len(causes) == 0 {
-			return false, bindingRead
-		}
-		seenBindingRead := bindingRead
-		for _, cause := range causes {
-			retryable, causeBindingRead := classifyAttemptBindingReadRetry(cause, bindingRead)
-			seenBindingRead = seenBindingRead || causeBindingRead
-			if !retryable {
-				return false, seenBindingRead
-			}
-		}
-		return true, seenBindingRead
-	}
-	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		cause := wrapped.Unwrap()
-		if cause == nil {
-			return false, bindingRead
-		}
-		return classifyAttemptBindingReadRetry(cause, bindingRead)
-	}
-	if !bindingRead {
-		return false, false
-	}
-	if err == context.DeadlineExceeded || err == io.EOF || err == io.ErrUnexpectedEOF {
-		return true, true
-	}
-	if err == context.Canceled {
-		return false, true
-	}
-	var netErr net.Error
-	if errors.As(err, &netErr) && (netErr.Timeout() || netErr.Temporary()) {
-		return true, true
-	}
-	var httpErr gethrpc.HTTPError
-	if errors.As(err, &httpErr) {
-		switch httpErr.StatusCode {
-		case http.StatusRequestTimeout, http.StatusTooEarly, http.StatusTooManyRequests,
-			http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
-			return true, true
-		}
-	}
-	for _, transportErr := range []error{
-		syscall.ECONNABORTED, syscall.ECONNREFUSED, syscall.ECONNRESET,
-		syscall.EHOSTUNREACH, syscall.ENETUNREACH, syscall.EPIPE, syscall.ETIMEDOUT,
-	} {
-		if err == transportErr {
-			return true, true
-		}
-	}
-	return false, true
 }
 
 type cachedAttemptBoundaryResolver struct {
@@ -347,6 +269,9 @@ func (self *cachedAttemptBoundaryResolver) prepareLatest(load *attemptBoundaryLo
 func (self *cachedAttemptBoundaryResolver) binding(ctx context.Context, block *attemptBoundaryBlock, clientID connect.Id) (AttemptBinding, error) {
 	key := attemptBindingLoadKey(block.boundary.EVMBlock, clientID)
 	for {
+		if err := ctx.Err(); err != nil {
+			return AttemptBinding{}, err
+		}
 		self.stateLock.Lock()
 		if binding, ok := block.bindings[clientID]; ok {
 			self.stateLock.Unlock()
@@ -364,6 +289,7 @@ func (self *cachedAttemptBoundaryResolver) binding(ctx context.Context, block *a
 		self.stateLock.Unlock()
 
 		chainBinding, err := self.rpc.Binding(ctx, block.boundary, clientID)
+		err = errors.Join(err, ctx.Err())
 		if err != nil {
 			err = &attemptBindingReadError{cause: err}
 		}
@@ -425,6 +351,14 @@ func (self *cachedAttemptBoundaryResolver) Resolve(ctx context.Context, pinned *
 		}
 		bindings[index] = binding
 	}
+	// Immutable census and binding bytes remain reusable, but a cached success
+	// cannot establish this invocation's canonical finalized authority.
+	if err := self.rpc.Validate(ctx, boundary); err != nil {
+		return AttemptBoundary{}, nil, &attemptBindingReadError{cause: err}
+	}
+	if err := ctx.Err(); err != nil {
+		return AttemptBoundary{}, nil, err
+	}
 	return boundary, bindings, nil
 }
 
@@ -434,6 +368,11 @@ type chainAttemptBoundaryRPC struct {
 }
 
 func (self *chainAttemptBoundaryRPC) Snapshot(ctx context.Context) (AttemptBoundary, error) {
+	if ctx == nil || self == nil || self.chain == nil {
+		return AttemptBoundary{}, errors.New("attempt boundary snapshot reader is unavailable")
+	}
+	ctx, cancel := self.chain.chainReadOperationContext(ctx)
+	defer cancel()
 	block, hash, err := self.chain.FinalizedBlockContext(ctx)
 	if err != nil {
 		return AttemptBoundary{}, fmt.Errorf("attempt finalized EVM head: %w", err)
@@ -449,6 +388,11 @@ func (self *chainAttemptBoundaryRPC) Snapshot(ctx context.Context) (AttemptBound
 }
 
 func (self *chainAttemptBoundaryRPC) Validate(ctx context.Context, boundary AttemptBoundary) error {
+	if ctx == nil || self == nil || self.chain == nil {
+		return errors.New("attempt boundary authority reader is unavailable")
+	}
+	ctx, cancel := self.chain.chainReadOperationContext(ctx)
+	defer cancel()
 	expectedHash, hashErr := canonicalAttemptHex32("attempt EVM boundary hash", boundary.EVMBlockHash, false)
 	if hashErr != nil {
 		return hashErr
@@ -467,7 +411,33 @@ func (self *chainAttemptBoundaryRPC) Validate(ctx context.Context, boundary Atte
 	if epoch == nil || !epoch.IsUint64() || epoch.Uint64() != boundary.SettlementEpoch {
 		return errors.New("attempt pinned EVM settlement epoch differs")
 	}
-	return nil
+	// Canonical membership alone cannot prove finality. Close after the state
+	// read, retaining the original pin even when the finalized head advances.
+	finalizedBlock, finalizedHash, err := self.chain.FinalizedBlockContext(ctx)
+	if err != nil {
+		return err
+	}
+	if finalizedBlock < boundary.EVMBlock {
+		return errors.New("attempt pinned EVM boundary is no longer finalized")
+	}
+	canonicalFinalized, err := self.chain.BlockHashContext(ctx, finalizedBlock)
+	if err != nil {
+		return err
+	}
+	if canonicalFinalized != finalizedHash {
+		return errors.New("attempt finalized EVM witness is no longer canonical")
+	}
+	canonicalBoundary := canonicalFinalized
+	if finalizedBlock != boundary.EVMBlock {
+		canonicalBoundary, err = self.chain.BlockHashContext(ctx, boundary.EVMBlock)
+		if err != nil {
+			return err
+		}
+	}
+	if canonicalBoundary != expectedHash {
+		return errors.New("attempt pinned EVM block hash changed during authority read")
+	}
+	return ctx.Err()
 }
 
 func (self *chainAttemptBoundaryRPC) Hotkeys(ctx context.Context, boundary AttemptBoundary) (map[[32]byte]uint16, error) {

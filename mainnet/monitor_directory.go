@@ -30,7 +30,8 @@ type monitorDirectory struct {
 // Pending ownership/capacity is retryable only while identity remains admitted.
 func monitorStoragePending(err error) bool {
 	var cleanup *monitorAdmissionCleanupError
-	return !errors.As(err, &cleanup) && !errors.Is(err, durablevolume.ErrIdentity) && (errors.Is(err, durablevolume.ErrBusy) || errors.Is(err, durablevolume.ErrUnavailable) || errors.Is(err, durablehead.ErrUncertain))
+	var refused *monitorAdmissionRefusalError
+	return !errors.As(err, &cleanup) && !errors.As(err, &refused) && !errors.Is(err, durablevolume.ErrIdentity) && (errors.Is(err, durablevolume.ErrBusy) || errors.Is(err, durablevolume.ErrUnavailable) || errors.Is(err, durablehead.ErrUncertain))
 }
 
 // A missing physical member is fresh only when no retained authority says it

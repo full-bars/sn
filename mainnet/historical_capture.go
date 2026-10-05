@@ -35,6 +35,8 @@ type historicalCaptureInput struct {
 	RuntimeCodeBlake2b256 historicalReplayDigest              `json:"runtime_code_blake2b_256"`
 	ExecutionStateVersion uint8                               `json:"execution_state_version"`
 	ObservationProfile    *historicalReplayObservationProfile `json:"observation_profile,omitempty"`
+	PrincipalQueries      []historicalPrincipalQuery          `json:"principal_queries,omitempty"`
+	PrincipalEffects      bool                                `json:"principal_effects,omitempty"`
 }
 
 type historicalCaptureReport struct {
@@ -53,6 +55,7 @@ type historicalCaptureRequest struct {
 	Input  planFileReference
 	Nodes  string
 	Budget time.Duration
+	Feed   *historicalNativeFeed
 }
 
 func (self historicalCaptureInput) validate() error {
@@ -73,18 +76,20 @@ func (self historicalCaptureInput) validate() error {
 		}
 		total += len(raw)
 	}
-	return self.ObservationProfile.validate(historicalReplayJob{RuntimeCodeSha256: self.RuntimeCodeSha256})
+	return errors.Join(self.ObservationProfile.validate(historicalReplayJob{RuntimeCodeSha256: self.RuntimeCodeSha256}), validateHistoricalPrincipalQueries(self.PrincipalQueries), validateHistoricalPrincipalEffectsRequest(self.PrincipalEffects, self.PrincipalQueries))
 }
 
 func validateHistoricalCaptureReport(input historicalCaptureInput, raw []byte, report historicalCaptureReport) error {
-	if report.Schema != historicalCaptureSchema || report.RequestSha256 != historicalReplayDigest(sha256.Sum256(raw)) || report.SdkRevision != historicalReplaySdk || report.CaptureMethod != "pinned-sdk-execution-proof-plus-strict-replay" || report.BackendReads == 0 || report.BackendReads > 65536 || report.BackendReadBytes == 0 || report.BackendReadBytes > 64*1024*1024 || len(report.JobJSON) == 0 || len(report.JobJSON) > historicalReplayJobLimit {
+	maximumJob, maximumNodes, maximumProofBytes := historicalJobLimits(input.ObservationProfile)
+	_, maximumReads, maximumReadBytes := historicalCaptureLimits(input.ObservationProfile)
+	if report.Schema != historicalCaptureSchema || report.RequestSha256 != historicalReplayDigest(sha256.Sum256(raw)) || report.SdkRevision != historicalReplaySdk || report.CaptureMethod != "pinned-sdk-execution-proof-plus-strict-replay" || report.BackendReads == 0 || report.BackendReads > maximumReads || report.BackendReadBytes == 0 || report.BackendReadBytes > maximumReadBytes || len(report.JobJSON) == 0 || len(report.JobJSON) > maximumJob {
 		return errors.New("historical capture report identity or resource bound differs")
 	}
 	var job historicalReplayJob
 	if err := decodePlanJson([]byte(report.JobJSON), &job); err != nil {
 		return err
 	}
-	if job.Schema != historicalReplaySchema || job.ParentHeaderHex != input.ParentHeaderHex || job.ParentHash != input.ParentHash || job.ChildHeaderHex != input.ChildHeaderHex || job.ChildHash != input.ChildHash || !slices.Equal(job.ExtrinsicsHex, input.ExtrinsicsHex) || job.RuntimeCodeSha256 != input.RuntimeCodeSha256 || job.RuntimeCodeBlake2b256 != input.RuntimeCodeBlake2b256 || job.ExecutionStateVersion != input.ExecutionStateVersion || !reflect.DeepEqual(job.ObservationProfile, input.ObservationProfile) || len(job.ProofNodesHex) == 0 || len(job.ProofNodesHex) > 8192 {
+	if job.Schema != historicalReplaySchema || job.ParentHeaderHex != input.ParentHeaderHex || job.ParentHash != input.ParentHash || job.ChildHeaderHex != input.ChildHeaderHex || job.ChildHash != input.ChildHash || !slices.Equal(job.ExtrinsicsHex, input.ExtrinsicsHex) || job.RuntimeCodeSha256 != input.RuntimeCodeSha256 || job.RuntimeCodeBlake2b256 != input.RuntimeCodeBlake2b256 || job.ExecutionStateVersion != input.ExecutionStateVersion || !reflect.DeepEqual(job.ObservationProfile, input.ObservationProfile) || !reflect.DeepEqual(job.PrincipalQueries, input.PrincipalQueries) || job.PrincipalEffects != input.PrincipalEffects || len(job.ProofNodesHex) == 0 || len(job.ProofNodesHex) > maximumNodes {
 		return errors.New("historical capture job differs from original request")
 	}
 	code, err := historicalReplayHex(job.RuntimeCodeHex, 8*1024*1024)
@@ -93,7 +98,7 @@ func validateHistoricalCaptureReport(input historicalCaptureInput, raw []byte, r
 	}
 	var proofBytes int
 	for _, value := range job.ProofNodesHex {
-		node, err := historicalReplayHex(value, min(8*1024*1024, 24*1024*1024-proofBytes))
+		node, err := historicalReplayHex(value, min(historicalProofNodeLimit(job.ObservationProfile), maximumProofBytes-proofBytes))
 		if err != nil || len(node) == 0 {
 			return errors.Join(errors.New("historical capture proof node shape or bound differs"), err)
 		}
@@ -128,6 +133,11 @@ func runHistoricalCapture(ctx context.Context, request historicalCaptureRequest,
 	if err := input.validate(); err != nil {
 		return nil, err
 	}
+	if request.Feed != nil {
+		if err := request.Feed.validate(input, raw, request.Nodes); err != nil {
+			return nil, err
+		}
+	}
 	fd, err := unix.Open(request.Nodes, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, err
@@ -139,7 +149,10 @@ func runHistoricalCapture(ctx context.Context, request historicalCaptureRequest,
 			result = nil
 		}
 	}()
-	output, err := runHistoricalProofWorker(owner, cancel, historicalProofWorkerRequest{Engine: request.Engine, Input: raw, Directory: filepath.Dir(request.Input.Path), MaximumReport: historicalCaptureReportLimit, Nodes: nodes}, hooks)
+	maximumReport, _, _ := historicalCaptureLimits(input.ObservationProfile)
+	// The matching Rust profile caps the complete serialized capture, including
+	// both principal boundaries. Replay-only additions do not enlarge this cap.
+	output, err := runHistoricalProofWorker(owner, cancel, historicalProofWorkerRequest{Engine: request.Engine, Input: raw, Directory: filepath.Dir(request.Input.Path), MaximumReport: maximumReport, Nodes: nodes, Feed: request.Feed}, hooks)
 	if err != nil {
 		return nil, err
 	}

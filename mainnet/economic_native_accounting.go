@@ -80,6 +80,11 @@ func summarizeNativeExecution(observation economicEmissionObservation) (*nativeE
 		if outcome == nil || !outcome.AmountsAuthenticated || outcome.ContentHash != outcome.hash() || outcome.Boundary != block.Boundary || block.Boundary.Number != window.Through.Number+1 || block.Header.ParentHash != window.Through.Hash {
 			return nil, errors.New("native window omitted or repeated an authenticated execution")
 		}
+		if outcome.RecipientEffects != nil {
+			if err := outcome.RecipientEffects.validate(*outcome); err != nil {
+				return nil, err
+			}
+		}
 		for _, item := range []struct {
 			target *string
 			value  string

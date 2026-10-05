@@ -357,19 +357,23 @@ func TestProductionRuntimeClosingCanonicalCheckPreservesPriorView(t *testing.T) 
 	fixture := newProductionRuntimeTestFixture(t, false)
 	client := fixture.rpc.native.API.Client.(*validatorRuntimeIdentityTestClient)
 	original := client.callContext
-	canonicalReads := 0
+	finalityReads, canonicalReads := 0, 0
+	faulted := false
 	client.callContext = func(ctx context.Context, result any, method string, args ...any) error {
+		if method == "chain_getFinalizedHead" {
+			finalityReads++
+		}
 		if method == "chain_getBlockHash" && args[0] == uint64(150) {
 			canonicalReads++
-			if canonicalReads == 4 {
-				*result.(*types.Hash) = types.Hash{0x98}
-				return nil
+			if finalityReads == 3 {
+				faulted = true
+				return setReleaseHistoricalTestResult(result, (types.Hash{0x98}).Hex())
 			}
 		}
 		return original(ctx, result, method, args...)
 	}
 	oldMeta, oldRuntime := fixture.rpc.native.Meta, fixture.rpc.native.Runtime
-	if err := authenticatePinnedNativeRuntimeAtContext(t.Context(), fixture.rpc.native, fixture.cfg, mainnetRuntimeTestBlock(150)); err == nil || canonicalReads != 4 {
+	if err := authenticatePinnedNativeRuntimeAtContext(t.Context(), fixture.rpc.native, fixture.cfg, mainnetRuntimeTestBlock(150)); err == nil || !faulted {
 		t.Fatalf("closing canonical change acquired authority: %v reads=%d", err, canonicalReads)
 	}
 	if fixture.rpc.native.Meta != oldMeta || fixture.rpc.native.Runtime != oldRuntime {

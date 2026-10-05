@@ -1,0 +1,20 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 67108864,
+  "data_minimum_available_bytes": 10737418240,
+  "history_count": 0,
+  "job_sha256": "19226d0c8c057634daa4f6fb94928a277aed916c0c0631ffc7527f095be5dbb1",
+  "margin": 2,
+  "memory_max_bytes": 268435456,
+  "memory_minimum_available_bytes": 113816633344,
+  "memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "runner_sha256": "41ebd58876595b451dabcb67cab09d601a985b1c285445a6699cafaa65b19e99",
+  "short_count": 1,
+  "status": "ADOPTED_BOUNDED_ORIGINAL_HYDRATION_EVIDENCE_RECOVERY",
+  "adopted_at": "2026-10-05T07:20:10.078516+00:00",
+  "root_review": "All322bindings andASTverified, inspectedcompactchecker. Recoveroriginal8exit0joinedcommands usingrawoutputpins/counts andoriginalresourcerecords. Preservefailedownerexit1/missingfinalsample; no network/reexecution/sourceedits oractualdefaultqualification. WaitindependentsourceACKbeforelaunch."
+}

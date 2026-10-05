@@ -59,10 +59,16 @@ type AuthenticatedRuntimeArtifact struct {
 // A block-view callback cannot manufacture or transfer caller-approved
 // authentication by filling exported artifact fields or swapping metadata.
 func ValidateRuntimeArtifactOwnerContext(ctx context.Context, chain *Chain, artifact AuthenticatedRuntimeArtifact) error {
-	if ctx == nil || chain == nil || chain.API == nil || chain.API.Client == nil || chain.ProvisionalRuntimeCompatibilityEnabled() || artifact.BlockHash == (types.Hash{}) || artifact.CompatibilityProfile != "" || !artifact.authenticationProof.matches(chain, artifact) {
+	if ctx == nil || chain == nil || chain.API == nil || chain.API.Client == nil || chain.ProvisionalRuntimeCompatibilityEnabled() || artifact.BlockHash == (types.Hash{}) || artifact.CompatibilityProfile != "" || !artifact.authenticationProof.matchesIdentity(chain, artifact) {
 		return errors.New("runtime view needs this owner's exact authenticated block artifact")
 	}
-	return ctx.Err()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if !artifact.authenticationProof.transport.matches(chain) {
+		return &runtimeTransportObservationError{}
+	}
+	return nil
 }
 
 // Coordinates one in-flight or successfully published immutable metadata load.
@@ -450,6 +456,10 @@ func AuthenticateRuntimeArtifactAtContext(ctx context.Context, chain *Chain, blo
 	if len(allowedIdentities) > maximumRuntimeMetadataArtifactsPerChain {
 		return result, fmt.Errorf("runtime artifact allowlist has %d identities, maximum %d", len(allowedIdentities), maximumRuntimeMetadataArtifactsPerChain)
 	}
+	transport, err := observeRuntimeTransport(chain)
+	if err != nil {
+		return result, err
+	}
 	canonicalRuntimeArtifactIdentities := make([]RuntimeArtifactIdentity, len(allowedIdentities))
 	allowedVersionIdentityBools := make(map[RuntimeVersionIdentity]bool, len(allowedIdentities))
 	for index, identity := range allowedIdentities {
@@ -477,7 +487,14 @@ func AuthenticateRuntimeArtifactAtContext(ctx context.Context, chain *Chain, blo
 	}
 	if selectedIdentity == nil || (version.SpecVersion > ReviewedRuntimeSpecVersion && chain.ProvisionalRuntimeCompatibilityEnabled()) {
 		if chain.ProvisionalRuntimeCompatibilityEnabled() {
-			return authenticateProvisionalRuntimeArtifact(ctx, chain, blockHash, version, canonicalRuntimeArtifactIdentities)
+			result, err := authenticateProvisionalRuntimeArtifact(ctx, chain, blockHash, version, canonicalRuntimeArtifactIdentities)
+			if err != nil {
+				return result, err
+			}
+			if !transport.matches(chain) {
+				return AuthenticatedRuntimeArtifact{BlockHash: blockHash}, &runtimeTransportObservationError{}
+			}
+			return result, nil
 		}
 		return result, fmt.Errorf("runtime at %s has unreviewed identity %s/%d/%d/%d", blockHash.Hex(), version.SpecName, version.SpecVersion, version.TransactionVersion, version.StateVersion)
 	}
@@ -505,9 +522,12 @@ func AuthenticateRuntimeArtifactAtContext(ctx context.Context, chain *Chain, blo
 	if err := ctx.Err(); err != nil {
 		return result, err
 	}
+	if !transport.matches(chain) {
+		return AuthenticatedRuntimeArtifact{BlockHash: blockHash}, &runtimeTransportObservationError{}
+	}
 	result.authenticationProof = &runtimeArtifactProof{
 		owner: chain.runtimeMetadataArtifactCache(), api: chain.API, blockHash: blockHash, genesisHash: chain.GenesisHash,
-		identity: *selectedIdentity, metadata: metadata,
+		identity: *selectedIdentity, metadata: metadata, transport: transport,
 	}
 	return result, nil
 }

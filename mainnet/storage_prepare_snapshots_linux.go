@@ -55,6 +55,8 @@ func storagePreparationSnapshotSpec(ownerLocal bool, owner durablevolume.Prepara
 		maximum = 64 * 1024
 	case "mainnet-monitor-checkpoint":
 		maximum = maxRpcReplyBytes
+	case economicConservationStorageKind:
+		maximum = economicConservationStorageMaximum
 	}
 	if maximum == 0 {
 		return durablehead.Spec{}, scope, errors.New("storage preparation owner kind is not in the implemented fixed registry")

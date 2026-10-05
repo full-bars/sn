@@ -312,8 +312,11 @@ func (self *evmOwnedChain) locate(ctx context.Context, head chainIdentity, recor
 			return result, err
 		}
 		number, err := header.authenticate(hash)
-		if err != nil || number != result.ScanNumber+1 || header.ParentHash != result.ScanHash {
-			return result, errors.Join(errors.New("EVM recovery native parent link differs"), err)
+		if err != nil {
+			return result, err
+		}
+		if number != result.ScanNumber+1 || header.ParentHash != result.ScanHash {
+			return result, errors.New("EVM recovery native parent link differs")
 		}
 		post, err := finalizedFrontierPostLog(header)
 		if err != nil {
@@ -361,8 +364,11 @@ func (self *evmOwnedChain) authenticatePositionWithRuntimeHistory(ctx context.Co
 	artifacts := []crv4.RuntimeArtifactIdentity{{Version: profile.RuntimeVersion, CodeHash: profile.RuntimeCodeHash, MetadataHash: profile.RuntimeMetadataHash}}
 	if profiles != nil {
 		parent, err := self.client.readIdentityAt(ctx, mapping.NativeHeader.ParentHash)
-		if err != nil || parent.FinalizedNumber+1 != identity.FinalizedNumber || parent.GenesisHash != identity.GenesisHash || parent.EvmChainId != identity.EvmChainId || parent.NativeChain != identity.NativeChain {
-			return chainIdentity{}, errors.Join(errors.New("successor historical runtime parent identity differs"), err)
+		if err != nil {
+			return chainIdentity{}, err
+		}
+		if parent.FinalizedNumber+1 != identity.FinalizedNumber || parent.GenesisHash != identity.GenesisHash || parent.EvmChainId != identity.EvmChainId || parent.NativeChain != identity.NativeChain {
+			return chainIdentity{}, errors.New("successor historical runtime parent identity differs")
 		}
 		artifacts, err = bootstrapSuccessorRuntimeArtifactPair(profiles, identity.runtimeVersion, parent.runtimeVersion)
 		if err != nil {

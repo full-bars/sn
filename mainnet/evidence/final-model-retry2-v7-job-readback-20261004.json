@@ -1,0 +1,83 @@
+{
+  "schema": "model-retry2-v7-job-readback-v1",
+  "status": "REVIEW_CLEAR_FRESH_RUNNER_ADMISSION_REQUIRED",
+  "readback_utc": "2026-10-04T22:30:17Z",
+  "sealed_time_ns": 1791153063101066585,
+  "owner_job": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owner-job-retry2-v7.json",
+    "sha256": "856011d8a4c79a4555d9a3937e7ba1a1627a620425572e013dfc6dcd751c4bd5"
+  },
+  "body_job": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-body-job-retry2-v7.json",
+    "sha256": "083b42f415e78134df80a847791f6f870bf6b5eefd62e5ec88413e4bb745f003"
+  },
+  "frozen_source_review_input": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-model-owner-review-v7.json",
+    "sha256": "2ccf9170a224bc22e497790d15199ba777ce13cfc83272a50cb2dd1324a10e60"
+  },
+  "independent_tooling_result": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/server-model-owner-lifecycle-independent-v7.receipt.json",
+    "sha256": "3a1405f5ea76a58aef661886ac42cd48993be9288b9dfb6d2b48cb3b2a2db126"
+  },
+  "binding_readback": {
+    "owner_bindings": 24,
+    "body_bindings": 22,
+    "all_sha256_match": true,
+    "atomic_cid_service_sha256": "0c1246b71c0e0860ce5f89158224e09309deee6c81b80cef6909006b4b5e8bef",
+    "new_lifecycle_helper_pinned_in_both": true
+  },
+  "fresh_namespaces_at_readback": {
+    "fixture": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/gate-final-model-retry2",
+    "evidence_prefix": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/db-retry2",
+    "outer_label": "final-c60-model-owned-db-retry2",
+    "body_label": "final-c60-full-normal-model-retry2",
+    "all_absent_before_runner_start": true
+  },
+  "live_history_identity_readback": [
+    {
+      "pid": 1970944,
+      "start": "101917367",
+      "state": "R"
+    },
+    {
+      "pid": 1970938,
+      "start": "101917366",
+      "state": "S"
+    },
+    {
+      "pid": 2156114,
+      "start": "102393445",
+      "state": "S"
+    },
+    {
+      "pid": 2156109,
+      "start": "102393445",
+      "state": "S"
+    }
+  ],
+  "canonical_lease": {
+    "pid": 2132303,
+    "start": "102349612",
+    "state": "S",
+    "device": 2081,
+    "inode": 16941991,
+    "exact_kernel_flock_confirmed": true
+  },
+  "unchanged": {
+    "original_data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "accounting_floor_bytes": 0,
+    "healthy_active_floor_bytes": 6307319808,
+    "margin": 2,
+    "model_data_launch_minimum_bytes": 25769803776,
+    "model_memory_launch_minimum_bytes": 128849018880,
+    "docker_root_launch_minimum_bytes": 300128382976,
+    "full_model_roots": 1703,
+    "image_source_graph_and_allowed_skips_unchanged_from_v6": true
+  },
+  "preserved_failed_attempt": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db.terminal.json",
+    "sha256": "606509fe111951c02d7ea7ec96e5bdd3486fac499711cee321b61878c57f2194"
+  },
+  "qualification_scope": "Only tooling regressions and job custody were reviewed here. Original attempt never entered a model body. This agent launched no model body or compiler; current fresh admission remains the runner responsibility."
+}

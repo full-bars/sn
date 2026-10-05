@@ -114,7 +114,7 @@ func (self *ChainClient) readReleaseProviderBindingsV2Context(ctx context.Contex
 	coordinator, address := self.coordinator, self.contractAddr
 	// The caller retains lifecycle ownership; this private synchronous borrow
 	// prevents a header-read callback from replacing the later RPC transport.
-	chain := &ChainClient{client: self.client, coordinator: coordinator, contractAddr: address, release: true}
+	chain := &ChainClient{client: self.client, coordinator: coordinator, contractAddr: address, release: true, readRetryHooks: self.readRetryHooks}
 	for index, id := range providerIDs {
 		if id == ([16]byte{}) || index > 0 && bytes.Compare(providerIDs[index-1][:], id[:]) >= 0 {
 			return nil, errors.New("decision provider binding census is not canonical")
@@ -275,7 +275,7 @@ func (self *ChainClient) ownReleaseDecisionChainV2Client(domain protocol.Validat
 	if self == nil || self.client == nil || self.coordinator == nil || self.chainId == nil || !self.release || self.chainId.Cmp(new(big.Int).SetUint64(domain.ChainID)) != 0 || self.contractAddr != common.Address(domain.Coordinator) {
 		return nil, errors.New("decision chain owner differs from its independent deployment domain")
 	}
-	return &ChainClient{client: self.client, coordinator: self.coordinator, chainId: new(big.Int).Set(self.chainId), contractAddr: self.contractAddr, release: true}, nil
+	return &ChainClient{client: self.client, coordinator: self.coordinator, chainId: new(big.Int).Set(self.chainId), contractAddr: self.contractAddr, release: true, readRetryHooks: self.readRetryHooks}, nil
 }
 
 // Both the EVM-only and native-plus-EVM entrypoints finish the same owned

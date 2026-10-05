@@ -412,7 +412,7 @@ func (self *monitorOperatorWorker) save() error {
 func readMonitorOperator(ctx context.Context, policy monitorOperatorPolicy, hooks monitorServiceReadHooks) (*stmonitor.Snapshot, string) {
 	raw, err := readMonitorServiceFile(ctx, policy.DatabaseFile, 8192, true, hooks)
 	if err != nil {
-		return nil, "unavailable"
+		return nil, monitorOperatorFileReadCode(err)
 	}
 	if monitorReadDigest(raw) != policy.DatabaseSha256 {
 		return nil, "identity"
@@ -426,6 +426,19 @@ func readMonitorOperator(ctx context.Context, policy monitorOperatorPolicy, hook
 		return nil, "unavailable"
 	}
 	return value, "observed"
+}
+
+// The shared reader also uses changed when its metadata recheck could not
+// complete. Only the nil-cause variant establishes an observed generation
+// mismatch. A separate joined close failure cannot weaken that observation.
+func monitorOperatorFileReadCode(err error) string {
+	var classified *monitorServiceReadError
+	if errors.As(err, &classified) {
+		if classified.code == "invalid" || classified.code == "changed" && classified.cause == nil {
+			return classified.code
+		}
+	}
+	return "unavailable"
 }
 
 // Fixed labels and explicit unknown capabilities prevent an empty DB census

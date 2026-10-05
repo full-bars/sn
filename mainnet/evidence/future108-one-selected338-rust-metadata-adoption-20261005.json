@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 15032385536,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "8bbf619eeded66e2c90c0222c8a6ac71857510da3a6cc63f5e20bd582e91c43b",
+  "margin": 2,
+  "memory_minimum_available_bytes": 120259084288,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "runner_sha256": "b4117f311f4ba0aff33501677e9e4ef80bd5afc35f6df2a4ebfab99220c31587",
+  "status": "ADOPTED_ONE_SELECTED338_RUST_METADATA_AFTER_MODEL30",
+  "adopted_at": "2026-10-05T03:44:13.510495+00:00",
+  "review_sha256": "31c38b48614caa4b4b4aa220a313325652a66b66a99249d6007b92fd62e11c8c",
+  "scope": "One exact selected33837-file Rust crate reused in place and one locked/offline Cargo dependency metadata command, no build/clean/test/export. Exact current capture/historical-proof/libtest target metadata only; old8ad5 images remain historical."
+}

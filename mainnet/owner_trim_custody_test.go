@@ -3,10 +3,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"errors"
 	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -176,40 +179,117 @@ func TestOwnerTrimExclusiveCustodyRejectsFilesystemChanges(t *testing.T) {
 	}
 }
 
-// The old prefix-only marker can resume its untouched first reservation. No
-// signed journal, consumed attempt or completed claim is reset by this path.
+// Stop actual initial claiming before completion rather than rolling back an
+// acknowledged head. Repeated resume preserves the original reserved bytes.
 func TestOwnerTrimIncompleteExclusiveClaimRemainsRecoverable(t *testing.T) {
-	for _, retained := range []bool{false, true} {
+	for _, boundary := range []string{"marker-synced", "progress-synced"} {
 		preparation, f := ownerTrimPreparedTestFixture(t)
-		store, err := openOwnerTrimStore(f.storage.Context, preparation.preparation, f.config, f.key, true)
+		path := f.config.Action.StatePath
+		originalMarker, err := os.Stat(path + ".lock")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := store.close(); err != nil {
-			t.Fatal(err)
+		interrupted := errors.New("synthetic trim initial claim interruption")
+		store, err := openOwnerTrimStoreWithClaimHook(f.storage.Context, preparation.preparation, f.config, f.key, true, func(observed string) error {
+			if observed == boundary {
+				return interrupted
+			}
+			return nil
+		})
+		if store != nil || !errors.Is(err, interrupted) {
+			if store != nil {
+				store.close()
+			}
+			t.Fatal("claim did not stop at its actual durable boundary", boundary, err)
 		}
 		marker := rootObjectHash(f.config) + "\n" + f.key + "\n"
-		if err := os.WriteFile(f.config.Action.StatePath+".lock", []byte(marker), 0600); err != nil {
-			t.Fatal(err)
+		raw, err := os.ReadFile(path + ".lock")
+		if err != nil || !bytes.Equal(raw, []byte(marker)) {
+			t.Fatal("interrupted trim acquired a completion marker", boundary, err)
 		}
-		if !retained {
-			if err := os.Remove(f.config.Action.StatePath); err != nil {
-				t.Fatal(err)
+		_, err = os.Stat(path)
+		if boundary == "marker-synced" && !errors.Is(err, os.ErrNotExist) || boundary == "progress-synced" && err != nil {
+			t.Fatal("interruption changed original trim journal presence", boundary, err)
+		}
+		store, err = openOwnerTrimStoreWithClaimHook(f.storage.Context, preparation.preparation, f.config, f.key, false, func(observed string) error {
+			if observed != "progress-synced" {
+				t.Fatal("trim resume rewrote its original marker", observed)
 			}
+			return interrupted
+		})
+		if store != nil || !errors.Is(err, interrupted) {
+			if store != nil {
+				store.close()
+			}
+			t.Fatal("unfinished trim could not retain its original row", boundary, err)
+		}
+		original, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
 		}
 		store, err = openOwnerTrimStore(f.storage.Context, preparation.preparation, f.config, f.key, false)
 		if err != nil {
-			t.Fatal("intact original incomplete claim could not resume", retained, err)
+			t.Fatal("intact original incomplete claim could not resume", boundary, err)
 		}
 		record, err := store.load()
 		if err != nil || record.Phase != "reserved" || record.Signature != "" || record.Broadcasts != 0 {
-			t.Fatal("incomplete claim invented native progress", retained, record.Phase, err)
+			t.Fatal("incomplete claim invented native progress", boundary, record.Phase, err)
 		}
 		if err := store.close(); err != nil {
 			t.Fatal(err)
 		}
 		if _, err := store.load(); err == nil {
 			t.Fatal("closed native owner retained custody")
+		}
+		raw, err = os.ReadFile(path + ".lock")
+		current, readErr := os.ReadFile(path)
+		retainedMarker, statErr := os.Stat(path + ".lock")
+		if err != nil || readErr != nil || statErr != nil || !bytes.Equal(raw, []byte(marker+bootstrapRootClaimComplete)) || !bytes.Equal(current, original) || !os.SameFile(originalMarker, retainedMarker) {
+			t.Fatal("trim completion replaced original bytes or physical marker", boundary, err, readErr, statErr)
+		}
+	}
+}
+
+// A removed committed row or retained unknown signing intent never acquires
+// initial-reservation authority from a truncated application marker.
+func TestOwnerTrimCompletedClaimCannotBecomeUnfinished(t *testing.T) {
+	for _, progress := range []string{"missing", "signing"} {
+		preparation, f := ownerTrimPreparedTestFixture(t)
+		store, err := openOwnerTrimStore(f.storage.Context, preparation.preparation, f.config, f.key, true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if progress == "signing" {
+			record, err := store.load()
+			if err != nil {
+				t.Fatal(err)
+			}
+			record.Phase, record.ContentHash = "signing", ""
+			record.ContentHash = rootObjectHash(record)
+			if err := store.save(record); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := store.close(); err != nil {
+			t.Fatal(err)
+		}
+		path := f.config.Action.StatePath
+		if progress == "missing" {
+			if err := os.Remove(path); err != nil {
+				t.Fatal(err)
+			}
+		}
+		marker := rootObjectHash(f.config) + "\n" + f.key + "\n"
+		if err := os.WriteFile(path+".lock", []byte(marker), 0600); err != nil {
+			t.Fatal(err)
+		}
+		before := mainnetNamespaceTest(t, filepath.Dir(path))
+		resumed, err := openOwnerTrimStore(f.storage.Context, preparation.preparation, f.config, f.key, false)
+		if resumed != nil {
+			resumed.close()
+		}
+		if err == nil || progress == "missing" && !errors.Is(err, durablevolume.ErrIdentity) || !reflect.DeepEqual(before, mainnetNamespaceTest(t, filepath.Dir(path))) {
+			t.Fatal("completed trim custody was recreated or downgraded", progress, err)
 		}
 	}
 }

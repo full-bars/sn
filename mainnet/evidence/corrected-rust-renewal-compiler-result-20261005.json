@@ -1,0 +1,31 @@
+{
+  "schema": "corrected-rust-renewal-compiler-result-v1",
+  "checked_at": "2026-10-05T06:49:44.768398+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-compile-v1.receipt.json",
+    "sha256": "bd67cd2f1dd0d0654ba82668e5a76c3111966bd538e3035e9c1c4bf021a39708"
+  },
+  "user_terminal_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-compile-v1-user-terminal-readback.json",
+    "sha256": "5c0e6aad352b79cbb8ddf8624859b08444e930666ede6f7a8afa44433cedc925"
+  },
+  "image": {
+    "bytes": 64973032,
+    "ctime_ns": 1791182903706433364,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120128642,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791182903706433364,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/main-b13-renewal-normal-libtest-v1",
+    "sha256": "f31f0851298ee600208ab41faff8bfc6ffce9d55735233f5767fd07520a9f712",
+    "type": 32768,
+    "uid": 1000
+  },
+  "source_crate_tree": "f9bab5ea206f7eed09bb3d8f9bb0f1845d3d7aee",
+  "actual_exit": 0,
+  "tree_joined": true,
+  "resource_errors": [],
+  "limit": "Corrected libtest compilation only. Targeted renewal/export5 and omission control remain pending. Prior37PASS/1FAIL retained; no full113 Rust pass or production engine rebuild inferred."
+}

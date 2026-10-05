@@ -1,0 +1,75 @@
+{
+  "author_validation": "Actual source declarations and expected source digests pinned; completed exporter/engine/prior batch waits replayed. AST only; no author body/list/compile.",
+  "classification": "Actual selected image LIST must contain exactly these3roots; all3 top-level RUN/PASS, zeroFAIL/SKIP and packagePASS required. No failfast; rawall-root events and durable waited outcome retained on failure.",
+  "closed_model30_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected1ea-native-model30-closed-terminal-proof-v1.json",
+    "sha256": "819d8191629441e62f6e450e24a1d01cf0c5a649d4020d679fe0a0602efb9c92"
+  },
+  "engines_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-engines-compile-v1.receipt.json",
+    "sha256": "af411d030d1080993b1e093b4ac85141085274664888ba4323af091937908dae"
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 1200,
+    "TimeoutStopSec": 90,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-selected338-native-carry3-normal-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-selected338-native-carry3-normal-v1-20261005.service"
+  },
+  "forecast": "Prospective1GiB disk/memory short class doubled, with conservative4GiB held reserves:10GiB disk/106GiB memory launch; hard2GiB/Swap0 and2GiB cumulative data-growth stop. Original96GiB memory/6.307GiB data/Docker healthy floors and baseline/cap unchanged. Mainnet128.8MB plus capture53.7MB/proof51.6MB and tiny fixed input exports are already protected; no new images retained.",
+  "independent_asset_source_readback": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/native-engine-selected338-carry-readback.json",
+    "sha256": "6c5b7a1b7e96cdc93022a7dd51d56ca4e7240f04d8d5adf386c1b82479c294e2"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-job-v1.json",
+    "sha256": "274ce6f92f7cc5a88a21864fecb6350de2770dd03e47c3889fac019e17252c2e"
+  },
+  "principal_export_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-principal-exporter-v1.receipt.json",
+    "sha256": "91f8276b7adf77fd58da7636e221ad6e04b7f48e3f2e1c655ec14db64fcc91fb"
+  },
+  "prior_public_compiler_batch": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1.receipt.json",
+    "sha256": "8fe93671c654edf678762139f581fba21ba35c661ab8fff83e1e15e5decc1301"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "274ce6f92f7cc5a88a21864fecb6350de2770dd03e47c3889fac019e17252c2e",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 0,
+    "runner_sha256": "1df362bc63e539abd49cc5b7d229a33603e3fa035730d684d40b14b31e397e1a",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_ONE_SELECTED338_NATIVE_CARRY3_SHORT_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-selected338-native-carry3-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-selected338-native-carry3-v1.py",
+    "sha256": "1df362bc63e539abd49cc5b7d229a33603e3fa035730d684d40b14b31e397e1a"
+  },
+  "schema": "selected338-native-carry3-review-v1",
+  "scope": "Three exact selected338 normal mainnet public carry/funding roots using actual current capture/historical-proof ELFs and four original principal exports. No later88 qualification, new compile, race, vet, control, DB cohort or Rust full-suite claim.",
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-selection-v1.json",
+    "sha256": "00d9f5a8c8f3742278f8cba050d3230189602fc154304a35b8a291f1f3ee3854"
+  },
+  "source_tuple": {
+    "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+    "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+    "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+  },
+  "status": "AUTHOR_SEALED_READY_FOR_ROOT_ADOPTION"
+}

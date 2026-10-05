@@ -1,0 +1,66 @@
+{
+  "author_static_validation": {
+    "path": "/mnt/data/sn-testnet/sol-canonical-lease-successor-108-20261005/author-static-validation-v2.json",
+    "sha256": "e926952e91c8e9e27676b68bd6ae78ae964a99666454742118740770c76766c2"
+  },
+  "findings": {
+    "acquisition_nonblocking_only": true,
+    "ast_only_no_import_or_execution": true,
+    "bound_files_verified": 8,
+    "held_and_closed_FD_receipts_separate_and_durable": true,
+    "lock_open_no_create_truncate_unlink": true,
+    "new_actual_expiry_from_own_UNIT_start_not_rebased_old_expiry": true,
+    "no_current_job_retargeting": true,
+    "original_baseline_cap_margin_and_healthy_floors_preserved": true,
+    "original_lock_inode_dev_preserved": [
+      2081,
+      16941991
+    ],
+    "predecessor_present_refuses": true,
+    "qualified_original_waits_required": true,
+    "same_UID_USER_cgroup_and_actual_invocation_required": true,
+    "two_quiescent_censuses_before_and_after_lock": true
+  },
+  "handoff_plan": {
+    "path": "/mnt/data/sn-testnet/sol-canonical-lease-successor-108-20261005/handoff-plan-v2.json",
+    "sha256": "93511b8647e6122bca56baaa234c5f754420d0d6896fb8a9175bcdab82bfabcd"
+  },
+  "hard_limits": {
+    "KillMode": "control-group",
+    "MemoryMax": 536870912,
+    "MemorySwapMax": 0,
+    "Restart": "no",
+    "RuntimeMaxSec": 28800,
+    "TimeoutStopSec": 10,
+    "Type": "exec",
+    "UMask": "0077"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-canonical-lease-successor-108-20261005/successor-job-v2.json",
+    "sha256": "7c7acb46e1986fbc2754c99bda23b646ff63286367bdc58d2b2eb5b996ca1878"
+  },
+  "qualification_limits": "Source/metadata review only; no programimport, lockacquisition, systemdoperation, signal, compiler, testbody orDockeraction. No currentlease extension, baseline reset or futureworkloadadmission granted.",
+  "required_activation_conditions": [
+    "All seven actualcompilerphase waits and exactcomposite terminal bound; all lateradmittedNative49/Server3/body/DB/control/adaptertest waits mustalso becomplete andexplicitlylisted in Rootadoption. OrdinaryFAIL is retained and doesnotbecomePASS.",
+    "Oldholder exactgeneration absent and oldUSERunitinactive/failedPID0; originalFLOCK mustbeavailable. Anyretirement/stop is a separateRoot-authorizedaction; thisreviewauthorizesneitherstopnorlaunch.",
+    "Emptycompiler/body/qualificationunit/Docker census; anyparkedexceptiononlyexactoriginalstoppedchildlessgeneration asjobdeclares. Permission/unobservable failures refusehandoff.",
+    "Rootadoption mustreplace everyplanplaceholderwithactualsealedpins andbindthisreview. Sourceplan isnotanexecutableadoption.",
+    "AfteractualsuccessorHELD, Root independentlyrechecksPID/start/USERinvocation/boot/exactlockinode/kernelFLOCK and actualexpiry; futurework mustbindnewgenerationinnewjobs. Protectedoldsource/images/receiptsarenotrewritten."
+  ],
+  "resource_basis": {
+    "disk_bytes": 1048576,
+    "margin": 2,
+    "memory_bytes": 268435456,
+    "minimum_available_data_bytes": 6309416960,
+    "minimum_available_memory_bytes": 103616086016,
+    "scope": "Holder and replay of bounded retained wait logs only; no compiler/body qualification authority."
+  },
+  "root_adoption_path": "/mnt/data/sn-testnet/sol-canonical-lease-successor-108-20261005/root-adoption-v2.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-canonical-lease-successor-108-20261005/hold-successor-v2.py",
+    "sha256": "61f211bfc8d377a9bbf577235771ab9636a2665aab28a960a562c61bda3a2448"
+  },
+  "schema": "canonical-successor-v2-independent-source-review-v1",
+  "status": "SOURCE_REVIEW_ACK_ACTIVATION_NOT_AUTHORIZED",
+  "time_utc": "2026-10-05T05:04:48.589056+00:00"
+}

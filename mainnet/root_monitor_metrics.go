@@ -35,6 +35,7 @@ func projectRootMonitorObservation(value *rootPreviewEnvelope) *rootMonitorObser
 // being written. Ambiguous writes cannot acknowledge themselves in their bytes.
 type rootMonitorPublication struct {
 	store         *monitorMetricsStore
+	admit         func() (*monitorMetricsStore, error)
 	outcome       string
 	lastSuccessAt time.Time
 	disabled      bool
@@ -43,7 +44,21 @@ type rootMonitorPublication struct {
 // A changed path disables this optional publisher. Ordinary I/O failures retry
 // at the next sample; old output ages independently in the existing collector.
 func (self *rootMonitorPublication) publish(event rootMonitorEvent, state *monitorState, role string, sampledAt time.Time) {
-	if self.store == nil || self.disabled {
+	if self.disabled {
+		return
+	}
+	if self.store == nil && self.admit != nil {
+		var err error
+		self.store, err = self.admit()
+		if err != nil {
+			self.outcome = "retrying"
+			if !rootMonitorStartupPending(err) {
+				self.outcome, self.disabled = "ownership-error", true
+			}
+			return
+		}
+	}
+	if self.store == nil {
 		return
 	}
 	raw := renderRootMonitorMetrics(event, state, role, self.outcome, self.lastSuccessAt)

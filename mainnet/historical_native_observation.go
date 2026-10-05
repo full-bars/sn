@@ -12,12 +12,45 @@ const historicalNativeProfileSchema = "urnetwork-original-wasm-native-observatio
 const historicalNativeCaptureLimit = 256 * 1024
 const historicalNativeReportLimit = 64 * 1024 * 1024
 
+// Separate native capacity keeps the receipt profile unchanged. Three nodes
+// per four-field UID leaf (branch/leaf/hashed value), doubled, admits the full
+// 4096-provider census while all byte, call and time dimensions remain finite.
+const historicalNativeProofNodes = 2 * (3*(4*4096+4) + 1)
+const historicalNativeProofBytes = 64 * 1024 * 1024
+const historicalNativeProofNodeBytes = 16 * 1024 * 1024
+const historicalNativeJobLimit = 192 * 1024 * 1024
+const historicalNativeCaptureReportLimit = 272 * 1024 * 1024
+const historicalNativeBackendReads = 4 * 65536
+const historicalNativeBackendBytes = 256 * 1024 * 1024
+
+func historicalNativeProfile(profile *historicalReplayObservationProfile) bool {
+	return profile != nil && profile.Schema == historicalNativeProfileSchema
+}
+func historicalProofNodeLimit(profile *historicalReplayObservationProfile) int {
+	if historicalNativeProfile(profile) {
+		return historicalNativeProofNodeBytes
+	}
+	return 8 * 1024 * 1024
+}
+func historicalJobLimits(profile *historicalReplayObservationProfile) (int, int, int) {
+	if historicalNativeProfile(profile) {
+		return historicalNativeJobLimit, historicalNativeProofNodes, historicalNativeProofBytes
+	}
+	return historicalReplayJobLimit, 8192, 24 * 1024 * 1024
+}
+func historicalCaptureLimits(profile *historicalReplayObservationProfile) (int, uint64, uint64) {
+	if historicalNativeProfile(profile) {
+		return historicalNativeCaptureReportLimit, historicalNativeBackendReads, historicalNativeBackendBytes
+	}
+	return historicalCaptureReportLimit, 65536, 64 * 1024 * 1024
+}
+
 func historicalNativePointerValid(global *string, offsets []uint32) bool {
 	return len(offsets) <= 4 && (global == nil || len(*global) > 0 && len(*global) <= 64)
 }
 
 func historicalNativePurpose(value string) bool {
-	return value == "native-drain" || value == "native-epoch" || value == "native-emission" || value == "native-miner-credit" || value == "native-owner-recycle"
+	return value == "native-fee-exempt" || value == "native-fee-refund-zero" || value == "native-drain" || value == "native-epoch" || value == "native-emission" || value == "native-miner-credit" || value == "native-owner-recycle" || historicalPrincipalEffectPurpose(value) || historicalYumaPurpose(value)
 }
 
 func validateHistoricalNativeCaptures(rule historicalReplayHookRule) error {

@@ -127,6 +127,14 @@ func (self *fleetMainnetRuntimeAuthority) artifactIdentity() crv4.RuntimeArtifac
 // header and canonical height around the exact runtime read. A connection
 // carrying testnet compatibility is inadmissible in production.
 func (self *fleetMainnetRuntimeAuthority) authenticateAt(ctx context.Context, chain *crv4.Chain, block types.Hash) (crv4.AuthenticatedRuntimeArtifact, error) {
+	return crv4.ReadRuntimeObservationContext(ctx, chain, func(ctx context.Context) (crv4.AuthenticatedRuntimeArtifact, error) {
+		return self.authenticateAtAttempt(ctx, chain, block)
+	})
+}
+
+// A replacement transport must repeat fresh network identity as well as the
+// artifact; only one complete original-block attempt may leave this boundary.
+func (self *fleetMainnetRuntimeAuthority) authenticateAtAttempt(ctx context.Context, chain *crv4.Chain, block types.Hash) (crv4.AuthenticatedRuntimeArtifact, error) {
 	if ctx == nil {
 		return crv4.AuthenticatedRuntimeArtifact{}, errors.New("fleet runtime context is absent")
 	}
@@ -171,7 +179,7 @@ func (self *fleetMainnetRuntimeAuthority) authenticateAt(ctx context.Context, ch
 	if err := checkCanonical(); err != nil {
 		return crv4.AuthenticatedRuntimeArtifact{}, err
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, chain, block, self.artifactIdentities()...)
+	artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, chain, block, self.artifactIdentities()...)
 	if err != nil {
 		return artifact, err
 	}
@@ -212,11 +220,21 @@ func (self *fleetMainnetRuntimeAuthority) finalizedView(ctx context.Context, cha
 // Native status does not reinterpret a current runtime through cached release
 // metadata, even when the requested commitment has the expected hash.
 func (self *fleetMainnetRuntimeAuthority) commitmentFinalized(ctx context.Context, chain *crv4.Chain, netuid uint16, hotkey [32]byte) (*crv4.FinalizedCommitment, error) {
-	view, block, err := self.finalizedFor(ctx, chain, crv4.FleetCommitmentRead)
-	if err != nil {
-		return nil, err
-	}
-	return view.FleetCommitmentAtContext(ctx, netuid, hotkey, block)
+	var block types.Hash
+	return crv4.ReadRuntimeObservationContext(ctx, chain, func(ctx context.Context) (*crv4.FinalizedCommitment, error) {
+		if block == (types.Hash{}) {
+			selected, err := crv4.FinalizedHeadContext(ctx, chain)
+			if err != nil {
+				return nil, err
+			}
+			block = selected
+		}
+		view, err := self.viewFor(ctx, chain, block, crv4.FleetCommitmentRead)
+		if err != nil {
+			return nil, err
+		}
+		return view.FleetCommitmentAtContext(ctx, netuid, hotkey, block)
+	})
 }
 
 // Receipt runtime authentication precedes all commitment storage decoding.
@@ -224,19 +242,21 @@ func (self *fleetMainnetRuntimeAuthority) commitmentWrite(ctx context.Context, c
 	if receipt == nil || receipt.BlockHash == (types.Hash{}) || receipt.BlockNumber == 0 {
 		return nil, errors.New("fleet finalized write receipt is incomplete")
 	}
-	view, err := self.viewFor(ctx, chain, receipt.BlockHash, crv4.FleetCommitmentRead)
-	if err != nil {
-		return nil, err
-	}
-	observed, err := view.FleetCommitmentAtContext(ctx, netuid, hotkey, receipt.BlockHash)
-	if err != nil {
-		return nil, err
-	}
-	if err := crv4.ValidateFleetCommitmentWrite(expected, receipt.BlockNumber, observed); err != nil {
-		return nil, err
-	}
-	observed.ExtrinsicHash = receipt.ExtrinsicHash
-	return observed, nil
+	return crv4.ReadRuntimeObservationContext(ctx, chain, func(ctx context.Context) (*crv4.FinalizedCommitment, error) {
+		view, err := self.viewFor(ctx, chain, receipt.BlockHash, crv4.FleetCommitmentRead)
+		if err != nil {
+			return nil, err
+		}
+		observed, err := view.FleetCommitmentAtContext(ctx, netuid, hotkey, receipt.BlockHash)
+		if err != nil {
+			return nil, err
+		}
+		if err := crv4.ValidateFleetCommitmentWrite(expected, receipt.BlockNumber, observed); err != nil {
+			return nil, err
+		}
+		observed.ExtrinsicHash = receipt.ExtrinsicHash
+		return observed, nil
+	})
 }
 
 // Publication uses authenticated signing inputs and rechecks before sending.

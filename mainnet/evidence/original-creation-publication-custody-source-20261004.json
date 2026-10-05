@@ -1,0 +1,366 @@
+{
+  "schema": "urnetwork-source-review-v1",
+  "date_utc": "2026-10-04",
+  "status": "source-frozen-not-compiled-or-executed",
+  "owner": "astra_recovery_owner_review",
+  "core": {
+    "path": "/mnt/data/sn-testnet/mainnet-sdk-creation-custody-20261004/connect",
+    "head": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "parent": "0b4e95ce742fd799835211d73edd517f2e242d8d",
+    "commits": [
+      "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c"
+    ],
+    "changed_files": [
+      {
+        "path": "durablevolume/inventory_attributes_linux.go",
+        "git_blob": "1eadc148232ac2227be317685111f96b9600bbeb",
+        "sha256": "ca73a358e839fd64b9cd43ac76f4255891fae61401369725b54d36671262e12e"
+      },
+      {
+        "path": "durablevolume/inventory_creation_publications_test.go",
+        "git_blob": "b72c009fd76f2d398a6037f347efb1d9851a14ff",
+        "sha256": "ea28ec45c35f5929c430a4c5c66595b2d2b09bc480176e832cccb3f89a1f30fc"
+      },
+      {
+        "path": "transfer_contract_creation_custody.go",
+        "git_blob": "f24fa2b2b5e2eafcb31256c47fde84c9f65879cc",
+        "sha256": "6cfcd5e33a58394a6862ee64156a1314e226fd2206f9506ce80951a8cd694b78"
+      },
+      {
+        "path": "transfer_contract_creation_custody_test.go",
+        "git_blob": "2d67d02c97320a80ec57ba59a28797cdc141e5c2",
+        "sha256": "0b875145e14bc8c58f795f960d889152e798be63d91cf19b570ae55035651eb6"
+      },
+      {
+        "path": "transfer_contract_creation_original.go",
+        "git_blob": "a093939af6e5afeaeea311cd99eb4624d32af244",
+        "sha256": "2ced74b25f507a3575e5ec0bd531a76d0eb398f245f362edd05f5cae81bbf1b3"
+      },
+      {
+        "path": "transfer_contract_creation_original_test.go",
+        "git_blob": "3f3f0a24baf893cf6d65025b91c817bc50bc616f",
+        "sha256": "57eab282a63599422f15dd3888b2c337de50e63c5758417ab51b0d046871e8e5"
+      },
+      {
+        "path": "transfer_contract_creation_store.go",
+        "git_blob": "c6783509fb3b7521348fac812d66846bca749ec4",
+        "sha256": "dc839a66c5f3e9d7e32961fa4f8162eeb4cad33d931774f3b56984f1b335cb02"
+      },
+      {
+        "path": "transfer_contract_creation_store_other.go",
+        "git_blob": "5f4bcff6c03479778b36cd4a1821136c6214ef91",
+        "sha256": "9701d06a02fe6110f2e02bbad30b1dbf9146930451d7a1f083cbeeeb2a41b065"
+      },
+      {
+        "path": "transfer_contract_creation_store_unix.go",
+        "git_blob": "563cecd7b60f1c8987c7ed28587e35816f599e09",
+        "sha256": "ab96cf80dea892c32a3b9c021458e5e73da0c64036091786eb86bcd4268ba070"
+      },
+      {
+        "path": "transfer_contract_manager.go",
+        "git_blob": "6297b69a15f3394757f76447b9fe146911e1e21f",
+        "sha256": "649b3f0bc7edc10f24394b3ce53a352a3dd24006a56a2173a423a370956f3dde"
+      }
+    ]
+  },
+  "sn": {
+    "path": "/mnt/data/sn-testnet/mainnet-recovery-owner-review-20261004/sn",
+    "head": "a108123601693bcee953e2e5f323ee6a8a1089d3",
+    "parent": "49459ace954ea4284a1e1831c8148e6fe715df7c",
+    "commits": [
+      "50158d7fecc0d2b1ac2dc48fe06b86288b63537f",
+      "a108123601693bcee953e2e5f323ee6a8a1089d3"
+    ],
+    "changed_files": [
+      {
+        "path": "mainnet/storage_prepare_creation_linux.go",
+        "git_blob": "5cdc346d1219bca1adf60a4b8c86d89fad64233a",
+        "sha256": "899547f664ded7f79b4e293d5ce757a72069f696569ae7f5e0887c4bd7c44168"
+      },
+      {
+        "path": "mainnet/storage_prepare_creation_test.go",
+        "git_blob": "fda76009d59d9d7b50dafa3745c118128a564272",
+        "sha256": "fd34467be01ba3ad15b7d08f1bd61d9f4279a0890d0e0b938d68e606eb19b48e"
+      },
+      {
+        "path": "mainnet/storage_prepare_original_files_linux.go",
+        "git_blob": "7ba813772682330dd65062c9c9296fc6ad631897",
+        "sha256": "94725be48a8d69dd990e6659be5abae4996f95034bdd8d29434abac450e37b62"
+      },
+      {
+        "path": "mainnet/storage_prepare_owners_linux.go",
+        "git_blob": "0f4f9818e345a5a6fbb551a1af60e6ee8e77c425",
+        "sha256": "37b77ef2435969b39b46280dac036caeecd19ada8cbb9726943ccc5002f92751"
+      },
+      {
+        "path": "mainnet/storage_prepare_publications_linux.go",
+        "git_blob": "ac280f362d523a70578f4d6a782416bbad03c70a",
+        "sha256": "9725bc2e5c37fb9c8b3995e00c52c30a14d8a56a7e7713acbfbee8de93ce9c00"
+      },
+      {
+        "path": "mainnet/storage_prepare_publications_test.go",
+        "git_blob": "b5b37181f5d090fae48806795680275b048108e6",
+        "sha256": "2b85bdc38338b87b950cdfb95d3dade64687bec7cbd6051d44bc5756eca04754"
+      },
+      {
+        "path": "mainnet/storage_prepare_restore_linux.go",
+        "git_blob": "9b88ba5a15198456fb12c83e92959a79ce0f281f",
+        "sha256": "f5eec714c9b27b537116a14c10941a41dee4cbc13a0b5d628c367bbd5df05684"
+      },
+      {
+        "path": "mainnet/storage_prepare_sdk_work_linux.go",
+        "git_blob": "4179040672ad0ee36deba7f41dbf1fb956533930",
+        "sha256": "2acec943348fb1dd448d8e66db01e3609633e46b522b98629de9501a68c7b9b8"
+      },
+      {
+        "path": "validator/provider_attempt_publication_namespace.go",
+        "git_blob": "f36857f3d361459b60e889feaee4c6a323ef57a8",
+        "sha256": "8d9fe5baf0f32741b7602f2ff206fb9362a8e3f5de15235a673309d749f952d3"
+      },
+      {
+        "path": "validator/provider_attempt_publication_namespace_linux.go",
+        "git_blob": "49604b88724c34b9aeb06c9c07a4d05f30d729cb",
+        "sha256": "30ec3ca1c0537400adfaa7ecc96420b3116543c16d8698adf5e7ce63cf7db259"
+      },
+      {
+        "path": "validator/provider_attempt_publication_namespace_other.go",
+        "git_blob": "b567e33fdc288d9c279e6d7a953fa1e4b86c31bc",
+        "sha256": "d1739d6b436eb01632953ba476b2437d3c3458d262124776e869f527dc294056"
+      }
+    ]
+  },
+  "dependencies": {
+    "prior_sdk_custody_handoff": "/mnt/data/sn-testnet/mainnet-parallel-20261004/sdk-outbox-custody/handoff.json",
+    "miner_original_contract_profile_and_actual_constructor": "12a89d9d6dc41417914e5d73882348c8542942b8",
+    "miner_source_path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/miner-original-contract-launch/sn",
+    "integration_original_window_verifier_and_runtime_publisher": "bfe9325859701f7ad4b9595c662a5e60db7f1157",
+    "integration_source_path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-attempt-publication/sn",
+    "integration_depends_on_namespace_api": "50158d7fecc0d2b1ac2dc48fe06b86288b63537f"
+  },
+  "complete_owner_profiles": [
+    {
+      "kind": "sdk-original-contract-store",
+      "input_schema": "urnetwork-original-contract-preparation-v1",
+      "inputs": [
+        "capture_profile.path",
+        "capture_profile.sha256",
+        "slot"
+      ],
+      "scope": "daemon",
+      "relative_path": ".",
+      "exclusive_root": true,
+      "logical_root": "Exact original miner profile Directory",
+      "independent_authority": "Shared Miner decoder verifies exact original hash. Explicit slot selects original domain, client, provider public key and nonzero durable SourceGeneration; retained leaves never select scope. SourceGeneration is namespace custody, not actual SDK manager Generation.",
+      "root_attribute": {
+        "name": "user.urnetwork.original-contracts.v1",
+        "maximum_bytes": 4096,
+        "schema": "urnetwork-original-contract-custody-v1"
+      },
+      "members": [
+        {
+          "path": ".creation.lock",
+          "mode": "0600",
+          "bytes": 0,
+          "meaning": "Original precreated exclusive lease inode"
+        },
+        {
+          "path": "request-<64 lowercase hex sha256>.json",
+          "mode": "0400",
+          "maximum_bytes": 131072,
+          "meaning": "Exact originally signed before-SendControl request frame"
+        },
+        {
+          "path": "admission-<64 lowercase hex sha256>.json",
+          "mode": "0400",
+          "maximum_bytes": 131072,
+          "meaning": "Exact signed callback admission with separate retained original request closure"
+        }
+      ],
+      "maximum_original_leaves": 16384,
+      "maximum_original_bytes": 134217728,
+      "fresh_birth": "Only accepted empty offline preparation creates the empty lease and publishes Core pure checkpoint with no-replace xattr authority. Runtime Open never creates a root, lease or birth marker.",
+      "restore": "All files/attributes are accounted for. The original physical marker is checked against independently approved scope at plan time. Every copied original signature and separate request/admission closure is checked before publishing a marker that changes only directory device/inode and lease inode. Signed SDK Generation and logical SourceGeneration remain unchanged.",
+      "coverage_limit": "Individual original creation records do not certify a complete network population or an empty extender set. Multiple actual SDK generations under the fixed approved key are retained; key rotation requires separate original authority."
+    },
+    {
+      "kind": "validator-provider-attempt-publications",
+      "input_schema": "urnetwork-provider-attempt-publication-preparation-v1",
+      "inputs": [
+        "preparation_profile.path",
+        "preparation_profile.sha256"
+      ],
+      "scope": "daemon",
+      "relative_path": ".",
+      "exclusive_root": true,
+      "logical_root": "Exactly StateDir/provider-attempt-publications",
+      "independent_authority": "Canonical protected ProviderAttemptPublicationPreparation file contains complete ordered operator roster, original RequestPreparation identities/births/allowances, exact RequestReceiptScopes and finite original publication limits. No retained cut supplies identity or allowance.",
+      "root_attribute": {
+        "name": "user.urnetwork.validator.publications.v1",
+        "maximum_bytes": 4096,
+        "schema": "urnetwork-provider-attempt-publication-custody-v1"
+      },
+      "members": [
+        {
+          "path": "epoch-%020d-noid-%020d.json",
+          "mode": "0600",
+          "maximum_bytes": "profile.MaxWindowBytes",
+          "meaning": "Exact canonical signed original request window with exactly one approved request-local closure per original request"
+        },
+        {
+          "path": ".compact-input-<32 lowercase hex nonce>",
+          "mode": "0600",
+          "maximum_bytes": "profile.MaxWindowBytes",
+          "meaning": "All original interrupted writer bytes, including empty/partial bytes, preserved inert and never promoted to a published cut"
+        }
+      ],
+      "whole_namespace_bounds": [
+        "profile.MaxHistoryBytes",
+        "profile.MaxFiles"
+      ],
+      "fresh_birth": "Only accepted empty offline preparation publishes the pure namespace attribute. Actual namespace Open/Check are read-only and require original prepared custody before runtime creator admission.",
+      "restore": "Complete original census and profile-bound birth remain retained. Public windows replay by approved NoID from independent original request birth through consecutive original epochs/blocks, exact prior frontier/hash, full signatures and exact original closure membership. Only physical directory device/inode change.",
+      "crash_hardlinks": "Generic export/archive rules continue to refuse hardlink aliases. Integration owns narrow exact final-plus-temp reconciliation under the actual prepared namespace lease; this adapter never drops a temp or relaxes a generic link rule.",
+      "coverage_limit": "Empty authentic birth and zero current publications do not claim completed-window evidence or grant restart. Changing current capacity/profile requires explicit independent original-profile migration/adoption; this schema never silently changes original allowances."
+    }
+  ],
+  "new_core_roots": [
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_custody_test.go",
+      "name": "TestOriginalContractStoreReadbackRetainsNamedInodeAndLinks"
+    },
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_custody_test.go",
+      "name": "TestOriginalContractStoreFailedReadbackKeepsCauseAndSameOwner"
+    },
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_custody_test.go",
+      "name": "TestOriginalContractStorePublicationCannotAcknowledgeReplacedInode"
+    },
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_custody_test.go",
+      "name": "TestOriginalContractStorePreparedBirthAndIndependentHistoricalScope"
+    },
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_custody_test.go",
+      "name": "TestOriginalContractStorePortableRestoreKeepsCompleteOriginalClosure"
+    },
+    {
+      "package": "./durablevolume",
+      "file": "durablevolume/inventory_creation_publications_test.go",
+      "name": "TestInventoryCreationAndProviderPublicationBirthSchemasAreBounded"
+    }
+  ],
+  "new_sn_roots": [
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_creation_test.go",
+      "name": "TestStoragePreparationCreationFreshAndEmptyRestoreKeepApprovedBirth"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_creation_test.go",
+      "name": "TestStoragePreparationCreationRestoreKeepsActualOriginalsAcrossLifecycles"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_creation_test.go",
+      "name": "TestStoragePreparationCreationRestoreRejectsForeignApprovedBirthBeforeCopy"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_creation_test.go",
+      "name": "TestStoragePreparationCreationRestoreRefusesMissingRequestClosure"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_publications_test.go",
+      "name": "TestStoragePreparationPublicationFreshAndEmptyRestoreAdmitActualNamespace"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_publications_test.go",
+      "name": "TestStoragePreparationPublicationRestoreKeepsActualWindowsClosuresAndCrashFiles"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_publications_test.go",
+      "name": "TestStoragePreparationPublicationRestoreRefusesMissingOriginalClose"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_publications_test.go",
+      "name": "TestStoragePreparationPublicationRestoreRefusesMissingOriginalWindow"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_publications_test.go",
+      "name": "TestStoragePreparationPublicationRestoreRejectsChangedApprovedScopeBeforeCopy"
+    },
+    {
+      "package": "./mainnet",
+      "file": "mainnet/storage_prepare_publications_test.go",
+      "name": "TestStoragePreparationPublicationGuardKeepsFailedObservationCauseAndOwner"
+    }
+  ],
+  "retained_core_original_lifecycle_roots": [
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_original_test.go",
+      "name": "TestOriginalContractCreationActualOwnerRetainsBeforeSendAndPublication"
+    },
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_original_test.go",
+      "name": "TestOriginalContractCreationDoesNotRecreateDeletedRequestAtResponse"
+    },
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_original_test.go",
+      "name": "TestOriginalContractCreationDifferentReturnedPartyStaysUnproved"
+    },
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_original_test.go",
+      "name": "TestOriginalContractCreationStoreRefusesPartialOriginalAndSymlink"
+    },
+    {
+      "package": ".",
+      "file": "transfer_contract_creation_original_test.go",
+      "name": "TestOriginalContractCreationCustodyCannotPolluteWholeWorkOutbox"
+    }
+  ],
+  "core_original_test_fixture_change": "Original 5 lifecycle roots use explicit synthetic first-birth preparation and unchanged actual request/callback ordering; no runtime auto-enrollment remains.",
+  "public_test_boundary": "Real public storage-prepare plan/apply/export/restore; real SDK CreateContract before-send and callback originals plus cold second lifecycle; real separate original request journal Append/SealWindow/CloseRequests; real copied files and original xattrs; actual namespace read-only guard; no Server/chain/replica qualification claimed.",
+  "negative_cases": [
+    "unprepared creation birth",
+    "changed named inode, hardlink and size after actual read",
+    "EIO/cancellation before physical comparison with same-owner retry",
+    "changed created inode before acknowledgement",
+    "independently different namespace SourceGeneration",
+    "missing separate original request closure",
+    "missing original request-local close",
+    "missing historical first published window",
+    "independently changed receipt scope",
+    "actual failed/closed borrowed descriptor without false identity inference",
+    "actual missing retained publication root marker"
+  ],
+  "omission_controls": {
+    "manifest": "/mnt/data/sn-testnet/mainnet-parallel-20261004/original-creation-publication-custody/controls.json",
+    "count": 10,
+    "state": "patches authored and git apply --check passed only"
+  },
+  "source_checks": [
+    "gofmt",
+    "git diff --check",
+    "independent exact dependency/source inspection",
+    "git apply --check for 10 omission controls"
+  ],
+  "qualification": false,
+  "remaining": "Canonical independent compilation plus selected normal/race/controls and relevant neighbor scopes; composed original role configurations and source namespaces must receive actual operator approval before production adoption. No author compiler, test body, DB, deployment, live-key or chain action performed.",
+  "handoff_manifest": "/mnt/data/sn-testnet/mainnet-parallel-20261004/original-creation-publication-custody/handoff.json"
+}

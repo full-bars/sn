@@ -1,0 +1,86 @@
+{
+  "author_validation": "Source and AST only; sealer imports no qualification helper or repository code.",
+  "carry3_job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-job-v1.json",
+    "sha256": "274ce6f92f7cc5a88a21864fecb6350de2770dd03e47c3889fac019e17252c2e"
+  },
+  "carry3_terminal_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-terminal-sol-readback-v1.json",
+    "sha256": "d7e6d21a026fe8168568911ff58d7d560c03d48d0b74319ff5c64b725f2ec31e"
+  },
+  "continuation": "Joined positive compiler exit continues only after context/source/resource verification. Signal, custody, resource, context, or image failure stops; cumulative floor never resets.",
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 3300,
+    "TimeoutStopSec": 10,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-latest475-core07-server87d-recovery7-compile-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-latest475-core07-server87d-recovery7-compile-v1-20261005.service"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-job-v1.json",
+    "sha256": "18664d74669f28756e7a1b27ea6a559fbcdaa2e25e290c06adb45b213acd3eac"
+  },
+  "lease_horizon": "Actual canonical USER invocation/runtime must contain RuntimeMaxSec + TimeoutStopSec before admission; rechecked per phase.",
+  "metadata_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-metadata-v1.receipt.json",
+    "sha256": "957c53c501626df4809d6e492600c0ffa4bc66e4238e9bff848c03f5d929ec4f"
+  },
+  "public_batch_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1.receipt.json",
+    "sha256": "8fe93671c654edf678762139f581fba21ba35c661ab8fff83e1e15e5decc1301"
+  },
+  "qualification": "NOT RUN; independent Resource review and exact Root adoption required before Sol execution.",
+  "recovery_mapping": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-package-mapping-v1.json",
+    "sha256": "115065e36dd21ea1f6b7d8ffa1ebeb47c1f68e1a33ff5d6191bfd999a107eb4b"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_minimum_available_bytes": 17179869184,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "18664d74669f28756e7a1b27ea6a559fbcdaa2e25e290c06adb45b213acd3eac",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "model_count": 0,
+    "phase_count": 7,
+    "runner_sha256": "3afe2aeb7720e078df8f593bac2085152a727bd5d2464b3632e048ecbdfe6121",
+    "runtime_max_seconds": 3300,
+    "status": "ADOPTED_ONE_SERIAL_RECOVERY_COMPILER_BATCH",
+    "whole_owner_horizon_seconds": 3310
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest475-core07-server87d-recovery7-compile-v1-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-recovery-consumer-compiler-batch-v2.py",
+    "sha256": "3afe2aeb7720e078df8f593bac2085152a727bd5d2464b3632e048ecbdfe6121"
+  },
+  "schema": "urnetwork-recovery-consumer-compiler-author-review-v1",
+  "scope": "Exactly seven serial normal compile-only targets: SN ./mainnet, ./miner, ./miner/onchain, ./validator, ./crv4, ./payoutartifact; Core root package. Retain all ordinary compiler failures and successful images on this exact final tuple. No body/list/vet/DB/Rust/image publication or inherited qualification of another source.",
+  "sealer": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/seal-recovery-consumer-compiler-batch-v3.py",
+    "sha256": "1affd1c4153bd95f64563b8fbcd0dbc91565036cc0cd2b1df554eda971f6643f"
+  },
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compiler-selection-v1.json",
+    "sha256": "205dae74daed1b5caff6c1623c0ac9bd2cedde40e1be2ca770117c5383d17708"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-compiler-source-closure-v1.json",
+    "sha256": "db288881b11cce1c2e14d3918ab75e2d1674baf1229d39626d674f40ea6e3acf"
+  },
+  "source_tuple": {
+    "core": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+    "server": "87d278f5e5f710ff6e3238892d9dcb0cc543c31a",
+    "sn": "47566b256b60cec221cca9a63f16aa56cb017b4b"
+  },
+  "status": "AUTHOR_SEALED_AWAITING_RESOURCE_REVIEW_AND_ROOT_ADOPTION"
+}

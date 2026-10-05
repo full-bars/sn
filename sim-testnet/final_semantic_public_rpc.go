@@ -499,7 +499,7 @@ func (self *PublicFinalSemanticChainReader) substrateMetadata(ctx context.Contex
 		if err != nil {
 			return nil, nil, err
 		}
-		artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, self.provisionalRuntime, hash, crv4.RuntimeArtifactIdentity{Version: self.runtimeVersion, CodeHash: self.runtimeCodeHash, MetadataHash: self.runtimeMetadataHash})
+		artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, self.provisionalRuntime, hash, crv4.RuntimeArtifactIdentity{Version: self.runtimeVersion, CodeHash: self.runtimeCodeHash, MetadataHash: self.runtimeMetadataHash})
 		if err != nil {
 			return nil, nil, err
 		}

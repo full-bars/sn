@@ -15,7 +15,8 @@ func monitorCanceledCheckpointLoad(ctx context.Context, err error) bool {
 	}
 	var ownership *monitorOutputOwnershipError
 	var cleanup *monitorAdmissionCleanupError
-	return !errors.Is(err, durablevolume.ErrIdentity) && !errors.Is(err, errRpcIdentityMismatch) && !errors.Is(err, errRpcIntegrity) && !errors.As(err, &ownership) && !errors.As(err, &cleanup) && monitorOnlyCancellationCauses(err, 0)
+	var refused *monitorAdmissionRefusalError
+	return !errors.Is(err, durablevolume.ErrIdentity) && !errors.Is(err, errRpcIdentityMismatch) && !errors.Is(err, errRpcIntegrity) && !errors.As(err, &ownership) && !errors.As(err, &cleanup) && !errors.As(err, &refused) && monitorOnlyCancellationCauses(err, 0)
 }
 
 // Joined independent I/O/close failures are not canceled observations. Owned

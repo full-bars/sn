@@ -21,6 +21,8 @@ const maximumMonitorEconomicBytes = 768 * 1024
 // Observation supplies an independently reviewed chain/runtime/generation and
 // first window. Later windows start at the retained cursor and remain bounded.
 type monitorEconomicNativePolicy struct {
+	archiveReferenceBytes  uint64
+	runtimeAdmission       *nativeProducerRuntimeAdmission
 	Role                   string                          `json:"role"`
 	HistoryCatalog         *monitorHistoryCatalogPolicy    `json:"history_catalog,omitempty"`
 	RuntimeCatalog         []monitorEconomicRuntimeEntry   `json:"runtime_catalog,omitempty"`
@@ -85,7 +87,9 @@ func (self monitorEconomicNativeEvent) index() uint64 {
 }
 
 type monitorEconomicNativeState struct {
+	runtimeAdmission       *nativeProducerRuntimeAdmission
 	ExecutionAccounting    *nativeExecutionWindow        `json:"execution_accounting,omitempty"`
+	ExecutionProducer      *nativeExecutionProducerState `json:"execution_producer,omitempty"`
 	Archive                *monitorEconomicNativeArchive `json:"archive,omitempty"`
 	Catalog                *monitorHistoryCatalogState   `json:"history_catalog,omitempty"`
 	RuntimeBoundFrom       uint64                        `json:"runtime_bound_from,omitempty"`
@@ -122,6 +126,14 @@ func monitorEconomicInteger(value string) (*big.Int, error) {
 }
 
 func (self *monitorEconomicNativeState) validate(policy monitorEconomicNativePolicy) error {
+	if err := self.ExecutionProducer.validate(policy.Observation, self.Cursor); err != nil {
+		return err
+	}
+	var err error
+	policy, err = self.runtimeReadPolicy(policy)
+	if err != nil {
+		return err
+	}
 	if self.ExecutionAccounting != nil {
 		if policy.Observation.Execution == nil || self.ExecutionAccounting.From != policy.Observation.From || self.ExecutionAccounting.Through != self.Cursor {
 			return errors.New("native accounting lost its original policy or retained cursor")
@@ -156,8 +168,11 @@ func (self *monitorEconomicNativeState) validate(policy monitorEconomicNativePol
 		}
 	}
 	if self.RuntimeBoundFrom != 0 {
-		if self.RuntimeBoundFrom <= policy.Observation.From.Number || self.RuntimeBoundFrom > self.Cursor.Number || self.LastExecutionRuntime == nil || self.LastPostStateRuntime == nil || !slices.Contains(policy.profiles(), *self.LastExecutionRuntime) || !slices.Contains(policy.profiles(), *self.LastPostStateRuntime) {
+		if self.RuntimeBoundFrom <= policy.Observation.From.Number || self.RuntimeBoundFrom > self.Cursor.Number {
 			return errors.New("native economic retained runtime context changed")
+		}
+		if err := self.validateRuntimeContext(policy, self.Cursor, self.LastExecutionRuntime, self.LastPostStateRuntime); err != nil {
+			return err
 		}
 	} else if self.LastExecutionRuntime != nil || self.LastPostStateRuntime != nil {
 		return errors.New("native economic retained runtime context has no original boundary")
@@ -184,8 +199,8 @@ func (self *monitorEconomicNativeState) validate(policy monitorEconomicNativePol
 			return errors.New("native economic retained event has no original position")
 		}
 		if self.RuntimeBoundFrom != 0 && item.Block.Number >= self.RuntimeBoundFrom {
-			if item.ExecutionRuntime == nil || item.PostStateRuntime == nil || !slices.Contains(policy.profiles(), *item.ExecutionRuntime) || !slices.Contains(policy.profiles(), *item.PostStateRuntime) {
-				return errors.New("native economic retained event lost its execution or post-state artifact")
+			if err := self.validateRuntimeContext(policy, item.Block, item.ExecutionRuntime, item.PostStateRuntime); err != nil {
+				return err
 			}
 		} else if item.ExecutionRuntime != nil || item.PostStateRuntime != nil {
 			return errors.New("native economic legacy event was relabeled with a new artifact")
@@ -272,6 +287,14 @@ func (self *monitorEconomicNativeState) validate(policy monitorEconomicNativePol
 func observeMonitorEconomicNative(ctx context.Context, client *rpcClient, policy monitorEconomicNativePolicy, state *monitorEconomicNativeState) (*economicEmissionObservation, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.retryWindow)
 	defer cancel()
+	if err := state.admitRuntime(ctx, policy); err != nil {
+		return nil, err
+	}
+	var err error
+	policy, err = state.runtimeReadPolicy(policy)
+	if err != nil {
+		return nil, err
+	}
 	chain, err := newRootCanonicalChainBounded(client, identityExpectation{NativeChain: policy.Observation.Network.NativeChain, GenesisHash: policy.Observation.Network.GenesisHash, EvmChainId: policy.Observation.Network.EvmChainId}, policy.profiles(), 64, 2)
 	if err != nil {
 		return nil, err
@@ -279,54 +302,31 @@ func observeMonitorEconomicNative(ctx context.Context, client *rpcClient, policy
 	if err := chain.network(ctx); err != nil {
 		return nil, err
 	}
-	var current string
-	if err := client.call(ctx, "chain_getBlockHash", []any{state.Cursor.Number}, &current); err != nil {
-		return nil, err
+	retained := []nativeFinalityPoint{{Number: state.Cursor.Number, Hash: state.Cursor.Hash}}
+	if state.Finalized != nil {
+		retained = append(retained, nativeFinalityPoint{Number: state.Finalized.Number, Hash: state.Finalized.Hash})
 	}
-	if current != state.Cursor.Hash {
-		return nil, errors.Join(errRpcIntegrity, errors.New("native economic retained cursor changed canonically"))
+	if state.BatchCount == 0 {
+		retained = append(retained, nativeFinalityPoint{Number: policy.Observation.Through.Number, Hash: policy.Observation.Through.Hash})
 	}
-	var hash string
-	if err := client.call(ctx, "chain_getFinalizedHead", []any{}, &hash); err != nil {
-		return nil, err
+	if state.PendingThrough != nil {
+		retained = append(retained, nativeFinalityPoint{Number: state.PendingThrough.Number, Hash: state.PendingThrough.Hash})
 	}
-	_, head, err := chain.header(ctx, hash)
+	point, err := client.readNativeFinalityCovering(ctx, retained...)
 	if err != nil {
 		return nil, err
 	}
-	if head < state.Cursor.Number || head == state.Cursor.Number && hash != state.Cursor.Hash {
-		return nil, errors.Join(errRpcIntegrity, errors.New("native economic finalized head regressed or changed"))
-	}
-	if state.Finalized != nil {
-		if head < state.Finalized.Number || head == state.Finalized.Number && hash != state.Finalized.Hash {
-			return nil, errors.Join(errRpcIntegrity, errors.New("native economic finalized assertion changed across samples"))
-		}
-		var prior string
-		if err := client.call(ctx, "chain_getBlockHash", []any{state.Finalized.Number}, &prior); err != nil {
-			return nil, err
-		}
-		if prior != state.Finalized.Hash {
-			return nil, errors.Join(errRpcIntegrity, errors.New("native economic prior finalized assertion changed canonically"))
-		}
-	}
+	head := point.Number
 	if head == state.Cursor.Number {
-		if state.BatchCount == 0 {
-			return nil, errors.New("native economic finalized head has not reached reviewed initial window")
-		}
 		return nil, nil
 	}
 	through := min(head, state.Cursor.Number+policy.BatchBlocks)
 	if state.BatchCount == 0 {
-		if head < policy.Observation.Through.Number {
-			return nil, errors.New("native economic finalized head has not reached reviewed initial window")
-		}
 		through = policy.Observation.Through.Number
 	} else if state.PendingThrough != nil {
-		if head < state.PendingThrough.Number {
-			return nil, errors.New("native economic head is behind retained pending range")
-		}
 		through = state.PendingThrough.Number
 	}
+	var hash string
 	if err := client.call(ctx, "chain_getBlockHash", []any{through}, &hash); err != nil {
 		return nil, err
 	}
@@ -339,6 +339,7 @@ func observeMonitorEconomicNative(ctx context.Context, client *rpcClient, policy
 	}
 	width := through - state.Cursor.Number
 	for {
+		windowContext := context.WithValue(ctx, nativeProducerStateKey{}, state.ExecutionProducer)
 		window := policy.Observation
 		window.From, window.Through = state.Cursor, economicEmissionBoundary{Number: state.Cursor.Number + width, Hash: hash}
 		if window.Through.Number != requested.Number {
@@ -346,7 +347,7 @@ func observeMonitorEconomicNative(ctx context.Context, client *rpcClient, policy
 				return nil, err
 			}
 		}
-		observation, err := observeEconomicEmissionCatalog(ctx, client, window, rootObjectHash(window), true, policy.RuntimeCatalog, true)
+		observation, err := observeEconomicEmissionCatalog(windowContext, client, window, rootObjectHash(window), true, policy.RuntimeCatalog, true)
 		if err == nil {
 			if !observation.Complete || observation.Policy.From != state.Cursor || observation.Policy.Through != window.Through || uint64(len(observation.Blocks)) != width {
 				return nil, errors.Join(errRpcIntegrity, errors.New("native economic batch is incomplete or changed its requested range"))
@@ -356,7 +357,7 @@ func observeMonitorEconomicNative(ctx context.Context, client *rpcClient, policy
 			observation.ContentHash = rootObjectHash(observation)
 			// A full declared page may exceed the remaining retained-byte bound.
 			// Try a smaller complete original subpage under this same deadline.
-			_, err = state.append(policy, &observation, state.SampleAt)
+			_, err = state.append(policy, &observation, state.SampleAt, ctx)
 			if err == nil {
 				return &observation, nil
 			}
@@ -373,7 +374,7 @@ func observeMonitorEconomicNative(ctx context.Context, client *rpcClient, policy
 
 // A next state is detached from the acknowledged state until durable publish.
 // The declared capacity holds this role before history loss; no silent pruning.
-func (self *monitorEconomicNativeState) append(policy monitorEconomicNativePolicy, observation *economicEmissionObservation, now time.Time) (*monitorEconomicNativeState, error) {
+func (self *monitorEconomicNativeState) append(policy monitorEconomicNativePolicy, observation *economicEmissionObservation, now time.Time, contexts ...context.Context) (*monitorEconomicNativeState, error) {
 	if observation == nil || !observation.Complete || observation.Policy.From != self.Cursor || self.BatchCount == math.MaxUint64 {
 		return nil, errors.New("native economic batch cannot advance original custody")
 	}
@@ -384,8 +385,28 @@ func (self *monitorEconomicNativeState) append(policy monitorEconomicNativePolic
 			return nil, err
 		}
 		next.ExecutionAccounting = accounting
+		if policy.Observation.Execution.Producer != nil {
+			producer := observation.ExecutionProducer
+			if err := producer.validate(policy.Observation, observation.Policy.Through); err != nil {
+				return nil, err
+			}
+			var previous uint64
+			if self.ExecutionProducer != nil {
+				previous = self.ExecutionProducer.Completed
+			}
+			if producer == nil || producer.Completed != previous+uint64(len(observation.Blocks)) {
+				return nil, errors.New("native producer skipped or repeated original completed jobs")
+			}
+			next.ExecutionProducer = producer
+			next.runtimeAdmission = observation.runtimeAdmission
+		} else if observation.ExecutionProducer != nil {
+			return nil, errors.New("legacy native owner cannot enroll an execution producer")
+		}
 	} else if observation.ExecutionWindow != nil {
 		return nil, errors.New("legacy native role received unconfigured execution authority")
+	}
+	if err := next.admitRuntime(nativeRuntimeAdmissionContext(contexts), policy); err != nil {
+		return nil, err
 	}
 	next.History = append([]monitorEconomicNativeEvent{}, self.History...)
 	alpha, err := monitorEconomicInteger(self.ObservedAlpha)

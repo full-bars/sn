@@ -16,7 +16,6 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -139,7 +138,7 @@ func newReleaseActivationReadFixture(t *testing.T) *releaseActivationReadFixture
 		})
 	})
 	chain := &ChainClient{client: ethclient.NewClient(client), coordinator: coordinator, contractAddr: common.Address(deployment.Coordinator), release: true}
-	chain.readRetryHooks.wait = func(ctx context.Context, _ time.Duration) error { return ctx.Err() }
+	chain.readRetryHooks = chainReadRetryTestHooks(chainReadTestFailureAttempts)
 	self.setup = &releaseActivationSetup{cfg: &cfg, hotkey: hotkey, clientKeys: map[uint64]ed25519.PrivateKey{2: private}, chain: chain, native: source.native.chain,
 		deployment: deployment, limit: cfg.EvidenceV2.Bounds.MaxControlBytes}
 	return self
@@ -151,7 +150,7 @@ func TestReleaseActivationPreparationReadPreservesTransportCause(t *testing.T) {
 	fixture := newReleaseActivationReadFixture(t)
 	fixture.fault = "canonical"
 	prepared, err := fixture.setup.prepare(t.Context())
-	if prepared != nil || !errors.Is(err, context.DeadlineExceeded) || !RetryableEvidenceTransportError(err) || fixture.failedReads != chainReadMaximumAttempts {
+	if prepared != nil || !errors.Is(err, context.DeadlineExceeded) || !RetryableEvidenceTransportError(err) || fixture.failedReads != chainReadTestFailureAttempts {
 		t.Fatalf("activation preparation read exhaustion became snapshot contradiction: %+v %v reads=%d", prepared, err, fixture.failedReads)
 	}
 	path, _ := ReleaseActivationSetupPaths(fixture.setup.cfg)
@@ -188,7 +187,7 @@ func TestReleaseActivationRetainedReadPreservesSignedWork(t *testing.T) {
 	for _, selected := range []string{"finalized", "canonical"} {
 		fixture.fault, fixture.failedReads = selected, 0
 		retained, _, missing, err := fixture.setup.readPrepared(t.Context())
-		if retained != nil || missing || !errors.Is(err, context.DeadlineExceeded) || !RetryableEvidenceTransportError(err) || fixture.failedReads != chainReadMaximumAttempts {
+		if retained != nil || missing || !errors.Is(err, context.DeadlineExceeded) || !RetryableEvidenceTransportError(err) || fixture.failedReads != chainReadTestFailureAttempts {
 			t.Fatalf("retained %s activation read failure became finality/canonical contradiction: %+v %t %v reads=%d", selected, retained, missing, err, fixture.failedReads)
 		}
 		fixture.fault = ""

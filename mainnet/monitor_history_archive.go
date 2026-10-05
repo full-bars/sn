@@ -33,7 +33,14 @@ type monitorHistoryReference struct {
 }
 
 func (self monitorHistoryReference) validate() error {
-	if !monitorHistoryPath(self.Path) || self.Bytes == 0 || self.Bytes > maxRpcReplyBytes || !planSha256(self.Sha256) {
+	return self.validateLimit(maxRpcReplyBytes)
+}
+
+func (self monitorHistoryReference) validateLimit(maximum uint64) error {
+	if maximum == 0 {
+		maximum = maxRpcReplyBytes
+	}
+	if maximum > economicConservationStorageMaximum || !monitorHistoryPath(self.Path) || self.Bytes == 0 || self.Bytes > maximum || !planSha256(self.Sha256) {
 		return errors.New("monitor history reference is not an exact bounded private snapshot")
 	}
 	return nil
@@ -57,7 +64,14 @@ type monitorHistorySnapshot struct {
 // lock here to exercise an actual nested cleanup failure without timing races.
 type monitorHistoryAdmissionReadKey struct{}
 
-func openMonitorHistorySnapshot(ctx context.Context, path string, write bool) (_ *monitorHistorySnapshot, resultErr error) {
+func openMonitorHistorySnapshot(ctx context.Context, path string, write bool) (*monitorHistorySnapshot, error) {
+	return openMonitorHistorySnapshotProfile(ctx, path, write, "mainnet-monitor-checkpoint", maxRpcReplyBytes)
+}
+
+func openMonitorHistorySnapshotProfile(ctx context.Context, path string, write bool, kind string, maximum int) (_ *monitorHistorySnapshot, resultErr error) {
+	if err := validateMonitorCheckpointProfile(kind, maximum); err != nil {
+		return nil, err
+	}
 	if !monitorHistoryPath(path) {
 		return nil, errors.New("monitor history path must be bounded canonical absolute")
 	}
@@ -83,7 +97,7 @@ func openMonitorHistorySnapshot(ctx context.Context, path string, write bool) (_
 	if err := storage.bindMarker(self.lock, false); err != nil {
 		return nil, err
 	}
-	if err := storage.bindSnapshotMode(path, "mainnet-monitor-checkpoint", maxRpcReplyBytes, false, write, !write); err != nil {
+	if err := storage.bindSnapshotMode(path, kind, maximum, false, write, !write); err != nil {
 		return nil, err
 	}
 	return self, nil
@@ -126,11 +140,15 @@ func (self *monitorHistorySnapshot) close() error {
 
 // The returned raw bytes are admission-only. Callers retain the reader and
 // discard decoded archive payloads after authenticating their bounded chain.
-func openMonitorHistoryReader(ctx context.Context, reference monitorHistoryReference) (_ *monitorHistorySnapshot, _ []byte, resultErr error) {
-	if err := reference.validate(); err != nil {
+func openMonitorHistoryReader(ctx context.Context, reference monitorHistoryReference) (*monitorHistorySnapshot, []byte, error) {
+	return openMonitorHistoryReaderProfile(ctx, reference, "mainnet-monitor-checkpoint", maxRpcReplyBytes)
+}
+
+func openMonitorHistoryReaderProfile(ctx context.Context, reference monitorHistoryReference, kind string, maximum int) (_ *monitorHistorySnapshot, _ []byte, resultErr error) {
+	if err := reference.validateLimit(uint64(maximum)); err != nil {
 		return nil, nil, err
 	}
-	owner, err := openMonitorHistorySnapshot(ctx, reference.Path, false)
+	owner, err := openMonitorHistorySnapshotProfile(ctx, reference.Path, false, kind, maximum)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -65,6 +65,7 @@ func TestSubstrateReadHttpTransientCloseRecoversAfterDiscard(t *testing.T) {
 func TestSubstrateReadHttpCloseRejectsFileMixedAndCanceledCauses(t *testing.T) {
 	for _, cause := range []error{
 		&os.PathError{Op: "close", Path: "synthetic-custody", Err: io.EOF},
+		&os.LinkError{Op: "rename", Old: "synthetic-custody-old", New: "synthetic-custody-new", Err: io.EOF},
 		errors.Join(io.EOF, errors.New("synthetic connection ownership contradiction")),
 		context.Canceled,
 	} {

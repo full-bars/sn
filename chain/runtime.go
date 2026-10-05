@@ -50,7 +50,7 @@ func AuthenticateFinalizedRuntimeContext(ctx context.Context, chain *crv4.Chain,
 	if err := checkCanonical(); err != nil {
 		return nil, FinalizedRuntime{}, err
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, chain, finalized, allowed...)
+	artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, chain, finalized, allowed...)
 	if err != nil {
 		return nil, FinalizedRuntime{}, fmt.Errorf("finalized runtime at %s is not a pinned artifact: %w", finalized.Hex(), err)
 	}

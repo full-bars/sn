@@ -713,6 +713,18 @@ func knownClaimTransaction(err error) bool {
 // Claim discovery needs only the epoch clock. Optional chain settings in the
 // shared API response have independent wire types and are not claim authority.
 func readClaimEpoch(ctx context.Context, strategy *connect.ClientStrategy, apiURL, byJWT string) (int64, error) {
+	return readClaimEpochWithRetry(ctx, strategy, apiURL, byJWT, claimReadRetryHooks{})
+}
+
+// One retained read owns its original URL and credentials through recovery.
+func readClaimEpochWithRetry(ctx context.Context, strategy *connect.ClientStrategy, apiURL, byJWT string, hooks claimReadRetryHooks) (int64, error) {
+	return retryClaimApiRead(ctx, hooks, func(readCtx context.Context) (int64, error) {
+		return readClaimEpochAttempt(readCtx, strategy, apiURL, byJWT)
+	})
+}
+
+// Parsing remains inside the attempt so a complete malformed response is hard.
+func readClaimEpochAttempt(ctx context.Context, strategy *connect.ClientStrategy, apiURL, byJWT string) (int64, error) {
 	body, err := connect.HttpGetWithStrategyRaw(ctx, strategy, apiURL+"/sn/epoch", byJWT)
 	if err != nil {
 		return 0, err
@@ -748,7 +760,7 @@ func reconcileClaimEntry(ctx context.Context, cfg *ClaimDaemonConfig, api claimA
 	if api == nil {
 		return "", errors.New("claim API is unavailable")
 	}
-	claim, err := api.SnPoolClaimSyncWithContext(ctx, &sdk.SnPoolClaimArgs{Epoch: entry.Epoch})
+	claim, err := readClaimPoolWithRetry(ctx, api, entry.Epoch, claimReadRetryHooks{})
 	if err != nil {
 		return "", err
 	}
@@ -783,7 +795,7 @@ func submitClaimDirect(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI
 	if err := store.requireWrite(ctx); err != nil {
 		return err
 	}
-	claim, err := api.SnPoolClaimSyncWithContext(ctx, &sdk.SnPoolClaimArgs{Epoch: entry.Epoch})
+	claim, err := readClaimPoolWithRetry(ctx, api, entry.Epoch, claimReadRetryHooks{})
 	if err != nil {
 		return err
 	}
@@ -1036,7 +1048,7 @@ func runClaimDaemonWithStore(ctx context.Context, cfg *ClaimDaemonConfig, store 
 	if err := store.save(queue); err != nil {
 		return err
 	}
-	strategy := connect.NewClientStrategyWithDefaults(ctx)
+	strategy := connect.NewClientStrategy(ctx, defaultClaimReadStrategySettings())
 	defer strategy.Close()
 	api := sdk.NewApi(ctx, strategy, cfg.APIURL)
 	defer func() {

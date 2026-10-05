@@ -38,11 +38,12 @@ type AttemptLedgerPreparationLegacy struct {
 // The independently reviewed head is exact, not merely a minimum prefix. No
 // private key is accepted by any offline preparation entry point.
 type AttemptLedgerPreparationScope struct {
-	Identity     AttemptLedgerIdentity           `json:"identity"`
-	Coordinator  string                          `json:"coordinator"`
-	Limits       AttemptLedgerDiskLimits         `json:"limits"`
-	ExpectedHead AttemptLedgerHead               `json:"expected_head"`
-	Legacy       *AttemptLedgerPreparationLegacy `json:"legacy"`
+	Identity     AttemptLedgerIdentity                 `json:"identity"`
+	Coordinator  string                                `json:"coordinator"`
+	Limits       AttemptLedgerDiskLimits               `json:"limits"`
+	ExpectedHead AttemptLedgerHead                     `json:"expected_head"`
+	Legacy       *AttemptLedgerPreparationLegacy       `json:"legacy"`
+	Requests     *AttemptLedgerRequestPreparationScope `json:"requests,omitempty"`
 }
 
 // Portable bytes and modes are separate from the target's eventual inodes.
@@ -69,6 +70,14 @@ type AttemptLedgerPreparationCensus struct {
 func (self AttemptLedgerPreparationScope) validate() (ed25519.PublicKey, error) {
 	if err := validateAttemptLedgerIdentity(self.Identity, nil); err != nil {
 		return nil, err
+	}
+	if self.Requests != nil {
+		if err := self.Requests.validate(self.Identity, self.Coordinator); err != nil {
+			return nil, err
+		}
+		if err := ValidateProviderAttemptRequestRootCapacity(self.Limits, self.Requests.Preparation.Limits); err != nil {
+			return nil, err
+		}
 	}
 	public, err := canonicalAttemptHex32("preparation validator public key", self.Identity.ValidatorVPK, false)
 	if err != nil {
@@ -180,6 +189,9 @@ func BuildFreshAttemptLedgerPreparation(ctx context.Context, stagingParent *os.F
 	if ctx == nil || stagingParent == nil || childName == "" || childName == "." || childName == ".." || strings.ContainsAny(childName, "/\x00") || len(childName) > 128 || scope.Legacy != nil || scope.ExpectedHead != (AttemptLedgerHead{Root: zeroAttemptHash()}) {
 		return result, errors.New("fresh ledger preparation requires explicit staging and empty public authority")
 	}
+	if scope.Requests != nil && scope.Requests.ExpectedHead != (ProviderAttemptRequestHead{}) {
+		return result, errors.New("fresh request preparation cannot replace a retained original head")
+	}
 	if err := errors.Join(ctx.Err(), attemptPreparationPrivate(stagingParent, true)); err != nil {
 		return result, err
 	}
@@ -269,6 +281,11 @@ func BuildFreshAttemptLedgerPreparation(ctx context.Context, stagingParent *os.F
 	}
 	if err := attemptPreparationCreate(ctx, child, attemptLedgerReadyName, readyRaw); err != nil {
 		return result, err
+	}
+	if scope.Requests != nil {
+		if err := attemptPreparationCreate(ctx, child, ProviderAttemptRequestJournalName, nil); err != nil {
+			return result, err
+		}
 	}
 	if err := errors.Join(backend.Sync(), child.Sync(), stagingParent.Sync(), ctx.Err()); err != nil {
 		return result, err

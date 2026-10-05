@@ -39,8 +39,8 @@ func (self *ReleaseSteerer) reconcileProductionPendingV2(ctx context.Context, cu
 	if err != nil {
 		// Retain the already published original-authority wait surface for
 		// callers observing a renewed config; every other leaf remains hard.
-		var unavailable *productionSteeringReadWait
-		if decisionCfg.ownerRecycleProduction.historicalOnly && errors.As(err, &unavailable) && releaseOnlyErrors(err, unavailable) && advertised != nil {
+		unavailable := releaseErrorMarker[*productionSteeringReadWait](err)
+		if decisionCfg.ownerRecycleProduction.historicalOnly && unavailable != nil && releaseOnlyErrors(err, unavailable) && advertised != nil {
 			return false, &productionPendingReconciliation{nativeEpoch: advertised.SubnetEpochIndex, extrinsicHash: current.Prepared.ExtrinsicHash, cause: unavailable.cause}
 		}
 		return false, err
@@ -50,8 +50,8 @@ func (self *ReleaseSteerer) reconcileProductionPendingV2(ctx context.Context, cu
 			return authenticateProductionFinalizedSourceContext(readCtx, &native, self.cfg, current.Prepared, receipt)
 		})
 		if err != nil {
-			var dispatch *crv4.FinalizedDispatchError
-			if errors.As(err, &dispatch) && releaseOnlyErrors(err, dispatch) {
+			dispatch := releaseErrorMarker[*crv4.FinalizedDispatchError](err)
+			if dispatch != nil && releaseOnlyErrors(err, dispatch) {
 				return false, self.intents.markFailedV2(ctx, current.VectorHash, dispatch)
 			}
 			return false, err

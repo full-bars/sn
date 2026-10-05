@@ -38,6 +38,12 @@ type ownerTrimStore struct {
 // Claim a fixed sixth journal only after revalidating the exact original v3
 // preparation and separately signed trim approval. Resume never adopts another.
 func openOwnerTrimStore(ctx context.Context, preparation bootstrapChainPreparation, config ownerTrimExecutionConfig, key string, create bool) (_ *ownerTrimStore, resultErr error) {
+	return openOwnerTrimStoreWithClaimHook(ctx, preparation, config, key, create, nil)
+}
+
+// The scoped test hook stops only after real marker or reservation durability.
+// It cannot change the accepted preparation, checkpoint or effect allowance.
+func openOwnerTrimStoreWithClaimHook(ctx context.Context, preparation bootstrapChainPreparation, config ownerTrimExecutionConfig, key string, create bool, claimHook func(string) error) (_ *ownerTrimStore, resultErr error) {
 	if err := config.validate(key); err != nil {
 		return nil, err
 	}
@@ -144,6 +150,11 @@ func openOwnerTrimStore(ctx context.Context, preparation bootstrapChainPreparati
 		if err := errors.Join(err, self.lock.Sync(), self.syncParent(), self.checkpoint()); err != nil {
 			return nil, err
 		}
+		if claimHook != nil {
+			if err := claimHook("marker-synced"); err != nil {
+				return nil, err
+			}
+		}
 	} else {
 		raw, err := io.ReadAll(io.LimitReader(self.lock, int64(len(marker)+len(bootstrapRootClaimComplete)+1)))
 		if err != nil {
@@ -178,6 +189,11 @@ func openOwnerTrimStore(ctx context.Context, preparation bootstrapChainPreparati
 	}
 	if _, err := self.load(); err != nil {
 		return nil, err
+	}
+	if claimHook != nil {
+		if err := claimHook("progress-synced"); err != nil {
+			return nil, err
+		}
 	}
 	written, err := self.storage.writeMarkerAt([]byte(bootstrapRootClaimComplete), int64(len(marker)))
 	if written != len(bootstrapRootClaimComplete) && err == nil {

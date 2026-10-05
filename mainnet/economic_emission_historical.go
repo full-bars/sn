@@ -8,25 +8,29 @@ import (
 	"errors"
 )
 
-func economicEmissionFinalizedAssertion(ctx context.Context, chain *rootCanonicalChain) (economicEmissionBoundary, *rootReceiptHeader, error) {
-	var hash string
-	if err := chain.client.call(ctx, "chain_getFinalizedHead", []any{}, &hash); err != nil {
-		return economicEmissionBoundary{}, nil, err
+// The archive keeps exact original boundaries while its owned route catches
+// up. A concrete canonical contradiction remains terminal before any wait.
+func economicEmissionFinalizedAssertion(ctx context.Context, chain *rootCanonicalChain, retained ...economicEmissionBoundary) (economicEmissionBoundary, *rootReceiptHeader, error) {
+	points := make([]nativeFinalityPoint, len(retained))
+	for index, boundary := range retained {
+		points[index] = nativeFinalityPoint{Number: boundary.Number, Hash: boundary.Hash}
 	}
-	header, number, err := chain.header(ctx, hash)
+	point, err := chain.client.readNativeFinalityCovering(ctx, points...)
 	if err != nil {
 		return economicEmissionBoundary{}, nil, err
 	}
-	return economicEmissionBoundary{Number: number, Hash: hash}, &header, nil
+	header, number, err := chain.header(ctx, point.Hash)
+	if err != nil {
+		return economicEmissionBoundary{}, nil, err
+	}
+	return economicEmissionBoundary{Number: number, Hash: point.Hash}, &header, nil
 }
 
+// A historical page retains only its finite exact range after head coverage.
 func economicEmissionHistoricalPage(ctx context.Context, chain *rootCanonicalChain, policy economicEmissionPolicy, budget *economicEmissionBudget, retain *[]rootReceiptHeader) (economicEmissionBoundary, *rootReceiptHeader, map[uint64]economicEmissionBlock, error) {
-	head, finalizedHeader, err := economicEmissionFinalizedAssertion(ctx, chain)
+	head, finalizedHeader, err := economicEmissionFinalizedAssertion(ctx, chain, policy.From, policy.Through)
 	if err != nil {
 		return head, finalizedHeader, nil, err
-	}
-	if head.Number < policy.Through.Number {
-		return head, finalizedHeader, nil, errors.New("native economic archive page is ahead of observed finalized head")
 	}
 	if err := budget.retain(finalizedHeader); err != nil {
 		return head, finalizedHeader, nil, err

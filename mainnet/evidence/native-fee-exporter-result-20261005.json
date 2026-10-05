@@ -1,0 +1,339 @@
+{
+  "verified_at": "2026-10-05T03:15:21.779728+00:00",
+  "source_tuple": {
+    "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+    "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+    "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+  },
+  "compiler_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-core87-server1ea-mainnet-normal-compile-v1.receipt.json",
+    "sha256": "84173c3b84c6ce2f37b89f3d89d4f6469b74bc4e18abd52a11ffff1724d85a43"
+  },
+  "exporter_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-native-fee-exporter-v1.receipt.json",
+    "sha256": "26d129cf20c24856e96477f4216b6417d9042463cede7490381ccbd4652fbeda"
+  },
+  "counts": {
+    "fail": 0,
+    "package_actions": [
+      "pass"
+    ],
+    "pass": 1,
+    "roots": {
+      "TestNativeFeeOutcomeExportSettlementFixtures": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      }
+    },
+    "skip": 0
+  },
+  "exports": {
+    "cases": [
+      "pair",
+      "missing",
+      "fractional-conflict"
+    ],
+    "directory": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1",
+    "files": [
+      {
+        "bytes": 1764,
+        "device": 2081,
+        "inode": 588849,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict.json",
+        "sha256": "22b60ff8f914073275d4fd7c2c942d4c02ced0147aa6bba52cac97f1c8527539"
+      },
+      {
+        "bytes": 13094,
+        "device": 2081,
+        "inode": 850968,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict/archive.json",
+        "sha256": "bfafaff0b4fa0c0d057493e45b5b1cb1ee177608d18923acc0f2a4a5cd926a57"
+      },
+      {
+        "bytes": 866,
+        "device": 2081,
+        "inode": 850970,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict/checkpoint.json",
+        "sha256": "3512040709edd5a39b8198e50e0772621205c7b8b1edab82cd747471b2e5ca07"
+      },
+      {
+        "bytes": 24761,
+        "device": 2081,
+        "inode": 850969,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict/collection.json",
+        "sha256": "5fceffa7ca91cc45f12093043e6eefe3791f5e92128c73c2dfb434bc4585f378"
+      },
+      {
+        "bytes": 854,
+        "device": 2081,
+        "inode": 850973,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict/fee-approval.json",
+        "sha256": "b3cad01d2f98d9f6b94d6020c98f4b849c60662f399419687835f5d55706ed60"
+      },
+      {
+        "bytes": 1758,
+        "device": 2081,
+        "inode": 850971,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict/finality.json",
+        "sha256": "c6cb4038830d1959c52d044e4ad2a7dad3679e22199121643dea9242179bb627"
+      },
+      {
+        "bytes": 3019,
+        "device": 2081,
+        "inode": 850972,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict/job.json",
+        "sha256": "2d42607f9e22d4b071d5e01c885c013566d711a8d1a0f90db88adcf7e6a62ec0"
+      },
+      {
+        "bytes": 2498,
+        "device": 2081,
+        "inode": 850974,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict/request.json",
+        "sha256": "f410eb00faf7b631441c43531847d539daf86c23475be1da9aaced52e2cb5b98"
+      },
+      {
+        "bytes": 1752,
+        "device": 2081,
+        "inode": 588848,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing.json",
+        "sha256": "1ae8080169e2f44937389d19cf36f9854c39724cea6eadc26cc930a01b75f2a0"
+      },
+      {
+        "bytes": 13094,
+        "device": 2081,
+        "inode": 850960,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing/archive.json",
+        "sha256": "bfafaff0b4fa0c0d057493e45b5b1cb1ee177608d18923acc0f2a4a5cd926a57"
+      },
+      {
+        "bytes": 866,
+        "device": 2081,
+        "inode": 850962,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing/checkpoint.json",
+        "sha256": "3512040709edd5a39b8198e50e0772621205c7b8b1edab82cd747471b2e5ca07"
+      },
+      {
+        "bytes": 24761,
+        "device": 2081,
+        "inode": 850961,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing/collection.json",
+        "sha256": "5fceffa7ca91cc45f12093043e6eefe3791f5e92128c73c2dfb434bc4585f378"
+      },
+      {
+        "bytes": 854,
+        "device": 2081,
+        "inode": 850965,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing/fee-approval.json",
+        "sha256": "59ccfcba92029e475850b2f25fba2ed435f2d9ff085989820922a3bb94d298f4"
+      },
+      {
+        "bytes": 1758,
+        "device": 2081,
+        "inode": 850963,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing/finality.json",
+        "sha256": "c6cb4038830d1959c52d044e4ad2a7dad3679e22199121643dea9242179bb627"
+      },
+      {
+        "bytes": 2995,
+        "device": 2081,
+        "inode": 850964,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing/job.json",
+        "sha256": "abc00fd43328c3651d168f8e267f62dd08e4b1b35fb6141e8818e4fafd144903"
+      },
+      {
+        "bytes": 2426,
+        "device": 2081,
+        "inode": 850966,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing/request.json",
+        "sha256": "b5f0dc68b769af6cf58b6cd7eec78899b547a2baaf384eb35f55084e90b2055a"
+      },
+      {
+        "bytes": 1749,
+        "device": 2081,
+        "inode": 588847,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair.json",
+        "sha256": "6ea75c22938def5073af7fb2fa53e8d55a6c426065f070e511a09c922c839d98"
+      },
+      {
+        "bytes": 13094,
+        "device": 2081,
+        "inode": 588840,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair/archive.json",
+        "sha256": "bfafaff0b4fa0c0d057493e45b5b1cb1ee177608d18923acc0f2a4a5cd926a57"
+      },
+      {
+        "bytes": 866,
+        "device": 2081,
+        "inode": 588842,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair/checkpoint.json",
+        "sha256": "3512040709edd5a39b8198e50e0772621205c7b8b1edab82cd747471b2e5ca07"
+      },
+      {
+        "bytes": 24761,
+        "device": 2081,
+        "inode": 588841,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair/collection.json",
+        "sha256": "5fceffa7ca91cc45f12093043e6eefe3791f5e92128c73c2dfb434bc4585f378"
+      },
+      {
+        "bytes": 854,
+        "device": 2081,
+        "inode": 588845,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair/fee-approval.json",
+        "sha256": "45a459ebe965e37ac1ed8d2bb8cf9e39244bcf7a54fc2922fa4ee6bb347ee0c0"
+      },
+      {
+        "bytes": 1758,
+        "device": 2081,
+        "inode": 588843,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair/finality.json",
+        "sha256": "c6cb4038830d1959c52d044e4ad2a7dad3679e22199121643dea9242179bb627"
+      },
+      {
+        "bytes": 2989,
+        "device": 2081,
+        "inode": 588844,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair/job.json",
+        "sha256": "241f66389370df45cb6c6893fa7604d76e8ce6fc900764895601b2c0ac50a2dc"
+      },
+      {
+        "bytes": 2408,
+        "device": 2081,
+        "inode": 588846,
+        "links": 1,
+        "mode": 256,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair/request.json",
+        "sha256": "3b592166fb40300693701c9874d3c3e33cf4e529c7122690676d428765d05106"
+      }
+    ],
+    "manifests": [
+      {
+        "case": "pair",
+        "manifest": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair.json",
+          "sha256": "6ea75c22938def5073af7fb2fa53e8d55a6c426065f070e511a09c922c839d98"
+        },
+        "request": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/pair/request.json",
+          "sha256": "sha256:3b592166fb40300693701c9874d3c3e33cf4e529c7122690676d428765d05106"
+        },
+        "transaction_hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+        "verifier": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest338-core87-server1ea-mainnet-normal-compile-v1.test",
+          "sha256": "sha256:4c5f912c392ba91b7d20d35207fd71bacb37237bebf373a6aba9252a19e974a7"
+        }
+      },
+      {
+        "case": "missing",
+        "manifest": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing.json",
+          "sha256": "1ae8080169e2f44937389d19cf36f9854c39724cea6eadc26cc930a01b75f2a0"
+        },
+        "request": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/missing/request.json",
+          "sha256": "sha256:b5f0dc68b769af6cf58b6cd7eec78899b547a2baaf384eb35f55084e90b2055a"
+        },
+        "transaction_hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+        "verifier": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest338-core87-server1ea-mainnet-normal-compile-v1.test",
+          "sha256": "sha256:4c5f912c392ba91b7d20d35207fd71bacb37237bebf373a6aba9252a19e974a7"
+        }
+      },
+      {
+        "case": "fractional-conflict",
+        "manifest": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict.json",
+          "sha256": "22b60ff8f914073275d4fd7c2c942d4c02ced0147aa6bba52cac97f1c8527539"
+        },
+        "request": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-latest338-native-fee-v1/fractional-conflict/request.json",
+          "sha256": "sha256:f410eb00faf7b631441c43531847d539daf86c23475be1da9aaced52e2cb5b98"
+        },
+        "transaction_hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+        "verifier": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest338-core87-server1ea-mainnet-normal-compile-v1.test",
+          "sha256": "sha256:4c5f912c392ba91b7d20d35207fd71bacb37237bebf373a6aba9252a19e974a7"
+        }
+      }
+    ],
+    "retained_verifier": {
+      "bytes": 128830768,
+      "ctime_ns": 1791169789079310406,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 120127691,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791169789079310406,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest338-core87-server1ea-mainnet-normal-compile-v1.test",
+      "sha256": "4c5f912c392ba91b7d20d35207fd71bacb37237bebf373a6aba9252a19e974a7",
+      "type": 32768,
+      "uid": 1000
+    },
+    "schema": "latest338-native-fee-three-case-export-closure-v1",
+    "scope": "Actual exporter root passed. Seven original references per case and exact selected protected mainnet.test retained; synthetic nested runtime, real signed receipt/GRANDPA verification. No production Rust or carry qualification."
+  },
+  "retained_image": {
+    "bytes": 128830768,
+    "ctime_ns": 1791169789079310406,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120127691,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791169789079310406,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest338-core87-server1ea-mainnet-normal-compile-v1.test",
+    "sha256": "4c5f912c392ba91b7d20d35207fd71bacb37237bebf373a6aba9252a19e974a7",
+    "type": 32768,
+    "uid": 1000
+  },
+  "scope": "Selected normal mainnet compile and one fixture exporter, three cases. Synthetic nested runtime with signed receipt and GRANDPA checks. Downstream server/nativefee bodies, real selected Rust/carry, race, controls, production authority and all original outcomes remain unqualified."
+}

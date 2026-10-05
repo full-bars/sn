@@ -1,0 +1,120 @@
+{
+  "actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-core87-server1ea-metadata-v1.receipt.json",
+    "sha256": "0e41a53d5154b673990694710fbd6d430072827c910098394337281527bbc465"
+  },
+  "closed_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "closed_model37_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+    "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+  },
+  "closed_monitor943_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+    "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+  },
+  "closure_validation": "All95 actual metadata child phases replayed exit0/joined;92 new source blobs match Git pins. Old expected hashes retained without rebasing. Virtual new packages are Go-only without cgo/asm; pinned toolchain compiler runs from the existing module cwd. All retained source/dependency pins rechecked before/after actual compile.",
+  "elapsed_estimate_limit": "Cache-dependent estimate only; no deadline or source qualification claim.",
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 2100,
+    "TimeoutStopSec": 10,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-latest338-core87-server1ea-mainnet-normal-compile-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-latest338-core87-server1ea-mainnet-normal-compile-v1-20261005.service"
+  },
+  "expected_elapsed_seconds": [
+    180,
+    600
+  ],
+  "healthy_guards": {
+    "active_data_formula": "max(6307319808, launch_data_available-8589934592)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted_or_rebased": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-core87-server1ea-mainnet-normal-compiler-job-v1.json",
+    "sha256": "b0cd753e22a9568ffe6a73b3f770a6b47ff4ef14b50de33c8be2892046b18844"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_minimum_available_bytes": 17179869184,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "b0cd753e22a9568ffe6a73b3f770a6b47ff4ef14b50de33c8be2892046b18844",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "model_count": 0,
+    "runner_sha256": "b5c9667a27ecd85ca9fddf9d3f600ff7830085f463ea056b02863e907cd5caae",
+    "status": "ADOPTED_ONE_BOUNDED_GO_COMPILER_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest338-core87-server1ea-mainnet-compiler-adoption-20261005.json",
+  "resource_forecast": {
+    "actual_model_count": 0,
+    "basis": "Prospective one-Go-compiler4GiB estimate with unchanged modules/toolchain/cache and actual newly bound dependency graph. No fully-warm claim or observed peak upper bound. Hard8GiB/Swap0 and data-growth8GiB guard;128MiB logs and512MiB protected image cap. Former model4GiB reserve retained despite actual0; thresholds remain16GiB data/112GiB memory.",
+    "compiler_disk_bytes": 4294967296,
+    "compiler_memory_bytes": 4294967296,
+    "held_former_model_disk_bytes": 4294967296,
+    "held_former_model_memory_bytes": 4294967296,
+    "margin": 2
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest338-core87-server1ea-mainnet-compiler-v1.py",
+    "sha256": "b5c9667a27ecd85ca9fddf9d3f600ff7830085f463ea056b02863e907cd5caae"
+  },
+  "schema": "latest338-core87-server1ea-mainnet-normal-compiler-review-v1",
+  "scope": "Exactly one normal SN ./mainnet go test -c -vet=off on338/Core87/1ea; no body/exporter execution or other package compiler. New native assets and all selected bodies require separate admission.",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-core87-server1ea-compiler-source-closure-v1.json",
+    "sha256": "6f3f8fc9b6cf9c5242ff396bb671173c8facc6fd89a429917cd89c88f59e0fd4"
+  },
+  "source_tuple": {
+    "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+    "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+    "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

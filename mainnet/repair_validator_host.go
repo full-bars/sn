@@ -27,6 +27,7 @@ import (
 // Public selection always uses root-owned releases and the system manager.
 type repairValidatorHost struct {
 	rootUid        uint32
+	rootGid        uint32
 	trustRoot      string
 	machinePath    string
 	bootPath       string
@@ -34,6 +35,7 @@ type repairValidatorHost struct {
 	cgroupType     func(string) (int64, error)
 	execute        func(context.Context, string, []string) ([]byte, error)
 	storageCommand func(context.Context, *exec.Cmd) error
+	operator       *repairOperatorTransports
 	monotonic      func() (uint64, error)
 }
 
@@ -215,10 +217,27 @@ func (self *repairValidatorHost) openPinned(ctx context.Context, reference planF
 
 // Operational records retain the producer's distinct owner and strict decoder.
 func (self *repairValidatorHost) read(ctx context.Context, path string, owner uint32, limit int64, private bool) ([]byte, error) {
+	return self.readProfile(ctx, path, owner, limit, private, monitorServiceRecordProfile)
+}
+
+// Policy reads retain the same original uid and ancestor checks as records;
+// only their explicit complete-role ingress ceiling is different.
+func (self *repairValidatorHost) readServicesPolicy(ctx context.Context, path string, owner uint32) ([]byte, error) {
+	return self.readProfile(ctx, path, owner, maxMonitorFeeServicesBytes, false, monitorServicePolicyProfile)
+}
+
+// The root monitor's continuing checkpoint has its own retained owner ceiling;
+// this never widens approval, systemd or generic progress-record admission.
+func (self *repairValidatorHost) readRootCheckpoint(ctx context.Context, path string) ([]byte, error) {
+	return self.readProfile(ctx, path, self.rootUid, maxMonitorCheckpointBytes, true, monitorRootCheckpointProfile)
+}
+
+// The selected finite file profile never substitutes for original host custody.
+func (self *repairValidatorHost) readProfile(ctx context.Context, path string, owner uint32, limit int64, private bool, profile monitorServiceReadProfile) ([]byte, error) {
 	if err := self.parents(path, owner); err != nil {
 		return nil, err
 	}
-	raw, err := readMonitorServiceFile(ctx, path, limit, private, monitorServiceReadHooks{afterRead: func(file *os.File) error {
+	raw, err := readMonitorServiceFileProfile(ctx, path, limit, private, monitorServiceReadHooks{afterRead: func(file *os.File) error {
 		info, err := file.Stat()
 		if err != nil {
 			return err
@@ -228,7 +247,7 @@ func (self *repairValidatorHost) read(ctx context.Context, path string, owner ui
 			return errors.New("validator repair evidence owner differs")
 		}
 		return nil
-	}})
+	}}, profile)
 	if err != nil {
 		return nil, err
 	}
@@ -272,6 +291,12 @@ func (self *repairValidatorHost) inspect(ctx context.Context, plan repairValidat
 // Independently approved static profiles share the physical host and manager
 // checks. Callers supply a fixed argument grammar, never command-line input.
 func (self *repairValidatorHost) inspectCommand(ctx context.Context, plan repairValidatorPlan, arguments string, extra map[string]string) (repairValidatorManager, error) {
+	return self.inspectCommandEnvironment(ctx, plan, arguments, extra, "")
+}
+
+// A separately signed process profile may select one exact loaded environment.
+// Validator callers retain the original empty-environment admission above.
+func (self *repairValidatorHost) inspectCommandEnvironment(ctx context.Context, plan repairValidatorPlan, arguments string, extra map[string]string, environment string) (repairValidatorManager, error) {
 	var result repairValidatorManager
 	for _, reference := range []planFileReference{plan.Unit.File, plan.Unit.Binary, plan.Unit.Config, plan.Systemctl} {
 		limit := int64(16 * 1024 * 1024)
@@ -355,6 +380,7 @@ func (self *repairValidatorHost) inspectCommand(ctx context.Context, plan repair
 	for _, key := range []string{"DropInPaths", "ExecStartPre", "ExecStartPost", "ExecStop", "ExecStopPost", "ExecReload", "Environment", "EnvironmentFiles", "PassEnvironment", "RootDirectory", "RootImage", "Wants", "Requisite", "BindsTo", "Conflicts", "OnFailure", "OnSuccess", "Triggers", "TriggeredBy", "PartOf", "Upholds"} {
 		expected[key] = ""
 	}
+	expected["Environment"] = environment
 	for key, value := range expected {
 		if values[key] != value {
 			return result, fmt.Errorf("validator repair loaded unit property differs: %s", key)

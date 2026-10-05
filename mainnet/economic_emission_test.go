@@ -8,10 +8,12 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"math"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -302,15 +304,19 @@ func TestEconomicEmissionRejectsAnchorAndClosingCanonicalConflicts(t *testing.T)
 			fixture.policy.From.Hash = "0x" + strings.Repeat("dd", 32)
 		} else {
 			prior := fixture.chain.fault
+			var closingStarted atomic.Bool
 			fixture.chain.fault = func(method string, params []json.RawMessage, count int) (any, bool) {
-				if method == "chain_getBlockHash" && len(params) == 1 && string(params[0]) == "102" {
+				if method == "chain_getFinalizedHead" && count == 2 {
+					closingStarted.Store(true)
+				}
+				if closingStarted.Load() && method == "chain_getBlockHash" && len(params) == 1 && string(params[0]) == "102" {
 					return "0x" + strings.Repeat("dd", 32), true
 				}
 				return prior(method, params, count)
 			}
 		}
 		result, err := observeEconomicEmission(t.Context(), fixture.client, fixture.policy, rootObjectHash(fixture.policy))
-		if err == nil || result.Complete || !strings.Contains(err.Error(), "conflict") {
+		if !errors.Is(err, errRpcIntegrity) || result.Complete {
 			t.Fatalf("finalized conflict passed: %v", err)
 		}
 		if closing && (len(result.Blocks) != 2 || result.ObservedIncentiveTotalAlpha != "10") {

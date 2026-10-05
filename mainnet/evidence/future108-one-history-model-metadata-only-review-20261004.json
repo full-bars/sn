@@ -1,0 +1,125 @@
+{
+  "schema": "future108-one-history-model-metadata-only-resource-review-v1",
+  "status": "RECOMMEND_EXPLICIT_ROOT_ADOPTION_METADATA_ONLY_FRESH_GUARDS_REQUIRED",
+  "time_ns": 1791154190294230679,
+  "review_only": true,
+  "scope": {
+    "metadata_slot_count_max": 1,
+    "operations": [
+      "bounded selective source staging of the exact Git source tuple",
+      "offline readonly go list -deps -test -json for sealed package selections"
+    ],
+    "not_authorized": [
+      "go list -export",
+      "go build",
+      "go test or test binary execution",
+      "Go/C/Rust compilation",
+      "Rust bodies",
+      "DB startup",
+      "dependency download",
+      "cache cleanup",
+      "large whole clones or LFS hydration",
+      "mutation or retargeting of the healthy history/model inputs or guards"
+    ],
+    "source_tuple": {
+      "sn": {
+        "commit": "5aaf88a6cbcee131164dd99f670a111df4313b5d",
+        "tree": "a7f232801f9f57fe4e6ed56f6f39b4c855c209c1"
+      },
+      "core": {
+        "commit": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+        "tree": "dbba7a7fff5e598f6deb44d4a26061c6276da3d5"
+      },
+      "server": {
+        "commit": "80bcc28578b177626e0080fda2d1af26932b3b6f",
+        "tree": "8d265e0fa81cffd46a0130287dbb4d97cea4c5e5"
+      }
+    },
+    "workspace_plan": "Sol must seal actual workspace, replacement/module inputs, selected-package argv and staging roots before its launch; the stage produces the exact dependency closure for a later separate compile review."
+  },
+  "accounting": {
+    "data_original_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "accounting_floor_bytes": 0,
+    "floor_formula": "max(0,113681502208-115964116992)",
+    "negative_floor_credit": false,
+    "baseline_rebased": false,
+    "margin": 2,
+    "history_count_max": 1,
+    "history_disk_forecast_bytes": 4294967296,
+    "history_memory_forecast_bytes": 2147483648,
+    "exact_active_model_count_max": 1,
+    "exact_active_model_disk_forecast_bytes": 4294967296,
+    "exact_active_model_memory_forecast_bytes": 4294967296,
+    "metadata_slot_disk_forecast_including_staging_bytes": 2147483648,
+    "metadata_slot_memory_forecast_bytes": 2147483648,
+    "data_launch_minimum_bytes": 21474836480,
+    "data_formula": "0 +2*(4GiB history+4GiB model+2GiB metadata including staging)",
+    "memory_launch_minimum_bytes": 120259084288,
+    "memory_formula": "96GiB +2*(2GiB history+4GiB model+2GiB metadata)",
+    "memory_active_floor_bytes": 103079215104,
+    "healthy_active_data_floor_bytes": 6307319808,
+    "docker_root_original_baseline_bytes": 304423350272,
+    "docker_root_launch_minimum_bytes": 300128382976,
+    "docker_root_active_floor_bytes": 295833415680,
+    "free_inode_minimum_each": 1000000
+  },
+  "required_slot_limits": {
+    "memory_max_bytes": 4294967296,
+    "memory_swap_max_bytes": 0,
+    "cgroup_requirement": "Dedicated new unit contains staging, go-list, wrappers and descendants. Read back actual cgroup memory.max/memory.swap.max before payload; retain memory.peak/events and joined wait. Do not apply limits to either healthy workload.",
+    "whole_data_growth_stop_bytes": 4294967296,
+    "data_stop_requirement": "Stop and join only the metadata owner when aggregate data available has declined4GiB from its immediately captured start, or any original active floor is crossed. This extra stop reference is not a rebase of the original113681502208 accounting baseline.",
+    "offline_environment": {
+      "GOENV": "off",
+      "GOTOOLCHAIN": "local",
+      "GOPROXY": "off",
+      "GOSUMDB": "off",
+      "GOFLAGS": "-mod=readonly -p=2",
+      "GOMAXPROCS": "2"
+    },
+    "other_requirements": [
+      "Use one metadata slot; zero simultaneous compiler, extra short body or Rust workload.",
+      "Keep GOMODCACHE/GOCACHE at sealed existing origins; no cleanup or hidden alternate cache.",
+      "Stage outside live model/history trees and bind every copied/overlaid source byte to the exact commit; omit LFS hydration and bound staging/log output inside the same disk forecast.",
+      "Use an explicit finite deadline and stream output with a declared byte limit.",
+      "Unexpected compiler/body, module fetch, scope expansion, crossed limit or incomplete join is refusal, not qualification.",
+      "Fresh canonical lease/PID-start/kernel-lock and exact workload/container census must precede launch."
+    ]
+  },
+  "model_forecast_support": {
+    "evidence": {
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/model-body4g-memory-prospective-basis-20261004.json",
+      "sha256": "6394c57b6e551be5cd39bb667f5d3bdd3f6a10e42ac2f063864cb5c29eaa3bab"
+    },
+    "meaning": "4GiB is an exact-workload prospective estimate with8GiB reservation, supported by two retained full-run DB sample series and partial dedicated current owner/body peaks. It is not an observed future upper bound.",
+    "active_model_tuple": {
+      "server": "c60b2bc173758fd1507c8385311a772ddee37730",
+      "core": "7de1d3e8d1d3012742da653ec80be899143f620e",
+      "sn": "0fbb0ccfe6285dbc160c3496bfccf8c3e1c9b281"
+    },
+    "active_model_pid_start": {
+      "pid": 2278433,
+      "start": "102548058"
+    },
+    "active_history_pid_start": {
+      "pid": 1970944,
+      "start": "101917367"
+    }
+  },
+  "non_admission_snapshot": {
+    "time_ns": 1791154111191353031,
+    "data_available_bytes": 27616780288,
+    "docker_available_bytes": 301550653440,
+    "memory_available_bytes": 129575669760,
+    "all_candidate_thresholds_fit": true,
+    "fresh_runner_observation_required": true
+  },
+  "later_compile_status": "NOT_ADMITTED: actual dependency closure, final package source and cache binding require separate prospective compiler review; no old b870 warmth assumption.",
+  "actions_by_reviewer": {
+    "launched_staging_or_go_list": false,
+    "launched_compiler_or_bodies": false,
+    "changed_healthy_guards": false,
+    "performed_cleanup": false
+  }
+}

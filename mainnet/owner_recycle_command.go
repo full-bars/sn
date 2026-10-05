@@ -1,5 +1,5 @@
-// Recycle commands observe, plan and retain public handoffs. They expose neither
-// a signing device/private key nor an author_submitExtrinsic or service route.
+// Recycle commands separate portable owner-local Ledger signing from host
+// custody and independently approved bounded submission of original bytes.
 package main
 
 import (
@@ -16,8 +16,13 @@ import (
 
 // Public dispatcher keeps reads separate from offline custody operations.
 func runOwnerRecycleCommand(ctx context.Context, args []string, stdout, stderr io.Writer) int {
+	return runOwnerRecycleCommandWithAdapter(ctx, args, stdout, stderr, nil)
+}
+
+// Only tests substitute the hardware boundary; no public bypass flag exists.
+func runOwnerRecycleCommandWithAdapter(ctx context.Context, args []string, stdout, stderr io.Writer, adapter ownerSigningAdapter) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "owner-recycle requires observe, plan, reserve, export, inspect-request, ledger-plan, import, status or reconcile")
+		fmt.Fprintln(stderr, "owner-recycle requires observe, plan, reserve, export, inspect-request, ledger-plan, sign, import, import-reply, status, reconcile, submit-plan or submit")
 		return 2
 	}
 	var value any
@@ -44,10 +49,12 @@ func runOwnerRecycleCommand(ctx context.Context, args []string, stdout, stderr i
 		}
 	case "inspect-request", "ledger-plan":
 		value, err = ownerRecycleRequestCommand(ctx, args, stderr)
-	case "reserve", "export", "import", "status", "reconcile":
+	case "sign":
+		value, err = ownerRecycleSignCommand(ctx, args[1:], stderr, adapter)
+	case "reserve", "export", "import", "import-reply", "status", "reconcile", "submit-plan", "submit":
 		value, err = ownerRecycleCustodyCommand(ctx, args, stderr)
 	default:
-		err = errors.New("unknown owner-recycle command; signing and broadcasting are not installed")
+		err = errors.New("unknown owner-recycle command")
 	}
 	if err != nil {
 		fmt.Fprintln(stderr, err)
@@ -160,8 +167,8 @@ func ownerRecycleRequestCommand(ctx context.Context, args []string, stderr io.Wr
 	return request.ledgerTranscript(trust, proof)
 }
 
-// Only explicit approved host-custody paths are opened here. The public API can
-// retain an externally supplied signature, but never issue or transmit one.
+// Host custody imports public bytes only. Submission additionally requires a
+// separately signed production authority policy and never invokes a signer.
 func ownerRecycleCustodyCommand(ctx context.Context, args []string, stderr io.Writer) (value any, resultErr error) {
 	mode := args[0]
 	flags := flag.NewFlagSet("owner-recycle "+mode, flag.ContinueOnError)
@@ -170,6 +177,8 @@ func ownerRecycleCustodyCommand(ctx context.Context, args []string, stderr io.Wr
 	key := flags.String("approval-key", "", "independent approval public key")
 	accepted := flags.String("accept-action-hash", "", "independently accepted action request hash")
 	var metadataPath, ledgerPath, signaturePath, signatureHash, requestHash string
+	var replyPath, replyHash, submissionPath, submissionHash, submissionKey, authorityHash string
+	maximumPosts := uint(1)
 	var ledgerResponse bool
 	if mode == "export" {
 		flags.StringVar(&metadataPath, "metadata", "", "exact metadata14 hex file")
@@ -181,8 +190,30 @@ func ownerRecycleCustodyCommand(ctx context.Context, args []string, stderr io.Wr
 		flags.StringVar(&requestHash, "accept-request-hash", "", "original exported request hash")
 		flags.BoolVar(&ledgerResponse, "ledger-response", false, "require exactly 00 plus64 Ed25519 bytes, excluding status words")
 	}
+	if mode == "import-reply" {
+		flags.StringVar(&replyPath, "reply", "", "original owner-local public recycle reply")
+		flags.StringVar(&replyHash, "reply-sha256", "", "exact original public reply file pin")
+		flags.StringVar(&requestHash, "accept-request-hash", "", "original retained exported request hash")
+	}
+	if mode == "submit-plan" || mode == "submit" {
+		flags.StringVar(&authorityHash, "production-authority-hash", "", "independently reviewed production runtime, release, finality and global owner custody authority")
+	}
+	if mode == "submit-plan" {
+		flags.UintVar(&maximumPosts, "maximum-posts", 1, "unsigned finite cumulative post allowance, 1 through 8")
+	}
+	if mode == "submit" {
+		flags.StringVar(&submissionPath, "submission-policy", "", "separate independently signed original-transaction submission approval")
+		flags.StringVar(&submissionHash, "submission-policy-sha256", "", "exact signed submission file pin")
+		flags.StringVar(&submissionKey, "submission-approval-key", "", "independently supplied submission approval key")
+	}
 	if err := flags.Parse(args[1:]); err != nil || flags.NArg() != 0 || *configPath == "" || !rootCanonicalHash(*key) || !planSha256(*accepted) {
 		return nil, errors.New("recycle custody requires --config FILE --approval-key HEX --accept-action-hash HASH")
+	}
+	if mode == "import-reply" && (replyPath == "" || !planSha256(replyHash) || !planSha256(requestHash)) ||
+		(mode == "submit-plan" || mode == "submit") && !planSha256(authorityHash) ||
+		mode == "submit-plan" && (maximumPosts == 0 || maximumPosts > 8) ||
+		mode == "submit" && (submissionPath == "" || !planSha256(submissionHash) || !rootCanonicalHash(submissionKey)) {
+		return nil, errors.New("recycle owner reply and submission modes require their separate exact independent pins and bounds")
 	}
 	raw, _, err := readBootstrapRootFile(ctx, *configPath, 128*1024)
 	if err != nil {
@@ -198,7 +229,7 @@ func ownerRecycleCustodyCommand(ctx context.Context, args []string, stderr io.Wr
 	if config.Action.RequestHash != *accepted {
 		return nil, errors.New("recycle action differs from independently accepted hash")
 	}
-	for _, path := range []string{*configPath, metadataPath, ledgerPath, signaturePath} {
+	for _, path := range []string{*configPath, metadataPath, ledgerPath, signaturePath, replyPath, submissionPath} {
 		if path == config.Action.StatePath || path == config.Action.StatePath+".lock" {
 			return nil, errors.New("recycle input overlaps custody journal")
 		}
@@ -220,6 +251,34 @@ func ownerRecycleCustodyCommand(ctx context.Context, args []string, stderr io.Wr
 	switch mode {
 	case "reserve", "status":
 		return custody.load()
+	case "import-reply":
+		record, err := custody.load()
+		if err != nil || record.Request == nil || record.Request.ContentHash != requestHash {
+			return nil, errors.Join(errors.New("recycle owner reply lacks original exported custody"), err)
+		}
+		reply, err := readOwnerSigningReply(ctx, replyPath, replyHash)
+		if err != nil {
+			return nil, err
+		}
+		signature, err := validateOwnerRecycleSigningReply(*record.Request, reply)
+		if err != nil {
+			return nil, err
+		}
+		return custody.importSignature(requestHash, signature)
+	case "submit-plan":
+		record, err := custody.load()
+		if err != nil {
+			return nil, err
+		}
+		approval, err := ownerRecycleSubmissionTemplate(record)
+		if err != nil {
+			return nil, err
+		}
+		approval.AuthorityHash, approval.MaximumAttempts = authorityHash, uint8(maximumPosts)
+		return struct {
+			Approval     ownerRecycleSubmissionApproval `json:"approval_template"`
+			SigningBytes string                         `json:"signing_bytes"`
+		}{Approval: approval, SigningBytes: "0x" + hex.EncodeToString(approval.signingBytes())}, nil
 	case "export":
 		metadata, _, err := readBootstrapRootFile(ctx, metadataPath, 2*maxMetadataRpcReplyBytes+3)
 		if err != nil {
@@ -249,12 +308,28 @@ func ownerRecycleCustodyCommand(ctx context.Context, args []string, stderr io.Wr
 			signature = signature[1:]
 		}
 		return custody.importSignature(requestHash, signature)
-	case "reconcile":
+	case "reconcile", "submit":
+		var approval ownerRecycleSubmissionApproval
+		if mode == "submit" {
+			raw, actual, err := readBootstrapRootFile(ctx, submissionPath, 32*1024)
+			if err != nil || actual != submissionHash {
+				return nil, errors.Join(errors.New("recycle submission policy file differs from independent pin"), err)
+			}
+			if err := decodePlanJson(raw, &approval); err != nil {
+				return nil, err
+			}
+			if approval.AuthorityHash != authorityHash {
+				return nil, errors.New("recycle submission policy differs from independently pinned production authority")
+			}
+		}
 		chain, err := newOwnerRecycleCanonicalChain(config, *key)
 		if err != nil {
 			return nil, err
 		}
 		defer chain.client.httpClient.CloseIdleConnections()
+		if mode == "submit" {
+			return custody.submit(ctx, chain, approval, submissionKey)
+		}
 		return custody.reconcile(ctx, chain)
 	}
 	return nil, errors.New("unknown recycle custody operation")

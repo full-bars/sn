@@ -1,0 +1,75 @@
+{
+  "schema": "urnetwork-source-review-v1",
+  "date_utc": "2026-10-04",
+  "status": "source-candidate-not-compiled-or-executed",
+  "source_parent": "3b3fb7f55d1feea6ae47e07febb6f0b612dccc16",
+  "dependencies": {
+    "core_final": "f664578524b3f06c3ae53f7911a7b55a697cb92a",
+    "core_custody_parent": "7706920460ebe4e76acc4169da3187f61591044d",
+    "core_original_lifecycle_parent": "7de1d3e8d1d3012742da653ec80be899143f620e",
+    "miner_portable_decoder": "ad703e8d6dfbf286a682079b5fb54c2939f3528e",
+    "miner_actual_constructor_and_runtime_scope": "07d531ba57dcd76fa14856a8c0538a133a6785c1",
+    "miner_source_evidence": "4c92ffeb648157fde6bc9871a2970f4d2d3bc652",
+    "sn_ancestry": [
+      "b4662ed8e8571d011abda4d5454a97aa184a8b5a",
+      "819882b4ce99619ef0842f659dccf3cfc9547127",
+      "3b3fb7f55d1feea6ae47e07febb6f0b612dccc16"
+    ]
+  },
+  "complete_owner_profile": {
+    "kind": "sdk-original-work-outbox",
+    "scope": "daemon",
+    "relative_path": ".",
+    "exclusive_root": true,
+    "input_schema": "urnetwork-sdk-work-preparation-v1",
+    "inputs": ["capture_profile.path", "capture_profile.sha256", "slot"],
+    "independent_authority": "Protected exact profile bytes pass the shared Miner decoder. The explicitly selected slot supplies logical outbox path, domain hash, client id, provider public key and independent request public key. No retained leaf selects these values.",
+    "root": "Process-owned private 0700 original outbox at its approved logical path",
+    "root_attribute": {
+      "name": "user.urnetwork.sdk-work.v1",
+      "maximum_bytes": 4096,
+      "schema": "urnetwork-sdk-whole-work-outbox-v1"
+    },
+    "members": [
+      {"path": ".owner.lock", "mode": "0600", "meaning": "Retained exclusive lease inode and canonical append-only physical member index", "maximum_bytes": 131072},
+      {"path": "<64 lowercase hex phase digest>.json", "mode": "0400", "meaning": "Exact canonical originally signed request and SDK cut submission", "maximum_each_bytes": 12582912}
+    ],
+    "maximum_original_records": 256,
+    "maximum_original_bytes": 134217728,
+    "unknown_names_or_owner_attributes": "Refused; existing preparation checkpoint is retained by the outer preparation owner",
+    "fresh_birth": "Only explicit accepted storage-prepare fresh request and empty-root fence may publish the pure SDK helper's initial checkpoint with no-replace custody. Runtime missing root, index or checkpoint refuses.",
+    "restore": "Complete original physical inventory, original checkpoint and signed submissions remain authoritative. Restore verifies copied originals under the independent profile and returns separately derived physical index bytes plus rebound checkpoint. Only physical device/inode coordinates and consequent index digests change; no signature, logical id, original digest, generation, birth authority or restart permission is minted.",
+    "pending": "Complete pending bytes retain their original pending phase during portable restore and read-only prelaunch admission. Only the joined actual runtime owner may reconcile their exact publication. Missing or partial pending bytes remain unknown and refused.",
+    "historical_key_gate": "Multiple original generations under the exact approved provider key are supported. Rotated historical keys require separately approved original profile/key-history authority; leaves cannot self-authorize rotation."
+  },
+  "core_corrections": [
+    "Complete checkpoint and index custody prevent deleted acknowledged files from being interpreted as new capture permission, including after restart.",
+    "Retained ancestor, root, index and original descriptors fence physical replacements, aliases, hard links and changed bytes. Failed reads and cancellation precede equality and byte-count comparisons.",
+    "Publication preserves uncertain pending original bytes; no live recapture occurs after a mutation failure.",
+    "Transient incomplete cuts consume no immutable outbox phase; the same signed permission may capture only after actual pending callback completion.",
+    "Pure borrowed-read restore API has no SN or durablevolume import in the SDK parent and returns explicit physical index bytes for copied inodes.",
+    "Inventory registers only the exact SDK and validator.requests.v1 attributes at 4096 bytes each; nearby unknown names remain refused.",
+    "Physical metadata preparation admits existing immutable 0400 original members while requiring its unsigned index to remain 0600."
+  ],
+  "sn_dispatcher_changes": [
+    "mainnet/storage_prepare_owners_linux.go: exact SDK fresh build and inspection cases",
+    "mainnet/storage_prepare_restore_linux.go: exact SDK original restore plan and inspection cases",
+    "mainnet/storage_prepare_linux.go: exact SDK index derivation route"
+  ],
+  "new_sn_test_roots": [
+    "TestStoragePreparationSdkFreshBirthAdmitsActualReadOnlyOwner",
+    "TestStoragePreparationSdkEmptyRestoreKeepsOriginalBirth",
+    "TestStoragePreparationSdkRestoreRetainsActualRuntimeOriginals",
+    "TestStoragePreparationSdkRestoreRefusesMissingOriginalAndForeignScope"
+  ],
+  "test_boundary": "Tests use public storage-prepare plan/apply/export/restore commands, actual SDK worker capture/delivery with a synthetic TLS request authority, original signed protocol bytes, real copied files, actual readonly SDK admission and actual new SDK lifecycle delivery. Refusals cover missing birth/leaf and independently mismatched client/provider key/domain/request authority. Core source tests cover interrupted pending publication and actual CreateContract callback completion. They do not qualify the separately owned Server endpoints or authorize restart.",
+  "adjacent_prior_source": {
+    "runtime_checkpoint_grammar": "819882b4 retains original runtime grammar before physical rebinding",
+    "attempt_ledger_observation_causes": "3b3fb7f5 retains syscall causes before identity and acknowledgement comparisons",
+    "style_only_successor": "The two prior new test files now use plain homogeneous loops instead of normal t.Run subtests. Their root names and intended assertions are unchanged.",
+    "claim_reserved_request_files": "Untouched; Claim owns pre-SEED request preparation and restoration. Core registry registration is the agreed dependency."
+  },
+  "source_checks": ["gofmt", "git diff --check", "exact dependency source inspection"],
+  "qualification": false,
+  "pending_qualification": "Independent compilation, selected normal/race roots, omission controls and neighboring source scopes under the canonical execution lease and reviewed resources. No author build, test body, database, deployment, live-key or chain action was performed."
+}

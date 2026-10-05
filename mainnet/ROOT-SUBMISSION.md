@@ -50,15 +50,20 @@ source, existing root seat/generation, native nonce/mortal window, custody,
 positive basket, fee reservation and original 1–8 broadcast bound. EVM945 is
 refused. A proposal's approval does not prove current custody or eligibility.
 
-The route requires one canonical HTTP(S) URL with an explicit IP address and
-port. There is no DNS resolution, default port, proxy, redirect, credential,
-query, fragment, alternate endpoint or fallback node. Every dial checks the
-approved address. HTTPS additionally requires ordinary certificate/hostname
-verification and an independently approved SHA-256 leaf SPKI pin. The code does
-not weaken certificate verification. Plain HTTP requires the approved owned
-network's integrity; an IP address does not independently prove node ownership
-or a proxy's upstream. Route ownership, VPN/proxy configuration and source-to-Wasm
-provenance remain operational approval inputs.
+The route requires one exact canonical HTTP(S) URL. HTTPS supports a lowercase
+public hostname, including `https://archive.chain.opentensor.ai` with its default
+port 443, or a literal IP address with an explicit port. Plain HTTP retains the
+literal-IP and explicit-port profile. DNS resolves only the approved hostname;
+every dial checks that exact hostname/IP and port. There is no proxy, redirect,
+credential, query, fragment, alternate endpoint or fallback node. HTTPS requires
+ordinary certificate/hostname verification and an independently approved
+SHA-256 leaf SPKI pin. The URL and pin remain signed approval fields; an existing
+signature cannot authorize another spelling, endpoint or certificate key.
+Plain HTTP relies on the approved network's integrity. Endpoint ownership,
+transport authentication and independent finality authority are separate facts;
+the public archive does not need to be an owned node. Legacy signed policy
+strings and evidence tags retain their exact bytes, including
+`owned-rpc-assertion`, without proving public endpoint ownership.
 
 ## Durable original bytes and numbered attempts
 

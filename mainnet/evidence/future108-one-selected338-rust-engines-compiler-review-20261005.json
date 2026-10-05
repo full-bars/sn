@@ -1,0 +1,72 @@
+{
+  "actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-metadata-v1.receipt.json",
+    "sha256": "c65e95249a0eb1f9c3fc104648cbaf2c7b2bfdff4eed60c345cb176a6b703c15"
+  },
+  "artifact_rule": "Exact selected path package ID/target/src/profile.test plus Cargo build-finished success and fresh:false; independently protected0500/nlink1 copied ELF per target. Never execute mutable target image.",
+  "closed_model30_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected1ea-native-model30-closed-terminal-proof-v1.json",
+    "sha256": "819d8191629441e62f6e450e24a1d01cf0c5a649d4020d679fe0a0602efb9c92"
+  },
+  "dependency_scope": "464 actual Cargo packages,431 source roots, complete registry package files and SDK checkout bound. Internal SDK symlinks fixed to bound checkout; no source copy.",
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 2100,
+    "TimeoutStopSec": 90,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-selected338-rust-engines-compile-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-selected338-rust-engines-compile-v1-20261005.service"
+  },
+  "forecast": "Unchanged6GiB build plus1GiB later principal-export disk allowances reserved2x=14GiB. Serial4GiB compiler forecast at2x hard8GiB, zero swap; conservative112GiB memory admission remains. Whole-data growth stop12GiB plus original healthy floors. Sampled past maxima are not future upper bounds.",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-engines-compiler-job-v1.json",
+    "sha256": "ee197cb08559a45eabc66912a7823f1d0d5b24715aa1cdcdaa6539005a4cc8aa"
+  },
+  "lease_and_ownership": "Exact canonical USER invocation/start/runtime and2190-second horizon; exclusive existing target lease held until actual child tree joined, all source/ELF checks and terminal sealing finish. No canonical baseline/cap/floor change.",
+  "pending": "Separate libtest compiler/principal export/Go carry consumers and controls remain pending; no author compiler or body execution.",
+  "prior_actual_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-metadata-v1.receipt.json",
+    "sha256": "c65e95249a0eb1f9c3fc104648cbaf2c7b2bfdff4eed60c345cb176a6b703c15"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 12884901888,
+    "data_minimum_available_bytes": 15032385536,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "ee197cb08559a45eabc66912a7823f1d0d5b24715aa1cdcdaa6539005a4cc8aa",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "metadata_count": 0,
+    "model_count": 0,
+    "runner_sha256": "c24f017bc622616fd255e8b474a45250d441dbf09ca3d9e4d203d32ee73a7dc5",
+    "status": "ADOPTED_ONE_SELECTED338_RUST_COMPILER_AFTER_MODEL30"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-selected338-rust-engines-compiler-adoption-20261005.json",
+  "resource_class_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-exclusive-selected338-rust-assets-prospective-class-review-v2-20261005.json",
+    "sha256": "dbff2939b105eef3bc3bef39274d17b7f308776063bd8308ded6d76b7795b94b"
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-selected338-rust-compiler-v1.py",
+    "sha256": "c24f017bc622616fd255e8b474a45250d441dbf09ca3d9e4d203d32ee73a7dc5"
+  },
+  "schema": "selected338-rust-engines-compiler-review-v1",
+  "scope": "One exact locked/offline compiler child for selected338 capture and historical-proof production binaries; no transition-replay target, clean, test body or export.",
+  "selected_targets": [
+    "runtime-historical-capture",
+    "runtime-historical-proof"
+  ],
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-dependency-source-closure-v1.json",
+    "sha256": "4cb6db110634f4595abcec1ed91f2be9968ea90ffe093be0bbf3236989f81fb4"
+  },
+  "status": "AUTHOR_SEALED_READY_FOR_ROOT_ADOPTION"
+}

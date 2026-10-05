@@ -33,15 +33,17 @@ type attemptPreparationObservation struct {
 // The caller joins all backend users before close; it retains the borrowed
 // root and its external plan/fence. Only the backend descriptor is owned here.
 type attemptPreparationView struct {
-	ctx          context.Context
-	root         *os.File
-	rootStat     unix.Stat_t
-	backend      *os.File
-	backendStat  unix.Stat_t
-	limits       AttemptLedgerDiskLimits
-	members      map[string]attemptPreparationObservation
-	anchor       []byte
-	anchorAbsent bool
+	ctx                 context.Context
+	root                *os.File
+	rootStat            unix.Stat_t
+	backend             *os.File
+	backendStat         unix.Stat_t
+	limits              AttemptLedgerDiskLimits
+	members             map[string]attemptPreparationObservation
+	anchor              []byte
+	anchorAbsent        bool
+	requestAnchor       []byte
+	requestAnchorAbsent bool
 }
 
 // Preparation operates only on private files owned by the exact calling identity.
@@ -158,6 +160,9 @@ func openAttemptPreparationView(ctx context.Context, root *os.File, limits Attem
 	if self.anchorAbsent {
 		resultErr = nil
 	}
+	if resultErr == nil {
+		self.requestAnchor, self.requestAnchorAbsent, resultErr = readProviderAttemptRequestAttribute(root)
+	}
 	return self, resultErr
 }
 
@@ -262,6 +267,9 @@ func (self *attemptPreparationView) census(scope AttemptLedgerPreparationScope) 
 			return nil, errors.Join(attemptLedgerCustodyLoss("preparation checkpoint is pending or differs from original physical custody", nil), err)
 		}
 	}
+	if _, err := self.requestCheckpoint(scope, nil, false); err != nil {
+		return nil, err
+	}
 	return files, self.checkCensus()
 }
 
@@ -273,6 +281,11 @@ func (self *attemptPreparationView) censusMembers(scope AttemptLedgerPreparation
 		return nil, err
 	}
 	allowed := map[string]bool{attemptLedgerStoreName: true, attemptLedgerImportName: true, attemptLedgerReadyName: true}
+	if scope.Requests != nil {
+		allowed[ProviderAttemptRequestJournalName] = true
+	} else if !self.requestAnchorAbsent {
+		return nil, attemptLedgerCustodyLoss("preparation cannot omit original request custody", nil)
+	}
 	if scope.Legacy != nil {
 		allowed[attemptLedgerLegacyName] = true
 	}
@@ -281,15 +294,18 @@ func (self *attemptPreparationView) censusMembers(scope AttemptLedgerPreparation
 			if name == attemptLedgerPendingName {
 				allowed[name] = true
 			}
+			if scope.Requests != nil && name == ProviderAttemptRequestPendingName {
+				allowed[name] = true
+			}
 		}
 	}
 	for _, name := range rootNames {
-		if strings.HasPrefix(name, "attempt-ledger") && !allowed[name] {
+		if (strings.HasPrefix(name, "attempt-ledger") || strings.HasPrefix(name, "provider-attempt-request")) && !allowed[name] {
 			return nil, attemptLedgerCustodyLoss("preparation retains unknown or pending ledger custody", nil)
 		}
 	}
 	files := []AttemptLedgerPreparationFile{{Path: attemptLedgerStoreName, Kind: "directory", Mode: self.backendStat.Mode & 0777}}
-	for _, name := range []string{attemptLedgerImportName, attemptLedgerReadyName, attemptLedgerLegacyName, attemptLedgerPendingName} {
+	for _, name := range []string{attemptLedgerImportName, attemptLedgerReadyName, attemptLedgerLegacyName, attemptLedgerPendingName, ProviderAttemptRequestJournalName, ProviderAttemptRequestPendingName} {
 		if !allowed[name] {
 			continue
 		}
@@ -300,6 +316,10 @@ func (self *attemptPreparationView) censusMembers(scope AttemptLedgerPreparation
 			maximum = scope.Limits.MaxLegacyBytes
 		} else if name == attemptLedgerPendingName {
 			maximum = scope.Limits.MaxRecordBytes
+		} else if name == ProviderAttemptRequestJournalName {
+			maximum = scope.Requests.Preparation.Limits.MaxJournalBytes
+		} else if name == ProviderAttemptRequestPendingName {
+			maximum = scope.Requests.Preparation.Limits.MaxRecordBytes
 		}
 		observation, err := self.observe(self.root, name, name, maximum)
 		if err != nil {
@@ -403,14 +423,18 @@ func (self *attemptPreparationView) checkCensus() error {
 		return attemptLedgerCustodyLoss("preparation backend member census changed", nil)
 	}
 	anchor, err := readAttemptLedgerCustodyAttribute(self.root)
-	if self.anchorAbsent && errors.Is(err, unix.ENODATA) {
-		return nil
+	if err != nil && !(self.anchorAbsent && errors.Is(err, unix.ENODATA)) {
+		return err
 	}
+	if self.anchorAbsent != errors.Is(err, unix.ENODATA) || !self.anchorAbsent && !bytes.Equal(anchor, self.anchor) {
+		return attemptLedgerCustodyLoss("preparation custody checkpoint changed during inspection", nil)
+	}
+	requestAnchor, absent, err := readProviderAttemptRequestAttribute(self.root)
 	if err != nil {
 		return err
 	}
-	if self.anchorAbsent || !bytes.Equal(anchor, self.anchor) {
-		return attemptLedgerCustodyLoss("preparation custody checkpoint changed during inspection", nil)
+	if absent != self.requestAnchorAbsent || !bytes.Equal(requestAnchor, self.requestAnchor) {
+		return attemptLedgerCustodyLoss("preparation request custody changed during inspection", nil)
 	}
 	return nil
 }

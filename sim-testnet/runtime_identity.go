@@ -226,7 +226,7 @@ func readRuntimeArtifactWithPolicy(ctx context.Context, chain *crv4.Chain, final
 	var authenticated crv4.AuthenticatedRuntimeArtifact
 	err := retryFinalSemanticRPCCall(ctx, nil, policy, func(attemptCtx context.Context) error {
 		var attemptErr error
-		authenticated, attemptErr = crv4.AuthenticateRuntimeArtifactAtContext(attemptCtx, chain, finalized, allowedIdentities...)
+		authenticated, attemptErr = crv4.ReadRuntimeArtifactAtContext(attemptCtx, chain, finalized, allowedIdentities...)
 		return attemptErr
 	})
 	if err != nil {

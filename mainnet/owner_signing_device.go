@@ -132,9 +132,18 @@ type ownerSigningDeviceStore struct {
 	storage *mainnetDurableDirectory
 	path    string
 	binding string
-	request ownerSigningRequest
+	scope   ownerSigningDeviceScope
 	lock    *os.File
 	failed  error
+}
+
+// A typed caller supplies its already authenticated request and reply verifier.
+// The record schema separates action families without changing old trim bytes.
+type ownerSigningDeviceScope struct {
+	Schema        string
+	RequestHash   string
+	HostStatePath string
+	ValidateReply func(ownerSigningReply) error
 }
 
 // Journal hashes include the independent adapter pins, request and phase.
@@ -172,7 +181,7 @@ func (self *ownerSigningDeviceStore) load() (ownerSigningDeviceRecord, error) {
 	}
 	claimed := record.ContentHash
 	record.ContentHash = ""
-	if record.Schema != ownerSigningStateSchema || record.BindingHash != self.binding || record.RequestHash != self.request.ContentHash || claimed != rootObjectHash(record) {
+	if record.Schema != self.scope.Schema || record.BindingHash != self.binding || record.RequestHash != self.scope.RequestHash || claimed != rootObjectHash(record) {
 		return record, errors.New("owner device journal identity or content seal differs")
 	}
 	record.ContentHash = claimed
@@ -189,7 +198,7 @@ func (self *ownerSigningDeviceStore) load() (ownerSigningDeviceRecord, error) {
 		if record.Reply == nil || !planSha256(record.ProofHash) {
 			return record, errors.New("owner signed journal lacks original proof or reply")
 		}
-		if _, err := record.Reply.validate(self.request); err != nil {
+		if err := self.scope.ValidateReply(*record.Reply); err != nil {
 			return record, err
 		}
 	default:
@@ -221,13 +230,25 @@ func (self *ownerSigningDeviceStore) save(record ownerSigningDeviceRecord) (resu
 // A single owner directory claims one request once; a new packet, executable,
 // backend or derivation cannot replace it even after expiry or uncertain I/O.
 func openOwnerSigningDeviceStore(ctx context.Context, config ownerSigningDeviceConfig, request ownerSigningRequest) (_ *ownerSigningDeviceStore, resultErr error) {
+	return openOwnerSigningDeviceScope(ctx, config, ownerSigningDeviceScope{Schema: ownerSigningStateSchema,
+		RequestHash: request.ContentHash, HostStatePath: request.Config.Action.StatePath,
+		ValidateReply: func(reply ownerSigningReply) error { _, err := reply.validate(request); return err }})
+}
+
+// Both owner action families use the same physical one-request custody rules.
+// No externally selected callback, journal schema or host path is interpreted.
+func openOwnerSigningDeviceScope(ctx context.Context, config ownerSigningDeviceConfig, scope ownerSigningDeviceScope) (_ *ownerSigningDeviceStore, resultErr error) {
+	if ctx == nil || scope.Schema != ownerSigningStateSchema && scope.Schema != ownerRecycleDeviceStateSchema || !planSha256(scope.RequestHash) ||
+		!bootstrapRootAbsolutePath(scope.HostStatePath) || scope.ValidateReply == nil {
+		return nil, errors.New("owner Ledger custody requires a typed authenticated request")
+	}
 	for _, path := range []string{config.StatePath, config.PythonPath, config.HelperPath, config.BackendPath} {
 		if !bootstrapRootAbsolutePath(path) {
 			return nil, errors.New("owner Ledger custody and tools require explicit canonical absolute paths")
 		}
 	}
-	if !planSha256(config.HelperHash) || !planSha256(config.BackendHash) || config.StatePath == request.Config.Action.StatePath ||
-		config.StatePath == request.Config.Action.StatePath+".lock" || filepath.Dir(config.StatePath) == filepath.Dir(request.Config.Action.StatePath) ||
+	if !planSha256(config.HelperHash) || !planSha256(config.BackendHash) || config.StatePath == scope.HostStatePath ||
+		config.StatePath == scope.HostStatePath+".lock" || filepath.Dir(config.StatePath) == filepath.Dir(scope.HostStatePath) ||
 		config.AppVersion[0] != 100 || config.AppVersion[1] == 0 && config.AppVersion[2] < 5 {
 		return nil, errors.New("owner Ledger state must be independently located with pinned helper/backend")
 	}
@@ -242,12 +263,12 @@ func openOwnerSigningDeviceStore(ctx context.Context, config ownerSigningDeviceC
 	binding := rootObjectHash(struct {
 		Config      ownerSigningDeviceConfig `json:"device_config"`
 		RequestHash string                   `json:"request_hash"`
-	}{Config: config, RequestHash: request.ContentHash})
+	}{Config: config, RequestHash: scope.RequestHash})
 	storage, err := openOwnerLocalDurableDirectory(ctx, filepath.Dir(config.StatePath))
 	if err != nil {
 		return nil, err
 	}
-	self := &ownerSigningDeviceStore{storage: storage, path: config.StatePath, binding: binding, request: request}
+	self := &ownerSigningDeviceStore{storage: storage, path: config.StatePath, binding: binding, scope: scope}
 	defer func() {
 		if resultErr != nil {
 			resultErr = errors.Join(resultErr, self.close())
@@ -309,7 +330,7 @@ func openOwnerSigningDeviceStore(ctx context.Context, config ownerSigningDeviceC
 	}
 	record, err := self.load()
 	if errors.Is(err, os.ErrNotExist) {
-		record = ownerSigningDeviceRecord{Schema: ownerSigningStateSchema, BindingHash: binding, RequestHash: request.ContentHash, Phase: "reserved"}
+		record = ownerSigningDeviceRecord{Schema: scope.Schema, BindingHash: binding, RequestHash: scope.RequestHash, Phase: "reserved"}
 		if err := self.save(record); err != nil {
 			return nil, err
 		}

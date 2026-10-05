@@ -371,9 +371,10 @@ func (self *releaseEvidenceV2StartupHistory) historicalDepositAudit(ctx context.
 		if err != nil {
 			return DepositAudit{}, err
 		}
+		defer reader.CloseIdleConnections()
 		artifact, err := reader.readCommittedReleaseDecisionV2Artifact(ctx, operator.commitment.ArtifactHash, min(self.cfg.EvidenceV2.Bounds.MaxArtifactBytes, maximumPayoutArtifactBytes))
 		if err != nil {
-			return DepositAudit{}, errors.Join(errors.New("historical committed payout bytes are unavailable or invalid; current failure is not past outage evidence"), err)
+			return DepositAudit{}, fmt.Errorf("historical committed payout bytes are unavailable or invalid; current failure is not past outage evidence: %w", err)
 		}
 		audit = EvaluateDepositArtifact(artifact, DepositArtifactExpectation{DeploymentID: self.cfg.DeploymentID, ChainID: self.cfg.ChainID, GenesisHash: self.cfg.GenesisHash, Netuid: self.cfg.Netuid, Coordinator: common.HexToAddress(self.cfg.Coordinator), SettlementVault: common.HexToAddress(self.cfg.SettlementVault), PolicyHash: self.cfg.PolicyHash, Epoch: observed.sourceEpoch, NoID: operator.noID, Signer: common.HexToAddress(config.ArtifactSigner), Start: payoutartifact.Boundary{Number: observed.sourceStart, Hash: releaseHex32(observed.sourceStartHash)}, End: payoutartifact.Boundary{Number: observed.sourceEnd, Hash: releaseHex32(observed.sourceEndHash)}, PayoutRoot: operator.commitment.PayoutRoot, ArtifactHash: operator.commitment.ArtifactHash, Committer: operator.commitment.Committer, RootSigner: operator.sourceVersion.RootSigner, CommitBlock: operator.commitment.CommitBlock}, epoch, operator.deposit, operator.convictionBefore, self.cfg.Policy.Deposit)
 	}
@@ -381,9 +382,8 @@ func (self *releaseEvidenceV2StartupHistory) historicalDepositAudit(ctx context.
 	return audit, ctx.Err()
 }
 
-// Exact content has an independent commitment and a finite caller allowance.
-// Join the actual response body's Close, including cancellation at EOF; never
-// route a late failure through the historical unavailable-audit branch.
+// Exact content retains its original commitment and byte allowance through one
+// five-minute read owner. An earlier caller deadline still ends all attempts.
 func (self *HTTPArtifactReader) readCommittedReleaseDecisionV2Artifact(ctx context.Context, hash [32]byte, maximum uint64) (result *payoutartifact.Artifact, resultErr error) {
 	if ctx == nil || self == nil || self.baseURL == nil || self.client == nil || hash == ([32]byte{}) || maximum == 0 || maximum > maximumPayoutArtifactBytes {
 		return nil, errors.New("historical committed artifact reader or bound is invalid")
@@ -392,25 +392,50 @@ func (self *HTTPArtifactReader) readCommittedReleaseDecisionV2Artifact(ctx conte
 		return nil, err
 	}
 	contentHash := fmt.Sprintf("sha256:%x", hash)
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, self.endpoint("/sn/artifact", url.Values{"hash": []string{contentHash}}), nil)
+	endpoint := self.endpoint("/sn/artifact", url.Values{"hash": []string{contentHash}})
+	err := retryReleaseHttpGet(ctx, func(readCtx context.Context) error {
+		var err error
+		result, err = self.readCommittedReleaseDecisionV2ArtifactAttempt(readCtx, endpoint, contentHash, maximum)
+		return err
+	}, self.retryHooks)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// Close each actual response before retry or publication. Only physical I/O
+// earns transport provenance; complete framing, grammar and digest failures do not.
+func (self *HTTPArtifactReader) readCommittedReleaseDecisionV2ArtifactAttempt(ctx context.Context, endpoint, contentHash string, maximum uint64) (result *payoutartifact.Artifact, resultErr error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 	response, err := self.client.Do(request)
 	if err != nil {
+		if response != nil && response.Body != nil {
+			err = errors.Join(err, self.closeCommittedReleaseDecisionV2Body(endpoint, response.Body))
+		}
 		return nil, err
 	}
 	defer func() {
-		resultErr = errors.Join(resultErr, response.Body.Close(), ctx.Err())
+		resultErr = errors.Join(resultErr, self.closeCommittedReleaseDecisionV2Body(endpoint, response.Body), ctx.Err())
 		if resultErr != nil {
 			result = nil
 		}
 	}()
-	if response.StatusCode != http.StatusOK || response.ContentLength > int64(maximum) || strings.ToLower(strings.TrimSpace(strings.Split(response.Header.Get("Content-Type"), ";")[0])) != "application/json" {
-		return nil, errors.New("historical committed artifact response has invalid status, media type or size")
+	if response.StatusCode != http.StatusOK {
+		return nil, &releaseHttpGetStatusError{endpoint: endpoint, status: response.StatusCode, retryAfter: attemptStreamHttpRetryAfter(response.Header)}
+	}
+	if response.ContentLength > int64(maximum) || strings.ToLower(strings.TrimSpace(strings.Split(response.Header.Get("Content-Type"), ";")[0])) != "application/json" {
+		return nil, errors.New("historical committed artifact response has invalid media type or size")
 	}
 	encoded, err := io.ReadAll(io.LimitReader(response.Body, int64(maximum)+1))
-	if err := releaseRpcObservationError(err, uint64(len(encoded)) <= maximum, errors.New("historical committed artifact exceeds its exact byte allowance")); err != nil {
+	err = committedReleaseDecisionHttpError(endpoint, "Read", err)
+	if uint64(len(encoded)) > maximum {
+		return nil, errors.Join(err, errors.New("historical committed artifact exceeds its exact byte allowance"))
+	}
+	if err != nil {
 		return nil, err
 	}
 	artifact, err := payoutartifact.Decode(encoded)
@@ -418,4 +443,22 @@ func (self *HTTPArtifactReader) readCommittedReleaseDecisionV2Artifact(ctx conte
 		return nil, err
 	}
 	return artifact, ctx.Err()
+}
+
+// Complete EOF can return a connection to the idle pool before Close reports
+// failure. Discard that uncertain connection before any retry or publication.
+func (self *HTTPArtifactReader) closeCommittedReleaseDecisionV2Body(endpoint string, body io.ReadCloser) error {
+	err := body.Close()
+	if err != nil {
+		self.client.CloseIdleConnections()
+	}
+	return committedReleaseDecisionHttpError(endpoint, "Close", err)
+}
+
+// Wrapping only the actual body error preserves mixed permanent siblings.
+func committedReleaseDecisionHttpError(endpoint, operation string, err error) error {
+	if err == nil {
+		return nil
+	}
+	return &url.Error{Op: operation, URL: endpoint, Err: err}
 }

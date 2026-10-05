@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "adopted_at": "2026-10-05T00:45:03.333702+00:00",
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_precondition": "Only AFTER actual latest178 mainnet66 body and list trees fully joined, zero compiler and zero other short. SolParallel sole execution owner. Preserve active model. No overlap authorized.",
+  "history_count": 0,
+  "job_sha256": "e9bb8935a802ceeaadc19aec6ab3acd0fd2a9db0f86265be5e8aa7ae2893ba7b",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 1,
+  "review_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-xops311-retry3-concrete-review-20261005.json",
+  "review_sha256": "2378aa6810aa36b83cce5e4d00e8f1b6a1c0885c73ab62f267e03b6e45cb381f",
+  "runner_sha256": "ed19a83b098c017cc7a94e1bd35c2320343248138affe691547ddac9bb4952b1",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_MODEL_PLUS_ONE_XOPS311_AFTER_COMPILER_JOIN"
+}

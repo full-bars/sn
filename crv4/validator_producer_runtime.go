@@ -20,11 +20,14 @@ const ValidatorProducerRuntimeProfile = "urnetwork-validator-producer-interface-
 // of testnet compatibility. The complete artifact remains caller authority.
 func ValidateValidatorProducerRuntimeArtifactContext(ctx context.Context, chain *Chain, artifact AuthenticatedRuntimeArtifact) error {
 	if ctx == nil || chain == nil || chain.API == nil || chain.API.Client == nil || chain.ProvisionalRuntimeCompatibilityEnabled() ||
-		artifact.BlockHash == (types.Hash{}) || artifact.CompatibilityProfile != "" || !artifact.authenticationProof.matches(chain, artifact) {
+		artifact.BlockHash == (types.Hash{}) || artifact.CompatibilityProfile != "" || !artifact.authenticationProof.matchesIdentity(chain, artifact) {
 		return errors.New("validator producer needs an exact authenticated non-provisional block artifact")
 	}
 	if err := ctx.Err(); err != nil {
 		return err
+	}
+	if !artifact.authenticationProof.transport.matches(chain) {
+		return &runtimeTransportObservationError{}
 	}
 	if artifact.Version.SpecName != "node-subtensor" || artifact.Version.SpecVersion == 0 || artifact.Version.TransactionVersion != 1 || artifact.Version.StateVersion != 1 {
 		return errors.New("validator producer runtime family or encoding version is unsupported")
@@ -67,11 +70,17 @@ func ValidateValidatorProducerRuntimeArtifactContext(ctx context.Context, chain 
 		return fmt.Errorf("validator producer runtime API: %w", err)
 	}
 	version, err := DecodeRuntimeVersionIdentity(raw)
-	if err != nil || version != artifact.Version {
-		return errors.Join(errors.New("validator producer runtime changed during capability authentication"), err)
+	if err != nil {
+		return err
+	}
+	if version != artifact.Version {
+		return errors.New("validator producer runtime changed during capability authentication")
 	}
 	if err := validateValidatorProducerRuntimeApis(raw); err != nil {
 		return fmt.Errorf("validator producer selective-metagraph API: %w", err)
+	}
+	if !artifact.authenticationProof.matches(chain, artifact) {
+		return ValidateRuntimeArtifactOwnerContext(ctx, chain, artifact)
 	}
 	return ctx.Err()
 }

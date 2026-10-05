@@ -150,10 +150,12 @@ func (self *ChainClient) confirmValidatorEvidenceTransactionV2(ctx context.Conte
 	if finalizedBlock < expected.Window.FinalizedBlock {
 		return nil, ErrValidatorEvidenceTransactionPending
 	}
-	readCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	receipt, err := chain.client.TransactionReceipt(readCtx, transaction.Hash())
-	err = errors.Join(err, readCtx.Err())
-	cancel()
+	var receipt *types.Receipt
+	err = chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		receipt, err = chain.client.TransactionReceipt(callCtx, transaction.Hash())
+		return err
+	})
 	if errors.Is(err, ethereum.NotFound) {
 		return nil, ErrValidatorEvidenceTransactionPending
 	}
@@ -184,10 +186,12 @@ func (self *ChainClient) confirmValidatorEvidenceTransactionV2(ctx context.Conte
 	if includedHash != [32]byte(receipt.BlockHash) {
 		return nil, errors.New("validator evidence receipt inclusion is no longer canonical")
 	}
-	readCtx, cancel = context.WithTimeout(ctx, chainCallTimeout)
-	included, err := chain.client.TransactionInBlock(readCtx, receipt.BlockHash, receipt.TransactionIndex)
-	err = errors.Join(err, readCtx.Err())
-	cancel()
+	var included *types.Transaction
+	err = chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		included, err = chain.client.TransactionInBlock(callCtx, receipt.BlockHash, receipt.TransactionIndex)
+		return err
+	})
 	if err != nil {
 		return nil, fmt.Errorf("read exact validator evidence transaction inclusion: %w", err)
 	}

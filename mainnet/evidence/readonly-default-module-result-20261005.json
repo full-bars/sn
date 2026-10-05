@@ -1,0 +1,65 @@
+{
+  "schema": "readonly-default-module-result-v1",
+  "checked_at": "2026-10-05T07:41:20.316542+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-fcfd-026b-c198-metadata-v2.receipt.json",
+    "sha256": "1d686b481aa1680bbd85412b208d0a9a8184ce6e042abdd3409a207c4ad70732"
+  },
+  "user_terminal_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-fcfd-026b-c198-metadata-v2-user-terminal-readback.json",
+    "sha256": "b0fd2b16cf835ffc48f24b24ce6ec11639b4e7e4702caefdd772293f739a61dd"
+  },
+  "source_tuple": {
+    "core": "026b850248352b72255be7a966e391e0a15e74c1",
+    "server": "c198263137730fe7fce7e9b83b6b6c298b3f9eba",
+    "sn": "fcfd5acde5c0a77eaedcbc2f39ce35f5f53052f4"
+  },
+  "source_mode": "physical-default-module-archives",
+  "phase_count": 5,
+  "all_waits_exit_zero_joined": true,
+  "graphs": [
+    {
+      "module": "sn",
+      "package_count": 1105,
+      "graph_pass": true
+    },
+    {
+      "module": "connect",
+      "package_count": 468,
+      "graph_pass": true
+    },
+    {
+      "module": "server",
+      "package_count": 1076,
+      "graph_pass": true
+    },
+    {
+      "module": "vlessinterop",
+      "package_count": 576,
+      "graph_pass": true
+    }
+  ],
+  "staging_provenance": {
+    "helper": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/stage-default-local-incremental-v1.py",
+      "sha256": "8c5b20159aecc260a31035db91b3073486b4182c7114b2f2da9a4e5b99382db6"
+    },
+    "new_bytes": 4946605,
+    "new_files": 36,
+    "prior_metadata_job": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-local-metadata-job-v1.json",
+      "sha256": "ac532b4c2e9173b8be3a05720c6ba1f9a8df342785b9d4ead72d1467631348b2"
+    },
+    "prior_metadata_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1.receipt.json",
+      "sha256": "236f5965da9e1434565677aa20026c392dcb02b56985a5a409aebd904a1886fc"
+    },
+    "prior_source_manifest": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-local-source-manifest-v1.json",
+      "sha256": "093587b9e087e34a61f88f5afb9dda4f8a185f8615d791c3a5e8f105a5688953"
+    },
+    "reused_files": 35643
+  },
+  "resource_errors": [],
+  "limit": "Actual cached offline GOWORKoff readonly graphs passed on committed module files. Establishes dependencies, not successful compilation, test behavior or mainnet deployment."
+}

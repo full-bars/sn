@@ -16,9 +16,8 @@ import (
 )
 
 const (
-	ethRpcOperationTimeout = 90 * time.Second
+	ethRpcOperationTimeout = 300 * time.Second
 	ethRpcRetryDelay       = 2 * time.Second
-	ethRpcMaximumAttempts  = 64
 )
 
 // Per-operation hooks allow deadline and cancellation tests without clock
@@ -60,7 +59,7 @@ func retryEthRpcRead(ctx context.Context, hooks ethRpcRetryHooks, read func(cont
 	ctx, cancel := withTimeout(ctx, ethRpcOperationTimeout)
 	defer cancel()
 	var lastErr error
-	for attempt := 1; attempt <= ethRpcMaximumAttempts; attempt++ {
+	for {
 		if err := ctx.Err(); err != nil {
 			return "", errors.Join(lastErr, err)
 		}
@@ -72,7 +71,7 @@ func retryEthRpcRead(ctx context.Context, hooks ethRpcRetryHooks, read func(cont
 			return value, nil
 		}
 		lastErr = err
-		if !retryableEthRpcError(err, false) || attempt == ethRpcMaximumAttempts {
+		if !retryableEthRpcError(err, false) {
 			return "", err
 		}
 		delay := ethRpcRetryDelay + time.Duration(rand.Int64N(int64(ethRpcRetryDelay/2)))
@@ -91,16 +90,22 @@ func retryEthRpcRead(ctx context.Context, hooks ethRpcRetryHooks, read func(cont
 			return "", errors.Join(lastErr, err)
 		}
 	}
-	return "", lastErr
 }
 
 // Every joined cause must permit retry. A timeout cannot hide malformed JSON,
 // an identity conflict, a contract refusal, or a response-close integrity error.
 func retryableEthRpcError(err error, transportOrigin bool) bool {
-	if err == nil || err == context.Canceled {
+	budget := &minerReadCauseBudget{remaining: minerReadCauseMaximumNodes}
+	return retryableEthRpcCause(err, transportOrigin, 0, budget)
+}
+
+// A delegated claim transport subtree consumes the same traversal allowance.
+func retryableEthRpcCause(err error, transportOrigin bool, depth int, budget *minerReadCauseBudget) bool {
+	if !budget.admit(err, depth) || err == context.Canceled {
 		return false
 	}
-	if _, fileError := err.(*os.PathError); fileError {
+	switch err.(type) {
+	case *os.PathError, *os.LinkError:
 		return false
 	}
 	if err == context.DeadlineExceeded || err == net.ErrClosed || err == syscall.ECONNRESET || err == syscall.ECONNREFUSED || err == syscall.EPIPE || err == syscall.ETIMEDOUT || err == syscall.ENETUNREACH || err == syscall.EHOSTUNREACH {
@@ -113,27 +118,36 @@ func retryableEthRpcError(err error, transportOrigin bool) bool {
 	case *ethRpcStatusError:
 		return cause.status == http.StatusTooManyRequests || cause.status >= 500 && cause.status <= 599
 	case *ethRpcTransportError:
-		return retryableEthRpcError(cause.cause, true)
+		return retryableEthRpcCause(cause.cause, true, depth+1, budget)
 	case *url.Error:
-		return retryableEthRpcError(cause.Err, true)
+		return retryableEthRpcCause(cause.Err, true, depth+1, budget)
 	case *net.OpError:
-		return retryableEthRpcError(cause.Err, true)
+		return retryableEthRpcCause(cause.Err, true, depth+1, budget)
+	case *net.DNSError:
+		// Explicit absence stays hard. A wrapped cause retains its own
+		// verdict; availability flags decide only a leaf without a child.
+		if cause.IsNotFound {
+			return false
+		}
+		if cause.UnwrapErr != nil {
+			return retryableEthRpcCause(cause.UnwrapErr, transportOrigin, depth+1, budget)
+		}
+		return cause.IsTimeout || cause.IsTemporary
 	}
 	if joined, ok := err.(interface{ Unwrap() []error }); ok {
-		hasCause := false
-		for _, cause := range joined.Unwrap() {
-			if cause == nil {
-				continue
-			}
-			hasCause = true
-			if !retryableEthRpcError(cause, transportOrigin) {
+		causes := joined.Unwrap()
+		if len(causes) == 0 || len(causes) > budget.remaining {
+			return false
+		}
+		for _, cause := range causes {
+			if !retryableEthRpcCause(cause, transportOrigin, depth+1, budget) {
 				return false
 			}
 		}
-		return hasCause
+		return true
 	}
 	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		return retryableEthRpcError(wrapped.Unwrap(), transportOrigin)
+		return retryableEthRpcCause(wrapped.Unwrap(), transportOrigin, depth+1, budget)
 	}
 	if networkErr, ok := err.(net.Error); ok {
 		return networkErr.Timeout() || networkErr.Temporary()

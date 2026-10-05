@@ -1,0 +1,48 @@
+{
+  "accounting_floor_bytes": 0,
+  "actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-overlay-metadata-v1.receipt.json",
+    "sha256": "76f92e6117d8705b17d85e9dac79421f4790b091a8d18d7461f53fd41529fb92"
+  },
+  "actual_wait": "Qualified ChildContext and guard unchanged; actual child wait durably stored before source/context postchecks and replayed on downstream body admission.",
+  "compiler_count": 1,
+  "compiler_disk_forecast_bytes": 4294967296,
+  "compiler_memory_forecast_bytes": 4294967296,
+  "compiler_memory_max_bytes": 8589934592,
+  "compiler_memory_swap_max_bytes": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 8589934592,
+  "data_minimum_available_bytes": 17179869184,
+  "docker_active_floor_bytes": 295833415680,
+  "docker_launch_floor_bytes": 300128382976,
+  "forecast_basis": "Prospective bounded one compiler estimate, not an observed peak upper bound and not an assertion of a fully warm graph. Actual prior5a compile peak3012927488B, same toolchain/cache/module versions; all current1078/167/1023 actual source dependencies bound. Four GiB forecast doubled to eight GiB hard compiler memory and whole-data growth cutoff. Protected image max512MiB; 128MiB log cap; no other compiler/short body admitted.",
+  "healthy_data_floor_bytes": 6307319808,
+  "healthy_memory_floor_bytes": 103079215104,
+  "history_count": 0,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-mainnet-normal-compiler-job-v1.json",
+    "sha256": "371424b4186d4f09357a8134f01627ee31f4cfaa24a080dfcf9d33f979a01ecd"
+  },
+  "margin": 2,
+  "memory_minimum_available_bytes": 120259084288,
+  "model_count": 1,
+  "model_disk_forecast_bytes": 4294967296,
+  "model_memory_forecast_bytes": 4294967296,
+  "prior_failure": "Old5a list exited2 and joined due invalid regex count; zero selected bodies executed; failed receipt retained and bound.",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest178-mainnet-compiler-v1.py",
+    "sha256": "523a14a82f896cb536ca146c1fd07aceb4ff2050fa78fb3c44141407edc808a6"
+  },
+  "scope": "One exact normal ./mainnet compiler only; BODY66 requires separate retained image and adopted SHORT job.",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-compiler-source-closure-v1.json",
+    "sha256": "22cf307007f33abe06ac4d92175909440b6bde649ea5b38e15c6339966f5240a"
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "ba5260285eb73650667665627f015e415afd9d82",
+    "sn": "178639735c0e9f4f2309b187557204a2bbf65f1e"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

@@ -7,6 +7,9 @@ use super::*;
 use sp_state_machine::{TrieBackend, TrieBackendBuilder, TrieBackendStorage};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
+#[path = "historical_principal_tests.rs"]
+mod principal_tests;
+
 fn request(job: &HistoricalJob) -> CaptureRequest {
     CaptureRequest {
         schema: capture::CAPTURE_SCHEMA.to_owned(),
@@ -19,6 +22,8 @@ fn request(job: &HistoricalJob) -> CaptureRequest {
         runtime_code_blake2b_256: job.runtime_code_blake2b_256,
         execution_state_version: job.execution_state_version,
         observation_profile: job.observation_profile.clone(),
+        principal_queries: job.principal_queries.clone(),
+        principal_effects: job.principal_effects,
     }
 }
 
@@ -40,7 +45,7 @@ fn backend(job: &HistoricalJob) -> TrieBackend<sp_trie::MemoryDB<Blake2Hasher>, 
     create_proof_check_backend(*parent.state_root(), StorageProof::new(nodes)).unwrap()
 }
 
-fn collect(job: &HistoricalJob) -> Result<CaptureReport, ProbeError> {
+pub(super) fn collect(job: &HistoricalJob) -> Result<CaptureReport, ProbeError> {
     let raw = serde_json::to_vec(&request(job)).unwrap();
     let result =
         capture::capture_historical_on_backend(&raw, &backend(job), &AtomicBool::new(false))?;
@@ -684,3 +689,13 @@ fn historical_capture_retained_directory_uses_content_addressed_nodes_without_wr
         "node symlink was followed"
     );
 }
+
+#[path = "historical_node_profile_tests.rs"]
+mod node_profile_tests;
+
+#[path = "historical_capture_heap_tests.rs"]
+mod heap_tests;
+
+#[cfg(target_os = "linux")]
+#[path = "historical_capture_refill_tests.rs"]
+mod refill_tests;

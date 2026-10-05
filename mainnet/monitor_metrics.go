@@ -175,6 +175,22 @@ func renderMonitorMetrics(event monitorEvent, state *monitorState) ([]byte, erro
 			outageAge = int64(observed.Sub(state.unavailableSince) / time.Second)
 		}
 	}
+	comparisonStatus, independentRpc, comparisonTime := 0, 0, int64(0)
+	if comparison := event.RpcComparison; comparison != nil {
+		switch comparison.Status {
+		case "agreement":
+			comparisonStatus = 1
+		case "disagreement":
+			comparisonStatus = 2
+			healthy = 0
+		}
+		if comparison.IndependentRpc {
+			independentRpc = 1
+		}
+		if timestamp, err := time.Parse(time.RFC3339Nano, comparison.ObservedAt); err == nil {
+			comparisonTime = timestamp.Unix()
+		}
+	}
 	var output strings.Builder
 	for _, metric := range []struct {
 		name  string
@@ -192,6 +208,9 @@ func renderMonitorMetrics(event monitorEvent, state *monitorState) ([]byte, erro
 		{name: "read_outage_active", help: "One during an unresolved read outage.", value: fmt.Sprint(outage)},
 		{name: "read_outage_started_timestamp_seconds", help: "Start of the unresolved read outage; zero if none.", value: fmt.Sprint(unix(state.unavailableSince))},
 		{name: "read_outage_age_seconds", help: "Outage age at the completed sample; freezes if the monitor stops.", value: fmt.Sprint(outageAge)},
+		{name: "rpc_comparison_status", help: "0 input unknown, 1 scoped agreement, 2 disagreement; never activation authority.", value: fmt.Sprint(comparisonStatus)},
+		{name: "independent_rpc", help: "One only after both separately admitted routes completed fixed-boundary comparison.", value: fmt.Sprint(independentRpc)},
+		{name: "rpc_comparison_sample_timestamp_seconds", help: "Last completed independent-route comparison attempt; zero if absent.", value: fmt.Sprint(comparisonTime)},
 	} {
 		fmt.Fprintf(&output, "# HELP sn_mainnet_monitor_%s %s\n# TYPE sn_mainnet_monitor_%s gauge\nsn_mainnet_monitor_%s %s\n", metric.name, metric.help, metric.name, metric.name, metric.value)
 	}

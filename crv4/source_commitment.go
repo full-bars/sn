@@ -506,6 +506,9 @@ func (self *Chain) VerifyFinalizedSourceRuntimeContext(ctx context.Context, prep
 	if ctx == nil || self == nil || prepared == nil || receipt == nil || receipt.BlockHash == (types.Hash{}) || receipt.BlockNumber == 0 {
 		return errors.New("crv4: source receipt runtime context is incomplete")
 	}
+	ctx, cancel := context.WithTimeout(ctx, substrateRpcReadRetryTimeout)
+	defer cancel()
+	ctx = WithFinalityReadOwnerContext(ctx)
 	proof := self.runtimeArtifactProof
 	if proof == nil || proof.blockHash.Hex() != prepared.PreparedAtBlockHash || proof.metadata != self.Meta ||
 		!proof.matches(self, AuthenticatedRuntimeArtifact{BlockHash: proof.blockHash, Version: proof.identity.Version,
@@ -548,43 +551,75 @@ func (self *Chain) verifyFinalizedSourceContext(ctx context.Context, prepared *P
 	if ctx == nil || self == nil || self.API == nil || self.API.Client == nil || receipt == nil || receipt.BlockNumber == 0 || receipt.BlockHash == (types.Hash{}) || prepared == nil || receipt.ExtrinsicHash.Hex() != prepared.ExtrinsicHash {
 		return errors.New("crv4: source finality identity is incomplete")
 	}
+	// Every dependent read borrows this one deadline, clipped by any enclosing
+	// runtime observation. Retrying transport never replaces the receipt.
+	ctx, cancel := context.WithTimeout(ctx, substrateRpcReadRetryTimeout)
+	defer cancel()
+	ctx = WithFinalityReadOwnerContext(ctx)
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 	if err := self.ValidatePreparedSource(prepared); err != nil {
 		return err
 	}
-	var finalizedHex string
-	if err := self.API.Client.CallContext(ctx, &finalizedHex, "chain_getFinalizedHead"); err != nil {
-		return fmt.Errorf("crv4: read source finalized head: %w", err)
+	checkCanonical := func(hash types.Hash, number uint64) error {
+		var canonicalHex string
+		if err := self.API.Client.CallContext(ctx, &canonicalHex, "chain_getBlockHash", number); err != nil {
+			return fmt.Errorf("crv4: read source canonical block: %w", err)
+		}
+		if canonicalHex == "" {
+			return &ReceiptEvidenceUnavailableError{BlockHash: hash, Field: "canonical block hash"}
+		}
+		canonical, err := receiptHash(canonicalHex)
+		if err != nil {
+			return err
+		}
+		if canonical != hash {
+			return errors.Join(errors.New("crv4: source receipt or finalized witness is not the canonical native block"), ctx.Err())
+		}
+		return nil
 	}
-	if finalizedHex == "" {
-		return &ReceiptEvidenceUnavailableError{Field: "finalized head"}
+	readFinality := func() (types.Hash, uint64, error) {
+		var encoded string
+		if err := self.API.Client.CallContext(ctx, &encoded, "chain_getFinalizedHead"); err != nil {
+			return types.Hash{}, 0, fmt.Errorf("crv4: read source finalized head: %w", err)
+		}
+		if encoded == "" {
+			return types.Hash{}, 0, &ReceiptEvidenceUnavailableError{Field: "finalized head"}
+		}
+		hash, err := receiptHash(encoded)
+		if err != nil {
+			return types.Hash{}, 0, err
+		}
+		_, number, err := self.receiptHeaderAt(ctx, hash)
+		if err != nil {
+			return types.Hash{}, 0, fmt.Errorf("crv4: read source finalized header: %w", err)
+		}
+		if err := checkCanonical(hash, number); err != nil {
+			return types.Hash{}, 0, err
+		}
+		if err := CheckRetainedFinalityReadWitnessContext(ctx, self, receipt.BlockHash, hash, number); err != nil {
+			return types.Hash{}, 0, err
+		}
+		return hash, number, nil
 	}
-	finalized, err := receiptHash(finalizedHex)
+	finalized, finalizedNumber, err := readFinality()
 	if err != nil {
 		return err
 	}
-	_, finalizedNumber, err := self.receiptHeaderAt(ctx, finalized)
-	if err != nil {
-		return fmt.Errorf("crv4: read source finalized header: %w", err)
+	if receipt.BlockHash == finalized && receipt.BlockNumber != finalizedNumber {
+		return errors.New("crv4: source receipt number differs from its authenticated finalized header")
+	}
+	if receipt.BlockHash != finalized {
+		if err := checkCanonical(receipt.BlockHash, receipt.BlockNumber); err != nil {
+			return err
+		}
+	}
+	if err := RetainFinalityReadWitnessContext(ctx, self, receipt.BlockHash, finalized, finalizedNumber); err != nil {
+		return err
 	}
 	if finalizedNumber < receipt.BlockNumber {
 		return &ReceiptEvidenceUnavailableError{BlockHash: receipt.BlockHash, Field: "finalized head through retained receipt"}
-	}
-	var canonicalHex string
-	if err := self.API.Client.CallContext(ctx, &canonicalHex, "chain_getBlockHash", receipt.BlockNumber); err != nil {
-		return fmt.Errorf("crv4: read source canonical block: %w", err)
-	}
-	if canonicalHex == "" {
-		return &ReceiptEvidenceUnavailableError{BlockHash: receipt.BlockHash, Field: "canonical block hash"}
-	}
-	canonical, err := receiptHash(canonicalHex)
-	if err != nil {
-		return err
-	}
-	if canonical != receipt.BlockHash {
-		return errors.New("crv4: source receipt is not the canonical native block")
 	}
 	verified, err := execution.verifyFinalizedExtrinsicContext(ctx, receipt.BlockHash, receipt.ExtrinsicHash)
 	if err != nil {
@@ -608,6 +643,26 @@ func (self *Chain) verifyFinalizedSourceContext(ctx context.Context, prepared *P
 	}
 	if err := ValidateFleetCommitmentWrite(hash, receipt.BlockNumber, observed); err != nil {
 		return fmt.Errorf("crv4: source metadata readback: %w", err)
+	}
+	closing, closingNumber, err := readFinality()
+	if err != nil {
+		return err
+	}
+	if closing != finalized {
+		if err := checkCanonical(finalized, finalizedNumber); err != nil {
+			return err
+		}
+	}
+	if receipt.BlockHash != closing && receipt.BlockHash != finalized {
+		if err := checkCanonical(receipt.BlockHash, receipt.BlockNumber); err != nil {
+			return err
+		}
+	}
+	if err := RetainFinalityReadWitnessContext(ctx, self, receipt.BlockHash, closing, closingNumber); err != nil {
+		return err
+	}
+	if closingNumber < finalizedNumber {
+		return &ReceiptEvidenceUnavailableError{BlockHash: finalized, Field: "finalized head through original source witness"}
 	}
 	return ctx.Err()
 }

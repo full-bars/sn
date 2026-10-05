@@ -30,9 +30,10 @@ const attemptLedgerRestoreSchema = "urnetwork-attempt-ledger-restore-v1"
 // The external reviewed head is the original acknowledged checkpoint. A
 // pending successor remains separately retained, not relabeled acknowledged.
 type attemptLedgerRestoreCensus struct {
-	Schema          string                        `json:"schema"`
-	Scope           AttemptLedgerPreparationScope `json:"scope"`
-	OriginalCustody []byte                        `json:"original_custody"`
+	Schema                 string                        `json:"schema"`
+	Scope                  AttemptLedgerPreparationScope `json:"scope"`
+	OriginalCustody        []byte                        `json:"original_custody"`
+	OriginalRequestCustody []byte                        `json:"original_request_custody,omitempty"`
 }
 
 // Public inputs may use whitespace but may not introduce unknown authority.
@@ -64,13 +65,18 @@ func PlanAttemptLedgerRestore(ctx context.Context, name string, owner durablevol
 	if _, err := scope.validate(); err != nil {
 		return durablevolume.PreparationOwnerPlan{}, err
 	}
-	if report.Schema != durablevolume.PhysicalInventorySchema || report.RestartAuthorized || len(report.Entries) < 5 || uint64(len(report.Entries)) > scope.Limits.MaxStorageFiles+6 {
+	maximumEntries := scope.Limits.MaxStorageFiles + 6
+	if scope.Requests != nil {
+		maximumEntries += 2
+	}
+	if report.Schema != durablevolume.PhysicalInventorySchema || report.RestartAuthorized || len(report.Entries) < 5 || uint64(len(report.Entries)) > maximumEntries {
 		return durablevolume.PreparationOwnerPlan{}, errors.New("ledger restore requires the complete bounded original physical inventory")
 	}
 	entries := map[string]durablevolume.InventoryEntry{}
 	inodes := map[uint64]bool{}
 	files := make([]durablevolume.PreparationFile, 0, len(report.Entries)-1)
 	var original []byte
+	var originalRequest []byte
 	used, metadata, backendCount := uint64(attemptStoreMetadataReserve), uint64(0), uint64(0)
 	for _, entry := range report.Entries {
 		if err := ctx.Err(); err != nil {
@@ -85,6 +91,13 @@ func PlanAttemptLedgerRestore(ctx context.Context, name string, owner durablevol
 		entries[entry.Path], inodes[entry.Physical.Inode] = entry, true
 		for _, attribute := range entry.OwnerAttributes {
 			if entry.Path == "" && attribute.Name == durablevolume.PreparationAttribute {
+				continue
+			}
+			if entry.Path == "" && attribute.Name == ProviderAttemptRequestAttribute && scope.Requests != nil {
+				if originalRequest != nil || len(attribute.Value) == 0 || len(attribute.Value) > 4096 || attemptLedgerCustodyDigest(attribute.Value) != attribute.Sha256 {
+					return durablevolume.PreparationOwnerPlan{}, attemptLedgerCustodyLoss("ledger restore changed original request checkpoint bytes", nil)
+				}
+				originalRequest = append([]byte(nil), attribute.Value...)
 				continue
 			}
 			if entry.Path != "" || attribute.Name != attemptLedgerCustodyAttribute || original != nil || len(attribute.Value) == 0 || len(attribute.Value) > 4096 || attemptLedgerCustodyDigest(attribute.Value) != attribute.Sha256 {
@@ -115,6 +128,14 @@ func PlanAttemptLedgerRestore(ctx context.Context, name string, owner durablevol
 				}
 			case attemptLedgerPendingName:
 				maximum = scope.Limits.MaxRecordBytes
+			case ProviderAttemptRequestJournalName:
+				if scope.Requests != nil {
+					maximum = scope.Requests.Preparation.Limits.MaxJournalBytes
+				}
+			case ProviderAttemptRequestPendingName:
+				if scope.Requests != nil {
+					maximum = scope.Requests.Preparation.Limits.MaxRecordBytes
+				}
 			default:
 				leaf := filepath.Base(entry.Path)
 				if filepath.Dir(entry.Path) != attemptLedgerStoreName {
@@ -190,11 +211,18 @@ func PlanAttemptLedgerRestore(ctx context.Context, name string, owner durablevol
 			return durablevolume.PreparationOwnerPlan{}, errors.Join(ErrDurablePublicationUncertain, errors.New("ledger restore lacks complete original pending record bytes"))
 		}
 	}
-	census, err := json.Marshal(attemptLedgerRestoreCensus{Schema: attemptLedgerRestoreSchema, Scope: scope, OriginalCustody: original})
+	if err := validateAttemptLedgerRequestRestore(scope, report.PhysicalRoot.Inode, entries, originalRequest); err != nil {
+		return durablevolume.PreparationOwnerPlan{}, err
+	}
+	census, err := json.Marshal(attemptLedgerRestoreCensus{Schema: attemptLedgerRestoreSchema, Scope: scope, OriginalCustody: original, OriginalRequestCustody: originalRequest})
 	if err != nil {
 		return durablevolume.PreparationOwnerPlan{}, err
 	}
-	return durablevolume.PreparationOwnerPlan{Owner: owner, StagingName: name, ExclusiveRoot: true, Files: files, Census: census, Attributes: []durablevolume.PreparationAttributeSpec{{Path: ".", Name: attemptLedgerCustodyAttribute}}}, ctx.Err()
+	attributes := []durablevolume.PreparationAttributeSpec{{Path: ".", Name: attemptLedgerCustodyAttribute}}
+	if scope.Requests != nil {
+		attributes = append(attributes, durablevolume.PreparationAttributeSpec{Path: ".", Name: ProviderAttemptRequestAttribute})
+	}
+	return durablevolume.PreparationOwnerPlan{Owner: owner, StagingName: name, ExclusiveRoot: true, Files: files, Census: census, Attributes: attributes}, ctx.Err()
 }
 
 // The read-only engine shares exact signature/index validation with production.
@@ -387,5 +415,13 @@ func InspectAttemptLedgerRestore(ctx context.Context, directory *os.File, owner 
 	if err := physical.checkCensus(); err != nil {
 		return nil, err
 	}
-	return []durablevolume.PreparedAttribute{{Spec: owner.Attributes[0], Raw: raw}}, ctx.Err()
+	result = []durablevolume.PreparedAttribute{{Spec: owner.Attributes[0], Raw: raw}}
+	if census.Scope.Requests != nil {
+		requestRaw, err := physical.requestCheckpoint(census.Scope, census.OriginalRequestCustody, true)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, durablevolume.PreparedAttribute{Spec: owner.Attributes[1], Raw: requestRaw})
+	}
+	return result, ctx.Err()
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/urfoundation/sn/internal/durablehead"
 	"github.com/urfoundation/sn/internal/durablepath"
 	"github.com/urnetwork/connect/durablevolume"
+	"github.com/urnetwork/server/strecovery"
 )
 
 const monitorEconomicNativeCheckpointSchema = "urnetwork-mainnet-native-economic-checkpoint-v1"
@@ -88,6 +89,11 @@ func openMonitorEconomicNativeWorker(ctx context.Context, client *rpcClient, pol
 	policy.Observation.FeePayers = append([]string(nil), policy.Observation.FeePayers...)
 	if policy.Observation.Execution != nil {
 		value := *policy.Observation.Execution
+		if value.Producer != nil {
+			producer := *value.Producer
+			producer.Renewals = append([]planFileReference(nil), producer.Renewals...)
+			value.Producer = &producer
+		}
 		policy.Observation.Execution = &value
 	}
 	registration, generation := *policy.Observation.SubnetRegistrationBlock, *policy.Observation.SubnetGeneration
@@ -165,7 +171,7 @@ func (self *monitorEconomicNativeWorker) load(ctx context.Context) (*monitorEcon
 	if err != nil {
 		return nil, err
 	}
-	record, err := decodeMonitorEconomicNativeCheckpoint(raw, self.policy)
+	record, err := decodeMonitorEconomicNativeCheckpoint(raw, self.policy, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +216,7 @@ func (self *monitorEconomicNativeWorker) save(state *monitorEconomicNativeState)
 
 func monitorEconomicNativeReadCode(err error) string {
 	switch {
-	case errors.Is(err, errRpcIntegrity), errors.Is(err, errRpcIdentityMismatch), errors.Is(err, durablevolume.ErrIdentity):
+	case errors.Is(err, errRpcIntegrity), errors.Is(err, errRpcIdentityMismatch), errors.Is(err, durablevolume.ErrIdentity), errors.Is(err, strecovery.ErrNativeFinalityConflict):
 		return "identity-conflict"
 	case errors.Is(err, errMonitorEconomicCapacity):
 		return "capacity-held"
@@ -224,6 +230,7 @@ func monitorEconomicNativeReadCode(err error) string {
 // Only this summary is exported. It does not emit unbounded retained history,
 // arbitrary source labels, or a numeric zero for unproved economic amounts.
 type monitorEconomicNativeSummary struct {
+	ProducerCapacity             *nativeProducerCapacitySummary         `json:"producer_capacity,omitempty"`
 	ExecutionAccounting          *nativeExecutionWindow                 `json:"execution_accounting,omitempty"`
 	ExecutionAuthority           string                                 `json:"execution_authority,omitempty"`
 	ArchivedEvents               uint64                                 `json:"archived_events"`
@@ -276,6 +283,7 @@ func (self *monitorEconomicNativeState) summary(policy monitorEconomicNativePoli
 		summary.ExecutionAuthority = "independently-approved-runtime-layout-and-finalized-boundaries"
 		summary.NativeMinerAllocationAlpha, summary.ProviderEntitlementAlpha, summary.OwnerRecycledAlpha = &value.MinerAllocation, &value.ProviderEntitlement, &value.OwnerRecycled
 	}
+	summary.ProducerCapacity = self.producerCapacity(policy)
 	return summary
 }
 
@@ -346,6 +354,22 @@ func renderMonitorEconomicNativeMetrics(policy monitorEconomicNativePolicy, stat
 	} {
 		fmt.Fprintf(&output, "sn_mainnet_native_economic_%s{role=%q} %v\n", metric.name, policy.Role, metric.value)
 	}
+	if producer := state.producerCapacity(policy); producer != nil {
+		for _, metric := range []struct {
+			name  string
+			value any
+		}{
+			{name: "producer_completed_jobs", value: producer.Completed},
+			{name: "producer_job_capacity", value: producer.Capacity.Jobs},
+			{name: "producer_jobs_remaining", value: producer.JobsRemaining},
+			{name: "producer_acknowledged_renewals", value: producer.AcknowledgedRenewals},
+			{name: "producer_configured_renewals", value: producer.ConfiguredRenewals},
+			{name: "producer_capacity_warning", value: flag(producer.CapacityWarning)},
+			{name: "producer_disk_forecast_known", value: flag(producer.Forecast != nil)},
+		} {
+			fmt.Fprintf(&output, "sn_mainnet_native_economic_%s{role=%q} %v\n", metric.name, policy.Role, metric.value)
+		}
+	}
 	return []byte(output.String())
 }
 
@@ -388,7 +412,15 @@ func (self *monitorEconomicNativeWorker) run(ctx context.Context, interval time.
 		if readErr == nil {
 			observation, readErr = observeMonitorEconomicNative(ctx, self.client, self.policy, self.state)
 		}
+		if errors.Is(readErr, errNativeProducerCleanup) {
+			fmt.Fprintln(stderr, "native execution producer ownership:", readErr)
+			return 3
+		}
 		if ctx.Err() != nil {
+			if monitorEconomicNativeReadCode(readErr) == "identity-conflict" {
+				fmt.Fprintln(stderr, "native execution contradictory evidence:", readErr)
+				return 3
+			}
 			return 0
 		}
 		observedAt := now().UTC()
@@ -396,7 +428,7 @@ func (self *monitorEconomicNativeWorker) run(ctx context.Context, interval time.
 		code := "caught-up"
 		if readErr == nil && observation != nil {
 			var next *monitorEconomicNativeState
-			next, readErr = self.state.append(self.policy, observation, observedAt)
+			next, readErr = self.state.append(self.policy, observation, observedAt, ctx)
 			if readErr == nil {
 				candidate, code = *next, next.Status
 			}

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/urnetwork/connect/durablevolume"
@@ -253,10 +254,83 @@ func TestOwnerRecycleCustodyRefusesHardlinkedStateAndMarker(t *testing.T) {
 	}
 }
 
-// Marker write interruption may recover only an unused reservation. An already
-// exported original request cannot be downgraded into a recoverable empty claim.
+// Actual pre-completion boundaries preserve the acknowledged physical head.
+// Recovery must never be simulated by deleting an already committed journal.
 func TestOwnerRecycleCustodyRecoversOnlyUnfinishedReservation(t *testing.T) {
-	for _, progress := range []string{"missing", "reserved", "exported"} {
+	for _, boundary := range []string{"marker-synced", "progress-synced"} {
+		f := newOwnerRecycleTestFixture(t, true)
+		path := f.config.Action.StatePath
+		originalMarker, err := os.Stat(path + ".lock")
+		if err != nil {
+			t.Fatal(err)
+		}
+		interrupted := errors.New("synthetic recycle initial claim interruption")
+		store, err := openOwnerRecycleStoreWithClaimHook(f.config, f.key, true, func(observed string) error {
+			if observed == boundary {
+				return interrupted
+			}
+			return nil
+		}, f.storage.Context)
+		if store != nil || !errors.Is(err, interrupted) {
+			if store != nil {
+				store.close()
+			}
+			t.Fatal("claim did not stop at its actual durable boundary", boundary, err)
+		}
+		marker := rootObjectHash(f.config) + "\n" + f.key + "\n"
+		raw, err := os.ReadFile(path + ".lock")
+		if err != nil || !bytes.Equal(raw, []byte(marker)) {
+			t.Fatal("interrupted claim acquired a completion marker", boundary, err)
+		}
+		_, err = os.Stat(path)
+		if boundary == "marker-synced" && !errors.Is(err, os.ErrNotExist) || boundary == "progress-synced" && err != nil {
+			t.Fatal("interruption changed its original journal presence", boundary, err)
+		}
+		// A second interrupted resume must retain the same acknowledged row,
+		// without consuming a one-shot permission to complete the claim.
+		store, err = openOwnerRecycleStoreWithClaimHook(f.config, f.key, false, func(observed string) error {
+			if observed != "progress-synced" {
+				t.Fatal("resume reached a fresh-marker boundary", observed)
+			}
+			return interrupted
+		}, f.storage.Context)
+		if store != nil || !errors.Is(err, interrupted) {
+			if store != nil {
+				store.close()
+			}
+			t.Fatal("unfinished original claim could not reach retained progress", boundary, err)
+		}
+		original, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resumed, err := openOwnerRecycleStore(f.config, f.key, false, f.storage.Context)
+		if err != nil {
+			t.Fatal("unfinished unused claim could not recover", boundary, err)
+		}
+		record, err := resumed.load()
+		if err != nil || record.Phase != "reserved" || record.Request != nil {
+			t.Fatal("unfinished claim changed original phase", boundary, err)
+		}
+		if err := resumed.close(); err != nil {
+			t.Fatal(err)
+		}
+		raw, err = os.ReadFile(path + ".lock")
+		if err != nil || !bytes.Equal(raw, []byte(marker+bootstrapRootClaimComplete)) {
+			t.Fatal("recovered claim lacks original completion marker", boundary, err)
+		}
+		current, err := os.ReadFile(path)
+		retainedMarker, statErr := os.Stat(path + ".lock")
+		if err != nil || statErr != nil || !bytes.Equal(current, original) || !os.SameFile(originalMarker, retainedMarker) {
+			t.Fatal("completion replaced original reservation or physical marker", boundary, err, statErr)
+		}
+	}
+}
+
+// Prefix-only application bytes cannot erase a committed physical generation
+// or make an exported original request recover as an unused reservation.
+func TestOwnerRecycleCompletedClaimCannotBecomeUnfinished(t *testing.T) {
+	for _, progress := range []string{"missing", "exported"} {
 		f := newOwnerRecycleTestFixture(t, true)
 		store, err := openOwnerRecycleStore(f.config, f.key, true, f.storage.Context)
 		if err != nil {
@@ -281,27 +355,13 @@ func TestOwnerRecycleCustodyRecoversOnlyUnfinishedReservation(t *testing.T) {
 		if err := os.WriteFile(path+".lock", []byte(marker), 0600); err != nil {
 			t.Fatal(err)
 		}
+		before := mainnetNamespaceTest(t, filepath.Dir(path))
 		resumed, err := openOwnerRecycleStore(f.config, f.key, false, f.storage.Context)
-		if progress == "exported" {
-			if err == nil {
-				resumed.close()
-				t.Fatal("advanced journal recovered through incomplete claim")
-			}
-			continue
+		if resumed != nil {
+			resumed.close()
 		}
-		if err != nil {
-			t.Fatal("unfinished unused claim could not recover", progress, err)
-		}
-		record, err := resumed.load()
-		if err != nil || record.Phase != "reserved" || record.Request != nil {
-			t.Fatal("unfinished claim changed original phase", progress, err)
-		}
-		if err := resumed.close(); err != nil {
-			t.Fatal(err)
-		}
-		raw, err := os.ReadFile(path + ".lock")
-		if err != nil || !bytes.Equal(raw, []byte(marker+bootstrapRootClaimComplete)) {
-			t.Fatal("recovered claim lacks original completion marker", progress, err)
+		if err == nil || progress == "missing" && !errors.Is(err, durablevolume.ErrIdentity) || !reflect.DeepEqual(before, mainnetNamespaceTest(t, filepath.Dir(path))) {
+			t.Fatal("completed original custody was recreated or downgraded", progress, err)
 		}
 	}
 }

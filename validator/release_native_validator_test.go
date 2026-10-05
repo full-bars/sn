@@ -22,6 +22,9 @@ import (
 
 // Each fixture owns its transcript, metadata, chain and mutable chain-state
 // fields; cancellation tests join the read before examining the transcript.
+type releaseNativeValidatorTestContextKey struct{}
+
+// Each fixture retains a distinct caller lineage through bounded read children.
 type releaseNativeValidatorTestFixture struct {
 	ctx         context.Context
 	chain       *crv4.Chain
@@ -65,7 +68,7 @@ func newReleaseNativeValidatorUIDTestFixture(t *testing.T, selectedUID uint16, h
 		t.Fatal("native fixture UID exceeds its real three-entry census")
 	}
 	fixture := &releaseNativeValidatorTestFixture{
-		ctx: context.Background(), genesis: types.Hash{1}, block: types.Hash{2},
+		ctx: context.WithValue(context.Background(), releaseNativeValidatorTestContextKey{}, t), genesis: types.Hash{1}, block: types.Hash{2},
 		blockNumber: 100, uid: selectedUID,
 		hotkey: [32]byte{11}, threshold: 100, total: 150, permit: true,
 	}
@@ -138,7 +141,7 @@ func newReleaseNativeValidatorUIDTestFixture(t *testing.T, selectedUID uint16, h
 	}
 	fixture.chain = &crv4.Chain{GenesisHash: fixture.genesis, Meta: types.NewMetadataV14(), Runtime: &types.RuntimeVersion{SpecName: "unrelated-dial-time"}}
 	fixture.chain.API = &gsrpc.SubstrateAPI{Client: &validatorRuntimeIdentityTestClient{callContext: func(ctx context.Context, result any, method string, args ...any) error {
-		if ctx != fixture.ctx {
+		if ctx == nil || ctx.Value(releaseNativeValidatorTestContextKey{}) != fixture.ctx.Value(releaseNativeValidatorTestContextKey{}) {
 			return errors.New("native startup reader changed its caller context")
 		}
 		if err := ctx.Err(); err != nil {
@@ -359,7 +362,7 @@ func TestAuthenticatePinnedNativeRuntimeValidatorStakeRejectsDifferentSigner(t *
 func TestAuthenticatePinnedNativeRuntimeValidatorStakeCancels(t *testing.T) {
 	t.Parallel()
 	fixture := newReleaseNativeValidatorTestFixture(t)
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(fixture.ctx)
 	defer cancel()
 	fixture.ctx = ctx
 	entered := make(chan struct{})

@@ -1,0 +1,124 @@
+{
+  "schema": "urnetwork-unix-fixture-harness-diagnosis-v1",
+  "selected_body_sources": {
+    "sn": "f0b7e52ab009746e05c3f6fb718243658881790d",
+    "server": "9836322d6c06ce0207fd5d754b025fc48cb11c83"
+  },
+  "evidence": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-release-build-normal.stdout",
+      "sha256": "dbfc5794a1f9354e36c6272040b3252944a37b768ce89f9dc74bdeca2cddd3f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-release-build-race.stdout",
+      "sha256": "8032cc3ec55b6d45e9bfd7b653bf61bff38ef492c9dad40fd7525931ec07bb1d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1.source-pins.json",
+      "sha256": "574f299d817690e8cab64b803e84d1746dc9880349d8bca302cdf0501706ff05"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-current-adjacent6-v1-release-build-normal.process-context.json",
+      "sha256": "f80d07feb69ae7a97e22821cba4e3d955a16a9b8a71b999f1869c6ab9c8d15c5"
+    }
+  ],
+  "actual_failing_socket_paths": [
+    {
+      "mode": "normal",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/tmp/sol-current-adjacent6-v1/TestImageBuildFailureRetainsCommandAndNeverSeals4024994217/002/daemon.sock",
+      "encoded_bytes": 162
+    },
+    {
+      "mode": "normal",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/tmp/sol-current-adjacent6-v1/TestPackageBuildMissingClosureRetainsAttempt799338081/002/daemon.sock",
+      "encoded_bytes": 157
+    },
+    {
+      "mode": "race",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/tmp/sol-current-adjacent6-v1/TestImageBuildFailureRetainsCommandAndNeverSeals1920188430/002/daemon.sock",
+      "encoded_bytes": 162
+    },
+    {
+      "mode": "race",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/tmp/sol-current-adjacent6-v1/TestPackageBuildMissingClosureRetainsAttempt981439603/002/daemon.sock",
+      "encoded_bytes": 157
+    }
+  ],
+  "cause": "The harness selected an 87-byte TMPDIR. Go testing adds the test name, random base suffix and numbered subdirectory before daemon.sock, exceeding Linux sockaddr_un pathname capacity. Both tests fail in net.Listen before production build functions or their assertions.",
+  "limit": {
+    "platform": "linux",
+    "maximum_path_bytes_excluding_terminator": 107
+  },
+  "classification": "test harness namespace failure; no production defect established",
+  "unchanged_causal_roots": [
+    "TestImageBuildFailureRetainsCommandAndNeverSeals",
+    "TestPackageBuildMissingClosureRetainsAttempt"
+  ],
+  "post_join_retry": {
+    "package": "./scripts/mainnet-release-build",
+    "selector": "^(TestImageBuildFailureRetainsCommandAndNeverSeals|TestPackageBuildMissingClosureRetainsAttempt)$",
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "expected_roots_per_mode": 2,
+    "expected_skips": 0,
+    "scratch_allocator_source": "tempfile.mkdtemp(prefix='snq-', dir='/mnt/data')",
+    "scratch_parent": "/mnt/data",
+    "scratch_mode": "0700",
+    "preflight": "assert len(os.fsencode(str(scratch))) <= 32",
+    "ownership": "fresh directory; retain physical identity and existing owned cleanup; do not change or signal active jobs",
+    "command_change": "only protected TMPDIR after the current batch joins; retain selected source/tool/env pins and normal resource/lease review",
+    "actual_body_owner": "Sol; author runs no test/compiler/process probe"
+  },
+  "bounds": [
+    {
+      "root": "TestImageBuildFailureRetainsCommandAndNeverSeals",
+      "leaf": "daemon.sock",
+      "maximum_selected_tempdir_suffix_bytes": 75,
+      "maximum_TMPDIR_prefix_bytes": 32,
+      "suggested_prefix_example": "/mnt/data/snq-12345678",
+      "example_complete_socket_bytes": 97
+    },
+    {
+      "root": "TestPackageBuildMissingClosureRetainsAttempt",
+      "leaf": "daemon.sock",
+      "maximum_selected_tempdir_suffix_bytes": 71,
+      "maximum_TMPDIR_prefix_bytes": 36,
+      "suggested_prefix_example": "/mnt/data/snq-12345678",
+      "example_complete_socket_bytes": 93
+    },
+    {
+      "root": "TestProductionRuntimeReplayCancellationJoinsWorker",
+      "leaf": "ready",
+      "maximum_selected_tempdir_suffix_bytes": 71,
+      "maximum_TMPDIR_prefix_bytes": 36,
+      "suggested_prefix_example": "/mnt/data/snq-12345678",
+      "example_complete_socket_bytes": 93
+    }
+  ],
+  "adjacent_scan": {
+    "release_build_socket_call_sites": 2,
+    "adjacent_fixture": "validator/production_runtime_replay_test.go TestProductionRuntimeReplayCancellationJoinsWorker uses t.TempDir()/ready with an actual Unix listener",
+    "resolution": "same short protected TMPDIR policy; no speculative fixture or production edits"
+  },
+  "source_edits": [],
+  "qualification": "Historical failures retained. Corrected retry has not been run by this author.",
+  "bound_source": [
+    {
+      "path": "/usr/local/go/src/syscall/syscall_linux.go",
+      "lines": "547-560",
+      "meaning": "Named Unix addresses reserve a terminating NUL; a full raw.Path-length name is EINVAL."
+    },
+    {
+      "path": "/usr/local/go/src/os/tempfile.go",
+      "lines": "22-23",
+      "meaning": "TempDir random suffix is decimal uint32, at most ten digits."
+    },
+    {
+      "path": "/usr/local/go/src/testing/testing.go",
+      "lines": "1431 onward",
+      "meaning": "TempDir uses the test-name pattern and numbered child directories."
+    }
+  ]
+}

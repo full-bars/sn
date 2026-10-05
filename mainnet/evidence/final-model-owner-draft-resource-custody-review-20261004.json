@@ -1,0 +1,84 @@
+{
+  "draft_bindings": [
+    {
+      "actual": "e6fca5877117b34203f7f6b9aa683e17fc9e1c12eb6c530cd647d83d105f2f8a",
+      "expected": "58a9c9e14ecc0e49153549322f0fcabebf8f94665493f1b4c24529e13f95a764",
+      "matches": false,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/run-final-model-owner.py"
+    },
+    {
+      "actual": "48d97554ba0fba66f35a7292f8bafeaf56a0b101ce7b282879bed2db08f4c48c",
+      "expected": "48d97554ba0fba66f35a7292f8bafeaf56a0b101ce7b282879bed2db08f4c48c",
+      "matches": true,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/run-final-model-only.sh"
+    },
+    {
+      "actual": "c0e8faf3871ddf3781096e2fe8ac508db439c8231a6522ce42fa5a1fb513632b",
+      "expected": "c0e8faf3871ddf3781096e2fe8ac508db439c8231a6522ce42fa5a1fb513632b",
+      "matches": true,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/execute-final-model-only.py"
+    },
+    {
+      "actual": "6cfa224a081b03abd7886cca16da4723d2b57c7ee181721dde69aee340b0d420",
+      "expected": "6cfa224a081b03abd7886cca16da4723d2b57c7ee181721dde69aee340b0d420",
+      "matches": true,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/release-gate-services-model-bounded.sh"
+    }
+  ],
+  "draft_manifest": {
+    "bytes": 1191,
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-model-owner-draft-bindings.json",
+    "sha256": "a81f2b437807d2e0f3ff9a8d739a40818fc90a46ac504e03e29d14c9e2d98fe2"
+  },
+  "execution_performed": false,
+  "findings": [
+    {
+      "correction": "Fail the owned phase promptly from an active guard and retain the reason; cancel/join only the new owner tree, never healthy histories.",
+      "finding": "MemAvailable96GiB and Docker-root295833415680 checks occur only in resource_ok after the entire body. The sampler does not stop the new owned phase when either live reserve is crossed.",
+      "id": "MODEL_OWNER_1",
+      "priority": "required-before-launch"
+    },
+    {
+      "correction": "Provide bounded exact-owner-ID/label-aware cleanup in the surviving owner after child-tree join, including private network. Use shell cleanup receipts when available and retain any incomplete cleanup without deleting unrelated resources.",
+      "finding": "Outer guard timeout/disk/log failure can terminate or kill the shell tree. Cleanup exists only in shell EXIT trap; Python finally only stops the sampler and later audits surviving containers. That does not guarantee fixture cleanup on every abnormal completion.",
+      "id": "MODEL_OWNER_2",
+      "priority": "required-before-launch"
+    },
+    {
+      "correction": "Synchronously retain initial and final snapshots, read owner/container memory.peak and memory.events when available, and make traversal/read errors explicit. Preserve already-seen vs not-yet-created lifecycle states and any gaps.",
+      "finding": "The asynchronous sampler has no required prelaunch initial or post-cleanup final row, memory.peak/events are not read, and os.walk silently ignores directory traversal errors. A missing/inaccessible directory can be reported as a zero or partial available allocation.",
+      "id": "MODEL_OWNER_3",
+      "priority": "required-before-launch"
+    },
+    {
+      "correction": "Seal a FAIL_OR_INCOMPLETE terminal in an outer finally for every post-launch path, carrying actual process wait, observation errors, cleanup observations and parse/binding failures.",
+      "finding": "Terminal Docker queries, cleanup receipt reads, body JSON reads and post-binding checks are outside an enclosing durable finalization handler. An exception there can omit the owner terminal receipt after the test already ran.",
+      "id": "MODEL_OWNER_4",
+      "priority": "required-before-launch"
+    },
+    {
+      "correction": "Freeze and independently review the final job. Require the two exact approved histories and no unadmitted DB workload; bind empty baseline or separately admit every running container. Ensure owned telemetry includes every actual body evidence/TMPDIR/fixture/model-cwd location, or make body evidence destination follow the sealed job.",
+      "finding": "Job history_bodies, baseline_running_container_ids, bindings and owned_directories remain caller-supplied; len(history_bodies)<=2 alone does not establish the exact approved fixture class or require baseline DB census empty. The body executor writes evidence under its fixed f67 directory even if the outer phase_root differs.",
+      "id": "MODEL_OWNER_5",
+      "priority": "final-job-review-required"
+    }
+  ],
+  "forecast_adoption_changed": false,
+  "positive_findings": [
+    "Full normal model scope, exact root census, prebuilt test2json/image/helper bindings and separate DB forecast checks are present.",
+    "Data-floor enforcement is passed to the streaming process guard.",
+    "Owned-directory allocated-byte/inode telemetry and exact CID memory reads are present; container logging is rotated at8m x2 and shell file output limit is256MiB.",
+    "Shell service cleanup verifies exact container owner labels/service labels/restart=no and removes only owned IDs; private-network ownership is checked before removal."
+  ],
+  "result": "The adopted prospective model resource estimates remain unchanged. The draft is not yet a concrete reviewed launch owner.",
+  "reviewed_utc": "2026-10-04T21:37:56.761268+00:00",
+  "reviewer": "/root/astra_qualification_resource_review",
+  "schema": "final-model-owner-draft-independent-review-v1",
+  "status": "DRAFT_REQUIRES_CORRECTIONS_BEFORE_LAUNCH",
+  "still_pending": [
+    "final source tuple/physical source graph",
+    "final model image and actual root list",
+    "explicit reviewed owner job",
+    "fresh combined admission before launch"
+  ]
+}

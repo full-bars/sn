@@ -1,0 +1,97 @@
+{
+  "status": "ADOPTED_ONE_MAIN_B13_RENEWAL_RUST_COMPILER",
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "accounting_floor_bytes": 0,
+  "margin": 2,
+  "history_count": 0,
+  "model_count": 0,
+  "compiler_count": 1,
+  "metadata_count": 0,
+  "data_minimum_available_bytes": 15032385536,
+  "memory_minimum_available_bytes": 120259084288,
+  "compiler_memory_max_bytes": 8589934592,
+  "compiler_memory_swap_max_bytes": 0,
+  "data_growth_stop_bytes": 12884901888,
+  "job_sha256": "cef9d3e5c51cabd78e3f53d9e9146ac43e21f49b5568b2e559b5e07ea038f5fd",
+  "runner_sha256": "869e22e5d55bdf056a776550dbc9cb22d7c7423b7ce90ee66cf40703559adaf3",
+  "execution_owner": "SolParallel only, user systemd manager",
+  "adopted_at": "2026-10-05T07:02:51.662177+00:00",
+  "root_review": "All exactbindings verified. Isolated test-only read-omission compiler, original engines/main source/normalstage unchanged. Normal renewal1PASS/export5 and independently joined metadata14failed graphs/pure33PASS retained. Compile only; causal failure body separately admitted.",
+  "additional_predecessor_waits": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-sn.process-result.json",
+      "sha256": "944793644f7e7735dc8b5ba00e0d63f57cd24d3fb85fe727d8ce01d467561d9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-connect.process-result.json",
+      "sha256": "52733247ea8e7a23068012920ebad82d2bee30f5ca7d4c52b21f12f32fd10a56"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-server.process-result.json",
+      "sha256": "8665d8be193c36a694a509cb7fa9c4e7076ffd3fefbe0e14aa101dad0ecabb17"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-sdk.process-result.json",
+      "sha256": "bb3501f4823dd53c0fdc2681c61e977e3bd7f4b7760f71bb175b3f067dc3219c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-glog.process-result.json",
+      "sha256": "8780b0979c8fe0351f617ae4bf3181bd8c8becd4a6733a9355e07449322ff0ae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-gvisor.process-result.json",
+      "sha256": "a1fc6d4f09c95a53901148dc121546ab06514551ebdadc2457157f7804980b5d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-proxy.process-result.json",
+      "sha256": "8c27f6d776f2a89d4b137ee7c3ec5ae56fabcf3009924b958982907747123f12"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-warp.process-result.json",
+      "sha256": "bc685baa5f0cf8788de767c8de9a2a6007d76c03729b7a644b4febb8e180fda1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-userwireguard.process-result.json",
+      "sha256": "d4ae76822d4fa8c53ccc72fed96083161e254bcf564ea4491948b2a4568397a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-stage-goidenticons.process-result.json",
+      "sha256": "a7abb8d36dba5cc4e0273845a96c06d1b9b6622f30e2202c2d1d52aa2476fe32"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-list-sn.process-result.json",
+      "sha256": "c7c17ebac3160a55d9fe1fc7f24fbb6a892c5cd3a1b32c144595d78a0b0816dc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-list-connect.process-result.json",
+      "sha256": "a172a811cf6335e3402472f81d5fdd1900b61bfb11c53699ede41bbb92f6aa4c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-list-server.process-result.json",
+      "sha256": "ffc08df1d9b1adbf89824325c63ab867527e49b35d16b82ff6d5d9a73dadee21"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-list-vlessinterop.process-result.json",
+      "sha256": "fb04fd5428dd26bfe7a2ff18670f98f066d41ed3e258ba5390163c285da2f8b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-v4.process-result.json",
+      "sha256": "a0524014236c21e31475485f8528360330abfef97be58e01f7f375cc4004dcb4"
+    }
+  ],
+  "additional_closed_owner_readbacks": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-user-terminal-readback.json",
+      "sha256": "a655e78d47499fe4e1b0ce3968c0a10d2e3fa1890337e51eaf074b8a31f078ce"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-v4-user-terminal-readback.json",
+      "sha256": "9846c3cd9c8a9a1fda9f82fc955fe9b59a7dc1397e849cd9629895a412b0f757"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-body-v1-user-terminal-readback.json",
+      "sha256": "1703e96dc8b7af355e56b8c1f59faa634bd8653125860b910fc8bdf96bd9b60b"
+    }
+  ]
+}

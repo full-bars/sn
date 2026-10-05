@@ -104,7 +104,7 @@ func runFiniteClaim(parent context.Context, opts docopt.Opts, hooks finiteClaimH
 	}
 	settings := hooks.strategySettings
 	if settings == nil {
-		settings = connect.DefaultClientStrategySettings()
+		settings = defaultClaimReadStrategySettings()
 	}
 	clientStrategy := connect.NewClientStrategy(ctx, settings)
 	defer clientStrategy.Close()

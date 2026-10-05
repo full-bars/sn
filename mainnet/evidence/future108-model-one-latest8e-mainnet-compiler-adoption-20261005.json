@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "adopted_at": "2026-10-05T01:06:40.333200+00:00",
+  "compiler_count": 1,
+  "compiler_memory_max_bytes": 8589934592,
+  "compiler_memory_swap_max_bytes": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 8589934592,
+  "data_minimum_available_bytes": 17179869184,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "f4716c9d60a5c4782c78684191f43c5cfc351b894d2e5c7abb8470af790646c6",
+  "margin": 2,
+  "memory_minimum_available_bytes": 120259084288,
+  "model_count": 1,
+  "review_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest8e-mainnet-compiler-review-20261005.json",
+  "review_sha256": "6ee8238d11f7cca11ba9ceeabef2f9725047f105d76b412c708b5725f34e7f1d",
+  "runner_sha256": "2e63818d9899873c06dabf4cccde5284ef1d8008d2bc684717cfea9a2110983e",
+  "scope": "Exact8e/Core25/2f8 normal mainnet compiler only after metadata/allpreviousjobs joined. Existing model retained. No other compile/short/history; newSQL779/nativefee780 not included.",
+  "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_GO_COMPILER"
+}

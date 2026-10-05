@@ -1,0 +1,83 @@
+{
+  "accounting": {
+    "accounting_floor_bytes": 0,
+    "accounting_floor_formula": "max(0, original_baseline-cap)",
+    "baseline_rebased": false,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "margin": 2
+  },
+  "asset_map": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/native-asset-readiness-3388840.json",
+    "sha256": "5450fc36e6713ddcfb0a0e8c12dad70939234d6c18bd849a7e5ed7290f6e450c"
+  },
+  "authorization_limit": "Review and prospective reservation release proposal only. No actual compiler, source staging, export, cleanup, or runtime reuse is authorized by this artifact. Root must adopt exact concrete jobs and exclusive slots after current Go phases join.",
+  "closed_model_evidence": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+      "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+      "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  ],
+  "execution_scope": {
+    "compiler_sequence": "Two separately waited and retained-image-qualified Cargo children, selected production historical capture/historical proof replay binaries then selected --no-run --lib test image. Exact targets and source closure require separate concrete review; do not substitute old transition-replay name without verifying the selected CLI protocol.",
+    "compiler_short_overlap": false,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "export_sequence": "After both compilers actually join and images are independently pinned, one separately adopted principal export root with4 fresh fixed cases; no Go/DB overlap.",
+    "go_native_fee_exporter_independent": true,
+    "history_count": 0,
+    "maximum_live_compilers": 1,
+    "maximum_live_shorts": 1,
+    "model_count": 0
+  },
+  "forecast": {
+    "both_disk_phases_reserved_up_front": true,
+    "data_minimum_available_bytes": 15032385536,
+    "evidence_limit": "Historical23s/29s compiler samples and1.726/1.343GB RSS, plus0.61s/45.2MB original export observation, support a prospective estimate only; none is an upper-bound proof or a selected338 qualification.",
+    "formula": "disk=2*(6GiB Rust build+1GiB later export)=14GiB; memory=96GiB healthy free floor+2*max(4GiB compiler,1GiB export)=104GiB",
+    "later_export_disk_bytes": 1073741824,
+    "later_export_memory_bytes": 1073741824,
+    "memory_minimum_available_bytes": 111669149696,
+    "rust_compiler_memory_bytes": 4294967296,
+    "rust_two_serial_compiler_children_total_disk_bytes": 6442450944
+  },
+  "healthy_guards": {
+    "compiler_data_active_formula": "max(6307319808, immediate_available-12884901888)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "export_data_active_formula": "max(6307319808, immediate_available-2147483648)",
+    "memory_floor_bytes": 103079215104,
+    "retargeted": false
+  },
+  "limits": {
+    "compiler_child_timeout_seconds": 1800,
+    "compiler_data_growth_stop_bytes": 12884901888,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "compiler_whole_owner_timeout_seconds": 2100,
+    "export_child_timeout_seconds": 900,
+    "export_data_growth_stop_bytes": 2147483648,
+    "export_memory_max_bytes": 2147483648,
+    "export_memory_swap_max_bytes": 0,
+    "export_whole_owner_timeout_seconds": 1200,
+    "runtime_lease_horizon_required": "Before each actual unit, canonical lease expiry must exceed whole-owner budget plus shutdown allowance; do not retain historical7200s child limits."
+  },
+  "reservation_decision": {
+    "basis": "All actual oldc60, selected4b-model37 and selected943-monitor17 owner/body waits joined, resource-qualified cleanup0 and exact owned DB/network absence evidence exists. This explicitly releases an inactive slot reservation only; prospective Rust and export forecasts are unchanged. Concrete launch must replay all waits and freshly verify exact resources absent, canonical lease, no competing compiler/body/DB.",
+    "former_model_count": 0,
+    "former_model_disk_forecast_released_bytes": 4294967296,
+    "former_model_memory_forecast_released_bytes": 4294967296
+  },
+  "schema": "exclusive-selected338-rust-assets-prospective-class-review-v1",
+  "selected_runtime_crate_tree": "d25b9b0f68a0a46337bddad23edc484768c60437",
+  "selected_sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65",
+  "status": "PROSPECTIVE_CLASS_READY_FOR_ROOT_SELECTION_CONCRETE_JOBS_PENDING"
+}

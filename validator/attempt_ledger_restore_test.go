@@ -55,7 +55,7 @@ func (self *attemptLedgerRestoreFixture) write(t *testing.T, name string, value 
 
 // The source uses the real original append barriers. Imported legacy bytes
 // and pending record bytes are all produced by the existing signing fixture.
-func newAttemptLedgerRestoreFixture(t *testing.T, fixture attemptRecordStoreTestFixture, legacy bool, stage string) *attemptLedgerRestoreFixture {
+func newAttemptLedgerRestoreFixture(t *testing.T, fixture attemptRecordStoreTestFixture, legacy bool, stage string, configure ...func(*attemptLedgerRestoreFixture)) *attemptLedgerRestoreFixture {
 	t.Helper()
 	parent := t.TempDir()
 	if err := os.Chmod(parent, 0700); err != nil {
@@ -109,6 +109,9 @@ func newAttemptLedgerRestoreFixture(t *testing.T, fixture attemptRecordStoreTest
 	self.scope = AttemptLedgerPreparationScope{Identity: fixture.identity, Coordinator: attemptLedgerDiskTestCoordinator, Limits: attemptLedgerDiskTestLimits(), ExpectedHead: self.checkpoint.Committed}
 	if self.checkpoint.Legacy != nil {
 		self.scope.Legacy = &AttemptLedgerPreparationLegacy{Bytes: self.checkpoint.Legacy.Bytes, Sha256: self.checkpoint.Legacy.Sha256}
+	}
+	for _, change := range configure {
+		change(self)
 	}
 	config, err := durablevolume.Load(self.storage.Reference)
 	if err != nil {

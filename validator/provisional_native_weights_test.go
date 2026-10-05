@@ -42,7 +42,7 @@ func TestProvisionalNativeWeightsClassifiesOnlyActualPreIntentRejections(t *test
 		errors.Join(empty, context.Canceled),
 		errors.Join(capped, errors.New("journal close failed")),
 	} {
-		if got := classifyProvisionalNativeWeights(context.Background(), true, 1400, 302, cause); got != cause {
+		if got := classifyProvisionalNativeWeights(context.Background(), true, 1400, 302, cause); !errors.Is(got, cause) || releaseErrorMarker[*provisionalNativeWeightRejection](got) != nil {
 			t.Fatalf("unrelated/mixed failure was classified: %v", got)
 		}
 	}

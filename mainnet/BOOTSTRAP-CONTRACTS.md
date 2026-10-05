@@ -206,12 +206,20 @@ flags. Its successful exit only means local structural/artifact review passed.
 
 The phase binds the mainnet EVM chain ID 964, independently approved native chain
 and genesis, exact runtime version/code/metadata and inspected source commit,
-native starting checkpoint and finite send window, fixed owned IP/port route,
+native starting checkpoint and finite send window, exact approved RPC URL,
 source-lock/cutover/custody-fence evidence hashes, custody identifier, artifact
 file, journal directory, finite attempts, total value plus maximum gas liability,
 and every prepared action's sender, nonce, target, calldata, value, gas and fees.
-HTTPS also requires normal certificate validation and the approved SPKI pin.
-No DNS, proxy, redirect, endpoint fallback or automatic write retry is admitted.
+HTTPS requires normal certificate/hostname validation and the approved leaf
+SPKI pin. Canonical lowercase public hostnames are supported, including
+`https://archive.chain.opentensor.ai` with the default HTTPS port 443. Literal IP
+routes retain their explicit-port requirement, and plaintext HTTP remains
+restricted to that profile. No proxy, redirect, alternate endpoint or automatic
+write retry is admitted. The URL and SPKI pin remain part of each signed plan;
+an existing approval cannot be retargeted during recovery. Endpoint ownership
+and independently approved finality are separate from this transport admission.
+Legacy signed policy strings and `owned-rpc-assertion` evidence tags retain
+their bytes; that label does not establish ownership of a public endpoint.
 
 The bounded graph may contain the ordered prefix of one through nine actions.
 One approval covers all supplied action reservations; no per-step confirmation

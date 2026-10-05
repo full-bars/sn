@@ -1,0 +1,102 @@
+{
+  "actual_compiler_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-compile-v1.receipt.json",
+    "sha256": "b0ec48b1a9cd9fe5afb188687476da004ed3062ed2e3922bfc17668756384a6b"
+  },
+  "body_mechanism": "Same qualified66/first13 runner, fixed tuple/count/schema changed. Actual list13 preflight, pinned prebuilt test2json, count1/parallel1/test timeout600s and outer660s;32MiB log. Exact root run/pass, zero skips/fails including subtests. Qualified actual waits durable before postchecks; old61PASS5FAIL body preserved.",
+  "healthy_guards": {
+    "active_data_formula": "max(6307319808, immediate_admission_data_available-2147483648)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted_or_rebased": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-priority13-job-v1.json",
+    "sha256": "3e2a4a3cdf8ff94423b8d12685fbda8a54fc9d3ca2a7be9822fc294dadd02f74"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "history_count": 0,
+    "job_sha256": "3e2a4a3cdf8ff94423b8d12685fbda8a54fc9d3ca2a7be9822fc294dadd02f74",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 1,
+    "runner_sha256": "3875f15164e494b002ea380ceff3b7eab0c9184fa00fc4d3b0160188bb3ab4bb",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_MODEL_PLUS_ONE_RETAINED_MAINNET_PRIORITY13_SHORT"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest8e-mainnet-priority13-adoption-20261005.json",
+  "resource_forecasts": {
+    "basis": "Prospective bounded synthetic local file/Python signing fixtures and in-memory funding algebra/cold-index work; no Rust/native replay or DB fixture. Enforced2GiB short memory/zeroSwap/wholedata growth2GiB; not an observed peak bound.",
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "retained_image": {
+    "bytes": 128232424,
+    "ctime_ns": 1791162600944944151,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120126878,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791162600944944151,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest8e-mainnet-normal-compile-v1.test",
+    "sha256": "70f8bbeea414ddf88b754eff01ca8d1151758e740e338d5333c1703b8ad38bf3",
+    "type": 32768,
+    "uid": 1000
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest8e-mainnet-priority13-body-v1.py",
+    "sha256": "3875f15164e494b002ea380ceff3b7eab0c9184fa00fc4d3b0160188bb3ab4bb"
+  },
+  "schema": "latest8e-mainnet-priority13-concrete-review-v1",
+  "scope": "One SHORT alongside exact existing oldc60 model only. No compiler/second short/native engine/extraDB overlap; live model PID/container census and canonical lease rechecked. Actual body result not claimed by author.",
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-priority13-selection-v1.json",
+    "sha256": "c1b719cef98e98551855c88643e3c5ce0ac14d6345ec369e3ccd49287500ad12"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-compiler-source-closure-v1.json",
+    "sha256": "8113272ce8f48bb5a2b0b268dfbdfa7ca97e998059b15647faf44e8d55123a5d"
+  },
+  "source_scope": {
+    "count": 13,
+    "native_public_roots_excluded": true,
+    "ordinary_funding_roots": [
+      "TestEconomicFundingJointPartialClaimsExhaustOriginalObligation",
+      "TestEconomicFundingJointExpiredCarryAndLatePaymentShareOriginalSource",
+      "TestEconomicFundingJointColdAndActiveExhaustionReplaysOriginalSegments",
+      "TestEconomicFundingJointColdSuccessorKeepsLatePredecessorPayment"
+    ],
+    "owner75_complete_claimed": false,
+    "owner_priority_roots": [
+      "TestOwnerRecycleCompletedClaimCannotBecomeUnfinished",
+      "TestOwnerRecycleCustodyRecoversOnlyUnfinishedReservation",
+      "TestOwnerSigningImportAdmissionRefusalPreservesOriginalCustody",
+      "TestOwnerSigningImportPreservesOriginalCustodyAndRecovery",
+      "TestOwnerSigningReplyCannotResolveUnknownSigningCustody",
+      "TestOwnerSigningV1PortableReplyImport",
+      "TestOwnerSigningV2CannotReplaceClaimedV1",
+      "TestOwnerTrimCompletedClaimCannotBecomeUnfinished",
+      "TestOwnerTrimIncompleteExclusiveClaimRemainsRecoverable"
+    ]
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "2f8a6ee4e4042d77ca3b257c2b2eaf495ba1e97d",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

@@ -1,0 +1,45 @@
+{
+  "author_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-xops311-retry3-concrete-review-20261005.json",
+    "sha256": "2378aa6810aa36b83cce5e4d00e8f1b6a1c0885c73ab62f267e03b6e45cb381f"
+  },
+  "exact_runner_delta": "Only job schema and candidate literals; numerical guards, actual wait mechanism, individual311 classifier and helper code byte-identical to qualified retry2.",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/finala1fd-xops311-retry3-job-v1.json",
+    "sha256": "e9bb8935a802ceeaadc19aec6ab3acd0fd2a9db0f86265be5e8aa7ae2893ba7b"
+  },
+  "resource_class_unchanged": {
+    "accounting_floor_bytes": 0,
+    "baseline_bytes": 113681502208,
+    "cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "healthy_memory_floor_bytes": 103079215104,
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "short_memory_max_bytes": 2147483648,
+    "short_swap_max_bytes": 0
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final-xops311-retry3-v1.py",
+    "sha256": "ed19a83b098c017cc7a94e1bd35c2320343248138affe691547ddac9bb4952b1"
+  },
+  "schema": "xops311-retry3-independent-resource-review-v1",
+  "scope": "MODEL plus exactly one SHORT; no overlap with current metadata/compiler/mainnet66. Root must release slot explicitly and adopt exact job; fresh runner census/capacity guard still required.",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/finala1fd-xops311-retry3-source-closure-v1.json",
+    "sha256": "f07670787464cd0b37fc9986057406031402788023259633defcbb232623a3bf"
+  },
+  "status": "PASS_READY_FOR_SEPARATE_ROOT_ADOPTION_AFTER_CURRENT_SLOT_JOINS",
+  "verified": {
+    "bound_files": 1001,
+    "no_compiler_or_body_by_reviewer": true,
+    "prior_failed_tree_joined": true,
+    "prior_failed_wait_exit": 1,
+    "source_tuple": [
+      "a1fdda0d047716e59bd4d3c465cd0f842c7d5f2c",
+      "09f8f989f88660dda442730a18ed99d505ba1988"
+    ],
+    "test_ids": 311
+  }
+}

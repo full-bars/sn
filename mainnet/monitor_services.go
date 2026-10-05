@@ -18,16 +18,26 @@ import (
 // Hooks observe real reads, real durability, and owned waits. None can supply
 // a source record, source match, checkpoint content or metric verdict.
 type monitorServiceHooks struct {
-	read                func(string) monitorServiceReadHooks
-	syncDirectory       func(role, kind string, file *os.File) error
-	afterClose          func(role, kind string, file *os.File) error
-	afterWorker         func(role string, exit int)
-	afterResult         func(context.Context, int)
-	afterEvent          func(context.Context, string)
-	wait                func(context.Context, string, time.Duration) bool
-	rpcWait             func(context.Context, string, time.Duration) error
-	afterCheckpointOpen func(context.Context, string, *os.File)
-	historyRead         func(role, step string)
+	beforeEconomicNativeAppend  func(context.Context, context.CancelFunc)
+	afterConservationNativeRead func(context.Context, error)
+	afterEntitlementRead        func(context.Context, string, error)
+	economicClaimWork           func(role, stage string, units uint64)
+	economicFundingWork         func(context.Context)
+	economicFinalityWork        func(context.Context)
+	beforeNativeFeeRead         func(context.Context, context.CancelFunc)
+	afterNativeFeeRead          func(context.Context, error)
+	nativeFeeReplay             historicalReplayHooks
+	read                        func(string) monitorServiceReadHooks
+	syncDirectory               func(role, kind string, file *os.File) error
+	afterClose                  func(role, kind string, file *os.File) error
+	afterWorker                 func(role string, exit int)
+	afterResult                 func(context.Context, int)
+	afterEvent                  func(context.Context, string)
+	wait                        func(context.Context, string, time.Duration) bool
+	rpcWait                     func(context.Context, string, time.Duration) error
+	afterRpcClient              func(command string, readBudget time.Duration)
+	afterCheckpointOpen         func(context.Context, string, *os.File)
+	historyRead                 func(role, step string)
 }
 
 // Role events contain bounded operational evidence and a closed export outcome.

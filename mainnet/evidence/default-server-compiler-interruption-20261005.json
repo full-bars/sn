@@ -1,0 +1,24 @@
+{
+  "schema": "mainnet-default-compiler-interruption-v1",
+  "status": "FAIL_OR_INCOMPLETE",
+  "parent_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-default-server5-v2.receipt.json",
+    "sha256": "26828f289526be255b45104058049ae382c79f1aea658682c4e10dc405469a00"
+  },
+  "phase_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-default-server5-v2-root.receipt.json",
+    "sha256": "bcef55cc00229161149971809e9bc04bd5b677ad73467d5fd880fd4976c5d9de"
+  },
+  "failure": {
+    "phase": "root",
+    "type": "UnqualifiedContinuation"
+  },
+  "resource_errors": [
+    {
+      "detail": "live compiler executable is unobservable: 3485899",
+      "type": "Refused"
+    }
+  ],
+  "image": null,
+  "limits": "Guard observation failure; no ordinary compiler result established. Preserve original waits and finish only unfinished phases after correcting process observation. The healthy nativefee peer must continue."
+}

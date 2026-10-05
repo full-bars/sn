@@ -22,6 +22,7 @@ import (
 )
 
 const monitorCheckpointSchema = "urnetwork-mainnet-monitor-checkpoint-v3"
+const maxMonitorCheckpointBytes = 2 * 1024 * 1024
 const monitorCheckpointOutageSchema = "urnetwork-mainnet-monitor-checkpoint-v2"
 const monitorCheckpointLegacySchema = "urnetwork-mainnet-monitor-checkpoint-v1"
 
@@ -51,6 +52,13 @@ type monitorCheckpointStore struct {
 // A process owns one checkpoint for its entire monitoring lifetime. The lock
 // prevents two monitors from alternately replacing the same finality history.
 func openMonitorCheckpoint(path string, expected identityExpectation, contexts ...context.Context) (*monitorCheckpointStore, error) {
+	return openMonitorCheckpointProfile(path, expected, "mainnet-monitor-checkpoint", maxMonitorCheckpointBytes, contexts...)
+}
+
+func openMonitorCheckpointProfile(path string, expected identityExpectation, kind string, maximum int, contexts ...context.Context) (*monitorCheckpointStore, error) {
+	if err := validateMonitorCheckpointProfile(kind, maximum); err != nil {
+		return nil, err
+	}
 	if !filepath.IsAbs(path) || filepath.Base(path) == "." || expected.NativeChain == "" || !validHash(expected.GenesisHash) || expected.EvmChainId != mainnetEvmChainId {
 		return nil, errors.New("checkpoint path or approved network identity is incomplete")
 	}
@@ -82,7 +90,7 @@ func openMonitorCheckpoint(path string, expected identityExpectation, contexts .
 	}
 	if directory.guard != nil {
 		name := filepath.Base(path)
-		spec := durablehead.Spec{Kind: "mainnet-monitor-checkpoint", Name: name, MaximumBytes: maxRpcReplyBytes, LockName: name + ".lock", AuxiliaryNames: []string{name + ".lock"}}
+		spec := durablehead.Spec{Kind: kind, Name: name, MaximumBytes: int64(maximum), LockName: name + ".lock", AuxiliaryNames: []string{name + ".lock"}}
 		directory.head, err = durablehead.Open(directory.ctx, directory.guard, lock, spec)
 		// A failed opener has no live users. One exact pending-byte recovery
 		// runs under the same retained exclusive lock before observations start.
@@ -114,14 +122,14 @@ func (self *monitorCheckpointStore) load() (*monitorState, error) {
 		return nil, err
 	}
 	state := &monitorState{}
-	raw, err := self.directory.read(filepath.Base(self.path), maxRpcReplyBytes, true)
+	raw, err := self.directory.read(filepath.Base(self.path), maxMonitorCheckpointBytes, true)
 	if monitorCheckpointAbsent(err) {
 		return state, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("checkpoint cannot be read within 1 MiB: %w", err)
 	}
-	if len(raw) > maxRpcReplyBytes {
+	if len(raw) > maxMonitorCheckpointBytes {
 		return nil, errors.New("checkpoint cannot be read within 1 MiB")
 	}
 	if err := protocol.ValidateUniqueJsonKeys(raw); err != nil {

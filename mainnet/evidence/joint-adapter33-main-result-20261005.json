@@ -1,0 +1,24 @@
+{
+  "schema": "joint-adapter33-main-actual-result-v1",
+  "checked_at": "2026-10-05T07:01:51.921525+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-v4.receipt.json",
+    "sha256": "a57d0f3bffb8d45365d5c49d7ed00a930386caee9b4fbb7f0239ada14af49418"
+  },
+  "user_terminal_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-v4-user-terminal-readback.json",
+    "sha256": "9846c3cd9c8a9a1fda9f82fc955fe9b59a7dc1397e849cd9629895a412b0f757"
+  },
+  "actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-v4.process-result.json",
+    "sha256": "a0524014236c21e31475485f8528360330abfef97be58e01f7f375cc4004dcb4"
+  },
+  "counts": {
+    "fail": 0,
+    "pass": 33,
+    "run": 33,
+    "skip": 0
+  },
+  "resource_errors": [],
+  "scope": "33 deterministic qualification-adapter tests on canonical main. Prior29PASS/1FAIL retained. Allows separately bounded two-owner qualification; does not prove any product tests or launch readiness."
+}

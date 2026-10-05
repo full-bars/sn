@@ -91,6 +91,18 @@ func (self *monitorAdmissionCleanupError) Error() string {
 }
 func (self *monitorAdmissionCleanupError) Unwrap() error { return self.cause }
 
+// A later refused observation dominates earlier transient causes retained for
+// diagnostics. Joining those causes cannot reopen a malformed checkpoint.
+type monitorAdmissionRefusalError struct{ cause error }
+
+// Diagnostics retain both the refused observation and any earlier outage.
+func (self *monitorAdmissionRefusalError) Error() string {
+	return "monitor admission refused: " + self.cause.Error()
+}
+
+// Cause matching preserves evidence without changing the terminal decision.
+func (self *monitorAdmissionRefusalError) Unwrap() error { return self.cause }
+
 func monitorAdmissionFailure(cause, cleanup error) error {
 	if cleanup == nil {
 		return cause
@@ -104,7 +116,8 @@ func monitorAdmissionFailure(cause, cleanup error) error {
 func monitorStartupPending(err error) bool {
 	var cleanup *monitorAdmissionCleanupError
 	var ownership *monitorOutputOwnershipError
-	if err == nil || errors.As(err, &cleanup) || errors.As(err, &ownership) || errors.Is(err, durablevolume.ErrIdentity) || errors.Is(err, errRpcIntegrity) || errors.Is(err, errRpcIdentityMismatch) || errors.Is(err, durablehead.ErrUncertain) || errors.Is(err, errMainnetDurablePublicationUncertain) {
+	var refused *monitorAdmissionRefusalError
+	if err == nil || errors.As(err, &cleanup) || errors.As(err, &ownership) || errors.As(err, &refused) || errors.Is(err, durablevolume.ErrIdentity) || errors.Is(err, errRpcIntegrity) || errors.Is(err, errRpcIdentityMismatch) || errors.Is(err, durablehead.ErrUncertain) || errors.Is(err, errMainnetDurablePublicationUncertain) {
 		return false
 	}
 	if monitorStoragePending(err) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, os.ErrClosed) {

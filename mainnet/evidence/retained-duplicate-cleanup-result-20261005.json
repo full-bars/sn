@@ -1,0 +1,20 @@
+{
+  "removed_count": 9523,
+  "removed_allocated_bytes": 5548728320,
+  "observed_free_delta_bytes": 5548380160,
+  "free_after_bytes": 19627220992,
+  "exclusive16GiB_headroom_bytes": 2447351808,
+  "accounting_unchanged": {
+    "baseline_bytes": 113681502208,
+    "cap_bytes": 115964116992,
+    "floor_bytes": 0,
+    "margin": 2
+  },
+  "no_whole_directories_or_unique_archives_or_elfs_or_sources_or_receipts_removed": true,
+  "fresh_future_admission_required": true,
+  "schema": "mainnet-retained-duplicate-cleanup-result-v1",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/qualification-child-context/evidence/approved-cold-archive-duplicates-reclaim-20261005-v1.receipt.json",
+    "sha256": "b81ace2c7ceaea1f6a788d27ee9dc1972f406919da9a9cc4007cd7ffbbc0c9bd"
+  }
+}

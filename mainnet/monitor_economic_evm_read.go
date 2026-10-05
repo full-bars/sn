@@ -28,10 +28,11 @@ import (
 // The mapping preface has its own existing response bounds. This budget covers
 // every retained block body, receipt, code and getter reply in the economic page.
 type monitorEvmReader struct {
-	client   *rpcClient
-	policy   monitorEconomicEvmPolicy
-	contract *abi.ABI
-	used     int
+	entitlementObserver *economicEntitlementReceiptObserver
+	client              *rpcClient
+	policy              monitorEconomicEvmPolicy
+	contract            *abi.ABI
+	used                int
 }
 
 type monitorEvmBlock struct {
@@ -408,6 +409,9 @@ func (self *monitorEvmReader) block(ctx context.Context, header *types.Header) (
 		if price.Cmp(tx.GasFeeCap()) > 0 || tx.Type() == types.LegacyTxType && price.Cmp(tx.GasPrice()) != 0 {
 			return result, monitorEvmIntegrity("economic receipt fee price exceeds its original signed authority")
 		}
+		if receipt.Status != types.ReceiptStatusSuccessful && len(receipt.Logs) != 0 {
+			return result, monitorEvmIntegrity("failed economic receipt retained committed contract logs")
+		}
 		cumulative = receipt.CumulativeGasUsed
 		digest := sha256.Sum256(raw)
 		receiptHash := "sha256:" + hex.EncodeToString(digest[:])
@@ -416,6 +420,14 @@ func (self *monitorEvmReader) block(ctx context.Context, header *types.Header) (
 				return result, monitorEvmIntegrity("economic receipt log position is missing, repeated or removed")
 			}
 			logIndex++
+			if observer := self.entitlementObserver; observer != nil && log.Address == observer.address {
+				decoder := monitorEvmReader{contract: observer.contract}
+				event, err := decoder.event(log, receiptHash)
+				if err != nil {
+					return result, err
+				}
+				observer.events = append(observer.events, event)
+			}
 			if log.Address == common.HexToAddress(self.policy.Address) {
 				event, err := self.event(log, receiptHash)
 				if err != nil {
@@ -439,6 +451,14 @@ func (self *monitorEvmReader) block(ctx context.Context, header *types.Header) (
 	result.Snapshot, err = self.snapshot(ctx, result.Boundary.Hash)
 	if err != nil {
 		return result, err
+	}
+	for index := range result.Events {
+		event := &result.Events[index]
+		identity, err := self.captureIdentity(ctx, *event)
+		if err != nil {
+			return result, err
+		}
+		event.CaptureIdentity = identity
 	}
 	for _, event := range result.Events {
 		if event.Name != "EntitlementFinalized" && event.Name != "RootMissed" {

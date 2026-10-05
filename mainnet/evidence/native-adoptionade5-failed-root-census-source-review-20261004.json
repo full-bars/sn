@@ -1,0 +1,317 @@
+{
+  "schema": "native-adoptionade5-failed-root-census-source-review-v1",
+  "status": "ORIGINAL_SETUP_FAILURES_RETAINED_ONLY_ONE_PROTECTED_ENVIRONMENT_ROOT_REPLAYED",
+  "source_reference": "b4662ed8e8571d011abda4d5454a97aa184a8b5a",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-normal-ade-ordinary.stdout",
+      "bytes": 24145,
+      "sha256": "2746046b63ccb66d26740588fc4b009a6ace99d96f6d043ba0ac1cb177b5e1f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-normal-ade-engine.stdout",
+      "bytes": 3902,
+      "sha256": "637ba93b333558c10bec18461516b383a578a7c519fd50db8051ca9e6c0657d8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-normal-restore-ordinary.stdout",
+      "bytes": 4880,
+      "sha256": "68807d42ffe31d4f53204b20d6d222d3efaa48765105bb1360fa535c44aa1054"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-normal-restore-engine.stdout",
+      "bytes": 9765,
+      "sha256": "190b4316fe62ca6db149a723b0277c76000784da6b1191b9295de9bbb7efe942"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-normal-principal-activation.stdout",
+      "bytes": 12829,
+      "sha256": "a7c95746c1187ac89ba9cb96627229173faad3fea37ee87bfab23f5b9a6ba55a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-normal-ade-full128.stdout",
+      "bytes": 1473,
+      "sha256": "96ce4bb9157c204a3df57624f335e637eabf2ead1203200da19f81244118155e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-normal-restore-cross128.stdout",
+      "bytes": 1424,
+      "sha256": "c4ee643f44d96b699528f21c3ef7b9e018c50b933170c7046df12b54752df7fa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-race-ade-ordinary.stdout",
+      "bytes": 24155,
+      "sha256": "ea84ea68b06ea3eca47e67bf5953aa979c4d7768afd8582b5161614437b5a187"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-race-ade-engine.stdout",
+      "bytes": 3910,
+      "sha256": "89eb36449bcc8f3ff0e10065f73ab0d90f60bb345e3d086147cd8f6e2dc06488"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-race-restore-ordinary.stdout",
+      "bytes": 4883,
+      "sha256": "4624cbaa5965ee6f5eac9ec803388abe5a34ef3b526b93d1c39f3206fba78476"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-race-restore-engine.stdout",
+      "bytes": 9783,
+      "sha256": "bdef0e433ede286ecaadfaf5f217600d3d2e17919f3a539abaf0ed0ac51af9d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-race-principal-activation.stdout",
+      "bytes": 12854,
+      "sha256": "f7b175874d74e780b6c5944094142e7f6644a96b03e471e762c52d57915dcb7c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-race-ade-full128.stdout",
+      "bytes": 1473,
+      "sha256": "4c347c0edea4312c9d4316c4a45d5e455828cb0b28214efe45c4f6995cde723e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-race-restore-cross128.stdout",
+      "bytes": 1424,
+      "sha256": "1bc3b6065d9fb84ff5f1063d1925fd57caf54a1cc54699dec114dd7570b50257"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-ancestry-smoke-normal.stdout",
+      "bytes": 982,
+      "sha256": "9332d95b3f76050be39e29566b714921e6a9b0b7d9b2570ca01dac99b16fd31e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-ancestry-smoke-race.stdout",
+      "bytes": 985,
+      "sha256": "28b6c207556db7ef95ac132789eabf56cfad4a2f77f43a6f4f6d5cfd04c27382"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/ade5-environment-ancestry/evidence/source-finding.json",
+      "bytes": 8023,
+      "sha256": "abb1e12d7b34ac04354232b94ddb1c015c83b41fe0b5957b2dcd034792595a7b"
+    }
+  ],
+  "modes": {
+    "normal": {
+      "original_run": 50,
+      "original_pass": 7,
+      "original_fail": 43,
+      "original_skip": 0,
+      "failed_roots": [
+        "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt",
+        "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies",
+        "TestEconomicConservationFixtureProtectsFreshRootWithoutWeakeningCustody",
+        "TestEconomicConservationNativeRenewalPublicPreservesOriginalPolicyAndArchive",
+        "TestEconomicConservationNativeRenewalPublicLostAckAndShortOutputReconcile",
+        "TestEconomicConservationNativeRenewalPublicRejectsForeignSignerAndLineage",
+        "TestEconomicConservationNativeRenewalPublicMissingReviewRemainsUnavailable",
+        "TestEconomicConservationNativeRenewalPublicRejectsReviewReuseAndChangedPrefix",
+        "TestEconomicConservationNativeRenewalExternalPolicyChangeDoesNotResetOwner",
+        "TestEconomicConservationNativeRenewalPublicRequiresIndependentInnerApproval",
+        "TestEconomicConservationNativeRenewalHeldArchiveCustodyBeforeDispatch",
+        "TestEconomicConservationNativeRenewalRestoreAuthenticatesCompleteOriginalHistory",
+        "TestEconomicConservationNativeRenewalCanceledProposalAndUnownedIndexHaveNoEffects",
+        "TestEconomicConservationRestoreReadFailureCannotInventHistoryMismatch",
+        "TestNativeProducerRenewalAuthenticatesOriginalAndMonotonicCapacity",
+        "TestEconomicConservationRestoreProtectsFreshAncestorBeforePreparation",
+        "TestNativeProducerRestorePreparesFreshTargetWithoutPriorGeneration",
+        "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart",
+        "TestEconomicConservationPublicPrincipalRefusesUndrainedActivationWithHealthySiblings",
+        "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob",
+        "TestEconomicConservationRestorePublicSingleRootKeepsFullClaimWindow",
+        "TestEconomicConservationRestorePublicRequiresEverySourceAndCoowner",
+        "TestEconomicConservationRestorePublicRejectsChangedAuthorityAndReserve",
+        "TestEconomicConservationRestorePublicReconstructsOriginalClaimHead",
+        "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot",
+        "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted",
+        "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval",
+        "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects",
+        "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody",
+        "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint",
+        "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress",
+        "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput",
+        "TestEconomicConservationPrincipalFixtureProvisionsAbsentHeadAndRefusesLostLock",
+        "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+        "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+        "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+        "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+        "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+        "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+        "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings",
+        "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed",
+        "TestEconomicConservationClaimWindowPublicFull128RetainsUnknownCreditAndResumes",
+        "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues"
+      ],
+      "retained_passed_roots": [
+        "TestEconomicConservationNativeRenewalReferenceBudgetAndIdentity",
+        "TestHistoricalReplayPublicRefusalRetainsBoundedOriginalDiagnostic",
+        "TestHistoricalReplayDiagnosticWordsDoNotReplaceProcessCause",
+        "TestHistoricalReplayDiagnosticCancellationKeepsOwnerCauseAndJoins",
+        "TestHistoricalCapturePublicCommandRetainsExactJobAndUnknownAuthority",
+        "TestHistoricalReplayCancellationJoinsPartialOutput",
+        "TestHistoricalReplayOutputBoundsCancelRealChild"
+      ],
+      "by_group": {
+        "ade-ordinary": {
+          "pass": 4,
+          "fail": 17,
+          "skip": 0
+        },
+        "ade-engine": {
+          "pass": 0,
+          "fail": 3,
+          "skip": 0
+        },
+        "restore-ordinary": {
+          "pass": 0,
+          "fail": 4,
+          "skip": 0
+        },
+        "restore-engine": {
+          "pass": 0,
+          "fail": 8,
+          "skip": 0
+        },
+        "principal-activation": {
+          "pass": 3,
+          "fail": 9,
+          "skip": 0
+        },
+        "ade-full128": {
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "restore-cross128": {
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        }
+      }
+    },
+    "race": {
+      "original_run": 50,
+      "original_pass": 7,
+      "original_fail": 43,
+      "original_skip": 0,
+      "failed_roots": [
+        "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt",
+        "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies",
+        "TestEconomicConservationFixtureProtectsFreshRootWithoutWeakeningCustody",
+        "TestEconomicConservationNativeRenewalPublicPreservesOriginalPolicyAndArchive",
+        "TestEconomicConservationNativeRenewalPublicLostAckAndShortOutputReconcile",
+        "TestEconomicConservationNativeRenewalPublicRejectsForeignSignerAndLineage",
+        "TestEconomicConservationNativeRenewalPublicMissingReviewRemainsUnavailable",
+        "TestEconomicConservationNativeRenewalPublicRejectsReviewReuseAndChangedPrefix",
+        "TestEconomicConservationNativeRenewalExternalPolicyChangeDoesNotResetOwner",
+        "TestEconomicConservationNativeRenewalPublicRequiresIndependentInnerApproval",
+        "TestEconomicConservationNativeRenewalHeldArchiveCustodyBeforeDispatch",
+        "TestEconomicConservationNativeRenewalRestoreAuthenticatesCompleteOriginalHistory",
+        "TestEconomicConservationNativeRenewalCanceledProposalAndUnownedIndexHaveNoEffects",
+        "TestEconomicConservationRestoreReadFailureCannotInventHistoryMismatch",
+        "TestNativeProducerRenewalAuthenticatesOriginalAndMonotonicCapacity",
+        "TestEconomicConservationRestoreProtectsFreshAncestorBeforePreparation",
+        "TestNativeProducerRestorePreparesFreshTargetWithoutPriorGeneration",
+        "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart",
+        "TestEconomicConservationPublicPrincipalRefusesUndrainedActivationWithHealthySiblings",
+        "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob",
+        "TestEconomicConservationRestorePublicSingleRootKeepsFullClaimWindow",
+        "TestEconomicConservationRestorePublicRequiresEverySourceAndCoowner",
+        "TestEconomicConservationRestorePublicRejectsChangedAuthorityAndReserve",
+        "TestEconomicConservationRestorePublicReconstructsOriginalClaimHead",
+        "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot",
+        "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted",
+        "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval",
+        "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects",
+        "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody",
+        "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint",
+        "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress",
+        "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput",
+        "TestEconomicConservationPrincipalFixtureProvisionsAbsentHeadAndRefusesLostLock",
+        "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+        "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+        "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+        "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+        "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+        "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+        "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings",
+        "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed",
+        "TestEconomicConservationClaimWindowPublicFull128RetainsUnknownCreditAndResumes",
+        "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues"
+      ],
+      "retained_passed_roots": [
+        "TestEconomicConservationNativeRenewalReferenceBudgetAndIdentity",
+        "TestHistoricalReplayPublicRefusalRetainsBoundedOriginalDiagnostic",
+        "TestHistoricalReplayDiagnosticWordsDoNotReplaceProcessCause",
+        "TestHistoricalReplayDiagnosticCancellationKeepsOwnerCauseAndJoins",
+        "TestHistoricalCapturePublicCommandRetainsExactJobAndUnknownAuthority",
+        "TestHistoricalReplayCancellationJoinsPartialOutput",
+        "TestHistoricalReplayOutputBoundsCancelRealChild"
+      ],
+      "by_group": {
+        "ade-ordinary": {
+          "pass": 4,
+          "fail": 17,
+          "skip": 0
+        },
+        "ade-engine": {
+          "pass": 0,
+          "fail": 3,
+          "skip": 0
+        },
+        "restore-ordinary": {
+          "pass": 0,
+          "fail": 4,
+          "skip": 0
+        },
+        "restore-engine": {
+          "pass": 0,
+          "fail": 8,
+          "skip": 0
+        },
+        "principal-activation": {
+          "pass": 3,
+          "fail": 9,
+          "skip": 0
+        },
+        "ade-full128": {
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "restore-cross128": {
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        }
+      }
+    }
+  },
+  "failure_classification": {
+    "all_86_original_failed_roots": "SETUP_ANCESTOR_PROTECTION",
+    "reached_product_guard_failures_established_by_original_logs": 0,
+    "cause": "The selected TMPDIR was below /mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5, uid1000 mode0775. Core openPhysicalDirectory calls protectedAncestor on every descriptor from /. Mode0775 fails protected because of group write; a uid1000 directory also fails the root-owned sticky ancestor exception. Mode0700 tmp/test leaves cannot repair the earlier ancestor."
+  },
+  "same_image_counterpart": {
+    "root": "TestEconomicConservationFixtureProtectsFreshRootWithoutWeakeningCustody",
+    "normal": "PASS",
+    "race": "PASS",
+    "safe_tmpdir": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/tmp-ade5-recovery",
+    "scope": "One root per mode; not all43 failed roots. Existing images and original production custody check unchanged."
+  },
+  "next_execution_owner_work": [
+    "Preserve original images, source, all seven passing roots and all43 failed roots per mode.",
+    "Freshly admit same-image environment-only continuation beneath an independently verified protected owned0700 ancestor; no chmod of shared ancestors and no weakened durable custody.",
+    "Use failed_roots for exact normal/race continuation. The prior smoke counterpart may be retained separately or repeated as a control.",
+    "Classify any newly reached failures by actual assertion/source before proposing production edits; keep existing six operative controls as distinct evidence."
+  ],
+  "author_actions": {
+    "cargo_or_go_compiles": 0,
+    "test_bodies_executed": 0,
+    "restore_source_edits": 0,
+    "scope": "Read-only receipt/source review and deterministic JSON census."
+  },
+  "limits": [
+    "No product defect is established by these original43 failures per mode.",
+    "No broader corrected-environment continuation was present in the inspected fixtureade5/evidence directory.",
+    "This source review does not qualify restore, original mainnet claims or launch."
+  ]
+}

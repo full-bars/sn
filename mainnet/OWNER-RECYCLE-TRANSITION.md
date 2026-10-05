@@ -1,4 +1,10 @@
-# Offline owner recycle transition
+# Owner recycle transition
+
+The original offline workflow below now has a separate
+[owner-local Ledger signing and bounded submission increment](OWNER-RECYCLE-EXECUTION.md).
+That new command path retains original action/request bytes and requires fresh
+independent production submission authority. Its source-only status does not
+extend the historical qualification receipts below.
 
 The subnet owner can change SN25 from Burn to Recycle on the inspected runtime
 470. This resolves the authority question behind MG-06; it does not establish
@@ -42,8 +48,10 @@ changes. [Admin window][origin], [scheduler][scheduler]
 
 ## Offline workflow
 
-No `owner-recycle` command signs, broadcasts, starts a service or loads a
-private key. All custody files must be regular, private files in a canonical
+The original modes in this workflow do not sign, broadcast, start a service or
+load a private key. The separate execution increment adds `sign` on the owner's
+computer and a separately approved `submit` on the host. All custody files must
+be regular, private files in a canonical
 absolute owner-private directory. Keep the journal and permanent `.lock` marker
 together, and use one globally exclusive owner-key custody process across hosts.
 Local file locking alone cannot provide that global exclusion.
@@ -82,7 +90,8 @@ Local file locking alone cannot provide that global exclusion.
    a raw 64-byte signature in hex. The owner signature is verified over the exact
    native payload; the full signed extrinsic and its hash become durable.
 7. `owner-recycle status` with the common flags returns the retained public
-   request and exact signed extrinsic. No transmission command is installed.
+   request and exact signed extrinsic. Use the separately approved execution
+   increment for bounded transmission; this retained status grants no authority.
    Any separately authorized external transmission must use those exact bytes,
    the approved route and original era, with qualified global owner custody and
    bounded attempt/fee policy. Never regenerate the action after ambiguous send.
@@ -134,8 +143,10 @@ The transcript explicitly reports `device_qualified: false`,
 `metadata_proof_verified: false`, `signing: false`, `network_effects: false`.
 The owner's actual device/platform, current metadata15/RFC78 digest and proof,
 source-to-Wasm exception and one-request device journal still require independent
-qualification. This increment does not connect the existing trim-only device
-signer to a new action type. [Owner signing boundaries](OWNER-SIGNING.md)
+qualification. The original offline increment did not connect the trim-only
+device signer to this action. The separate execution increment now provides a
+typed recycle device/reply domain while preserving trim custody bytes.
+[Owner signing boundaries](OWNER-SIGNING.md)
 
 ## Recovery and outcome
 

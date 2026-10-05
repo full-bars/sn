@@ -27,6 +27,17 @@ type ValidatorStakeCensusObservation struct {
 // artifact, exact block, threshold and canonical closing checks are shared
 // with the per-validator reader; an error discards the entire projection.
 func ReadValidatorStakeCensusAtContext(ctx context.Context, chain *Chain, query ValidatorIdentityQuery, allowed ...RuntimeArtifactIdentity) (ValidatorStakeCensusObservation, error) {
+	if len(allowed) > maximumRuntimeMetadataArtifactsPerChain {
+		return ValidatorStakeCensusObservation{}, errors.New("validator stake census runtime allowlist exceeds its bound")
+	}
+	allowed = append([]RuntimeArtifactIdentity(nil), allowed...)
+	return readRuntimeObservation(ctx, chain, func(ctx context.Context) (ValidatorStakeCensusObservation, error) {
+		return readValidatorStakeCensusAttempt(ctx, chain, query, allowed...)
+	})
+}
+
+// One attempt preserves the original query and rejects any partial result.
+func readValidatorStakeCensusAttempt(ctx context.Context, chain *Chain, query ValidatorIdentityQuery, allowed ...RuntimeArtifactIdentity) (ValidatorStakeCensusObservation, error) {
 	empty := ValidatorStakeCensusObservation{}
 	if query.MaximumSubnetUIDs == 0 || query.MaximumSubnetUIDs > 4096 {
 		return empty, errors.New("validator stake census bound must be within 1..4096")

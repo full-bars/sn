@@ -28,6 +28,10 @@ const CHILD_WRITE: &str =
 /// Offsets are fixed fixture data. The normal program modifies one complete
 /// state; no expected-root value or verifier branch is imported by the Wasm.
 fn wasm(imports: &str, body: &str) -> Vec<u8> {
+    wasm_with_heap(imports, body, 8192)
+}
+
+fn wasm_with_heap(imports: &str, body: &str, heap: u32) -> Vec<u8> {
     let version = RuntimeVersion {
         spec_name: Cow::Borrowed("synthetic-historical-runtime"),
         spec_version: 1,
@@ -61,7 +65,7 @@ fn wasm(imports: &str, body: &str) -> Vec<u8> {
         (import "env" "ext_default_child_storage_clear_version_1" (func $child_clear (param i64 i64)))
         {imports}
         (memory (export "memory") 8)
-        (global (export "__heap_base") i32 (i32.const 8192))
+        (global (export "__heap_base") i32 (i32.const {heap}))
         (data (i32.const 32) "{escaped}")
         (data (i32.const 1984) "zzzz-account")
         (data (i32.const 3072) "synthetic-child")
@@ -152,6 +156,8 @@ fn job(code: &[u8], change: impl FnOnce(&mut Storage)) -> HistoricalJob {
             .into_iter()
             .collect(),
         observation_profile: None,
+        principal_queries: None,
+        principal_effects: false,
     }
 }
 
@@ -237,6 +243,7 @@ fn observation_profile(code: &[u8], export: &str, purpose: &str) -> observer::Ob
             memory: Vec::new(),
         }],
         metadata_sha256: None,
+        principal_storage_prefixes: None,
     }
 }
 

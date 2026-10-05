@@ -4,10 +4,11 @@ package main
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net"
 	"net/http"
+	"os"
+	"reflect"
 	"syscall"
 	"time"
 )
@@ -37,31 +38,65 @@ func monitorProgressRetryStatus(status int) bool {
 }
 
 func monitorProgressRetryTransport(err error) bool {
-	if err == nil || errors.Is(err, context.Canceled) {
+	remaining := 128
+	return monitorProgressRetryCause(err, 0, &remaining)
+}
+
+// Complete physical cause graphs retain one finite inspection allowance.
+// Foreign Is/As methods never grant authority; local custody stays terminal.
+func monitorProgressRetryCause(err error, depth int, remaining *int) bool {
+	*remaining--
+	if err == nil || *remaining < 0 || depth > 32 {
 		return false
+	}
+	value := reflect.ValueOf(err)
+	switch value.Kind() {
+	case reflect.Pointer, reflect.Interface, reflect.Map, reflect.Slice, reflect.Func, reflect.Chan:
+		if value.IsNil() {
+			return false
+		}
+	}
+	switch err.(type) {
+	case *os.PathError, *os.LinkError:
+		return false
+	}
+	switch err {
+	case context.Canceled:
+		return false
+	case context.DeadlineExceeded, io.EOF, io.ErrUnexpectedEOF, syscall.EIO,
+		syscall.ECONNRESET, syscall.ECONNREFUSED, syscall.EPIPE, syscall.ETIMEDOUT,
+		syscall.ENETUNREACH, syscall.EHOSTUNREACH, syscall.ENETDOWN,
+		syscall.ENETRESET, syscall.ECONNABORTED:
+		return true
 	}
 	// Joined permanent causes must not borrow a sibling's timeout. Inspect
 	// owned wrappers before classifying a leaf as a transient transport error.
 	if joined, ok := err.(interface{ Unwrap() []error }); ok {
 		causes := joined.Unwrap()
-		if len(causes) == 0 {
+		if len(causes) == 0 || len(causes) > *remaining {
 			return false
 		}
 		for _, cause := range causes {
-			if !monitorProgressRetryTransport(cause) {
+			if !monitorProgressRetryCause(cause, depth+1, remaining) {
 				return false
 			}
 		}
 		return true
 	}
 	if dns, ok := err.(*net.DNSError); ok {
-		return !dns.IsNotFound && (dns.IsTimeout || dns.IsTemporary)
+		if dns.IsNotFound {
+			return false
+		}
+		if cause := dns.Unwrap(); cause != nil {
+			return monitorProgressRetryCause(cause, depth+1, remaining)
+		}
+		return dns.IsTimeout || dns.IsTemporary
 	}
-	if wrapped, ok := err.(interface{ Unwrap() error }); ok && wrapped.Unwrap() != nil {
-		return monitorProgressRetryTransport(wrapped.Unwrap())
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return monitorProgressRetryCause(wrapped.Unwrap(), depth+1, remaining)
 	}
-	var network net.Error
-	return errors.Is(err, context.DeadlineExceeded) || errors.As(err, &network) && network.Timeout() || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, syscall.EIO) || errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.ECONNREFUSED) || errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ETIMEDOUT) || errors.Is(err, syscall.ENETUNREACH) || errors.Is(err, syscall.EHOSTUNREACH) || errors.Is(err, syscall.ENETDOWN) || errors.Is(err, syscall.ENETRESET) || errors.Is(err, syscall.ECONNABORTED)
+	network, ok := err.(net.Error)
+	return ok && network.Timeout()
 }
 
 // An observed body/close fault replaces the status-only retry permission.

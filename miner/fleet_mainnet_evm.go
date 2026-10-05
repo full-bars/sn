@@ -28,7 +28,16 @@ type fleetEvmNativeReadClient struct{ client *rpc.Client }
 
 // Forwards bounded reads without taking ownership of the transport.
 func (self *fleetEvmNativeReadClient) CallContext(ctx context.Context, result any, method string, args ...any) error {
-	return self.client.CallContext(ctx, result, method, args...)
+	return evmrpc.CallRuntimeReadContext(ctx, self.client, result, method, args...)
+}
+
+// Borrowed adapters preserve the submitting client's actual socket lifetime.
+func (self *fleetEvmNativeReadClient) TransportGeneration() uint64 {
+	if self == nil {
+		return 0
+	}
+	generation, _ := evmrpc.RuntimeTransportGeneration(self.client)
+	return generation
 }
 
 // Admission has no background-context fallback.
@@ -63,12 +72,11 @@ func (self *fleetMainnetRuntimeAuthority) admitEvmPurpose(ctx context.Context, c
 	if self == nil || ctx == nil || client == nil {
 		return errors.New("mainnet EVM runtime authority is unavailable")
 	}
-	chainId, err := client.ChainID(ctx)
-	if err != nil {
-		return err
+	if generation, tracked := evmrpc.RuntimeTransportGeneration(client.Client()); !tracked || generation == 0 {
+		return errors.New("mainnet EVM runtime transport owner is unavailable")
 	}
-	if !chainId.IsUint64() || chainId.Uint64() != self.EvmChainId {
-		return errors.New("mainnet EVM runtime authority chain id differs")
+	if number != nil {
+		number = new(big.Int).Set(number)
 	}
 	genesis, err := types.NewHashFromHexString(self.GenesisHash)
 	if err != nil {
@@ -76,30 +84,42 @@ func (self *fleetMainnetRuntimeAuthority) admitEvmPurpose(ctx context.Context, c
 	}
 	chain := &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: &fleetEvmNativeReadClient{client: client.Client()}}, GenesisHash: genesis}
 	var block types.Hash
-	if number == nil {
-		block, err = crv4.FinalizedHeadContext(ctx, chain)
-	} else {
-		if !number.IsUint64() || number.Sign() <= 0 {
-			return errors.New("mainnet receipt native height is invalid")
+	_, err = crv4.ReadRuntimeObservationContext(ctx, chain, func(ctx context.Context) (struct{}, error) {
+		var chainId hexutil.Big
+		if err := chain.API.Client.CallContext(ctx, &chainId, "eth_chainId"); err != nil {
+			return struct{}{}, err
 		}
-		err = chain.API.Client.CallContext(ctx, &block, "chain_getBlockHash", number.Uint64())
-	}
-	if err != nil {
-		return err
-	}
-	if _, err := self.authenticateFor(ctx, chain, block, purpose); err != nil {
-		return err
-	}
-	if number != nil {
-		height, _, err := chain.ReceiptHeaderAtContext(ctx, block)
-		if err != nil {
-			return err
+		if !(*big.Int)(&chainId).IsUint64() || (*big.Int)(&chainId).Uint64() != self.EvmChainId {
+			return struct{}{}, errors.New("mainnet EVM runtime authority chain id differs")
 		}
-		if height != number.Uint64() {
-			return errors.New("mainnet receipt native height changed")
+		if block == (types.Hash{}) {
+			if number == nil {
+				block, err = crv4.FinalizedHeadContext(ctx, chain)
+			} else {
+				if !number.IsUint64() || number.Sign() <= 0 {
+					return struct{}{}, errors.New("mainnet receipt native height is invalid")
+				}
+				err = chain.API.Client.CallContext(ctx, &block, "chain_getBlockHash", number.Uint64())
+			}
+			if err != nil {
+				return struct{}{}, err
+			}
 		}
-	}
-	return ctx.Err()
+		if _, err := self.authenticateFor(ctx, chain, block, purpose); err != nil {
+			return struct{}{}, err
+		}
+		if number != nil {
+			height, _, err := chain.ReceiptHeaderAtContext(ctx, block)
+			if err != nil {
+				return struct{}{}, err
+			}
+			if height != number.Uint64() {
+				return struct{}{}, errors.New("mainnet receipt native height changed")
+			}
+		}
+		return struct{}{}, ctx.Err()
+	})
+	return err
 }
 
 // Nil preserves the established testnet submission path without creating any

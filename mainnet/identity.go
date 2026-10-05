@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -187,60 +188,92 @@ func (self *rpcClient) callAdmittedReadResult(ctx context.Context, method string
 		}
 		request.Header.Set("Content-Type", "application/json")
 		response, requestErr := self.httpClient.Do(request)
-		if requestErr == nil {
-			body, readErr := io.ReadAll(io.LimitReader(response.Body, int64(replyLimit)+1))
-			response.Body.Close()
-			if readErr != nil {
-				requestErr = readErr
-			} else if len(body) > replyLimit {
+		if requestErr != nil {
+			if !rpcReadTransportMayRetry(requestErr) {
 				attemptCancel()
-				return fmt.Errorf("%w: %s: reply exceeds %d MiB", errRpcIntegrity, method, replyLimit/(1024*1024))
-			} else if response.StatusCode == http.StatusOK {
+				return errors.Join(requestErr, operationCtx.Err())
+			}
+		} else {
+			body, readErr := io.ReadAll(io.LimitReader(response.Body, int64(replyLimit)+1))
+			closeErr := response.Body.Close()
+			requestErr = errors.Join(readErr, closeErr, attemptCtx.Err())
+			if len(body) > replyLimit {
+				attemptCancel()
+				return errors.Join(fmt.Errorf("%w: %s: reply exceeds %d MiB", errRpcIntegrity, method, replyLimit/(1024*1024)), requestErr)
+			}
+			if requestErr != nil {
+				// An interrupted body cannot erase a known terminal status.
+				if response.StatusCode >= http.StatusMultipleChoices && response.StatusCode < http.StatusBadRequest {
+					requestErr = errors.Join(fmt.Errorf("%w: %s: HTTP %d redirect from owned route", errRpcIntegrity, method, response.StatusCode), requestErr)
+				} else if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusRequestTimeout && response.StatusCode != http.StatusTooManyRequests && response.StatusCode != http.StatusBadGateway && response.StatusCode != http.StatusServiceUnavailable && response.StatusCode != http.StatusGatewayTimeout {
+					requestErr = errors.Join(fmt.Errorf("%s: HTTP %d", method, response.StatusCode), requestErr)
+				}
+				if !rpcReadTransportMayRetry(requestErr) {
+					attemptCancel()
+					return errors.Join(requestErr, operationCtx.Err())
+				}
+			}
+			if readErr == nil && response.StatusCode == http.StatusOK {
 				if decodeErr := protocol.ValidateUniqueJsonKeys(body); decodeErr != nil {
 					attemptCancel()
-					return fmt.Errorf("%w: %s: invalid JSON document: %v", errRpcIntegrity, method, decodeErr)
+					return errors.Join(fmt.Errorf("%w: %s: invalid JSON document: %v", errRpcIntegrity, method, decodeErr), requestErr)
 				}
 				var reply rpcReply
 				if decodeErr := json.Unmarshal(body, &reply); decodeErr != nil {
 					attemptCancel()
-					return fmt.Errorf("%w: %s: invalid reply: %v", errRpcIntegrity, method, decodeErr)
+					return errors.Join(fmt.Errorf("%w: %s: invalid reply: %v", errRpcIntegrity, method, decodeErr), requestErr)
 				}
 				if reply.JsonRpc != "2.0" || reply.Id != 1 {
 					attemptCancel()
-					return fmt.Errorf("%w: %s: reply has the wrong request identity", errRpcIntegrity, method)
+					return errors.Join(fmt.Errorf("%w: %s: reply has the wrong request identity", errRpcIntegrity, method), requestErr)
 				}
 				if reply.Error != nil {
 					if len(reply.Result) != 0 && !bytes.Equal(reply.Result, []byte("null")) {
 						attemptCancel()
-						return fmt.Errorf("%w: %s: reply has both result and error", errRpcIntegrity, method)
+						return errors.Join(fmt.Errorf("%w: %s: reply has both result and error", errRpcIntegrity, method), requestErr)
 					}
-					requestErr = &rpcCallError{method: method, code: reply.Error.Code, message: reply.Error.Message}
+					requestErr = errors.Join(&rpcCallError{method: method, code: reply.Error.Code, message: reply.Error.Message}, requestErr)
 					if !rpcTransientReadError(reply.Error.Code, reply.Error.Message) {
 						attemptCancel()
 						return requestErr
 					}
 				} else if retryAbsent && bytes.Equal(reply.Result, []byte("null")) {
-					requestErr = fmt.Errorf("%w: %s did not return the retained fact", errRpcObservationUnavailable, method)
+					requestErr = errors.Join(fmt.Errorf("%w: %s did not return the retained fact", errRpcObservationUnavailable, method), requestErr)
 				} else {
 					if len(reply.Result) == 0 || bytes.Equal(reply.Result, []byte("null")) && !allowAbsent {
 						attemptCancel()
-						return fmt.Errorf("%w: %s: missing result", errRpcIntegrity, method)
+						return errors.Join(fmt.Errorf("%w: %s: missing result", errRpcIntegrity, method), requestErr)
 					}
-					decodeErr := json.Unmarshal(reply.Result, result)
-					attemptCancel()
+					decodeTarget := result
+					if requestErr != nil {
+						// Validate typed contradictions without publishing fields
+						// from a response whose physical close still needs retry.
+						value := reflect.ValueOf(result)
+						if value.IsValid() && value.Kind() == reflect.Pointer && !value.IsNil() {
+							decodeTarget = reflect.New(value.Type().Elem()).Interface()
+						}
+					}
+					decodeErr := json.Unmarshal(reply.Result, decodeTarget)
 					if decodeErr != nil {
-						return fmt.Errorf("%w: %s: invalid result: %v", errRpcIntegrity, method, decodeErr)
+						attemptCancel()
+						return errors.Join(fmt.Errorf("%w: %s: invalid result: %v", errRpcIntegrity, method, decodeErr), requestErr, operationCtx.Err())
 					}
-					return nil
+					if requestErr == nil {
+						requestErr = attemptCtx.Err()
+						if requestErr == nil {
+							attemptCancel()
+							return operationCtx.Err()
+						}
+					}
 				}
-			} else if response.StatusCode >= http.StatusMultipleChoices && response.StatusCode < http.StatusBadRequest {
+			} else if readErr == nil && response.StatusCode >= http.StatusMultipleChoices && response.StatusCode < http.StatusBadRequest {
 				attemptCancel()
-				return fmt.Errorf("%w: %s: HTTP %d redirect from owned route", errRpcIntegrity, method, response.StatusCode)
-			} else if response.StatusCode != http.StatusRequestTimeout && response.StatusCode != http.StatusTooManyRequests && response.StatusCode != http.StatusBadGateway && response.StatusCode != http.StatusServiceUnavailable && response.StatusCode != http.StatusGatewayTimeout {
+				return errors.Join(fmt.Errorf("%w: %s: HTTP %d redirect from owned route", errRpcIntegrity, method, response.StatusCode), requestErr)
+			} else if readErr == nil && response.StatusCode != http.StatusRequestTimeout && response.StatusCode != http.StatusTooManyRequests && response.StatusCode != http.StatusBadGateway && response.StatusCode != http.StatusServiceUnavailable && response.StatusCode != http.StatusGatewayTimeout {
 				attemptCancel()
-				return fmt.Errorf("%s: HTTP %d", method, response.StatusCode)
-			} else {
-				requestErr = fmt.Errorf("HTTP %d", response.StatusCode)
+				return errors.Join(fmt.Errorf("%s: HTTP %d", method, response.StatusCode), requestErr)
+			} else if readErr == nil {
+				requestErr = errors.Join(fmt.Errorf("HTTP %d", response.StatusCode), requestErr)
 				deadline, _ := operationCtx.Deadline()
 				delay = rpcReadRetryDelay(response.Header, body, delay, time.Now(), deadline)
 			}
@@ -320,8 +353,14 @@ func (self *rpcClient) readIdentityAt(ctx context.Context, blockHash string) (ch
 		}
 		retainedHeader.normalizeHashes()
 		number, err := retainedHeader.authenticate(blockHash)
-		if err != nil || number >= identity.FinalizedNumber {
-			return chainIdentity{}, fmt.Errorf("%w: retained header is invalid or not finalized: %v", errRpcIntegrity, err)
+		if err != nil {
+			return chainIdentity{}, fmt.Errorf("%w: retained header is invalid: %v", errRpcIntegrity, err)
+		}
+		if number >= identity.FinalizedNumber {
+			finalized, err = self.readNativeFinalityCovering(sampleCtx, finalized, nativeFinalityPoint{Number: number, Hash: blockHash})
+			if err != nil {
+				return chainIdentity{}, err
+			}
 		}
 		identity.FinalizedHash, identity.FinalizedNumber = blockHash, number
 	}

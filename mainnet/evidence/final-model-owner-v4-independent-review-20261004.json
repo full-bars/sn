@@ -1,0 +1,95 @@
+{
+  "schema": "final-model-owner-v4-independent-review-v1",
+  "status": "OWNER_CODE_REVIEW_PASS_FINAL_JOB_CORRECTIONS_PENDING",
+  "utc": "2026-10-04T22:01:49.244331+00:00",
+  "reviewer": "/root/astra_qualification_resource_review",
+  "owner": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/run-final-model-owner.py",
+    "sha256": "bb038f57048cade1d6bb8f87df280af300f0e21151359a3e9896230fd4b699a3",
+    "bytes": 15040
+  },
+  "frozen_review_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-model-owner-review-v4.json",
+    "sha256": "ac6043b9c37bf5a21f266ff5ccc12a934c291a6b37c14a6cae8b313d0e103af5",
+    "bytes": 1191
+  },
+  "body_job": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-body-job.json",
+    "sha256": "a3175cb900dc2f4e2346b3887ef39113e21a89a76602e123caf72d78ff0cc669",
+    "bytes": 5393
+  },
+  "owner_job_reviewed": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owner-job.json",
+    "sha256": "e90101f2049bf5b7d5ce957f4f6f2604e71a86a895d0e8f34df736394cc4485e",
+    "bytes": 7959
+  },
+  "physical_source_image_readback": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/final-c60-model-v4-source-image-independent-readback-20261004.json",
+    "sha256": "a182e03feb95db938d9bf001f9e9e5b7d21a20e16a0be17151f1dcd6c00c4a9b",
+    "bytes": 1879
+  },
+  "no_compiler_or_body_or_DB_launched": true,
+  "no_cleanup_or_signals_performed": true,
+  "previous_findings_closed": [
+    "Active guard enforces original datafloor6307319808, MemAvailable96GiB and Docker-root295833415680 while the child runs; observation failures trigger failure.",
+    "After child-tree join, surviving owner attempts bounded cleanup using exact container/service/owner identity and exact network owner label; network ownership is written and synced before create, allowing lost-ack recovery.",
+    "Initial and final samples are mandatory and included in resource qualification; process/container peak/events are observed; os.walk errors are explicit.",
+    "Post-wait Docker queries, body decoding, source hashes and binding checks are under failure-terminal sealing. Actual wait/raw receipt remains separate from classification.",
+    "Model phase_root is required to equal the fixed executor evidence root, avoiding a hidden alternate evidence destination.",
+    "Full final physical source-stage records and compiler dependency graph are pinned and checked before launch and after wait."
+  ],
+  "concrete_job_findings": [
+    {
+      "id": "V4_JOB_EVIDENCE_TELEMETRY",
+      "severity": "fix-before-launch",
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owner-job.json",
+      "finding": "owned_directories currently contains only tmp, fixture root and model cwd. Model/body/wrapper/setup/resource logs and receipts write into phase_root/evidence, which is omitted from allocated-byte/inode telemetry.",
+      "required_change": "Add /mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence to owned_directories. Avoid double-counting if selecting the whole phase root instead."
+    },
+    {
+      "id": "V4_JOB_SAMPLER_BINDING",
+      "severity": "fix-before-launch",
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owner-job.json",
+      "finding": "run-final-model-owner.py imports old read_owned_container_memory and inspect_owned_container from run-full-model-v2.py, but the concrete job does not pin that source file.",
+      "required_binding": {
+        "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/run-full-model-v2.py",
+        "sha256": "af1c0f131b2c16347353fc74c5be2bc87074076b6b832892f7aa46ba8b19f2dd",
+        "bytes": 19954
+      }
+    },
+    {
+      "id": "V4_JOB_SECOND_HISTORY",
+      "severity": "refresh-before-launch",
+      "finding": "Reviewed e901 job lists only one active history. Root plans to start corrected Claim normal before DB; its actual PID/starttime and related test2json processes must be added to the frozen job.",
+      "reviewed_history_bodies": [
+        {
+          "pid": 1970944,
+          "start": "101917367",
+          "related_test_processes": [
+            {
+              "pid": 1970938,
+              "start": "101917366",
+              "kind": "test2json"
+            }
+          ]
+        }
+      ],
+      "required_change": "Reseal the concrete outer job with actual exact approved history process identities after launch of corrected Claim normal; then perform fresh original lease/resource/census checks."
+    }
+  ],
+  "verified_scope": {
+    "normal_model_only": true,
+    "actual_binary_roots": 1703,
+    "baseline_running_container_ids": [],
+    "compiler_count_allowed": 0,
+    "short_count_allowed": 0,
+    "history_count_max": 2,
+    "data_launch_threshold_bytes": 25769803776,
+    "memory_launch_threshold_bytes": 128849018880,
+    "original_data_baseline_bytes": 113681502208,
+    "cap_bytes": 115964116992,
+    "data_accounting_floor_bytes": 0,
+    "margin": 2
+  },
+  "review_limit": "No further substantive owner-code launch blocker found in the frozen bb038f57048cade1d6bb8f87df280af300f0e21151359a3e9896230fd4b699a3 revision. This is prospective review, not a model PASS or a substitute for the final sealed job and fresh admission."
+}

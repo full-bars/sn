@@ -39,6 +39,18 @@ type releaseNativeCaptureClientV2 struct {
 	retain  func(context.Context, ReleaseEvidenceV2NativeRead) error
 }
 
+// Retaining exact RPC bytes must not conceal an upstream reconnect. Clients
+// without a generation retain the same immutable-client lifetime as before.
+func (self *releaseNativeCaptureClientV2) TransportGeneration() uint64 {
+	if self == nil || self.Client == nil {
+		return 0
+	}
+	if tracked, ok := self.Client.(interface{ TransportGeneration() uint64 }); ok {
+		return tracked.TransportGeneration()
+	}
+	return 1
+}
+
 // Enforces the retained-result allocation bound inside the RPC decoder.
 type releaseNativeCaptureResultV2 struct {
 	maximum uint64
@@ -179,7 +191,7 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 		if isOwnerRecycleProductionConfig(cfg) {
 			authenticated, _, err = authenticateOwnerRecycleProductionArtifactAtContext(ctx, owned, cfg, types.Hash(blockHash), true)
 		} else {
-			authenticated, err = crv4.AuthenticateRuntimeArtifactAtContext(ctx, owned, types.Hash(blockHash), HistoricalReleaseRuntimeArtifacts(releaseRuntimeIdentityV2(cfg))...)
+			authenticated, err = crv4.ReadRuntimeArtifactAtContext(ctx, owned, types.Hash(blockHash), HistoricalReleaseRuntimeArtifacts(releaseRuntimeIdentityV2(cfg))...)
 		}
 		if err != nil {
 			return err

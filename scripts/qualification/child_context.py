@@ -217,8 +217,27 @@ class ChildContext:
                 "process label already retains an outcome")
         self.verify()
         original_context = self.receipt()
-        result = process_guard(argv, self.cwd, self._environment.copy(), output, label,
-                               timeout, log_limit=log_limit, minimum_free=minimum_free)
+        try:
+            result = process_guard(argv, self.cwd, self._environment.copy(), output, label,
+                                   timeout, log_limit=log_limit, minimum_free=minimum_free)
+        except BaseException as error:
+            result = getattr(error, "qualification_process_result", None)
+            if result is not None:
+                require(result.get("argv") == argv and result.get("tree_joined") is True
+                        and type(result.get("exit")) is int and result.get("guard_failure"),
+                        "guard exception does not retain an actual joined wait")
+                retained = durable_json(result_path, {"schema": "urnetwork-qualification-process-wait-v1",
+                    "label": label, "result": result, "child_context": original_context,
+                    "executable": copy.deepcopy(self._executables[argv[0]])})
+                for stream in ("stdout", "stderr"):
+                    descriptor = os.open(output / (label + "." + stream), os.O_RDONLY | os.O_NOFOLLOW)
+                    try:
+                        os.fsync(descriptor)
+                    finally:
+                        os.close(descriptor)
+                error.qualification_process_reference = retained
+            # No context-postcheck receipt is published on a guard failure.
+            raise
         # Persist the exact guard return before postcheck, shape conversion or
         # caller classification. A later checker error cannot erase Wait/join.
         retained = durable_json(result_path, {"schema": "urnetwork-qualification-process-wait-v1",
@@ -273,62 +292,100 @@ class ChildContext:
 
 
 def compiler_census(proc=Path("/proc")):
-    """Count actual compiler origins and NUL argv, independent of argv[0] spelling.
+    """Observe a stable compiler generation across bounded exec/exit cuts.
 
-    This is a sampled census, not an admission lock. A caller must still own its
-    resource lease and recheck before starting work. Unobservable live compiler
-    candidates cause refusal; a process that has actually exited is skipped.
+    A failed /proc read is not proof of exit. Retry the same start time, skip
+    only an observed dead process or absent directory, and refuse a persistently
+    unobservable live compiler. This census never replaces the admission lease.
     """
     result = {"go_test_compilers": [], "go_workers": [], "rustc": []}
+    kinds = ("go", "compile", "rustc")
     for entry in proc.iterdir():
         if not entry.name.isdigit():
             continue
-        try:
-            raw_stat = (entry / "stat").read_text()
-            comm = raw_stat[raw_stat.index("(") + 1:raw_stat.rindex(")")]
-            fields = raw_stat[raw_stat.rindex(")") + 1:].split()
-            if fields[0] == "Z":
-                continue
+        original_start = None
+        reason = "live process lost compiler observation"
+        last_error = None
+        for unused in range(3):
             try:
-                executable = os.readlink(entry / "exe")
-            except (FileNotFoundError, ProcessLookupError, PermissionError):
+                raw_stat = (entry / "stat").read_text()
+                comm = raw_stat.split("(", 1)[1].rsplit(")", 1)[0]
+                fields = raw_stat.rsplit(")", 1)[1].split()
+                require(original_start is None or fields[19] == original_start,
+                        "compiler PID reused during census")
+                original_start = fields[19]
+                if fields[0] in ("Z", "X"):
+                    break
+                reason = "live compiler executable is unobservable"
+                try:
+                    executable = os.readlink(entry / "exe")
+                except PermissionError:
+                    if comm not in kinds:
+                        break
+                    raise
+                kind = Path(executable.removesuffix(" (deleted)")).name
+                if kind not in kinds and comm not in kinds:
+                    break
+                reason = "live compiler argv is unobservable"
+                raw_argv = (entry / "cmdline").read_bytes()
+                current_stat = (entry / "stat").read_text()
+                current_fields = current_stat.rsplit(")", 1)[1].split()
+                require(current_fields[19] == original_start, "compiler PID reused during census")
+                if current_fields[0] in ("Z", "X"):
+                    break
+                if not raw_argv or not raw_argv.endswith(b"\0"):
+                    continue
+                reason = "live compiler executable is unobservable"
+                after_executable = os.readlink(entry / "exe")
+                after_argv = (entry / "cmdline").read_bytes()
+                after_stat = (entry / "stat").read_text()
+                after_fields = after_stat.rsplit(")", 1)[1].split()
+                require(after_fields[19] == original_start, "compiler PID reused during census")
+                if after_fields[0] in ("Z", "X"):
+                    break
+                if (executable != after_executable or raw_argv != after_argv or
+                        fields[1] != after_fields[1] or
+                        comm != current_stat.split("(", 1)[1].rsplit(")", 1)[0] or
+                        comm != after_stat.split("(", 1)[1].rsplit(")", 1)[0]):
+                    reason = "live compiler snapshot remains unstable"
+                    continue
+                argv = [os.fsdecode(arg) for arg in raw_argv[:-1].split(b"\0")]
+                row = {"pid": int(entry.name), "ppid": int(after_fields[1]), "starttime": original_start,
+                       "comm": comm, "executable": executable, "argv": argv}
+                if kind == "rustc" or comm == "rustc":
+                    result["rustc"].append(row)
+                elif kind == "compile" or comm == "compile":
+                    result["go_workers"].append(row)
+                else:
+                    args = argv[1:]
+                    if args[:1] == ["-C"]:
+                        args = args[2:]
+                    elif args and args[0].startswith("-C="):
+                        args = args[1:]
+                    if args[:1] == ["test"] and any(arg in ("-c", "-c=true") for arg in args[1:]):
+                        result["go_test_compilers"].append(row)
+                break
+            except (FileNotFoundError, ProcessLookupError, PermissionError) as error:
+                last_error = error
                 if not entry.exists():
+                    break
+                try:
+                    current = (entry / "stat").read_text().rsplit(")", 1)[1].split()
+                except (FileNotFoundError, ProcessLookupError, PermissionError) as error:
+                    last_error = error
+                    if not entry.exists():
+                        break
                     continue
-                current = (entry / "stat").read_text().rsplit(")", 1)[1].split()
-                if current[0] == "Z":
-                    continue
-                require(comm not in ("go", "compile", "rustc"),
-                        "live compiler executable is unobservable: " + entry.name)
-                continue
-            kind = Path(executable.removesuffix(" (deleted)")).name
-            if kind not in ("go", "compile", "rustc") and comm not in ("go", "compile", "rustc"):
-                continue
-            raw_argv = (entry / "cmdline").read_bytes()
-            require(raw_argv and raw_argv.endswith(b"\0"), "live compiler argv is unobservable")
-            argv = [os.fsdecode(arg) for arg in raw_argv[:-1].split(b"\0")]
-            current_stat = (entry / "stat").read_text()
-            current_fields = current_stat.rsplit(")", 1)[1].split()
-            if current_fields[0] == "Z":
-                continue
-            require(current_fields[19] == fields[19]
-                    and current_stat.split("(", 1)[1].rsplit(")", 1)[0] == comm,
-                    "compiler identity changed during census")
-            row = {"pid": int(entry.name), "ppid": int(fields[1]), "starttime": fields[19],
-                   "comm": comm, "executable": executable, "argv": argv}
-            if kind == "rustc" or comm == "rustc":
-                result["rustc"].append(row)
-            elif kind == "compile" or comm == "compile":
-                result["go_workers"].append(row)
-            else:
-                args = argv[1:]
-                if args[:1] == ["-C"]:
-                    args = args[2:]
-                elif args and args[0].startswith("-C="):
-                    args = args[1:]
-                if args[:1] == ["test"] and any(arg in ("-c", "-c=true") for arg in args[1:]):
-                    result["go_test_compilers"].append(row)
-        except (FileNotFoundError, ProcessLookupError):
-            require(not entry.exists(), "live process lost compiler observation: " + entry.name)
+                require(original_start is None or current[19] == original_start,
+                        "compiler PID reused during census")
+                original_start = current[19]
+                if current[0] in ("Z", "X"):
+                    break
+        else:
+            try:
+                require(False, reason + ": " + entry.name)
+            except Exception as error:
+                raise error from last_error
     for rows in result.values():
         rows.sort(key=lambda row: row["pid"])
     return result

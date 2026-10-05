@@ -1,0 +1,50 @@
+{
+  "body_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-normal-v1.receipt.json",
+    "sha256": "a254adf289d90e2330de3db5f657341c29ce80cb74acf55c6fc6e4814c2b329a"
+  },
+  "checker_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-terminal-sol-readback-v1.json",
+    "sha256": "d7e6d21a026fe8168568911ff58d7d560c03d48d0b74319ff5c64b725f2ec31e"
+  },
+  "counts": {
+    "fail": 1,
+    "pass": 2,
+    "run": 3,
+    "skip": 0
+  },
+  "failure": "Chronology test line168: proved original capital lost its contradiction through delayed finalization.",
+  "limits": [
+    "Two funding consumers pass; chronology remains failed and assigned to Astra Max.",
+    "Null original runner counts do not imply a pass; counts independently rebuilt from retained JSON events.",
+    "No rerun, later-source inheritance or deployment occurred."
+  ],
+  "resource_errors": [],
+  "roots": {
+    "TestEconomicCarryChronologyPublicDelayedRootRetainsSourceThroughArchive": {
+      "fail": 1,
+      "run": 1
+    },
+    "TestEconomicFundingPublicActualWithdrawalKeepsSourceBoundsThroughArchive": {
+      "pass": 1,
+      "run": 1
+    },
+    "TestEconomicFundingPublicMissedRootPaysOriginalStockWithoutEarningItAgain": {
+      "pass": 1,
+      "run": 1
+    }
+  },
+  "schema": "selected338-carry-actual-result-v1",
+  "source_tuple": {
+    "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+    "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+    "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+  },
+  "stdout": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-normal-v1.stdout",
+    "sha256": "52967c2c8a9d44e9aacf8843f3c503f8a36191f05a2b49e8ed7ff1ff34fcf241"
+  },
+  "tree_joined": true,
+  "unix_exit": 1,
+  "verified_at_utc": "2026-10-05T04:34:08.074845+00:00"
+}

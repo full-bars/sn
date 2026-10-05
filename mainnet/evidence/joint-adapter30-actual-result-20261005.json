@@ -1,0 +1,20 @@
+{
+  "schema": "joint-adapter30-actual-result-v1",
+  "checked_at": "2026-10-05T06:42:55.403438+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter30-gc-v3.receipt.json",
+    "sha256": "9468dbcc51d949036c5c9c53a43886178b3d50641898ec88b4f2152709753546"
+  },
+  "counts": {
+    "fail": 1,
+    "pass": 29,
+    "run": 30,
+    "skip": 0
+  },
+  "resource_errors": [],
+  "failed_selectors": [
+    "test_joint_peer_admission.JointAdmissionTests.test_changed_invocation_and_reused_main_pid_are_refused"
+  ],
+  "scope": "Qualification harness only; no product test, compiler, deployment or production outcome.",
+  "status": "FAIL_OR_INCOMPLETE"
+}

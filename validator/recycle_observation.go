@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"time"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/urfoundation/sn/crv4"
@@ -90,263 +89,249 @@ func observeOwnerRecycleAdmissionAt(ctx context.Context, cfg *ReleaseConfig, nat
 	}
 	approval := envelope.Approval
 	pin := approval.Proposal.Runtime
-	operationCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	operationCtx, cancel := context.WithTimeout(ctx, productionSteeringReadTimeout)
 	defer cancel()
-	ctx = operationCtx
-	call := native.API.Client.CallContext
-	var nativeChain, evmChainId string
-	var genesis types.Hash
-	if err := call(ctx, &nativeChain, "system_chain"); err != nil {
-		return nil, err
-	}
-	if err := call(ctx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
-		return nil, err
-	}
-	if err := call(ctx, &evmChainId, "eth_chainId"); err != nil {
-		return nil, err
-	}
-	if nativeChain != approval.NativeChain || genesis != types.Hash(pin.GenesisHash) || native.GenesisHash != genesis || evmChainId != "0x3c4" {
-		return nil, errors.New("owner-recycle route differs from the independently approved mainnet name, genesis or EVM chain 964")
-	}
-	finalized, err := crv4.FinalizedHeadContext(ctx, native)
-	if err != nil {
-		return nil, err
-	}
-	finalizedNumber, _, err := native.CanonicalHeaderAtContext(ctx, finalized)
-	if err != nil {
-		return nil, err
-	}
-	finalityHash := finalized
-	number := finalizedNumber
-	if requested != (types.Hash{}) {
-		finalized = requested
-		number, _, err = native.ReceiptHeaderAtContext(ctx, finalized)
+	operationCtx = withRuntimeFinalityOwner(operationCtx)
+	var finality runtimeFinalityObservation
+	return crv4.ReadRuntimeObservationContext(operationCtx, native, func(ctx context.Context) (*OwnerRecycleAdmissionObservation, error) {
+		call := native.API.Client.CallContext
+		var nativeChain, evmChainId string
+		var genesis types.Hash
+		if err := call(ctx, &nativeChain, "system_chain"); err != nil {
+			return nil, err
+		}
+		if err := call(ctx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
+			return nil, err
+		}
+		if err := call(ctx, &evmChainId, "eth_chainId"); err != nil {
+			return nil, err
+		}
+		if nativeChain != approval.NativeChain || genesis != types.Hash(pin.GenesisHash) || native.GenesisHash != genesis || evmChainId != "0x3c4" {
+			return nil, errors.New("owner-recycle route differs from the independently approved mainnet name, genesis or EVM chain 964")
+		}
+		head, err := readRuntimeFinalityWitness(ctx, native)
 		if err != nil {
 			return nil, err
 		}
-	}
-	if number > finalizedNumber {
-		return nil, errors.New("owner-recycle census is newer than the current finalized head")
-	}
-	if finalized == (types.Hash{}) || number < approval.ValidFromNativeBlock || number > approval.ValidThroughNativeBlock || number > math.MaxUint32 {
-		return nil, errors.New("owner-recycle finalized head is outside the signed observation window")
-	}
-	checkCanonical := func() error {
-		var canonical types.Hash
-		if err := call(ctx, &canonical, "chain_getBlockHash", number); err != nil {
-			return err
-		}
-		if canonical != finalized {
-			return errors.New("owner-recycle finalized census hash is not canonical at its height")
-		}
-		return ctx.Err()
-	}
-	if err := checkCanonical(); err != nil {
-		return nil, err
-	}
-	expected := crv4.RuntimeArtifactIdentity{Version: pin.Version, CodeHash: releaseHex32(pin.CodeHash), MetadataHash: releaseHex32(pin.MetadataHash)}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, native, finalized, expected)
-	if err != nil {
-		return nil, fmt.Errorf("read owner-recycle finalized runtime: %w", err)
-	}
-	if artifact.CompatibilityProfile != "" {
-		return nil, errors.New("owner-recycle finalized runtime lacks exact independent authority")
-	}
-	entries, err := ownerRecycleStorageProfile(artifact.Metadata)
-	if err != nil {
-		return nil, err
-	}
-	read := func(name string, limit int, required bool, args ...[]byte) ([]byte, error) {
-		key, err := types.CreateStorageKey(artifact.Metadata, crv4.PalletName, name, args...)
-		if err != nil {
-			return nil, err
-		}
-		value := ownerRecycleStorageValue{limit: limit}
-		if err := call(ctx, &value, "state_getStorage", key.Hex(), finalized.Hex()); err != nil {
-			return nil, fmt.Errorf("owner-recycle %s: %w", name, err)
-		}
-		if !value.present {
-			if required {
-				return nil, fmt.Errorf("owner-recycle %s requires explicit finalized storage", name)
+		if requested == (types.Hash{}) {
+			requested, err = crv4.SelectFinalityReadBlockContext(ctx, native, requested, head.hash)
+			if err != nil {
+				return nil, err
 			}
-			return nil, nil
 		}
-		return value.raw, nil
-	}
-	readFixed := func(name string, size int, fallback bool, args ...[]byte) ([]byte, error) {
-		raw, err := read(name, size, !fallback, args...)
+		finalized := requested
+		number, _, err := native.ReceiptHeaderAtContext(ctx, finalized)
 		if err != nil {
 			return nil, err
 		}
-		if raw == nil && fallback {
-			raw = entries[name].Fallback
+		if finalized == (types.Hash{}) || number < approval.ValidFromNativeBlock || number > approval.ValidThroughNativeBlock || number > math.MaxUint32 {
+			return nil, errors.New("owner-recycle finalized head is outside the signed observation window")
 		}
-		if len(raw) != size {
-			return nil, fmt.Errorf("owner-recycle %s has an incompatible value length", name)
+		selectedBlock := runtimeFinalityWitness{hash: finalized, number: number}
+		if err := finality.check(ctx, native, head, selectedBlock); err != nil {
+			return nil, err
 		}
-		return raw, nil
-	}
-	netuid := binary.LittleEndian.AppendUint16(nil, pin.Netuid)
-	mode, err := readFixed("RecycleOrBurn", 1, false, netuid)
-	if err != nil {
-		return nil, err
-	}
-	if mode[0] != 1 {
-		return nil, errors.New("owner-recycle needs explicit finalized Recycle; absent or Burn mode cannot pass")
-	}
-	owner, err := readFixed("SubnetOwner", 32, false, netuid)
-	if err != nil {
-		return nil, err
-	}
-	if !bytes.Equal(owner, approval.SubnetOwner[:]) {
-		return nil, errors.New("owner-recycle subnet owner differs from approval")
-	}
-	mechanisms, err := readFixed("MechanismCountCurrent", 1, true, netuid)
-	if err != nil {
-		return nil, err
-	}
-	if mechanisms[0] != 1 {
-		return nil, errors.New("owner-recycle requires exactly one native mechanism")
-	}
-	nativeEpoch, err := readFixed("SubnetEpochIndex", 8, true, netuid)
-	if err != nil {
-		return nil, err
-	}
-	epoch := binary.LittleEndian.Uint64(nativeEpoch)
-	if approval.Production == nil && epoch > approval.FirstNativeEpoch || approval.Production != nil && !ownerRecycleDecisionEpochApproved(&approval, epoch) {
-		return nil, errors.New("owner-recycle signed first native epoch has passed; no late activation is inferred")
-	}
-	countRaw, err := readFixed("SubnetworkN", 2, false, netuid)
-	if err != nil {
-		return nil, err
-	}
-	count := uint32(binary.LittleEndian.Uint16(countRaw))
-	if count == 0 || count > approval.MaximumSubnetUids {
-		return nil, errors.New("owner-recycle subnet census exceeds the approved nonzero bound")
-	}
-	snapshot := OwnerRecycleSnapshot{Runtime: pin, FinalizedHash: [32]byte(finalized), FinalizedNumber: number, MechanismCount: 1, RecycleModeScale: []byte{1}, SubnetOwner: approval.SubnetOwner}
-	byHotkey := make(map[[32]byte]OwnerRecycleRegistration, count)
-	for uid := uint32(0); uid < count; uid++ {
-		uidRaw := binary.LittleEndian.AppendUint16(nil, uint16(uid))
-		hotkeyRaw, err := readFixed("Keys", 32, false, netuid, uidRaw)
+		expected := crv4.RuntimeArtifactIdentity{Version: pin.Version, CodeHash: releaseHex32(pin.CodeHash), MetadataHash: releaseHex32(pin.MetadataHash)}
+		artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, native, finalized, expected)
+		if err != nil {
+			return nil, fmt.Errorf("read owner-recycle finalized runtime: %w", err)
+		}
+		if artifact.CompatibilityProfile != "" {
+			return nil, errors.New("owner-recycle finalized runtime lacks exact independent authority")
+		}
+		entries, err := ownerRecycleStorageProfile(artifact.Metadata)
 		if err != nil {
 			return nil, err
 		}
-		hotkey := [32]byte(hotkeyRaw)
-		if _, exists := byHotkey[hotkey]; hotkey == ([32]byte{}) || exists {
-			return nil, errors.New("owner-recycle registration census has a zero or duplicate hotkey")
+		read := func(name string, limit int, required bool, args ...[]byte) ([]byte, error) {
+			key, err := types.CreateStorageKey(artifact.Metadata, crv4.PalletName, name, args...)
+			if err != nil {
+				return nil, err
+			}
+			value := ownerRecycleStorageValue{limit: limit}
+			if err := call(ctx, &value, "state_getStorage", key.Hex(), finalized.Hex()); err != nil {
+				return nil, fmt.Errorf("owner-recycle %s: %w", name, err)
+			}
+			if !value.present {
+				if required {
+					return nil, fmt.Errorf("owner-recycle %s requires explicit finalized storage", name)
+				}
+				return nil, nil
+			}
+			return value.raw, nil
 		}
-		reverse, err := readFixed("Uids", 2, false, netuid, hotkeyRaw)
+		readFixed := func(name string, size int, fallback bool, args ...[]byte) ([]byte, error) {
+			raw, err := read(name, size, !fallback, args...)
+			if err != nil {
+				return nil, err
+			}
+			if raw == nil && fallback {
+				raw = entries[name].Fallback
+			}
+			if len(raw) != size {
+				return nil, fmt.Errorf("owner-recycle %s has an incompatible value length", name)
+			}
+			return raw, nil
+		}
+		netuid := binary.LittleEndian.AppendUint16(nil, pin.Netuid)
+		mode, err := readFixed("RecycleOrBurn", 1, false, netuid)
 		if err != nil {
 			return nil, err
 		}
-		if binary.LittleEndian.Uint16(reverse) != uint16(uid) {
-			return nil, errors.New("owner-recycle forward and reverse registrations disagree")
+		if mode[0] != 1 {
+			return nil, errors.New("owner-recycle needs explicit finalized Recycle; absent or Burn mode cannot pass")
 		}
-		registered, err := readFixed("BlockAtRegistration", 8, false, netuid, uidRaw)
+		owner, err := readFixed("SubnetOwner", 32, false, netuid)
 		if err != nil {
 			return nil, err
 		}
-		registration := OwnerRecycleRegistration{Uid: uint16(uid), Hotkey: hotkey, RegistrationBlock: binary.LittleEndian.Uint64(registered)}
-		if registration.RegistrationBlock > number {
-			return nil, errors.New("owner-recycle registration is newer than its finalized census")
+		if !bytes.Equal(owner, approval.SubnetOwner[:]) {
+			return nil, errors.New("owner-recycle subnet owner differs from approval")
 		}
-		byHotkey[hotkey] = registration
-		snapshot.Registrations = append(snapshot.Registrations, registration)
-	}
-	if _, exists := byHotkey[approval.ValidatorHotkey]; !exists {
-		return nil, errors.New("owner-recycle approved validator hotkey is not registered")
-	}
-	ownedRaw, err := read("OwnedHotkeys", 4+32*int(approval.MaximumOwnedHotkeys), false, owner)
-	if err != nil {
-		return nil, err
-	}
-	if ownedRaw == nil {
-		ownedRaw = entries["OwnedHotkeys"].Fallback
-	}
-	snapshot.OwnedHotkeys, err = decodeOwnerRecycleHotkeys(ownedRaw, approval.MaximumOwnedHotkeys)
-	if err != nil {
-		return nil, err
-	}
-	ownerSet := map[[32]byte]bool{}
-	var recognized []OwnerRecycleRegistration
-	for _, hotkey := range snapshot.OwnedHotkeys {
-		ownerSet[hotkey] = true
-		if registration, exists := byHotkey[hotkey]; exists {
-			recognized = append(recognized, registration)
+		mechanisms, err := readFixed("MechanismCountCurrent", 1, true, netuid)
+		if err != nil {
+			return nil, err
 		}
-	}
-	sort.Slice(recognized, func(i, j int) bool {
-		if recognized[i].RegistrationBlock != recognized[j].RegistrationBlock {
-			return recognized[i].RegistrationBlock > recognized[j].RegistrationBlock
+		if mechanisms[0] != 1 {
+			return nil, errors.New("owner-recycle requires exactly one native mechanism")
 		}
-		return recognized[i].Uid < recognized[j].Uid
+		nativeEpoch, err := readFixed("SubnetEpochIndex", 8, true, netuid)
+		if err != nil {
+			return nil, err
+		}
+		epoch := binary.LittleEndian.Uint64(nativeEpoch)
+		if approval.Production == nil && epoch > approval.FirstNativeEpoch || approval.Production != nil && !ownerRecycleDecisionEpochApproved(&approval, epoch) {
+			return nil, errors.New("owner-recycle signed first native epoch has passed; no late activation is inferred")
+		}
+		countRaw, err := readFixed("SubnetworkN", 2, false, netuid)
+		if err != nil {
+			return nil, err
+		}
+		count := uint32(binary.LittleEndian.Uint16(countRaw))
+		if count == 0 || count > approval.MaximumSubnetUids {
+			return nil, errors.New("owner-recycle subnet census exceeds the approved nonzero bound")
+		}
+		snapshot := OwnerRecycleSnapshot{Runtime: pin, FinalizedHash: [32]byte(finalized), FinalizedNumber: number, MechanismCount: 1, RecycleModeScale: []byte{1}, SubnetOwner: approval.SubnetOwner}
+		byHotkey := make(map[[32]byte]OwnerRecycleRegistration, count)
+		for uid := uint32(0); uid < count; uid++ {
+			uidRaw := binary.LittleEndian.AppendUint16(nil, uint16(uid))
+			hotkeyRaw, err := readFixed("Keys", 32, false, netuid, uidRaw)
+			if err != nil {
+				return nil, err
+			}
+			hotkey := [32]byte(hotkeyRaw)
+			if _, exists := byHotkey[hotkey]; hotkey == ([32]byte{}) || exists {
+				return nil, errors.New("owner-recycle registration census has a zero or duplicate hotkey")
+			}
+			reverse, err := readFixed("Uids", 2, false, netuid, hotkeyRaw)
+			if err != nil {
+				return nil, err
+			}
+			if binary.LittleEndian.Uint16(reverse) != uint16(uid) {
+				return nil, errors.New("owner-recycle forward and reverse registrations disagree")
+			}
+			registered, err := readFixed("BlockAtRegistration", 8, false, netuid, uidRaw)
+			if err != nil {
+				return nil, err
+			}
+			registration := OwnerRecycleRegistration{Uid: uint16(uid), Hotkey: hotkey, RegistrationBlock: binary.LittleEndian.Uint64(registered)}
+			if registration.RegistrationBlock > number {
+				return nil, errors.New("owner-recycle registration is newer than its finalized census")
+			}
+			byHotkey[hotkey] = registration
+			snapshot.Registrations = append(snapshot.Registrations, registration)
+		}
+		if _, exists := byHotkey[approval.ValidatorHotkey]; !exists {
+			return nil, errors.New("owner-recycle approved validator hotkey is not registered")
+		}
+		ownedRaw, err := read("OwnedHotkeys", 4+32*int(approval.MaximumOwnedHotkeys), false, owner)
+		if err != nil {
+			return nil, err
+		}
+		if ownedRaw == nil {
+			ownedRaw = entries["OwnedHotkeys"].Fallback
+		}
+		snapshot.OwnedHotkeys, err = decodeOwnerRecycleHotkeys(ownedRaw, approval.MaximumOwnedHotkeys)
+		if err != nil {
+			return nil, err
+		}
+		ownerSet := map[[32]byte]bool{}
+		var recognized []OwnerRecycleRegistration
+		for _, hotkey := range snapshot.OwnedHotkeys {
+			ownerSet[hotkey] = true
+			if registration, exists := byHotkey[hotkey]; exists {
+				recognized = append(recognized, registration)
+			}
+		}
+		sort.Slice(recognized, func(i, j int) bool {
+			if recognized[i].RegistrationBlock != recognized[j].RegistrationBlock {
+				return recognized[i].RegistrationBlock > recognized[j].RegistrationBlock
+			}
+			return recognized[i].Uid < recognized[j].Uid
+		})
+		explicit, err := read("SubnetOwnerHotkey", 32, false, netuid)
+		if err != nil {
+			return nil, err
+		}
+		if explicit != nil {
+			if len(explicit) != 32 || [32]byte(explicit) == ([32]byte{}) {
+				return nil, errors.New("owner-recycle explicit owner hotkey is malformed")
+			}
+			hotkey := [32]byte(explicit)
+			snapshot.SubnetOwnerHotkey = &hotkey
+			if registration, exists := byHotkey[hotkey]; exists && !ownerSet[hotkey] {
+				recognized = append([]OwnerRecycleRegistration{registration}, recognized...)
+			}
+		}
+		actualOwners := make([][32]byte, len(recognized))
+		for index, registration := range recognized {
+			actualOwners[index] = registration.Hotkey
+		}
+		sort.Slice(actualOwners, func(i, j int) bool { return bytes.Compare(actualOwners[i][:], actualOwners[j][:]) < 0 })
+		if len(actualOwners) != len(approval.OwnerHotkeys) {
+			return nil, errors.New("owner-recycle recognized owner census differs from the exact approved recipients")
+		}
+		for index := range actualOwners {
+			if actualOwners[index] != approval.OwnerHotkeys[index] {
+				return nil, errors.New("owner-recycle recognized owner identities changed")
+			}
+		}
+		minimum, err := readFixed("MinAllowedWeights", 2, true, netuid)
+		if err != nil {
+			return nil, err
+		}
+		storedCap, err := readFixed("MaxWeightsLimit", 2, true, netuid)
+		if err != nil {
+			return nil, err
+		}
+		if err := finality.close(ctx, native, selectedBlock); err != nil {
+			return nil, err
+		}
+		proposalHash, err := approval.Proposal.Hash(cfg.Policy)
+		if err != nil {
+			return nil, err
+		}
+		observation := &OwnerRecycleAdmissionObservation{
+			ApprovalHash: cfg.OwnerRecycleApproval.Approval.SHA256, ProposalHash: proposalHash, ConfigHash: approval.ConfigHash,
+			NativeEpoch: epoch, FirstNativeEpoch: approval.FirstNativeEpoch, Snapshot: snapshot, RecognizedOwners: recognized,
+			MinimumAllowedWeights: binary.LittleEndian.Uint16(minimum), StoredMaximumWeightLimit: binary.LittleEndian.Uint16(storedCap),
+			RuntimeMaximumWeightLimit: 65535, SignedMaximumWeightLimit: cfg.Policy.Steering.MaxWeightLimitU16,
+			ApprovalAuthenticated: true, OwnerCensusAuthenticated: true, RecycleModeAuthenticated: true,
+			Blockers: []string{
+				"production runtime/configuration authority must be migrated without testnet inheritance",
+				"successor measurement/envelope/intent/archive and drained activation boundary are not implemented",
+				"provider artifacts, self/controlled masks and independent active validator admission need exact decision-time proof",
+				"final Yuma/native miner allocation, recycled incentive and runtime-derived rounding tolerance are unobserved",
+			},
+		}
+		if approval.Production != nil {
+			observation.Blockers = []string{
+				"census alone does not authenticate the complete production decision, eligibility or source transaction",
+				"final Yuma/native miner allocation, recycled incentive and runtime-derived rounding tolerance are unobserved",
+			}
+		}
+		return observation, nil
 	})
-	explicit, err := read("SubnetOwnerHotkey", 32, false, netuid)
-	if err != nil {
-		return nil, err
-	}
-	if explicit != nil {
-		if len(explicit) != 32 || [32]byte(explicit) == ([32]byte{}) {
-			return nil, errors.New("owner-recycle explicit owner hotkey is malformed")
-		}
-		hotkey := [32]byte(explicit)
-		snapshot.SubnetOwnerHotkey = &hotkey
-		if registration, exists := byHotkey[hotkey]; exists && !ownerSet[hotkey] {
-			recognized = append([]OwnerRecycleRegistration{registration}, recognized...)
-		}
-	}
-	actualOwners := make([][32]byte, len(recognized))
-	for index, registration := range recognized {
-		actualOwners[index] = registration.Hotkey
-	}
-	sort.Slice(actualOwners, func(i, j int) bool { return bytes.Compare(actualOwners[i][:], actualOwners[j][:]) < 0 })
-	if len(actualOwners) != len(approval.OwnerHotkeys) {
-		return nil, errors.New("owner-recycle recognized owner census differs from the exact approved recipients")
-	}
-	for index := range actualOwners {
-		if actualOwners[index] != approval.OwnerHotkeys[index] {
-			return nil, errors.New("owner-recycle recognized owner identities changed")
-		}
-	}
-	minimum, err := readFixed("MinAllowedWeights", 2, true, netuid)
-	if err != nil {
-		return nil, err
-	}
-	storedCap, err := readFixed("MaxWeightsLimit", 2, true, netuid)
-	if err != nil {
-		return nil, err
-	}
-	if err := checkCanonical(); err != nil {
-		return nil, err
-	}
-	if err := native.CheckCanonicalBlockAtContext(ctx, finalityHash, finalizedNumber); err != nil {
-		return nil, err
-	}
-	proposalHash, err := approval.Proposal.Hash(cfg.Policy)
-	if err != nil {
-		return nil, err
-	}
-	observation := &OwnerRecycleAdmissionObservation{
-		ApprovalHash: cfg.OwnerRecycleApproval.Approval.SHA256, ProposalHash: proposalHash, ConfigHash: approval.ConfigHash,
-		NativeEpoch: epoch, FirstNativeEpoch: approval.FirstNativeEpoch, Snapshot: snapshot, RecognizedOwners: recognized,
-		MinimumAllowedWeights: binary.LittleEndian.Uint16(minimum), StoredMaximumWeightLimit: binary.LittleEndian.Uint16(storedCap),
-		RuntimeMaximumWeightLimit: 65535, SignedMaximumWeightLimit: cfg.Policy.Steering.MaxWeightLimitU16,
-		ApprovalAuthenticated: true, OwnerCensusAuthenticated: true, RecycleModeAuthenticated: true,
-		Blockers: []string{
-			"production runtime/configuration authority must be migrated without testnet inheritance",
-			"successor measurement/envelope/intent/archive and drained activation boundary are not implemented",
-			"provider artifacts, self/controlled masks and independent active validator admission need exact decision-time proof",
-			"final Yuma/native miner allocation, recycled incentive and runtime-derived rounding tolerance are unobserved",
-		},
-	}
-	if approval.Production != nil {
-		observation.Blockers = []string{
-			"census alone does not authenticate the complete production decision, eligibility or source transaction",
-			"final Yuma/native miner allocation, recycled incentive and runtime-derived rounding tolerance are unobserved",
-		}
-	}
-	return observation, nil
 }
 
 // Bounds hex decoding before copying the storage payload. The transport still

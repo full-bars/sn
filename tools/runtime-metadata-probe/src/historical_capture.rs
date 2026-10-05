@@ -10,14 +10,18 @@
 
 use super::*;
 use sp_core::H256;
-use sp_state_machine::{
-    prove_execution_on_trie_backend, TrieBackend, TrieBackendBuilder, TrieBackendStorage,
-};
+use sp_state_machine::{TrieBackend, TrieBackendBuilder, TrieBackendStorage};
 use std::collections::BTreeMap;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Mutex,
 };
+
+#[cfg(target_os = "linux")]
+#[path = "historical_capture_feed.rs"]
+mod feed;
+#[path = "historical_capture_scope.rs"]
+mod scope;
 
 #[cfg(target_os = "linux")]
 use std::{
@@ -49,6 +53,10 @@ pub struct CaptureRequest {
     pub execution_state_version: u8,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub observation_profile: Option<observer::ObservationProfile>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub principal_queries: Option<Vec<principal::PrincipalQuery>>,
+    #[serde(default, skip_serializing_if = "principal::is_false")]
+    pub principal_effects: bool,
 }
 
 /// Exact job JSON is preserved as bytes in a string, avoiding authority based
@@ -81,6 +89,11 @@ struct CaptureStorage<'a, S> {
     original: &'a S,
     canceled: &'a AtomicBool,
     captured: &'a Mutex<CapturedNodes>,
+    maximum_nodes: usize,
+    maximum_node_bytes: usize,
+    maximum_proof_bytes: usize,
+    maximum_reads: usize,
+    maximum_read_bytes: usize,
 }
 
 impl<S: TrieBackendStorage<Blake2Hasher>> TrieBackendStorage<Blake2Hasher>
@@ -102,7 +115,7 @@ impl<S: TrieBackendStorage<Blake2Hasher>> TrieBackendStorage<Blake2Hasher>
                 .reads
                 .checked_add(1)
                 .ok_or("historical capture read overflow")?;
-            if state.reads > 65536 {
+            if state.reads > self.maximum_reads {
                 return Err("historical capture read count bound".to_owned());
             }
             Ok(())
@@ -113,7 +126,10 @@ impl<S: TrieBackendStorage<Blake2Hasher>> TrieBackendStorage<Blake2Hasher>
             let raw = value
                 .as_ref()
                 .ok_or("historical capture parent trie node is absent")?;
-            if raw.is_empty() || raw.len() > MAXIMUM_CODE_BYTES || H256(blake2_256(raw)) != *key {
+            if raw.is_empty()
+                || raw.len() > self.maximum_node_bytes
+                || H256(blake2_256(raw)) != *key
+            {
                 return Err(
                     "historical capture trie node size or content identity differs".to_owned(),
                 );
@@ -131,11 +147,13 @@ impl<S: TrieBackendStorage<Blake2Hasher>> TrieBackendStorage<Blake2Hasher>
                 .read_bytes
                 .checked_add(raw.len())
                 .ok_or("historical capture I/O overflow")?;
-            if state.read_bytes > 64 * 1024 * 1024 {
+            if state.read_bytes > self.maximum_read_bytes {
                 return Err("historical capture cumulative read byte bound".to_owned());
             }
             if !state.nodes.contains_key(key) {
-                if state.nodes.len() >= 8192 || raw.len() > MAXIMUM_PROOF_BYTES - state.bytes {
+                if state.nodes.len() >= self.maximum_nodes
+                    || raw.len() > self.maximum_proof_bytes - state.bytes
+                {
                     return Err("historical capture retained proof bound".to_owned());
                 }
                 state.bytes += raw.len();
@@ -204,7 +222,23 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
     raw: &[u8],
     parent_backend: &TrieBackend<S, Blake2Hasher>,
     canceled: &AtomicBool,
+    observed: impl FnMut(CapturePhase),
+) -> Result<Vec<u8>, ProbeError> {
+    capture_historical_scoped(
+        raw,
+        parent_backend,
+        canceled,
+        observed,
+        &scope::Scopes::default(),
+    )
+}
+
+fn capture_historical_scoped<S: TrieBackendStorage<Blake2Hasher>>(
+    raw: &[u8],
+    parent_backend: &TrieBackend<S, Blake2Hasher>,
+    canceled: &AtomicBool,
     mut observed: impl FnMut(CapturePhase),
+    scopes: &scope::Scopes,
 ) -> Result<Vec<u8>, ProbeError> {
     let captured = Mutex::new(CapturedNodes::default());
     check(canceled, &captured)?;
@@ -213,6 +247,8 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
     }
     let request: CaptureRequest = serde_json::from_slice(raw)
         .map_err(|e| ProbeError::new(format!("historical capture request JSON: {e}")))?;
+    principal::validate(&request.principal_queries)?;
+    principal::validate_effects(request.principal_effects, &request.principal_queries)?;
     if request.schema != CAPTURE_SCHEMA || request.extrinsics_hex.len() > 16384 {
         return Err(ProbeError::new(
             "historical capture schema or body item bound",
@@ -266,15 +302,32 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
             "historical capture extrinsics root differs",
         ));
     }
-    let backend = TrieBackendBuilder::new(
+    let (_, maximum_nodes, maximum_proof_bytes) = proof_limits(&request.observation_profile);
+    let native = native_profile(&request.observation_profile);
+    let (maximum_reads, maximum_read_bytes, maximum_report_bytes) = if native {
+        (4 * 65536, 256 * 1024 * 1024, 272 * 1024 * 1024)
+    } else {
+        (65536, 64 * 1024 * 1024, MAXIMUM_CAPTURE_REPORT_BYTES)
+    };
+    let original = TrieBackendBuilder::new(
         CaptureStorage {
             original: parent_backend.backend_storage(),
             canceled,
             captured: &captured,
+            maximum_nodes,
+            maximum_node_bytes: proof_node_limit(&request.observation_profile),
+            maximum_proof_bytes,
+            maximum_reads,
+            maximum_read_bytes,
         },
         *parent.state_root(),
     )
+    .with_recorder(Default::default())
     .build();
+    let backend = scope::ScopedBackend {
+        inner: original,
+        scopes,
+    };
     let code = backend.storage(well_known_keys::CODE);
     observed(CapturePhase::Code);
     check_failure(&captured)?;
@@ -340,23 +393,36 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
     let mut overlay = OverlayedChanges::<Blake2Hasher>::default();
     let mut extensions = Extensions::default();
     extensions.register(hosts::HistoricalBudget(hosts::Budget::default()));
+    let _ = principal::observe(
+        &request.principal_queries,
+        &backend,
+        &executor,
+        &mut extensions,
+        &runtime,
+        parent.hash(),
+    )?;
     check(canceled, &captured)?;
-    // This is the exact pinned SDK execution-proof primitive, not a caller
-    // claim that an arbitrary state_getReadProof key list happened to suffice.
+    // Use the pinned helper's public recorder/StateMachine primitives directly.
+    // Converting this owner via AsTrieBackend would discard operation scope.
+    // Execute the block onchain, as strict replay does. The SDK's offchain
+    // context ignores the proved heap-pages override and can change execution.
     let execution = std::panic::catch_unwind(AssertUnwindSafe(|| {
-        prove_execution_on_trie_backend(
+        StateMachine::new(
             &backend,
             &mut overlay,
             &executor,
             "Core_execute_block",
             &block.encode(),
-            &runtime,
             &mut extensions,
+            &runtime,
+            CallContext::Onchain,
         )
+        .execute()
     }));
     observed(CapturePhase::Execution);
     check_failure(&captured)?;
-    let (output, proof) = execution
+    scopes.check().map_err(ProbeError::new)?;
+    let output = execution
         .map_err(|_| ProbeError::new("historical capture execution panicked on parent proof"))?
         .map_err(|e| ProbeError::new(format!("historical capture execution refused: {e}")))?;
     if !output.is_empty()
@@ -379,6 +445,7 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
     }));
     observed(CapturePhase::Root);
     check_failure(&captured)?;
+    scopes.check().map_err(ProbeError::new)?;
     let root =
         root.map_err(|_| ProbeError::new("historical capture root materialization panicked"))?;
     if root != *child.state_root() {
@@ -387,13 +454,33 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
         ));
     }
     check(canceled, &captured)?;
-    drop(backend);
+    let _ = principal::observe_execution(
+        request.principal_effects,
+        &request.principal_queries,
+        &backend,
+        &mut overlay,
+        &executor,
+        &mut extensions,
+        &runtime,
+        child.hash(),
+        state_version,
+        root,
+    )?;
+    check(canceled, &captured)?;
+    check_failure(&captured)?;
+    scopes.check().map_err(ProbeError::new)?;
+    let proof = backend
+        .inner
+        .extract_proof()
+        .ok_or_else(|| ProbeError::new("historical capture recorder is absent"))?;
     let state = captured
         .into_inner()
         .map_err(|_| ProbeError::new("historical capture lock poisoned"))?;
     let mut nodes: BTreeSet<Vec<u8>> = state.nodes.into_values().collect();
     nodes.extend(proof.into_iter_nodes());
-    if nodes.len() > 8192 || nodes.iter().map(Vec::len).sum::<usize>() > MAXIMUM_PROOF_BYTES {
+    if nodes.len() > maximum_nodes
+        || nodes.iter().map(Vec::len).sum::<usize>() > maximum_proof_bytes
+    {
         return Err(ProbeError::new("historical capture combined proof bound"));
     }
     let job = HistoricalJob {
@@ -412,6 +499,8 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
             .map(|node| format!("0x{}", hex::encode(node)))
             .collect(),
         observation_profile: request.observation_profile,
+        principal_queries: request.principal_queries,
+        principal_effects: request.principal_effects,
     };
     let job_json = serde_json::to_string(&job)
         .map_err(|e| ProbeError::new(format!("historical capture job JSON: {e}")))?;
@@ -436,7 +525,7 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
     let encoded = serde_json::to_vec(&report)
         .map_err(|e| ProbeError::new(format!("historical capture report JSON: {e}")))?;
     observed(CapturePhase::Report);
-    if encoded.len() > MAXIMUM_CAPTURE_REPORT_BYTES {
+    if encoded.len() > maximum_report_bytes {
         return Err(ProbeError::new("historical capture report byte bound"));
     }
     check_cancellation(canceled)?;
@@ -450,34 +539,47 @@ pub(super) fn capture_historical_on_backend_observed<S: TrieBackendStorage<Blake
 #[cfg(target_os = "linux")]
 struct NodeDirectory<'a> {
     root: &'a File,
+    feed: Option<&'a feed::Refill<'a>>,
+    maximum_node_bytes: usize,
 }
 
 #[cfg(target_os = "linux")]
 impl TrieBackendStorage<Blake2Hasher> for NodeDirectory<'_> {
-    fn get(&self, key: &H256, _prefix: (&[u8], Option<u8>)) -> Result<Option<Vec<u8>>, String> {
+    fn get(&self, key: &H256, prefix: (&[u8], Option<u8>)) -> Result<Option<Vec<u8>>, String> {
         let path = format!(
             "/proc/self/fd/{}/{}",
             self.root.as_raw_fd(),
             hex::encode(key.0)
         );
-        let mut file = OpenOptions::new()
-            .read(true)
-            .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
-            .open(path)
-            .map_err(|e| format!("historical capture node read: {e}"))?;
+        let open = || {
+            OpenOptions::new()
+                .read(true)
+                .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+                .open(&path)
+        };
+        let mut file = match open() {
+            Ok(file) => file,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound && self.feed.is_some() => {
+                self.feed
+                    .ok_or("historical capture refill owner absent")?
+                    .get(key, prefix)?;
+                open().map_err(|e| format!("historical capture acknowledged node read: {e}"))?
+            }
+            Err(error) => return Err(format!("historical capture node read: {error}")),
+        };
         let before = file
             .metadata()
             .map_err(|e| format!("historical capture node stat: {e}"))?;
         if !before.is_file()
             || before.len() == 0
-            || before.len() > MAXIMUM_CODE_BYTES as u64
+            || before.len() > self.maximum_node_bytes as u64
             || before.nlink() != 1
         {
             return Err("historical capture node is not a bounded unique regular file".to_owned());
         }
         let mut raw = Vec::with_capacity(before.len() as usize);
         (&mut file)
-            .take((MAXIMUM_CODE_BYTES + 1) as u64)
+            .take((self.maximum_node_bytes + 1) as u64)
             .read_to_end(&mut raw)
             .map_err(|e| format!("historical capture node payload: {e}"))?;
         let after = file
@@ -513,6 +615,17 @@ impl TrieBackendStorage<Blake2Hasher> for NodeDirectory<'_> {
 /// authenticates its own content address and the request's parent state root.
 #[cfg(target_os = "linux")]
 pub fn capture_historical_directory_json(raw: &[u8], root: &File) -> Result<Vec<u8>, ProbeError> {
+    capture_historical_directory_feed_json(raw, root, None)
+}
+
+/// The optional inherited pipes grant only bounded proof refill for this exact
+/// request. They do not select a route or grant signer/finality authority.
+#[cfg(target_os = "linux")]
+pub fn capture_historical_directory_feed_json(
+    raw: &[u8],
+    root: &File,
+    pipes: Option<(&File, &File)>,
+) -> Result<Vec<u8>, ProbeError> {
     if raw.is_empty() || raw.len() > MAXIMUM_CAPTURE_REQUEST_BYTES {
         return Err(ProbeError::new("historical capture request byte bound"));
     }
@@ -535,6 +648,30 @@ pub fn capture_historical_directory_json(raw: &[u8], root: &File) -> Result<Vec<
             "historical capture node directory is absent",
         ));
     }
-    let backend = TrieBackendBuilder::new(NodeDirectory { root }, *parent.state_root()).build();
-    capture_historical_on_backend(raw, &backend, &AtomicBool::new(false))
+    if pipes.is_some() && !native_profile(&request.observation_profile) {
+        return Err(ProbeError::new(
+            "historical refill requires the native execution profile",
+        ));
+    }
+    let scopes = scope::Scopes::default();
+    let refill = pipes.map(|(request_pipe, response_pipe)| {
+        feed::Refill::new(
+            raw,
+            parent.hash(),
+            *parent.state_root(),
+            &scopes,
+            request_pipe,
+            response_pipe,
+        )
+    });
+    let backend = TrieBackendBuilder::new(
+        NodeDirectory {
+            root,
+            feed: refill.as_ref(),
+            maximum_node_bytes: proof_node_limit(&request.observation_profile),
+        },
+        *parent.state_root(),
+    )
+    .build();
+    capture_historical_scoped(raw, &backend, &AtomicBool::new(false), |_| {}, &scopes)
 }

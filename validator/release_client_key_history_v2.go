@@ -105,19 +105,27 @@ func (self *ChainClient) readReleaseClientKeyAuthorityUnsharedV2(ctx context.Con
 	if err := errors.Join(ctx.Err(), domain.Validate(), boundary.Validate()); err != nil {
 		return result, err
 	}
-	chain := &ChainClient{client: self.client, coordinator: self.coordinator, chainId: new(big.Int).Set(self.chainId), contractAddr: self.contractAddr, release: true}
+	chain := &ChainClient{client: self.client, coordinator: self.coordinator, chainId: new(big.Int).Set(self.chainId), contractAddr: self.contractAddr, release: true, readRetryHooks: self.readRetryHooks}
 	defer func() {
 		resultErr = errors.Join(resultErr, ctx.Err())
 		if resultErr != nil {
 			result = common.Address{}
 		}
 	}()
-	chainID, err := chain.client.ChainID(ctx)
+	var chainID *big.Int
+	err := chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		chainID, err = chain.client.ChainID(callCtx)
+		return err
+	})
 	if err := releaseRpcObservationError(err, chainID != nil && chainID.Cmp(chain.chainId) == 0, errors.New("client-key authority RPC chain identity differs")); err != nil {
 		return result, err
 	}
 	var nativeGenesis *common.Hash
-	err = chain.client.Client().CallContext(ctx, &nativeGenesis, "chain_getBlockHash", uint64(0))
+	err = chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		nativeGenesis = nil
+		return chain.client.Client().CallContext(callCtx, &nativeGenesis, "chain_getBlockHash", uint64(0))
+	})
 	if err := releaseRpcObservationError(err, nativeGenesis != nil && [32]byte(*nativeGenesis) == domain.GenesisHash, errors.New("client-key authority native RPC genesis identity differs")); err != nil {
 		return result, err
 	}

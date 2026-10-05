@@ -16,6 +16,7 @@ func (self *attemptReplayReadInterruption) Unwrap() error { return self.cause }
 // Only the failed read projection owns this marker. A later joined close,
 // custody, integrity or cancellation failure is rechecked by the retry loop.
 func classifyAttemptReplayRead(err error) error {
+	err = observeReleaseError(err)
 	if !RetryableEvidenceTransportError(err) {
 		return err
 	}

@@ -25,13 +25,14 @@ const mainnetEvmChainId = 964
 
 // monitorEvent is one JSON line suitable for the existing log/alert pipeline.
 type monitorEvent struct {
-	Schema      string                        `json:"schema"`
-	ObservedAt  string                        `json:"observed_at"`
-	Status      string                        `json:"status"`
-	Severity    string                        `json:"severity,omitempty"`
-	Detail      string                        `json:"detail,omitempty"`
-	Snapshot    *identityEnvelope             `json:"snapshot,omitempty"`
-	Diagnostics *monitorDiagnosticObservation `json:"diagnostics,omitempty"`
+	Schema        string                        `json:"schema"`
+	ObservedAt    string                        `json:"observed_at"`
+	Status        string                        `json:"status"`
+	Severity      string                        `json:"severity,omitempty"`
+	Detail        string                        `json:"detail,omitempty"`
+	Snapshot      *identityEnvelope             `json:"snapshot,omitempty"`
+	Diagnostics   *monitorDiagnosticObservation `json:"diagnostics,omitempty"`
+	RpcComparison *monitorRpcComparisonResult   `json:"rpc_comparison,omitempty"`
 }
 
 // monitorState tracks finalized progress without treating a changing tip as finality.
@@ -91,7 +92,7 @@ func (self *monitorState) observe(now time.Time, identity chainIdentity, stallAf
 	return "ok", nil
 }
 
-// Wire cancellation once; only owner-signing sign invokes the pinned device adapter.
+// Wire cancellation once; device commands retain their explicit custody gates.
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -170,6 +171,9 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	if len(args) != 0 && args[0] == "root-service" {
 		return runRootServiceCommand(ctx, args[1:], stdout, stderr)
 	}
+	if len(args) != 0 && args[0] == "root-capabilities" {
+		return runRootCurrentCapabilitiesCommand(ctx, args[1:], stdout, stderr)
+	}
 	if len(args) != 0 && args[0] == "activate-root-passive" {
 		return runRootPassiveHostCommand(ctx, args[1:], stdout, stderr, now)
 	}
@@ -187,6 +191,9 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	}
 	if len(args) != 0 && args[0] == "repair-validator" {
 		return runRepairValidatorCommand(ctx, args[1:], stdout, stderr, now)
+	}
+	if len(args) != 0 && args[0] == "repair-controller" {
+		return runRepairControllerCommand(ctx, args[1:], stdout, stderr, now)
 	}
 	if len(args) != 0 && args[0] == "repair-active-validator" {
 		return runRepairActiveValidatorCommand(ctx, args[1:], stdout, stderr, now)
@@ -245,8 +252,23 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	if len(args) != 0 && args[0] == "observe-native-miner-emission" {
 		return runEconomicEmissionCommand(ctx, args[1:], stdout, stderr)
 	}
+	if len(args) != 0 && args[0] == "economic-conservation-archive" {
+		return runEconomicConservationArchive(ctx, args[1:], stdout, stderr, hooks)
+	}
+	if len(args) != 0 && args[0] == "economic-conservation-claim-window" {
+		return runEconomicConservationClaimWindow(ctx, args[1:], stdout, stderr, hooks)
+	}
+	if len(args) != 0 && args[0] == "observe-economic-conservation" {
+		return runEconomicConservationCommand(ctx, args[1:], stdout, stderr, now, hooks)
+	}
 	if len(args) != 0 && args[0] == "verify-historical-execution" {
 		return runHistoricalReplayCommand(ctx, args[1:], stdout, stderr)
+	}
+	if len(args) != 0 && args[0] == "verify-admitted-native-fees" {
+		return runEconomicNativeFeeEvidenceCommand(ctx, args[1:], stdout, stderr)
+	}
+	if len(args) != 0 && args[0] == "verify-native-fee-outcome" {
+		return runEconomicNativeFeeOutcomeCommand(ctx, args[1:], stdout, stderr)
 	}
 	if len(args) != 0 && args[0] == "verify-historical-fee-context" {
 		return runHistoricalFeeContextCommand(ctx, args[1:], stdout, stderr)
@@ -260,7 +282,8 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	if len(args) == 0 || args[0] != "inspect" && args[0] != "monitor" {
 		fmt.Fprintln(stderr, "storage reports: sn-mainnet storage-inventory|storage-verify --durable-volumes FILE --durable-volumes-sha256 sha256:DIGEST --root DIR --former-writer-fence FILE --former-writer-fence-sha256 sha256:DIGEST [--inventory FILE --inventory-sha256 sha256:DIGEST]; reports do not authorize restart")
 		fmt.Fprintln(stderr, "owner-local storage reports: storage-owner-inventory|storage-owner-verify selects only the owner-local declaration schema; --max-owner-attributes and --max-owner-attribute-bytes bound retained custody metadata; verification --compare-reviewed-rebound only reports comparison to an explicit target declaration")
-		fmt.Fprintln(stderr, "owner recycle offline custody: sn-mainnet owner-recycle observe|plan|reserve|export|inspect-request|ledger-plan|import|status|reconcile [explicit policy, approval, original action and request pins]")
+		fmt.Fprintln(stderr, "owner recycle custody: sn-mainnet owner-recycle observe|plan|reserve|export|inspect-request|ledger-plan|sign|import|import-reply|status|reconcile|submit-plan|submit [explicit policy, approval, original action and request pins]")
+		fmt.Fprintln(stderr, "offline root capabilities: sn-mainnet root-capabilities --metadata FILE --metadata-hash 0xHASH --runtime-source-commit COMMIT; call compatibility does not establish current participation or signing authority")
 		fmt.Fprintln(stderr, "offline owner handoff: sn-mainnet owner-signing inspect|sign|reply|verify|ledger-plan --request FILE --accept-request-hash HASH --trim-approval-key HEX --owner-account-id HEX --expected-genesis HEX [owner-local device custody, public response or proof flags]")
 		fmt.Fprintln(stderr, "offline artifacts: sn-mainnet safe-release-verify --version 1.4.1|1.5.0 --variant Safe|SafeL2 --archive ABSOLUTE_FILE")
 		fmt.Fprintln(stderr, "offline successor preparation: bootstrap-chain contract-successor-preview|contract-successor-prepare|contract-successor-resume --config FILE --run-dir DIR --accept-plan-hash HASH --request FILE [exact preparation approval flags]")
@@ -274,12 +297,18 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	expectedChain := flags.String("expected-chain", "", "approved native chain name")
 	expectedGenesis := flags.String("expected-genesis", "", "approved native genesis hash")
 	expectedEvmChainId := flags.Uint64("expected-evm-chain-id", 0, "approved EVM chain ID")
-	retryWindow := flags.Duration("retry-window", 60*time.Second, "total transient retry window per read")
+	defaultRetryWindow := 60 * time.Second
+	if command == "monitor" {
+		defaultRetryWindow = defaultMonitorProgressReadBudget
+	}
+	retryWindow := flags.Duration("retry-window", defaultRetryWindow, "total transient retry window per read")
 	interval := flags.Duration("interval", 30*time.Second, "monitor sampling interval")
 	stallAfter := flags.Duration("stall-after", 5*time.Minute, "finality progress alert threshold")
 	checkpointPath := flags.String("checkpoint", "", "absolute path for a durable monitor finality checkpoint")
 	metricsPath := flags.String("metrics-file", "", "absolute .prom path for atomic monitor telemetry")
 	servicesPath := flags.String("services", "", "bounded expected service-role policy; requires checkpoint and metrics-file")
+	comparisonPath := flags.String("rpc-comparison-policy", "", "optional private independently approved second-route comparison policy")
+	comparisonPin := flags.String("rpc-comparison-policy-sha256", "", "exact independently admitted comparison policy SHA-256")
 	if err := flags.Parse(args[1:]); err != nil || flags.NArg() != 0 || *rpcUrl == "" {
 		fmt.Fprintln(stderr, "command requires --rpc and no positional arguments")
 		return 2
@@ -292,6 +321,9 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2
+	}
+	if hooks.afterRpcClient != nil {
+		hooks.afterRpcClient(command, client.retryWindow)
 	}
 	expected := identityExpectation{NativeChain: *expectedChain, GenesisHash: *expectedGenesis, EvmChainId: *expectedEvmChainId}
 	checkExpected := command == "monitor" || expected.NativeChain != "" || expected.GenesisHash != "" || expected.EvmChainId != 0
@@ -306,6 +338,25 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	if command == "inspect" && (*checkpointPath != "" || *metricsPath != "" || *servicesPath != "") {
 		fmt.Fprintln(stderr, "--checkpoint, --metrics-file and --services are only valid for monitor")
 		return 2
+	}
+	if (*comparisonPath == "") != (*comparisonPin == "") || command != "monitor" && (*comparisonPath != "" || *comparisonPin != "") {
+		fmt.Fprintln(stderr, "RPC comparison requires both policy flags and the monitor command")
+		return 2
+	}
+	if *comparisonPath != "" {
+		if !bootstrapRootAbsolutePath(*comparisonPath) || !planSha256(*comparisonPin) {
+			fmt.Fprintln(stderr, "RPC comparison requires an absolute policy path and canonical SHA-256 pin")
+			return 2
+		}
+		for _, output := range []string{*checkpointPath, *metricsPath} {
+			if output != "" && (*comparisonPath == output || *comparisonPath == output+".lock") {
+				fmt.Fprintln(stderr, "RPC comparison input must be separate from monitor outputs and locks")
+				return 2
+			}
+		}
+		comparison := &monitorRpcComparisonRequest{path: *comparisonPath, pin: *comparisonPin, primaryUrl: *rpcUrl, expected: expected, now: now}
+		defer comparison.close()
+		ctx = context.WithValue(ctx, monitorRpcComparisonContextKey{}, comparison)
 	}
 	if *metricsPath != "" && *checkpointPath != "" {
 		metrics, metricsErr := resolveMonitorDestination(*metricsPath)
@@ -382,11 +433,11 @@ func runChainMonitor(ctx context.Context, client *rpcClient, expected identityEx
 	if checkpointPath != "" {
 		checkpoint, err = openMonitorCheckpoint(checkpointPath, expected, ctx)
 		if err != nil {
-			if ctx.Err() != nil {
+			if monitorCanceledCheckpointLoad(ctx, err) {
 				return 0
 			}
 			fmt.Fprintln(stderr, "monitor checkpoint:", err)
-			if monitorStoragePending(err) && !errors.Is(err, durablehead.ErrUncertain) {
+			if ctx.Err() == nil && monitorStartupPending(err) {
 				return 1
 			}
 			return 3
@@ -394,12 +445,23 @@ func runChainMonitor(ctx context.Context, client *rpcClient, expected identityEx
 		if hooks.afterCheckpointOpen != nil {
 			hooks.afterCheckpointOpen(ctx, "chain", checkpoint.lock)
 		}
-		state, err = checkpoint.load()
+		budget := defaultMonitorProgressReadBudget
+		if client != nil && client.retryWindow > 0 {
+			budget = client.retryWindow
+		}
+		state, err = loadMonitorChainCheckpoint(ctx, checkpoint, budget, stdout, stderr, now, hooks)
 		if err != nil {
 			if monitorCanceledCheckpointLoad(ctx, err) {
 				return 0
 			}
 			fmt.Fprintln(stderr, "monitor checkpoint:", err)
+			if monitorStartupPending(err) {
+				if ctx.Err() != nil {
+					return 0
+				}
+				return 1
+			}
+			publishMonitorAdmission("chain", "quarantined", err, 0, stdout, stderr, now)
 			return 3
 		}
 		if hooks.syncDirectory != nil {
@@ -409,11 +471,11 @@ func runChainMonitor(ctx context.Context, client *rpcClient, expected identityEx
 	if metricsPath != "" {
 		metrics, err = openMonitorMetrics(metricsPath, ctx)
 		if err != nil {
-			if ctx.Err() != nil {
+			if monitorCanceledCheckpointLoad(ctx, err) {
 				return 0
 			}
 			fmt.Fprintln(stderr, "monitor metrics:", err)
-			if monitorStoragePending(err) {
+			if ctx.Err() == nil && monitorStartupPending(err) {
 				return 1
 			}
 			return 2
@@ -423,7 +485,7 @@ func runChainMonitor(ctx context.Context, client *rpcClient, expected identityEx
 		}
 		for {
 			if err := metrics.initialize(state); err != nil {
-				if ctx.Err() != nil {
+				if monitorCanceledCheckpointLoad(ctx, err) {
 					return 0
 				}
 				fmt.Fprintln(stderr, "initialize monitor metrics:", err)
@@ -461,7 +523,8 @@ func runChainMonitor(ctx context.Context, client *rpcClient, expected identityEx
 		if ctx.Err() != nil {
 			return 0
 		}
-		event := monitorEvent{Schema: monitorSchema}
+		comparisonResult := unknownMonitorRpcComparison("independent RPC policy or chain observation unavailable")
+		event := monitorEvent{Schema: monitorSchema, RpcComparison: &comparisonResult}
 		var checkpointErr error
 		metricsErr = nil
 		sampleStartedAt := now().UTC()
@@ -524,6 +587,17 @@ func runChainMonitor(ctx context.Context, client *rpcClient, expected identityEx
 						event.Status, event.Severity, event.Detail = "checkpoint-error", "critical", "checkpoint publication unavailable"
 					}
 				}
+			}
+		}
+		if event.Status == "ok" || event.Status == "finality-stalled" {
+			if comparison, ok := ctx.Value(monitorRpcComparisonContextKey{}).(monitorRpcComparisonReader); ok {
+				comparisonResult = comparison.compare(ctx, identity.FinalizedHash)
+			}
+			if ctx.Err() != nil {
+				return 0
+			}
+			if comparisonResult.Status == "disagreement" {
+				event.Severity = "critical"
 			}
 		}
 		terminalObservation := event.Status == "finality-conflict" || event.Status == "rpc-integrity"

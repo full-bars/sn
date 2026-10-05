@@ -102,11 +102,14 @@ class CargoControlTests(unittest.TestCase):
     def test_normal_leader_exit_refuses_and_reaps_remaining_descendant(self):
         output = self.root / "normal-process"
         output.mkdir()
-        with self.assertRaisesRegex(guard.Refused, "descendants retained process custody"):
+        with self.assertRaisesRegex(guard.Refused, "descendants retained process custody") as caught:
             guard.run_process([sys.executable, "-c", self.process_program(True)],
                               self.root, os.environ.copy(), output, "child", 15)
         pid = int((output / "child.stdout").read_text().strip())
         self.assert_process_gone(pid)
+        self.assertTrue(caught.exception.qualification_process_result["tree_joined"])
+        self.assertEqual(caught.exception.qualification_process_result["exit"], 0)
+        self.assertEqual(caught.exception.qualification_process_result["guard_failure"]["type"], "Refused")
 
     def test_failed_phase_joins_term_ignoring_leader_and_descendant(self):
         previous = guard.set_subreaper(True)
@@ -153,12 +156,15 @@ class CargoControlTests(unittest.TestCase):
         output = self.root / "overflow-process"
         output.mkdir()
         script = "import os,time; print(os.getpid(),flush=True); os.write(1,b'x'*8192); time.sleep(60)"
-        with self.assertRaisesRegex(guard.Refused, "output exceeds reviewed log forecast"):
+        with self.assertRaisesRegex(guard.Refused, "output exceeds reviewed log forecast") as caught:
             guard.run_process([sys.executable, "-c", script], self.root, os.environ.copy(),
                               output, "child", 15, log_limit=4096)
         # The process group and all adopted descendants must be joined even if
         # the overflowing chunk was refused before its bytes were logged.
         self.assertEqual(guard.owned_children(), [])
+        self.assertTrue(caught.exception.qualification_process_result["tree_joined"])
+        self.assertIs(type(caught.exception.qualification_process_result["exit"]), int)
+        self.assertIn("output exceeds", caught.exception.qualification_process_result["guard_failure"]["detail"])
 
 
 if __name__ == "__main__":

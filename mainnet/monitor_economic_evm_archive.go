@@ -100,7 +100,7 @@ func (self *monitorEconomicEvmArchive) validate(policy monitorEconomicEvmPolicy,
 	}
 	seen := map[string]bool{}
 	for _, reference := range self.Segments {
-		if err := reference.validate(); err != nil {
+		if err := reference.validateLimit(policy.archiveReferenceBytes); err != nil {
 			return err
 		}
 		if seen[reference.Path] || seen[reference.Path+".lock"] {
@@ -131,7 +131,7 @@ func (self *monitorEconomicEvmState) feeTotal() *big.Int {
 }
 
 func compactMonitorEconomicEvm(record monitorEconomicEvmCheckpoint, reference monitorHistoryReference, policy monitorEconomicEvmPolicy) (monitorEconomicEvmCheckpoint, error) {
-	if err := reference.validate(); err != nil {
+	if err := reference.validateLimit(policy.archiveReferenceBytes); err != nil {
 		return record, err
 	}
 	validation, err := record.validationPolicy(policy)

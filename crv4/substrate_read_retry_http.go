@@ -95,29 +95,45 @@ func RetryableSubstrateReadTransportError(err error) bool {
 // A consumer must not fall back to generic URL/EOF unwrapping after this owner
 // rejects a native close or mixed error. Presence is separate from retryability.
 func HasSubstrateReadTransportCause(err error) bool {
-	if IsSubstrateReadTransportCause(err) {
-		return true
-	}
-	if joined, ok := err.(interface{ Unwrap() []error }); ok {
-		for _, cause := range joined.Unwrap() {
-			if HasSubstrateReadTransportCause(cause) {
-				return true
+	budget := &substrateReadCauseBudget{remaining: 128}
+	var visit func(error, int) bool
+	visit = func(cause error, depth int) bool {
+		if !budget.admit(cause, depth) {
+			return false
+		}
+		if IsSubstrateReadTransportCause(cause) {
+			return true
+		}
+		if joined, ok := cause.(interface{ Unwrap() []error }); ok {
+			causes := joined.Unwrap()
+			if !budget.admitsChildren(causes) {
+				return false
+			}
+			for _, child := range causes {
+				if visit(child, depth+1) {
+					return true
+				}
 			}
 		}
+		if wrapped, ok := cause.(interface{ Unwrap() error }); ok {
+			return visit(wrapped.Unwrap(), depth+1)
+		}
+		return false
 	}
-	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		return HasSubstrateReadTransportCause(wrapped.Unwrap())
-	}
-	return false
+	return visit(err, 0)
 }
 
 // A composed read owner treats each native transport boundary as an opaque
 // subtree. It may combine independent transient readers, but must never unwrap
 // a rejected native close or framing cause into a generic retryable deadline.
 func IsSubstrateReadTransportCause(err error) bool {
-	switch err.(type) {
-	case *SubstrateReadHttpStatusError, *substrateReadHttpTransportError, *substrateReadHttpCloseError:
-		return true
+	switch cause := err.(type) {
+	case *SubstrateReadHttpStatusError:
+		return cause != nil
+	case *substrateReadHttpTransportError:
+		return cause != nil
+	case *substrateReadHttpCloseError:
+		return cause != nil
 	}
 	return false
 }
@@ -125,23 +141,45 @@ func IsSubstrateReadTransportCause(err error) bool {
 // Every joined branch must be transient and at least one must retain this
 // client's actual read origin. A joined owner deadline does not erase that cause.
 func classifySubstrateReadHttpError(err error) (bool, bool) {
-	if err == nil || err == context.Canceled || err == gsrpcgeth.ErrClientQuit {
+	budget := &substrateReadCauseBudget{remaining: 128}
+	return classifySubstrateReadHttpErrorBounded(err, 0, budget)
+}
+
+// Physical subtrees borrow this same traversal budget; a nested marker never
+// restarts it or lets a timeout hide a sibling application or custody failure.
+func classifySubstrateReadHttpErrorBounded(err error, depth int, budget *substrateReadCauseBudget) (bool, bool) {
+	if !budget.admit(err, depth) || err == context.Canceled || err == gsrpcgeth.ErrClientQuit {
 		return false, false
 	}
-	if _, localFile := err.(*os.PathError); localFile {
+	switch err.(type) {
+	case *os.PathError, *os.LinkError:
 		return false, false
 	}
 	if _, rpcError := err.(gsrpcgeth.Error); rpcError {
 		return false, false
 	}
+	if err == context.DeadlineExceeded {
+		return true, false
+	}
+	switch cause := err.(type) {
+	case *SubstrateReadHttpStatusError:
+		return retryableSubstrateReadHttpStatus(cause.status), true
+	case *substrateReadHttpTransportError:
+		return retryableSubstrateRpcReadTransportBounded(cause.cause, true, false, depth+1, budget), true
+	case *substrateReadHttpCloseError:
+		return retryableSubstrateRpcReadTransportBounded(cause.cause, true, false, depth+1, budget), true
+	}
+	if substrateReadCustomMatcher(err) {
+		return false, false
+	}
 	if joined, ok := err.(interface{ Unwrap() []error }); ok {
 		causes := joined.Unwrap()
-		if len(causes) == 0 {
+		if !budget.admitsChildren(causes) {
 			return false, false
 		}
 		originated := false
 		for _, cause := range causes {
-			retryable, physical := classifySubstrateReadHttpError(cause)
+			retryable, physical := classifySubstrateReadHttpErrorBounded(cause, depth+1, budget)
 			if !retryable {
 				return false, false
 			}
@@ -149,18 +187,10 @@ func classifySubstrateReadHttpError(err error) (bool, bool) {
 		}
 		return true, originated
 	}
-	switch cause := err.(type) {
-	case *SubstrateReadHttpStatusError:
-		return retryableSubstrateReadHttpStatus(cause.status), true
-	case *substrateReadHttpTransportError:
-		return retryableSubstrateRpcReadTransport(cause.cause, true, false), true
-	case *substrateReadHttpCloseError:
-		return retryableSubstrateRpcReadTransport(cause.cause, true, false), true
-	}
 	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		return classifySubstrateReadHttpError(wrapped.Unwrap())
+		return classifySubstrateReadHttpErrorBounded(wrapped.Unwrap(), depth+1, budget)
 	}
-	return err == context.DeadlineExceeded, false
+	return false, false
 }
 
 // An immutable instance wraps only allowlisted read attempts. It owns and
@@ -235,7 +265,12 @@ func dialContextSubstrateClient(ctx context.Context, endpoint string) (*contextS
 			owned := standard.Clone()
 			base, closeReadHttp = owned, owned.CloseIdleConnections
 		}
-		client := &http.Client{Transport: &substrateReadHttpTransport{base: base, maximumBytes: substrateReadHttpResponseLimit}}
+		client := &http.Client{
+			Transport: &substrateReadHttpTransport{base: base, maximumBytes: substrateReadHttpResponseLimit},
+			// An approved endpoint cannot silently hand an exact runtime read to
+			// a redirect target. Its response remains visible to the read owner.
+			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		}
 		transport, err = gsrpcgeth.DialHTTPWithClient(endpoint, client)
 	} else {
 		transport, err = gsrpcgeth.DialContext(ctx, endpoint)

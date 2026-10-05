@@ -343,8 +343,8 @@ func TestRootSubmissionOriginalBytesAndSkippedAttempts(t *testing.T) {
 	}
 }
 
-// Route construction refuses dns, credentials, redirection, implicit ports and
-// tls trust shortcuts. The read-only client's write prohibition remains intact.
+// IP route construction refuses credentials, redirection, implicit IP ports
+// and TLS trust shortcuts. Public DNS routes separately require pinned HTTPS.
 func TestRootSubmissionRouteAndTlsBoundary(t *testing.T) {
 	fixture := newRootSubmissionFixture(t)
 	for _, route := range []string{"https://owned-node.example:443", "http://192.0.2.10", "http://192.0.2.10:0", "http://user@192.0.2.10:9944", "http://192.0.2.10:9944?secret=x", "http://192.0.2.10:9944#fragment", "http://0.0.0.0:9944", "http://192.0.2.10:09944", "http://192.0.2.10:9944/%2fother"} {

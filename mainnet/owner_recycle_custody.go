@@ -1,5 +1,5 @@
-// Offline custody reserves and retains one signing request. No method signs or
-// submits; ambiguous export/import durability always requires reopening custody.
+// Original custody retains one signing request and its separate bounded send
+// approval. Ambiguous durability always requires reopening the same custody.
 package main
 
 import (
@@ -13,16 +13,17 @@ const ownerRecycleRecordSchema = "urnetwork-mainnet-owner-recycle-state-v1"
 // Public metadata, original signature and exact extrinsic survive all recovery.
 // Exported without a returned signature is unresolved, never safe unsigned expiry.
 type ownerRecycleRecord struct {
-	Schema         string                      `json:"schema"`
-	Config         ownerRecycleConfig          `json:"config"`
-	ApprovalKey    string                      `json:"approval_public_key_ed25519"`
-	Phase          string                      `json:"phase"`
-	Request        *ownerRecycleSigningRequest `json:"signing_request,omitempty"`
-	Signature      string                      `json:"signature,omitempty"`
-	RawExtrinsic   string                      `json:"raw_extrinsic,omitempty"`
-	ExtrinsicHash  string                      `json:"extrinsic_hash,omitempty"`
-	Reconciliation *ownerRecycleReconciliation `json:"reconciliation,omitempty"`
-	ContentHash    string                      `json:"content_hash"`
+	Schema         string                        `json:"schema"`
+	Config         ownerRecycleConfig            `json:"config"`
+	ApprovalKey    string                        `json:"approval_public_key_ed25519"`
+	Phase          string                        `json:"phase"`
+	Request        *ownerRecycleSigningRequest   `json:"signing_request,omitempty"`
+	Signature      string                        `json:"signature,omitempty"`
+	RawExtrinsic   string                        `json:"raw_extrinsic,omitempty"`
+	ExtrinsicHash  string                        `json:"extrinsic_hash,omitempty"`
+	Reconciliation *ownerRecycleReconciliation   `json:"reconciliation,omitempty"`
+	Submission     *ownerRecycleSubmissionRecord `json:"submission,omitempty"`
+	ContentHash    string                        `json:"content_hash"`
 }
 
 // Financial outcome and mode qualification are separate, with activation false.
@@ -82,6 +83,14 @@ func (self ownerRecycleRecord) validate(config ownerRecycleConfig, key string) e
 	self.ContentHash = ""
 	if self.Schema != ownerRecycleRecordSchema || self.ApprovalKey != key || rootObjectHash(self.Config) != rootObjectHash(config) || claimed != rootObjectHash(self) {
 		return errors.New("recycle custody config/key or checksum differs")
+	}
+	if self.Submission != nil {
+		if self.Request == nil || self.Signature == "" || self.Submission.Attempts > self.Submission.Approval.MaximumAttempts {
+			return errors.New("recycle submission lacks original signed custody or exceeds its immutable allowance")
+		}
+		if err := self.Submission.Approval.validate(self, self.Submission.ApprovalKey); err != nil {
+			return err
+		}
 	}
 	if self.Phase == "reserved" {
 		if self.Request != nil || self.Signature != "" || self.RawExtrinsic != "" || self.ExtrinsicHash != "" || self.Reconciliation != nil {

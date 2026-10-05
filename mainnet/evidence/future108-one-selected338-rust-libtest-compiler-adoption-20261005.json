@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 1,
+  "compiler_memory_max_bytes": 8589934592,
+  "compiler_memory_swap_max_bytes": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 12884901888,
+  "data_minimum_available_bytes": 15032385536,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "98c82bbd5ed7c07be43198b9b57957cf589b34b8d40f07e47a185200a4a98f6a",
+  "margin": 2,
+  "memory_minimum_available_bytes": 120259084288,
+  "metadata_count": 0,
+  "model_count": 0,
+  "runner_sha256": "c24f017bc622616fd255e8b474a45250d441dbf09ca3d9e4d203d32ee73a7dc5",
+  "status": "ADOPTED_ONE_SELECTED338_RUST_COMPILER_AFTER_MODEL30",
+  "adopted_at": "2026-10-05T03:56:54.492658+00:00",
+  "review_sha256": "ffac282f4be8828f211cc7c338f5719fb7da6630f481eb6867a8a857ebc961e1",
+  "scope": "One exact locked/offline cargo test --lib --no-run compiler child for selected338 libtest image; no test execution or principal export."
+}

@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"syscall"
 
@@ -46,7 +47,7 @@ func repairValidatorObservationError(message string, cause error, retainedName b
 		return errors.Join(durablevolume.ErrIdentity, errors.New(message), cause)
 	}
 	if errors.Is(cause, context.Canceled) || errors.Is(cause, context.DeadlineExceeded) || errors.Is(cause, os.ErrClosed) || errors.Is(cause, syscall.EBADF) {
-		return errors.Join(errors.New(message), cause)
+		return fmt.Errorf("%s: %w", message, cause)
 	}
 	return mainnetDurableUnavailable(message, cause)
 }

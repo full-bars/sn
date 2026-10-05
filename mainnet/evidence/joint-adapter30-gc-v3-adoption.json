@@ -1,0 +1,20 @@
+{
+  "status": "ADOPTED_ONE_JOINT_ADAPTER_PURE_TEST_SUITE",
+  "job_sha256": "6ef4fe6e2b2a88aaa628874e95a80d01a361eb60ce76c7a5117fed547d0eab2e",
+  "runner_sha256": "f0c6644d1910b617d098604bbd2708666f1e1e0e708f4266324dc49627fe2efd",
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "accounting_floor_bytes": 0,
+  "margin": 2,
+  "compiler_count": 0,
+  "model_count": 0,
+  "history_count": 0,
+  "short_count": 1,
+  "data_minimum_available_bytes": 10737418240,
+  "memory_minimum_available_bytes": 113816633344,
+  "memory_max_bytes": 268435456,
+  "memory_swap_max_bytes": 0,
+  "data_growth_stop_bytes": 67108864,
+  "adopted_at": "2026-10-05T06:39:51.586007+00:00",
+  "root_review": "55 bindings and runner AST checked.30 unchanged pure deterministic tests. Admission permits unrelated stopped containers while requiring no running containers and closed owned databases. Prior prebody refusal preserved. No deployment approval."
+}

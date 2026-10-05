@@ -34,6 +34,8 @@ const (
 	providerStatusFailed
 	providerStatusNotice
 	providerStartupRecoveryRequired
+	providerWorkCaptureRequired
+	providerContractCaptureRequired
 )
 
 // Immutable scalar status can be compared without formatting SDK error strings.
@@ -155,6 +157,10 @@ func (self *providerDiagnostics) observe(event providerDiagnosticEvent, provider
 		code = "http_notice"
 	case providerStartupRecoveryRequired:
 		domain, code = "authentication", "startup_recovery_required"
+	case providerWorkCaptureRequired:
+		code = "whole_work_capture_required"
+	case providerContractCaptureRequired:
+		code = "original_contract_capture_required"
 	}
 	if event != providerExtenderObserved {
 		extender = nil
@@ -165,6 +171,12 @@ func (self *providerDiagnostics) observe(event providerDiagnosticEvent, provider
 	guidance := ""
 	if event == providerStartupRecoveryRequired {
 		guidance = "Check proxy slots and restore original provider custody. Known new work: --allow-client-registration. Verified original legacy key/JWT: --adopt-legacy-provider-key. See miner/PROVIDER-REGISTRATION.md."
+	}
+	if event == providerWorkCaptureRequired {
+		guidance = "Restore the reviewed whole-work profile, original provider identity and private outbox. Supply --whole-work-capture and --whole-work-capture-sha256. See miner/PROVIDER-WHOLE-WORK.md."
+	}
+	if event == providerContractCaptureRequired {
+		guidance = "Restore the approved original contract profile, provider key and prepared source custody. Supply --original-contract-capture and --original-contract-capture-sha256. See miner/PROVIDER-WHOLE-WORK.md."
 	}
 	record := struct {
 		Schema        string                       `json:"schema"`

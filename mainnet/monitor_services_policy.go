@@ -53,7 +53,7 @@ var monitorRolePattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
 // Policy admission precedes all source workers. The same independent chain
 // identity must describe chain observations and every supplied producer role.
 func loadMonitorServices(ctx context.Context, path string, expected identityExpectation, checkpointPath, metricsPath string) (*monitorServicesPolicy, error) {
-	raw, err := readMonitorServiceFile(ctx, path, maxMonitorServicesBytes, false, monitorServiceReadHooks{})
+	raw, err := readMonitorServicesPolicyFile(ctx, path, monitorServiceReadHooks{})
 	if err != nil {
 		return nil, errors.Join(errors.New("service policy must be bounded protected regular JSON"), err)
 	}
@@ -71,6 +71,9 @@ func loadMonitorServices(ctx context.Context, path string, expected identityExpe
 	}
 	if policy.Schema != monitorServicesSchema {
 		return nil, errors.New("service policy schema is unknown")
+	}
+	if err := policy.validateFrame(len(raw)); err != nil {
+		return nil, err
 	}
 	rolesCount := len(policy.Validators) + len(policy.Operators) + len(policy.Providers) + len(policy.Claims) + len(policy.NativeEconomics) + len(policy.EvmEconomics)
 	if rolesCount == 0 || rolesCount > diagnostics.MaximumDomains-2 || len(policy.Validators) > maxMonitorValidatorRoles || len(policy.Operators) > maxMonitorOperators || len(policy.Providers) > maxMonitorProviders || len(policy.Claims) > maxMonitorClaims || len(policy.NativeEconomics) > maximumMonitorEconomicRoles || len(policy.EvmEconomics) > maximumMonitorEconomicRoles {

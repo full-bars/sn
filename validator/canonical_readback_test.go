@@ -62,7 +62,7 @@ func canonicalReadbackTestClient(t *testing.T, prior *ChainClient, before func(c
 		})
 	})
 	chain := &ChainClient{client: ethclient.NewClient(client), rpcUrl: prior.rpcUrl, chainId: new(big.Int).Set(prior.chainId), st: prior.st, coordinator: prior.coordinator, contractAddr: prior.contractAddr, release: prior.release}
-	chain.readRetryHooks.wait = chainReadRetryNoWait
+	chain.readRetryHooks = chainReadRetryTestHooks(chainReadTestFailureAttempts)
 	if chain.release {
 		chain.contract = chain.coordinator.Instance(chain.client, chain.contractAddr)
 	} else {
@@ -127,7 +127,7 @@ func TestValidatorEvidenceCanonicalReadbackRejectsObservedFork(t *testing.T) {
 	}
 }
 
-// Sequential healthy reads may together exceed thirty seconds; each actual
+// Sequential healthy reads may together exceed sixty seconds; each actual
 // request still has its full finite allowance under the caller's deadline.
 func TestValidatorEvidenceReadbackUsesIndependentRequestDeadlines(t *testing.T) {
 	for _, winner := range []bool{false, true} {
@@ -199,8 +199,9 @@ func TestValidatorEvidenceReadbackBoundsDirectRequests(t *testing.T) {
 				}
 				return nil
 			}, fixture.handler)
+			chain.readRetryHooks = chainReadRetryHooks{wait: chainReadRetryNoWait}
 			result, err := chain.FindValidatorEvidenceSlotWinnerV2Context(t.Context(), fixture.expected)
-			if !injected || result != nil || !errors.Is(err, context.DeadlineExceeded) || !RetryableEvidenceTransportError(err) || time.Since(started) != chainCallTimeout {
+			if !injected || result != nil || !errors.Is(err, context.DeadlineExceeded) || !RetryableEvidenceTransportError(err) || time.Since(started) != chainReadOperationTimeout {
 				t.Fatalf("method=%s elapsed=%s result=%v err=%v", method, time.Since(started), result, err)
 			}
 		})

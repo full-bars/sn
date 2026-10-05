@@ -109,6 +109,7 @@ func (self *monitorClaimState) observationCode(policy monitorClaimPolicy, value 
 	}
 	for _, prior := range self.Epochs {
 		for _, entry := range value.Entries {
+			policy.observeWork("retained-observation-comparison", 1)
 			if entry.Epoch != prior.Epoch || entry.Observation == nil {
 				continue
 			}
@@ -149,6 +150,7 @@ func (self *monitorClaimState) observe(policy monitorClaimPolicy, value *protoco
 		for index := range self.Epochs {
 			retained := &self.Epochs[index]
 			for _, entry := range value.Entries {
+				policy.observeWork("current-observation-comparison", 1)
 				if entry.Epoch != retained.Epoch || entry.Observation == nil {
 					continue
 				}
@@ -214,6 +216,7 @@ type monitorClaimSummary struct {
 func (self *monitorClaimState) summary(policy monitorClaimPolicy, now time.Time) monitorClaimSummary {
 	result := monitorClaimSummary{Expected: len(policy.Epochs), ProgressAt: self.SemanticProgressAt}
 	for index, expected := range policy.Epochs {
+		policy.observeWork("summary-epoch", 1)
 		observation := self.Epochs[index].Observation
 		if self.Epochs[index].Proof != nil {
 			result.MerkleProofs++
@@ -246,6 +249,7 @@ func (self *monitorClaimState) summary(policy monitorClaimPolicy, now time.Time)
 		// earlier exact assertion remains in retained evidence.
 		if self.Record != nil {
 			for _, entry := range self.Record.Entries {
+				policy.observeWork("summary-payment-comparison", 1)
 				if entry.Epoch == expected.Epoch && entry.Observation != nil && entry.Observation.PaymentStatus == "invalid" {
 					result.InvalidPayment++
 				}

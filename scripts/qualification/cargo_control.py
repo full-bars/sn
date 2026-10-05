@@ -211,7 +211,8 @@ def join_process_tree(process, failed):
 
 
 def run_process(args, cwd, environment, output, label, timeout,
-                log_limit=MAXIMUM_LOG_BYTES, minimum_free=0):
+                log_limit=MAXIMUM_LOG_BYTES, minimum_free=0,
+                resource_observer=None, before_tree_join=None):
     """Stream bounded logs; cancel and reap descendants on every completion path."""
     stdout = output / (label + ".stdout")
     stderr = output / (label + ".stderr")
@@ -219,46 +220,78 @@ def run_process(args, cwd, environment, output, label, timeout,
     process = None
     failed = True
     used = 0
-    with stdout.open("xb") as out, stderr.open("xb") as err:
-        original_subreaper = set_subreaper(True)
+    joined = False
+
+    def join_owned(failing):
+        """A sampler failure cannot bypass the actual owned-tree wait."""
+        nonlocal joined
+        joined = False
         try:
-            require(not owned_children(), "runner already owns an unrelated child")
-            process = subprocess.Popen(args, cwd=cwd, env=environment, stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE, start_new_session=True)
-            with selectors.DefaultSelector() as select:
-                for pipe, destination in ((process.stdout, out), (process.stderr, err)):
-                    os.set_blocking(pipe.fileno(), False)
-                    select.register(pipe, selectors.EVENT_READ, destination)
-                deadline = time.monotonic() + timeout
-                while select.get_map() or process.poll() is None:
-                    if time.monotonic() >= deadline:
-                        raise subprocess.TimeoutExpired(args, timeout)
-                    require(shutil.disk_usage(output).free >= minimum_free,
-                            "active phase crossed the shared floor")
-                    for key, _ in select.select(timeout=0.05):
-                        raw = os.read(key.fileobj.fileno(), min(65536, log_limit - used + 1))
-                        if raw:
-                            used += len(raw)
-                            require(used <= log_limit, "process output exceeds reviewed log forecast")
-                            key.data.write(raw)
-                        else:
-                            select.unregister(key.fileobj)
-                    if process.poll() is not None and owned_children():
-                        require(not join_process_tree(process, False),
-                                "leader exited while descendants retained process custody")
-                code = process.wait()
-            require(not join_process_tree(process, False), "surviving descendant after leader exit")
-            failed = False
+            if before_tree_join is not None:
+                before_tree_join()
         finally:
+            unexpected = join_process_tree(process, failing)
+            joined = True
+        return unexpected
+
+    try:
+        with stdout.open("xb") as out, stderr.open("xb") as err:
+            original_subreaper = set_subreaper(True)
             try:
-                if process is not None:
-                    join_process_tree(process, failed)
-                    process.stdout.close()
-                    process.stderr.close()
+                require(not owned_children(), "runner already owns an unrelated child")
+                process = subprocess.Popen(args, cwd=cwd, env=environment, stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE, start_new_session=True)
+                with selectors.DefaultSelector() as select:
+                    for pipe, destination in ((process.stdout, out), (process.stderr, err)):
+                        os.set_blocking(pipe.fileno(), False)
+                        select.register(pipe, selectors.EVENT_READ, destination)
+                    deadline = time.monotonic() + timeout
+                    while select.get_map() or process.poll() is None:
+                        if time.monotonic() >= deadline:
+                            raise subprocess.TimeoutExpired(args, timeout)
+                        require(shutil.disk_usage(output).free >= minimum_free,
+                                "active phase crossed the shared floor")
+                        if resource_observer is not None:
+                            resource_observer()
+                        for key, _ in select.select(timeout=0.05):
+                            raw = os.read(key.fileobj.fileno(), min(65536, log_limit - used + 1))
+                            if raw:
+                                used += len(raw)
+                                require(used <= log_limit, "process output exceeds reviewed log forecast")
+                                key.data.write(raw)
+                            else:
+                                select.unregister(key.fileobj)
+                        if process.poll() is not None and owned_children():
+                            require(not join_owned(False),
+                                    "leader exited while descendants retained process custody")
+                    code = process.wait()
+                require(not join_owned(False), "surviving descendant after leader exit")
+                failed = False
             finally:
-                set_subreaper(original_subreaper)
-    return {"argv": args, "exit": code, "stdout_sha256": digest(stdout),
-            "stderr_sha256": digest(stderr), "log_bytes": used, "tree_joined": True}
+                try:
+                    if process is not None:
+                        try:
+                            join_owned(failed)
+                        finally:
+                            process.stdout.close()
+                            process.stderr.close()
+                finally:
+                    set_subreaper(original_subreaper)
+        return {"argv": args, "exit": code, "stdout_sha256": digest(stdout),
+                "stderr_sha256": digest(stderr), "log_bytes": used, "tree_joined": True}
+    except BaseException as error:
+        # Preserve the original exception type/cause. Only an actual completed
+        # owned-tree join supplies this wait; callers must keep it unqualified.
+        # Reusing an exception instance must not reuse an earlier child's wait.
+        error.qualification_process_result = None
+        error.qualification_process_reference = None
+        if process is not None and joined and type(process.returncode) is int:
+            error.qualification_process_result = {
+                "argv": args, "pid": process.pid, "exit": process.returncode,
+                "stdout_sha256": digest(stdout), "stderr_sha256": digest(stderr),
+                "log_bytes": used, "tree_joined": True,
+                "guard_failure": {"type": type(error).__name__, "detail": str(error)}}
+        raise
 
 
 def fresh_artifact(path, package, crate):

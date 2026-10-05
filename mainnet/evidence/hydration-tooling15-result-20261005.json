@@ -1,0 +1,27 @@
+{
+  "schema": "mainnet-hydration-tooling-tests-result-v1",
+  "status": "PASS_PURE_TOOLING15",
+  "actual_tests": 15,
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-hydration-compact15-v1.receipt.json",
+    "sha256": "5b45f7805ff5c898df934692a864577bf38231d08b86ce56f8beeea21530434d"
+  },
+  "user_terminal": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-hydration-compact15-v1-user-terminal-readback.json",
+    "sha256": "aa431c856ca2297ee850ac06e70948b7d10b737bc27fefed8796f75a3cff65e9"
+  },
+  "source": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/test_hydration_compact_evidence_v1.py",
+    "sha256": "98079070e165e7b737943c7ab619a18677befea73307f5c6554f211d60af79be"
+  },
+  "actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-hydration-compact15-v1.process-result.json",
+    "sha256": "0a8dd8851f529b70b2853d5e7ebd1e0866b2c1ab4f79d233d663d1c2951febce"
+  },
+  "raw_outcomes": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-hydration-compact15-v1.stderr",
+    "sha256": "e97e15810a3384614ee9c84443b078d784b48b3bab6266ea37e77d42199b926a"
+  },
+  "scope": "Pure synthetic tooling regressions only; no Go/network/DB/original hydration commands. Actual child wait retained.",
+  "unused_alternate_job": "hydration15-compact-regression-job-v1.json was prepared/adopted but not executed. No duplicate invocation."
+}

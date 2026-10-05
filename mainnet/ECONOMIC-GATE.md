@@ -5,10 +5,13 @@ The selected target is 10% of the native miner allocation for providers and
 that policy. They do not construct weights, change validator caps, submit calls,
 authorize activation, or establish a final Yuma outcome.
 
-When the mode is Burn, the separate [offline owner transition](OWNER-RECYCLE-TRANSITION.md)
+When the mode is Burn, the separate [owner transition](OWNER-RECYCLE-TRANSITION.md)
 constructs an independently approved exact native request and retains public
-signature/receipt custody. It supplies no live signing or broadcast operation;
-its successful Recycle readback remains a precondition for this economic gate.
+signature/receipt custody. Current source also implements owner-local Ledger
+signing, exact returned-reply import on the host, and separately approved bounded
+submission/reconciliation; [qualification and actual authority remain open](MAINNET.md).
+The observation/reference commands above remain signer-free. A successful
+Recycle readback remains a precondition, not proof of the actual 10%/90% outcome.
 
 ## Finalized mode precondition
 

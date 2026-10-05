@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-// No submission method is installed. The owned route is an explicit trust
-// assumption for finalized head and storage, not a GRANDPA/storage-proof client.
+// Recovery remains read-only; separately approved custody owns any post. The
+// route asserts finalized head and storage, not GRANDPA or storage proofs.
 type ownerRecycleCanonicalChain struct {
 	*rootCanonicalChain
 	config ownerRecycleConfig

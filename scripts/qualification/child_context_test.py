@@ -1,6 +1,7 @@
 """Real subprocess/context regressions; no Go or Rust application is compiled."""
 
 import hashlib
+import functools
 import json
 import os
 from pathlib import Path
@@ -9,9 +10,12 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
+import cargo_control
+import owner_resource_guard
 from cargo_control import Refused, run_process
 from child_context import ChildContext, bind_executable, compiler_census, replay_process_result
 
@@ -282,6 +286,186 @@ class ChildContextTests(unittest.TestCase):
         (entry / "exe").unlink()
         with self.assertRaisesRegex(Refused, "executable is unobservable"):
             compiler_census(proc)
+
+    def test_compiler_census_retries_executable_loss_until_same_generation_exits(self):
+        proc = self.root / "proc"
+        proc.mkdir()
+        entry = self.process(proc, 10, "compile", ["compile", "-p", "synthetic"], "/synthetic/compile")
+        original = (entry / "stat").read_text()
+        calls = []
+        def cut(path):
+            self.assertEqual(path, entry / "exe")
+            calls.append(path)
+            if len(calls) == 2:
+                (entry / "stat").write_text(original.replace(") S ", ") Z "))
+            raise FileNotFoundError("synthetic exiting executable")
+        with mock.patch("child_context.os.readlink", side_effect=cut):
+            result = compiler_census(proc)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(result, {"go_test_compilers": [], "go_workers": [], "rustc": []})
+
+    def test_compiler_census_retries_executable_loss_without_losing_live_worker(self):
+        proc = self.root / "proc"
+        proc.mkdir()
+        entry = self.process(proc, 10, "compile", ["compile", "-p", "synthetic"], "/synthetic/compile")
+        with mock.patch("child_context.os.readlink", side_effect=[
+                FileNotFoundError("synthetic exec cut"), "/synthetic/compile", "/synthetic/compile"]):
+            result = compiler_census(proc)
+        self.assertEqual([(row["pid"], row["starttime"]) for row in result["go_workers"]], [(10, "1010")])
+
+    def test_compiler_census_empty_argv_checks_exit_before_refusing(self):
+        proc = self.root / "proc"
+        proc.mkdir()
+        entry = self.process(proc, 10, "compile", ["compile"], "/synthetic/compile")
+        original = (entry / "stat").read_text()
+        read_bytes = Path.read_bytes
+        def cut(path):
+            if path == entry / "cmdline":
+                (entry / "stat").write_text(original.replace(") S ", ") Z "))
+                return b""
+            return read_bytes(path)
+        with mock.patch.object(Path, "read_bytes", cut):
+            self.assertEqual(compiler_census(proc)["go_workers"], [])
+
+    def test_compiler_census_reuse_during_failed_read_is_never_exit(self):
+        proc = self.root / "proc"
+        proc.mkdir()
+        entry = self.process(proc, 10, "compile", ["compile"], "/synthetic/compile")
+        original = (entry / "stat").read_text()
+        def cut(path):
+            (entry / "stat").write_text(original.rsplit(" ", 1)[0].replace(") S ", ") Z ") + " 9999")
+            raise FileNotFoundError("synthetic PID replacement")
+        with mock.patch("child_context.os.readlink", side_effect=cut), \
+                self.assertRaisesRegex(Refused, "PID reused"):
+            compiler_census(proc)
+
+    def test_compiler_census_persistent_permission_refusal_keeps_original_cause(self):
+        proc = self.root / "proc"
+        proc.mkdir()
+        self.process(proc, 10, "compile", ["compile"], "/synthetic/compile")
+        cause = PermissionError("synthetic inaccessible live executable")
+        with mock.patch("child_context.os.readlink", side_effect=cause) as lookup, \
+                self.assertRaisesRegex(Refused, "executable is unobservable") as caught:
+            compiler_census(proc)
+        self.assertEqual(lookup.call_count, 3)
+        self.assertIs(caught.exception.__cause__, cause)
+
+    def test_resource_guard_exception_retains_actual_wait_without_context_pass(self):
+        context = ChildContext(self.cwd, self.environment)
+        python = str(Path(sys.executable).resolve())
+        context.bind(python)
+        cause = Refused("synthetic resource observer failure")
+        def observe():
+            raise cause
+        guard = functools.partial(run_process, resource_observer=observe)
+        with self.assertRaisesRegex(Refused, "synthetic resource observer failure") as caught:
+            context.run([python, "-c", "import time; time.sleep(60)"],
+                        self.output, "resource-failure", 15, process_guard=guard)
+        self.assertIs(caught.exception, cause)
+        reference = cause.qualification_process_reference
+        result = replay_process_result(reference, require_context_verified=False)
+        self.assertTrue(result["tree_joined"])
+        self.assertIs(type(result["exit"]), int)
+        self.assertEqual(result["guard_failure"]["detail"], str(cause))
+        self.assertFalse(result["context_verified"])
+        self.assertFalse((self.output / "resource-failure.process-context.json").exists())
+        with self.assertRaisesRegex(Refused, "postcheck is incomplete"):
+            replay_process_result(reference)
+        with self.assertRaises(ProcessLookupError):
+            os.kill(result["pid"], 0)
+
+    def test_sampler_stop_exception_still_joins_and_retains_child(self):
+        context = ChildContext(self.cwd, self.environment)
+        python = str(Path(sys.executable).resolve())
+        context.bind(python)
+        cause = Refused("synthetic sampler join failure")
+        def stop():
+            raise cause
+        guard = functools.partial(run_process, before_tree_join=stop)
+        with self.assertRaisesRegex(Refused, "synthetic sampler join failure"):
+            context.run([python, "-c", "print('synthetic child done')"],
+                        self.output, "sampler-failure", 15, process_guard=guard)
+        result = replay_process_result(cause.qualification_process_reference, require_context_verified=False)
+        self.assertEqual(result["exit"], 0)
+        self.assertTrue(result["tree_joined"])
+        self.assertFalse(result["context_verified"])
+        self.assertEqual(cargo_control.owned_children(), [])
+
+    def test_unverified_guard_cleanup_cannot_publish_a_joined_wait(self):
+        context = ChildContext(self.cwd, self.environment)
+        python = str(Path(sys.executable).resolve())
+        context.bind(python)
+        join = cargo_control.join_process_tree
+        def observe():
+            raise Refused("synthetic observer failure")
+        def unavailable(process, failed):
+            join(process, failed)
+            raise Refused("synthetic cleanup proof unavailable")
+        with mock.patch.object(cargo_control, "join_process_tree", side_effect=unavailable), \
+                self.assertRaisesRegex(Refused, "cleanup proof unavailable") as caught:
+            context.run([python, "-c", "import time; time.sleep(60)"], self.output,
+                        "unverified-cleanup", 15,
+                        process_guard=functools.partial(run_process, resource_observer=observe))
+        self.assertIsNone(getattr(caught.exception, "qualification_process_result", None))
+        self.assertFalse((self.output / "unverified-cleanup.process-result.json").exists())
+        self.assertEqual(cargo_control.owned_children(), [])
+
+    def test_owner_resource_guard_keeps_failure_and_actual_wait(self):
+        context = ChildContext(self.cwd, self.environment)
+        python = str(Path(sys.executable).resolve())
+        context.bind(python)
+        original_read = Path.read_text
+        def memory(path, *args, **kwargs):
+            if path == Path("/proc/meminfo"):
+                return "MemAvailable: 200000000 kB\n"
+            return original_read(path, *args, **kwargs)
+        disk = SimpleNamespace(free=500000000000)
+        stopped = []
+        with mock.patch.object(Path, "read_text", memory), \
+                mock.patch.object(owner_resource_guard.shutil, "disk_usage", return_value=disk), \
+                mock.patch.object(owner_resource_guard, "resource_observation_failed", True), \
+                mock.patch.object(owner_resource_guard, "before_tree_join", lambda: stopped.append(True)), \
+                self.assertRaisesRegex(Refused, "owned resource observation failed") as caught:
+            context.run([python, "-c", "import time; time.sleep(60)"], self.output,
+                        "owner-failure", 15, process_guard=owner_resource_guard.run_process)
+        result = replay_process_result(caught.exception.qualification_process_reference,
+                                       require_context_verified=False)
+        self.assertTrue(stopped)
+        self.assertTrue(result["tree_joined"])
+        self.assertEqual(result["guard_failure"]["detail"], "owned resource observation failed")
+        self.assertFalse(result["context_verified"])
+        self.assertEqual(cargo_control.owned_children(), [])
+
+    def test_reused_exception_cannot_relabel_a_prior_actual_wait(self):
+        context = ChildContext(self.cwd, self.environment)
+        python = str(Path(sys.executable).resolve())
+        context.bind(python)
+        cause = Refused("synthetic reused observer exception")
+        def observe():
+            raise cause
+        argv = [python, "-c", "import time; time.sleep(60)"]
+        with self.assertRaises(Refused):
+            context.run(argv, self.output, "original-wait", 15,
+                        process_guard=functools.partial(run_process, resource_observer=observe))
+        original = cause.qualification_process_reference
+        with mock.patch.object(cargo_control.subprocess, "Popen", side_effect=cause), \
+                self.assertRaises(Refused):
+            context.run(argv, self.output, "not-restarted", 15)
+        self.assertIsNone(cause.qualification_process_result)
+        self.assertIsNone(cause.qualification_process_reference)
+        self.assertFalse((self.output / "not-restarted.process-result.json").exists())
+        self.assertTrue(replay_process_result(original, require_context_verified=False)["tree_joined"])
+
+    def test_process_creation_failure_cannot_fabricate_an_actual_wait(self):
+        context = ChildContext(self.cwd, self.environment)
+        python = str(Path(sys.executable).resolve())
+        context.bind(python)
+        cause = OSError("synthetic exec refusal")
+        with mock.patch.object(cargo_control.subprocess, "Popen", side_effect=cause), \
+                self.assertRaisesRegex(OSError, "synthetic exec refusal") as caught:
+            context.run([python, "-c", "pass"], self.output, "not-started", 15)
+        self.assertIs(caught.exception, cause)
+        self.assertFalse((self.output / "not-started.process-result.json").exists())
 
 
 if __name__ == "__main__":

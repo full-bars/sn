@@ -40,7 +40,11 @@ func (self *ReleaseSteerer) observeProductionApplicationV2(ctx context.Context, 
 	var row []crv4.WeightPair
 	err := self.productionRead(ctx, productionReadApplication, current, func(readCtx context.Context) error {
 		var err error
-		hash, err = crv4.FinalizedHeadContext(readCtx, &native)
+		candidate, err := readRuntimeWitnessHash(readCtx, &native, "finalized head", "chain_getFinalizedHead")
+		if err != nil {
+			return err
+		}
+		hash, err = crv4.SelectFinalityReadBlockContext(readCtx, &native, types.Hash{}, candidate)
 		if err != nil {
 			return err
 		}

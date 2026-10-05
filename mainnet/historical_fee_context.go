@@ -107,9 +107,12 @@ func runHistoricalFeeContext(ctx context.Context, request historicalFeeContextRe
 			return fmt.Errorf("read historical fee input: %w", err)
 		}
 		if digest != reference.Sha256 {
-			return errors.New("historical fee input differs from its exact pin")
+			return errors.Join(errEconomicNativeFeeIntegrity, errors.New("historical fee input differs from its exact pin"))
 		}
-		return decodePlanJson(raw, value)
+		if err := decodePlanJson(raw, value); err != nil {
+			return errors.Join(errEconomicNativeFeeIntegrity, err)
+		}
+		return nil
 	}
 	var archive strecovery.Archive
 	var collection strecovery.ReceiptCollection
@@ -130,17 +133,24 @@ func runHistoricalFeeContext(ctx context.Context, request historicalFeeContextRe
 		}
 	}
 	if archive.Selection.Genesis != request.Genesis || archive.Selection.ChainId != request.EvmChainId || checkpoint.Genesis != request.Genesis {
-		return nil, errors.New("historical fee evidence differs from the independent network")
+		return nil, errors.Join(errEconomicNativeFeeIntegrity, errors.New("historical fee evidence differs from the independent network"))
 	}
 	contexts, err := strecovery.VerifyReceiptFeeContexts(owner, &archive, &collection, &checkpoint, &proof)
 	if err != nil {
-		return nil, fmt.Errorf("verify historical receipt and native contexts: %w", err)
+		if owner.Err() != nil && monitorOnlyCancellationCauses(err, 0) {
+			return nil, err
+		}
+		return nil, errors.Join(errEconomicNativeFeeIntegrity, fmt.Errorf("verify historical receipt and native contexts: %w", err))
 	}
 	replay, err := runHistoricalReplay(owner, historicalReplayRequest{Engine: request.Engine, Job: request.Job, Budget: budget}, hooks)
 	if err != nil {
 		return nil, err
 	}
-	return joinHistoricalFeeContext(owner, request, contexts, replay)
+	result, err = joinHistoricalFeeContext(owner, request, contexts, replay)
+	if err != nil && (owner.Err() == nil || !monitorOnlyCancellationCauses(err, 0)) {
+		err = errors.Join(errEconomicNativeFeeIntegrity, err)
+	}
+	return result, err
 }
 
 // Only the immediately returned verifier/replay objects enter this join. It

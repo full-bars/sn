@@ -169,6 +169,19 @@ func TestProductionSteeringNativeHttpExhaustionBecomesObservableWait(t *testing.
 	if retryableProductionSteeringRead(errors.Join(physical, hard)) {
 		t.Fatal("configured native origin hid a joined integrity contradiction")
 	}
+	cycle := &productionSteeringCauseNode{}
+	cycle.children = []error{cycle}
+	for _, cause := range []error{cycle, &productionSteeringCauseMatcher{cause: context.DeadlineExceeded}, context.Canceled} {
+		waits := 0
+		self.productionReadHooks.wait = func(context.Context, time.Duration) error { waits++; return context.DeadlineExceeded }
+		self.productionReadHooks.withTimeout = context.WithTimeout
+		err := self.productionRead(t.Context(), productionReadReceipt, intent, func(context.Context) error {
+			return errors.Join(physical, cause)
+		})
+		if err == nil || waits != 0 || retryableProductionSteeringRead(err) {
+			t.Fatal("actual native physical cause hid a malformed or canceled sibling")
+		}
+	}
 }
 
 // A complete malformed response is a protocol defect. Adding a phase deadline

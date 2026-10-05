@@ -95,11 +95,11 @@ func validatePreparedNativeRuntimeContext(ctx context.Context, native *crv4.Chai
 		return nil
 	}
 	expected := crv4.RuntimeArtifactIdentity{Version: crv4.RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: cfg.RuntimeSpec, TransactionVersion: cfg.TransactionVersion, StateVersion: cfg.StateVersion}, CodeHash: cfg.RuntimeCodeHash, MetadataHash: cfg.RuntimeMetadataHash}
-	prepared, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, native, preparedHash, expected)
+	prepared, err := crv4.ReadRuntimeArtifactAtContext(ctx, native, preparedHash, expected)
 	if err != nil {
 		return fmt.Errorf("authenticate pending signing runtime: %w", err)
 	}
-	current, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, native, currentHash, expected)
+	current, err := crv4.ReadRuntimeArtifactAtContext(ctx, native, currentHash, expected)
 	if err != nil {
 		return fmt.Errorf("authenticate current replay runtime: %w", err)
 	}

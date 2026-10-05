@@ -4,7 +4,7 @@
 
 #![deny(unsafe_code)]
 
-use runtime_metadata_probe::historical::{replay_historical_json, MAXIMUM_HISTORICAL_JOB_BYTES};
+use runtime_metadata_probe::historical::{replay_historical_json, MAXIMUM_NATIVE_JOB_BYTES};
 use std::io::{Read, Write};
 
 fn main() {
@@ -14,7 +14,7 @@ fn main() {
     }
     let mut raw = Vec::new();
     let outcome = std::io::stdin()
-        .take((MAXIMUM_HISTORICAL_JOB_BYTES + 1) as u64)
+        .take((MAXIMUM_NATIVE_JOB_BYTES + 1) as u64)
         .read_to_end(&mut raw)
         .map_err(|e| e.to_string())
         .and_then(|_| replay_historical_json(&raw).map_err(|e| e.to_string()));

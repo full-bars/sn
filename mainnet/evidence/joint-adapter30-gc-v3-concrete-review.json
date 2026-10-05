@@ -1,0 +1,48 @@
+{
+  "adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/joint-adapter30-gc-v3-adoption.json",
+  "binding_count": 55,
+  "change": "Only admission of historical stopped containers: require no running Docker, qualified closed37/943/30 exact-ID/label/network absence and actual c60 proof plus IDs/labels absence. No container deletion, workload overlap or original evidence mutation.",
+  "created_at": "2026-10-05T06:34:17.744720+00:00",
+  "executed_by_author": false,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter30-gc-v3-job-v1.json",
+    "sha256": "6ef4fe6e2b2a88aaa628874e95a80d01a361eb60ce76c7a5117fed547d0eab2e"
+  },
+  "preserved_journal": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter30-gc-v2-prebody-refusal-journal.log",
+    "sha256": "3e1dd07ea877465d85920074f32c85de2c56a69e02d8e410bbb44053dc72d1a4"
+  },
+  "preserved_prebody_refusal": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter30-gc-v2-prebody-refusal-readback.json",
+    "sha256": "8aa3e05cdb1e7e49c55dc1591b9ac7bbd9a51216edbe357557844cfe4268baad"
+  },
+  "prior_concrete_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/joint-adapter30-gc-v2-concrete-review.json",
+    "sha256": "a55e0e34aab4e944ee32f25544767b3e3be6b04059640c85d640507a5c7b5e8f"
+  },
+  "prior_refusal_outcome": {
+    "child_wait": "none: no child launched",
+    "test_count": 0,
+    "user_status": "failed,MainPID0,original invocation retained"
+  },
+  "prior_source_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/joint-peer-adapter-v2-source-and-prospective-class-review.json",
+    "sha256": "f1135651c5abd70962f9ed8502b35b10b4e0ebd2c991967d358a9e3c630b2821"
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-joint-adapter-tests-v3.py",
+    "sha256": "f0c6644d1910b617d098604bbd2708666f1e1e0e708f4266324dc49627fe2efd"
+  },
+  "runtime_normalized_prebody_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter30-gc-v2-prebody-owner-normalized-readback.json",
+    "sha256": "60eb1c158bda03fa850ba8dba19f54dbaf1c81fe0871454b089d39ce945c8ec1"
+  },
+  "schema": "joint-adapter30-concrete-qualification-review-v3",
+  "status": "READY_FOR_ROOT_ADOPTION_AFTER_NARROW_INDEPENDENT_ACK",
+  "unchanged": [
+    "Frozen adapterGCv2 and all30 test selectors",
+    "256MiB MemoryMax/Swap0,60s child,Runtime170+Stop10",
+    "Original10GiB/106GiB entry,64MiB cumulative growth,healthy96GiB/data6307319808/Docker floors",
+    "Main9 actual9 compiler waits/USER closure and canonical successor generation/horizon"
+  ]
+}

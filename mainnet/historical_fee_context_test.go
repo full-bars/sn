@@ -64,6 +64,18 @@ func historicalFeeContextSyntheticPeer(job historicalReplayJob, report *historic
 		traceJob.RuntimeCodeHex = "0xf1"
 	}
 	trace := historicalObservationTestTrace(traceJob)
+	if input.Mode == "fractional-conflict" {
+		// The same original signature has a contradictory complete native
+		// pair. Its odd debit cannot map exactly under a signed 1/2 ratio.
+		withdrawal, debit := "1001", "751"
+		trace.FeeEvents.Candidates[0].WithdrawalRao = &withdrawal
+		trace.FeeEvents.Candidates[0].DebitRao = &debit
+		for index := range trace.FeeEvents.Events {
+			if trace.FeeEvents.Events[index].Purpose == "fee-withdraw" {
+				trace.FeeEvents.Events[index].AmountRao = &withdrawal
+			}
+		}
+	}
 	payer := historicalReplayDigest(blake2b.Sum256(append([]byte("evm:"), input.Source[:]...)))
 	for index := range trace.FeeEvents.Events {
 		event := &trace.FeeEvents.Events[index]
@@ -83,7 +95,12 @@ func historicalFeeContextSyntheticPeer(job historicalReplayJob, report *historic
 
 func historicalFeeContextTestFixture(t *testing.T, name, mode string) (historicalFeeContextRequest, *historicalFeeContextFixture, historicalReplayJob) {
 	t.Helper()
-	raw, err := os.ReadFile(filepath.Join("testdata", "historical-fee-context", name+".json"))
+	return historicalFeeContextTestFixtureAt(t, filepath.Join("testdata", "historical-fee-context", name+".json"), name, mode)
+}
+
+func historicalFeeContextTestFixtureAt(t *testing.T, path, name, mode string) (historicalFeeContextRequest, *historicalFeeContextFixture, historicalReplayJob) {
+	t.Helper()
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}

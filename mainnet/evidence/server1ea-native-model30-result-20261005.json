@@ -1,0 +1,220 @@
+{
+  "verified_at": "2026-10-05T03:34:12.336086+00:00",
+  "source_tuple": {
+    "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+    "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+    "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+  },
+  "body_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-normal-v1.receipt.json",
+    "sha256": "479661de38fcca52623bcd970ca1325006f9702219274a9f9ac96a57a3d6c5c9"
+  },
+  "owner_terminal": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-owned-db-v1.terminal.json",
+    "sha256": "1a3acc6a60a2523968bb1ad0d62fbc26bf46fe9ced7db93f346239cfc5214eaa"
+  },
+  "counts": {
+    "TestStNativeFeeSettlementCanceledAndRefusedWritesLeaveNoCredit": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementCancellationAfterConflictPersistsHold": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementCancellationKeepsActualNativeDebit": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementCannotCreditAnotherNonceOrSignature": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementConcurrentRetriesKeepOneDurableCharge": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementConflictingRetainedReceiptCreatesHold": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementConsumesNoAdditionalSigningAttempts": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementDenominationRefusalDoesNotRewriteOriginal": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementFractionalContradictionRetainsUnknownExpense": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementHoldsAuthenticatedContradictoryOriginal": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementIntervalContradictionCannotKeepCredit": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementInvalidatesWaitingAllowanceSnapshot": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementInvalidatesWaitingSigningSnapshot": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementLaterFinalizedHeadKeepsOriginalReceipt": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementLostSignatureCannotChangeOriginalReservation": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementMissingConflictOriginalsCannotKeepCredit": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementNewProofWrapperKeepsOriginalCustody": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementOriginalDebitIsDurableAndIdempotent": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementOriginalGenerationAndUnknownSuccessorBothCount": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementPartialOriginalCustodyRollsBackCredit": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementPublicFractionalConflictRevokesCredit": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementPublicMissingRefundKeepsFullCeiling": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementPublicOwnedProofRetainsAllOriginals": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementPublicProofRecoversLostSignerResult": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementRefusesOutsideRuntimeAndNativeInterval": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementRetiredAccountKeepsItsOriginalLifetime": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementRuntimeContradictionCannotKeepCredit": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementUnknownAndUnownedKeepFullCeiling": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementUsesNonceMaximumAcrossCandidates": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestStNativeFeeSettlementVerifiedOverspendStaysCharged": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    }
+  },
+  "resource_qualified": true,
+  "resource_errors": [],
+  "cleanup_exit": 0,
+  "owned_containers_absent": [
+    {
+      "service": "postgres",
+      "id": "e3fc79eb07af05615c495d32fef21e51d25469cf9fb811a0b1cca860f6b6ec6e",
+      "remaining": ""
+    },
+    {
+      "service": "redis",
+      "id": "bcd626481930a2cbc376c118dfa55b65e9f66393c67ced392a5751d0fee984d3",
+      "remaining": ""
+    }
+  ],
+  "scope": "Exactly 30 normal settlement model roots (26 ordinary and four public proof consumers). Actual database lifecycle and cleanup verified. Does not qualify controller/CLI/nativefee package, later recovery sources, race, controls, real Rust/carry, full model suite or production outcomes.",
+  "totals": {
+    "run": 30,
+    "pass": 30,
+    "fail": 0,
+    "skip": 0
+  }
+}

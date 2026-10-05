@@ -1,0 +1,23 @@
+{
+  "schema": "mainnet-process-recovery-tooling-result-v1",
+  "status": "PASS_TOOLING38",
+  "actual_tests": 38,
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-census-wait38-v1.receipt.json",
+    "sha256": "ba9e7326198d357b00b2cd3a8bcd2800d300d8ca489476fe9e2d847f3069d2cf"
+  },
+  "user_terminal": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-census-wait38-v1-user-terminal-readback.json",
+    "sha256": "f2549e2027c2ae4d76c34d539e48a77a22a448738c8b466943f6c391d9bdc3c7"
+  },
+  "actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-census-wait38-v1.process-result.json",
+    "sha256": "541a569e8df69b15f739a1a3e5eb3aff2df445c7462d8244065092e4e032456b"
+  },
+  "raw_outcomes": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-census-wait38-v1.stderr",
+    "sha256": "0f8b5ee5a8c0f0416f8c906364b24613bea41cc65534495f828ae36a0ecdad9c"
+  },
+  "source_fix_commit": "0bd3f545",
+  "scope": "Canonical compiler census and exceptional child wait recovery:27 ChildContext +11 cargo guard roots. 38 pass, exit0, joined. No product compiler success inferred."
+}

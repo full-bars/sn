@@ -13,11 +13,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfoundation/sn/payoutartifact"
 )
 
@@ -65,7 +68,8 @@ func NewHTTPArtifactReader(apiURL, deploymentID string, netuid uint16) (*HTTPArt
 	return &HTTPArtifactReader{
 		baseURL: baseURL, deploymentID: deploymentID, netuid: netuid,
 		client: &http.Client{
-			Timeout: releaseHttpGetAttemptTimeout,
+			Timeout:   releaseHttpGetAttemptTimeout,
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment, DialContext: (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext, ForceAttemptHTTP2: true, MaxIdleConns: 4, MaxIdleConnsPerHost: 2, IdleConnTimeout: 90 * time.Second, TLSHandshakeTimeout: 10 * time.Second},
 			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
@@ -191,6 +195,31 @@ func artifactObjectHash(object artifactHistoryObject) (string, error) {
 // individually valid: a signed operator equivocation cannot pick a winner by
 // object-list ordering.
 func (self *HTTPArtifactReader) Read(ctx context.Context, epoch uint64, noID uint64) (*payoutartifact.Artifact, error) {
+	return self.read(ctx, epoch, noID, 0, true)
+}
+
+// A selected consumer may enforce its admitted resident census before costly
+// share/Merkle reconstruction. Zero is reserved for the legacy byte-bound API.
+func (self *HTTPArtifactReader) ReadProviderCensus(ctx context.Context, epoch uint64, noID uint64, maximumProviders int) (*payoutartifact.Artifact, error) {
+	if maximumProviders <= 0 {
+		return nil, ErrArtifactCapacity
+	}
+	return self.read(ctx, epoch, noID, maximumProviders, true)
+}
+
+// ReadProviderOriginalCensus authenticates the exact signed artifact/history
+// and finite provider frame. Its optional closed-work component is still raw:
+// only the containing independently selected whole-provider owner may admit it.
+func (self *HTTPArtifactReader) ReadProviderOriginalCensus(ctx context.Context, epoch uint64, noID uint64, maximumProviders int) (*payoutartifact.Artifact, error) {
+	if maximumProviders <= 0 {
+		return nil, ErrArtifactCapacity
+	}
+	return self.read(ctx, epoch, noID, maximumProviders, false)
+}
+
+var ErrArtifactCapacity = errors.New("original artifact exceeds the consumer's admitted provider census")
+
+func (self *HTTPArtifactReader) read(ctx context.Context, epoch uint64, noID uint64, maximumProviders int, closedWork bool) (*payoutartifact.Artifact, error) {
 	if noID == 0 {
 		return nil, errors.New("artifact no_id is zero")
 	}
@@ -202,7 +231,7 @@ func (self *HTTPArtifactReader) Read(ctx context.Context, epoch uint64, noID uin
 	})
 	value, err := self.get(ctx, historyEndpoint, maximumArtifactHistoryBytes)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrArtifactUnavailable, err)
+		return nil, newArtifactUnavailable(err)
 	}
 	history, err := decodeArtifactHistory(value)
 	if err != nil {
@@ -241,17 +270,77 @@ func (self *HTTPArtifactReader) Read(ctx context.Context, epoch uint64, noID uin
 	contentEndpoint := self.endpoint("/sn/artifact", url.Values{"hash": []string{contentHash}})
 	value, err = self.get(ctx, contentEndpoint, maximumPayoutArtifactBytes)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrArtifactUnavailable, err)
+		return nil, newArtifactUnavailable(err)
 	}
 	if sizes[contentHash] != int64(len(value)) {
 		return nil, errors.New("artifact content size does not match history")
 	}
-	artifact, err := payoutartifact.Decode(value)
+	if maximumProviders != 0 {
+		var census struct {
+			Providers []json.RawMessage `json:"providers"`
+			Leaves    []json.RawMessage `json:"leaves"`
+		}
+		if err := json.Unmarshal(value, &census); err != nil {
+			return nil, err
+		}
+		if len(census.Providers) > maximumProviders || len(census.Leaves) > maximumProviders {
+			return nil, ErrArtifactCapacity
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	artifact, err := payoutartifact.DecodeWithContext(ctx, value)
 	if err != nil {
 		return nil, fmt.Errorf("artifact integrity: %w", err)
 	}
 	if !strings.EqualFold(artifact.ContentHash, contentHash) {
 		return nil, errors.New("artifact content response does not match history")
 	}
+	// Optional original rows are independently reconstructed in both live and
+	// retained HTTP observation readers. Missing/foreign components stay unknown.
+	if closedWork && artifact.ClosedWork != nil {
+		if _, err := payoutartifact.VerifyClosedWorkReports(ctx, artifact, common.Address{}); err != nil && !errors.Is(err, payoutartifact.ErrClosedWorkUnavailable) {
+			return nil, err
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	return artifact, nil
+}
+
+// Preserve the precise observed cause alongside the legacy sentinel. Only this
+// reader constructs the classification; an arbitrary supplied error cannot
+// acquire retry permission by implementing Is or matching diagnostic text.
+type artifactUnavailable struct {
+	cause   error
+	pending bool
+}
+
+func (self *artifactUnavailable) Error() string {
+	return fmt.Sprintf("%s: %v", ErrArtifactUnavailable, self.cause)
+}
+func (self *artifactUnavailable) Unwrap() error        { return self.cause }
+func (self *artifactUnavailable) Is(target error) bool { return target == ErrArtifactUnavailable }
+func newArtifactUnavailable(cause error) error {
+	return &artifactUnavailable{cause: cause, pending: artifactObservationPendingCause(cause)}
+}
+
+// Missing original content and exhausted transient reads remain pending. HTTP
+// authorization, identity, framing and canonical-content refusals are permanent.
+func ArtifactObservationPending(err error) bool {
+	if err == ErrArtifactUnavailable {
+		return true
+	}
+	value, ok := err.(*artifactUnavailable)
+	return ok && value != nil && value.pending
+}
+
+// Each reader owns its transport pool. Closing one reader never closes a
+// sibling's pooled connections; in-flight reads are joined by the caller context.
+func (self *HTTPArtifactReader) CloseIdleConnections() {
+	if self != nil && self.client != nil {
+		self.client.CloseIdleConnections()
+	}
 }

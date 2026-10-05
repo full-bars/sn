@@ -218,7 +218,7 @@ func (self *TunnelTransport) newRegisteredClient(ctx context.Context, firstHop c
 		context.WithoutCancel(self.ctx), nil, self.clientStrategy,
 		[]connect.Id{self.cfg.SourceClientId}, self.cfg.ApiUrl, jwt, self.cfg.ConnectUrl,
 		"validator", "validator", RequireVersion(), &self.cfg.SourceClientId,
-		newTunnelClientSettings, settings,
+		self.closeReportClientSettings, settings,
 	)
 	registered.cleanup.generator = registered.generator
 	destination, err := connect.NewMultiHopId(firstHop)
@@ -248,7 +248,7 @@ func (self *TunnelTransport) newRegisteredClient(ctx context.Context, firstHop c
 		}
 		return nil
 	}
-	client, err := registered.generator.NewClientContext(clientCtx, ctx, args, newTunnelClientSettings())
+	client, err := registered.generator.NewClientContext(clientCtx, ctx, args, self.closeReportClientSettings())
 	if err != nil {
 		return registered, fmt.Errorf("tunnel client setup: %w", err)
 	}

@@ -35,6 +35,9 @@ func storagePreparationAdapter(ownerLocal bool) durablevolume.PreparationAdapter
 			return inspectStoragePreparationRestore(ctx, target, owner, inventory, ownerLocal)
 		},
 		RebindRestore: func(ctx context.Context, owner durablevolume.PreparationOwnerPlan, inventory durablevolume.Inventory, original []byte, targets []durablevolume.PreparationSource) ([]byte, error) {
+			if owner.Owner.Kind == storageSdkWorkKind {
+				return rebindStorageSdkWorkRestore(ctx, owner, inventory, original, targets, ownerLocal)
+			}
 			return rebindStoragePreparationMembersRestore(ctx, owner, inventory, original, targets, ownerLocal)
 		},
 	}
@@ -61,8 +64,11 @@ func buildStoragePreparationOwner(ctx context.Context, staging *os.File, name st
 	for _, file := range census.Files {
 		files = append(files, durablevolume.PreparationFile{Path: file.Path, Kind: file.Kind, Mode: file.Mode, Bytes: file.Bytes, Sha256: file.Sha256})
 	}
-	return durablevolume.PreparationOwnerPlan{Owner: owner, StagingName: name, Files: files, Census: raw,
-		Attributes: []durablevolume.PreparationAttributeSpec{{Path: ".", Name: "user.urnetwork.attempt-ledger-custody"}}}, nil
+	attributes := []durablevolume.PreparationAttributeSpec{{Path: ".", Name: "user.urnetwork.attempt-ledger-custody"}}
+	if scope.Requests != nil {
+		attributes = append(attributes, durablevolume.PreparationAttributeSpec{Path: ".", Name: validator.ProviderAttemptRequestAttribute})
+	}
+	return durablevolume.PreparationOwnerPlan{Owner: owner, StagingName: name, Files: files, Census: raw, Attributes: attributes}, nil
 }
 
 // The ledger verifies exact public identity/head and every signed record before
@@ -77,14 +83,27 @@ func inspectStoragePreparationOwner(ctx context.Context, target *os.File, owner 
 		return nil, err
 	}
 	expected := durablevolume.PreparationAttributeSpec{Path: ".", Name: "user.urnetwork.attempt-ledger-custody"}
-	if len(owner.Attributes) != 1 || owner.Attributes[0] != expected {
+	count := 1
+	requestSpec := durablevolume.PreparationAttributeSpec{Path: ".", Name: validator.ProviderAttemptRequestAttribute}
+	if scope.Requests != nil {
+		count++
+	}
+	if len(owner.Attributes) != count || owner.Attributes[0] != expected || count == 2 && owner.Attributes[1] != requestSpec {
 		return nil, errors.New("prepared ledger changed its fixed checkpoint destination")
 	}
 	raw, err := validator.BuildAttemptLedgerPreparationCheckpoint(ctx, target, scope, census)
 	if err != nil {
 		return nil, err
 	}
-	return []durablevolume.PreparedAttribute{{Spec: expected, Raw: raw}}, nil
+	attributes := []durablevolume.PreparedAttribute{{Spec: expected, Raw: raw}}
+	if scope.Requests != nil {
+		requestRaw, err := validator.BuildAttemptLedgerPreparationRequestCheckpoint(ctx, target, scope, census)
+		if err != nil {
+			return nil, err
+		}
+		attributes = append(attributes, durablevolume.PreparedAttribute{Spec: requestSpec, Raw: requestRaw})
+	}
+	return attributes, nil
 }
 
 // The independently selected command fixes daemon or owner-local scope before

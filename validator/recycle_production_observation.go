@@ -42,6 +42,14 @@ type OwnerRecycleProductionValidator struct {
 // The complete current and historical runtime identities are authenticated
 // before any storage is decoded; no spec-version-only fallback is selected.
 func observeOwnerRecycleProductionEligibility(ctx context.Context, cfg *ReleaseConfig, native *crv4.Chain, authority *OwnerRecycleMeasurementAuthority) (*OwnerRecycleProductionEligibility, error) {
+	return crv4.ReadRuntimeObservationContext(ctx, native, func(ctx context.Context) (*OwnerRecycleProductionEligibility, error) {
+		return observeOwnerRecycleProductionEligibilityAttempt(ctx, cfg, native, authority)
+	})
+}
+
+// Both the decision and activation census must belong to one complete read;
+// a late reconnect cannot retain an earlier validator or emission projection.
+func observeOwnerRecycleProductionEligibilityAttempt(ctx context.Context, cfg *ReleaseConfig, native *crv4.Chain, authority *OwnerRecycleMeasurementAuthority) (*OwnerRecycleProductionEligibility, error) {
 	envelope, err := ownerRecycleProductionApproval(cfg)
 	if err != nil || authority == nil || authority.expected.NativeSnapshotBlock == 0 {
 		return nil, errors.Join(errors.New("owner-recycle production eligibility lacks approved decision authority"), err)
@@ -53,7 +61,7 @@ func observeOwnerRecycleProductionEligibility(ctx context.Context, cfg *ReleaseC
 	if err := authenticateHistoricalNativeRuntimeAtContext(ctx, &view, cfg, block); err != nil {
 		return nil, err
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, &view, block, releaseRuntimeIdentityV2(cfg))
+	artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, &view, block, releaseRuntimeIdentityV2(cfg))
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +144,7 @@ func observeOwnerRecycleProductionEligibility(ctx context.Context, cfg *ReleaseC
 	if err != nil {
 		return nil, err
 	}
-	activation, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, &view, activationHash, allowed...)
+	activation, err := crv4.ReadRuntimeArtifactAtContext(ctx, &view, activationHash, allowed...)
 	if err != nil {
 		return nil, err
 	}

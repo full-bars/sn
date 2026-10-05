@@ -128,6 +128,8 @@ pub struct ObservationProfile {
     pub rules: Vec<HookRule>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metadata_sha256: Option<[u8; 32]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub principal_storage_prefixes: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -152,6 +154,17 @@ pub struct Observation {
     pub native: Option<NativeObservation>,
 }
 
+// A complete committed top-storage mutation census is independent of selected
+// callsites. Unlabelled writes stay visible even if their net stock change is zero.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct PrincipalMutation {
+    pub ordinal: usize,
+    pub operation: String,
+    pub key_hex: String,
+    pub value_sha256: Option<[u8; 32]>,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ObservationReport {
@@ -164,13 +177,18 @@ pub struct ObservationReport {
     pub observations: Vec<Observation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fee_events: Option<super::fee_events::FeeEventReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub principal_mutations: Option<Vec<PrincipalMutation>>,
 }
 
 pub(super) struct Observer {
     profile: ObservationProfile,
     stack: Vec<Frame>,
     records: Vec<Observation>,
-    transactions: Vec<usize>,
+    transactions: Vec<(usize, usize)>,
+    principal_prefixes: Vec<Vec<u8>>,
+    principal_mutations: Vec<PrincipalMutation>,
+    principal_attempts: usize,
     total_records: usize,
     total_bytes: usize,
     calls: usize,
@@ -233,6 +251,30 @@ impl HistoricalObserver {
                 "observer profile, code or review reference differs",
             ));
         }
+        let mut principal_prefixes: Vec<Vec<u8>> = Vec::new();
+        if let Some(prefixes) = &profile.principal_storage_prefixes {
+            if profile.schema != "urnetwork-original-wasm-native-observation-v2"
+                || prefixes.is_empty()
+                || prefixes.len() > 16
+            {
+                return Err(ProbeError::new(
+                    "observer principal storage scope is empty or exceeds bound",
+                ));
+            }
+            for value in prefixes {
+                let prefix = super::hex_bytes("principal storage prefix", value, 64)?;
+                if prefix.is_empty()
+                    || principal_prefixes
+                        .iter()
+                        .any(|prior| prefix.starts_with(prior) || prior.starts_with(&prefix))
+                {
+                    return Err(ProbeError::new(
+                        "observer principal storage prefixes overlap",
+                    ));
+                }
+                principal_prefixes.push(prefix);
+            }
+        }
         let original = bodies(wasm)?;
         let mut normalized =
             sc_executor_common::runtime_blob::RuntimeBlob::uncompress_if_needed(wasm)
@@ -266,11 +308,24 @@ impl HistoricalObserver {
             ) || profile.schema == "urnetwork-original-wasm-native-observation-v2"
                 && matches!(
                     rule.purpose.as_str(),
-                    "native-drain"
+                    "native-fee-exempt"
+                        | "native-fee-refund-zero"
+                        | "native-drain"
                         | "native-epoch"
                         | "native-emission"
                         | "native-miner-credit"
                         | "native-owner-recycle"
+                        | "native-yuma-meta"
+                        | "native-yuma-settings"
+                        | "native-yuma-node"
+                        | "native-yuma-weights"
+                        | "native-yuma-bonds"
+                        | "native-principal-deposit"
+                        | "native-principal-withdrawal"
+                        | "native-principal-refund"
+                        | "native-principal-vault-capture"
+                        | "native-principal-earning"
+                        | "native-principal-support"
                 ))
                 || !native && !rule.memory.is_empty()
                 || rule.memory.len() > 16
@@ -311,6 +366,9 @@ impl HistoricalObserver {
             stack: Vec::new(),
             records: Vec::new(),
             transactions: Vec::new(),
+            principal_prefixes,
+            principal_mutations: Vec::new(),
+            principal_attempts: 0,
             total_records: 0,
             total_bytes: 0,
             calls: 0,
@@ -329,6 +387,11 @@ impl HistoricalObserver {
         }
         let profile_bytes = serde_json::to_vec(&self.0.profile)
             .map_err(|e| ProbeError::new(format!("observer profile encoding: {e}")))?;
+        let principal_mutations = if self.0.profile.principal_storage_prefixes.is_some() {
+            Some(std::mem::take(&mut self.0.principal_mutations))
+        } else {
+            None
+        };
         Ok(ObservationReport {
             profile_sha256: sha2_256(&profile_bytes),
             source_review_sha256: self.0.profile.source_review_sha256,
@@ -340,6 +403,7 @@ impl HistoricalObserver {
                 .map(|layout| layout.decode(&self.0.records, extrinsics))
                 .transpose()?,
             observations: std::mem::take(&mut self.0.records),
+            principal_mutations,
         })
     }
 }
@@ -434,6 +498,23 @@ fn observe_value(
     let observer = &mut observer.0;
     observer.calls += 1;
     assert!(observer.calls <= 65536, "observer host work bound");
+    if matches!(operation, "set" | "clear" | "append" | "clear_prefix")
+        && observer.principal_prefixes.iter().any(|prefix| {
+            key.starts_with(prefix) || operation == "clear_prefix" && prefix.starts_with(key)
+        })
+    {
+        observer.principal_attempts += 1;
+        assert!(
+            observer.principal_attempts <= NATIVE_RECORDS && key.len() <= 512,
+            "observer principal mutation census bound"
+        );
+        observer.principal_mutations.push(PrincipalMutation {
+            ordinal: observer.calls,
+            operation: operation.to_owned(),
+            key_hex: format!("0x{}", hex::encode(key)),
+            value_sha256: value.map(sha2_256),
+        });
+    }
     if let Some(purpose) = selected {
         // Hex encoding expands payloads; refuse before allocating that copy.
         let payload_bytes = key
@@ -471,7 +552,19 @@ fn observe_value(
             .expect("observer byte overflow");
         observer.total_records += 1;
         let (maximum_records, maximum_bytes) = if native_profile {
-            (NATIVE_RECORDS, NATIVE_RETAINED_BYTES)
+            (
+                if observer
+                    .profile
+                    .rules
+                    .iter()
+                    .any(|rule| rule.purpose.starts_with("native-yuma-"))
+                {
+                    6 * 4096
+                } else {
+                    NATIVE_RECORDS
+                },
+                NATIVE_RETAINED_BYTES,
+            )
         } else {
             (MAXIMUM_RECORDS, MAXIMUM_RETAINED_BYTES)
         };
@@ -550,7 +643,9 @@ pub(super) fn transaction(mut ext: &mut dyn sp_core::traits::Externalities, oper
                 observer.transactions.len() < 32,
                 "observer transaction depth bound"
             );
-            observer.transactions.push(observer.records.len());
+            observer
+                .transactions
+                .push((observer.records.len(), observer.principal_mutations.len()));
         }
         "commit" => {
             observer
@@ -563,8 +658,9 @@ pub(super) fn transaction(mut ext: &mut dyn sp_core::traits::Externalities, oper
                 .transactions
                 .pop()
                 .expect("observer transaction imbalance");
-            observer.discarded += observer.records.len() - retained;
-            observer.records.truncate(retained);
+            observer.discarded += observer.records.len() - retained.0;
+            observer.records.truncate(retained.0);
+            observer.principal_mutations.truncate(retained.1);
         }
         _ => panic!("observer unsupported transaction operation"),
     }

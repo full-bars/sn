@@ -37,20 +37,22 @@ type monitorEvmFixtureBlock struct {
 }
 
 type monitorEvmFixture struct {
-	mapping       *finalizedMappingFixture
-	services      *monitorServicesFixture
-	policy        monitorEconomicEvmPolicy
-	contract      *abi.ABI
-	blocks        map[uint64]*monitorEvmFixtureBlock
-	byHash        map[string]*monitorEvmFixtureBlock
-	byTransaction map[string]map[string]any
-	url           string
-	ctx           context.Context
-	code          []byte
-	stateLock     sync.Mutex
-	counts        map[string]int
-	fault         func(string, []any, any) (any, bool)
-	unavailable   atomic.Bool
+	mapping                *finalizedMappingFixture
+	services               *monitorServicesFixture
+	policy                 monitorEconomicEvmPolicy
+	contract               *abi.ABI
+	blocks                 map[uint64]*monitorEvmFixtureBlock
+	byHash                 map[string]*monitorEvmFixtureBlock
+	byTransaction          map[string]map[string]any
+	url                    string
+	ctx                    context.Context
+	code                   []byte
+	stateLock              sync.Mutex
+	counts                 map[string]int
+	fixtureGetters         map[string][]any
+	fault                  func(string, []any, any) (any, bool)
+	unavailable            atomic.Bool
+	unavailableTransaction string
 }
 
 func monitorEvmTestLog(t *testing.T, contract *abi.ABI, address common.Address, name string, values ...any) *types.Log {
@@ -212,7 +214,11 @@ func (self *monitorEvmFixture) serve(w http.ResponseWriter, request *http.Reques
 	self.counts[call.Method]++
 	fault := self.fault
 	self.stateLock.Unlock()
-	if self.unavailable.Load() && call.Method == "eth_getTransactionReceipt" && len(self.blocks[12].transactions) != 0 && call.Params[0] == self.blocks[12].transactions[0].Hash().Hex() {
+	outageTransaction := self.unavailableTransaction
+	if outageTransaction == "" && len(self.blocks[12].transactions) != 0 {
+		outageTransaction = self.blocks[12].transactions[0].Hash().Hex()
+	}
+	if self.unavailable.Load() && call.Method == "eth_getTransactionReceipt" && len(call.Params) != 0 && call.Params[0] == outageTransaction {
 		http.Error(w, "synthetic receipt outage", 503)
 		return
 	}
@@ -291,6 +297,15 @@ func (self *monitorEvmFixture) serve(w http.ResponseWriter, request *http.Reques
 		if err != nil {
 			http.Error(w, "args", 400)
 			return
+		}
+		if values, exists := self.fixtureGetters[method.Name]; exists {
+			encoded, err := method.Outputs.Pack(values...)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			result = hexutil.Encode(encoded)
+			break
 		}
 		var value any
 		switch method.Name {

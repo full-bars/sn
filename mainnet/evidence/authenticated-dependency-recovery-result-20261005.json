@@ -1,0 +1,144 @@
+{
+  "schema": "authenticated-dependency-recovery-result-v1",
+  "checked_at": "2026-10-05T07:30:31.965914+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-hydration-evidence-recovery-v1.receipt.json",
+    "sha256": "cf209bbe222a5c0a898b748f812c9c205f785352082b525c09238cf87c3e820d"
+  },
+  "recovered_evidence": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-recovered-v1.json",
+    "sha256": "9de9b94b5d128bf9c347a0828a8cf1b5a110197ea18f2c32a67b49867274364c"
+  },
+  "user_terminal_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-hydration-evidence-recovery-v1-user-terminal-readback.json",
+    "sha256": "c0779372a6f0404e558b1b7b152309fbcb9dd7077f78cc721171d232d864bbc1"
+  },
+  "counts": {
+    "download_records": 1735,
+    "original_phases": 8
+  },
+  "downloads": [
+    {
+      "checksum_count": 1252,
+      "download_pass": true,
+      "module": "sn",
+      "module_count": 626,
+      "module_error_count": 0,
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-download-sn.stdout",
+        "sha256": "79c785849f2fede3bb98a66e13b1ec1bd0bffe5416b3f5d28b726cac40d93a8b"
+      }
+    },
+    {
+      "checksum_count": 482,
+      "download_pass": true,
+      "module": "connect",
+      "module_count": 241,
+      "module_error_count": 0,
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-download-connect.stdout",
+        "sha256": "d10ff0a7f9e5791006c3d63c2bf8739db19f1cfba76c95dfbfae5297490db6fe"
+      }
+    },
+    {
+      "checksum_count": 1276,
+      "download_pass": true,
+      "module": "server",
+      "module_count": 638,
+      "module_error_count": 0,
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-download-server.stdout",
+        "sha256": "663eeb8047e47afad7b7b92b3bd7a9273afdbb8592000358343fd045da45c268"
+      }
+    },
+    {
+      "checksum_count": 460,
+      "download_pass": true,
+      "module": "vlessinterop",
+      "module_count": 230,
+      "module_error_count": 0,
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-download-vlessinterop.stdout",
+        "sha256": "c4d9a1389855169743de44321943c852308072c93560d51abeddf6d10f4482e8"
+      }
+    }
+  ],
+  "graphs": [
+    {
+      "default_qualification": false,
+      "graph_pass": true,
+      "module": "sn",
+      "outside_source_path_count": 0,
+      "package_count": 1105,
+      "package_error_count": 0,
+      "selected_packages": [
+        "./mainnet",
+        "./nativefee",
+        "./validator",
+        "./miner",
+        "./miner/onchain",
+        "./crv4",
+        "./payoutartifact",
+        "./evmrpc"
+      ],
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-propose-sn.stdout",
+        "sha256": "6850db00152f111dabd3fb67cecf6c26e621b5e783c6b813ef8a22ffe3a9dc54"
+      }
+    },
+    {
+      "default_qualification": false,
+      "graph_pass": true,
+      "module": "connect",
+      "outside_source_path_count": 0,
+      "package_count": 468,
+      "package_error_count": 0,
+      "selected_packages": [
+        ".",
+        "./protocol"
+      ],
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-propose-connect.stdout",
+        "sha256": "5a6cec0b851151f9f16017aa5c26fb0b2d7cea54807666f445c85229cc528106"
+      }
+    },
+    {
+      "default_qualification": false,
+      "graph_pass": true,
+      "module": "server",
+      "outside_source_path_count": 0,
+      "package_count": 1076,
+      "package_error_count": 0,
+      "selected_packages": [
+        ".",
+        "./model",
+        "./controller",
+        "./cli/stnativefees",
+        "./monitor"
+      ],
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-propose-server.stdout",
+        "sha256": "82ddc3c25f53206b1282fde391ed2b869b13d363d8e4539e00cf84c8c7461ddd"
+      }
+    },
+    {
+      "default_qualification": false,
+      "graph_pass": true,
+      "module": "vlessinterop",
+      "outside_source_path_count": 0,
+      "package_count": 576,
+      "package_error_count": 0,
+      "selected_packages": [
+        "."
+      ],
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-propose-vlessinterop.stdout",
+        "sha256": "51229399b0ce0115f882f4c1cf4f5a1984ff1ee98257ba284bc610f7d7b36a64"
+      }
+    }
+  ],
+  "original_outer_exit": 1,
+  "original_final_sample_unrecorded": true,
+  "default_qualification": false,
+  "scope": "Recovered original eight successful joined download/proposal commands. No rerun; corrected actual readonly default graphs and compilers remain separate."
+}

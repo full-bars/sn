@@ -115,6 +115,12 @@ func PlanRestore(ctx context.Context, name string, owner durablevolume.Preparati
 	if err := decodeSnapshotRestore(checkpointRaw, &checkpoint); err != nil {
 		return durablevolume.PreparationOwnerPlan{}, err
 	}
+	// Restoration changes physical coordinates only. It cannot normalize an
+	// original checkpoint which the runtime refuses as ambiguous custody.
+	canonical, err := json.Marshal(checkpoint)
+	if err != nil || !bytes.Equal(checkpointRaw, canonical) {
+		return durablevolume.PreparationOwnerPlan{}, identity(errors.New("snapshot restore original checkpoint is not canonical"), err)
+	}
 	if checkpoint.Schema != Schema || checkpoint.Kind != spec.Kind || checkpoint.Name != spec.Name || checkpoint.MaximumBytes != spec.MaximumBytes || checkpoint.DirectoryInode != report.PhysicalRoot.Inode || checkpoint.LockName != spec.LockName || len(checkpoint.Auxiliaries) != len(spec.AuxiliaryNames) || !validMember(checkpoint.Committed, spec.MaximumBytes) {
 		return durablevolume.PreparationOwnerPlan{}, identity(errors.New("snapshot restore checkpoint differs from its exact original profile"))
 	}

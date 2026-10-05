@@ -21,35 +21,35 @@ func runReleaseProductionSteeringLoopWithWait(ctx context.Context, submit func()
 		if err := ctx.Err(); err != nil {
 			return releaseRuntimeError(ctx, errors.Join(pendingErr, err))
 		}
-		err := submit()
+		err := observeReleaseError(submit())
 		if ctx.Err() != nil {
 			return releaseRuntimeError(ctx, errors.Join(pendingErr, err, ctx.Err()))
 		}
-		var readWait *productionSteeringReadWait
-		var originalPending *productionPendingReconciliation
-		var transition *productionSteeringTransition
-		var preparation *productionPreparationPending
-		var authentication *productionOperatorAuthenticationPending
+		readWait := releaseErrorMarker[*productionSteeringReadWait](err)
+		originalPending := releaseErrorMarker[*productionPendingReconciliation](err)
+		transition := releaseErrorMarker[*productionSteeringTransition](err)
+		preparation := releaseErrorMarker[*productionPreparationPending](err)
+		authentication := releaseErrorMarker[*productionOperatorAuthenticationPending](err)
 		switch {
 		case err == nil || releaseOnlyErrors(err, ErrSteeringAlreadyFinal):
 			failures, pendingErr = 0, nil
 			progress.observeSteering(0, false, "complete", true)
-		case errors.As(err, &readWait) && readWait.phase >= productionReadIntent && readWait.phase <= productionReadApplication && retryableProductionSteeringRead(readWait.cause) && releaseOnlyErrors(err, readWait):
+		case readWait != nil && readWait.phase >= productionReadIntent && readWait.phase <= productionReadApplication && retryableProductionSteeringRead(readWait.cause) && releaseOnlyErrors(err, readWait):
 			outcome := "read_wait"
 			if readWait.phase == productionReadReceipt {
 				outcome = "receipt_transport_wait"
 			}
 			progress.observeSteering(readWait.nativeEpoch, readWait.epochKnown, outcome, false)
 			releaseDiagnostic(ctx, "steering", outcome, readWait.nativeEpoch, readWait.epochKnown, 0, releaseDiagnosticFacts{phase: readWait.phase, cause: releaseDiagnosticReadCause(readWait.cause)})
-		case errors.As(err, &preparation) && releaseOnlyErrors(err, preparation):
+		case preparation != nil && releaseOnlyErrors(err, preparation):
 			progress.observeSteering(preparation.nativeEpoch, preparation.epochKnown, "read_wait", false)
 			releaseDiagnostic(ctx, "steering", "preparation_pending", preparation.nativeEpoch, preparation.epochKnown, 0, releaseDiagnosticFacts{phase: productionReadPreparation})
-		case errors.As(err, &authentication) && releaseOnlyErrors(err, authentication):
+		case authentication != nil && releaseOnlyErrors(err, authentication):
 			observeProductionAuthenticationWait(ctx, progress, authentication)
-		case errors.As(err, &originalPending) && (originalPending.cause == nil || retryableProductionSteeringRead(originalPending.cause)) && releaseOnlyErrors(err, originalPending):
+		case originalPending != nil && (originalPending.cause == nil || retryableProductionSteeringRead(originalPending.cause)) && releaseOnlyErrors(err, originalPending):
 			progress.observeSteering(originalPending.nativeEpoch, true, "receipt_pending", originalPending.cause == nil)
 			releaseDiagnostic(ctx, "steering", "receipt_pending", originalPending.nativeEpoch, true, 0, releaseDiagnosticFacts{phase: productionReadReceipt, cause: releaseDiagnosticReadCause(originalPending.cause)})
-		case errors.As(err, &transition) && releaseOnlyErrors(err, transition):
+		case transition != nil && releaseOnlyErrors(err, transition):
 			outcome := "working"
 			if transition.revealWait {
 				outcome = "reveal_wait"

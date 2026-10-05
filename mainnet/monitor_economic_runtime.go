@@ -47,6 +47,7 @@ func monitorEconomicReadSeconds(seconds uint64) uint64 {
 // A renewal explicitly names the original serialized budget. The checkpoint's
 // original policy hash authenticates that basis, including every other field.
 func (self monitorEconomicNativePolicy) identityHash() string {
+	self.Observation = nativeProducerOriginalPolicy(self.Observation)
 	self.RuntimeCatalog = nil
 	self.RuntimeCapacity = nil
 	if self.ReadBudgetBasisSeconds != nil {

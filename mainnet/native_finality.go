@@ -68,23 +68,12 @@ func (self *rpcClient) closeSnapshotFinality(ctx context.Context, identity chain
 	return self.closeNativeFinality(ctx, identity.finalityWitness, nativeFinalityPoint{Number: identity.FinalizedNumber, Hash: identity.FinalizedHash})
 }
 
-// Normal advancement preserves the original selected snapshot. A regression,
-// changed opening witness or changed selected block invalidates this read.
+// Normal advancement preserves the original selected snapshot. A lagging read
+// waits for coverage; changed opening or selected hashes invalidate the read.
 func (self *rpcClient) closeNativeFinality(ctx context.Context, opening, selected nativeFinalityPoint) error {
-	closing, err := self.readNativeFinality(ctx)
-	if err != nil {
-		return err
+	if selected.Number > opening.Number {
+		return fmt.Errorf("%w: selected snapshot exceeds its original native finality witness", errRpcIntegrity)
 	}
-	if selected.Number > opening.Number || closing.Number < opening.Number {
-		return fmt.Errorf("%w: native finalized head regressed or no longer covers the selected snapshot", errRpcIntegrity)
-	}
-	if err := self.checkNativeCanonical(ctx, opening); err != nil {
-		return err
-	}
-	if selected != opening {
-		if err := self.checkNativeCanonical(ctx, selected); err != nil {
-			return err
-		}
-	}
-	return ctx.Err()
+	_, err := self.readNativeFinalityCovering(ctx, opening, selected)
+	return err
 }

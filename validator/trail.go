@@ -572,6 +572,9 @@ type TrailEngineConfig struct {
 	// measurement seam. Legacy/unit callers may omit both.
 	AttemptLedger           *AttemptLedger
 	AttemptBoundaryResolver AttemptBoundaryResolver
+	// An explicitly prepared owner retains exact request bytes before sends.
+	// Nil preserves legacy transport while leaving request completeness unknown.
+	RequestJournal *ProviderAttemptRequestJournal
 }
 
 const attemptBindingRetryDelay = 2 * time.Second
@@ -726,31 +729,6 @@ func (self *TrailEngine) waitForAttemptBindingRetry(ctx context.Context) error {
 		wait = waitAttemptBindingRetry
 	}
 	return wait(ctx, attemptBindingRetryDelay)
-}
-
-// Wrapper labels do not turn owner cancellation into local corruption, while
-// one independent joined branch keeps the complete tree hard.
-func onlyAttemptContextError(err, want error) bool {
-	if err == nil || want == nil {
-		return false
-	}
-	if joined, ok := err.(interface{ Unwrap() []error }); ok {
-		causes := joined.Unwrap()
-		if len(causes) == 0 {
-			return false
-		}
-		for _, cause := range causes {
-			if !onlyAttemptContextError(cause, want) {
-				return false
-			}
-		}
-		return true
-	}
-	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		cause := wrapped.Unwrap()
-		return cause != nil && onlyAttemptContextError(cause, want)
-	}
-	return err == want
 }
 
 // Retains one verified assignment and its exact boundary while a typed
@@ -909,6 +887,9 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 	if ledgerEnabled && (self.ledger == nil || self.resolve == nil || self.stats == nil) {
 		return nil, errors.New("attempt ledger and boundary resolver must be configured together")
 	}
+	if self.cfg.RequestJournal != nil && (!ledgerEnabled || self.cfg.RequestJournal.identity.ClientId != self.clientId || self.cfg.RequestJournal.identity.Ledger != self.ledger.identity) {
+		return nil, errors.New("provider request journal differs from original trail owner")
+	}
 	requestedDepth := self.cfg.M
 	if requestedDepth < 0 || 255 < requestedDepth {
 		return nil, &TrailError{Kind: TrailErrorProtocol, Err: fmt.Errorf("configured requested depth %d is not byte-representable", requestedDepth)}
@@ -923,7 +904,11 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 	}
 	var attemptRecord AttemptRecord
 	attemptActive := false
+	var releaseRequest func()
 	defer func() {
+		if releaseRequest != nil {
+			releaseRequest()
+		}
 		if attemptActive {
 			self.stats.abortAttempt()
 		}
@@ -969,15 +954,37 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 	if err != nil {
 		return nil, &TrailError{Kind: TrailErrorSeed, Err: err}
 	}
+	seedSignature := connect.SignVerifyMessage(self.vsk, seedMessage)
 	seedBody, err := json.Marshal(&connect.VerifySeedArgs{
 		ClientId:    self.clientId,
 		Vpk:         self.vpk,
 		ClientNonce: clientNonce,
-		SeedSig:     connect.SignVerifyMessage(self.vsk, seedMessage),
+		SeedSig:     seedSignature,
 		M:           requestedDepth,
 	})
 	if err != nil {
 		return nil, &TrailError{Kind: TrailErrorSeed, Err: err}
+	}
+	if journal := self.cfg.RequestJournal; journal != nil {
+		reserve := beforeSeed
+		var original *ProviderAttemptRequestRecord
+		beforeSeed = func(owner context.Context) error {
+			if err := reserve(owner); err != nil {
+				return err
+			}
+			if original != nil {
+				return owner.Err()
+			}
+			var err error
+			if releaseRequest == nil {
+				releaseRequest, err = journal.beginTrail(owner, attemptRecord.Boundary)
+				if err != nil {
+					return err
+				}
+			}
+			original, err = journal.Append(owner, attemptRecord.Boundary, seedHop, seedBody, seedMessage, seedSignature)
+			return err
+		}
 	}
 	responseBody, err := self.postStep(ctx, seedHop, seedBody, beforeSeed)
 	if err != nil {
@@ -1069,6 +1076,11 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 			return failAttempt(TrailErrorProtocol, connect.Id{}, AttemptDispositionValidatorError, err)
 		}
 
+		if journal := self.cfg.RequestJournal; journal != nil {
+			if _, err := journal.Append(ctx, attemptRecord.Boundary, pendingHop, extendBody, extendMessage, extendSig); err != nil {
+				return failAttempt(TrailErrorProtocol, pendingHop, AttemptDispositionValidatorError, err)
+			}
+		}
 		stepStart := time.Now()
 		responseBody, err := self.postStep(ctx, pendingHop, extendBody, nil)
 		if err != nil {

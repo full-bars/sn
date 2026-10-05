@@ -29,9 +29,20 @@ func validateValidatorReadRuntimeAtContext(ctx context.Context, chain *Chain, ar
 	}
 	if artifact.CompatibilityProfile != "" {
 		if !chain.RuntimeArtifactCompatible(artifact) {
+			proof := artifact.compatibilityProof
+			if proof != nil && chain.ProvisionalRuntimeCompatibilityEnabled() && artifact.GenesisHash == chain.GenesisHash &&
+				artifact.CompatibilityProfile == ProvisionalRuntimeCompatibilityProfile && proof.owner == chain.provisionalRuntime && proof.metadata == artifact.Metadata &&
+				proof.identity == (RuntimeArtifactIdentity{Version: artifact.Version, CodeHash: artifact.CodeHash, MetadataHash: artifact.MetadataHash}) && !proof.transport.matches(chain) {
+				return &runtimeTransportObservationError{}
+			}
 			return errors.New("validator stake runtime has no authenticated consumed-interface profile")
 		}
 		return ctx.Err()
+	}
+	if artifact.authenticationProof != nil {
+		if err := ValidateRuntimeArtifactOwnerContext(ctx, chain, artifact); err != nil {
+			return err
+		}
 	}
 	// Preserve the exact historical adapters already reviewed for this layout.
 	// New versions use the capability below without adding another spec entry.
@@ -74,11 +85,17 @@ func validateValidatorReadRuntimeAtContext(ctx context.Context, chain *Chain, ar
 		return fmt.Errorf("validator stake runtime API capability: %w", err)
 	}
 	observed, err := DecodeRuntimeVersionIdentity(raw)
-	if err != nil || observed != artifact.Version {
-		return errors.Join(errors.New("validator stake runtime changed during capability observation"), err)
+	if err != nil {
+		return err
+	}
+	if observed != artifact.Version {
+		return errors.New("validator stake runtime changed during capability observation")
 	}
 	if err := validateProvisionalRuntimeApis(raw); err != nil {
 		return fmt.Errorf("validator stake selective-metagraph capability: %w", err)
+	}
+	if artifact.authenticationProof != nil {
+		return ValidateRuntimeArtifactOwnerContext(ctx, chain, artifact)
 	}
 	return ctx.Err()
 }

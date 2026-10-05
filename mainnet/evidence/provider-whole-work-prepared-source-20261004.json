@@ -1,0 +1,87 @@
+{
+  "schema": "provider-whole-work-prepared-source-handoff-v1",
+  "status": "AUTHORED_UNEXECUTED",
+  "source_commit": "07d531ba57dcd76fa14856a8c0538a133a6785c1",
+  "prior_launch_source": "7da3e844d9e2ba8bd12209050bca57cda0233239",
+  "prior_launch_evidence": "mainnet/evidence/provider-whole-work-launch-source-20261004.json",
+  "successor_commits_after_ac20f79b": [
+    "ad703e8d6dfbf286a682079b5fb54c2939f3528e",
+    "94f7b80bdd18b3a1af46e232215606e7ce96932d",
+    "7ba18ebfe0dc3f5d2ecbe3de196e664386ad8df8",
+    "07d531ba57dcd76fa14856a8c0538a133a6785c1"
+  ],
+  "source_worktree": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/miner-sdk-work-prepared-custody/sn",
+  "git_author": "Bitprecipice <bitprecipice@proton.me>",
+  "dependencies": {
+    "connect": "7706920460ebe4e76acc4169da3187f61591044d",
+    "connect_parent": "7de1d3e8d1d3012742da653ec80be899143f620e",
+    "sdk": "9ae95704a2303f94963e9d2fad81fa5705a4698c",
+    "module_manifests_unchanged": true,
+    "final_source_composition_required": true,
+    "storage_prepare_adapter": "Separately owned sdk-original-work-outbox fresh/restore adapter must be included in the final composition; this source handoff does not qualify that adapter."
+  },
+  "production_scope": [
+    "DecodeProviderWorkCaptureProfile shares exact digest, bounded JSON, full roster, domain, independent keys and canonical path grammar with the live profile reader",
+    "Offline decoder performs no filesystem access; protected recovery reads and physical original/destination inventories remain owned by storage preparation",
+    "Standalone proxyCtx and swarm memberCtx enter the shared actual provider constructor",
+    "Constructor calls Core ValidateOriginalWorkOutbox before capture transport or SDK worker creation",
+    "Admission scope pins the exact approved provider slot PublicKey, ClientId, DomainHash and independent RequestPublicKey",
+    "OriginalWorkCaptureSettings.PublicKey retains the same approved provider key during runtime capture and replay",
+    "Only explicitly accepted offline preparation creates birth; runtime missing root/index/checkpoint cannot become empty known custody"
+  ],
+  "custody_limits": [
+    "Admission owns and closes a temporary exclusive reader; runtime subsequently reacquires and monitors its own lease",
+    "Preflight is not a transferred lifetime lease, and later physical changes remain runtime refusal",
+    "Profile-only bootstrap export remains a configuration artifact, not actual outbox or deployment approval",
+    "Multiple manager generations under the same approved provider key may replay exact originals",
+    "Historical rotated provider keys require a separately approved original profile and key-history gate; a retained signed leaf cannot select its own expected key",
+    "An absent optional capture profile preserves legacy unknown behavior",
+    "No key, signed request, original cut, generation or completed proof is synthesized during launch or recovery admission"
+  ],
+  "new_portable_selector": "^TestProviderWholeWorkPortableProfile(PreservesOriginalScopeWithoutLiveOutbox|RefusesReinterpretedAuthority|BoundsAndCancellation)$",
+  "new_constructor_selector": "^TestProviderWholeWorkActualConstructor(RefusesUnpreparedCustody|PreservesCanceledCustody|RefusesUnapprovedRetainedKey)$",
+  "revised_lifecycle_selector": "^TestProviderWholeWorkActualDevice(CaptureAndRestartPreserveOriginal|CancellationJoinsHttpAndOutbox)$",
+  "root_accounting": {
+    "new_distinct_portable_roots": 3,
+    "new_distinct_constructor_roots": 3,
+    "prior_lifecycle_roots_revised_not_added": 2,
+    "unchanged_prior_miner_root_sources": 6,
+    "unchanged_prior_bootstrap_root_sources": 3,
+    "executed": 0,
+    "prior_historical_miner17_per_mode_is_separate": true
+  },
+  "fixture_boundaries": [
+    "Portable tests retain a two-provider exact scope while original directories are absent or moved and prove live admission still refuses",
+    "Portable tests reject changed hash spelling/bytes, duplicate and unknown JSON, malformed domains/identities, overlapping paths, absent or oversized input and canceled context",
+    "Actual constructor refuses empty and index-only unprepared outboxes with typed original-custody failure before downstream SDK owners",
+    "Actual constructor cancellation occurs before changing capture settings or custody",
+    "An actual SDK-produced retained cut under the old key cannot be admitted under a new independently selected provider key",
+    "The two lifecycle roots now explicitly prepare one synthetic birth using the public Core helper and create-only checkpoint publication before the first device",
+    "Restart uses that same birth and retained original cut; generation-attributed HTTP cancellation barriers remain unchanged",
+    "Constructor lifecycle, public CLI refusal and public bootstrap export remain separate test paths, not one successful end-to-end public CLI capture"
+  ],
+  "proposed_causal_controls_unexecuted": [
+    "Route offline decoder through physical custody validation and require absent/moved-root positive assertion to fail",
+    "Omit exact-byte hash or duplicate/unknown-field checks and require original-authority refusal to fail",
+    "Omit preconstruction prepared-outbox validation and require the typed missing-birth assertion to fail",
+    "Omit constructor cancellation admission and require canceled-context/unchanged-settings assertion to fail",
+    "Omit approved PublicKey in preflight or runtime settings and require actual retained-history or configured-key assertions to fail"
+  ],
+  "source_sha256": {
+    "miner/provider_work_capture.go": "695d295d55a51dca9a512bf720d3eb9c021362e4e799f3e7f3d1a1dec70a7ff2",
+    "miner/provider_work_capture_portable_test.go": "9f070701eebe47b3eff67e63f7cb7783f720f77bebeedd576dd3c24a945d1095",
+    "miner/provider_work_capture_custody_test.go": "596f75e636f701f626a102723a09f72ecece55a3fe7711a94716424b6c8e2e34",
+    "miner/provider_work_capture_lifecycle_test.go": "e80f25f2ab3adeacdde7ad7c02e1b9d6ac8903209bad07f37cc7de3a60064fc3",
+    "miner/run.go": "05f7d60f73812c0bacfabfbff4582ef5a87a93b572d972730880c22af1952ac5",
+    "miner/swarm.go": "b2d55d78521dc8287349684a2eaab9f2a1f22245813101b1ddb55e516cf2b003"
+  },
+  "validation_performed": ["Source inspection", "gofmt", "git diff --check"],
+  "validation_not_performed": ["Go compilation", "Test execution", "Race execution", "Causal-control execution", "Deployment", "Live signing"],
+  "remaining_admission": [
+    "Independent deterministic fixture review and canonical resource-leased normal/race/causal qualification of the exact composed source graph",
+    "Composition and qualification of the independently owned fresh/restore preparation adapter",
+    "Independent original capture profile, request key, provider key and complete expected owner/window authority for actual deployment",
+    "Server route/custody and pre-sign companion attachment composition",
+    "Actual host preparation/adoption and mandatory MG06 financial conformance"
+  ]
+}

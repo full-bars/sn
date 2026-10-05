@@ -40,8 +40,9 @@ import (
 
 // TunnelTransportConfig configures the production transport.
 type TunnelTransportConfig struct {
-	ApiUrl     string
-	ConnectUrl string
+	CloseReportDomainHash [32]byte
+	ApiUrl                string
+	ConnectUrl            string
 	// ByClientJwt returns the validator identity client's current JWT. The SDK
 	// API rotates it in place; every newly created tunnel snapshots the latest
 	// value while an in-flight tunnel may finish on the prior still-valid JWT.

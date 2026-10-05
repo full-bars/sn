@@ -1,0 +1,88 @@
+{
+  "actual_compiler_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-mainnet-normal-compile-v1.receipt.json",
+    "sha256": "a7883fa8134ae16410870558f102e274b045dfbf0a663acf6b77f625d221f072"
+  },
+  "actual_wait": "Qualified durable ChildContext wait and same guard/image verifier; compiler actual wait exit0/joined replay; prior failed LISTexit2 and Xops2exit1 waits retained and replayed as joined predecessors. Independent sampler for actual list and actual body.",
+  "body_mechanism": "Actual retained image -test.list exact66 required before body; pinned prebuilt test2json; one anchored selection with count1/parallel1/test timeout600s, outer660s; 32MiB logs. Each root exactly one run and one pass; no root/subtest skip/fail; package exactly pass.",
+  "healthy_guards": {
+    "active_data_formula": "max(6307319808, immediate_admission_data_available-2147483648)",
+    "baseline_rebased": false,
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-mainnet-normal-owner-cli-regex66-job-v1.json",
+    "sha256": "1a4188cf8069bcda832357c20d0c414381a2ce4a691d10efe8560f56aedfbf4d"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "history_count": 0,
+    "job_sha256": "1a4188cf8069bcda832357c20d0c414381a2ce4a691d10efe8560f56aedfbf4d",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 1,
+    "runner_sha256": "a2b1706d6d4939b0af41e14e328b0981631053da1fcf6a88794de10d15c7a1fd",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_MODEL_PLUS_ONE_RETAINED_MAINNET66_SHORT"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest178-mainnet66-adoption-20261005.json",
+  "resource_forecast": {
+    "basis": "Prospective sequential fixture body estimate; hard2GiB memory/zeroSwap and wholedata growth2GiB. Synthetic file/loopback workload within exact selected roots; no peak upper bound assertion.",
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "retained_image": {
+    "bytes": 128059736,
+    "ctime_ns": 1791160851945614208,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120126632,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791160851945614208,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest178-mainnet-normal-compile-v1.test",
+    "sha256": "d189f24d717108004b8afec7dfc2ecfab93f6949f862f8c3eea1043ad8bf0da7",
+    "type": 32768,
+    "uid": 1000
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest178-mainnet66-body-v1.py",
+    "sha256": "a2b1706d6d4939b0af41e14e328b0981631053da1fcf6a88794de10d15c7a1fd"
+  },
+  "schema": "latest178-mainnet66-concrete-review-v1",
+  "scope_exclusions": [
+    "No concurrent compiler/history/second short",
+    "No new DB or real hardware/chain/host effect",
+    "No stale5a retained image or later funding source qualification",
+    "No actual test result claimed by author"
+  ],
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-mainnet-owner-cli-regex66-selection-v1.json",
+    "sha256": "80eea99fbc2d1e7f777bd1eef537283e5a76a2f4963e760cd7eec793ee3ad87d"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-compiler-source-closure-v1.json",
+    "sha256": "22cf307007f33abe06ac4d92175909440b6bde649ea5b38e15c6339966f5240a"
+  },
+  "source_selection": "The65 previously reviewed roots all retain byte-identical test source files. Exact added root TestRepairOperatorEnvironmentValueBounds directly signs and validates synthetic operator host approvals at1,1000,1001,2047,2048,2049 byte and invalid-character boundaries. Existing fixture creates temporary signed authority files and one loopback httptest status service with cleanup; synthetic host execution/storage adapters stay injected.",
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "ba5260285eb73650667665627f015e415afd9d82",
+    "sn": "178639735c0e9f4f2309b187557204a2bbf65f1e"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "mainnet-main-code-freeze-v1",
+  "frozen_at_utc": "2026-10-05 05:12:13 UTC",
+  "repositories": [
+    {
+      "repository": "sn",
+      "worktree": "/home/by/urnetwork/sn",
+      "commit": "babb0af573f6bdfe95a7db6d8888bbe9327fc39b",
+      "tree": "cb05b497825f8c04a1e61b3e126c942e7f0a3255",
+      "remote_main_matches": true
+    },
+    {
+      "repository": "connect",
+      "worktree": "/home/by/urnetwork/connect",
+      "commit": "7ca8e222e3496552146f2d97eb09237401662c99",
+      "tree": "03285ec39f1758f29479cc66fc5f0653590eefdd",
+      "remote_main_matches": true
+    },
+    {
+      "repository": "server",
+      "worktree": "/mnt/data/sn-testnet/server-model-settlement-fixtures-20261002/server-integrated",
+      "commit": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+      "tree": "31f2c940ff1462130d17d79142cbfdc5affe1e5c",
+      "remote_main_matches": true
+    },
+    {
+      "repository": "xops",
+      "worktree": "/home/by/urnetwork/xops",
+      "commit": "482050c3194412b620940d22d87acc00a91847b2",
+      "tree": "9c96700edd8d473366a7e97d310a26fe6253c799",
+      "remote_main_matches": true
+    }
+  ],
+  "verification_status": "PENDING_ON_PUBLISHED_MAIN",
+  "policy": "Reviewed code is merged before verification. Run verification on the frozen main versions; apply targeted fixes on main and reuse results whose complete inputs remain unchanged.",
+  "retained_compiler_result": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1.receipt.json",
+    "sha256": "a0aeaaf5bdf0d077cbd0ffc2fdfd840f2abbe0a24b41895998418aa93dfa3133",
+    "scope": "All seven selected475/Core07/Server87d normal compilers passed. This is not a combined-main test or release qualification."
+  },
+  "limits": [
+    "Core and Server merges preserve additional upstream changes; final dependency verification remains required.",
+    "No mainnet signing, deployment, activation or economic acceptance is established.",
+    "Documentation-only commits after this freeze do not change the frozen application code."
+  ]
+}

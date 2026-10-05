@@ -3,6 +3,7 @@ package validator
 import (
 	"context"
 	"errors"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -20,10 +21,14 @@ func NewReleaseChainReadRPCContext(ctx context.Context, transport *rpc.Client, e
 		return nil, errors.New("release read RPC owner is incomplete")
 	}
 	client := ethclient.NewClient(transport)
-	probe, cancel := context.WithTimeout(ctx, chainDialTimeout)
-	defer cancel()
-	chainID, err := client.ChainID(probe)
-	if err := errors.Join(err, probe.Err(), ctx.Err()); err != nil {
+	reader := &ChainClient{client: client}
+	var chainID *big.Int
+	err := reader.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		chainID, err = client.ChainID(callCtx)
+		return err
+	})
+	if err != nil {
 		return nil, err
 	}
 	if chainID == nil || chainID.Sign() <= 0 {

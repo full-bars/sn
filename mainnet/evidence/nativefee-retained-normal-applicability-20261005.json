@@ -1,0 +1,55 @@
+{
+  "status": "APPLICABLE_RETAINED_NORMAL_COMPONENT_WITH_EXPLICIT_UNREACHED_MANIFEST_DELTA",
+  "applicability": "A successful original Main9 nativefee11 normal receipt may satisfy this current nativefee component without duplicate compilation/body under this explicit proof. The receipt/image must retain babb/7ca/3e1 provenance; attach this proof instead of relabeling it current-origin.",
+  "origin_source_tuple": {
+    "core": "7ca8e222e3496552146f2d97eb09237401662c99",
+    "server": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+    "sn": "babb0af573f6bdfe95a7db6d8888bbe9327fc39b"
+  },
+  "current_scope_tuple": {
+    "core": "026b850248352b72255be7a966e391e0a15e74c1",
+    "server": "c198263137730fe7fce7e9b83b6b6c298b3f9eba",
+    "sn": "fcfd5acde5c0a77eaedcbc2f39ce35f5f53052f4"
+  },
+  "image": {
+    "bytes": 8022648,
+    "ctime_ns": 1791180532623370999,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120128545,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791180532623370999,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/published-main-sn-core9-normal-v1-nativefee.test",
+    "sha256": "feaec46dd00a6d5950d62bed7e2296ceb13e5917b3f903986c5fde9ef517d6cb",
+    "type": 32768,
+    "uid": 1000
+  },
+  "origin_actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-sn-core9-normal-v1-nativefee.process-result.json",
+    "sha256": "635de4ee6a9260f53fd6c5629996d2c6d319588d60ab84a8200c991a91fd3d36"
+  },
+  "same_package_count_including_C_pseudoimport": 201,
+  "same_resolved_input_count": 1348,
+  "changed_manifest_modules_unreached_by_this_component": [
+    "github.com/andybalholm/brotli",
+    "github.com/pion/sctp",
+    "github.com/refraction-networking/utls",
+    "github.com/urnetwork/connect",
+    "github.com/urnetwork/sdk"
+  ],
+  "limits": [
+    "No whole-main qualification or current-origin compiler result.",
+    "No race or causal-control image/body applicability inferred from this normal image.",
+    "No otherSN/Core/Server module image equality inferred.",
+    "No test body/compiler/DB/network execution by this checker.",
+    "Current metadata and declared module bytes remain independently pinned despite narrow executable-source equivalence."
+  ],
+  "schema": "mainnet-nativefee-retained-normal-applicability-v1",
+  "proof": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/default-current-large-scope/nativefee-main9-to-default-current-applicability.json",
+    "sha256": "60de07a44585f9ea32d1641514203bf35cab4e615216ce0fb930cb982b48f493"
+  },
+  "root_independent_rehashed_input_bindings": 2696,
+  "execution_status": "Nativefee body remains unrun; applicability establishes reuse eligibility, not success."
+}

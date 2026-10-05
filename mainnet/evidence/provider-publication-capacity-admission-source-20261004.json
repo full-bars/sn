@@ -1,0 +1,67 @@
+{
+  "schema": "urnetwork-source-review-v1",
+  "date_utc": "2026-10-04",
+  "owner": "astra_recovery_owner_review",
+  "status": "source-frozen-not-compiled-or-executed",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-recovery-owner-review-20261004/sn",
+    "head": "3e58fdb8fddaa0e7779c109b381e4d89da556655",
+    "parent": "366fcd6fb7827a60e9fac2dc9b5ebb786325c4bc",
+    "commits": [
+      "f730cfa6ef6a75454d32d4fb0d7626774fec91ce",
+      "3e58fdb8fddaa0e7779c109b381e4d89da556655"
+    ],
+    "changed_files": [
+      {
+        "path": "mainnet/storage_prepare_publication_capacity_test.go",
+        "git_blob": "45a06356a5babef6e6af5f5134bd8273ff6f7e87",
+        "sha256": "7fe533da517d62b4696e6ad0eea80ee9b94a79bc1da0bed3a0a291a0d095084f"
+      },
+      {
+        "path": "mainnet/storage_prepare_publications_test.go",
+        "git_blob": "30ebc1b4edae2afe93c661ed1f6092e1e98a9c19",
+        "sha256": "0ad87aa82ebdf9f8417e3206763458bb4d98b81a7109277e8325ca379b54724f"
+      },
+      {
+        "path": "validator/provider_attempt_publication_namespace.go",
+        "git_blob": "6ce037cbc6860b6ccf12cff2e884da608feaf804",
+        "sha256": "ae5662ebd7d9b32015918a992d52e783ddc9f0b2a60bb73106100980fa8dacf1"
+      }
+    ]
+  },
+  "prior_handoff": "/mnt/data/sn-testnet/mainnet-parallel-20261004/original-creation-publication-custody/handoff.json",
+  "preserved_frozen_sources": {
+    "sn_adapters": "a108123601693bcee953e2e5f323ee6a8a1089d3",
+    "integration": "bfe9325859701f7ad4b9595c662a5e60db7f1157",
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c"
+  },
+  "correction": {
+    "original_gap": "Publication Validate admitted declared history up to signed-int limits and file count beyond Core complete physical inventory, allowing fresh birth whose future declared original namespace could not be exported/restored.",
+    "max_history_bytes": 1099511627776,
+    "max_window_bytes": "Nonzero and no greater than declared MaxHistoryBytes; no clamping or silent normalization.",
+    "max_files": 32767,
+    "file_accounting": "Every final window and every empty/partial/complete inert temp shares aggregate bytes and file count. The physical root consumes the remaining entry. Transient final/temp hardlinks retain Integration exact lease reconciliation before generic export.",
+    "forecast_api": "(ProviderAttemptPublicationPreparation).InventoryLimits() returns {MaxEntries:MaxFiles+1, MaxBytes:MaxHistoryBytes, MaxDepth:1, MaxOwnerAttributes:2, MaxOwnerAttributeBytes:8192} after complete profile validation.",
+    "migration_gate": "Existing profile digest/birth schema and window files are unchanged. A proposed capacity increase is independently validated but cannot open or restore an old root under a new profile. Any migration needs separately reviewed authority preserving original birth and windows; no automatic migration/adoption is implemented."
+  },
+  "new_public_test_roots": [
+    "TestStoragePreparationPublicationRejectsUnexportableDeclaredCapacity",
+    "TestStoragePreparationPublicationBoundaryForecastEntersActualPhysicalExport",
+    "TestStoragePreparationPublicationCapacityChangeCannotAdoptOriginalBirth"
+  ],
+  "test_boundary": "Actual public fresh plan refusal precedes forecast assertions; exact maximum Core limits enter actual export containing only tiny empty/partial crash files; actual request journal creates signed window/close, proposed capacity increase refuses actual runtime open and public restore while held source/archive marker/window bytes remain exact. No large allocation or body execution performed.",
+  "controls": {
+    "manifest": "/mnt/data/sn-testnet/mainnet-parallel-20261004/publication-capacity-admission/controls.json",
+    "count": 4,
+    "status": "patch applicability passed; expected failure unexecuted"
+  },
+  "source_checks": [
+    "gofmt",
+    "git diff --check",
+    "exact Core source inspection",
+    "git apply --check for four omission patches"
+  ],
+  "qualification": false,
+  "remaining": "Independent compiler/body/normal/race/control execution after canonical resource review; existing complete-source dependency chain still required.",
+  "handoff_manifest": "/mnt/data/sn-testnet/mainnet-parallel-20261004/publication-capacity-admission/handoff.json"
+}

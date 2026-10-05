@@ -15,7 +15,6 @@ import (
 	"slices"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfoundation/sn/stabi"
@@ -67,7 +66,7 @@ func ObserveOwnerRecycleMeasurementOperators(ctx context.Context, authority *Own
 	if chain == nil || !slices.Contains(authority.config.RPC, chain.rpcUrl) || chain.rpcUrl == "" || authority.expected.ChainID != 964 {
 		return nil, errors.New("owner-recycle operator reader requires its independently approved mainnet route")
 	}
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	ctx, cancel := chain.chainReadOperationContext(ctx)
 	defer cancel()
 	defer func() {
 		resultErr = errors.Join(resultErr, ctx.Err())

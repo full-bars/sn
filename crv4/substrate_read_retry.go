@@ -26,7 +26,8 @@ func substrateRPCReadMayReplay(method string) bool {
 	switch method {
 	case "chain_getFinalizedHead", "chain_getHeader", "chain_getBlockHash", "chain_getBlock",
 		"state_getStorage", "state_getStorageHash", "state_getMetadata", "state_getRuntimeVersion",
-		"state_queryStorageAt", "state_getKeys", "state_getKeysPaged", "state_call", "system_accountNextIndex":
+		"state_queryStorageAt", "state_getKeys", "state_getKeysPaged", "state_call", "system_accountNextIndex",
+		"system_chain", "eth_chainId":
 		return true
 	default:
 		return false
@@ -40,42 +41,56 @@ func substrateRPCDisconnected(err error) bool {
 // Every joined cause must be transient. Decoder EOF has no retry authority
 // unless the actual URL/socket boundary retained its transport origin.
 func retryableSubstrateRpcReadTransport(err error, transportOrigin, allowReconnectMarker bool) bool {
-	var rpcError gsrpcgeth.Error
-	if err == nil || err == context.Canceled || err == gsrpcgeth.ErrClientQuit || errors.As(err, &rpcError) {
+	budget := &substrateReadCauseBudget{remaining: 128}
+	return retryableSubstrateRpcReadTransportBounded(err, transportOrigin, allowReconnectMarker, 0, budget)
+}
+
+// Every recursive branch consumes the same allowance. Trusted leaves precede
+// custom-match rejection because standard errno values implement Is themselves.
+func retryableSubstrateRpcReadTransportBounded(err error, transportOrigin, allowReconnectMarker bool, depth int, budget *substrateReadCauseBudget) bool {
+	if !budget.admit(err, depth) || err == context.Canceled || err == gsrpcgeth.ErrClientQuit {
 		return false
 	}
-	if _, localFile := err.(*os.PathError); localFile {
+	if _, rpcError := err.(gsrpcgeth.Error); rpcError {
 		return false
 	}
-	if joined, ok := err.(interface{ Unwrap() []error }); ok {
-		causes := joined.Unwrap()
-		if len(causes) == 0 {
-			return false
-		}
-		for _, cause := range causes {
-			if !retryableSubstrateRpcReadTransport(cause, transportOrigin, allowReconnectMarker) {
-				return false
-			}
-		}
+	switch err.(type) {
+	case *os.PathError, *os.LinkError:
+		return false
+	}
+	if err == context.DeadlineExceeded || err == net.ErrClosed {
 		return true
+	}
+	if err == io.EOF || err == io.ErrUnexpectedEOF {
+		return transportOrigin
+	}
+	if number, ok := err.(syscall.Errno); ok {
+		return number == syscall.ECONNRESET || number == syscall.ECONNREFUSED || number == syscall.EPIPE ||
+			number == syscall.ETIMEDOUT || number.Timeout() || number.Temporary()
 	}
 	switch cause := err.(type) {
 	case *SubstrateReadHttpStatusError:
 		return retryableSubstrateReadHttpStatus(cause.status)
 	case *substrateReadHttpTransportError:
-		return retryableSubstrateRpcReadTransport(cause.cause, true, false)
+		return retryableSubstrateRpcReadTransportBounded(cause.cause, true, false, depth+1, budget)
 	case *substrateReadHttpCloseError:
-		return retryableSubstrateRpcReadTransport(cause.cause, true, false)
+		return retryableSubstrateRpcReadTransportBounded(cause.cause, true, false, depth+1, budget)
 	case *url.Error:
-		return retryableSubstrateRpcReadTransport(cause.Err, true, allowReconnectMarker)
+		return retryableSubstrateRpcReadTransportBounded(cause.Err, true, allowReconnectMarker, depth+1, budget)
 	case *net.OpError:
-		return retryableSubstrateRpcReadTransport(cause.Err, true, allowReconnectMarker)
-	}
-	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		return retryableSubstrateRpcReadTransport(wrapped.Unwrap(), transportOrigin, allowReconnectMarker)
-	}
-	if closed, ok := err.(*websocket.CloseError); ok {
-		switch closed.Code {
+		return retryableSubstrateRpcReadTransportBounded(cause.Err, true, allowReconnectMarker, depth+1, budget)
+	case *net.DNSError:
+		// The optional child is absent on ordinary resolver timeout leaves.
+		// A missing name and every actual child retain their hard priority.
+		if cause.IsNotFound {
+			return false
+		}
+		if cause.UnwrapErr != nil {
+			return retryableSubstrateRpcReadTransportBounded(cause.UnwrapErr, transportOrigin, allowReconnectMarker, depth+1, budget)
+		}
+		return cause.IsTimeout || cause.IsTemporary
+	case *websocket.CloseError:
+		switch cause.Code {
 		case websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseAbnormalClosure,
 			websocket.CloseInternalServerErr, websocket.CloseServiceRestart, websocket.CloseTryAgainLater:
 			return true
@@ -83,16 +98,30 @@ func retryableSubstrateRpcReadTransport(err error, transportOrigin, allowReconne
 			return false
 		}
 	}
+	if substrateReadCustomMatcher(err) {
+		return false
+	}
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		causes := joined.Unwrap()
+		if !budget.admitsChildren(causes) {
+			return false
+		}
+		for _, cause := range causes {
+			if !retryableSubstrateRpcReadTransportBounded(cause, transportOrigin, allowReconnectMarker, depth+1, budget) {
+				return false
+			}
+		}
+		return true
+	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return retryableSubstrateRpcReadTransportBounded(wrapped.Unwrap(), transportOrigin, allowReconnectMarker, depth+1, budget)
+	}
 	if network, ok := err.(net.Error); ok && (network.Timeout() || network.Temporary()) {
 		return true
 	}
-	if err == io.EOF || err == io.ErrUnexpectedEOF {
-		return transportOrigin
-	}
-	// GSRPC's reconnect marker is private. Only this exact allowlisted read
-	// owner may interpret it; arbitrary RPC application messages cannot retry.
-	return err == context.DeadlineExceeded || err == syscall.ECONNRESET || err == syscall.ECONNREFUSED ||
-		err == syscall.EPIPE || err == syscall.ETIMEDOUT || err == net.ErrClosed || allowReconnectMarker && err.Error() == "client reconnected"
+	// GSRPC's private reconnect marker belongs only to an allowlisted read.
+	// A physical HTTP marker above deliberately disables this text fallback.
+	return allowReconnectMarker && err.Error() == "client reconnected"
 }
 
 const substrateRpcReadRetryTimeout = 300 * time.Second
@@ -214,27 +243,38 @@ func (self *contextSubstrateClient) Close() {
 	}
 }
 
+// Capacity pacing is a distinct RPC application outcome. It still requires
+// a complete finite tree containing only that exact structured response.
 func substrateRPCHistoricalCapacity(err error) bool {
-	if err == nil {
+	budget := &substrateReadCauseBudget{remaining: 128}
+	return substrateRpcHistoricalCapacityBounded(err, 0, budget)
+}
+
+// Custom matchers and malformed joins cannot acquire the shared cooldown.
+func substrateRpcHistoricalCapacityBounded(err error, depth int, budget *substrateReadCauseBudget) bool {
+	if !budget.admit(err, depth) {
+		return false
+	}
+	if substrateReadCustomMatcher(err) {
 		return false
 	}
 	if joined, ok := err.(interface{ Unwrap() []error }); ok {
 		causes := joined.Unwrap()
-		if len(causes) == 0 {
+		if !budget.admitsChildren(causes) {
 			return false
 		}
 		for _, cause := range causes {
-			if !substrateRPCHistoricalCapacity(cause) {
+			if !substrateRpcHistoricalCapacityBounded(cause, depth+1, budget) {
 				return false
 			}
 		}
 		return true
 	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return substrateRpcHistoricalCapacityBounded(wrapped.Unwrap(), depth+1, budget)
+	}
 	if rpcError, ok := err.(gsrpcgeth.Error); ok {
 		return strings.EqualFold(strings.TrimSpace(rpcError.Error()), "Historical work rate limit exceeded")
-	}
-	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		return substrateRPCHistoricalCapacity(wrapped.Unwrap())
 	}
 	return false
 }

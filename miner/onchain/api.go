@@ -139,6 +139,13 @@ type intentPrinter func(from common.Address, chainID *big.Int, rpcURL string) fu
 // submit is the shared dial + chain-id check + runTx path behind Submit and the
 // submit/unbind-head CLI handlers. mkPrint may be nil (generic intent block).
 func submit(ctx context.Context, p SubmitParams, mkPrint intentPrinter, hooks SubmitHooks) (*types.Receipt, error) {
+	// Read retries keep this original intent even if a caller later reuses its
+	// argument buffers. The signing envelope never adopts a later read's inputs.
+	p.Calldata = append([]byte(nil), p.Calldata...)
+	p.Rpcs = append([]string(nil), p.Rpcs...)
+	if p.ChainID != nil {
+		p.ChainID = new(big.Int).Set(p.ChainID)
+	}
 	from := crypto.PubkeyToAddress(p.Key.PublicKey)
 	client, chainID, rpcURL, err := dialFirst(ctx, p.Rpcs)
 	if err != nil {

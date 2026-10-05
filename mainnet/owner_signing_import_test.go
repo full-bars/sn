@@ -4,12 +4,16 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/ed25519"
 	"encoding/hex"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/urnetwork/connect/durablevolume"
 )
 
 // Export starts from the real original five-journal preparation and its sixth
@@ -72,7 +76,7 @@ func TestOwnerSigningImportPreservesOriginalCustodyAndRecovery(t *testing.T) {
 		if code := chain.command(t.Context(), "trim-import-reply", &stdout, &stderr, args...); code != 0 {
 			t.Fatalf("original reply import %d: %d %s", attempt, code, stderr.String())
 		}
-		store, err := openOwnerTrimStore(t.Context(), chain.preparation, f.config, f.key, false)
+		store, err := openOwnerTrimStore(chain.storageContext(t.Context()), chain.preparation, f.config, f.key, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -115,7 +119,7 @@ func TestOwnerSigningImportPreservesOriginalCustodyAndRecovery(t *testing.T) {
 // phase. The existing original-custody recovery contract remains unchanged.
 func TestOwnerSigningReplyCannotResolveUnknownSigningCustody(t *testing.T) {
 	chain, f, configPath, metadataPath, request, trust := ownerSigningPreparedFixture(t)
-	store, err := openOwnerTrimStore(t.Context(), chain.preparation, f.config, f.key, false)
+	store, err := openOwnerTrimStore(chain.storageContext(t.Context()), chain.preparation, f.config, f.key, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +161,7 @@ func TestOwnerSigningReplyCannotResolveUnknownSigningCustody(t *testing.T) {
 // journal. Custody migration requires its own explicit workflow and evidence.
 func TestOwnerSigningV2CannotReplaceClaimedV1(t *testing.T) {
 	chain, f := ownerTrimPreparedTestFixture(t, ownerSigningTestKey().Public().(ed25519.PublicKey))
-	store, err := openOwnerTrimStore(t.Context(), chain.preparation, f.config, f.key, true)
+	store, err := openOwnerTrimStore(chain.storageContext(t.Context()), chain.preparation, f.config, f.key, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +172,7 @@ func TestOwnerSigningV2CannotReplaceClaimedV1(t *testing.T) {
 	}
 	ownerSigningTestLedgerConfig(t, f)
 	for _, create := range []bool{false, true} {
-		if owner, err := openOwnerTrimStore(t.Context(), chain.preparation, f.config, f.key, create); err == nil {
+		if owner, err := openOwnerTrimStore(chain.storageContext(t.Context()), chain.preparation, f.config, f.key, create); err == nil {
 			owner.close()
 			t.Fatal("new v2 signature domain replaced claimed v1 custody")
 		}
@@ -185,7 +189,7 @@ func TestOwnerSigningV1PortableReplyImport(t *testing.T) {
 	native := newOwnerTrimActionTestFixture(t)
 	chain, f := ownerTrimPreparedTestFixture(t, native.pair.Public())
 	configRef := bootstrapRootTestWrite(t, filepath.Join(filepath.Dir(chain.path), "original-v1-config.json"), f.config)
-	store, err := openOwnerTrimStore(t.Context(), chain.preparation, f.config, f.key, true)
+	store, err := openOwnerTrimStore(chain.storageContext(t.Context()), chain.preparation, f.config, f.key, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,5 +212,59 @@ func TestOwnerSigningV1PortableReplyImport(t *testing.T) {
 	if code := chain.command(t.Context(), "trim-import-reply", &stdout, &stderr, "--trim-config", configRef.Path, "--trim-approval-key", f.key,
 		"--request", requestRef.Path, "--accept-request-hash", request.ContentHash, "--reply", replyRef.Path, "--reply-sha256", replyRef.Sha256); code != 0 {
 		t.Fatalf("v1 portable reply import: %d %s", code, stderr.String())
+	}
+}
+
+// Absent admission and cancellation leave the original journals available to
+// an explicitly declared retry; neither condition means the signing state reset.
+func TestOwnerSigningImportAdmissionRefusalPreservesOriginalCustody(t *testing.T) {
+	chain, f, _, _, _, _ := ownerSigningPreparedFixture(t)
+	original := chain.journals(t)
+	retained := map[string][]byte{}
+	for _, path := range []string{f.config.Action.StatePath, f.config.Action.StatePath + ".lock"} {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		retained[path] = raw
+	}
+	reads := chain.census.count("state_getStorage")
+	canceled, cancel := context.WithCancel(chain.storageContext(t.Context()))
+	cancel()
+	for _, admission := range []struct {
+		name  string
+		ctx   context.Context
+		cause error
+	}{
+		{name: "undeclared", ctx: t.Context()},
+		{name: "canceled", ctx: canceled, cause: context.Canceled},
+	} {
+		store, err := openOwnerTrimStore(admission.ctx, chain.preparation, f.config, f.key, false)
+		if store != nil {
+			store.close()
+			t.Fatal("refused admission acquired original signing custody", admission.name)
+		}
+		if err == nil || errors.Is(err, durablevolume.ErrIdentity) || admission.cause != nil && !errors.Is(err, admission.cause) {
+			t.Fatal("admission refusal lost its cause or declared original custody lost", admission.name, err)
+		}
+	}
+	store, err := openOwnerTrimStore(chain.storageContext(t.Context()), chain.preparation, f.config, f.key, false)
+	if err != nil {
+		t.Fatal("declared retry could not reopen original signing custody", err)
+	}
+	if _, err := store.load(); err != nil {
+		store.close()
+		t.Fatal(err)
+	}
+	if err := store.close(); err != nil {
+		t.Fatal(err)
+	}
+	for path, expected := range retained {
+		if actual, err := os.ReadFile(path); err != nil || !bytes.Equal(actual, expected) {
+			t.Fatal("admission refusal or retry changed original owner journal", path, err)
+		}
+	}
+	if !reflect.DeepEqual(original, chain.journals(t)) || chain.census.count("state_getStorage") != reads {
+		t.Fatal("admission refusal or retry changed original preparation or read chain state")
 	}
 }

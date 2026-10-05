@@ -35,6 +35,12 @@ type ownerRecycleStore struct {
 // Reserve uses exclusive creation; resume accepts only the same approved marker.
 // No path comes from a portable request on an owner's separate signing computer.
 func openOwnerRecycleStore(config ownerRecycleConfig, key string, create bool, storageContexts ...context.Context) (_ *ownerRecycleStore, resultErr error) {
+	return openOwnerRecycleStoreWithClaimHook(config, key, create, nil, storageContexts...)
+}
+
+// Tests interrupt actual durable claim boundaries before completion. The
+// ordinary opener never installs a hook or changes the physical head contract.
+func openOwnerRecycleStoreWithClaimHook(config ownerRecycleConfig, key string, create bool, claimHook func(string) error, storageContexts ...context.Context) (_ *ownerRecycleStore, resultErr error) {
 	path := config.Action.StatePath
 	if err := errors.Join(config.validate(key), bootstrapRootDirectory(filepath.Dir(path))); err != nil {
 		return nil, err
@@ -101,6 +107,11 @@ func openOwnerRecycleStore(config ownerRecycleConfig, key string, create bool, s
 		if err := errors.Join(err, self.lock.Sync(), self.syncParent(), self.checkpoint()); err != nil {
 			return nil, err
 		}
+		if claimHook != nil {
+			if err := claimHook("marker-synced"); err != nil {
+				return nil, err
+			}
+		}
 	} else {
 		raw, err := io.ReadAll(io.LimitReader(self.lock, int64(len(marker)+len(bootstrapRootClaimComplete)+1)))
 		if err != nil {
@@ -133,6 +144,11 @@ func openOwnerRecycleStore(config ownerRecycleConfig, key string, create bool, s
 	}
 	if _, err := self.load(); err != nil {
 		return nil, err
+	}
+	if claimHook != nil {
+		if err := claimHook("progress-synced"); err != nil {
+			return nil, err
+		}
 	}
 	written, err := self.storage.writeMarkerAt([]byte(bootstrapRootClaimComplete), int64(len(marker)))
 	if written != len(bootstrapRootClaimComplete) && err == nil {

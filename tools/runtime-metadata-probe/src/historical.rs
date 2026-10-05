@@ -23,24 +23,56 @@ use sp_trie::StorageProof;
 use sp_version::RuntimeVersion;
 use std::{any::TypeId, collections::BTreeSet, panic::AssertUnwindSafe};
 
+#[path = "historical_capture.rs"]
+pub mod capture;
 #[path = "historical_fee_events.rs"]
 pub mod fee_events;
 #[path = "historical_hosts.rs"]
 mod hosts;
 #[path = "historical_observer.rs"]
 pub mod observer;
+#[path = "historical_principal.rs"]
+pub mod principal;
 #[path = "historical_pure_hosts.rs"]
 mod pure_hosts;
 #[path = "historical_backend.rs"]
 mod strict;
-#[path = "historical_capture.rs"]
-pub mod capture;
 #[cfg(test)]
 #[path = "historical_tests.rs"]
 mod tests;
 
 pub const HISTORICAL_SCHEMA: &str = "urnetwork-historical-proof-replay-v1";
 pub const MAXIMUM_HISTORICAL_JOB_BYTES: usize = 96 * 1024 * 1024;
+pub const MAXIMUM_NATIVE_JOB_BYTES: usize = 192 * 1024 * 1024;
+const MAXIMUM_NATIVE_PROOF_NODES: usize = 2 * (3 * (4 * 4096 + 4) + 1);
+const MAXIMUM_NATIVE_PROOF_BYTES: usize = 64 * 1024 * 1024;
+
+fn native_profile(profile: &Option<observer::ObservationProfile>) -> bool {
+    profile
+        .as_ref()
+        .is_some_and(|profile| profile.schema == "urnetwork-original-wasm-native-observation-v2")
+}
+
+fn proof_node_limit(profile: &Option<observer::ObservationProfile>) -> usize {
+    if native_profile(profile) {
+        16 * 1024 * 1024
+    } else {
+        MAXIMUM_CODE_BYTES
+    }
+}
+
+fn proof_limits(profile: &Option<observer::ObservationProfile>) -> (usize, usize, usize) {
+    if native_profile(profile) {
+        (
+            MAXIMUM_NATIVE_JOB_BYTES,
+            MAXIMUM_NATIVE_PROOF_NODES,
+            MAXIMUM_NATIVE_PROOF_BYTES,
+        )
+    } else {
+        (MAXIMUM_HISTORICAL_JOB_BYTES, 8192, MAXIMUM_PROOF_BYTES)
+    }
+}
+
 const MAXIMUM_PROOF_BYTES: usize = 24 * 1024 * 1024;
 const MAXIMUM_CODE_BYTES: usize = 8 * 1024 * 1024;
 // Published real runtimes exceed the original synthetic 8 MiB expanded bound.
@@ -68,6 +100,10 @@ pub struct HistoricalJob {
     pub proof_nodes_hex: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub observation_profile: Option<observer::ObservationProfile>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub principal_queries: Option<Vec<principal::PrincipalQuery>>,
+    #[serde(default, skip_serializing_if = "principal::is_false")]
+    pub principal_effects: bool,
 }
 
 /// A complete state-root reproduction is deliberately separate from economic
@@ -98,6 +134,10 @@ pub struct HistoricalReport {
     pub production_selection: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hook_observations: Option<observer::ObservationReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub opening_principals: Option<Vec<principal::PrincipalObservation>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub closing_principals: Option<Vec<principal::PrincipalObservation>>,
 }
 
 /// Bound before allocation and reject alternate hexadecimal spellings.
@@ -175,14 +215,19 @@ fn memory_bound(wasm: &[u8], heap_pages: Option<u64>) -> Result<(), ProbeError> 
 /// external I/O is supplied to the runtime; omitted hosts trap when invoked.
 /// Nothing, including a partially computed report, is published on failure.
 pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
-    if raw.is_empty() || raw.len() > MAXIMUM_HISTORICAL_JOB_BYTES {
+    if raw.is_empty() || raw.len() > MAXIMUM_NATIVE_JOB_BYTES {
         return Err(ProbeError::new("historical job byte bound"));
     }
     let job: HistoricalJob = serde_json::from_slice(raw)
         .map_err(|e| ProbeError::new(format!("historical job JSON: {e}")))?;
-    if job.schema != HISTORICAL_SCHEMA
+    principal::validate(&job.principal_queries)?;
+    principal::validate_effects(job.principal_effects, &job.principal_queries)?;
+    let (maximum_job_bytes, maximum_nodes, maximum_proof_bytes) =
+        proof_limits(&job.observation_profile);
+    if raw.len() > maximum_job_bytes
+        || job.schema != HISTORICAL_SCHEMA
         || job.proof_nodes_hex.is_empty()
-        || job.proof_nodes_hex.len() > 8192
+        || job.proof_nodes_hex.len() > maximum_nodes
         || job.extrinsics_hex.len() > 16384
     {
         return Err(ProbeError::new("historical schema or item bound"));
@@ -238,9 +283,13 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
     let mut proof_bytes = 0;
     let mut proof_nodes = BTreeSet::new();
     for node in &job.proof_nodes_hex {
-        let node = hex_bytes("proof node", node, MAXIMUM_CODE_BYTES)?;
+        let node = hex_bytes(
+            "proof node",
+            node,
+            proof_node_limit(&job.observation_profile),
+        )?;
         proof_bytes += node.len();
-        if node.is_empty() || proof_bytes > MAXIMUM_PROOF_BYTES || !proof_nodes.insert(node) {
+        if node.is_empty() || proof_bytes > maximum_proof_bytes || !proof_nodes.insert(node) {
             return Err(ProbeError::new("historical proof bound or duplicate node"));
         }
     }
@@ -290,7 +339,11 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
             })
             .build();
     let mut extensions = Extensions::default();
-    extensions.register(hosts::HistoricalBudget(hosts::Budget { work, depth: 0 }));
+    extensions.register(hosts::HistoricalBudget(hosts::Budget {
+        work,
+        depth: 0,
+        read_only: false,
+    }));
     let mut version_overlay = OverlayedChanges::<Blake2Hasher>::default();
     let version_raw = StateMachine::new(
         &backend,
@@ -317,6 +370,14 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
             "historical executing state version or version side effect differs",
         ));
     }
+    let opening_principals = principal::observe(
+        &job.principal_queries,
+        &backend,
+        &executor,
+        &mut extensions,
+        &runtime,
+        parent.hash(),
+    )?;
     // Decode metadata from the same original code with storage/offchain hosts
     // absent. A witness cannot supply a substituted layout for its events.
     let event_layout = job
@@ -406,6 +467,21 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
         .and_then(|value| value.downcast_mut::<observer::HistoricalObserver>())
         .map(|observer| observer.finish(event_layout.as_ref(), job.extrinsics_hex.len()))
         .transpose()?;
+    // API queries are not block callsite observations. Finish and remove the
+    // observer before querying the same original runtime on its completed overlay.
+    extensions.deregister(TypeId::of::<observer::HistoricalObserver>());
+    let closing_principals = principal::observe_execution(
+        job.principal_effects,
+        &job.principal_queries,
+        &backend,
+        &mut overlay,
+        &executor,
+        &mut extensions,
+        &runtime,
+        child.hash(),
+        state_version,
+        root,
+    )?;
     let budget = extensions
         .get_mut(TypeId::of::<hosts::HistoricalBudget>())
         .and_then(|value| value.downcast_mut::<hosts::HistoricalBudget>())
@@ -433,6 +509,8 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
         native_fee_withdrawal_refund_observed: false,
         production_selection: false,
         hook_observations,
+        opening_principals,
+        closing_principals,
     })
     .map_err(|e| ProbeError::new(format!("historical report JSON: {e}")))
 }

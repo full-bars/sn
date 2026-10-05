@@ -90,6 +90,9 @@ func storageSnapshotRestoreTargetWithLimits(t *testing.T, source *storagePrepara
 				if err := os.WriteFile(path, raw, 0600); err != nil {
 					t.Fatal(err)
 				}
+				if err := os.Chmod(path, os.FileMode(entry.Mode)); err != nil {
+					t.Fatal(err)
+				}
 			}
 		}
 		for _, attribute := range entry.OwnerAttributes {

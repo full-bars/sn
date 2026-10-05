@@ -1,0 +1,23 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 12884901888,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "d086b6e2ee8fd3d6e64f6e91804068bf242f366e48204d58518c33335ef2bfe3",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "runner_sha256": "d33e8af8f9610a704c85e64e6e13e027f769fff8baab952ade11153af08bf792",
+  "short_count": 0,
+  "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL",
+  "adopted_at": "2026-10-05T03:00:35.641209+00:00",
+  "review_sha256": "af4a0d6c5a6fe8e73e94883a2dd2dea88fb64f6b68bf5ac86c8dc365af468a24",
+  "scope": "Exactly92 Git blobs (SN54/Core12/Server26) over immutable943 overlay and three offline Go-list dependency/test graphs. Exact338/Core87/1ea only; no compile/export/body/download/DB startup or qualification inheritance. Prior943 monitor15PASS2FAIL and Xops33 32PASS1FAIL remain unchanged and joined."
+}

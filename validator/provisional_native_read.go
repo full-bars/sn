@@ -24,6 +24,7 @@ func classifyProvisionalNativeRead(enabled bool, nativeEpoch uint64, err error) 
 	if !enabled {
 		return err
 	}
+	err = observeReleaseError(err)
 	retryable, transport := classifyReleasePreparationRetry(err)
 	if !retryable || !transport {
 		return err

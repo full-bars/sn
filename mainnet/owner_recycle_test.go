@@ -643,7 +643,7 @@ func TestOwnerRecycleLaterBurnAndDispatchFailureRemainTerminal(t *testing.T) {
 	}
 }
 
-// The public parser provides no signer, submit, service, or secret-key option.
+// Bare effect names, service routes and secret-key options carry no authority.
 func TestOwnerRecyclePublicCommandRefusesEffects(t *testing.T) {
 	for _, args := range [][]string{{"sign"}, {"submit"}, {"apply"}, {"service"}, {"ledger-plan", "--seed", "synthetic"}, {"observe", "--owner-account-id", "bad"}} {
 		var out, errOut bytes.Buffer

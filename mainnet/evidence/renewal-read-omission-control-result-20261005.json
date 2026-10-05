@@ -1,0 +1,25 @@
+{
+  "schema": "renewal-read-omission-control-result-v1",
+  "checked_at": "2026-10-05T07:14:29.254553+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-read-omission-body-v1.receipt.json",
+    "sha256": "26ab498079c04afc7f781c241e31390b1513c0bbbb3125099a31b875d623fecf"
+  },
+  "actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-read-omission-body-v1-01.process-result.json",
+    "sha256": "e0c90616dc7182eabec4548bc91e7654b1c79782a75734359c62120ece2b060d"
+  },
+  "status": "PASS_MAIN_RENEWAL_READ_OMISSION_CONTROL_KILLED",
+  "totals": {
+    "fail": 1,
+    "not_run": 0,
+    "pass": 0,
+    "planned": 1,
+    "run": 1,
+    "skip": 0
+  },
+  "actual_child_exit": 101,
+  "classification": "Expected causal assertion rejects one omitted original deposit read observation.",
+  "normal_result": "corrected-rust-renewal-body-result-20261005.json",
+  "limit": "One causal control, not a production failure or a complete113-root Rust suite qualification."
+}

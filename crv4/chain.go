@@ -91,6 +91,8 @@ type Chain struct {
 	// independently of metadata-cache residency and provisional admission.
 	runtimeArtifactProof   *runtimeArtifactProof
 	validatorProducerProof *runtimeArtifactProof
+	// Shared by nested read-only observations; never used around submission.
+	runtimeObservationRead runtimeObservationReadHooks
 }
 
 // contextSubstrateClient adapts GSRPC's context-aware transport to the

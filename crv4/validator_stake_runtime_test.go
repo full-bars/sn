@@ -45,7 +45,7 @@ func newValidatorStakeCapabilityTestFixture(t *testing.T) *validatorStakeCapabil
 		if self.beforeRead != nil {
 			self.beforeRead(self.versionReads)
 		}
-		if ctx != identity.ctx || !reflect.DeepEqual(args, []any{identity.query.BlockHash.Hex()}) {
+		if !validatorIdentityTestReadContext(ctx, identity.ctx) || !reflect.DeepEqual(args, []any{identity.query.BlockHash.Hex()}) {
 			return true, errors.New("capability runtime version is not query-block bound")
 		}
 		return true, setRuntimeIdentityTestResult(result, map[string]any{

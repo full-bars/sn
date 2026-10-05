@@ -42,26 +42,13 @@ import (
 )
 
 const (
-	chainDialTimeout                = 15 * time.Second
-	chainCallTimeout                = 30 * time.Second
+	chainDialTimeout                = 60 * time.Second
+	chainCallTimeout                = 60 * time.Second
 	chainSendTimeout                = 60 * time.Second
 	chainWaitMinedTimeout           = 5 * time.Minute
 	chainMaximumBatchCalls          = 50
 	chainBlockIdentityCacheCapacity = 256
 )
-
-// Only validated provisional boundary preparation receives this marker.
-// Its existing producer deadline still bounds each longer canonical read.
-type provisionalBoundaryReadBudgetKey struct{}
-
-func chainReadCallTimeout(ctx context.Context) time.Duration {
-	if ctx != nil {
-		if enabled, _ := ctx.Value(provisionalBoundaryReadBudgetKey{}).(bool); enabled {
-			return 120 * time.Second
-		}
-	}
-	return chainCallTimeout
-}
 
 // Preserves the hash reported by the EVM RPC. Subtensor's synthetic block
 // identity cannot be reconstructed with the standard Ethereum header hash.
@@ -138,7 +125,16 @@ type chainEndpointContext func(context.Context, time.Duration) (context.Context,
 // dialChainWithEndpointContext closes every rejected endpoint client before
 // advancing. Its injected context factory is only a deterministic test seam.
 func dialChainWithEndpointContext(ctx context.Context, rpcUrls []string, contractAddr common.Address, release bool, endpointContext chainEndpointContext) (*ChainClient, error) {
-	if ctx == nil || endpointContext == nil {
+	if endpointContext == nil {
+		return nil, errors.New("EVM endpoint context is unavailable")
+	}
+	return dialChainWithReadRetryContext(ctx, rpcUrls, contractAddr, release, chainReadRetryHooks{withAttemptTimeout: endpointContext})
+}
+
+// Ordered endpoint passes share one operation budget. Rejected transports close
+// before failover or retry, and a hard failure never grants another retry pass.
+func dialChainWithReadRetryContext(ctx context.Context, rpcUrls []string, contractAddr common.Address, release bool, hooks chainReadRetryHooks) (*ChainClient, error) {
+	if ctx == nil {
 		return nil, errors.New("EVM dial context is unavailable")
 	}
 	if len(rpcUrls) == 0 {
@@ -147,53 +143,65 @@ func dialChainWithEndpointContext(ctx context.Context, rpcUrls []string, contrac
 	if release && contractAddr == (common.Address{}) {
 		return nil, fmt.Errorf("contract address is zero")
 	}
-	var errs []error
-	for _, url := range rpcUrls {
-		if err := ctx.Err(); err != nil {
-			return nil, err
+	owner := &ChainClient{readRetryHooks: hooks}
+	ctx, cancel := owner.chainReadOperationContext(ctx)
+	defer cancel()
+	var lastErr error
+	for attempt := 1; ; attempt++ {
+		var errs []error
+		for _, url := range rpcUrls {
+			if err := ctx.Err(); err != nil {
+				return nil, errors.Join(lastErr, errors.Join(errs...), err)
+			}
+			endpointCtx, endpointCancel := owner.chainReadAttemptContext(ctx)
+			if endpointCtx == nil || endpointCancel == nil {
+				return nil, errors.New("EVM endpoint context is unavailable")
+			}
+			rpcClient, err := rpc.DialOptions(endpointCtx, url, rpc.WithHTTPClient(&http.Client{
+				Transport: &chainHTTPTransport{base: http.DefaultTransport, maxResponseBytes: chainHTTPResponseLimit},
+			}))
+			if err != nil {
+				err = errors.Join(err, endpointCtx.Err())
+				endpointCancel()
+				errs = append(errs, fmt.Errorf("%s: %w", url, err))
+				continue
+			}
+			client := ethclient.NewClient(rpcClient)
+			chainId, err := client.ChainID(endpointCtx)
+			err = errors.Join(err, endpointCtx.Err())
+			endpointCancel()
+			if err == nil && (chainId == nil || chainId.Sign() <= 0) {
+				err = errors.New("EVM endpoint chain identity is absent")
+			}
+			if err != nil {
+				client.Close()
+				errs = append(errs, fmt.Errorf("%s: %w", url, err))
+				continue
+			}
+			if err := ctx.Err(); err != nil {
+				client.Close()
+				return nil, errors.Join(errors.Join(errs...), err)
+			}
+			c := &ChainClient{
+				client: client, rpcUrl: url, chainId: chainId,
+				st: stabi.NewSTSubnet(), coordinator: stabi.NewSTCoordinator(),
+				contractAddr: contractAddr, release: release, readRetryHooks: hooks,
+			}
+			if release {
+				c.contract = c.coordinator.Instance(client, contractAddr)
+			} else {
+				c.contract = c.st.Instance(client, contractAddr)
+			}
+			return c, nil
 		}
-		endpointCtx, cancel := endpointContext(ctx, chainDialTimeout)
-		if endpointCtx == nil || cancel == nil {
-			return nil, errors.New("EVM endpoint context is unavailable")
+		lastErr = fmt.Errorf("no rpc endpoint answered: %w", errors.Join(errs...))
+		if !RetryableEvidenceTransportError(lastErr) {
+			return nil, lastErr
 		}
-		rpcClient, err := rpc.DialOptions(endpointCtx, url, rpc.WithHTTPClient(&http.Client{
-			Transport: &chainHTTPTransport{base: http.DefaultTransport, maxResponseBytes: chainHTTPResponseLimit},
-		}))
-		if err != nil {
-			cancel()
-			errs = append(errs, fmt.Errorf("%s: %w", url, err))
-			continue
+		if err := owner.waitChainReadRetry(ctx, attempt); err != nil {
+			return nil, errors.Join(lastErr, err)
 		}
-		client := ethclient.NewClient(rpcClient)
-		chainId, err := client.ChainID(endpointCtx)
-		err = errors.Join(err, endpointCtx.Err())
-		cancel()
-		if err != nil {
-			client.Close()
-			errs = append(errs, fmt.Errorf("%s: %w", url, err))
-			continue
-		}
-		if err := ctx.Err(); err != nil {
-			client.Close()
-			return nil, err
-		}
-		c := &ChainClient{
-			client:       client,
-			rpcUrl:       url,
-			chainId:      chainId,
-			st:           stabi.NewSTSubnet(),
-			coordinator:  stabi.NewSTCoordinator(),
-			contractAddr: contractAddr,
-			release:      release,
-		}
-		if release {
-			c.contract = c.coordinator.Instance(client, contractAddr)
-		} else {
-			c.contract = c.st.Instance(client, contractAddr)
-		}
-		return c, nil
 	}
-	return nil, fmt.Errorf("no rpc endpoint answered: %w", errors.Join(errs...))
 }
 
 // FinalizedBlockContext identifies the canonical EVM head used by every
@@ -318,10 +326,13 @@ func chainViewAtContext[T any](ctx context.Context, c *ChainClient, block uint64
 	if ctx == nil {
 		return zero, errors.New("chain view context is nil")
 	}
-	ctx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	defer cancel()
-	value, err := bind.Call(c.contract, &bind.CallOpts{Context: ctx, BlockNumber: new(big.Int).SetUint64(block)}, calldata, unpack)
-	if err := errors.Join(err, ctx.Err()); err != nil {
+	var value T
+	err := c.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		value, err = bind.Call(c.contract, &bind.CallOpts{Context: callCtx, BlockNumber: new(big.Int).SetUint64(block)}, calldata, unpack)
+		return err
+	})
+	if err != nil {
 		return zero, err
 	}
 	return value, nil
@@ -831,10 +842,13 @@ func (self *ChainClient) RpcUrl() string {
 
 // chainView performs one read against the bound STSubnet contract.
 func chainView[T any](c *ChainClient, calldata []byte, unpack func([]byte) (T, error)) (T, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), chainCallTimeout)
-	defer cancel()
-	value, err := bind.Call(c.contract, &bind.CallOpts{Context: ctx}, calldata, unpack)
-	if err := errors.Join(err, ctx.Err()); err != nil {
+	var value T
+	err := c.retryChainRead(context.Background(), func(callCtx context.Context) error {
+		var err error
+		value, err = bind.Call(c.contract, &bind.CallOpts{Context: callCtx}, calldata, unpack)
+		return err
+	})
+	if err != nil {
 		var zero T
 		return zero, err
 	}
@@ -842,10 +856,13 @@ func chainView[T any](c *ChainClient, calldata []byte, unpack func([]byte) (T, e
 }
 
 func (self *ChainClient) BlockNumber() (uint64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), chainCallTimeout)
-	defer cancel()
-	number, err := self.client.BlockNumber(ctx)
-	if err := errors.Join(err, ctx.Err()); err != nil {
+	var number uint64
+	err := self.retryChainRead(context.Background(), func(callCtx context.Context) error {
+		var err error
+		number, err = self.client.BlockNumber(callCtx)
+		return err
+	})
+	if err != nil {
 		return 0, err
 	}
 	return number, nil
@@ -1029,15 +1046,17 @@ func (self *ChainClient) depositedSumsAtFinalizedContext(ctx context.Context, fr
 		if toBlock-from >= getLogsChunkBlocks {
 			to = from + getLogsChunkBlocks - 1
 		}
-		callCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-		logs, err := self.client.FilterLogs(callCtx, ethereum.FilterQuery{
-			FromBlock: new(big.Int).SetUint64(from),
-			ToBlock:   new(big.Int).SetUint64(to),
-			Addresses: []common.Address{self.contractAddr},
-			Topics:    topics,
+		var logs []types.Log
+		err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+			var err error
+			logs, err = self.client.FilterLogs(callCtx, ethereum.FilterQuery{
+				FromBlock: new(big.Int).SetUint64(from),
+				ToBlock:   new(big.Int).SetUint64(to),
+				Addresses: []common.Address{self.contractAddr},
+				Topics:    topics,
+			})
+			return err
 		})
-		err = errors.Join(err, callCtx.Err())
-		cancel()
 		if err != nil {
 			return nil, fmt.Errorf("eth_getLogs Deposited [%d,%d]: %w", from, to, err)
 		}
@@ -1236,10 +1255,13 @@ func (self *ChainClient) ethCallAtContext(ctx context.Context, to common.Address
 	if ctx == nil {
 		return nil, errors.New("EVM call context is nil")
 	}
-	ctx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	defer cancel()
-	output, err := self.client.CallContract(ctx, ethereum.CallMsg{To: &to, Data: calldata}, blockNumber)
-	if err := errors.Join(err, ctx.Err()); err != nil {
+	var output []byte
+	err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		output, err = self.client.CallContract(callCtx, ethereum.CallMsg{To: &to, Data: calldata}, blockNumber)
+		return err
+	})
+	if err != nil {
 		return nil, err
 	}
 	return output, nil

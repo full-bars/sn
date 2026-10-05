@@ -1,0 +1,377 @@
+{
+  "schema": "published-main-metadata-result-v1",
+  "checked_at": "2026-10-05T05:26:49.447337+00:00",
+  "status": "METADATA_PASS_NO_COMPILER_OR_BODY",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1.receipt.json",
+    "sha256": "8f0b230e220e4778b09f5d7bb4aed035e1c77c9251cef3b315455361a366cdba"
+  },
+  "source_tuple": {
+    "core": "7ca8e222e3496552146f2d97eb09237401662c99",
+    "server": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+    "sn": "babb0af573f6bdfe95a7db6d8888bbe9327fc39b"
+  },
+  "phases": [
+    {
+      "phase": "published-main-babb-7ca-3e1-metadata-v1-stage-sn",
+      "exit": 0,
+      "tree_joined": true,
+      "process_result": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-stage-sn.process-result.json",
+        "sha256": "e5ccda358eae43edeb7dfeb6de4a55cd287283ec7602f196cfd2ddd1c3dd7857"
+      }
+    },
+    {
+      "phase": "published-main-babb-7ca-3e1-metadata-v1-stage-connect",
+      "exit": 0,
+      "tree_joined": true,
+      "process_result": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-stage-connect.process-result.json",
+        "sha256": "ddbcc2f125d848fc50f3dd09d414d87986f96edbc0ea2d302c29b474fa59dbf8"
+      }
+    },
+    {
+      "phase": "published-main-babb-7ca-3e1-metadata-v1-stage-server",
+      "exit": 0,
+      "tree_joined": true,
+      "process_result": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-stage-server.process-result.json",
+        "sha256": "b722a3e9c101c31b57150ba95d7e639a58551d1510d144f0e8adb32c3cd97ae8"
+      }
+    },
+    {
+      "phase": "published-main-babb-7ca-3e1-metadata-v1-fetch-gvisor",
+      "exit": 0,
+      "tree_joined": true,
+      "process_result": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-fetch-gvisor.process-result.json",
+        "sha256": "063c3dc15c86c8f6cb6d19a5f890b99126abb2b5c3746948879fca322206da03"
+      }
+    },
+    {
+      "phase": "published-main-babb-7ca-3e1-metadata-v1-list-sn",
+      "exit": 0,
+      "tree_joined": true,
+      "process_result": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-sn.process-result.json",
+        "sha256": "11af6eca6d9fd61099c673f65c3f92305abcf9ae008d853cf8139adcb328fce8"
+      }
+    },
+    {
+      "phase": "published-main-babb-7ca-3e1-metadata-v1-list-connect",
+      "exit": 0,
+      "tree_joined": true,
+      "process_result": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-connect.process-result.json",
+        "sha256": "b1f0a024ef9589ab9b6b5040035e5f58badc1fdd63183ef2cecdc2127de58d1c"
+      }
+    },
+    {
+      "phase": "published-main-babb-7ca-3e1-metadata-v1-list-server",
+      "exit": 0,
+      "tree_joined": true,
+      "process_result": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-server.process-result.json",
+        "sha256": "009f2ebeb211130be8cca4588991e4764f961bd9b2060f35f26ab88092be9b81"
+      }
+    }
+  ],
+  "graphs": [
+    {
+      "module": "sn",
+      "outside_source_paths": [],
+      "package_errors": [],
+      "packages": 1088,
+      "result": {
+        "argv": [
+          "/usr/local/go/bin/go",
+          "list",
+          "-deps",
+          "-test",
+          "-json",
+          "./mainnet",
+          "./nativefee",
+          "./validator",
+          "./miner",
+          "./miner/onchain",
+          "./crv4",
+          "./payoutartifact",
+          "./evmrpc"
+        ],
+        "child_context": {
+          "cwd": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-source-v1/sn",
+          "cwd_identity": {
+            "device": 2081,
+            "gid": 1000,
+            "inode": 8977424,
+            "mode": 16832,
+            "uid": 1000
+          },
+          "environment_keys": [
+            "GOCACHE",
+            "GOENV",
+            "GOFLAGS",
+            "GOMAXPROCS",
+            "GOMODCACHE",
+            "GOPROXY",
+            "GOSUMDB",
+            "GOTOOLCHAIN",
+            "GOWORK",
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "PATH",
+            "TMPDIR"
+          ],
+          "environment_sha256": "93c759619d249f44e1b1ce3e97a50be9e03a54b3d8b23e27c05ee4a8e9b1a766",
+          "runner_executable": {
+            "bytes": 17712,
+            "ctime_ns": 1787173372341242475,
+            "device": 64512,
+            "gid": 1000,
+            "inode": 38538849,
+            "mode": 33261,
+            "mtime_ns": 1787173372341242475,
+            "path": "/home/by/.pyenv/versions/3.14.7/bin/python3.14",
+            "sha256": "5f4016bc51761a8b135d601ed5714a58ce3e74831aea2838d0d72f1be5bd6e6c",
+            "uid": 1000
+          },
+          "tool_environment": {
+            "GOCACHE": "/mnt/data/sn-testnet/sol-mainnet-native-schedule-independent-20261002/gocache",
+            "GOENV": "off",
+            "GOFLAGS": "-mod=readonly",
+            "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+            "GOTOOLCHAIN": "local",
+            "GOWORK": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-work-v1/sn/go.work",
+            "PATH": "/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin",
+            "TMPDIR": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/tmp/published-main-babb-7ca-3e1-metadata-v1"
+          }
+        },
+        "executable": {
+          "bytes": 15434687,
+          "ctime_ns": 1787173916330527602,
+          "device": 64512,
+          "gid": 0,
+          "inode": 21889063,
+          "mode": 33261,
+          "mtime_ns": 1786408852000000000,
+          "path": "/usr/local/go/bin/go",
+          "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45",
+          "uid": 0
+        },
+        "exit": 0,
+        "log_bytes": 5507897,
+        "process_result": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-sn.process-result.json",
+          "sha256": "11af6eca6d9fd61099c673f65c3f92305abcf9ae008d853cf8139adcb328fce8"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "3832e72ab3b5d18ef4dbb32480d275fd26656b089608ae2f8bcbf74cb3da79b9",
+        "tree_joined": true
+      },
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-sn.stdout",
+        "sha256": "3832e72ab3b5d18ef4dbb32480d275fd26656b089608ae2f8bcbf74cb3da79b9"
+      },
+      "workspace": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-work-v1/sn/go.work",
+        "sha256": "3871577983f1835280d2f2ea10079938e19005dc0242d5d3b02972dbb7fd0607"
+      }
+    },
+    {
+      "module": "connect",
+      "outside_source_paths": [],
+      "package_errors": [],
+      "packages": 446,
+      "result": {
+        "argv": [
+          "/usr/local/go/bin/go",
+          "list",
+          "-deps",
+          "-test",
+          "-json",
+          ".",
+          "./protocol"
+        ],
+        "child_context": {
+          "cwd": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-source-v1/connect",
+          "cwd_identity": {
+            "device": 2081,
+            "gid": 1000,
+            "inode": 8977474,
+            "mode": 16832,
+            "uid": 1000
+          },
+          "environment_keys": [
+            "GOCACHE",
+            "GOENV",
+            "GOFLAGS",
+            "GOMAXPROCS",
+            "GOMODCACHE",
+            "GOPROXY",
+            "GOSUMDB",
+            "GOTOOLCHAIN",
+            "GOWORK",
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "PATH",
+            "TMPDIR"
+          ],
+          "environment_sha256": "119d4a1125156dddaf3a7a34ce4daf1cad5c2e9f72ff6d0400c6dd3fdf280725",
+          "runner_executable": {
+            "bytes": 17712,
+            "ctime_ns": 1787173372341242475,
+            "device": 64512,
+            "gid": 1000,
+            "inode": 38538849,
+            "mode": 33261,
+            "mtime_ns": 1787173372341242475,
+            "path": "/home/by/.pyenv/versions/3.14.7/bin/python3.14",
+            "sha256": "5f4016bc51761a8b135d601ed5714a58ce3e74831aea2838d0d72f1be5bd6e6c",
+            "uid": 1000
+          },
+          "tool_environment": {
+            "GOCACHE": "/mnt/data/sn-testnet/sol-mainnet-native-schedule-independent-20261002/gocache",
+            "GOENV": "off",
+            "GOFLAGS": "-mod=readonly",
+            "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+            "GOTOOLCHAIN": "local",
+            "GOWORK": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-work-v1/connect/go.work",
+            "PATH": "/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin",
+            "TMPDIR": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/tmp/published-main-babb-7ca-3e1-metadata-v1"
+          }
+        },
+        "executable": {
+          "bytes": 15434687,
+          "ctime_ns": 1787173916330527602,
+          "device": 64512,
+          "gid": 0,
+          "inode": 21889063,
+          "mode": 33261,
+          "mtime_ns": 1786408852000000000,
+          "path": "/usr/local/go/bin/go",
+          "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45",
+          "uid": 0
+        },
+        "exit": 0,
+        "log_bytes": 1547529,
+        "process_result": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-connect.process-result.json",
+          "sha256": "b1f0a024ef9589ab9b6b5040035e5f58badc1fdd63183ef2cecdc2127de58d1c"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "2d455a9c3b6baa3a7eee3df49345032f00c601fcbb1f41e8ee809f50db2d8e65",
+        "tree_joined": true
+      },
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-connect.stdout",
+        "sha256": "2d455a9c3b6baa3a7eee3df49345032f00c601fcbb1f41e8ee809f50db2d8e65"
+      },
+      "workspace": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-work-v1/connect/go.work",
+        "sha256": "16b204024793684e69de41778cb7c786017ab7df99a2e5821463ab7be6cf1982"
+      }
+    },
+    {
+      "module": "server",
+      "outside_source_paths": [],
+      "package_errors": [],
+      "packages": 1059,
+      "result": {
+        "argv": [
+          "/usr/local/go/bin/go",
+          "list",
+          "-deps",
+          "-test",
+          "-json",
+          ".",
+          "./model",
+          "./controller",
+          "./cli/stnativefees",
+          "./monitor"
+        ],
+        "child_context": {
+          "cwd": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-source-v1/server",
+          "cwd_identity": {
+            "device": 2081,
+            "gid": 1000,
+            "inode": 20374302,
+            "mode": 16832,
+            "uid": 1000
+          },
+          "environment_keys": [
+            "GOCACHE",
+            "GOENV",
+            "GOFLAGS",
+            "GOMAXPROCS",
+            "GOMODCACHE",
+            "GOPROXY",
+            "GOSUMDB",
+            "GOTOOLCHAIN",
+            "GOWORK",
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "PATH",
+            "TMPDIR"
+          ],
+          "environment_sha256": "334002509ac7b5e8873e15545e90bb7dfa7f9eea6ccfc2548365c9158b262120",
+          "runner_executable": {
+            "bytes": 17712,
+            "ctime_ns": 1787173372341242475,
+            "device": 64512,
+            "gid": 1000,
+            "inode": 38538849,
+            "mode": 33261,
+            "mtime_ns": 1787173372341242475,
+            "path": "/home/by/.pyenv/versions/3.14.7/bin/python3.14",
+            "sha256": "5f4016bc51761a8b135d601ed5714a58ce3e74831aea2838d0d72f1be5bd6e6c",
+            "uid": 1000
+          },
+          "tool_environment": {
+            "GOCACHE": "/mnt/data/sn-testnet/sol-mainnet-native-schedule-independent-20261002/gocache",
+            "GOENV": "off",
+            "GOFLAGS": "-mod=readonly",
+            "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+            "GOTOOLCHAIN": "local",
+            "GOWORK": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-work-v1/server/go.work",
+            "PATH": "/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin",
+            "TMPDIR": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/tmp/published-main-babb-7ca-3e1-metadata-v1"
+          }
+        },
+        "executable": {
+          "bytes": 15434687,
+          "ctime_ns": 1787173916330527602,
+          "device": 64512,
+          "gid": 0,
+          "inode": 21889063,
+          "mode": 33261,
+          "mtime_ns": 1786408852000000000,
+          "path": "/usr/local/go/bin/go",
+          "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45",
+          "uid": 0
+        },
+        "exit": 0,
+        "log_bytes": 6049173,
+        "process_result": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-server.process-result.json",
+          "sha256": "009f2ebeb211130be8cca4588991e4764f961bd9b2060f35f26ab88092be9b81"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "29925278d521a2803e61ce940d2621f4158772587b1bf8867a1d0e386222f8b9",
+        "tree_joined": true
+      },
+      "stdout": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-server.stdout",
+        "sha256": "29925278d521a2803e61ce940d2621f4158772587b1bf8867a1d0e386222f8b9"
+      },
+      "workspace": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-main-babb-7ca-3e1-work-v1/server/go.work",
+        "sha256": "a266b414c53b2a52618564abb457fee223b8d37d9cec3992e6184f406c34435d"
+      }
+    }
+  ],
+  "resource_errors": [],
+  "scope": "Archive and checksum-pinned dependency acquisition followed by three offline dependency graphs. No compiler, body, database, signing or deployment result."
+}

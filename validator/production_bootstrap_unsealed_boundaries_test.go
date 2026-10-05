@@ -150,7 +150,7 @@ func productionBootstrapUnsealedBoundaryTestChain(t *testing.T, fixture *product
 		t.Fatal(err)
 	}
 	t.Cleanup(chain.Close)
-	chain.readRetryHooks.wait = func(ctx context.Context, _ time.Duration) error { return ctx.Err() }
+	chain.readRetryHooks = chainReadRetryTestHooks(chainReadTestFailureAttempts)
 	return chain
 }
 

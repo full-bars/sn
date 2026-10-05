@@ -1055,6 +1055,7 @@ func runReleaseSteeringLoopWithWaitAndPermissions(ctx context.Context, epoch fun
 			return releaseRuntimeError(ctx, errors.Join(pendingErr, schedulerErr))
 		}
 		currentEpoch, err := epoch()
+		err = observeReleaseError(err)
 		if ctx.Err() != nil {
 			return releaseRuntimeError(ctx, errors.Join(pendingErr, schedulerErr, err))
 		}
@@ -1081,12 +1082,12 @@ func runReleaseSteeringLoopWithWaitAndPermissions(ctx context.Context, epoch fun
 				pendingErr = nil
 			}
 			if !completed && !deferred {
-				err = submit()
-				var closedInput *provisionalClosedNativeInput
-				var rejected *provisionalNativeWeightRejection
-				var interrupted *provisionalNativeReadInterruption
-				var replayInterrupted *attemptReplayReadInterruption
-				var originalPending *productionPendingReconciliation
+				err = observeReleaseError(submit())
+				closedInput := releaseErrorMarker[*provisionalClosedNativeInput](err)
+				rejected := releaseErrorMarker[*provisionalNativeWeightRejection](err)
+				interrupted := releaseErrorMarker[*provisionalNativeReadInterruption](err)
+				replayInterrupted := releaseErrorMarker[*attemptReplayReadInterruption](err)
+				originalPending := releaseErrorMarker[*productionPendingReconciliation](err)
 				pendingReconciliation = false
 				retryablePreparation, interruptedPreparation := classifyReleasePreparationRetry(err)
 				if err == nil || releaseOnlyErrors(err, ErrSteeringAlreadyFinal) {
@@ -1094,18 +1095,18 @@ func runReleaseSteeringLoopWithWaitAndPermissions(ctx context.Context, epoch fun
 					retryableCut = false
 					weightRejected = false
 					pendingErr = nil
-				} else if errors.As(err, &originalPending) && originalPending.nativeEpoch == targetEpoch && releaseOnlyErrors(err, originalPending) {
+				} else if originalPending != nil && originalPending.nativeEpoch == targetEpoch && releaseOnlyErrors(err, originalPending) {
 					// This is a real retained intent awaiting observation, not a
 					// failed preparation or permission to skip its native outcome.
 					// Keep prior hard causes; the next epoch must reconcile it.
 					pendingReconciliation = pendingErr == nil
 					weightRejected, retryableCut = false, false
 					fmt.Printf("release steer: %v; retrying receipt observation on next poll\n", originalPending)
-				} else if errors.As(err, &closedInput) && (allowDeferral || allowFreshWeights && closedInput.beforeFirstIntent) && closedInput.nativeEpoch == targetEpoch && releaseOnlyErrors(err, errProvisionalClosedNativeInput) && pendingErr == nil {
+				} else if closedInput != nil && (allowDeferral || allowFreshWeights && closedInput.beforeFirstIntent) && closedInput.nativeEpoch == targetEpoch && releaseOnlyErrors(err, errProvisionalClosedNativeInput) && pendingErr == nil {
 					deferred, failures, pendingErr = true, 0, nil
 					retryableCut = false
 					fmt.Printf("release steer: %v; waiting for next native epoch\n", closedInput)
-				} else if (allowDeferral || allowFreshWeights) && errors.As(err, &rejected) && rejected.nativeEpoch == targetEpoch && releaseOnlyErrors(err, rejected) {
+				} else if (allowDeferral || allowFreshWeights) && rejected != nil && rejected.nativeEpoch == targetEpoch && releaseOnlyErrors(err, rejected) {
 					// Funding and eligibility can change before this native epoch
 					// ends. Keep the existing poll/retry, without killing independent
 					// proof workers or erasing an unrelated unresolved failure.
@@ -1113,11 +1114,11 @@ func runReleaseSteeringLoopWithWaitAndPermissions(ctx context.Context, epoch fun
 					retryableCut = false
 					rejectedAttempts++
 					fmt.Printf("release steer: %v; rejected attempt %d; retrying on next poll\n", rejected, rejectedAttempts)
-				} else if allowFreshWeights && errors.As(err, &interrupted) && interrupted.nativeEpoch == targetEpoch && releaseOnlyErrors(err, interrupted) {
+				} else if allowFreshWeights && interrupted != nil && interrupted.nativeEpoch == targetEpoch && releaseOnlyErrors(err, interrupted) {
 					weightRejected = false
 					retryableCut = pendingErr == nil
 					fmt.Printf("release steer: %v; retrying authenticated preparation on next poll\n", interrupted)
-				} else if errors.As(err, &replayInterrupted) && RetryableEvidenceTransportError(err) {
+				} else if replayInterrupted != nil && RetryableEvidenceTransportError(err) {
 					weightRejected = false
 					retryableCut = allowDeferral && pendingErr == nil
 					// Retained intent reads replay before the pre-intent handler.

@@ -15,6 +15,12 @@ import (
 // Exact accepted preparation and run-directory identities precede any mutation.
 // Every resume reloads its independently pinned inputs before retained ownership.
 func runBootstrapChainCommand(ctx context.Context, args []string, stdout, stderr io.Writer) (result int) {
+	if len(args) > 1 && args[1] == "provider-role-config" {
+		return runBootstrapProviderRoleCommand(ctx, args[2:], stdout, stderr)
+	}
+	if len(args) > 1 && args[1] == "validator-source-role-config" {
+		return runBootstrapValidatorOriginalRoleCommand(ctx, args[2:], stdout, stderr)
+	}
 	if len(args) > 1 && strings.HasPrefix(args[1], "contract-") {
 		return runBootstrapChainContractCommand(ctx, args[1:], stdout, stderr)
 	}

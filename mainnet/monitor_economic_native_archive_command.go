@@ -123,7 +123,7 @@ func buildMonitorNativeArchivePlan(ctx context.Context, request monitorNativeArc
 	if uint64(len(original)) != request.Original.Bytes || monitorReadDigest(original) != request.Original.Sha256 {
 		return plan, nil, errors.New("native archive original checkpoint changed after review")
 	}
-	record, err := decodeMonitorEconomicNativeCheckpoint(original, request.Policy)
+	record, err := decodeMonitorEconomicNativeCheckpoint(original, request.Policy, ctx)
 	if err != nil {
 		return plan, nil, err
 	}
@@ -218,7 +218,7 @@ func planMonitorNativeArchive(ctx context.Context, request monitorNativeArchiveR
 		return plan, err
 	}
 	defer func() { resultErr = errors.Join(resultErr, source.close()) }()
-	record, err := decodeMonitorEconomicNativeCheckpoint(raw, request.Policy)
+	record, err := decodeMonitorEconomicNativeCheckpoint(raw, request.Policy, ctx)
 	if err != nil {
 		return plan, err
 	}
@@ -302,7 +302,7 @@ func applyMonitorNativeArchive(ctx context.Context, plan monitorNativeArchivePla
 	if !archived && !bytes.Equal(current, original) {
 		return errors.New("native compact checkpoint lost its original archive")
 	}
-	record, err := decodeMonitorEconomicNativeCheckpoint(original, plan.Request.Policy)
+	record, err := decodeMonitorEconomicNativeCheckpoint(original, plan.Request.Policy, ctx)
 	if err != nil {
 		return err
 	}

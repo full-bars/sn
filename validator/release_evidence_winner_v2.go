@@ -88,10 +88,12 @@ func (self *ChainClient) FindValidatorEvidenceSlotWinnerV2Context(ctx context.Co
 	event := contractAbi.Events[stabi.STValidatorEvidenceEvidenceCommittedEventName]
 	canonicalHash := common.Hash(includedHash)
 	topics := [][]common.Hash{{event.ID}, {common.Hash(slot)}, {common.BigToHash(new(big.Int).SetUint64(expected.Evidence.Header.NoID))}, {common.BigToHash(new(big.Int).SetUint64(expected.Window.Epoch))}}
-	readCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	logs, err := chain.client.FilterLogs(readCtx, ethereum.FilterQuery{BlockHash: &canonicalHash, Addresses: []common.Address{expected.Journal}, Topics: topics})
-	err = errors.Join(err, readCtx.Err())
-	cancel()
+	var logs []types.Log
+	err = chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		logs, err = chain.client.FilterLogs(callCtx, ethereum.FilterQuery{BlockHash: &canonicalHash, Addresses: []common.Address{expected.Journal}, Topics: topics})
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -115,10 +117,13 @@ func (self *ChainClient) FindValidatorEvidenceSlotWinnerV2Context(ctx context.Co
 			return nil, errors.New("validator evidence discovered event topics differ")
 		}
 	}
-	readCtx, cancel = context.WithTimeout(ctx, chainCallTimeout)
-	transaction, pending, err := chain.client.TransactionByHash(readCtx, logs[0].TxHash)
-	err = errors.Join(err, readCtx.Err())
-	cancel()
+	var transaction *types.Transaction
+	var pending bool
+	err = chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		transaction, pending, err = chain.client.TransactionByHash(callCtx, logs[0].TxHash)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}

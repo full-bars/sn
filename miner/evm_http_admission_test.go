@@ -38,7 +38,7 @@ func TestEvmHttpMinerDialPathsRefuseOversizedIdentity(t *testing.T) {
 			_ = json.NewEncoder(writer).Encode(map[string]any{"jsonrpc": "2.0", "id": call.Id, "result": "0x3b1"})
 		}))
 		cfg.RPC = []string{server.URL}
-		authority := &fleetMainnetRuntimeAuthority{EvmChainId: 945}
+		authority := &fleetMainnetRuntimeAuthority{EvmChainId: 945, GenesisHash: "0x" + strings.Repeat("a1", 32)}
 		switch owner {
 		case "fleet-current":
 			client, _, callErr := authority.dialEvm(t.Context(), cfg.RPC)

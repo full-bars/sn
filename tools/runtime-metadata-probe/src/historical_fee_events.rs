@@ -236,6 +236,15 @@ impl EventLayout {
         let key = format!("0x{}", hex::encode(key));
         let mut events = Vec::new();
         for observation in observations {
+            // Native profiles also retain original allocation/event appends.
+            // Their complete records remain in the trace; only independently
+            // selected fee callsites enter this metadata-specific decoder.
+            if !matches!(
+                observation.purpose.as_str(),
+                "fee-withdraw" | "fee-refund" | "ethereum-executed"
+            ) {
+                continue;
+            }
             if observation.key_hex != key || observation.operation != "append" {
                 continue;
             }

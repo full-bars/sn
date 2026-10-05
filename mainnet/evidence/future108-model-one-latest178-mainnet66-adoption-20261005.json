@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "adopted_at": "2026-10-05T00:43:43.106480+00:00",
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "history_count": 0,
+  "job_sha256": "1a4188cf8069bcda832357c20d0c414381a2ce4a691d10efe8560f56aedfbf4d",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 1,
+  "review_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest178-mainnet66-review-20261005.json",
+  "review_sha256": "4cbd96038e69b10ea3f9d054810dbf29418f43470883247c128f9431895858f6",
+  "runner_sha256": "a2b1706d6d4939b0af41e14e328b0981631053da1fcf6a88794de10d15c7a1fd",
+  "scope": "Only exact reviewed retained mainnet66 body alongside existing model; independent execution and joined predecessors required.",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_MODEL_PLUS_ONE_RETAINED_MAINNET66_SHORT"
+}

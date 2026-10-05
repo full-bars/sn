@@ -23,12 +23,35 @@ import (
 const storageMonitorTreeKind = "mainnet-monitor-checkpoint-tree"
 const storageMonitorTreeSchema = "urnetwork-monitor-checkpoint-tree-restore-v1"
 
-// All members retain the existing one-MiB monitor snapshot profile. The list
-// is explicit, ordered and bounded; directory ancestry follows only these
-// names. Independent unknown members still fail the core's complete union.
+// The original list keeps the one-MiB monitor profile. A separately declared
+// combined owner may select its fixed larger profile for exact listed paths;
+// neither a byte count nor a filename can infer a different physical owner.
 type storageMonitorTreeScope struct {
-	Schema    string   `json:"schema"`
-	Snapshots []string `json:"snapshots"`
+	Schema    string                              `json:"schema"`
+	Snapshots []string                            `json:"snapshots"`
+	Profiles  []storageMonitorTreeSnapshotProfile `json:"snapshot_profiles,omitempty"`
+}
+
+type storageMonitorTreeSnapshotProfile struct {
+	Path         string `json:"path"`
+	Kind         string `json:"kind"`
+	MaximumBytes uint64 `json:"maximum_bytes"`
+}
+
+// Build once per bounded restore admission. Repeated or unlisted overrides
+// cannot change an already selected owner or borrow a sibling's authority.
+func (self storageMonitorTreeScope) profiles() (map[string]storageMonitorTreeSnapshotProfile, error) {
+	result := make(map[string]storageMonitorTreeSnapshotProfile, len(self.Snapshots))
+	for _, path := range self.Snapshots {
+		result[path] = storageMonitorTreeSnapshotProfile{Path: path, Kind: "mainnet-monitor-checkpoint", MaximumBytes: maxRpcReplyBytes}
+	}
+	for index, profile := range self.Profiles {
+		if _, present := result[profile.Path]; !present || index > 0 && self.Profiles[index-1].Path >= profile.Path || profile.Kind != economicConservationStorageKind || profile.MaximumBytes != economicConservationStorageMaximum {
+			return nil, errors.New("monitor tree profile is not an exact distinct listed combined owner")
+		}
+		result[profile.Path] = profile
+	}
+	return result, nil
 }
 
 type storageMonitorTreeHead struct {
@@ -82,14 +105,24 @@ func storageMonitorTreeProfile(owner durablevolume.PreparationOwner, ownerLocal 
 			return scope, errors.New("monitor tree paths must be exact, bounded, distinct and sorted")
 		}
 	}
-	return scope, nil
+	_, err := scope.profiles()
+	return scope, err
 }
 
 // This private view is not a replacement exported inventory. The unchanged
 // core authenticates the complete original report and disjoint union. The
 // existing snapshot adapter then checks its original immediate parent inode.
 func storageMonitorTreeHeadPlan(ctx context.Context, stagingName, path string, report durablevolume.Inventory) (durablevolume.PreparationOwnerPlan, durablevolume.Inventory, durablehead.Spec, json.RawMessage, error) {
+	return storageMonitorTreeHeadPlanProfile(ctx, stagingName, path, report, "mainnet-monitor-checkpoint", maxRpcReplyBytes)
+}
+
+// The pair is a fixed registered snapshot format, not a caller-supplied parser
+// limit. Original attributes must match it during both planning and readback.
+func storageMonitorTreeHeadPlanProfile(ctx context.Context, stagingName, path string, report durablevolume.Inventory, kind string, maximum int) (durablevolume.PreparationOwnerPlan, durablevolume.Inventory, durablehead.Spec, json.RawMessage, error) {
 	var empty durablevolume.PreparationOwnerPlan
+	if err := validateMonitorCheckpointProfile(kind, maximum); err != nil {
+		return empty, durablevolume.Inventory{}, durablehead.Spec{}, nil, err
+	}
 	if ctx == nil || !storageMonitorTreePath(path) {
 		return empty, durablevolume.Inventory{}, durablehead.Spec{}, nil, errors.New("monitor tree head requires an exact relative snapshot path")
 	}
@@ -126,11 +159,11 @@ func storageMonitorTreeHeadPlan(ctx context.Context, stagingName, path string, r
 		entry.Path = filepath.Base(entry.Path)
 		view.Entries = append(view.Entries, entry)
 	}
-	profile, err := json.Marshal(storageSnapshotPreparationScope{Schema: "urnetwork-snapshot-preparation-v1", Name: filepath.Base(path), MaximumBytes: maxRpcReplyBytes})
+	profile, err := json.Marshal(storageSnapshotPreparationScope{Schema: "urnetwork-snapshot-preparation-v1", Name: filepath.Base(path), MaximumBytes: int64(maximum)})
 	if err != nil {
 		return empty, view, durablehead.Spec{}, nil, err
 	}
-	owner := durablevolume.PreparationOwner{Kind: "mainnet-monitor-checkpoint", RelativePath: ".", Purpose: "restore", RestoreCoverage: durablevolume.PreparationCompleteUnion, Inputs: profile}
+	owner := durablevolume.PreparationOwner{Kind: kind, RelativePath: ".", Purpose: "restore", RestoreCoverage: durablevolume.PreparationCompleteUnion, Inputs: profile}
 	spec, _, err := storagePreparationSnapshotSpec(false, owner)
 	if err != nil {
 		return empty, view, spec, profile, err
@@ -147,6 +180,10 @@ func planStorageMonitorTreeRestore(ctx context.Context, name string, owner durab
 	if err != nil {
 		return empty, err
 	}
+	profiles, err := scope.profiles()
+	if err != nil {
+		return empty, err
+	}
 	entries := map[string]durablevolume.InventoryEntry{}
 	for _, entry := range report.Entries {
 		if _, present := entries[entry.Path]; present {
@@ -159,7 +196,8 @@ func planStorageMonitorTreeRestore(ctx context.Context, name string, owner durab
 	directories := map[string]durablevolume.PhysicalRoot{}
 	census := storageMonitorTreeCensus{Schema: storageMonitorTreeSchema}
 	for _, path := range scope.Snapshots {
-		plan, _, _, _, err := storageMonitorTreeHeadPlan(ctx, name, path, report)
+		profile := profiles[path]
+		plan, _, _, _, err := storageMonitorTreeHeadPlanProfile(ctx, name, path, report, profile.Kind, int(profile.MaximumBytes))
 		if err != nil {
 			return empty, err
 		}
@@ -241,6 +279,21 @@ func openStorageMonitorTreeTarget(ctx context.Context, root *os.File, directory 
 	if ctx == nil || root == nil || directory != "." && !storageMonitorTreePath(filepath.Join(directory, "head")) {
 		return nil, errors.New("monitor tree inspection requires its borrowed target root")
 	}
+	return openStorageRestoreDirectory(ctx, root, directory)
+}
+
+// Native approvals and artifact roots use the original volume namespace;
+// their copied-source reader retains the same descriptor and custody checks.
+func openStorageNativeRestoreDirectory(ctx context.Context, root *os.File, directory string) (*storageMonitorTreeTarget, error) {
+	if ctx == nil || root == nil || directory != "." && !storageNativeRestorePath(filepath.Join(directory, "head")) {
+		return nil, errors.New("native restore inspection requires its borrowed target root")
+	}
+	return openStorageRestoreDirectory(ctx, root, directory)
+}
+
+// Callers select their fixed bounded namespace before borrowing the root.
+// Traversal keeps real no-follow descriptors and exact original generations.
+func openStorageRestoreDirectory(ctx context.Context, root *os.File, directory string) (_ *storageMonitorTreeTarget, resultErr error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -337,9 +390,14 @@ func inspectStorageMonitorTreeRestore(ctx context.Context, root *os.File, owner 
 	if err != nil {
 		return nil, err
 	}
+	profiles, err := scope.profiles()
+	if err != nil {
+		return nil, err
+	}
 	result := make([]durablevolume.PreparedAttribute, 0, len(owner.Attributes))
 	for _, path := range scope.Snapshots {
-		plan, view, spec, profile, err := storageMonitorTreeHeadPlan(ctx, owner.StagingName, path, report)
+		selected := profiles[path]
+		plan, view, spec, profile, err := storageMonitorTreeHeadPlanProfile(ctx, owner.StagingName, path, report, selected.Kind, int(selected.MaximumBytes))
 		if err != nil {
 			return nil, err
 		}

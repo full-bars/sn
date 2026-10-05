@@ -1,0 +1,88 @@
+{
+  "actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-metadata-v1.receipt.json",
+    "sha256": "69f12c2aee0aa789800a5432b78d84a3eedc78e2824097b0e9e04932a9376902"
+  },
+  "author_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest88-core07-serverec3-public-compile-v1-author-review-20261005.json",
+    "sha256": "1095a2eaf93411f418eef43b36f3551e0ad79bef9f2e48a48f0e29eec18228c2"
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 2100,
+    "TimeoutStopSec": 10,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-latest88-core07-serverec3-public-compile-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-latest88-core07-serverec3-public-compile-v1-20261005.service"
+  },
+  "healthy_guards": {
+    "accounting_floor_bytes": 0,
+    "cap_bytes": 115964116992,
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "original_baseline_bytes": 113681502208,
+    "retargeted_or_rebased": false
+  },
+  "horizon": "Per-phase300/600/600/300s, whole2100s plus10s stop; actual canonical USER runtime/start/invocation must contain whole horizon and each next phase. No lease extension or namespace competition.",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1-job-v1.json",
+    "sha256": "0a386963fd9c759760864d3c0ee317a701db9665ddf9462e27659d74a7486356"
+  },
+  "mechanism_review": "Read complete runner10e3002e and sealer a483 source. Four compilers run serially under one unchanged cumulative8GiB growth floor. Qualified child context, actual durable wait and immutable ELF helpers retained. Ordinary positive compiler errors collect; signal/source/context/resource/custody/image failures stop continuation. Each phase checks empty compiler/body/DB census and actual canonical USER lease identity/remaining horizon. No image execution or test listing.",
+  "qualification_scope": "Four normal compile-only packages; all test bodies, race, vet and causal controls remain separately unqualified. No independent author execution occurred.",
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_minimum_available_bytes": 17179869184,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "0a386963fd9c759760864d3c0ee317a701db9665ddf9462e27659d74a7486356",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "model_count": 0,
+    "phase_count": 4,
+    "runner_sha256": "10e3002edd2f9bb495ac0203bcb42f53506e9812ca2936da69c28dba03f8ed94",
+    "runtime_max_seconds": 2100,
+    "status": "ADOPTED_ONE_SERIAL_PUBLIC_COMPILER_BATCH",
+    "whole_owner_horizon_seconds": 2110
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest88-core07-serverec3-public-compile-v1-adoption-20261005.json",
+  "resource_forecast": {
+    "basis": "Prospective4GiB total incremental compiler/cache/retained-output forecast for four serial normal packages sharing the already used dependency graph/cache; no fully-warm or measured-upper-bound claim.128MiB per-phase logs and512MiB per retained ELF caps; whole growth hard stop8GiB, concurrency1. Conservative former-model4GiB reserves retained despite actual model_count0.",
+    "compiler_disk_forecast_bytes": 4294967296,
+    "compiler_memory_forecast_bytes": 4294967296,
+    "compiler_memory_max_bytes": 8589934592,
+    "data_launch_minimum_bytes": 17179869184,
+    "held_conservative_disk_reserve_bytes": 4294967296,
+    "held_conservative_memory_reserve_bytes": 4294967296,
+    "margin": 2,
+    "memory_launch_minimum_bytes": 120259084288,
+    "memory_swap_max_bytes": 0,
+    "whole_batch_data_growth_max_bytes": 8589934592
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-public-consumer-compiler-batch-v1.py",
+    "sha256": "10e3002edd2f9bb495ac0203bcb42f53506e9812ca2936da69c28dba03f8ed94"
+  },
+  "schema": "public-consumer-four-compiler-independent-review-v1",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-compiler-source-closure-v1.json",
+    "sha256": "80a9cb82e43bdb759d89b4eaca7b10956db9c339f4febc9aac2cac4ee1a1a7ad"
+  },
+  "source_review": "All48 actual metadata waits were replayed exit0/joined by the closure sealer;42,184 expected source/dependency pins retain every original expected digest. All concrete job bindings rehashed. Exact four selected packages use the new offline overlay and matching per-module go.work. Prior338 artifacts retain original provenance.",
+  "source_tuple": {
+    "core": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+    "server": "ec3feae1cb35d8718dbbf33f5d11d6ab42206e3a",
+    "sn": "88bd7956d401fe6de1f764242e75e6ddf1a3653f"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

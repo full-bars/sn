@@ -126,7 +126,7 @@ func buildMonitorNativeCatalogPlan(ctx context.Context, request monitorNativeCat
 	if uint64(len(raw)) != request.Original.Bytes || monitorReadDigest(raw) != request.Original.Sha256 {
 		return plan, errors.New("native catalog original checkpoint differs from reviewed bytes")
 	}
-	record, err := decodeMonitorEconomicNativeCheckpoint(raw, request.Policy)
+	record, err := decodeMonitorEconomicNativeCheckpoint(raw, request.Policy, ctx)
 	if err != nil {
 		return plan, err
 	}
@@ -197,7 +197,7 @@ func planMonitorNativeCatalog(ctx context.Context, request monitorNativeCatalogR
 		return plan, err
 	}
 	defer func() { resultErr = errors.Join(resultErr, source.close()) }()
-	record, err := decodeMonitorEconomicNativeCheckpoint(raw, request.Policy)
+	record, err := decodeMonitorEconomicNativeCheckpoint(raw, request.Policy, ctx)
 	if err != nil {
 		return plan, err
 	}
@@ -243,7 +243,7 @@ func applyMonitorNativeCatalog(ctx context.Context, plan monitorNativeCatalogPla
 	if !present {
 		return errors.New("native catalog original checkpoint is absent")
 	}
-	record, err := decodeMonitorEconomicNativeCheckpoint(current, plan.Request.Policy)
+	record, err := decodeMonitorEconomicNativeCheckpoint(current, plan.Request.Policy, ctx)
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func applyMonitorNativeCatalog(ctx context.Context, plan monitorNativeCatalogPla
 	if !reflect.DeepEqual(expected, plan) {
 		return errors.New("native catalog approval lost exact original progress or forecast")
 	}
-	record, err = decodeMonitorEconomicNativeCheckpoint(original, plan.Request.Policy)
+	record, err = decodeMonitorEconomicNativeCheckpoint(original, plan.Request.Policy, ctx)
 	if err != nil {
 		return err
 	}

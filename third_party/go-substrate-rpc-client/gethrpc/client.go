@@ -79,6 +79,8 @@ type Client struct {
 	services *serviceRegistry
 
 	idCounter uint32
+	// Copies made by the compatibility client share transport custody.
+	transportGeneration *atomic.Uint64
 
 	// This function, if non-nil, is called when the connection is lost.
 	reconnectFunc reconnectFunc
@@ -210,20 +212,22 @@ func newClient(initctx context.Context, connect reconnectFunc) (*Client, error) 
 func initClient(conn ServerCodec, idgen func() ID, services *serviceRegistry) *Client {
 	_, isHTTP := conn.(*httpConn)
 	c := &Client{
-		idgen:       idgen,
-		isHTTP:      isHTTP,
-		services:    services,
-		writeConn:   conn,
-		close:       make(chan struct{}),
-		closing:     make(chan struct{}),
-		didClose:    make(chan struct{}),
-		reconnected: make(chan ServerCodec),
-		readOp:      make(chan readOp),
-		readErr:     make(chan error),
-		reqInit:     make(chan *requestOp),
-		reqSent:     make(chan error, 1),
-		reqTimeout:  make(chan *requestOp),
+		idgen:               idgen,
+		isHTTP:              isHTTP,
+		services:            services,
+		writeConn:           conn,
+		transportGeneration: new(atomic.Uint64),
+		close:               make(chan struct{}),
+		closing:             make(chan struct{}),
+		didClose:            make(chan struct{}),
+		reconnected:         make(chan ServerCodec),
+		readOp:              make(chan readOp),
+		readErr:             make(chan error),
+		reqInit:             make(chan *requestOp),
+		reqSent:             make(chan error, 1),
+		reqTimeout:          make(chan *requestOp),
 	}
+	c.transportGeneration.Store(1)
 	if !isHTTP {
 		go c.dispatch(conn)
 	}
@@ -255,6 +259,9 @@ func (c *Client) SupportedModules() (map[string]string, error) {
 
 // Close closes the client, aborting any in-flight requests.
 func (c *Client) Close() {
+	if c.transportGeneration != nil {
+		c.transportGeneration.Store(0)
+	}
 	if c.isHTTP {
 		return
 	}
@@ -529,6 +536,7 @@ func (c *Client) reconnect(ctx context.Context) error {
 		log.Trace("RPC client reconnect failed", "err", err)
 		return err
 	}
+	c.advanceTransportGeneration()
 	select {
 	case c.reconnected <- newconn:
 		c.writeConn = newconn
@@ -577,6 +585,7 @@ func (c *Client) dispatch(codec ServerCodec) {
 			}
 
 		case err := <-c.readErr:
+			c.advanceTransportGeneration()
 			conn.handler.log.Debug("RPC connection read error", "err", err)
 			conn.close(err, lastOp)
 			reading = false

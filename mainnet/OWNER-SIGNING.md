@@ -11,8 +11,13 @@ The implemented setup action is the native
 `AdminUtils.sudo_trim_to_max_allowed_uids(netuid, max_n)` call for SN25. The
 selected maximum comes from the retained owner-trim review. This command does
 not implement another subnet-owner action or EVM contract signing. The root
-`SetRootWeights` hotkey uses a separate hardware signer; its device model is not
-selected here. Operator demand-deposit wallets remain separate vault-held keys.
+hotkey retains separate hardware custody; its device model is not selected
+here. Reviewed v470 retires `SetRootWeights`, and unchanged registered/staked
+root participation needs no periodic native signature. Any required current
+root lifecycle mutation uses its independently identified owning/staker coldkey
+or admitted proxy; it cannot inherit this owner Ledger or its approval. See
+[current root participation](ROOT-CURRENT-PARTICIPANT.md). Operator demand-deposit
+wallets remain separate vault-held keys.
 
 This increment supplies a real pinned-SDK adapter and deterministic hardware
 boundary fixtures. A concrete Linux SDK build and its separate behavioral
@@ -22,12 +27,21 @@ runtime. See the open gates below before treating output as launch evidence.
 
 ## Exact native contract
 
+The selected launch reset is [best-effort owner trim](OWNER-TRIM-BEST-EFFORT.md).
+Its fresh execution/action domains are
+`urnetwork-mainnet-owner-trim-best-effort-execution-v1` and
+`urnetwork-mainnet-owner-trim-best-effort-action-v1`. They use the same Ledger
+fields and portable handoff below, with the best-effort selection rule and a
+separate submission-risk signature. The strict v1/v2 formats described here
+remain their original historical contracts; they do not establish an enforced
+window on the selected runtime.
+
 The original owner-trim v1 contract uses sr25519 `MultiSignature` variant 1 and
 disabled `CheckMetadataHash`. Its signed bytes, approval domain, journals and
 liabilities remain unchanged. A Ledger-derived account cannot be represented by
 silently changing that action's signature type.
 
-Ledger setup instead requires a fresh independently signed execution schema
+Strict Ledger setup instead requires a fresh independently signed execution schema
 `urnetwork-mainnet-owner-trim-execution-v2` and action schema
 `urnetwork-mainnet-owner-trim-action-v2`. The v2 template additionally supplies:
 
@@ -53,8 +67,9 @@ issuance must remain with their original owner.
 
 ## Prepare and export on the operator host
 
-Use the original v3 chain preparation, run directory and accepted plan hash from
-[BOOTSTRAP-CHAIN.md](BOOTSTRAP-CHAIN.md). The v2 unsigned template includes the
+Use the original v3 or passive-root v4 chain preparation, run directory and
+accepted plan hash from [BOOTSTRAP-CHAIN.md](BOOTSTRAP-CHAIN.md). The unsigned
+best-effort template includes the
 four fields above and the existing explicitly selected nonce, finalized birth,
 mortal period, fee reserve, attempt limit, custody and owned-route fields.
 `runtime14.hex` and `runtime15.hex` contain canonical lowercase `0x` hex. The
@@ -65,19 +80,24 @@ No conversion from metadata14 is synthesized.
 ```sh
 sn-mainnet bootstrap-chain trim-plan --config /private/chain.json \
   --run-dir /private/custody --accept-plan-hash sha256:ORIGINAL_PLAN \
-  --trim-config /private/trim-v2-template.json \
+  --durable-volumes /private/durable-volumes.json \
+  --durable-volumes-sha256 sha256:EXACT_HOST_DECLARATION \
+  --trim-config /private/trim-best-effort-template.json \
   --metadata /private/runtime14.hex --ledger-metadata /private/runtime15.hex \
   --trim-approval-key 0xINDEPENDENT_APPROVAL_KEY
 ```
 
 After the independent approval is attached to the emitted config, retain it as
-`trim-v2.json` and use `trim-apply` with the same original custody flags and
-`--trim-config /private/trim-v2.json`, without metadata flags. Then export:
+`trim-best-effort.json` and use `trim-apply` with the same original custody flags
+and `--trim-config /private/trim-best-effort.json`, without metadata flags. Then
+export:
 
 ```sh
 sn-mainnet bootstrap-chain trim-export --config /private/chain.json \
   --run-dir /private/custody --accept-plan-hash sha256:ORIGINAL_PLAN \
-  --trim-config /private/trim-v2.json --trim-approval-key 0xINDEPENDENT_APPROVAL_KEY \
+  --durable-volumes /private/durable-volumes.json \
+  --durable-volumes-sha256 sha256:EXACT_HOST_DECLARATION \
+  --trim-config /private/trim-best-effort.json --trim-approval-key 0xINDEPENDENT_APPROVAL_KEY \
   --metadata /private/runtime14.hex --ledger-metadata /private/runtime15.hex \
   > /private/owner-request.json
 ```
@@ -123,6 +143,15 @@ for this approved request, separate from any operator journal. Retain that
 directory permanently through signing and reconciliation. Examples below use
 placeholders for independently reviewed pins, not usable production approvals.
 
+Before signing, use the public `storage-owner-prepare plan` and `apply` sequence
+in [OWNER-CUSTODY-PREPARATION.md](OWNER-CUSTODY-PREPARATION.md) to provision the
+exact `mainnet-owner-signing` snapshot. A private directory alone cannot satisfy
+the signing-store constructor. Keep the portable inputs outside its fresh root,
+and retain the returned owner-local declaration and exact hash. Host bootstrap
+and trim commands similarly need their separate daemon declaration through the
+common `--durable-volumes` and `--durable-volumes-sha256` flags; those host inputs
+are not transferred as owner signing authority.
+
 ## Inspect, sign and return
 
 Inspect the exact reviewed request first:
@@ -144,7 +173,9 @@ sn-mainnet owner-signing sign --request /owner/trim/request.json \
   --accept-request-hash sha256:REQUEST_CONTENT_HASH \
   --trim-approval-key 0xINDEPENDENT_APPROVAL_KEY \
   --owner-account-id 0xEXISTING_OWNER_ACCOUNT_ID32 --expected-genesis 0xGENESIS \
-  --owner-state /owner/trim/device-state.json \
+  --owner-state /owner/trim/custody/device-state.json \
+  --durable-volumes /owner/trim/durable-volumes.json \
+  --durable-volumes-sha256 sha256:EXACT_OWNER_DECLARATION \
   --ledger-python /reviewed/python3 \
   --ledger-helper /owner/trim/owner_ledger_adapter.py \
   --ledger-helper-sha256 sha256:REVIEWED_HELPER \
@@ -177,7 +208,9 @@ The operator imports that reply without the owner's device or keys:
 ```sh
 sn-mainnet bootstrap-chain trim-import-reply --config /private/chain.json \
   --run-dir /private/custody --accept-plan-hash sha256:ORIGINAL_PLAN \
-  --trim-config /private/trim-v2.json --trim-approval-key 0xINDEPENDENT_APPROVAL_KEY \
+  --durable-volumes /private/durable-volumes.json \
+  --durable-volumes-sha256 sha256:EXACT_HOST_DECLARATION \
+  --trim-config /private/trim-best-effort.json --trim-approval-key 0xINDEPENDENT_APPROVAL_KEY \
   --request /private/owner-request.json \
   --accept-request-hash sha256:REQUEST_CONTENT_HASH \
   --reply /private/owner-reply.json --reply-sha256 sha256:EXACT_REPLY_FILE

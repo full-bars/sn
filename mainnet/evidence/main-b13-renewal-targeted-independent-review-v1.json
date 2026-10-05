@@ -1,0 +1,82 @@
+{
+  "activation_conditions": [
+    "Root selects exclusive next phase after actual current Main9 and any intervening jobs join; original waits and exact USER closure must be bound at adoption.",
+    "Fresh original entry floors and canonical successor generation/horizon remain required; no overlap with live exclusive jobs.",
+    "Actual compiler PASS/image custody is required before any body-job finalization; no image or outcome is inferred by this review.",
+    "If another owned DB cohort intervenes, bind its actual terminal/cleanup/absent-owned-resource proof before admission."
+  ],
+  "body_class": {
+    "cumulative_data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "memory_max_bytes": 2147483648,
+    "memory_minimum_available_bytes": 113816633344,
+    "swap_max_bytes": 0
+  },
+  "body_runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-main-b13-renewal-body-v1.py",
+    "sha256": "831c82998d27e99a75ff6dbbc0b74621c4da2bc55590a842b2ef0500ca534492"
+  },
+  "body_sealer": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/seal-main-b13-renewal-body-v1.py",
+    "sha256": "c42fe7c90a2b3df9f766100cb400d0b22ba35d83cbcbc5cf664a64bb2e2a2778"
+  },
+  "checks": {
+    "all_limits_unchanged_from_v1": true,
+    "body_semantics": "one exact root; original exit101 remains FAIL; normal requires five protected exports; separate omission body requires actual normal PASS, distinct actual mutant image and exact causal assertion",
+    "compiler_profile": "one exact root libtest; offline locked no-run; actual newly-built Cargo artifact required",
+    "corrected_cargo_package_id": "path+file:///mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/stage-main-b13-renewal-normal-v1#runtime-metadata-probe@0.1.0",
+    "dependency_custody": "retained 464-package closure; exact old root removed and 37-file selected main root substituted; SDK/registry and Cargo configuration verified before and after",
+    "invalid_v1_preserved": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-compiler-job-v1.json",
+      "sha256": "02a2e53a7dcd8e74528c94cce443be83eb24727b30ff9869f1a6daa0ed7acdf6"
+    },
+    "job_bindings_verified": 256,
+    "main_component_bytes": 590931,
+    "main_component_files_verified": 37,
+    "source_ast_parsed": true
+  },
+  "compiler_class": {
+    "cumulative_data_growth_stop_bytes": 12884901888,
+    "data_minimum_available_bytes": 15032385536,
+    "disk_forecast_build_bytes": 6442450944,
+    "disk_future_export_reserve_bytes": 1073741824,
+    "margin": 2,
+    "memory_max_bytes": 8589934592,
+    "memory_minimum_available_bytes": 120259084288,
+    "swap_max_bytes": 0,
+    "timeout_seconds": 1800,
+    "whole_owner_horizon_seconds": 2190
+  },
+  "compiler_job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-compiler-job-v2.json",
+    "sha256": "4580b67eed790b5dad9346371d325ecf9992e88c1e1c1be00249238dac045384"
+  },
+  "compiler_runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-main-b13-renewal-rust-compiler-v1.py",
+    "sha256": "869e22e5d55bdf056a776550dbc9cb22d7c7423b7ce90ee66cf40703559adaf3"
+  },
+  "compiler_sealer": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/seal-main-b13-renewal-rust-compiler-v2.py",
+    "sha256": "1d3697c0ca0c3f02a531c60524638f4cecb0b1340bac89617e1fa1cef5da39a7"
+  },
+  "created_at": "2026-10-05T06:18:29.035581+00:00",
+  "executed": {
+    "body": false,
+    "compiler": false,
+    "docker": false,
+    "systemd": false,
+    "target_lock": false
+  },
+  "limitations": [
+    "This is source and prospective-class review, not actual resource admission or qualification result.",
+    "No broad Rust113, Wasm or Go result is claimed."
+  ],
+  "reviewer": "astra_qualification_resource_review",
+  "schema": "targeted-main-rust-renewal-independent-review-v1",
+  "source_tuple": {
+    "core": "7ca8e222e3496552146f2d97eb09237401662c99",
+    "server": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+    "sn": "b13a422536f2e247a0e01f70de9e1cb8569ff366"
+  },
+  "status": "SOURCE_AND_PROSPECTIVE_CLASS_ACK_ACTUAL_ADOPTION_PENDING"
+}

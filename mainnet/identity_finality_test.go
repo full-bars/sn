@@ -43,6 +43,9 @@ func newIdentityFinalityFixture(t *testing.T) *identityFinalityFixture {
 		self.headHashes[number], self.headHeaders[hash], self.canonicalKVs[number] = hash, header, hash
 	}
 	client.httpClient.Transport = roundTripFunc(self.roundTrip)
+	// Tests that leave a lower head in place exhaust the real retry boundary
+	// explicitly. Recovery tests replace this hook with their transition.
+	client.retryWait = func(context.Context, time.Duration) error { return context.DeadlineExceeded }
 	return self
 }
 
@@ -355,7 +358,7 @@ func TestRuntimeSnapshotFinalityRejectsRegressionAfterMetadata(t *testing.T) {
 		}
 	}
 	snapshot, err := f.client.readRuntimeSnapshotAtIdentity(t.Context(), identity)
-	if !errors.Is(err, errRpcIntegrity) || snapshot.Schema != "" || f.counts["state_getMetadata"] != 1 {
+	if !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || snapshot.Schema != "" || f.counts["state_getMetadata"] != 1 {
 		t.Fatalf("unfinalized runtime bytes were published: %+v %v", snapshot, err)
 	}
 }
@@ -382,6 +385,7 @@ func TestIdentityFinalityWitnessRemainsPrivateAndRequired(t *testing.T) {
 // reporting independently encoded finalized90 after the chosen read completes.
 func installNativeFinalityRegression(t *testing.T, client *rpcClient, trigger func(string, []any) bool) *atomic.Bool {
 	t.Helper()
+	client.retryWait = func(context.Context, time.Duration) error { return context.DeadlineExceeded }
 	header, hash := rootReceiptHeaderFixture(t, testGenesisHash, 90, nil, false)
 	regressed := &atomic.Bool{}
 	transport := client.httpClient.Transport
@@ -423,7 +427,7 @@ func TestRootPreviewFinalityClosesAfterStorage(t *testing.T) {
 	client, fixture := newRootFixture(t)
 	regressed := installNativeFinalityRegression(t, client, func(method string, _ []any) bool { return method == "state_getStorage" })
 	preview, err := client.readRootPreview(t.Context(), fixture.policy, "synthetic-policy")
-	if !regressed.Load() || !errors.Is(err, errRpcIntegrity) || preview.Schema != "" || preview.ReadOnlyReady {
+	if !regressed.Load() || !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || preview.Schema != "" || preview.ReadOnlyReady {
 		t.Fatalf("root storage outlived finality: %+v %v", preview, err)
 	}
 }
@@ -433,7 +437,7 @@ func TestSubnetPreviewFinalityClosesAfterStorage(t *testing.T) {
 	client, _, policy := newSubnetFixture(t)
 	regressed := installNativeFinalityRegression(t, client, func(method string, _ []any) bool { return method == "state_getStorage" })
 	preview, err := client.readSubnetPreview(t.Context(), policy, "synthetic-policy")
-	if !regressed.Load() || !errors.Is(err, errRpcIntegrity) || preview.Schema != "" || preview.CensusComplete {
+	if !regressed.Load() || !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || preview.Schema != "" || preview.CensusComplete {
 		t.Fatalf("subnet storage outlived finality: %+v %v", preview, err)
 	}
 }
@@ -444,7 +448,7 @@ func TestRecycleModeFinalityClosesAfterStorage(t *testing.T) {
 	client, policy, _ := newRecycleTestClient(t, &mode, nil)
 	regressed := installNativeFinalityRegression(t, client, func(method string, _ []any) bool { return method == "state_getStorage" })
 	observation, err := client.readRecycleMode(t.Context(), policy, "synthetic-policy")
-	if !regressed.Load() || !errors.Is(err, errRpcIntegrity) || observation.Schema != "" || observation.ModeGatePassed {
+	if !regressed.Load() || !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || observation.Schema != "" || observation.ModeGatePassed {
 		t.Fatalf("Recycle mode outlived finality: %+v %v", observation, err)
 	}
 }
@@ -455,7 +459,7 @@ func TestSubnetDiscoveryFinalityClosesAfterStorage(t *testing.T) {
 	client, _, _, snapshot := newSubnetDiscoveryFixture(t)
 	regressed := installNativeFinalityRegression(t, client, func(method string, _ []any) bool { return method == "state_queryStorageAt" })
 	observation, err := client.readSubnetDiscovery(t.Context(), snapshot, rootObjectHash(snapshot))
-	if !regressed.Load() || !errors.Is(err, errRpcIntegrity) || observation.Schema != "" || observation.MembershipComplete {
+	if !regressed.Load() || !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || observation.Schema != "" || observation.MembershipComplete {
 		t.Fatalf("discovery membership outlived finality: %+v %v", observation, err)
 	}
 }
@@ -478,7 +482,7 @@ func TestBootstrapChainReadinessFinalityClosesAfterRootCheckpoint(t *testing.T) 
 		return false
 	})
 	result, err := f.client.observeBootstrapChainReadiness(f.storageContext(t.Context()), f.preparation)
-	if !regressed.Load() || !errors.Is(err, errRpcIntegrity) || result.ObservationComplete || result.Census != nil || result.Status != "unresolved" || !reflect.DeepEqual(original, f.journals(t)) {
+	if !regressed.Load() || !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || result.ObservationComplete || result.Census != nil || result.Status != "unresolved" || !reflect.DeepEqual(original, f.journals(t)) {
 		t.Fatalf("late finality loss published readiness or changed custody: heads=%d checks=%d result=%+v err=%v", heads, afterCensus, result, err)
 	}
 }
@@ -497,7 +501,7 @@ func TestValidatorActivationNativeFinalityClosesAfterCheckpointStorage(t *testin
 		return method == "state_getStorage" && params[0] == key.Hex()
 	})
 	result, err := f.chain.client.observeValidatorActivationNative(t.Context(), f.chain.preparation, readiness)
-	if !regressed.Load() || !errors.Is(err, errRpcIntegrity) || result != nil {
+	if !regressed.Load() || !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || result != nil {
 		t.Fatalf("native checkpoint storage outlived finality: %+v %v", result, err)
 	}
 }
@@ -525,7 +529,7 @@ func TestValidatorActivationStakeFinalityClosesAfterActivityStorage(t *testing.T
 		return method == "state_getStorage" && params[0] == key.Hex()
 	})
 	result, err := client.observeValidatorActivationStake(t.Context(), activation.chain.preparation, readiness, prior)
-	if !regressed.Load() || !errors.Is(err, errRpcIntegrity) || result != nil {
+	if !regressed.Load() || !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || result != nil {
 		t.Fatalf("stake activity storage outlived finality: %+v %v", result, err)
 	}
 }

@@ -31,10 +31,42 @@ type monitorServiceReadHooks struct {
 	afterClose func(*os.File) error
 }
 
+// Only the complete service-policy ingress can select the larger declared
+// role frame. Progress, checkpoint and repair records retain their old bound.
+type monitorServiceReadProfile uint8
+
+const (
+	monitorServiceRecordProfile monitorServiceReadProfile = iota
+	monitorServicePolicyProfile
+	monitorRootCheckpointProfile
+)
+
 // Finite reads refuse aliases, special files, oversized data and replacements
 // within a read. Atomic replacement between separate samples remains ordinary.
 func readMonitorServiceFile(ctx context.Context, path string, limit int64, private bool, hooks monitorServiceReadHooks) (raw []byte, resultErr error) {
-	if ctx == nil || !filepath.IsAbs(path) || filepath.Clean(path) != path || limit < 1 || limit > 128*1024 {
+	return readMonitorServiceFileProfile(ctx, path, limit, private, hooks, monitorServiceRecordProfile)
+}
+
+// A complete policy is read before its independently declared per-role frame
+// can be decoded. Both callers still enforce validateFrame before using it.
+func readMonitorServicesPolicyFile(ctx context.Context, path string, hooks monitorServiceReadHooks) ([]byte, error) {
+	return readMonitorServiceFileProfile(ctx, path, maxMonitorFeeServicesBytes, false, hooks, monitorServicePolicyProfile)
+}
+
+// Profiles select only a finite ingress ceiling; every profile shares the
+// same descriptor custody, cancellation, replacement and close checks.
+func readMonitorServiceFileProfile(ctx context.Context, path string, limit int64, private bool, hooks monitorServiceReadHooks, profile monitorServiceReadProfile) (raw []byte, resultErr error) {
+	maximum := int64(128 * 1024)
+	switch profile {
+	case monitorServiceRecordProfile:
+	case monitorServicePolicyProfile:
+		maximum = maxMonitorFeeServicesBytes
+	case monitorRootCheckpointProfile:
+		maximum = maxMonitorCheckpointBytes
+	default:
+		return nil, &monitorServiceReadError{code: "invalid"}
+	}
+	if ctx == nil || !filepath.IsAbs(path) || filepath.Clean(path) != path || limit < 1 || limit > maximum {
 		return nil, &monitorServiceReadError{code: "invalid"}
 	}
 	defer func() {

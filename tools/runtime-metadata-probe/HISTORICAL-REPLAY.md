@@ -4,7 +4,7 @@
 job from stdin and writes a report only after complete execution and post-state
 comparison. The process owner must impose a finite total deadline (300 seconds
 by default), bounded stdout/stderr capture, and kill/join on cancellation. This
-worker does not yet have a production monitor caller.
+worker's subprocess lifecycle is owned by the native producer's Go supervisor.
 
 The job binds canonical SCALE parent/child headers, their exact hashes, the
 complete extrinsic vector, exact parent runtime code, and raw `StorageProof`
@@ -13,6 +13,22 @@ nodes. Parent linkage, child number, extrinsics root, proved `:code`, proved
 separate checks. Consensus seals are retained in the original header identity
 and removed only from the runtime execution input. No seal/finality verifier or
 source-to-code admission is supplied by this backend.
+
+Capture executes `Core_execute_block` in the same onchain context as strict
+replay. In the pinned SDK, an explicit proved `:heappages` value selects static
+memory sizing only in that context; the offchain proof helper ignores it.
+Absent heap overrides retain the bounded dynamic strategy. Heap parity and
+growth regressions are authored but await independent execution.
+
+Incremental refill regressions exercise the public directory/feed capture
+entry from an empty node directory. Each response retains only the requested
+node after proving membership with the pinned SDK's exact top or child read
+proof at the requested prefix. Six authored roots cover ordinary reads/writes,
+unread siblings needed by deletion, top/child ranges and odd nibbles, missing
+iterator/root nodes, and a foreign acknowledgement followed by exact restart.
+They await independent compilation and execution. These in-process Rust tests
+do not replace qualification of the Go broker, process deadline or durable
+producer cursor.
 
 The executor and trie implementation are pinned to SDK
 `cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a`. A strict adapter runs fallible

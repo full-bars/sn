@@ -1,0 +1,116 @@
+{
+  "elapsed_estimate_limit": "Forecast from prior qualified overlay; actual I/O and compiler cache can vary. Server compile and new DB bodies separate.",
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "unit": "sn-latest8e-server-final-overlay-metadata-v1-20261005.service"
+  },
+  "expected_elapsed_seconds": [
+    60,
+    150
+  ],
+  "forecast": {
+    "basis": "Same qualified bounded metadata mechanism. At most20 one-MiB Git show captures, three64MiB offline Go-list logs and tiny immutable overlay/workspace. Base31k-file archive only read/verified; no new full source copy. Parent actual overlay metadata succeeded; this new tuple still requires actual metadata.",
+    "margin": 2,
+    "metadata_disk_bytes": 2147483648,
+    "metadata_memory_bytes": 2147483648,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, launch_data_available-4294967296)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "rebased_or_retargeted": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server-final-overlay-metadata-job-v1.json",
+    "sha256": "efc992fc00594a1ad8c26224ed36d15ea31b78d80b1f64a5778b7800337c3263"
+  },
+  "overlay_bytes": 258576,
+  "overlay_files": 19,
+  "parent_actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest127-server-final-overlay-metadata-v1.receipt.json",
+    "sha256": "9dacb512a86e18eff90555af179add0ed122c69f4c93ba1efbaa60bd5558ab21"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 12884901888,
+    "history_count": 0,
+    "job_sha256": "efc992fc00594a1ad8c26224ed36d15ea31b78d80b1f64a5778b7800337c3263",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 1,
+    "runner_sha256": "9eb7e8e3b4c058d589342106a325912f49449524f27f5f2542d3d5b8bc16e70b",
+    "short_count": 0,
+    "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_METADATA_STAGE"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest8e-server-overlay-metadata-adoption-20261005-v1.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest8e-server-overlay-metadata-v1.py",
+    "sha256": "9eb7e8e3b4c058d589342106a325912f49449524f27f5f2542d3d5b8bc16e70b"
+  },
+  "schema": "latest8e-server-final-overlay-metadata-review-v1",
+  "scope": "One MODEL plus one metadata stage only after actual Server2f8 compiler and Xops3 joins; no compiler/body/extraDB/Rust/downloads. Existing178/ba body/result preserved. Prior5a compile/list failure and all Xops retries preserved.",
+  "source_compatibility": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/next-peer-source-binding-127db99c.json",
+    "sha256": "515fa82e896a6f4162ad6ea4cdef5530b9c3e153965702ce72f96edc91fbdc91"
+  },
+  "source_deltas": [
+    {
+      "all_changed_paths": [
+        "M\tmainnet/economic_conservation_funding.go",
+        "M\tmainnet/economic_conservation_funding_archive.go",
+        "A\tmainnet/economic_conservation_funding_flow.go",
+        "A\tmainnet/economic_conservation_funding_flow_public_test.go",
+        "A\tmainnet/economic_conservation_funding_flow_test.go",
+        "M\tmainnet/owner_recycle_custody_integrity_test.go",
+        "M\tmainnet/owner_recycle_store.go",
+        "M\tmainnet/owner_signing_import_test.go",
+        "M\tmainnet/owner_trim_custody_test.go",
+        "M\tmainnet/owner_trim_store.go",
+        "M\tmainnet/repair_operator_authority.go",
+        "A\tmainnet/repair_operator_environment_test.go"
+      ],
+      "base": "b0371195eb9d2127adab8dfe917e1516838b010a",
+      "go_mod_sum_unchanged": true,
+      "head": "8e0104964cfb13e81c8510aab0b2917713669654",
+      "module": "sn",
+      "repo": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-owner-fixture-final/sn",
+      "tree": "569542d5dc7e4053d4de5cc9cfe990c33b81a7a5"
+    },
+    {
+      "all_changed_paths": [
+        "M\tmodel/contract_usage_db_test.go",
+        "M\tmodel/provider_url_probe_completed_priority_test.go",
+        "M\tmodel/provider_url_probe_due_test.go",
+        "M\tmodel/provider_url_probe_recovery_pacing_test.go",
+        "M\tmodel/st_provider_closed_work_test.go",
+        "M\tmodel/subscription_force_close_dispute_test.go",
+        "M\tmodel/subscription_settlement_amplification_test.go"
+      ],
+      "base": "0f6a48a1b896d0cf3b2dbdabb94114659980648e",
+      "go_mod_sum_unchanged": true,
+      "head": "2f8a6ee4e4042d77ca3b257c2b2eaf495ba1e97d",
+      "module": "server",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/server-final-legacy-fixture/server",
+      "tree": "3efebcff523407040102f65a000aca6ac2f9b65f"
+    }
+  ],
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "2f8a6ee4e4042d77ca3b257c2b2eaf495ba1e97d",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION_AFTER_XOPS_JOIN"
+}

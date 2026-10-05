@@ -1,0 +1,36 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 15032385536,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "92dfdf5c978012edf58f46a9c66d298502a16302c96e4b64acd207cc7bd0527d",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "network_dependency_count": 1,
+  "runner_sha256": "0c48ac80ae56237926bedeecded75dd793474eef308a66bcd8be632a4ca62824",
+  "short_count": 0,
+  "status": "ADOPTED_PUBLISHED_MAIN_METADATA_WITH_ONE_PINNED_DEPENDENCY_FETCH",
+  "adopted_at": "2026-10-05T05:23:45.753485+00:00",
+  "review_sha256": "386ed3023bbf06aa1f5b68a90adab368c2c848828b1bdf3faf778976911ccd8f",
+  "scope": "Three exact published-main Git archives, one explicit checksum-pinned published gvisor dependency fetch, then three offline readonly go list -deps -test graphs. No compiler, body, DB, auto toolchain fetch, or inherited old-graph qualification.",
+  "source_tuple": {
+    "core": "7ca8e222e3496552146f2d97eb09237401662c99",
+    "server": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+    "sn": "babb0af573f6bdfe95a7db6d8888bbe9327fc39b"
+  },
+  "verified_pins": [
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-metadata-job-v1.json",
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1.receipt.json",
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-user-terminal-readback-v2.json",
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-published-main-metadata-v1.py",
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-source-manifest-v1.json"
+  ]
+}

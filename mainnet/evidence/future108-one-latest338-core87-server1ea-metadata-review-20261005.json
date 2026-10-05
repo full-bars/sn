@@ -1,0 +1,277 @@
+{
+  "author_validation": "Clean exact Git heads/trees and complete source deltas read, SN cumulative intake matched by blob/hash, parent expected hashes retained. Actual prior metadata and joined nonzero943/Xops waits replayed. Python AST parse only; no author staging, Go execution, compiler or body.",
+  "closed_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "closed_model37_actual_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-independent-readback-v1.json",
+    "sha256": "2492394fc0c1152c61b6040985b2e10e9c5e3b9c34de2ae4c231efd59624955b"
+  },
+  "closed_model37_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+    "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+  },
+  "closed_monitor943_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+    "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+  },
+  "effective_overlay_files": 123,
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 1800,
+    "TimeoutStopSec": 10,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-latest338-core87-server1ea-metadata-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-latest338-core87-server1ea-metadata-v1-20261005.service"
+  },
+  "expected_elapsed_seconds": [
+    120,
+    600
+  ],
+  "forecast": {
+    "actual_model_count": 0,
+    "basis": "92 individually bounded1MiB Git-show logs plus three64MiB graph logs, 1784943 bytes of new physical source, bounded wait/resource receipts and immutable reused archives. Same2GiB forecast at2x plus conservatively held4GiB former-model reserve,12GiB data/108GiB memory. Forecast is prospective, not observed peak proof; hard4GiB memory/no swap and4GiB data-growth cutoff.",
+    "held_former_model_disk_bytes": 4294967296,
+    "held_former_model_memory_bytes": 4294967296,
+    "margin": 2,
+    "metadata_disk_bytes": 2147483648,
+    "metadata_memory_bytes": 2147483648
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, immediate_available-4294967296)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "rebased_or_retargeted": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-core87-server1ea-metadata-job-v1.json",
+    "sha256": "d086b6e2ee8fd3d6e64f6e91804068bf242f366e48204d58518c33335ef2bfe3"
+  },
+  "overlay_bytes": 1784943,
+  "overlay_files": 92,
+  "parent_actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server9430262c-monitor-metadata-v1.receipt.json",
+    "sha256": "1b79d394c90f8f5b5a549c05582607722dcaf07d03b47c06a18a478475009fc7"
+  },
+  "prior_compiler": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server873e313c-monitor-normal-compile-v1.receipt.json",
+    "sha256": "4cc6b22a34861164dd82a8c5aacfbf35d1c065c92ffa55f941508c82087a73df"
+  },
+  "prior_failed_compiler": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server7885-monitor-normal-compile-v1.receipt.json",
+    "sha256": "094379f175a77e4d0abae6791e833ca2d0fb5e9fd5ec75cd7e6b14eba9e11dd6"
+  },
+  "prior_xops33": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-v1.receipt.json",
+    "sha256": "56748837d4ee77742f4af3250d30a34916566469739a05cdbaad3aa64e18ee2b"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 12884901888,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "d086b6e2ee8fd3d6e64f6e91804068bf242f366e48204d58518c33335ef2bfe3",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "runner_sha256": "d33e8af8f9610a704c85e64e6e13e027f769fff8baab952ade11153af08bf792",
+    "short_count": 0,
+    "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest338-core87-server1ea-metadata-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest338-core87-server1ea-delta-metadata-v1.py",
+    "sha256": "d33e8af8f9610a704c85e64e6e13e027f769fff8baab952ade11153af08bf792"
+  },
+  "schema": "latest338-core87-server1ea-delta-metadata-review-v1",
+  "scope": "Exactly92 Git blobs (SN54/Core12/Server26) over immutable943 overlay and three offline Go-list dependency/test graphs. Exact338/Core87/1ea only; no compile/export/body/download/DB startup or qualification inheritance. Prior943 monitor15PASS2FAIL and Xops33 32PASS1FAIL remain unchanged and joined.",
+  "source_changes": "Exact54SN +12Core +26Server files; all module manifests unchanged. Two new Go package directories represented by bound overlays; all physical baseline archives stay immutable.",
+  "source_deltas": [
+    {
+      "all_changed_paths": [
+        "M\tcrv4/validator_identity.go",
+        "M\tcrv4/validator_identity_test.go",
+        "A\tcrv4/validator_read_finality.go",
+        "A\tcrv4/validator_read_finality_test.go",
+        "M\tcrv4/validator_schedule.go",
+        "M\tcrv4/validator_stake.go",
+        "A\tmainnet/bootstrap_plan_dispatch_test.go",
+        "M\tmainnet/durable_volume_owner.go",
+        "M\tmainnet/economic_conservation_carry_chronology_test.go",
+        "M\tmainnet/economic_conservation_command.go",
+        "A\tmainnet/economic_conservation_metrics_recovery_test.go",
+        "M\tmainnet/economic_conservation_provider_earning_test.go",
+        "M\tmainnet/economic_conservation_provider_originals.go",
+        "A\tmainnet/economic_emission_finality_coverage_test.go",
+        "M\tmainnet/economic_emission_historical.go",
+        "M\tmainnet/economic_emission_observe.go",
+        "M\tmainnet/economic_emission_test.go",
+        "A\tmainnet/economic_native_fee_outcome_command.go",
+        "A\tmainnet/economic_native_fee_outcome_export_test.go",
+        "A\tmainnet/economic_native_fee_outcome_test.go",
+        "M\tmainnet/finalized_mapping.go",
+        "M\tmainnet/historical_fee_context_test.go",
+        "M\tmainnet/identity.go",
+        "M\tmainnet/identity_finality_test.go",
+        "M\tmainnet/main.go",
+        "A\tmainnet/monitor_economic_finality_coverage_test.go",
+        "M\tmainnet/monitor_economic_native.go",
+        "A\tmainnet/monitor_progress_cause_test.go",
+        "M\tmainnet/monitor_progress_retry.go",
+        "M\tmainnet/native_finality.go",
+        "A\tmainnet/native_finality_coverage.go",
+        "A\tmainnet/native_finality_coverage_test.go",
+        "M\tmainnet/repair_operator_census.go",
+        "A\tmainnet/repair_operator_census_availability_test.go",
+        "A\tmainnet/repair_operator_observation_test.go",
+        "M\tmainnet/repair_operator_resources.go",
+        "M\tminer/onchain/api.go",
+        "M\tminer/onchain/eth.go",
+        "A\tminer/onchain/read_retry.go",
+        "A\tminer/onchain/read_retry_test.go",
+        "M\tminer/provider_registration.go",
+        "A\tminer/provider_registration_cause_test.go",
+        "M\tminer/sn_read_retry_cause.go",
+        "A\tnativefee/README.md",
+        "A\tnativefee/invoke_linux.go",
+        "A\tnativefee/invoke_linux_test.go",
+        "A\tnativefee/invoke_other.go",
+        "A\tnativefee/originals_linux.go",
+        "A\tnativefee/supervisor_linux.go",
+        "A\tnativefee/verified.go",
+        "A\tvalidator/attempt_binding_read_retry.go",
+        "A\tvalidator/attempt_binding_read_retry_test.go",
+        "M\tvalidator/attempt_boundary_cache.go",
+        "M\tvalidator/trail.go"
+      ],
+      "base": "8e0104964cfb13e81c8510aab0b2917713669654",
+      "go_mod_sum_unchanged": true,
+      "head": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65",
+      "intake": {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-validator-read-final/evidence/intake.json",
+        "sha256": "2cac86a1f5f7d5652858c4b595b5250817fe0d14b2471929064cb18e086a9392"
+      },
+      "module": "sn",
+      "repo": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-validator-read-final/sn",
+      "tree": "c7535371381ce66ff3b2dd50bd80f871b3029059"
+    },
+    {
+      "all_changed_paths": [
+        "M\thttp_upgrade.go",
+        "A\thttp_upgrade_close.go",
+        "A\thttp_upgrade_error.go",
+        "A\thttp_upgrade_error_test.go",
+        "A\thttp_upgrade_read_cause_test.go",
+        "A\thttp_upgrade_websocket_cause_test.go",
+        "M\tnet_http.go",
+        "M\tnet_http_exhaustion.go",
+        "A\tnet_http_exhaustion_dns_test.go",
+        "A\tnet_http_exhaustion_incomplete_test.go",
+        "A\ttransfer_close_delivery_shutdown_test.go",
+        "M\ttransfer_contract_manager.go"
+      ],
+      "base": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+      "go_mod_sum_unchanged": true,
+      "head": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+      "intake": {
+        "path": "/mnt/data/sn-testnet/mainnet-sdk-error-close-composition-20261005/evidence/final-v2/intake.json",
+        "sha256": "9fcf544ba8e95ad79777f0fde56fc8cffecbf9bfd6197121039164d918364b42"
+      },
+      "module": "connect",
+      "repo": "/mnt/data/sn-testnet/mainnet-sdk-error-close-composition-20261005/connect",
+      "tree": "16e4f4b74ca6f6a9f0da43567e1fceea5064ac7d"
+    },
+    {
+      "all_changed_paths": [
+        "A\tcli/stnativefees/README.md",
+        "A\tcli/stnativefees/main.go",
+        "A\tcli/stnativefees/main_test.go",
+        "M\tcontroller/st_controller.go",
+        "A\tcontroller/st_native_fee_settlement.go",
+        "A\tcontroller/st_native_fee_settlement_public_test.go",
+        "A\tcontroller/st_native_fee_settlement_test.go",
+        "A\tcontroller/st_transaction_endpoint_read_test.go",
+        "M\tcontroller/st_transaction_gas_policy.go",
+        "M\tdb_migrations.go",
+        "A\tenv_bounded_resource_linux.go",
+        "A\tenv_bounded_resource_linux_test.go",
+        "A\tenv_bounded_resource_other.go",
+        "A\tmodel/st_native_fee_original_model.go",
+        "A\tmodel/st_native_fee_recover_model.go",
+        "A\tmodel/st_native_fee_settlement_model.go",
+        "A\tmodel/st_native_fee_settlement_model_test.go",
+        "A\tmodel/st_native_fee_settlement_public_test.go",
+        "M\tmodel/st_transaction_gas_model.go",
+        "A\tmonitor/signal_migrations_native_fee.go",
+        "A\tmonitor/signal_migrations_native_fee_test.go",
+        "M\tmonitor/signal_migrations_sn_mainnet.go",
+        "A\tst_native_fee_denomination.go",
+        "A\tst_native_fee_denomination_test.go",
+        "A\tst_native_fee_settlement_schema.go",
+        "A\tst_native_fee_settlement_schema_test.go"
+      ],
+      "base": "9430262c868d563e1443ebdce24bcec480bfcd81",
+      "go_mod_sum_unchanged": true,
+      "head": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+      "intake": {
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/server-final-native-fee/source-handoff-1ea80fa2-peer3388840a.json",
+        "sha256": "bc9be6a12bc4a299574d9d1e76cf12e8c81d2cdaab8542274999e4aabca0abc5"
+      },
+      "module": "server",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/server-final-native-fee/server",
+      "tree": "e01c120c86eb2c00e9af77e22c08e7b13ea42e3e"
+    }
+  ],
+  "source_tuple": {
+    "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+    "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+    "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION",
+  "virtual_package_dirs": [
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/server/cli/stnativefees",
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/sn/nativefee"
+  ]
+}

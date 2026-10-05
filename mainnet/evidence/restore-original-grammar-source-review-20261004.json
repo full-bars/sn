@@ -1,0 +1,36 @@
+{
+  "schema": "urnetwork-source-review-v1",
+  "date_utc": "2026-10-04",
+  "source_parent": "b4662ed8e8571d011abda4d5454a97aa184a8b5a",
+  "status": "source-candidate-not-executed",
+  "finding": "Snapshot restoration decoded and reserialized original checkpoint attributes without requiring the canonical bytes demanded by the runtime opener. Whitespace or a conflicting duplicate key could therefore be refused at original startup yet normalized into a restored owner.",
+  "production_change": {
+    "path": "internal/durablehead/restore_linux.go",
+    "function": "PlanRestore",
+    "behavior": "Require original checkpoint bytes to equal their canonical encoding before any physical checkpoint derivation. Preserve original rejected bytes and return the existing identity class.",
+    "adjacent_callers_reviewed": [
+      "mainnet fixed snapshots",
+      "mainnet complete-union snapshot views",
+      "mainnet successor local and nonce member adapters",
+      "mainnet nested monitor checkpoint trees",
+      "miner fleet recovery and provider claim snapshots"
+    ],
+    "grammar_change": false,
+    "capacity_change": false,
+    "restart_authority_change": false
+  },
+  "regression": {
+    "path": "mainnet/storage_prepare_restore_grammar_test.go",
+    "root": "TestStoragePreparationRestorePreservesRuntimeCheckpointGrammar",
+    "cases": 12,
+    "positive_controls": "Actual fresh preparation, canonical empty and committed runtime restart, public export and restore, then original history readback under both exclusive and complete-union profiles.",
+    "negative_controls": "Whitespace and conflicting duplicate-schema originals fail both actual runtime admission and public restore planning; target members remain absent and held/archive original attribute bytes remain unchanged.",
+    "proposed_causal_control": "Remove only the canonical comparison in PlanRestore. The malformed-original public restore controls must then fail while their runtime refusals remain in place.",
+    "execution": "Not compiled or executed by the author. Independent normal, race and causal-control qualification remains pending."
+  },
+  "source_checks": [
+    "gofmt",
+    "git diff --check"
+  ],
+  "qualification": false
+}

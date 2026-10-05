@@ -28,7 +28,7 @@ type monitorEconomicNativeArchive struct {
 	Events              uint64                    `json:"events"`
 }
 
-func decodeMonitorEconomicNativeCheckpoint(raw []byte, policy monitorEconomicNativePolicy) (record monitorEconomicNativeCheckpoint, resultErr error) {
+func decodeMonitorEconomicNativeCheckpoint(raw []byte, policy monitorEconomicNativePolicy, contexts ...context.Context) (record monitorEconomicNativeCheckpoint, resultErr error) {
 	if len(raw) == 0 || len(raw) > maxRpcReplyBytes {
 		return record, errors.New("native checkpoint exceeds its byte bound")
 	}
@@ -50,6 +50,9 @@ func decodeMonitorEconomicNativeCheckpoint(raw []byte, policy monitorEconomicNat
 		return record, err
 	}
 	if err := record.State.Catalog.validate(policy.HistoryCatalog, policy.Role, policy.identityHash(), ""); err != nil {
+		return record, err
+	}
+	if err := record.State.admitRuntime(nativeRuntimeAdmissionContext(contexts), policy); err != nil {
 		return record, err
 	}
 	return record, record.State.validate(policy)
@@ -80,7 +83,7 @@ func (self *monitorEconomicNativeArchive) validate(policy monitorEconomicNativeP
 	}
 	seen := map[string]bool{}
 	for _, reference := range self.Segments {
-		if err := reference.validate(); err != nil {
+		if err := reference.validateLimit(policy.archiveReferenceBytes); err != nil {
 			return err
 		}
 		if seen[reference.Path] || seen[reference.Path+".lock"] {
@@ -108,7 +111,7 @@ func (self *monitorEconomicNativeArchive) validate(policy monitorEconomicNativeP
 // Rollover appends exactly one immutable prefix; it never discards earlier
 // segments or changes a retained incomplete batch's original high-water.
 func compactMonitorEconomicNative(record monitorEconomicNativeCheckpoint, reference monitorHistoryReference, policy monitorEconomicNativePolicy) (monitorEconomicNativeCheckpoint, error) {
-	if err := reference.validate(); err != nil {
+	if err := reference.validateLimit(policy.archiveReferenceBytes); err != nil {
 		return record, err
 	}
 	if err := record.State.validate(policy); err != nil {
@@ -170,7 +173,7 @@ func openMonitorEconomicNativeArchive(ctx context.Context, policy monitorEconomi
 			return owners, err
 		}
 		owners = append(owners, owner)
-		record, err := decodeMonitorEconomicNativeCheckpoint(raw, policy)
+		record, err := decodeMonitorEconomicNativeCheckpoint(raw, policy, ctx)
 		if err != nil {
 			return owners, err
 		}

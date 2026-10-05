@@ -2,7 +2,6 @@ package validator
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/urfoundation/sn/crv4"
@@ -51,8 +50,9 @@ func classifyProvisionalNativeWeights(ctx context.Context, enabled bool, nativeE
 	if !enabled || err == nil || ctx == nil || ctx.Err() != nil {
 		return err
 	}
-	var infeasible *crv4.InfeasibleWeightLimitError
-	if releaseOnlyErrors(err, errNoPositiveUnmaskedWeights) || (errors.As(err, &infeasible) && releaseOnlyErrors(err, infeasible)) {
+	err = observeReleaseError(err)
+	infeasible := releaseErrorMarker[*crv4.InfeasibleWeightLimitError](err)
+	if releaseOnlyErrors(err, errNoPositiveUnmaskedWeights) || (infeasible != nil && releaseOnlyErrors(err, infeasible)) {
 		return &provisionalNativeWeightRejection{nativeEpoch: nativeEpoch, settlementEpoch: settlementEpoch, cause: err}
 	}
 	return err

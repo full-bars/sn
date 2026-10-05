@@ -17,6 +17,7 @@ import (
 	"net/netip"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -29,24 +30,63 @@ type ownedSubmissionRoute struct {
 	SendTimeoutSeconds uint32 `json:"send_timeout_seconds"`
 }
 
-// An explicit canonical ip endpoint avoids mutable resolver/fallback routes.
-// Https also requires normal certificate verification and an approved spki pin.
-// Plain http relies on the independently approved owned network's integrity.
+// Signed HTTPS routes may name a public service. DNS chooses only that host's
+// addresses; ordinary certificate verification and the signed SPKI pin still
+// authenticate its peer. Plain HTTP retains the explicit IP-and-port profile.
 func (self ownedSubmissionRoute) validate() error {
 	approval := self
 	parsed, err := url.Parse(approval.RpcUrl)
 	if err != nil || parsed == nil || parsed.String() != approval.RpcUrl || parsed.User != nil || parsed.RawQuery != "" || parsed.ForceQuery || parsed.Fragment != "" || parsed.Opaque != "" || parsed.RawPath != "" || parsed.Scheme != "http" && parsed.Scheme != "https" {
 		return errors.New("root submission requires one canonical credential-free http(s) route")
 	}
-	address, err := netip.ParseAddr(parsed.Hostname())
-	port, portErr := strconv.ParseUint(parsed.Port(), 10, 16)
-	if err != nil || portErr != nil || port == 0 || address.Zone() != "" || address.IsUnspecified() || address.IsMulticast() || address.Is4In6() || parsed.Host != net.JoinHostPort(address.String(), strconv.FormatUint(port, 10)) {
-		return errors.New("root submission requires one explicit canonical IP and port without dns or zone fallback")
+	host, port := parsed.Hostname(), parsed.Port()
+	if address, err := netip.ParseAddr(host); err == nil {
+		value, portErr := strconv.ParseUint(port, 10, 16)
+		if portErr != nil || value == 0 || address.Zone() != "" || address.IsUnspecified() || address.IsMulticast() || address.Is4In6() || parsed.Host != net.JoinHostPort(address.String(), strconv.FormatUint(value, 10)) {
+			return errors.New("submission IP route requires one canonical address and explicit port")
+		}
+	} else {
+		if parsed.Scheme != "https" || !ownedSubmissionHostname(host) {
+			return errors.New("submission hostname route requires canonical HTTPS and a fully qualified host")
+		}
+		expected := host
+		if port != "" {
+			value, portErr := strconv.ParseUint(port, 10, 16)
+			if portErr != nil || value == 0 || port != strconv.FormatUint(value, 10) {
+				return errors.New("submission hostname route has a noncanonical port")
+			}
+			expected = net.JoinHostPort(host, port)
+		}
+		if parsed.Host != expected {
+			return errors.New("submission hostname route differs from its canonical host and port")
+		}
 	}
 	if parsed.Scheme == "https" && !planSha256(approval.TlsSpkiHash) || parsed.Scheme == "http" && approval.TlsSpkiHash != "" {
 		return errors.New("root submission tls pin is absent or attached to plaintext http")
 	}
 	return nil
+}
+
+// ASCII DNS labels avoid case, IDNA, search-domain and numeric-address aliases.
+// International service names must use their explicit lowercase A-label form.
+func ownedSubmissionHostname(host string) bool {
+	if len(host) == 0 || len(host) > 253 || !strings.Contains(host, ".") {
+		return false
+	}
+	labels := strings.Split(host, ".")
+	for _, label := range labels {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return false
+		}
+		for _, value := range label {
+			if !(value >= 'a' && value <= 'z' || value >= '0' && value <= '9' || value == '-') {
+				return false
+			}
+		}
+	}
+	// A numeric final label could reinterpret a malformed IPv4 spelling as a
+	// DNS host. Public DNS top-level domains contain at least one letter.
+	return strings.ContainsAny(labels[len(labels)-1], "abcdefghijklmnopqrstuvwxyz")
 }
 
 // Reads and writes share only this constructor-owned fixed route. Disable
@@ -60,15 +100,20 @@ func newOwnedSubmissionClient(approval ownedSubmissionRoute) (*rpcClient, error)
 		return nil, err
 	}
 	parsed, _ := url.Parse(approval.RpcUrl)
+	port := parsed.Port()
+	if port == "" {
+		port = "443"
+	}
+	endpoint := net.JoinHostPort(parsed.Hostname(), port)
 	dialer := &net.Dialer{Timeout: 30 * time.Second}
 	transport := &http.Transport{
 		Proxy: nil, DisableKeepAlives: true, ForceAttemptHTTP2: false,
 		TLSHandshakeTimeout: 30 * time.Second,
 		DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
-			if network != "tcp" || address != parsed.Host {
+			if network != "tcp" || address != endpoint {
 				return nil, errors.New("root submission transport attempted another route")
 			}
-			return dialer.DialContext(ctx, network, parsed.Host)
+			return dialer.DialContext(ctx, network, endpoint)
 		},
 	}
 	if parsed.Scheme == "https" {

@@ -131,18 +131,26 @@ func (self *buildLog) Write(raw []byte) (int, error) {
 	return n, err
 }
 
-// Metadata is bounded while the child writes, before allocating its full output.
+// A named buffer keeps io.Copy on Write; a promoted bytes.Buffer.ReadFrom
+// would bypass the bound while os/exec drains the child's output pipe.
 type buildBuffer struct {
-	bytes.Buffer
-	limit int
+	buffer bytes.Buffer
+	limit  int
 }
 
+// Refuse an entire excess chunk before it can grow the retained metadata.
 func (self *buildBuffer) Write(raw []byte) (int, error) {
 	if len(raw) > self.limit-self.Len() {
 		return 0, errors.New("build metadata exceeds limit")
 	}
-	return self.Buffer.Write(raw)
+	return self.buffer.Write(raw)
 }
+
+// Only bounded writes contribute to the retained size.
+func (self *buildBuffer) Len() int { return self.buffer.Len() }
+
+// The caller borrows the complete bounded metadata after the child joins.
+func (self *buildBuffer) Bytes() []byte { return self.buffer.Bytes() }
 
 // The fixed environment prevents shell, workspace or compiler-option injection.
 func buildEnvironment(output string) []string {

@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "686b64fdc64660023cda058c363fdceeec714d87c5126caa1c985b0206971326",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 0,
+  "runner_sha256": "e21c239720fe7c0a9df8bd6544c32a9c6ea1ae23188a23e5bb727ad1f41f36aa",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_ONE_RETAINED_NATIVE_FEE_EXPORTER_SHORT_POST_MODEL",
+  "adopted_at": "2026-10-05T03:11:37.869318+00:00",
+  "review_sha256": "467e5c4db8a2cc22c63b77b828ab0afa2318ea9de35d8b76fb08e966e92df413",
+  "scope": "Real signed receipt and GRANDPA checks with a synthetic nested runtime in the selected mainnet.test. No original Wasm engine, production denomination policy or carry qualification."
+}

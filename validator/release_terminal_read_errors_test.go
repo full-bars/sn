@@ -192,7 +192,7 @@ func TestReleaseTerminalReadErrorsRetryThroughExistingOwner(t *testing.T) {
 		submissions++
 		return fixture.window(t.Context())
 	}, func() bool { return submissions <= releaseSteeringFailureLimit+2 }, true)
-	if err != nil || reads != chainReadMaximumAttempts*(releaseSteeringFailureLimit+2)+1 || submissions != releaseSteeringFailureLimit+3 {
+	if err != nil || reads != chainReadTestFailureAttempts*(releaseSteeringFailureLimit+2)+1 || submissions != releaseSteeringFailureLimit+3 {
 		t.Fatalf("interrupted terminal read exhausted permanent failure budget: reads=%d submissions=%d error=%v", reads, submissions, err)
 	}
 }

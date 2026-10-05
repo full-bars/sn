@@ -91,7 +91,7 @@ func TestEthRpcRetryRecoversAfterMinuteOfTimeouts(t *testing.T) {
 	hooks := ethRpcRetryHooks{
 		withTimeout: func(ctx context.Context, duration time.Duration) (context.Context, context.CancelFunc) {
 			budgets++
-			if duration != ethRpcOperationTimeout || duration < time.Minute || duration > 2*time.Minute {
+			if duration != 300*time.Second {
 				t.Fatalf("operation retry budget differs: %s", duration)
 			}
 			owner = &ethRpcTestDeadline{Context: ctx, deadline: time.Now().Add(duration), done: make(chan struct{})}
@@ -143,7 +143,7 @@ func TestEthRpcRetryStopsAtOperationDeadline(t *testing.T) {
 	}
 	value, err := ethRpcHexResultWithRetry(t.Context(), client, "http://rpc.example", "eth_chainId", []any{}, hooks)
 	var status *ethRpcStatusError
-	if value != "" || !errors.Is(err, context.DeadlineExceeded) || !errors.As(err, &status) || status.status != http.StatusServiceUnavailable || calls < 20 || calls >= ethRpcMaximumAttempts || budgets != 1 || elapsed < ethRpcOperationTimeout || elapsed >= ethRpcOperationTimeout+ethRpcRetryDelay*3/2 {
+	if value != "" || !errors.Is(err, context.DeadlineExceeded) || !errors.As(err, &status) || status.status != http.StatusServiceUnavailable || calls < 100 || calls > 150 || budgets != 1 || elapsed < ethRpcOperationTimeout || elapsed >= ethRpcOperationTimeout+ethRpcRetryDelay*3/2 {
 		t.Fatalf("retry extended or lost its budget: value=%q calls=%d budgets=%d elapsed=%s error=%v", value, calls, budgets, elapsed, err)
 	}
 }

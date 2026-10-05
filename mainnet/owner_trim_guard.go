@@ -99,13 +99,9 @@ func (self *rpcClient) readOwnerTrimGuard(ctx context.Context, policy subnetCens
 	if err != nil {
 		return ownerTrimGuard{}, err
 	}
-	// Sampling time, route spelling and node release are not historical state.
-	baseline.Identity.ObservedAt = retained.Identity.ObservedAt
-	baseline.Identity.RpcUrl = retained.Identity.RpcUrl
-	baseline.Identity.NodeVersion = retained.Identity.NodeVersion
-	rebuilt, err := buildOwnerTrimPlan(sampleCtx, policy, baseline)
-	if err != nil || rebuilt.ContentHash != plan.ContentHash {
-		return ownerTrimGuard{}, fmt.Errorf("%w: retained owner trim plan differs from its authenticated historical census: %v", errRpcIntegrity, err)
+	rebuilt, err := rebuildOwnerTrimGuardPlan(sampleCtx, policy, baseline, plan)
+	if err != nil {
+		return ownerTrimGuard{}, err
 	}
 	current, err := self.readSubnetPreview(sampleCtx, policy, policyHash)
 	if err != nil {
@@ -169,6 +165,23 @@ func (self *rpcClient) readOwnerTrimGuard(ctx context.Context, policy subnetCens
 		return ownerTrimGuard{}, err
 	}
 	return result, nil
+}
+
+// Only a completed reconstruction can contradict retained history. An
+// interrupted computation preserves its cause and produces no replacement plan.
+func rebuildOwnerTrimGuardPlan(ctx context.Context, policy subnetCensusPolicy, baseline subnetPreview, retained ownerTrimPlan) (ownerTrimPlan, error) {
+	// Sampling time, route spelling and node release are not historical state.
+	baseline.Identity.ObservedAt = retained.Census.Observation.Identity.ObservedAt
+	baseline.Identity.RpcUrl = retained.Census.Observation.Identity.RpcUrl
+	baseline.Identity.NodeVersion = retained.Census.Observation.Identity.NodeVersion
+	rebuilt, err := buildOwnerTrimPlan(ctx, policy, baseline)
+	if err != nil {
+		return ownerTrimPlan{}, fmt.Errorf("rebuild retained owner trim plan: %w", err)
+	}
+	if rebuilt.ContentHash != retained.ContentHash {
+		return ownerTrimPlan{}, fmt.Errorf("%w: retained owner trim plan differs from its authenticated historical census", errRpcIntegrity)
+	}
+	return rebuilt, nil
 }
 
 // A fixed retained selection never silently grows, shrinks or reranks when

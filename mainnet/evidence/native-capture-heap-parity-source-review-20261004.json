@@ -1,0 +1,46 @@
+{
+  "schema": "native-capture-heap-parity-source-review-v1",
+  "source_base": "b4662ed8e8571d011abda4d5454a97aa184a8b5a",
+  "sdk_revision": "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a",
+  "qualification": "source inspection and authored unexecuted regressions only; no Cargo, compiler or test body was run",
+  "finding": {
+    "trigger": "An authenticated parent contains an explicit :heappages override, and the original block depends on the resulting initial memory size or maximum growth.",
+    "before": "Capture executes Core_execute_block with CallContext::Offchain, while strict replay uses CallContext::Onchain. The pinned executor ignores the proved heap override in the offchain context. A valid replay can therefore remain impossible to capture from a complete parent backend.",
+    "after": "Capture uses CallContext::Onchain, matching strict replay and the original runtime-code heap override. No proof, finality, runtime approval or resource bound is weakened.",
+    "expected_control": "Restore only CallContext::Offchain in historical_capture.rs. historical_capture_executes_with_proved_onchain_heap_pages must first pass its strict replay baseline and then fail its capture assertion. This control has not been executed."
+  },
+  "source_blobs_before": {
+    "tools/runtime-metadata-probe/src/historical_capture.rs": "1ab31ba8aaf86c56c781a338e57c8a5b015f4442",
+    "tools/runtime-metadata-probe/src/historical.rs": "addbd4e1658e4d570b250d12f003204f2fe44623",
+    "tools/runtime-metadata-probe/src/historical_backend.rs": "21c5b74012cd45efef650d351b798d23e9cfe10f",
+    "tools/runtime-metadata-probe/src/historical_capture_scope.rs": "79656439c514cb6ac065289093cc74a6ccd627e2",
+    "mainnet/historical_native_feed_test.go": "c875746df1c770d6927d94e890feb08ae99b47be"
+  },
+  "sdk_source_blobs": {
+    "substrate/client/executor/src/executor.rs": "198a2a31ab8dbc375af36798fda5ea4888a67168",
+    "substrate/client/executor/common/src/runtime_blob/runtime_blob.rs": "e3f4b4ad97745edd45d69113a6697fbb091c897d",
+    "substrate/primitives/state-machine/src/trie_backend_essence.rs": "057c742649db11298e8210c6b1192ee85db7c325"
+  },
+  "changed_rust_blobs": {
+    "tools/runtime-metadata-probe/src/historical_capture.rs": "a52b50ae56395d03ae54625e9381680df70871a2",
+    "tools/runtime-metadata-probe/src/historical_capture_tests.rs": "c34159b1dfd25536d9961b08439a04551728b74e",
+    "tools/runtime-metadata-probe/src/historical_capture_heap_tests.rs": "98e4550b71f6e1309d181e5821f40fbdbfb94b10"
+  },
+  "new_roots": [
+    "historical::tests::capture_tests::heap_tests::historical_capture_executes_with_proved_onchain_heap_pages",
+    "historical::tests::capture_tests::heap_tests::historical_capture_without_heap_override_preserves_dynamic_growth",
+    "historical::tests::capture_tests::heap_tests::historical_capture_proved_heap_override_keeps_original_memory_bound"
+  ],
+  "retained_controls_source_review": [
+    "CaptureStorage independently latches raw-node failures and checks them after execution, root materialization and principal observation before accepting a report.",
+    "ScopedBackend preserves exact child operation context and forces incomplete iterators to report errors; StrictBackend independently checks fallible top and child delta roots before SDK fallback roots can be accepted.",
+    "The Go broker admits candidate nodes only after exact parent/request binding, content hashing and owned publication. Actual SDK traversal authenticates the root and absence; no RPC value or page-end marker supplies accounting authority.",
+    "Native producer binds capture input to independently verified raw parent and child headers, strictly replays the retained original job, and publishes completion before advancing its retained cursor. Its outer read context bounds capture and every refill."
+  ],
+  "remaining_qualification_gap": "TestNativeProducerActualCaptureRefillAndRetainedReplay returns the full original proof for every top-level request and refuses child RPC routes. It does not establish incremental child, iterator, odd-nibble or root-sibling replenishment, even when the test passes. No unsupported operation is promoted by this review.",
+  "limits": [
+    "The heap regression uses synthetic Wasm and independently constructed parent/child maps; it supplies no production runtime approval.",
+    "No live chain RPC, signing, deployment, node database or executable qualification was performed.",
+    "Current source composition, real capture/replay engine images, original-runtime witnesses and populated complete-proof behavior remain separately qualified by their owners."
+  ]
+}

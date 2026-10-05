@@ -1,0 +1,166 @@
+{
+  "actual_compile_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server4b-model-normal-compile-v1.receipt.json",
+    "sha256": "a2f19bbf2d3564e2be254f14ec9615791f88c8d910c13c6557f69d1c39e9f3ab"
+  },
+  "body_executor": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/execute-selected-server4b-model37-v1.py",
+    "sha256": "670c46a2e7a42cb41f1ba47c049f89c37d370c3062bbccef5cc2b8e312a0e7de"
+  },
+  "body_job": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-body-job-v1.json",
+    "sha256": "6112a126d03786af4103e79295f03df5cd3f0cf782fbeb2f935453e3ff538cc5"
+  },
+  "changes_from_qualified_owner": "Existing lifecycle observer/atomic CID publication/fallback exact-owner cleanup unchanged. Shell changes only final executor target. New body selection adds actual LIST37 and exact zero-skip classifier using qualified wait. Owner requires exact closed-old-model proof, no history/DB baseline, current full SHA closure, USER uid1000 exactcgroup,8GiB owner hard limit and preserved conservative launch thresholds/wholedata cutoff.",
+  "closed_prior_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "body_timeout_seconds": 1560,
+    "log_limit_each_bytes": 134217728,
+    "manager": "user",
+    "outer_child_timeout_seconds": 1800,
+    "test_timeout_seconds": 1500,
+    "uid": 1000,
+    "unit": "sn-selected-server4b-model37-db-v1-20261005.service"
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, immediate_data_available-8589934592)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "original_baseline_and_cap_unchanged": true
+  },
+  "helper_reuse": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-fixture-helper-reuse-v1.json",
+    "sha256": "dd4f5b6f50e85f0efaaf238876e28ab0d47ee0a7f8d1f618842aebfbf4bfbf50"
+  },
+  "lifecycle_unchanged": {
+    "qualified16test_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/server-model-owner-lifecycle-independent-v7.receipt.json",
+      "sha256": "3a1405f5ea76a58aef661886ac42cd48993be9288b9dfb6d2b48cb3b2a2db126"
+    },
+    "release_helper": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/release-gate-services-model-bounded.sh",
+      "sha256": "0c1246b71c0e0860ce5f89158224e09309deee6c81b80cef6909006b4b5e8bef"
+    },
+    "source": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/model-owner-lifecycle.py",
+      "sha256": "4636d1436ff790eaec5d99cf15fe49c65139b2168069fe2fb7fd283e31c6c0ed"
+    }
+  },
+  "limitations": [
+    "Prospective4GiB body forecast is not a measured future maximum. Owner MemoryMax does not enclose Docker sibling cgroups; both owned service cgroups remain separately observed under96GiB host memory floor.",
+    "Root adoption and live fresh capacity/lease/census checks still required. No author compiler, body or DB launch.",
+    "TestContractCloseOriginalCanceledHistoryReadRollsBackThenRecovers remains included as an actual prior failure; selection does not claim every19 root is already repaired."
+  ],
+  "owner_job": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-owner-job-v1.json",
+    "sha256": "e9b9e0428639764bd18c6a314e8e5eb275da1256808513167d0c390212abd3bc"
+  },
+  "owner_runner": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/run-selected-server4b-model37-owner-v1.py",
+    "sha256": "ff6bf8de2633597a28fa9d056ca8db81032007d76b920a8ea1bb9bd4932199d5"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_launch_minimum_bytes": 17179869184,
+    "docker_root_baseline_bytes": 304423350272,
+    "docker_root_launch_minimum_bytes": 300128382976,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "healthy_owner_active_floor_bytes": 6307319808,
+    "held_extra_reserve_disk_bytes": 4294967296,
+    "held_extra_reserve_memory_bytes": 4294967296,
+    "history_count": 0,
+    "job_sha256": "e9b9e0428639764bd18c6a314e8e5eb275da1256808513167d0c390212abd3bc",
+    "margin": 2,
+    "memory_launch_minimum_bytes": 120259084288,
+    "metadata_count": 0,
+    "model_body_forecast_disk_bytes": 4294967296,
+    "model_body_forecast_memory_bytes": 4294967296,
+    "model_count": 1,
+    "owner_memory_max_bytes": 8589934592,
+    "owner_memory_swap_max_bytes": 0,
+    "runner_sha256": "ff6bf8de2633597a28fa9d056ca8db81032007d76b920a8ea1bb9bd4932199d5",
+    "short_body_count": 0,
+    "status": "ADOPTED_ONE_SELECTED_SERVER4B_MODEL37_DB_OWNER"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-selected-server4b-model37-db-owner-adoption-20261005.json",
+  "resource_basis": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/completed-c60-resource-basis-selected-server4b-model37-20261005.json",
+    "sha256": "fefff0836d6fadac56e5570558b5f839359019b05f0917cb8ef4868c00f50f2d"
+  },
+  "retained_image": {
+    "bytes": 84453280,
+    "ctime_ns": 1791164376538096011,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120127108,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791164376538096011,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest8e-server4b-model-normal-compile-v1.test",
+    "sha256": "6307fc60f6759e1d4f496db55dff0a36401bf3af4b21a364d70aeade1e97aac0",
+    "type": 32768,
+    "uid": 1000
+  },
+  "schema": "selected-server4b-model37-db-owner-concrete-review-v1",
+  "scope": "One exact37 normal model body with isolated fresh PG18/Redis only after all actual compiler/short predecessors joined. All19 previous model failures+8 new provider roots+21 JSON repair roots after11 overlaps. No historical pass inheritance, no skips, no package substitution. New4b normalcompile/list/body only; root13/monitor10/controller7/race/controls pending. Old c60 resource-qualified failed terminal retained.",
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server4b-model37-selection-source-v1.json",
+    "sha256": "a9c5e8c7f391109af581b2d310b4fe0d8c72c0566ac261f8d356b5df21ad3f31"
+  },
+  "shell": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/run-selected-server4b-model37-only-v1.sh",
+    "sha256": "9e88a68008c8fee6f1dd81abd3693db5d575a3f48f8cd08530ce81596949f89d"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server4b-compiler-source-closure-v1.json",
+    "sha256": "aea08c8e77937abf400c3d73d0e6d781fa2ee4b50cac06431bbe75b25edb3fd4"
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "4b917455396419606fcff33cf45a6f362549203e",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "AUTHOR_SEALED_READY_FOR_INDEPENDENT_REVIEW_AND_ROOT_ADOPTION"
+}

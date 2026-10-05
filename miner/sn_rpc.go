@@ -104,11 +104,19 @@ func ethRpcHexRequest(ctx context.Context, client *http.Client, rpcUrl string, m
 	if err != nil {
 		return "", &ethRpcTransportError{cause: err}
 	}
+	// Close belongs to the same physical response as Read. Its transient
+	// failures can retry, while every joined hard cause still defeats recovery.
+	closeResponse := func() error {
+		if err := response.Body.Close(); err != nil {
+			return &ethRpcTransportError{cause: err}
+		}
+		return nil
+	}
 	if response.StatusCode != http.StatusOK {
-		return "", errors.Join(&ethRpcStatusError{method: method, status: response.StatusCode}, response.Body.Close(), requestCtx.Err())
+		return "", errors.Join(&ethRpcStatusError{method: method, status: response.StatusCode}, closeResponse(), requestCtx.Err())
 	}
 	if response.ContentLength > ethRpcResponseLimit {
-		return "", errors.Join(fmt.Errorf("%s: RPC response exceeds %d bytes", method, ethRpcResponseLimit), response.Body.Close(), requestCtx.Err())
+		return "", errors.Join(fmt.Errorf("%s: RPC response exceeds %d bytes", method, ethRpcResponseLimit), closeResponse(), requestCtx.Err())
 	}
 	responseBodyBytes, readErr := io.ReadAll(io.LimitReader(response.Body, ethRpcResponseLimit+1))
 	if readErr != nil {
@@ -117,11 +125,15 @@ func ethRpcHexRequest(ctx context.Context, client *http.Client, rpcUrl string, m
 	if len(responseBodyBytes) > ethRpcResponseLimit {
 		readErr = errors.Join(readErr, fmt.Errorf("%s: RPC response exceeds %d bytes", method, ethRpcResponseLimit))
 	}
-	if err := errors.Join(readErr, response.Body.Close(), requestCtx.Err()); err != nil {
-		return "", err
+	responseErr := errors.Join(readErr, closeResponse(), requestCtx.Err())
+	if readErr != nil || responseErr != nil && !retryableEthRpcError(responseErr, false) {
+		return "", responseErr
 	}
+	// A complete contradictory response stays hard even when close also
+	// reports a retryable transport failure. No refused result is returned.
+	refuse := func(err error) (string, error) { return "", errors.Join(err, responseErr) }
 	if err := protocol.ValidateUniqueJsonKeys(responseBodyBytes); err != nil {
-		return "", fmt.Errorf("%s: malformed JSON-RPC response: %v", method, err)
+		return refuse(fmt.Errorf("%s: malformed JSON-RPC response: %v", method, err))
 	}
 	var rpcResponse struct {
 		Version string          `json:"jsonrpc"`
@@ -130,10 +142,10 @@ func ethRpcHexRequest(ctx context.Context, client *http.Client, rpcUrl string, m
 		Error   json.RawMessage `json:"error"`
 	}
 	if err := json.Unmarshal(responseBodyBytes, &rpcResponse); err != nil {
-		return "", fmt.Errorf("%s: bad json-rpc response: %w", method, err)
+		return refuse(fmt.Errorf("%s: bad json-rpc response: %w", method, err))
 	}
 	if rpcResponse.Version != "2.0" || !bytes.Equal(rpcResponse.Id, []byte("1")) || (len(rpcResponse.Result) == 0) == (len(rpcResponse.Error) == 0) {
-		return "", fmt.Errorf("%s: JSON-RPC response identity or result/error envelope differs from the request", method)
+		return refuse(fmt.Errorf("%s: JSON-RPC response identity or result/error envelope differs from the request", method))
 	}
 	if len(rpcResponse.Error) != 0 {
 		var rpcError *struct {
@@ -141,13 +153,13 @@ func ethRpcHexRequest(ctx context.Context, client *http.Client, rpcUrl string, m
 			Message string `json:"message"`
 		}
 		if err := json.Unmarshal(rpcResponse.Error, &rpcError); err != nil || rpcError == nil {
-			return "", fmt.Errorf("%s: malformed JSON-RPC error", method)
+			return refuse(fmt.Errorf("%s: malformed JSON-RPC error", method))
 		}
-		return "", fmt.Errorf("%s: rpc error %d: %s", method, rpcError.Code, rpcError.Message)
+		return refuse(fmt.Errorf("%s: rpc error %d: %s", method, rpcError.Code, rpcError.Message))
 	}
 	var hexResult string
 	if err := json.Unmarshal(rpcResponse.Result, &hexResult); err != nil {
-		return "", fmt.Errorf("%s: non-string result", method)
+		return refuse(fmt.Errorf("%s: non-string result", method))
 	}
 	if method == "eth_chainId" {
 		_, err = parseEthHexQuantity(hexResult)
@@ -155,9 +167,9 @@ func ethRpcHexRequest(ctx context.Context, client *http.Client, rpcUrl string, m
 		_, err = parseEthHexBytes(hexResult)
 	}
 	if err != nil {
-		return "", fmt.Errorf("%s: malformed hexadecimal result: %w", method, err)
+		return refuse(fmt.Errorf("%s: malformed hexadecimal result: %w", method, err))
 	}
-	if err := requestCtx.Err(); err != nil {
+	if err := errors.Join(responseErr, requestCtx.Err()); err != nil {
 		return "", err
 	}
 	return hexResult, nil

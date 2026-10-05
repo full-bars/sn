@@ -51,7 +51,13 @@ type ValidatorIdentityObservation struct {
 // on an otherwise immutable Chain. RPC transport response limits remain the
 // transport's responsibility; bounded storage decoding adds no unbounded copy.
 func ReadValidatorIdentityAtContext(ctx context.Context, chain *Chain, query ValidatorIdentityQuery, allowed ...RuntimeArtifactIdentity) (ValidatorIdentityObservation, error) {
-	return readValidatorIdentityWithRuntimeAtContext(ctx, chain, query, nil, allowed...)
+	if len(allowed) > maximumRuntimeMetadataArtifactsPerChain {
+		return ValidatorIdentityObservation{}, errors.New("validator identity runtime allowlist exceeds its bound")
+	}
+	allowed = append([]RuntimeArtifactIdentity(nil), allowed...)
+	return readRuntimeObservation(ctx, chain, func(ctx context.Context) (ValidatorIdentityObservation, error) {
+		return readValidatorIdentityWithRuntimeAtContext(ctx, chain, query, nil, allowed...)
+	})
 }
 
 // A dependent read may require its narrow runtime capability before the first
@@ -104,23 +110,15 @@ func readValidatorIdentityWithRuntimeAtContext(ctx context.Context, chain *Chain
 	if number != query.BlockNumber {
 		return empty, errors.New("validator identity header number differs from the independent pin")
 	}
-	finalized, err := FinalizedHeadContext(ctx, chain)
+	finalized, finalizedNumber, err := readFinalityReadWitnessContext(ctx, chain, query.BlockHash)
 	if err != nil {
 		return empty, err
 	}
-	finalizedNumber, _, err := chain.ReceiptHeaderAtContext(ctx, finalized)
-	if err != nil {
+	if err := RetainFinalityReadWitnessContext(ctx, chain, query.BlockHash, finalized, finalizedNumber); err != nil {
 		return empty, err
 	}
 	if finalizedNumber < query.BlockNumber {
-		return empty, errors.New("validator identity block is not finalized")
-	}
-	finalizedCanonical, err := validatorIdentityBlockHashAtContext(ctx, chain, finalizedNumber)
-	if err != nil {
-		return empty, err
-	}
-	if finalizedCanonical != finalized {
-		return empty, errors.New("validator identity finalized head is not canonical")
+		return empty, &ReceiptEvidenceUnavailableError{BlockHash: query.BlockHash, Field: "validator identity opening finalized coverage"}
 	}
 	artifact, err := AuthenticateRuntimeArtifactAtContext(ctx, chain, query.BlockHash, allowed...)
 	if err != nil {
@@ -209,20 +207,10 @@ func readValidatorIdentityWithRuntimeAtContext(ctx context.Context, chain *Chain
 	}
 	// A provider switch or inconsistent canonical view cannot publish a mixed
 	// observation. Do not reconstruct native hashes from Ethereum/header fields.
-	canonical, err = validatorIdentityBlockHashAtContext(ctx, chain, query.BlockNumber)
-	if err != nil {
+	if err := closeValidatorReadFinalityContext(ctx, chain,
+		finalityReadWitness{hash: query.BlockHash, number: query.BlockNumber},
+		finalityReadWitness{hash: finalized, number: finalizedNumber}); err != nil {
 		return empty, err
-	}
-	if canonical != query.BlockHash {
-		return empty, errors.New("validator identity canonical block changed during observation")
-	}
-	if err := ctx.Err(); err != nil {
-		return empty, err
-	}
-	if finalized != query.BlockHash {
-		if err := chain.CheckCanonicalBlockAtContext(ctx, finalized, finalizedNumber); err != nil {
-			return empty, err
-		}
 	}
 	observation := ValidatorIdentityObservation{
 		GenesisHash: query.GenesisHash, BlockHash: query.BlockHash, BlockNumber: query.BlockNumber,
@@ -244,6 +232,9 @@ func validatorIdentityBlockHashAtContext(ctx context.Context, chain *Chain, numb
 	var raw json.RawMessage
 	if err := chain.API.Client.CallContext(ctx, &raw, "chain_getBlockHash", number); err != nil {
 		return types.Hash{}, fmt.Errorf("validator identity block %d: %w", number, err)
+	}
+	if len(raw) == 0 || bytes.Equal(raw, []byte("null")) || bytes.Equal(raw, []byte(`""`)) {
+		return types.Hash{}, &ReceiptEvidenceUnavailableError{Field: fmt.Sprintf("validator identity canonical hash at height %d", number)}
 	}
 	decoded, err := decodeValidatorIdentityHexResult(raw, 32, false)
 	if err != nil {

@@ -74,29 +74,14 @@ func measurementSettingsFromOpts(opts docopt.Opts) (measurementRunSettings, erro
 // Only typed unavailable reads may replay the exact retained request. Hard
 // custody, completed identity/refusal and mixed joined causes remain closed.
 func measurementAuthenticationRetryable(err error, depth int) bool {
-	if err == nil || depth > 32 {
+	remaining := 512
+	return releaseErrorGraph(err, func(cause error) bool {
+		switch cause.(type) {
+		case *sdk.NetworkClientRegistrationUnavailableError, *clientauth.RegistrationRefreshUnavailableError:
+			return true
+		}
 		return false
-	}
-	switch err.(type) {
-	case *sdk.NetworkClientRegistrationUnavailableError, *clientauth.RegistrationRefreshUnavailableError:
-		return true
-	}
-	if joined, ok := err.(interface{ Unwrap() []error }); ok {
-		causes := joined.Unwrap()
-		if len(causes) == 0 || len(causes) > 32 {
-			return false
-		}
-		for _, cause := range causes {
-			if !measurementAuthenticationRetryable(cause, depth+1) {
-				return false
-			}
-		}
-		return true
-	}
-	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		return measurementAuthenticationRetryable(wrapped.Unwrap(), depth+1)
-	}
-	return false
+	}, depth, &remaining)
 }
 
 func authenticateMeasurement(ctx context.Context, api *sdk.Api, owner *clientauth.ValidatorMeasurementClientKeyOwner, networkPath string) (string, connect.Id, error) {

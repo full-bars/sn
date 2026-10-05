@@ -1,0 +1,78 @@
+{
+  "schema": "main-xops-conservation33-actual-result-v1",
+  "checked_at": "2026-10-05T05:58:32.144240+00:00",
+  "status": "PASS_MAIN_CONTROL1_AND33_NO_SKIPS",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-v3.receipt.json",
+    "sha256": "12f8057abd7f8d31eee68a08819066bf1043d1be2e03575329e0014fa5b54f04"
+  },
+  "user_terminal_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-v3-user-terminal-readback.json",
+    "sha256": "5cd66eb09c29d3a795461a6e278988a6bc183c56e1d89b50b4ca6cb5f7be7743"
+  },
+  "source_commit": "482050c3194412b620940d22d87acc00a91847b2",
+  "counts": {
+    "conservation": {
+      "actual_test_ids": [
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_authority_cannot_move_producer_to_an_unchecked_directory",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_changed_original_engine_refuses_combined_activation",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_changed_original_policy_refuses_only_combined_owner",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_combined_cannot_borrow_foreign_native_chain",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_combined_input_loss_does_not_block_healthy_monitor_restart",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_combined_read_budget_bounds_keep_explicit_300_default",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_combined_unit_is_independent_and_cannot_reown_data",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_controller_admits_exact_separately_reviewed_combined_bundle",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_explicit_follow_command_retains_policy_and_durable_names",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_explicit_nonproducing_peer_does_not_acquire_combined_custody",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_missing_declared_producer_root_is_refused_without_creation",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_missing_original_engine_census_refuses_rendering",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_nested_standalone_producer_directory_is_refused",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_omitted_combined_configuration_never_infers_an_owner",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_policy_keeps_its_independent_one_mib_frame",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_remote_cleartext_rpc_is_refused",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_shared_checkpoint_root_is_refused",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationDeploymentTests.test_shared_standalone_producer_directory_is_refused",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_all_confirmed_economic_holds_have_real_firing_rules",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_capacity_warning_is_distinct_from_integrity_failure",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_clock_ahead_clears_when_retained_time_reenters_tolerance",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_clock_ahead_requires_more_than_thirty_seconds",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_fresh_publications_suppress_missing_and_stale",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_future_retained_sample_pages_only_for_clock_ahead",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_missing_combined_owner_fires_from_independent_roster",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_missing_sample_keeps_roster_unknown_without_clock_alarm",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_omitting_independent_roster_causally_removes_missing_alert",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_pending_native_work_does_not_raise_source_unavailable",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_removing_clock_ahead_rule_reproduces_silent_future_sample",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_stale_combined_publication_fires_without_fresh_heartbeat",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_stale_sample_keeps_stale_alarm_without_clock_alarm",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_unknown_target_cannot_be_reported_as_observed_failure",
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_zero_sample_keeps_startup_unknown_without_clock_alarm"
+      ],
+      "fail": 0,
+      "pass": 33,
+      "skip": 0
+    },
+    "control": {
+      "actual_test_ids": [
+        "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_removing_clock_ahead_rule_reproduces_silent_future_sample"
+      ],
+      "fail": 0,
+      "pass": 1,
+      "skip": 0
+    },
+    "fail": 0,
+    "phase_order": [
+      "control1",
+      "conservation33"
+    ],
+    "skip": 0,
+    "test_invocations": 34,
+    "unique_roots": 33
+  },
+  "actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-v3.process-result.json",
+    "sha256": "79369f4344ae18d406a2a2ca1a8b3e8c5360de3f5848219b527d145419b24757"
+  },
+  "resource_errors": [],
+  "scope_limit": "Corrected control1 followed by conservation33 on canonical main. Prior32PASS1FAIL preserved; no live ingestion, alert delivery, deploy or full current318 result inferred."
+}

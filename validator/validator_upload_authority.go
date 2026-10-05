@@ -80,6 +80,15 @@ type ValidatorUploadNativeObserver struct {
 // The fixed eight-byte native timestamp is retained only after a final
 // canonical height/hash check. The schedule reader separately proves permit.
 func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chain, deployment ValidatorUploadDeployment) (result ValidatorUploadNativeObserver, resultErr error) {
+	var selected types.Hash
+	return crv4.ReadRuntimeObservationContext(ctx, native, func(ctx context.Context) (ValidatorUploadNativeObserver, error) {
+		return validatorUploadNativeObserverAttempt(ctx, native, deployment, &selected)
+	})
+}
+
+// Timestamp storage belongs to the same transport as its route and artifact.
+// A replacement repeats those reads while retaining the first finalized block.
+func validatorUploadNativeObserverAttempt(ctx context.Context, native *crv4.Chain, deployment ValidatorUploadDeployment, selected *types.Hash) (result ValidatorUploadNativeObserver, resultErr error) {
 	if ctx == nil || native == nil || native.API == nil || native.API.Client == nil {
 		return result, errors.New("validator staging native observer is unavailable")
 	}
@@ -98,10 +107,14 @@ func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chai
 	if err := deployment.authenticateNativeRuntimeRouteContext(ctx, native); err != nil {
 		return result, err
 	}
-	hash, err := crv4.FinalizedHeadContext(ctx, native)
+	finalized, err := crv4.FinalizedHeadContext(ctx, native)
 	if err != nil {
 		return result, err
 	}
+	if *selected == (types.Hash{}) {
+		*selected = finalized
+	}
+	hash := *selected
 	number, _, err := native.CanonicalHeaderAtContext(ctx, hash)
 	if err != nil {
 		return result, err
@@ -109,11 +122,20 @@ func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chai
 	if number == 0 {
 		return result, errors.New("validator staging finalized native header is absent")
 	}
+	if finalized != hash {
+		finalizedNumber, _, err := native.CanonicalHeaderAtContext(ctx, finalized)
+		if err != nil {
+			return result, err
+		}
+		if finalizedNumber < number {
+			return result, errors.New("validator staging native finality regressed")
+		}
+	}
 	allowed, err := deployment.runtimeArtifactsAt(number, false)
 	if err != nil {
 		return result, err
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, native, hash, allowed...)
+	artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, native, hash, allowed...)
 	if err != nil {
 		return result, err
 	}
@@ -165,12 +187,10 @@ func (self *ChainClient) ValidatorUploadObserverContext(ctx context.Context) (re
 		Hash      *common.Hash    `json:"hash"`
 		Timestamp *hexutil.Uint64 `json:"timestamp"`
 	}
-	callCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	defer cancel()
-	if err := self.client.Client().CallContext(callCtx, &header, "eth_getBlockByNumber", "finalized", false); err != nil {
-		return result, err
-	}
-	if err := callCtx.Err(); err != nil {
+	if err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+		header = nil
+		return self.client.Client().CallContext(callCtx, &header, "eth_getBlockByNumber", "finalized", false)
+	}); err != nil {
 		return result, err
 	}
 	if header == nil || header.Number == nil || header.Hash == nil || header.Timestamp == nil || *header.Number == 0 || *header.Number > math.MaxInt64 ||
@@ -239,13 +259,11 @@ func (self *ChainClient) ValidatorUploadActivationEventsContext(ctx context.Cont
 		LogIndex    *hexutil.Uint64 `json:"logIndex"`
 		Removed     *bool           `json:"removed"`
 	}
-	callCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	defer cancel()
 	filter := map[string]any{"address": common.Address(deployment.Journal), "fromBlock": hexutil.EncodeUint64(from), "toBlock": hexutil.EncodeUint64(to), "topics": []common.Hash{topic}}
-	if err := self.client.Client().CallContext(callCtx, &rows, "eth_getLogs", filter); err != nil {
-		return nil, err
-	}
-	if err := callCtx.Err(); err != nil {
+	if err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+		rows = nil
+		return self.client.Client().CallContext(callCtx, &rows, "eth_getLogs", filter)
+	}); err != nil {
 		return nil, err
 	}
 	// JSON null is not an authenticated empty range. Geth leaves a nonnil

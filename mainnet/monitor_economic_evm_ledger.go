@@ -265,6 +265,9 @@ func (self *monitorEconomicEvmState) validate(policy monitorEconomicEvmPolicy) e
 				return errors.New("EVM economic event value exceeds its bound")
 			}
 		}
+		if err := event.CaptureIdentity.validate(policy, event); err != nil {
+			return err
+		}
 		previous, previousIndex, previousHash = event.Block.Number, event.LogIndex, event.Block.Hash
 	}
 	previous = from

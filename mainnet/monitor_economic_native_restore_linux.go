@@ -51,9 +51,15 @@ func buildMonitorNativeRestoreRequest(ctx context.Context, request monitorNative
 	if err != nil {
 		return result, err
 	}
+	// This single-root command restores monitor history. Its existing external
+	// producer inputs remain exact reads; originals inside this root use copies.
+	ctx = context.WithValue(ctx, nativeProducerRuntimeReadKey{}, func(ctx context.Context, reference planFileReference, maximum int) ([]byte, error) {
+		raw, _, err := readNativeProducerRestoreOriginal(ctx, reference, maximum, []*monitorHistoryRestoreRootReview{root}, nil)
+		return raw, err
+	})
 	if err := validateMonitorNativeRestoreHistory(request.Policy, request.Original, func(reference monitorHistoryReference) ([]byte, error) {
 		return root.read(ctx, reference)
-	}); err != nil {
+	}, ctx); err != nil {
 		return result, err
 	}
 	if err := root.finish(ctx); err != nil {
@@ -64,12 +70,13 @@ func buildMonitorNativeRestoreRequest(ctx context.Context, request monitorNative
 
 // Each source inventory can live under a different root. The original signed
 // paths and exact predecessor summaries, not root placement, bind the history.
-func validateMonitorNativeRestoreHistory(policy monitorEconomicNativePolicy, original monitorHistoryReference, read func(monitorHistoryReference) ([]byte, error)) error {
+func validateMonitorNativeRestoreHistory(policy monitorEconomicNativePolicy, original monitorHistoryReference, read func(monitorHistoryReference) ([]byte, error), contexts ...context.Context) error {
+	ctx := nativeRuntimeAdmissionContext(contexts)
 	raw, err := read(original)
 	if err != nil {
 		return err
 	}
-	record, err := decodeMonitorEconomicNativeCheckpoint(raw, policy)
+	record, err := decodeMonitorEconomicNativeCheckpoint(raw, policy, ctx)
 	if err != nil {
 		return err
 	}
@@ -87,7 +94,7 @@ func validateMonitorNativeRestoreHistory(policy monitorEconomicNativePolicy, ori
 			if err != nil {
 				return err
 			}
-			segment, err := decodeMonitorEconomicNativeCheckpoint(raw, policy)
+			segment, err := decodeMonitorEconomicNativeCheckpoint(raw, policy, ctx)
 			if err != nil {
 				return err
 			}

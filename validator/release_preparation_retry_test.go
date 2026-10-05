@@ -102,7 +102,7 @@ func TestReleasePreparationJoinedReadKeepsPreIntentAuthority(t *testing.T) {
 		t.Fatal("post-intent collection gained read retry authority")
 	}
 	pureCut := errors.Join(errAttemptCutPending, errAttemptCutSnapshotStale)
-	if got := classifyProvisionalNativeRead(true, 7, pureCut); got != pureCut {
+	if got := classifyProvisionalNativeRead(true, 7, pureCut); !errors.Is(got, pureCut) || releaseErrorMarker[*provisionalNativeReadInterruption](got) != nil {
 		t.Fatal("pure cut wait acquired pre-intent read authority")
 	}
 	interrupted := classifyProvisionalNativeRead(true, 7, joined)
@@ -150,7 +150,7 @@ func TestReleasePreparationJoinedFailuresPreserveEveryHardCause(t *testing.T) {
 		if retryable, transport := classifyReleasePreparationRetry(joined); retryable || transport {
 			t.Fatalf("independent cause was hidden by cut/transport: cause=%v retryable=%t transport=%t", hard, retryable, transport)
 		}
-		if got := classifyProvisionalNativeRead(true, 7, joined); got != joined {
+		if got := classifyProvisionalNativeRead(true, 7, joined); !errors.Is(got, joined) || releaseErrorMarker[*provisionalNativeReadInterruption](got) != nil {
 			t.Fatalf("independent cause acquired pre-intent authority: %v", hard)
 		}
 	}

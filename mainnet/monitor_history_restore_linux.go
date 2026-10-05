@@ -23,6 +23,7 @@ type monitorHistoryRestoreRootReview struct {
 	entries   map[string]durablevolume.InventoryEntry
 	seen      map[string]bool
 	nested    []string
+	profiles  map[string]storageMonitorTreeSnapshotProfile
 }
 
 // An additional co-owner has exact explicit coverage; unknown files never get
@@ -38,7 +39,7 @@ func newMonitorHistoryRestoreRootReview(ctx context.Context, request durablevolu
 	if report.StateRoot.Path != request.RootPath || declared[request.RootPath] != report.StateRoot || !monitorHistoryPath(request.RestoreSource.Directory) {
 		return nil, errors.New("monitor history changed an original declared logical root")
 	}
-	self := &monitorHistoryRestoreRootReview{request: request, inventory: report, entries: map[string]durablevolume.InventoryEntry{}, seen: map[string]bool{}}
+	self := &monitorHistoryRestoreRootReview{request: request, inventory: report, entries: map[string]durablevolume.InventoryEntry{}, seen: map[string]bool{}, profiles: map[string]storageMonitorTreeSnapshotProfile{}}
 	self.request.Owners = nil
 	for _, entry := range report.Entries {
 		if _, present := self.entries[entry.Path]; present {
@@ -50,7 +51,7 @@ func newMonitorHistoryRestoreRootReview(ctx context.Context, request durablevolu
 		if owner.RestoreCoverage != durablevolume.PreparationCompleteUnion || owner.Purpose != "restore" {
 			return nil, errors.New("monitor history additional owner lacks complete retained union coverage")
 		}
-		if owner.Kind == "mainnet-monitor-checkpoint" {
+		if owner.Kind == "mainnet-monitor-checkpoint" || owner.Kind == economicConservationStorageKind {
 			_, scope, err := storagePreparationSnapshotSpec(false, owner)
 			if err != nil || self.seen[scope.Name] {
 				return nil, errors.Join(errors.New("monitor history repeats an additional snapshot"), err)
@@ -62,12 +63,17 @@ func newMonitorHistoryRestoreRootReview(ctx context.Context, request durablevolu
 			if err != nil {
 				return nil, err
 			}
+			profiles, err := scope.profiles()
+			if err != nil {
+				return nil, err
+			}
 			for _, path := range scope.Snapshots {
 				if self.seen[path] {
 					return nil, errors.New("monitor history repeats an additional tree snapshot")
 				}
 				self.seen[path] = true
 				self.nested = append(self.nested, path)
+				self.profiles[path] = profiles[path]
 			}
 			continue
 		}
@@ -87,7 +93,13 @@ func monitorHistoryRestoreRelative(root, path string) (string, bool) {
 }
 
 func monitorHistoryRestoreRoot(roots []*monitorHistoryRestoreRootReview, reference monitorHistoryReference) (*monitorHistoryRestoreRootReview, error) {
-	if err := reference.validate(); err != nil {
+	return monitorHistoryRestoreRootLimit(roots, reference, maxRpcReplyBytes)
+}
+
+// Only the original combined policy supplies the larger reference limit.
+// Standalone monitor callers retain the legacy wrapper and physical format.
+func monitorHistoryRestoreRootLimit(roots []*monitorHistoryRestoreRootReview, reference monitorHistoryReference, maximum uint64) (*monitorHistoryRestoreRootReview, error) {
+	if err := reference.validateLimit(maximum); err != nil {
 		return nil, err
 	}
 	var found *monitorHistoryRestoreRootReview
@@ -108,7 +120,16 @@ func monitorHistoryRestoreRoot(roots []*monitorHistoryRestoreRootReview, referen
 
 // Only the exact signed-history reference selects a new fixed snapshot owner.
 func (self *monitorHistoryRestoreRootReview) read(ctx context.Context, reference monitorHistoryReference) ([]byte, error) {
-	if err := reference.validate(); err != nil {
+	return self.readProfile(ctx, reference, "mainnet-monitor-checkpoint", maxRpcReplyBytes)
+}
+
+// The fixed owner profile is authenticated against original physical metadata
+// before copied bytes are decoded. Larger parsers cannot upgrade legacy heads.
+func (self *monitorHistoryRestoreRootReview) readProfile(ctx context.Context, reference monitorHistoryReference, kind string, maximum int) ([]byte, error) {
+	if err := validateMonitorCheckpointProfile(kind, maximum); err != nil {
+		return nil, err
+	}
+	if err := reference.validateLimit(uint64(maximum)); err != nil {
 		return nil, err
 	}
 	name, contained := monitorHistoryRestoreRelative(self.request.RootPath, reference.Path)
@@ -119,11 +140,11 @@ func (self *monitorHistoryRestoreRootReview) read(ctx context.Context, reference
 	if !present || entry.Kind != "file" || entry.Size != reference.Bytes || entry.Sha256 != reference.Sha256 || self.seen[name] {
 		return nil, errors.New("monitor history inventory omits, repeats or changes an original member")
 	}
-	inputs, err := json.Marshal(storageSnapshotPreparationScope{Schema: "urnetwork-snapshot-preparation-v1", Name: filepath.Base(name), MaximumBytes: maxRpcReplyBytes})
+	inputs, err := json.Marshal(storageSnapshotPreparationScope{Schema: "urnetwork-snapshot-preparation-v1", Name: filepath.Base(name), MaximumBytes: int64(maximum)})
 	if err != nil {
 		return nil, err
 	}
-	owner := durablevolume.PreparationOwner{Kind: "mainnet-monitor-checkpoint", RelativePath: ".", Purpose: "restore", RestoreCoverage: durablevolume.PreparationCompleteUnion, Inputs: inputs}
+	owner := durablevolume.PreparationOwner{Kind: kind, RelativePath: ".", Purpose: "restore", RestoreCoverage: durablevolume.PreparationCompleteUnion, Inputs: inputs}
 	spec, _, err := storagePreparationSnapshotSpec(false, owner)
 	if err != nil {
 		return nil, err
@@ -133,11 +154,11 @@ func (self *monitorHistoryRestoreRootReview) read(ctx context.Context, reference
 			return nil, err
 		}
 	} else {
-		if _, _, _, _, err := storageMonitorTreeHeadPlan(ctx, "monitor-history-review", name, self.inventory); err != nil {
+		if _, _, _, _, err := storageMonitorTreeHeadPlanProfile(ctx, "monitor-history-review", name, self.inventory, kind, maximum); err != nil {
 			return nil, err
 		}
 	}
-	raw, err := readBootstrapChainInput(ctx, planFileReference{Path: filepath.Join(self.request.RestoreSource.Directory, name), Sha256: reference.Sha256}, maxRpcReplyBytes)
+	raw, err := readBootstrapChainInput(ctx, planFileReference{Path: filepath.Join(self.request.RestoreSource.Directory, name), Sha256: reference.Sha256}, maximum)
 	if err != nil {
 		return nil, fmt.Errorf("monitor history copied member read: %w", err)
 	}
@@ -149,6 +170,7 @@ func (self *monitorHistoryRestoreRootReview) read(ctx context.Context, reference
 		self.request.Owners = append(self.request.Owners, owner)
 	} else {
 		self.nested = append(self.nested, name)
+		self.profiles[name] = storageMonitorTreeSnapshotProfile{Path: name, Kind: kind, MaximumBytes: uint64(maximum)}
 	}
 	return raw, nil
 }
@@ -159,7 +181,17 @@ func (self *monitorHistoryRestoreRootReview) read(ctx context.Context, reference
 func (self *monitorHistoryRestoreRootReview) finish(ctx context.Context) error {
 	if len(self.nested) != 0 {
 		sort.Strings(self.nested)
-		inputs, err := json.Marshal(storageMonitorTreeScope{Schema: storageMonitorTreeSchema, Snapshots: self.nested})
+		scope := storageMonitorTreeScope{Schema: storageMonitorTreeSchema, Snapshots: self.nested}
+		for _, path := range self.nested {
+			profile, present := self.profiles[path]
+			if !present {
+				return errors.New("monitor history lost an original nested snapshot profile")
+			}
+			if profile.Kind != "mainnet-monitor-checkpoint" {
+				scope.Profiles = append(scope.Profiles, profile)
+			}
+		}
+		inputs, err := json.Marshal(scope)
 		if err != nil {
 			return err
 		}
@@ -169,6 +201,7 @@ func (self *monitorHistoryRestoreRootReview) finish(ctx context.Context) error {
 		}
 		self.request.Owners = append(self.request.Owners, owner)
 		self.nested = nil
+		self.profiles = nil
 	}
 	return validateMonitorHistoryRestoreCapacity(self.request, self.inventory)
 }

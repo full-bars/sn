@@ -70,12 +70,12 @@ func repairActiveValidatorRunning(plan repairValidatorPlan, manager repairValida
 // this incident's margins; another role cannot substitute its source or policy.
 func (self *repairValidatorHost) activeIncident(ctx context.Context, plan repairActiveValidatorPlan, now time.Time, fresh bool) error {
 	p := plan.Process
-	raw, err := self.read(ctx, plan.MonitorServices.Path, p.MonitorUid, maxMonitorServicesBytes, false)
+	raw, err := self.readServicesPolicy(ctx, plan.MonitorServices.Path, p.MonitorUid)
 	if err != nil {
 		return err
 	}
 	var policy monitorServicesPolicy
-	if monitorReadDigest(raw) != plan.MonitorServices.Sha256 || decodePlanJson(raw, &policy) != nil || policy.Schema != monitorServicesSchema || len(policy.Validators) > maxMonitorValidatorRoles {
+	if monitorReadDigest(raw) != plan.MonitorServices.Sha256 || decodePlanJson(raw, &policy) != nil || policy.Schema != monitorServicesSchema || len(policy.Validators) > maxMonitorValidatorRoles || policy.validateFrame(len(raw)) != nil {
 		return errors.New("active repair monitor policy changed or is malformed")
 	}
 	found := 0

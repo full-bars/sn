@@ -1,0 +1,170 @@
+{
+  "actual_compile_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server9430262c-monitor-normal-compile-v1.receipt.json",
+    "sha256": "3f418721f2144455866ca43c08dde42ea8c57f156e420b628ab732a20718f2a8"
+  },
+  "body_executor": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/execute-selected-server9430262c-monitor17-v1.py",
+    "sha256": "cbbae98a1671fe292fbb3a1e78644fc591f61c6529a474d9249e2a69e0c1a06c"
+  },
+  "body_job": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-body-job-v1.json",
+    "sha256": "69e9332d73e950f6aaf47fed343e78ef6d226d141bff682e5ae222cf38cd802d"
+  },
+  "changes_from_qualified_owner": "Existing lifecycle observer/atomic CID publication/fallback exact-owner cleanup unchanged. Shell changes only final executor target. New body selection adds actual LIST17 and exact zero-skip classifier using qualified wait. Owner requires exact closed-old-model proof, no history/DB baseline, current full SHA closure, USER uid1000 exactcgroup,8GiB owner hard limit and preserved conservative launch thresholds/wholedata cutoff.",
+  "closed_prior_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "closed_prior_model37": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+    "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "body_timeout_seconds": 1560,
+    "log_limit_each_bytes": 134217728,
+    "manager": "user",
+    "outer_child_timeout_seconds": 1800,
+    "test_timeout_seconds": 1500,
+    "uid": 1000,
+    "unit": "sn-selected-server9430262c-monitor17-db-v1-20261005.service"
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, immediate_data_available-8589934592)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "original_baseline_and_cap_unchanged": true
+  },
+  "helper_reuse": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-fixture-helper-reuse-v1.json",
+    "sha256": "dd4f5b6f50e85f0efaaf238876e28ab0d47ee0a7f8d1f618842aebfbf4bfbf50"
+  },
+  "lifecycle_unchanged": {
+    "qualified16test_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/server-model-owner-lifecycle-independent-v7.receipt.json",
+      "sha256": "3a1405f5ea76a58aef661886ac42cd48993be9288b9dfb6d2b48cb3b2a2db126"
+    },
+    "release_helper": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/release-gate-services-model-bounded.sh",
+      "sha256": "0c1246b71c0e0860ce5f89158224e09309deee6c81b80cef6909006b4b5e8bef"
+    },
+    "source": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/model-owner-lifecycle.py",
+      "sha256": "4636d1436ff790eaec5d99cf15fe49c65139b2168069fe2fb7fd283e31c6c0ed"
+    }
+  },
+  "limitations": [
+    "Prospective4GiB body forecast is not a measured future maximum. Owner MemoryMax does not enclose Docker sibling cgroups; both owned service cgroups remain separately observed under96GiB host memory floor.",
+    "Root adoption and live fresh capacity/lease/census checks still required. No author compiler, body or DB launch.",
+    "Previously completed model37 retains its exact4b scope and is not rerun; selected9430262c monitor17 alone is admitted."
+  ],
+  "owner_job": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-owner-job-v1.json",
+    "sha256": "0d89e362a0a6ebd22e4d4b567254ec2458879e7a45a7c8fb63e7804e8868d723"
+  },
+  "owner_runner": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/run-selected-server9430262c-monitor17-owner-v1.py",
+    "sha256": "d40594020b6d3c2354edf8a30c72911c949a15e0cb49f468644a63de127316f1"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_launch_minimum_bytes": 17179869184,
+    "docker_root_baseline_bytes": 304423350272,
+    "docker_root_launch_minimum_bytes": 300128382976,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "healthy_owner_active_floor_bytes": 6307319808,
+    "held_extra_reserve_disk_bytes": 4294967296,
+    "held_extra_reserve_memory_bytes": 4294967296,
+    "history_count": 0,
+    "job_sha256": "0d89e362a0a6ebd22e4d4b567254ec2458879e7a45a7c8fb63e7804e8868d723",
+    "margin": 2,
+    "memory_launch_minimum_bytes": 120259084288,
+    "metadata_count": 0,
+    "model_body_forecast_disk_bytes": 4294967296,
+    "model_body_forecast_memory_bytes": 4294967296,
+    "model_count": 1,
+    "owner_memory_max_bytes": 8589934592,
+    "owner_memory_swap_max_bytes": 0,
+    "runner_sha256": "d40594020b6d3c2354edf8a30c72911c949a15e0cb49f468644a63de127316f1",
+    "short_body_count": 0,
+    "status": "ADOPTED_ONE_SELECTED_SERVER9430262C_MONITOR17_DB_OWNER"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-selected-server9430262c-monitor17-db-owner-adoption-20261005.json",
+  "resource_basis": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/completed-model37-resource-basis-selected-server9430262c-monitor17-20261005.json",
+    "sha256": "66673ea92c32a11bd513a97082744cbcd214a4d4080317012964deef916024e7"
+  },
+  "retained_image": {
+    "bytes": 94409584,
+    "ctime_ns": 1791167451666340857,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120127193,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791167451666340857,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest8e-server9430262c-monitor-normal-compile-v1.test",
+    "sha256": "de229c1fa6fea7250200ec1abd8c1a6fa8a54688a97c1d6a45c5be15b9d610a9",
+    "type": 32768,
+    "uid": 1000
+  },
+  "schema": "selected-server9430262c-monitor17-db-owner-concrete-review-v1",
+  "scope": "One exact17 normal monitor body with isolated fresh PG18/Redis only after actual compiler/short/model37 predecessors joined. Eight late-monitor plus ten inherited779-monitor roots minus one overlap; no fullmodel/root/controller/native780/race/source-mutant-control qualification. No skips, no package substitution or source PASS inheritance.",
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server9430262c-monitor17-selection-source-v1.json",
+    "sha256": "f3fa28dcc50b3bb3ced2543bfe8f8b8f3fc1300a40c458a7b2f6ef7b5e63b307"
+  },
+  "shell": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/run-selected-server9430262c-monitor17-only-v1.sh",
+    "sha256": "f71312ce7433b8feb23bcc5198887657b9e989b3f783064ddfa79106dc9d114b"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server9430262c-monitor-compiler-source-closure-v1.json",
+    "sha256": "ebfa5095fe3f13b4ba05197634827dd0636acd6d6491e41ff025fc9eba4342b1"
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "9430262c868d563e1443ebdce24bcec480bfcd81",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "AUTHOR_SEALED_READY_FOR_INDEPENDENT_REVIEW_AND_ROOT_ADOPTION"
+}

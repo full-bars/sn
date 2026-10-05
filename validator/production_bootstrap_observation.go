@@ -242,7 +242,10 @@ func observeProductionBootstrapOperators(ctx context.Context, cfg *ReleaseConfig
 	// The immutable hash cache cannot prove the height is still canonical.
 	// Re-read the actual mapping after the last API body has closed.
 	var confirmed *chainRPCBlock
-	if err := chain.client.Client().CallContext(ctx, &confirmed, "eth_getBlockByNumber", hexutil.EncodeUint64(block), false); err != nil {
+	if err := chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		confirmed = nil
+		return chain.client.Client().CallContext(callCtx, &confirmed, "eth_getBlockByNumber", hexutil.EncodeUint64(block), false)
+	}); err != nil {
 		return nil, err
 	}
 	confirmedBlock, confirmedHash, err := confirmed.identity()

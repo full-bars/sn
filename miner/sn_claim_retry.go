@@ -1,6 +1,6 @@
 package miner
 
-// Only the finite command's idempotent epoch and pool reads enter this owner.
+// Only idempotent claim epoch and pool reads enter this owner.
 // Signing, submission and wallet mutations never share its retry loop.
 
 import (
@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -86,25 +87,40 @@ func retryClaimApiRead[T any](ctx context.Context, hooks claimReadRetryHooks, re
 // All joined causes must permit retry: an auth, parser or integrity failure
 // cannot be hidden by a simultaneous timeout or gateway status.
 func retryableClaimApiRead(err error) bool {
+	budget := &minerReadCauseBudget{remaining: minerReadCauseMaximumNodes}
+	return retryableClaimApiReadCause(err, 0, budget)
+}
+
+// SDK status authority does not extend inside a physical transport subtree.
+func retryableClaimApiReadCause(err error, depth int, budget *minerReadCauseBudget) bool {
 	switch cause := err.(type) {
 	case *connect.HttpStatusError:
-		return cause.StatusCode == http.StatusTooManyRequests || cause.StatusCode >= 500 && cause.StatusCode <= 599
-	case *url.Error, *net.OpError:
-		return retryableEthRpcError(err, false)
+		if !budget.admit(err, depth) {
+			return false
+		}
+		return cause.StatusCode == http.StatusRequestTimeout || cause.StatusCode == http.StatusTooEarly || cause.StatusCode == http.StatusTooManyRequests || cause.StatusCode >= 500 && cause.StatusCode <= 599
+	case *os.PathError, *os.LinkError, *url.Error, *net.OpError, *net.DNSError:
+		return retryableEthRpcCause(err, false, depth, budget)
 	case interface{ Unwrap() []error }:
-		hasCause := false
-		for _, child := range cause.Unwrap() {
-			if child != nil {
-				hasCause = true
-				if !retryableClaimApiRead(child) {
-					return false
-				}
+		if !budget.admit(err, depth) {
+			return false
+		}
+		causes := cause.Unwrap()
+		if len(causes) == 0 || len(causes) > budget.remaining {
+			return false
+		}
+		for _, child := range causes {
+			if !retryableClaimApiReadCause(child, depth+1, budget) {
+				return false
 			}
 		}
-		return hasCause
+		return true
 	case interface{ Unwrap() error }:
-		return retryableClaimApiRead(cause.Unwrap())
+		if !budget.admit(err, depth) {
+			return false
+		}
+		return retryableClaimApiReadCause(cause.Unwrap(), depth+1, budget)
 	default:
-		return retryableEthRpcError(err, false)
+		return retryableEthRpcCause(err, false, depth, budget)
 	}
 }

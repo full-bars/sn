@@ -6,6 +6,7 @@ import (
 	"context"
 	"net"
 	"os"
+	"syscall"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
@@ -85,10 +86,20 @@ func (self *FinalizedExtrinsicScan) ReachedFinalizedBoundary() bool {
 // unavailable/transport leaves retain completed earlier bodies; diagnostic text
 // and unowned EOF are deliberately insufficient for this classification.
 func receiptScanUnavailable(err error) bool {
-	if err == nil {
+	if HasSubstrateReadTransportCause(err) {
+		return RetryableSubstrateReadTransportError(err)
+	}
+	budget := &substrateReadCauseBudget{remaining: 128}
+	return receiptScanUnavailableBounded(err, 0, budget)
+}
+
+// Partial absence evidence needs the complete finite cause tree. Native
+// markers stay opaque, and wrappers are checked before timeout interfaces.
+func receiptScanUnavailableBounded(err error, depth int, budget *substrateReadCauseBudget) bool {
+	if !budget.admit(err, depth) {
 		return false
 	}
-	if HasSubstrateReadTransportCause(err) {
+	if IsSubstrateReadTransportCause(err) {
 		return RetryableSubstrateReadTransportError(err)
 	}
 	if _, ok := err.(*ReceiptEvidenceUnavailableError); ok {
@@ -98,23 +109,27 @@ func receiptScanUnavailable(err error) bool {
 		return true
 	}
 	switch cause := err.(type) {
-	case *os.PathError:
+	case *os.PathError, *os.LinkError:
 		return false
-	case net.Error:
+	case syscall.Errno:
 		return cause.Timeout()
+	case interface{ Is(error) bool }, interface{ As(any) bool }:
+		return false
 	case interface{ Unwrap() []error }:
 		children := cause.Unwrap()
-		if len(children) == 0 {
+		if !budget.admitsChildren(children) {
 			return false
 		}
 		for _, child := range children {
-			if !receiptScanUnavailable(child) {
+			if !receiptScanUnavailableBounded(child, depth+1, budget) {
 				return false
 			}
 		}
 		return true
 	case interface{ Unwrap() error }:
-		return receiptScanUnavailable(cause.Unwrap())
+		return receiptScanUnavailableBounded(cause.Unwrap(), depth+1, budget)
+	case net.Error:
+		return cause.Timeout()
 	}
 	return false
 }

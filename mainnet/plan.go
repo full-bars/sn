@@ -137,7 +137,7 @@ type bootstrapPlan struct {
 func bootstrapRequirements() []planRequirement {
 	return []planRequirement{
 		{Id: "runtime-authority", Description: "Independent mainnet source-to-Wasm, code/metadata/version and supported capability approval"},
-		{Id: "owned-rpc", Description: "Owned mainnet route attestation, archive capability and independently corroborated finalized identity"},
+		{Id: "owned-rpc", Description: "Explicitly approved mainnet RPC route and archive capability, with endpoint ownership and independently approved finality authority recorded separately; public RPC is supported"},
 		{Id: "testnet-closure", Description: "Final testnet report preserving R48 failure and the actual completed scope"},
 		{Id: "testnet-exceptions", Description: "Disposition of every testnet exception; no provisional testnet authority inherited"},
 		{Id: "production-qualification", Description: "Exact composed binary/contract/server release and controlled production-path rehearsal results"},
@@ -289,7 +289,7 @@ func buildBootstrapPlan(config bootstrapPlanConfig, snapshot finalizedSnapshotEn
 	plan := bootstrapPlan{
 		Schema: bootstrapPlanSchema, Status: "blocked", DeploymentId: config.DeploymentId, Netuid: config.Netuid, Network: config.Network,
 		FinalizedHash: snapshot.FinalizedHash, FinalizedNumber: snapshot.FinalizedNumber, EvmHash: snapshot.Mapping.EvmHeader.Hash, EvmNumber: snapshot.Mapping.EvmHeader.Number,
-		ObservationTrust: "owned-rpc-assertion; content hashes are not approval or independent consensus proof", RuntimeVersion: snapshot.Runtime.Version,
+		ObservationTrust: "approved-rpc-assertion; endpoint ownership and independent finality authority are separate; content hashes are not approval or independent consensus proof", RuntimeVersion: snapshot.Runtime.Version,
 		Inputs: inputs, Requirements: requirements, Actions: actions,
 		Economics: planEconomics{Denominator: "native_miner_allocation_before_withholding", ProviderNumerator: 1, FractionDenominator: 10, RemainderNumerator: 9, Remainder: "owner-recycle", Assurance: "observed-native-target"},
 		ExecutionBlockers: []string{

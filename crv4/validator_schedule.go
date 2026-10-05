@@ -36,7 +36,18 @@ type ValidatorScheduleObservation struct {
 // Resolves Uids through authenticated historical metadata, then executes the
 // real bidirectional registration, finality and calculated-stake reader. No
 // dial-time metadata, EVM block number or activation UID participates.
-func ReadValidatorScheduleAtContext(ctx context.Context, chain *Chain, query ValidatorScheduleQuery, allowed ...RuntimeArtifactIdentity) (result ValidatorScheduleObservation, resultErr error) {
+func ReadValidatorScheduleAtContext(ctx context.Context, chain *Chain, query ValidatorScheduleQuery, allowed ...RuntimeArtifactIdentity) (ValidatorScheduleObservation, error) {
+	if len(allowed) > maximumRuntimeMetadataArtifactsPerChain {
+		return ValidatorScheduleObservation{}, errors.New("validator schedule runtime allowlist exceeds its bound")
+	}
+	allowed = append([]RuntimeArtifactIdentity(nil), allowed...)
+	return readRuntimeObservation(ctx, chain, func(ctx context.Context) (ValidatorScheduleObservation, error) {
+		return readValidatorScheduleAttempt(ctx, chain, query, allowed...)
+	})
+}
+
+// One attempt preserves the original query and rejects any partial result.
+func readValidatorScheduleAttempt(ctx context.Context, chain *Chain, query ValidatorScheduleQuery, allowed ...RuntimeArtifactIdentity) (result ValidatorScheduleObservation, resultErr error) {
 	if ctx == nil || chain == nil || chain.API == nil || chain.API.Client == nil {
 		return result, errors.New("validator schedule context is unavailable")
 	}
@@ -123,12 +134,10 @@ func ReadValidatorScheduleAtContext(ctx context.Context, chain *Chain, query Val
 	if binary.LittleEndian.Uint16(recheckedUID) != resolvedUID {
 		return result, errors.New("validator schedule registration changed during observation")
 	}
-	canonical, err := validatorIdentityBlockHashAtContext(ctx, chain, query.BlockNumber)
-	if err != nil {
+	if err := closeValidatorReadFinalityContext(ctx, chain,
+		finalityReadWitness{hash: query.BlockHash, number: query.BlockNumber},
+		finalityReadWitness{hash: stake.Identity.FinalizedHash, number: stake.Identity.FinalizedNumber}); err != nil {
 		return result, err
-	}
-	if canonical != query.BlockHash {
-		return result, errors.New("validator schedule canonical block changed during observation")
 	}
 	return ValidatorScheduleObservation{Stake: stake, SubnetEpochIndex: binary.LittleEndian.Uint64(epoch)}, ctx.Err()
 }
