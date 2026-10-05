@@ -651,7 +651,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if proxySettings != nil {
 			proxyAddr = proxySettings.Address
 			// Use address hash as proxy index for bandwidth tracking.
-			bw = bwRegistry.Register(int(addressHash(proxyAddr)))
+			bw = bwRegistry.Register(int(addressHash(proxyAddr) & 0x7fffffff))
 		}
 		clientStrategySettings.ConnectSettings = bandwidth.WrapConnectSettings(
 			clientStrategySettings.ConnectSettings, bw, proxyAddr,
