@@ -445,8 +445,10 @@ func TestProviderRegistrationOwnerSpansApiJoin(t *testing.T) {
 // credential rotation and map order retain those operations and the shared key.
 func TestProviderRegistrationSlotsSurviveCredentialAndOrderChanges(t *testing.T) {
 	fixture := newProviderRegistrationFixture(t)
-	first := &connect.ProxySettings{Network: "tcp", Address: "192.0.2.10:1080", Auth: &proxy.Auth{User: "synthetic-first", Password: "synthetic-password"}}
-	second := &connect.ProxySettings{Network: "tcp", Address: "192.0.2.11:1080"}
+	firstAddress, firstRelayed := newSyntheticSocksRelay(t)
+	secondAddress, secondRelayed := newSyntheticSocksRelay(t)
+	first := &connect.ProxySettings{Network: "tcp", Address: firstAddress, Auth: &proxy.Auth{User: "synthetic-first", Password: "synthetic-password"}}
+	second := &connect.ProxySettings{Network: "tcp", Address: secondAddress}
 	stop := errors.New("synthetic proxy authentication handoff")
 	var handoffLock sync.Mutex
 	handoffs := map[string]int{}
@@ -469,6 +471,9 @@ func TestProviderRegistrationSlotsSurviveCredentialAndOrderChanges(t *testing.T)
 	t.Logf("provider slot allocation: posts=%d legacy=%d allocated=%d physical_refreshes=%d handoffs=%v", posts, legacy, allocated, refreshed, handoffs)
 	if posts != 3 || legacy != 0 || allocated != 3 || refreshed != 0 || len(handoffs) != 3 {
 		t.Fatal("provider slots did not complete three original allocations")
+	}
+	if atomic.LoadInt64(firstRelayed) == 0 || atomic.LoadInt64(secondRelayed) == 0 {
+		t.Fatal("provider proxy slots bypassed their configured proxies")
 	}
 	paths := map[string]bool{}
 	records := map[string]providerRegistrationTestRecord{}
