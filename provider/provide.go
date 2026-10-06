@@ -895,6 +895,28 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	transportHealth := newProxyTransportHealth(proxyCtx, proxyIndex)
 	platformSettings := connect.DefaultPlatformTransportSettings()
 	platformSettings.Log = transportHealth.logger(connect.DefaultLogger())
+	// The DATAGRAM offer on an H3 connection is an operator gate, not
+	// connect's own default of true. snH3Eligible is the single rollout
+	// predicate; see h3_datagram.go. The value is read at each H3 dial, so
+	// applying it here covers the first dial and the control socket updates the
+	// running transport live.
+	h3Eligible := snH3Eligible(proxyIndex, proxySettings, isNative)
+	h3IdentityKey := directProxyKey
+	if proxySettings != nil {
+		h3IdentityKey = proxySettings.Key()
+	}
+	// Which identities run H3 is the `h3` control key's decision; an excluded
+	// identity is pinned to H1 only so the engine never dials H3 at all.
+	applyH3ModeToSettings(platformSettings, h3Eligible)
+	if h3Eligible {
+		applyH3DatagramOfferToSettings(platformSettings)
+		// One collector across every transport, so DATAGRAM counters are a
+		// process total rather than whichever transport is sampled last. See
+		// h3_datagram.go.
+		platformSettings.H3DatagramStats = h3DatagramProcessStats
+	}
+	h3Launch := registerH3Running(h3IdentityKey, h3Eligible)
+	defer unregisterH3RunningIfCurrent(h3IdentityKey, h3Launch)
 	if factory := newH3PacketConnFactory(proxySettings, proxyBandwidth, identityKey); factory != nil {
 		platformSettings.H3PacketConnFactory = factory
 	}
@@ -903,6 +925,11 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		platformTransport.Close()
 	})
 	defer unregCloser()
+	if h3Eligible {
+		applyH3DatagramSendToSettings(platformSettings)
+		registerH3DatagramTarget(platformSettings, platformTransport)
+		defer unregisterH3DatagramTarget(platformTransport)
+	}
 
 	proxyBecameLive()
 	defer proxyWentDown()
@@ -1249,6 +1276,18 @@ func provideLauncherLoop(st *provideState) func() {
 		allProxySettings = append(allProxySettings, s)
 	}
 
+	// Publish the full desired set (internal or file source, plus URL-sourced)
+	// so a cap ranks over every proxy the box runs, and re-resolve the current
+	// mode now that the set is known. A persisted `h3 = N` replays before this
+	// point, when only the internal config was readable, so without the
+	// re-resolve a file- or URL-fed box would cap to zero proxies.
+	publishH3ProxyCandidates(allProxySettings)
+	if m := currentH3Mode(); m.kind == h3ModeCap {
+		if resolved, err := buildH3ResolvedMode(m.raw); err == nil {
+			h3ModeValue.Store(resolved)
+		}
+	}
+
 	// Migrate legacy bare-address state entries before anything reads proxyState
 	// by key, and adopt saved client logins onto identity keys before the
 	// warmth evaluation below consults the client-JWT store.
@@ -1440,6 +1479,13 @@ func provideLauncherLoop(st *provideState) func() {
 	reloader.seedRunningAuth(launchSettings)
 	reloader.StartWatcher(st.ctx)
 	reloader.reload()
+
+	// Wire the live `h3` mode re-apply now that the cancel map and the reloader
+	// exist. See reapplyH3ModeLive. Apply it once here: a control update that
+	// landed while the startup loop was launching identities would not
+	// otherwise reconnect the identities it affects.
+	h3ReapplyLive = func() { reapplyH3ModeLive(st) }
+	reapplyH3ModeLive(st)
 
 	// URL fetcher and maintenance goroutines.
 	proxyURLs := resolveProxyURLs(st.opts)

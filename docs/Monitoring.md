@@ -117,3 +117,36 @@ The test file covers the two enabled rules. `prometheus.yml` lists `urnetwork.ym
 | `urnet_conntrack_used_ratio` | gauge | | `nf_conntrack_count` over `nf_conntrack_max` (Linux, when conntrack is loaded). Overflow drops packets silently |
 | `urnet_tcp_time_wait` | gauge | | TCP sockets in TIME_WAIT (Linux) |
 | `urnet_tcp_orphans` | gauge | | Orphaned TCP sockets (Linux) |
+
+## Metrics for QUIC DATAGRAM
+
+The `urnet_h3_datagram_*` families are served once the DATAGRAM gate is on or a
+connection has carried a datagram, so a box that never enables the feature
+serves none of them. Turn the feature on with `urnet-tools set h3-datagram on`.
+
+The H3 identity set itself is always exported:
+
+| Metric | Type | Labels | Meaning |
+|---|---|---|---|
+| `urnet_h3_mode_info` | gauge | `mode` | Value 1 for the resolved `h3` mode (`off`, `direct`, a proxy count, or `all`) |
+| `urnet_h3_set_size` | gauge | | Grand total of running identities that run H3: proxies plus the direct identity. Under an `<int>` cap the direct identity is counted on top of the N proxies. |
+| `urnet_h3_proxy_set_size` | gauge | | Running proxies that run H3, excluding the direct identity. `urnet_h3_set_size` is this plus the direct identity when it runs. |
+
+| Metric | Type | Labels | Meaning |
+|---|---|---|---|
+| `urnet_h3_datagram_rx_messages_total` | counter | | Messages received over DATAGRAM |
+| `urnet_h3_datagram_rx_bytes_total` | counter | | Bytes of messages received over DATAGRAM |
+| `urnet_h3_datagram_rx_dropped_total` | counter | | Received DATAGRAM messages dropped by the reassembly limit |
+| `urnet_h3_datagram_rx_timeouts_total` | counter | | Received DATAGRAM messages dropped by the reassembly timeout |
+| `urnet_h3_datagram_rx_rejected_total` | counter | `reason` | DATAGRAMs refused by the datagram layer: `malformed`, `duplicate`, `checksum` |
+| `urnet_h3_datagram_tx_messages_total` | counter | | Messages sent over DATAGRAM |
+| `urnet_h3_datagram_tx_bytes_total` | counter | | Bytes of messages sent over DATAGRAM |
+| `urnet_h3_datagram_tx_stream_messages_total` | counter | | Messages sent on the reliable stream of a connection that negotiated DATAGRAM, so the lane split is `tx_messages` against this |
+| `urnet_h3_datagram_tx_errors_total` | counter | | DATAGRAM send errors |
+
+The fork exports `urnet_h3_datagram_offered_total`, `urnet_h3_datagram_accepted_total`
+and `urnet_h3_datagram_blackholes_total` as well. This provider does not: those
+counters live inside the connect library, and the pinned revision sn builds
+against has the DATAGRAM data plane but not the gate and counters the fork
+added. Until sn moves onto a connect revision that carries them, an offered-but-
+not-accepted connection is not visible here.

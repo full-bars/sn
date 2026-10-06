@@ -210,6 +210,24 @@ func validateSetValue(key, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", key, value)
 		}
+	case "h3-datagram", "h3-datagram-send":
+		switch value {
+		case "on", "off":
+		default:
+			return fmt.Errorf("%s: must be on or off (got %q)", key, value)
+		}
+	case "h3":
+		switch strings.ToLower(strings.TrimSpace(value)) {
+		case "off", "direct", "on", "all", "auto", "0":
+			return nil
+		}
+		// A count must be positive, matching the provider's parseH3Mode: zero
+		// is the "0" alias for off handled above, and a stray zero spelling
+		// such as "00" is not a count.
+		if n, err := strconv.Atoi(strings.TrimSpace(value)); err == nil && n > 0 {
+			return nil
+		}
+		return fmt.Errorf("h3: must be off, direct, a positive proxy count, or all (got %q)", value)
 	}
 	return nil
 }
@@ -240,6 +258,9 @@ var setKeyHelps = []string{
 	"  hot-restart         on|off        preserve client JWTs across restarts",
 	"  oom-cap             on|off|shadow OOM-aware start cap: shadow logs what it would do (default), on enforces, off is the kill switch and forgets the standing cap",
 	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed)",
+	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply)",
+	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message)",
+	"  h3                  off|direct|N|all  which identities run H3: none, the direct identity only, the N best proxies, or all. N must be a positive integer (on == direct, 0 == off). N caps the PROXY set only; the direct identity is always additionally eligible and does not consume one of the N, so h3=N runs N proxies plus the direct identity (default: all)",
 	"  gomemlimit          <bytes>       Go runtime memory limit (e.g. 256MiB, 1GiB)",
 	"  gogc      <int>|off|disabled     GC target percentage (default: 100). off clears; disabled turns GC off entirely (unbounded heap)",
 	"  profile             <profile>     tuning profile (auto, eco, lowmem, turbo-v4, turbo-v8)",
@@ -255,12 +276,13 @@ var setKeyHelps = []string{
 // shortcut. The exceptions send "off" as a real value, because their off state
 // is not their default: hot_restart and ramlogs keep a concrete off behaviour,
 // proxy_self_heal and metrics would otherwise revert to a default that is not
-// off, and oom_cap would revert to the "shadow" default, which decides and logs
-// but enforces nothing, so the documented kill switch would never turn the
-// feature off.
+// off, oom_cap would revert to the "shadow" default, which decides and logs but
+// enforces nothing, so the documented kill switch would never turn the feature
+// off, and h3's default is "all", so the clear path would turn H3 back on for
+// every identity instead of disabling it.
 func treatsOffAsClear(canonicalKey string) bool {
 	switch canonicalKey {
-	case "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline":
+	case "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline", "h3":
 		return false
 	}
 	return true

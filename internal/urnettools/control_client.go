@@ -137,6 +137,11 @@ var controlKeyCanonical = map[string]string{
 	"smart_dialer":                "smart_dialer",
 	"baseline":                    "baseline",
 	"baseline_recorder":           "baseline",
+	"h3-datagram":                 "h3_datagram",
+	"h3_datagram":                 "h3_datagram",
+	"h3-datagram-send":            "h3_datagram_send",
+	"h3_datagram_send":            "h3_datagram_send",
+	"h3":                          "h3",
 	"proxy-url-max":               "proxy_url_max",
 	"proxy_url_max":               "proxy_url_max",
 	"proxy-url-refresh":           "proxy_url_refresh",
@@ -168,6 +173,20 @@ func canonicalControlKey(key string) (string, bool) {
 	return c, ok
 }
 
+// validateH3ModeValue accepts off, direct, all, a positive proxy count, and the
+// backward-compatible aliases on (== direct) and 0 (== off).
+func validateH3ModeValue(value string) error {
+	v := strings.ToLower(strings.TrimSpace(value))
+	switch v {
+	case "off", "direct", "on", "all", "0", "auto", "":
+		return nil
+	}
+	if n, err := strconv.Atoi(v); err == nil && n > 0 {
+		return nil
+	}
+	return fmt.Errorf("h3: must be off, direct, a positive proxy count, or all (got %q)", value)
+}
+
 // validateControlValue validates values before sending to the socket or
 // queueing to pending_overrides.json.
 func validateControlValue(canonicalKey, value string) error {
@@ -195,12 +214,14 @@ func validateControlValue(canonicalKey, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", canonicalKey, value)
 		}
-	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline":
+	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send":
 		switch strings.ToLower(value) {
 		case "on", "off":
 		default:
 			return fmt.Errorf("%s: must be on or off (got %q)", canonicalKey, value)
 		}
+	case "h3":
+		return validateH3ModeValue(value)
 	case "oom_cap":
 		switch strings.ToLower(value) {
 		case "on", "off", "shadow":

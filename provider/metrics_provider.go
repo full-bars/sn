@@ -546,6 +546,27 @@ func providerExtraMetrics() string {
 	writeResourceSignalGauges(&b, readBaselineGC(time.Now()), readBaselineNet())
 	writeRuntimeGauges(&b, time.Since(providerStartTime), runtimeSysBytes())
 	writeDashboardMetrics(&b)
+	// --- QUIC DATAGRAM on the H3 connection ---
+	// Emitted once the DATAGRAM gate is on or a connection has carried a
+	// datagram, so a box that never enables the feature serves no empty
+	// h3_datagram families. See h3_datagram.go.
+	if dg, ok := h3DatagramStatsSnapshot(); ok && h3DatagramMetricsEnabled(dg) {
+		writeH3DatagramMetrics(&b, dg)
+	}
+	// --- H3 identity set ---
+	// The resolved `h3` mode, the grand total of running identities that run
+	// H3, and how many of those are proxies. A cap counts the direct identity
+	// on top of the N proxies. See h3_mode.go.
+	fmt.Fprintf(&b, "# HELP urnet_h3_mode_info Resolved h3 mode: off, direct, a proxy count, or all.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_h3_mode_info gauge\n")
+	fmt.Fprintf(&b, "urnet_h3_mode_info{mode=%s} 1\n", prometheusLabelValue(H3ModeName()))
+	h3Set, h3Proxies := H3SetSizes()
+	fmt.Fprintf(&b, "# HELP urnet_h3_set_size Grand total of running identities that currently run H3: eligible proxies plus the direct identity when it runs. Under an `<int>` cap the direct identity is counted on top of the N proxies.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_h3_set_size gauge\n")
+	fmt.Fprintf(&b, "urnet_h3_set_size %d\n", h3Set)
+	fmt.Fprintf(&b, "# HELP urnet_h3_proxy_set_size Running PROXIES that currently run H3, excluding the direct identity; urnet_h3_set_size is this plus the direct identity when it runs.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_h3_proxy_set_size gauge\n")
+	fmt.Fprintf(&b, "urnet_h3_proxy_set_size %d\n", h3Proxies)
 
 	return b.String()
 }
