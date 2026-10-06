@@ -590,3 +590,126 @@ func TestRunReloadReconciler_FiresOnInterval(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 	}
 }
+
+// A reload that re-resolves an active cap must also reconnect the running
+// identities whose membership changed. The cap ranking shifts as the desired
+// set changes (a replacement proxy ranks in, or the pool shrinks), and the
+// proxies that join or leave the top N only pick up the new H3 decision if the
+// reapply runs -- the same path SetH3Mode uses. Without it, a proxy displaced
+// from the cap keeps running H3 (N+1 proxies under a cap of N) and a promoted
+// proxy stays on H1 until the next control update.
+//
+// The test drives the real ProxyReloader.reload() twice: first with only P1 in
+// the source, then with P2 added and outranking P1 for the single slot. It
+// asserts P1's tracked running entry flips to not-eligible, which only
+// reapplyH3ModeLive does. Dropping the reapply from the reload's cap
+// re-resolution leaves P1 tracked and eligible, failing this test.
+func TestProxyReloadReResolvesActiveCap(t *testing.T) {
+	withTempHome(t)
+
+	// proxy_url.json is absent, which reads as an empty cache with no error, so
+	// the reload's candidate publication (and cap re-resolution) is not gated
+	// off this cycle.
+	if err := writeProxyState(&ProxyState{Proxies: map[string]ProxyEntry{}}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Distinct keys so the ranking tie-break (by key) is deterministic: with
+	// both proxies ungraded and scoreless, the lexicographically smaller key
+	// wins the slot. P2's address sorts ahead of P1's.
+	p1 := &connect.ProxySettings{
+		Network: "tcp",
+		Address: "10.0.0.2:8080",
+		Auth:    &proxy.Auth{User: "u1", Password: "p1"},
+	}
+	p2 := &connect.ProxySettings{
+		Network: "tcp",
+		Address: "10.0.0.1:8080",
+		Auth:    &proxy.Auth{User: "u1", Password: "p1"},
+	}
+	p1Key, p2Key := p1.Key(), p2.Key()
+
+	src := filepath.Join(t.TempDir(), "proxies.txt")
+	if err := os.WriteFile(src, []byte("10.0.0.2:8080:u1:p1\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Wire the reloader and the live re-apply exactly as provideLauncherLoop
+	// does: the reloader shares the provideState's cancel map and mutex, and
+	// h3ReapplyLive reconnects through that same state.
+	st := &provideState{proxyCancelMap: map[string]context.CancelFunc{}}
+	cancelMapKeys := func() []string {
+		st.proxyCancelMu.Lock()
+		defer st.proxyCancelMu.Unlock()
+		out := make([]string, 0, len(st.proxyCancelMap))
+		for k := range st.proxyCancelMap {
+			out = append(out, k)
+		}
+		return out
+	}
+	reloader := &ProxyReloader{
+		cancelMap:       st.proxyCancelMap,
+		cancelMapMu:     &st.proxyCancelMu,
+		state:           &ProxyState{Proxies: map[string]ProxyEntry{}},
+		sourcePath:      src,
+		parentCtx:       context.Background(),
+		wg:              &sync.WaitGroup{},
+		drainingProxies: map[string]context.CancelFunc{},
+		spawnProxy: func(proxyCtx context.Context, settings *connect.ProxySettings, isNative bool, isURLSourced bool) {
+			<-proxyCtx.Done()
+		},
+	}
+	origReapply := h3ReapplyLive
+	h3ReapplyLive = func() { reapplyH3ModeLive(st) }
+	defer func() { h3ReapplyLive = origReapply }()
+
+	// Save/restore the published candidate set and the mode for other tests.
+	h3ProxyCandidatesMu.Lock()
+	prevSet, prevKnown := h3ProxyCandidatesSet, h3ProxyCandidatesKnown
+	h3ProxyCandidatesMu.Unlock()
+	defer func() {
+		h3ProxyCandidatesMu.Lock()
+		h3ProxyCandidatesSet, h3ProxyCandidatesKnown = prevSet, prevKnown
+		h3ProxyCandidatesMu.Unlock()
+	}()
+	publishH3ProxyCandidates(nil)
+	prevMode, err := SetH3Mode("1")
+	if err != nil {
+		t.Fatalf("SetH3Mode(1): %v", err)
+	}
+	defer SetH3Mode(prevMode)
+
+	// First reload: only P1 is desired, so the cap resolves over P1 and P1 is
+	// launched. Simulate the launched goroutine registering its H3 running
+	// entry (the fake spawnProxy does not).
+	reloader.reload()
+	st.proxyCancelMu.Lock()
+	_, p1Running := st.proxyCancelMap[p1Key]
+	st.proxyCancelMu.Unlock()
+	if !p1Running {
+		t.Fatalf("reload did not launch p1 (cancel map keys: %v)", cancelMapKeys())
+	}
+	registerH3Running(p1Key, true)
+	defer unregisterH3Running(p1Key)
+	if !h3EligibleForKey(p1Key, false) {
+		t.Fatal("p1 should hold the single cap slot after the first reload")
+	}
+
+	// Second reload: P2 is added and outranks P1 for the single slot, so P1 is
+	// displaced and must be reconnected (cancelled and re-spawned on H1).
+	if err := os.WriteFile(src, []byte("10.0.0.2:8080:u1:p1\n10.0.0.1:8080:u1:p1\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	reloader.reload()
+
+	if !h3EligibleForKey(p2Key, false) {
+		t.Fatal("p2 should take the cap slot after the reload re-resolves over the new set")
+	}
+	if h3EligibleForKey(p1Key, false) {
+		t.Fatal("p1 should be displaced from the cap slot")
+	}
+	eligible, tracked := h3RunningEligibleOf(p1Key)
+	if !tracked || eligible {
+		t.Fatalf("p1 running entry after reload = tracked:%v eligible:%v; want tracked:true eligible:false — the reload re-resolved the cap but did not reconnect the displaced proxy", tracked, eligible)
+	}
+}

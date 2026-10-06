@@ -202,6 +202,14 @@ func TestH3DatagramStatsSnapshotIsProcessWide(t *testing.T) {
 	restore := swapH3DatagramTargets()
 	defer restore()
 
+	// The counters are package-global and process-wide, so this test must not
+	// leak its recorded traffic into other tests reading absolute totals (a
+	// -shuffle ordering dependency). Swap in a fresh collector and restore the
+	// original on the way out.
+	origStats := h3DatagramProcessStats
+	h3DatagramProcessStats = &connect.H3DatagramStats{}
+	defer func() { h3DatagramProcessStats = origStats }()
+
 	settings := connect.DefaultPlatformTransportSettings()
 	registerH3DatagramTarget(settings, &connect.PlatformTransport{})
 	registerH3DatagramTarget(settings, &connect.PlatformTransport{})

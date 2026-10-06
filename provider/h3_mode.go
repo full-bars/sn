@@ -204,7 +204,10 @@ func h3ProxyCandidateSettings() []*connect.ProxySettings {
 	if !h3ProxyCandidatesKnown {
 		return nil
 	}
-	return h3ProxyCandidatesSet
+	// Clone the slice: the caller must not receive the internal slice across
+	// the mutex boundary, where a later publish (a slice-header swap) or any
+	// future element write would race the caller's reads.
+	return append([]*connect.ProxySettings(nil), h3ProxyCandidatesSet...)
 }
 
 // buildH3ResolvedMode parses a value and resolves any cap set.
@@ -225,6 +228,63 @@ func buildH3ResolvedMode(value string) (*h3ResolvedMode, error) {
 		m.eligibleKeys = h3TopProxyKeys(cap, settings, state)
 	}
 	return m, nil
+}
+
+// reResolveActiveH3Cap re-resolves an active cap over the current published
+// candidate set and applies the result to the running identities. It is the
+// shared startup/reload path (provide.go and ProxyReloader.reload both call it
+// after publishing the candidate set).
+//
+// The resolved set is a function of the candidates, the persisted proxy state,
+// and the cap, so if none of those moved the mode is left untouched.
+//
+// The swap is a compare-and-swap against the mode that was just read:
+// buildH3ResolvedMode reads proxy state from disk, so a control-socket update
+// that lands during that window replaces the stored pointer and the CAS fails,
+// leaving the operator's newer mode in place instead of clobbering it with this
+// stale re-resolve.
+//
+// When the cap set did change, h3ReapplyLive (installed by the launcher) is
+// invoked to reconnect the running identities whose membership changed — the
+// same path SetH3Mode uses. Without it, a proxy promoted into (or displaced
+// from) the top N keeps its old H3 state until the next control update, so a
+// cap of N can end up with N+1 proxies running H3. h3ReapplyLive is nil before
+// the launcher installs it (early startup, CLI, tests), when there is nothing
+// running to reconnect.
+func reResolveActiveH3Cap() {
+	m := currentH3Mode()
+	if m.kind != h3ModeCap {
+		return
+	}
+	resolved, err := buildH3ResolvedMode(m.raw)
+	if err != nil {
+		return
+	}
+	if sameH3EligibleKeys(m.eligibleKeys, resolved.eligibleKeys) {
+		return
+	}
+	if !h3ModeValue.CompareAndSwap(m, resolved) {
+		// A concurrent control update replaced the mode while the cap was being
+		// re-resolved; leave the operator's newer mode in place.
+		return
+	}
+	if h3ReapplyLive != nil {
+		h3ReapplyLive()
+	}
+}
+
+// sameH3EligibleKeys reports whether two resolved cap sets select the same
+// identities. A nil map and an empty map are the same (no eligible proxies).
+func sameH3EligibleKeys(a, b map[string]bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for key, v := range a {
+		if b[key] != v {
+			return false
+		}
+	}
+	return true
 }
 
 // h3EligibleForKey is the core decision for one identity key.

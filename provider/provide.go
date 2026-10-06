@@ -905,6 +905,14 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	if proxySettings != nil {
 		h3IdentityKey = proxySettings.Key()
 	}
+	// Register the running entry immediately after the eligibility read, before
+	// the more expensive settings wiring below. A concurrent reapplyH3ModeLive
+	// must see this identity tracked: it skips an untracked key on the
+	// assumption that the key reads the mode when it builds its transport, so a
+	// wider window here would let a key register stale eligibility and stay on
+	// the wrong side of the set until the next control update.
+	h3Launch := registerH3Running(h3IdentityKey, h3Eligible)
+	defer unregisterH3RunningIfCurrent(h3IdentityKey, h3Launch)
 	// Which identities run H3 is the `h3` control key's decision; an excluded
 	// identity is pinned to H1 only so the engine never dials H3 at all.
 	applyH3ModeToSettings(platformSettings, h3Eligible)
@@ -915,8 +923,6 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		// h3_datagram.go.
 		platformSettings.H3DatagramStats = h3DatagramProcessStats
 	}
-	h3Launch := registerH3Running(h3IdentityKey, h3Eligible)
-	defer unregisterH3RunningIfCurrent(h3IdentityKey, h3Launch)
 	if factory := newH3PacketConnFactory(proxySettings, proxyBandwidth, identityKey); factory != nil {
 		platformSettings.H3PacketConnFactory = factory
 	}
@@ -1281,11 +1287,14 @@ func provideLauncherLoop(st *provideState) func() {
 	// mode now that the set is known. A persisted `h3 = N` replays before this
 	// point, when only the internal config was readable, so without the
 	// re-resolve a file- or URL-fed box would cap to zero proxies.
-	publishH3ProxyCandidates(allProxySettings)
-	if m := currentH3Mode(); m.kind == h3ModeCap {
-		if resolved, err := buildH3ResolvedMode(m.raw); err == nil {
-			h3ModeValue.Store(resolved)
-		}
+	//
+	// Gated on urlCacheLoaded, matching the reload path: an unreadable
+	// proxy_url.json drops every URL-sourced proxy from allProxySettings, so
+	// publishing here would install a partial candidate set. A later successful
+	// reload publishes the complete set.
+	if urlCacheLoaded {
+		publishH3ProxyCandidates(allProxySettings)
+		reResolveActiveH3Cap()
 	}
 
 	// Migrate legacy bare-address state entries before anything reads proxyState
