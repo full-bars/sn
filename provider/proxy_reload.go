@@ -593,7 +593,9 @@ func (r *ProxyReloader) reload() {
 	// Keep the cap ranking set current so a later `h3 = N` ranks over the live
 	// set, not just the internal config, and re-resolve an active cap over the
 	// new set so a replacement proxy that ranks in starts with H3 without the
-	// operator setting `h3` again.
+	// operator setting `h3` again. reResolveActiveH3Cap also reconnects the
+	// running identities whose membership changed, so a proxy displaced from the
+	// top N stops running H3 (capping at N) and a promoted proxy starts.
 	//
 	// Publish only a COMPLETE desired set. An unreadable proxy_url.json drops
 	// every URL-sourced proxy from this cycle, and the removal path keeps those
@@ -602,11 +604,7 @@ func (r *ProxyReloader) reload() {
 	// place.
 	if urlCacheLoaded {
 		publishH3ProxyCandidates(desiredValues)
-		if m := currentH3Mode(); m.kind == h3ModeCap {
-			if resolved, err := buildH3ResolvedMode(m.raw); err == nil {
-				h3ModeValue.Store(resolved)
-			}
-		}
+		reResolveActiveH3Cap()
 	}
 	adoptLegacyProxyState(r.state, desiredValues)
 	if store := loadGlobalClientJWTStore(); store != nil {

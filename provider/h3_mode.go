@@ -202,9 +202,24 @@ func h3ProxyCandidateSettings() []*connect.ProxySettings {
 	h3ProxyCandidatesMu.RLock()
 	defer h3ProxyCandidatesMu.RUnlock()
 	if !h3ProxyCandidatesKnown {
+		// Unknown: the launcher has not published yet (the CLI and unit
+		// tests), so the caller falls back to readProxySettings().
 		return nil
 	}
-	return h3ProxyCandidatesSet
+	// Known, so return the published set even when it is EMPTY. A nil return
+	// means "no launcher has published", and the empty-but-known case must not
+	// be confused with it: the caller's nil fallback would otherwise resolve a
+	// cap over the internal config instead of the (empty) set the box actually
+	// runs, capping over phantom keys that match no running identity. make([]T,
+	// 0) is non-nil, so the clone below is a non-nil empty slice for an empty
+	// (or nil) published set.
+	//
+	// Clone the slice: the caller must not receive the internal slice across
+	// the mutex boundary, where a later publish (a slice-header swap) or any
+	// future element write would race the caller's reads.
+	clone := make([]*connect.ProxySettings, len(h3ProxyCandidatesSet))
+	copy(clone, h3ProxyCandidatesSet)
+	return clone
 }
 
 // buildH3ResolvedMode parses a value and resolves any cap set.
@@ -225,6 +240,61 @@ func buildH3ResolvedMode(value string) (*h3ResolvedMode, error) {
 		m.eligibleKeys = h3TopProxyKeys(cap, settings, state)
 	}
 	return m, nil
+}
+
+// reResolveActiveH3Cap re-resolves an active cap over the current published
+// candidate set and applies the result to the running identities. It is the
+// shared startup/reload path (provide.go and ProxyReloader.reload both call it
+// after publishing the candidate set).
+//
+// The resolved set is a function of the candidates, the persisted proxy state,
+// and the cap, so if none of those moved the mode is left untouched.
+//
+// The swap is a compare-and-swap against the mode that was just read:
+// buildH3ResolvedMode reads proxy state from disk, so a control-socket update
+// that lands during that window replaces the stored pointer and the CAS fails,
+// leaving the operator's newer mode in place instead of clobbering it with this
+// stale re-resolve.
+//
+// When the cap set did change, the installed live re-apply hook (see
+// runH3ReapplyLive) reconnects the running identities whose membership changed
+// — the same path SetH3Mode uses. Without it, a proxy promoted into (or
+// displaced from) the top N keeps its old H3 state until the next control
+// update, so a cap of N can end up with N+1 proxies running H3. The hook is
+// unset before the launcher installs it (early startup, CLI, tests), when there
+// is nothing running to reconnect.
+func reResolveActiveH3Cap() {
+	m := currentH3Mode()
+	if m.kind != h3ModeCap {
+		return
+	}
+	resolved, err := buildH3ResolvedMode(m.raw)
+	if err != nil {
+		return
+	}
+	if sameH3EligibleKeys(m.eligibleKeys, resolved.eligibleKeys) {
+		return
+	}
+	if !h3ModeValue.CompareAndSwap(m, resolved) {
+		// A concurrent control update replaced the mode while the cap was being
+		// re-resolved; leave the operator's newer mode in place.
+		return
+	}
+	runH3ReapplyLive()
+}
+
+// sameH3EligibleKeys reports whether two resolved cap sets select the same
+// identities. A nil map and an empty map are the same (no eligible proxies).
+func sameH3EligibleKeys(a, b map[string]bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for key, v := range a {
+		if b[key] != v {
+			return false
+		}
+	}
+	return true
 }
 
 // h3EligibleForKey is the core decision for one identity key.
@@ -299,6 +369,40 @@ func registerH3Running(key string, eligible bool) uint64 {
 	return launch
 }
 
+// registerH3RunningEligible reads the identity's current H3 eligibility and
+// records it as a running entry in ONE critical section, returning the running
+// key, the eligibility actually registered, and the owning launch id. It is the
+// launcher's registration path; callers later release through
+// unregisterH3RunningIfCurrent.
+//
+// The read and the registration MUST be atomic. reapplyH3ModeLive (a concurrent
+// `h3` control update, or a reload re-resolve) skips an untracked key on the
+// assumption that the key reads the mode when it builds its transport. With the
+// read outside h3RunningMu the two can interleave so the re-apply observes the
+// key untracked and skips it, and only then does the launch register the stale
+// value and apply stale ModePreferences — leaving the identity on the wrong
+// side of the cap until the next control update. Holding the lock across both
+// makes the two orderings safe: the re-apply either observes this registration
+// (and reconnects the identity if the mode moved) or runs before it, in which
+// case the read here sees the newer mode.
+func registerH3RunningEligible(proxySettings *connect.ProxySettings, isNative bool) (key string, eligible bool, launch uint64) {
+	key = directProxyKey
+	if proxySettings != nil {
+		key = proxySettings.Key()
+	}
+	h3RunningMu.Lock()
+	defer h3RunningMu.Unlock()
+	eligible = snH3Eligible(0, proxySettings, isNative)
+	if key == "" {
+		return key, eligible, 0
+	}
+	h3RunningNext++
+	launch = h3RunningNext
+	h3RunningEligible[key] = eligible
+	h3RunningLaunch[key] = launch
+	return key, eligible, launch
+}
+
 // unregisterH3Running drops the identity's entry unconditionally. Callers that
 // are not a tracked launch (tests, one-off probes) use this.
 func unregisterH3Running(key string) {
@@ -365,7 +469,37 @@ func h3ProxySetSize() int {
 
 // h3ReapplyLive is set by provideLauncherLoop once the identities and the proxy
 // cancel map are live. It reconnects the identities whose membership changed.
-var h3ReapplyLive func()
+// Reads come from the control socket (SetH3Mode) and the reload goroutine
+// (reResolveActiveH3Cap) while the launcher installs it at startup, so both the
+// store and the load are guarded by h3ReapplyLiveMu: an unsynchronized store
+// races those readers under the Go memory model, and the reload read is the one
+// this feature adds.
+var (
+	h3ReapplyLiveMu sync.Mutex
+	h3ReapplyLive   func()
+)
+
+// installH3ReapplyLive sets the live re-apply hook. The launcher installs it
+// before it starts the reload watcher or runs the first reload, so a cap
+// re-resolve triggered from either observes the hook rather than silently
+// skipping the reconnect.
+func installH3ReapplyLive(f func()) {
+	h3ReapplyLiveMu.Lock()
+	h3ReapplyLive = f
+	h3ReapplyLiveMu.Unlock()
+}
+
+// runH3ReapplyLive invokes the installed hook, if any. The hook runs outside
+// the lock: it reconnects proxies and triggers a reload, which must not run
+// while holding h3ReapplyLiveMu.
+func runH3ReapplyLive() {
+	h3ReapplyLiveMu.Lock()
+	f := h3ReapplyLive
+	h3ReapplyLiveMu.Unlock()
+	if f != nil {
+		f()
+	}
+}
 
 // SetH3Mode applies a control value at runtime and returns the previous mode
 // name. The identities that join or leave the set are closed and reconnected
@@ -377,9 +511,7 @@ func SetH3Mode(value string) (previous string, err error) {
 	}
 	previous = currentH3Mode().name()
 	h3ModeValue.Store(resolved)
-	if h3ReapplyLive != nil {
-		h3ReapplyLive()
-	}
+	runH3ReapplyLive()
 	return previous, nil
 }
 

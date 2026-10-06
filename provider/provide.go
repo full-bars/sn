@@ -900,11 +900,20 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	// predicate; see h3_datagram.go. The value is read at each H3 dial, so
 	// applying it here covers the first dial and the control socket updates the
 	// running transport live.
-	h3Eligible := snH3Eligible(proxyIndex, proxySettings, isNative)
-	h3IdentityKey := directProxyKey
-	if proxySettings != nil {
-		h3IdentityKey = proxySettings.Key()
-	}
+	//
+	// The eligibility read and the running-entry registration are ONE atomic
+	// step. A concurrent control update or reload re-resolve runs
+	// reapplyH3ModeLive, which skips an untracked key on the assumption that the
+	// key reads the mode when it builds its transport. Reading the eligibility
+	// before registering would let that re-apply observe this identity
+	// untracked and skip it, after which the launch would register the stale
+	// value and wire stale ModePreferences, leaving the identity on the wrong
+	// side of the cap until the next control update. registerH3RunningEligible
+	// holds h3RunningMu across both, so the re-apply either sees the
+	// registration (and reconnects the identity if the mode moved) or runs
+	// before it, in which case the read here sees the newer mode.
+	h3IdentityKey, h3Eligible, h3Launch := registerH3RunningEligible(proxySettings, isNative)
+	defer unregisterH3RunningIfCurrent(h3IdentityKey, h3Launch)
 	// Which identities run H3 is the `h3` control key's decision; an excluded
 	// identity is pinned to H1 only so the engine never dials H3 at all.
 	applyH3ModeToSettings(platformSettings, h3Eligible)
@@ -915,8 +924,6 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		// h3_datagram.go.
 		platformSettings.H3DatagramStats = h3DatagramProcessStats
 	}
-	h3Launch := registerH3Running(h3IdentityKey, h3Eligible)
-	defer unregisterH3RunningIfCurrent(h3IdentityKey, h3Launch)
 	if factory := newH3PacketConnFactory(proxySettings, proxyBandwidth, identityKey); factory != nil {
 		platformSettings.H3PacketConnFactory = factory
 	}
@@ -1281,11 +1288,14 @@ func provideLauncherLoop(st *provideState) func() {
 	// mode now that the set is known. A persisted `h3 = N` replays before this
 	// point, when only the internal config was readable, so without the
 	// re-resolve a file- or URL-fed box would cap to zero proxies.
-	publishH3ProxyCandidates(allProxySettings)
-	if m := currentH3Mode(); m.kind == h3ModeCap {
-		if resolved, err := buildH3ResolvedMode(m.raw); err == nil {
-			h3ModeValue.Store(resolved)
-		}
+	//
+	// Gated on urlCacheLoaded, matching the reload path: an unreadable
+	// proxy_url.json drops every URL-sourced proxy from allProxySettings, so
+	// publishing here would install a partial candidate set. A later successful
+	// reload publishes the complete set.
+	if urlCacheLoaded {
+		publishH3ProxyCandidates(allProxySettings)
+		reResolveActiveH3Cap()
 	}
 
 	// Migrate legacy bare-address state entries before anything reads proxyState
@@ -1477,14 +1487,18 @@ func provideLauncherLoop(st *provideState) func() {
 	// case (LA7 incident: 100 proxies pasted with new creds, "added 100"
 	// printed, daemon kept dialing the old user).
 	reloader.seedRunningAuth(launchSettings)
+	// Install the live `h3` re-apply hook BEFORE StartWatcher and the first
+	// reload: the control socket is already live, and both StartWatcher and
+	// reload() can drive reResolveActiveH3Cap, whose reconnect is inert unless
+	// the hook is installed. Installing it here (rather than after reload())
+	// also means the first reload's cap re-resolve reconnects the identities it
+	// changes. See reapplyH3ModeLive.
+	installH3ReapplyLive(func() { reapplyH3ModeLive(st) })
 	reloader.StartWatcher(st.ctx)
 	reloader.reload()
-
-	// Wire the live `h3` mode re-apply now that the cancel map and the reloader
-	// exist. See reapplyH3ModeLive. Apply it once here: a control update that
-	// landed while the startup loop was launching identities would not
-	// otherwise reconnect the identities it affects.
-	h3ReapplyLive = func() { reapplyH3ModeLive(st) }
+	// Apply once now: a control update that landed while the startup loop was
+	// launching identities would not otherwise reconnect the identities it
+	// affects.
 	reapplyH3ModeLive(st)
 
 	// URL fetcher and maintenance goroutines.
