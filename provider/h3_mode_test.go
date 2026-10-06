@@ -25,6 +25,8 @@ func TestParseH3ModeValues(t *testing.T) {
 		{"", h3ModeAll, 0},
 		{"7", h3ModeCap, 7},
 		{"128", h3ModeCap, 128},
+		// A leading zero on a positive count still parses as that count.
+		{"01", h3ModeCap, 1},
 	}
 	for _, c := range cases {
 		kind, n, err := parseH3Mode(c.value)
@@ -35,7 +37,10 @@ func TestParseH3ModeValues(t *testing.T) {
 			t.Fatalf("parseH3Mode(%q) = (%d, %d), want (%d, %d)", c.value, kind, n, c.kind, c.cap)
 		}
 	}
-	for _, bad := range []string{"sometimes", "-1", "on off", "1.5"} {
+	// "0" is off (handled above). Any OTHER zero spelling must be rejected, not
+	// accepted as a cap of zero: a zero cap keeps the direct identity eligible
+	// and would silently mean `direct`, the opposite of off.
+	for _, bad := range []string{"sometimes", "-1", "on off", "1.5", "00", "+0", "-0"} {
 		if _, _, err := parseH3Mode(bad); err == nil {
 			t.Fatalf("parseH3Mode(%q) accepted a value it should reject", bad)
 		}
@@ -311,5 +316,41 @@ func TestReapplyH3ModeLiveReconnectsOnlyChangedIdentities(t *testing.T) {
 	}
 	if _, ok := st.proxyCancelMap["keep"]; !ok {
 		t.Fatal("a staying identity was removed from the cancel map")
+	}
+}
+
+// A live mode change reconnects a changed identity by cancelling the old launch
+// and respawning a new one. The two overlap: the replacement registers its
+// h3RunningEligible entry before the cancelled launch finishes unwinding and
+// runs its cleanup. The cleanup must release the entry only while its own
+// launch is still the current one, or it erases the live identity from health
+// and metrics. Removing the launch check from unregisterH3RunningIfCurrent
+// makes the middle assertion fail.
+func TestReconnectKeepsRunningEntryWhenOldLaunchCleansUp(t *testing.T) {
+	const key = "h3-launch-race"
+	unregisterH3Running(key)
+	defer unregisterH3Running(key)
+
+	// The launch that is being replaced.
+	oldLaunch := registerH3Running(key, true)
+
+	// The replacement launch registers before the old one unwinds.
+	replacementLaunch := registerH3Running(key, true)
+	if oldLaunch == replacementLaunch {
+		t.Fatal("registerH3Running reused a launch id; the ownership check cannot work")
+	}
+
+	// The cancelled launch's defer runs here.
+	unregisterH3RunningIfCurrent(key, oldLaunch)
+	if eligible, tracked := h3RunningEligibleOf(key); !tracked {
+		t.Fatal("the cancelled launch's cleanup erased the replacement launch's entry; the live identity dropped out of health and metrics")
+	} else if !eligible {
+		t.Fatal("the replacement launch's entry was left with the wrong eligibility")
+	}
+
+	// The replacement's own cleanup does release it.
+	unregisterH3RunningIfCurrent(key, replacementLaunch)
+	if _, tracked := h3RunningEligibleOf(key); tracked {
+		t.Fatal("the owning launch's cleanup did not remove the entry")
 	}
 }

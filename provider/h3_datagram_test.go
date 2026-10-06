@@ -170,3 +170,104 @@ func TestH3DatagramMetricsFamilies(t *testing.T) {
 		}
 	}
 }
+
+// swapH3DatagramTargets empties the target registry for one test and returns a
+// restore func, so a test can control exactly which transports are registered.
+func swapH3DatagramTargets() func() {
+	h3DatagramTargetsMu.Lock()
+	orig := h3DatagramTargets
+	h3DatagramTargets = nil
+	h3DatagramTargetsMu.Unlock()
+	return func() {
+		h3DatagramTargetsMu.Lock()
+		h3DatagramTargets = orig
+		h3DatagramTargetsMu.Unlock()
+	}
+}
+
+// The snapshot must be the process-wide total, not a sample of one transport.
+// With the old "read the last registered transport" behavior a registered
+// transport whose own collector is empty reports zero, so the recorded counts
+// vanish; here every transport shares one collector and the counts survive.
+func TestH3DatagramStatsSnapshotIsProcessWide(t *testing.T) {
+	restore := swapH3DatagramTargets()
+	defer restore()
+
+	settings := connect.DefaultPlatformTransportSettings()
+	registerH3DatagramTarget(settings, &connect.PlatformTransport{})
+	registerH3DatagramTarget(settings, &connect.PlatformTransport{})
+
+	before, ok := h3DatagramStatsSnapshot()
+	if !ok {
+		t.Fatal("snapshot unavailable while a transport is registered")
+	}
+	h3DatagramProcessStats.RecordStreamSent(17)
+	h3DatagramProcessStats.RecordStreamReceived(23)
+
+	after, ok := h3DatagramStatsSnapshot()
+	if !ok {
+		t.Fatal("snapshot unavailable after recording")
+	}
+	// RecordStreamSent/Received add one message and the byte count it carries.
+	if got := after.StreamSentMessageByteCount - before.StreamSentMessageByteCount; got != 17 {
+		t.Fatalf("snapshot stream-sent byte delta = %d, want 17: the counters are not aggregated across transports", got)
+	}
+	if got := after.StreamReceivedMessageByteCount - before.StreamReceivedMessageByteCount; got != 23 {
+		t.Fatalf("snapshot stream-received byte delta = %d, want 23: the counters are not aggregated across transports", got)
+	}
+	if got := after.StreamSentMessageCount - before.StreamSentMessageCount; got != 1 {
+		t.Fatalf("snapshot stream-sent message delta = %d, want 1", got)
+	}
+}
+
+// A box that never enables the feature must serve no empty datagram families;
+// once the gate is on, or a connection has carried a datagram, they are served.
+func TestH3DatagramMetricsEnabledGating(t *testing.T) {
+	prevOffer := SetH3DatagramOffer(false)
+	prevSend := SetH3DatagramSend(false)
+	defer SetH3DatagramOffer(prevOffer)
+	defer SetH3DatagramSend(prevSend)
+
+	if h3DatagramMetricsEnabled(connect.H3DatagramStatsSnapshot{}) {
+		t.Fatal("gate off and no traffic must not serve the families")
+	}
+	if !h3DatagramMetricsEnabled(connect.H3DatagramStatsSnapshot{ReceivedMessageCount: 1}) {
+		t.Fatal("carried traffic must serve the families even with the gate off")
+	}
+	if !h3DatagramMetricsEnabled(connect.H3DatagramStatsSnapshot{SentMessageCount: 1}) {
+		t.Fatal("sent datagrams must serve the families even with the gate off")
+	}
+	SetH3DatagramOffer(true)
+	if !h3DatagramMetricsEnabled(connect.H3DatagramStatsSnapshot{}) {
+		t.Fatal("the gate on must serve the families")
+	}
+}
+
+// Dropping a closed transport must not retain it in the slice's truncated
+// backing-array tail. Leaving the tail populated makes this fail.
+func TestUnregisterH3DatagramTargetClearsTruncatedSlot(t *testing.T) {
+	restore := swapH3DatagramTargets()
+	defer restore()
+
+	settings := connect.DefaultPlatformTransportSettings()
+	t1 := &connect.PlatformTransport{}
+	t2 := &connect.PlatformTransport{}
+	registerH3DatagramTarget(settings, t1)
+	registerH3DatagramTarget(settings, t2)
+
+	unregisterH3DatagramTarget(t1)
+
+	h3DatagramTargetsMu.Lock()
+	live := h3DatagramTargets
+	backing := live[:cap(live)]
+	h3DatagramTargetsMu.Unlock()
+
+	if len(live) != 1 || live[0].transport != t2 {
+		t.Fatalf("registry after unregister = %d entries (first transport %p), want just t2", len(live), t2)
+	}
+	for i := len(live); i < len(backing); i++ {
+		if backing[i] != nil {
+			t.Fatalf("backing slot %d still holds %p after truncation; the closed transport is retained", i, backing[i])
+		}
+	}
+}

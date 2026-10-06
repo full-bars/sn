@@ -33,7 +33,7 @@ func TestBaselineOffIsSentAsAValueNotAClear(t *testing.T) {
 // the mistake. The urnettools side has no access to the provider's map, so the
 // known default-on keys are listed here and must stay in step with it.
 func TestDefaultOnKeysNeverTakeTheOffAsClearPath(t *testing.T) {
-	for _, k := range []string{"baseline", "oom_cap"} {
+	for _, k := range []string{"baseline", "oom_cap", "h3"} {
 		if treatsOffAsClear(k) {
 			t.Errorf("%s has a live default that is not off, so off must be sent as a value", k)
 		}

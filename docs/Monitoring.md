@@ -120,9 +120,9 @@ The test file covers the two enabled rules. `prometheus.yml` lists `urnetwork.ym
 
 ## Metrics for QUIC DATAGRAM
 
-The `urnet_h3_datagram_*` families are served only when an eligible platform
-transport is registered, so a box that never enables the feature serves none of
-them. Turn the feature on with `urnet-tools set h3-datagram on`.
+The `urnet_h3_datagram_*` families are served once the DATAGRAM gate is on or a
+connection has carried a datagram, so a box that never enables the feature
+serves none of them. Turn the feature on with `urnet-tools set h3-datagram on`.
 
 The H3 identity set itself is always exported:
 

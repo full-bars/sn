@@ -97,8 +97,11 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 		// The resolved H3 identity set: the mode value, the grand total of
 		// running identities that run H3, and how many of those are proxies.
 		// h3_set counts the direct identity on top of an `<int>` cap; h3_proxies
-		// counts the proxies only. See h3_mode.go.
-		healthLine += fmt.Sprintf(" h3=%s h3_set=%d h3_proxies=%d", H3ModeName(), H3SetSize(), H3ProxySetSize())
+		// counts the proxies only. Both come from one snapshot so an identity
+		// registering between reads cannot report an impossible pair. See
+		// h3_mode.go.
+		h3Set, h3Proxies := H3SetSizes()
+		healthLine += fmt.Sprintf(" h3=%s h3_set=%d h3_proxies=%d", H3ModeName(), h3Set, h3Proxies)
 		if dohFailures > 0 {
 			healthLine += fmt.Sprintf(" dns_failures=%d", dohFailures)
 		}

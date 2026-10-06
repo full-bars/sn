@@ -181,7 +181,7 @@ func validateH3ModeValue(value string) error {
 	case "off", "direct", "on", "all", "0", "auto", "":
 		return nil
 	}
-	if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+	if n, err := strconv.Atoi(v); err == nil && n > 0 {
 		return nil
 	}
 	return fmt.Errorf("h3: must be off, direct, a positive proxy count, or all (got %q)", value)

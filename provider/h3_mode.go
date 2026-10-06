@@ -102,7 +102,11 @@ func parseH3Mode(value string) (kind h3ModeKind, cap int, err error) {
 		return h3ModeAll, 0, nil
 	}
 	if n, convErr := strconv.Atoi(v); convErr == nil {
-		if n < 0 {
+		// Only a positive count is a cap. The literal "0" is handled above as
+		// the documented alias for off; every other zero spelling (e.g. "00",
+		// "+0", "-0") must not slip through as a cap of zero, which would keep
+		// the direct identity eligible and silently mean `direct`.
+		if n <= 0 {
 			return 0, 0, fmt.Errorf("h3: %q must be off, direct, a positive proxy count, or all", value)
 		}
 		return h3ModeCap, n, nil
@@ -229,53 +233,97 @@ func snH3Eligible(proxyIndex int, proxySettings *connect.ProxySettings, isNative
 var (
 	h3RunningMu       sync.Mutex
 	h3RunningEligible = map[string]bool{}
+	// h3RunningLaunch is the launch id that currently owns each key's
+	// h3RunningEligible entry. registerH3Running stamps a fresh id and returns
+	// it; a goroutine releases the entry only while its id is still the owner.
+	// Without that check a cancelled launch would delete the entry its
+	// replacement had just registered, because a live mode change reconnects an
+	// identity by cancelling the old launch and respawning a new one that
+	// overlaps in time. proxyLaunches records the same generation for the
+	// cancel map.
+	h3RunningLaunch = map[string]uint64{}
+	h3RunningNext   uint64
 )
 
-func registerH3Running(key string, eligible bool) {
+// registerH3Running records whether a running identity currently runs H3 and
+// returns the launch id that owns the entry. Callers that will later release
+// the entry hold the id so they release only their own launch (see
+// unregisterH3RunningIfCurrent).
+func registerH3Running(key string, eligible bool) uint64 {
 	if key == "" {
-		return
+		return 0
 	}
 	h3RunningMu.Lock()
+	h3RunningNext++
+	launch := h3RunningNext
 	h3RunningEligible[key] = eligible
+	h3RunningLaunch[key] = launch
 	h3RunningMu.Unlock()
+	return launch
 }
 
+// unregisterH3Running drops the identity's entry unconditionally. Callers that
+// are not a tracked launch (tests, one-off probes) use this.
 func unregisterH3Running(key string) {
 	if key == "" {
 		return
 	}
 	h3RunningMu.Lock()
 	delete(h3RunningEligible, key)
+	delete(h3RunningLaunch, key)
 	h3RunningMu.Unlock()
+}
+
+// unregisterH3RunningIfCurrent drops the identity's entry only while launch is
+// still the identity's current launch. The cancelled launch on the way out
+// after a live mode change or a credential rotation must not erase the entry
+// the replacement launch registered, which would drop a live identity from
+// health and metrics.
+func unregisterH3RunningIfCurrent(key string, launch uint64) {
+	if key == "" || launch == 0 {
+		return
+	}
+	h3RunningMu.Lock()
+	if h3RunningLaunch[key] == launch {
+		delete(h3RunningEligible, key)
+		delete(h3RunningLaunch, key)
+	}
+	h3RunningMu.Unlock()
+}
+
+// h3SetSizes returns the running H3 counts under one lock: the GRAND TOTAL
+// (eligible proxies plus the direct identity when it runs) and the PROXY-only
+// count. Reading the two via separate calls can interleave with a
+// register/unregister and report an impossible pair, for example a total
+// smaller than the proxy count.
+func h3SetSizes() (setSize int, proxySetSize int) {
+	h3RunningMu.Lock()
+	defer h3RunningMu.Unlock()
+	for key, eligible := range h3RunningEligible {
+		if !eligible {
+			continue
+		}
+		setSize++
+		if key != directProxyKey {
+			proxySetSize++
+		}
+	}
+	return
 }
 
 // h3SetSize is the GRAND TOTAL of running identities that currently run H3:
 // the eligible proxies plus the direct identity when it is eligible. Under a
 // cap it is the cap plus at most one, never the cap alone.
 func h3SetSize() int {
-	h3RunningMu.Lock()
-	defer h3RunningMu.Unlock()
-	n := 0
-	for _, eligible := range h3RunningEligible {
-		if eligible {
-			n++
-		}
-	}
-	return n
+	setSize, _ := h3SetSizes()
+	return setSize
 }
 
 // h3ProxySetSize is how many of those are PROXIES. The direct identity sits on
 // top of the cap, so h3SetSize is this plus the direct identity when it runs.
 func h3ProxySetSize() int {
-	h3RunningMu.Lock()
-	defer h3RunningMu.Unlock()
-	n := 0
-	for key, eligible := range h3RunningEligible {
-		if eligible && key != directProxyKey {
-			n++
-		}
-	}
-	return n
+	_, proxySetSize := h3SetSizes()
+	return proxySetSize
 }
 
 // h3ReapplyLive is set by provideLauncherLoop once the identities and the proxy
@@ -315,6 +363,14 @@ func H3SetSize() int {
 // when it runs.
 func H3ProxySetSize() int {
 	return h3ProxySetSize()
+}
+
+// H3SetSizes returns both running H3 counts from one consistent snapshot, so a
+// reader that reports them together (health line, /metrics) can never show a
+// total smaller than the proxy count when an identity registers or unregisters
+// between two separate reads.
+func H3SetSizes() (setSize int, proxySetSize int) {
+	return h3SetSizes()
 }
 
 // applyH3ModeToSettings writes the mode onto one identity's platform settings:

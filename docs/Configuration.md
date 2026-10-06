@@ -175,16 +175,18 @@ with no restart.
 | :--- | :--- |
 | `off` | No identity runs H3. |
 | `direct` | The direct (native) identity only, which is what the sibling forks do. |
-| `<int>` | The N best proxies, best first, by grade then earnings. The number caps the PROXY set only: the direct identity is always additionally eligible and does not consume one of the N, so `h3 = 10` runs ten H3 proxies plus the direct identity. |
+| `<int>` | The N best proxies, best first, by grade then earnings. N is a positive integer. The number caps the PROXY set only: the direct identity is always additionally eligible and does not consume one of the N, so `h3 = 10` runs ten H3 proxies plus the direct identity. |
 | `all` | Every identity. This is the default, matching sn before the key existed. |
 
-`on` is kept as an alias for `direct`, and `0` as an alias for `off`. Set it with
-`urnet-tools set h3 direct` (and so on). A number caps the proxy set only: the
-direct identity always keeps H3 on top of the cap and never consumes one of the
-N, because it is the baseline path and costs one carrier. So `h3 = 10` runs ten
-H3 proxies plus the direct identity, eleven carriers in total. A change
-reconnects only the identities that join or leave the set; the rest keep their
-connections.
+`on` is kept as an alias for `direct`, and `0` as an alias for `off`. Any other
+zero spelling (`00`, `+0`) is rejected rather than read as a count, because a
+count of zero would keep the direct identity eligible and mean `direct` instead.
+Set it with `urnet-tools set h3 direct` (and so on). A number caps the proxy set
+only: the direct identity always keeps H3 on top of the cap and never consumes
+one of the N, because it is the baseline path and costs one carrier. So
+`h3 = 10` runs ten H3 proxies plus the direct identity, eleven carriers in
+total. A change reconnects only the identities that join or leave the set; the
+rest keep their connections.
 
 The `[health]` line carries `h3=<mode>`, `h3_set=<n>` and `h3_proxies=<m>`.
 `h3_set` is the grand total of running identities that run H3, which is the

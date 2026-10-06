@@ -70,6 +70,14 @@ var (
 	h3DatagramTargets   []*h3DatagramTarget
 )
 
+// h3DatagramProcessStats is one collector shared by every platform transport
+// sn builds. connect aggregates connection generations behind an injected
+// *H3DatagramStats, so a single process-level collector means the health line
+// and /metrics report the whole process rather than whichever transport happens
+// to be last in the registry, and the counters never move backwards when a
+// transport disconnects or a proxy reloads.
+var h3DatagramProcessStats = &connect.H3DatagramStats{}
+
 // h3DatagramOfferValue is the offer value to write onto a settings object.
 func h3DatagramOfferValue() bool {
 	return h3DatagramOffer.Load()
@@ -160,6 +168,12 @@ func unregisterH3DatagramTarget(transport *connect.PlatformTransport) {
 			filtered = append(filtered, t)
 		}
 	}
+	// Clear the truncated tail: the backing array still references the closed
+	// transport and its settings past the new length, which would keep them
+	// reachable until the slice reallocates.
+	for i := len(filtered); i < len(h3DatagramTargets); i++ {
+		h3DatagramTargets[i] = nil
+	}
 	h3DatagramTargets = filtered
 	h3DatagramTargetsMu.Unlock()
 }
@@ -179,32 +193,59 @@ func applyH3DatagramOfferLive() {
 
 // applyH3DatagramSendLive writes the send-lane threshold to every registered
 // settings object. No kick: the threshold is read per message.
+//
+// The pinned connect reads H3DatagramSettings.HybridDatagramMessageByteCount
+// from its per-connection send workers without a lock (transport.go
+// UseDatagramForPath), so a live change is a data race under the Go memory
+// model: connect exposes no synchronized setter for this field on this
+// revision. The write is skipped when the value already matches, which keeps
+// the steady state free of writes, but a real transition still writes the field
+// once. Removing the race altogether needs a connect-side atomic setter, which
+// is out of sn's hands.
 func applyH3DatagramSendLive() {
 	threshold := h3DatagramSendThresholdValue()
 	h3DatagramTargetsMu.Lock()
 	targets := append([]*h3DatagramTarget(nil), h3DatagramTargets...)
 	h3DatagramTargetsMu.Unlock()
 	for _, t := range targets {
-		if t.settings.H3DatagramSettings != nil {
-			t.settings.H3DatagramSettings.HybridDatagramMessageByteCount = threshold
+		if t.settings.H3DatagramSettings == nil {
+			continue
 		}
+		if t.settings.H3DatagramSettings.HybridDatagramMessageByteCount == threshold {
+			continue
+		}
+		t.settings.H3DatagramSettings.HybridDatagramMessageByteCount = threshold
 	}
 }
 
-// h3DatagramStatsSnapshot returns the DATAGRAM counters of the running
-// transport, or ok=false when no eligible transport is registered. The health
-// line and /metrics both read this.
+// h3DatagramStatsSnapshot returns the process-wide DATAGRAM counters, or
+// ok=false when no eligible transport is registered. The health line and
+// /metrics both read this.
+//
+// Every transport writes into the one h3DatagramProcessStats collector, so this
+// is the sum over every running identity and every reconnect generation, not a
+// sample of one transport: a churning proxy set cannot make the counters drop
+// or reset.
 func h3DatagramStatsSnapshot() (snapshot connect.H3DatagramStatsSnapshot, ok bool) {
 	h3DatagramTargetsMu.Lock()
-	var transport *connect.PlatformTransport
-	if n := len(h3DatagramTargets); 0 < n {
-		transport = h3DatagramTargets[n-1].transport
-	}
+	registered := 0 < len(h3DatagramTargets)
 	h3DatagramTargetsMu.Unlock()
-	if transport == nil {
+	if !registered {
 		return snapshot, false
 	}
-	return transport.DatagramStats(), true
+	return h3DatagramProcessStats.Snapshot(), true
+}
+
+// h3DatagramMetricsEnabled reports whether /metrics should serve the
+// urnet_h3_datagram_* families for this snapshot: once an operator turns the
+// gate on, or once a connection has carried a datagram, so a box that never
+// enables the feature serves none of them. Without this an H3 set that is on by
+// default would export ten all-zero families while the DATAGRAM gate is off.
+func h3DatagramMetricsEnabled(snapshot connect.H3DatagramStatsSnapshot) bool {
+	return H3DatagramOfferEnabled() ||
+		H3DatagramSendEnabled() ||
+		0 < snapshot.ReceivedMessageCount ||
+		0 < snapshot.SentMessageCount
 }
 
 // h3DatagramHealthSuffix renders the DATAGRAM part of the [health] line, or ""

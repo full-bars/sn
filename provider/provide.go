@@ -910,9 +910,13 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	applyH3ModeToSettings(platformSettings, h3Eligible)
 	if h3Eligible {
 		applyH3DatagramOfferToSettings(platformSettings)
+		// One collector across every transport, so DATAGRAM counters are a
+		// process total rather than whichever transport is sampled last. See
+		// h3_datagram.go.
+		platformSettings.H3DatagramStats = h3DatagramProcessStats
 	}
-	registerH3Running(h3IdentityKey, h3Eligible)
-	defer unregisterH3Running(h3IdentityKey)
+	h3Launch := registerH3Running(h3IdentityKey, h3Eligible)
+	defer unregisterH3RunningIfCurrent(h3IdentityKey, h3Launch)
 	if factory := newH3PacketConnFactory(proxySettings, proxyBandwidth, identityKey); factory != nil {
 		platformSettings.H3PacketConnFactory = factory
 	}
