@@ -267,7 +267,7 @@ var setKeyHelps = []string{
 	"  ramlogs             on|off        in-memory ramlogs toggle",
 	"  metrics             on|off        enable metrics endpoint",
 	"  metrics-listen      auto|<ip:port> /metrics listen address. auto binds loopback plus every Tailscale IPv4 (0.0.0.0 in a container); an explicit address is used as-is, and off clears back to auto. Live; a change rebinds a running listener (default: auto)",
-	"  baseline            on|off        record this box's behaviour into baseline.jsonl every 15 minutes, with the transport split and the lifetime counters, for `urnet-tools baseline show|compare` (default: on)",
+	"  baseline            on|off        record this box's behaviour into baseline.jsonl every 15 minutes, with the lifetime billable counter, for `urnet-tools baseline show|compare` (default: on)",
 	"  proxy-audit         on|off        grade proxies and park the ones that prove junk. Observe mode by default (logs verdicts without acting); parking only acts when hot-restart is on (default: off)",
 }
 
