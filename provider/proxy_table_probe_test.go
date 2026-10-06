@@ -130,7 +130,7 @@ func TestProbeTableThroughProxy_ViabilityAbort(t *testing.T) {
 	origPass := tableProbePassCounter.Load()
 	pass := origPass
 	tableProbePassCounter.Store(pass)
-	hosts, _ := sampleProbeTargets(tableProbeSeed(addr, pass), 20)
+	hosts := sampleProbeHosts(tableProbeSeed(addr, pass), 20, cfg.UseSpreadOrder)
 	probeDNSCache.Lock()
 	for _, h := range hosts {
 		probeDNSCache.m[h] = probeDNSCachedIP{ip: net.ParseIP("93.184.216.34"), at: time.Now()}

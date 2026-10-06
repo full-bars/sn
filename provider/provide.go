@@ -1515,6 +1515,9 @@ func provideLauncherLoop(st *provideState) func() {
 	})
 	go connect.HandleError(func() { runURLProxyReaper(st.ctx, apiProbeHost, apiProbePort) })
 	go connect.HandleError(func() { runPaidProxyGrader(st.ctx, apiProbeHost, apiProbePort) })
+	// Direct-path (native local-IP) health grade: read-only visibility into the
+	// box's own route, persisted to its own file so no consumer can act on it.
+	go connect.HandleError(func() { runDirectGrader(st.ctx) })
 	go connect.HandleError(func() { runProxyGradeSummary(st.ctx) })
 	go connect.HandleError(func() { pruneURLProxyBlacklist(st.ctx) })
 	go connect.HandleError(func() { runProxyURLCleanup(st.ctx, cleanupScope, cleanupInterval, selfHealEnabled) })
