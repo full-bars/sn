@@ -349,17 +349,17 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 
 **Status**: ✅ Shipped
 
-## 28. H3 Identity Set and Gated QUIC DATAGRAM (in progress, not shipped)
+## 28. H3 Identity Set and Gated QUIC DATAGRAM (PR #66)
 
 - **The `h3` control key chooses which identities run H3**: values are `off`, `direct`, a proxy count, or `all`. `on` is an alias for `direct`, and `0` aliases `off`. The default is `all`, matching sn before the key existed. The key applies live, with no restart.
 - **A change reconnects only the identities that join or leave the set**: the mode reuses the proxy cancel-and-reload path, so every other identity keeps its connection.
-- **A count means the N best proxies**: the set is ranked by grade then earnings, best first. The direct identity is not a proxy, so a count excludes it.
+- **A count caps the proxy set only**: a bare integer takes the N best proxies, ranked by grade then earnings, best first. The direct identity is always additionally eligible and never consumes one of the N. So `h3=10` runs ten H3 proxies plus the direct identity.
 - **`h3-datagram` gates the QUIC DATAGRAM offer**: it defaults off. An H3 connection reads the offer when it dials, so a change re-dials that connection.
-- **`h3-datagram-send` gates the send lane**: it defaults off. The send threshold is read per message, so a change is immediate.
+- **`h3-datagram-send` gates the send lane**: it defaults off. The send threshold is read per message, so a change is immediate. It sends only where the server accepted the offer.
 - **One predicate decides eligibility**: `snH3Eligible` in `provider/h3_mode.go` calls the core `h3EligibleForKey`. The transport wiring in `provider/provide.go` calls only that predicate. A future narrowing of the set is one change in one place.
-- **Operator visibility**: the `[health]` line carries `h3=<mode> h3_set=<n>` and the datagram counters. `/metrics` carries `urnet_h3_mode_info`, `urnet_h3_set_size` and the `urnet_h3_datagram_*` families.
+- **Operator visibility**: the `[health]` line carries `h3=<mode>`, `h3_set=<n>` and `h3_proxies=<m>`, plus the datagram counters. `/metrics` carries `urnet_h3_mode_info`, `urnet_h3_set_size`, `urnet_h3_proxy_set_size` and the `urnet_h3_datagram_*` families.
 - **Known limitation**: the offered, accepted and blackhole counters are not exported. The pinned connect revision exposes the DATAGRAM data plane but not those counters. A connection that offered DATAGRAM and was not accepted is not visible here.
 
-**Files**: `provider/h3_mode.go` and `provider/h3_datagram.go` are being prepared for this release and are not yet in the tree; the wiring will land in `provider/provide.go`, `provider/control_socket.go`, `provider/control_state.go`, `provider/health_heartbeat.go`, `provider/metrics_provider.go`, `internal/urnettools/control_client.go`, `internal/urnettools/restore_delegate.go` and `internal/urnettools/cobra.go`. `docs/Configuration.md` and `docs/Monitoring.md` do not yet carry H3 docs.
+**Files**: `provider/h3_mode.go`, `provider/h3_datagram.go`, the wiring in `provider/provide.go`, `provider/control_socket.go`, `provider/control_state.go`, `provider/health_heartbeat.go`, `provider/metrics_provider.go`, `internal/urnettools/control_client.go`, `internal/urnettools/restore_delegate.go` and `internal/urnettools/cobra.go`. `docs/Configuration.md` and `docs/Monitoring.md` carry the H3 documentation.
 
-**Status**: ⏳ In progress, not shipped: prepared for this release; the code is not merged, so this section describes intended behaviour only.
+**Status**: ✅ Shipped
