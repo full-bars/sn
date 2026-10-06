@@ -45,11 +45,6 @@ curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Mac.sh | sh
 ```
 
-**🪟 Windows (PowerShell)**
-
-```powershell
-irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex
-```
 
 **🐋 Docker**
 
@@ -57,12 +52,35 @@ irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provi
 docker pull ghcr.io/full-bars/sn:latest
 ```
 
-**🔄 Uninstall**
+**🪟 Windows (PowerShell)**
 
-```sh
-curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Linux.sh | sh      # Linux
-irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Win32.ps1 | iex     # Windows
+```powershell
+irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex
 ```
+
+Windows Defender may flag this one-liner. See the note below.
+
+> [!NOTE]
+> Windows Defender may flag the Windows install one-liner, and it may flag the installed
+> binaries. These are false positives, and every release's scan result is recorded on the
+> release page. If Defender blocks the one-liner, download the script and run it from disk
+> instead. Both lines go in PowerShell:
+>
+> ```powershell
+> irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 -OutFile "$env:TEMP\install-win.ps1"
+> powershell -NoProfile -ExecutionPolicy Bypass -File "$env:TEMP\install-win.ps1"
+> ```
+
+<details>
+<summary>The detections you may see, and what each one means</summary>
+
+- `Trojan:Script/Wacatac.B!ml`, `Trojan:Script/Wacatac.C!ml`, `Trojan:Win32/Wacatac.B!ml`, `Trojan:Win32/Wacatac.C!ml`: Defender's machine-learning label for files whose shape looks like a packed Trojan. Our Go binaries are stripped, statically linked and unsigned, which reads as a packed payload. The B and C variants are different model generations, so one binary can be flagged under more than one name.
+- `Trojan:Win32/Commando.A!ml`: fires on the download-and-run command line itself, not on the file. Every `curl | sh` installer looks the same to it. No binary is involved.
+- `Trojan:Win32/Bearfoos.A!ml`: a behavioural label for creating a scheduled task. The installer registers a scheduled task so the provider can update itself, and a behavioural model cannot tell that apart from persistence malware.
+
+</details>
+
+### After you install
 
 After installation, authenticate and start providing:
 
@@ -77,6 +95,20 @@ Full guides: [Installation](docs/Installation.md), [Docker Deployment](docs/Dock
 [Adding Proxies](docs/Adding-Proxies.md), [urnet-tools](docs/urnet-tools-go.md).
 
 ---
+
+### Uninstall
+
+**🐧 Linux**
+
+```sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Linux.sh | sh
+```
+
+**🪟 Windows (PowerShell)**
+
+```powershell
+irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Win32.ps1 | iex
+```
 
 ## Mechanism at a glance
 
