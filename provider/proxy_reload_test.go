@@ -659,9 +659,11 @@ func TestProxyReloadReResolvesActiveCap(t *testing.T) {
 			<-proxyCtx.Done()
 		},
 	}
+	h3ReapplyLiveMu.Lock()
 	origReapply := h3ReapplyLive
-	h3ReapplyLive = func() { reapplyH3ModeLive(st) }
-	defer func() { h3ReapplyLive = origReapply }()
+	h3ReapplyLiveMu.Unlock()
+	installH3ReapplyLive(func() { reapplyH3ModeLive(st) })
+	defer installH3ReapplyLive(origReapply)
 
 	// Save/restore the published candidate set and the mode for other tests.
 	h3ProxyCandidatesMu.Lock()

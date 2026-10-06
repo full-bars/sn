@@ -118,6 +118,32 @@ func TestFirstProxyGoroutineRunsTheResourceWarnings(t *testing.T) {
 	}
 }
 
+// The live `h3` re-apply hook must be installed before the reload watcher and
+// the first reload start. Both can drive reResolveActiveH3Cap, whose reconnect
+// is inert unless the hook is already installed, so installing it after the
+// first reload (the round-2 shape) makes that reload's cap re-resolve a no-op
+// and leaves a promoted or displaced proxy on the wrong side of the cap.
+func TestLauncherInstallsH3ReapplyBeforeReload(t *testing.T) {
+	body := launcherBody(t)
+	install := body.firstIndex("installH3ReapplyLive")
+	if install < 0 {
+		t.Fatal("provideLauncherLoop() never calls installH3ReapplyLive: the live h3 " +
+			"re-apply hook is never installed and a cap re-resolve can never reconnect a " +
+			"running proxy")
+	}
+	for _, later := range []string{"StartWatcher", "reload"} {
+		at := body.firstIndex(later)
+		if at < 0 {
+			continue
+		}
+		if at < install {
+			t.Errorf("provideLauncherLoop() calls %s at line %d but installH3ReapplyLive "+
+				"first at line %d; the hook must be installed before the watcher and the "+
+				"first reload can re-resolve a cap", later, at, install)
+		}
+	}
+}
+
 // startupWiring is a parsed function body with helpers to ask what it calls.
 type startupWiring struct {
 	fset  *token.FileSet
