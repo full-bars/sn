@@ -38,7 +38,7 @@ func seedProbeDNSForBlocks(t *testing.T, address string, cfg proxyTableProbeConf
 		if width <= 0 {
 			return
 		}
-		hosts, _ := SampleProbeTargets(blockSeed, width)
+		hosts := sampleProbeHosts(blockSeed, width, cfg.UseSpreadOrder)
 		for _, h := range hosts {
 			added[h] = true
 			probeDNSCache.m[h] = probeDNSCachedIP{ip: net.ParseIP("93.184.216.34"), at: time.Now()}
@@ -48,7 +48,7 @@ func seedProbeDNSForBlocks(t *testing.T, address string, cfg proxyTableProbeConf
 	probeDNSCache.Lock()
 	seed(tableProbeSeed(address, pass), baseW)
 	if growTo > baseW {
-		for _, h := range disjointGrowthHosts(address, pass, baseW, growTo-baseW) {
+		for _, h := range disjointGrowthHosts(address, pass, baseW, growTo-baseW, cfg.UseSpreadOrder) {
 			added[h] = true
 			probeDNSCache.m[h] = probeDNSCachedIP{ip: net.ParseIP("93.184.216.34"), at: time.Now()}
 			delete(probeDNSCache.fail, h)
@@ -417,7 +417,7 @@ func seedOnlyOneProbeHost(t *testing.T, address string) {
 	if baseW <= 0 || baseW > cfg.SampleWidth {
 		baseW = cfg.SampleWidth
 	}
-	baseHosts, _ := SampleProbeTargets(tableProbeSeed(address, pass), baseW)
+	baseHosts := sampleProbeHosts(tableProbeSeed(address, pass), baseW, cfg.UseSpreadOrder)
 	if len(baseHosts) == 0 {
 		t.Fatalf("empty base block at width %d for %s", baseW, address)
 	}
@@ -433,7 +433,7 @@ func seedOnlyOneProbeHost(t *testing.T, address string) {
 	// so growth can never reach live DNS either.
 	growTo := cfg.probeWidth()
 	if growTo > baseW {
-		for _, h := range disjointGrowthHosts(address, pass, baseW, growTo-baseW) {
+		for _, h := range disjointGrowthHosts(address, pass, baseW, growTo-baseW, cfg.UseSpreadOrder) {
 			// delete any stale SUCCESS entry too: a prior test that resolved this
 			// host via live DNS leaves an m entry (probeDNSSuccessTTL=2h), and
 			// resolveProbeTarget checks m BEFORE fail, so a leftover success would
@@ -480,7 +480,7 @@ func TestDisjointGrowthHosts_NoBaseOverlap(t *testing.T) {
 		for _, h := range base {
 			baseSet[h] = true
 		}
-		grown := disjointGrowthHosts("1.2.3.4:1080", uint64(p), cfg.SampleWidth, extra)
+		grown := disjointGrowthHosts("1.2.3.4:1080", uint64(p), cfg.SampleWidth, extra, false)
 		if len(grown) != extra {
 			t.Errorf("pass %d: growth returned %d hosts, want %d", p, len(grown), extra)
 			return
