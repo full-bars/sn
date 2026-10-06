@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v2026.10.6-1064742750-meso] — 2026-10-06
 
 ### Added
 
