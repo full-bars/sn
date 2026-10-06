@@ -202,12 +202,24 @@ func h3ProxyCandidateSettings() []*connect.ProxySettings {
 	h3ProxyCandidatesMu.RLock()
 	defer h3ProxyCandidatesMu.RUnlock()
 	if !h3ProxyCandidatesKnown {
+		// Unknown: the launcher has not published yet (the CLI and unit
+		// tests), so the caller falls back to readProxySettings().
 		return nil
 	}
+	// Known, so return the published set even when it is EMPTY. A nil return
+	// means "no launcher has published", and the empty-but-known case must not
+	// be confused with it: the caller's nil fallback would otherwise resolve a
+	// cap over the internal config instead of the (empty) set the box actually
+	// runs, capping over phantom keys that match no running identity. make([]T,
+	// 0) is non-nil, so the clone below is a non-nil empty slice for an empty
+	// (or nil) published set.
+	//
 	// Clone the slice: the caller must not receive the internal slice across
 	// the mutex boundary, where a later publish (a slice-header swap) or any
 	// future element write would race the caller's reads.
-	return append([]*connect.ProxySettings(nil), h3ProxyCandidatesSet...)
+	clone := make([]*connect.ProxySettings, len(h3ProxyCandidatesSet))
+	copy(clone, h3ProxyCandidatesSet)
+	return clone
 }
 
 // buildH3ResolvedMode parses a value and resolves any cap set.

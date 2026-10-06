@@ -647,13 +647,19 @@ func TestProxyReloadReResolvesActiveCap(t *testing.T) {
 		}
 		return out
 	}
+	parentCtx, parentCancel := context.WithCancel(context.Background())
+	wg := &sync.WaitGroup{}
+	t.Cleanup(func() {
+		parentCancel()
+		wg.Wait()
+	})
 	reloader := &ProxyReloader{
 		cancelMap:       st.proxyCancelMap,
 		cancelMapMu:     &st.proxyCancelMu,
 		state:           &ProxyState{Proxies: map[string]ProxyEntry{}},
 		sourcePath:      src,
-		parentCtx:       context.Background(),
-		wg:              &sync.WaitGroup{},
+		parentCtx:       parentCtx,
+		wg:              wg,
 		drainingProxies: map[string]context.CancelFunc{},
 		spawnProxy: func(proxyCtx context.Context, settings *connect.ProxySettings, isNative bool, isURLSourced bool) {
 			<-proxyCtx.Done()

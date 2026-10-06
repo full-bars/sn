@@ -127,13 +127,21 @@ func TestProxyReloadPromotedProxyRegisteredTracked(t *testing.T) {
 	}
 
 	st := &provideState{proxyCancelMap: map[string]context.CancelFunc{}}
+	// A cancellable parent, cancelled and drained on the way out: the spawned
+	// goroutines block on proxyCtx.Done() and would otherwise outlive the test.
+	parentCtx, parentCancel := context.WithCancel(context.Background())
+	wg := &sync.WaitGroup{}
+	t.Cleanup(func() {
+		parentCancel()
+		wg.Wait()
+	})
 	reloader := &ProxyReloader{
 		cancelMap:       st.proxyCancelMap,
 		cancelMapMu:     &st.proxyCancelMu,
 		state:           &ProxyState{Proxies: map[string]ProxyEntry{}},
 		sourcePath:      src,
-		parentCtx:       context.Background(),
-		wg:              &sync.WaitGroup{},
+		parentCtx:       parentCtx,
+		wg:              wg,
 		drainingProxies: map[string]context.CancelFunc{},
 		spawnProxy: func(proxyCtx context.Context, settings *connect.ProxySettings, isNative bool, isURLSourced bool) {
 			// The real launch registration path, not a manual registerH3Running.
@@ -220,15 +228,21 @@ func TestReResolveActiveH3CapSameKeysIsNoOp(t *testing.T) {
 		Address: "10.4.4.4:8080",
 		Auth:    &proxy.Auth{User: "u", Password: "p"},
 	}
+	c1Key := c1.Key()
 	publishH3ProxyCandidates([]*connect.ProxySettings{c1})
 	if _, err := SetH3Mode("1"); err != nil {
 		t.Fatal(err)
 	}
+	// Register c1 as a live, tracked running identity (it is in the cancel map
+	// below). Without this the key is untracked, so reapplyH3ModeLive skips it
+	// regardless of the guard and the cancelled assertion pins nothing.
+	registerH3Running(c1Key, true)
+	defer unregisterH3Running(c1Key)
 
 	var reapplies int32
 	cancelled := false
 	st := &provideState{proxyCancelMap: map[string]context.CancelFunc{
-		c1.Key(): func() { cancelled = true },
+		c1Key: func() { cancelled = true },
 	}}
 	installH3ReapplyLive(func() {
 		atomic.AddInt32(&reapplies, 1)
@@ -243,6 +257,90 @@ func TestReResolveActiveH3CapSameKeysIsNoOp(t *testing.T) {
 	}
 	if cancelled {
 		t.Fatal("a running proxy was cancelled for an unchanged cap set")
+	}
+	// The tracked proxy must be left exactly as it was: the guard protects a
+	// LIVE identity, not merely an untracked cancel-map entry.
+	if eligible, tracked := h3RunningEligibleOf(c1Key); !tracked || !eligible {
+		t.Fatalf("the unchanged cap set changed the tracked proxy's running entry = tracked:%v "+
+			"eligible:%v; a live identity was cancelled or dropped despite no membership change",
+			tracked, eligible)
+	}
+}
+
+// reResolveActiveH3Cap swaps the stored mode with a compare-and-swap against the
+// pointer it read. A control-socket `h3` update that lands between that read and
+// the swap replaces the pointer, so the CAS fails and the operator's newer mode
+// must be preserved: the stale re-resolve must NOT overwrite it and must NOT
+// reconnect anyone. The window is opened by holding h3ProxyCandidatesMu —
+// buildH3ResolvedMode reads the candidates under that lock, so the re-resolve
+// blocks there after it has read the mode — and the control update is landed
+// while it is blocked.
+func TestReResolveActiveH3CapLosesToConcurrentControlUpdate(t *testing.T) {
+	withTempHome(t)
+
+	h3ReapplyLiveMu.Lock()
+	origReapply := h3ReapplyLive
+	h3ReapplyLiveMu.Unlock()
+	var reapplies int32
+	installH3ReapplyLive(func() { atomic.AddInt32(&reapplies, 1) })
+	defer installH3ReapplyLive(origReapply)
+
+	h3ProxyCandidatesMu.Lock()
+	prevSet, prevKnown := h3ProxyCandidatesSet, h3ProxyCandidatesKnown
+	h3ProxyCandidatesMu.Unlock()
+	defer func() {
+		h3ProxyCandidatesMu.Lock()
+		h3ProxyCandidatesSet, h3ProxyCandidatesKnown = prevSet, prevKnown
+		h3ProxyCandidatesMu.Unlock()
+	}()
+	prevMode := currentH3Mode()
+	defer h3ModeValue.Store(prevMode)
+
+	// The mode the re-resolve reads: a cap whose stored set is {"m1-key"}. The
+	// published candidates resolve the same cap to a DIFFERENT key, so the
+	// re-resolve does not short-circuit on sameH3EligibleKeys and reaches the CAS.
+	h3ModeValue.Store(&h3ResolvedMode{
+		kind:         h3ModeCap,
+		cap:          1,
+		raw:          "1",
+		eligibleKeys: map[string]bool{"m1-key": true},
+	})
+	cand := &connect.ProxySettings{Network: "tcp", Address: "10.6.6.6:8080"}
+	if cand.Key() == "m1-key" {
+		t.Fatal("test premise: the candidate key must differ from the stale resolved key")
+	}
+	publishH3ProxyCandidates([]*connect.ProxySettings{cand})
+
+	// Freeze buildH3ResolvedMode at its candidate read.
+	h3ProxyCandidatesMu.Lock()
+	done := make(chan struct{})
+	go func() {
+		reResolveActiveH3Cap()
+		close(done)
+	}()
+	// Let the re-resolve read the cap mode and block on the candidate lock.
+	time.Sleep(250 * time.Millisecond)
+
+	// The operator's concurrent control update, landing in the read→CAS window.
+	operator := &h3ResolvedMode{kind: h3ModeDirect, raw: h3ModeDirectName}
+	h3ModeValue.Store(operator)
+	h3ProxyCandidatesMu.Unlock()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("reResolveActiveH3Cap did not return")
+	}
+
+	if got := currentH3Mode(); got != operator {
+		t.Fatalf("reResolveActiveH3Cap overwrote the concurrent control update: stored mode is now "+
+			"%q (%p), want the operator's %q (%p); the CAS-failure branch did not abort the stale "+
+			"re-resolve and clobbered the operator's newer mode",
+			got.name(), got, operator.name(), operator)
+	}
+	if got := atomic.LoadInt32(&reapplies); got != 0 {
+		t.Fatalf("reResolveActiveH3Cap ran the live reconnect %d times after losing the CAS; "+
+			"the stale re-resolve must abort without reconnecting anyone", got)
 	}
 }
 

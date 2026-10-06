@@ -134,6 +134,8 @@ func TestLauncherInstallsH3ReapplyBeforeReload(t *testing.T) {
 	for _, later := range []string{"StartWatcher", "reload"} {
 		at := body.firstIndex(later)
 		if at < 0 {
+			t.Errorf("provideLauncherLoop() no longer calls %s: this order pin is only "+
+				"meaningful while both are present, so a missing call is a failure too", later)
 			continue
 		}
 		if at < install {
@@ -141,6 +143,41 @@ func TestLauncherInstallsH3ReapplyBeforeReload(t *testing.T) {
 				"first at line %d; the hook must be installed before the watcher and the "+
 				"first reload can re-resolve a cap", later, at, install)
 		}
+	}
+}
+
+// provideWithProxy is the launcher's ONLY registration path: the direct identity
+// (provideDirectSetup) and every proxy reach it, and no test runs a real launch
+// (it requires live platform auth), so nothing at runtime fails if that call
+// site is reverted. The round-2 shape read the identity's H3 eligibility with
+// snH3Eligible and registered it separately with registerH3Running; the two
+// steps let a concurrent re-apply/reload observe the identity untracked and skip
+// it, then the launch records the stale value and wires stale ModePreferences.
+// registerH3RunningEligible holds h3RunningMu across both. Pin the call site
+// here, the same way the other provideWithProxy wiring is pinned.
+func TestProvideWithProxyRegistersH3EligibilityAtomically(t *testing.T) {
+	body := funcBody(t, "provideWithProxy")
+	if body.firstIndex("registerH3RunningEligible") < 0 {
+		t.Error("provideWithProxy() never calls registerH3RunningEligible: the atomic " +
+			"eligibility-read-and-registration is not wired into the launcher, so an " +
+			"identity whose transport is built here is never registered as running H3")
+		return
+	}
+	if !body.hasCallWithFirstArg("registerH3RunningEligible", "proxySettings") {
+		t.Error("provideWithProxy() does not call registerH3RunningEligible(proxySettings, isNative): " +
+			"the identity's own settings must be the registration argument")
+	}
+	// The round-2 shape must not come back: the read (snH3Eligible) and the
+	// registration (registerH3Running) as two separate steps.
+	if at := body.firstIndex("snH3Eligible"); at >= 0 {
+		t.Errorf("provideWithProxy() reads H3 eligibility with snH3Eligible at line %d; the read "+
+			"and the registration must be the single registerH3RunningEligible call, or a "+
+			"concurrent re-apply/reload can observe the identity untracked and skip it", at)
+	}
+	if at := body.firstIndex("registerH3Running"); at >= 0 {
+		t.Errorf("provideWithProxy() registers a running entry with registerH3Running at line %d; "+
+			"that is the round-2 shape, where the eligibility read and the registration are two "+
+			"steps a concurrent re-apply can interleave", at)
 	}
 }
 

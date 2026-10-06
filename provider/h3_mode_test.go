@@ -392,3 +392,47 @@ func TestH3CapRanksOverPublishedCandidates(t *testing.T) {
 		t.Fatalf("a cap of 1 resolved no published proxy key: %v", resolved.eligibleKeys)
 	}
 }
+
+// An empty-but-KNOWN published set must cap to zero proxies, not fall back to
+// readProxySettings(). The launcher publishes an empty set when the box runs no
+// file- or URL-sourced proxies; resolving the internal config then would cap
+// over stale internal keys that match no running identity, breaking the
+// known/unknown contract buildH3ResolvedMode relies on. The regression this
+// pins: cloning the published set with append(nil, set...) returns nil for an
+// EMPTY set, so the empty-but-known case was mistaken for "unknown" and the
+// fallback ran.
+func TestH3CapEmptyPublishedCandidatesDoNotFallBack(t *testing.T) {
+	// A stale internal config that readProxySettings() WOULD rank. If the
+	// empty published set falls back to it, the cap resolves a proxy here.
+	withTempHome(t)
+	writeProxyConfig(&ProxyConfig{Servers: map[string]string{"10.7.7.7:8080": ""}})
+	if internal := readProxySettings(); len(internal) == 0 {
+		t.Fatal("test premise: the stale internal config must be readable from the temp home")
+	}
+
+	h3ProxyCandidatesMu.Lock()
+	prevSet, prevKnown := h3ProxyCandidatesSet, h3ProxyCandidatesKnown
+	h3ProxyCandidatesMu.Unlock()
+	defer func() {
+		h3ProxyCandidatesMu.Lock()
+		h3ProxyCandidatesSet, h3ProxyCandidatesKnown = prevSet, prevKnown
+		h3ProxyCandidatesMu.Unlock()
+	}()
+
+	// Known but empty: the box runs zero proxies from any launcher source.
+	publishH3ProxyCandidates(nil)
+	if got := h3ProxyCandidateSettings(); got == nil {
+		t.Fatal("a known-but-empty published set returned a nil slice; a nil return means " +
+			"\"no launcher published\", so buildH3ResolvedMode falls back to readProxySettings()")
+	}
+
+	resolved, err := buildH3ResolvedMode("1")
+	if err != nil {
+		t.Fatalf("buildH3ResolvedMode(1): %v", err)
+	}
+	if len(resolved.eligibleKeys) != 0 {
+		t.Fatalf("an empty-but-known published set capped to %d proxy keys (%v); it fell back "+
+			"to readProxySettings() and ranked stale internal keys the box does not run",
+			len(resolved.eligibleKeys), resolved.eligibleKeys)
+	}
+}
