@@ -260,12 +260,15 @@ var setKeyHelps = []string{
 	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed)",
 	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply)",
 	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message)",
-	"  h3                  off|direct|N|all  which identities run H3: none, the direct identity only, the N best proxies, or all. N must be a positive integer (on == direct, 0 == off). N caps the PROXY set only; the direct identity is always additionally eligible and does not consume one of the N, so h3=N runs N proxies plus the direct identity (default: all)",
+	"  h3                  off|direct|N|all  which identities run H3: none, the direct identity only, the N best proxies, or all. N must be a positive integer (on == direct, 0 == off, auto == all). N caps the PROXY set only; the direct identity is always additionally eligible and does not consume one of the N, so h3=N runs N proxies plus the direct identity (default: all)",
 	"  gomemlimit          <bytes>       Go runtime memory limit (e.g. 256MiB, 1GiB)",
 	"  gogc      <int>|off|disabled     GC target percentage (default: 100). off clears; disabled turns GC off entirely (unbounded heap)",
 	"  profile             <profile>     tuning profile (auto, eco, lowmem, turbo-v4, turbo-v8)",
 	"  ramlogs             on|off        in-memory ramlogs toggle",
 	"  metrics             on|off        enable metrics endpoint",
+	"  metrics-listen      auto|<ip:port> /metrics listen address. auto binds loopback plus every Tailscale IPv4 (0.0.0.0 in a container); an explicit address is used as-is, and off clears back to auto. Live; a change rebinds a running listener (default: auto)",
+	"  baseline            on|off        record this box's behaviour into baseline.jsonl every 15 minutes, with the transport split and the lifetime counters, for `urnet-tools baseline show|compare` (default: on)",
+	"  proxy-audit         on|off        grade proxies and park the ones that prove junk. Observe mode by default (logs verdicts without acting); parking only acts when hot-restart is on (default: off)",
 }
 
 // treatsOffAsClear reports whether `set <key> off` is turned into a generic
@@ -532,6 +535,13 @@ func formatSets(p Provider, want string) error {
 		{"ramlogs", "ramlogs"},
 		{"metrics", "metrics"},
 		{"metrics-listen", "metrics_listen"},
+		{"oom-cap", "oom_cap"},
+		{"smart-dialer", "smart_dialer"},
+		{"h3", "h3"},
+		{"h3-datagram", "h3_datagram"},
+		{"h3-datagram-send", "h3_datagram_send"},
+		{"baseline", "baseline"},
+		{"proxy-audit", "proxy_audit"},
 	}
 
 	for _, item := range orderedKeys {

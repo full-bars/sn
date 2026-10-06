@@ -178,7 +178,8 @@ with no restart.
 | `<int>` | The N best proxies, best first, by grade then earnings. N is a positive integer. The number caps the PROXY set only: the direct identity is always additionally eligible and does not consume one of the N, so `h3 = 10` runs ten H3 proxies plus the direct identity. |
 | `all` | Every identity. This is the default, matching sn before the key existed. |
 
-`on` is kept as an alias for `direct`, and `0` as an alias for `off`. Any other
+`on` is kept as an alias for `direct`, `0` as an alias for `off`, and `auto`
+as an alias for `all`. Any other
 zero spelling (`00`, `+0`) is rejected rather than read as a count, because a
 count of zero would keep the direct identity eligible and mean `direct` instead.
 Set it with `urnet-tools set h3 direct` (and so on). A number caps the proxy set
