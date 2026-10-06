@@ -590,10 +590,24 @@ func (r *ProxyReloader) reload() {
 	for _, s := range desiredSet {
 		desiredValues = append(desiredValues, s)
 	}
-	// Keep the cap ranking set current: a reload can add or drop file- or
-	// URL-sourced proxies, and a later `h3 = N` must rank over the live set,
-	// not just the internal config.
-	publishH3ProxyCandidates(desiredValues)
+	// Keep the cap ranking set current so a later `h3 = N` ranks over the live
+	// set, not just the internal config, and re-resolve an active cap over the
+	// new set so a replacement proxy that ranks in starts with H3 without the
+	// operator setting `h3` again.
+	//
+	// Publish only a COMPLETE desired set. An unreadable proxy_url.json drops
+	// every URL-sourced proxy from this cycle, and the removal path keeps those
+	// proxies running, so publishing the partial set would let a later `h3 = N`
+	// exclude running proxies. A read failure leaves the last complete set in
+	// place.
+	if urlCacheLoaded {
+		publishH3ProxyCandidates(desiredValues)
+		if m := currentH3Mode(); m.kind == h3ModeCap {
+			if resolved, err := buildH3ResolvedMode(m.raw); err == nil {
+				h3ModeValue.Store(resolved)
+			}
+		}
+	}
 	adoptLegacyProxyState(r.state, desiredValues)
 	if store := loadGlobalClientJWTStore(); store != nil {
 		store.AdoptLegacy(desiredValues)

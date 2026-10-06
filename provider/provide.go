@@ -1481,8 +1481,11 @@ func provideLauncherLoop(st *provideState) func() {
 	reloader.reload()
 
 	// Wire the live `h3` mode re-apply now that the cancel map and the reloader
-	// exist. See reapplyH3ModeLive.
+	// exist. See reapplyH3ModeLive. Apply it once here: a control update that
+	// landed while the startup loop was launching identities would not
+	// otherwise reconnect the identities it affects.
 	h3ReapplyLive = func() { reapplyH3ModeLive(st) }
+	reapplyH3ModeLive(st)
 
 	// URL fetcher and maintenance goroutines.
 	proxyURLs := resolveProxyURLs(st.opts)
