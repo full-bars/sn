@@ -53,6 +53,7 @@ This release carries the identity and live-status work staged earlier, together 
 - **The idle hint blames auth only when it explains the idleness** ([#31](https://github.com/full-bars/sn/pull/31)): a steady trickle of auth retries on a large healthy pool is not an auth outage.
 - **Proxy keys are never printed raw** ([#30](https://github.com/full-bars/sn/pull/30)): an identity key embeds the account, so operator-facing listings show a display form instead of the raw key.
 - **The reload summary says where additions came from** ([#31](https://github.com/full-bars/sn/pull/31)): the `reloaded: +N added` line breaks the additions down by source, and URL-sourced launches get their own line instead of being folded into a bare count.
+- **Proxy health now says `down`, `dropped` and `never up` in place of `degraded` and `dead`** ([#67](https://github.com/full-bars/sn/pull/67)): the report headline shows `down` as one total with its two parts named beside it, `dropped` for a proxy that was up and then went down, and `never up` for one that never connected. The `STATUS` column and the `proxy_health.log` rows say `DROPPED` and `NEVER UP`. The `top` view and the live status block say `down` in place of `degraded`, so the report and the `top` view agree. The behaviour and the proxy pruning are unchanged. `degraded` stays for the systemd status band that measures how much of the pool is live. See `LOG_REFERENCE.md`.
 
 ### Maintenance
 

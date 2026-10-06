@@ -363,3 +363,13 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 **Files**: `provider/h3_mode.go`, `provider/h3_datagram.go`, the wiring in `provider/provide.go`, `provider/control_socket.go`, `provider/control_state.go`, `provider/health_heartbeat.go`, `provider/metrics_provider.go`, `internal/urnettools/control_client.go`, `internal/urnettools/restore_delegate.go` and `internal/urnettools/cobra.go`. `docs/Configuration.md` and `docs/Monitoring.md` carry the H3 documentation.
 
 **Status**: ✅ Shipped
+
+## 29. Proxy Health Labels: Down, Dropped and Never Up (PR #67)
+
+- **The proxy health report names each state plainly**: the report headline shows `down` as one total with its two parts named beside it, `dropped` for a proxy that was up and then went down, and `never up` for one that never connected, in place of the old `Dead` and `Degraded` pair that double-counted the dropped bucket inside `Down`.
+- **The surfaces agree on one word**: the report `STATUS` column and the `proxy_health.log` rows say `DROPPED` and `NEVER UP`, and the `top` view, the live status block and the snapshot state reason say `down`.
+- **The behaviour and the pruning are unchanged**: this is display strings, comments, docs and tests only, and `degraded` stays for the systemd status band that measures how much of the pool is live. The reaper predicate and every internal identifier (`IsDegraded`, `DegradedProxies`, the `Degraded` struct field, the cleanup threshold) are unchanged.
+
+**Files**: `provider/proxy_health_log.go`, `provider/node_snapshot.go`, `internal/urnettools/snapshot_render.go`, `internal/urnettools/top_view.go`, the golden files under `internal/urnettools/testdata/` and `testdata/livestatus/`, and `LOG_REFERENCE.md`. `docs/Configuration.md`, `docs/Proxy-Management.md`, `docs/Docker-Deployment.md`, `docs/Troubleshooting.md`, `docs/design/live-status-snapshot.md`, `docs/urnet-tools-Go.md` and `docs/urnet-tools-go.md` carry the updated wording.
+
+**Status**: ✅ Shipped
