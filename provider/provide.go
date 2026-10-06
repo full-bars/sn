@@ -1276,6 +1276,18 @@ func provideLauncherLoop(st *provideState) func() {
 		allProxySettings = append(allProxySettings, s)
 	}
 
+	// Publish the full desired set (internal or file source, plus URL-sourced)
+	// so a cap ranks over every proxy the box runs, and re-resolve the current
+	// mode now that the set is known. A persisted `h3 = N` replays before this
+	// point, when only the internal config was readable, so without the
+	// re-resolve a file- or URL-fed box would cap to zero proxies.
+	publishH3ProxyCandidates(allProxySettings)
+	if m := currentH3Mode(); m.kind == h3ModeCap {
+		if resolved, err := buildH3ResolvedMode(m.raw); err == nil {
+			h3ModeValue.Store(resolved)
+		}
+	}
+
 	// Migrate legacy bare-address state entries before anything reads proxyState
 	// by key, and adopt saved client logins onto identity keys before the
 	// warmth evaluation below consults the client-JWT store.

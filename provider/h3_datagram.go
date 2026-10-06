@@ -218,21 +218,17 @@ func applyH3DatagramSendLive() {
 	}
 }
 
-// h3DatagramStatsSnapshot returns the process-wide DATAGRAM counters, or
-// ok=false when no eligible transport is registered. The health line and
-// /metrics both read this.
+// h3DatagramStatsSnapshot returns the process-wide DATAGRAM counters. The
+// health line and /metrics both read this.
 //
 // Every transport writes into the one h3DatagramProcessStats collector, so this
 // is the sum over every running identity and every reconnect generation, not a
 // sample of one transport: a churning proxy set cannot make the counters drop
-// or reset.
+// or reset. The collector holds the process total, so the counters stay
+// available after the last transport exits and while the gate is off; a caller
+// that serves metric families gates them on h3DatagramMetricsEnabled, which
+// reads the same snapshot.
 func h3DatagramStatsSnapshot() (snapshot connect.H3DatagramStatsSnapshot, ok bool) {
-	h3DatagramTargetsMu.Lock()
-	registered := 0 < len(h3DatagramTargets)
-	h3DatagramTargetsMu.Unlock()
-	if !registered {
-		return snapshot, false
-	}
 	return h3DatagramProcessStats.Snapshot(), true
 }
 

@@ -354,3 +354,41 @@ func TestReconnectKeepsRunningEntryWhenOldLaunchCleansUp(t *testing.T) {
 		t.Fatal("the owning launch's cleanup did not remove the entry")
 	}
 }
+
+// A cap must rank over every proxy the box runs, not just the internal config.
+// The launcher publishes the full desired set (internal or file source, plus
+// URL-sourced), so a cap can include a file- or URL-sourced proxy. Resolve from
+// readProxySettings() again and the published set is ignored, so this fails.
+func TestH3CapRanksOverPublishedCandidates(t *testing.T) {
+	// Save and restore the published candidate set so other tests are not
+	// affected by this one.
+	h3ProxyCandidatesMu.Lock()
+	prevSet, prevKnown := h3ProxyCandidatesSet, h3ProxyCandidatesKnown
+	h3ProxyCandidatesMu.Unlock()
+	defer func() {
+		h3ProxyCandidatesMu.Lock()
+		h3ProxyCandidatesSet, h3ProxyCandidatesKnown = prevSet, prevKnown
+		h3ProxyCandidatesMu.Unlock()
+	}()
+
+	// These two stand in for proxies a file source or URL feed would supply.
+	// They are not in the internal config, so readProxySettings() would not
+	// return them.
+	fileProxy := &connect.ProxySettings{Network: "tcp", Address: "127.0.0.1:19999"}
+	otherProxy := &connect.ProxySettings{Network: "tcp", Address: "127.0.0.1:19998"}
+	publishH3ProxyCandidates([]*connect.ProxySettings{fileProxy, otherProxy})
+
+	resolved, err := buildH3ResolvedMode("1")
+	if err != nil {
+		t.Fatalf("buildH3ResolvedMode(1): %v", err)
+	}
+	if resolved.kind != h3ModeCap {
+		t.Fatalf("kind = %v, want cap", resolved.kind)
+	}
+	if len(resolved.eligibleKeys) != 1 {
+		t.Fatalf("a cap of 1 resolved %d proxy keys from the published set, want 1: %v", len(resolved.eligibleKeys), resolved.eligibleKeys)
+	}
+	if !resolved.eligibleKeys[fileProxy.Key()] && !resolved.eligibleKeys[otherProxy.Key()] {
+		t.Fatalf("a cap of 1 resolved no published proxy key: %v", resolved.eligibleKeys)
+	}
+}

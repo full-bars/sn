@@ -176,6 +176,37 @@ func h3TopProxyKeys(n int, settings []*connect.ProxySettings, state *ProxyState)
 	return out
 }
 
+// h3ProxyCandidates is the launcher's full desired proxy set once it is known:
+// the internal or file source, plus URL-sourced proxies. readProxySettings()
+// reads only the internal config, so a cap resolved from it alone would rank
+// zero file- or URL-sourced proxies. The launcher publishes the same set it
+// launches, and a cap ranks over every proxy the box runs. The CLI and test
+// paths fall back to readProxySettings() until something publishes.
+var (
+	h3ProxyCandidatesMu    sync.RWMutex
+	h3ProxyCandidatesSet   []*connect.ProxySettings
+	h3ProxyCandidatesKnown bool
+)
+
+// publishH3ProxyCandidates records the launcher's current desired proxy set so
+// a cap resolves over the proxies the box actually runs. The launcher calls
+// this at startup and on every reload.
+func publishH3ProxyCandidates(settings []*connect.ProxySettings) {
+	h3ProxyCandidatesMu.Lock()
+	h3ProxyCandidatesSet = settings
+	h3ProxyCandidatesKnown = true
+	h3ProxyCandidatesMu.Unlock()
+}
+
+func h3ProxyCandidateSettings() []*connect.ProxySettings {
+	h3ProxyCandidatesMu.RLock()
+	defer h3ProxyCandidatesMu.RUnlock()
+	if !h3ProxyCandidatesKnown {
+		return nil
+	}
+	return h3ProxyCandidatesSet
+}
+
 // buildH3ResolvedMode parses a value and resolves any cap set.
 func buildH3ResolvedMode(value string) (*h3ResolvedMode, error) {
 	kind, cap, err := parseH3Mode(value)
@@ -184,8 +215,14 @@ func buildH3ResolvedMode(value string) (*h3ResolvedMode, error) {
 	}
 	m := &h3ResolvedMode{kind: kind, cap: cap, raw: value}
 	if kind == h3ModeCap {
+		settings := h3ProxyCandidateSettings()
+		if settings == nil {
+			// No launcher has published a set yet (the CLI and unit tests): the
+			// internal config is the best available.
+			settings = readProxySettings()
+		}
 		state, _ := readProxyState()
-		m.eligibleKeys = h3TopProxyKeys(cap, readProxySettings(), state)
+		m.eligibleKeys = h3TopProxyKeys(cap, settings, state)
 	}
 	return m, nil
 }
@@ -402,7 +439,10 @@ func reapplyH3ModeLive(st *provideState) {
 		isNative := key == directProxyKey
 		want := h3EligibleForKey(key, isNative)
 		had, tracked := h3RunningEligibleOf(key)
-		if tracked && had == want {
+		// A key that has launched but not yet registered its transport
+		// reads the new mode when it builds one, so it is left alone. Only
+		// a tracked identity whose eligibility actually changed reconnects.
+		if !tracked || had == want {
 			continue
 		}
 		changed = append(changed, key)

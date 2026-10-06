@@ -590,6 +590,10 @@ func (r *ProxyReloader) reload() {
 	for _, s := range desiredSet {
 		desiredValues = append(desiredValues, s)
 	}
+	// Keep the cap ranking set current: a reload can add or drop file- or
+	// URL-sourced proxies, and a later `h3 = N` must rank over the live set,
+	// not just the internal config.
+	publishH3ProxyCandidates(desiredValues)
 	adoptLegacyProxyState(r.state, desiredValues)
 	if store := loadGlobalClientJWTStore(); store != nil {
 		store.AdoptLegacy(desiredValues)

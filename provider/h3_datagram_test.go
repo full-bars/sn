@@ -82,6 +82,15 @@ func TestH3DatagramSendGateZeroesTheSendThreshold(t *testing.T) {
 // The rollout predicate is the single hook. Today it covers every identity, so
 // narrowing it later is a change here only.
 func TestSnH3EligibleCoversEveryIdentityToday(t *testing.T) {
+	// The predicate reads the live mode, and other tests leave a cap or `off`
+	// in place and restore from a cap name (which re-resolves from disk). Pin
+	// `all` here and restore it, or this test fails under a different test
+	// order or -shuffle.
+	previous, err := SetH3Mode("all")
+	if err != nil {
+		t.Fatalf("SetH3Mode(all): %v", err)
+	}
+	defer SetH3Mode(previous)
 	if !snH3Eligible(0, nil, true) {
 		t.Fatal("direct identity is not eligible; sn runs H3 for it")
 	}
