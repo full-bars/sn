@@ -14,7 +14,7 @@
 | Memory ballooning / OOM kills | High proxy count without a memory profile | Set `URNETWORK_PROFILE=auto` or `eco`; enable `URNETWORK_SELF_HEAL=1`. |
 | `proxy refresh` refused shortly after a restart | Warmup lockout | Run `urnet-tools proxy refresh --force` to bypass the warmup gate. |
 | Disk space exhaustion | Unrotated logs filling the disk | Enable `URNETWORK_RAMLOGS=1`, or set Docker log rotation with `--log-opt max-size=10m --log-opt max-file=3`. |
-| Proxies marked dead or degraded | Proxy failure or dropped connections | Run `urnet-tools proxy health` and prune with `urnet-tools proxy remove-dead`. |
+| Proxies marked never-up or dropped | Proxy failure or dropped connections | Run `urnet-tools proxy health` and prune with `urnet-tools proxy remove-dead`. |
 | `urnet-tools set` seems not to apply | The change was rejected, queued, or applied only on restart | Check the provider log for `[control]` lines. See Confirming a settings change below. |
 | `status` shows a running process but no control socket | Startup failure, or a second provider for the same OS user | The socket is the liveness signal, not the PID. Check the log for a startup error and `urnet-tools providers --all` for a collision. |
 

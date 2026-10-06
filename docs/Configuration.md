@@ -232,7 +232,7 @@ See [High-Volume Performance Tuning](High-Volume-Performance-Tuning.md) for the 
 
 ## 🩺 Viewing proxy health
 
-You can view the full list of dead and degraded proxies, as well as a live event log of proxy state transitions:
+You can view the full list of never-up and dropped proxies, as well as a live event log of proxy state transitions:
 
 *   **Host**: Run `urnet-tools proxy health`.
 *   **Docker**: See [Docker Deployment](Docker-Deployment.md) for the `proxy-health` command.

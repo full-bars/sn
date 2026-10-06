@@ -70,9 +70,9 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 | `proxy add-source <url> [target]` | Add a live URL proxy source. Fetched and probed immediately. |
 | `proxy remove-source <url> [target]` | Remove a URL proxy source. |
 | `proxy ids [target]` | Show the `client_id` the platform assigned to each proxy. Bearer tokens are never printed. |
-| `proxy health [target]` | Display live health state (Up, Down, Dead, Degraded). |
+| `proxy health [target]` | Display live health state (Up, Down, Dropped, Never up). |
 | `proxy traffic [target]` | Display bandwidth, billable traffic, and active NAT sessions per proxy. |
-| `proxy remove-dead [target]` | Interactively prune dead and degraded proxies. Honors `--dry-run`. |
+| `proxy remove-dead [target]` | Interactively prune never-up and dropped proxies. Honors `--dry-run`. |
 | `summary [target]` | Fleet-style summary of proxy counts by source (url, file, internal). Top-level command. |
 
 ### System and Performance Tuning

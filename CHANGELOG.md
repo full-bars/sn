@@ -11,6 +11,7 @@
 
 ### Changed
 
+- **The dropped bucket is labeled on its own, and the idle hint reads again**: the live status and `top` view called the was-up-now-down bucket `down`, the same word the whole-pool figure uses for dead plus dropped. The breakdown bucket is `dropped` now, matching the proxy health report, so `down` has one meaning. The idle hint no longer calls every offline proxy dead. Labels and wording only; the reaper inputs are unchanged.
 - **A node that deliberately runs with no proxies now reads `active`, not `degraded`** (<https://github.com/full-bars/sn/pull/31>): serving on the direct transport with no proxy source configured is a valid, completed configuration, and was previously indistinguishable from a real outage. A configured source that came back empty still reads degraded, and so does a node whose direct transport is off with nothing to serve.
 - **The idle hint blames auth only when it explains the idleness** (<https://github.com/full-bars/sn/pull/31>): a steady trickle of auth retries on a large healthy pool is no longer reported as an auth outage. Auth is blamed for a failure wave, or when most of the pool is not connected while failures are happening; otherwise the hint states what is true and shows the numbers behind it.
 - **The reload summary says where additions came from** (<https://github.com/full-bars/sn/pull/31>): the `reloaded: +N added` line breaks the additions down by source, and URL-sourced launches get their own line instead of being folded into a bare count.
