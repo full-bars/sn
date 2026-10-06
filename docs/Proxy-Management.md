@@ -85,9 +85,9 @@ docker exec -it urfix urnet-tools proxy remove-dead
 > The provider continuously monitors proxy health. This command queries the
 > live health state and groups failing proxies into two categories:
 >
-> 1. **Dead proxies:** proxies that have never successfully authenticated
+> 1. **Never-up proxies:** proxies that have never successfully authenticated
 >    (likely bad credentials or unreachable IPs).
-> 2. **Inactive or degraded proxies:** proxies that were previously working
+> 2. **Inactive or dropped proxies:** proxies that were previously working
 >    but have been offline for an extended period.
 >
 > Proxies that proxy audit has parked (health `parked`) are resting, not failing, and are never listed here. See [Configuration](Configuration.md#proxy-audit).
