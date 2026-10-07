@@ -1145,8 +1145,11 @@ func (r *ProxyReloader) reload() {
 		}
 	}
 	autoNote := ""
-	if trimSource == trimCapOOM {
+	switch trimSource {
+	case trimCapOOM:
 		autoNote = " (automatic OOM cap)"
+	case trimCapThrash:
+		autoNote = " (automatic thrash cap: memory was thrashing on the last run)"
 	}
 	trimChanged := false
 	if trimErr == nil {

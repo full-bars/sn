@@ -140,7 +140,7 @@ func effectiveTrimCapSource() (int, string, error) {
 			deferCritWrite(w)
 		}
 		if auto > 0 {
-			return auto, trimCapOOM, nil
+			return auto, autoSource, nil
 		}
 		return 0, "", nil
 	}

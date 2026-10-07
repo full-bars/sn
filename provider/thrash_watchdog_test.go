@@ -7,6 +7,7 @@ package provider
 // time-driven with explicit clocks; no wall-clock assertions.
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -228,6 +229,9 @@ func TestThrashMachineCriticalAfterFifteenMinutes(t *testing.T) {
 	if st := m.step(thrashAt.Add(15*time.Minute+time.Second), severe, thrashRead{}); st.cur != thrashCritical {
 		t.Fatalf("t+15m: want critical, got %v", st.cur)
 	}
+	if m.thrashSince.IsZero() || !m.thrashSince.Equal(thrashAt) {
+		t.Fatalf("thrashSince must mark the thrashing entry (survives critical): got %v, want %v", m.thrashSince, thrashAt)
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -264,39 +268,39 @@ func TestThrashCapEscalationLadder(t *testing.T) {
 	withTempHome(t)
 	base := thrashT0
 
-	allowed, reason, n := thrashCapEscalationAllowed(thrashCapState{}, base)
-	if !allowed || n != 0 {
-		t.Fatalf("first escalation must be allowed, got (%v, %q, %d)", allowed, reason, n)
+	allowed, code, reason, n := thrashCapEscalationAllowed(thrashCapState{}, base)
+	if !allowed || code != "" || n != 0 {
+		t.Fatalf("first escalation must be allowed, got (%v, %q, %q, %d)", allowed, code, reason, n)
 	}
 	if err := recordThrashEscalation(300, base); err != nil {
 		t.Fatalf("record: %v", err)
 	}
 	// 10 minutes later: inside the 30m re-arm window.
-	if allowed, _, n := thrashCapEscalationAllowed(readThrashCapState(), base.Add(10*time.Minute)); allowed || n != 1 {
-		t.Fatalf("within backoff must be denied, got (allowed=%v, n=%d)", allowed, n)
+	if allowed, code, _, n := thrashCapEscalationAllowed(readThrashCapState(), base.Add(10*time.Minute)); allowed || code != "rearm" || n != 1 {
+		t.Fatalf("within backoff must be denied with code rearm, got (allowed=%v, code=%q, n=%d)", allowed, code, n)
 	}
 	// Past 30m: allowed again (count now 1 -> next backoff 2h).
 	second := base.Add(31 * time.Minute)
-	if allowed, _, _ := thrashCapEscalationAllowed(readThrashCapState(), second); !allowed {
+	if allowed, _, _, _ := thrashCapEscalationAllowed(readThrashCapState(), second); !allowed {
 		t.Fatalf("past the first backoff must be allowed")
 	}
 	recordThrashEscalation(300, second)
 	// 1h after the second: inside the 2h window.
-	if allowed, _, _ := thrashCapEscalationAllowed(readThrashCapState(), second.Add(time.Hour)); allowed {
-		t.Fatalf("within 2h backoff must be denied")
+	if allowed, code, _, _ := thrashCapEscalationAllowed(readThrashCapState(), second.Add(time.Hour)); allowed || code != "rearm" {
+		t.Fatalf("within 2h backoff must be denied with code rearm")
 	}
 	third := second.Add(2*time.Hour + time.Minute)
-	if allowed, _, _ := thrashCapEscalationAllowed(readThrashCapState(), third); !allowed {
+	if allowed, _, _, _ := thrashCapEscalationAllowed(readThrashCapState(), third); !allowed {
 		t.Fatalf("past the 2h backoff must be allowed")
 	}
 	recordThrashEscalation(300, third)
 	// Three in 24h: cap reached.
-	if allowed, reason, n := thrashCapEscalationAllowed(readThrashCapState(), third.Add(7*time.Hour)); allowed || n != 3 {
-		t.Fatalf("3/24h must deny (reason=%q, n=%d)", reason, n)
+	if allowed, code, _, n := thrashCapEscalationAllowed(readThrashCapState(), third.Add(7*time.Hour)); allowed || code != "cap-reached" || n != 3 {
+		t.Fatalf("3/24h must deny with code cap-reached, got (allowed=%v, code=%q, n=%d)", allowed, code, n)
 	}
 	// Far enough out that the oldest fall out of the window: allowed again.
 	later := base.Add(25 * time.Hour)
-	if allowed, _, n := thrashCapEscalationAllowed(readThrashCapState(), later); !allowed {
+	if allowed, _, _, n := thrashCapEscalationAllowed(readThrashCapState(), later); !allowed {
 		t.Fatalf("aged-out window must allow again (n=%d)", n)
 	}
 }
@@ -359,14 +363,16 @@ func TestEffectiveTrimCapIncludesThrashCap(t *testing.T) {
 
 func TestScoreExcludingCPU(t *testing.T) {
 	comps := map[string]float64{"psi_cpu": 0.9, "mem": 0.3, "heap": 0.2}
-	if got := scoreExcludingCPU(0.9, comps); got != 0.3 {
+	if got := scoreExcludingCPU(comps); got != 0.3 {
 		t.Fatalf("want 0.3, got %v", got)
 	}
-	if got := scoreExcludingCPU(1.0, comps); got != 1.0 {
-		t.Fatalf("emergency pin must carry: got %v", got)
+	// A saturated psi_cpu alone must NOT carry (scoring fix), even at 1.0.
+	if got := scoreExcludingCPU(map[string]float64{"psi_cpu": 1.0, "mem": 0.1}); got != 0.1 {
+		t.Fatalf("cpu-saturated: want 0.1, got %v", got)
 	}
-	if got := scoreExcludingCPU(0.1, map[string]float64{"psi_cpu": 0.1}); got != 0 {
-		t.Fatalf("cpu-only: want 0, got %v", got)
+	// Emergency conditions saturate their own components, so the loop carries them.
+	if got := scoreExcludingCPU(map[string]float64{"psi_cpu": 0.4, "heap": 1.0}); got != 1.0 {
+		t.Fatalf("heap emergency: want 1.0, got %v", got)
 	}
 }
 
@@ -394,7 +400,7 @@ func TestThrashMessagesAreHumanReadable(t *testing.T) {
 	rd := thrashRead{unitSwapOK: true, unitSwapMiB: 3100, hostSwapOK: true, hostSwapTotalMiB: 3300, hostSwapUsedMiB: 3300, heapOK: true, heapFrac: 3.1, heapUsedMiB: 2100, heapLimitMiB: 680, ramAvailMiB: 82, ramAvailOK: true}
 
 	msg := thrashOnsetMsg(3*time.Minute, rt, rd, 0.94, true)
-	for _, want := range []string{"thrashing swap", "stalled on memory ~51%", "25 MB/s", "3.0 GB", "94% of all swap in use", "Heap is 3.1x"} {
+	for _, want := range []string{"thrashing swap", "memory was stalled ~51% of the time", "25 MB/s", "3.0 GB", "94% of all swap in use", "Heap is 3.1x"} {
 		if !strings.Contains(msg, want) {
 			t.Errorf("onset msg missing %q: %s", want, msg)
 		}
@@ -464,4 +470,283 @@ func thrashHas(list []string, want string) bool {
 		}
 	}
 	return false
+}
+
+// ---------------------------------------------------------------------------
+// Review-round regressions (source flip, gates, loop, status, messages)
+// ---------------------------------------------------------------------------
+
+func TestThrashTrackerSourceFlipReBaselines(t *testing.T) {
+	var tr thrashTracker
+	rd := thrashRead{
+		psiSomeTotal: 100, psiFullTotal: 100, psiSomeOK: true, psiFullOK: true,
+		psiSomeUnit: true, psiUnit: true,
+		swapIn: 50, swapOut: 50, swapOK: true, swapUnit: true,
+	}
+	tr.rates(rd, thrashT0)
+	rd.psiSomeTotal, rd.psiFullTotal = 100+90_000_000, 100+45_000_000
+	rd.swapIn = 50 + 9000
+	r := tr.rates(rd, thrashT0.Add(90*time.Second))
+	if r.fullFrac < 0.49 || r.fullFrac > 0.51 || r.swapInPS < 99 {
+		t.Fatalf("same-source rates: full=%v swapIn=%v", r.fullFrac, r.swapInPS)
+	}
+	// Flip to host counters with much larger cumulative values: the tracker
+	// must re-baseline instead of fabricating a huge rate (the false-severe
+	// bug: only backward moves are clamped, forward jumps are not).
+	rd.psiSomeUnit, rd.psiUnit, rd.swapUnit = false, false, false
+	rd.psiSomeTotal, rd.psiFullTotal = 9_000_000_000, 9_000_000_000
+	rd.swapIn, rd.swapOut = 900_000_000, 900_000_000
+	r = tr.rates(rd, thrashT0.Add(180*time.Second))
+	if r.fullFrac != 0 || r.swapInPS != 0 {
+		t.Fatalf("source flip must re-baseline: full=%v swapIn=%v", r.fullFrac, r.swapInPS)
+	}
+	// The next same-source tick yields real rates again.
+	rd.psiFullTotal += 45_000_000
+	rd.swapIn += 9000
+	r = tr.rates(rd, thrashT0.Add(270*time.Second))
+	if r.fullFrac < 0.49 || r.fullFrac > 0.51 {
+		t.Fatalf("post-flip rates: full=%v", r.fullFrac)
+	}
+}
+
+func TestThrashTrackerClampsFraction(t *testing.T) {
+	var tr thrashTracker
+	rd := thrashRead{psiFullTotal: 1, psiFullOK: true, psiUnit: true}
+	tr.rates(rd, thrashT0)
+	rd.psiFullTotal = 1 + 999_000_000 // absurd delta
+	r := tr.rates(rd, thrashT0.Add(time.Second))
+	if r.fullFrac != 1.0 {
+		t.Fatalf("fraction must clamp to 1.0, got %v", r.fullFrac)
+	}
+}
+
+func TestThrashAttributionExactHalfIsOurs(t *testing.T) {
+	rd := thrashRead{unitSwapOK: true, unitSwapMiB: 1650, hostSwapOK: true, hostSwapUsedMiB: 3300, hostSwapTotalMiB: 3300}
+	if attr, share, ok := thrashAttribution(rd); attr != "unit" || !ok || share != 0.5 {
+		t.Fatalf("exactly 50%% must be ours: got (%s, %v, %v)", attr, share, ok)
+	}
+}
+
+func TestThrashMachineSevereBoundaryInclusive(t *testing.T) {
+	m := &thrashMachine{state: thrashCalm, stateSince: thrashT0}
+	rt := thrashRates{fullFrac: 0.25, fullOK: true} // exactly the severe floor
+	m.step(thrashT0, rt, thrashRead{})
+	if st := m.step(thrashT0.Add(91*time.Second), rt, thrashRead{}); st.cur != thrashThrashing {
+		t.Fatalf("exactly 25%% must be severe: got %v", st.cur)
+	}
+}
+
+func TestThrashEscalateGates(t *testing.T) {
+	home := withTempHome(t)
+	t.Cleanup(ResetHotSwapStateForTest)
+	now := thrashT0
+	rt := thrashRates{fullFrac: 0.5, fullOK: true, swapOK: true, swapInPS: 500, swapOutPS: 500}
+	rdUnit := thrashRead{unitSwapOK: true, unitSwapMiB: 3000, hostSwapOK: true, hostSwapUsedMiB: 3300, hostSwapTotalMiB: 3300}
+
+	// self-heal off
+	if got := thrashEscalate(now, rt, rdUnit, false, "unit", 0.9, true); got.Action != "alert" || got.Code != "self-heal-off" {
+		t.Fatalf("self-heal off: got (%s, %s)", got.Action, got.Code)
+	}
+	// hot-swap draining: the real drain flag, not the echoed env var
+	isHotSwapDraining.Store(true)
+	got := thrashEscalate(now, rt, rdUnit, true, "unit", 0.9, true)
+	isHotSwapDraining.Store(false)
+	if got.Code != "hotswap" {
+		t.Fatalf("draining: got %s", got.Code)
+	}
+	// other-process attribution
+	rdOther := thrashRead{unitSwapOK: true, unitSwapMiB: 100, hostSwapOK: true, hostSwapUsedMiB: 3000, hostSwapTotalMiB: 3300}
+	if got := thrashEscalate(now, rt, rdOther, true, "other", 0.03, true); got.Code != "attributed-other" {
+		t.Fatalf("other: got %s", got.Code)
+	}
+	// unknown attribution
+	if got := thrashEscalate(now, rt, thrashRead{}, true, "unknown", 0, false); got.Code != "attributed-unknown" {
+		t.Fatalf("unknown: got %s", got.Code)
+	}
+	// no supervisor
+	t.Setenv("INVOCATION_ID", "")
+	t.Setenv("NOTIFY_SOCKET", "")
+	if got := thrashEscalate(now, rt, rdUnit, true, "unit", 0.9, true); got.Code != "no-supervisor" {
+		t.Fatalf("no supervisor: got %s", got.Code)
+	}
+	// inside the re-arm window
+	t.Setenv("INVOCATION_ID", "test-supervisor")
+	if err := recordThrashEscalation(300, now.Add(-time.Minute)); err != nil {
+		t.Fatalf("record: %v", err)
+	}
+	if got := thrashEscalate(now, rt, rdUnit, true, "unit", 0.9, true); got.Code != "rearm" {
+		t.Fatalf("rearm: got %s", got.Code)
+	}
+	// past the window: the restart is taken
+	got = thrashEscalate(now.Add(31*time.Minute), rt, rdUnit, true, "unit", 0.9, true)
+	if got.Action != "restart" || got.Restarts != 2 {
+		t.Fatalf("restart: got (%s, %d)", got.Action, got.Restarts)
+	}
+	b, err := os.ReadFile(filepath.Join(home, ".urnetwork", "autopilot.jsonl"))
+	if err != nil || !strings.Contains(string(b), `"actor":"thrash"`) {
+		t.Fatalf("ledger must carry the cycle: err=%v content=%s", err, string(b))
+	}
+}
+
+// shrinkThrashDurations shrinks the watchdog timing vars for a loop-level
+// test and returns the restore func.
+func shrinkThrashDurations() func() {
+	origInterval, origSustain, origSevere := thrashSampleInterval, thrashSustain, thrashSevereSustain
+	origRetry, origRecovery := thrashRetryInterval, thrashRecoveryCheckAfter
+	thrashSampleInterval = 5 * time.Millisecond
+	thrashSustain = time.Millisecond
+	thrashSevereSustain = time.Millisecond
+	thrashRetryInterval = time.Millisecond
+	thrashRecoveryCheckAfter = time.Hour // keep the recovery line out of the way
+	return func() {
+		thrashSampleInterval, thrashSustain, thrashSevereSustain = origInterval, origSustain, origSevere
+		thrashRetryInterval, thrashRecoveryCheckAfter = origRetry, origRecovery
+	}
+}
+
+func TestRunThrashWatchdogEscalatesAndExits(t *testing.T) {
+	home := withTempHome(t)
+	t.Setenv("INVOCATION_ID", "test-supervisor")
+	// resolveSelfHealEnabled reads control state first, then the file, then
+	// the startup default. Pin both layers: in-memory override (unpersisted)
+	// plus the file (the file layer wins unless control state overrides).
+	if err := globalControlState.set("proxy_self_heal", "on"); err == nil {
+		t.Cleanup(func() { _ = globalControlState.clear("proxy_self_heal") })
+	}
+	if err := os.MkdirAll(filepath.Join(home, ".urnetwork"), 0o700); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(home, ".urnetwork", "proxy_self_heal"), []byte("on\n"), 0o600); err != nil {
+		t.Fatalf("write override: %v", err)
+	}
+	ResetHotSwapStateForTest()
+	t.Cleanup(ResetHotSwapStateForTest)
+	restore := shrinkThrashDurations()
+	defer restore()
+
+	calls := 0
+	var psiFull, swapIn uint64
+	prevRead := thrashReadFn
+	thrashReadFn = func() thrashRead {
+		calls++
+		if calls == 1 {
+			// Startup sensor line: calm, all sources readable.
+			return thrashRead{psiSomeOK: true, psiFullOK: true, psiSomeUnit: true, psiUnit: true, swapOK: true, swapUnit: true, ramAvailOK: true, ramAvailMiB: 500}
+		}
+		psiFull += 50_000_000
+		swapIn += 100_000
+		return thrashRead{
+			psiSomeTotal: psiFull, psiFullTotal: psiFull,
+			psiSomeOK: true, psiFullOK: true, psiSomeUnit: true, psiUnit: true,
+			swapIn: swapIn, swapOut: swapIn, swapOK: true, swapUnit: true,
+			unitSwapMiB: 3000, unitSwapOK: true,
+			hostSwapUsedMiB: 3300, hostSwapTotalMiB: 3300, hostSwapOK: true,
+			heapFrac: 3.1, heapUsedMiB: 2100, heapLimitMiB: 680, heapOK: true,
+			ramAvailMiB: 82, ramAvailOK: true,
+		}
+	}
+	defer func() { thrashReadFn = prevRead }()
+
+	exitCode := -1
+	prevExit := thrashExitFn
+	thrashExitFn = func(code int) { exitCode = code }
+	defer func() { thrashExitFn = prevExit }()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	done := make(chan struct{})
+	go func() {
+		runThrashWatchdog(ctx, true)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(8 * time.Second):
+		t.Fatal("watchdog never escalated")
+	}
+	if exitCode != thrashExitCode {
+		t.Fatalf("exit code: got %d, want %d", exitCode, thrashExitCode)
+	}
+	// The escalation must be persisted: the restarts ring is the anti-loop
+	// accounting (the cap itself is 0 here because no proxies are running in
+	// the test).
+	if st := readThrashCapState(); len(st.Restarts) == 0 {
+		t.Fatalf("thrash cap state must record the restart")
+	}
+	b, err := os.ReadFile(filepath.Join(home, ".urnetwork", "autopilot.jsonl"))
+	if err != nil || !strings.Contains(string(b), `"actor":"thrash"`) {
+		t.Fatalf("ledger must carry the restart: err=%v content=%s", err, string(b))
+	}
+}
+
+func TestPressureStatusThrashFields(t *testing.T) {
+	home := withTempHome(t)
+
+	f := 0.51
+	snap := &thrashSnapshot{State: "thrashing", SinceUnix: thrashT0.Unix(), PSIFull: &f}
+	snap.Summary = "memory thrash: test summary"
+	globalThrashSnap.Store(snap)
+	defer globalThrashSnap.Store(nil)
+
+	var gc gcGovernorState
+	writePressureStatus(0.9, map[string]float64{"heap": 0.9}, &gc)
+	b, err := os.ReadFile(filepath.Join(home, ".urnetwork", "pressure_status"))
+	if err != nil {
+		t.Fatalf("read pressure_status: %v", err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(b, &m); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if m["thrash_state"] != "thrashing" {
+		t.Fatalf("thrash_state: got %v", m["thrash_state"])
+	}
+	if v, ok := m["psi_mem_full"].(float64); !ok || v != f {
+		t.Fatalf("psi_mem_full: got %v (want %v, a number)", m["psi_mem_full"], f)
+	}
+	if v, ok := m["swap_io_rate"]; !ok || v != nil {
+		t.Fatalf("swap_io_rate must be null when the snapshot has none: got %v", v)
+	}
+	if sum, _ := m["summary"].(string); !strings.Contains(sum, "memory thrash: test summary") {
+		t.Fatalf("summary must reuse the thrash sentence: %q", sum)
+	}
+
+	// Now with values present: numbers, not nulls.
+	swap := 5123.0
+	snap2 := &thrashSnapshot{State: "under-pressure", PSIFull: &f, SwapIOPS: &swap}
+	globalThrashSnap.Store(snap2)
+	writePressureStatus(0.4, map[string]float64{"heap": 0.4}, &gc)
+	b, err = os.ReadFile(filepath.Join(home, ".urnetwork", "pressure_status"))
+	if err != nil {
+		t.Fatalf("read pressure_status (2): %v", err)
+	}
+	if !strings.Contains(string(b), `"swap_io_rate":5123`) {
+		t.Fatalf("swap_io_rate must serialize as a number: %s", string(b))
+	}
+}
+
+func TestThrashMessagesUnavailableNoFakeZeros(t *testing.T) {
+	rt := thrashRates{} // everything unavailable
+	rd := thrashRead{heapOK: true, heapFrac: 3.1, heapUsedMiB: 2100, heapLimitMiB: 680, ramAvailOK: false}
+	msg := thrashOnsetMsg(3*time.Minute, rt, rd, 0, false)
+	if !strings.Contains(msg, "unreadable") {
+		t.Fatalf("onset must say swap activity is unreadable: %s", msg)
+	}
+	for _, bad := range []string{"0 MB/s", "0.0%"} {
+		if strings.Contains(msg, bad) {
+			t.Fatalf("onset fabricates a zero (%q): %s", bad, msg)
+		}
+	}
+	cleared := thrashClearedMsg("Thrash cleared", rd, rt)
+	if !strings.Contains(cleared, "unknown") || strings.Contains(cleared, "0 MB RAM") {
+		t.Fatalf("cleared must not print fake zeros: %s", cleared)
+	}
+	detail := thrashDetailLine(rt, rd, "unknown")
+	if strings.Contains(detail, "0.00") || strings.Contains(detail, "ram 0 MB") {
+		t.Fatalf("detail must not print fake zeros: %s", detail)
+	}
+	warn := thrashEarlyWarnMsg(rd)
+	if !strings.Contains(warn, "unknown") || strings.Contains(warn, "0 MB RAM") {
+		t.Fatalf("early warn must not print fake zeros: %s", warn)
+	}
 }

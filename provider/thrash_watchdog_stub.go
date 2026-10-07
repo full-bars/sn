@@ -17,9 +17,3 @@ func runThrashWatchdog(_ context.Context, _ bool) {}
 // platform; off Linux it never becomes true (the watchdog is a no-op) and the
 // pool controller that reads it is a no-op stub too.
 var thrashFreeze atomic.Bool
-
-// thrashStateName keeps the pressure_status writer compiling where the
-// watchdog never runs.
-func thrashStateName() string { return "" }
-
-func thrashSummaryForStatus() string { return "" }

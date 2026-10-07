@@ -42,7 +42,9 @@ const (
 )
 
 // thrashRestartBackoff is the re-arm schedule between escapes, indexed by how
-// many escapes already happened in the last 24h.
+// many escapes already happened in the last 24h. At the current max of 3 per
+// day the third rung (6h) is unreachable (a third restart is denied outright);
+// it stays for spec parity and goes live if the daily max ever rises.
 var thrashRestartBackoff = []time.Duration{
 	30 * time.Minute,
 	2 * time.Hour,
@@ -104,12 +106,14 @@ func thrashRestartsWithin(st thrashCapState, now time.Time) []int64 {
 
 // thrashCapEscalationAllowed applies the anti-loop ladder: at most
 // thrashMaxRestarts24h escapes per day, spaced by thrashRestartBackoff.
-// Returns the reason when denied and the count of escapes in the last 24h.
-func thrashCapEscalationAllowed(st thrashCapState, now time.Time) (bool, string, int) {
+// Returns a stable code plus human reason when denied, and the count of
+// escapes in the last 24h. The code is what callers dedupe on; the reason
+// embeds changing durations and must never be compared.
+func thrashCapEscalationAllowed(st thrashCapState, now time.Time) (bool, string, string, int) {
 	recent := thrashRestartsWithin(st, now)
 	n := len(recent)
 	if n >= thrashMaxRestarts24h {
-		return false, fmt.Sprintf("restart cap reached (%d of max %d restarts in 24h); not restarting again today", n, thrashMaxRestarts24h), n
+		return false, "cap-reached", fmt.Sprintf("restart cap reached (%d of max %d restarts in 24h); not restarting again today", n, thrashMaxRestarts24h), n
 	}
 	if n > 0 {
 		idx := n - 1
@@ -119,10 +123,10 @@ func thrashCapEscalationAllowed(st thrashCapState, now time.Time) (bool, string,
 		wait := thrashRestartBackoff[idx]
 		since := now.Sub(time.Unix(recent[n-1], 0))
 		if since < wait {
-			return false, fmt.Sprintf("re-arming: last restart was %s ago, next allowed in %s", roundDur(since), roundDur(wait-since)), n
+			return false, "rearm", fmt.Sprintf("re-arming: last restart was %s ago, next allowed in %s", roundDur(since), roundDur(wait-since)), n
 		}
 	}
-	return true, "", n
+	return true, "", "", n
 }
 
 // thrashCapForNextStart sizes the refit cap: a fraction of what was running

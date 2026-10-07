@@ -109,13 +109,12 @@ var globalPressureNoCPU atomic.Uint64
 func currentPressureNoCPU() float64 { return math.Float64frombits(globalPressureNoCPU.Load()) }
 func setPressureNoCPU(v float64)    { globalPressureNoCPU.Store(math.Float64bits(v)) }
 
-// scoreExcludingCPU is the worst component with psi_cpu removed; the
-// emergency pins (heap, goroutines) are never CPU-driven, so an emergency raw
-// score carries through unchanged.
-func scoreExcludingCPU(raw float64, comps map[string]float64) float64 {
-	if raw >= 1.0 {
-		return 1.0
-	}
+// scoreExcludingCPU is the worst component with psi_cpu removed. The main
+// score's emergency pins are heap/goroutine conditions, and those saturate
+// their own components (the ramps top out exactly where the pins fire), so
+// this loop alone honours emergencies; a saturated psi_cpu alone no longer
+// blocks growth (scoring fix: CPU stalls may shrink the pool, not pin it).
+func scoreExcludingCPU(comps map[string]float64) float64 {
 	best := 0.0
 	for k, v := range comps {
 		if k == "psi_cpu" {
@@ -922,9 +921,11 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 		}
 		setPressure(smoothed)
 
-		// CPU-excluded companion score for the grow gate: same emergency-pin
-		// rule, so a genuine blowout still reads 1.0 on both.
-		rawNoCPU := scoreExcludingCPU(raw, comps)
+		// CPU-excluded companion score for the grow gate. The main score's
+		// emergency pins are heap/goroutine conditions, and those saturate
+		// their own components to 1.0, so the loop alone carries emergencies;
+		// a saturated psi_cpu alone no longer blocks growth (scoring fix).
+		rawNoCPU := scoreExcludingCPU(comps)
 		if rawNoCPU >= 1.0 {
 			smoothedNoCPU = 1.0
 		} else {

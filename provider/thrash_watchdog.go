@@ -276,7 +276,8 @@ func cgroupV2SelfDir() string {
 type thrashRead struct {
 	psiSomeTotal, psiFullTotal uint64
 	psiSomeOK, psiFullOK       bool
-	psiUnit                    bool // read from the unit's cgroup (preferred)
+	psiSomeUnit                bool // some line read from the unit's cgroup
+	psiUnit                    bool // full line read from the unit's cgroup (preferred)
 
 	swapIn, swapOut uint64
 	swapOK          bool
@@ -329,17 +330,29 @@ func readThrashRead() thrashRead {
 	var rd thrashRead
 	unitDir := cgroupV2SelfDir()
 
-	// PSI memory: prefer the unit's memory.pressure, fall back to
-	// /proc/pressure/memory. Both are parsed as total= deltas.
+	// PSI memory: prefer the unit's memory.pressure PER LINE, fall back to
+	// /proc/pressure/memory per line. A unit file lacking only "full" must not
+	// suppress a readable host "full" (severe detection depends on full).
 	if unitDir != "" {
 		if b, err := os.ReadFile(filepath.Join(unitDir, "memory.pressure")); err == nil {
-			rd.psiSomeTotal, rd.psiFullTotal, rd.psiSomeOK, rd.psiFullOK = parsePSITotals(string(b))
-			rd.psiUnit = rd.psiSomeOK || rd.psiFullOK
+			some, full, someOK, fullOK := parsePSITotals(string(b))
+			if someOK {
+				rd.psiSomeTotal, rd.psiSomeOK, rd.psiSomeUnit = some, true, true
+			}
+			if fullOK {
+				rd.psiFullTotal, rd.psiFullOK, rd.psiUnit = full, true, true
+			}
 		}
 	}
-	if !rd.psiUnit {
+	if !rd.psiSomeOK || !rd.psiFullOK {
 		if b, err := os.ReadFile("/proc/pressure/memory"); err == nil {
-			rd.psiSomeTotal, rd.psiFullTotal, rd.psiSomeOK, rd.psiFullOK = parsePSITotals(string(b))
+			some, full, someOK, fullOK := parsePSITotals(string(b))
+			if someOK && !rd.psiSomeOK {
+				rd.psiSomeTotal, rd.psiSomeOK = some, true
+			}
+			if fullOK && !rd.psiFullOK {
+				rd.psiFullTotal, rd.psiFullOK = full, true
+			}
 		}
 	}
 
@@ -441,9 +454,15 @@ func readThrashRead() thrashRead {
 // Rates
 // ---------------------------------------------------------------------------
 
-// thrashTracker carries the previous counters between samples.
+// thrashTracker carries the previous counters and their source between
+// samples. Host counters are cumulative since boot and unit counters since
+// the cgroup was created: a tick that flips source must re-baseline, or the
+// forward delta fabricates a huge rate the reset clamp cannot see (only
+// backward moves are clamped).
 type thrashTracker struct {
 	someTotal, fullTotal, swapIn, swapOut, refault, pgscan pressureCounterDelta
+	someSource, fullSource, swapSource                     string
+	someTagged, fullTagged, swapTagged                     bool
 }
 
 // thrashRates is the derived per-second view of one reading. PSI totals are
@@ -461,16 +480,57 @@ type thrashRates struct {
 	pgscanOK            bool
 }
 
-// rates converts one reading into rates, updating the tracker.
+// rearmDelta resets one delta so the next rate call re-baselines at 0.
+func rearmDelta(d *pressureCounterDelta) { *d = pressureCounterDelta{} }
+
+// clampFrac keeps a derived stalled-fraction inside [0,1]; counter quirks
+// must never read as "stalled more than all the time".
+func clampFrac(v float64) float64 {
+	if v < 0 {
+		return 0
+	}
+	if v > 1 {
+		return 1
+	}
+	return v
+}
+
+// rates converts one reading into rates, updating the tracker. A source
+// flip re-baselines that stream and reports 0 for the flip tick.
 func (tr *thrashTracker) rates(rd thrashRead, now time.Time) thrashRates {
 	var r thrashRates
 	if rd.psiSomeOK {
-		r.someFrac, r.someOK = tr.someTotal.rate(rd.psiSomeTotal, now)/1e6, true
+		src := "host"
+		if rd.psiSomeUnit {
+			src = "unit"
+		}
+		if tr.someTagged && src != tr.someSource {
+			rearmDelta(&tr.someTotal)
+		}
+		tr.someSource, tr.someTagged = src, true
+		r.someFrac, r.someOK = clampFrac(tr.someTotal.rate(rd.psiSomeTotal, now)/1e6), true
 	}
 	if rd.psiFullOK {
-		r.fullFrac, r.fullOK = tr.fullTotal.rate(rd.psiFullTotal, now)/1e6, true
+		src := "host"
+		if rd.psiUnit {
+			src = "unit"
+		}
+		if tr.fullTagged && src != tr.fullSource {
+			rearmDelta(&tr.fullTotal)
+		}
+		tr.fullSource, tr.fullTagged = src, true
+		r.fullFrac, r.fullOK = clampFrac(tr.fullTotal.rate(rd.psiFullTotal, now)/1e6), true
 	}
 	if rd.swapOK {
+		src := "host"
+		if rd.swapUnit {
+			src = "unit"
+		}
+		if tr.swapTagged && src != tr.swapSource {
+			rearmDelta(&tr.swapIn)
+			rearmDelta(&tr.swapOut)
+		}
+		tr.swapSource, tr.swapTagged = src, true
 		r.swapInPS = tr.swapIn.rate(rd.swapIn, now)
 		r.swapOutPS = tr.swapOut.rate(rd.swapOut, now)
 		r.swapOK = true
@@ -527,11 +587,11 @@ func (s thrashStateT) String() string {
 type thrashMachine struct {
 	state          thrashStateT
 	stateSince     time.Time
+	thrashSince    time.Time // when the current thrash episode began (survives the move to critical)
 	worseSince     time.Time
 	severeSince    time.Time
 	calmSince      time.Time
 	lastAttempt    time.Time // throttles escalation attempts
-	episode        int       // increments each entry into thrashing
 	heapWarned     bool
 	swapCritWarned bool
 }
@@ -555,6 +615,10 @@ func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thras
 	heapCorrAvail := rd.heapOK && rd.unitSwapOK
 	heapCorr := heapCorrAvail && rd.heapFrac >= 1.0 && rd.unitSwapMiB > 0
 	corr := swapCorr || refCorr || pgCorr || heapCorr
+	// corrAvail includes readable-but-quiet level signals on purpose:
+	// availability of a corroborating source is what decides the stricter
+	// PSI-only bar, not its current activity — a readable box whose own
+	// signals would expose a real storm must not take the 20% path.
 	corrAvail := rt.swapOK || rt.refaultOK || rt.pgscanOK || heapCorrAvail
 
 	mild := rt.fullOK && rt.fullFrac >= thrashMildFrac
@@ -627,7 +691,7 @@ func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thras
 		m.state = target
 		m.stateSince = now
 		if target == thrashThrashing {
-			m.episode++
+			m.thrashSince = now
 		}
 	}
 	return thrashStep{prev: prev, cur: m.state, changed: prev != m.state, condDur: condDur}
@@ -672,9 +736,13 @@ func fmtSwapMBs(pps float64) string {
 }
 
 func thrashOnsetMsg(condDur time.Duration, rt thrashRates, rd thrashRead, share float64, shareOK bool) string {
-	stallTxt := "stalled on memory"
+	stallTxt := "memory was stalling"
 	if stall, ok := thrashStallFrac(rt); ok {
-		stallTxt = fmt.Sprintf("stalled on memory ~%.0f%% of the time", stall*100)
+		stallTxt = fmt.Sprintf("memory was stalled ~%.0f%% of the time", stall*100)
+	}
+	swapTxt := "swap activity is unreadable right now"
+	if rt.swapOK {
+		swapTxt = fmt.Sprintf("it is swapping ~%s", fmtSwapMBs(rt.swapInPS+rt.swapOutPS))
 	}
 	held := "an unmeasurable amount of the swap"
 	switch {
@@ -687,8 +755,8 @@ func thrashOnsetMsg(condDur time.Duration, rt thrashRates, rd thrashRead, share 
 	if rd.heapOK {
 		heapTxt = fmt.Sprintf(" Heap is %.1fx its limit.", rd.heapFrac)
 	}
-	return fmt.Sprintf("🚨 [memory] The box is out of RAM and thrashing swap — for the last %s it was %s, it is swapping ~%s, and %s belongs to this provider.%s",
-		roundDur(condDur), stallTxt, fmtSwapMBs(rt.swapInPS+rt.swapOutPS), held, heapTxt)
+	return fmt.Sprintf("🚨 [memory] The box is out of RAM and thrashing swap — for the last %s %s, %s, and %s belongs to this provider.%s",
+		roundDur(condDur), stallTxt, swapTxt, held, heapTxt)
 }
 
 func thrashOtherMsg(rd thrashRead, share float64) string {
@@ -701,8 +769,12 @@ func thrashUnknownMsg() string {
 }
 
 func thrashEarlyWarnMsg(rd thrashRead) string {
-	return fmt.Sprintf("⚠️ [memory] The program's heap is %.1fx its size limit (%s of %s) and the machine is swapping. If the heap keeps growing the box will start thrashing. %s RAM free.",
-		rd.heapFrac, fmtMiBHuman(rd.heapUsedMiB), fmtMiBHuman(rd.heapLimitMiB), fmtMiBHuman(rd.ramAvailMiB))
+	ramTxt := "RAM free: unknown"
+	if rd.ramAvailOK {
+		ramTxt = fmt.Sprintf("%s RAM free", fmtMiBHuman(rd.ramAvailMiB))
+	}
+	return fmt.Sprintf("⚠️ [memory] The program's heap is %.1fx its size limit (%s of %s) and the machine is swapping. If the heap keeps growing the box will start thrashing. %s.",
+		rd.heapFrac, fmtMiBHuman(rd.heapUsedMiB), fmtMiBHuman(rd.heapLimitMiB), ramTxt)
 }
 
 func thrashActionMsg(restartN, maxN, running, cap int) string {
@@ -715,7 +787,11 @@ func thrashActionMsg(restartN, maxN, running, cap int) string {
 }
 
 func thrashClearedMsg(prefix string, rd thrashRead, rt thrashRates) string {
-	parts := []string{fmt.Sprintf("%s RAM free", fmtMiBHuman(rd.ramAvailMiB))}
+	freeTxt := "RAM free: unknown"
+	if rd.ramAvailOK {
+		freeTxt = fmt.Sprintf("%s RAM free", fmtMiBHuman(rd.ramAvailMiB))
+	}
+	parts := []string{freeTxt}
 	if rd.hostSwapOK {
 		parts = append(parts, fmt.Sprintf("%s swap in use", fmtMiBHuman(rd.hostSwapUsedMiB)))
 	}
@@ -890,13 +966,6 @@ func thrashSwapIOForStatus() (float64, bool) {
 	return 0, false
 }
 
-func thrashSummaryForStatus() string {
-	if s := globalThrashSnap.Load(); s != nil {
-		return s.Summary
-	}
-	return ""
-}
-
 // pressureSummaryOf renders the operator-facing summary for the
 // pressure_status file: one sentence, human units, no decoding required
 // (thrash states reuse the thrash snapshot's summary, which is written by
@@ -960,51 +1029,56 @@ func pressureSummaryOf(score float64, comps map[string]float64) string {
 // thrashEscalation is the decision of one escalation attempt.
 type thrashEscalation struct {
 	Action   string // "restart" | "alert"
+	Code     string // stable reason code for alert dedupe (reasons embed changing durations)
 	Msg      string
-	Reason   string // denial reason for alerts
+	Reason   string // human denial reason for alerts
 	Cap      int
 	Running  int
 	Restarts int // restarts in the last 24h after this one
 }
 
-func thrashEscalationAlert(reason string) thrashEscalation {
-	return thrashEscalation{Action: "alert", Reason: reason}
+func thrashEscalationAlert(code, reason string) thrashEscalation {
+	return thrashEscalation{Action: "alert", Code: code, Reason: reason}
 }
 
 // thrashEscalate runs the full gate stack once. Pure aside from the cap file
 // write, the ledger entry and env reads; the caller owns the log + exit.
 func thrashEscalate(now time.Time, rt thrashRates, rd thrashRead, selfHeal bool, attr string, share float64, shareOK bool) thrashEscalation {
 	if !resolveSelfHealEnabled(selfHeal) {
-		return thrashEscalationAlert("self-heal is off (URNETWORK_SELF_HEAL / proxy_self_heal), so no automatic restart runs; the operator must act")
+		return thrashEscalationAlert("self-heal-off", "self-heal is off (URNETWORK_SELF_HEAL / proxy_self_heal), so no automatic restart runs; the operator must act")
 	}
-	if os.Getenv(EnvHotSwap) == "1" {
-		return thrashEscalationAlert("a hot-swap is in flight; not restarting")
+	if thrashHotSwapBusy() {
+		return thrashEscalationAlert("hotswap", "a hot-swap is draining or mid-handoff in this process; not restarting")
 	}
 	switch attr {
 	case "other":
-		return thrashEscalationAlert(fmt.Sprintf("the swap belongs to another process: this provider holds %s of %s swapped (%.0f%%); never restarting someone else's thrash",
+		return thrashEscalationAlert("attributed-other", fmt.Sprintf("the swap belongs to another process: this provider holds %s of %s swapped (%.0f%%); never restarting someone else's thrash",
 			fmtMiBHuman(rd.unitSwapMiB), fmtMiBHuman(rd.hostSwapUsedMiB), share*100))
 	case "unknown":
-		return thrashEscalationAlert("the swap cannot be attributed to this provider and no per-unit PSI is readable; not restarting blind")
+		return thrashEscalationAlert("attributed-unknown", "the swap cannot be attributed to this provider and no per-unit PSI is readable; not restarting blind")
 	}
 	if os.Getenv("INVOCATION_ID") == "" && os.Getenv("NOTIFY_SOCKET") == "" {
-		return thrashEscalationAlert("not running under a service supervisor (systemd), so a self-exit would not be restarted; not restarting")
+		return thrashEscalationAlert("no-supervisor", "not running under a service supervisor (systemd), so a self-exit would not be restarted; not restarting")
 	}
 	st := readThrashCapState()
-	allowed, reason, n := thrashCapEscalationAllowed(st, now)
+	allowed, code, reason, n := thrashCapEscalationAllowed(st, now)
 	if !allowed {
-		return thrashEscalationAlert(reason)
+		return thrashEscalationAlert(code, reason)
 	}
 	running := runningProxyCountForPressure()
 	cap := thrashCapForNextStart(running)
-	if cap > 0 {
-		if err := recordThrashEscalation(cap, now); err != nil {
-			tlog("[proxy][thrash] warn: could not persist thrash cap: %v\n", err)
-		}
+	// Always persist the escalation: even with no cap (nothing running), the
+	// restarts ring is the anti-loop's accounting and must survive.
+	if err := recordThrashEscalation(cap, now); err != nil {
+		tlog("[proxy][thrash] warn: could not persist thrash cap: %v\n", err)
 	}
 	stall := 0.0
 	if v, ok := thrashStallFrac(rt); ok {
 		stall = v
+	}
+	swapClause := "swap activity unreadable"
+	if rt.swapOK {
+		swapClause = "swapping " + fmtSwapMBs(rt.swapInPS+rt.swapOutPS)
 	}
 	ledgerRecord(ledgerEntry{
 		Actor:  "thrash",
@@ -1012,15 +1086,35 @@ func thrashEscalate(now time.Time, rt thrashRates, rd thrashRead, selfHeal bool,
 		From:   running,
 		To:     cap,
 		Mode:   "on",
-		Reason: fmt.Sprintf("swap thrash: %.0f%% of wall time stalled on memory, swapping %s", stall*100, fmtSwapMBs(rt.swapInPS+rt.swapOutPS)),
+		Reason: fmt.Sprintf("swap thrash: %.0f%% of wall time stalled on memory, %s", stall*100, swapClause),
 	})
 	return thrashEscalation{
 		Action:   "restart",
+		Code:     "restart",
 		Msg:      thrashActionMsg(n+1, thrashMaxRestarts24h, running, cap),
 		Cap:      cap,
 		Running:  running,
 		Restarts: n + 1,
 	}
+}
+
+// thrashHotSwapBusy reports whether a hot-swap is currently draining or
+// mid-handoff in THIS process. Env-based detection is wrong: the candidate
+// child inherits EnvHotSwap for its whole life (nothing unsets it after the
+// handoff), so an env gate would silently disable the restart rung forever on
+// every updated box — while the draining parent, the one that must NOT exit,
+// never has it set at all.
+func thrashHotSwapBusy() bool {
+	if isHotSwapDraining.Load() {
+		return true
+	}
+	// The hot-swap trigger holds this lock for the whole handoff; a free lock
+	// means nothing is in flight.
+	if hotSwapLock.TryLock() {
+		hotSwapLock.Unlock()
+		return false
+	}
+	return true
 }
 
 // ---------------------------------------------------------------------------
@@ -1075,9 +1169,21 @@ func thrashDetailLine(rt thrashRates, rd thrashRead, attr string) string {
 	if rt.swapOK {
 		swap = fmtSwapMBs(rt.swapInPS + rt.swapOutPS)
 	}
-	return fmt.Sprintf("psi-mem full %s, swap %s, heap %.2f, ram %s, size-attr %s",
-		stall, swap, rd.heapFrac, fmtMiBHuman(rd.ramAvailMiB), attr)
+	heapTxt := "?"
+	if rd.heapOK {
+		heapTxt = fmt.Sprintf("%.2f", rd.heapFrac)
+	}
+	ramTxt := "?"
+	if rd.ramAvailOK {
+		ramTxt = fmtMiBHuman(rd.ramAvailMiB)
+	}
+	return fmt.Sprintf("psi-mem full %s, swap %s, heap %s, ram %s, size-attr %s",
+		stall, swap, heapTxt, ramTxt, attr)
 }
+
+// thrashReadFn is the sensing seam: tests drive fabricated readings through
+// the real loop.
+var thrashReadFn = readThrashRead
 
 // runThrashWatchdog is the supervised loop. Sensing + status always run;
 // escalation is gated (self-heal, supervision, attribution, cap, anti-loop).
@@ -1086,7 +1192,7 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 	tr := &thrashTracker{}
 	m := &thrashMachine{state: thrashCalm, stateSince: startedAt}
 
-	first := readThrashRead()
+	first := thrashReadFn()
 	active, missing := thrashSensorLine(first)
 	switch {
 	case len(active) == 0:
@@ -1108,6 +1214,7 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 	clearedThisLife := false
 
 	lastAction := ""
+	lastActionCode := ""
 	if priorEscalation {
 		lastAction = "restart (previous process)"
 	}
@@ -1127,7 +1234,7 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 		case <-ticker.C:
 		}
 		now := thrashNowFn()
-		rd := readThrashRead()
+		rd := thrashReadFn()
 		rt := tr.rates(rd, now)
 		st := m.step(now, rt, rd)
 		attr, share, shareOK := thrashAttribution(rd)
@@ -1150,8 +1257,11 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 				}
 			case st.cur == thrashCritical && st.prev == thrashThrashing:
 				critLog("[thrash] still thrashing %s after onset (%s); restart capability: %v\n",
-					roundDur(now.Sub(m.stateSince)), thrashDetailLine(rt, rd, attr), thrashRestartable())
-			case st.cur == thrashCalm && st.prev >= thrashThrashing:
+					roundDur(now.Sub(m.thrashSince)), thrashDetailLine(rt, rd, attr), thrashRestartable())
+			case st.cur < thrashThrashing && st.prev >= thrashThrashing:
+				// The one-step relax never lands thrashing->calm directly, so
+				// the clearance sentence belongs to LEAVING the thrashing
+				// state, whichever calmer state it steps down to.
 				importantLogf("%s\n", thrashClearedMsg("Thrash cleared", rd, rt))
 				clearedThisLife = true
 			case st.cur < thrashThrashing && st.prev >= thrashUnderPressure:
@@ -1199,9 +1309,12 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 				thrashExitFn(thrashExitCode)
 				return // a test seam replaced thrashExitFn: stop the loop cleanly
 			case "alert":
-				if esc.Reason != lastAction {
+				// Dedupe by reason CODE: re-arm reasons embed changing
+				// durations, so comparing the text re-alerts every retry.
+				if esc.Code != lastActionCode {
 					critLog("[thrash] detected but NOT restarting: %s\n", esc.Reason)
 					ledgerRecord(ledgerEntry{Actor: "thrash", Action: "alert", Reason: esc.Reason})
+					lastActionCode = esc.Code
 					lastAction = esc.Reason
 				}
 			}
