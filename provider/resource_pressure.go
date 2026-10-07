@@ -744,23 +744,51 @@ func effectiveCores() float64 {
 	return cores
 }
 
-// cgroupCPUQuotaCores reads cgroup v2 cpu.max ("quota period"; quota may be
-// "max"). ok=false when unreadable or unlimited.
+// cgroupCPUQuotaCores reads the effective cgroup v2 CPU quota in cores: the
+// TIGHTEST cpu.max among this process's own cgroup and every ancestor up to
+// /sys/fs/cgroup, because each level constrains its subtree (a systemd unit
+// lives in a slice; the quota may sit there, not at the unit's own cgroup or
+// the mount root where the old single-file read looked). ok=false when
+// nothing in the chain is quota'd.
 func cgroupCPUQuotaCores() (float64, bool) {
-	b, err := os.ReadFile("/sys/fs/cgroup/cpu.max")
-	if err != nil {
-		return 0, false
+	best := 0.0
+	check := func(dir string) {
+		b, err := os.ReadFile(filepath.Join(dir, "cpu.max"))
+		if err != nil {
+			return
+		}
+		f := strings.Fields(string(b))
+		if len(f) != 2 || f[0] == "max" {
+			return
+		}
+		quota, err1 := strconv.ParseFloat(f[0], 64)
+		period, err2 := strconv.ParseFloat(f[1], 64)
+		if err1 != nil || err2 != nil || period <= 0 || quota <= 0 {
+			return
+		}
+		if cores := quota / period; best == 0 || cores < best {
+			best = cores
+		}
 	}
-	f := strings.Fields(string(b))
-	if len(f) != 2 || f[0] == "max" {
-		return 0, false
+	dir := cgroupV2SelfDir()
+	if dir == "" {
+		dir = "/sys/fs/cgroup"
 	}
-	quota, err1 := strconv.ParseFloat(f[0], 64)
-	period, err2 := strconv.ParseFloat(f[1], 64)
-	if err1 != nil || err2 != nil || period <= 0 || quota <= 0 {
-		return 0, false
+	for strings.HasPrefix(dir, "/sys/fs/cgroup") {
+		check(dir)
+		if dir == "/sys/fs/cgroup" {
+			break
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
 	}
-	return quota / period, true
+	if best > 0 {
+		return best, true
+	}
+	return 0, false
 }
 
 // cpuVetoSignal is the normalized CPU PSI the governor's CPU veto reads, the

@@ -682,7 +682,9 @@ func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thras
 	}
 
 	// A thrash that persists is no longer something the box works through.
-	if target == thrashThrashing && m.state == thrashThrashing &&
+	// thrashCond is required: a box that calmed at minute 14 is inside the
+	// relax window, not unresolved, and must not be promoted to critical.
+	if thrashCond && target == thrashThrashing && m.state == thrashThrashing &&
 		now.Sub(m.stateSince) >= thrashCriticalAfter {
 		target = thrashCritical
 	}
@@ -1204,6 +1206,17 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 		}
 		tlog("%s\n", line)
 	}
+
+	// Prime the rate tracker with the startup reading and publish an initial
+	// snapshot, so the first tick (one interval from now) already computes
+	// real rates instead of burning another interval on a fresh baseline, and
+	// the status surface is never empty for the first window.
+	rt0 := tr.rates(first, startedAt)
+	attr0, share0, share0OK := thrashAttribution(first)
+	initSnap := buildThrashSnapshot(m, first, rt0, attr0, share0, share0OK,
+		len(thrashRestartsWithin(readThrashCapState(), startedAt)), "", startedAt)
+	globalThrashSnap.Store(initSnap)
+	writeThrashStatusFile(initSnap)
 
 	// A previous process left a cap behind: watch for the restart's outcome.
 	priorEscalation := false

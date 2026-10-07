@@ -582,6 +582,11 @@ func TestThrashEscalateGates(t *testing.T) {
 	if got.Action != "restart" || got.Restarts != 2 {
 		t.Fatalf("restart: got (%s, %d)", got.Action, got.Restarts)
 	}
+	// The computed cap is 0 (nothing running), so the standing 300 from the
+	// earlier escalation is preserved rather than erased.
+	if cap, ok := activeThrashCap(now.Add(31 * time.Minute)); !ok || cap != 300 {
+		t.Fatalf("standing cap must be preserved when the new cap is 0: got (%d, %v)", cap, ok)
+	}
 	b, err := os.ReadFile(filepath.Join(home, ".urnetwork", "autopilot.jsonl"))
 	if err != nil || !strings.Contains(string(b), `"actor":"thrash"`) {
 		t.Fatalf("ledger must carry the cycle: err=%v content=%s", err, string(b))
@@ -748,5 +753,37 @@ func TestThrashMessagesUnavailableNoFakeZeros(t *testing.T) {
 	warn := thrashEarlyWarnMsg(rd)
 	if !strings.Contains(warn, "unknown") || strings.Contains(warn, "0 MB RAM") {
 		t.Fatalf("early warn must not print fake zeros: %s", warn)
+	}
+}
+
+func TestThrashMachineCalmRecoveryIsNotCritical(t *testing.T) {
+	m := &thrashMachine{state: thrashCalm, stateSince: thrashT0}
+	severe := thrashRates{fullFrac: 0.30, fullOK: true}
+	m.step(thrashT0, severe, thrashRead{})
+	thrashAt := thrashT0.Add(91 * time.Second)
+	m.step(thrashAt, severe, thrashRead{})
+	// The thrash ends at minute 14…
+	calm := thrashRates{}
+	if st := m.step(thrashAt.Add(14*time.Minute), calm, thrashRead{}); st.cur != thrashThrashing {
+		t.Fatalf("relax window: want thrashing, got %v", st.cur)
+	}
+	// …so the 15-minute mark must NOT promote to critical (it is recovering).
+	if st := m.step(thrashAt.Add(15*time.Minute+time.Second), calm, thrashRead{}); st.cur != thrashThrashing {
+		t.Fatalf("calm recovery must not promote to critical: got %v", st.cur)
+	}
+}
+
+func TestPressureSummaryOf(t *testing.T) {
+	f := 0.51
+	globalThrashSnap.Store(&thrashSnapshot{State: "thrashing", PSIFull: &f, Summary: "memory thrash: x"})
+	if got := pressureSummaryOf(0.9, map[string]float64{"heap": 0.9}); !strings.Contains(got, "memory pressure 0.90 — memory thrash: x") {
+		t.Fatalf("thrashing summary must reuse the thrash sentence: %q", got)
+	}
+	globalThrashSnap.Store(nil)
+	if got := pressureSummaryOf(0.2, map[string]float64{"heap": 0.2}); !strings.HasPrefix(got, "system calm") {
+		t.Fatalf("low pressure must read calm: %q", got)
+	}
+	if got := pressureSummaryOf(0.8, map[string]float64{"heap": 0.8}); !strings.Contains(got, "heap is over its soft limit") {
+		t.Fatalf("heap-driven pressure must name the driver: %q", got)
 	}
 }

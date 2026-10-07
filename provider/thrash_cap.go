@@ -159,8 +159,17 @@ func recordThrashEscalation(cap int, now time.Time) error {
 	}
 	prev := readThrashCapState()
 	recent := thrashRestartsWithin(prev, now)
+	// The restart is ALWAYS appended: the ring is the anti-loop's accounting,
+	// and skipping it when the computed cap was 0 (nothing running) once
+	// allowed unthrottled restart loops. A cap of 0 keeps any cap the previous
+	// escalation left standing instead of erasing it — the next start still
+	// benefits from fitting better.
+	writeCap := cap
+	if writeCap <= 0 && prev.Cap > 0 {
+		writeCap = prev.Cap
+	}
 	st := thrashCapState{
-		Cap:         cap,
+		Cap:         writeCap,
 		SetUnix:     now.Unix(),
 		ExpiresUnix: now.Add(thrashCapHold).Unix(),
 		Restarts:    append(recent, now.Unix()),
