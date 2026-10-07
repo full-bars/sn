@@ -1495,7 +1495,11 @@ func provideLauncherLoop(st *provideState) func() {
 	// changes. See reapplyH3ModeLive.
 	installH3ReapplyLive(func() { reapplyH3ModeLive(st) })
 	reloader.StartWatcher(st.ctx)
-	go connect.HandleError(func() { reloader.RunReloadWatchdog(st.ctx) })
+	go superviseLoop(st.ctx, "reload_watchdog", func() { reloader.RunReloadWatchdog(st.ctx) }, nil)
+	// A hot swap execs in place: the pid survives and the previous image's
+	// proxy.lock would read as held-by-a-live-holder. Clear it before the
+	// first reload so an escalated restart is not blocked by its own lock.
+	cleanStaleSelfProxyLock()
 	reloader.reload()
 	// Apply once now: a control update that landed while the startup loop was
 	// launching identities would not otherwise reconnect the identities it
