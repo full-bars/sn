@@ -89,6 +89,31 @@ func trimFixtureRunning(t *testing.T, running int) (*ProxyReloader, []string, *a
 	return r, addrs, &cancelled
 }
 
+// The reload summary's running count excludes the direct transport, like the
+// trim receipt's: a direct-running node must not read as one proxy above the
+// pool it actually serves. The count is computed once (reloadRunning) and
+// reused by the trim section, so this also pins the shared-source refactor.
+func TestReloadSummaryRunningCountExcludesDirect(t *testing.T) {
+	resetTrimCapSeen()
+	t.Cleanup(resetTrimCapSeen)
+	r, _, _ := trimFixture(t)
+	t.Setenv("DISABLE_DIRECT_IP", "")
+
+	// A direct transport is running (in the cancel map), as after a previous
+	// reload with direct enabled. It is not part of the desired set.
+	r.cancelMapMu.Lock()
+	r.cancelMap[directProxyKey] = func() {}
+	r.cancelMapMu.Unlock()
+
+	out := captureTlog(t, func() { r.reload() })
+	if !strings.Contains(out, "running=3 desired=3") {
+		t.Fatalf("the reload summary must count 3 non-direct running proxies, got:\n%s", out)
+	}
+	if strings.Contains(out, "running=4") {
+		t.Fatalf("the direct transport must not be counted as a running proxy:\n%s", out)
+	}
+}
+
 // A capped startup already logged and applied the cap via startupTrimSelection
 // (main.go). If the reload loop's change-detector is not primed with that same
 // cap, the first reload sees it as new and duplicates both the "received" log
@@ -191,11 +216,14 @@ func TestReload_TrimLogsReceiptAndResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	first := captureTlog(t, func() { r.reload() })
-	if !strings.Contains(first, "[proxy][trim] received: cap=1 (was none); 3 running, 3 desired, applying") {
+	if !strings.Contains(first, "[proxy][trim] received: limiting this provider to 1 running proxies (was none); 3 running now, 3 desired, applying") {
 		t.Fatalf("missing receipt line, got:\n%s", first)
 	}
-	if !strings.Contains(first, "[proxy][trim] applied: cap=1: shed 2 worst-graded running") {
+	if !strings.Contains(first, "[proxy][trim] applied: the running cap is now 1 — removed 2 lowest-graded running proxies") {
 		t.Fatalf("missing result line, got:\n%s", first)
+	}
+	if !strings.Contains(first, "(cap=1 shed=2 held=") {
+		t.Fatalf("applied line must keep the machine tail, got:\n%s", first)
 	}
 
 	second := captureTlog(t, func() { r.reload() })
