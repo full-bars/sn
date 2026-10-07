@@ -984,7 +984,9 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 
 		writePressureStatus(smoothed, comps, &gcState)
 		if r := pressureRegime(smoothed); r != lastRegime {
-			pressureLog("[proxy][pressure] %.2f (%s)\n", smoothed, formatComponents(comps))
+			// Plain words first, machine counters in the trailing paren
+			// (operator-log readability contract).
+			pressureLog("[proxy][pressure] %s (%s)\n", pressureSummaryOf(smoothed, comps), formatComponents(comps))
 			lastRegime = r
 		}
 	}
@@ -1499,7 +1501,11 @@ func runPoolController(ctx context.Context, configuredMax int, selfHealEnabled b
 		}
 		release()
 		if next != target {
-			pressureLog("[proxy][pressure] pool target %d -> %d (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
+			if next > target {
+				pressureLog("[proxy][pressure] Pool size target raised %d -> %d: the box looks healthy, growing back toward the allowed maximum. (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
+			} else {
+				pressureLog("[proxy][pressure] Pool size target lowered %d -> %d: the box is under pressure, shrinking to fit. (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
+			}
 		}
 
 		if pressure > aimdShrinkAbove {

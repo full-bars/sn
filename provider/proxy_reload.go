@@ -1255,7 +1255,7 @@ func (r *ProxyReloader) reload() {
 			added = kept
 		}
 		if shedCount > 0 || dropped > 0 || trimChanged {
-			logImportant("[proxy][trim] applied: cap=%d: shed %d worst-graded running, held %d additions (pool ~%d)", trimCap, shedCount, dropped, runningNonDirect-shedCount)
+			logImportant("[proxy][trim] applied: the running cap is now %d — removed %d lowest-graded running proxies, holding %d additions so the pool stays under the cap (pool ~%d)", trimCap, shedCount, dropped, runningNonDirect-shedCount)
 		}
 		if trimChanged {
 			pendingCrit = append(pendingCrit, func() {

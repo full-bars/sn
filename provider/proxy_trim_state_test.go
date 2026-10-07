@@ -194,7 +194,7 @@ func TestReload_TrimLogsReceiptAndResult(t *testing.T) {
 	if !strings.Contains(first, "[proxy][trim] received: cap=1 (was none); 3 running, 3 desired, applying") {
 		t.Fatalf("missing receipt line, got:\n%s", first)
 	}
-	if !strings.Contains(first, "[proxy][trim] applied: cap=1: shed 2 worst-graded running") {
+	if !strings.Contains(first, "[proxy][trim] applied: the running cap is now 1 — removed 2 lowest-graded running proxies") {
 		t.Fatalf("missing result line, got:\n%s", first)
 	}
 
