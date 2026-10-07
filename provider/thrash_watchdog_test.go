@@ -787,7 +787,7 @@ func TestPressureSummaryOf(t *testing.T) {
 	if got := pressureSummaryOf(0.2, map[string]float64{"heap": 0.2}); !strings.HasPrefix(got, "system calm") {
 		t.Fatalf("low pressure must read calm: %q", got)
 	}
-	if got := pressureSummaryOf(0.8, map[string]float64{"heap": 0.8}); !strings.Contains(got, "heap is over its soft limit") {
+	if got := pressureSummaryOf(0.8, map[string]float64{"heap": 0.8}); !strings.Contains(got, "close to its soft limit") {
 		t.Fatalf("heap-driven pressure must name the driver: %q", got)
 	}
 }

@@ -715,10 +715,30 @@ func gcGovernor(heapFrac float64, hostAvail int64, psiCPU float64, canRelease bo
 // so an operator can always tell why GOGC moved (the 10s subtick and the
 // self-heal-off tick used to change it silently).
 func logGCGovernorChange(prevGOGC int, state *gcGovernorState) {
-	if state.currentGOGC != prevGOGC {
-		tlog("[proxy][pressure] gcGovernor %s (heap=%.2f go=%d)\n",
-			state.lastTightenAction, state.lastHeapFrac, state.currentGOGC)
+	if state.currentGOGC == prevGOGC {
+		return
 	}
+	if state.currentGOGC < prevGOGC {
+		// Tightened (a lower GOGC collects harder).
+		what := "tightened"
+		switch state.gcStateName {
+		case "hard":
+			what = "tightened hard"
+		case "critical":
+			what = "tightened as far as it goes (and handed free memory back to the OS)"
+		}
+		tlog("[proxy][pressure] Memory governor: %s garbage collection to keep the heap in check (heap at %.0f%% of its soft limit; collecting at %d%% growth, was %d%%) — it relaxes on its own once things calm down. (gcGovernor %s heap=%.2f go=%d)\n",
+			what, state.lastHeapFrac*100, state.currentGOGC, prevGOGC,
+			state.lastTightenAction, state.lastHeapFrac, state.currentGOGC)
+		return
+	}
+	what := "eased to a gentler setting"
+	if state.gcStateName == "normal" {
+		what = "back to normal"
+	}
+	tlog("[proxy][pressure] Memory governor: memory has calmed down, so garbage collection is %s (heap at %.0f%% of its soft limit; collecting at %d%% growth, was %d%%). (gcGovernor %s heap=%.2f go=%d)\n",
+		what, state.lastHeapFrac*100, state.currentGOGC, prevGOGC,
+		state.lastTightenAction, state.lastHeapFrac, state.currentGOGC)
 }
 
 // cpuPressureComponent is the ONE CPU-PSI ramp, shared by computePressure and
@@ -985,8 +1005,12 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 		writePressureStatus(smoothed, comps, &gcState)
 		if r := pressureRegime(smoothed); r != lastRegime {
 			// Plain words first, machine counters in the trailing paren
-			// (operator-log readability contract).
-			pressureLog("[proxy][pressure] %s (%s)\n", pressureSummaryOf(smoothed, comps), formatComponents(comps))
+			// (operator-log readability contract); never an empty "()".
+			if compsTxt := formatComponents(comps); compsTxt != "" {
+				pressureLog("[proxy][pressure] %s (%s)\n", pressureSummaryOf(smoothed, comps), compsTxt)
+			} else {
+				pressureLog("[proxy][pressure] %s\n", pressureSummaryOf(smoothed, comps))
+			}
 			lastRegime = r
 		}
 	}
@@ -1501,10 +1525,18 @@ func runPoolController(ctx context.Context, configuredMax int, selfHealEnabled b
 		}
 		release()
 		if next != target {
-			if next > target {
-				pressureLog("[proxy][pressure] Pool size target raised %d -> %d: the box looks healthy, growing back toward the allowed maximum. (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
-			} else {
-				pressureLog("[proxy][pressure] Pool size target lowered %d -> %d: the box is under pressure, shrinking to fit. (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
+			// Attribute the move honestly: AIMD pressure steps and cap or
+			// ceiling changes share this path, and blaming the wrong one
+			// sends an operator chasing memory that was never the cause.
+			switch {
+			case next > target && pressure < aimdGrowBelow:
+				pressureLog("[proxy][pressure] Pool size target raised %d -> %d: pressure is low (%.2f), growing toward the allowed maximum. (pressure=%.2f cache=%d)\n", target, next, pressure, pressure, cacheSize)
+			case next > target:
+				pressureLog("[proxy][pressure] Pool size target raised %d -> %d: a cap or ceiling changed. (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
+			case pressure > aimdShrinkAbove:
+				pressureLog("[proxy][pressure] Pool size target lowered %d -> %d: pressure has been high (%.2f), shrinking to fit. (pressure=%.2f cache=%d)\n", target, next, pressure, pressure, cacheSize)
+			default:
+				pressureLog("[proxy][pressure] Pool size target lowered %d -> %d: a cap or ceiling lowered it. (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
 			}
 		}
 

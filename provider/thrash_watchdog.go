@@ -1027,7 +1027,10 @@ func thrashSwapIOForStatus() (float64, bool) {
 // pressureSummaryOf renders the operator-facing summary for the
 // pressure_status file: one sentence, human units, no decoding required
 // (thrash states reuse the thrash snapshot's summary, which is written by
-// the watchdog). The worst component names the driver in words.
+// the watchdog). The worst component names the driver in words. The calm/
+// easing wording is decided from BOTH the smoothed score and the live
+// components: the EWMA lags, so a smoothed-high score with calm components
+// must read "easing", never "calm".
 func pressureSummaryOf(score float64, comps map[string]float64) string {
 	if s := globalThrashSnap.Load(); s != nil && s.Summary != "" &&
 		(s.State == "thrashing" || s.State == "critical") {
@@ -1043,7 +1046,7 @@ func pressureSummaryOf(score float64, comps map[string]float64) string {
 	var facts []string
 	if snap != nil {
 		if snap.HeapFrac != nil {
-			facts = append(facts, fmt.Sprintf("heap %.1fx its soft limit", *snap.HeapFrac))
+			facts = append(facts, fmt.Sprintf("heap at %.0f%% of its soft limit", *snap.HeapFrac*100))
 		}
 		if snap.RAMAvailMiB != nil {
 			facts = append(facts, fmt.Sprintf("%s RAM free", fmtMiBHuman(*snap.RAMAvailMiB)))
@@ -1054,20 +1057,26 @@ func pressureSummaryOf(score float64, comps map[string]float64) string {
 	}
 	joined := strings.Join(facts, "; ")
 	if bestV < 0.5 {
-		if joined == "" {
+		switch {
+		case score < 0.5 && joined == "":
 			return fmt.Sprintf("system calm (pressure %.2f)", score)
+		case score < 0.5:
+			return fmt.Sprintf("system calm (pressure %.2f); %s", score, joined)
+		case joined == "":
+			return fmt.Sprintf("pressure is easing (%.2f)", score)
+		default:
+			return fmt.Sprintf("pressure is easing (%.2f); %s", score, joined)
 		}
-		return fmt.Sprintf("system calm (pressure %.2f); %s", score, joined)
 	}
 	driver, prefix := map[string]string{
-		"heap":    "the program's heap is over its soft limit",
+		"heap":    "the program's heap is close to its soft limit",
 		"mem":     "the machine is low on free RAM",
 		"psi_mem": "tasks are stalling on memory",
 		"psi_cpu": "tasks are stalling on CPU",
 		"psi_io":  "tasks are stalling on disk IO",
 		"goro":    "goroutine growth is high",
 		"load":    "system load is high",
-		"fd":      "file descriptors are running out",
+		"fd":      "file descriptors are getting scarce",
 	}[best], "system pressure"
 	if driver == "" {
 		driver, prefix = "pressure is elevated", "system pressure"

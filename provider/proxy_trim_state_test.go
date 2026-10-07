@@ -191,11 +191,14 @@ func TestReload_TrimLogsReceiptAndResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	first := captureTlog(t, func() { r.reload() })
-	if !strings.Contains(first, "[proxy][trim] received: cap=1 (was none); 3 running, 3 desired, applying") {
+	if !strings.Contains(first, "[proxy][trim] received: limiting this provider to 1 running proxies (was none); 3 running now, 3 desired, applying") {
 		t.Fatalf("missing receipt line, got:\n%s", first)
 	}
 	if !strings.Contains(first, "[proxy][trim] applied: the running cap is now 1 — removed 2 lowest-graded running proxies") {
 		t.Fatalf("missing result line, got:\n%s", first)
+	}
+	if !strings.Contains(first, "(cap=1 shed=2 held=") {
+		t.Fatalf("applied line must keep the machine tail, got:\n%s", first)
 	}
 
 	second := captureTlog(t, func() { r.reload() })

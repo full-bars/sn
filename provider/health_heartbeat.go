@@ -48,6 +48,10 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 	// Uses the shared constant to stay in sync with connectingStaleAfter (M7 fix).
 	const deadConfirmDelay = StagingWindowDuration
 
+	// healthVerdictAttentionDownPct: how much of the pool may be down before
+	// the plain-sentence health verdict reads "needs attention" (percent).
+	const healthVerdictAttentionDownPct = 10
+
 	// per-proxy byte counts from the previous tick, used to compute rates.
 	prevTick := map[string]trafficBytes{}
 	prevTickTime := time.Now()
@@ -290,6 +294,29 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 		}
 		tlog("[earn] proxies_up=%d serving=%d idle=%d clients=%d\n",
 			report.Up, serving, idle, totalClients)
+
+		// Plain-sentence verdict (readability contract): one line, checked in
+		// severity order. "earning" means traffic RIGHT NOW (serving > 0),
+		// not billable-today, so a box that is quiet after the midnight reset
+		// reads idle rather than unhealthy.
+		totalProxies := report.Up + down
+		switch {
+		case uptime < deadConfirmDelay:
+			tlog("❤️ [health] Verdict: starting up — %d of %d proxies up so far; failures are not judged until the first %s have passed.\n",
+				report.Up, totalProxies, roundDur(deadConfirmDelay))
+		case report.Up == 0:
+			tlog("❤️ [health] Verdict: down — none of the %d proxies is up; nothing can earn.\n", totalProxies)
+		case down == 0 && serving > 0:
+			tlog("❤️ [health] Verdict: healthy — all %d proxies up and earning, nothing needs attention.\n", totalProxies)
+		case down == 0:
+			tlog("❤️ [health] Verdict: healthy but idle — all %d proxies up, no customer traffic right now.\n", totalProxies)
+		case down*100 >= totalProxies*healthVerdictAttentionDownPct:
+			tlog("❤️ [health] Verdict: needs attention — only %d of %d proxies up, %d down (%d dead, %d failing).\n",
+				report.Up, totalProxies, down, len(report.Dead), len(report.Degraded))
+		default:
+			tlog("❤️ [health] Verdict: mostly healthy — %d of %d proxies up, %d down (%d dead, %d failing); see the lists above.\n",
+				report.Up, totalProxies, down, len(report.Dead), len(report.Degraded))
+		}
 
 		pruneProxyHistoryStores()
 
