@@ -181,7 +181,11 @@ func cleanStaleSelfProxyLock() {
 	if !ok || pid != os.Getpid() {
 		return
 	}
-	if time.Unix(ts, 0).Before(processStart) {
+	// Inclusive bound: a lock written by the previous image in the same
+	// integer second as this process's start must be cleaned too, and at
+	// cleanup time this image cannot yet hold a lock of its own (it runs
+	// before any local consumer).
+	if ts <= processStart.Unix() {
 		// Compare before removing, like the steal path: another holder
 		// could have replaced the file between the read and the remove.
 		if current, err := os.ReadFile(path); err != nil || string(current) != string(b) {
@@ -823,7 +827,12 @@ func (r *ProxyReloader) reload() {
 		if time.Since(slotAcquiredAt) < reloadHardLimit {
 			return false
 		}
-		tlog("🚨 [proxy] reload aborted at %s after %v (hard limit %v): state left as-is, next trigger retries\n",
+		// Mark the trigger un-consumed: an aborted reload did none of its
+		// work, and without this the change would wait for the next trigger
+		// (up to the hourly reconciler) instead of being retried on a later
+		// watch tick.
+		r.reloadSlotSkipped.Store(true)
+		tlog("🚨 [proxy] reload aborted at %s after %v (hard limit %v): state left as-is, retried on a later tick\n",
 			phase, time.Since(slotAcquiredAt).Round(time.Second), reloadHardLimit)
 		return true
 	}
