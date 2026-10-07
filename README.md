@@ -22,8 +22,8 @@ the rest of the Bittensor field is in [`COMPARISON.md`](COMPARISON.md). Terms ar
 the [glossary](#glossary) at the end.
 
 > [!NOTE]
-> This fork (`full-bars/sn`) ships the modernized **H3/QUIC provider** built on the
-> current engine. Install and operate it with the commands below; the subnet
+> This fork (`full-bars/sn`) ships the modern engine version of the 3.23-fix
+> provider. Install and operate it with the commands below; the subnet
 > mechanism documentation that follows still applies to the validator/miner
 > side of the system.
 
