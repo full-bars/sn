@@ -97,9 +97,16 @@ func thrashRestartsWithin(st thrashCapState, now time.Time) []int64 {
 	cutoff := now.Add(-thrashCapHold).Unix()
 	out := make([]int64, 0, len(st.Restarts))
 	for _, ts := range st.Restarts {
-		if ts >= cutoff && ts <= now.Unix() {
-			out = append(out, ts)
+		if ts < cutoff {
+			continue
 		}
+		if ts > now.Unix() {
+			// A backwards clock step left a future-dated entry: keep the
+			// restart (dropping it would silently bypass the cooldown) but
+			// clamp it to now.
+			ts = now.Unix()
+		}
+		out = append(out, ts)
 	}
 	return out
 }
@@ -165,7 +172,9 @@ func recordThrashEscalation(cap int, now time.Time) error {
 	// escalation left standing instead of erasing it — the next start still
 	// benefits from fitting better.
 	writeCap := cap
-	if writeCap <= 0 && prev.Cap > 0 {
+	// Preserve/inherit the previous cap only while it is still UNEXPIRED, and
+	// never loosen: the tighter of the two wins ("tighter automatic wins").
+	if prev.Cap > 0 && prev.ExpiresUnix > now.Unix() && (writeCap <= 0 || prev.Cap < writeCap) {
 		writeCap = prev.Cap
 	}
 	st := thrashCapState{

@@ -109,6 +109,12 @@ var globalPressureNoCPU atomic.Uint64
 func currentPressureNoCPU() float64 { return math.Float64frombits(globalPressureNoCPU.Load()) }
 func setPressureNoCPU(v float64)    { globalPressureNoCPU.Store(math.Float64bits(v)) }
 
+// lastRunningProxyCount mirrors the pressure monitor's last running-proxy
+// sample as an atomic: the thrash watchdog's escalation path needs the count
+// but must not take proxyHealthMu (rule 1 — never block on a lock a wedge can
+// hold).
+var lastRunningProxyCount atomic.Int64
+
 // scoreExcludingCPU is the worst component with psi_cpu removed. The main
 // score's emergency pins are heap/goroutine conditions, and those saturate
 // their own components (the ramps top out exactly where the pins fire), so
@@ -917,6 +923,7 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 			// off by one on a direct-only or direct+proxies node.
 			proxyCount := runningProxyCountForPressure()
 			oomCapUpdatePeak(proxyCount, time.Now())
+			lastRunningProxyCount.Store(int64(proxyCount))
 			// Real free memory, independent of the pressure score and of
 			// self-heal: log when the box gets short and when it recovers.
 			avail := hostAvailMiB() // one reading, used for both the decision and the line
@@ -927,6 +934,7 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 
 		if !resolveSelfHealEnabled(selfHealEnabled) {
 			smoothed = 0
+			smoothedNoCPU = 0
 			setPressure(0)
 			setPressureNoCPU(0)
 			// Reset the connection memory budget to full so connections

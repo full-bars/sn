@@ -35,6 +35,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -70,6 +71,15 @@ var (
 	// thrashExitFn is the process exit used for the supervised restart; a test
 	// seam, production always os.Exit.
 	thrashExitFn = os.Exit
+	// thrashPersistTimeout bounds the anti-loop state write: a blocked flock
+	// must abort the escalation (alert), never stall the loop or exit without
+	// the record.
+	thrashPersistTimeout = 5 * time.Second
+	// thrashLedgerTimeout bounds the audit-ledger write on the escalation path.
+	thrashLedgerTimeout = 2 * time.Second
+	// thrashPriorEscalationWindow: a restarts-ring entry this close to process
+	// start means THIS process is the thrash restart whose outcome to report.
+	thrashPriorEscalationWindow = 30 * time.Minute
 )
 
 const (
@@ -86,6 +96,10 @@ const (
 	thrashSwapCorroboratePS    = 250.0
 	thrashRefaultCorroboratePS = 50.0
 	thrashPgscanCorroboratePS  = 100.0
+
+	// thrashEarlyWarnSwapPS is the swap-activity floor for the heap early
+	// warning: one page/s of ambient host swap must not trigger it.
+	thrashEarlyWarnSwapPS = 25.0
 
 	// thrashAttributionShare is the share of used swap the unit must hold for
 	// the restart to be ours to take.
@@ -121,14 +135,17 @@ type pressureCounterDelta struct {
 }
 
 // rate records cur and returns its non-negative per-second delta against the
-// previous observation.
-func (d *pressureCounterDelta) rate(cur uint64, now time.Time) float64 {
+// previous observation. ok=false on a fresh baseline, a source flip, a
+// backwards counter or a non-advancing clock: the value is UNAVAILABLE, not
+// zero. Reporting a fake zero marked as readable made the state machine read
+// a flapping source as a calm tick and reset its sustain clocks.
+func (d *pressureCounterDelta) rate(cur uint64, now time.Time) (float64, bool) {
 	prev, prevAt, had := d.value, d.at, d.have
 	d.have, d.at, d.value = true, now, cur
 	if !had || !now.After(prevAt) || cur < prev {
-		return 0
+		return 0, false
 	}
-	return float64(cur-prev) / now.Sub(prevAt).Seconds()
+	return float64(cur-prev) / now.Sub(prevAt).Seconds(), true
 }
 
 // parsePSITotals extracts the cumulative total= microseconds for the some
@@ -288,6 +305,10 @@ type thrashRead struct {
 
 	pgscan   uint64
 	pgscanOK bool
+	// pgscanUnit records which source the pgscan counter came from (unit
+	// memory.stat vs host /proc/vmstat): a flip between them must re-baseline
+	// or it fabricates a huge forward delta and a false corroborator.
+	pgscanUnit bool
 
 	unitSwapMiB                       int64
 	unitSwapOK                        bool
@@ -461,8 +482,8 @@ func readThrashRead() thrashRead {
 // backward moves are clamped).
 type thrashTracker struct {
 	someTotal, fullTotal, swapIn, swapOut, refault, pgscan pressureCounterDelta
-	someSource, fullSource, swapSource                     string
-	someTagged, fullTagged, swapTagged                     bool
+	someSource, fullSource, swapSource, pgscanSource       string
+	someTagged, fullTagged, swapTagged, pgscanTagged       bool
 }
 
 // thrashRates is the derived per-second view of one reading. PSI totals are
@@ -496,7 +517,8 @@ func clampFrac(v float64) float64 {
 }
 
 // rates converts one reading into rates, updating the tracker. A source
-// flip re-baselines that stream and reports 0 for the flip tick.
+// flip re-baselines that stream; a baseline/flip tick reports the stream as
+// unavailable (ok=false), never as a readable zero.
 func (tr *thrashTracker) rates(rd thrashRead, now time.Time) thrashRates {
 	var r thrashRates
 	if rd.psiSomeOK {
@@ -508,7 +530,9 @@ func (tr *thrashTracker) rates(rd thrashRead, now time.Time) thrashRates {
 			rearmDelta(&tr.someTotal)
 		}
 		tr.someSource, tr.someTagged = src, true
-		r.someFrac, r.someOK = clampFrac(tr.someTotal.rate(rd.psiSomeTotal, now)/1e6), true
+		if v, ok := tr.someTotal.rate(rd.psiSomeTotal, now); ok {
+			r.someFrac, r.someOK = clampFrac(v/1e6), true
+		}
 	}
 	if rd.psiFullOK {
 		src := "host"
@@ -519,7 +543,9 @@ func (tr *thrashTracker) rates(rd thrashRead, now time.Time) thrashRates {
 			rearmDelta(&tr.fullTotal)
 		}
 		tr.fullSource, tr.fullTagged = src, true
-		r.fullFrac, r.fullOK = clampFrac(tr.fullTotal.rate(rd.psiFullTotal, now)/1e6), true
+		if v, ok := tr.fullTotal.rate(rd.psiFullTotal, now); ok {
+			r.fullFrac, r.fullOK = clampFrac(v/1e6), true
+		}
 	}
 	if rd.swapOK {
 		src := "host"
@@ -531,15 +557,29 @@ func (tr *thrashTracker) rates(rd thrashRead, now time.Time) thrashRates {
 			rearmDelta(&tr.swapOut)
 		}
 		tr.swapSource, tr.swapTagged = src, true
-		r.swapInPS = tr.swapIn.rate(rd.swapIn, now)
-		r.swapOutPS = tr.swapOut.rate(rd.swapOut, now)
-		r.swapOK = true
+		vIn, okIn := tr.swapIn.rate(rd.swapIn, now)
+		vOut, okOut := tr.swapOut.rate(rd.swapOut, now)
+		if okIn && okOut {
+			r.swapInPS, r.swapOutPS, r.swapOK = vIn, vOut, true
+		}
 	}
 	if rd.refaultOK {
-		r.refaultPS, r.refaultOK = tr.refault.rate(rd.refault, now), true
+		if v, ok := tr.refault.rate(rd.refault, now); ok {
+			r.refaultPS, r.refaultOK = v, true
+		}
 	}
 	if rd.pgscanOK {
-		r.pgscanPS, r.pgscanOK = tr.pgscan.rate(rd.pgscan, now), true
+		src := "host"
+		if rd.pgscanUnit {
+			src = "unit"
+		}
+		if tr.pgscanTagged && src != tr.pgscanSource {
+			rearmDelta(&tr.pgscan)
+		}
+		tr.pgscanSource, tr.pgscanTagged = src, true
+		if v, ok := tr.pgscan.rate(rd.pgscan, now); ok {
+			r.pgscanPS, r.pgscanOK = v, true
+		}
 	}
 	return r
 }
@@ -601,12 +641,24 @@ type thrashStep struct {
 	prev, cur thrashStateT
 	changed   bool
 	condDur   time.Duration // how long the worsening condition has held
+	// cond is whether the condition holds on THIS tick. The escalation gate
+	// requires it: the machine stays in thrashing through its relax window,
+	// and a denied earlier attempt would otherwise land on a recovered box.
+	cond bool
 }
 
 // step advances the machine. Pure except for the machine's own bookkeeping:
 // all time comes from now, so tests drive it with a fake clock.
 func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thrashStep {
 	prev := m.state
+
+	if !rt.fullOK {
+		// PSI full unavailable (fresh baseline, source flip, unreadable): a
+		// NEUTRAL tick. Hold every clock and the state — a fake readable zero
+		// here used to read as calm and reset the sustain clocks, defeating
+		// detection exactly when sources flap.
+		return thrashStep{prev: prev, cur: m.state, changed: false, cond: false}
+	}
 
 	severe := rt.fullOK && rt.fullFrac >= thrashSevereFrac
 	swapCorr := rt.swapOK && (rt.swapInPS+rt.swapOutPS) >= thrashSwapCorroboratePS
@@ -682,10 +734,10 @@ func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thras
 	}
 
 	// A thrash that persists is no longer something the box works through.
-	// thrashCond is required: a box that calmed at minute 14 is inside the
-	// relax window, not unresolved, and must not be promoted to critical.
+	// The CURRENT continuous condition must have held for the full window:
+	// neither the relax-window state nor a single resumed tick may promote.
 	if thrashCond && target == thrashThrashing && m.state == thrashThrashing &&
-		now.Sub(m.stateSince) >= thrashCriticalAfter {
+		condDur >= thrashCriticalAfter {
 		target = thrashCritical
 	}
 
@@ -696,7 +748,7 @@ func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thras
 			m.thrashSince = now
 		}
 	}
-	return thrashStep{prev: prev, cur: m.state, changed: prev != m.state, condDur: condDur}
+	return thrashStep{prev: prev, cur: m.state, changed: prev != m.state, condDur: condDur, cond: thrashCond}
 }
 
 // thrashAttribution decides whose memory is being swapped. ours only when
@@ -706,6 +758,10 @@ func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thras
 func thrashAttribution(rd thrashRead) (attr string, share float64, shareOK bool) {
 	if rd.unitSwapOK && rd.hostSwapOK && rd.hostSwapUsedMiB > 0 {
 		s := float64(rd.unitSwapMiB) / float64(rd.hostSwapUsedMiB)
+		if s > 1 {
+			// MiB truncation / accounting skew can read >100%; never print it.
+			s = 1
+		}
 		if s >= thrashAttributionShare {
 			return "unit", s, true
 		}
@@ -737,10 +793,10 @@ func fmtSwapMBs(pps float64) string {
 	return fmt.Sprintf("%.0f MB/s", pps/256.0)
 }
 
-func thrashOnsetMsg(condDur time.Duration, rt thrashRates, rd thrashRead, share float64, shareOK bool) string {
-	stallTxt := "memory was stalling"
+func thrashOnsetMsg(rt thrashRates, rd thrashRead, share float64, shareOK bool) string {
+	stallTxt := "memory is stalling"
 	if stall, ok := thrashStallFrac(rt); ok {
-		stallTxt = fmt.Sprintf("memory was stalled ~%.0f%% of the time", stall*100)
+		stallTxt = fmt.Sprintf("memory is currently stalled ~%.0f%% of the time", stall*100)
 	}
 	swapTxt := "swap activity is unreadable right now"
 	if rt.swapOK {
@@ -757,8 +813,8 @@ func thrashOnsetMsg(condDur time.Duration, rt thrashRates, rd thrashRead, share 
 	if rd.heapOK {
 		heapTxt = fmt.Sprintf(" Heap is %.1fx its limit.", rd.heapFrac)
 	}
-	return fmt.Sprintf("🚨 [memory] The box is out of RAM and thrashing swap — for the last %s %s, %s, and %s belongs to this provider.%s",
-		roundDur(condDur), stallTxt, swapTxt, held, heapTxt)
+	return fmt.Sprintf("🚨 [memory] The box is out of RAM and thrashing swap — %s, %s, and %s belongs to this provider.%s",
+		stallTxt, swapTxt, held, heapTxt)
 }
 
 func thrashOtherMsg(rd thrashRead, share float64) string {
@@ -1067,12 +1123,23 @@ func thrashEscalate(now time.Time, rt thrashRates, rd thrashRead, selfHeal bool,
 	if !allowed {
 		return thrashEscalationAlert(code, reason)
 	}
-	running := runningProxyCountForPressure()
+	running := int(lastRunningProxyCount.Load())
 	cap := thrashCapForNextStart(running)
-	// Always persist the escalation: even with no cap (nothing running), the
-	// restarts ring is the anti-loop's accounting and must survive.
-	if err := recordThrashEscalation(cap, now); err != nil {
-		tlog("[proxy][thrash] warn: could not persist thrash cap: %v\n", err)
+	// The restart must not happen unless its anti-loop record is durable:
+	// with a read-only ~/.urnetwork every fresh process would see an empty
+	// ring and restart again with no spacing and no daily ceiling. The write
+	// runs in a goroutine with a bounded wait so a blocked flock cannot stall
+	// the escalation path (rule 1: the watchdog never blocks on a lock).
+	var persistErr error
+	persistDone := make(chan error, 1)
+	go func() { persistDone <- recordThrashEscalation(cap, now) }()
+	select {
+	case persistErr = <-persistDone:
+	case <-time.After(thrashPersistTimeout):
+		persistErr = errors.New("timed out persisting the restart record")
+	}
+	if persistErr != nil {
+		return thrashEscalationAlert("persist-failed", fmt.Sprintf("cannot persist the anti-loop restart record (%v); not restarting, to avoid an unthrottled restart loop", persistErr))
 	}
 	stall := 0.0
 	if v, ok := thrashStallFrac(rt); ok {
@@ -1082,14 +1149,23 @@ func thrashEscalate(now time.Time, rt thrashRates, rd thrashRead, selfHeal bool,
 	if rt.swapOK {
 		swapClause = "swapping " + fmtSwapMBs(rt.swapInPS+rt.swapOutPS)
 	}
-	ledgerRecord(ledgerEntry{
-		Actor:  "thrash",
-		Action: "restart",
-		From:   running,
-		To:     cap,
-		Mode:   "on",
-		Reason: fmt.Sprintf("swap thrash: %.0f%% of wall time stalled on memory, %s", stall*100, swapClause),
-	})
+	// Ledger: fire-and-forget but bounded, same reasoning as the cap write.
+	ledgerDone := make(chan struct{})
+	go func() {
+		ledgerRecord(ledgerEntry{
+			Actor:  "thrash",
+			Action: "restart",
+			From:   running,
+			To:     cap,
+			Mode:   "on",
+			Reason: fmt.Sprintf("swap thrash: %.0f%% of wall time stalled on memory, %s", stall*100, swapClause),
+		})
+		close(ledgerDone)
+	}()
+	select {
+	case <-ledgerDone:
+	case <-time.After(thrashLedgerTimeout):
+	}
 	return thrashEscalation{
 		Action:   "restart",
 		Code:     "restart",
@@ -1218,10 +1294,17 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 	globalThrashSnap.Store(initSnap)
 	writeThrashStatusFile(initSnap)
 
-	// A previous process left a cap behind: watch for the restart's outcome.
+	// A previous process left a restart behind: watch for the outcome. Key on
+	// the LAST ring entry being recent (a thrash restart happened just before
+	// this process started), NOT on the cap hold — the cap survives 24h, so
+	// an ordinary deploy inside that window would claim "cleared by the
+	// restart", and a cap-0 escalation (nothing running) would never report.
 	priorEscalation := false
-	if cap, ok := activeThrashCap(thrashNowFn()); ok && cap > 0 {
-		priorEscalation = true
+	if st := readThrashCapState(); len(st.Restarts) > 0 {
+		last := time.Unix(st.Restarts[len(st.Restarts)-1], 0)
+		if !last.Before(startedAt.Add(-thrashPriorEscalationWindow)) && !last.After(startedAt) {
+			priorEscalation = true
+		}
 	}
 	recoveredLogged := !priorEscalation
 	clearedThisLife := false
@@ -1262,7 +1345,7 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 			case st.cur >= thrashThrashing && st.prev < thrashThrashing:
 				switch attr {
 				case "unit":
-					importantLogf("%s\n", thrashOnsetMsg(st.condDur, rt, rd, share, shareOK))
+					importantLogf("%s\n", thrashOnsetMsg(rt, rd, share, shareOK))
 				case "other":
 					importantLogf("%s\n", thrashOtherMsg(rd, share))
 				default:
@@ -1270,21 +1353,25 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 				}
 			case st.cur == thrashCritical && st.prev == thrashThrashing:
 				critLog("[thrash] still thrashing %s after onset (%s); restart capability: %v\n",
-					roundDur(now.Sub(m.thrashSince)), thrashDetailLine(rt, rd, attr), thrashRestartable())
+					roundDur(st.condDur), thrashDetailLine(rt, rd, attr), thrashRestartable())
+			case st.cur == thrashThrashing && st.prev == thrashCritical:
+				tlog("[proxy][thrash] pressure easing (critical -> thrashing): %s\n", thrashDetailLine(rt, rd, attr))
 			case st.cur < thrashThrashing && st.prev >= thrashThrashing:
 				// The one-step relax never lands thrashing->calm directly, so
 				// the clearance sentence belongs to LEAVING the thrashing
 				// state, whichever calmer state it steps down to.
 				importantLogf("%s\n", thrashClearedMsg("Thrash cleared", rd, rt))
 				clearedThisLife = true
+				lastActionCode = "" // a new episode must be able to alert again
 			case st.cur < thrashThrashing && st.prev >= thrashUnderPressure:
 				tlog("[proxy][thrash] memory pressure settling: %s\n", thrashDetailLine(rt, rd, attr))
 			}
 		}
 
-		// Early warning: heap over its limit while the machine is swapping.
+		// Early warning: heap over its limit while the machine is actually
+		// swapping (a floor, not one page/s of ambient host swap).
 		if !m.heapWarned && m.state < thrashThrashing && rd.heapOK && rd.heapFrac >= 1.0 &&
-			rt.swapOK && (rt.swapInPS+rt.swapOutPS) > 0 {
+			rt.swapOK && (rt.swapInPS+rt.swapOutPS) >= thrashEarlyWarnSwapPS {
 			importantLogf("%s\n", thrashEarlyWarnMsg(rd))
 			m.heapWarned = true
 		}
@@ -1310,8 +1397,10 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 		globalThrashSnap.Store(snap)
 		writeThrashStatusFile(snap)
 
-		// Escalation: throttled attempts while thrashing continues.
-		if (m.state == thrashThrashing || m.state == thrashCritical) &&
+		// Escalation: throttled attempts while the condition ACTUALLY holds —
+		// the machine sits in thrashing through its relax window, and a
+		// denied earlier attempt must not land on an already-recovered box.
+		if st.cond && (m.state == thrashThrashing || m.state == thrashCritical) &&
 			now.Sub(m.lastAttempt) >= thrashRetryInterval {
 			m.lastAttempt = now
 			esc := thrashEscalate(now, rt, rd, selfHealEnabled, attr, share, shareOK)
@@ -1319,6 +1408,8 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 			case "restart":
 				lastAction = fmt.Sprintf("restart %d/%d, cap %d -> %d", esc.Restarts, thrashMaxRestarts24h, esc.Running, esc.Cap)
 				importantLogf("%s\n", esc.Msg)
+				// os.Exit skips the defers: clear the stale status first.
+				clearThrashStatusFile()
 				thrashExitFn(thrashExitCode)
 				return // a test seam replaced thrashExitFn: stop the loop cleanly
 			case "alert":
