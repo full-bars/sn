@@ -63,9 +63,11 @@ Windows Defender may flag this one-liner. See the note below.
 > [!NOTE]
 > Windows Defender may flag the Windows install one-liner, and it may flag the downloaded
 > binaries. What we see are machine-learning heuristics (the `!ml` suffix), not signatures;
-> for the binaries we publish they are false positives. Each release page records the scan
-> results for those binaries. If Defender blocks the one-liner, download the script, review
-> it, and run it from disk instead. Both lines go in PowerShell:
+> for the binaries we publish they are false positives. Recent release pages record the scan
+> results for the published binaries. If Defender blocks the one-liner, download the script,
+> review it, and run it from disk instead. If Defender quarantines an extracted binary,
+> allow it from Windows Security > Virus & threat protection > Protection history. Both lines
+> go in PowerShell:
 >
 > ```powershell
 > irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 -OutFile "$env:TEMP\install-win.ps1"
@@ -75,9 +77,10 @@ Windows Defender may flag this one-liner. See the note below.
 <details>
 <summary>The detections you may see, and what each one means</summary>
 
-- `Trojan:Script/Wacatac.B!ml`, `Trojan:Script/Wacatac.C!ml`, `Trojan:Win32/Wacatac.B!ml`, `Trojan:Win32/Wacatac.C!ml`: Defender's machine-learning label for files whose shape looks like a packed Trojan. Our Go binaries are stripped, statically linked and unsigned, which reads as a packed payload. The B and C variants are different model generations, so one binary can be flagged under more than one name.
+- `Trojan:Script/Wacatac.B!ml`, `Trojan:Script/Wacatac.C!ml`: Defender's machine-learning label for the PowerShell installer script fetching and extracting a remote payload.
+- `Trojan:Win32/Wacatac.B!ml`, `Trojan:Win32/Wacatac.C!ml`: Defender's machine-learning label for files whose shape looks like a packed trojan. Our Go binaries are stripped, statically linked and unsigned, which reads as a packed payload. The B and C variants are different model generations, so one binary can be flagged under more than one name. `Trojan:Win32/Execution.A!ml` is another label from the same family on some builds.
 - `Trojan:Win32/Commando.A!ml`: fires on the download-and-run command line itself (the `irm ... | iex` one-liner), not on the installed files. Fetching a remote script and piping it into execution reads as a trojan-downloader pattern to the model.
-- `Trojan:Win32/Bearfoos.A!ml`: a behavioural label for creating a scheduled task. The installer registers a scheduled task so the provider can update itself, and a behavioural model cannot tell that apart from persistence malware.
+- `Trojan:Win32/Bearfoos.A!ml`: a behavioural label for scheduled-task activity. The installer registers Task Scheduler tasks — a weekly update task (on `latest` installs) and, if you accept auto-start, a logon task so the provider starts at login — and a behavioural model cannot tell that apart from persistence malware.
 
 </details>
 
@@ -95,8 +98,6 @@ urnet-tools auto on
 Full guides: [Installation](docs/Installation.md), [Docker Deployment](docs/Docker-Deployment.md),
 [Adding Proxies](docs/Adding-Proxies.md), [urnet-tools](docs/urnet-tools-go.md).
 
----
-
 ### Uninstall
 
 **🐧 Linux**
@@ -110,6 +111,8 @@ curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 ```powershell
 irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Win32.ps1 | iex
 ```
+
+---
 
 ## Mechanism at a glance
 
