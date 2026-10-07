@@ -1495,6 +1495,7 @@ func provideLauncherLoop(st *provideState) func() {
 	// changes. See reapplyH3ModeLive.
 	installH3ReapplyLive(func() { reapplyH3ModeLive(st) })
 	reloader.StartWatcher(st.ctx)
+	go connect.HandleError(func() { reloader.RunReloadWatchdog(st.ctx) })
 	reloader.reload()
 	// Apply once now: a control update that landed while the startup loop was
 	// launching identities would not otherwise reconnect the identities it
