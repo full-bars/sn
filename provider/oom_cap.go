@@ -97,10 +97,11 @@ const (
 
 // effectiveTrimCapSource is the cap the launch and reload paths enforce and the
 // source that binds: the tightest positive of the operator's trim file (never
-// written by the auto logic) and the automatic OOM cap, which counts only in
-// "on" mode. cap 0 means no cap and the source is "". Logs and the action ledger
-// use the source so a shed driven by the automatic cap is not attributed to the
-// operator.
+// written by the auto logic) and the automatic caps — the OOM cap (only in
+// "on" mode) and the thrash cap (thrash_cap.go, written only by a deliberate
+// escalation). cap 0 means no cap and the source is "". Logs and the action
+// ledger use the source so a shed driven by an automatic cap is not attributed
+// to the operator.
 //
 // The automatic cap is evaluated FIRST and independently of the operator's file:
 // the two come from different places and one unreadable file must not silence
@@ -113,12 +114,20 @@ const (
 // still applies.
 func effectiveTrimCapSource() (int, string, error) {
 	auto := 0
+	autoSource := ""
 	if oomCapMode() == oomCapOn {
 		var st oomCapState
 		if dir, derr := oomCapDir(); derr == nil {
 			oomReadJSON(filepath.Join(dir, "oom_cap.json"), &st)
 		}
-		auto = st.Cap
+		if st.Cap > 0 {
+			auto, autoSource = st.Cap, trimCapOOM
+		}
+	}
+	// The thrash cap: the "escape and remember" state the thrash watchdog
+	// leaves behind after a swap-thrash restart. The tighter automatic wins.
+	if tc, ok := activeThrashCap(time.Now()); ok && tc > 0 && (auto == 0 || tc < auto) {
+		auto, autoSource = tc, trimCapThrash
 	}
 	operator, err := readTrimTarget()
 	if err != nil {
@@ -137,7 +146,7 @@ func effectiveTrimCapSource() (int, string, error) {
 	}
 	switch {
 	case auto > 0 && (operator == 0 || auto < operator):
-		return auto, trimCapOOM, nil
+		return auto, autoSource, nil
 	case operator > 0:
 		return operator, trimCapOperator, nil
 	}

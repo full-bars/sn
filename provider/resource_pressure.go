@@ -37,6 +37,14 @@ const (
 	psiRampLo = 10.0
 	psiRampHi = 60.0
 
+	// CPU PSI on a SINGLE-CORE box sits in a busy-but-healthy band (~30-50)
+	// during ordinary dialing, so the shared ramp scored normal operation as
+	// sustained pressure and helped pin the pool (LA7: 500 -> 284 -> 138 and
+	// no regrowth). The quieter 1-core ramp; multi-core keeps the shared PSI
+	// ramp, which self-normalizes across cores there.
+	cpu1CoreRampLo = 40.0
+	cpu1CoreRampHi = 90.0
+
 	// MemAvailable/MemTotal: plenty of page cache headroom above 25%,
 	// reclaim death spiral territory below 5%.
 	memAvailRampLo = 0.25 // score 0 at or above this fraction free
@@ -93,6 +101,33 @@ var globalPressure atomic.Uint64
 func currentPressure() float64 { return math.Float64frombits(globalPressure.Load()) }
 func setPressure(v float64)    { globalPressure.Store(math.Float64bits(v)) }
 
+// globalPressureNoCPU mirrors globalPressure with the psi_cpu component
+// excluded, for the pool GROW gate (scoring fix: CPU stalls may shrink the
+// pool but must not block regrowth on busy-but-healthy small boxes).
+var globalPressureNoCPU atomic.Uint64
+
+func currentPressureNoCPU() float64 { return math.Float64frombits(globalPressureNoCPU.Load()) }
+func setPressureNoCPU(v float64)    { globalPressureNoCPU.Store(math.Float64bits(v)) }
+
+// scoreExcludingCPU is the worst component with psi_cpu removed; the
+// emergency pins (heap, goroutines) are never CPU-driven, so an emergency raw
+// score carries through unchanged.
+func scoreExcludingCPU(raw float64, comps map[string]float64) float64 {
+	if raw >= 1.0 {
+		return 1.0
+	}
+	best := 0.0
+	for k, v := range comps {
+		if k == "psi_cpu" {
+			continue
+		}
+		if v > best {
+			best = v
+		}
+	}
+	return best
+}
+
 // pressureSample is one raw reading of every sensor. Zero values mean "no
 // data" and normalize to zero pressure (fail-open).
 type pressureSample struct {
@@ -107,7 +142,10 @@ type pressureSample struct {
 	RunningProxies int
 	HeapFrac       float64 // heap in use / max-memory soft limit; 0 = no limit set
 	FDFrac         float64 // open FDs / RLIMIT_NOFILE; 0 = unavailable
-	SensorErrs     map[string]error
+	// Cores is the effective CPU count (GOMAXPROCS/cgroup-quota aware) the
+	// CPU-PSI ramp is scaled by. 0 = unknown (multi-core ramp, as before).
+	Cores      float64
+	SensorErrs map[string]error
 }
 
 // normalizeRamp maps v onto [0,1] linearly between lo and hi. Works for
@@ -159,7 +197,7 @@ func goroutineEmergency(s pressureSample) bool {
 func computePressure(s pressureSample) (float64, map[string]float64) {
 	comps := map[string]float64{
 		"psi_mem": normalizeRamp(s.PSIMem, psiRampLo, psiRampHi),
-		"psi_cpu": normalizeRamp(s.PSICPU, psiRampLo, psiRampHi),
+		"psi_cpu": cpuPressureComponent(s.PSICPU, s.Cores),
 		"psi_io":  normalizeRamp(s.PSIIO, ioRampLo, ioRampHi),
 		"load":    normalizeRamp(s.LoadPerCore, loadRampLo, loadRampHi),
 		"goro":    goroutineComponent(s),
@@ -342,7 +380,7 @@ func readMemAvailFrac() (float64, error) {
 // one missing source (PSI on old kernels, everything on Windows/macOS)
 // never blanks the others. Self-signals always work.
 func collectPressureSample() pressureSample {
-	s := pressureSample{SensorErrs: map[string]error{}, Goroutines: runtime.NumGoroutine(), RunningProxies: runningProxyCountForPressure()}
+	s := pressureSample{SensorErrs: map[string]error{}, Goroutines: runtime.NumGoroutine(), RunningProxies: runningProxyCountForPressure(), Cores: effectiveCores()}
 
 	if v, err := readPSI("memory"); err == nil {
 		s.PSIMem = v
@@ -678,6 +716,54 @@ func logGCGovernorChange(prevGOGC int, state *gcGovernorState) {
 	}
 }
 
+// cpuPressureComponent is the ONE CPU-PSI ramp, shared by computePressure and
+// cpuVetoSignal (they used to duplicate it). cores selects the 1-core ramp;
+// note the deliberate veto-cutoff behavior change on single-core boxes:
+// psi_cpu values that used to read 0.6+ now read far lower, so the GC veto no
+// longer fires on ordinary single-core busyness.
+func cpuPressureComponent(raw, cores float64) float64 {
+	if raw <= 0 {
+		return 0
+	}
+	if cores > 0 && cores <= 1.5 {
+		return normalizeRamp(raw, cpu1CoreRampLo, cpu1CoreRampHi)
+	}
+	return normalizeRamp(raw, psiRampLo, psiRampHi)
+}
+
+// effectiveCores is the CPU count the pressure math should believe: NumCPU,
+// capped by a cgroup cpu.max quota and by an explicit GOMAXPROCS, because
+// both genuinely limit this process on an otherwise-big box.
+func effectiveCores() float64 {
+	cores := float64(runtime.NumCPU())
+	if q, ok := cgroupCPUQuotaCores(); ok && q > 0 && q < cores {
+		cores = q
+	}
+	if g := float64(runtime.GOMAXPROCS(0)); g > 0 && g < cores {
+		cores = g
+	}
+	return cores
+}
+
+// cgroupCPUQuotaCores reads cgroup v2 cpu.max ("quota period"; quota may be
+// "max"). ok=false when unreadable or unlimited.
+func cgroupCPUQuotaCores() (float64, bool) {
+	b, err := os.ReadFile("/sys/fs/cgroup/cpu.max")
+	if err != nil {
+		return 0, false
+	}
+	f := strings.Fields(string(b))
+	if len(f) != 2 || f[0] == "max" {
+		return 0, false
+	}
+	quota, err1 := strconv.ParseFloat(f[0], 64)
+	period, err2 := strconv.ParseFloat(f[1], 64)
+	if err1 != nil || err2 != nil || period <= 0 || quota <= 0 {
+		return 0, false
+	}
+	return quota / period, true
+}
+
 // cpuVetoSignal is the normalized CPU PSI the governor's CPU veto reads, the
 // same quantity the sweep passes (comps["psi_cpu"]). 0 when PSI is
 // unavailable, which leaves the veto inert, as before.
@@ -686,7 +772,7 @@ func cpuVetoSignal() float64 {
 	if err != nil {
 		return 0
 	}
-	return normalizeRamp(v, psiRampLo, psiRampHi)
+	return cpuPressureComponent(v, effectiveCores())
 }
 
 // gcSubtickStep is the fast heap-only path: tighten on a raw live-heap spike.
@@ -771,6 +857,7 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 	var headroom headroomTracker
 	headroomLow := headroomLowThresholdMiB(detectEffectiveRAMLimitBytes() >> 20)
 	var smoothed float64
+	var smoothedNoCPU float64
 	lastRegime := 0
 	fullTicker := time.NewTicker(pressureSampleInterval)
 	defer fullTicker.Stop()
@@ -814,6 +901,7 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 		if !resolveSelfHealEnabled(selfHealEnabled) {
 			smoothed = 0
 			setPressure(0)
+			setPressureNoCPU(0)
 			// Reset the connection memory budget to full so connections
 			// opened after self-healing is disabled don't keep the reduced
 			// buffers from an earlier pressure episode.
@@ -833,6 +921,16 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 			smoothed = ewmaUpdate(smoothed, raw)
 		}
 		setPressure(smoothed)
+
+		// CPU-excluded companion score for the grow gate: same emergency-pin
+		// rule, so a genuine blowout still reads 1.0 on both.
+		rawNoCPU := scoreExcludingCPU(raw, comps)
+		if rawNoCPU >= 1.0 {
+			smoothedNoCPU = 1.0
+		} else {
+			smoothedNoCPU = ewmaUpdate(smoothedNoCPU, rawNoCPU)
+		}
+		setPressureNoCPU(smoothedNoCPU)
 
 		// Consolidated GC governor: merge heap + host-RAM, tighter wins.
 		prevGOGC := gcState.currentGOGC
@@ -917,13 +1015,26 @@ func writePressureStatus(score float64, comps map[string]float64, gcState *gcGov
 	if gcState != nil {
 		lastHeapFrac = gcState.lastHeapFrac
 	}
+	// Thrash fields + a plain-language summary: nothing here needs decoding.
+	var psiFull any
+	if v, ok := thrashPSIFullForStatus(); ok {
+		psiFull = v
+	}
+	var swapIO any
+	if v, ok := thrashSwapIOForStatus(); ok {
+		swapIO = v
+	}
 	payload, err := json.Marshal(map[string]any{
-		"score":       score,
-		"components":  comps,
-		"target_pool": target,
-		"gc_state":    gcStateNameOf(gcState),
-		"heap_frac":   lastHeapFrac,
-		"updated":     time.Now().UTC().Format(time.RFC3339),
+		"score":        score,
+		"components":   comps,
+		"target_pool":  target,
+		"gc_state":     gcStateNameOf(gcState),
+		"heap_frac":    lastHeapFrac,
+		"thrash_state": thrashStateName(),
+		"psi_mem_full": psiFull,
+		"swap_io_rate": swapIO,
+		"summary":      pressureSummaryOf(score, comps),
+		"updated":      time.Now().UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		return
@@ -1282,13 +1393,23 @@ func runPoolController(ctx context.Context, configuredMax int, selfHealEnabled b
 			continue
 		}
 		pressure := currentPressure()
-		// While the GC governor is tightening, freeze pool GROWTH only: if the
-		// current pressure would trigger a grow (low pressure), hold the target
-		// flat by suppressing the grow branch. Shrinking is still allowed so the
-		// pool can keep shedding load under pressure. This prevents the pool
-		// growing into a memory squeeze the governor is deliberately backing
-		// away from (the observer-effect the spec warned about).
-		if gcTightening.Load() && pressure < aimdGrowBelow {
+		// Grow/hold decisions must not be blocked by CPU stalls alone
+		// (scoring fix: a 1-core box's CPU PSI otherwise pins the pool below
+		// its ceiling forever). Outside the shrink regime, read the score with
+		// psi_cpu excluded; the shrink decision below keeps the full score.
+		if pressure <= aimdShrinkAbove {
+			if noCPU := currentPressureNoCPU(); noCPU < pressure {
+				pressure = noCPU
+			}
+		}
+		// While the GC governor is tightening or the thrash watchdog holds the
+		// freeze rung, freeze pool GROWTH only: if the current pressure would
+		// trigger a grow (low pressure), hold the target flat by suppressing
+		// the grow branch. Shrinking is still allowed so the pool can keep
+		// shedding load under pressure. This prevents the pool growing into a
+		// memory squeeze the system is deliberately backing away from (the
+		// observer-effect the spec warned about).
+		if (gcTightening.Load() || thrashFreeze.Load()) && pressure < aimdGrowBelow {
 			pressure = aimdGrowBelow
 		}
 		if pressure > aimdShrinkAbove {
@@ -1448,6 +1569,7 @@ func paidProxyCount() int {
 // freezing the last (possibly emergency) reading in force.
 func resetPressureActuators(state *gcGovernorState, setGC func(int) int) {
 	setPressure(0)
+	setPressureNoCPU(0)
 	applyPressureMemoryBudget(0)
 	gcTightening.Store(false)
 	if state != nil {

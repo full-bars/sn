@@ -1531,6 +1531,12 @@ func provideLauncherLoop(st *provideState) func() {
 	if pressureLoopsSupported {
 		go superviseLoop(st.ctx, "pressure_monitor", func() { runPressureMonitor(st.ctx, selfHealEnabled) }, nil)
 		go superviseLoop(st.ctx, "pool_controller", func() { runPoolController(st.ctx, proxyURLMax, selfHealEnabled) }, nil)
+		// Thrash watchdog: senses swap-thrash independently of the pressure
+		// score, holds the freeze-growth rung, and (gated on self-heal,
+		// supervision, attribution and the anti-loop cap) restarts the
+		// provider. onFail releases the freeze rung so a dead loop cannot
+		// hold the pool flat forever.
+		go superviseLoop(st.ctx, "thrash_watchdog", func() { runThrashWatchdog(st.ctx, selfHealEnabled) }, func() { thrashFreeze.Store(false) })
 	}
 	go superviseLoop(st.ctx, "degraded_proxy_reaper", func() { runDegradedProxyReaper(st.ctx, st.proxyCancelMap, &st.proxyCancelMu) }, nil)
 	// Proxy audit: parks proven-junk paid/file proxies when proxy audit is on
