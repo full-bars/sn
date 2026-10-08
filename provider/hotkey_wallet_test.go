@@ -844,3 +844,18 @@ func TestHotkeyWallet_StartUpkeepFromProvide(t *testing.T) {
 		t.Fatalf("upkeep loop started %d times, want 1", started.Load())
 	}
 }
+
+func TestProvideLegacyWalletGateRefusesWithoutOptIn(t *testing.T) {
+	if err := provideLegacyWalletGate(false); err == nil {
+		t.Fatal("provide --wallet must refuse the unsigned request without --legacy-network-wallet")
+	}
+	if err := provideLegacyWalletGate(true); err != nil {
+		t.Fatalf("explicit opt-in must pass: %v", err)
+	}
+}
+
+func TestHotkeyWalletUpkeepStepBudgetExceedsPerRequestTimeout(t *testing.T) {
+	if hotkeyWalletUpkeepStepTimeout <= 30*time.Second {
+		t.Fatalf("step budget %v must exceed the 30s per-request timeout", hotkeyWalletUpkeepStepTimeout)
+	}
+}

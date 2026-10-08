@@ -304,12 +304,18 @@ func provideSetupSignals(st *provideState) {
 
 // provideLaunchGoroutines starts all background monitoring and reporting.
 func provideLaunchGoroutines(st *provideState) {
-	// Subnet claim wallet
+	// Subnet claim wallet (unsigned, legacy only)
 	if coldkeySs58, walletErr := st.opts.String("--wallet"); walletErr == nil && coldkeySs58 != "" {
-		walletClientStrategy := connect.NewClientStrategyWithDefaults(st.ctx)
-		if err := snSetWallet(st.ctx, walletClientStrategy, st.apiUrl, coldkeySs58); err != nil {
+		legacyNetwork, _ := st.opts.Bool("--legacy-network-wallet")
+		if err := provideLegacyWalletGate(legacyNetwork); err != nil {
 			fmt.Printf("subnet wallet not set: %s\n", err)
-			fmt.Printf("continuing to provide. Retry with: provider wallet set <coldkey_ss58>\n")
+			fmt.Printf("continuing to provide. Use provider wallet hotkey set instead.\n")
+		} else {
+			walletClientStrategy := connect.NewClientStrategyWithDefaults(st.ctx)
+			if err := snSetWallet(st.ctx, walletClientStrategy, st.apiUrl, coldkeySs58); err != nil {
+				fmt.Printf("subnet wallet not set: %s\n", err)
+				fmt.Printf("continuing to provide. Retry with: provider wallet set <coldkey_ss58> --legacy-network-wallet\n")
+			}
 		}
 	}
 
@@ -1744,4 +1750,13 @@ func usesSlowRetrySemaphore(hasProxy, isURLSourced bool, authFailures, maxAuthFa
 		return false
 	}
 	return authFailures >= maxAuthFailures || 0 < slowRetryCycles || 0 < genuineRetryCycles
+}
+
+// provideLegacyWalletGate mirrors the gate on `provider wallet set`: the
+// unsigned POST /sn/wallet is only sent on an explicit opt-in.
+func provideLegacyWalletGate(legacyNetwork bool) error {
+	if !legacyNetwork {
+		return errors.New("provide --wallet sends the unsigned network wallet request; pass --legacy-network-wallet to allow it, or use provider wallet hotkey set")
+	}
+	return nil
 }

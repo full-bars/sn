@@ -680,6 +680,12 @@ func hotkeyWalletCmd(opts docopt.Opts) {
 	}
 }
 
+// hotkeyWalletUpkeepStepTimeout bounds one whole upkeep step. A step makes
+// several requests (list, consent, delegation, accept), each already capped by
+// the 30s per-request client timeout, so the step budget must exceed that or a
+// slow first request starves the rest.
+const hotkeyWalletUpkeepStepTimeout = 5 * time.Minute
+
 // Single step of hourly upkeep.
 func runHotkeyWalletUpkeepStep(ctx context.Context, apiUrl string, hotkey *crv4.Keypair, lastGen *uint64) (hotkeyWalletOutcome, error) {
 	base, err := providerStateDir()
@@ -701,7 +707,7 @@ func runHotkeyWalletUpkeepStep(ctx context.Context, apiUrl string, hotkey *crv4.
 	}
 	target := hotkeyWalletSingleTarget(apiUrl, byJwt)
 
-	callCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	callCtx, cancel := context.WithTimeout(ctx, hotkeyWalletUpkeepStepTimeout)
 	defer cancel()
 
 	return ensureOperatorHotkeyWallet(callCtx, target, hotkey, chain)
