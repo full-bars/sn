@@ -313,6 +313,13 @@ func provideLaunchGoroutines(st *provideState) {
 		}
 	}
 
+	// Hourly hotkey delegation refresh, only with --hotkey_seed_file
+	if seedFile, _ := st.opts.String("--hotkey_seed_file"); seedFile != "" {
+		if _, err := startHotkeyWalletUpkeep(st.ctx, seedFile, st.apiUrl, runHotkeyWalletUpkeep); err != nil {
+			tlog("[wallet] hotkey delegation upkeep not started: %s\n", err)
+		}
+	}
+
 	// Hourly pulse — diagnostic logging + stall-recovery check.
 	// REMOVED: TriggerPulse() — was a no-op in v2026 connect which handles
 	// stall recovery internally via its transport reconnection loop.

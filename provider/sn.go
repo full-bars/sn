@@ -38,7 +38,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -469,24 +471,33 @@ func (p *SNProvider) SetWallet(ctx context.Context, coldkeySs58 string) error {
 	return snSetWallet(ctx, strategy, apiUrl, coldkeySs58)
 }
 
-// walletSet implements `provider wallet set <coldkey_ss58>`.
-func walletSet(opts docopt.Opts) {
-	apiUrl, err := resolveApiUrl(opts)
-	if err != nil {
-		fmt.Printf("network config error: %s\n", err)
-		os.Exit(1)
+// runWalletSet implements `provider wallet set <coldkey_ss58>`.
+func runWalletSet(ctx context.Context, opts docopt.Opts) error {
+	legacyNetwork, _ := opts.Bool("--legacy-network-wallet")
+	if !legacyNetwork {
+		return errors.New("provider wallet set without --legacy-network-wallet is disabled; use provider wallet hotkey set or pass --legacy-network-wallet")
 	}
 
+	apiUrl, err := resolveApiUrl(opts)
+	if err != nil {
+		return fmt.Errorf("network config error: %w", err)
+	}
+
+	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
+
+	coldkeySs58, _ := opts.String("<coldkey_ss58>")
+	return snSetWallet(ctx, clientStrategy, apiUrl, coldkeySs58)
+}
+
+// walletSet implements `provider wallet set <coldkey_ss58>`.
+func walletSet(opts docopt.Opts) {
 	event := connect.NewEventWithContext(context.Background())
 	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 
 	ctx, cancel := context.WithCancel(event.Ctx())
 	defer cancel()
 
-	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
-
-	coldkeySs58, _ := opts.String("<coldkey_ss58>")
-	if err := snSetWallet(ctx, clientStrategy, apiUrl, coldkeySs58); err != nil {
+	if err := runWalletSet(ctx, opts); err != nil {
 		fmt.Printf("subnet wallet not set: %s\n", err)
 		os.Exit(1)
 	}
@@ -497,36 +508,94 @@ func WalletSet(opts docopt.Opts) {
 	walletSet(opts)
 }
 
-// claim implements `provider claim [--epoch=<epoch>] [--rpc=<rpc_url>]...
-// [--key_file=<key_file>] [--dry-run]`.
-//
-// Default epoch: the platform reports the current epoch e; the payout
-// root for e is only committed and finalized after e ends
-// (sn/WHITEPAPER.md 5.2), so the default target is e-1 — the most
-// recent epoch that can have a committed root. During the first ~48h of
-// e that root may still be inside its dispute window; `claim_open_block`
-// in the output says when the claim becomes submittable.
-//
-// Verification requires the payout roots to agree: the inclusion proof
-// walked locally from the recomputed leaf must authenticate the leaf
-// against the server-provided root, and (when --rpc is given) that root
-// must equal the root read from the contract with eth_call — so a
-// verified claim does not rest on trusting the platform (decision D-6).
-// Exits nonzero on any mismatch. When a --key_file (and --rpc) is given,
-// a verified claim is signed and submitted via sn/miner/onchain;
-// otherwise the ready-to-submit calldata is printed for snclaim.
-func claim(opts docopt.Opts) {
-	apiUrl, err := resolveApiUrl(opts)
+// fetchPoolClaim performs a direct HTTP GET /sn/pool/claim?epoch=N[&legacy_coldkey=S]
+func fetchPoolClaim(ctx context.Context, apiUrl string, byJwt string, epoch uint64, legacyColdkey string) (*connect.SnPoolClaimResult, error) {
+	reqUrl := fmt.Sprintf("%s/sn/pool/claim?epoch=%d", strings.TrimSuffix(apiUrl, "/"), epoch)
+	if legacyColdkey != "" {
+		reqUrl += "&legacy_coldkey=" + url.QueryEscape(legacyColdkey)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqUrl, nil)
 	if err != nil {
-		fmt.Printf("network config error: %s\n", err)
-		os.Exit(1)
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+byJwt)
+	client := http.Client{
+		Timeout:       30 * time.Second,
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 16*1024*1024))
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		errLen := min(len(body), 200)
+		return nil, fmt.Errorf("GET /sn/pool/claim: %s: %s", resp.Status, strings.TrimSpace(string(body[:errLen])))
+	}
+	var res connect.SnPoolClaimResult
+	if err := json.Unmarshal(body, &res); err != nil {
+		return nil, fmt.Errorf("GET /sn/pool/claim answer is not JSON: %w", err)
+	}
+	if res.Error != nil && res.Error.Message != "" {
+		return nil, fmt.Errorf("GET /sn/pool/claim: %s", res.Error.Message)
+	}
+	return &res, nil
+}
+
+// runClaim executes the claim command logic.
+func runClaim(ctx context.Context, opts docopt.Opts) error {
+	providerJwtPath, _ := opts.String("--provider-jwt")
+	legacyColdkey, _ := opts.String("--legacy-coldkey")
+
+	if providerJwtPath != "" && legacyColdkey != "" {
+		return errors.New("--provider-jwt and --legacy-coldkey are mutually exclusive")
 	}
 
-	event := connect.NewEventWithContext(context.Background())
-	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+	var byJwt string
+	if providerJwtPath != "" {
+		jwtBytes, err := os.ReadFile(providerJwtPath)
+		if err != nil {
+			return fmt.Errorf("reading --provider-jwt file %s: %w", providerJwtPath, err)
+		}
+		byJwt = strings.TrimSpace(string(jwtBytes))
+		if byJwt == "" {
+			return fmt.Errorf("--provider-jwt file %s is empty", providerJwtPath)
+		}
+	} else if legacyColdkey != "" {
+		if _, err := ss58.DecodeWithPrefix(legacyColdkey, ss58.BittensorPrefix); err != nil {
+			return fmt.Errorf("invalid --legacy-coldkey: %w", err)
+		}
+		token, err := readNetworkJwt()
+		if err != nil {
+			return err
+		}
+		byJwt = token
+	} else {
+		providerJwtDefaultPath, err := providerStatePath(".provider.jwt")
+		if err != nil {
+			return err
+		}
+		jwtBytes, err := os.ReadFile(providerJwtDefaultPath)
+		if errors.Is(err, os.ErrNotExist) {
+			return errors.New("no .provider.jwt found; pass --provider-jwt=<path> or --legacy-coldkey=<coldkey_ss58>")
+		}
+		if err != nil {
+			return fmt.Errorf("reading %s: %w", providerJwtDefaultPath, err)
+		}
+		byJwt = strings.TrimSpace(string(jwtBytes))
+		if byJwt == "" {
+			return fmt.Errorf("%s is empty; pass --provider-jwt=<path> or --legacy-coldkey=<coldkey_ss58>", providerJwtDefaultPath)
+		}
+	}
 
-	ctx, cancel := context.WithCancel(event.Ctx())
-	defer cancel()
+	apiUrl, err := resolveApiUrl(opts)
+	if err != nil {
+		return fmt.Errorf("network config error: %w", err)
+	}
 
 	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
 
@@ -536,10 +605,6 @@ func claim(opts docopt.Opts) {
 		fmt.Printf("note: --dry-run has no effect without --key_file; claim only verifies\n")
 	}
 
-	byJwt, err := readNetworkJwt()
-	if err != nil {
-		panic(err)
-	}
 	api := connect.NewBringYourApi(ctx, clientStrategy, apiUrl)
 	api.SetByJwt(byJwt)
 
@@ -549,8 +614,7 @@ func claim(opts docopt.Opts) {
 	}
 	// submitting needs an rpc endpoint to broadcast through
 	if keyFile != "" && len(rpcUrls) == 0 {
-		fmt.Printf("claim: --key_file needs --rpc to submit\n")
-		os.Exit(1)
+		return errors.New("claim: --key_file needs --rpc to submit")
 	}
 
 	epoch := uint64(0)
@@ -558,54 +622,52 @@ func claim(opts docopt.Opts) {
 	if epochStr, epochErr := opts.String("--epoch"); epochErr == nil && epochStr != "" {
 		epoch, err = strconv.ParseUint(epochStr, 10, 64)
 		if err != nil {
-			panic(fmt.Errorf("bad --epoch %q: %s", epochStr, err))
+			return fmt.Errorf("bad --epoch %q: %w", epochStr, err)
 		}
 	} else {
 		epochResult, err := api.SnEpochSync()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		if epochResult.Epoch == 0 {
-			panic(fmt.Errorf("current epoch is 0; no finalized epoch to claim yet"))
+			return errors.New("current epoch is 0; no finalized epoch to claim yet")
 		}
 		epoch = epochResult.Epoch - 1
 		epochNote = fmt.Sprintf(" (last finalized; current epoch is %d. Use --epoch to override)", epochResult.Epoch)
 	}
 
-	poolClaim, err := api.SnPoolClaimSync(&connect.SnPoolClaimArgs{
-		Epoch: epoch,
-	})
+	poolClaim, err := fetchPoolClaim(ctx, apiUrl, byJwt, epoch, legacyColdkey)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// decode and sanity-check the claim fields
 	if len(poolClaim.NoId) == 0 {
-		panic(fmt.Errorf("claim has no no_id"))
+		return errors.New("claim has no no_id")
 	}
 	if 32 < len(poolClaim.NoId) {
-		panic(fmt.Errorf("bad no_id length %d; expected <= 32", len(poolClaim.NoId)))
+		return fmt.Errorf("bad no_id length %d; expected <= 32", len(poolClaim.NoId))
 	}
 	noId := new(big.Int).SetBytes(poolClaim.NoId)
 	if len(poolClaim.Coldkey) != 32 {
-		panic(fmt.Errorf("bad coldkey length %d; expected 32", len(poolClaim.Coldkey)))
+		return fmt.Errorf("bad coldkey length %d; expected 32", len(poolClaim.Coldkey))
 	}
 	var coldkey [32]byte
 	copy(coldkey[:], poolClaim.Coldkey)
 	if len(poolClaim.PayoutRoot) != 32 {
-		panic(fmt.Errorf("bad payout root length %d; expected 32", len(poolClaim.PayoutRoot)))
+		return fmt.Errorf("bad payout root length %d; expected 32", len(poolClaim.PayoutRoot))
 	}
 	var serverRoot [32]byte
 	copy(serverRoot[:], poolClaim.PayoutRoot)
 	if poolClaim.ShareBps < 0 {
-		panic(fmt.Errorf("bad share_bps %d", poolClaim.ShareBps))
+		return fmt.Errorf("bad share_bps %d", poolClaim.ShareBps)
 	}
 	shareBps := uint64(poolClaim.ShareBps)
 	shareBpsBig := new(big.Int).SetUint64(shareBps)
 	proof := make([][32]byte, len(poolClaim.Proof))
 	for i, proofElement := range poolClaim.Proof {
 		if len(proofElement) != 32 {
-			panic(fmt.Errorf("bad proof element %d length %d; expected 32", i, len(proofElement)))
+			return fmt.Errorf("bad proof element %d length %d; expected 32", i, len(proofElement))
 		}
 		copy(proof[i][:], proofElement)
 	}
@@ -661,8 +723,8 @@ func claim(opts docopt.Opts) {
 			break
 		}
 		if !chainChecked {
-			fmt.Printf("status: UNVERIFIED — no --rpc endpoint answered\n")
-			os.Exit(1)
+			fmt.Printf("status: UNVERIFIED - no --rpc endpoint answered\n")
+			return errors.New("unverified: no --rpc endpoint answered")
 		}
 	}
 
@@ -720,22 +782,20 @@ func claim(opts docopt.Opts) {
 		for _, mismatch := range mismatches {
 			fmt.Printf("mismatch: %s\n", mismatch)
 		}
-		fmt.Printf("status: MISMATCH — do not submit\n")
-		os.Exit(1)
+		fmt.Printf("status: MISMATCH - do not submit\n")
+		return errors.New("status: MISMATCH - do not submit")
 	}
 
 	// verified. With an EVM key, sign+send through onchain.Submit; otherwise
 	// print the calldata for the offline/air-gapped snclaim path.
 	if keyFile != "" {
 		if !common.IsHexAddress(poolClaim.ContractAddress) {
-			fmt.Printf("claim: server contract address %q is not a valid EVM address\n", poolClaim.ContractAddress)
-			os.Exit(1)
+			return fmt.Errorf("claim: server contract address %q is not a valid EVM address", poolClaim.ContractAddress)
 		}
 		contract := common.HexToAddress(poolClaim.ContractAddress)
 		key, err := onchain.LoadKeyFile(keyFile)
 		if err != nil {
-			fmt.Printf("claim: %s\n", err)
-			os.Exit(1)
+			return fmt.Errorf("claim: %w", err)
 		}
 		receipt, err := onchain.Submit(ctx, onchain.SubmitParams{
 			Contract: contract,
@@ -746,14 +806,13 @@ func claim(opts docopt.Opts) {
 			DryRun:   dryRun,
 		})
 		if err != nil {
-			fmt.Printf("claim submit failed: %s\n", err)
-			os.Exit(1)
+			return fmt.Errorf("claim submit failed: %w", err)
 		}
 		if receipt == nil {
-			return // dry run; onchain.Submit printed the preflight
+			return nil // dry run; onchain.Submit printed the preflight
 		}
 		printMinerClaimed(receipt, contract)
-		return
+		return nil
 	}
 
 	fmt.Printf("claimMiner calldata:\n0x%x\n", claimCalldata)
@@ -762,6 +821,21 @@ func claim(opts docopt.Opts) {
 		fmt.Printf("status: VERIFIED (proof, server, and on-chain roots agree)\n")
 	} else {
 		fmt.Printf("status: VERIFIED against the server root only\n")
+	}
+	return nil
+}
+
+// claim implements `provider claim`.
+func claim(opts docopt.Opts) {
+	event := connect.NewEventWithContext(context.Background())
+	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+
+	ctx, cancel := context.WithCancel(event.Ctx())
+	defer cancel()
+
+	if err := runClaim(ctx, opts); err != nil {
+		fmt.Fprintf(os.Stderr, "claim: %v\n", err)
+		os.Exit(1)
 	}
 }
 
