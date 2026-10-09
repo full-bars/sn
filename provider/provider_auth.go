@@ -350,10 +350,7 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 	// so mint (here) and in-process renewal (runProxyJWTWatcher) always send
 	// the same string; the server UPDATEs the row's description on renewal.
 
-	authClientArgs := &connect.AuthNetworkClientArgs{
-		Description: description,
-		DeviceSpec:  "",
-	}
+	authClientArgs := newProviderAuthClientArgsForMint(description)
 
 	api.AuthNetworkClient(authClientArgs, authClientCallback)
 

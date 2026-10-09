@@ -146,6 +146,10 @@ github.com/full-bars/connect v0.0.0-20261005104249-241d90ba174f h1:NxdDytEpQdFia
 github.com/full-bars/connect v0.0.0-20261005104249-241d90ba174f/go.mod h1:QFBu38vuEEbHqDBo668682lHk0w1G1qD0F1TVSjUaM4=
 github.com/full-bars/connect v0.0.0-20261005162500-8fba422537bb h1:7TvLY7UfiYt1kFnIaUJhMFpfdwvv3+evvwkb1pXEE8o=
 github.com/full-bars/connect v0.0.0-20261005162500-8fba422537bb/go.mod h1:QFBu38vuEEbHqDBo668682lHk0w1G1qD0F1TVSjUaM4=
+github.com/full-bars/connect v0.0.0-20261009011450-fa99a17688a3 h1:oZ3eCizu8Vtok1qacGthbnI1KpNYcJE5UewHXjg1PP4=
+github.com/full-bars/connect v0.0.0-20261009011450-fa99a17688a3/go.mod h1:VWW5oK27pM7UjHjMgjGREkfRzA1/RiDIZU2W3M9hIRo=
+github.com/full-bars/connect v0.0.0-20261009012513-e4d97cacc728 h1:EBrkvLhCi6XSry00J5SM6VPhW2ZzoxIjvmOBpSL7mMw=
+github.com/full-bars/connect v0.0.0-20261009012513-e4d97cacc728/go.mod h1:VWW5oK27pM7UjHjMgjGREkfRzA1/RiDIZU2W3M9hIRo=
 github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c h1:QSDm4GpjAU16CxcZK4jbQLmCj3QtLHFqxPE38MleXhA=
 github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c/go.mod h1:IHtyYBudQmotM5M7loKNR54hFyzsM0pL+qeD2U8BQzU=
 github.com/full-bars/goidenticons v0.0.0-20260822053141-e6a59cd2e818 h1:kxyyIoEIPE2YtUwLWEop9Y9PHTyYosqiNMf/SCRLva4=
@@ -555,6 +559,8 @@ github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 h1:epCh84lMvA70
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
 github.com/test-go/testify v1.1.4 h1:Tf9lntrKUMHiXQ07qBScBTSA0dhYQlu83hswqelv1iE=
 github.com/test-go/testify v1.1.4/go.mod h1:rH7cfJo/47vWGdi4GPj16x3/t1xGOj2YxzmNQzk2ghU=
+github.com/theodorsm/covert-dtls v1.5.1 h1:qTp59YIwGpY4eDJbR237R1MAahWLZNryDNknFRGR0FU=
+github.com/theodorsm/covert-dtls v1.5.1/go.mod h1:MTb9IO4aqSxrcrh569UGO4PlC1Yel37M440z+gcm13E=
 github.com/thrawn01/args v0.3.0/go.mod h1:TnRiOFjyh7Wa6oC8ACFPc7KIvbzCiluphA3mJUiPIEo=
 github.com/tinylib/msgp v1.6.4 h1:mOwYbyYDLPj35mkA2BjjYejgJk9BuHxDdvRnb6v2ZcQ=
 github.com/tinylib/msgp v1.6.4/go.mod h1:RSp0LW9oSxFut3KzESt5Voq4GVWyS+PSulT77roAqEA=

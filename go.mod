@@ -3,6 +3,7 @@ module github.com/urfoundation/sn
 go 1.27.1
 
 require (
+	github.com/ChainSafe/go-schnorrkel v1.1.0
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.2.2-0.20240919131012-e3b938563803
 	github.com/consensys/gnark-crypto v0.20.1
@@ -25,11 +26,11 @@ require (
 	golang.org/x/sys v0.47.0
 	golang.org/x/term v0.45.0
 	golang.org/x/time v0.15.0
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/ChainSafe/go-schnorrkel v1.1.0 // indirect
 	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251001021608-1fe7b43fc4d6 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/TwiN/go-away v1.8.0 // indirect
@@ -174,6 +175,7 @@ require (
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/stripe/stripe-go/v82 v82.5.1 // indirect
 	github.com/supranational/blst v0.3.16-0.20250831170142-f48500c1fdbe // indirect
+	github.com/theodorsm/covert-dtls v1.5.1 // indirect
 	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
@@ -199,7 +201,6 @@ require (
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20241231184526-a9ab2273dd10 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -241,4 +242,4 @@ replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-sub
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261005162500-8fba422537bb
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261009012513-e4d97cacc728

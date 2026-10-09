@@ -876,11 +876,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 
 	fmt.Printf("instance_id: %s\n", instanceId)
 
-	auth := &connect.ClientAuth{
-		ByJwt:      byClientJwt,
-		InstanceId: instanceId,
-		AppVersion: RequireVersion(),
-	}
+	auth := newProviderClientAuth(byClientJwt, instanceId)
 	// The platform transport's H3 (QUIC) modes open a UDP socket, which left
 	// alone is a socket on the host: a proxied identity that wins the H3 race
 	// would reach the platform from the host's address, not its proxy's. The
