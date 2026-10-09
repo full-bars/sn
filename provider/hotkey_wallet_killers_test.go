@@ -174,9 +174,9 @@ func TestHotkeySecretHygiene_NoSeedLeakedInOutput(t *testing.T) {
 // must be refused with error, nothing appended to store, and nothing submitted to operator.
 func TestHotkeyWalletSet_InvalidOrWrongKeySignatureRefused(t *testing.T) {
 	tests := []struct {
-		name      string
-		corrupt   bool
-		wrongKey  bool
+		name     string
+		corrupt  bool
+		wrongKey bool
 	}{
 		{name: "wrong_key_signature", wrongKey: true},
 		{name: "corrupted_signature", corrupt: true},
@@ -396,15 +396,15 @@ func TestHotkeyWalletSet_PendingStatementMismatchesRefused(t *testing.T) {
 		msg := setupPending("100", "200")
 		var out bytes.Buffer
 		err := hotkeyWalletSet(ctx, docopt.Opts{
-			"hotkey":                true,
-			"set":                   true,
-			"<coldkey_ss58>":        coldkey1Kp.Address(),
-			"--hotkey_seed_file":    hotkey1Seed,
-			"--wallet-from-epoch":   "150",
+			"hotkey":                 true,
+			"set":                    true,
+			"<coldkey_ss58>":         coldkey1Kp.Address(),
+			"--hotkey_seed_file":     hotkey1Seed,
+			"--wallet-from-epoch":    "150",
 			"--wallet-through-epoch": "250",
-			"--message":             msg,
-			"--signature":           dummySig,
-			"--api_url":             op.server.URL,
+			"--message":              msg,
+			"--signature":            dummySig,
+			"--api_url":              op.server.URL,
 		}, &out)
 		if err == nil || !strings.Contains(err.Error(), "the pending statement earns epochs") {
 			t.Fatalf("expected error mentioning 'the pending statement earns epochs', got: %v", err)
@@ -1108,5 +1108,3 @@ func TestHotkeyWalletSet_MissingSignatureSource(t *testing.T) {
 		t.Fatalf("expected error mentioning 'the coldkey's signature is required', got: %v", err)
 	}
 }
-
-
