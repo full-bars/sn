@@ -468,10 +468,19 @@ func (p Policy) Validate() error {
 	if b.Schema != "urnetwork-fleet-binding-v1" || !b.ChangesEffectiveNextEpoch || b.MaximumValidityEpochs == 0 || !b.CommitmentsRequired || b.ClientSignature != "ed25519" || b.HotkeySignature != "sr25519" {
 		return errors.New("unsupported binding policy")
 	}
-	if p.Safety.MinimumHealthyNOCount < 2 || p.Safety.MinimumLiveValidatorCount < 2 || p.Safety.MaximumFinalizedHeadLagBlocks <= 0 || !p.Safety.StopOnRuntimeChange || !p.Safety.StopOnPolicyMismatch || !p.Safety.StopOnIndexGap {
+	if p.Safety.MinimumHealthyNOCount < 1 || p.Safety.MinimumLiveValidatorCount < 1 || p.Safety.MaximumFinalizedHeadLagBlocks <= 0 || !p.Safety.StopOnRuntimeChange || !p.Safety.StopOnPolicyMismatch || !p.Safety.StopOnIndexGap {
 		return errors.New("unsafe safety policy")
 	}
-	if uint64(p.Steering.MaxWeightLimitU16)*uint64(p.Safety.MinimumHealthyNOCount) < uint64(^uint16(0)) {
+	// A testnet row can be pool-only: one UID per healthy operator. A mainnet
+	// production row puts 9/10, or with no provider weight the whole row, on the
+	// economic approval's recipients (the treasury policy requires at least two)
+	// and the planner checks every entry against the cap exactly, so one operator
+	// still leaves a row two UIDs wide.
+	breadth := uint64(p.Safety.MinimumHealthyNOCount)
+	if p.NetworkProfile == "mainnet" && breadth < 2 {
+		breadth = 2
+	}
+	if uint64(p.Steering.MaxWeightLimitU16)*breadth < uint64(^uint16(0)) {
 		return errors.New("max_weight_limit_u16 is infeasible at the minimum healthy operator count")
 	}
 	return nil

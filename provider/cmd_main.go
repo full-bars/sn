@@ -81,7 +81,8 @@ Usage:
     provider provide [--port=<port>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
-        [--wallet=<coldkey_ss58>]
+        [--wallet=<coldkey_ss58> [--legacy-network-wallet]]
+        [--hotkey_seed_file=<path>]
         [--max-memory=<mem>]
         [--proxy_file=<proxy_file>]
         [--file=<file>]
@@ -97,7 +98,8 @@ Usage:
     	[--port=<port>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
-        [--wallet=<coldkey_ss58>]
+        [--wallet=<coldkey_ss58> [--legacy-network-wallet]]
+        [--hotkey_seed_file=<path>]
         [--max-memory=<mem>]
         [--proxy_file=<proxy_file>]
         [--file=<file>]
@@ -105,13 +107,26 @@ Usage:
         [--url=<url>...]
         [--URL=<URL>...]
         [-v...]
-    provider wallet set <coldkey_ss58>
+    provider wallet set <coldkey_ss58> [--legacy-network-wallet]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet hotkey challenge <coldkey_ss58> --hotkey_seed_file=<path>
+        [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet hotkey set <coldkey_ss58> --hotkey_seed_file=<path>
+        [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]
+        [--replace-other-hotkey]
+        [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet hotkey status [--hotkey_seed_file=<path>]
         [--api_url=<api_url>]
         [-v...]
     provider sn-status [--json]
         [--api_url=<api_url>]
         [-v...]
-    provider claim [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+    provider claim [--store-client=<key> | --provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
         [--api_url=<api_url>]
         [-v...]
     provider bind-head --hotkey=<hex> --registrant=<registrant> --contract=<contract> [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
@@ -160,6 +175,19 @@ Options:
     --wallet=<coldkey_ss58>          Also set the subnet claim wallet at startup, same as provider wallet set.
                                      A failure is logged and does not block providing.
     <coldkey_ss58>                   Subnet claim wallet: an ss58 coldkey address (prefix 42).
+    --legacy-network-wallet          Explicit network-wallet compatibility; allows unsigned subnet wallet set.
+    --hotkey_seed_file=<path>        Path to 0600 hotkey seed file.
+    --coldkey_seed_file=<path>       Path to 0600 coldkey seed file.
+    --replace-other-hotkey           hotkey set: replace the network's delegation to a different hotkey. Without it that is refused.
+    --message=<text>                 Statement message string to sign.
+    --signature=<hex>                64-byte sr25519 signature in hex (0x optional).
+    --wallet-from-epoch=<epoch>      First epoch of earning wallet mapping.
+    --wallet-through-epoch=<epoch>   Last epoch of earning wallet mapping.
+    --store-client=<key>             claim: use the client token of this identity from the store
+                                     (~/.urnetwork/.client_jwts.json; the key is a proxy address or "direct").
+                                     Pick a client that served traffic.
+    --provider-jwt=<path>            Path to provider JWT file for claim.
+    --legacy-coldkey=<coldkey_ss58>  Explicit legacy coldkey ss58 for claim on pre-mainnet epochs.
     --epoch=<epoch>                  Epoch to fetch the subnet pool claim for. Defaults to the last
                                      finalized epoch, which is the epoch before the current one.
     --rpc=<rpc_url>                  EVM json-rpc endpoint used to check the payout root on-chain.
@@ -250,7 +278,9 @@ Options:
 			proxyTrim(opts)
 		}
 	} else if wallet, _ := opts.Bool("wallet"); wallet {
-		if set, _ := opts.Bool("set"); set {
+		if hotkey, _ := opts.Bool("hotkey"); hotkey {
+			hotkeyWalletCmd(opts)
+		} else if set, _ := opts.Bool("set"); set {
 			walletSet(opts)
 		}
 	} else if snStatus, _ := opts.Bool("sn-status"); snStatus {
