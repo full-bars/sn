@@ -125,7 +125,7 @@ Usage:
     provider sn-status [--json]
         [--api_url=<api_url>]
         [-v...]
-    provider claim [--provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+    provider claim [--store-client=<key> | --provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
         [--api_url=<api_url>]
         [-v...]
     provider bind-head --hotkey=<hex> --registrant=<registrant> --contract=<contract> [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
@@ -181,6 +181,9 @@ Options:
     --signature=<hex>                64-byte sr25519 signature in hex (0x optional).
     --wallet-from-epoch=<epoch>      First epoch of earning wallet mapping.
     --wallet-through-epoch=<epoch>   Last epoch of earning wallet mapping.
+    --store-client=<key>             claim: use the client token of this identity from the store
+                                     (~/.urnetwork/.client_jwts.json; the key is a proxy address or "direct").
+                                     Pick a client that served traffic.
     --provider-jwt=<path>            Path to provider JWT file for claim.
     --legacy-coldkey=<coldkey_ss58>  Explicit legacy coldkey ss58 for claim on pre-mainnet epochs.
     --epoch=<epoch>                  Epoch to fetch the subnet pool claim for. Defaults to the last

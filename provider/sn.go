@@ -546,17 +546,60 @@ func fetchPoolClaim(ctx context.Context, apiUrl string, byJwt string, epoch uint
 	return &res, nil
 }
 
+// claimStoreClientJwt returns the client token of one identity from the client
+// token store (~/.urnetwork/.client_jwts.json). This fork mints its client
+// tokens through the store, not into upstream's .provider.jwt files, so this is
+// where a claim finds its credential. The platform looks a claim up by the
+// client in the token, so the identity must be one that served traffic. A
+// token that names no client (the network token) or has expired is refused
+// here rather than as an opaque platform refusal. The token is never printed.
+func claimStoreClientJwt(key string) (string, error) {
+	path, err := providerStatePath(".client_jwts.json")
+	if err != nil {
+		return "", err
+	}
+	store := newClientJWTStore(path)
+	entry, ok := store.Get(key)
+	if !ok {
+		return "", fmt.Errorf("no client %q in %s; the key is the proxy address the identity was minted for, or \"direct\"", key, path)
+	}
+	byJwt := strings.TrimSpace(entry.ByClientJWT)
+	if byJwt == "" {
+		return "", fmt.Errorf("client %q has an empty token in the store", key)
+	}
+	if !jwtContainsClientId(byJwt) {
+		return "", fmt.Errorf("client %q does not hold a client token (is it the network token?); claim needs a client token", key)
+	}
+	if err := validateJWTExpiry(byJwt); err != nil {
+		return "", fmt.Errorf("client %q token has expired; let the provider renew it or pass a fresher --provider-jwt", key)
+	}
+	return byJwt, nil
+}
+
 // runClaim executes the claim command logic.
 func runClaim(ctx context.Context, opts docopt.Opts) error {
 	providerJwtPath, _ := opts.String("--provider-jwt")
 	legacyColdkey, _ := opts.String("--legacy-coldkey")
+	storeClient, _ := opts.String("--store-client")
 
-	if providerJwtPath != "" && legacyColdkey != "" {
-		return errors.New("--provider-jwt and --legacy-coldkey are mutually exclusive")
+	given := 0
+	for _, v := range []string{providerJwtPath, legacyColdkey, storeClient} {
+		if v != "" {
+			given += 1
+		}
+	}
+	if 1 < given {
+		return errors.New("--provider-jwt, --legacy-coldkey and --store-client are mutually exclusive")
 	}
 
 	var byJwt string
-	if providerJwtPath != "" {
+	if storeClient != "" {
+		token, err := claimStoreClientJwt(storeClient)
+		if err != nil {
+			return err
+		}
+		byJwt = token
+	} else if providerJwtPath != "" {
 		jwtBytes, err := os.ReadFile(providerJwtPath)
 		if err != nil {
 			return fmt.Errorf("reading --provider-jwt file %s: %w", providerJwtPath, err)
@@ -581,7 +624,7 @@ func runClaim(ctx context.Context, opts docopt.Opts) error {
 		}
 		jwtBytes, err := os.ReadFile(providerJwtDefaultPath)
 		if errors.Is(err, os.ErrNotExist) {
-			return errors.New("no .provider.jwt found; pass --provider-jwt=<path> or --legacy-coldkey=<coldkey_ss58>")
+			return errors.New("no .provider.jwt found; pass --store-client=<key> (an identity from ~/.urnetwork/.client_jwts.json), --provider-jwt=<path> or --legacy-coldkey=<coldkey_ss58>")
 		}
 		if err != nil {
 			return fmt.Errorf("reading %s: %w", providerJwtDefaultPath, err)
