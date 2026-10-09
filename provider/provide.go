@@ -289,6 +289,9 @@ func provideSetupSignals(st *provideState) {
 			tlog("[systemd] READY=1 notify failed: %s\n", err)
 		}
 		reportProxyStatusToSystemd()
+		// systemd's watchdog runs from here: feed it through the whole of
+		// startup, not only once the proxy list is loaded.
+		startLivenessWatchdog(st.ctx)
 	}
 
 	go func() {
@@ -1005,6 +1008,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			}
 		}
 		_ = notifySystemdReady() // non-actionable: systemd notify is best-effort
+		startLivenessWatchdog(st.ctx)
 	})
 	if unregSocketCloser != nil {
 		defer unregSocketCloser()
@@ -1530,6 +1534,14 @@ func provideLauncherLoop(st *provideState) func() {
 	// good (and leaving the last pressure score, GOGC and memory budget in force).
 	if pressureLoopsSupported {
 		go superviseLoop(st.ctx, "pressure_monitor", func() { runPressureMonitor(st.ctx, selfHealEnabled) }, nil)
+		// systemd watchdog feed: inert unless the unit sets WatchdogSec=. Pings only
+		// while the pressure monitor keeps ticking, so a process that is alive but
+		// stalled (a GC death spiral on a small box) is restarted by systemd.
+		// Evidence capture: goroutine and heap profiles to ~/.urnetwork/incidents/ when
+		// the build-up of a stall shows, while the process can still write them.
+		if incidentCaptureEnabled() {
+			go superviseLoop(st.ctx, "incident_capture", func() { runIncidentCapture(st.ctx) }, nil)
+		}
 		go superviseLoop(st.ctx, "pool_controller", func() { runPoolController(st.ctx, proxyURLMax, selfHealEnabled) }, nil)
 		// Thrash watchdog: senses swap-thrash independently of the pressure
 		// score, holds the freeze-growth rung, and (gated on self-heal,
