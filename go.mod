@@ -1,6 +1,6 @@
 module github.com/urfoundation/sn
 
-go 1.27.0
+go 1.27.1
 
 require (
 	github.com/Microsoft/go-winio v0.6.2

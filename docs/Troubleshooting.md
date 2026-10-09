@@ -29,6 +29,7 @@ failure and what happened.
 |------|---------|
 | 0 | Clean shutdown (SIGTERM or manual stop). |
 | 78 | The JWT is expired or invalid. The container startup script intercepts this code, deletes the stale JWT, and re-authenticates when an auth code is available (see Container troubleshooting). |
+| 75 | Planned restart requested by the swap-thrash watchdog. It is not a crash. Under systemd with `Restart=on-failure` the unit restarts the provider. In a container the start script restarts it after 5 seconds, and only when `URNETWORK_EXIT75_OK=1` allowed the watchdog to exit at all. See [Swap-thrash watchdog](Configuration.md#swap-thrash-watchdog). |
 
 ## Container troubleshooting
 
