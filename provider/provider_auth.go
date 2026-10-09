@@ -22,7 +22,7 @@ package provider
 //   - RequireVersion (hotswap.go)
 //   - isHotSwapDraining (hotswap.go)
 //   - ProxyEverUp, ProxyAuthFailureCount (proxy_health.go)
-//   - newProviderAuthClientArgsForRenewal, renewClientJWT (renewal_watcher.go)
+//   - newProviderAuthClientArgsForRenewal, renewClientJWT, isRenewalTransient (renewal_watcher.go)
 //   - revokedIdentityAuthFailureThreshold (renewal_watcher.go)
 
 import (
@@ -289,6 +289,11 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 						}
 						return renewedJwt, parsedId, true, nil
 					}
+					if isRenewalTransient(renewErr) {
+						tlog("🔥 [hot-restart] %s: stored client JWT expired, renewal of identity %s failed without a verdict (%v); keeping the identity and retrying instead of minting a new one\n", identityKey, parsedId, renewErr)
+						returnErr = fmt.Errorf("renewal of %s deferred: %w", parsedId, renewErr)
+						return
+					}
 					tlog("🔥 [hot-restart] %s: stored client JWT expired, renewal attempt failed (%v), minting fresh\n", identityKey, renewErr)
 				} else {
 					tlog("🔥 [hot-restart] %s: stored client JWT expired, invalid client_id %q (%v), minting fresh\n", identityKey, entry.ClientID, parseErr)
@@ -309,6 +314,11 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 							tlog("⚠️ [jwt-store] failed to persist renewed client JWT for %s: %v\n", identityKey, putErr)
 						}
 						return renewedJwt, parsedId, true, nil
+					}
+					if isRenewalTransient(renewErr) {
+						tlog("🔥 [hot-restart] %s: stored client JWT missing client_id claim, renewal of identity %s failed without a verdict (%v); keeping the identity and retrying instead of minting a new one\n", identityKey, parsedId, renewErr)
+						returnErr = fmt.Errorf("renewal of %s deferred: %w", parsedId, renewErr)
+						return
 					}
 					tlog("🔥 [hot-restart] %s: stored client JWT missing client_id claim, renewal salvage failed (%v), minting fresh\n", identityKey, renewErr)
 				} else {
