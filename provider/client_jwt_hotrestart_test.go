@@ -2,6 +2,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -678,4 +681,123 @@ func TestProvideUsesTheIdentityKeyForTheJWTStore(t *testing.T) {
 	if strings.Count(string(src), "identityKey := jwtStoreKey(proxySettings)") < 2 {
 		t.Fatal("provide.go must derive identityKey with jwtStoreKey(proxySettings) at both sites")
 	}
+}
+
+// A renewal that fails without a verdict (timeout, dropped connection, HTTP
+// failure) says nothing about the identity, so provideAuth must keep it and
+// return an error for the caller's backoff, not mint a new client.
+func TestProvideAuthKeepsIdentityOnTransientRenewalFailure(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		jwtExp time.Duration
+		claims bool
+	}{
+		{"expired stored token", -time.Hour, true},
+		{"stored token without client_id", time.Hour, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			home, restoreHome := withHome(t)
+			defer restoreHome()
+			writeAccountJWT(t, home, map[string]interface{}{
+				"client_id":  testClientId,
+				"network_id": "net-1",
+			})
+			restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
+			defer restoreStore()
+
+			claims := map[string]interface{}{"exp": float64(time.Now().Add(tc.jwtExp).Unix())}
+			if tc.claims {
+				claims["client_id"] = testClientId
+			}
+			entry := clientJWTEntry{
+				ByClientJWT: createFakeJWTWithClaims(claims),
+				ClientID:    testClientId,
+				NetworkID:   "net-1",
+				MintedAt:    time.Now().Add(-25 * time.Hour),
+			}
+			_ = loadGlobalClientJWTStore().Put("direct", entry)
+
+			origFn := renewClientJWTFn
+			defer func() { renewClientJWTFn = origFn }()
+			renewClientJWTFn = func(_ context.Context, _, _ string, _ connect.Id, _ string, _ *connect.ClientStrategy) (string, error) {
+				return "", &renewalTransientError{errFakeRenew}
+			}
+			t.Setenv("URNETWORK_HOT_RESTART", "1")
+
+			// No recover: a fall-through into the mint path dials the API and
+			// panics with a nil context, which is the failure under test.
+			_, _, reused, err := provideAuth(nil, nil, "", docopt.Opts{}, "node", "direct")
+			if err == nil || !isRenewalTransient(err) {
+				t.Fatalf("provideAuth err = %v, want a deferred transient renewal error", err)
+			}
+			if reused {
+				t.Fatal("a failed renewal must not report the identity as reused")
+			}
+			stored, ok := loadGlobalClientJWTStore().Get("direct")
+			if !ok || stored.ByClientJWT != entry.ByClientJWT || stored.ClientID != entry.ClientID {
+				t.Fatalf("the stored identity must be left untouched, got %+v ok=%v", stored, ok)
+			}
+		})
+	}
+}
+
+func TestIsRenewalTransientOnlyForUnverdictedFailures(t *testing.T) {
+	if !isRenewalTransient(&renewalTransientError{errFakeRenew}) {
+		t.Fatal("a marked error must classify as transient")
+	}
+	if !isRenewalTransient(fmt.Errorf("wrapped: %w", &renewalTransientError{errFakeRenew})) {
+		t.Fatal("a wrapped marked error must classify as transient")
+	}
+	if isRenewalTransient(errFakeRenew) {
+		t.Fatal("an unmarked error is a verdict and must not classify as transient")
+	}
+}
+
+func renewTestApi(t *testing.T, handler http.HandlerFunc) string {
+	t.Helper()
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
+	return server.URL
+}
+
+func TestRenewClientJWTClassifiesFailures(t *testing.T) {
+	clientId := connect.NewId()
+
+	t.Run("an HTTP failure carries no verdict", func(t *testing.T) {
+		url := renewTestApi(t, func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "boom", http.StatusInternalServerError)
+		})
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		_, err := renewClientJWT(ctx, url, "account-jwt", clientId, "d", nil)
+		if err == nil || !isRenewalTransient(err) {
+			t.Fatalf("an HTTP 500 must be transient, got %v", err)
+		}
+	})
+
+	t.Run("a cancelled context carries no verdict", func(t *testing.T) {
+		url := renewTestApi(t, func(w http.ResponseWriter, r *http.Request) { <-r.Context().Done() })
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		_, err := renewClientJWT(ctx, url, "account-jwt", clientId, "d", nil)
+		if err == nil || !isRenewalTransient(err) {
+			t.Fatalf("a cancelled context must be transient, got %v", err)
+		}
+	})
+
+	t.Run("Client does not exist is a verdict", func(t *testing.T) {
+		url := renewTestApi(t, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"error":{"message":"Client does not exist."}}`))
+		})
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		_, err := renewClientJWT(ctx, url, "account-jwt", clientId, "d", nil)
+		if err == nil {
+			t.Fatal("a refused renewal must error")
+		}
+		if isRenewalTransient(err) {
+			t.Fatalf("the platform's answer is a verdict and must not be transient: %v", err)
+		}
+	})
 }

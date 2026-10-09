@@ -427,6 +427,22 @@ func newProviderAuthClientArgsForRenewal(description string, clientId connect.Id
 	}
 }
 
+// renewalTransientError marks a renewal that failed before the platform gave a
+// verdict on the identity: a dropped connection, a timeout, an HTTP failure or
+// a cancelled context. It says nothing about whether the client still exists,
+// so the caller must retry rather than throw the identity away by minting a new
+// one. A verdict ("Client does not exist.", a refusal, a mismatched client id)
+// is a plain error and still falls through to a fresh mint.
+type renewalTransientError struct{ err error }
+
+func (e *renewalTransientError) Error() string { return e.err.Error() }
+func (e *renewalTransientError) Unwrap() error { return e.err }
+
+func isRenewalTransient(err error) bool {
+	var transient *renewalTransientError
+	return errors.As(err, &transient)
+}
+
 func renewClientJWT(ctx context.Context, apiUrl, byJwt string, clientId connect.Id, description string, clientStrategy *connect.ClientStrategy) (string, error) {
 	if clientStrategy == nil {
 		clientStrategy = connect.NewClientStrategyWithDefaults(ctx)
@@ -440,11 +456,11 @@ func renewClientJWT(ctx context.Context, apiUrl, byJwt string, clientId connect.
 	var result connect.ApiCallbackResult[*connect.AuthNetworkClientResult]
 	select {
 	case <-ctx.Done():
-		return "", ctx.Err()
+		return "", &renewalTransientError{ctx.Err()}
 	case result = <-channel:
 	}
 	if result.Error != nil {
-		return "", fmt.Errorf("auth-client renewal api error: %w", result.Error)
+		return "", &renewalTransientError{fmt.Errorf("auth-client renewal api error: %w", result.Error)}
 	}
 	if result.Result == nil {
 		return "", fmt.Errorf("empty result from auth-client renewal API")
