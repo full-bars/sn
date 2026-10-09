@@ -373,3 +373,57 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 **Files**: `provider/proxy_health_log.go`, `provider/node_snapshot.go`, `internal/urnettools/snapshot_render.go`, `internal/urnettools/top_view.go`, the golden files under `internal/urnettools/testdata/` and `testdata/livestatus/`, and `LOG_REFERENCE.md`. `docs/Configuration.md`, `docs/Proxy-Management.md`, `docs/Docker-Deployment.md`, `docs/Troubleshooting.md`, `docs/design/live-status-snapshot.md`, `docs/urnet-tools-Go.md` and `docs/urnet-tools-go.md` carry the updated wording.
 
 **Status**: ✅ Shipped
+
+---
+
+## 30. A Failed Renewal Keeps the Client Identity (PR #82)
+
+**Purpose**: A stored client token whose renewal failed for a transient reason was replaced by a brand new client, abandoning the old client id and its history.
+
+**Files Modified**: `provider/renewal_watcher.go`, `provider/client_jwt_hotrestart_test.go`
+
+**Change**:
+- `renewClientJWT` marks a renewal that failed without a platform verdict as a `renewalTransientError`: a transport error, a 5xx, a 408, a 429 or a cancelled context. `provideAuth` keeps the identity at both fall-through sites and returns the error for the caller's backoff. A definite answer (`Client does not exist.`, a mismatched client id, a permanent 4xx) still mints a fresh client. The status is read from the `<code> <text>: <body>` prefix that the HTTP error carries on every non-200 answer.
+
+**How to Identify in New Upstream**: `renewalTransientError`, `isRenewalTransient` and `renewalHTTPRefusal` in `provider/renewal_watcher.go`.
+
+**Status**: ported from 3.23-fix PR #802 (renewal half only). The claim credential and the wallet gate of that line do not apply here: this line's claim still authenticates with the network token, and the signed wallet flow is a separate change.
+
+---
+
+## 31. A Container Can Opt In to the Exit 75 Restart (PR #84)
+
+**Purpose**: The thrash watchdog's self-restart exits with status 75 and was allowed only under systemd, so in a container it always declined. A container may now opt in, safely.
+
+**Files Modified**: `provider/thrash_watchdog.go`, `docker/scripts/start_stable.sh`, `docker/scripts/start_nightly.sh`, `docker/scripts/start_jwt.sh`, `docker/scripts/pelican_panel.sh`, `docker/scripts/test_update_verify.sh`, `.github/workflows/build.yml`, `docs/Configuration.md`
+
+**Files Added**: `docker/scripts/test_exit75_restart.sh`
+
+**Change**:
+- `thrashSupervisorKind` is the one decision used by both the exit gate and the critical-state log line. systemd (`INVOCATION_ID` or `NOTIFY_SOCKET`) restarts on 75. A container (`/.dockerenv` or `URNETWORK_CONTAINER=1`) does only with `URNETWORK_EXIT75_OK=1`.
+- Before exiting in a container the watchdog proves the state directory holding `thrash_cap.json` can be written and read back, otherwise the escalation is refused as `persist-failed`. The probe runs in a goroutine bounded by `thrashPersistTimeout`.
+- The start scripts treat exit 75 as a planned restart (5 second sleep, failure counter and JWT untouched). `start_update.sh` and the JWT-mode function of `pelican_panel.sh` have no restart loop and are untouched.
+
+**How to Identify in New Upstream**: `thrashSupervisorKind` and `thrashCapDirWritableBounded` in `provider/thrash_watchdog.go`; the `-eq 75` block in each start script.
+
+**Status**: ported from 3.23-fix PR #803. Nothing sets `URNETWORK_EXIT75_OK` by default.
+
+---
+
+## 32. urnet-tools Runs Natively on Windows and Follows Rotated Logs (PR #79)
+
+**Purpose**: `urnet-tools` shelled out to Unix tools on Windows (`tail`, `sudo`) and a clean Windows profile could not start the provider.
+
+**Files Modified**: `internal/urnettools/legacy_cmds.go`, `internal/urnettools/lifecycle_start_windows.go`, `internal/urnettools/proxy.go`, `internal/urnettools/restart_escalation.go`, `internal/urnettools/select_multi.go`
+
+**Files Added**: `internal/urnettools/log_stream.go`, `internal/urnettools/log_follow_open_unix.go`, `internal/urnettools/log_follow_open_windows.go`, and tests for each
+
+**Change**:
+- `streamLogFile` prints the last lines and then follows. It is the log view on Windows and the fallback wherever `tail` is missing. It reads from exactly where the tail stopped, so no line is skipped, and each line appears once.
+- On Windows the log is opened with `FILE_SHARE_DELETE` through `syscall.CreateFile`, so a rotation, a clear or an update is not blocked. Paths longer than `MAX_PATH` get the `\\?\` prefix, which `CreateFile` does not add the way `os.Open` does.
+- If the path starts naming a different file, the follower drains the old one and follows the new one from its start. A truncated log restarts from its start. A tail window that starts exactly on a line boundary keeps its first line.
+- `homeForUser` resolves the account home from the account database (`os/user`, then `getent`) before `$HOME`, which is only the last resort for the invoking user. The state directory is created before the provider is launched on Windows, and the sudo checks are skipped there.
+
+**How to Identify in New Upstream**: `internal/urnettools/log_stream.go` and `openFollowFile`.
+
+**Status**: ported from 3.23-fix PR #795. The two follow-up fixes (tail window, long paths) are on the `port/windows-log-follow-leftovers` branch. A live `urnet-tools proxy health` run against a Windows provider has not been done.
