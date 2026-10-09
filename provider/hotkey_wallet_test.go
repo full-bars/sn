@@ -730,15 +730,34 @@ func TestHotkeyWallet_E7_ClaimCredentials(t *testing.T) {
 
 	// Case 3: --provider-jwt sends that token
 	providerJwtFile := filepath.Join(stateDir, "custom-provider.jwt")
-	_ = os.WriteFile(providerJwtFile, []byte("custom-provider-token"), 0600)
+	customClientJwt := testClientJwt(t, time.Hour)
+	_ = os.WriteFile(providerJwtFile, []byte(customClientJwt), 0600)
 	optsProvider := docopt.Opts{
 		"claim":          true,
 		"--provider-jwt": providerJwtFile,
 		"--api_url":      server.URL,
 	}
 	_ = runClaim(context.Background(), optsProvider)
-	if h := lastAuthHeader.Load(); h == nil || *h != "Bearer custom-provider-token" {
-		t.Fatalf("expected Bearer custom-provider-token, got %v", h)
+	if h := lastAuthHeader.Load(); h == nil || *h != "Bearer "+customClientJwt {
+		t.Fatalf("expected the --provider-jwt client token as bearer, got %v", h)
+	}
+
+	// Case 4: --provider-jwt holding the network token or an expired token is
+	// refused locally, before any request
+	before := claimCalls.Load()
+	for name, token := range map[string]string{
+		"network token": "network-jwt-token",
+		"expired":       testClientJwt(t, -time.Hour),
+	} {
+		file := filepath.Join(stateDir, "bad-"+strings.ReplaceAll(name, " ", "-")+".jwt")
+		_ = os.WriteFile(file, []byte(token), 0600)
+		err := runClaim(context.Background(), docopt.Opts{"claim": true, "--provider-jwt": file, "--api_url": server.URL})
+		if err == nil {
+			t.Fatalf("%s via --provider-jwt must be refused locally", name)
+		}
+	}
+	if claimCalls.Load() != before {
+		t.Fatalf("a refused token must not reach the platform, saw %d new calls", claimCalls.Load()-before)
 	}
 }
 
@@ -857,5 +876,79 @@ func TestProvideLegacyWalletGateRefusesWithoutOptIn(t *testing.T) {
 func TestHotkeyWalletUpkeepStepBudgetExceedsPerRequestTimeout(t *testing.T) {
 	if hotkeyWalletUpkeepStepTimeout <= 30*time.Second {
 		t.Fatalf("step budget %v must exceed the 30s per-request timeout", hotkeyWalletUpkeepStepTimeout)
+	}
+}
+
+// A set whose submission failed has already stored its generation. Running it
+// again with the coldkey seed must resubmit that head, not sign a new
+// generation on every retry until the lineage cap.
+func TestHotkeyWalletSetRetryReusesTheStoredHead(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+
+	op := newFakeOperator(t)
+	if err := os.WriteFile(filepath.Join(stateDir, "jwt"), []byte(op.byJwt), 0600); err != nil {
+		t.Fatal(err)
+	}
+	hotkeySeed := filepath.Join(stateDir, "hotkey.seed")
+	if err := os.WriteFile(hotkeySeed, []byte(strings.Repeat("12", 32)), 0600); err != nil {
+		t.Fatal(err)
+	}
+	coldkeySeed := filepath.Join(stateDir, "coldkey.seed")
+	if err := os.WriteFile(coldkeySeed, []byte(strings.Repeat("34", 32)), 0600); err != nil {
+		t.Fatal(err)
+	}
+	coldkeyRaw, err := crv4.LoadSeedFile(coldkeySeed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	coldkeyKp, err := crv4.KeypairFromSeed(coldkeyRaw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	coldkeySs58 := coldkeyKp.Address()
+
+	var out bytes.Buffer
+	if err := hotkeyWalletChallenge(context.Background(), docopt.Opts{
+		"hotkey": true, "challenge": true, "<coldkey_ss58>": coldkeySs58,
+		"--hotkey_seed_file": hotkeySeed, "--api_url": op.server.URL,
+	}, &out); err != nil {
+		t.Fatalf("challenge failed: %v", err)
+	}
+
+	setOpts := docopt.Opts{
+		"hotkey": true, "set": true, "<coldkey_ss58>": coldkeySs58,
+		"--hotkey_seed_file": hotkeySeed, "--coldkey_seed_file": coldkeySeed, "--api_url": op.server.URL,
+	}
+
+	// the operator is down: the generation is stored locally, the submit fails
+	op.mu.Lock()
+	op.return500 = true
+	op.mu.Unlock()
+	if err := hotkeyWalletSet(context.Background(), setOpts, &out); err == nil {
+		t.Fatal("a set against a failing operator must report the failure")
+	}
+	store := hotkeyWalletStore(stateDir)
+	chain, err := store.Chain()
+	if err != nil || len(chain) != 1 {
+		t.Fatalf("expected one stored generation after the failed set, got %d (%v)", len(chain), err)
+	}
+
+	// the operator is back: the retry must resubmit generation 1
+	op.mu.Lock()
+	op.return500 = false
+	op.mu.Unlock()
+	out.Reset()
+	if err := hotkeyWalletSet(context.Background(), setOpts, &out); err != nil {
+		t.Fatalf("the retry failed: %v\n%s", err, out.String())
+	}
+	chain, err = store.Chain()
+	if err != nil || len(chain) != 1 {
+		t.Fatalf("the retry signed a new generation: chain length %d (%v)", len(chain), err)
+	}
+	op.mu.Lock()
+	defer op.mu.Unlock()
+	if len(op.delegations) != 1 {
+		t.Fatalf("expected the retry to delegate once, got %d delegations", len(op.delegations))
 	}
 }

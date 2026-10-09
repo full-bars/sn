@@ -325,6 +325,13 @@ func (self Operator) origin() (string, error) {
 	return strings.TrimSuffix(self.ApiUrl, "/"), nil
 }
 
+// SecureApiUrl is the rule every request that carries a JWT follows: https, or
+// plaintext http only for a literal loopback host, with no credentials, query
+// or fragment in the URL. It returns the URL without a trailing slash.
+func SecureApiUrl(apiUrl string) (string, error) {
+	return Operator{ApiUrl: apiUrl}.origin()
+}
+
 // Only literal loopback names qualify; DNS is never consulted, so a later
 // rebinding cannot move plaintext credentials off the host.
 func loopbackHost(host string) bool {

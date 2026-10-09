@@ -116,6 +116,7 @@ Usage:
         [-v...]
     provider wallet hotkey set <coldkey_ss58> --hotkey_seed_file=<path>
         [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]
+        [--replace-other-hotkey]
         [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
         [--api_url=<api_url>]
         [-v...]
@@ -177,6 +178,7 @@ Options:
     --legacy-network-wallet          Explicit network-wallet compatibility; allows unsigned subnet wallet set.
     --hotkey_seed_file=<path>        Path to 0600 hotkey seed file.
     --coldkey_seed_file=<path>       Path to 0600 coldkey seed file.
+    --replace-other-hotkey           hotkey set: replace the network's delegation to a different hotkey. Without it that is refused.
     --message=<text>                 Statement message string to sign.
     --signature=<hex>                64-byte sr25519 signature in hex (0x optional).
     --wallet-from-epoch=<epoch>      First epoch of earning wallet mapping.

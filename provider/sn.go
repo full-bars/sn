@@ -58,6 +58,7 @@ import (
 
 	"github.com/urnetwork/connect"
 
+	"github.com/urfoundation/sn/hotkeywallet"
 	"github.com/urfoundation/sn/merkle"
 	"github.com/urfoundation/sn/miner/onchain"
 	"github.com/urfoundation/sn/provider/bandwidth"
@@ -510,7 +511,12 @@ func WalletSet(opts docopt.Opts) {
 
 // fetchPoolClaim performs a direct HTTP GET /sn/pool/claim?epoch=N[&legacy_coldkey=S]
 func fetchPoolClaim(ctx context.Context, apiUrl string, byJwt string, epoch uint64, legacyColdkey string) (*connect.SnPoolClaimResult, error) {
-	reqUrl := fmt.Sprintf("%s/sn/pool/claim?epoch=%d", strings.TrimSuffix(apiUrl, "/"), epoch)
+	// the client jwt must never leave the box in cleartext
+	origin, err := hotkeywallet.SecureApiUrl(apiUrl)
+	if err != nil {
+		return nil, err
+	}
+	reqUrl := fmt.Sprintf("%s/sn/pool/claim?epoch=%d", origin, epoch)
 	if legacyColdkey != "" {
 		reqUrl += "&legacy_coldkey=" + url.QueryEscape(legacyColdkey)
 	}
@@ -576,6 +582,19 @@ func claimStoreClientJwt(key string) (string, error) {
 	return byJwt, nil
 }
 
+// requireClientClaimToken refuses a token the platform would answer with an
+// opaque refusal: one that names no client (the network token) or has expired.
+// source says where the token came from, for the operator. Never prints it.
+func requireClientClaimToken(byJwt string, source string) error {
+	if !jwtContainsClientId(byJwt) {
+		return fmt.Errorf("%s does not hold a client token (is it the network token?); claim needs a client token", source)
+	}
+	if err := validateJWTExpiry(byJwt); err != nil {
+		return fmt.Errorf("%s has expired; let the provider renew it or pass a fresher token", source)
+	}
+	return nil
+}
+
 // runClaim executes the claim command logic.
 func runClaim(ctx context.Context, opts docopt.Opts) error {
 	providerJwtPath, _ := opts.String("--provider-jwt")
@@ -608,6 +627,9 @@ func runClaim(ctx context.Context, opts docopt.Opts) error {
 		if byJwt == "" {
 			return fmt.Errorf("--provider-jwt file %s is empty", providerJwtPath)
 		}
+		if err := requireClientClaimToken(byJwt, "the --provider-jwt file"); err != nil {
+			return err
+		}
 	} else if legacyColdkey != "" {
 		if _, err := ss58.DecodeWithPrefix(legacyColdkey, ss58.BittensorPrefix); err != nil {
 			return fmt.Errorf("invalid --legacy-coldkey: %w", err)
@@ -615,6 +637,12 @@ func runClaim(ctx context.Context, opts docopt.Opts) error {
 		token, err := readNetworkJwt()
 		if err != nil {
 			return err
+		}
+		if jwtContainsClientId(token) {
+			return errors.New("the network jwt unexpectedly names a client; --legacy-coldkey needs the account (network) token")
+		}
+		if err := validateJWTExpiry(token); err != nil {
+			return errors.New("the network jwt has expired; run `provider auth` again, then retry")
 		}
 		byJwt = token
 	} else {
@@ -632,6 +660,9 @@ func runClaim(ctx context.Context, opts docopt.Opts) error {
 		byJwt = strings.TrimSpace(string(jwtBytes))
 		if byJwt == "" {
 			return fmt.Errorf("%s is empty; pass --provider-jwt=<path> or --legacy-coldkey=<coldkey_ss58>", providerJwtDefaultPath)
+		}
+		if err := requireClientClaimToken(byJwt, providerJwtDefaultPath); err != nil {
+			return err
 		}
 	}
 
@@ -817,11 +848,12 @@ func runClaim(ctx context.Context, opts docopt.Opts) error {
 		Proof:    proof,
 	})
 	if err != nil {
-		panic(fmt.Errorf("pack claimMiner: %s", err))
+		return fmt.Errorf("pack claimMiner: %w", err)
 	}
 
 	if 0 < len(mismatches) {
-		fmt.Printf("claimMiner calldata:\n0x%x\n", claimCalldata)
+		// no calldata here: a claim that failed verification must not leave
+		// ready-to-submit bytes in the terminal
 		for _, mismatch := range mismatches {
 			fmt.Printf("mismatch: %s\n", mismatch)
 		}

@@ -1049,7 +1049,7 @@ func TestEnsureOperatorHotkeyWallet_AdvancePastExistingEntry(t *testing.T) {
 	op.mu.Unlock()
 
 	target := hotkeyWalletTarget{apiUrl: op.server.URL, byJwt: op.byJwt, domain: "test"}
-	outcome, err := ensureOperatorHotkeyWallet(context.Background(), target, hotkeyKp, chain)
+	outcome, err := ensureOperatorHotkeyWallet(context.Background(), target, hotkeyKp, chain, false)
 	if err != nil {
 		t.Fatalf("ensureOperatorHotkeyWallet failed: %v", err)
 	}
@@ -1106,5 +1106,70 @@ func TestHotkeyWalletSet_MissingSignatureSource(t *testing.T) {
 
 	if err == nil || !strings.Contains(err.Error(), "the coldkey's signature is required") {
 		t.Fatalf("expected error mentioning 'the coldkey's signature is required', got: %v", err)
+	}
+}
+
+// A delegation that adopts the head but whose window has passed earns nothing.
+// The upkeep must renew it instead of treating "adopts the head" as done.
+func TestEnsureOperatorHotkeyWallet_RenewsAnExpiredAdoptedDelegation(t *testing.T) {
+	for _, tc := range []struct {
+		name         string
+		throughEpoch uint64
+		wantRenewal  bool
+	}{
+		{"window passed", 5, true},
+		{"window still open", 1_000_000, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			stateDir := t.TempDir()
+			store := hotkeyWalletStore(stateDir)
+			op := newFakeOperator(t)
+			op.mu.Lock()
+			op.epoch = 50
+			op.mu.Unlock()
+
+			hotkeySeed := filepath.Join(stateDir, "hotkey.seed")
+			_ = os.WriteFile(hotkeySeed, []byte(strings.Repeat("12", 32)), 0600)
+			coldkeySeed := filepath.Join(stateDir, "coldkey.seed")
+			_ = os.WriteFile(coldkeySeed, []byte(strings.Repeat("34", 32)), 0600)
+			hotkeyKp, _ := loadOperatorHotkey(hotkeySeed)
+			coldkeyRaw, _ := crv4.LoadSeedFile(coldkeySeed)
+			coldkeyKp, _ := crv4.KeypairFromSeed(coldkeyRaw)
+
+			stmt, err := hotkeywallet.NextStatement(nil, fakeTestDomain.HotkeySubnet(), hotkeyKp.PublicKey(), coldkeyKp.PublicKey(), 1, 100, time.Now())
+			if err != nil {
+				t.Fatal(err)
+			}
+			msg, _ := stmt.Message()
+			coldkeySig, _ := hotkeywallet.Sign(coldkeyKp, msg)
+			hotkeySig, _ := hotkeywallet.Sign(hotkeyKp, msg)
+			_ = store.Append(protocol.HotkeyWalletMappingConsent{Message: msg, ColdkeySignature: coldkeySig, HotkeySignature: hotkeySig})
+			chain, _ := store.Chain()
+			_, headHash, err := protocol.VerifyHotkeyWalletMappingLineage(context.Background(), chain)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			op.mu.Lock()
+			op.extraWallets = []map[string]any{{
+				"coldkey_ss58":       coldkeyKp.Address(),
+				"consent_scope":      "hotkey",
+				"hotkey_ss58":        hotkeyKp.Address(),
+				"from_epoch":         uint64(1),
+				"through_epoch":      tc.throughEpoch,
+				"consent_head_hash":  "0x" + hex.EncodeToString(headHash[:]),
+				"consent_generation": uint64(1),
+			}}
+			op.mu.Unlock()
+
+			target := hotkeyWalletTarget{apiUrl: op.server.URL, byJwt: op.byJwt, domain: "test"}
+			outcome, err := ensureOperatorHotkeyWallet(context.Background(), target, hotkeyKp, chain, false)
+			if err != nil {
+				t.Fatalf("ensureOperatorHotkeyWallet failed: %v", err)
+			}
+			if outcome.delegated != tc.wantRenewal {
+				t.Fatalf("delegated = %v, want %v (through epoch %d, operator epoch 50)", outcome.delegated, tc.wantRenewal, tc.throughEpoch)
+			}
+		})
 	}
 }

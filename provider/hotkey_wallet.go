@@ -81,7 +81,12 @@ func hotkeyWalletCall(ctx context.Context, target hotkeyWalletTarget, method str
 		}
 		reader = bytes.NewReader(raw)
 	}
-	request, err := http.NewRequestWithContext(ctx, method, strings.TrimSuffix(target.apiUrl, "/")+path, reader)
+	// the network jwt must never leave the box in cleartext
+	origin, err := hotkeywallet.SecureApiUrl(target.apiUrl)
+	if err != nil {
+		return err
+	}
+	request, err := http.NewRequestWithContext(ctx, method, origin+path, reader)
 	if err != nil {
 		return err
 	}
@@ -351,9 +356,31 @@ func (self hotkeyWalletOutcome) String() string {
 	return fmt.Sprintf("chain stored; delegated to generation %d from epoch %d through %d", self.generation, self.fromEpoch, self.throughEpoch)
 }
 
+// refuseHotkeyTakeover stops a box from replacing the network's delegation to a
+// different hotkey. The delegation is network-scoped and a fleet is one network,
+// so two boxes with different hotkeys would take it back from each other every
+// hour, each time moving the paid coldkey. Replacing another hotkey's delegation
+// takes the explicit --replace-other-hotkey; the hourly upkeep never has it.
+func refuseHotkeyTakeover(entry *hotkeyWalletEntry, hotkey [32]byte, replaceOther bool) error {
+	if entry == nil || replaceOther {
+		return nil
+	}
+	if entry.ConsentScope != "" && entry.ConsentScope != protocol.EarningWalletModeHotkey {
+		return nil
+	}
+	entryHotkey, err := ss58.DecodeWithPrefix(entry.HotkeySs58, ss58.BittensorPrefix)
+	if err != nil {
+		return fmt.Errorf("the operator lists a delegation whose hotkey %q cannot be read, so it is not replaced; check it with `provider wallet hotkey status`, or pass --replace-other-hotkey", entry.HotkeySs58)
+	}
+	if entryHotkey == hotkey {
+		return nil
+	}
+	return fmt.Errorf("the network is already delegated to another hotkey (%s); replacing it moves the paid coldkey for every box of this network. Check `provider wallet hotkey status`, and pass --replace-other-hotkey only if you mean to take it over", entry.HotkeySs58)
+}
+
 // Stores the chain at one operator, then delegates the miner's network there
 // to the chain's head unless the delegation already adopts it.
-func ensureOperatorHotkeyWallet(ctx context.Context, target hotkeyWalletTarget, hotkey *crv4.Keypair, chain []protocol.HotkeyWalletMappingConsent) (hotkeyWalletOutcome, error) {
+func ensureOperatorHotkeyWallet(ctx context.Context, target hotkeyWalletTarget, hotkey *crv4.Keypair, chain []protocol.HotkeyWalletMappingConsent, replaceOther bool) (hotkeyWalletOutcome, error) {
 	operator := hotkeywallet.Operator{ApiUrl: target.apiUrl, ByJwt: target.byJwt}
 	headHash, generation, err := operator.SubmitChain(ctx, chain)
 	if err != nil {
@@ -364,11 +391,16 @@ func ensureOperatorHotkeyWallet(ctx context.Context, target hotkeyWalletTarget, 
 	if err != nil {
 		return outcome, err
 	}
-	if entry.adopts(hotkey.PublicKey(), headHash, generation) {
-		return outcome, nil
-	}
 	epochResult, err := hotkeyWalletEpoch(ctx, target)
 	if err != nil {
+		return outcome, err
+	}
+	// adopting the head is not enough: a delegation whose window has passed
+	// earns nothing, so it is renewed like a missing one
+	if entry.adopts(hotkey.PublicKey(), headHash, generation) && epochResult.Epoch+2 <= entry.ThroughEpoch {
+		return outcome, nil
+	}
+	if err := refuseHotkeyTakeover(entry, hotkey.PublicKey(), replaceOther); err != nil {
 		return outcome, err
 	}
 	outcome.delegated = true
@@ -384,10 +416,10 @@ func ensureOperatorHotkeyWallet(ctx context.Context, target hotkeyWalletTarget, 
 }
 
 // Every authenticated operator in turn, each reported; returns how many failed.
-func hotkeyWalletSubmit(ctx context.Context, targets []hotkeyWalletTarget, awaiting []string, hotkey *crv4.Keypair, chain []protocol.HotkeyWalletMappingConsent, out io.Writer) int {
+func hotkeyWalletSubmit(ctx context.Context, targets []hotkeyWalletTarget, awaiting []string, hotkey *crv4.Keypair, chain []protocol.HotkeyWalletMappingConsent, replaceOther bool, out io.Writer) int {
 	failed := 0
 	for _, target := range targets {
-		outcome, err := ensureOperatorHotkeyWallet(ctx, target, hotkey, chain)
+		outcome, err := ensureOperatorHotkeyWallet(ctx, target, hotkey, chain, replaceOther)
 		if err != nil {
 			failed++
 			fmt.Fprintf(out, "operator %s: failed: %v\n", target.domain, err)
@@ -509,11 +541,25 @@ func hotkeyWalletSet(ctx context.Context, opts docopt.Opts, out io.Writer) error
 		if err != nil {
 			return err
 		}
+		// A set whose submission failed has already stored its generation. A
+		// retry with the same coldkey and epochs resubmits that head: signing a
+		// new generation on every retry would run into the lineage cap.
+		reuseHead := false
+		if len(chain) > 0 {
+			headStatement, _, err := protocol.VerifyHotkeyWalletMappingConsent(ctx, chain[len(chain)-1])
+			if err == nil && headStatement.Coldkey == coldkey && headStatement.Hotkey == hotkey.PublicKey() &&
+				(epochs == nil || headStatement.FromEpoch == epochs.from && headStatement.ThroughEpoch == epochs.through) {
+				original, stored, reuseHead = chain[len(chain)-1], true, true
+				fmt.Fprintf(out, "generation %d is already stored for this coldkey and these epochs; resubmitting it\n", headStatement.Generation)
+			}
+		}
 		statement, err := store.Pending()
 		if err != nil {
 			return err
 		}
-		if statement == nil || statement.Generation != uint64(len(chain))+1 || statement.Hotkey != hotkey.PublicKey() || statement.Coldkey != coldkey || epochs != nil && (statement.FromEpoch != epochs.from || statement.ThroughEpoch != epochs.through) {
+		if reuseHead {
+			// nothing to sign
+		} else if statement == nil || statement.Generation != uint64(len(chain))+1 || statement.Hotkey != hotkey.PublicKey() || statement.Coldkey != coldkey || epochs != nil && (statement.FromEpoch != epochs.from || statement.ThroughEpoch != epochs.through) {
 			if statement, err = hotkeyWalletNextStatement(ctx, store, targets, hotkey, coldkey, coldkeySs58, epochs, out); err != nil {
 				return err
 			}
@@ -521,11 +567,16 @@ func hotkeyWalletSet(ctx context.Context, opts docopt.Opts, out io.Writer) error
 				return err
 			}
 		}
-		if original.Message, err = statement.Message(); err != nil {
-			return err
-		}
-		if original.ColdkeySignature, err = hotkeywallet.Sign(coldkeyPair, original.Message); err != nil {
-			return err
+		if !reuseHead {
+			if original.Message, err = statement.Message(); err != nil {
+				return err
+			}
+			// show what the coldkey is about to sign: the epochs of a fresh
+			// statement come from the operator
+			fmt.Fprintf(out, "signing with the coldkey: generation %d, coldkey %s, epochs %d through %d\n", statement.Generation, coldkeySs58, statement.FromEpoch, statement.ThroughEpoch)
+			if original.ColdkeySignature, err = hotkeywallet.Sign(coldkeyPair, original.Message); err != nil {
+				return err
+			}
 		}
 	} else {
 		original.Message = snUnescapeMessage(message)
@@ -589,7 +640,8 @@ func hotkeyWalletSet(ctx context.Context, opts docopt.Opts, out io.Writer) error
 		return err
 	}
 	fmt.Fprintf(out, "hotkey wallet generation %d: coldkey %s, epochs %d through %d, head 0x%x\n", head.Generation, coldkeySs58, head.FromEpoch, head.ThroughEpoch, headHash)
-	if failed := hotkeyWalletSubmit(ctx, targets, nil, hotkey, chain, out); failed > 0 {
+	replaceOther, _ := opts.Bool("--replace-other-hotkey")
+	if failed := hotkeyWalletSubmit(ctx, targets, nil, hotkey, chain, replaceOther, out); failed > 0 {
 		return fmt.Errorf("%d of %d authenticated operators do not adopt the head yet; set it again with the same --message and --signature", failed, len(targets))
 	}
 	return nil
@@ -648,7 +700,7 @@ func hotkeyWalletStatus(ctx context.Context, opts docopt.Opts, out io.Writer) er
 	}
 	targets := []hotkeyWalletTarget{target}
 	for _, t := range targets {
-		_, entry, err := hotkeyWalletEntries(ctx, t)
+		network, entry, err := hotkeyWalletEntries(ctx, t)
 		switch {
 		case err != nil:
 			fmt.Fprintf(out, "operator %s: unavailable: %v\n", t.domain, err)
@@ -656,11 +708,35 @@ func hotkeyWalletStatus(ctx context.Context, opts docopt.Opts, out io.Writer) er
 			fmt.Fprintf(out, "operator %s: no hotkey delegation\n", t.domain)
 		case head != nil && entry.adopts(hotkey, headHash, head.Generation):
 			fmt.Fprintf(out, "operator %s: adopts the head, generation %d, from epoch %d through %d\n", t.domain, head.Generation, entry.FromEpoch, entry.ThroughEpoch)
+			epochResult, epochErr := hotkeyWalletEpoch(ctx, t)
+			var epoch uint64
+			if epochErr == nil {
+				epoch = epochResult.Epoch
+			}
+			for _, note := range hotkeyWalletDelegationNotes(entry, network, epoch, epochErr == nil) {
+				fmt.Fprintln(out, note)
+			}
 		default:
 			fmt.Fprintf(out, "operator %s: delegates to hotkey %s at generation %d, not the head\n", t.domain, entry.HotkeySs58, entry.ConsentGeneration)
 		}
 	}
 	return nil
+}
+
+// hotkeyWalletDelegationNotes are the caveats `hotkey status` adds to a
+// delegation that adopts the head: the server pays the provider's own signed
+// consent first, then a signed network consent, and the hotkey's coldkey only
+// after both; and a delegation outside its window earns nothing.
+func hotkeyWalletDelegationNotes(delegation *hotkeyWalletEntry, network *hotkeyWalletEntry, epoch uint64, epochOK bool) []string {
+	var notes []string
+	if epochOK && delegation.ThroughEpoch < epoch+2 {
+		notes = append(notes, fmt.Sprintf("  not effective: the window ends at epoch %d and the operator is at epoch %d; the next provide upkeep renews it", delegation.ThroughEpoch, epoch))
+	}
+	if network != nil {
+		notes = append(notes, fmt.Sprintf("  a signed network wallet consent (coldkey %s) outranks this delegation, so that coldkey is paid, not the hotkey's", network.ColdkeySs58))
+	}
+	notes = append(notes, "  a per-provider signed consent outranks both for that provider (not listed here)")
+	return notes
 }
 
 // "provider wallet hotkey challenge|set|status".
@@ -713,7 +789,8 @@ func runHotkeyWalletUpkeepStep(ctx context.Context, apiUrl string, hotkey *crv4.
 	callCtx, cancel := context.WithTimeout(ctx, hotkeyWalletUpkeepStepTimeout)
 	defer cancel()
 
-	return ensureOperatorHotkeyWallet(callCtx, target, hotkey, chain)
+	// the hourly upkeep never replaces another hotkey's delegation
+	return ensureOperatorHotkeyWallet(callCtx, target, hotkey, chain, false)
 }
 
 // Hourly delegation refresh loop started from provide.

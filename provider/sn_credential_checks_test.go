@@ -110,7 +110,7 @@ func TestRunClaimRefusesBadCredentialInputsBeforeAnyRequest(t *testing.T) {
 func TestRunClaimKeyFileWithoutRpcIsRefusedBeforeFetching(t *testing.T) {
 	home := snCredentialTestHome(t)
 	jwtFile := filepath.Join(home, "client.jwt")
-	if err := os.WriteFile(jwtFile, []byte("a-client-token"), 0o600); err != nil {
+	if err := os.WriteFile(jwtFile, []byte(testClientJwt(t, time.Hour)), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	var requests atomic.Int32
