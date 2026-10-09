@@ -15,6 +15,8 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/urfoundation/sn/crv4"
 	"github.com/urfoundation/sn/hotkeywallet"
+	"github.com/urfoundation/sn/protocol"
+	"github.com/urfoundation/sn/ss58"
 )
 
 func captureOutput(t *testing.T, fn func()) string {
@@ -404,3 +406,308 @@ func TestHotkeyWalletSet_PendingStatementMismatchesRefused(t *testing.T) {
 		}
 	})
 }
+
+// 4. hotkeyWalletSubmit failure (~589): when operator rejects consent, set must return an error.
+func TestHotkeyWalletSet_OperatorSubmitFailure(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+
+	op := newFakeOperator(t)
+	if err := os.WriteFile(filepath.Join(stateDir, "jwt"), []byte(op.byJwt), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	hotkeySeed := filepath.Join(stateDir, "hotkey.seed")
+	_ = os.WriteFile(hotkeySeed, []byte(strings.Repeat("12", 32)), 0600)
+	coldkeySeed := filepath.Join(stateDir, "coldkey.seed")
+	_ = os.WriteFile(coldkeySeed, []byte(strings.Repeat("34", 32)), 0600)
+
+	coldkeyRaw, _ := crv4.LoadSeedFile(coldkeySeed)
+	coldkeyKp, _ := crv4.KeypairFromSeed(coldkeyRaw)
+
+	ctx := context.Background()
+	var out bytes.Buffer
+	challengeOpts := docopt.Opts{
+		"hotkey":             true,
+		"challenge":          true,
+		"<coldkey_ss58>":     coldkeyKp.Address(),
+		"--hotkey_seed_file": hotkeySeed,
+		"--api_url":          op.server.URL,
+	}
+	if err := hotkeyWalletChallenge(ctx, challengeOpts, &out); err != nil {
+		t.Fatalf("challenge failed: %v", err)
+	}
+
+	store := hotkeyWalletStore(stateDir)
+	pending, err := store.Pending()
+	if err != nil || pending == nil {
+		t.Fatalf("expected pending, got %v", err)
+	}
+	msg, _ := pending.Message()
+	sig, err := hotkeywallet.Sign(coldkeyKp, msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Trigger operator failure during submit
+	op.mu.Lock()
+	op.return500 = true
+	op.mu.Unlock()
+
+	setOpts := docopt.Opts{
+		"hotkey":             true,
+		"set":                true,
+		"<coldkey_ss58>":     coldkeyKp.Address(),
+		"--hotkey_seed_file": hotkeySeed,
+		"--message":          msg,
+		"--signature":        "0x" + hex.EncodeToString(sig[:]),
+		"--api_url":          op.server.URL,
+	}
+	err = hotkeyWalletSet(ctx, setOpts, &out)
+	if err == nil {
+		t.Fatal("expected hotkeyWalletSet to fail when operator fails submit, got nil")
+	}
+	if !strings.Contains(err.Error(), "do not adopt the head yet") {
+		t.Fatalf("expected error mentioning 'do not adopt the head yet', got: %v", err)
+	}
+}
+
+// 5. adopts() (~188-192): table test for each condition.
+func TestHotkeyWalletEntry_AdoptsTable(t *testing.T) {
+	hotkey := [32]byte{1, 2, 3, 4, 5}
+	hotkeySs58, err := ss58.Encode(hotkey, ss58.BittensorPrefix)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	differentHotkey := [32]byte{9, 9, 9}
+	diffHotkeySs58, err := ss58.Encode(differentHotkey, ss58.BittensorPrefix)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	headHash := [32]byte{10, 11, 12, 13}
+	headHashHex := "0x" + hex.EncodeToString(headHash[:])
+
+	diffHeadHash := [32]byte{20, 21, 22}
+	diffHeadHashHex := "0x" + hex.EncodeToString(diffHeadHash[:])
+
+	tests := []struct {
+		name       string
+		entry      *hotkeyWalletEntry
+		queryKey   [32]byte
+		queryHash  [32]byte
+		queryGen   uint64
+		wantAdopts bool
+	}{
+		{
+			name: "all_matching_with_scope",
+			entry: &hotkeyWalletEntry{
+				HotkeySs58:        hotkeySs58,
+				ConsentHeadHash:   headHashHex,
+				ConsentGeneration: 3,
+				ConsentScope:      protocol.EarningWalletModeHotkey,
+			},
+			queryKey:   hotkey,
+			queryHash:  headHash,
+			queryGen:   3,
+			wantAdopts: true,
+		},
+		{
+			name: "all_matching_without_scope",
+			entry: &hotkeyWalletEntry{
+				HotkeySs58:        hotkeySs58,
+				ConsentHeadHash:   headHashHex,
+				ConsentGeneration: 3,
+			},
+			queryKey:   hotkey,
+			queryHash:  headHash,
+			queryGen:   3,
+			wantAdopts: true,
+		},
+		{
+			name: "wrong_scope",
+			entry: &hotkeyWalletEntry{
+				HotkeySs58:        hotkeySs58,
+				ConsentHeadHash:   headHashHex,
+				ConsentGeneration: 3,
+				ConsentScope:      "network",
+			},
+			queryKey:   hotkey,
+			queryHash:  headHash,
+			queryGen:   3,
+			wantAdopts: false,
+		},
+		{
+			name: "wrong_hotkey",
+			entry: &hotkeyWalletEntry{
+				HotkeySs58:        diffHotkeySs58,
+				ConsentHeadHash:   headHashHex,
+				ConsentGeneration: 3,
+			},
+			queryKey:   hotkey,
+			queryHash:  headHash,
+			queryGen:   3,
+			wantAdopts: false,
+		},
+		{
+			name: "wrong_generation",
+			entry: &hotkeyWalletEntry{
+				HotkeySs58:        hotkeySs58,
+				ConsentHeadHash:   headHashHex,
+				ConsentGeneration: 4,
+			},
+			queryKey:   hotkey,
+			queryHash:  headHash,
+			queryGen:   3,
+			wantAdopts: false,
+		},
+		{
+			name: "wrong_head_hash",
+			entry: &hotkeyWalletEntry{
+				HotkeySs58:        hotkeySs58,
+				ConsentHeadHash:   diffHeadHashHex,
+				ConsentGeneration: 3,
+			},
+			queryKey:   hotkey,
+			queryHash:  headHash,
+			queryGen:   3,
+			wantAdopts: false,
+		},
+		{
+			name:       "nil_entry",
+			entry:      nil,
+			queryKey:   hotkey,
+			queryHash:  headHash,
+			queryGen:   3,
+			wantAdopts: false,
+		},
+		{
+			name: "invalid_ss58",
+			entry: &hotkeyWalletEntry{
+				HotkeySs58:        "not-a-valid-ss58-address",
+				ConsentHeadHash:   headHashHex,
+				ConsentGeneration: 3,
+			},
+			queryKey:   hotkey,
+			queryHash:  headHash,
+			queryGen:   3,
+			wantAdopts: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.entry.adopts(tc.queryKey, tc.queryHash, tc.queryGen)
+			if got != tc.wantAdopts {
+				t.Fatalf("adopts() = %v, want %v", got, tc.wantAdopts)
+			}
+		})
+	}
+}
+
+// 6. snNormalizeSignatureHex length check (~805) and snUnescapeMessage (~822): table tests.
+func TestSnNormalizeSignatureHex_Table(t *testing.T) {
+	valid64Bytes := bytes.Repeat([]byte{0xab}, 64)
+	valid64Hex := hex.EncodeToString(valid64Bytes)
+
+	tests := []struct {
+		name      string
+		input     string
+		want      string
+		errSubstr string
+	}{
+		{
+			name:  "valid_with_0x",
+			input: "0x" + valid64Hex,
+			want:  "0x" + valid64Hex,
+		},
+		{
+			name:  "valid_without_0x",
+			input: valid64Hex,
+			want:  "0x" + valid64Hex,
+		},
+		{
+			name:  "valid_uppercase_0X",
+			input: "0X" + strings.ToUpper(valid64Hex),
+			want:  "0x" + valid64Hex,
+		},
+		{
+			name:      "refused_63_bytes",
+			input:     hex.EncodeToString(bytes.Repeat([]byte{0xab}, 63)),
+			errSubstr: "must be a 64-byte sr25519 signature, got 63 bytes",
+		},
+		{
+			name:      "refused_65_bytes",
+			input:     hex.EncodeToString(bytes.Repeat([]byte{0xab}, 65)),
+			errSubstr: "must be a 64-byte sr25519 signature, got 65 bytes",
+		},
+		{
+			name:      "refused_32_bytes",
+			input:     hex.EncodeToString(bytes.Repeat([]byte{0xab}, 32)),
+			errSubstr: "must be a 64-byte sr25519 signature, got 32 bytes",
+		},
+		{
+			name:      "invalid_hex",
+			input:     "0xnothexchars!",
+			errSubstr: "--signature must be hex",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := snNormalizeSignatureHex(tc.input)
+			if tc.errSubstr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.errSubstr) {
+					t.Fatalf("expected error mentioning %q, got: %v", tc.errSubstr, err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if got != tc.want {
+					t.Fatalf("got %q, want %q", got, tc.want)
+				}
+			}
+		})
+	}
+}
+
+func TestSnUnescapeMessage_Table(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "escaped_newlines",
+			input: "line1\\nline2\\nline3",
+			want:  "line1\nline2\nline3",
+		},
+		{
+			name:  "already_contains_real_newlines",
+			input: "line1\nline2\\nstill_real",
+			want:  "line1\nline2\\nstill_real",
+		},
+		{
+			name:  "no_newlines",
+			input: "single line without escapes",
+			want:  "single line without escapes",
+		},
+		{
+			name:  "empty_string",
+			input: "",
+			want:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := snUnescapeMessage(tc.input)
+			if got != tc.want {
+				t.Fatalf("snUnescapeMessage(%q) = %q, want %q", tc.input, got, tc.want)
+			}
+		})
+	}
+}
+

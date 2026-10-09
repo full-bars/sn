@@ -184,6 +184,9 @@ func (self *hotkeyWalletEntry) adopts(hotkey [32]byte, headHash [32]byte, genera
 	if self == nil {
 		return false
 	}
+	if self.ConsentScope != "" && self.ConsentScope != protocol.EarningWalletModeHotkey {
+		return false
+	}
 	entryHotkey, err := ss58.DecodeWithPrefix(self.HotkeySs58, ss58.BittensorPrefix)
 	if err != nil || entryHotkey != hotkey || self.ConsentGeneration != generation {
 		return false
