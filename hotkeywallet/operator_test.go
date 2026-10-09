@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"slices"
@@ -826,5 +827,35 @@ func TestEnsureDelegationNeedsAHotkeyAndAHead(t *testing.T) {
 	}
 	if requests, _, _, _ := operator.counts(); requests != 0 {
 		t.Fatalf("an incomplete delegation reached the operator in %d requests", requests)
+	}
+}
+
+// A status other than 200 is a typed ErrRefused that keeps its message and
+// tells a rejected network JWT (401).
+func TestOperatorStatusErrorIsTypedRefusal(t *testing.T) {
+	err := &StatusError{Method: "POST", Path: "/sn/wallet/hotkey-consent", Status: "401 Unauthorized", StatusCode: 401, Answer: "401 the network JWT is required"}
+	if !errors.Is(err, ErrRefused) {
+		t.Fatal("a status error is not an ErrRefused")
+	}
+	if err.Error() != "operator refused the hotkey wallet request: POST /sn/wallet/hotkey-consent: 401 Unauthorized: 401 the network JWT is required" {
+		t.Fatalf("message = %q", err.Error())
+	}
+	var status *StatusError
+	if !errors.As(fmt.Errorf("storing the chain: %w", err), &status) || status.StatusCode != 401 {
+		t.Fatal("a wrapped status error lost its status code")
+	}
+}
+
+// The operator's own 401 reaches the caller as that typed status.
+func TestOperatorCallTypesAnOperatorStatus(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "401 the network JWT is required", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+	var result map[string]any
+	err := Operator{ApiUrl: server.URL, ByJwt: "stale"}.call(t.Context(), http.MethodGet, "/sn/wallets", nil, 1024, &result)
+	var status *StatusError
+	if !errors.As(err, &status) || status.StatusCode != http.StatusUnauthorized || status.Method != http.MethodGet || status.Path != "/sn/wallets" || status.Answer != "401 the network JWT is required" || !errors.Is(err, ErrRefused) {
+		t.Fatalf("err = %v", err)
 	}
 }

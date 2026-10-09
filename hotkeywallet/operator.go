@@ -35,6 +35,23 @@ const maximumWalletsBytes = 16 * 1024 * 1024
 // The operator answered with an error status or an error result.
 var ErrRefused = errors.New("operator refused the hotkey wallet request")
 
+// StatusError is an operator's answer with a status other than 200. It is an
+// ErrRefused; StatusCode tells, for example, a rejected network JWT (401).
+type StatusError struct {
+	Method     string
+	Path       string
+	Status     string
+	StatusCode int
+	// the start of the answer, at most 512 bytes
+	Answer string
+}
+
+func (self *StatusError) Error() string {
+	return fmt.Sprintf("%s: %s %s: %s: %s", ErrRefused, self.Method, self.Path, self.Status, self.Answer)
+}
+
+func (self *StatusError) Unwrap() error { return ErrRefused }
+
 // One operator's hotkey wallet API, called as the network that the JWT names.
 // ApiUrl must use https, or plaintext http only for a literal loopback host.
 // Requests time out after 30 seconds when Client is nil. Redirects are never
@@ -304,7 +321,7 @@ func (self Operator) call(ctx context.Context, method string, path string, body 
 		return fmt.Errorf("%s %s answer exceeds %d bytes", method, path, maximum)
 	}
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %s %s: %s: %s", ErrRefused, method, path, response.Status, strings.TrimSpace(string(answer[:min(len(answer), 512)])))
+		return &StatusError{Method: method, Path: path, Status: response.Status, StatusCode: response.StatusCode, Answer: strings.TrimSpace(string(answer[:min(len(answer), 512)]))}
 	}
 	if err := json.Unmarshal(answer, result); err != nil {
 		return fmt.Errorf("%s %s answer is not JSON: %w", method, path, err)
