@@ -148,6 +148,8 @@ github.com/full-bars/connect v0.0.0-20261005162500-8fba422537bb h1:7TvLY7UfiYt1k
 github.com/full-bars/connect v0.0.0-20261005162500-8fba422537bb/go.mod h1:QFBu38vuEEbHqDBo668682lHk0w1G1qD0F1TVSjUaM4=
 github.com/full-bars/connect v0.0.0-20261009011450-fa99a17688a3 h1:oZ3eCizu8Vtok1qacGthbnI1KpNYcJE5UewHXjg1PP4=
 github.com/full-bars/connect v0.0.0-20261009011450-fa99a17688a3/go.mod h1:VWW5oK27pM7UjHjMgjGREkfRzA1/RiDIZU2W3M9hIRo=
+github.com/full-bars/connect v0.0.0-20261009012513-e4d97cacc728 h1:EBrkvLhCi6XSry00J5SM6VPhW2ZzoxIjvmOBpSL7mMw=
+github.com/full-bars/connect v0.0.0-20261009012513-e4d97cacc728/go.mod h1:VWW5oK27pM7UjHjMgjGREkfRzA1/RiDIZU2W3M9hIRo=
 github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c h1:QSDm4GpjAU16CxcZK4jbQLmCj3QtLHFqxPE38MleXhA=
 github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c/go.mod h1:IHtyYBudQmotM5M7loKNR54hFyzsM0pL+qeD2U8BQzU=
 github.com/full-bars/goidenticons v0.0.0-20260822053141-e6a59cd2e818 h1:kxyyIoEIPE2YtUwLWEop9Y9PHTyYosqiNMf/SCRLva4=

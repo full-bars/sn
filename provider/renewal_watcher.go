@@ -282,11 +282,7 @@ func runProxyJWTWatcher(ctx context.Context, cfg proxyJWTWatcherConfig) {
 			cfg.OOB.SetByJwt(newJwt)
 		}
 		if cfg.Transport != nil {
-			cfg.Transport.SetAuth(&connect.ClientAuth{
-				ByJwt:      newJwt,
-				InstanceId: cfg.InstanceId,
-				AppVersion: RequireVersion(),
-			})
+			cfg.Transport.SetAuth(newProviderClientAuth(newJwt, cfg.InstanceId))
 		}
 		// Keep the previous NetworkID when the account JWT parse fails: a
 		// mismatch would make the store treat the entry as mint-fresh on
@@ -421,9 +417,10 @@ func readAccountJWT() (string, error) {
 
 func newProviderAuthClientArgsForRenewal(description string, clientId connect.Id) *connect.AuthNetworkClientArgs {
 	return &connect.AuthNetworkClientArgs{
-		ClientId:    &clientId,
-		Description: description,
-		DeviceSpec:  "",
+		ClientId:      &clientId,
+		Description:   description,
+		DeviceSpec:    "",
+		ProvideIntent: provideIntentEnabled(),
 	}
 }
 
