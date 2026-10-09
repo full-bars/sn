@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -64,7 +65,7 @@ func TestRunSdWatchdogWithholdsThePingWhileStalled(t *testing.T) {
 	l := newLivenessProgress(now)
 
 	var mu sync.Mutex
-	var pings, logs, stalls int
+	var pings, logs, stalls, undos int
 	ping := func() error { mu.Lock(); pings++; mu.Unlock(); return nil }
 	logf := func(string, ...any) { mu.Lock(); logs++; mu.Unlock() }
 	tick := make(chan time.Time)
@@ -73,7 +74,7 @@ func TestRunSdWatchdogWithholdsThePingWhileStalled(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		runSdWatchdogLoop(ctx, tick, l, 10*time.Minute, ping, logf, func() { mu.Lock(); stalls++; mu.Unlock() })
+		runSdWatchdogLoop(ctx, tick, l, 10*time.Minute, ping, logf, func() bool { return true }, func() func() { mu.Lock(); stalls++; mu.Unlock(); return func() { mu.Lock(); undos++; mu.Unlock() } })
 	}()
 	step := func() {
 		t.Helper()
@@ -119,6 +120,53 @@ func TestRunSdWatchdogWithholdsThePingWhileStalled(t *testing.T) {
 	if p, _ := count(); p <= healthyPings {
 		t.Fatal("pinging must resume once progress resumes")
 	}
+	mu.Lock()
+	if undos != 1 {
+		mu.Unlock()
+		t.Fatalf("the lean cap written at the stall must be undone when progress resumes before systemd acts, undone %d times", undos)
+	}
+	mu.Unlock()
 	cancel()
 	<-done
+}
+
+// self-heal off means off for actions: the watchdog is still fed, nothing is
+// recorded, and the line says what would have happened.
+func TestRunSdWatchdogWithSelfHealOffKeepsFeedingAndRecordsNothing(t *testing.T) {
+	var clock atomic.Int64
+	clock.Store(time.Unix(1_000_000, 0).UnixNano())
+	now := func() time.Time { return time.Unix(0, clock.Load()) }
+	l := newLivenessProgress(now)
+
+	var mu sync.Mutex
+	var pings, stalls int
+	var lines []string
+	tick := make(chan time.Time)
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		runSdWatchdogLoop(ctx, tick, l, 10*time.Minute,
+			func() error { mu.Lock(); pings++; mu.Unlock(); return nil },
+			func(f string, a ...any) { mu.Lock(); lines = append(lines, f); mu.Unlock() },
+			func() bool { return false },
+			func() func() { mu.Lock(); stalls++; mu.Unlock(); return nil })
+	}()
+	clock.Add(int64(11 * time.Minute))
+	for i := 0; i < 4; i++ {
+		tick <- now()
+	}
+	cancel()
+	<-done
+	mu.Lock()
+	defer mu.Unlock()
+	if pings < 3 {
+		t.Fatalf("with self-heal off the watchdog must keep being fed, pings=%d", pings)
+	}
+	if stalls != 0 {
+		t.Fatalf("with self-heal off nothing may be recorded, onStall ran %d times", stalls)
+	}
+	if len(lines) != 1 || !strings.Contains(lines[0], "self-heal is off") {
+		t.Fatalf("expected exactly one line saying self-heal is off, got %v", lines)
+	}
 }

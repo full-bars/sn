@@ -1539,7 +1539,7 @@ func provideLauncherLoop(st *provideState) func() {
 			go superviseLoop(st.ctx, "incident_capture", func() { runIncidentCapture(st.ctx) }, nil)
 		}
 		if _, enabled := sdWatchdogInterval(os.Getenv); enabled {
-			go superviseLoop(st.ctx, "liveness_watchdog", func() { runSdWatchdog(st.ctx) }, nil)
+			go superviseLoop(st.ctx, "liveness_watchdog", func() { runSdWatchdog(st.ctx, func() bool { return resolveSelfHealEnabled(selfHealEnabled) }) }, nil)
 		}
 		go superviseLoop(st.ctx, "pool_controller", func() { runPoolController(st.ctx, proxyURLMax, selfHealEnabled) }, nil)
 		// Thrash watchdog: senses swap-thrash independently of the pressure
