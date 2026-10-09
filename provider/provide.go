@@ -1530,6 +1530,12 @@ func provideLauncherLoop(st *provideState) func() {
 	// good (and leaving the last pressure score, GOGC and memory budget in force).
 	if pressureLoopsSupported {
 		go superviseLoop(st.ctx, "pressure_monitor", func() { runPressureMonitor(st.ctx, selfHealEnabled) }, nil)
+		// systemd watchdog feed: inert unless the unit sets WatchdogSec=. Pings only
+		// while the pressure monitor keeps ticking, so a process that is alive but
+		// stalled (a GC death spiral on a small box) is restarted by systemd.
+		if _, enabled := sdWatchdogInterval(os.Getenv); enabled {
+			go superviseLoop(st.ctx, "liveness_watchdog", func() { runSdWatchdog(st.ctx) }, nil)
+		}
 		go superviseLoop(st.ctx, "pool_controller", func() { runPoolController(st.ctx, proxyURLMax, selfHealEnabled) }, nil)
 		// Thrash watchdog: senses swap-thrash independently of the pressure
 		// score, holds the freeze-growth rung, and (gated on self-heal,
