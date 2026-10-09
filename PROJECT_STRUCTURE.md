@@ -65,6 +65,8 @@ sn/                                  # Fork root (forked from urfoundation/sn)
 │       ├── lifecycle*.go            # start/stop/restart/uninstall + systemd units
 │       ├── update.go                # Provider/tool update, digest verify, backup/prune
 │       ├── proxy.go                 # proxy add/clear/summary/remove-dead
+│       ├── log_stream.go            # Native log follower: last lines, then follow; rotation and truncation aware
+│       ├── log_follow_open_*.go     # Per-OS open for the follower (Windows: delete sharing, paths over MAX_PATH)
 │       ├── hotswap.go               # hotswap trigger (v2026 version acceptance)
 │       ├── session_cmds.go          # Encrypted identity session save/load (AES-256-GCM)
 │       ├── provider.go              # Provider struct, version-from-buildinfo
