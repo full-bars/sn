@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -34,10 +35,18 @@ const livenessStaleAfter = 10 * time.Minute
 // delay the watchdog's decision.
 const livenessRecordTimeout = 5 * time.Second
 
+// livenessStartupGrace is how long startup may take before the first tick of
+// the progress loop. The loop starts only after the proxy list is loaded and
+// launched, which on a large list takes minutes; until it has ticked once, a
+// process is judged against this, not against the stall budget. A start that
+// takes longer than this is itself a stall.
+const livenessStartupGrace = 30 * time.Minute
+
 // livenessProgress records when the process last proved it can make progress.
 type livenessProgress struct {
-	nowFn func() time.Time
-	nano  atomic.Int64
+	nowFn  func() time.Time
+	nano   atomic.Int64
+	ticked atomic.Bool
 }
 
 func newLivenessProgress(nowFn func() time.Time) *livenessProgress {
@@ -46,14 +55,26 @@ func newLivenessProgress(nowFn func() time.Time) *livenessProgress {
 	return l
 }
 
-// note records progress now.
+// note records progress now without claiming the progress loop has ticked.
 func (self *livenessProgress) note() {
 	self.nano.Store(self.nowFn().UnixNano())
 }
 
-// fresh reports whether progress was recorded within staleAfter.
+// tick records a tick of the progress loop. After the first one the strict
+// stall budget applies.
+func (self *livenessProgress) tick() {
+	self.ticked.Store(true)
+	self.note()
+}
+
+// fresh reports whether progress was recorded recently enough: within
+// staleAfter once the loop has ticked, within the startup grace before that.
 func (self *livenessProgress) fresh(staleAfter time.Duration) bool {
-	return self.nowFn().Sub(time.Unix(0, self.nano.Load())) <= staleAfter
+	limit := staleAfter
+	if !self.ticked.Load() {
+		limit = max(limit, livenessStartupGrace)
+	}
+	return self.nowFn().Sub(time.Unix(0, self.nano.Load())) <= limit
 }
 
 // processLiveness is the one the pressure monitor feeds.
@@ -62,7 +83,7 @@ var processLiveness = newLivenessProgress(time.Now)
 // noteLivenessProgress is called by the loop whose ticking proves the process
 // can still schedule goroutines, take its locks and write its logs.
 func noteLivenessProgress() {
-	processLiveness.note()
+	processLiveness.tick()
 }
 
 // sdWatchdogInterval is how often to ping, derived from systemd's WATCHDOG_USEC:
@@ -82,13 +103,15 @@ func sdWatchdogInterval(getenv func(string) string) (time.Duration, bool) {
 }
 
 // runSdWatchdogLoop pings on every tick while progress is fresh. While it is
-// not, it withholds the ping, logs once per episode and runs onStall once; the
-// undo onStall returns runs if progress resumes before systemd acts. When acting
-// reports false (self-heal is off) nothing is withheld or recorded: the ping
-// keeps flowing and the line says what would have happened, because off means
-// off for automatic restarts.
-func runSdWatchdogLoop(ctx context.Context, tick <-chan time.Time, progress *livenessProgress, staleAfter time.Duration, ping func() error, logf func(string, ...any), acting func() bool, onStall func() func()) {
-	stalled := false
+// not, the gate decides: when it says no (self-heal is off, or the daily restart
+// budget is spent) the ping keeps flowing and the line says what would have
+// happened; when it says yes the ping is withheld, the stall is logged once and
+// onStall runs once, and the undo it returns runs if progress resumes before
+// systemd acts. gate is asked with episodeStart true only at the first stale
+// tick of an episode: the budget it consults includes the entry onStall itself
+// writes, so asking again mid-episode would feed the watchdog right back.
+func runSdWatchdogLoop(ctx context.Context, tick <-chan time.Time, progress *livenessProgress, staleAfter time.Duration, ping func() error, logf func(string, ...any), gate func(episodeStart bool) (bool, string), onStall func() func()) {
+	passive, acting := false, false
 	var undo func()
 	for {
 		select {
@@ -97,27 +120,28 @@ func runSdWatchdogLoop(ctx context.Context, tick <-chan time.Time, progress *liv
 		case <-tick:
 		}
 		if progress.fresh(staleAfter) {
-			if stalled {
-				stalled = false
-				if undo != nil {
-					undo()
-					undo = nil
-				}
+			if passive || acting {
+				passive, acting = false, false
 				logf("[liveness] progress resumed; the systemd watchdog is being fed again\n")
 			}
-			_ = ping()
+			_ = ping() // the ping first: nothing below may delay it
+			if undo != nil {
+				go undo() // the lock behind it can block, so it never sits in front of the ping
+				undo = nil
+			}
 			continue
 		}
-		if !acting() {
-			if !stalled {
-				stalled = true
-				logf("[liveness] no progress for %s, but self-heal is off, so the systemd watchdog is still being fed (it would otherwise be withheld and systemd would restart the provider)\n", staleAfter)
+		ok, why := gate(!acting)
+		if !ok {
+			if !passive {
+				passive = true
+				logf("[liveness] no progress for %s, but %s, so the systemd watchdog is still being fed (it would otherwise be withheld and systemd would restart the provider)\n", staleAfter, why)
 			}
 			_ = ping()
 			continue
 		}
-		if !stalled {
-			stalled = true
+		if !acting {
+			acting = true
 			logf("🚨 [liveness] no progress for %s: withholding the systemd watchdog ping, so systemd will restart the provider\n", staleAfter)
 			if onStall != nil {
 				undo = onStall()
@@ -126,11 +150,24 @@ func runSdWatchdogLoop(ctx context.Context, tick <-chan time.Time, progress *liv
 	}
 }
 
-// runSdWatchdog starts the watchdog when systemd asked for one. It logs through
-// the disk event log, not the ramlog pipe: the ramlog reader may be the thing
-// that is starved, and a log call that blocks must not stop the ping decision.
-// acting says whether automatic restarts are allowed (the self-heal switch).
-func runSdWatchdog(ctx context.Context, acting func() bool) {
+var livenessStartOnce sync.Once
+
+// startLivenessWatchdog starts the feed once, as early as the provider is ready
+// (not after the proxy list is loaded): systemd's watchdog timer runs from the
+// start, and the loop has to be feeding it through the whole of startup.
+func startLivenessWatchdog(ctx context.Context) {
+	if _, enabled := sdWatchdogInterval(os.Getenv); !enabled {
+		return
+	}
+	livenessStartOnce.Do(func() {
+		go superviseLoop(ctx, "liveness_watchdog", func() { runSdWatchdog(ctx, livenessGate) }, nil)
+	})
+}
+
+// runSdWatchdog is the feed itself. It logs through the disk event log, not the
+// ramlog pipe: the ramlog reader may be the thing that is starved, and a log
+// call that blocks must not stop the ping decision.
+func runSdWatchdog(ctx context.Context, gate func(episodeStart bool) (bool, string)) {
 	interval, ok := sdWatchdogInterval(os.Getenv)
 	if !ok {
 		return
@@ -138,14 +175,16 @@ func runSdWatchdog(ctx context.Context, acting func() bool) {
 	if os.Getenv("NOTIFY_SOCKET") == "" {
 		// WatchdogSec= is set but systemd gave this process no notify socket
 		// (NotifyAccess=none), so no ping can ever reach it and systemd will
-		// restart the unit every interval whatever this process does.
+		// restart the unit every interval whatever this process does. Say so
+		// once and stay put: returning would have the supervisor restart this
+		// loop for ever.
 		critLog("⚠️ [liveness] WATCHDOG_USEC is set but NOTIFY_SOCKET is not: the unit needs NotifyAccess=main or all, or systemd will restart the provider every %s\n", interval*3)
+		<-ctx.Done()
 		return
 	}
-	// start from a clean slate: the startup time is progress
-	processLiveness.note()
+	processLiveness.note()      // the start is progress
 	_ = notifySystemdWatchdog() // first feed right away
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	runSdWatchdogLoop(ctx, ticker.C, processLiveness, livenessStaleAfter, notifySystemdWatchdog, critLog, acting, recordLivenessStall)
+	runSdWatchdogLoop(ctx, ticker.C, processLiveness, livenessStaleAfter, notifySystemdWatchdog, critLog, gate, recordLivenessStall)
 }

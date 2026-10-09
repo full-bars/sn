@@ -289,6 +289,9 @@ func provideSetupSignals(st *provideState) {
 			tlog("[systemd] READY=1 notify failed: %s\n", err)
 		}
 		reportProxyStatusToSystemd()
+		// systemd's watchdog runs from here: feed it through the whole of
+		// startup, not only once the proxy list is loaded.
+		startLivenessWatchdog(st.ctx)
 	}
 
 	go func() {
@@ -1005,6 +1008,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			}
 		}
 		_ = notifySystemdReady() // non-actionable: systemd notify is best-effort
+		startLivenessWatchdog(st.ctx)
 	})
 	if unregSocketCloser != nil {
 		defer unregSocketCloser()
@@ -1537,9 +1541,6 @@ func provideLauncherLoop(st *provideState) func() {
 		// the build-up of a stall shows, while the process can still write them.
 		if incidentCaptureEnabled() {
 			go superviseLoop(st.ctx, "incident_capture", func() { runIncidentCapture(st.ctx) }, nil)
-		}
-		if _, enabled := sdWatchdogInterval(os.Getenv); enabled {
-			go superviseLoop(st.ctx, "liveness_watchdog", func() { runSdWatchdog(st.ctx, func() bool { return resolveSelfHealEnabled(selfHealEnabled) }) }, nil)
 		}
 		go superviseLoop(st.ctx, "pool_controller", func() { runPoolController(st.ctx, proxyURLMax, selfHealEnabled) }, nil)
 		// Thrash watchdog: senses swap-thrash independently of the pressure
