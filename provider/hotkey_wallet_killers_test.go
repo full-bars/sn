@@ -5,12 +5,17 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"io"
+	"math"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/docopt/docopt-go"
 	"github.com/urfoundation/sn/crv4"
@@ -710,4 +715,398 @@ func TestSnUnescapeMessage_Table(t *testing.T) {
 		})
 	}
 }
+
+// 7. Epoch flag validation (~287, ~298): only one of from/through refused;
+// through < from refused; range > hotkeyWalletIntervalEpochs refused;
+// and hotkeyWalletIntervalEpochs == 65535.
+func TestHotkeyWallet_IntervalEpochsConstant(t *testing.T) {
+	if hotkeyWalletIntervalEpochs != 65535 {
+		t.Fatalf("hotkeyWalletIntervalEpochs = %d, want 65535", hotkeyWalletIntervalEpochs)
+	}
+
+	// Range of exactly 65535 must be accepted
+	opts := docopt.Opts{
+		"--wallet-from-epoch":    "10",
+		"--wallet-through-epoch": "65545", // 65545 - 10 = 65535
+	}
+	epochs, err := hotkeyWalletEpochsFromOpts(opts)
+	if err != nil {
+		t.Fatalf("expected exact interval 65535 to be accepted, got: %v", err)
+	}
+	if epochs == nil || epochs.from != 10 || epochs.through != 65545 {
+		t.Fatalf("unexpected epochs result: %+v", epochs)
+	}
+
+	// Range of 65536 must be refused
+	optsExcess := docopt.Opts{
+		"--wallet-from-epoch":    "10",
+		"--wallet-through-epoch": "65546", // 65546 - 10 = 65536
+	}
+	_, err = hotkeyWalletEpochsFromOpts(optsExcess)
+	if err == nil || !strings.Contains(err.Error(), "must be at most 65535 epochs after") {
+		t.Fatalf("expected error for interval exceeding 65535, got: %v", err)
+	}
+}
+
+func TestHotkeyWalletEpochsFromOpts_Validation(t *testing.T) {
+	tests := []struct {
+		name      string
+		opts      docopt.Opts
+		errSubstr string
+		wantNil   bool
+	}{
+		{
+			name:    "neither_specified",
+			opts:    docopt.Opts{},
+			wantNil: true,
+		},
+		{
+			name:      "only_from_specified",
+			opts:      docopt.Opts{"--wallet-from-epoch": "100"},
+			errSubstr: "--wallet-from-epoch and --wallet-through-epoch go together",
+		},
+		{
+			name:      "only_through_specified",
+			opts:      docopt.Opts{"--wallet-through-epoch": "100"},
+			errSubstr: "--wallet-from-epoch and --wallet-through-epoch go together",
+		},
+		{
+			name:      "through_smaller_than_from",
+			opts:      docopt.Opts{"--wallet-from-epoch": "100", "--wallet-through-epoch": "50"},
+			errSubstr: "must be at most 65535 epochs after",
+		},
+		{
+			name:      "range_exceeds_interval",
+			opts:      docopt.Opts{"--wallet-from-epoch": "0", "--wallet-through-epoch": "70000"},
+			errSubstr: "must be at most 65535 epochs after",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := hotkeyWalletEpochsFromOpts(tc.opts)
+			if tc.errSubstr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.errSubstr) {
+					t.Fatalf("expected error mentioning %q, got: %v", tc.errSubstr, err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if tc.wantNil && got != nil {
+					t.Fatalf("expected nil epochs, got %+v", got)
+				}
+			}
+		})
+	}
+}
+
+// 8. Operator answer hardening against mock operator:
+// redirect refused (~94), oversized answer refused (~105), implausible epoch refused (~135),
+// malformed genesis_hash refused (~204), netuid > 65535 refused (~207), operators disagree refused (~251).
+func TestHotkeyWallet_OperatorAnswerHardening(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("redirect_refused", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/redirect" {
+				http.Redirect(w, r, "/destination", http.StatusFound)
+				return
+			}
+			if r.URL.Path == "/destination" {
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"ok": true}`))
+				return
+			}
+			http.NotFound(w, r)
+		}))
+		defer ts.Close()
+
+		target := hotkeyWalletTarget{apiUrl: ts.URL, byJwt: "dummy", domain: "test"}
+		var dest map[string]any
+		err := hotkeyWalletCall(ctx, target, http.MethodGet, "/redirect", nil, &dest)
+		if err == nil {
+			t.Fatal("expected redirect to be refused with error, got nil")
+		}
+		if !strings.Contains(err.Error(), "302 Found") {
+			t.Fatalf("expected error mentioning 302 Found, got: %v", err)
+		}
+	})
+
+	t.Run("oversized_answer_refused", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			chunk := bytes.Repeat([]byte("a"), 64*1024)
+			written := 0
+			for written < hotkeyWalletAnswerBytes+1 {
+				n, _ := w.Write(chunk)
+				written += n
+			}
+		}))
+		defer ts.Close()
+
+		target := hotkeyWalletTarget{apiUrl: ts.URL, byJwt: "dummy", domain: "test"}
+		var dest map[string]any
+		err := hotkeyWalletCall(ctx, target, http.MethodGet, "/large", nil, &dest)
+		if err == nil || !strings.Contains(err.Error(), "answer exceeds") {
+			t.Fatalf("expected answer exceeds error, got: %v", err)
+		}
+	})
+
+	t.Run("implausible_epoch_refused", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"epoch":        uint64(math.MaxUint64),
+				"chain_id":     1,
+				"genesis_hash": "0x" + strings.Repeat("11", 32),
+				"netuid":       1,
+			})
+		}))
+		defer ts.Close()
+
+		target := hotkeyWalletTarget{apiUrl: ts.URL, byJwt: "dummy", domain: "test"}
+		_, err := hotkeyWalletEpoch(ctx, target)
+		if err == nil || !strings.Contains(err.Error(), "is implausible") {
+			t.Fatalf("expected error mentioning 'is implausible', got: %v", err)
+		}
+	})
+
+	t.Run("malformed_genesis_hash_refused", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"epoch":        10,
+				"chain_id":     1,
+				"genesis_hash": "0x1234", // malformed: not 64 hex digits
+				"netuid":       1,
+			})
+		}))
+		defer ts.Close()
+
+		target := hotkeyWalletTarget{apiUrl: ts.URL, byJwt: "dummy", domain: "test"}
+		_, err := hotkeyWalletOperatorSubnet(ctx, target, "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY")
+		if err == nil || !strings.Contains(err.Error(), "not 0x and 64 hex digits") {
+			t.Fatalf("expected error mentioning 'not 0x and 64 hex digits', got: %v", err)
+		}
+	})
+
+	t.Run("netuid_overflow_refused", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"epoch":        10,
+				"chain_id":     1,
+				"genesis_hash": "0x" + strings.Repeat("22", 32),
+				"netuid":       70000, // > math.MaxUint16 (65535)
+			})
+		}))
+		defer ts.Close()
+
+		target := hotkeyWalletTarget{apiUrl: ts.URL, byJwt: "dummy", domain: "test"}
+		_, err := hotkeyWalletOperatorSubnet(ctx, target, "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY")
+		if err == nil || !strings.Contains(err.Error(), "beyond any subnet") {
+			t.Fatalf("expected error mentioning 'beyond any subnet', got: %v", err)
+		}
+	})
+
+	t.Run("operators_disagree_on_subnet", func(t *testing.T) {
+		ts1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"epoch":        10,
+				"chain_id":     1,
+				"genesis_hash": "0x" + strings.Repeat("33", 32),
+				"netuid":       1,
+			})
+		}))
+		defer ts1.Close()
+
+		ts2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"epoch":        10,
+				"chain_id":     1,
+				"genesis_hash": "0x" + strings.Repeat("33", 32),
+				"netuid":       2, // differs from operator 1
+			})
+		}))
+		defer ts2.Close()
+
+		target1 := hotkeyWalletTarget{apiUrl: ts1.URL, byJwt: "dummy", domain: "op1"}
+		target2 := hotkeyWalletTarget{apiUrl: ts2.URL, byJwt: "dummy", domain: "op2"}
+
+		var out bytes.Buffer
+		_, err := hotkeyWalletSubnet(ctx, []hotkeyWalletTarget{target1, target2}, "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", &out)
+		if err == nil || !strings.Contains(err.Error(), "operators disagree on the subnet") {
+			t.Fatalf("expected error mentioning 'operators disagree on the subnet', got: %v", err)
+		}
+	})
+}
+
+// 9. hotkeyWalletNextStatement from-epoch clamping (~329) and upkeep clamping (~373);
+// runHotkeyWalletUpkeepStep with an empty chain does nothing (~700);
+// hotkeyWalletSet without seed file or message refused (~488).
+func TestHotkeyWalletNextStatement_FromEpochClamping(t *testing.T) {
+	stateDir := t.TempDir()
+	store := hotkeyWalletStore(stateDir)
+
+	op := newFakeOperator(t)
+	op.mu.Lock()
+	op.epoch = 100 // current epoch is 100
+	op.mu.Unlock()
+
+	hotkeySeed := filepath.Join(stateDir, "hotkey.seed")
+	_ = os.WriteFile(hotkeySeed, []byte(strings.Repeat("12", 32)), 0600)
+	coldkeySeed := filepath.Join(stateDir, "coldkey.seed")
+	_ = os.WriteFile(coldkeySeed, []byte(strings.Repeat("34", 32)), 0600)
+
+	hotkeyKp, _ := loadOperatorHotkey(hotkeySeed)
+	coldkeyRaw, _ := crv4.LoadSeedFile(coldkeySeed)
+	coldkeyKp, _ := crv4.KeypairFromSeed(coldkeyRaw)
+
+	// Create and append a chain entry with FromEpoch = 200 (well ahead of current epoch 100)
+	stmt, err := hotkeywallet.NextStatement(nil, fakeTestDomain.HotkeySubnet(), hotkeyKp.PublicKey(), coldkeyKp.PublicKey(), 200, 250, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	msg, err := stmt.Message()
+	if err != nil {
+		t.Fatal(err)
+	}
+	coldkeySig, _ := hotkeywallet.Sign(coldkeyKp, msg)
+	hotkeySig, _ := hotkeywallet.Sign(hotkeyKp, msg)
+	original := protocol.HotkeyWalletMappingConsent{
+		Message:          msg,
+		ColdkeySignature: coldkeySig,
+		HotkeySignature:  hotkeySig,
+	}
+	if err := store.Append(original); err != nil {
+		t.Fatal(err)
+	}
+
+	target := hotkeyWalletTarget{apiUrl: op.server.URL, byJwt: op.byJwt, domain: "test"}
+	var out bytes.Buffer
+	nextStmt, err := hotkeyWalletNextStatement(context.Background(), store, []hotkeyWalletTarget{target}, hotkeyKp, coldkeyKp.PublicKey(), coldkeyKp.Address(), nil, &out)
+	if err != nil {
+		t.Fatalf("hotkeyWalletNextStatement failed: %v", err)
+	}
+
+	// Must be clamped to max(current+1, head.FromEpoch+1) = max(101, 201) = 201
+	if nextStmt.FromEpoch != 201 {
+		t.Fatalf("nextStmt.FromEpoch = %d, want clamped to 201", nextStmt.FromEpoch)
+	}
+}
+
+func TestEnsureOperatorHotkeyWallet_AdvancePastExistingEntry(t *testing.T) {
+	stateDir := t.TempDir()
+	store := hotkeyWalletStore(stateDir)
+
+	op := newFakeOperator(t)
+	op.mu.Lock()
+	op.epoch = 10 // epochResult.Epoch + 2 = 12
+	op.mu.Unlock()
+
+	hotkeySeed := filepath.Join(stateDir, "hotkey.seed")
+	_ = os.WriteFile(hotkeySeed, []byte(strings.Repeat("12", 32)), 0600)
+	coldkeySeed := filepath.Join(stateDir, "coldkey.seed")
+	_ = os.WriteFile(coldkeySeed, []byte(strings.Repeat("34", 32)), 0600)
+
+	hotkeyKp, _ := loadOperatorHotkey(hotkeySeed)
+	coldkeyRaw, _ := crv4.LoadSeedFile(coldkeySeed)
+	coldkeyKp, _ := crv4.KeypairFromSeed(coldkeyRaw)
+
+	// Chain has 1 entry
+	stmt, err := hotkeywallet.NextStatement(nil, fakeTestDomain.HotkeySubnet(), hotkeyKp.PublicKey(), coldkeyKp.PublicKey(), 1, 100, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	msg, _ := stmt.Message()
+	coldkeySig, _ := hotkeywallet.Sign(coldkeyKp, msg)
+	hotkeySig, _ := hotkeywallet.Sign(hotkeyKp, msg)
+	_ = store.Append(protocol.HotkeyWalletMappingConsent{
+		Message:          msg,
+		ColdkeySignature: coldkeySig,
+		HotkeySignature:  hotkeySig,
+	})
+	chain, _ := store.Chain()
+
+	// Operator reports an existing entry with FromEpoch = 20 (> 12)
+	// (not adopting because consent_head_hash is different)
+	op.mu.Lock()
+	op.extraWallets = []map[string]any{
+		{
+			"coldkey_ss58":       coldkeyKp.Address(),
+			"consent_scope":      "hotkey",
+			"hotkey_ss58":        hotkeyKp.Address(),
+			"from_epoch":         uint64(20),
+			"through_epoch":      uint64(100),
+			"consent_head_hash":  "0x" + strings.Repeat("ff", 32), // mismatched head
+			"consent_generation": uint64(1),
+		},
+	}
+	op.mu.Unlock()
+
+	target := hotkeyWalletTarget{apiUrl: op.server.URL, byJwt: op.byJwt, domain: "test"}
+	outcome, err := ensureOperatorHotkeyWallet(context.Background(), target, hotkeyKp, chain)
+	if err != nil {
+		t.Fatalf("ensureOperatorHotkeyWallet failed: %v", err)
+	}
+
+	// Must advance past existing entry: entry.FromEpoch + 1 = 20 + 1 = 21
+	if outcome.fromEpoch != 21 {
+		t.Fatalf("outcome.fromEpoch = %d, want advanced past existing entry to 21", outcome.fromEpoch)
+	}
+}
+
+func TestRunHotkeyWalletUpkeepStep_EmptyChain(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+
+	op := newFakeOperator(t)
+	hotkeySeed := filepath.Join(stateDir, "hotkey.seed")
+	_ = os.WriteFile(hotkeySeed, []byte(strings.Repeat("12", 32)), 0600)
+	hotkeyKp, _ := loadOperatorHotkey(hotkeySeed)
+
+	// Chain is empty, and stateDir does not even have a JWT
+	var lastGen uint64
+	outcome, err := runHotkeyWalletUpkeepStep(context.Background(), op.server.URL, hotkeyKp, &lastGen)
+	if err != nil {
+		t.Fatalf("expected empty chain upkeep step to return cleanly, got err: %v", err)
+	}
+	if outcome.delegated || outcome.generation != 0 {
+		t.Fatalf("expected zero outcome on empty chain, got: %+v", outcome)
+	}
+
+	// Must have made zero calls to operator
+	if count := op.callCount("GET /sn/wallet"); count != 0 {
+		t.Fatalf("expected 0 calls to operator on empty chain, got %d", count)
+	}
+	if count := op.callCount("GET /sn/epoch"); count != 0 {
+		t.Fatalf("expected 0 calls to operator on empty chain, got %d", count)
+	}
+}
+
+func TestHotkeyWalletSet_MissingSignatureSource(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+
+	hotkeySeed := filepath.Join(stateDir, "hotkey.seed")
+	_ = os.WriteFile(hotkeySeed, []byte(strings.Repeat("12", 32)), 0600)
+
+	var out bytes.Buffer
+	err := hotkeyWalletSet(context.Background(), docopt.Opts{
+		"hotkey":             true,
+		"set":                true,
+		"<coldkey_ss58>":     "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+		"--hotkey_seed_file": hotkeySeed,
+		"--api_url":          "https://dummy.example",
+	}, &out)
+
+	if err == nil || !strings.Contains(err.Error(), "the coldkey's signature is required") {
+		t.Fatalf("expected error mentioning 'the coldkey's signature is required', got: %v", err)
+	}
+}
+
 
