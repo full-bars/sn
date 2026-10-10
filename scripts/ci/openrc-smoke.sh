@@ -125,6 +125,7 @@ ok "service user urnet exists"
 say "running the installer against the fake release"
 # The base-URL overrides are the seam that lets a branch build be installed.
 # They are exported so the installer's own subshell inherits them.
+export URNET_ALLOW_BASE_OVERRIDE=1
 export URNET_API_BASE="http://127.0.0.1:8099/api"
 export URNET_DL_BASE="http://127.0.0.1:8099"
 export URNET_MIRROR_BASE="http://127.0.0.1:8099/releases/download"
