@@ -452,6 +452,104 @@ else
   echo "$AU_OUT" | head -6 | sed 's/^/     /'
 fi
 
+# --- auth prompt via pty (H4 + L1) -------------------------------------------
+# Exercise openrc_prompt_auth under a pseudo-terminal: verify that the code does
+# not echo to the tty (L1) and that it is handed to the provider through
+# URNETWORK_AUTH_CODE auth -f without piping stdin to term.ReadPassword (H4).
+say "verifying interactive auth prompt via pty (H4 + L1)"
+if command -v python3 >/dev/null 2>&1; then
+  if python3 - <<'PYEOF'
+import os, pty, time, subprocess, sys
+
+mock_bin = '/tmp/mock-urnetwork'
+recorded = '/tmp/auth_recorded.txt'
+try:
+    os.remove(recorded)
+except OSError:
+    pass
+
+with open(mock_bin, 'w') as f:
+    f.write('''#!/bin/sh
+if [ "$1" = "auth" ] && [ "$2" = "-f" ]; then
+    echo "CODE=$URNETWORK_AUTH_CODE" > /tmp/auth_recorded.txt
+    echo "ARGS=$*" >> /tmp/auth_recorded.txt
+    exit 0
+fi
+exit 1
+''')
+os.chmod(mock_bin, 0o755)
+
+with open('/srv/fake-release/stage/install.sh') as f:
+    script_text = f.read()
+
+start = script_text.find('openrc_prompt_auth ()')
+if start == -1:
+    start = script_text.find('openrc_prompt_auth()')
+end = script_text.find('\n}\n', start)
+fn_body = script_text[start:end+2]
+
+cmd = f'''
+openrc_user="{os.environ.get('SVC_USER', 'urnet')}"
+openrc_home="/home/$openrc_user"
+openrc_tty=/dev/tty
+PATH="/tmp:$PATH"
+alias urnetwork="{mock_bin}"
+su() {{
+    shift 4
+    exec /bin/sh -c "$1"
+}}
+{fn_body}
+openrc_prompt_auth
+'''
+
+pid, fd = pty.fork()
+if pid == 0:
+    os.execv('/bin/sh', ['/bin/sh', '-c', cmd])
+else:
+    time.sleep(0.1)
+    os.write(fd, b'y\r')
+    time.sleep(0.1)
+    secret = b'test-secret-auth-987'
+    os.write(fd, secret + b'\r')
+    out = b''
+    for _ in range(20):
+        time.sleep(0.05)
+        try:
+            chunk = os.read(fd, 1024)
+            if chunk:
+                out += chunk
+        except OSError:
+            break
+    os.waitpid(pid, 0)
+
+    if not os.path.exists(recorded):
+        print("FAIL: auth did not record credentials")
+        sys.exit(1)
+    with open(recorded) as rf:
+        content = rf.read()
+    if "CODE=test-secret-auth-987" not in content or "ARGS=auth -f" not in content:
+        print(f"FAIL: unexpected recorded content: {content}")
+        sys.exit(1)
+
+    idx = out.find(b'Auth code: ')
+    if idx != -1:
+        after_prompt = out[idx:idx+len(b'Auth code: ') + len(secret) + 4]
+        if secret in after_prompt:
+            print("FAIL: auth code was echoed to the terminal (L1 violation)")
+            sys.exit(1)
+    sys.exit(0)
+PYEOF
+  then
+    ok "auth prompt non-interactive hop passed via URNETWORK_AUTH_CODE auth -f (H4)"
+    ok "auth code was not echoed to terminal (L1)"
+  else
+    fail "auth prompt pty test failed"
+  fi
+  rm -f /tmp/mock-urnetwork /tmp/auth_recorded.txt
+else
+  echo "   NOTE: python3 not available; skipping pty auth verification"
+fi
+
 # --- verdict -----------------------------------------------------------------
 say "result"
 if [ "$FAILED" -eq 0 ]; then

@@ -1730,15 +1730,25 @@ openrc_prompt_auth ()
     case "$openrc_auth_answer" in
         [Yy]*)
             printf "Auth code: "
-            read -r openrc_code < "$openrc_tty" || openrc_code=""
+            openrc_code=""
+            if command -v stty >/dev/null 2>&1 && stty -echo < "$openrc_tty" 2>/dev/null; then
+                read -r openrc_code < "$openrc_tty" || openrc_code=""
+                stty echo < "$openrc_tty" 2>/dev/null || true
+                printf "\n"
+            else
+                read -rs openrc_code < "$openrc_tty" 2>/dev/null || read -r openrc_code < "$openrc_tty" || openrc_code=""
+                printf "\n"
+            fi
             if [ -z "$openrc_code" ]; then
                 printf "No code entered; skipping. Authenticate later with:\n"
                 printf "                      \e[1msu -s /bin/sh %s -c 'urnetwork auth <code>'\e[0m\n" "$openrc_user"
                 return 0
             fi
             printf "Authenticating as \e[1m%s\e[0m...\n" "$openrc_user"
-            # Feed the code on stdin so it never appears in the process list.
-            if printf '%s\n' "$openrc_code" | su -s /bin/sh "$openrc_user" -c "urnetwork auth"; then
+            # Feed the code on stdin and read into URNETWORK_AUTH_CODE so it never
+            # appears in the process list or arguments, and invoke `auth -f` so it
+            # does not prompt for overwrite on stdin or fail on term.ReadPassword.
+            if printf '%s\n' "$openrc_code" | su -s /bin/sh "$openrc_user" -c 'IFS= read -r c; URNETWORK_AUTH_CODE=$c exec urnetwork auth -f'; then
                 printf "\e[1;32mAuthenticated.\e[0m Start the service below.\n"
             else
                 printf "\e[1;33mAuthentication did not complete.\e[0m You can retry with:\n"

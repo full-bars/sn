@@ -475,6 +475,27 @@ func TestFreeBSDToolDigestLookup(t *testing.T) {
 	}
 }
 
+// H4 + L1: openrc_prompt_auth must read the code silently (stty -echo or read -rs)
+// and pass it to urnetwork via URNETWORK_AUTH_CODE and auth -f without term.ReadPassword.
+func TestOpenRCPromptAuthNonInteractiveHop(t *testing.T) {
+	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := strings.ReplaceAll(string(b), "\r\n", "\n")
+	fn := extractShellFunc(t, script, "openrc_prompt_auth")
+	if fn == "" {
+		t.Fatal("could not extract openrc_prompt_auth from the Linux installer")
+	}
+
+	if !strings.Contains(fn, "URNETWORK_AUTH_CODE=$c exec urnetwork auth -f") {
+		t.Error("openrc_prompt_auth does not pass code via URNETWORK_AUTH_CODE or missing load-bearing -f")
+	}
+	if !strings.Contains(fn, "stty -echo") && !strings.Contains(fn, "read -rs") {
+		t.Error("openrc_prompt_auth does not suppress echo (L1 violation)")
+	}
+}
+
 // skipWithoutPOSIXShell skips tests that execute the FreeBSD installer with
 // /bin/sh. The suite also runs on Windows, where that binary does not exist,
 // so without this the test fails on a platform it was never meant to
