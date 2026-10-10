@@ -68,6 +68,14 @@ resolve_service_user() {
         printf '%s\n' "$SERVICE_USER_OVERRIDE"
         return
     fi
+    if [ -n "${URNETWORK_USER:-}" ]; then
+        printf '%s\n' "$URNETWORK_USER"
+        return
+    fi
+    if id -u urnetwork >/dev/null 2>&1; then
+        printf '%s\n' "urnetwork"
+        return
+    fi
     if [ -n "${SUDO_USER:-}" ]; then
         printf '%s\n' "$SUDO_USER"
         return
@@ -110,12 +118,12 @@ user_shell() {
 service_name="urnetwork"
 rc_script="/usr/local/etc/rc.d/$service_name"
 
-# Paths come from the SERVICE user's home, not $HOME. Under sudo $HOME may
-# still be root's, and an install under /root would be unreadable by the
-# account the provider actually runs as.
+# Paths: the install tree is root-owned at /usr/local/libexec/urnetwork-provider
+# (with chmod go-w), while the state directory (~/.urnetwork) lives in the
+# service user's home.
 service_user="$(resolve_service_user)"
 service_home="$(user_home "$service_user")"
-install_path="$service_home/.local/share/urnetwork-provider"
+install_path="/usr/local/libexec/urnetwork-provider"
 provider_bin="$install_path/bin/urnetwork"
 state_dir="$service_home/.urnetwork"
 github_api="https://api.github.com/repos/full-bars/sn"
@@ -183,7 +191,8 @@ install_wrapper_tool() {
     _td="$1"
     curl -fsSL "$github_raw/scripts/Provider_Install_FreeBSD.sh" -o "$_td/urnet-tools.wrapper" 2>/dev/null || return 1
     chmod 755 "$_td/urnet-tools.wrapper"
-    mv -f "$_td/urnet-tools.wrapper" "$install_path/bin/urnet-tools"
+    priv mv -f "$_td/urnet-tools.wrapper" "$install_path/bin/urnet-tools"
+    priv chmod 755 "$install_path/bin/urnet-tools"
 }
 
 # --- rc.d script ---
@@ -471,14 +480,24 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
         install_wrapper_tool "$tmpdir" || true
     fi
 
-    # The rc.d script and rc.conf are ROOT-owned; the files the SERVICE user
-    # must read are not. Under sudo the download and copy ran as root, so hand
-    # the install and state directories to the service user or the provider
-    # starts as an account that cannot read its own binary.
-    if [ "$(id -u)" = "0" ] && [ "$service_user" != "root" ]; then
-        chown -R "$service_user" "$install_path" 2>/dev/null || true
-        mkdir -p "$state_dir"
-        chown -R "$service_user" "$state_dir" 2>/dev/null || true
+    # The install tree stays ROOT-OWNED and group/other-writable-never. The
+    # provider binary is executed by root on every hot-swap and by the rc.d
+    # script on restart, so a service-user-writable binary is a privilege
+    # boundary the installer must not create. Only the STATE directory belongs
+    # to the service user: that is where its own config and JWT live.
+    if [ "$(id -u)" = "0" ]; then
+        if [ "$service_user" != "root" ]; then
+            mkdir -p "$state_dir"
+            chown -R "$service_user" "$state_dir" 2>/dev/null || true
+            chmod 700 "$state_dir" 2>/dev/null || true
+        fi
+        chown -R root:wheel "$install_path" 2>/dev/null || \
+            chown -R root "$install_path" 2>/dev/null || true
+        chmod -R go-w "$install_path" 2>/dev/null || true
+        # The binaries must stay executable by the service user while the
+        # directories above them are not writable by anyone else.
+        chmod 755 "$install_path" "$install_path/bin" 2>/dev/null || true
+        [ -f "$provider_bin" ] && chmod 755 "$provider_bin" 2>/dev/null || true
     fi
 
     if [ "$(id -u)" != "0" ]; then

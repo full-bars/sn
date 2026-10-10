@@ -178,13 +178,20 @@ func installedBSDProvider() string {
 // in priority order. Kept as a pure function of the home directory so the
 // installer script and this lookup cannot drift apart silently.
 func bsdProviderCandidates(home string) []string {
-	if home == "" {
-		return nil
+	// The installer puts the tree at /usr/local/libexec, root-owned. It comes
+	// FIRST because it is the location a current install actually uses; the
+	// per-home paths remain as the fallback for an install made before the
+	// tree moved, and for one installed with an explicit override.
+	candidates := []string{
+		"/usr/local/libexec/urnetwork-provider/bin/urnetwork",
 	}
-	return []string{
+	if home == "" {
+		return candidates
+	}
+	return append(candidates,
 		filepath.Join(home, ".local", "share", "urnetwork-provider", "bin", "urnetwork"),
 		filepath.Join(home, ".urnetwork", "urnetwork"),
-	}
+	)
 }
 
 // bsdStateDir is the provider state dir on FreeBSD.
