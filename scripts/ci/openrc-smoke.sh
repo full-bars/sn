@@ -152,13 +152,17 @@ fi
 # home, so root-executed code (the cron entry, sudo urnet-tools update) can
 # never reach it through a user-writable ancestor.
 INSTALL_ROOT=/usr/local/lib/urnetwork-provider
-STAGED="$INSTALL_ROOT/urnetwork.openrc"
-if [ -f "$STAGED" ] && [ ! -f /etc/init.d/urnetwork ]; then
-  say "completing the root half of the install"
-  cp "$STAGED" /etc/init.d/urnetwork
-  chmod +x /etc/init.d/urnetwork
-  rc-update add urnetwork default >/dev/null 2>&1
-  ok "init script installed from the staged copy"
+if [ ! -e "$INSTALL_ROOT/urnetwork.openrc" ]; then
+  ok "service script is not staged in the install tree (H2 TOCTOU guard)"
+else
+  fail "service script was staged in the install tree"
+fi
+
+say "verifying refusal of install paths inside service user home (H2)"
+if sh "$ROOT/stage/install.sh" -i "/home/$SVC_USER/.local/share/urnetwork-provider" </dev/null 2>/dev/null; then
+  fail "installer allowed install path inside service user home"
+else
+  ok "installer refused install path inside service user home"
 fi
 
 # --- the OpenRC branch was taken --------------------------------------------

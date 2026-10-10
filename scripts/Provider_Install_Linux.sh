@@ -1097,16 +1097,25 @@ openrc_service_running ()
 # STATE dir (~/.urnetwork, where the JWT and live state live) stays in the
 # user's home — which is where it belongs, since the provider must write it.
 #
-# Explicit -i/--install paths and non-root runs are untouched: an operator who
-# names a directory gets exactly that directory. This only redirects the
-# OpenRC + root + non-explicit default, which is the case that needed fixing.
+# Explicit -i/--install paths are untouched: an operator who
+# names a directory gets exactly that directory. This redirects the
+# OpenRC default (root or non-root with sudo) to the root-owned location.
 openrc_maybe_redirect_install_path ()
 {
     [ "$has_openrc" -eq 1 ] || return 0
     # Only when the OpenRC branch is the one that will run: a host where the
     # systemd path is chosen (systemctl present) keeps root's own install path.
     [ "$has_systemd" -eq 0 ] || return 0
-    [ "$(id -u)" -eq 0 ] || return 0
+    if [ "$(id -u)" -eq 0 ]; then
+        :
+    elif [ -n "${SUDO:-}" ]; then
+        openrc_elevate=1
+    elif command -v sudo > /dev/null 2>&1 && sudo -n true > /dev/null 2>&1; then
+        SUDO="sudo"
+        openrc_elevate=1
+    else
+        return 0
+    fi
     [ "${install_path_explicit:-0}" -eq 0 ] || return 0
 
     # Migrate an older OpenRC install out of the service user's home. Run as
@@ -1466,22 +1475,35 @@ ROTATE
 install_openrc_units ()
 {
     openrc_home="$(openrc_user_home)"
-    openrc_staged="$install_path/urnetwork.openrc"
+    openrc_stage_dir="$(mktemp -d 2>/dev/null || mktemp -d -t urnetwork-openrc.XXXXXX)"
+    if [ -z "$openrc_stage_dir" ] || [ ! -d "$openrc_stage_dir" ]; then
+        pr_err "Failed to create temporary directory for OpenRC service staging"
+        exit 1
+    fi
+    chmod 0700 "$openrc_stage_dir"
+    openrc_staged="$openrc_stage_dir/urnetwork.openrc"
 
     # Re-enable a paused auto-update entry (including one left by a previous
     # failed install run) before anything can return early.
     openrc_restore_update_entry
 
-    # A path warning is only meaningful when the install did NOT land in a
-    # root-owned or service-user-owned location: the OpenRC default
-    # (/usr/local/lib/urnetwork-provider) and an install under the service
-    # user's home are both fine, but an arbitrary -i path that neither the
-    # service user can read nor root owns breaks the service.
+    # Refuse an install inside the service user's home: root-executed tools
+    # or cron entries must never reach binaries through a user-writable
+    # ancestor (H2).
     case "$install_path" in
-        "$openrc_install_root"|"$openrc_install_root"/*|"$openrc_home"/*) ;;
+        "$openrc_home"|"$openrc_home"/*)
+            pr_err "Install path '%s' is inside the service user's home (%s)." "$install_path" "$openrc_home"
+            pr_err "OpenRC services must not run from a user-writable ancestor (privilege escalation risk). Refusing install."
+            rm -rf "$openrc_stage_dir"
+            exit 1
+            ;;
+        "$openrc_install_root"|"$openrc_install_root"/*)
+            ;;
         *)
-            pr_warn "This install is at %s but the service runs as '%s' (%s)." "$install_path" "$openrc_user" "$openrc_home"
-            pr_warn "The tree must be readable by the service user; if this is not deliberate, reinstall with the default location."
+            pr_err "Unsafe install path '%s' for OpenRC service running as '%s' (%s)." "$install_path" "$openrc_user" "$openrc_home"
+            pr_err "The OpenRC install tree must reside in a root-owned location such as %s." "$openrc_install_root"
+            rm -rf "$openrc_stage_dir"
+            exit 1
             ;;
     esac
 
@@ -1602,6 +1624,7 @@ EOF
                && sudo rc-update add urnetwork default \
                && SUDO=sudo openrc_finalize_root_paths \
                && sudo rc-service urnetwork start; then
+                rm -rf "$openrc_stage_dir"
                 pr_info "Service urnetwork installed, enabled and started."
                 return 0
             fi
@@ -1620,8 +1643,10 @@ EOF
 
     if ! cp "$openrc_staged" "$openrc_initd_file"; then
         pr_err "Failed to install %s" "$openrc_initd_file"
+        rm -rf "$openrc_stage_dir"
         exit 1
     fi
+    rm -rf "$openrc_stage_dir"
     if ! chmod 755 "$openrc_initd_file"; then
         pr_err "Failed to make %s executable" "$openrc_initd_file"
         exit 1
@@ -2222,13 +2247,13 @@ do_install ()
         if [ ! -d "$install_path" ]; then
             pr_info "Creating directory '%s'" "$install_path"
 
-            if ! mkdir -p "$install_path"; then
+            if ! ${SUDO:-} mkdir -p "$install_path"; then
                 pr_err "Failed to create directory '%s'" "$install_path"
                 exit 1
             fi
         fi
 
-        if ! mkdir -p "$install_path/bin"; then
+        if ! ${SUDO:-} mkdir -p "$install_path/bin"; then
             pr_err "Failed to create directory '%s'" "$install_path/bin"
             exit 1
         fi
@@ -2236,10 +2261,10 @@ do_install ()
 
     if [ -z "$URNETWORK_NO_DOWNLOAD_TARBALL" ]; then
         # Bypass 'Text file busy' locks on running binaries by moving the active inode out of the way first
-        mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || true
-        cp "$bin_program" "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
-        chmod 755 "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
-        rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        ${SUDO:-} mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        ${SUDO:-} cp "$bin_program" "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
+        ${SUDO:-} chmod 755 "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
+        ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
     fi
 
     cd "$script_rundir" || exit 1
@@ -2269,10 +2294,10 @@ do_install ()
             if download_asset "$tool_dl_url" "$workdir/$tool_asset"; then
                 if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
                     # Bypass 'Text file busy' like the provider swap above.
-                    mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
-                    cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                    chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                    rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                    ${SUDO:-} mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                    ${SUDO:-} cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                    ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                    ${SUDO:-} rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
                     tool_installed=1
                 else
                     pr_warn "urnet-tools sha256 mismatch, falling back to shell script"
@@ -2281,10 +2306,10 @@ do_install ()
                 pr_warn "Primary tool download failed, trying GitHub mirror..."
                 if download_asset "$tool_mirror_url" "$workdir/$tool_asset"; then
                     if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
-                        mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
-                        cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                        chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                        rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                        ${SUDO:-} mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                        ${SUDO:-} cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                        ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                        ${SUDO:-} rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
                         tool_installed=1
                     else
                         pr_warn "urnet-tools sha256 mismatch (mirror), falling back to shell script"
@@ -2337,17 +2362,17 @@ do_install ()
             exit 1
         fi
 
-        rm -f "$install_path/bin/urnet-tools"
-        printf "%s\n" "$script" > "$install_path/bin/urnet-tools"
-        chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools"; exit 1; }
+        ${SUDO:-} rm -f "$install_path/bin/urnet-tools"
+        printf "%s\n" "$script" | ${SUDO:-} tee "$install_path/bin/urnet-tools" > /dev/null
+        ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools"; exit 1; }
 
         # Note: the GitHub-fetched script above (from main branch) is the canonical
         # version. The tarball copy is NOT used here to avoid overwriting with stale
         # bundled content that may lack the latest fix.
     fi
 
-    echo "$version_to_install" > "$install_path/.version"
-    echo "$release_date" > "$install_path/.date"
+    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
+    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
 
     if [ "$has_systemd" -eq 1 ]; then
         install_systemd_units
@@ -2658,13 +2683,13 @@ do_install ()
         if [ ! -d "$install_path" ]; then
             pr_info "Creating directory '%s'" "$install_path"
 
-            if ! mkdir -p "$install_path"; then
+            if ! ${SUDO:-} mkdir -p "$install_path"; then
                 pr_err "Failed to create directory '%s'" "$install_path"
                 exit 1
             fi
         fi
 
-        if ! mkdir -p "$install_path/bin"; then
+        if ! ${SUDO:-} mkdir -p "$install_path/bin"; then
             pr_err "Failed to create directory '%s'" "$install_path/bin"
             exit 1
         fi
@@ -2672,10 +2697,10 @@ do_install ()
 
     if [ -z "$URNETWORK_NO_DOWNLOAD_TARBALL" ]; then
         # Bypass 'Text file busy' locks on running binaries by moving the active inode out of the way first
-        mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || true
-        cp "$bin_program" "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
-        chmod 755 "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
-        rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        ${SUDO:-} mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        ${SUDO:-} cp "$bin_program" "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
+        ${SUDO:-} chmod 755 "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
+        ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
     fi
 
     cd "$script_rundir" || exit 1
@@ -2705,10 +2730,10 @@ do_install ()
             if download_asset "$tool_dl_url" "$workdir/$tool_asset"; then
                 if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
                     # Bypass 'Text file busy' like the provider swap above.
-                    mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
-                    cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                    chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                    rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                    ${SUDO:-} mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                    ${SUDO:-} cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                    ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                    ${SUDO:-} rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
                     tool_installed=1
                 else
                     pr_warn "urnet-tools sha256 mismatch, falling back to shell script"
@@ -2717,10 +2742,10 @@ do_install ()
                 pr_warn "Primary tool download failed, trying GitHub mirror..."
                 if download_asset "$tool_mirror_url" "$workdir/$tool_asset"; then
                     if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
-                        mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
-                        cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                        chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
-                        rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                        ${SUDO:-} mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                        ${SUDO:-} cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                        ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                        ${SUDO:-} rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
                         tool_installed=1
                     else
                         pr_warn "urnet-tools sha256 mismatch (mirror), falling back to shell script"
@@ -2773,17 +2798,17 @@ do_install ()
             exit 1
         fi
 
-        rm -f "$install_path/bin/urnet-tools"
-        printf "%s\n" "$script" > "$install_path/bin/urnet-tools"
-        chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools"; exit 1; }
+        ${SUDO:-} rm -f "$install_path/bin/urnet-tools"
+        printf "%s\n" "$script" | ${SUDO:-} tee "$install_path/bin/urnet-tools" > /dev/null
+        ${SUDO:-} chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools"; exit 1; }
 
         # Note: the GitHub-fetched script above (from main branch) is the canonical
         # version. The tarball copy is NOT used here to avoid overwriting with stale
         # bundled content that may lack the latest fix.
     fi
 
-    echo "$version_to_install" > "$install_path/.version"
-    echo "$release_date" > "$install_path/.date"
+    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
+    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
 
     if [ "$has_systemd" -eq 1 ]; then
         install_systemd_units
@@ -2917,7 +2942,7 @@ do_uninstall ()
 
     pr_info "Removing: %s" "$install_path"
     
-    if ! rm -r "$install_path"; then
+    if ! ${SUDO:-} rm -r "$install_path"; then
         pr_err "Failed to completely remove '%s'" "$install_path"
         exit 1
     fi

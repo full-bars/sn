@@ -201,8 +201,10 @@ func TestFreeBSDInstallerNeverCopiesOntoRunningBinary(t *testing.T) {
 // OpenRC installs run the tree ROOT-OWNED at /usr/local/lib/urnetwork-provider,
 // and only when the operator did not name an explicit -i path. An unset
 // install_path_explicit used to make the guard `[ "" -eq 0 ]` fail with an
-// "integer expected" error that aborted the redirect (H1). These cases execute
-// the REAL function from the script and assert what actually gets installed.
+// "integer expected" error that aborted the redirect (H1). In H2, non-root runs
+// with working sudo also redirect into the root-owned tree and set SUDO=sudo.
+// These cases execute the REAL function from the script and assert what
+// actually gets installed.
 func TestOpenRCRedirectInstallPath(t *testing.T) {
 	skipWithoutPOSIXShell(t)
 	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
@@ -215,24 +217,20 @@ func TestOpenRCRedirectInstallPath(t *testing.T) {
 		t.Fatal("could not extract openrc_maybe_redirect_install_path from the Linux installer")
 	}
 
-	// The surrounding harness stubs everything the function reaches that a
-	// test box cannot provide: run as uid 0 (the redirect only applies to
-	// root installs), a fixed service-user home, and no-op message helpers.
 	harness := `
 pr_info() { return 0; }
 pr_warn() { return 0; }
-id() { echo 0; }
 openrc_user_home() { echo /home/urnet; }
 openrc_install_root=/usr/local/lib/urnetwork-provider
 `
 
-	run := func(setup string) string {
+	run := func(idStub, sudoStub, setup string) string {
 		cmd := exec.Command("/bin/sh", "-c",
-			harness+fn+"\n"+
+			harness+idStub+"\n"+sudoStub+"\n"+fn+"\n"+
 				`has_openrc=1; has_systemd=0; openrc_migrating=0; `+setup+"\n"+
 				`install_path="/root/.local/share/urnetwork-provider"; `+
 				`openrc_maybe_redirect_install_path; `+
-				`echo "PATH=$install_path"`)
+				`echo "PATH=$install_path SUDO=${SUDO:-} ELEVATE=${openrc_elevate:-0}"`)
 		cmd.Env = []string{"PATH=/usr/bin:/bin"}
 		out, err := cmd.CombinedOutput()
 		if err != nil {
@@ -242,12 +240,75 @@ openrc_install_root=/usr/local/lib/urnetwork-provider
 	}
 
 	// Default root OpenRC install redirects into the root-owned tree.
-	if got := run("install_path_explicit=0"); got != "PATH=/usr/local/lib/urnetwork-provider" {
-		t.Errorf("default OpenRC install path = %q, want the root-owned tree", got)
+	if got := run("id() { echo 0; }", "", "install_path_explicit=0"); !strings.HasPrefix(got, "PATH=/usr/local/lib/urnetwork-provider") {
+		t.Errorf("default OpenRC root install = %q, want the root-owned tree", got)
 	}
-	// An explicit -i path is the operator's choice and must be untouched.
-	if got := run("install_path_explicit=1"); got != "PATH=/root/.local/share/urnetwork-provider" {
-		t.Errorf("explicit -i path = %q, want it left alone", got)
+	// Explicit -i path as root is left alone.
+	if got := run("id() { echo 0; }", "", "install_path_explicit=1"); !strings.HasPrefix(got, "PATH=/root/.local/share/urnetwork-provider") {
+		t.Errorf("explicit -i path as root = %q, want it left alone", got)
+	}
+	// Non-root with working sudo redirects to root-owned tree and sets SUDO=sudo, openrc_elevate=1.
+	sudoWorks := "command() { [ \"$1\" = \"-v\" ] && [ \"$2\" = \"sudo\" ]; }; sudo() { [ \"$1\" = \"-n\" ] && [ \"$2\" = \"true\" ]; }"
+	if got := run("id() { echo 1000; }", sudoWorks, "install_path_explicit=0"); got != "PATH=/usr/local/lib/urnetwork-provider SUDO=sudo ELEVATE=1" {
+		t.Errorf("non-root with sudo = %q, want redirect to root-owned tree with SUDO=sudo ELEVATE=1", got)
+	}
+	// Non-root without sudo does NOT redirect.
+	sudoFails := "command() { return 1; }; sudo() { return 1; }"
+	if got := run("id() { echo 1000; }", sudoFails, "install_path_explicit=0"); !strings.HasPrefix(got, "PATH=/root/.local/share/urnetwork-provider") {
+		t.Errorf("non-root without sudo = %q, want no redirect", got)
+	}
+}
+
+// H2: install_openrc_units must refuse an explicit install path inside the
+// service user's home (where user could modify root-executed binaries) and
+// must refuse unsafe paths.
+func TestOpenRCInstallUnitsRefusesUnsafePath(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := strings.ReplaceAll(string(b), "\r\n", "\n")
+	fn := extractShellFunc(t, script, "install_openrc_units")
+	if fn == "" {
+		t.Fatal("could not extract install_openrc_units from the Linux installer")
+	}
+
+	harness := `
+pr_info() { return 0; }
+pr_warn() { return 0; }
+pr_err() { return 0; }
+openrc_user_home() { echo /home/urnet; }
+openrc_restore_update_entry() { return 0; }
+openrc_user=urnet
+openrc_install_root=/usr/local/lib/urnetwork-provider
+`
+	runPath := func(path string) int {
+		cmd := exec.Command("/bin/sh", "-c",
+			harness+fn+"\n"+
+				`install_path="`+path+`"; `+
+				`id() { echo 0; }; `+
+				`chmod() { return 0; }; `+
+				`cat() { return 0; }; `+
+				`install_openrc_units; exit 0`)
+		cmd.Env = []string{"PATH=/usr/bin:/bin"}
+		err := cmd.Run()
+		if err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				return exitErr.ExitCode()
+			}
+			return 1
+		}
+		return 0
+	}
+
+	// Refuses install inside service user home (exit 1).
+	if code := runPath("/home/urnet/.local/share/urnetwork-provider"); code != 1 {
+		t.Errorf("install inside home returned exit code %d, want 1", code)
+	}
+	// Refuses unsafe path outside approved tree (exit 1).
+	if code := runPath("/tmp/arbitrary"); code != 1 {
+		t.Errorf("install in arbitrary path returned exit code %d, want 1", code)
 	}
 }
 
@@ -270,11 +331,34 @@ func extractShellFunc(t *testing.T, script, name string) string {
 		return ""
 	}
 	rest := script[start:]
-	end := strings.Index(rest, "\n}\n")
-	if end < 0 {
+	lines := strings.Split(rest, "\n")
+	var heredocTag string
+	endIdx := -1
+	charCount := 0
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if heredocTag != "" {
+			if trimmed == heredocTag {
+				heredocTag = ""
+			}
+		} else {
+			if idx := strings.Index(line, "<<"); idx >= 0 {
+				tag := strings.TrimSpace(line[idx+2:])
+				tag = strings.Trim(tag, "'\"")
+				if tag != "" && !strings.ContainsAny(tag, " \t;") {
+					heredocTag = tag
+				}
+			} else if i > 0 && line == "}" {
+				endIdx = charCount + len(line)
+				break
+			}
+		}
+		charCount += len(line) + 1
+	}
+	if endIdx < 0 {
 		return ""
 	}
-	return rest[:end+2]
+	return rest[:endIdx]
 }
 
 // A release asset with no digest must read as ABSENT. jq prints the string
