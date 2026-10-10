@@ -98,6 +98,8 @@ urnet-tools auto on
 Full guides: [Installation](docs/Installation.md), [Docker Deployment](docs/Docker-Deployment.md),
 [Adding Proxies](docs/Adding-Proxies.md), [urnet-tools](docs/urnet-tools-go.md).
 
+**Platforms:** Linux (systemd, and Alpine/OpenRC with a native boot-start service), macOS, Windows and FreeBSD. Alpine setup: [docs/OpenRC.md](docs/OpenRC.md); FreeBSD setup: [docs/FreeBSD.md](docs/FreeBSD.md).
+
 ### Uninstall
 
 **🐧 Linux**

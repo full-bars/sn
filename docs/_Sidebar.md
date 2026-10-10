@@ -3,6 +3,8 @@
 
 #### Getting Started
 * **[Installation](Installation)**
+* **[Alpine Linux (OpenRC)](OpenRC)**
+* **[FreeBSD](FreeBSD)**
 * **[Configuration](Configuration)**
 * **[Docker Deployment](Docker-Deployment)**
 * **[Advanced Deployment](Advanced-Deployment)**

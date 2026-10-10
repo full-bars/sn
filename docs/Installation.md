@@ -38,6 +38,11 @@ urnet-tools proxy refresh
 
 > Full proxy-loading walkthrough (including Windows): [Adding Proxies](Adding-Proxies.md).
 
+## 🧭 Other Platforms (Quick install)
+
+- **Alpine Linux (OpenRC):** the same install command, run from a root shell, installs a system service under `supervise-daemon`. See the [Alpine Linux (OpenRC) guide](https://github.com/full-bars/sn/wiki/OpenRC).
+- **FreeBSD:** installs an `rc.d` service from the FreeBSD installer script. See the [FreeBSD guide](https://github.com/full-bars/sn/wiki/FreeBSD).
+
 ## 🍎 macOS Installation
 
 The macOS installer is the equivalent of the Linux installer but uses `launchd` instead of `systemd`:
