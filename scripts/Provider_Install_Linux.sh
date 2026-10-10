@@ -102,15 +102,38 @@ no_modify_bashrc=0
 update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
 
 api_base="https://api.github.com/repos/full-bars/sn"
+urnet_dl_base="https://dl.fullbars.xyz"
+urnet_github_dl_base="https://github.com/full-bars/sn/releases/download"
 
 # Base-URL overrides: URL seams exported by CI to serve a branch build from a
 # local fake release (see scripts/ci/openrc-smoke.sh). Defaults keep the
-# production endpoints. The Go urnet-tools self-update and the installers all
-# resolve assets through these same names, so a CI-served build exercises the
-# real download+verify path unmodified.
-if [ -n "${URNET_API_BASE:-}" ]; then api_base="$URNET_API_BASE"; fi
-urnet_dl_base="${URNET_DL_BASE:-https://dl.fullbars.xyz}"
-urnet_github_dl_base="${URNET_MIRROR_BASE:-https://github.com/full-bars/sn/releases/download}"
+# production endpoints. These variables appear only in this shell installer
+# and CI smoke scripts (not in Go urnet-tools). Overrides are gated behind
+# URNET_ALLOW_BASE_OVERRIDE=1 to prevent silent redirection of the trust chain.
+if [ "${URNET_ALLOW_BASE_OVERRIDE:-0}" = "1" ]; then
+    if [ -n "${URNET_API_BASE:-}" ]; then
+        api_base="$URNET_API_BASE"
+        echo "Note: URNET_API_BASE override active: $api_base"
+    fi
+    if [ -n "${URNET_DL_BASE:-}" ]; then
+        urnet_dl_base="$URNET_DL_BASE"
+        echo "Note: URNET_DL_BASE override active: $urnet_dl_base"
+    fi
+    if [ -n "${URNET_MIRROR_BASE:-}" ]; then
+        urnet_github_dl_base="$URNET_MIRROR_BASE"
+        echo "Note: URNET_MIRROR_BASE override active: $urnet_github_dl_base"
+    fi
+else
+    if [ -n "${URNET_API_BASE:-}" ]; then
+        echo "WARNING: ignoring URNET_API_BASE override; URNET_ALLOW_BASE_OVERRIDE=1 is required" >&2
+    fi
+    if [ -n "${URNET_DL_BASE:-}" ]; then
+        echo "WARNING: ignoring URNET_DL_BASE override; URNET_ALLOW_BASE_OVERRIDE=1 is required" >&2
+    fi
+    if [ -n "${URNET_MIRROR_BASE:-}" ]; then
+        echo "WARNING: ignoring URNET_MIRROR_BASE override; URNET_ALLOW_BASE_OVERRIDE=1 is required" >&2
+    fi
+fi
 
 install_path="$HOME/.local/share/urnetwork-provider"
 # Whether the install path was named explicitly with -i/--install. Guards the
