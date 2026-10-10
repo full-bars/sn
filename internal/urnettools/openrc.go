@@ -237,7 +237,7 @@ func openrcMatchedProviderFrom(provs []Provider, t Target) (Provider, bool) {
 	if len(matches) != 1 {
 		return Provider{}, false
 	}
-	if !providerSupervisedByOpenRCFn(matches[0]) {
+	if matches[0].Supervisor != "openrc" && !providerSupervisedByOpenRCFn(matches[0]) {
 		return Provider{}, false
 	}
 	return matches[0], true
