@@ -197,8 +197,14 @@ jobs:
             # a key added to bsdSysctlWrites() is checked here automatically,
             # and a key REMOVED from it stops being checked instead of
             # silently going unverified.
+            # The pattern is single-quoted, so the backslashes in the version
+            # below would be LITERAL: grep warns "stray \ before \"" and matches
+            # nothing, so `keys` came back empty and this check always fataled.
+            # Inside single quotes only \. needs escaping; the double quotes are
+            # written bare. Verified against this file on the PR merge ref:
+            # the escaped form extracts 0 keys, this form extracts 5.
             keys="$(sed -n '/^func bsdSysctlWrites/,/^}/p' internal/urnettools/optimize_bsd.go \
-                   | grep -oE '\"(net|kern)\\.[a-z._]+\"' | tr -d '\"' | sort -u)"
+                   | grep -oE '"(net|kern)\.[a-z._]+"' | tr -d '"' | sort -u)"
             if [ -z "$keys" ]; then
               echo "FATAL: could not extract the tuning key list from optimize_bsd.go"
               exit 1
