@@ -978,6 +978,12 @@ func optimizeFor(goos string) func() error {
 	if goos == "darwin" {
 		return optimizeDarwin
 	}
+	if goos == "freebsd" {
+		// FreeBSD shares no tunable name with Linux: routing this to
+		// optimizeLinux wrote net.core.rmem_max and /etc/sysctl.d, neither of
+		// which exists here, so it reported success while changing nothing.
+		return optimizeFreeBSD
+	}
 	return optimizeLinux
 }
 
