@@ -140,7 +140,21 @@ func setAutoStart(p Provider, on bool) error {
 	if on {
 		value = "YES"
 	}
-	if out, err := exec.Command("sysrc", service+"_enable="+value).CombinedOutput(); err != nil {
+	// sysrc writes /etc/rc.conf, which is root-owned, so a non-root caller
+	// needs the same escalation bsdServiceControl uses. The installer installs
+	// the provider as a normal user, so without this `auto-start on|off` fails
+	// with a permission error from exactly the account it was installed for.
+	var name string
+	var args []string
+	if os.Geteuid() == 0 {
+		name, args = "sysrc", []string{service + "_enable=" + value}
+	} else {
+		if _, err := exec.LookPath("sudo"); err != nil {
+			return fmt.Errorf("auto-start needs root and sudo is not installed — run it as root")
+		}
+		name, args = "sudo", []string{"sysrc", service + "_enable=" + value}
+	}
+	if out, err := exec.Command(name, args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("auto-start %s: sysrc %s_enable=%s: %w (%s)",
 			providerLabel(p), service, value, err, strings.TrimSpace(string(out)))
 	}
