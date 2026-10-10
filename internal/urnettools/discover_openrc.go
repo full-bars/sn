@@ -48,9 +48,13 @@ func discoverOpenRCService(running []Provider) (Provider, bool) {
 	}
 
 	// A live supervise-daemon child already covers this service in the running
-	// list; do not report it twice.
+	// list; do not report it twice. Match on the supervised process, or on the
+	// requested user running the same binary — matching the binary alone let a
+	// bare provider started by any other user suppress the stopped record, so
+	// providers/uninstall/logs never saw the service and selector-less start
+	// fell through to the unitless path.
 	for _, p := range running {
-		if p.Binary == command || (user != "" && p.User == user && p.Binary == command) {
+		if p.Binary == command && (providerSupervisedByOpenRCFn(p) || (user != "" && p.User == user)) {
 			return Provider{}, false
 		}
 	}
