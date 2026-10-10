@@ -1728,7 +1728,7 @@ install_openrc_units ()
 # URnetwork Provider — OpenRC service (written by Provider_Install_Linux.sh)
 #
 # supervise-daemon keeps the provider running and respawns it on exit
-# (5s initial delay, 5s backoff steps up to 60s, at most 10 restarts/hour).
+# (5s delay, at most 10 restarts/hour).
 # command_user makes the provider run
 # as '$openrc_user' with HOME=$openrc_home, so its state lives in
 # $openrc_home/.urnetwork.
