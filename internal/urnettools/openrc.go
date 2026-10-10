@@ -619,7 +619,15 @@ func openrcTreeOwnedByRoot(path string) bool {
 // openrcStagedRootToolPath returns the root-owned staged tool path on Linux,
 // or "" elsewhere. platform-crossing callers (tool_path_unix.go compiled for
 // darwin too) use this instead of the linux-only const.
-func openrcStagedRootToolPath() string { return openrcRootToolPath }
+func openrcStagedRootToolPath() string {
+	if !openrcActive() {
+		return ""
+	}
+	if fi, err := openrcStatFn(openrcRootToolPath); err != nil || fi.IsDir() {
+		return ""
+	}
+	return openrcRootToolPath
+}
 
 // openrcUpdateToolPath picks the binary the PERIODIC CRON ENTRY will execute.
 //
