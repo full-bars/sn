@@ -407,17 +407,21 @@ do_install() {
         exit 1
     fi
 
-    mkdir -p "$install_path/bin"
+    # The tree is root-owned at /usr/local/libexec, which a normal user cannot
+    # create. Every write below goes through priv so a non-root install
+    # elevates instead of failing at the first mkdir. (This was a regression
+    # from moving the tree out of the service user's home.)
+    priv mkdir -p "$install_path/bin" || { pr_err "Failed to create %s" "$install_path"; rm -rf "$tmpdir"; exit 1; }
     # `cp` onto a running binary fails with ETXTBSY ("Text file busy"), which
     # is exactly the `update` case: the provider is still executing the file
     # being replaced. Staging next to the target and renaming is atomic, is
     # allowed over a running image, and never leaves a half-written binary.
-    staged="$provider_bin.new.$$"
-    cp "$provider_src" "$staged" || { pr_err "Failed to stage binary"; rm -f "$staged"; rm -rf "$tmpdir"; exit 1; }
-    chmod 755 "$staged"
-    mv -f "$staged" "$provider_bin" || { pr_err "Failed to install binary"; rm -f "$staged"; rm -rf "$tmpdir"; exit 1; }
+    staged="$install_path/bin/.urnetwork.new.$$"
+    priv cp "$provider_src" "$staged" || { pr_err "Failed to stage binary"; rm -f "$staged"; rm -rf "$tmpdir"; exit 1; }
+    priv chmod 755 "$staged"
+    priv mv -f "$staged" "$provider_bin" || { pr_err "Failed to install binary"; rm -f "$staged"; rm -rf "$tmpdir"; exit 1; }
 
-    echo "$tag" > "$install_path/version"
+    printf '%s\n' "$tag" | priv tee "$install_path/version" > /dev/null
 
     # Install the tool: the Go urnet-tools binary shipped as a release asset,
     # digest-verified; fall back to this shell script for releases that
