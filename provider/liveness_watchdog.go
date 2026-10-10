@@ -152,16 +152,29 @@ func runSdWatchdogLoop(ctx context.Context, tick <-chan time.Time, progress *liv
 
 var livenessStartOnce sync.Once
 
-// startLivenessWatchdog starts the feed once, as early as the provider is ready
-// (not after the proxy list is loaded): systemd's watchdog timer runs from the
-// start, and the loop has to be feeding it through the whole of startup.
+// startLivenessWatchdog starts the stall defense once, as early as the provider
+// is ready (not after the proxy list is loaded): systemd's watchdog timer runs
+// from the start, and the loop has to be feeding it through the whole of
+// startup. Where there is no timer to feed (a container's start script) the same
+// detection runs with a self-exit as its action (see runSelfExitLivenessWatchdog).
 func startLivenessWatchdog(ctx context.Context) {
-	if _, enabled := sdWatchdogInterval(os.Getenv); !enabled {
+	if !livenessApplies() {
 		return
 	}
 	livenessStartOnce.Do(func() {
 		go superviseLoop(ctx, "liveness_watchdog", func() { runSdWatchdog(ctx, livenessGate) }, nil)
 	})
+}
+
+// livenessApplies reports whether this process runs the stall detection at all:
+// under systemd when the unit sets WatchdogSec= (there is a ping to withhold),
+// or under a supervisor with no watchdog of its own, which can only be asked
+// for a restart by the provider exiting (a container's start script).
+func livenessApplies() bool {
+	if _, enabled := sdWatchdogInterval(os.Getenv); enabled {
+		return true
+	}
+	return livenessUnderSelfExitSupervisor()
 }
 
 // runSdWatchdog is the feed itself. It logs through the disk event log, not the
@@ -170,6 +183,13 @@ func startLivenessWatchdog(ctx context.Context) {
 func runSdWatchdog(ctx context.Context, gate func(episodeStart bool) (bool, string)) {
 	interval, ok := sdWatchdogInterval(os.Getenv)
 	if !ok {
+		// No systemd watchdog. Under a supervisor that restarts on exit 75 but
+		// has no watchdog of its own (a container's start script), the same
+		// stall detection still protects the box: its action is a self-exit
+		// instead of a withheld ping.
+		if livenessApplies() {
+			runSelfExitLivenessWatchdog(ctx, gate)
+		}
 		return
 	}
 	if os.Getenv("NOTIFY_SOCKET") == "" {
