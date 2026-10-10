@@ -104,6 +104,10 @@ update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
 api_base="https://api.github.com/repos/full-bars/sn"
 
 install_path="$HOME/.local/share/urnetwork-provider"
+# Whether the install path was named explicitly with -i/--install. Guards the
+# OpenRC redirect (openrc_maybe_redirect_install_path): an explicit path is
+# the operator's choice and is never overridden.
+install_path_explicit=0
 version_file="$install_path/.version"
 
 # Canonical URL for re-running this installer in a freshly created user's context.
@@ -586,6 +590,7 @@ while [ $# -gt 0 ]; do
             fi
 
             install_path="$2"
+            install_path_explicit=1
             shift 2
             ;;
 
@@ -1102,7 +1107,7 @@ openrc_maybe_redirect_install_path ()
     # systemd path is chosen (systemctl present) keeps root's own install path.
     [ "$has_systemd" -eq 0 ] || return 0
     [ "$(id -u)" -eq 0 ] || return 0
-    [ "$install_path_explicit" -eq 0 ] || return 0
+    [ "${install_path_explicit:-0}" -eq 0 ] || return 0
 
     # Migrate an older OpenRC install out of the service user's home. Run as
     # root (or via sudo). The migration is idempotent so an interrupted run
@@ -1915,7 +1920,7 @@ do_install ()
     openrc_maybe_redirect_install_path
     if [ "$install_path" != "$openrc_path_before" ]; then
         pr_info "OpenRC service user '%s': installing under %s" "$openrc_user" "$install_path"
-    elif [ "$has_openrc" -eq 1 ] && [ "$(id -u)" -eq 0 ] && [ "$install_path_explicit" -eq 0 ]; then
+    elif [ "$has_openrc" -eq 1 ] && [ "$(id -u)" -eq 0 ] && [ "${install_path_explicit:-0}" -eq 0 ]; then
         pr_warn "Service user '%s' has no home directory (%s); installing to %s." "$openrc_user" "$(openrc_user_home)" "$install_path"
     fi
 

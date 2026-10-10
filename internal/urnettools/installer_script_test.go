@@ -198,13 +198,74 @@ func TestFreeBSDInstallerNeverCopiesOntoRunningBinary(t *testing.T) {
 	}
 }
 
+// OpenRC installs run the tree ROOT-OWNED at /usr/local/lib/urnetwork-provider,
+// and only when the operator did not name an explicit -i path. An unset
+// install_path_explicit used to make the guard `[ "" -eq 0 ]` fail with an
+// "integer expected" error that aborted the redirect (H1). These cases execute
+// the REAL function from the script and assert what actually gets installed.
+func TestOpenRCRedirectInstallPath(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := strings.ReplaceAll(string(b), "\r\n", "\n")
+	fn := extractShellFunc(t, script, "openrc_maybe_redirect_install_path")
+	if fn == "" {
+		t.Fatal("could not extract openrc_maybe_redirect_install_path from the Linux installer")
+	}
+
+	// The surrounding harness stubs everything the function reaches that a
+	// test box cannot provide: run as uid 0 (the redirect only applies to
+	// root installs), a fixed service-user home, and no-op message helpers.
+	harness := `
+pr_info() { return 0; }
+pr_warn() { return 0; }
+id() { echo 0; }
+openrc_user_home() { echo /home/urnet; }
+openrc_install_root=/usr/local/lib/urnetwork-provider
+`
+
+	run := func(setup string) string {
+		cmd := exec.Command("/bin/sh", "-c",
+			harness+fn+"\n"+
+				`has_openrc=1; has_systemd=0; openrc_migrating=0; `+setup+"\n"+
+				`install_path="/root/.local/share/urnetwork-provider"; `+
+				`openrc_maybe_redirect_install_path; `+
+				`echo "PATH=$install_path"`)
+		cmd.Env = []string{"PATH=/usr/bin:/bin"}
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("openrc_maybe_redirect_install_path failed: %v (%s)", err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+
+	// Default root OpenRC install redirects into the root-owned tree.
+	if got := run("install_path_explicit=0"); got != "PATH=/usr/local/lib/urnetwork-provider" {
+		t.Errorf("default OpenRC install path = %q, want the root-owned tree", got)
+	}
+	// An explicit -i path is the operator's choice and must be untouched.
+	if got := run("install_path_explicit=1"); got != "PATH=/root/.local/share/urnetwork-provider" {
+		t.Errorf("explicit -i path = %q, want it left alone", got)
+	}
+}
+
 // extractShellFunc returns the body of a top-level shell function, from its
 // definition line to the closing brace at column 0. Used so assertions can
 // target ONE function instead of the whole file, which is how a string present
 // in a sibling function satisfied a check about do_install.
 func extractShellFunc(t *testing.T, script, name string) string {
 	t.Helper()
-	start := strings.Index(script, name+"() {")
+	// The script declares functions in two styles: `name() {` and
+	// `name ()` with the brace on the following line. Match either and take
+	// the earliest, so a rename-vs-decl drift cannot silently empty the body.
+	start := -1
+	for _, cand := range []string{name + "()", name + " ()"} {
+		if i := strings.Index(script, cand); i >= 0 && (start < 0 || i < start) {
+			start = i
+		}
+	}
 	if start < 0 {
 		return ""
 	}

@@ -170,6 +170,20 @@ else
   fail "no command_user= in the init script"
 fi
 
+# H1: the provider binary MUST be at the root-owned install root, not in a
+# user-writable home. Previously the redirect was dead code and a root run
+# landed the tree in /root/.local/share, where the service user (via
+# /root's 0700) could not exec it - the job passed for the wrong reason. A
+# missing binary here is a HARD failure, not a diagnostic note.
+if [ -x "$INSTALL_ROOT/bin/urnetwork" ]; then
+  ok "provider binary is at $INSTALL_ROOT/bin/urnetwork"
+else
+  fail "$INSTALL_ROOT/bin/urnetwork is MISSING - the OpenRC install did not land in the root-owned tree"
+  ls -la "$INSTALL_ROOT/bin" 2>/dev/null | sed 's/^/     /' || echo "     (no $INSTALL_ROOT/bin at all)"
+  find / -name urnetwork -type f 2>/dev/null | head -5 | sed 's/^/     found: /'
+  exit 1
+fi
+
 # Boot persistence: the runlevel symlink is what starts the service with no
 # login session. Its EXISTENCE is deterministic and must be asserted.
 if [ -e /etc/runlevels/default/urnetwork ]; then
