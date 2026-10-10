@@ -1731,13 +1731,21 @@ openrc_prompt_auth ()
         [Yy]*)
             printf "Auth code: "
             openrc_code=""
+            # Never fall back to a plain `read -r` here. If echo cannot be
+            # turned off the code is printed on screen, which is worse than not
+            # asking: an auth code is a credential. Refuse and print the
+            # instructions for authenticating separately.
             if command -v stty >/dev/null 2>&1 && stty -echo < "$openrc_tty" 2>/dev/null; then
                 read -r openrc_code < "$openrc_tty" || openrc_code=""
                 stty echo < "$openrc_tty" 2>/dev/null || true
                 printf "\n"
-            else
-                read -rs openrc_code < "$openrc_tty" 2>/dev/null || read -r openrc_code < "$openrc_tty" || openrc_code=""
+            elif read -rs openrc_code < "$openrc_tty" 2>/dev/null; then
                 printf "\n"
+            else
+                printf "\n\e[1;33mCannot read the auth code without echoing it, so it was not read.\e[0m\n"
+                printf "Authenticate separately with:\n"
+                printf "                      \e[1msu -s /bin/sh %s -c 'urnetwork auth <code>'\e[0m\n" "$openrc_user"
+                return 0
             fi
             if [ -z "$openrc_code" ]; then
                 printf "No code entered; skipping. Authenticate later with:\n"
@@ -4372,11 +4380,28 @@ EOF
     if [ "$has_openrc" -eq 1 ] && [ -f /etc/init.d/urnetwork ]; then
         # OpenRC: restart through rc-service as root. rc_ulimit is read by
         # openrc-run at start, so the restart is what binds the new limit.
-        pr_info "Restarting the urnetwork service to apply ulimits..."
-        if rc-service urnetwork restart >/dev/null 2>&1 || rc-service urnetwork start >/dev/null 2>&1; then
-            pr_info "Service restarted with the new limits."
+        #
+        # Two things this must not do, both of which it used to:
+        #  - restart without asking. A cold restart drops every active
+        #    connection and the proxy warmup state, which is the 8-12 hours
+        #    confirm_restart warns about. The systemd path above gates on
+        #    confirm_restart; this branch skipped it because the check it used
+        #    (systemctl --user is-active) is always false under OpenRC.
+        #  - start a service the operator deliberately stopped. The old
+        #    `restart || start` fallback did exactly that.
+        #
+        # Only a RUNNING service is restarted, and only after confirmation.
+        # A stopped one just needs the new limits to apply at its next start.
+        if rc-service urnetwork status >/dev/null 2>&1; then
+            confirm_restart "Applying the new limits restarts the URNetwork provider."
+            pr_info "Restarting the urnetwork service to apply ulimits..."
+            if rc-service urnetwork restart >/dev/null 2>&1; then
+                pr_info "Service restarted with the new limits."
+            else
+                pr_warn "Could not restart the service; run: rc-service urnetwork restart"
+            fi
         else
-            pr_warn "Could not restart the service; run: rc-service urnetwork restart"
+            pr_info "Service is not running; the new limits apply at its next start."
         fi
         # No lingering equivalent exists (and none is needed): OpenRC has no
         # per-user service manager, and the service lives in the default
