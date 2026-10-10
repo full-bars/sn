@@ -760,6 +760,18 @@ func openrcUpdateCronScript(toolPath string) string {
 		"# it aside and plant their own binary at the same path. Verify every\n" +
 		"# component from the root down before exec'ing; refuse loudly otherwise.\n" +
 		"tool=" + shellQuoteSingle(toolPath) + "\n" +
+		"\tif [ -L \"$tool\" ]; then\n" +
+		"\t\techo \"urnetwork-update: refusing to run $tool: it is a symlink\" >&2; exit 1\n" +
+		"\tfi\n" +
+		"\tif [ ! -f \"$tool\" ]; then\n" +
+		"\t\techo \"urnetwork-update: refusing to run $tool: it is not a regular file\" >&2; exit 1\n" +
+		"\tfi\n" +
+		"\ttool_owner=$(stat -c %u \"$tool\" 2>/dev/null)\n" +
+		"\ttool_mode=$(stat -c %a \"$tool\" 2>/dev/null)\n" +
+		"\tif [ \"$tool_owner\" != \"0\" ] || [ \"$((0$tool_mode & 022))\" -ne 0 ]; then\n" +
+		"\t\techo \"urnetwork-update: refusing to run $tool: it is writable by a non-root user (owner=$tool_owner mode=$tool_mode)\" >&2\n" +
+		"\t\texit 1\n" +
+		"\tfi\n" +
 		"dir=$(dirname \"$tool\")\n" +
 		// dirname never progresses for a bare name (dirname utool = "."), so
 		// guard against the loop spinning forever on a tool path without a
