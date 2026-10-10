@@ -103,6 +103,15 @@ update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
 
 api_base="https://api.github.com/repos/full-bars/sn"
 
+# Base-URL overrides: URL seams exported by CI to serve a branch build from a
+# local fake release (see scripts/ci/openrc-smoke.sh). Defaults keep the
+# production endpoints. The Go urnet-tools self-update and the installers all
+# resolve assets through these same names, so a CI-served build exercises the
+# real download+verify path unmodified.
+if [ -n "${URNET_API_BASE:-}" ]; then api_base="$URNET_API_BASE"; fi
+urnet_dl_base="${URNET_DL_BASE:-https://dl.fullbars.xyz}"
+urnet_github_dl_base="${URNET_MIRROR_BASE:-https://github.com/full-bars/sn/releases/download}"
+
 install_path="$HOME/.local/share/urnetwork-provider"
 # Whether the install path was named explicitly with -i/--install. Guards the
 # OpenRC redirect (openrc_maybe_redirect_install_path): an explicit path is
@@ -2333,7 +2342,7 @@ do_install ()
         pr_err "Could not resolve 'latest' tag to a specific version. GitHub API might be unreachable."
         exit 1
     fi
-    dl_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    dl_url="$urnet_github_dl_base/$tag/urnetwork-provider-$tag.tar.gz"
     mirror_url="$dl_url"
     
     pr_info "Downloading: %s" "$dl_url"
@@ -2436,7 +2445,7 @@ do_install ()
     tool_installed=0
     if [ -n "$tag" ] && [ "$tag" != "latest" ]; then
         tool_asset="urnet-tools-linux-$arch"
-        tool_dl_url="https://github.com/full-bars/sn/releases/download/$tag/$tool_asset"
+        tool_dl_url="$urnet_github_dl_base/$tag/$tool_asset"
         tool_mirror_url="$tool_dl_url"
 
         # Resolve the digest from the release API. Empty digest = the release
@@ -2784,8 +2793,8 @@ do_install ()
         pr_err "Could not resolve 'latest' tag to a specific version. GitHub API might be unreachable."
         exit 1
     fi
-    dl_url="https://dl.fullbars.xyz/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
-    mirror_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    dl_url="$urnet_dl_base/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    mirror_url="$urnet_github_dl_base/$tag/urnetwork-provider-$tag.tar.gz"
     
     pr_info "Downloading: %s" "$dl_url"
     
@@ -2887,8 +2896,8 @@ do_install ()
     tool_installed=0
     if [ -n "$tag" ] && [ "$tag" != "latest" ]; then
         tool_asset="urnet-tools-linux-$arch"
-        tool_dl_url="https://dl.fullbars.xyz/releases/download/$tag/$tool_asset"
-        tool_mirror_url="https://github.com/full-bars/sn/releases/download/$tag/$tool_asset"
+        tool_dl_url="$urnet_dl_base/releases/download/$tag/$tool_asset"
+        tool_mirror_url="$urnet_github_dl_base/$tag/$tool_asset"
 
         # Resolve the digest from the release API. Empty digest = the release
         # predates tool assets (or the asset is missing) → fall back to shell.
