@@ -1220,7 +1220,15 @@ func installBinary(src, dst, user string) error {
 		os.Remove(newPath)
 		return err
 	}
-	if user != "" && os.Geteuid() == 0 {
+	// Under the root-owned OpenRC layout the binary must STAY root-owned:
+	// chowning it to the service user would hand the file itself to an
+	// unprivileged account that root later executes (update-time version
+	// verify, the next `sudo urnet-tools update`). The service user only
+	// needs read+exec, which the 0755 above already delivers. The chown
+	// exists for the user-session (systemd) layout, where the binary lives
+	// in the user's own tree and must be theirs to replace via updates run
+	// without root.
+	if user != "" && os.Geteuid() == 0 && !openrcTreeOwnedByRoot(dst) {
 		uid, gid, err := lookupUserIDs(user)
 		if err != nil {
 			tmpFile.Close()
