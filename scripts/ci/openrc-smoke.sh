@@ -485,8 +485,17 @@ with open('/srv/fake-release/stage/install.sh') as f:
 start = script_text.find('openrc_prompt_auth ()')
 if start == -1:
     start = script_text.find('openrc_prompt_auth()')
+# A '\n}\n' inside a heredoc ends the match early, and a missing name or a
+# missing terminator both used to yield a silently truncated function body that
+# failed later with a vague error. Say which one it is instead.
+if start == -1:
+    sys.exit('openrc-smoke: could not find openrc_prompt_auth in the installer')
 end = script_text.find('\n}\n', start)
+if end == -1:
+    sys.exit('openrc-smoke: could not find the end of openrc_prompt_auth (no closing brace line)')
 fn_body = script_text[start:end+2]
+if 'Auth code: ' not in fn_body:
+    sys.exit('openrc-smoke: extracted openrc_prompt_auth looks truncated (no auth prompt inside it)')
 
 cmd = f'''
 openrc_user="{os.environ.get('SVC_USER', 'urnet')}"
