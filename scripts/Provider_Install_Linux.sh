@@ -1345,6 +1345,62 @@ openrc_stage_root_owned_tool ()
     return 1
 }
 
+openrc_resolve_parent ()
+{
+    # Canonicalize the PARENT of p lexically, printing it on stdout.
+    #
+    # Lexical on purpose: the install tree usually does not exist yet, and
+    # resolving through a symlink in a path that does not exist would let a
+    # planted link choose where the installer writes. POSIX sh has no realpath,
+    # and readlink -f on the parent can still be steered by a link the service
+    # user owns, so collapse "." and ".." by hand.
+    _rp="$1"
+    case "$_rp" in
+        */*) _rp="${_rp%/*}" ;;
+        *)   _rp="." ;;
+    esac
+    [ -n "$_rp" ] || _rp="/"
+
+    _abs=""
+    case "$_rp" in
+        /*) _abs=1 ;;
+        *)  _abs=0 ;;
+    esac
+
+    # Walk the components, keeping a stack of real names. ".." pops it; on an
+    # absolute path it stops at the root, and on a relative one it is dropped
+    # (a relative path cannot climb above where it started).
+    _stack=""
+    _count=0
+    _save_ifs="$IFS"
+    IFS="/"
+    for _comp in $_rp; do
+        [ -n "$_comp" ] || continue
+        case "$_comp" in
+            ".") continue ;;
+            "..")
+                if [ "$_count" -gt 0 ]; then
+                    _stack="${_stack%/*}"
+                    _count=$((_count - 1))
+                fi
+                ;;
+            *)
+                _stack="${_stack}/${_comp}"
+                _count=$((_count + 1))
+                ;;
+        esac
+    done
+    IFS="$_save_ifs"
+
+    if [ "$_abs" = "1" ]; then
+        [ -n "$_stack" ] || _stack="/"
+    else
+        [ -n "$_stack" ] || _stack="."
+        _stack="${_stack#/}"
+    fi
+    printf '%s\n' "$_stack"
+}
+
 openrc_finalize_root_paths ()
 {
     # The install tree is root-owned whatever path it sits on, and under the
@@ -1502,6 +1558,34 @@ install_openrc_units ()
         *)
             pr_err "Unsafe install path '%s' for OpenRC service running as '%s' (%s)." "$install_path" "$openrc_user" "$openrc_home"
             pr_err "The OpenRC install tree must reside in a root-owned location such as %s." "$openrc_install_root"
+            rm -rf "$openrc_stage_dir"
+            exit 1
+            ;;
+    esac
+
+    # The case above is TEXTUAL, so a path that merely starts with the root
+    # prefix can still resolve somewhere else entirely:
+    #   /usr/local/lib/urnetwork-provider/../../../../etc
+    # passes "$openrc_install_root"/* and then resolves to /etc. Everything
+    # downstream (openrc_finalize_root_paths, which recursively deletes symlinks
+    # and chmods, and the binary copy before it) then acts on the RESOLVED
+    # location. So validate the resolved path, not the literal one.
+    #
+    # Lexical resolution, not readlink -f: the tree may not exist yet, and a
+    # planted symlink in a not-yet-created directory must not be able to steer
+    # this. Canonicalize the PARENT (which does exist) and re-append the leaf.
+    openrc_resolved_parent="$(openrc_resolve_parent "$install_path")" || {
+        pr_err "Could not resolve the parent directory of install path '%s'; refusing install." "$install_path"
+        rm -rf "$openrc_stage_dir"
+        exit 1
+    }
+    openrc_resolved="$openrc_resolved_parent/$(basename "$install_path")"
+    case "$openrc_resolved" in
+        "$openrc_install_root"|"$openrc_install_root"/*)
+            ;;
+        *)
+            pr_err "Install path '%s' resolves to '%s', which is outside the root-owned tree." "$install_path" "$openrc_resolved"
+            pr_err "Path traversal is refused. The OpenRC install tree must resolve under %s." "$openrc_install_root"
             rm -rf "$openrc_stage_dir"
             exit 1
             ;;
