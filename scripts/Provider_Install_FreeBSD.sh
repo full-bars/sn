@@ -674,12 +674,41 @@ do_update() {
     pr_info "Update complete."
 }
 
+# write_state_flag sets a flag file (on/off) under state_dir.
+#
+# state_dir lives in the service user's home, so under sudo the writer may
+# be root while the directory is user-controlled: a symlink planted at the
+# flag path would redirect a root write anywhere on the filesystem. Refuse
+# a symlink outright, and write through a temp file + rename(2) — rename
+# replaces the destination dirent and never follows a trailing symlink, so
+# even a race cannot turn the final step into an arbitrary write. 0644
+# matches what a plain printf > would have created (umask 022), keeping
+# the flag readable by the service user after a root run.
+write_state_flag() {
+    _flag="$state_dir/$1"
+    _val="$2"
+    if [ -h "$_flag" ]; then
+        pr_err "refusing to write %s: it is a symlink" "$_flag"
+        return 1
+    fi
+    mkdir -p "$state_dir"
+    _tmp=$(mktemp "$state_dir/.flag.XXXXXX") || {
+        pr_err "cannot create temp file under %s" "$state_dir"
+        return 1
+    }
+    if ! { printf '%s\n' "$_val" > "$_tmp" && chmod 0644 "$_tmp" && mv -f "$_tmp" "$_flag"; }; then
+        rm -f "$_tmp"
+        pr_err "cannot write %s" "$_flag"
+        return 1
+    fi
+}
+
 do_hot_restart() {
     mode="${1:-}"
     file="$state_dir/hot_restart"
     case "$mode" in
-        on)    mkdir -p "$state_dir"; printf '%s\n' "on"  > "$file"; pr_info "hot-restart enabled" ;;
-        off)   mkdir -p "$state_dir"; printf '%s\n' "off" > "$file"; pr_info "hot-restart disabled" ;;
+        on)    write_state_flag hot_restart on  || exit 1; pr_info "hot-restart enabled" ;;
+        off)   write_state_flag hot_restart off || exit 1; pr_info "hot-restart disabled" ;;
         status|"")
             if [ -f "$file" ] && [ "$(cat "$file" 2>/dev/null)" = "on" ]; then
                 pr_info "hot-restart: on"
@@ -749,8 +778,8 @@ case "$operation" in
     self-heal)
         file="$state_dir/proxy_self_heal"
         case "${1:-}" in
-            on) mkdir -p "$state_dir"; printf '%s\n' "on" > "$file"; pr_info "Self-heal enabled" ;;
-            off) mkdir -p "$state_dir"; printf '%s\n' "off" > "$file"; pr_info "Self-heal disabled" ;;
+            on) write_state_flag proxy_self_heal on  || exit 1; pr_info "Self-heal enabled" ;;
+            off) write_state_flag proxy_self_heal off || exit 1; pr_info "Self-heal disabled" ;;
             status|"")
                 if [ -f "$file" ] && [ "$(cat "$file" 2>/dev/null)" = "on" ]; then
                     pr_info "self-heal: on"
