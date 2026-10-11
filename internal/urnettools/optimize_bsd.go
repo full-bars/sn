@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -330,8 +329,10 @@ func readBSDConf() (content string, existed bool, err error) {
 }
 
 // writeBSDConf replaces the boot file atomically, preserving its existing mode
-// when there is one. The temp file is created in the same directory so the
-// rename stays on one filesystem and is therefore atomic.
+// when there is one. It goes through writeFileAtomic: the file is fsync'd
+// before the rename and the parent directory after it, so a power loss cannot
+// commit the rename while leaving the contents unflushed (a truncated or
+// empty /etc/sysctl.conf at boot, silently dropping every managed tunable).
 func writeBSDConf(content string, existed bool) error {
 	mode := os.FileMode(0o644)
 	if existed {
@@ -339,26 +340,7 @@ func writeBSDConf(content string, existed bool) error {
 			mode = fi.Mode().Perm()
 		}
 	}
-	dir := filepath.Dir(bsdSysctlConfPath)
-	tmp, err := os.CreateTemp(dir, ".sysctl.conf.urnet")
-	if err != nil {
-		return err
-	}
-	name := tmp.Name()
-	defer os.Remove(name)
-
-	if _, err := tmp.WriteString(content); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Chmod(mode); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		return err
-	}
-	return os.Rename(name, bsdSysctlConfPath)
+	return writeFileAtomic(bsdSysctlConfPath, []byte(content), mode)
 }
 
 // rollbackBSDConf restores the exact prior bytes of the boot file, or removes it
