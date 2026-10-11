@@ -67,6 +67,49 @@ func effectiveBSDValue(current, target string) string {
 	return target
 }
 
+// effectiveBSDMaxsockbuf returns the kern.ipc.maxsockbuf value to apply,
+// covering the TCP spaces the box will actually run with.
+//
+// The per-key raise is not enough for this key: sb_max_adj is only about
+// MCLBYTES/(MSIZE+MCLBYTES) ≈ 0.889 of maxsockbuf, and a host whose
+// recvspace/sendspace already sit above the configured targets (a tuned
+// site default of 32 MiB, for example) keeps those spaces under
+// effectiveBSDValue — while maxsockbuf raised only to its own target would
+// leave sb_max_adj BELOW the spaces, so tcp_attach fails every new socket
+// with ENOBUFS. The spaces are also persisted, so the breakage would
+// survive a reboot. The floor is ceil(1.15 × max(effective spaces)): 1/0.889
+// ≈ 1.125, and the extra margin covers sb_max_adj drift. A non-numeric
+// reading anywhere falls back to the plain per-key raise.
+func effectiveBSDMaxsockbuf(currentSockbuf, currentRecv, currentSend string) string {
+	var targetSockbuf, targetRecv, targetSend string
+	for _, w := range bsdSysctlWrites() {
+		switch w[0] {
+		case "kern.ipc.maxsockbuf":
+			targetSockbuf = w[1]
+		case "net.inet.tcp.recvspace":
+			targetRecv = w[1]
+		case "net.inet.tcp.sendspace":
+			targetSend = w[1]
+		}
+	}
+	base := effectiveBSDValue(currentSockbuf, targetSockbuf)
+	effRecv, rerr := strconv.ParseInt(strings.TrimSpace(effectiveBSDValue(currentRecv, targetRecv)), 10, 64)
+	effSend, serr := strconv.ParseInt(strings.TrimSpace(effectiveBSDValue(currentSend, targetSend)), 10, 64)
+	baseInt, berr := strconv.ParseInt(strings.TrimSpace(base), 10, 64)
+	if rerr != nil || serr != nil || berr != nil {
+		return base
+	}
+	need := effRecv
+	if effSend > need {
+		need = effSend
+	}
+	floor := (115*need + 99) / 100 // ceil(1.15 × need)
+	if baseInt > floor {
+		return base
+	}
+	return strconv.FormatInt(floor, 10)
+}
+
 // WHY /etc/sysctl.conf AND NOT sysrc(8): FreeBSD persists runtime sysctl
 // tunables in /etc/sysctl.conf, which /etc/rc.d/sysctl applies at boot in
 // multi-user mode (sysctl.conf(5)). sysrc(8) is NOT an alternative — it edits
@@ -213,11 +256,22 @@ func optimizeFreeBSD() error {
 	}
 
 	// Apply max(current, target) per key so an already-higher site value is
-	// never lowered. The slice keeps bsdSysctlWrites order (maxsockbuf before
-	// the TCP spaces it must cover).
+	// never lowered. maxsockbuf additionally floors at ceil(1.15× the
+	// effective TCP spaces, see effectiveBSDMaxsockbuf) — the TCP spaces are
+	// computed here first so that floor sees them; the slice still keeps
+	// bsdSysctlWrites order (maxsockbuf before the spaces it must cover).
+	eff := make(map[string]string, len(writes))
+	for _, w := range writes {
+		eff[w[0]] = effectiveBSDValue(prior[w[0]], w[1])
+	}
+	eff["kern.ipc.maxsockbuf"] = effectiveBSDMaxsockbuf(
+		prior["kern.ipc.maxsockbuf"],
+		prior["net.inet.tcp.recvspace"],
+		prior["net.inet.tcp.sendspace"],
+	)
 	effective := make([][]string, 0, len(writes))
 	for _, w := range writes {
-		effective = append(effective, []string{w[0], effectiveBSDValue(prior[w[0]], w[1])})
+		effective = append(effective, []string{w[0], eff[w[0]]})
 	}
 
 	// Snapshot the boot file too, so a persist failure restores it exactly. The
