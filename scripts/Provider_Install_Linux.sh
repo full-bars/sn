@@ -1761,7 +1761,8 @@ EOF
         pr_warn "User '%s' does not exist; the service is NOT installed (a unit with an unresolvable command_user fails at every start)." "$openrc_user"
         pr_info "Create the service user and install as it:"
         pr_info "    useradd -m -s /bin/sh %s    # or: adduser -D %s" "$openrc_user" "$openrc_user"
-        pr_info "    su - %s -c 'curl -fSsL %s | sh'" "$openrc_user" "$urnet_install_url"
+        pr_info "    Create the user first, then run the installer as root:"
+        pr_info "        curl -fSsL %s | sh" "$urnet_install_url"
         pr_info "The service script is staged at %s if you prefer to finish by hand." "$openrc_staged"
         return 0
     fi
@@ -1810,7 +1811,10 @@ EOF
         return 0
     fi
 
-    openrc_finalize_root_paths
+    if ! openrc_finalize_root_paths; then
+        rm -rf "$openrc_stage_dir"
+        exit 1
+    fi
 
     if ! cp "$openrc_staged" "$openrc_initd_file"; then
         pr_err "Failed to install %s" "$openrc_initd_file"
@@ -3658,8 +3662,11 @@ toggle_ramlogs ()
         on)
             confirm_restart "Enabling RAM logging requires restarting the URNetwork provider."
             pr_info "Enabling RAM logging..."
-            queue_pending_override "ramlogs" "on"
-            urnetwork_service_restart
+            queue_pending_override "ramlogs" "on" "$openrc_user_home"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after enabling RAM logging; aborting."
+                exit 1
+            fi
             pr_info "RAM logging enabled and service restarted."
             ;;
         off)
@@ -3723,19 +3730,25 @@ toggle_lowmode ()
             ram_mib=$(detect_mem_limit_mib)
             gomem_mib=$(( ram_mib * 85 / 100 ))
             pr_info "Dynamic GOMEMLIMIT set to ${gomem_mib}MiB (85%% of ${ram_mib}MiB detected RAM)"
-            queue_pending_override "profile" "lowmem"
-            queue_pending_override "gomemlimit" "${gomem_mib}MiB"
-            queue_pending_override "gogc" "50"
-            urnetwork_service_restart
+            queue_pending_override "profile" "lowmem" "$openrc_user_home"
+            queue_pending_override "gomemlimit" "${gomem_mib}MiB" "$openrc_user_home"
+            queue_pending_override "gogc" "50" "$openrc_user_home"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after enabling lowmode; aborting."
+                exit 1
+            fi
             pr_info "Lowmode enabled and service restarted."
             ;;
         off)
             confirm_restart "Disabling lowmode requires restarting the URNetwork provider."
             pr_info "Disabling lowmode..."
-            queue_pending_clear "profile"
-            queue_pending_clear "gomemlimit"
-            queue_pending_clear "gogc"
-            urnetwork_service_restart
+            queue_pending_clear "profile" "$openrc_user_home"
+            queue_pending_clear "gomemlimit" "$openrc_user_home"
+            queue_pending_clear "gogc" "$openrc_user_home"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after disabling lowmode; aborting."
+                exit 1
+            fi
             pr_info "Lowmode disabled and service restarted."
             ;;
         "")

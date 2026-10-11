@@ -58,3 +58,13 @@ func bsdScheduledUpdate(euid int, stagedToolOK bool, runningTool, userLogDir str
 	// executable), so a root-run tick keeps it current.
 	return bsdRootToolPath, bsdRootLogDir, nil
 }
+
+// bsdTreeOwnedByRoot reports whether a binary path lives under the
+// root-owned FreeBSD layout. installBinary consults this before chowning a
+// freshly swapped binary to the service user: chowning a file in the
+// root-owned tree would hand the file itself to an unprivileged account that
+// root later executes (update-time version verify, the next urnet-tools update).
+// The service user only needs read+exec, which the 0755 above already delivers.
+func bsdTreeOwnedByRoot(path string) bool {
+	return strings.HasPrefix(path, "/usr/local/libexec/urnetwork-provider")
+}

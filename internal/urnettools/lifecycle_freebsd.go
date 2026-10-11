@@ -81,24 +81,44 @@ func bsdRequireRcScript(p Provider, service string) error {
 // rc.d start/stop need root (the script's own mkdir/chown/daemon -u require
 // it), so a non-root invocation that silently fails would look like success.
 // Output is returned in the error so a failure is diagnosable.
+//
+// The mapped action is the rc.d one*-prefixed command (onestart, onestop,
+// onerestart, onestatus), which bypasses the _enable flag guard so that
+// `_enable=NO` does not make start/restart silent no-ops.
 func bsdServiceControl(p Provider, action string) error {
 	service := bsdRcServiceName(p.Binary)
 	if err := bsdRequireRcScript(p, service); err != nil {
 		return err
 	}
+	// Map rc.d actions to their one*-prefixed equivalents,
+	// which bypass _enable guards so that _enable=NO does not make
+	// start/restart silent no-ops.
+	var mapped string
+	switch action {
+	case "start":
+		mapped = "onestart"
+	case "stop":
+		mapped = "onestop"
+	case "restart":
+		mapped = "onerestart"
+	case "status":
+		mapped = "onestatus"
+	default:
+		mapped = action
+	}
 	var name string
 	var args []string
 	if os.Geteuid() == 0 {
-		name, args = "service", []string{service, action}
+		name, args = "service", []string{service, mapped}
 	} else {
 		if _, err := exec.LookPath("sudo"); err != nil {
 			return fmt.Errorf("`service %s %s` needs root and sudo is not installed — run it as root", service, action)
 		}
-		name, args = "sudo", []string{"service", service, action}
+		name, args = "sudo", []string{"service", service, mapped}
 	}
 	out, err := bsdServiceRunFn(name, args...)
 	if err != nil {
-		return fmt.Errorf("service %s %s: %w (%s)", service, action, err, strings.TrimSpace(string(out)))
+		return fmt.Errorf("service %s %s: %w (%s)", service, mapped, err, strings.TrimSpace(string(out)))
 	}
 	return nil
 }

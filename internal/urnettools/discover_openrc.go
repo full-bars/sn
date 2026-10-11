@@ -106,8 +106,14 @@ func openrcInitScriptIdentity(path string) (command, user string) {
 		switch key {
 		case "command":
 			command = val
-		case "command_user":
-			user = val
+case "command_user":
+		user = val
+		// OpenRC command_user may contain a ":group" suffix
+		// (e.g. "urnetwork:wheel") which is not a user name.
+		// Strip it so only the username remains.
+		if idx := strings.IndexByte(user, ':'); idx >= 0 {
+			user = user[:idx]
+		}
 		}
 	}
 	if user == "" {

@@ -167,7 +167,6 @@ func upsertBSDConfLines(conf string, writes [][]string) (string, error) {
 			if k, _, ok := strings.Cut(trimmed, "="); ok && strings.TrimSpace(k) == key {
 				lines[i] = want
 				replaced = true
-				break
 			}
 		}
 		if replaced {
