@@ -20,7 +20,6 @@ set -eu
 
 ROOT=/srv/fake-release
 SVC_USER=urnet
-DL="$ROOT/releases/download/$CI_TAG"
 FAILED=0
 
 say()  { echo "== $*"; }
@@ -91,7 +90,6 @@ else
 fi
 # shellcheck disable=SC2086
 $HTTPD_CMD -f -p 127.0.0.1:8099 -h "$ROOT" &
-HTTPD_PID=$!
 # Readiness check rather than a blind sleep.
 i=0
 while [ $i -lt 20 ]; do
