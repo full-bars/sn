@@ -1216,17 +1216,23 @@ openrc_restore_update_entry ()
 
 # openrc_teardown_service: stop and de-register the OpenRC service and remove
 # its artifacts (init script, periodic entry including a paused one, and the
-# service user's state). Root does the work; a non-root run prints the exact
-# sudo commands. Shared by the normal uninstall path and the
-# missing-install-directory path, where the service must still be removed.
+# service user's state). Root does the work; a non-root run with a working sudo
+# elevates through ${SUDO:-}, and one without prints the exact commands. Shared
+# by the normal uninstall path and the missing-install-directory path, where the
+# service must still be removed.
 openrc_teardown_service ()
 {
     pr_info "Removing OpenRC service"
-    if [ "$(id -u)" -eq 0 ]; then
-        rc-service urnetwork stop 2>/dev/null || true
-        rc-update del urnetwork default 2>/dev/null || true
-        rm -f "$openrc_initd_file" 2>/dev/null || pr_err "warning: could not remove %s" "$openrc_initd_file"
-        rm -f /etc/periodic/daily/urnetwork-update /etc/periodic/daily/urnetwork-update.installer-paused \
+    # ${SUDO:-} is empty for an already-root run and "sudo" for a non-root run
+    # whose sudo works non-interactively. Without this the teardown only ran as
+    # root, so an uninstall started by the service user removed the install tree
+    # but LEFT the service enabled - it would respawn a provider whose binary
+    # no longer exists, and come back on every boot.
+    if [ "$(id -u)" -eq 0 ] || { [ -n "${SUDO:-}" ] && ${SUDO:-} -n true > /dev/null 2>&1; }; then
+        ${SUDO:-} rc-service urnetwork stop 2>/dev/null || true
+        ${SUDO:-} rc-update del urnetwork default 2>/dev/null || true
+        ${SUDO:-} rm -f "$openrc_initd_file" 2>/dev/null || pr_err "warning: could not remove %s" "$openrc_initd_file"
+        ${SUDO:-} rm -f /etc/periodic/daily/urnetwork-update /etc/periodic/daily/urnetwork-update.installer-paused \
               /etc/periodic/weekly/urnetwork-update /etc/periodic/weekly/urnetwork-update.installer-paused \
               /etc/periodic/monthly/urnetwork-update /etc/periodic/monthly/urnetwork-update.installer-paused 2>/dev/null || true
         # The provider's state lives in the SERVICE user's home (the service
@@ -1234,7 +1240,7 @@ openrc_teardown_service ()
         openrc_state_home="$(openrc_user_home)"
         if [ -d "$openrc_state_home/.urnetwork" ]; then
             pr_info "Removing: %s/.urnetwork" "$openrc_state_home"
-            rm -rf "$openrc_state_home/.urnetwork"
+            ${SUDO:-} rm -rf "$openrc_state_home/.urnetwork"
         fi
     else
         pr_warn "Removing the system service needs root; run:"
@@ -1247,18 +1253,26 @@ openrc_teardown_service ()
     fi
 }
 
-# stop_openrc_units mirrors stop_systemd_units for the OpenRC service. Only
-# root can stop a system service; a non-root run leaves it up (the binary
-# swap is rename-based and safe) and prints the restart command that applies
-# the update.
+# stop_openrc_units mirrors stop_systemd_units for the OpenRC service. A
+# non-root run with a working sudo elevates through ${SUDO:-}; one without
+# leaves the service up (the binary swap is rename-based and safe) and prints
+# the restart command that applies the update.
 stop_openrc_units ()
 {
     openrc_service_running || return 0
 
+    # Elevate when we can. A forced update that never stopped the service left
+    # the OLD process running against a replaced binary, and an install the
+    # service user could not stop ended up swapping a file out from under a
+    # live provider.
     if [ "$(id -u)" -ne 0 ]; then
-        pr_info "urnetwork (OpenRC service) is running; the installer cannot restart it as a non-root user."
-        pr_info "Apply this install afterwards with: sudo rc-service urnetwork restart"
-        return 0
+        if [ -n "${SUDO:-}" ] && ${SUDO:-} -n true > /dev/null 2>&1; then
+            : # sudo works non-interactively; fall through and use ${SUDO:-}
+        else
+            pr_info "urnetwork (OpenRC service) is running; the installer cannot restart it as a non-root user."
+            pr_info "Apply this install afterwards with: sudo rc-service urnetwork restart"
+            return 0
+        fi
     fi
 
     if [ "$operation" = "update" ] && [ "$FORCE" != "1" ]; then
@@ -1279,7 +1293,7 @@ stop_openrc_units ()
     openrc_pause_update_entry
 
     pr_info "urnetwork (OpenRC service) is running — it will be stopped for the update and restarted once finished."
-    if rc-service urnetwork stop; then
+    if ${SUDO:-} rc-service urnetwork stop; then
         openrc_units_stopped=1
     else
         pr_err "warning: failed to stop urnetwork (OpenRC service); continuing anyway"
