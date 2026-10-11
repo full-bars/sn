@@ -181,6 +181,16 @@ func TestOpenRCInstallTreeValidationRunsBeforeWrites(t *testing.T) {
 	}
 }
 
+// runShellScriptWithPath runs script with stubDir prepended to PATH, so a
+// `command -v <name>` guard inside the installer finds the stub.
+func runShellScriptWithPath(t *testing.T, stubDir, script string) (string, error) {
+	t.Helper()
+	cmd := exec.Command("sh", "-c", script)
+	cmd.Env = []string{"PATH=" + stubDir + ":/usr/bin:/bin"}
+	out, err := cmd.CombinedOutput()
+	return string(out), err
+}
+
 // readInstaller returns the Linux installer's source with CRLF normalized.
 func readInstaller(t *testing.T) string {
 	t.Helper()

@@ -653,6 +653,9 @@ systemd_units_stopped=0
 openrc_user="${URNET_OPENRC_USER:-urnet}"
 openrc_initd_file="/etc/init.d/urnetwork"
 openrc_units_stopped=0
+# Set once the provider binary has been moved aside for replacement, so a
+# failure between the move and the rename-back knows to restore it.
+openrc_swap_pending=0
 
 stop_systemd_units ()
 {
@@ -1399,6 +1402,47 @@ openrc_resolve_parent ()
         _stack="${_stack#/}"
     fi
     printf '%s\n' "$_stack"
+}
+
+# openrc_rollback_binary_swap restores the provider binary after a failed
+# replacement. The swap moves the live binary aside to dodge ETXTBSY, so any
+# failure between the move and the rename-back leaves the tree with NO binary
+# while the service has already been stopped by stop_openrc_units.
+#
+# Restores three things, in order: the previous binary, the paused auto-update
+# entry, and the running service. Leaving the periodic entry paused is the
+# quieter half of the bug - the install fails loudly, but auto-update then never
+# runs again and nothing says so.
+openrc_rollback_binary_swap ()
+{
+    if [ "${openrc_swap_pending:-0}" != "1" ]; then
+        return 0
+    fi
+    openrc_swap_pending=0
+
+    if [ -f "$install_path/bin/urnetwork.old" ]; then
+        if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork" 2>/dev/null; then
+            pr_warn "Restored the previous provider binary; the update did not apply."
+        else
+            pr_err "Could not restore the previous provider binary from %s" "$install_path/bin/urnetwork.old"
+            pr_err "The provider is NOT installed. Re-run the installer, or put that file back as bin/urnetwork."
+        fi
+    fi
+
+    # Un-pause the periodic update entry the stop path may have paused.
+    if command -v openrc_restore_update_entry > /dev/null 2>&1; then
+        openrc_restore_update_entry
+    fi
+
+    # Put the service back the way it was found. openrc_units_stopped is set by
+    # stop_openrc_units only when it actually stopped something.
+    if [ "${openrc_units_stopped:-0}" = "1" ]; then
+        if command -v rc-service > /dev/null 2>&1; then
+            ${SUDO:-} rc-service urnetwork start > /dev/null 2>&1 && \
+                pr_warn "Restarted the service on the previous binary." || \
+                pr_warn "Could not restart the service; run: rc-service urnetwork start"
+        fi
+    fi
 }
 
 openrc_finalize_root_paths ()
@@ -2363,10 +2407,25 @@ do_install ()
 
     if [ -z "$URNETWORK_NO_DOWNLOAD_TARBALL" ]; then
         # Bypass 'Text file busy' locks on running binaries by moving the active inode out of the way first
-        ${SUDO:-} mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || true
-        ${SUDO:-} cp "$bin_program" "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
-        ${SUDO:-} chmod 755 "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
+        if ${SUDO:-} mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null; then
+            openrc_swap_pending=1
+        fi
+        # A failure past this point leaves the service stopped with NO binary:
+        # the original is in .old and the exit fires before the rename back, so
+        # a failed copy degraded to "no provider at all". Roll the swap back
+        # before giving up, which leaves the previous version running instead.
+        if ! ${SUDO:-} cp "$bin_program" "$install_path/bin/urnetwork"; then
+            pr_err "Failed to install provider binary"
+            openrc_rollback_binary_swap
+            exit 1
+        fi
+        if ! ${SUDO:-} chmod 755 "$install_path/bin/urnetwork"; then
+            pr_err "Failed to install provider binary"
+            openrc_rollback_binary_swap
+            exit 1
+        fi
         ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        openrc_swap_pending=0
     fi
 
     cd "$script_rundir" || exit 1
@@ -2799,10 +2858,25 @@ do_install ()
 
     if [ -z "$URNETWORK_NO_DOWNLOAD_TARBALL" ]; then
         # Bypass 'Text file busy' locks on running binaries by moving the active inode out of the way first
-        ${SUDO:-} mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || true
-        ${SUDO:-} cp "$bin_program" "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
-        ${SUDO:-} chmod 755 "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
+        if ${SUDO:-} mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null; then
+            openrc_swap_pending=1
+        fi
+        # A failure past this point leaves the service stopped with NO binary:
+        # the original is in .old and the exit fires before the rename back, so
+        # a failed copy degraded to "no provider at all". Roll the swap back
+        # before giving up, which leaves the previous version running instead.
+        if ! ${SUDO:-} cp "$bin_program" "$install_path/bin/urnetwork"; then
+            pr_err "Failed to install provider binary"
+            openrc_rollback_binary_swap
+            exit 1
+        fi
+        if ! ${SUDO:-} chmod 755 "$install_path/bin/urnetwork"; then
+            pr_err "Failed to install provider binary"
+            openrc_rollback_binary_swap
+            exit 1
+        fi
         ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        openrc_swap_pending=0
     fi
 
     cd "$script_rundir" || exit 1
