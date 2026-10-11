@@ -483,8 +483,8 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
                 actual=""
             fi
             if [ -n "$actual" ] && [ "$actual" = "$tool_digest" ]; then
-                mv -f "$tmpdir/$tool_asset" "$install_path/bin/urnet-tools"
-                chmod 755 "$install_path/bin/urnet-tools"
+                priv mv -f "$tmpdir/$tool_asset" "$install_path/bin/urnet-tools"
+                priv chmod 755 "$install_path/bin/urnet-tools"
             else
                 pr_warn "urnet-tools sha256 mismatch, falling back to shell wrapper"
                 install_wrapper_tool "$tmpdir" || true

@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -191,4 +192,18 @@ func providerBinaryBasename(binary string) string {
 		return ""
 	}
 	return base
+}
+
+// bsdRcConfUser reads the rc.conf user for the named rc.d service via
+// sysrc(8). It returns the configured user, or "" when unset or unreadable.
+// This is the authoritative source for which account a stopped service
+// would run as: the passwd database is consulted only by the running
+// process path, and a stopped install has no process to read credentials
+// from, so the rc.conf knob is the only honest answer.
+func bsdRcConfUser(service string) string {
+	out, err := exec.Command("sysrc", "-n", service+"_user").CombinedOutput()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }
