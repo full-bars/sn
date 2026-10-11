@@ -37,3 +37,58 @@ func TestBSDCronMarkerMatchesWholeServiceName(t *testing.T) {
 		}
 	}
 }
+
+// Root's crontab must never exec a user-writable path: the invoker's binary
+// (sudo urnet-tools → os.Executable under the service user's tree) would let
+// that user plant root-run code. Root either uses the installer's staged
+// root-owned copy or gets an error — no silent fallback. Non-root keeps the
+// invoker path, since that crontab runs as the same user.
+func TestBSDScheduledUpdate(t *testing.T) {
+	cases := []struct {
+		name         string
+		euid         int
+		stagedToolOK bool
+		wantTool     string
+		wantLogDir   string
+		wantErr      bool
+	}{
+		{
+			name:         "root with staged tool uses the staged path and /var/log",
+			euid:         0,
+			stagedToolOK: true,
+			wantTool:     bsdRootToolPath,
+			wantLogDir:   bsdRootLogDir,
+		},
+		{
+			name:         "root without a root-owned staged tool is refused",
+			euid:         0,
+			stagedToolOK: false,
+			wantErr:      true,
+		},
+		{
+			name:         "non-root keeps the invoker path and user log dir",
+			euid:         1001,
+			stagedToolOK: true, // ignored for non-root
+			wantTool:     "/home/user/.local/bin/urnet-tools",
+			wantLogDir:   "/home/user/.urnetwork",
+		},
+	}
+
+	for _, c := range cases {
+		tool, logDir, err := bsdScheduledUpdate(c.euid, c.stagedToolOK,
+			"/home/user/.local/bin/urnet-tools", "/home/user/.urnetwork")
+		if c.wantErr {
+			if err == nil {
+				t.Errorf("%s: expected an error, got tool=%q logDir=%q", c.name, tool, logDir)
+			}
+			continue
+		}
+		if err != nil {
+			t.Errorf("%s: unexpected error: %v", c.name, err)
+			continue
+		}
+		if tool != c.wantTool || logDir != c.wantLogDir {
+			t.Errorf("%s: got (%q, %q), want (%q, %q)", c.name, tool, logDir, c.wantTool, c.wantLogDir)
+		}
+	}
+}

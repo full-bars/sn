@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 // FreeBSD lifecycle: an rc.d(8) service script plus a periodic auto-update
@@ -135,11 +136,31 @@ func setAutoUpdateSchedule(p Provider, label, interval string) error {
 	if interval == "off" {
 		return removeBSDUpdateCron(p)
 	}
-	line, err := bsdUpdateCronLine(toolExePath(), bsdLogDir(), interval)
+	tool, logDir, err := bsdScheduledUpdate(os.Geteuid(), bsdStagedToolIsRootOwned(), toolExePath(), bsdLogDir())
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(logDir, 0o755); err != nil {
+		return fmt.Errorf("auto-update: create log dir %s: %w", logDir, err)
+	}
+	line, err := bsdUpdateCronLine(tool, logDir, interval)
 	if err != nil {
 		return err
 	}
 	return writeBSDUpdateCron(p, line)
+}
+
+// bsdStagedToolIsRootOwned reports whether the installer's staged tool copy
+// exists and is owned by root. Existence alone is not enough: a file planted
+// at that path by a non-root process (or a root-owned file under a
+// user-writable ancestor) must not qualify the path for root's crontab.
+func bsdStagedToolIsRootOwned() bool {
+	fi, err := os.Stat(bsdRootToolPath)
+	if err != nil || fi.IsDir() {
+		return false
+	}
+	st, ok := fi.Sys().(*syscall.Stat_t)
+	return ok && st.Uid == 0
 }
 
 // cleanupLifecycle removes the auto-update cron entry on uninstall. The rc.d
