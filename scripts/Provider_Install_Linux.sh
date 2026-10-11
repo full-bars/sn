@@ -4475,14 +4475,35 @@ EOF
     if [ "$has_openrc" -eq 1 ] && [ -f /etc/init.d/urnetwork ]; then
         conf_d="/etc/conf.d/urnetwork"
         mkdir -p /etc/conf.d
-        if [ -f "$conf_d" ] && grep -q '^rc_ulimit=' "$conf_d"; then
-            sed -i "s|^rc_ulimit=.*|rc_ulimit=\"-n $ulimit_val\"|" "$conf_d"
-        else
-            # Preserve anything already there (a user's own settings) and append.
-            printf '\n# Added by urnet-tools optimize: open files limit for the provider\nrc_ulimit="-n %s"\n' "$ulimit_val" >> "$conf_d"
-        fi
-        chmod 0644 "$conf_d"
-        pr_info "Ulimit %s written to %s (rc_ulimit)." "$ulimit_val" "$conf_d"
+        # rc_ulimit is sourced as shell by openrc at every boot: only a bare
+        # number may be spliced in, or a stray value becomes code at boot.
+        case "$ulimit_val" in
+            ''|*[!0-9]*)
+                pr_warn "Skipping rc_ulimit: value %s is not numeric." "$ulimit_val"
+                ;;
+            *)
+                # Render through a temp file and rename: sed -i truncates in
+                # place on some seds, and a crash mid-write would leave a
+                # half-written file for openrc to source at boot.
+                conf_tmp=$(mktemp "${conf_d}.XXXXXX") || conf_tmp=""
+                if [ -n "$conf_tmp" ]; then
+                    if [ -f "$conf_d" ] && grep -q '^rc_ulimit=' "$conf_d"; then
+                        sed "s|^rc_ulimit=.*|rc_ulimit=\"-n $ulimit_val\"|" "$conf_d" > "$conf_tmp"
+                    else
+                        # Preserve anything already there (a user's own settings) and append.
+                        {
+                            [ -f "$conf_d" ] && cat "$conf_d"
+                            printf '\n# Added by urnet-tools optimize: open files limit for the provider\nrc_ulimit="-n %s"\n' "$ulimit_val"
+                        } > "$conf_tmp"
+                    fi
+                    chmod 0644 "$conf_tmp"
+                    mv -f "$conf_tmp" "$conf_d"
+                    pr_info "Ulimit %s written to %s (rc_ulimit)." "$ulimit_val" "$conf_d"
+                else
+                    pr_warn "Could not create a temp file next to %s; rc_ulimit not written." "$conf_d"
+                fi
+                ;;
+        esac
         override_file=""   # nothing else may try to use it
     else
         # Ensure everything in the home folder touched by root is restored to user ownership
