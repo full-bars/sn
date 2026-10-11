@@ -635,13 +635,13 @@ func openrcStagedRootToolPath() string { return openrcRootToolPath }
 // openrcUpdateToolPath picks the binary the PERIODIC CRON ENTRY will execute.
 //
 // SECURITY: that entry runs as ROOT. Anything it executes must live somewhere
-// no non-root user can influence. The install tree is normally inside the
-// service user's home, and root-owning the tree does not help: the user owns
-// their home, so they can rename the tree aside and recreate the path with
-// their own urnet-tools - root then runs it at the next tick. The root-owned
-// copy under /usr/local/libexec is therefore preferred over every other
-// candidate, and a user-reachable path is only used when that copy is absent
-// (a pre-upgrade install), which openrcUpdateCronScript then guards.
+// no non-root user can influence. The install tree is root-owned under
+// /usr/local/lib/urnetwork-provider, and the staged copy under
+// /usr/local/libexec is preferred for the same reason: a user-reachable
+// candidate (next to p.Binary, PATH lookup, this executable) is only used
+// when the root-owned copy is absent (a pre-upgrade install), which
+// openrcUpdateCronScript then guards — a user who can write any fallback
+// path must not be able to feed root a replacement tool.
 func openrcUpdateToolPath(p Provider) string {
 	if fi, err := openrcStatFn(openrcRootToolPath); err == nil && !fi.IsDir() {
 		return openrcRootToolPath
