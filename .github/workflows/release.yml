@@ -306,6 +306,7 @@ jobs:
           # publishes, not ship a release that breaks installers + self-update.
           for arch in amd64 arm64; do
             test -f "release_tmp/freebsd/$arch/provider"
+            test -f "tool_tmp/freebsd/$arch/urnet-tools"
             cp "tool_tmp/freebsd/$arch/urnet-tools" "urnet-tools-freebsd-$arch"
             cp "tool_tmp/freebsd/$arch/urnet-tools" "release_tmp/freebsd/$arch/urnet-tools"
           done
@@ -413,7 +414,7 @@ jobs:
           '{
             "embeds": [{
               "title": ("🎉 Release " + $version + " is Live"),
-              "description": ("**Binaries:** linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64, windows/arm64\n\n**Update existing install:**\n```\nurnet-tools update\n```\n\n**Linux fresh install:**\n```\ncurl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Linux.sh | sh\n```\n**macOS fresh install:**\n```\ncurl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Mac.sh | sh\n```\n\n[View GitHub Release](" + $releaseUrl + ")"),
+              "description": ("**Binaries:** linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64, windows/arm64, freebsd/amd64, freebsd/arm64\n\n**Update existing install:**\n```\nurnet-tools update\n```\n\n**Linux fresh install:**\n```\ncurl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Linux.sh | sh\n```\n**macOS fresh install:**\n```\ncurl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Mac.sh | sh\n```\n\n[View GitHub Release](" + $releaseUrl + ")"),
               "color": 3066993,
               "footer": { "text": "URNetwork Release Monitor • Binaries" }
             }]
