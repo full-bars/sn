@@ -1674,9 +1674,15 @@ retry="TERM/40/KILL/5"
 # path is bounded - Restart=on-failure still hits the default StartLimitBurst -
 # so this matches it: restart promptly, back off as failures repeat, then give
 # up so the operator can see a stopped service instead of a spinning one.
+#
+# NOTE: the step/cap pair is NOT a thing supervise-daemon understands
+# (openrc-run(8) has only respawn_delay, respawn_max and respawn_period). The
+# bound is respawn_max (10 failures) inside respawn_period (3600s), and the
+# delay between attempts is the constant respawn_delay=5 above. An earlier
+# revision wrote respawn_delay_step=5 / respawn_delay_cap=60 here; they were
+# silently ignored, so the comment's claim of a "5s backoff steps up to 60s"
+# was describing behaviour that never happened.
 respawn_delay=5
-respawn_delay_step=5
-respawn_delay_cap=60
 respawn_max=10
 respawn_period=3600
 # Logs live under /var/log, NOT in the service user's home.
