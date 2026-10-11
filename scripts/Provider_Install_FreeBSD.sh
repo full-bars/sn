@@ -288,7 +288,16 @@ ${service_name}_start()
     fi
     rm -f "\$pidfile"
     mkdir -p "\$logdir"
-    chown \${${service_name}_user} "\$logdir"
+    chown root:wheel "\$logdir" 2>/dev/null || true
+    chmod 0755 "\$logdir" 2>/dev/null || true
+    # Pre-create stdout.log as a regular file owned by the service user.
+    # Must be a regular file (not a symlink) to prevent privilege escalation
+    # via planted symlinks. If it exists and is a symlink, refuse to start.
+    if [ -L "\$logdir/stdout.log" ]; then
+        echo "Refusing to start: \$logdir/stdout.log is a symlink (privilege escalation risk)."
+        return 1
+    fi
+    install -o \${${service_name}_user} -m 0640 /dev/null "\$logdir/stdout.log" 2>/dev/null || true
     echo "Starting $service_name."
     \$daemon -f -t $service_name -p "\$pidfile" -o "\$logdir/stdout.log" \\
         -u \${${service_name}_user} \\

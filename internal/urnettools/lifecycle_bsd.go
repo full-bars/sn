@@ -51,7 +51,7 @@ status_cmd="%[1]s_status"
 #   - -u sets HOME, USER and SHELL for the target user, so the provider's state
 #     dir lands in that user's home rather than root's.
 #   - -p writes the child pid through pidfile(3), giving stop and status a
-#     precise handle on the provider process.
+#     precise handle on the child process.
 #
 # No -m flag: daemon(8) defaults to sending BOTH stdout and stderr to the -o
 # file. A mask of 0 (the previous value) plumbed neither, so the log stayed
@@ -83,7 +83,16 @@ logdir="/var/log/%[1]s"
     fi
     rm -f "$pidfile"
     mkdir -p "$logdir"
-    chown ${%[1]s_user} "$logdir"
+    chown root:wheel "$logdir" 2>/dev/null || true
+    chmod 0755 "$logdir" 2>/dev/null || true
+    # Pre-create stdout.log as a regular file owned by the service user.
+    # Must be a regular file (not a symlink) to prevent privilege escalation
+    # via planted symlinks. If it exists and is a symlink, refuse to start.
+    if [ -L "$logdir/stdout.log" ]; then
+        echo "Refusing to start: $logdir/stdout.log is a symlink (privilege escalation risk)."
+        return 1
+    fi
+    install -o ${%[1]s_user} -m 0640 /dev/null "$logdir/stdout.log" 2>/dev/null || true
     echo "Starting %[1]s."
     $daemon -f -t %[1]s -p "$pidfile" -o "$logdir/stdout.log" \
         -u ${%[1]s_user} \
