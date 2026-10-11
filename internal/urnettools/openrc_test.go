@@ -160,6 +160,81 @@ func TestOpenRCRouteLifecycleArgv(t *testing.T) {
 	}
 }
 
+// TestOpenRCRouteLifecycleRestartFallback pins the restart-then-start
+// fallback: rc-service refuses to restart a service that is not running, so
+// `urnet-tools restart` on a stopped OpenRC service must retry with start —
+// the same shape as the installer's urnetwork_service_restart helper. A
+// failed restart whose start also fails must surface the restart error, and
+// a failed start after a FAILED stop (verb=stop) must NOT retry anything.
+func TestOpenRCRouteLifecycleRestartFallback(t *testing.T) {
+	cases := []struct {
+		name     string
+		verb     string
+		failOn   []string // rc-service verbs whose stub returns an error
+		wantCmds []string
+		wantErr  bool
+	}{
+		{
+			name:     "restart fails, start succeeds",
+			verb:     "restart",
+			failOn:   []string{"restart"},
+			wantCmds: []string{"rc-service urnetwork restart", "rc-service urnetwork start"},
+			wantErr:  false,
+		},
+		{
+			name:     "restart fails, start also fails: restart error surfaces",
+			verb:     "restart",
+			failOn:   []string{"restart", "start"},
+			wantCmds: []string{"rc-service urnetwork restart", "rc-service urnetwork start"},
+			wantErr:  true,
+		},
+		{
+			name:     "successful restart does not also start",
+			verb:     "restart",
+			wantCmds: []string{"rc-service urnetwork restart"},
+			wantErr:  false,
+		},
+		{
+			name:     "failed stop is not retried as start",
+			verb:     "stop",
+			failOn:   []string{"stop"},
+			wantCmds: []string{"rc-service urnetwork stop"},
+			wantErr:  true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			rig := newOpenRCTestRig(t, true, true)
+			failing := map[string]bool{}
+			for _, v := range c.failOn {
+				failing[v] = true
+			}
+			openrcRunFn = func(args ...string) error {
+				rig.argv = append(rig.argv, append([]string(nil), args...))
+				if len(args) > 0 && failing[args[len(args)-1]] {
+					return errors.New("stubbed failure")
+				}
+				return nil
+			}
+			handled, err := openrcRouteLifecycle(c.verb, nil, true, false)
+			if !handled {
+				t.Fatal("handled = false; the OpenRC backend must own this verb")
+			}
+			if c.wantErr != (err != nil) {
+				t.Fatalf("err = %v, wantErr = %v", err, c.wantErr)
+			}
+			var got []string
+			for _, a := range rig.argv {
+				got = append(got, strings.Join(a, " "))
+			}
+			if strings.Join(got, "\n") != strings.Join(c.wantCmds, "\n") {
+				t.Errorf("commands = %q, want %q", got, c.wantCmds)
+			}
+		})
+	}
+}
+
 // TestOpenRCRouteLifecycleFallthroughs pins the cases where the OpenRC
 // backend must NOT act and the caller's normal path runs instead.
 func TestOpenRCRouteLifecycleFallthroughs(t *testing.T) {

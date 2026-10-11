@@ -496,6 +496,17 @@ func openrcRouteLifecycle(verb string, args []string, force, dryRun bool) (bool,
 	}
 	fmt.Printf("running rc-service %s %s...\n", openrcServiceName, verb)
 	if err := openrcRunFn(openrcServiceArgv(verb)...); err != nil {
+		// rc-service refuses to "restart" a service that is not running —
+		// the same reason the installer's urnetwork_service_restart models
+		// restart as restart-then-start. Mirror that here so `urnet-tools
+		// restart` works on a stopped OpenRC service instead of failing
+		// with a bare rc-service error.
+		if verb == "restart" {
+			if startErr := openrcRunFn(openrcServiceArgv("start")...); startErr == nil {
+				fmt.Printf("%s %s (OpenRC service)\n", openrcVerbPast(verb), openrcServiceName)
+				return true, nil
+			}
+		}
 		return true, fmt.Errorf("rc-service %s %s: %w%s", openrcServiceName, verb, err, openrcElevationHint())
 	}
 	fmt.Printf("%s %s (OpenRC service)\n", openrcVerbPast(verb), openrcServiceName)
