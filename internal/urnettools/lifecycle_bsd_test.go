@@ -89,9 +89,19 @@ func TestRenderBSDServiceScriptShape(t *testing.T) {
 		t.Error("script has no pidfile-based running check; start/status cannot be reliable")
 	}
 	// daemon(8) defaults to sending both streams to -o. A mask of 0 sends
-	// neither, which silently discards everything the provider logs.
-	if strings.Contains(script, "-m 0") {
-		t.Error("script passes -m 0 to daemon; that discards all provider output")
+	// neither, which silently discards everything the provider logs. The
+	// check is on the daemon invocation line specifically: the log-dir setup
+	// legitimately uses `install -m 0640`, whose "-m 0" substring is not a
+	// daemon mask.
+	daemonLine := ""
+	for _, line := range strings.Split(script, "\n") {
+		if strings.Contains(line, "$daemon -f") {
+			daemonLine = line
+			break
+		}
+	}
+	if strings.Contains(daemonLine, "-m 0") {
+		t.Error("daemon invocation passes -m 0; that discards all provider output")
 	}
 	if !strings.Contains(script, `$daemon -f -t urnetwork -p "$pidfile" -o "$logdir/stdout.log"`) {
 		t.Error("script does not start daemon with the pidfile and log file")
@@ -116,8 +126,18 @@ func TestRenderBSDServiceScriptShape(t *testing.T) {
 	if strings.Contains(script, `\${urnetwork_user}`) {
 		t.Error("script escapes ${urnetwork_user}; sh would pass it literally, not expand it")
 	}
-	if !strings.Contains(script, `chown ${urnetwork_user} "$logdir"`) {
-		t.Error("script does not chown the log dir to the rc.conf user")
+	// The log dir is root-owned (root:wheel, 0755) so the service user cannot
+	// rename it aside and plant a symlink; only stdout.log itself is owned by
+	// the rc.conf user, pre-created as a regular file, and a planted symlink
+	// must refuse the start outright.
+	if !strings.Contains(script, `chown root:wheel "$logdir"`) {
+		t.Error("script does not chown the log dir to root:wheel")
+	}
+	if !strings.Contains(script, `install -o ${urnetwork_user} -m 0640 /dev/null "$logdir/stdout.log"`) {
+		t.Error("script does not pre-create stdout.log owned by the rc.conf user")
+	}
+	if !strings.Contains(script, `if [ -L "$logdir/stdout.log" ]`) {
+		t.Error("script does not refuse to start when stdout.log is a symlink")
 	}
 	// $flags must reach the provider expanded, not as a literal ${...} or a
 	// bare backslash followed by the value.
