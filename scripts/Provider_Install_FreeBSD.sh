@@ -276,7 +276,11 @@ ${service_name}_running_pid()
     [ -f "\$pidfile" ] || return 1
     _pid="\$(cat "\$pidfile" 2>/dev/null)"
     [ -n "\$_pid" ] || return 1
-    kill -0 "\$_pid" 2>/dev/null || return 1
+    # ps, not kill -0: kill -0 returns EPERM (non-zero, same as ESRCH) for a
+    # process owned by another user, so an unprivileged service status would
+    # report "not running" while the provider is up. ps sees every process,
+    # so a pid ps lists is alive regardless of who owns it.
+    [ -n "\$(ps -p "\$_pid" -o pid= 2>/dev/null)" ] || return 1
     echo "\$_pid"
 }
 

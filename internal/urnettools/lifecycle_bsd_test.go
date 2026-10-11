@@ -88,6 +88,16 @@ func TestRenderBSDServiceScriptShape(t *testing.T) {
 	if !strings.Contains(script, `urnetwork_running_pid`) {
 		t.Error("script has no pidfile-based running check; start/status cannot be reliable")
 	}
+	// The liveness probe must be ps, not kill -0: kill -0 returns EPERM
+	// (non-zero, same as ESRCH) for a process owned by another user, so an
+	// unprivileged status would report "not running" while the provider is
+	// up. ps sees every process regardless of owner.
+	if strings.Contains(script, `kill -0 "$_pid" 2>/dev/null || return 1`) {
+		t.Error("running_pid uses kill -0; EPERM for another user's process would report a live provider as stopped")
+	}
+	if !strings.Contains(script, `[ -n "$(ps -p "$_pid" -o pid= 2>/dev/null)" ] || return 1`) {
+		t.Error("running_pid does not probe liveness with ps; another user's live pid would report as stopped")
+	}
 	// daemon(8) defaults to sending both streams to -o. A mask of 0 sends
 	// neither, which silently discards everything the provider logs. The
 	// check is on the daemon invocation line specifically: the log-dir setup

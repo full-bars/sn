@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -277,9 +278,11 @@ func stopUnitlessProvider(p Provider, force bool) error {
 
 // processAlive reports whether a pid still runs and can receive signals. A
 // signal-0 probe never kills; ESRCH means the process is gone, EPERM means
-// it exists but belongs to another user. A zombie is treated as dead: the
-// process has exited and only awaits its parent's reaping (systemd reaps
-// unit children immediately; a disowned provider rests under PID 1).
+// it exists but belongs to another user — so both nil and EPERM count as
+// alive, and only a genuine failure (or a vanished pid) is dead. A zombie
+// is treated as dead: the process has exited and only awaits its parent's
+// reaping (systemd reaps unit children immediately; a disowned provider
+// rests under PID 1).
 func processAlive(pid int) bool {
 	if pid <= 0 {
 		return false
@@ -294,7 +297,8 @@ func processAlive(pid int) bool {
 	if err != nil {
 		return false
 	}
-	return proc.Signal(syscall.Signal(0)) == nil
+	err = proc.Signal(syscall.Signal(0))
+	return err == nil || errors.Is(err, os.ErrPermission)
 }
 
 // logsUnitlessProvider streams — or precisely explains the absence of — logs
