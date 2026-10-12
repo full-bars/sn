@@ -154,6 +154,8 @@ github.com/full-bars/connect v0.0.0-20261012104641-1298f16dc6f3 h1:/04P13f/MZthW
 github.com/full-bars/connect v0.0.0-20261012104641-1298f16dc6f3/go.mod h1:QFBu38vuEEbHqDBo668682lHk0w1G1qD0F1TVSjUaM4=
 github.com/full-bars/connect v0.0.0-20261012110454-35f5ffe6785e h1:Rk3UlYPlOtc0Yra56qVNn+7nYrLL1OxjgivgrT2N9vc=
 github.com/full-bars/connect v0.0.0-20261012110454-35f5ffe6785e/go.mod h1:QFBu38vuEEbHqDBo668682lHk0w1G1qD0F1TVSjUaM4=
+github.com/full-bars/connect v0.0.0-20261012111424-cee8e2e2be6d h1:i8B7U2nN9Wu2vAighwb6x8T20qcKBhV/yDcFz4K1uEA=
+github.com/full-bars/connect v0.0.0-20261012111424-cee8e2e2be6d/go.mod h1:QFBu38vuEEbHqDBo668682lHk0w1G1qD0F1TVSjUaM4=
 github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c h1:QSDm4GpjAU16CxcZK4jbQLmCj3QtLHFqxPE38MleXhA=
 github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c/go.mod h1:IHtyYBudQmotM5M7loKNR54hFyzsM0pL+qeD2U8BQzU=
 github.com/full-bars/goidenticons v0.0.0-20260822053141-e6a59cd2e818 h1:kxyyIoEIPE2YtUwLWEop9Y9PHTyYosqiNMf/SCRLva4=
