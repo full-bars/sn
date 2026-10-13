@@ -187,7 +187,7 @@ type proxyJWTWatcherConfig struct {
 	ApiURL         string
 	ClientStrategy *connect.ClientStrategy
 	OOB            RenewalOOBControl
-	Transport      *connect.PlatformTransport
+	Transport      transportAuthSetter
 	// RenewNow is signaled by the OOB's 401 callback (and available for
 	// tests to drive the fast-path directly).
 	RenewNow chan struct{}
@@ -576,4 +576,12 @@ func formatSeconds(d time.Duration) string {
 		return fmt.Sprintf("%.1fs", d.Seconds())
 	}
 	return formatDuration(d)
+}
+
+// transportAuthSetter is what the renewal watcher needs of the platform
+// transport: a single transport or the dual-stack group. Never store a nil
+// concrete pointer in it (a typed nil is a non-nil interface and SetAuth would
+// dereference it); leave the field nil instead.
+type transportAuthSetter interface {
+	SetAuth(auth *connect.ClientAuth)
 }

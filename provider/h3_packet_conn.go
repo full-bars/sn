@@ -43,7 +43,7 @@ func newH3PacketConnFactory(proxySettings *connect.ProxySettings, bw *bandwidth.
 			}
 			pc = relayed
 		} else {
-			raw, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
+			raw, err := listenDirectH3Udp(connect.PinnedIpFamilyFromContext(ctx))
 			if err != nil {
 				return nil, err
 			}
@@ -54,4 +54,21 @@ func newH3PacketConnFactory(proxySettings *connect.ProxySettings, bw *bandwidth.
 		}
 		return pc, nil
 	}
+}
+
+// listenDirectH3Udp opens the direct identity's QUIC socket. A transport pinned
+// to IPv6 by the dual-stack group needs a v6 socket and one pinned to IPv4 a v4
+// socket; an unpinned transport keeps the socket this factory has always opened
+// ("udp" with the v4 wildcard, which Go binds dual-stack). The
+// family is explicit rather than a dual-stack wildcard because a v6 wildcard is
+// v6-only by default on some hosts (FreeBSD).
+func listenDirectH3Udp(pinnedIpFamily int) (*net.UDPConn, error) {
+	switch pinnedIpFamily {
+	case 6:
+		return net.ListenUDP("udp6", &net.UDPAddr{IP: net.IPv6unspecified, Port: 0})
+	case 4:
+		// "udp" with the v4 wildcard would bind a dual-stack [::] socket
+		return net.ListenUDP("udp4", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
+	}
+	return net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
 }

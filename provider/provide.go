@@ -930,15 +930,39 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	if factory := newH3PacketConnFactory(proxySettings, proxyBandwidth, identityKey); factory != nil {
 		platformSettings.H3PacketConnFactory = factory
 	}
-	platformTransport := connect.NewPlatformTransport(proxyCtx, clientStrategy, connectClient.RouteManager(), st.connectUrl, auth, platformSettings)
+	// Only the direct identity can hold a transport per address family; see
+	// family_transport.go. H3 stays on for it: each pinned transport opens a UDP
+	// socket of its own family (newH3PacketConnFactory).
+	useFamily, familyReason := useFamilyTransports(proxySettings, isNative, st.connectUrl)
+	if isNative {
+		recordFamilyTransportDecision(useFamily, familyReason)
+	}
+	platformTransport, legacyTransport, familyGroup := newProviderPlatformTransport(
+		proxyCtx, clientStrategySettings, clientStrategy, connectClient.RouteManager(),
+		st.connectUrl, auth, platformSettings, useFamily,
+	)
 	unregCloser := RegisterCoordinatorCloser(func() {
 		platformTransport.Close()
 	})
 	defer unregCloser()
+	if familyGroup != nil {
+		// prompt teardown of the group's three transports and two strategies;
+		// runs after stopTransportHealth (LIFO), so no late up lands after the
+		// final down
+		defer familyGroup.Close()
+		stopFamilyStatus := startFamilyStatusReporter(proxyCtx, familyGroup)
+		defer stopFamilyStatus()
+	}
 	if h3Eligible {
+		// The send threshold lives behind a pointer the group's per-family
+		// settings copies share, so this write reaches all three transports.
 		applyH3DatagramSendToSettings(platformSettings)
-		registerH3DatagramTarget(platformSettings, platformTransport)
-		defer unregisterH3DatagramTarget(platformTransport)
+		// The live offer toggle writes a by-value field, which the group's
+		// copies do not see; it takes effect at the next identity launch.
+		if legacyTransport != nil {
+			registerH3DatagramTarget(platformSettings, legacyTransport)
+			defer unregisterH3DatagramTarget(legacyTransport)
+		}
 	}
 
 	proxyBecameLive()
