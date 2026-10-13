@@ -48,7 +48,8 @@ Quick jump:
 | `TURBO` | - | Set to `v4` or `v8` to enable turbo mode. Prefer this variable for Docker turbo mode. |
 | `URNETWORK_RAMLOGS` | `0` | Set to `1` to redirect provider logs to RAM instead of stdout. Cannot be used with Docker `--log-opt`. On systemd/native, set this with `urnet-tools ramlogs on\|off`. |
 | `URNETWORK_METRICS` | - | Exact bind address for the Prometheus `/metrics` endpoint, for example `100.64.0.10:9100`. Overrides `urnet-tools metrics listen`. Leave it unset and auto mode chooses: loopback plus the machine's Tailscale address on bare metal, every interface inside a container. Never bind a public interface. See [Monitoring](Monitoring.md). |
-| `URNETWORK_SKIP_AUDIT` | `0` | Set to `1` to skip the startup system audit (disk speed benchmark, ulimit, conntrack checks). Useful in Docker where host sysctls aren't visible. |
+| `URNETWORK_SKIP_AUDIT` | `0` | Set to `1` to skip the whole startup system audit (ulimit and conntrack checks, and the disk benchmark). |
+| `URNETWORK_DISK_BENCH` | unset | Controls only the startup disk write benchmark, which runs only under `URNETWORK_PROFILE=auto` and decides whether to switch to RAM logs. Unset: runs on bare metal and VMs, never inside a container, and never while the host disk is busy. `1`: also run it in a container (still skipped when the disk is busy). `0`: never run it. It is capped at 16 MiB and 3 s, writes only inside the state dir, and caches its result (see `urnet_disk_write_mbps` and `urnet_disk_slow` in `/metrics`). |
 
 ### 🌐 Proxy Feeds & Reaping
 

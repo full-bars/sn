@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
 )
 
 // Golden Values for a high-performance provider.
@@ -22,8 +21,9 @@ const (
 
 // RunSystemAudit checks the host's system limits and logs warnings if they
 // are suboptimal for a high-volume provider. This is a passive check that
-// does not require root. Returns (slowDisk, lowSpace).
-func RunSystemAudit(skipDiskTest bool) (slowDisk bool, lowSpace bool) {
+// does not require root. Returns (slowDisk, lowSpace). stateDir is where the
+// optional disk benchmark may write; empty means the benchmark never runs.
+func RunSystemAudit(stateDir string, skipDiskTest bool) (slowDisk bool, lowSpace bool) {
 	if runtime.GOOS != "linux" {
 		return false, false
 	}
@@ -84,84 +84,15 @@ func RunSystemAudit(skipDiskTest bool) (slowDisk bool, lowSpace bool) {
 	}
 
 	// 5. Check Disk I/O (Free Space & Latency)
+	if stateDir == "" {
+		return false, false
+	}
 	if skipDiskTest {
-		_, lowSpace = CheckDiskSpace()
+		_, lowSpace = CheckDiskSpace(stateDir)
 		return false, lowSpace
 	}
 
-	return RunDiskAudit()
-}
-
-// CheckDiskSpace returns (freeMiB, lowSpaceFlag)
-func CheckDiskSpace() (int64, bool) {
-	var stat syscall.Statfs_t
-	wd, _ := os.Getwd()
-	if err := syscall.Statfs(wd, &stat); err != nil {
-		return 0, false
-	}
-
-	freeBytes := int64(stat.Bavail) * int64(stat.Bsize)
-	freeMiB := freeBytes / 1024 / 1024
-
-	if freeMiB < 1024 { // < 1GB
-		fmt.Printf("🚨 [audit] CRITICAL: Low disk space (%d MiB available). Provider may fail.\n", freeMiB)
-		return freeMiB, true
-	}
-	return freeMiB, false
-}
-
-// RunDiskAudit performs a robust cache-busting write test to detect slow
-// disk I/O and checks for sufficient free space. Returns (slowDisk, lowSpace).
-func RunDiskAudit() (slowDisk bool, lowSpace bool) {
-	// 1. Check Free Space
-	freeMiB, lowSpace := CheckDiskSpace()
-
-	// 2. Determine Test File Size
-	// Target 1/4 of free space, capped at 1024MB (1GB), floor 16MB.
-	testSizeMiB := freeMiB / 4
-	if testSizeMiB > 1024 {
-		testSizeMiB = 1024
-	}
-	if testSizeMiB < 16 {
-		testSizeMiB = 16
-	}
-
-	// 3. Performance Test (Sync Write)
-	testFile := ".io-test"
-	data := make([]byte, 1024*1024) // 1MB buffer
-	for i := range data {
-		data[i] = byte(i % 255)
-	}
-
-	start := time.Now()
-	f, err := os.OpenFile(testFile, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0600)
-	if err != nil {
-		return false, lowSpace
-	}
-	defer os.Remove(testFile)
-
-	for i := int64(0); i < testSizeMiB; i++ {
-		if _, err := f.Write(data); err != nil {
-			fmt.Printf("[audit] Disk I/O test failed: %v (likely out of disk space)\n", err)
-			f.Close()
-			return true, lowSpace // Treat as slow/broken disk to trigger RAM logging
-		}
-	}
-	f.Close()
-
-	elapsed := time.Since(start)
-	mbps := float64(testSizeMiB) / elapsed.Seconds()
-
-	fmt.Printf("[audit] Disk write speed: %.1f MB/s (%dMB sync test)\n", mbps, testSizeMiB)
-
-	// Fleet threshold: < 50MB/s is considered slow for high-volume logs.
-	if mbps < 50 {
-		slowDisk = true
-		fmt.Printf("[audit] Slow disk I/O detected (%.1f MB/s for %dMB sync write).\n", mbps, testSizeMiB)
-		fmt.Printf("[audit] Hint: Suggest enabling RAM logging to eliminate I/O bottlenecks: 'urnet-tools ramlogs on'.\n")
-	}
-
-	return slowDisk, lowSpace
+	return RunDiskAudit(stateDir)
 }
 
 func readSysctlInt(path string) (int, error) {
