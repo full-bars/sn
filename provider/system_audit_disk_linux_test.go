@@ -4,11 +4,14 @@ package provider
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -422,5 +425,106 @@ func TestDiskBenchCapIsWholeChunksAndNeverAboveOneSixtyFourthOfFree(t *testing.T
 		if got%diskBenchChunk != 0 || got > c.freeMiB*1024*1024/diskBenchFreeDiv {
 			t.Errorf("free %d MiB: cap %d is not whole chunks within free/64", c.freeMiB, got)
 		}
+	}
+}
+
+// captureStdout redirects os.Stdout to a pipe for the duration of fn and
+// returns what was printed.
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+	old := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	os.Stdout = w
+	fn()
+	w.Close()
+	os.Stdout = old
+	b, err := io.ReadAll(r)
+	r.Close()
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	return string(b)
+}
+
+// ghostPath returns a path of n levels that do not exist below base.
+func ghostPath(base string, n int) string {
+	for i := 0; i < n; i++ {
+		base = filepath.Join(base, fmt.Sprintf("ghost-%d", i))
+	}
+	return base
+}
+
+// A state dir several missing levels deep must still be measured through its
+// nearest existing parent, not reported as a full disk. The statfs is injected so
+// the expected value cannot drift with the real disk, and the probes show which
+// level answered.
+func TestCheckDiskSpaceWalksUpPastMissingLevels(t *testing.T) {
+	base := t.TempDir()
+	var probed []string
+	orig := diskSpaceStatfs
+	diskSpaceStatfs = func(path string, st *syscall.Statfs_t) error {
+		probed = append(probed, path)
+		if path != base {
+			return syscall.ENOENT
+		}
+		st.Bsize = 4096
+		st.Bavail = 5000 * 1024 * 1024 / 4096 // 5000 MiB
+		return nil
+	}
+	t.Cleanup(func() { diskSpaceStatfs = orig })
+
+	var got int64
+	var low bool
+	out := captureStdout(t, func() { got, low = CheckDiskSpace(ghostPath(base, 12)) })
+	if got != 5000 || low {
+		t.Fatalf("deep missing path: got (%d, %v), want (5000, false)", got, low)
+	}
+	if strings.Contains(out, "CRITICAL") {
+		t.Fatalf("a measurable dir printed a CRITICAL line: %q", out)
+	}
+	if len(probed) != 13 || probed[len(probed)-1] != base {
+		t.Fatalf("probed %d paths ending at %q, want 12 missing levels then %q", len(probed), probed[len(probed)-1], base)
+	}
+}
+
+// A path that cannot be measured at any level is unknown, not low: (0, false)
+// and no output, so a wrong path can never raise a false alert.
+func TestCheckDiskSpaceUnmeasurablePathIsQuiet(t *testing.T) {
+	orig := diskSpaceStatfs
+	diskSpaceStatfs = func(path string, st *syscall.Statfs_t) error { return syscall.ENOENT }
+	t.Cleanup(func() { diskSpaceStatfs = orig })
+	var got int64
+	var low bool
+	out := captureStdout(t, func() { got, low = CheckDiskSpace(ghostPath(t.TempDir(), 12)) })
+	if got != 0 || low {
+		t.Fatalf("unmeasurable path: got (%d, %v), want (0, false)", got, low)
+	}
+	if out != "" {
+		t.Fatalf("unmeasurable path printed %q, want silence", out)
+	}
+}
+
+// An unmeasurable path must not read as a full disk in the benchmark's own skip
+// message either: unknown is not zero.
+func TestRunDiskAuditUnmeasurablePathIsNotReportedAsAFullDisk(t *testing.T) {
+	withBenchEnv(t, false, 0, true)
+	orig := diskSpaceStatfs
+	diskSpaceStatfs = func(string, *syscall.Statfs_t) error { return syscall.ENOENT }
+	t.Cleanup(func() { diskSpaceStatfs = orig })
+	dir := filepath.Join(t.TempDir(), "state", "deep")
+
+	var slow, low bool
+	out := captureStdout(t, func() { slow, low = RunDiskAudit(dir) })
+	if slow || low {
+		t.Fatalf("unmeasurable path: got (slow %v, low %v), want (false, false)", slow, low)
+	}
+	if !strings.Contains(out, "could not measure free space") || strings.Contains(out, "only 0 MiB free") {
+		t.Fatalf("skip message = %q, want the could-not-measure wording and never 0 MiB free", out)
+	}
+	if _, err := os.Stat(dir); err == nil {
+		t.Fatal("the benchmark created the state dir although it could not measure it")
 	}
 }

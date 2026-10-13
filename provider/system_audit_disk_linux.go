@@ -79,26 +79,36 @@ type diskBenchCache struct {
 
 // CheckDiskSpace returns the free space under dir in MiB and whether it is low
 // (under 1 GiB). A directory that does not exist yet is measured through its
-// nearest existing parent.
+// nearest existing parent, however many missing levels that takes. A path no
+// level can measure is reported as (0, false): unknown is not low.
 func CheckDiskSpace(dir string) (int64, bool) {
-	var stat syscall.Statfs_t
+	freeMiB, low, _ := checkDiskSpaceMeasured(dir)
+	return freeMiB, low
+}
+
+// checkDiskSpaceMeasured is CheckDiskSpace plus whether any level could be
+// measured, so a caller can tell an unmeasurable path from a full disk.
+func checkDiskSpaceMeasured(dir string) (freeMiB int64, low bool, measured bool) {
 	probe := dir
-	for i := 0; i < 8; i++ {
-		if err := syscall.Statfs(probe, &stat); err == nil {
-			break
+	for {
+		var stat syscall.Statfs_t
+		if err := diskSpaceStatfs(probe, &stat); err == nil {
+			freeMiB = int64(stat.Bavail) * int64(stat.Bsize) / 1024 / 1024
+			if freeMiB < 1024 {
+				fmt.Printf("🚨 [audit] CRITICAL: Low disk space (%d MiB available). Provider may fail.\n", freeMiB)
+				return freeMiB, true, true
+			}
+			return freeMiB, false, true
 		}
 		next := filepath.Dir(probe)
 		if next == probe {
-			return 0, false
+			// walked to the root without a measurable level: we could not
+			// measure, which is not the same as low. Say nothing, so a wrong
+			// path cannot raise a false alert.
+			return 0, false, false
 		}
 		probe = next
 	}
-	freeMiB := int64(stat.Bavail) * int64(stat.Bsize) / 1024 / 1024
-	if freeMiB < 1024 {
-		fmt.Printf("🚨 [audit] CRITICAL: Low disk space (%d MiB available). Provider may fail.\n", freeMiB)
-		return freeMiB, true
-	}
-	return freeMiB, false
 }
 
 // RunDiskAudit measures synchronous write speed under dir, safely. It returns
@@ -112,7 +122,12 @@ func RunDiskAudit(dir string) (slowDisk bool, lowSpace bool) {
 		return false, lowSpace
 	}
 
-	freeMiB, lowSpace := CheckDiskSpace(dir)
+	freeMiB, lowSpace, measured := checkDiskSpaceMeasured(dir)
+	if !measured {
+		// unknown is not zero: do not report a full disk for a path we could not measure
+		fmt.Printf("[audit] Disk benchmark skipped: could not measure free space under %s\n", dir)
+		return false, false
+	}
 	if freeMiB < diskBenchMinFreeMiB {
 		fmt.Printf("[audit] Disk benchmark skipped: only %d MiB free under %s\n", freeMiB, dir)
 		return false, lowSpace
@@ -317,6 +332,9 @@ func DiskBenchStatus(dir string) (mbps float64, slow bool, age time.Duration, ok
 var (
 	diskBenchInContainer = looksContainerised
 	diskBenchIOPressure  = readIOPressure
+	// diskSpaceStatfs is CheckDiskSpace's statfs; tests replace it to
+	// reproduce a path no level can measure.
+	diskSpaceStatfs = syscall.Statfs
 )
 
 // diskBenchSkipReason returns why the benchmark must not run now, or "".
