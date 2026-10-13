@@ -458,25 +458,35 @@ func ghostPath(base string, n int) string {
 }
 
 // A state dir several missing levels deep must still be measured through its
-// nearest existing parent, not reported as a full disk.
+// nearest existing parent, not reported as a full disk. The statfs is injected so
+// the expected value cannot drift with the real disk, and the probes show which
+// level answered.
 func TestCheckDiskSpaceWalksUpPastMissingLevels(t *testing.T) {
 	base := t.TempDir()
-	var st syscall.Statfs_t
-	if err := syscall.Statfs(base, &st); err != nil {
-		t.Fatalf("statfs %s: %v", base, err)
+	var probed []string
+	orig := diskSpaceStatfs
+	diskSpaceStatfs = func(path string, st *syscall.Statfs_t) error {
+		probed = append(probed, path)
+		if path != base {
+			return syscall.ENOENT
+		}
+		st.Bsize = 4096
+		st.Bavail = 5000 * 1024 * 1024 / 4096 // 5000 MiB
+		return nil
 	}
-	want := int64(st.Bavail) * int64(st.Bsize) / 1024 / 1024
-	if want < 2048 {
-		t.Skipf("only %d MiB free under %s, cannot assert 'not low'", want, base)
-	}
+	t.Cleanup(func() { diskSpaceStatfs = orig })
+
 	var got int64
 	var low bool
 	out := captureStdout(t, func() { got, low = CheckDiskSpace(ghostPath(base, 12)) })
-	if got != want || low {
-		t.Fatalf("deep missing path: got (%d, %v), want (%d, false)", got, low, want)
+	if got != 5000 || low {
+		t.Fatalf("deep missing path: got (%d, %v), want (5000, false)", got, low)
 	}
 	if strings.Contains(out, "CRITICAL") {
 		t.Fatalf("a measurable dir printed a CRITICAL line: %q", out)
+	}
+	if len(probed) != 13 || probed[len(probed)-1] != base {
+		t.Fatalf("probed %d paths ending at %q, want 12 missing levels then %q", len(probed), probed[len(probed)-1], base)
 	}
 }
 
@@ -494,5 +504,27 @@ func TestCheckDiskSpaceUnmeasurablePathIsQuiet(t *testing.T) {
 	}
 	if out != "" {
 		t.Fatalf("unmeasurable path printed %q, want silence", out)
+	}
+}
+
+// An unmeasurable path must not read as a full disk in the benchmark's own skip
+// message either: unknown is not zero.
+func TestRunDiskAuditUnmeasurablePathIsNotReportedAsAFullDisk(t *testing.T) {
+	withBenchEnv(t, false, 0, true)
+	orig := diskSpaceStatfs
+	diskSpaceStatfs = func(string, *syscall.Statfs_t) error { return syscall.ENOENT }
+	t.Cleanup(func() { diskSpaceStatfs = orig })
+	dir := filepath.Join(t.TempDir(), "state", "deep")
+
+	var slow, low bool
+	out := captureStdout(t, func() { slow, low = RunDiskAudit(dir) })
+	if slow || low {
+		t.Fatalf("unmeasurable path: got (slow %v, low %v), want (false, false)", slow, low)
+	}
+	if !strings.Contains(out, "could not measure free space") || strings.Contains(out, "only 0 MiB free") {
+		t.Fatalf("skip message = %q, want the could-not-measure wording and never 0 MiB free", out)
+	}
+	if _, err := os.Stat(dir); err == nil {
+		t.Fatal("the benchmark created the state dir although it could not measure it")
 	}
 }
