@@ -127,7 +127,7 @@ func RunDiskAudit(dir string) (slowDisk bool, lowSpace bool) {
 		return r.Slow, lowSpace
 	}
 
-	maxBytes := min(int64(diskBenchMaxBytes), freeMiB*1024*1024/diskBenchFreeDiv)
+	maxBytes := diskBenchCap(freeMiB)
 	r := runDiskBench(dir, maxBytes, diskBenchBudget)
 	switch {
 	case r.TimedOut:
@@ -386,3 +386,12 @@ func parseIOPressure(s string) (float64, bool) {
 // DiskBenchSkipReason reports why the disk benchmark would not run right now
 // ("" when it would). Exported for the provider's tests and diagnostics.
 func DiskBenchSkipReason() string { return diskBenchSkipReason() }
+
+// diskBenchCap is the most the benchmark may write on a disk with freeMiB free:
+// the byte cap or free/64, whichever is smaller, rounded down to whole chunks
+// because every write is a full chunk. Callers have already ruled out disks
+// under diskBenchMinFreeMiB, so the result is at least four chunks.
+func diskBenchCap(freeMiB int64) int64 {
+	n := min(int64(diskBenchMaxBytes), freeMiB*1024*1024/diskBenchFreeDiv)
+	return n - n%diskBenchChunk
+}

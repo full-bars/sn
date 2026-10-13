@@ -247,6 +247,7 @@ func TestBenchCacheIgnoresGarbageAndSkipsNonAnswers(t *testing.T) {
 }
 
 func TestRunDiskAuditUsesCacheWithoutWriting(t *testing.T) {
+	withBenchEnv(t, false, 0, true)
 	dir := t.TempDir()
 	dev, ok := diskBenchDevice(dir)
 	writeDiskBenchCache(dir, dev, ok, diskBenchResult{MBps: 3, Bytes: 4 << 20, Slow: true}, time.Now())
@@ -262,6 +263,7 @@ func TestRunDiskAuditUsesCacheWithoutWriting(t *testing.T) {
 }
 
 func TestRunDiskAuditNeverWritesOutsideTheStateDir(t *testing.T) {
+	withBenchEnv(t, false, 0, true)
 	cwd := t.TempDir()
 	state := filepath.Join(t.TempDir(), "state")
 	t.Chdir(cwd)
@@ -401,5 +403,24 @@ func TestRunDiskBenchSteadyFastDiskStillPassesTheTailCheck(t *testing.T) {
 	})
 	if r := runDiskBench(dir, 32<<20, 3*time.Second); r.Slow {
 		t.Fatalf("steady fast disk failed the tail check: %+v", r)
+	}
+}
+
+func TestDiskBenchCapIsWholeChunksAndNeverAboveOneSixtyFourthOfFree(t *testing.T) {
+	cases := []struct{ freeMiB, wantBytes int64 }{
+		{300, 4 << 20},     // 4.69 MiB rounds down, not up to 5
+		{256, 4 << 20},     // the smallest disk that is benchmarked
+		{1000, 15 << 20},   // 15.6 MiB
+		{1024, 16 << 20},   // exactly the byte cap
+		{500000, 16 << 20}, // large disks stay at the byte cap
+	}
+	for _, c := range cases {
+		got := diskBenchCap(c.freeMiB)
+		if got != c.wantBytes {
+			t.Errorf("free %d MiB: cap %d, want %d", c.freeMiB, got, c.wantBytes)
+		}
+		if got%diskBenchChunk != 0 || got > c.freeMiB*1024*1024/diskBenchFreeDiv {
+			t.Errorf("free %d MiB: cap %d is not whole chunks within free/64", c.freeMiB, got)
+		}
 	}
 }
