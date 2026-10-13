@@ -177,17 +177,23 @@ func TestNewProviderPlatformTransportExactlyOneConcrete(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		clientStrategySettings := connect.DefaultClientStrategySettings()
 		clientStrategy := connect.NewClientStrategy(ctx, clientStrategySettings)
+		settings := connect.DefaultPlatformTransportSettings()
+		defaultBudget := settings.PlatformTransportBudget
 		transport, legacy, group := newProviderPlatformTransport(
 			ctx, clientStrategySettings, clientStrategy, connect.NewRouteManager(ctx, "test"),
 			"wss://connect.bringyour.com",
 			&connect.ClientAuth{ByJwt: "testing", InstanceId: connect.NewId(), AppVersion: "testing"},
-			connect.DefaultPlatformTransportSettings(), useFamily,
+			settings, useFamily,
 		)
 		if transport == nil {
 			t.Fatalf("useFamily=%t: nil transport interface", useFamily)
 		}
 		if (legacy != nil) == (group != nil) {
 			t.Fatalf("useFamily=%t: legacy=%v group=%v, want exactly one", useFamily, legacy != nil, group != nil)
+		}
+		// only the group gets a budget sized for three transports
+		if useFamily == (settings.PlatformTransportBudget == defaultBudget) {
+			t.Fatalf("useFamily=%t: the default budget must be replaced for the group and kept otherwise", useFamily)
 		}
 		if useFamily {
 			if group == nil || providerPlatformTransport(group) != transport {

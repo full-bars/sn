@@ -243,6 +243,12 @@ func newProviderPlatformTransport(
 		legacy = connect.NewPlatformTransport(ctx, clientStrategy, routeManager, connectUrl, auth, settings)
 		return legacy, legacy, nil
 	}
+	// The default budget admits one carrier of each kind. The group runs three
+	// transports, and at Background priority the two pins are the ones refused
+	// when the budget is full, so with the default they never dial H3 and sit on
+	// H1 without any signal. Size the budget for three. It is admission
+	// accounting, not an allocation.
+	settings.PlatformTransportBudget = familyGroupBudget()
 	group = newProviderFamilyGroup(
 		ctx, clientStrategySettings, clientStrategy, routeManager,
 		connectUrl, familyServiceUrl(connectUrl, 4), familyServiceUrl(connectUrl, 6),
@@ -386,4 +392,18 @@ func writeFamilyTransportMetrics(b *strings.Builder) {
 	fmt.Fprintf(b, "# HELP urnet_dualstack_standby_active Whether the family-agnostic standby is dialing because no pinned transport is connected.\n")
 	fmt.Fprintf(b, "# TYPE urnet_dualstack_standby_active gauge\n")
 	fmt.Fprintf(b, "urnet_dualstack_standby_active %d\n", active)
+}
+
+// familyBudgetReferenceByteCount is connect's reference memory budget, used
+// when no process-wide memory target is set.
+const familyBudgetReferenceByteCount = 64 << 20
+
+// familyGroupBudget is the transport budget for one identity's family group:
+// the default sizing, scaled for the group's three transports.
+func familyGroupBudget() *connect.PlatformTransportBudget {
+	target := connect.MemoryBudget()
+	if target <= 0 {
+		target = familyBudgetReferenceByteCount
+	}
+	return connect.NewPlatformTransportBudgetForMemoryTarget(3 * target)
 }
