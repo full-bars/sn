@@ -645,6 +645,14 @@ func provide(opts docopt.Opts) {
 		stopSignals()
 		os.Exit(code)
 	}
+	// The diagnostics event for a refusal goes to a sink that is refused on
+	// non-Linux platforms and on a Linux stdout that is a regular file, so the
+	// operator can see nothing at all. A refusal carries a closed code; say it
+	// on stderr (exit status stays 0 by design).
+	var refused *clientauth.RegistrationRefusedError
+	if errors.As(err, &refused) && ctx.Err() == nil {
+		fmt.Fprintf(os.Stderr, "provider did not start: %s. Known new work: --allow-client-registration. Verified original legacy key/JWT: --adopt-legacy-provider-key. See miner/PROVIDER-REGISTRATION.md.\n", refused.Code)
+	}
 	if err != nil && ctx.Err() == nil && (settings.requireWorkCapture || settings.workCapturePath != "" || settings.workCaptureSha256 != "" || settings.requireContractCapture || settings.contractCapturePath != "" || settings.contractCaptureSha256 != "") {
 		stopSignals()
 		fmt.Fprintln(os.Stderr, "provider original capture launch refused; restore approved profiles, retained identity and prepared custody")
