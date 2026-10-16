@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/urfoundation/sn/internal/durablesync"
 )
 
 const maximumSeedFileBytes = 4096
@@ -191,7 +193,7 @@ func openSeedFileDirectory(path string, create bool, hooks seedFileHooks) (direc
 			if err := self.check(); err != nil {
 				return nil, err
 			}
-			if err := errors.Join(opened.Sync(), parentFile.Sync()); err != nil {
+			if err := errors.Join(durablesync.Sync(opened), durablesync.Sync(parentFile)); err != nil {
 				return nil, err
 			}
 		}
@@ -268,7 +270,9 @@ func (self *seedFileDirectory) readWithParser(name string, parse func([]byte) ([
 	if err := self.check(); err != nil {
 		return seed, nil, err
 	}
-	if err := errors.Join(file.Sync(), self.files[len(self.files)-1].Sync()); err != nil {
+	// file keeps its own flush: it is a regular file, and only a directory
+	// flush is the operation some platforms do not have.
+	if err := errors.Join(file.Sync(), durablesync.Sync(self.files[len(self.files)-1])); err != nil {
 		return seed, nil, err
 	}
 	after, err := file.Stat()
@@ -390,7 +394,7 @@ func loadSeedFileOwned(path string, create, rawOnly bool, hooks seedFileHooks) (
 	if err := directory.check(); err != nil {
 		return seed, false, err
 	}
-	if err := directory.files[len(directory.files)-1].Sync(); err != nil {
+	if err := durablesync.Sync(directory.files[len(directory.files)-1]); err != nil {
 		return seed, false, err
 	}
 	loaded, published, err := directory.read(name, rawOnly)
