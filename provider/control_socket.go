@@ -1031,6 +1031,34 @@ func getHotSwapTrigger() func() error {
 	return hotSwapTrigger
 }
 
+// metricsEnabledByState reports whether /metrics should run according to the
+// persisted `metrics` setting. It defaults to ON: a node whose operator never
+// switched it on went dark, with no listener and nobody to notice. The
+// listener in "auto" mode binds loopback plus the box's Tailscale addresses
+// (inside a container, 0.0.0.0 with only published ports reachable) and never
+// a public interface. An explicit `metrics off` is persisted and wins.
+func metricsEnabledByState(state *controlState) bool {
+	v, ok := state.get("metrics")
+	if !ok || strings.TrimSpace(v) == "" {
+		return true
+	}
+	return !strings.EqualFold(strings.TrimSpace(v), "off")
+}
+
+// startDefaultMetrics starts /metrics at provider startup for a node that did
+// not choose: URNETWORK_METRICS (bound elsewhere), a persisted `metrics on`
+// (applyPersistedRuntimeTuning) and a persisted `metrics off` all take
+// precedence. A HotSwap candidate skips it; startMetricsAfterTakeover binds
+// after takeover. A start failure is logged and never stops the provider.
+func startDefaultMetrics(state *controlState, hotSwapCandidate bool) {
+	if hotSwapCandidate || os.Getenv("URNETWORK_METRICS") != "" || !metricsEnabledByState(state) {
+		return
+	}
+	if err := applyMetricsLive("on"); err != nil {
+		tlog("[metrics] default /metrics could not start: %v\n", err)
+	}
+}
+
 func RegisterCoordinatorCloser(closer func()) func() {
 	if closer == nil {
 		return func() {}
@@ -1118,12 +1146,7 @@ func startMetricsAfterTakeover(state *controlState) {
 	if srv != nil {
 		return
 	}
-	enabled := os.Getenv("URNETWORK_METRICS") != ""
-	if !enabled {
-		if v, ok := state.get("metrics"); ok && strings.EqualFold(v, "on") {
-			enabled = true
-		}
-	}
+	enabled := os.Getenv("URNETWORK_METRICS") != "" || metricsEnabledByState(state)
 	if !enabled {
 		return
 	}

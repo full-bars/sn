@@ -162,6 +162,7 @@ func TestListenMetricsInContainerBindsAllInterfaces(t *testing.T) {
 		t.Fatal(err)
 	}
 	metricsContainerMarkers = []string{marker}
+	stubContainerAddrs(t, "172.17.0.2", "fd00::2")
 
 	ln, err := listenMetrics(0)
 	if err != nil {
@@ -282,4 +283,74 @@ func TestIsTailscaleInterface(t *testing.T) {
 			t.Errorf("isTailscaleInterface(%q) = true", name)
 		}
 	}
+}
+
+// stubContainerAddrs points publiclyAddressed at the given interface
+// addresses, restoring the real probe afterwards.
+func stubContainerAddrs(t *testing.T, addrs ...string) {
+	t.Helper()
+	saved := containerAddrsFunc
+	t.Cleanup(func() { containerAddrsFunc = saved })
+	containerAddrsFunc = func() []netip.Addr {
+		var out []netip.Addr
+		for _, a := range addrs {
+			out = append(out, netip.MustParseAddr(a))
+		}
+		return out
+	}
+}
+
+func TestPubliclyAddressed(t *testing.T) {
+	for _, c := range []struct {
+		addrs []string
+		want  bool
+	}{
+		{[]string{"172.17.0.2"}, false},
+		{[]string{"10.0.0.5", "192.168.1.9"}, false},
+		{[]string{"fd00::2", "fe80::1"}, false},
+		{[]string{"100.64.0.10"}, false}, // Tailscale CGNAT is not public
+		{[]string{"203.0.113.7"}, true},
+		{[]string{"172.17.0.2", "203.0.113.7"}, true},
+		{[]string{"2001:db8::7"}, true},
+		{nil, false},
+	} {
+		stubContainerAddrs(t, c.addrs...)
+		if got := publiclyAddressed(); got != c.want {
+			t.Errorf("publiclyAddressed(%v) = %v, want %v", c.addrs, got, c.want)
+		}
+	}
+}
+
+// A container that shares the host's network (--network host) holds public
+// addresses: the default must NOT bind 0.0.0.0 there.
+func TestListenMetricsHostNetworkedContainerStaysOffPublicInterfaces(t *testing.T) {
+	port := stubMetricsAuto(t, noTailscale)
+	marker := filepath.Join(t.TempDir(), ".dockerenv")
+	if err := os.WriteFile(marker, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	metricsContainerMarkers = []string{marker}
+	stubContainerAddrs(t, "203.0.113.7", "172.17.0.1")
+
+	ln, err := listenMetrics(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	for _, addr := range metricsServedAddrsOfListener(ln) {
+		ap, err := netip.ParseAddrPort(addr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ap.Addr().IsUnspecified() || !ap.Addr().IsLoopback() || int(ap.Port()) != port {
+			t.Fatalf("a publicly addressed container listened on %s; only loopback is allowed here", addr)
+		}
+	}
+}
+
+func metricsServedAddrsOfListener(ln net.Listener) []string {
+	if multi, ok := ln.(*metricsMultiListener); ok {
+		return multi.Addrs()
+	}
+	return []string{ln.Addr().String()}
 }

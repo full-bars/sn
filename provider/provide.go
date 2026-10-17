@@ -1575,6 +1575,9 @@ func provideLauncherLoop(st *provideState) func() {
 			serveMetrics(ln)
 		}
 	}
+	// /metrics is on by default (see metricsEnabledByState): auto mode binds
+	// loopback plus the box's Tailscale addresses and never a public interface.
+	startDefaultMetrics(globalControlState, st.isHotSwapCandidate)
 
 	return func() {}
 }
