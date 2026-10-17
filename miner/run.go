@@ -96,6 +96,9 @@ Usage:
 		[--quarantine-rejected-sign-in]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
+        [--proxy_url=<proxy_url>]... [--url=<url>]... [--URL=<URL>]...
+        [--proxy_url_refresh=<dur>] [--proxy_url_max=<n>]
+        [--proxy_dead_cleanup_scope=<scope>] [--proxy_dead_cleanup_interval=<dur>]
         [--wallet=<coldkey_ss58> [--provider-jwt=<path>] [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]]
 		[--test-egress-source-ip=<source_ip>]
         [--max-memory=<mem>]
@@ -110,6 +113,9 @@ Usage:
     	[--port=<port>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
+        [--proxy_url=<proxy_url>]... [--url=<url>]... [--URL=<URL>]...
+        [--proxy_url_refresh=<dur>] [--proxy_url_max=<n>]
+        [--proxy_dead_cleanup_scope=<scope>] [--proxy_dead_cleanup_interval=<dur>]
         [--wallet=<coldkey_ss58> [--provider-jwt=<path>] [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]]
 		[--test-egress-source-ip=<source_ip>]
         [--max-memory=<mem>]
@@ -295,7 +301,17 @@ Options:
     <proxy_user>                     SOCKS5 user
     <proxy_password>                 SOCKS5 password
     <key_address>                    SOCKS5 server as host:port, host:port:user:pass, host:port::, or key@host:port
-    --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port`,
+    --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port
+    --proxy_url=<proxy_url>          Fetch SOCKS5 proxies from this URL (repeatable). Also --url / --URL / PROXY_URL (comma-separated).
+                                     List lines are host:port, host:port:user:pass, socks5://host:port or socks5://user:pass@host:port.
+    --proxy_url_refresh=<dur>        How often to re-fetch the --proxy_url sources and add new entries (default 1h).
+                                     Also PROXY_URL_REFRESH. Minimum 10s.
+    --proxy_url_max=<n>              Cap on total proxies sourced from --proxy_url (default 500). 0 = unlimited.
+                                     Also PROXY_URL_MAX.
+    --proxy_dead_cleanup_scope=<scope>  Automatic dead-proxy cleanup scope: none, url, or all (default url).
+                                     Also PROXY_DEAD_CLEANUP_SCOPE.
+    --proxy_dead_cleanup_interval=<dur>  How often automatic cleanup runs, when the scope is not none
+                                     (default 6h). Also PROXY_DEAD_CLEANUP_INTERVAL. Minimum 1m.`,
 		DefaultApiUrl,
 		DefaultConnectUrl,
 		operatorlist.DefaultUrl,
@@ -588,7 +604,16 @@ func provide(opts docopt.Opts) {
 	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	defer stopSignals()
 
-	allProxySettings := readProxySettings()
+	// The manager owns the desired proxy set (the legacy <state>/proxy config
+	// plus any URL-sourced cache) and keeps the state current while the
+	// providers run.
+	proxyManager := newProxyManager(proxyManagerConfigFromOpts(opts, apiUrl))
+	allProxySettings, _, err := proxyManager.start(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "proxy state error: %s\n", err)
+		os.Exit(1)
+	}
+	defer proxyManager.stop()
 	providerCount := len(allProxySettings)
 	if providerCount == 0 {
 		providerCount = 1
@@ -1387,7 +1412,19 @@ type ProxyAuth struct {
 	Password string `json:"password"`
 }
 
+// readProxySettings returns the desired provider slots. It is manager-backed:
+// when proxy.state exists the desired set is the manager's (operator config
+// plus URL cache, capped by the operator trim target); a state directory the
+// port has never touched falls back to the legacy <state>/proxy file.
 func readProxySettings() []*connect.ProxySettings {
+	return proxyManagerReadSettings()
+}
+
+// readProxySettingsLegacy is the pre-port reader: the internal `<state>/proxy`
+// config only. It stays the fallback for a fresh state directory and the
+// internal-config reader used by the dead-proxy removal and desired-set
+// queries.
+func readProxySettingsLegacy() []*connect.ProxySettings {
 	proxyConfig := readProxyConfig()
 
 	if proxyConfig.Servers == nil {
@@ -1422,9 +1459,13 @@ func readProxySettings() []*connect.ProxySettings {
 	return allProxySettings
 }
 
+// proxyAddressPattern parses "host:port[:user:pass]" (credentials optional,
+// IPv6 hosts in brackets). Compiled once at package init: the earlier
+// per-call MustCompile made every parse allocate a compiled program.
+var proxyAddressPattern = regexp.MustCompile("^(.*:\\d*):([^:]*):([^:]*)$")
+
 func parseProxyAddress(proxyAddress string) (address string, user string, password string) {
-	r := regexp.MustCompile("^(.*:\\d*):([^:]*):([^:]*)$")
-	groups := r.FindStringSubmatch(proxyAddress)
+	groups := proxyAddressPattern.FindStringSubmatch(proxyAddress)
 	if groups != nil {
 		address = groups[1]
 		user = groups[2]
