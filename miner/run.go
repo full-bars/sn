@@ -175,6 +175,14 @@ Usage:
     provider proxy auth remove [<key>] [--all]
     provider proxy add [<key_address>...] [--proxy_file=<proxy_file>] [-f]
     provider proxy remove [<key_address>...] [--all]
+    provider proxy add-source <url>
+    provider proxy remove-source <url>
+    provider proxy refresh [--force]
+    provider proxy trim <count> [--preview]
+    provider proxy summary
+    provider proxy exclude [<pattern>] [--remove]
+    provider proxy remove-dead [--degraded[=<duration>]] [--auth-failures=<N>] [--source=<source>] [--yes] [--preview]
+    provider proxy activity
     provider choose_network <api_url> <connect_url>
     provider choose_network --reset
     provider choose_network --show
@@ -302,6 +310,17 @@ Options:
     <proxy_password>                 SOCKS5 password
     <key_address>                    SOCKS5 server as host:port, host:port:user:pass, host:port::, or key@host:port
     --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port
+    <url>                            A proxy list URL, for 'proxy add-source' and 'proxy remove-source'.
+    <count>                          Max number of running proxies to keep, for 'proxy trim'. 0/off clears the cap.
+    <pattern>                        Host substring for 'proxy exclude' (add). With --remove, deletes the pattern.
+                                     With no pattern, 'proxy exclude' lists the active patterns.
+    --force                          With 'proxy refresh', bypass the 8-hour warmup protection gate.
+    --preview                        With 'proxy trim' or 'proxy remove-dead', list what would change and write nothing.
+    --remove                         With 'proxy exclude', delete the pattern instead of adding it.
+    --auth-failures=<N>              With 'proxy remove-dead', also remove proxies with at least N auth failures
+                                     per day of uptime.
+    --source=<source>                With 'proxy remove-dead', only consider proxies from this source: url, file, or internal.
+    --yes                            With 'proxy remove-dead', skip the per-category confirmation prompts.
     --proxy_url=<proxy_url>          Fetch SOCKS5 proxies from this URL (repeatable). Also --url / --URL / PROXY_URL (comma-separated).
                                      List lines are host:port, host:port:user:pass, socks5://host:port or socks5://user:pass@host:port.
     --proxy_url_refresh=<dur>        How often to re-fetch the --proxy_url sources and add new entries (default 1h).
@@ -364,10 +383,26 @@ func Run(args []string) {
 			} else if remove, _ := opts.Bool("remove"); remove {
 				proxyAuthRemove(opts)
 			}
+		} else if addSource, _ := opts.Bool("add-source"); addSource {
+			proxyAddSource(opts)
+		} else if removeSource, _ := opts.Bool("remove-source"); removeSource {
+			proxyRemoveSource(opts)
+		} else if exclude, _ := opts.Bool("exclude"); exclude {
+			proxyExclude(opts)
 		} else if add, _ := opts.Bool("add"); add {
 			proxyAdd(opts)
+		} else if removeDead, _ := opts.Bool("remove-dead"); removeDead {
+			proxyRemoveDead(opts)
 		} else if remove, _ := opts.Bool("remove"); remove {
 			proxyRemove(opts)
+		} else if refresh, _ := opts.Bool("refresh"); refresh {
+			proxyRefresh(opts)
+		} else if activity, _ := opts.Bool("activity"); activity {
+			proxyActivity()
+		} else if summary, _ := opts.Bool("summary"); summary {
+			proxySummary()
+		} else if trim, _ := opts.Bool("trim"); trim {
+			proxyTrim(opts)
 		}
 	} else if wallet, _ := opts.Bool("wallet"); wallet {
 		if hotkey, _ := opts.Bool("hotkey"); hotkey {
@@ -838,11 +873,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		seed := keyOwner.Seed()
 		byClientJwt, clientId, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), self.allowClientRegistration, output, index)
 		if err != nil {
+			// Fork hook: the ported v33 give-up/backoff accounting
+			// (proxy_manager_auth.go) records this identity's failed
+			// authentication, and gives up on it once it reaches the ceiling.
+			noteProviderAuthFailure(proxySettings, err)
 			if proxyCtx.Err() == nil {
 				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
 			}
 			return err
 		}
+		// Fork hook: a completed authentication proves the identity and clears
+		// its failure/give-up history.
+		noteProviderAuthSuccess(proxySettings)
 
 		// Each authenticated slot owns its optional wallet set. A fresh or
 		// proxy provider never borrows the direct provider's credential.

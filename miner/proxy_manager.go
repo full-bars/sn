@@ -257,6 +257,18 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	}
 	sortProxySettingsByKey(all)
 
+	// Fork hook: v33's launch-time give-up backoff gate. A URL-sourced identity
+	// still inside its backoff window is held back instead of relaunched
+	// (proxy_manager_auth.go).
+	if heldCount := dropBackoffHeldURLProxies(desiredSet, sourceOf, time.Now()); heldCount > 0 {
+		all = all[:0]
+		for _, s := range desiredSet {
+			all = append(all, s)
+		}
+		sortProxySettingsByKey(all)
+		tlog("[proxy][auth] %d URL-sourced proxies are held back inside their give-up backoff window\n", heldCount)
+	}
+
 	if importLegacy {
 		// Highest ID first so new IDs never collide with persisted ones.
 		highestID := -1
