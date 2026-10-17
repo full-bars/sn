@@ -85,7 +85,8 @@ func providerStartupWalletUsesAuthenticatedSlot(t *testing.T, proxySlot bool) {
 	var originalSeed, originalMarker []byte
 	unrelated := providerRegistrationTestToken(t, "00000000-0000-0000-0000-000000000999", "unrelated-direct")
 	if proxySlot {
-		proxy = &connect.ProxySettings{Network: "tcp", Address: "192.0.2.25:1080"}
+		proxyAddress, _ := newSyntheticSocksRelay(t)
+		proxy = &connect.ProxySettings{Network: "tcp", Address: proxyAddress}
 		// Existing credentials require their original shared key and marker.
 		keyOwner, err := clientauth.OpenProviderClientKey(ctx, filepath.Join(fixture.dir, ".provider.key"), clientauth.ProviderClientKeyOptions{AllowCreate: true})
 		if err != nil {
