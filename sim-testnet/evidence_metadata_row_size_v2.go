@@ -40,6 +40,17 @@ func newCampaignMetadataRowSizerV2(maximumBytes uint64) (*campaignMetadataRowSiz
 	return &campaignMetadataRowSizerV2{maximumBytes: maximumBytes, source: uint64(len(source)) + 12, sourceOrigin: uint64(len(sourceOrigin)) + 12 - 1, carrier: uint64(len(carrier)) + 12}, nil
 }
 
+// encoding/json writes each malformed Utf8 byte as one replacement: a literal
+// U+FFFD under Go 1.27's default jsonv2 experiment, or a \ufffd escape without
+// it. One probe of the linked encoder keeps the count exact in either build.
+var campaignMetadataInvalidUtf8BytesV2 = func() uint64 {
+	encoded, err := json.Marshal(string([]byte{0xff}))
+	if err != nil || len(encoded) < 2 {
+		return uint64(len(`\ufffd`))
+	}
+	return uint64(len(encoded) - 2)
+}()
+
 // Quotes already belong to the prototype. Match encoding/json's Html-safe
 // content width, including replacement of each malformed Utf8 byte. A width
 // above the independent document ceiling is represented by one over that cap.
@@ -65,7 +76,7 @@ func campaignMetadataStringContentBytesV2(value string, maximumBytes uint64) uin
 		} else {
 			runeValue, width := utf8.DecodeRuneInString(value[index:])
 			if runeValue == utf8.RuneError && width == 1 {
-				size += 5
+				size += campaignMetadataInvalidUtf8BytesV2 - 1
 			} else if runeValue == '\u2028' || runeValue == '\u2029' {
 				size += 3
 			}

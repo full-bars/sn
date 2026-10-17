@@ -3,6 +3,7 @@ package crv4
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"testing"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/registry"
@@ -78,6 +79,37 @@ func TestSourceCommitmentExactSignedBatchAndCiphertext(t *testing.T) {
 	want := []byte{11, 2, 8, 18, 0, 9, 2, 4, 131}
 	if !bytes.Equal(call[:len(want)], want) || !bytes.Equal(call[41:43], []byte{7, 113}) {
 		t.Fatalf("wrong exact atomic calls: %x", call[:43])
+	}
+}
+
+// The validator's source anchor is one Sha256 field and never a fleet
+// commitment, whatever its hash, including one that starts with the tag
+// bytes. This pins the hard-coded encoding; checkNotFleetCommitment, which
+// cannot fail on it, is only defense in depth (its rejection of real fleet
+// bytes is TestSourceCommitmentWriterNeverProducesFleetTag).
+func TestSourceCommitmentAnchorIsNeverAFleetCommitment(t *testing.T) {
+	var tagLike [32]byte
+	copy(tagLike[:], FleetCommitmentTag)
+	tagLike[31] = 1
+	for _, hash := range []types.Hash{{9}, types.Hash(tagLike), types.Hash(sha256.Sum256([]byte("source")))} {
+		prepared, key := sourcePreparedTest(t)
+		prepared.SourceCommitment.Hash = hash.Hex()
+		signSourcePreparedTest(t, prepared, key, nil)
+		if _, err := prepared.Validate(); err != nil {
+			t.Fatal(err)
+		}
+		call, _, _, err := preparedSourceEncoding(prepared)
+		if err != nil {
+			t.Fatal(err)
+		}
+		anchor := call[7:41]
+		if anchor[0] != 4 || anchor[1] != dataSHA256Variant || !bytes.Equal(anchor[2:], hash[:]) {
+			t.Fatalf("source anchor %x is not one Sha256 field of the hash", anchor)
+		}
+		registration := append([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0xb8, 0xb2, 0x8d, 0x00}, anchor...)
+		if _, _, err := DecodeFleetCommitmentRegistrationWithBlockV454(registration); !errors.Is(err, ErrLegacyFleetCommitment) {
+			t.Fatalf("source registration read as a fleet: %v", err)
+		}
 	}
 }
 

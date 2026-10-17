@@ -15,6 +15,25 @@ use std::{borrow::Cow, collections::BTreeMap};
 #[path = "historical_capture_tests.rs"]
 mod capture_tests;
 
+#[path = "historical_extrinsics_root_tests.rs"]
+mod extrinsics_root_tests;
+
+#[path = "historical_global_alias_tests.rs"]
+mod global_alias_tests;
+
+#[path = "historical_host_snapshot_tests.rs"]
+mod host_snapshot_tests;
+
+#[path = "historical_epoch_layout_tests.rs"]
+mod epoch_layout_tests;
+
+#[path = "historical_metadata_scope_tests.rs"]
+mod metadata_scope_tests;
+#[path = "historical_recipient_layout_tests.rs"]
+mod recipient_layout_tests;
+#[path = "historical_storage_call_tests.rs"]
+mod storage_call_tests;
+
 #[path = "historical_native_execution_tests.rs"]
 mod native_execution_tests;
 
@@ -32,12 +51,16 @@ fn wasm(imports: &str, body: &str) -> Vec<u8> {
 }
 
 fn wasm_with_heap(imports: &str, body: &str, heap: u32) -> Vec<u8> {
+    wasm_with_version(imports, body, heap, 1)
+}
+
+fn wasm_with_version(imports: &str, body: &str, heap: u32, system_version: u8) -> Vec<u8> {
     let version = RuntimeVersion {
         spec_name: Cow::Borrowed("synthetic-historical-runtime"),
         spec_version: 1,
         apis: Cow::Owned(vec![(sp_core::hashing::blake2_64(b"Core"), 4)]),
         transaction_version: 1,
-        system_version: 1,
+        system_version,
         ..RuntimeVersion::default()
     }
     .encode();
@@ -109,7 +132,14 @@ fn parent_storage(code: &[u8]) -> Storage {
 /// Complete raw snapshots retain all top-level, child, and hashed-value nodes.
 /// The child expected map uses the SDK's full-state builder independently.
 fn job(code: &[u8], change: impl FnOnce(&mut Storage)) -> HistoricalJob {
-    let initial = parent_storage(code);
+    job_with_storage(code, parent_storage(code), change)
+}
+
+fn job_with_storage(
+    code: &[u8],
+    initial: Storage,
+    change: impl FnOnce(&mut Storage),
+) -> HistoricalJob {
     let backing = TestExternalities::<Blake2Hasher>::new_with_code_and_state(
         code,
         initial.clone(),
@@ -133,7 +163,7 @@ fn job(code: &[u8], change: impl FnOnce(&mut Storage)) -> HistoricalJob {
     let body = vec![vec![1u8, 2, 3].encode()];
     let child = NativeHeader::new(
         5,
-        BlakeTwo256::ordered_trie_root(body.clone(), StateVersion::V1),
+        BlakeTwo256::ordered_trie_root(body.clone(), StateVersion::V0),
         *backing.backend.root(),
         parent.hash(),
         Digest::default(),
@@ -241,9 +271,16 @@ fn observation_profile(code: &[u8], export: &str, purpose: &str) -> observer::Ob
             offset_start: 0,
             offset_end: body.len() as u32,
             memory: Vec::new(),
+            host_snapshot: None,
+            state_reads: Vec::new(),
+            storage_call: None,
+            recipient_owner: false,
         }],
         metadata_sha256: None,
         principal_storage_prefixes: None,
+        original_globals: Vec::new(),
+        epoch_layout: None,
+        recipient_layout: None,
     }
 }
 
@@ -1093,7 +1130,7 @@ fn historical_empty_block_and_sealed_header_keep_original_identity() {
     let mut job = job(&code, |_| {});
     job.extrinsics_hex.clear();
     replace_child(&mut job, |header| {
-        header.set_extrinsics_root(BlakeTwo256::ordered_trie_root(Vec::new(), StateVersion::V1));
+        header.set_extrinsics_root(BlakeTwo256::ordered_trie_root(Vec::new(), StateVersion::V0));
         header
             .digest_mut()
             .push(DigestItem::Seal(*b"FAKE", vec![17; 64]));

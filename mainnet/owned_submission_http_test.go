@@ -24,6 +24,16 @@ import (
 	"time"
 )
 
+// A canceled dial still starts its hostname lookup in the background, where
+// the system resolver could send a query for a synthetic name. This resolver
+// sends none: it returns only when that lookup is canceled.
+func init() {
+	ownedSubmissionResolver = &net.Resolver{PreferGo: true, Dial: func(ctx context.Context, _, _ string) (net.Conn, error) {
+		<-ctx.Done()
+		return nil, ctx.Err()
+	}}
+}
+
 // Endpoint validation never resolves a name or discovers transport authority.
 func TestOwnedSubmissionApprovedHttpsEndpoints(t *testing.T) {
 	pin := rootObjectHash("synthetic public RPC certificate")

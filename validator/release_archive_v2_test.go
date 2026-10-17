@@ -36,9 +36,9 @@ func newReleaseArchiveV2TestFixture(t *testing.T) releaseArchiveV2TestFixture {
 	return newReleaseArchiveV2TestFixtureWithTrails(t, 15)
 }
 
-func newReleaseArchiveV2TestFixtureWithTrails(t *testing.T, trails int) releaseArchiveV2TestFixture {
+func newReleaseArchiveV2TestFixtureWithTrails(t *testing.T, trails int, configure ...func(*ReleaseConfig)) releaseArchiveV2TestFixture {
 	t.Helper()
-	startup := newReleaseStartupV2TestFixture(t, true)
+	startup := newReleaseStartupV2TestFixtureWithBounds(t, true, nil, configure...)
 	for index := range startup.disk.participants {
 		for range trails {
 			startup.trail(t, index)
@@ -52,8 +52,10 @@ func newReleaseArchiveV2TestFixtureWithTrails(t *testing.T, trails int) releaseA
 	last := startup.terminal(t, false)
 	cfg := startup.cfg
 	cfg.Operators = slices.Clone(cfg.Operators)
+	origins := make([]string, len(cfg.Operators))
 	for index := range cfg.Operators {
 		cfg.Operators[index].APIURL = startup.replicas[index].Origin
+		origins[index] = cfg.Operators[index].APIURL
 	}
 	fixture := releaseArchiveV2TestFixture{startup: startup, files: map[ReleaseEvidenceV2CaptureSource][]byte{}, last: last}
 	for _, operator := range cfg.EvidenceV2.Operators {
@@ -108,7 +110,7 @@ func newReleaseArchiveV2TestFixtureWithTrails(t *testing.T, trails int) releaseA
 			fixture.files[ReleaseEvidenceV2CaptureSource{Kind: parts[0], Name: parts[1], Origin: startup.replicas[index].Origin}] = raw
 		}
 	}
-	fixture.options = ReleaseEvidenceV2ArchiveOptions{Config: &cfg, Hotkey: startup.inputs[0].Context.Activation.Hotkey, Origins: [2]string{cfg.Operators[0].APIURL, cfg.Operators[1].APIURL}, ScratchRoot: newAttemptSettlementRuntimeV2TestStateDir(t), MaximumBytes: releaseArchiveV2TestMaximumBytes, MaximumObjects: 4096}
+	fixture.options = ReleaseEvidenceV2ArchiveOptions{Config: &cfg, Hotkey: startup.inputs[0].Context.Activation.Hotkey, Origins: origins, ScratchRoot: newAttemptSettlementRuntimeV2TestStateDir(t), MaximumBytes: releaseArchiveV2TestMaximumBytes, MaximumObjects: 4096}
 	fixture.options.ReadSource = func(ctx context.Context, source ReleaseEvidenceV2CaptureSource) ([]byte, error) {
 		if err := ctx.Err(); err != nil {
 			return nil, err

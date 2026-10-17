@@ -230,6 +230,7 @@ func monitorEconomicNativeReadCode(err error) string {
 // Only this summary is exported. It does not emit unbounded retained history,
 // arbitrary source labels, or a numeric zero for unproved economic amounts.
 type monitorEconomicNativeSummary struct {
+	TreasuryIncome               *nativeTreasuryAmounts                 `json:"treasury_income,omitempty"`
 	ProducerCapacity             *nativeProducerCapacitySummary         `json:"producer_capacity,omitempty"`
 	ExecutionAccounting          *nativeExecutionWindow                 `json:"execution_accounting,omitempty"`
 	ExecutionAuthority           string                                 `json:"execution_authority,omitempty"`
@@ -279,6 +280,8 @@ func (self *monitorEconomicNativeState) summary(policy monitorEconomicNativePoli
 		Incidents: self.Incidents, Authority: "owned-rpc-assertion"}
 	if self.ExecutionAccounting != nil {
 		value := *self.ExecutionAccounting
+		value.Treasury = cloneNativeTreasuryAmounts(self.ExecutionAccounting.Treasury)
+		summary.TreasuryIncome = cloneNativeTreasuryAmounts(value.Treasury)
 		summary.ExecutionAccounting = &value
 		summary.ExecutionAuthority = "independently-approved-runtime-layout-and-finalized-boundaries"
 		summary.NativeMinerAllocationAlpha, summary.ProviderEntitlementAlpha, summary.OwnerRecycledAlpha = &value.MinerAllocation, &value.ProviderEntitlement, &value.OwnerRecycled

@@ -54,18 +54,14 @@ func PrepareReleaseSourceRolePredecessorV2(ctx context.Context, cfg *ReleaseConf
 	if err != nil {
 		return nil, err
 	}
-	var file steeringIntentFile
-	decoder := json.NewDecoder(bytes.NewReader(encoded))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&file); err != nil {
-		return nil, err
-	}
-	canonical, err := json.MarshalIndent(file, "", "  ")
-	if err != nil || !bytes.Equal(encoded, append(canonical, '\n')) || file.Schema != steeringIntentSchema {
+	// Only the current intent is consulted, and it is always live, so a sealed
+	// predecessor's segments are not read.
+	file, err := decodeSteeringIntentFileV2(ctx, encoded, cfg.EvidenceV2.Bounds.IntentFileLimit())
+	if err != nil {
 		return nil, errors.Join(errors.New("source role predecessor intent file is not canonical"), err)
 	}
 	if file.Current == nil {
-		if len(file.History) != 0 {
+		if len(file.History) != 0 || len(file.Segments) != 0 {
 			return nil, errors.New("source role predecessor history lost its current intent")
 		}
 		return nil, nil

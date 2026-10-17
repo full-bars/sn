@@ -142,6 +142,10 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 	if cfg == nil || intent == nil || intent.Prepared == nil || ctx == nil {
 		return errors.New("native source capture intent is incomplete")
 	}
+	decisionCfg, err := productionConfigForIntent(cfg, intent)
+	if err != nil {
+		return err
+	}
 	if _, err := releaseHistoricalRuntimeArtifactsAt(cfg, intent.Prepared.PreparedAtBlock); err != nil {
 		return err
 	}
@@ -158,7 +162,7 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 	seen := map[string]bool{}
 	hashes := []string{artifact.NativeSnapshotHash, intent.Prepared.PreparedAtBlockHash, intent.FinalizedBlockHash}
 	if isOwnerRecycleProductionConfig(cfg) {
-		approval, err := ownerRecycleProductionApproval(cfg)
+		approval, err := ownerRecycleProductionApproval(decisionCfg)
 		if err != nil {
 			return err
 		}
@@ -223,10 +227,6 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 		return err
 	}
 	if isOwnerRecycleProductionConfig(cfg) {
-		decisionCfg, err := productionConfigForIntent(cfg, intent)
-		if err != nil {
-			return err
-		}
 		authority, err := ObserveOwnerRecycleMeasurementAuthority(ctx, decisionCfg, owned, releaseMeasurementV2Decision(artifact))
 		if err != nil {
 			return err

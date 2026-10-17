@@ -52,7 +52,8 @@ type monitorCheckpointStore struct {
 // A process owns one checkpoint for its entire monitoring lifetime. The lock
 // prevents two monitors from alternately replacing the same finality history.
 func openMonitorCheckpoint(path string, expected identityExpectation, contexts ...context.Context) (*monitorCheckpointStore, error) {
-	return openMonitorCheckpointProfile(path, expected, "mainnet-monitor-checkpoint", maxMonitorCheckpointBytes, contexts...)
+	// The borrowed-read ceiling does not enlarge the original physical owner.
+	return openMonitorCheckpointProfile(path, expected, "mainnet-monitor-checkpoint", maxRpcReplyBytes, contexts...)
 }
 
 func openMonitorCheckpointProfile(path string, expected identityExpectation, kind string, maximum int, contexts ...context.Context) (*monitorCheckpointStore, error) {

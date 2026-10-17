@@ -124,7 +124,7 @@ func runRepairControllerCommandWithHost(ctx context.Context, args []string, stdo
 		return 2
 	}
 	manifestReference := planFileReference{Path: *manifestPath, Sha256: *manifestHash}
-	if err := errors.Join(host.pin(ctx, manifestReference, 64*1024, false), host.parents(*checkpoint, host.rootUid), host.parents(*metricsPath, host.rootUid)); err != nil {
+	if err := host.pin(ctx, manifestReference, 64*1024, false); err != nil {
 		fmt.Fprintln(stderr, err)
 		return repairControllerCommandExit(err)
 	}
@@ -196,6 +196,13 @@ func runRepairControllerCommandWithHost(ctx context.Context, args []string, stdo
 				}
 			}
 		}
+	}
+	// The overlap census is path arithmetic, so it refuses an invalid
+	// configuration whatever exists. Only a valid one inspects its output
+	// ancestors, whose absence is retryable unavailability.
+	if err := errors.Join(host.parents(*checkpoint, host.rootUid), host.parents(*metricsPath, host.rootUid)); err != nil {
+		fmt.Fprintln(stderr, err)
+		return repairControllerCommandExit(err)
 	}
 	store, record, err := openRepairControllerStore(ctx, *checkpoint, manifest, hash, now())
 	if err != nil {

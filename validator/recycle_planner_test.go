@@ -19,7 +19,7 @@ func recycleTestId(value uint16) [32]byte {
 
 // Two owner destinations fit the unchanged signed half-row cap. The two
 // independent validator identities remain recipients of native dividends.
-func recycleTestInput(t *testing.T) OwnerRecyclePreviewInput {
+func recycleTestInput(t testing.TB) OwnerRecyclePreviewInput {
 	t.Helper()
 	parent := exactPolicy(t)
 	parent.NetworkProfile = "mainnet"

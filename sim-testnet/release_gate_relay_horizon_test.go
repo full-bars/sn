@@ -18,8 +18,7 @@ import (
 func TestProducerGateStateSelectionCoversFundedRelayHorizon(t *testing.T) {
 	t.Parallel()
 	script, groups := releaseEvidenceV2GateFixture(t)
-	selected := []releaseEvidenceV2GateGroup{groups[1], groups[0], groups[2]}
-	selected[0].packages = []string{"./sim-testnet"}
+	selected := []releaseEvidenceV2GateGroup{groups[3], groups[0], groups[2]}
 	selected[0].sources = map[string][]string{"./sim-testnet": releaseEvidenceV2GateSources(t, []string{
 		"evidence_relay_horizon_test.go", "evidence_relay_horizon_runtime_test.go",
 		"evidence_relay_launch_budget_test.go", "evidence_relay_launch_runtime_test.go",
@@ -55,17 +54,33 @@ func TestProducerGateStateSelectionFundedRelayRetainsAuthenticatedOwners(t *test
 		caller  string
 		callees []string
 	}{
-		{path: "evidence_relay_campaign.go", caller: "runScenarioWithEvidenceRelay", callees: []string{"validateRuntimeEvidenceSourceCapacity", "newEvidenceRelayRuntime", "WaitReady", "RequirePrepared", "WaitThrough", "WaitAuditPass", "Close", "runScenarioWithProbe"}},
-		{path: "evidence_relay_runtime.go", caller: "run", callees: []string{"prepareHorizon", "advance", "advanceDepositAudits", "awaitNextPass"}},
+		{path: "evidence_relay_campaign.go", caller: "runScenarioWithEvidenceRelay", callees: []string{"validateRuntimeEvidenceSourceCapacity", "newEvidenceRelayRuntime", "WaitReady", "RequirePrepared", "WaitPublicAudit", "WaitRange", "WaitAuditPass", "Close", "runScenarioWithProbe"}},
+		{path: "evidence_relay_runtime.go", caller: "run", callees: []string{"prepareHorizon", "newEvidenceRelayPublicAudit", "retryStep", "advanceDepositAudits", "awaitNextPass"}},
+		{path: "evidence_relay_retry.go", caller: "retryStep", callees: []string{"retryStepWithWait"}},
+		{path: "evidence_relay_retry.go", caller: "retryStepWithWait", callees: []string{"runEvidenceRelayStep"}},
+		{path: "evidence_relay_retry.go", caller: "runEvidenceRelayStep", callees: []string{"call"}},
 		{path: "evidence_relay_runtime.go", caller: "awaitNextPass", callees: []string{"completeRemainingRequest"}},
-		{path: "evidence_relay_runtime.go", caller: "completeRemainingRequest", callees: []string{"checkRemaining"}},
-		{path: "evidence_relay_runtime.go", caller: "advance", callees: []string{"checkHorizonBlock", "readClosedPublication", "admit", "admitOwnedEvidenceRelayAction"}},
+		{path: "evidence_relay_runtime.go", caller: "completeRemainingRequest", callees: []string{"completeRemainingRequestWithWait"}},
+		{path: "evidence_relay_runtime.go", caller: "completeRemainingRequestWithWait", callees: []string{"retryStepWithWait", "checkRemaining"}},
+		{path: "evidence_relay_runtime.go", caller: "advance", callees: []string{"checkHorizonBlock", "readClosedPublication", "advanceClosedPublication"}},
+		{path: "evidence_relay_runtime.go", caller: "advanceClosedPublication", callees: []string{"admit", "admitOwnedEvidenceRelayAction"}},
 		{path: "evidence_relay_audit.go", caller: "advanceDepositAudits", callees: []string{"checkHorizonBlock", "readAuditPublication", "admit", "admitOwnedEvidenceRelayAction"}},
 		{path: "evidence_relay_continuation_budget.go", caller: "admitOwnedEvidenceRelayAction", callees: []string{"readRetainedEvidenceRelayRequest", "admitEvidenceRelayAction"}},
 		{path: "evidence_relay_owner_plan_cache.go", caller: "readRetainedEvidenceRelayRequest", callees: []string{"readOwnedEvidenceRelayRequest", "readOwnedEvidenceRelayRequestWithOwner"}},
 		{path: "evidence_relay_continuation_budget.go", caller: "readOwnedEvidenceRelayRequest", callees: []string{"readValidatorEvidenceHistoricalPlan", "readOwnedEvidenceRelayRequestWithOwner"}},
 		{path: "evidence_relay_continuation_budget.go", caller: "readOwnedEvidenceRelayRequestWithOwner", callees: []string{"validateEvidenceRelayRequest"}},
-		{path: "evidence_relay_horizon_runtime.go", caller: "prepareHorizon", callees: []string{"readHorizonNative", "requireHorizonRemaining", "readAdmittedHorizon", "DiscoverValidatorEvidencePublicationV2Manifests", "DiscoverValidatorEvidenceDepositAuditV2Manifests", "readClosedPublication", "readAuditPublication"}},
+		{path: "evidence_relay_horizon_runtime.go", caller: "prepareHorizon", callees: []string{"prepareHorizonWithWait"}},
+		{path: "evidence_relay_horizon_runtime.go", caller: "prepareHorizonWithWait", callees: []string{"retryStepWithWait", "readHorizon"}},
+		{path: "evidence_relay_horizon_runtime.go", caller: "readHorizon", callees: []string{"readHorizonNative", "requireHorizonRemaining", "readAdmittedHorizon", "preparePublicCensus"}},
+		{path: "evidence_relay_public_audit.go", caller: "preparePublicCensus", callees: []string{"discoverEvidenceRelayClosedGenerations", "discoverEvidenceRelayAuditGenerations", "verify"}},
+		{path: "evidence_relay_policy_rollover.go", caller: "discoverEvidenceRelayClosedGenerations", callees: []string{"DiscoverValidatorEvidencePublicationV2Manifests"}},
+		{path: "evidence_relay_policy_rollover.go", caller: "discoverEvidenceRelayAuditGenerations", callees: []string{"DiscoverValidatorEvidenceDepositAuditV2Manifests"}},
+		{path: "evidence_relay_public_audit.go", caller: "verify", callees: []string{"readClosedPublication", "readAuditPublication", "admit"}},
+		// A provisional continuation defers the same verification to its
+		// read-only worker, which the campaign's terminal wait must observe.
+		{path: "evidence_relay_public_audit.go", caller: "newEvidenceRelayPublicAudit", callees: []string{"run"}},
+		{path: "evidence_relay_public_audit.go", caller: "run", callees: []string{"retryStep", "verify"}},
+		{path: "evidence_relay_public_audit.go", caller: "WaitPublicAudit", callees: []string{"Wait"}},
 		{path: "evidence_relay_horizon_runtime.go", caller: "readHorizonNative", callees: []string{"FinalizedHeadContext", "ReadValidatorScheduleAtContext", "MeetsNonSelfStakeAndPermit"}},
 		{path: "evidence_relay_horizon_runtime.go", caller: "readAdmittedHorizon", callees: []string{"Entries", "ReadReleaseEvidenceV2SetupFile", "validateEvidenceRelayRequest", "admit"}},
 		{path: "evidence_relay_horizon_runtime.go", caller: "readClosedPublication", callees: []string{"ReleaseEpochStartBlockAtHashContext", "ReleaseEpochEndBlockAtHashContext", "ReadValidatorEvidencePublicationV2", "ReadRetainedValidatorEvidencePublicationV2"}},
@@ -93,6 +108,10 @@ func TestProducerGateStateSelectionFundedRelayRetainsAuthenticatedOwners(t *test
 				t.Errorf("%s:%s lost required owned call %s", edge.path, edge.caller, callee)
 			}
 		}
+	}
+	// The worker hands advance to its finite retry owner as a method value.
+	if !releaseClosureFunctionCallArguments(t, "evidence_relay_runtime.go", "run", "retryStep")["advance"] {
+		t.Error("evidence_relay_runtime.go:run lost required owned call advance")
 	}
 }
 

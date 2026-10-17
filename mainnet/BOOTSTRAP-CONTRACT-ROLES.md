@@ -1,20 +1,21 @@
 # Offline contract-to-validator declaration admission
 
-`bootstrap-chain contract-role-plan` binds two independently signed UR producer
-configs to the exact approved contract graph. Earlier v3 inspection checks that
-the two configs agree with each other; agreement alone permits both to name a
-foreign deployment or the coordinator implementation instead of its proxy.
+`bootstrap-chain contract-role-plan` binds every independently signed UR
+producer config, two or v5's one, to the exact approved contract graph. Earlier
+inspection checks that two configs agree with each other; agreement alone
+permits both to name a foreign deployment or the coordinator implementation
+instead of its proxy, and a single v5 config has no peer to disagree with.
 
 ```sh
 sn-mainnet bootstrap-chain contract-role-plan --config /private/chain.json
 ```
 
-The command rereads the original v3 input and every transitive signed config. It
-reconstructs all eight approved action projections through `evidence-create`
-using the pinned release artifacts. Each producer's coordinator must equal the
-predicted proxy address, its settlement vault must equal the approved vault, and
-its policy identifier must equal the exact atomic proxy initializer's policy
-hash. Both configs may be individually valid and mutually consistent while this
+The command rereads the original v3, v4 or v5 input and every transitive signed
+config. It reconstructs all eight approved action projections through
+`evidence-create` using the pinned release artifacts. Each producer's
+coordinator must equal the predicted proxy address, its settlement vault must
+equal the approved vault, and its policy identifier must equal the exact atomic
+proxy initializer's policy hash. Both configs may be individually valid and mutually consistent while this
 separate admission refuses their shared foreign declaration.
 
 The sealed result binds the original preparation and contract-plan hashes,
@@ -27,7 +28,7 @@ actual CREATE heights, the evidence anchor or an executed installation.
 `declared_deploy_block` remains an unverified scan-floor declaration. Canonical
 receipts must later prove that it cannot omit required contract history. Current
 contract runtime/getters, the anchored evidence journal, operator evidence,
-current roles and both validator service activations require separate admission.
+current roles and every validator service activation require separate admission.
 Every original pending phase remains; canonical receipt, current state,
 installation, activation and network-effect fields remain false.
 

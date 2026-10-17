@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Actual public plan/apply restore must retain historical native custody while
 // rebinding only the new target's physical metadata. Every payload is synthetic.
@@ -12,6 +12,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -380,6 +381,8 @@ func TestStoragePreparationRestoreCompletedLossNeverRecreates(t *testing.T) {
 
 // Approved staging is retained source intent; losing its input archive later
 // cannot redirect copying to a replacement archive or regenerate signed bytes.
+// Apply authenticates the original archive again, so the replacement is
+// refused before the target changes, and the held original then completes.
 func TestStoragePreparationRestoreAcceptedStageRetainsOriginalSource(t *testing.T) {
 	f := newStoragePreparationRestoreFixture(t, false, "")
 	path, hash := storagePreparationFreezeOwnerPlan(t, f.target, f.command)
@@ -390,6 +393,18 @@ func TestStoragePreparationRestoreAcceptedStageRetainsOriginalSource(t *testing.
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(f.archive, "unreviewed"), []byte("must never be read into restore"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	root, metadata := mainnetNamespaceTest(t, f.target.root), mainnetNamespaceTest(t, f.target.metadata)
+	var output, diagnostic bytes.Buffer
+	code := runMain(f.target.ctx, []string{f.command, "apply", "--plan", path, "--plan-sha256", hash}, &output, &diagnostic)
+	if code == 0 || output.Len() != 0 || !strings.Contains(diagnostic.String(), durablevolume.ErrIdentity.Error()) || !strings.Contains(diagnostic.String(), "missing original owner authority") {
+		t.Fatal("restore apply substituted its accepted stage for a replaced original archive", code, diagnostic.String())
+	}
+	if !reflect.DeepEqual(root, mainnetNamespaceTest(t, f.target.root)) || !reflect.DeepEqual(metadata, mainnetNamespaceTest(t, f.target.metadata)) {
+		t.Fatal("refused restore changed the target or its progress")
+	}
+	if err := errors.Join(os.RemoveAll(f.archive), os.Rename(f.archive+".held", f.archive)); err != nil {
 		t.Fatal(err)
 	}
 	f.assertRuntime(t, f.apply(t, path, hash), false)

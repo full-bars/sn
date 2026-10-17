@@ -84,7 +84,8 @@ func TestRootMonitorOutputReadOutageRetainsEvidence(t *testing.T) {
 		clock.seconds.Add(10)
 	}, wait: func(ctx context.Context, _ string, _ time.Duration) bool { return ctx.Err() == nil }}
 	args := []string{"root-monitor", "--rpc", server.URL, "--policy", rootTestPolicyFile(t, fixture.policy), "--metrics-file", metrics, "--metrics-role", "primary", "--samples", "3"}
-	if code := runMainWithMonitorHooks(t.Context(), args, output, io.Discard, clock.now, hooks); code != 0 || samples != 3 {
+	ctx := monitorTestStorageContext(t, t.Context(), args)
+	if code := runMainWithMonitorHooks(ctx, args, output, io.Discard, clock.now, hooks); code != 0 || samples != 3 {
 		t.Fatal("root read outage stopped bounded recovery", code, samples)
 	}
 }
@@ -145,7 +146,8 @@ func TestRootMonitorOutputMetricsAmbiguityAndOwnershipStayOptional(t *testing.T)
 		wait: func(ctx context.Context, _ string, _ time.Duration) bool { return ctx.Err() == nil },
 	}
 	args := []string{"root-monitor", "--rpc", server.URL, "--policy", rootTestPolicyFile(t, fixture.policy), "--checkpoint", checkpoint, "--metrics-file", metrics, "--metrics-role", "primary", "--samples", "4"}
-	if code := runMainWithMonitorHooks(t.Context(), args, output, io.Discard, clock.now, hooks); code != 0 || writes != 3 || samples != 4 {
+	ctx := monitorTestStorageContext(t, t.Context(), args)
+	if code := runMainWithMonitorHooks(ctx, args, output, io.Discard, clock.now, hooks); code != 0 || writes != 3 || samples != 4 {
 		t.Fatal("optional metrics fault stopped observation", code, writes, samples)
 	}
 	decoder := json.NewDecoder(&stdout)
@@ -165,7 +167,7 @@ func TestRootMonitorOutputMetricsAmbiguityAndOwnershipStayOptional(t *testing.T)
 	if err != nil || !info.IsDir() {
 		t.Fatal("disabled publisher overwrote replacement")
 	}
-	store, err := openMonitorCheckpoint(checkpoint, identityExpectation{NativeChain: fixture.policy.NativeChain, GenesisHash: fixture.policy.GenesisHash, EvmChainId: 964})
+	store, err := openMonitorCheckpoint(checkpoint, identityExpectation{NativeChain: fixture.policy.NativeChain, GenesisHash: fixture.policy.GenesisHash, EvmChainId: 964}, ctx)
 	if err != nil {
 		t.Fatal("command did not release checkpoint")
 	}
@@ -227,24 +229,24 @@ func TestRootMonitorOutputReadCancellationPreservesBudgetAndUnknown(t *testing.T
 	url, entered, left := monitorServicesBlockedChain(t)
 	metrics := filepath.Join(monitorMetricsTestDir(t), "root.prom")
 	args := []string{"root-monitor", "--rpc", url, "--policy", rootTestPolicyFile(t, fixture.policy), "--retry-window", "59s", "--metrics-file", metrics, "--metrics-role", "primary"}
-	if code := runMain(t.Context(), args, io.Discard, io.Discard); code != 2 {
+	ctx := monitorTestStorageContext(t, t.Context(), args)
+	if code := runMain(ctx, args, io.Discard, io.Discard); code != 2 {
 		t.Fatal("sub-minute retry admitted")
 	}
 	args[6] = "60s"
-	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
-	done := make(chan int, 1)
-	go func() { done <- runMain(ctx, args, io.Discard, io.Discard) }()
-	<-entered
+	run := startRootMonitorOutputTestRun(t, ctx, func(ctx context.Context) int {
+		return runMain(ctx, args, io.Discard, io.Discard)
+	})
+	run.event(t, entered)
 	values := monitorOutputTestMetrics(t, metrics)
 	if values[`sn_mainnet_root_monitor_sample_timestamp_seconds{role="primary"}`] != 0 || values[`sn_mainnet_root_monitor_current_observation{role="primary"}`] != 0 || values[`sn_mainnet_root_monitor_read_only_ready{role="primary"}`] != 0 {
 		t.Fatal("blocked initial read became known healthy")
 	}
-	cancel()
-	if code := <-done; code != 0 {
+	run.cancel()
+	if code := run.join(t); code != 0 {
 		t.Fatal("cancellation changed existing exit semantics", code)
 	}
-	<-left
+	monitorTestEvent(t, nil, left)
 }
 
 // Hard continuity checkpoint writes and cleanup stay visible even when logs
@@ -280,11 +282,12 @@ func TestRootMonitorOutputCustodyAndEarlyCleanupRemainHard(t *testing.T) {
 			wait: func(ctx context.Context, _ string, _ time.Duration) bool { return ctx.Err() == nil },
 		}
 		args := []string{"root-monitor", "--rpc", server.URL, "--policy", rootTestPolicyFile(t, fixture.policy), "--checkpoint", checkpoint, "--metrics-file", metrics, "--metrics-role", "primary", "--samples", "2"}
-		code := runMainWithMonitorHooks(t.Context(), args, nil, nil, time.Now, hooks)
+		ctx := monitorTestStorageContext(t, t.Context(), args)
+		code := runMainWithMonitorHooks(ctx, args, nil, nil, time.Now, hooks)
 		if closed != 2 || cleanupFault && code != 3 || !cleanupFault && code != 1 {
 			t.Fatal("optional logger hid custody/cleanup failure", cleanupFault, code, closed)
 		}
-		store, err := openMonitorCheckpoint(checkpoint, identityExpectation{NativeChain: fixture.policy.NativeChain, GenesisHash: fixture.policy.GenesisHash, EvmChainId: 964})
+		store, err := openMonitorCheckpoint(checkpoint, identityExpectation{NativeChain: fixture.policy.NativeChain, GenesisHash: fixture.policy.GenesisHash, EvmChainId: 964}, ctx)
 		if err != nil {
 			t.Fatal("checkpoint owner leaked")
 		}
@@ -327,7 +330,8 @@ func TestRootMonitorOutputRefusedMetricsAdmissionStillSamples(t *testing.T) {
 			}
 		}, wait: func(ctx context.Context, _ string, _ time.Duration) bool { return ctx.Err() == nil }}
 		args := []string{"root-monitor", "--rpc", server.URL, "--policy", rootTestPolicyFile(t, fixture.policy), "--checkpoint", checkpoint, "--metrics-file", metrics, "--metrics-role", "primary", "--samples", "2"}
-		if code := runMainWithMonitorHooks(t.Context(), args, output, io.Discard, time.Now, hooks); code != 0 {
+		ctx := monitorTestStorageContext(t, t.Context(), args)
+		if code := runMainWithMonitorHooks(ctx, args, output, io.Discard, time.Now, hooks); code != 0 {
 			t.Fatal("optional metrics admission stopped read-only sampling", code)
 		}
 		decoder := json.NewDecoder(&stdout)
@@ -348,7 +352,7 @@ func TestRootMonitorOutputRefusedMetricsAdmissionStillSamples(t *testing.T) {
 				t.Fatal("refused output directory was modified")
 			}
 		}
-		store, err := openMonitorCheckpoint(checkpoint, identityExpectation{NativeChain: fixture.policy.NativeChain, GenesisHash: fixture.policy.GenesisHash, EvmChainId: 964})
+		store, err := openMonitorCheckpoint(checkpoint, identityExpectation{NativeChain: fixture.policy.NativeChain, GenesisHash: fixture.policy.GenesisHash, EvmChainId: 964}, ctx)
 		if err != nil {
 			t.Fatal(err)
 		}

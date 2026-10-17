@@ -19,6 +19,7 @@ SOURCE_COMMIT = "67dcf7f791dc495064c293f080a0702cb433e51e"
 MAX_INPUT = 17 * 1024 * 1024
 MAX_METADATA = 8 * 1024 * 1024
 MAX_MESSAGE = 16 * 1024
+MULTISIG_FIELDS = {"multisig_account_id", "multisig_threshold", "multisig_signatories"}
 
 
 def unique_object(pairs):
@@ -39,6 +40,44 @@ def decode_hex(value, maximum):
     if "0x" + raw.hex() != value:
         raise ValueError("noncanonical adapter hex")
     return raw
+
+
+def multisig_account(signatories, threshold):
+    """pallet_multisig multi_account_id over the complete sorted signer set.
+
+    blake2_256("modlpy/utilisuba" ++ compact(len) ++ accounts ++ u16 threshold).
+    The bounded count keeps compact encoding to its one- or two-byte modes.
+    """
+    count = len(signatories)
+    if count < 64:
+        prefix = bytes([count << 2])
+    elif count < 1 << 14:
+        prefix = ((count << 2) | 1).to_bytes(2, "little")
+    else:
+        raise ValueError("multisig signer set exceeds its bound")
+    encoded = b"modlpy/utilisuba" + prefix + b"".join(signatories) + threshold.to_bytes(2, "little")
+    return hashlib.blake2b(encoded, digest_size=32).digest()
+
+
+def check_multisig(request, signer):
+    """Offline, before any SDK or device: the named signer belongs to a sorted
+    complete signer set that derives the request's owner multisig account."""
+    signatories = request["multisig_signatories"]
+    threshold = request["multisig_threshold"]
+    if not isinstance(signatories, list) or not 2 <= len(signatories) <= 100:
+        raise ValueError("multisig signer set must contain two through 100 accounts")
+    if type(threshold) is not int or not 2 <= threshold <= len(signatories):
+        raise ValueError("multisig threshold is outside the signer set")
+    accounts = [decode_hex(value, 32) for value in signatories]
+    if any(len(account) != 32 or account == bytes(32) for account in accounts) or any(
+        left >= right for left, right in zip(accounts, accounts[1:])
+    ):
+        raise ValueError("multisig signatories must be nonzero, unique and sorted AccountId32")
+    if signer not in accounts:
+        raise ValueError("named signatory is not in the multisig signer set")
+    owner = decode_hex(request["multisig_account_id"], 32)
+    if len(owner) != 32 or multisig_account(accounts, threshold) != owner:
+        raise ValueError("multisig signer set and threshold do not derive the subnet owner account")
 
 
 def load_backend(path, expected_hash):
@@ -126,7 +165,8 @@ def main():
         "call_scale", "included_in_extrinsic", "included_in_signed_data", "response_path",
         "proof_sha256", "expected_app_version",
     }
-    if set(request) != fields or request["schema"] != SCHEMA or request["mode"] not in ("prepare", "sign"):
+    multisig = set(request) == fields | MULTISIG_FIELDS
+    if set(request) != fields and not multisig or request["schema"] != SCHEMA or request["mode"] not in ("prepare", "sign"):
         raise ValueError("unsupported adapter request")
     for name in ("account", "index"):
         if type(request[name]) is not int or not 0 <= request[name] < 2 ** 31:
@@ -141,6 +181,8 @@ def main():
     expected_digest = decode_hex(request["metadata_digest"], 32)
     if len(owner) != 32 or len(expected_digest) != 32 or metadata[:5] != b"meta\x0f":
         raise ValueError("Ledger signing requires AccountId32, digest32 and unwrapped metadata15")
+    if multisig:
+        check_multisig(request, owner)
     call = decode_hex(request["call_scale"], MAX_MESSAGE)
     extra = decode_hex(request["included_in_extrinsic"], MAX_MESSAGE)
     implicit = decode_hex(request["included_in_signed_data"], MAX_MESSAGE)
@@ -173,6 +215,8 @@ def main():
             raise ValueError("installed Ledger app version differs from independent pin")
         public_key, _ = device.address(request["account"], request["index"], 42, True)
         if bytes(public_key) != owner:
+            if multisig:
+                raise ValueError("device-derived AccountId32 is not the named multisig signatory")
             raise ValueError("device-derived AccountId32 is not the existing subnet owner")
         signature = bytes(device.sign(payload, proof, request["account"], request["index"]))
         if len(signature) != 65 or signature[0] != 0:

@@ -7,11 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
-const solidityStaticDeployedRoots = "src/STCoordinator.sol\nsrc/STFleetBatcher.sol\nsrc/STValidatorEvidence.sol\nsrc/probe/STSubnetProbe.sol\nsrc/testnet/STCoordinatorAdversary.sol"
+// The deployed contracts, including the settlement v2 coordinator, vault and
+// claim batcher, plus the settlement v2 ledger sum tree library, which
+// VERSION2-FINAL.md §15 adds as a root of its own.
+const solidityStaticDeployedRoots = "src/STCoordinator.sol\nsrc/STFleetBatcher.sol\nsrc/STValidatorEvidence.sol\nsrc/probe/STSubnetProbe.sol\nsrc/testnet/STCoordinatorAdversary.sol\nsrc/LedgerTree.sol\nsrc/STSettlement2.sol\nsrc/STSettlementVault2.sol\nsrc/STClaimBatcher.sol"
 
 // Admit the reviewed literal array only. A comment, duplicate, nondeployed
 // library or dynamic expansion cannot stand in for one actual analysis root.
@@ -96,6 +101,88 @@ func TestSolidityStaticGateRejectsOmittedOrCommentOnlyEvidenceRoot(t *testing.T)
 	} {
 		if changed == script || verifySolidityStaticRootCensus(changed) == nil {
 			t.Fatal("a library, comment or absent executable census authorized static coverage")
+		}
+	}
+}
+
+// runSolidityStaticGate runs the real static script with stand-ins for
+// Slither, solc and forge. The fake Slither records each root it analyzes and
+// reports a medium finding for the root named by finding: with a failing exit,
+// or with a successful one when silent is set. The fake forge prints layout as
+// STSettlement2's storage layout.
+func runSolidityStaticGate(t *testing.T, finding string, silent bool, layout string) (string, []string, error) {
+	t.Helper()
+	bin := t.TempDir()
+	for name, body := range map[string]string{
+		"slither": `if [[ "$1" == --version ]]; then echo 0.11.6; exit 0; fi
+printf '%s\n' "$1" >> "$FAKE_SLITHER_ROOTS"
+if [[ "$1" == "$FAKE_SLITHER_FINDING" ]]; then
+  printf '{"results":{"detectors":[{"impact":"Medium","check":"locked-ether","description":"fake finding"}]}}' > "${@: -1}"
+  [[ -n "$FAKE_SLITHER_SILENT" ]] && exit 0
+  exit 255
+fi
+printf '{"results":{"detectors":[]}}' > "${@: -1}"`,
+		"solc":  `echo 'Version: 0.8.24+commit.e11b9ed9.Linux.g++'`,
+		"forge": `[[ "$*" == "inspect STSettlement2 storageLayout --json" ]] && cat "$FAKE_FORGE_LAYOUT"`,
+	} {
+		if err := os.WriteFile(filepath.Join(bin, name), []byte("#!/usr/bin/env bash\n"+body+"\n"), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	roots := filepath.Join(t.TempDir(), "roots")
+	layoutPath := filepath.Join(t.TempDir(), "layout.json")
+	if err := os.WriteFile(layoutPath, []byte(layout), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	silentValue := ""
+	if silent {
+		silentValue = "1"
+	}
+	command := exec.CommandContext(t.Context(), "bash", "../scripts/test-solidity-static.sh")
+	command.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
+		"SLITHER_BIN="+filepath.Join(bin, "slither"), "SOLC_BIN="+filepath.Join(bin, "solc"),
+		"SLITHER_FOUNDRY_OUT="+t.TempDir(), "SLITHER_FOUNDRY_CACHE_PATH="+t.TempDir(),
+		"FAKE_SLITHER_ROOTS="+roots, "FAKE_SLITHER_FINDING="+finding, "FAKE_SLITHER_SILENT="+silentValue,
+		"FAKE_FORGE_LAYOUT="+layoutPath)
+	output, err := command.CombinedOutput()
+	analyzed, readErr := os.ReadFile(roots)
+	if readErr != nil {
+		t.Fatalf("no root was analyzed: %v\n%s", readErr, output)
+	}
+	return string(output), strings.Fields(string(analyzed)), err
+}
+
+// A finding in one root, reported by a failing or by a successful Slither
+// exit, or a changed STSettlement2 layout, still fails the gate naming it,
+// and no longer stops the analysis: every later root and the layout pin run
+// (VERSION2-FINAL.md §14 gate 1, S-9).
+func TestSolidityStaticGateAnalyzesEveryRootAfterAFinding(t *testing.T) {
+	pinned, err := os.ReadFile("../evm/layout/STSettlement2.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	output, analyzed, err := runSolidityStaticGate(t, "", false, string(pinned))
+	if err != nil || strings.Join(analyzed, "\n") != solidityStaticDeployedRoots ||
+		!strings.Contains(output, "release Solidity static gate passed for all 9 deployable roots") {
+		t.Fatalf("clean roots: %v %q\n%s", err, analyzed, output)
+	}
+	for _, test := range []struct {
+		name, finding, layout, failed, report string
+		silent                                bool
+	}{
+		{name: "a failing exit", finding: "src/probe/STSubnetProbe.sol", layout: string(pinned),
+			failed: "src/probe/STSubnetProbe.sol", report: "[Medium] locked-ether: fake finding"},
+		{name: "a successful exit", finding: "src/STCoordinator.sol", silent: true, layout: string(pinned),
+			failed: "src/STCoordinator.sol", report: "Slither emitted a high/medium finding despite a successful exit for src/STCoordinator.sol"},
+		{name: "a changed layout", layout: strings.Replace(string(pinned), `"label": "vault"`, `"label": "vault2"`, 1),
+			failed: "layout/STSettlement2.json", report: "STSettlement2 storage layout differs from layout/STSettlement2.json"},
+	} {
+		output, analyzed, err := runSolidityStaticGate(t, test.finding, test.silent, test.layout)
+		var exit *exec.ExitError
+		if !errors.As(err, &exit) || exit.ExitCode() != 1 || strings.Join(analyzed, "\n") != solidityStaticDeployedRoots ||
+			!strings.Contains(output, test.report) || !strings.Contains(output, "release Solidity static gate failed for: "+test.failed+"\n") ||
+			strings.Contains(output, "passed for all") {
+			t.Fatalf("%s: %v %q\n%s", test.name, err, analyzed, output)
 		}
 	}
 }

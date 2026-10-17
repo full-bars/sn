@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // These controls use the public offline plan/apply and public monitor command.
 // Expected epochs and the test operational key are independently constructed;

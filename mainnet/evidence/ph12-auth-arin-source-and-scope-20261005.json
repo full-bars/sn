@@ -1,0 +1,266 @@
+{
+  "arin": {
+    "adjacent_existing": 4,
+    "affected_existing": 3,
+    "controls": 3,
+    "intake": {
+      "bytes": 13118,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/arin-remote-population-transactions/evidence/HANDOFF.json",
+      "sha256": "8e9b9e79312b3aa29f62ee9029bd753327914715c5e60b3fae53200661c766d8"
+    },
+    "lesson": "Setup inserts100000 synthetic clients in512-row committed statements to release per-client transaction locks. Keep the original public triggers, actual population, twenty owners, timing and collection assertions; no PostgreSQL setting or live fixture is changed.",
+    "merged_ancestor": "0f2dc8071658a2612bc1f8a6fd67f87ebf07a25d",
+    "new_roots": 1,
+    "normal": "UNEXECUTED",
+    "race": "UNEXECUTED",
+    "source_owner": "d3382fd64e53017fd5cc9d16509464f8b613037f"
+  },
+  "author_execution": {
+    "binary_list": 0,
+    "compiler": 0,
+    "database": 0,
+    "live_rpc": 0,
+    "production_changes": 0,
+    "test_body": 0
+  },
+  "completion_complement": {
+    "combined_deduplicated_obligations_per_mode": 2981,
+    "master_per_mode": 2824,
+    "scope_limit": "The master2824 remains unchanged. Companion obligations retain exact scopes and cannot be silently dropped; this arithmetic grants no execution result or whole-current-source census.",
+    "sdk_separate_per_mode": 15,
+    "separate_existing_per_mode": 109,
+    "separate_upstream_required": 51,
+    "upstream_additional_disjoint_per_mode": 33,
+    "upstream_already_master": 18
+  },
+  "contract_reuse": {
+    "actual_forge_roots_retained": 226,
+    "actual_forge_suites": 20,
+    "assessment": {
+      "bytes": 11025,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/reuse-assessment.json",
+      "sha256": "398df4384bbd20c57df2ad6e4f5219e981c646b855da8c87bf9f418bb344a437"
+    },
+    "fail": 0,
+    "five_artifact_readback": {
+      "bytes": 48299,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/five-artifact-input-readback.json",
+      "sha256": "a950d1b02e8389a92df7cc6c839df77531d088a7f413c46bf969c7fb1ab20d14"
+    },
+    "historical_origin": "41f996083f5e6910e639a093da0bb63e4e860222",
+    "input_readback_applies_through_current_sn": true,
+    "limit": "Preserve actual historical origins and exact two-root recovery causal pair/four catalogue Go controls. No229PASS, newbuild, deployment, actual native10/90 or live authority is inferred.",
+    "remaining_solidity_controls": 1,
+    "remaining_solidity_roots": [
+      "test_lateRootConsumesNewerMissedEpochWithoutRelabellingItsFunding",
+      "test_lateRootConsumesNewerExpiredRemainderWithoutRepeatingAcceptedClaim",
+      "test_earlierFinalizationCannotConsumeCarryCreatedAfterItsReceipt"
+    ],
+    "skip": 0
+  },
+  "controls": {
+    "bytes": 260366,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5e71-ph12-arin/control-catalog-addendum.json",
+    "sha256": "9b6a7ca66af2b60060b69d9c4b94107a6917bb083f34b310072723d771a6110f"
+  },
+  "counts_per_mode": {
+    "all_go": 2824,
+    "connect": 224,
+    "mainnet": 302,
+    "server": 2044,
+    "server_api_handlers": 10,
+    "server_controller": 101,
+    "server_full_model": 1866,
+    "sn": 548,
+    "sn_connect_vless": 780,
+    "validator": 79,
+    "vlessinterop": 8
+  },
+  "existing_adjacent_obligations": {
+    "bytes": 95249,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5e71-ph12-arin/existing-adjacent-recipes.json",
+    "sha256": "1d4b4fc12fbed4b2ffb7eab8ccdccd37c2ce178e41b6b71c4aec0eeef7bbd7e1"
+  },
+  "fp2": {
+    "controls": 4,
+    "intake": {
+      "bytes": 3259,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/fp2-bucket-oracle/HANDOFF.json",
+      "sha256": "13c0f931b8ab773295801e25e697616b104ef918a252b08c7c8a0d0b5aa9edfd"
+    },
+    "lesson": "The documented discovery policy can return native Quality plus a lower-priority Speed borrower and Online members. Strengthen exact identities and tiers while retaining strict named/forced Quality. Production and economics remain unchanged; preserve the original frozen-model failure.",
+    "new_roots": 0,
+    "normal": "UNEXECUTED",
+    "race": "UNEXECUTED",
+    "review": {
+      "bytes": 1424,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/fp2-bucket-oracle/evidence/independent-source-review-v1.json",
+      "sha256": "4e850d1ea715d3c548f784d49c8992fad626ff02525d0337b058f54958fd5338"
+    },
+    "source_commit": "67467b263ff311da66ec96b3e9d007850bbfc627",
+    "strengthened_existing_roots": 1
+  },
+  "frozen_fullmodel_observation": {
+    "bytes": 1607,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5e71-ph12-arin/fullmodel-live-observation.json",
+    "sha256": "acae1b6febbea5d6fe9224a13c516c01b910e220bbfcb8855609bcf88161e803"
+  },
+  "original38_outcome_ids_and_requirements_preserved": true,
+  "ph12": {
+    "controls": "UNEXECUTED",
+    "generator": "UNEXECUTED",
+    "lessons": [
+      "A provider credential and its original contribution select claims; current wallet projection or aggregate representative identity cannot replace the admitted client/network/coldkey.",
+      "Earning-wallet authority requires the original prospective consent and explicit interval. A generic login proof does not create WalletMappingConsent.",
+      "Retain and sync exact signed consent before POST. Retry the same original after a lost acknowledgement, including when the seed is unavailable, and authenticate the actual endpoint rather than trusting the local acknowledgement cache.",
+      "Server decimal-string no_id must decode exactly into SDK int64 without float conversion, partial receiver publication or ABI changes; legacy integer input remains supported."
+    ],
+    "new_roots": {
+      "sdk_existing_separate": 3,
+      "sdk_new_cumulative_separate": 12,
+      "server_controller": 6,
+      "server_handlers": 10,
+      "sn_miner": 20
+    },
+    "normal": "UNEXECUTED",
+    "race": "UNEXECUTED",
+    "sdk_noid": {
+      "bytes": 2116,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-claim-auth/SDK-NOID-INTAKE.json",
+      "sha256": "8c807942e051e9e50f1379ca33e859bff5660d284a1595324913d5145072c08a"
+    },
+    "sdk_prior": {
+      "bytes": 2853,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-claim-auth/SDK-HANDOFF.json",
+      "sha256": "0839f755375e830cccde91572a76fd3bc5c46d356e111f3511b55ee05b597d0c"
+    },
+    "sdk_selection": {
+      "bytes": 28605,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5e71-ph12-arin/SDK-SELECTION.json",
+      "sha256": "cab0e820cc3c5748958e8051a433d18b814804e718a26df037d382f1324d42ec"
+    },
+    "server": {
+      "bytes": 82080,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-claim-auth/SERVER-HANDOFF.json",
+      "sha256": "f93668508b5d17f6db32e56fba802f7f3b1cc6a9b246e0e34e2b38c459bc4363"
+    },
+    "sn": {
+      "bytes": 27556,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-claim-auth/SN-HANDOFF.json",
+      "sha256": "2db91c6836aea09294973f7da55c50be5f5184cdad418685ed68cf66acc7433b"
+    }
+  },
+  "remaining_source_work": [
+    "Separate EVM decision closing-finalized-head correction is under review and outside this checkpoint.",
+    "The upstream ac53 finite source review found no confirmed regression; its relevant declaration/adjacent recipe remains separately required and unqualified."
+  ],
+  "schema": "ph12-auth-arin-source-and-scope-v1",
+  "scope": {
+    "bytes": 6238,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5e71-ph12-arin/SCOPE-HANDOFF.json",
+    "sha256": "519c64b38e1aaa0183a16497b3e7af63ed68f8d6d648dee584c146b45e1cf10d"
+  },
+  "sdk_generator_source_review": {
+    "actual_generator_currentness": "UNEXECUTED",
+    "finding": "SnEpochResult remains nonbehavioral kindJson; generator method-set emission is skipped for this data type and its tagged int64 field is unchanged.",
+    "review": {
+      "bytes": 2759,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-claim-auth/sdk-evidence/JSON-METHOD-GENERATOR-SOURCE-REVIEW.json",
+      "sha256": "b70a305e97fcca2211a90a649bbff00bf5b2866c71a67ea19752c6d472f133ea"
+    }
+  },
+  "sdk_separate_control_groups": {
+    "count": 12,
+    "excluded_from_core357": true,
+    "intake": {
+      "bytes": 19133,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-claim-auth/sdk-evidence/SDK-CONTROLS-HANDOFF.json",
+      "sha256": "3883880bf8b9e653d9990cda766ba1a8017e85593b7a2904dc04950dd3d3822f"
+    },
+    "normal": "UNEXECUTED",
+    "race": "UNEXECUTED"
+  },
+  "separate_sdk_targeted_per_mode": 15,
+  "source_proof": {
+    "bytes": 66948,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5e71-ph12-arin/source-proof.json",
+    "sha256": "2901ec5c5a93c3c7f06e4af5ab58f5946670f0b5be0e8c0276f5b5f87029b73e"
+  },
+  "source_tuple": {
+    "connect": "026b850248352b72255be7a966e391e0a15e74c1",
+    "sdk": "e3f4f3fb56e59eb9fdb12c1f87594209c505e5e9",
+    "server": "67467b263ff311da66ec96b3e9d007850bbfc627",
+    "sn": "5e71e63c8d56418d389e8fa9a7e0f2c1310e1fcf",
+    "xops": "9a37239ebeebbb5efea4f63a56191f91f3c4ad8f"
+  },
+  "status": "MERGED_SOURCE_IMPLEMENTED_UNQUALIFIED",
+  "upstream_required_recipe": {
+    "bytes": 40944,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5e71-ph12-arin/UPSTREAM-REQUIRED-RECIPE.json",
+    "sha256": "c997297ec0ebe25b0bde5e1973da6ed6e7a8ef50b4dd1aee0173a7a9aad97cd3"
+  },
+  "upstream_server": {
+    "base": "d64c9beb49a8637ce753103e9ea34521cc55f597",
+    "files": [
+      "FP2FIX.md",
+      "arindbctl/ARINDB.md",
+      "bringyourctl/main.go",
+      "connect/resident.go",
+      "connect/resident_control_ack_retirement_test.go",
+      "connect/resident_idle_deadline_test.go",
+      "connect/resident_idle_watcher_test.go",
+      "model/subscription_legacy_busy_gates_test.go",
+      "model/subscription_legacy_due_index_test.go",
+      "model/subscription_legacy_grant_lock_plan_test.go",
+      "model/subscription_legacy_grant_owner_diagnostic_test.go",
+      "model/subscription_legacy_head_allocation_test.go",
+      "model/subscription_legacy_head_test.go",
+      "model/subscription_legacy_mixed_page_test.go",
+      "model/subscription_legacy_owned_metadata_test.go",
+      "model/subscription_legacy_page_budget_test.go",
+      "model/subscription_legacy_provider_owner_diagnostic_test.go",
+      "model/subscription_legacy_settlement.go",
+      "model/subscription_legacy_settlement_contention_test.go",
+      "model/subscription_legacy_settlement_test.go",
+      "model/subscription_model.go",
+      "model/subscription_net_escrow_settlement_cache.go",
+      "model/subscription_provider_totals.go",
+      "model/subscription_provider_totals_contention_test.go",
+      "model/subscription_provider_totals_settlement_test.go",
+      "model/subscription_provider_totals_test.go",
+      "model/subscription_redis_admission.go",
+      "model/subscription_redis_ambiguous_compensation_test.go",
+      "model/subscription_redis_compensation_ownership_test.go",
+      "model/subscription_redis_recovery.go",
+      "model/subscription_redis_selection.go",
+      "model/subscription_redis_zero_compensation_test.go",
+      "monitor/SIGNALS.md",
+      "task/task.go",
+      "task/task_argument_privacy.go",
+      "task/task_argument_privacy_test.go",
+      "taskworker/taskworker.go",
+      "taskworker/workload_profile.go"
+    ],
+    "head": "ac53dc21af7fb97a6c5350ebcf54cb546ac95c1b",
+    "required_recipe": {
+      "bytes": 40944,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5e71-ph12-arin/UPSTREAM-REQUIRED-RECIPE.json",
+      "sha256": "c997297ec0ebe25b0bde5e1973da6ed6e7a8ef50b4dd1aee0173a7a9aad97cd3"
+    },
+    "result": "No confirmed mainnet blocker or regression found in the bounded source review. No production/test source changes proposed or made.",
+    "review": {
+      "bytes": 32613,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-upstream-delta-review/HANDOFF.json",
+      "sha256": "346602c16cc730a795cf4be2fc497aec457bbd18acc522c649d6cb5970f56baf"
+    },
+    "status": "FINITE_SOURCE_ACK_NO_CONFIRMED_REGRESSION_QUALIFICATION_PENDING",
+    "whole_current_server_pass_inferred": false
+  },
+  "validation": {
+    "new_control_index_apply_checks": 68,
+    "new_root_declarations_and_parent_absence": "PASS",
+    "no_duplicate_master_tuple_both_modes": "PASS",
+    "prior_master_tuple_subset_both_modes": "PASS",
+    "source_blob_hashes": "PASS"
+  }
+}

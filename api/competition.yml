@@ -1,6 +1,6 @@
 openapi: "3.1.0"
 info:
-  version: 2026.9.25
+  version: 2026.10.16
   title: URnetwork Competition API
   description: |
     Control-plane API for reproducible, cached sim-latency competition rounds.
@@ -8,7 +8,7 @@ info:
     connect/api/bringyour.yml. Competition paths are namespaced under
     /competition.
 
-    Round workload seeds and score results are never returned while a round is
+    V1 behavior remains unchanged. Round workload seeds and score results are never returned while a round is
     active or grading. The API publishes a seed commitment and the generated
     providers.yml SHA-256 until every admitted job is terminal and the winner
     is finalized (after ordered honesty review in production), then exposes
@@ -34,6 +34,21 @@ info:
     their original per-job control samples and normalized-score-first ranking.
     Committing production epoch one atomically ends the staging era and cancels
     queued staging work; it refuses to race a running staging evaluation.
+
+    V2 is disabled by default and requires a prospectively approved frozen
+    provisional_reward_v2 policy and competition.reward.v2 capability. An open
+    legacy round cannot change mode. Discovery, admission, and polling advertise
+    the immutable contract; legacy score URLs reject v2 with unsupported_decision_mode.
+    V2 publishes only after close, complete authoritative drain, seal, and reveal.
+    A provisional reward winner is not honesty approval, source approval, or payment.
+    Rankings and measurements remain immutable; authenticated retrospective
+    findings append reward revisions. Carry-forward source is separately approved.
+    The one-sided Welch alpha 0.05 is per candidate, not a season-wide error guarantee.
+    The durable event feed is HTTPS-authenticated, not a signed webhook protocol.
+    Receipt means received; applied and confirmed are distinct external accounting
+    claims, never proof that an already transferred reward can be clawed back.
+    No replacement burn formula or actual Apex money-movement API is invented here.
+    Six seven-day admission windows may have arbitrarily long grading drains.
   contact:
     name: URnetwork
     email: support@ur.xyz
@@ -375,15 +390,330 @@ paths:
         "503":
           $ref: "#/components/responses/CompetitionUnavailable"
 
+  /competition/v2/score/preflight:
+    post:
+      operationId: CompetitionV2Preflight
+      tags: [Competition]
+      summary: Screen exact canonical identity before a production fee
+      description: |
+        Submitter only. Validates the frozen v2 mode, open admission, canonical
+        patch and prospectively adopted repeat policy. reward_eligible=false
+        discloses a known exact (base source lock, canonical patch) exclusion.
+        This is not admission, reservation, or payment authority. The adapter
+        must refuse a known excluded entitlement before CollectOnce; durable
+        admission rechecks the same identity under its round lock.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CompetitionScoreArgs"}
+      responses:
+        "200":
+          description: Known eligibility and canonical identities; no fee charged.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionV2SubmissionPreflight"}
+        "400": {$ref: "#/components/responses/CompetitionBadRequest"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/score:
+    post:
+      operationId: CompetitionV2SubmitScore
+      tags: [Competition]
+      summary: Admit an explicitly v2 submission
+      description: |
+        Submitter only; legacy operators do not inherit this capability. Same
+        canonical patch cache, fee agreement, FIFO and evaluator as v1. A v1
+        round is rejected. Persist status_url exactly; never guess a job URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CompetitionScoreArgs"}
+      responses:
+        "202":
+          description: Durable job with immutable v2 polling URL.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionScoreAcceptedResult"}
+        "400": {$ref: "#/components/responses/CompetitionBadRequest"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/score/{jobId}:
+    get:
+      operationId: CompetitionV2GetScore
+      tags: [Competition]
+      summary: Poll an owned immutable v2 job
+      description: |
+        Submitter ownership is required even after publication. Before close,
+        drain and reveal, completed outcomes remain state=completed; the typed
+        evaluation_status and message-free evaluation_failure preserve safe
+        transport diagnostics without exposing scores or private error text.
+      parameters:
+        - {name: jobId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Safe job state or published immutable score.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionScoreJobResult"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "404": {$ref: "#/components/responses/CompetitionNotFound"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/rounds/{roundId}/result:
+    get:
+      operationId: CompetitionV2RoundResult
+      tags: [Competition]
+      security: []
+      summary: Published evaluation seal and versioned reward decisions
+      description: |
+        Returns 409 until close, complete drain and reveal. Scores, ranks, exact
+        original completion timestamps and the seal never change. The current
+        provisional recipient and review/settlement/source state may advance
+        only through append-only records. Private findings and bearer actor
+        names are redacted; public explanation and withheld-evidence rationale
+        remain. Neither approved source carry-forward nor a receipt approves
+        the current reward candidate. source_approval belongs to that candidate;
+        source_decision describes the separately selected reviewed incumbent.
+      parameters:
+        - {name: roundId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Public, sanitized v2 result; no-store because decisions may advance.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionV2RoundResult"}
+        "404": {$ref: "#/components/responses/CompetitionNotFound"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/rounds/{roundId}/decisions:
+    get:
+      operationId: CompetitionV2Decisions
+      tags: [Competition]
+      security: []
+      summary: Complete immutable reward revision history
+      description: Same result shape and publication gate as /result; revision numbering is contiguous per round.
+      parameters:
+        - {name: roundId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Complete result, original seal and ordered decision history.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionV2RoundResult"}
+        "404": {$ref: "#/components/responses/CompetitionNotFound"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/rounds/{roundId}/seal:
+    post:
+      operationId: CompetitionV2Seal
+      tags: [Competition operator]
+      summary: Seal complete terminal evidence and elect once
+      description: Scheduler scope only. No caller-selected winner or policy. Replays return the original immutable seal. No public evidence is returned ahead of reveal.
+      parameters:
+        - {name: roundId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Existing or newly sealed public result.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionV2RoundResult"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/rounds/{roundId}/reviews:
+    post:
+      operationId: CompetitionV2Review
+      tags: [Competition operator]
+      summary: Record a bounded, authenticated integrity review
+      description: |
+        Reviewer scope only. Maximum JSON body 64 KiB. Actor comes from the
+        bearer credential, not the body. Exact idempotency replay returns the
+        original review; a different body or stale expected_revision conflicts.
+        Published conflicts include current_revision and current_decision_sha256.
+        The server computes any replacement from the original ranking; an
+        expected replacement is only a consistency check. Approving the current
+        recipient creates a genuine review, not a second reward entitlement.
+        Source-only deferral does not imply reward disqualification.
+      parameters:
+        - {name: roundId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CompetitionIntegrityReviewRequest"}
+      responses:
+        "200":
+          description: Private authenticated review result; no-store.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionIntegrityReviewResult"}
+        "400": {$ref: "#/components/responses/CompetitionBadRequest"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/events:
+    get:
+      operationId: CompetitionV2Events
+      tags: [Competition operator]
+      summary: Reconcile durable reward events by cursor
+      description: |
+        Settlement scope only, exact environment/competition/season. The cursor
+        is durable insertion order, not a timestamp or ULID ordering assumption.
+        Persist each page before acknowledgment. Global cursor gaps are possible;
+        per-round revision gaps are not. An unpublished head stops the page and
+        is never skipped. Empty pages preserve the cursor. Delivery is at least
+        once; consumers reject conflicting reuse and poll after restart/outage.
+        payload_sha256 hashes canonical decision JSON including decision_sha256;
+        decision_sha256 hashes that decision with its own digest empty.
+      parameters:
+        - {name: after_cursor, in: query, schema: {type: integer, format: int64, minimum: 0, default: 0}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 100}}
+      responses:
+        "200":
+          description: Bounded published event page with the last persisted delivery cursor.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionRewardEventPage"}
+        "400": {$ref: "#/components/responses/CompetitionBadRequest"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/receipts:
+    post:
+      operationId: CompetitionV2Receipt
+      tags: [Competition operator]
+      summary: Append an idempotent exact-event receipt
+      description: |
+        Settlement scope only. Maximum JSON body 16 KiB. Actor and received_at
+        are authoritative server values. Each event/actor/status is immutable;
+        an exact replay returns the original receipt. received does not imply
+        applied or confirmed. Actual accounting uses approved integration
+        policy; the reference adapter emits received only and moves no funds.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CompetitionSettlementReceipt"}
+      responses:
+        "200":
+          description: Original or newly committed receipt.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionSettlementReceipt"}
+        "400": {$ref: "#/components/responses/CompetitionBadRequest"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/source/{generation}/readiness:
+    post:
+      operationId: CompetitionV2SourceReadiness
+      tags: [Competition operator]
+      summary: Acknowledge the exact installed API runtime manifest
+      description: |
+        Source-promoter scope only. No body, caller ready flag, or caller image
+        identity is accepted. The API verifies its installed immutable manifest
+        against the durable source intent and records its actual runtime digest.
+        Missing deployment-loader integration returns source_not_ready; this
+        endpoint does not manufacture a rollout or activate source by itself.
+      parameters:
+        - {name: generation, in: path, required: true, schema: {type: integer, format: int64, minimum: 1}}
+      responses:
+        "200":
+          description: Exact manifest readiness receipt.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionSourceReadiness"}
+        "400": {$ref: "#/components/responses/CompetitionBadRequest"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+        "503": {$ref: "#/components/responses/CompetitionUnavailable"}
+
+  /competition/v2/holds:
+    post:
+      operationId: CompetitionV2Hold
+      tags: [Competition operator]
+      summary: Pause or resume one separately authorized capability
+      description: Scheduler controls admission/evaluation, source_promoter controls source_activation, and settlement controls reward_delivery. Release requires RECOVERY_APPROVED. No hold discards accepted work or rewrites history.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CompetitionAutomationHoldArgs"}
+      responses:
+        "200":
+          description: Immutable attributed hold revision.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionAutomationHold"}
+        "400": {$ref: "#/components/responses/CompetitionBadRequest"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+
+  /competition/v2/rounds/{roundId}/incidents:
+    post:
+      operationId: CompetitionV2Incident
+      tags: [Competition operator]
+      summary: Append evaluation invalidation or a source compromise
+      description: Scheduler can invalidate evaluation; source_promoter can report source-only compromise. One token cannot combine both authorities. Invalidated is distinct from no improvement; committed measurements and source locks remain unchanged.
+      parameters:
+        - {name: roundId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CompetitionAutomationIncidentArgs"}
+      responses:
+        "200":
+          description: Immutable attributed incident and affected source ancestry.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CompetitionAutomationIncident"}
+        "400": {$ref: "#/components/responses/CompetitionBadRequest"}
+        "401": {$ref: "#/components/responses/CompetitionUnauthorized"}
+        "403": {$ref: "#/components/responses/CompetitionForbidden"}
+        "409": {$ref: "#/components/responses/CompetitionConflict"}
+
 components:
   securitySchemes:
     CompetitionBearerAuth:
       type: http
       scheme: bearer
       bearerFormat: opaque
-      description: Competition submitter or operator token.
+      description: |
+        Opaque competition token. Legacy submitter/operator roles retain their
+        original v1 authority. V2 scheduler, reviewer, settlement and
+        source_promoter are distinct roles scoped to environment, competition_id
+        and season_id. Legacy operators never inherit v2 privileges. Revoked
+        credentials fail immediately on the next request.
 
   responses:
+    CompetitionForbidden:
+      description: Authenticated token lacks the exact required capability or scope.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/CompetitionError"}
     CompetitionBadRequest:
       description: Malformed request.
       content:
@@ -416,6 +746,357 @@ components:
             $ref: "#/components/schemas/CompetitionError"
 
   schemas:
+    CompetitionDecisionMode:
+      type: string
+      const: provisional_reward_v2
+    CompetitionRequiredCapability:
+      type: string
+      const: competition.reward.v2
+    CompetitionV2SubmissionPreflight:
+      type: object
+      additionalProperties: false
+      required: [round_id, patch_sha256, base_source_lock_sha256, decision_mode, required_api_capability, reward_eligible]
+      properties:
+        round_id: {type: string, format: uuid}
+        patch_sha256: {$ref: "#/components/schemas/Sha256"}
+        base_source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
+        decision_mode: {$ref: "#/components/schemas/CompetitionDecisionMode"}
+        required_api_capability: {$ref: "#/components/schemas/CompetitionRequiredCapability"}
+        reward_eligible: {type: boolean}
+        ineligibility_reason: {type: string}
+    CompetitionSealedEntry:
+      type: object
+      additionalProperties: false
+      required: [job_id, patch_sha256, base_source_lock_sha256, state, submitted_at, completed_at, rank, eligible]
+      properties:
+        job_id: {type: string, format: uuid}
+        patch_sha256: {$ref: "#/components/schemas/Sha256"}
+        base_source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
+        state: {type: string, enum: [succeeded, failed, canceled]}
+        submitted_at: {type: string, format: date-time}
+        started_at: {type: string, format: date-time}
+        completed_at:
+          type: string
+          format: date-time
+          description: Original authenticated terminal result commit after archive; never review, notification, or inferred execution time.
+        score: {$ref: "#/components/schemas/CompetitionScoreResult"}
+        score_sha256:
+          $ref: "#/components/schemas/Sha256"
+          description: Digest of exact archived score.json bytes, not a re-encoding of this public projection.
+        artifact_manifest_sha256: {$ref: "#/components/schemas/Sha256"}
+        rank: {type: integer, minimum: 1}
+        eligible_candidate_rank: {type: integer, minimum: 1}
+        eligible: {type: boolean}
+        ineligibility_reason: {type: string}
+    CompetitionEvaluationSeal:
+      type: object
+      additionalProperties: false
+      required: [round_id, environment, competition_id, season_id, epoch, sealed_at, publication_at, source_choice_at, policy_sha256, baseline_raw_score, takeover_margin, inventory_sha256, ranking_sha256, seal_sha256, terminal_counts, entries]
+      properties:
+        round_id: {type: string, format: uuid}
+        environment: {type: string}
+        competition_id: {type: string}
+        season_id: {type: string}
+        epoch: {type: integer}
+        sealed_at: {type: string, format: date-time}
+        publication_at: {type: string, format: date-time}
+        source_choice_at: {type: string, format: date-time}
+        policy_sha256: {$ref: "#/components/schemas/Sha256"}
+        baseline_sha256: {$ref: "#/components/schemas/Sha256"}
+        baseline_raw_score:
+          type: number
+          minimum: 0
+          description: Median raw latency from the immutable nine-replicate baseline, or zero when no scoring baseline was produced. Not the Welch sample mean.
+        takeover_margin: {type: number, minimum: 0, maximum: 0.5}
+        inventory_sha256: {$ref: "#/components/schemas/Sha256"}
+        ranking_sha256: {$ref: "#/components/schemas/Sha256"}
+        seal_sha256: {$ref: "#/components/schemas/Sha256"}
+        terminal_counts: {type: object, additionalProperties: {type: integer, minimum: 0}}
+        entries: {type: array, items: {$ref: "#/components/schemas/CompetitionSealedEntry"}}
+    CompetitionRewardDecision:
+      type: object
+      additionalProperties: false
+      required: [round_id, environment, competition_id, season_id, revision, decision_sha256, seal_sha256, action, selected_job_id, reason_code, decided_at, settlement_policy_version, burn_policy_version, settlement_mode]
+      properties:
+        round_id: {type: string, format: uuid}
+        environment: {type: string}
+        competition_id: {type: string}
+        season_id: {type: string}
+        revision: {type: integer, minimum: 1}
+        previous_decision_sha256: {$ref: "#/components/schemas/Sha256"}
+        decision_sha256: {$ref: "#/components/schemas/Sha256"}
+        seal_sha256: {$ref: "#/components/schemas/Sha256"}
+        action: {type: string, enum: [elect, replace, no_winner, invalidated]}
+        selected_job_id: {type: [string, "null"], format: uuid}
+        superseded_job_id: {type: string, format: uuid}
+        superseded_revision: {type: integer, minimum: 1}
+        reason_code: {type: string}
+        review_id: {type: string, format: uuid}
+        decided_at: {type: string, format: date-time}
+        effective_settlement_anchor:
+          type: string
+          format: date-time
+          description: Selected job's original authenticated completed_at. It is evidence, not an entitlement/burn formula or funds-transfer time.
+        settlement_policy_version: {type: string}
+        burn_policy_version: {type: string}
+        settlement_mode: {type: string, enum: [shadow, live]}
+    CompetitionReviewFinding:
+      type: object
+      additionalProperties: false
+      required: [criterion, disposition, reason_code, explanation, evidence_sha256]
+      properties:
+        criterion: {type: string, enum: [measurement_integrity, workload_generalization, containment, patch_scope, reproducibility, source_safety]}
+        disposition: {type: string, enum: [pass, fail, not_applicable]}
+        reason_code: {type: string}
+        explanation: {type: string, minLength: 1, maxLength: 4096}
+        evidence_sha256: {$ref: "#/components/schemas/Sha256"}
+    CompetitionIntegrityReviewRequest:
+      type: object
+      additionalProperties: false
+      required: [idempotency_key, expected_revision, job_id, patch_sha256, base_source_lock_sha256, score_sha256, baseline_sha256, artifact_manifest_sha256, criteria_version, reward_disposition, source_disposition, reason_codes, public_explanation, withheld_evidence_explanation, private_evidence_sha256, findings]
+      properties:
+        idempotency_key: {type: string, minLength: 1, maxLength: 128}
+        expected_revision: {type: integer, minimum: 1}
+        job_id: {type: string, format: uuid}
+        patch_sha256: {$ref: "#/components/schemas/Sha256"}
+        base_source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
+        score_sha256: {$ref: "#/components/schemas/Sha256"}
+        baseline_sha256: {$ref: "#/components/schemas/Sha256"}
+        artifact_manifest_sha256: {$ref: "#/components/schemas/Sha256"}
+        criteria_version: {type: string, maxLength: 128}
+        reward_disposition: {type: string, enum: [approved, disqualified, restored, unchanged]}
+        source_disposition: {type: string, enum: [approved, rejected, deferred, unchanged]}
+        reason_codes: {type: array, minItems: 1, maxItems: 16, items: {type: string}}
+        public_explanation: {type: string, minLength: 1, maxLength: 4096}
+        withheld_evidence_explanation: {type: string, minLength: 1}
+        private_evidence_sha256: {$ref: "#/components/schemas/Sha256"}
+        findings: {type: array, minItems: 6, maxItems: 6, items: {$ref: "#/components/schemas/CompetitionReviewFinding"}}
+        supersedes_review_id: {type: string, format: uuid}
+        appeal_id: {type: string}
+        expected_replacement_job_id: {type: string, format: uuid}
+    CompetitionIntegrityReviewResult:
+      type: object
+      additionalProperties: false
+      required: [review_id, round_id, actor_id, created_at, request, request_sha256, reward_decision]
+      properties:
+        review_id: {type: string, format: uuid}
+        round_id: {type: string, format: uuid}
+        actor_id: {type: string}
+        created_at: {type: string, format: date-time}
+        request: {$ref: "#/components/schemas/CompetitionIntegrityReviewRequest"}
+        request_sha256: {$ref: "#/components/schemas/Sha256"}
+        reward_decision: {$ref: "#/components/schemas/CompetitionRewardDecision"}
+    CompetitionPublicIntegrityReview:
+      type: object
+      additionalProperties: false
+      required: [review_id, round_id, actor_id, created_at, request, request_sha256, reward_decision]
+      properties:
+        review_id: {type: string, format: uuid}
+        round_id: {type: string, format: uuid}
+        actor_id: {type: string, const: ""}
+        created_at: {type: string, format: date-time}
+        request_sha256: {$ref: "#/components/schemas/Sha256"}
+        reward_decision: {$ref: "#/components/schemas/CompetitionRewardDecision"}
+        request:
+          type: object
+          description: Original evidence identities with explicitly redacted private request content. Request digest continues to identify the original private record.
+          additionalProperties: false
+          properties:
+            idempotency_key: {type: string, const: ""}
+            expected_revision: {type: integer}
+            job_id: {type: string, format: uuid}
+            patch_sha256: {$ref: "#/components/schemas/Sha256"}
+            base_source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
+            score_sha256: {$ref: "#/components/schemas/Sha256"}
+            baseline_sha256: {$ref: "#/components/schemas/Sha256"}
+            artifact_manifest_sha256: {$ref: "#/components/schemas/Sha256"}
+            criteria_version: {type: string}
+            reward_disposition: {type: string}
+            source_disposition: {type: string}
+            reason_codes: {type: array, items: {type: string}}
+            public_explanation: {type: string}
+            withheld_evidence_explanation: {type: string}
+            private_evidence_sha256: {type: string, const: ""}
+            supersedes_review_id: {type: string, format: uuid}
+            appeal_id: {type: string}
+            findings:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  criterion: {type: string}
+                  disposition: {type: string}
+                  reason_code: {type: string}
+                  explanation: {type: string, const: ""}
+                  evidence_sha256: {type: string, const: ""}
+    CompetitionRewardEvent:
+      type: object
+      additionalProperties: false
+      required: [cursor, event_id, payload_sha256, publication_at, decision]
+      properties:
+        cursor: {type: integer, format: int64, minimum: 1}
+        event_id: {type: string, format: uuid}
+        payload_sha256: {$ref: "#/components/schemas/Sha256"}
+        publication_at: {type: string, format: date-time}
+        decision: {$ref: "#/components/schemas/CompetitionRewardDecision"}
+    CompetitionRewardEventPage:
+      type: object
+      additionalProperties: false
+      required: [events, next_cursor]
+      properties:
+        events: {type: array, maxItems: 200, items: {$ref: "#/components/schemas/CompetitionRewardEvent"}}
+        next_cursor: {type: integer, format: int64, minimum: 0}
+    CompetitionSettlementReceipt:
+      type: object
+      additionalProperties: false
+      required: [event_id, environment, competition_id, season_id, round_id, revision, payload_sha256, decision_sha256, status, accounting_reference]
+      properties:
+        event_id: {type: string, format: uuid}
+        environment: {type: string}
+        competition_id: {type: string}
+        season_id: {type: string}
+        round_id: {type: string, format: uuid}
+        revision: {type: integer, minimum: 1}
+        payload_sha256: {$ref: "#/components/schemas/Sha256"}
+        decision_sha256: {$ref: "#/components/schemas/Sha256"}
+        status: {type: string, enum: [received, applied, confirmed, rejected]}
+        accounting_reference: {type: string, maxLength: 1024}
+        chain_transaction: {type: string, maxLength: 256}
+        applied_at: {type: string, format: date-time}
+        received_at: {type: string, format: date-time, description: Server-assigned receipt commit time.}
+        actor_id: {type: string, description: Authenticated actor; redacted in public results.}
+    CompetitionV2RoundResult:
+      type: object
+      additionalProperties: false
+      required: [decision_mode, required_api_capability, seal, reward_revision, provisional_reward_winner, integrity_review, source_approval, decisions, integrity_reviews, settlement_status, settlement_receipts, incidents, invalidated]
+      properties:
+        decision_mode: {$ref: "#/components/schemas/CompetitionDecisionMode"}
+        required_api_capability: {$ref: "#/components/schemas/CompetitionRequiredCapability"}
+        seal: {$ref: "#/components/schemas/CompetitionEvaluationSeal"}
+        reward_revision: {type: integer, minimum: 1}
+        provisional_reward_winner: {type: [string, "null"], format: uuid}
+        integrity_review: {type: string, enum: [not_reviewed, approved, disqualified, not_applicable]}
+        source_approval: {type: string, enum: [pending, approved, rejected, deferred, not_applicable]}
+        decisions: {type: array, items: {$ref: "#/components/schemas/CompetitionRewardDecision"}}
+        integrity_reviews: {type: array, items: {$ref: "#/components/schemas/CompetitionPublicIntegrityReview"}}
+        source_decision: {$ref: "#/components/schemas/CompetitionSourceActivation"}
+        settlement_status: {type: string, enum: [pending, received, applied, confirmed, rejected]}
+        settlement_receipts: {type: array, items: {$ref: "#/components/schemas/CompetitionSettlementReceipt"}}
+        incidents: {type: array, items: {$ref: "#/components/schemas/CompetitionAutomationIncident"}}
+        invalidated: {type: boolean}
+    CompetitionSourceActivation:
+      type: object
+      required: [target_round_id]
+      description: Separately authorized reviewed source intent; public projection omits raw manifest and private Git refs.
+      properties:
+        environment: {type: string}
+        competition_id: {type: string}
+        season_id: {type: string}
+        generation: {type: integer, format: int64}
+        expected_generation: {type: integer, format: int64}
+        source_generation: {type: integer}
+        target_epoch: {type: integer}
+        target_round_id: {type: string, format: uuid, description: Immutable reserved identity shared by readiness receipts and the later production round.}
+        source_decision_digest: {$ref: "#/components/schemas/Sha256"}
+        approved_patch_sha256: {$ref: "#/components/schemas/Sha256"}
+        kind: {type: string}
+        reason: {type: string}
+        base_source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
+        source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
+        commits: {type: object, additionalProperties: {$ref: "#/components/schemas/GitSha"}}
+        git_refs: {type: [object, "null"]}
+        review_id: {type: string, format: uuid}
+        review_decision_digest: {$ref: "#/components/schemas/Sha256"}
+        reward_decision_digest: {$ref: "#/components/schemas/Sha256"}
+        manifest_commit: {$ref: "#/components/schemas/GitSha"}
+        manifest_sha256: {$ref: "#/components/schemas/Sha256"}
+        publication_journal_sha256: {$ref: "#/components/schemas/Sha256"}
+        config_expected_commit: {$ref: "#/components/schemas/GitSha"}
+        evaluator_image_digest: {$ref: "#/components/schemas/ImageDigest"}
+        evaluated_image_digest: {$ref: "#/components/schemas/ImageDigest"}
+        host_qualification_sha256: {$ref: "#/components/schemas/Sha256"}
+        threshold: {type: number}
+        threshold_evidence_sha256: {$ref: "#/components/schemas/Sha256"}
+        prepared_at: {type: string, format: date-time}
+        build_ready_at: {type: string, format: date-time}
+        opens_at: {type: string, format: date-time}
+        activated_at: {type: string, format: date-time}
+        abandoned_at: {type: string, format: date-time}
+        intent_sha256: {$ref: "#/components/schemas/Sha256"}
+        state: {type: string}
+    CompetitionSourceReadiness:
+      type: object
+      additionalProperties: false
+      required: [environment, competition_id, season_id, generation, target_round_id, role, actor_id, manifest_commit, manifest_sha256, source_lock_sha256, runtime_image_digest, qualification_sha256, ready, recorded_at]
+      properties:
+        environment: {type: string}
+        competition_id: {type: string}
+        season_id: {type: string}
+        generation: {type: integer, format: int64}
+        target_round_id: {type: string, format: uuid}
+        role: {type: string, enum: [api, worker]}
+        actor_id: {type: string}
+        manifest_commit: {$ref: "#/components/schemas/GitSha"}
+        manifest_sha256: {$ref: "#/components/schemas/Sha256"}
+        source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
+        runtime_image_digest: {$ref: "#/components/schemas/ImageDigest"}
+        qualification_sha256: {$ref: "#/components/schemas/Sha256"}
+        ready: {type: boolean}
+        recorded_at: {type: string, format: date-time}
+    CompetitionAutomationHoldArgs:
+      type: object
+      additionalProperties: false
+      required: [kind, active, expected_revision, idempotency_key, reason_code, public_explanation, evidence_sha256]
+      properties:
+        kind: {type: string, enum: [admission, evaluation, source_activation, reward_delivery]}
+        active: {type: boolean}
+        expected_revision: {type: integer, minimum: 0}
+        idempotency_key: {type: string, minLength: 1, maxLength: 128}
+        reason_code: {type: string, enum: [OPERATOR_HOLD, EVALUATION_INTEGRITY_INCIDENT, SOURCE_COMPROMISE, RECOVERY_APPROVED]}
+        public_explanation: {type: string, minLength: 1, maxLength: 4096}
+        evidence_sha256: {$ref: "#/components/schemas/Sha256"}
+    CompetitionAutomationHold:
+      type: object
+      additionalProperties: false
+      properties:
+        hold_id: {type: string, format: uuid}
+        environment: {type: string}
+        competition_id: {type: string}
+        season_id: {type: string}
+        actor_id: {type: string}
+        revision: {type: integer}
+        created_at: {type: string, format: date-time}
+        request: {$ref: "#/components/schemas/CompetitionAutomationHoldArgs"}
+        request_sha256: {$ref: "#/components/schemas/Sha256"}
+    CompetitionAutomationIncidentArgs:
+      type: object
+      additionalProperties: false
+      required: [idempotency_key, expected_reward_revision, invalidates_evaluation, source_compromised, reason_code, public_explanation, evidence_sha256]
+      properties:
+        idempotency_key: {type: string, maxLength: 128, description: Nonempty in writes; redacted to empty in public result history.}
+        expected_reward_revision: {type: integer, minimum: 0}
+        invalidates_evaluation: {type: boolean}
+        source_compromised: {type: boolean}
+        source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
+        reason_code: {type: string, enum: [EVALUATION_INTEGRITY_INCIDENT, SOURCE_COMPROMISE]}
+        public_explanation: {type: string, minLength: 1, maxLength: 4096}
+        evidence_sha256: {$ref: "#/components/schemas/Sha256"}
+    CompetitionAutomationIncident:
+      type: object
+      additionalProperties: false
+      properties:
+        incident_id: {type: string, format: uuid}
+        round_id: {type: string, format: uuid}
+        environment: {type: string}
+        competition_id: {type: string}
+        season_id: {type: string}
+        actor_id: {type: string, description: Redacted to empty in public result history.}
+        created_at: {type: string, format: date-time}
+        request: {$ref: "#/components/schemas/CompetitionAutomationIncidentArgs"}
+        request_sha256: {$ref: "#/components/schemas/Sha256"}
+        affected_source_generations: {type: array, items: {type: integer, format: int64}}
+
     CompetitionHealthResult:
       type: object
       additionalProperties: false
@@ -459,6 +1140,8 @@ components:
         - evaluation_policy
         - season_policy
       properties:
+        decision_mode: {$ref: "#/components/schemas/CompetitionDecisionMode"}
+        required_api_capability: {$ref: "#/components/schemas/CompetitionRequiredCapability"}
         competition_id:
           type: string
           minLength: 1
@@ -712,6 +1395,8 @@ components:
         - reveal_at
         - created_at
       properties:
+        decision_mode: {$ref: "#/components/schemas/CompetitionDecisionMode"}
+        required_api_capability: {$ref: "#/components/schemas/CompetitionRequiredCapability"}
         round_id:
           type: string
           format: uuid
@@ -724,7 +1409,7 @@ components:
           description: True for a fee-free pre-production epoch evaluated against frozen source epoch zero and excluded from winner promotion and the production leaderboard.
         status:
           type: string
-          enum: [scheduled, open, grading, finalized, canceled]
+          enum: [scheduled, open, grading, finalized, canceled, sealed]
         workload_commitment:
           $ref: "#/components/schemas/Sha256"
         providers_sha256:
@@ -881,6 +1566,8 @@ components:
       additionalProperties: false
       required: [job_id, round_id, staging, patch_sha256, state, cache_hit, status_url]
       properties:
+        decision_mode: {$ref: "#/components/schemas/CompetitionDecisionMode"}
+        required_api_capability: {$ref: "#/components/schemas/CompetitionRequiredCapability"}
         job_id:
           type: string
           format: uuid
@@ -898,7 +1585,7 @@ components:
           type: boolean
         status_url:
           type: string
-          pattern: "^/competition/score/[0-9a-f-]+$"
+          pattern: "^/competition/(v2/)?score/[0-9a-f-]+$"
 
     CompetitionScoreJobResult:
       type: object
@@ -915,6 +1602,8 @@ components:
         - evaluator_image_digest
         - api_image_digest
       properties:
+        decision_mode: {$ref: "#/components/schemas/CompetitionDecisionMode"}
+        required_api_capability: {$ref: "#/components/schemas/CompetitionRequiredCapability"}
         job_id:
           type: string
           format: uuid
@@ -1141,6 +1830,8 @@ components:
       additionalProperties: false
       required: [kind, code, message, retriable]
       properties:
+        current_revision: {type: integer, minimum: 1}
+        current_decision_sha256: {$ref: "#/components/schemas/Sha256"}
         kind:
           type: string
           enum: [auth, submission, infrastructure]

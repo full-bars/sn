@@ -20,11 +20,13 @@ import (
 const safeCurrentStorageSchema = "urnetwork-mainnet-safe-current-storage-observation-v1"
 
 // The scope comes from a distinct independently signed policy proposal and the
-// immutable execution plan. It cannot be inferred from observed storage.
+// immutable execution plan. It cannot be inferred from observed storage. Only an
+// explicit SingleOwner selection admits one owner at threshold one.
 type safeCurrentStorageScope struct {
 	Safe                 common.Address
 	Singleton            common.Address
 	Owners               []common.Address
+	SingleOwner          bool
 	Nonce                string
 	Version              string
 	Variant              string
@@ -98,10 +100,22 @@ func safeCurrentMappingSlot(address common.Address, slot byte) common.Hash {
 	return crypto.Keccak256Hash(raw)
 }
 
-// Exact three-owner/two-signature, no-module semantics deliberately refuse all
-// additional words, including approved hashes, signed messages and old baggage.
+// Exactly two reviewed owner profiles exist: three owners at threshold two, or
+// an explicitly selected single owner at threshold one. Observed state, owner
+// count or signature bytes never select between them.
+func safeOwnerProfile(singleOwner bool) (int, int) {
+	if singleOwner {
+		return 1, 1
+	}
+	return 3, 2
+}
+
+// Exact three-owner/two-signature or one-owner/one-signature, no-module semantics
+// deliberately refuse all additional words, including approved hashes, signed
+// messages and old baggage.
 func (self safeCurrentStorageScope) validate() error {
-	if self.Safe == (common.Address{}) || self.Singleton == (common.Address{}) || self.Safe == self.Singleton || len(self.Owners) != 3 ||
+	owners, _ := safeOwnerProfile(self.SingleOwner)
+	if self.Safe == (common.Address{}) || self.Singleton == (common.Address{}) || self.Safe == self.Singleton || len(self.Owners) != owners ||
 		!mainnetRuntimeCodecSource(self.Runtime.RuntimeSourceCommit) || self.Runtime.RuntimeVersion.SpecName == "" || self.Runtime.RuntimeVersion.SpecVersion == 0 || self.Runtime.RuntimeVersion.StateVersion > 1 ||
 		!rootCanonicalHash(self.Runtime.RuntimeCodeHash) || !rootCanonicalHash(self.Runtime.RuntimeMetadataHash) {
 		return errors.New("Safe current storage scope lacks exact account or runtime authority")
@@ -176,9 +190,10 @@ func (self safeCurrentStorageScope) words(entries map[string][]byte) ([]safeCurr
 	}
 	nonce, _ := new(big.Int).SetString(self.Nonce, 10)
 	sentinel := common.HexToAddress("0x1")
+	owners, threshold := safeOwnerProfile(self.SingleOwner)
 	for slot, expected := range map[common.Hash]common.Hash{
-		{}: common.BytesToHash(self.Singleton[:]), common.BytesToHash([]byte{3}): common.BytesToHash([]byte{3}),
-		common.BytesToHash([]byte{4}): common.BytesToHash([]byte{2}), common.BytesToHash([]byte{5}): common.BigToHash(nonce),
+		{}: common.BytesToHash(self.Singleton[:]), common.BytesToHash([]byte{3}): common.BytesToHash([]byte{byte(owners)}),
+		common.BytesToHash([]byte{4}): common.BytesToHash([]byte{byte(threshold)}), common.BytesToHash([]byte{5}): common.BigToHash(nonce),
 		safeCurrentMappingSlot(sentinel, 1): common.BytesToHash(sentinel[:]),
 	} {
 		if values[slot] != expected {

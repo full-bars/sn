@@ -22,7 +22,7 @@ func TestEvmEvidenceCreateRequiresCompletedVaultBinding(t *testing.T) {
 		if _, code, diagnostic := f.command("apply", "--action", "evidence-create"); code != 3 {
 			t.Fatalf("%s binding admitted evidence: %d %s", stage, code, diagnostic)
 		}
-		if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmEvidenceCreateStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) || !maps.Equal(counts, f.counts) {
+		if err := f.unclaimed(evmEvidenceCreateStateFile); err != nil || !maps.Equal(counts, f.counts) {
 			t.Fatalf("%s binding opened evidence custody: %v", stage, err)
 		}
 	}
@@ -131,7 +131,7 @@ func TestEvmEvidenceCreateFencesSevenPredecessorCheckpoints(t *testing.T) {
 				t.Fatal("pending storage selector released the evidence checkpoint barrier")
 			}
 			pendingObserved = false
-			if _, code, diagnostic := f.command("resume", "--action", "evidence-create", "--online", "--submit"); code != 1 || !changed || refresh && !pendingObserved || !strings.Contains(diagnostic, "ancestry") || len(f.writes) != 7 {
+			if _, code, diagnostic := f.command("resume", "--action", "evidence-create", "--online", "--submit"); code != 1 || !changed || refresh && !pendingObserved || !strings.Contains(diagnostic, evmTestCheckpointRefusal(f, number, "ancestry")) || len(f.writes) != 7 {
 				t.Fatalf("evidence checkpoint %d refresh=%v accepted: %d %s", number, refresh, code, diagnostic)
 			}
 			f.override = nil

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Physical restore composes the complete combined Claim owner with the full
 // admitted namespace. Every signed path is fixed before original publication.

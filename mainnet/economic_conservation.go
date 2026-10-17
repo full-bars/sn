@@ -29,8 +29,9 @@ type economicConservationRoute struct {
 }
 
 type economicConservationPolicy struct {
-	EntitlementSources *economicConservationEntitlementPolicy `json:"original_entitlement_sources,omitempty"`
-	StorageProfile     *economicConservationStorageProfile    `json:"storage_profile,omitempty"`
+	PrincipalRetention *economicConservationPrincipalRetentionPolicy `json:"principal_retention,omitempty"`
+	EntitlementSources *economicConservationEntitlementPolicy        `json:"original_entitlement_sources,omitempty"`
+	StorageProfile     *economicConservationStorageProfile           `json:"storage_profile,omitempty"`
 	operatingHeadBytes uint64
 	FeeAuthority       *economicNativeFeePolicy                `json:"native_fee_authority,omitempty"`
 	Continuation       *economicConservationContinuationPolicy `json:"continuation,omitempty"`
@@ -67,6 +68,9 @@ func (self economicConservationPolicy) validate() error {
 		return err
 	}
 	if err := self.validatePrincipalAuthority(); err != nil {
+		return err
+	}
+	if err := self.PrincipalRetention.validate(self); err != nil {
 		return err
 	}
 	if err := self.validateEntitlementSources(); err != nil {
@@ -209,6 +213,7 @@ type economicConservationReceipt struct {
 // before an append and never prunes an unresolved liability. Archived matched
 // facts stay authenticated by exact checkpoints under separately held custody.
 type economicConservationState struct {
+	principalProvisional *economicConservationPrincipalProvisional
 	OriginalFees         []nativeFeeCensusProjection              `json:"original_complete_fee_census,omitempty"`
 	FinalityApproval     []byte                                   `json:"original_consensus_approval,omitempty"`
 	FinalityWindows      []nativeExecutionFinalityWindow          `json:"original_consensus_windows,omitempty"`

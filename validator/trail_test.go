@@ -147,7 +147,7 @@ type mockVerifyServer struct {
 	cacheHits               int
 }
 
-func newMockVerifyServer(t *testing.T, providerCount int) (*mockVerifyServer, ed25519.PrivateKey, connect.Id) {
+func newMockVerifyServer(t testing.TB, providerCount int) (*mockVerifyServer, ed25519.PrivateKey, connect.Id) {
 	t.Helper()
 	_, serverKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -512,10 +512,13 @@ type failingTrailTransport struct {
 	attempts int
 	cancel   context.CancelFunc
 	cancelAt int
+	// the family each attempt tries first
+	firstIpFamilies []int
 }
 
-func (self *failingTrailTransport) PostVerify(context.Context, connect.Id, []byte) ([]byte, error) {
+func (self *failingTrailTransport) PostVerify(ctx context.Context, _ connect.Id, _ []byte) ([]byte, error) {
 	self.attempts++
+	self.firstIpFamilies = append(self.firstIpFamilies, hopFirstIpFamilyOf(ctx))
 	if self.cancel != nil && self.attempts == self.cancelAt {
 		self.cancel()
 	}
@@ -539,7 +542,7 @@ func TestTrailEngineSeedPacingMetersEveryRetry(t *testing.T) {
 		paced++
 		return nil
 	}
-	if _, err := engine.postStep(context.Background(), connect.NewId(), []byte("seed"), pace); err == nil {
+	if _, _, err := engine.postStep(context.Background(), connect.NewId(), []byte("seed"), 4, pace); err == nil {
 		t.Fatal("failing SEED retries unexpectedly succeeded")
 	}
 	if paced != 3 || transport.attempts != 3 {
@@ -547,7 +550,7 @@ func TestTrailEngineSeedPacingMetersEveryRetry(t *testing.T) {
 	}
 
 	transport.attempts = 0
-	if _, err := engine.postStep(context.Background(), connect.NewId(), []byte("extend"), nil); err == nil {
+	if _, _, err := engine.postStep(context.Background(), connect.NewId(), []byte("extend"), 6, nil); err == nil {
 		t.Fatal("failing EXTEND retries unexpectedly succeeded")
 	}
 	if transport.attempts != 3 || paced != 3 {

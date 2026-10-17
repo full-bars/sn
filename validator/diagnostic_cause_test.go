@@ -7,6 +7,7 @@ package validator
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"strings"
@@ -122,8 +123,15 @@ func TestValidatorDiagnosticsKnownFieldsAndOpaqueWrappers(t *testing.T) {
 		{cause: io.EOF, want: releaseDiagnosticTransport},
 		{cause: (*crv4.ReceiptEvidenceUnavailableError)(nil), want: releaseDiagnosticUnknown},
 		{cause: (*validatorDiagnosticMethodProbe)(nil), want: releaseDiagnosticUnknown},
-		{cause: errors.Join(context.DeadlineExceeded), want: releaseDiagnosticUnknown},
+		{cause: errors.Join(context.DeadlineExceeded), want: releaseDiagnosticTimeout},
+		{cause: fmt.Errorf("read attempt: %w", &url.Error{Op: "Get", URL: "https://synthetic.example", Err: context.DeadlineExceeded}), want: releaseDiagnosticTimeout},
+		{cause: errors.Join(context.DeadlineExceeded, errors.New("synthetic opaque")), want: releaseDiagnosticUnknown},
 		{cause: errors.Join(&crv4.ReceiptEvidenceUnavailableError{}, errors.New("synthetic hard custody failure")), want: releaseDiagnosticUnknown},
+		// A steering read collapsed to its deadline verdict reads as a timeout,
+		// bare or as its frozen observation.
+		{cause: &productionSteeringReadDeadline{leaves: 3, sample: "Get https://synthetic.example"}, want: releaseDiagnosticTimeout},
+		{cause: observeReleaseError(&productionSteeringReadDeadline{leaves: 3}), want: releaseDiagnosticTimeout},
+		{cause: (*productionSteeringReadDeadline)(nil), want: releaseDiagnosticUnknown},
 	} {
 		if got := releaseDiagnosticReadCause(candidate.cause); got != candidate.want {
 			t.Fatalf("closed validator read fact changed: got %d want %d", got, candidate.want)
@@ -142,7 +150,9 @@ func TestValidatorDiagnosticsKnownFieldsAndOpaqueWrappers(t *testing.T) {
 		{cause: &TrailError{Kind: TrailErrorHop, Err: &url.Error{Err: context.DeadlineExceeded}}, kind: "hop", fact: "timeout"},
 		{cause: &TrailError{Kind: TrailErrorSeed, Err: context.Canceled}, kind: "seed", fact: "canceled"},
 		{cause: &TrailError{Kind: TrailErrorProtocol, Err: io.ErrUnexpectedEOF}, kind: "protocol", fact: "transport"},
-		{cause: &TrailError{Kind: TrailErrorUnknownOutcome, Err: errors.Join(context.DeadlineExceeded)}, kind: "unknown_final", fact: "unknown"},
+		{cause: &TrailError{Kind: TrailErrorUnknownOutcome, Err: errors.Join(context.DeadlineExceeded)}, kind: "unknown_final", fact: "timeout"},
+		{cause: &TrailError{Kind: TrailErrorSeed, Err: fmt.Errorf("step failed after 3 attempts: %w", fmt.Errorf("verify post via x: %w", &url.Error{Err: context.DeadlineExceeded}))}, kind: "seed", fact: "timeout"},
+		{cause: &TrailError{Kind: TrailErrorHop, Err: errors.Join(context.DeadlineExceeded, errors.New("synthetic opaque"))}, kind: "hop", fact: "unknown"},
 		{cause: (*TrailError)(nil), kind: "unknown", fact: "unknown"},
 		{cause: &TrailError{Kind: TrailErrorHop, Err: cycle}, kind: "hop", fact: "unknown"},
 	} {

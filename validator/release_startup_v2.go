@@ -18,7 +18,7 @@ import (
 // This is the sole semantic join for the root's acquired disk census. It does
 // not start workers, submit transactions or remove the release entrypoint gate.
 // The caller continues to own every ledger and must join users before Close.
-func startReleaseEvidenceV2DiskState(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins [2]string, disk *releaseEvidenceV2DiskState) error {
+func startReleaseEvidenceV2DiskState(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins []string, disk *releaseEvidenceV2DiskState) error {
 	if cfg == nil {
 		return errors.New("evidence semantic startup configuration is absent")
 	}
@@ -28,14 +28,14 @@ func startReleaseEvidenceV2DiskState(ctx context.Context, cfg *ReleaseConfig, ch
 
 // Tests may select actual reviewed fixture metadata and physical failures, but
 // cannot supply activation, cursor, replay or proof-projection verdicts.
-func startReleaseEvidenceV2DiskStateWithRuntime(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins [2]string, disk *releaseEvidenceV2DiskState, runtime crv4.RuntimeArtifactIdentity, physical attemptSettlementV2IO) (resultErr error) {
+func startReleaseEvidenceV2DiskStateWithRuntime(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins []string, disk *releaseEvidenceV2DiskState, runtime crv4.RuntimeArtifactIdentity, physical attemptSettlementV2IO) (resultErr error) {
 	return startReleaseEvidenceV2DiskStateOwned(ctx, cfg, chain, native, inputs, serverKeys, origins, disk, runtime, physical, nil)
 }
 
 // The production root retains only the already-reconstructed cursor inputs
 // after genuine semantic publication and every physical owner has closed.
 // It cannot replace a replay result or expose a partial startup census.
-func startReleaseEvidenceV2DiskStateOwned(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins [2]string, disk *releaseEvidenceV2DiskState, runtime crv4.RuntimeArtifactIdentity, physical attemptSettlementV2IO, retained **releaseEvidenceV2StartupHistory) (resultErr error) {
+func startReleaseEvidenceV2DiskStateOwned(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins []string, disk *releaseEvidenceV2DiskState, runtime crv4.RuntimeArtifactIdentity, physical attemptSettlementV2IO, retained **releaseEvidenceV2StartupHistory) (resultErr error) {
 	if ctx == nil {
 		return errors.New("evidence semantic startup context is absent")
 	}

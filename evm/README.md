@@ -142,9 +142,11 @@ the proxy as sink recorder and vault coordinator. The required
 must match the finalized public chain manifest. It accepts only Bittensor
 testnet chain 945 or mainnet chain 964.
 Testnet requires a dedicated EOA owner. Mainnet calls the standard Safe
-`getThreshold()`/`getOwners()` views and refuses deployment unless the owner is
-exactly a 2-of-3 Safe with three distinct nonzero owners. Deployer, owner,
-guardian, and commitment oracle must also be pairwise distinct.
+`getThreshold()`/`getOwners()` views and refuses deployment unless the owner has
+exactly the selected shape: by default a 2-of-3 Safe with three distinct nonzero
+owners, or with `ST_OWNER_SAFE_PROFILE=1-of-1` a Safe with one nonzero owner and
+threshold 1 (the SN25 launch). Any other profile value is refused. Deployer,
+owner, guardian, and commitment oracle must also be pairwise distinct.
 
 The release deployment path is the Go `sim-testnet` harness, which embeds and
 verifies the exact reviewed artifacts. It predicts all mirror identities, uses

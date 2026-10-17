@@ -38,7 +38,10 @@ func TestProducerGateStateSelectionOrdinaryRuntimeV2RetainsOwnerAndReplay(t *tes
 		{path: "../validator/measurement_stats_v2.go", caller: "reconcileReleaseStatsCutV2Owned", callee: "reconcileReleaseStatsCutV2OwnedWithJournalGuard"},
 		{path: "../validator/measurement_stats_v2.go", caller: "reconcileReleaseStatsCutV2OwnedWithJournalGuard", callee: "releaseStatsV2PrefixRoot"},
 		{path: "../validator/measurement_stats_v2.go", caller: "reconcileReleaseStatsCutV2OwnedWithJournalGuard", callee: "VerifyHeader"},
-		{path: "../validator/measurement_stats_v2.go", caller: "reconcileReleaseStatsCutV2OwnedWithJournalGuard", callee: "VerifyReleaseStatsMeasurementWithAttemptCutV2"},
+		// Since dd0a5a25e the replay goes through the startup memo, which skips
+		// only a cut whose exact inputs already passed.
+		{path: "../validator/measurement_stats_v2.go", caller: "reconcileReleaseStatsCutV2OwnedWithJournalGuard", callee: "verifyStatsCut"},
+		{path: "../validator/release_startup_verified.go", caller: "verifyStatsCut", callee: "VerifyReleaseStatsMeasurementWithAttemptCutV2"},
 		{path: "../validator/measurement_stats_v2.go", caller: "reconcileReleaseStatsCutV2OwnedWithJournalGuard", callee: "releaseStatsV2SuffixEgress"},
 		{path: "../validator/measurement_stats_v2.go", caller: "reconcileReleaseStatsCutV2OwnedWithJournalGuard", callee: "saveOwned"},
 		{path: "../validator/measurement_stats_v2.go", caller: "reconcileReleaseStatsCutV2OwnedWithJournalGuard", callee: "guard"},
@@ -71,10 +74,16 @@ func TestProducerGateStateSelectionOrdinaryRuntimeV2RetainsOwnerAndReplay(t *tes
 			t.Errorf("%s lost ordinary runtime edge %s", edge.caller, edge.callee)
 		}
 	}
-	for _, caller := range []string{"detachReleaseStatsMeasurementV2Owned", "reconcileReleaseStatsCutV2Owned", "detachReleaseStatsMeasurementV2OwnedWithJournalGuard", "reconcileReleaseStatsCutV2OwnedWithJournalGuard"} {
-		calls := releaseClosureFunctionCalls(t, "../validator/measurement_stats_v2.go", caller)
+	for _, function := range []struct{ path, caller string }{
+		{"../validator/measurement_stats_v2.go", "detachReleaseStatsMeasurementV2Owned"},
+		{"../validator/measurement_stats_v2.go", "reconcileReleaseStatsCutV2Owned"},
+		{"../validator/measurement_stats_v2.go", "detachReleaseStatsMeasurementV2OwnedWithJournalGuard"},
+		{"../validator/measurement_stats_v2.go", "reconcileReleaseStatsCutV2OwnedWithJournalGuard"},
+		{"../validator/release_startup_verified.go", "verifyStatsCut"},
+	} {
+		calls := releaseClosureFunctionCalls(t, function.path, function.caller)
 		if calls["BuildCut"] || calls["VerifyReleaseStatsMeasurement"] {
-			t.Errorf("compact runtime %s acquired a legacy replay bypass", caller)
+			t.Errorf("compact runtime %s acquired a legacy replay bypass", function.caller)
 		}
 	}
 }

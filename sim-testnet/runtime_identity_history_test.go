@@ -79,6 +79,17 @@ func setReleaseRuntimeTestResult(result any, value any) error {
 		}
 		*target = text
 		return nil
+	case **string:
+		if value == nil {
+			*target = nil
+			return nil
+		}
+		text, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("release runtime test nullable string has type %T", value)
+		}
+		*target = &text
+		return nil
 	default:
 		return fmt.Errorf("unexpected release runtime result type %T", result)
 	}

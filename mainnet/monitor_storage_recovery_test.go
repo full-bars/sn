@@ -102,16 +102,18 @@ func TestMonitorStorageStoppedOperatorReleasesOwnersBeforePeerStops(t *testing.T
 			return false
 		}
 	}}
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	done := make(chan int, 1)
 	go func() {
 		defer close(done)
-		done <- runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, nil, fixture.clock.now, hooks)
+		done <- runMainWithMonitorHooks(ctx, args, sink, nil, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-done })
-	if event := <-sink.events; event.Publication != "published" {
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
+	if event := monitorTestEvent(t, done, sink.events); event.Publication != "published" {
 		t.Fatal("operator fixture did not publish its real journal observation", event)
 	}
-	<-sink.validators
+	monitorTestEvent(t, done, sink.validators)
 	checkpoint, metrics := monitorOperatorPaths(fixture.checkpointPath, fixture.metricsPath, "operator-a")
 	if err := os.Rename(metrics, metrics+".retained"); err != nil {
 		t.Fatal(err)
@@ -119,11 +121,11 @@ func TestMonitorStorageStoppedOperatorReleasesOwnersBeforePeerStops(t *testing.T
 	if err := os.Symlink(metrics+".retained", metrics); err != nil {
 		t.Fatal(err)
 	}
-	resume["operator-a"] <- struct{}{}
-	if event := <-sink.events; event.Publication != "ownership-error" {
+	resumeMonitorTestWorker(t, done, resume["operator-a"])
+	if event := monitorTestEvent(t, done, sink.events); event.Publication != "ownership-error" {
 		t.Fatal("operator publisher loss did not stop its own role", event)
 	}
-	if exit := <-terminal; exit != 3 {
+	if exit := monitorTestEvent(t, done, terminal); exit != 3 {
 		t.Fatal("operator terminal exit differs", exit)
 	}
 	for _, path := range []string{metrics + ".lock", checkpoint + ".lock"} {
@@ -136,12 +138,12 @@ func TestMonitorStorageStoppedOperatorReleasesOwnersBeforePeerStops(t *testing.T
 			t.Fatal("stopped operator retained its lock", path, err)
 		}
 	}
-	resume["alpha"] <- struct{}{}
-	if role := <-sink.validators; role != "alpha" {
+	resumeMonitorTestWorker(t, done, resume["alpha"])
+	if role := monitorTestEvent(t, done, sink.validators); role != "alpha" {
 		t.Fatal("stopped operator suppressed validator publication", role)
 	}
 	cancel()
-	if exit := <-done; exit != 3 {
+	if exit := monitorTestEvent(t, nil, done); exit != 3 {
 		t.Fatal("operator terminal result disappeared", exit)
 	}
 }
@@ -523,24 +525,24 @@ func TestMonitorStorageOperatorLostAckRetainsIncident(t *testing.T) {
 		return nil
 	}}
 	cancel, done, sink, resume := startMonitorOperatorTest(t, fixture, url, hooks)
-	first := <-sink.events
+	first := monitorTestEvent(t, done, sink.events)
 	if first.Publication != "retrying" || first.State == nil || first.State.Transactions.Latest == nil || !first.State.PublicationLastSuccessAt.IsZero() {
 		t.Fatal("uncertain operator snapshot fabricated acknowledgement", first)
 	}
-	if role := <-sink.validators; role != "alpha" {
+	if role := monitorTestEvent(t, done, sink.validators); role != "alpha" {
 		t.Fatal("operator checkpoint failure stopped validator peer", role)
 	}
 	incident := first.State.Transactions.Latest.Id
 	if err := os.Remove(fixture.policy.Operators[0].DatabaseFile); err != nil {
 		t.Fatal(err)
 	}
-	resume <- struct{}{}
-	second := <-sink.events
+	resumeMonitorTestWorker(t, done, resume)
+	second := monitorTestEvent(t, done, sink.events)
 	if second.Publication != "published" || second.State.ReadStatus != "unavailable" || second.State.Transactions.Latest == nil || second.State.Transactions.Latest.Id != incident || closes.Load() != 1 {
 		t.Fatal("operator continuation lost retained incident", second, closes.Load())
 	}
 	cancel()
-	if exit := <-done; exit != 0 {
+	if exit := monitorTestEvent(t, nil, done); exit != 0 {
 		t.Fatal("continued operator failed joined cancellation", exit)
 	}
 }

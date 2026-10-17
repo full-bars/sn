@@ -68,6 +68,103 @@ invocation reconciles before considering another bounded attempt. `trim-reconcil
 remains read-only, including after terminal financial settlement or exhausted
 allowance. No path refreshes a nonce or mortal era.
 
+## Native multisig owner
+
+The SN25 owner is the `ur-owner` 2-of-3 native multisig, so its trim is two
+approvals by two signatories. The
+[multisig signing section](OWNER-SIGNING.md#native-multisig-owner-ur-owner)
+describes the domain, request and reply shapes and the owner-side commands.
+On the host the domain keeps this workflow, with these differences:
+
+- The fixed owner-trim journal holds an ordered list of signatory steps. Step 0,
+  the first approval, is the journal's anchor. Every host command for a step
+  takes `--multisig-step N`, which must name the latest step.
+- Every step is a separate, independently approved config and a separately
+  signed submission policy over that step's own signed bytes. Each policy
+  carries `multisig_step` (`first`, `final` or `cancel`) and the mandatory
+  multisig residual. Draft policies with `trim-submit-plan`.
+- `trim-reconcile` stays read-only and returns once the step is reconciled.
+
+The 2-of-3 sequence, with the original custody flags on every command:
+
+1. `trim-plan` with a multisig template prepares the first approval. The
+   template's `multisig` object supplies `threshold`, `signatories`,
+   `signatory_account_id`, `max_ref_time`, `max_proof_size` and
+   `deposit_limit_rao`. The action supplies the depositor's nonce, era, fee
+   reserve, derivation path and broadcast budget. The owner account comes from
+   the reviewed policy, and the command refuses a signer set that does not
+   derive it. After independent approval, `trim-apply` claims the journal.
+2. `trim-export --multisig-step 0` produces the depositor's request. The
+   depositor signs it on their own computer. `trim-import-reply --multisig-step 0`
+   retains the reply.
+3. `trim-submit-plan --multisig-step 0`, a separately signed policy, then
+   `trim-submit --multisig-step 0` with the policy flags. Admission requires
+   that no operation is pending for the call hash, that the chain owner is
+   still the multisig and that the signer's nonce matches. The metadata deposit
+   must fit its approved limit, and the signer's spendable balance must cover
+   the deposit plus its fee reserve. The full best-effort census and predicate
+   admission must also pass.
+4. `trim-reconcile --multisig-step 0` records `approval-recorded` only after
+   the exact `NewMultisig` event and the pending entry read back at the
+   inclusion block: timepoint, depositor, a single approval, the deposit and
+   the owner.
+5. `trim-multisig-plan --multisig-template FILE --metadata FILE` builds the
+   final approval for another signatory. At the current finalized head it reads
+   back the pending entry with the exact retained timepoint, the depositor and
+   a remaining approval, the owner and the signer's nonce. It prints
+   `step_config`, `approval_signing_bytes` and that observation. After
+   independent approval, `trim-multisig-apply --multisig-step-config FILE`
+   appends the step.
+6. Repeat steps 2–4 with `--multisig-step 1` for the final signatory. The step
+   is `executed` only with `MultisigExecuted` for the original timepoint and
+   call hash, an `Ok` inner result, the pending entry gone, the owner unchanged
+   and `MaxAllowedUids(25) == max_n` read back at the inclusion block. The
+   status `multisig-executed-partial-trim-correspondence-observed` additionally
+   requires the existing before/after census correspondence. An `Err` inner
+   result is `inner-dispatch-failed`, a failed trim that consumes the
+   operation.
+
+A later-step template is a separate JSON file:
+
+```json
+{"operation": "as_multi",
+ "signatory_account_id": "0xFINAL_SIGNATORY_ACCOUNT_ID32",
+ "signer_derivation_path": "m/44'/354'/0'/0'/0'",
+ "nonce": 17, "birth_block": 9227600, "birth_hash": "0xFINALIZED_BIRTH_HASH",
+ "mortal_period": 256, "fee_reserve_rao": 1000000, "max_broadcasts": 2,
+ "max_ref_time": 1000000000, "max_proof_size": 65536}
+```
+
+Placeholder values are not an approved step. A read-only
+`TransactionPaymentCallApi_query_call_info` check on runtime 473 reported the
+trim call's declared weight as 397,260,000 ref_time and 8,596 proof_size for
+every `max_n` tried (1, 64, 128 and 255). A `max_weight` below the declared
+weight makes the final approval's outer dispatch fail with the fee charged and
+the operation still pending. `as_multi` adds `max_weight` to the outer
+pre-dispatch weight, so keep the bound modest, for example 1,000,000,000 and
+65,536.
+
+To cancel a stuck first approval, the original depositor plans
+`"operation": "cancel_as_multi"` with no weight and follows the same steps.
+Cancellation admission needs only the original pending entry, depositor,
+nonce and fee reserve, so census drift cannot block it. `cancelled` requires
+`MultisigCancelled` and the pending entry gone. Only the depositor can cancel.
+
+A later step can be planned only while the operation is open and every earlier
+step is settled. An expired, nonce-conflicted or outer-failed final approval or
+cancellation can therefore be replanned as a new step. `executed`,
+`inner-dispatch-failed`, `cancelled` and any state conflict close the
+operation. The first approval is the anchor: if it expires or fails before
+opening the operation, prepare fresh original custody. The journal retains
+every step's request config, signature, numbered posts and evidence across
+restarts. A lost reply is recovered from the signatory's owner-local journal,
+and a lost acknowledgement consumes its numbered attempt.
+
+After the first approval, any other signatory can complete the pending
+operation, and the depositor can cancel it, outside this tool at any time.
+Admission rechecks the chain before each post, and only canonical receipts and
+exact-block readback establish what happened.
+
 ## Explicit pruning and registration choices
 
 `trim-submit-plan` defaults to these conservative choices. Empty fields in an
@@ -107,7 +204,8 @@ generation correspondence; changed or unapproved generations still conflict.
 Strict v1/v2 retains its original correspondence rule. Whole-block observations
 never prove that every absence was caused by this one call.
 
-Every result keeps `full_reset_completed=false` and `activation_ready=false`.
+Every result keeps `full_reset_completed=false` and `activation_ready=false`,
+including every multisig status.
 Actual device/account/digest qualification, a classified current census, both
 independent approvals, external custody of the coldkey and outstanding signatures,
 original receipt/outcome review, any retained-miner disposition, contract

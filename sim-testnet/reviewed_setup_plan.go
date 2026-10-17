@@ -20,10 +20,14 @@ func archiveReviewedSetupPlan(stateDir string, plan *SetupPlan) (*SetupPlan, err
 	if err != nil {
 		return nil, err
 	}
+	// Authenticate the exact bytes to be archived. Reading back a fresh
+	// archive then reuses that renewal verification; different first-written
+	// bytes for the hash are still verified in full.
+	raw = append(raw, '\n')
 	if _, err := decodePersistedPlanBytes(raw); err != nil {
 		return nil, err
 	}
-	raw, err = archiveReviewedSetupPlanBytes(stateDir, plan.PlanHash, append(raw, '\n'))
+	raw, err = archiveReviewedSetupPlanBytes(stateDir, plan.PlanHash, raw)
 	if err != nil {
 		return nil, err
 	}

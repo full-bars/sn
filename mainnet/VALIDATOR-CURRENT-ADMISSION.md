@@ -1,8 +1,11 @@
-# Independently accepted current admission for the two UR validators
+# Independently accepted current admission for two-unit UR validator activation
 
 `activate-validators admit-current` and `start` have a concrete current-authority
-adapter for the original majority and secondary services. It requires a separate
-signed acceptance, exact original installation custody, and fresh observations.
+adapter for the original majority and secondary services. Like the rest of
+[`activate-validators`](VALIDATOR-ACTIVATION.md), it refuses a one-role v5
+preparation; the SN25 launch's one UR validator runs as `validator run` through
+xops on snow instead. It requires a separate signed acceptance, exact original
+installation custody, and fresh observations.
 The ordinary process approval and earlier `admit-*` reports remain insufficient.
 No approval, signer operation, mainnet transaction, service installation or live
 start was performed by this implementation.

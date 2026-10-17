@@ -24,7 +24,7 @@ import (
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/protocol"
 	"github.com/urfoundation/sn/validator"
-	"golang.org/x/sys/unix"
+	"github.com/urnetwork/connect/durablevolume"
 )
 
 type validatorActivationFixture struct {
@@ -86,6 +86,13 @@ func newValidatorActivationFixtureWithNativeCensus(t *testing.T, mutate func(*ty
 			configureCensus(census, policy)
 		}
 	}, configureApproval)
+	return newValidatorActivationFixtureForChain(t, chain)
+}
+
+// Host approval binds the already prepared chain regardless of its independently
+// selected legacy or passive root policy.
+func newValidatorActivationFixtureForChain(t *testing.T, chain *bootstrapChainFixture) *validatorActivationFixture {
+	t.Helper()
 	directory := filepath.Dir(chain.path)
 	hostRoot := filepath.Dir(directory)
 	if err := os.Chmod(hostRoot, 0755); err != nil {
@@ -160,7 +167,7 @@ func newValidatorActivationFixtureWithNativeCensus(t *testing.T, mutate func(*ty
 	}
 	prepareMainnetSnapshotTest(t, p.StatePath, "mainnet-validator-activation", 128*1024)
 	f.approval = validatorActivationApproval{Schema: validatorActivationSchema, Plan: p}
-	h := &repairValidatorHost{rootUid: uint32(os.Geteuid()), trustRoot: hostRoot, machinePath: filepath.Join(directory, "machine-id"), bootPath: filepath.Join(directory, "boot-id"), cgroupRoot: filepath.Join(directory, "cgroup"), execute: f.execute, monotonic: func() (uint64, error) { return 150, nil }, cgroupType: func(string) (int64, error) { return unix.CGROUP2_SUPER_MAGIC, nil }}
+	h := &repairValidatorHost{rootUid: uint32(os.Geteuid()), trustRoot: hostRoot, machinePath: filepath.Join(directory, "machine-id"), bootPath: filepath.Join(directory, "boot-id"), cgroupRoot: filepath.Join(directory, "cgroup"), execute: f.execute, monotonic: func() (uint64, error) { return 150, nil }, cgroupType: func(string) (int64, error) { return repairValidatorCgroup2Magic, nil }}
 	f.host = &validatorActivationHost{host: h, unitDirectory: unitDirectory}
 	h.storageCommand = serviceStorageTestTransport(t)
 	repairValidatorTestWrite(t, h.machinePath, []byte(p.MachineId+"\n"), 0644)
@@ -456,12 +463,16 @@ func TestValidatorActivationPostSyncWindowConsumesWithoutStarting(t *testing.T) 
 	for _, change := range []string{"expiry", "read-age", "cancellation"} {
 		f := newValidatorActivationFixture(t)
 		f.installed()
-		ctx, cancel := context.WithCancel(t.Context())
+		ctx, cancel := context.WithCancel(f.chain.storageContext(t.Context()))
 		store, err := openValidatorActivationStore(ctx, f.approval, f.key, false, f.now)
 		if err != nil {
 			t.Fatal(err)
 		}
+		fired := false
 		store.syncDirectory = func(file *os.File) error {
+			if err := file.Sync(); err != nil {
+				return err
+			}
 			raw, err := os.ReadFile(store.path)
 			if err != nil {
 				return err
@@ -470,7 +481,8 @@ func TestValidatorActivationPostSyncWindowConsumesWithoutStarting(t *testing.T) 
 			if err := json.Unmarshal(raw, &record); err != nil {
 				return err
 			}
-			if !record.Units[0].StartAt.IsZero() {
+			if !fired && !record.Units[0].StartAt.IsZero() {
+				fired = true
 				switch change {
 				case "expiry":
 					f.now = f.approval.Plan.ExpiresAt
@@ -480,12 +492,12 @@ func TestValidatorActivationPostSyncWindowConsumesWithoutStarting(t *testing.T) 
 					cancel()
 				}
 			}
-			return file.Sync()
+			return nil
 		}
 		result, err := advanceValidatorActivation(ctx, store, f.host, f, "start", func() time.Time { return f.now })
 		closeErr := store.close()
 		cancel()
-		if err == nil || closeErr != nil || f.starts != [2]int{} || result.Units[0].StartAt.IsZero() {
+		if err == nil || closeErr != nil || !fired || f.starts != [2]int{} || result.Units[0].StartAt.IsZero() {
 			t.Fatal("post-sync refusal refunded or issued a start", change, result, err, closeErr)
 		}
 		result, code, detail := f.command(t.Context(), "resume", nil)
@@ -498,7 +510,7 @@ func TestValidatorActivationPostSyncWindowConsumesWithoutStarting(t *testing.T) 
 func TestValidatorActivationAmbiguousAcknowledgementWriteRecoversExactBytes(t *testing.T) {
 	f := newValidatorActivationFixture(t)
 	f.installed()
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -516,7 +528,7 @@ func TestValidatorActivationAmbiguousAcknowledgementWriteRecoversExactBytes(t *t
 		}
 		return file.Sync()
 	}
-	result, err := advanceValidatorActivation(t.Context(), store, f.host, f, "start", func() time.Time { return f.now })
+	result, err := advanceValidatorActivation(f.chain.storageContext(t.Context()), store, f.host, f, "start", func() time.Time { return f.now })
 	if err == nil || f.starts != [2]int{1, 0} || result.Units[0].Generation == nil {
 		t.Fatal("ambiguous acknowledged start not retained", result, err)
 	}
@@ -526,6 +538,40 @@ func TestValidatorActivationAmbiguousAcknowledgementWriteRecoversExactBytes(t *t
 	result, code, detail := f.command(t.Context(), "start", f)
 	if code != 0 || f.starts != [2]int{1, 1} || result.Units[0].Completed == nil {
 		t.Fatal("reopen replayed acknowledged start", code, result, detail)
+	}
+}
+
+// Missing host storage authority refuses before opening the original owner.
+// Supplying that same prepared declaration later does not rewrite its history.
+func TestValidatorActivationRequiresDeclaredStorageBeforeReopen(t *testing.T) {
+	f := newValidatorActivationFixture(t)
+	f.installed()
+	original := mainnetNamespaceTest(t, filepath.Dir(f.approval.Plan.StatePath))
+	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	if store != nil {
+		_ = store.close()
+		t.Fatal("undeclared activation acquired an original journal owner")
+	}
+	if err == nil || !strings.Contains(err.Error(), "explicit durable-volume declaration and hash are required") || f.starts != [2]int{} {
+		t.Fatal("undeclared activation did not refuse at storage admission", err, f.starts)
+	}
+	if !reflect.DeepEqual(original, mainnetNamespaceTest(t, filepath.Dir(f.approval.Plan.StatePath))) {
+		t.Fatal("missing declaration changed original activation custody")
+	}
+	ctx := f.chain.storageContext(t.Context())
+	store, err = openValidatorActivationStore(ctx, f.approval, f.key, false, f.now)
+	if err != nil {
+		t.Fatal("explicit original storage declaration could not reopen activation", err)
+	}
+	defer store.close()
+	record, readErr := store.load(ctx)
+	closeErr := store.close()
+	if readErr != nil || closeErr != nil || record.Status != "installed" || record.Operations != 1 ||
+		!record.Units[0].StartAt.IsZero() || !record.Units[1].StartAt.IsZero() || f.starts != [2]int{} {
+		t.Fatal("declared reopen changed installed authority or consumed a start", record, readErr, closeErr, f.starts)
+	}
+	if !reflect.DeepEqual(original, mainnetNamespaceTest(t, filepath.Dir(f.approval.Plan.StatePath))) {
+		t.Fatal("declared reopen rewrote original activation custody")
 	}
 }
 
@@ -567,16 +613,26 @@ func TestValidatorActivationCancellationJoinsAndReleasesOwnership(t *testing.T) 
 		return original(ctx, path, args)
 	}
 	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
 	done := make(chan int, 1)
+	joined := false
+	defer func() {
+		cancel()
+		if !joined {
+			<-done
+		}
+	}()
 	go func() { _, code, _ := f.command(ctx, "admit", nil); done <- code }()
 	<-entered
-	if store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now); err == nil {
-		store.close()
-		t.Fatal("concurrent activation owner acquired journal")
+	if store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now); !errors.Is(err, durablevolume.ErrBusy) {
+		if store != nil {
+			store.close()
+		}
+		t.Fatal("concurrent activation did not reach the original busy owner", err)
 	}
 	cancel()
-	if code := <-done; code == 0 {
+	code := <-done
+	joined = true
+	if code == 0 {
 		t.Fatal("canceled activation reported success")
 	}
 	select {

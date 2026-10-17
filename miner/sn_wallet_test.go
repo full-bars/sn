@@ -264,17 +264,21 @@ func TestSnWalletProofFromOpts(t *testing.T) {
 	if _, err := snWalletProofFromOpts(map[string]any{"--coldkey_seed_file": "/k", "--message": "m", "--signature": "s"}); err == nil {
 		t.Fatalf("seed file with message accepted")
 	}
+	if _, err := snWalletProofFromOpts(map[string]any{"--provider-jwt": "/selected.jwt", "--legacy-network-wallet": true}); err == nil {
+		t.Fatal("mixed provider and legacy wallet modes accepted")
+	}
 }
 
 func TestSnSetWalletSignsChallengeWithSeedFile(t *testing.T) {
-	setTestNetworkJwt(t, "network-jwt")
+	networkJwt := financialTestJwt(t, "", "legacy-network")
+	setTestNetworkJwt(t, networkJwt)
 	api := newFakeSnApi(t)
 	ctx, clientStrategy := testClientStrategy(t)
 	keypair := testAliceKeypair(t)
 	// the hex form with a 0x prefix and a trailing newline, as `subkey` prints it
 	seedFile := writeTestSeedFile(t, "0x"+testAliceSeedHex+"\n")
 
-	err := snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{SeedFile: seedFile})
+	err := snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{SeedFile: seedFile, credentials: snCredentialSelection{legacyNetwork: true}})
 	if err != nil {
 		t.Fatalf("set: %v", err)
 	}
@@ -294,7 +298,7 @@ func TestSnSetWalletSignsChallengeWithSeedFile(t *testing.T) {
 		t.Fatalf("challenge request carried Authorization %q", api.challengeAuth[0])
 	}
 	// the set carries the address, the exact message and the signature over it,
-	// under the network jwt
+	// under the explicitly selected legacy network jwt
 	set := api.walletRequests[0]
 	if stringField(t, set, "coldkey_ss58") != testAliceAddress {
 		t.Fatalf("set coldkey %v", set["coldkey_ss58"])
@@ -313,16 +317,16 @@ func TestSnSetWalletSignsChallengeWithSeedFile(t *testing.T) {
 	if !keypair.Verify(snWrapBytes(testChallengeMessage), signature) {
 		t.Fatalf("posted signature does not verify over the wrapped challenge")
 	}
-	if api.walletAuth[0] != "Bearer network-jwt" {
+	if api.walletAuth[0] != "Bearer "+networkJwt {
 		t.Fatalf("set Authorization %q", api.walletAuth[0])
 	}
 	if _, present := set["client_id"]; present {
-		t.Fatalf("set carried a client_id: %v", set["client_id"])
+		t.Fatalf("explicit legacy set acquired a client_id: %v", set["client_id"])
 	}
 }
 
 func TestSnSetWalletWithExternalSignature(t *testing.T) {
-	setTestNetworkJwt(t, "network-jwt")
+	setTestNetworkJwt(t, financialTestJwt(t, "", "legacy-network"))
 	api := newFakeSnApi(t)
 	ctx, clientStrategy := testClientStrategy(t)
 	keypair := testAliceKeypair(t)
@@ -333,7 +337,7 @@ func TestSnSetWalletWithExternalSignature(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	proof := &snWalletProof{Message: snEscapeMessage(testChallengeMessage), Signature: hex.EncodeToString(signature)}
+	proof := &snWalletProof{Message: snEscapeMessage(testChallengeMessage), Signature: hex.EncodeToString(signature), credentials: snCredentialSelection{legacyNetwork: true}}
 	if err := snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, proof); err != nil {
 		t.Fatalf("set: %v", err)
 	}
@@ -359,7 +363,7 @@ func TestSnSetWalletWithExternalSignature(t *testing.T) {
 }
 
 func TestSnSetWalletRefusesSeedThatDoesNotDeriveTheColdkey(t *testing.T) {
-	setTestNetworkJwt(t, "network-jwt")
+	setTestNetworkJwt(t, financialTestJwt(t, "", "legacy-network"))
 	api := newFakeSnApi(t)
 	ctx, clientStrategy := testClientStrategy(t)
 	otherSeed := strings.Repeat("11", 32)
@@ -369,7 +373,7 @@ func TestSnSetWalletRefusesSeedThatDoesNotDeriveTheColdkey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{SeedFile: seedFile})
+	err = snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{SeedFile: seedFile, credentials: snCredentialSelection{legacyNetwork: true}})
 	if err == nil || !strings.Contains(err.Error(), "derives "+other.Address()+", not "+testAliceAddress) {
 		t.Fatalf("mismatch error: %v", err)
 	}
@@ -381,7 +385,7 @@ func TestSnSetWalletRefusesSeedThatDoesNotDeriveTheColdkey(t *testing.T) {
 
 	// a missing seed file is an error, never created
 	missing := filepath.Join(filepath.Dir(seedFile), "absent.seed")
-	err = snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{SeedFile: missing})
+	err = snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{SeedFile: missing, credentials: snCredentialSelection{legacyNetwork: true}})
 	if err == nil {
 		t.Fatalf("missing seed file accepted")
 	}
@@ -391,12 +395,12 @@ func TestSnSetWalletRefusesSeedThatDoesNotDeriveTheColdkey(t *testing.T) {
 }
 
 func TestSnSetWalletUnsignedFallbackExplainsMain(t *testing.T) {
-	setTestNetworkJwt(t, "network-jwt")
+	setTestNetworkJwt(t, financialTestJwt(t, "", "legacy-network"))
 	api := newFakeSnApi(t)
 	api.walletError = "A coldkey signature over the wallet challenge is required."
 	ctx, clientStrategy := testClientStrategy(t)
 
-	err := snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, nil)
+	err := snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{credentials: snCredentialSelection{legacyNetwork: true}})
 	if err == nil {
 		t.Fatalf("unsigned set against main succeeded")
 	}
@@ -424,7 +428,7 @@ func TestSnSetWalletUnsignedFallbackExplainsMain(t *testing.T) {
 	api.walletError = ""
 	api.mu.Unlock()
 	ctx, clientStrategy = testClientStrategy(t)
-	if err := snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{}); err != nil {
+	if err := snSetWallet(ctx, clientStrategy, api.server.URL, testAliceAddress, &snWalletProof{credentials: snCredentialSelection{legacyNetwork: true}}); err != nil {
 		t.Fatalf("unsigned set on a permissive deployment: %v", err)
 	}
 }
@@ -444,6 +448,7 @@ func TestSnPrintWalletChallenge(t *testing.T) {
 		`"substrate" signing context`,
 		"<Bytes>...</Bytes>",
 		"provider wallet set " + testAliceAddress + " --message='" + snEscapeMessage(testChallengeMessage) + "' --signature=0x",
+		"--legacy-network-wallet --api_url=" + snWalletShellValue(api.server.URL),
 	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("challenge text lacks %q:\n%s", want, text)

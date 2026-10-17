@@ -4,7 +4,6 @@ package validator
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -78,8 +77,14 @@ func requireOwnerRecycleProductionFirstIntent(cfg *ReleaseConfig, previous *Stee
 		if epoch != approved.Approval.FirstNativeEpoch {
 			return errors.New("owner-recycle initial intent missed its signed drained activation epoch")
 		}
-	} else if previous.OwnerRecycle == nil {
+	} else if productionEconomicIntent(previous) == nil {
 		return errors.New("owner-recycle production cannot reinterpret a parent intent as its successor predecessor")
+	} else if cfg.TreasuryApproval != nil && previous.Treasury == nil {
+		if previous.Status != "applied" || epoch != approved.Approval.FirstNativeEpoch || previous.SubnetEpoch >= epoch {
+			return errors.New("treasury transition requires an applied original intent and its exact new drained first epoch")
+		}
+	} else if cfg.TreasuryApproval == nil && previous.Treasury != nil {
+		return errors.New("owner-recycle configuration cannot continue a treasury intent")
 	}
 	return nil
 }
@@ -97,7 +102,12 @@ func validateOwnerRecycleProductionApproval(cfg *ReleaseConfig, approval *OwnerR
 		return nil
 	}
 	p := approval.Production
-	if approval.Schema != ownerRecycleProductionApprovalSchema || p == nil || p.Schema != ownerRecycleProductionScope ||
+	approvalSchema, scope, proposalSchema := ownerRecycleProductionApprovalSchema, ownerRecycleProductionScope, ownerRecycleProposalSchema
+	if cfg.TreasuryApproval != nil {
+		approvalSchema, scope, proposalSchema = TreasuryApprovalSchema, TreasuryProductionScope, TreasuryProposalSchema
+	}
+	if approval.Schema != approvalSchema || approval.Proposal.Schema != proposalSchema ||
+		(cfg.TreasuryApproval != nil) != (approval.Proposal.Treasury != nil) || p == nil || p.Schema != scope ||
 		p.RuntimeCapability != crv4.ValidatorProducerRuntimeProfile || p.MaximumLastUpdateAge == 0 || p.ActivationNativeHash == ([32]byte{}) ||
 		p.ValidThroughNativeEpoch < approval.FirstNativeEpoch || len(p.ValidatorHotkeys) < cfg.Policy.Safety.MinimumLiveValidatorCount ||
 		len(p.ValidatorHotkeys) > maximumOwnerRecycleApprovedHotkeys {
@@ -116,8 +126,12 @@ func validateOwnerRecycleProductionApproval(cfg *ReleaseConfig, approval *OwnerR
 			return errors.New("owner-recycle production validators must be ordered, unique and nonzero")
 		}
 		foundSelf = foundSelf || hotkey == approval.ValidatorHotkey
+		if treasuryRecipientHotkey(approval.Proposal.Treasury, hotkey) {
+			return errors.New("treasury recipient cannot also be an approved validator")
+		}
+		// Only a treasury approval's own validator may also be an owner.
 		for _, owner := range approval.OwnerHotkeys {
-			if owner == hotkey {
+			if owner == hotkey && (hotkey != approval.ValidatorHotkey || approval.Proposal.Treasury == nil) {
 				return errors.New("owner-recycle production validator cannot be an owner recipient")
 			}
 		}
@@ -137,19 +151,10 @@ func loadOwnerRecycleProductionConfig(cfg *ReleaseConfig) error {
 	if err := validateOwnerRecycleApprovalSelection(cfg); err != nil {
 		return err
 	}
-	reference := cfg.OwnerRecycleApproval.Approval
-	raw, sourceErr := ReadReleaseEvidenceV2File(context.Background(), reference, maximumOwnerRecycleApprovalBytes)
-	if sourceErr != nil {
-		reference.Path = retainedProductionApprovalPath(cfg)
-		var err error
-		raw, err = ReadReleaseEvidenceV2File(context.Background(), reference, maximumOwnerRecycleApprovalBytes)
-		if err != nil {
-			reference.Path = filepath.Join(cfg.StateDir, retainedOwnerRecycleApprovalName)
-			raw, err = ReadReleaseEvidenceV2File(context.Background(), reference, maximumOwnerRecycleApprovalBytes)
-			if err != nil {
-				return errors.Join(sourceErr, err)
-			}
-		}
+	raw, err := readRetainedProductionFile(cfg, productionEconomicSelection(cfg).Approval, maximumOwnerRecycleApprovalBytes,
+		retainedProductionApprovalPath(cfg), filepath.Join(cfg.StateDir, retainedOwnerRecycleApprovalName))
+	if err != nil {
+		return err
 	}
 	return loadOwnerRecycleProductionConfigBytes(cfg, raw)
 }
@@ -163,7 +168,7 @@ func loadOwnerRecycleProductionConfigBytes(cfg *ReleaseConfig, raw []byte) error
 	if err := validateOwnerRecycleApprovalSelection(cfg); err != nil {
 		return err
 	}
-	if err := matchProductionAuthorityBytes(cfg.OwnerRecycleApproval.Approval, raw, maximumOwnerRecycleApprovalBytes); err != nil {
+	if err := matchProductionAuthorityBytes(productionEconomicSelection(cfg).Approval, raw, maximumOwnerRecycleApprovalBytes); err != nil {
 		return err
 	}
 	if _, err := decodeOwnerRecycleApproval(cfg, raw); err != nil {
@@ -173,7 +178,7 @@ func loadOwnerRecycleProductionConfigBytes(cfg *ReleaseConfig, raw []byte) error
 	if err != nil {
 		return err
 	}
-	cfg.ownerRecycleProduction = &ownerRecycleProductionAuthority{encoded: bytes.Clone(raw), configHash: hash, selection: *cfg.OwnerRecycleApproval}
+	cfg.ownerRecycleProduction = &ownerRecycleProductionAuthority{encoded: bytes.Clone(raw), configHash: hash, selection: *productionEconomicSelection(cfg)}
 	return nil
 }
 
@@ -186,12 +191,12 @@ func validateOwnerRecycleProductionConfig(cfg *ReleaseConfig) error {
 
 // Returns a newly decoded value; callers cannot mutate the retained capsule.
 func ownerRecycleProductionApproval(cfg *ReleaseConfig) (*OwnerRecycleApprovalEnvelope, error) {
-	if cfg == nil || cfg.SchemaVersion != ReleaseMainnetProductionSchemaVersion || cfg.ownerRecycleProduction == nil || cfg.OwnerRecycleApproval == nil {
+	if cfg == nil || cfg.SchemaVersion != ReleaseMainnetProductionSchemaVersion || cfg.ownerRecycleProduction == nil || productionEconomicSelection(cfg) == nil {
 		return nil, errors.New("owner-recycle production configuration lacks independently loaded authority")
 	}
 	owner := cfg.ownerRecycleProduction
 	hash, err := OwnerRecycleConfigHash(cfg)
-	if err != nil || hash != owner.configHash || !reflect.DeepEqual(owner.selection, *cfg.OwnerRecycleApproval) {
+	if err != nil || hash != owner.configHash || !reflect.DeepEqual(owner.selection, *productionEconomicSelection(cfg)) {
 		return nil, errors.Join(errors.New("owner-recycle production configuration changed after approval"), err)
 	}
 	approval, err := decodeOwnerRecycleApproval(cfg, owner.encoded)

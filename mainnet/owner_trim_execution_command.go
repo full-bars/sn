@@ -20,8 +20,9 @@ import (
 // opt-in mode and never manufactures the strict future-window capability.
 func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr io.Writer) (result int) {
 	mode := args[0]
-	if mode != "trim-plan" && mode != "trim-apply" && mode != "trim-resume" && mode != "trim-import" && mode != "trim-reconcile" && mode != "trim-export" && mode != "trim-import-reply" && mode != "trim-submit-plan" && mode != "trim-submit" {
-		fmt.Fprintln(stderr, "bootstrap-chain requires trim-plan, trim-apply, trim-resume, trim-export, trim-import, trim-import-reply, trim-reconcile, trim-submit-plan or trim-submit")
+	if mode != "trim-plan" && mode != "trim-apply" && mode != "trim-resume" && mode != "trim-import" && mode != "trim-reconcile" && mode != "trim-export" && mode != "trim-import-reply" && mode != "trim-submit-plan" && mode != "trim-submit" &&
+		mode != "trim-multisig-plan" && mode != "trim-multisig-apply" {
+		fmt.Fprintln(stderr, "bootstrap-chain requires trim-plan, trim-apply, trim-resume, trim-export, trim-import, trim-import-reply, trim-reconcile, trim-submit-plan, trim-submit, trim-multisig-plan or trim-multisig-apply")
 		return 2
 	}
 	flags := flag.NewFlagSet("bootstrap-chain "+mode, flag.ContinueOnError)
@@ -34,9 +35,22 @@ func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr 
 	var metadataPath, ledgerMetadataPath, signaturePath, requestPath, requestHash, replyPath, replyHash string
 	var submissionPath, submissionHash, submissionKey string
 	var pruningPolicy, registrationPolicy string
-	if mode == "trim-plan" || mode == "trim-export" {
+	var multisigTemplatePath, multisigStepConfigPath string
+	multisigStep := -1
+	if mode == "trim-plan" || mode == "trim-export" || mode == "trim-multisig-plan" {
 		flags.StringVar(&metadataPath, "metadata", "", "private file containing exact pinned runtime metadata hex")
+	}
+	if mode == "trim-plan" || mode == "trim-export" {
 		flags.StringVar(&ledgerMetadataPath, "ledger-metadata", "", "Ledger domains: independently approved unwrapped metadata15 hex")
+	}
+	if mode == "trim-export" || mode == "trim-import-reply" || mode == "trim-submit-plan" || mode == "trim-submit" || mode == "trim-reconcile" {
+		flags.IntVar(&multisigStep, "multisig-step", -1, "native multisig owner only: index of the latest signatory step")
+	}
+	if mode == "trim-multisig-plan" {
+		flags.StringVar(&multisigTemplatePath, "multisig-template", "", "signatory-local later-step template for the original open operation")
+	}
+	if mode == "trim-multisig-apply" {
+		flags.StringVar(&multisigStepConfigPath, "multisig-step-config", "", "independently approved later-step config from trim-multisig-plan")
 	}
 	if mode == "trim-import" {
 		flags.StringVar(&signaturePath, "signature", "", "original public native signature file, never a private key")
@@ -57,7 +71,8 @@ func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr 
 		flags.StringVar(&registrationPolicy, "registration-policy", ownerTrimRequireClosedRegistration, "unsigned choice: require-observed-closed-registration or accept-competing-registration-and-reentry-risk")
 	}
 	if err := flags.Parse(args[1:]); err != nil || flags.NArg() != 0 || *configPath == "" || *trimPath == "" || *runDir == "" ||
-		!planSha256(*accepted) || !rootCanonicalHash(*key) || (mode == "trim-plan" || mode == "trim-export") && metadataPath == "" || mode == "trim-import" && signaturePath == "" ||
+		!planSha256(*accepted) || !rootCanonicalHash(*key) || (mode == "trim-plan" || mode == "trim-export" || mode == "trim-multisig-plan") && metadataPath == "" || mode == "trim-import" && signaturePath == "" ||
+		mode == "trim-multisig-plan" && multisigTemplatePath == "" || mode == "trim-multisig-apply" && multisigStepConfigPath == "" ||
 		mode == "trim-import-reply" && (requestPath == "" || replyPath == "" || !planSha256(requestHash) || !planSha256(replyHash)) ||
 		mode == "trim-submit" && (submissionPath == "" || !planSha256(submissionHash) || !rootCanonicalHash(submissionKey)) {
 		fmt.Fprintln(stderr, "trim phase requires original --config, --run-dir, --accept-plan-hash, --trim-config and independent --trim-approval-key")
@@ -66,6 +81,13 @@ func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr 
 	preparation, err := loadBootstrapChainPreparation(ctx, *configPath)
 	if err != nil || !bootstrapChainHasRootRole(preparation.Plan.Config.Schema) || preparation.Plan.ContentHash != *accepted || preparation.Plan.Config.RunDirectory != *runDir {
 		fmt.Fprintln(stderr, "trim phase original preparation differs:", err)
+		return 3
+	}
+	// The sealed no-trim decision has no review to sign; no trim input or
+	// custody marker is read, opened or claimed for it.
+	if preparation.Plan.Config.noOwnerTrim() {
+		fmt.Fprintf(stderr, "bootstrap-chain %s refused: the accepted v5 preparation sealed owner_trim_mode %q, so its owner-trim phase is %s and has no trim review, action or custody\n",
+			mode, bootstrapChainOwnerTrimNone, bootstrapChainOwnerTrimNotSelected)
 		return 3
 	}
 	raw, _, err := readBootstrapRootFile(ctx, *trimPath, maxRpcReplyBytes)
@@ -80,7 +102,7 @@ func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr 
 	}
 	ledgerMetadata := ""
 	if mode == "trim-plan" || mode == "trim-export" {
-		if (config.Schema == ownerTrimLedgerExecutionSchema || config.Schema == ownerTrimBestEffortExecutionSchema) != (ledgerMetadataPath != "") {
+		if (config.Schema == ownerTrimLedgerExecutionSchema || config.Schema == ownerTrimBestEffortExecutionSchema || config.Schema == ownerTrimMultisigExecutionSchema) != (ledgerMetadataPath != "") {
 			fmt.Fprintln(stderr, "trim Ledger domains require --ledger-metadata; v1 keeps its original metadata profile")
 			return 2
 		}
@@ -131,6 +153,9 @@ func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr 
 			if config.Schema == ownerTrimBestEffortExecutionSchema {
 				config.Action.Schema = ownerTrimBestEffortActionSchema
 			}
+			if config.Schema == ownerTrimMultisigExecutionSchema {
+				config.Action.Schema = ownerTrimMultisigActionSchema
+			}
 		}
 		if config.Signature != "" || !config.validSchemas() || config.Route.validate() != nil || config.Route.ReadRetrySeconds < 60 || config.Route.ReadRetrySeconds > 900 || config.Route.SendTimeoutSeconds == 0 || config.Route.SendTimeoutSeconds > 60 {
 			fmt.Fprintln(stderr, "trim-plan requires an unsigned bounded action/route template")
@@ -142,8 +167,19 @@ func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr 
 		action.Runtime = rootReceiptProfile{RuntimeSourceCommit: policy.RuntimeSourceCommit, RuntimeVersion: policy.RuntimeVersion, RuntimeCodeHash: policy.RuntimeCodeHash, RuntimeMetadataHash: policy.RuntimeMetadataHash}
 		action.StatePath, action.Coldkey, action.Netuid = filepath.Join(*runDir, ownerTrimStateFile), policy.SubnetOwnerColdkey, policy.Netuid
 		action.SubnetRegistrationBlock, action.SubnetGeneration, action.MaximumUids, action.SelectionRule = *policy.SubnetRegistrationBlock, *policy.SubnetGeneration, review.Best.MaximumUids, ownerTrimSubsetRule
-		if config.Schema == ownerTrimBestEffortExecutionSchema {
+		if config.Schema == ownerTrimBestEffortExecutionSchema || config.Schema == ownerTrimMultisigExecutionSchema {
 			action.SelectionRule = ownerTrimBestEffortSelection
+		}
+		// A native multisig owner plans only its first approval here: the signer
+		// set and threshold must derive the reviewed subnet owner exactly.
+		if action.Multisig != nil {
+			multisig := action.Multisig.clone()
+			if multisig.Operation != "" && multisig.Operation != "as_multi" || multisig.Timepoint != nil || multisig.AccountId != "" && multisig.AccountId != action.Coldkey {
+				fmt.Fprintln(stderr, "trim-plan prepares only the first multisig approval for the reviewed owner; later steps use trim-multisig-plan")
+				return 2
+			}
+			multisig.AccountId, multisig.Operation = action.Coldkey, "as_multi"
+			action.Multisig = &multisig
 		}
 		metadata, _, err := readBootstrapRootFile(ctx, metadataPath, 2*maxMetadataRpcReplyBytes+3)
 		if err == nil {
@@ -164,7 +200,7 @@ func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr 
 		return 0
 	}
 	// The new config, public signature and markers must never name each other.
-	for _, input := range []string{*trimPath, signaturePath, metadataPath, ledgerMetadataPath, requestPath, replyPath, submissionPath} {
+	for _, input := range []string{*trimPath, signaturePath, metadataPath, ledgerMetadataPath, requestPath, replyPath, submissionPath, multisigTemplatePath, multisigStepConfigPath} {
 		if input != "" && (!bootstrapRootAbsolutePath(input) || input == config.Action.StatePath || input == config.Action.StatePath+".lock") {
 			fmt.Fprintln(stderr, "trim input overlaps the fixed action journal or marker")
 			return 2
@@ -181,6 +217,16 @@ func runBootstrapTrimCommand(ctx context.Context, args []string, stdout, stderr 
 			result = 1
 		}
 	}()
+	if config.Action.Multisig != nil {
+		return runOwnerTrimMultisigMode(ctx, mode, ownerTrimMultisigOptions{step: multisigStep, metadataPath: metadataPath, ledgerMetadata: ledgerMetadata,
+			templatePath: multisigTemplatePath, stepConfigPath: multisigStepConfigPath, requestPath: requestPath, requestHash: requestHash, replyPath: replyPath,
+			replyHash: replyHash, submissionPath: submissionPath, submissionHash: submissionHash, submissionKey: submissionKey, pruningPolicy: pruningPolicy,
+			registrationPolicy: registrationPolicy}, store, config, *key, encoder, stderr)
+	}
+	if multisigStep != -1 || mode == "trim-multisig-plan" || mode == "trim-multisig-apply" {
+		fmt.Fprintln(stderr, "trim multisig phases require an original native multisig owner action")
+		return 2
+	}
 	owner := ownerTrimExecutor{config: config, key: *key, store: store}
 	record, err := store.load()
 	if err != nil {

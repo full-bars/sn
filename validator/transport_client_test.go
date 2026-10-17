@@ -25,9 +25,14 @@ type tunnelTestClient struct {
 	post  func(context.Context, connect.Id, []byte) ([]byte, error)
 	close func(context.Context) error
 	owned tunnelTransportClient
+	// Each request's family, in order; the request lease serializes it.
+	families        []hopIpFamily
+	firstIpFamilies []int
 }
 
-func (self *tunnelTestClient) postVerify(ctx context.Context, hop connect.Id, body []byte) ([]byte, error) {
+func (self *tunnelTestClient) postVerify(ctx context.Context, hop connect.Id, body []byte, family hopIpFamily) ([]byte, error) {
+	self.families = append(self.families, family)
+	self.firstIpFamilies = append(self.firstIpFamilies, family.first)
 	return self.post(ctx, hop, body)
 }
 
@@ -459,5 +464,170 @@ func TestTunnelPacketReceiverRejectsPreviousHopAndCanceledRequest(t *testing.T) 
 	receive(connect.SourceId(hop), protocol.ProvideMode_Network, nil, []byte("late"))
 	if output.String() != "expected" {
 		t.Fatalf("cross-request packet reached netstack: %q", output.String())
+	}
+}
+
+func newTestTunnelTransportWithClients(t *testing.T, clients int) *TunnelTransport {
+	t.Helper()
+	transport := NewTunnelTransport(t.Context(), nil, TunnelTransportConfig{SourceClientId: connect.NewId(), Clients: clients})
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := transport.CloseAndWait(ctx); err != nil {
+			t.Error(err)
+		}
+	})
+	return transport
+}
+
+// A nonpositive count keeps the single retained client.
+func TestTunnelTransportClientCountDefaultsToOne(t *testing.T) {
+	for clients, want := range map[int]int{-2: 1, 0: 1, 1: 1, 5: 5} {
+		transport := newTestTunnelTransportWithClients(t, clients)
+		if transport.clientCount != want || cap(transport.clientLeases) != want || len(transport.clientLeases) != want {
+			t.Fatalf("clients=%d count=%d cap=%d free=%d, want %d", clients, transport.clientCount, cap(transport.clientLeases), len(transport.clientLeases), want)
+		}
+	}
+}
+
+// Concurrent trails each lease their own retained client, so up to the
+// configured count of exchanges run at once and none shares a client.
+func TestTunnelTransportClientsServeConcurrentRequestsExclusively(t *testing.T) {
+	const clients, requests = 3, 6
+	transport := newTestTunnelTransportWithClients(t, clients)
+	entered, release := make(chan struct{}, requests), make(chan struct{})
+	var active, maximum, creations, shared atomic.Int32
+	transport.newClient = func(context.Context, connect.Id) (tunnelTransportClient, error) {
+		creations.Add(1)
+		var own atomic.Int32
+		client := &tunnelTestClient{ctx: t.Context(), close: func(context.Context) error { return nil }}
+		client.post = func(ctx context.Context, _ connect.Id, _ []byte) ([]byte, error) {
+			if own.Add(1) != 1 {
+				shared.Add(1)
+			}
+			defer own.Add(-1)
+			current := active.Add(1)
+			defer active.Add(-1)
+			for old := maximum.Load(); old < current && !maximum.CompareAndSwap(old, current); old = maximum.Load() {
+			}
+			entered <- struct{}{}
+			select {
+			case <-release:
+				return []byte("ok"), nil
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+		}
+		return client, nil
+	}
+	done := make(chan error, requests)
+	for range requests {
+		go func() { _, err := transport.PostVerify(t.Context(), connect.NewId(), nil); done <- err }()
+	}
+	for range clients {
+		<-entered
+	}
+	for range requests - clients {
+		release <- struct{}{}
+		<-entered
+	}
+	for range clients {
+		release <- struct{}{}
+	}
+	for range requests {
+		if err := <-done; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if maximum.Load() != clients || creations.Load() != clients || shared.Load() != 0 {
+		t.Fatalf("concurrent=%d registrations=%d shared uses=%d", maximum.Load(), creations.Load(), shared.Load())
+	}
+}
+
+// A request finds a free client while another trail's exchange is still
+// running, instead of spending its own step deadline behind that exchange.
+func TestTunnelTransportFreeClientServesWhileAnotherBlocks(t *testing.T) {
+	transport := newTestTunnelTransportWithClients(t, 2)
+	entered, release := make(chan struct{}), make(chan struct{})
+	var calls atomic.Int32
+	transport.newClient = func(context.Context, connect.Id) (tunnelTransportClient, error) {
+		client := &tunnelTestClient{ctx: t.Context(), close: func(context.Context) error { return nil }}
+		client.post = func(ctx context.Context, _ connect.Id, body []byte) ([]byte, error) {
+			if calls.Add(1) == 1 {
+				close(entered)
+				select {
+				case <-release:
+					return nil, nil
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
+			}
+			return bytes.Clone(body), nil
+		}
+		return client, nil
+	}
+	blocked := make(chan error, 1)
+	go func() { _, err := transport.PostVerify(t.Context(), connect.NewId(), nil); blocked <- err }()
+	<-entered
+	stepCtx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	defer cancel()
+	if body, err := transport.PostVerify(stepCtx, connect.NewId(), []byte("second")); err != nil || string(body) != "second" {
+		t.Fatalf("free client exchange = %q, %v", body, err)
+	}
+	select {
+	case err := <-blocked:
+		t.Fatalf("blocked exchange returned early: %v", err)
+	default:
+	}
+	close(release)
+	if err := <-blocked; err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Shutdown joins and retires every retained client exactly once.
+func TestTunnelTransportStopRetiresEveryClient(t *testing.T) {
+	const clients = 3
+	transport := NewTunnelTransport(t.Context(), nil, TunnelTransportConfig{SourceClientId: connect.NewId(), Clients: clients})
+	entered, release := make(chan struct{}, clients), make(chan struct{})
+	var creations atomic.Int32
+	closes := make([]atomic.Int32, clients)
+	transport.newClient = func(context.Context, connect.Id) (tunnelTransportClient, error) {
+		index := creations.Add(1) - 1
+		client := &tunnelTestClient{ctx: t.Context(), close: func(context.Context) error { closes[index].Add(1); return nil }}
+		client.post = func(ctx context.Context, _ connect.Id, _ []byte) ([]byte, error) {
+			entered <- struct{}{}
+			select {
+			case <-release:
+				return nil, nil
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+		}
+		return client, nil
+	}
+	done := make(chan error, clients)
+	for range clients {
+		go func() { _, err := transport.PostVerify(t.Context(), connect.NewId(), nil); done <- err }()
+	}
+	for range clients {
+		<-entered
+	}
+	close(release)
+	for range clients {
+		if err := <-done; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := transport.CloseAndWait(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if creations.Load() != clients {
+		t.Fatalf("registrations=%d", creations.Load())
+	}
+	for index := range closes {
+		if closes[index].Load() != 1 {
+			t.Fatalf("client %d retired %d times", index, closes[index].Load())
+		}
 	}
 }

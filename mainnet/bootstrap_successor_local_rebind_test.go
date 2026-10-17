@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Private owner controls complement the unchanged public causal test overlay.
 package main
@@ -8,11 +8,12 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"errors"
-	"github.com/urnetwork/connect/durablevolume"
 	"maps"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/urnetwork/connect/durablevolume"
 )
 
 // Loss of the real publication acknowledgement must resume exactly that

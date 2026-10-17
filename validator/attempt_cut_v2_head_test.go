@@ -19,7 +19,7 @@ import (
 )
 
 // Converts an already authenticated fixture binding without changing its key.
-func attemptCutV2HeadTestFleetKey(t *testing.T, binding AttemptBinding) FleetScoreKey {
+func attemptCutV2HeadTestFleetKey(t testing.TB, binding AttemptBinding) FleetScoreKey {
 	t.Helper()
 	fleet, err := canonicalAttemptHex32("fixture fleet", binding.FleetID, false)
 	if err != nil {

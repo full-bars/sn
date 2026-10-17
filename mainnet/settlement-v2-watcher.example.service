@@ -1,0 +1,20 @@
+# The independent settlement v2 watcher (VERSION2-FINAL.md §10.2; VERSION2-LAUNCH.md
+# step 13) on a host other than the validator's. One run checks vault2's pending
+# root, challenges a provable fault and demands an unverifiable root.
+# settlement-v2-watcher.example.timer starts it. Replace each <...> placeholder
+# with the input SETTLEMENT-V2-EXAMPLES.md names.
+[Unit]
+Description=Settlement v2 watcher: check vault2's pending root
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=snclaim-watcher
+Group=snclaim-watcher
+ExecStart=/usr/local/bin/snclaim v2 check --all --vault=<vault2-address> --no_id=1 --rpc=<O21-evm-rpc-url> --api_url=<operator-api-url> --chain_id=964 --challenge --demand --key_file=<O21-watcher-key-file>
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes

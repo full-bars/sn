@@ -108,6 +108,24 @@ func TestProviderSwarmMemberDisablesTheExtenderRole(t *testing.T) {
 	}
 }
 
+// The miner's provider extender tries udp 53 for its dns carrier beside udp
+// 4053, which the sdk default leaves off for every app (connect/EXTENDER.md
+// L2). Only the device settings the miner builds opt in.
+func TestProviderDeviceSettingsOptTheExtenderInToTheDnsPrivilegedPort(t *testing.T) {
+	if sdk.DefaultDeviceLocalSettings().ProvideExtenderDnsPrivilegedPort {
+		t.Fatal("the sdk default binds 53, so the miner setting proves nothing")
+	}
+	for _, domainHash := range [][32]byte{{}, {71}} {
+		settings := ProviderDeviceSettings(domainHash)
+		if !settings.ProvideExtenderDnsPrivilegedPort {
+			t.Fatalf("domain %x: the miner's extender does not try 53", domainHash[:1])
+		}
+		if !settings.ProvideExtenderEnabled {
+			t.Fatalf("domain %x: the miner's extender role is off", domainHash[:1])
+		}
+	}
+}
+
 // Callback state keeps closed scalar facts, including unknown versus disabled.
 // Repeated facts do not depend on arbitrary SDK error/address text.
 func TestProviderExtenderStatusLine(t *testing.T) {

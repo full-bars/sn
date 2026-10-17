@@ -87,7 +87,7 @@ func TestReleaseStartupV2InitialImagePreservesActualPositiveLegacyHistory(t *tes
 	cfg.EvidenceV2.Bounds.MaxHistoryBytes = fixture.options.MaxBytes
 	history := &releaseEvidenceV2StartupHistory{cfg: cfg, initial: map[uint64]ReleaseEvidenceV2ActivationContext{}, keys: fixture.options.ServerKeys, activationHistory: last, current: map[uint64]releaseEvidenceV2StartupCursor{}}
 	replicas, _ := newAttemptCutV2ReplicaTestStores(t)
-	history.readers, err = newReleaseEvidenceV2StartupReaders([2]string{replicas[0].Origin, replicas[1].Origin}, cfg.EvidenceV2.Bounds.Cut)
+	history.readers, err = newReleaseEvidenceV2StartupReaders([]string{replicas[0].Origin, replicas[1].Origin}, cfg.EvidenceV2.Bounds.Cut)
 	if err != nil {
 		t.Fatal(err)
 	}

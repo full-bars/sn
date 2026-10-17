@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The archive planner must admit one original checkpoint for all consumers.
 // Fee retirement cannot leave Claim/native adoption using its earlier copy.

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Real retained files and deterministic I/O seams expose native custody loss.
 package chain

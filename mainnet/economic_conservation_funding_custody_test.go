@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Funding projection borrows an admitted original index only between complete
 // owner fences. Real public snapshots exercise cancellation, inode loss and

@@ -46,6 +46,16 @@ type attemptPrivateDirectory struct {
 	anchor      attemptPrivateFileState
 }
 
+// A witness taken after an actual Close checks work already done. It keeps the
+// declared storage values but not the caller's cancellation, so a cancelled
+// owner still reports only physical cleanup errors.
+func attemptPrivateDirectoryWitnessContext(ctx context.Context) context.Context {
+	if ctx == nil {
+		return nil
+	}
+	return context.WithoutCancel(ctx)
+}
+
 // Every component is opened natively with no-follow, nonblocking directory
 // flags. A FIFO or symlink replacement cannot block or redirect acquisition.
 func openAttemptPrivateDirectory(path string, storageContexts ...context.Context) (*attemptPrivateDirectory, error) {

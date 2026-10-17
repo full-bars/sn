@@ -107,9 +107,12 @@ func monitorProgressPublicRetryPeer(t *testing.T, kind string) {
 	}, wait: func(waitCtx context.Context, _ string, _ time.Duration) bool { <-waitCtx.Done(); return false }}
 	sink := &monitorProgressRetrySink{events: make(chan monitorProgressRetryEvent, 8)}
 	var diagnostic bytes.Buffer
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	done := make(chan int, 1)
 	go func() {
-		done <- runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, &diagnostic, fixture.clock.now, hooks)
+		defer close(done)
+		done <- runMainWithMonitorHooks(ctx, args, sink, &diagnostic, fixture.clock.now, hooks)
 	}()
 	joined := false
 	t.Cleanup(func() {

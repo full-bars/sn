@@ -188,7 +188,7 @@ func verifyProductionRuntimeContinuity(cfg *ReleaseConfig, policyRaw, certificat
 		return nil, nil, err
 	}
 	policy := envelope.Policy
-	key, err := canonicalAttemptHex32("original runtime continuity approver", cfg.OwnerRecycleApproval.Signer, false)
+	key, err := canonicalAttemptHex32("original runtime continuity approver", productionEconomicSelection(cfg).Signer, false)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -265,20 +265,8 @@ func InspectProductionRuntimeContinuityContext(ctx context.Context, native *crv4
 	var finality runtimeFinalityObservation
 	return crv4.ReadRuntimeObservationContext(ctx, native, func(ctx context.Context) (*ProductionRuntimeContinuityInspection, error) {
 		approved, _ := ownerRecycleProductionApproval(cfg)
-		var genesis types.Hash
-		var name, evm string
-		call := native.API.Client.CallContext
-		if err := call(ctx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
+		if _, err := readRuntimeNetworkIdentity(ctx, native, approved.Approval.NativeChain, native.GenesisHash); err != nil {
 			return nil, err
-		}
-		if err := call(ctx, &name, "system_chain"); err != nil {
-			return nil, err
-		}
-		if err := call(ctx, &evm, "eth_chainId"); err != nil {
-			return nil, err
-		}
-		if genesis != native.GenesisHash || name != approved.Approval.NativeChain || evm != "0x3c4" {
-			return nil, errors.New("runtime continuity fresh network identity differs")
 		}
 		head, err := readRuntimeFinalityWitness(ctx, native)
 		if err != nil {

@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -285,11 +286,11 @@ func (self *evidenceRelayColdCensusTestFixture) publication(t *testing.T, epoch,
 		references = append(references, validatorcomponent.ValidatorEvidencePublicationV2MemberReference{NoId: activation.NoID, SignedArtifactHash: hash, SignedArtifactBytes: uint64(len(raw))})
 	}
 	var manifest any = validatorcomponent.ValidatorEvidencePublicationV2Manifest{Schema: validatorcomponent.ValidatorEvidencePublicationV2Schema, Kind: kind,
-		Epoch: epoch, Origins: self.runtime.origins, CensusHash: censusHash, CensusBytes: uint64(len(censusRaw)), Members: references}
+		Epoch: epoch, Origins: slices.Clone(self.runtime.origins[:]), CensusHash: censusHash, CensusBytes: uint64(len(censusRaw)), Members: references}
 	path, err := validatorcomponent.ValidatorEvidencePublicationV2ManifestPath(source.stateDir, epoch)
 	if kind == protocol.ValidatorEvidenceDepositAudit {
 		manifest = validatorcomponent.ValidatorEvidenceDepositAuditV2Manifest{Schema: validatorcomponent.ValidatorEvidenceDepositAuditV2ManifestSchema, Kind: kind,
-			Epoch: epoch, Subject: subject, Decision: decision, Origins: self.runtime.origins, CensusHash: censusHash, CensusBytes: uint64(len(censusRaw)), Members: references}
+			Epoch: epoch, Subject: subject, Decision: decision, Origins: slices.Clone(self.runtime.origins[:]), CensusHash: censusHash, CensusBytes: uint64(len(censusRaw)), Members: references}
 		path, err = validatorcomponent.ValidatorEvidenceDepositAuditV2ManifestPath(source.stateDir, epoch, subject)
 	}
 	if err != nil {

@@ -64,7 +64,7 @@ func newProductionContinuityPolicyTestFixture(t *testing.T) *productionContinuit
 		header, hash := releaseReceiptTestHeader(t, parent, number)
 		self.hashes[number], self.headers[hash], parent = hash, header, hash
 	}
-	client := owner.rpc.native.API.Client.(*validatorRuntimeIdentityTestClient)
+	client := owner.rpc.client
 	original := client.callContext
 	client.callContext = func(ctx context.Context, target any, method string, args ...any) error {
 		self.calls++

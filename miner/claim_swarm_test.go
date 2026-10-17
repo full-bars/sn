@@ -15,7 +15,7 @@ import (
 func writeClaimSwarmMemberConfig(t *testing.T, dir, id, keyFile, rpc string) string {
 	t.Helper()
 	jwtFile := filepath.Join(dir, id+".jwt")
-	if err := os.WriteFile(jwtFile, []byte("jwt\n"), 0o600); err != nil {
+	if err := os.WriteFile(jwtFile, []byte(financialTestJwt(t, financialTestClientId, id)), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	config := ClaimDaemonConfig{

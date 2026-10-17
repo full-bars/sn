@@ -196,5 +196,7 @@ func readFinalNativeIntentReferencesV2(ctx context.Context, cfg *ResolvedConfig,
 	if err != nil {
 		return nil, err
 	}
-	return decodeValidatorIntentBytes(raw, validatorID)
+	return decodeValidatorIntentBytes(raw, validatorID, func(name string, maximum uint64) ([]byte, error) {
+		return validatorpkg.ReadReleaseEvidenceV2SetupFile(ctx, filepath.Join(release.StateDir, filepath.FromSlash(name)), maximum)
+	})
 }

@@ -29,6 +29,7 @@ type ProviderAttemptRequestJournal struct {
 	limits      ProviderAttemptRequestLimits
 	key         ed25519.PrivateKey
 	checkpoint  *ProviderAttemptRequestCheckpoint
+	legacy      bool
 	file        *os.File
 	observed    os.FileInfo
 	failure     error
@@ -70,6 +71,10 @@ func OpenProviderAttemptRequestJournal(ctx context.Context, path string, prepara
 		return nil, err
 	}
 	defer func() { resultErr = errors.Join(resultErr, directory.leave()) }()
+	// Preparation is complete here, so every owner sharing the root is visible.
+	if err := checkProviderAttemptRequestRootAttributes(directory.directory); err != nil {
+		return nil, err
+	}
 	raw, absent, err := readProviderAttemptRequestAttribute(directory.directory)
 	if err != nil {
 		return nil, err
@@ -77,14 +82,14 @@ func OpenProviderAttemptRequestJournal(ctx context.Context, path string, prepara
 	if absent {
 		return nil, errors.Join(durablevolume.ErrIdentity, errors.New("provider request original preparation anchor is absent"))
 	}
-	var checkpoint ProviderAttemptRequestCheckpoint
-	if err := attemptStoreDecode(raw, &checkpoint); err != nil {
+	checkpoint, legacy, err := decodeProviderAttemptRequestCheckpoint(raw, preparation)
+	if err != nil {
 		return nil, err
 	}
 	if err := self.validateCheckpoint(checkpoint); err != nil {
 		return nil, err
 	}
-	self.checkpoint = &checkpoint
+	self.checkpoint, self.legacy = &checkpoint, legacy
 	if err := self.openFileAndRecover(ctx); err != nil {
 		return nil, err
 	}
@@ -113,17 +118,16 @@ func (self *ProviderAttemptRequestJournal) validateCheckpoint(value ProviderAtte
 }
 
 // Persisting the checkpoint includes the directory barrier and exact readback.
+// One atomic replacement writes the fixed-width record, also over a v1 value.
 func (self *ProviderAttemptRequestJournal) saveCheckpoint(create bool) error {
-	raw, err := json.Marshal(self.checkpoint)
+	raw, err := encodeProviderAttemptRequestCheckpoint(*self.checkpoint)
 	if err != nil {
 		return err
-	}
-	if len(raw) > 4096 {
-		return protocol.ErrProviderAttemptsCapacity
 	}
 	if err := writeProviderAttemptRequestAttribute(self.directory.directory, raw, create); err != nil {
 		return err
 	}
+	self.legacy = false
 	if err := self.directory.sync("provider-request-checkpoint"); err != nil {
 		return err
 	}
@@ -233,7 +237,11 @@ func (self *ProviderAttemptRequestJournal) check() error {
 	if err != nil {
 		return err
 	}
-	expected, encodeErr := json.Marshal(self.checkpoint)
+	// A v1 value admitted at open is compared as v1 until a save replaces it.
+	expected, encodeErr := encodeProviderAttemptRequestCheckpoint(*self.checkpoint)
+	if self.legacy {
+		expected, encodeErr = json.Marshal(self.checkpoint)
+	}
 	if encodeErr != nil || absent || !bytes.Equal(raw, expected) {
 		return errors.Join(durablevolume.ErrIdentity, encodeErr, errors.New("provider request custody changed after admission"))
 	}
@@ -523,8 +531,8 @@ func (self *ProviderAttemptRequestJournal) ready(ctx context.Context) error {
 	if absent {
 		return errors.Join(durablevolume.ErrIdentity, errors.New("provider request interrupted head disappeared"))
 	}
-	var original ProviderAttemptRequestCheckpoint
-	if err := attemptStoreDecode(raw, &original); err != nil {
+	original, legacy, err := decodeProviderAttemptRequestCheckpoint(raw, self.preparation)
+	if err != nil {
 		return err
 	}
 	if err := self.validateCheckpoint(original); err != nil {
@@ -535,7 +543,7 @@ func (self *ProviderAttemptRequestJournal) ready(ctx context.Context) error {
 	if original.Committed.Sequence > self.checkpoint.Committed.Sequence || self.checkpoint.Committed.Sequence-original.Committed.Sequence > 1 {
 		return errors.Join(durablevolume.ErrIdentity, errors.New("provider request interrupted sequence differs"))
 	}
-	self.checkpoint = &original
+	self.checkpoint, self.legacy = &original, legacy
 	if err := self.openFileAndRecover(ctx); err != nil {
 		return err
 	}

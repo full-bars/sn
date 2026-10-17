@@ -35,6 +35,55 @@ Prepared replay requires both the original and current exact artifacts to match,
 as well as the independently authenticated durable production intent; an old
 signature is never rewritten for a replacement runtime.
 
+## Signed successor admission
+
+Subtensor replaces its runtime every few days. A schema-3 mainnet config may set
+`runtime_successor_profile: urnetwork-validator-producer-interface-v1`, the same
+profile its approval names as `production.runtime_capability`. The field is part
+of the complete config that the approval's `config_hash` signs; omitting it keeps
+the exact pin and the config's original serialized identity. Testnet, schema 1/2
+and observation configs refuse it, and it never coexists with testnet
+`provisional_runtime_compatibility`. The policy is unchanged:
+`safety.stop_on_runtime_change: true` stays mandatory, and with this field the
+validator stops on a change to an interface it consumes rather than on every new
+spec version.
+
+The production native dial installs the admission on its connection before any
+read. Inside a signed block window, a live runtime that differs from the approved
+artifact is admitted only when it is a successor of that exact artifact: the same
+spec name, transaction version 1 and state version 1, and a strictly higher spec
+version. Its version, `:code` hash and metadata bytes are read and hashed at the
+exact block, through the same approved route, genesis, finality and transport
+checks as the approved artifact. Its producer interface (consumed storage, source
+batch calls, receipt events, ordered signed extensions and selective-metagraph
+API v2) must equal the reviewed profile that the approved artifact satisfies. The
+owner census, eligibility and treasury storage that production decodes must keep
+their reviewed shapes. The result is an ordinary exact artifact for its own
+identity: readers decode with its metadata, and fresh preparation signs with its
+real spec and transaction versions. Any changed consumed interface refuses the
+successor with an error naming the item, and steering stops through its existing
+failure limit, leaving the external weight fallback in effect.
+
+Each original config in `production_authority_history` that opted in keeps that
+admission for its own approved artifact. Decisions it made under an admitted
+successor therefore still verify after renewal. Renewal may newly opt in but
+cannot withdraw or change the profile. Evidence rendering changes nothing but
+its references, so an activation-pending config must already carry the field
+for its rendered successor to have it. Earlier exact windows stay exact. A
+pending transaction signed under a runtime that was replaced before inclusion can
+never be included, because `CheckSpecVersion` binds its signature and installed
+spec versions only increase. When no receipt exists through the scanned boundary,
+the nonce is unspent and that boundary already runs a later spec, the pending
+owner records the transaction as failed instead of retrying; it never
+rebroadcasts. Configs without the field keep waiting on such bytes. Server
+staging loads the same signed config, so its refresh admits successors through
+the same producer-interface check; it decodes no owner or treasury storage.
+
+This keeps the signed production window, deployment, policy and custody fixed.
+It approves no runtime source or economic semantics: the approver accepts that
+later runtimes preserving these wire interfaces may change behavior that the
+interfaces do not express.
+
 Compatible configuration renewal uses the separate bounded
 `production_authority_history` described in the
 [production transition](OWNER-RECYCLE-PRODUCTION.md#durable-original-production-authority).

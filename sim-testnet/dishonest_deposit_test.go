@@ -134,7 +134,13 @@ func dishonestValidatorIntent(t *testing.T, poolUID uint16) validatorpkg.Steerin
 func writeDishonestValidatorIntent(t *testing.T, stateDir string, intent validatorpkg.SteeringIntent) {
 	t.Helper()
 	path := filepath.Join(stateDir, "runtime", "validator-1", "state", "steering-intents.json")
-	if err := writePublicJSON(path, map[string]any{"schema": validatorpkg.SteeringIntentSchema, "current": intent, "history": []any{}}); err != nil {
+	// The validator's own canonical store: its field order, indented.
+	store := struct {
+		Schema  string                        `json:"schema"`
+		Current *validatorpkg.SteeringIntent  `json:"current,omitempty"`
+		History []validatorpkg.SteeringIntent `json:"history"`
+	}{Schema: validatorpkg.SteeringIntentSchema, Current: &intent, History: []validatorpkg.SteeringIntent{}}
+	if err := writePublicJSON(path, store); err != nil {
 		t.Fatal(err)
 	}
 }

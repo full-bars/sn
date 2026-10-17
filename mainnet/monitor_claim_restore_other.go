@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !darwin
 
 package main
 
@@ -9,11 +9,11 @@ import (
 )
 
 func runMonitorClaimArchiveRestoreRequest(_ context.Context, _ []string, _ io.Writer, stderr io.Writer) int {
-	fmt.Fprintln(stderr, "Claim history restore requires the qualified Linux storage profile")
+	fmt.Fprintln(stderr, "Claim history restore requires the qualified Linux or macOS storage profile")
 	return 2
 }
 
 func runMonitorClaimArchiveRestoreCohort(_ context.Context, _ []string, _ io.Writer, stderr io.Writer) int {
-	fmt.Fprintln(stderr, "Claim history cohort restore requires the qualified Linux storage profile")
+	fmt.Fprintln(stderr, "Claim history cohort restore requires the qualified Linux or macOS storage profile")
 	return 2
 }

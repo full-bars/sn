@@ -52,7 +52,11 @@ func fleetRecoveryCompleted(record *fleetRecoveryRecord) error {
 // Captures exact canonical manifest semantics before loading any signing key.
 func fleetRecoveryNewIntent(action string, authority *fleetMainnetRuntimeAuthority, manifest *protocol.FleetManifest) (fleetRecoveryIntent, error) {
 	raw, err := manifest.Canonical()
-	return fleetRecoveryIntent{Action: action, Genesis: authority.GenesisHash, Manifest: raw}, err
+	intent := fleetRecoveryIntent{Action: action, Genesis: authority.GenesisHash, Manifest: raw}
+	if action == "publish" {
+		intent.Format = crv4.FleetCommitmentTag
+	}
+	return intent, err
 }
 
 // The original approval is copied at prepare time, not reopened after send.
@@ -113,7 +117,8 @@ func fleetRecoverableNative(ctx context.Context, opts docopt.Opts, manifest *pro
 	}
 	defer store.close()
 	record, err := store.find(intent)
-	if err != nil {
+	legacy := store.unresolvedLegacyPublish(intent)
+	if err != nil && legacy == nil {
 		return err
 	}
 	seed, err := crv4.LoadSeedFile(fleetOpt(opts, "--hotkey_seed_file"))
@@ -132,6 +137,17 @@ func fleetRecoverableNative(ctx context.Context, opts docopt.Opts, manifest *pro
 		}
 	}
 	signer := fleetRecoverySigner{native: key}
+	if legacy != nil {
+		// A pre-tag publication blocks every new intent until it is resolved.
+		// It is finished from its original signed bytes (never re-signed) and
+		// verified with the legacy decoder, then the tagged publish proceeds.
+		if err := fleetRecoveryCloseLegacyPublish(ctx, opts, store, legacy, signer); err != nil {
+			return err
+		}
+		if record, err = store.find(intent); err != nil {
+			return err
+		}
+	}
 	if record != nil {
 		if record.NativeSigner != key.PublicKey() {
 			return errors.New("fleet recovery original native signer differs")
@@ -225,6 +241,9 @@ func fleetRecoverableNative(ctx context.Context, opts docopt.Opts, manifest *pro
 		}
 		receipt = result.Submit.Receipt
 	} else {
+		if err := refuseFleetPublishFromValidatorRole(ctx, view, manifest.Netuid, manifest.Hotkey, start); err != nil {
+			return err
+		}
 		hash, _ := manifest.CommitmentHash()
 		call, err := view.NewSetFleetCommitmentCall(manifest.Netuid, hash)
 		if err != nil {
@@ -262,6 +281,36 @@ func fleetRecoverableNative(ctx context.Context, opts docopt.Opts, manifest *pro
 		}
 	}
 	return fleetRecoveryFinishNative(ctx, store, record, signer, authority, chain, receipt)
+}
+
+// Resolves an unresolved pre-tag publication under its own original
+// approval: the archive scan finds its receipt, or the original bytes are
+// replayed when its nonce is still free, and the legacy readback makes the
+// record terminal. Its outcome says the miner must republish tagged.
+func fleetRecoveryCloseLegacyPublish(ctx context.Context, opts docopt.Opts, store *fleetRecoveryStore, legacy *fleetRecoveryRecord, signer fleetRecoverySigner) error {
+	if legacy.NativeSigner != signer.native.PublicKey() {
+		return errors.New("fleet recovery original native signer differs")
+	}
+	authority, _, err := legacy.authority()
+	if err != nil {
+		return err
+	}
+	endpointContext := func(parent context.Context, budget time.Duration) (context.Context, context.CancelFunc) {
+		return context.WithTimeout(parent, budget)
+	}
+	chain, _, err := dialFleetNativeWithEndpointContext(ctx, fleetOpts(opts, "--substrate"), fleetNativeEndpointTimeout, endpointContext, crv4.DialChainContext, authority.recoveryNetwork)
+	if err != nil {
+		return err
+	}
+	defer closeFleetNative(chain)
+	if err := fleetRecoveryResumeNative(ctx, store, legacy, signer, authority, chain, true); err != nil {
+		// A legacy publication that finalized with a dispatch failure is
+		// terminal too; it no longer blocks the tagged publish.
+		if closed, findErr := store.find(legacy.Intent); findErr != nil || closed == nil || closed.Stage != "finalized" {
+			return err
+		}
+	}
+	return nil
 }
 
 // Historical decoding uses the original exact approval. Neither an upgraded
@@ -318,11 +367,15 @@ func fleetRecoveryFinishNative(ctx context.Context, store *fleetRecoveryStore, r
 	copy := *record
 	if record.Intent.Action == "publish" {
 		hash, _ := manifest.CommitmentHash()
-		observed, err := authority.commitmentWrite(ctx, chain, manifest.Netuid, manifest.Hotkey, hash, receipt)
+		legacy := record.Intent.legacyPublish()
+		observed, err := authority.commitmentWriteFormat(ctx, chain, manifest.Netuid, manifest.Hotkey, hash, receipt, legacy)
 		if err != nil {
 			return fleetRecoveryUnresolved(record, err)
 		}
 		copy.Outcome = fmt.Sprintf("commitment 0x%x written at native block %d", observed.Hash, observed.CommitmentBlock)
+		if legacy {
+			copy.Outcome = fmt.Sprintf("legacy untagged commitment 0x%x written at native block %d; it is never mirrored, republish in the tagged format", observed.Hash, observed.CommitmentBlock)
+		}
 	} else {
 		postState, err := authority.viewFor(ctx, chain, receipt.BlockHash, crv4.FleetRegistrationRead)
 		if err != nil {
@@ -448,6 +501,17 @@ func fleetRecoveryResumeNativeRange(ctx context.Context, store *fleetRecoverySto
 	}
 	if !apply {
 		return fleetRecoveryUnresolved(record, errors.New("native replay requires --apply"))
+	}
+	if record.Intent.Action == "publish" {
+		// A replay is a fresh send of retained bytes: the role is rechecked
+		// at the finalized head, and a refusal leaves the record unresolved.
+		_, manifest, err := record.authority()
+		if err != nil {
+			return fleetRecoveryUnresolved(record, err)
+		}
+		if err := refuseFleetPublishFromValidatorRole(ctx, view, manifest.Netuid, record.NativeSigner, finalized); err != nil {
+			return fleetRecoveryUnresolved(record, err)
+		}
 	}
 	if err := authority.signingAdmission(ctx, chain, record.StartHash, purpose); err != nil {
 		return fleetRecoveryUnresolved(record, err)

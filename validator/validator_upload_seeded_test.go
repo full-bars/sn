@@ -124,7 +124,7 @@ func TestValidatorUploadAdmissionSeededHistoryReuseKeepsCurrentEligibilityFresh(
 		t.Fatal(err)
 	}
 	historicalReads, currentReads := fixture.activationReads.Load(), fixture.currentCanonicalCalls
-	if historicalReads == 0 || len(owner.seededHistory) != 1 || owner.nextRefreshDelay() != 120*time.Second {
+	if historicalReads == 0 || len(owner.verifiedHistory) != 1 || owner.nextRefreshDelay() != 120*time.Second {
 		t.Fatal("successful seeded history was not retained with its normal refresh interval")
 	}
 	header, session, digest := validatorUploadAdmissionTestHeader(t, fixture, fixture.authority.Expected, 0x41, "current-api-client", []byte("object"))
@@ -154,14 +154,14 @@ func TestValidatorUploadAdmissionSeededHistoryReuseKeepsCurrentEligibilityFresh(
 		}
 		t.Fatal("historical success authorized a currently ineligible owner")
 	}
-	if fixture.activationReads.Load() != historicalReads || len(owner.seededHistory) != 1 || owner.nextRefreshDelay() != 30*time.Second {
+	if fixture.activationReads.Load() != historicalReads || len(owner.verifiedHistory) != 1 || owner.nextRefreshDelay() != 30*time.Second {
 		t.Fatal("permit loss discarded immutable history or delayed the incomplete refresh")
 	}
 	fixture.currentPermit = true
 	if err := owner.refresh(t.Context(), fixture.now); err != nil {
 		t.Fatal(err)
 	}
-	if fixture.activationReads.Load() != historicalReads || len(owner.seededFailures) != 0 || owner.nextRefreshDelay() != 120*time.Second {
+	if fixture.activationReads.Load() != historicalReads || len(owner.activationFailures) != 0 || owner.nextRefreshDelay() != 120*time.Second {
 		t.Fatal("recovered current eligibility did not reuse history and clear its failure")
 	}
 }
@@ -203,7 +203,7 @@ func TestValidatorUploadAdmissionSeededPartialHistoryRetriesOnlyUnverifiedSeed(t
 	if err := owner.WaitReady(t.Context()); !errors.Is(err, ErrValidatorEvidenceAbsent) {
 		t.Fatalf("partial seeded admission reported complete readiness: %v", err)
 	}
-	if len(owner.seededHistory) != 1 || len(owner.entries) != 1 || owner.nextRefreshDelay() != 30*time.Second {
+	if len(owner.verifiedHistory) != 1 || len(owner.entries) != 1 || owner.nextRefreshDelay() != 30*time.Second {
 		t.Fatal("partial refresh lost its success, admitted the missing seed, or failed to schedule prompt retry")
 	}
 	header, session, digest := validatorUploadAdmissionTestHeader(t, fixture, missing.Activation, 0x41, "current-api-client", []byte("object"))
@@ -217,7 +217,7 @@ func TestValidatorUploadAdmissionSeededPartialHistoryRetriesOnlyUnverifiedSeed(t
 	if err := owner.refresh(t.Context(), fixture.now); err != nil {
 		t.Fatal(err)
 	}
-	if fixture.activationReads.Load() != reads+1 || fixture.absentActivationReads.Load() != absent+1 || len(owner.seededHistory) != 1 {
+	if fixture.activationReads.Load() != reads+1 || fixture.absentActivationReads.Load() != absent+1 || len(owner.verifiedHistory) != 1 {
 		t.Fatal("partial retry cached an unverified seed or repeated the successful seed's history")
 	}
 }
@@ -237,7 +237,7 @@ func TestValidatorUploadAdmissionSeededHistoryRejectsChangedCanonicalAnchor(t *t
 	if err := owner.refresh(t.Context(), fixture.now); err == nil {
 		t.Fatal("changed canonical EVM anchor passed a warm refresh")
 	}
-	if len(owner.seededHistory) != 0 {
+	if len(owner.verifiedHistory) != 0 {
 		t.Fatal("historical success survived a changed canonical anchor")
 	}
 }
@@ -260,7 +260,7 @@ func TestValidatorUploadAdmissionSeededHistorySurvivesUnavailableAnchor(t *testi
 	} else {
 		owner.invalidate(err)
 	}
-	if len(owner.seededHistory) != 1 || len(owner.entries) != 0 {
+	if len(owner.verifiedHistory) != 1 || len(owner.entries) != 0 {
 		t.Fatal("read unavailability erased immutable proof or retained current admission")
 	}
 	fixture.fault = ""

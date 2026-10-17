@@ -6,11 +6,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"slices"
 	"testing"
 )
 
-func retainedPublicationV2TestReplicas(origins [2]string, objects [2]map[string][]byte) [2]ValidatorEvidenceRetainedReplicaV2 {
-	var result [2]ValidatorEvidenceRetainedReplicaV2
+func retainedPublicationV2TestReplicas(origins []string, objects []map[string][]byte) []ValidatorEvidenceRetainedReplicaV2 {
+	result := make([]ValidatorEvidenceRetainedReplicaV2, len(objects))
 	for index, values := range objects {
 		result[index] = ValidatorEvidenceRetainedReplicaV2{Origin: origins[index], ReadMetadata: func(ctx context.Context, hash string, size uint64) ([]byte, error) {
 			raw, found := values["metadata/"+hash]
@@ -27,7 +28,7 @@ func retainedPublicationV2TestReplicas(origins [2]string, objects [2]map[string]
 // the ordinary relay still requires its live HTTP readers.
 func TestValidatorEvidencePublicationV2RetainedReadsStoppedOrigins(t *testing.T) {
 	fixture := newReleasePublicationV2TestFixture(t, true)
-	var objects [2]map[string][]byte
+	objects := make([]map[string][]byte, len(fixture.startup.stores))
 	for index, store := range fixture.startup.stores {
 		objects[index], _, _ = store.snapshot()
 		store.stopHTTP()
@@ -55,12 +56,12 @@ func TestValidatorEvidencePublicationV2RetainedReadsStoppedOrigins(t *testing.T)
 			objects[1][key] = original
 		}
 	}
-	changed := replicas
+	changed := slices.Clone(replicas)
 	changed[1].Origin = changed[0].Origin
 	if actual, err := ReadRetainedValidatorEvidencePublicationV2(t.Context(), fixture.manifest, fixture.readOptions, changed); err == nil || actual != nil {
 		t.Fatal("retained reader collapsed original replica identities", err)
 	}
-	changed = replicas
+	changed = slices.Clone(replicas)
 	changed[1].ReadMetadata = nil
 	if actual, err := ReadRetainedValidatorEvidencePublicationV2(t.Context(), fixture.manifest, fixture.readOptions, changed); err == nil || actual != nil {
 		t.Fatal("retained reader admitted an incomplete replica census", err)
@@ -83,7 +84,7 @@ func TestValidatorEvidenceDepositAuditV2RetainedReadsStoppedOrigins(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	var objects [2]map[string][]byte
+	objects := make([]map[string][]byte, len(fixture.base.stores))
 	for index, store := range fixture.base.stores {
 		store.stateLock.Lock()
 		objects[index] = make(map[string][]byte, len(store.objects))

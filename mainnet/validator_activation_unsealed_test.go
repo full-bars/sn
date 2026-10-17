@@ -30,7 +30,7 @@ func validatorActivationUnsealedTestCheckpoint(f *validatorActivationFixture) va
 func TestValidatorActivationUnsealedRetainsPartialCheckpoint(t *testing.T) {
 	f := newValidatorActivationFixture(t)
 	f.installed()
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestValidatorActivationUnsealedRetainsPartialCheckpoint(t *testing.T) {
 func TestValidatorActivationUnsealedRejectsRetainedRegression(t *testing.T) {
 	f := newValidatorActivationFixture(t)
 	f.installed()
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}

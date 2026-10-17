@@ -257,7 +257,7 @@ func TestEvmCreateRejectsUnapprovedPlanBeforeCustody(t *testing.T) {
 		if code == 0 {
 			t.Fatalf("accepted unapproved %s", name)
 		}
-		if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmCreateStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) {
+		if err := f.unclaimed(evmCreateStateFile); err != nil {
 			t.Fatalf("invalid %s acquired custody", name)
 		}
 		if len(f.counts) != 0 {

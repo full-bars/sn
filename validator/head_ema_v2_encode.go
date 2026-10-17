@@ -101,7 +101,7 @@ func (self *headEMAStoreV2JSONWriter) quoted(value string) error {
 		}
 		runeValue, width := utf8.DecodeRuneInString(value[index:])
 		if runeValue == utf8.RuneError && width == 1 {
-			if err := self.emit("\\ufffd"); err != nil {
+			if err := self.emit(encodingJSONInvalidUTF8Replacement); err != nil {
 				return err
 			}
 		} else if runeValue == '\u2028' {

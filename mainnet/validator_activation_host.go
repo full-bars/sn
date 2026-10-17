@@ -13,6 +13,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/urnetwork/connect/durablesys"
+
 	"golang.org/x/sys/unix"
 )
 
@@ -194,7 +196,7 @@ func (self *validatorActivationHost) installFile(ctx context.Context, reference 
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := unix.Renameat2(fd, stage, fd, filepath.Base(reference.Path), unix.RENAME_NOREPLACE); err != nil {
+	if err := durablesys.RenameNoReplace(fd, stage, fd, filepath.Base(reference.Path)); err != nil {
 		return err
 	}
 	// A failure after rename is retained as install intent and re-admits exact

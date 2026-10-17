@@ -80,7 +80,7 @@ func testFiniteClaimPublicGetRecovery(t *testing.T, target string) {
 	if err := os.Chmod(state, 0700); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(state, "jwt"), []byte("synthetic-finite-claim-token"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(state, ".provider.jwt"), []byte(financialTestJwt(t, financialTestClientId, "public-finite")), 0600); err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithTimeout(t.Context(), 90*time.Second)

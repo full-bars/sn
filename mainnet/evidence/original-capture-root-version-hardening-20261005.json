@@ -1,0 +1,140 @@
+{
+  "schema": "original-capture-root-version-and-restore-checkpoint-v1",
+  "checkpoint_utc": "2026-10-05T23:10:22Z",
+  "authority": "Documentation checkpoint only; no production approval or runtime success claim.",
+  "supersedes": "Earlier pending and source-49 status statements in MAINNET.md and PRELAUNCH-FIXES.md; original evidence and test counts remain unchanged.",
+  "original_profile": {
+    "rules": 17,
+    "assembled_bytes": 20629,
+    "sha256": "6c9c387bcffe8c492d77764a9956927be5de2a0dede8663d2bf3a94c9840aae4",
+    "status": "ASSEMBLY_PASS",
+    "prior_checkpoint": "original-profile17-assembly-20261005.json"
+  },
+  "actual_capture": {
+    "block": 9218962,
+    "block_hash": "0xcff0e3a3678187c4ecf43f2c9c1be7266c55d118aadf7a6a9663d618c2362daf",
+    "parent": 9218961,
+    "parent_hash": "0x635a9950429ea46e82515a46a2fc82491ddc4d7b1a63c85befaec45ae9f64d0f",
+    "status": "FAILED_BEFORE_RUNTIME_EXECUTION",
+    "error": "historical capture extrinsics root differs",
+    "capture_exit": 1,
+    "worker_joined": true,
+    "resource_errors": 0,
+    "principal_result": false,
+    "strict_replay_completed": false,
+    "terminal": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/original-epoch9218962-v1/run/evidence/terminal.json",
+      "bytes": 24366,
+      "sha256": "1721bab39748d105b20831dbe9266bd96cce2cc6c7824300a21a316c2f8d2edb"
+    },
+    "stderr": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/original-epoch9218962-v1/run/evidence/original-capture.stderr",
+      "bytes": 741,
+      "sha256": "608d731f690331c1adc580c02e90382db79850774bedb5a5d6c6208bb5c5c242"
+    },
+    "failure_readback": {
+      "path": "/home/by/sn-testnet-runtime473-capture-input-20261005/body-root-analysis-v1/EXECUTION-FAILURE-READBACK.json",
+      "bytes": 2435,
+      "sha256": "9e6bc2be7f40d1fa681e9b09a57f095d4a84fbff9c27aab98c21e5818002969f"
+    }
+  },
+  "confirmed_root_version_mismatch": {
+    "original_body_count": 15,
+    "original_body_bytes": 6918,
+    "all_length_prefixes_canonical": true,
+    "all_opaque_decode_reencode_exact": true,
+    "body_header_and_storage_state_version_unchanged": true,
+    "header_root": "0x8f08d0460e62b2dd74ed9baf7d251494600be8cb6dbbbf3e73cf06af05794e22",
+    "calculated_ordered_roots": {
+      "0": "0x8f08d0460e62b2dd74ed9baf7d251494600be8cb6dbbbf3e73cf06af05794e22",
+      "1": "0xc232a3675365446748bea20dc443a1760f6bf4837c9b63d45ec290b74ad8793d"
+    },
+    "parent_runtime": {
+      "spec_version": 473,
+      "rpc_state_version": 1,
+      "system_version": 1,
+      "sdk_storage_state_version": 1,
+      "sdk_extrinsics_root_state_version": 0
+    },
+    "sdk_commit": "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a",
+    "sdk_contract": "RuntimeVersion::state_version and RuntimeVersion::extrinsics_root_state_version are independent; system_version 1 selects storage V1 and extrinsics V0. FRAME system finalization applies them separately.",
+    "calculation_scope": "Original-byte static calculation following pinned SDK trie encoding; no new SDK engine, compiler, test, VM or RPC execution by this analysis.",
+    "evidence": {
+      "path": "/home/by/sn-testnet-runtime473-capture-input-20261005/body-root-analysis-v1/ROOT-CAUSE-EVIDENCE.json",
+      "bytes": 10575,
+      "sha256": "ca58749b71ac5d391488699b6d9dc803a4c2ecf9525cccc22ff3411b96424bee"
+    },
+    "actual_body_fixture": {
+      "path": "/home/by/sn-testnet-runtime473-capture-input-20261005/body-root-analysis-v1/actual-block-9218962.body-root-vector.json",
+      "bytes": 18411,
+      "sha256": "f1190d2ca755b5c5eded90aff10cc1465251e80124074916bc10276465ab9b13"
+    },
+    "status_at_checkpoint": "Source correction merged with independent SOURCE_ACK; selected regression execution, corrected engine/fixture refresh, original capture and strict replay pending.",
+    "source_correction": {
+      "source_commit": "9d9037791cae3f487ce5c7c7065858b725839f5b",
+      "main_merge_commit": "430463bd522d1502b9b26797d4020013f67de30f",
+      "handoff": {
+        "path": "/home/by/urnetwork-worktrees/runtime473-extrinsics-layout/handoff-9d903779/HANDOFF.json",
+        "bytes": 6458,
+        "sha256": "6c05f2795093d35683eb48be3cd7a49fedbd7221844e2ef5c3d947e2694c6d17"
+      },
+      "selection": {
+        "path": "/home/by/urnetwork-worktrees/runtime473-extrinsics-layout/handoff-9d903779/selection.json",
+        "bytes": 4092,
+        "sha256": "5f576595ab41e76f3bb326ea44ce0170b658f3929280d4b560d7efe7ebbdf41e"
+      },
+      "review_disposition": "SOURCE_ACK",
+      "execution_status": "UNEXECUTED_AT_CHECKPOINT",
+      "received_review": {
+        "path": "/home/by/urnetwork-worktrees/runtime473-extrinsics-layout/handoff-9d903779/RECEIVED-SOURCE-ACK.json",
+        "bytes": 663,
+        "sha256": "27fe6dd4e1819e2651c1fc0b2e6bf0451331b450a73049f9082962c43566a863",
+        "attribution": "Source author retained the exact independent reviewer message; source review only."
+      }
+    }
+  },
+  "principal_restore": {
+    "source_commit": "3e4440be1e808d06ab69c2417905a29af26d5dac",
+    "main_merge_commit": "4e2f2a8085c8a47949c04b58263a16ba02f2c51c",
+    "independent_review": {
+      "path": "/home/by/urnetwork-worktrees/principal-retention-restore/NATIVE-WITNESS-SOURCE-REVIEW-3e4440be.json",
+      "bytes": 5369,
+      "sha256": "92ff020f36b542f7543ff1d990ff30e5427ff2a7ecd1c74834c46f2de08319fb"
+    },
+    "review_disposition": "SOURCE_ACK",
+    "handoff": {
+      "path": "/home/by/urnetwork-worktrees/principal-retention-restore/handoff/HANDOFF.json",
+      "bytes": 4359,
+      "sha256": "257cba1bd2a99c316adc9f13f52bd612934ccc7b7f70602b0a0a25253e80f47e"
+    },
+    "selection": {
+      "path": "/home/by/urnetwork-worktrees/principal-retention-restore/handoff/SELECTED20.json",
+      "bytes": 7540,
+      "sha256": "00df8b16eb3358481115513390ae37845e226653fdf54d4653830605f8a41f3f"
+    },
+    "selected_roots": 20,
+    "ordinary_roots": 11,
+    "capture_replay_consumer_roots": 9,
+    "execution_status": "UNEXECUTED_AT_CHECKPOINT",
+    "engine_fixture_refresh": "QUEUED",
+    "scope": "Explicit copied-source restore rereads already-admitted inventory/profile without repeating first-read coverage. Copied views remain unavailable for live checkpoint writes, finite sampling or native worker starts; incomplete Principal remains unknown."
+  },
+  "activation": {
+    "configuration_path": "/home/by/urnetwork/config/main/sn.yml",
+    "status": "blocked",
+    "empty_required_fields": [
+      "deployment_id",
+      "coordinator",
+      "settlement_vault",
+      "policy_hash",
+      "readiness_sha256"
+    ],
+    "earnings_boundary": "2026-10-06 inclusive; unchanged and not launch authority",
+    "readiness_estimate": null
+  },
+  "documentation_verification": {
+    "original_evidence_sha256_checked": true,
+    "compiler_or_tests_run": false,
+    "source_body_header_or_policy_modified": false
+  }
+}

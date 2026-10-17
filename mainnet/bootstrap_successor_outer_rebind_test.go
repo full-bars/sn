@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Actual public adoption must inspect both retained outer images without
 // repairing them, then let only the independently approved writer reconcile.

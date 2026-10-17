@@ -6,6 +6,10 @@ the same `--approval`, `--accept-approval-hash` and `--independent-public-key`
 arguments as the other admission modes. Both static units must already be
 installed. The command only reads chain, operator and host evidence and writes
 its existing activation custody journal. It cannot start a service or sign.
+Like the rest of [`activate-validators`](VALIDATOR-ACTIVATION.md), it serves a
+two-role, two-operator deployment and refuses a one-role v5 preparation; the
+SN25 launch, with one operator and one validator by owner decision (October 7),
+does not use it.
 
 The observation composes the qualified native checkpoint, current executable
 and contract views, both roles' registered operator client keys and conservative
@@ -25,9 +29,10 @@ weaken that guard, copy mutable state into a new authority, or interpret missing
 files as empty history. Only a canonical, explicitly empty, pinned history can
 prove a pristine prefix. `current_mutable_prefix_proven` remains false.
 
-The proof reader admits exactly two operators, at most 16 MiB of combined pinned
-history and 256 legacy closures per member, in addition to the original signed
-runtime limits. Public verify-key replies are capped at 256 KiB. Historical RPC
+The proof reader admits exactly two operators, the form this tool serves, at
+most 16 MiB of combined pinned history and 256 legacy closures per member, in
+addition to the original signed runtime limits. Public verify-key replies are
+capped at 256 KiB. Historical RPC
 attempts have a 60 second budget and one 300 second retry owner; verify-key GETs
 use the existing 60/300 second owner. A pure timeout may retry against completed
 mathematical work. Mixed transport/integrity errors and cancellation stop.
@@ -83,10 +88,12 @@ absent suffix is observed under its retained existing parent; it never replaces
 the independently pinned explicit activation origin.
 
 The actual current cuts select content-addressed record and proof streams from
-both original operator origins. Both copies must authenticate. The existing
-archive verifier reconstructs complete signed record ancestry, lifetime trails,
-generations, ordinary cuts, terminal transitions and EMA state in fresh private
-scratch under the activation journal's host custody directory. It then observes
+both original operator origins, the two replicas that release V2 evidence keeps
+for two operators. Both copies must authenticate. A one-operator deployment has
+one replica, on that operator's own server, and is outside this reader. The
+existing archive verifier reconstructs complete signed record ancestry, lifetime
+trails, generations, ordinary cuts, terminal transitions and EMA state in fresh
+private scratch under the activation journal's host custody directory. It then observes
 the original activation and every committed historical native/EVM boundary.
 No journal header, imported ready projection or service self-report can supply
 that verdict. Source controls are capped at 16 MiB, tape content at 48 MiB,

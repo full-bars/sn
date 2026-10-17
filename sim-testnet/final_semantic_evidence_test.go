@@ -1480,7 +1480,7 @@ func TestFinalSemanticPoolAuditDistinguishesUnderpaymentFromRecovery(t *testing.
 	pool.ObservedDepositRao = new(big.Int).Sub(requiredDepositRao, big.NewInt(1)).String()
 	pool.QualityPPM = 0
 	pool.QualityFactor = FinalRational{Numerator: "0", Denominator: "1"}
-	pool.ImpliedUsageGiB = FinalRational{Numerator: "0", Denominator: "1"}
+	pool.ImpliedDemand = FinalRational{Numerator: "0", Denominator: "1"}
 	pool.RawScore = FinalRational{Numerator: "0", Denominator: "1"}
 	pool.AppliedWeight = 0
 	cycle := source.Validators[0].Cycles[0]
@@ -1496,14 +1496,16 @@ func TestFinalSemanticPoolAuditDistinguishesUnderpaymentFromRecovery(t *testing.
 	pool.AuditStatus = validatorpkg.DepositAuditCompliant
 	pool.AuditDisposition = "pool_weight_eligible"
 	pool.AuditError = ""
+	// The recovered row is the fixture's worked row again: 1 GiB at 1,000,000
+	// rao per GiB implies 1,000,000 rao, and * 3/4 is 750,000.
 	pool.QualityPPM = 500_000
 	pool.QualityFactor = FinalRational{Numerator: "1", Denominator: "2"}
-	pool.ImpliedUsageGiB = FinalRational{Numerator: "1", Denominator: "1"}
-	pool.RawScore = FinalRational{Numerator: "1", Denominator: "2"}
+	pool.ImpliedDemand = FinalRational{Numerator: "1000000", Denominator: "1"}
+	pool.RawScore = FinalRational{Numerator: "500000", Denominator: "1"}
 	pool.AppliedWeight = source.Validators[0].Cycles[0].Pools[0].AppliedWeight
 	pool.QualityFactor = FinalRational{Numerator: "3", Denominator: "4"}
-	pool.RawScore = FinalRational{Numerator: "3", Denominator: "4"}
-	if score, eligible, err := verifyFinalPoolWeight(&source, cycle.SettlementEpoch, cycle.QualityMinimumPPM, cycle.QualityMaximumPPM, &pool); err != nil || !eligible || score.Cmp(big.NewRat(3, 4)) != 0 {
+	pool.RawScore = FinalRational{Numerator: "750000", Denominator: "1"}
+	if score, eligible, err := verifyFinalPoolWeight(&source, cycle.SettlementEpoch, cycle.QualityMinimumPPM, cycle.QualityMaximumPPM, &pool); err != nil || !eligible || score.Cmp(big.NewRat(750_000, 1)) != 0 {
 		t.Fatalf("recovered audit score=%v eligible=%t error=%v", score, eligible, err)
 	}
 }
@@ -2208,13 +2210,24 @@ func buildFinalSemanticFixture(t *testing.T) (FinalSemanticEvidence, map[string]
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The pool rows below are worked by hand from WHITEPAPER 8.1 for the
+	// testnet schedule, not taken from the validator's measurement: 1 GiB and
+	// no users at the baseline tier of 1,000,000 rao per GiB owe 1,000,000 rao,
+	// under the cap, and imply a demand of 1,000,000 rao; 1,000 rao of
+	// conviction earns no discount; quality 500,000 ppm clamps to the 750,000
+	// ppm floor, so q is 3/4 and the raw score is 1,000,000 * 3/4 = 750,000.
+	fixturePoolBaseline := policy.Deposit.Tiers[0]
+	if fixturePoolBaseline != (protocol.DepositTier{RateNumeratorRaoPerGiB: 1_000_000, RateDenominator: 1}) || fixturePoolTier != fixturePoolBaseline || fixturePoolDepositRao.Cmp(big.NewInt(1_000_000)) != 0 || policy.Steering.QualityTransform.MinimumPPM != 750_000 {
+		t.Fatalf("fixture pool rows no longer match the worked testnet schedule: tier=%+v baseline=%+v deposit=%s", fixturePoolTier, fixturePoolBaseline, fixturePoolDepositRao)
+	}
 	for noID, uid := range []uint16{11, 13} {
 		cycle.Pools = append(cycle.Pools, FinalPoolWeightEvidence{
 			NoID: uint64(noID + 1), UID: uid, SourceEpoch: 9, UsageBytes: fixturePoolUsageBytes,
 			ConvictionBeforeRao: fixturePoolConvictionRao.String(), RateNumeratorRaoPerGiB: fixturePoolTier.RateNumeratorRaoPerGiB, RateDenominator: fixturePoolTier.RateDenominator,
+			BaselineRateNumeratorRaoPerGiB: fixturePoolBaseline.RateNumeratorRaoPerGiB, BaselineRateDenominator: fixturePoolBaseline.RateDenominator,
 			EpochDepositCapRao: strconv.FormatUint(policy.Deposit.EpochCapRaoPerOperator, 10), RequiredDepositRao: fixturePoolDepositRao.String(), ObservedDepositRao: fixturePoolDepositRao.String(),
 			QualityPPM: 500_000, QualityFactor: FinalRational{Numerator: "3", Denominator: "4"},
-			ImpliedUsageGiB: FinalRational{Numerator: "1", Denominator: "1"}, RawScore: FinalRational{Numerator: "3", Denominator: "4"},
+			ImpliedDemand: FinalRational{Numerator: "1000000", Denominator: "1"}, RawScore: FinalRational{Numerator: "750000", Denominator: "1"},
 			Formula: finalDepositFormula, AuditStatus: validatorpkg.DepositAuditCompliant, AuditCompliant: true, AuditDisposition: "pool_weight_eligible",
 			ArtifactHash: finalTestHex(byte(44 + noID)), PayoutArtifact: artifact("payout-artifact", fmt.Sprintf("deposit-payout-%d.json", noID+1), []byte(fmt.Sprintf("deposit payout %d", noID+1))),
 			DepositReceipt: evmReceipt(fmt.Sprintf("deposit-%d", noID+1), uint64(90+2*noID)),

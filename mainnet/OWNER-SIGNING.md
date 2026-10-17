@@ -9,7 +9,10 @@ public reply into that same custody.
 
 The implemented setup action is the native
 `AdminUtils.sudo_trim_to_max_allowed_uids(netuid, max_n)` call for SN25. The
-selected maximum comes from the retained owner-trim review. This command does
+selected maximum comes from the retained owner-trim review. The actual SN25
+owner is the `ur-owner` native multisig, so the launch trim uses the
+[native multisig owner](#native-multisig-owner-ur-owner) workflow: two
+signatories each sign their own exact request on their own computer and Ledger. This command does
 not implement another subnet-owner action or EVM contract signing. The root
 hotkey retains separate hardware custody; its device model is not selected
 here. Reviewed v470 retires `SetRootWeights`, and unchanged registered/staked
@@ -126,7 +129,9 @@ Maturin release builds of that verified checkout. Exact source, lock, toolchain,
 artifact pins and platform/reproducibility limits are in
 [OWNER-LEDGER-SDK.md](OWNER-LEDGER-SDK.md). Its ELF requires GLIBC 2.38 and is not
 a macOS or Windows bundle. Use only the separately qualified artifact and Python
-runtime for the owner's actual platform.
+runtime for the owner's actual platform. `sn-mainnet` and the adapter run on
+macOS; a macOS owner still needs its own pinned `bittensor_core` build (see
+[MACOS.md](MACOS.md)).
 
 Transfer the reviewed native extension file and its independently authenticated
 SHA256 pin to the owner. The adapter loads that explicit file, not an arbitrary
@@ -220,6 +225,136 @@ Import reconstructs the approved original action and exact reply before entering
 the existing signature custody transition. It never submits. Reimport of the
 same signature is idempotent; another signature cannot replace retained bytes.
 Existing unknown host signing cannot be resolved by importing a new reply.
+
+## Native multisig owner (`ur-owner`)
+
+On October 6, finalized block 9,227,472 on runtime 473 reported
+`SubtensorModule.SubnetOwner(25)` as the native multisig
+`5HTeZ5168DjjGWZgbvzGfysEAj9fnexF24gYFKJHENU5cc8a` (AccountId32
+`0xeeacb0f457acd4dca96b3545e7e165bad8e2f59040ba3fff24b34e4a051d5290`). It is
+btcli preset `ur-owner`: threshold 2 over `brien-ur-owner`
+(`5HnhcDkB7fQcbabDsmQXeP6N4fDKnciKjMkKCScUwkJYHH3u`, Brien's Ledger, Polkadot
+generic app 100.0.26, Ed25519, `m/44'/354'/1'/0'/0'`), `jack-ur`
+(`5GeoGiGEvUEQqTfTaUsvXqMQD4zVMNeYtYqMN8JLaMfiDp4J`) and `keith-ur`
+(`5DFCNQmzRedo6hbZci4PTFMRuQJQ5PX6f6WrJBxDCDU3yBzS`). The account is
+`blake2_256("modlpy/utilisuba" ++ compact(3) ++ sorted AccountIds ++ u16 2)`,
+as pallet-multisig derives it.
+
+A multisig has no key. The trim runs only when a second signatory approves the
+same call, so each signatory signs **their own exact outer extrinsic** on their
+own computer and Ledger:
+
+| Step | Signer | Outer call | Effect |
+| --- | --- | --- | --- |
+| First approval | Any signatory, who becomes the depositor | `Multisig.as_multi(2, other_signatories, None, AdminUtils.sudo_trim_to_max_allowed_uids(25, max_n), max_weight)` | Opens the operation and reserves the deposit from the depositor. Emits `NewMultisig`. Trims nothing |
+| Final approval | Another signatory | `Multisig.as_multi(2, other_signatories, Some(timepoint), same trim call, max_weight)` | Dispatches the trim with the multisig as origin. Emits `MultisigExecuted` with the inner result and releases the deposit |
+| Cancellation | Only the original depositor | `Multisig.cancel_as_multi(2, other_signatories, timepoint, call_hash)` | Removes a stuck pending operation and releases the deposit |
+
+Both approvals carry the complete nested trim call, not only its hash, so the
+device can show `netuid` and `max_n`. For that reason the first approval uses
+`as_multi` rather than `approve_as_multi`.
+
+### Approved multisig domain
+
+The workflow uses its own approval domain:
+`urnetwork-mainnet-owner-trim-multisig-execution-v1` with action schema
+`urnetwork-mainnet-owner-trim-multisig-action-v1`. It keeps the best-effort
+selection rule, the Ed25519 Ledger envelope and the approved RFC78 digest.
+`coldkey_account_id` is the subnet owner, the multisig account. The step's
+outer signatory owns the nonce, mortal era, fee reserve, derivation path and
+broadcast budget. The action adds a `multisig` object:
+
+| Field | Meaning |
+| --- | --- |
+| `account_id` | The subnet owner multisig. It must equal `coldkey_account_id` and the derivation of the next two fields |
+| `threshold` | Exactly 2 |
+| `signatories` | The complete signer set as canonical AccountId32, sorted by raw bytes |
+| `signatory_account_id` | This step's outer signer, a member of the set |
+| `operation` | `as_multi` or `cancel_as_multi` |
+| `timepoint` | `null` for the first approval. Later steps carry the first approval's finalized `{height, index}` |
+| `inner_call_scale` | The exact trim call bytes, derived from the pinned metadata |
+| `inner_call_hash` | `blake2_256(inner_call_scale)` |
+| `max_ref_time`, `max_proof_size` | The inner weight bound passed to `as_multi`. Zero for a cancellation |
+| `deposit_limit_rao` | First approval only. Bounds `DepositBase + 2 × DepositFactor` from the pinned metadata |
+
+`call_scale` and `payload_scale` hold the outer call and its signing payload.
+Preparation authenticates these in the approved metadata: `Multisig` at pallet
+index 13 with `as_multi` = 1 and `cancel_as_multi` = 3, the nested
+`RuntimeCall::AdminUtils` variant, the `Multisigs` storage shape and the
+deposit constants. It refuses a signer set that does not derive the reviewed
+owner. On runtime 473 the indices match, `DepositBase` is 132,000,000 rao and
+`DepositFactor` is 32,000,000 rao, so the 2-of-3 deposit is 196,000,000 rao.
+
+The portable request keeps its schema and fields. Its `approved_config` is one
+step's independently approved config, which binds the inner call bytes and
+hash. A multisig reply adds `signatory_account_id`, the outer signer;
+`owner_account_id` stays the multisig owner. Direct-owner requests, replies
+and adapter input are unchanged.
+
+### Signing a step
+
+Each signatory runs `owner-signing inspect`, `sign` and `verify` as above, with
+two independent account pins:
+
+```sh
+sn-mainnet owner-signing sign --request /owner/trim/step-0/request.json \
+  --accept-request-hash sha256:REQUEST_CONTENT_HASH \
+  --trim-approval-key 0xINDEPENDENT_APPROVAL_KEY \
+  --owner-account-id 0xMULTISIG_OWNER_ACCOUNT_ID32 \
+  --signatory-account-id 0xTHIS_SIGNATORY_ACCOUNT_ID32 \
+  --expected-genesis 0xGENESIS \
+  --owner-state /owner/trim/step-0/custody/device-state.json \
+  --durable-volumes /owner/trim/durable-volumes.json \
+  --durable-volumes-sha256 sha256:EXACT_OWNER_DECLARATION \
+  --ledger-python /reviewed/python3 \
+  --ledger-helper /owner/trim/owner_ledger_adapter.py \
+  --ledger-helper-sha256 sha256:REVIEWED_HELPER \
+  --ledger-backend /owner/sdk/bittensor_core.abi3.so \
+  --ledger-backend-sha256 sha256:REVIEWED_NATIVE_EXTENSION \
+  --ledger-app-version 100.0.26 > /owner/trim/step-0/reply.json
+```
+
+A multisig request without `--signatory-account-id`, or a direct-owner request
+with it, is refused. `inspect` shows the outer `Multisig` call. The adapter
+receives the complete public signer set and threshold. Before it loads the SDK
+or opens USB HID, it refuses unless the named signatory belongs to a sorted set
+that derives the owner account. On the device it then requires the derived key
+to equal the named signatory. Use a fresh owner-local state path for every
+request, each with its own prepared `mainnet-owner-signing` snapshot (see
+[OWNER-CUSTODY-PREPARATION.md](OWNER-CUSTODY-PREPARATION.md)). One state path
+claims one request for good: signing again returns the retained reply without
+the device, and another request is refused.
+
+### RFC78 proof and display of the nested call
+
+The adapter passes the complete outer call bytes to `generate_extrinsic_proof`.
+The proof covers the whole extrinsic, so it carries the `Multisig` call types
+and the nested `RuntimeCall::AdminUtils` call types. Per the pinned app source
+(`app/src/metadata_parser.c` and `metadata_reader.c` in Zondax
+`ledger-polkadot` at `644ec63851072f6eac9c3911ea23a811f3a1b15c`), the generic
+app decodes the nested call from that proof like any other type and shows
+`netuid` and `max_n`. It bounds recursion at depth 50, far above this nesting.
+No physical device has displayed this call yet.
+
+The opt-in `TestOwnerSigningNativeSdkMultisigNestedTrimProof` composes the
+nested call with the native SDK. It checks the call bytes against this codec
+and the proof's nested types, then prepares the proof through the unmodified
+adapter. On October 6 it passed against an unqualified macOS build of
+`bittensor_core` with the pinned upstream fixtures. A read-only check of that
+build with runtime 473's metadata15 composed the identical outer call and gave
+a 4,629-byte proof (4,824 bytes with the payload, within the 16 KiB bound). The
+owner's qualified artifact must still pass these tests.
+
+### Ledger signatories only
+
+The treasury multisig flow supports only Ledger Ed25519 signatories, and this
+workflow follows it. Every signatory who signs a trim step uses a Ledger with
+the Polkadot generic app, at a hardened `m/44'/354'/account'/0'/index'` path
+whose derived AccountId32 is that signatory. A software or sr25519 key cannot
+sign a step through this tool, so the trim needs two such Ledger signatories.
+
+This change edits `owner_ledger_adapter.py`. Re-review it and provision its new
+SHA256 pin for every flow that runs the helper.
 
 ## Recovery and remaining qualification
 

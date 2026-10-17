@@ -163,7 +163,7 @@ func inspectBootstrapContractInstallationAt(ctx context.Context, owner *bootstra
 	}
 	nonce := new(big.Int).Add(plan.transaction().Nonce, big.NewInt(1))
 	nonce.Mod(nonce, new(big.Int).Lsh(big.NewInt(1), 256))
-	scope := safeCurrentStorageScope{Safe: plan.Review.Transaction.Safe, Singleton: plan.Request.Singleton, Owners: plan.Request.Owners, Nonce: nonce.String(),
+	scope := safeCurrentStorageScope{Safe: plan.Review.Transaction.Safe, Singleton: plan.Request.Singleton, Owners: plan.Request.Owners, SingleOwner: plan.Request.singleOwner(), Nonce: nonce.String(),
 		Version: plan.Review.Request.Version, Variant: plan.Review.Request.Variant, Runtime: anchorRuntime}
 	pin, err := loadSafeReleasePin(scope.Version, scope.Variant)
 	if err != nil {

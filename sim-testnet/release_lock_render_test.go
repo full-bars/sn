@@ -221,6 +221,36 @@ func TestReleaseLockRenderingReplacesStaleObservedValuesWithoutSelfReference(t *
 	}
 }
 
+// A fresh rendering from an attested lock that still carries the retired
+// operator-proxy pins keeps every other repository field and drops the pins.
+func TestReleaseLockRenderingDropsRetiredOperatorProxyPins(t *testing.T) {
+	attested := testReleaseLockFixture(t)
+	attested.Repositories["operator_proxy_go_source_hash"] = "sha256:" + strings.Repeat("1", 64)
+	attested.Repositories["operator_proxy_commit"] = strings.Repeat("a", 40)
+	if err := validateReleaseLockStatic(attested); err != nil {
+		t.Fatalf("attested lock with retired pins was refused: %v", err)
+	}
+	candidate, err := releaseLockWithObservation(attested, testReleaseLockObservation(t, attested))
+	if err != nil {
+		t.Fatal(err)
+	}
+	wire, err := canonicalReleaseLockBytes(candidate)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(wire, []byte("operator_proxy")) {
+		t.Fatalf("fresh release lock carried retired operator-proxy pins:\n%s", wire)
+	}
+	for key, value := range attested.Repositories {
+		if strings.HasPrefix(key, "operator_proxy") {
+			continue
+		}
+		if candidate.Repositories[key] != value {
+			t.Errorf("fresh release lock changed repositories.%s from %v to %v", key, value, candidate.Repositories[key])
+		}
+	}
+}
+
 func TestCleanReleaseRepositorySnapshotRejectsDirtyAndMissingWorktrees(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
@@ -258,12 +288,13 @@ func TestCleanReleaseRepositorySnapshotRejectsDirtyAndMissingWorktrees(t *testin
 	}
 }
 
-// The current build includes admission-only local modules in its source
-// snapshot without adding required fields to retained release-lock bytes.
-func TestReleaseLockObservationFencesAdmissionOnlyWarp(t *testing.T) {
+// Builds the complete current release workspace as clean single-commit
+// checkouts with exact module identities. No operator-proxy checkout exists.
+func releaseObservationWorkspaceTest(t *testing.T) (string, *ResolvedConfig) {
+	t.Helper()
 	workspace := t.TempDir()
 	for _, relative := range []string{
-		"sn", "server", "operator-proxy", "vault", "config", "connect", "sdk", "glog",
+		"sn", "server", "vault", "config", "connect", "sdk", "glog",
 		"goidenticons", "proxy", "userwireguard", "warp", "xops", "sn/evm/lib/forge-std",
 		"sn/evm/lib/openzeppelin-contracts", "sn/evm/lib/openzeppelin-contracts-upgradeable",
 	} {
@@ -288,9 +319,49 @@ func TestReleaseLockObservationFencesAdmissionOnlyWarp(t *testing.T) {
 	}
 	cfg := &ResolvedConfig{Repos: RepoPaths{
 		SN: filepath.Join(workspace, "sn"), Server: filepath.Join(workspace, "server"),
-		OperatorProxy: filepath.Join(workspace, "operator-proxy"), Vault: filepath.Join(workspace, "vault"),
-		PlatformConfig: filepath.Join(workspace, "config"),
+		Vault: filepath.Join(workspace, "vault"), PlatformConfig: filepath.Join(workspace, "config"),
 	}}
+	return workspace, cfg
+}
+
+// Release-lock observation fences every current repository without an
+// operator-proxy checkout or observed field; the retired module is no input.
+func TestReleaseLockObservationDoesNotRequireOperatorProxy(t *testing.T) {
+	_, cfg := releaseObservationWorkspaceTest(t)
+	repositories, err := releaseObservationRepositories(cfg)
+	if err != nil {
+		t.Fatalf("release observation required a retired repository: %v", err)
+	}
+	names := map[string]bool{}
+	for _, repository := range repositories {
+		names[repository.Name] = true
+	}
+	expected := []string{
+		"sn", "server", "vault", "platform-config", "connect", "sdk", "glog", "goidenticons", "proxy",
+		"userwireguard", "warp", "xops", "forge-std", "openzeppelin-contracts", "openzeppelin-contracts-upgradeable",
+	}
+	for _, name := range expected {
+		if !names[name] {
+			t.Errorf("release observation omitted %s", name)
+		}
+	}
+	if names["operator-proxy"] || len(repositories) != len(expected) {
+		t.Fatalf("release observation inventory = %+v", repositories)
+	}
+	if _, err := cleanReleaseRepositorySnapshot(repositories); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range releaseRepositoryObservedKeys {
+		if strings.HasPrefix(key, "operator_proxy") {
+			t.Errorf("release observation still requires %s", key)
+		}
+	}
+}
+
+// The current build includes admission-only local modules in its source
+// snapshot without adding required fields to retained release-lock bytes.
+func TestReleaseLockObservationFencesAdmissionOnlyWarp(t *testing.T) {
+	workspace, cfg := releaseObservationWorkspaceTest(t)
 	repositories, err := releaseObservationRepositories(cfg)
 	if err != nil {
 		t.Fatal(err)

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfoundation/sn/protocol"
@@ -60,7 +61,7 @@ func (self releaseArchivePublicationReaderV2) ReadMetadata(ctx context.Context, 
 }
 
 func sameReleaseArchivePublicationV2(a, b *ValidatorEvidenceCensusV2Publication) bool {
-	if a == nil || b == nil || a.Origins != b.Origins || a.CensusHash != b.CensusHash || !bytes.Equal(a.Census, b.Census) || len(a.Members) != len(b.Members) {
+	if a == nil || b == nil || !slices.Equal(a.Origins, b.Origins) || a.CensusHash != b.CensusHash || !bytes.Equal(a.Census, b.Census) || len(a.Members) != len(b.Members) {
 		return false
 	}
 	for i, member := range a.Members {
@@ -100,7 +101,7 @@ func (self *ReleaseEvidenceV2Archive) terminalPublicationV2(ctx context.Context,
 	if err := manifest.validate(options.Bounds.MaxClosureBytes, options.Bounds.MaxParticipants); err != nil {
 		return nil, err
 	}
-	if manifest.Epoch != window.Epoch || manifest.Origins != options.Origins || len(manifest.Members) != len(options.Activations) {
+	if manifest.Epoch != window.Epoch || !slices.Equal(manifest.Origins, options.Origins) || len(manifest.Members) != len(options.Activations) {
 		return nil, errors.New("archive terminal publication escaped its original window or members")
 	}
 	for index, member := range manifest.Members {
@@ -301,8 +302,8 @@ func (self *ReleaseEvidenceV2Archive) ReplayPublicationsV2(ctx context.Context, 
 
 // AuthenticatePublicationsV2 uses the caller's actual recorded chain client.
 // Each epoch boundary is read at the canonical terminal; every original dual
-// consent and payload is fetched again from both independently approved public
-// origins, then its exact stable companion slot and runtime are authenticated.
+// consent and payload is fetched again from every independently approved public
+// origin, then its exact stable companion slot and runtime are authenticated.
 func (self *ReleaseEvidenceV2Archive) AuthenticatePublicationsV2(ctx context.Context, chain *ChainClient, firstEpoch, epochCount, terminalBlock uint64, terminalHash [32]byte) error {
 	if chain == nil || terminalBlock == 0 || terminalHash == ([32]byte{}) {
 		return errors.New("archive publication canonical terminal reader is absent")

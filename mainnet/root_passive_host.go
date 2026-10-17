@@ -356,7 +356,14 @@ func advanceRootPassiveHost(ctx context.Context, store *rootPassiveHostStore, ho
 	if err := errors.Join(store.validateOwner(), control.validate(), rootPassiveHostWindow(ctx, p, record.HighWaterAt, now(), record.StartObservation)); err != nil {
 		return finish("uncertain-consumed-start", err)
 	}
-	if err := h.start(ctx, host.profile(p)); err != nil {
+	if err := h.start(ctx, host.profile(p), func() error {
+		dispatchAt := now()
+		if err := rootPassiveHostWindow(ctx, p, record.HighWaterAt, dispatchAt, record.StartObservation); err != nil {
+			return err
+		}
+		record.HighWaterAt = dispatchAt
+		return nil
+	}); err != nil {
 		return finish("uncertain-consumed-start", err)
 	}
 	manager, err = host.inspect(ctx, p)

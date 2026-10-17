@@ -210,6 +210,9 @@ func classifyReleaseRetryBounded(err error, siblingCancellation, legacyText, tra
 		retryable := cause.IsTimeout || cause.IsTemporary
 		return retryable, retryable
 	case *attemptStreamHttpReadError:
+		if cause.interrupted {
+			return true, true
+		}
 		return classifyReleaseRetryBounded(cause.cause, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
 	case *chainRpcMissingResponseError:
 		return classifyReleaseRetryBounded(cause.cause, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
@@ -619,6 +622,9 @@ func startReleaseOperatorWithAdmission(ctx context.Context, cfg *ReleaseConfig, 
 	if err != nil {
 		closeErr := api.CloseAndWait(context.Background())
 		strategy.Close()
+		if clientauth.IsNetworkCredentialRejected(err) {
+			err = fmt.Errorf("%w; sign in again and write a fresh network JWT to %s", err, op.NetworkJWTFile)
+		}
 		return nil, errors.Join(fmt.Errorf("no_id %d authentication: %w", op.NoID, err), releaseStageError("authentication API shutdown", closeErr))
 	}
 
@@ -637,7 +643,7 @@ func startReleaseOperatorWithAdmission(ctx context.Context, cfg *ReleaseConfig, 
 	platformTransport := connect.NewPlatformTransportWithDefaults(ctx, strategy, identityClient.RouteManager(), op.ConnectURL, &connect.ClientAuth{
 		ByJwt: byClientJWT, InstanceId: instanceID, AppVersion: RequireVersion(),
 	})
-	transport := NewTunnelTransport(ctx, strategy, TunnelTransportConfig{ApiUrl: op.APIURL, ConnectUrl: op.ConnectURL, ByClientJwt: api.GetByJwt, SourceClientId: clientID})
+	transport := NewTunnelTransport(ctx, strategy, TunnelTransportConfig{ApiUrl: op.APIURL, ConnectUrl: op.ConnectURL, ByClientJwt: api.GetByJwt, SourceClientId: clientID, Clients: op.Concurrency})
 	refreshSub := api.AddJwtRefreshListener(clientauth.JwtRefreshListenerFunc(func(jwt string) {
 		if err := clientauth.WriteToken(op.ClientJWTFile, jwt); err != nil {
 			releaseDiagnostic(ctx, "operator", "jwt_save_failed", 0, false, 0, releaseDiagnosticFacts{operatorId: op.NoID, operatorKnown: true, cause: releaseDiagnosticHardError})
@@ -760,6 +766,16 @@ func dialPinnedNative(ctx context.Context, cfg *ReleaseConfig) (*crv4.Chain, err
 			errs = append(errs, fmt.Errorf("%s: provisional runtime authority: %w", endpoint, err))
 			continue
 		}
+		// Only signed production configs reach here through read-only activation;
+		// legacy and bootstrap configs keep their exact pins.
+		if isOwnerRecycleProductionConfig(cfg) {
+			if err := enableReleaseRuntimeSuccession(chain, cfg); err != nil {
+				cancel()
+				chain.API.Client.Close()
+				errs = append(errs, fmt.Errorf("%s: runtime successor authority: %w", endpoint, err))
+				continue
+			}
+		}
 		if _, err := authenticatePinnedNativeRuntimeContext(endpointCtx, chain, cfg); err != nil {
 			cancel()
 			chain.API.Client.Close()
@@ -783,7 +799,13 @@ func RunRelease(ctx context.Context, configPath string) (returnErr error) {
 // Optional operational output cannot grant authority or change the configured
 // protocol owner. A publisher failure never cancels validation or reconciliation.
 func RunReleaseWithProgress(ctx context.Context, configPath, progressPath string) error {
-	return runReleaseWithStartupAndProgressV2(ctx, configPath, nil, nil, progressPath)
+	return runReleaseWithStartupAndProgressV2(ctx, configPath, nil, nil, nil, progressPath)
+}
+
+// An already pinned native gap bridge only admits its one missed-native edge;
+// with a nil bridge this is exactly RunReleaseWithProgress.
+func RunReleaseWithNativeGapBridge(ctx context.Context, configPath, progressPath string, bridge *ReleaseNativeGapBridge) error {
+	return runReleaseWithStartupAndProgressV2(ctx, configPath, nil, nil, bridge, progressPath)
 }
 
 func runReleaseWithActivationSetup(ctx context.Context, configPath string, retainedSetup *ProvisionalActivationSetupV2) (returnErr error) {
@@ -791,12 +813,12 @@ func runReleaseWithActivationSetup(ctx context.Context, configPath string, retai
 }
 
 func runReleaseWithStartupV2(ctx context.Context, configPath string, retainedSetup *ProvisionalActivationSetupV2, adoption *ReleaseHistoryAdoptionV2) (returnErr error) {
-	return runReleaseWithStartupAndProgressV2(ctx, configPath, retainedSetup, adoption, "")
+	return runReleaseWithStartupAndProgressV2(ctx, configPath, retainedSetup, adoption, nil, "")
 }
 
 // One optional publisher shares only the parent lifecycle, never its signer,
 // stores or retry decisions. Its deferred close always joins the owned worker.
-func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, retainedSetup *ProvisionalActivationSetupV2, adoption *ReleaseHistoryAdoptionV2, progressPath string) (returnErr error) {
+func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, retainedSetup *ProvisionalActivationSetupV2, adoption *ReleaseHistoryAdoptionV2, bridge *ReleaseNativeGapBridge, progressPath string) (returnErr error) {
 	if ctx == nil {
 		return errors.New("release production lifecycle context is unavailable")
 	}
@@ -804,10 +826,12 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 		return err
 	}
 	cfg, err := LoadReleaseConfig(configPath)
-	if errors.Is(err, ErrReleaseEvidenceV2ActivationPending) && retainedSetup == nil && adoption == nil {
+	if errors.Is(err, ErrReleaseEvidenceV2ActivationPending) && retainedSetup == nil && adoption == nil && bridge == nil {
 		// The inputs are missing. The lifecycle allows run to finish an
 		// activation that was prepared and published earlier once its epoch
-		// has begun; it never signs, publishes or invents one.
+		// has begun; it never signs, publishes or invents one. A signed schema 3
+		// config reports ErrReleaseProductionActivationPending instead and is
+		// never completed in place.
 		fmt.Fprintf(os.Stderr, "validator: evidence_v2 inputs are not rendered; completing the pending activation\n")
 		if completeErr := CompletePendingReleaseActivation(ctx, configPath, os.Stderr); completeErr != nil {
 			return errors.Join(err, completeErr)
@@ -828,6 +852,22 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 			return err
 		}
 	}
+	if bridge != nil {
+		if retainedSetup != nil || adoption != nil {
+			return errors.New("native gap bridge cannot select provisional startup or history adoption")
+		}
+		if err := bridge.configure(cfg); err != nil {
+			return err
+		}
+		// A v1 bridge prints exactly its one line; a v2 bridge prints each
+		// earlier edge, then the last one, which alone can still be pending.
+		edges := bridge.Edges()
+		for _, edge := range edges[:len(edges)-1] {
+			fmt.Fprintf(os.Stderr, "validator: native gap bridge edge from native epoch %d (%s) to the first intent at native epoch %d or later\n", edge.LastNativeEpoch, edge.LastArtifactHash, edge.FirstNativeEpoch)
+		}
+		last := edges[len(edges)-1]
+		fmt.Fprintf(os.Stderr, "validator: native gap bridge from native epoch %d (%s) to the first intent at native epoch %d or later; release idles before it\n", last.LastNativeEpoch, last.LastArtifactHash, last.FirstNativeEpoch)
+	}
 	if retainedSetup != nil {
 		if err := retainedSetup.validate(cfg, configPath); err != nil {
 			return err
@@ -841,6 +881,10 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 	defer func() { returnErr = errors.Join(returnErr, closeStorage()) }()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	// Replays under the configured replay roots, startup's included, remove
+	// their fresh scratch child once it is closed.
+	replayScratch := newReplayScratchRetirement(cfg, os.Stderr)
+	ctx = withReplayScratchRetirement(ctx, replayScratch)
 	ctx, diagnosticOwner, diagnosticErr := newReleaseDiagnostics(ctx, os.Stderr, time.Now)
 	if diagnosticErr != nil {
 		return diagnosticErr
@@ -892,6 +936,18 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 		}
 	}
 	production := isOwnerRecycleProductionConfig(cfg)
+	// Verified startup work outlives a failed stage attempt and serves the
+	// live service, so a retry resumes instead of starting from nothing.
+	var verified *releaseStartupVerified
+	if production {
+		verified = newReleaseStartupVerified()
+		ctx = withReleaseStartupVerified(ctx, verified)
+		defer func() {
+			if err := verified.flush(); err != nil {
+				fmt.Fprintf(os.Stderr, "validator: startup verified progress record not written: %v\n", err)
+			}
+		}()
+	}
 	startupStage := func(stage string, operation func(context.Context) error) error {
 		if production {
 			return awaitProductionStartupStage(ctx, cfg, progress, stage, operation)
@@ -981,10 +1037,12 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 			}
 		}
 	}
-	if len(cfg.Operators) < 2 {
-		return errors.New("release V2 requires two configured public operator origins")
+	// A single configured operator's own server holds the only public evidence
+	// replica; otherwise the first two configured operators hold copies.
+	origins, err := releaseEvidenceV2ConfiguredOrigins(cfg)
+	if err != nil {
+		return err
 	}
-	origins := [2]string{cfg.Operators[0].APIURL, cfg.Operators[1].APIURL}
 	if _, err := newReleaseEvidenceV2StartupReaders(origins, cfg.EvidenceV2.Bounds.Cut); err != nil {
 		return err
 	}
@@ -995,6 +1053,13 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 		return err
 	}); err != nil {
 		return fmt.Errorf("release V2 server-key startup: %w", err)
+	}
+	if production && releaseStartupVerifiedPersistenceFrom(ctx) {
+		if authority, err := releaseStartupVerifiedAuthorityFor(cfg, hotkey.PublicKey(), serverKeys); retainedSetup != nil || adoption != nil || err != nil {
+			fmt.Fprintf(os.Stderr, "validator: startup verified progress is not kept for this run: %v\n", errors.Join(err, errors.New("only a plain production history keeps it")))
+		} else {
+			verified.enableRecord(cfg.StateDir, hotkey, authority, os.Stderr)
+		}
 	}
 	var disk *releaseEvidenceV2DiskState
 	defer func() {
@@ -1025,6 +1090,9 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 		return nil
 	}); err != nil {
 		return fmt.Errorf("release V2 semantic startup: %w", err)
+	}
+	if err := verified.flush(); err != nil {
+		fmt.Fprintf(os.Stderr, "validator: startup verified progress record not written: %v\n", err)
 	}
 	// Bounded startup has closed all temporary replay/reference owners. The
 	// completed runtime now belongs to the enclosing service, not that attempt.
@@ -1084,12 +1152,33 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 	if err != nil {
 		return fmt.Errorf("release V2 native startup: %w", err)
 	}
+	if production {
+		fmt.Fprintf(os.Stderr, "validator: startup reused %d already verified history units\n", verified.skippedUnits())
+		if err := verified.flush(); err != nil {
+			fmt.Fprintf(os.Stderr, "validator: startup verified progress record not written: %v\n", err)
+		}
+		go verified.flushUntilDone(ctx, os.Stderr)
+	}
 	if !production {
 		if err := advanceInitialReleaseWithRetry(ctx, snapshot, chain.ReleaseSnapshotContext, runtimeV2.advance, waitReleaseSnapshotRetry); err != nil {
 			return fmt.Errorf("release V2 initial terminal publication: %w", err)
 		}
 	}
+	// The audit starts only after the runtime confirmed the settlement_v2
+	// contracts in its first advance.
+	ledgerAudit, err := newReleaseSettlementV2Audit(ctx, cfg, chain, runtimeV2.settlementV2Confirmed)
+	if err != nil {
+		return fmt.Errorf("settlement v2 ledger audit startup: %w", err)
+	}
 	workersOwnResources = true
+	// Children earlier processes left go to a slow background sweep that
+	// starts after startup and never blocks steering. It ends with this run.
+	sweepCtx, stopSweep := context.WithCancel(ctx)
+	sweepDone := replayScratch.start(sweepCtx)
+	defer func() {
+		stopSweep()
+		<-sweepDone
+	}()
 	var trailReady <-chan struct{}
 	if production {
 		trailReady = runtimeV2.preparation.ready
@@ -1102,6 +1191,7 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 			}
 			return runReleaseSettlementRefresh(ctx, time.Duration(cfg.PollSeconds)*time.Second, chain.ReleaseSnapshotContext, runtimeV2.advance, func(*ReleaseSnapshot) {}, waitReleaseSnapshotRetry)
 		},
+		ledgerAudit: ledgerAudit.worker(),
 		newSteerer: func([]*ReleaseMeasurementContext) (releaseSteererRunner, error) {
 			return steerer, nil
 		},
@@ -1112,14 +1202,17 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 	})
 }
 
-func runReleaseConfig(configPath, progressPath string, reference durablevolume.Reference) {
-	ctx := context.Background()
+func runReleaseConfig(configPath, progressPath string, reference durablevolume.Reference, ledger SettlementV2RuntimeOptions, bridge *ReleaseNativeGapBridge, keepVerified bool) {
+	ctx := WithSettlementV2RuntimeOptions(context.Background(), ledger)
 	if reference.Path != "" || reference.Sha256 != "" {
 		ctx = durablevolume.WithReference(ctx, reference)
 	}
+	if keepVerified {
+		ctx = withReleaseStartupVerifiedPersistence(ctx)
+	}
 	event := connect.NewEventWithContext(ctx)
 	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-	if err := RunReleaseWithProgress(event.Ctx(), configPath, progressPath); err != nil {
+	if err := RunReleaseWithNativeGapBridge(event.Ctx(), configPath, progressPath, bridge); err != nil {
 		panic(err)
 	}
 }

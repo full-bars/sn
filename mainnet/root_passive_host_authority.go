@@ -1,5 +1,5 @@
 // Passive root hosting has separate signed process authority. It neither
-// borrows the two UR starts nor introduces a native signing capability.
+// borrows a UR validator start nor introduces a native signing capability.
 package main
 
 import (
@@ -114,16 +114,18 @@ func (self rootPassiveHostPlan) sandbox() map[string]string {
 	return map[string]string{"NoNewPrivileges": "yes", "UMask": "0077", "CapabilityBoundingSet": "", "ProtectSystem": "strict", "ReadWritePaths": self.CheckpointDirectory, "PrivateDevices": "yes", "ProtectKernelTunables": "yes", "ProtectKernelModules": "yes", "ProtectControlGroups": "yes", "RestrictSUIDSGID": "yes", "LockPersonality": "yes"}
 }
 
-// Reopen the original v4 composition, both UR inspections and exact passive
-// role signature. No runtime copy or current observation can replace these.
+// Reopen the original passive v4 or one-role v5 composition, every UR
+// inspection and the exact passive role signature. v5's sole UR hotkey may also
+// hold this root seat only under one coldkey, which the preparation loader
+// enforces. No runtime copy or current observation can replace these.
 func loadRootPassiveHostPreparation(ctx context.Context, approval rootPassiveHostApproval) (bootstrapChainPreparation, error) {
 	p := approval.Plan
 	preparation, err := loadBootstrapChainPreparation(ctx, p.Preparation.Path)
 	if err != nil {
 		return preparation, err
 	}
-	if preparation.Plan.Config.Schema != bootstrapChainConfigSchemaV4 || preparation.Plan.ConfigSha256 != p.Preparation.Sha256 || preparation.Plan.ContentHash != p.PlanHash || preparation.Root.ContentHash != p.RootPlanHash || preparation.Root.PassiveService == nil {
-		return preparation, errors.New("passive host original v4 preparation differs")
+	if !bootstrapChainPassiveRoot(preparation.Plan.Config.Schema) || preparation.Plan.ConfigSha256 != p.Preparation.Sha256 || preparation.Plan.ContentHash != p.PlanHash || preparation.Root.ContentHash != p.RootPlanHash || preparation.Root.PassiveService == nil {
+		return preparation, errors.New("passive host original v4/v5 preparation differs")
 	}
 	root, digest, err := loadRootPassiveRuntime(ctx, p.Runtime.Path)
 	if err != nil || digest != p.Runtime.Sha256 || root.ContentHash != preparation.Root.ContentHash {

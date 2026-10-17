@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Real files, descriptor joins and explicit barriers prove checkpoint custody.
 package chain
@@ -14,6 +14,9 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/urnetwork/connect/durablesys"
+	"golang.org/x/sys/unix"
+
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urnetwork/connect/durablevolume"
 )
@@ -25,7 +28,7 @@ func TestNativeJournalCustodyAnchorIsMandatory(t *testing.T) {
 	if err := journal.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if err := syscall.Removexattr(path, NativeJournalCustodyAttribute); err != nil {
+	if err := unix.Removexattr(path, NativeJournalCustodyAttribute); err != nil {
 		t.Fatal(err)
 	}
 	for _, open := range []func(context.Context, string) (*Journal, error){OpenDurableJournal, ReconcileDurableJournal} {
@@ -36,7 +39,7 @@ func TestNativeJournalCustodyAnchorIsMandatory(t *testing.T) {
 		if !errors.Is(err, durablevolume.ErrIdentity) {
 			t.Fatal("missing anchor was admitted", err)
 		}
-		if _, err := syscall.Getxattr(path, NativeJournalCustodyAttribute, nil); !errors.Is(err, syscall.ENODATA) {
+		if _, err := unix.Getxattr(path, NativeJournalCustodyAttribute, nil); !errors.Is(err, durablesys.ErrNoAttribute) {
 			t.Fatal("runtime enrolled a missing anchor", err)
 		}
 	}

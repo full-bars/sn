@@ -1,0 +1,488 @@
+{
+  "adjacent_completion_recipe": {
+    "bytes": 16758,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/adjacent-existing14-recipe.json",
+    "sha256": "7e9ffc78b4b86729f093b4b5cf060551885379592c24168c76afc6948e3fdcc2"
+  },
+  "all_owner_blobs_equal_merged_main": true,
+  "author_execution": {
+    "binary_lists": 0,
+    "compilers": 0,
+    "database": 0,
+    "deployment": 0,
+    "production_changes": 0,
+    "test_bodies": 0
+  },
+  "counts_per_mode": {
+    "all_go": 2767,
+    "connect": 224,
+    "mainnet": 302,
+    "server": 2027,
+    "server_controller": 95,
+    "server_full_model": 1865,
+    "sn": 508,
+    "sn_connect_vless": 740,
+    "vlessinterop": 8
+  },
+  "current_server8_actual": {
+    "body_passes_inferred": 0,
+    "control_kills_inferred": 0,
+    "normal_compiler_passes": 8,
+    "original_waits": [
+      {
+        "exit": 0,
+        "reference": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-controller.process-result.json",
+          "sha256": "3d505121df90cf5f5603e63d777c50362ecda319455e6411b322e30fdcd023a3"
+        },
+        "tree_joined": true
+      },
+      {
+        "exit": 0,
+        "reference": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-model.process-result.json",
+          "sha256": "8c39e2cfbc99b09b1f7fe0f69fc74d1da26462a17c3d155a8b193b19a0a840b4"
+        },
+        "tree_joined": true
+      },
+      {
+        "exit": 0,
+        "reference": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-root.process-result.json",
+          "sha256": "183132c48650f81d9e7383e00f108a1e6b837dc9cea03cb4fdcdb7c5992f4a92"
+        },
+        "tree_joined": true
+      },
+      {
+        "exit": 0,
+        "reference": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-monitor.process-result.json",
+          "sha256": "b3871b7e521eb21e29ad1fca39672a0d36c8bca3a0c2c73caa68ded2d1050441"
+        },
+        "tree_joined": true
+      },
+      {
+        "exit": 0,
+        "reference": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-native-cli.process-result.json",
+          "sha256": "bb04d151f5ae3d15d657b03baa8a82501463af31f80cc748a8903119265ea5b5"
+        },
+        "tree_joined": true
+      },
+      {
+        "exit": 0,
+        "reference": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-api.process-result.json",
+          "sha256": "a7fb50914150a414057058e284d107b5b0d6e76e71dff985dd26ead68b717ff9"
+        },
+        "tree_joined": true
+      },
+      {
+        "exit": 0,
+        "reference": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-proxy.process-result.json",
+          "sha256": "427e0e0c316403f37825ff0cb176c3416ed694e4c6cdc58f95d39b0c09ff408c"
+        },
+        "tree_joined": true
+      },
+      {
+        "exit": 0,
+        "reference": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-taskworker-work.process-result.json",
+          "sha256": "b3198c0eb4a93ab9ee9c429dd8fc42a719f27e8a251546b941f592c5e82e449a"
+        },
+        "tree_joined": true
+      }
+    ],
+    "phase_ids": [
+      "controller",
+      "model",
+      "root",
+      "monitor",
+      "native-cli",
+      "api",
+      "proxy",
+      "taskworker-work"
+    ],
+    "race_passes_inferred": 0,
+    "receipt": {
+      "bytes": 53251,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1.receipt.json",
+      "sha256": "2489289bbc2a837583e17338cb051ee4a762ebfc93ee69806ab319875080f3f6"
+    },
+    "scope": "Exact624/Core026/d64 compiler inputs only. No new8776 operator qualification follows. Fullmodel1865 bodies and controller95/payment bodies are separate.",
+    "source_closure": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-624cf1-026b-d64-compiler-source-closure-v1.json",
+      "sha256": "f2ce1ef4248f9d01d062e32f40a881c1af86c26d659de13262ddaec1641782ff"
+    },
+    "source_tuple": {
+      "core": "026b850248352b72255be7a966e391e0a15e74c1",
+      "server": "d64c9beb49a8637ce753103e9ea34521cc55f597",
+      "sn": "624cf1e00f45dac61bc5675e4a21eb2a8dd121e5"
+    },
+    "status": "COMPILE_BATCH_PASS_BODY_PENDING",
+    "user_terminal": {
+      "bytes": 3205,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-serverd64-current8-normal-v1-user-terminal-readback.json",
+      "sha256": "51ab65d090248b0d5d11fa6e2a109cb37ea43d65bd799c5a63a0f93e6cedca87"
+    }
+  },
+  "documentation_base": "8776b03884fcca74d827dc613bd8233d2dc5f7a3",
+  "finite_contract_review": {
+    "disposition": "No confirmed missing production implementation or adjacent code defect found in the reviewed scope; no product change or new test authored.",
+    "limits": [
+      "Authentic native runtime, finality, source-to-code and nested rollback/exact transfer behavior.",
+      "Independent owner/Safe/root/UR approvals, hardware custody, generation and live Recycle recognition.",
+      "Actual completed paid/free provider measurement, immutable original recipient/direction/close facts and complete window census; canceled originals are not fabricated.",
+      "Accepted exact compiled/deployed five-contract graph, old immutable-vault liability lifecycle and actual sustained settlement/claim outcomes.",
+      "Original pending controls/public consumers retain their separate exact-source and asset obligations."
+    ],
+    "new_control_groups": 0,
+    "new_roots": 0,
+    "not_a_completion_certificate": true,
+    "reference": {
+      "bytes": 40132,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-completion-audit-9a6446e5/review.json",
+      "sha256": "22993b6d52e3c662e7bd9139fde557d1555de784464e158f3e0d42714ad8091f"
+    },
+    "reviewed_inputs_identical_at8776": [
+      {
+        "git_blob": "37dce20ed4b53257165089705b4d174493ba61a7",
+        "path": "evm/src/STCoordinator.sol",
+        "sha256": "e7c5a292a04ea9c7e9c354699416bf4184d20b4f2bb54facad48f1fb6384c6ea"
+      },
+      {
+        "git_blob": "20152a65012a18248eb60fb3fba249bfc160eb64",
+        "path": "evm/src/STSettlementVault.sol",
+        "sha256": "ac76e47f8744bf65d621005b4765985002e17a706f380c914987af4af55ede4a"
+      },
+      {
+        "git_blob": "b73443d418dce83ee4a24cf6b6d36a65c275642e",
+        "path": "evm/src/STReserveSink.sol",
+        "sha256": "18de7d37b11edcf1e6b57adb290acc5c568b43673557ebb74f94d68620db2a46"
+      },
+      {
+        "git_blob": "285f42aef5e62983c4a0995c4cc6f98f2dde1b4e",
+        "path": "evm/src/NativeBalance.sol",
+        "sha256": "6e17708fea3f8ed48086c58fafbd4fd5549e5ea857aad534915855aa8c2c6d46"
+      },
+      {
+        "git_blob": "436ff4284a4717f7c798b29d6942505121985586",
+        "path": "evm/script/Deploy.s.sol",
+        "sha256": "239cf9c910108600d6c8484404e5e0cbcf8118de24a097d4b658473c77085fb0"
+      },
+      {
+        "git_blob": "0e785be7e1ad2f693a253028b3023616dd54747c",
+        "path": "scripts/mainnet-release-build/contracts.go",
+        "sha256": "bcb21b9a9113651e914b4d129a545c2d67ca177b8fab935432fc487bb57bee26"
+      },
+      {
+        "git_blob": "f19878254047dcb3c980731426ef2609bd9f5811",
+        "path": "scripts/mainnet-release-build/build.go",
+        "sha256": "c34e23e446b17887dce3972ae86a2f143336b983019b50ca8ae209712acbdb4f"
+      },
+      {
+        "git_blob": "6d312d51c7659f579009a3637b2a3807f4d6eeef",
+        "path": "sim-testnet/gencontracts/main.go",
+        "sha256": "4c850b01fc4462de12d52077d5821667f16bd9dfe48eeed27e712a0933b0cc6f"
+      },
+      {
+        "git_blob": "16ac201e194060cb5fc88104c84f7d97699517b4",
+        "path": "sim-testnet/contracts_gen.go",
+        "sha256": "91d4c21837321d627e88af7eb98c8eee125384d2a5d96c2fe70c91c989b8398e"
+      },
+      {
+        "git_blob": "70ea637b48fb4c5514922441ac2c680347f183cf",
+        "path": "mainnet/contract_artifacts.go",
+        "sha256": "94d1ac9ae82835ac2e545275c3850ec94ef45ce70e10510b8f3870ad84ed0930"
+      },
+      {
+        "git_blob": "ead0868b28e54f52dcd95e8d0b74877fed9a54a8",
+        "path": "validator/recycle_planner.go",
+        "sha256": "549c33ee610e94015ab4f6065e41a287346932ed6a0468b8311812c947682297"
+      },
+      {
+        "git_blob": "f2659903ddda54919cc9a692a37f2968abb85820",
+        "path": "validator/recycle_measurement.go",
+        "sha256": "1e429178b540cb87599b1ecb84212b481240a1a06147553dc6bef88a73255ddf"
+      },
+      {
+        "git_blob": "b665db8dd8fc6c335ce5784290696e752e248e69",
+        "path": "validator/recycle_production_approval.go",
+        "sha256": "0e28aaf7adcd9bd6d7c53bed9c193b40e2cc4f00fa3ce39d96342b8436080017"
+      },
+      {
+        "git_blob": "2a4d96f2eb7de8be6c713bf1cc92894facaad858",
+        "path": "validator/recycle_production_decision.go",
+        "sha256": "b29eb411a6f445ce3e5b0fe897335e361e6cb17b2252f89f682d850f7914abf1"
+      },
+      {
+        "git_blob": "d4ce165e5aa07c63237aa71491127320394eb5c8",
+        "path": "validator/recycle_production_prepared.go",
+        "sha256": "653f66984f130d71b043deb4ec9784ccc8fd8da6726e9856a872dc68b405a57a"
+      },
+      {
+        "git_blob": "ad33dcce57452a245591c9f3a651d7796b6d08e8",
+        "path": "validator/release_submit_v2.go",
+        "sha256": "f20699aee58dfd2959ca7e483e8bdecbf4d220f54a9a9da32be9bf12bd600938"
+      },
+      {
+        "git_blob": "133992df8b19b78315a7647005f287546e76470a",
+        "path": "validator/release_math.go",
+        "sha256": "4d4b61c0e9847e2ebd05ed46b07f22846654f9d4fc458b71545874b988a70945"
+      },
+      {
+        "git_blob": "4445ffbc7a836ee03eafd444338bc0d175c3cec5",
+        "path": "protocol/policy.go",
+        "sha256": "f9d0e2b227a8e69ac4f2501b90390c79a628b8be4ef78b6c75a293e7c66161d6"
+      },
+      {
+        "git_blob": "b6acafc5fa23aeaae0416663ed5a32d9d9c5e57e",
+        "path": "mainnet/owner_recycle_action.go",
+        "sha256": "fca8ad81cb94ed2764e6baaf0a8810e9a5a55c2185baca09958de2d0ae7f467f"
+      },
+      {
+        "git_blob": "b547ec28886ea6824367d34c42eb50478f9082ad",
+        "path": "mainnet/owner_recycle_submission.go",
+        "sha256": "05318c104fa7e72397e73934f5e6ee58c62f32cae2219932362994b0e4940feb"
+      },
+      {
+        "git_blob": "2f879371b4ad70dc80fca4c44c436f1be490ba72",
+        "path": "mainnet/economic_reference.go",
+        "sha256": "b190d55f0cac689cbeea454f9708525b7dfd9dfd8937accb8411cb1a16c3cd46"
+      },
+      {
+        "git_blob": "1bf9318c5d6a339def5edc4024f0adef9f24561f",
+        "path": "mainnet/economic_conservation_conformance.go",
+        "sha256": "351b6c1bf98905509227d50d0104a78835e6bd17b9c9a5dc4150467d5bb49154"
+      },
+      {
+        "git_blob": "ae962c47a29321992a6d7c5a065c86e3b8217188",
+        "path": "mainnet/economic_conservation_entitlement.go",
+        "sha256": "bfaffef115c32c87af767f7af78be5cef669f054d500634c48724c6414254321"
+      },
+      {
+        "git_blob": "7738bc6b7035351091a1549fb99417a0e5948c23",
+        "path": "mainnet/economic_conservation_funding.go",
+        "sha256": "74cffa35699d157107206f12c136ac2f3c4885870a37ace7cd12c6c9b0bd4d42"
+      },
+      {
+        "git_blob": "1fa67c7397b1df6312af55a6adadba3d9bf0ffd1",
+        "path": "evm/CLAIM-RECOVERY.md",
+        "sha256": "59028c27fd96fec48aa16ed0c4c56db37f11ddb6492c56a8a252e773fc786677"
+      },
+      {
+        "git_blob": "298e42c706986511fcd7910cb9ec74433ad16f8e",
+        "path": "mainnet/PRELAUNCH-FIXES.md",
+        "sha256": "3e0922b87e791ada7a47f8c882c5e469df8c3aee313ac5096a9dc959305761e4"
+      }
+    ],
+    "source": {
+      "all_bound_files_match_commit": true,
+      "commit": "9a6446e59545b3aba94f3937a3cc95da8ebf50ef",
+      "repository": "/home/by/urnetwork/sn",
+      "tree": "f37f32e043c845ea7dfb63e5a2917c275571b735"
+    }
+  },
+  "independent_source_review": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/repair-dispatch-window/evidence/validator-independent-source-ack-v1.json",
+    "sha256": "efb0b581404dc4e0a998ce3f4b21fc74a57acf28521ceb931a45af069627e616"
+  },
+  "mechanism": {
+    "custody": "A consumed or uncertain one-shot start remains durably consumed; no automatic retry, alternate generation or renewed approval is created.",
+    "defect": "A successful final storage inspection or original census could complete after the last signed authority-window check, leaving stale permission at process-start dispatch.",
+    "failure_precedence": "Original storage/read failure returns before a later clock verdict; actual clock read causes remain retained.",
+    "fix": "Require a caller-owned final authority callback after successful storage inspection and immediately before the fixed start command. Recheck the appropriate wall/high-water/window, sample-age and active join/monotonic constraints under the same owner."
+  },
+  "merged_main": "8776b03884fcca74d827dc613bd8233d2dc5f7a3",
+  "new_declarations": [
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 362,
+      "root": "TestRepairActiveValidatorDispatchClockReadFailureRetainsCause",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 193,
+      "root": "TestRepairActiveValidatorStartWindowAfterStorageInspection",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 120,
+      "root": "TestRepairOperatorStartWindowAfterOriginalCensus",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 75,
+      "root": "TestRepairOperatorStartWindowAfterStorageInspection",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 235,
+      "root": "TestRepairRootPassiveStartWindowAfterStorageInspection",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 310,
+      "root": "TestRepairStartStorageFailurePrecedesClockRefusal",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 155,
+      "root": "TestRepairValidatorStartWindowAfterStorageInspection",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 270,
+      "root": "TestRootPassiveHostStartWindowAfterStorageInspection",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 417,
+      "root": "TestValidatorActivationCurrentWindowAfterStorageInspection",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "file": "mainnet/repair_start_window_test.go",
+      "line": 379,
+      "root": "TestValidatorActivationStartWindowAfterStorageInspection",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    }
+  ],
+  "new_roots": [
+    "TestRepairActiveValidatorDispatchClockReadFailureRetainsCause",
+    "TestRepairActiveValidatorStartWindowAfterStorageInspection",
+    "TestRepairOperatorStartWindowAfterOriginalCensus",
+    "TestRepairOperatorStartWindowAfterStorageInspection",
+    "TestRepairRootPassiveStartWindowAfterStorageInspection",
+    "TestRepairStartStorageFailurePrecedesClockRefusal",
+    "TestRepairValidatorStartWindowAfterStorageInspection",
+    "TestRootPassiveHostStartWindowAfterStorageInspection",
+    "TestValidatorActivationCurrentWindowAfterStorageInspection",
+    "TestValidatorActivationStartWindowAfterStorageInspection"
+  ],
+  "preserved_outcomes": {
+    "master2757_preserved": true,
+    "original263_controls_preserved": true,
+    "original38_ids_unchanged": true,
+    "outcomes_closed": 0
+  },
+  "qualification": {
+    "control_bodies": "UNEXECUTED",
+    "controls_source_apply_check": "PASS_ON_EXACT_MERGED8776",
+    "new_control_groups": 6,
+    "new_roots_per_mode": 10,
+    "normal": "UNEXECUTED",
+    "race": "UNEXECUTED",
+    "separate_adjacent19": "Five already in master; fourteen separately retained completion requirements. None is newly credited by this source review."
+  },
+  "requirements_map": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/repair-dispatch-window/evidence/operator-requirements-map-v1.json",
+    "sha256": "f38fda2eb91c4316d12f9179b933045250ef6bea5ee31e638d71440aaafaaa6d"
+  },
+  "schema": "repair-dispatch-merged-source-and-scope-v1",
+  "scope": {
+    "bytes": 2101,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/SCOPE-HANDOFF.json",
+    "sha256": "56188052f6f4943869c262a406903844fd4a7c47937aad1577ae1057040db821"
+  },
+  "source_control_groups": 269,
+  "source_files": [
+    {
+      "bytes": 17683,
+      "git_blob": "f28c301568590107d1d80dc8442829fd6cb3c370",
+      "path": "mainnet/durable_volume_custody_test.go",
+      "sha256": "4dca88165d1fce3e9652f20e3a1a808e16bda3547f7e16d4bf94db061c94e26c"
+    },
+    {
+      "bytes": 5662,
+      "git_blob": "da9fc1958c149941fffecc0ae982f4bc83739e93",
+      "path": "mainnet/durable_volume_unit_inspector_test.go",
+      "sha256": "428f5a49f468266e989db0c30a27362ec20abf08adafc0b0f7c74818b11123d5"
+    },
+    {
+      "bytes": 10712,
+      "git_blob": "2ad9ce99dd3d29603c57ddd88252ea2cf9e61e50",
+      "path": "mainnet/repair_active_validator.go",
+      "sha256": "98e342b1599c7798679e86542250eac4d01082ef5f49100628e542c9e5fce5e7"
+    },
+    {
+      "bytes": 17530,
+      "git_blob": "d5ba5b71702894edf9a67f04586fc53357f559d7",
+      "path": "mainnet/repair_operator.go",
+      "sha256": "bff192850a7627dc2a1b9dc8e618695e5bce6adce8c050ec4f6b8454babdf1e5"
+    },
+    {
+      "bytes": 17462,
+      "git_blob": "8b0e653881bc907edbac5f0d169eaa57d2b181ac",
+      "path": "mainnet/repair_process.go",
+      "sha256": "c0614679d146b52af9dd70bf647d5a011e4d44a9b7c3b219e88e329d541bcfbd"
+    },
+    {
+      "bytes": 9565,
+      "git_blob": "0ed4927e5c91aac8d62c9b554ede33f7f417e366",
+      "path": "mainnet/repair_root_passive_host.go",
+      "sha256": "4267686697f753db0d032f4af05157e9a0d6ef83dac693dde8325c951a2f4cdb"
+    },
+    {
+      "bytes": 19957,
+      "git_blob": "238a2eeff71ab5adb4180f1a4bc461a3da40ceac",
+      "path": "mainnet/repair_start_window_test.go",
+      "sha256": "4f93a375defbd2b9b0798294d37716d3bb6f18c90ea79c5ae7d2e8b8c6805dc9"
+    },
+    {
+      "bytes": 8685,
+      "git_blob": "db902363d3fc0f54b93bc80216faa275ed1e84a7",
+      "path": "mainnet/repair_validator.go",
+      "sha256": "df49e238a30dc98cdd5662f4202ba430b9447182c44bfe15e967c608d74c30cb"
+    },
+    {
+      "bytes": 25316,
+      "git_blob": "67b4fe2af181f9c906fb483f63830904b8c53907",
+      "path": "mainnet/repair_validator_host.go",
+      "sha256": "904037a40237b96ea389f7a31918b3a8aad3e80273a2837f4e86baddfc651ae0"
+    },
+    {
+      "bytes": 16430,
+      "git_blob": "0f63a9e4d5c30e933c0449166e1f1bead980c957",
+      "path": "mainnet/root_passive_host.go",
+      "sha256": "e0b435750ad28a22fb3079464ed4521c9eca92c398786a34bf5c08112d94971d"
+    },
+    {
+      "bytes": 24203,
+      "git_blob": "8454dff6df806cc58e756fa540bb3db403254cac",
+      "path": "mainnet/validator_activation.go",
+      "sha256": "22656d9018eb77f4c19f33f20ddd0c1262f95b697def9b81bbb71d6da61e43a4"
+    }
+  ],
+  "source_intake": {
+    "bytes": 8942,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/repair-dispatch-window/HANDOFF.json",
+    "sha256": "6228380952c99b0ebe249aac9980aae2848a15696d44bc9b73365b3fa1ab4bc5"
+  },
+  "source_owner_commit": "9d3fe1397c7836113f609f46c7ca0ed1fd9c8de6",
+  "source_owner_tree": "c790fdf0728d92bb9f566f17df54440b1d581e5b",
+  "status": "MERGED_SOURCE_IMPLEMENTED_UNQUALIFIED",
+  "unselected_work_in_progress": [
+    "Validator runtime-identity correction",
+    "PH12 correction"
+  ]
+}

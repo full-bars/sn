@@ -68,6 +68,7 @@ func runOwnerSigningCommandWithAdapter(ctx context.Context, args []string, stdou
 	flags.StringVar(&trust.ApprovalKey, "trim-approval-key", "", "independent approval public key")
 	flags.StringVar(&trust.Owner, "owner-account-id", "", "independent existing subnet-owner AccountId32")
 	flags.StringVar(&trust.Genesis, "expected-genesis", "", "independently approved native genesis")
+	flags.StringVar(&trust.Signatory, "signatory-account-id", "", "native multisig owner only: independent AccountId32 of this computer's named signatory")
 	var signaturePath, ledgerResponsePath, replyPath, replyHash, proofPath, proofHash string
 	deviceConfig := ownerSigningDeviceConfig{}
 	appVersion := ""
@@ -93,7 +94,7 @@ func runOwnerSigningCommandWithAdapter(ctx context.Context, args []string, stdou
 		flags.StringVar(&proofHash, "ledger-metadata-sha256", "", "independent exact proof file sha256")
 	}
 	if err := flags.Parse(args[1:]); err != nil || flags.NArg() != 0 || *requestPath == "" || !planSha256(trust.RequestHash) ||
-		!rootCanonicalHash(trust.ApprovalKey) || !rootCanonicalHash(trust.Owner) || !rootCanonicalHash(trust.Genesis) ||
+		!rootCanonicalHash(trust.ApprovalKey) || !rootCanonicalHash(trust.Owner) || !rootCanonicalHash(trust.Genesis) || trust.Signatory != "" && !rootCanonicalHash(trust.Signatory) ||
 		mode == "reply" && (signaturePath == "") == (ledgerResponsePath == "") ||
 		mode == "verify" && (replyPath == "" || !planSha256(replyHash)) ||
 		mode == "ledger-plan" && (proofPath == "" || !planSha256(proofHash)) ||
@@ -131,6 +132,16 @@ func runOwnerSigningCommandWithAdapter(ctx context.Context, args []string, stdou
 	var result any
 	switch mode {
 	case "inspect":
+		// A multisig step displays its exact outer call; the device shows the
+		// nested trim call through the same RFC78 proof of that outer call.
+		call, gates := "AdminUtils.sudo_trim_to_max_allowed_uids(netuid, max_n)", []string{}
+		if multisig := request.Config.Action.Multisig; multisig != nil {
+			call = "Multisig.as_multi(threshold, other_signatories, maybe_timepoint, AdminUtils.sudo_trim_to_max_allowed_uids(netuid, max_n), max_weight)"
+			if multisig.kind() == "cancel" {
+				call = "Multisig.cancel_as_multi(threshold, other_signatories, timepoint, blake2_256(AdminUtils.sudo_trim_to_max_allowed_uids(netuid, max_n)))"
+			}
+			gates = append(gates, "multisig-"+multisig.kind()+"-step-of-ordered-signatory-custody")
+		}
 		result = struct {
 			RequestHash     string          `json:"request_hash"`
 			Action          ownerTrimAction `json:"action"`
@@ -142,8 +153,8 @@ func runOwnerSigningCommandWithAdapter(ctx context.Context, args []string, stdou
 			NetworkEffects  bool            `json:"network_effects"`
 			OpenGates       []string        `json:"open_gates"`
 		}{RequestHash: request.ContentHash, Action: request.Config.Action, SignatureScheme: request.SignatureScheme,
-			SigningBytes: request.SigningBytes, Call: "AdminUtils.sudo_trim_to_max_allowed_uids(netuid, max_n)",
-			OpenGates: []string{"physical-device-and-sdk-build-qualification", "runtime-rfc78-digest-enabled-in-approved-wasm", "global-owner-nonce-and-custody-fence", "current-owner-trim-enforced-authority"}}
+			SigningBytes: request.SigningBytes, Call: call,
+			OpenGates: append([]string{"physical-device-and-sdk-build-qualification", "runtime-rfc78-digest-enabled-in-approved-wasm", "global-owner-nonce-and-custody-fence", "current-owner-trim-enforced-authority"}, gates...)}
 	case "sign":
 		result, err = signOwnerRequest(ctx, deviceConfig, request, adapter)
 		if err != nil {

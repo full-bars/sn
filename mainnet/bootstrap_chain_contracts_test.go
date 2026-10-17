@@ -53,6 +53,36 @@ func bootstrapContractTestJournals(t *testing.T, directory string) map[string]st
 	return result
 }
 
+// Fresh custody is eight explicitly prepared empty markers and no journal. The
+// returned namespace also fixes each marker's inode and checkpoint, so a later
+// comparison proves that an observation neither claimed nor replaced one.
+func bootstrapContractTestFresh(t *testing.T, directory string) map[string]mainnetNamespaceFileTest {
+	t.Helper()
+	for i := range 8 {
+		path := filepath.Join(directory, bootstrapContractStateFile(i))
+		if _, err := os.Lstat(path); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("fresh contract custody unexpectedly retained a journal", path, err)
+		}
+		if raw, err := os.ReadFile(path + ".lock"); err != nil || len(raw) != 0 {
+			t.Fatal("fresh contract custody changed its precreated empty marker", path, err)
+		}
+	}
+	return mainnetNamespaceTest(t, directory)
+}
+
+// Only the reserve owner can replace its record: the physical head refuses
+// bytes it did not acknowledge before any original lineage is compared.
+func bootstrapContractTestPublishReserve(t *testing.T, f *evmCreateFixture, record evmActionRecord) {
+	t.Helper()
+	store, err := openEvmActionStore(f.config, false, nil, f.storage.Context)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := errors.Join(store.save(record), store.close()); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // The public result must carry its complete seal without adding execution scope.
 func bootstrapContractTestResult(t *testing.T, raw []byte) bootstrapChainContractReadiness {
 	t.Helper()
@@ -120,16 +150,22 @@ func TestBootstrapContractReadinessRetainsOriginalSignedCustody(t *testing.T) {
 	f.result(t, "resume")
 }
 
-// Every original child remains mandatory. Restoring the exact missing bytes
-// makes the same owner resumable; inspection never repairs or recreates them.
+// Every original child remains mandatory. Returning the exact missing file
+// makes the same owner resumable; inspection never repairs or recreates it.
+// The file is held aside and returned, because retained custody binds its
+// inode and checkpoint: rewriting the same bytes would be another file.
 func TestBootstrapContractReadinessLeavesMissingOriginalCustodyUnresolved(t *testing.T) {
 	f := newBootstrapChainFixture(t)
 	f.result(t, "apply")
-	original := f.journals(t)
+	held := filepath.Join(filepath.Dir(f.config.RunDirectory), "synthetic-held-original-child")
 	for _, path := range f.preparation.childPaths() {
 		for _, suffix := range []string{"", ".lock"} {
 			missing := path + suffix
-			if err := os.Remove(missing); err != nil {
+			saved, err := os.Stat(missing)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Rename(missing, held); err != nil {
 				t.Fatal(err)
 			}
 			before := f.journals(t)
@@ -139,8 +175,11 @@ func TestBootstrapContractReadinessLeavesMissingOriginalCustodyUnresolved(t *tes
 			if code != 1 || result.Status != "unresolved" || result.CustodyInspectionComplete || result.RemainingOriginalAttempts != nil || !maps.Equal(before, f.journals(t)) {
 				t.Fatalf("missing %s became authority: %d %s %+v", missing, code, stderr.String(), result)
 			}
-			if err := os.WriteFile(missing, []byte(original[missing]), 0600); err != nil {
+			if err := os.Rename(held, missing); err != nil {
 				t.Fatal(err)
+			}
+			if restored, err := os.Stat(missing); err != nil || !os.SameFile(saved, restored) {
+				t.Fatal("fixture did not restore the original child inode", missing, err)
 			}
 		}
 	}
@@ -155,9 +194,10 @@ func TestBootstrapContractPlanReportsNineActionCapBeforeSigning(t *testing.T) {
 	f.config.Plan.Actions = append(f.config.Plan.Actions, evmPhaseAction{Id: "evidence-anchor", Sender: f.config.Plan.Actions[0].Sender, Nonce: 8, To: &target, Data: "0x01", ValueWei: "0", Gas: 21000, FeeCapWei: "10", TipCapWei: "1"})
 	f.config.Plan.MaximumTotalWei = "2244000000"
 	f.publishConfig()
+	prepared := bootstrapContractTestFresh(t, f.config.Plan.RunDirectory)
 	result, plans := bootstrapContractTestInspection(t, f)
 	if len(plans) != 8 || !result.Actions[8].Approved || result.Actions[8].SemanticsVerified || result.Actions[8].ExecutorImplemented || result.Actions[8].CustodyStatus != "sealed-reservation-only" || result.OriginalMaximumAttempts != 8 || result.MinimumFreshInstallationAttempts != 9 ||
-		!slices.Contains(result.Blockers, "APPROVED_PREFIX_INITIAL_SENDS_EXCEED_ORIGINAL_ATTEMPT_CAP") || slices.Contains(result.Blockers, "FULL_INSTALLATION_ACTION_APPROVAL_MISSING") || !slices.Contains(result.Blockers, "SAFE_INNER_AUTHORITY_NONCE_AND_SIGNATURES_UNVERIFIED") || len(bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)) != 0 || len(f.counts) != 0 {
+		!slices.Contains(result.Blockers, "APPROVED_PREFIX_INITIAL_SENDS_EXCEED_ORIGINAL_ATTEMPT_CAP") || slices.Contains(result.Blockers, "FULL_INSTALLATION_ACTION_APPROVAL_MISSING") || !slices.Contains(result.Blockers, "SAFE_INNER_AUTHORITY_NONCE_AND_SIGNATURES_UNVERIFIED") || !reflect.DeepEqual(prepared, mainnetNamespaceTest(t, f.config.Plan.RunDirectory)) || len(f.counts) != 0 {
 		t.Fatalf("nine-action reservation acquired semantics or hid its cap: %+v", result)
 	}
 	for i := range plans {
@@ -182,7 +222,8 @@ func TestBootstrapContractPlanChecksEveryApprovedProjection(t *testing.T) {
 		action.Data = action.Data[:len(action.Data)-2] + "01"
 	}
 	f.publishConfig()
-	if _, _, err := prepareBootstrapContractReadiness(t.Context(), f.plan, f.configPath); err == nil || !strings.Contains(err.Error(), "evidence") || len(bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)) != 0 || len(f.counts) != 0 {
+	prepared := bootstrapContractTestFresh(t, f.config.Plan.RunDirectory)
+	if _, _, err := prepareBootstrapContractReadiness(t.Context(), f.plan, f.configPath); err == nil || !strings.Contains(err.Error(), "evidence") || !reflect.DeepEqual(prepared, mainnetNamespaceTest(t, f.config.Plan.RunDirectory)) || len(f.counts) != 0 {
 		t.Fatal("full-prefix inspection skipped the changed evidence constructor", err)
 	}
 }
@@ -298,21 +339,26 @@ func TestBootstrapContractReadinessRejectsChangedPredecessorLineage(t *testing.T
 	f.prepareVaultSigned()
 	path := filepath.Join(f.config.Plan.RunDirectory, evmCreateStateFile)
 	before := bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)
-	var record evmActionRecord
-	if err := json.Unmarshal([]byte(before[path]), &record); err != nil {
+	var original evmActionRecord
+	if err := json.Unmarshal([]byte(before[path]), &original); err != nil {
 		t.Fatal(err)
 	}
+	record := original
 	record.Attempts++
 	record.ContentHash = ""
 	record.ContentHash = rootObjectHash(record)
-	bootstrapRootTestWrite(t, path, record)
+	bootstrapContractTestPublishReserve(t, f, record)
 	changed := bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)
+	if changed[path] == before[path] {
+		t.Fatal("fixture did not publish the changed ancestor record")
+	}
 	result, plans := bootstrapContractTestInspection(t, f)
 	if err := inspectBootstrapContractCustody(f.storage.Context, plans, &result); err == nil || !strings.Contains(err.Error(), "predecessor") || result.CustodyInspectionComplete || result.RetainedCompletedActions != 1 || result.RetainedAttempts != 2 || result.Actions[1].CustodyStatus != "unresolved" || !maps.Equal(changed, bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)) {
 		t.Fatalf("child adopted changed ancestor custody: %+v %v", result, err)
 	}
-	if err := os.WriteFile(path, []byte(before[path]), 0600); err != nil {
-		t.Fatal(err)
+	bootstrapContractTestPublishReserve(t, f, original)
+	if !maps.Equal(before, bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)) {
+		t.Fatal("fixture did not restore the exact original ancestor record")
 	}
 	if _, code, diagnostic := f.command("resume", "--action", "vault-create"); code != 0 {
 		t.Fatal(diagnostic)

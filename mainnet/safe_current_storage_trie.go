@@ -243,6 +243,31 @@ func (self *safeCurrentStorageNode) path(parent []byte) []byte {
 // Point reads authenticate account code and runtime bytes at the same root.
 // A present empty value stays distinct from a proven absent key.
 func (self *safeCurrentStorageTrie) read(ctx context.Context, root [32]byte, key []byte) ([]byte, bool, error) {
+	node, present, err := self.point(ctx, root, key)
+	if err != nil || !present {
+		return nil, false, err
+	}
+	value, err := self.value(node)
+	return slices.Clone(value), err == nil, err
+}
+
+// A hashed value's commitment is already authenticated by its trie node. This
+// avoids embedding a multi-megabyte runtime in a small signed completion proof.
+func (self *safeCurrentStorageTrie) commitment(ctx context.Context, root [32]byte, key []byte) ([32]byte, bool, error) {
+	node, present, err := self.point(ctx, root, key)
+	if err != nil || !present {
+		return [32]byte{}, false, err
+	}
+	if node.valueHashed {
+		var hash [32]byte
+		copy(hash[:], node.value)
+		return hash, true, nil
+	}
+	return blake2b.Sum256(node.value), true, nil
+}
+
+// Exact path traversal distinguishes proved absence from omitted proof nodes.
+func (self *safeCurrentStorageTrie) point(ctx context.Context, root [32]byte, key []byte) (*safeCurrentStorageNode, bool, error) {
 	if ctx == nil || len(key) > maximumSafeCurrentStorageKeyBytes {
 		return nil, false, errors.New("Safe current proof key or context differs")
 	}
@@ -261,8 +286,7 @@ func (self *safeCurrentStorageTrie) read(ctx context.Context, root [32]byte, key
 			if !node.hasValue {
 				return nil, false, nil
 			}
-			value, err := self.value(node)
-			return slices.Clone(value), err == nil, err
+			return node, true, nil
 		}
 		if node.leaf || len(node.children[wanted[offset]]) == 0 {
 			return nil, false, nil

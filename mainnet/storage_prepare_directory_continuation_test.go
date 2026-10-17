@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Directory-head preparation uses actual public plan/apply boundaries. Unknown
 // scope, capacity, pending bytes and missing completed heads never become fresh.
@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/internal/durablehead"
 	"github.com/urfoundation/sn/internal/durablepath"
@@ -252,7 +254,7 @@ func TestStoragePreparationDirectoryOwnersRefuseLostCompletedHeads(t *testing.T)
 		if err != nil || !bytes.Equal(before, after) {
 			t.Fatal("lost head rewrote accepted progress", kind, err)
 		}
-		if _, err := unix.Getxattr(f.root, attribute, make([]byte, 4096)); !errors.Is(err, unix.ENODATA) {
+		if _, err := unix.Getxattr(f.root, attribute, make([]byte, 4096)); !errors.Is(err, durablesys.ErrNoAttribute) {
 			t.Fatal("missing head was recreated", kind, err)
 		}
 	}

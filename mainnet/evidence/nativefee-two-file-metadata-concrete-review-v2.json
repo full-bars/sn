@@ -1,0 +1,74 @@
+{
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 780,
+    "TimeoutStopSec": 90
+  },
+  "forecast": {
+    "basis": "Retained cache and hardlinked stages; two small Git blobs, one graph stdout<=64MiB, stage log<=4MiB, directory metadata and small receipts fit the existing 1GiB growth limit. Original global floors/cap/margin retained.",
+    "entry_data_bytes": 10737418240,
+    "entry_memory_bytes": 113816633344,
+    "growth_stop_bytes": 1073741824,
+    "memory_max_bytes": 2147483648
+  },
+  "fresh_bytes": 23025,
+  "fresh_files": 2,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/nativefee-two-file-metadata-job-v2.json",
+    "sha256": "e0f2637fe35527b192450aa81f1afc71abea97c7c372165ea0d4e7237ed3049b"
+  },
+  "ordering": "Actual current96 nativefee13 normal/race ordinary failures and closed USER readback are bound. Only source470 fixture delta metadata executes; no product body or duplicate test run. Any intervening owner requires its actual wait and closure in Root adoption.",
+  "parent_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-fcfd-026b-c198-compiler-source-closure-v1.json",
+    "sha256": "e09ddf70cb7db4f48fe958fd2336b8c47dd4e03a74c33fe11f9647871a0ca00c"
+  },
+  "phase_bounds": {
+    "nativefee_graph": 300,
+    "stage": 180,
+    "total": 480
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 1073741824,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "e0f2637fe35527b192450aa81f1afc71abea97c7c372165ea0d4e7237ed3049b",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 2147483648,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "network_dependency_count": 0,
+    "runner_sha256": "ceb979519805792d882b31c2bca00142e9cf657aa30353aa885d4ac0f2ce8d92",
+    "short_count": 0,
+    "status": "ADOPTED_NATIVEFEE_TWO_FILE_CACHED_METADATA"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/nativefee-two-file-metadata-adoption-v2.json",
+  "reused_files": 35677,
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-nativefee-two-file-metadata-v2.py",
+    "sha256": "ceb979519805792d882b31c2bca00142e9cf657aa30353aa885d4ac0f2ce8d92"
+  },
+  "source_delta_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/nativefee470-two-file-source-proof-v2.json",
+    "sha256": "ddf41a299de1ff01e6dcb5ddf12058893ddfe740071b19ac3715f3a803a1402e"
+  },
+  "source_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-nativefee470-source-manifest-v2.json",
+    "sha256": "ad22b87106929a6529362542e60067485d29a9bd5b1da592c1ce077e8eb4721a"
+  },
+  "stage_helper": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/stage-nativefee-two-file-v2.py",
+    "sha256": "704bf723b8949bc83654ce98e73f7d84d392422fc7b11dbf530f69689f420be0"
+  },
+  "status": "READY_AFTER_ACTUAL_CURRENT96_NATIVEFEE13_ORDINARY_FAILURES_JOINED",
+  "validation": "AST, finite Git/object comparisons, original graph JSON/file-class membership and immutable pins only. No stage, Go, compiler, body or service by author.",
+  "whole_owner_horizon_seconds": 870
+}

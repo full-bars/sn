@@ -1,0 +1,276 @@
+{
+  "author_execution": {
+    "bodies": 0,
+    "compilers": 0,
+    "db": 0,
+    "deployment": 0,
+    "lists": 0
+  },
+  "consumer": {
+    "actual": {
+      "counts": {
+        "fail": 0,
+        "pass": 12,
+        "run": 12,
+        "skip": 0
+      },
+      "elapsed_seconds": 6.981,
+      "exit": 0,
+      "outer_terminal": {
+        "active_state": "inactive",
+        "cgroup_absent": true,
+        "exit": 0,
+        "main_pid": 0
+      },
+      "prior_loader_failures_preserved": [
+        {
+          "attempt": 1,
+          "classification": "LOADER_ONLY_INTERPRETER_DEPENDENCY_FAILURE",
+          "loader_error_records": 12,
+          "missing_import": "yaml",
+          "original_failure_preserved": true,
+          "receipt": {
+            "bytes": 8617,
+            "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v1.receipt.json",
+            "sha256": "7c9487f5e6bdae27571acfdc97291ddb71700a4b52f1c0dcae0c059f50258fd8"
+          },
+          "selected_test_bodies_run": 0,
+          "stderr": {
+            "bytes": 10675,
+            "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v1.stderr",
+            "sha256": "334ad14ef62e028c60886847b92e3b0439be66bcc2d7bfd0948605373a15ffcb"
+          },
+          "user_terminal": {
+            "bytes": 1425,
+            "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v1-user-terminal-readback.json",
+            "sha256": "19532fb437522af21f2dd8ec6a1b06607ff4dc636d0479edc06a6284721ff81b"
+          }
+        },
+        {
+          "attempt": 2,
+          "classification": "LOADER_ONLY_INTERPRETER_DEPENDENCY_FAILURE",
+          "loader_error_records": 12,
+          "missing_import": "ansible",
+          "original_failure_preserved": true,
+          "receipt": {
+            "bytes": 8532,
+            "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v2.receipt.json",
+            "sha256": "bc26b19e8c847c7575a3aab072010465638f31687a9c19522801ff446176ef67"
+          },
+          "selected_test_bodies_run": 0,
+          "stderr": {
+            "bytes": 13003,
+            "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v2.stderr",
+            "sha256": "cef2755c0a0e392cfef12dcd30e218b0a808fe4d559d6476b21667a0647ea277"
+          },
+          "user_terminal": {
+            "bytes": 1420,
+            "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v2-user-terminal-readback.json",
+            "sha256": "ddadb921ccf2d456d45298054a4249be8e30d2b2098512a3fb37eb56ff1c0936"
+          }
+        }
+      ],
+      "producer624_files_match_sn14a": true,
+      "promtool": {
+        "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+        "sha256": "e59210d5474e2c811a4460fb1593d708b94d58107ae62e9d44e88029bb7e5805"
+      },
+      "python": "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+      "receipt": {
+        "bytes": 8724,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v3.receipt.json",
+        "sha256": "ceccdbdfa45f6167dc585da8d9d49cf655a86169bff2b2e0b7b8dbc376a31734"
+      },
+      "required_environment": {
+        "SN_MAINNET_PROMTOOL": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+        "SN_MAINNET_SOURCE": "/home/by/urnetwork/sn"
+      },
+      "scope_limit": "Only twelve PH15 dashboard Python/actual-Promtool tests. Prior conservation33 was not repeated. No Go producer normal/race or four Go control results, live ingestion/on-call/drill or deployment outcome follows. V3 uses the existing qualified virtual environment; no source change or dependency installation.",
+      "selected_names_match_intake12": true,
+      "source_heads": {
+        "/home/by/urnetwork/sn": "14a4bef86f63a9a67ce637aa8ddc4422c798f189",
+        "/home/by/urnetwork/xops": "9a37239ebeebbb5efea4f63a56191f91f3c4ad8f"
+      },
+      "source_pins": [
+        {
+          "path": "/home/by/urnetwork/xops/grafana/sn-mainnet-domain.json",
+          "sha256": "fa67ee7f427cc117bee59e8f2faaf312dfa67fcdea1731219563f12ec20f55c0"
+        },
+        {
+          "path": "/home/by/urnetwork/xops/main/ansible/SN-MAINNET-DASHBOARD.md",
+          "sha256": "27dd77d9813f501d058444f5c458f1855137ad1d38d40702f65b68e180f8814c"
+        },
+        {
+          "path": "/home/by/urnetwork/xops/main/ansible/files/sn-mainnet-dashboard/dashboard.py",
+          "sha256": "82847d295f321dc9ba62b9b1b12057ae8c64308911907871494680cdb46042ae"
+        },
+        {
+          "path": "/home/by/urnetwork/xops/main/ansible/files/sn-mainnet-dashboard/metrics-contract.json",
+          "sha256": "523a786bec3d19168cdc7102a421f87a902ebd9bce28d904c4ff165ddb12596b"
+        },
+        {
+          "path": "/home/by/urnetwork/xops/main/ansible/tests/test_sn_mainnet_dashboard.py",
+          "sha256": "f5758497f6a61c55e5862540c9d2dd3d1876989511c3b79eff1d5d715c4647d2"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "PASS_XOPS_PH15_12",
+      "stderr": {
+        "bytes": 2369,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v3.stderr",
+        "sha256": "6bd9f157dbd0bb9c35487477110aaa6ae35fc1c4dfa5b84098e72312e079ba72"
+      },
+      "tree_joined": true,
+      "user_terminal": {
+        "bytes": 1471,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v3-user-terminal-readback.json",
+        "sha256": "2199c59fe71e8d0916f4fc3c835dc1f033e15791280c7319e390fe76149d082a"
+      },
+      "wait": {
+        "bytes": 3406,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-xops-ph15-12-v3.process-result.json",
+        "sha256": "f41a3c0abb6cfca5717522f7d36f4250aef2c4f2b007e044c5fc8f7b0736d1a5"
+      }
+    },
+    "intake": {
+      "bytes": 13215,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/domain-dashboard-ph15-9a37239e-intake.json",
+      "sha256": "207e209de3884127533339456ca95b135bc279b501d57d8ae359ffa8f471b621"
+    },
+    "main": "9a37239ebeebbb5efea4f63a56191f91f3c4ad8f",
+    "prior_conservation33_evidence_preserved": {
+      "control_pass": 1,
+      "fail": 0,
+      "receipt": {
+        "bytes": 32800,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-v3.receipt.json",
+        "sha256": "12f8057abd7f8d31eee68a08819066bf1043d1be2e03575329e0014fa5b54f04"
+      },
+      "resource_errors": [],
+      "scope": "Original482 source only; does not qualify new provider/progress consumers.",
+      "skip": 0,
+      "status": "PASS_MAIN_CONTROL1_AND33_NO_SKIPS",
+      "suite_pass": 33,
+      "test_invocations": 34,
+      "unchanged_components": [
+        {
+          "blob": "3ccac78e8487583d65927610760fd1d5aaad63cc",
+          "equal_to_commit": "482050c3194412b620940d22d87acc00a91847b2",
+          "path": "main/ansible/files/sn-mainnet-monitor/deployment.py"
+        },
+        {
+          "blob": "51fcb784a5900277c6e8843865547dcf37cd9457",
+          "equal_to_commit": "482050c3194412b620940d22d87acc00a91847b2",
+          "path": "main/ansible/tests/test_sn_mainnet_monitor_conservation.py"
+        }
+      ],
+      "unique_roots": 33
+    },
+    "required_environment": {
+      "SN_MAINNET_PROMTOOL": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+      "SN_MAINNET_SOURCE": "Git repository containing exact producer624cf1e00f45dac61bc5675e4a21eb2a8dd121e5"
+    },
+    "selected_test_ids": [
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_all_original_dashboard_queries_parse_in_prometheus",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_backlog_survives_source_loss_while_measured_progress_is_unknown",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_caught_up_zero_estimate_does_not_manufacture_a_measurement_rate",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_progress_guard_removal_exposes_unknown_estimate_or_zero_rate",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_progress_values_cannot_borrow_peer_known_flags",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_provider_absent_census_and_each_unknown_value_stay_blank",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_provider_and_progress_require_a_current_complete_sample",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_provider_guard_removal_exposes_an_unadmitted_zero",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_provider_partial_coverage_and_known_zero_retain_their_original_values",
+      "test_sn_mainnet_dashboard.MainnetDashboardPromqlTests.test_rate_interval_requires_its_two_positive_observations",
+      "test_sn_mainnet_dashboard.MainnetDashboardSourceTests.test_every_queried_metric_has_an_original_public_producer",
+      "test_sn_mainnet_dashboard.MainnetDashboardTests.test_export_matches_closed_metric_contract_and_keeps_all_fourteen_chain_gauges"
+    ],
+    "status": "PASS_XOPS_PH15_12",
+    "targeted_tests": 12,
+    "tree": "860774c4594761e42a6efe910051eeffac0e2ee6"
+  },
+  "counts_per_mode": {
+    "all_go": 2757,
+    "connect": 224,
+    "mainnet": 292,
+    "server": 2027,
+    "server_controller": 95,
+    "server_full_model": 1865,
+    "sn": 498,
+    "sn_connect_vless": 730,
+    "vlessinterop": 8
+  },
+  "documentation_base": "1af1e92b2e810c42131832afde744676cb291b6c",
+  "preserved_all38_original_outcomes": true,
+  "previous_2755_scope_preserved": {
+    "bytes": 2109,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-dddd-ph15/SCOPE-HANDOFF.json",
+    "sha256": "dab70e37f307df0f8793d2fd95deea25961f435ce31b925a92359b862544ec11"
+  },
+  "previous_go_roots_per_mode": 2733,
+  "previous_source_control_groups": 259,
+  "producer": {
+    "actual_normal": {
+      "complete_evidence": {
+        "bytes": 15540,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-1af1-ph15-normal32/current-compilers-and-ph15-producer-normal-20261005.json",
+        "sha256": "6621b9b30449b527ce8799248e33509fe8d2902c30475250e2c57eb0bb586ee5"
+      },
+      "counts": {
+        "fail": 0,
+        "pass": 32,
+        "run": 32,
+        "skip": 0
+      },
+      "outer_terminal": {
+        "active_state": "inactive",
+        "exit": 0,
+        "main_pid": 0,
+        "readback": {
+          "bytes": 1631,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-ph15-producer32-normal-v1-user-terminal-readback.json",
+          "sha256": "26ded585ac82deedff9bdbe6f178be8e291b02ec76243bb8ddb8b6378d4f54a1"
+        },
+        "status": "EXECUTOR_ARTIFACT_VERIFIED"
+      },
+      "receipt": {
+        "bytes": 15742,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-ph15-producer32-normal-v1.receipt.json",
+        "sha256": "172a513c62bd3723a7dfd24633b67d3df977fd73d40fcc7a441ce1488085485b"
+      }
+    },
+    "causal_controls": "4_GROUPS_UNEXECUTED",
+    "commit": "624cf1e00f45dac61bc5675e4a21eb2a8dd121e5",
+    "intake": {
+      "bytes": 5429,
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261005/ph15-status-evidence/INTAKE.json",
+      "sha256": "c84b25f6071c948b722bf2b631e233ae2b941ff63e96c7f3ecd03b299165a853"
+    },
+    "merged_sn_main": "dddd686da6bcd66598f27c5176b406387fda1750",
+    "new_coverage_progress_gauges": 36,
+    "normal": "PASS_32_RUN_32_PASS_0_FAIL_0_SKIP",
+    "old_financial_gauges_preserved": 36,
+    "race": "UNEXECUTED",
+    "status_output": "operational_progress after original durable acknowledgment",
+    "total_fixed_gauges": 72
+  },
+  "remaining_original_ph15": [
+    "Producer32 race and four original producer control groups remain unexecuted. Producer32 normal and twelve targeted consumers have separately passed; retain their actual scopes and component receipts.",
+    "Other owners actual submission/finalization receipts and durable incident recurrence/resolution histories.",
+    "Original provider/window inputs, deployed measured rates, collector/receiver ingestion, on-call delivery and outage/deadlock rehearsals."
+  ],
+  "schema": "ph15-consumer-and-producer-normal-actual-progress-v3",
+  "scope": {
+    "bytes": 1545,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-1af1-ph15-normal32/SCOPE-HANDOFF.json",
+    "sha256": "2724795fa61afc5034bb727f5f20081c03ebbe5a263fe46360373474c6f99007"
+  },
+  "semantics": [
+    "Original36 financial gauges and original custody/signing authority are preserved.",
+    "Exact provider/window presence and independent known-value fields expose partial admitted evidence without rounding large values.",
+    "Preparation throughput and LOCAL finalized-observation delivery cadence remain separate; cadence is not chain production time.",
+    "Catch-up ETA targets the retained admitted finalized boundary; unknown future-boundary and repair ETA remain unknown.",
+    "Merged source does not establish active collector ingestion, alert delivery, live operation or complete PH15."
+  ],
+  "source_control_groups": 263,
+  "status": "PRODUCER32_NORMAL_AND_CONSUMER12_PASS_RACE_CONTROLS_PENDING"
+}

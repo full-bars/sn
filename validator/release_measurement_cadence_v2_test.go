@@ -146,7 +146,7 @@ func TestReleaseMeasurementV2CadenceReplaysTwoSettlementsForOneNativeSuccessor(t
 	if err != nil {
 		t.Fatal(err)
 	}
-	history.readers[0], history.readers[1] = reader, reader
+	history.readers = []*HTTPAttemptStreamV2Reader{reader, reader}
 	runtime := &releaseRuntimeV2{cfg: cfg, history: history, gate: make(chan struct{}, 1)}
 	store := &IntentStore{v2: &releaseIntentV2Owner{runtime: runtime}}
 	verify := func() error {

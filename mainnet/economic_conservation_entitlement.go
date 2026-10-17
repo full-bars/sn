@@ -419,6 +419,18 @@ func (self economicConservationState) entitlementCensusFacts() uint64 {
 				for _, wallet := range originals.Wallets {
 					count += uint64(len(wallet.Originals))
 				}
+				count += uint64(len(originals.NetworkWallets))
+				for _, wallet := range originals.NetworkWallets {
+					count += uint64(len(wallet.Originals))
+				}
+				count += uint64(len(originals.HotkeyDelegations))
+				for _, delegation := range originals.HotkeyDelegations {
+					count += uint64(len(delegation.Originals))
+				}
+				count += uint64(len(originals.HotkeyConsents))
+				for _, consent := range originals.HotkeyConsents {
+					count += uint64(len(consent.Originals))
+				}
 				if originals.Work != nil {
 					count += uint64(len(originals.Work.Owners))
 				}

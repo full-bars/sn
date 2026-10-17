@@ -185,6 +185,8 @@ func fleetCommand(opts docopt.Opts) error {
 		return fleetPublish(ctx, opts, manifest)
 	case mustBoolOpt(opts, "bind"):
 		return fleetBind(ctx, opts, manifest)
+	case mustBoolOpt(opts, "sign"):
+		return fleetSign(opts, manifest, os.Stdout, os.Stderr)
 	case mustBoolOpt(opts, "status"):
 		return fleetStatus(ctx, opts, manifest)
 	case mustBoolOpt(opts, "revoke"):
@@ -315,8 +317,12 @@ func fleetPublish(ctx context.Context, opts docopt.Opts, manifest *protocol.Flee
 		fmt.Printf("fleet commitment finalized\n  endpoint: %s\n  netuid: %d\n  hotkey: 0x%x\n  commitment: 0x%x\n  extrinsic: %s\n  finalized_block: %d\n  finalized_hash: %s\n", endpoint, manifest.Netuid, manifest.Hotkey, hash, verified.ExtrinsicHash.Hex(), verified.FinalizedAt, verified.FinalizedHash.Hex())
 		return nil
 	}
-	if _, err := authenticateAndBindFleetRuntimeFinalizedContext(ctx, chain); err != nil {
+	finalized, err := authenticateAndBindFleetRuntimeFinalizedContext(ctx, chain)
+	if err != nil {
 		return fmt.Errorf("authenticate fleet runtime before publish: %w", err)
+	}
+	if err := refuseFleetPublishFromValidatorRole(ctx, chain, manifest.Netuid, manifest.Hotkey, finalized); err != nil {
+		return err
 	}
 	receipt, err := chain.SetFleetCommitment(ctx, hotkey, manifest.Netuid, hash)
 	if err != nil {
@@ -335,19 +341,7 @@ func fleetBindingAndSign(opts docopt.Opts, manifest *protocol.FleetManifest) (pr
 	if err != nil {
 		return protocol.FleetBinding{}, nil, nil, err
 	}
-	member, err := fleetMember(manifest, clientID)
-	if err != nil {
-		return protocol.FleetBinding{}, nil, nil, err
-	}
-	from, err := parseFleetEpoch(opts, "--valid_from_epoch")
-	if err != nil {
-		return protocol.FleetBinding{}, nil, nil, err
-	}
-	to, err := parseFleetEpoch(opts, "--valid_to_epoch")
-	if err != nil {
-		return protocol.FleetBinding{}, nil, nil, err
-	}
-	binding, err := manifest.Binding(member, from, to)
+	binding, err := fleetBindingForClient(opts, manifest, clientID)
 	if err != nil {
 		return binding, nil, nil, err
 	}
@@ -359,17 +353,44 @@ func fleetBindingAndSign(opts docopt.Opts, manifest *protocol.FleetManifest) (pr
 	if err != nil {
 		return binding, nil, nil, err
 	}
-	hotkeySeed, err := crv4.LoadSeedFile(fleetOpt(opts, "--hotkey_seed_file"))
+	hotkeySignature, err := fleetSignHotkey(fleetOpt(opts, "--hotkey_seed_file"), manifest, binding)
+	return binding, clientSignature, hotkeySignature, err
+}
+
+// fleetBindingForClient builds the manifest member binding for clientID over
+// the --valid_from_epoch..--valid_to_epoch window. It reads no key material.
+func fleetBindingForClient(opts docopt.Opts, manifest *protocol.FleetManifest, clientID [16]byte) (protocol.FleetBinding, error) {
+	member, err := fleetMember(manifest, clientID)
 	if err != nil {
-		return binding, nil, nil, err
+		return protocol.FleetBinding{}, err
+	}
+	from, err := parseFleetEpoch(opts, "--valid_from_epoch")
+	if err != nil {
+		return protocol.FleetBinding{}, err
+	}
+	to, err := parseFleetEpoch(opts, "--valid_to_epoch")
+	if err != nil {
+		return protocol.FleetBinding{}, err
+	}
+	return manifest.Binding(member, from, to)
+}
+
+// fleetSignHotkey signs the binding digest with the manifest hotkey's sr25519
+// seed. A seed for any other hotkey is refused.
+func fleetSignHotkey(hotkeySeedPath string, manifest *protocol.FleetManifest, binding protocol.FleetBinding) ([]byte, error) {
+	hotkeySeed, err := crv4.LoadSeedFile(hotkeySeedPath)
+	if err != nil {
+		return nil, err
 	}
 	hotkey, err := crv4.KeypairFromSeed(hotkeySeed)
 	if err != nil || hotkey.PublicKey() != manifest.Hotkey {
-		return binding, nil, nil, errors.New("hotkey seed does not match manifest")
+		return nil, errors.New("hotkey seed does not match manifest")
 	}
-	digest, _ := binding.Digest()
-	hotkeySignature, err := hotkey.Sign(digest[:])
-	return binding, clientSignature, hotkeySignature, err
+	digest, err := binding.Digest()
+	if err != nil {
+		return nil, err
+	}
+	return hotkey.Sign(digest[:])
 }
 
 func fleetBind(ctx context.Context, opts docopt.Opts, manifest *protocol.FleetManifest) error {

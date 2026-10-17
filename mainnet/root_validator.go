@@ -71,7 +71,7 @@ func (self rootValidatorPolicy) validate() error {
 		}
 	}
 	if !passive && (self.StorageProfile != rootStorageProfileName || self.RuntimeSourceCommit != rootProfileSource) ||
-		passive && (self.StorageProfile != rootPassiveStorageProfile || self.RuntimeSourceCommit != rootPassiveSource || self.ExpectedSeat == nil || self.ExpectedSeat.RegistrationBlock == 0) {
+		passive && (self.StorageProfile != rootPassiveStorageProfile || !crv4.ReviewedNativeOwnerSource(self.RuntimeSourceCommit) || self.ExpectedSeat == nil || self.ExpectedSeat.RegistrationBlock == 0) {
 		return errors.New("root observation source/storage profile is unreviewed; add and qualify a profile before interpreting another runtime source")
 	}
 	if strings.TrimSpace(self.RuntimeVersion.SpecName) == "" || self.RuntimeVersion.SpecVersion == 0 || self.RuntimeVersion.TransactionVersion == 0 || self.RuntimeVersion.StateVersion == 0 {

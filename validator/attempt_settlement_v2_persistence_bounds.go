@@ -75,8 +75,10 @@ func (self *attemptSettlementV2JSONCount) string(value string) error {
 		switch {
 		case character == '"' || character == '\\' || character == '\b' || character == '\f' || character == '\n' || character == '\r' || character == '\t':
 			size = 2
-		case character < 0x20 || character == '<' || character == '>' || character == '&' || character == '\u2028' || character == '\u2029' || character == utf8.RuneError && width == 1:
+		case character < 0x20 || character == '<' || character == '>' || character == '&' || character == '\u2028' || character == '\u2029':
 			size = 6
+		case character == utf8.RuneError && width == 1:
+			size = uint64(len(encodingJSONInvalidUTF8Replacement))
 		}
 		if err := self.add(size); err != nil {
 			return err

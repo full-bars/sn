@@ -75,6 +75,7 @@ type nativeProducerProvider struct {
 }
 
 type nativeProducerAuthority struct {
+	Treasury                 *nativeTreasuryAuthority            `json:"treasury_authority,omitempty"`
 	FeeCensus                *nativeFeeCensusPolicy              `json:"complete_fee_authority,omitempty"`
 	Yuma                     *nativeYumaPolicy                   `json:"complete_allocation_authority,omitempty"`
 	Principal                *nativePrincipalPolicy              `json:"opening_principal_authority,omitempty"`
@@ -106,7 +107,7 @@ func (self nativeProducerAuthority) signingBytes() ([]byte, error) {
 	if err != nil || len(raw) > nativeProducerAuthorityMaximum(self.FeeCensus) {
 		return nil, errors.Join(errors.New("native producer authority exceeds its finite frame"), err)
 	}
-	return append([]byte(nativeProducerAuthoritySchema+"\x00"), raw...), nil
+	return append([]byte(nativeTreasurySchema(self.Treasury, nativeProducerAuthoritySchema, nativeTreasuryProducerAuthoritySchema)+"\x00"), raw...), nil
 }
 
 func loadNativeProducerAuthority(ctx context.Context, policy economicEmissionPolicy) (*nativeProducerAuthority, error) {
@@ -149,7 +150,7 @@ func readNativeProducerAuthority(ctx context.Context, policy economicEmissionPol
 	if err != nil {
 		return nil, err
 	}
-	if !reflect.DeepEqual(authority.Yuma, execution.Yuma) || !reflect.DeepEqual(authority.Principal, execution.Principal) || authority.Schema != nativeProducerAuthoritySchema || authority.Network != policy.Network || authority.Netuid != policy.Netuid || policy.SubnetRegistrationBlock == nil || policy.SubnetGeneration == nil || authority.Registration != *policy.SubnetRegistrationBlock || authority.Generation != *policy.SubnetGeneration || authority.Runtime != policy.Runtime || authority.Runtime.RuntimeSourceCommit != frontierMappingSourceCommit || authority.ReviewSha256 != execution.ReviewSha256 || authority.Profile == nil || authority.Profile.Schema != historicalNativeProfileSchema || monitorReadDigest(profileRaw) != execution.ProfileSha256 || authority.CaptureEngine != producer.CaptureEngine || authority.ReplayEngine != execution.Engine || authority.Directory != execution.Directory || authority.Nodes != producer.Nodes || authority.Nodes != filepath.Join(execution.Directory, "nodes") || authority.MaximumJobs != producer.MaximumJobs || authority.MaximumBytes != producer.MaximumBytes || authority.MaximumEntries != producer.MaximumEntries || authority.MaximumDescendantHeaders != producer.MaximumDescendantHeaders || len(authority.Providers) > int(policy.MaximumUids) {
+	if !reflect.DeepEqual(authority.Treasury, execution.Treasury) || !reflect.DeepEqual(authority.Yuma, execution.Yuma) || !reflect.DeepEqual(authority.Principal, execution.Principal) || authority.Schema != nativeTreasurySchema(execution.Treasury, nativeProducerAuthoritySchema, nativeTreasuryProducerAuthoritySchema) || authority.Network != policy.Network || authority.Netuid != policy.Netuid || policy.SubnetRegistrationBlock == nil || policy.SubnetGeneration == nil || authority.Registration != *policy.SubnetRegistrationBlock || authority.Generation != *policy.SubnetGeneration || authority.Runtime != policy.Runtime || authority.Runtime.RuntimeSourceCommit != nativeExecutionRuntimeSource(authority.Treasury) || authority.ReviewSha256 != execution.ReviewSha256 || authority.Profile == nil || authority.Profile.Schema != historicalNativeProfileSchema || monitorReadDigest(profileRaw) != execution.ProfileSha256 || authority.CaptureEngine != producer.CaptureEngine || authority.ReplayEngine != execution.Engine || authority.Directory != execution.Directory || authority.Nodes != producer.Nodes || authority.Nodes != filepath.Join(execution.Directory, "nodes") || authority.MaximumJobs != producer.MaximumJobs || authority.MaximumBytes != producer.MaximumBytes || authority.MaximumEntries != producer.MaximumEntries || authority.MaximumDescendantHeaders != producer.MaximumDescendantHeaders || len(authority.Providers) > int(policy.MaximumUids) {
 		return nil, errors.Join(errRpcIntegrity, errors.New("native producer reusable approval differs from original execution/provider/capacity policy"))
 	}
 	if err := nativeProducerReviewedProfile(authority); err != nil {
@@ -174,6 +175,12 @@ func readNativeProducerAuthority(ctx context.Context, policy economicEmissionPol
 	signature, signatureErr := rootOfflineSignatureBytes(authority.Signature)
 	if messageErr != nil || keyErr != nil || signatureErr != nil || !ed25519.Verify(key, message, signature) {
 		return nil, errors.Join(errRpcIntegrity, errors.New("native producer independent authority signature is invalid"))
+	}
+	if err := authority.Treasury.validateScope(policy, policy.Through, nil); err != nil {
+		return nil, err
+	}
+	if authority.Treasury != nil && authority.From != authority.Treasury.Deployment.Activation {
+		return nil, errors.New("native treasury producer changed its original activation anchor")
 	}
 	return &authority, nil
 }

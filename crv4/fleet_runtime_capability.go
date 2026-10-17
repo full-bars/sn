@@ -49,6 +49,8 @@ func ValidateFleetRuntimeMetadata(metadata *types.Metadata, purpose FleetRuntime
 		storage["Commitments"] = "CommitmentOf LastCommitment"
 	case FleetCommitmentWrite:
 		storage["System"] = "Account"
+		// Publication refuses validator and subnet-owner hotkeys first.
+		storage["SubtensorModule"] = "Uids ValidatorPermit SubnetOwnerHotkey"
 		calls["Commitments"] = "set_commitment"
 		signing = true
 	case FleetDispatchRead:

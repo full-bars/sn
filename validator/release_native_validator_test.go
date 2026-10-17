@@ -44,7 +44,7 @@ type releaseNativeValidatorTestFixture struct {
 }
 
 // The independent SDK supplies exact SCALE compacts for the runtime response.
-func releaseNativeValidatorTestCompact(t *testing.T, value uint64) []byte {
+func releaseNativeValidatorTestCompact(t testing.TB, value uint64) []byte {
 	t.Helper()
 	encoded, err := codec.Encode(types.NewUCompactFromUInt(value))
 	if err != nil {

@@ -76,14 +76,25 @@ func newAttemptCutV2SealTestFixtureForOperatorWithEpochOrder(t *testing.T, depth
 
 // Select the complete synthetic network/policy before creating or signing any
 // record; a mainnet fixture must not relabel an existing testnet transcript.
-func newAttemptCutV2SealTestFixtureForDomain(t *testing.T, depth, completed, failed int, ledgerBeforeEpoch bool, policy protocol.Policy, identity AttemptLedgerIdentity) *attemptCutV2SealTestFixture {
+func newAttemptCutV2SealTestFixtureForDomain(t testing.TB, depth, completed, failed int, ledgerBeforeEpoch bool, policy protocol.Policy, identity AttemptLedgerIdentity) *attemptCutV2SealTestFixture {
 	t.Helper()
 	return newAttemptCutV2SealTestFixtureForDomainWithLimits(t, depth, completed, failed, ledgerBeforeEpoch, policy, identity, attemptLedgerDiskTestLimits())
 }
 
 // Foreground workload tests declare all retained and concurrent records before
 // opening their owner. Existing fixtures retain their original small limits.
-func newAttemptCutV2SealTestFixtureForDomainWithLimits(t *testing.T, depth, completed, failed int, ledgerBeforeEpoch bool, policy protocol.Policy, identity AttemptLedgerIdentity, limits AttemptLedgerDiskLimits) *attemptCutV2SealTestFixture {
+func newAttemptCutV2SealTestFixtureForDomainWithLimits(t testing.TB, depth, completed, failed int, ledgerBeforeEpoch bool, policy protocol.Policy, identity AttemptLedgerIdentity, limits AttemptLedgerDiskLimits) *attemptCutV2SealTestFixture {
+	t.Helper()
+	return newAttemptCutV2SealTestFixtureForCensus(t, depth, attemptCutV2SealTestProviders, completed, failed, ledgerBeforeEpoch, policy, identity, limits)
+}
+
+// The verifier's usual provider population.
+const attemptCutV2SealTestProviders = 16
+
+// The verifier's provider population belongs to the work census. A trail's
+// hops are distinct providers, its unrecorded seed among them, so a census of
+// depth providers assigns every other provider exactly once per complete trail.
+func newAttemptCutV2SealTestFixtureForCensus(t testing.TB, depth, providers, completed, failed int, ledgerBeforeEpoch bool, policy protocol.Policy, identity AttemptLedgerIdentity, limits AttemptLedgerDiskLimits) *attemptCutV2SealTestFixture {
 	t.Helper()
 	if policy.Verify.TrailDepth != 8 {
 		t.Fatalf("release policy depth = %d, want the existing M8 policy", policy.Verify.TrailDepth)
@@ -93,7 +104,7 @@ func newAttemptCutV2SealTestFixtureForDomainWithLimits(t *testing.T, depth, comp
 	if err != nil {
 		t.Fatal(err)
 	}
-	server, key, clientID := newMockVerifyServer(t, 16)
+	server, key, clientID := newMockVerifyServer(t, providers)
 	state := newAttemptLedgerDiskTestStateDir(t)
 	stats := NewStatsEngine(StatsConfig{AMin: policy.Verify.ReliabilityAMin})
 	if !ledgerBeforeEpoch {
@@ -206,7 +217,7 @@ type attemptCutV2SealTestObjects struct {
 }
 
 // Each operation gets a fresh private scratch name and object namespace.
-func newAttemptCutV2SealTestOptions(t *testing.T, fixture *attemptCutV2SealTestFixture) (AttemptCutV2SealOptions, *attemptCutV2SealTestObjects) {
+func newAttemptCutV2SealTestOptions(t testing.TB, fixture *attemptCutV2SealTestFixture) (AttemptCutV2SealOptions, *attemptCutV2SealTestObjects) {
 	t.Helper()
 	objects := &attemptCutV2SealTestObjects{metadataKVs: map[string][]byte{}, dataKVs: map[string]map[string][]byte{AttemptStreamV2Records: {}, AttemptStreamV2Proofs: {}}}
 	write := func(kind string) AttemptStreamV2ObjectWriter {

@@ -33,7 +33,7 @@ type repairProcessCustody interface {
 	check(context.Context) error
 	inspect(context.Context) (repairValidatorManager, error)
 	beforeStart(context.Context, time.Time) error
-	start(context.Context) error
+	start(context.Context, func() error) error
 	progress(context.Context, time.Time, time.Time) (string, error)
 	close() error
 }
@@ -359,7 +359,14 @@ func resumeRepairProcess(ctx context.Context, store *repairProcessStore, host *r
 		if err := errors.Join(control.validate(), store.validateOwner(), custody.check(owner), custody.beforeStart(owner, actionAt)); err != nil {
 			return finish("uncertain-consumed-start", err)
 		}
-		if err := custody.start(owner); err != nil {
+		if err := custody.start(owner, func() error {
+			dispatchAt := now()
+			if dispatchAt.Before(record.HighWaterAt) || dispatchAt.Before(p.ValidFrom) || !dispatchAt.Before(p.ExpiresAt) || owner.Err() != nil {
+				return errors.Join(errRepairProcessHeld, errors.New("process repair authority window closed before start dispatch"), owner.Err())
+			}
+			record.HighWaterAt = dispatchAt
+			return nil
+		}); err != nil {
 			return finish("uncertain-consumed-start", err)
 		}
 		manager, err := custody.inspect(owner)

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type claimNonceSafetyError struct{ cause error }
@@ -59,6 +61,11 @@ func (self *claimAdmission) rememberSigned(cfg *ClaimDaemonConfig, entry *ClaimQ
 	if err != nil {
 		return self.failNonce(err)
 	}
+	return self.rememberNonce(tx)
+}
+
+// The v1 and v2 daemons share this floor for one authenticated relayer signature.
+func (self *claimAdmission) rememberNonce(tx *types.Transaction) error {
 	if tx.Nonce() == math.MaxUint64 {
 		return self.failNonce(errors.New("signed nonce has no successor"))
 	}

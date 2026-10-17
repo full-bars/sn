@@ -16,8 +16,8 @@ import (
 
 // Independent reviewed alternatives retain every preexisting producer family.
 // New adjacent roots are selected by prefix, not by a frozen hand-picked list.
-const releaseEvidenceV2OldProducerGroups = "Attempt|DiskAttempt|HTTPAttemptStreamV2|SealAttemptCutV2|TrailPolicyDepth|StatsWrite|StatsSnapshotWrite|StatsMultiBatch|StatsSettlement|Deposited|ReleaseMeasurement|ReleaseStatsV2Runtime|ReleaseHeadV2|IntentStore|SteeringIntent|MeasurementStats|ExactPoolQuality|HeadEMA|ReleaseSteeringLoop|ReleaseSettlementRefresh"
-const releaseEvidenceV2NewProducerGroups = "ReleaseEvidenceV2|ReleaseActivationV2|ReleaseBootstrapV2|ReleaseActivationHistoryV2|ReleaseInitialBoundaryV2|ReleaseStartupV2|ValidatorEvidenceCensusV2|ChainEvidence|RunRelease|ValidatorEvidence|ValidatorUpload|ReleaseClientKeyHistory|ReleaseClientKeyAuthority|ReleaseRuntimeV2|ArtifactHttpObservation|NativeSourceHash|IntentV2|ReleaseNativeCaptureV2|ReleaseCaptureV2|ReleaseArchiveV2|ReleaseHistoryAdoptionV2|ReleaseNativeObservationV2"
+const releaseEvidenceV2OldProducerGroups = "Attempt|DiskAttempt|TrailPolicyDepth|StatsWrite|StatsSnapshotWrite|StatsMultiBatch|StatsSettlement|Deposited|ReleaseMeasurement|ReleaseStatsV2Runtime|ReleaseHeadV2|IntentStore|SteeringIntent|ExactPoolQuality|HeadEMA|ReleaseSteeringLoop|ReleaseSettlementRefresh"
+const releaseEvidenceV2NewProducerGroups = "ReleaseEvidenceV2|ReleaseActivationV2|ReleaseBootstrapV2|ReleaseActivationHistoryV2|ReleaseInitialBoundaryV2|ReleaseStartupV2|ReleaseStartupVerified|ValidatorEvidenceCensusV2|ChainEvidence|RunRelease|ValidatorEvidence|ValidatorUpload|ReleaseClientKeyHistory|ReleaseClientKeyAuthority|ReleaseRuntimeV2|ArtifactHttpObservation|NativeSourceHash|IntentV2|ReleaseNativeCaptureV2|ReleaseCaptureV2|ReleaseArchiveV2|ReleaseHistoryAdoptionV2|ReleaseNativeObservationV2|ProductionLoader"
 
 type releaseEvidenceV2GateGroup struct {
 	phase            string
@@ -79,6 +79,20 @@ func verifyReleaseEvidenceV2GateGroup(script string, group releaseEvidenceV2Gate
 	}
 	if len(group.sources) != len(group.packages) || len(group.packages) == 0 {
 		return fmt.Errorf("evidence gate source package census differs")
+	}
+	// A source census shows that its tests run only in a package that one of
+	// the group's commands runs.
+	commandPackageKVs := map[string]bool{}
+	for _, command := range group.commands {
+		fields := strings.Fields(command)
+		for index := 2; index < len(fields) && (fields[index] == "-race" || !strings.HasPrefix(fields[index], "-")); index++ {
+			commandPackageKVs[fields[index]] = true
+		}
+	}
+	for _, packagePath := range group.packages {
+		if !commandPackageKVs[packagePath] {
+			return fmt.Errorf("evidence gate %s has no command that runs its source package %s", group.variable, packagePath)
+		}
 	}
 	requiredSelector := group.requiredSelector
 	if requiredSelector == "" {
@@ -160,7 +174,7 @@ func releaseEvidenceV2GateFixture(t *testing.T) (string, []releaseEvidenceV2Gate
 			`go test ./validator -run "$producer_tests" -count=1 -parallel=4 -timeout 90m`,
 			`go test -race ./validator -run "$producer_tests" -count=1 -parallel=4 -timeout 90m`,
 		}},
-		{phase: "solidity", variable: "validator_evidence_tests", alternatives: "ValidatorEvidence|RuntimeEvidenceV2|RuntimeEvidence|EvidenceRelay|EvmTxManager|ClientKeyHistory|RuntimeProvisional|ProvisionalRelay|RelayContinuation", packages: []string{"./protocol", "./stabi", "./sim-testnet/gencontracts"}, sources: map[string][]string{
+		{phase: "solidity", variable: "validator_evidence_tests", alternatives: "ValidatorEvidence|ClientKeyHistory", packages: []string{"./protocol", "./stabi", "./sim-testnet/gencontracts"}, sources: map[string][]string{
 			"./protocol":                 releaseEvidenceV2GateSources(t, []string{"../protocol/validator_evidence*_test.go", "../protocol/client_key_history*_test.go"}),
 			"./stabi":                    releaseEvidenceV2GateSources(t, []string{"../stabi/validator_evidence*_test.go"}),
 			"./sim-testnet/gencontracts": releaseEvidenceV2GateSources(t, []string{"gencontracts/evidence*_test.go"}),
@@ -172,7 +186,7 @@ func releaseEvidenceV2GateFixture(t *testing.T) (string, []releaseEvidenceV2Gate
 			`go test ./sim-testnet -run "$capture_tests" -count=1` + releaseGateCaptureOwnerSkip + ` -timeout 5m`,
 			`go test -race ./sim-testnet -run "$capture_tests" -count=1` + releaseGateCaptureOwnerSkip + ` -timeout 10m`,
 		}},
-		{phase: "evidence_simulator", job: "evidence-simulator", variable: "simulator_evidence_tests", alternatives: "ValidatorEvidence|RuntimeEvidenceV2|RuntimeEvidence|EvidenceRelay|EvmTxManager|ClientKeyHistory|RuntimeProvisional|ProvisionalRelay|RelayContinuation", packages: []string{"./sim-testnet"}, sources: map[string][]string{
+		{phase: "evidence_simulator", job: "evidence-simulator", variable: "simulator_evidence_tests", alternatives: "ValidatorEvidence|RuntimeEvidenceV2|RuntimeEvidence|EvidenceRelay|EvmTxManager|ClientKeyHistory|RuntimeProvisional|ProvisionalRelay|RelayContinuation|EvidencePolicy", packages: []string{"./sim-testnet"}, sources: map[string][]string{
 			"./sim-testnet": releaseEvidenceV2GateSources(t, []string{"evidence_deployment*_test.go", "evidence_carry*_test.go", "runtime_evidence*_test.go", "runtime_reserved_provisional_test.go", "evidence_relay*_test.go", "evidence_relay_launch_budget_test.go", "evidence_relay_launch_runtime_test.go", "evm_nonce_turn_test.go", "adversary_client_key_batch_test.go"}),
 		}, commands: []string{
 			`go test ./sim-testnet -run "$simulator_evidence_tests" -count=1` + ` -skip "$simulator_evidence_serial_skip_tests"` + ` -timeout 10m`,
@@ -243,7 +257,7 @@ func TestProducerGateStateSelectionEvidenceV2RejectsEveryNewFamilyOmission(t *te
 	script, groups := releaseEvidenceV2GateFixture(t)
 	for _, index := range []int{0, 1, 3} {
 		group := groups[index]
-		families := "ValidatorEvidence|RuntimeEvidenceV2|RuntimeEvidence|EvidenceRelay|EvmTxManager|ClientKeyHistory|RuntimeProvisional|ProvisionalRelay|RelayContinuation"
+		families := group.alternatives
 		if index == 0 {
 			families = releaseEvidenceV2NewProducerGroups
 		}
@@ -398,5 +412,24 @@ func TestProducerGateStateSelectionEvidenceV2RequiresCompleteSourceCensus(t *tes
 	}
 	if err := verifyReleaseEvidenceV2GateGroup(script, contract); err != nil {
 		t.Fatalf("independent package identities were conflated: %v", err)
+	}
+}
+
+// A source census of a package that none of the group's commands runs shows
+// nothing: the funded relay horizon pin checked ./sim-testnet's sources
+// against the companion's commands, which stopped running ./sim-testnet in
+// e76a0e696. The phase whose commands run the package passes.
+func TestProducerGateStateSelectionEvidenceV2RefusesASourcePackageNoCommandRuns(t *testing.T) {
+	t.Parallel()
+	script, groups := releaseEvidenceV2GateFixture(t)
+	sources := map[string][]string{"./sim-testnet": {"package main\nfunc TestValidatorEvidenceSyntheticRelayRoot(t *testing.T) {}\n"}}
+	companion, simulator := groups[1], groups[3]
+	companion.packages, companion.sources = []string{"./sim-testnet"}, sources
+	simulator.sources = sources
+	if err := verifyReleaseEvidenceV2GateGroup(script, simulator); err != nil {
+		t.Fatalf("the phase that runs ./sim-testnet was refused: %v", err)
+	}
+	if err := verifyReleaseEvidenceV2GateGroup(script, companion); err == nil || !strings.Contains(err.Error(), "validator_evidence_tests has no command that runs its source package ./sim-testnet") {
+		t.Fatalf("a source census of a package that no command runs was accepted: %v", err)
 	}
 }

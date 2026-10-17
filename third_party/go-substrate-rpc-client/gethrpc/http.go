@@ -140,8 +140,11 @@ func (c *Client) sendHTTP(ctx context.Context, op *requestOp, msg interface{}) e
 	if err := json.Unmarshal(body, &respmsg); err != nil {
 		return err
 	}
-	if !respmsg.isResponse() || !bytes.Equal(respmsg.ID, op.ids[0]) {
+	if !validHttpResponseEnvelope(&respmsg) || !bytes.Equal(respmsg.ID, op.ids[0]) {
 		return errors.New("HTTP RPC response does not match request")
+	}
+	if respmsg.Result == nil && respmsg.Error == nil {
+		return ErrNoResult
 	}
 	op.resp <- &respmsg
 	return nil
@@ -168,15 +171,29 @@ func (c *Client) sendBatchHTTP(ctx context.Context, op *requestOp, msgs []*jsonr
 		pending[string(id)] = true
 	}
 	for _, response := range respmsgs {
-		if !response.isResponse() || !pending[string(response.ID)] {
+		if !validHttpResponseEnvelope(&response) || !pending[string(response.ID)] {
 			return errors.New("HTTP RPC batch response does not match request")
 		}
 		delete(pending, string(response.ID))
+	}
+	// Omission retains its public failure identity only after every envelope
+	// matches. No sibling result is published from an incomplete batch.
+	for _, response := range respmsgs {
+		if response.Result == nil && response.Error == nil {
+			return ErrNoResult
+		}
 	}
 	for i := 0; i < len(respmsgs); i++ {
 		op.resp <- &respmsgs[i]
 	}
 	return nil
+}
+
+// Envelope admission is separate from the result/error requirement so an
+// exact omitted result remains ErrNoResult without admitting foreign replies.
+func validHttpResponseEnvelope(response *jsonrpcMessage) bool {
+	return response.Version == vsn && response.hasValidID() && response.Method == "" && response.Params == nil &&
+		(response.Result == nil || response.Error == nil)
 }
 
 func (hc *httpConn) doRequest(ctx context.Context, msg interface{}) ([]byte, error) {

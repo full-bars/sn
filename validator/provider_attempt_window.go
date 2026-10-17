@@ -29,7 +29,8 @@ type ProviderAttemptWindowMember struct {
 }
 
 // Registry revisions and locators are portable originals. The real immutable
-// v2 record/proof objects remain at the two retained public origins.
+// v2 record/proof objects remain at the retained public replica origins: one,
+// or two independent origins.
 type ProviderAttemptWindow struct {
 	Schema          string                             `json:"schema"`
 	RegistryHistory []protocol.ProviderAttemptRegistry `json:"registry_history"`
@@ -42,7 +43,8 @@ type ProviderAttemptValidatorOptions struct {
 	Publication ValidatorEvidencePublicationV2ReadOptions
 	Settlement  AttemptSettlementV2Options
 	// Exact original transport bytes only; the full public decoder still runs.
-	RetainedMetadata *[2]ValidatorEvidenceRetainedReplicaV2
+	// A non-nil census names one retained store per publication origin.
+	RetainedMetadata []ValidatorEvidenceRetainedReplicaV2
 }
 
 // One explicit aggregate allowance bounds the complete cross-validator read;
@@ -129,13 +131,14 @@ func ownProviderAttemptWindow(ctx context.Context, candidate ProviderAttemptWind
 		if !exists {
 			return nil, nil, nil, protocol.ErrProviderAttemptsUnavailable
 		}
-		if member.Hotkey != owner.Hotkey || option.Publication.Window != window || member.Manifest.Epoch != window.Epoch || member.Manifest.Kind != protocol.ValidatorEvidenceClosedCensus || member.Manifest.Origins != option.Publication.Origins {
+		if member.Hotkey != owner.Hotkey || option.Publication.Window != window || member.Manifest.Epoch != window.Epoch || member.Manifest.Kind != protocol.ValidatorEvidenceClosedCensus || !slices.Equal(member.Manifest.Origins, option.Publication.Origins) {
 			return nil, nil, nil, errors.Join(protocol.ErrProviderAttemptsIntegrity, errors.New("provider attempt owner, clock or origins differ"))
 		}
 		if len(option.Publication.Activations) != len(owner.NoIds) || len(option.Settlement.Operators) != len(owner.NoIds) || len(member.Manifest.Members) != len(owner.NoIds) {
 			return nil, nil, nil, protocol.ErrProviderAttemptsUnavailable
 		}
 		option.Publication.Activations = slices.Clone(option.Publication.Activations)
+		option.Publication.Origins = slices.Clone(option.Publication.Origins)
 		if option.Publication.Policy != nil {
 			policy := *option.Publication.Policy
 			policy.Deposit.Tiers = slices.Clone(policy.Deposit.Tiers)
@@ -183,13 +186,14 @@ func ownProviderAttemptWindow(ctx context.Context, candidate ProviderAttemptWind
 			return nil, nil, nil, protocol.ErrProviderAttemptsCapacity
 		}
 		metadataBytes += uint64(len(encoded))
+		member.Manifest.Origins = slices.Clone(member.Manifest.Origins)
 		member.Manifest.Members = slices.Clone(member.Manifest.Members)
 		owned[index], options[owner.Hotkey] = member, option
 	}
 	return registry, owned, options, ctx.Err()
 }
 
-// Read both original metadata replicas and replay every actual record/proof
+// Read every original metadata replica and replay every actual record/proof
 // stream. An error/cancellation at the final owner returns no partial counters.
 func VerifyProviderAttemptWindow(ctx context.Context, candidate ProviderAttemptWindow, expected ProviderAttemptWindowOptions) (result *VerifiedProviderAttemptWindow, resultErr error) {
 	if ctx == nil {

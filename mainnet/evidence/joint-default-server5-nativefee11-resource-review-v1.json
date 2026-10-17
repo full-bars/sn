@@ -1,0 +1,81 @@
+{
+  "status": "REVIEWED_PROSPECTIVE_EXACT_TWO_OWNER_CLASS_NOT_LAUNCH_AUTHORITY",
+  "scope": "One current default Server5 compiler owner and one retained Main9 nativefee11 body owner; two exact immutable USER generations and no DB or third worker. Both launched by SolParallel after two Root adoptions.",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-v4.receipt.json",
+      "sha256": "a57d0f3bffb8d45365d5c49d7ed00a930386caee9b4fbb7f0239ada14af49418"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-v4-user-terminal-readback.json",
+      "sha256": "9846c3cd9c8a9a1fda9f82fc955fe9b59a7dc1397e849cd9629895a412b0f757"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-fcfd-026b-c198-metadata-v2.receipt.json",
+      "sha256": "1d686b481aa1680bbd85412b208d0a9a8184ce6e042abdd3409a207c4ad70732"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-fcfd-026b-c198-metadata-v2-user-terminal-readback.json",
+      "sha256": "b0fd2b16cf835ffc48f24b24ce6ec11639b4e7e4702caefdd772293f739a61dd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected1ea-native-model30-closed-terminal-proof-v1.json",
+      "sha256": "819d8191629441e62f6e450e24a1d01cf0c5a649d4020d679fe0a0602efb9c92"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+      "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+      "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-canonical-lease-successor-108-20261005/holder-receipt-v1.json",
+      "sha256": "341abbba247d67733fa026b3cde1086790a00d09f108a3d1775c2fb091644b54"
+    }
+  ],
+  "accounting": {
+    "original_data_baseline_bytes": 113681502208,
+    "cumulative_cap_bytes": 115964116992,
+    "accounting_floor_bytes": 0,
+    "margin": 2,
+    "closed_former_model_hold_released_only_for_this_pair_bytes": 4294967296,
+    "remaining_compiler_disk_forecast_bytes": 4294967296,
+    "remaining_short_disk_forecast_bytes": 1073741824,
+    "remaining_compiler_memory_forecast_bytes": 4294967296,
+    "remaining_short_memory_forecast_bytes": 1073741824
+  },
+  "admission": {
+    "data_available_minimum_bytes": 10737418240,
+    "memory_available_minimum_bytes": 113816633344,
+    "docker_available_minimum_bytes": 300128382976,
+    "available_inodes_minimum": 1000000
+  },
+  "active": {
+    "healthy_data_floor_bytes": 6307319808,
+    "healthy_host_memory_floor_bytes": 103079215104,
+    "healthy_docker_floor_bytes": 295833415680,
+    "one_joint_growth_bytes": 10737418240,
+    "floor_formula": "max(6307319808, immutable_first_pair_available_bytes - 10737418240)",
+    "compiler_memory_max_bytes": 8589934592,
+    "short_memory_max_bytes": 2147483648,
+    "memory_swap_max_bytes": 0,
+    "compiler_unit_horizon_seconds": 3310,
+    "short_unit_horizon_seconds": 690
+  },
+  "ownership": [
+    "One shared immutable initial sample/floor across both roles and every phase, never reset.",
+    "Exact job/runner hashes, USER manager/UID/unit/full cgroup, first InvocationID/PID-start claims; no replacement generation.",
+    "Departure requires original terminal and every registered original child wait, stopped original generation and empty cgroup.",
+    "Each owner stops only its own tree on a guard failure; peer departure never inferred from elapsed time or absence alone.",
+    "Retained nativefee image keeps Main9 archived workspace provenance; latest default input applicability remains a separate exact source comparison."
+  ],
+  "forecast_basis": "Five compiler images plus logs/cache under prospective4GiB compiler allowance; one nativefee11 LIST/body under prospective1GiB short allowance. Both doubled in one10GiB cumulative reservation and enforced8+2GiB memory maxima. Data healthy floor can make the effective growth allowance smaller than10GiB. Actual initial resource/lease/census admission is mandatory.",
+  "pending": [
+    "Exact corrected five-phase metadata-compatible variant pins, two final job/plan hashes and Root adoptions.",
+    "Complete actual current default compiler source closure.",
+    "Fresh whole-horizon/host/data/Docker/kernel-lease observations by actual admitted owners."
+  ],
+  "author_execution": false
+}

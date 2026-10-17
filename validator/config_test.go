@@ -185,6 +185,18 @@ func TestReleaseConfigRequiresMinimumNOsAndExplicitControlledNOs(t *testing.T) {
 	}
 }
 
+func TestReleaseConfigRefusesControllingEveryOperator(t *testing.T) {
+	cfg := validReleaseConfig(t)
+	cfg.ControlledNOIDs = []uint64{1, 2}
+	if _, err := LoadReleaseConfig(writeReleaseConfig(t, cfg)); err == nil || !strings.Contains(err.Error(), "covers every configured operator") {
+		t.Fatalf("config masking every operator was accepted: %v", err)
+	}
+	cfg.ControlledNOIDs = []uint64{1}
+	if _, err := LoadReleaseConfig(writeReleaseConfig(t, cfg)); err != nil {
+		t.Fatalf("config controlling one of two operators was rejected: %v", err)
+	}
+}
+
 func TestReleaseConfigRequiresDistinctOperatorArtifactSigners(t *testing.T) {
 	cfg := validReleaseConfig(t)
 	cfg.Operators[1].ArtifactSigner = cfg.Operators[0].ArtifactSigner

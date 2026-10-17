@@ -31,9 +31,9 @@ type releaseInitialBoundaryV2TestFixture struct {
 	beforeOperator func(context.Context, uint64) error
 }
 
-func newReleaseInitialBoundaryV2TestFixture(t *testing.T, fault string) *releaseInitialBoundaryV2TestFixture {
+func newReleaseInitialBoundaryV2TestFixture(t *testing.T, fault string, configure ...func(*ReleaseConfig)) *releaseInitialBoundaryV2TestFixture {
 	t.Helper()
-	fixture := &releaseInitialBoundaryV2TestFixture{releaseBootstrapV2TestFixture: newReleaseBootstrapV2TestFixture(t), fault: fault}
+	fixture := &releaseInitialBoundaryV2TestFixture{releaseBootstrapV2TestFixture: newReleaseBootstrapV2TestFixture(t, configure...), fault: fault}
 	server := gethrpc.NewServer()
 	if err := server.RegisterName("eth", fixture); err != nil {
 		t.Fatal(err)

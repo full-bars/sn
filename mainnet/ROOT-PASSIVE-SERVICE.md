@@ -2,7 +2,9 @@
 
 The current root role is `passive_accumulate_in_place`: observe an independently
 approved existing netuid-0 seat while its dividend basket accumulates. It runs
-alongside both UR subnet validators. It never constructs, signs or broadcasts a
+alongside the UR subnet validators: two under bootstrap v4, or the one `sole`
+validator under v5, the SN25 launch form (owner decision, October 7), whose
+hotkey may also hold this seat. It never constructs, signs or broadcasts a
 root transaction. Registration, root staking, claims, take changes, delegation
 changes and optional basket trades need separately approved capabilities.
 
@@ -20,7 +22,7 @@ A fresh unsigned launch composition uses these explicit versions:
 
 | Input | Required value |
 | --- | --- |
-| Bootstrap chain config | `urnetwork-mainnet-bootstrap-chain-config-v4` |
+| Bootstrap chain config | `urnetwork-mainnet-bootstrap-chain-config-v4` (two UR roles) or `urnetwork-mainnet-bootstrap-chain-config-v5` (one `sole` UR role) |
 | Root child config | `urnetwork-mainnet-bootstrap-root-config-v2` |
 | Root child plan | `urnetwork-mainnet-bootstrap-root-passive-plan-v2` |
 | Root service | `urnetwork-mainnet-root-passive-service-v1` |
@@ -48,8 +50,10 @@ Ed25519 config approver. Its `action_approval_public_key_ed25519` is empty.
 The approval binds deployment, complete root plan hash and complete service
 config hash. Its signing message is the approval schema plus a NUL byte plus
 canonical Go JSON with an empty signature. This is config approval only; no
-native key or nonce is present. The two separately approved UR production
-configs remain required, and the root hotkey cannot count toward their quorum.
+native key or nonce is present. The separately approved UR production configs
+remain required: two under v4, one under v5. The root hotkey never counts toward
+their quorum. Only v5 lets this seat use the sole UR hotkey, and only when both
+roles name the same coldkey; the seat is still observed as the root role.
 
 Legacy bootstrap v1/v2/v3, root config v1, `explicit_root_weights`, original
 signature domains and retained custody remain unchanged. They cannot acquire
@@ -61,14 +65,15 @@ fresh launch plan.
 ## Preparation and operation
 
 Run the existing `bootstrap-chain plan`, then the independently accepted local
-`apply`/`resume` workflow. A v4 preparation retains three real journals: chain,
-contracts and passive root preparation. It creates no root signing-custody
-journal, native signature, transaction or observer checkpoint. Contract and UR
-admission paths accept this explicit v4 scope and preserve their own approvals.
+`apply`/`resume` workflow. A v4 or v5 preparation retains three real journals:
+chain, contracts and passive root preparation. It creates no root signing-custody
+journal, native signature, transaction or observer checkpoint. Contract admission
+paths accept this explicit v4 or v5 scope and preserve their own approvals. The
+two-unit [UR activation](VALIDATOR-ACTIVATION.md) accepts v4 and refuses v5.
 
 The service invocation JSON has `schema`, the same exact `root_config` file
 reference, and the complete independently selected `root_validator` role from
-the v4 chain config. Review its content hash with:
+the v4 or v5 chain config. Review its content hash with:
 
 ```sh
 mainnet root-passive-service plan --config /private/passive-runtime.json
@@ -89,9 +94,10 @@ match and that the retired root call/gates are absent. The observer authenticate
 the full runtime tuple and current canonical finalized state, ownership,
 registration generation, stake/retention, delegate take, delegation and basket
 storage. Any runtime or generation mismatch fails closed. `bootstrap-chain
-readiness` observes UR and passive root state at the same finalized hash and
-reports the root policy's finite approval window. `ready` remains observation
-readiness; `activation_ready` stays false.
+readiness` observes UR and passive root state at the same finalized hash, as
+separate roles even when v5 shares one hotkey, and reports the root policy's
+finite approval window. `ready` remains observation readiness;
+`activation_ready` stays false.
 
 No production service has been installed or started by this change. Deployment
 must pin the qualified binary and exact approvals, supervise the finite command,
@@ -108,11 +114,12 @@ mainnet economic outcomes remain independent launch gates.
 ## Independently approved static host owner
 
 `activate-root-passive` owns one initial passive process start on one approved
-Linux host/boot. Its [qualification](evidence/passive-root-host-20261001.md)
-binds original v4 preparation, both UR config inspections, exact passive runtime
-bytes, the independent passive config signature, and a separate signed host
-approval. It does not consume either UR process allowance. No production unit
-was installed or started during qualification.
+Linux host/boot. It binds the original v4 or v5 preparation, every UR config
+inspection, exact passive runtime bytes, the independent passive config
+signature, and a separate signed host approval. Its
+[qualification](evidence/passive-root-host-20261001.md) covers the v4 form; v5
+admission was added later. It does not consume a UR process allowance. No
+production unit was installed or started during qualification.
 
 Fresh host approvals must select
 `<bootstrap-run-directory>/root-passive-observation/<checkpoint-name>` in the
@@ -142,7 +149,7 @@ contains:
 
 | Field | Exact approved value |
 | --- | --- |
-| `bootstrap_config`, `bootstrap_plan_hash` | Original v4 file reference and preparation content hash |
+| `bootstrap_config`, `bootstrap_plan_hash` | Original v4 or v5 file reference and preparation content hash |
 | `runtime_config`, `root_plan_hash` | Exact private invocation file reference and passive child hash |
 | `unit_file` | `/etc/systemd/system/sn-mainnet-root-passive.service` and hash of the fixed rendered unit |
 | `mainnet_binary`, `systemctl` | Protected absolute file paths and exact binary hashes |
@@ -196,10 +203,11 @@ is not recovery.
 
 Mainnet remains gated on independently approved runtime/source provenance and
 its recorded reproducibility exception, an actual existing root seat and stake,
-the fresh v4 passive configuration/signature, this exact independent host
+the fresh v4 or v5 passive configuration/signature, this exact independent host
 signature and acceptance, the qualified successor binary, protected host paths,
-owned RPC access and observed live service health. Both UR current-admission
-approvals, original contract anchor/history, signer exclusion and operator
+owned RPC access and observed live service health. UR validator admission (both
+two-unit current-admission approvals under v4, or the sole validator's own start
+under v5), original contract anchor/history, signer exclusion and operator
 readiness retain their separate gates. The release fenced at SN `6c801a25` does
 not include this later host implementation and must not be relabeled as covering it.
 

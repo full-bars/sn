@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Missing originals, incomplete lanes and signature conflicts remain distinct
 // from a known empty full registry through the actual public/cold reader.

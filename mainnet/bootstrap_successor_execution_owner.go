@@ -203,9 +203,10 @@ func (self bootstrapSuccessorExecutionEvent) validate(approval bootstrapSuccesso
 func (self bootstrapSuccessorExecutionPlan) admit(observation bootstrapSuccessorExecutionObservation) error {
 	r := self.Review
 	p := r.Preparation.Approval.Plan.Proposal
+	_, threshold := safeOwnerProfile(self.Request.singleOwner())
 	if observation.NativeHash == (common.Hash{}) || observation.NativeNumber < r.Request.StartNativeNumber || observation.NativeNumber > r.Request.ValidThroughNative ||
 		observation.NativeNumber == r.Request.StartNativeNumber && observation.NativeHash.Hex() != r.Request.StartNativeHash ||
-		observation.Singleton != self.Request.Singleton || !slices.Equal(observation.Owners, self.Request.Owners) || observation.Threshold != 2 ||
+		observation.Singleton != self.Request.Singleton || !slices.Equal(observation.Owners, self.Request.Owners) || observation.Threshold != uint64(threshold) ||
 		len(observation.Modules) != 0 || observation.Guard != (common.Address{}) || observation.ModuleGuard != (common.Address{}) || observation.FallbackHandler != (common.Address{}) ||
 		len(observation.PendingSafeDigests) != 0 || observation.SafeNonce != r.Transaction.Nonce ||
 		observation.RelayerNonce != r.Relayer.Nonce || observation.RelayerPendingNonce != r.Relayer.Nonce ||

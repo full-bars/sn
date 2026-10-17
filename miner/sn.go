@@ -3,7 +3,7 @@ package miner
 // sn.go — subnet (bittensor) subcommands for the provider
 // (sn/PLAN.md 7.3): `provider wallet set` registers the claim coldkey
 // with the platform (decision D-2; the signed set lives in sn_wallet.go),
-// and `provider claim` fetches and verifies this network's pool payout
+// and `provider claim` fetches and verifies this provider's pool payout
 // claim for an epoch (decision D-6). Claim recomputes the merkle leaf and
 // checks the inclusion proof with sn/merkle, cross-checks the payout root
 // on-chain via a minimal eth_call when --rpc is given, and builds the
@@ -18,6 +18,7 @@ package miner
 // read-side eth_call transport (sn_rpc.go).
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -37,6 +38,7 @@ import (
 
 	"github.com/urfoundation/sn/merkle"
 	"github.com/urfoundation/sn/miner/onchain"
+	"github.com/urfoundation/sn/ss58"
 	"github.com/urfoundation/sn/stabi"
 )
 
@@ -115,7 +117,7 @@ func runFiniteClaim(parent context.Context, opts docopt.Opts, hooks finiteClaimH
 		fmt.Printf("note: --dry-run has no effect without --key_file; claim only verifies\n")
 	}
 
-	byJwt, err := readNetworkJwt()
+	byJwt, _, err := readSnCredentials(snCredentialsFromOpts(opts))
 	if err != nil {
 		return err
 	}
@@ -124,6 +126,13 @@ func runFiniteClaim(parent context.Context, opts docopt.Opts, hooks finiteClaimH
 		_ = api.CloseAndWait(context.Background())
 	}()
 	api.SetByJwt(byJwt)
+
+	legacyColdkey, _ := opts.String("--legacy-coldkey")
+	if legacyColdkey != "" {
+		if _, err := ss58.DecodeWithPrefix(legacyColdkey, ss58.BittensorPrefix); err != nil {
+			return fmt.Errorf("legacy original coldkey: %w", err)
+		}
+	}
 
 	var rpcUrls []string
 	if rpcAny, ok := opts["--rpc"]; ok && rpcAny != nil {
@@ -158,7 +167,7 @@ func runFiniteClaim(parent context.Context, opts docopt.Opts, hooks finiteClaimH
 	}
 
 	poolClaim, err := retryClaimApiRead(ctx, hooks.retry, func(readCtx context.Context) (*sdk.SnPoolClaimResult, error) {
-		return api.SnPoolClaimSyncWithContext(readCtx, &sdk.SnPoolClaimArgs{Epoch: epoch})
+		return api.SnPoolClaimSyncWithContext(readCtx, &sdk.SnPoolClaimArgs{Epoch: epoch, LegacyColdkey: legacyColdkey})
 	})
 	if err != nil {
 		return err
@@ -172,6 +181,13 @@ func runFiniteClaim(parent context.Context, opts docopt.Opts, hooks finiteClaimH
 	}
 	if poolClaim.Epoch != epoch {
 		return fmt.Errorf("claim epoch %d differs from requested %d", poolClaim.Epoch, epoch)
+	}
+
+	if legacyColdkey != "" {
+		want, _ := ss58.DecodeWithPrefix(legacyColdkey, ss58.BittensorPrefix)
+		if !bytes.Equal(want[:], poolClaim.Coldkey) {
+			return errors.New("legacy claim response changed the selected original coldkey")
+		}
 	}
 
 	// decode and sanity-check the claim fields

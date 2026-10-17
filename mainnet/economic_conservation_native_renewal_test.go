@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Public proposals and archive adoption retain the original combined policy.
 // Grammar controls use signed input files; the separate producer control runs
@@ -295,9 +295,10 @@ func TestEconomicConservationNativeRenewalExternalPolicyChangeDoesNotResetOwner(
 	command[2], command[4] = path, pin
 	var output, diagnostic bytes.Buffer
 	code := runMain(f.ctx, command, &output, &diagnostic)
-	// Either original-policy comparison can refuse first. A retained archive
-	// checks its capacity/review basis before the active checkpoint hash.
-	refusedOriginalBasis := strings.Contains(diagnostic.String(), "policy basis") || strings.Contains(diagnostic.String(), "economic archive changed its original capacity or review basis")
+	// The retained native adoption is admitted before the archive basis and
+	// the checkpoint hash: its predecessor is the approval head of the
+	// original policy's producer renewals, which the outer policy changed.
+	refusedOriginalBasis := strings.Contains(diagnostic.String(), "economic native adoption lost its exact predecessor")
 	if code != 3 || output.Len() != 0 || !refusedOriginalBasis || !reflect.DeepEqual(before, mainnetNamespaceTest(t, filepath.Dir(f.source.checkpoint))) {
 		t.Fatal("changed external config bypassed original combined owner identity", code, diagnostic.String())
 	}
@@ -376,7 +377,7 @@ func TestEconomicConservationNativeRenewalRestoreAuthenticatesCompleteOriginalHi
 	original := monitorHistoryReference{Path: f.source.checkpoint, Sha256: monitorReadDigest(raw), Bytes: uint64(len(raw))}
 	var reads int
 	read := func(reference monitorHistoryReference) ([]byte, error) { reads++; return os.ReadFile(reference.Path) }
-	if err := validateEconomicConservationRestoreHistory(f.ctx, f.source.policy, original, read, monitorServiceHooks{}); err != nil || reads != 3 {
+	if err := validateEconomicConservationRestoreHistory(f.ctx, f.source.policy, original, read, nil, monitorServiceHooks{}); err != nil || reads != 3 {
 		t.Fatal("copied native adoption did not authenticate exact original history once", err, reads)
 	}
 	state := f.source.state(t)
@@ -393,7 +394,7 @@ func TestEconomicConservationNativeRenewalRestoreAuthenticatesCompleteOriginalHi
 			return changed, nil
 		}
 		return os.ReadFile(reference.Path)
-	}, monitorServiceHooks{}); err == nil {
+	}, nil, monitorServiceHooks{}); err == nil {
 		t.Fatal("self-sealed copied native head discarded its original approval lineage")
 	}
 }

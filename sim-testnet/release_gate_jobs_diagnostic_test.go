@@ -92,7 +92,7 @@ release_gate_jobs_init
 		"RELEASE_GATE_JOBS=2", "RELEASE_GATE_CONCURRENT_GATES=2")
 	command.Env = append(command.Env, overrides...)
 	command.Cancel = func() error { return command.Process.Signal(syscall.SIGTERM) }
-	command.WaitDelay = 20 * time.Second
+	command.WaitDelay = releaseGateQueueFixtureWaitDelay
 	output, err := command.CombinedOutput()
 	if ctx.Err() != nil {
 		t.Fatalf("diagnostic fixture did not join: %v\n%s", ctx.Err(), output)

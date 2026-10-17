@@ -36,9 +36,16 @@ var suiteFixtureResourceKindNames = map[string][]string{
 	"config":     {"apple_roots.pem", "brevo.yml", "db.yml", "email.yml", "mmdb/places.yml", "pro.yml", "redis.yml", "settings.yml", "subsidy.yml", "tls.yml"},
 }
 
+// The Authorization the fixture's Helius webhook expects. The server refuses
+// every Helius webhook without a configured value, so the fixture carries one,
+// visibly synthetic so it is never mistaken for a deployment's secret.
+const suiteFixtureHeliusWebhookAuthorization = "fixture-synthetic-helius-webhook-authorization"
+
 // The portable suite resolves its documentation and local transport subnets
 // without importing the production-sized location database. Public addresses
 // outside those fixtures retain their separate database resource contract.
+// The last two entries match connect/tun.go's default local allocators. Keep
+// the generator dependency-free; tests exercise actual allocated addresses.
 const suiteFixtureSettings = `all:
   ip_overrides:
     - subnet: "192.0.2.0/24"
@@ -57,6 +64,16 @@ const suiteFixtureSettings = `all:
       region: "Fixture Region"
       city: "Fixture City"
     - subnet: "::1/128"
+      country_code: "zz"
+      country: "Fixture Country"
+      region: "Fixture Region"
+      city: "Fixture City"
+    - subnet: "169.254.0.0/16"
+      country_code: "zz"
+      country: "Fixture Country"
+      region: "Fixture Region"
+      city: "Fixture City"
+    - subnet: "fd75:726e:6574::/96"
       country_code: "zz"
       country: "Fixture Country"
       region: "Fixture Region"
@@ -343,11 +360,11 @@ func createSuiteFixture(parent, server, postgres, redis string) (report fixtureR
 		"vault/brevo.yml":        []byte("brevo:\n  api_key: ''\n  webhook_bearers: []\n"),
 		"vault/circle.yml":       []byte("wallet_set_id: ''\ncircle:\n  api_token: ''\n  entity_secret: ''\n  app_id: ''\n  solana_usdc_address: ''\n  polygon_usdc_address: ''\n  solana_wallet_id: ''\n  polygon_wallet_id: ''\n"),
 		"vault/coinbase.yml":     []byte("api:\n  host: disabled.fixture.example\n  key: ''\nwebhook:\n  shared_secret: ''\n"),
-		"vault/helius.yml":       []byte("api_key: ''\nhelius:\n  api_key: ''\n"),
+		"vault/helius.yml":       []byte("api_key: ''\nhelius:\n  api_key: ''\n  webhook_auth_header: " + suiteFixtureHeliusWebhookAuthorization + "\n"),
 		"vault/services.yml":     []byte("{}\n"),
 		"vault/st.yml":           []byte("enabled: false\n"),
 		"vault/stripe.yml":       []byte("api:\n  token: ''\n  publishable_key: ''\nwebhook:\n  signing_secret: ''\n"),
-		"vault/x402.yml":         []byte("enabled: false\nskus: []\n"),
+		"vault/x402.yml":         []byte("enabled: false\nskus: {}\n"),
 		"vault/verify.yml":       []byte(fmt.Sprintf("profile: testnet\nkeys:\n  - server_key_id: 0\n    seed: %q\negress_hash_key: %q\nsettings:\n  step_timeout_seconds: 5\n  step_timeout_grace_seconds: 1\n  trail_ttl_grace_seconds: 60\n  egress_ttl_seconds: 600\n  egress_refresh_seconds: 60\n  reliability_a_min: 1\n  stats_period_seconds: 60\n  egress_ipv4_prefix: 29\n  egress_ipv6_prefix: 48\n  egress_hash_key_id: fixture-egress\n  soft_guardrails_enabled: false\n  hard_seed_per_minute_per_source: 40\n  hard_extend_per_minute_per_source: 400\n  hard_active_trails_per_source: 32\n", base64.StdEncoding.EncodeToString(secrets[3]), base64.StdEncoding.EncodeToString(secrets[4]))),
 		"config/apple_roots.pem": certificatePem,
 		"config/brevo.yml":       []byte("brevo:\n  list_ids:\n    new_networks: 1\n    network_users: 2\n"),

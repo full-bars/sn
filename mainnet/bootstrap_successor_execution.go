@@ -21,13 +21,16 @@ const bootstrapSuccessorExecutionSchema = "urnetwork-mainnet-successor-execution
 const bootstrapSuccessorExecutionApprovalSchema = "urnetwork-mainnet-successor-execution-approval-v1"
 const bootstrapSuccessorExecutionEnvelopeSchema = "urnetwork-mainnet-successor-execution-envelope-v1"
 const bootstrapSuccessorExecutionRequestSchema = "urnetwork-mainnet-successor-execution-request-v1"
+const bootstrapSuccessorExecutionSingleOwnerRequestSchema = "urnetwork-mainnet-successor-execution-single-owner-request-v1"
 const bootstrapSuccessorExecutionPrefix = "contract-successor-execution"
 const bootstrapSuccessorExecutionStagePrefix = ".successor-execution-"
 const maximumBootstrapSuccessorExecutionBytes = 512 * 1024
 
-// This initial profile admits exactly three independently chosen owners, two
-// EIP-712 ECDSA signatures, and no modules, guards or fallback handler. Imported
-// signatures are public bytes, not proof of current membership or key custody.
+// The original schema admits exactly three independently chosen owners and two
+// EIP-712 ECDSA signatures; the separately named single-owner schema admits one
+// owner and one such signature. Both refuse modules, guards and a fallback
+// handler. Imported signatures are public bytes, not proof of current
+// membership or key custody.
 type bootstrapSuccessorExecutionRequest struct {
 	Schema             string            `json:"schema"`
 	SafeReviewHash     string            `json:"safe_review_hash"`
@@ -60,16 +63,29 @@ type bootstrapSuccessorExecutionApproval struct {
 	Signature string                          `json:"signature_ed25519"`
 }
 
+// Only the explicit request schema selects the owner profile. Owner count,
+// signature length and observed Safe state never select or widen it.
+func (self bootstrapSuccessorExecutionRequest) singleOwner() bool {
+	return self.Schema == bootstrapSuccessorExecutionSingleOwnerRequestSchema
+}
+
 // Strict input grammar precedes any custody mutation or large archive read.
 func (self bootstrapSuccessorExecutionRequest) validate() error {
-	if self.Schema != bootstrapSuccessorExecutionRequestSchema || !planSha256(self.SafeReviewHash) ||
-		!bootstrapRootAbsolutePath(self.RegistryDirectory) || len(self.Owners) != 3 || self.Singleton == (common.Address{}) ||
+	owners, _ := safeOwnerProfile(self.singleOwner())
+	if self.Schema != bootstrapSuccessorExecutionRequestSchema && !self.singleOwner() || !planSha256(self.SafeReviewHash) ||
+		!bootstrapRootAbsolutePath(self.RegistryDirectory) || len(self.Owners) != owners || self.Singleton == (common.Address{}) ||
 		!bootstrapRootAbsolutePath(self.SafeSignatures.Path) || !planSha256(self.SafeSignatures.Sha256) ||
 		!bootstrapRootAbsolutePath(self.RelayerTransaction.Path) || !planSha256(self.RelayerTransaction.Sha256) || self.SafeSignatures.Path == self.RelayerTransaction.Path {
+		if self.singleOwner() {
+			return errors.New("successor single-owner execution requires exact review, physical registry, one owner and pinned signature files")
+		}
 		return errors.New("successor execution requires exact review, physical registry, three owners and pinned signature files")
 	}
 	for i, owner := range self.Owners {
 		if owner == (common.Address{}) || owner == common.BytesToAddress([]byte{1}) || i > 0 && bytes.Compare(self.Owners[i-1][:], owner[:]) >= 0 {
+			if self.singleOwner() {
+				return errors.New("successor single-owner execution owner must be a nonzero non-sentinel identity")
+			}
 			return errors.New("successor execution owners must be three distinct sorted nonzero identities")
 		}
 	}
@@ -87,11 +103,15 @@ func (self bootstrapSuccessorExecutionPlan) transaction() safeExecutionTransacti
 // Every signed outer field is fixed; a signature replacement needs a new schema
 // and independently approved migration, including both old nonce liabilities.
 func (self bootstrapSuccessorExecutionPlan) outer(profile *safeExecutionProfile) (evmPhaseAction, error) {
-	signatures, err := rootReceiptHex(self.SafeSignatures, 130)
-	if err != nil || len(signatures) != 130 {
+	_, threshold := safeOwnerProfile(self.Request.singleOwner())
+	signatures, err := rootReceiptHex(self.SafeSignatures, threshold*65)
+	if err != nil || len(signatures) != threshold*65 {
+		if self.Request.singleOwner() {
+			return evmPhaseAction{}, errors.Join(errors.New("successor single-owner execution requires exactly one Safe signature"), err)
+		}
 		return evmPhaseAction{}, errors.Join(errors.New("successor execution requires exactly two Safe signatures"), err)
 	}
-	inspection, err := profile.inspectSignatures(self.transaction(), signatures, 2)
+	inspection, err := profile.inspectSignatures(self.transaction(), signatures, threshold)
 	if err != nil {
 		return evmPhaseAction{}, err
 	}
@@ -223,8 +243,9 @@ func buildBootstrapSuccessorExecution(ctx context.Context, review bootstrapSucce
 	if err != nil {
 		return plan, err
 	}
-	signatures, signatureHash, err := readBootstrapRootFile(ctx, request.SafeSignatures.Path, 130)
-	if err != nil || signatureHash != request.SafeSignatures.Sha256 || len(signatures) != 130 {
+	_, threshold := safeOwnerProfile(request.singleOwner())
+	signatures, signatureHash, err := readBootstrapRootFile(ctx, request.SafeSignatures.Path, threshold*65)
+	if err != nil || signatureHash != request.SafeSignatures.Sha256 || len(signatures) != threshold*65 {
 		return plan, errors.Join(errors.New("successor Safe signature input differs"), err)
 	}
 	raw, rawHash, err := readBootstrapRootFile(ctx, request.RelayerTransaction.Path, 128*1024)

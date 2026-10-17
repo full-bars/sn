@@ -86,7 +86,7 @@ func validateReleaseMainnetRuntimeHistoryScope(cfg *ReleaseConfig) error {
 	if cfg == nil || cfg.SchemaVersion != releaseMainnetRuntimeObservationSchemaVersion || !cfg.Production ||
 		cfg.ChainID != 964 || cfg.Policy.NetworkProfile != "mainnet" || cfg.Netuid == 0 || cfg.ValidatorID == 0 ||
 		cfg.ProvisionalRuntimeCompatibility != "" || cfg.ProvisionalDeferClosedNativeInput ||
-		cfg.OwnerRecycleApproval != nil || cfg.SourceRolePredecessorV2 != nil || cfg.PreviousPolicy != nil || cfg.historyAdoptionV2 != nil {
+		productionEconomicSelection(cfg) != nil || cfg.SourceRolePredecessorV2 != nil || cfg.PreviousPolicy != nil || cfg.historyAdoptionV2 != nil {
 		return errors.New("mainnet runtime observation requires schema 2, independent mainnet policy and no provisional or producer authority")
 	}
 	if !releaseMainnetRuntimeHex(cfg.GenesisHash, 32, "0x") || cfg.GenesisHash == provisionalRuntimeTestnetGenesis ||

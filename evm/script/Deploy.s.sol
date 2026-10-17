@@ -120,6 +120,8 @@ contract Deploy is Script {
     /// ST_MINIMUM_TRANSFER_TAO_RAO,
     /// ST_EPOCH_DEPOSIT_CAP_RAO and
     /// ST_CAMPAIGN_DEPOSIT_CAP_RAO. Window fields have profile defaults.
+    /// ST_OWNER_SAFE_PROFILE selects the mainnet owner Safe's shape: 2-of-3
+    /// (the default) or 1-of-1.
     function _loadConfig(bool mainnet) internal view returns (Config memory cfg) {
         cfg.netuid = SafeCast.toUint16(vm.envUint("ST_NETUID"));
         cfg.deployer = vm.envAddress("ST_DEPLOYER");
@@ -146,7 +148,7 @@ contract Deploy is Script {
         );
         require(cfg.reserveHotkey != cfg.escrowHotkey && policyHash != bytes32(0), "Deploy: policy");
         if (mainnet) {
-            _requireMainnetSafe(cfg.owner);
+            _requireMainnetSafe(cfg.owner, _singleOwnerSafeProfile());
         } else {
             require(cfg.owner.code.length == 0, "Deploy: testnet owner must be EOA");
         }
@@ -187,10 +189,21 @@ contract Deploy is Script {
         return SafeCast.toUint64(uint256(epochBlocks) * uint256(claimTTLEpochs));
     }
 
+    /// @dev The owner Safe's shape is selected, never inferred from the deployed
+    /// Safe: 2-of-3 unless the release explicitly selects 1-of-1.
+    function _singleOwnerSafeProfile() internal view returns (bool) {
+        bytes32 profile = keccak256(bytes(vm.envOr("ST_OWNER_SAFE_PROFILE", string("2-of-3"))));
+        if (profile == keccak256("2-of-3")) {
+            return false;
+        }
+        require(profile == keccak256("1-of-1"), "Deploy: unknown owner Safe profile");
+        return true;
+    }
+
     /// @dev A generic contract address is not a mainnet governance policy.
-    /// Require the standard Safe read interface and the exact release-1.0
+    /// Require the standard Safe read interface and the selected release-1.0
     /// threshold/owner shape before any broadcast can start.
-    function _requireMainnetSafe(address owner_) internal view {
+    function _requireMainnetSafe(address owner_, bool singleOwner) internal view {
         require(owner_.code.length != 0, "Deploy: mainnet owner must be Safe");
         (bool thresholdOK, bytes memory thresholdData) =
             owner_.staticcall(abi.encodeCall(ISafeGovernance.getThreshold, ()));
@@ -201,7 +214,11 @@ contract Deploy is Script {
             owner_.staticcall(abi.encodeCall(ISafeGovernance.getOwners, ()));
         require(ownersOK && ownersData.length >= 64, "Deploy: Safe owners unavailable");
         address[] memory owners = abi.decode(ownersData, (address[]));
-        require(threshold == 2 && owners.length == 3, "Deploy: mainnet owner must be 2-of-3 Safe");
+        if (singleOwner) {
+            require(threshold == 1 && owners.length == 1, "Deploy: mainnet owner must be 1-of-1 Safe");
+        } else {
+            require(threshold == 2 && owners.length == 3, "Deploy: mainnet owner must be 2-of-3 Safe");
+        }
         for (uint256 i = 0; i < owners.length; i++) {
             require(owners[i] != address(0), "Deploy: Safe owner zero");
             for (uint256 j = 0; j < i; j++) {

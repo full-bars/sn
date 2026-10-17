@@ -1,0 +1,95 @@
+{
+  "entry_and_guards": {
+    "accounting_floor_bytes": 0,
+    "data_active_formula": "max(6307319808, immediate_available-8589934592)",
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_launch_minimum_bytes": 17179869184,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_minimum_bytes": 300128382976,
+    "healthy_data_floor_bytes": 6307319808,
+    "healthy_memory_floor_bytes": 103079215104,
+    "memory_launch_minimum_bytes": 120259084288,
+    "owner_memory_max_bytes": 8589934592,
+    "owner_memory_swap_max_bytes": 0,
+    "scope": "Exclusive one owned DB cohort; no concurrent compiler/body/metadata."
+  },
+  "final_job_conditions": [
+    "Bind actual successful main model image/compile receipt, b1db closure, exact1823 actual LIST census and all selected root outcomes.",
+    "Use the actual successor lease generation and prove at admission that12120seconds fit its remaining lifetime.",
+    "Preserve resource-qualified actual predecessor waits/USER closures and exact cleanup0/owned-ID absence for every prior DB cohort, including model30 and intervening main packages.",
+    "Require sampled/final owner and available owned-DB oom/oom_kill/oom_group_kill counters zero and Docker OOMKilled false before resource_qualified.",
+    "Collect ordinary assertion failures/skips without granting PASS, preserve source/image/output custody and complete authenticated teardown."
+  ],
+  "forecast": {
+    "basis": "One serial normal test image (-parallel=1, GOMAXPROCS=2), existing bounded fixture/migration lifecycle, prior full1703 memory observations, no compiler or dependency download during body. The prospective4GiB body memory forecast is above the observed combined2.383GB sample maximum; margin2 is retained. Disk forecast retains4GiB for body/fixture/log/evidence growth, with database data on tmpfs and explicit log limits; this is an estimate, not a claimed measured upper bound.",
+    "held_extra_disk_bytes": 4294967296,
+    "held_extra_memory_bytes": 4294967296,
+    "margin": 2,
+    "owned_db_body_disk_bytes": 4294967296,
+    "owned_db_body_memory_bytes": 4294967296
+  },
+  "implementation_bounds": {
+    "body_logs_each_bytes": 134217728,
+    "docker_log_per_container_bytes": 16777216,
+    "important_scope": "The owner8GiB cgroup cap does not cap the separate Docker cgroups. Their actual memory/events/ownership are sampled; host96GiB guard and authenticated teardown remain required. Tmpfs sizes are ceilings, not forecast allocation.",
+    "list_logs_each_bytes": 4194304,
+    "owner_logs_each_bytes": 134217728,
+    "postgres_tmpfs_size_bytes": 34359738368,
+    "redis_tmpfs_size_bytes": 8589934592,
+    "release_helper": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/release-gate-services-model-bounded.sh",
+      "sha256": "0c1246b71c0e0860ce5f89158224e09309deee6c81b80cef6909006b4b5e8bef"
+    }
+  },
+  "prior_actual_resource_basis": {
+    "actual_jsonl_rows": 14308,
+    "interpretation": "Observed historical source/custody cohort only; none is a future upper bound. Shared evidence directory and whole-filesystem free-space changes are not owned-process peak measurements. Prior ordinary test failures and allowed skips remain unchanged.",
+    "oom_observations": [],
+    "owned_directory_allocated_sample_max_bytes": {
+      "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence": 114954240,
+      "/mnt/data/sn-testnet/sol-server-final-f67-20261004/final-c60-source/server/model": 8499200,
+      "/mnt/data/sn-testnet/sol-server-final-f67-20261004/gate-final-model-retry3": 253952,
+      "/mnt/data/sn-testnet/sol-server-final-f67-20261004/tmp": 90537984
+    },
+    "owner_kernel_peak_bytes": 570843136,
+    "postgres_sampled_memory_max_bytes": 2143956992,
+    "redis_sampled_memory_max_bytes": 61403136,
+    "sample_duration_seconds": 9348.744916946,
+    "samples": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.resources.jsonl",
+      "sha256": "21fde7e0527357cff68d3fe079c083c3334c9e92ca9f750652a3a292f6e8efe0"
+    },
+    "simultaneous_sampled_owner_plus_owned_db_max_bytes": 2383249408,
+    "terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    }
+  },
+  "schema": "published-main-full-model1823-prospective-resource-review-v1",
+  "selected_model_roots": 1823,
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/published-main-server-model-normal-v1-selection.json",
+    "sha256": "f87a7e3e75d7acf3ced593b5e0227f2a31534d44972a465c26922301ed111767"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-compiler-source-closure-v2.json",
+    "sha256": "b1dbdfd30d3744b446f094ed77fb900753f21b440cf0e121c53d4d24dcc89f76"
+  },
+  "source_tuple": {
+    "core": "7ca8e222e3496552146f2d97eb09237401662c99",
+    "server": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+    "sn": "babb0af573f6bdfe95a7db6d8888bbe9327fc39b"
+  },
+  "status": "PROSPECTIVE_CLASS_SUPPORTED_FINAL_JOB_AND_ROOT_ADOPTION_REQUIRED",
+  "time_envelope_seconds": {
+    "child": 10920,
+    "owner": 12000,
+    "systemd_runtime_max": 12030,
+    "systemd_stop": 90,
+    "test": 10800,
+    "whole_owner_horizon": 12120
+  },
+  "validation_scope": "Read-only retained sample reduction and source mechanism review only; no compiler, body, DB, cleanup or admission execution."
+}

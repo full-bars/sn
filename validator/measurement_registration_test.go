@@ -28,6 +28,7 @@ import (
 	"github.com/docopt/docopt-go"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/urfoundation/sn/clientauth"
+	"github.com/urfoundation/sn/operatorlist"
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
 )
@@ -784,5 +785,35 @@ func TestMeasurementRefreshIntegrityNoticeHonorsCurrentGeneration(t *testing.T) 
 			t.Fatal("current measurement integrity notice left malformed authority live")
 		}
 		closeOwners()
+	}
+}
+
+// A retained registration the operator refuses for its network sign-in names
+// the command that signs in again, not measurement custody recovery.
+func TestMeasurementRunNamesARejectedSignIn(t *testing.T) {
+	for _, authCommand := range []string{"", "validator auth --operator=op.example"} {
+		fixture := newMeasurementRunFixture(t)
+		fixture.retainOperation()
+		fixture.status = http.StatusUnauthorized
+		settings := fixture.settings(false)
+		settings.authCommand = authCommand
+		ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
+		err := settings.run(ctx, io.Discard)
+		cancel()
+		want := "`validator auth`"
+		if authCommand != "" {
+			want = "`" + authCommand + "`"
+		}
+		if !clientauth.IsNetworkCredentialRejected(err) || !strings.Contains(err.Error(), "the network sign-in at "+fixture.networkPath+" was rejected or has expired") || !strings.Contains(err.Error(), want) {
+			t.Fatalf("err = %v, want guidance naming %s", err, want)
+		}
+		if posts, _, _, _ := fixture.counts(); posts != 1 {
+			t.Fatalf("a rejected sign-in was retried (%d posts)", posts)
+		}
+	}
+	operator := operatorlist.Operator{Domain: "op.example", ApiUrl: "https://api.op.example", ConnectUrl: "wss://connect.op.example"}
+	settings := allOperatorsSettings{measurement: measurementRunSettings{stateDir: t.TempDir()}, list: operatorListOptions{url: operatorlist.DefaultUrl}}
+	if runner := settings.operatorRunner(operator); runner.authCommand != settings.authCommand("op.example") || !strings.HasPrefix(runner.authCommand, "validator auth --operator=op.example") {
+		t.Fatalf("operator runner auth command = %q", runner.authCommand)
 	}
 }

@@ -27,9 +27,11 @@ type releaseSteererRunner interface {
 type releaseRuntimeOperations struct {
 	providerRequests func(context.Context) error
 	refresh          func(context.Context) error
-	newSteerer       func([]*ReleaseMeasurementContext) (releaseSteererRunner, error)
-	running          func()
-	trailReady       <-chan struct{}
+	// ledgerAudit, when set, audits settlement v2 pending roots.
+	ledgerAudit func(context.Context) error
+	newSteerer  func([]*ReleaseMeasurementContext) (releaseSteererRunner, error)
+	running     func()
+	trailReady  <-chan struct{}
 }
 
 // Every non-nil cause must be an explicitly allowed lifecycle result. In
@@ -201,7 +203,7 @@ func closeReleaseAttemptStates(states map[uint64]*releaseAttemptState) error {
 // Every process-owned worker joins before the same operator teardown callbacks;
 // the public RunRelease returns this operation's result directly.
 func runReleaseOperatorWorkers(ctx context.Context, cancel context.CancelFunc, cfg *ReleaseConfig, runtimes []*releaseOperatorRuntime, operations releaseRuntimeOperations) (returnErr error) {
-	runtimeErrors := make(chan error, 2*len(runtimes)+4)
+	runtimeErrors := make(chan error, 2*len(runtimes)+5)
 	var workers sync.WaitGroup
 	defer func() {
 		cancel()
@@ -228,6 +230,13 @@ func runReleaseOperatorWorkers(ctx context.Context, cancel context.CancelFunc, c
 			runtimeErrors <- err
 		}
 	})
+	if operations.ledgerAudit != nil {
+		workers.Go(func() {
+			if err := releaseRuntimeError(ctx, operations.ledgerAudit(ctx)); err != nil {
+				runtimeErrors <- err
+			}
+		})
+	}
 	for index, runtime := range runtimes {
 		operatorID := cfg.Operators[index].NoID
 		concurrency := cfg.Operators[index].Concurrency

@@ -22,7 +22,7 @@ func releaseReceiptTestHeaderWire(header types.Header) any {
 
 // The one-entry layout0 root is an independent exact leaf codec, not a call to
 // the production trie implementation. Fixtures need only empty or one entry.
-func releaseReceiptTestHeader(t *testing.T, parent types.Hash, number uint64, extrinsics ...string) (types.Header, types.Hash) {
+func releaseReceiptTestHeader(t testing.TB, parent types.Hash, number uint64, extrinsics ...string) (types.Header, types.Hash) {
 	t.Helper()
 	if len(extrinsics) > 1 {
 		t.Fatal("receipt fixture supports only empty or single-extrinsic bodies")

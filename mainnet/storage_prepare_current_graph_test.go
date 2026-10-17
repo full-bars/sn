@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Tracked module consumption must retain the actual public owner constructor's
 // retry semantics after the offline dispatcher publishes its original custody.

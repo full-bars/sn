@@ -173,14 +173,24 @@ func TestAttemptComparisonNilAndEmptyParity(t *testing.T) {
 	}
 }
 
-// Invalid-byte replacement escapes and literal valid U+FFFD have different
-// JSON bytes, even when decoding yields the same string. Pin both encodings
-// independently; decoded equality must never replace the legacy byte oracle.
+// Without jsonv2, invalid-byte replacement escapes and literal valid U+FFFD
+// have different JSON bytes, even when decoding yields the same string; jsonv2
+// writes that literal, so they collide. Pin the linked form independently;
+// decoded equality must never replace the legacy byte oracle.
 func TestAttemptComparisonInvalidUTF8Parity(t *testing.T) {
 	t.Parallel()
-	const replacementWire = "\"\\ufffd\""
-	const twoReplacementWire = "\"\\ufffd\\ufffd\""
-	const threeReplacementWire = "\"\\ufffd\\ufffd\\ufffd\""
+	replacement := "\\ufffd"
+	if probe, err := json.Marshal(string([]byte{0xff})); err != nil {
+		t.Fatal(err)
+	} else if string(probe) == "\"\ufffd\"" {
+		replacement = "\ufffd"
+	} else if string(probe) != "\""+replacement+"\"" {
+		t.Fatalf("invalid UTF-8 wire %q is neither the escape nor the jsonv2 literal", probe)
+	}
+	collides := replacement == "\ufffd"
+	replacementWire := "\"" + replacement + "\""
+	twoReplacementWire := "\"" + replacement + replacement + "\""
+	threeReplacementWire := "\"" + replacement + replacement + replacement + "\""
 	const literalReplacementWire = "\"\ufffd\""
 	const literalTwoReplacementWire = "\"\ufffd\ufffd\""
 	const literalThreeReplacementWire = "\"\ufffd\ufffd\ufffd\""
@@ -192,20 +202,20 @@ func TestAttemptComparisonInvalidUTF8Parity(t *testing.T) {
 		want, decodedEqual  bool
 	}{
 		{name: "single invalid collision", left: string([]byte{0xff}), right: string([]byte{0xfe}), leftWire: replacementWire, rightWire: replacementWire, want: true, decodedEqual: true},
-		{name: "invalid versus literal replacement", left: string([]byte{0xff}), right: "\ufffd", leftWire: replacementWire, rightWire: literalReplacementWire, want: false, decodedEqual: true},
-		{name: "two invalid versus literal replacements", left: string([]byte{0xff, 0xfe}), right: "\ufffd\ufffd", leftWire: twoReplacementWire, rightWire: literalTwoReplacementWire, want: false, decodedEqual: true},
+		{name: "invalid versus literal replacement", left: string([]byte{0xff}), right: "\ufffd", leftWire: replacementWire, rightWire: literalReplacementWire, want: collides, decodedEqual: true},
+		{name: "two invalid versus literal replacements", left: string([]byte{0xff, 0xfe}), right: "\ufffd\ufffd", leftWire: twoReplacementWire, rightWire: literalTwoReplacementWire, want: collides, decodedEqual: true},
 		{name: "two invalid versus one literal replacement", left: string([]byte{0xff, 0xfe}), right: "\ufffd", leftWire: twoReplacementWire, rightWire: literalReplacementWire, want: false, decodedEqual: false},
-		{name: "overlong versus literal replacements", left: "x" + string([]byte{0xc0, 0xaf}), right: "x\ufffd\ufffd", leftWire: "\"x\\ufffd\\ufffd\"", rightWire: "\"x\ufffd\ufffd\"", want: false, decodedEqual: true},
-		{name: "surrogate versus literal replacements", left: string([]byte{0xed, 0xa0, 0x80}), right: "\ufffd\ufffd\ufffd", leftWire: threeReplacementWire, rightWire: literalThreeReplacementWire, want: false, decodedEqual: true},
+		{name: "overlong versus literal replacements", left: "x" + string([]byte{0xc0, 0xaf}), right: "x\ufffd\ufffd", leftWire: "\"x" + replacement + replacement + "\"", rightWire: "\"x\ufffd\ufffd\"", want: collides, decodedEqual: true},
+		{name: "surrogate versus literal replacements", left: string([]byte{0xed, 0xa0, 0x80}), right: "\ufffd\ufffd\ufffd", leftWire: threeReplacementWire, rightWire: literalThreeReplacementWire, want: collides, decodedEqual: true},
 		{name: "ASCII versus invalid", left: "ascii", right: string([]byte{0xff}), leftWire: "\"ascii\"", rightWire: replacementWire, want: false, decodedEqual: false},
 		{name: "valid JSON escapes", left: "<>&\u2028\u2029\\\"", right: "<>&\u2028\u2029\\\"", leftWire: escapedWire, rightWire: escapedWire, want: true, decodedEqual: true},
 		{name: "two invalid collision", left: string([]byte{0xff, 0xfe}), right: string([]byte{0xfe, 0xfd}), leftWire: twoReplacementWire, rightWire: twoReplacementWire, want: true, decodedEqual: true},
-		{name: "overlong invalid collision", left: "x" + string([]byte{0xc0, 0xaf}), right: "x" + string([]byte{0xff, 0xfe}), leftWire: "\"x\\ufffd\\ufffd\"", rightWire: "\"x\\ufffd\\ufffd\"", want: true, decodedEqual: true},
+		{name: "overlong invalid collision", left: "x" + string([]byte{0xc0, 0xaf}), right: "x" + string([]byte{0xff, 0xfe}), leftWire: "\"x" + replacement + replacement + "\"", rightWire: "\"x" + replacement + replacement + "\"", want: true, decodedEqual: true},
 		{name: "surrogate invalid collision", left: string([]byte{0xed, 0xa0, 0x80}), right: string([]byte{0xff, 0xfe, 0xfd}), leftWire: threeReplacementWire, rightWire: threeReplacementWire, want: true, decodedEqual: true},
 		{name: "truncated invalid collision", left: string([]byte{0xe2, 0x82}), right: string([]byte{0xc0, 0xaf}), leftWire: twoReplacementWire, rightWire: twoReplacementWire, want: true, decodedEqual: true},
 		{name: "invalid versus escape text", left: string([]byte{0xff}), right: "\\ufffd", leftWire: replacementWire, rightWire: "\"\\\\ufffd\"", want: false, decodedEqual: false},
-		{name: "mixed literal and invalid collision", left: "pre" + string([]byte{0xff}) + "\ufffdpost", right: "pre" + string([]byte{0xfe}) + "\ufffdpost", leftWire: "\"pre\\ufffd\ufffdpost\"", rightWire: "\"pre\\ufffd\ufffdpost\"", want: true, decodedEqual: true},
-		{name: "invalid position is retained", left: "a" + string([]byte{0xff}) + "b", right: "ab" + string([]byte{0xfe}), leftWire: "\"a\\ufffdb\"", rightWire: "\"ab\\ufffd\"", want: false, decodedEqual: false},
+		{name: "mixed literal and invalid collision", left: "pre" + string([]byte{0xff}) + "\ufffdpost", right: "pre" + string([]byte{0xfe}) + "\ufffdpost", leftWire: "\"pre" + replacement + "\ufffdpost\"", rightWire: "\"pre" + replacement + "\ufffdpost\"", want: true, decodedEqual: true},
+		{name: "invalid position is retained", left: "a" + string([]byte{0xff}) + "b", right: "ab" + string([]byte{0xfe}), leftWire: "\"a" + replacement + "b\"", rightWire: "\"ab" + replacement + "\"", want: false, decodedEqual: false},
 		{name: "valid replacement collision", left: "\ufffd", right: "\ufffd", leftWire: literalReplacementWire, rightWire: literalReplacementWire, want: true, decodedEqual: true},
 		{name: "valid Unicode is not folded", left: "\u00e9", right: "e\u0301", leftWire: "\"\u00e9\"", rightWire: "\"e\u0301\"", want: false, decodedEqual: false},
 	}

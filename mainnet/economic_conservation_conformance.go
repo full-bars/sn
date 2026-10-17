@@ -1,6 +1,8 @@
 // Mathematical conformance and authority are independent. A complete original
 // denominator can disprove the fixed ten/ninety split; matching a selected
 // execution and artifact does not prove independent finality or measured usage.
+// Treasury epochs whose actual weight inputs were the reserve-only row owe
+// providers nothing; the complete allocation witness alone identifies them.
 package main
 
 import (
@@ -10,6 +12,11 @@ import (
 
 // A measured contradiction is distinct from missing approval or source evidence.
 type economicConservationConformance struct {
+	TreasuryWithinTolerance     *bool    `json:"original_treasury_ninety_within_tolerance,omitempty"`
+	TreasuryDeviationNumerator  *string  `json:"treasury_deviation_times_ten_alpha,omitempty"`
+	ReserveOnlyAllocation       *string  `json:"reserve_only_miner_allocation_alpha,omitempty"`
+	TreasuryCustodyComplete     *bool    `json:"original_treasury_custody_complete,omitempty"`
+	TreasuryIncomeSpendable     *bool    `json:"original_treasury_income_unlocked_or_spent,omitempty"`
 	NativeSplitWithinTolerance  *bool    `json:"native_ten_ninety_within_tolerance"`
 	OwnerRecycleWithinTolerance *bool    `json:"original_owner_ninety_within_tolerance"`
 	ProviderDeviationNumerator  *string  `json:"provider_deviation_times_ten_alpha"`
@@ -86,6 +93,22 @@ func (self *economicConservationSummary) assessConformance() error {
 	}
 	if self.Execution != nil && self.Execution.Through == self.NativeCursor && self.Yuma != nil && self.Yuma.Current && self.Yuma.Through == self.NativeCursor && self.Yuma.MinerDenominator != nil && self.Yuma.FullQuantizationTolerance != nil {
 		within, pd, od, q, err := economicNativeSplit(*self.Yuma.MinerDenominator, self.Execution.ProviderEntitlement, self.Execution.OwnerRecycled, *self.Yuma.FullQuantizationTolerance)
+		reserveOnly := "0"
+		if self.Yuma.ReserveOnlyAllocation != nil {
+			reserveOnly = *self.Yuma.ReserveOnlyAllocation
+		}
+		if self.Execution.Treasury != nil {
+			allocated, sumErr := economicConservationSum(self.Execution.ProviderEntitlement, self.Execution.OwnerRecycled, self.Execution.ResidualEntitlement, self.Execution.Treasury.Gross)
+			if sumErr != nil || *self.Yuma.MinerDenominator != allocated {
+				return errors.Join(errors.New("treasury conformance changed the original complete miner allocation"), sumErr)
+			}
+			within, pd, od, q, err = economicTreasuryReserveSplit(*self.Execution, *self.Yuma.FullQuantizationTolerance, reserveOnly)
+			if reserveOnly != "0" {
+				result.ReserveOnlyAllocation = &reserveOnly
+			}
+		} else if reserveOnly != "0" {
+			return errors.New("owner-recycle conformance cannot admit a treasury reserve-only tranche")
+		}
 		if err != nil {
 			return err
 		}
@@ -96,17 +119,44 @@ func (self *economicConservationSummary) assessConformance() error {
 			return err
 		}
 		result.OwnerRecycleWithinTolerance = &ownerWithin
+		if self.Execution.Treasury != nil {
+			result.OwnerRecycleWithinTolerance, result.OwnerDeviationNumerator = nil, nil
+			result.TreasuryWithinTolerance, result.TreasuryDeviationNumerator = &ownerWithin, &od
+			if self.Execution.OwnerRecycled != "0" {
+				within = false
+				result.NativeSplitWithinTolerance = &within
+			}
+		}
 		if self.Execution.ResidualEntitlement != "0" {
 			result.NativeSplitWithinTolerance = nil
 			result.Missing = append(result.Missing, "complete-original-provider-recipient-membership")
 		}
-		if !ownerWithin || self.Execution.ResidualEntitlement == "0" && !within {
+		if !ownerWithin || self.Execution.ResidualEntitlement == "0" && !within || self.Execution.Treasury != nil && self.Execution.OwnerRecycled != "0" {
 			value := false
 			result.NativeSplitWithinTolerance = &value
-			result.Contradictions = append(result.Contradictions, "complete-native-miner-allocation-contradicts-provider-ten-owner-ninety")
+			label := "complete-native-miner-allocation-contradicts-provider-ten-owner-ninety"
+			if self.Execution.Treasury != nil {
+				label = "complete-native-miner-tranche-contradicts-provider-ten-treasury-remainder"
+			}
+			result.Contradictions = append(result.Contradictions, label)
 		}
 	} else {
 		result.Missing = append(result.Missing, "complete-original-miner-denominator-and-all-quantization-stages")
+	}
+	if self.Execution != nil && self.Execution.Treasury != nil {
+		complete := self.Treasury != nil && self.Treasury.Through == self.NativeCursor && self.Treasury.CauseCensusComplete && self.Treasury.StockCovered && self.Treasury.AvailabilityKnown
+		result.TreasuryCustodyComplete = &complete
+		if !complete {
+			result.Missing = append(result.Missing, "complete-current-original-treasury-custody-and-availability")
+		}
+		if self.Treasury != nil {
+			result.TreasuryIncomeSpendable = self.Treasury.IncomeUnlockedOrSpent
+		}
+		if result.TreasuryIncomeSpendable == nil {
+			result.Missing = append(result.Missing, "original-treasury-income-unlocked-or-spent")
+		} else if !*result.TreasuryIncomeSpendable {
+			result.Contradictions = append(result.Contradictions, "original-treasury-native-income-remains-locked")
+		}
 	}
 	if !self.NativeCurrent || !self.VaultCurrent || self.NativeHeld || self.VaultHeld || self.JoinIssue != "" {
 		result.Missing = append(result.Missing, "current-original-native-and-vault-boundaries")
@@ -159,4 +209,54 @@ func (self *economicConservationSummary) assessConformance() error {
 	// Activation has its own reviewed deployment gate. This observational
 	// predicate does not send funds, sign a contract action or launch a service.
 	return nil
+}
+
+// Treasury reference rounding carries across the complete original miner
+// tranche, including emission redirected to validators. Gross already contains
+// collateral; current spendability is checked separately from this split.
+func economicTreasurySplit(window nativeExecutionWindow, tolerance string) (bool, string, string, string, error) {
+	return economicTreasuryReserveSplit(window, tolerance, "0")
+}
+
+// A reserve-only tranche, identified by its epoch's actual weight inputs in
+// the complete allocation witness, owes providers nothing and the treasury
+// all of it. Integer tenths still carry across every remaining tranche; with
+// no such tranche this is exactly the window's cumulative 10/90 reference.
+func economicTreasuryReserveSplit(window nativeExecutionWindow, tolerance, reserveOnly string) (bool, string, string, string, error) {
+	if window.Treasury == nil {
+		return false, "", "", "", errors.New("treasury split lacks original income")
+	}
+	if err := window.validate(); err != nil {
+		return false, "", "", "", err
+	}
+	provider, ok := new(big.Int).SetString(window.ProviderDeviation, 10)
+	if !ok || window.TreasuryDeviation == nil {
+		return false, "", "", "", errors.New("treasury split lacks exact cumulative reference")
+	}
+	treasury, ok := new(big.Int).SetString(*window.TreasuryDeviation, 10)
+	if !ok {
+		return false, "", "", "", errors.New("treasury split deviation differs")
+	}
+	reserve, err := monitorEconomicInteger(reserveOnly)
+	if err != nil {
+		return false, "", "", "", err
+	}
+	if reserve.Sign() != 0 {
+		miner, minerErr := monitorEconomicInteger(window.MinerAllocation)
+		entitled, entitledErr := monitorEconomicInteger(window.ProviderEntitlement)
+		gross, grossErr := monitorEconomicInteger(window.Treasury.Gross)
+		if err := errors.Join(minerErr, entitledErr, grossErr); err != nil || reserve.Cmp(miner) > 0 {
+			return false, "", "", "", errors.Join(errors.New("treasury reserve-only tranche exceeds the original miner allocation"), err)
+		}
+		providerReference := new(big.Int).Quo(new(big.Int).Sub(miner, reserve), big.NewInt(10))
+		provider = new(big.Int).Sub(entitled, providerReference)
+		treasury = new(big.Int).Sub(gross, new(big.Int).Sub(miner, providerReference))
+	}
+	pd, td := provider.Mul(provider, big.NewInt(10)).String(), treasury.Mul(treasury, big.NewInt(10)).String()
+	providerWithin, err := economicNativeDeviationWithin(pd, tolerance)
+	if err != nil {
+		return false, "", "", "", err
+	}
+	treasuryWithin, err := economicNativeDeviationWithin(td, tolerance)
+	return providerWithin && treasuryWithin && window.OwnerRecycled == "0", pd, td, tolerance, err
 }

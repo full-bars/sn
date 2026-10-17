@@ -73,6 +73,9 @@ type productionStartupEvmTestFixture struct {
 	freshRead chan struct{}
 	freshOnce sync.Once
 	release   chan struct{}
+	// Settlement v2 views by lowercase target and calldata, as
+	// settlementV2TestKey keys them; nil serves none.
+	settlementV2 map[string][]byte
 }
 
 // Blocking handlers consume and close the real bounded body before publishing
@@ -138,6 +141,9 @@ func (self *productionStartupEvmTestFixture) view(ctx context.Context, call map[
 	}
 	initial := self.contexts[9]
 	target := common.BytesToAddress(call["to"])
+	if answer, found := self.settlementV2[strings.ToLower(target.Hex())+"/"+common.Bytes2Hex(data)]; found {
+		return bytes.Clone(answer), true, nil
+	}
 	coordinator, journal := stabi.NewSTCoordinator(), stabi.NewSTValidatorEvidence()
 	coordinatorAbi, err := stabi.STCoordinatorMetaData.ParseABI()
 	if err != nil {
@@ -212,15 +218,17 @@ type productionStartupApiTestFixture struct {
 	seedOnce                sync.Once
 	release                 chan struct{}
 	registrationUnavailable bool
-	registrationRequest     []byte
-	registrationPosts       int
-	registrationRead        chan struct{}
-	registrationOnce        sync.Once
-	rejectRefreshAfter      int
-	beforeRefreshReject     func(context.Context)
-	beforeRefresh           func(context.Context)
-	invalidRefreshAfter     int
-	invalidRefresh          string
+	// the operator rejects the network JWT that registration carries (401)
+	registrationRejected bool
+	registrationRequest  []byte
+	registrationPosts    int
+	registrationRead     chan struct{}
+	registrationOnce     sync.Once
+	rejectRefreshAfter   int
+	beforeRefreshReject  func(context.Context)
+	beforeRefresh        func(context.Context)
+	invalidRefreshAfter  int
+	invalidRefresh       string
 }
 
 // This HTTP fixture retains one exact operation even when its reply is lost.
@@ -239,6 +247,7 @@ func (self *productionStartupApiTestFixture) registerClient(writer http.Response
 	same := bytes.Equal(self.registrationRequest, raw)
 	self.registrationPosts++
 	unavailable := self.registrationUnavailable
+	rejected := self.registrationRejected
 	self.stateLock.Unlock()
 	self.registrationOnce.Do(func() { close(self.registrationRead) })
 	if !same {
@@ -247,6 +256,10 @@ func (self *productionStartupApiTestFixture) registerClient(writer http.Response
 	}
 	if unavailable {
 		writer.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+	if rejected {
+		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	claims := gojwt.MapClaims{}
@@ -515,6 +528,12 @@ func newProductionStartupTestFixture(t *testing.T) *productionStartupTestFixture
 // Opt-in belongs to the actual complete signed configuration, before any
 // source or intent exists. Default fixtures preserve historical config bytes.
 func newProductionStartupTestFixtureWithRegistration(t *testing.T, allowRegistration bool) *productionStartupTestFixture {
+	return newProductionStartupTestFixtureWithConfig(t, allowRegistration, nil)
+}
+
+// configure edits the complete config before the independent approval signs
+// it; nil keeps the default fixture's config bytes unchanged.
+func newProductionStartupTestFixtureWithConfig(t *testing.T, allowRegistration bool, configure func(*ReleaseConfig)) *productionStartupTestFixture {
 	t.Helper()
 	self := &productionStartupTestFixture{activationKVs: map[uint64]protocol.ValidatorEvidenceActivation{}, contextKVs: map[uint64]ReleaseEvidenceV2ActivationContext{}, latestRead: make(chan struct{})}
 	root := identityTestStateDir(t)
@@ -644,6 +663,12 @@ func newProductionStartupTestFixtureWithRegistration(t *testing.T, allowRegistra
 			t.Cleanup(func() { close(api.release); server.Close() })
 			op.APIURL, op.ConnectURL = server.URL, "ws"+strings.TrimPrefix(server.URL, "http")+"/connect"
 			self.origins[index] = api
+		}
+		if configure != nil {
+			configure(cfg)
+		}
+		if cfg.SettlementV2 != nil {
+			self.evm.settlementV2 = settlementV2TestStartupViews(t, cfg)
 		}
 		normalizeProductionStartupTestConfig(t, cfg, root)
 	})

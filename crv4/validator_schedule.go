@@ -4,6 +4,7 @@
 package crv4
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
@@ -14,6 +15,11 @@ import (
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
+
+// The exact queried block has no reverse UID mapping for the hotkey. This is
+// an observation that the hotkey is not registered on the subnet, not an
+// unavailable or malformed read.
+var ErrValidatorScheduleHotkeyUnregistered = errors.New("validator schedule hotkey is not registered on the subnet")
 
 // No UID is supplied: an old ledger UID must not select current registration.
 // The independent block and runtime pins retain the identity reader's bounds.
@@ -85,7 +91,9 @@ func readValidatorScheduleAttempt(ctx context.Context, chain *Chain, query Valid
 	if err := validateValidatorReadRuntimeAtContext(ctx, chain, artifact, validatorScheduleRuntimePurpose); err != nil {
 		return result, err
 	}
-	read := func(name string, maximum int, args ...[]byte) ([]byte, error) {
+	// A nonnil absent error names what a JSON null observes at this exact
+	// block. Otherwise null is refused like any other malformed value.
+	read := func(name string, maximum int, absent error, args ...[]byte) ([]byte, error) {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
@@ -97,6 +105,9 @@ func readValidatorScheduleAttempt(ctx context.Context, chain *Chain, query Valid
 		if err := chain.API.Client.CallContext(ctx, &raw, "state_getStorage", key.Hex(), query.BlockHash.Hex()); err != nil {
 			return nil, fmt.Errorf("validator schedule %s read: %w", name, err)
 		}
+		if absent != nil && bytes.Equal(raw, []byte("null")) {
+			return nil, absent
+		}
 		value, err := decodeValidatorIdentityHexResult(raw, maximum, false)
 		if err != nil || len(value) != maximum {
 			return nil, errors.Join(fmt.Errorf("validator schedule %s is not an exact %d-byte value", name, maximum), err)
@@ -104,7 +115,36 @@ func readValidatorScheduleAttempt(ctx context.Context, chain *Chain, query Valid
 		return value, nil
 	}
 	netuid := encodeNetuid(query.Netuid)
-	uid, err := read("Uids", 2, netuid, query.Hotkey[:])
+	uid, err := read("Uids", 2, ErrValidatorScheduleHotkeyUnregistered, netuid, query.Hotkey[:])
+	if errors.Is(err, ErrValidatorScheduleHotkeyUnregistered) {
+		// Absence revokes prior eligibility, so authenticate its chain and
+		// finalized block even though there is no UID for the stake reader.
+		genesis, checkErr := validatorIdentityBlockHashAtContext(ctx, chain, 0)
+		if checkErr != nil {
+			return result, checkErr
+		}
+		if genesis != query.GenesisHash {
+			return result, errors.New("validator schedule RPC genesis differs from the independent pin")
+		}
+		number, _, checkErr := chain.ReceiptHeaderAtContext(ctx, query.BlockHash)
+		if checkErr != nil {
+			return result, checkErr
+		}
+		if number != query.BlockNumber {
+			return result, errors.New("validator schedule header number differs from the independent pin")
+		}
+		_, checkErr = read("Uids", 2, ErrValidatorScheduleHotkeyUnregistered, netuid, query.Hotkey[:])
+		if checkErr == nil {
+			return result, errors.New("validator schedule absent registration changed during observation")
+		}
+		if !errors.Is(checkErr, ErrValidatorScheduleHotkeyUnregistered) {
+			return result, checkErr
+		}
+		selected := finalityReadWitness{hash: query.BlockHash, number: query.BlockNumber}
+		if checkErr := closeValidatorReadFinalityContext(ctx, chain, selected, selected); checkErr != nil {
+			return result, checkErr
+		}
+	}
 	if err != nil {
 		return result, err
 	}
@@ -122,12 +162,13 @@ func readValidatorScheduleAttempt(ctx context.Context, chain *Chain, query Valid
 	if stake.Identity.Hotkey != query.Hotkey || stake.Identity.Runtime != (RuntimeArtifactIdentity{Version: artifact.Version, CodeHash: artifact.CodeHash, MetadataHash: artifact.MetadataHash}) {
 		return result, errors.New("validator schedule hotkey or runtime changed during identity observation")
 	}
-	epoch, err := read("SubnetEpochIndex", 8, netuid)
+	epoch, err := read("SubnetEpochIndex", 8, nil, netuid)
 	if err != nil {
 		return result, err
 	}
 	// A changed reverse mapping or canonical hash cannot publish a mixed view.
-	recheckedUID, err := read("Uids", 2, netuid, query.Hotkey[:])
+	// A mapping this block already returned and now omits is malformed.
+	recheckedUID, err := read("Uids", 2, nil, netuid, query.Hotkey[:])
 	if err != nil {
 		return result, err
 	}

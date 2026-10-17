@@ -287,16 +287,16 @@ func loadBootstrapPlan(ctx context.Context, configPath string) (bootstrapPlan, e
 // An outline is explicitly unbound: it helps collect missing inputs before
 // Snow mainnet identity exists, without relabeling testnet evidence as mainnet.
 func bootstrapPlanOutline() bootstrapPlan {
-	requirements := bootstrapRequirements()
+	requirements := bootstrapTreasuryRequirements()
 	for index := range requirements {
 		requirements[index].Status = "missing"
 	}
-	actions := bootstrapActions()
+	actions := bootstrapTreasuryActions()
 	for index := range actions {
 		actions[index].Status = "blocked"
 	}
-	return bootstrapPlan{Schema: bootstrapPlanSchema, Status: "unbound_outline", Netuid: 25, Requirements: requirements, Actions: actions,
-		Economics:         planEconomics{Denominator: "native_miner_allocation_before_withholding", ProviderNumerator: 1, FractionDenominator: 10, RemainderNumerator: 9, Remainder: "owner-recycle", Assurance: "observed-native-target"},
+	return bootstrapPlan{Schema: bootstrapTreasuryPlanSchema, Status: "unbound_outline", Netuid: 25, Requirements: requirements, Actions: actions,
+		Economics:         bootstrapTreasuryEconomics(),
 		ExecutionBlockers: []string{"Supply independently approved mainnet chain/genesis/EVM964 and exact snapshot/source-lock/release inputs before building a bound review", "This review hash cannot authorize the separate executable local-custody phase; chain actions still need their semantic adapters and independent bounded authority"}}
 }
 

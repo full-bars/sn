@@ -44,6 +44,15 @@ type fleetRecoveryIntent struct {
 	ClientId  [16]byte `json:"client_id"`
 	FromEpoch uint64   `json:"from_epoch"`
 	ToEpoch   uint64   `json:"to_epoch"`
+	// The commitment format of a publish: crv4.FleetCommitmentTag for the
+	// tagged format. Empty is a pre-tag (one-field Sha256) publication, whose
+	// id is unchanged by this field; a tagged publish is a new intent.
+	Format string `json:"format,omitempty"`
+}
+
+// A publication record written before the fleet tag.
+func (self fleetRecoveryIntent) legacyPublish() bool {
+	return self.Action == "publish" && self.Format == ""
 }
 
 // Exact original approval bytes, transaction and signing checkpoint survive
@@ -173,6 +182,9 @@ func fleetRecoveryDecode(raw []byte, target any) error {
 func (self *fleetRecoveryRecord) validate() error {
 	if self == nil || self.Schema != fleetRecoverySchema || self.Id != self.Intent.id() || len(self.Raw) == 0 || len(self.Raw) > fleetRecoveryMaxRaw || len(self.Intent.Manifest) > 256*1024 || self.StartHash == (types.Hash{}) || self.StartNumber == 0 {
 		return errors.New("fleet recovery record identity or bounds differ")
+	}
+	if self.Intent.Format != "" && (self.Intent.Action != "publish" || self.Intent.Format != crv4.FleetCommitmentTag) {
+		return errors.New("fleet recovery commitment format differs")
 	}
 	if self.Stage != "prepared" && self.Stage != "may_have_sent" && self.Stage != "finalized" {
 		return errors.New("fleet recovery record stage is invalid")
@@ -475,6 +487,9 @@ func (self *fleetRecoveryStore) find(intent fleetRecoveryIntent) (*fleetRecovery
 			found = record
 		}
 		if record.Stage != "finalized" && record.Id != intent.id() {
+			if record.Intent.legacyPublish() {
+				return nil, fmt.Errorf("fleet recovery unresolved pre-tag publish transaction %s blocks a new intent; run provider fleet publish to close it and republish in the tagged format", record.TxHash)
+			}
 			return nil, fmt.Errorf("fleet recovery unresolved %s transaction %s blocks a new intent", record.Intent.Action, record.TxHash)
 		}
 	}
@@ -482,6 +497,20 @@ func (self *fleetRecoveryStore) find(intent fleetRecoveryIntent) (*fleetRecovery
 		return nil, errors.New("fleet recovery journal record capacity exhausted")
 	}
 	return found, nil
+}
+
+// The unresolved pre-tag publication of the same manifest on the same
+// network, if that is what blocks intent. A tagged publish closes it first.
+func (self *fleetRecoveryStore) unresolvedLegacyPublish(intent fleetRecoveryIntent) *fleetRecoveryRecord {
+	if intent.Action != "publish" || intent.Format == "" {
+		return nil
+	}
+	for _, record := range self.records {
+		if record.Stage != "finalized" && record.Intent.legacyPublish() && record.Intent.Genesis == intent.Genesis && bytes.Equal(record.Intent.Manifest, intent.Manifest) {
+			return record
+		}
+	}
+	return nil
 }
 
 // Publishes a new signed transaction or a signed outcome without replacing

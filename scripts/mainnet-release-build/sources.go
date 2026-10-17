@@ -166,6 +166,29 @@ func validateReleaseRpcFork(config buildConfig, module buildModule) error {
 	return errors.New("substrate RPC module must resolve to the reviewed fork in the pinned SN repository")
 }
 
+// A local build compiles the API modules and the gVisor fork from their own
+// census checkouts, at the recorded commit, and from no other directory.
+func validateLocalReleaseModule(config buildConfig, module buildModule) error {
+	targets := map[string][2]string{
+		"github.com/urnetwork/sdk":     {"sdk", ""},
+		"github.com/urnetwork/connect": {"connect", ""},
+		"github.com/pion/sctp":         {"connect", "sctp"},
+		"gvisor.dev/gvisor":            {"gvisor", ""},
+	}
+	target, ok := targets[module.Path]
+	if !ok {
+		return nil
+	}
+	for _, repo := range config.Repositories {
+		if repo.Name == target[0] && repo.Commit != "" && module.Repository == repo.Name && module.Commit == repo.Commit &&
+			module.Directory == filepath.Join(config.Workspace, repo.Path, target[1]) &&
+			module.EffectiveVersion == "" && !module.GraphOnly && module.GoModSha256 != "" {
+			return nil
+		}
+	}
+	return fmt.Errorf("%s must resolve to its local census checkout %s", module.Path, target[0])
+}
+
 // All roots must be exact physical Git directories with unchanged tracked state.
 func verifyBuildSources(ctx context.Context, config buildConfig) error {
 	physical, err := filepath.EvalSymlinks(config.Workspace)
@@ -235,6 +258,7 @@ func captureBuildModules(ctx context.Context, config buildConfig, repository str
 	decoder := json.NewDecoder(bytes.NewReader(raw))
 	result := []buildModule{}
 	seen := map[string]bool{}
+	local := config.dependencyMode() == "local"
 	for len(result) < 4096 {
 		var module goModule
 		err := decoder.Decode(&module)
@@ -248,8 +272,10 @@ func captureBuildModules(ctx context.Context, config buildConfig, repository str
 			return nil, errors.New("duplicate or missing Go module identity")
 		}
 		seen[module.Path] = true
-		if err := validateReleaseModule(module); err != nil {
-			return nil, err
+		if !local {
+			if err := validateReleaseModule(module); err != nil {
+				return nil, err
+			}
 		}
 		effective := module
 		if module.Replace != nil {
@@ -281,16 +307,25 @@ func captureBuildModules(ctx context.Context, config buildConfig, repository str
 		if err := validateReleaseRpcFork(config, entry); err != nil {
 			return nil, err
 		}
+		if local {
+			if err := validateLocalReleaseModule(config, entry); err != nil {
+				return nil, err
+			}
+		}
 		if module.Path == "github.com/urnetwork/sdk" || module.Path == "github.com/urnetwork/connect" || module.Path == "github.com/pion/sctp" {
 			if entry.GraphOnly {
 				return nil, fmt.Errorf("required API module %s lacks materialized provenance", module.Path)
 			}
-			entry.ZipPath = filepath.Join(strings.TrimSpace(string(moduleCache)), "cache/download", effective.Path, "@v", effective.Version+".zip")
-			zip, err := buildFile(entry.ZipPath)
-			if err != nil {
-				return nil, err
+			// Pinned mode retains the downloaded archive; a local census checkout
+			// is bound by its recorded commit and tree instead.
+			if !local {
+				entry.ZipPath = filepath.Join(strings.TrimSpace(string(moduleCache)), "cache/download", effective.Path, "@v", effective.Version+".zip")
+				zip, err := buildFile(entry.ZipPath)
+				if err != nil {
+					return nil, err
+				}
+				entry.ZipSha256 = zip.Sha256
 			}
-			entry.ZipSha256 = zip.Sha256
 		}
 		result = append(result, entry)
 	}

@@ -1,0 +1,255 @@
+{
+  "schema": "code-and-focused-qualification-checkpoint-v1",
+  "status": "SELECTED_CODE_AND_FOCUSED_CHECKS_PASS",
+  "scope": "Selected code fixes, local synthetic focused tests and package compilation. No real mainnet capture/RPC, database migration, deployment, activation or new authority in this task.",
+  "current_sources": {
+    "sn": "88de7fc2f66dce261781bda63b5e1a4f928d5d98",
+    "server": "948f12a7409a5b31a0ff31814b1363b1ad71763b",
+    "connect": "a5dfb3c7e9669f885c599925009fe922840ebf6b"
+  },
+  "current_all_package_builds": {
+    "sn-current": {
+      "status": "PASS",
+      "exit": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/sn-current.exit",
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "stdout": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/sn-current.stdout",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/sn-current.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "server-current": {
+      "status": "PASS",
+      "exit": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/server-current.exit",
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "stdout": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/server-current.stdout",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/server-current.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "qualified_scopes": {
+    "root_registration": {
+      "passed": 54,
+      "failed": 0,
+      "skipped": 0,
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/mainnet-root54-v1/run/evidence/closed-user-readback-v1.json",
+        "bytes": 18691,
+        "sha256": "07ad981c356121494c3ad07501f931a62d0298921c939892c5347be5e0c4d039"
+      },
+      "tested_sn": "5534c8ec341c8503bbe74663aeffc42d8b3786a4",
+      "tested_server": "be1eea87c7f1b722ddbe2dfa49cfe1accb04354a"
+    },
+    "native_rpc_successor": {
+      "passed": 7,
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-rpc7-errno-v1/run/evidence/closed-owner-readback-v1.json",
+        "bytes": 7642,
+        "sha256": "d34097c259a5f9b5b1302a9d4ed02396407c1945c69637d9baa14e8e89f2c90c"
+      },
+      "tested_server": "9f7f99832f3be04471aa306c277deb7f40c1d8ed",
+      "coverage": "Five original failures plus two additional roots. Prior SN feed4 passes retained separately."
+    },
+    "selected_schedule_preflight": {
+      "passed": 6,
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-cli6-preflight-v1/run/evidence/closed-owner-readback-v1.json",
+        "bytes": 3762,
+        "sha256": "85080d151ee8db159e6eab4f12ddbfd587754edac368e895a691c2fe6a4b1bdb"
+      },
+      "tested_server": "362fe373c421109ac0ec3e32f005dad50b61ffcf"
+    },
+    "provider_successor4": {
+      "passed": 3,
+      "failed": 1,
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/sn-provider-recovery-v1/run/evidence/closed-user-readback-v1.json",
+        "bytes": 5884,
+        "sha256": "fb842c883df3441f86faf4eb399103dfe5504ea8fcbaf724dac065d8fead269e"
+      },
+      "tested_sn": "f5ac7e8ddc799d3894dd4a3bcc7c6dc15121462d",
+      "coverage": "Both original validator12 failures pass. The added completed/failed/idle control fails here and passes in final validator3."
+    },
+    "final_direct_tests": {
+      "closure": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/resource-independent-closed-readback-v1.json",
+        "bytes": 6753,
+        "sha256": "69035048ba96ab1a334d9193a2ad0bb2295610e6e1f206507ad5dd25cfedc7fa"
+      },
+      "tested_sources": {
+        "sn": "88de7fc2f66dce261781bda63b5e1a4f928d5d98",
+        "server": "362fe373c421109ac0ec3e32f005dad50b61ffcf",
+        "connect": "a5dfb3c7e9669f885c599925009fe922840ebf6b"
+      },
+      "results": {
+        "validator3": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "roots": [
+            "TestReleaseHttpGetRefusesElapsedDeadlineBeforeCancellation",
+            "TestWalletMappingHttpRefusesElapsedDeadlineBeforeCancellation",
+            "TestProviderAttemptSourceActualCompletedFailedAndIdleOwners"
+          ],
+          "stdout": {
+            "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/validator3.stdout",
+            "bytes": 3223,
+            "sha256": "8fbe838727731a38d58d6e42683f2816cbb1e104eba57cd8b6064e3f85ce9549"
+          },
+          "stderr": {
+            "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/validator3.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "exit": {
+            "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/validator3.exit",
+            "bytes": 2,
+            "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+          }
+        },
+        "core8": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "roots": [
+            "TestTransferPayloadOwnerItemLocalAckExpiry",
+            "TestTransferPayloadOwnerSnapshotFencesAndConcurrency",
+            "TestTransferPayloadOwnerSnapshotRefusesInconsistentCounters",
+            "TestTransferPayloadOwnerForwardLoadedOffersAndFinalReturn",
+            "TestTransferPayloadOwnerNativeAckBlackhole",
+            "TestTransferPayloadOwnerDetachedHeadRewrite",
+            "TestTransferPayloadOwnerContractHeadReplacement",
+            "TestTransferPayloadOwnerForwardDebugCopyReplacement"
+          ],
+          "stdout": {
+            "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/core8.stdout",
+            "bytes": 15192,
+            "sha256": "6d854c9c0289f570f6549cd5e8b2bfc52e6967489697200c31ff69a39faa3f8b"
+          },
+          "stderr": {
+            "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/core8.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "exit": {
+            "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/core8.exit",
+            "bytes": 2,
+            "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+          }
+        }
+      }
+    },
+    "server_connect_interop": {
+      "passed": 2,
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-api-alignment-v1/run/evidence/closed-owner-readback-v1.json",
+        "bytes": 3379,
+        "sha256": "7559d57a81f3091c33a55a588dcdbf4fa35e60360679d37c80e426e42486c960"
+      },
+      "tested_server": "362fe373c421109ac0ec3e32f005dad50b61ffcf",
+      "tested_connect": "a5dfb3c7e9669f885c599925009fe922840ebf6b",
+      "scope": "Interop2 passed; this original owner also retains a separate Core test-image staging failure, resolved by final direct Core8."
+    }
+  },
+  "retained_original_failures": {
+    "rpc16": {
+      "passed": 11,
+      "failed": 5,
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-rpc16-cwd-v1/run/evidence/closed-user-readback-v1.json",
+        "bytes": 9237,
+        "sha256": "96f488e49670fc419addaceeb4767cf1de4b74c25454ad8cfec056b9ca3803e4"
+      }
+    },
+    "validator12_and_sn_build": {
+      "passed": 10,
+      "failed": 2,
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/validator-final-v1/run/evidence/closed-user-readback-v1.json",
+        "bytes": 8484,
+        "sha256": "9af1b83f789cbd7648e4413f38ed948a5fa292f99746437be1f4482ac23ba53c"
+      },
+      "dependency": "Old Connect11f lacked required published APIs; old SN all-package compile failure remains retained."
+    },
+    "server_build": {
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-final-build-v1/run/evidence/closed-owner-readback-v1.json",
+        "bytes": 1886,
+        "sha256": "9a7750c3328b87161b56eac99b0a08286008f6c864edfff676e1b288f3fe1c12"
+      },
+      "dependency": "Old Connect11f"
+    },
+    "core_test_image_staging": {
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-api-alignment-v1/run/evidence/closed-owner-readback-v1.json",
+        "bytes": 3379,
+        "sha256": "7559d57a81f3091c33a55a588dcdbf4fa35e60360679d37c80e426e42486c960"
+      },
+      "cause": "Retained ../gvisor root missing and exact klauspost/compress v1.19.1 unavailable to the offline compiler."
+    }
+  },
+  "earlier_passing_builds": {
+    "sn_source": "f5ac7e8ddc799d3894dd4a3bcc7c6dc15121462d",
+    "server_source": "362fe373c421109ac0ec3e32f005dad50b61ffcf",
+    "connect_source": "a5dfb3c7e9669f885c599925009fe922840ebf6b",
+    "sn_receipt": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/sn-provider-recovery-v1/run/evidence/closed-user-readback-v1.json",
+      "bytes": 5884,
+      "sha256": "fb842c883df3441f86faf4eb399103dfe5504ea8fcbaf724dac065d8fead269e"
+    },
+    "server_receipt": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/server-api-alignment-v1/run/evidence/closed-owner-readback-v1.json",
+      "bytes": 3379,
+      "sha256": "7559d57a81f3091c33a55a588dcdbf4fa35e60360679d37c80e426e42486c960"
+    },
+    "scope": "SN/Server go build ./... and SN mainnet binary pass; their provider/Core test outcomes remain separately attributed above."
+  },
+  "qualification_limits": [
+    "No aggregate pass total or blanket full-suite result.",
+    "Latest Server948f upstream changes have current build evidence only; prior interop2 and direct test scopes retain Server362fe.",
+    "Earlier retention20, raw-version scope3 and Rust11 original10-pass/1-fail evidence remain unchanged."
+  ],
+  "source_only_follow_on": {
+    "source_inspection_commit": "f5ac7e8ddc799d3894dd4a3bcc7c6dc15121462d",
+    "paths": [
+      "validator/production_bootstrap_prefix.go",
+      "validator/production_steering_read.go",
+      "validator/chain_read_retry.go"
+    ],
+    "scope": "Err-only read admission at these adjacent sites is source-inspected only; no reproduction or financial mismatch claimed."
+  },
+  "historical_operational_evidence": {
+    "receipt": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/original-epoch9218962-v2/run/evidence/closed-owner-readback-v1.json",
+      "bytes": 2877,
+      "sha256": "d203bc201bb90745d48346239b332d293280a443a1780a6ae8a23348eac27475"
+    },
+    "raw_failing_rpc_reply_retained": false,
+    "scope": "Closed historical capture failure outside current code/test task; no new chain conflict or readiness claim."
+  },
+  "economics": "10% providers /90% receive-only ur-reserve; historical recycle/sending requirements are superseded.",
+  "activation": "blocked; unchanged",
+  "current_build_closure": {
+    "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/resource-independent-current-builds-closed-v1.json",
+    "sha256": "3612f7298416820113c518858d8ed01faa51a063af8756377a71d74a5acce99b",
+    "bytes": 4783
+  }
+}

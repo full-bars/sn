@@ -1,9 +1,10 @@
 # Substrate RPC transport, response and metadata decoder corrections
 
-This local module preserves the runtime Go sources, module manifests, README,
-and license files from `github.com/centrifuge/go-substrate-rpc-client/v4`
+This local module preserves the runtime Go sources, README, and license files
+from `github.com/centrifuge/go-substrate-rpc-client/v4`
 `v4.2.2-0.20240919131012-e3b938563803`, commit
-`e3b938563803c6a71043c4e7ba2e0d27c400f514`. The upstream repository HEAD was still
+`e3b938563803c6a71043c4e7ba2e0d27c400f514`, and carries its module manifests
+tidied for the imported files. The upstream repository HEAD was still
 that commit when checked on October 1, 2026. The original module download has
 sum `h1:eOBL15BXZnM4LODDmAgjOJ9Y1eehk6ABRIrEkHxmKs4=` and go.mod sum
 `h1:k61SBXqYmnZO4frAJyH3iuqjolYrYsq79r8EstmklDY=`.
@@ -19,6 +20,17 @@ including the new admission files. Reversing that patch
 in a temporary copy makes every entry in `UPSTREAM.sha256` match. The root
 Apache 2.0 license and the gethrpc LGPLv3 `COPYING`, `COPYING.LESSER`, and `AUTHORS`
 files are retained without changes.
+
+`go.mod` and `go.sum` are upstream's after `go mod tidy`. The release gate's
+source freeze verifies every live module with `go mod tidy -diff`, and this
+module is live: SN's and the server's release commands link it. Without
+upstream's tests the import uses `davecgh/go-spew` only indirectly and no
+longer uses `btcsuite/btcutil`, `StackExchange/wmi`, `go-ole/go-ole`,
+`shirou/gopsutil`, `tklauser/go-sysconf` or `tklauser/numcpus`. Tidy drops
+those six requirements and 41 checksum lines; it adds no requirement and
+changes no version. `UPSTREAM.patch` records both files, so its reversal still
+restores upstream's manifests. SN's and the server's release commands are
+byte-identical with either pair of manifests.
 
 The transport can observe a read disconnect before the current write reports
 completion. Upstream exempts that request from disconnect cancellation because

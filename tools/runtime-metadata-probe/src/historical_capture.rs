@@ -295,8 +295,10 @@ fn capture_historical_scoped<S: TrieBackendStorage<Blake2Hasher>>(
         }
         body.push(scale_exact::<OpaqueExtrinsic>("capture extrinsic", &bytes)?);
     }
-    if BlakeTwo256::ordered_trie_root(body.iter().map(Encode::encode).collect(), state_version)
-        != *child.extrinsics_root()
+    if BlakeTwo256::ordered_trie_root(
+        body.iter().map(Encode::encode).collect(),
+        extrinsics_root_state_version(request.execution_state_version)?,
+    ) != *child.extrinsics_root()
     {
         return Err(ProbeError::new(
             "historical capture extrinsics root differs",
@@ -354,21 +356,65 @@ fn capture_historical_scoped<S: TrieBackendStorage<Blake2Hasher>>(
     let wasm = sp_maybe_compressed_blob::decompress(&code, MAXIMUM_EXPANDED_CODE_BYTES)
         .map_err(|e| ProbeError::new(format!("historical capture code decompression: {e}")))?;
     memory_bound(&wasm, heap_pages)?;
-    let wrapped = WrappedRuntimeCode(code.as_slice().into());
+    if let Some(profile) = &request.observation_profile {
+        for key in epoch_layout::state_keys(profile)? {
+            // Retain parent inclusion/absence paths even when the original
+            // runtime never reads this observer-only key. Replay samples the
+            // actual live overlay at the selected callback, not this value.
+            let value = backend.storage(&key);
+            check_failure(&captured)?;
+            value.map_err(|e| {
+                ProbeError::new(format!("historical capture observation-state proof: {e}"))
+            })?;
+            check(canceled, &captured)?;
+        }
+    }
+    // The capture pass must record observer-only proof paths too. The same
+    // reviewed aliases expose original globals without changing instructions;
+    // original code identity stays in the request/job, with a separate cache.
+    let aliases = request
+        .observation_profile
+        .as_ref()
+        .map(|profile| profile.original_globals.as_slice())
+        .unwrap_or_default();
+    let observed_code = global_alias::expose(&wasm, aliases)?;
+    let runtime_bytes = if aliases.is_empty() {
+        code.as_slice()
+    } else {
+        observed_code.as_ref()
+    };
+    let wrapped = WrappedRuntimeCode(runtime_bytes.into());
     let runtime = RuntimeCode {
         code_fetcher: &wrapped,
         heap_pages,
-        hash: request.runtime_code_blake2b_256.to_vec(),
+        hash: if aliases.is_empty() {
+            request.runtime_code_blake2b_256.to_vec()
+        } else {
+            blake2_256(runtime_bytes).to_vec()
+        },
     };
-    let executor = WasmExecutor::<hosts::HistoricalHostFunctions>::builder()
-        .with_allow_missing_host_functions(true)
-        .with_onchain_heap_alloc_strategy(HeapAllocStrategy::Dynamic {
-            maximum_pages: Some(1024),
+    let observation = request
+        .observation_profile
+        .clone()
+        .map(|profile| {
+            observer::HistoricalObserver::new(
+                profile,
+                request.runtime_code_sha256,
+                &wasm,
+                heap_pages,
+            )
         })
-        .with_offchain_heap_alloc_strategy(HeapAllocStrategy::Dynamic {
-            maximum_pages: Some(1024),
-        })
-        .build();
+        .transpose()?;
+    let executor =
+        WasmExecutor::<observer::ObservedHosts<hosts::HistoricalHostFunctions>>::builder()
+            .with_allow_missing_host_functions(true)
+            .with_onchain_heap_alloc_strategy(HeapAllocStrategy::Dynamic {
+                maximum_pages: Some(1024),
+            })
+            .with_offchain_heap_alloc_strategy(HeapAllocStrategy::Dynamic {
+                maximum_pages: Some(1024),
+            })
+            .build();
     let mut execution_header = child.clone();
     while execution_header
         .digest()
@@ -402,6 +448,9 @@ fn capture_historical_scoped<S: TrieBackendStorage<Blake2Hasher>>(
         parent.hash(),
     )?;
     check(canceled, &captured)?;
+    if let Some(observation) = observation {
+        extensions.register(observation);
+    }
     // Use the pinned helper's public recorder/StateMachine primitives directly.
     // Converting this owner via AsTrieBackend would discard operation scope.
     // Execute the block onchain, as strict replay does. The SDK's offchain
@@ -454,6 +503,15 @@ fn capture_historical_scoped<S: TrieBackendStorage<Blake2Hasher>>(
         ));
     }
     check(canceled, &captured)?;
+    // Capture observations are provisional: finish their bounded transaction
+    // owner and discard them. Only independent strict replay publishes evidence.
+    if let Some(observer) = extensions
+        .get_mut(TypeId::of::<observer::HistoricalObserver>())
+        .and_then(|value| value.downcast_mut::<observer::HistoricalObserver>())
+    {
+        let _ = observer.finish(None, request.extrinsics_hex.len())?;
+    }
+    extensions.deregister(TypeId::of::<observer::HistoricalObserver>());
     let _ = principal::observe_execution(
         request.principal_effects,
         &request.principal_queries,

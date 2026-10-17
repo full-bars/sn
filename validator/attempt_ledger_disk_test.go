@@ -26,7 +26,7 @@ const attemptLedgerDiskTestCoordinator = "0x111111111111111111111111111111111111
 
 // TempDir's numbered directory uses the process umask, not a private mode.
 // Create a dedicated owned state child without changing its existing parent.
-func newAttemptLedgerDiskTestStateDir(t *testing.T) string {
+func newAttemptLedgerDiskTestStateDir(t testing.TB) string {
 	t.Helper()
 	dir := filepath.Join(t.TempDir(), "state")
 	if err := os.Mkdir(dir, 0o700); err != nil {

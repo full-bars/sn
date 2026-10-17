@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Passive composition exercises independent real shared lock descriptions.
 // No callback supplies custody bytes or replaces a kernel lock operation.

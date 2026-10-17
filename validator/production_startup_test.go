@@ -8,10 +8,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math/big"
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/urfoundation/sn/stabi"
 )
 
 // An unrelated latest metadata/current EVM outage cannot strand an immortal
@@ -89,7 +94,20 @@ func TestProductionStartupRunReleaseReconcilesBeforeCurrentPreparation(t *testin
 // settlement publication owner have completed. The test cancels at that I/O
 // barrier. The empty measurement census cannot authorize a native signature.
 func TestProductionStartupRunReleaseInitialDeploymentBecomesReady(t *testing.T) {
-	fixture := newProductionStartupTestFixture(t)
+	productionStartupTestInitialDeployment(t, newProductionStartupTestFixture(t))
+}
+
+// VA-9: the signed activation authenticates against the evidence journal and
+// the initial settlement publication reaches readiness unchanged under a
+// production config carrying settlement_v2, after its identity check. The
+// census of a closed epoch is TestSettlementV2ClosedCensusContinuesAcrossAdoption.
+func TestProductionStartupRunReleaseInitialDeploymentWithSettlementV2(t *testing.T) {
+	productionStartupTestInitialDeployment(t, newProductionStartupSettlementV2TestFixture(t))
+}
+
+// A fresh deployment up to its first trail seed request.
+func productionStartupTestInitialDeployment(t *testing.T, fixture *productionStartupTestFixture) {
+	t.Helper()
 	fixture.selectEmptyDeployment(t)
 	cfg := fixture.continuation.production.cfg
 	intentPath := filepath.Join(cfg.StateDir, "steering-intents.json")
@@ -133,5 +151,58 @@ func TestProductionStartupRunReleaseInitialDeploymentBecomesReady(t *testing.T) 
 	fixture.stateLock.Unlock()
 	if len(fixture.native.broadcasts) != 0 || writeRequests != 0 {
 		t.Fatal("fresh startup invented a native send before the test's trail barrier")
+	}
+}
+
+// The startup config also carries settlement_v2. No pool is registered in
+// vault2 yet, as before E_s, so every epoch keeps its operatorAt destination.
+func newProductionStartupSettlementV2TestFixture(t *testing.T) *productionStartupTestFixture {
+	t.Helper()
+	block := settlementV2TestBlock
+	return newProductionStartupTestFixtureWithConfig(t, false, func(cfg *ReleaseConfig) { cfg.SettlementV2 = &block })
+}
+
+// The chain's honest settlement v2 views for cfg: the three identity getters
+// and an unregistered vault2 pool for every configured operator.
+func settlementV2TestStartupViews(t *testing.T, cfg *ReleaseConfig) map[string][]byte {
+	t.Helper()
+	views := settlementV2TestAnswers(cfg.Coordinator)
+	vaultABI, err := stabi.STSettlementVault2MetaData.ParseABI()
+	if err != nil {
+		t.Fatal(err)
+	}
+	unregistered, err := vaultABI.Methods["pools"].Outputs.Pack(stabi.ISTSettlementVault2Pool{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, operator := range cfg.Operators {
+		calldata := stabi.NewSTSettlementVault2().PackPools(new(big.Int).SetUint64(operator.NoID))
+		views[cfg.SettlementV2.Vault+"/"+common.Bytes2Hex(calldata)] = unregistered
+	}
+	return views
+}
+
+// VA-6: when STSettlement2 names another vault, the validator stops at its
+// first finalized snapshot, before trail seeding or any native send.
+func TestProductionStartupRunReleaseRefusesSettlementV2Mismatch(t *testing.T) {
+	fixture := newProductionStartupSettlementV2TestFixture(t)
+	fixture.evm.settlementV2[settlementV2TestKey(settlementV2TestBlock.Settlement, "vault()")] = settlementV2TestWord("0x5e77000000000000000000000000000000000003")
+	fixture.selectEmptyDeployment(t)
+	err := RunRelease(fixture.storageContext(t.Context()), fixture.configPath)
+	if err == nil || !strings.Contains(err.Error(), "settlement_v2 STSettlement2.vault() at block") {
+		t.Fatalf("startup admitted another vault or stopped for another cause: %v", err)
+	}
+	for _, api := range fixture.origins {
+		select {
+		case <-api.seedRead:
+			t.Fatal("trail seeding began under a refused settlement v2 identity")
+		default:
+		}
+	}
+	fixture.stateLock.Lock()
+	writeRequests := fixture.writeRequests
+	fixture.stateLock.Unlock()
+	if len(fixture.native.broadcasts) != 0 || writeRequests != 0 {
+		t.Fatal("refused settlement v2 identity reached a native send")
 	}
 }

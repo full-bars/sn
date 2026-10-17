@@ -62,6 +62,17 @@ func releaseClientKeyDecisionV2(cfg *ReleaseConfig, noID uint64, hotkey [32]byte
 	return domain, request, domain.Validate()
 }
 
+// The measured client's key as its verified operator-signed registration
+// states it: the registered key, or zero for a signed removal. The collector
+// and the historical verifier both derive a binding row's local key from
+// exactly this value, never from the coordinator binding being judged.
+func releaseCapturedLocalClientKeyV2(registration protocol.ClientKeyRegistration) string {
+	if !registration.Present {
+		return releaseHex32([32]byte{})
+	}
+	return releaseHex32(registration.PublicKey)
+}
+
 // Nonce freshness belongs to live transport. The immutable local slot names
 // the complete decision before that nonce exists, so retries reopen one file.
 func releaseClientKeyCaptureV2Path(stateDir string, domain protocol.ClientKeyHistoryDomain, request protocol.ClientKeyObservationRequest) (string, error) {

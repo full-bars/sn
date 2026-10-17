@@ -267,7 +267,7 @@ func TestEvmCoordinatorCreateRequiresCompletedVaultJournal(t *testing.T) {
 		if _, code, diagnostic := f.command("apply", "--action", "coordinator-create"); code != 3 {
 			t.Fatalf("%s vault admitted coordinator: %d %s", stage, code, diagnostic)
 		}
-		if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmCoordinatorCreateStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) || !maps.Equal(counts, f.counts) {
+		if err := f.unclaimed(evmCoordinatorCreateStateFile); err != nil || !maps.Equal(counts, f.counts) {
 			t.Fatalf("%s vault acquired implementation custody: %v", stage, err)
 		}
 	}
@@ -340,7 +340,7 @@ func TestEvmCoordinatorCreateFencesBothPredecessorCheckpoints(t *testing.T) {
 			}
 			return result
 		}
-		if _, code, diagnostic := f.command("resume", "--action", "coordinator-create", "--online", "--submit"); code != 1 || !changed || !strings.Contains(diagnostic, "canonical native ancestry changed") || len(f.writes) != 2 {
+		if _, code, diagnostic := f.command("resume", "--action", "coordinator-create", "--online", "--submit"); code != 1 || !changed || !strings.Contains(diagnostic, evmTestCheckpointRefusal(f, number, "canonical native ancestry changed")) || len(f.writes) != 2 {
 			t.Fatalf("checkpoint %d escaped implementation admission: %d %s", number, code, diagnostic)
 		}
 		f.override = nil
@@ -627,7 +627,7 @@ func TestEvmCoordinatorCreateRefusesRevertedVault(t *testing.T) {
 	if _, code, diagnostic := f.command("apply", "--action", "coordinator-create"); code != 3 || !strings.Contains(diagnostic, "successful vault") {
 		t.Fatalf("reverted vault admitted implementation: %d %s", code, diagnostic)
 	}
-	if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmCoordinatorCreateStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) {
+	if err := f.unclaimed(evmCoordinatorCreateStateFile); err != nil {
 		t.Fatalf("reverted vault opened child: %v", err)
 	}
 }

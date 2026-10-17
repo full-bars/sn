@@ -35,49 +35,53 @@ import (
 
 // Mutation hooks are explicit Rpc barriers, never timing or scheduler probes.
 type fleetMainnetTestFixture struct {
-	stateLock             sync.Mutex
-	durable               *durablefixture.Fixture
-	authority             fleetMainnetRuntimeAuthority
-	manifest              *protocol.FleetManifest
-	opts                  docopt.Opts
-	server                *httptest.Server
-	genesis               types.Hash
-	head                  types.Hash
-	receiptBlock          types.Hash
-	metadata              string
-	code                  string
-	version               crv4.RuntimeVersionIdentity
-	calls                 map[string]int
-	storage               map[string]string
-	hook                  func(string)
-	evmChainId            uint64
-	evmTx                 common.Hash
-	evmSigned             *ethtypes.Transaction
-	evmReceipt            *ethtypes.Receipt
-	nativeSigned          string
-	finalizedNumber       uint64
-	nativeBlocks          map[uint64]types.Hash
-	nativeHeaders         map[uint64]types.Header
-	nativeHeaderOverrides map[uint64]any
-	nativeBodyOverrides   map[uint64]any
-	nativeBodyReads       map[uint64]int
-	nativeRuntimeUpdateAt uint64
-	nativeReceiptNumber   uint64
-	nativeThrough         uint64
-	historicalVersions    map[string]crv4.RuntimeVersionIdentity
-	nativeNonce           uint64
-	evmNonce              uint64
-	evmBlockNumber        uint64
-	nativeBroadcast       bool
-	nativeDropAck         bool
-	nativeDispatchFailure bool
-	nativeBlockMissing    bool
-	missingMapping        bool
-	mappingAtParent       bool
-	revoked               bool
-	after                 func(string)
-	rpcFailure            func(string) error
-	responseStatus        func(string, []json.RawMessage) int
+	stateLock    sync.Mutex
+	durable      *durablefixture.Fixture
+	authority    fleetMainnetRuntimeAuthority
+	manifest     *protocol.FleetManifest
+	opts         docopt.Opts
+	server       *httptest.Server
+	genesis      types.Hash
+	head         types.Hash
+	receiptBlock types.Hash
+	metadata     string
+	code         string
+	version      crv4.RuntimeVersionIdentity
+	calls        map[string]int
+	storage      map[string]string
+	hook         func(string)
+	evmChainId   uint64
+	evmTx        common.Hash
+	evmSigned    *ethtypes.Transaction
+	evmReceipt   *ethtypes.Receipt
+	nativeSigned string
+	// Extrinsics that landed in earlier blocks, by block number.
+	nativeLanded map[uint64]string
+	// System.Events key and the one-success-event value nativeWebsocket built.
+	nativeEventsKey, nativeEvents string
+	finalizedNumber               uint64
+	nativeBlocks                  map[uint64]types.Hash
+	nativeHeaders                 map[uint64]types.Header
+	nativeHeaderOverrides         map[uint64]any
+	nativeBodyOverrides           map[uint64]any
+	nativeBodyReads               map[uint64]int
+	nativeRuntimeUpdateAt         uint64
+	nativeReceiptNumber           uint64
+	nativeThrough                 uint64
+	historicalVersions            map[string]crv4.RuntimeVersionIdentity
+	nativeNonce                   uint64
+	evmNonce                      uint64
+	evmBlockNumber                uint64
+	nativeBroadcast               bool
+	nativeDropAck                 bool
+	nativeDispatchFailure         bool
+	nativeBlockMissing            bool
+	missingMapping                bool
+	mappingAtParent               bool
+	revoked                       bool
+	after                         func(string)
+	rpcFailure                    func(string) error
+	responseStatus                func(string, []json.RawMessage) int
 }
 
 // Owns synthetic public metadata, private test seeds, and local Rpc lifecycle.
@@ -257,10 +261,7 @@ func newFleetMainnetTestFixture(t *testing.T) *fleetMainnetTestFixture {
 				if override, exists := self.nativeBodyOverrides[number]; exists {
 					result = override
 				} else if !self.nativeBlockMissing {
-					extrinsics := []string{}
-					if self.nativeBroadcast && number == self.nativeReceiptNumber {
-						extrinsics = append(extrinsics, self.nativeSigned)
-					}
+					extrinsics := self.nativeBodyWithLock(number)
 					result = map[string]any{"block": map[string]any{"header": self.nativeHeaderWireWithLock(number), "extrinsics": extrinsics}}
 				}
 			}

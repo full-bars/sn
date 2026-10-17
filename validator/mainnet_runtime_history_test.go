@@ -24,12 +24,14 @@ import (
 
 // Mutable transport responses are guarded only while scripted calls execute.
 // Tests change them between joined operations, never during an observation.
+// Instrumentation retains the mock separately from any installed route wrapper.
 type mainnetRuntimeTestFixture struct {
 	stateLock        sync.Mutex
 	cfg              ReleaseConfig
 	approvals        []releaseMainnetRuntimeApproval
 	path             string
 	native           *crv4.Chain
+	client           *validatorRuntimeIdentityTestClient
 	genesis          types.Hash
 	nativeChain      string
 	evmChainId       string
@@ -82,8 +84,8 @@ func newMainnetRuntimeTestFixture(t *testing.T) *mainnetRuntimeTestFixture {
 	self.cfg.RuntimeCodeHash = tail.RuntimeCodeHash
 	self.cfg.RuntimeMetadataHash = tail.RuntimeMetadataHash
 	self.path = writeReleaseConfig(t, self.cfg)
-	client := &validatorRuntimeIdentityTestClient{callContext: self.callContext}
-	self.native = &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: client}, GenesisHash: self.genesis, Meta: types.NewMetadataV14(), Runtime: &types.RuntimeVersion{SpecName: "unbound", SpecVersion: 3}}
+	self.client = &validatorRuntimeIdentityTestClient{callContext: self.callContext}
+	self.native = &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: self.client}, GenesisHash: self.genesis, Meta: types.NewMetadataV14(), Runtime: &types.RuntimeVersion{SpecName: "unbound", SpecVersion: 3}}
 	return self
 }
 

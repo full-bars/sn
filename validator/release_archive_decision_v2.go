@@ -29,6 +29,7 @@ type ReleaseEvidenceV2DecisionObservation struct {
 	RevealNativeEpoch      uint64                       `json:"reveal_native_epoch,omitempty"`
 	ApplicationNativeEpoch uint64                       `json:"application_native_epoch,omitempty"`
 	OwnerRecycle           *OwnerRecycleProductionProof `json:"owner_recycle,omitempty"`
+	Treasury               *OwnerRecycleProductionProof `json:"treasury,omitempty"`
 }
 
 // The prepared snapshot may precede an epoch boundary crossed by inclusion.
@@ -194,7 +195,11 @@ func (self *ReleaseEvidenceV2Archive) ObserveSources(ctx context.Context, chain 
 			if err != nil {
 				return nil, err
 			}
-			observation.OwnerRecycle = &stage.proof
+			if decisionCfg.TreasuryApproval != nil {
+				observation.Treasury = &stage.proof
+			} else {
+				observation.OwnerRecycle = &stage.proof
+			}
 			productionStages[observation.MeasurementHash] = stage
 		}
 		result = append(result, observation)
@@ -262,11 +267,18 @@ func (self *ReleaseEvidenceV2Archive) ReplayDecisions(ctx context.Context, obser
 		}
 		stage := self.productionStages[observation.MeasurementHash]
 		if isOwnerRecycleProductionConfig(&self.owner.cfg) {
-			observed, err := ownerRecycleProductionProofBytes(ctx, observation.OwnerRecycle, bounds.MaxControlBytes)
+			proof := observation.OwnerRecycle
+			if item.Intent.Treasury != nil {
+				proof = observation.Treasury
+			}
+			if observation.OwnerRecycle != nil && observation.Treasury != nil || (item.Intent.Treasury != nil) != (observation.Treasury != nil) {
+				return errors.New("archive observation selects a different economic successor")
+			}
+			observed, err := ownerRecycleProductionProofBytes(ctx, proof, bounds.MaxControlBytes)
 			if err != nil || stage == nil || !bytes.Equal(observed, stage.encoded) {
 				return errors.Join(errors.New("owner-recycle archive needs the complete independently observed production decision"), err)
 			}
-		} else if observation.OwnerRecycle != nil {
+		} else if observation.OwnerRecycle != nil || observation.Treasury != nil {
 			return errors.New("legacy archive cannot select production by an observation sidecar")
 		}
 		decisionCfg, err := productionConfigForIntent(&self.owner.cfg, &item.Intent)
@@ -312,6 +324,9 @@ func (self *ReleaseEvidenceV2Archive) decisionOptions(ctx context.Context, inten
 	controlled := slices.Clone(decisionCfg.ControlledNOIDs)
 	slices.Sort(controlled)
 	result := ReleaseMeasurementV2Options{Expected: observation.Decision, Policy: decisionPolicy, ControlledNOIDs: controlled, Bindings: observation.Bindings, Pools: observation.Pools, DepositAudits: observation.DepositAudits, Operators: map[uint64]ReleaseMeasurementV2OperatorOptions{}, MaxOperators: bounds.MaxOperators, MaxHeadEntries: bounds.MaxHeadEntries, MaxArtifactBytes: bounds.MaxArtifactBytes, MaxControlBytes: bounds.MaxControlBytes}
+	// Archive replay admits a reserve-only decision only under its original
+	// treasury authority; the sidecar's row is still rederived and compared.
+	result.treasuryReserveFallback = treasuryReserveFallbackConfig(decisionCfg)
 	for _, participant := range history.participants {
 		expected, found := contexts[participant.NoID]
 		input := inputs[participant.NoID]

@@ -133,3 +133,24 @@ func TestEvidenceRequestBudgetExhaustionCancellationAndCapacity(t *testing.T) {
 		}
 	}
 }
+
+// A failed attempt keeps its own cause beside the cancellation that ends the
+// request; the readback test covers a cause that already carries it.
+func TestEvidenceRequestBudgetCancellationKeepsTheAttemptFailure(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	failure := errors.New("synthetic evidence transport failure")
+	calls := 0
+	probe := &liveScenarioProbe{client: &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+		calls++
+		cancel()
+		return nil, failure
+	})}}
+	raw, _, err := probe.getCampaignEvidenceWithWait(ctx, "https://evidence.example/sn/evidence?hash=synthetic", campaignEvidenceFileKind, 128*1024*1024, defaultCampaignEvidenceLimits(), func(context.Context, time.Duration) error {
+		t.Error("canceled request waited to retry")
+		return nil
+	})
+	if raw != nil || calls != 1 || !errors.Is(err, failure) || !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancellation replaced the attempt failure: calls=%d err=%v", calls, err)
+	}
+}

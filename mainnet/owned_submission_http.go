@@ -89,6 +89,10 @@ func ownedSubmissionHostname(host string) bool {
 	return strings.ContainsAny(labels[len(labels)-1], "abcdefghijklmnopqrstuvwxyz")
 }
 
+// ownedSubmissionResolver resolves an approved hostname for each dial. Nil is
+// the system resolver; tests substitute one that sends no DNS query.
+var ownedSubmissionResolver *net.Resolver
+
 // Reads and writes share only this constructor-owned fixed route. Disable
 // connection reuse and body replay so net/http cannot retry an uncertain post.
 func newOwnedSubmissionClient(approval ownedSubmissionRoute) (*rpcClient, error) {
@@ -105,7 +109,7 @@ func newOwnedSubmissionClient(approval ownedSubmissionRoute) (*rpcClient, error)
 		port = "443"
 	}
 	endpoint := net.JoinHostPort(parsed.Hostname(), port)
-	dialer := &net.Dialer{Timeout: 30 * time.Second}
+	dialer := &net.Dialer{Timeout: 30 * time.Second, Resolver: ownedSubmissionResolver}
 	transport := &http.Transport{
 		Proxy: nil, DisableKeepAlives: true, ForceAttemptHTTP2: false,
 		TLSHandshakeTimeout: 30 * time.Second,

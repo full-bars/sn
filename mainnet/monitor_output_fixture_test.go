@@ -56,6 +56,12 @@ func (self *monitorFixtureOutput) WriteContext(ctx context.Context, raw []byte) 
 // Preserve exact old barriers while exercising the public command and exporter.
 func runMonitorTestWithClock(t *testing.T, ctx context.Context, args []string, stdout, stderr io.Writer, now func() time.Time) int {
 	t.Helper()
+	return prepareMonitorTestWithClock(t, ctx, args, stdout, stderr, now)()
+}
+
+// Admission runs on the caller before the returned command may own a worker.
+func prepareMonitorTestWithClock(t *testing.T, ctx context.Context, args []string, stdout, stderr io.Writer, now func() time.Time) func() int {
+	t.Helper()
 	ctx = monitorTestStorageContext(t, ctx, args)
 	output := &monitorFixtureOutput{writer: stdout, completed: make(chan struct{}, 1)}
 	hooks := monitorServiceHooks{wait: func(ctx context.Context, _ string, duration time.Duration) bool {
@@ -73,7 +79,7 @@ func runMonitorTestWithClock(t *testing.T, ctx context.Context, args []string, s
 			return true
 		}
 	}}
-	return runMainWithMonitorHooks(ctx, args, output, stderr, now, hooks)
+	return func() int { return runMainWithMonitorHooks(ctx, args, output, stderr, now, hooks) }
 }
 
 // Wall-clock fixtures keep the same real timing and merely join publication.

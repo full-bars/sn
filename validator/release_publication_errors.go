@@ -31,7 +31,17 @@ func (e *attemptStreamHTTPIncompleteError) Unwrap() error { return e.cause }
 
 // A real Http body supplies these causes; local decoder eof and diagnostic
 // text never acquire transport provenance through the retry classifier.
-type attemptStreamHttpReadError struct{ cause error }
+//
+// interrupted marks a failure of the body's own read before authenticated EOF
+// while the caller was still live: the transport lost the stream, or this
+// read's own I/O allowance expired. HTTP/2 reports a lost connection (failed
+// ping), GOAWAY or stream reset through values private to net/http, so this
+// read boundary, not the leaf, carries the transport provenance. The bytes
+// read so far are never accepted, so retrying cannot admit a partial object.
+type attemptStreamHttpReadError struct {
+	cause       error
+	interrupted bool
+}
 
 // Keep the original read diagnostic while carrying its physical source.
 func (self *attemptStreamHttpReadError) Error() string { return self.cause.Error() }

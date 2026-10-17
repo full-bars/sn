@@ -1,5 +1,5 @@
-// This command composes bounded local preparation and a separate read-only
-// readiness observation. Neither path signs, submits or activates a service.
+// This command composes bounded local preparation and read-only readiness.
+// The explicit root-registration precursor owns separate signing/send authority.
 package main
 
 import (
@@ -15,6 +15,9 @@ import (
 // Exact accepted preparation and run-directory identities precede any mutation.
 // Every resume reloads its independently pinned inputs before retained ownership.
 func runBootstrapChainCommand(ctx context.Context, args []string, stdout, stderr io.Writer) (result int) {
+	if len(args) > 1 && args[1] == "root-registration" {
+		return runRootRegisterCommand(ctx, args[2:], stdout, stderr)
+	}
 	if len(args) > 1 && args[1] == "provider-role-config" {
 		return runBootstrapProviderRoleCommand(ctx, args[2:], stdout, stderr)
 	}
@@ -28,7 +31,7 @@ func runBootstrapChainCommand(ctx context.Context, args []string, stdout, stderr
 		return runBootstrapTrimCommand(ctx, args[1:], stdout, stderr)
 	}
 	if len(args) < 2 || args[1] != "plan" && args[1] != "apply" && args[1] != "resume" && args[1] != "readiness" {
-		fmt.Fprintln(stderr, "bootstrap-chain requires plan, apply, resume, read-only readiness, contract-plan, offline contract-readiness or unsigned contract-successor-plan")
+		fmt.Fprintln(stderr, "bootstrap-chain requires plan, apply, resume, read-only readiness, contract-plan, offline contract-readiness, unsigned contract-successor-plan or the separately approved root-registration precursor")
 		return 2
 	}
 	command := args[1]

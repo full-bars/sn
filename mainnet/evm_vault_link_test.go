@@ -616,7 +616,7 @@ func TestEvmVaultLinkRefusesRevertedReserveLink(t *testing.T) {
 	if _, code, diagnostic := f.command("apply", "--action", "vault-link"); code != 3 || !strings.Contains(diagnostic, "successful reserve recorder binding") {
 		t.Fatalf("reverted reserve binding admitted vault: %d %s", code, diagnostic)
 	}
-	if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmVaultLinkStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) {
+	if err := f.unclaimed(evmVaultLinkStateFile); err != nil {
 		t.Fatalf("reverted reserve acquired vault binding custody: %v", err)
 	}
 }

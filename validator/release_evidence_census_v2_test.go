@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"slices"
 	"sync"
 	"testing"
 
@@ -30,21 +31,27 @@ type evidenceCensusV2TestFixture struct {
 	operators []*attemptCutV2StatsTestFixture
 	closure   *AttemptSettlementClosureV2
 	hotkey    *crv4.Keypair
-	replicas  [2]AttemptCutV2Replica
-	stores    [2]*attemptCutV2ReplicaTestStore
+	replicas  []AttemptCutV2Replica
+	stores    []*attemptCutV2ReplicaTestStore
 }
 
 // The first operator may have real successful/failed trails. A second genuine
 // empty operator forces complete idle/no-payout coverage in every test.
 func newEvidenceCensusV2TestFixture(t *testing.T, completed, failed int) *evidenceCensusV2TestFixture {
 	t.Helper()
+	return newEvidenceCensusV2TestFixtureForCensus(t, completed, failed, []uint64{9, 11})
+}
+
+// A single configured operator owns the census and its only public replica.
+func newEvidenceCensusV2TestFixtureForCensus(t *testing.T, completed, failed int, noIDs []uint64) *evidenceCensusV2TestFixture {
+	t.Helper()
 	hotkey, err := crv4.KeypairFromSeed([32]byte{0x37})
 	if err != nil {
 		t.Fatal(err)
 	}
-	replicas, stores := newAttemptCutV2ReplicaTestStores(t)
+	replicas, stores := newAttemptCutV2ReplicaTestStoreCensus(t, releaseEvidenceV2ReplicaCensus(len(noIDs)))
 	fixture := &evidenceCensusV2TestFixture{hotkey: hotkey, replicas: replicas, stores: stores}
-	for index, noID := range []uint64{9, 11} {
+	for index, noID := range noIDs {
 		complete, fail := 0, 0
 		if index == 0 {
 			complete, fail = completed, failed
@@ -80,14 +87,19 @@ func (self *evidenceCensusV2TestFixture) options(t *testing.T) ValidatorEvidence
 	t.Helper()
 	authority := attemptSettlementV2TestOptions(t, self.operators...)
 	keys := make(map[uint64]ed25519.PrivateKey, len(self.operators))
-	second := make(map[uint64]string, len(self.operators))
+	var second map[uint64]string
+	if len(self.replicas) == 2 {
+		second = make(map[uint64]string, len(self.operators))
+	}
 	for _, operator := range self.operators {
 		noID := operator.seal.expected.Identity.NoID
 		keys[noID] = bytes.Clone(operator.seal.key)
-		second[noID] = filepath.Join(t.TempDir(), "replica-two")
+		if second != nil {
+			second[noID] = filepath.Join(t.TempDir(), "replica-two")
+		}
 	}
 	boundary := self.operators[0].seal.expected.Boundary
-	return ValidatorEvidenceCensusV2Options{Settlement: authority, Window: protocol.ValidatorEvidenceWindow{Epoch: boundary.SettlementEpoch, StartBlock: 1, EndBlock: boundary.EVMBlock + 1, FinalizedBlock: boundary.EVMBlock + 1}, PrivateKeys: keys, Hotkey: self.hotkey, Replicas: self.replicas, SecondReplicaScratchDirectories: second}
+	return ValidatorEvidenceCensusV2Options{Settlement: authority, Window: protocol.ValidatorEvidenceWindow{Epoch: boundary.SettlementEpoch, StartBlock: 1, EndBlock: boundary.EVMBlock + 1, FinalizedBlock: boundary.EVMBlock + 1}, PrivateKeys: keys, Hotkey: self.hotkey, Replicas: slices.Clone(self.replicas), SecondReplicaScratchDirectories: second}
 }
 
 // Counts distinguish admission refusal from an otherwise hidden public read
@@ -120,7 +132,7 @@ func TestValidatorEvidenceCensusV2PublishesRealCompleteBatch(t *testing.T) {
 	if err != nil || publication == nil {
 		t.Fatalf("real complete evidence publication: %v", err)
 	}
-	if len(publication.Members) != 2 || publication.CensusHash != sha256.Sum256(publication.Census) || publication.Origins != [2]string{fixture.replicas[0].Origin, fixture.replicas[1].Origin} {
+	if len(publication.Members) != 2 || publication.CensusHash != sha256.Sum256(publication.Census) || !slices.Equal(publication.Origins, []string{fixture.replicas[0].Origin, fixture.replicas[1].Origin}) {
 		t.Fatal("publication lost its exact complete census")
 	}
 	var census ValidatorEvidenceCensusV2

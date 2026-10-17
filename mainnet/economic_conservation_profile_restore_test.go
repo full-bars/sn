@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The combined adapter restores a real large original witness and the exact
 // producer namespace that made it. Independent fixed owners retain their own
@@ -82,7 +82,8 @@ func economicConservationTestCompleteLargeRestore(t *testing.T, cold bool) {
 	if err != nil || len(declaration.Volumes) != 1 || len(declaration.Volumes[0].StateRoots) != 2 {
 		t.Fatal("large source does not have its two exact owner roots", err)
 	}
-	combined := &economicConservationRestoreFixture{archive: f, state: state, retained: declaration, readFiles: nativeProducerRestoreTestFiles}
+	// Both exact owner roots are restored, so no untouched root remains.
+	combined := &economicConservationRestoreFixture{archive: f, state: state, retained: declaration, readFiles: nativeProducerRestoreTestFiles, complete: true}
 	combined.request = economicConservationRestoreRequest{Schema: economicConservationRestoreSchema, Policy: f.source.policy,
 		Original: monitorHistoryReference{Path: f.source.checkpoint, Sha256: monitorReadDigest(active), Bytes: uint64(len(active))},
 		Limits:   durablevolume.PreparationCohortLimits{MaxRoots: 2, MaxPlanBytes: 32 * 1024 * 1024, MaxControlBytes: 64 * 1024 * 1024, MaxEntries: 16384, MaxBytes: 512 * 1024 * 1024, MaxOwnerAttributes: 256, MaxOwnerAttributeBytes: 256 * 4096}}

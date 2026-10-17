@@ -63,8 +63,11 @@ const (
 	// cipherSuite is tle's AESGCMStreamCipherProvider::CIPHER_SUITE.
 	cipherSuite = "AES_GCM_"
 
-	// MaxCommitSizeBytes is subtensor's MAX_CRV3_COMMIT_SIZE_BYTES bound on
-	// the commit BoundedVec (pallets/subtensor/src/lib.rs).
+	// MaxCommitSizeBytes is subtensor's Yuma timelocked-commit bound
+	// (pallets/subtensor/src/lib.rs). Through runtime 473 it was the
+	// MAX_CRV3_COMMIT_SIZE_BYTES decode bound of the commit BoundedVec. From 475
+	// that decode bound is 32 KiB for Null subnets, and Yuma subnets enforce
+	// YUMA_COMMIT_SIZE_BYTES (5,000) at dispatch with CommitPayloadTooLarge.
 	MaxCommitSizeBytes = 5000
 )
 

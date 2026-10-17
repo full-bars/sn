@@ -8,6 +8,8 @@ import (
 	"errors"
 	"os"
 
+	"github.com/urnetwork/connect/durablesys"
+
 	"github.com/urfoundation/sn/internal/durablehead"
 	"github.com/urnetwork/connect/durablevolume"
 	"golang.org/x/sys/unix"
@@ -137,7 +139,7 @@ func (self *bootstrapSuccessorRestoredMemberHead) check() error {
 	raw := make([]byte, 4097)
 	n, err := unix.Fgetxattr(int(self.root.Fd()), self.attribute, raw)
 	if err != nil {
-		if errors.Is(err, unix.ENODATA) || errors.Is(err, unix.ERANGE) {
+		if errors.Is(err, durablesys.ErrNoAttribute) || errors.Is(err, unix.ERANGE) {
 			return self.storage.identity("restored census checkpoint disappeared or exceeded its original bound", err)
 		}
 		return mainnetDurableUnavailable("cannot reobserve restored census checkpoint", err)

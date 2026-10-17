@@ -33,10 +33,21 @@ import (
 
 // Epoch geometry is supplied by the actual hash-pinned contract transport,
 // independently of candidate ledger roots or terminal payloads.
-type releaseRuntimeV2ChainTestFixture struct{ *releaseStartupV2TestFixture }
+type releaseRuntimeV2ChainTestFixture struct {
+	*releaseStartupV2TestFixture
+	// Settlement v2 views by lowercase target and calldata, as
+	// settlementV2TestKey keys them, and how many were read; nil serves none.
+	settlementV2Lock  sync.Mutex
+	settlementV2      map[string][]byte
+	settlementV2Reads int
+}
 
 func (self *releaseRuntimeV2ChainTestFixture) Call(ctx context.Context, call map[string]hexutil.Bytes, selector gethrpc.BlockNumberOrHash) (hexutil.Bytes, error) {
-	if selector.BlockHash == nil || selector.BlockNumber != nil || !selector.RequireCanonical || common.BytesToAddress(call["to"]) != common.HexToAddress(self.cfg.Coordinator) {
+	target := common.BytesToAddress(call["to"])
+	self.settlementV2Lock.Lock()
+	answer, settlementV2 := self.settlementV2[strings.ToLower(target.Hex())+"/"+common.Bytes2Hex(call["input"])]
+	self.settlementV2Lock.Unlock()
+	if selector.BlockHash == nil || selector.BlockNumber != nil || !selector.RequireCanonical || target != common.HexToAddress(self.cfg.Coordinator) && !settlementV2 {
 		return nil, errors.New("runtime fixture requires exact canonical hash selectors")
 	}
 	found := false
@@ -47,6 +58,12 @@ func (self *releaseRuntimeV2ChainTestFixture) Call(ctx context.Context, call map
 	}
 	if !found {
 		return nil, errors.New("runtime fixture view has no independent block")
+	}
+	if settlementV2 {
+		self.settlementV2Lock.Lock()
+		self.settlementV2Reads++
+		self.settlementV2Lock.Unlock()
+		return bytes.Clone(answer), nil
 	}
 	coordinator := stabi.NewSTCoordinator()
 	parsed, err := stabi.STCoordinatorMetaData.ParseABI()
@@ -84,10 +101,11 @@ func (self *releaseRuntimeV2HttpTestStore) counts() map[uint64]int {
 
 type releaseRuntimeV2TestFixture struct {
 	startup  *releaseStartupV2TestFixture
+	evm      *releaseRuntimeV2ChainTestFixture
 	runtime  *releaseRuntimeV2
 	runtimes []*releaseOperatorRuntime
-	stores   [2]*releaseRuntimeV2HttpTestStore
-	origins  [2]string
+	stores   []*releaseRuntimeV2HttpTestStore
+	origins  []string
 	hotkey   *crv4.Keypair
 }
 
@@ -98,9 +116,9 @@ func newReleaseRuntimeV2TestFixture(t *testing.T) *releaseRuntimeV2TestFixture {
 }
 
 // Bounds are independently supplied before startup, ledger and HTTP ownership.
-func newReleaseRuntimeV2TestFixtureWithBounds(t *testing.T, bounds *ReleaseEvidenceV2Bounds) *releaseRuntimeV2TestFixture {
+func newReleaseRuntimeV2TestFixtureWithBounds(t *testing.T, bounds *ReleaseEvidenceV2Bounds, configure ...func(*ReleaseConfig)) *releaseRuntimeV2TestFixture {
 	t.Helper()
-	startup := newReleaseStartupV2TestFixtureWithBounds(t, false, bounds)
+	startup := newReleaseStartupV2TestFixtureWithBounds(t, false, bounds, configure...)
 	startup.cfg.EvidenceV2.UploadIntentSeconds = 300
 	if bounds == nil {
 		startup.cfg.EvidenceV2.Bounds.Cut.Records.MaxPageBytes = 256 * 1024
@@ -112,8 +130,9 @@ func newReleaseRuntimeV2TestFixtureWithBounds(t *testing.T, bounds *ReleaseEvide
 		startup.blocks[number] = [32]byte{byte(number / 500), byte(number % 500), 0x75}
 	}
 	startup.finalized = 2001
+	evm := &releaseRuntimeV2ChainTestFixture{releaseStartupV2TestFixture: startup}
 	rpcServer := gethrpc.NewServer()
-	if err := rpcServer.RegisterName("eth", &releaseRuntimeV2ChainTestFixture{releaseStartupV2TestFixture: startup}); err != nil {
+	if err := rpcServer.RegisterName("eth", evm); err != nil {
 		t.Fatal(err)
 	}
 	endpoint := httptest.NewServer(rpcServer)
@@ -124,7 +143,7 @@ func newReleaseRuntimeV2TestFixtureWithBounds(t *testing.T, bounds *ReleaseEvide
 	}
 	t.Cleanup(chain.Close)
 	startup.chain = chain
-	self := &releaseRuntimeV2TestFixture{startup: startup}
+	self := &releaseRuntimeV2TestFixture{startup: startup, evm: evm}
 	for index, input := range startup.inputs {
 		store := &releaseRuntimeV2HttpTestStore{objects: map[string][]byte{}, postsBySource: map[uint64]int{}}
 		credential := "runtime-v2-destination-" + strconv.Itoa(index+1)
@@ -212,7 +231,7 @@ func newReleaseRuntimeV2TestFixtureWithBounds(t *testing.T, bounds *ReleaseEvide
 		}
 		t.Cleanup(upload.close)
 		self.runtimes = append(self.runtimes, &releaseOperatorRuntime{measurement: &ReleaseMeasurementContext{NoID: input.Config.NoID}, attemptUpload: upload})
-		self.stores[index], self.origins[index] = store, apiEndpoint.URL
+		self.stores, self.origins = append(self.stores, store), append(self.origins, apiEndpoint.URL)
 	}
 	self.hotkey, err = crv4.KeypairFromSeed([32]byte{0x31})
 	if err != nil {
@@ -408,7 +427,7 @@ func TestReleaseRuntimeV2RejectsUnreviewedConfiguredArtifact(t *testing.T) {
 	}
 	beforeCalls := len(fixture.nativeFixture.calls)
 	before := releaseStartupV2TestDiskImages(t, fixture.disk)
-	runtime, err := newReleaseRuntimeV2(t.Context(), &fixture.cfg, fixture.chain, fixture.nativeFixture.chain, hotkey, fixture.inputs, fixture.keys, [2]string{fixture.replicas[0].Origin, fixture.replicas[1].Origin}, fixture.disk)
+	runtime, err := newReleaseRuntimeV2(t.Context(), &fixture.cfg, fixture.chain, fixture.nativeFixture.chain, hotkey, fixture.inputs, fixture.keys, fixture.origins(), fixture.disk)
 	if err == nil || runtime != nil || !strings.Contains(err.Error(), "not the reviewed") {
 		t.Fatalf("production root admitted an unreviewed artifact: %v", err)
 	}
@@ -436,7 +455,7 @@ func TestReleaseRuntimeV2ExplicitArtifactStillAuthenticatesNativeHistory(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	origins := [2]string{fixture.replicas[0].Origin, fixture.replicas[1].Origin}
+	origins := fixture.origins()
 	beforeCalls := len(fixture.nativeFixture.calls)
 	runtime, err := newReleaseRuntimeV2WithRuntime(t.Context(), &fixture.cfg, fixture.chain, fixture.nativeFixture.chain, hotkey, fixture.inputs, fixture.keys, origins, fixture.disk, fixture.nativeFixture.expected)
 	if err != nil || runtime == nil || len(fixture.nativeFixture.calls) <= beforeCalls {

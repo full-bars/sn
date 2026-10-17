@@ -376,6 +376,9 @@ func (self *ReleaseSteerer) gatherPoolsV2(ctx context.Context, snapshot *Release
 	return pools, audits, ctx.Err()
 }
 
+// The audit's capture is checked with the custody it acquires. Startup shares
+// one custody across every retained intent, and each caller checks its whole
+// custody before using the audit.
 func (self *releaseEvidenceV2StartupHistory) historicalDepositAuditWithCaptureV2(ctx context.Context, observed *releaseDecisionChainV2Observation, operator releaseDecisionChainV2Operator, claimed DepositAudit, decision *ReleaseMeasurementArtifact, custody *releaseEvidenceV2StartupReferences) (DepositAudit, error) {
 	if claimed.HttpObservationHash == "" {
 		return self.historicalDepositAudit(ctx, observed, operator, claimed.Status)
@@ -383,6 +386,7 @@ func (self *releaseEvidenceV2StartupHistory) historicalDepositAuditWithCaptureV2
 	if operator.commitment.CommitBlock == 0 || observed.boundary.SettlementEpoch < self.cfg.Policy.Deposit.UsageLagEpochs || custody == nil {
 		return DepositAudit{}, errors.New("artifact HTTP capture has no actual committed source request")
 	}
+	auditOwnerIndex := len(custody.owners)
 	var config *OperatorConfig
 	for index := range self.cfg.Operators {
 		if self.cfg.Operators[index].NoID == operator.noID {
@@ -432,5 +436,5 @@ func (self *releaseEvidenceV2StartupHistory) historicalDepositAuditWithCaptureV2
 		audit = EvaluateDepositArtifact(artifact, DepositArtifactExpectation{DeploymentID: self.cfg.DeploymentID, ChainID: self.cfg.ChainID, GenesisHash: self.cfg.GenesisHash, Netuid: self.cfg.Netuid, Coordinator: common.HexToAddress(self.cfg.Coordinator), SettlementVault: common.HexToAddress(self.cfg.SettlementVault), PolicyHash: self.cfg.PolicyHash, Epoch: observed.sourceEpoch, NoID: operator.noID, Signer: common.HexToAddress(config.ArtifactSigner), Start: payoutartifact.Boundary{Number: observed.sourceStart, Hash: releaseHex32(observed.sourceStartHash)}, End: payoutartifact.Boundary{Number: observed.sourceEnd, Hash: releaseHex32(observed.sourceEndHash)}, PayoutRoot: operator.commitment.PayoutRoot, ArtifactHash: operator.commitment.ArtifactHash, Committer: operator.commitment.Committer, RootSigner: operator.sourceVersion.RootSigner, CommitBlock: operator.commitment.CommitBlock}, epoch, operator.deposit, operator.convictionBefore, self.cfg.Policy.Deposit)
 	}
 	audit.ObservedAtBlock, audit.ArtifactDeadlineBlock, audit.HttpObservationHash = observed.boundary.EVMBlock, observed.artifactDeadline, claimed.HttpObservationHash
-	return audit, custody.check()
+	return audit, custody.checkSince(auditOwnerIndex)
 }

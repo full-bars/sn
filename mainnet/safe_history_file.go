@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/urnetwork/connect/durablesys"
+
 	"golang.org/x/sys/unix"
 )
 
@@ -84,7 +86,7 @@ func writeSafeHistoryCapture(ctx context.Context, path string, envelope safeHist
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := unix.Renameat2(fd, stage, fd, filepath.Base(path), unix.RENAME_NOREPLACE); err != nil {
+	if err := durablesys.RenameNoReplace(fd, stage, fd, filepath.Base(path)); err != nil {
 		return err
 	}
 	return errors.Join(directory.Sync(), ctx.Err())

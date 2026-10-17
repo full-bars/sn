@@ -1,0 +1,165 @@
+{
+  "adoption_authority": "Root only after final job sealing and independent resource review; sealer writes no adoption file.",
+  "author_validation": "All source/dependency pins read and compared; source and runner/sealer AST parsed. No runner, classifier, sealer, test, compiler, service, deployment or new qualification body executed.",
+  "candidate": "482050c3194412b620940d22d87acc00a91847b2",
+  "classifier": "Two ordered unittest OK blocks required; each phase requires its exact unique test-ID census and singular/plural Ran summary. Skips/errors/failures prevent success. Combined raw blocks retained in one bounded process result. The duplicate control invocation is not a34th root.",
+  "closed_owned_db_phases": [
+    {
+      "label": "selected4b-model37",
+      "proof": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+        "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+      }
+    },
+    {
+      "label": "selected-server9430262c-monitor17",
+      "proof": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+        "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+      }
+    },
+    {
+      "label": "selected1ea-native-model30",
+      "proof": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected1ea-native-model30-closed-terminal-proof-v1.json",
+        "sha256": "819d8191629441e62f6e450e24a1d01cf0c5a649d4020d679fe0a0602efb9c92"
+      }
+    }
+  ],
+  "created_utc": "2026-10-05T04:30:15.279187+00:00",
+  "current_child_qualification": "UNRUN; no inherited parent311 or2f32 result",
+  "execution_owner": "SolParallel only, user systemd manager",
+  "existing_mechanism": "One established ChildContext/guard/context.run process tree. Bound bash first runs control then execs full33 only on success. Same canonical lease, zero model/DB/compiler/body census, source pins, launch/active floors,900s deadline,32MiB log cap,2GiB MemoryMax/zero swap and process-tree join. No author process or systemd launched.",
+  "files": {
+    "dependency": 739,
+    "pyvenv_cfg": 1,
+    "sn_rules": 4,
+    "total": 1001,
+    "xops": 257
+  },
+  "final_job_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-xops-control1-conservation33-job-v1.json",
+  "final_review_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-final482050-xops-control1-conservation33-review-20261005.json",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/domain-dashboard-482050c3-control-output-intake.json",
+    "sha256": "462152d3cf9dca63f45b35bc4c134874404c69b6077f52fdd8cfefc2ecd2f319"
+  },
+  "job_template": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-xops-control1-conservation33-job-template-v1.json",
+    "sha256": "233c14e5d14f77a4595d95f6da43123b5dccfc936c478f3519916f8942ce322e"
+  },
+  "known_pre_slot_sequence": "ResourceReview reports current pubfour compiler, then Root-requested carry3 and Ops compiler batch. Final sealer invocation must bind real completed waits for the selected sequence. The current template deliberately has a nonlaunch schema.",
+  "mandatory_environment": {
+    "GOMAXPROCS": "2",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/by/urnetwork/.virtualenv/brien/bin:/usr/local/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "SN_MAINNET_PROMETHEUS": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+    "SN_MAINNET_PROMTOOL": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+    "SN_MAINNET_SOURCE": "/mnt/data/urnetwork/astra-domain-dashboard-20261004/sn-source-09f8f989"
+  },
+  "parent_runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final2f1043-xops-conservation33-post-model-v1.py",
+    "sha256": "3bf89ee253a18f37c0813db4dbac69203632ab19d01c2246ef786d97cb9d23b7"
+  },
+  "phase_order": [
+    {
+      "argv_tail": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "main/ansible/tests",
+        "-p",
+        "test_sn_mainnet_monitor_conservation.py",
+        "-k",
+        "test_removing_clock_ahead_rule_reproduces_silent_future_sample",
+        "-v"
+      ],
+      "name": "control1",
+      "selection": "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_removing_clock_ahead_rule_reproduces_silent_future_sample",
+      "unique_roots": 1
+    },
+    {
+      "argv_tail": [
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "main/ansible/tests",
+        "-p",
+        "test_sn_mainnet_monitor_conservation.py",
+        "-v"
+      ],
+      "name": "conservation33",
+      "only_after": "control1 exits0",
+      "unique_roots": 33
+    }
+  ],
+  "prior_failed_raw": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-v1.stderr",
+    "sha256": "dc3e011ea0c26840d485e44b6d8463a519653da4057a1d5bba70abc8dbe7e960"
+  },
+  "prior_failed_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-v1.receipt.json",
+    "sha256": "56748837d4ee77742f4af3250d30a34916566469739a05cdbaad3aa64e18ee2b"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-final482050-xops-control1-conservation33-adoption-20261005.json",
+  "required_adoption_status": "ADOPTED_ONE_XOPS_CONTROL1_CONSERVATION33_AFTER_JOIN",
+  "retained_prior_outcome": {
+    "exit": 1,
+    "fail": 1,
+    "pass": 32,
+    "resource_errors": [],
+    "skip": 0,
+    "tree_joined": true
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final482050-xops-control1-conservation33-post-model-v1.py",
+    "sha256": "74529e684f2dabf3841f60c9764860040cd66d07fec9ca94c0faae3a7008a38e"
+  },
+  "schema": "final482050-xops-control1-conservation33-prepared-recipe-v1",
+  "sealer": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/seal-final482050-xops-control1-conservation33-v1.py",
+    "sha256": "9c1d70deb90fbe93c782d2da4c89d01bebfa8ee58baa01aae84d4e6427c76b1e"
+  },
+  "sealer_inputs_required": {
+    "--closed-db-proof": "Repeat for every additional owned DB cohort completed before this slot; existing closed c60/model37/943monitor17/native-model30 already bound. Verified with existing closed-DB reader.",
+    "--compiler-wait": "Required real latest compiler .process-result.json path, distinct from old943 fence. All inputs must exist and replay as actually joined.",
+    "--predecessor-wait": "At least one required current-slot predecessor process-result path; repeat for every actual phase Root schedules before this short. No future SHA placeholders."
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-xops-control1-conservation33-source-closure-v1.json",
+    "sha256": "2c9e934fc3eaa76d68a4ebbef865493e0b6e3138391f4e0a353636f3e17b24d3"
+  },
+  "source_commit": "09f8f989f88660dda442730a18ed99d505ba1988",
+  "source_root": "/mnt/data/urnetwork/astra-domain-dashboard-20261004/sn-source-09f8f989",
+  "status": "PREPARED_SOURCE_ONLY_PENDING_FINAL_JOIN_PINS_AND_RESOURCE_REVIEW",
+  "successful_test_invocations": 34,
+  "successful_unique_roots": 33,
+  "tools": [
+    {
+      "path": "/home/by/.pyenv/versions/3.14.7/bin/python3.14",
+      "sha256": "5f4016bc51761a8b135d601ed5714a58ce3e74831aea2838d0d72f1be5bd6e6c"
+    },
+    {
+      "path": "/usr/bin/bash",
+      "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+    },
+    {
+      "path": "/usr/bin/git",
+      "sha256": "2a8c18fbf43da9f692d75474c72bea9dfd796c260b0f3dfe456376abc3bbd668"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+      "sha256": "e59210d5474e2c811a4460fb1593d708b94d58107ae62e9d44e88029bb7e5805"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+      "sha256": "4ee49f574d80682b6571f017c8f42f2532aa3603b725b51ecb0cb864f06c2282"
+    }
+  ],
+  "tree": "9c96700edd8d473366a7e97d310a26fe6253c799",
+  "worktree": "/mnt/data/urnetwork/astra-domain-dashboard-20261004/xops-conservation-control-output"
+}

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 package main
 
@@ -15,6 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/protocol"
@@ -149,7 +151,7 @@ func (self *storagePublicationFixture) originals(t *testing.T, count int) []vali
 	if err := errors.Join(file.Sync(), file.Close()); err != nil {
 		t.Fatal(err)
 	}
-	if err := unix.Fsetxattr(int(root.Fd()), validator.ProviderAttemptRequestAttribute, raw, unix.XATTR_CREATE); err != nil {
+	if err := durablesys.SetAttribute(int(root.Fd()), validator.ProviderAttemptRequestAttribute, raw, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
 	if err := root.Sync(); err != nil {
@@ -310,7 +312,7 @@ func TestStoragePreparationPublicationRestoreRefusesMissingOriginalClose(t *test
 	if code := runMain(storage.target.ctx, []string{storage.command, "apply", "--plan", path, "--plan-sha256", hash}, &output, &diagnostic); code == 0 {
 		t.Fatal("request window without its original close acquired restored custody")
 	}
-	if _, err := unix.Getxattr(f.source.root, validator.ProviderAttemptPublicationNamespaceAttribute, make([]byte, 4096)); !errors.Is(err, unix.ENODATA) {
+	if _, err := unix.Getxattr(f.source.root, validator.ProviderAttemptPublicationNamespaceAttribute, make([]byte, 4096)); !errors.Is(err, durablesys.ErrNoAttribute) {
 		t.Fatal("missing original close published a rebound birth", err)
 	}
 	if entries, err := os.ReadDir(storage.heldSource); err != nil || len(entries) != 1 {
@@ -328,7 +330,7 @@ func TestStoragePreparationPublicationRestoreRefusesMissingOriginalWindow(t *tes
 	if code := runMain(storage.target.ctx, []string{storage.command, "apply", "--plan", path, "--plan-sha256", hash}, &output, &diagnostic); code == 0 {
 		t.Fatal("later valid window hid the missing original birth prefix")
 	}
-	if _, err := unix.Getxattr(f.source.root, validator.ProviderAttemptPublicationNamespaceAttribute, make([]byte, 4096)); !errors.Is(err, unix.ENODATA) {
+	if _, err := unix.Getxattr(f.source.root, validator.ProviderAttemptPublicationNamespaceAttribute, make([]byte, 4096)); !errors.Is(err, durablesys.ErrNoAttribute) {
 		t.Fatal("missing original prefix published a rebound birth", err)
 	}
 }

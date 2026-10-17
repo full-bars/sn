@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Actual signed M8 trails and protected files expose the pre-send boundary.
 // Fault hooks force interrupted publication without sleeps or scheduler races.
@@ -378,13 +378,13 @@ func TestProviderRequestPureRestoreRebindsOnlyPhysicalIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var rebound ProviderAttemptRequestCheckpoint
-	if err := json.Unmarshal(attribute, &rebound); err != nil {
+	rebound, err := DecodeProviderAttemptRequestCheckpoint(attribute, expected)
+	if err != nil {
 		t.Fatal(err)
 	}
 	before := verified.Checkpoint()
 	before.DirectoryInode, before.FileInode = rebound.DirectoryInode, rebound.FileInode
-	want, err := json.Marshal(before)
+	want, err := encodeProviderAttemptRequestCheckpoint(before)
 	if err != nil || !bytes.Equal(want, attribute) {
 		t.Fatalf("restore changed logical request custody: %v", err)
 	}

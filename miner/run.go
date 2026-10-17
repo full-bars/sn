@@ -19,6 +19,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/urnetwork/sdk"
 
 	"github.com/urfoundation/sn/clientauth"
+	"github.com/urfoundation/sn/operatorlist"
 )
 
 const DefaultApiUrl = "https://api.bringyour.com"
@@ -57,6 +59,7 @@ func initGlog() {
 
 // mainUsage returns the docopt usage string. Package-level (rather than
 // inline in `main`) so tests can parse argv against the real usage.
+// Docopt needs two spaces between an option declaration and its description.
 func mainUsage() string {
 	return fmt.Sprintf(
 		`Connect provider.
@@ -67,12 +70,22 @@ The default URLs are:
 
 A network saved with "provider choose_network" replaces these defaults;
 "provider choose_network --show" prints the network actually in effect.
+"provide --all-operators" ignores both and mines every operator in the
+operator list, by default %[3]s.
 
 Usage:
     provider auth ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
     	[--api_url=<api_url>]
     	[--max-memory=<mem>]
     	[-v...]
+    provider auth --operator=<domain> ([<auth_code>] | --user_auth=<user_auth> [--password=<password>] | --hotkey_seed_file=<path>) [-f]
+        [--operators-url=<url>]
+        [-v...]
+    provider provide --all-operators [--operators-url=<url>] [--operators-refresh=<duration>]
+        [--auto-register --hotkey_seed_file=<path> | --hotkey_seed_file=<path>]
+        [--port=<port>] [--max-memory=<mem>] [--allow-client-registration]
+        [-v...]
+    provider operators [--operators-url=<url>] [-v...]
     provider provide [--port=<port>]
 		[--close-report-domain=<path>]
 		[--whole-work-capture=<path> --whole-work-capture-sha256=<hash>]
@@ -80,9 +93,10 @@ Usage:
 		[--original-contract-capture=<path> --original-contract-capture-sha256=<hash>]
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
+		[--quarantine-rejected-sign-in]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
-        [--wallet=<coldkey_ss58> [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]]
+        [--wallet=<coldkey_ss58> [--provider-jwt=<path>] [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]]
 		[--test-egress-source-ip=<source_ip>]
         [--max-memory=<mem>]
         [-v...]
@@ -96,20 +110,31 @@ Usage:
     	[--port=<port>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
-        [--wallet=<coldkey_ss58> [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]]
+        [--wallet=<coldkey_ss58> [--provider-jwt=<path>] [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]]
 		[--test-egress-source-ip=<source_ip>]
         [--max-memory=<mem>]
         [-v...]
-    provider wallet set <coldkey_ss58> [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]
+    provider wallet set <coldkey_ss58> [--provider-jwt=<path> | --legacy-network-wallet] [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]
         [--api_url=<api_url>]
         [-v...]
-    provider wallet challenge <coldkey_ss58>
+    provider wallet challenge <coldkey_ss58> [--provider-jwt=<path> | --legacy-network-wallet] [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
         [--api_url=<api_url>]
         [-v...]
-    provider claim [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+    provider wallet hotkey challenge <coldkey_ss58> --hotkey_seed_file=<path>
+        [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--operators-url=<url>]
+        [-v...]
+    provider wallet hotkey set <coldkey_ss58> --hotkey_seed_file=<path>
+        [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]
+        [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--operators-url=<url>]
+        [-v...]
+    provider wallet hotkey status [--hotkey_seed_file=<path>] [--operators-url=<url>] [-v...]
+    provider claim [--provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
         [--api_url=<api_url>]
         [-v...]
     provider claim-daemon --config=<path>
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [-v...]
+    provider claim-daemon-v2 --config=<path> [--v1-config=<path>] [--threshold-rao=<rao>] [--claim-now]
         [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
     provider fleet manifest --manifest=<path>
@@ -128,6 +153,8 @@ Usage:
     provider fleet bind --manifest=<path> --client_id=<hex> --client_seed_file=<path> --hotkey_seed_file=<path> --valid_from_epoch=<e> --valid_to_epoch=<e> --rpc=<rpc_url>... --relayer_key_file=<path> [--dry-run]
         [--mainnet-runtime-authority=<path> --mainnet-runtime-authority-sha256=<hex>]
         [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [-v...]
+    provider fleet sign --manifest=<path> [--client_id=<hex>] [--client_seed_file=<path>] [--hotkey_seed_file=<path>] --valid_from_epoch=<e> --valid_to_epoch=<e>
         [-v...]
     provider fleet status --manifest=<path> --client_id=<hex> --substrate=<ws_url>... --rpc=<rpc_url>...
         [--provisional-runtime-compatibility=<profile> --runtime-observation-dir=<path>]
@@ -151,21 +178,27 @@ Options:
 	--whole-work-capture=<path>        Exact public launch profile for independently signed whole-work requests and retained private outboxes.
 	--whole-work-capture-sha256=<hash>  Independently reviewed sha256: digest of that original launch profile.
 	--require-whole-work-capture       Refuse startup without the complete original capture profile; never allocate replacement client keys.
-	--original-contract-capture=<path> Exact approved original request/admission source profile with prepared private custody.
-	--original-contract-capture-sha256=<hash> Independently reviewed sha256: digest of the original contract source profile.
-	--require-original-contract-capture       Refuse startup without the complete original contract source profile and retained provider identity.
+	--original-contract-capture=<path>  Exact approved original request/admission source profile with prepared private custody.
+	--original-contract-capture-sha256=<hash>  Independently reviewed sha256: digest of the original contract source profile.
+	--require-original-contract-capture  Refuse startup without the complete original contract source profile and retained provider identity.
     --durable-volumes=<path>          Exact external storage declaration; fleet writes require the owner-local schema.
     --durable-volumes-sha256=<hash>   Reviewed sha256: digest; claim daemons require the daemon-volume schema.
     -h --help                        Show this help and exit.
     --version                        Show version.
-    -v...                            Enable verbose mode. -v implies verbose level 1,
-    				                 -vv implies level 2... etc.
+    -v                               Enable verbose mode. Repeat for higher levels:
+                                     one -v means level 1, -vv means level 2, and so on.
     -f                               Force overwrite the JWT token store file or proxy value, if exists.
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
 	--allow-client-registration       Explicitly permit a new durable provider client operation; never replaces retained identity.
 	--adopt-legacy-provider-key       Assert the retained legacy provider key is original; refresh only, no new client allocation.
 	--config=<path>                    Strict release-1.0 daemon/component configuration.
+	--v1-config=<path>                 claim-daemon-v2: also run the unchanged v1 claim daemon of this configuration in
+	                                   the same process; both use one relayer key and share its nonce admission.
+	--threshold-rao=<rao>              claim-daemon-v2: claim an account once its claimable balance reaches this many
+	                                   rao. Default 1900000000 (1.9 α, so a claim's planning gas is at most 10%% of it);
+	                                   never below the 15200000-rao (0.0152 α) transfer floor.
+	--claim-now                        claim-daemon-v2: on start, claim every account with anything claimable, once.
     --connect_url=<connect_url>      Specify a custom connect URL to use.
     <api_url>                        API URL to save (https://, or http:// only for an explicit loopback host).
     <connect_url>                    Connect URL to save (wss://, or ws:// only for an explicit loopback host).
@@ -176,14 +209,25 @@ Options:
     				                 password anyways, if you don't specify it using this option.
     -p --port=<port>                 Status server port [default: 0].
     --max-memory=<mem>               Set the maximum amount of memory in bytes, or the suffixes b, kib, mib, gib may be used [This is a soft limit].
+    --wallet-from-epoch=<epoch>     First prospective earning epoch in the signed provider mapping.
+    --wallet-through-epoch=<epoch>  Last inclusive earning epoch; at most 65536 epochs.
+                                     Omit both to use the next epoch through the finite 65536-epoch window.
+                                     With wallet hotkey: the global consent's epochs. Omitted, generation 1 earns
+                                     from epoch 0 and a later one from the operators' current epoch plus 1, each
+                                     through 65535 epochs later.
+    --provider-jwt=<path>           Select one retained provider JWT; default: .provider.jwt in the provider state directory.
+    --legacy-network-wallet         Explicit network-wallet compatibility; never selects a provider wallet.
+    --legacy-coldkey=<coldkey_ss58>   Read a legacy network-only proof for this original committed coldkey.
+                                     Uses the network JWT; never substitutes the current network wallet.
     --wallet=<coldkey_ss58>          Also set the subnet claim wallet at startup, same as provider wallet set.
                                      A failure is logged and does not block providing.
-    --coldkey_seed_file=<path>       With --wallet / wallet set: the coldkey's 32-byte sr25519 seed (raw, or 64 hex
+    --coldkey_seed_file=<path>       With --wallet / wallet set / wallet hotkey set: the coldkey's 32-byte sr25519 seed (raw, or 64 hex
                                      chars with an optional 0x prefix) in a private file that is never created here.
                                      The CLI fetches the wallet challenge and signs it, proving the coldkey; refused
                                      unless the seed derives <coldkey_ss58>. The seed never leaves the host.
     --message=<text>                 With --wallet / wallet set: the challenge printed by "provider wallet challenge",
                                      signed elsewhere (a literal \n stands for a newline). Needs --signature.
+                                     With wallet hotkey set: the statement "provider wallet hotkey challenge" printed.
     --signature=<hex>                The coldkey's 64-byte sr25519 signature over --message, hex (0x optional), made
                                      in the "substrate" signing context over the exact UTF-8 text (LF line endings,
                                      no trailing newline) or over that text wrapped in <Bytes>...</Bytes> (what a
@@ -210,9 +254,33 @@ Options:
 	--mainnet-runtime-authority=<path>  Independently reviewed exact mainnet fleet runtime authority document.
 	--mainnet-runtime-authority-sha256=<hex>  Approved SHA-256 of the exact authority bytes (64 lowercase hex digits).
 	--manifest=<path>                  Canonical urnetwork-fleet-manifest-v1 JSON file.
-	--client_id=<hex>                  Stable 16-byte UR client identity from the fleet manifest.
-	--client_seed_file=<path>          Raw or hex 32-byte Ed25519 client key seed.
-	--hotkey_seed_file=<path>          Hex/raw 32-byte sr25519 fleet hotkey seed.
+	--client_id=<hex>                  Stable 16-byte UR client identity from the fleet manifest. fleet sign:
+	                                   optional with --client_seed_file (the member holding that key).
+	--client_seed_file=<path>          Raw or hex 32-byte Ed25519 client key seed (a provider's is
+	                                   .provider.key in its state directory, e.g. ~/.urnetwork/.provider.key).
+	                                   fleet sign signs locally and prints the {binding, client_signature}
+	                                   payload the ur.io Top 200 page takes, plus hotkey_signature with
+	                                   --hotkey_seed_file; it sends nothing and never prints a seed.
+	--hotkey_seed_file=<path>          Hex/raw 32-byte sr25519 hotkey seed in a private file that is never created
+	                                   here: the fleet hotkey, or the miner hotkey that signs in to operators
+	                                   as a TAO wallet (--auto-register, auth --operator) and signs the hotkey
+	                                   wallet consent and each operator's delegation (wallet hotkey).
+	--all-operators                    provide: run one provider per operator in the operator list, each in its
+	                                   own state directory operators/<domain> below the provider state directory.
+	                                   Excludes --api_url, --connect_url, --provider-jwt, the wallet, capture,
+	                                   close-report and test egress flags, and --adopt-legacy-provider-key.
+	                                   With --hotkey_seed_file and a hotkey wallet chain, every authenticated
+	                                   operator gets the chain and a delegation to its head at start and hourly.
+	--operators-url=<url>              The operator list (https, or http only for loopback); default %[3]s.
+	                                   The last good copy is kept as operators.yml in the provider state directory.
+	--operators-refresh=<duration>     How often --all-operators refetches the operator list, as a Go duration
+	                                   of at least 1m; default 1h. Providers follow the list as it changes.
+	--auto-register                    With --all-operators: sign in with the hotkey of --hotkey_seed_file to each
+	                                   operator that has no jwt, creating the hotkey's network there at the first
+	                                   sign-in; no chain transaction. New operator directories need a new provider
+	                                   client, so every provider also gets --allow-client-registration.
+	--operator=<domain>                auth: authenticate to this operator from the operator list and write its
+	                                   jwt in operators/<domain> below the provider state directory.
 	--valid_from_epoch=<e>             First settlement epoch in which a binding is active.
 	--valid_to_epoch=<e>               Last settlement epoch in which a binding is active.
 	--effective_epoch=<e>              Future epoch at which a fleet revocation takes effect.
@@ -230,6 +298,7 @@ Options:
     --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port`,
 		DefaultApiUrl,
 		DefaultConnectUrl,
+		operatorlist.DefaultUrl,
 	)
 }
 
@@ -238,6 +307,11 @@ Options:
 // the subnet's provider: it runs the provide/proxy/auth flows plus the on-chain
 // wallet / claim / fleet actions (formerly connect/provider).
 func Run(args []string) {
+	// docopt alone would answer these with the whole usage text
+	if err := operatorArgsError(args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	opts, err := docopt.ParseArgs(mainUsage(), args, RequireVersion())
 
 	if err != nil {
@@ -280,7 +354,9 @@ func Run(args []string) {
 			proxyRemove(opts)
 		}
 	} else if wallet, _ := opts.Bool("wallet"); wallet {
-		if set, _ := opts.Bool("set"); set {
+		if hotkey, _ := opts.Bool("hotkey"); hotkey {
+			hotkeyWalletCmd(opts)
+		} else if set, _ := opts.Bool("set"); set {
 			walletSet(opts)
 		} else if challenge, _ := opts.Bool("challenge"); challenge {
 			walletChallenge(opts)
@@ -291,14 +367,26 @@ func Run(args []string) {
 		if err := runClaimDaemon(minerStorageContext(context.Background(), opts), fleetOpt(opts, "--config")); err != nil {
 			panic(err)
 		}
+	} else if claimDaemonV2, _ := opts.Bool("claim-daemon-v2"); claimDaemonV2 {
+		if err := runClaimDaemonV2Command(minerStorageContext(context.Background(), opts), opts); err != nil {
+			panic(err)
+		}
 	} else if fleet_, _ := opts.Bool("fleet"); fleet_ {
 		if err := fleetCommand(opts); err != nil {
 			panic(err)
 		}
 	} else if auth_, _ := opts.Bool("auth"); auth_ {
-		auth(opts)
+		if _, err := opts.String("--operator"); err == nil {
+			operatorAuthCmd(opts)
+		} else {
+			auth(opts)
+		}
 	} else if provide_, _ := opts.Bool("provide"); provide_ {
-		provide(opts)
+		if allOperators, _ := opts.Bool("--all-operators"); allOperators {
+			provideAllOperatorsCmd(opts)
+		} else {
+			provide(opts)
+		}
 	} else if authProvide, _ := opts.Bool("auth-provide"); authProvide {
 		auth(opts)
 		provide(opts)
@@ -307,29 +395,19 @@ func Run(args []string) {
 			fmt.Printf("%s\n", err)
 			os.Exit(1)
 		}
+	} else if operators, _ := opts.Bool("operators"); operators {
+		operatorsCmd(opts)
 	}
 }
 
+// Authentication shares the selected state directory with provider startup and claims.
 func auth(opts docopt.Opts) {
-	home, err := os.UserHomeDir()
+	jwtPath, err := providerStatePath("jwt")
 	if err != nil {
 		panic(err)
 	}
-	urNetworkDir := filepath.Join(home, ".urnetwork")
-	jwtPath := filepath.Join(urNetworkDir, "jwt")
-
-	if _, err := os.Stat(jwtPath); !errors.Is(err, os.ErrNotExist) {
-		// jwt exists
-		if force, _ := opts.Bool("-f"); !force {
-			fmt.Printf("%s exists. Overwrite? [yN]\n", jwtPath)
-
-			reader := bufio.NewReader(os.Stdin)
-			confirm, _ := reader.ReadString('\n')
-			if strings.ToLower(strings.TrimSpace(confirm)) != "y" {
-				return
-			}
-
-		}
+	if !confirmJwtOverwrite(opts, jwtPath) {
+		return
 	}
 
 	apiUrl, err := resolveApiUrl(opts)
@@ -347,6 +425,61 @@ func auth(opts docopt.Opts) {
 	ctx, cancel := context.WithCancel(event.Ctx())
 	defer cancel()
 
+	byJwt, err := networkLogin(ctx, opts, apiUrl, terminalLoginPrompts())
+	if err != nil {
+		panic(err)
+	}
+	if byJwt != "" {
+		if err := clientauth.WriteNetworkTokenWithContext(ctx, jwtPath, byJwt); err != nil {
+			panic(err)
+		}
+		fmt.Printf("Jwt written to %s\n", jwtPath)
+	}
+}
+
+// Without -f, an existing jwt is replaced only when the user answers y.
+func confirmJwtOverwrite(opts docopt.Opts, jwtPath string) bool {
+	if _, err := os.Stat(jwtPath); errors.Is(err, os.ErrNotExist) {
+		return true
+	}
+	if force, _ := opts.Bool("-f"); force {
+		return true
+	}
+	fmt.Printf("%s exists. Overwrite? [yN]\n", jwtPath)
+	reader := bufio.NewReader(os.Stdin)
+	confirm, _ := reader.ReadString('\n')
+	return strings.ToLower(strings.TrimSpace(confirm)) == "y"
+}
+
+// Reads what the command line left out of a login. Tests replace the terminal.
+type loginPrompts struct {
+	password func() (string, error)
+	authCode func() (string, error)
+}
+
+func terminalLoginPrompts() loginPrompts {
+	stdin := int(syscall.Stdin)
+	return loginPrompts{
+		password: func() (string, error) {
+			fmt.Print("Enter password: ")
+			passwordBytes, err := term.ReadPassword(stdin)
+			if err != nil {
+				return "", err
+			}
+			fmt.Printf("\n")
+			return string(passwordBytes), nil
+		},
+		authCode: func() (string, error) {
+			return readAuthCode(os.Stdin, os.Stdout, term.IsTerminal(stdin), func() ([]byte, error) {
+				return term.ReadPassword(stdin)
+			})
+		},
+	}
+}
+
+// The network jwt from a user and password, or else from an auth code,
+// prompting for the password or code when the command line has none.
+func networkLogin(ctx context.Context, opts docopt.Opts, apiUrl string, prompts loginPrompts) (string, error) {
 	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
 	defer clientStrategy.Close()
 	api := sdk.NewApi(ctx, clientStrategy, apiUrl)
@@ -354,73 +487,52 @@ func auth(opts docopt.Opts) {
 		_ = api.CloseAndWait(context.Background())
 	}()
 
-	var byJwt string
 	if userAuth, err := opts.String("--user_auth"); err == nil {
-		// user_auth and password
-
-		var password string
-		if password, err = opts.String("--password"); err == nil && password == "" {
-			fmt.Print("Enter password: ")
-			passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
+		// an absent --password is not a string, so it prompts too
+		password, err := opts.String("--password")
+		if err != nil || password == "" {
+			password, err = prompts.password()
 			if err != nil {
-				panic(err)
+				return "", err
 			}
-			password = string(passwordBytes)
-			fmt.Printf("\n")
 		}
-
-		// fmt.Printf("userAuth='%s'; password='%s'\n", userAuth, password)
-
-		loginArgs := &sdk.AuthLoginWithPasswordArgs{
+		loginResult, err := api.AuthLoginWithPasswordSyncWithContext(ctx, &sdk.AuthLoginWithPasswordArgs{
 			UserAuth: userAuth,
 			Password: password,
-		}
-		loginResult, err := api.AuthLoginWithPasswordSyncWithContext(ctx, loginArgs)
+		})
 		if err != nil {
-			panic(err)
+			return "", err
 		}
 		if loginResult.Error != nil {
-			panic(fmt.Errorf("%s", loginResult.Error.Message))
+			return "", fmt.Errorf("%s", loginResult.Error.Message)
 		}
 		if loginResult.VerificationRequired != nil {
-			panic(fmt.Errorf("Verification required for %s. Use the app or web to complete account setup.", loginResult.VerificationRequired.UserAuth))
+			return "", fmt.Errorf("Verification required for %s. Use the app or web to complete account setup.", loginResult.VerificationRequired.UserAuth)
 		}
+		if loginResult.Network == nil {
+			return "", errors.New("login returned no network")
+		}
+		return loginResult.Network.ByJwt, nil
+	}
 
-		byJwt = loginResult.Network.ByJwt
-	} else {
-		// auth_code
-		authCode, _ := opts.String("<auth_code>")
-		if authCode == "" {
-			stdin := int(syscall.Stdin)
-			var err error
-			authCode, err = readAuthCode(os.Stdin, os.Stdout, term.IsTerminal(stdin), func() ([]byte, error) {
-				return term.ReadPassword(stdin)
-			})
-			if err != nil {
-				panic(err)
-			}
-		}
-
-		authCodeLogin := &sdk.AuthCodeLoginArgs{
-			AuthCode: authCode,
-		}
-		authCodeLoginResult, err := api.AuthCodeLoginSyncWithContext(ctx, authCodeLogin)
+	authCode, _ := opts.String("<auth_code>")
+	if authCode == "" {
+		var err error
+		authCode, err = prompts.authCode()
 		if err != nil {
-			panic(err)
+			return "", err
 		}
-		if authCodeLoginResult.Error != nil {
-			panic(fmt.Errorf("%s", authCodeLoginResult.Error.Message))
-		}
-
-		byJwt = authCodeLoginResult.Jwt
 	}
-
-	if byJwt != "" {
-		if err := clientauth.WriteToken(jwtPath, byJwt); err != nil {
-			panic(err)
-		}
-		fmt.Printf("Jwt written to %s\n", jwtPath)
+	authCodeLoginResult, err := api.AuthCodeLoginSyncWithContext(ctx, &sdk.AuthCodeLoginArgs{
+		AuthCode: authCode,
+	})
+	if err != nil {
+		return "", err
 	}
+	if authCodeLoginResult.Error != nil {
+		return "", fmt.Errorf("%s", authCodeLoginResult.Error.Message)
+	}
+	return authCodeLoginResult.Jwt, nil
 }
 
 // testEgressDialContext returns the narrow source-bind seam used by
@@ -476,12 +588,6 @@ func provide(opts docopt.Opts) {
 	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	defer stopSignals()
 
-	// subnet claim wallet (sn/PLAN.md 7.3, decision D-2): validate the
-	// ss58 coldkey locally, prove it with --coldkey_seed_file or
-	// --message/--signature (sn_wallet.go) and idempotently register it
-	// with the platform before providing starts.
-	provideSetWallet(ctx, apiUrl, opts)
-
 	allProxySettings := readProxySettings()
 	providerCount := len(allProxySettings)
 	if providerCount == 0 {
@@ -499,12 +605,24 @@ func provide(opts docopt.Opts) {
 
 	allowClientRegistration, _ := opts.Bool("--allow-client-registration")
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
+	// internal: an operator child of provide --all-operators --auto-register
+	quarantineRejectedSignIn, _ := opts.Bool("--quarantine-rejected-sign-in")
 	domainPath, _ := opts.String("--close-report-domain")
 	domainHash, domainErr := ReadProviderCloseReportDomain(domainPath)
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, quarantineRejectedSignIn: quarantineRejectedSignIn}
+	settings.wallet, _ = opts.String("--wallet")
+	if settings.wallet != "" {
+		settings.walletProof, err = snWalletProofFromOpts(opts)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "subnet wallet not set: %v; continuing to provide\n", err)
+			settings.wallet = ""
+		}
+	} else if misuse := snProvideWalletMisuse(opts); misuse != "" {
+		fmt.Fprintln(os.Stderr, misuse)
+	}
 	settings.closeReportDomainHash = domainHash
 	settings.workCapturePath, _ = opts.String("--whole-work-capture")
 	settings.workCaptureSha256, _ = opts.String("--whole-work-capture-sha256")
@@ -512,9 +630,15 @@ func provide(opts docopt.Opts) {
 	settings.contractCapturePath, _ = opts.String("--original-contract-capture")
 	settings.contractCaptureSha256, _ = opts.String("--original-contract-capture-sha256")
 	settings.requireContractCapture, _ = opts.Bool("--require-original-contract-capture")
-	// A complete-profile launch must report refusal to its supervisor. The
-	// owned run has joined every child before this process-level exit decision.
-	if err := settings.run(ctx, os.Stdout); err != nil && ctx.Err() == nil && (settings.requireWorkCapture || settings.workCapturePath != "" || settings.workCaptureSha256 != "" || settings.requireContractCapture || settings.contractCapturePath != "" || settings.contractCaptureSha256 != "") {
+	// A complete-profile launch must report refusal to its supervisor, and a
+	// child that set its rejected network sign-in aside says so by its exit
+	// code. The owned run has joined every child before this exit decision.
+	err = settings.run(ctx, os.Stdout)
+	if code, ok := providerRunExitCode(err); ok {
+		stopSignals()
+		os.Exit(code)
+	}
+	if err != nil && ctx.Err() == nil && (settings.requireWorkCapture || settings.workCapturePath != "" || settings.workCaptureSha256 != "" || settings.requireContractCapture || settings.contractCapturePath != "" || settings.contractCaptureSha256 != "") {
 		stopSignals()
 		fmt.Fprintln(os.Stderr, "provider original capture launch refused; restore approved profiles, retained identity and prepared custody")
 		os.Exit(1)
@@ -542,6 +666,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
 	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
+		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
 		return err
 	}
 	providers := self.proxySettings
@@ -596,10 +721,6 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return err
 	}
 	defer func() { returnErr = errors.Join(returnErr, status.close()) }()
-	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
-		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
-		return err
-	}
 	keyPath, err := providerStatePath(".provider.key")
 	if err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
@@ -613,6 +734,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return err
 	}
 	defer func() { returnErr = errors.Join(returnErr, keyOwner.Close()) }()
+	networkJwtPath, err := providerStatePath("jwt")
+	if err != nil {
+		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
+		return err
+	}
+	var quarantined atomic.Bool
+	stopRenewal := startNetworkTokenRenewal(ctx, self.apiUrl, providers[0], self.testEgressDialer, networkJwtPath, output, self.quarantineRejectedSignIn, func(clientauth.NetworkTokenQuarantine) {
+		// the supervisor signs in again once this child has exited
+		quarantined.Store(true)
+		cancel()
+	})
+	defer func() { returnErr = errors.Join(returnErr, stopRenewal()) }()
 
 	// Bandwidth registry tracks per-proxy byte counters for billing.
 	// The wrapped dial counts TCP egress; UDP/QUIC egress in this lane is
@@ -681,9 +814,33 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		byClientJwt, clientId, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), self.allowClientRegistration, output, index)
 		if err != nil {
 			if proxyCtx.Err() == nil {
-				output.observe(providerStartupRecoveryRequired, index, true, err, 0, nil)
+				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
 			}
 			return err
+		}
+
+		// Each authenticated slot owns its optional wallet set. A fresh or
+		// proxy provider never borrows the direct provider's credential.
+		if self.wallet != "" {
+			proof := snWalletProof{}
+			if self.walletProof != nil {
+				proof = *self.walletProof
+			}
+			if proof.credentials.jwtFile == "" {
+				proof.credentials.jwtFile = clientJwtPath
+			}
+			proof.credentials.original = byClientJwt
+			walletStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)
+			walletErr := snSetWallet(proxyCtx, walletStrategy, self.apiUrl, self.wallet, &proof)
+			walletStrategy.Close()
+			if hooks, ok := proxyCtx.Value(providerRegistrationHooksKey{}).(providerRegistrationHooks); ok && hooks.afterWallet != nil {
+				if err := hooks.afterWallet(walletErr); err != nil {
+					return errors.Join(walletErr, err)
+				}
+			}
+			if walletErr != nil {
+				fmt.Fprintf(os.Stderr, "provider %d subnet wallet not set: %v; continuing to provide\n", index, walletErr)
+			}
 		}
 
 		callbacks := &providerAuthenticationCallbacks{diagnostics: output, provider: index, clientJwtPath: clientJwtPath, networkJwtPath: networkJwtPath, cancel: cancel, custody: keyOwner}
@@ -808,13 +965,31 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	for result := range results {
 		returnErr = errors.Join(returnErr, result)
 	}
+	if quarantined.Load() {
+		returnErr = errors.Join(returnErr, errProviderNetworkSignInQuarantined)
+	}
 	return returnErr
 }
 
-// providerStateDir returns the absolute path of the provider state
-// directory, ~/.urnetwork — the one place `jwt`, `.provider.jwt`,
-// `network.json`, `.provider.key` and `.provider.cert` live. Does not
-// create it.
+// errProviderNetworkSignInQuarantined ends a run whose rejected network
+// sign-in was set aside (--quarantine-rejected-sign-in).
+var errProviderNetworkSignInQuarantined = errors.New("the rejected network sign-in was set aside")
+
+// providerQuarantinedExitCode tells the supervisor that this child set its
+// rejected network sign-in aside (EX_TEMPFAIL): it signs in again and starts
+// the child, without the crash backoff.
+const providerQuarantinedExitCode = 75
+
+// providerRunExitCode is the process exit code a run's error asks for, if any.
+func providerRunExitCode(err error) (int, bool) {
+	if errors.Is(err, errProviderNetworkSignInQuarantined) {
+		return providerQuarantinedExitCode, true
+	}
+	return 0, false
+}
+
+// Resolves the shared auth, network, proxy and provider state directory.
+// URNETWORK_STATE_DIR overrides ~/.urnetwork; resolution creates no files.
 func providerStateDir() (string, error) {
 	if override := strings.TrimSpace(os.Getenv("URNETWORK_STATE_DIR")); override != "" {
 		absolute, err := filepath.Abs(override)
@@ -830,9 +1005,7 @@ func providerStateDir() (string, error) {
 	return filepath.Join(home, ".urnetwork"), nil
 }
 
-// providerStatePath returns the absolute filesystem path of a named
-// provider state file under ~/.urnetwork (alongside `jwt`). Does not
-// create the directory.
+// Resolves one file in the selected state directory without creating it.
 func providerStatePath(name string) (string, error) {
 	dir, err := providerStateDir()
 	if err != nil {
@@ -1283,13 +1456,12 @@ func obfuscatePassword(password string) string {
 	}
 }
 
+// Proxy selection follows the same state directory as its provider credentials.
 func readProxyConfig() *ProxyConfig {
-	home, err := os.UserHomeDir()
+	proxyPath, err := providerStatePath("proxy")
 	if err != nil {
 		panic(err)
 	}
-	urNetworkDir := filepath.Join(home, ".urnetwork")
-	proxyPath := filepath.Join(urNetworkDir, "proxy")
 
 	if _, err := os.Stat(proxyPath); errors.Is(err, os.ErrNotExist) {
 		return &ProxyConfig{}
@@ -1308,13 +1480,12 @@ func readProxyConfig() *ProxyConfig {
 	return &proxyConfig
 }
 
+// Updates only the selected directory's proxy configuration.
 func writeProxyConfig(proxyConfig *ProxyConfig) {
-	home, err := os.UserHomeDir()
+	proxyPath, err := providerStatePath("proxy")
 	if err != nil {
 		panic(err)
 	}
-	urNetworkDir := filepath.Join(home, ".urnetwork")
-	proxyPath := filepath.Join(urNetworkDir, "proxy")
 
 	b, err := json.Marshal(proxyConfig)
 	if err != nil {

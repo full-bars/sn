@@ -25,6 +25,7 @@ const nativeExecutionPolicySchema = "urnetwork-native-miner-execution-policy-v1"
 const nativeExecutionAdmissionLimit = 1024 * 1024
 
 type nativeExecutionPolicy struct {
+	Treasury          *nativeTreasuryAuthority       `json:"treasury_authority,omitempty"`
 	FeeCensus         *nativeFeeCensusPolicy         `json:"complete_fee_authority,omitempty"`
 	Yuma              *nativeYumaPolicy              `json:"complete_allocation_authority,omitempty"`
 	Principal         *nativePrincipalPolicy         `json:"opening_principal_authority,omitempty"`
@@ -41,13 +42,13 @@ func (self *nativeExecutionPolicy) validate() error {
 	if self == nil {
 		return nil
 	}
-	if self.Schema != nativeExecutionPolicySchema || !rootCanonicalHash(self.ApprovalPublicKey) || !planSha256(self.ReviewSha256) || !planSha256(self.ProfileSha256) || !bootstrapRootAbsolutePath(self.Engine.Path) || !planSha256(self.Engine.Sha256) || !bootstrapRootAbsolutePath(self.Directory) {
+	if self.Schema != nativeTreasurySchema(self.Treasury, nativeExecutionPolicySchema, nativeTreasuryExecutionPolicySchema) || !rootCanonicalHash(self.ApprovalPublicKey) || !planSha256(self.ReviewSha256) || !planSha256(self.ProfileSha256) || !bootstrapRootAbsolutePath(self.Engine.Path) || !planSha256(self.Engine.Sha256) || !bootstrapRootAbsolutePath(self.Directory) {
 		return errors.New("native execution requires original independent runtime/layout/engine authority")
 	}
 	if self.FeeCensus != nil && self.Producer == nil {
 		return errors.New("native complete fee authority requires the original continuous producer")
 	}
-	return errors.Join(self.Producer.validate(), self.Principal.validate(), self.Yuma.validate(), self.FeeCensus.validate())
+	return errors.Join(self.Producer.validate(), self.Principal.validate(), self.Yuma.validate(), self.FeeCensus.validate(), self.Treasury.validate(), validateNativeTreasuryPrincipal(self.Treasury, self.Principal))
 }
 
 // An admitted recipient is a registration generation, never merely an event UID.
@@ -60,6 +61,7 @@ type nativeExecutionRecipient struct {
 }
 
 type nativeExecutionAdmission struct {
+	Treasury          *nativeTreasuryAuthority   `json:"treasury_authority,omitempty"`
 	FeeCensus         *nativeFeeCensusPolicy     `json:"complete_fee_authority,omitempty"`
 	Yuma              *nativeYumaPolicy          `json:"complete_allocation_authority,omitempty"`
 	Principal         *nativePrincipalPolicy     `json:"opening_principal_authority,omitempty"`
@@ -86,7 +88,7 @@ func (self nativeExecutionAdmission) signingBytes() ([]byte, error) {
 	if err != nil || len(raw) > nativeProducerAuthorityMaximum(self.FeeCensus) {
 		return nil, errors.Join(errors.New("native execution admission frame exceeds bound"), err)
 	}
-	return append([]byte(nativeExecutionAdmissionSchema+"\x00"), raw...), nil
+	return append([]byte(nativeTreasurySchema(self.Treasury, nativeExecutionAdmissionSchema, nativeTreasuryExecutionAdmissionSchema)+"\x00"), raw...), nil
 }
 
 func (self nativeExecutionAdmission) validate(policy economicEmissionPolicy, block economicEmissionBlock, runtime rootReceiptProfile) error {
@@ -97,10 +99,13 @@ func (self nativeExecutionAdmission) validate(policy economicEmissionPolicy, blo
 	if err := expected.validate(); err != nil {
 		return err
 	}
+	if err := self.Treasury.validateScope(policy, block.Boundary, nil); err != nil {
+		return err
+	}
 	if !reflect.DeepEqual(self.FeeCensus, expected.FeeCensus) {
 		return errors.New("native execution changed original complete fee authority")
 	}
-	if !reflect.DeepEqual(self.Yuma, expected.Yuma) || !reflect.DeepEqual(self.Principal, expected.Principal) || self.Schema != nativeExecutionAdmissionSchema || self.Network != policy.Network || self.Netuid != policy.Netuid || self.Registration != *policy.SubnetRegistrationBlock || self.Generation != *policy.SubnetGeneration || self.Child != block.Boundary || self.Parent.Number+1 != self.Child.Number || self.Parent.Hash != block.Header.ParentHash || self.Runtime != runtime || self.Runtime.RuntimeSourceCommit != frontierMappingSourceCommit || self.ReviewSha256 != expected.ReviewSha256 || self.ProfileSha256 != expected.ProfileSha256 || self.EngineSha256 != expected.Engine.Sha256 || self.FinalityAuthority != "independently-reviewed-finalized-boundary" || !bootstrapRootAbsolutePath(self.Job.Path) || !planSha256(self.Job.Sha256) || len(self.Providers) > int(policy.MaximumUids) {
+	if !reflect.DeepEqual(self.Treasury, expected.Treasury) || !reflect.DeepEqual(self.Yuma, expected.Yuma) || !reflect.DeepEqual(self.Principal, expected.Principal) || self.Schema != nativeTreasurySchema(expected.Treasury, nativeExecutionAdmissionSchema, nativeTreasuryExecutionAdmissionSchema) || self.Network != policy.Network || self.Netuid != policy.Netuid || self.Registration != *policy.SubnetRegistrationBlock || self.Generation != *policy.SubnetGeneration || self.Child != block.Boundary || self.Parent.Number+1 != self.Child.Number || self.Parent.Hash != block.Header.ParentHash || self.Runtime != runtime || self.Runtime.RuntimeSourceCommit != nativeExecutionRuntimeSource(self.Treasury) || self.ReviewSha256 != expected.ReviewSha256 || self.ProfileSha256 != expected.ProfileSha256 || self.EngineSha256 != expected.Engine.Sha256 || self.FinalityAuthority != "independently-reviewed-finalized-boundary" || !bootstrapRootAbsolutePath(self.Job.Path) || !planSha256(self.Job.Sha256) || len(self.Providers) > int(policy.MaximumUids) {
 		return errors.New("native execution approval differs from original runtime, boundary or economic identity")
 	}
 	seen := map[string]bool{}
@@ -123,6 +128,9 @@ func (self nativeExecutionAdmission) validate(policy economicEmissionPolicy, blo
 // FixedPointTolerance covers the observed final normalization and u64 casts;
 // it does not excuse Yuma disagreement or grant an economic activation approval.
 type nativeExecutionOutcome struct {
+	RecipientInputs        []nativeRecipientInputProvenance    `json:"original_recipient_inputs,omitempty"`
+	EpochInputs            *nativeEpochInputProvenance         `json:"original_epoch_inputs,omitempty"`
+	Treasury               *nativeTreasuryAmounts              `json:"treasury_income,omitempty"`
 	FeeCensus              *nativeFeeCensusProjection          `json:"original_fee_census,omitempty"`
 	CertifiedWindow        *nativeExecutionFinalityProjection  `json:"original_finality_window,omitempty"`
 	Yuma                   *nativeYumaProjection               `json:"complete_allocation_witness,omitempty"`
@@ -214,13 +222,22 @@ func nativeCaptureVector(record historicalReplayObservation, label string, count
 
 // All decoded values come from the owned VM's captures. Approval carries no
 // alpha amounts. Read absence, omitted captures or ambiguous order refuse.
-func deriveNativeExecution(policy economicEmissionPolicy, admission nativeExecutionAdmission, block economicEmissionBlock, job historicalReplayJob, report historicalReplayReport, drainKeys [3]nativeExecutionDrain) (*nativeExecutionOutcome, error) {
+func deriveNativeExecution(policy economicEmissionPolicy, admission nativeExecutionAdmission, block economicEmissionBlock, job historicalReplayJob, report historicalReplayReport, drainKeys [3]nativeExecutionDrain, metadata *types.Metadata) (*nativeExecutionOutcome, error) {
 	profile, trace := job.ObservationProfile, report.HookObservations
-	if profile == nil || profile.Schema != historicalNativeProfileSchema || trace == nil || (profile.MetadataSha256 != nil) != (admission.FeeCensus != nil) {
+	if profile == nil || profile.Schema != historicalNativeProfileSchema || trace == nil {
 		return nil, errors.New("native execution omits its dedicated original-memory profile")
+	}
+	if err := validateNativeExecutionMetadataScope(profile, admission.FeeCensus); err != nil {
+		return nil, err
 	}
 	if err := admission.FeeCensus.validate(); err != nil {
 		return nil, err
+	}
+	if err := admission.Treasury.validateScope(policy, block.Boundary, nil); err != nil {
+		return nil, err
+	}
+	if admission.Treasury != nil && (policy.Execution == nil || !reflect.DeepEqual(admission.Treasury, policy.Execution.Treasury) || admission.Schema != nativeTreasuryExecutionAdmissionSchema) || admission.Treasury == nil && policy.Execution != nil && policy.Execution.Treasury != nil {
+		return nil, errors.New("native treasury derivation differs from signed successor admission")
 	}
 	if !report.PostStateReproduced || "sha256:"+hex.EncodeToString(report.JobSha256[:]) != admission.Job.Sha256 || report.ParentHash != job.ParentHash || report.ChildHash != job.ChildHash || report.RuntimeCodeSha256 != job.RuntimeCodeSha256 {
 		return nil, errors.New("native execution report lacks the exact successful original replay")
@@ -238,6 +255,14 @@ func deriveNativeExecution(policy economicEmissionPolicy, admission nativeExecut
 	if monitorReadDigest(raw) != admission.ProfileSha256 || "sha256:"+hex.EncodeToString(profile.SourceReviewSha256[:]) != admission.ReviewSha256 || "0x"+hex.EncodeToString(job.ParentHash[:]) != admission.Parent.Hash || "0x"+hex.EncodeToString(job.ChildHash[:]) != admission.Child.Hash || "0x"+hex.EncodeToString(job.RuntimeCodeBlake2b256[:]) != admission.Runtime.RuntimeCodeHash {
 		return nil, errors.New("native execution job or raw memory profile differs from independent approval")
 	}
+	epochLayout, err := newNativeEpochStorageLayout(profile, metadata, policy.Netuid)
+	if err != nil {
+		return nil, err
+	}
+	recipientLayout, err := newNativeRecipientStorageLayout(profile, metadata, policy.Netuid)
+	if err != nil {
+		return nil, err
+	}
 	var drains []*historicalReplayObservation
 	var epoch, emission *historicalReplayObservation
 	recipients := []historicalReplayObservation{}
@@ -252,9 +277,25 @@ func deriveNativeExecution(policy economicEmissionPolicy, admission nativeExecut
 		if historicalPrincipalEffectPurpose(record.Purpose) || historicalYumaPurpose(record.Purpose) {
 			continue
 		}
+		if record.Purpose == "native-uid-census" || record.Purpose == "native-epoch-index" {
+			if epochLayout == nil {
+				return nil, errors.New("native original census has no admitted epoch layout")
+			}
+			if err := epochLayout.collect(*record); err != nil {
+				return nil, err
+			}
+			continue
+		}
 		// The same original runtime callsite can execute for several subnets.
 		// Its actual netuid remains part of the authenticated memory capture.
-		netuid, err := nativeCaptureUint(*record, "netuid", 2)
+		var netuid uint64
+		if recipientLayout != nil && nativeRecipientStoragePurpose(record.Purpose) {
+			netuid, err = recipientLayout.netuidFor(*record)
+		} else if epochLayout != nil && record.Purpose == "native-drain" {
+			netuid, err = nativeEpochDrainNetuid(*record, drainKeys)
+		} else {
+			netuid, err = nativeCaptureUint(*record, "netuid", 2)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -277,17 +318,23 @@ func deriveNativeExecution(policy economicEmissionPolicy, admission nativeExecut
 				return nil, errors.New("native original emission precedes or repeats normalization")
 			}
 			emission = record
-		case "native-miner-credit", "native-owner-recycle":
-			if emission == nil || record.Operation != "set" {
+		case "native-miner-capture", "native-miner-credit", "native-owner-recycle", "native-recipient-owner-hotkey", "native-recipient-auto-stake", "native-recipient-owner":
+			if emission == nil || recipientLayout == nil && (record.Operation != "set" || record.Purpose != "native-miner-credit" && record.Purpose != "native-owner-recycle") || recipientLayout != nil && record.Operation != "get" && record.Operation != "set" {
 				return nil, errors.New("native recipient effect precedes original normalization")
+			}
+			if recipientLayout != nil && len(recipients) >= 6*rootCensusLimit+1 {
+				return nil, errors.New("native original recipient component census exceeds its finite bound")
 			}
 			recipients = append(recipients, *record)
 		default:
 			return nil, errors.New("native economic profile contains an unrelated semantic observation")
 		}
 	}
-	result := &nativeExecutionOutcome{Boundary: block.Boundary, AdmissionHash: rootObjectHash(admission), JobHash: admission.Job.Sha256, TraceHash: rootObjectHash(trace), MinerAllocation: "0", ProviderEntitlement: "0", OwnerRecycled: "0", ResidualEntitlement: "0", CollateralCapture: "0", FixedPointDust: "0", FixedPointTolerance: "0", RedirectedToValidators: "0", AllocationDifference: "0", Recipients: []nativeExecutionRecipient{}}
+	result := &nativeExecutionOutcome{Treasury: newNativeTreasuryAmounts(admission.Treasury), Boundary: block.Boundary, AdmissionHash: rootObjectHash(admission), JobHash: admission.Job.Sha256, TraceHash: rootObjectHash(trace), MinerAllocation: "0", ProviderEntitlement: "0", OwnerRecycled: "0", ResidualEntitlement: "0", CollateralCapture: "0", FixedPointDust: "0", FixedPointTolerance: "0", RedirectedToValidators: "0", AllocationDifference: "0", Recipients: []nativeExecutionRecipient{}}
 	if len(drains) == 0 && epoch == nil && emission == nil && len(recipients) == 0 {
+		if epochLayout != nil && epochLayout.hasRecords() {
+			return nil, errors.New("native original census has no completed epoch")
+		}
 		for _, event := range block.Events {
 			if event.Kind == "SubtensorModule.IncentiveAlphaEmittedToMiners" {
 				return nil, errors.New("native replay omitted a runtime incentive execution")
@@ -321,24 +368,37 @@ func deriveNativeExecution(policy economicEmissionPolicy, admission nativeExecut
 		tranches[index] = binary.LittleEndian.Uint64(raw)
 	}
 	miner, validator, root := tranches[0], tranches[1], tranches[2]
-	for label, expected := range map[string]uint64{"subnet-registered": *policy.SubnetRegistrationBlock, "subnet-generation": *policy.SubnetGeneration} {
-		value, err := nativeCaptureUint(*drains[0], label, 8)
-		if err != nil || value != expected {
-			return nil, errors.New("native drain lost its original subnet generation")
+	if epochLayout != nil {
+		if err := epochLayout.validateGeneration(*drains[0], policy); err != nil {
+			return nil, err
+		}
+	} else {
+		for label, expected := range map[string]uint64{"subnet-registered": *policy.SubnetRegistrationBlock, "subnet-generation": *policy.SubnetGeneration} {
+			value, err := nativeCaptureUint(*drains[0], label, 8)
+			if err != nil || value != expected {
+				return nil, errors.New("native drain lost its original subnet generation")
+			}
 		}
 	}
+
 	count := len(block.Events[0].AlphaByUid)
 	if count > int(policy.MaximumUids) {
 		return nil, errors.New("native execution UID census exceeds original bound")
 	}
-	total, err := nativeCaptureUint(*epoch, "total-alpha", 8)
-	if err != nil {
-		return nil, err
+	var total uint64
+	if epochLayout == nil {
+		total, err = nativeCaptureUint(*epoch, "total-alpha", 8)
+		if err != nil {
+			return nil, err
+		}
 	}
 	trancheTotal := new(big.Int).Add(new(big.Int).SetUint64(miner), new(big.Int).SetUint64(validator))
 	trancheTotal.Add(trancheTotal, new(big.Int).SetUint64(root))
 	if trancheTotal.BitLen() > 64 {
 		trancheTotal.SetUint64(^uint64(0))
+	}
+	if epochLayout != nil {
+		total = trancheTotal.Uint64()
 	}
 	if total != trancheTotal.Uint64() {
 		return nil, errors.New("native normalization total includes an unobserved tranche or owner cut")
@@ -363,13 +423,26 @@ func deriveNativeExecution(policy economicEmissionPolicy, admission nativeExecut
 	if err != nil {
 		return nil, err
 	}
-	hotkeys, err := nativeCapture(*epoch, "hotkeys", count*32)
+	var hotkeys, uids []byte
+	var epochIndex uint64
+	if epochLayout != nil {
+		hotkeys, uids, epochIndex, result.EpochInputs, err = epochLayout.derive(*epoch, count, total, drains)
+	} else {
+		hotkeys, err = nativeCapture(*epoch, "hotkeys", count*32)
+		if err == nil {
+			uids, err = nativeCapture(*epoch, "uids", count*2)
+		}
+		if err == nil && admission.Treasury != nil {
+			epochIndex, err = nativeCaptureUint(*epoch, "subnet-epoch", 8)
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
-	uids, err := nativeCapture(*epoch, "uids", count*2)
-	if err != nil {
-		return nil, err
+	if admission.Treasury != nil {
+		if err := admission.Treasury.validateScope(policy, block.Boundary, &epochIndex); err != nil {
+			return nil, err
+		}
 	}
 	allocation, dust, tolerance, err := nativeExecutionArithmetic(total, incentives, dividends, normalized, emitted)
 	if err != nil {
@@ -399,70 +472,92 @@ func deriveNativeExecution(policy economicEmissionPolicy, admission nativeExecut
 		}
 		providers[provider.Hotkey] = provider
 	}
+	if err := validateNativeTreasuryRoster(admission.Treasury, byHotkey, providers); err != nil {
+		return nil, err
+	}
 	providerTotal, ownerTotal, residualTotal, capturedTotal := new(big.Int), new(big.Int), new(big.Int), new(big.Int)
-	effects := make([]nativeExecutionEffect, 0, len(recipients))
-	for _, record := range recipients {
-		hotkey, err := nativeCapture(record, "hotkey", 32)
+	inputs := make([]nativeRecipientInput, 0, len(recipients))
+	if recipientLayout != nil {
+		inputs, err = recipientLayout.decode(recipients)
 		if err != nil {
 			return nil, err
 		}
-		identity, exists := byHotkey["0x"+hex.EncodeToString(hotkey)]
+	} else {
+		for _, record := range recipients {
+			input, err := decodeNativeLegacyRecipient(record)
+			if err != nil {
+				return nil, err
+			}
+			inputs = append(inputs, input)
+		}
+	}
+	effects := make([]nativeExecutionEffect, 0, len(inputs))
+	for _, input := range inputs {
+		identity, exists := byHotkey[input.hotkey]
 		if !exists || used[identity.Hotkey] {
 			return nil, errors.New("native recipient effect changed or duplicated original generation")
 		}
 		uid := identity.Uid
 		used[identity.Hotkey] = true
-		coldkey, err := nativeCapture(record, "coldkey", 32)
-		if err != nil {
-			return nil, err
-		}
-		result.Recipients[uid].Coldkey = "0x" + hex.EncodeToString(coldkey)
+		result.Recipients[uid].Coldkey = input.coldkey
 		if provider, ok := providers[identity.Hotkey]; ok && provider.Coldkey != result.Recipients[uid].Coldkey {
 			return nil, errors.New("native provider reward owner changed")
 		}
-		gross, err := nativeCaptureUint(record, "gross", 8)
-		if err != nil {
-			return nil, err
-		}
+		gross := input.gross
 		if gross != emitted[uid] {
 			return nil, errors.New("native reward, capture and actual recycling do not conserve original emission")
 		}
-		effect := nativeExecutionEffect{Ordinal: record.Ordinal, Recipient: result.Recipients[uid], Branch: record.Purpose, Gross: fmt.Sprint(gross), Liquid: "0", Collateral: "0", Recycled: "0"}
+		effect := nativeExecutionEffect{Ordinal: input.record.Ordinal, Recipient: result.Recipients[uid], Branch: input.branch, Gross: fmt.Sprint(gross), Liquid: "0", Collateral: "0", Recycled: "0"}
 		_, effect.Provider = providers[identity.Hotkey]
-		if record.Purpose == "native-owner-recycle" {
+		if input.branch == "native-owner-recycle" {
 			// The admitted original body/range identifies the owner Recycle
 			// branch, excluding burn, root recycling and separate owner cut.
-			recycled, err := nativeCaptureUint(record, "recycled", 8)
-			if err != nil || recycled != gross {
+			recycled := input.recycled
+			if recycled != gross {
 				return nil, errors.New("native owner recycling differs from original entitlement")
 			}
-			if _, provider := providers[identity.Hotkey]; provider {
-				return nil, errors.New("native provider is also a runtime owner recycle recipient")
+			if effect.Provider || admission.Treasury != nil && nativeTreasuryRecipient(admission.Treasury.Policy, effect.Recipient) {
+				return nil, errors.New("native approved recipient is also a runtime owner recycle recipient")
 			}
 			ownerTotal.Add(ownerTotal, new(big.Int).SetUint64(recycled))
 			effect.Recycled = fmt.Sprint(recycled)
 		} else {
-			captured, err := nativeCaptureUint(record, "captured", 8)
-			if err != nil {
-				return nil, err
-			}
-			liquid, err := nativeCaptureUint(record, "liquid", 8)
-			if err != nil || captured > gross || liquid != gross-captured {
+			captured, liquid := input.captured, input.liquid
+			if captured > gross || liquid != gross-captured {
 				return nil, errors.New("native collateral capture and liquid reward do not conserve original entitlement")
 			}
 			capturedTotal.Add(capturedTotal, new(big.Int).SetUint64(captured))
 			effect.Liquid, effect.Collateral = fmt.Sprint(liquid), fmt.Sprint(captured)
-			if _, provider := providers[identity.Hotkey]; provider {
+			effect.Treasury, err = deriveNativeStorageTreasuryRecipient(admission.Treasury, input, effect)
+			if err != nil {
+				return nil, err
+			}
+			if effect.Provider {
 				providerTotal.Add(providerTotal, new(big.Int).SetUint64(gross))
+			} else if effect.Treasury != nil {
+				for _, item := range []struct {
+					target *string
+					value  string
+				}{
+					{target: &result.Treasury.Gross, value: effect.Gross}, {target: &result.Treasury.Liquid, value: effect.Liquid}, {target: &result.Treasury.Collateral, value: effect.Collateral},
+				} {
+					if err := nativeExecutionAdd(item.target, item.value, false); err != nil {
+						return nil, err
+					}
+				}
 			} else {
 				residualTotal.Add(residualTotal, new(big.Int).SetUint64(gross))
 			}
 		}
+		if input.provenance != nil {
+			result.RecipientInputs = append(result.RecipientInputs, *input.provenance)
+		}
 		effects = append(effects, effect)
 	}
 	for _, identity := range result.Recipients {
-		if emitted[identity.Uid] != 0 && !used[identity.Hotkey] {
-			return nil, errors.New("native execution omitted a nonzero original recipient effect")
+		treasury := admission.Treasury != nil && nativeTreasuryRecipient(admission.Treasury.Policy, identity)
+		if (emitted[identity.Uid] != 0 || treasury) && !used[identity.Hotkey] {
+			return nil, errors.New("native execution omitted an original treasury or nonzero recipient effect")
 		}
 	}
 	result.ProviderEntitlement, result.OwnerRecycled, result.ResidualEntitlement, result.CollateralCapture = providerTotal.String(), ownerTotal.String(), residualTotal.String(), capturedTotal.String()
@@ -613,19 +708,12 @@ func validateNativeExecutionReplay(ctx context.Context, policy economicEmissionP
 			}
 		}
 	}
-	entries, err := observationStorageProfile(metadata, economicEmissionStorageSpecs)
+	drains, err := nativeExecutionDrainKeys(metadata, policy.Netuid)
 	if err != nil {
 		return nil, err
 	}
-	var drains [3]nativeExecutionDrain
-	for index, name := range []string{"PendingServerEmission", "PendingValidatorEmission", "PendingRootAlphaDivs"} {
-		key, err := types.CreateStorageKey(metadata, "SubtensorModule", name, binary.LittleEndian.AppendUint16(nil, policy.Netuid))
-		if err != nil {
-			return nil, err
-		}
-		drains[index] = nativeExecutionDrain{Key: key.Hex(), Fallback: append([]byte(nil), entries[name].Fallback...)}
-	}
-	result, err := deriveNativeExecution(policy, admission, block, job, *report, drains)
+
+	result, err := deriveNativeExecution(policy, admission, block, job, *report, drains, metadata)
 	if err != nil {
 		return nil, nativeExecutionDerivationError(err)
 	}
@@ -642,4 +730,22 @@ func validateNativeExecutionReplay(ctx context.Context, policy economicEmissionP
 		return nil, nativeExecutionDerivationError(err)
 	}
 	return result, nil
+}
+
+// One metadata-validated map layout supplies both provider selection and the
+// final amount derivation; neither accepts a caller's replacement key prefix.
+func nativeExecutionDrainKeys(metadata *types.Metadata, netuid uint16) ([3]nativeExecutionDrain, error) {
+	var drains [3]nativeExecutionDrain
+	entries, err := observationStorageProfile(metadata, economicEmissionStorageSpecs)
+	if err != nil {
+		return drains, err
+	}
+	for index, name := range []string{"PendingServerEmission", "PendingValidatorEmission", "PendingRootAlphaDivs"} {
+		key, err := types.CreateStorageKey(metadata, "SubtensorModule", name, binary.LittleEndian.AppendUint16(nil, netuid))
+		if err != nil {
+			return drains, err
+		}
+		drains[index] = nativeExecutionDrain{Key: key.Hex(), Fallback: append([]byte(nil), entries[name].Fallback...)}
+	}
+	return drains, nil
 }

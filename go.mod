@@ -20,12 +20,12 @@ require (
 	github.com/urnetwork/connect v0.0.0
 	github.com/urnetwork/glog v0.0.0
 	github.com/urnetwork/sdk v0.0.0
-	github.com/urnetwork/server v0.0.0-00010101000000-000000000000
+	github.com/urnetwork/server v0.0.0
 	github.com/vedhavyas/go-subkey/v2 v2.0.0
-	golang.org/x/crypto v0.54.0
-	golang.org/x/net v0.57.0
-	golang.org/x/sys v0.47.0
-	golang.org/x/term v0.45.0
+	golang.org/x/crypto v0.57.0
+	golang.org/x/net v0.60.0
+	golang.org/x/sys v0.48.0
+	golang.org/x/term v0.46.0
 	golang.org/x/time v0.15.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
@@ -194,8 +194,8 @@ require (
 	golang.org/x/exp v0.0.0-20260727155853-b88d891fe743 // indirect
 	golang.org/x/image v0.44.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20241231184526-a9ab2273dd10 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
@@ -212,7 +212,7 @@ require (
 // validator (and miner) import connect; connect imports glog. Replaces in a
 // dependency's go.mod are ignored, so the main module declares both.
 
-replace github.com/urnetwork/server => github.com/urnetwork/server v0.0.0-20261005092907-b2541a0fef99
+replace github.com/urnetwork/server => github.com/urnetwork/server v0.0.0-20261017012310-0fd9ce9708ea
 
 // The server module also imports Warp; dependency replaces are not inherited.
 replace github.com/urnetwork/warp => github.com/urnetwork/warp v0.0.0-20260926170351-89a47cb6561d
@@ -223,7 +223,7 @@ replace github.com/urnetwork/proxy => github.com/urnetwork/proxy v0.0.0-20260923
 
 replace github.com/urnetwork/userwireguard => github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f
 
-replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20261006082636-701fa391e160
+replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20261016200328-a9197cdc5853
 
 replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9
 

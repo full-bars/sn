@@ -287,8 +287,17 @@ func TestSupervisorDependencyDockerHelper(t *testing.T) {
 
 // This exercises the real supervisor entry point, Docker adapter and manifest
 // so deleting its recovery wiring deterministically loses the expected start.
-// No child, data, setup, or funding action participates in the repair.
+// No child, data, setup, or funding action participates in the repair, and no
+// Docker helper outlives its parent. Under -race, on a CPU without AVX2 or SHA
+// extensions, the supervisor hashes its executable for 16 seconds before its
+// first Docker command, so recovery has two minutes and the private owner five.
 func TestSupervisorRecoversDependencyWhileKeepingGeneration(t *testing.T) {
+	runSupervisorDescendantOwnerTest(t, 0, 5*time.Minute, assertSupervisorRecoversDependencyWhileKeepingGenerationTest)
+}
+
+// Cancellation always reaches the supervisor while its Docker start is still
+// running: the callback answers the start only after the test has returned.
+func assertSupervisorRecoversDependencyWhileKeepingGenerationTest(t *testing.T) {
 	stateDir := t.TempDir()
 	dependencies, _ := dependencyRecoveryTestFixture()
 	dependency := dependencies[0]
@@ -310,13 +319,18 @@ func TestSupervisorRecoversDependencyWhileKeepingGeneration(t *testing.T) {
 		t.Fatal(err)
 	}
 	started := make(chan string, 1)
+	release := make(chan struct{})
 	callback := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		started <- strings.TrimPrefix(request.URL.Path, "/")
+		<-release
 		writer.WriteHeader(http.StatusNoContent)
 	}))
 	defer callback.Close()
+	defer close(release)
 	path := filepath.Join(stateDir, "docker")
-	if err := os.WriteFile(path, []byte("#!/bin/sh\nset -eu\nresult=$(\"$RECOVERY_TEST_BINARY\" -test.run=^TestSupervisorDependencyDockerHelper$ -- \"$@\" 2>/dev/null)\nprintf '%s\\n' \"$result\" | /usr/bin/tail -n 1\n"), 0o700); err != nil {
+	// Like the real CLI, the helper is the supervisor's own child: canceling
+	// a command kills and reaps it, where a forking shell would orphan it.
+	if err := os.WriteFile(path, []byte("#!/bin/sh\nset -eu\nexec \"$RECOVERY_TEST_BINARY\" -test.run=^TestSupervisorDependencyDockerHelper$ -- \"$@\" 2>/dev/null\n"), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", stateDir)
@@ -340,7 +354,7 @@ func TestSupervisorRecoversDependencyWhileKeepingGeneration(t *testing.T) {
 		}
 	case err := <-done:
 		t.Fatalf("supervisor exited before dependency recovery: %v", err)
-	case <-time.After(20 * time.Second):
+	case <-time.After(2 * time.Minute):
 		cancel()
 		<-done
 		t.Fatal("supervisor did not recover its stopped dependency")

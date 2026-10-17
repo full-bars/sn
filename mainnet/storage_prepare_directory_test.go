@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The public offline dispatcher admits fixed directory-head formats without
 // manufacturing a first runtime payload or any transaction authority.

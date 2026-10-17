@@ -177,13 +177,16 @@ func newSimulatorClientSeedTestFixtureWithOperatorSeeds(t *testing.T, cfg *Resol
 	if err := validatorpkg.AdvanceAttemptSettlementEpoch(root, 43, boundary, participants); err != nil {
 		t.Fatal(err)
 	}
-	intents, err := json.Marshal(struct {
-		Schema string `json:"schema"`
-	}{Schema: validatorpkg.SteeringIntentSchema})
+	// The validator's own canonical store, here with no intent.
+	intents, err := json.MarshalIndent(struct {
+		Schema  string                        `json:"schema"`
+		Current *validatorpkg.SteeringIntent  `json:"current,omitempty"`
+		History []validatorpkg.SteeringIntent `json:"history"`
+	}{Schema: validatorpkg.SteeringIntentSchema}, "", "  ")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "steering-intents.json"), intents, 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "steering-intents.json"), append(intents, '\n'), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	writeFinalPathIdentityTestPublic(t, stateRoot, cfg.Config.Deployment.DeploymentID, map[uint64][]FinalOperatorPathIdentity{1: finalPathIdentityTestKeyVector(validatorKeys)})

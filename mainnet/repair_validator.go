@@ -135,7 +135,14 @@ func resumeRepairValidator(ctx context.Context, store *repairValidatorStore, hos
 		if err := control.validate(); err != nil {
 			return finish("uncertain-consumed-start", err)
 		}
-		if err := host.start(ctx, plan); err != nil {
+		if err := host.start(ctx, plan, func() error {
+			dispatchAt := now()
+			if dispatchAt.Before(record.HighWaterAt) || dispatchAt.Before(plan.ValidFrom) || !dispatchAt.Before(plan.ExpiresAt) || dispatchAt.Sub(incidentAt) > time.Duration(plan.MaximumSampleAgeSeconds)*time.Second || ctx.Err() != nil {
+				return errors.Join(errors.New("validator repair authority window closed before start dispatch"), ctx.Err())
+			}
+			record.HighWaterAt = dispatchAt
+			return nil
+		}); err != nil {
 			return finish("uncertain-consumed-start", err)
 		}
 		manager, err = host.inspect(ctx, plan)

@@ -25,10 +25,23 @@ use std::{any::TypeId, collections::BTreeSet, panic::AssertUnwindSafe};
 
 #[path = "historical_capture.rs"]
 pub mod capture;
+#[path = "historical_epoch_layout.rs"]
+mod epoch_layout;
 #[path = "historical_fee_events.rs"]
 pub mod fee_events;
+#[path = "historical_global_alias.rs"]
+pub mod global_alias;
+#[path = "historical_recipient_layout.rs"]
+mod recipient_layout;
+#[path = "historical_storage_call.rs"]
+mod storage_call;
+
+#[path = "historical_host_snapshot.rs"]
+mod host_snapshot;
 #[path = "historical_hosts.rs"]
 mod hosts;
+#[path = "historical_metadata_scope.rs"]
+mod metadata_scope;
 #[path = "historical_observer.rs"]
 pub mod observer;
 #[path = "historical_principal.rs"]
@@ -81,6 +94,24 @@ const MAXIMUM_EXPANDED_CODE_BYTES: usize = 32 * 1024 * 1024;
 const MAXIMUM_BLOCK_BYTES: usize = 8 * 1024 * 1024;
 const MAXIMUM_HEADER_BYTES: usize = 64 * 1024;
 type NativeHeader = Header<u32, BlakeTwo256>;
+
+/// The v1 wire retains the raw stateVersion/systemVersion RPC alias, not a
+/// normalized trie layout. It admits only zero and one, as the Go request and
+/// job validators do. Their storage layouts differ, but the SDK selects body
+/// layout zero for both. Replay separately requires the original Core_version
+/// to match this raw value exactly; equal storage layouts are not sufficient.
+fn extrinsics_root_state_version(system_version: u8) -> Result<StateVersion, ProbeError> {
+    // StateVersion::try_from also accepts raw two as V1. That conversion must
+    // not silently expand this versioned job grammar or reinterpret old pins.
+    if system_version > 1 {
+        return Err(ProbeError::new("historical state version unsupported"));
+    }
+    Ok(RuntimeVersion {
+        system_version,
+        ..RuntimeVersion::default()
+    }
+    .extrinsics_root_state_version())
+}
 
 /// Roots come only from these completely decoded headers. The caller must
 /// independently admit their hashes/finality before using any resulting fact.
@@ -171,7 +202,7 @@ fn scale_exact<T: Decode + Encode>(label: &str, raw: &[u8]) -> Result<T, ProbeEr
 
 /// Refuse oversized initial/imported memories before Wasmtime compilation.
 /// The executor additionally caps dynamic growth. Heap pages are proved state.
-fn memory_bound(wasm: &[u8], heap_pages: Option<u64>) -> Result<(), ProbeError> {
+pub(crate) fn memory_bound(wasm: &[u8], heap_pages: Option<u64>) -> Result<(), ProbeError> {
     let mut memories = 0;
     let mut check = |memory: wasmparser::MemoryType| -> Result<(), ProbeError> {
         memories += 1;
@@ -269,7 +300,7 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
     }
     if BlakeTwo256::ordered_trie_root(
         extrinsics.iter().map(Encode::encode).collect(),
-        state_version,
+        extrinsics_root_state_version(job.execution_state_version)?,
     ) != *child.extrinsics_root()
     {
         return Err(ProbeError::new("historical extrinsics root differs"));
@@ -318,11 +349,28 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
     let wasm = sp_maybe_compressed_blob::decompress(&code, MAXIMUM_EXPANDED_CODE_BYTES)
         .map_err(|e| ProbeError::new(format!("historical code decompression: {e}")))?;
     memory_bound(&wasm, heap_pages)?;
-    let wrapped = WrappedRuntimeCode(code.as_slice().into());
+    // Original :code was authenticated above. A reviewed export-only view has
+    // its own executor cache identity; it never replaces the job's original.
+    let aliases = job
+        .observation_profile
+        .as_ref()
+        .map(|profile| profile.original_globals.as_slice())
+        .unwrap_or_default();
+    let observed = global_alias::expose(&wasm, aliases)?;
+    let runtime_bytes = if aliases.is_empty() {
+        code.as_slice()
+    } else {
+        observed.as_ref()
+    };
+    let wrapped = WrappedRuntimeCode(runtime_bytes.into());
     let runtime = RuntimeCode {
         code_fetcher: &wrapped,
         heap_pages,
-        hash: job.runtime_code_blake2b_256.to_vec(),
+        hash: if aliases.is_empty() {
+            job.runtime_code_blake2b_256.to_vec()
+        } else {
+            blake2_256(runtime_bytes).to_vec()
+        },
     };
     let observation = job
         .observation_profile
@@ -379,12 +427,13 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
         parent.hash(),
     )?;
     // Decode metadata from the same original code with storage/offchain hosts
-    // absent. A witness cannot supply a substituted layout for its events.
+    // absent. The pin does not select fee accounting or require fee pallets
+    // when only native storage and allocation callsites are selected.
     let event_layout = job
         .observation_profile
         .as_ref()
-        .and_then(|profile| profile.metadata_sha256)
-        .map(|expected| {
+        .filter(|profile| profile.metadata_sha256.is_some())
+        .map(|profile| {
             let metadata_executor =
                 WasmExecutor::<crate::StatelessMetadataHostFunctions>::builder()
                     .with_allow_missing_host_functions(true)
@@ -395,9 +444,10 @@ pub fn replay_historical_json(raw: &[u8]) -> Result<Vec<u8>, ProbeError> {
             let raw =
                 crate::execute_runtime_api(&metadata_executor, &runtime, "Metadata_metadata")?;
             let metadata: sp_core::OpaqueMetadata = scale_exact("original runtime metadata", &raw)?;
-            fee_events::EventLayout::from_generated(metadata.as_slice(), expected)
+            metadata_scope::event_layout(profile, metadata.as_slice())
         })
-        .transpose()?;
+        .transpose()?
+        .flatten();
     // Consensus seals are external to runtime execution. Keep their original
     // header hash in the report and refuse seals placed between runtime items.
     let mut execution_header = child.clone();

@@ -477,12 +477,12 @@ func TestValidatorActivationAdmissionRejectsExpiredObservationAndRollback(t *tes
 	for _, change := range []string{"age", "rollback", "advance"} {
 		f := newValidatorActivationFixture(t)
 		f.installed()
-		store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+		store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 		if err != nil {
 			t.Fatal(err)
 		}
 		calls := 0
-		result, err := advanceValidatorActivation(t.Context(), store, f.host, nil, "admit", func() time.Time {
+		result, err := advanceValidatorActivation(f.chain.storageContext(t.Context()), store, f.host, nil, "admit", func() time.Time {
 			calls++
 			if change == "advance" && calls >= 3 {
 				return f.now.Add(time.Second)
@@ -511,22 +511,33 @@ func TestValidatorActivationAdmissionRejectsExpiredObservationAndRollback(t *tes
 
 // Publishing the observation can block too. Post-sync refusal keeps that
 // historical evidence and the spent operation, without reporting it current.
+// Cancellation inside publication requires reopening its exact pending bytes;
+// it cannot assert that a second source-refused publication completed.
 func TestValidatorActivationAdmissionPostSyncFreshness(t *testing.T) {
 	for _, change := range []string{"age", "rollback", "cancel"} {
 		f := newValidatorActivationFixture(t)
 		f.installed()
-		ctx, cancel := context.WithCancel(t.Context())
+		ctx, cancel := context.WithCancel(f.chain.storageContext(t.Context()))
 		store, err := openValidatorActivationStore(ctx, f.approval, f.key, false, f.now)
 		if err != nil {
 			cancel()
 			t.Fatal(err)
 		}
+		t.Cleanup(func() {
+			cancel()
+			_ = store.close()
+		})
 		before, err := store.load(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
 		reached := false
+		var published validatorActivationRecord
+		var publishedRaw []byte
 		store.syncDirectory = func(file *os.File) error {
+			if err := file.Sync(); err != nil {
+				return err
+			}
 			raw, err := os.ReadFile(store.path)
 			if err != nil {
 				return err
@@ -535,8 +546,9 @@ func TestValidatorActivationAdmissionPostSyncFreshness(t *testing.T) {
 			if err := json.Unmarshal(raw, &record); err != nil {
 				return err
 			}
-			if record.Status == "admitted-process-only" {
+			if !reached && record.Status == "admitted-process-only" {
 				reached = true
+				published, publishedRaw = record, bytes.Clone(raw)
 				switch change {
 				case "age":
 					f.now = f.now.Add(121 * time.Second)
@@ -546,13 +558,51 @@ func TestValidatorActivationAdmissionPostSyncFreshness(t *testing.T) {
 					cancel()
 				}
 			}
-			return file.Sync()
+			return nil
 		}
 		result, err := advanceValidatorActivation(ctx, store, f.host, nil, "admit", func() time.Time { return f.now })
+		if change == "cancel" {
+			if !errors.Is(err, context.Canceled) || !errors.Is(err, errMainnetDurablePublicationUncertain) || !reached || result.Status != "admitted-process-only" || result.Readiness == nil || result.Operations != before.Operations+1 || f.starts != [2]int{} || f.authorityCalls != 0 || result.ActivationReady || result.RootServiceActive || result.ChainSuccessProven {
+				t.Fatal("canceled publication lost its uncertainty, evidence or consumed operation", result, err)
+			}
+			if _, err := store.load(t.Context()); err == nil {
+				t.Fatal("canceled publication admitted the same owner without reopening")
+			}
+		}
 		closeErr := store.close()
 		cancel()
-		if err == nil || closeErr != nil || !reached || result.Status != "source-refused" || result.Readiness == nil || result.Operations != before.Operations+1 || f.starts != [2]int{} {
+		if change != "cancel" && (err == nil || closeErr != nil || !reached || result.Status != "source-refused" || result.Readiness == nil || result.Operations != before.Operations+1 || f.starts != [2]int{}) {
 			t.Fatal("post-sync admission reported stale evidence current or refunded its operation", change, result, err, closeErr)
+		}
+		if change != "cancel" {
+			continue
+		}
+		if closeErr != nil {
+			t.Fatal(closeErr)
+		}
+		// A fresh physical owner reconciles the actual original snapshot. It
+		// does not repeat admission, replace evidence or refund the operation.
+		fresh := f.chain.storageContext(t.Context())
+		reopened, err := openValidatorActivationStore(fresh, f.approval, f.key, false, f.now)
+		if err != nil {
+			t.Fatal("fresh owner could not reconcile original published admission", err)
+		}
+		t.Cleanup(func() { _ = reopened.close() })
+		retained, loadErr := reopened.load(fresh)
+		closeErr = reopened.close()
+		raw, readErr := os.ReadFile(f.approval.Plan.StatePath)
+		if loadErr != nil || closeErr != nil || readErr != nil || !bytes.Equal(raw, publishedRaw) || !reflect.DeepEqual(retained, published) || !reflect.DeepEqual(retained.Approval, before.Approval) || !reflect.DeepEqual(retained.Units, before.Units) || retained.PublicKey != before.PublicKey || retained.Operations != before.Operations+1 {
+			t.Fatal("reopen replaced original authority, evidence or spent allowance", loadErr, closeErr, readErr)
+		}
+		for _, operation := range []string{"status", "resume"} {
+			observed, code, detail := f.command(t.Context(), operation, nil)
+			if operation == "status" && (code != 0 || observed.Status != "admitted-process-only") || operation == "resume" && (code == 0 || observed.Status != "activation-authority-unavailable") || observed.Operations != retained.Operations || !reflect.DeepEqual(observed.Readiness, retained.Readiness) || !reflect.DeepEqual(observed.Units, retained.Units) || f.starts != [2]int{} || f.authorityCalls != 0 || observed.ActivationReady || observed.RootServiceActive || observed.ChainSuccessProven {
+				t.Fatal("public recovery renewed admission or invented start authority", operation, code, observed, detail)
+			}
+		}
+		raw, readErr = os.ReadFile(f.approval.Plan.StatePath)
+		if readErr != nil || !bytes.Equal(raw, publishedRaw) {
+			t.Fatal("public recovery rewrote original published admission", readErr)
 		}
 	}
 }
@@ -566,7 +616,7 @@ func TestValidatorActivationLegacyReadinessRecoversConsumedStart(t *testing.T) {
 	if _, code, detail := f.command(t.Context(), "start", f); code == 0 || f.starts != [2]int{1, 0} {
 		t.Fatal("synthetic initial partial start unavailable", code, detail)
 	}
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}

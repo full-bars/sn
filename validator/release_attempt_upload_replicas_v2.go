@@ -10,18 +10,19 @@ import (
 	"fmt"
 )
 
-// The complete configured runtime census is checked before returning either
-// writer. Public origins select two existing authenticated sessions, never a
-// new login, credential file, artifact signing key or raw object-store client.
-// Inputs must not be mutated during construction; returned routing owns values.
-func releaseAttemptUploadReplicasV2(cfg *ReleaseConfig, origins [2]string, runtimes []*releaseOperatorRuntime) ([2]AttemptCutV2Replica, error) {
+// The complete configured runtime census is checked before returning any
+// writer. Public origins select two existing authenticated sessions, or a
+// single operator's own session as the only replica, never a new login,
+// credential file, artifact signing key or raw object-store client. Inputs
+// must not be mutated during construction; returned routing owns values.
+func releaseAttemptUploadReplicasV2(cfg *ReleaseConfig, origins []string, runtimes []*releaseOperatorRuntime) ([]AttemptCutV2Replica, error) {
 	replicas, err := releaseAttemptUploadConfiguredReplicasV2(cfg, origins, runtimes)
 	if err != nil {
-		return [2]AttemptCutV2Replica{}, err
+		return nil, err
 	}
 	for _, runtime := range runtimes {
 		if err := runtime.attemptUpload.ctx.Err(); err != nil {
-			return [2]AttemptCutV2Replica{}, err
+			return nil, err
 		}
 	}
 	return replicas, nil
@@ -30,43 +31,42 @@ func releaseAttemptUploadReplicasV2(cfg *ReleaseConfig, origins [2]string, runti
 // Configured identity, bounds and concrete writer ownership survive session
 // withdrawal. This does not admit publication: every callback still joins the
 // original session, and live builders above additionally require active owners.
-func releaseAttemptUploadConfiguredReplicasV2(cfg *ReleaseConfig, origins [2]string, runtimes []*releaseOperatorRuntime) ([2]AttemptCutV2Replica, error) {
-	var zero [2]AttemptCutV2Replica
-	if cfg == nil || len(cfg.Operators) < 2 || len(runtimes) != len(cfg.Operators) ||
+func releaseAttemptUploadConfiguredReplicasV2(cfg *ReleaseConfig, origins []string, runtimes []*releaseOperatorRuntime) ([]AttemptCutV2Replica, error) {
+	if cfg == nil || len(cfg.Operators) == 0 || len(origins) != releaseEvidenceV2ReplicaCensus(len(cfg.Operators)) || len(runtimes) != len(cfg.Operators) ||
 		uint64(len(runtimes)) > cfg.EvidenceV2.Bounds.MaxOperators || uint64(len(runtimes)) > cfg.EvidenceV2.Bounds.MaxParticipants {
-		return zero, errors.New("release attempt upload runtime census is incomplete or exceeds its bounds")
+		return nil, errors.New("release attempt upload runtime census is incomplete or exceeds its bounds")
 	}
 	configured := make(map[uint64]OperatorConfig, len(cfg.Operators))
 	for _, operator := range cfg.Operators {
 		if operator.NoID == 0 || configured[operator.NoID].NoID != 0 {
-			return zero, errors.New("release attempt upload configured operator is zero or duplicated")
+			return nil, errors.New("release attempt upload configured operator is zero or duplicated")
 		}
 		configured[operator.NoID] = operator
 	}
 	seen := make(map[uint64]bool, len(runtimes))
-	var selected [2]*releaseAttemptUploadV2
+	selected := make([]*releaseAttemptUploadV2, len(origins))
 	for _, runtime := range runtimes {
 		if runtime == nil || runtime.measurement == nil || runtime.attemptUpload == nil {
-			return zero, errors.New("release attempt upload runtime owner is missing")
+			return nil, errors.New("release attempt upload runtime owner is missing")
 		}
 		owner := runtime.attemptUpload
 		operator, found := configured[owner.noID]
 		if !found || seen[owner.noID] || runtime.measurement.NoID != owner.noID || owner.origin != operator.APIURL || owner.bounds != cfg.EvidenceV2.Bounds.Cut || owner.maxTransitionBytes != cfg.EvidenceV2.Bounds.MaxTransitionBytes || owner.ctx == nil || owner.cancel == nil || owner.writer == nil {
-			return zero, errors.New("release attempt upload runtime differs from its configured operator")
+			return nil, errors.New("release attempt upload runtime differs from its configured operator")
 		}
 		// Check the actual attached writer, not only its owner's markers. This
 		// constructs no request and never calls the live credential getter.
 		expected, err := newHttpAttemptStreamV2Writer(operator.APIURL, owner.bounds, max(attemptStreamV2MetadataBytes(owner.bounds), owner.maxTransitionBytes), owner.writer.byJwt)
 		if err != nil {
-			return zero, err
+			return nil, err
 		}
 		writer := owner.writer
 		if owner.bounds.MaxHeaderBytes == 0 || owner.bounds.MaxHeaderBytes > attemptStreamV2MetadataBytes(owner.bounds) ||
 			writer.endpoint != expected.endpoint || writer.metadataBytes != expected.metadataBytes ||
 			writer.recordBytes != expected.recordBytes || writer.proofBytes != expected.proofBytes ||
 			writer.client == nil || writer.client.Timeout != expected.client.Timeout || writer.client.CheckRedirect == nil ||
-			writer.client.Transport != nil || writer.client.Jar != nil {
-			return zero, errors.New("release attempt upload concrete writer differs from its admitted route or bounds")
+			writer.client.Transport != expected.client.Transport || writer.client.Jar != nil {
+			return nil, errors.New("release attempt upload concrete writer differs from its admitted route or bounds")
 		}
 		// Function identity cannot prove credential ownership. The private
 		// constructor still binds the actual SDK session and redirect refusal.
@@ -74,16 +74,16 @@ func releaseAttemptUploadConfiguredReplicasV2(cfg *ReleaseConfig, origins [2]str
 		for index, origin := range origins {
 			if origin == owner.origin {
 				if selected[index] != nil {
-					return zero, errors.New("release attempt upload public origin has competing runtime owners")
+					return nil, errors.New("release attempt upload public origin has competing runtime owners")
 				}
 				selected[index] = owner
 			}
 		}
 	}
-	var replicas [2]AttemptCutV2Replica
+	replicas := make([]AttemptCutV2Replica, len(selected))
 	for index, owner := range selected {
 		if owner == nil {
-			return zero, fmt.Errorf("release attempt upload public origin %d has no authenticated runtime", index+1)
+			return nil, fmt.Errorf("release attempt upload public origin %d has no authenticated runtime", index+1)
 		}
 		writer := func(kind string) AttemptStreamV2ObjectWriter {
 			return func(ctx context.Context, hash string, raw []byte) error { return owner.write(ctx, kind, hash, raw) }
@@ -92,7 +92,7 @@ func releaseAttemptUploadConfiguredReplicasV2(cfg *ReleaseConfig, origins [2]str
 	}
 	// Reuse the exact public reader's alias, header and stream-bound admission.
 	if _, err := newAttemptCutV2Replicas(cfg.EvidenceV2.Bounds.Cut, replicas); err != nil {
-		return zero, err
+		return nil, err
 	}
 	return replicas, nil
 }

@@ -6,9 +6,13 @@ package main
 import (
 	"errors"
 	"math/big"
+	"reflect"
 )
 
 type nativeExecutionWindow struct {
+	Treasury               *nativeTreasuryAmounts   `json:"treasury_income,omitempty"`
+	TreasuryReference      *string                  `json:"treasury_reference_alpha,omitempty"`
+	TreasuryDeviation      *string                  `json:"treasury_deviation_alpha,omitempty"`
 	From                   economicEmissionBoundary `json:"from_exclusive"`
 	Through                economicEmissionBoundary `json:"through_inclusive"`
 	Blocks                 uint64                   `json:"blocks"`
@@ -50,6 +54,9 @@ func nativeExecutionEmpty(from economicEmissionBoundary) nativeExecutionWindow {
 	return nativeExecutionWindow{From: from, Through: from, EvidenceChain: rootObjectHash(from), MinerAllocation: "0", ProviderEntitlement: "0", OwnerRecycled: "0", ResidualEntitlement: "0", CollateralCapture: "0", RedirectedToValidators: "0", AllocationDifference: "0", FixedPointDust: "0", FixedPointTolerance: "0", ProviderReference: "0", OwnerRecycleReference: "0"}
 }
 
+// These references apply the fixed split to the complete tranche; the window
+// cannot see weight inputs. Conformance removes treasury reserve-only tranches,
+// which the complete allocation witness identifies, from the provider basis.
 func (self *nativeExecutionWindow) references() error {
 	var amounts []*big.Int
 	for _, raw := range []string{self.MinerAllocation, self.ProviderEntitlement, self.OwnerRecycled} {
@@ -66,6 +73,16 @@ func (self *nativeExecutionWindow) references() error {
 	self.OwnerRecycleReference = owner.String()
 	self.ProviderDeviation = new(big.Int).Sub(amounts[1], provider).String()
 	self.OwnerRecycleDeviation = new(big.Int).Sub(amounts[2], owner).String()
+	self.TreasuryReference, self.TreasuryDeviation = nil, nil
+	if self.Treasury != nil {
+		if err := self.Treasury.validate(); err != nil {
+			return err
+		}
+		gross, _ := new(big.Int).SetString(self.Treasury.Gross, 10)
+		reference, deviation := owner.String(), new(big.Int).Sub(gross, owner).String()
+		self.TreasuryReference, self.TreasuryDeviation = &reference, &deviation
+		self.OwnerRecycleReference, self.OwnerRecycleDeviation = "0", self.OwnerRecycled
+	}
 	// Final I32F32 normalization loss alone is not the full governed tolerance
 	// for preceding runtime quantization, fee, vault or independent Claim effects.
 	self.PolicyConformance = "unresolved-full-runtime-tolerance-and-conservation"
@@ -75,6 +92,9 @@ func (self *nativeExecutionWindow) references() error {
 
 func summarizeNativeExecution(observation economicEmissionObservation) (*nativeExecutionWindow, error) {
 	window := nativeExecutionEmpty(observation.Policy.From)
+	if observation.Policy.Execution != nil {
+		window.Treasury = newNativeTreasuryAmounts(observation.Policy.Execution.Treasury)
+	}
 	for _, block := range observation.Blocks {
 		outcome := block.ExecutionOutcome
 		if outcome == nil || !outcome.AmountsAuthenticated || outcome.ContentHash != outcome.hash() || outcome.Boundary != block.Boundary || block.Boundary.Number != window.Through.Number+1 || block.Header.ParentHash != window.Through.Hash {
@@ -84,6 +104,12 @@ func summarizeNativeExecution(observation economicEmissionObservation) (*nativeE
 			if err := outcome.RecipientEffects.validate(*outcome); err != nil {
 				return nil, err
 			}
+		}
+		if !sameNativeTreasuryAuthority(window.Treasury, outcome.Treasury) {
+			return nil, errors.New("native execution window changed original treasury policy")
+		}
+		if err := addNativeTreasuryAmounts(&window.Treasury, outcome.Treasury); err != nil {
+			return nil, err
 		}
 		for _, item := range []struct {
 			target *string
@@ -126,12 +152,19 @@ func (self nativeExecutionWindow) validate() error {
 	if err := copy.references(); err != nil {
 		return err
 	}
-	if copy.ProviderReference != self.ProviderReference || copy.OwnerRecycleReference != self.OwnerRecycleReference || copy.ProviderDeviation != self.ProviderDeviation || copy.OwnerRecycleDeviation != self.OwnerRecycleDeviation || copy.PolicyConformance != self.PolicyConformance {
+	if copy.ProviderReference != self.ProviderReference || copy.OwnerRecycleReference != self.OwnerRecycleReference || copy.ProviderDeviation != self.ProviderDeviation || copy.OwnerRecycleDeviation != self.OwnerRecycleDeviation || copy.PolicyConformance != self.PolicyConformance || !reflect.DeepEqual(copy.TreasuryReference, self.TreasuryReference) || !reflect.DeepEqual(copy.TreasuryDeviation, self.TreasuryDeviation) {
 		return errors.New("native cumulative 10/90 reference did not carry exact rounding")
 	}
 	allocation := "0"
 	for _, value := range []string{self.ProviderEntitlement, self.OwnerRecycled, self.ResidualEntitlement, self.AllocationDifference} {
 		if err := nativeExecutionAdd(&allocation, value, true); err != nil {
+			return err
+		}
+	}
+	if self.Treasury != nil {
+		// AllocationDifference is signed; a temporary negative subtotal does
+		// not invalidate the separately authenticated nonnegative treasury mint.
+		if err := nativeExecutionAdd(&allocation, self.Treasury.Gross, true); err != nil {
 			return err
 		}
 	}
@@ -154,8 +187,20 @@ func nativeExecutionRetains(current, prior *nativeExecutionWindow) error {
 	if err := prior.validate(); err != nil {
 		return err
 	}
-	if current.From != prior.From || current.Through.Number < prior.Through.Number || current.Through.Number == prior.Through.Number && *current != *prior {
+	if current.From != prior.From || current.Through.Number < prior.Through.Number || current.Through.Number == prior.Through.Number && !reflect.DeepEqual(current, prior) {
 		return errors.New("native archived execution predecessor was replaced")
+	}
+	if !sameNativeTreasuryAuthority(current.Treasury, prior.Treasury) {
+		return errors.New("native archive changed treasury authority")
+	}
+	if current.Treasury != nil {
+		for _, pair := range [][2]string{{current.Treasury.Gross, prior.Treasury.Gross}, {current.Treasury.Liquid, prior.Treasury.Liquid}, {current.Treasury.Collateral, prior.Treasury.Collateral}} {
+			next, _ := new(big.Int).SetString(pair[0], 10)
+			old, _ := new(big.Int).SetString(pair[1], 10)
+			if next.Cmp(old) < 0 {
+				return errors.New("native archive reduced treasury income")
+			}
+		}
 	}
 	for _, pair := range [][2]string{{current.MinerAllocation, prior.MinerAllocation}, {current.ProviderEntitlement, prior.ProviderEntitlement}, {current.OwnerRecycled, prior.OwnerRecycled}, {current.ResidualEntitlement, prior.ResidualEntitlement}, {current.CollateralCapture, prior.CollateralCapture}, {current.RedirectedToValidators, prior.RedirectedToValidators}, {current.FixedPointDust, prior.FixedPointDust}, {current.FixedPointTolerance, prior.FixedPointTolerance}} {
 		next, nextOK := new(big.Int).SetString(pair[0], 10)
@@ -180,6 +225,7 @@ func appendNativeExecution(previous *nativeExecutionWindow, observation economic
 			return nil, errors.New("native execution accounting lacks its original drained activation boundary")
 		}
 		value := *window
+		value.Treasury = cloneNativeTreasuryAmounts(window.Treasury)
 		return &value, nil
 	}
 	if err := previous.validate(); err != nil {
@@ -188,7 +234,14 @@ func appendNativeExecution(previous *nativeExecutionWindow, observation economic
 	if previous.Through != window.From || previous.From != activation {
 		return nil, errors.New("native execution accounting skipped or repeated its retained predecessor")
 	}
+	if !sameNativeTreasuryAuthority(previous.Treasury, window.Treasury) {
+		return nil, errors.New("native append changed treasury authority")
+	}
 	next := *previous
+	next.Treasury = cloneNativeTreasuryAmounts(previous.Treasury)
+	if err := addNativeTreasuryAmounts(&next.Treasury, window.Treasury); err != nil {
+		return nil, err
+	}
 	for _, item := range []struct {
 		target *string
 		value  string

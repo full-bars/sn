@@ -1,0 +1,303 @@
+{
+  "schema": "carry-treasury-qualification-followup-v1",
+  "status": "RECORDED_SCOPES_PASS",
+  "scope": "Additive code and local qualification evidence. No live chain capture, deployed readiness, signing authority or activation.",
+  "previous_checkpoint": {
+    "path": "code-focused-followup-20261006.json",
+    "bytes": 6422,
+    "sha256": "40895a6ba4d357d85d08dffbf29edb10e7d016d0c70aa4d4d2f8a16372b5b9a9"
+  },
+  "qualified_scopes": {
+    "retained_solidity_carry3_control1": {
+      "result": "PASS_CARRY3_CONTROL1",
+      "normal": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "receipt": {
+          "path": "/home/by/sn-testnet-root-fallback-20261005/retained-carry3-control1/normal.receipt.json",
+          "bytes": 4278,
+          "sha256": "5666cf813e5f44eebe0750a2da2aa58be91062e7b0c7d26dd2fedc92abe19e90"
+        }
+      },
+      "negative_control": {
+        "result": "EXPECTED_ASSERTION_FAILURE",
+        "test_body_exit": 1,
+        "expected_failure": "assertion failed: 0 != 101",
+        "receipt": {
+          "path": "/home/by/sn-testnet-root-fallback-20261005/retained-carry3-control1/control.receipt.json",
+          "bytes": 4688,
+          "sha256": "d8aad92e058d8740e062c8c6b4522f7d8503aff10cb7862983d9ed4cd995a51f"
+        },
+        "scope": "Omitting original prior carry must fail the original chronology assertion; this is not a fourth ordinary pass."
+      },
+      "terminal": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/retained-carry3-control1/terminal.json",
+        "bytes": 29608,
+        "sha256": "30fbc716c91bd3ec9b86f4445a7ef9aef7caeae3fc9280c0c816ff095162d9f4"
+      },
+      "closed_owner": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/retained-carry3-control1/continuation-v7-user-terminal-readback.json",
+        "bytes": 7373,
+        "sha256": "b281959df731003b1aad283ea3f35a98f0c65b3a924b5b6b68f6b3e559f9ea77"
+      },
+      "current_source_equality": {
+        "receipt": {
+          "path": "/home/by/sn-testnet-root-fallback-20261005/retained-carry3-control1/current-source-check.json",
+          "bytes": 226,
+          "sha256": "6106398d9b7d55fcd9cc592267ffc39402b6cce5acf576eef888889939404240"
+        },
+        "sn_source": "9a21e15611bb99bc06e6f6da54ec63865a2138cf",
+        "checked_solidity_inputs": 1658,
+        "mismatches": 0,
+        "manifest": {
+          "path": "/home/by/sn-testnet-root-fallback-20261005/retained-carry3-control1/whole-solidity-inputs.json",
+          "bytes": 530138,
+          "sha256": "919e2e8e47cee5d0a6fd9b33965f359d8b4e98440bf9f8ab940fd3a6fbea0e99"
+        },
+        "later_source_scope": {
+          "sn_source": "c90cba0993d92d8cde381b9d2da71d95a6da5d0a",
+          "changes_since_comparison": "Only five mainnet Go implementation/test files changed between 9a21e156 and c90cba09; no Solidity or literal Solidity build input changed."
+        }
+      },
+      "scope": "Previously executed and retained qualification, recovered read-only and copied to healthy root storage; no new Forge invocation. The 1,658 literal Solidity inputs match source9a21e156."
+    },
+    "server_accounting_db2": {
+      "result": "PASS",
+      "selected_roots": [
+        "TestAsyncDebitPageDeadlineResumesCommittedAccounting",
+        "TestLegacySettlementPageDeadlinePreservesJoinedFailureAndCommittedCursor"
+      ],
+      "sources": {
+        "sn": "9a21e15611bb99bc06e6f6da54ec63865a2138cf",
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e"
+      },
+      "body_receipt": {
+        "path": "/home/by/sol-accounting2-v2-20261006/body/result.json",
+        "bytes": 18549,
+        "sha256": "64a91f620d187097e7d858a1b66e5e201d492a94586f4dfb4a870a99cae884c9"
+      },
+      "source_proof": {
+        "path": "/home/by/sol-accounting2-v2-20261006/source.json",
+        "bytes": 1609,
+        "sha256": "b9b196c168fe32301ab6ddf48dab7e67c41db5d0e4edc27a02733556dfab2b4c"
+      },
+      "binary": {
+        "path": "/home/by/sol-accounting2-v2-20261006/model.test",
+        "sha256": "5e3070bbaffafd331c5a4e896aba222e39569836a1da01eff7f063e3af923066"
+      },
+      "scope": "Two local tests against fresh isolated PostgreSQL/Redis fixtures; each joined exit0. This is not production migration or deployment readiness.",
+      "cleanup": {
+        "runner_exit": {
+          "path": "/home/by/sol-accounting2-v2-20261006/runner.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        "cleanup_exit": {
+          "path": "/home/by/sol-accounting2-v2-20261006/evidence/accounting2-v2-cleanup.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        "service_cleanup_log": {
+          "path": "/home/by/sol-accounting2-v2-20261006/evidence/accounting2-v2-services-cleanup.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "network_cleanup_log": {
+          "path": "/home/by/sol-accounting2-v2-20261006/evidence/accounting2-v2-network-cleanup.log",
+          "bytes": 65,
+          "sha256": "696d4548dbbd86a66e3db7aaf54f38d9568e01eaa802b15f990913154edb477d"
+        },
+        "scope": "Original runner and fresh owned-resource cleanup both exited zero; exact resource absence was read back by the execution owner."
+      }
+    },
+    "server_cancellation_pure4": {
+      "result": "PASS",
+      "selected_roots": [
+        "TestAsyncDebitPageDeadlinePreservesVisitedCursor",
+        "TestAsyncDebitPageDeadlinePreservesBusyCursor",
+        "TestAsyncDebitPageDeadlineKeepsForeignFailures",
+        "TestSettlementPageCancellationRejectsIncompleteAndForeignCauses"
+      ],
+      "race": false,
+      "sources": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "sn": "9a21e15611bb99bc06e6f6da54ec63865a2138cf"
+      },
+      "receipt": {
+        "path": "/home/by/rf-sn-provider-recovery-v1-20261005/local-scopes-20261006/closed-receipt.json",
+        "bytes": 5655,
+        "sha256": "0f85332672b46398bf3d0f98231148430bb16cd4cd89c98d1a9a37c2f0935961"
+      },
+      "scope": "Local selected tests only; exact selected roots passed, empty stderr, parent joined and scope closed. No live chain or deployment qualification."
+    },
+    "sn_economic_progress_race2": {
+      "result": "PASS",
+      "selected_roots": [
+        "TestEconomicProgressPublicOutageRetainsOwnerAndIndependentDomain",
+        "TestEconomicProgressPublicRestartStartsNewMeasurementWindow"
+      ],
+      "race": true,
+      "sources": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "sn": "9a21e15611bb99bc06e6f6da54ec63865a2138cf"
+      },
+      "receipt": {
+        "path": "/home/by/rf-sn-provider-recovery-v1-20261005/local-scopes-20261006/closed-receipt.json",
+        "bytes": 5655,
+        "sha256": "0f85332672b46398bf3d0f98231148430bb16cd4cd89c98d1a9a37c2f0935961"
+      },
+      "scope": "Local selected tests only; exact selected roots passed, empty stderr, parent joined and scope closed. No live chain or deployment qualification."
+    },
+    "treasury_activation7": {
+      "result": "PASS",
+      "selected_roots": [
+        "TestBootstrapRootPassiveComposesAndResumesBothRoles",
+        "TestValidatorActivationTreasuryNativeBothApprovalScopesRequired",
+        "TestValidatorActivationTreasuryNativeDefaultCodecRefused",
+        "TestValidatorActivationTreasuryNativeMalformedModeRefused",
+        "TestValidatorActivationTreasuryNativeProjectionPreservesLegacy",
+        "TestValidatorActivationTreasuryNativePublicAdmission",
+        "TestValidatorActivationTreasuryNativeSameBlockModeConflict"
+      ],
+      "sources": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "sn": "ff1ba7d2297a55ae02e29b593304872bd9490017"
+      },
+      "production_change": "270908beaae994705e5dcb73e039e411a7e332f5",
+      "fixture_correction": "874f9fc62398355f85d75505c9f6bff445640aef",
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/focused-treasury7-20261006/closed-user-readback-v1.json",
+        "bytes": 3106,
+        "sha256": "4890af691b2f24871eb9b3daad0feeac1ee0e5b288aef6926cb31898d4a8a833"
+      },
+      "scope": "All six originally failed new treasury cases plus one passive-bootstrap control pass once, -vet=off. The original eight adjacent passes retain their earlier source scope; this is not a new fourteen-test all-pass run."
+    },
+    "miner_state_and_refusal4": {
+      "result": "PASS",
+      "selected_roots": [
+        "TestProviderRegistrationCliRefusalHasClosedGuidance",
+        "TestMinerStateDirectoryAuthWritesSelectedState",
+        "TestMinerStateDirectoryAuthDeclinesSelectedOverwrite",
+        "TestMinerStateDirectoryProxyCommandsStaySelected"
+      ],
+      "sources": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "sn": "ff1ba7d2297a55ae02e29b593304872bd9490017"
+      },
+      "receipt": {
+        "path": "/home/by/rf-sn-provider-recovery-v1-20261005/miner4-rerun-20261006/closed-receipt.json",
+        "bytes": 3077,
+        "sha256": "43b6e433ee8be4d1e8f7d3ca2a761ede082fa14751d6a3718af7d971cc699354"
+      },
+      "scope": "Four selected state-directory and early-provider-refusal tests passed, with joined parent and closed scope. No live provider registration or transaction."
+    }
+  },
+  "retained_original_failures": {
+    "earlier_carry_list": {
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/executor-evidence-small-v4/normal-list.process-result.json",
+      "sha256": "e4818408521d34a8c2cdf0fd742d1f5e2a00a05c8c8360e8e9cd48f370905747"
+    },
+    "db2_collector_import": {
+      "result": "SETUP_FAILURE_BEFORE_TEST_BODIES",
+      "runner_exit": {
+        "path": "/home/by/sol-accounting2-20261006/runner.exit",
+        "bytes": 2,
+        "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+      },
+      "stderr": {
+        "path": "/home/by/sol-accounting2-20261006/fixture.stderr",
+        "bytes": 685,
+        "sha256": "d09a8cce46aca6097c2bb01f92e0c1f4d90caec0e5ea3aa6c81c0bd8b2f2e67c"
+      },
+      "cleanup_exit": {
+        "path": "/home/by/sol-accounting2-20261006/evidence/accounting2-v1-cleanup.exit",
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "scope": "The collector could not import cargo_control. The successor corrects collector sys.path; no product source change was needed."
+    },
+    "treasury14_fixture_scope": {
+      "result": "EIGHT_ADJACENT_PASS_SIX_NEW_FIXTURE_FAIL",
+      "passed": 8,
+      "failed": 6,
+      "passed_roots": [
+        "TestBootstrapChainV1RestartPreservesOriginalScope",
+        "TestBootstrapChainValidatorProductionConfigsBoundOffline",
+        "TestBootstrapChainValidatorRejectsSignedScopeMismatch",
+        "TestBootstrapChainValidatorRejectsWrongSignatureDomain",
+        "TestValidatorActivationLegacyReadinessRecoversConsumedStart",
+        "TestValidatorActivationNativeAdmissionKeepsRemainingAuthorityClosed",
+        "TestValidatorActivationNativeArchiveCheckpointAndCurrentEpoch",
+        "TestValidatorActivationNativeModeAndMechanismDenial"
+      ],
+      "failed_roots": [
+        "TestValidatorActivationTreasuryNativeBothApprovalScopesRequired",
+        "TestValidatorActivationTreasuryNativeDefaultCodecRefused",
+        "TestValidatorActivationTreasuryNativeMalformedModeRefused",
+        "TestValidatorActivationTreasuryNativeProjectionPreservesLegacy",
+        "TestValidatorActivationTreasuryNativePublicAdmission",
+        "TestValidatorActivationTreasuryNativeSameBlockModeConflict"
+      ],
+      "sources": {
+        "sn": "c90cba0993d92d8cde381b9d2da71d95a6da5d0a",
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e"
+      },
+      "source_change": "270908beaae994705e5dcb73e039e411a7e332f5",
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/focused-treasury14-20261006/closed-user-readback-v1.json",
+        "bytes": 4266,
+        "sha256": "b21e493a2841588b69ea6901fca493d9fdf26b4d75a1438547785cc904690d52"
+      },
+      "common_failure": "bootstrap chain validator approved runtime/source or subnet owner differs from independent trim and child scope",
+      "scope": "The original six new roots stopped at the fixture approval/source precondition; the corrected treasury_activation7 run qualifies them separately."
+    },
+    "miner_refusal_guidance": {
+      "passed": 3,
+      "failed": 1,
+      "failed_roots": [
+        "TestProviderRegistrationCliRefusalHasClosedGuidance"
+      ],
+      "sources": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "sn": "1b71eaa499ed251b7cca472cb2a1af7815075c7e"
+      },
+      "receipt": {
+        "path": "/home/by/rf-sn-provider-recovery-v1-20261005/miner4-20261006/failure-receipt.json",
+        "bytes": 2938,
+        "sha256": "a706bfab5be466475a8a3fe163124f744eed472022fc2b866851b315cb383af7"
+      },
+      "successor": "qualified_scopes.miner_state_and_refusal4"
+    }
+  },
+  "qualification_limits": [
+    "Keep prior evidence indexes and original failures unchanged.",
+    "Qualification is scoped to exact inputs and test selections; no aggregate full-suite result.",
+    "Operational configuration remains blocked; reserve receives funds only.",
+    "Later Server implementation changes and pending paired builds are outside these receipts. Earlier all-package builds retain their original bc3c20d0/a4da14a5/501c172d tuple."
+  ],
+  "operational_inputs_outside_scope": {
+    "activation": "blocked",
+    "empty_selected_deployment_fields": [
+      "deployment_id",
+      "coordinator",
+      "settlement_vault",
+      "policy_hash",
+      "readiness_sha256"
+    ],
+    "remaining": [
+      "Owner/root/operator custody and roles",
+      "Registered receive-only recipient setup",
+      "Runtime authority",
+      "Deployment and activation"
+    ],
+    "source": "Current selected-configuration status reported by Root; no configuration mutation in this docs task."
+  }
+}

@@ -84,6 +84,9 @@ type Chain struct {
 	runtimeArtifacts *runtimeMetadataArtifactCache
 	// Set before sharing the connection, and shared by block-local read views.
 	provisionalRuntime *provisionalRuntimeCompatibility
+	// Explicit mainnet successor admission for approved exact anchors. Set
+	// before sharing the connection; it never coexists with provisional policy.
+	runtimeSuccession *runtimeSuccessionPolicy
 	// A bound view owns its authenticated capability independently of cache
 	// residency. It is replaced only while the caller exclusively owns the view.
 	runtimeCompatibilityProof *runtimeCompatibilityProof

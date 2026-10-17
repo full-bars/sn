@@ -124,6 +124,7 @@ func compactMonitorEconomicNative(record monitorEconomicNativeCheckpoint, refere
 	archive := &monitorEconomicNativeArchive{Cursor: state.Cursor, BatchCount: state.BatchCount, BatchChainHash: state.BatchChainHash, ObservedAlpha: state.ObservedAlpha, ObservedFeesRao: state.ObservedFeesRao, Events: uint64(len(state.History))}
 	if state.ExecutionAccounting != nil {
 		value := *state.ExecutionAccounting
+		value.Treasury = cloneNativeTreasuryAmounts(state.ExecutionAccounting.Treasury)
 		archive.ExecutionAccounting = &value
 	}
 	if state.Archive != nil {

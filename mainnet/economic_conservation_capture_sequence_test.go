@@ -62,7 +62,11 @@ func newEconomicCaptureSequenceFixture(t *testing.T, sameBlock bool) (*economicC
 		job.ParentHeaderHex, job.ParentHash = first.ChildHeaderHex, first.ChildHash
 		body := append(rootCompact(32), contracts[1].transaction.Hash().Bytes()...)
 		job.ExtrinsicsHex = []string{nativeExecutionTestHex(body)}
-		root, err := rootExtrinsicsRoot([][]byte{body}, job.ExecutionStateVersion)
+		// Admitted system versions zero and one use extrinsics layout zero.
+		if job.ExecutionStateVersion > 1 {
+			t.Fatal("fixture system version is unsupported")
+		}
+		root, err := rootExtrinsicsRoot([][]byte{body}, 0)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -1,0 +1,82 @@
+{
+  "all38_preserved": true,
+  "author_execution": {
+    "binary_list": 0,
+    "body": 0,
+    "compiler": 0,
+    "database": 0,
+    "live_rpc": 0
+  },
+  "changed_existing_deadline_obligation": {
+    "bytes": 14404,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-516-decision-route/existing-adjacent-recipes.json",
+    "sha256": "97cd84c75834a2a6f7fc9cf122df34fec9eb069639eefcadc4d48541616ba3a6"
+  },
+  "completion_complement": {
+    "combined_deduplicated_obligations_per_mode": 2998,
+    "master_per_mode": 2840,
+    "scope_limit": "Master2840 excludes companion obligations only for accounting; all remain explicitly required, no new execution credit.",
+    "sdk_separate_per_mode": 15,
+    "separate_existing_per_mode": 110,
+    "separate_upstream_required": 51,
+    "upstream_additional_disjoint_per_mode": 33,
+    "upstream_already_master": 18
+  },
+  "contract_followup": {
+    "bytes": 11143,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/HANDOFF.json",
+    "sha256": "e5b876031eb519afb7aec188d194a54555589713c63bacc2d8ba4995ab9f0fb1"
+  },
+  "contract_limit": "Retain actualForge226/five-artifact input equality and historical controls; carry3/prior-carry1 remain pending, not229PASS or deployed authority.",
+  "controls": "UNEXECUTED",
+  "frozen_model_exceptions": {
+    "bytes": 2217,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-516-decision-route/fullmodel-known-exceptions.json",
+    "sha256": "42146dab96452ee07ae8b3be0e070f42d42207f042b8e9850065551c3a78fd1e"
+  },
+  "known_pending_source_work": [
+    {
+      "component": "recycle_operators.checkRoute immediate identity",
+      "limit": "A completed wrong early identity must be checked before a later RPC timeout; no route-source roots or controls counted before its frozen/merged intake.",
+      "status": "AUTHORING_SEPARATE_FIX"
+    }
+  ],
+  "lessons": [
+    "Opening finality, dependent financial reads and closing coverage borrow one original300-second owner; each physical header retains its60-second attempt ceiling or shorter caller deadline.",
+    "Authenticate fresh current and original canonical anchors before accepting higher coverage. Authentic lower/null coverage is temporary unavailability; a completed original hash/number contradiction remains hard even with later absence or timeout.",
+    "Only header evidence is retried. Financial view reads are not replayed and every error withholds a partial decision result."
+  ],
+  "new_validator_roots": 16,
+  "normal": "UNEXECUTED",
+  "owner_intake": {
+    "bytes": 14396,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/decision-finality-retry/handoff/INTAKE.json",
+    "sha256": "f0fb729640ee94f3b0f98d578bfb90efd2791ec9061039c374e02163095aec39"
+  },
+  "race": "UNEXECUTED",
+  "schema": "evm-decision-finality-source-and-scope-v1",
+  "scope": {
+    "bytes": 3351,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-516-decision-route/SCOPE-HANDOFF.json",
+    "sha256": "305fafd56f3ff49a6d3a307367977219230cd8ce6e482d95bb5b8361c588f7cd"
+  },
+  "skipped_input_followup": {
+    "bytes": 9866,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/model-skipped-input-followup/HANDOFF.json",
+    "sha256": "c9413d94c672c6365157714de1b50854f07ebf48564502ec4ef5613c7764b5e1"
+  },
+  "source_control_groups_added": 13,
+  "source_proof": {
+    "bytes": 14493,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-516-decision-route/source-proof.json",
+    "sha256": "e55b605a7a049d4b8d0746bc99d96b47ecdcecb96f6a41a404b316ddefe85829"
+  },
+  "source_tuple": {
+    "connect": "026b850248352b72255be7a966e391e0a15e74c1",
+    "sdk": "e3f4f3fb56e59eb9fdb12c1f87594209c505e5e9",
+    "server": "67467b263ff311da66ec96b3e9d007850bbfc627",
+    "sn": "516b397ac85776b97bd8fd99a75228c429f0fbed",
+    "xops": "9a37239ebeebbb5efea4f63a56191f91f3c4ad8f"
+  },
+  "status": "MERGED_SOURCE_IMPLEMENTED_UNQUALIFIED"
+}

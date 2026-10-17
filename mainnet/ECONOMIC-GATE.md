@@ -1,9 +1,12 @@
 # Owner-recycle observation and integer reference
 
-The selected target is 10% of the native miner allocation for providers and
+The original target was 10% of the native miner allocation for providers and
 90% owner-recycle. These signer-free commands collect preconditions and evidence for
 that policy. They do not construct weights, change validator caps, submit calls,
-authorize activation, or establish a final Yuma outcome.
+authorize activation, or establish a final Yuma outcome. The October 5 decision
+replaced the recycle half with 90% to the `ur-reserve` treasury
+([treasury emissions](TREASURY-EMISSIONS.md)); `economic-reference` also computes
+that treasury reference.
 
 When the mode is Burn, the separate [owner transition](OWNER-RECYCLE-TRANSITION.md)
 constructs an independently approved exact native request and retains public
@@ -112,6 +115,21 @@ The example allocates provider references `0, 1` and recycle references `9, 0`;
 rounding is carried across intervals. Recycling creates no reserve credit and
 no deferred provider liability. Reference rounding is distinct from native
 runtime truncation dust. A capture followed by a claim is not two rewards.
+
+A treasury reference uses input schema `urnetwork-native-miner-reference-input-v2`
+with the signed `treasury_policy` and reports the remainder as
+`treasury_reference_alpha` instead of recycle. It may also list
+`reserve_only_intervals`: strictly ordered indices of intervals whose rows were
+the treasury's reserve-only fallback, which owe providers nothing. Those
+intervals leave the provider basis unchanged:
+
+```text
+provider_total(k) = floor(sum(miner_interval[i] for i <= k, i not reserve-only) / 10)
+treasury_total(k) = miner_total(k) - provider_total(k)
+```
+
+Each reserve-only interval therefore adds its whole tranche to the treasury
+reference. The list is refused without a treasury policy.
 
 The input is caller-supplied reference data. This command does not authenticate
 interval provenance, detect omitted/replayed native intervals, calculate actual

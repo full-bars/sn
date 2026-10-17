@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/urfoundation/sn/crv4"
@@ -117,8 +118,17 @@ func observeOwnerRecycleProductionEligibilityAttempt(ctx context.Context, cfg *R
 		fresh := max(last, registration.RegistrationBlock)
 		if stake.Identity.Hotkey != hotkey || !stake.MeetsNonSelfStakeAndPermit() || stake.Identity.Coldkey == ([32]byte{}) ||
 			coldkeysKVs[stake.Identity.Coldkey] || fresh == 0 || fresh > authority.expected.NativeSnapshotBlock ||
-			authority.expected.NativeSnapshotBlock-fresh > production.MaximumLastUpdateAge {
+			authority.expected.NativeSnapshotBlock-fresh > production.MaximumLastUpdateAge ||
+			approval.Proposal.Treasury != nil && stake.Identity.Coldkey == approval.Proposal.Treasury.MultisigAccount {
 			return nil, errors.New("owner-recycle production validators lack distinct ownership, stake/permit or bounded native activity")
+		}
+		// The runtime lets the subnet owner hotkey submit without a permit or
+		// threshold stake. An approved owner-validator gets no such exception:
+		// it is the registered owner hotkey under the subnet owner coldkey and
+		// still holds a real validator permit and threshold stake.
+		if slices.Contains(approval.OwnerHotkeys, hotkey) && (stake.Identity.Coldkey != approval.SubnetOwner || !stake.SubnetOwnerRegistered ||
+			stake.SubnetOwnerUID != registration.Uid || !stake.Identity.ValidatorPermit || stake.TotalStakeRao < stake.StakeThresholdRao) {
+			return nil, errors.New("owner-validator lacks the subnet owner identity, a validator permit or threshold stake")
 		}
 		coldkeysKVs[stake.Identity.Coldkey] = true
 		// The advancing finality witness is deliberately not a decision fact;
@@ -178,6 +188,70 @@ func observeOwnerRecycleProductionEligibilityAttempt(ctx context.Context, cfg *R
 		return nil, err
 	}
 	return result, ctx.Err()
+}
+
+// The facts each decision checks at a signed activation, read at one candidate
+// block before an approval names it: its canonical height, native epoch index
+// and pending miner emission, under that block's approved historical runtime.
+func readOwnerRecycleDrainedBoundaryAt(ctx context.Context, native *crv4.Chain, cfg *ReleaseConfig, block types.Hash) (productionDrainedBoundaryFacts, error) {
+	return crv4.ReadRuntimeObservationContext(ctx, native, func(ctx context.Context) (productionDrainedBoundaryFacts, error) {
+		view := *native
+		if err := authenticateHistoricalNativeRuntimeAtContext(ctx, &view, cfg, block); err != nil {
+			return productionDrainedBoundaryFacts{}, err
+		}
+		number, _, err := view.CanonicalHeaderAtContext(ctx, block)
+		if err != nil {
+			return productionDrainedBoundaryFacts{}, fmt.Errorf("read drained native boundary header: %w", err)
+		}
+		allowed, err := releaseHistoricalRuntimeArtifactsAt(cfg, number)
+		if err != nil {
+			return productionDrainedBoundaryFacts{}, err
+		}
+		artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, &view, block, allowed...)
+		if err != nil {
+			return productionDrainedBoundaryFacts{}, err
+		}
+		entries, err := ownerRecycleProductionStorageProfile(artifact.Metadata)
+		if err != nil {
+			return productionDrainedBoundaryFacts{}, err
+		}
+		facts := productionDrainedBoundaryFacts{Block: number}
+		for _, field := range []struct {
+			name   string
+			target *uint64
+		}{
+			{name: "PendingServerEmission", target: &facts.PendingServerEmission},
+			{name: "SubnetEpochIndex", target: &facts.Epoch},
+		} {
+			key, err := types.CreateStorageKey(artifact.Metadata, crv4.PalletName, field.name, binary.LittleEndian.AppendUint16(nil, cfg.Netuid))
+			if err != nil {
+				return productionDrainedBoundaryFacts{}, err
+			}
+			value := ownerRecycleStorageValue{limit: 8}
+			if err := view.API.Client.CallContext(ctx, &value, "state_getStorage", key.Hex(), block.Hex()); err != nil {
+				return productionDrainedBoundaryFacts{}, fmt.Errorf("read drained native boundary %s: %w", field.name, err)
+			}
+			raw := value.raw
+			if !value.present {
+				raw = entries[field.name].Fallback
+			}
+			if len(raw) != 8 {
+				return productionDrainedBoundaryFacts{}, fmt.Errorf("drained native boundary %s is not an exact u64", field.name)
+			}
+			*field.target = binary.LittleEndian.Uint64(raw)
+		}
+		if err := view.CheckCanonicalBlockAtContext(ctx, block, number); err != nil {
+			return productionDrainedBoundaryFacts{}, err
+		}
+		return facts, ctx.Err()
+	})
+}
+
+// Observations only; an approval decides separately whether to name them.
+type productionDrainedBoundaryFacts struct {
+	Block                 uint64
+	Epoch                 uint64
+	PendingServerEmission uint64
 }
 
 // Additional consumed fields have the same exact metadata discipline as the

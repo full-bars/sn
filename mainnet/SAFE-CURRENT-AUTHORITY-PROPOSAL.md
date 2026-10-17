@@ -51,7 +51,8 @@ remain closed.
 ## Complete account coverage
 
 The collector requests fourteen keys: native runtime code, proxy and singleton
-code/metadata, and nine permitted Safe storage locations. No node enumeration,
+code/metadata, and nine permitted Safe storage locations. The single-owner
+profile has seven Safe locations, so twelve keys. No node enumeration,
 pagination EOF, `eth_getProof`, tracing API or transaction-pool census is needed.
 
 The proof verifier traverses **every intersecting subtree** under the Safe's
@@ -65,11 +66,19 @@ Only these nonzero words are admitted for the pinned 1.4.1/1.5.0 Safe/SafeL2
 layouts:
 
 - slot zero: the exact approved singleton, with zero address padding;
-- slots three/four: owner count three and threshold two;
+- slots three/four: owner count three and threshold two, or one and one under
+  the single-owner profile;
 - slot five: the exact retained Safe nonce, or proven absence when it is zero;
 - module mapping slot one: sentinel points to itself;
-- owner mapping slot two: sentinel and three approved owners form one complete
-  acyclic list, in any order, ending at sentinel.
+- owner mapping slot two: sentinel and the approved owners (three, or one) form
+  one complete acyclic list, in any order, ending at sentinel.
+
+The signed execution request selects the owner profile:
+`urnetwork-mainnet-successor-execution-single-owner-request-v1` selects one owner
+at threshold one, and the original request schema three owners at threshold two.
+Observed storage never selects it; a genuine one-owner Safe fails a three-owner
+scope and the reverse. The SN25 launch uses the single-owner profile (owner
+decision, October 7).
 
 All other storage must be absent. This includes orphan owner/module entries,
 guards, fallback handlers, deprecated domain storage, signed messages, approved
@@ -106,11 +115,15 @@ Ed25519 signing domain. The original independent approver must sign:
    through the immutable execution plan.
 4. A separately pinned private review file. It cannot reuse original build,
    runtime, signer-cutover or history evidence or overlap retained custody.
-5. The exact proposed policy text in
-   `bootstrapSuccessorSafeCurrentPolicy`: current-only completeness; strict empty
-   extra storage; no history claim; owned-node finality and scoped, non-atomic
-   pending assertions; all-signer cutover; unchanged receipts, signatures, nonce
-   claims, attempts, window, fees and liabilities; public submission still closed.
+5. The exact proposed policy text for the execution's owner profile:
+   `bootstrapSuccessorSafeCurrentPolicy` for three owners, or
+   `bootstrapSuccessorSafeCurrentSingleOwnerPolicy` for one, which names a
+   single owner link at threshold one and a single-owner and relayer signer
+   cutover. Neither text admits the other profile. Both state current-only
+   completeness; strict empty extra storage; no history claim; owned-node
+   finality and scoped, non-atomic pending assertions; signer cutover; unchanged
+   receipts, signatures, nonce claims, attempts, window, fees and liabilities;
+   public submission still closed.
 
 Validation reauthenticates the original canonical/history statements and every
 runtime predecessor; the proposal cannot rewrite or erase them. Its signature
@@ -147,10 +160,10 @@ those finite reads; deterministic tests preserve that fact. Its output sets
 every scoped value matches.
 
 An approved policy would need to accept the owned-node assertions and the
-independently attested signer cutover explicitly: all three Safe signers and the
-relayer are fenced to retained custody, there are no other live Safe signatures
-or relayer transactions, and no other principal can introduce an authorized Safe
-transition. This is an external trust condition, not a mathematical consequence
+independently attested signer cutover explicitly: every Safe signer (three, or
+the single owner) and the relayer are fenced to retained custody, there are no
+other live Safe signatures or relayer transactions, and no other principal can
+introduce an authorized Safe transition. This is an external trust condition, not a mathematical consequence
 of the proof. Pending native administrative/runtime transitions and changes
 between calls also remain outside the complete-prefix fact. If that boundary is
 unacceptable, the owned node must provide a separately qualified atomic pending

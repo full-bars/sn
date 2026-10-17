@@ -60,13 +60,25 @@ release_gate_jobs_init() {
   local command cpu_slots memory_slots requested reservations
   case "${RELEASE_GATE_DIAGNOSTIC:-0}" in 0 | 1) ;; *) echo 'RELEASE_GATE_DIAGNOSTIC must be 0 or 1' >&2; return 1 ;; esac
   release_gate_diagnostic="${RELEASE_GATE_DIAGNOSTIC:-0}"
+  # Every gate, nested fixtures included, starts pinned. Only the aggregate
+  # entry selects its local dependency mode, after this initializer returns.
+  release_gate_dependency_mode=pinned
   for command in setsid python3 stat nproc mkfifo timeout; do command -v "$command" >/dev/null || return 1; done
   [[ -d /proc/self ]] || { echo 'release gate jobs require Linux process identities' >&2; return 1; }
   set +m
   release_gate_jobs_script="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/release-gate-jobs.sh"
+  # A job inherits its gate's exports path. Clear it before anything can
+  # fail, so the exit trap below never removes another gate's exports.
+  release_gate_mainnet_exports=''
   release_gate_root="$(mktemp -d "${TMPDIR:-/tmp}/urnetwork-release-gate.XXXXXXXX")" || return 1
   release_gate_root="$(cd -- "$release_gate_root" && pwd -P)" || return 1
-  declare -ga release_gate_pids=() release_gate_starts=() release_gate_labels=() release_gate_pending=() release_gate_ack_fds=()
+  # The ./mainnet qualification exports, built by one job for the jobs that
+  # read them, and removed once every job has joined.
+  release_gate_mainnet_exports="$release_gate_root/mainnet-exports"
+  # Not exported: only the process that made this gate's root removes its
+  # exports, never a job or fixture that inherits the path.
+  release_gate_exports_owner="$$"
+  declare -ga release_gate_pids=() release_gate_starts=() release_gate_labels=() release_gate_pending=() release_gate_ack_fds=() release_gate_exits=()
   release_gate_active=0 release_gate_result=0 release_gate_body_result=0 release_gate_services_cleaned=0
   trap 'release_gate_jobs_exit "$?"' EXIT
   trap 'exit 130' INT
@@ -99,10 +111,10 @@ release_gate_jobs_init() {
   (( release_gate_job_cpus > 0 )) || release_gate_job_cpus=1
   if (( release_gate_job_cpus > 4 )); then release_gate_job_cpus=4; fi
   export GOMAXPROCS="$release_gate_job_cpus" GOFLAGS="${GOFLAGS:-} -p=$release_gate_job_cpus"
-  export RAYON_NUM_THREADS="$release_gate_job_cpus" CARGO_BUILD_JOBS="$release_gate_job_cpus"
+  export RAYON_NUM_THREADS="$release_gate_job_cpus" CARGO_BUILD_JOBS="$release_gate_job_cpus" RUST_TEST_THREADS="$release_gate_job_cpus"
   export FOUNDRY_OUT="$release_gate_root/full-out" FOUNDRY_CACHE_PATH="$release_gate_root/full-cache"
   export SLITHER_FOUNDRY_OUT="$release_gate_root/slither-out" SLITHER_FOUNDRY_CACHE_PATH="$release_gate_root/slither-cache"
-  export release_gate_root sn_repo workspace release_gate_diagnostic
+  export release_gate_root sn_repo workspace release_gate_diagnostic release_gate_dependency_mode release_gate_mainnet_exports
   export -f release_gate_record_preflight release_gate_preflight_refusal release_gate_preflight_status release_gate_diagnostic_inventory
   source "$workspace/server/local/release-gate-services.sh" || return 1
   if [[ "$release_gate_diagnostic" == 1 ]]; then
@@ -163,10 +175,14 @@ release_gate_preflight_status() {
 }
 
 # Missing checkout/resource directories remain explicit failures even when
-# the original strict source checker necessarily stops at the first one.
+# the original strict source checker necessarily stops at the first one. The
+# aggregate gate's local dependency mode passes local: it never reads a vault.
 release_gate_diagnostic_inventory() {
-  local repo result=0
-  for repo in sn server operator-proxy connect sdk glog goidenticons proxy userwireguard warp vault xops config; do
+  local repo result=0 mode="${1:-pinned}"
+  for repo in sn server connect sdk glog goidenticons proxy userwireguard warp gvisor vault xops config; do
+    if [[ "$mode" == local && "$repo" == vault ]]; then
+      continue
+    fi
     if [[ ! -d "$workspace/$repo" ]]; then
       printf 'incomplete diagnostic repository directory: %s\n' "$repo" >&2
       result=1
@@ -318,6 +334,7 @@ release_gate_wait_one() {
         status="$RELEASE_GATE_JOB_EXIT"
         (( status != 0 )) || status=125
       fi
+      release_gate_exits[index]="$status"
       printf '[release gate] joined %s (exit %s); log %s\n' "${release_gate_labels[index]}" "$status" "$release_gate_root/logs/${release_gate_labels[index]}.log"
       if (( status != 0 && release_gate_result == 0 )); then release_gate_result="$status"; fi
       if [[ "${release_gate_labels[index]}" != diagnostic-preflights ]] && (( status != 0 && release_gate_body_result == 0 )); then release_gate_body_result="$status"; fi
@@ -341,6 +358,31 @@ release_gate_join() {
   return "$release_gate_result"
 }
 
+# Join the admitted job named $1, reaping any other that completes first, and
+# leave its exit in RELEASE_GATE_AWAITED_EXIT. A job that needs its work is
+# admitted after this, knowing whether that work exists.
+release_gate_await() {
+  local index
+  for index in "${!release_gate_labels[@]}"; do
+    if [[ "${release_gate_labels[index]}" == "$1" ]]; then
+      while [[ "${release_gate_pending[index]}" == 1 ]]; do release_gate_wait_one || return 1; done
+      RELEASE_GATE_AWAITED_EXIT="${release_gate_exits[index]}"
+      return 0
+    fi
+  done
+  printf 'release gate: no admitted job %s to await\n' "$1" >&2
+  return 1
+}
+
+# Remove the ./mainnet exports only when they are this gate's own: a nested
+# fixture whose initializer fails still holds its parent gate's path.
+release_gate_remove_own_exports() {
+  [[ -n "${release_gate_mainnet_exports:-}" && -n "${release_gate_root:-}" ]] || return 0
+  [[ "${release_gate_exports_owner:-}" == "$$" ]] || return 0
+  [[ "$release_gate_mainnet_exports" == "$release_gate_root/mainnet-exports" ]] || return 0
+  rm -rf -- "$release_gate_mainnet_exports"
+}
+
 release_gate_complete() {
   local status=0
   release_gate_join || status=$?
@@ -350,6 +392,7 @@ release_gate_complete() {
   else
     (( status != 0 )) || status=1
   fi
+  release_gate_remove_own_exports || { (( status != 0 )) || status=1; }
   return "$status"
 }
 
@@ -390,6 +433,7 @@ release_gate_jobs_exit() {
     if [[ "$release_gate_services_cleaned" != 1 ]] && declare -F release_gate_services_cleanup >/dev/null; then
       release_gate_services_cleanup || { (( status != 0 )) || status=1; }
     fi
+    release_gate_remove_own_exports || { (( status != 0 )) || status=1; }
   else
     echo "release gate: not all child identities joined; private services retained for inspection" >&2
     (( status != 0 )) || status=1

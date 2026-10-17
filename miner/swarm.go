@@ -9,7 +9,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -46,6 +45,8 @@ type ProviderSwarmMember struct {
 	DNSPumpHost            string                           `json:"dns_pump_host"`
 	StateDir               string                           `json:"state_dir"`
 	Wallet                 string                           `json:"wallet"`
+	WalletFromEpoch        *int64                           `json:"wallet_from_epoch,omitempty"`
+	WalletThroughEpoch     *int64                           `json:"wallet_through_epoch,omitempty"`
 	WalletSeedFile         string                           `json:"wallet_seed_file"`
 	SourceIP               string                           `json:"source_ip"`
 	WorkCapturePath        string                           `json:"whole_work_capture,omitempty"`
@@ -210,8 +211,10 @@ func (self ProviderSwarmConfig) Validate() error {
 		if _, err := ss58.DecodeWithPrefix(member.Wallet, ss58.BittensorPrefix); err != nil {
 			return fmt.Errorf("member %s wallet: %w", member.ID, err)
 		}
-		if _, err := swarmMemberWalletKey(member); err != nil {
-			return fmt.Errorf("member %s wallet identity: %w", member.ID, err)
+		// A retained signed consent can be acknowledged after the seed is
+		// unmounted. Fresh signing validates the key before any challenge.
+		if !filepath.IsAbs(member.WalletSeedFile) || filepath.Clean(member.WalletSeedFile) != member.WalletSeedFile {
+			return fmt.Errorf("member %s wallet seed path must be clean and absolute", member.ID)
 		}
 		source, err := netip.ParseAddr(member.SourceIP)
 		if err != nil || !source.Is4() || !source.IsLoopback() || seenSources[source.String()] {
@@ -307,26 +310,14 @@ func swarmMemberWalletKey(member ProviderSwarmMember) (*crv4.Keypair, error) {
 	return key, nil
 }
 
-// Signs a fresh challenge and submits it once through the configured source
-// and TLS policy. The temporary client releases its connections before return.
+// Retains or replays signed consent through the configured source and TLS
+// policy. Only a fresh original needs the coldkey seed to remain available.
 func setSwarmMemberWallet(ctx context.Context, member ProviderSwarmMember, settings *connect.ClientStrategySettings) error {
-	key, err := swarmMemberWalletKey(member)
+	coldkey, err := ss58.DecodeWithPrefix(member.Wallet, ss58.BittensorPrefix)
 	if err != nil {
 		return err
 	}
-	jwt, err := clientauth.ReadToken(filepath.Join(member.StateDir, "jwt"))
-	if err != nil {
-		return err
-	}
-	providerJWT, err := clientauth.ReadToken(filepath.Join(member.StateDir, ".provider.jwt"))
-	if err != nil {
-		return err
-	}
-	providerID, err := clientauth.ClientIdFromJwt(providerJWT)
-	if err != nil {
-		return fmt.Errorf("wallet provider identity: %w", err)
-	}
-	clientID, err := sdk.ParseId(providerID.String())
+	providerJwt, clientId, err := readSnCredentials(snCredentialSelection{jwtFile: filepath.Join(member.StateDir, ".provider.jwt")})
 	if err != nil {
 		return err
 	}
@@ -346,14 +337,14 @@ func setSwarmMemberWallet(ctx context.Context, member ProviderSwarmMember, setti
 	if maxResponseBytes <= 0 {
 		maxResponseBytes = connect.DefaultMaxHttpResponseBodyBytes
 	}
-	httpPost := func(ctx context.Context, requestUrl string, requestBytes []byte, byJwt string) ([]byte, error) {
+	httpRequest := func(ctx context.Context, method, requestUrl string, requestBytes []byte, byJwt string) ([]byte, error) {
 		requestCtx := ctx
 		if 0 < settings.RequestTimeout {
 			var cancel context.CancelFunc
 			requestCtx, cancel = context.WithTimeout(ctx, settings.RequestTimeout)
 			defer cancel()
 		}
-		request, err := http.NewRequestWithContext(requestCtx, http.MethodPost, requestUrl, bytes.NewReader(requestBytes))
+		request, err := http.NewRequestWithContext(requestCtx, method, requestUrl, bytes.NewReader(requestBytes))
 		if err != nil {
 			return nil, err
 		}
@@ -369,41 +360,20 @@ func setSwarmMemberWallet(ctx context.Context, member ProviderSwarmMember, setti
 		}
 		return readSwarmWalletResponse(ctx, requestCtx, response, maxResponseBytes)
 	}
-	challenge, err := connect.HttpPostWithRawFunction(ctx, httpPost, member.APIURL+"/auth/wallet-challenge",
-		&sdk.AuthWalletChallengeArgs{WalletAddress: member.Wallet, Blockchain: "TAO"}, jwt,
-		&sdk.AuthWalletChallengeResult{}, connect.NewNoopApiCallback[*sdk.AuthWalletChallengeResult]())
-	if err != nil {
-		return fmt.Errorf("wallet challenge: %w", err)
+	api := &swarmWalletMappingApi{apiUrl: member.APIURL, token: providerJwt,
+		post: func(ctx context.Context, url string, body []byte, token string) ([]byte, error) {
+			return httpRequest(ctx, http.MethodPost, url, body, token)
+		},
+		get: func(ctx context.Context, url, token string) ([]byte, error) {
+			return httpRequest(ctx, http.MethodGet, url, nil, token)
+		},
 	}
-	if challenge == nil {
-		return errors.New("wallet challenge returned no result")
+	if (member.WalletFromEpoch == nil) != (member.WalletThroughEpoch == nil) || member.WalletFromEpoch != nil && (*member.WalletFromEpoch < 0 || *member.WalletThroughEpoch < *member.WalletFromEpoch || *member.WalletThroughEpoch-*member.WalletFromEpoch > 65535) {
+		return errors.New("invalid swarm wallet earning interval")
 	}
-	if challenge.Error != nil {
-		return fmt.Errorf("wallet challenge: %s", challenge.Error.Message)
-	}
-	if challenge.MessageTemplate == "" {
-		return errors.New("wallet challenge returned an empty message")
-	}
-	// The server consumes this exact challenge once. Sign its bytes using the
-	// coldkey's substrate context; never reuse a previous challenge/signature.
-	signature, err := key.Sign([]byte(challenge.MessageTemplate))
-	if err != nil {
-		return err
-	}
-	result, err := connect.HttpPostWithRawFunction(ctx, httpPost, member.APIURL+"/sn/wallet", &sdk.SnSetWalletArgs{
-		ColdkeySs58: member.Wallet, ClientId: clientID,
-		Signature: "0x" + hex.EncodeToString(signature), Message: challenge.MessageTemplate,
-	}, jwt, &sdk.SnSetWalletResult{}, connect.NewNoopApiCallback[*sdk.SnSetWalletResult]())
-	if err != nil {
-		return err
-	}
-	if result == nil {
-		return errors.New("wallet set returned no result")
-	}
-	if result.Error != nil {
-		return errors.New(result.Error.Message)
-	}
-	return nil
+	selection := snCredentialSelection{jwtFile: filepath.Join(member.StateDir, ".provider.jwt")}
+	proof := &snWalletProof{SeedFile: member.WalletSeedFile, credentials: selection, fromEpoch: member.WalletFromEpoch, throughEpoch: member.WalletThroughEpoch}
+	return snSetProviderWallet(ctx, api, member.APIURL, providerJwt, clientId, member.Wallet, coldkey, proof, selection)
 }
 
 type providerSwarmInstance struct {

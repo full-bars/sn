@@ -265,7 +265,7 @@ func openFinalValidatorReplayV2(ctx context.Context, evidence *FinalSemanticEvid
 	for _, source := range manifest.Capture.Sources {
 		sources = append(sources, validatorpkg.ReleaseEvidenceV2ArchiveSource{Source: source.Source, SizeBytes: source.Artifact.SizeBytes, ContentHash: source.Artifact.ContentHash})
 	}
-	owner.archive, err = validatorpkg.OpenReleaseEvidenceV2Archive(ctx, validatorpkg.ReleaseEvidenceV2ArchiveOptions{Config: release, Hotkey: hotkey, Origins: manifest.Capture.Origins, Sources: sources, ReadSource: func(ctx context.Context, source validatorpkg.ReleaseEvidenceV2CaptureSource) ([]byte, error) {
+	owner.archive, err = validatorpkg.OpenReleaseEvidenceV2Archive(ctx, validatorpkg.ReleaseEvidenceV2ArchiveOptions{Config: release, Hotkey: hotkey, Origins: manifest.Capture.Origins[:], Sources: sources, ReadSource: func(ctx context.Context, source validatorpkg.ReleaseEvidenceV2CaptureSource) ([]byte, error) {
 		locator, found := census[source]
 		if !found {
 			return nil, errors.New("final V2 source escaped its closed census")
@@ -283,7 +283,9 @@ func openFinalValidatorReplayV2(ctx context.Context, evidence *FinalSemanticEvid
 	if err != nil {
 		return nil, err
 	}
-	owner.intents, err = decodeValidatorIntentBytes(store, int(entry.ValidatorID))
+	owner.intents, err = decodeValidatorIntentBytes(store, int(entry.ValidatorID), func(name string, maximum uint64) ([]byte, error) {
+		return readNamed("private", name, maximum)
+	})
 	if err != nil {
 		return nil, err
 	}

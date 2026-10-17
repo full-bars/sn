@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Only synthetic tests provision their owned private roots. Runtime queue
 // admission has no enrollment, absent-context or pathname-creation fallback.
@@ -15,6 +15,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"testing"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -39,16 +41,16 @@ func claimQueueTestContext(t testing.TB, ctx context.Context, paths ...string) c
 		}
 		roots = append(roots, physical)
 		attribute := durablehead.Attribute("provider-claim-queue", "claim-queue.json")
-		if _, err := syscall.Getxattr(physical, attribute, nil); err == nil {
+		if _, err := unix.Getxattr(physical, attribute, nil); err == nil {
 			continue
 		}
-		var stat syscall.Stat_t
-		if err := syscall.Stat(physical, &stat); err != nil {
+		var stat unix.Stat_t
+		if err := unix.Stat(physical, &stat); err != nil {
 			t.Fatal(err)
 		}
 		checkpoint := durablehead.Checkpoint{Schema: durablehead.Schema, Kind: "provider-claim-queue", Name: "claim-queue.json", MaximumBytes: maximumClaimQueueBytes, DirectoryInode: stat.Ino}
 		filePath := filepath.Join(physical, "claim-queue.json")
-		err = syscall.Lstat(filePath, &stat)
+		err = unix.Lstat(filePath, &stat)
 		if err == nil && stat.Mode&syscall.S_IFMT == syscall.S_IFREG && stat.Mode&0077 == 0 && stat.Size <= maximumClaimQueueBytes {
 			raw, err := os.ReadFile(filePath)
 			if err != nil {
@@ -63,7 +65,7 @@ func claimQueueTestContext(t testing.TB, ctx context.Context, paths ...string) c
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := syscall.Setxattr(physical, attribute, raw, 1); err != nil {
+		if err := unix.Setxattr(physical, attribute, raw, unix.XATTR_CREATE); err != nil {
 			t.Fatal(err)
 		}
 		directory, err := os.Open(physical)

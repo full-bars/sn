@@ -37,7 +37,7 @@ func readEconomicMetricsTest(t *testing.T, raw []byte) map[string]uint64 {
 		}
 		values[name] = value
 	}
-	if len(values) != 36 || len(raw) > 16*1024 || !bytes.HasSuffix(raw, []byte("\n")) {
+	if len(values) != 72 || len(raw) > 16*1024 || !bytes.HasSuffix(raw, []byte("\n")) {
 		t.Fatal("economic metrics escaped their exact finite shape", len(values), len(raw))
 	}
 	return values

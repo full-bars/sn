@@ -42,6 +42,7 @@ type item struct {
 	Name, Path, ABI, Creation, Runtime, RuntimeHash, ArtifactHash, StorageLayoutHash string
 	References                                                                       map[string][]int
 	Release                                                                          bool
+	ReleaseV2                                                                        bool
 	Variable                                                                         string
 	Artifact                                                                         artifact
 }
@@ -64,21 +65,29 @@ type artifactDefinition struct {
 	// requireEmptyLinearStorage prevents the deliberately minimal testnet UUPS
 	// drill implementation from acquiring coordinator storage slots. It reads
 	// only OpenZeppelin's shared namespaced owner slot and the ERC1967 slot.
+	// The stateless claim batcher must keep an empty layout too.
 	requireEmptyLinearStorage bool
 	// requiredStorageSlots binds any deliberately hard-coded upgrade-drill
 	// coordinate to the release coordinator's compiler layout.
 	requiredStorageSlots map[string]string
+	// releaseV2 places the artifact in the separate settlement v2 release,
+	// whose deployment tooling reads these storage coordinates back.
+	releaseV2 bool
 }
 
 var artifactDefinitions = []artifactDefinition{
-	{"ReserveSink", "STReserveSink.sol/STReserveSink.json", true, "", []string{"netuid", "reserveHotkey", "selfColdkey", "bootstrap"}, []string{"src/STReserveSink.sol"}, false, nil},
-	{"SettlementVault", "STSettlementVault.sol/STSettlementVault.json", true, "", []string{"netuid", "escrowHotkey", "selfColdkey", "minimumClaimTTLBlocks", "minimumTransferTaoRao", "bootstrap"}, []string{"src/STSettlementVault.sol"}, false, nil},
-	{"Coordinator", "STCoordinator.sol/STCoordinator.json", true, "", []string{"__self"}, []string{"lib/openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol"}, false, map[string]string{"netuid": "0", "settlementVault": "2", "reserveSink": "3", "validatorEvidence": "23"}},
-	{"ValidatorEvidence", "STValidatorEvidence.sol/STValidatorEvidence.json", true, "", []string{"coordinator", "settlementVault", "chainId", "netuid", "genesisHash", "deploymentIdHash"}, []string{"src/STValidatorEvidence.sol"}, false, nil},
-	{"ERC1967Proxy", "ERC1967Proxy.sol/ERC1967Proxy.json", true, "", nil, nil, false, nil},
-	{"CoordinatorAdversary", "STCoordinatorAdversary.sol/STCoordinatorAdversary.json", false, "TestnetGovernanceDrillArtifact", []string{"__self"}, []string{"lib/openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol"}, true, nil},
-	{"SubnetProbe", "STSubnetProbe.sol/STSubnetProbe.json", false, "TestnetPrecompileProbeArtifact", []string{"owner", "netuid"}, []string{"src/probe/STSubnetProbe.sol"}, false, nil},
-	{"FleetBatcher", "STFleetBatcher.sol/STFleetBatcher.json", false, "TestnetFleetBatcherArtifact", []string{"coordinator", "oracle"}, []string{"src/STFleetBatcher.sol"}, false, nil},
+	{"ReserveSink", "STReserveSink.sol/STReserveSink.json", true, "", []string{"netuid", "reserveHotkey", "selfColdkey", "bootstrap"}, []string{"src/STReserveSink.sol"}, false, nil, false},
+	{"SettlementVault", "STSettlementVault.sol/STSettlementVault.json", true, "", []string{"netuid", "escrowHotkey", "selfColdkey", "minimumClaimTTLBlocks", "minimumTransferTaoRao", "bootstrap"}, []string{"src/STSettlementVault.sol"}, false, nil, false},
+	{"Coordinator", "STCoordinator.sol/STCoordinator.json", true, "", []string{"__self"}, []string{"lib/openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol"}, false, map[string]string{"netuid": "0", "settlementVault": "2", "reserveSink": "3", "validatorEvidence": "23"}, false},
+	{"ValidatorEvidence", "STValidatorEvidence.sol/STValidatorEvidence.json", true, "", []string{"coordinator", "settlementVault", "chainId", "netuid", "genesisHash", "deploymentIdHash"}, []string{"src/STValidatorEvidence.sol"}, false, nil, false},
+	{"ERC1967Proxy", "ERC1967Proxy.sol/ERC1967Proxy.json", true, "", nil, nil, false, nil, true},
+	{"CoordinatorAdversary", "STCoordinatorAdversary.sol/STCoordinatorAdversary.json", false, "TestnetGovernanceDrillArtifact", []string{"__self"}, []string{"lib/openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol"}, true, nil, false},
+	{"SubnetProbe", "STSubnetProbe.sol/STSubnetProbe.json", false, "TestnetPrecompileProbeArtifact", []string{"owner", "netuid"}, []string{"src/probe/STSubnetProbe.sol"}, false, nil, false},
+	{"FleetBatcher", "STFleetBatcher.sol/STFleetBatcher.json", false, "TestnetFleetBatcherArtifact", []string{"coordinator", "oracle"}, []string{"src/STFleetBatcher.sol"}, false, nil, false},
+	{"SettlementVault2", "STSettlementVault2.sol/STSettlementVault2.json", false, "", []string{"netuid", "escrowHotkey", "selfColdkey", "bootstrap", "demandFeeWei"}, []string{"src/STSettlementVault2.sol"}, false, map[string]string{"coordinator": "0", "escrowRegistered": "0", "_entered": "0", "_totalCaptured": "1", "_totalPaid": "1"}, true},
+	{"Settlement2", "STSettlement2.sol/STSettlement2.json", false, "", []string{"__self"}, []string{"lib/openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol"}, false, map[string]string{"v1Coordinator": "0", "vault": "1", "_auditors": "2", "quorum": "3", "auditorSetVersion": "4"}, true},
+	// The optional claim batcher holds no storage, which its layout must show.
+	{"ClaimBatcher", "STClaimBatcher.sol/STClaimBatcher.json", false, "", nil, nil, true, nil, true},
 }
 
 // Remove compiler IDs without collapsing two declarations that share a short
@@ -225,13 +234,17 @@ func canonicalArtifactHashForBytecode(a artifact, immutableReferences map[string
 }
 
 func main() {
-	if len(os.Args) == 5 && os.Args[1] == "--release-json" {
+	if len(os.Args) == 5 && (os.Args[1] == "--release-json" || os.Args[1] == "--release-v2-json") {
 		items := loadContractItems(os.Args[2])
 		retained, err := os.ReadFile(os.Args[3])
 		must(err)
 		items, err = preserveReviewedBytecode(os.Args[3], retained, items)
 		must(err)
-		encoded, err := renderReleaseJson(items)
+		render := renderReleaseJson
+		if os.Args[1] == "--release-v2-json" {
+			render = renderReleaseV2Json
+		}
+		encoded, err := render(items)
 		must(err)
 		must(os.WriteFile(os.Args[4], encoded, 0600))
 		return
@@ -263,6 +276,17 @@ func main() {
 // Export only the reviewed production artifacts after the existing source,
 // layout and retained-bytecode checks. No mainnet authority is created here.
 func renderReleaseJson(items []item) ([]byte, error) {
+	return renderRelease(items, "urnetwork-contract-release-artifacts-v1", func(contract item) bool { return contract.Release }, "ReserveSink", "SettlementVault", "Coordinator", "ERC1967Proxy", "ValidatorEvidence")
+}
+
+// The settlement v2 phase deploys its own two contracts behind the same proxy,
+// and optionally the claim batcher.
+func renderReleaseV2Json(items []item) ([]byte, error) {
+	return renderRelease(items, "urnetwork-settlement-v2-contract-release-artifacts-v1", func(contract item) bool { return contract.ReleaseV2 }, "SettlementVault2", "Settlement2", "ERC1967Proxy", "ClaimBatcher")
+}
+
+// One release schema holds exactly its named members, sorted by name.
+func renderRelease(items []item, schema string, member func(item) bool, names ...string) ([]byte, error) {
 	type releaseArtifact struct {
 		Name                string           `json:"name"`
 		Abi                 string           `json:"abi"`
@@ -276,11 +300,14 @@ func renderReleaseJson(items []item) ([]byte, error) {
 	envelope := struct {
 		Schema    string            `json:"schema"`
 		Artifacts []releaseArtifact `json:"artifacts"`
-	}{Schema: "urnetwork-contract-release-artifacts-v1", Artifacts: []releaseArtifact{}}
+	}{Schema: schema, Artifacts: []releaseArtifact{}}
 	seen := map[string]bool{}
-	wanted := map[string]bool{"ReserveSink": true, "SettlementVault": true, "Coordinator": true, "ERC1967Proxy": true, "ValidatorEvidence": true}
+	wanted := map[string]bool{}
+	for _, name := range names {
+		wanted[name] = true
+	}
 	for _, artifact := range items {
-		if !artifact.Release {
+		if !member(artifact) {
 			continue
 		}
 		if seen[artifact.Name] || !wanted[artifact.Name] || artifact.Creation == "" || artifact.Runtime == "" {
@@ -289,8 +316,8 @@ func renderReleaseJson(items []item) ([]byte, error) {
 		seen[artifact.Name] = true
 		envelope.Artifacts = append(envelope.Artifacts, releaseArtifact{Name: artifact.Name, Abi: artifact.ABI, Creation: artifact.Creation, Runtime: artifact.Runtime, RuntimeHash: artifact.RuntimeHash, ArtifactHash: artifact.ArtifactHash, StorageLayoutHash: artifact.StorageLayoutHash, ImmutableReferences: artifact.References})
 	}
-	if len(envelope.Artifacts) != 5 {
-		return nil, errors.New("release export requires exactly five production artifacts")
+	if len(envelope.Artifacts) != len(names) {
+		return nil, errors.New("release export requires exactly its production artifacts")
 	}
 	sort.Slice(envelope.Artifacts, func(i, j int) bool { return envelope.Artifacts[i].Name < envelope.Artifacts[j].Name })
 	raw, err := json.Marshal(envelope)
@@ -376,7 +403,7 @@ func loadContractItems(root string) []item {
 		items = append(items, item{
 			Name: d.name, Path: path, ABI: string(abi), Creation: creation, Runtime: runtime,
 			RuntimeHash: rh.Hex(), ArtifactHash: artifactHash, StorageLayoutHash: "sha256:" + hex.EncodeToString(lh[:]),
-			References: refs, Release: d.release, Variable: d.variable, Artifact: a,
+			References: refs, Release: d.release, ReleaseV2: d.releaseV2, Variable: d.variable, Artifact: a,
 		})
 	}
 	sort.Slice(items, func(i, j int) bool { return items[i].Name < items[j].Name })
@@ -445,9 +472,17 @@ func renderContractArtifacts(items []item) ([]byte, error) {
 		}
 		fmt.Fprintf(&b, "{Name: %q, ABI: %sABI, CreationBytecode: %sCreationBytecode, RuntimeBytecode: %sRuntimeBytecode, RuntimeBytecodeHash: %sRuntimeBytecodeHash, FoundryArtifactHash: %sFoundryArtifactHash, StorageLayoutHash: %sStorageLayoutHash, ImmutableReferences: %#v},\n", v.Name, v.Name, v.Name, v.Name, v.Name, v.Name, v.Name, v.References)
 	}
+	b.WriteString("}\n\n")
+	b.WriteString("var SettlementV2ReleaseArtifacts = []ContractArtifact{\n")
+	for _, v := range items {
+		if !v.ReleaseV2 {
+			continue
+		}
+		fmt.Fprintf(&b, "{Name: %q, ABI: %sABI, CreationBytecode: %sCreationBytecode, RuntimeBytecode: %sRuntimeBytecode, RuntimeBytecodeHash: %sRuntimeBytecodeHash, FoundryArtifactHash: %sFoundryArtifactHash, StorageLayoutHash: %sStorageLayoutHash, ImmutableReferences: %#v},\n", v.Name, v.Name, v.Name, v.Name, v.Name, v.Name, v.Name, v.References)
+	}
 	b.WriteString("}\n")
 	for _, v := range items {
-		if !v.Release {
+		if !v.Release && !v.ReleaseV2 {
 			if v.Variable == "" {
 				panic("testnet-only artifact has no generated variable: " + v.Name)
 			}
@@ -548,12 +583,13 @@ func preserveReviewedBytecode(path string, source []byte, items []item) ([]item,
 	result := append([]item(nil), items...)
 	for index := range result {
 		contract := &result[index]
-		oldCreation, err := requiredGeneratedConstant(constants, contract.Name+"CreationBytecode")
-		if err != nil {
-			return nil, err
+		oldCreation, creationErr := requiredGeneratedConstant(constants, contract.Name+"CreationBytecode")
+		oldRuntime, runtimeErr := requiredGeneratedConstant(constants, contract.Name+"RuntimeBytecode")
+		if creationErr != nil && runtimeErr != nil {
+			// A newly cataloged artifact has no reviewed payload to preserve.
+			continue
 		}
-		oldRuntime, err := requiredGeneratedConstant(constants, contract.Name+"RuntimeBytecode")
-		if err != nil {
+		if err := errors.Join(creationErr, runtimeErr); err != nil {
 			return nil, err
 		}
 		oldCreationNormalized, err := normalizeSolidityMetadataDigest(oldCreation)

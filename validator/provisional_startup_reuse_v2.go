@@ -79,7 +79,7 @@ func (self *releaseRuntimeV2) resumeProvisionalRetainedPublication(ctx context.C
 	if err != nil {
 		return false, err
 	}
-	if closure == nil || closure.Epoch != epoch || len(closure.Transitions) != len(self.history.participants) || len(closure.Transitions) == 0 || closure.Transitions[0] == nil || manifest.Origins != self.origins || len(manifest.Members) != len(closure.Transitions) {
+	if closure == nil || closure.Epoch != epoch || len(closure.Transitions) != len(self.history.participants) || len(closure.Transitions) == 0 || closure.Transitions[0] == nil || !slices.Equal(manifest.Origins, self.origins) || len(manifest.Members) != len(closure.Transitions) {
 		return false, errors.New("retained publication differs from its configured complete closure")
 	}
 	census := ValidatorEvidenceCensusV2{Schema: ValidatorEvidenceCensusV2Schema, Hotkey: self.hotkey.PublicKey(), Boundary: closure.Transitions[0].FromBoundary, Members: make([]ValidatorEvidenceCensusV2Member, len(closure.Transitions))}

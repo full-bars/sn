@@ -1,7 +1,8 @@
 //go:build linux || darwin
 
 // The running validator publishes original request windows independently of
-// settlement refresh. Exact local bytes precede dual public replication.
+// settlement refresh. Exact local bytes precede public replication at every
+// replica origin.
 package validator
 
 import (
@@ -70,10 +71,10 @@ func retainProviderAttemptPublication(ctx context.Context, path string, raw []by
 	return owner.write(raw)
 }
 
-// One exact payload is uploaded with the original source reservation to both
-// configured origins, then read back without credentials from each origin.
-func replicateProviderAttemptPublication(ctx context.Context, raw []byte, replicas [2]AttemptCutV2Replica, bounds AttemptCutV2Bounds, maximum uint64) error {
-	if len(raw) == 0 || uint64(len(raw)) > maximum || replicas[0].Origin == replicas[1].Origin {
+// One exact payload is uploaded with the original source reservation to every
+// configured origin, then read back without credentials from each origin.
+func replicateProviderAttemptPublication(ctx context.Context, raw []byte, replicas []AttemptCutV2Replica, bounds AttemptCutV2Bounds, maximum uint64) error {
+	if len(raw) == 0 || uint64(len(raw)) > maximum || validateReleaseEvidenceV2ReplicaCount(len(replicas)) != nil || len(replicas) == 2 && replicas[0].Origin == replicas[1].Origin {
 		return protocol.ErrProviderAttemptsCapacity
 	}
 	hash := attemptHex32(sha256.Sum256(raw))
@@ -99,7 +100,7 @@ func replicateProviderAttemptPublication(ctx context.Context, raw []byte, replic
 	return ctx.Err()
 }
 
-// A cursor moves only after exact local persistence and both public readbacks.
+// A cursor moves only after exact local persistence and every public readback.
 // Restart begins at original birth and reuses each retained file byte-for-byte.
 type providerAttemptPublicationCursor struct {
 	epoch     uint64

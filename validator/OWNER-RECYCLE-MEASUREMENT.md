@@ -7,6 +7,13 @@ row and its quantized values. Its only status is `verified_proposal_blocked`.
 capsule nor its separate unsigned intent is accepted by the production intent
 store or a native signing/submission method.
 
+The treasury successor reuses this builder under its own
+`urnetwork-native-treasury-measurement-v1` capsule
+([treasury production](TREASURY-PRODUCTION.md)). Only there, on the mainnet
+schema-3 path, a genuinely empty provider allocation yields the reserve-only row,
+marked `fallback: reserve_only_empty_provider_allocation`, instead of a refusal.
+An owner-recycle row still requires provider weight.
+
 ## Concrete API path
 
 1. Load and retain the independently selected approval using
@@ -107,7 +114,9 @@ parent's head/pool theta and masks, then receives exactly one tenth of the propo
 row. The remaining nine tenths are divided equally among unmasked recognized
 owner destinations. Shared production quantization rejects lost recipients and
 signed-cap violations; native minimum weight count is checked too. No cap repair,
-zero-provider fallback, reserve credit or final-incentive claim is inferred.
+zero-provider fallback, reserve credit or final-incentive claim is inferred. The
+treasury capsule's reserve-only row is the only zero-provider row, and only
+treasury authority can produce it.
 
 The following remain explicit blockers:
 

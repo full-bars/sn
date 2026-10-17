@@ -9,8 +9,9 @@ import (
 
 // The single buffered value is the latest observed epoch, not a work queue.
 // Cancellation joins every read before the strategy/API owner is closed.
-func startClaimEpochReader(ctx context.Context, period time.Duration, read func(context.Context) (int64, error)) (<-chan int64, <-chan struct{}) {
-	epochs := make(chan int64, 1)
+// The v2 daemon reads its account snapshots through the same worker.
+func startClaimEpochReader[T any](ctx context.Context, period time.Duration, read func(context.Context) (T, error)) (<-chan T, <-chan struct{}) {
+	epochs := make(chan T, 1)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)

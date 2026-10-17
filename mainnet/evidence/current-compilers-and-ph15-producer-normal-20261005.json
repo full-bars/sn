@@ -1,0 +1,433 @@
+{
+  "author_execution": {
+    "bodies": 0,
+    "compilers": 0,
+    "db": 0,
+    "deployment": 0,
+    "lists": 0
+  },
+  "counts_per_mode": {
+    "all_go": 2757,
+    "connect": 224,
+    "mainnet": 292,
+    "server": 2027,
+    "server_controller": 95,
+    "server_full_model": 1865,
+    "sn": 498,
+    "sn_connect_vless": 730,
+    "vlessinterop": 8
+  },
+  "current2_actual": {
+    "body_results_inferred": 0,
+    "normal_compilers_passed": 2,
+    "phases": [
+      {
+        "exit": 0,
+        "id": "mainnet",
+        "receipt": {
+          "bytes": 9296,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-mainnet-miner2-normal-v1-mainnet.receipt.json",
+          "sha256": "432dc0c835accd00fa350bb004cc0f15c7ceb147edfeddf8a35580fd3363db04"
+        },
+        "resource_errors": [],
+        "retained_image": {
+          "bytes": 130031424,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-mainnet-miner2-normal-v1-mainnet.test",
+          "sha256": "b3a804e1b368a7eaf38fc19614497d1bb506d7affc97396be3d511a55c30d18b"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING",
+        "tree_joined": true,
+        "wait": {
+          "bytes": 2832,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-mainnet-miner2-normal-v1-mainnet.process-result.json",
+          "sha256": "38ecd711da23e8d7b17e212bf3d0c4201a01df372b4c022c4dfc03fc82712e8f"
+        }
+      },
+      {
+        "exit": 0,
+        "id": "miner",
+        "receipt": {
+          "bytes": 9282,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-mainnet-miner2-normal-v1-miner.receipt.json",
+          "sha256": "8c7600c7d409bc6465723ed24dd850babac63d7407d50984eac462f9a50840de"
+        },
+        "resource_errors": [],
+        "retained_image": {
+          "bytes": 105634640,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-mainnet-miner2-normal-v1-miner.test",
+          "sha256": "871c170c031aa9614c80718a3bfe7afe2164b6b3bf44727359f1fce857972925"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING",
+        "tree_joined": true,
+        "wait": {
+          "bytes": 2824,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-mainnet-miner2-normal-v1-miner.process-result.json",
+          "sha256": "ac0c49a5b264c11fb32985f6a7fbcbd766904ec38a10ddd2d8cf1ae01db8e514"
+        }
+      }
+    ],
+    "receipt": {
+      "bytes": 25503,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-mainnet-miner2-normal-v1.receipt.json",
+      "sha256": "6dc7ec68a1579dbef8b9460838ccbd18d92359d847417802a637b165a1458afc"
+    },
+    "scope": "Current mainnet and miner normal compiler images. Their successful compile does not qualify full package bodies, race or controls; earlier seven/Server983 images preserve original source provenance.",
+    "source_closure": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-624cf1-026b-d64-compiler-source-closure-v1.json",
+      "sha256": "f2ce1ef4248f9d01d062e32f40a881c1af86c26d659de13262ddaec1641782ff"
+    },
+    "source_tuple": {
+      "core": "026b850248352b72255be7a966e391e0a15e74c1",
+      "server": "d64c9beb49a8637ce753103e9ea34521cc55f597",
+      "sn": "624cf1e00f45dac61bc5675e4a21eb2a8dd121e5"
+    },
+    "status": "COMPILE_BATCH_PASS_BODY_PENDING",
+    "user_terminal": {
+      "bytes": 1708,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-mainnet-miner2-normal-v1-user-terminal-readback.json",
+      "sha256": "a603368aeb8b3449516319a5ad1a18e875eeb23803d99f5b0ca5c4e4b3fe6075"
+    }
+  },
+  "documentation_base": "1af1e92b2e810c42131832afde744676cb291b6c",
+  "payment_neighbor_restoration": {
+    "bytes": 3150,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-1af1-ph15-normal32/payment-neighbor-union-proof.json",
+    "sha256": "38bc3b1b76600b5f7d55ef67eda42e2b722cdc4ec455e289d24de64a990a7b9a"
+  },
+  "ph15_producer_actual": {
+    "actual_selected_list_count": 32,
+    "compiler_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-mainnet-miner2-normal-v1-mainnet.receipt.json",
+      "sha256": "432dc0c835accd00fa350bb004cc0f15c7ceb147edfeddf8a35580fd3363db04"
+    },
+    "controls": "4_GROUPS_UNEXECUTED",
+    "counts": {
+      "fail": 0,
+      "pass": 32,
+      "run": 32,
+      "skip": 0
+    },
+    "image": {
+      "bytes": 130031424,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-mainnet-miner2-normal-v1-mainnet.test",
+      "sha256": "b3a804e1b368a7eaf38fc19614497d1bb506d7affc97396be3d511a55c30d18b"
+    },
+    "outer_terminal": {
+      "active_state": "inactive",
+      "exit": 0,
+      "main_pid": 0,
+      "readback": {
+        "bytes": 1631,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-ph15-producer32-normal-v1-user-terminal-readback.json",
+        "sha256": "26ded585ac82deedff9bdbe6f178be8e291b02ec76243bb8ddb8b6378d4f54a1"
+      },
+      "status": "EXECUTOR_ARTIFACT_VERIFIED"
+    },
+    "phases": [
+      {
+        "exit": 0,
+        "operation": "list",
+        "stdout": {
+          "bytes": 1964,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-ph15-producer32-normal-v1-list.stdout",
+          "sha256": "86635e4bb7d07ee142459dcfee58362f7180b74c9d3afef8fa302a3a3a48229a"
+        },
+        "tree_joined": true,
+        "wait": {
+          "bytes": 3934,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-ph15-producer32-normal-v1-list.process-result.json",
+          "sha256": "be5d9adb8fb54b572e990eed12a14ec8827935a26b0a72405c9d14d5039859fd"
+        }
+      },
+      {
+        "exit": 0,
+        "operation": "body",
+        "stdout": {
+          "bytes": 4830,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-ph15-producer32-normal-v1-body.stdout",
+          "sha256": "77c732f57e0d1f9d37098fbe944c4ed286c0abd4c2fd6a2208a5c05e549ed140"
+        },
+        "tree_joined": true,
+        "wait": {
+          "bytes": 4001,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-ph15-producer32-normal-v1-body.process-result.json",
+          "sha256": "164815ff47d68644def7bb12c0c3d969547dd8edf00cd00d96358ce2f5574ba9"
+        }
+      }
+    ],
+    "race": "UNEXECUTED",
+    "receipt": {
+      "bytes": 15742,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-ph15-producer32-normal-v1.receipt.json",
+      "sha256": "172a513c62bd3723a7dfd24633b67d3df977fd73d40fcc7a441ce1488085485b"
+    },
+    "resource_errors": [],
+    "roots": {
+      "TestEconomicMetricsCoverageOverflowDoesNotEraseOtherEvidence": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsExtendedContractFitsOriginalOwnerBound": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsFollowAvailabilityKeepsCommittedProgress": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsFollowCancellationJoinsMetricsRetry": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsFollowCheckpointPublicationRemainsHeld": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsFollowInitialAvailabilityAllowsSameOwnerRestart": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsFollowMetricsOwnershipLossRemainsTerminal": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsFollowMixedMetricsFailureRemainsTerminal": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsFundingRefreshPreservesUnknownAndDefiniteRefusal": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsNativeAllocationKeepsIndependentKnownResults": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsProgressKeepsIndependentRatesAndUnknownDomains": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsProgressOverflowWithdrawsOnlyItsProjection": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsProviderAbsenceAndKnownZeroStayDistinct": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsProviderExactIntegerProjectionIsIndependent": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsProviderPartialCoverageRemainsVisible": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsPublicEqualByteLockReplacementCannotPublish": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsPublicFollowPublishesOutageAndRecoveryBeforeOutput": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsPublicFundingPresenceDoesNotInventIncomeOnlyCredit": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsPublicInputCollisionRefusesBeforeEffects": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsPublicLostAckKeepsCheckpointAndSuppressesOutput": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsStartupFundingAndConformanceRemainUnknown": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicMetricsUnknownConformanceCannotBecomeHealthyAcceptance": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressCurrentZeroDoesNotPredictFutureOrRepair": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressDurationCeilingAndOverflow": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressIncomparableClocksAndBoundariesRemainUnknown": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressPendingCannotBypassOriginalIdentity": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressPendingKeepsOriginalPreparationWindow": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressPublicOutageRetainsOwnerAndIndependentDomain": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressPublicRestartStartsNewMeasurementWindow": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressStalledReadCannotReusePriorRate": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressUnavailableAndHeldInvalidateMeasurementContinuity": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "TestEconomicProgressUnchangedHeadRetainsReadHighWater": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      }
+    },
+    "scope": "Exactly32 PH15 producer roots in normal mode; no full292-mainnet, producer race, four Go control or deployment claim.",
+    "selection": {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261005/ph15-status-evidence/scope.json",
+      "sha256": "02818a6de66fc835f963d8d708431baa440a3b2dbd364897e3014251e1dfb030"
+    },
+    "source_tuple": {
+      "core": "026b850248352b72255be7a966e391e0a15e74c1",
+      "server": "d64c9beb49a8637ce753103e9ea34521cc55f597",
+      "sn": "624cf1e00f45dac61bc5675e4a21eb2a8dd121e5"
+    },
+    "status": "PASS_PH15_PRODUCER32_NORMAL"
+  },
+  "preserved_obligations": "All38 original outcomes and263 controls remain open as previously recorded. Prior2755 tuples are preserved;2 existing requested payment neighbors restore2757.",
+  "schema": "current-two-compilers-and-ph15-producer32-normal-v1",
+  "scope": {
+    "bytes": 1545,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-1af1-ph15-normal32/SCOPE-HANDOFF.json",
+    "sha256": "2724795fa61afc5034bb727f5f20081c03ebbe5a263fe46360373474c6f99007"
+  },
+  "source_control_groups": 263,
+  "tooling38_actual": {
+    "actual_tests": 38,
+    "combined_owner_readback": {
+      "bytes": 2210,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-interpreter37-source1-v1-user-terminal-readback.json",
+      "sha256": "2ca160b9b8ced4f1253a9cc372e2a04a55822326d4ce5eb880d5974fcb1b25ec"
+    },
+    "elapsed_seconds": 2.227,
+    "fail": 0,
+    "later_duplicate_prebody_refusal": {
+      "exit": 1,
+      "invocation_id": "e109d51bc3c346a9b537d2c916610a47",
+      "no_second_test_body": true,
+      "owner_pid": 3592879,
+      "prebody_refusal": "FileExistsError existing owned scratch /mnt/data/sn-testnet/i38v1"
+    },
+    "original_and_duplicate_journal": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-interpreter37-source1-v1-unit-original-and-redundant-journal.log",
+      "sha256": "d17fbc8ea7991b0d48aa52545c0574a2de89f402190bc964934058271ed558a5"
+    },
+    "original_execution": {
+      "child_exit": 0,
+      "owner_success_journal_at": "2026-10-05 11:29:58 UTC",
+      "status": "PASS_INTERPRETER37_SOURCE1",
+      "tests": 38,
+      "tree_joined": true
+    },
+    "original_wait": {
+      "bytes": 1995,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-interpreter37-source1-v1.process-result.json",
+      "sha256": "a04ce7bddb3e9b74aaec3661d8695bb2c886a8d7786ffec1c0791e92b4629459"
+    },
+    "pass": 38,
+    "receipt": {
+      "bytes": 3791,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-interpreter37-source1-v1.receipt.json",
+      "sha256": "b4712010b1601acdb85605845d46083bc4097d83137f3bbc5308ef25f8de35ca"
+    },
+    "remaining": "Original tooling controls remain separately required. No full34 source-verifier rerun or blanket current applicability for its prior33 passes is asserted.",
+    "scope": "10 interpreter tests +27 ChildContext tests +one corrected source-verifier assertion; tooling only, no product Go roots or other33 verifier rerun.",
+    "skip": 0,
+    "source_commit": "1af1e92b2e810c42131832afde744676cb291b6c",
+    "source_unchanged": true,
+    "status": "PASS_INTERPRETER37_SOURCE1",
+    "stderr": {
+      "bytes": 6963,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-interpreter37-source1-v1.stderr",
+      "sha256": "78799fd9901dfa21313639294153c2d399ca5ecc490930c52d31f1c20fd9fe28"
+    }
+  }
+}

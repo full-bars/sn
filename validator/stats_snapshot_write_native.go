@@ -427,7 +427,7 @@ func (self *statsSnapshotDirectory) checkFinal() error {
 	}
 	var resultErr error
 	for _, root := range self.roots {
-		current, err := openAttemptPrivateDirectory(root.directory.path, root.directory.storageCtx)
+		current, err := openAttemptPrivateDirectory(root.directory.path, attemptPrivateDirectoryWitnessContext(root.directory.storageCtx))
 		if err != nil {
 			resultErr = errors.Join(resultErr, err)
 			continue

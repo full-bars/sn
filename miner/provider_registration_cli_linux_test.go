@@ -35,12 +35,8 @@ func TestProviderRegistrationCliRefusalHasClosedGuidance(t *testing.T) {
 			}
 		}
 		if phase == "duplicate" {
-			dir := filepath.Join(privateHome, ".urnetwork")
-			if err := os.Mkdir(dir, 0700); err != nil {
-				t.Fatal(err)
-			}
 			raw, err := json.Marshal(ProxyConfig{Servers: map[string]string{"192.0.2.40:1080:synthetic-one:synthetic-password": "", "192.0.2.40:1080:synthetic-two:synthetic-password": ""}})
-			if err != nil || os.WriteFile(filepath.Join(dir, "proxy"), raw, 0600) != nil {
+			if err != nil || os.WriteFile(filepath.Join(fixture.dir, "proxy"), raw, 0600) != nil {
 				t.Fatal("could not retain synthetic duplicate proxy configuration")
 			}
 		}

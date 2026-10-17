@@ -204,6 +204,7 @@ func deriveNativePrincipalEffects(policy economicEmissionPolicy, admission nativ
 		if err != nil {
 			return nil, err
 		}
+		effect.Query = nativePrincipalAdmittedQuery(effect.Query, authority.Queries)
 		if effect.Query.Netuid != policy.Netuid {
 			continue
 		}
@@ -318,6 +319,7 @@ func (self *nativePrincipalExecutionProjection) validate(policy economicEmission
 		copy(query.Hotkey[:], hot)
 		copy(query.Coldkey[:], cold)
 		query.Netuid = binary.LittleEndian.Uint16(netuid)
+		query = nativePrincipalAdmittedQuery(query, self.Authority.Queries)
 		if query != effect.Query || effect.Before != x.String() || effect.After != y.String() || effect.Amount != delta.String() || delta.Sign() < 0 || effect.Kind == "support" && delta.Sign() != 0 || effect.ExtrinsicIndex != nil && !rootCanonicalHash(effect.ExtrinsicHash) || effect.ExtrinsicIndex == nil && effect.ExtrinsicHash != "" || effect.Kind == "vault-capture" && (effect.ExtrinsicIndex == nil || !rootCanonicalHash(effect.EvmTransactionHash)) {
 			return errors.New("principal original observation and derived effect disagree")
 		}

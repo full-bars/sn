@@ -23,6 +23,8 @@ type nativeYumaAllocation struct {
 
 // SourceReview fixes an algorithm family, not a runtime-number allowlist.
 // The enclosing signed replay independently pins the actual code and callsites.
+// ReserveOnlyAllocation names the original miner tranche of an epoch whose
+// actual weight inputs were the treasury reserve-only row; other epochs omit it.
 type nativeYumaProjection struct {
 	Schema                    string                        `json:"schema"`
 	Authority                 nativeYumaPolicy              `json:"authority"`
@@ -38,6 +40,7 @@ type nativeYumaProjection struct {
 	Allocations               []nativeYumaAllocation        `json:"complete_uid_allocations,omitempty"`
 	MinerDenominator          *string                       `json:"complete_miner_denominator_alpha"`
 	FullQuantizationTolerance *string                       `json:"full_miner_quantization_tolerance_alpha"`
+	ReserveOnlyAllocation     *string                       `json:"reserve_only_miner_allocation_alpha,omitempty"`
 	ContentHash               string                        `json:"content_hash"`
 }
 
@@ -105,8 +108,9 @@ func (self *nativeYumaProjection) calculate(ctx context.Context, netuid uint16, 
 	self.Allocations = nil
 	self.MinerDenominator = nil
 	self.FullQuantizationTolerance = nil
+	self.ReserveOnlyAllocation = nil
 	if self.Epoch == nil {
-		if len(self.Records) != 0 || len(outcome.Recipients) != 0 || outcome.MinerAllocation != "0" {
+		if len(self.Records) != 0 || len(outcome.Recipients) != 0 || outcome.MinerAllocation != "0" || outcome.EpochInputs != nil {
 			return errors.New("native Yuma missing original epoch contradicts native execution")
 		}
 		zero := "0"
@@ -114,7 +118,15 @@ func (self *nativeYumaProjection) calculate(ctx context.Context, netuid uint16, 
 		self.FullQuantizationTolerance = &zero
 		return nil
 	}
-	input, err := decodeNativeYuma(self.Authority, netuid, self.Boundary, self.Records, *self.Epoch)
+	var total uint64
+	if outcome.EpochInputs != nil {
+		var err error
+		total, err = nativeYumaJoinedEpochTotal(*self.Epoch, outcome.EpochInputs, outcome.Recipients)
+		if err != nil {
+			return err
+		}
+	}
+	input, err := decodeNativeYuma(self.Authority, netuid, self.Boundary, self.Records, *self.Epoch, outcome.EpochInputs, outcome.Recipients)
 	if err != nil {
 		if errors.Is(err, errMonitorEconomicCapacity) {
 			return err
@@ -122,10 +134,12 @@ func (self *nativeYumaProjection) calculate(ctx context.Context, netuid uint16, 
 		self.Issue = err.Error()
 		return nil
 	}
-	total, err := nativeCaptureUint(*self.Epoch, "total-alpha", 8)
-	if err != nil {
-		self.Issue = err.Error()
-		return nil
+	if outcome.EpochInputs == nil {
+		total, err = nativeCaptureUint(*self.Epoch, "total-alpha", 8)
+		if err != nil {
+			self.Issue = err.Error()
+			return nil
+		}
 	}
 	fixed, err := evaluateNativeYuma(ctx, input, total, false, self.Authority.MaximumOperations)
 	if err != nil {
@@ -215,7 +229,11 @@ func (self *nativeYumaProjection) calculate(ctx context.Context, netuid uint16, 
 		}
 		self.Allocations = append(self.Allocations, nativeYumaAllocation{Uid: node.Uid, Hotkey: node.Hotkey, Registered: node.Registered, ActualMiner: amount.String(), ActualValidator: fixed.validatorAlpha[index].Num().String(), ReferenceMiner: reference.serverAlpha[index].RatString(), ReferenceValidator: reference.validatorAlpha[index].RatString(), AbsoluteMinerError: difference.RatString()})
 	}
-	amounts, err := economicConservationSum(outcome.ProviderEntitlement, outcome.OwnerRecycled, outcome.ResidualEntitlement)
+	treasury := "0"
+	if outcome.Treasury != nil {
+		treasury = outcome.Treasury.Gross
+	}
+	amounts, err := economicConservationSum(outcome.ProviderEntitlement, outcome.OwnerRecycled, outcome.ResidualEntitlement, treasury)
 	if err != nil || amounts != denominator.String() {
 		return errors.New("native Yuma full denominator contradicts original recipient effects")
 	}
@@ -226,7 +244,63 @@ func (self *nativeYumaProjection) calculate(ctx context.Context, netuid uint16, 
 	denominatorText, boundText := denominator.String(), bound.String()
 	self.MinerDenominator = &denominatorText
 	self.FullQuantizationTolerance = &boundText
+	if nativeYumaReserveOnlyRows(input, fixed.active, outcome.Treasury) {
+		allocation := outcome.MinerAllocation
+		self.ReserveOnlyAllocation = &allocation
+	}
 	return nil
+}
+
+// A reserve-only epoch is selected by its original weight inputs, never by
+// its outcome. Every row that carries active stake and still votes after the
+// runtime's own self and outdated-target masks must name exactly the approved
+// treasury generations at one equal positive weight; at least one must vote.
+// A provider, residual, partial or unequal row keeps the ordinary 1/10 target.
+func nativeYumaReserveOnlyRows(input nativeYumaInput, active []*big.Rat, treasury *nativeTreasuryAmounts) bool {
+	if treasury == nil || len(treasury.Policy.Recipients) == 0 || len(active) != len(input.Nodes) || len(input.Weights) != len(input.Nodes) {
+		return false
+	}
+	recipients := make(map[uint16]bool, len(treasury.Policy.Recipients))
+	for _, recipient := range treasury.Policy.Recipients {
+		if int(recipient.Uid) >= len(input.Nodes) {
+			return false
+		}
+		node := input.Nodes[recipient.Uid]
+		if !nativeTreasuryRecipient(treasury.Policy, nativeExecutionRecipient{Uid: node.Uid, Hotkey: node.Hotkey, Registered: node.Registered}) {
+			return false
+		}
+		recipients[recipient.Uid] = true
+	}
+	rows := 0
+	for index, node := range input.Nodes {
+		if active[index] == nil || active[index].Sign() <= 0 {
+			continue
+		}
+		columns, weight := 0, uint16(0)
+		for _, edge := range input.Weights[index] {
+			if int(edge.Column) >= len(input.Nodes) {
+				return false
+			}
+			// These are the columns the runtime itself ignores for this row.
+			target := input.Nodes[edge.Column]
+			if edge.Column == node.Uid && node.Uid != input.OwnerUid || node.LastUpdate <= target.Registered || input.CommitReveal && node.CommitBlock < target.Registered {
+				continue
+			}
+			if !recipients[edge.Column] || edge.Value == 0 || columns != 0 && edge.Value != weight {
+				return false
+			}
+			columns, weight = columns+1, edge.Value
+		}
+		// A row with no remaining vote directs nothing to providers either.
+		if columns == 0 {
+			continue
+		}
+		if columns != len(recipients) {
+			return false
+		}
+		rows++
+	}
+	return rows != 0
 }
 
 // Original checkpoint custody is still required by consumers. Recalculation

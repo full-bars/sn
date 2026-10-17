@@ -390,3 +390,91 @@ func TestOwnerSigningNativeSdkRejectsArtifactSubstitution(t *testing.T) {
 		}
 	}
 }
+
+// A native multisig approval nests the owner trim inside Multisig.as_multi.
+// The unmodified adapter must prepare the RFC78 proof for that complete outer
+// call, and the shortened metadata must carry the nested AdminUtils call type
+// the generic app needs to decode and display netuid and max_n on the device.
+func TestOwnerSigningNativeSdkMultisigNestedTrimProof(t *testing.T) {
+	fixture := newOwnerSigningNativeSdkFixture(t)
+	signers := newOwnerTrimMultisigTestSigners(t)
+	fixture.instrument(t, `
+request = json.load(sys.stdin)
+backend = load_backend(request["backend_path"], request["backend_sha256"])
+metadata = bytes.fromhex(request["metadata_scale"][2:])
+runtime = backend.Runtime(metadata, request["spec_version"], 1, 42)
+inner = bytes(runtime.compose_call("AdminUtils", "sudo_trim_to_max_allowed_uids", {"netuid": 25, "max_n": 6}))
+others = [bytes.fromhex(v[2:]) for v in request["multisig_signatories"] if v != request["owner_account_id"]]
+outer = bytes(runtime.compose_call("Multisig", "as_multi", {"threshold": 2, "other_signatories": others, "maybe_timepoint": None, "call": inner, "max_weight": {"ref_time": 1000000000, "proof_size": 65536}}))
+digest = bytes.fromhex(request["metadata_digest"][2:])
+extra, implicit = runtime.signature_payload_parts(era={"period": 8, "current": 64}, nonce=7, tip=0, tip_asset_id=None, genesis_hash=bytes([0x12])*32, era_block_hash=bytes([0x56])*32, metadata_hash=digest)
+chain = (metadata, request["spec_version"], request["spec_name"], 42, 9, "TAO")
+proof = bytes(backend.generate_extrinsic_proof(outer, bytes(extra), bytes(implicit), *chain))
+direct = bytes(backend.generate_extrinsic_proof(inner, bytes(extra), bytes(implicit), *chain))
+print(json.dumps({"inner": inner.hex(), "call": outer.hex(), "extra": bytes(extra).hex(), "implicit": bytes(implicit).hex(), "proof": proof.hex(), "direct": direct.hex()}))
+sys.exit(0)
+`)
+	input := fixture.input
+	input.Owner = signers.accounts[2]
+	input.MultisigAccount, input.MultisigThreshold, input.MultisigSignatories = signers.owner, 2, signers.accounts
+	raw, _ := json.Marshal(input)
+	command := exec.CommandContext(t.Context(), fixture.config.PythonPath, "-I", fixture.config.HelperPath)
+	command.Stdin = bytes.NewReader(raw)
+	output, err := command.CombinedOutput()
+	if err != nil {
+		t.Fatal("native nested multisig composition or proof failed", err, string(output))
+	}
+	var parts struct {
+		Inner    string `json:"inner"`
+		Call     string `json:"call"`
+		Extra    string `json:"extra"`
+		Implicit string `json:"implicit"`
+		Proof    string `json:"proof"`
+		Direct   string `json:"direct"`
+	}
+	if err := json.Unmarshal(output, &parts); err != nil {
+		t.Fatal(err)
+	}
+	inner, _ := hex.DecodeString(parts.Inner)
+	proof, _ := hex.DecodeString(parts.Proof)
+	direct, _ := hex.DecodeString(parts.Direct)
+	expected := binary.LittleEndian.AppendUint16([]byte{ownerTrimMultisigPallet, ownerTrimMultisigAsMulti}, 2)
+	expected = append(expected, rootCompact(2)...)
+	for _, account := range signers.accounts[:2] {
+		decoded, _ := hex.DecodeString(account[2:])
+		expected = append(expected, decoded...)
+	}
+	expected = append(append(append(expected, 0), inner...), append(rootCompact(1_000_000_000), rootCompact(65_536)...)...)
+	if len(inner) != 6 || !bytes.Equal(inner[2:], []byte{25, 0, 6, 0}) || parts.Call != hex.EncodeToString(expected) {
+		t.Fatal("native nested as_multi differs from the owner multisig codec", parts.Inner, parts.Call)
+	}
+	text := func(value string) []byte {
+		return append(rootCompact(uint64(len(value))), value...)
+	}
+	for _, name := range []string{"as_multi", "maybe_timepoint", "sudo_trim_to_max_allowed_uids", "netuid", "max_n"} {
+		if !bytes.Contains(proof, text(name)) {
+			t.Fatal("RFC78 proof for the outer call lacks a nested call type", name)
+		}
+	}
+	if bytes.Contains(direct, text("as_multi")) || len(proof) <= len(direct) {
+		t.Fatal("proof comparison does not distinguish the nested call")
+	}
+	// Restore the unmodified helper and prepare through the Go/Python bridge.
+	helper, err := os.ReadFile("owner_ledger_adapter.py")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(fixture.config.HelperPath, helper, 0600); err != nil {
+		t.Fatal(err)
+	}
+	input.Call, input.IncludedExtrinsic, input.IncludedSignedData = "0x"+parts.Call, "0x"+parts.Extra, "0x"+parts.Implicit
+	result, err := runOwnerLedgerAdapter(t.Context(), fixture.config, input)
+	digest := sha256.Sum256(proof)
+	if err != nil || result.Mode != "prepare" || result.ProofHash != "sha256:"+hex.EncodeToString(digest[:]) || len(expected)+len(parts.Extra)/2+len(parts.Implicit)/2+len(proof) > ownerLedgerPayloadLimit {
+		t.Fatal("unmodified adapter did not prepare the nested multisig proof", err)
+	}
+	input.Owner = "0x" + hex.EncodeToString(ownerTrimMultisigTestKey("outsider").Public().(ed25519.PublicKey))
+	if _, err := runOwnerLedgerAdapter(t.Context(), fixture.config, input); err == nil {
+		t.Fatal("adapter prepared a proof for a signer outside the owner multisig")
+	}
+}

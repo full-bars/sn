@@ -1,5 +1,5 @@
 // These source-graph regressions resolve modules without importing clientauth,
-// so a stale sibling override produces an assertion instead of a build failure.
+// so a wrong sibling or pin produces an assertion instead of a build failure.
 package sourcegraph
 
 import (
@@ -41,29 +41,67 @@ func resolvedSourceModule(t *testing.T, modulePath string) sourceModule {
 	return module
 }
 
-// The registration and refresh API used by SN must not depend on ../sdk HEAD.
-func TestClientauthSourceGraphPinsSdkWithoutSiblingOverride(t *testing.T) {
-	module := resolvedSourceModule(t, "github.com/urnetwork/sdk")
-	if module.Path != "github.com/urnetwork/sdk" || module.Replace == nil || module.Replace.Path != "github.com/urnetwork/sdk" || module.Replace.Version != "v0.0.0-20261001021058-5d37be3876e5" {
-		t.Fatalf("clientauth SDK resolved outside the reviewed registration source: %+v replacement=%+v", module, module.Replace)
+// A local build takes the module from exactly its sibling checkout beside SN;
+// a pinned build takes it from its reviewed version. Any other replacement, or
+// none, fails. An empty pin version admits any version of the pinned path, for
+// a module whose bytes only go.sum binds.
+func requireSiblingOrPin(t *testing.T, label, modulePath, sibling, pinPath, pinVersion string) {
+	t.Helper()
+	module := resolvedSourceModule(t, modulePath)
+	replacement := module.Replace
+	if module.Path != modulePath || replacement == nil {
+		t.Fatalf("%s is neither a sibling checkout nor pinned: %+v", label, module)
+	}
+	if replacement.Version == "" {
+		directory, err := filepath.Abs(filepath.Join("..", "..", "..", filepath.FromSlash(sibling)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if replacement.Path != "../"+sibling || replacement.Dir != directory {
+			t.Fatalf("%s resolved outside its sibling checkout ../%s: replacement=%+v", label, sibling, replacement)
+		}
+		return
+	}
+	if replacement.Path != pinPath || (pinVersion != "" && replacement.Version != pinVersion) {
+		t.Fatalf("%s resolved outside its reviewed pin: replacement=%+v", label, replacement)
 	}
 }
 
-// The SDK pin alone is insufficient: redirect ownership and exhaustion causes
-// require the matching Connect source, even when an older sibling is clean.
-func TestClientauthSourceGraphPinsConnectWithoutSiblingOverride(t *testing.T) {
-	module := resolvedSourceModule(t, "github.com/urnetwork/connect")
-	if module.Path != "github.com/urnetwork/connect" || module.Replace == nil || module.Replace.Path != "github.com/urnetwork/connect" || module.Replace.Version != "v0.0.0-20261001021459-e1b5d77b5029" {
-		t.Fatalf("clientauth Connect resolved outside the reviewed transport source: %+v replacement=%+v", module, module.Replace)
-	}
+// The registration and refresh API used by SN: the SDK sibling in a local
+// build, or the reviewed SDK pin in a pinned build.
+func TestClientauthSourceGraphSelectsSdkSiblingOrPin(t *testing.T) {
+	requireSiblingOrPin(t, "clientauth SDK", "github.com/urnetwork/sdk", "sdk", "github.com/urnetwork/sdk", "v0.0.0-20261001021058-5d37be3876e5")
 }
 
-// A versioned Connect requirement does not inherit its fork replacement. Keep
-// the effective SCTP source at that same commit, without a mutable local path.
-func TestClientauthSourceGraphPinsReviewedSctpFork(t *testing.T) {
-	module := resolvedSourceModule(t, "github.com/pion/sctp")
-	if module.Path != "github.com/pion/sctp" || module.Replace == nil || module.Replace.Path != "github.com/urnetwork/connect/sctp" || module.Replace.Version != "v0.0.0-20261001021459-e1b5d77b5029" {
-		t.Fatalf("clientauth SCTP resolved outside the reviewed Connect fork: %+v replacement=%+v", module, module.Replace)
+// Redirect ownership and exhaustion causes require the matching Connect
+// source: the Connect sibling, or the reviewed Connect pin.
+func TestClientauthSourceGraphSelectsConnectSiblingOrPin(t *testing.T) {
+	requireSiblingOrPin(t, "clientauth Connect", "github.com/urnetwork/connect", "connect", "github.com/urnetwork/connect", "v0.0.0-20261001021459-e1b5d77b5029")
+}
+
+// A dependency's fork replacement is not inherited. The SCTP source is the fork
+// in the Connect sibling, or the fork at the reviewed Connect commit.
+func TestClientauthSourceGraphSelectsSctpForkSiblingOrPin(t *testing.T) {
+	requireSiblingOrPin(t, "clientauth SCTP", "github.com/pion/sctp", "connect/sctp", "github.com/urnetwork/connect/sctp", "v0.0.0-20261001021459-e1b5d77b5029")
+}
+
+// SN and the server share one gVisor fork: the gvisor sibling, or the
+// published fork.
+func TestSourceGraphSelectsGvisorForkSiblingOrPin(t *testing.T) {
+	requireSiblingOrPin(t, "gVisor", "gvisor.dev/gvisor", "gvisor", "github.com/urnetwork/gvisor", "")
+}
+
+// A release build is local or pinned throughout; the release builder refuses a
+// graph that mixes sibling checkouts with pins in either mode.
+func TestSourceGraphSelectsOneDependencyMode(t *testing.T) {
+	forms := map[bool][]string{}
+	for _, modulePath := range []string{"github.com/urnetwork/sdk", "github.com/urnetwork/connect", "github.com/pion/sctp", "gvisor.dev/gvisor"} {
+		module := resolvedSourceModule(t, modulePath)
+		local := module.Replace != nil && module.Replace.Version == ""
+		forms[local] = append(forms[local], modulePath)
+	}
+	if len(forms[true]) != 0 && len(forms[false]) != 0 {
+		t.Fatalf("source graph mixes sibling checkouts %v with pins %v", forms[true], forms[false])
 	}
 }
 

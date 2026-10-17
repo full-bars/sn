@@ -44,6 +44,9 @@ func openOwnerTrimStore(ctx context.Context, preparation bootstrapChainPreparati
 // The scoped test hook stops only after real marker or reservation durability.
 // It cannot change the accepted preparation, checkpoint or effect allowance.
 func openOwnerTrimStoreWithClaimHook(ctx context.Context, preparation bootstrapChainPreparation, config ownerTrimExecutionConfig, key string, create bool, claimHook func(string) error) (_ *ownerTrimStore, resultErr error) {
+	if preparation.Plan.Config.noOwnerTrim() {
+		return nil, errors.New("owner trim custody refused: the accepted preparation sealed no owner trim")
+	}
 	if err := config.validate(key); err != nil {
 		return nil, err
 	}
@@ -86,10 +89,10 @@ func openOwnerTrimStoreWithClaimHook(ctx context.Context, preparation bootstrapC
 	}
 	// The new fixed journal must also be disjoint from every original input and
 	// role custody namespace; the original v3 paths themselves are unchanged.
-	for _, path := range append(preparation.protectedPaths(), preparation.Plan.ConfigPath, preparation.Plan.Config.OwnerTrimPolicy.Path, preparation.Plan.Config.OwnerTrimPlan.Path,
-		preparation.Plan.Config.Contracts.Path, preparation.Plan.Config.Root.Path, preparation.Plan.Config.Validators[0].Config.Path,
-		preparation.Plan.Config.Validators[1].Config.Path, preparation.Plan.Config.RootValidator.Approval.Path,
-		preparation.Root.ServiceInput.Path, preparation.Contracts.Config.Plan.Artifacts.Path) {
+	original := append(preparation.protectedPaths(), preparation.Plan.ConfigPath, preparation.Plan.Config.OwnerTrimPolicy.Path, preparation.Plan.Config.OwnerTrimPlan.Path,
+		preparation.Plan.Config.Contracts.Path, preparation.Plan.Config.Root.Path)
+	original = append(original, preparation.Plan.Config.validatorConfigPaths()...)
+	for _, path := range append(original, preparation.Plan.Config.RootValidator.Approval.Path, preparation.Root.ServiceInput.Path, preparation.Contracts.Config.Plan.Artifacts.Path) {
 		if action.StatePath == path || action.StatePath+".lock" == path || path+".lock" == action.StatePath {
 			return nil, errors.New("owner trim fixed custody path overlaps original preparation")
 		}

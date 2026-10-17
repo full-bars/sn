@@ -7,9 +7,11 @@ declaration. Actual signing requires the owner's independently prepared local
 custody. Host reserve, export, import, submission and reconciliation require the
 separate host declaration.
 
-The implemented physical preparation profile is Linux. Use the reviewed binary,
-filesystem and owner SDK bundle for that platform; these commands do not qualify
-a different owner platform, physical Ledger or firmware.
+Physical preparation profiles are implemented for Linux (ext4, xfs or btrfs)
+and macOS (a local APFS volume with ownership enforced; see
+[MACOS.md](MACOS.md) for its volume, path and identity rules). Use the reviewed
+binary, filesystem and owner SDK bundle for the actual platform; these commands
+do not qualify a different owner platform, physical Ledger or firmware.
 
 ## Exact fresh preparation request
 
@@ -26,7 +28,8 @@ as fresh. The request must supply all of:
   existing empty directory with mode 0700. Keep portable requests, tools,
   approvals, output reports and the preparation inputs outside this fresh root.
 - `former_writer_fence`, a `{ "path": ..., "sha256": ... }` reference to a
-  private `urnetwork-storage-preparation-fence-v1` file. It binds `root_path`,
+  private `urnetwork-storage-preparation-fence-v1` file on the selected mount,
+  outside the root and staging directory. It binds `root_path`,
   the observed `root_inode`, `purpose: "fresh"`, `former_writers_stopped: true`,
   `no_previous_owner_state: true`, and the actual external `evidence` for those
   assertions. A local lock cannot establish remote writer cessation.

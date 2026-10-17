@@ -23,11 +23,12 @@ type economicConservationPrincipalArchive struct {
 }
 
 type economicConservationPrincipalEffectSummary struct {
-	Archived  *economicConservationPrincipalArchive `json:"archived_complete_effects,omitempty"`
-	Active    []nativePrincipalReconciliation       `json:"active_original_effects"`
-	Through   economicEmissionBoundary              `json:"through"`
-	Current   bool                                  `json:"complete_through_native_cursor"`
-	Authority string                                `json:"authority"`
+	Retained  *economicConservationPrincipalRetained `json:"retained_original_effects,omitempty"`
+	Archived  *economicConservationPrincipalArchive  `json:"archived_complete_effects,omitempty"`
+	Active    []nativePrincipalReconciliation        `json:"active_original_effects"`
+	Through   economicEmissionBoundary               `json:"through"`
+	Current   bool                                   `json:"complete_through_native_cursor"`
+	Authority string                                 `json:"authority"`
 }
 
 func (self *economicConservationState) appendPrincipalEffects(policy economicConservationPolicy, outcome nativeExecutionOutcome, native *monitorEconomicNativeState) error {
@@ -50,7 +51,7 @@ func (self *economicConservationState) appendPrincipalEffects(policy economicCon
 		return err
 	}
 	for _, query := range outcome.PrincipalEffects.Authority.Queries {
-		matched := false
+		matched := nativeTreasuryPrincipalQuery(policy.Native.Observation.Execution.Treasury, query, policy.Native.Observation.Netuid)
 		for _, route := range policy.Routes {
 			if route.Kind != "tail-pool" {
 				continue
@@ -97,7 +98,7 @@ func (self economicConservationState) validatePrincipalEffects(policy economicCo
 		archived = self.Archive.PrincipalEffects
 	}
 	if authority == nil || authority.Effects == nil {
-		if archived != nil || self.PrincipalExecutions != nil {
+		if archived != nil || self.PrincipalExecutions != nil || self.Archive != nil && self.Archive.PrincipalRetained != nil {
 			return errors.New("economic principal effects appeared under legacy authority")
 		}
 		return nil
@@ -120,12 +121,28 @@ func (self economicConservationState) validatePrincipalEffects(policy economicCo
 			if pool.Query != authority.Queries[index] || !pool.Complete || pool.Before == nil || pool.After == nil || pool.Residual == nil || *pool.Residual != "0" {
 				return errors.New("economic principal archive summarized unknown effects")
 			}
+			treasury := nativeTreasuryPrincipalQuery(policy.Native.Observation.Execution.Treasury, pool.Query, policy.Native.Observation.Netuid)
+			if treasury != (pool.CapturedEarnings != nil) {
+				return errors.New("principal archive changed treasury collateral role")
+			}
+			if pool.CapturedEarnings != nil {
+				if _, err := monitorEconomicInteger(*pool.CapturedEarnings); err != nil {
+					return err
+				}
+			}
 			for _, amount := range []string{pool.Deposits, pool.Withdrawals, pool.Refunds, pool.VaultCaptures, pool.NativeEarnings} {
 				if _, err := monitorEconomicInteger(amount); err != nil {
 					return err
 				}
 			}
 		}
+	}
+	if self.Archive != nil && self.Archive.PrincipalRetained != nil {
+		head := self.Archive.PrincipalRetained
+		if err := head.validate(policy, previous, after, self.Native.Cursor); err != nil {
+			return err
+		}
+		previous, after = head.Through, head.After
 	}
 	for _, value := range self.PrincipalExecutions {
 		if value.Outcome.PrincipalEffects != nil || value.Outcome.OpeningPrincipals != nil || value.Projection.Parent != previous || after != nil && !reflect.DeepEqual(after, value.Projection.Before) {
@@ -172,6 +189,16 @@ func mergeEconomicPrincipalArchive(archive *economicConservationPrincipalArchive
 		if prior.Query != pool.Query {
 			return nil, errors.New("economic principal retirement changed original query")
 		}
+		if (pool.CapturedEarnings == nil) != (prior.CapturedEarnings == nil) {
+			return nil, errors.New("principal retirement changed treasury collateral authority")
+		}
+		if pool.CapturedEarnings != nil {
+			total, err := economicConservationSum(*pool.CapturedEarnings, *prior.CapturedEarnings)
+			if err != nil {
+				return nil, err
+			}
+			pool.CapturedEarnings = &total
+		}
 		pool.Before = prior.Before
 		for _, pair := range []struct {
 			target *string
@@ -200,6 +227,10 @@ func (self *economicConservationState) retirePrincipalEffects() error {
 	if self.Archive == nil {
 		return errors.New("economic principal retirement requires an owned archive")
 	}
+	if self.Archive.PrincipalRetained != nil {
+		// A complete later block cannot bridge an earlier unresolved interval.
+		return nil
+	}
 	retired := 0
 	for _, value := range self.PrincipalExecutions {
 		result, err := value.Projection.reconcile(value.Outcome)
@@ -223,6 +254,9 @@ func (self *economicConservationState) retirePrincipalEffects() error {
 }
 
 func (self *economicConservationArchiveView) retainPrincipalEffects(original, compacted *economicConservationState) error {
+	if err := self.indexPrincipalRetentions(original, compacted); err != nil {
+		return err
+	}
 	if compacted.Archive == nil || compacted.Archive.PrincipalEffects == nil {
 		return nil
 	}
@@ -272,6 +306,11 @@ func (self economicConservationState) principalEffectsSummary(policy economicCon
 	if self.Archive != nil && self.Archive.PrincipalEffects != nil {
 		result.Archived = self.Archive.PrincipalEffects
 		result.Through = result.Archived.Through
+	}
+	if self.Archive != nil && self.Archive.PrincipalRetained != nil {
+		result.Retained = self.Archive.PrincipalRetained
+		result.Through = result.Retained.CompleteThrough
+		result.Current = result.Retained.UnresolvedBlocks == 0
 	}
 	for _, value := range self.PrincipalExecutions {
 		entry, err := value.Projection.reconcile(value.Outcome)

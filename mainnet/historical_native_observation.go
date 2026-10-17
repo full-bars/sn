@@ -50,7 +50,7 @@ func historicalNativePointerValid(global *string, offsets []uint32) bool {
 }
 
 func historicalNativePurpose(value string) bool {
-	return value == "native-fee-exempt" || value == "native-fee-refund-zero" || value == "native-drain" || value == "native-epoch" || value == "native-emission" || value == "native-miner-credit" || value == "native-owner-recycle" || historicalPrincipalEffectPurpose(value) || historicalYumaPurpose(value)
+	return value == "native-miner-capture" || value == "native-recipient-owner-hotkey" || value == "native-recipient-auto-stake" || value == "native-recipient-owner" || value == "native-uid-census" || value == "native-epoch-index" || value == "native-fee-exempt" || value == "native-fee-refund-zero" || value == "native-drain" || value == "native-epoch" || value == "native-emission" || value == "native-miner-credit" || value == "native-owner-recycle" || historicalPrincipalEffectPurpose(value) || historicalYumaPurpose(value)
 }
 
 func validateHistoricalNativeCaptures(rule historicalReplayHookRule) error {
@@ -110,8 +110,8 @@ func validateHistoricalNativeObservation(profile *historicalReplayObservationPro
 	var selected *historicalReplayHookRule
 	for index := range profile.Rules {
 		rule := &profile.Rules[index]
-		for _, frame := range observation.Stack {
-			if rule.FunctionIndex == frame.FunctionIndex && frame.FunctionOffset >= rule.OffsetStart && frame.FunctionOffset < rule.OffsetEnd {
+		for frameIndex := range observation.Stack {
+			if historicalRuleMatchesAt(*rule, observation.Stack, frameIndex) {
 				selected = rule
 				break
 			}
@@ -119,6 +119,9 @@ func validateHistoricalNativeObservation(profile *historicalReplayObservationPro
 	}
 	if selected == nil || len(selected.Memory) != len(observation.Native.Memory) {
 		return errors.New("native memory differs from exact callsite layout")
+	}
+	if err := validateHistoricalExecutionState(*selected, *observation.Native); err != nil {
+		return err
 	}
 	if observation.Native.ExecutionPhaseHex != nil {
 		phase, err := historicalReplayHex(*observation.Native.ExecutionPhaseHex, 5)

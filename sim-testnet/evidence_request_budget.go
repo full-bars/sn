@@ -77,7 +77,12 @@ func (self *liveScenarioProbe) getCampaignEvidenceWithWait(ctx context.Context, 
 			return raw, status, nil
 		}
 		if err := requestCtx.Err(); err != nil {
-			return nil, status, err
+			// The attempt's own failure, such as its body Close, stays beside
+			// the cancellation that ends the request.
+			if errors.Is(failure, err) {
+				return nil, status, failure
+			}
+			return nil, status, errors.Join(failure, err)
 		}
 		transient := scenarioSnapshotTransportError(failure, true)
 		var response *evidenceRequestStatusError

@@ -169,7 +169,8 @@ func newReleaseSteererV2Context(ctx context.Context, cfg *ReleaseConfig, chain *
 	}
 	ema.v2.provisionalEpochGaps = runtime.history != nil && runtime.history.retainedStartup && provisionalClosedNativeInputEnabled(&ownedCfg)
 	ema.v2.historyAdoption = runtime.history.historyAdoption
-	self := &ReleaseSteerer{cfg: &ownedCfg, chain: chain, native: native, hotkey: runtime.hotkey, contexts: byNo, operators: operators, intents: intents, headEMA: ema, runtimeV2: runtime}
+	ema.v2.nativeGapBridge = runtime.history.nativeGapBridge
+	self := &ReleaseSteerer{cfg: &ownedCfg, chain: chain, native: native, hotkey: runtime.hotkey, contexts: byNo, operators: operators, intents: intents, headEMA: ema, runtimeV2: runtime, settlementV2: releaseSettlementV2Addresses(&ownedCfg)}
 	if err := requireReleaseEvidenceV2Runtime(self); err != nil {
 		return nil, err
 	}
@@ -263,17 +264,29 @@ func (self *ReleaseSteerer) restoreHeadEmaV2(ctx context.Context, intent *Steeri
 	return self.headEMA.CommitForEpochV2(ctx, artifact.SubnetEpoch, artifact.HeadEMA, artifact.Policy.Steering.HeadScoreEMA)
 }
 
-// The metadata slot is not shared with a fleet signing identity. Any actual
-// coordinator mirror rejects the role; an occupied native slot is allowed only
-// when it equals a separately authenticated finalized validator source intent.
+const releaseSourceRoleMirrorV2Rejection = "validator source hotkey has an existing fleet commitment mirror or malformed role response"
+
+// The metadata slot is not shared with a fleet signing identity. A coordinator
+// mirror rejects the role unless it is an exact copy of this hotkey's own
+// native write; an occupied native slot is allowed only when it equals a
+// separately authenticated finalized validator source intent.
 func (self *ReleaseSteerer) checkSourceRoleV2(ctx context.Context, snapshot *ReleaseSnapshot, nativeHash types.Hash, previous *SteeringIntent) error {
 	data := self.chain.coordinator.PackMirroredCommitments(self.hotkey.PublicKey())
 	raw, err := self.chain.ethCallAtHashContext(ctx, common.HexToAddress(self.cfg.Coordinator), data, snapshot.BlockNumber, snapshot.BlockHash)
 	if err != nil {
 		return err
 	}
-	if len(raw) != 96 || !slices.Equal(raw, make([]byte, 96)) {
-		return errors.New("validator source hotkey has an existing fleet commitment mirror or malformed role response")
+	if len(raw) != 96 {
+		return errors.New(releaseSourceRoleMirrorV2Rejection)
+	}
+	if !slices.Equal(raw, make([]byte, 96)) {
+		rule := self.checkSourceRoleMirrorV2
+		if self.sourceRoleMirrorRuleV2 != nil {
+			rule = self.sourceRoleMirrorRuleV2
+		}
+		if err := rule(ctx, raw); err != nil {
+			return err
+		}
 	}
 	observed, err := self.native.SourceCommitmentSlotAtContext(ctx, self.cfg.Netuid, self.hotkey.PublicKey(), nativeHash)
 	if err != nil {
@@ -301,6 +314,36 @@ func (self *ReleaseSteerer) checkSourceRoleV2(ctx context.Context, snapshot *Rel
 		}
 	}
 	return errors.New("validator source native slot belongs to another role or unretained write")
+}
+
+// mirroredCommitments returns (commitmentHash, finalizedBlockHash,
+// finalizedBlock): a native registration, the block that wrote it and that
+// block's hash. The mirror passes only if, at that block hash, this hotkey's
+// slot held exactly that hash written at exactly that block: a copy of the
+// validator's own write, since only the hotkey can write its slot. Such a copy
+// cannot make the validator a fleet member, because bindFleetMember also needs
+// the hotkey's sr25519 signature over a fleet binding, which the validator
+// never signs. The proof reads the archived block, not a retained intent, so
+// it outlives intent history and evidence generations. Keys come from the
+// current pinned metadata and the registration is decoded exactly, so a
+// changed layout fails closed.
+func (self *ReleaseSteerer) checkSourceRoleMirrorV2(ctx context.Context, raw []byte) error {
+	if len(raw) != 96 || !slices.Equal(raw[64:88], make([]byte, 24)) {
+		return errors.New(releaseSourceRoleMirrorV2Rejection)
+	}
+	commitmentHash, blockHash := [32]byte(raw[:32]), types.Hash(raw[32:64])
+	block := binary.BigEndian.Uint64(raw[88:])
+	if commitmentHash == ([32]byte{}) || blockHash == (types.Hash{}) || block == 0 {
+		return errors.New(releaseSourceRoleMirrorV2Rejection)
+	}
+	observed, err := self.native.SourceCommitmentAtContext(ctx, self.cfg.Netuid, self.hotkey.PublicKey(), blockHash)
+	if err != nil {
+		return fmt.Errorf("%s: read the mirrored native write at block %d: %w", releaseSourceRoleMirrorV2Rejection, block, err)
+	}
+	if crv4.ValidateFleetCommitmentWrite(commitmentHash, block, observed) != nil || observed.FinalizedHash != blockHash {
+		return errors.New(releaseSourceRoleMirrorV2Rejection)
+	}
+	return ctx.Err()
 }
 
 func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) {
@@ -344,8 +387,13 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	preparingProduction := isOwnerRecycleProductionConfig(self.cfg)
 	defer func() {
 		var wait *productionSteeringReadWait
-		if preparingProduction && !errors.As(resultErr, &wait) && retryableProductionSteeringRead(resultErr) && !errors.Is(ctx.Err(), context.Canceled) {
-			resultErr = &productionSteeringReadWait{phase: productionReadPreparation, cause: resultErr}
+		if preparingProduction && resultErr != nil && !errors.As(resultErr, &wait) && !errors.Is(ctx.Err(), context.Canceled) {
+			cause := observeProductionSteeringRead(resultErr, evidenceReadContextError(ctx) == context.DeadlineExceeded)
+			if retryableProductionSteeringRead(cause) {
+				resultErr = &productionSteeringReadWait{phase: productionReadPreparation, cause: cause}
+			} else {
+				resultErr = cause
+			}
 		}
 	}()
 	var nativeHash types.Hash
@@ -395,6 +443,9 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 		return err
 	}
 	if err := self.intents.v2.historyAdoption.requireFirstEpoch(current, nativeState.SubnetEpochIndex); err != nil {
+		return err
+	}
+	if err := self.intents.v2.nativeGapBridge.requireFirstEpoch(current, nativeState.SubnetEpochIndex); err != nil {
 		return err
 	}
 	if err := self.restoreHeadEmaV2(ctx, current); err != nil {
@@ -454,6 +505,9 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	if current != nil {
 		options.Expected.PreviousArtifactHash = current.MeasurementArtifactHash
 	}
+	// Only current treasury authority answers an empty provider allocation
+	// with its reserve-only row; every other path still refuses to submit.
+	options.treasuryReserveFallback = treasuryReserveFallbackConfig(self.cfg)
 	settlement := options.Settlement
 	options.Settlement = nil
 	head, err := self.gatherHeadV2(ctx, snapshot, nativeState.SubnetEpochIndex, nativeState.CurrentBlock, nativeHash.Hex(), hotkeyUids, inputs, options)
@@ -619,6 +673,10 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	defer func() {
 		resultErr = self.productionRetainedReadFailure(ctx, productionReadIntent, durableIntent, resultErr)
 	}()
+	var treasuryIntent *TreasuryProductionIntent
+	if self.cfg.TreasuryApproval != nil {
+		treasuryIntent, productionIntent = productionIntent, nil
+	}
 	intent, err := self.intents.beginV2(ctx, SteeringIntent{
 		ValidatorID:             self.cfg.ValidatorID,
 		Netuid:                  self.cfg.Netuid,
@@ -636,6 +694,7 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 		MeasurementEnvelopeHash: envelopeHash,
 		MeasurementEnvelopeSize: envelopeSize,
 		OwnerRecycle:            productionIntent,
+		Treasury:                treasuryIntent,
 		SelfUID:                 selfUid,
 		MaskedUIDs:              verifiedMeasurement.MaskedUIDs,
 		EligibleHeadUIDs:        headSelectionUIDs(verifiedMeasurement.EligibleHead),

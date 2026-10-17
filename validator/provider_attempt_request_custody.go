@@ -6,7 +6,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/ed25519"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"io"
@@ -239,14 +241,145 @@ func (self *VerifiedProviderAttemptRequestCustody) ReboundCheckpoint(directory, 
 	return encodeProviderAttemptRequestCheckpoint(value)
 }
 
-// Keep the registered opaque custody attribute inside its fixed 4096 bytes.
+// The attribute holds the same checkpoint at one fixed width. Its original
+// preparation is a digest and the closed head omits its preparation copy:
+// both must equal the separately retained preparation every reader supplies.
+// Preparation writes the full width at birth, so a replacement never grows.
 func encodeProviderAttemptRequestCheckpoint(value ProviderAttemptRequestCheckpoint) ([]byte, error) {
-	raw, err := json.Marshal(value)
+	preparation := ProviderAttemptRequestPreparation{Identity: value.Identity, Limits: value.Limits, Birth: value.Birth}
+	if value.Schema != ProviderAttemptRequestCheckpointSchema || value.Closed != nil && (value.Closed.Schema != ProviderAttemptRequestWindowSchema || value.Closed.Preparation != preparation || len(value.Closed.Signature) != ed25519.SignatureSize) {
+		return nil, errors.Join(protocol.ErrProviderAttemptsIntegrity, errors.New("provider request checkpoint has no fixed-width encoding"))
+	}
+	digest, err := providerAttemptRequestPreparationDigest(preparation)
 	if err != nil {
 		return nil, err
 	}
-	if len(raw) > 4096 {
-		return nil, protocol.ErrProviderAttemptsCapacity
+	raw := append(make([]byte, 0, providerAttemptRequestAttributeBytes), providerAttemptRequestAttributeSchema...)
+	raw = append(raw, digest[:]...)
+	raw = binary.BigEndian.AppendUint64(raw, value.DirectoryInode)
+	raw = binary.BigEndian.AppendUint64(raw, value.FileInode)
+	pending, closed := ProviderAttemptRequestPending{}, ProviderAttemptRequestClosedHead{Signature: make([]byte, ed25519.SignatureSize)}
+	flags := [2]byte{}
+	if value.Pending != nil {
+		pending, flags[0] = *value.Pending, 1
 	}
-	return raw, nil
+	if value.Closed != nil {
+		closed, flags[1] = *value.Closed, 1
+	}
+	if raw, err = appendProviderAttemptRequestHead(raw, value.Committed); err != nil {
+		return nil, err
+	}
+	raw = append(raw, flags[0])
+	raw = binary.BigEndian.AppendUint64(raw, pending.Bytes)
+	raw = append(raw, pending.Hash[:]...)
+	raw = append(raw, flags[1])
+	window := closed.Window
+	for _, field := range []uint64{window.Epoch, window.StartBlock, window.EndBlock, window.FinalizedBlock, window.Subject.ObservationEpoch, window.Subject.NativeEpoch} {
+		raw = binary.BigEndian.AppendUint64(raw, field)
+	}
+	raw = append(raw, closed.PreviousCutHash[:]...)
+	for _, head := range []ProviderAttemptRequestHead{closed.Begin, closed.End} {
+		if raw, err = appendProviderAttemptRequestHead(raw, head); err != nil {
+			return nil, err
+		}
+	}
+	raw = append(raw, closed.RecordsHash[:]...)
+	return append(raw, closed.Signature...), nil
+}
+
+// An empty head has no block hash; every other head names a canonical one.
+func appendProviderAttemptRequestHead(raw []byte, head ProviderAttemptRequestHead) ([]byte, error) {
+	var block [32]byte
+	if head.LastBoundary.EVMBlockHash != "" {
+		var err error
+		if block, err = canonicalAttemptHex32("provider request head block hash", head.LastBoundary.EVMBlockHash, false); err != nil {
+			return nil, errors.Join(protocol.ErrProviderAttemptsIntegrity, err)
+		}
+	}
+	raw = binary.BigEndian.AppendUint64(raw, head.Sequence)
+	raw = append(raw, head.Hash[:]...)
+	raw = binary.BigEndian.AppendUint64(raw, head.Bytes)
+	raw = binary.BigEndian.AppendUint64(raw, head.LastBoundary.SettlementEpoch)
+	raw = binary.BigEndian.AppendUint64(raw, head.LastBoundary.EVMBlock)
+	return append(raw, block[:]...), nil
+}
+
+// The digest binds the omitted identity, limits and birth to one preparation.
+func providerAttemptRequestPreparationDigest(value ProviderAttemptRequestPreparation) ([32]byte, error) {
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return [32]byte{}, err
+	}
+	return sha256.Sum256(raw), nil
+}
+
+// Read the fixed-width attribute, or the canonical v1 JSON that earlier
+// releases wrote. legacy reports v1, which the next save replaces with v2.
+// Either format must name the expected preparation; callers still validate
+// the decoded heads against its bounds.
+func decodeProviderAttemptRequestCheckpoint(raw []byte, expected ProviderAttemptRequestPreparation) (value ProviderAttemptRequestCheckpoint, legacy bool, err error) {
+	if !bytes.HasPrefix(raw, []byte(providerAttemptRequestAttributeSchema)) {
+		if err := attemptStoreDecode(raw, &value); err != nil {
+			return ProviderAttemptRequestCheckpoint{}, true, err
+		}
+		// v1 spells its preparation out where v2 has the digest, and it must
+		// also have the v2 record that its next save writes.
+		_, encodeErr := encodeProviderAttemptRequestCheckpoint(value)
+		if encodeErr != nil || (ProviderAttemptRequestPreparation{Identity: value.Identity, Limits: value.Limits, Birth: value.Birth}) != expected {
+			return ProviderAttemptRequestCheckpoint{}, true, errors.Join(durablevolume.ErrIdentity, encodeErr, errors.New("provider request v1 checkpoint differs from its original preparation or v2 record"))
+		}
+		return value, true, nil
+	}
+	if len(raw) != providerAttemptRequestAttributeBytes {
+		return value, false, errors.Join(durablevolume.ErrIdentity, errors.New("provider request checkpoint has another width"))
+	}
+	digest, err := providerAttemptRequestPreparationDigest(expected)
+	if err != nil {
+		return value, false, err
+	}
+	body := raw[len(providerAttemptRequestAttributeSchema):]
+	if !bytes.Equal(body[:len(digest)], digest[:]) {
+		return value, false, errors.Join(durablevolume.ErrIdentity, errors.New("provider request checkpoint belongs to another original preparation"))
+	}
+	offset := len(digest)
+	next := func(size int) []byte {
+		offset += size
+		return body[offset-size : offset]
+	}
+	number := func() uint64 { return binary.BigEndian.Uint64(next(8)) }
+	hash := func() (result [32]byte) {
+		copy(result[:], next(32))
+		return result
+	}
+	head := func() ProviderAttemptRequestHead {
+		result := ProviderAttemptRequestHead{Sequence: number(), Hash: hash(), Bytes: number(), LastBoundary: AttemptBoundary{SettlementEpoch: number(), EVMBlock: number()}}
+		if block := hash(); block != ([32]byte{}) {
+			result.LastBoundary.EVMBlockHash = attemptHex32(block)
+		}
+		return result
+	}
+	value = ProviderAttemptRequestCheckpoint{Schema: ProviderAttemptRequestCheckpointSchema, Identity: expected.Identity, Limits: expected.Limits, Birth: expected.Birth, DirectoryInode: number(), FileInode: number(), Committed: head()}
+	pending := next(1)[0] != 0
+	value.Pending = &ProviderAttemptRequestPending{Bytes: number(), Hash: hash()}
+	if !pending {
+		value.Pending = nil
+	}
+	closed := next(1)[0] != 0
+	window := protocol.ValidatorEvidenceWindow{Epoch: number(), StartBlock: number(), EndBlock: number(), FinalizedBlock: number(), Subject: protocol.ValidatorEvidenceSubject{ObservationEpoch: number(), NativeEpoch: number()}}
+	value.Closed = &ProviderAttemptRequestClosedHead{Schema: ProviderAttemptRequestWindowSchema, Preparation: expected, Window: window, PreviousCutHash: hash(), Begin: head(), End: head(), RecordsHash: hash(), Signature: slices.Clone(next(ed25519.SignatureSize))}
+	if !closed {
+		value.Closed = nil
+	}
+	// Flags other than 0/1 and bytes in an absent section are not canonical.
+	canonical, err := encodeProviderAttemptRequestCheckpoint(value)
+	if err != nil || !bytes.Equal(canonical, raw) {
+		return ProviderAttemptRequestCheckpoint{}, false, errors.Join(durablevolume.ErrIdentity, err, errors.New("provider request checkpoint is not canonical"))
+	}
+	return value, false, nil
+}
+
+// Other packages read the directory attribute with the runtime's strict decoder.
+func DecodeProviderAttemptRequestCheckpoint(raw []byte, expected ProviderAttemptRequestPreparation) (ProviderAttemptRequestCheckpoint, error) {
+	value, _, err := decodeProviderAttemptRequestCheckpoint(raw, expected)
+	return value, err
 }

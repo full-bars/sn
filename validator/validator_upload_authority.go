@@ -77,18 +77,19 @@ type ValidatorUploadNativeObserver struct {
 	TimestampMillis uint64
 }
 
-// The fixed eight-byte native timestamp is retained only after a final
-// canonical height/hash check. The schedule reader separately proves permit.
+// The fixed eight-byte native timestamp is retained only after closing
+// canonical/finalized checks. The schedule reader separately proves permit.
 func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chain, deployment ValidatorUploadDeployment) (result ValidatorUploadNativeObserver, resultErr error) {
 	var selected types.Hash
+	var finality runtimeFinalityObservation
 	return crv4.ReadRuntimeObservationContext(ctx, native, func(ctx context.Context) (ValidatorUploadNativeObserver, error) {
-		return validatorUploadNativeObserverAttempt(ctx, native, deployment, &selected)
+		return validatorUploadNativeObserverAttempt(ctx, native, deployment, &selected, &finality)
 	})
 }
 
 // Timestamp storage belongs to the same transport as its route and artifact.
 // A replacement repeats those reads while retaining the first finalized block.
-func validatorUploadNativeObserverAttempt(ctx context.Context, native *crv4.Chain, deployment ValidatorUploadDeployment, selected *types.Hash) (result ValidatorUploadNativeObserver, resultErr error) {
+func validatorUploadNativeObserverAttempt(ctx context.Context, native *crv4.Chain, deployment ValidatorUploadDeployment, selected *types.Hash, finality *runtimeFinalityObservation) (result ValidatorUploadNativeObserver, resultErr error) {
 	if ctx == nil || native == nil || native.API == nil || native.API.Client == nil {
 		return result, errors.New("validator staging native observer is unavailable")
 	}
@@ -107,29 +108,28 @@ func validatorUploadNativeObserverAttempt(ctx context.Context, native *crv4.Chai
 	if err := deployment.authenticateNativeRuntimeRouteContext(ctx, native); err != nil {
 		return result, err
 	}
-	finalized, err := crv4.FinalizedHeadContext(ctx, native)
+	finalized, err := readRuntimeFinalityWitness(ctx, native)
 	if err != nil {
 		return result, err
 	}
-	if *selected == (types.Hash{}) {
-		*selected = finalized
-	}
-	hash := *selected
-	number, _, err := native.CanonicalHeaderAtContext(ctx, hash)
+	hash, err := crv4.SelectFinalityReadBlockContext(ctx, native, *selected, finalized.hash)
 	if err != nil {
 		return result, err
+	}
+	*selected = hash
+	number := finalized.number
+	if hash != finalized.hash {
+		number, _, err = native.ReceiptHeaderAtContext(ctx, hash)
+		if err != nil {
+			return result, err
+		}
 	}
 	if number == 0 {
 		return result, errors.New("validator staging finalized native header is absent")
 	}
-	if finalized != hash {
-		finalizedNumber, _, err := native.CanonicalHeaderAtContext(ctx, finalized)
-		if err != nil {
-			return result, err
-		}
-		if finalizedNumber < number {
-			return result, errors.New("validator staging native finality regressed")
-		}
+	block := runtimeFinalityWitness{hash: hash, number: number}
+	if err := finality.check(ctx, native, finalized, block); err != nil {
+		return result, err
 	}
 	allowed, err := deployment.runtimeArtifactsAt(number, false)
 	if err != nil {
@@ -161,7 +161,7 @@ func validatorUploadNativeObserverAttempt(ctx context.Context, native *crv4.Chai
 	if timestamp == 0 || timestamp > math.MaxInt64 {
 		return result, errors.New("validator staging native timestamp exceeds its bound")
 	}
-	if err := native.CheckCanonicalBlockAtContext(ctx, hash, number); err != nil {
+	if err := finality.close(ctx, native, block); err != nil {
 		return result, err
 	}
 	return ValidatorUploadNativeObserver{Number: number, Hash: hash, TimestampMillis: timestamp}, nil

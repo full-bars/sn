@@ -78,20 +78,9 @@ func authenticateReleaseMainnetRuntimeAttempt(ctx context.Context, native *crv4.
 	if err != nil || native.GenesisHash != expectedGenesis {
 		return empty, nil, errors.New("mainnet runtime observation connection genesis differs from independent authority")
 	}
-	call := native.API.Client.CallContext
-	var nativeChain, evmChainId string
-	var genesis types.Hash
-	if err := call(ctx, &nativeChain, "system_chain"); err != nil {
+	genesis, err := readRuntimeNetworkIdentity(ctx, native, pin.NativeChain, expectedGenesis)
+	if err != nil {
 		return empty, nil, err
-	}
-	if err := call(ctx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
-		return empty, nil, err
-	}
-	if err := call(ctx, &evmChainId, "eth_chainId"); err != nil {
-		return empty, nil, err
-	}
-	if nativeChain != pin.NativeChain || genesis != expectedGenesis || evmChainId != "0x3c4" {
-		return empty, nil, errors.New("mainnet runtime observation fresh chain name/genesis/EVM964 identity differs")
 	}
 	finalized, err := readRuntimeFinalityWitness(ctx, native)
 	if err != nil {
@@ -142,7 +131,7 @@ func authenticateReleaseMainnetRuntimeAttempt(ctx context.Context, native *crv4.
 	artifact.GenesisHash = genesis
 	return artifact, &MainnetRuntimeObservation{
 		ConfigSha256: attemptHex32(history.configHash), ApprovalSha256: cfg.MainnetRuntimeApprovals[selected.Revision-1].SHA256,
-		Revision: selected.Revision, NativeChain: nativeChain, GenesisHash: genesis, EvmChainId: 964,
+		Revision: selected.Revision, NativeChain: pin.NativeChain, GenesisHash: genesis, EvmChainId: 964,
 		BlockHash: block, BlockNumber: number, FinalizedHash: finalized.hash, Runtime: selected.artifactIdentity(),
 	}, nil
 }

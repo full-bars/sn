@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The optional companion shares one complete-root byte envelope with its
 // original assignment owner. Legacy scopes retain their existing grammar.

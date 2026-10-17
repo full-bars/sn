@@ -71,20 +71,24 @@ type ReleaseMeasurementV2OperatorOptions struct {
 // bounds the canonical wire. Neither may exceed the existing envelope ceiling.
 // Settlement supplies the independent previous-window authority whenever the
 // artifact carries a closure; its scratch owners must differ from current ones.
+// Only a treasury-selected configuration sets the private reserve fallback: an
+// empty provider allocation then verifies with no provider row, which its
+// reserve-only treasury row replaces. Other callers keep the original refusal.
 type ReleaseMeasurementV2Options struct {
-	Expected         ReleaseMeasurementV2Decision
-	Policy           protocol.Policy
-	ReplayPolicy     *protocol.Policy
-	ControlledNOIDs  []uint64
-	Bindings         []ReleaseBindingMeasurement
-	Pools            []ReleasePoolMeasurement
-	DepositAudits    []DepositAudit
-	Operators        map[uint64]ReleaseMeasurementV2OperatorOptions
-	Settlement       *AttemptSettlementV2Options
-	MaxOperators     uint64
-	MaxHeadEntries   uint64
-	MaxArtifactBytes uint64
-	MaxControlBytes  uint64
+	Expected                ReleaseMeasurementV2Decision
+	Policy                  protocol.Policy
+	ReplayPolicy            *protocol.Policy
+	ControlledNOIDs         []uint64
+	Bindings                []ReleaseBindingMeasurement
+	Pools                   []ReleasePoolMeasurement
+	DepositAudits           []DepositAudit
+	Operators               map[uint64]ReleaseMeasurementV2OperatorOptions
+	Settlement              *AttemptSettlementV2Options
+	MaxOperators            uint64
+	MaxHeadEntries          uint64
+	MaxArtifactBytes        uint64
+	MaxControlBytes         uint64
+	treasuryReserveFallback bool
 }
 
 // Decision and replay census are published atomically. Prior EMA migration,
@@ -469,7 +473,7 @@ func verifyOwnedReleaseMeasurementV2(ctx context.Context, artifact *ReleaseMeasu
 		}
 		statsKVs[input.NoID], replayedKVs[input.NoID] = projection.Stats, projection.Replay
 	}
-	decision, err := assembleReleaseMeasurement(artifact, statsKVs, fleets, bound, membersByUID, stale, controlled)
+	decision, err := assembleReleaseMeasurement(artifact, statsKVs, fleets, bound, membersByUID, stale, controlled, options.treasuryReserveFallback)
 	if err != nil {
 		return VerifiedReleaseMeasurementV2{}, err
 	}

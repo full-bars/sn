@@ -51,9 +51,97 @@ import (
 // TrailTransport posts one signed /verify body through the given provider
 // hop's egress and returns the raw response body. Implementations must make
 // the request egress from exactly that hop (the server attributes the hop
-// from the source IP). ctx bounds the whole attempt.
+// from the source IP). ctx bounds the whole attempt, and carries the address
+// family the hop tries first (hopFirstIpFamilyOf).
 type TrailTransport interface {
 	PostVerify(ctx context.Context, hop connect.Id, jsonBody []byte) ([]byte, error)
+}
+
+// hopFirstIpFamily is the address family (4 or 6) the hop at position (0 for
+// the SEED) of the trail-th trail tries first (IPV6.md C7). Families alternate
+// along a trail, and each trail starts on the family the trail before it did
+// not, so over any two consecutive trails every position tries each family
+// first once, whatever the depth. Retries never move the alternation: within
+// a step, a source-egress-unresolved answer pins the other family for the
+// step's later attempts (postStep), any other retry keeps the family of the
+// attempt before it, and the next hop and the next trail take their families
+// from their positions alone.
+func hopFirstIpFamily(trail uint64, position int) int {
+	if (trail+uint64(position))%2 == 0 {
+		return 4
+	}
+	return 6
+}
+
+// otherIpFamily is the family a hop request did not try first.
+func otherIpFamily(firstIpFamily int) int {
+	if firstIpFamily == 4 {
+		return 6
+	}
+	return 4
+}
+
+// errSourceEgressUnresolved is the server's retryable answer to a hop request
+// whose source address it resolved to no provider (VALIDATOR.md §8.2): the
+// request left the hop on a family the server has not indexed for that
+// provider, as a provider with one family-agnostic transport has only the
+// family it landed on indexed. Nothing was recorded, so the identical body
+// may go again through the same hop. A TrailTransport returns it, as a
+// sourceEgressUnresolvedError, for exactly HTTP 421 with the body
+// verifySourceEgressUnresolvedBody.
+var errSourceEgressUnresolved = errors.New("source egress unresolved")
+
+// verifySourceEgressUnresolvedBody is the whole body of the server's 421.
+const verifySourceEgressUnresolvedBody = "source-egress-unresolved\n"
+
+// sourceEgressUnresolvedError is errSourceEgressUnresolved for one request,
+// with the family the request reached the server on, or 0 when the transport
+// does not know it.
+type sourceEgressUnresolvedError struct {
+	hop      connect.Id
+	ipFamily int
+}
+
+func (self *sourceEgressUnresolvedError) Error() string {
+	return fmt.Sprintf("verify post via %s: %s", self.hop, errSourceEgressUnresolved)
+}
+
+func (self *sourceEgressUnresolvedError) Is(target error) bool {
+	return target == errSourceEgressUnresolved
+}
+
+// hopIpFamily is the address family a hop request's tunnel tries first, and
+// whether the request may use only that one.
+type hopIpFamily struct {
+	// first is 4 or 6; 0 is no preference
+	first int
+	// pinned limits the request to first: a source-egress-unresolved answer
+	// earlier in the step ruled the other family out
+	pinned bool
+}
+
+type hopIpFamilyKey struct{}
+
+// withHopIpFamily marks a hop request with its family.
+func withHopIpFamily(ctx context.Context, family hopIpFamily) context.Context {
+	return context.WithValue(ctx, hopIpFamilyKey{}, family)
+}
+
+// withHopFirstIpFamily marks a hop request with the family it tries first.
+func withHopFirstIpFamily(ctx context.Context, firstIpFamily int) context.Context {
+	return withHopIpFamily(ctx, hopIpFamily{first: firstIpFamily})
+}
+
+// hopIpFamilyOf is a hop request's family: what the trail engine marked it
+// with, or no preference for a request it did not make.
+func hopIpFamilyOf(ctx context.Context) hopIpFamily {
+	family, _ := ctx.Value(hopIpFamilyKey{}).(hopIpFamily)
+	return family
+}
+
+// hopFirstIpFamilyOf is the family a hop request tries first, or 0.
+func hopFirstIpFamilyOf(ctx context.Context) int {
+	return hopIpFamilyOf(ctx).first
 }
 
 // SeedPicker picks the validator-chosen entry provider for a new trail
@@ -511,6 +599,10 @@ type TrailError struct {
 	Kind TrailErrorKind
 	Hop  connect.Id // the implicated hop for TrailErrorHop
 	Err  error
+	// Diagnostics only: where the trail stopped and how many hops it had
+	// confirmed. Neither changes the error's text, retry or attribution.
+	stage trailStage
+	depth int
 }
 
 func (self *TrailError) Error() string {
@@ -568,6 +660,12 @@ type TrailEngineConfig struct {
 	// Zero disables the gate for single-trail callers and unit tests; the
 	// release runner derives a positive value from the locked policy.
 	SeedAttemptInterval time.Duration
+	// ConfirmedSeedHorizon keeps a provider as a preferred seed for this long
+	// after this process last received a server-authenticated answer through
+	// it (trail_seed_pool.go). Zero follows SeedAttemptInterval: the release
+	// runner's gate enables the default horizon, while single-trail callers and
+	// unit tests keep the picker's own choice. A negative value disables it.
+	ConfirmedSeedHorizon time.Duration
 	// AttemptLedger and AttemptBoundaryResolver are an all-or-nothing release
 	// measurement seam. Legacy/unit callers may omit both.
 	AttemptLedger           *AttemptLedger
@@ -620,9 +718,14 @@ type TrailEngine struct {
 
 	seedDiscoverySchedule attemptSchedule
 	seedPostSchedule      attemptSchedule
+	// Providers this process has seen answer; nil keeps the picker's choice.
+	seedPool *trailSeedPool
 
 	completed atomic.Uint64
 	failed    atomic.Uint64
+	// trails counts the trails that reached their SEED, which numbers each
+	// trail for hopFirstIpFamily.
+	trails atomic.Uint64
 }
 
 type attemptSchedule struct {
@@ -701,6 +804,7 @@ func NewTrailEngine(
 		transport:        transport,
 		keys:             keys,
 		pickSeed:         pickSeed,
+		seedPool:         newTrailSeedPool(cfg, clientId, stats),
 		stats:            stats,
 		store:            store,
 		epochFn:          epochFn,
@@ -853,30 +957,63 @@ func (self *TrailEngine) verifyAssign(assign *connect.VerifyAssignResult, wantTr
 }
 
 // postStep sends one body through hop with the step timeout, retrying the
-// identical body (idempotent, §4.3) up to ExtendAttempts within the budget.
+// identical body (idempotent, §4.3) up to ExtendAttempts within the budget,
+// and reports how long the attributed attempts took: those from the last
+// source-egress-unresolved answer on, which the server attributed to hop.
+// The first attempt tries firstIpFamily first. An attempt answered
+// errSourceEgressUnresolved rules out the family it reached the server on,
+// and the step's later attempts are pinned to the other one (tcp4 or tcp6),
+// so a hop that landed on the family the server has not indexed for its
+// provider is resent on the one it has (§8.2), however slow that family is
+// to connect; once both families are ruled out, the step fails. Any other
+// failure is retried on the same family. The server answers at most two of
+// a step's attempts that way, so ExtendAttempts=3 holds a first try, the
+// resend and one retry of it. Every attempt shares the step's deadline.
 // beforeAttempt, when non-nil, meters every send including retries.
-func (self *TrailEngine) postStep(ctx context.Context, hop connect.Id, body []byte, beforeAttempt func(context.Context) error) ([]byte, error) {
+func (self *TrailEngine) postStep(ctx context.Context, hop connect.Id, body []byte, firstIpFamily int, beforeAttempt func(context.Context) error) (responseBody []byte, latency time.Duration, err error) {
 	stepCtx, cancel := context.WithTimeout(ctx, self.cfg.StepTimeout)
 	defer cancel()
+	family := hopIpFamily{first: firstIpFamily}
+	// ruledOut[f] is whether a source-egress-unresolved answer ruled out f
+	ruledOut := map[int]bool{}
+	var attributedStart time.Time
 	var lastErr error
 	for attempt := 0; attempt < self.cfg.ExtendAttempts; attempt++ {
+		if ruledOut[4] && ruledOut[6] {
+			return nil, 0, fmt.Errorf("step failed after %d attempts, both families unresolved: %w", attempt, lastErr)
+		}
 		if beforeAttempt != nil {
 			if err := beforeAttempt(stepCtx); err != nil {
-				return nil, fmt.Errorf("seed attempt pace: %w", err)
+				return nil, 0, fmt.Errorf("seed attempt pace: %w", err)
 			}
 		}
-		responseBody, err := self.transport.PostVerify(stepCtx, hop, body)
+		attemptStart := time.Now()
+		if attributedStart.IsZero() {
+			attributedStart = attemptStart
+		}
+		responseBody, err := self.transport.PostVerify(withHopIpFamily(stepCtx, family), hop, body)
 		if err == nil {
-			return responseBody, nil
+			return responseBody, time.Since(attributedStart), nil
 		}
 		lastErr = err
+		var unresolved *sourceEgressUnresolvedError
+		if errors.As(err, &unresolved) || errors.Is(err, errSourceEgressUnresolved) {
+			landed := family.first
+			if unresolved != nil && unresolved.ipFamily != 0 {
+				landed = unresolved.ipFamily
+			}
+			ruledOut[landed] = true
+			family = hopIpFamily{first: otherIpFamily(landed), pinned: true}
+			// the server attributed nothing to this attempt
+			attributedStart = time.Time{}
+		}
 		select {
 		case <-stepCtx.Done():
-			return nil, fmt.Errorf("step timeout after %d attempts: %w", attempt+1, lastErr)
+			return nil, 0, fmt.Errorf("step timeout after %d attempts: %w", attempt+1, lastErr)
 		default:
 		}
 	}
-	return nil, fmt.Errorf("step failed after %d attempts: %w", self.cfg.ExtendAttempts, lastErr)
+	return nil, 0, fmt.Errorf("step failed after %d attempts: %w", self.cfg.ExtendAttempts, lastErr)
 }
 
 // RunTrail walks one full trail: SEED through a picked entry, then EXTEND
@@ -896,12 +1033,14 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 	}
 	m := min(max(requestedDepth, connect.VerifyMMin), connect.VerifyMMax)
 	if err := self.waitForSeedDiscovery(ctx); err != nil {
-		return nil, &TrailError{Kind: TrailErrorSeed, Err: fmt.Errorf("seed discovery pace: %w", err)}
+		return nil, &TrailError{Kind: TrailErrorSeed, Err: fmt.Errorf("seed discovery pace: %w", err), stage: trailStageDiscovery}
 	}
-	seedHop, err := self.pickSeed(ctx)
+	seedHop, err := self.pickTrailSeed(ctx)
 	if err != nil {
-		return nil, &TrailError{Kind: TrailErrorSeed, Err: fmt.Errorf("seed pick: %w", err)}
+		return nil, &TrailError{Kind: TrailErrorSeed, Err: fmt.Errorf("seed pick: %w", err), stage: trailStagePick}
 	}
+	seedTry := self.beginSeedTry(seedHop)
+	defer seedTry.finish(ctx)
 	var attemptRecord AttemptRecord
 	attemptActive := false
 	var releaseRequest func()
@@ -913,6 +1052,8 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 			self.stats.abortAttempt()
 		}
 	}()
+	// The last pre-send step an attempt reached; diagnostics only.
+	seedStage := trailStagePace
 	beforeSeed := self.waitForSeedAttempt
 	if ledgerEnabled {
 		// Reserve only after pacing, but before sending SEED: an authenticated
@@ -924,6 +1065,7 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 			if attemptActive {
 				return nil
 			}
+			seedStage = trailStageReserve
 			boundary, bindings, err := self.resolve(ctx, nil, nil)
 			if err != nil {
 				return fmt.Errorf("reserve attempt boundary: %w", err)
@@ -948,11 +1090,11 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 	// --- SEED (§4.1) ---
 	clientNonce := make([]byte, connect.VerifyNonceSize)
 	if _, err := rand.Read(clientNonce); err != nil {
-		return nil, &TrailError{Kind: TrailErrorSeed, Err: err}
+		return nil, &TrailError{Kind: TrailErrorSeed, Err: err, stage: trailStageInternal}
 	}
 	seedMessage, err := connect.BuildVerifySeedMessage(self.vpk, clientNonce, byte(requestedDepth))
 	if err != nil {
-		return nil, &TrailError{Kind: TrailErrorSeed, Err: err}
+		return nil, &TrailError{Kind: TrailErrorSeed, Err: err, stage: trailStageInternal}
 	}
 	seedSignature := connect.SignVerifyMessage(self.vsk, seedMessage)
 	seedBody, err := json.Marshal(&connect.VerifySeedArgs{
@@ -963,7 +1105,7 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 		M:           requestedDepth,
 	})
 	if err != nil {
-		return nil, &TrailError{Kind: TrailErrorSeed, Err: err}
+		return nil, &TrailError{Kind: TrailErrorSeed, Err: err, stage: trailStageInternal}
 	}
 	if journal := self.cfg.RequestJournal; journal != nil {
 		reserve := beforeSeed
@@ -975,6 +1117,7 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 			if original != nil {
 				return owner.Err()
 			}
+			seedStage = trailStageJournal
 			var err error
 			if releaseRequest == nil {
 				releaseRequest, err = journal.beginTrail(owner, attemptRecord.Boundary)
@@ -986,10 +1129,20 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 			return err
 		}
 	}
-	responseBody, err := self.postStep(ctx, seedHop, seedBody, beforeSeed)
+	beforeSeed = seedTry.metered(beforeSeed)
+	// the trail's number, which alternates the family its hops try first
+	trailNumber := self.trails.Add(1) - 1
+	responseBody, _, err := self.postStep(ctx, seedHop, seedBody, hopFirstIpFamily(trailNumber, 0), func(owner context.Context) error {
+		seedStage = trailStagePace
+		if err := beforeSeed(owner); err != nil {
+			return err
+		}
+		seedStage = trailStageSend
+		return nil
+	})
 	if err != nil {
 		// Seed failures are the validator's own pick — not attributable.
-		return nil, &TrailError{Kind: TrailErrorSeed, Hop: seedHop, Err: err}
+		return nil, &TrailError{Kind: TrailErrorSeed, Hop: seedHop, Err: err, stage: seedStage}
 	}
 	var envelope verifyResponseEnvelope
 	if err := json.Unmarshal(responseBody, &envelope); err != nil {
@@ -1006,6 +1159,8 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 	if err := self.verifyAssign(&assign, confirmed); err != nil {
 		return nil, &TrailError{Kind: TrailErrorProtocol, Err: err}
 	}
+	// The seed answered with an authenticated ASSIGN; a later refusal is not its.
+	seedTry.confirm()
 	// Bind the authenticated response before assigned-hop evidence. Any
 	// pre-SEED settlement reservation is released by the owner defer on error.
 	if assign.M != m {
@@ -1040,6 +1195,7 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 		return err
 	}
 	recordConfirmation := func(latencyMs float64) {
+		self.observeConfirmedHop(assign.NextHop)
 		if !ledgerEnabled {
 			self.stats.RecordConfirmation(assign.NextHop, latencyMs)
 			return
@@ -1050,7 +1206,10 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 		attemptRecord.Assignments[index].LatencyBucket = uint8(latencyBucket(latencyMs))
 	}
 	failAttempt := func(kind TrailErrorKind, hop connect.Id, disposition string, cause error) (*ProofRecord, error) {
-		trailErr := &TrailError{Kind: kind, Hop: hop, Err: cause}
+		trailErr := &TrailError{Kind: kind, Hop: hop, Err: cause, depth: len(confirmed)}
+		if kind == TrailErrorHop {
+			trailErr.stage = trailStageSend
+		}
 		if err := commitFailure(disposition); err != nil {
 			return nil, errors.Join(trailErr, err)
 		}
@@ -1081,15 +1240,16 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 				return failAttempt(TrailErrorProtocol, pendingHop, AttemptDispositionValidatorError, err)
 			}
 		}
-		stepStart := time.Now()
-		responseBody, err := self.postStep(ctx, pendingHop, extendBody, nil)
+		// the latency is the attributed attempts' alone: an attempt answered
+		// source-egress-unresolved reached the server from no provider
+		responseBody, stepLatency, err := self.postStep(ctx, pendingHop, extendBody, hopFirstIpFamily(trailNumber, depth-1), nil)
 		if err != nil {
 			// The assigned hop never confirmed: local failure attribution
 			// to the pending hop (§4.4/§7.2) — the exposure recorded at
 			// ASSIGN time stands unconfirmed.
 			return failAttempt(TrailErrorHop, pendingHop, AttemptDispositionHopFailure, err)
 		}
-		latencyMs := float64(time.Since(stepStart)) / float64(time.Millisecond)
+		latencyMs := float64(stepLatency) / float64(time.Millisecond)
 
 		if err := json.Unmarshal(responseBody, &envelope); err != nil {
 			return failAttempt(TrailErrorProtocol, pendingHop, AttemptDispositionProtocol, err)

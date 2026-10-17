@@ -121,6 +121,7 @@ func bootstrapSuccessorSafeCurrentTestCommandPreservesExactSend(t *testing.T, pu
 	chain, plan := f.original.contracts, f.approval.Plan
 	root := f.original.config.RunDirectory
 	original := bootstrapSuccessorPreparationTestFiles(t, root)
+	originalMembers := bootstrapSuccessorExecutionTestMemberCensus(t, root, false)
 	nonces := bootstrapSuccessorPreparationTestFiles(t, plan.Request.RegistryDirectory)
 	model := &bootstrapSuccessorExecutionFixture{t: t, approval: f.approval, key: f.key}
 	revision := bootstrapSuccessorSafeCurrentTestNext(t, model, f.canonical, bootstrapSuccessorRuntimeHistory{}, nil)
@@ -415,11 +416,8 @@ func bootstrapSuccessorSafeCurrentTestCommandPreservesExactSend(t *testing.T, pu
 	if code, result, diagnostic := invoke(0, false, args); code != 0 || !result.InstallationComplete || result.CumulativeAttempts != 10 || result.SubmissionAttempted || result.SafeCurrentRevisionHash != rootObjectHash(revision) {
 		t.Fatal("public historical reconciliation lost current-policy custody", code, result, diagnostic)
 	}
-	for name, raw := range original {
-		retained, err := os.ReadFile(filepath.Join(root, name))
-		if err != nil || string(retained) != raw {
-			t.Fatal("current-policy capability rewrote original receipts or execution", name, err)
-		}
+	if name := bootstrapSuccessorExecutionTestChangedOriginal(t, root, original, originalMembers); name != "" {
+		t.Fatal("current-policy capability rewrote original receipts or execution", name)
 	}
 	retained, err := os.ReadFile(countedPath)
 	if err != nil || !bytes.Equal(retained, countedRaw) || !maps.Equal(nonces, bootstrapSuccessorPreparationTestFiles(t, plan.Request.RegistryDirectory)) {

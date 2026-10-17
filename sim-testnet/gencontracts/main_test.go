@@ -335,6 +335,25 @@ func TestPreserveReviewedBytecodeRejectsUnauthenticatedArtifact(t *testing.T) {
 	}
 }
 
+// SV-8: a newly cataloged artifact has no reviewed payload, so regeneration
+// takes its rebuilt bytes; a partly missing payload is still refused.
+func TestPreserveReviewedBytecodeAdmitsOnlyWhollyNewArtifacts(t *testing.T) {
+	reviewed := testContractItem(t, "Reviewed", "6007", strings.Repeat("99", 32))
+	existing, err := renderContractArtifacts([]item{reviewed})
+	if err != nil {
+		t.Fatal(err)
+	}
+	added := testContractItem(t, "Added", "6008", strings.Repeat("aa", 32))
+	preserved, err := preserveReviewedBytecode("contracts_gen.go", existing, []item{added, reviewed})
+	if err != nil || preserved[0].Creation != added.Creation || preserved[0].Runtime != added.Runtime || preserved[1].Creation != reviewed.Creation {
+		t.Fatalf("new artifact was not admitted with its rebuilt payload: %v", err)
+	}
+	partial := []byte(strings.Replace(string(existing), "const ReviewedRuntimeBytecode", "const ReviewedRuntimeBytecodeRemoved", 1))
+	if _, err := preserveReviewedBytecode("contracts_gen.go", partial, []item{reviewed}); err == nil || !strings.Contains(err.Error(), "ReviewedRuntimeBytecode") {
+		t.Fatalf("partly missing reviewed payload was admitted: %v", err)
+	}
+}
+
 func testContractItem(t *testing.T, name, executable, digest string) item {
 	t.Helper()
 	creation := metadataBytecode(executable+"01", digest)

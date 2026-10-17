@@ -612,8 +612,87 @@ func TestRepositoryDiscoveryUsesModuleIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.SN != r.Repos.SN || got.Server != r.Repos.Server || got.OperatorProxy != r.Repos.OperatorProxy || got.Vault != r.Repos.Vault || got.PlatformConfig != r.Repos.PlatformConfig {
+	if got.SN != r.Repos.SN || got.Server != r.Repos.Server || got.Vault != r.Repos.Vault || got.PlatformConfig != r.Repos.PlatformConfig {
 		t.Fatalf("discovered repositories = %+v, want %+v", got, r.Repos)
+	}
+}
+
+// Discovery needs only the current sibling set: module identity for sn and
+// server plus the vault and platform-config resource files. A workspace
+// without the retired operator-proxy checkout resolves completely.
+func TestRepositoryDiscoveryDoesNotRequireOperatorProxy(t *testing.T) {
+	workspace := t.TempDir()
+	for relative, content := range map[string]string{
+		"sn/go.mod":                 "module github.com/urfoundation/sn\n",
+		"server/go.mod":             "module github.com/urnetwork/server\n",
+		"vault/main/st.yml":         "synthetic: true\n",
+		"config/local/settings.yml": "synthetic: true\n",
+	} {
+		path := filepath.Join(workspace, filepath.FromSlash(relative))
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	configPath := filepath.Join(workspace, "sn", "sim-testnet", "testnet.yml")
+	got, err := discoverRepos(configPath, LoadOptions{})
+	if err != nil {
+		t.Fatalf("discovery required a retired repository: %v", err)
+	}
+	want := RepoPaths{
+		SN: filepath.Join(workspace, "sn"), Server: filepath.Join(workspace, "server"),
+		Vault: filepath.Join(workspace, "vault"), PlatformConfig: filepath.Join(workspace, "config"),
+	}
+	if got != want {
+		t.Fatalf("discovered repositories = %+v, want %+v", got, want)
+	}
+}
+
+// The retired operator_proxy key stays readable. Strict loading accepts the
+// checked-in deployment configs that still carry it, and its JSON field keeps
+// the name and position that ConfigHash and archived authorities bind.
+func TestHarnessRepositoriesKeepRetiredOperatorProxyIdentity(t *testing.T) {
+	const legacy = `{"discovery":"auto","sn":"auto","server":"auto","operator_proxy":"auto","vault":"auto","platform_config":"auto"}`
+	for _, path := range []string{"testnet.yml", "testnet-light.yml"} {
+		var cfg HarnessConfig
+		if err := strictYAML(path, &cfg); err != nil {
+			t.Fatal(err)
+		}
+		encoded, err := json.Marshal(cfg.Repositories)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(encoded) != legacy {
+			t.Errorf("%s repository identity = %s, want %s", path, encoded, legacy)
+		}
+	}
+	path := filepath.Join(t.TempDir(), "repositories.yml")
+	if err := os.WriteFile(path, []byte("repositories:\n  discovery: auto\n  sn: auto\n  server: auto\n  vault: auto\n  platform_config: auto\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var current struct {
+		Repositories RepositoryConfig `yaml:"repositories"`
+	}
+	if err := strictYAML(path, &current); err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := json.Marshal(current.Repositories)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := `{"discovery":"auto","sn":"auto","server":"auto","operator_proxy":"","vault":"auto","platform_config":"auto"}`; string(encoded) != want {
+		t.Errorf("config without the retired key encodes as %s, want %s", encoded, want)
+	}
+	decoder := json.NewDecoder(strings.NewReader(legacy))
+	decoder.DisallowUnknownFields()
+	var archived RepositoryConfig
+	if err := decoder.Decode(&archived); err != nil {
+		t.Fatalf("archived repository identity no longer decodes: %v", err)
+	}
+	if reencoded, err := json.Marshal(archived); err != nil || string(reencoded) != legacy {
+		t.Fatalf("archived repository identity re-encodes as %s: %v", reencoded, err)
 	}
 }
 

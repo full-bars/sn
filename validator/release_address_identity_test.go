@@ -7,7 +7,6 @@ package validator
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -71,11 +70,11 @@ func persistReleaseAddressCaptureTestIntent(t *testing.T, f *releaseBootstrapV2T
 	if err != nil {
 		t.Fatal(err)
 	}
-	encoded, err := json.Marshal(steeringIntentFile{Schema: SteeringIntentSchema, Current: i, History: []SteeringIntent{}})
+	encoded, err := marshalAttemptSettlementV2JSON(t.Context(), &steeringIntentFile{Schema: SteeringIntentSchema, Current: i, History: []SteeringIntent{}}, f.cfg.EvidenceV2.Bounds.IntentFileLimit(), true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(f.cfg.StateDir, "steering-intents.json"), append(encoded, '\n'), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(f.cfg.StateDir, "steering-intents.json"), encoded, 0o600); err != nil {
 		t.Fatal(err)
 	}
 	return measurement

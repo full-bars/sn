@@ -77,7 +77,7 @@ func ObserveProductionBootstrapCommittedPrefix(ctx context.Context, path string,
 			return nil, err
 		}
 	}
-	// Existing immutable readers retain both namespace descriptors and their
+	// Existing immutable readers retain every namespace descriptor and their
 	// complete census through all replay and historical reads. No chmod/chown.
 	bounds := cfg.EvidenceV2.Bounds
 	bounds.MaxHistoryBytes = min(bounds.MaxHistoryBytes, uint64(productionBootstrapCommittedMaximumControl))
@@ -190,10 +190,12 @@ func checkProductionBootstrapStatePath(ctx context.Context, path string, service
 func captureProductionBootstrapCommitted(ctx context.Context, cfg *ReleaseConfig, observed ProductionBootstrapObservation, history *releaseEvidenceV2HistoryFiles, scratch string) (ReleaseEvidenceV2ArchiveOptions, error) {
 	options := ReleaseEvidenceV2ArchiveOptions{Config: cfg, Hotkey: observed.Native.Hotkey, ScratchRoot: scratch, MaximumBytes: productionBootstrapCommittedMaximumBytes, MaximumObjects: productionBootstrapCommittedMaximumObjects}
 	inputs, err := readProductionBootstrapPrefixInputs(ctx, cfg, observed)
-	if err != nil || len(cfg.Operators) != 2 || history == nil {
+	if err == nil {
+		options.Origins, err = releaseEvidenceV2ConfiguredOrigins(cfg)
+	}
+	if err != nil || len(options.Origins) != len(inputs) || history == nil {
 		return options, errors.Join(errors.New("committed prefix original census is unavailable"), err)
 	}
-	options.Origins = [2]string{cfg.Operators[0].APIURL, cfg.Operators[1].APIURL}
 	capture := ReleaseEvidenceV2CaptureOptions{Hotkey: options.Hotkey, Origins: options.Origins, MaximumBytes: options.MaximumBytes, MaximumObjects: options.MaximumObjects,
 		MaximumDataBytes: productionBootstrapCommittedMaximumBytes - productionBootstrapCommittedMaximumControl, MaximumControlBytes: productionBootstrapCommittedMaximumControl, ReuseCapturedStreams: true}
 	contents := map[string][]byte{}
@@ -262,7 +264,7 @@ func captureProductionBootstrapCommitted(ctx context.Context, cfg *ReleaseConfig
 			return options, err
 		}
 		closure, err := decodeAttemptSettlementClosureV2Bytes(ctx, member.encoded, cfg.EvidenceV2.Bounds.MaxClosureBytes, cfg.EvidenceV2.Bounds.MaxParticipants)
-		if err != nil || closure.Epoch != member.epoch || len(closure.Transitions) != 2 {
+		if err != nil || closure.Epoch != member.epoch || len(closure.Transitions) != len(inputs) {
 			return options, errors.Join(errors.New("committed prefix terminal census differs"), err)
 		}
 		for i, transition := range closure.Transitions {
@@ -272,7 +274,7 @@ func captureProductionBootstrapCommitted(ctx context.Context, cfg *ReleaseConfig
 			cuts = append(cuts, &transition.Cut)
 		}
 	}
-	// Verify every header/domain before fetching either origin. Full record,
+	// Verify every header/domain before fetching any origin. Full record,
 	// trail and prior-state authority still belongs to the existing replay.
 	captureBounds := cfg.EvidenceV2.Bounds.Cut
 	for _, limits := range []*AttemptStreamV2Bounds{&captureBounds.Records, &captureBounds.Proofs} {
@@ -326,7 +328,7 @@ func captureProductionBootstrapCommitted(ctx context.Context, cfg *ReleaseConfig
 // Projection requires real complete replay and both retained checkpoints as
 // anchors. Even validly re-signed shorter history cannot erase a prior prefix.
 func projectProductionBootstrapCommitted(ctx context.Context, archive *ReleaseEvidenceV2Archive, sources []ReleaseEvidenceV2ArchiveSource, observed ProductionBootstrapObservation, approved ProductionBootstrapPrefixObservation, previous *ProductionBootstrapCommittedObservation, serviceUid uint32) (*ProductionBootstrapCommittedObservation, error) {
-	if archive == nil || archive.closed || archive.history == nil || archive.owner == nil || len(approved.Prefixes) != 2 {
+	if archive == nil || archive.closed || archive.history == nil || archive.owner == nil || len(archive.inputs) == 0 || len(approved.Prefixes) != len(archive.inputs) {
 		return nil, errors.New("committed prefix replay owner is absent")
 	}
 	initial, err := replayProductionBootstrapPrefix(ctx, &archive.owner.cfg, archive.inputs, archive.history.keys, observed)
@@ -365,7 +367,7 @@ func projectProductionBootstrapCommitted(ctx context.Context, archive *ReleaseEv
 		result.PreviousHash, prior.ContentHash = prior.ContentHash, ""
 		if result.PreviousHash != productionBootstrapPrefixHash(prior) || prior.Schema != result.Schema || !prior.HistoricalSources || prior.ConfigHash != result.ConfigHash || prior.PolicyHash != result.PolicyHash ||
 			prior.ServiceUid != serviceUid || prior.Native.Hotkey != observed.Native.Hotkey || prior.Native.Block > observed.Native.Block || prior.Native.Epoch > observed.Native.Epoch || prior.EvmBlock > observed.EvmBlock ||
-			prior.Native.Block == observed.Native.Block && prior.Native.Hash != observed.Native.Hash || prior.EvmBlock == observed.EvmBlock && prior.EvmHash != observed.EvmHash || len(prior.Prefixes) != 2 {
+			prior.Native.Block == observed.Native.Block && prior.Native.Hash != observed.Native.Hash || prior.EvmBlock == observed.EvmBlock && prior.EvmHash != observed.EvmHash || len(prior.Prefixes) != len(result.Prefixes) {
 			return nil, errors.New("committed prefix previous checkpoint domain regressed")
 		}
 		for i, prefix := range prior.Prefixes {

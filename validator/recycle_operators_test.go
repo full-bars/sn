@@ -104,7 +104,9 @@ func (self *recycleOperatorFixture) GetBlockByNumber(ctx context.Context, number
 	count := func() int { self.stateLock.Lock(); defer self.stateLock.Unlock(); return self.routeReads }()
 	if self.retargetDecision && count >= 2 && uint64(number) == self.finalized {
 		hash := result["hash"].(common.Hash)
-		hash[0] ^= 1
+		// Keep this a valid fork of the original single-byte fixture identity.
+		// Zero would stop at header decoding before the canonical route check.
+		hash[len(hash)-1] ^= 1
 		result["hash"] = hash
 	}
 	return result, ctx.Err()
@@ -124,12 +126,16 @@ func newRecycleOperatorFixtureWithHotkey(t *testing.T, hotkey [32]byte) *recycle
 // Optional independent fixture inputs are fixed before provider sealing and
 // approval. The callback assembles real journals; it cannot admit a verdict.
 func newRecycleOperatorFixtureWithInputs(t *testing.T, hotkey [32]byte, completed int, selectedPolicy *protocol.Policy, setup func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture)) *recycleOperatorFixture {
-	return newRecycleOperatorFixtureWithActivation(t, hotkey, completed, selectedPolicy, setup, nil)
+	t.Helper()
+	return newRecycleOperatorFixtureWithMeasurement(t, setup, func(setup func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture)) *recycleMeasurementFixture {
+		return newRecycleMeasurementFixtureWithPolicy(t, completed, setup, hotkey, selectedPolicy)
+	})
 }
 
-// Full startup can provide real activation bytes without rewriting any signed
-// provider evidence after its compact stream has been sealed.
-func newRecycleOperatorFixtureWithActivation(t *testing.T, hotkey [32]byte, completed int, selectedPolicy *protocol.Policy, setup func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture), anchor func(*recycleAdmissionFixture, *attemptCutV2SealTestFixture)) *recycleOperatorFixture {
+// The measurement is built with this fixture's route and audit windows, then
+// setup, before anything is signed. Full startup's measure provides real
+// activation bytes without rewriting any provider evidence sealed afterwards.
+func newRecycleOperatorFixtureWithMeasurement(t *testing.T, setup func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture), measure func(func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture)) *recycleMeasurementFixture) *recycleOperatorFixture {
 	t.Helper()
 	fixture := &recycleOperatorFixture{releaseDecisionV2TestFixture: newReleaseDecisionV2TestFixture(t)}
 	server := gethrpc.NewServer()
@@ -159,22 +165,14 @@ func newRecycleOperatorFixtureWithActivation(t *testing.T, hotkey [32]byte, comp
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { client.Close(); httpServer.Close(); server.Stop() })
-	fixture.measurement = newRecycleMeasurementFixtureWithActivation(t, completed, func(admission *recycleAdmissionFixture, provider *releaseMeasurementV2TestFixture) {
+	fixture.measurement = measure(func(admission *recycleAdmissionFixture, provider *releaseMeasurementV2TestFixture) {
 		admission.cfg.RPC = []string{httpServer.URL}
-		artifact := provider.artifact
-		for index := range artifact.DepositAudits {
-			audit := &artifact.DepositAudits[index]
-			if !artifact.Policy.IsZeroPrice() {
-				audit.SourceStartHash = releaseHex32([32]byte{0x25})
-				audit.SourceEndHash = releaseHex32([32]byte{0x26})
-			}
-			audit.ArtifactDeadlineBlock = 90 + artifact.Policy.Settlement.RootCommitWindowBlocks
-		}
+		setRecycleOperatorTestAuditWindows(provider.artifact)
 		if setup != nil {
 			setup(admission, provider)
 		}
 		provider.rebuildLegacy(t)
-	}, hotkey, selectedPolicy, anchor)
+	})
 	measurement := fixture.measurement
 	artifact := measurement.provider.artifact
 	fixture.views = map[string]releaseDecisionV2TestView{}
@@ -242,6 +240,19 @@ func newRecycleOperatorFixtureWithActivation(t *testing.T, hotkey [32]byte, comp
 		fixture.views[hex.EncodeToString(data)] = releaseDecisionV2TestView{method: "getHotkey", data: slices.Clone(registration.Hotkey[:])}
 	}
 	return fixture
+}
+
+// The coordinator's source windows and artifact deadline, fixed before any
+// approval is signed. Applying them again leaves an artifact unchanged.
+func setRecycleOperatorTestAuditWindows(artifact *ReleaseMeasurementArtifact) {
+	for index := range artifact.DepositAudits {
+		audit := &artifact.DepositAudits[index]
+		if !artifact.Policy.IsZeroPrice() {
+			audit.SourceStartHash = releaseHex32([32]byte{0x25})
+			audit.SourceEndHash = releaseHex32([32]byte{0x26})
+		}
+		audit.ArtifactDeadlineBlock = 90 + artifact.Policy.Settlement.RootCommitWindowBlocks
+	}
 }
 
 // Each observation receives new actual replay scratch, preserving retry scope.
@@ -342,8 +353,12 @@ func TestOwnerRecycleOperatorsRejectLateRouteRetarget(t *testing.T) {
 		fixture.retargetChain = fault == "chain"
 		fixture.retargetGenesis = fault == "genesis"
 		fixture.retargetDecision = fault == "decision"
-		if owner, err := fixture.observe(t); err == nil || owner != nil {
+		owner, err := fixture.observe(t)
+		if err == nil || owner != nil || RetryableEvidenceTransportError(err) {
 			t.Fatalf("%s late route replacement admitted: %v", fault, err)
+		}
+		if fault == "decision" && !strings.Contains(err.Error(), "operator canonical decision changed before retention") {
+			t.Fatal("late decision fork did not reach the canonical route check", err)
 		}
 		if fixture.count("rootCommitments") != 2 {
 			t.Fatalf("%s test did not reach complete source census", fault)

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Standard consumers may finish from n>0 even when a reader also reports an
 // error. A revoked preparation read therefore admits none of that call's bytes.

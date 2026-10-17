@@ -31,7 +31,7 @@ func validatorActivationTailBoundaryTestCheckpoint(f *validatorActivationFixture
 func TestValidatorActivationTailBoundariesRetainPartialCheckpoint(t *testing.T) {
 	f := newValidatorActivationFixture(t)
 	f.installed()
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestValidatorActivationTailBoundariesRetainPartialCheckpoint(t *testing.T) 
 func TestValidatorActivationTailBoundariesRejectRetainedRegression(t *testing.T) {
 	f := newValidatorActivationFixture(t)
 	f.installed()
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestValidatorActivationTailBoundariesRejectRetainedRegression(t *testing.T)
 func TestValidatorActivationTailBoundariesAdvanceCommittedCut(t *testing.T) {
 	f := newValidatorActivationFixture(t)
 	f.installed()
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}

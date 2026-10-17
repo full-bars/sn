@@ -297,11 +297,20 @@ func (self ReleaseEvidenceV2Bounds) Validate(operators uint64) error {
 	return nil
 }
 
+// The spelling alone: canonical, absolute, non-root UTF-8. It never touches
+// the filesystem, so it is the whole path check for declared-only admission.
+func validateReleaseEvidenceV2PathSpelling(path string) error {
+	if !utf8.ValidString(path) || strings.ContainsRune(path, 0) || path != strings.TrimSpace(path) || !filepath.IsAbs(path) || filepath.Clean(path) != path || filepath.Dir(path) == path {
+		return errors.New("evidence_v2 path must be canonical absolute non-root UTF-8")
+	}
+	return nil
+}
+
 // This spelling check precedes legacy normalization; evidence authority is
 // never silently cleaned, made absolute or redirected through an ancestor link.
 func ValidateReleaseEvidenceV2Path(path string) error {
-	if !utf8.ValidString(path) || strings.ContainsRune(path, 0) || path != strings.TrimSpace(path) || !filepath.IsAbs(path) || filepath.Clean(path) != path || filepath.Dir(path) == path {
-		return errors.New("evidence_v2 path must be canonical absolute non-root UTF-8")
+	if err := validateReleaseEvidenceV2PathSpelling(path); err != nil {
+		return err
 	}
 	current := string(filepath.Separator)
 	parts := strings.Split(strings.TrimPrefix(path, current), string(filepath.Separator))
@@ -367,6 +376,11 @@ func (self ReleaseEvidenceV2OperatorConfig) Unrendered() bool {
 // This is a content reference check only; callers still authenticate decoded
 // activation, both signatures, historical eligibility and inclusion/finality.
 func (self ReleaseEvidenceV2File) Validate(maxBytes uint64) error {
+	return self.validate(maxBytes, ValidateReleaseEvidenceV2Path)
+}
+
+// The same reference check, with the path admitted by the caller's rule.
+func (self ReleaseEvidenceV2File) validate(maxBytes uint64, admitPath func(string) error) error {
 	if self.Bytes == 0 || self.Bytes > maxBytes || self.Bytes >= uint64(^uint(0)>>1) {
 		return errors.New("evidence_v2 reference length is missing or exceeds its independent bound")
 	}
@@ -377,24 +391,32 @@ func (self ReleaseEvidenceV2File) Validate(maxBytes uint64) error {
 	if err != nil || len(digest) != sha256.Size || self.SHA256 != "0x"+hex.EncodeToString(digest) || self.SHA256 == "0x"+strings.Repeat("0", 64) {
 		return errors.New("evidence_v2 reference hash is missing or non-canonical")
 	}
-	return ValidateReleaseEvidenceV2Path(self.Path)
+	return admitPath(self.Path)
 }
 
 // Canonical sorting is part of rendered/runtime identity. Durable operator
 // roots may descend from the coordinator, but scratch and reference inputs may
 // not overlap any durable root, credential, each other or another operator.
 func (self ReleaseEvidenceV2Config) Validate(operators []OperatorConfig, coordinator, hotkey string) error {
-	return self.validate(operators, coordinator, hotkey, false)
+	return self.validate(operators, coordinator, hotkey, false, false)
 }
 
 // ValidatePreActivation applies every rule of Validate except that an
 // operator entry may still be unrendered. Named paths and scratch roots of an
 // unrendered entry keep the full overlap and ownership checks.
 func (self ReleaseEvidenceV2Config) ValidatePreActivation(operators []OperatorConfig, coordinator, hotkey string) error {
-	return self.validate(operators, coordinator, hotkey, true)
+	return self.validate(operators, coordinator, hotkey, true, false)
 }
 
-func (self ReleaseEvidenceV2Config) validate(operators []OperatorConfig, coordinator, hotkey string, allowUnrendered bool) error {
+// declaredOnly admits each path by its spelling and the overlap rules below,
+// without a stat or open: bootstrap inspection runs as another account, which
+// cannot observe the validator's private directories once they exist. Every
+// validator loader passes false and keeps the physical walk and privacy checks.
+func (self ReleaseEvidenceV2Config) validate(operators []OperatorConfig, coordinator, hotkey string, allowUnrendered, declaredOnly bool) error {
+	admitPath, admitDirectory := ValidateReleaseEvidenceV2Path, validateReleaseEvidenceV2Directory
+	if declaredOnly {
+		admitPath, admitDirectory = validateReleaseEvidenceV2PathSpelling, validateReleaseEvidenceV2PathSpelling
+	}
 	if self.Schema != ReleaseEvidenceV2ConfigSchema {
 		return errors.New("production requires explicit evidence_v2 configuration")
 	}
@@ -409,10 +431,10 @@ func (self ReleaseEvidenceV2Config) validate(operators []OperatorConfig, coordin
 	if len(self.Operators) != len(operators) {
 		return errors.New("evidence_v2 operator census differs from configured operators")
 	}
-	if err := validateReleaseEvidenceV2Directory(coordinator); err != nil {
+	if err := admitDirectory(coordinator); err != nil {
 		return err
 	}
-	if err := ValidateReleaseEvidenceV2Path(hotkey); err != nil {
+	if err := admitPath(hotkey); err != nil {
 		return err
 	}
 	overlaps := func(first, second string) bool {
@@ -424,7 +446,7 @@ func (self ReleaseEvidenceV2Config) validate(operators []OperatorConfig, coordin
 		if operator.NoID == 0 || byNO[operator.NoID].NoID != 0 {
 			return errors.New("evidence_v2 operator identity is zero or duplicated")
 		}
-		if err := validateReleaseEvidenceV2Directory(operator.StateDir); err != nil {
+		if err := admitDirectory(operator.StateDir); err != nil {
 			return err
 		}
 		if operator.StateDir == coordinator || strings.HasPrefix(coordinator, operator.StateDir+string(filepath.Separator)) {
@@ -442,7 +464,7 @@ func (self ReleaseEvidenceV2Config) validate(operators []OperatorConfig, coordin
 		protected = append(protected, operator.StateDir)
 		for _, path := range []string{operator.NetworkJWTFile, operator.ClientJWTFile, operator.ClientKeySeedFile} {
 			if path != "" {
-				if err := ValidateReleaseEvidenceV2Path(path); err != nil {
+				if err := admitPath(path); err != nil {
 					return err
 				}
 				protected = append(protected, path)
@@ -479,7 +501,7 @@ func (self ReleaseEvidenceV2Config) validate(operators []OperatorConfig, coordin
 			// shape, privacy and overlap exactly as rendered ones would be.
 			for _, file := range operator.Files() {
 				if file.Path != "" {
-					if err := ValidateReleaseEvidenceV2Path(file.Path); err != nil {
+					if err := admitPath(file.Path); err != nil {
 						return err
 					}
 					owned = append(owned, file.Path)
@@ -487,7 +509,7 @@ func (self ReleaseEvidenceV2Config) validate(operators []OperatorConfig, coordin
 			}
 			for _, path := range []string{operator.ReplayScratchRoot, operator.SealScratchRoot} {
 				if path != "" {
-					if err := validateReleaseEvidenceV2Directory(path); err != nil {
+					if err := admitDirectory(path); err != nil {
 						return err
 					}
 					owned = append(owned, path)
@@ -500,20 +522,20 @@ func (self ReleaseEvidenceV2Config) validate(operators []OperatorConfig, coordin
 		}
 		limits := []uint64{uint64(protocol.ValidatorEvidenceActivationPayloadSize), 64, 64, self.Bounds.Cut.MaxHeaderBytes, self.Bounds.MaxHistoryBytes}
 		for index, file := range operator.Files() {
-			if err := file.Validate(limits[index]); err != nil {
+			if err := file.validate(limits[index], admitPath); err != nil {
 				return err
 			}
 			owned = append(owned, file.Path)
 		}
 		owned = append(owned, operator.ReplayScratchRoot, operator.SealScratchRoot)
 		for _, path := range []string{operator.ReplayScratchRoot, operator.SealScratchRoot} {
-			if err := validateReleaseEvidenceV2Directory(path); err != nil {
+			if err := admitDirectory(path); err != nil {
 				return err
 			}
 		}
 	}
 	for index, path := range owned {
-		if err := ValidateReleaseEvidenceV2Path(path); err != nil {
+		if err := admitPath(path); err != nil {
 			return err
 		}
 		for _, other := range protected {

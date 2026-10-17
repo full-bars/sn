@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // An unfinished census checkpoint retains both original metadata images.
 // Public preparation must rebind them without choosing or losing history.
@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/internal/durablehead"
 	"github.com/urnetwork/connect/durablevolume"
@@ -98,7 +100,7 @@ func storageMemberOuterControl(t *testing.T, boundary string) {
 		ctx := storageMemberRestoreApply(t, f, path, hash)
 		for _, source := range plan.Sources {
 			var physical unix.Stat_t
-			if err := unix.Stat(filepath.Join(f.storage.target.root, source.File.Path), &physical); err != nil || physical.Ino != source.Identity.Inode || physical.Dev != source.Identity.Device {
+			if err := unix.Stat(filepath.Join(f.storage.target.root, source.File.Path), &physical); err != nil || physical.Ino != source.Identity.Inode || durablesys.StatDevice(&physical) != source.Identity.Device {
 				t.Fatal("paired metadata did not transfer exact reviewed inode", source.File.Path, err)
 			}
 		}

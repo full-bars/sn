@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The public fixed dispatcher enrolls only explicit fresh request custody and
 // later restores its complete original bytes before the real runtime reopens.

@@ -17,6 +17,8 @@ import (
 
 // Configuration is copied before workers start and is immutable for one run.
 type providerRunSettings struct {
+	wallet                  string
+	walletProof             *snWalletProof
 	apiUrl                  string
 	connectUrl              string
 	port                    int
@@ -25,13 +27,16 @@ type providerRunSettings struct {
 	testEgressDialer        *connect.DialContextSettings
 	allowClientRegistration bool
 	adoptLegacyProviderKey  bool
-	closeReportDomainHash   [32]byte
-	workCapturePath         string
-	workCaptureSha256       string
-	requireWorkCapture      bool
-	contractCapturePath     string
-	contractCaptureSha256   string
-	requireContractCapture  bool
+	// an operator child of provide --all-operators --auto-register: a network
+	// sign-in the renewal call rejects is set aside and the child exits
+	quarantineRejectedSignIn bool
+	closeReportDomainHash    [32]byte
+	workCapturePath          string
+	workCaptureSha256        string
+	requireWorkCapture       bool
+	contractCapturePath      string
+	contractCaptureSha256    string
+	requireContractCapture   bool
 }
 
 // This owner starts exactly one Serve goroutine after listener admission. Its

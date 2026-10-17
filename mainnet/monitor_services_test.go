@@ -140,6 +140,9 @@ func (self *monitorServicesFixture) start(t *testing.T, url string, hooks monito
 func (self *monitorServicesFixture) startWithContext(t *testing.T, parent context.Context, url string, hooks monitorServiceHooks) *monitorServicesTestRun {
 	t.Helper()
 	ctx, cancel := context.WithCancel(parent)
+	t.Cleanup(cancel)
+	args := self.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	run := &monitorServicesTestRun{cancel: cancel, done: make(chan struct{}), events: make(chan monitorServiceEvent, 32), resume: map[string]chan struct{}{}}
 	for _, role := range self.policy.Validators {
 		run.resume[role.Role] = make(chan struct{})
@@ -162,9 +165,9 @@ func (self *monitorServicesFixture) startWithContext(t *testing.T, parent contex
 	}
 	go func() {
 		defer close(run.done)
-		run.exit = runMonitorStorageTestWithHooks(t, ctx, self.args(url), &monitorServicesTestWriter{events: run.events}, &run.stderr, self.clock.now, hooks)
+		run.exit = runMainWithMonitorHooks(ctx, args, &monitorServicesTestWriter{events: run.events}, &run.stderr, self.clock.now, hooks)
 	}()
-	t.Cleanup(func() { run.cancel(); <-run.done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, run.cancel, run.done) })
 	return run
 }
 
@@ -183,6 +186,8 @@ func (self *monitorServicesTestRun) next(t testing.TB) monitorServiceEvent {
 		}
 	case <-t.Context().Done():
 		t.Fatal("test canceled before sample")
+	case <-time.After(30 * time.Second):
+		t.Fatal("monitor service sample did not complete")
 	}
 	return monitorServiceEvent{}
 }
@@ -196,6 +201,18 @@ func (self *monitorServicesTestRun) again(t testing.TB, role string) {
 		t.Fatalf("command ended before next sample: %s", self.stderr.String())
 	case <-t.Context().Done():
 		t.Fatal("test canceled")
+	case <-time.After(30 * time.Second):
+		t.Fatal("monitor service worker did not accept resume")
+	}
+}
+
+// A stopped command cannot strand a caller waiting on an entry hook.
+func (self *monitorServicesTestRun) barrier(t *testing.T, event <-chan struct{}) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
+	defer cancel()
+	if _, err := waitMonitorTestEvent(ctx, self.done, event); err != nil {
+		t.Fatal(err)
 	}
 }
 

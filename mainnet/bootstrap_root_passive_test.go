@@ -22,13 +22,31 @@ import (
 // service/config domain and both new UR configs with generated test-only keys.
 func newBootstrapRootPassiveFixture(t *testing.T) *bootstrapChainFixture {
 	t.Helper()
+	return newBootstrapRootPassiveFixtureWithCensus(t, nil, nil)
+}
+
+// Native profiles and producer domains are selected before passive metadata
+// authentication, independent signatures, or the first custody claim.
+func newBootstrapRootPassiveFixtureWithCensus(t *testing.T, configure func(*rootRpcFixture, *subnetCensusPolicy), configureApproval func(*bootstrapChainValidatorFixture)) *bootstrapChainFixture {
+	t.Helper()
 	f := newBootstrapChainFixture(t)
-	rootPassiveTestMetadata(t, f.census)
+	bootstrapRootPassiveConvert(t, f, configure, configureApproval)
+	return f
+}
+
+// Any complete v3 fixture, including one with the full evidence graph, can be
+// reapproved for passive v4 observation before its first custody claim.
+func bootstrapRootPassiveConvert(t *testing.T, f *bootstrapChainFixture, configure func(*rootRpcFixture, *subnetCensusPolicy), configureApproval func(*bootstrapChainValidatorFixture)) {
+	t.Helper()
 	var policy subnetCensusPolicy
 	raw, err := readBootstrapChainInput(t.Context(), f.config.OwnerTrimPolicy, maxRpcReplyBytes)
 	if err != nil || decodePlanJson(raw, &policy) != nil {
 		t.Fatal("synthetic original policy unavailable", err)
 	}
+	if configure != nil {
+		configure(f.census, &policy)
+	}
+	rootPassiveTestMetadata(t, f.census)
 	policy.RuntimeSourceCommit, policy.RuntimeMetadataHash = rootPassiveSource, f.census.policy.RuntimeMetadataHash
 	f.config.OwnerTrimPolicy = bootstrapRootTestWrite(t, f.config.OwnerTrimPolicy.Path, policy)
 	scope := f.root.plan.identityScope()
@@ -58,6 +76,9 @@ func newBootstrapRootPassiveFixture(t *testing.T) *bootstrapChainFixture {
 		v.approval.Proposal.Runtime.SourceCommit, v.approval.Proposal.Runtime.MetadataHash = rootPassiveSource, bootstrapChainTestAccount(t, policy.RuntimeMetadataHash)
 		v.approval.ValidFromNativeBlock = 100
 		v.approval.Production.ActivationNativeHash = bootstrapChainTestAccount(t, testFinalizedHash)
+		if configureApproval != nil {
+			configureApproval(v)
+		}
 		f.config.Validators[i].Config = v.publish(t)
 	}
 	server := rootFixtureServer(t, f.census)
@@ -81,7 +102,6 @@ func newBootstrapRootPassiveFixture(t *testing.T) *bootstrapChainFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return f
 }
 
 // Three real preparation journals retain contracts and passive config. No

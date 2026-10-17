@@ -8,10 +8,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -98,5 +101,69 @@ func TestWholeWorkFrontierUnknownProjectionAndFiniteOwnerStayDistinct(t *testing
 	}
 	if _, err := RecoverFrontierWindowHeader(t.Context(), make([]byte, 1024*1024+1), expected); !errors.Is(err, ErrClosedWorkCapacity) {
 		t.Fatal("oversized header parsed", err)
+	}
+}
+
+// Snow's finalized Finney block 9,278,937 commits this exact header in its
+// Frontier digest. Its stored time equals Timestamp.Now there; the public
+// eth_getBlockByNumber projection rendered the same block as 0x6acefc24 seconds.
+func wholeWorkMainnetFrontierHeader(t *testing.T) []byte {
+	t.Helper()
+	header := &types.Header{ParentHash: common.HexToHash("0xd1d20d71b8ebcd22e6d47cc21d13cbe09ee7fcf71fd37c85478966fc9eab42f1"), UncleHash: types.EmptyUncleHash, Coinbase: common.HexToAddress("0xa465590dc5684ee630be3e01b808e106b3547e21"), Root: common.HexToHash("0xa127f70f130ba7e49a9f92fc1cf989d5bbaa41e061b434d31ac2c20bafafe171"), TxHash: types.EmptyTxsHash, ReceiptHash: types.EmptyReceiptsHash, Difficulty: big.NewInt(0), Number: big.NewInt(9278937), GasLimit: 75000000, Time: 1791949860000, Extra: []byte{}}
+	if header.Hash().Hex() != "0xa13fc554995ad5bc6a8da64a8911a9b286e2dccbd1b5cc0c7d8c420b38f450ab" {
+		t.Fatal("mainnet header vector differs from its native commitment")
+	}
+	raw, err := rlp.EncodeToBytes(header)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
+}
+
+// PH-15: each header is read under its own declared profile. Frontier floors
+// its stored milliseconds to the public seconds; ordinary EVM keeps its seconds.
+func TestWholeWorkClockTimeFollowsDeclaredHeaderProfile(t *testing.T) {
+	// 0x6acefc24 = 1,791,949,860 s = 2026-10-14T03:51:00Z.
+	mainnet := time.Date(2026, time.October, 14, 3, 51, 0, 0, time.UTC)
+	if actual, err := WindowClockTime(FrontierWindowClockProfile, wholeWorkMainnetFrontierHeader(t)); err != nil || !actual.Equal(mainnet) || actual.Unix() != 0x6acefc24 {
+		t.Fatal("mainnet Frontier milliseconds lost their public seconds instant", actual, err)
+	}
+	_, remainder, _ := wholeWorkRenderedFrontier(t, 9278937, 1791949860999)
+	if actual, err := WindowClockTime(FrontierWindowClockProfile, remainder); err != nil || !actual.Equal(mainnet) {
+		t.Fatal("millisecond remainder moved the public seconds instant", actual, err)
+	}
+	ordinary, err := rlp.EncodeToBytes(&types.Header{Number: big.NewInt(1), Difficulty: big.NewInt(0), Time: 1700000000})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 1,700,000,000 s = 2023-11-14T22:13:20Z.
+	if actual, err := WindowClockTime("", ordinary); err != nil || !actual.Equal(time.Date(2023, time.November, 14, 22, 13, 20, 0, time.UTC)) {
+		t.Fatal("ordinary EVM seconds profile changed", actual, err)
+	}
+}
+
+// PH-15: an unknown profile has no unit, and bytes outside the declared profile
+// or the Unix range are refused rather than read under another unit.
+func TestWholeWorkClockTimeRefusesUnknownProfileAndForeignBytes(t *testing.T) {
+	mainnet := wholeWorkMainnetFrontierHeader(t)
+	if _, err := WindowClockTime("frontier-legacy-rlp15-seconds", mainnet); !errors.Is(err, ErrClosedWorkUnavailable) || !strings.Contains(err.Error(), `profile "frontier-legacy-rlp15-seconds" is unknown`) {
+		t.Fatal("unknown header profile chose a unit", err)
+	}
+	london, err := rlp.EncodeToBytes(&types.Header{Number: big.NewInt(1), Difficulty: big.NewInt(0), Time: 1700000000, BaseFee: big.NewInt(7)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := WindowClockTime(FrontierWindowClockProfile, london); !errors.Is(err, ErrClosedWorkIntegrity) || !strings.Contains(err.Error(), "not the Frontier RLP15 profile") {
+		t.Fatal("sixteen-field seconds header read as Frontier milliseconds", err)
+	}
+	if _, err := WindowClockTime(FrontierWindowClockProfile, mainnet[:len(mainnet)-1]); !errors.Is(err, ErrClosedWorkIntegrity) {
+		t.Fatal("truncated header bytes produced an instant", err)
+	}
+	overflow, err := rlp.EncodeToBytes(&types.Header{Number: big.NewInt(1), Difficulty: big.NewInt(0), Time: math.MaxInt64 + 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := WindowClockTime("", overflow); !errors.Is(err, ErrClosedWorkIntegrity) || !strings.Contains(err.Error(), "exceeds the Unix range") {
+		t.Fatal("seconds beyond the Unix range wrapped", err)
 	}
 }

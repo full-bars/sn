@@ -16,6 +16,8 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -94,8 +96,8 @@ func newValidatorUploadProductionTestFixture(t *testing.T) *validatorUploadProdu
 	if err != nil {
 		t.Fatal(err)
 	}
-	original := production.rpc.native.API.Client.(*validatorRuntimeIdentityTestClient).callContext
-	production.rpc.native.API.Client.(*validatorRuntimeIdentityTestClient).callContext = func(ctx context.Context, result any, method string, args ...any) error {
+	original := production.rpc.client.callContext
+	production.rpc.client.callContext = func(ctx context.Context, result any, method string, args ...any) error {
 		if method == "state_getStorage" || method == "state_call" {
 			if len(args) == 0 {
 				return errors.New("production upload storage omits its block")
@@ -213,7 +215,7 @@ func TestValidatorUploadProductionRuntimeRetainsRenewedAuthorityWindow(t *testin
 		t.Fatal(err)
 	}
 	fixture.config.ProductionRuntimeConfig = mainnetRuntimeTestWriteBytes(t, filepath.Join(identityTestStateDir(t), "renewed-production.yml"), raw)
-	client := production.rpc.native.API.Client.(*validatorRuntimeIdentityTestClient)
+	client := production.rpc.client
 	original := client.callContext
 	client.callContext = func(ctx context.Context, result any, method string, args ...any) error {
 		// The synthetic registrations/stake are unchanged from block 100 to
@@ -391,7 +393,7 @@ func TestValidatorUploadProductionRuntimeRejectsAuthorityAndRouteSubstitution(t 
 		case "evm":
 			fixture.production.rpc.evmChainId = "0x999"
 		case "route":
-			native.API.Client = &recycleAdmissionRouteClient{validatorRuntimeIdentityTestClient: priorClient.(*validatorRuntimeIdentityTestClient), route: "wss://unapproved-upload.example"}
+			native.API.Client = &recycleAdmissionRouteClient{validatorRuntimeIdentityTestClient: fixture.production.rpc.client, route: "wss://unapproved-upload.example"}
 		}
 		if observation, err := ValidatorUploadNativeObserverContext(t.Context(), native, owner.config.Deployment); err == nil || observation != (ValidatorUploadNativeObserver{}) {
 			t.Fatalf("cached native identity concealed %s substitution: %v", fault, err)
@@ -416,5 +418,157 @@ func TestValidatorUploadProductionRuntimeRejectsUnapprovedOriginalArtifact(t *te
 	cancel()
 	if _, err := loadValidatorUploadRuntimeContext(ctx, fixture.config.Deployment, fixture.config.ProductionRuntimeConfig); !errors.Is(err, context.Canceled) {
 		t.Fatalf("canceled projection did not fail before file work: %v", err)
+	}
+}
+
+// The server stages a signed mainnet config without the validator's durable
+// root or state_dir. Its operator copies each selected input beside the pinned
+// config under the content-addressed name the validator retains in state_dir.
+type validatorUploadRetainedTestFixture struct {
+	cfg        *ReleaseConfig
+	deployment ValidatorUploadDeployment
+	pinned     ReleaseEvidenceV2File
+	expected   *validatorUploadRuntimeAuthority
+	copies     []string
+}
+
+// Two signed shapes reach the server: a renewal carrying approved runtime and
+// original authority history, and the treasury successor that activation
+// writes. The expected projection is loaded while every signed path exists.
+func newValidatorUploadRetainedTestFixture(t *testing.T, treasury bool) *validatorUploadRetainedTestFixture {
+	t.Helper()
+	var path string
+	if treasury {
+		pending := newProductionPendingTestFixture(t, true)
+		boundary := productionRenderingTestBoundary(pending.approval.FirstNativeEpoch+3, 150)
+		_, options := productionRenderingTestPublish(t, pending, nil, &boundary)
+		path = options.RenderedConfigPath
+	} else {
+		production := newProductionRuntimeTestFixture(t, true)
+		current, _ := productionAuthorityTestSuccessor(t, production.cfg, production.approval, production.private, true)
+		path = writeReleaseConfig(t, *current)
+	}
+	cfg, err := LoadReleaseConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	genesis, err := parseHash32("staging genesis", cfg.GenesisHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	self := &validatorUploadRetainedTestFixture{cfg: cfg, pinned: mainnetRuntimeTestWriteBytes(t, filepath.Join(identityTestStateDir(t), "production-runtime.yml"), raw),
+		deployment: ValidatorUploadDeployment{ChainID: cfg.ChainID, GenesisHash: genesis, Netuid: cfg.Netuid,
+			Coordinator: [20]byte(common.HexToAddress(cfg.Coordinator)), SettlementVault: [20]byte(common.HexToAddress(cfg.SettlementVault)),
+			DeploymentIDHash: sha256.Sum256([]byte(cfg.DeploymentID)), Journal: [20]byte{0x4a}, RuntimeHash: [32]byte{0x4b},
+			DeploymentBlock: cfg.DeployBlock, NativeRuntime: releaseNativeRuntimeIdentity(cfg), MaximumSubnetUIDs: 1}}
+	deployment, err := loadValidatorUploadRuntimeContext(t.Context(), self.deployment, self.pinned)
+	if err != nil {
+		t.Fatal(err)
+	}
+	self.expected = deployment.productionRuntime
+	moves := [][2]string{{productionEconomicSelection(cfg).Approval.Path, retainedProductionApprovalPath(cfg)}}
+	for _, reference := range cfg.ProductionRuntimeApprovals {
+		moves = append(moves, [2]string{reference.Path, retainedProductionRuntimePath(cfg, reference.SHA256)})
+	}
+	for _, reference := range cfg.ProductionAuthorityHistory {
+		moves = append(moves, [2]string{reference.Path, retainedProductionAuthorityPath(cfg, reference.SHA256)})
+	}
+	for _, move := range moves {
+		source, retained := move[0], move[1]
+		if _, err := os.Stat(retained); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("state_dir already holds a retained copy", retained, err)
+		}
+		raw, err := os.ReadFile(source)
+		if err != nil {
+			t.Fatal(err)
+		}
+		copied := filepath.Join(filepath.Dir(self.pinned.Path), filepath.Base(retained))
+		if err := os.WriteFile(copied, raw, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Remove(source); err != nil {
+			t.Fatal(err)
+		}
+		self.copies = append(self.copies, copied)
+	}
+	return self
+}
+
+// Every signed source path is gone, as on the server. The copies beside the
+// pinned config restore exactly the projection those sources gave, under both
+// the owner-recycle and the treasury selector.
+func TestValidatorUploadProductionRuntimeReadsRetainedCopiesBesideConfig(t *testing.T) {
+	for _, treasury := range []bool{false, true} {
+		fixture := newValidatorUploadRetainedTestFixture(t, treasury)
+		if treasury != strings.HasPrefix(filepath.Base(fixture.copies[0]), "treasury-production-approval-") {
+			t.Fatal("the approval copy is not named for its selector", fixture.copies[0])
+		}
+		deployment, err := loadValidatorUploadRuntimeContext(t.Context(), fixture.deployment, fixture.pinned)
+		if err != nil {
+			t.Fatal("staging refused retained copies beside its pinned config", treasury, err)
+		}
+		owner := deployment.productionRuntime
+		if owner == nil || len(owner.history) == 0 || !reflect.DeepEqual(*owner, *fixture.expected) {
+			t.Fatal("retained copies changed the staged runtime projection", treasury)
+		}
+	}
+}
+
+// A copy is found by its name but admitted only by its signed digest. A
+// same-length change to any one of them refuses the whole staged projection.
+func TestValidatorUploadProductionRuntimeRefusesWrongRetainedCopy(t *testing.T) {
+	fixture := newValidatorUploadRetainedTestFixture(t, false)
+	if len(fixture.copies) != 3 {
+		t.Fatal("fixture does not stage an approval, a runtime history and an original authority", fixture.copies)
+	}
+	for _, copied := range fixture.copies {
+		raw, err := os.ReadFile(copied)
+		if err != nil {
+			t.Fatal(err)
+		}
+		changed := bytes.Clone(raw)
+		changed[len(changed)/2] ^= 1
+		if err := os.WriteFile(copied, changed, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		deployment, err := loadValidatorUploadRuntimeContext(t.Context(), fixture.deployment, fixture.pinned)
+		if err == nil || deployment.productionRuntime != nil || !strings.Contains(err.Error(), "bytes differ from their configured identity") {
+			t.Fatal("staging admitted wrong bytes beside its pinned config", filepath.Base(copied), err)
+		}
+		if err := os.WriteFile(copied, raw, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := loadValidatorUploadRuntimeContext(t.Context(), fixture.deployment, fixture.pinned); err != nil {
+		t.Fatal("restored copies were refused", err)
+	}
+}
+
+// Only staging names its config directory. The producer loader refuses the
+// same staged config while the copies sit beside it, and admits it once the
+// same files are retained under the same names in its own state_dir.
+func TestProductionLoaderIgnoresRetainedCopiesBesideConfig(t *testing.T) {
+	fixture := newValidatorUploadRetainedTestFixture(t, false)
+	if cfg, err := LoadReleaseConfig(fixture.pinned.Path); cfg != nil || !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("producer loader consulted retained copies beside its config", err)
+	}
+	if err := os.MkdirAll(fixture.cfg.StateDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for _, copied := range fixture.copies {
+		raw, err := os.ReadFile(copied)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(fixture.cfg.StateDir, filepath.Base(copied)), raw, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := LoadReleaseConfig(fixture.pinned.Path); err != nil {
+		t.Fatal("producer loader refused the same names in its own state_dir", err)
 	}
 }

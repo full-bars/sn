@@ -1,0 +1,73 @@
+{
+  "accounting_floor_bytes": 0,
+  "actual_server8_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2.receipt.json",
+    "sha256": "8515b4496d79a8c57651911f272717d4d8cacff258fb5217a4f08df392e53cff"
+  },
+  "actual_server8_user_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-user-terminal-readback.json",
+    "sha256": "98d871d6e75102fab3863414fed1baac572b46f23354785d29c2b97a34a74771"
+  },
+  "additional_predecessor_waits": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-api.process-result.json",
+      "sha256": "dd6be2f6d9b3f4dfafe7588fd703183b14e27d9e4d87fd37244bc8f1594b1e43"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-controller.process-result.json",
+      "sha256": "821503d9b6255e4a39b4e10b15ff51c4e3ae60ba61e618dbab519cef5d80309f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-model.process-result.json",
+      "sha256": "a315fba37661a2208aa434374056cd44b3d410d94235a3348443e7907672877e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-monitor.process-result.json",
+      "sha256": "bc83e2715b6956ea049236ecc8252a01ebbdba085d41047b89b06c25a018e58b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-native-cli.process-result.json",
+      "sha256": "275600cb258f06e00d5bb942c884466a930da5371af464eb0418ad03f46d8807"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-proxy.process-result.json",
+      "sha256": "ce6ba18a1d85fa68efb3ecf7803f8e14647a0dead47e0c0d5f6c95e90ccb60b8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-root.process-result.json",
+      "sha256": "670e944a9c46857a47b32c379c63eed83af49e7b8957c7bc8da4b399231a45a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-taskworker-work.process-result.json",
+      "sha256": "5b0a187e7b92d524e7202d8a3d32335f14f5c80b950ef102a484452d6c7313fc"
+    }
+  ],
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "independent_resource_review": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-resource-independent-review-v1.json",
+    "sha256": "0b8aa0c12688a2970ae0f34f7b1da217e42f354cd7d754f7002127b73eb3a6c0"
+  },
+  "job_sha256": "49b8ff7903e9009eefc898e8b0fc701e9fa5b7be98492ff5e31d0af75e20bb96",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 0,
+  "root_observation": {
+    "data_available_bytes": 16858660864,
+    "memory_available_bytes": 129548566528,
+    "server8_user_properties": "MainPID=0\nResult=success\nActiveState=inactive\nSubState=dead\n",
+    "time_ns": 1791195121583043065
+  },
+  "runner_sha256": "36e62ee94891ec181361c4af92b9f688c1c571f2d881170696a4fa3e09282a7e",
+  "schema": "root-full113-actual-predecessor-adoption-v1",
+  "scope": "One fresh LIST and one full113 normal body, including original exporter roots. Compiler/body/race/control and external deployment scope remain separate.",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_MAIN_B13_FULL113_SERIAL_SHORT"
+}

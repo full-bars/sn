@@ -9,6 +9,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -17,6 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/urfoundation/sn/payoutartifact"
+	"github.com/urfoundation/sn/protocol"
 	"github.com/urfoundation/sn/ss58"
 	"github.com/urnetwork/connect"
 )
@@ -193,6 +196,85 @@ func TestFinalPayoutArtifactAcceptsAuthenticatedProviderDomain(t *testing.T) {
 	fixture, data := finalPayoutArtifactTestFixture(t)
 	if err := verifyFinalPayoutArtifact(fixture.evidence, fixture.pool, fixture.expected, fixture.assignments, fixture.reliabilityMin, data); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// A deposit audit declares its payout artifact's whole usage, so bytes and
+// users bind together, a zero user count included. Under a per-user schedule
+// the open user count let a short deposit pass: a row declaring none of the
+// artifact's 7 users owes 70 rao less, and its own arithmetic and the policy
+// comparison both accept it. An expectation that declares no usage, as an
+// epoch row's does, leaves the artifact's counts to the artifact.
+func TestFinalPayoutArtifactBindsTheDepositAuditsUsageAndUsers(t *testing.T) {
+	fixture, _ := finalPayoutArtifactTestFixture(t)
+	artifact, err := payoutartifact.Build(payoutartifact.BuildInput{
+		DeploymentID: fixture.evidence.DeploymentID, GenesisHash: fixture.evidence.GenesisHash, PolicyHash: fixture.evidence.PolicyHash, ChainID: fixture.evidence.ChainID, Netuid: fixture.evidence.Netuid,
+		Coordinator: common.HexToAddress(fixture.evidence.Deployment.CoordinatorProxy), SettlementVault: common.HexToAddress(fixture.evidence.Deployment.SettlementVault),
+		Epoch: fixture.expected.Epoch, NoID: 1,
+		Start: payoutartifact.Boundary{Number: 100, Hash: "0x" + strings.Repeat("33", 32)}, End: payoutartifact.Boundary{Number: 200, Hash: "0x" + strings.Repeat("44", 32)},
+		OperatorSnapshotHash: finalPayoutOperatorSnapshotHash(1, fixture.expected.Epoch, fixture.evidence.PolicyHash), FleetSnapshotHash: finalPayoutFleetSnapshotHash(fixture.providers),
+		Providers: fixture.providers, TotalUsers: 7, ReliabilityAMin: fixture.reliabilityMin, CreatedAt: time.Unix(1_700_000_000, 0).UTC(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := payoutartifact.Sign(artifact, fixture.key); err != nil {
+		t.Fatal(err)
+	}
+	data, err := payoutartifact.Bytes(artifact)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The two providers carry 101 and 102 bytes.
+	if artifact.TotalUsageBytes != 203 || artifact.TotalUsers != 7 {
+		t.Fatalf("artifact usage %d bytes, %d users", artifact.TotalUsageBytes, artifact.TotalUsers)
+	}
+	verify := func(usageBytes, users uint64) error {
+		expected := *finalPayoutArtifactTestExpectation(artifact)
+		expected.UsageBytes, expected.Users = usageBytes, users
+		return verifyFinalPayoutArtifact(fixture.evidence, fixture.pool, &expected, fixture.assignments, fixture.reliabilityMin, data)
+	}
+	if err := verify(203, 7); err != nil {
+		t.Fatalf("exact usage was refused: %v", err)
+	}
+	if err := verify(0, 0); err != nil {
+		t.Fatalf("an expectation without usage was refused: %v", err)
+	}
+	const differs = "payout artifact usage does not match deposit audit"
+	for _, test := range []struct {
+		name         string
+		bytes, users uint64
+	}{
+		{name: "no users declared", bytes: 203},
+		{name: "one user short", bytes: 203, users: 6},
+		{name: "one byte short", bytes: 202, users: 7},
+		{name: "users without bytes", users: 7},
+	} {
+		if err := verify(test.bytes, test.users); err == nil || err.Error() != differs {
+			t.Errorf("%s: error=%v, want exactly %q", test.name, err, differs)
+		}
+	}
+	// The deposit that binding refuses. Users priced at 10, 8 and 6 rao by
+	// tier: the 1 GiB row with no users owes 1,000,000 rao, 7 users add 70.
+	policy, err := protocol.LoadPolicy(filepath.Join("..", "deploy", "testnet", "policy-v1.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy.Deposit.Unit = protocol.DepositUnitRaoPerGiBAndUser
+	policy.Deposit.Tiers = append([]protocol.DepositTier(nil), policy.Deposit.Tiers...)
+	for index, perUser := range []uint64{10, 8, 6} {
+		policy.Deposit.Tiers[index].RateNumeratorRaoPerUser = perUser
+	}
+	if required, _, err := protocol.RequiredDepositRao(finalPoolWeightTestGiB, 7, big.NewInt(1_000), policy.Deposit); err != nil || required.String() != "1000070" {
+		t.Fatalf("policy requirement for 7 users = %v (%v), want 1000070", required, err)
+	}
+	evidence, row := finalPoolWeightTestRow()
+	row.RateNumeratorRaoPerUser, row.BaselineRateNumeratorRaoPerUser = 10, 10
+	if _, eligible, err := verifyFinalPoolWeightTestRow(&evidence, &row); err != nil || !eligible {
+		t.Fatalf("row without users: eligible=%t error=%v", eligible, err)
+	}
+	if err := verifyFinalPolicyInputs(finalPoolWeightTestPolicyEvidence(policy, row), policy); err != nil {
+		t.Fatalf("row without users under the per-user policy: %v", err)
 	}
 }
 

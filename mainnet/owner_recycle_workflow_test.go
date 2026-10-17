@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Public preparation and dispatcher continuations retain one original owner
 // request across separate computers. Only the device boundary is synthetic.

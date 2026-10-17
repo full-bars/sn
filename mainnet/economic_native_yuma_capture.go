@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 const nativeYumaSchema = "urnetwork-original-yuma-allocation-witness-v1"
@@ -135,9 +136,50 @@ func (self *nativeYumaDecoder) edges(count uint16) []nativeYumaEdge {
 	return result
 }
 
+// The enclosing original replay derives this join from actual storage reads.
+// These checks bind its use to the same epoch and dense recipient census; they
+// do not turn a caller-supplied hash into independent execution authority.
+func nativeYumaJoinedEpochTotal(epoch historicalReplayObservation, joined *nativeEpochInputProvenance, recipients []nativeExecutionRecipient) (uint64, error) {
+	if joined == nil || joined.Schema != nativeEpochStorageLayoutSchema || epoch.Ordinal == 0 || joined.EpochObservationOrdinal != epoch.Ordinal || epoch.Purpose != "native-epoch" || epoch.Operation != "host" || epoch.Native == nil || epoch.Native.ExecutionPhaseHex == nil || *epoch.Native.ExecutionPhaseHex != "0x02" || len(joined.DrainOrdinals) != 3 || len(recipients) > rootCensusLimit || len(joined.UidReadOrdinals) != len(recipients) {
+		return 0, errors.New("native Yuma storage join differs from its original epoch or recipient census")
+	}
+	for _, field := range epoch.Native.Memory {
+		switch field.Name {
+		case "total-alpha", "hotkeys", "uids", "subnet-epoch":
+			return 0, errors.New("native Yuma storage join cannot substitute legacy memory fields")
+		}
+	}
+	if len(joined.TotalAlpha) == 0 || len(joined.TotalAlpha) > 20 {
+		return 0, errors.New("native Yuma original joined total exceeds u64")
+	}
+	total, err := strconv.ParseUint(joined.TotalAlpha, 10, 64)
+	if err != nil || strconv.FormatUint(total, 10) != joined.TotalAlpha {
+		return 0, errors.New("native Yuma original joined total is not canonical u64")
+	}
+	seen := map[uint64]bool{}
+	last := uint64(0)
+	for _, ordinal := range joined.DrainOrdinals {
+		if ordinal <= last || ordinal >= epoch.Ordinal {
+			return 0, errors.New("native Yuma original drain order differs")
+		}
+		seen[ordinal], last = true, ordinal
+	}
+	if joined.EpochWriteOrdinal <= last || joined.EpochWriteOrdinal >= epoch.Ordinal || seen[joined.EpochWriteOrdinal] {
+		return 0, errors.New("native Yuma original epoch counter write differs")
+	}
+	seen[joined.EpochWriteOrdinal] = true
+	for index, ordinal := range joined.UidReadOrdinals {
+		if ordinal <= joined.EpochWriteOrdinal || ordinal >= epoch.Ordinal || seen[ordinal] || recipients[index].Uid != uint16(index) {
+			return 0, errors.New("native Yuma original UID read census is not dense and distinct")
+		}
+		seen[ordinal] = true
+	}
+	return total, nil
+}
+
 // Every captured record precedes the matching original epoch output. Multiple
 // mechanisms or incomplete input shapes require a separately admitted schema.
-func decodeNativeYuma(policy nativeYumaPolicy, netuid uint16, boundary economicEmissionBoundary, records []historicalReplayObservation, epoch historicalReplayObservation) (nativeYumaInput, error) {
+func decodeNativeYuma(policy nativeYumaPolicy, netuid uint16, boundary economicEmissionBoundary, records []historicalReplayObservation, epoch historicalReplayObservation, joined *nativeEpochInputProvenance, recipients []nativeExecutionRecipient) (nativeYumaInput, error) {
 	input := nativeYumaInput{Netuid: netuid}
 	if len(records) < 2 || len(records) > 2+3*rootCensusLimit || records[0].Purpose != "native-yuma-meta" || records[1].Purpose != "native-yuma-settings" {
 		return input, errors.New("native Yuma complete input census is absent")
@@ -189,6 +231,9 @@ func decodeNativeYuma(policy nativeYumaPolicy, netuid uint16, boundary economicE
 		return input, errors.New("native Yuma liquid-alpha branch is unclosed")
 	}
 	count := int(input.Count)
+	if joined != nil && len(recipients) != count {
+		return input, errors.New("native Yuma storage join omitted an original recipient")
+	}
 	input.Nodes = make([]nativeYumaNode, count)
 	input.Weights = make([][]nativeYumaEdge, count)
 	input.Bonds = make([][]nativeYumaEdge, count)
@@ -234,12 +279,23 @@ func decodeNativeYuma(policy nativeYumaPolicy, netuid uint16, boundary economicE
 	if err != nil {
 		return input, err
 	}
-	hotkeys, err := nativeCapture(epoch, "hotkeys", count*32)
-	if err != nil {
-		return input, err
+	var hotkeys []byte
+	if joined == nil {
+		hotkeys, err = nativeCapture(epoch, "hotkeys", count*32)
+		if err != nil {
+			return input, err
+		}
 	}
 	for index, node := range input.Nodes {
-		if registered[index] != node.Registered || fmt.Sprintf("0x%x", hotkeys[index*32:(index+1)*32]) != node.Hotkey {
+		if registered[index] != node.Registered {
+			return input, errors.New("native Yuma input/output UID generation differs")
+		}
+		if joined != nil {
+			recipient := recipients[index]
+			if recipient.Uid != node.Uid || recipient.Hotkey != node.Hotkey || recipient.Registered != node.Registered {
+				return input, errors.New("native Yuma input differs from its original storage-joined UID generation")
+			}
+		} else if fmt.Sprintf("0x%x", hotkeys[index*32:(index+1)*32]) != node.Hotkey {
 			return input, errors.New("native Yuma input/output UID generation differs")
 		}
 	}

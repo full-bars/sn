@@ -45,6 +45,7 @@ type providerRegistrationTestRecord struct {
 // One fixture models versioned server dedup and deliberately non-idempotent
 // legacy allocation. Real PostgreSQL allocation is independently qualified.
 type providerRegistrationFixture struct {
+	walletHandler  http.HandlerFunc
 	test           *testing.T
 	dir            string
 	server         *httptest.Server
@@ -60,6 +61,8 @@ type providerRegistrationFixture struct {
 	status         int
 	malformed      bool
 	onCommit       func()
+	// the server rejects every network token renewal (401)
+	networkRefreshes int
 }
 
 // Explicit private parents keep both positive and negative custody fixtures
@@ -92,7 +95,13 @@ func providerRegistrationTestToken(t *testing.T, client, marker string) string {
 // DNS name, account or network endpoint is used by the fixture.
 func newProviderRegistrationFixture(t *testing.T) *providerRegistrationFixture {
 	t.Helper()
-	self := &providerRegistrationFixture{test: t, dir: providerRegistrationPrivateDir(t), requests: map[string][]byte{}, clients: map[string]string{}, refreshClients: map[string]int{}}
+	return newProviderRegistrationFixtureIn(t, providerRegistrationPrivateDir(t))
+}
+
+// A fixture whose state directory is dir, such as an operator directory.
+func newProviderRegistrationFixtureIn(t *testing.T, dir string) *providerRegistrationFixture {
+	t.Helper()
+	self := &providerRegistrationFixture{test: t, dir: dir, requests: map[string][]byte{}, clients: map[string]string{}, refreshClients: map[string]int{}}
 	t.Setenv("URNETWORK_STATE_DIR", self.dir)
 	if err := clientauth.WriteToken(filepath.Join(self.dir, "jwt"), providerRegistrationTestToken(t, "", "bootstrap")); err != nil {
 		t.Fatal(err)
@@ -195,6 +204,13 @@ func (self *providerRegistrationFixture) observeCustody(body []byte, request sdk
 // Allocation happens before a lost-reply barrier. A subsequent versioned call
 // can return only the same client; the legacy route allocates on every call.
 func (self *providerRegistrationFixture) serveHttp(w http.ResponseWriter, r *http.Request) {
+	self.stateLock.Lock()
+	walletHandler := self.walletHandler
+	self.stateLock.Unlock()
+	if walletHandler != nil && strings.HasPrefix(r.URL.Path, "/sn/") {
+		walletHandler(w, r)
+		return
+	}
 	body, err := io.ReadAll(io.LimitReader(r.Body, 16*1024))
 	closeErr := r.Body.Close()
 	if err != nil || closeErr != nil {
@@ -203,6 +219,13 @@ func (self *providerRegistrationFixture) serveHttp(w http.ResponseWriter, r *htt
 	}
 	if r.URL.Path == "/hello" {
 		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if r.URL.Path == "/auth/network-refresh" {
+		self.stateLock.Lock()
+		self.networkRefreshes++
+		self.stateLock.Unlock()
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	if r.URL.Path == "/auth/refresh" {

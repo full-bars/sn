@@ -27,7 +27,15 @@ contract MissingSafeInterface {}
 
 contract DeployHarness is Deploy {
     function requireMainnetSafe(address owner_) external view {
-        _requireMainnetSafe(owner_);
+        _requireMainnetSafe(owner_, false);
+    }
+
+    function requireMainnetSingleOwnerSafe(address owner_) external view {
+        _requireMainnetSafe(owner_, true);
+    }
+
+    function singleOwnerSafeProfile() external view returns (bool) {
+        return _singleOwnerSafeProfile();
     }
 
     function loadTestnetConfig() external view returns (Config memory) {
@@ -81,6 +89,49 @@ contract DeploymentPolicyTest is Test {
         SafeShapeMock duplicateOwner = new SafeShapeMock(2, _owners(address(1), address(1), address(3)));
         vm.expectRevert("Deploy: Safe owners not distinct");
         deploy.requireMainnetSafe(address(duplicateOwner));
+    }
+
+    function test_mainnetSingleOwnerProfileRequiresExactOneOfOneSafe() external {
+        address[] memory one = new address[](1);
+        one[0] = address(0xA1);
+        deploy.requireMainnetSingleOwnerSafe(address(new SafeShapeMock(1, one)));
+
+        SafeShapeMock twoOfThree = new SafeShapeMock(2, _owners(address(0xA1), address(0xA2), address(0xA3)));
+        vm.expectRevert("Deploy: mainnet owner must be 1-of-1 Safe");
+        deploy.requireMainnetSingleOwnerSafe(address(twoOfThree));
+
+        address[] memory two = new address[](2);
+        two[0] = address(0xA1);
+        two[1] = address(0xA2);
+        SafeShapeMock twoOwners = new SafeShapeMock(1, two);
+        vm.expectRevert("Deploy: mainnet owner must be 1-of-1 Safe");
+        deploy.requireMainnetSingleOwnerSafe(address(twoOwners));
+
+        SafeShapeMock zeroOwner = new SafeShapeMock(1, new address[](1));
+        vm.expectRevert("Deploy: Safe owner zero");
+        deploy.requireMainnetSingleOwnerSafe(address(zeroOwner));
+
+        vm.expectRevert("Deploy: mainnet owner must be Safe");
+        deploy.requireMainnetSingleOwnerSafe(address(0xA1));
+    }
+
+    function test_mainnetTwoOfThreeProfileRefusesOneOfOneSafe() external {
+        address[] memory one = new address[](1);
+        one[0] = address(0xA1);
+        SafeShapeMock oneOfOne = new SafeShapeMock(1, one);
+        vm.expectRevert("Deploy: mainnet owner must be 2-of-3 Safe");
+        deploy.requireMainnetSafe(address(oneOfOne));
+    }
+
+    function test_ownerSafeProfileIsSelectedExplicitly() external {
+        vm.setEnv("ST_OWNER_SAFE_PROFILE", "2-of-3");
+        assertFalse(deploy.singleOwnerSafeProfile());
+        vm.setEnv("ST_OWNER_SAFE_PROFILE", "1-of-1");
+        assertTrue(deploy.singleOwnerSafeProfile());
+        vm.setEnv("ST_OWNER_SAFE_PROFILE", "1of1");
+        vm.expectRevert("Deploy: unknown owner Safe profile");
+        deploy.singleOwnerSafeProfile();
+        vm.setEnv("ST_OWNER_SAFE_PROFILE", "2-of-3");
     }
 
     function test_deploymentConfigBoundsAllNarrowValues() external {

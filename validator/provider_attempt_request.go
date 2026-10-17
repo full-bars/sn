@@ -15,6 +15,7 @@ import (
 
 	"github.com/urfoundation/sn/protocol"
 	"github.com/urnetwork/connect"
+	"github.com/urnetwork/connect/durablevolume"
 )
 
 const (
@@ -24,6 +25,39 @@ const (
 	ProviderAttemptRequestPendingName      = "provider-attempt-request.pending"
 	ProviderAttemptRequestCheckpointSchema = "urnetwork-provider-attempt-request-custody-v1"
 )
+
+// The attribute holds the checkpoint as this fixed-width v2 record: schema,
+// preparation digest, both inodes, committed head, pending flag and fields,
+// closed flag and window, predecessor, frontiers, records hash and signature.
+// Absent sections are zero.
+const (
+	providerAttemptRequestAttributeSchema = "urnetwork-provider-attempt-request-custody-v2"
+	providerAttemptRequestHeadBytes       = 8 + 32 + 8 + 8 + 8 + 32
+	providerAttemptRequestAttributeBytes  = len(providerAttemptRequestAttributeSchema) + 32 + 8 + 8 + providerAttemptRequestHeadBytes + 1 + 8 + 32 + 1 + 6*8 + 32 + 2*providerAttemptRequestHeadBytes + 32 + ed25519.SignatureSize
+)
+
+// ext4 without ea_inode keeps all of an inode's attributes in its spare inode
+// bytes and one block. The forecast uses the block alone: its header, then per
+// attribute a fixed entry plus the name without "user." and the value, each
+// padded to four bytes, and a terminating zero word.
+const (
+	ext4AttributeBlockBytes  = 4096
+	ext4AttributeHeaderBytes = 32
+	ext4AttributeEntryBytes  = 16
+	ext4AttributeEndBytes    = 4
+)
+
+// connect durablevolume's storage-preparation anchor, mirrored at its widest
+// for the forecast; a test pins this shape to the anchor storage-prepare writes.
+const providerAttemptRequestPreparationAnchorSchema = "urnetwork-storage-preparation-anchor-v1"
+
+type providerAttemptRequestPreparationAnchor struct {
+	Schema       string                            `json:"schema"`
+	PlanSha256   string                            `json:"plan_sha256"`
+	CohortSha256 string                            `json:"cohort_sha256,omitempty"`
+	RootInode    uint64                            `json:"root_inode"`
+	Control      durablevolume.PreparationIdentity `json:"control"`
+}
 
 // The existing ledger identity supplies original deployment and signing lane;
 // a network login cannot replace the configured client signing authority.
@@ -58,19 +92,39 @@ func (self ProviderAttemptRequestPreparation) Validate() error {
 	return forecastProviderAttemptRequestCheckpoint(self)
 }
 
-// Original escaped identity bytes must fit the complete future closed/pending
-// checkpoint before birth. No future send can discover an impossible xattr.
+// The request attribute shares the ledger root inode with the assignment
+// custody checkpoint and durablevolume's preparation anchor and generation.
+// All four at their widest for this identity must fit one ext4 attribute
+// block before birth, so no future send can discover an impossible xattr.
 func forecastProviderAttemptRequestCheckpoint(expected ProviderAttemptRequestPreparation) error {
-	var hash [32]byte
-	for index := range hash {
-		hash[index] = 255
+	custody, anchor, err := providerAttemptRequestWidestRootAttributes(expected)
+	if err != nil {
+		return err
 	}
-	boundary := AttemptBoundary{SettlementEpoch: ^uint64(0), EVMBlock: ^uint64(0), EVMBlockHash: "0x" + strings.Repeat("f", 64)}
-	head := ProviderAttemptRequestHead{Sequence: expected.Limits.MaxRecords, Hash: hash, Bytes: expected.Limits.MaxJournalBytes, LastBoundary: boundary}
-	closed := &ProviderAttemptRequestClosedHead{Schema: ProviderAttemptRequestWindowSchema, Preparation: expected, Window: protocol.ValidatorEvidenceWindow{Epoch: ^uint64(0), StartBlock: ^uint64(0) - 1, EndBlock: ^uint64(0), FinalizedBlock: ^uint64(0)}, PreviousCutHash: hash, Begin: head, End: head, RecordsHash: hash, Signature: make([]byte, ed25519.SignatureSize)}
-	value := ProviderAttemptRequestCheckpoint{Schema: ProviderAttemptRequestCheckpointSchema, Identity: expected.Identity, Limits: expected.Limits, Birth: expected.Birth, DirectoryInode: ^uint64(0), FileInode: ^uint64(0), Committed: head, Pending: &ProviderAttemptRequestPending{Bytes: expected.Limits.MaxRecordBytes, Hash: hash}, Closed: closed}
-	_, err := encodeProviderAttemptRequestCheckpoint(value)
-	return err
+	used := ext4AttributeHeaderBytes + ext4AttributeEndBytes
+	for name, size := range map[string]int{attemptLedgerCustodyAttribute: len(custody), durablevolume.PreparationAttribute: len(anchor), durablevolume.RootGenerationAttribute: durablevolume.RootGenerationBytes, ProviderAttemptRequestAttribute: providerAttemptRequestAttributeBytes} {
+		used += (ext4AttributeEntryBytes+len(strings.TrimPrefix(name, "user."))+3)&^3 + (size+3)&^3
+	}
+	if used > ext4AttributeBlockBytes {
+		return errors.Join(protocol.ErrProviderAttemptsCapacity, errors.New("provider request root attributes exceed one ext4 attribute block"))
+	}
+	return nil
+}
+
+// Widest values: every number at its maximum, legacy and pending custody
+// present, and a cohort digest in the preparation anchor.
+func providerAttemptRequestWidestRootAttributes(expected ProviderAttemptRequestPreparation) (custody, anchor []byte, err error) {
+	digest := "sha256:" + strings.Repeat("f", 64)
+	member := attemptLedgerCustodyMember{Inode: ^uint64(0), Bytes: ^uint64(0), Sha256: digest}
+	head := AttemptLedgerHead{LastSequence: ^uint64(0), Root: "0x" + strings.Repeat("f", 64), RecordBytes: ^uint64(0), TrailCount: ^uint64(0)}
+	custody, err = json.Marshal(attemptLedgerCustodyCheckpoint{Schema: attemptLedgerCustodySchema, Identity: expected.Identity.Ledger, Coordinator: expected.Identity.Coordinator, DirectoryInode: ^uint64(0), DatabaseInode: ^uint64(0),
+		Import: member, Ready: member, Legacy: &member, Committed: head, Pending: &attemptLedgerCustodyPending{Head: head, Record: member}})
+	if err != nil {
+		return nil, nil, err
+	}
+	anchor, err = json.Marshal(providerAttemptRequestPreparationAnchor{Schema: providerAttemptRequestPreparationAnchorSchema, PlanSha256: digest, CohortSha256: digest, RootInode: ^uint64(0),
+		Control: durablevolume.PreparationIdentity{Device: ^uint64(0), Inode: ^uint64(0), Mode: ^uint32(0), Uid: ^uint32(0), Gid: ^uint32(0)}})
+	return custody, anchor, err
 }
 
 // Exact wire body and signature remain available for original Server lookup.

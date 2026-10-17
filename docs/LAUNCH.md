@@ -16,7 +16,8 @@ required `testnet-` inputs are populated in `../vault/main/st.yml`: the containe
 encrypted wallet/password references, existing netuid 521, three spend ceilings,
 two loopback operator API origins, MinIO overlay host, private RPC hostname and
 single-owner testnet governance. Unprefixed settings remain mainnet-only; mainnet
-contract custody remains 2-of-3 Safe governance.
+contract custody is Safe governance, a 1-of-1 Safe at the SN25 launch (owner
+decision, October 7).
 
 The checked-in `sim-testnet/testnet.yml` currently selects the official public
 Substrate and EVM testnet RPCs as its operational pair. Both typed override URLs

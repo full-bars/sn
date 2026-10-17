@@ -190,7 +190,7 @@ func collectFinalValidatorInputsV2(ctx context.Context, cfg *ResolvedConfig, sta
 				return err
 			}
 			maximum := uint64(maximumCampaignEvidenceRawFileBytes)
-			if source.Kind == "private" && source.Name == "steering-intents.json" {
+			if source.Kind == "private" && (source.Name == "steering-intents.json" || validatorpkg.SteeringIntentSegmentName(source.Name)) {
 				maximum = max(maximum, min(release.EvidenceV2.Bounds.MaxControlBytes, release.EvidenceV2.Bounds.MaxHistoryBytes))
 			}
 			if source.Kind == "relay-journal" && source.Name == "journal.jsonl" && source.Origin == "" {
@@ -256,7 +256,7 @@ func collectFinalValidatorInputsV2(ctx context.Context, cfg *ResolvedConfig, sta
 			chain.Close()
 			return nil, err
 		}
-		captured, captureErr := validatorpkg.CaptureReleaseEvidenceV2(ctx, release, chain, native, validatorpkg.ReleaseEvidenceV2CaptureOptions{Hotkey: hotkey, Origins: collected.EvidenceV2.Origins, MaximumBytes: captureLimits.dataBytes + captureLimits.controlBytes, MaximumObjects: captureLimits.maximumObjects, MaximumDataBytes: captureLimits.dataBytes, MaximumControlBytes: captureLimits.controlBytes, ThroughEpoch: lastEpoch}, retain)
+		captured, captureErr := validatorpkg.CaptureReleaseEvidenceV2(ctx, release, chain, native, validatorpkg.ReleaseEvidenceV2CaptureOptions{Hotkey: hotkey, Origins: collected.EvidenceV2.Origins[:], MaximumBytes: captureLimits.dataBytes + captureLimits.controlBytes, MaximumObjects: captureLimits.maximumObjects, MaximumDataBytes: captureLimits.dataBytes, MaximumControlBytes: captureLimits.controlBytes, ThroughEpoch: lastEpoch}, retain)
 		if captureErr == nil {
 			collected.EvidenceV2.NativeCheckpoints, captureErr = collectFinalNativeCoverageV2(ctx, release, chain, native, hotkey, captured, *window, retain)
 		}
@@ -562,7 +562,7 @@ func waitFinalValidatorPublicationsV2(ctx context.Context, cfg *ResolvedConfig, 
 				if err != nil {
 					return false, err
 				}
-				readOptions := validatorpkg.ValidatorEvidencePublicationV2ReadOptions{Activations: activationCenses[release.ValidatorID], Window: protocol.ValidatorEvidenceWindow{Epoch: epoch, StartBlock: start, EndBlock: end, FinalizedBlock: terminal.Status.Contracts.FinalizedHead.Number}, Origins: [2]string{cfg.OperatorAPIOrigins[0], cfg.OperatorAPIOrigins[1]}, Bounds: release.EvidenceV2.Bounds}
+				readOptions := validatorpkg.ValidatorEvidencePublicationV2ReadOptions{Activations: activationCenses[release.ValidatorID], Window: protocol.ValidatorEvidenceWindow{Epoch: epoch, StartBlock: start, EndBlock: end, FinalizedBlock: terminal.Status.Contracts.FinalizedHead.Number}, Origins: []string{cfg.OperatorAPIOrigins[0], cfg.OperatorAPIOrigins[1]}, Bounds: release.EvidenceV2.Bounds}
 				if release.PreviousPolicy != nil {
 					readOptions.Policy, readOptions.PreviousPolicy = &release.Policy, release.PreviousPolicy
 				}
@@ -635,25 +635,6 @@ func verifyFinalCapturedValidatorBytesV2WithReader(ctx context.Context, cfg *Res
 		return errors.Join(errors.New("compact capture hotkey differs from original identity"), err)
 	}
 	storeBytes := loaded[collected.IntentStore.URI]
-	intents, err := decodeValidatorIntentBytes(storeBytes, int(collected.ValidatorID))
-	if err != nil {
-		return err
-	}
-	var store struct {
-		Schema  string            `json:"schema"`
-		Current json.RawMessage   `json:"current"`
-		History []json.RawMessage `json:"history"`
-	}
-	if err := decodeStrictJSONBytes(storeBytes, &store); err != nil {
-		return err
-	}
-	rawIntents := append([]json.RawMessage(nil), store.History...)
-	if len(store.Current) != 0 && !bytes.Equal(bytes.TrimSpace(store.Current), []byte("null")) {
-		rawIntents = append(rawIntents, store.Current)
-	}
-	if len(intents) != len(rawIntents) {
-		return errors.New("compact captured original intent count differs")
-	}
 	private := map[string]FinalArtifactLocator{}
 	var nativeReads uint64
 	for _, source := range collected.EvidenceV2.Sources {
@@ -695,6 +676,20 @@ func verifyFinalCapturedValidatorBytesV2WithReader(ctx context.Context, cfg *Res
 	storeSource, found := private["steering-intents.json"]
 	if nativeReads == 0 || !found || storeSource.SizeBytes != uint64(len(storeBytes)) || storeSource.ContentHash != bytesSHA256(storeBytes) {
 		return errors.New("compact native source/store original custody is incomplete")
+	}
+	// A sealed store's segments were captured as its own private sources.
+	intents, rawIntents, err := decodeValidatorIntentHistory(storeBytes, int(collected.ValidatorID), func(name string, maximum uint64) ([]byte, error) {
+		locator, found := private[name]
+		if !found || locator.SizeBytes > maximum {
+			return nil, errors.New("compact captured intent segment is outside its original custody")
+		}
+		return read(ctx, locator)
+	})
+	if err != nil {
+		return err
+	}
+	if len(intents) != len(rawIntents) {
+		return errors.New("compact captured original intent count differs")
 	}
 	selected := append([]FinalCollectedValidatorIntent(nil), collected.Intents...)
 	selected = append(selected, collected.LifecycleIntents...)

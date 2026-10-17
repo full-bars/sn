@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Public recovery retains the reviewed root/control pair. Missing completed
 // custody or replaced parents never authorize creating another namespace.

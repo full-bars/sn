@@ -277,6 +277,8 @@ func (self *StatsEngine) detachReleaseStatsMeasurementV2OwnedWithJournalGuard(ow
 	if _, _, err := VerifyReleaseStatsMeasurementWithAttemptCutV2(owner.ctx, measurement, *cut, expected, options.Policy, options.Bounds, options.Stats); err != nil {
 		return nil, err
 	}
+	// The next start's replay of this journal has these exact inputs.
+	releaseStartupVerifiedFrom(owner.ctx).recordStatsCut(measurement, *cut, expected, options.Policy, options.Bounds, options.Stats)
 	currentHead, err := self.releaseStatsV2OwnedHead(dir)
 	if err != nil || currentHead != head {
 		return nil, errors.Join(errors.New("compact native head changed before journal publication"), err)
@@ -405,7 +407,7 @@ func (self *StatsEngine) reconcileReleaseStatsCutV2OwnedWithJournalGuard(owner *
 			return err
 		}
 	} else {
-		if _, _, err := VerifyReleaseStatsMeasurementWithAttemptCutV2(owner.ctx, measurement, cut, expected, options.Policy, options.Bounds, options.Stats); err != nil {
+		if err := releaseStartupVerifiedFrom(owner.ctx).verifyStatsCut(owner.ctx, measurement, cut, expected, options.Policy, options.Bounds, options.Stats); err != nil {
 			return err
 		}
 	}

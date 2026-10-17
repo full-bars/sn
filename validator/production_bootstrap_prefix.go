@@ -147,15 +147,16 @@ func loadProductionBootstrapPrefixConfig(ctx context.Context, path string, raw [
 	return cfg, nil
 }
 
-// Both complete operator histories and every signature are pinned before the
+// Every complete operator history and every signature is pinned before the
 // first network read. Extra, reordered, omitted or substituted domains refuse.
+// The census is the configured one or two operators, each one evidence replica.
 func readProductionBootstrapPrefixInputs(ctx context.Context, cfg *ReleaseConfig, observed ProductionBootstrapObservation) ([]releaseEvidenceV2ActivationInput, error) {
 	public, err := readProductionBootstrapPublicInputs(ctx, cfg, observed.Native.Hotkey)
 	if err != nil {
 		return nil, err
 	}
-	if len(public) != 2 || len(observed.Operators) != len(public) {
-		return nil, errors.New("bootstrap prefix requires the exact two-operator census")
+	if validateReleaseEvidenceV2ReplicaCount(len(public)) != nil || len(observed.Operators) != len(public) {
+		return nil, errors.New("bootstrap prefix requires the exact configured one- or two-operator census")
 	}
 	remaining := uint64(productionBootstrapPrefixMaximumBytes)
 	inputs := make([]releaseEvidenceV2ActivationInput, 0, len(public))
@@ -263,6 +264,7 @@ func authenticateProductionBootstrapPrefix(ctx context.Context, cfg *ReleaseConf
 
 // A pure transport failure may retry; a joined integrity, file or cancellation
 // cause cannot be hidden by another timeout. All per-attempt clients are closed.
+// Elapsed deadlines refuse admission while timer cancellation is still queued.
 func retryProductionBootstrapPrefixRead(ctx context.Context, read func(context.Context) error, hooks releaseHttpGetRetryHooks) error {
 	if ctx == nil || read == nil {
 		return errors.New("bootstrap prefix retry owner is absent")
@@ -278,20 +280,25 @@ func retryProductionBootstrapPrefixRead(ctx context.Context, read func(context.C
 	defer cancel()
 	var last error
 	for {
-		if err := errors.Join(ctx.Err(), operation.Err()); err != nil {
+		if err := errors.Join(evidenceReadContextError(ctx), evidenceReadContextError(operation)); err != nil {
 			return errors.Join(last, err)
 		}
 		attempt, closeAttempt := withTimeout(operation, 60*time.Second)
-		last = errors.Join(read(attempt), attempt.Err())
-		closeAttempt()
-		if last == nil {
-			return errors.Join(ctx.Err(), operation.Err())
+		if err := errors.Join(evidenceReadContextError(ctx), evidenceReadContextError(operation)); err != nil {
+			closeAttempt()
+			return errors.Join(last, err)
 		}
-		if !retryableProductionSteeringRead(last) || errors.Is(ctx.Err(), context.Canceled) {
-			return errors.Join(last, ctx.Err())
+		last = evidenceReadContextError(attempt)
+		if last == nil {
+			last = errors.Join(read(attempt), evidenceReadContextError(attempt))
+		}
+		closeAttempt()
+		ownerErr := errors.Join(evidenceReadContextError(ctx), evidenceReadContextError(operation))
+		if last == nil || ownerErr != nil || !retryableProductionSteeringRead(last) {
+			return errors.Join(last, ownerErr)
 		}
 		if err := wait(operation, releaseSnapshotStartupRetryDelay); err != nil {
-			return errors.Join(last, err, ctx.Err())
+			return errors.Join(last, err, evidenceReadContextError(ctx), evidenceReadContextError(operation))
 		}
 	}
 }

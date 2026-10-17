@@ -106,7 +106,17 @@ func TestEconomicFundingJointPublicOriginalLeavesExhaustAndReplayAfterRetirement
 	}
 	again := f.sample(t, monitorServiceHooks{})
 	economicFundingJointPublicResult(t, again)
-	if !reflect.DeepEqual(result.Funding, again.Funding) || entitlement.artifactReads.Load() != 2 {
+	// Retirement moves the root-missed epoch-two obligation, already carried
+	// into epoch three, to the cold archive (6c73811fc). Epoch three resolves
+	// it there with unchanged funding; every other figure stays exact.
+	cold := *result.Funding
+	cold.ActiveEntitlements = nil
+	for _, value := range result.Funding.ActiveEntitlements {
+		if value.Id != "2/1" {
+			cold.ActiveEntitlements = append(cold.ActiveEntitlements, value)
+		}
+	}
+	if len(cold.ActiveEntitlements) != len(result.Funding.ActiveEntitlements)-1 || state.Archive.Counts.Entitlements != 1 || !reflect.DeepEqual(&cold, again.Funding) || entitlement.artifactReads.Load() != 2 {
 		t.Fatal("cold original replay lost correlation or readmitted a leaf", result.Funding, again.Funding)
 	}
 }

@@ -33,9 +33,10 @@ type ReleaseEvidenceV2ArchiveSource struct {
 }
 
 type ReleaseEvidenceV2ArchiveOptions struct {
-	Config         *ReleaseConfig
-	Hotkey         [32]byte
-	Origins        [2]string
+	Config *ReleaseConfig
+	Hotkey [32]byte
+	// Every configured operator's API origin, in configured order: one, or two.
+	Origins        []string
 	Sources        []ReleaseEvidenceV2ArchiveSource
 	ReadSource     func(context.Context, ReleaseEvidenceV2CaptureSource) ([]byte, error)
 	ScratchRoot    string
@@ -62,7 +63,7 @@ type ReleaseEvidenceV2Archive struct {
 type releaseEvidenceV2ArchiveOwner struct {
 	ctx        context.Context
 	cfg        ReleaseConfig
-	origins    [2]string
+	origins    []string
 	root       string
 	anchor     os.FileInfo
 	sources    map[ReleaseEvidenceV2CaptureSource]ReleaseEvidenceV2ArchiveSource
@@ -104,8 +105,8 @@ func newReleaseEvidenceV2ArchiveOwner(ctx context.Context, options ReleaseEviden
 	if options.Config.ProvisionalDeferClosedNativeInput {
 		return nil, errors.New("public archive replay requires complete strict source verification")
 	}
-	if len(options.Config.Operators) != 2 || options.Origins != [2]string{options.Config.Operators[0].APIURL, options.Config.Operators[1].APIURL} {
-		return nil, errors.New("archive V2 origins differ from the approved operator census")
+	if configured, err := releaseEvidenceV2ConfiguredOrigins(options.Config); err != nil || len(configured) != len(options.Config.Operators) || !slices.Equal(options.Origins, configured) {
+		return nil, errors.Join(errors.New("archive V2 origins differ from the approved operator census"), err)
 	}
 	if _, err := newReleaseEvidenceV2StartupReaders(options.Origins, options.Config.EvidenceV2.Bounds.Cut); err != nil {
 		return nil, err
@@ -137,7 +138,7 @@ func newReleaseEvidenceV2ArchiveOwner(ctx context.Context, options ReleaseEviden
 	if err != nil || resolved != options.ScratchRoot {
 		return nil, errors.Join(errors.New("archive scratch root contains an alias"), err)
 	}
-	owner := &releaseEvidenceV2ArchiveOwner{ctx: ctx, cfg: cfg, origins: options.Origins, root: options.ScratchRoot, anchor: anchor, sources: make(map[ReleaseEvidenceV2CaptureSource]ReleaseEvidenceV2ArchiveSource, len(options.Sources)), readSource: options.ReadSource, ledgers: map[uint64]*releaseEvidenceV2ArchiveLedger{}}
+	owner := &releaseEvidenceV2ArchiveOwner{ctx: ctx, cfg: cfg, origins: slices.Clone(options.Origins), root: options.ScratchRoot, anchor: anchor, sources: make(map[ReleaseEvidenceV2CaptureSource]ReleaseEvidenceV2ArchiveSource, len(options.Sources)), readSource: options.ReadSource, ledgers: map[uint64]*releaseEvidenceV2ArchiveLedger{}}
 	remaining := options.MaximumBytes
 	contents := map[string]uint64{}
 	for _, source := range options.Sources {

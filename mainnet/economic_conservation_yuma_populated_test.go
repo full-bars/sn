@@ -116,7 +116,14 @@ func TestEconomicConservationPublicPopulatedUnderprovisioningRefusesBeforeSource
 	f.source.policy.Continuation = nil
 	f.source.policy.StorageProfile = nil
 	f.source.policy.MaximumFacts = 8192
-	f.source.writePolicy(t)
+	// writePolicy admits only a valid policy, so write the refused one as is.
+	raw, err := json.Marshal(f.source.policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(f.source.path, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
 	reads, requests := f.source.claimReads.Load(), producer.requests.Load()
 	var output, issue bytes.Buffer
 	code := runMainWithMonitorHooks(f.ctx, f.source.args(t), &output, &issue, func() time.Time { return f.source.now }, monitorServiceHooks{})

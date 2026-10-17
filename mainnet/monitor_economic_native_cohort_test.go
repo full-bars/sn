@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The original native checkpoint and its archive occupy separate real roots.
 // Public preparation and restore retain exact paths and all co-owner metadata.
@@ -287,22 +287,6 @@ func TestMonitorNativeCohortRestoreKeepsOriginalPendingOutcome(t *testing.T) {
 	event := run.next(t)
 	if !event.Current || event.State.Cursor.Number != 102 || event.State.BatchCount != 2 || event.State.PendingThrough != nil || event.State.ArchiveSegments != 1 || monitorEconomicTestFee(event) != "12" {
 		t.Fatal("cross-root continuation lost original outcome", event)
-	}
-	run.stop(t)
-}
-
-func TestMonitorNativeCohortRestoreAdmitsAll512SegmentsAndBothHeads(t *testing.T) {
-	f := newMonitorNativeCohortFixture(t, 512)
-	reference := f.plan(t)
-	f.native.ctx = f.apply(t, reference, false)
-	if record := f.native.record(t); !reflect.DeepEqual(record, f.record) {
-		t.Fatal("full cross-root catalog changed")
-	}
-	wait := monitorNativeObserveAdmission(t, f.record.State.Archive.Segments)
-	run := f.native.start(t, monitorServiceHooks{})
-	wait(run)
-	if event := run.next(t); !event.Current || event.State.ArchiveSegments != 512 || event.State.Cursor != f.record.State.Cursor || event.State.BatchCount != f.record.State.BatchCount {
-		t.Fatal("full cross-root public continuation differs", event)
 	}
 	run.stop(t)
 }

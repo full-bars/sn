@@ -183,7 +183,7 @@ func validatorActivationHealthTestCheckpoint(f *validatorActivationFixture, inde
 func TestValidatorActivationHealthCompletedCheckpointSurvivesLaterRefusal(t *testing.T) {
 	f := newValidatorActivationFixture(t)
 	f.installed()
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +218,7 @@ func TestValidatorActivationHealthCompletedCheckpointSurvivesLaterRefusal(t *tes
 func TestValidatorActivationHealthRejectsCheckpointReplacement(t *testing.T) {
 	f := newValidatorActivationFixture(t)
 	f.installed()
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}

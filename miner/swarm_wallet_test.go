@@ -3,19 +3,20 @@ package miner
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/urfoundation/sn/crv4"
+	"github.com/urfoundation/sn/protocol"
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
-	"github.com/urnetwork/server/model"
 )
 
 func swarmWalletTestSettings() *connect.ClientStrategySettings {
@@ -27,65 +28,55 @@ func swarmWalletTestSettings() *connect.ClientStrategySettings {
 }
 
 func TestSetSwarmMemberWalletSignsFreshChallengeForExistingProvider(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
+	defer cancel()
 	member := validProviderSwarmConfig(t).Members[0]
-	var challenges, wallets atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet && r.URL.Path == "/hello" {
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		if r.Method != http.MethodPost || r.Header.Get("Authorization") != "Bearer token" {
-			t.Errorf("wallet request lacks its existing network authorization")
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-		switch r.URL.Path {
-		case "/auth/wallet-challenge":
-			var args sdk.AuthWalletChallengeArgs
-			if err := json.NewDecoder(r.Body).Decode(&args); err != nil || args.Blockchain != "TAO" || args.WalletAddress != member.Wallet {
-				t.Errorf("challenge does not select the provisioned coldkey: %v", err)
-				http.Error(w, "invalid challenge", http.StatusBadRequest)
-				return
-			}
-			index := challenges.Add(1)
-			message := model.FormatWalletAuthChallengeMessage(fmt.Sprintf("wallet-%d", index), 1700000000+int64(index))
-			_ = json.NewEncoder(w).Encode(sdk.AuthWalletChallengeResult{MessageTemplate: message})
-		case "/sn/wallet":
-			var args sdk.SnSetWalletArgs
-			if err := json.NewDecoder(r.Body).Decode(&args); err != nil {
-				t.Error(err)
-				http.Error(w, "invalid wallet", http.StatusBadRequest)
-				return
-			}
-			index := wallets.Add(1)
-			message := model.FormatWalletAuthChallengeMessage(fmt.Sprintf("wallet-%d", index), 1700000000+int64(index))
-			valid, err := model.VerifyBittensorSignature(member.Wallet, args.Message, args.Signature)
-			if !valid || err != nil || args.ColdkeySs58 != member.Wallet || args.Message != message || challenges.Load() != index || args.ClientId == nil || args.ClientId.String() != "00000000-0000-0000-0000-000000000001" {
-				t.Errorf("signed handoff lost its exact challenge, payout key or provider identity: valid=%t err=%v", valid, err)
-				_ = json.NewEncoder(w).Encode(sdk.SnSetWalletResult{Error: &sdk.SnSetWalletError{Message: "invalid signed wallet"}})
-				return
-			}
-			if replayValid, _ := model.VerifyBittensorSignature(member.Wallet, args.Message+"changed", args.Signature); replayValid {
-				t.Error("signature accepted changed challenge bytes")
-			}
-			_, _ = w.Write([]byte(`{}`))
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	t.Cleanup(server.Close)
-	member.APIURL = server.URL
-	for range 2 {
-		if err := setSwarmMemberWallet(context.Background(), member, swarmWalletTestSettings()); err != nil {
+	providerJwt, err := os.ReadFile(filepath.Join(member.StateDir, ".provider.jwt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := swarmMemberWalletKey(member)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := newFinancialWalletMappingHttp(t, string(providerJwt), member.Wallet, key.PublicKey())
+	member.APIURL = f.endpoint.URL
+	// A separately selected earning interval needs fresh consent; retry of the
+	// same interval is covered by the retained-original replay roots.
+	for index := range 2 {
+		from, through := int64(3+index*2), int64(4+index*2)
+		member.WalletFromEpoch, member.WalletThroughEpoch = &from, &through
+		f.stateLock.Lock()
+		f.epoch, f.fromEpoch, f.throughEpoch = from-1, from, through
+		f.stateLock.Unlock()
+		if err := setSwarmMemberWallet(ctx, member, swarmWalletTestSettings()); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if challenges.Load() != 2 || wallets.Load() != 2 {
-		t.Fatalf("requests: challenges=%d wallets=%d", challenges.Load(), wallets.Load())
+	f.stateLock.Lock()
+	defer f.stateLock.Unlock()
+	if len(f.challengeRequests) != 2 || len(f.walletBodies) != 2 || f.messages[0] == f.messages[1] {
+		t.Fatal("fresh earning windows lost their distinct challenges", len(f.challengeRequests), len(f.walletBodies))
+	}
+	for index, raw := range f.walletBodies {
+		var args sdk.SnSetWalletArgs
+		if err := json.Unmarshal(raw, &args); err != nil || args.Message != f.messages[index] {
+			t.Fatal("signed handoff lost its exact fresh challenge", index, err)
+		}
+		original, _, err := financialWalletMappingTestReceipt(ctx, &args)
+		if err != nil {
+			t.Fatal("signed handoff lost its original coldkey proof", err)
+		}
+		original.Message += "changed"
+		if _, _, err := protocol.VerifyWalletMappingConsent(ctx, original); err == nil {
+			t.Fatal("signature accepted changed challenge bytes")
+		}
 	}
 }
 
 func TestSetSwarmMemberWalletRejectsKeyMismatchBeforeHTTP(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
+	defer cancel()
 	member := validProviderSwarmConfig(t).Members[0]
 	var requests atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -94,8 +85,13 @@ func TestSetSwarmMemberWalletRejectsKeyMismatchBeforeHTTP(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 	member.APIURL = server.URL
-	member.Wallet = "different-payout-address"
-	if err := setSwarmMemberWallet(context.Background(), member, swarmWalletTestSettings()); err == nil || !strings.Contains(err.Error(), "differs") {
+	originalWallet := member.Wallet
+	otherKey, err := crv4.KeypairFromSeed([32]byte{154})
+	if err != nil {
+		t.Fatal(err)
+	}
+	member.Wallet = otherKey.Address()
+	if err := setSwarmMemberWallet(ctx, member, swarmWalletTestSettings()); err == nil || !strings.Contains(err.Error(), "derives") {
 		t.Fatalf("wallet/key mismatch was not rejected: %v", err)
 	}
 	if requests.Load() != 0 {
@@ -104,42 +100,47 @@ func TestSetSwarmMemberWalletRejectsKeyMismatchBeforeHTTP(t *testing.T) {
 	if err := os.Remove(member.WalletSeedFile); err != nil {
 		t.Fatal(err)
 	}
-	if err := setSwarmMemberWallet(context.Background(), member, swarmWalletTestSettings()); err == nil {
+	member.Wallet = originalWallet
+	if err := setSwarmMemberWallet(ctx, member, swarmWalletTestSettings()); err == nil {
 		t.Fatal("missing wallet seed was accepted")
 	}
 	if _, err := os.Lstat(member.WalletSeedFile); !os.IsNotExist(err) {
 		t.Fatalf("missing wallet was regenerated: %v", err)
 	}
+	if requests.Load() != 0 {
+		t.Fatalf("missing fresh wallet seed sent %d HTTP requests", requests.Load())
+	}
 }
 
 func TestSetSwarmMemberWalletPreservesServerRefusal(t *testing.T) {
-	for _, refusedPath := range []string{"/auth/wallet-challenge", "/sn/wallet"} {
-		t.Run(refusedPath, func(t *testing.T) {
-			member := validProviderSwarmConfig(t).Members[0]
-			var wallets atomic.Int32
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/hello" {
-					return
-				}
-				if r.URL.Path == "/sn/wallet" {
-					wallets.Add(1)
-				}
-				w.Header().Set("Content-Type", "application/json")
-				if r.URL.Path == refusedPath {
-					_, _ = w.Write([]byte(`{"error":{"message":"wallet authorization refused"}}`))
-					return
-				}
-				_ = json.NewEncoder(w).Encode(sdk.AuthWalletChallengeResult{MessageTemplate: model.FormatWalletAuthChallengeMessage("refusal-test", 1700000000)})
-			}))
-			t.Cleanup(server.Close)
-			member.APIURL = server.URL
-			if err := setSwarmMemberWallet(context.Background(), member, swarmWalletTestSettings()); err == nil || !strings.Contains(err.Error(), "wallet authorization refused") {
-				t.Fatalf("server refusal was not preserved: %v", err)
-			}
-			if refusedPath == "/auth/wallet-challenge" && wallets.Load() != 0 {
-				t.Fatal("wallet was submitted after challenge refusal")
-			}
-		})
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
+	defer cancel()
+	for _, refusedPath := range []string{"/sn/wallet/consent", "/sn/wallet"} {
+		member := validProviderSwarmConfig(t).Members[0]
+		providerJwt, err := os.ReadFile(filepath.Join(member.StateDir, ".provider.jwt"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		key, err := swarmMemberWalletKey(member)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f := newFinancialWalletMappingHttp(t, string(providerJwt), member.Wallet, key.PublicKey())
+		if refusedPath == "/sn/wallet/consent" {
+			f.challengeFault = "refused"
+		} else {
+			f.receiptFault = "refused"
+		}
+		member.APIURL = f.endpoint.URL
+		if err := setSwarmMemberWallet(ctx, member, swarmWalletTestSettings()); err == nil || !strings.Contains(err.Error(), "wallet authorization refused") {
+			t.Fatalf("%s: server refusal was not preserved: %v", refusedPath, err)
+		}
+		f.stateLock.Lock()
+		wallets := len(f.walletBodies)
+		f.stateLock.Unlock()
+		if refusedPath == "/sn/wallet/consent" && wallets != 0 || refusedPath == "/sn/wallet" && wallets != 1 {
+			t.Fatal("refused wallet handoff changed its request boundary", refusedPath, wallets)
+		}
 	}
 }
 
@@ -152,7 +153,11 @@ func TestSetSwarmMemberWalletCancellationStopsChallenge(t *testing.T) {
 		if r.URL.Path == "/hello" {
 			return
 		}
-		if r.URL.Path == "/auth/wallet-challenge" {
+		if r.URL.Path == "/sn/epoch" {
+			_ = json.NewEncoder(w).Encode(sdk.SnEpochResult{Epoch: 2})
+			return
+		}
+		if r.URL.Path == "/sn/wallet/consent" {
 			if _, err := io.Copy(io.Discard, r.Body); err != nil {
 				t.Error(err)
 				return
@@ -171,7 +176,7 @@ func TestSetSwarmMemberWalletCancellationStopsChallenge(t *testing.T) {
 	t.Cleanup(func() { close(cleanup) })
 	t.Cleanup(server.CloseClientConnections)
 	member.APIURL = server.URL
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	t.Cleanup(cancel)
 	result := make(chan error, 1)
 	go func() { result <- setSwarmMemberWallet(ctx, member, swarmWalletTestSettings()) }()
