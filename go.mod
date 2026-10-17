@@ -3,6 +3,7 @@ module github.com/urfoundation/sn
 go 1.27.2
 
 require (
+	github.com/ChainSafe/go-schnorrkel v1.1.0
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.2.2-0.20240919131012-e3b938563803
 	github.com/consensys/gnark-crypto v0.20.1
@@ -12,6 +13,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/holiman/uint256 v1.3.2
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/quic-go/quic-go v0.61.0
 	github.com/spf13/cobra v1.10.2
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
@@ -25,11 +27,11 @@ require (
 	golang.org/x/sys v0.47.0
 	golang.org/x/term v0.45.0
 	golang.org/x/time v0.15.0
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/ChainSafe/go-schnorrkel v1.1.0 // indirect
 	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251001021608-1fe7b43fc4d6 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/TwiN/go-away v1.8.0 // indirect
@@ -51,7 +53,6 @@ require (
 	github.com/decred/base58 v1.0.4 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
-	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.5 // indirect
@@ -84,7 +85,6 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20250907135507-afb5586c32a6 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.10.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jbenet/go-temp-err-catcher v0.1.0 // indirect
@@ -130,7 +130,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nyaruka/phonenumbers v1.6.5 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect
-	github.com/oklog/ulid/v2 v2.1.1 // indirect
 	github.com/oschwald/maxminddb-golang/v2 v2.4.1 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pierrec/xxHash v0.1.5 // indirect
@@ -158,13 +157,11 @@ require (
 	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/webtransport-go v0.12.0 // indirect
 	github.com/redis/go-redis/v9 v9.22.0 // indirect
 	github.com/refraction-networking/utls v1.8.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/cors v1.8.2 // indirect
 	github.com/rs/xid v1.6.0 // indirect
-	github.com/samber/lo v1.51.0 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -199,7 +196,6 @@ require (
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20241231184526-a9ab2273dd10 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -241,4 +237,4 @@ replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-sub
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261005162500-8fba422537bb
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261017031058-0e962e104c31

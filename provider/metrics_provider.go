@@ -11,6 +11,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // --- Operational counters (in-process, exposed via /metrics) ---
@@ -569,6 +571,13 @@ func providerExtraMetrics() string {
 	fmt.Fprintf(&b, "# HELP urnet_h3_proxy_set_size Running PROXIES that currently run H3, excluding the direct identity; urnet_h3_set_size is this plus the direct identity when it runs.\n")
 	fmt.Fprintf(&b, "# TYPE urnet_h3_proxy_set_size gauge\n")
 	fmt.Fprintf(&b, "urnet_h3_proxy_set_size %d\n", h3Proxies)
+
+	// --- connect stream and transport accounting ---
+	// Stream sequence kinds, lifetimes, open requests, control frames, p2p
+	// transport churn and TLS handshakes by dial path. The connect module owns
+	// these counters; the provider appends their exposition here since sn
+	// serves the whole /metrics payload from this function.
+	b.WriteString(connect.StreamMetricsPrometheus())
 
 	return b.String()
 }
