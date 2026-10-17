@@ -450,6 +450,9 @@ func TestLegacyImportNetworkMismatchFallsBackWithoutTouchingStore(t *testing.T) 
 	if !strings.Contains(fixture.recorder.text(), "network_id_mismatch") {
 		t.Fatalf("reason missing from record: %s", fixture.recorder.text())
 	}
+	if !strings.Contains(fixture.recorder.text(), entry.ClientID[:8]) {
+		t.Fatalf("fallback record must name the saved client_id: %s", fixture.recorder.text())
+	}
 	fixture.assertOriginalsUntouched()
 }
 

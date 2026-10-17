@@ -347,6 +347,11 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			entry:    entry,
 			state:    "prove",
 		}
+		// The saved client_id is the display identity even when its entry
+		// later fails validation, so the fallback warning can name it.
+		if len(entry.ClientID) >= 8 {
+			slot.clientID8 = entry.ClientID[:8]
+		}
 		if recorded, ok := journal.Slots[storeKey]; ok {
 			switch recorded.State {
 			case "imported":
