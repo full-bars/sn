@@ -23,6 +23,15 @@ var ErrWalletMappingUnavailable = errors.New("original wallet mapping authority 
 var ErrWalletMappingIntegrity = errors.New("original wallet mapping contradicts its approved identity")
 var ErrWalletMappingCapacity = errors.New("original wallet mapping exceeds its finite history profile")
 
+// Joined with ErrWalletMappingUnavailable: the roster pins no chain for this
+// owner. Earning-wallet selection may fall back from an absent provider chain.
+var ErrWalletMappingAbsent = errors.New("no wallet mapping chain is pinned for this owner")
+
+// Joined with ErrWalletMappingUnavailable: the complete pinned chain verifies
+// and no consent in it is effective at the epoch. This is the only verified
+// outcome, besides absence, from which earning-wallet selection falls back.
+var ErrWalletMappingNotEffective = errors.New("no wallet mapping consent is effective at the epoch")
+
 // The caller signs both the new association and its exact retained predecessor.
 // Acceptance expiry is distinct from the inclusive approved earning epochs.
 type WalletMappingStatement struct {
@@ -109,24 +118,8 @@ func VerifyWalletMappingConsent(ctx context.Context, original WalletMappingConse
 	if err != nil {
 		return nil, [32]byte{}, err
 	}
-	public := &schnorrkel.PublicKey{}
-	if err := public.Decode(statement.Coldkey); err != nil {
-		return nil, [32]byte{}, errors.Join(ErrWalletMappingIntegrity, err)
-	}
-	signature := &schnorrkel.Signature{}
-	if err := signature.Decode(original.Signature); err != nil {
-		return nil, [32]byte{}, errors.Join(ErrWalletMappingIntegrity, err)
-	}
-	verified := false
-	for _, message := range []string{original.Message, "<Bytes>" + original.Message + "</Bytes>"} {
-		ok, err := public.Verify(signature, schnorrkel.NewSigningContext([]byte("substrate"), []byte(message)))
-		if err == nil && ok {
-			verified = true
-			break
-		}
-	}
-	if !verified {
-		return nil, [32]byte{}, ErrWalletMappingIntegrity
+	if err := verifyWalletMappingColdkeySignature(statement.Coldkey, original); err != nil {
+		return nil, [32]byte{}, err
 	}
 	raw, err := json.Marshal(original)
 	if err != nil || len(raw) > MaxWalletMappingConsentBytes {
@@ -136,6 +129,26 @@ func VerifyWalletMappingConsent(ctx context.Context, original WalletMappingConse
 		return nil, [32]byte{}, err
 	}
 	return statement, sha256.Sum256(raw), nil
+}
+
+// The coldkey's sr25519 signature in the substrate context over the exact
+// message, raw or in the Bytes wrapper that SignRaw wallets apply.
+func verifyWalletMappingColdkeySignature(coldkey [32]byte, original WalletMappingConsent) error {
+	public := &schnorrkel.PublicKey{}
+	if err := public.Decode(coldkey); err != nil {
+		return errors.Join(ErrWalletMappingIntegrity, err)
+	}
+	signature := &schnorrkel.Signature{}
+	if err := signature.Decode(original.Signature); err != nil {
+		return errors.Join(ErrWalletMappingIntegrity, err)
+	}
+	for _, message := range []string{original.Message, "<Bytes>" + original.Message + "</Bytes>"} {
+		ok, err := public.Verify(signature, schnorrkel.NewSigningContext([]byte("substrate"), []byte(message)))
+		if err == nil && ok {
+			return nil
+		}
+	}
+	return ErrWalletMappingIntegrity
 }
 
 // The selected head is independent approved window authority. Neither a SQL
@@ -195,7 +208,7 @@ func VerifyWalletMappingHistory(ctx context.Context, originals []WalletMappingCo
 		return nil, ErrWalletMappingIntegrity
 	}
 	if selected == nil || selected.Statement.ThroughEpoch < expected.Epoch {
-		return nil, ErrWalletMappingUnavailable
+		return nil, errors.Join(ErrWalletMappingUnavailable, ErrWalletMappingNotEffective)
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
