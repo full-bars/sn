@@ -12,10 +12,37 @@ import (
 	"github.com/docopt/docopt-go"
 )
 
+// proxyAddressWithCredentials matches host:port:user:password for IPv4 and
+// hostnames. It is compiled once: parseProxyAddress runs for every proxy on
+// every reload, and compiling per call was a large share of a busy node's
+// allocations.
+var proxyAddressWithCredentials = regexp.MustCompile("^(.*:\\d*):([^:]*):([^:]*)$")
+
 // parseProxyAddress splits a proxy address into address, user, password.
+// Accepted forms: host:port, host:port:user:password, and the same two with an
+// IPv6 host in brackets ([2001:db8::1]:1080, [2001:db8::1]:1080:user:password).
+// A bare, unbracketed IPv6 address cannot be told apart from host:port, so it
+// is not supported; anything that does not match comes back whole as the address.
 func parseProxyAddress(proxyAddress string) (address string, user string, password string) {
-	r := regexp.MustCompile("^(.*:\\d*):([^:]*):([^:]*)$")
-	groups := r.FindStringSubmatch(proxyAddress)
+	if strings.HasPrefix(proxyAddress, "[") {
+		if end := strings.Index(proxyAddress, "]"); end > 0 {
+			rest := proxyAddress[end+1:]
+			if strings.HasPrefix(rest, ":") {
+				fields := strings.Split(rest[1:], ":")
+				if isDigits(fields[0]) {
+					switch len(fields) {
+					case 1:
+						return proxyAddress, "", ""
+					case 3:
+						return proxyAddress[:end+1] + ":" + fields[0], fields[1], fields[2]
+					}
+				}
+			}
+		}
+		// malformed bracketed form: keep it whole, as an unparsable line always was
+		return proxyAddress, "", ""
+	}
+	groups := proxyAddressWithCredentials.FindStringSubmatch(proxyAddress)
 	if groups != nil {
 		address = groups[1]
 		user = groups[2]
@@ -25,6 +52,17 @@ func parseProxyAddress(proxyAddress string) (address string, user string, passwo
 	// assume host:port
 	address = proxyAddress
 	return
+}
+
+// isDigits reports whether s is empty or all ASCII digits (the pattern allows
+// an empty port).
+func isDigits(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // resolveDuration returns the --flag value if set and parseable, else the
