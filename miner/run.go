@@ -93,6 +93,7 @@ Usage:
 		[--original-contract-capture=<path> --original-contract-capture-sha256=<hash>]
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
+		[--no-legacy-import]
 		[--quarantine-rejected-sign-in]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
@@ -107,6 +108,7 @@ Usage:
 		[--original-contract-capture=<path> --original-contract-capture-sha256=<hash>]
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
+		[--no-legacy-import]
     	[--port=<port>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
@@ -192,6 +194,9 @@ Options:
     --api_url=<api_url>              Specify a custom API URL to use.
 	--allow-client-registration       Explicitly permit a new durable provider client operation; never replaces retained identity.
 	--adopt-legacy-provider-key       Assert the retained legacy provider key is original; refresh only, no new client allocation.
+	--no-legacy-import               Disable the automatic import of 3.23-fix saved provider identities from
+	                                 .client_jwts.json; no legacy file is read for import and no sn state file is
+	                                 written, so startup behaves exactly as before this feature.
 	--config=<path>                    Strict release-1.0 daemon/component configuration.
 	--v1-config=<path>                 claim-daemon-v2: also run the unchanged v1 claim daemon of this configuration in
 	                                   the same process; both use one relayer key and share its nonce admission.
@@ -605,6 +610,7 @@ func provide(opts docopt.Opts) {
 
 	allowClientRegistration, _ := opts.Bool("--allow-client-registration")
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
+	noLegacyImport, _ := opts.Bool("--no-legacy-import")
 	// internal: an operator child of provide --all-operators --auto-register
 	quarantineRejectedSignIn, _ := opts.Bool("--quarantine-rejected-sign-in")
 	domainPath, _ := opts.String("--close-report-domain")
@@ -612,7 +618,7 @@ func provide(opts docopt.Opts) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, quarantineRejectedSignIn: quarantineRejectedSignIn}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, quarantineRejectedSignIn: quarantineRejectedSignIn}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -726,6 +732,23 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
 		return err
 	}
+	// Fork-only: automatically import 3.23-fix saved identities before the key
+	// gate runs. Slots whose saved identity could not be proven are allowed to
+	// register a new client below, exactly like 3.23-fix mints fresh when its
+	// own reuse fails; the original 3.23-fix files are never written.
+	stateDir := filepath.Dir(keyPath)
+	legacyImport := runLegacyProviderImport(ctx, legacyImportOptions{
+		stateDir:       stateDir,
+		networkJwtPath: filepath.Join(stateDir, "jwt"),
+		providers:      self.proxySettings,
+		disabled:       self.noLegacyImport,
+		explicitCreate: self.allowClientRegistration,
+		explicitAdopt:  self.adoptLegacyProviderKey,
+		recorder:       output,
+		newProver: func() (legacyImportProver, func(), error) {
+			return newSdkLegacyImportProver(ctx, self.apiUrl)
+		},
+	})
 	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: self.allowClientRegistration, AdoptLegacyKey: self.adoptLegacyProviderKey})
 	if err != nil {
 		if ctx.Err() == nil {
@@ -811,7 +834,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 
 		seed := keyOwner.Seed()
-		byClientJwt, clientId, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), self.allowClientRegistration, output, index)
+		// The explicit flag always allocates; the automatic import enables a
+		// new registration only for this slot's recorded fallback.
+		allowCreate := self.allowClientRegistration || legacyImport.mintAllowed(legacyImportStoreKey(proxySettings))
+		byClientJwt, clientId, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), allowCreate, output, index)
 		if err != nil {
 			if proxyCtx.Err() == nil {
 				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)

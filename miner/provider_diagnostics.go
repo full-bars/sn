@@ -5,7 +5,9 @@ package miner
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"sync/atomic"
 	"time"
 
 	"github.com/urfoundation/sn/diagnostics"
@@ -41,7 +43,19 @@ const (
 	providerNetworkTokenRenewalWait
 	providerNetworkTokenRenewalStopped
 	providerNetworkSignInQuarantined
+	providerLegacyImportCommitted
+	providerLegacyImportFallback
+	providerLegacyImportSkipped
+	providerLegacyImportSummary
 )
+
+// LegacyImport reports the fork-only automatic import of 3.23-fix saved
+// identities for this run: slots that reused a saved client_id and slots that
+// fell back to a new client identity. Scalar counters only, never an identity.
+type providerLegacyImportStatus struct {
+	Imported int `json:"imported"`
+	Fallback int `json:"fallback"`
+}
 
 // The guidance of a rejected or no longer renewable network sign-in. The
 // operator form is the one a provide --all-operators child needs.
@@ -62,11 +76,12 @@ type providerExtenderObservation struct {
 // Optional operational delivery evidence is independent of status=ok, which
 // retains its existing process-liveness meaning. Counters describe one run.
 type providerDiagnosticStatus struct {
-	Schema         string               `json:"schema"`
-	Authentication diagnostics.Snapshot `json:"authentication"`
-	Keys           diagnostics.Snapshot `json:"keys"`
-	Extender       diagnostics.Snapshot `json:"extender"`
-	Runtime        diagnostics.Snapshot `json:"runtime"`
+	Schema         string                      `json:"schema"`
+	Authentication diagnostics.Snapshot        `json:"authentication"`
+	Keys           diagnostics.Snapshot        `json:"keys"`
+	Extender       diagnostics.Snapshot        `json:"extender"`
+	Runtime        diagnostics.Snapshot        `json:"runtime"`
+	LegacyImport   *providerLegacyImportStatus `json:"legacy_import,omitempty"`
 }
 
 // Tests observe actual construction and joined closure, without replacing the
@@ -80,7 +95,12 @@ type providerDiagnosticHooks struct {
 type providerDiagnosticHooksKey struct{}
 
 // Concurrent producers share only this explicit instance's four fixed queues.
-type providerDiagnostics struct{ exporter *diagnostics.Exporter }
+type providerDiagnostics struct {
+	exporter *diagnostics.Exporter
+
+	legacyImportImportedCount atomic.Int64
+	legacyImportFallbackCount atomic.Int64
+}
 
 // Refused sinks remain visible through snapshots; no synchronous fallback is
 // attempted. The owning run must close this object on every subsequent exit.
@@ -105,7 +125,72 @@ func (self *providerDiagnostics) snapshot() *providerDiagnosticStatus {
 	if self == nil {
 		return nil
 	}
-	return &providerDiagnosticStatus{Schema: providerDiagnosticSchema, Authentication: self.exporter.Snapshot("authentication"), Keys: self.exporter.Snapshot("keys"), Extender: self.exporter.Snapshot("extender"), Runtime: self.exporter.Snapshot("runtime")}
+	return &providerDiagnosticStatus{
+		Schema:         providerDiagnosticSchema,
+		Authentication: self.exporter.Snapshot("authentication"),
+		Keys:           self.exporter.Snapshot("keys"),
+		Extender:       self.exporter.Snapshot("extender"),
+		Runtime:        self.exporter.Snapshot("runtime"),
+		LegacyImport: &providerLegacyImportStatus{
+			Imported: int(self.legacyImportImportedCount.Load()),
+			Fallback: int(self.legacyImportFallbackCount.Load()),
+		},
+	}
+}
+
+// The fork-only legacy import reports one line per slot plus one summary.
+// These records keep the fixed diagnostics schema; their added fields are
+// scalar display facts (a client id prefix, a slot name, a target filename),
+// never credentials.
+func (self *providerDiagnostics) legacyImportCommitted(clientID8, slot, target string) {
+	self.offerLegacyImport("authentication", "legacy_import_committed", clientID8, slot, "wrote "+target,
+		"The saved 3.23-fix identity was proven against the server key and imported; the original files are untouched and 3.23-fix rollback stays possible.")
+}
+
+func (self *providerDiagnostics) legacyImportFallback(clientID8, slot, reason string) {
+	self.offerLegacyImport("authentication", "legacy_import_fallback", clientID8, slot, "new client will be registered; reason="+reason,
+		"The saved 3.23-fix client_id "+clientID8+" could not be reused ("+reason+"); a new client identity is registered for this slot. The original files are untouched; --adopt-legacy-provider-key stays available as a manual override.")
+}
+
+func (self *providerDiagnostics) legacyImportSkipped(reason, detail string) {
+	self.offerLegacyImport("runtime", "legacy_import_skipped", "", "", reason+": "+detail, "")
+}
+
+func (self *providerDiagnostics) legacyImportSummary(imported, fallback, skipped int) {
+	self.legacyImportImportedCount.Store(int64(imported))
+	self.legacyImportFallbackCount.Store(int64(fallback))
+	self.offerLegacyImport("runtime", "legacy_import_summary", "", "",
+		fmt.Sprintf("imported=%d fallback=%d skipped=%d", imported, fallback, skipped),
+		"Automatic 3.23-fix identity import finished: imported slots reused their saved client_id, fallback slots register a new client identity.")
+}
+
+func (self *providerDiagnostics) offerLegacyImport(domain, code, clientID8, slot, detail, guidance string) {
+	if self == nil {
+		return
+	}
+	file := ""
+	if code == "legacy_import_committed" || code == "legacy_import_fallback" {
+		file = legacyClientJwtStoreName
+	}
+	record := struct {
+		Schema        string `json:"schema"`
+		Domain        string `json:"domain"`
+		Event         string `json:"event"`
+		Provider      uint64 `json:"provider"`
+		ProviderKnown bool   `json:"provider_known"`
+		Cause         string `json:"cause"`
+		RetryMs       uint64 `json:"retry_ms"`
+		ClientId8     string `json:"client_id8,omitempty"`
+		Slot          string `json:"slot,omitempty"`
+		Detail        string `json:"detail,omitempty"`
+		File          string `json:"file,omitempty"`
+		Guidance      string `json:"guidance,omitempty"`
+	}{Schema: providerDiagnosticSchema, Domain: domain, Event: code, Cause: "none", ClientId8: clientID8, Slot: slot, Detail: detail, File: file, Guidance: guidance}
+	raw, encodeErr := json.Marshal(record)
+	if encodeErr != nil {
+		return
+	}
+	self.exporter.Offer(domain, append(raw, '\n'))
 }
 
 // Preserve the existing wire vocabulary without invoking foreign methods.

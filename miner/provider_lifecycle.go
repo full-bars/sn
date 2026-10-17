@@ -27,6 +27,9 @@ type providerRunSettings struct {
 	testEgressDialer        *connect.DialContextSettings
 	allowClientRegistration bool
 	adoptLegacyProviderKey  bool
+	// fork-only: automatic import of 3.23-fix saved identities is on by
+	// default; --no-legacy-import disables it entirely
+	noLegacyImport bool
 	// an operator child of provide --all-operators --auto-register: a network
 	// sign-in the renewal call rejects is set aside and the child exits
 	quarantineRejectedSignIn bool
