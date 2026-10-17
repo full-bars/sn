@@ -111,7 +111,7 @@ jobs:
           GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
         run: |
           for attempt in 1 2 3; do
-            echo "Build attempt $attempt..."; go build -ldflags "-X main.Version=shakedown-mint" -o /tmp/provider ./provider/ && break
+            echo "Build attempt $attempt..."; go build -ldflags "-X main.Version=shakedown-mint" -o /tmp/provider ./cmd/provider/ && break
             if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10; else echo "Build failed after 3 attempts"; exit 1; fi
           done
           mkdir -p /tmp/mint
