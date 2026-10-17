@@ -117,8 +117,8 @@ github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMo
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
-github.com/full-bars/connect v0.0.0-20261017031058-0e962e104c31 h1:78lfajGSzcmOu7NBuC6ONKnMKAESruVxn70X1f0HKEs=
-github.com/full-bars/connect v0.0.0-20261017031058-0e962e104c31/go.mod h1:QFBu38vuEEbHqDBo668682lHk0w1G1qD0F1TVSjUaM4=
+github.com/full-bars/connect v0.0.0-20261017075543-c8d8cdf536a8 h1:WT5r+O/oT33yN7lch8Rgzo/ZKBiBU6PrE+vYOnGVsWs=
+github.com/full-bars/connect v0.0.0-20261017075543-c8d8cdf536a8/go.mod h1:ijBmhQcFTkLp9/fbXTfDBZg1bjfjoT7T9SqSCbmwsQ0=
 github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7zvxg=
 github.com/gagliardetto/binary v0.8.0/go.mod h1:2tfj51g5o9dnvsc+fL3Jxr22MuWzYXwx9wEoN0XQ7/c=
 github.com/gagliardetto/solana-go v1.21.0 h1:ZswwwDOFuD/7Hk/k3b6dyLetmvEJuyLmQU7xIziCZgo=
@@ -506,6 +506,8 @@ github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 h1:epCh84lMvA70
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
 github.com/test-go/testify v1.1.4 h1:Tf9lntrKUMHiXQ07qBScBTSA0dhYQlu83hswqelv1iE=
 github.com/test-go/testify v1.1.4/go.mod h1:rH7cfJo/47vWGdi4GPj16x3/t1xGOj2YxzmNQzk2ghU=
+github.com/theodorsm/covert-dtls v1.5.1 h1:qTp59YIwGpY4eDJbR237R1MAahWLZNryDNknFRGR0FU=
+github.com/theodorsm/covert-dtls v1.5.1/go.mod h1:MTb9IO4aqSxrcrh569UGO4PlC1Yel37M440z+gcm13E=
 github.com/thrawn01/args v0.3.0/go.mod h1:TnRiOFjyh7Wa6oC8ACFPc7KIvbzCiluphA3mJUiPIEo=
 github.com/tinylib/msgp v1.6.4 h1:mOwYbyYDLPj35mkA2BjjYejgJk9BuHxDdvRnb6v2ZcQ=
 github.com/tinylib/msgp v1.6.4/go.mod h1:RSp0LW9oSxFut3KzESt5Voq4GVWyS+PSulT77roAqEA=
@@ -525,8 +527,8 @@ github.com/urnetwork/goidenticons v0.0.0-20260925081816-06eb779a691e h1:lmhDN5RJ
 github.com/urnetwork/goidenticons v0.0.0-20260925081816-06eb779a691e/go.mod h1:O/Q9lMhKp+Z4BvqRh9eQouMU9ImbTUNieOZF5npKR0o=
 github.com/urnetwork/proxy v0.0.0-20260923144941-024b212f8a6f h1:DfwxLj+fluhygWAe48P/WGXN+YoMwW+faj/zPltiJIw=
 github.com/urnetwork/proxy v0.0.0-20260923144941-024b212f8a6f/go.mod h1:8X15xUXLyX4LnQwm80hwjGIdkO27ix1mO8jId8bcCJE=
-github.com/urnetwork/sdk v0.0.0-20261005062140-1ca8b35a43cf h1:YsNWlqu6vjSNfmEaGP0wBE6j71oQi8N1T90qMuvMIzU=
-github.com/urnetwork/sdk v0.0.0-20261005062140-1ca8b35a43cf/go.mod h1:P3s1L18oLey1/unxNOE0e9dsQBjLkGAOuQ6zGZzyN2Y=
+github.com/urnetwork/sdk v0.0.0-20261006082636-701fa391e160 h1:yxO0NwgiqoCEQAOL2UdIUUTnt6Hf8UFdzNF1b7pLhoQ=
+github.com/urnetwork/sdk v0.0.0-20261006082636-701fa391e160/go.mod h1:P3s1L18oLey1/unxNOE0e9dsQBjLkGAOuQ6zGZzyN2Y=
 github.com/urnetwork/server v0.0.0-20261005092907-b2541a0fef99 h1:rT0z9tYumhZqOjCeWeyeDiYL4B3vKuzMlTiBOC1yqCI=
 github.com/urnetwork/server v0.0.0-20261005092907-b2541a0fef99/go.mod h1:twXRL+x00a8QkNa3/142FiNebNBJiGAkwPSZCsne264=
 github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f h1:mFWJM5UHu+mi0zlhkBbzmzfSba5/7Jg617msw57LA5c=
