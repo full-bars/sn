@@ -157,20 +157,29 @@ func upsertBSDConfLines(conf string, writes [][]string) (string, error) {
 		}
 		want := renderBSDConfLine(key, value)
 
-		// Replace an existing assignment to this key, wherever it lives.
+		// Replace every existing assignment to this key, keeping the first. The loop
+		// used to stop at the first match, so a /etc/sysctl.conf that already sets
+		// the key twice kept its later line untouched — and /etc/rc.d/sysctl applies
+		// lines in file order, so the stale value won at boot while the command
+		// still printed "persisted". Rewrite the first occurrence and drop the rest.
 		replaced := false
+		var dropIdx []int
 		for i, l := range lines {
 			trimmed := strings.TrimSpace(l)
 			if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 				continue
 			}
 			if k, _, ok := strings.Cut(trimmed, "="); ok && strings.TrimSpace(k) == key {
+				if replaced {
+					dropIdx = append(dropIdx, i) // a later duplicate: remove it so it cannot win at boot
+					continue
+				}
 				lines[i] = want
 				replaced = true
-				break
 			}
 		}
 		if replaced {
+			lines = dropLinesAt(lines, dropIdx)
 			continue
 		}
 
@@ -197,6 +206,29 @@ func upsertBSDConfLines(conf string, writes [][]string) (string, error) {
 		}
 	}
 	return strings.Join(lines, "\n"), nil
+}
+
+// dropLinesAt returns lines with the given indexes removed, preserving order.
+// Used to remove duplicate key assignments that were neutralised, without
+// touching unrelated blank lines the file already had — dropping every empty
+// line instead would strip a trailing newline the renderer relies on and break
+// idempotence.
+func dropLinesAt(lines []string, drop []int) []string {
+	if len(drop) == 0 {
+		return lines
+	}
+	gone := make(map[int]bool, len(drop))
+	for _, i := range drop {
+		gone[i] = true
+	}
+	out := make([]string, 0, len(lines)-len(drop))
+	for i, l := range lines {
+		if gone[i] {
+			continue
+		}
+		out = append(out, l)
+	}
+	return out
 }
 
 // indexOfLine returns the index of the first line equal to want, or -1.

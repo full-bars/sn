@@ -8,6 +8,7 @@ package urnettools
 // another platform is a second chance to get it subtly wrong.
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -59,12 +60,21 @@ func stateDirInsideHome(home, dir string) bool {
 }
 
 // evalExistingPrefix resolves symlinks in the longest existing ancestor of p
-// and re-appends the not-yet-existing remainder.
+// and re-appends the not-yet-existing remainder. A component that exists but
+// is a DANGLING symlink resolves to nothing, so the loop would walk past it and
+// accept the unresolved path as inside ownerHome; a target that later appears
+// outside the home would then be followed on read. Distinguish a genuinely
+// missing component (fine to descend) from an existing unresolved link (refuse).
 func evalExistingPrefix(p string) string {
 	rest := ""
 	for cur := p; ; {
 		if real, err := filepath.EvalSymlinks(cur); err == nil {
 			return filepath.Join(real, rest)
+		}
+		if fi, lerr := os.Lstat(cur); lerr == nil && fi.Mode()&os.ModeSymlink != 0 {
+			// The component exists as a symlink that does not resolve: its
+			// target is absent now and may appear anywhere later.
+			return "" //nolint:nilnil // caller treats "" as "cannot prove containment"
 		}
 		parent := filepath.Dir(cur)
 		if parent == cur {
