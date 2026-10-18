@@ -365,7 +365,7 @@ func startNetworkTokenRenewal(ctx context.Context, apiUrl string, proxySettings 
 	strategySettings.DialContextSettings = dialer
 	strategy := connect.NewClientStrategy(renewalCtx, strategySettings)
 	api := sdk.NewApi(renewalCtx, strategy, apiUrl)
-	renewer := newNetworkTokenRenewer(networkJwtPath, api.NetworkRefreshSyncWithContextAndJwt, output)
+	renewer := newNetworkTokenRenewer(networkJwtPath, renewNetworkTokenThroughAuthLimiter(api), output)
 	renewer.quarantineRejected = quarantineRejected
 	renewer.onQuarantined = onQuarantined
 	if hooks, ok := ctx.Value(networkTokenRenewalHooksKey{}).(networkTokenRenewalHooks); ok && hooks.afterStart != nil {

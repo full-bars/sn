@@ -931,12 +931,39 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 
 		seed := keyOwner.Seed()
+		// Fork hook: the v33 auth admission gate (proxy_manager_admission_gate.go)
+		// orders this identity's wait for a shared auth slot, weighted by its
+		// LIFETIME failure count (v33 main.go's admitFailureCount), so a
+		// chronically dead address cannot re-enter the lottery at full
+		// "untried" priority every time the URL requeue brings it back. The
+		// gate waits on the shared auth rate limiter itself, and its release
+		// func holds the in-flight concurrency slot for exactly as long as
+		// the attempt runs.
+		admitFailureCount := 0
+		if proxySettings != nil {
+			admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Key())
+		}
+		release, admitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
+		if admitErr != nil {
+			// A cancelled wait never reached the API, so it is not evidence
+			// about the API's rate and must not be reported to the limiter
+			// (v33 returns waitErr down the same path).
+			if proxyCtx.Err() == nil {
+				output.observe(providerAuthenticationRecoveryEvent(admitErr), index, true, admitErr, 0, nil)
+			}
+			return admitErr
+		}
 		byClientJwt, clientId, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), self.allowClientRegistration, output, index)
+		release()
 		if err != nil {
 			// Fork hook: the ported v33 give-up/backoff accounting
 			// (proxy_manager_auth.go) records this identity's failed
 			// authentication, and gives up on it once it reaches the ceiling.
 			noteProviderAuthFailure(proxySettings, err)
+			// Fork hook: the shared limiter learns from the completed
+			// attempt (v33 main.go reports after the failure accounting, so
+			// a first-ever success is already "proven" when it lands).
+			reportProviderAuthResult(proxySettings, err)
 			if proxyCtx.Err() == nil {
 				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
 			}
@@ -945,6 +972,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// Fork hook: a completed authentication proves the identity and clears
 		// its failure/give-up history.
 		noteProviderAuthSuccess(proxySettings)
+		reportProviderAuthResult(proxySettings, nil)
 
 		// Each authenticated slot owns its optional wallet set. A fresh or
 		// proxy provider never borrows the direct provider's credential.
