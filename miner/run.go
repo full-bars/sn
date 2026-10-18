@@ -179,6 +179,7 @@ Usage:
     provider proxy remove [<key_address>...] [--all]
     provider proxy remove --match=<pattern> [--yes] [--preview]
     provider proxy add-source <url>
+    provider proxy paste [--file=<file>]
     provider proxy remove-source <url>
     provider proxy refresh [--force]
     provider proxy trim <count> [--preview]
@@ -394,6 +395,8 @@ func Run(args []string) {
 			}
 		} else if addSource, _ := opts.Bool("add-source"); addSource {
 			proxyAddSource(opts)
+		} else if paste, _ := opts.Bool("paste"); paste {
+			proxyPaste(opts)
 		} else if removeSource, _ := opts.Bool("remove-source"); removeSource {
 			proxyRemoveSource(opts)
 		} else if exclude, _ := opts.Bool("exclude"); exclude {
@@ -1388,24 +1391,19 @@ func proxyAuthRemove(opts docopt.Opts) {
 }
 
 func proxyAdd(opts docopt.Opts) {
+	// File-backed providers (Workflow A: proxy.state.Source set by
+	// --proxy_file, C-10) re-read that file on every reload, so additions must
+	// land in THAT file; a write to the internal config is discarded by the
+	// next reload. The paste hand-off (`proxy add --proxy_file=<tmp> -f`)
+	// relies on this routing.
+	if state, err := readProxyState(); err == nil && state.Source != "" {
+		proxyAddFileBacked(state.Source, opts)
+		return
+	}
+
 	proxyConfig := readProxyConfig()
 
-	allKeyAddress := []string{}
-	if allKeyAddressAny, ok := opts["<key_address>"]; ok {
-		allKeyAddress = append(allKeyAddress, allKeyAddressAny.([]string)...)
-	}
-	if proxyPath, _ := opts.String("--proxy_file"); proxyPath != "" {
-		b, err := os.ReadFile(proxyPath)
-		if err != nil {
-			panic(err)
-		}
-		for _, line := range strings.Split(string(b), "\n") {
-			line = strings.TrimSpace(line)
-			if line != "" && line[0] != '#' {
-				allKeyAddress = append(allKeyAddress, line)
-			}
-		}
-	}
+	allKeyAddress := proxyAddCollectAddresses(opts)
 
 	if proxyConfig.Servers == nil {
 		proxyConfig.Servers = map[string]string{}
