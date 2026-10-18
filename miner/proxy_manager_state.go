@@ -226,15 +226,17 @@ func resolveProxyID(state *ProxyState, address string) int {
 // ("file", "internal", or "url"). Once set, the tag is never overwritten -
 // an address keeps its original provenance across reloads and restarts, so
 // source-scoped dead-proxy cleanup stays accurate even if the same address
-// later also appears in a different source. (v33 additionally registers the
-// source with the recovery scout; the scout is P1(c), so the port records the
-// tag only.)
+// later also appears in a different source. v33 additionally registers the
+// source with the recovery scout (proxy_scout.go), which ranks scouts by
+// provenance.
 func tagProxySourceIfUnset(state *ProxyState, address, source string) {
 	entry := state.Proxies[address]
 	if entry.Source == "" {
 		entry.Source = source
 	}
 	state.Proxies[address] = entry
+	// recovery scouts are ranked partly by provenance (see proxy_manager_scout.go)
+	registerScoutSource(address, entry.Source)
 }
 
 // proxyIDCounter is the global monotonic proxy ID counter.

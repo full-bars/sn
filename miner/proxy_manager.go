@@ -372,6 +372,11 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// current.
 	proxyWarmupDone.Store(true)
 
+	// Recovery scouts: install the provider's ranking (v33 main.go provide()).
+	// The connect-side install is a seam until the pinned connect exports the
+	// hook (proxy_manager_scout.go).
+	installScoutScorer()
+
 	// Command audit ring: v33 main() runs initAuditRing + recordProcessStart at
 	// process start and forceAuditPersist at shutdown. The control socket that
 	// records commands is P2; the lifecycle entry and the persistence are wired
