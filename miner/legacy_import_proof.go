@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -242,6 +243,14 @@ func legacyImportProveSlot(ctx context.Context, prover legacyImportProver, publi
 			return outcome
 		}
 		lastErr = refreshErr
+		if errors.Is(refreshErr, context.Canceled) {
+			// The phase was stopped while this call was in flight (budget,
+			// short circuit, or the run's own context). A canceled call is no
+			// verdict about the identity: defer it, never fall back, so a
+			// stopped phase cannot mint over an unproven identity.
+			outcome.unreachable = true
+			return outcome
+		}
 		if !legacyImportProofRetryable(refreshErr) {
 			outcome.state = "fallback"
 			outcome.reason = "refresh_rejected"
