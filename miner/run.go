@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -679,6 +678,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if len(providers) == 0 {
 		providers = []*connect.ProxySettings{nil}
 	}
+	slotIdentities := newProviderSlotIdentities(providers)
 	workProfile, err := ReadProviderWorkCaptureProfile(ctx, self.workCapturePath, self.workCaptureSha256, self.requireWorkCapture)
 	if err != nil {
 		output.observe(providerWorkCaptureRequired, 0, false, err, 0, nil)
@@ -696,7 +696,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if workProfile != nil || contractProfile != nil {
 		slots := make([]string, 0, len(providers))
 		for _, proxy := range providers {
-			slots = append(slots, providerRegistrationSlot(proxy))
+			slots = append(slots, providerRegistrationSlot(slotIdentities, proxy))
 		}
 		if err := workProfile.validateRole(self.apiUrl, slots, self.closeReportDomainHash); err != nil {
 			output.observe(providerWorkCaptureRequired, 0, false, err, 0, nil)
@@ -714,7 +714,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	progressMembers := make([]providerProgressConfigMember, 0, len(providers))
 	for _, proxy := range providers {
-		progressMembers = append(progressMembers, providerProgressConfigMember{Slot: providerRegistrationSlot(proxy), ApiUrl: self.apiUrl, ConnectUrl: self.connectUrl})
+		progressMembers = append(progressMembers, providerProgressConfigMember{Slot: providerRegistrationSlot(slotIdentities, proxy), ApiUrl: self.apiUrl, ConnectUrl: self.connectUrl})
 	}
 	progress, err := newProviderProgressOwner("standalone", progressMembers)
 	if err != nil {
@@ -828,7 +828,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if err != nil {
 			panic(err)
 		}
-		clientJwtPath, err := providerClientJwtPath(proxySettings)
+		clientJwtPath, err := providerClientJwtPath(slotIdentities, proxySettings)
 		if err != nil {
 			panic(err)
 		}
@@ -837,7 +837,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// The explicit flag always allocates; the automatic import enables a
 		// new registration only for this slot's recorded fallback.
 		allowCreate := self.allowClientRegistration || legacyImport.mintAllowed(legacyImportStoreKey(proxySettings))
-		byClientJwt, clientId, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), allowCreate, output, index)
+		byClientJwt, clientId, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
 		if err != nil {
 			if proxyCtx.Err() == nil {
 				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
@@ -907,7 +907,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			fmt.Sprintf("provider %s %s", runtime.GOOS, RequireVersion()),
 			settings,
 			workProfile,
-			providerRegistrationSlot(proxySettings),
+			providerRegistrationSlot(slotIdentities, proxySettings),
 			clientId,
 			contractProfile,
 		)
@@ -924,11 +924,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// Always-on public mode includes network and friends/family service,
 		// matching the SDK's hierarchical provide contract.
 		device.SetProvideControlMode(sdk.ProvideControlModeAlways)
-		progressGeneration, err := progress.attach(proxyCtx, providerRegistrationSlot(proxySettings), device)
+		progressGeneration, err := progress.attach(proxyCtx, providerRegistrationSlot(slotIdentities, proxySettings), device)
 		if err != nil {
 			return err
 		}
-		defer progress.retire(providerRegistrationSlot(proxySettings), progressGeneration)
+		defer progress.retire(providerRegistrationSlot(slotIdentities, proxySettings), progressGeneration)
 
 		keyMaterial := device.GetKeyMaterial()
 		if !bytes.Equal(keyMaterial.GetClientKeySeed(), seed) {
@@ -1043,13 +1043,15 @@ func providerStatePath(name string) (string, error) {
 // providerClientJwtPath gives each independently connected proxy provider a
 // stable renewable client identity without placing proxy credentials in a
 // filename. The direct (non-proxy) provider keeps the simple legacy-adjacent
-// name.
-func providerClientJwtPath(proxySettings *connect.ProxySettings) (string, error) {
+// name. An address configured more than once hashes the full 3.23-fix
+// identity (address + user), so two usernames at one host:port get distinct
+// files, never one credential holding either identity; an address configured
+// once keeps its historical name byte-identical.
+func providerClientJwtPath(identities providerSlotIdentities, proxySettings *connect.ProxySettings) (string, error) {
 	if proxySettings == nil {
 		return providerStatePath(".provider.jwt")
 	}
-	key := proxySettings.Network + "\x00" + proxySettings.Address
-	sum := sha256.Sum256([]byte(key))
+	sum := identities.hash(proxySettings)
 	return providerStatePath(fmt.Sprintf(".provider-%x.jwt", sum[:8]))
 }
 

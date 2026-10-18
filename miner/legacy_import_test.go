@@ -162,6 +162,20 @@ type legacyImportFixture struct {
 
 func newLegacyImportFixture(t *testing.T, withAuth bool, proxies int) *legacyImportFixture {
 	t.Helper()
+	settings := make([]*connect.ProxySettings, 0, proxies)
+	for index := 0; index < proxies; index++ {
+		address := fmt.Sprintf("127.0.0.1:%d", 18471+index)
+		entry := &connect.ProxySettings{Network: "tcp", Address: address}
+		if withAuth {
+			entry.Auth = &proxy.Auth{User: fmt.Sprintf("fakeuser%d", index+1), Password: "fakepass"}
+		}
+		settings = append(settings, entry)
+	}
+	return newLegacyImportFixtureWithSettings(t, settings)
+}
+
+func newLegacyImportFixtureWithSettings(t *testing.T, settings []*connect.ProxySettings) *legacyImportFixture {
+	t.Helper()
 	fixture := &legacyImportFixture{
 		t:              t,
 		dir:            t.TempDir(),
@@ -195,12 +209,7 @@ func newLegacyImportFixture(t *testing.T, withAuth bool, proxies int) *legacyImp
 		MintedAt:    time.Now(),
 	}
 	fixture.prover.serviceKey[fixture.directClientID] = fixture.public
-	for index := 0; index < proxies; index++ {
-		address := fmt.Sprintf("127.0.0.1:%d", 18471+index)
-		settings := &connect.ProxySettings{Network: "tcp", Address: address}
-		if withAuth {
-			settings.Auth = &proxy.Auth{User: fmt.Sprintf("fakeuser%d", index+1), Password: "fakepass"}
-		}
+	for _, settings := range settings {
 		key := settings.Key()
 		clientID := connect.NewId().String()
 		deviceID := connect.NewId().String()
@@ -256,7 +265,7 @@ func (self *legacyImportFixture) assertOriginalsUntouched() {
 }
 
 func (self *legacyImportFixture) target(settings *connect.ProxySettings) string {
-	return legacyImportTargetPath(self.dir, settings)
+	return legacyImportTargetPath(self.dir, newProviderSlotIdentities(self.proxySettings), settings)
 }
 
 func (self *legacyImportFixture) run(hooks legacyImportHooks) legacyImportResult {
@@ -428,7 +437,7 @@ func TestLegacyImportUnconfiguredSlotsStayUntouched(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(fixture.dir, ".provider.jwt")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("direct entry of an unconfigured slot was imported")
 	}
-	unconfigured := legacyImportTargetPath(fixture.dir, unconfiguredSettings)
+	unconfigured := legacyImportTargetPath(fixture.dir, newProviderSlotIdentities(fixture.proxySettings), unconfiguredSettings)
 	if _, err := os.Stat(unconfigured); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("unconfigured proxy slot was imported")
 	}
@@ -753,20 +762,29 @@ func TestLegacyImportDisabledAndExplicitFlagsDoNothing(t *testing.T) {
 func TestLegacyImportMappingMatchesRunPaths(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("URNETWORK_STATE_DIR", stateDir)
-	direct := legacyImportTargetPath(stateDir, nil)
-	wantDirect, err := providerClientJwtPath(nil)
+	direct := legacyImportTargetPath(stateDir, providerSlotIdentities{}, nil)
+	wantDirect, err := providerClientJwtPath(providerSlotIdentities{}, nil)
 	if err != nil || direct != wantDirect {
 		t.Fatalf("direct path %q != run path %q (%v)", direct, wantDirect, err)
 	}
-	for _, settings := range []*connect.ProxySettings{
+	providers := []*connect.ProxySettings{
 		{Network: "tcp", Address: "127.0.0.1:18471"},
 		{Network: "tcp", Address: "127.0.0.1:18472", Auth: &proxy.Auth{User: "fakeuser1"}},
-	} {
-		got := legacyImportTargetPath(stateDir, settings)
-		want, err := providerClientJwtPath(settings)
+		{Network: "tcp", Address: "127.0.0.1:18473", Auth: &proxy.Auth{User: "acct-short"}},
+		{Network: "tcp", Address: "127.0.0.1:18473", Auth: &proxy.Auth{User: "acct-long"}},
+	}
+	identities := newProviderSlotIdentities(providers)
+	seen := map[string]bool{}
+	for _, settings := range providers {
+		got := legacyImportTargetPath(stateDir, identities, settings)
+		want, err := providerClientJwtPath(identities, settings)
 		if err != nil || got != want {
 			t.Fatalf("path %q != run path %q (%v)", got, want, err)
 		}
+		if seen[got] {
+			t.Fatalf("two 3.23-fix identities share %q", got)
+		}
+		seen[got] = true
 		if legacyImportStoreKey(settings) != settings.Key() {
 			t.Fatal("store key must be the connect proxy key")
 		}

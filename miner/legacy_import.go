@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -228,21 +227,22 @@ func legacyImportStoreKey(settings *connect.ProxySettings) string {
 }
 
 // legacyImportSlotHash is the sn slot hash of a configured proxy: the same
-// sha256(Network + "\x00" + Address) miner/run.go hashes for the per-slot
-// credential filename.
-func legacyImportSlotHash(settings *connect.ProxySettings) [32]byte {
-	return sha256.Sum256([]byte(settings.Network + "\x00" + settings.Address))
+// hash providerClientJwtPath (miner/run.go) resolves through the shared
+// providerSlotIdentities rule, so an address carrying two 3.23-fix identities
+// maps to two credential files here too.
+func legacyImportSlotHash(identities providerSlotIdentities, settings *connect.ProxySettings) [32]byte {
+	return identities.hash(settings)
 }
 
 // legacyImportTargetPath is the sn per-slot credential path for a configured
 // slot: the same name providerClientJwtPath (miner/run.go) resolves in the
 // state directory, kept next to this logic so it is testable without the
 // process-wide state dir resolution.
-func legacyImportTargetPath(stateDir string, settings *connect.ProxySettings) string {
+func legacyImportTargetPath(stateDir string, identities providerSlotIdentities, settings *connect.ProxySettings) string {
 	if settings == nil {
 		return filepath.Join(stateDir, ".provider.jwt")
 	}
-	sum := legacyImportSlotHash(settings)
+	sum := legacyImportSlotHash(identities, settings)
 	return filepath.Join(stateDir, fmt.Sprintf(".provider-%x.jwt", sum[:8]))
 }
 
@@ -364,10 +364,11 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	if len(providers) == 0 {
 		providers = []*connect.ProxySettings{nil}
 	}
+	identities := newProviderSlotIdentities(providers)
 	var slots []*legacyImportSlot
 	for _, settings := range providers {
 		storeKey := legacyImportStoreKey(settings)
-		target := legacyImportTargetPath(opts.stateDir, settings)
+		target := legacyImportTargetPath(opts.stateDir, identities, settings)
 		if _, err := os.Stat(target); err == nil {
 			continue
 		}
