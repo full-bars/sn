@@ -61,6 +61,46 @@ func initGlog() {
 	flag.Set("logtostderr", "true")
 	flag.Set("stderrthreshold", "INFO")
 	flag.Set("v", "0")
+
+	// v33 ramlogs: the lowmem/eco profiles and URNETWORK_RAMLOGS=1 redirect
+	// the long-running provide process's stdout/stderr into the /dev/shm
+	// ramlog (shmlog_linux.go, PM-05). Auto-detection handover is handled in
+	// the startup audit path. One-shot CLI subcommands print directly to the
+	// terminal instead: the redirect is process-wide, so applying it to e.g.
+	// `proxy summary` would leave the caller with no output at all.
+	profile := effectiveProfile()
+	ramlogs := os.Getenv("URNETWORK_RAMLOGS") == "1"
+	if (profileWantsRamlogs(profile) || ramlogs) && isLongRunningSubcommand() {
+		fmt.Fprintf(os.Stderr, "[ramlogs] Logs redirected to RAM — view with: urnet-tools logs\n")
+		initSHMLogger()
+	}
+}
+
+// isLongRunningSubcommand reports whether os.Args invokes the long-running
+// provide (or auth-provide) command, as opposed to a one-shot CLI subcommand
+// like `proxy remove-dead` or `proxy summary`. Used to decide whether
+// stdout/stderr should be redirected into the ramlog: doing so for one-shot
+// commands left them producing no visible output to the caller at all, since
+// the redirect is process-wide, not scoped to `provide`.
+//
+// -h/--help/--version are excluded even on `provide`/`auth-provide`: this
+// runs from init(), before docopt.ParseArgs gets a chance to handle those
+// flags and exit, so a terminating invocation like `provide --help` would
+// otherwise have its usage/version text redirected into the ramlog too.
+func isLongRunningSubcommand() bool {
+	if len(os.Args) < 2 {
+		return false
+	}
+	if os.Args[1] != "provide" && os.Args[1] != "auth-provide" {
+		return false
+	}
+	for _, arg := range os.Args[2:] {
+		switch arg {
+		case "-h", "--help", "--version":
+			return false
+		}
+	}
+	return true
 }
 
 // mainUsage returns the docopt usage string. Package-level (rather than

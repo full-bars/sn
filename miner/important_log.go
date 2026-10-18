@@ -1,0 +1,90 @@
+package miner
+
+import "strings"
+
+// importantLogMarkers select the high-value, low-volume lines mirrored into the
+// separate small /dev/shm "important" buffer so the earnings/health signal
+// survives for hours even when the main ramlog floods. Deliberately excludes
+// high-volume lines (per-proxy reload enumeration, per-attempt auth failures,
+// `give-up` cycles, `[net][s]select`); only the rare terminal `Permanently
+// removed` eviction line is kept from the proxy-init path.
+var importantLogMarkers = []string{
+	"[profit]",
+	"[earn]",
+	// The process-wide STUN health aggregate (the "📡 [stun]" line, at most
+	// once a minute) is the only success signal for STUN and the only record of
+	// the ok/fail balance — keep it in the important buffer. The emoji is part
+	// of the marker so a bare "[stun]" elsewhere does not ride into the buffer.
+	"📡 [stun]",
+	"[health]",
+	"[outage]",
+	"[pace]",
+	"client_id",
+	"instance_id",
+	"Permanently removed",
+	"[proxy][authrate]",
+	// The reconnect governor's once-a-minute verdict (shadow mode: observing
+	// only) is the record of how the platform transport behaved through a
+	// backend episode: attempts per second, classes, bytes per attempt, and
+	// what a shared budget would have held. Low volume, high value.
+	"[govern]",
+	// Probe-grade lines are low-volume and high-value: the per-cycle grade
+	// breakdown, what got admitted by tier, cap evictions, and reaper grade
+	// refreshes happen at most a few times a day and are the only record of
+	// how the quality gate behaved. Keep them in the important buffer so
+	// they survive hours of main-log flooding. Markers carry the exact
+	// "[proxy][url] " prefix so unrelated lines cannot match.
+	"[proxy][url] probe grade breakdown",
+	"[proxy][url] admitted by tier",
+	"[proxy][url] cap eviction",
+	// The per-cycle headline (what a URL fetch did to the pool) and the launch
+	// line (URL proxies actually starting) are rare and high-value.
+	"[proxy][url] cycle:",
+	"[proxy][url] source ",
+	"[proxy][url] launching",
+	"[proxy][url] reaper: refreshed grade",
+	// Grade summary + per-address delta lines (design 2026-08-09): the
+	// running-tier snapshot, per-source breakdown, changes-vs-last-round,
+	// score stats, and tier-change deltas are low-volume and high-value —
+	// keep them in the important buffer + disk events.log. The countdown
+	// line ("next fetch probe ...") deliberately matches NO marker, so it
+	// stays in the regular ramlog only.
+	"[proxy][grade] running:",
+	"[proxy][grade] sources:",
+	"[proxy][grade] changes",
+	"[proxy][grade] scores:",
+	"[proxy][grade] delta",
+	// Sibling paid-grader + table-probe lines from #344/#343 also belong
+	// in the important buffer — same low-volume/high-value class. They
+	// were added to the [proxy][grade] namespace by this PR, so curate
+	// them here.
+	"[proxy][grade] paid",
+	"[proxy][grade] graded",
+	// The read-only direct-path grade needs its OWN marker: every marker above
+	// carries the "[proxy][grade] " prefix while this line continues with
+	// "direct: ", so none of them match a real grade line — nor the "(ungraded)"
+	// state, which contains the word but not the prefixed marker.
+	"[proxy][grade] direct:",
+	// Capacity-control decisions (trim commands and results, the OOM-aware start
+	// cap and its kill switch, startup limit warnings, low memory headroom):
+	// rare and high-value, and the only record of why a box ran fewer proxies or
+	// got short of memory. Exact substrings (matched with Contains) chosen so the trim
+	// write-failure warning and other per-cycle lines do not match; a new marker
+	// must be checked against those lines.
+	"[proxy][trim] received",
+	"[proxy][trim] applied",
+	"[proxy][trim] startup",
+	"[oomcap]",
+	"[proxy][resources]",
+}
+
+// isImportantLogLine reports whether a single log line should be mirrored to the
+// important buffer.
+func isImportantLogLine(line string) bool {
+	for _, m := range importantLogMarkers {
+		if strings.Contains(line, m) {
+			return true
+		}
+	}
+	return false
+}
