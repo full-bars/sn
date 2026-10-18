@@ -511,6 +511,12 @@ func (self *Owner) checkTemporaryCensus(allowReconcile bool) (resultErr error) {
 				// marker as evidence and refuse rather than clear anything.
 				return errors.Join(ErrUncertain, errors.New("pending snapshot temporary is missing"))
 			}
+			if self.readOnly {
+				// A passive reader leaves transient metadata alone. The marker
+				// names no member, so it cannot affect the committed head, and a
+				// read-only open must not unlink or fsync anything.
+				continue
+			}
 			// It names no member, so clearing it is safe in either mode.
 			if err := unix.Unlinkat(int(self.directory.File().Fd()), marker, 0); err != nil {
 				return errors.Join(ErrUncertain, observation(err, false))

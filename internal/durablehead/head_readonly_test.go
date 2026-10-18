@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/urfoundation/sn/internal/durablepath"
@@ -197,5 +198,36 @@ func TestSnapshotHeadReadOnlyRetainsObservedLeafLoss(t *testing.T) {
 	}
 	if _, _, err := owner.Read(); !errors.Is(err, durablevolume.ErrIdentity) {
 		t.Fatalf("read-only holder revived its invalidated generation: %v", err)
+	}
+}
+
+// A passive reader must not unlink transient head metadata: a stale marker
+// names no member, and a read-only open that removed it would fail outright on
+// a read-only filesystem where its own unlink cannot succeed.
+func TestSnapshotHeadReadOnlyOwnerIgnoresAStaleMarker(t *testing.T) {
+	self := newFixture(t)
+	if err := self.owner.Publish([]byte("committed"), nil); err != nil {
+		t.Fatal(err)
+	}
+	stale := filepath.Join(self.root, self.owner.prefix()+"create-"+strings.Repeat("34", 16))
+	if err := self.close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(stale, nil, 0600); err != nil {
+		t.Fatal(err)
+	}
+	self.volume.Host.SetReserve(0, 0)
+	self.volume.Host.SetReadOnly(true)
+	directory, lock := openReadFixture(t, self)
+	owner, err := OpenReadOnly(self.volume.Context, directory, lock, testSpec)
+	if err != nil {
+		t.Fatalf("read-only inspection with a stale marker: %v", err)
+	}
+	defer owner.Close()
+	if value := readOwnerValue(t, owner); value != "committed" {
+		t.Fatalf("value = %q", value)
+	}
+	if _, err := os.Stat(stale); err != nil {
+		t.Fatalf("read-only open removed the stale marker: %v", err)
 	}
 }
