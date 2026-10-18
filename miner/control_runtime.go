@@ -210,6 +210,39 @@ func (s *controlRuntimeState) lastStartedVersionSnapshot() string {
 	return s.lastStartedVersion
 }
 
+// bandwidthSnapshot returns the run's per-index byte counters, nil before the
+// provide loop publishes a registry.
+func (s *controlRuntimeState) bandwidthSnapshot() map[int]*bandwidth.ProxyBandwidth {
+	s.mu.Lock()
+	registry := s.registry
+	s.mu.Unlock()
+	if registry == nil {
+		return nil
+	}
+	return registry.Snapshot()
+}
+
+// trafficTotals reads the registry's per-direction byte sums and the live
+// client count. The second result is false when this run has no registry yet,
+// so /metrics can omit the counters instead of exporting a fabricated zero.
+func (s *controlRuntimeState) trafficTotals() (billableRx, billableTx, totalRx, totalTx uint64, clients int64, ok bool) {
+	snapshot := s.bandwidthSnapshot()
+	if snapshot == nil {
+		return 0, 0, 0, 0, 0, false
+	}
+	for _, bw := range snapshot {
+		if bw == nil {
+			continue
+		}
+		billableRx += bw.BillableRx.Load()
+		billableTx += bw.BillableTx.Load()
+		totalRx += bw.TotalRx.Load()
+		totalTx += bw.TotalTx.Load()
+		clients += bw.Clients.Load()
+	}
+	return billableRx, billableTx, totalRx, totalTx, clients, true
+}
+
 // counterTotals reads the run's cumulative billable and total byte counts, and
 // the number of live clients, from the bandwidth registry. The second result
 // is false when this run has no registry yet (for example a snapshot taken

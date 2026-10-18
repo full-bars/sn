@@ -519,20 +519,8 @@ func validH3ControlValue(value string) bool {
 	return false
 }
 
-// validateMetricsListen accepts auto, off, or an address:port with a port.
-func validateMetricsListen(value string) error {
-	if strings.EqualFold(value, "auto") || strings.EqualFold(value, "off") {
-		return nil
-	}
-	host, port, err := net.SplitHostPort(strings.TrimSpace(value))
-	if err != nil || host == "" || port == "" {
-		return fmt.Errorf("metrics_listen: must be auto or an IP address with a port, like 100.64.0.10:9100 or 0.0.0.0:9100 (got %q)", value)
-	}
-	if n, err := strconv.Atoi(port); err != nil || n <= 0 || n > 65535 {
-		return fmt.Errorf("metrics_listen: must be auto or an IP address with a port, like 100.64.0.10:9100 or 0.0.0.0:9100 (got %q)", value)
-	}
-	return nil
-}
+// validateMetricsListen accepts auto, off, or an IP literal with a port; it
+// lives in metrics_listen.go (the v33 implementation).
 
 // peerAllowed is the peer admission rule shared by the platform peercred
 // files: the provider's own UID, or root.
@@ -944,13 +932,6 @@ func applyControlMetricsLive(value string) error {
 		return fmt.Errorf("the miner does not implement the v3.23 Prometheus /metrics exporter yet; the setting is persisted and will apply when the exporter lands")
 	}
 	// off: nothing to stop. (A future exporter stops here.)
-	return nil
-}
-
-// metricsServedAddrs returns the /metrics listen addresses. The miner has no
-// exporter yet, so this is always empty and `urnet-tools metrics` reports
-// metrics off with an explanatory path.
-func metricsServedAddrs() []string {
 	return nil
 }
 
