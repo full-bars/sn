@@ -299,6 +299,16 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 		if adopted > 0 {
 			tlog("[proxy][identity] adopted %d legacy proxy.state entries (%d shared-address splits)\n", adopted, split)
 		}
+		// Earnings history (v33 main startup): load the persisted store and
+		// migrate any legacy bare-address entries onto the identity keys the
+		// desired set claims, so the launch ranking, the scout and the audit
+		// see real earnings across a restart.
+		if loadErr := globalProxyEarningsStore.Load(); loadErr != nil {
+			tlog("[proxy][earn] warn: could not load proxy earnings history: %v\n", loadErr)
+		}
+		if adoptedEarn, splitEarn := globalProxyEarningsStore.adoptLegacy(all); adoptedEarn > 0 {
+			tlog("[proxy][identity] adopted %d legacy earnings entries (%d shared-address splits)\n", adoptedEarn, splitEarn)
+		}
 		state.NextID = currentProxyIDCounter()
 		if len(state.Proxies) != before || adopted > 0 {
 			writeState = true
