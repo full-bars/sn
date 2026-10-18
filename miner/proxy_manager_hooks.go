@@ -39,10 +39,17 @@ var liveProxyHealthByKey = proxyLiveHealthSnapshot
 // outage detector is P2.
 var degradedReaperFrozen = func() bool { return false }
 
-// proxyResolution statuses for the miner status surface (P2 consumes these).
+// Proxy resolution statuses for the miner status surface and the direct-only
+// H3 default (P2 consumes these). The values are the 3.23-fix v33 provider's
+// (provider/systemd_status.go): the zero value is "no resolution attempted
+// yet", which is what keeps the direct-only H3 default off during startup.
 const (
-	proxyResolutionOK int32 = iota
-	proxyResolutionFailed
+	proxyResolutionPending   int32 = 0 // no resolution attempted yet
+	proxyResolutionFailed    int32 = 1 // attempted, source unreachable
+	proxyResolutionEmpty     int32 = 2 // a proxy source was configured but yielded zero usable proxies
+	proxyResolutionOK        int32 = 3 // resolved with at least one proxy
+	proxyResolutionZeroValid int32 = 4 // no proxy source configured; direct-only is a valid zero config
+	proxyResolutionNoSource  int32 = 5 // no proxy source configured and the direct transport is off: nothing is served
 )
 
 var (
@@ -50,12 +57,26 @@ var (
 	proxyResolutionReason atomic.Value // string
 )
 
-// setProxyResolutionStatus records the last URL-source resolution outcome. The
-// v33 provider feeds its systemd status line from this; the miner port keeps
-// the state for the P2 status surface and for the ported tests.
+// currentProxyResolution exposes the settled proxy-resolution state to the
+// transport default logic (direct-only H3 opt-in) and the status surface.
+func currentProxyResolution() int32 {
+	return proxyResolutionStatus.Load()
+}
+
+// setProxyResolutionStatus records the last resolution outcome.
+//
+// Direct-only H3 defaults depend on this status becoming ZeroValid, so the
+// re-apply belongs here — the one choke point every path goes through — and
+// fires only on transitions into or out of it. Without the guard it would
+// re-run on every settled reload (the periodic reload loop), spamming the log
+// with "applied h3=on" once a minute forever.
 func setProxyResolutionStatus(status int32, reason string) {
+	prev := proxyResolutionStatus.Load()
 	proxyResolutionStatus.Store(status)
 	proxyResolutionReason.Store(reason)
+	if (status == proxyResolutionZeroValid) != (prev == proxyResolutionZeroValid) {
+		applyDirectOnlyH3Defaults()
+	}
 }
 
 // getProxyResolutionReason returns the last recorded resolution reason.

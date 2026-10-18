@@ -927,6 +927,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// the tier default, and after the memory plan so the operator precedence
 	// in applyTurboMemoryLimit/applyEcoSettings/ensureMemoryLimit holds.
 	applyProfileProcessTuning(self.maxMemory)
+	// Apply the resolved h3 setting once, before any provider builds its
+	// transport, so a later live change compares against the mode the running
+	// identities were actually built with (the v33 startup replay). The proxy
+	// resolution is still Pending here; a settled direct-only node picks its
+	// default up on the first settle (see h3_direct_default.go).
+	replayH3ModeAtStartup(controlState)
 	initControlAuditRing()
 	// A HotSwap successor labels its start entry "hotswap". A Docker in-place
 	// execve successor is not a spawned candidate (no IPC descriptor) but the

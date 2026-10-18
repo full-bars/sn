@@ -318,6 +318,9 @@ var controlLiveEffectKeys = map[string]bool{
 	"gogc":                        true,
 	"smart_dialer":                true,
 	"h1_plus":                     true,
+	"h3":                          true,
+	"h3_datagram":                 true,
+	"h3_datagram_send":            true,
 	"metrics":                     true,
 	"metrics_listen":              true,
 	"proxy_self_heal":             true,
@@ -333,18 +336,15 @@ var controlLiveEffectKeys = map[string]bool{
 // consumer at all yet; applyLiveSideEffect logs the gap explicitly so an
 // operator never believes a value took effect when nothing reads it.
 var controlUnsupportedKeys = map[string]bool{
-	"node_name":        true,
-	"report_url":       true,
-	"report_interval":  true,
-	"fast_auth":        true,
-	"baseline":         true,
-	"h3":               true,
-	"h3_datagram":      true,
-	"h3_datagram_send": true,
-	"ip_version":       true,
-	"oom_cap":          true,
-	"profile":          true,
-	"ramlogs":          true,
+	"node_name":       true,
+	"report_url":      true,
+	"report_interval": true,
+	"fast_auth":       true,
+	"baseline":        true,
+	"ip_version":      true,
+	"oom_cap":         true,
+	"profile":         true,
+	"ramlogs":         true,
 }
 
 // controlNeedsRestart returns true if setting this key requires a provider
@@ -377,6 +377,12 @@ var controlLiveDefaults = map[string]string{
 	// Clearing audit reapplies the runtime default (off = observe mode),
 	// releasing the live override so the persisted value rules.
 	"proxy_audit": "off",
+	// Clearing h3_datagram / h3_datagram_send restores the upstream
+	// default: offering and sending QUIC DATAGRAM is on. Nothing is
+	// toggled either way (see applyControlLiveSideEffect); the clear is
+	// reported through the same explicit always-on line as a set.
+	"h3_datagram":      "on",
+	"h3_datagram_send": "on",
 }
 
 // applyControlLiveDefault reapplies the runtime default for a live-applied
@@ -388,6 +394,11 @@ func applyControlLiveDefault(key string) error {
 	case "proxy_url_max", "proxy_url_refresh", "proxy_dead_cleanup_scope", "proxy_dead_cleanup_interval", "proxy_self_heal":
 		globalProxyControlState.clear(key)
 		return nil
+	case "h3":
+		// Clearing the key hands the decision back to URNETWORK_H3 and the
+		// direct-only default (h3DefaultModeName), which is what a restart
+		// would use, so the live state matches the persisted one.
+		return applyControlLiveSideEffect(key, h3DefaultModeName())
 	}
 	def, ok := controlLiveDefaults[key]
 	if !ok {
@@ -990,10 +1001,33 @@ func applyControlLiveSideEffect(key, value string) error {
 			was = "on"
 		}
 		tlog("⚙️ [control] applied smart_dialer=%s (was %s)\n", value, was)
+	case "h3":
+		// The mode (see h3Mode) is read when an identity builds its transport.
+		// A change relaunches the identities whose policy moved: the direct
+		// identity when its own policy changed, and the proxies whose
+		// eligibility changed (a few at a time, see relaunchH3ProxiesNow).
+		setting, err := parseH3Mode(value)
+		if err != nil {
+			return err
+		}
+		previous, relaunch := applyH3Mode(setting)
+		tlog("[control] applied h3=%s (was %s)\n", setting, previous)
+		if relaunch {
+			go restartDirectIdentity()
+		}
+		if previous != setting {
+			relaunchH3ProxiesNow(setting)
+		}
+	case "h3_datagram", "h3_datagram_send":
+		// The h3 port is limit-only: the pinned upstream connect offers and
+		// sends QUIC DATAGRAM by default and carries no runtime toggle, so
+		// there is nothing here to switch. The key is accepted and says so
+		// explicitly instead of claiming an effect it cannot have.
+		importantLogf("[control] %s=%s accepted; QUIC datagrams stay on at the upstream always-on default in this build\n", key, value)
 	case "h1_plus":
 		enabled := strings.EqualFold(value, "on")
 		connect.SetH1PlusDisabled(!enabled)
-		tlog("⚙️ [control] applied h1_plus=%s (takes effect on the next connect)\n", onOffLabel(enabled))
+		tlog("⚙️ [control] applied h1_plus=%s (upstream default on; takes effect on the next connect)\n", onOffLabel(enabled))
 	case "metrics":
 		return applyMetricsLive(value)
 	case "metrics_listen":
