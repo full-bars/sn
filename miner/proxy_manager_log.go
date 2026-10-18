@@ -20,9 +20,9 @@ import (
 // cycle says it, and one launch line says when URL proxies actually start.
 //
 // The fork-only port keeps the v33 formats verbatim so operators and log
-// greps see the same lines. tlog/importantLogf are the miner's stand-ins for
-// v33's ramlog and important-log writers; P2 routes them into the miner's
-// diagnostics output.
+// greps see the same lines. tlog is the miner's stand-in for v33's ramlog
+// writer; importantLogf (important_logf.go) mirrors a line to both that sink
+// and the disk events.log through critLog, exactly as v33's does.
 
 // proxyManagerLogWriter is where ported proxy pipeline lines go. Variable so
 // tests can capture them; P2 can point it at the diagnostics output.
@@ -30,13 +30,6 @@ var proxyManagerLogWriter io.Writer = os.Stderr
 
 // tlog writes a detail line of the proxy pipeline.
 func tlog(format string, args ...any) {
-	fmt.Fprintf(proxyManagerLogWriter, format, args...)
-}
-
-// importantLogf writes a line the operator should see even when scrolling.
-// v33 keeps these in an important buffer; the port writes them to the same
-// sink until P2 wires the diagnostics output.
-func importantLogf(format string, args ...any) {
 	fmt.Fprintf(proxyManagerLogWriter, format, args...)
 }
 

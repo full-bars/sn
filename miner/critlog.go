@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -27,6 +28,10 @@ const critLogMaxSize = 1 * 1024 * 1024
 // worst drop a diagnostic line).
 var critLogMu sync.Mutex
 
+// critLogInCriticalSection, when set by a test, runs inside the locked section
+// so the test can assert the lock is held there without depending on timing.
+var critLogInCriticalSection func()
+
 func critLogPath() (string, error) {
 	dir, err := providerStateDir()
 	if err != nil {
@@ -38,6 +43,9 @@ func critLogPath() (string, error) {
 func critLog(format string, args ...any) {
 	critLogMu.Lock()
 	defer critLogMu.Unlock()
+	if critLogInCriticalSection != nil {
+		critLogInCriticalSection()
+	}
 	p, err := critLogPath()
 	if err != nil {
 		return
@@ -111,4 +119,12 @@ func rotateCritLog(path string) {
 	defer f.Close()
 	f.Write(b[start:])
 	f.Sync()
+}
+
+func critLogPanic(r any, stack []byte) {
+	critLog("PANIC: %v\n%s", r, string(stack))
+
+	buf := make([]byte, 64*1024)
+	n := runtime.Stack(buf, true)
+	critLog("GOROUTINE DUMP:\n%s", string(buf[:n]))
 }

@@ -300,3 +300,46 @@ func TestReadTrimTargetStillReportsUnreadableFile(t *testing.T) {
 		t.Fatal("readTrimTarget must still report an unreadable file to its direct callers")
 	}
 }
+
+// The unparseable-cap warning is written to the ramlog immediately, but its
+// events.log copy is queued: readTrimTarget can run under the proxy manager's
+// lock, and the startup path drains the queue after start() returns.
+func TestTrimGarbageWarningIsQueuedForEventsLog(t *testing.T) {
+	drainDeferredCrit()
+	t.Cleanup(func() { drainDeferredCrit() })
+	trimGarbageReset()
+	t.Cleanup(trimGarbageReset)
+
+	stateDir := withTempHome(t)
+
+	if err := os.WriteFile(filepath.Join(stateDir, "proxy_trim"), []byte("five hundred"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if n, err := readTrimTarget(); err != nil || n != 0 {
+		t.Fatalf("garbage must read as no cap, got %d,%v", n, err)
+	}
+	queued := drainDeferredCrit()
+	if len(queued) != 1 || !strings.Contains(queued[0], "not a proxy count") {
+		t.Fatalf("the warning must be queued for events.log, got %q", queued)
+	}
+
+	// A repeat sighting stays off the queue: that value already warned.
+	if _, err := readTrimTarget(); err != nil {
+		t.Fatal(err)
+	}
+	if queued := drainDeferredCrit(); len(queued) != 0 {
+		t.Fatalf("a repeat sighting must not requeue, got %q", queued)
+	}
+
+	// The startup drain writes whatever is queued to events.log, which the
+	// miner keeps in its state dir (the temp dir withTempHome pinned above).
+	deferCritWrite("[proxy][trim] test queued line")
+	writeDeferredCrit()
+	b, err := os.ReadFile(filepath.Join(stateDir, "events.log"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), "test queued line") {
+		t.Fatalf("writeDeferredCrit must write events.log, got %q", string(b))
+	}
+}

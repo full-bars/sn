@@ -56,26 +56,7 @@ func init() {
 	// initPprof()
 }
 
-func initGlog() {
-	flag.Set("logtostderr", "true")
-	flag.Set("stderrthreshold", "INFO")
-	flag.Set("v", "0")
-
-	// v33 ramlogs: the lowmem/eco profiles and URNETWORK_RAMLOGS=1 redirect
-	// the long-running provide process's stdout/stderr into the /dev/shm
-	// ramlog (shmlog_linux.go, PM-05). Auto-detection handover is handled in
-	// the startup audit path. One-shot CLI subcommands print directly to the
-	// terminal instead: the redirect is process-wide, so applying it to e.g.
-	// `proxy summary` would leave the caller with no output at all.
-	profile := effectiveProfile()
-	ramlogs := os.Getenv("URNETWORK_RAMLOGS") == "1"
-	if (profileWantsRamlogs(profile) || ramlogs) && isLongRunningSubcommand() {
-		fmt.Fprintf(os.Stderr, "[ramlogs] Logs redirected to RAM — view with: urnet-tools logs\n")
-		initSHMLogger()
-	}
-}
-
-// isLongRunningSubcommand reports whether os.Args invokes the long-running
+// isLongRunningSubcommand reports whether args invoke the long-running
 // provide (or auth-provide) command, as opposed to a one-shot CLI subcommand
 // like `proxy remove-dead` or `proxy summary`. Used to decide whether
 // stdout/stderr should be redirected into the ramlog: doing so for one-shot
@@ -86,20 +67,57 @@ func initGlog() {
 // runs from init(), before docopt.ParseArgs gets a chance to handle those
 // flags and exit, so a terminating invocation like `provide --help` would
 // otherwise have its usage/version text redirected into the ramlog too.
-func isLongRunningSubcommand() bool {
-	if len(os.Args) < 2 {
+func isLongRunningSubcommand(args []string) bool {
+	if len(args) < 2 {
 		return false
 	}
-	if os.Args[1] != "provide" && os.Args[1] != "auth-provide" {
+	if args[1] != "provide" && args[1] != "auth-provide" {
 		return false
 	}
-	for _, arg := range os.Args[2:] {
+	for _, arg := range args[2:] {
 		switch arg {
 		case "-h", "--help", "--version":
 			return false
 		}
 	}
 	return true
+}
+
+// ramlogsRequested reports whether the environment selects the /dev/shm
+// ramlog: URNETWORK_RAMLOGS=1 asks for it directly, and the lowmem and eco
+// profiles carry it. The v33 provider reads the same two variables with the
+// same meaning (provider/main.go initGlog).
+func ramlogsRequested() bool {
+	profile := os.Getenv("URNETWORK_PROFILE")
+	return profile == "lowmem" || profile == "eco" || os.Getenv("URNETWORK_RAMLOGS") == "1"
+}
+
+// ramlogRedirectRequested is the whole initGlog decision: the ramlog is
+// selected (profile or env) AND this invocation is the long-running provider.
+// Everything else keeps the default routing on stderr — the terminal, docker
+// logs or the journal — where the select lines ([net][s]select), the proxy
+// pipeline and the rest of the glog/tlog output are read. A one-shot
+// subcommand keeps the terminal even with URNETWORK_RAMLOGS=1: the redirect
+// is process-wide, so redirecting `proxy summary` would leave it silent to
+// its caller.
+func ramlogRedirectRequested(args []string) bool {
+	return ramlogsRequested() && isLongRunningSubcommand(args)
+}
+
+func initGlog() {
+	flag.Set("logtostderr", "true")
+	flag.Set("stderrthreshold", "INFO")
+	flag.Set("v", "0")
+
+	// The default routing is stderr, and it stays that way for every
+	// invocation that does not ask for the ramlog. Only the long-running
+	// provide (or auth-provide) invocation redirects stdout/stderr into
+	// /dev/shm/urnetwork.log, and only when the profile or URNETWORK_RAMLOGS
+	// selects it (v33 provider/main.go initGlog).
+	if ramlogRedirectRequested(os.Args) {
+		fmt.Fprintf(os.Stderr, "[ramlogs] Logs redirected to RAM — view with: urnet-tools logs\n")
+		initSHMLogger()
+	}
 }
 
 // mainUsage returns the docopt usage string. Package-level (rather than
@@ -753,6 +771,10 @@ func provide(opts docopt.Opts) {
 		os.Exit(1)
 	}
 	defer proxyManager.stop()
+	// Startup holds no reload lock, so any critical-log line the cap lookup
+	// queued (an unparseable proxy_trim) is written straight away here rather
+	// than waiting for a reload that may be hours away.
+	writeDeferredCrit()
 	providerCount := len(allProxySettings)
 	if providerCount == 0 {
 		providerCount = 1
@@ -832,7 +854,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if hooks.afterCreate != nil {
 		hooks.afterCreate(output)
 	}
-	ctx, cancel := context.WithCancel(parent)
+	ctx, rawCancel := context.WithCancel(parent)
+	// Record what first cancelled the run for the SIGNAL line in events.log:
+	// whichever caller cancels first (signal handler goroutine, control-socket
+	// shutdown, quarantine, or a failed worker) leaves its stack, the same
+	// first-canceller record the v33 provider keeps in provideSetupSignals.
+	cancelSource := &runCancelSource{}
+	cancel := func() {
+		cancelSource.record()
+		rawCancel()
+	}
 	defer cancel()
 	// The control surface's run state: start time, the previous run's marker
 	// (restart reason and version), and a clean-exit marker for the next
@@ -842,6 +873,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	defer func() {
 		if returnErr == nil {
 			finishControlRun("clean")
+			// events.log keeps the clean shutdown across a reboot that wipes
+			// /dev/shm; the line matches the v33 provide teardown.
+			critLog("PROVIDER EXIT: normal shutdown (code=0)")
 		}
 	}()
 	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
@@ -1037,6 +1071,20 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	bwRegistry := bandwidth.NewRegistry()
 	// The control socket's snapshot and traffic replies read these counters.
 	controlRuntime.setBandwidthRegistry(bwRegistry)
+
+	// events.log records the start of this run - version, pid, host - once
+	// its identity is staged and before any provider child starts, the same
+	// line the v33 provider writes from provideSetupMemory.
+	providerStartupCritLog()
+
+	// events.log records the shutdown cause too: the first canceller's stack,
+	// or v33's parent-cancellation text when the startup signal handler
+	// cancelled the parent context before this run's own cancellers ran.
+	go func() {
+		<-ctx.Done()
+		tlog("[provider] shutting down: main context cancelled\n")
+		critLog("SIGNAL: context cancelled — draining goroutines\nsource:\n%s", cancelSource.text())
+	}()
 
 	provideWithProxy := func(index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
 		defer func() {

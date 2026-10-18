@@ -286,9 +286,7 @@ func shmLogFatal(code int, format string, args ...any) {
 		f.Close()
 	}
 	os.Stderr.Write([]byte(msg))
-	// v33 also mirrors this into its critical-log file (critLog); the miner
-	// has no critlog writer yet (P2 remainder), so the ramlog and stderr are
-	// the whole record.
+	critLog("FATAL exit=%d: %s", code, fmt.Sprintf(format, args...))
 	os.Exit(code)
 }
 
