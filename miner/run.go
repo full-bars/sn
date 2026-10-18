@@ -134,6 +134,9 @@ Usage:
         [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--operators-url=<url>]
         [-v...]
     provider wallet hotkey status [--hotkey_seed_file=<path>] [--operators-url=<url>] [-v...]
+    provider sn-status [--json]
+        [--api_url=<api_url>]
+        [-v...]
     provider claim [--provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
         [--api_url=<api_url>]
         [-v...]
@@ -418,6 +421,8 @@ func Run(args []string) {
 		} else if challenge, _ := opts.Bool("challenge"); challenge {
 			walletChallenge(opts)
 		}
+	} else if snStatus, _ := opts.Bool("sn-status"); snStatus {
+		snStatusCmd(opts)
 	} else if claim_, _ := opts.Bool("claim"); claim_ {
 		claim(opts)
 	} else if claimDaemon, _ := opts.Bool("claim-daemon"); claimDaemon {
