@@ -372,6 +372,13 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// current.
 	proxyWarmupDone.Store(true)
 
+	// Command audit ring: v33 main() runs initAuditRing + recordProcessStart at
+	// process start and forceAuditPersist at shutdown. The control socket that
+	// records commands is P2; the lifecycle entry and the persistence are wired
+	// here so `urnet-tools history` has the process record (proxy_manager_audit_ring.go).
+	initAuditRing()
+	recordProcessStart(false, false)
+
 	ctx, cancel := context.WithCancel(parent)
 	m.cancel = cancel
 	m.started = true
@@ -423,8 +430,27 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 		defer m.wg.Done()
 		runProxyGradeSummary(ctx)
 	}()
+	// Proxy audit (v33 proxy_audit_run.go): parks proven-junk paid/file proxies
+	// when the audit switch is on AND hot restart is on, and only logs
+	// would-park otherwise (the miner's hot restart is P2, so it observes). 5
+	// minute cadence, like v33.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runProxyAudit(ctx, proxyAuditParkCancelMap, &proxyAuditParkCancelMu, proxyAuditStartupEnabled())
+	}()
 	return launch, held, nil
 }
+
+// proxyAuditParkCancelMap is the per-address cancel map proxy audit parks
+// through. v33 builds it in its provide loop (proxyCancelMap/proxyCancelMu);
+// the miner's provide loop does not register per-proxy cancels yet (the hot
+// reload reconciler is P2), so the map stays empty and a park finds nothing to
+// cancel until P2 fills it. The audit still evaluates grades and reports.
+var (
+	proxyAuditParkCancelMap = map[string]context.CancelFunc{}
+	proxyAuditParkCancelMu  sync.Mutex
+)
 
 // stop cancels the loops and waits for them.
 func (m *proxyManager) stop() {
@@ -436,6 +462,8 @@ func (m *proxyManager) stop() {
 		cancel()
 	}
 	m.wg.Wait()
+	// Flush the command audit ring (v33 main()'s shutdown persist).
+	forceAuditPersist()
 }
 
 // mirrorLegacyProxyConfig rewrites <state>/proxy (the miner's legacy internal
