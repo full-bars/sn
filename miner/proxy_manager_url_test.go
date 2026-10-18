@@ -39,6 +39,12 @@ func withTempHome(t *testing.T) string {
 	resetProxyHealthReportStateForTest()
 	resetGlobalControlStateForTest()
 	t.Cleanup(resetGlobalControlStateForTest)
+	// The earnings store is process-wide and its path is fixed at package
+	// init; point it at this test's state dir and start empty, so a manager
+	// start cannot read (or migrate) a real developer state file.
+	prevEarningsStore := globalProxyEarningsStore
+	globalProxyEarningsStore = newProxyEarningsStore(proxyEarningsPath())
+	t.Cleanup(func() { globalProxyEarningsStore = prevEarningsStore })
 	lastReloadTriggerTime.Lock()
 	lastReloadTriggerTime.ts = time.Time{}
 	lastReloadTriggerTime.pending = false

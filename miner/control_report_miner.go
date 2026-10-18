@@ -295,12 +295,11 @@ func buildMinerTrimPreview(count int) (string, error) {
 		// slots were never launched), fall back to the live health keys.
 		running = proxyLiveHealthKeys()
 	}
-	// Per-key traffic ranking is not available: the bandwidth registry is
-	// keyed by address hash, not by proxy identity. The ranking still uses
-	// health and grades; the note reaches the operator through the provider
-	// log.
-	traffic := map[string]uint64{}
-	return trimPreviewText(state, urlState, running, traffic, count), nil
+	// The shed ranking protects what a proxy has EARNED: this run's billable
+	// bytes per identity (the counters the provide loop publishes) with the
+	// decayed earnings score behind them, so an idle proxy is shed before a
+	// revenue stream (v33 runningProxyEarnings).
+	return trimPreviewText(state, urlState, running, runningProxyEarnings(), count), nil
 }
 
 // buildMinerAuditStatus reports the proxy audit engine, which the miner does

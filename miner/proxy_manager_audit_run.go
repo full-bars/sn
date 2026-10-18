@@ -10,11 +10,12 @@ package miner
 //
 //   - the LIVE health registry is the fork-local one (proxyLiveHealthSnapshot,
 //     proxy_manager_health_registry.go);
-//   - the per-proxy client count and the earn tracker are seams
-//     (proxyAuditClients, proxyEarnedRecentlyFor, proxyEarningsScoreFor): the
-//     miner has no live per-proxy bandwidth counters yet, so clients reports
-//     "unknown" and the audit vetoes a park it cannot measure, exactly as v33
-//     treats a registry miss;
+//   - the per-proxy client count is a seam (proxyAuditClients): the miner has
+//     no live per-proxy client counter yet, so clients reports "unknown" and
+//     the audit vetoes a park it cannot measure, exactly as v33 treats a
+//     registry miss. The earnings score and the recency signal are the real
+//     store (proxy_manager_earnings_store.go) and tracker
+//     (proxy_manager_earn_tracker.go);
 //   - hotRestartEnabled is a seam: the miner's hot restart and its reload
 //     reconciler are P2, so until they land parking would cancel a proxy with
 //     no path back and the audit stays in observe mode;
@@ -494,7 +495,9 @@ func newLiveProxyAuditor(cancelMap map[string]context.CancelFunc, cancelMu *sync
 		earningsScore: func(addr string, now time.Time) float64 {
 			return proxyEarningsScoreFor(addr, now)
 		},
-		earnedRecently:  proxyEarnedRecentlyFor,
+		earnedRecently: func(addr string) bool {
+			return globalPerProxyEarnTracker.EarnedSince(addr, paidEarnWindow)
+		},
 		trackerWarm:     func() bool { return proxyAuditTrackerWarm(start, time.Now()) },
 		act:             func() bool { return proxyAuditActEnabled(startupProxyAudit) },
 		notActingReason: func() string { return proxyAuditNotActingReason(startupProxyAudit) },

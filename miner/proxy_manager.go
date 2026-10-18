@@ -376,6 +376,16 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 		if adopted > 0 {
 			tlog("[proxy][identity] adopted %d legacy proxy.state entries (%d shared-address splits)\n", adopted, split)
 		}
+		// Earnings history (v33 main startup): load the persisted store and
+		// migrate any legacy bare-address entries onto the identity keys the
+		// desired set claims, so the launch ranking, the scout and the audit
+		// see real earnings across a restart.
+		if loadErr := globalProxyEarningsStore.Load(); loadErr != nil {
+			tlog("[proxy][earn] warn: could not load proxy earnings history: %v\n", loadErr)
+		}
+		if adoptedEarn, splitEarn := globalProxyEarningsStore.adoptLegacy(all); adoptedEarn > 0 {
+			tlog("[proxy][identity] adopted %d legacy earnings entries (%d shared-address splits)\n", adoptedEarn, splitEarn)
+		}
 		state.NextID = currentProxyIDCounter()
 		if len(state.Proxies) != before || adopted > 0 {
 			writeState = true
@@ -394,7 +404,12 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	if trimCap > 0 && len(all) > trimCap {
 		urlStateForGrades, _ := readProxyURLState()
 		gradeFor := buildTrimGradeResolver(state, urlStateForGrades)
-		launch, held = startupTrimSelection(all, trimCap, state.Proxies, gradeFor, func(string) float64 { return 0 })
+		// Earnings protect a proven earner from being held at startup: the
+		// decayed store score puts a proxy that earned before this process
+		// started ahead of an idle one with the same health and grade (v33
+		// startupTrimSelection).
+		earningsFor := func(key string) float64 { return proxyEarningsScore(key, time.Now()) }
+		launch, held = startupTrimSelection(all, trimCap, state.Proxies, gradeFor, earningsFor)
 		importantLogf("[proxy][trim] startup: cap=%d, launching %d of %d desired, holding %d worst-graded until the cap is raised\n",
 			trimCap, len(launch), len(all), len(held))
 		primeTrimCapSeen(trimCap, trimCapOperator)
@@ -514,6 +529,15 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 		defer m.wg.Done()
 		runURLProxyReaper(ctx, m.cfg.ApiHost, m.cfg.ApiPort)
 	}()
+	// Paid/file-list proxy grading (v33 proxy_grade_paid.go): rides the
+	// reaper ticker cadence and grades non-URL proxies read-only on the
+	// paid stale sweep, so proxy.state carries the Score/Graded fields the
+	// trim, audit and summary read.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runPaidProxyGrader(ctx, m.cfg.ApiHost, m.cfg.ApiPort)
+	}()
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
@@ -532,6 +556,16 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	go func() {
 		defer m.wg.Done()
 		runProxyHealthLog(ctx, proxyHealthLogInterval)
+	}()
+	// Earnings recording loop (v33 runEarningWindows, recording half): folds
+	// the live per-identity billable counters into the per-proxy earn tracker
+	// (the paid grader's earn-skip and the audit's park decision) and the
+	// persisted earnings store (the launch ranking, the trim tiebreak and the
+	// scout) once a minute.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runProxyEarningsRecorder(ctx)
 	}()
 	// Direct-path egress grade (v33 proxy_direct_grade.go): read-only, persisted
 	// to its own direct_grade.json, gated on the operator's direct toggle
