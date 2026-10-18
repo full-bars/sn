@@ -578,6 +578,14 @@ func resolveProxyAuditEnabled(startupEnabled bool) bool {
 	if v, ok := globalProxyControlState.get("proxy_audit"); ok {
 		return strings.EqualFold(v, "on") || v == "1" || strings.EqualFold(v, "true")
 	}
+	// Then the persisted control state the socket writes (provider_state.json,
+	// loaded at startup). v33 resolves the switch from this state, so an
+	// `audit on` survives the restart that drops the live override and the
+	// in-process map; without this read the miner fell through to the marker
+	// file and the startup default and the persisted value was forgotten.
+	if v, ok := globalControlState.get("proxy_audit"); ok {
+		return strings.EqualFold(v, "on") || v == "1" || strings.EqualFold(v, "true")
+	}
 	path, err := proxyAuditOverridePath()
 	if err == nil {
 		if data, err := os.ReadFile(path); err == nil {
