@@ -30,6 +30,10 @@ func swarmWalletTestSettings() *connect.ClientStrategySettings {
 func TestSetSwarmMemberWalletSignsFreshChallengeForExistingProvider(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	defer cancel()
+	// The two windows below are deliberately narrow so the test can observe
+	// that a *different* interval needs its own consent; the default refusal of
+	// such intervals is covered by TestSnWalletMappingIntervalRefusesOddIntervals.
+	t.Setenv("URNETWORK_WALLET_ALLOW_ODD_INTERVAL", "1")
 	member := validProviderSwarmConfig(t).Members[0]
 	providerJwt, err := os.ReadFile(filepath.Join(member.StateDir, ".provider.jwt"))
 	if err != nil {

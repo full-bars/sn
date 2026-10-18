@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"strings"
 
 	gojwt "github.com/golang-jwt/jwt/v5"
@@ -25,18 +26,37 @@ type snWalletMappingApi interface {
 	SnSetWalletSyncWithContext(context.Context, *sdk.SnSetWalletArgs) (*sdk.SnSetWalletResult, error)
 }
 
+// The protocol's consent window is finite: a consent covers its start epoch
+// through the next snWalletConsentSpan epochs (v33 snConsentSpan).
+const snWalletConsentSpan = 65535
+
 // Default consent covers the next earning epoch through the protocol's finite
-// 65,536-epoch interval. Explicit bounds are signed exactly as supplied.
+// 65,536-epoch interval. Explicit bounds are signed exactly as supplied, but an
+// interval that would leave epochs unpaid is refused unless
+// URNETWORK_WALLET_ALLOW_ODD_INTERVAL=1 (v33 snConsentInterval).
 func snWalletMappingInterval(ctx context.Context, api snWalletMappingApi, proof *snWalletProof) (int64, int64, error) {
-	if proof != nil && proof.fromEpoch != nil {
-		return *proof.fromEpoch, *proof.throughEpoch, nil
-	}
 	epoch, err := api.SnEpochSyncWithContext(ctx)
 	if err != nil {
 		return 0, 0, err
 	}
 	if epoch == nil || epoch.Epoch < 0 || epoch.Epoch > math.MaxInt64-65536 {
 		return 0, 0, errors.New("wallet consent earning epoch is unavailable")
+	}
+	if proof != nil && proof.fromEpoch != nil {
+		from, through := *proof.fromEpoch, *proof.throughEpoch
+		// The server refuses any later network consent that does not start
+		// after this one, and settlement does not fall back to an earlier
+		// generation, so a mistaken interval cannot be undone: epochs before a
+		// too-late start, or after a too-short end, stay unpaid.
+		if os.Getenv("URNETWORK_WALLET_ALLOW_ODD_INTERVAL") != "1" {
+			if from > epoch.Epoch+2 {
+				return 0, 0, fmt.Errorf("wallet consent: --wallet-from-epoch=%d is far beyond the current epoch %d; epochs before it would be unpaid and the consent cannot be moved earlier (URNETWORK_WALLET_ALLOW_ODD_INTERVAL=1 overrides)", from, epoch.Epoch)
+			}
+			if through-from != snWalletConsentSpan {
+				return 0, 0, fmt.Errorf("wallet consent: the interval covers %d epochs, not the full %d; epochs after it would be unpaid (URNETWORK_WALLET_ALLOW_ODD_INTERVAL=1 overrides)", through-from+1, snWalletConsentSpan+1)
+			}
+		}
+		return from, through, nil
 	}
 	return epoch.Epoch + 1, epoch.Epoch + 65536, nil
 }
