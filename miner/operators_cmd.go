@@ -169,6 +169,7 @@ func newOperatorSupervisorSettings(opts docopt.Opts) (operatorSupervisorSettings
 	settings.verbosity, _ = opts["-v"].(int)
 	settings.allowClientRegistration, _ = opts.Bool("--allow-client-registration")
 	settings.autoRegister, _ = opts.Bool("--auto-register")
+	settings.noLegacyImport, _ = opts.Bool("--no-legacy-import")
 	if seedPath, err := opts.String("--hotkey_seed_file"); err == nil {
 		if settings.hotkey, err = loadOperatorHotkey(seedPath); err != nil {
 			return operatorSupervisorSettings{}, operatorlist.RefreshSettings{}, err

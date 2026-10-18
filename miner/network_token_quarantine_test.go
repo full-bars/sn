@@ -53,7 +53,7 @@ func TestAutomaticSignInKeepsARevokedSlotBlocked(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	clientPath, err := providerClientJwtPath(nil)
+	clientPath, err := providerClientJwtPath(providerSlotIdentities{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

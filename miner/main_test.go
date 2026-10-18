@@ -7,6 +7,8 @@ package miner
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"net"
 	"path/filepath"
 	"strings"
@@ -53,7 +55,7 @@ func TestProviderMemoryTargetDividesExplicitLimit(t *testing.T) {
 func TestProviderClientJwtPathIsStableAndSecretFree(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	direct, err := providerClientJwtPath(nil)
+	direct, err := providerClientJwtPath(providerSlotIdentities{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,24 +68,48 @@ func TestProviderClientJwtPathIsStableAndSecretFree(t *testing.T) {
 		Address: "proxy.example:1080",
 		Auth:    &proxy.Auth{User: "first-user", Password: "first-secret"},
 	}
+	rotated := &connect.ProxySettings{
+		Network: "tcp",
+		Address: "proxy.example:1080",
+		Auth:    &proxy.Auth{User: "first-user", Password: "rotated-secret"},
+	}
 	second := &connect.ProxySettings{
 		Network: "tcp",
 		Address: "proxy.example:1080",
 		Auth:    &proxy.Auth{User: "other-user", Password: "other-secret"},
 	}
-	firstPath, err := providerClientJwtPath(first)
+	providers := []*connect.ProxySettings{first, second}
+	identities := newProviderSlotIdentities(providers)
+	firstPath, err := providerClientJwtPath(identities, first)
 	if err != nil {
 		t.Fatal(err)
 	}
-	secondPath, err := providerClientJwtPath(second)
+	rotatedPath, err := providerClientJwtPath(identities, rotated)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if firstPath != secondPath {
-		t.Fatalf("credential rotation changed provider identity path: %s != %s", firstPath, secondPath)
+	secondPath, err := providerClientJwtPath(identities, second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if firstPath != rotatedPath {
+		t.Fatalf("credential rotation changed provider identity path: %s != %s", firstPath, rotatedPath)
+	}
+	if firstPath == secondPath {
+		t.Fatalf("two users at one address share a path: %s", firstPath)
 	}
 	if firstPath == direct || filepath.Base(firstPath) == ".provider.jwt" {
 		t.Fatalf("proxy path did not receive a distinct identity: %s", firstPath)
+	}
+
+	single := newProviderSlotIdentities([]*connect.ProxySettings{first})
+	historical := sha256.Sum256([]byte(first.Network + "\x00" + first.Address))
+	historyPath, err := providerClientJwtPath(single, first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(home, ".urnetwork", fmt.Sprintf(".provider-%x.jwt", historical[:8])); historyPath != want {
+		t.Fatalf("single-use address changed its historical path: %s != %s", historyPath, want)
 	}
 }
 

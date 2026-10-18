@@ -47,7 +47,7 @@ func TestProviderStartupWalletRefusesProxyWhenRetainedKeyIsMissing(t *testing.T)
 		t.Fatal(err)
 	}
 	proxy := &connect.ProxySettings{Network: "tcp", Address: "192.0.2.25:1080"}
-	selectedPath, err := providerClientJwtPath(proxy)
+	selectedPath, err := providerClientJwtPath(providerSlotIdentities{}, proxy)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func providerStartupWalletUsesAuthenticatedSlot(t *testing.T, proxySlot bool) {
 			t.Fatal(err)
 		}
 	}
-	selectedPath, err := providerClientJwtPath(proxy)
+	selectedPath, err := providerClientJwtPath(providerSlotIdentities{}, proxy)
 	if err != nil {
 		t.Fatal(err)
 	}
