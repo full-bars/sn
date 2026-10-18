@@ -76,6 +76,8 @@ type operatorSupervisorSettings struct {
 	verbosity               int
 	allowClientRegistration bool
 	port                    int
+	// forwarded to every child so the kill switch also reaches the fleet path
+	noLegacyImport bool
 }
 
 // A started child: a real process, or a test's stand-in.
@@ -558,6 +560,9 @@ func (self *operatorSupervisor) childArgs(spec operatorChildSpec) []string {
 	}
 	if self.settings.allowClientRegistration || self.settings.autoRegister {
 		args = append(args, "--allow-client-registration")
+	}
+	if self.settings.noLegacyImport {
+		args = append(args, "--no-legacy-import")
 	}
 	if self.settings.autoRegister {
 		// a rejected network sign-in is set aside and the child exits, so

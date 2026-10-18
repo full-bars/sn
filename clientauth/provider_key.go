@@ -98,8 +98,10 @@ func openProviderClientKey(ctx context.Context, keyPath string, options Provider
 	if len(seed) != ed25519.SeedSize || bytes.Equal(seed, make([]byte, ed25519.SeedSize)) {
 		return nil, errors.New("provider client key must be an existing nonzero 32-byte seed")
 	}
-	public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
-	expected := []byte("urnetwork-provider-client-key-v1\n0x" + hex.EncodeToString(public) + "\n")
+	expected, err := ProviderKeyIdentityMarker(seed)
+	if err != nil {
+		return nil, err
+	}
 	marker, err := store.read(".provider.key.identity")
 	if errors.Is(err, os.ErrNotExist) {
 		if err := admitProviderKeyMarker(store, options.AdoptLegacyKey); err != nil {
@@ -118,6 +120,17 @@ func openProviderClientKey(ctx context.Context, keyPath string, options Provider
 	}
 	self.seed = seed
 	return self, nil
+}
+
+// ProviderKeyIdentityMarker returns the .provider.key.identity marker bytes
+// for a raw 32-byte Ed25519 seed, or an error when the seed is not one. The
+// key owner and the automatic legacy import share this one derivation.
+func ProviderKeyIdentityMarker(seed []byte) ([]byte, error) {
+	if len(seed) != ed25519.SeedSize || bytes.Equal(seed, make([]byte, ed25519.SeedSize)) {
+		return nil, errors.New("provider client key must be an existing nonzero 32-byte seed")
+	}
+	public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
+	return []byte("urnetwork-provider-client-key-v1\n0x" + hex.EncodeToString(public) + "\n"), nil
 }
 
 // A bare retained seed can finish the key-before-marker crash window. Existing

@@ -4,7 +4,6 @@ package miner
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -31,11 +30,14 @@ type providerRegistrationHooks struct {
 type providerRegistrationHooksKey struct{}
 
 // Exact direct/proxy identity excludes credentials and map iteration order.
-func providerRegistrationSlot(settings *connect.ProxySettings) string {
+// An address shared by several configured proxies is keyed by the full
+// 3.23-fix identity (address + user), so distinct usernames at one host:port
+// stay distinct slots instead of collapsing onto one.
+func providerRegistrationSlot(identities providerSlotIdentities, settings *connect.ProxySettings) string {
 	if settings == nil {
 		return "direct"
 	}
-	sum := sha256.Sum256([]byte(settings.Network + "\x00" + settings.Address))
+	sum := identities.hash(settings)
 	return "proxy-sha256:" + hex.EncodeToString(sum[:])
 }
 
@@ -45,10 +47,11 @@ func validateProviderRegistrationSlots(providers []*connect.ProxySettings) error
 	if len(providers) > 4096 {
 		return errors.New("provider registration exceeds its 4096 member bound")
 	}
+	identities := newProviderSlotIdentities(providers)
 	slotKVs, pathKVs := map[string]bool{}, map[string]bool{}
 	for _, settings := range providers {
-		slot := providerRegistrationSlot(settings)
-		path, err := providerClientJwtPath(settings)
+		slot := providerRegistrationSlot(identities, settings)
+		path, err := providerClientJwtPath(identities, settings)
 		if err != nil {
 			return err
 		}

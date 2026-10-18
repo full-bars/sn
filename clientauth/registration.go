@@ -59,6 +59,21 @@ func (self *RegistrationRefreshUnavailableError) Error() string {
 }
 func (self *RegistrationRefreshUnavailableError) Unwrap() error { return self.cause }
 
+// IsRegistrationRefreshUnavailable reports whether err is a retryable
+// unavailable read: the API was never reached, so the saved identity has not
+// been refused and no permanent decision may be based on it.
+func IsRegistrationRefreshUnavailable(err error) bool {
+	var unavailable *RegistrationRefreshUnavailableError
+	return errors.As(err, &unavailable)
+}
+
+// NewRegistrationRefreshUnavailableError wraps the leaf read failure. The
+// cause is kept for classification: a server status means the API answered,
+// a network error means it was never reached.
+func NewRegistrationRefreshUnavailableError(cause error) error {
+	return &RegistrationRefreshUnavailableError{cause: cause}
+}
+
 // Only a completed remote reply can produce this cause. Local registration or
 // credential custody failures retain their original hard errors separately.
 type RegistrationResponseIdentityError struct{}

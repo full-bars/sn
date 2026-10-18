@@ -221,6 +221,19 @@ func refreshStoredClientJwt(ctx context.Context, api *sdk.Api, networkPath, clie
 	return refreshStoredClientJwtWithReadiness(ctx, api, networkPath, clientPath, token, persist, true)
 }
 
+// ProbeClientJwtRefresh verifies the API still accepts a retained client
+// credential and that the refresh preserves its identity, without persisting
+// anything, allocating anything or marking a rejection: the probe owns no
+// custody. It runs the same refresh and the same identity validation the
+// normal retained-credential path runs.
+func ProbeClientJwtRefresh(ctx context.Context, api *sdk.Api, token string) error {
+	if api == nil {
+		return errors.New("client refresh probe has no api")
+	}
+	_, _, err := refreshStoredClientJwtWithCustody(ctx, api, token, func(string) error { return nil }, func() error { return nil }, func() error { return nil }, false)
+	return err
+}
+
 // Production observation does not need speculative API readiness. Its caller
 // requires successful refresh, including after an unpersisted old revocation.
 func refreshStoredClientJwtWithReadiness(ctx context.Context, api *sdk.Api, networkPath, clientPath, token string, persist func(string) error, allowUnavailable bool) (string, connect.Id, error) {
@@ -275,7 +288,7 @@ func refreshStoredClientJwtWithCustody(ctx context.Context, api *sdk.Api, token 
 		return "", connect.Id{}, errors.Join(refreshErr, err)
 	}
 	if !allowUnavailable {
-		return "", connect.Id{}, &RegistrationRefreshUnavailableError{cause: refreshErr}
+		return "", connect.Id{}, NewRegistrationRefreshUnavailableError(refreshErr)
 	}
 	if err := ctx.Err(); err != nil {
 		return "", connect.Id{}, err
