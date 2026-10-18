@@ -3,6 +3,7 @@ package miner
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -41,6 +42,17 @@ func internalServerSettings(proxyConfig *ProxyConfig, proxyAddress, authKey stri
 		}
 	}
 	return proxySettings
+}
+
+// expandPath expands a leading ~/ or ~\ to the user's home directory
+// (v33 main.go expandPath). Any other path is returned unchanged.
+func expandPath(p string) string {
+	if strings.HasPrefix(p, "~/") || strings.HasPrefix(p, "~\\") {
+		if home, err := os.UserHomeDir(); err == nil {
+			return filepath.Join(home, p[2:])
+		}
+	}
+	return p
 }
 
 // readProxySettingsFromFile reads proxy settings directly from an external file

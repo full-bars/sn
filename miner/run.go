@@ -94,6 +94,7 @@ Usage:
 		[--allow-client-registration | --adopt-legacy-provider-key]
 		[--no-legacy-import]
 		[--quarantine-rejected-sign-in]
+        [--proxy_file=<proxy_file>] [--file=<file>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
         [--proxy_url=<proxy_url>]... [--url=<url>]... [--URL=<URL>]...
@@ -112,6 +113,7 @@ Usage:
 		[--allow-client-registration | --adopt-legacy-provider-key]
 		[--no-legacy-import]
     	[--port=<port>]
+        [--proxy_file=<proxy_file>] [--file=<file>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
         [--proxy_url=<proxy_url>]... [--url=<url>]... [--URL=<URL>]...
@@ -176,7 +178,10 @@ Usage:
     provider proxy auth remove [<key>] [--all]
     provider proxy add [<key_address>...] [--proxy_file=<proxy_file>] [-f]
     provider proxy remove [<key_address>...] [--all]
+    provider proxy remove --match=<pattern> [--yes] [--preview]
+    provider proxy clear
     provider proxy add-source <url>
+    provider proxy paste [--file=<file>]
     provider proxy remove-source <url>
     provider proxy refresh [--force]
     provider proxy trim <count> [--preview]
@@ -313,9 +318,15 @@ Options:
     <proxy_user>                     SOCKS5 user
     <proxy_password>                 SOCKS5 password
     <key_address>                    SOCKS5 server as host:port, host:port:user:pass, host:port::, or key@host:port
-    --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port
+    --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port.
+                                     With provide/auth-provide it selects the file-backed proxy source the running
+                                     provider re-reads on reload; also PROXY_FILE.
+    --file=<file>                    Alias for --proxy_file (provide/auth-provide); with 'proxy paste', the input file.
     <url>                            A proxy list URL, for 'proxy add-source' and 'proxy remove-source'.
     <count>                          Max number of running proxies to keep, for 'proxy trim'. 0/off clears the cap.
+    --match=<pattern>                Case-insensitive substring matched against proxy hosts (never port or
+                                     credentials). Removes matches from the proxy list, proxy file, and URL
+                                     cache, and excludes the pattern from future URL fetches. See 'proxy exclude'.
     <pattern>                        Host substring for 'proxy exclude' (add). With --remove, deletes the pattern.
                                      With no pattern, 'proxy exclude' lists the active patterns.
     --force                          With 'proxy refresh', bypass the 8-hour warmup protection gate.
@@ -389,6 +400,8 @@ func Run(args []string) {
 			}
 		} else if addSource, _ := opts.Bool("add-source"); addSource {
 			proxyAddSource(opts)
+		} else if paste, _ := opts.Bool("paste"); paste {
+			proxyPaste(opts)
 		} else if removeSource, _ := opts.Bool("remove-source"); removeSource {
 			proxyRemoveSource(opts)
 		} else if exclude, _ := opts.Bool("exclude"); exclude {
@@ -399,6 +412,8 @@ func Run(args []string) {
 			proxyRemoveDead(opts)
 		} else if remove, _ := opts.Bool("remove"); remove {
 			proxyRemove(opts)
+		} else if clear, _ := opts.Bool("clear"); clear {
+			proxyClear(opts)
 		} else if refresh, _ := opts.Bool("refresh"); refresh {
 			proxyRefresh(opts)
 		} else if activity, _ := opts.Bool("activity"); activity {
@@ -1509,24 +1524,19 @@ func proxyAuthRemove(opts docopt.Opts) {
 }
 
 func proxyAdd(opts docopt.Opts) {
+	// File-backed providers (Workflow A: proxy.state.Source set by
+	// --proxy_file, C-10) re-read that file on every reload, so additions must
+	// land in THAT file; a write to the internal config is discarded by the
+	// next reload. The paste hand-off (`proxy add --proxy_file=<tmp> -f`)
+	// relies on this routing.
+	if state, err := readProxyState(); err == nil && state.Source != "" {
+		proxyAddFileBacked(state.Source, opts)
+		return
+	}
+
 	proxyConfig := readProxyConfig()
 
-	allKeyAddress := []string{}
-	if allKeyAddressAny, ok := opts["<key_address>"]; ok {
-		allKeyAddress = append(allKeyAddress, allKeyAddressAny.([]string)...)
-	}
-	if proxyPath, _ := opts.String("--proxy_file"); proxyPath != "" {
-		b, err := os.ReadFile(proxyPath)
-		if err != nil {
-			panic(err)
-		}
-		for _, line := range strings.Split(string(b), "\n") {
-			line = strings.TrimSpace(line)
-			if line != "" && line[0] != '#' {
-				allKeyAddress = append(allKeyAddress, line)
-			}
-		}
-	}
+	allKeyAddress := proxyAddCollectAddresses(opts)
 
 	if proxyConfig.Servers == nil {
 		proxyConfig.Servers = map[string]string{}
@@ -1584,36 +1594,50 @@ func proxyAdd(opts docopt.Opts) {
 }
 
 func proxyRemove(opts docopt.Opts) {
-	proxyConfig := readProxyConfig()
+	// --match routes to the pattern collection/removal (v33 proxyRemove):
+	// the pattern is matched against hosts in the internal config, the proxy
+	// state and the URL cache, and persisted as a fetch exclusion.
+	if pattern, _ := opts.String("--match"); pattern != "" {
+		proxyRemoveMatch(pattern, opts)
+		return
+	}
 
 	if all, _ := opts.Bool("--all"); all {
-		clear(proxyConfig.Servers)
-	} else {
+		// v33's remove --all is the full reset (clearProxyStores): the internal
+		// config, proxy.state - Proxies and the ID counter - and the URL cache
+		// and source list. Failures are warnings, matching v33: a partial reset
+		// beats refusing the operator.
+		if err := clearProxyStores(); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: %v\n", err)
+		}
+		return
+	}
 
-		allKeyAddress := []string{}
-		if allKeyAddressAny, ok := opts["<key_address>"]; ok {
-			allKeyAddress = append(allKeyAddress, allKeyAddressAny.([]string)...)
+	proxyConfig := readProxyConfig()
+
+	allKeyAddress := []string{}
+	if allKeyAddressAny, ok := opts["<key_address>"]; ok {
+		allKeyAddress = append(allKeyAddress, allKeyAddressAny.([]string)...)
+	}
+
+	if proxyConfig.Servers == nil {
+		proxyConfig.Servers = map[string]string{}
+	}
+
+	for _, keyAddress := range allKeyAddress {
+		var key string
+		var address string
+		i := strings.Index(keyAddress, "@")
+		if 0 <= i {
+			key = keyAddress[:i]
+			address = keyAddress[i+1:]
+		} else {
+			key = ""
+			address = keyAddress
 		}
 
-		if proxyConfig.Servers == nil {
-			proxyConfig.Servers = map[string]string{}
-		}
-
-		for _, keyAddress := range allKeyAddress {
-			var key string
-			var address string
-			i := strings.Index(keyAddress, "@")
-			if 0 <= i {
-				key = keyAddress[:i]
-				address = keyAddress[i+1:]
-			} else {
-				key = ""
-				address = keyAddress
-			}
-
-			if key == "" || proxyConfig.Servers[address] == key {
-				delete(proxyConfig.Servers, address)
-			}
+		if key == "" || proxyConfig.Servers[address] == key {
+			delete(proxyConfig.Servers, address)
 		}
 	}
 

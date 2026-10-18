@@ -20,6 +20,7 @@ import (
 //	proxy add-source <url>          (v33 proxyAddSource)
 //	proxy remove-source <url>       (v33 proxyRemoveSource)
 //	proxy refresh [--force]         (v33 proxyRefresh)
+//	proxy remove --match=<pattern> [--yes] [--preview]  (v33 proxyRemoveMatch)
 //	proxy trim <count> [--preview]  (v33 proxyTrim)
 //	proxy summary                   (v33 proxySummary)
 //	proxy exclude [<pattern>] [--remove]  (v33 proxyExclude)
@@ -246,6 +247,146 @@ func proxyExclude(opts docopt.Opts) {
 	}
 	fmt.Printf("added exclude pattern %q - future URL fetches will skip matching hosts\n", pattern)
 	fmt.Println("note: already-cached/running proxies are not removed; use 'proxy remove --match' for that")
+}
+
+// ---- proxy remove --match ----
+
+// proxyRemoveMatch implements `provider proxy remove --match=<pattern>
+// [--yes] [--preview]` (v33 proxyRemoveMatch): remove every proxy whose host
+// matches pattern from the internal config, the proxy state and the URL cache
+// in one pass, and persist the pattern as a URL-fetch exclusion so a refresh
+// cannot silently bring the matches back.
+func proxyRemoveMatch(pattern string, opts docopt.Opts) {
+	autoYes, _ := opts.Bool("--yes")
+	preview, _ := opts.Bool("--preview")
+
+	proxyConfig := readProxyConfig()
+
+	// state and urlState are optional: the provider may never have run, or
+	// there may be no URL sources. Missing stores just mean fewer places to
+	// search.
+	var stateProxies map[string]ProxyEntry
+	var stateSource string
+	state, stateErr := readProxyState()
+	if stateErr == nil {
+		stateProxies = state.Proxies
+		stateSource = state.Source
+	} else {
+		state = &ProxyState{}
+	}
+	urlState, urlErr := readProxyURLState()
+	if urlErr != nil {
+		urlState = &ProxyURLState{}
+	}
+
+	addrsBySource, display := collectMatchingProxies(
+		pattern, proxyConfig, stateProxies, stateSource, urlState.Cache)
+
+	if len(display) == 0 {
+		fmt.Printf("no proxies matched %q - nothing to do\n", pattern)
+		return
+	}
+
+	const sampleMax = 10
+	fmt.Printf("%d proxies match %q:\n", len(display), pattern)
+	for i, d := range display {
+		if i == sampleMax {
+			fmt.Printf("    ... and %d more\n", len(display)-sampleMax)
+			break
+		}
+		fmt.Printf("    %s\n", d)
+	}
+
+	if preview {
+		fmt.Println("=== PREVIEW (no changes will be made) ===")
+		return
+	}
+
+	if !autoYes && !confirm(fmt.Sprintf("Remove %d proxies and exclude %q from future URL fetches?", len(display), pattern)) {
+		fmt.Println("Aborted.")
+		return
+	}
+
+	if err := removeDeadProxies(state, addrsBySource); err != nil {
+		fmt.Printf("removal failed: %v\n", err)
+		return
+	}
+
+	// Persist the exclude pattern so URL source refreshes cannot re-add
+	// matching proxies. Re-read to avoid clobbering the cache changes
+	// removeDeadProxies just wrote.
+	if urlState, err := readProxyURLState(); err == nil {
+		if addExcludePattern(urlState, pattern) {
+			if err := writeProxyURLState(urlState); err != nil {
+				fmt.Printf("warning: could not persist exclude pattern: %v\n", err)
+			}
+		}
+	}
+
+	fmt.Printf("Removed %d proxies matching %q. Pattern excluded from future URL fetches.\n", len(display), pattern)
+	fmt.Println("The running provider will apply the change via hot reload (no restart).")
+}
+
+// ---- proxy clear / remove --all ----
+
+// clearProxyStores is the storage reset shared by `proxy clear` (the shipped
+// urnet-tools maps clear to remove --all) and `proxy remove --all`: the
+// internal config, proxy.state (Proxies and the ID counter, matching v33's
+// "next run starts ID assignment from 0") and the URL cache and source list
+// are emptied. proxy.state.Source is deliberately left alone: it is the
+// selected workflow, not proxy data, and a file-backed reload re-reads the
+// operator's file (v33 has the same behavior).
+//
+// The cross-process proxy lock serializes the state reset against a running
+// provider's health-snapshot write, which would otherwise clobber it and
+// silently revive the removed proxies (v33 finding #11).
+func clearProxyStores() error {
+	proxyConfig := readProxyConfig()
+	clear(proxyConfig.Servers)
+	writeProxyConfig(proxyConfig)
+
+	if release, err := acquireProxyLockWithRetry(); err == nil {
+		if state, err := readProxyState(); err == nil {
+			state.Proxies = map[string]ProxyEntry{}
+			state.NextID = 0
+			if err := writeProxyState(state); err != nil {
+				release()
+				return err
+			}
+		}
+		release()
+	} else {
+		fmt.Fprintf(os.Stderr, "note: could not acquire the proxy lock for the state reset (%v); the running provider will re-sync on its next snapshot\n", err)
+	}
+
+	if urlState, err := readProxyURLState(); err == nil {
+		urlState.Cache = map[string]ProxyURLEntry{}
+		urlState.Sources = nil
+		if err := writeProxyURLState(urlState); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// proxyClear implements `provider proxy clear` - the v33 surface the shipped
+// urnet-tools exposes; its delegation maps the verb to `proxy remove --all`.
+// It resets the curated internal config, the proxy state and the URL cache,
+// then triggers a reload so a running provider applies the reset without a
+// restart.
+func proxyClear(opts docopt.Opts) {
+	state, stateErr := readProxyState()
+	running := stateErr == nil && !state.StartedAt.IsZero()
+
+	previousServers := len(readProxyConfig().Servers)
+
+	if err := clearProxyStores(); err != nil {
+		proxyCommandFatal(77, "could not clear the proxy stores: %v", err)
+	}
+	fmt.Printf("proxy clear: removed %d internal server(s), the proxy state and the URL cache\n", previousServers)
+	if running {
+		triggerProxyReload()
+	}
 }
 
 // ---- proxy refresh ----
