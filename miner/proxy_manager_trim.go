@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/urnetwork/connect"
 )
@@ -19,9 +21,11 @@ import (
 //
 // The GRADE resolver is the real v33 unifier (proxyGradeFor,
 // proxy_manager_grade_report.go, ported in P1(c)): the paid/file store wins
-// over the address-keyed URL cache. The tests that need a live earnings store
-// are deferred to P1(c2)/P2 (see the report); the trim ranking passes a zero
-// earnings function until the earnings store lands.
+// over the address-keyed URL cache. The EARNINGS half of the ranking is the
+// real store too (runningProxyEarnings below): what a running proxy has
+// earned decides whether a shed touches an idle proxy or a revenue stream,
+// and a proxy that earned before this process started keeps its protection
+// through the decayed score.
 
 // trimCapOperator is the source label for a cap the operator set by hand.
 const trimCapOperator = "operator"
@@ -381,6 +385,99 @@ func selectWorstRunningProxies(state map[string]ProxyEntry, gradeFor func(addr s
 	for i := 0; i < n; i++ {
 		out[i] = cands[i].addr
 	}
+	return out
+}
+
+// runningProxyEarnings builds a per-identity map of what each running proxy has
+// EARNED, in billable bytes (keyed by ProxySettings.Key(): address, or
+// address+user for a credentialed proxy), for the shed rankings. The key MUST
+// match the running list and proxy.state keys the rankings look it up with;
+// keying by the bare address made a credentialed proxy's earnings invisible, so
+// an active earner ranked as idle and could be shed first.
+//
+// It is billable bytes, never total bytes: total includes the platform's
+// non-billable traffic, which on a measured provider was about 17x the billable
+// figure, so a proxy that moved a lot of total traffic and earned nothing
+// ranked as a protected earner while a small real earner could be shed first.
+// Each value is the larger of this run's billable bytes and the decayed
+// earnings score: a proxy that earned heavily last week but has been idle since
+// this process started is still a proven earner and must not look idle. The
+// score already includes this run's billable bytes (Observe credits them), so
+// the larger of the two is the score except right after a restart cleared it.
+func runningProxyEarnings() map[string]uint64 {
+	return runningProxyEarningsAt(time.Now())
+}
+
+// runningProxyEarningsAt is runningProxyEarnings at a given instant, which is
+// what the decayed score is evaluated at; the tests pin it so no assertion
+// depends on the wall clock.
+func runningProxyEarningsAt(now time.Time) map[string]uint64 {
+	earnings := map[string]uint64{}
+	score := func(key string, billable uint64) {
+		earned := billable
+		if s := proxyEarningsScore(key, now); 0 < s {
+			earned = max(earned, uint64(s))
+		}
+		if 0 < earned {
+			earnings[key] = earned
+		}
+	}
+	// The miner's identity-keyed bandwidth publication (the same counters the
+	// earnings recorder folds in) stands in for v33's
+	// connect.ProxyBandwidthSnapshotByKey().
+	snapshot := proxyEarnBandwidthSnapshot()
+	for key, bw := range snapshot {
+		if bw == nil {
+			continue
+		}
+		score(key, bw.BillableRx.Load()+bw.BillableTx.Load())
+	}
+	// A running proxy has no bandwidth record until it finishes launching, so
+	// it is absent from the snapshot. Walk the running identity keys as well,
+	// or it reads zero and can be shed ahead of a proxy with a lower stored
+	// score.
+	for _, key := range runningProxyAddresses() {
+		if bw, ok := snapshot[key]; ok && bw != nil {
+			continue
+		}
+		score(key, 0)
+	}
+	return earnings
+}
+
+// runningProxyAddresses returns the currently RUNNING proxies as identity keys
+// (ProxySettings.Key(): address, or address+user for a credentialed proxy), so
+// the trim preview and the shed ranking report the running pool rather than the
+// larger desired set in proxy.state. The keys must match the ones proxy.state
+// and runningProxyEarnings use, or the preview ranks a credentialed proxy as
+// unknown and idle.
+//
+// Sources, in order: the slots this process's provide loop published
+// (controlRuntime), the identities with live per-identity counters, and — when
+// neither is populated, for example in a state dir whose slots this process
+// never launched — the live health registry.
+func runningProxyAddresses() []string {
+	seen := map[string]bool{}
+	var out []string
+	add := func(key string) {
+		if key == "" || seen[key] {
+			return
+		}
+		seen[key] = true
+		out = append(out, key)
+	}
+	for _, key := range controlRuntime.runningKeySnapshot() {
+		add(key)
+	}
+	for key := range proxyEarnBandwidthSnapshot() {
+		add(key)
+	}
+	if len(out) == 0 {
+		for _, key := range proxyLiveHealthKeys() {
+			add(key)
+		}
+	}
+	sort.Strings(out)
 	return out
 }
 

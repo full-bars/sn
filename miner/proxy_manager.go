@@ -327,7 +327,12 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	if trimCap > 0 && len(all) > trimCap {
 		urlStateForGrades, _ := readProxyURLState()
 		gradeFor := buildTrimGradeResolver(state, urlStateForGrades)
-		launch, held = startupTrimSelection(all, trimCap, state.Proxies, gradeFor, func(string) float64 { return 0 })
+		// Earnings protect a proven earner from being held at startup: the
+		// decayed store score puts a proxy that earned before this process
+		// started ahead of an idle one with the same health and grade (v33
+		// startupTrimSelection).
+		earningsFor := func(key string) float64 { return proxyEarningsScore(key, time.Now()) }
+		launch, held = startupTrimSelection(all, trimCap, state.Proxies, gradeFor, earningsFor)
 		importantLogf("[proxy][trim] startup: cap=%d, launching %d of %d desired, holding %d worst-graded until the cap is raised\n",
 			trimCap, len(launch), len(all), len(held))
 		primeTrimCapSeen(trimCap, trimCapOperator)
