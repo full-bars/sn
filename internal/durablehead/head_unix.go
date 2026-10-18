@@ -592,6 +592,16 @@ func (self *Owner) checkTemporaryCensus(allowReconcile bool) (resultErr error) {
 		if !allowReconcile {
 			return errors.Join(ErrUncertain, errors.New("snapshot create marker is retained"))
 		}
+		stat, present, err := self.stat(temporary, false)
+		if err != nil {
+			return err
+		}
+		if present && stat.Size != 0 {
+			// Bytes that no checkpoint names are custody loss or tampering,
+			// never a publication that never started. Refuse exactly as the
+			// anchored case does; the bytes stay as evidence.
+			return errors.Join(ErrUncertain, errors.New("unanchored snapshot temporary is retained"))
+		}
 		if err := unix.Unlinkat(int(self.directory.File().Fd()), temporary, 0); err != nil {
 			return errors.Join(ErrUncertain, observation(err, false))
 		}

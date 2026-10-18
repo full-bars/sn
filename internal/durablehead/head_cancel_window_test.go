@@ -211,7 +211,9 @@ func TestReconcileClearsACrashedCreatePair(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(self.root, prefix+"create-"+nonce), nil, 0600); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(self.root, prefix+nonce), []byte("partial"), 0600); err != nil {
+	// The real crash pair is empty: the pending checkpoint is what announces
+	// the bytes, and this publication never reached it.
+	if err := os.WriteFile(filepath.Join(self.root, prefix+nonce), nil, 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -256,6 +258,43 @@ func TestReconcileRejectsAnUnknownTemporary(t *testing.T) {
 	defer cancel()
 	if _, _, _, err := tryReconcileOwner(t, self.root, ctx); !errors.Is(err, ErrUncertain) {
 		t.Fatalf("reconcile accepted an unknown temporary: %v", err)
+	}
+}
+
+// A marked temporary holding bytes with no checkpoint that names them is
+// custody loss or tampering, never something to delete: both opens refuse and
+// the bytes stay as evidence.
+func TestReconcileRefusesANonEmptyUnanchoredTemporary(t *testing.T) {
+	self := newFixture(t)
+	if err := self.owner.Publish([]byte("committed"), nil); err != nil {
+		t.Fatal(err)
+	}
+	prefix := self.owner.prefix()
+	if err := self.close(); err != nil {
+		t.Fatal(err)
+	}
+	nonce := strings.Repeat("cd", 16)
+	marker := filepath.Join(self.root, prefix+"create-"+nonce)
+	temporary := filepath.Join(self.root, prefix+nonce)
+	if err := os.WriteFile(marker, nil, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(temporary, []byte("partial"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(self.volume.Context, cancelWindowTimeout)
+	defer cancel()
+	if _, _, _, err := tryOpenOwner(t, self.root, ctx); !errors.Is(err, ErrUncertain) {
+		t.Fatalf("plain open accepted non-empty unanchored bytes: %v", err)
+	}
+	if _, _, _, err := tryReconcileOwner(t, self.root, ctx); !errors.Is(err, ErrUncertain) {
+		t.Fatalf("reconcile deleted non-empty unanchored bytes: %v", err)
+	}
+	if raw, err := os.ReadFile(temporary); err != nil || string(raw) != "partial" {
+		t.Fatalf("evidence bytes changed: %q %v", raw, err)
+	}
+	if _, err := os.Stat(marker); err != nil {
+		t.Fatalf("marker removed: %v", err)
 	}
 }
 
