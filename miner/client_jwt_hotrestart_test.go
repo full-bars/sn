@@ -843,7 +843,10 @@ func TestProvideClientJWTMintsAndPuts(t *testing.T) {
 
 func TestProvideClientJWTHotRestartDisabled(t *testing.T) {
 	// URNETWORK_HOT_RESTART=0 turns the reuse path off entirely: the stored
-	// entry is not read, not renewed, and not returned.
+	// entry is not read, not renewed, and not returned. The off path must also
+	// not take the durable-registration mint, which reads and refreshes the
+	// retained per-slot credential (reuse under another name): it must use the
+	// explicit fresh-registration mint so a new client_id is registered.
 	setHotRestart(t, false)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
@@ -872,8 +875,16 @@ func TestProvideClientJWTHotRestartDisabled(t *testing.T) {
 		t.Fatal("renewal must not be called when hot restart is off")
 		return "", nil
 	}
+	// The durable-registration mint stands for the credential-reading path:
+	// hot restart off must leave it untouched.
 	mint := newFakeMint()
 	cfg.Mint = mint.mint
+	freshJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": "00000000-0000-0000-0000-000000000003",
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	fresh := &fakeMint{jwt: freshJwt, id: connect.Id{3}}
+	cfg.FreshMint = fresh.mint
 
 	byJwt, _, reused, err := provideClientJWT(context.Background(), cfg)
 	if err != nil {
@@ -882,8 +893,43 @@ func TestProvideClientJWTHotRestartDisabled(t *testing.T) {
 	if reused {
 		t.Fatal("hot restart off must mint fresh")
 	}
-	if byJwt != mint.jwt || mint.calls != 1 {
-		t.Fatalf("mint = %q calls=%d, want the fresh mint once", byJwt, mint.calls)
+	if byJwt != fresh.jwt || fresh.calls != 1 {
+		t.Fatalf("fresh mint = %q calls=%d, want the fresh mint once", byJwt, fresh.calls)
+	}
+	if mint.calls != 0 {
+		t.Fatalf("the credential-reading durable-registration mint ran %d times with hot restart off, want 0", mint.calls)
+	}
+
+	// The fresh identity is persisted for the next restart, so turning hot
+	// restart back on loads the new credential instead of the replaced one.
+	stored, ok := loadGlobalClientJWTStore().Get("direct")
+	if !ok {
+		t.Fatal("the fresh identity must be persisted for the next restart")
+	}
+	if stored.ByClientJWT != freshJwt || stored.ClientID != fresh.id.String() || stored.NetworkID != "net-1" {
+		t.Fatalf("stored = %+v, want the fresh identity %q stamped with net-1", stored, fresh.id.String())
+	}
+}
+
+func TestProvideClientJWTHotRestartOffRequiresFreshMint(t *testing.T) {
+	// A caller that turns hot restart off cannot fall back to the retained
+	// credential mint: the off contract is a new identity, so a missing fresh
+	// mint is an error, never a silent reuse or refresh.
+	setHotRestart(t, false)
+	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
+	defer restoreStore()
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+
+	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id":  testClientId,
+		"network_id": "net-1",
+	})
+	cfg := clientJWTTestConfig(t, networkJwt, nil)
+	mint := newFakeMint()
+	cfg.Mint = mint.mint
+
+	if _, _, reused, err := provideClientJWT(context.Background(), cfg); err == nil || reused || mint.calls != 0 {
+		t.Fatalf("hot restart off without a fresh mint = %v (reused=%v mint calls=%d), want a refusal", err, reused, mint.calls)
 	}
 }
 

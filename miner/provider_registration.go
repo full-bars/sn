@@ -112,10 +112,32 @@ func providerAuthenticationRecoveryEvent(err error) providerDiagnosticEvent {
 // Each attempt is finite. Later attempts replay the same durably retained
 // operation and never fall back to the legacy allocating endpoint.
 func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, output *providerDiagnostics, index uint64) (string, connect.Id, error) {
+	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, false, output, index)
+}
+
+// authenticateProviderFresh registers a new client for one slot. It is the
+// URNETWORK_HOT_RESTART=0 mint: clientauth.RegisterFreshClientJwt never reads
+// or refreshes the retained per-slot credential, so every start produces a
+// new client_id (the v33 off contract). The attempt loop, retry
+// classification and diagnostics are shared with the retained-custody path;
+// only the registration entry differs.
+func authenticateProviderFresh(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, output *providerDiagnostics, index uint64) (string, connect.Id, error) {
+	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, true, output, index)
+}
+
+// One attempt loop serves both mints. The retained-custody path owns its
+// durable replay on a typed availability failure; the fresh path does not
+// yield those, so a lost fresh reply is left to the caller's backoff instead
+// of being replayed into a second client.
+func authenticateProviderWith(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, freshIdentity bool, output *providerDiagnostics, index uint64) (string, connect.Id, error) {
 	hooks, _ := ctx.Value(providerRegistrationHooksKey{}).(providerRegistrationHooks)
+	register := keyOwner.LoadOrRegisterClientJwt
+	if freshIdentity {
+		register = keyOwner.RegisterFreshClientJwt
+	}
 	for {
 		attempt, cancel := context.WithTimeout(ctx, 300*time.Second)
-		token, id, err := keyOwner.LoadOrRegisterClientJwt(attempt, api, networkPath, clientPath, slot, allowCreate)
+		token, id, err := register(attempt, api, networkPath, clientPath, slot, allowCreate)
 		cancel()
 		if hooks.afterAttempt != nil {
 			if hookErr := hooks.afterAttempt(err); hookErr != nil {

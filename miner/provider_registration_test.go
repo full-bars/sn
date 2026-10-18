@@ -661,6 +661,77 @@ func TestProviderRegistrationAdoptsLegacyAndRefusesLostCredential(t *testing.T) 
 	}
 }
 
+// v33 parity for URNETWORK_HOT_RESTART=0: every start registers a new client
+// with a new client_id, while the default keeps reusing. The retained
+// versioned identity is not refreshed; the fresh client replaces it in the
+// credential file and in custody, and the next default start loads the new
+// credential without a refusal.
+func TestProviderRegistrationHotRestartOffMintsFreshIdentity(t *testing.T) {
+	fixture := newProviderRegistrationFixture(t)
+	stop := errors.New("synthetic stop after authenticated provider")
+	authenticate := func(capture *connect.Id) providerRegistrationHooks {
+		return providerRegistrationHooks{afterAuthenticated: func(_ string, id connect.Id, _ []byte) error {
+			*capture = id
+			return stop
+		}}
+	}
+
+	// Default (hot restart on): the versioned registration allocates client A.
+	var first connect.Id
+	if err := fixture.run(t.Context(), true, authenticate(&first)); !errors.Is(err, stop) {
+		t.Fatalf("hot-restart-on run: %v", err)
+	}
+	posts, legacy, allocated, refreshes := fixture.counts()
+	if posts != 1 || legacy != 0 || allocated != 1 || refreshes != 0 || first == (connect.Id{}) {
+		t.Fatalf("hot-restart-on run: posts=%d legacy=%d allocated=%d refreshes=%d first=%s", posts, legacy, allocated, refreshes, first)
+	}
+
+	// URNETWORK_HOT_RESTART=0: a fresh client through the legacy route, never
+	// the retained credential.
+	setHotRestart(t, false)
+	var second connect.Id
+	if err := fixture.run(t.Context(), true, authenticate(&second)); !errors.Is(err, stop) {
+		t.Fatalf("hot-restart-off run: %v", err)
+	}
+	posts, legacy, allocated, refreshes = fixture.counts()
+	if posts != 1 || legacy != 1 || allocated != 2 || refreshes != 0 || second == (connect.Id{}) || second == first {
+		t.Fatalf("hot-restart-off run: posts=%d legacy=%d allocated=%d refreshes=%d first=%s second=%s", posts, legacy, allocated, refreshes, first, second)
+	}
+	credential, err := clientauth.ReadToken(filepath.Join(fixture.dir, ".provider.jwt"))
+	if err != nil || jwtClientId(credential) != second.String() {
+		t.Fatalf("hot-restart-off credential = %q err=%v, want the new client %s", credential, err, second)
+	}
+	// The replaced versioned operation cannot outlive its replacement...
+	if _, err := os.Stat(filepath.Join(fixture.dir, ".provider.jwt.registration")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("hot-restart-off run retained the replaced versioned record")
+	}
+	// ...and the new identity's existing-client custody names exactly it.
+	marker, err := os.ReadFile(filepath.Join(fixture.dir, ".provider.jwt.registration.existing"))
+	if err != nil || !bytes.Contains(marker, []byte(second.String())) || bytes.Contains(marker, []byte(first.String())) {
+		t.Fatalf("hot-restart-off existing-client custody = %s err=%v", marker, err)
+	}
+
+	// Back to the default: the new credential is loaded again (the refusals a
+	// stale record or marker would raise must not fire) and nothing allocates.
+	t.Setenv("URNETWORK_HOT_RESTART", "1")
+	var third connect.Id
+	if err := fixture.run(t.Context(), true, authenticate(&third)); !errors.Is(err, stop) {
+		t.Fatalf("default-after-off run: %v", err)
+	}
+	posts, legacy, allocated, refreshes = fixture.counts()
+	if posts != 1 || legacy != 1 || allocated != 2 || third != second {
+		t.Fatalf("default-after-off run: posts=%d legacy=%d allocated=%d refreshes=%d third=%s want %s", posts, legacy, allocated, refreshes, third, second)
+	}
+	if refreshes == 0 {
+		t.Fatal("default-after-off run did not exercise the retained credential")
+	}
+	for client := range fixture.refreshedClients() {
+		if client != second.String() {
+			t.Fatalf("default-after-off run refreshed %s, want only the fresh identity %s", client, second)
+		}
+	}
+}
+
 // After a real versioned request, losing the public marker cannot bless a
 // changed seed under either flag. The original request remains untouched.
 func TestProviderRegistrationLostKeyMarkerRequiresRecovery(t *testing.T) {
