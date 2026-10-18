@@ -17,13 +17,16 @@ import (
 
 // Configuration is copied before workers start and is immutable for one run.
 type providerRunSettings struct {
-	wallet                  string
-	walletProof             *snWalletProof
-	apiUrl                  string
-	connectUrl              string
-	port                    int
-	proxySettings           []*connect.ProxySettings
-	memoryPlan              providerMemoryPlan
+	wallet        string
+	walletProof   *snWalletProof
+	apiUrl        string
+	connectUrl    string
+	port          int
+	proxySettings []*connect.ProxySettings
+	memoryPlan    providerMemoryPlan
+	// the explicit --max-memory, or 0 when absent; the profile tiers use it
+	// to decide whether an operator value already wins
+	maxMemory               connect.ByteCount
 	testEgressDialer        *connect.DialContextSettings
 	allowClientRegistration bool
 	adoptLegacyProviderKey  bool

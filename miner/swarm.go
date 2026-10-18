@@ -524,6 +524,9 @@ func swarmMemberDeviceSettings(
 	deviceSettings.KeyMaterial = keyMaterial
 	deviceSettings.ProviderDialContextSettings = dialSettings
 	deviceSettings.DnsPumpHost = member.DNSPumpHost
+	// The swarm members are providers too: the profile tiers apply to each
+	// member's settings, the same as the standalone launch path.
+	applyProfileDeviceSettings(deviceSettings)
 	return deviceSettings
 }
 

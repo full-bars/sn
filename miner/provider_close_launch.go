@@ -14,6 +14,9 @@ func ProviderDeviceSettings(domainHash [32]byte) *sdk.DeviceLocalSettings {
 	settings := sdk.DefaultDeviceLocalSettings()
 	settings.ClientSettings.ContractManagerSettings.CloseReportDomainHash = domainHash
 	settings.ProvideExtenderDnsPrivilegedPort = true
+	// URNETWORK_PROFILE tiers (lowmem/turbo-v4/turbo-v8) are per-provider
+	// settings in v33; apply them here, next to every other constructor.
+	applyProfileDeviceSettings(settings)
 	return settings
 }
 

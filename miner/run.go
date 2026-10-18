@@ -46,6 +46,12 @@ var Version string
 func init() {
 	// debug.SetGCPercent(10)
 
+	// Must run before initGlog(): initGlog reads URNETWORK_PROFILE/
+	// URNETWORK_RAMLOGS from the environment to make its one-shot,
+	// unrepeatable decision about redirecting stdout/stderr to a ramlog.
+	// See startup_env_seed.go for why this cannot just be a later call in
+	// provide() the way every other control-socket key works.
+	seedEnvFromControlState()
 	initGlog()
 
 	// initPprof()
@@ -656,12 +662,16 @@ func provide(opts docopt.Opts) {
 
 	// sized per provider (provider_memory.go); an absent --max-memory has no
 	// ceiling: the target is derived from the host memory
+	maxMemory := parseProviderMaxMemory(opts)
 	memoryPlan := newProviderMemoryPlan(
-		parseProviderMaxMemory(opts),
+		maxMemory,
 		hostMemoryByteCount(),
 		providerCount,
 	)
 	applyProviderProcessMemory(memoryPlan)
+	// v33's pool auto-size runs before any provider is built; see
+	// applyPoolAutoSize for the pinned-connect adaptation.
+	applyPoolAutoSize(maxMemory)
 
 	allowClientRegistration, _ := opts.Bool("--allow-client-registration")
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
@@ -672,7 +682,7 @@ func provide(opts docopt.Opts) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, quarantineRejectedSignIn: quarantineRejectedSignIn}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, quarantineRejectedSignIn: quarantineRejectedSignIn}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -812,6 +822,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	mergePendingControlOverrides(controlState)
 	globalControlState = controlState
+	// The profile tiers' Go runtime knobs (profiles/memory, PM-04) come after
+	// the control state is loaded so a persisted `set gomemlimit|gogc` beats
+	// the tier default, and after the memory plan so the operator precedence
+	// in applyTurboMemoryLimit/applyEcoSettings/ensureMemoryLimit holds.
+	applyProfileProcessTuning(self.maxMemory)
 	initControlAuditRing()
 	recordControlProcessStart()
 	controlState.shutdownFn = cancel
