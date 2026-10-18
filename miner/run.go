@@ -959,6 +959,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			return runHotSwapParentHandoff(ctx, cancel, self.opts)
 		})
 	}
+	// /metrics: URNETWORK_METRICS binds a fixed address; otherwise the
+	// persisted `metrics` setting rules and defaults to on. The listener
+	// starts beside the control socket so a scrape during startup already
+	// answers; the byte counters appear once the registry is published below.
+	// A HotSwap candidate skips the bind: the parent still holds the address
+	// until it yields.
+	startMetricsAtStartup(controlState, self.hotSwapCandidate)
+	defer func() { _ = stopMetrics() }()
 	// One rate sample per second feeds the snapshot's throughput history.
 	go controlRuntime.runSampler(ctx)
 

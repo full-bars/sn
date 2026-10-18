@@ -39,6 +39,44 @@ const (
 	snapshotIdleBps        = 5120 // 5 KiB/s, the same idle default urnet-tools update --idle uses
 )
 
+// minerRestartState is the restart picture shared by the control socket's
+// snapshot reply and the /metrics startup gauges (metrics_provider.go). It is
+// derived from the run marker beginControlRun consumed plus the version
+// breadcrumb, the same inputs v33's detectStartup/classifyRestart read.
+type minerRestartState struct {
+	Reason          string
+	CleanShutdown   bool
+	PreviousVersion string
+	HadPriorRun     bool
+}
+
+// readMinerRestartState derives the restart picture. A clean exit (and the
+// hotswap/update paths, which also write the marker) is clean; a start with
+// prior state but no marker is a crash; no prior state at all is a first
+// start.
+func readMinerRestartState() minerRestartState {
+	marker, hadPriorRun := controlRuntime.markerSnapshot()
+	state := minerRestartState{Reason: "first-start", HadPriorRun: hadPriorRun}
+	if !hadPriorRun {
+		return state
+	}
+	state.PreviousVersion = marker.Version
+	if state.PreviousVersion == "" {
+		state.PreviousVersion = controlRuntime.lastStartedVersionSnapshot()
+	}
+	switch marker.Reason {
+	case "clean":
+		state.Reason, state.CleanShutdown = "clean", true
+	case "hotswap":
+		state.Reason, state.CleanShutdown = "hotswap", true
+	case "update":
+		state.Reason, state.CleanShutdown = "update", true
+	default:
+		state.Reason = "unclean"
+	}
+	return state
+}
+
 // buildMinerSnapshot assembles the node snapshot from the miner's state.
 func buildMinerSnapshot() (*nodeSnapshot, error) {
 	now := time.Now()
@@ -53,20 +91,8 @@ func buildMinerSnapshot() (*nodeSnapshot, error) {
 		uptime = 0
 	}
 
-	marker, hadPriorRun := controlRuntime.markerSnapshot()
-	restart := snapshotRestart{Reason: "first-start"}
-	if hadPriorRun {
-		switch marker.Reason {
-		case "clean":
-			restart = snapshotRestart{Reason: "clean", CleanShutdown: true}
-		case "hotswap":
-			restart = snapshotRestart{Reason: "hotswap", CleanShutdown: true}
-		case "update":
-			restart = snapshotRestart{Reason: "update", CleanShutdown: true}
-		default:
-			restart = snapshotRestart{Reason: "unclean"}
-		}
-	}
+	restartState := readMinerRestartState()
+	restart := snapshotRestart{Reason: restartState.Reason, CleanShutdown: restartState.CleanShutdown}
 
 	proxies, proxyNote := snapshotProxyCounts()
 	billable, total, clients, haveCounters := controlRuntime.counterTotals()
@@ -76,7 +102,7 @@ func buildMinerSnapshot() (*nodeSnapshot, error) {
 	snap := &nodeSnapshot{
 		V:               1,
 		Version:         minerControlVersion(),
-		PreviousVersion: marker.Version,
+		PreviousVersion: restartState.PreviousVersion,
 		StartedAt:       startedAt.UTC(),
 		Now:             now.UTC(),
 		UptimeSeconds:   uptime.Seconds(),
@@ -104,7 +130,7 @@ func buildMinerSnapshot() (*nodeSnapshot, error) {
 			TotalHistoryBps: totalHistory,
 		}
 	}
-	if marker.Version == minerControlVersion() {
+	if restartState.PreviousVersion == minerControlVersion() {
 		snap.PreviousVersion = ""
 	}
 

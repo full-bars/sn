@@ -361,10 +361,13 @@ var controlLiveDefaults = map[string]string{
 	// path maps any non-positive value to math.MaxInt64.
 	"gomemlimit": "0",
 	"gogc":       "100",
-	// Without an entry here, clearing metrics would report success while the
-	// (hypothetical) listener kept serving. There is no listener in the
-	// miner, so clearing is a no-op that must still be recorded.
-	"metrics":        "off",
+	// Without an entry here, clearing metrics called applyControlLiveDefault,
+	// which returned nil without touching the listener: the endpoint kept
+	// serving while the CLI reported success and no restart needed. That is
+	// the control an operator reaches for when scraping goes wrong.
+	"metrics": "off",
+	// Clearing an explicit address goes back to auto, rebinding a running
+	// listener on loopback plus Tailscale.
 	"metrics_listen": "auto",
 	// Clearing smart_dialer must restore the measured-cost preference to its
 	// off default.
@@ -522,20 +525,8 @@ func validH3ControlValue(value string) bool {
 	return false
 }
 
-// validateMetricsListen accepts auto, off, or an address:port with a port.
-func validateMetricsListen(value string) error {
-	if strings.EqualFold(value, "auto") || strings.EqualFold(value, "off") {
-		return nil
-	}
-	host, port, err := net.SplitHostPort(strings.TrimSpace(value))
-	if err != nil || host == "" || port == "" {
-		return fmt.Errorf("metrics_listen: must be auto or an IP address with a port, like 100.64.0.10:9100 or 0.0.0.0:9100 (got %q)", value)
-	}
-	if n, err := strconv.Atoi(port); err != nil || n <= 0 || n > 65535 {
-		return fmt.Errorf("metrics_listen: must be auto or an IP address with a port, like 100.64.0.10:9100 or 0.0.0.0:9100 (got %q)", value)
-	}
-	return nil
-}
+// validateMetricsListen accepts auto, off, or an IP literal with a port; it
+// lives in metrics_listen.go (the v33 implementation).
 
 // peerAllowed is the peer admission rule shared by the platform peercred
 // files: the provider's own UID, or root.
@@ -587,6 +578,8 @@ func resolveHotRestartEnabled() bool {
 }
 
 func handleControlRequest(state *controlState, req controlRequest) controlResponse {
+	IncrControlCmd(req.Cmd)
+
 	switch req.Cmd {
 	case "version":
 		return controlResponse{OK: true, BuildVersion: minerControlVersion()}
@@ -1002,11 +995,9 @@ func applyControlLiveSideEffect(key, value string) error {
 		connect.SetH1PlusDisabled(!enabled)
 		tlog("⚙️ [control] applied h1_plus=%s (takes effect on the next connect)\n", onOffLabel(enabled))
 	case "metrics":
-		return applyControlMetricsLive(value)
+		return applyMetricsLive(value)
 	case "metrics_listen":
-		// No listener exists in the miner yet, so there is nothing to move.
-		// Persisting the address is all the miner can honestly do.
-		return nil
+		return applyMetricsListenLive()
 	case "proxy_url_max", "proxy_url_refresh", "proxy_dead_cleanup_scope", "proxy_dead_cleanup_interval", "proxy_self_heal":
 		// The running URL fetcher/reaper/cleanup loops re-read these on every
 		// cycle through the P1 resolvers, which check this in-process map
@@ -1028,18 +1019,6 @@ func applyControlLiveSideEffect(key, value string) error {
 	return nil
 }
 
-// applyControlMetricsLive is the miner's honest stand-in for v33's
-// applyMetricsLive. The miner has no Prometheus exporter yet, so "off" is
-// already true (there is no listener), and "on" is refused by name instead of
-// silently claiming a listener exists.
-func applyControlMetricsLive(value string) error {
-	if strings.EqualFold(value, "on") {
-		return fmt.Errorf("the miner does not implement the v3.23 Prometheus /metrics exporter yet; the setting is persisted and will apply when the exporter lands")
-	}
-	// off: nothing to stop. (A future exporter stops here.)
-	return nil
-}
-
 // applyProxyAuditControlLive pushes a proxy_audit on/off to the running audit
 // engine. v33's applyLiveSideEffect("proxy_audit") sets the in-memory override
 // and pokes the ticker; the miner's engine resolves the switch through
@@ -1057,13 +1036,6 @@ func applyProxyAuditControlLive(value string) error {
 		spawnRunOnce(a)
 	}
 	tlog("[proxy][audit] proxy audit %s via control socket\n", onOffLabel(enabled))
-	return nil
-}
-
-// metricsServedAddrs returns the /metrics listen addresses. The miner has no
-// exporter yet, so this is always empty and `urnet-tools metrics` reports
-// metrics off with an explanatory path.
-func metricsServedAddrs() []string {
 	return nil
 }
 
