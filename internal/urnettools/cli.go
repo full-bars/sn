@@ -239,6 +239,12 @@ Proxy Management [target]:
   proxy trim <N>                  ✂   hold running proxies at N, shed worst first (F -> A)
   report [<url>|off]              📡  set report URL at runtime (no restart)
 
+Wallet Consent [target]:
+  wallet status                   🪪  show the network wallet consent (read-only)
+  wallet challenge <coldkey>      🪪  fetch the consent statement to sign (signs nothing)
+  wallet set <coldkey>            🪪  submit a signed consent (--coldkey_seed_file: own workstation only)
+  wallet sign <coldkey>           🪪  sign with the browser helper; the seed never leaves the extension
+
 Maintenance [target]:
   reinstall                       🔧  reinstall provider
   uninstall                       🗑   uninstall provider

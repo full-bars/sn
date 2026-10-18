@@ -200,6 +200,7 @@ func newBaselineCmd() *cobra.Command {
 			"  compare   before and after the last upgrade, or between two marks\n\n" +
 			"The record lives in ~/.urnetwork/baseline.jsonl and holds counts and totals " +
 			"only: no proxy addresses, usernames or passwords.",
+		Example:            "  urnet-tools baseline show\n  urnet-tools baseline mark before-upgrade\n  urnet-tools baseline compare",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if hasHelpFlag(args) {
