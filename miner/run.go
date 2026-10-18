@@ -851,7 +851,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		quarantined.Store(true)
 		cancel()
 	})
-	defer func() { returnErr = errors.Join(returnErr, stopRenewal()) }()
+	// joinRenewal stops and joins the renewal watcher exactly once. The final
+	// quarantine verdict below must be read after the watcher's goroutine has
+	// finished: its rejection handling runs on that goroutine, so deciding the
+	// exit code without joining first races the very callback that sets the
+	// verdict (a rejected sign-in could look like an ordinary run failure).
+	var stopRenewalOnce sync.Once
+	var stopRenewalErr error
+	joinRenewal := func() error {
+		stopRenewalOnce.Do(func() { stopRenewalErr = stopRenewal() })
+		return stopRenewalErr
+	}
+	defer func() { returnErr = errors.Join(returnErr, joinRenewal()) }()
 
 	// Bandwidth registry tracks per-proxy byte counters for billing.
 	// The wrapped dial counts TCP egress; UDP/QUIC egress in this lane is
@@ -919,7 +930,25 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 
 		seed := keyOwner.Seed()
-		byClientJwt, clientId, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), self.allowClientRegistration, output, index)
+		// Fork hook: the ported v33 hot-restart reuse (client_jwt_hotrestart.go)
+		// sits in front of the durable-registration mint. With hot restart on
+		// (the v33 default), a stored client JWT for this proxy identity is
+		// reused — or renewed with the same client_id when expired — so a
+		// restart keeps the identity's server-side reliability history.
+		identityKey := jwtStoreKey(proxySettings)
+		byClientJwt, clientId, reused, err := provideClientJWT(proxyCtx, clientJWTProvideConfig{
+			Api:                    api,
+			NetworkJwtPath:         networkJwtPath,
+			ClientJwtPath:          clientJwtPath,
+			KeyOwner:               keyOwner,
+			ProxySettings:          proxySettings,
+			IdentityKey:            identityKey,
+			ApiUrl:                 self.apiUrl,
+			ClientStrategySettings: clientStrategySettings,
+			Mint: func(mintCtx context.Context) (string, connect.Id, error) {
+				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), self.allowClientRegistration, output, index)
+			},
+		})
 		if err != nil {
 			// Fork hook: the ported v33 give-up/backoff accounting
 			// (proxy_manager_auth.go) records this identity's failed
@@ -929,6 +958,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
 			}
 			return err
+		}
+		if reused {
+			tlog("[reuse] client_id: %s\n", clientId)
+		} else {
+			tlog("[new] client_id: %s\n", clientId)
 		}
 		// Fork hook: a completed authentication proves the identity and clears
 		// its failure/give-up history.
@@ -958,7 +992,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 		}
 
-		callbacks := &providerAuthenticationCallbacks{diagnostics: output, provider: index, clientJwtPath: clientJwtPath, networkJwtPath: networkJwtPath, cancel: cancel, custody: keyOwner}
+		callbacks := &providerAuthenticationCallbacks{diagnostics: output, provider: index, clientJwtPath: clientJwtPath, networkJwtPath: networkJwtPath, identityKey: identityKey, cancel: cancel, custody: keyOwner}
 		boundRefresh := &providerBoundRefresh{original: byClientJwt, callbacks: callbacks}
 		refreshSub := api.AddJwtRefreshListener(boundRefresh)
 		integritySub := api.AddClientRefreshIntegrityListener(boundRefresh)
@@ -1079,6 +1113,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	close(results)
 	for result := range results {
 		returnErr = errors.Join(returnErr, result)
+	}
+	// Join the sign-in renewal watcher before reading its verdict, so a
+	// rejection it is still processing has set `quarantined` first (see
+	// joinRenewal above).
+	if stopErr := joinRenewal(); stopErr != nil {
+		returnErr = errors.Join(returnErr, stopErr)
 	}
 	if quarantined.Load() {
 		returnErr = errors.Join(returnErr, errProviderNetworkSignInQuarantined)

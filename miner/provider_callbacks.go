@@ -22,8 +22,13 @@ type providerAuthenticationCallbacks struct {
 	provider       uint64
 	clientJwtPath  string
 	networkJwtPath string
-	cancel         context.CancelFunc
-	custody        *clientauth.ProviderClientKeyOwner
+	// identityKey is the slot's client JWT store key (jwtStoreKey). A
+	// platform-rejected credential also evicts the hot-restart store entry so
+	// a restart cannot hand the same poisoned identity straight back (the v33
+	// "Delete on rejection": provider/provider_auth.go watchReusedIdentity...).
+	identityKey string
+	cancel      context.CancelFunc
+	custody     *clientauth.ProviderClientKeyOwner
 }
 
 // Required token persistence precedes its existing global cancellation policy.
@@ -52,6 +57,15 @@ func (self *providerAuthenticationCallbacks) AuthLogout() {
 	}
 	if err != nil {
 		self.retainFailure(err)
+	}
+	// Fork hook: a rejected credential must not be reused on the next start
+	// either. The custody tombstone already blocks the durable-registration
+	// path; evicting the hot-restart store entry is what stops provideClientJWT
+	// from handing the same poisoned identity straight back.
+	if self.identityKey != "" {
+		if delErr := loadGlobalClientJWTStore().Delete(self.identityKey); delErr != nil {
+			tlog("⚠️ [jwt-store] failed to evict rejected identity for %s: %v\n", self.identityKey, delErr)
+		}
 	}
 	self.cancel()
 	if err != nil {
