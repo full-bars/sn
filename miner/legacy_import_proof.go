@@ -140,13 +140,15 @@ func (self *legacyImportProofTracker) progress() legacyImportProgress {
 }
 
 // startLegacyImportHeartbeat emits the running tally immediately and every
-// interval until the returned stop func runs.
+// interval until the returned stop func runs. The opening emission is
+// synchronous, before any proof can resolve: the first heartbeat is the
+// phase starting (proven=0, pending=all), not a race with a fast prover.
 func startLegacyImportHeartbeat(narrator *legacyImportNarrator, tracker *legacyImportProofTracker, interval time.Duration, start time.Time) func() {
+	narrator.heartbeat(tracker.progress(), time.Since(start))
 	done := make(chan struct{})
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
-		narrator.heartbeat(tracker.progress(), time.Since(start))
 		for {
 			select {
 			case <-done:
@@ -312,7 +314,7 @@ func legacyImportProveAll(
 		rest = append(rest, slot)
 	}
 	if direct != nil {
-		narrator.wait("proof slot", fmt.Sprintf("direct (1 of %d, timeout=%s)", len(prove), legacyImportElapsed(opts.proofTimeout)))
+		narrator.wait("proof slot", fmt.Sprintf("direct (1 of %d, timeout=%s)", len(prove), legacyImportBound(opts.proofTimeout)))
 		apply(legacyImportProveSlot(proofCtx, prover, public, direct, opts))
 		if proofCtx.Err() != nil {
 			return legacyImportStop(ctx, proofCtx, budget, narrator, prove, resolved, start)
@@ -432,7 +434,7 @@ func legacyImportBuildProver(ctx context.Context, opts legacyImportOptions) (leg
 	if timeout <= 0 {
 		timeout = legacyImportProverBuildTimeout
 	}
-	opts.narrator.wait("prover construction", fmt.Sprintf("timeout=%s", legacyImportElapsed(timeout)))
+	opts.narrator.wait("prover construction", fmt.Sprintf("timeout=%s", legacyImportBound(timeout)))
 	type built struct {
 		prover legacyImportProver
 		close  func()
@@ -441,7 +443,7 @@ func legacyImportBuildProver(ctx context.Context, opts legacyImportOptions) (leg
 	done := make(chan built, 1)
 	wait := func(family string, attempt int, dialTimeout time.Duration) {
 		opts.narrator.wait("api dial", fmt.Sprintf("family=%s, attempt=%d, timeout=%s",
-			family, attempt, legacyImportElapsed(dialTimeout)))
+			family, attempt, legacyImportBound(dialTimeout)))
 	}
 	go func() {
 		prover, closeProver, err := opts.newProver(wait)
@@ -451,8 +453,8 @@ func legacyImportBuildProver(ctx context.Context, opts legacyImportOptions) (leg
 	case b := <-done:
 		return b.prover, b.close, b.err
 	case <-time.After(timeout):
-		opts.narrator.line("prover construction timed out after %s; the proof cannot run this start", legacyImportElapsed(timeout))
-		return nil, nil, fmt.Errorf("prover construction timed out after %s", legacyImportElapsed(timeout))
+		opts.narrator.line("prover construction timed out after %s; the proof cannot run this start", legacyImportBound(timeout))
+		return nil, nil, fmt.Errorf("prover construction timed out after %s", legacyImportBound(timeout))
 	}
 }
 

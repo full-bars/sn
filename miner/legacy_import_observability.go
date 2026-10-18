@@ -179,6 +179,13 @@ func legacyImportElapsed(d time.Duration) string {
 	return d.Round(100 * time.Millisecond).String()
 }
 
+// legacyImportBound renders a bound exactly: an operator reading a timeout or
+// a budget must see the number the code enforces, not a rounded
+// approximation (150ms rounds to 200ms under legacyImportElapsed).
+func legacyImportBound(d time.Duration) string {
+	return d.String()
+}
+
 // legacyImportID8 is the display prefix of an identity string: enough to
 // correlate a detection or a result with the store, never a full credential.
 func legacyImportID8(value string) string {
