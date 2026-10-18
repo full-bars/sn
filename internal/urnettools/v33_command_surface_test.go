@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
 // v33ClientCommand is one row of the v33 (3.23-fix) urnet-tools command
@@ -208,20 +210,22 @@ func TestCompletionCommandEnabled(t *testing.T) {
 // guard the repo already keeps for the provider CLI (miner/cli_command_refs_test.go)
 // to the urnet-tools client: every `urnet-tools <command>` named in the docs
 // must be a command the client tree actually has, so a removed command cannot
-// stay documented and send operators to something that will not run.
+// stay documented and send operators to something that will not run. The same
+// check covers `urnet-docker <command>` against the docker tree.
 func TestDocsReferenceExistingUrnetToolsCommands(t *testing.T) {
 	files, err := filepath.Glob(filepath.Join("..", "..", "docs", "*.md"))
 	if err != nil || len(files) == 0 {
 		t.Fatalf("no docs found to check: %v", err)
 	}
-	ref := regexp.MustCompile(`urnet-tools ([a-z][a-z0-9-]*)`)
 	// Builtins that are not per-provider commands: completion is Cobra's and
 	// help is handled by the framework.
 	builtin := map[string]bool{"completion": true, "help": true}
 
-	root := buildRootCmd()
-	root.InitDefaultHelpCmd()
-	root.InitDefaultCompletionCmd()
+	toolsRoot := buildRootCmd()
+	toolsRoot.InitDefaultHelpCmd()
+	toolsRoot.InitDefaultCompletionCmd()
+	dockerRoot := buildDockerRootCmd()
+	dockerRoot.InitDefaultHelpCmd()
 
 	missing := map[string][]string{}
 	for _, file := range files {
@@ -229,17 +233,27 @@ func TestDocsReferenceExistingUrnetToolsCommands(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, m := range ref.FindAllStringSubmatch(string(b), -1) {
-			name := m[1]
-			if builtin[name] {
-				continue
-			}
-			if _, _, err := root.Find([]string{name}); err != nil {
-				missing[name] = append(missing[name], filepath.Base(file))
+		for _, ref := range []struct {
+			binary string
+			root   *cobra.Command
+		}{
+			{binary: "urnet-tools", root: toolsRoot},
+			{binary: "urnet-docker", root: dockerRoot},
+		} {
+			re := regexp.MustCompile(regexp.QuoteMeta(ref.binary) + ` ([a-z][a-z0-9-]*)`)
+			for _, m := range re.FindAllStringSubmatch(string(b), -1) {
+				name := m[1]
+				if builtin[name] {
+					continue
+				}
+				if _, _, err := ref.root.Find([]string{name}); err != nil {
+					key := ref.binary + " " + name
+					missing[key] = append(missing[key], filepath.Base(file))
+				}
 			}
 		}
 	}
 	for name, where := range missing {
-		t.Errorf("docs reference `urnet-tools %s` but the client has no such command (in %s)", name, strings.Join(where, ", "))
+		t.Errorf("docs reference `%s` but the client has no such command (in %s)", name, strings.Join(where, ", "))
 	}
 }
