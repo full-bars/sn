@@ -183,7 +183,10 @@ Usage:
         [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--operators-url=<url>]
         [-v...]
     provider wallet hotkey status [--hotkey_seed_file=<path>] [--operators-url=<url>] [-v...]
-    provider claim [--provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+    provider sn-status [--json]
+        [--api_url=<api_url>]
+        [-v...]
+    provider claim [--store-client=<key> | --provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
         [--api_url=<api_url>]
         [-v...]
     provider claim-daemon --config=<path>
@@ -235,6 +238,9 @@ Usage:
     provider proxy exclude [<pattern>] [--remove]
     provider proxy remove-dead [--degraded[=<duration>]] [--auth-failures=<N>] [--source=<source>] [--yes] [--preview]
     provider proxy activity
+    provider direct [<state>]
+    provider logs [-n <lines>]
+    provider print-network-id <file>
     provider choose_network <api_url> <connect_url>
     provider choose_network --reset
     provider choose_network --show
@@ -253,6 +259,7 @@ Options:
     --version                        Show version.
     -v                               Enable verbose mode. Repeat for higher levels:
                                      one -v means level 1, -vv means level 2, and so on.
+    --json                           Output in JSON format for automated tooling.
     -f                               Force overwrite the JWT token store file or proxy value, if exists.
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
@@ -284,6 +291,11 @@ Options:
                                      With wallet hotkey: the global consent's epochs. Omitted, generation 1 earns
                                      from epoch 0 and a later one from the operators' current epoch plus 1, each
                                      through 65535 epochs later.
+    --store-client=<key>            claim: use the client token of this identity from the provider state
+                                     directory's .client_jwts.json identity store. <key> is the proxy address
+                                     the identity was minted for, or "direct"; with several identities at one
+                                     address pass the full key (the address, \x1f, then the user). Exactly one
+                                     of --store-client, --provider-jwt and --legacy-coldkey.
     --provider-jwt=<path>           Select one retained provider JWT; default: .provider.jwt in the provider state directory.
     --legacy-network-wallet         Explicit network-wallet compatibility; never selects a provider wallet.
     --legacy-coldkey=<coldkey_ss58>   Read a legacy network-only proof for this original committed coldkey.
@@ -391,7 +403,9 @@ Options:
     --proxy_dead_cleanup_scope=<scope>  Automatic dead-proxy cleanup scope: none, url, or all (default url).
                                      Also PROXY_DEAD_CLEANUP_SCOPE.
     --proxy_dead_cleanup_interval=<dur>  How often automatic cleanup runs, when the scope is not none
-                                     (default 6h). Also PROXY_DEAD_CLEANUP_INTERVAL. Minimum 1m.`,
+                                     (default 6h). Also PROXY_DEAD_CLEANUP_INTERVAL. Minimum 1m.
+    <state>                          Direct IP providing state: on | off | status. If omitted, reports current state.
+    -n <lines>                       Number of lines to show from the end of the log [default: 0].`,
 		DefaultApiUrl,
 		DefaultConnectUrl,
 		operatorlist.DefaultUrl,
@@ -477,6 +491,8 @@ func Run(args []string) {
 		} else if challenge, _ := opts.Bool("challenge"); challenge {
 			walletChallenge(opts)
 		}
+	} else if snStatus, _ := opts.Bool("sn-status"); snStatus {
+		snStatusCmd(opts)
 	} else if claim_, _ := opts.Bool("claim"); claim_ {
 		claim(opts)
 	} else if claimDaemon, _ := opts.Bool("claim-daemon"); claimDaemon {
@@ -506,11 +522,17 @@ func Run(args []string) {
 	} else if authProvide, _ := opts.Bool("auth-provide"); authProvide {
 		auth(opts)
 		provide(opts)
+	} else if logs, _ := opts.Bool("logs"); logs {
+		providerLogs(opts)
+	} else if printNetworkId, _ := opts.Bool("print-network-id"); printNetworkId {
+		printNetworkIdCmd(opts)
 	} else if chooseNetwork, _ := opts.Bool("choose_network"); chooseNetwork {
 		if err := chooseNetworkCmd(opts); err != nil {
 			fmt.Printf("%s\n", err)
 			os.Exit(1)
 		}
+	} else if direct_, _ := opts.Bool("direct"); direct_ {
+		cmdDirect(opts)
 	} else if operators, _ := opts.Bool("operators"); operators {
 		operatorsCmd(opts)
 	}

@@ -438,14 +438,15 @@ func TestSnWalletMappingRefusesChangedChallengeBeforePost(t *testing.T) {
 	}
 }
 
-// Explicit earning bounds bypass epoch discovery and survive the exact signed
-// producer request, original retention and current acknowledgement unchanged.
+// Explicit earning bounds are signed exactly as supplied when they cover the
+// full protocol window; the current epoch is read to refuse an interval that
+// would leave epochs unpaid.
 func TestSnWalletMappingSignsExplicitEarningInterval(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	defer cancel()
 	token, key, seedPath := financialWalletMappingTestProvider(t)
 	f := newFinancialWalletMappingHttp(t, token, key.Address(), key.PublicKey())
-	from, through := int64(11), int64(13)
+	from, through := int64(3), int64(65538)
 	f.fromEpoch, f.throughEpoch = from, through
 	if err := financialWalletMappingTestSet(t, ctx, f.endpoint.URL, key.Address(), &snWalletProof{SeedFile: seedPath, fromEpoch: &from, throughEpoch: &through}); err != nil {
 		t.Fatal(err)
@@ -453,8 +454,8 @@ func TestSnWalletMappingSignsExplicitEarningInterval(t *testing.T) {
 	f.stateLock.Lock()
 	epochs, challenges, posts := f.epochRequests, len(f.challengeRequests), len(f.walletBodies)
 	f.stateLock.Unlock()
-	if epochs != 0 || challenges != 1 || posts != 1 {
-		t.Fatal("explicit earning interval was replaced by epoch discovery", epochs, challenges, posts)
+	if epochs != 1 || challenges != 1 || posts != 1 {
+		t.Fatal("explicit earning interval was normalized or re-signed", epochs, challenges, posts)
 	}
 	journal, err := financialWalletMappingTestJournal(ctx, filepath.Join(os.Getenv("URNETWORK_STATE_DIR"), ".provider.jwt"), f.endpoint.URL)
 	if err != nil || len(journal.Records) != 1 || !journal.Records[0].Acknowledged {

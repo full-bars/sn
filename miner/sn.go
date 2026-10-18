@@ -117,7 +117,11 @@ func runFiniteClaim(parent context.Context, opts docopt.Opts, hooks finiteClaimH
 		fmt.Printf("note: --dry-run has no effect without --key_file; claim only verifies\n")
 	}
 
-	byJwt, _, err := readSnCredentials(snCredentialsFromOpts(opts))
+	selection, err := snClaimCredentialFromOpts(opts)
+	if err != nil {
+		return err
+	}
+	byJwt, _, err := readSnCredentials(selection)
 	if err != nil {
 		return err
 	}
