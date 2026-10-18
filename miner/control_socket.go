@@ -755,6 +755,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			defer state.txMu.Unlock()
 			oldValue, oldMeta, hadOld := state.getWithMeta("proxy_audit")
 			if err := state.set("proxy_audit", val); err != nil {
+				tlog("❌ [control] audit %s rejected: %s\n", req.Action, err)
 				return controlResponse{OK: false, Error: err.Error()}
 			}
 			if err := state.persist(); err != nil {
@@ -767,11 +768,12 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 					delete(state.meta, "proxy_audit")
 				}
 				state.mu.Unlock()
+				tlog("❌ [control] audit %s failed to persist, rolled back: %s\n", req.Action, err)
 				return controlResponse{OK: false, Error: "audit applied in memory but failed to persist: " + err.Error()}
 			}
-			// The miner has no audit engine; the value persists for parity and
-			// the provider log says no engine consumes it.
-			tlog("[control] proxy audit %s persisted; the miner does not run the v33 audit engine yet\n", req.Action)
+			// The v33 confirmation line, naming the value the setting had
+			// before this change.
+			tlog("✓ [proxy][audit] proxy audit %s via control socket (was %s)\n", req.Action, formerValue(oldValue, hadOld))
 			recordControlAudit(CommandAudit{
 				Timestamp: time.Now(),
 				Cmd:       "audit",
