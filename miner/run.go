@@ -183,6 +183,9 @@ Usage:
     provider proxy exclude [<pattern>] [--remove]
     provider proxy remove-dead [--degraded[=<duration>]] [--auth-failures=<N>] [--source=<source>] [--yes] [--preview]
     provider proxy activity
+    provider direct [<state>]
+    provider logs [-n <lines>]
+    provider print-network-id <file>
     provider choose_network <api_url> <connect_url>
     provider choose_network --reset
     provider choose_network --show
@@ -201,6 +204,7 @@ Options:
     --version                        Show version.
     -v                               Enable verbose mode. Repeat for higher levels:
                                      one -v means level 1, -vv means level 2, and so on.
+    --json                           Output in JSON format for automated tooling.
     -f                               Force overwrite the JWT token store file or proxy value, if exists.
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
@@ -330,7 +334,9 @@ Options:
     --proxy_dead_cleanup_scope=<scope>  Automatic dead-proxy cleanup scope: none, url, or all (default url).
                                      Also PROXY_DEAD_CLEANUP_SCOPE.
     --proxy_dead_cleanup_interval=<dur>  How often automatic cleanup runs, when the scope is not none
-                                     (default 6h). Also PROXY_DEAD_CLEANUP_INTERVAL. Minimum 1m.`,
+                                     (default 6h). Also PROXY_DEAD_CLEANUP_INTERVAL. Minimum 1m.
+    <state>                          Direct IP providing state: on | off | status. If omitted, reports current state.
+    -n <lines>                       Number of lines to show from the end of the log [default: 0].`,
 		DefaultApiUrl,
 		DefaultConnectUrl,
 		operatorlist.DefaultUrl,
@@ -441,11 +447,17 @@ func Run(args []string) {
 	} else if authProvide, _ := opts.Bool("auth-provide"); authProvide {
 		auth(opts)
 		provide(opts)
+	} else if logs, _ := opts.Bool("logs"); logs {
+		providerLogs(opts)
+	} else if printNetworkId, _ := opts.Bool("print-network-id"); printNetworkId {
+		printNetworkIdCmd(opts)
 	} else if chooseNetwork, _ := opts.Bool("choose_network"); chooseNetwork {
 		if err := chooseNetworkCmd(opts); err != nil {
 			fmt.Printf("%s\n", err)
 			os.Exit(1)
 		}
+	} else if direct_, _ := opts.Bool("direct"); direct_ {
+		cmdDirect(opts)
 	} else if operators, _ := opts.Bool("operators"); operators {
 		operatorsCmd(opts)
 	}
