@@ -107,6 +107,66 @@ func TestV33CommandSurfaceParity(t *testing.T) {
 	}
 }
 
+// v33DockerCommands is the v33 (3.23-fix) urnet-docker command surface, read
+// from the reference client at 9bdb0909a and recorded as the D1-D22 inventory
+// in the parity audit (sn-parity/D.md, section 2). The docker shim is the
+// other half of the same client, and it forwards to the same provider
+// commands, so its surface gets the same regression guard as urnet-tools.
+var v33DockerCommands = []v33ClientCommand{
+	{name: "providers", aliases: []string{"list", "ps"}},
+	{name: "status"},
+	{name: "top"},
+	{name: "sn-status"},
+	{name: "start"},
+	{name: "stop"},
+	{name: "restart"},
+	{name: "logs"},
+	{name: "auth"},
+	{name: "choose-network", aliases: []string{"choose_network"}},
+	{name: "summary"},
+	{name: "report"},
+	{name: "update", aliases: []string{"self-update", "selfupdate"}},
+	{name: "idle-update"},
+	{name: "version"},
+	{name: "proxy", subs: []string{"add", "paste", "clear", "remove", "add-source", "remove-source", "refresh", "remove-dead", "health", "traffic", "summary", "trim", "audit", "exclude"}},
+	{name: "self-heal", aliases: []string{"selfheal"}},
+	{name: "set"},
+	{name: "rename"},
+	{name: "fast-auth", aliases: []string{"fastauth"}},
+	{name: "session"},
+	{name: "exec"},
+	{name: "direct"},
+	{name: "usage"},
+}
+
+// TestV33DockerCommandSurfaceParity mirrors TestV33CommandSurfaceParity for
+// the urnet-docker tree: a command or alias in the D1-D22 inventory that
+// disappears is a surface regression.
+func TestV33DockerCommandSurfaceParity(t *testing.T) {
+	root := buildDockerRootCmd()
+	root.InitDefaultHelpCmd()
+
+	for _, want := range v33DockerCommands {
+		found, _, err := root.Find([]string{want.name})
+		if err != nil || found.Name() != want.name {
+			t.Errorf("v33 urnet-docker command %q is missing from the tree (err=%v)", want.name, err)
+			continue
+		}
+		for _, alias := range want.aliases {
+			resolved, _, err := root.Find([]string{alias})
+			if err != nil || resolved.Name() != want.name {
+				t.Errorf("v33 urnet-docker alias %q does not resolve to %q (err=%v)", alias, want.name, err)
+			}
+		}
+		for _, sub := range want.subs {
+			child, _, err := root.Find([]string{want.name, sub})
+			if err != nil || child.Name() != sub {
+				t.Errorf("v33 urnet-docker subcommand %q %q is missing (err=%v)", want.name, sub, err)
+			}
+		}
+	}
+}
+
 // The v33 proxy group dispatches its subcommands from raw arguments, so the
 // tree cannot be walked; the dispatcher's own required-subcommand list is the
 // surface. Every v33 proxy verb must still be named there.
