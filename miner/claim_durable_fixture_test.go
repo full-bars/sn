@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
 
@@ -24,6 +25,29 @@ import (
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/internal/durablehead"
 )
+
+// reconcileClaimV2TestTemporaries removes the durable-head create temporaries a
+// cancelled daemon can leave in a state directory. The Owner retains an
+// unanchored temporary and refuses to open over it by design
+// (checkTemporaryCensus); a test that asserts a later, unrelated refusal
+// reconciles the fixture's leftovers itself.
+func reconcileClaimV2TestTemporaries(t testing.TB, dirs ...string) {
+	t.Helper()
+	for _, dir := range dirs {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasPrefix(entry.Name(), ".durable-head-") {
+				continue
+			}
+			if err := os.Remove(filepath.Join(dir, entry.Name())); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+}
 
 // Existing checkpoint metadata is never replaced, including negative fixtures.
 // Deliberately prewritten legacy-format fixtures are adopted only by this

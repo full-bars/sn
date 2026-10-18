@@ -295,6 +295,10 @@ func TestClaimV2RunsBesideV1(t *testing.T) {
 		t.Fatalf("v1 queue changed beside v2: %+v", entry)
 	}
 	// Each daemon refuses the other's queue.
+	// A cancelled publication can leave an unanchored durable-head temporary
+	// behind, which the next Owner refuses by design; this block asserts the
+	// schema refusal, so reconcile those fixture leftovers first.
+	reconcileClaimV2TestTemporaries(t, v1.StateDir, v2Dir)
 	refused := claimQueueTestContext(t, t.Context(), v1.StateDir, v2Dir)
 	v2Store, err := newClaimQueueV2Store(refused, v1.StateDir)
 	if err != nil {

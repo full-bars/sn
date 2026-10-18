@@ -125,6 +125,29 @@ func (self *recordingLegacyImportRecorder) legacyImportSkipped(reason, detail st
 	self.skipped = append(self.skipped, reason+"|"+detail)
 }
 
+// skippedList copies the recorded skip reasons so a failing test can name the
+// silent path instead of reporting only the missing artifact.
+func (self *recordingLegacyImportRecorder) skippedList() []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	return append([]string(nil), self.skipped...)
+}
+
+// legacyImportTestDirListing names the fixture's state files for failure
+// messages.
+func legacyImportTestDirListing(t *testing.T, dir string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return []string{"<" + err.Error() + ">"}
+	}
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	return names
+}
+
 func (self *recordingLegacyImportRecorder) legacyImportSummary(imported, fallback, skipped int) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -378,9 +401,12 @@ func TestLegacyImportDirectSlotWithoutProxies(t *testing.T) {
 	if len(result.mintSlots) != 0 {
 		t.Fatal("direct slot must import")
 	}
+	if skips := fixture.recorder.skippedList(); len(skips) != 0 {
+		t.Fatalf("direct slot import skipped: %v (state dir: %v)", skips, legacyImportTestDirListing(t, fixture.dir))
+	}
 	raw, err := os.ReadFile(filepath.Join(fixture.dir, ".provider.jwt"))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%v (state dir: %v)", err, legacyImportTestDirListing(t, fixture.dir))
 	}
 	token, err := clientauth.ReadToken(filepath.Join(fixture.dir, ".provider.jwt"))
 	if err != nil {
