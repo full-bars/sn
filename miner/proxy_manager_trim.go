@@ -53,12 +53,56 @@ func readTrimTarget() (int, error) {
 	if err != nil || n < 0 {
 		// Treat unparseable as no cap, never a false cap, but say so once: a
 		// cap the operator believes is set has silently stopped applying.
+		// The ramlog line is immediate, but the events.log copy is an
+		// open+write+fsync and this runs while the caller may hold its lock
+		// (the proxy manager's start() holds m.mu), so it is queued for after
+		// the lock is released. Callers with no deferred queue drain it
+		// themselves.
 		if w := trimGarbageWarning(s); w != "" {
 			tlog("%s\n", w)
+			deferCritWrite(w)
 		}
 		return 0, nil
 	}
 	return n, nil
+}
+
+// deferredCrit holds critical-log lines produced while a caller holds a lock
+// it must not block on. Drained by drainDeferredCrit after the lock is gone.
+var deferredCrit struct {
+	sync.Mutex
+	lines []string
+}
+
+// deferCritWrite queues a line for the post-unlock critical-log write.
+func deferCritWrite(line string) {
+	deferredCrit.Lock()
+	defer deferredCrit.Unlock()
+	deferredCrit.lines = append(deferredCrit.lines, line)
+}
+
+// drainDeferredCrit returns and clears the queued lines without writing them.
+// Used where the caller wants the lines itself (tests, and the startup path
+// which writes them directly). It does NOT participate in batch ordering, so
+// only one such caller may run at a time; the startup path runs once per
+// process, before reloads exist. The reload path (P2) must serialise its
+// batches like the v33 drainDeferredCritFn so lines reach events.log in the
+// order the reloads that produced them ran.
+func drainDeferredCrit() []string {
+	deferredCrit.Lock()
+	defer deferredCrit.Unlock()
+	out := deferredCrit.lines
+	deferredCrit.lines = nil
+	return out
+}
+
+// writeDeferredCrit writes the lines queued by deferCritWrite to events.log.
+// This is the startup consumer: the proxy manager's start() has returned, so
+// no reload lock is held and the blocking open+write+fsync of critLog is fine.
+func writeDeferredCrit() {
+	for _, line := range drainDeferredCrit() {
+		critLog("%s", line)
+	}
 }
 
 // trimGarbageSeen is every unparseable proxy_trim value already warned about,

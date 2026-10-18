@@ -713,6 +713,10 @@ func provide(opts docopt.Opts) {
 		os.Exit(1)
 	}
 	defer proxyManager.stop()
+	// Startup holds no reload lock, so any critical-log line the cap lookup
+	// queued (an unparseable proxy_trim) is written straight away here rather
+	// than waiting for a reload that may be hours away.
+	writeDeferredCrit()
 	providerCount := len(allProxySettings)
 	if providerCount == 0 {
 		providerCount = 1
