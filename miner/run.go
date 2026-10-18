@@ -137,7 +137,7 @@ Usage:
     provider sn-status [--json]
         [--api_url=<api_url>]
         [-v...]
-    provider claim [--provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+    provider claim [--store-client=<key> | --provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
         [--api_url=<api_url>]
         [-v...]
     provider claim-daemon --config=<path>
@@ -236,6 +236,11 @@ Options:
                                      With wallet hotkey: the global consent's epochs. Omitted, generation 1 earns
                                      from epoch 0 and a later one from the operators' current epoch plus 1, each
                                      through 65535 epochs later.
+    --store-client=<key>            claim: use the client token of this identity from the provider state
+                                     directory's .client_jwts.json identity store. <key> is the proxy address
+                                     the identity was minted for, or "direct"; with several identities at one
+                                     address pass the full key (the address, \x1f, then the user). Exactly one
+                                     of --store-client, --provider-jwt and --legacy-coldkey.
     --provider-jwt=<path>           Select one retained provider JWT; default: .provider.jwt in the provider state directory.
     --legacy-network-wallet         Explicit network-wallet compatibility; never selects a provider wallet.
     --legacy-coldkey=<coldkey_ss58>   Read a legacy network-only proof for this original committed coldkey.

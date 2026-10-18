@@ -20,6 +20,12 @@ type snCredentialSelection struct {
 	original      string
 	jwtFile       string
 	legacyNetwork bool
+	// storeClient is the operator-typed identity key and storeJwt the client
+	// token `provider claim --store-client` resolved from the identity store.
+	// A store credential arrives as a token, not a file: nothing re-reads or
+	// overwrites it.
+	storeClient string
+	storeJwt    string
 }
 
 // Selection does not refresh, register, mint or overwrite an identity.
@@ -30,8 +36,12 @@ func snCredentialsFromOpts(opts docopt.Opts) snCredentialSelection {
 	return snCredentialSelection{jwtFile: strings.TrimSpace(path), legacyNetwork: legacyWallet || strings.TrimSpace(legacyColdkey) != ""}
 }
 
-// The selected original path also names the command's consent journal.
+// The selected original path also names the command's consent journal. The
+// store read has no file behind it, so it never resolves one.
 func snCredentialPath(selection snCredentialSelection) (string, error) {
+	if selection.storeClient != "" || selection.storeJwt != "" {
+		return "", fmt.Errorf("the credential selected from the identity store is a token, not a file")
+	}
 	path := selection.jwtFile
 	if path == "" {
 		name := ".provider.jwt"
@@ -50,6 +60,16 @@ func snCredentialPath(selection snCredentialSelection) (string, error) {
 // Parsing only selects local wiring. The API verifies the token signature and
 // authorization; this function never turns unverified claims into authority.
 func readSnCredentials(selection snCredentialSelection) (string, *sdk.Id, error) {
+	if selection.storeJwt != "" {
+		// The store read already refused an empty, non-client or expired
+		// token; this only extracts the identity the claim is authorized as.
+		clientId, err := clientauth.ClientIdFromJwt(selection.storeJwt)
+		if err != nil || clientId == (connect.Id{}) {
+			return "", nil, fmt.Errorf("stored client credential has no usable client identity: %w", errors.Join(err, errors.New("provider claim is not ready")))
+		}
+		id, err := sdk.ParseId(clientId.String())
+		return selection.storeJwt, id, err
+	}
 	path, err := snCredentialPath(selection)
 	if err != nil {
 		return "", nil, err
