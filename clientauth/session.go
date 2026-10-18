@@ -288,7 +288,7 @@ func refreshStoredClientJwtWithCustody(ctx context.Context, api *sdk.Api, token 
 		return "", connect.Id{}, errors.Join(refreshErr, err)
 	}
 	if !allowUnavailable {
-		return "", connect.Id{}, &RegistrationRefreshUnavailableError{cause: refreshErr}
+		return "", connect.Id{}, NewRegistrationRefreshUnavailableError(refreshErr)
 	}
 	if err := ctx.Err(); err != nil {
 		return "", connect.Id{}, err

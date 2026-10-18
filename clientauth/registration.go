@@ -67,6 +67,13 @@ func IsRegistrationRefreshUnavailable(err error) bool {
 	return errors.As(err, &unavailable)
 }
 
+// NewRegistrationRefreshUnavailableError wraps the leaf read failure. The
+// cause is kept for classification: a server status means the API answered,
+// a network error means it was never reached.
+func NewRegistrationRefreshUnavailableError(cause error) error {
+	return &RegistrationRefreshUnavailableError{cause: cause}
+}
+
 // Only a completed remote reply can produce this cause. Local registration or
 // credential custody failures retain their original hard errors separately.
 type RegistrationResponseIdentityError struct{}
