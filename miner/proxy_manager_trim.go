@@ -17,12 +17,11 @@ import (
 // (proxy_trim.go): the persisted `proxy trim <N>` hard cap on running proxies
 // and the worst-first shed ranking that startup uses to hold proxies back.
 //
-// The GRADE resolver is stubbed for P1(a): it reads the persisted
-// Score/Graded fields of the two stores directly instead of v33's unified
-// proxyGradeFor (proxy_grade_report.go, P1(c)). The ported trim tests that
-// assert grade ordering pass through this stub because the persisted fields
-// are what the stub reads; the tests that need a live earnings store or the
-// health registry are deferred to P1(c)/P2 (see the report).
+// The GRADE resolver is the real v33 unifier (proxyGradeFor,
+// proxy_manager_grade_report.go, ported in P1(c)): the paid/file store wins
+// over the address-keyed URL cache. The tests that need a live earnings store
+// are deferred to P1(c2)/P2 (see the report); the trim ranking passes a zero
+// earnings function until the earnings store lands.
 
 // trimCapOperator is the source label for a cap the operator set by hand.
 const trimCapOperator = "operator"
@@ -271,28 +270,23 @@ type trimRank struct {
 	traffic uint64
 }
 
-// trimGradeFor is the P1(a) stand-in for v33's proxyGradeFor unifier
-// (proxy_grade_report.go, P1(c)): it reads the persisted grade from the paid
-// store first (ProxyEntry wins), then the URL cache by bare address. The
-// second return is false when neither store has a decidable grade.
+// trimGradeFor resolves the grade for a proxy identity key through the real
+// v33 unifier (proxyGradeFor, proxy_manager_grade_report.go): the paid/file
+// store (proxy.state, ProxyEntry) wins over the URL cache (proxy_url.json,
+// ProxyURLEntry, looked up by the key's address part); the second return is
+// false when neither store has a graded entry. P1(c) replaced the P1(a)
+// stand-in that re-read the persisted fields here, so the trim ranking can no
+// longer drift from the report/summary resolution.
 func trimGradeFor(key string, state *ProxyState, urlState *ProxyURLState) (float64, bool) {
-	if state != nil {
-		if entry, ok := state.Proxies[key]; ok && entry.Graded {
-			return entry.Score, true
-		}
-	}
-	if urlState != nil {
-		addr, _ := connect.SplitProxyKey(key)
-		if entry, ok := urlState.Cache[addr]; ok && entry.Graded {
-			return entry.Score, true
-		}
+	if info, ok := proxyGradeFor(key, state, urlState); ok {
+		return info.Score, true
 	}
 	return 0, false
 }
 
 // buildTrimGradeResolver returns a per-identity-key A-F grade resolver backed by
-// trimGradeFor: the paid/file store wins, else the URL cache. A nil urlState
-// degrades to the paid store only.
+// the proxyGradeFor unifier: the paid/file store wins, else the URL cache. A nil
+// urlState degrades to the paid store only.
 func buildTrimGradeResolver(state *ProxyState, urlState *ProxyURLState) func(key string) (float64, bool) {
 	return func(key string) (float64, bool) {
 		return trimGradeFor(key, state, urlState)
