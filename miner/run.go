@@ -636,6 +636,23 @@ func provide(opts docopt.Opts) {
 		panic(err)
 	}
 
+	// HotSwap candidate: a child spawned by a handoff inherits the parent's
+	// IPC channel (fd 3 on Unix, the named pipe in the environment on Windows).
+	// It runs its pre-flight here, before any provider state is touched, and
+	// announces READY only once the account token and the API host check out;
+	// the parent answers TAKEOVER when it is ready to yield. A failed
+	// pre-flight exits 2 so a supervisor restart is the visible outcome rather
+	// than a second provider starting while the parent still holds the
+	// identities.
+	hotSwapIPC, isHotSwapCandidate := getHotSwapChildIPC()
+	if isHotSwapCandidate {
+		if err := runHotSwapChildHandshake(hotSwapIPC, opts, apiUrl); err != nil {
+			fmt.Fprintf(os.Stderr, "[hotswap] candidate pre-flight failed: %s\n", err)
+			hotSwapIPC.Close()
+			os.Exit(2)
+		}
+	}
+
 	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	defer stopSignals()
 
@@ -672,7 +689,7 @@ func provide(opts docopt.Opts) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, quarantineRejectedSignIn: quarantineRejectedSignIn}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -813,17 +830,37 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	mergePendingControlOverrides(controlState)
 	globalControlState = controlState
 	initControlAuditRing()
-	recordControlProcessStart()
+	// A HotSwap successor labels its start entry "hotswap". A Docker in-place
+	// execve successor is not a spawned candidate (no IPC descriptor) but the
+	// env marker survives the exec, so both kinds are labelled. The persist
+	// gate is armed only for a spawned candidate: its ring was loaded before
+	// the parent's final flush and must not clobber it until the takeover
+	// merge.
+	recordProcessStart(self.hotSwapCandidate || os.Getenv(EnvHotSwapExec) == "1", self.hotSwapCandidate)
 	controlState.shutdownFn = cancel
-	controlClose, err := startControlSocket(ctx, controlState)
-	if err != nil {
-		output.observe(providerStatusFailed, 0, false, err, 0, nil)
-		return err
+	// The control socket is also the handoff's process-level switch: the
+	// retiring parent quiesces (closes) it at the commit point and the
+	// successor binds its own once the path is free. A spawned candidate does
+	// not bind here — the parent still holds the socket — and binds from its
+	// takeover continuation instead.
+	controlSocket := &hotSwapControlSocketOwner{ctx: ctx, state: controlState}
+	if !self.hotSwapCandidate {
+		if err := controlSocket.start(); err != nil {
+			output.observe(providerStatusFailed, 0, false, err, 0, nil)
+			return err
+		}
 	}
-	defer func() {
-		controlClose()
-		forceControlAuditPersist()
-	}()
+	defer controlSocket.finish()
+	// The handoff trigger: SIGUSR2 on Unix and the control socket's hotswap
+	// command both run the parent-side handoff. A spawned candidate starts its
+	// own listener and trigger in the takeover continuation, once the parent
+	// has yielded.
+	if !self.hotSwapCandidate {
+		startHotSwapSignalListener(ctx, cancel, self.opts)
+		setHotSwapTrigger(func() error {
+			return runHotSwapParentHandoff(ctx, cancel, self.opts)
+		})
+	}
 	// One rate sample per second feeds the snapshot's throughput history.
 	go controlRuntime.runSampler(ctx)
 
@@ -885,6 +922,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}()
 		proxyCtx, proxyCancel := context.WithCancel(ctx)
 		defer proxyCancel()
+
+		// A handoff's commit point (the parent's yieldCoordinatorSession) drops
+		// this slot's platform session so the successor's connections under the
+		// same client_id become the residents. Cancelling the slot's context
+		// ends its serve loop; the deferred teardown then closes the device and
+		// API session, which is the miner's equivalent of the v33 provider's
+		// per-proxy platformTransport.Close() closer.
+		unregSlotCloser := RegisterCoordinatorCloser(proxyCancel)
+		defer unregSlotCloser()
 
 		clientStrategySettings := connect.DefaultClientStrategySettings()
 		clientStrategySettings.ProxySettings = proxySettings
@@ -1053,6 +1099,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 		defer progress.retire(providerRegistrationSlot(proxySettings), progressGeneration)
 
+		// HotSwap candidate: this process exists to take the parent's place.
+		// This slot is live, so the takeover is real and must be confirmed —
+		// the ACK is what lets the parent yield its coordinator session and
+		// drain. The continuation (bind this process's own control socket,
+		// merge the parent's final audit entries, take over the handoff
+		// triggers) follows on the goroutine that sent the ACK and runs once
+		// for the process.
+		if self.hotSwapCandidate {
+			candidateAckOnce.Do(func() { self.hotSwapTakeoverCandidate(ctx, cancel, controlSocket) })
+		}
+
 		keyMaterial := device.GetKeyMaterial()
 		if !bytes.Equal(keyMaterial.GetClientKeySeed(), seed) {
 			return errors.New("provider device changed its retained registration key")
@@ -1114,6 +1171,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	for result := range results {
 		returnErr = errors.Join(returnErr, result)
 	}
+	// A handed-off parent must outlive the slots the yield cancelled: the drain
+	// window keeps in-flight streams alive until the successor owns the
+	// traffic, and the drain owns the exit. Without this the run would return
+	// the moment the last yielded slot unwinds.
+	waitForHotSwapDrain()
 	// Join the sign-in renewal watcher before reading its verdict, so a
 	// rejection it is still processing has set `quarantined` first (see
 	// joinRenewal above).

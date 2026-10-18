@@ -6,12 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
 )
 
@@ -37,6 +39,16 @@ type providerRunSettings struct {
 	contractCapturePath      string
 	contractCaptureSha256    string
 	requireContractCapture   bool
+	// A spawned HotSwap candidate marks itself here: URNETWORK_HOTSWAP=1 with
+	// the IPC channel the parent handed over (fd 3 on Unix, the pipe named in
+	// the environment on Windows). The candidate ACKs the parent once its
+	// first slot is live, and only then binds the control socket and starts
+	// its own trigger/listener — the parent holds both until it yields.
+	hotSwapIPC       io.ReadWriteCloser
+	hotSwapCandidate bool
+	// opts is the parsed CLI options, threaded to the handoff trigger for the
+	// v33 signature (the handoff re-execs the same argv, not these options).
+	opts docopt.Opts
 }
 
 // This owner starts exactly one Serve goroutine after listener admission. Its
