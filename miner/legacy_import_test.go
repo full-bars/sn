@@ -65,6 +65,9 @@ type fakeLegacyImportProver struct {
 	refreshErr  map[string]error
 	publicCalls int
 	refreshCall int
+	// transientRemaining > 0 makes the next calls return the retryable
+	// unavailable read, then fall through to refreshErr.
+	transientRemaining int
 }
 
 func (self *fakeLegacyImportProver) ServerPublicKey(ctx context.Context, clientID connect.Id) ([]byte, error) {
@@ -81,6 +84,10 @@ func (self *fakeLegacyImportProver) ServerPublicKey(ctx context.Context, clientI
 
 func (self *fakeLegacyImportProver) RefreshAccepted(ctx context.Context, token string) error {
 	self.refreshCall++
+	if self.transientRemaining > 0 {
+		self.transientRemaining--
+		return &clientauth.RegistrationRefreshUnavailableError{}
+	}
 	if self.refreshErr == nil {
 		return nil
 	}
@@ -853,4 +860,95 @@ func (self *legacyImportFixture) overrideRefreshError(settings *connect.ProxySet
 		self.t.Fatal(readErr)
 	}
 	self.prover.refreshErr = map[string]error{store[settings.Key()].ByClientJWT: err}
+}
+
+// A transient proof read (the API was never reached) must not become a
+// fallback: it is retried within the start.
+func TestLegacyImportTransientProofRetriesWithinStart(t *testing.T) {
+	oldBackoff := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = oldBackoff }()
+
+	fixture := newLegacyImportFixture(t, true, 2)
+	fixture.captureOriginals()
+	// Tier 1 cannot answer and the first refresh is a transient unavailable
+	// read. The retry inside the same start proves the saved identities.
+	fixture.prover.publicErr = errors.New("synthetic: api unavailable")
+	fixture.prover.transientRemaining = 1
+	result := fixture.run(legacyImportHooks{})
+	if len(result.mintSlots) != 0 {
+		t.Fatalf("a transient proof must not mint, got %v", result.mintSlots)
+	}
+	for _, settings := range fixture.proxySettings {
+		if _, err := os.Stat(fixture.target(settings)); err != nil {
+			t.Fatalf("credential for %s not imported after the retry: %v", settings.Key(), err)
+		}
+	}
+	committed, fallbacks, _, _ := fixture.recorder.counts()
+	if committed != len(fixture.proxySettings) || fallbacks != 0 {
+		t.Fatalf("committed=%d fallbacks=%d, want %d and 0", committed, fallbacks, len(fixture.proxySettings))
+	}
+	fixture.assertOriginalsUntouched()
+}
+
+// A proof that stays unavailable is deferred: nothing is journaled, nothing is
+// minted, the saved credential is untouched, and the next start proves it.
+func TestLegacyImportTransientProofIsNotJournaledAsFallback(t *testing.T) {
+	oldBackoff := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = oldBackoff }()
+
+	fixture := newLegacyImportFixture(t, true, 2)
+	fixture.captureOriginals()
+	fixture.prover.publicErr = errors.New("synthetic: api unavailable")
+	fixture.prover.transientRemaining = legacyImportTransientAttempts * len(fixture.proxySettings)
+	first := fixture.run(legacyImportHooks{})
+	if len(first.mintSlots) != 0 {
+		t.Fatalf("a transient proof must not mint, got %v", first.mintSlots)
+	}
+	journal := fixture.journal()
+	for _, settings := range fixture.proxySettings {
+		key := settings.Key()
+		if recorded, ok := journal.Slots[key]; ok {
+			t.Fatalf("slot %s journaled from a transient proof: %+v", key, recorded)
+		}
+		if _, err := os.Stat(fixture.target(settings)); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("slot %s wrote a credential from a transient proof", key)
+		}
+	}
+	_, fallbacks, _, _ := fixture.recorder.counts()
+	if fallbacks != 0 {
+		t.Fatalf("a transient proof recorded %d fallbacks", fallbacks)
+	}
+	if !strings.Contains(fixture.recorder.text(), "refresh_unavailable") {
+		t.Fatalf("the unavailable read is not reported: %s", fixture.recorder.text())
+	}
+	fixture.assertOriginalsUntouched()
+
+	// The next start proves the saved identities again and imports them.
+	fixture.prover.publicErr = nil
+	fixture.prover.transientRemaining = 0
+	second := fixture.run(legacyImportHooks{})
+	if len(second.mintSlots) != 0 {
+		t.Fatalf("recovery must not mint, got %v", second.mintSlots)
+	}
+	store, err := readLegacyStoreRaw(fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	journal = fixture.journal()
+	for _, settings := range fixture.proxySettings {
+		key := settings.Key()
+		raw, err := os.ReadFile(fixture.target(settings))
+		if err != nil {
+			t.Fatalf("slot %s not imported on the next start: %v", key, err)
+		}
+		if string(raw) != store[key].ByClientJWT {
+			t.Fatalf("slot %s credential is not the saved token", key)
+		}
+		if recorded := journal.Slots[key]; recorded.State != "imported" {
+			t.Fatalf("slot %s journal state = %q, want imported", key, recorded.State)
+		}
+	}
+	fixture.assertOriginalsUntouched()
 }

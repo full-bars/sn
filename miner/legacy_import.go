@@ -47,6 +47,12 @@ const (
 	legacyImportDirectKey     = "direct"
 )
 
+// A transient proof read (the API was never reached) is retried within the
+// start and never journaled. Only a verdict freezes a fallback.
+const legacyImportTransientAttempts = 3
+
+var legacyImportTransientBackoff = 2 * time.Second
+
 // legacyClientJwtEntry mirrors the 3.23-fix clientJWTEntry
 // (provider/client_jwt_store.go:29-34). Only these fields are read; the
 // store's extra bytes and any future fields are ignored.
@@ -174,7 +180,8 @@ type legacyImportSlot struct {
 	entry     legacyClientJwtEntry
 	clientID  connect.Id
 	clientID8 string
-	// state is "prove", "commit", "fallback" or "refuse".
+	// state is "prove", "commit", "fallback", "defer" or "refuse". A deferred
+	// slot made no decision and is retried on the next start.
 	state  string
 	proof  string
 	reason string
@@ -424,12 +431,34 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			}
 		}
 		for _, slot := range inconclusive {
-			if err := prover.RefreshAccepted(ctx, slot.entry.ByClientJWT); err != nil {
-				slot.state = "fallback"
-				slot.reason = "refresh_rejected"
-			} else {
-				slot.state = "commit"
-				slot.proof = "refresh"
+			// A transient read (the API was never reached) is retried within
+			// this start. If it stays unavailable the slot is deferred: the
+			// saved credential stays untouched, nothing is journaled, no new
+			// client is allocated, and the next start proves it again. Only a
+			// completed refusal is a fallback.
+			slot.state = "defer"
+			slot.reason = "refresh_unavailable"
+			for attempt := 1; ; attempt++ {
+				err := prover.RefreshAccepted(ctx, slot.entry.ByClientJWT)
+				if err == nil {
+					slot.state = "commit"
+					slot.proof = "refresh"
+					slot.reason = ""
+					break
+				}
+				if !legacyImportProofRetryable(err) {
+					slot.state = "fallback"
+					slot.reason = "refresh_rejected"
+					break
+				}
+				if ctx.Err() != nil || attempt >= legacyImportTransientAttempts {
+					break
+				}
+				select {
+				case <-ctx.Done():
+					return result
+				case <-time.After(legacyImportTransientBackoff):
+				}
 			}
 		}
 		closeProver()
@@ -437,6 +466,14 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	if ctx.Err() != nil {
 		// A canceled startup makes no permanent identity decision.
 		return result
+	}
+
+	// Deferred slots made no decision: the saved credential stays untouched
+	// and the next start proves it again.
+	for _, slot := range slots {
+		if slot.state == "defer" {
+			skip("refresh_unavailable", slot.clientID8)
+		}
 	}
 
 	// A fallback may never mint over sn custody: an existing registration
@@ -533,6 +570,13 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		opts.recorder.legacyImportSummary(imported, len(fallback), skipped)
 	}
 	return result
+}
+
+// legacyImportProofRetryable reports whether a proof error is a transient
+// unavailable read rather than a verdict about the saved identity. The API was
+// never reached, so no permanent decision may be based on it.
+func legacyImportProofRetryable(err error) bool {
+	return clientauth.IsRegistrationRefreshUnavailable(err) || errors.Is(err, context.DeadlineExceeded)
 }
 
 // legacyEntryIdentity applies the safety checks that precede any import:
