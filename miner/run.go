@@ -177,6 +177,7 @@ Usage:
     provider proxy auth remove [<key>] [--all]
     provider proxy add [<key_address>...] [--proxy_file=<proxy_file>] [-f]
     provider proxy remove [<key_address>...] [--all]
+    provider proxy remove --match=<pattern> [--yes] [--preview]
     provider proxy add-source <url>
     provider proxy remove-source <url>
     provider proxy refresh [--force]
@@ -317,6 +318,9 @@ Options:
     --file=<file>                    Alias for --proxy_file (provide/auth-provide); with 'proxy paste', the input file.
     <url>                            A proxy list URL, for 'proxy add-source' and 'proxy remove-source'.
     <count>                          Max number of running proxies to keep, for 'proxy trim'. 0/off clears the cap.
+    --match=<pattern>                Case-insensitive substring matched against proxy hosts (never port or
+                                     credentials). Removes matches from the proxy list, proxy file, and URL
+                                     cache, and excludes the pattern from future URL fetches. See 'proxy exclude'.
     <pattern>                        Host substring for 'proxy exclude' (add). With --remove, deletes the pattern.
                                      With no pattern, 'proxy exclude' lists the active patterns.
     --force                          With 'proxy refresh', bypass the 8-hour warmup protection gate.
@@ -1459,6 +1463,14 @@ func proxyAdd(opts docopt.Opts) {
 }
 
 func proxyRemove(opts docopt.Opts) {
+	// --match routes to the pattern collection/removal (v33 proxyRemove):
+	// the pattern is matched against hosts in the internal config, the proxy
+	// state and the URL cache, and persisted as a fetch exclusion.
+	if pattern, _ := opts.String("--match"); pattern != "" {
+		proxyRemoveMatch(pattern, opts)
+		return
+	}
+
 	proxyConfig := readProxyConfig()
 
 	if all, _ := opts.Bool("--all"); all {
