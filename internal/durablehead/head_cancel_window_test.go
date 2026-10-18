@@ -525,3 +525,41 @@ func TestAbandonRepairIsCrashIdempotentAtEveryStep(t *testing.T) {
 		})
 	}
 }
+
+// A marker cleanup failure after a durable commit is not a publication
+// failure: the value is committed, the owner stays usable, and the stale
+// marker is cleared by the next open.
+func TestPublishSurvivesMarkerCleanupFailure(t *testing.T) {
+	self := newFixture(t)
+	if err := self.owner.Publish([]byte("committed"), nil); err != nil {
+		t.Fatal(err)
+	}
+	self.owner.at = func(point string) error {
+		if point == "marker-remove" {
+			return unix.EIO
+		}
+		return nil
+	}
+	if err := self.owner.Publish([]byte("next"), nil); err != nil {
+		t.Fatalf("a marker cleanup failure failed the publication: %v", err)
+	}
+	self.owner.at = nil
+	if value := readOwnerValue(t, self.owner); value != "next" {
+		t.Fatalf("value = %q, want the committed next generation", value)
+	}
+	if names := durableTemporaryNames(t, self.root); len(names) == 0 {
+		t.Fatal("fixture did not leave the marker behind")
+	}
+	if err := self.owner.Publish([]byte("again"), nil); err != nil {
+		t.Fatalf("owner refused a later publication: %v", err)
+	}
+	if err := self.close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := self.open(false); err != nil {
+		t.Fatalf("open after a leftover marker: %v", err)
+	}
+	if names := durableTemporaryNames(t, self.root); len(names) != 0 {
+		t.Fatalf("stale marker was not cleared: %v", names)
+	}
+}

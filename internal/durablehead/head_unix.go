@@ -663,9 +663,14 @@ func (self *Owner) writeCreateMarker(nonce string) error {
 }
 
 // removeCreateMarker is best effort after the checkpoint names the temporary;
-// a leftover marker is cleared by Reconcile.
+// a leftover marker is cleared by Reconcile. Its own error is advisory: a
+// failure here cannot change the committed generation, and the callers must
+// not report a durable publication as failed because of it.
 func (self *Owner) removeCreateMarker(nonce string) error {
 	name := self.prefix() + "create-" + nonce
+	if err := self.boundary("marker-remove"); err != nil {
+		return err
+	}
 	if err := unix.Unlinkat(int(self.directory.File().Fd()), name, 0); err != nil && !errors.Is(err, unix.ENOENT) {
 		return observation(err, false)
 	}
@@ -953,9 +958,10 @@ func (self *Owner) PublishWithHooks(raw []byte, hooks PublicationHooks) (resultE
 	if err := self.finishPending(hooks); err != nil {
 		return err
 	}
-	if err := self.removeCreateMarker(nonceHex); err != nil {
-		return err
-	}
+	// Best effort after a durable commit: the checkpoint no longer names the
+	// temporary, so a marker left behind is stale and the next open clears it.
+	// A cleanup failure here must not turn the publication into an error.
+	_ = self.removeCreateMarker(nonceHex)
 	return nil
 }
 
@@ -969,9 +975,9 @@ func (self *Owner) reconcile() error {
 		return self.retain(errors.Join(ErrUncertain, err))
 	}
 	if pending != nil {
-		if err := self.removeCreateMarker(strings.TrimPrefix(pending.Temporary, self.prefix())); err != nil {
-			return self.retain(errors.Join(ErrUncertain, err))
-		}
+		// Best effort, as in publication: the completed checkpoint no longer
+		// names the temporary and a leftover marker is stale.
+		_ = self.removeCreateMarker(strings.TrimPrefix(pending.Temporary, self.prefix()))
 	}
 	return nil
 }
