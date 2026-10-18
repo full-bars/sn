@@ -69,7 +69,7 @@ func getProxyResolutionReason() string {
 // warnProxySourceFailure reports a URL source failure to the operator surface.
 // P1(a) logs it; P2 routes it into the important buffer / status line.
 var warnProxySourceFailure = func(label, reason string) {
-	importantLogf("[proxy][url] warning: source %s failed: %s\n", label, reason)
+	importantLogf("[proxy][url] WARNING: proxy source %s: %s — retrying\n", label, reason)
 }
 
 // URL fetcher / reaper countdown state for the grade summary. The fetcher

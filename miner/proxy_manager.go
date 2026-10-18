@@ -506,7 +506,7 @@ func proxyManagerReadSettings() []*connect.ProxySettings {
 	m := newProxyManager(defaultProxyManagerConfig())
 	launch, _, _, err := m.desired(false)
 	if err != nil {
-		tlog("[proxy] warning: could not read the managed proxy state (%v); using the legacy proxy file\n", err)
+		tlog("[proxy] warning: could not read proxy.state: %v\n", err)
 		return readProxySettingsLegacy()
 	}
 	return launch
