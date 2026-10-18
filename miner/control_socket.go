@@ -178,7 +178,7 @@ func startControlSocket(ctx context.Context, state *controlState) (func(), error
 				} else if acceptBackoff < time.Second {
 					acceptBackoff *= 2
 				}
-				tlog("[control] accept failed, retrying in %s: %v\n", acceptBackoff, err)
+				tlog("⚠️ [control] accept failed, retrying in %s: %v\n", acceptBackoff, err)
 				time.Sleep(acceptBackoff)
 				continue
 			}
@@ -243,7 +243,7 @@ func handleControlConn(conn net.Conn, state *controlState) {
 			// instead of "connection reset by peer".
 			conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 			writeControlResponse(conn, controlResponse{OK: false, Error: err.Error()})
-			tlog("[control] rejected connection: %s\n", err)
+			tlog("🔒 [control] rejected connection: %s\n", err)
 			return
 		}
 	}
@@ -650,7 +650,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		defer state.txMu.Unlock()
 		oldValue, oldMeta, hadOld := state.getWithMeta(req.Key)
 		if err := state.set(req.Key, req.Value); err != nil {
-			tlog("[control] set %s=%s rejected: %s\n", req.Key, req.Value, err)
+			tlog("❌ [control] set %s=%s rejected: %s\n", req.Key, req.Value, err)
 			return controlResponse{OK: false, Error: err.Error()}
 		}
 		if err := state.persist(); err != nil {
@@ -663,15 +663,15 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 				delete(state.meta, req.Key)
 			}
 			state.mu.Unlock()
-			tlog("[control] set %s=%s failed to persist, rolled back: %s\n", req.Key, req.Value, err)
+			tlog("❌ [control] set %s=%s failed to persist, rolled back: %s\n", req.Key, req.Value, err)
 			return controlResponse{OK: false, Error: "set applied in memory but failed to persist: " + err.Error()}
 		}
 		if err := applyControlLiveSideEffect(req.Key, req.Value); err != nil {
-			tlog("[control] set %s=%s (was %s) persisted but live apply failed, takes effect on restart: %s\n",
+			tlog("⚠️ [control] set %s=%s (was %s) persisted but live apply failed, takes effect on restart: %s\n",
 				req.Key, req.Value, formerValue(oldValue, hadOld), err)
 			return controlResponse{OK: false, Error: "persisted, but failed to apply live: " + err.Error()}
 		}
-		tlog("[control] set %s=%s (was %s)\n", req.Key, req.Value, formerValue(oldValue, hadOld))
+		tlog("⚙️ [control] set %s=%s (was %s)\n", req.Key, req.Value, formerValue(oldValue, hadOld))
 		recordControlAudit(CommandAudit{
 			Timestamp: time.Now(),
 			Cmd:       req.Cmd,
@@ -692,7 +692,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		defer state.txMu.Unlock()
 		oldValue, oldMeta, hadOld := state.getWithMeta(req.Key)
 		if err := state.clear(req.Key); err != nil {
-			tlog("[control] clear %s rejected: %s\n", req.Key, err)
+			tlog("❌ [control] clear %s rejected: %s\n", req.Key, err)
 			return controlResponse{OK: false, Error: err.Error()}
 		}
 		if err := state.persist(); err != nil {
@@ -702,17 +702,17 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 				state.meta[req.Key] = oldMeta
 				state.mu.Unlock()
 			}
-			tlog("[control] clear %s failed to persist, rolled back: %s\n", req.Key, err)
+			tlog("❌ [control] clear %s failed to persist, rolled back: %s\n", req.Key, err)
 			return controlResponse{OK: false, Error: "clear applied in memory but failed to persist: " + err.Error()}
 		}
 		liveCleared := controlLiveEffectKeys[req.Key]
 		if liveCleared {
 			if err := applyControlLiveDefault(req.Key); err != nil {
-				tlog("[control] clear %s persisted but live default apply failed: %s\n", req.Key, err)
+				tlog("⚠️ [control] clear %s persisted but live default apply failed: %s\n", req.Key, err)
 				return controlResponse{OK: false, NeedsRestart: true, Error: "cleared, but failed to reapply live default: " + err.Error()}
 			}
 		}
-		tlog("[control] cleared %s (was %s)\n", req.Key, formerValue(oldValue, hadOld))
+		tlog("⚙️ [control] cleared %s (was %s)\n", req.Key, formerValue(oldValue, hadOld))
 		recordControlAudit(CommandAudit{
 			Timestamp: time.Now(),
 			Cmd:       req.Cmd,
@@ -833,7 +833,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		if state.shutdownFn == nil {
 			return controlResponse{OK: false, Error: "shutdown not available (no shutdown function configured)"}
 		}
-		tlog("[control] shutdown requested via control socket\n")
+		tlog("🛑 [control] shutdown requested via control socket\n")
 		// The cancel runs asynchronously so the client gets its ACK first.
 		go func() {
 			time.Sleep(50 * time.Millisecond)
@@ -905,11 +905,11 @@ func applyControlLiveSideEffect(key, value string) error {
 		if previous {
 			was = "on"
 		}
-		tlog("[control] applied smart_dialer=%s (was %s)\n", value, was)
+		tlog("⚙️ [control] applied smart_dialer=%s (was %s)\n", value, was)
 	case "h1_plus":
 		enabled := strings.EqualFold(value, "on")
 		connect.SetH1PlusDisabled(!enabled)
-		tlog("[control] applied h1_plus=%s (takes effect on the next connect)\n", onOffLabel(enabled))
+		tlog("⚙️ [control] applied h1_plus=%s (takes effect on the next connect)\n", onOffLabel(enabled))
 	case "metrics":
 		return applyControlMetricsLive(value)
 	case "metrics_listen":
