@@ -1,0 +1,170 @@
+name: FreeBSD verification
+
+# Restored from fix/ci-freebsd-release (ref 928798776) and adapted to the
+# miner/tools line: the provider CLI is ./cli/miner and the client is
+# ./cmd/urnet-tools. The parts of the old workflow that verified code which
+# does not exist on this line (scripts/Provider_Install_FreeBSD.sh, the rc.d
+# renderer, optimize_bsd.go, the root sysmem package) are now file-existence
+# gates inside .github/scripts/freebsd-smoke.sh: they report a clearly-marked
+# TODO and switch on by themselves when the code lands, instead of failing a
+# release job over a feature that was never ported.
+#
+# The harness runs on a real FreeBSD kernel and asserts what the miner's
+# FreeBSD paths need: the binary loads, procstat reports what discovery parses,
+# swapinfo/sysrc/service/crontab exist, the host-memory sysctls resolve,
+# LOCAL_PEERCRED is on the kernel, and `miner provide` binds and serves its
+# control socket (mode 0600, newline-JSON protocol).
+#
+# TRIGGERS: release tags + manual dispatch only. The earlier PR / main push
+# triggers are gone: this is release-only verification now.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# ─────────────────────────── RELEASE GATING SWITCH ─────────────────────────
+# Gating is OFF: this workflow fails itself on a broken cell, but nothing in
+# release.yml depends on it, so it blocks no release creation. The single
+# operator-facing switch that turns the release matrix into a gate is the
+# clearly marked RELEASE_GATE_MODE switch in distro-matrix.yml (recipe in
+# docs/Distro-Matrix-CI.md §Release gating).
+# ---------------------------------------------------------------------------
+
+env:
+  GO_VERSION: "1.27"
+
+jobs:
+  freebsd-runtime:
+    name: miner on FreeBSD (real kernel)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Cross-build the FreeBSD payload on the runner
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o out/miner ./cli/miner/; then
+              echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+          file out/miner
+          # TODO(freebsd-urnettools): internal/urnettools has no FreeBSD port at
+          # this commit, so urnet-tools cannot be cross-built and its discovery
+          # and lifecycle surface cannot be exercised. The gates below activate
+          # the moment the port lands; the harness does the same for its checks.
+          if [ -f internal/urnettools/discover_freebsd.go ]; then
+            GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o out/urnet-tools ./cmd/urnet-tools/
+            GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go test -c -o out/urnettools.test ./internal/urnettools
+            echo "urnet-tools FreeBSD port present: binary + test binary built"
+          else
+            echo "urnet-tools FreeBSD port absent at this commit (TODO): miner-only cell"
+          fi
+          # TODO(freebsd-miner-tests): ./miner's test files import
+          # internal/durablefixture, which has no freebsd build constraint
+          # support yet, so no miner test binary can be produced. When it can,
+          # build it here and the harness runs the socket/peercred selection:
+          #   GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go test -c -o out/miner.test ./miner
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          set -euo pipefail
+          mkdir -p out/fixtures /tmp/mint
+          HOME=/tmp/mint ./out/miner auth \
+            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
+          test -s /tmp/mint/.urnetwork/jwt || {
+            echo "::error::JWT mint failed (verification required?)"; tail -n 20 /tmp/mint/auth.log; exit 1; }
+          cp /tmp/mint/.urnetwork/jwt out/fixtures/jwt
+          chmod 600 out/fixtures/jwt
+          # Same refusal guard as shakedown.yml; the token is never printed.
+          python3 - <<'PY'
+          import base64, json
+          raw = open('out/fixtures/jwt').read().strip()
+          p = raw.split('.')[1] + '=' * (-len(raw.split('.')[1]) % 4)
+          d = json.loads(base64.urlsafe_b64decode(p))
+          print("minted a disposable JWT for account:", d.get('network_name'))
+          if d.get('network_name') == 'mesocyclone':
+              raise SystemExit("REFUSING: the minted JWT is the production account")
+          PY
+          rm -rf /tmp/mint
+
+      - name: Run the shared harness on a real FreeBSD kernel
+        # The action boots a QEMU VM on the runner. runs-on stays ubuntu-latest
+        # even for other arches — that is the action's documented requirement.
+        # Pinned by commit SHA: `@v1` is a mutable tag, so a third-party change
+        # would silently alter what this job verifies. Bump deliberately.
+        uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc # v1
+        with:
+          release: "14.5"
+          mem: 4096
+          cpu: 2
+          sync: rsync
+          prepare: |
+            # procstat is base FreeBSD (procstat(1) is in the base system, not a
+            # package). Do NOT pkg-install it: on a stock image there is no
+            # matching package, the install fails, and a `|| true` here hides
+            # that — which then breaks every procstat check downstream.
+            command -v procstat >/dev/null 2>&1 || {
+              echo "FATAL: procstat not present in the base image"
+              exit 1
+            }
+          run: |
+            set -e
+            export BIN_DIR="$PWD/out"
+            export REPO_DIR="$PWD"
+            export JWT_FILE="$PWD/out/fixtures/jwt"
+            export OUT_DIR="$PWD/out/freebsd-evidence"
+            mkdir -p "$OUT_DIR"
+            sh .github/scripts/freebsd-smoke.sh
+
+      - name: Collect the evidence
+        if: always()
+        run: |
+          set -uo pipefail
+          ls -la out out/fixtures out/freebsd-evidence 2>/dev/null || true
+          rm -f out/fixtures/jwt
+
+      - name: Upload the FreeBSD evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freebsd-verification-evidence
+          path: out/freebsd-evidence/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "FreeBSD runtime verification finished."
+          echo "Review the harness log above for the authoritative result."
+          echo "TODO gates that are expected to be CONDITIONAL at this head:"
+          echo "  - freebsd-urnettools (internal/urnettools FreeBSD port)"
+          echo "  - freebsd-installer  (scripts/Provider_Install_FreeBSD.sh)"
+          echo "  - freebsd-optimize   (internal/urnettools/optimize_bsd.go)"
+          echo "  - freebsd-miner-tests (miner test fixtures off freebsd)"

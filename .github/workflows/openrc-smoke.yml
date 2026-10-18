@@ -1,0 +1,225 @@
+name: OpenRC (Alpine) smoke
+
+# Restored from fix/ci-freebsd-release (ref 23cb98140) and adapted to the
+# miner/tools line: the provider CLI is now ./cli/miner and the client is
+# ./cmd/urnet-tools, so the OpenRC cell runs the real miner under a real
+# supervise-daemon service instead of the old fake-release + installer flow
+# (which does not exist at this commit — the harness marks those checks as
+# clearly-labelled TODO gates and they switch on by themselves when the code
+# lands).
+#
+# What still runs here, and is the reason this workflow exists: a stripped
+# Alpine container with OpenRC as the service manager proves the static miner
+# runs on musl, starts under supervise-daemon as a dedicated non-root user,
+# binds its control socket, is reachable by urnet-tools, survives a restart and
+# stops. The cross-build job also keeps the windows/darwin vet gate that caught
+# the linux-only symbol leaks on the old line.
+#
+# TRIGGERS: release tags + manual dispatch only. The earlier PR / main push /
+# weekly schedule triggers are gone: this cell belongs to the release distro
+# matrix now.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# ─────────────────────────── RELEASE GATING SWITCH ─────────────────────────
+# Gating is OFF: this workflow fails itself on a broken cell, but nothing in
+# release.yml depends on it, so it blocks no release creation. The single
+# operator-facing switch that turns the release matrix into a gate is the
+# clearly marked RELEASE_GATE_MODE switch in distro-matrix.yml (recipe in
+# docs/Distro-Matrix-CI.md §Release gating).
+# ---------------------------------------------------------------------------
+
+env:
+  GO_VERSION: "1.27"
+
+jobs:
+  openrc-smoke:
+    name: OpenRC service path (alpine)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Build the static payload
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          set -euo pipefail
+          mkdir -p out/evidence out/fixtures
+          # The container writes evidence as root; make the bind-mount target
+          # usable from both sides before Docker creates it itself.
+          chmod 777 out/evidence
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            # CGO_ENABLED=0 is REQUIRED: a default build links glibc and cannot
+            # exec on musl Alpine.
+            if CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o out/miner ./cli/miner/ &&
+               CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o out/urnet-tools ./cmd/urnet-tools/; then
+              echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+          file out/miner out/urnet-tools
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mint
+          HOME=/tmp/mint ./out/miner auth \
+            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
+          test -s /tmp/mint/.urnetwork/jwt || {
+            echo "::error::JWT mint failed (verification required?)"; tail -n 20 /tmp/mint/auth.log; exit 1; }
+          cp /tmp/mint/.urnetwork/jwt out/fixtures/jwt
+          chmod 600 out/fixtures/jwt
+          # Same refusal guard as shakedown.yml; the token is never printed.
+          python3 - <<'PY'
+          import base64, json
+          raw = open('out/fixtures/jwt').read().strip()
+          p = raw.split('.')[1] + '=' * (-len(raw.split('.')[1]) % 4)
+          d = json.loads(base64.urlsafe_b64decode(p))
+          print("minted a disposable JWT for account:", d.get('network_name'))
+          if d.get('network_name') == 'mesocyclone':
+              raise SystemExit("REFUSING: the minted JWT is the production account")
+          PY
+          rm -rf /tmp/mint
+
+      - name: Install and exercise the service on a stripped Alpine
+        # `docker run` on the HOST runner, deliberately NOT the `container:`
+        # job key: what is under test is the static Go binary under a real
+        # OpenRC service manager, in Alpine's musl userland.
+        #
+        # --cap-add SYS_PTRACE is REQUIRED, not decoration. Docker strips
+        # CAP_SYS_PTRACE from the container's bounding set, so a client running
+        # as another user cannot read /proc/<pid>/exe for a process owned by
+        # the service user. Real hosts carry this capability by default.
+        run: |
+          set -euo pipefail
+          docker run --rm --cap-add SYS_PTRACE \
+            -e BIN_DIR=/srv/bin \
+            -e REPO_DIR=/srv/repo \
+            -e JWT_FILE=/srv/fixtures/jwt \
+            -e OUT_DIR=/srv/out \
+            -e TIMEOUT_S=90 \
+            -v "$PWD/out:/srv/bin:ro" \
+            -v "$PWD/out/fixtures:/srv/fixtures:ro" \
+            -v "$PWD/out/evidence:/srv/out" \
+            -v "$PWD:/srv/repo:ro" \
+            -v "$PWD/.github/scripts/openrc-smoke.sh:/srv/openrc-smoke.sh:ro" \
+            alpine:latest sh /srv/openrc-smoke.sh 2>&1 | tee /tmp/openrc-smoke.log
+
+      - name: Publish the cell summary
+        if: always()
+        run: |
+          {
+            echo "### OpenRC smoke — alpine:latest"
+            echo
+            sed -n '/openrc-smoke summary/,$p' /tmp/openrc-smoke.log 2>/dev/null || echo "(no harness output)"
+          } >>"$GITHUB_STEP_SUMMARY" || true
+          if grep -q 'RESULT: PASS' /tmp/openrc-smoke.log 2>/dev/null; then exit 0; fi
+          echo "::error::OpenRC smoke failed"
+          exit 1
+
+      - name: Remove the staged JWT
+        if: always()
+        run: rm -f out/fixtures/jwt
+
+      - name: Upload the smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openrc-smoke-evidence
+          path: |
+            out/evidence/
+            /tmp/openrc-smoke.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  # urnet-tools ships for windows and macOS as well as linux, and the OpenRC
+  # backend is linux-only by construction (build-tagged stubs elsewhere). Every
+  # Linux-only symbol a SHARED call site reaches must also exist as an
+  # off-linux stub, or the windows/darwin release build breaks while linux CI
+  # stays green.
+  #
+  # `go vet` rather than `go build` on purpose: it type-checks the package AND
+  # its test files, which build alone would not catch. (The freebsd leg is
+  # tracked in freebsd.yml/portable-core.yml; there is no FreeBSD port of
+  # internal/urnettools yet.)
+  cross-build:
+    name: urnet-tools cross-build (${{ matrix.goos }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [windows, darwin]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Vet urnettools for ${{ matrix.goos }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: amd64
+          CGO_ENABLED: "0"
+        run: |
+          set -euo pipefail
+          go vet ./internal/urnettools/
+          go build -o /dev/null ./cmd/urnet-tools
+          echo "${{ matrix.goos }} cross-build OK"
+
+  lint-shell:
+    name: Installer shell lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: dash + bash + shellcheck
+        run: |
+          set -euo pipefail
+          # The installer runs under `sh` on Alpine, where sh is busybox ash.
+          # Syntax bash accepts and ash rejects is a latent breakage that only
+          # surfaces on a real Alpine box, so lint against dash as well as bash.
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dash shellcheck
+          rc=0
+          for f in scripts/Provider_Install_Linux.sh scripts/test_provider_install.sh; do
+            echo "== $f =="
+            dash -n  "$f" && echo "  dash OK"        || rc=1
+            bash -n  "$f" && echo "  bash OK"        || rc=1
+            shellcheck -S error "$f" && echo "  shellcheck OK" || rc=1
+          done
+          exit $rc
