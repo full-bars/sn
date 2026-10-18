@@ -33,6 +33,11 @@ fans it out to independent cells:
   privileged container with `/sbin/init` as PID 1 installs
   `.github/scripts/systemd-smoke.sh`'s unit and drives
   start/socket/status/stop/restart/crash-restart through `systemctl`.
+  Before the container starts, the job runs
+  `sh .github/scripts/systemd-smoke.sh --self-test` on the runner: the
+  regression fixtures for the exit-75 rejection matcher, which must not read
+  a `:40150` UDP port as a 401 while still matching `HTTP/1.1 401` and the
+  miner's `network_sign_in_rejected` event.
   The image build installs **curl where the family provides it** (apt, dnf,
   zypper, pacman) with **netcat as the documented fallback**; the assertions
   themselves talk to the control socket through `urnet-tools`.
@@ -69,12 +74,26 @@ Every cell is independent by construction. The workflow deliberately has:
 Verify the invariant with:
 
 ```sh
-rg -n 'max-parallel|needs:|concurrency' .github/workflows/distro-matrix.yml
+rg -n 'max-parallel|needs:|concurrency' \
+  .github/workflows/distro-matrix.yml .github/workflows/freebsd.yml \
+  .github/workflows/openrc-smoke.yml .github/workflows/portable-core.yml
 ```
 
-The only expected hits are the four intended fan-in edges (two
-`needs: build-binaries`, one `needs: [...]` on the summary) and no
-`max-parallel`/`concurrency` line at all.
+The only expected hits are the three intended fan-in edges in
+`distro-matrix.yml` — two `needs: build-binaries` (the container and systemd
+cells) and one `needs: [build-binaries, ...cells]` on the summary — with no
+`max-parallel:` or `concurrency:` line in any of the four workflows. Each of
+the four declares exactly the same triggers:
+
+```yaml
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+```
+
+(no `pull_request`, no `schedule`).
 
 ## Release gating (one switch, currently OFF)
 
@@ -143,6 +162,13 @@ lands (file-existence greps over the synced repository):
 All local runs use the static payload and a disposable JWT and an explicit,
 isolated `HOME`; nothing reads or writes the ambient home.
 
+The exit-75 rejection matcher fixtures need no container and run on any host
+(POSIX sh — dash, busybox ash and bash all pass today):
+
+```sh
+sh .github/scripts/systemd-smoke.sh --self-test
+```
+
 Build the payload (from a worktree at the commit under test):
 
 ```sh
@@ -159,7 +185,7 @@ mkdir -p /tmp/distroci/out /tmp/distroci/state && chmod 777 /tmp/distroci/out
 docker run --rm \
   -e BIN_DIR=/opt/test/bin \
   -e JWT_FILE=/opt/test/fixtures/jwt \
-  -e HOME_DIR=/state/home -e WORK_DIR=/state/work \
+  -e HOME=/state/home -e HOME_DIR=/state/home -e WORK_DIR=/state/work \
   -e STATE_DIR=/state/home/.urnetwork -e OUT_DIR=/state/out -e TIMEOUT_S=90 \
   -v /tmp/distroci/bin:/opt/test/bin:ro \
   -v /tmp/distroci/fixtures:/opt/test/fixtures:ro \
@@ -169,7 +195,10 @@ docker run --rm \
   <image> /bin/sh /opt/test/distro-smoke.sh
 ```
 
-(`/bin/sh` works on every matrix image, including Alpine's busybox ash.)
+(`/bin/sh` works on every matrix image, including Alpine's busybox ash. The
+harness itself re-exports `HOME=$HOME_DIR` for every process it starts; the
+`-e HOME` above keeps the container-level environment pointing at the same
+isolated directory.)
 
 systemd cell locally: build the image exactly like the workflow's step does
 (`Dockerfile.systemd`), then `docker run --privileged --cgroupns=host
@@ -198,10 +227,14 @@ at all — a mixed matrix makes rollbacks ambiguous.
 
 - `.github/workflows/distro-matrix.yml` — the release matrix.
 - `.github/workflows/freebsd.yml`, `openrc-smoke.yml`, `portable-core.yml` —
-  the restored release-only verification workflows.
+  the restored release-only verification workflows; `openrc-smoke.yml` carries
+  the dash/bash/shellcheck lint for the installer and for the release-matrix
+  smoke scripts.
 - `.github/scripts/distro-smoke.sh` — container smoke; mints and guards the
   disposable JWT, isolated `HOME`.
-- `.github/scripts/systemd-smoke.sh` — systemd unit lifecycle harness.
+- `.github/scripts/systemd-smoke.sh` — systemd unit lifecycle harness;
+  carries the exit-75 rejection matcher and its `--self-test` regression
+  fixtures (the `:40150` case is pinned there).
 - `.github/scripts/openrc-smoke.sh` — Alpine/OpenRC service lifecycle harness.
 - `.github/scripts/freebsd-smoke.sh` — FreeBSD kernel harness shared by
   `distro-matrix.yml` and `freebsd.yml`.
