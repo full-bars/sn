@@ -75,26 +75,61 @@ func proxyManagerEnvOrFlag(opts docopt.Opts, flag, env, def string) string {
 	return def
 }
 
-// proxyManagerEnvOrFlagInt is proxyManagerEnvOrFlag for integers.
+// proxyManagerEnvOrFlagInt is proxyManagerEnvOrFlag for integers, and is the
+// v33 resolveInt counterpart (provider/main.go): an unparseable value from the
+// chosen source is named and the default used, instead of falling back
+// silently. A negative value still falls back quietly: v33's resolveInt
+// accepts it, so warning about it would invent a message v33 never writes.
 func proxyManagerEnvOrFlagInt(opts docopt.Opts, flag, env string, def int) int {
-	raw := proxyManagerEnvOrFlag(opts, flag, env, "")
-	if raw == "" {
+	if v, err := opts.String(flag); err == nil && strings.TrimSpace(v) != "" {
+		raw := strings.TrimSpace(v)
+		n, err := strconv.Atoi(raw)
+		if err == nil && n >= 0 {
+			return n
+		}
+		if err != nil {
+			tlog("[proxy][url] warning: invalid integer %q for %s; using default %d\n", raw, flag, def)
+		}
 		return def
 	}
-	if n, err := strconv.Atoi(strings.TrimSpace(raw)); err == nil && n >= 0 {
-		return n
+	if raw := strings.TrimSpace(os.Getenv(env)); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err == nil && n >= 0 {
+			return n
+		}
+		if err != nil {
+			tlog("[proxy][url] warning: invalid integer %q for %s; using default %d\n", raw, env, def)
+		}
 	}
 	return def
 }
 
-// proxyManagerEnvOrFlagDuration is proxyManagerEnvOrFlag for durations.
+// proxyManagerEnvOrFlagDuration is proxyManagerEnvOrFlag for durations, and is
+// the v33 resolveDuration counterpart (provider/main.go): an unparseable value
+// from the chosen source is named and the default used, instead of falling
+// back silently. A non-positive value still falls back quietly: v33's
+// resolveDuration accepts it, so warning about it would invent a message v33
+// never writes.
 func proxyManagerEnvOrFlagDuration(opts docopt.Opts, flag, env string, def time.Duration) time.Duration {
-	raw := proxyManagerEnvOrFlag(opts, flag, env, "")
-	if raw == "" {
+	if v, err := opts.String(flag); err == nil && strings.TrimSpace(v) != "" {
+		raw := strings.TrimSpace(v)
+		d, err := time.ParseDuration(raw)
+		if err == nil && d > 0 {
+			return d
+		}
+		if err != nil {
+			tlog("[proxy][url] warning: invalid duration %q for %s; using default %s\n", raw, flag, def)
+		}
 		return def
 	}
-	if d, err := time.ParseDuration(strings.TrimSpace(raw)); err == nil && d > 0 {
-		return d
+	if raw := strings.TrimSpace(os.Getenv(env)); raw != "" {
+		d, err := time.ParseDuration(raw)
+		if err == nil && d > 0 {
+			return d
+		}
+		if err != nil {
+			tlog("[proxy][url] warning: invalid duration %q for %s; using default %s\n", raw, env, def)
+		}
 	}
 	return def
 }
