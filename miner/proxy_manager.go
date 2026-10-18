@@ -327,6 +327,37 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 			primeTrimCapSeen(trimCap, trimCapOperator)
 		}
 	}
+
+	// The h3 count setting ranks over the proxies this box runs, so the
+	// candidates are noted under every setting: switching to a count later
+	// ranks over the real set at once instead of an empty one. A ranking that
+	// moved relaunches the identities that joined or left it (see
+	// h3_proxy_set.go); the reload path itself starts nothing.
+	setting := resolveH3Mode(globalControlState, currentProxyResolution())
+	if noteH3Candidates(launch, setting) {
+		relaunchH3ProxiesNow(setting)
+	}
+
+	// Settle the resolution state (v33 proxy_reload.go): the direct-only H3
+	// default, the status line and the snapshot all read it. Only a node with
+	// no proxy source configured AND direct providing enabled settles as
+	// zero-valid — the state that auto-enables H3 for an operator who never
+	// touched the key. A source that was configured but yielded nothing is
+	// not a completed zero-proxy setup, and neither is a node that serves
+	// nothing at all.
+	anySourceConfigured := state.Source != "" || (urlErr == nil && urlState != nil && len(urlState.Sources) > 0)
+	switch {
+	case len(launch) > 0 || len(held) > 0:
+		setProxyResolutionStatus(proxyResolutionOK, "")
+	case anySourceConfigured:
+		setProxyResolutionStatus(proxyResolutionEmpty, "source returned no usable proxies")
+	case urlErr != nil:
+		setProxyResolutionStatus(proxyResolutionFailed, "could not read proxy_url.json")
+	case !isDirectEnabled():
+		setProxyResolutionStatus(proxyResolutionNoSource, "direct transport disabled and no proxy source configured")
+	default:
+		setProxyResolutionStatus(proxyResolutionZeroValid, "direct-only providing; no proxy source configured")
+	}
 	return launch, held, writeState, nil
 }
 
