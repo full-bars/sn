@@ -95,12 +95,10 @@ func proxyHealthStateCounts() (up, down, dead, degraded int) {
 }
 
 // previewViaControlSocket asks the running provider what a trim would shed
-// (v33's dialControlSocket path). The miner's control socket is the P2 port, so
-// P1(b) ships the seam with the same error the v33 CLI reports when the
-// provider is not reachable. P2 replaces the body; nothing else changes.
-var previewViaControlSocket = func(count int) (string, error) {
-	return "", fmt.Errorf("the control socket is not available in this build")
-}
+// (v33's dialControlSocket path). P2 wires the socket: the running provider
+// computes the preview because it is the only process that knows its running
+// set.
+var previewViaControlSocket = previewViaControlSocketDial
 
 // ---- proxy add-source / remove-source ----
 

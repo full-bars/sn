@@ -59,6 +59,15 @@ func (s *proxyManagerControlState) set(key, value string) {
 	s.values[key] = value
 }
 
+// clear removes key, so resolve* falls through to the legacy override file
+// and then the startup default, exactly as if it had never been set. The
+// control socket calls it on a `clear` for one of the manager's keys.
+func (s *proxyManagerControlState) clear(key string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.values, key)
+}
+
 // reset clears all stored values. Tests only.
 func (s *proxyManagerControlState) reset() {
 	s.mu.Lock()

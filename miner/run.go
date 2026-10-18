@@ -781,6 +781,33 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return err
 	}
 	defer func() { returnErr = errors.Join(returnErr, status.close()) }()
+
+	// The control socket is the daemon surface the unmodified urnet-tools and
+	// urnet-docker clients drive (P2). It starts beside the status server,
+	// before any provider child runs, so a command that arrives during startup
+	// is served. The control state is the miner's record of every socket-set
+	// setting; the queue urnet-tools wrote while the provider was stopped is
+	// merged once here.
+	controlState, err := loadControlState()
+	if err != nil {
+		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
+		return err
+	}
+	mergePendingControlOverrides(controlState)
+	globalControlState = controlState
+	initControlAuditRing()
+	recordControlProcessStart()
+	controlState.shutdownFn = cancel
+	controlClose, err := startControlSocket(ctx, controlState)
+	if err != nil {
+		output.observe(providerStatusFailed, 0, false, err, 0, nil)
+		return err
+	}
+	defer func() {
+		controlClose()
+		forceControlAuditPersist()
+	}()
+
 	keyPath, err := providerStatePath(".provider.key")
 	if err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
