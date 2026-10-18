@@ -143,8 +143,12 @@ func readNetworkJWT(path string) (string, error) {
 
 // currentProviderNetworkID extracts the network_id claim from the active
 // network token file, falling back to any unambiguous stored network_id in the
-// client JWT store if the file is missing or lacks the claim. Ported from the
-// v33 provider's proxy_warmth.go.
+// client JWT store, and then to the stored per-proxy credential files (see
+// anyStoredProviderNetworkID, proxy_manager_warmth.go) when the store holds
+// no unambiguous id. Ported from the v33 provider's proxy_warmth.go; the two
+// fallbacks cover the miner's two on-disk representations of the same
+// identities (.client_jwts.json and the .provider-*.jwt files), so a node
+// whose store has not been written yet still resolves its network.
 func currentProviderNetworkID() string {
 	if path, err := providerStatePath("jwt"); err == nil && path != "" {
 		if data, err := os.ReadFile(path); err == nil {
@@ -154,9 +158,11 @@ func currentProviderNetworkID() string {
 		}
 	}
 	if store := loadGlobalClientJWTStore(); store != nil {
-		return store.AnyNetworkID()
+		if nid := store.AnyNetworkID(); nid != "" {
+			return nid
+		}
 	}
-	return ""
+	return anyStoredProviderNetworkID()
 }
 
 // clientJWTRejected reports whether a previous run recorded the platform's

@@ -803,7 +803,7 @@ func provide(opts docopt.Opts) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, proxySourceOf: proxyManager.proxySourceOf(), memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -1166,6 +1166,31 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 
 		seed := keyOwner.Seed()
+		// Fork hook: the v33 auth admission gate (proxy_manager_admission_gate.go)
+		// orders this identity's wait for a shared auth slot, weighted by its
+		// LIFETIME failure count (v33 main.go's admitFailureCount), so a
+		// chronically dead address cannot re-enter the lottery at full
+		// "untried" priority every time the URL requeue brings it back. The
+		// gate waits on the shared auth rate limiter itself, and its release
+		// func holds the in-flight concurrency slot for exactly as long as
+		// the attempt runs: in v33 the gate wraps provideAuth, so here it
+		// wraps the whole client-identity acquisition below — a stored-JWT
+		// reuse costs no API round trip, but a renewal or fresh mint does,
+		// and those are what the shared limiter governs.
+		admitFailureCount := 0
+		if proxySettings != nil {
+			admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Key())
+		}
+		release, admitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
+		if admitErr != nil {
+			// A cancelled wait never reached the API, so it is not evidence
+			// about the API's rate and must not be reported to the limiter
+			// (v33 returns waitErr down the same path).
+			if proxyCtx.Err() == nil {
+				output.observe(providerAuthenticationRecoveryEvent(admitErr), index, true, admitErr, 0, nil)
+			}
+			return admitErr
+		}
 		// The explicit flag always allocates; the automatic import enables a
 		// new registration only for this slot's recorded fallback.
 		allowCreate := self.allowClientRegistration || legacyImport.mintAllowed(legacyImportStoreKey(proxySettings))
@@ -1188,11 +1213,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
 			},
 		})
+		release()
 		if err != nil {
 			// Fork hook: the ported v33 give-up/backoff accounting
 			// (proxy_manager_auth.go) records this identity's failed
 			// authentication, and gives up on it once it reaches the ceiling.
 			noteProviderAuthFailure(proxySettings, err)
+			// Fork hook: the shared limiter learns from the completed
+			// attempt (v33 main.go reports after the failure accounting, so
+			// a first-ever success is already "proven" when it lands).
+			reportProviderAuthResult(proxySettings, err)
 			if proxyCtx.Err() == nil {
 				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
 			}
@@ -1206,6 +1236,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// Fork hook: a completed authentication proves the identity and clears
 		// its failure/give-up history.
 		noteProviderAuthSuccess(proxySettings)
+		reportProviderAuthResult(proxySettings, nil)
 
 		// Each authenticated slot owns its optional wallet set. A fresh or
 		// proxy provider never borrows the direct provider's credential.
@@ -1321,9 +1352,23 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return nil
 	}
 
+	// Launch ordering (W-02): v33's warmth/earnings prioritization
+	// (proxy_manager_warmth.go) decides the order the provider goroutines
+	// start in and the per-tier stagger between them, so the scarce auth-mint
+	// slots go to the identities that can dial with a stored client JWT or
+	// renew one in a single step, and within a tier the proven earners go
+	// first. The direct slot keeps its relative place at the end of the list
+	// (it is not a proxy and carries no warmth). Each slot keeps its original
+	// index, so the diagnostics label a provider by the slot it was
+	// configured as, exactly as before.
+	launchSlots := scheduleProxyLaunch(providers, self.proxySourceOf, "")
 	var wg sync.WaitGroup
 	results := make(chan error, len(providers))
-	for index, proxySettings := range providers {
+	for _, slot := range launchSlots {
+		index := slot.Index
+		proxySettings := slot.Settings
+		baseDelay := slot.Delay
+		staggerDuration := slot.Stagger
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -1346,10 +1391,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				}
 				results <- result
 			}()
-			select {
-			case <-ctx.Done():
+			// The warmth-derived base delay plus a jittered
+			// per-slot stagger; a zero delay starts immediately.
+			if !backoffPacerWithDelay(baseDelay, staggerDuration, ctx) {
 				return
-			case <-time.After(time.Duration(index) * 100 * time.Millisecond):
 			}
 			if ctx.Err() != nil {
 				return

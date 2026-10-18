@@ -25,10 +25,16 @@ type providerRunSettings struct {
 	connectUrl    string
 	port          int
 	proxySettings []*connect.ProxySettings
-	memoryPlan    providerMemoryPlan
+	// proxySourceOf is each proxy identity's provenance ("file", "internal",
+	// "url"), as the proxy manager recorded it when it built the launch set.
+	// The warmth launch ordering (proxy_manager_warmth.go) reads it to keep
+	// unproven URL-sourced identities behind the curated list; a nil map
+	// treats every proxy as trusted provenance.
+	proxySourceOf map[string]string
 	// the explicit --max-memory, or 0 when absent; the profile tiers use it
 	// to decide whether an operator value already wins
 	maxMemory               connect.ByteCount
+	memoryPlan              providerMemoryPlan
 	testEgressDialer        *connect.DialContextSettings
 	allowClientRegistration bool
 	adoptLegacyProviderKey  bool

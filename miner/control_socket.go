@@ -330,6 +330,7 @@ var controlLiveEffectKeys = map[string]bool{
 	"proxy_dead_cleanup_interval": true,
 	"hot_restart":                 true,
 	"proxy_audit":                 true,
+	"fast_auth":                   true,
 }
 
 // controlUnsupportedKeys are accepted and persisted but have no miner
@@ -339,7 +340,6 @@ var controlUnsupportedKeys = map[string]bool{
 	"node_name":       true,
 	"report_url":      true,
 	"report_interval": true,
-	"fast_auth":       true,
 	"baseline":        true,
 	"ip_version":      true,
 	"oom_cap":         true,
@@ -1042,6 +1042,17 @@ func applyControlLiveSideEffect(key, value string) error {
 		return applyProxyAuditControlLive(value)
 	case "hot_restart":
 		tlog("[control] hot_restart=%s (restart machinery %s)\n", value, onOffLabel(resolveHotRestartEnabled()))
+	case "fast_auth":
+		// The shared sign-in rate limiter (proxy_manager_auth_limiter.go)
+		// re-reads the control state on every Wait, so there is nothing to
+		// apply here — say what the operator just bought, and note the
+		// legacy marker file it now overrides.
+		effect := "waits on"
+		if strings.EqualFold(value, "on") {
+			effect = "bypasses"
+		}
+		tlog("[control] fast_auth=%s: sign-in attempts %s the shared rate limiter (the legacy fast_auth marker file no longer decides)\n",
+			value, effect)
 	default:
 		if controlUnsupportedKeys[key] {
 			// Persisted, but nothing in the miner reads it yet. Say so rather
