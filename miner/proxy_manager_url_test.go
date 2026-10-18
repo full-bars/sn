@@ -32,6 +32,8 @@ func withTempHome(t *testing.T) string {
 	// into the next test's resolution (v33 resets it only around its own
 	// override writes).
 	resetProbeConfigCache()
+	// The live health registry is process-wide too.
+	resetProxyHealthReportStateForTest()
 	resetGlobalControlStateForTest()
 	t.Cleanup(resetGlobalControlStateForTest)
 	lastReloadTriggerTime.Lock()

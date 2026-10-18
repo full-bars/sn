@@ -134,6 +134,9 @@ func noteProviderAuthSuccess(settings *connect.ProxySettings) {
 	globalProvenProxies.MarkSucceeded(key)
 	globalProxyFailureHistory.Reset(key)
 	globalProxySlowRetryState.ClearDropped(key)
+	// Live health: a proxy that just authenticated is up, so the URL reaper
+	// shields it and the health report shows it (v33 connect health parity).
+	noteLiveProxyHealthUp(key)
 }
 
 // noteProviderAuthFailure is the miner auth path's failure hook. A cancelled
@@ -155,6 +158,10 @@ func noteProviderAuthFailure(settings *connect.ProxySettings, err error) {
 		return
 	}
 	key := settings.Key()
+	// Live health: a failed authentication means the proxy is not up right now,
+	// so the reaper stops shielding it and the traffic/health report shows it
+	// as degraded.
+	noteLiveProxyHealthFailure(key)
 	failures := globalProxyFailureHistory.RecordFailure(key)
 	if failures < proxyAuthMaxFailures(key) {
 		return

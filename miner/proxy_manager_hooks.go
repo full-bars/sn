@@ -28,8 +28,10 @@ type proxyHealthStatus struct {
 }
 
 // liveProxyHealthByKey is the live per-proxy health, a variable so tests can
-// supply their own and P2 can install the registry reader.
-var liveProxyHealthByKey = func() map[string]proxyHealthStatus { return nil }
+// supply their own. The default reads the process-wide health registry
+// (proxy_manager_health_registry.go), which the auth path and the health
+// cadence fill.
+var liveProxyHealthByKey = proxyLiveHealthSnapshot
 
 // degradedReaperFrozen reports whether an upstream outage makes proxy failures
 // meaningless (v33: the degraded-reaper freeze). P1(a) never freezes; the

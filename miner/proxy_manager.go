@@ -229,6 +229,13 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	if state.Proxies == nil {
 		state.Proxies = map[string]ProxyEntry{}
 	}
+	// Live health (v33 connect health parity): the persisted health seeds the
+	// registry on the first read after a restart, and any health this process
+	// has observed since is overlaid onto the entries the trim ranking reads.
+	seedLiveProxyHealthFromState(state)
+	if overlaid := overlayLiveProxyHealth(state.Proxies); overlaid > 0 {
+		tlog("[proxy][health] overlaid live health onto %d prox%s before the desired-set build\n", overlaid, plural(overlaid, "y", "ies"))
+	}
 
 	tag, primary, err := m.primarySource(state)
 	if err != nil {
@@ -389,6 +396,15 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	go func() {
 		defer m.wg.Done()
 		runProxyURLCleanup(ctx, m.cfg.DeadCleanupScope, m.cfg.DeadCleanupInterval, m.cfg.SelfHeal)
+	}()
+	// Health cadence: writes proxy_health.state / proxy_health.log /
+	// proxy_traffic.state / usage_history.jsonl and persists the overlaid
+	// health back into proxy.state, so the proxy subcommands and the reaper
+	// see live health (v33's health heartbeat).
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runProxyHealthLog(ctx, proxyHealthLogInterval)
 	}()
 	return launch, held, nil
 }
