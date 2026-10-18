@@ -406,6 +406,15 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 		defer m.wg.Done()
 		runProxyHealthLog(ctx, proxyHealthLogInterval)
 	}()
+	// Direct-path egress grade (v33 proxy_direct_grade.go): read-only, persisted
+	// to its own direct_grade.json, gated on the operator's direct toggle
+	// (isDirectEnabled). v33 starts it unconditionally beside the reaper loops
+	// with the same cadence; the same here.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runDirectGrader(ctx)
+	}()
 	return launch, held, nil
 }
 
