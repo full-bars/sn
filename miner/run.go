@@ -45,6 +45,12 @@ var Version string
 func init() {
 	// debug.SetGCPercent(10)
 
+	// Must run before initGlog(): initGlog reads URNETWORK_PROFILE/
+	// URNETWORK_RAMLOGS from the environment to make its one-shot,
+	// unrepeatable decision about redirecting stdout/stderr to a ramlog.
+	// See startup_env_seed.go for why this cannot just be a later call in
+	// provide() the way every other control-socket key works.
+	seedEnvFromControlState()
 	initGlog()
 
 	// initPprof()
@@ -54,6 +60,46 @@ func initGlog() {
 	flag.Set("logtostderr", "true")
 	flag.Set("stderrthreshold", "INFO")
 	flag.Set("v", "0")
+
+	// v33 ramlogs: the lowmem/eco profiles and URNETWORK_RAMLOGS=1 redirect
+	// the long-running provide process's stdout/stderr into the /dev/shm
+	// ramlog (shmlog_linux.go, PM-05). Auto-detection handover is handled in
+	// the startup audit path. One-shot CLI subcommands print directly to the
+	// terminal instead: the redirect is process-wide, so applying it to e.g.
+	// `proxy summary` would leave the caller with no output at all.
+	profile := effectiveProfile()
+	ramlogs := os.Getenv("URNETWORK_RAMLOGS") == "1"
+	if (profileWantsRamlogs(profile) || ramlogs) && isLongRunningSubcommand() {
+		fmt.Fprintf(os.Stderr, "[ramlogs] Logs redirected to RAM — view with: urnet-tools logs\n")
+		initSHMLogger()
+	}
+}
+
+// isLongRunningSubcommand reports whether os.Args invokes the long-running
+// provide (or auth-provide) command, as opposed to a one-shot CLI subcommand
+// like `proxy remove-dead` or `proxy summary`. Used to decide whether
+// stdout/stderr should be redirected into the ramlog: doing so for one-shot
+// commands left them producing no visible output to the caller at all, since
+// the redirect is process-wide, not scoped to `provide`.
+//
+// -h/--help/--version are excluded even on `provide`/`auth-provide`: this
+// runs from init(), before docopt.ParseArgs gets a chance to handle those
+// flags and exit, so a terminating invocation like `provide --help` would
+// otherwise have its usage/version text redirected into the ramlog too.
+func isLongRunningSubcommand() bool {
+	if len(os.Args) < 2 {
+		return false
+	}
+	if os.Args[1] != "provide" && os.Args[1] != "auth-provide" {
+		return false
+	}
+	for _, arg := range os.Args[2:] {
+		switch arg {
+		case "-h", "--help", "--version":
+			return false
+		}
+	}
+	return true
 }
 
 // mainUsage returns the docopt usage string. Package-level (rather than
@@ -692,12 +738,16 @@ func provide(opts docopt.Opts) {
 
 	// sized per provider (provider_memory.go); an absent --max-memory has no
 	// ceiling: the target is derived from the host memory
+	maxMemory := parseProviderMaxMemory(opts)
 	memoryPlan := newProviderMemoryPlan(
-		parseProviderMaxMemory(opts),
+		maxMemory,
 		hostMemoryByteCount(),
 		providerCount,
 	)
 	applyProviderProcessMemory(memoryPlan)
+	// v33's pool auto-size runs before any provider is built; see
+	// applyPoolAutoSize for the pinned-connect adaptation.
+	applyPoolAutoSize(maxMemory)
 
 	allowClientRegistration, _ := opts.Bool("--allow-client-registration")
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
@@ -709,7 +759,7 @@ func provide(opts docopt.Opts) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -850,6 +900,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	mergePendingControlOverrides(controlState)
 	globalControlState = controlState
+	// The profile tiers' Go runtime knobs (profiles/memory, PM-04) come after
+	// the control state is loaded so a persisted `set gomemlimit|gogc` beats
+	// the tier default, and after the memory plan so the operator precedence
+	// in applyTurboMemoryLimit/applyEcoSettings/ensureMemoryLimit holds.
+	applyProfileProcessTuning(self.maxMemory)
 	initControlAuditRing()
 	// A HotSwap successor labels its start entry "hotswap". A Docker in-place
 	// execve successor is not a spawned candidate (no IPC descriptor) but the

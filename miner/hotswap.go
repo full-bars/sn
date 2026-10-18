@@ -28,6 +28,9 @@ package miner
 //     drain/execve paths flush nothing while keeping the call order.
 //   - restoreStdioBeforeExec is the no-op the provider uses when its ramlog
 //     pipe redirect is inactive; the miner does not redirect stdio.
+//     (Superseded by the ported ramlog: the linux build restores the
+//     pre-redirect descriptors via shmlog_linux.go, non-linux keeps this
+//     no-op through shmlog_fallback.go.)
 
 import (
 	"bufio"
@@ -269,10 +272,9 @@ func (*hotswapLifetimeStore) Flush() {}
 
 var lifetimeStore = &hotswapLifetimeStore{}
 
-// restoreStdioBeforeExec is a no-op when the ramlog pipe redirect is not
-// active, which is the miner's case: the provider's shmlog redirect was not
-// ported, so the execve path hands stdio to the successor unchanged.
-func restoreStdioBeforeExec() {}
+// restoreStdioBeforeExec is the per-OS implementation from the ported ramlog
+// (shmlog_linux.go restores the pre-redirect descriptors for an in-place
+// execve; shmlog_fallback.go is the no-op where there is no ramlog pipe).
 
 // readyResult holds the result of reading a hotswap IPC message in a goroutine.
 type readyResult struct {
