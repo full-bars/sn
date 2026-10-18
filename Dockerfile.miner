@@ -68,6 +68,7 @@ COPY --from=builder /app/urnet_tools_bin /usr/local/bin/urnet-tools
 COPY docker/miner/entrypoint.sh /app/entrypoint.sh
 COPY docker/miner/start_miner.sh /app/start_miner.sh
 COPY docker/miner/jwt_verify.sh /app/jwt_verify.sh
+COPY docker/miner/provider_env.sh /app/provider_env.sh
 
 RUN dos2unix /app/*.sh && chmod +x /app/*.sh \
     && ln -sf /app/urnetwork_${TARGETARCH}_stable /usr/local/bin/provider \

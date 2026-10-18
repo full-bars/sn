@@ -33,7 +33,7 @@ APP="$tmp/app"
 mkdir -p "$APP"
 # The entrypoint execs $APP_DIR/start_miner.sh, so stage the scripts next to
 # the stub exactly as the image does.
-cp "$REPO"/docker/miner/entrypoint.sh "$REPO"/docker/miner/start_miner.sh "$REPO"/docker/miner/jwt_verify.sh "$APP/"
+cp "$REPO"/docker/miner/entrypoint.sh "$REPO"/docker/miner/start_miner.sh "$REPO"/docker/miner/jwt_verify.sh "$REPO"/docker/miner/provider_env.sh "$APP/"
 chmod +x "$APP"/*.sh
 printf 'fake-hotkey-seed-not-real\n' > "$tmp/seed.bin"
 
@@ -102,7 +102,7 @@ run_entry "$h" "-" "$VALID_JWT" "$tmp/l6" 0 \
   HOTKEY_SEED_FILE="$tmp/seed.bin" ALLOW_CLIENT_REGISTRATION=Y MAX_MEMORY=1500mib \
   OPERATORS_URL=http://127.0.0.1:9/operators.yml PROVIDER_ARGS="--quarantine-rejected-sign-in"
 t "AUTHCODE is passed to auth" sh -c "grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l6'"
-t "the operator flags are passed to provide" sh -c "grep -q 'argv: provide --all-operators --auto-register --hotkey_seed_file=$tmp/seed.bin --operators-url=http://127.0.0.1:9/operators.yml --allow-client-registration --max-memory=1500mib --quarantine-rejected-sign-in' '$tmp/l6'"
+t "the operator flags are passed to provide" sh -c "grep -q 'argv: provide --all-operators --auto-register --hotkey_seed_file=$tmp/seed.bin --max-memory=1500mib --allow-client-registration --quarantine-rejected-sign-in --operators-url=http://127.0.0.1:9/operators.yml' '$tmp/l6'"
 t "the session file is created and reported" sh -c "[ -s '$h/.urnetwork/jwt' ] && grep -q 'Session written to' '$tmp/l6.out'"
 t "no auth code or password in the logs" sh -c "! grep -q '$FAKE_CODE' '$tmp/l6.out' && ! grep -q 'fake-password' '$tmp/l6.out'"
 t "the wallet reminder is logged" grep -q "A payout wallet and consent must be set" "$tmp/l6.out"
@@ -180,6 +180,54 @@ echo "--- volume warning ---"
 h="$tmp/h18"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l18" 0 AUTH=authcode AUTHCODE="$FAKE_CODE"
 t "an unmounted empty state dir logs the new-identity warning" grep -q "WARNING: Without a persistent volume mounted" "$tmp/l18.out"
+
+echo "--- provider_env.sh (the v33 operator mapping port) ---"
+PE="$REPO/docker/miner/provider_env.sh"
+pe() { # pe <home> [KEY=VALUE...] -> the helper's flags or errors
+  local home="$1"
+  shift
+  env -i PATH="$PATH" HOME="$home" "$@" sh -c '. "$1"; provider_env_flags "$2"' _ "$PE" "$home/.urnetwork" 2>&1
+}
+
+h="$tmp/pe1"
+out="$(pe "$h")"
+t "no variables set emits nothing" [ -z "$out" ]
+
+out="$(pe "$h" ALL_OPERATORS=Y)"
+t "ALL_OPERATORS=Y emits --all-operators" [ "$out" = "--all-operators" ]
+
+out="$(pe "$h" ALLOW_CLIENT_REGISTRATION=Y)"
+t "ALLOW_CLIENT_REGISTRATION=Y emits --allow-client-registration" [ "$out" = "--allow-client-registration" ]
+
+out="$(pe "$h" ALL_OPERATORS=Y ALLOW_CLIENT_REGISTRATION=auto)"
+t "auto never adds the flag (kept miner behavior)" [ "$out" = "--all-operators" ]
+
+out="$(pe "$h" HOTKEY_SEED_FILE="$tmp/seed.bin")"
+t "a seed without ALL_OPERATORS is left to the auth path" [ -z "$out" ]
+
+out="$(pe "$h" ALL_OPERATORS=Y AUTO_REGISTER=Y HOTKEY_SEED_FILE="$tmp/seed.bin" \
+  MAX_MEMORY=2gib ALLOW_CLIENT_REGISTRATION=Y PROVIDER_ARGS='--skip-audit --dry-run')"
+expected="$(printf '%s\n' --all-operators --auto-register "--hotkey_seed_file=$tmp/seed.bin" --max-memory=2gib --allow-client-registration --skip-audit --dry-run)"
+t "the v33 operator set maps onto the miner's provide flags" [ "$out" = "$expected" ]
+
+out="$(pe "$h" ALL_OPERATORS=maybe)"; rc=$?
+printf '%s' "$out" > "$tmp/pe-bool.out"
+t "an invalid ALL_OPERATORS value is refused" sh -c "grep -q 'ALL_OPERATORS must be 1/true/yes/on or 0/false/no/off' '$tmp/pe-bool.out' && [ $rc -ne 0 ]"
+
+out="$(pe "$h" MAX_MEMORY='2 gib')"; rc=$?
+printf '%s' "$out" > "$tmp/pe-max.out"
+t "whitespace in MAX_MEMORY is refused" sh -c "grep -q 'MAX_MEMORY must not contain whitespace' '$tmp/pe-max.out' && [ $rc -ne 0 ]"
+
+out="$(pe "$h" HOTKEY_SEED_FILE='/tmp/a b')"; rc=$?
+printf '%s' "$out" > "$tmp/pe-seed.out"
+t "whitespace in HOTKEY_SEED_FILE is refused" sh -c "grep -q 'HOTKEY_SEED_FILE must not contain whitespace' '$tmp/pe-seed.out' && [ $rc -ne 0 ]"
+
+out="$(pe "$h" ALLOW_CLIENT_REGISTRATION=maybe)"; rc=$?
+printf '%s' "$out" > "$tmp/pe-allow.out"
+t "the helper rejects an unknown ALLOW_CLIENT_REGISTRATION" sh -c "grep -q 'ALLOW_CLIENT_REGISTRATION must be auto, Y or N' '$tmp/pe-allow.out' && [ $rc -ne 0 ]"
+
+out="$(pe "$h" PROVIDER_ARGS='--flag=*')"
+t "PROVIDER_ARGS is split on whitespace and not globbed" [ "$out" = "--flag=*" ]
 
 echo "--- jwt helpers ---"
 # shellcheck source=docker/miner/jwt_verify.sh
