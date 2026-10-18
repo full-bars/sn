@@ -17,12 +17,18 @@ import (
 
 // Configuration is copied before workers start and is immutable for one run.
 type providerRunSettings struct {
-	wallet                  string
-	walletProof             *snWalletProof
-	apiUrl                  string
-	connectUrl              string
-	port                    int
-	proxySettings           []*connect.ProxySettings
+	wallet        string
+	walletProof   *snWalletProof
+	apiUrl        string
+	connectUrl    string
+	port          int
+	proxySettings []*connect.ProxySettings
+	// proxySourceOf is each proxy identity's provenance ("file", "internal",
+	// "url"), as the proxy manager recorded it when it built the launch set.
+	// The warmth launch ordering (proxy_manager_warmth.go) reads it to keep
+	// unproven URL-sourced identities behind the curated list; a nil map
+	// treats every proxy as trusted provenance.
+	proxySourceOf           map[string]string
 	memoryPlan              providerMemoryPlan
 	testEgressDialer        *connect.DialContextSettings
 	allowClientRegistration bool

@@ -672,7 +672,7 @@ func provide(opts docopt.Opts) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, quarantineRejectedSignIn: quarantineRejectedSignIn}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, proxySourceOf: proxyManager.proxySourceOf(), memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, quarantineRejectedSignIn: quarantineRejectedSignIn}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -1077,9 +1077,23 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return nil
 	}
 
+	// Launch ordering (W-02): v33's warmth/earnings prioritization
+	// (proxy_manager_warmth.go) decides the order the provider goroutines
+	// start in and the per-tier stagger between them, so the scarce auth-mint
+	// slots go to the identities that can dial with a stored client JWT or
+	// renew one in a single step, and within a tier the proven earners go
+	// first. The direct slot keeps its relative place at the end of the list
+	// (it is not a proxy and carries no warmth). Each slot keeps its original
+	// index, so the diagnostics label a provider by the slot it was
+	// configured as, exactly as before.
+	launchSlots := scheduleProxyLaunch(providers, self.proxySourceOf, "")
 	var wg sync.WaitGroup
 	results := make(chan error, len(providers))
-	for index, proxySettings := range providers {
+	for _, slot := range launchSlots {
+		index := slot.Index
+		proxySettings := slot.Settings
+		baseDelay := slot.Delay
+		staggerDuration := slot.Stagger
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -1102,10 +1116,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				}
 				results <- result
 			}()
-			select {
-			case <-ctx.Done():
+			// The warmth-derived base delay plus a jittered
+			// per-slot stagger; a zero delay starts immediately.
+			if !backoffPacerWithDelay(baseDelay, staggerDuration, ctx) {
 				return
-			case <-time.After(time.Duration(index) * 100 * time.Millisecond):
 			}
 			if ctx.Err() != nil {
 				return

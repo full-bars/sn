@@ -194,6 +194,21 @@ func newProxyManager(cfg proxyManagerConfig) *proxyManager {
 	return &proxyManager{cfg: cfg, sourceOf: map[string]string{}}
 }
 
+// proxySourceOf returns a copy of the provenance map recorded when the
+// desired set was last built (see desired): each identity's source tag
+// ("file", "internal", "url"). The provide run hands it to the warmth launch
+// ordering, which must not re-derive the tags itself: a URL-sourced identity
+// mislabeled as curated would launch ahead of the operator's list. A key
+// absent from the map (e.g. a run that never started the manager) launches
+// as trusted provenance.
+func (m *proxyManager) proxySourceOf() map[string]string {
+	out := make(map[string]string, len(m.sourceOf))
+	for key, source := range m.sourceOf {
+		out[key] = source
+	}
+	return out
+}
+
 // legacyProxySettings reads the miner's internal `<state>/proxy` config. This
 // is the fallback the manager uses when proxy.state has no external source
 // file configured.
@@ -342,6 +357,13 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 			primeTrimCapSeen(trimCap, trimCapOperator)
 		}
 	}
+	// The launch provenance is what the warmth launch ordering consumes
+	// (proxy_manager_warmth.go): it must be the REAL tag ("file", "internal",
+	// "url") the desired set was built with, not a uniform placeholder, or a
+	// URL-sourced identity would be ranked like a curated one. Held and
+	// backed-off identities are recorded too; the ordering only looks up the
+	// launch keys.
+	m.sourceOf = sourceOf
 	return launch, held, writeState, nil
 }
 
@@ -377,10 +399,9 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// file: it is the operator's curated config, and writing discovered
 	// entries into it would make them indistinguishable from curated ones.
 	m.mirrorLegacyProxyConfig()
-	m.sourceOf = map[string]string{}
-	for _, s := range launch {
-		m.sourceOf[s.Key()] = "internal"
-	}
+	// m.sourceOf was recorded by desired() above with each identity's real
+	// provenance; the warmth launch ordering reads it through
+	// proxySourceOf().
 
 	// URL-sourced proxies only launch on the next start until P2 wires the hot
 	// reload watcher; the loops below still keep proxy_url.json and the trigger
