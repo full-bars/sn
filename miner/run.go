@@ -725,6 +725,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
+	// The control surface's run state: start time, the previous run's marker
+	// (restart reason and version), and a clean-exit marker for the next
+	// start. Declared before the child machinery so a clean return marks the
+	// run; a crash or kill leaves no marker, which reads as "unclean".
+	beginControlRun(time.Now())
+	defer func() {
+		if returnErr == nil {
+			finishControlRun("clean")
+		}
+	}()
 	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
 		return err
@@ -733,6 +743,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if len(providers) == 0 {
 		providers = []*connect.ProxySettings{nil}
 	}
+	// Publish the launched proxy slots to the control surface (P2b): the
+	// running provider is the only process that knows its running set, which
+	// is what `proxy trim --preview` asks it for. The direct slot has no key.
+	controlRuntime.setRunningProxies(providerSlotKeys(providers))
 	workProfile, err := ReadProviderWorkCaptureProfile(ctx, self.workCapturePath, self.workCaptureSha256, self.requireWorkCapture)
 	if err != nil {
 		output.observe(providerWorkCaptureRequired, 0, false, err, 0, nil)
@@ -775,6 +789,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return err
 	}
 	defer progress.close()
+	// Per-slot sessions: the control snapshot counts connected/ready slots
+	// through this owner.
+	controlRuntime.setProviderProgress(progress)
 	status, err := newProviderStatusServer(self.port, output, cancel, progress)
 	if err != nil {
 		output.observe(providerStatusFailed, 0, false, err, 0, nil)
@@ -807,6 +824,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		controlClose()
 		forceControlAuditPersist()
 	}()
+	// One rate sample per second feeds the snapshot's throughput history.
+	go controlRuntime.runSampler(ctx)
 
 	keyPath, err := providerStatePath(".provider.key")
 	if err != nil {
@@ -838,6 +857,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// The wrapped dial counts TCP egress; UDP/QUIC egress in this lane is
 	// not wrapped (see bandwidth.WrapDialContextSettings).
 	bwRegistry := bandwidth.NewRegistry()
+	// The control socket's snapshot and traffic replies read these counters.
+	controlRuntime.setBandwidthRegistry(bwRegistry)
 
 	provideWithProxy := func(index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
 		defer func() {

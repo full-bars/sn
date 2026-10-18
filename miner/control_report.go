@@ -48,6 +48,16 @@ type nodeSnapshot struct {
 
 	// Traffic carries the byte totals and the total-traffic rate.
 	Traffic *snapshotTraffic `json:"traffic,omitempty"`
+
+	// MinerNotes is an additive field (clients ignore unknown fields) naming
+	// data the miner cannot supply or qualifying what it does supply, so the
+	// reply never reads as more complete than it is.
+	MinerNotes []string `json:"miner_notes,omitempty"`
+}
+
+// total is the pool size the state derivation and hints use.
+func (p snapshotProxies) total() int {
+	return p.Up + p.Degraded + p.Connecting + p.Dead
 }
 
 // snapshotTraffic is billable versus total traffic.
