@@ -880,14 +880,22 @@ func applyControlLiveSideEffect(key, value string) error {
 			limit = math.MaxInt64
 		}
 		debug.SetMemoryLimit(limit)
+		// The v33 controlApplyLog applied-lines (provider/control_socket.go),
+		// so the journal records what the runtime now holds.
+		if limit == math.MaxInt64 {
+			tlog("⚙️ [control] applied gomemlimit=unlimited (no soft memory limit)\n")
+		} else {
+			tlog("⚙️ [control] applied gomemlimit=%s\n", value)
+		}
 	case "gogc":
 		// Only "disabled" turns collection off. "off" is the clear value for
 		// every tuning key, so a set carrying it restores the runtime default.
 		if strings.EqualFold(value, "disabled") {
 			debug.SetGCPercent(-1)
-			importantLogf("[control] applied gogc=disabled (garbage collection off; heap grows unbounded)\n")
+			tlog("⚙️ [control] applied gogc=disabled (garbage collection off; heap grows unbounded)\n")
 		} else if strings.EqualFold(value, "off") {
 			debug.SetGCPercent(100)
+			tlog("⚙️ [control] applied gogc=100 (off restores the default)\n")
 		} else {
 			percent, err := strconv.Atoi(value)
 			if err != nil {
