@@ -424,7 +424,7 @@ func readBounded(ctx context.Context, file *os.File, maximum int64) ([]byte, err
 }
 
 func (self *Owner) prefix() string {
-	return ".durable-head-" + digest([]byte(self.spec.Kind + "\x00" + self.spec.Name))[:32] + "-"
+	return HeadPrefix(self.spec)
 }
 func (self *Owner) temporaryName(name string) bool {
 	if !strings.HasPrefix(name, self.prefix()) || len(name) != len(self.prefix())+32 {

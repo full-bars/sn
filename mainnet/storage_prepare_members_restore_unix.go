@@ -49,6 +49,11 @@ func planStoragePreparationMembersRestore(ctx context.Context, name string, owne
 		return durablevolume.PreparationOwnerPlan{}, err
 	}
 	isMetadata := func(path string) bool {
+		if _, marker := durablehead.ParseCreateMarker(spec, path); marker {
+			// A create marker belongs to the head pair, never to the application
+			// member namespace or to the physical metadata derivation.
+			return true
+		}
 		return path == spec.Name || head.Pending != nil && path == head.Pending.Temporary
 	}
 	attribute := durablevolume.PreparationAttributeSpec{Path: ".", Name: durablehead.Attribute(spec.Kind, spec.Name)}
@@ -193,6 +198,12 @@ func validateStoragePreparationMemberImage(census bootstrapSuccessorMemberCensus
 		return err
 	}
 	allowed := map[string]bool{"": true, spec.Name: true}
+	for name := range entries {
+		if _, marker := durablehead.ParseCreateMarker(spec, name); marker {
+			// Restored head metadata, never a signed application member.
+			allowed[name] = true
+		}
+	}
 	pending := census.Pending
 	for _, member := range census.Members {
 		actual, found := entries[member.Name]
@@ -275,6 +286,10 @@ func rebindStoragePreparationMembersRestore(ctx context.Context, owner durablevo
 	}
 	memberEntries := make(map[string]durablevolume.InventoryEntry, len(entries))
 	for path, entry := range entries {
+		if _, marker := durablehead.ParseCreateMarker(spec, path); marker {
+			// A create marker is restored with the head pair, not as a member.
+			continue
+		}
 		if !storagePreparationMemberMetadataOwns(expected.PhysicalMetadata, path) || path == spec.Name {
 			memberEntries[path] = entry
 		}
@@ -438,6 +453,10 @@ func inspectStoragePreparationMembersRestore(ctx context.Context, root *os.File,
 	}
 	memberEntries := make(map[string]durablevolume.InventoryEntry, len(entries))
 	for path, entry := range entries {
+		if _, marker := durablehead.ParseCreateMarker(spec, path); marker {
+			// A create marker is restored with the head pair, not as a member.
+			continue
+		}
 		if !storagePreparationMemberMetadataOwns(expected.PhysicalMetadata, path) || path == spec.Name {
 			memberEntries[path] = entry
 		}

@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"os"
+	"strings"
 )
 
 const Schema = "urnetwork-durable-snapshot-head-v2"
@@ -37,6 +38,32 @@ type Spec struct {
 func Attribute(kind, name string) string {
 	digest := sha256.Sum256([]byte(kind + "\x00" + name))
 	return "user.urnetwork.snapshot." + hex.EncodeToString(digest[:])
+}
+
+// HeadPrefix is the basename prefix shared by this snapshot's temporaries and
+// create markers. One prefix derivation keeps the runtime and restorers aligned.
+func HeadPrefix(spec Spec) string {
+	sum := sha256.Sum256([]byte(spec.Kind + "\x00" + spec.Name))
+	return ".durable-head-" + hex.EncodeToString(sum[:])[:32] + "-"
+}
+
+// CreateMarker names the temporary a publication nonce will create. The marker
+// exists before the temporary, so a crash between the two stays recoverable.
+func CreateMarker(spec Spec, nonce string) string {
+	return HeadPrefix(spec) + "create-" + nonce
+}
+
+// ParseCreateMarker returns the temporary basename a create marker announces.
+// A marker is transient head metadata, never an application member or payload.
+func ParseCreateMarker(spec Spec, name string) (string, bool) {
+	nonce, ok := strings.CutPrefix(name, HeadPrefix(spec)+"create-")
+	if !ok || len(nonce) != 32 {
+		return "", false
+	}
+	if _, err := hex.DecodeString(nonce); err != nil {
+		return "", false
+	}
+	return HeadPrefix(spec) + nonce, true
 }
 
 // These records are also the provisioning/backup format. Runtime writers only

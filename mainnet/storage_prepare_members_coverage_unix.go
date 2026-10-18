@@ -35,7 +35,8 @@ func storagePreparationMembersRestoreView(ctx context.Context, owner durablevolu
 		if err := ctx.Err(); err != nil {
 			return durablevolume.Inventory{}, err
 		}
-		if entry.Path != "" && entry.Path != spec.Name && (head.Pending == nil || entry.Path != head.Pending.Temporary) && !bootstrapSuccessorMemberOwns(spec, false, entry.Path) {
+		_, marker := durablehead.ParseCreateMarker(spec, entry.Path)
+		if entry.Path != "" && entry.Path != spec.Name && (head.Pending == nil || entry.Path != head.Pending.Temporary) && !marker && !bootstrapSuccessorMemberOwns(spec, false, entry.Path) {
 			continue
 		}
 		if entry.Path == "" {

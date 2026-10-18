@@ -67,6 +67,7 @@ func buildBootstrapSuccessorRebindCensus(ctx context.Context, plan durablevolume
 	if !reflect.DeepEqual(expected, plan.Owners[index]) {
 		return result, errors.New("successor physical rebind changed original member bytes or capacities")
 	}
+	spec := bootstrapSuccessorMemberSpec(original.Owner.Kind == "mainnet-successor-nonce-members")
 	files := map[string]durablevolume.PreparationFile{}
 	members := map[string]bool{}
 	for ownerIndex, owner := range plan.Owners {
@@ -76,6 +77,9 @@ func buildBootstrapSuccessorRebindCensus(ctx context.Context, plan durablevolume
 			}
 			files[file.Path] = file
 			if ownerIndex == index && !paths[file.Path] {
+				// The create marker is restored with the head pair. It is not a
+				// member of the signed application census, but it is a target
+				// file the rebind must account for.
 				members[file.Path] = true
 			}
 		}
@@ -93,7 +97,6 @@ func buildBootstrapSuccessorRebindCensus(ctx context.Context, plan durablevolume
 	if len(files) != 0 {
 		return result, errors.New("successor physical rebind omitted a reviewed target source")
 	}
-	spec := bootstrapSuccessorMemberSpec(original.Owner.Kind == "mainnet-successor-nonce-members")
 	head, _, err := storagePreparationMemberRestoreHead(spec, inventory)
 	if err != nil {
 		return result, err

@@ -72,6 +72,7 @@ func PlanRestore(ctx context.Context, name string, owner durablevolume.Preparati
 	inodes := map[uint64]bool{}
 	files := make([]durablevolume.PreparationFile, 0, len(report.Entries)-1)
 	var checkpointRaw []byte
+	var markerTemporaries []string
 	for _, entry := range report.Entries {
 		if err := ctx.Err(); err != nil {
 			return durablevolume.PreparationOwnerPlan{}, err
@@ -84,6 +85,14 @@ func PlanRestore(ctx context.Context, name string, owner durablevolume.Preparati
 			return durablevolume.PreparationOwnerPlan{}, errors.New("snapshot restore original names are duplicated")
 		}
 		entries[entry.Path] = entry
+		if temporary, marker := ParseCreateMarker(spec, entry.Path); marker {
+			// A create marker is transient head metadata. It is restored with
+			// the head pair, but it is never an application member.
+			if entry.Kind != "file" || entry.Mode != 0600 || entry.Size != 0 || len(entry.OwnerAttributes) != 0 {
+				return durablevolume.PreparationOwnerPlan{}, errors.New("snapshot restore create marker differs from its exact transient shape")
+			}
+			markerTemporaries = append(markerTemporaries, temporary)
+		}
 		if entry.Path == "" {
 			if entry.Kind != "directory" || entry.Mode != 0700 || *entry.Physical != report.PhysicalRoot {
 				return durablevolume.PreparationOwnerPlan{}, errors.New("snapshot restore original root differs")
@@ -157,9 +166,20 @@ func PlanRestore(ctx context.Context, name string, owner durablevolume.Preparati
 			return durablevolume.PreparationOwnerPlan{}, errors.Join(ErrUncertain, errors.New("snapshot restore lacks complete original pending or exchanged bytes"))
 		}
 	}
+	if checkpoint.Pending == nil {
+		for _, temporary := range markerTemporaries {
+			if entry, present := entries[temporary]; present && entry.Kind == "file" && entry.Mode == 0600 && entry.Size == 0 {
+				// The crash pair never reached a pending checkpoint. Restoring
+				// the zero-byte pair preserves the state Reconcile abandons.
+				allowed[temporary] = true
+			}
+		}
+	}
 	for path := range entries {
 		if !allowed[path] {
-			return durablevolume.PreparationOwnerPlan{}, identity(errors.New("snapshot restore contains an unreviewed owner member"))
+			if _, marker := ParseCreateMarker(spec, path); !marker {
+				return durablevolume.PreparationOwnerPlan{}, identity(errors.New("snapshot restore contains an unreviewed owner member"))
+			}
 		}
 	}
 	census, err := json.Marshal(snapshotRestoreCensus{Schema: snapshotRestoreSchema, Profile: append(json.RawMessage(nil), profile...), OriginalCheckpoint: checkpointRaw})
