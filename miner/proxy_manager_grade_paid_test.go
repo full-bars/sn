@@ -656,7 +656,7 @@ func TestRunPaidProxyGrader_ExitsOnCancelledContext(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		runPaidProxyGrader(ctx, "1.2.3.4", 443)
+		runPaidProxyGrader(ctx, "1.2.3.4", 443, nil)
 		close(done)
 	}()
 
@@ -681,7 +681,7 @@ func TestRunPaidProxyGrader_CancelMidRunStopsLoop(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() {
-		runPaidProxyGrader(ctx, "1.2.3.4", 443)
+		runPaidProxyGrader(ctx, "1.2.3.4", 443, nil)
 		close(done)
 	}()
 

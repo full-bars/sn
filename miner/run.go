@@ -1379,6 +1379,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// (it is not a proxy and carries no warmth). Each slot keeps its original
 	// index, so the diagnostics label a provider by the slot it was
 	// configured as, exactly as before.
+	// Startup grading gate readiness hook (proxy_manager_gate.go): the
+	// manager's active probe loops are held until the workers launched below
+	// are up, and this is the moment their clocks (plateau, deadline) start
+	// from. The hook never blocks and changes nothing about the launches.
+	noteProviderWorkerLaunches()
 	launchSlots := scheduleProxyLaunch(providers, self.proxySourceOf, "")
 	var wg sync.WaitGroup
 	results := make(chan error, len(providers))

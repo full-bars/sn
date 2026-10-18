@@ -248,6 +248,10 @@ type proxyManager struct {
 	// sourceOf records each desired identity's provenance ("file", "internal",
 	// "url"), for the reload attribution line.
 	sourceOf map[string]string
+
+	// gate is the startup grading gate (proxy_manager_gate.go) the active
+	// probe loops wait on. It is armed by start and never closed.
+	gate *gradingGate
 }
 
 func newProxyManager(cfg proxyManagerConfig) *proxyManager {
@@ -529,11 +533,24 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	ctx, cancel := context.WithCancel(parent)
 	m.cancel = cancel
 	m.started = true
+	// The startup grading gate: the active probe loops below (the paid/file
+	// grader, the URL fetch + stage-1 probe cycles, the stale-reaper pass)
+	// wait on it until the provide run's workers are up. It decides from the
+	// launch set here and the run's published worker accounting, and it never
+	// blocks launching, admission, the control socket or the import
+	// (proxy_manager_gate.go).
+	m.gate = newGradingGate(len(launch))
+	processGradingGate.Store(m.gate)
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		m.gate.run(ctx)
+	}()
 	if len(m.cfg.Urls) > 0 {
 		m.wg.Add(1)
 		go func() {
 			defer m.wg.Done()
-			runProxyURLFetcher(ctx, m.cfg.Urls, m.cfg.Refresh, m.cfg.Max, m.cfg.ApiHost, m.cfg.ApiPort, m.cfg.SelfHeal)
+			runProxyURLFetcher(ctx, m.cfg.Urls, m.cfg.Refresh, m.cfg.Max, m.cfg.ApiHost, m.cfg.ApiPort, m.cfg.SelfHeal, m.gate)
 		}()
 	}
 	// AIMD pool controller (v33 runPoolController, T-07): computes and
@@ -551,7 +568,7 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
-		runURLProxyReaper(ctx, m.cfg.ApiHost, m.cfg.ApiPort)
+		runURLProxyReaper(ctx, m.cfg.ApiHost, m.cfg.ApiPort, m.gate)
 	}()
 	// Paid/file-list proxy grading (v33 proxy_grade_paid.go): rides the
 	// reaper ticker cadence and grades non-URL proxies read-only on the
@@ -560,7 +577,7 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
-		runPaidProxyGrader(ctx, m.cfg.ApiHost, m.cfg.ApiPort)
+		runPaidProxyGrader(ctx, m.cfg.ApiHost, m.cfg.ApiPort, m.gate)
 	}()
 	m.wg.Add(1)
 	go func() {
@@ -634,12 +651,18 @@ var (
 func (m *proxyManager) stop() {
 	m.mu.Lock()
 	cancel := m.cancel
+	gate := m.gate
 	m.started = false
 	m.mu.Unlock()
 	if cancel != nil {
 		cancel()
 	}
 	m.wg.Wait()
+	// This manager's gate is done with the process: a later provide run in the
+	// same process registers its own.
+	if gate != nil {
+		processGradingGate.CompareAndSwap(gate, nil)
+	}
 	// Flush the command audit ring (v33 main()'s shutdown persist).
 	forceAuditPersist()
 }
