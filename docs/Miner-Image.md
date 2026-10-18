@@ -18,8 +18,26 @@ changes.
 
 ## Quick start
 
+> **Name the container with `urnet` in it** (the examples below use
+> `urnet-miner`). The unmodified `urnet-docker` client discovers provider
+> containers whose image reference contains `urnetwork` or whose container name
+> contains `urnet`; a container named `sn-miner` is invisible to
+> `urnet-docker providers` and to `--unit` targeting. `docker start|stop|logs`
+> also work without discovery, but every urnet-docker command that resolves a
+> provider target needs one of those two spellings.
+>
+> The published image refs (`ghcr.io/full-bars/sn:miner`, `:miner-<tag>`,
+> `:miner-<short-sha>`) do not contain `urnetwork` themselves, so with an
+> unmodified client the container name is the discovery hook. The sn client
+> also matches the `full-bars/sn` image ref. If tooling targets by image
+> reference instead, retag a pulled image under an `urnetwork`-bearing name:
+>
+> ```bash
+> docker tag ghcr.io/full-bars/sn:miner urnetwork-miner:latest
+> ```
+
 ```bash
-docker run -d --name sn-miner \
+docker run -d --name urnet-miner \
   -v sn_miner_data:/root/.urnetwork \
   -e AUTH=authcode \
   -e AUTHCODE='YOUR_AUTH_CODE_HERE' \
@@ -31,7 +49,7 @@ A single-operator node that signs in for one operator and mines the listed
 operators:
 
 ```bash
-docker run -d --name sn-miner \
+docker run -d --name urnet-miner \
   -v sn_miner_data:/root/.urnetwork \
   -e AUTH=authcode \
   -e AUTHCODE='YOUR_AUTH_CODE_HERE' \
@@ -81,8 +99,11 @@ conflict is logged and `AUTH` wins.
 2. A stored session is checked locally (`exp`/`nbf`, 5 minute skew). Only a
    definitely expired session is removed, and only when a credential exists to
    replace it; anything unreadable is left for the miner to report.
-3. An empty, unmounted state directory logs a new-identity warning, and one
-   wallet reminder line is always logged.
+3. The state directory must be owned by the container user (root with the
+   default image): a bind mount created by another host UID is refused by the
+   custody checks with a bare `startup_recovery_required` diagnostic. An empty,
+   unmounted state directory logs a new-identity warning, and one wallet
+   reminder line is always logged.
 4. Authentication runs once when no session exists, then `provide` runs under a
    small supervisor: exit 75 restarts after 5s, exit 78 clears the session and
    re-authenticates (up to 3 times), other crashes exit after 3 attempts so the
