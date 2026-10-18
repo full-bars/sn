@@ -19,10 +19,8 @@ import (
 // anything.
 //
 // Ported from the 3.23-fix v33 provider's proxy_grade_paid_test.go (plus the
-// identity, seed and ticker files). The earn-skip cases
-// (proxy_grade_paid_earnskip_test.go upstream) land with the per-proxy earn
-// tracker port: until then proxyEarnedRecentlyFor is the seam that reports
-// "no recent earnings".
+// identity, seed and ticker files). The earn-skip cases live in
+// proxy_manager_grade_paid_earnskip_test.go.
 
 // writePaidGradeProbeOverride sets the probe config for paid-grading tests.
 func writePaidGradeProbeOverride(t *testing.T, enabled bool) {

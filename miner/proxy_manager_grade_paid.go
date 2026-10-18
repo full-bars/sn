@@ -245,14 +245,12 @@ func runPaidProxyGradeOnce(ctx context.Context, apiHost string, apiPort uint16) 
 			// proxy (LastGraded zero) is always force-probed: earn-skip
 			// must never prevent the FIRST grade, or an earning proxy with
 			// no grade stays ungraded forever.
-			// Port staging: v33 asks the per-proxy earn tracker
-			// (globalPerProxyEarnTracker.EarnedSince(key, paidEarnWindow),
-			// G-06). The tracker lands with the earnings port; until then the
-			// seam reports "no recent earnings" (see
-			// proxy_manager_earnings_seam.go), which probes paid proxies on
-			// the paid stale window alone. The tracker port replaces this
-			// call with the real tracker lookup.
-			earnedRecently := proxyEarnedRecentlyFor(key)
+			// The tracker is keyed exactly like the grader: by proxy
+			// IDENTITY (address, or address+user), so a credentialed proxy
+			// at a shared gateway is skipped only when THAT account earned.
+			// The earnings recording loop feeds it from the provide run's
+			// registry on the health cadence.
+			earnedRecently := globalPerProxyEarnTracker.EarnedSince(key, paidEarnWindow)
 			forceProbeDue := entry.LastGraded.IsZero() || now.Sub(entry.LastGraded) >= paidForceProbeCeiling
 			if earnedRecently && !forceProbeDue {
 				continue // earning and not past the ceiling — save the bandwidth
