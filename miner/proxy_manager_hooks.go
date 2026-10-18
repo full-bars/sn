@@ -14,7 +14,8 @@ import (
 //     form v33 uses. P2 wires these when the miner's ops/observability port
 //     lands.
 //   - the control-socket / metrics status surface (resolution status, source
-//     failure warnings, grade deltas, fetcher countdowns).
+//     failure warnings). The grade deltas and the fetcher/reaper countdown
+//     state below are no longer seams: the P1(c) grade summary reads them.
 //
 // Every one is a function variable (or a trivial state cell) with a calm
 // default, so P2 replaces the implementation without touching the ported
@@ -71,13 +72,9 @@ var warnProxySourceFailure = func(label, reason string) {
 	importantLogf("[proxy][url] warning: source %s failed: %s\n", label, reason)
 }
 
-// emitProxyGradeDelta records a grade change (v33 grades.log). P1(a) logs it;
-// the paid/URL grading sweep that calls it is P1(c).
-var emitProxyGradeDelta = func(addr, oldTier, newTier string, oldScore, newScore float64, oldGraded bool) {}
-
-// URL fetcher / reaper countdown state for the grade summary (P2). The fetcher
-// publishes these so an operator-facing summary can show the next window; the
-// miner port keeps the state machine, P2 renders it.
+// URL fetcher / reaper countdown state for the grade summary. The fetcher
+// publishes these so the summary can show the next window; the summary renders
+// them (proxy_manager_grade_summary.go).
 var (
 	urlFetcherState  atomic.Value // string
 	nextFetchProbe   atomic.Int64 // unix nanos, 0 = none
@@ -105,6 +102,15 @@ func setNextFetchProbeAt(t time.Time) {
 	nextFetchProbe.Store(t.UnixNano())
 }
 
+// getNextFetchProbeAt returns the published next fetch window start (zero when
+// none is scheduled).
+func getNextFetchProbeAt() time.Time {
+	if ns := nextFetchProbe.Load(); ns != 0 {
+		return time.Unix(0, ns)
+	}
+	return time.Time{}
+}
+
 // setNextGradeRefreshAt publishes the next reaper window start (zero clears).
 func setNextGradeRefreshAt(t time.Time) {
 	if t.IsZero() {
@@ -112,4 +118,13 @@ func setNextGradeRefreshAt(t time.Time) {
 		return
 	}
 	nextGradeRefresh.Store(t.UnixNano())
+}
+
+// getNextGradeRefreshAt returns the published next reaper window start (zero
+// when none is scheduled).
+func getNextGradeRefreshAt() time.Time {
+	if ns := nextGradeRefresh.Load(); ns != 0 {
+		return time.Unix(0, ns)
+	}
+	return time.Time{}
 }

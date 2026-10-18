@@ -32,6 +32,9 @@ func withTempHome(t *testing.T) string {
 	// into the next test's resolution (v33 resets it only around its own
 	// override writes).
 	resetProbeConfigCache()
+	// The proxy_grades.json resolver caches its parsed snapshot against the
+	// file mtime, so a test that wrote an override would leak it similarly.
+	resetProxyGradesConfigCache()
 	// The live health registry is process-wide too.
 	resetProxyHealthReportStateForTest()
 	resetGlobalControlStateForTest()

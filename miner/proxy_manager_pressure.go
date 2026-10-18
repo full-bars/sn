@@ -65,6 +65,9 @@ const (
 
 	reaperStaleCalm = 3 * time.Hour // matches the pre-pressure fixed value
 	reaperStaleHot  = 1 * time.Hour
+
+	paidStaleCalm = 6 * time.Hour
+	paidStaleHot  = 3 * time.Hour
 )
 
 // cleanupIntervalScale shortens the cleanup cadence under pressure: cleanup
@@ -79,4 +82,15 @@ func cleanupIntervalScale(pressure float64) float64 {
 func reaperStaleThreshold(pressure float64) time.Duration {
 	t := normalizeRamp(pressure, cleanupScaleStart, cleanupScaleFull)
 	return reaperStaleCalm - time.Duration(t*float64(reaperStaleCalm-reaperStaleHot))
+}
+
+// paidStaleThreshold is the same shape for the PAID/file-proxy window, which
+// is deliberately wider: the operator pays for paid-probe bandwidth, and paid
+// proxies are stable by construction, so they should be re-probed far less
+// often than URL-sourced ones. Combined with the earn-skip in the paid grader
+// (P1(c2)), this drives paid probe spend toward zero in steady state. The grade
+// summary reads it for the per-source stale ratio.
+func paidStaleThreshold(pressure float64) time.Duration {
+	t := normalizeRamp(pressure, cleanupScaleStart, cleanupScaleFull)
+	return paidStaleCalm - time.Duration(t*float64(paidStaleCalm-paidStaleHot))
 }

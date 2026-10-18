@@ -415,6 +415,14 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 		defer m.wg.Done()
 		runDirectGrader(ctx)
 	}()
+	// Grade summary (v33 proxy_grade_summary.go): a pure-read A-F snapshot of
+	// the running set every proxy_grades.json interval, on the important/disk
+	// logs and <state>/grades. It never probes, so it is safe at fleet size.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runProxyGradeSummary(ctx)
+	}()
 	return launch, held, nil
 }
 
