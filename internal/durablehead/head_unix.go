@@ -1,8 +1,10 @@
 //go:build linux || darwin
 
-// Snapshots publish through the retained directory, with an exact pending head
-// before data writes. An exchanged predecessor remains present until both
-// physical generations have been checked and the new one has been synced.
+// Snapshots publish through the retained directory: a create marker names the
+// temporary before it exists, the pending head is anchored before the bytes so a
+// prepared record whose bytes reached stable storage survives an interrupted
+// commit, and an exchanged predecessor remains present until both physical
+// generations have been checked.
 package durablehead
 
 import (
@@ -13,6 +15,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -114,7 +117,7 @@ func open(ctx context.Context, directory *durablepath.Directory, lock *os.File, 
 	if err := self.checkAuxiliaries(); err != nil {
 		return nil, err
 	}
-	if err := self.checkTemporaryCensus(); err != nil {
+	if err := self.checkTemporaryCensus(reconcile); err != nil {
 		return nil, err
 	}
 	if self.checkpoint.Pending != nil {
@@ -431,8 +434,11 @@ func (self *Owner) temporaryName(name string) bool {
 	return err == nil
 }
 
-// A crashed pre-anchor create is retained and refused, never silently removed.
-func (self *Owner) checkTemporaryCensus() (resultErr error) {
+// A temporary is refused unless a create marker names it. A marker that names
+// no existing member is stale and safe to clear in either mode; a marker pair
+// with no pending checkpoint is cleared only by Reconcile. A prefixed member
+// that is neither shape is unknown and stays refused.
+func (self *Owner) checkTemporaryCensus(allowReconcile bool) (resultErr error) {
 	fd, err := unix.Openat(int(self.directory.File().Fd()), ".", unix.O_RDONLY|unix.O_CLOEXEC|unix.O_DIRECTORY, 0)
 	if err != nil {
 		return observation(err, false)
@@ -440,6 +446,9 @@ func (self *Owner) checkTemporaryCensus() (resultErr error) {
 	file := os.NewFile(uintptr(fd), self.directory.File().Name())
 	defer func() { resultErr = errors.Join(resultErr, observation(file.Close(), false)) }()
 	count := 0
+	temporaries := map[string]bool{}
+	markers := map[string]string{}
+	unknown := ""
 	for {
 		if err := self.ctx.Err(); err != nil {
 			return err
@@ -450,17 +459,181 @@ func (self *Owner) checkTemporaryCensus() (resultErr error) {
 			return errors.Join(durablevolume.ErrUnavailable, errors.New("snapshot namespace exceeds finite member capacity"))
 		}
 		for _, name := range names {
-			if strings.HasPrefix(name, self.prefix()) && (self.checkpoint.Pending == nil || name != self.checkpoint.Pending.Temporary) {
-				return errors.Join(ErrUncertain, errors.New("unanchored snapshot temporary is retained"))
+			rest, ok := strings.CutPrefix(name, self.prefix())
+			if !ok {
+				continue
 			}
+			if nonce, isMarker := strings.CutPrefix(rest, "create-"); isMarker {
+				if len(nonce) == 32 {
+					if _, err := hex.DecodeString(nonce); err == nil {
+						markers[name] = nonce
+						continue
+					}
+				}
+			}
+			if len(rest) == 32 {
+				if _, err := hex.DecodeString(rest); err == nil {
+					temporaries[name] = true
+					continue
+				}
+			}
+			unknown = name
 		}
 		if errors.Is(err, io.EOF) {
-			return nil
+			break
 		}
 		if err != nil {
 			return observation(err, false)
 		}
 	}
+	if unknown != "" {
+		return errors.Join(ErrUncertain, fmt.Errorf("unrecognized snapshot member %q is retained", unknown))
+	}
+	removed := false
+	for marker, nonce := range markers {
+		temporary := self.prefix() + nonce
+		pendingNames := self.checkpoint.Pending != nil && self.checkpoint.Pending.Temporary == temporary
+		if !temporaries[temporary] {
+			if pendingNames {
+				// The member may already be renamed into place; only then can
+				// finishPending complete without the temporary.
+				if renamed, err := self.matches(self.spec.Name, self.checkpoint.Pending.Next); err != nil {
+					return err
+				} else if renamed {
+					continue
+				}
+				// The checkpoint names it but its bytes are gone: keep the
+				// marker as evidence and refuse rather than clear anything.
+				return errors.Join(ErrUncertain, errors.New("pending snapshot temporary is missing"))
+			}
+			// It names no member, so clearing it is safe in either mode.
+			if err := unix.Unlinkat(int(self.directory.File().Fd()), marker, 0); err != nil {
+				return errors.Join(ErrUncertain, observation(err, false))
+			}
+			removed = true
+			continue
+		}
+		if pendingNames {
+			complete, err := self.matches(temporary, self.checkpoint.Pending.Next)
+			if err != nil {
+				return err
+			}
+			if !complete {
+				// An exchange rename leaves the next bytes at the name and the
+				// previous committed bytes at the temporary; that is complete.
+				if renamed, err := self.matches(self.spec.Name, self.checkpoint.Pending.Next); err != nil {
+					return err
+				} else if renamed {
+					if committed, err := self.matches(temporary, self.checkpoint.Committed); err != nil {
+						return err
+					} else if committed {
+						complete = true
+					}
+				}
+			}
+			if complete {
+				// The prepared bytes reached stable storage: finishPending keeps
+				// the exact signed record.
+				continue
+			}
+			stat, present, err := self.stat(temporary, false)
+			if err != nil {
+				return err
+			}
+			if !present || stat.Size != 0 {
+				// Bytes were written but not completely: that is custody loss or
+				// tampering, never a publication that never started. Refuse.
+				return errors.Join(ErrUncertain, errors.New("incomplete pending snapshot is retained"))
+			}
+			if !allowReconcile {
+				return errors.Join(ErrUncertain, errors.New("incomplete pending snapshot is retained"))
+			}
+			// The anchored publication never wrote a byte, so no prepared record
+			// exists. Abandon it; the committed generation is authoritative.
+			if err := unix.Unlinkat(int(self.directory.File().Fd()), temporary, 0); err != nil {
+				return errors.Join(ErrUncertain, observation(err, false))
+			}
+			if err := self.directory.File().Sync(); err != nil {
+				return errors.Join(ErrUncertain, observation(err, false))
+			}
+			if err := self.abandonPending(); err != nil {
+				return err
+			}
+			delete(temporaries, temporary)
+			if err := unix.Unlinkat(int(self.directory.File().Fd()), marker, 0); err != nil {
+				return errors.Join(ErrUncertain, observation(err, false))
+			}
+			if err := self.directory.File().Sync(); err != nil {
+				return errors.Join(ErrUncertain, observation(err, false))
+			}
+			removed = true
+			continue
+		}
+		if !allowReconcile {
+			return errors.Join(ErrUncertain, errors.New("snapshot create marker is retained"))
+		}
+		if err := unix.Unlinkat(int(self.directory.File().Fd()), temporary, 0); err != nil {
+			return errors.Join(ErrUncertain, observation(err, false))
+		}
+		// Persist the removal before the marker goes, so a crash can never
+		// leave a markerless temporary.
+		if err := self.directory.File().Sync(); err != nil {
+			return errors.Join(ErrUncertain, observation(err, false))
+		}
+		delete(temporaries, temporary)
+		if err := unix.Unlinkat(int(self.directory.File().Fd()), marker, 0); err != nil {
+			return errors.Join(ErrUncertain, observation(err, false))
+		}
+		removed = true
+	}
+	for name := range temporaries {
+		if self.checkpoint.Pending != nil && name == self.checkpoint.Pending.Temporary {
+			continue
+		}
+		return errors.Join(ErrUncertain, errors.New("unanchored snapshot temporary is retained"))
+	}
+	if removed {
+		if err := self.directory.File().Sync(); err != nil {
+			return errors.Join(ErrUncertain, observation(err, false))
+		}
+	}
+	return nil
+}
+
+// abandonPending clears an anchored publication whose bytes never completed.
+// Only Reconcile calls it, and the committed snapshot is unchanged.
+func (self *Owner) abandonPending() error {
+	if self.checkpoint.Pending == nil {
+		return nil
+	}
+	next := self.checkpoint
+	next.Pending = nil
+	return self.writeCheckpoint(next, "abandon")
+}
+
+// writeCreateMarker names the temporary before it exists, so a process killed
+// between the two leaves a recoverable pair instead of an unknown file.
+func (self *Owner) writeCreateMarker(nonce string) error {
+	name := self.prefix() + "create-" + nonce
+	fd, err := unix.Openat(int(self.directory.File().Fd()), name, unix.O_WRONLY|unix.O_CREAT|unix.O_EXCL|unix.O_CLOEXEC|unix.O_NOFOLLOW, 0600)
+	if err != nil {
+		return observation(err, false)
+	}
+	file := os.NewFile(uintptr(fd), name)
+	if err := errors.Join(file.Sync(), file.Close()); err != nil {
+		return observation(err, false)
+	}
+	return self.directory.File().Sync()
+}
+
+// removeCreateMarker is best effort after the checkpoint names the temporary;
+// a leftover marker is cleared by Reconcile.
+func (self *Owner) removeCreateMarker(nonce string) error {
+	name := self.prefix() + "create-" + nonce
+	if err := unix.Unlinkat(int(self.directory.File().Fd()), name, 0); err != nil && !errors.Is(err, unix.ENOENT) {
+		return observation(err, false)
+	}
+	return self.directory.File().Sync()
 }
 
 func (self *Owner) check(write bool) error {
@@ -662,14 +835,21 @@ func (self *Owner) PublishWithHooks(raw []byte, hooks PublicationHooks) (resultE
 	if err := self.check(true); err != nil {
 		return err
 	}
-	if err := self.checkTemporaryCensus(); err != nil {
+	if err := self.checkTemporaryCensus(false); err != nil {
 		return self.retain(err)
+	}
+	if err := self.ctx.Err(); err != nil {
+		return err
 	}
 	var nonce [16]byte
 	if _, err := rand.Read(nonce[:]); err != nil {
 		return err
 	}
 	temporary := self.prefix() + hex.EncodeToString(nonce[:])
+	nonceHex := hex.EncodeToString(nonce[:])
+	if err := self.writeCreateMarker(nonceHex); err != nil {
+		return err
+	}
 	fd, err := unix.Openat(int(self.directory.File().Fd()), temporary, unix.O_RDWR|unix.O_CREAT|unix.O_EXCL|unix.O_CLOEXEC|unix.O_NOFOLLOW, 0600)
 	if err != nil {
 		return observation(err, false)
@@ -686,6 +866,9 @@ func (self *Owner) PublishWithHooks(raw []byte, hooks PublicationHooks) (resultE
 	if err := self.boundary("temporary-created"); err != nil {
 		return err
 	}
+	// The pending checkpoint is anchored before the bytes, so a prepared record
+	// whose bytes reached stable storage is never discarded by a later barrier.
+	// Reconcile abandons an anchored publication whose bytes never completed.
 	stat, _, err := self.stat(temporary, true)
 	if err != nil {
 		return err
@@ -731,7 +914,13 @@ func (self *Owner) PublishWithHooks(raw []byte, hooks PublicationHooks) (resultE
 	if _, err := self.readMember(temporary, next); err != nil {
 		return err
 	}
-	return self.finishPending(hooks)
+	if err := self.finishPending(hooks); err != nil {
+		return err
+	}
+	if err := self.removeCreateMarker(nonceHex); err != nil {
+		return err
+	}
+	return nil
 }
 
 // One exact next generation, before or after exchange, is the only recovery.
@@ -739,8 +928,14 @@ func (self *Owner) reconcile() error {
 	if err := self.admit(true); err != nil {
 		return err
 	}
+	pending := self.checkpoint.Pending
 	if err := self.finishPending(PublicationHooks{}); err != nil {
 		return self.retain(errors.Join(ErrUncertain, err))
+	}
+	if pending != nil {
+		if err := self.removeCreateMarker(strings.TrimPrefix(pending.Temporary, self.prefix())); err != nil {
+			return self.retain(errors.Join(ErrUncertain, err))
+		}
 	}
 	return nil
 }
@@ -790,7 +985,7 @@ func (self *Owner) finishPending(hooks PublicationHooks) error {
 	if err := self.checkAuxiliaries(); err != nil {
 		return err
 	}
-	if err := self.checkTemporaryCensus(); err != nil {
+	if err := self.checkTemporaryCensus(false); err != nil {
 		return err
 	}
 	finalNext, err := self.matches(self.spec.Name, pending.Next)

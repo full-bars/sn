@@ -335,17 +335,17 @@ func TestSnapshotHeadLostAcknowledgementRecovery(t *testing.T) {
 				t.Fatal(err)
 			}
 			err := self.open(true)
-			if stage == "temporary-created" || stage == "pending-synced" {
-				if err == nil {
-					t.Fatal("incomplete next bytes recovered")
-				}
-				return
-			}
 			if err != nil {
 				t.Fatal(err)
 			}
-			if raw, present, err := self.owner.Read(); err != nil || !present || !bytes.Equal(raw, next) {
-				t.Fatal("recovery changed retained next bytes", string(raw), err)
+			want := next
+			if stage == "temporary-created" || stage == "pending-synced" {
+				// An anchored publication whose bytes never completed is
+				// abandoned; the committed generation is unchanged.
+				want = []byte("original")
+			}
+			if raw, present, err := self.owner.Read(); err != nil || !present || !bytes.Equal(raw, want) {
+				t.Fatal("recovery changed retained bytes", string(raw), err)
 			}
 			if err := self.owner.Publish([]byte("later"), nil); err != nil {
 				t.Fatal("bounded recovery could not continue", err)
@@ -422,22 +422,17 @@ func TestSnapshotHeadAcknowledgmentReadFailureRetainsOriginalWrite(t *testing.T)
 					t.Fatal(err)
 				}
 				err = self.open(true)
-				if stage == "pending-synced" {
-					if err == nil {
-						t.Fatal("incomplete pending payload became completed recovery")
-					}
-					observed := make([]byte, 4096)
-					n, readErr := unix.Getxattr(filepath.Join(self.root, testSpec.LockName), attribute, observed)
-					if readErr != nil || !bytes.Equal(observed[:n], retained) {
-						t.Fatal("refused recovery rewrote the original pending authority", readErr)
-					}
-					return
-				}
 				if err != nil {
 					t.Fatal("complete next bytes did not recover", err)
 				}
-				if raw, present, err := self.owner.Read(); err != nil || !present || !bytes.Equal(raw, next) {
-					t.Fatal("recovered acknowledgment changed original next payload", err, present, string(raw))
+				wantValue := next
+				if stage == "pending-synced" {
+					// The anchored publication never wrote its bytes, so recovery
+					// abandons it and keeps the committed generation.
+					wantValue = original
+				}
+				if raw, present, err := self.owner.Read(); err != nil || !present || !bytes.Equal(raw, wantValue) {
+					t.Fatal("recovered acknowledgment changed retained payload", err, present, string(raw))
 				}
 			}()
 		}
@@ -484,7 +479,19 @@ func TestSnapshotHeadRecoveryRejectsUnknownBytes(t *testing.T) {
 			if err := self.owner.Publish([]byte("exact-original-next"), nil); !errors.Is(err, ErrUncertain) {
 				t.Fatal(err)
 			}
-			pending := self.owner.checkpoint.Pending
+			retained := make([]byte, 4096)
+			n, err := unix.Fgetxattr(int(self.lock.Fd()), Attribute(testSpec.Kind, testSpec.Name), retained)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var checkpoint Checkpoint
+			if err := json.Unmarshal(retained[:n], &checkpoint); err != nil {
+				t.Fatal(err)
+			}
+			pending := checkpoint.Pending
+			if pending == nil {
+				t.Fatal("no anchored pending after the publication")
+			}
 			path := filepath.Join(self.root, pending.Temporary)
 			switch kind {
 			case "extra":
@@ -645,16 +652,16 @@ func TestSnapshotHeadJoinedCrashRecovery(t *testing.T) {
 				t.Fatalf("child did not cross real boundary: %v %s", err, output)
 			}
 			err = self.open(true)
-			if stage == "temporary-created" {
-				if err == nil {
-					t.Fatal("unanchored crash enrolled")
-				}
-				return
-			}
 			if err != nil {
 				t.Fatal(err)
 			}
-			if raw, present, err := self.owner.Read(); err != nil || !present || string(raw) != "child-original-signed-next" {
+			want := "child-original-signed-next"
+			if stage == "temporary-created" {
+				// The anchored publication never wrote its bytes, so the
+				// committed generation stays prior-acknowledged.
+				want = "prior-acknowledged"
+			}
+			if raw, present, err := self.owner.Read(); err != nil || !present || string(raw) != want {
 				t.Fatal("crash bytes changed", string(raw), err)
 			}
 		})
