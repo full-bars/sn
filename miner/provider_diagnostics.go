@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -112,6 +113,51 @@ func newProviderDiagnostics(ctx context.Context, writer io.Writer) (*providerDia
 	return &providerDiagnostics{exporter: exporter}, nil
 }
 
+// providerDiagnosticFallbackWriter receives the records that must survive a
+// primary stream the exporter had to refuse. The exporter admits only writers
+// that can promise a bounded, cancellable write: a stdout redirected to a
+// regular file is refused, which used to drop the closed
+// startup_recovery_required message of a refused startup with it. The
+// fallback is a best-effort console write, like tlog. A variable so tests can
+// capture the fallback without touching the process stderr.
+var providerDiagnosticFallbackWriter io.Writer = os.Stderr
+
+// requiredDiagnostic selects the records that must not be hidden by a refused
+// primary stream: the custody/admission recovery message and the automatic
+// legacy import's decisions, which are the only account of why a 3.23-fix
+// state did or did not migrate. Ordinary status noise keeps the existing
+// best-effort contract.
+func requiredDiagnostic(code string) bool {
+	switch code {
+	case "startup_recovery_required",
+		"legacy_import_committed",
+		"legacy_import_fallback",
+		"legacy_import_skipped",
+		"legacy_import_summary":
+		return true
+	}
+	return false
+}
+
+// offerRecord delivers one complete bounded record through the exporter. When
+// a required record is refused because the destination is unavailable (a
+// refused sink, not a momentarily full queue), it is written to the fallback
+// so a startup refusal still names its recovery.
+func (self *providerDiagnostics) offerRecord(domain, code string, raw []byte) {
+	if self == nil || self.exporter == nil {
+		return
+	}
+	if self.exporter.Offer(domain, raw) {
+		return
+	}
+	if !requiredDiagnostic(code) || self.exporter.Snapshot(domain).Outcome != "unavailable" {
+		return
+	}
+	if providerDiagnosticFallbackWriter != nil {
+		fmt.Fprintf(providerDiagnosticFallbackWriter, "%s", raw)
+	}
+}
+
 // The original sink remains caller-owned; exporter descriptors and worker join.
 func (self *providerDiagnostics) close() error {
 	if self == nil {
@@ -190,7 +236,7 @@ func (self *providerDiagnostics) offerLegacyImport(domain, code, clientID8, slot
 	if encodeErr != nil {
 		return
 	}
-	self.exporter.Offer(domain, append(raw, '\n'))
+	self.offerRecord(domain, code, append(raw, '\n'))
 }
 
 // Preserve the existing wire vocabulary without invoking foreign methods.
@@ -313,5 +359,5 @@ func (self *providerDiagnostics) observeFile(event providerDiagnosticEvent, prov
 	if encodeErr != nil {
 		return // All fields above are scalar; no arbitrary marshaler is invoked.
 	}
-	self.exporter.Offer(domain, append(raw, '\n'))
+	self.offerRecord(domain, code, append(raw, '\n'))
 }

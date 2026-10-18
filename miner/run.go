@@ -827,6 +827,13 @@ func provide(opts docopt.Opts) {
 	err = settings.run(ctx, os.Stdout)
 	if code, ok := providerRunExitCode(err); ok {
 		stopSignals()
+		if errors.Is(err, errProviderStartupRefused) {
+			// The documented startup_recovery_required JSON is emitted by the
+			// run, but its diagnostic stream is best effort (a redirected
+			// regular-file stdout refuses it). Name the refusal on stderr too:
+			// a refused startup that leaves no trace reads as a clean exit.
+			fmt.Fprintf(os.Stderr, "provider startup refused: %v\n", err)
+		}
 		os.Exit(code)
 	}
 	if err != nil && ctx.Err() == nil && (settings.requireWorkCapture || settings.workCapturePath != "" || settings.workCaptureSha256 != "" || settings.requireContractCapture || settings.contractCapturePath != "" || settings.contractCaptureSha256 != "") {
@@ -880,7 +887,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}()
 	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
-		return err
+		return startupRefusal(ctx, err)
 	}
 	providers := self.proxySettings
 	if len(providers) == 0 {
@@ -952,7 +959,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	controlState, err := loadControlState()
 	if err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
-		return err
+		return startupRefusal(ctx, err)
 	}
 	mergePendingControlOverrides(controlState)
 	globalControlState = controlState
@@ -1014,7 +1021,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	keyPath, err := providerStatePath(".provider.key")
 	if err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
-		return err
+		return startupRefusal(ctx, err)
 	}
 	// Fork-only: automatically import 3.23-fix saved identities before the key
 	// gate runs. Slots whose saved identity could not be proven are allowed to
@@ -1038,13 +1045,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if ctx.Err() == nil {
 			output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
 		}
-		return err
+		return startupRefusal(ctx, err)
 	}
 	defer func() { returnErr = errors.Join(returnErr, keyOwner.Close()) }()
 	networkJwtPath, err := providerStatePath("jwt")
 	if err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
-		return err
+		return startupRefusal(ctx, err)
 	}
 	var quarantined atomic.Bool
 	stopRenewal := startNetworkTokenRenewal(ctx, self.apiUrl, providers[0], self.testEgressDialer, networkJwtPath, output, self.quarantineRejectedSignIn, func(clientauth.NetworkTokenQuarantine) {
@@ -1435,10 +1442,45 @@ var errProviderNetworkSignInQuarantined = errors.New("the rejected network sign-
 // the child, without the crash backoff.
 const providerQuarantinedExitCode = 75
 
+// providerStartupRefusedExitCode ends a run that stopped at startup admission
+// before any provider served. A supervisor (systemd Restart=on-failure, the
+// miner image's own supervisor, provide --all-operators) must see the refusal
+// as a failure and retry, never as a clean completion.
+const providerStartupRefusedExitCode = 1
+
+// errProviderStartupRefused marks a run whose retained custody was refused
+// before any provider served (a 3.23-fix state the automatic import could not
+// prove, a missing or mismatched key identity marker, an unusable key). The
+// run's own error stays unwrap-able; this sentinel only selects the exit code.
+var errProviderStartupRefused = errors.New("provider startup refused")
+
+// providerStartupRefusalError keeps the refusal cause in the error chain while
+// marking the run for the nonzero startup exit.
+type providerStartupRefusalError struct{ cause error }
+
+func (self *providerStartupRefusalError) Error() string { return self.cause.Error() }
+func (self *providerStartupRefusalError) Unwrap() error { return self.cause }
+func (self *providerStartupRefusalError) Is(target error) bool {
+	return target == errProviderStartupRefused
+}
+
+// startupRefusal marks a pre-provider startup error as a refusal. A stop
+// signal already cancelling the run is a clean stop, not a refusal: it keeps
+// the bare error and the ordinary exit policy.
+func startupRefusal(ctx context.Context, err error) error {
+	if err == nil || ctx.Err() != nil {
+		return err
+	}
+	return &providerStartupRefusalError{cause: err}
+}
+
 // providerRunExitCode is the process exit code a run's error asks for, if any.
 func providerRunExitCode(err error) (int, bool) {
 	if errors.Is(err, errProviderNetworkSignInQuarantined) {
 		return providerQuarantinedExitCode, true
+	}
+	if errors.Is(err, errProviderStartupRefused) {
+		return providerStartupRefusedExitCode, true
 	}
 	return 0, false
 }

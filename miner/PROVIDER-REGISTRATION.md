@@ -90,11 +90,17 @@ Each API attempt has a 300-second ceiling. Only an entirely typed transient
 availability cause tree can retry, at one-second intervals under the service
 context, with the same retained operation. Completed refusals, unsupported
 routes, malformed replies, changed identity and local custody errors stop that
-worker. Cancellation retains the error and joins its owners. The CLI preserves
-its prior daemon-completion exit policy; the internal runner returns the cause.
+worker. Cancellation retains the error and joins its owners. The CLI keeps the
+prior daemon-completion exit policy for a run that served; a run that stopped at
+startup admission before any provider served exits with
+`providerStartupRefusedExitCode` (1) so a supervisor restarts rather than
+reading a refused startup as a clean completion.
 Admission failures offer a closed `startup_recovery_required` message with flag
-and custody guidance before the existing bounded diagnostic drain. Unavailable
-output remains best effort and never holds authentication or shutdown.
+and custody guidance before the existing bounded diagnostic drain. When the
+diagnostic destination itself was refused (a stdout redirected to a regular
+file cannot promise a bounded write), the recovery message and the automatic
+legacy import's decisions are still written to stderr. Unavailable output
+remains best effort and never holds authentication or shutdown.
 Live refresh checks stable principal, roles and client/device identity before
 persisting. SDK integrity notices cancel only their still-current credential
 generation, including protection against stale equal-byte replacement logins.
