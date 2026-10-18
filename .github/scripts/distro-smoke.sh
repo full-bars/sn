@@ -266,14 +266,20 @@ if [ "$SMOKE_ADAPT_DISCOVERY" = "1" ]; then
     fi
     if [ -w /etc/passwd ]; then
         PEME="$(id -un 2>/dev/null || echo root)"
-        CUR_HOME="$(awk -F: -v u="$PEME" '$1==u {print $6}' /etc/passwd 2>/dev/null | head -n 1)"
-        if [ -n "$CUR_HOME" ] && [ "$CUR_HOME" != "$HOME_DIR" ]; then
+        # POSIX tools only: the opensuse/tumbleweed image ships NO awk, so the
+        # field extraction and the rewrite use grep/cut/sed. Getting this wrong
+        # is silent: the adaptation no-ops and discovery then attributes
+        # /root/.urnetwork instead of the isolated HOME.
+        CUR_HOME="$(grep "^$PEME:" /etc/passwd 2>/dev/null | head -n 1 | cut -d: -f6)"
+        if [ -z "$CUR_HOME" ]; then
+            cond "no /etc/passwd entry for $PEME; state-dir discovery attribution not adapted"
+        elif [ "$CUR_HOME" != "$HOME_DIR" ]; then
             # Field 6 of the current user's line is the only field changed.
-            awk -F: -v u="$PEME" -v h="$HOME_DIR" 'BEGIN{OFS=":"} $1==u {$6=h} {print}' \
+            sed "s|^\($PEME:[^:]*:[^:]*:[^:]*:[^:]*:\)[^:]*:|\1$HOME_DIR:|" \
                 /etc/passwd >"$WORK_DIR/passwd.new" 2>/dev/null &&
                 cp "$WORK_DIR/passwd.new" /etc/passwd 2>/dev/null &&
                 pass "passwd home for $PEME pointed at $HOME_DIR (container-local discovery adaptation)"
-            [ -n "$OUT_DIR" ] && awk -F: -v u="$PEME" '$1==u {print}' /etc/passwd >"$OUT_DIR/passwd-entry.txt" 2>/dev/null
+            [ -n "$OUT_DIR" ] && grep "^$PEME:" /etc/passwd >"$OUT_DIR/passwd-entry.txt" 2>/dev/null
         else
             pass "passwd home for $PEME already resolves to $HOME_DIR"
         fi
@@ -452,7 +458,7 @@ if [ "$sock" = "yes" ]; then
         sed 's/^/    | /' "$WORK_DIR/status-discovery.err" 2>/dev/null | head -n 15
         echo "  --- discovery inputs: passwd entry and provider-named path ---"
         id -un 2>/dev/null | sed 's/^/    user: /'
-        awk -F: -v u="$(id -un 2>/dev/null || echo root)" '$1==u {print "    passwd: " $0}' /etc/passwd 2>/dev/null
+        grep "^$(id -un 2>/dev/null || echo root):" /etc/passwd 2>/dev/null | sed 's/^/    passwd: /'
         ls -l "$WORK_DIR/bin/provider" 2>/dev/null | sed 's/^/    /'
     fi
 fi

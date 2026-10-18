@@ -119,11 +119,17 @@ pass "network fixture present: $STATE_DIR/network.json"
 # /etc/passwd home. Container-local adaptation, same as distro-smoke.sh.
 if [ -w /etc/passwd ]; then
     U="$(id -un 2>/dev/null || echo root)"
-    CUR_HOME="$(awk -F: -v u="$U" '$1==u {print $6}' /etc/passwd 2>/dev/null | head -n 1)"
+    # POSIX tools only: the opensuse/tumbleweed image ships NO awk, so the
+    # extraction and the rewrite use grep/cut/sed (a silent no-op here would
+    # leave discovery attributing /root/.urnetwork instead of the harness HOME).
+    CUR_HOME="$(grep "^$U:" /etc/passwd 2>/dev/null | head -n 1 | cut -d: -f6)"
     if [ -n "$CUR_HOME" ] && [ "$CUR_HOME" != "$HOME_DIR" ]; then
-        awk -F: -v u="$U" -v h="$HOME_DIR" 'BEGIN{OFS=":"} $1==u {$6=h} {print}' /etc/passwd >/srv/passwd.new &&
+        # Field 6 of the current user's line is the only field changed.
+        sed "s|^\($U:[^:]*:[^:]*:[^:]*:[^:]*:\)[^:]*:|\1$HOME_DIR:|" /etc/passwd >/srv/passwd.new &&
             cp /srv/passwd.new /etc/passwd 2>/dev/null &&
             pass "passwd home for $U pointed at $HOME_DIR (container-local discovery adaptation)"
+    elif [ -z "$CUR_HOME" ]; then
+        cond "no /etc/passwd entry for $U; state-dir discovery attribution not adapted"
     fi
 fi
 
@@ -493,7 +499,10 @@ if check_feature "exit-75 quarantine (--quarantine-rejected-sign-in)" 'providerQ
     printf '  probe exit=%s\n' "$E75_RC"
     if [ "$E75_RC" = "75" ]; then
         pass "the miner exits 75 for a quarantined sign-in (unit would restart without backoff)"
-    elif grep -qiE 'rejected|unauthor|401' "$OUT_DIR/exit75.log" 2>/dev/null; then
+    # Only a genuine rejection marker counts. A bare "401" is NOT enough: it
+    # appears inside port numbers and byte counts ("udp6 [::]:40150", "401
+    # bytes"), which made a sandboxed non-rejection run look like a rejection.
+    elif grep -qiE 'rejected|unauthori[sz]ed|http[ _-]?401|status[ =:"]+401' "$OUT_DIR/exit75.log" 2>/dev/null; then
         fail "sign-in was rejected but the process exited $E75_RC, not 75"
     else
         cond "probe did not reach a rejected sign-in in this sandbox (exit $E75_RC) — TODO: run it where the API is reachable with a rejectable token"
