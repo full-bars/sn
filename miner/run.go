@@ -1048,6 +1048,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return startupRefusal(ctx, err)
 	}
 	defer func() { returnErr = errors.Join(returnErr, keyOwner.Close()) }()
+	if backup := keyOwner.RotationBackupName(); backup != "" {
+		// The operator asked for a new durable identity; the replaced key file
+		// must stay recoverable and the replacement must be visible.
+		fmt.Fprintf(os.Stderr, "provider client key rotated: a fresh seed replaces the unusable retained key; the replaced file is preserved as %s\n", backup)
+	}
+	// v33 accepted the all-zero seed as a real key and the server can hold its
+	// public key, so the retained identity is used. It is publicly known,
+	// though, and the operator must rotate deliberately once the migration has
+	// preserved the existing identities. stderr, like the startup refusal:
+	// this warning must survive a diagnostic sink the exporter had to refuse.
+	warnZeroProviderSeed(os.Stderr, keyOwner.Seed())
 	networkJwtPath, err := providerStatePath("jwt")
 	if err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)

@@ -41,8 +41,10 @@ type legacyStartupRefusalState struct {
 	proxyKey string
 }
 
-// A valid 32-byte seed still needs the sn marker to adopt; the NY5 backup's
-// zero seed is the unusable-key variant of the same refused startup.
+// A valid 32-byte seed still needs the sn marker to adopt; a wrong-length
+// retained seed is the unusable-key variant of the same refused startup. (The
+// all-zero seed of the NY5 backup is a usable identity and migrates; see
+// legacy_import_zero_seed_test.go.)
 func writeLegacyStartupRefusalState(t *testing.T, seed []byte) *legacyStartupRefusalState {
 	t.Helper()
 	dir := providerRegistrationPrivateDir(t)
@@ -160,14 +162,16 @@ func assertLegacyStartupRefusedLoudly(t *testing.T, state *legacyStartupRefusalS
 	}
 }
 
-// The zero-seed state is the NY5 backup shape: the import runs and refuses
-// the unusable key at once, and the key gate refuses the unmarked key.
-func TestProvideLegacyStartupRefusalZeroSeedStaysLoud(t *testing.T) {
+// A malformed retained key is a genuinely broken state: the import skips
+// provider_key_invalid at once and the key gate refuses the unmarked key. The
+// all-zero seed no longer falls in this class (v33 used it as a real key), so a
+// truncated seed keeps that loud-refusal coverage.
+func TestProvideLegacyStartupRefusalMalformedSeedStaysLoud(t *testing.T) {
 	if os.Getenv(legacyRefusalChildEnv) == "1" {
 		Run([]string{"provide", "--port=0", "--api_url=" + os.Getenv("SN_TEST_LEGACY_API"), "--connect_url=" + os.Getenv("SN_TEST_LEGACY_CONNECT")})
 		return
 	}
-	state := writeLegacyStartupRefusalState(t, make([]byte, 32))
+	state := writeLegacyStartupRefusalState(t, bytes.Repeat([]byte{0x1f}, 31))
 	stderr, err := runLegacyRefusalChild(t, state, "http://127.0.0.1:1")
 	assertLegacyStartupRefusedLoudly(t, state, stderr, err, "provider_key_invalid")
 }

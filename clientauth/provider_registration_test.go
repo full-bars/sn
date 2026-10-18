@@ -284,18 +284,14 @@ func TestProviderClientKeyMissingMarkerDoesNotBlessRetainedHistory(t *testing.T)
 	}
 }
 
-// Unsafe, malformed and changed keys fail even with a new-create flag. The
-// namespace guards must execute before reading key bytes or replacing files.
+// Unsafe or changed custody fails even with a new-create flag. The namespace
+// guards must execute before reading key bytes or replacing files: a rotation
+// never excuses a symlink, an unsafe mode, a second link or a key that differs
+// from its retained public identity.
 func TestProviderClientKeyRejectsChangedOrUnsafeCustody(t *testing.T) {
-	for _, fault := range []string{"short", "zero", "mode", "symlink", "hardlink", "marker"} {
+	for _, fault := range []string{"mode", "symlink", "hardlink", "marker"} {
 		path := filepath.Join(providerRegistrationPrivateDir(t), ".provider.key")
 		seed := bytes.Repeat([]byte{7}, ed25519.SeedSize)
-		if fault == "short" {
-			seed = seed[:31]
-		}
-		if fault == "zero" {
-			seed = make([]byte, ed25519.SeedSize)
-		}
 		if err := os.WriteFile(path, seed, 0600); err != nil {
 			t.Fatal(err)
 		}
@@ -328,5 +324,122 @@ func TestProviderClientKeyRejectsChangedOrUnsafeCustody(t *testing.T) {
 	cancel()
 	if owner, err := OpenProviderClientKey(ctx, filepath.Join(providerRegistrationPrivateDir(t), ".provider.key"), ProviderClientKeyOptions{AllowCreate: true}); !errors.Is(err, context.Canceled) || owner != nil {
 		t.Fatal("canceled key preparation created custody")
+	}
+}
+
+// The live NY5 state: v33 used any nonempty raw seed, and the server holds the
+// public key of the all-zero seed a 3.23-fix provider can leave behind. The
+// marker must derive from it and the key gate must open without any creation
+// flag, so the automatic import can preserve the existing identities.
+func TestProviderClientKeyZeroSeedIsARetainedIdentity(t *testing.T) {
+	dir := providerRegistrationPrivateDir(t)
+	path := filepath.Join(dir, ".provider.key")
+	zero := make([]byte, ed25519.SeedSize)
+	if err := os.WriteFile(path, zero, 0600); err != nil {
+		t.Fatal(err)
+	}
+	wantMarker, err := ProviderKeyIdentityMarker(zero)
+	if err != nil || len(wantMarker) == 0 {
+		t.Fatalf("the all-zero seed must derive its identity marker: %v", err)
+	}
+	owner, err := OpenProviderClientKey(t.Context(), path, ProviderClientKeyOptions{})
+	if err != nil || owner == nil {
+		t.Fatalf("the key gate refused the retained all-zero identity: %v", err)
+	}
+	defer owner.Close()
+	if !bytes.Equal(owner.Seed(), zero) {
+		t.Fatal("the key gate changed the retained all-zero seed")
+	}
+	if owner.RotationBackupName() != "" {
+		t.Fatal("a non-flag open rotated the retained key")
+	}
+	marker, err := os.ReadFile(filepath.Join(dir, ".provider.key.identity"))
+	if err != nil || !bytes.Equal(marker, wantMarker) {
+		t.Fatalf("the all-zero seed did not publish its derived marker: %v", err)
+	}
+	backups, err := filepath.Glob(filepath.Join(dir, ".provider.key-*"))
+	if err != nil || len(backups) != 0 {
+		t.Fatalf("an accepted retained key left rotation backups: %v %v", backups, err)
+	}
+}
+
+// Explicit creation over a zero or wrong-length retained key is the rotation
+// path, not a refusal: the replaced file is preserved as a timestamped backup,
+// a fresh seed is published, and its marker replaces the retired key's marker.
+// A usable nonzero retained seed is never rotated.
+func TestProviderClientKeyExplicitCreationRotatesUnusableRetainedKey(t *testing.T) {
+	for _, fault := range []string{"zero", "zero-marked", "short"} {
+		dir := providerRegistrationPrivateDir(t)
+		path := filepath.Join(dir, ".provider.key")
+		retained := bytes.Repeat([]byte{7}, ed25519.SeedSize)
+		switch fault {
+		case "zero", "zero-marked":
+			retained = make([]byte, ed25519.SeedSize)
+		case "short":
+			retained = retained[:31]
+		}
+		if err := os.WriteFile(path, retained, 0600); err != nil {
+			t.Fatal(err)
+		}
+		if fault == "zero-marked" {
+			retired, err := ProviderKeyIdentityMarker(retained)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, ".provider.key.identity"), retired, 0600); err != nil {
+				t.Fatal(err)
+			}
+		}
+		owner, err := OpenProviderClientKey(t.Context(), path, ProviderClientKeyOptions{AllowCreate: true})
+		if err != nil || owner == nil {
+			t.Fatalf("explicit creation refused to rotate the %s retained key: %v", fault, err)
+		}
+		rotation := owner.RotationBackupName()
+		if rotation == "" {
+			t.Fatalf("%s rotation did not name its backup", fault)
+		}
+		backup, err := os.ReadFile(filepath.Join(dir, rotation))
+		if err != nil || !bytes.Equal(backup, retained) {
+			t.Fatalf("%s rotation did not preserve the replaced key file: %v", fault, err)
+		}
+		seed := owner.Seed()
+		if len(seed) != ed25519.SeedSize || bytes.Equal(seed, retained) || bytes.Equal(seed, make([]byte, ed25519.SeedSize)) {
+			t.Fatalf("%s rotation did not mint a fresh seed", fault)
+		}
+		published, err := os.ReadFile(path)
+		if err != nil || !bytes.Equal(published, seed) {
+			t.Fatalf("%s rotation published other bytes than its returned seed: %v", fault, err)
+		}
+		wantMarker, err := ProviderKeyIdentityMarker(seed)
+		marker, markerErr := os.ReadFile(filepath.Join(dir, ".provider.key.identity"))
+		if err != nil || markerErr != nil || !bytes.Equal(marker, wantMarker) {
+			t.Fatalf("%s rotation did not republish the derived marker: %v", fault, markerErr)
+		}
+		if err := owner.Close(); err != nil {
+			t.Fatal(err)
+		}
+		// The rotated state is an ordinary retained identity: the next start
+		// without the flag keeps it and never rotates again.
+		reopened, err := OpenProviderClientKey(t.Context(), path, ProviderClientKeyOptions{})
+		if err != nil || !bytes.Equal(reopened.Seed(), seed) || reopened.RotationBackupName() != "" {
+			t.Fatalf("%s rotation was not stable across a restart: %v", fault, err)
+		}
+		if err := reopened.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// A usable nonzero key is never replaced by the explicit flag.
+	dir := providerRegistrationPrivateDir(t)
+	path := filepath.Join(dir, ".provider.key")
+	stable := bytes.Repeat([]byte{3}, ed25519.SeedSize)
+	if err := os.WriteFile(path, stable, 0600); err != nil {
+		t.Fatal(err)
+	}
+	owner, err := OpenProviderClientKey(t.Context(), path, ProviderClientKeyOptions{AllowCreate: true})
+	if err != nil || !bytes.Equal(owner.Seed(), stable) || owner.RotationBackupName() != "" {
+		t.Fatalf("explicit creation rotated a usable retained key: %v", err)
+	}
+	if err := owner.Close(); err != nil {
+		t.Fatal(err)
 	}
 }

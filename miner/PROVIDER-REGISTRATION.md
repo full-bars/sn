@@ -16,7 +16,9 @@ comes from the configured server and its network principal.
 - A known new installation or new proxy member requires
   `--allow-client-registration`. New key creation also requires no retained
   provider history. This flag never clears an operation, first-send anchor,
-  existing-client marker, rejection or key-identity mismatch.
+  existing-client marker, rejection or key-identity mismatch. The one retained
+  key it may replace is a zero or wrong-length `.provider.key` (the deliberate
+  rotation below), which is preserved as a timestamped backup first.
 - An ordinary restart with retained key/marker and operation or credential
   needs no creation flag. A persisted request can resume without the flag even
   if it has not received its first reply.
@@ -30,6 +32,21 @@ comes from the configured server and its network principal.
   side files. In that missing-marker case, any retained versioned operation,
   lock, first-send/existing marker, rejection or unknown provider history makes
   this a recovery case instead of an automatic upgrade.
+- v33 used any nonempty raw seed as the provider client key
+  (`readProviderClientKeySeed` plus the caller's `0 < len(seed)` check), so a
+  retained 32-byte seed is a usable key even when it is the all-zero seed: the
+  server already holds the public key it derives, the automatic legacy import
+  proves that saved identity, and the key gate opens on the derived marker. The
+  run does not refuse it. It is not silent either: the all-zero seed is a
+  publicly known key, so anyone can sign as this provider's client identity.
+  The run writes a `WARNING` to stderr (the stream that also carries startup
+  refusals, because a redirected diagnostic sink can be refused) and the
+  operator must rotate deliberately *after* the migration has preserved the
+  existing identities: `--allow-client-registration` over a zero or
+  wrong-length retained key mints a fresh seed and preserves the replaced file
+  as `.provider.key-<UTC timestamp>.bak` before republishing the new marker.
+  Only explicit creation rotates; a usable nonzero retained seed is never
+  replaced. Without the flag, a wrong length stays malformed and is refused.
 - Missing or unsafe key material, a key/marker mismatch, or a missing key marker
   with retained versioned history requires custody recovery. Neither flag
   repairs it. A bare existing seed with no provider history may finish the
@@ -57,12 +74,14 @@ retain their original bytes.
 
 The key owner locks `.provider.key.registration.lock` across all provider
 workers. It publishes and fsyncs `.provider.key`, then `.provider.key.identity`,
-before any API allocation. Each independent slot retains its existing JWT
-filename, plus `.registration`, `.registration.started`, and when adopting an
-existing token, `.registration.existing`. The existing 8-byte proxy filename
-suffix is only a path: the full scope digest is authoritative for local replay.
-Duplicate effective slots and duplicate credential paths are refused before
-workers start. A changed scope at an existing path is refused.
+before any API allocation. An explicit rotation (explicit creation over a zero
+or wrong-length retained key) publishes the timestamped backup of the replaced
+file first, then the fresh key and its marker. Each independent slot retains its
+existing JWT filename, plus `.registration`, `.registration.started`, and when
+adopting an existing token, `.registration.existing`. The existing 8-byte proxy
+filename suffix is only a path: the full scope digest is authoritative for local
+replay. Duplicate effective slots and duplicate credential paths are refused
+before workers start. A changed scope at an existing path is refused.
 
 The versioned loader fsyncs the original request and independent first-send
 anchor before POST. It validates the response against that request and original
