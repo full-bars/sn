@@ -2,11 +2,13 @@
 //
 // The phase proves the DIRECT identity first (so its result is the first proof
 // line an operator sees), then the rest of the candidate slots with bounded
-// concurrency. Every proof call runs under its own deadline even when the
-// prover ignores the context, a heartbeat reports the tally every ~10s, and a
-// total budget (or a run of unreachable API dials) ends the phase loudly:
-// proven slots keep their proofs, everything else is left for the next start
-// and named in the summary. There is no path where the import sits silent.
+// concurrency. Every slot's proof -- both tiers and every retry -- runs under
+// ONE deadline even when the prover ignores the context (the SDK retries its
+// own dials for ~15s behind a dead API), so one stalled slot can never turn
+// into minutes. A heartbeat reports the tally every ~10s, and a total budget
+// (or a run of unreachable API dials) ends the phase loudly: proven slots keep
+// their proofs, everything else is left for the next start and named in the
+// summary. There is no path where the import sits silent.
 package miner
 
 import (
@@ -31,7 +33,10 @@ const (
 	// legacyImportProverBuildTimeout bounds the wait for the prover client to
 	// be constructed: a constructor that hangs must not hide the import.
 	legacyImportProverBuildTimeout = 15 * time.Second
-	// legacyImportProofTimeout bounds ONE proof call, including its dial.
+	// legacyImportProofTimeout bounds ONE slot's proof: tier 1, tier 2 and its
+	// retries, including every dial. The SDK behind a dead API spends its own
+	// ~15s retrying before it gives up, so this bound is what keeps a single
+	// proof from multiplying into minutes.
 	legacyImportProofTimeout = 12 * time.Second
 	// legacyImportProofConcurrency is how many proof calls may be in flight.
 	// 1000 slots must not crawl one by one.
@@ -199,11 +204,17 @@ func legacyImportBoundedProof[T any](ctx context.Context, timeout time.Duration,
 // legacyImportProveSlot answers the two proof questions for one slot:
 // tier 1 compares the retained public key with the key the server holds for
 // the client_id; a null or unreachable read is inconclusive and falls through
-// to tier 2, the refresh probe the normal retained-credential path runs. Every
-// call is bounded by opts.proofTimeout.
+// to tier 2, the refresh probe the normal retained-credential path runs. The
+// whole proof of the slot -- both tiers and every retry -- is bounded by
+// opts.proofTimeout as a single budget.
 func legacyImportProveSlot(ctx context.Context, narrator *legacyImportNarrator, prover legacyImportProver, public ed25519.PublicKey, slot *legacyImportSlot, opts legacyImportProveOptions) legacyImportProofOutcome {
+	// One deadline for this slot's whole proof. The SDK keeps retrying its
+	// own dials for ~15s before it gives up, so without this a single dead
+	// call would multiply into minutes of retries.
+	slotCtx, slotCancel := context.WithTimeout(ctx, opts.proofTimeout)
+	defer slotCancel()
 	outcome := legacyImportProofOutcome{slot: slot}
-	serverKey, err, _ := legacyImportBoundedProof(ctx, opts.proofTimeout, func(callCtx context.Context) ([]byte, error) {
+	serverKey, err, _ := legacyImportBoundedProof(slotCtx, opts.proofTimeout, func(callCtx context.Context) ([]byte, error) {
 		return prover.ServerPublicKey(callCtx, slot.clientID)
 	})
 	inconclusive := false
@@ -233,7 +244,7 @@ func legacyImportProveSlot(ctx context.Context, narrator *legacyImportNarrator, 
 	outcome.reason = "refresh_unavailable"
 	var lastErr error
 	for attempt := 1; ; attempt++ {
-		_, refreshErr, _ := legacyImportBoundedProof(ctx, opts.proofTimeout, func(callCtx context.Context) (struct{}, error) {
+		_, refreshErr, _ := legacyImportBoundedProof(slotCtx, opts.proofTimeout, func(callCtx context.Context) (struct{}, error) {
 			return struct{}{}, prover.RefreshAccepted(callCtx, slot.entry.ByClientJWT)
 		})
 		if refreshErr == nil {
@@ -256,7 +267,7 @@ func legacyImportProveSlot(ctx context.Context, narrator *legacyImportNarrator, 
 			outcome.reason = "refresh_rejected"
 			return outcome
 		}
-		if ctx.Err() != nil || attempt >= opts.attempts {
+		if slotCtx.Err() != nil || attempt >= opts.attempts {
 			break
 		}
 		// The backoff before another transient attempt is a wait: name it like
@@ -264,10 +275,10 @@ func legacyImportProveSlot(ctx context.Context, narrator *legacyImportNarrator, 
 		narrator.wait("proof retry", fmt.Sprintf("client_id=%s, next attempt %d of %d",
 			slot.clientID8, attempt+1, opts.attempts))
 		select {
-		case <-ctx.Done():
+		case <-slotCtx.Done():
 		case <-time.After(legacyImportTransientBackoff):
 		}
-		if ctx.Err() != nil {
+		if slotCtx.Err() != nil {
 			break
 		}
 	}

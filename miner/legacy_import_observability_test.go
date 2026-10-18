@@ -256,16 +256,17 @@ func (self *hangingLegacyImportProver) RefreshAccepted(context.Context, string) 
 	return errors.New("synthetic: hanging refresh")
 }
 
-// A prover that never answers must not keep the import silent: the per-proof
-// deadline bounds each call, the budget ends the phase loudly, and the summary
-// names the bound and what was left.
+// A prover that never answers must not keep the import silent: each slot's
+// proof is bounded by its own deadline, the budget ends the phase loudly, and
+// the summary names the bound and what was left. 40 slots at concurrency 2
+// need ~3s of slot deadlines, so the 700ms budget stops the phase mid-run.
 func TestLegacyImportHangingProverIsBoundedAndLoud(t *testing.T) {
 	oldBackoff := legacyImportTransientBackoff
 	legacyImportTransientBackoff = 0
 	defer func() { legacyImportTransientBackoff = oldBackoff }()
 
 	buffer := captureLegacyImportLog(t)
-	fixture := newLegacyImportFixture(t, true, 4)
+	fixture := newLegacyImportFixture(t, true, 40)
 	hang := newHangingLegacyImportProver()
 	defer hang.unblock()
 	start := time.Now()
@@ -319,6 +320,51 @@ func TestLegacyImportHangingProverIsBoundedAndLoud(t *testing.T) {
 	for _, slot := range journal.Slots {
 		if slot.State != "defer" {
 			t.Fatalf("a hanging prover journaled %+v, want defer", slot)
+		}
+	}
+}
+
+// One slot's proof is bounded by ONE proof timeout: the deadline covers tier
+// 1, tier 2 and the retries together, even when the phase budget would allow
+// much more. A single dead slot concludes in the bound, not in 3x the bound.
+func TestLegacyImportDeadSlotIsBoundedToOneProofTimeout(t *testing.T) {
+	buffer := captureLegacyImportLog(t)
+	fixture := newLegacyImportFixture(t, true, 1)
+	hang := newHangingLegacyImportProver()
+	defer hang.unblock()
+	start := time.Now()
+	result := runLegacyProviderImport(context.Background(), legacyImportOptions{
+		stateDir:       fixture.dir,
+		networkJwtPath: filepath.Join(fixture.dir, "jwt"),
+		providers:      fixture.proxySettings,
+		recorder:       fixture.recorder,
+		newProver: func(legacyImportProofDialWait) (legacyImportProver, func(), error) {
+			return hang, func() {}, nil
+		},
+		proverBuildTimeout:      2 * time.Second,
+		proofTimeout:            200 * time.Millisecond,
+		proofConcurrency:        4,
+		heartbeatInterval:       50 * time.Millisecond,
+		unreachableShortCircuit: 1000,
+		budget:                  30 * time.Second,
+	})
+	elapsed := time.Since(start)
+	// Per-call bounds with the attempt ceiling would need ~4.5s here (three
+	// 200ms calls plus two 2s backoffs); the per-slot bound ends it at ~0.2s.
+	if elapsed > 2*time.Second {
+		t.Fatalf("a single dead slot held the import for %s", elapsed)
+	}
+	if len(result.mintSlots) != 0 {
+		t.Fatalf("a dead slot must not mint, got %v", result.mintSlots)
+	}
+	text := buffer.String()
+	for _, want := range []string{
+		"deferred reason=refresh_unavailable (left for the next start)",
+		"summary: imported=0 fallback=0 skipped=1 left=0 elapsed=",
+		"result=complete",
+	} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("narration misses %q:\n%s", want, text)
 		}
 	}
 }
