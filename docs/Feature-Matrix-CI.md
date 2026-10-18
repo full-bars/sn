@@ -39,17 +39,25 @@ release blocker in them is not masked by proxy churn.
 | `socket-peer-uid` | a foreign uid (`nobody`/65534) is denied — `Permission denied` at the filesystem or a structured refusal |
 | `socket-oversize-set` | a 4100+ byte `set` value is refused with `value too large`, not accepted |
 | `socket-oversize-line` | a 70KB line does not kill the socket; it still answers |
+| `socket-framing` | two requests on ONE connection get two JSON responses (newline-delimited framing) |
 | `socket-hostile-input` | 5 hostile inputs (non-JSON, `{}`, traversal-shaped cmd, bad version, truncated JSON) get bounded JSON and the socket survives |
 | `control-key-live` | `set gogc=250` applies live, reads back, is logged, and changes `provider_state.json` (before/after fingerprint) |
-| `key-h3-limit` | `set h3=3` either applies live or is classified as persisted-but-inert with its owning port |
-| `key-ramlogs` | `set ramlogs=on` either applies live or is classified as persisted-but-inert with its owning port |
-| `metrics-bind` | when the exporter exists: `metrics on` applies and no wildcard public bind is reported; otherwise classified unsupported |
-| `identity-mint` | a provider client identity (`.provider.jwt`) is minted against the disposable JWT |
+| `key-h3-limit` | `set h3=3` applies live and is reflected: readback, a `[control] … h3=3` log line, and the persisted `provider_state.json` value (a head without the live port self-detects to SKIP-UNSUPPORTED) |
+| `control-keys-live` | `proxy-url-refresh`/`proxy-url-max`/`smart-dialer`/`h1-plus` each report `applied live via control socket` with a matching readback and no restart warning (overrides cleared after) |
+| `control-keys-needs-restart` | `profile`/`node-name` report `requires a restart to take effect` (the needs-restart semantics; overrides cleared after) |
+| `metrics-bind` | `metrics on` applies and every reported listen address is inside the documented policy (loopback / Tailscale CGNAT; wildcard only inside a container) |
+| `metrics-scrape` | the running exporter answers an HTTP GET with a Prometheus payload (`# HELP urnet_…`), fetched with curl/wget/busybox (installed if missing) from the reported address |
+| `metrics-off-on` | `metrics off` stops the listener (scrape dead) and `metrics on` rebinds it |
+| `identity-mint` | a provider client identity (`.provider.jwt`) is minted against the disposable JWT; its `client_id` is named in the report |
 | `identity-key-material` | `.provider.key` exists next to the identity |
 | `clean-sigterm` | SIGTERM exits rc=0 and removes the socket file |
-| `identity-restart-reuse` | the client identity is carried across a restart when the stable client-JWT store exists; otherwise classified with the owning port |
-| `hot-restart-off` | `URNETWORK_HOT_RESTART=0` mints new ids when the client-JWT store exists; otherwise classified with the owning port |
-| `hotswap-handoff` | a raw `{"cmd":"hotswap"}` trigger hands the socket to a successor; otherwise classified with the owning port |
+| `identity-restart-reuse` | the `client_id` carried across a restart is the same one (compared as a claim, so a token renewal does not read as an identity change); a head without the store self-detects |
+| `hot-restart-off` | `URNETWORK_HOT_RESTART=0` mints a fresh client id and rewrites `.client_jwts.json`; a head without the store self-detects |
+| `hotswap-handoff` | a raw `{"cmd":"hotswap"}` trigger makes the parent exit and a successor answer on the re-bound socket (successor pid resolved through `urnet-tools providers` with a /proc fallback) |
+| `hotswap-metrics-rebind` | after the handoff, `/metrics` answers again from the successor on the same address (the takeover rebind) |
+| `logging-events` | at default verbosity, `events.log` records `STARTUP: version=…`, and a clean SIGTERM records `SIGNAL: context cancelled` + `PROVIDER EXIT: normal shutdown` |
+| `ramlog-routing` | `URNETWORK_RAMLOGS=1` and `URNETWORK_PROFILE=lowmem` each redirect the long-running provide's stdio to `/dev/shm/urnetwork.log` with the `[ramlogs] Active at …` banner |
+| `key-ramlogs` | `set ramlogs on` reports the restart-required semantics and, on the NEXT start, the persisted key beats an explicit `URNETWORK_RAMLOGS=0`: the banner appears and the important buffer (`important.log`) exists |
 | `identity-gate-fresh` | a fresh state dir without `--allow-client-registration` must not allocate (no socket) |
 | `identity-gate-adopt` | `--adopt-legacy-provider-key` against a fresh dir must not allocate either |
 | `exit-75-quarantine` | a rejected sign-in with `--quarantine-rejected-sign-in` exits 75 (EX_TEMPFAIL; environmental when not reproducible) |
@@ -186,7 +194,7 @@ URL-STAGGER: source-gap=13s source-order=swapped independent-order=manip url sur
 | --- | --- | --- |
 | `BIN_DIR` | — | dir holding `miner` + `urnet-tools` (required unless `MINER_BIN`/`TOOLS_BIN` are set) |
 | `MINER_BIN` | `$BIN_DIR/miner` | miner binary |
-| `TOOLS_BIN` | `$BIN_DIR/urnet-tools` (or `urnet-tools-323`) | urnet-tools binary |
+| `TOOLS_BIN` | `$BIN_DIR/urnet-tools` (or `urnet-tools-323`) | `urnet-tools` binary |
 | `JWT_FILE` | — | disposable JWT; staged into `$STATE_DIR/jwt` (mode 600, never printed); without it the live blocks are `SKIP-NO-NETWORK` |
 | `STATE_HOME` / `HOME` | `HOME`, else `/root` | sandbox home; `STATE_DIR` and the report live under it |
 | `STATE_DIR` | `$STATE_HOME/.urnetwork` | provider state dir |

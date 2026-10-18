@@ -23,7 +23,7 @@ changes.
 > containers whose image reference contains `urnetwork` or whose container name
 > contains `urnet`; a container named `sn-miner` is invisible to
 > `urnet-docker providers` and to `--unit` targeting. `docker start|stop|logs`
-> also work without discovery, but every urnet-docker command that resolves a
+> also work without discovery, but every `urnet-docker` command that resolves a
 > provider target needs one of those two spellings.
 >
 > The published image refs (`ghcr.io/full-bars/sn:miner`, `:miner-<tag>`,
