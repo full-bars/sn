@@ -301,6 +301,12 @@ type clientJWTProvideConfig struct {
 	ClientStrategySettings *connect.ClientStrategySettings
 	// Mint mints a fresh client identity. Required.
 	Mint func(context.Context) (string, connect.Id, error)
+	// FreshMint registers a brand-new client identity with a new client_id.
+	// With hot restart off it replaces Mint: the durable-registration mint
+	// reads and refreshes the retained slot credential (reuse under another
+	// name), while URNETWORK_HOT_RESTART=0 promises a fresh identity per start
+	// (the v33 off contract). Required whenever hot restart is off.
+	FreshMint func(context.Context) (string, connect.Id, error)
 }
 
 // minerProviderDescription is the client description the miner sends at mint
@@ -320,6 +326,10 @@ func minerProviderDescription() string {
 // (no network_id on either side, a mismatch, an unparseable client_id, a
 // refused renewal) falls through to a fresh mint. Every mint and renewal is
 // persisted, so the next restart can reuse it.
+//
+// With hot restart off, the fresh-registration mint (FreshMint) always runs:
+// URNETWORK_HOT_RESTART=0 asks for a new client_id on every start, exactly the
+// v33 off behavior, so the retained credential is never read or refreshed.
 func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClientJwt string, clientId connect.Id, reused bool, returnErr error) {
 	identityKey := cfg.IdentityKey
 	if identityKey == "" {
@@ -426,7 +436,19 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 		}
 	}
 
-	byClientJwt, clientId, err := cfg.Mint(ctx)
+	// URNETWORK_HOT_RESTART=0 is the operator's fresh-identity contract: the
+	// start registers a new client (new client_id) and must never read or
+	// refresh the retained credential. Mint performs the durable-registration
+	// path, which owns that credential; FreshMint is the explicit alternative
+	// and is only reachable here, with hot restart off.
+	mint := cfg.Mint
+	if !hotRestartEnabled() {
+		if cfg.FreshMint == nil {
+			return "", connect.Id{}, false, errors.New("hot restart off requires the fresh registration mint")
+		}
+		mint = cfg.FreshMint
+	}
+	byClientJwt, clientId, err := mint(ctx)
 	if err != nil {
 		return "", connect.Id{}, false, err
 	}

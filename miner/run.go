@@ -1216,7 +1216,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// sits in front of the durable-registration mint. With hot restart on
 		// (the v33 default), a stored client JWT for this proxy identity is
 		// reused — or renewed with the same client_id when expired — so a
-		// restart keeps the identity's server-side reliability history.
+		// restart keeps the identity's server-side reliability history. With
+		// hot restart off, the fresh mint below registers a new client with a
+		// new client_id and never reads the retained credential (v33 off).
 		identityKey := jwtStoreKey(proxySettings)
 		byClientJwt, clientId, reused, err := provideClientJWT(proxyCtx, clientJWTProvideConfig{
 			Api:                    api,
@@ -1229,6 +1231,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			ClientStrategySettings: clientStrategySettings,
 			Mint: func(mintCtx context.Context) (string, connect.Id, error) {
 				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
+			},
+			FreshMint: func(mintCtx context.Context) (string, connect.Id, error) {
+				return authenticateProviderFresh(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
 			},
 		})
 		release()

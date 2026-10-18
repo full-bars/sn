@@ -262,6 +262,25 @@ func (self *ProviderClientKeyOwner) LoadOrRegisterClientJwt(ctx context.Context,
 	return loadOrRegisterClientJwtInDirectory(ctx, api, networkPath, clientPath, "provider", scope, allowCreate, registrationHooks{}, self.store)
 }
 
+// RegisterFreshClientJwt registers a brand-new client for one provider slot
+// and replaces the slot credential with it. It is the URNETWORK_HOT_RESTART=0
+// contract (a fresh identity per start) and is deliberately a separate entry
+// from LoadOrRegisterClientJwt, so the retained-custody default cannot change
+// by accident: this path never reads the retained credential, while the
+// default owns reading, validating and refreshing it.
+func (self *ProviderClientKeyOwner) RegisterFreshClientJwt(ctx context.Context, api *sdk.Api, networkPath, clientPath, slot string, allowCreate bool) (string, connect.Id, error) {
+	if self == nil || self.store == nil || len(self.seed) != ed25519.SeedSize || !providerClientCredentialName(filepath.Base(clientPath)) || api == nil {
+		return "", connect.Id{}, errors.New("provider registration lacks its retained custody owner")
+	}
+	endpoint, err := api.NetworkClientRegistrationEndpoint()
+	if err != nil {
+		return "", connect.Id{}, err
+	}
+	public := ed25519.NewKeyFromSeed(self.seed).Public().(ed25519.PublicKey)
+	scope := RegistrationScope{Endpoint: endpoint, ClientKey: "0x" + hex.EncodeToString(public), ClientRole: "provider-v1", ClientSlot: slot}
+	return registerFreshClientJwtWithCustody(ctx, api, networkPath, clientPath, "provider", scope, allowCreate, self.store)
+}
+
 // A completed refresh can update only a credential in the key owner's original
 // directory. The enclosing API callback still validates its original identity.
 func (self *ProviderClientKeyOwner) PersistClientJwt(clientPath, token string) (returnErr error) {
