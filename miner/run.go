@@ -178,6 +178,7 @@ Usage:
     provider proxy add [<key_address>...] [--proxy_file=<proxy_file>] [-f]
     provider proxy remove [<key_address>...] [--all]
     provider proxy remove --match=<pattern> [--yes] [--preview]
+    provider proxy clear
     provider proxy add-source <url>
     provider proxy paste [--file=<file>]
     provider proxy remove-source <url>
@@ -407,6 +408,8 @@ func Run(args []string) {
 			proxyRemoveDead(opts)
 		} else if remove, _ := opts.Bool("remove"); remove {
 			proxyRemove(opts)
+		} else if clear, _ := opts.Bool("clear"); clear {
+			proxyClear(opts)
 		} else if refresh, _ := opts.Bool("refresh"); refresh {
 			proxyRefresh(opts)
 		} else if activity, _ := opts.Bool("activity"); activity {
@@ -1469,36 +1472,42 @@ func proxyRemove(opts docopt.Opts) {
 		return
 	}
 
+	if all, _ := opts.Bool("--all"); all {
+		// v33's remove --all is the full reset (clearProxyStores): the internal
+		// config, proxy.state - Proxies and the ID counter - and the URL cache
+		// and source list. Failures are warnings, matching v33: a partial reset
+		// beats refusing the operator.
+		if err := clearProxyStores(); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: %v\n", err)
+		}
+		return
+	}
+
 	proxyConfig := readProxyConfig()
 
-	if all, _ := opts.Bool("--all"); all {
-		clear(proxyConfig.Servers)
-	} else {
+	allKeyAddress := []string{}
+	if allKeyAddressAny, ok := opts["<key_address>"]; ok {
+		allKeyAddress = append(allKeyAddress, allKeyAddressAny.([]string)...)
+	}
 
-		allKeyAddress := []string{}
-		if allKeyAddressAny, ok := opts["<key_address>"]; ok {
-			allKeyAddress = append(allKeyAddress, allKeyAddressAny.([]string)...)
+	if proxyConfig.Servers == nil {
+		proxyConfig.Servers = map[string]string{}
+	}
+
+	for _, keyAddress := range allKeyAddress {
+		var key string
+		var address string
+		i := strings.Index(keyAddress, "@")
+		if 0 <= i {
+			key = keyAddress[:i]
+			address = keyAddress[i+1:]
+		} else {
+			key = ""
+			address = keyAddress
 		}
 
-		if proxyConfig.Servers == nil {
-			proxyConfig.Servers = map[string]string{}
-		}
-
-		for _, keyAddress := range allKeyAddress {
-			var key string
-			var address string
-			i := strings.Index(keyAddress, "@")
-			if 0 <= i {
-				key = keyAddress[:i]
-				address = keyAddress[i+1:]
-			} else {
-				key = ""
-				address = keyAddress
-			}
-
-			if key == "" || proxyConfig.Servers[address] == key {
-				delete(proxyConfig.Servers, address)
-			}
+		if key == "" || proxyConfig.Servers[address] == key {
+			delete(proxyConfig.Servers, address)
 		}
 	}
 

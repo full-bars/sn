@@ -327,6 +327,68 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 	fmt.Println("The running provider will apply the change via hot reload (no restart).")
 }
 
+// ---- proxy clear / remove --all ----
+
+// clearProxyStores is the storage reset shared by `proxy clear` (the shipped
+// urnet-tools maps clear to remove --all) and `proxy remove --all`: the
+// internal config, proxy.state (Proxies and the ID counter, matching v33's
+// "next run starts ID assignment from 0") and the URL cache and source list
+// are emptied. proxy.state.Source is deliberately left alone: it is the
+// selected workflow, not proxy data, and a file-backed reload re-reads the
+// operator's file (v33 has the same behavior).
+//
+// The cross-process proxy lock serializes the state reset against a running
+// provider's health-snapshot write, which would otherwise clobber it and
+// silently revive the removed proxies (v33 finding #11).
+func clearProxyStores() error {
+	proxyConfig := readProxyConfig()
+	clear(proxyConfig.Servers)
+	writeProxyConfig(proxyConfig)
+
+	if release, err := acquireProxyLockWithRetry(); err == nil {
+		if state, err := readProxyState(); err == nil {
+			state.Proxies = map[string]ProxyEntry{}
+			state.NextID = 0
+			if err := writeProxyState(state); err != nil {
+				release()
+				return err
+			}
+		}
+		release()
+	} else {
+		fmt.Fprintf(os.Stderr, "note: could not acquire the proxy lock for the state reset (%v); the running provider will re-sync on its next snapshot\n", err)
+	}
+
+	if urlState, err := readProxyURLState(); err == nil {
+		urlState.Cache = map[string]ProxyURLEntry{}
+		urlState.Sources = nil
+		if err := writeProxyURLState(urlState); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// proxyClear implements `provider proxy clear` - the v33 surface the shipped
+// urnet-tools exposes; its delegation maps the verb to `proxy remove --all`.
+// It resets the curated internal config, the proxy state and the URL cache,
+// then triggers a reload so a running provider applies the reset without a
+// restart.
+func proxyClear(opts docopt.Opts) {
+	state, stateErr := readProxyState()
+	running := stateErr == nil && !state.StartedAt.IsZero()
+
+	previousServers := len(readProxyConfig().Servers)
+
+	if err := clearProxyStores(); err != nil {
+		proxyCommandFatal(77, "could not clear the proxy stores: %v", err)
+	}
+	fmt.Printf("proxy clear: removed %d internal server(s), the proxy state and the URL cache\n", previousServers)
+	if running {
+		triggerProxyReload()
+	}
+}
+
 // ---- proxy refresh ----
 
 // refreshRemoval is a tracked proxy that `proxy refresh` would remove: its
