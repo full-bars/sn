@@ -8,6 +8,8 @@ package miner
 // socket release wait.
 
 import (
+	"bufio"
+	"context"
 	"net"
 	"os"
 	"path/filepath"
@@ -190,5 +192,72 @@ func TestExecInPlaceUsesTheSuppliedImage(t *testing.T) {
 	err := execInPlace(filepath.Join(t.TempDir(), "no-such-binary"), []string{"no-such-binary"}, os.Environ())
 	if err == nil {
 		t.Fatal("expected syscall.Exec to fail for a missing binary")
+	}
+}
+
+// TestHotSwapTakeoverCandidateAcksAndTakesOver drives the successor side of a
+// completed handoff directly: the IPC is a real socketpair (so the ACK is read
+// back from the parent's end), the control socket must be bound by this process
+// once the parent's is gone, and the handoff trigger must move to the new
+// process.
+func TestHotSwapTakeoverCandidateAcksAndTakesOver(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	ResetHotSwapStateForTest()
+	t.Cleanup(func() {
+		ResetHotSwapStateForTest()
+		setHotSwapTrigger(nil)
+	})
+
+	fds := mustSocketpair(t)
+	parentEnd := os.NewFile(uintptr(fds[0]), "test-hotswap-parent")
+	childEnd := os.NewFile(uintptr(fds[1]), "test-hotswap-child")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	state, err := loadControlState()
+	if err != nil {
+		t.Fatalf("loadControlState: %v", err)
+	}
+	globalControlState = state
+	owner := &hotSwapControlSocketOwner{ctx: ctx, state: state}
+	defer owner.finish()
+
+	settings := providerRunSettings{hotSwapIPC: childEnd, hotSwapCandidate: true}
+	settings.hotSwapTakeoverCandidate(ctx, cancel, owner)
+
+	ackCh := make(chan HotswapMessage, 1)
+	go func() {
+		msg, err := readHotswapMessage(bufio.NewReader(parentEnd))
+		if err == nil {
+			ackCh <- msg
+		}
+	}()
+	select {
+	case ack := <-ackCh:
+		if ack.Type != HotswapMsgAck {
+			t.Fatalf("candidate sent %q, want ACK", ack.Type)
+		}
+		if ack.PID != os.Getpid() {
+			t.Fatalf("ACK pid = %d, want %d", ack.PID, os.Getpid())
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("candidate never ACKed the parent")
+	}
+
+	// The parent quiesced its socket at the commit point, so the successor
+	// must now own the path.
+	path, err := controlSocketPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	conn, err := net.Dial("unix", path)
+	if err != nil {
+		t.Fatalf("successor did not bind the control socket: %v", err)
+	}
+	conn.Close()
+
+	if getHotSwapTrigger() == nil {
+		t.Fatal("successor did not take over the hotswap trigger")
 	}
 }
