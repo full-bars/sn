@@ -150,12 +150,12 @@ func noteProviderAuthSuccess(settings *connect.ProxySettings) {
 // slow-versus-broken signal to apply; counting it keeps a proxy that never
 // completes an authentication inside the give-up/eviction accounting instead
 // of leaving it unaccounted forever.
-func noteProviderAuthFailure(settings *connect.ProxySettings, err error) {
+func noteProviderAuthFailure(settings *connect.ProxySettings, err error) providerAuthGiveUpInfo {
 	if settings == nil || settings.Address == "" {
-		return
+		return providerAuthGiveUpInfo{}
 	}
 	if err != nil && errors.Is(err, context.Canceled) {
-		return
+		return providerAuthGiveUpInfo{}
 	}
 	key := settings.Key()
 	// Live health: a failed authentication means the proxy is not up right now,
@@ -164,21 +164,23 @@ func noteProviderAuthFailure(settings *connect.ProxySettings, err error) {
 	noteLiveProxyHealthFailure(key)
 	failures := globalProxyFailureHistory.RecordFailure(key)
 	if failures < proxyAuthMaxFailures(key) {
-		return
+		return providerAuthGiveUpInfo{}
 	}
 	result := proxyAuthGiveUp(settings, isURLSourcedProxyKey(key))
+	info := providerAuthGiveUpInfo{giveUp: result.giveUp, retryIn: result.retryIn, evicted: result.evicted}
 	if result.evicted {
 		tlog("[proxy][auth] %s give-up %d of %d: authentication failed %d times; evicted from the URL cache and will not be retried\n",
 			proxyKeyDisplay(key), result.giveUp, proxyURLGiveUpEvictAfterCycles, failures)
-		return
+		return info
 	}
 	if result.evictFail != nil {
 		tlog("[proxy][auth] %s give-up %d: could not evict (%v); backing off %s\n",
 			proxyKeyDisplay(key), result.giveUp, result.evictFail, formatDuration(result.retryIn))
-		return
+		return info
 	}
 	tlog("[proxy][auth] %s give-up %d of %d after %d failed authentications; will retry in %s\n",
 		proxyKeyDisplay(key), result.giveUp, proxyURLGiveUpEvictAfterCycles, failures, formatDuration(result.retryIn))
+	return info
 }
 
 // isURLSourcedProxyKey reports whether the given identity key is a

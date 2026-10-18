@@ -298,7 +298,7 @@ func (self *legacyImportFixture) run(hooks legacyImportHooks) legacyImportResult
 		networkJwtPath: filepath.Join(self.dir, "jwt"),
 		providers:      self.proxySettings,
 		recorder:       self.recorder,
-		newProver: func() (legacyImportProver, func(), error) {
+		newProver: func(legacyImportProofDialWait) (legacyImportProver, func(), error) {
 			return self.prover, func() {}, nil
 		},
 		hooks: hooks,
@@ -380,7 +380,7 @@ func TestLegacyImportSecondStartIsANoOp(t *testing.T) {
 		networkJwtPath: filepath.Join(fixture.dir, "jwt"),
 		providers:      fixture.proxySettings,
 		recorder:       second,
-		newProver: func() (legacyImportProver, func(), error) {
+		newProver: func(legacyImportProofDialWait) (legacyImportProver, func(), error) {
 			return fixture.prover, func() {}, nil
 		},
 	})
@@ -621,7 +621,7 @@ func TestLegacyImportKillAfterFirstCredentialRecovers(t *testing.T) {
 		networkJwtPath: filepath.Join(fixture.dir, "jwt"),
 		providers:      fixture.proxySettings,
 		recorder:       second,
-		newProver: func() (legacyImportProver, func(), error) {
+		newProver: func(legacyImportProofDialWait) (legacyImportProver, func(), error) {
 			return fixture.prover, func() {}, nil
 		},
 	})
@@ -761,7 +761,7 @@ func TestLegacyImportDisabledAndExplicitFlagsDoNothing(t *testing.T) {
 				networkJwtPath: filepath.Join(fixture.dir, "jwt"),
 				providers:      fixture.proxySettings,
 				recorder:       fixture.recorder,
-				newProver: func() (legacyImportProver, func(), error) {
+				newProver: func(legacyImportProofDialWait) (legacyImportProver, func(), error) {
 					return fixture.prover, func() {}, nil
 				},
 			}

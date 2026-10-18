@@ -41,6 +41,10 @@ type providerRunSettings struct {
 	// fork-only: automatic import of 3.23-fix saved identities is on by
 	// default; --no-legacy-import disables it entirely
 	noLegacyImport bool
+	// fork-only: the total proving budget of the automatic import; 0 takes
+	// the package default (5m). --legacy-import-budget and
+	// URNETWORK_LEGACY_IMPORT_BUDGET override it.
+	legacyImportBudget time.Duration
 	// an operator child of provide --all-operators --auto-register: a network
 	// sign-in the renewal call rejects is set aside and the child exits
 	quarantineRejectedSignIn bool
