@@ -326,6 +326,7 @@ var controlLiveEffectKeys = map[string]bool{
 	"proxy_dead_cleanup_scope":    true,
 	"proxy_dead_cleanup_interval": true,
 	"hot_restart":                 true,
+	"proxy_audit":                 true,
 }
 
 // controlUnsupportedKeys are accepted and persisted but have no miner
@@ -337,7 +338,6 @@ var controlUnsupportedKeys = map[string]bool{
 	"report_interval":  true,
 	"fast_auth":        true,
 	"baseline":         true,
-	"proxy_audit":      true,
 	"h3":               true,
 	"h3_datagram":      true,
 	"h3_datagram_send": true,
@@ -371,6 +371,9 @@ var controlLiveDefaults = map[string]string{
 	"smart_dialer": "off",
 	// Clearing h1_plus restores the default: H1+ upgrades allowed.
 	"h1_plus": "on",
+	// Clearing audit reapplies the runtime default (off = observe mode),
+	// releasing the live override so the persisted value rules.
+	"proxy_audit": "off",
 }
 
 // applyControlLiveDefault reapplies the runtime default for a live-applied
@@ -750,7 +753,8 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 				val = "on"
 			}
 			// Same persist-then-commit transaction as "set": apply, persist,
-			// roll back memory on failure so disk and memory never disagree.
+			// roll back memory on failure so disk and memory never disagree
+			// about whether audit is on.
 			state.txMu.Lock()
 			defer state.txMu.Unlock()
 			oldValue, oldMeta, hadOld := state.getWithMeta("proxy_audit")
@@ -769,9 +773,15 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 				state.mu.Unlock()
 				return controlResponse{OK: false, Error: "audit applied in memory but failed to persist: " + err.Error()}
 			}
-			// The miner has no audit engine; the value persists for parity and
-			// the provider log says no engine consumes it.
-			tlog("[control] proxy audit %s persisted; the miner does not run the v33 audit engine yet\n", req.Action)
+			// The audit engine resolves the switch from the in-process
+			// manager map and the live override on every tick, so the value
+			// must reach both here: writing provider_state.json alone would
+			// only take effect on the next start.
+			if err := applyControlLiveSideEffect("proxy_audit", val); err != nil {
+				tlog("[control] audit %s persisted but live apply failed: %s\n", req.Action, err)
+				return controlResponse{OK: false, Error: "persisted, but failed to apply live: " + err.Error()}
+			}
+			tlog("[control] proxy audit %s via control socket (was %s)\n", req.Action, formerValue(oldValue, hadOld))
 			recordControlAudit(CommandAudit{
 				Timestamp: time.Now(),
 				Cmd:       "audit",
@@ -781,9 +791,58 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			})
 			return controlResponse{OK: true, Value: val}
 		case "release":
-			// No audit engine means nothing is parked; say so rather than
-			// pretending a release happened.
-			return controlResponse{OK: false, Error: "proxy audit: the miner does not implement the v3.23 proxy audit engine, so no proxy is parked"}
+			a := currentProxyAuditor.Load()
+			if a == nil {
+				return controlResponse{OK: false, Error: "proxy auditor not active"}
+			}
+			// Serialize with the ticker: release mutates the same park and
+			// backoff state a running tick is reading and rewriting.
+			a.mu.Lock()
+			if req.Address == "" {
+				a.mu.Unlock()
+				return controlResponse{OK: false, Error: "proxy audit release requires an address or --all"}
+			}
+			if req.Address == "--all" {
+				released := a.st.releaseAll()
+				for _, addr := range released {
+					a.releaseBackoff(addr)
+				}
+				a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
+				a.mu.Unlock()
+				tlog("[proxy][audit] released all %d parked proxies via control socket\n", len(released))
+				return controlResponse{OK: true, Value: fmt.Sprintf("released %d proxies", len(released))}
+			}
+			known := a.st.parkedAddrs()
+			if globalProxyFailureHistory != nil {
+				known = append(known, globalProxyFailureHistory.Keys()...)
+			}
+			keys := resolveAuditReleaseKeys(req.Address, known)
+			wasParked := false
+			for _, key := range keys {
+				if a.st.isParked(key) {
+					wasParked = true
+					a.st.release(key)
+				}
+				a.releaseBackoff(key)
+				if globalProxyFailureHistory != nil {
+					globalProxyFailureHistory.Reset(key)
+				}
+			}
+			a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
+			a.mu.Unlock()
+			// Name what was released by address (never the raw identity key,
+			// whose \x1f separator must not reach a log line); several
+			// accounts at one gateway are reported as a count.
+			label := proxyKeyDisplay(keys[0])
+			if len(keys) > 1 {
+				label = fmt.Sprintf("%s (%d accounts)", req.Address, len(keys))
+			}
+			if wasParked {
+				tlog("[proxy][audit] released parked proxy %s via control socket\n", label)
+				return controlResponse{OK: true, Value: fmt.Sprintf("released proxy %s", label)}
+			}
+			tlog("[proxy][audit] cleared backoff for proxy %s via control socket (was not parked)\n", label)
+			return controlResponse{OK: true, Value: fmt.Sprintf("cleared backoff for proxy %s", label)}
 		default:
 			return controlResponse{OK: false, Error: fmt.Sprintf("unknown audit action %q (status|on|off|release)", req.Action)}
 		}
@@ -801,6 +860,26 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		}
 		entries, nextCursor := globalAuditRing.Entries(limit, req.Cursor)
 		return controlResponse{OK: true, Entries: entries, NextCursor: nextCursor}
+
+	case "mark":
+		// An operator annotation on the baseline timeline. It goes through the
+		// socket so the provider stays the only writer: a second writer would
+		// be a second process appending to the same file during a hot swap,
+		// which is the case the append's inter-process lock exists for.
+		label := strings.TrimSpace(req.Value)
+		if label == "" {
+			// An unlabelled mark is a line a reader cannot act on and compare
+			// cannot use as a boundary, so it is refused rather than written.
+			return controlResponse{OK: false, Error: "mark: a label is required"}
+		}
+		ts, err := baselineMark(label)
+		if err != nil {
+			return controlResponse{OK: false, Error: fmt.Sprintf("mark: %v", err)}
+		}
+		// Report the timestamp actually recorded, so the operator can
+		// correlate it with their own notes rather than guessing when the
+		// mark landed.
+		return controlResponse{OK: true, Value: ts.UTC().Format(time.RFC3339)}
 
 	case "ledger":
 		value, err := minerLedgerTail(minerLedgerLimit(req.Limit))
@@ -922,6 +1001,8 @@ func applyControlLiveSideEffect(key, value string) error {
 		// first and the legacy override file second.
 		globalProxyControlState.set(key, value)
 		tlog("[control] applied %s=%s to the running proxy manager\n", key, value)
+	case "proxy_audit":
+		return applyProxyAuditControlLive(value)
 	case "hot_restart":
 		tlog("[control] hot_restart=%s (restart machinery %s)\n", value, onOffLabel(resolveHotRestartEnabled()))
 	default:
@@ -944,6 +1025,26 @@ func applyControlMetricsLive(value string) error {
 		return fmt.Errorf("the miner does not implement the v3.23 Prometheus /metrics exporter yet; the setting is persisted and will apply when the exporter lands")
 	}
 	// off: nothing to stop. (A future exporter stops here.)
+	return nil
+}
+
+// applyProxyAuditControlLive pushes a proxy_audit on/off to the running audit
+// engine. v33's applyLiveSideEffect("proxy_audit") sets the in-memory override
+// and pokes the ticker; the miner's engine resolves the switch through
+// resolveProxyAuditEnabled (proxy_manager_audit_run.go), which reads the
+// in-process manager map BEFORE the override file and the startup default, so
+// the value must land in both places. Writing provider_state.json alone is
+// what made `set proxy_audit`/`audit on|off` inert until a restart.
+func applyProxyAuditControlLive(value string) error {
+	enabled := strings.EqualFold(value, "on")
+	globalProxyControlState.set("proxy_audit", value)
+	setProxyAuditOverride(enabled)
+	// One immediate tick so the switch is honoured now rather than at the next
+	// five-minute pass; the gate drops redundant spawns.
+	if a := currentProxyAuditor.Load(); a != nil {
+		spawnRunOnce(a)
+	}
+	tlog("[proxy][audit] proxy audit %s via control socket\n", onOffLabel(enabled))
 	return nil
 }
 
