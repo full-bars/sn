@@ -41,10 +41,14 @@ import (
 //   - contract metrics (P2): the v33 summary's "Contract Stats" block is not
 //     printed here because the miner has no equivalent counter yet.
 
-// proxyCommandFatal prints the v33 shmLogFatal line and exits with its code.
-// v33's exit codes (50-72) are the operator-visible contract for scripts.
+// proxyCommandFatal prints the v33 shmLogFatal line, records the same event in
+// the critical log (events.log), and exits with its code. v33's exit codes
+// (50-72) are the operator-visible contract for scripts, and its shmLogFatal
+// wrote the FATAL line to events.log before exiting; a supervisor that
+// restarts the miner relies on that record surviving outside the terminal.
 func proxyCommandFatal(code int, format string, args ...any) {
 	fmt.Fprintf(os.Stderr, "FATAL [exit %d]: %s\n", code, fmt.Sprintf(format, args...))
+	critLog("FATAL exit=%d: %s", code, fmt.Sprintf(format, args...))
 	os.Exit(code)
 }
 
