@@ -376,6 +376,32 @@ func TestLegacyImportUnreachableApiStopsHammering(t *testing.T) {
 	}
 }
 
+// The backoff between transient proof retries is a wait like any other: the
+// phase names it instead of sitting silent between attempts.
+func TestLegacyImportTransientRetryWaitIsNarrated(t *testing.T) {
+	oldBackoff := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = oldBackoff }()
+
+	buffer := captureLegacyImportLog(t)
+	fixture := newLegacyImportFixture(t, true, 1)
+	unreachable := &net.OpError{Op: "dial", Net: "tcp", Err: syscall.ECONNREFUSED}
+	fixture.prover.publicErr = unreachable
+	fixture.prover.transientRemaining = legacyImportTransientAttempts
+	fixture.prover.transientCause = unreachable
+	result := fixture.run(legacyImportHooks{})
+	if len(result.mintSlots) != 0 {
+		t.Fatalf("a transient proof must not mint, got %v", result.mintSlots)
+	}
+	text := buffer.String()
+	if !strings.Contains(text, "waiting for proof retry (client_id=") {
+		t.Fatalf("the retry backoff wait is not narrated:\n%s", text)
+	}
+	if !strings.Contains(text, "summary: imported=0 fallback=0 skipped=1 left=0 elapsed=") {
+		t.Fatalf("a retried-transient slot is not accounted in the summary:\n%s", text)
+	}
+}
+
 // A 1000-slot stub import completes in bounded time, with heartbeats and a
 // final summary; the direct identity's result is narrated before any proxy's.
 func TestLegacyImportThousandSlotsBounded(t *testing.T) {

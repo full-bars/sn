@@ -201,7 +201,7 @@ func legacyImportBoundedProof[T any](ctx context.Context, timeout time.Duration,
 // the client_id; a null or unreachable read is inconclusive and falls through
 // to tier 2, the refresh probe the normal retained-credential path runs. Every
 // call is bounded by opts.proofTimeout.
-func legacyImportProveSlot(ctx context.Context, prover legacyImportProver, public ed25519.PublicKey, slot *legacyImportSlot, opts legacyImportProveOptions) legacyImportProofOutcome {
+func legacyImportProveSlot(ctx context.Context, narrator *legacyImportNarrator, prover legacyImportProver, public ed25519.PublicKey, slot *legacyImportSlot, opts legacyImportProveOptions) legacyImportProofOutcome {
 	outcome := legacyImportProofOutcome{slot: slot}
 	serverKey, err, _ := legacyImportBoundedProof(ctx, opts.proofTimeout, func(callCtx context.Context) ([]byte, error) {
 		return prover.ServerPublicKey(callCtx, slot.clientID)
@@ -259,6 +259,10 @@ func legacyImportProveSlot(ctx context.Context, prover legacyImportProver, publi
 		if ctx.Err() != nil || attempt >= opts.attempts {
 			break
 		}
+		// The backoff before another transient attempt is a wait: name it like
+		// every other wait, so the phase is never silent while it blocks.
+		narrator.wait("proof retry", fmt.Sprintf("client_id=%s, next attempt %d of %d",
+			slot.clientID8, attempt+1, opts.attempts))
 		select {
 		case <-ctx.Done():
 		case <-time.After(legacyImportTransientBackoff):
@@ -324,7 +328,7 @@ func legacyImportProveAll(
 	}
 	if direct != nil {
 		narrator.wait("proof slot", fmt.Sprintf("direct (1 of %d, timeout=%s)", len(prove), legacyImportBound(opts.proofTimeout)))
-		apply(legacyImportProveSlot(proofCtx, prover, public, direct, opts))
+		apply(legacyImportProveSlot(proofCtx, narrator, prover, public, direct, opts))
 		if proofCtx.Err() != nil {
 			return legacyImportStop(ctx, proofCtx, budget, narrator, prove, resolved, start)
 		}
@@ -343,7 +347,7 @@ func legacyImportProveAll(
 				return
 			}
 			defer func() { <-sem }()
-			outcomes <- legacyImportProveSlot(proofCtx, prover, public, slot, opts)
+			outcomes <- legacyImportProveSlot(proofCtx, narrator, prover, public, slot, opts)
 		}(rest[i])
 	}
 
