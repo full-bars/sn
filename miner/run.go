@@ -51,10 +51,68 @@ func init() {
 	// initPprof()
 }
 
+// isLongRunningSubcommand reports whether args invoke the long-running
+// provide (or auth-provide) command, as opposed to a one-shot CLI subcommand
+// like `proxy remove-dead` or `proxy summary`. Used to decide whether
+// stdout/stderr should be redirected into the ramlog: doing so for one-shot
+// commands left them producing no visible output to the caller at all, since
+// the redirect is process-wide, not scoped to `provide`.
+//
+// -h/--help/--version are excluded even on `provide`/`auth-provide`: this
+// runs from init(), before docopt.ParseArgs gets a chance to handle those
+// flags and exit, so a terminating invocation like `provide --help` would
+// otherwise have its usage/version text redirected into the ramlog too.
+func isLongRunningSubcommand(args []string) bool {
+	if len(args) < 2 {
+		return false
+	}
+	if args[1] != "provide" && args[1] != "auth-provide" {
+		return false
+	}
+	for _, arg := range args[2:] {
+		switch arg {
+		case "-h", "--help", "--version":
+			return false
+		}
+	}
+	return true
+}
+
+// ramlogsRequested reports whether the environment selects the /dev/shm
+// ramlog: URNETWORK_RAMLOGS=1 asks for it directly, and the lowmem and eco
+// profiles carry it. The v33 provider reads the same two variables with the
+// same meaning (provider/main.go initGlog).
+func ramlogsRequested() bool {
+	profile := os.Getenv("URNETWORK_PROFILE")
+	return profile == "lowmem" || profile == "eco" || os.Getenv("URNETWORK_RAMLOGS") == "1"
+}
+
+// ramlogRedirectRequested is the whole initGlog decision: the ramlog is
+// selected (profile or env) AND this invocation is the long-running provider.
+// Everything else keeps the default routing on stderr — the terminal, docker
+// logs or the journal — where the select lines ([net][s]select), the proxy
+// pipeline and the rest of the glog/tlog output are read. A one-shot
+// subcommand keeps the terminal even with URNETWORK_RAMLOGS=1: the redirect
+// is process-wide, so redirecting `proxy summary` would leave it silent to
+// its caller.
+func ramlogRedirectRequested(args []string) bool {
+	return ramlogsRequested() && isLongRunningSubcommand(args)
+}
+
 func initGlog() {
 	flag.Set("logtostderr", "true")
 	flag.Set("stderrthreshold", "INFO")
 	flag.Set("v", "0")
+
+	// The default routing is stderr, and it stays that way for every
+	// invocation that does not ask for the ramlog. Only the long-running
+	// provide (or auth-provide) invocation redirects stdout/stderr into
+	// /dev/shm/urnetwork.log, and only when the profile or URNETWORK_RAMLOGS
+	// selects it (v33 provider/main.go initGlog).
+	if ramlogRedirectRequested(os.Args) {
+		fmt.Fprintf(os.Stderr, "[ramlogs] Logs redirected to RAM - view with: urnet-tools logs\n")
+		initSHMLogger()
+	}
 }
 
 // mainUsage returns the docopt usage string. Package-level (rather than
