@@ -63,15 +63,36 @@ RUN apk update && apk add --no-cache \
 COPY --from=builder /app/miner_bin /app/urnetwork_${TARGETARCH}_stable
 # Relay kept available for the proxy surface, direct mode and sn-status.
 COPY --from=builder /app/provider_relay_bin /app/urnetwork_${TARGETARCH}_relay
-COPY --from=builder /app/urnet_tools_bin /usr/local/bin/urnet-tools
+# Go client kept as urnet-tools-go; /usr/local/bin/urnet-tools is the
+# dispatcher below, which routes update/idle-update to the verified shell
+# update wrapper (/app/urnet-tools.sh) and everything else here.
+COPY --from=builder /app/urnet_tools_bin /usr/local/bin/urnet-tools-go
 
 COPY docker/miner/entrypoint.sh /app/entrypoint.sh
 COPY docker/miner/start_miner.sh /app/start_miner.sh
 COPY docker/miner/jwt_verify.sh /app/jwt_verify.sh
+COPY docker/miner/provider_env.sh /app/provider_env.sh
+# The shell update wrapper urnet-docker's in-place update expects at
+# /app/urnet-tools.sh (it sed-patches it from the host).
+COPY docker/miner/urnet-tools.sh /app/urnet-tools.sh
+COPY docker/miner/urnet-tools-dispatch.sh /usr/local/bin/urnet-tools
 
-RUN dos2unix /app/*.sh && chmod +x /app/*.sh \
+# Shared docker/scripts helpers: the wrapper sources update_verify.sh, and
+# the urnet-tools surface exposes proxy-health/proxy-traffic/logs.
+COPY docker/scripts/update_verify.sh /app/update_verify.sh
+COPY docker/scripts/proxy-health.sh /app/proxy-health.sh
+COPY docker/scripts/proxy-traffic.sh /app/proxy-traffic.sh
+COPY docker/scripts/logs.sh /app/logs.sh
+
+RUN dos2unix /app/*.sh /usr/local/bin/urnet-tools && chmod +x /app/*.sh /usr/local/bin/urnet-tools \
     && ln -sf /app/urnetwork_${TARGETARCH}_stable /usr/local/bin/provider \
-    && ln -sf /app/urnetwork_${TARGETARCH}_relay /usr/local/bin/provider-relay
+    && ln -sf /app/urnetwork_${TARGETARCH}_relay /usr/local/bin/provider-relay \
+    && ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health \
+    && ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic \
+    && ln -sf /app/logs.sh /usr/local/bin/logs \
+    && ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools-sh \
+    && ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh \
+    && ln -sf /app/jwt_verify.sh /usr/local/bin/jwt_verify.sh
 
 # State volume: a single known path an operator can mount.
 VOLUME ["/root/.urnetwork"]

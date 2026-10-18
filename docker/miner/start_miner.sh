@@ -14,6 +14,10 @@
 #   OPERATOR=<domain>          -> auth --operator=<domain>
 #   PROVIDER_ARGS="..."        -> appended to provide verbatim
 #   PROXY_FILE=<path>          -> provider proxy add --proxy_file (default /app/proxy.txt)
+#
+# The six v33 variables are mapped by provider_env.sh, the ported 3.23-fix
+# helper sourced below; OPERATORS_URL, OPERATOR and PROXY_FILE are
+# miner-image additions that have no v33 mapping.
 set -e
 
 APP_DIR="${APP_DIR:-/app}"
@@ -37,6 +41,22 @@ is_true() {
   esac
 }
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Local exp/nbf validation for a stored session (sourced by the entrypoint too).
+if [ -f "$SCRIPT_DIR/jwt_verify.sh" ]; then
+  . "$SCRIPT_DIR/jwt_verify.sh"
+elif [ -f "/app/jwt_verify.sh" ]; then
+  . "/app/jwt_verify.sh"
+fi
+
+# v33 operator env -> provide flags: ALL_OPERATORS, AUTO_REGISTER,
+# HOTKEY_SEED_FILE, ALLOW_CLIENT_REGISTRATION, MAX_MEMORY, PROVIDER_ARGS.
+if [ -f "$SCRIPT_DIR/provider_env.sh" ]; then
+  . "$SCRIPT_DIR/provider_env.sh"
+elif [ -f "/app/provider_env.sh" ]; then
+  . "/app/provider_env.sh"
+fi
+
 func_get_architecture() {
   case "$(uname -m)" in
     x86_64)  A_SYS_ARCH=amd64 ;;
@@ -50,17 +70,11 @@ func_get_architecture() {
 }
 
 func_check_config() {
-  ALLOW_CLIENT_REGISTRATION_LC="$(printf '%s' "${ALLOW_CLIENT_REGISTRATION:-auto}" | tr '[:upper:]' '[:lower:]')"
-
-  if is_true "${AUTO_REGISTER:-}"; then
-    if [ -z "$HOTKEY_SEED_FILE" ]; then
-      log "[ERROR] AUTO_REGISTER=Y requires HOTKEY_SEED_FILE to be set"
-      exit 1
-    fi
-    if ! is_true "${ALL_OPERATORS:-}"; then
-      log "[ERROR] AUTO_REGISTER=Y requires ALL_OPERATORS=Y (the flag only exists on provide --all-operators)"
-      exit 1
-    fi
+  # Validate the v33 operator environment once, before anything runs. The
+  # same flags are emitted again for the actual provide command.
+  if ! provider_env_flags "$STATE_DIR" >/dev/null; then
+    log "[ERROR] Invalid provider environment; fix the setting logged above and restart"
+    exit 1
   fi
 
   if [ -n "$HOTKEY_SEED_FILE" ]; then
@@ -77,22 +91,15 @@ func_check_config() {
     log "[WARN] OPERATORS_URL is only passed to provide when ALL_OPERATORS=Y; it is still used for auth --operator"
   fi
 
-  case "$ALLOW_CLIENT_REGISTRATION_LC" in
-    y|yes|true|1)
-      ALLOW_CLIENT_REGISTRATION_FLAG="--allow-client-registration"
+  case "$(provider_env_allow_client_registration_mode)" in
+    y)
       log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: passing --allow-client-registration"
       ;;
-    n|no|false|0)
-      ALLOW_CLIENT_REGISTRATION_FLAG=""
+    n)
       log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: not passing --allow-client-registration"
       ;;
-    auto|"")
-      ALLOW_CLIENT_REGISTRATION_FLAG=""
+    auto)
       log "[INFO] ALLOW_CLIENT_REGISTRATION=auto: not passing --allow-client-registration (set it to Y to enable client registration)"
-      ;;
-    *)
-      log "[ERROR] ALLOW_CLIENT_REGISTRATION must be auto, Y or N (got '$ALLOW_CLIENT_REGISTRATION')"
-      exit 1
       ;;
   esac
 
@@ -149,28 +156,17 @@ func_maybe_add_proxies() {
 
 func_provide() {
   set -- provide
-  if is_true "${ALL_OPERATORS:-}"; then
-    set -- "$@" --all-operators
+  # v33 operator flags from the environment (see provider_env.sh). Empty when
+  # none of the variables is set, so the command line stays exactly `provide`.
+  if ! PROVIDER_ENV_ARGS="$(provider_env_flags "$STATE_DIR")"; then
+    log "[ERROR] Invalid provider environment; fix the setting logged above and restart"
+    exit 1
   fi
-  if is_true "${AUTO_REGISTER:-}"; then
-    set -- "$@" --auto-register
-  fi
-  if is_true "${ALL_OPERATORS:-}" && [ -n "$HOTKEY_SEED_FILE" ]; then
-    set -- "$@" --hotkey_seed_file="$HOTKEY_SEED_FILE"
-  fi
+  # shellcheck disable=SC2086  # deliberate word splitting of the flag list
+  set -- "$@" $PROVIDER_ENV_ARGS
+  # Miner-image addition with no v33 provider_env.sh mapping.
   if is_true "${ALL_OPERATORS:-}" && [ -n "$OPERATORS_URL" ]; then
     set -- "$@" --operators-url="$OPERATORS_URL"
-  fi
-  if [ -n "$ALLOW_CLIENT_REGISTRATION_FLAG" ]; then
-    set -- "$@" "$ALLOW_CLIENT_REGISTRATION_FLAG"
-  fi
-  if [ -n "$MAX_MEMORY" ]; then
-    set -- "$@" --max-memory="$MAX_MEMORY"
-  fi
-  if [ -n "$PROVIDER_ARGS" ]; then
-    # Intentional word splitting: PROVIDER_ARGS is a raw flag list.
-    # shellcheck disable=SC2086
-    set -- "$@" $PROVIDER_ARGS
   fi
 
   log "[INFO] Starting the miner: $PROVIDER_BIN $*"
@@ -190,9 +186,26 @@ func_bootstrap() {
   fi
   log "[INFO] Running $( "$PROVIDER_BIN" --version 2>/dev/null || echo 'unknown version' )"
 
+  # Reuse a stored session only when it passes the local exp/nbf check. Same
+  # helper and policy as the entrypoint: an expired session is not reused (it
+  # can be replaced when a credential is available), and an unparseable one is
+  # left in place for the miner to report on.
+  session_reusable=0
   if [ -s "$SESSION_JWT" ]; then
-    log "[INFO] Existing session found at $SESSION_JWT; skipping authentication"
-  else
+    if command -v validate_jwt_file >/dev/null 2>&1 && ! validate_jwt_file "$SESSION_JWT"; then
+      if command -v jwt_expired >/dev/null 2>&1 && jwt_expired "$SESSION_JWT"; then
+        log "[WARN] Stored session at $SESSION_JWT is expired; not reusing it"
+      else
+        log "[WARN] Stored session at $SESSION_JWT could not be validated locally; leaving it in place for the miner to report on"
+        session_reusable=1
+      fi
+    else
+      session_reusable=1
+      log "[INFO] Existing session found at $SESSION_JWT; skipping authentication"
+    fi
+  fi
+
+  if [ "$session_reusable" -ne 1 ]; then
     auth_code="$POSITIONAL_CODE"
     if [ -z "$auth_code" ]; then
       auth_code="${URNETWORK_AUTH_CODE:-}"
@@ -216,6 +229,11 @@ func_bootstrap() {
       if is_true "${AUTO_REGISTER:-}" && [ -n "$HOTKEY_SEED_FILE" ]; then
         log "[INFO] --auto-register will sign in operators that have no session"
       fi
+    elif [ -s "$SESSION_JWT" ]; then
+      # The stored session is expired and no credential is available to
+      # replace it; keep it in place and let the miner report the auth state
+      # instead of failing the container here.
+      log "[WARN] No credential is available to replace the expired session at $SESSION_JWT; the miner will report the auth state"
     else
       log "[ERROR] No stored session and no usable credential: set AUTHCODE, or OPERATOR with HOTKEY_SEED_FILE, or USER_AUTH and PASSWORD"
       exit 1

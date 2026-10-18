@@ -1,9 +1,19 @@
 #!/bin/sh
-# Local JWT payload validation for the sn miner image.
+# Local JWT payload validation helper for the sn container scripts.
+#
 # Validates the exp and nbf claims with a 5 minute clock skew, and never logs
-# or prints the token. Adapted from the 3.23-fix image helper of the same name.
-# Returns 0 when the token looks usable, 1 when it is expired, not yet valid,
-# or unparseable.
+# or prints the token. validate_jwt_file returns 0 when the token looks
+# usable, 1 when it is expired, not yet valid, or unparseable.
+#
+# Sourced by docker/scripts/{entrypoint,start_stable,start_nightly,start_jwt}.sh
+# and by docker/miner/{entrypoint,start_miner}.sh. Keep the two copies
+# (docker/scripts/jwt_verify.sh and docker/miner/jwt_verify.sh) identical;
+# docker/miner/test_miner_entrypoint.sh asserts that.
+#
+# jwt_expired is the stricter probe the miner image uses to tell "definitely
+# expired" apart from "could not validate": it returns 0 only when the token
+# is past its exp claim beyond the skew, so a caller never destroys a session
+# it cannot read.
 
 validate_jwt_file() {
   jwt_path="$1"
