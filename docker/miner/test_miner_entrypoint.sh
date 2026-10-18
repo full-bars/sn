@@ -233,6 +233,78 @@ t "the helper rejects an unknown ALLOW_CLIENT_REGISTRATION" sh -c "grep -q 'ALLO
 out="$(pe "$h" PROVIDER_ARGS='--flag=*')"
 t "PROVIDER_ARGS is split on whitespace and not globbed" [ "$out" = "--flag=*" ]
 
+echo "--- urnet-tools: update wrapper, dispatcher and symlink contract ---"
+# Stage the wrapper and its digest helper as the image has them.
+cp "$REPO"/docker/miner/urnet-tools.sh "$REPO"/docker/scripts/update_verify.sh "$APP/"
+chmod +x "$APP"/urnet-tools.sh "$APP"/update_verify.sh
+UTS="$APP/urnet-tools.sh"
+
+out="$(sh "$UTS" 2>&1)"; rc=$?
+printf '%s' "$out" > "$tmp/ut-usage.out"
+t "the wrapper prints usage without a command" sh -c "grep -q 'Usage: urnet-tools <command> \[args\]' '$tmp/ut-usage.out' && [ $rc -ne 0 ]"
+
+out="$(PELICAN=yes sh "$UTS" update 2>&1)"; rc=$?
+printf '%s' "$out" > "$tmp/ut-pelican.out"
+t "Pelican mode refuses runtime updates" sh -c "grep -q 'runtime updates are disabled under Pelican' '$tmp/ut-pelican.out' && [ $rc -ne 0 ]"
+
+out="$(sh "$UTS" proxy health 2>&1)"; rc=$?
+printf '%s' "$out" > "$tmp/ut-proxy.out"
+t "proxy health names the missing helper instead of failing silently" sh -c "grep -q 'proxy-health not found' '$tmp/ut-proxy.out' && [ $rc -ne 0 ]"
+
+# Program classifier / install guard, exercised through the source-only seam
+# with stubbed binaries (no network, no container).
+cat > "$tmp/ut-miner-stub" <<'B'
+#!/bin/sh
+echo "provider provide --all-operators"
+B
+cat > "$tmp/ut-relay-stub" <<'B'
+#!/bin/sh
+echo "provider sn-status"
+B
+printf 'no marker here\n' > "$tmp/ut-none-stub"
+chmod +x "$tmp/ut-miner-stub" "$tmp/ut-relay-stub"
+cp "$tmp/ut-miner-stub" "$tmp/ut-miner-stub2"
+
+t "the classifier reads a miner binary" bash -c 'URNET_TOOLS_SOURCE_ONLY=1 . "$1" && [ "$(upd_binary_class "$2")" = miner ]' _ "$REPO/docker/miner/urnet-tools.sh" "$tmp/ut-miner-stub"
+t "the classifier reads a relay binary" bash -c 'URNET_TOOLS_SOURCE_ONLY=1 . "$1" && [ "$(upd_binary_class "$2")" = relay ]' _ "$REPO/docker/miner/urnet-tools.sh" "$tmp/ut-relay-stub"
+t "the classifier reports unknown for an unmarked file" bash -c 'URNET_TOOLS_SOURCE_ONLY=1 . "$1" && [ "$(upd_binary_class "$2")" = unknown ]' _ "$REPO/docker/miner/urnet-tools.sh" "$tmp/ut-none-stub"
+t "the install guard refuses a relay candidate for a miner binary" bash -c 'URNET_TOOLS_SOURCE_ONLY=1 . "$1" && ! upd_install_compatible "$2" "$3"' _ "$REPO/docker/miner/urnet-tools.sh" "$tmp/ut-relay-stub" "$tmp/ut-miner-stub"
+t "the install guard accepts a matching miner candidate" bash -c 'URNET_TOOLS_SOURCE_ONLY=1 . "$1" && upd_install_compatible "$2" "$3"' _ "$REPO/docker/miner/urnet-tools.sh" "$tmp/ut-miner-stub2" "$tmp/ut-miner-stub"
+t "the install guard refuses an unclassifiable candidate" bash -c 'URNET_TOOLS_SOURCE_ONLY=1 . "$1" && ! upd_install_compatible "$2" "$3"' _ "$REPO/docker/miner/urnet-tools.sh" "$tmp/ut-none-stub" "$tmp/ut-miner-stub"
+
+# The dispatcher keeps the Go client for everything except the update path.
+cp "$REPO"/docker/miner/urnet-tools-dispatch.sh "$tmp/urnet-tools-dispatch"
+chmod +x "$tmp/urnet-tools-dispatch"
+cat > "$tmp/dd-wrapper" <<'B'
+#!/bin/sh
+echo "wrapper:$*"
+B
+cat > "$tmp/dd-go" <<'B'
+#!/bin/sh
+echo "go:$*"
+B
+chmod +x "$tmp/dd-wrapper" "$tmp/dd-go"
+
+out="$(env URNET_TOOLS_WRAPPER="$tmp/dd-wrapper" URNET_TOOLS_GO_BINARY="$tmp/dd-go" "$tmp/urnet-tools-dispatch" update --tag v1)"
+t "the dispatcher routes update to the shell wrapper" [ "$out" = "wrapper:update --tag v1" ]
+out="$(env URNET_TOOLS_WRAPPER="$tmp/dd-wrapper" URNET_TOOLS_GO_BINARY="$tmp/dd-go" "$tmp/urnet-tools-dispatch" idle-update --threshold 1)"
+t "the dispatcher routes idle-update to the shell wrapper" [ "$out" = "wrapper:idle-update --threshold 1" ]
+out="$(env URNET_TOOLS_WRAPPER="$tmp/dd-wrapper" URNET_TOOLS_GO_BINARY="$tmp/dd-go" "$tmp/urnet-tools-dispatch" status --json)"
+t "every other command keeps the Go client" [ "$out" = "go:status --json" ]
+out="$(env URNET_TOOLS_WRAPPER="$tmp/dd-wrapper" URNET_TOOLS_GO_BINARY="$tmp/dd-go" "$tmp/urnet-tools-dispatch")"
+t "a bare dispatcher call runs the Go client" [ "$out" = "go:" ]
+
+echo "--- Dockerfile.miner ships the image contract ---"
+t "the wrapper is copied to /app/urnet-tools.sh" grep -q 'COPY docker/miner/urnet-tools.sh /app/urnet-tools.sh' "$REPO/Dockerfile.miner"
+t "the dispatcher is installed as /usr/local/bin/urnet-tools" grep -q 'COPY docker/miner/urnet-tools-dispatch.sh /usr/local/bin/urnet-tools' "$REPO/Dockerfile.miner"
+t "the Go client is kept as urnet-tools-go" grep -q 'urnet_tools_bin /usr/local/bin/urnet-tools-go' "$REPO/Dockerfile.miner"
+t "proxy-health is symlinked onto PATH" grep -q 'ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health' "$REPO/Dockerfile.miner"
+t "proxy-traffic is symlinked onto PATH" grep -q 'ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic' "$REPO/Dockerfile.miner"
+t "logs is symlinked onto PATH" grep -q 'ln -sf /app/logs.sh /usr/local/bin/logs' "$REPO/Dockerfile.miner"
+t "urnet-tools-sh points at the wrapper" grep -q 'ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools-sh' "$REPO/Dockerfile.miner"
+t "update_verify.sh is symlinked onto PATH" grep -q 'ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh' "$REPO/Dockerfile.miner"
+t "jwt_verify.sh is symlinked onto PATH" grep -q 'ln -sf /app/jwt_verify.sh /usr/local/bin/jwt_verify.sh' "$REPO/Dockerfile.miner"
+
 echo "--- jwt helpers ---"
 # shellcheck source=docker/miner/jwt_verify.sh
 . "$REPO/docker/miner/jwt_verify.sh"

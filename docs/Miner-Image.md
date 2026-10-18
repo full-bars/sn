@@ -4,7 +4,9 @@
 in as `provider`, the binary whose CLI carries `provide --all-operators`,
 `operators`, `auth --operator`, `wallet`, `claim`, `claim-daemon(-v2)` and
 `fleet`. It also bakes the relay (`cmd/provider`) as `provider-relay` for the
-proxy surface, direct mode and sn-status, plus `urnet-tools`.
+proxy surface, direct mode and sn-status, plus `urnet-tools`: the Go client
+(`urnet-tools-go`) behind a dispatcher that sends `update`/`idle-update` to
+the verified shell update wrapper.
 
 The image publishes no ports and runs no status server. The miner dials
 outbound only.
@@ -83,6 +85,32 @@ run the baked `provider-relay` in direct mode, give it the relay image's flags
    small supervisor: exit 75 restarts after 5s, exit 78 clears the session and
    re-authenticates (up to 3 times), other crashes exit after 3 attempts so the
    container or systemd restart policy takes over.
+
+## Inside the image
+
+| Path | What it is |
+|---|---|
+| `/app/urnetwork_<arch>_stable`, `provider` | the miner (the program whose usage is `provider ...`) |
+| `/app/urnetwork_<arch>_relay`, `provider-relay` | the relay |
+| `/app/urnet-tools.sh`, `urnet-tools-sh` | the verified shell update wrapper (`do_update`: release digest check, `update-pending` marker, respawn verification, Pelican refusal) |
+| `urnet-tools` | dispatcher: `update`/`idle-update` go to the shell wrapper, every other command goes to the Go client |
+| `urnet-tools-go` | the Go client (the `urnet-tools` of the relay image) |
+| `proxy-health`, `proxy-traffic`, `logs` | state-file helpers on PATH, as in the relay image |
+| `/app/{entrypoint,start_miner,provider_env,jwt_verify,update_verify}.sh` | startup scripts and their helpers |
+
+## Updating the miner
+
+`urnet-docker update <container>` works against a miner container: it
+sed-patches `/app/urnet-tools.sh` from the host and runs `docker exec <c>
+urnet-tools update`, which the dispatcher routes to the shell wrapper. The
+wrapper refuses to install a release binary that is not the program this
+image runs: full-bars/sn releases publish the relay as `provider`, while the
+miner ships only inside this image, so an in-place swap would replace the
+miner with the relay. It points at the image stream instead.
+
+Update a miner container by pulling and recreating it, or let Watchtower do
+it; the Quick start commands are safe to re-run against an existing state
+volume. The volume keeps the identity, so no auth code is consumed again.
 
 ## Migration from 3.23-fix
 
