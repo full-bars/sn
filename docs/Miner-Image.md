@@ -153,9 +153,13 @@ because nothing in this image writes 3.23-fix state.
 ## Building locally
 
 ```bash
-docker build -f Dockerfile.miner -t sn-miner .
-docker run --rm --network none -e AUTH=userpass sn-miner    # fails closed, exit 1
+docker build -f Dockerfile.miner -t urnetwork-miner:local .
+docker run --rm --network none -e AUTH=userpass urnetwork-miner:local    # fails closed, exit 1
 ```
+
+A local tag can carry a compatible reference (`urnetwork`), so an image built
+this way is discovered by image reference as well as by container name. The
+published `ghcr.io/full-bars/sn:miner*` refs cannot (see Quick start).
 
 The entrypoint contract is covered by `docker/miner/test_miner_entrypoint.sh`
 (stub provider, offline).
