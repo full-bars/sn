@@ -48,6 +48,11 @@ type Owner struct {
 	at            func(string) error
 }
 
+// openAt is the fault hook copied into every owner at open, so a test can stop
+// the open-time census repair at a named boundary. Production leaves it nil;
+// the owner's own at field covers every step after open.
+var openAt func(string) error
+
 // Normal admission refuses every pending operation. The same borrowed lock
 // description already held by the application avoids a second flock owner.
 func Open(ctx context.Context, directory *durablepath.Directory, lock *os.File, spec Spec) (*Owner, error) {
@@ -79,7 +84,7 @@ func open(ctx context.Context, directory *durablepath.Directory, lock *os.File, 
 	}
 	spec.AuxiliaryNames = append([]string(nil), spec.AuxiliaryNames...)
 	sort.Strings(spec.AuxiliaryNames)
-	self := &Owner{ctx: ctx, directory: directory, lock: lock, spec: spec, knownKVs: map[string]unix.Stat_t{}, readOnly: readOnly}
+	self := &Owner{ctx: ctx, directory: directory, lock: lock, spec: spec, knownKVs: map[string]unix.Stat_t{}, readOnly: readOnly, at: openAt}
 	if err := self.admit(false); err != nil {
 		return nil, err
 	}
@@ -550,18 +555,33 @@ func (self *Owner) checkTemporaryCensus(allowReconcile bool) (resultErr error) {
 			}
 			// The anchored publication never wrote a byte, so no prepared record
 			// exists. Abandon it; the committed generation is authoritative.
+			//
+			// The checkpoint is cleared before anything is removed. A crash after
+			// the clear leaves a marker with an empty temporary and no pending
+			// checkpoint, which this census clears on the next Reconcile. Removing
+			// the temporary first instead left a checkpoint naming a temporary
+			// that was already durably gone, which no open or Reconcile resolved.
+			if err := self.abandonPending(); err != nil {
+				return err
+			}
 			if err := unix.Unlinkat(int(self.directory.File().Fd()), temporary, 0); err != nil {
 				return errors.Join(ErrUncertain, observation(err, false))
+			}
+			if err := self.boundary("abandon-temporary-removed"); err != nil {
+				return err
 			}
 			if err := self.directory.File().Sync(); err != nil {
 				return errors.Join(ErrUncertain, observation(err, false))
 			}
-			if err := self.abandonPending(); err != nil {
+			if err := self.boundary("abandon-temporary-synced"); err != nil {
 				return err
 			}
 			delete(temporaries, temporary)
 			if err := unix.Unlinkat(int(self.directory.File().Fd()), marker, 0); err != nil {
 				return errors.Join(ErrUncertain, observation(err, false))
+			}
+			if err := self.boundary("abandon-marker-removed"); err != nil {
+				return err
 			}
 			if err := self.directory.File().Sync(); err != nil {
 				return errors.Join(ErrUncertain, observation(err, false))

@@ -399,3 +399,90 @@ func TestPublishCancelBeforeStartingCreatesNoTemporary(t *testing.T) {
 	}
 	closeOwner(t, reopenDir, reopenLock, reopened)
 }
+
+func readCheckpointRaw(t *testing.T, self *fixture) []byte {
+	t.Helper()
+	raw := make([]byte, 4096)
+	n, err := unix.Fgetxattr(int(self.lock.Fd()), Attribute(testSpec.Kind, testSpec.Name), raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return append([]byte(nil), raw[:n]...)
+}
+
+func restoreCheckpointRaw(t *testing.T, root string, raw []byte) {
+	t.Helper()
+	if err := unix.Setxattr(filepath.Join(root, testSpec.LockName), Attribute(testSpec.Kind, testSpec.Name), raw, unix.XATTR_REPLACE); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// The repair that abandons an empty anchored publication is crash idempotent:
+// a fault at every step boundary, with unsynced metadata lost the way a
+// machine crash loses it, still reopens and settles on the committed value.
+func TestAbandonRepairIsCrashIdempotentAtEveryStep(t *testing.T) {
+	steps := []struct {
+		stage string
+		// revert restores the pre-repair checkpoint bytes, modelling a crash
+		// that lost metadata written but never synced. Only the steps before
+		// the abandon checkpoint's sync need it.
+		revert bool
+	}{
+		{"abandon-written", true},
+		{"abandon-synced", false},
+		{"abandon-temporary-removed", false},
+		{"abandon-temporary-synced", false},
+		{"abandon-marker-removed", false},
+	}
+	for _, step := range steps {
+		t.Run(step.stage, func(t *testing.T) {
+			self := newFixture(t)
+			if err := self.owner.Publish([]byte("committed"), nil); err != nil {
+				t.Fatal(err)
+			}
+			// Anchor an empty publication: the pending checkpoint is durable
+			// and its temporary exists with no byte written, which is exactly
+			// the state Reconcile abandons.
+			self.owner.at = func(point string) error {
+				if point == "pending-synced" {
+					return unix.EIO
+				}
+				return nil
+			}
+			if err := self.owner.Publish([]byte("next"), nil); !errors.Is(err, ErrUncertain) {
+				t.Fatalf("fixture publication = %v", err)
+			}
+			self.owner.at = nil
+			retained := readCheckpointRaw(t, self)
+			if err := self.close(); err != nil {
+				t.Fatal(err)
+			}
+			openAt = func(point string) error {
+				if point == step.stage {
+					return unix.EIO
+				}
+				return nil
+			}
+			err := self.open(true)
+			openAt = nil
+			if err == nil {
+				t.Fatalf("fault at %s did not stop the repair", step.stage)
+			}
+			if step.revert {
+				restoreCheckpointRaw(t, self.root, retained)
+			}
+			if err := self.open(true); err != nil {
+				t.Fatalf("repair after a crash at %s is not recoverable: %v", step.stage, err)
+			}
+			if value := readOwnerValue(t, self.owner); value != "committed" {
+				t.Fatalf("value = %q, want the committed generation", value)
+			}
+			if names := durableTemporaryNames(t, self.root); len(names) != 0 {
+				t.Fatalf("repair left %v", names)
+			}
+			if err := self.owner.Publish([]byte("after"), nil); err != nil {
+				t.Fatalf("publish after recovery: %v", err)
+			}
+		})
+	}
+}
