@@ -48,11 +48,27 @@
 #                     the owning port when one exists
 #   SKIP-NO-NETWORK   environmental: no network / no JWT / provider could not
 #                     stay up; never a product verdict
+#   SKIP-UNSAFE       a client-level check is disabled because the invoking
+#                     user's passwd home is not the sandbox HOME, so
+#                     urnet-tools discovery could resolve to the operator's
+#                     real state; the report's client-targeting row carries
+#                     the dir it would have resolved to
 #
-# Exit: 0 = no FAIL lines, 1 = FAIL lines present, 75 = ENV_BLOCKER.
+# Exit: 0 = no FAIL lines, 1 = FAIL lines present, 75 = ENV_BLOCKER,
+# 78 = REFUSED by the preflight guard (the run would touch the operator's
+# real provider state; never a product verdict).
 #
 # Scope: this script reads the binaries and writes only inside STATE_HOME. It
-# never pushes, tags, opens PRs, comments, or reruns workflows.
+# never pushes, tags, opens PRs, comments, or reruns workflows. It refuses to
+# run at all when its effective state dir, HOME, or an ambient
+# URNETWORK_STATE_DIR equals, contains, or lives inside the operator's real
+# state (/home/klets/.urnetwork) - client-level urnet-tools commands resolve
+# their target through discovery, which attributes a provider's state dir to
+# the KERNEL owner's passwd home and falls back to <passwd home>/.urnetwork,
+# so an unadapted host makes them act on the operator's real provider. Every
+# client-level check therefore runs only when the invoking user's passwd home
+# IS the sandbox HOME (the container adaptation above); otherwise it is
+# recorded SKIP-UNSAFE without invoking the client. See docs/Feature-Matrix-CI.md.
 #
 # Portability notes: the network-facing lines were verified in containerized
 # runs (debian:stable-slim, alpine:latest, almalinux:9) against the integrated
@@ -99,12 +115,15 @@ RUN_USER="$(id -un 2>/dev/null || echo root)"
 REPORT="${FEATURE_REPORT:-$STATE_HOME/feature-matrix-report.txt}"
 WORK="${FEATURE_WORK:-$STATE_HOME/.feature-matrix-work}"
 
-PASS_N=0; FAIL_N=0; SKIPU_N=0; SKIPN_N=0
+PASS_N=0; FAIL_N=0; SKIPU_N=0; SKIPN_N=0; SKIPX_N=0
 FAIL_ITEMS=""
 ENV_BLOCKER=0
 MINER_PID=""
 MINER_LAST_RC=""
 LIVE=0
+CLIENT_SAFE=0
+CLIENT_RESOLVED=""
+CLIENT_UNSAFE_REASON=""
 
 # The passwd home BEFORE container adaptation: the sandbox-leak canary.
 PH_ORIG=""
@@ -124,6 +143,7 @@ record() { # $1=verdict $2=name $3..=detail
 " ;;
         SKIP-UNSUPPORTED) SKIPU_N=$((SKIPU_N + 1)) ;;
         SKIP-NO-NETWORK) SKIPN_N=$((SKIPN_N + 1)) ;;
+        SKIP-UNSAFE) SKIPX_N=$((SKIPX_N + 1)) ;;
     esac
 }
 
@@ -292,10 +312,146 @@ adapt_home() {
                     cat /etc/passwd.fmnew > /etc/passwd && rm -f /etc/passwd.fmnew
                 say "NOTE container-adaptation: passwd home for $RUN_USER -> $STATE_HOME (state-dir trust for urnet-tools)"
             else
-                say "WARN: STATE_HOME=$STATE_HOME is outside $RUN_USER's passwd home ($ph) and /etc/passwd is not writable; discovery may not find the provider"
+                say "WARN: STATE_HOME=$STATE_HOME is outside $RUN_USER's passwd home ($ph) and /etc/passwd is not writable; client-level checks will skip (client-targeting below)"
             fi
             ;;
     esac
+}
+
+# ---------------------------------------------------------------------------
+# preflight guard + client target pinning
+# ---------------------------------------------------------------------------
+# urnet-tools resolves a client-level command's target through discovery,
+# which attributes a running provider's state dir to the KERNEL owner's
+# passwd home: a state dir outside that home is rejected and the fallback is
+# <passwd home>/.urnetwork; delegated client commands then exec the provider
+# binary with HOME=<that passwd home>. A sandbox HOME outside the invoking
+# user's passwd home (the operator's host, where /etc/passwd cannot be
+# adapted) therefore makes client commands resolve to the operator's real
+# state even though this harness runs every process with an isolated HOME.
+# The guard refuses the whole run (exit 78) when any path it writes or the
+# state it uses overlaps that real state; the pinning below disables every
+# client-level check unless the passwd home IS the sandbox HOME.
+
+OPERATOR_STATE="/home/klets/.urnetwork"
+
+canon_dir() {
+    # Physical path for $1: resolve symlinks in the longest existing prefix
+    # and keep the remainder lexically; print $1 unchanged when nothing
+    # resolves. Reads only, never creates anything.
+    [ -n "$1" ] || { printf ''; return 0; }
+    _cd=$1
+    _cd_tail=""
+    while [ ! -d "$_cd" ] && [ "$_cd" != "/" ]; do
+        _cd_tail="/$(basename "$_cd")$_cd_tail"
+        _cd=$(dirname "$_cd")
+    done
+    if _cd_phys="$(cd "$_cd" 2>/dev/null && pwd -P)"; then
+        printf '%s%s\n' "$_cd_phys" "$_cd_tail"
+    else
+        printf '%s\n' "$1"
+    fi
+}
+
+path_strictly_inside() { # $1 is strictly inside directory $2
+    case "$1" in
+        "$2"/*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+path_overlaps() { # $1 == $2, or one is strictly inside the other
+    [ "$1" = "$2" ] && return 0
+    path_strictly_inside "$1" "$2" && return 0
+    path_strictly_inside "$2" "$1" && return 0
+    return 1
+}
+
+guard_refuse() {
+    printf '\nREFUSING TO RUN (preflight guard): %s\n' "$1" >&2
+    printf 'The operator provider state is %s and this harness must never resolve a target to it.\n' "$OPERATOR_STATE" >&2
+    printf 'Nothing was created, deleted, or invoked. Fix STATE_HOME/STATE_DIR/FEATURE_WORK (and unset URNETWORK_STATE_DIR),\n' >&2
+    printf 'or run the matrix in a disposable container, as the CI job does.\n' >&2
+    exit 78
+}
+
+preflight_guard() {
+    # Runs before anything is created or invoked (main calls it first).
+    case "${STATE_HOME:-}" in
+        ""|/) guard_refuse "STATE_HOME is empty or '/'; the sandbox root must be a real directory" ;;
+    esac
+    case "${STATE_DIR:-}" in
+        ""|/) guard_refuse "STATE_DIR is empty or '/'; the effective state dir must be a real path" ;;
+    esac
+    OPERATOR_STATE_C="$(canon_dir "$OPERATOR_STATE")"
+    STATE_HOME_C="$(canon_dir "$STATE_HOME")"
+    STATE_DIR_C="$(canon_dir "$STATE_DIR")"
+    WORK_C="$(canon_dir "$WORK")"
+    REPORT_C="$(canon_dir "$REPORT")"
+    path_overlaps "$STATE_HOME_C" "$OPERATOR_STATE_C" && guard_refuse "STATE_HOME=$STATE_HOME equals, contains, or lives inside the operator state $OPERATOR_STATE"
+    path_overlaps "$STATE_DIR_C" "$OPERATOR_STATE_C" && guard_refuse "the effective state dir STATE_DIR=$STATE_DIR equals, contains, or lives inside the operator state $OPERATOR_STATE"
+    path_overlaps "$WORK_C" "$OPERATOR_STATE_C" && guard_refuse "WORK=$WORK equals, contains, or lives inside the operator state $OPERATOR_STATE"
+    path_overlaps "$REPORT_C" "$OPERATOR_STATE_C" && guard_refuse "the report path $REPORT equals, contains, or lives inside the operator state $OPERATOR_STATE"
+    # Every invocation is run with HOME=$STATE_HOME (the sandbox root this
+    # harness created), so STATE_HOME itself must be a real directory (checked
+    # above); an ambient HOME already sitting inside the operator state is
+    # refused outright.
+    AMBIENT_HOME_C="$(canon_dir "${HOME:-}")"
+    if [ "$AMBIENT_HOME_C" = "$OPERATOR_STATE_C" ] || path_strictly_inside "$AMBIENT_HOME_C" "$OPERATOR_STATE_C"; then
+        guard_refuse "HOME=$HOME is inside the operator state $OPERATOR_STATE"
+    fi
+    if [ -n "${URNETWORK_STATE_DIR:-}" ]; then
+        urnet_state_c="$(canon_dir "$URNETWORK_STATE_DIR")"
+        if [ "$urnet_state_c" = "$STATE_DIR_C" ]; then
+            printf 'NOTE: URNETWORK_STATE_DIR=%s equals the sandbox state; unsetting it for the runs below\n' "$URNETWORK_STATE_DIR"
+        else
+            path_overlaps "$urnet_state_c" "$OPERATOR_STATE_C" && guard_refuse "URNETWORK_STATE_DIR=$URNETWORK_STATE_DIR points at the operator state $OPERATOR_STATE"
+            guard_refuse "URNETWORK_STATE_DIR=$URNETWORK_STATE_DIR is set in the invoking environment; unset it so this harness controls the state dir"
+        fi
+    fi
+    # The ambient state override must not leak into a miner start (only
+    # start_run-style env isolation would strip it). The guard above already
+    # refused any value that matters.
+    unset URNETWORK_STATE_DIR 2>/dev/null || true
+    return 0
+}
+
+resolve_client_targeting() {
+    # CLIENT_RESOLVED is what discovery would attribute to the sandbox
+    # provider and the HOME a delegated provider binary would run with: the
+    # sandbox state iff the invoking user's passwd home IS the sandbox HOME
+    # (the container adaptation above); otherwise <passwd home>/.urnetwork.
+    # Records the client-targeting assertion row (PASS inside the sandbox,
+    # FAIL otherwise) that every client-level check's verdict hangs off.
+    PH_ADAPTED="$(passwd_home_for "$RUN_USER")"
+    if [ -n "$PH_ADAPTED" ] && [ "$(canon_dir "$PH_ADAPTED")" = "$STATE_HOME_C" ]; then
+        CLIENT_SAFE=1
+        CLIENT_RESOLVED="$STATE_DIR"
+    else
+        CLIENT_SAFE=0
+        if [ -n "$PH_ADAPTED" ]; then
+            CLIENT_RESOLVED="$PH_ADAPTED/.urnetwork"
+        else
+            CLIENT_RESOLVED="unresolved (no passwd entry for $RUN_USER)"
+        fi
+        CLIENT_UNSAFE_REASON="client-level targeting disabled: the invoking user's passwd home (${PH_ADAPTED:-unknown}) is not the sandbox HOME ($STATE_HOME), so urnet-tools discovery/delegation would resolve to $CLIENT_RESOLVED; run in a disposable container (CI)"
+        say "WARN $CLIENT_UNSAFE_REASON"
+    fi
+    if [ "$CLIENT_SAFE" = "1" ]; then
+        record PASS client-targeting "client targeting resolved to $CLIENT_RESOLVED (the invoking user's passwd home is the sandbox HOME; inside the sandbox)"
+    else
+        record FAIL client-targeting "client targeting resolved to $CLIENT_RESOLVED (outside the sandbox state $STATE_DIR; passwd home ${PH_ADAPTED:-unknown} != sandbox HOME $STATE_HOME; client-level checks disabled)"
+    fi
+    return 0
+}
+
+# client_skip <name...>: record client-level checks as SKIP-UNSAFE (called
+# only when CLIENT_SAFE != 1; the client is never invoked then).
+client_skip() {
+    for _cn in "$@"; do
+        record SKIP-UNSAFE "$_cn" "$CLIENT_UNSAFE_REASON"
+    done
+    return 0
 }
 
 set_up_wrapper() {
@@ -444,8 +600,28 @@ trap on_exit EXIT INT TERM
 # urnet-tools wrapper + raw control socket helpers
 # ---------------------------------------------------------------------------
 SOCK="$STATE_DIR/provider.sock"
-T()  { HOME="$STATE_HOME" "$TOOLS_BIN" "$@"; }
-TS() { HOME="$STATE_HOME" "$TOOLS_BIN" "$@" --state-dir "$STATE_DIR"; }
+# Client-level wrappers. Both hard-refuse (exit 78, without invoking anything)
+# when CLIENT_SAFE != 1: every caller sits behind a client_skip gate, so this
+# firing means a client invocation escaped the gate and the run must not
+# continue with untrusted targeting.
+T()  {
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        printf 'FATAL: refusing a client-level urnet-tools invocation with unsafe targeting\n' >&2
+        printf 'invocation: urnet-tools %s\n' "$*" >&2
+        printf '%s\n' "$CLIENT_UNSAFE_REASON" >&2
+        exit 78
+    fi
+    HOME="$STATE_HOME" "$TOOLS_BIN" "$@"
+}
+TS() {
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        printf 'FATAL: refusing a client-level urnet-tools invocation with unsafe targeting\n' >&2
+        printf 'invocation: urnet-tools %s --state-dir %s\n' "$*" "$STATE_DIR" >&2
+        printf '%s\n' "$CLIENT_UNSAFE_REASON" >&2
+        exit 78
+    fi
+    HOME="$STATE_HOME" "$TOOLS_BIN" "$@" --state-dir "$STATE_DIR"
+}
 
 NC=0
 if have nc; then
@@ -679,8 +855,12 @@ b1_identity_restart() {
         else
             record SKIP-UNSUPPORTED identity-restart-reuse "client_id changed and no .client_jwts.json store at this head ($(cid_short "$one_cid") -> $(cid_short "$two_cid")). Owning port: feat/p2-hotswap (wt-sn-hotswap: client_jwt_store)"
         fi
-        marker="$(TS status 2>/dev/null | grep -oE 'last restart: [a-z-]+' | head -1)"
-        say "status after restart: ${marker:-'(no restart marker line)'}"
+        if [ "$CLIENT_SAFE" = "1" ]; then
+            marker="$(TS status 2>/dev/null | grep -oE 'last restart: [a-z-]+' | head -1)"
+            say "status after restart: ${marker:-'(no restart marker line)'}"
+        else
+            say "status after restart: (not queried: client targeting disabled, see client-targeting)"
+        fi
     else
         record FAIL identity-restart "provider did not come back after SIGTERM"
     fi
@@ -776,6 +956,10 @@ b1_state_paths() {
 # re-served from the successor (the takeover rebind). A head without the
 # trigger self-detects to SKIP-UNSUPPORTED.
 b1_hotswap() {
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        client_skip hotswap-handoff hotswap-metrics-rebind
+        return 0
+    fi
     start_live_miner miner-hotswap
     hs=""
     if [ "$LIVE" = "1" ]; then
@@ -902,6 +1086,10 @@ b1_ramlogs() {
     # selector 3: the persisted key + restart. Set it live (acceptance), stop,
     # start again with URNETWORK_RAMLOGS=0 EXPLICITLY set: the seed from the
     # control state must still win, which is the documented precedence.
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        client_skip key-ramlogs
+        return 0
+    fi
     if ! ensure_live miner-ramlog-key1; then
         record SKIP-NO-NETWORK key-ramlogs "provider not live to accept the ramlogs key"
         return
@@ -1010,6 +1198,10 @@ b1_exit75() {
 # needs-restart matrix is b1_control_key_semantics below; ramlogs' restart
 # semantics are asserted end-to-end by b1_ramlogs.
 b1_control_keys() {
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        client_skip control-key-live key-h3-limit
+        return 0
+    fi
     st_before="$(fsum "$STATE_DIR/provider_state.json")"
     out="$(TS set gogc 250 -f 2>&1)"; rc=$?
     st_after="$(fsum "$STATE_DIR/provider_state.json")"
@@ -1057,6 +1249,10 @@ b1_control_keys() {
 # persisted here: the persisted key would override the URNETWORK_HOT_RESTART=0
 # probe below, which exists to pin exactly that switch).
 b1_control_key_semantics() {
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        client_skip control-keys-live control-keys-needs-restart
+        return 0
+    fi
     bad=""; checked=""
     for kv in "proxy_url_refresh=90s" "proxy_url_max=450" "smart_dialer=on" "proxy_dead_cleanup_scope=url"; do
         k="${kv%%=*}"; v="${kv#*=}"
@@ -1122,6 +1318,10 @@ b1_control_key_semantics() {
 # scrape with whatever fetch tool the image has, and off -> listener stops ->
 # on -> listener returns (the live control wiring).
 b1_metrics() {
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        client_skip metrics-bind metrics-scrape metrics-off-on
+        return 0
+    fi
     addrs=""
     out="$(TS metrics on -f 2>&1)"; rc=$?
     case "$out" in
@@ -1220,7 +1420,11 @@ run_block1() {
     if [ "$ENV_BLOCKER" = "1" ]; then return; fi
 
     if [ -n "$(miner_help | head -1)" ]; then
-        record PASS binaries "miner answers provide --help; urnet-tools: $(HOME="$STATE_HOME" "$TOOLS_BIN" version 2>&1 | head -1 | firstline)"
+        if [ "$CLIENT_SAFE" = "1" ]; then
+            record PASS binaries "miner answers provide --help; urnet-tools: $(HOME="$STATE_HOME" "$TOOLS_BIN" version 2>&1 | head -1 | firstline)"
+        else
+            record PASS binaries "miner answers provide --help (urnet-tools version not queried: client targeting disabled, see client-targeting)"
+        fi
     else
         record FAIL binaries "miner does not answer provide --help"
         ENV_BLOCKER=1
@@ -1433,6 +1637,10 @@ url_fetch() {
 
 b2_url_sources() {
     head1 "BLOCK 2 — URL source pipeline"
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        client_skip url-fetch-source1 url-fetch-source2 url-state-coherence url-cached-skip url-remove-source url-log-vocabulary
+        return 0
+    fi
     if ! ensure_live miner-url; then
         record SKIP-NO-NETWORK url-fetch-source1 "provider not live; URL pipeline cannot run"
         record SKIP-NO-NETWORK url-fetch-source2 "provider not live"
@@ -1564,6 +1772,10 @@ b2_url_sources() {
 # deterministic operator manipulation on synthetic entries.
 b2_manipulations() {
     head1 "BLOCK 2 — proxy manipulation (synthetic entries)"
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        client_skip proxy-add trim-preview-no-write trim-apply proxy-remove remove-dead-preview remove-match refresh-add-only proxy-paste proxy-clear
+        return 0
+    fi
     if ! ensure_live miner-manip; then
         record SKIP-NO-NETWORK proxy-manip "provider not live"
         return
@@ -1727,6 +1939,10 @@ b3_cli_tree() {
 
 b3_surface() {
     head1 "BLOCK 3 — broad surface"
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        client_skip surface-cli-tree surface-version surface-status surface-proxy-health surface-proxy-traffic surface-proxy-ids surface-summary surface-config surface-audit surface-metrics surface-exclude surface-proxy-graders
+        return 0
+    fi
     b3_cli_tree
     if ! ensure_live miner-surface; then
         record SKIP-NO-NETWORK surface "provider not live"
@@ -1855,7 +2071,7 @@ b3_surface() {
 # ---------------------------------------------------------------------------
 summary() {
     head1 "SUMMARY"
-    say "PASS=$PASS_N FAIL=$FAIL_N SKIP-UNSUPPORTED=$SKIPU_N SKIP-NO-NETWORK=$SKIPN_N"
+    say "PASS=$PASS_N FAIL=$FAIL_N SKIP-UNSUPPORTED=$SKIPU_N SKIP-NO-NETWORK=$SKIPN_N SKIP-UNSAFE=$SKIPX_N"
     if [ "$FAIL_N" -gt 0 ]; then
         say "FAIL items:"
         printf '%s\n' "$FAIL_ITEMS" | sed '/^$/d' | tee -a "$REPORT"
@@ -1874,12 +2090,14 @@ main() {
         printf 'usage: BIN_DIR=<dir with miner + urnet-tools> [JWT_FILE=...] [STATE_HOME=...] sh %s\n' "$0" >&2
         BIN_DIR="."
     fi
+    preflight_guard
     mkdir -p "$STATE_HOME" "$STATE_DIR" "$WORK" 2>/dev/null || true
     chmod 700 "$STATE_DIR" 2>/dev/null || true
     : >"$REPORT"
     say "feature-matrix harness $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
     say "bin_dir=$BIN_DIR miner=${MINER_BIN:-?} tools=${TOOLS_BIN:-?} state_home=$STATE_HOME state_dir=$STATE_DIR timeout=$TIMEOUT"
     adapt_home
+    resolve_client_targeting
     set_up_wrapper
     if [ -n "$JWT_FILE" ] && [ -r "$JWT_FILE" ]; then
         mkdir -p "$STATE_DIR"
@@ -1890,7 +2108,14 @@ main() {
     run_block1
 
     if [ "$ENV_BLOCKER" != "1" ]; then
-        stagger_init
+        # The stagger only paces network fetches made by client-level checks;
+        # when those are disabled there is nothing to pace, but the blocks
+        # must still run so they record their SKIP-UNSAFE rows.
+        if [ "$CLIENT_SAFE" = "1" ]; then
+            stagger_init
+        else
+            CHK_ORDER="url manip surface"
+        fi
         for g in $CHK_ORDER; do
             case "$g" in
                 url)     b2_url_sources ;;

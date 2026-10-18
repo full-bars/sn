@@ -44,11 +44,16 @@
 # UNSUPPORTED (runtime-detected absence at this head; the reason names the
 # next step), NO-DOCKER (no docker CLI/daemon in the sandbox), NO-TOOL (a
 # sandbox tool the check needs is missing), UPSTREAM (an earlier check did not
-# produce the value this check asserts against).
+# produce the value this check asserts against), UNSAFE (a client-level check
+# is disabled because the invoking user's passwd home is not the sandbox HOME,
+# so urnet-tools discovery could attribute the operator's real state; see the
+# preflight guard and the client-targeting row).
 #
 # Exit status: 0 = no FAIL lines; 1 = FAIL lines present; 75 = ENV_BLOCKER
-# (a missing mandatory input: BIN_DIR/miner/urnet-tools or no JWT source).
-# SKIP lines never fail a run. ENV_BLOCKER is not a product verdict.
+# (a missing mandatory input: BIN_DIR/miner/urnet-tools or no JWT source);
+# 78 = REFUSED by the preflight guard (the run would touch the operator's
+# real provider state; never a product verdict). SKIP lines never fail a run.
+# ENV_BLOCKER is not a product verdict.
 #
 # JWT contract: exactly like the release matrix. In CI the job mints a
 # disposable token from GAUNTLET_USER/GAUNTLET_PW once (shakedown.yml's
@@ -65,6 +70,26 @@
 # discovery adaptations distro-smoke.sh uses), and every process this script
 # starts is stopped on exit (EXIT/INT/TERM trap). Nothing touches the ambient
 # HOME, no production account, no pushes/tags/PRs/comments/workflow reruns.
+#
+# Preflight guard and target pinning (post-incident hardening). urnet-tools
+# resolves a client-level command's target through discovery, which attributes
+# a provider's state dir to the KERNEL owner's passwd home: a state dir outside
+# that home is rejected and the fallback is <passwd home>/.urnetwork; delegated
+# client commands then exec the provider binary with HOME=<that passwd home>.
+# So a sandbox HOME outside the invoking user's passwd home (the operator's
+# host, where /etc/passwd cannot be adapted) makes client commands resolve to
+# the operator's real state (/home/klets/.urnetwork) even though every process
+# runs with an isolated HOME. This harness therefore:
+#   1. refuses to run at all (exit 78) when its effective state dir, HOME, or
+#      an ambient URNETWORK_STATE_DIR equals, contains, or lives inside the
+#      operator's real state, or when HOME is not inside the sandbox root it
+#      creates; and
+#   2. runs every client-level check only when the invoking user's passwd home
+#      IS the sandbox HOME (the container adaptation above), otherwise those
+#      checks record SKIP-UNSAFE and the report's client-targeting assertion
+#      row records the dir discovery would have targeted.
+# Provider-level runs always use an explicit isolated HOME and are never
+# affected. See docs/Feature-Matrix-CI.md for the incident and the contract.
 #
 # Inputs (env):
 #   BIN_DIR                    dir with `miner` (required) and optionally
@@ -181,6 +206,89 @@ fi
 [ -n "$TOOLS_BIN" ] || TOOLS_BIN="$BIN_DIR/urnet-tools"
 [ -n "$DOCKER_BIN" ] || DOCKER_BIN="$BIN_DIR/urnet-docker"
 
+# ------------------------------------------------------ preflight guard -----
+# Runs BEFORE anything is created, deleted, or invoked. The operator's real
+# provider state is a hard no-touch constant: when any path this harness uses
+# for state, HOME, scratch, or evidence equals, contains, or lives inside it,
+# the run is refused here (exit 78) instead of being attempted at all. This
+# is the guard for the P2 acceptance incident where client-level urnet-tools
+# commands resolved through discovery to the operator's real state while
+# every process ran with an isolated HOME.
+
+OPERATOR_STATE="/home/klets/.urnetwork"
+
+canon_dir() {
+    # Physical path for $1: resolve symlinks in the longest existing prefix
+    # and keep the remainder lexically; print $1 unchanged when nothing
+    # resolves. Reads only, never creates anything.
+    [ -n "$1" ] || { printf ''; return 0; }
+    _cd=$1
+    _cd_tail=""
+    while [ ! -d "$_cd" ] && [ "$_cd" != "/" ]; do
+        _cd_tail="/$(basename "$_cd")$_cd_tail"
+        _cd=$(dirname "$_cd")
+    done
+    if _cd_phys="$(cd "$_cd" 2>/dev/null && pwd -P)"; then
+        printf '%s%s\n' "$_cd_phys" "$_cd_tail"
+    else
+        printf '%s\n' "$1"
+    fi
+}
+
+path_strictly_inside() { # $1 is strictly inside directory $2
+    case "$1" in
+        "$2"/*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+path_overlaps() { # $1 == $2, or one is strictly inside the other
+    [ "$1" = "$2" ] && return 0
+    path_strictly_inside "$1" "$2" && return 0
+    path_strictly_inside "$2" "$1" && return 0
+    return 1
+}
+
+guard_refuse() {
+    printf '\nREFUSING TO RUN (preflight guard): %s\n' "$1" >&2
+    printf 'The operator provider state is %s and this harness must never resolve a target to it.\n' "$OPERATOR_STATE" >&2
+    printf 'Nothing was created, deleted, or invoked. Fix HOME_DIR/WORK_DIR/OUT_DIR (and unset URNETWORK_STATE_DIR),\n' >&2
+    printf 'or run the matrix in a disposable container, as the CI job does.\n' >&2
+    exit 78
+}
+
+say "preflight guard"
+case "${HOME_DIR:-}" in
+    ""|/) guard_refuse "HOME_DIR is empty or '/'; the sandbox root must be a real directory" ;;
+esac
+case "${WORK_DIR:-}" in
+    ""|/) guard_refuse "WORK_DIR is empty or '/'; the sandbox root must be a real directory" ;;
+esac
+OPERATOR_STATE_C="$(canon_dir "$OPERATOR_STATE")"
+HOME_DIR_C="$(canon_dir "$HOME_DIR")"
+WORK_DIR_C="$(canon_dir "$WORK_DIR")"
+STATE_C="$(canon_dir "$HOME_DIR/.urnetwork")"
+path_overlaps "$HOME_DIR_C" "$OPERATOR_STATE_C" && guard_refuse "HOME_DIR=$HOME_DIR equals, contains, or lives inside the operator state $OPERATOR_STATE"
+path_overlaps "$WORK_DIR_C" "$OPERATOR_STATE_C" && guard_refuse "WORK_DIR=$WORK_DIR equals, contains, or lives inside the operator state $OPERATOR_STATE"
+path_overlaps "$STATE_C" "$OPERATOR_STATE_C" && guard_refuse "the effective state dir $HOME_DIR/.urnetwork equals, contains, or lives inside the operator state $OPERATOR_STATE"
+if [ -n "$OUT_DIR" ]; then
+    OUT_DIR_C="$(canon_dir "$OUT_DIR")"
+    path_overlaps "$OUT_DIR_C" "$OPERATOR_STATE_C" && guard_refuse "OUT_DIR=$OUT_DIR equals, contains, or lives inside the operator state $OPERATOR_STATE"
+fi
+if [ -n "${URNETWORK_STATE_DIR:-}" ]; then
+    urnet_state_c="$(canon_dir "$URNETWORK_STATE_DIR")"
+    if [ "$urnet_state_c" = "$STATE_C" ]; then
+        note "URNETWORK_STATE_DIR=$URNETWORK_STATE_DIR equals the sandbox state; unsetting it for the runs below"
+    else
+        path_overlaps "$urnet_state_c" "$OPERATOR_STATE_C" && guard_refuse "URNETWORK_STATE_DIR=$URNETWORK_STATE_DIR points at the operator state $OPERATOR_STATE"
+        guard_refuse "URNETWORK_STATE_DIR=$URNETWORK_STATE_DIR is set in the invoking environment; unset it so this harness controls the state dir"
+    fi
+fi
+# The ambient state override must not leak into the JWT mint or a client
+# invocation (the miner honours URNETWORK_STATE_DIR; only provider-level runs
+# get env -i). The guard above already refused any value that mattered.
+unset URNETWORK_STATE_DIR 2>/dev/null || true
+
 if [ -n "$OUT_DIR" ]; then
     mkdir -p "$OUT_DIR" || { printf 'FATAL: cannot create OUT_DIR=%s\n' "$OUT_DIR" >&2; exit 2; }
     REPORT_FILE="$OUT_DIR/acceptance-report.txt"
@@ -244,6 +352,13 @@ record "os=${OS_PRETTY:-unknown} libc=$LIBC home=$HOME_DIR state=$STATE"
 # state dir that lives under the invoking user's passwd home. Both are
 # container-local adaptations, not product changes.
 PEME="$(id -un 2>/dev/null || echo root)"
+passwd_home_for() { # $1=user -> passwd home (empty when unknown)
+    if command -v getent >/dev/null 2>&1; then
+        getent passwd "$1" 2>/dev/null | head -n 1 | cut -d: -f6
+    else
+        grep "^$1:" /etc/passwd 2>/dev/null | head -n 1 | cut -d: -f6
+    fi
+}
 if [ -w /etc/passwd ]; then
     CUR_HOME="$(grep "^$PEME:" /etc/passwd 2>/dev/null | head -n 1 | cut -d: -f6)"
     if [ -z "$CUR_HOME" ]; then
@@ -255,7 +370,40 @@ if [ -w /etc/passwd ]; then
             note "passwd home for $PEME pointed at $HOME_DIR (container-local discovery adaptation)"
     fi
 else
-    note "cannot adapt /etc/passwd home (not writable); discovery may not attribute $STATE"
+    note "cannot adapt /etc/passwd home (not writable); client-level checks will skip (client-targeting below)"
+fi
+# The HOME every invocation runs with must be inside the sandbox root this
+# script created; HOME is exported to HOME_DIR above, so this asserts the link.
+HOME_C="$(canon_dir "$HOME")"
+if [ "$HOME_C" != "$HOME_DIR_C" ] && ! path_strictly_inside "$HOME_C" "$HOME_DIR_C"; then
+    guard_refuse "HOME=$HOME is not inside the sandbox root $HOME_DIR"
+fi
+
+# Client targeting resolution and pinning. CLIENT_RESOLVED is what discovery
+# would attribute to the sandbox provider and the HOME a delegated provider
+# binary would run with: the sandbox state iff the invoking user's passwd home
+# IS the sandbox HOME (the container adaptation above); otherwise client-level
+# commands resolve to <passwd home>/.urnetwork and are disabled with
+# SKIP-UNSAFE, and the assertion row below fails naming that dir.
+PASSWD_HOME="$(passwd_home_for "$PEME")"
+CLIENT_SAFE=0
+CLIENT_UNSAFE_REASON=""
+if [ -n "$PASSWD_HOME" ] && [ "$(canon_dir "$PASSWD_HOME")" = "$HOME_DIR_C" ]; then
+    CLIENT_SAFE=1
+    CLIENT_RESOLVED="$STATE"
+else
+    if [ -n "$PASSWD_HOME" ]; then
+        CLIENT_RESOLVED="$PASSWD_HOME/.urnetwork"
+    else
+        CLIENT_RESOLVED="unresolved (no passwd entry for $PEME)"
+    fi
+    CLIENT_UNSAFE_REASON="client-level targeting disabled: the invoking user's passwd home (${PASSWD_HOME:-unknown}) is not the sandbox HOME ($HOME_DIR), so urnet-tools discovery/delegation would resolve to $CLIENT_RESOLVED; run in a disposable container (CI)"
+    note "$CLIENT_UNSAFE_REASON"
+fi
+if [ "$CLIENT_SAFE" = "1" ]; then
+    pass "client-targeting" "client targeting resolved to $CLIENT_RESOLVED (the invoking user's passwd home is the sandbox HOME; inside the sandbox)"
+else
+    fail "client-targeting" "client targeting resolved to $CLIENT_RESOLVED (outside the sandbox state $STATE; passwd home ${PASSWD_HOME:-unknown} != sandbox HOME $HOME_DIR; client-level checks disabled)"
 fi
 pass "sandbox" "isolated HOME=$HOME_DIR, state=$STATE, miner reachable as $PROVIDER_LINK"
 
@@ -704,7 +852,16 @@ fi
 # ------------------------------------------- (b) urnet-tools against daemon --
 
 # t_run <name> <args...>: run urnet-tools, capture out/err, expose T_RC.
+# Hard-refuses (exit 78, without invoking anything) when client targeting is
+# not pinned to the sandbox: every caller must sit inside the CLIENT_SAFE
+# gates below, so this firing means a client invocation escaped a gate.
 t_run() {
+    if [ "$CLIENT_SAFE" != "1" ]; then
+        printf 'FATAL: refusing a client-level urnet-tools invocation with unsafe targeting\n' >&2
+        printf 'invocation: urnet-tools %s\n' "$*" >&2
+        printf '%s\n' "$CLIENT_UNSAFE_REASON" >&2
+        exit 78
+    fi
     _n=$1
     shift
     "$TOOLS_BIN" "$@" >"$TOOLS_RUNS/$_n.out" 2>"$TOOLS_RUNS/$_n.err"
@@ -729,6 +886,30 @@ d_run() {
 }
 t_out()  { cat "$TOOLS_RUNS/$1.out" 2>/dev/null; }
 t_text() { cat "$TOOLS_RUNS/$1.out" "$TOOLS_RUNS/$1.err" 2>/dev/null; }
+
+# The two helpers below record the client-level checks of section (b) as
+# SKIP-UNSAFE when CLIENT_SAFE != 1; the client is never invoked in that case.
+# The raw nc control probes (daemon-traffic/internals/goroutines) stay
+# unaffected because they talk to the socket directly.
+client_skip_status_rows() {
+    skip "tools-version" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "tools-status" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "daemon-snapshot" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+}
+client_skip_surface_rows() {
+    skip "daemon-history" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "control-metrics-on" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "control-metrics-scrape" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "control-key-set-get" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "tools-logs" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "restored-enforcement" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "restored-completion" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "restored-wallet" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "restored-wallet-status" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "proxy-synthetic-add" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "proxy-trim-preview" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+    skip "proxy-remove-clear" "UNSAFE" "$CLIENT_UNSAFE_REASON"
+}
 
 # nc_ok: a netcat that supports unix sockets (busybox nc does not).
 nc_ok() {
@@ -757,6 +938,11 @@ http_get() {
 }
 
 say "urnet-tools command surface against the running daemon (b) [$SURFACE_RUN]"
+
+# Client-level checks run only when targeting is pinned (CLIENT_SAFE); the
+# body indentation is deliberately left at the old level to keep this gate a
+# small, reviewable diff over the committed harness.
+if [ "$CLIENT_SAFE" = "1" ]; then
 
 t_run version version
 if [ "$T_RC" = "0" ] && head -n 1 "$TOOLS_RUNS/version.out" 2>/dev/null | grep -q '^urnet-tools '; then
@@ -795,6 +981,12 @@ else
     fail "daemon-snapshot" "status --json exited $T_RC or the snapshot lacks v/state/resources: $(head -c 200 "$TOOLS_RUNS/status-json.out" 2>/dev/null)"
 fi
 
+else
+    # Client-level targeting is not pinned to the sandbox: record the checks
+    # this block would have run and skip them; nothing was invoked.
+    client_skip_status_rows
+fi
+
 # traffic / internals / goroutines: the same raw requests urnet-tools sends for
 # top's light counters and its Internals panel.
 if nc_ok; then
@@ -818,6 +1010,12 @@ else
     skip "daemon-internals" "NO-TOOL" "no unix-socket netcat (nc -U) in the sandbox; the CI job installs netcat-openbsd"
     skip "daemon-goroutines" "NO-TOOL" "no unix-socket netcat (nc -U) in the sandbox; the CI job installs netcat-openbsd"
 fi
+
+# Client-level checks run only when targeting is pinned (CLIENT_SAFE); the
+# body indentation is deliberately left at the old level to keep this gate a
+# small, reviewable diff over the committed harness. The raw nc probes above
+# already ran, so the daemon rows they produced are unaffected.
+if [ "$CLIENT_SAFE" = "1" ]; then
 
 t_run history history --state-dir "$STATE" 20
 if [ "$T_RC" = "0" ] && grep -q 'audit entries' "$TOOLS_RUNS/history.out" 2>/dev/null &&
@@ -952,6 +1150,12 @@ if [ "$T_RC" = "0" ] && ! grep -q '192\.0\.2\.' "$_proxy_file" 2>/dev/null; then
     pass "proxy-remove-clear" "proxy remove <addr> -f then proxy clear -f removed every synthetic entry"
 else
     fail "proxy-remove-clear" "proxy remove/clear left synthetic entries behind (rc=$T_RC)"
+fi
+
+else
+    # Client-level targeting is not pinned to the sandbox: record every check
+    # this block would have run and skip them; nothing was invoked.
+    client_skip_surface_rows
 fi
 
 # ------------------------------------------------------- (c) urnet-docker --
