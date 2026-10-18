@@ -198,7 +198,7 @@ jobs:
           echo "${{ matrix.goos }} cross-build OK"
 
   lint-shell:
-    name: Installer shell lint
+    name: Installer + release-matrix shell lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -213,10 +213,15 @@ jobs:
           # The installer runs under `sh` on Alpine, where sh is busybox ash.
           # Syntax bash accepts and ash rejects is a latent breakage that only
           # surfaces on a real Alpine box, so lint against dash as well as bash.
+          # The release-matrix harnesses (.github/scripts/*-smoke.sh) are POSIX
+          # sh for the same reason: the distro cells run them under the distro's
+          # own /bin/sh, musl Alpine included, so they get the same gate.
           sudo apt-get update -qq
           sudo apt-get install -y -qq dash shellcheck
           rc=0
-          for f in scripts/Provider_Install_Linux.sh scripts/test_provider_install.sh; do
+          for f in scripts/Provider_Install_Linux.sh scripts/test_provider_install.sh \
+                   .github/scripts/distro-smoke.sh .github/scripts/systemd-smoke.sh \
+                   .github/scripts/openrc-smoke.sh .github/scripts/freebsd-smoke.sh; do
             echo "== $f =="
             dash -n  "$f" && echo "  dash OK"        || rc=1
             bash -n  "$f" && echo "  bash OK"        || rc=1
