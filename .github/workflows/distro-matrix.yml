@@ -244,6 +244,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Self-test the exit-75 rejection matcher
+        # The matcher decides whether a probe run reached a rejected sign-in.
+        # It once read the UDP port ":40150" as a 401 status and a sandboxed
+        # non-rejection run as a rejection, so its regression fixtures run
+        # here on every release. No container is involved.
+        run: sh .github/scripts/systemd-smoke.sh --self-test
+
       - name: Download the payload
         uses: actions/download-artifact@v4
         with:

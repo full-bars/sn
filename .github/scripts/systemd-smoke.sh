@@ -27,7 +27,13 @@
 #   TIMEOUT_S  seconds to wait for provider.sock after a start (default: 60)
 #   UNIT_NAME  unit to install (default: urnetwork.service)
 #
-# Exit status: 0 when every hard check passed, 1 otherwise.
+# Usage:     sh systemd-smoke.sh             — run the cell (inside the container)
+#            sh systemd-smoke.sh --self-test  — run the exit-75 rejection matcher
+#                                               regression fixtures only; no
+#                                               container side effects
+#
+# Exit status: 0 when every hard check passed, 1 otherwise (--self-test: 0 when
+# every matcher fixture passes, 1 otherwise).
 
 set -u
 
@@ -54,6 +60,69 @@ pass() { PASSES=$((PASSES + 1)); printf '  PASS: %s\n' "$*"; }
 fail() { FAILS=$((FAILS + 1)); printf '  FAIL: %s\n' "$*"; }
 cond() { CONDS=$((CONDS + 1)); printf '  CONDITIONAL/TODO: %s\n' "$*"; }
 say()  { printf '== %s\n' "$*"; }
+
+# ------------------------------------------------------- rejection matcher --
+# rejection_seen <logfile> — whether the exit-75 probe log shows the API
+# rejecting the sign-in. A bare "401" is NOT a rejection: it appears inside
+# port numbers and byte counts ("udp6 [::]:40150", "read 401 bytes"), which
+# once made a sandboxed non-rejection run look rejected. Word markers
+# ("rejected", "unauthorised/unauthorized" — the miner itself prints
+# "network_sign_in_rejected") count on their own; a 401 counts only as an
+# HTTP status token: "HTTP/1.1 401 ...", "http 401", "status: 401",
+# "status code: 401". The status token is anchored at the tail
+# ("([^0-9]|$)"): the 401 must end there, so ":40150" can never match.
+rejection_seen() {
+    grep -qiE 'rejected|unauthori[sz]ed|http/[0-9.]+[[:space:]]+401([^0-9]|$)|http[[:space:]_=-]+401([^0-9]|$)|status([[:space:]]+code)?[[:space:]]*[:=]?[[:space:]]*401([^0-9]|$)' "$1" 2>/dev/null
+}
+
+# --self-test: the regression fixtures for the matcher. The ":40150" case is
+# the one that regressed (a UDP port read as a 401 status); the HTTP
+# status-line forms are what a genuine rejection must still match. Run as
+# `sh systemd-smoke.sh --self-test`; it exits 0 only when every case passes.
+self_test_rejection_seen() {
+    st_dir="${TMPDIR:-/tmp}/systemd-smoke-selftest.$$"
+    rm -rf "$st_dir"
+    mkdir -p "$st_dir" || { printf '  FAIL: cannot create %s\n' "$st_dir"; return 2; }
+    st_cases=0
+    st_fail=0
+    printf '== exit-75 rejection matcher self-test (regression fixtures) ==\n'
+    # want|label|log line
+    while IFS='|' read -r st_want st_label st_line; do
+        st_cases=$((st_cases + 1))
+        printf '%s\n' "$st_line" >"$st_dir/case.log"
+        if rejection_seen "$st_dir/case.log"; then st_got=match; else st_got=nomatch; fi
+        if [ "$st_got" = "$st_want" ]; then
+            printf '  PASS: %s -> %s\n' "$st_label" "$st_got"
+        else
+            printf '  FAIL: %s -> %s (want %s)\n' "$st_label" "$st_got" "$st_want"
+            st_fail=1
+        fi
+    done <<'CASES'
+nomatch|udp6 source port :40150 (the original false positive)|I1018 10:26:16.876799     344 transport_pt.go:458] [pt]write err = write udp6 [::]:40150->[2001:470:99:5940:3a05:25ff:fe37:292a]:53: sendto: network is unreachable
+nomatch|h3 connect line with a local port 40266|I1018 10:26:21.140021     344 transport_family.go:1908] [c]h3 connect to 65.49.70.94:443 (connect-v4.bringyour.com) local=0.0.0.0:40266 bound=false
+nomatch|byte count "401 bytes"|read 401 bytes from the peer socket before the deadline
+nomatch|URL carrying port 40150|Post "https://api-v4.bringyour.com:40150/network/refresh" failed
+nomatch|http-prefixed port 40150 (tail anchored)|proxy http 40150 refused the upgrade
+nomatch|status-prefixed port 40150 (tail anchored)|poll status:40150 once more
+match|rejected diagnostics event|{"schema":"urnetwork-provider-diagnostics-v1","domain":"authentication","event":"network_sign_in_rejected"}
+match|HTTP/1.1 status line|HTTP/1.1 401 Unauthorized
+match|HTTP/2 status|HTTP/2 401
+match|http 401 form|request completed: http 401 returned by the api
+match|status: 401 form|status: 401
+match|status code: 401 form|unexpected status code: 401
+match|unauthorized word|401 Unauthorized: the token has expired
+CASES
+    rm -rf "$st_dir"
+    printf 'exit-75 rejection matcher self-test: %s cases, %s failed\n' "$st_cases" "$st_fail"
+    return "$st_fail"
+}
+
+case "${1:-}" in
+    --self-test)
+        self_test_rejection_seen
+        exit $?
+        ;;
+esac
 
 mkdir -p "$OUT_DIR" "$HOME_DIR" 2>/dev/null || {
     echo "FATAL: cannot create HOME_DIR=$HOME_DIR / OUT_DIR=$OUT_DIR" >&2
@@ -499,10 +568,10 @@ if check_feature "exit-75 quarantine (--quarantine-rejected-sign-in)" 'providerQ
     printf '  probe exit=%s\n' "$E75_RC"
     if [ "$E75_RC" = "75" ]; then
         pass "the miner exits 75 for a quarantined sign-in (unit would restart without backoff)"
-    # Only a genuine rejection marker counts. A bare "401" is NOT enough: it
-    # appears inside port numbers and byte counts ("udp6 [::]:40150", "401
-    # bytes"), which made a sandboxed non-rejection run look like a rejection.
-    elif grep -qiE 'rejected|unauthori[sz]ed|http[ _-]?401|status[ =:"]+401' "$OUT_DIR/exit75.log" 2>/dev/null; then
+    # rejection_seen() (see the matcher and its --self-test fixtures near the
+    # top): word markers count, a 401 counts only as an anchored HTTP status
+    # token, so the ":40150" UDP port that fooled an unanchored match cannot.
+    elif rejection_seen "$OUT_DIR/exit75.log"; then
         fail "sign-in was rejected but the process exited $E75_RC, not 75"
     else
         cond "probe did not reach a rejected sign-in in this sandbox (exit $E75_RC) — TODO: run it where the API is reachable with a rejectable token"
