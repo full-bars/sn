@@ -968,9 +968,9 @@ func (o *hotSwapControlSocketOwner) finish() {
 // soon as its first slot proves the takeover real. It mirrors the v33
 // provider's candidate continuation (provider/provide.go): ACK the parent so it
 // may yield and drain, wait for the parent's control socket to be released,
-// pull the parent's final audit entries into this process's ring, bind this
-// process's own control socket, and take over the SIGNAL and control-socket
-// handoff triggers.
+// pull the parent's final audit entries into this process's ring, rebind
+// /metrics, bind this process's own control socket, and take over the SIGNAL
+// and control-socket handoff triggers.
 //
 // The parent keeps the socket and the audit file until its commit point, which
 // precedes its drain, so nothing here may run before the ACK.
@@ -991,6 +991,13 @@ func (self providerRunSettings) hotSwapTakeoverCandidate(ctx context.Context, ca
 	// our entries. Re-merge and persist once that is over so a crash soon after
 	// takeover cannot lose our start entry.
 	go reconcileAuditRingAfterHandoff(ctx, HotSwapDrainTimeout+auditReconcileGrace)
+
+	// Rebind /metrics: the candidate skipped the startup bind because the
+	// parent still held the address, and the parent releases its listener at
+	// the handoff commit point. Mirrors the v33 continuation's order -- after
+	// the audit merge, before the control socket -- so the socket and audit
+	// handoff steps keep their sequence.
+	startMetricsAfterTakeover(globalControlState)
 
 	// This process is now the provider: bind the socket the parent quiesced,
 	// and answer SIGUSR2 (and the control socket's hotswap command) ourselves.

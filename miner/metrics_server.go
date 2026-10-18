@@ -40,6 +40,11 @@ var (
 
 	// metricsServer is the running /metrics server, nil when off.
 	metricsServer *http.Server
+
+	// metricsUnregCloser unregisters the hotswap yield closer serveMetrics
+	// installs. It is cleared by stopMetrics so a re-served listener does not
+	// leave a stale closer behind. Guarded by metricsMu.
+	metricsUnregCloser func()
 )
 
 // metricsHandoffPending is true while this process is a HotSwap candidate
@@ -47,15 +52,16 @@ var (
 // yields, so a listener started earlier either fails to bind or lands on a
 // different port. startMetricsAfterTakeover clears it.
 //
-// The miner's hot-restart machinery is the daemon's own (hotSwapTrigger); the
-// candidate/takeover split arrives with the hotswap port, so today this is
-// only ever set by tests and by startMetricsAtStartup when a caller knows it
-// is a candidate.
+// run.go sets it at startup when this process is a spawned HotSwap candidate
+// (startMetricsAtStartup), and the candidate's takeover continuation clears it
+// through startMetricsAfterTakeover.
 var metricsHandoffPending atomic.Bool
 
 // serveMetrics serves /metrics on ln. It is the miner's port of v33's
-// serveMetrics minus the HotSwap coordinator registration the miner does not
-// have yet: the miner's run path owns stopMetrics on shutdown.
+// serveMetrics, including the HotSwap coordinator registration: a retiring
+// parent releases the listener when it yields at the handoff commit point, so
+// the promoted candidate can rebind the same address. The miner's run path
+// still owns stopMetrics on ordinary shutdown.
 func serveMetrics(ln net.Listener) {
 	server := &http.Server{
 		Handler:           metricsHandler(),
@@ -65,6 +71,14 @@ func serveMetrics(ln net.Listener) {
 	metricsMu.Lock()
 	metricsServer = server
 	metricsListener = ln
+	if metricsUnregCloser != nil {
+		metricsUnregCloser()
+	}
+	metricsUnregCloser = RegisterCoordinatorCloser(func() {
+		if err := stopMetrics(); err != nil {
+			tlog("[metrics] releasing /metrics for hotswap: %v\n", err)
+		}
+	})
 	metricsMu.Unlock()
 	go func() {
 		if err := server.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
@@ -116,6 +130,10 @@ func acceptsGzip(header string) bool {
 // when nothing is running.
 func stopMetrics() error {
 	metricsMu.Lock()
+	if metricsUnregCloser != nil {
+		metricsUnregCloser()
+		metricsUnregCloser = nil
+	}
 	server := metricsServer
 	ln := metricsListener
 	metricsServer = nil

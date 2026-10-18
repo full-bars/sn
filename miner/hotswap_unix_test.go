@@ -202,10 +202,15 @@ func TestExecInPlaceUsesTheSuppliedImage(t *testing.T) {
 // process.
 func TestHotSwapTakeoverCandidateAcksAndTakesOver(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	// The continuation rebinds /metrics now, so keep this test off the box's
+	// real ports: auto stubs to an ephemeral loopback listener that the
+	// cleanup below stops.
+	stubMetricsAuto(t)
 	ResetHotSwapStateForTest()
 	t.Cleanup(func() {
 		ResetHotSwapStateForTest()
 		setHotSwapTrigger(nil)
+		_ = stopMetrics()
 	})
 
 	fds := mustSocketpair(t)
@@ -259,5 +264,95 @@ func TestHotSwapTakeoverCandidateAcksAndTakesOver(t *testing.T) {
 
 	if getHotSwapTrigger() == nil {
 		t.Fatal("successor did not take over the hotswap trigger")
+	}
+}
+
+// TestHotSwapTakeoverCandidateRebindsMetrics is the regression for the
+// integration gap where startMetricsAfterTakeover was defined but never
+// called: the candidate skipped the startup /metrics bind (the parent held
+// the address), so the takeover continuation must rebind it. Without the
+// call this finds no listener.
+func TestHotSwapTakeoverCandidateRebindsMetrics(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	stubMetricsAuto(t)
+	// Start from no listener, so the assertion is about this takeover and a
+	// leaked listener cannot make it pass vacuously.
+	_ = stopMetrics()
+	ResetHotSwapStateForTest()
+	t.Cleanup(func() {
+		ResetHotSwapStateForTest()
+		setHotSwapTrigger(nil)
+		_ = stopMetrics()
+	})
+
+	fds := mustSocketpair(t)
+	childEnd := os.NewFile(uintptr(fds[1]), "test-hotswap-child")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	state, err := loadControlState()
+	if err != nil {
+		t.Fatalf("loadControlState: %v", err)
+	}
+	globalControlState = state
+	owner := &hotSwapControlSocketOwner{ctx: ctx, state: state}
+	defer owner.finish()
+
+	settings := providerRunSettings{hotSwapIPC: childEnd, hotSwapCandidate: true}
+	settings.hotSwapTakeoverCandidate(ctx, cancel, owner)
+
+	// The successor is the provider now and must serve /metrics itself.
+	addrs := metricsServedAddrs()
+	if len(addrs) == 0 {
+		t.Fatal("takeover did not rebind /metrics: startMetricsAfterTakeover is not called from the takeover continuation")
+	}
+	// The rebind goes through the same bind policy as startup: auto mode is
+	// loopback plus Tailscale, never a public interface. The box is stubbed
+	// to no Tailscale and no container, so loopback is all of it.
+	for _, addr := range addrs {
+		host, _, err := net.SplitHostPort(addr)
+		if err != nil || host != "127.0.0.1" {
+			t.Fatalf("takeover bound /metrics on %q; auto must stay loopback plus Tailscale", addr)
+		}
+	}
+}
+
+// TestHotSwapTakeoverCandidateHonorsMetricsOff: the rebind is not
+// unconditional. A node whose operator turned /metrics off stays dark across
+// the handoff instead of resurrecting the listener.
+func TestHotSwapTakeoverCandidateHonorsMetricsOff(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	stubMetricsAuto(t)
+	_ = stopMetrics()
+	ResetHotSwapStateForTest()
+	t.Cleanup(func() {
+		ResetHotSwapStateForTest()
+		setHotSwapTrigger(nil)
+		_ = stopMetrics()
+	})
+
+	fds := mustSocketpair(t)
+	childEnd := os.NewFile(uintptr(fds[1]), "test-hotswap-child")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	state, err := loadControlState()
+	if err != nil {
+		t.Fatalf("loadControlState: %v", err)
+	}
+	if err := state.set("metrics", "off"); err != nil {
+		t.Fatal(err)
+	}
+	globalControlState = state
+	owner := &hotSwapControlSocketOwner{ctx: ctx, state: state}
+	defer owner.finish()
+
+	settings := providerRunSettings{hotSwapIPC: childEnd, hotSwapCandidate: true}
+	settings.hotSwapTakeoverCandidate(ctx, cancel, owner)
+
+	if addrs := metricsServedAddrs(); addrs != nil {
+		t.Fatalf("takeover bound /metrics on %v despite the persisted off", addrs)
 	}
 }

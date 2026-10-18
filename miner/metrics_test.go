@@ -385,3 +385,41 @@ func TestPrometheusLabelValueEscapes(t *testing.T) {
 		t.Fatalf("escaped label does not parse: %v", errs)
 	}
 }
+
+// TestYieldReleasesMetricsListener is the parent half of the takeover rebind:
+// a HotSwap parent must release its /metrics listener when it yields the
+// coordinator session at the handoff commit point, or the promoted candidate
+// cannot rebind the same address (auto mode would hop ports and an explicit
+// address would never bind again).
+func TestYieldReleasesMetricsListener(t *testing.T) {
+	withTempHome(t)
+	// Start from no listener, so applyMetricsLive below definitely binds the
+	// address this test checks for its release.
+	_ = stopMetrics()
+	addr := fmt.Sprintf("127.0.0.1:%d", reserveFreePort(t))
+	t.Setenv("URNETWORK_METRICS", addr)
+	ResetHotSwapStateForTest()
+	t.Cleanup(func() {
+		_ = stopMetrics()
+		ResetHotSwapStateForTest()
+	})
+
+	if err := applyMetricsLive("on"); err != nil {
+		t.Fatalf("metrics on: %v", err)
+	}
+	if addrs := metricsServedAddrs(); len(addrs) != 1 || addrs[0] != addr {
+		t.Fatalf("metrics listener = %v, want [%s]", addrs, addr)
+	}
+
+	yieldCoordinatorSession()
+
+	if addrs := metricsServedAddrs(); addrs != nil {
+		t.Fatalf("the yield left /metrics running on %v; the successor cannot rebind the address", addrs)
+	}
+	// The address is actually free again, so a successor can take it.
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		t.Fatalf("metrics address still held after the yield: %v", err)
+	}
+	ln.Close()
+}
