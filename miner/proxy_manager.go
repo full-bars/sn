@@ -429,6 +429,18 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 			runProxyURLFetcher(ctx, m.cfg.Urls, m.cfg.Refresh, m.cfg.Max, m.cfg.ApiHost, m.cfg.ApiPort, m.cfg.SelfHeal)
 		}()
 	}
+	// AIMD pool controller (v33 runPoolController, T-07): computes and
+	// persists the URL pool's TargetPoolSize every poolControlInterval, and
+	// sheds the worst URL proxies back to the cache on a sustained-pressure
+	// cut. The fetcher and cleanup loops read the target back (gated on
+	// self-heal, see resolveEffectiveProxyURLMax), which is the half that
+	// makes the learned operating point real; v33 starts this loop
+	// unconditionally beside the fetcher, and so does the miner.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runPoolController(ctx, m.cfg.Max, m.cfg.SelfHeal)
+	}()
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
