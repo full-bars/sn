@@ -46,6 +46,12 @@ var Version string
 func init() {
 	// debug.SetGCPercent(10)
 
+	// Must run before initGlog(): initGlog reads URNETWORK_PROFILE/
+	// URNETWORK_RAMLOGS from the environment to make its one-shot,
+	// unrepeatable decision about redirecting stdout/stderr to a ramlog.
+	// See startup_env_seed.go for why this cannot be a later call in
+	// provide() the way every other control-socket key works.
+	seedEnvFromControlState()
 	initGlog()
 
 	// initPprof()
@@ -781,7 +787,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if hooks.afterCreate != nil {
 		hooks.afterCreate(output)
 	}
-	ctx, cancel := context.WithCancel(parent)
+	ctx, rawCancel := context.WithCancel(parent)
+	// Record what first cancelled the run for the SIGNAL line in events.log:
+	// whichever caller cancels first (signal handler goroutine, control-socket
+	// shutdown, quarantine, or a failed worker) leaves its stack, the same
+	// first-canceller record the v33 provider keeps in provideSetupSignals.
+	cancelSource := &runCancelSource{}
+	cancel := func() {
+		cancelSource.record()
+		rawCancel()
+	}
 	defer cancel()
 	// The control surface's run state: start time, the previous run's marker
 	// (restart reason and version), and a clean-exit marker for the next
@@ -791,6 +806,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	defer func() {
 		if returnErr == nil {
 			finishControlRun("clean")
+			// events.log keeps the clean shutdown across a reboot that wipes
+			// /dev/shm; the line matches the v33 provide teardown.
+			critLog("PROVIDER EXIT: normal shutdown (code=0)")
 		}
 	}()
 	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
@@ -917,6 +935,20 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	bwRegistry := bandwidth.NewRegistry()
 	// The control socket's snapshot and traffic replies read these counters.
 	controlRuntime.setBandwidthRegistry(bwRegistry)
+
+	// events.log records the start of this run - version, pid, host - once
+	// its identity is staged and before any provider child starts, the same
+	// line the v33 provider writes from provideSetupMemory.
+	providerStartupCritLog()
+
+	// events.log records the shutdown cause too: the first canceller's stack,
+	// or v33's parent-cancellation text when the startup signal handler
+	// cancelled the parent context before this run's own cancellers ran.
+	go func() {
+		<-ctx.Done()
+		tlog("[provider] shutting down: main context cancelled\n")
+		critLog("SIGNAL: context cancelled — draining goroutines\nsource:\n%s", cancelSource.text())
+	}()
 
 	provideWithProxy := func(index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
 		defer func() {
