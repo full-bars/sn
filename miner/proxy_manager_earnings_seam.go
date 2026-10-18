@@ -28,6 +28,12 @@ const (
 	// when "no recent earnings" means something after a restart.
 	paidEarnWindow = 15 * time.Minute
 
+	// paidForceProbeCeiling is the hard upper bound on how long a paid proxy
+	// can go without a real stage-1 probe regardless of earn state (v33
+	// earn_tracker.go). The paid grader reads it; the tracker port adopts this
+	// constant with the rest of that file.
+	paidForceProbeCeiling = 24 * time.Hour
+
 	// earningsPromotionBytes is the decayed score at which a URL-sourced proxy
 	// stops being treated as an unproven address and is ordered alongside the
 	// file list. The scout's file bonus equals it on purpose.

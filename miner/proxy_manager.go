@@ -398,6 +398,15 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 		defer m.wg.Done()
 		runURLProxyReaper(ctx, m.cfg.ApiHost, m.cfg.ApiPort)
 	}()
+	// Paid/file-list proxy grading (v33 proxy_grade_paid.go): rides the
+	// reaper ticker cadence and grades non-URL proxies read-only on the
+	// paid stale sweep, so proxy.state carries the Score/Graded fields the
+	// trim, audit and summary read.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runPaidProxyGrader(ctx, m.cfg.ApiHost, m.cfg.ApiPort)
+	}()
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()

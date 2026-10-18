@@ -202,48 +202,9 @@ func gradeSummaryStaleAfter(src string, pressure float64) time.Duration {
 	return paidStaleThreshold(pressure)
 }
 
-// paidDesiredSet returns the addresses the paid grader OWNS: the UNION of the
-// live source file (when state.Source is set) and the operator's internal
-// config. This union is the single source of truth for paid ownership and MUST
-// be used by every site that needs it - the collect apply phases and the
-// summary (whose ownership bucketing must agree with the writer).
-//
-// Port adaptation: v33's internal leg is readProxySettings(), which is the
-// operator's internal config there. The miner's readProxySettings() is
-// manager-backed and returns the whole desired set INCLUDING URL-cached
-// addresses, which would misclassify URL-sourced proxies as paid-owned here;
-// the port therefore uses readProxySettingsLegacy(), the same internal-config
-// reader the pre-port miner used. The paid grader itself is P1(c2), so the
-// second return (fileOK) is unused today and exists for the same call site
-// shape as v33.
-func paidDesiredSet(state *ProxyState) (map[string]*connect.ProxySettings, bool) {
-	out := map[string]*connect.ProxySettings{}
-	fileOK := true
-	if state.Source != "" {
-		cf, err := readProxySettingsFromFile(state.Source)
-		switch {
-		case err != nil:
-			// Unreadable: membership cannot prove non-ownership.
-			fileOK = false
-			tlog("[proxy][grade] warning: %v (paid desired set proceeds with internal config only; file %s unreadable)\n", err, state.Source)
-		case len(cf) == 0:
-			// Readable but EMPTY: it proves nothing about ownership either -
-			// the operator's file may be momentarily empty mid-edit - so keep
-			// the fallback path.
-			fileOK = false
-		default:
-			for _, s := range cf {
-				out[s.Key()] = s
-			}
-		}
-	}
-	for _, s := range readProxySettingsLegacy() {
-		if _, ok := out[s.Key()]; !ok {
-			out[s.Key()] = s
-		}
-	}
-	return out, fileOK
-}
+// paidDesiredSet (the paid ownership union) lives in
+// proxy_manager_grade_paid.go, beside the paid grader that writes the grades
+// this summary buckets: the reader cannot drift from the writer.
 
 // collectProxyGradeSummary reads proxy.state + proxy_url.json under the
 // proxy lock and buckets every RUNNING proxy by its grade. URL-sourced
