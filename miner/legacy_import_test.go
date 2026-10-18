@@ -10,10 +10,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -66,8 +68,11 @@ type fakeLegacyImportProver struct {
 	publicCalls int
 	refreshCall int
 	// transientRemaining > 0 makes the next calls return the retryable
-	// unavailable read, then fall through to refreshErr.
+	// unavailable read, then fall through to refreshErr. transientCause is the
+	// wrapped leaf: a server status means the API answered, a network error
+	// means it was never reached.
 	transientRemaining int
+	transientCause     error
 }
 
 func (self *fakeLegacyImportProver) ServerPublicKey(ctx context.Context, clientID connect.Id) ([]byte, error) {
@@ -86,7 +91,7 @@ func (self *fakeLegacyImportProver) RefreshAccepted(ctx context.Context, token s
 	self.refreshCall++
 	if self.transientRemaining > 0 {
 		self.transientRemaining--
-		return &clientauth.RegistrationRefreshUnavailableError{}
+		return clientauth.NewRegistrationRefreshUnavailableError(self.transientCause)
 	}
 	if self.refreshErr == nil {
 		return nil
@@ -909,8 +914,11 @@ func TestLegacyImportTransientProofIsNotJournaledAsFallback(t *testing.T) {
 	journal := fixture.journal()
 	for _, settings := range fixture.proxySettings {
 		key := settings.Key()
-		if recorded, ok := journal.Slots[key]; ok {
-			t.Fatalf("slot %s journaled from a transient proof: %+v", key, recorded)
+		if recorded, ok := journal.Slots[key]; !ok || recorded.State != "defer" {
+			t.Fatalf("slot %s journal = %+v, want a defer entry (not a fallback)", key, recorded)
+		}
+		if journal.Slots[key].State == "fallback" {
+			t.Fatalf("slot %s was journaled as a fallback from a transient proof", key)
 		}
 		if _, err := os.Stat(fixture.target(settings)); !errors.Is(err, os.ErrNotExist) {
 			t.Fatalf("slot %s wrote a credential from a transient proof", key)
@@ -948,6 +956,132 @@ func TestLegacyImportTransientProofIsNotJournaledAsFallback(t *testing.T) {
 		}
 		if recorded := journal.Slots[key]; recorded.State != "imported" {
 			t.Fatalf("slot %s journal state = %q, want imported", key, recorded.State)
+		}
+	}
+	fixture.assertOriginalsUntouched()
+}
+
+// When the key read is unavailable but auth works, tier 2 proves the slot and
+// it commits: no deferral is needed for a partial outage the refresh can
+// resolve.
+func TestLegacyImportKeyReadUnavailableUsesRefreshProof(t *testing.T) {
+	fixture := newLegacyImportFixture(t, true, 2)
+	fixture.captureOriginals()
+	fixture.prover.publicErr = errors.New("synthetic: key route unavailable")
+	result := fixture.run(legacyImportHooks{})
+	if len(result.mintSlots) != 0 {
+		t.Fatalf("a refresh-proven slot must not mint, got %v", result.mintSlots)
+	}
+	committed, fallbacks, _, _ := fixture.recorder.counts()
+	if committed != len(fixture.proxySettings) || fallbacks != 0 {
+		t.Fatalf("committed=%d fallbacks=%d, want %d and 0", committed, fallbacks, len(fixture.proxySettings))
+	}
+	journal := fixture.journal()
+	for _, settings := range fixture.proxySettings {
+		recorded := journal.Slots[settings.Key()]
+		if recorded.State != "imported" || recorded.Proof != "refresh" {
+			t.Fatalf("slot %s journal = %+v, want imported via refresh", settings.Key(), recorded)
+		}
+	}
+	fixture.assertOriginalsUntouched()
+}
+
+// A partial outage (the API answers, the proof does not) is bounded: three
+// answered failed starts fall back once, with the warning naming the old id,
+// and later starts stay on that decision without proving again.
+func TestLegacyImportPartialOutageBoundFallsBackOnce(t *testing.T) {
+	oldBackoff := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = oldBackoff }()
+
+	fixture := newLegacyImportFixture(t, true, 1)
+	fixture.captureOriginals()
+	slot := fixture.proxySettings[0]
+	partial := &connect.HttpStatusError{StatusCode: 503}
+	fixture.prover.publicErr = errors.New("synthetic: key route unavailable")
+	for start := 1; start <= legacyImportDeferralStarts; start++ {
+		fixture.prover.transientRemaining = legacyImportTransientAttempts
+		fixture.prover.transientCause = partial
+		result := fixture.run(legacyImportHooks{})
+		journal := fixture.journal()
+		recorded := journal.Slots[slot.Key()]
+		if start < legacyImportDeferralStarts {
+			if len(result.mintSlots) != 0 {
+				t.Fatalf("start %d minted before the bound", start)
+			}
+			if recorded.State != "defer" || recorded.Deferrals != start {
+				t.Fatalf("start %d journal = %+v, want defer %d", start, recorded, start)
+			}
+		} else {
+			if !result.mintSlots[slot.Key()] {
+				t.Fatalf("bound start did not allow the mint")
+			}
+			if recorded.State != "fallback" || recorded.Reason != "proof_unavailable_bound" {
+				t.Fatalf("bound start journal = %+v, want fallback proof_unavailable_bound", recorded)
+			}
+		}
+		if _, err := os.Stat(fixture.target(slot)); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("start %d wrote a credential", start)
+		}
+	}
+	_, fallbacks, _, _ := fixture.recorder.counts()
+	if fallbacks != 1 {
+		t.Fatalf("expected exactly one fallback record, got %d", fallbacks)
+	}
+	store, err := readLegacyStoreRaw(fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantID8 := store[slot.Key()].ClientID[:8]
+	if !strings.Contains(fixture.recorder.text(), wantID8+"|") {
+		t.Fatalf("the fallback warning does not name %s: %s", wantID8, fixture.recorder.text())
+	}
+	fixture.assertOriginalsUntouched()
+
+	// A later start is sticky: no proof attempt and no new decision.
+	publicCalls, refreshCalls := fixture.prover.publicCalls, fixture.prover.refreshCall
+	fixture.prover.transientRemaining = 0
+	last := fixture.run(legacyImportHooks{})
+	if !last.mintSlots[slot.Key()] {
+		t.Fatalf("the sticky fallback must keep the mint allowed")
+	}
+	if fixture.prover.publicCalls != publicCalls || fixture.prover.refreshCall != refreshCalls {
+		t.Fatalf("a sticky fallback re-proved the slot")
+	}
+	if recorded := fixture.journal().Slots[slot.Key()]; recorded.State != "fallback" {
+		t.Fatalf("sticky start journal = %+v", recorded)
+	}
+	if _, count, _, _ := fixture.recorder.counts(); count != 1 {
+		t.Fatalf("a later start repeated the fallback warning: %d", count)
+	}
+}
+
+// A total outage (the API is unreachable) defers indefinitely: it never counts
+// toward the bound and never mints, so a saved identity the server may still
+// accept is not discarded while nothing can be proven.
+func TestLegacyImportTotalOutageKeepsDeferring(t *testing.T) {
+	oldBackoff := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = oldBackoff }()
+
+	fixture := newLegacyImportFixture(t, true, 1)
+	fixture.captureOriginals()
+	slot := fixture.proxySettings[0]
+	unreachable := &net.OpError{Op: "dial", Net: "tcp", Err: syscall.ECONNREFUSED}
+	fixture.prover.publicErr = errors.New("synthetic: api unreachable")
+	for start := 1; start <= legacyImportDeferralStarts+1; start++ {
+		fixture.prover.transientRemaining = legacyImportTransientAttempts
+		fixture.prover.transientCause = unreachable
+		result := fixture.run(legacyImportHooks{})
+		if len(result.mintSlots) != 0 {
+			t.Fatalf("a total outage minted on start %d", start)
+		}
+		recorded := fixture.journal().Slots[slot.Key()]
+		if recorded.State != "defer" || recorded.Deferrals != 0 {
+			t.Fatalf("start %d journal = %+v, want a non-counting deferral", start, recorded)
+		}
+		if _, err := os.Stat(fixture.target(slot)); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("start %d wrote a credential", start)
 		}
 	}
 	fixture.assertOriginalsUntouched()

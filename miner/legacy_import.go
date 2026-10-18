@@ -26,9 +26,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -48,10 +50,23 @@ const (
 )
 
 // A transient proof read (the API was never reached) is retried within the
-// start and never journaled. Only a verdict freezes a fallback.
+// start and never journaled as a final decision. Only a verdict freezes a
+// fallback.
 const legacyImportTransientAttempts = 3
 
 var legacyImportTransientBackoff = 2 * time.Second
+
+// A persistent partial outage (the API answers, but the proof reads stay
+// unavailable) is bounded so the provider still starts, minting a new identity
+// exactly as the documented fallback: three consecutive answered failures or
+// thirty minutes since the first one. Operator decision 2026-10-17 suggests
+// exactly these bounds; three starts covers a boot/restart blip and thirty
+// minutes covers a single long run. A total outage (the API is unreachable)
+// never counts toward the bound and keeps deferring.
+const (
+	legacyImportDeferralStarts = 3
+	legacyImportDeferralWindow = 30 * time.Minute
+)
 
 // legacyClientJwtEntry mirrors the 3.23-fix clientJWTEntry
 // (provider/client_jwt_store.go:29-34). Only these fields are read; the
@@ -71,6 +86,11 @@ type legacyImportJournalSlot struct {
 	Proof    string `json:"proof,omitempty"`
 	Reason   string `json:"reason,omitempty"`
 	Target   string `json:"target,omitempty"`
+	// A deferred slot is retry bookkeeping, not a decision: the next start
+	// proves it again. Only answered partial-outage failures count toward the
+	// bound; a total outage records the deferral without counting.
+	Deferrals       int   `json:"deferrals,omitempty"`
+	FirstDeferredAt int64 `json:"first_deferred_at,omitempty"`
 }
 
 type legacyImportJournal struct {
@@ -185,6 +205,15 @@ type legacyImportSlot struct {
 	state  string
 	proof  string
 	reason string
+	// A deferred slot counts answered partial-outage failures toward the mint
+	// bound and remembers when the first one happened. A total-outage failure
+	// is marked unreachable and never counts.
+	deferrals       int
+	firstDeferredAt int64
+	unreachable     bool
+	// fallbackRecorded marks a sticky fallback loaded from the journal: the
+	// decision is replayed quietly, not announced again.
+	fallbackRecorded bool
 }
 
 // legacyImportStoreKey is the 3.23-fix store key of a configured slot. The
@@ -370,10 +399,16 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 				// Sticky: never import this slot again. The new client is
 				// registered by the normal durable path below.
 				slot.state = "fallback"
+				slot.fallbackRecorded = true
 				slot.reason = recorded.Reason
 				if slot.reason == "" {
 					slot.reason = "import_declined_earlier"
 				}
+			case "defer":
+				// Retry bookkeeping, not a decision: prove again, keeping the
+				// partial-outage count so the bound survives restarts.
+				slot.deferrals = recorded.Deferrals
+				slot.firstDeferredAt = recorded.FirstDeferredAt
 			}
 		}
 		slots = append(slots, slot)
@@ -438,6 +473,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			// completed refusal is a fallback.
 			slot.state = "defer"
 			slot.reason = "refresh_unavailable"
+			var lastErr error
 			for attempt := 1; ; attempt++ {
 				err := prover.RefreshAccepted(ctx, slot.entry.ByClientJWT)
 				if err == nil {
@@ -446,6 +482,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 					slot.reason = ""
 					break
 				}
+				lastErr = err
 				if !legacyImportProofRetryable(err) {
 					slot.state = "fallback"
 					slot.reason = "refresh_rejected"
@@ -460,12 +497,35 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 				case <-time.After(legacyImportTransientBackoff):
 				}
 			}
+			if slot.state == "defer" {
+				slot.unreachable = legacyImportProofUnreachable(lastErr)
+			}
 		}
 		closeProver()
 	}
 	if ctx.Err() != nil {
 		// A canceled startup makes no permanent identity decision.
 		return result
+	}
+
+	// Bound a persistent partial outage: when the API answers but the proof
+	// stays unavailable, three answered failed starts or thirty minutes since
+	// the first one fall back to the documented mint. A total outage never
+	// counts and keeps deferring.
+	now := time.Now()
+	for _, slot := range slots {
+		if slot.state != "defer" || slot.unreachable {
+			continue
+		}
+		if slot.firstDeferredAt == 0 {
+			slot.firstDeferredAt = now.Unix()
+		}
+		slot.deferrals++
+		if slot.deferrals >= legacyImportDeferralStarts ||
+			now.Unix()-slot.firstDeferredAt >= int64(legacyImportDeferralWindow/time.Second) {
+			slot.state = "fallback"
+			slot.reason = "proof_unavailable_bound"
+		}
 	}
 
 	// Deferred slots made no decision: the saved credential stays untouched
@@ -489,24 +549,27 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		}
 	}
 
-	var commit, fallback []*legacyImportSlot
+	var commit, fallback, deferred []*legacyImportSlot
 	for _, slot := range slots {
 		switch slot.state {
 		case "commit":
 			commit = append(commit, slot)
 		case "fallback":
 			fallback = append(fallback, slot)
+		case "defer":
+			deferred = append(deferred, slot)
 		}
 	}
-	if len(commit) == 0 && len(fallback) == 0 {
+	if len(commit) == 0 && len(fallback) == 0 && len(deferred) == 0 {
 		return result
 	}
 
 	// Commit step 1: the marker. Writing it is the adoption semantics the
 	// manual --adopt-legacy-provider-key asserts; here the proof above is the
 	// assertion. A new client registered for a fallback slot uses this same
-	// retained seed, and the old providers ignore the marker entirely.
-	if !markerExists {
+	// retained seed, and the old providers ignore the marker entirely. A
+	// deferral alone writes nothing.
+	if (len(commit) > 0 || len(fallback) > 0) && !markerExists {
 		if err := writeLegacyImportNewFile(markerPath, marker); err != nil && !errors.Is(err, os.ErrExist) {
 			skip("marker_write_failed", err.Error())
 			return result
@@ -550,7 +613,9 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	}
 
 	// Commit step 3: the fallback decisions. The journal freezes them so a
-	// later start never imports these slots again.
+	// later start never imports these slots again. A sticky fallback loaded
+	// from the journal keeps the mint allowed but is not announced again.
+	newFallbacks := 0
 	for _, slot := range fallback {
 		journal.Slots[slot.storeKey] = legacyImportJournalSlot{
 			State:    "fallback",
@@ -559,15 +624,31 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			Target:   filepath.Base(slot.target),
 		}
 		result.mintSlots[slot.storeKey] = true
-		opts.recorder.legacyImportFallback(slot.clientID8, slot.display, slot.reason)
+		if !slot.fallbackRecorded {
+			newFallbacks++
+			opts.recorder.legacyImportFallback(slot.clientID8, slot.display, slot.reason)
+		}
+	}
+
+	// Commit step 4: deferral bookkeeping. This is not a decision: the saved
+	// credential stays untouched and the count only bounds a partial outage.
+	for _, slot := range deferred {
+		journal.Slots[slot.storeKey] = legacyImportJournalSlot{
+			State:           "defer",
+			ClientID:        slot.entry.ClientID,
+			Reason:          slot.reason,
+			Target:          filepath.Base(slot.target),
+			Deferrals:       slot.deferrals,
+			FirstDeferredAt: slot.firstDeferredAt,
+		}
 	}
 	if err := writeLegacyImportJournal(opts.stateDir, journal); err != nil {
 		// The mint may proceed without the audit record, but an unreadable
 		// journal must not silently become a decision again.
 		skip("journal_write_failed", err.Error())
 	}
-	if imported > 0 || len(fallback) > 0 || skipped > 0 {
-		opts.recorder.legacyImportSummary(imported, len(fallback), skipped)
+	if imported > 0 || newFallbacks > 0 || skipped > 0 {
+		opts.recorder.legacyImportSummary(imported, newFallbacks, skipped)
 	}
 	return result
 }
@@ -576,7 +657,28 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 // unavailable read rather than a verdict about the saved identity. The API was
 // never reached, so no permanent decision may be based on it.
 func legacyImportProofRetryable(err error) bool {
-	return clientauth.IsRegistrationRefreshUnavailable(err) || errors.Is(err, context.DeadlineExceeded)
+	return clientauth.IsRegistrationRefreshUnavailable(err) || legacyImportProofUnreachable(err)
+}
+
+// legacyImportProofUnreachable reports whether the proof error chain shows the
+// API was never reached: DNS, dial, connection or timeout errors. A total
+// outage defers indefinitely rather than minting, because a saved identity the
+// server may still accept must not be discarded while nothing can be proven.
+func legacyImportProofUnreachable(err error) bool {
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return true
+	}
+	var opErr *net.OpError
+	if errors.As(err, &opErr) {
+		return true
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+	return errors.Is(err, syscall.ECONNREFUSED) || errors.Is(err, syscall.ENETUNREACH) ||
+		errors.Is(err, syscall.EHOSTUNREACH) || errors.Is(err, syscall.ECONNRESET) ||
+		errors.Is(err, syscall.ETIMEDOUT)
 }
 
 // legacyEntryIdentity applies the safety checks that precede any import:
@@ -761,7 +863,7 @@ func readLegacyImportJournal(stateDir string) (legacyImportJournal, error) {
 		return empty, errors.New("legacy import journal has an unknown schema")
 	}
 	for _, slot := range journal.Slots {
-		if slot.State != "imported" && slot.State != "fallback" {
+		if slot.State != "imported" && slot.State != "fallback" && slot.State != "defer" {
 			return empty, errors.New("legacy import journal has an unknown slot state")
 		}
 	}
