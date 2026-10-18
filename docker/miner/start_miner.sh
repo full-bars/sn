@@ -42,6 +42,13 @@ is_true() {
 }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Local exp/nbf validation for a stored session (sourced by the entrypoint too).
+if [ -f "$SCRIPT_DIR/jwt_verify.sh" ]; then
+  . "$SCRIPT_DIR/jwt_verify.sh"
+elif [ -f "/app/jwt_verify.sh" ]; then
+  . "/app/jwt_verify.sh"
+fi
+
 # v33 operator env -> provide flags: ALL_OPERATORS, AUTO_REGISTER,
 # HOTKEY_SEED_FILE, ALLOW_CLIENT_REGISTRATION, MAX_MEMORY, PROVIDER_ARGS.
 if [ -f "$SCRIPT_DIR/provider_env.sh" ]; then
@@ -179,9 +186,26 @@ func_bootstrap() {
   fi
   log "[INFO] Running $( "$PROVIDER_BIN" --version 2>/dev/null || echo 'unknown version' )"
 
+  # Reuse a stored session only when it passes the local exp/nbf check. Same
+  # helper and policy as the entrypoint: an expired session is not reused (it
+  # can be replaced when a credential is available), and an unparseable one is
+  # left in place for the miner to report on.
+  session_reusable=0
   if [ -s "$SESSION_JWT" ]; then
-    log "[INFO] Existing session found at $SESSION_JWT; skipping authentication"
-  else
+    if command -v validate_jwt_file >/dev/null 2>&1 && ! validate_jwt_file "$SESSION_JWT"; then
+      if command -v jwt_expired >/dev/null 2>&1 && jwt_expired "$SESSION_JWT"; then
+        log "[WARN] Stored session at $SESSION_JWT is expired; not reusing it"
+      else
+        log "[WARN] Stored session at $SESSION_JWT could not be validated locally; leaving it in place for the miner to report on"
+        session_reusable=1
+      fi
+    else
+      session_reusable=1
+      log "[INFO] Existing session found at $SESSION_JWT; skipping authentication"
+    fi
+  fi
+
+  if [ "$session_reusable" -ne 1 ]; then
     auth_code="$POSITIONAL_CODE"
     if [ -z "$auth_code" ]; then
       auth_code="${URNETWORK_AUTH_CODE:-}"
@@ -205,6 +229,11 @@ func_bootstrap() {
       if is_true "${AUTO_REGISTER:-}" && [ -n "$HOTKEY_SEED_FILE" ]; then
         log "[INFO] --auto-register will sign in operators that have no session"
       fi
+    elif [ -s "$SESSION_JWT" ]; then
+      # The stored session is expired and no credential is available to
+      # replace it; keep it in place and let the miner report the auth state
+      # instead of failing the container here.
+      log "[WARN] No credential is available to replace the expired session at $SESSION_JWT; the miner will report the auth state"
     else
       log "[ERROR] No stored session and no usable credential: set AUTHCODE, or OPERATOR with HOTKEY_SEED_FILE, or USER_AUTH and PASSWORD"
       exit 1

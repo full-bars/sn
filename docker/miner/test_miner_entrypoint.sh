@@ -147,6 +147,10 @@ h="$tmp/h15"; mkdir -p "$h/.urnetwork"; printf 'not-a-jwt\n' > "$h/.urnetwork/jw
 run_entry "$h" "-" "not-a-jwt" "$tmp/l15" 0 AUTH=authcode
 t "an unparseable session is left in place for the miner to report" sh -c "[ -s '$h/.urnetwork/jwt' ] && grep -q 'could not be validated locally' '$tmp/l15.out'"
 
+h="$tmp/h23"; mkdir -p "$h/.urnetwork"; printf '%s\n' "$EXPIRED_JWT" > "$h/.urnetwork/jwt"
+run_entry "$h" "-" "" "$tmp/l23" 0 AUTH=authcode
+t "an expired session with no code still reaches provide for the miner to report" sh -c "grep -q 'expired; not reusing it' '$tmp/l23.out' && grep -q 'miner will report the auth state' '$tmp/l23.out' && grep -q 'argv: provide' '$tmp/l23' && [ -s '$h/.urnetwork/jwt' ]"
+
 echo "--- operator mode ---"
 h="$tmp/h16"
 run_entry "$h" ".urnetwork/operators/example.invalid/jwt" "$VALID_JWT" "$tmp/l16" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" \
@@ -241,6 +245,14 @@ t "jwt_expired does not fire on a valid token" sh -c "! jwt_expired '$tmp/v.jwt'
 printf 'not-a-jwt\n' > "$tmp/n.jwt"
 t "jwt_expired does not fire on an unparseable token" sh -c "! jwt_expired '$tmp/n.jwt'"
 t "jwt_verify rejects an nbf in the future" sh -c "printf '%s\n' '$hdr.$(b64url "{\"exp\":$((now + 3600)),\"nbf\":$((now + 3600))}").sig' > '$tmp/nbf.jwt' && ! validate_jwt_file '$tmp/nbf.jwt'"
+
+echo "--- jwt_verify.sh is shared with docker/scripts ---"
+t "the two jwt_verify.sh copies are identical" cmp -s "$REPO/docker/scripts/jwt_verify.sh" "$REPO/docker/miner/jwt_verify.sh"
+# shellcheck source=docker/scripts/jwt_verify.sh
+. "$REPO/docker/scripts/jwt_verify.sh"
+t "the shared helper accepts a valid token" validate_jwt_file "$tmp/v.jwt"
+t "the shared helper rejects an expired token" sh -c "! validate_jwt_file '$tmp/e.jwt'"
+t "the shared helper does not treat an unparseable token as expired" sh -c "! jwt_expired '$tmp/n.jwt'"
 
 echo ""
 echo "Results: $pass passed, $fail failed"
