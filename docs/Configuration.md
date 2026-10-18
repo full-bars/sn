@@ -197,28 +197,20 @@ proxies plus the direct identity; `h3_proxies` is the proxy count only. In
 `/metrics` the same split is `urnet_h3_set_size` (the grand total) and
 `urnet_h3_proxy_set_size` (proxies only), alongside `urnet_h3_mode_info`.
 
-**Whether H3 offers DATAGRAM.** The engine enables the offer by default; sn
-gates it so an operator decides.
+**Whether H3 offers DATAGRAM.** QUIC DATAGRAM is always on at the upstream
+default in this build: the offer is made on every H3 connection, and a server
+that accepts sends its small frames to this provider as datagrams while a
+server that does not understand the offer echoes it back and the connection
+runs on the plain stream. There is no toggle and no environment variable.
 
-| Key | Values | Default | Command | Meaning |
-| :--- | :--- | :--- | :--- | :--- |
-| `h3_datagram` | `on`, `off` | `off` | `urnet-tools set h3-datagram on\|off` | Offer QUIC DATAGRAM when an H3 connection dials. A server that accepts sends its small frames to this provider as datagrams. A server that does not understand the offer echoes it back and the connection runs on the plain stream. There is no environment variable. |
-| `h3_datagram_send` | `on`, `off` | `off` | `urnet-tools set h3-datagram-send on\|off` | Also send small frames as datagrams on a connection where the server accepted DATAGRAM. Larger frames and everything else stay on the reliable stream. |
+The `h3_datagram` and `h3_datagram_send` control keys are accepted so 3.23-fix
+tooling does not fail, but they change nothing here: setting either one returns
+an explicit acknowledgement that datagrams stay on at the upstream default
+instead of claiming an effect the pinned connect revision cannot provide.
+Clearing them restores the same always-on default.
 
-Both keys are live: no restart. `h3-datagram` is read when an H3 connection
-dials, so changing it re-dials that connection with the new setting; a box with
-the offer off grows no datagram health fields. `h3-datagram-send` is read per
-message, so it takes effect on the next message with no reconnect.
-
-DATAGRAM only carries traffic on an H3 connection where the server accepted the
-offer, so turning it on one box first and watching `[health]` (`h3_dg_rx`,
-`dg_tx`, `dg_tx_stream`, `dg_tx_err`) and `/metrics` (`urnet_h3_datagram_*`) is
-the intended first step. There is no `offered`/`accepted` counter on this
-provider yet: the pinned connect revision exposes the data plane but not those
-counters.
-
-Which identities may offer datagrams follows the `h3` set, decided by the one
-predicate `snH3Eligible` in `provider/h3_mode.go`.
+Which identities carry the datagram-capable H3 connections follows the `h3`
+set above.
 
 ## 🎛️ Profile Selection
 
