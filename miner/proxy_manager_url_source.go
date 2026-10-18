@@ -874,15 +874,19 @@ type reaperProbeTarget struct {
 // before the probe fields existed). Entries that fail proxyAPIMaxFails
 // consecutive probes are moved to the persistent Blacklist. Runs every
 // proxyReaperInterval. Exits when ctx is cancelled.
-func runURLProxyReaper(ctx context.Context, apiHost string, apiPort uint16) {
-	ticker := time.NewTicker(proxyReaperInterval)
+//
+// The startup grading gate (proxy_manager_gate.go) holds the pass - the
+// stage-1 table probes and the stale-reaper demotions - until the launched
+// pool is up. A nil gate (a caller with no manager) is open.
+func runURLProxyReaper(ctx context.Context, apiHost string, apiPort uint16, gate *gradingGate) {
+	ticker := time.NewTicker(gradingLoopInterval)
 	defer ticker.Stop()
 
 	for {
 		// Publish the countdown BEFORE the pass so the first cycle is not
 		// "unknown" and the estimate is not systematically late by the
 		// pass duration.
-		setNextGradeRefreshAt(time.Now().Add(proxyReaperInterval))
+		setNextGradeRefreshAt(time.Now().Add(gradingLoopInterval))
 		select {
 		case <-ctx.Done():
 			// Clear the published refresh estimate on shutdown so the
@@ -890,6 +894,10 @@ func runURLProxyReaper(ctx context.Context, apiHost string, apiPort uint16) {
 			setNextGradeRefreshAt(time.Time{})
 			return
 		case <-ticker.C:
+		}
+		if !gate.wait(ctx) {
+			setNextGradeRefreshAt(time.Time{})
+			return
 		}
 		runURLProxyReaperOnce(ctx, apiHost, apiPort)
 	}
@@ -1246,7 +1254,12 @@ func pruneURLProxyBlacklist(ctx context.Context) {
 // at high pressure), so a drowning box adds probe/auth/reload work more
 // slowly instead of stopping dead. A near-empty cache is never stretched,
 // so a fresh box under load still bootstraps.
-func runProxyURLFetcher(ctx context.Context, urls []string, refreshInterval time.Duration, maxTotal int, apiHost string, apiPort uint16, selfHealEnabled bool) {
+//
+// gate is the startup grading gate (proxy_manager_gate.go): while held, the
+// fetch + stage-1 admission probe cycle does not start, so a fresh box never
+// probes a URL list before its workers exist. A nil gate (a caller with no
+// manager) is open.
+func runProxyURLFetcher(ctx context.Context, urls []string, refreshInterval time.Duration, maxTotal int, apiHost string, apiPort uint16, selfHealEnabled bool, gate *gradingGate) {
 	if len(urls) == 0 {
 		// Publish why the countdown line will stay zero forever: nothing
 		// to fetch.
@@ -1279,7 +1292,16 @@ func runProxyURLFetcher(ctx context.Context, urls []string, refreshInterval time
 	case <-time.After(probeStartupCooldown):
 	}
 
-	// The initial fetch is always allowed (cold-start / starvation escape).
+	// The startup grading gate (proxy_manager_gate.go) holds the fetch + stage-1
+	// admission probe cycle until the launched pool is up; the crash-loop
+	// cooldown above still runs first, so a box that cannot stay alive never
+	// probes. The initial fetch is always allowed after the gate opens
+	// (cold-start / starvation escape). A nil gate (a caller with no manager)
+	// is open.
+	if !gate.wait(ctx) {
+		setURLFetcherState("inactive")
+		return
+	}
 	fetchAndMergeProxyURLs(ctx, urls, resolveEffectiveProxyURLMax(maxTotal, selfHealEnabled), apiHost, apiPort)
 	lastFetch := time.Now()
 
@@ -1306,6 +1328,13 @@ func runProxyURLFetcher(ctx context.Context, urls []string, refreshInterval time
 			setURLFetcherState("inactive")
 			return
 		case <-ticker.C:
+			// The gate holds each fetch + stage-1 probe cycle until the pool
+			// is up; it opens once and never closes.
+			if !gate.wait(ctx) {
+				setNextFetchProbeAt(time.Time{})
+				setURLFetcherState("inactive")
+				return
+			}
 			// Re-check runtime overrides on every tick
 			if ni := resolveProxyURLRefresh(refreshInterval); ni != activeInterval {
 				ticker.Stop()

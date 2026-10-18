@@ -56,8 +56,13 @@ type gradeTarget struct {
 // runPaidProxyGrader drives the paid/file-proxy grade sweep on the reaper
 // ticker cadence. The pass itself is split out so it can be exercised
 // directly in tests without waiting on proxyReaperInterval.
-func runPaidProxyGrader(ctx context.Context, apiHost string, apiPort uint16) {
-	ticker := time.NewTicker(proxyReaperInterval)
+//
+// The startup grading gate (proxy_manager_gate.go) holds the sweep until the
+// launched pool is up: while held, a tick waits instead of grading, and the
+// first pass runs as the gate opens. A nil gate (a caller with no manager) is
+// open.
+func runPaidProxyGrader(ctx context.Context, apiHost string, apiPort uint16, gate *gradingGate) {
+	ticker := time.NewTicker(gradingLoopInterval)
 	defer ticker.Stop()
 
 	for {
@@ -65,6 +70,9 @@ func runPaidProxyGrader(ctx context.Context, apiHost string, apiPort uint16) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+		}
+		if !gate.wait(ctx) {
+			return
 		}
 		runPaidProxyGradeOnce(ctx, apiHost, apiPort)
 	}

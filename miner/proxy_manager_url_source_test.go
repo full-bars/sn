@@ -388,7 +388,7 @@ func TestRunProxyURLFetcher_StopsOnContextCancel(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() {
-		runProxyURLFetcher(ctx, []string{srv.URL}, time.Hour, 0, "", 0, true)
+		runProxyURLFetcher(ctx, []string{srv.URL}, time.Hour, 0, "", 0, true, nil)
 		close(done)
 	}()
 
@@ -419,7 +419,7 @@ func TestRunProxyURLFetcher_StartupCooldownDefersFirstFetch(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() {
-		runProxyURLFetcher(ctx, []string{srv.URL}, time.Hour, 0, "", 0, true)
+		runProxyURLFetcher(ctx, []string{srv.URL}, time.Hour, 0, "", 0, true, nil)
 		close(done)
 	}()
 
@@ -459,7 +459,7 @@ func TestRunProxyURLFetcher_WarmupCancelSetsInactiveState(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() {
-		runProxyURLFetcher(ctx, []string{"http://example.invalid/urls"}, time.Hour, 0, "", 0, true)
+		runProxyURLFetcher(ctx, []string{"http://example.invalid/urls"}, time.Hour, 0, "", 0, true, nil)
 		close(done)
 	}()
 
