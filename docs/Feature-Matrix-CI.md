@@ -215,7 +215,7 @@ Enable it when running with a large budget or on a private runner:
 ## Wiring the feature-matrix job into distro-matrix.yml
 
 `.github/workflows/distro-matrix.yml` is owned by the release-distro work; do
-not edit it from this branch. Two changes wire the harness in:
+not edit it from this branch. Three changes wire the harness in:
 
 1. one line in the existing `build-binaries` job (next to the
    `cp .github/scripts/distro-smoke.sh out/distro-smoke.sh` line):
@@ -348,6 +348,13 @@ The step `exit "$rc"` fails the cell on FAIL (rc=1) and on ENV_BLOCKER
 cell. `STATE_HOME: /tmp/feature-matrix/home` is the explicit isolated HOME
 the harness writes into; the container is disposable, so its /etc/passwd
 adaptation (the discovery contract) is container-local.
+
+For the workflow owner (`feat/p2-distro-ci`, which owns `distro-matrix.yml`
+and `distro-smoke.sh`), the third change: the workflow's trailing `summary`
+job aggregates the cells by name (`needs:` plus a `check` row per cell), so
+add `distro-features` there too — otherwise a feature cell that fails
+(harness rc=1 or rc=75) is visible in its own job but does not fail the
+aggregated summary the way the smoke cells do.
 
 ## Running locally
 
