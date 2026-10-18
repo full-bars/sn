@@ -891,8 +891,20 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		proxyAddr := ""
 		if proxySettings != nil {
 			proxyAddr = proxySettings.Address
-			// Use address hash as proxy index for bandwidth tracking.
-			bw = bwRegistry.Register(int(addressHash(proxyAddr) & 0x7fffffff))
+			// Key the counters by proxy IDENTITY (address, or address+user for
+			// a credentialed proxy), not by the bare address: two accounts
+			// behind one gateway are different paid proxies, and a counter
+			// shared between them would credit each identity with the other's
+			// bytes — the earnings store and the per-proxy earn tracker both
+			// key by identity, and the control report's totals are per proxy.
+			bw = bwRegistry.Register(proxyIdentityBandwidthIndex(proxySettings))
+			// Publish the same counter for the earnings recording loop
+			// (proxy_manager_earnings_loop.go), which folds it into the earned
+			// history and the earn tracker once a minute. Withdrawn when the
+			// slot exits: an offline identity leaves the live snapshot, while
+			// its earnings record survives in the store.
+			publishProxyEarnBandwidth(proxySettings.Key(), bw)
+			defer unpublishProxyEarnBandwidth(proxySettings.Key())
 		}
 		clientStrategySettings.ConnectSettings = bandwidth.WrapConnectSettings(
 			clientStrategySettings.ConnectSettings, bw, proxyAddr,
@@ -1629,14 +1641,14 @@ func writeProxyConfig(proxyConfig *ProxyConfig) {
 	}
 }
 
-// addressHash returns a stable uint32 hash of an address string,
+// addressHash returns a stable uint32 hash of a string,
 // used as a proxy index for bandwidth tracking in v2026 where
 // ProxySettings has no Index field.
 //
 // DESIGN ADAPTATION: The fork's connect.ProxySettings carried an int Index
 // field assigned at proxy registration time. v2026 removed this —
-// ProxySettings only has Network, Address, Auth. We hash the address to
-// produce a stable integer key for the bandwidth registry. Collisions are
+// ProxySettings only has Network, Address, Auth. We hash the proxy identity
+// to produce a stable integer key for the bandwidth registry. Collisions are
 // acceptable (two proxies sharing a hash just share a counter) and rare
 // for realistic proxy counts.
 func addressHash(addr string) uint32 {
@@ -1645,4 +1657,18 @@ func addressHash(addr string) uint32 {
 		h = h*31 + uint32(addr[i])
 	}
 	return h
+}
+
+// proxyIdentityBandwidthIndex is the bandwidth registry index for one proxy
+// slot: the hash of the proxy IDENTITY key (address, or address+user for a
+// credentialed proxy). Hashing the identity instead of the bare address keeps
+// two accounts behind one gateway address on separate counters, so the
+// earnings store and the earn tracker — which both key by identity — never
+// credit one account with the other's billable bytes. The direct slot is not
+// a proxy and keeps index 0.
+func proxyIdentityBandwidthIndex(settings *connect.ProxySettings) int {
+	if settings == nil {
+		return 0
+	}
+	return int(addressHash(settings.Key()) & 0x7fffffff)
 }
