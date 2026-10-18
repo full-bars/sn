@@ -175,10 +175,26 @@ h="$tmp/h22"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l22" 0 AUTH=authcode ALL_OPERATORS=Y
 t "ALL_OPERATORS with no credential runs without a network sign-in" sh -c "grep -q \"uses each operator's stored session\" '$tmp/l22.out' && ! grep -q 'argv: auth' '$tmp/l22' && grep -q 'argv: provide --all-operators' '$tmp/l22'"
 
-echo "--- BUILD is ignored, not honored ---"
+echo "--- BUILD deprecation and conflict resolution (AUTH wins) ---"
 h="$tmp/h17"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l17" 0 BUILD=jwt AUTH=authcode AUTHCODE="$FAKE_CODE"
-t "BUILD on the miner image logs a warning" grep -q "BUILD is not supported by the miner image" "$tmp/l17.out"
+t "a consistent BUILD still logs the unsupported warning" grep -q "BUILD is not supported by the miner image" "$tmp/l17.out"
+
+h="$tmp/h24"; mkdir -p "$h/.urnetwork"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/l24" 0 BUILD=stable AUTH=authcode AUTHCODE="$FAKE_CODE"
+t "a conflicting BUILD and AUTH log the conflict and AUTH is used" sh -c "grep -q \"Conflicting AUTH='authcode' and BUILD='stable' specified\" '$tmp/l24.out' && grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l24' && grep -q 'argv: provide' '$tmp/l24'"
+
+h="$tmp/h25"; mkdir -p "$h/.urnetwork"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/l25" 0 BUILD=nightly AUTHCODE="$FAKE_CODE"
+t "BUILD alone logs the deprecation hint and AUTH is inferred from the code" sh -c "grep -q 'BUILD is deprecated for auth selection' '$tmp/l25.out' && grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l25'"
+
+h="$tmp/h26"; mkdir -p "$h/.urnetwork"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/l26" 0 AUTH=UserPass USER_AUTH=fake-user PASSWORD="$FAKE_PW"
+t "AUTH is matched case-insensitively" sh -c "grep -q 'argv: auth --user_auth=fake-user --password=$FAKE_PW -f' '$tmp/l26'"
+
+h="$tmp/h27"; mkdir -p "$h/.urnetwork"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/l27" 0 AUTH=authcode URNETWORK_AUTH_CODE="$FAKE_CODE"
+t "URNETWORK_AUTH_CODE works without AUTHCODE" sh -c "grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l27'"
 
 echo "--- volume warning ---"
 h="$tmp/h18"

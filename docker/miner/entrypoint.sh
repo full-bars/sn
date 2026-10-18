@@ -37,12 +37,28 @@ if [ -z "${URNETWORK_AUTH_CODE:-}" ] && [ -n "${AUTHCODE:-}" ]; then
   export URNETWORK_AUTH_CODE="$AUTHCODE"
 fi
 
-if [ -n "${BUILD:-}" ]; then
-  log "WARNING: BUILD is not supported by the miner image and is ignored (use AUTH=userpass|authcode)"
-fi
-
 AUTH_RAW="${AUTH:-}"
 AUTH_LC="$(printf '%s' "$AUTH_RAW" | tr '[:upper:]' '[:lower:]')"
+
+# BUILD deprecation hint and conflict resolution (the v33 entrypoint
+# contract). The 3.23-fix entrypoint derives the build from AUTH and lets an
+# explicit BUILD win a conflict; this image selects the auth path with AUTH
+# only, so BUILD is accepted, ignored, and AUTH always wins.
+if [ -n "${BUILD:-}" ]; then
+  case "$AUTH_LC" in
+    userpass) AUTH_EXPECTED_BUILD="stable" ;;
+    authcode) AUTH_EXPECTED_BUILD="jwt" ;;
+    *)        AUTH_EXPECTED_BUILD="" ;;
+  esac
+  BUILD_LC="$(printf '%s' "$BUILD" | tr '[:upper:]' '[:lower:]')"
+  if [ -z "$AUTH_LC" ]; then
+    log "WARNING: BUILD is deprecated for auth selection, use AUTH=userpass|authcode (BUILD='$BUILD' is not supported by the miner image)"
+  elif [ -n "$AUTH_EXPECTED_BUILD" ] && [ "$BUILD_LC" != "$AUTH_EXPECTED_BUILD" ]; then
+    log "WARNING: Conflicting AUTH='$AUTH_RAW' and BUILD='$BUILD' specified; the miner image ignores BUILD and uses AUTH='$AUTH_LC'"
+  else
+    log "WARNING: BUILD is not supported by the miner image and is ignored (AUTH='$AUTH_LC' applies)"
+  fi
+fi
 
 if [ -z "$AUTH_LC" ]; then
   if [ -n "${URNETWORK_AUTH_CODE:-}" ] || [ "$#" -gt 0 ]; then

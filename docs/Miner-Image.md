@@ -70,7 +70,9 @@ run the baked `provider-relay` in direct mode, give it the relay image's flags
 | `PROXY_FILE` | Proxy file added with `provider proxy add --proxy_file` at startup (default `/app/proxy.txt`). |
 | `URNETWORK_STATE_DIR` | State directory override; defaults to `$HOME/.urnetwork`. |
 
-`BUILD` is not supported by this image and logs a warning if set.
+`BUILD` is not supported by this image and logs a warning if set; when
+`BUILD` and `AUTH` are both set and would select different paths, the
+conflict is logged and `AUTH` wins.
 
 ## Startup behavior
 
