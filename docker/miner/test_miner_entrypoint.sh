@@ -265,7 +265,12 @@ t "Pelican mode refuses runtime updates" sh -c "grep -q 'runtime updates are dis
 
 out="$(sh "$UTS" proxy health 2>&1)"; rc=$?
 printf '%s' "$out" > "$tmp/ut-proxy.out"
-t "proxy health names the missing helper instead of failing silently" sh -c "grep -q 'proxy-health not found' '$tmp/ut-proxy.out' && [ $rc -ne 0 ]"
+if [ -x /usr/local/bin/proxy-health ]; then
+  # Inside the built image the helper exists on PATH: the wrapper must run it.
+  t "proxy health runs the installed helper" sh -c "[ $rc -eq 0 ] && ! grep -q 'proxy-health not found' '$tmp/ut-proxy.out'"
+else
+  t "proxy health names the missing helper instead of failing silently" sh -c "grep -q 'proxy-health not found' '$tmp/ut-proxy.out' && [ $rc -ne 0 ]"
+fi
 
 # Program classifier / install guard, exercised through the source-only seam
 # with stubbed binaries (no network, no container).
