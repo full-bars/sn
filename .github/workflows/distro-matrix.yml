@@ -82,6 +82,7 @@ jobs:
           # run.
           cp .github/scripts/distro-smoke.sh out/distro-smoke.sh
           cp .github/scripts/distro-features.sh out/distro-features.sh
+          cp .github/scripts/acceptance-matrix.sh out/acceptance-matrix.sh
 
       - name: Upload the payload
         id: upload
@@ -320,6 +321,124 @@ jobs:
           } >>"$GITHUB_STEP_SUMMARY" || true
           # Make the skips/findings visible inline even when the job fails.
           grep -E '^(FAIL|SKIP-NO-NETWORK|SKIP-UNSUPPORTED) ' /tmp/feature-matrix.log 2>/dev/null || true
+
+  # --------------------------------------------------------------------------
+  # Tier 1c: the acceptance matrix — the committed, repeatable form of the
+  # ad-hoc P2 acceptance workbench (scratch/p2b/acc1, scratch/p2d). Runs
+  # .github/scripts/acceptance-matrix.sh in the distro's own userland:
+  #   (a) the hot-restart identity reuse matrix (fresh mint -> reuse ->
+  #       URNETWORK_HOT_RESTART=0 new -> reuse -> renew keeps the id -> reuse;
+  #       .client_jwts.json keeps the v33 shape),
+  #   (b) the urnet-tools command surface against the running daemon
+  #       (version/status/snapshot/traffic/internals/goroutines/history, the
+  #       restored v33 commands, control keys incl. metrics on + the /metrics
+  #       scrape, logs, proxy commands with synthetic TEST-NET-1 entries),
+  #   (c) the urnet-docker runtime checks that apply to the miner line — this
+  #       SKIP-NO-DOCKER here, because container jobs have no docker daemon
+  #       (run the script locally with the host /var/run/docker.sock and a
+  #       docker CLI to exercise them),
+  #   (d) command-tree parity for the documented v33 inventories.
+  # netcat-openbsd is installed for the raw control-socket probes (traffic/
+  # internals/goroutines — the requests urnet-tools itself sends) and curl for
+  # the /metrics scrape; without them those checks SKIP with the tool named,
+  # never fail. The JWT is minted once here (the distro-features pattern),
+  # guarded against the production account, and passed via JWT_FILE env; the
+  # script also carries the guard and never prints the token.
+  # --------------------------------------------------------------------------
+  acceptance-matrix:
+    name: acceptance matrix (debian:stable-slim)
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read # the token is used below to fetch this run's payload artifact
+    container:
+      image: debian:stable-slim
+    steps:
+      - name: Install curl + unzip + netcat in the distro image
+        run: |
+          set -eu
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+            curl unzip ca-certificates netcat-openbsd
+          nc -h 2>&1 | head -n 1 || true
+
+      - name: Fetch the payload (artifact REST API; no JS action, so musl works)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          mkdir -p /tmp/payload
+          url="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ needs.build-binaries.outputs.artifact-id }}/zip"
+          curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -o /tmp/payload.zip "$url"
+          unzip -q -o /tmp/payload.zip -d /tmp/payload
+          chmod +x /tmp/payload/miner /tmp/payload/urnet-tools /tmp/payload/urnet-docker /tmp/payload/acceptance-matrix.sh
+          ls -l /tmp/payload
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          set -eu
+          mkdir -p /tmp/mint /tmp/fixtures
+          HOME=/tmp/mint /tmp/payload/miner auth \
+            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
+          test -s /tmp/mint/.urnetwork/jwt || {
+            echo "::error::JWT mint failed (verification required?)"; tail -n 20 /tmp/mint/auth.log; exit 1; }
+          cp /tmp/mint/.urnetwork/jwt /tmp/fixtures/jwt
+          chmod 600 /tmp/fixtures/jwt
+          # Production-account refusal guard, decoded with POSIX tools: this
+          # image has no python3 and no jq. The token is never printed.
+          payload="$(cut -d. -f2 /tmp/fixtures/jwt | tr '_-' '/+')"
+          pad=$(( (4 - ${#payload} % 4) % 4 ))
+          i=0; while [ "$i" -lt "$pad" ]; do payload="$payload="; i=$((i + 1)); done
+          if printf '%s' "$payload" | base64 -d >/tmp/mint/jwt-payload.json 2>/dev/null &&
+             [ -s /tmp/mint/jwt-payload.json ]; then
+            if grep -q 'mesocyclone' /tmp/mint/jwt-payload.json; then
+              echo "::error::REFUSING: the minted JWT is the production account"; exit 1
+            fi
+            echo "minted a disposable JWT (account guarded, token never printed)"
+          else
+            echo "::warning::could not decode the JWT payload; the production-account guard was not applied"
+          fi
+          rm -rf /tmp/mint
+
+      - name: Syntax-check the acceptance script
+        run: sh -n /tmp/payload/acceptance-matrix.sh || { echo "::error::acceptance-matrix.sh syntax error"; exit 1; }
+
+      - name: Run the acceptance matrix (the harness creates its isolated HOME)
+        env:
+          BIN_DIR: /tmp/payload
+          JWT_FILE: /tmp/fixtures/jwt
+          OUT_DIR: /tmp/acceptance-out
+          TIMEOUT_S: "90"
+          IDENTITY_TIMEOUT_S: "240"
+        run: |
+          # POSIX sh on purpose: this runs in the distro's own shell. The
+          # harness never prints the token; its report and logs stay inside
+          # OUT_DIR (the raw store is never copied; only a redacted rendering).
+          set +e
+          sh /tmp/payload/acceptance-matrix.sh >/tmp/acceptance-matrix.log 2>&1
+          rc=$?
+          cat /tmp/acceptance-matrix.log
+          echo "harness rc=$rc"
+          exit "$rc"
+
+      - name: Publish the acceptance summary
+        if: always()
+        run: |
+          {
+            echo "### acceptance matrix — debian:stable-slim"
+            echo
+            echo '```'
+            sed -n '/acceptance-matrix summary/,$p' /tmp/acceptance-matrix.log 2>/dev/null || echo "(no harness output)"
+            echo '```'
+          } >>"$GITHUB_STEP_SUMMARY" || true
+          # Make the skips/findings visible inline even when the job fails.
+          grep -E '^(FAIL|SKIP-[A-Z]+) ' /tmp/acceptance-matrix.log 2>/dev/null || true
 
   # --------------------------------------------------------------------------
   # Tier 2: systemd cells. A privileged container whose PID 1 is /sbin/init, so
@@ -951,7 +1070,7 @@ jobs:
   summary:
     name: release-matrix summary
     if: always()
-    needs: [build-binaries, distro-smoke, distro-features, systemd, windows, macos, freebsd]
+    needs: [build-binaries, distro-smoke, distro-features, acceptance-matrix, systemd, windows, macos, freebsd]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -960,6 +1079,7 @@ jobs:
           BUILD_BINARIES: ${{ needs.build-binaries.result }}
           DISTRO_SMOKE: ${{ needs.distro-smoke.result }}
           DISTRO_FEATURES: ${{ needs.distro-features.result }}
+          ACCEPTANCE_MATRIX: ${{ needs.acceptance-matrix.result }}
           SYSTEMD: ${{ needs.systemd.result }}
           WINDOWS: ${{ needs.windows.result }}
           MACOS: ${{ needs.macos.result }}
@@ -986,6 +1106,7 @@ jobs:
           row "build-binaries (linux/amd64)" "$BUILD_BINARIES" "miner + urnet-tools + urnet-docker, CGO_ENABLED=0"
           check "distro-smoke (7 Linux images)" "$DISTRO_SMOKE" "debian, almalinux, fedora, leap 15.6, tumbleweed, arch, alpine"
           check "distro-features (2 images)" "$DISTRO_FEATURES" "debian stable slim + alpine: risky surfaces, url pipeline, broad surface (glibc + musl)"
+          check "acceptance matrix (debian)" "$ACCEPTANCE_MATRIX" "hot-restart identity reuse, urnet-tools surface vs the daemon, urnet-docker runtime (SKIP-NO-DOCKER in container jobs), v33 parity"
           check "systemd (6 images)" "$SYSTEMD" "install/start/socket/status/stop/restart/crash; TODO cells marked in the log"
           check "windows-latest" "$WINDOWS" "build+vet+unit tests+miner+control socket (socket gap recorded, not faked)" conditional
           check "macos-13 + macos-14" "$MACOS" "build+vet+unit tests+launchd lifecycle; macOS socket probe is record-only" conditional

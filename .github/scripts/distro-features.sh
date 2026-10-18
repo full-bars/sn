@@ -20,21 +20,26 @@
 # Blocks:
 #   BLOCK 1 — risky surfaces, first: control-socket security (0600 perm, peer
 #             uid, oversize set, one-line framing), identity + restart (mint,
-#             clean SIGTERM, client-id reuse / HOT_RESTART=0 new ids, exit-75),
-#             hotswap/execve handoff (conditional), the registration identity
-#             gate, metrics bind policy (conditional), side-effectful control
-#             keys with before/after state, sandbox state paths, corrupt-state
+#             clean SIGTERM, client-id reuse across restart, HOT_RESTART=0
+#             fresh-mint, events.log lifecycle lines, exit-75), ramlog routing
+#             (URNETWORK_RAMLOGS / profile lowmem / persisted ramlogs key ->
+#             /dev/shm/urnetwork.log + important.log), hotswap handoff with
+#             /metrics rebind, the registration identity gate, metrics control
+#             wiring + HTTP scrape + bind policy, control-key live-apply and
+#             needs-restart semantics, sandbox state paths, corrupt-state
 #             recovery.
 #   BLOCK 2 — URL source pipeline (mandatory): add-source of the real public
 #             lists, the [proxy][url] log vocabulary, cache/state coherence,
 #             cached-skip on a second cycle, remove-source; urnet-tools
 #             manipulation on deterministic synthetic entries (add, remove,
-#             trim preview/apply, remove-dead, refresh, paste/clear
-#             conditional). Per-container jitter + source gaps + randomized
+#             trim preview/apply, remove-dead, refresh, remove --match,
+#             paste/clear). Per-container jitter + source gaps + randomized
 #             order (see the STAGGER section and docs/Feature-Matrix-CI.md).
-#   BLOCK 3 — broad surface: version/status/health/traffic/ids/summary/config
-#             and the conditional exporter/audit/hotswap surfaces, as far as
-#             this head implements them.
+#   BLOCK 3 — broad surface: version/status/health/traffic/ids/summary/config,
+#             the provider's proxy-exclude grammar, the full documented v33
+#             command tree (help surface), and the conditional
+#             exporter/audit/graders surfaces, as far as this head implements
+#             them.
 #
 # Classification:
 #   PASS              the documented behavior was observed
@@ -49,8 +54,12 @@
 # Scope: this script reads the binaries and writes only inside STATE_HOME. It
 # never pushes, tags, opens PRs, comments, or reruns workflows.
 #
-# Portability notes: the network-facing lines were verified against the pinned
-# miner (wt-sn-daemon @85de151ac) and urnet-tools (wt-rc6 @9bdb0909a).
+# Portability notes: the network-facing lines were verified in containerized
+# runs (debian:stable-slim, alpine:latest, almalinux:9) against the integrated
+# one-program head; see docs/Feature-Matrix-CI.md §Verified runs for the
+# binary SHA256s and the per-distro verdicts. Checks self-detect the surfaces
+# of whatever head they are pointed at; a surface that is genuinely absent is
+# SKIP-UNSUPPORTED with the owning port named.
 
 set -u
 
@@ -124,6 +133,141 @@ firstline() { head -1 2>/dev/null | cut -c1-200; }
 json_has() { printf '%s' "$1" | grep -q "$2" 2>/dev/null; }
 grep_c() { grep -c -- "$1" 2>/dev/null || true; } # always prints a number
 as_num() { case "${1:-}" in ''|*[!0-9]*) printf '0' ;; *) printf '%s' "$1" ;; esac; }
+
+# ---------------------------------------------------------------------------
+# JWT / client-id helpers (never print the token, only its client_id claim)
+# ---------------------------------------------------------------------------
+# jwt_payload prints the base64url-decoded JWT payload for a token file using
+# only POSIX tools (these images have no python3 and no jq).
+jwt_payload() { # $1=file
+    b64="$(cut -d. -f2 "$1" 2>/dev/null | tr '_-' '/+')"
+    [ -n "$b64" ] || return 1
+    pad=$(( (4 - ${#b64} % 4) % 4 )); i=0
+    while [ "$i" -lt "$pad" ]; do b64="${b64}="; i=$((i + 1)); done
+    printf '%s' "$b64" | base64 -d 2>/dev/null
+}
+
+# json_client_id extracts the first "client_id" string value from JSON on
+# stdin (the client-JWT store and decodable JWT payloads share the field name).
+json_client_id() {
+    sed -n 's/.*"client_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' 2>/dev/null | head -1
+}
+
+jwt_client_id() { [ -r "$1" ] && jwt_payload "$1" 2>/dev/null | json_client_id; }
+store_client_id() { # $1=store file; prefers the "direct" slot's entry
+    [ -r "$1" ] || return 0
+    direct="$(sed -n '/"direct"[[:space:]]*:/,/^[[:space:]]*}/p' "$1" 2>/dev/null | json_client_id)"
+    [ -n "$direct" ] || direct="$(json_client_id <"$1")"
+    printf '%s' "$direct"
+}
+
+# short fingerprint of a client id for report lines (never the whole claim)
+cid_short() {
+    case "${1:-}" in
+        '') printf 'none' ;;
+        *) printf '%s..%s' "$(printf '%s' "$1" | cut -c1-8)" "$(printf '%s' "$1" | tail -c 4)" ;;
+    esac
+}
+
+# ---------------------------------------------------------------------------
+# HTTP fetch tool (for the /metrics scrape)
+# ---------------------------------------------------------------------------
+# HTTP_FETCH is one of curl / wget / busybox-wget, or empty when none is
+# available even after an install attempt. busybox wget covers alpine and
+# other busybox userlands; curl covers the CI images (the job installs it).
+HTTP_FETCH=""
+detect_http_fetch() {
+    [ -n "$HTTP_FETCH" ] && return 0
+    if have curl; then HTTP_FETCH="curl"; return 0; fi
+    if have wget; then HTTP_FETCH="wget"; return 0; fi
+    if have busybox && busybox wget --help >/dev/null 2>&1; then HTTP_FETCH="busybox-wget"; return 0; fi
+    # Install one where the image gives us a package manager and root.
+    if [ "$(id -u 2>/dev/null || echo 0)" = "0" ]; then
+        if have apt-get; then
+            (apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl) >/dev/null 2>&1 || true
+        elif have apk; then
+            apk add --no-cache curl >/dev/null 2>&1 || true
+        elif have dnf; then
+            dnf install -y curl >/dev/null 2>&1 || dnf install -y --allowerasing curl-minimal >/dev/null 2>&1 || true
+        elif have microdnf; then
+            microdnf install -y curl >/dev/null 2>&1 || true
+        elif have yum; then
+            yum install -y curl >/dev/null 2>&1 || true
+        fi
+    fi
+    if have curl; then HTTP_FETCH="curl"; return 0; fi
+    if have wget; then HTTP_FETCH="wget"; return 0; fi
+    if have busybox; then HTTP_FETCH="busybox-wget"; return 0; fi
+    return 1
+}
+http_get() { # $1=url -> body on stdout; nonzero rc on any failure
+    case "$HTTP_FETCH" in
+        curl)         curl -fsS --max-time 5 "$1" 2>/dev/null ;;
+        wget)         wget -q -O - -T 5 "$1" 2>/dev/null ;;
+        busybox-wget) busybox wget -q -O - -T 5 "$1" 2>/dev/null ;;
+        *)            return 127 ;;
+    esac
+}
+
+# is_container reports whether this process runs inside a container (the
+# marker files Docker/Podman create). The metrics auto-bind policy documents
+# 0.0.0.0 for containers and loopback+Tailscale elsewhere, so the bind-policy
+# check is keyed on this.
+is_container() { [ -e /.dockerenv ] || [ -e /run/.containerenv ]; }
+
+# metrics_addr_allowed reports whether one "ip:port" from the provider's
+# /metrics status is inside the documented auto-bind policy: wildcard (in a
+# container), loopback, or a Tailscale CGNAT address. Anything else is a FAIL.
+metrics_addr_allowed() {
+    a="$1"
+    case "$a" in
+        "0.0.0.0:"*|"[::]:"*|"[::]":*)
+            is_container && return 0
+            return 1 ;;
+    esac
+    case "$a" in
+        "127."*|"[::1]:"*|"::1:"*) return 0 ;;
+        "100."*)
+            # Tailscale CGNAT is 100.64.0.0/10; accept the whole /10 by second octet.
+            o2="$(printf '%s' "$a" | cut -d. -f2)"
+            [ "$(as_num "$o2")" -ge 64 ] && [ "$(as_num "$o2")" -le 127 ] && return 0
+            return 1 ;;
+    esac
+    return 1
+}
+
+# scrape-candidate URLs for a reported listen addr: wildcard -> loopback
+# (IPv4 first, then IPv6), everything else used as-is.
+metrics_scrape_candidates() { # $1=addr (ip:port) -> candidate urls
+    a="$1"
+    case "$a" in
+        "0.0.0.0:"*) printf 'http://127.0.0.1:%s/metrics' "${a#0.0.0.0:}" ;;
+        "[::]:"*)    p="$(printf '%s' "$a" | sed 's/^\[::\]://')"
+                     printf 'http://127.0.0.1:%s/metrics http://[::1]:%s/metrics' "$p" "$p" ;;
+        :*)          printf 'http://127.0.0.1%s/metrics' "$a" ;;
+        *)           printf 'http://%s/metrics' "$a" ;;
+    esac
+}
+
+metrics_scrape_url() { # $1=addr -> first candidate (compat single-URL helper)
+    metrics_scrape_candidates "$1" | awk '{print $1}'
+}
+
+# metrics_fetch_any tries every candidate for $1 and prints the first body
+# that looks like a Prometheus payload; sets METRICS_URL to the URL that
+# answered. Returns 1 when none did.
+metrics_fetch_any() { # $1=addr
+    METRICS_URL=""
+    for u in $(metrics_scrape_candidates "$1"); do
+        body="$(http_get "$u" 2>/dev/null)"
+        if printf '%s' "$body" | grep -q '# HELP urnet_'; then
+            METRICS_URL="$u"
+            printf '%s' "$body"
+            return 0
+        fi
+    done
+    return 1
+}
 
 # ---------------------------------------------------------------------------
 # container-local adaptations
@@ -423,6 +567,19 @@ b1_socket_security() {
             record FAIL socket-oversize-line "socket dead or silent after a 70KB line"
         fi
 
+        # one-line framing: two requests on ONE connection are answered, one
+        # JSON line each, in order (the documented newline-delimited protocol).
+        printf '{"cmd":"get","key":"gomemlimit","v":1}\n{"cmd":"get","key":"gogc","v":1}\n' >"$WORK/req-two.json"
+        two="$(raw_send "$WORK/req-two.json")"
+        n_ok="$(printf '%s\n' "$two" | grep -c '"ok"' 2>/dev/null || true)"
+        if [ "$(as_num "$n_ok")" -ge 2 ]; then
+            record PASS socket-framing "two requests on one connection got two JSON responses"
+        elif miner_gone && ! miner_crashed; then
+            record SKIP-NO-NETWORK socket-framing "provider left during the socket checks (environmental): $(printf '%s' "$two" | firstline)"
+        else
+            record FAIL socket-framing "expected 2 responses on one connection, saw $n_ok: $(printf '%s' "$two" | tr '\n' ' ' | firstline)"
+        fi
+
         printf 'not json at all\n' >"$WORK/h1"
         printf '{}\n' >"$WORK/h2"
         printf '{"cmd":"../etc/passwd","key":"","v":1}\n' >"$WORK/h3"
@@ -449,13 +606,14 @@ b1_socket_security() {
         record SKIP-UNSUPPORTED socket-peer-uid "netcat (nc -U) not available in this image"
         record SKIP-UNSUPPORTED socket-oversize-set "netcat (nc -U) not available in this image"
         record SKIP-UNSUPPORTED socket-oversize-line "netcat (nc -U) not available in this image"
+        record SKIP-UNSUPPORTED socket-framing "netcat (nc -U) not available in this image"
         record SKIP-UNSUPPORTED socket-hostile-input "netcat (nc -U) not available in this image"
     fi
 }
 
-# identity + restart: mint, key material, clean SIGTERM, reuse across restart,
-# HOT_RESTART=0 new ids (conditional), exit-75 quarantine (conditional), and
-# state-path containment.
+# identity + restart: mint, key material, clean SIGTERM, client-id reuse
+# across restart (via the stable client-JWT store), HOT_RESTART=0 fresh-mint,
+# events.log lifecycle lines, and state-path containment.
 ident_fp() {
     if [ -f "$STATE_DIR/.provider.jwt" ]; then printf 'jwt:%s' "$(fsum "$STATE_DIR/.provider.jwt")"; else printf 'none'; fi
 }
@@ -463,18 +621,27 @@ client_store_fp() {
     if [ -f "$STATE_DIR/.client_jwts.json" ]; then printf 'store:%s' "$(fsum "$STATE_DIR/.client_jwts.json")"; else printf 'none'; fi
 }
 
-b1_identity_restart() {
-    one="$(ident_fp)"
-    if [ "$one" = "none" ]; then
+# wait_identity_cid waits up to $1 seconds for the direct provider's client
+# id; prints it (empty on timeout). The direct slot's client JWT is
+# .provider.jwt; the durable store is .client_jwts.json.
+wait_identity_cid() {
+    cid="$(jwt_client_id "$STATE_DIR/.provider.jwt")"
+    if [ -z "$cid" ]; then
         i=0
-        while [ "$i" -lt "$FEATURE_IDENTITY_TIMEOUT" ] && [ ! -f "$STATE_DIR/.provider.jwt" ]; do
+        while [ "$i" -lt "$1" ]; do
+            cid="$(jwt_client_id "$STATE_DIR/.provider.jwt")"
+            [ -n "$cid" ] && break
             kill -0 "$MINER_PID" 2>/dev/null || break
             sleep 2; i=$((i + 2))
         done
-        one="$(ident_fp)"
     fi
-    if [ "$one" != "none" ]; then
-        record PASS identity-mint "provider client identity present ($one)"
+    printf '%s' "$cid"
+}
+
+b1_identity_restart() {
+    one_cid="$(wait_identity_cid "$FEATURE_IDENTITY_TIMEOUT")"
+    if [ -f "$STATE_DIR/.provider.jwt" ]; then
+        record PASS identity-mint "provider client identity present (client_id $(cid_short "$one_cid"), store entry $(cid_short "$(store_client_id "$STATE_DIR/.client_jwts.json")"))"
         if [ -f "$STATE_DIR/.provider.key" ]; then
             record PASS identity-key-material ".provider.key present next to the client identity"
         else
@@ -493,21 +660,24 @@ b1_identity_restart() {
         SIGKILL-*) record FAIL clean-sigterm "SIGTERM ignored, had to SIGKILL ($MINER_STOP_RC)" ;;
         *) record FAIL clean-sigterm "SIGTERM rc=$MINER_STOP_RC, socket $( [ -e "$SOCK" ] && echo left-behind || echo removed )" ;;
     esac
+    b1_logging
 
-    # client-id reuse across restart. The stable store is the hotswap port;
-    # without it the miner mints a fresh identity per start (observed below).
+    # client-id reuse across restart: the stable store (feat/p2-hotswap) makes
+    # a restart carry the same client_id; without the store self-detects to
+    # SKIP-UNSUPPORTED. The check compares the client_id CLAIM, not a file
+    # fingerprint - a renewal rewrites the token while keeping the id.
     start_live_miner miner-restart
     if [ "$LIVE" = "1" ]; then
-        two="none"; j=0
-        while [ "$j" -lt 30 ] && [ "$two" = "none" ]; do two="$(ident_fp)"; [ "$two" = "none" ] && sleep 2 && j=$((j + 2)); done
-        if [ "$one" = "none" ] || [ "$two" = "none" ]; then
-            record SKIP-NO-NETWORK identity-restart-reuse "identity not observable before/after restart (one=$one two=$two)"
-        elif [ "$one" = "$two" ]; then
-            record PASS identity-restart-reuse "same client identity carried across restart ($two)"
-        elif [ -f "$STATE_DIR/.client_jwts.json" ]; then
-            record FAIL identity-restart-reuse "identity changed across restart with the client-JWT store present ($one -> $two)"
+        two_cid="$(wait_identity_cid 60)"
+        store_two="$(store_client_id "$STATE_DIR/.client_jwts.json")"
+        if [ -z "$one_cid" ] || [ -z "$two_cid" ]; then
+            record SKIP-NO-NETWORK identity-restart-reuse "client_id not observable before/after restart (one=${one_cid:-none} two=${two_cid:-none})"
+        elif [ "$one_cid" = "$two_cid" ]; then
+            record PASS identity-restart-reuse "same client_id carried across restart ($(cid_short "$two_cid"))"
+        elif [ -n "$store_two" ]; then
+            record FAIL identity-restart-reuse "client_id changed across restart with the client-JWT store present ($(cid_short "$one_cid") -> $(cid_short "$two_cid"))"
         else
-            record SKIP-UNSUPPORTED identity-restart-reuse "identity changed and no .client_jwts.json store at this head ($one -> $two). Owning port: feat/p2-hotswap (wt-sn-hotswap: client_jwt_store)"
+            record SKIP-UNSUPPORTED identity-restart-reuse "client_id changed and no .client_jwts.json store at this head ($(cid_short "$one_cid") -> $(cid_short "$two_cid")). Owning port: feat/p2-hotswap (wt-sn-hotswap: client_jwt_store)"
         fi
         marker="$(TS status 2>/dev/null | grep -oE 'last restart: [a-z-]+' | head -1)"
         say "status after restart: ${marker:-'(no restart marker line)'}"
@@ -516,19 +686,30 @@ b1_identity_restart() {
     fi
     stop_miner "$FEATURE_START_TIMEOUT"
 
-    # HOT_RESTART=0: the store makes reuse-vs-new observable. At this head the
-    # store is absent, so the run still proves the flag is accepted without
-    # crashing; new-id semantics are asserted only when the store exists.
+    # HOT_RESTART=0: with the store present this must mint a FRESH client id.
+    # The check reads the store before and after and requires the direct
+    # client_id to change; without a store it self-detects to SKIP-UNSUPPORTED.
     store_before="$(client_store_fp)"
+    cid_before="$(store_client_id "$STATE_DIR/.client_jwts.json")"
+    : >"$WORK/miner-hr0.log"
     HOME="$STATE_HOME" URNETWORK_HOT_RESTART=0 "$MINER_WRAPPER" provide --port=0 $START_FLAGS >"$WORK/miner-hr0.log" 2>&1 &
     MINER_PID=$!
     if wait_for_socket "$FEATURE_START_TIMEOUT" && sleep "$FEATURE_SETTLE" && kill -0 "$MINER_PID" 2>/dev/null; then
         if [ "$store_before" != "none" ] || [ -f "$STATE_DIR/.client_jwts.json" ]; then
+            cid_after=""; j=0
+            while [ "$j" -lt "$FEATURE_IDENTITY_TIMEOUT" ]; do
+                cid_after="$(store_client_id "$STATE_DIR/.client_jwts.json")"
+                [ -n "$cid_after" ] && [ "$cid_after" != "$cid_before" ] && break
+                kill -0 "$MINER_PID" 2>/dev/null || break
+                sleep 2; j=$((j + 2))
+            done
             store_after="$(client_store_fp)"
-            if [ "$store_before" != "$store_after" ]; then
-                record PASS hot-restart-off "HOT_RESTART=0 minted a new client identity (store $store_before -> $store_after)"
+            if [ -n "$cid_after" ] && [ "$cid_after" != "$cid_before" ] && [ "$store_before" != "$store_after" ]; then
+                record PASS hot-restart-off "HOT_RESTART=0 minted a fresh client id ($(cid_short "$cid_before") -> $(cid_short "$cid_after")); store rewritten"
+            elif [ "$store_before" = "$store_after" ]; then
+                record FAIL hot-restart-off "HOT_RESTART=0 left the store byte-identical ($store_after); reuse was not disabled"
             else
-                record FAIL hot-restart-off "HOT_RESTART=0 did not mint new ids (store unchanged $store_after)"
+                record FAIL hot-restart-off "HOT_RESTART=0 store changed but no fresh client_id observed (before=$(cid_short "$cid_before") after=$(cid_short "$cid_after")): $(tail -2 "$WORK/miner-hr0.log" | tr '\n' ' ' | firstline)"
             fi
         else
             record SKIP-UNSUPPORTED hot-restart-off "hot_restart=0 accepted, but the client-JWT store that makes reuse vs new observable is not at this head. Owning port: feat/p2-hotswap (wt-sn-hotswap)"
@@ -544,6 +725,30 @@ b1_identity_restart() {
     stop_miner "$FEATURE_START_TIMEOUT"
 
     b1_state_paths
+}
+
+# events.log (critlog): the provide lifecycle must be recorded at DEFAULT
+# verbosity - STARTUP once the identity is staged, SIGNAL and PROVIDER EXIT
+# when a clean SIGTERM drains the run. Requires a live run and a clean stop;
+# anything less is SKIP-NO-NETWORK, never a fake pass.
+b1_logging() {
+    ev="$STATE_DIR/events.log"
+    if [ ! -f "$ev" ]; then
+        record FAIL logging-events "events.log missing after a live run under $STATE_DIR"
+        return
+    fi
+    startup=$(grep -c 'STARTUP: version=' "$ev" 2>/dev/null || true)
+    signal=$(grep -c 'SIGNAL: context cancelled' "$ev" 2>/dev/null || true)
+    exitl=$(grep -c 'PROVIDER EXIT: normal shutdown' "$ev" 2>/dev/null || true)
+    if [ "$(as_num "$startup")" -lt 1 ]; then
+        record FAIL logging-events "events.log has no STARTUP line (startup=$startup signal=$signal exit=$exitl)"
+    elif [ "$(as_num "$signal")" -ge 1 ] && [ "$(as_num "$exitl")" -ge 1 ]; then
+        record PASS logging-events "events.log recorded the lifecycle at default verbosity (STARTUP x$startup, SIGNAL x$signal, PROVIDER EXIT x$exitl)"
+    elif [ "${MINER_STOP_RC:-}" = "0" ]; then
+        record FAIL logging-events "clean stop but events.log lacks SIGNAL/EXIT (startup=$startup signal=$signal exit=$exitl)"
+    else
+        record SKIP-NO-NETWORK logging-events "no clean stop observed yet; cannot assert SIGNAL/PROVIDER EXIT (startup=$startup)"
+    fi
 }
 
 b1_state_paths() {
@@ -565,35 +770,67 @@ b1_state_paths() {
     fi
 }
 
-# hotswap / execve handoff (conditional): the raw control socket is the only
-# truthful trigger probe at this head; urnet-tools hotswap sends SIGUSR2 to a
-# daemon that does not wire a handoff, so it is not treated as evidence.
+# hotswap handoff: the raw control socket's {"cmd":"hotswap"} is the trigger
+# probe. The integrated head wires it (feat/p2-hotswap): the parent must exit,
+# a successor must answer on the re-bound socket, and /metrics must be
+# re-served from the successor (the takeover rebind). A head without the
+# trigger self-detects to SKIP-UNSUPPORTED.
 b1_hotswap() {
     start_live_miner miner-hotswap
+    hs=""
     if [ "$LIVE" = "1" ]; then
+        # capture the metrics state before the handoff (rebind assertion)
+        metrics_before="$(TS metrics status 2>&1 | firstline)"
+        addrs_before="$(printf '%s' "$(TS metrics status 2>&1)" | sed -n 's/.*listening  http:\/\/\([^/]*\)\/metrics.*/\1/p' | sort -u | tr '\n' ' ')"
         if [ "$NC" = "1" ]; then
             printf '{"cmd":"hotswap","v":1}\n' >"$WORK/req-hotswap.json"
             hs="$(raw_send "$WORK/req-hotswap.json")"
-        else
-            hs=""
         fi
         case "$hs" in
+            *"hot restart is disabled"*)
+                record SKIP-UNSUPPORTED hotswap-handoff "hot restart disabled in this run: $(printf '%s' "$hs" | firstline)" ;;
             *"not available"*|*"no unit"*|*"not implemented"*|*"unsupported"*)
                 record SKIP-UNSUPPORTED hotswap-handoff "no hotswap trigger wired at this head: $(printf '%s' "$hs" | firstline). Owning port: feat/p2-hotswap (wt-sn-hotswap)" ;;
             *'"ok":true'*|*triggered*|*Triggered*)
                 oldpid="$MINER_PID"
-                k=0; handed=0
-                while [ "$k" -lt 45 ]; do
+                handoff_wait="${FEATURE_HOTSWAP_TIMEOUT:-120}"
+                k=0; handed=0; serve=""
+                while [ "$k" -lt "$handoff_wait" ]; do
                     sleep 1; k=$((k + 1))
                     kill -0 "$oldpid" 2>/dev/null && continue
-                    [ -S "$SOCK" ] && { handed=1; break; }
+                    if [ -S "$SOCK" ]; then
+                        # socket file exists; require an ANSWER to prove a successor serves it
+                        serve="$(TS get gomemlimit 2>&1)"
+                        printf '%s' "$serve" | grep -q 'gomemlimit' && { handed=1; break; }
+                    fi
                 done
                 if [ "$handed" = "1" ]; then
-                    record PASS hotswap-handoff "parent exited, successor re-bound the socket"
-                    pp="$(TS providers 2>/dev/null | awk -v d="$STATE_DIR" '$0 ~ d {print $1; exit}')"
-                    MINER_PID="$pp"; say "hotswap successor pid=$pp"
+                    record PASS hotswap-handoff "parent exited, successor re-bound the socket: $(printf '%s' "$serve" | firstline)"
+                    pp="$(TS providers 2>/dev/null | grep -F -- "$STATE_DIR" | sed -n 's/.*pid \([0-9][0-9]*\).*/\1/p' | head -1)"
+                    [ -n "$pp" ] || pp="$(proc_pid_for_state_home)"
+                    case "$pp" in ''|*[!0-9]*) say "hotswap successor pid not resolvable; leaving MINER_PID=$oldpid (dead)" ;;
+                        *) if kill -0 "$pp" 2>/dev/null; then MINER_PID="$pp"; say "hotswap successor pid=$pp"; fi ;;
+                    esac
+                    # takeover rebind of /metrics (feat/p2-metrics + the rebind fix)
+                    if [ -n "$addrs_before" ] && detect_http_fetch; then
+                        url="$(metrics_scrape_url "$(printf '%s' "$addrs_before" | awk '{print $1}')")"
+                        rk=0; rebound=0; rbody=""
+                        while [ "$rk" -lt 30 ]; do
+                            rbody="$(http_get "$url" 2>/dev/null)"; rk=$((rk + 1))
+                            printf '%s' "$rbody" | grep -q '# HELP urnet_' && { rebound=1; break; }
+                            sleep 1
+                        done
+                        if [ "$rebound" = "1" ]; then
+                            record PASS hotswap-metrics-rebind "successor re-served /metrics on $url"
+                        else
+                            record FAIL hotswap-metrics-rebind "no /metrics answer on $url within 30s of the handoff (before: $metrics_before)"
+                        fi
+                    else
+                        record SKIP-UNSUPPORTED hotswap-metrics-rebind "no scrape tool or no pre-handoff metrics address to re-check (before='$addrs_before')"
+                    fi
                 else
-                    record FAIL hotswap-handoff "handoff did not complete within 45s (old pid alive=$(kill -0 "$oldpid" 2>/dev/null && echo yes || echo no))"
+                    record FAIL hotswap-handoff "handoff did not complete within ${handoff_wait}s (old pid alive=$(kill -0 "$oldpid" 2>/dev/null && echo yes || echo no); socket serve probe: $(printf '%s' "$serve" | firstline))"
+                    record SKIP-NO-NETWORK hotswap-metrics-rebind "no handoff to assert"
                 fi ;;
             "")
                 record SKIP-UNSUPPORTED hotswap-handoff "netcat (nc -U) not available: the raw control-socket handoff probe cannot run. Owning port: feat/p2-hotswap (wt-sn-hotswap)" ;;
@@ -603,6 +840,95 @@ b1_hotswap() {
         record SKIP-NO-NETWORK hotswap-handoff "provider not live"
     fi
     stop_miner "$FEATURE_START_TIMEOUT"
+}
+
+# proc_pid_for_state_home scans /proc for a provider child booted with
+# HOME=$STATE_HOME (the hotswap successor, when urnet-tools discovery cannot
+# name it). Root-only in practice, but the harness runs as root in CI cells.
+proc_pid_for_state_home() {
+    for d in /proc/[0-9]*; do
+        pid="${d#/proc/}"
+        cmd="$(tr '\0' ' ' <"$d/cmdline" 2>/dev/null || true)"
+        case "$cmd" in *"provide --port=0"*) : ;; *) continue ;; esac
+        env="$(tr '\0' '\n' <"$d/environ" 2>/dev/null || true)"
+        case "$env" in
+            *"HOME=$STATE_HOME"*)
+                if [ "$pid" != "$$" ]; then printf '%s' "$pid"; return 0; fi ;;
+        esac
+    done
+    return 0
+}
+
+# ramlog routing: URNETWORK_RAMLOGS=1 and the lowmem/eco profiles must send
+# the long-running provide's stdio to /dev/shm/urnetwork.log (the [ramlogs]
+# banner), and the persisted `ramlogs` control key must do the same on the
+# NEXT start - the documented needs-restart semantics plus the control-state
+# -> env seed path. The important buffer (state-dir important.log) must exist
+# whenever the ramlog is active.
+ramlog_probe_run() { # $1=logfile; rest: NAME=value env for the run
+    logf="$1"; shift
+    rm -f /dev/shm/urnetwork.log
+    : >"$logf"
+    HOME="$STATE_HOME" env "$@" "$MINER_WRAPPER" provide --port=0 $START_FLAGS >"$logf" 2>&1 &
+    MINER_PID=$!
+    RAMLOG_BANNER="no"; RAMLOG_IMPORTANT="no"; RAMLOG_ALIVE="no"
+    if wait_for_socket "$FEATURE_START_TIMEOUT"; then
+        sleep 2
+        if kill -0 "$MINER_PID" 2>/dev/null; then RAMLOG_ALIVE="yes"; fi
+        if [ -f /dev/shm/urnetwork.log ] && grep -q '\[ramlogs\] Active at /dev/shm/urnetwork.log' /dev/shm/urnetwork.log 2>/dev/null; then
+            RAMLOG_BANNER="yes"
+        fi
+        [ -f "$STATE_DIR/important.log" ] && RAMLOG_IMPORTANT="yes"
+    fi
+}
+
+b1_ramlogs() {
+    # selector 1: explicit URNETWORK_RAMLOGS=1 (no ramlogs key persisted yet)
+    ramlog_probe_run "$WORK/miner-ramlog-env.log" URNETWORK_RAMLOGS=1
+    env_banner="$RAMLOG_BANNER"
+    stop_miner 15
+
+    # selector 2: URNETWORK_PROFILE=lowmem (the profile alone asks for the ramlog)
+    ramlog_probe_run "$WORK/miner-ramlog-profile.log" URNETWORK_PROFILE=lowmem
+    prof_banner="$RAMLOG_BANNER"
+    stop_miner 15
+
+    if [ "$env_banner" = "yes" ] && [ "$prof_banner" = "yes" ]; then
+        record PASS ramlog-routing "URNETWORK_RAMLOGS=1 and URNETWORK_PROFILE=lowmem both redirected stdio to /dev/shm/urnetwork.log ([ramlogs] banner present)"
+    else
+        record FAIL ramlog-routing "env selector banner=$env_banner profile selector banner=$prof_banner (want both yes; logs: $(tail -1 "$WORK/miner-ramlog-env.log" 2>/dev/null | firstline) / $(tail -1 "$WORK/miner-ramlog-profile.log" 2>/dev/null | firstline))"
+    fi
+
+    # selector 3: the persisted key + restart. Set it live (acceptance), stop,
+    # start again with URNETWORK_RAMLOGS=0 EXPLICITLY set: the seed from the
+    # control state must still win, which is the documented precedence.
+    if ! ensure_live miner-ramlog-key1; then
+        record SKIP-NO-NETWORK key-ramlogs "provider not live to accept the ramlogs key"
+        return
+    fi
+    rm -f /dev/shm/urnetwork.log "$STATE_DIR/important.log"
+    out="$(TS set ramlogs on -f 2>&1)"; rc=$?
+    restart_note="$(printf '%s' "$out" | grep -i 'requires a restart' | firstline)"
+    stop_miner "$FEATURE_START_TIMEOUT"
+    if [ "$rc" != "0" ]; then
+        record FAIL key-ramlogs "set ramlogs on rc=$rc: $(printf '%s' "$out" | firstline)"
+        return
+    fi
+    ramlog_probe_run "$WORK/miner-ramlog-key2.log" URNETWORK_RAMLOGS=0
+    key_banner="$RAMLOG_BANNER"; key_imp="$RAMLOG_IMPORTANT"
+    # clear the override while the ramlog provider still serves the socket
+    if kill -0 "$MINER_PID" 2>/dev/null && [ -S "$SOCK" ]; then
+        TS set ramlogs off -f >/dev/null 2>&1 || say "WARN: could not clear the ramlogs key (next starts may keep ramlog routing)"
+    fi
+    stop_miner "$FEATURE_START_TIMEOUT"
+
+    if [ -z "$restart_note" ]; then
+        record FAIL key-ramlogs "ramlogs accepted but the provider did not report 'requires a restart to take effect': $(printf '%s' "$out" | firstline)"
+    elif [ "$key_banner" = "yes" ] && [ "$key_imp" = "yes" ]; then
+        record PASS key-ramlogs "persisted ramlogs=on beat an explicit URNETWORK_RAMLOGS=0 on the next start (need-restart semantics); /dev/shm/urnetwork.log has the [ramlogs] banner and $STATE_DIR/important.log exists"
+    else
+        record FAIL key-ramlogs "persisted ramlogs=on did not route after restart (banner=$key_banner important.log=$key_imp; restart-note='$restart_note'); last log: $(tail -1 "$WORK/miner-ramlog-key2.log" 2>/dev/null | firstline)"
+    fi
 }
 
 # registration identity gate: a fresh dir without --allow-client-registration
@@ -679,7 +1005,10 @@ b1_exit75() {
     rm -rf "$xhome"
 }
 
-# side-effectful control keys with before/after state.
+# side-effectful control keys with before/after state: gogc (runtime knob)
+# and h3 (the limit key the integrated head wires live). The full live-apply /
+# needs-restart matrix is b1_control_key_semantics below; ramlogs' restart
+# semantics are asserted end-to-end by b1_ramlogs.
 b1_control_keys() {
     st_before="$(fsum "$STATE_DIR/provider_state.json")"
     out="$(TS set gogc 250 -f 2>&1)"; rc=$?
@@ -695,52 +1024,156 @@ b1_control_keys() {
     fi
     TS set gogc off -f >/dev/null 2>&1 || true
 
+    # h3 limit key (feat/p2-h3): must apply live, read back, be logged and
+    # persisted. A head without the live port answers "requires a restart" or
+    # rejects the key; that self-detects as SKIP-UNSUPPORTED, never a fake pass.
+    st_before="$(fsum "$STATE_DIR/provider_state.json")"
     out="$(TS set h3 3 -f 2>&1)"; rc=$?
-    if printf '%s' "$out" | grep -qi 'no consumer\|requires a restart'; then
-        record SKIP-UNSUPPORTED key-h3-limit "persisted but inert at this head: $(printf '%s' "$out" | grep -i 'requires a restart\|no consumer' | firstline). Owning port: feat/p2-h3 (wt-sn-h3)"
-        TS set h3 off -f >/dev/null 2>&1 || true
+    st_after="$(fsum "$STATE_DIR/provider_state.json")"
+    if printf '%s' "$out" | grep -qi 'unknown key'; then
+        record SKIP-UNSUPPORTED key-h3-limit "no h3 control key at this head: $(printf '%s' "$out" | firstline)"
+    elif [ "$rc" = "0" ] && printf '%s' "$out" | grep -q 'requires a restart'; then
+        record SKIP-UNSUPPORTED key-h3-limit "h3 persists but has no live consumer at this head: $(printf '%s' "$out" | grep -i 'requires a restart' | firstline). Owning port: feat/p2-h3 (wt-sn-h3)"
     elif [ "$rc" = "0" ]; then
         rb="$(TS get h3 2>&1)"
-        if printf '%s' "$rb" | grep -q 'h3: 3'; then
-            record PASS key-h3-limit "h3=3 applied live (readback $(printf '%s' "$rb" | firstline))"
+        logged=$(grep -cE '\[control\] (set|applied) h3=3' "$WORK/miner-main.log" "$WORK/miner-main-r2.log" 2>/dev/null | awk -F: '{s+=$2} END{print s+0}')
+        persisted=$(grep -cE '"h3"[[:space:]]*:[[:space:]]*"3"' "$STATE_DIR/provider_state.json" 2>/dev/null || true)
+        if printf '%s' "$rb" | grep -q 'h3: 3' && [ "$(as_num "$logged")" -ge 1 ] && [ "$(as_num "$persisted")" -ge 1 ] && [ "$st_before" != "$st_after" ]; then
+            record PASS key-h3-limit "h3=3 applied live and reflected (get '$(printf '%s' "$rb" | firstline)'; $logged log line(s); provider_state.json updated)"
         else
-            record FAIL key-h3-limit "set ok but readback: $(printf '%s' "$rb" | firstline)"
+            record FAIL key-h3-limit "set rc=0 but reflection incomplete: readback='$(printf '%s' "$rb" | firstline)' loglines=$logged persisted=$persisted state=$st_before->$st_after"
         fi
     else
         record FAIL key-h3-limit "set h3 3 rc=$rc: $(printf '%s' "$out" | firstline)"
     fi
+    TS set h3 off -f >/dev/null 2>&1 || true
+}
 
-    out="$(TS set ramlogs on -f 2>&1)"; rc=$?
-    if printf '%s' "$out" | grep -qi 'no consumer\|requires a restart'; then
-        record SKIP-UNSUPPORTED key-ramlogs "persisted but inert at this head: $(printf '%s' "$out" | grep -i 'requires a restart\|no consumer' | firstline). Owning port: feat/p2-ops (wt-sn-ops)"
-        TS set ramlogs off -f >/dev/null 2>&1 || true
-    elif [ "$rc" = "0" ]; then
-        record PASS key-ramlogs "ramlogs on applied"
+# control-key semantics: the live-apply set must answer "applied live via
+# control socket" with a matching readback and no restart warning; keys with
+# no live consumer must answer "requires a restart to take effect". Every
+# override this check sets is cleared again, so later checks see the same
+# startup defaults a fresh provider would (hot_restart is deliberately NOT
+# persisted here: the persisted key would override the URNETWORK_HOT_RESTART=0
+# probe below, which exists to pin exactly that switch).
+b1_control_key_semantics() {
+    bad=""; checked=""
+    for kv in "proxy_url_refresh=90s" "proxy_url_max=450" "smart_dialer=on" "proxy_dead_cleanup_scope=url"; do
+        k="${kv%%=*}"; v="${kv#*=}"
+        out="$(TS set "$k" "$v" -f 2>&1)"; rc=$?
+        rb="$(TS get "$k" 2>&1)"
+        if [ "$rc" != "0" ]; then
+            bad="$bad $k(set rc=$rc: $(printf '%s' "$out" | firstline))"
+        elif ! printf '%s' "$out" | grep -q 'applied live'; then
+            bad="$bad $k(no applied-live confirmation)"
+        elif printf '%s' "$out" | grep -q 'requires a restart'; then
+            bad="$bad $k(claimed restart-required though live-applied)"
+        elif ! printf '%s' "$rb" | grep -q "$k: $v"; then
+            bad="$bad $k(readback '$(printf '%s' "$rb" | firstline)')"
+        fi
+        checked="$checked $k"
+        TS set "$k" off -f >/dev/null 2>&1 || true
+    done
+    # h1_plus is a provider-side live key the urnet-tools key inventory does
+    # not expose; exercise it over the raw control socket so the provider's
+    # live-apply path is still covered. A live-applied key answers ok:true
+    # WITHOUT needs_restart and logs "[control] applied h1_plus="; without a
+    # unix-socket netcat the leg is SKIP-UNSUPPORTED, never silently dropped.
+    raw_leg=""
+    if [ "$NC" = "1" ]; then
+        printf '{"cmd":"set","key":"h1_plus","value":"on","v":1}\n' >"$WORK/req-h1plus.json"
+        h1o="$(raw_send "$WORK/req-h1plus.json")"
+        printf '{"cmd":"clear","key":"h1_plus","v":1}\n' >"$WORK/req-h1plus-clear.json"
+        _="$(raw_send "$WORK/req-h1plus-clear.json")"
+        h1log=$(grep -cE '\[control\] applied h1_plus=' "$WORK/miner-main.log" "$WORK/miner-main-r2.log" 2>/dev/null | awk -F: '{s+=$2} END{print s+0}')
+        if json_has "$h1o" '"ok":true' && ! json_has "$h1o" '"needs_restart":true' && [ "$(as_num "$h1log")" -ge 1 ]; then
+            checked="$checked raw:h1_plus"
+        else
+            bad="$bad raw:h1_plus(reply '$(printf '%s' "$h1o" | firstline)'; applied-loglines=$h1log)"
+        fi
+        raw_leg=" (raw-socket legs: h1_plus)"
     else
-        record FAIL key-ramlogs "set ramlogs on rc=$rc: $(printf '%s' "$out" | firstline)"
+        record SKIP-UNSUPPORTED control-keys-live-raw "netcat (nc -U) not available: the h1_plus raw-socket leg cannot run (urnet-tools does not expose the provider-only key)"
+    fi
+    if [ -z "$bad" ]; then
+        record PASS control-keys-live "applied live with readback, no restart warning:$checked$raw_leg (overrides cleared after)"
+    else
+        record FAIL control-keys-live "live keys misbehaved:$bad"
+    fi
+
+    bad=""; checked=""
+    for kv in "profile=eco" "node-name=feature-matrix"; do
+        k="${kv%%=*}"; v="${kv#*=}"
+        out="$(TS set "$k" "$v" -f 2>&1)"; rc=$?
+        if [ "$rc" != "0" ] || ! printf '%s' "$out" | grep -q 'requires a restart to take effect'; then
+            bad="$bad $k(rc=$rc: $(printf '%s' "$out" | firstline))"
+        fi
+        checked="$checked $k"
+        TS set "$k" off -f >/dev/null 2>&1 || true
+    done
+    if [ -z "$bad" ]; then
+        record PASS control-keys-needs-restart "restart-only keys report 'requires a restart to take effect' (checked:$checked; overrides cleared after)"
+    else
+        record FAIL control-keys-needs-restart "restart-required keys did not report their semantics:$bad"
     fi
 }
 
-# metrics bind policy (conditional): when the exporter exists, no public
-# wildcard bind may be reported.
-b1_metrics_bind() {
+# metrics: control wiring (`metrics on`), the documented bind policy, an HTTP
+# scrape with whatever fetch tool the image has, and off -> listener stops ->
+# on -> listener returns (the live control wiring).
+b1_metrics() {
+    addrs=""
     out="$(TS metrics on -f 2>&1)"; rc=$?
-    if printf '%s' "$out" | grep -qi 'does not implement'; then
-        record SKIP-UNSUPPORTED metrics-bind "exporter not implemented at this head: $(printf '%s' "$out" | firstline). Owning port: feat/p2-metrics (wt-sn-metrics)"
-    elif [ "$rc" = "0" ]; then
-        st="$(TS metrics status 2>&1)"
-        addrs="$(printf '%s' "$st" | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}:[0-9]+' | sort -u | tr '\n' ' ')"
+    case "$out" in
+        *"does not implement"*|*"not implement"*)
+            record SKIP-UNSUPPORTED metrics-bind "exporter not implemented at this head: $(printf '%s' "$out" | firstline). Owning port: feat/p2-metrics (wt-sn-metrics)"
+            record SKIP-UNSUPPORTED metrics-scrape "exporter not implemented at this head"
+            record SKIP-UNSUPPORTED metrics-off-on "exporter not implemented at this head"
+            return ;;
+    esac
+    st="$(TS metrics status 2>&1)"
+    if [ "$rc" = "0" ] && printf '%s' "$st" | grep -q 'Metrics: on'; then
+        addrs="$(printf '%s' "$st" | sed -n 's/.*listening  http:\/\/\([^/]*\)\/metrics.*/\1/p' | sort -u | tr '\n' ' ')"
+        [ -n "$addrs" ] || addrs="$(printf '%s' "$st" | grep -oE '([0-9]{1,3}(\.[0-9]{1,3}){3}|\[[0-9a-f:]+\]):[0-9]+' | sort -u | tr '\n' ' ')"
         bad=""
         for a in $addrs; do
-            case "$a" in 0.0.0.0:*|"[::]:"*) bad="$bad $a" ;; esac
+            metrics_addr_allowed "$a" || bad="$bad $a"
         done
         if [ -n "$bad" ]; then
-            record FAIL metrics-bind "public wildcard bind(s):$bad"
+            record FAIL metrics-bind "listen address(es) outside the documented policy (loopback/tailscale; wildcard only inside a container):$bad"
         else
-            record PASS metrics-bind "no public wildcard bind; addrs='${addrs:-none reported}'"
+            record PASS metrics-bind "metrics on applied; addrs='${addrs:-none reported}' inside the documented policy"
         fi
     else
-        record FAIL metrics-bind "metrics on rc=$rc: $(printf '%s' "$out" | firstline)"
+        record FAIL metrics-bind "metrics on rc=$rc: $(printf '%s' "$out" | firstline); status: $(printf '%s' "$st" | firstline)"
+        record SKIP-NO-NETWORK metrics-scrape "no listener to scrape (metrics control failed)"
+        record SKIP-NO-NETWORK metrics-off-on "no listener to stop"
+        return
+    fi
+
+    url=""
+    for a in $addrs; do url="$(metrics_scrape_url "$a")"; [ -n "$url" ] && break; done
+    if ! detect_http_fetch; then
+        record SKIP-UNSUPPORTED metrics-scrape "no HTTP fetch tool in this image (curl/wget/busybox) and installation was not possible"
+    else
+        body=""
+        [ -n "$url" ] && body="$(http_get "$url")"
+        if printf '%s' "$body" | grep -q '# HELP urnet_'; then
+            record PASS metrics-scrape "$HTTP_FETCH fetched $url ($(printf '%s\n' "$body" | grep -c '^urnet_' 2>/dev/null || true) urnet_ series lines)"
+        else
+            record FAIL metrics-scrape "$HTTP_FETCH fetched '$url' but no Prometheus payload: $(printf '%s' "$body" | firstline)"
+        fi
+    fi
+
+    off_out="$(TS metrics off -f 2>&1)"; off_rc=$?
+    off_status="$(TS metrics status 2>&1)"
+    off_body=""
+    if [ -n "$url" ] && detect_http_fetch; then off_body="$(http_get "$url" 2>/dev/null)"; fi
+    back_out="$(TS metrics on -f 2>&1)"; back_rc=$?
+    if [ "$off_rc" = "0" ] && printf '%s' "$off_status" | grep -q 'Metrics: off' && [ -z "$off_body" ] && [ "$back_rc" = "0" ]; then
+        record PASS metrics-off-on "metrics off stopped the listener (scrape dead) and metrics on rebound it"
+    else
+        record FAIL metrics-off-on "off rc=$off_rc status='$(printf '%s' "$off_status" | firstline)' scrape_after_off=${off_body:+still-alive} on_rc=$back_rc: $(printf '%s' "$back_out" | firstline)"
     fi
 }
 
@@ -840,9 +1273,16 @@ run_block1() {
     fi
     if [ "$LIVE" != "1" ]; then
         record SKIP-NO-NETWORK control-keys "provider not live"
+        record SKIP-NO-NETWORK control-keys-live "provider not live"
+        record SKIP-NO-NETWORK control-keys-needs-restart "provider not live"
         record SKIP-NO-NETWORK metrics-bind "provider not live"
+        record SKIP-NO-NETWORK metrics-scrape "provider not live"
+        record SKIP-NO-NETWORK metrics-off-on "provider not live"
         record SKIP-NO-NETWORK identity "provider not live"
         record SKIP-NO-NETWORK restart "provider not live"
+        record SKIP-NO-NETWORK logging-events "provider not live"
+        record SKIP-NO-NETWORK ramlog-routing "provider not live"
+        record SKIP-NO-NETWORK key-ramlogs "provider not live"
         record SKIP-NO-NETWORK hotswap-handoff "provider not live"
         b1_state_paths
         b1_corrupt_state
@@ -850,8 +1290,10 @@ run_block1() {
     fi
 
     b1_control_keys
-    b1_metrics_bind
+    b1_control_key_semantics
+    b1_metrics
     b1_identity_restart
+    b1_ramlogs
     b1_hotswap
     b1_identity_gate
     b1_exit75
@@ -1250,8 +1692,42 @@ b2_manipulations() {
 # ---------------------------------------------------------------------------
 # BLOCK 3 — BROAD SURFACE
 # ---------------------------------------------------------------------------
+
+# The documented v33 client command surface: the 47-row inventory the parity
+# audit pins (internal/urnettools/v33_command_surface_test.go keeps the same
+# table), plus the aliases and the wallet group. Every one must exist and
+# answer its own --help with rc=0; none of them touches a provider.
+V33_COMMANDS="providers status top sn-status start stop restart update idle-update self-update logs summary version default session turbo auto eco lowmode ramlogs optimize hotswap fast-auth get set rename auth choose-network wallet proxy report reinstall uninstall auto-update auto-start self-heal show-ip history autopilot enforcement baseline metrics smart-dialer profile dashboard config usage __do-restart"
+V33_ALIASES="list ps selfupdate hot-swap fastauth show set-node-name choose_network autoupdate autostart selfheal ip-detect ipdetect audit smart_dialer profiles dash panel"
+V33_WALLET_SUBS="status challenge set sign"
+
+b3_cli_tree() {
+    missing=""; n=0
+    for c in $V33_COMMANDS; do
+        out="$(HOME="$STATE_HOME" "$TOOLS_BIN" "$c" --help 2>&1)"; rc=$?
+        n=$((n + 1))
+        if [ "$rc" != "0" ] || [ -z "$out" ]; then missing="$missing $c(rc=$rc)"; fi
+    done
+    for a in $V33_ALIASES; do
+        out="$(HOME="$STATE_HOME" "$TOOLS_BIN" "$a" --help 2>&1)"; rc=$?
+        n=$((n + 1))
+        if [ "$rc" != "0" ] || [ -z "$out" ]; then missing="$missing $a(rc=$rc)"; fi
+    done
+    for w in $V33_WALLET_SUBS; do
+        out="$(HOME="$STATE_HOME" "$TOOLS_BIN" wallet "$w" --help 2>&1)"; rc=$?
+        n=$((n + 1))
+        if [ "$rc" != "0" ] || [ -z "$out" ]; then missing="$missing wallet-$w(rc=$rc)"; fi
+    done
+    if [ -z "$missing" ]; then
+        record PASS surface-cli-tree "all $n documented v33 commands/aliases (incl. wallet subs) answer <cmd> --help (rc=0)"
+    else
+        record FAIL surface-cli-tree "missing/unresponsive:$missing"
+    fi
+}
+
 b3_surface() {
     head1 "BLOCK 3 — broad surface"
+    b3_cli_tree
     if ! ensure_live miner-surface; then
         record SKIP-NO-NETWORK surface "provider not live"
         return
@@ -1318,15 +1794,59 @@ b3_surface() {
         record FAIL surface-metrics "rc=$rc: $(printf '%s' "$out" | firstline)"
     fi
 
-    # exclusivity of the remaining surfaces: only classify unknown/absent,
-    # never fail on a surface this head does not expose.
-    out="$(TS proxy exclude 192.0.2.99 2>&1)"; rc=$?
-    if printf '%s' "$out" | grep -qi 'unknown proxy subcommand\|unknown flag'; then
-        record SKIP-UNSUPPORTED surface-exclude "proxy exclude not exposed by this urnet-tools: $(printf '%s' "$out" | firstline)"
-    elif [ "$rc" = "0" ]; then
-        record PASS surface-exclude "proxy exclude accepted: $(printf '%s' "$out" | firstline)"
+    # exclude (feat/p2-proxy-cli): the provider grammar owns
+    # `proxy exclude <pattern> [--remove]`; urnet-tools deliberately routes
+    # exclusion through its --exclude targeting flag (documented in its own
+    # proxy help), so the operator check drives the provider surface end to
+    # end: add -> list -> remove, with proxy_url.json as the evidence. A head
+    # without the grammar self-detects to SKIP-UNSUPPORTED.
+    out="$(HOME="$STATE_HOME" "$MINER_WRAPPER" proxy exclude 192.0.2.99 2>&1)"; rc=$?
+    if printf '%s' "$out" | grep -qi 'unknown\|usage:'; then
+        record SKIP-UNSUPPORTED surface-exclude "provider grammar has no proxy exclude at this head: $(printf '%s' "$out" | firstline). Owning port: feat/p2-proxy-cli (wt-sn-proxy-cli)"
+    elif [ "$rc" = "0" ] && { printf '%s' "$out" | grep -q 'added exclude pattern' || printf '%s' "$out" | grep -q 'already excluded'; } \
+         && grep -q '192.0.2.99' "$STATE_DIR/proxy_url.json" 2>/dev/null; then
+        listout="$(HOME="$STATE_HOME" "$MINER_WRAPPER" proxy exclude 2>&1)"
+        rmout="$(HOME="$STATE_HOME" "$MINER_WRAPPER" proxy exclude 192.0.2.99 --remove 2>&1)"; rrc=$?
+        if [ "$rrc" = "0" ] && printf '%s' "$rmout" | grep -q 'removed exclude pattern' \
+             && ! grep -q '"192.0.2.99"' "$STATE_DIR/proxy_url.json" 2>/dev/null; then
+            record PASS surface-exclude "provider proxy exclude add/list/remove round-trip on proxy_url.json (list: $(printf '%s' "$listout" | grep '192.0.2.99' | firstline)); urnet-tools routes exclusion via its --exclude targeting flag"
+        else
+            record FAIL surface-exclude "remove leg rc=$rrc: $(printf '%s' "$rmout" | firstline)"
+        fi
     else
-        record FAIL surface-exclude "rc=$rc: $(printf '%s' "$out" | firstline)"
+        record FAIL surface-exclude "provider proxy exclude add rc=$rc: $(printf '%s' "$out" | firstline)"
+    fi
+
+    # proxy graders / earnings / admission / AIMD: the operator surfaces owned
+    # by the parallel proxy-grade line (bg-63: P-09 graders, T-07 earnings,
+    # W-02 admission/AIMD). Conditional and self-detecting: probe the tool's
+    # proxy verbs AND the provider usage text; when none is present the check
+    # stays SKIP-UNSUPPORTED and names the owning work packages.
+    found=""; bad=""
+    for term in graders earnings admission aimd grade; do
+        pout="$(TS proxy "$term" 2>&1)"; prc=$?
+        case "$pout" in
+            *"unknown proxy subcommand"*|*"unknown flag"*|*"Usage:"*|*"usage:"*) : ;;
+            *)
+                if [ "$prc" = "0" ]; then
+                    found="$found $term"
+                elif printf '%s' "$pout" | grep -qi 'not implement'; then
+                    bad="$bad $term(stubbed: $(printf '%s' "$pout" | firstline))"
+                else
+                    found="$found $term(advertised: $(printf '%s' "$pout" | firstline))"
+                fi ;;
+        esac
+    done
+    ph="$(miner_help)"
+    for term in graders aimd admissions; do
+        if printf '%s' "$ph" | grep -qw "$term"; then found="$found provider:$term"; fi
+    done
+    if [ -n "$bad" ]; then
+        record FAIL surface-proxy-graders "advertised but unimplemented:$bad"
+    elif [ -n "$found" ]; then
+        record PASS surface-proxy-graders "graders/earnings/admission/AIMD surface present:$found"
+    else
+        record SKIP-UNSUPPORTED surface-proxy-graders "no proxy graders/earnings/admission/AIMD operator surface at this head; the machinery is internal-only here (proxy_grades.json/grade log markers, proxy_earnings.json, admitted-by-tier lines, AIMD TargetPoolSize). Owning work packages: bg-63 P-09 (graders), T-07 (earnings), W-02 (admission/AIMD)"
     fi
 }
 
