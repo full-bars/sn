@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -62,10 +63,27 @@ type controlRuntimeState struct {
 	lastMarker  runStateMarker
 	hadPriorRun bool
 
+	// lastStartedVersion is the version of the previous start, read from the
+	// .miner_version breadcrumb. Unlike the marker (written only by a clean
+	// exit) it exists after a crash too, which is what lets the snapshot and
+	// /metrics tell a crash-restart from a first start.
+	lastStartedVersion string
+
 	// rate is the billable/total byte rate ring behind the snapshot's rate and
 	// traffic history.
 	rate controlRateSampler
 }
+
+// minerVersionBreadcrumb is the version file written at every run start
+// (v33's .provider_version). metrics_provider.go and the snapshot read it.
+//
+// It must not be named .provider_version here: the state directory is also
+// the provider-key custody directory, and clientauth treats every `.provider*`
+// file as retained provider history, which refuses a first registration
+// (clientauth/provider_key.go: a missing .provider.key beside any `.provider`
+// file is "provider_key_missing_with_retained_history", never a new install).
+// The breadcrumb is the miner's own, so it lives under the miner's own name.
+const minerVersionBreadcrumb = ".miner_version"
 
 var controlRuntime = &controlRuntimeState{}
 
@@ -93,6 +111,21 @@ func beginControlRun(now time.Time) {
 	if proxyStateFile := mustStatePathQuiet("proxy.state"); proxyStateFile != "" {
 		if _, err := os.Stat(proxyStateFile); err == nil {
 			controlRuntime.hadPriorRun = true
+		}
+	}
+
+	// The version breadcrumb: read the previous start's version (survives a
+	// crash, unlike the marker), then record this one. A breadcrumb that was
+	// already there also marks the run as a restart in its own right.
+	if versionPath := mustStatePathQuiet(minerVersionBreadcrumb); versionPath != "" {
+		if data, err := os.ReadFile(versionPath); err == nil {
+			controlRuntime.lastStartedVersion = strings.TrimSpace(string(data))
+			if controlRuntime.lastStartedVersion != "" {
+				controlRuntime.hadPriorRun = true
+			}
+		}
+		if err := atomicWriteFile(versionPath, []byte(minerControlVersion()), 0o600); err != nil {
+			tlog("[control] could not write the version breadcrumb: %v\n", err)
 		}
 	}
 }
@@ -166,6 +199,15 @@ func (s *controlRuntimeState) markerSnapshot() (runStateMarker, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.lastMarker, s.hadPriorRun
+}
+
+// lastStartedVersionSnapshot returns the version the previous start recorded
+// in the .miner_version breadcrumb ("" when there is none, or before any
+// prior run started).
+func (s *controlRuntimeState) lastStartedVersionSnapshot() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.lastStartedVersion
 }
 
 // counterTotals reads the run's cumulative billable and total byte counts, and
@@ -332,6 +374,7 @@ func resetControlRuntimeForTest() {
 	controlRuntime.progress = nil
 	controlRuntime.lastMarker = runStateMarker{}
 	controlRuntime.hadPriorRun = false
+	controlRuntime.lastStartedVersion = ""
 	controlRuntime.rate = controlRateSampler{}
 }
 
