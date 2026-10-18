@@ -147,18 +147,10 @@ func (self *sdkLegacyImportProver) RefreshAccepted(ctx context.Context, token st
 	return clientauth.ProbeClientJwtRefresh(ctx, self.api, token)
 }
 
-// newSdkLegacyImportProver builds one direct control-plane API for the whole
-// import proof. The proof reads are small public/self reads, like the login
-// the operator already runs from this host; a per-slot proxy is deliberately
-// not used so a dead proxy slot cannot silently discard the other slots.
-func newSdkLegacyImportProver(ctx context.Context, apiUrl string) (legacyImportProver, func(), error) {
-	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
-	api := sdk.NewApi(ctx, clientStrategy, apiUrl)
-	return &sdkLegacyImportProver{api: api}, func() {
-		clientStrategy.Close()
-		api.CloseAndWait(context.Background())
-	}, nil
-}
+// The proof client's constructor lives in legacy_import_transport.go: it
+// builds one direct control-plane API whose dials prefer the host's working
+// family and are bounded at every step. A per-slot proxy is deliberately not
+// used so a dead proxy slot cannot silently discard the other slots.
 
 // legacyImportHooks fail only at real durable write boundaries. Tests use
 // them to interrupt a commit and prove the next start recovers.
@@ -177,8 +169,32 @@ type legacyImportOptions struct {
 	explicitCreate bool
 	explicitAdopt  bool
 	recorder       legacyImportRecorder
-	newProver      func() (legacyImportProver, func(), error)
-	hooks          legacyImportHooks
+	// narrator receives the human-readable import story. nil falls back to
+	// the package writer (stderr), so a run always narrates itself.
+	narrator *legacyImportNarrator
+	// newProver builds the proof client; the wait hook names the proof
+	// transport's family dials for the narration.
+	newProver func(wait legacyImportProofDialWait) (legacyImportProver, func(), error)
+	hooks     legacyImportHooks
+	// The proving bounds. Zero takes the package defaults; tests shorten them,
+	// operators override the budget through the flag/env.
+	proverBuildTimeout      time.Duration
+	proofTimeout            time.Duration
+	proofConcurrency        int
+	heartbeatInterval       time.Duration
+	unreachableShortCircuit int
+	budget                  time.Duration
+}
+
+// legacyImportProveOptions projects the run's proving bounds.
+func (self legacyImportOptions) proveOptions() legacyImportProveOptions {
+	return legacyImportProveOptions{
+		budget:       self.budget,
+		proofTimeout: self.proofTimeout,
+		concurrency:  self.proofConcurrency,
+		heartbeat:    self.heartbeatInterval,
+		shortCircuit: self.unreachableShortCircuit,
+	}
 }
 
 // legacyImportResult tells the run which slots may register a new client.
@@ -213,6 +229,12 @@ type legacyImportSlot struct {
 	// fallbackRecorded marks a sticky fallback loaded from the journal: the
 	// decision is replayed quietly, not announced again.
 	fallbackRecorded bool
+	// attempted is set when the proof phase actually read the server for this
+	// slot; left marks a slot the phase stopped before attempting (budget or
+	// API-unreachable short circuit). A left slot is deferred bookkeeping
+	// only: the next start proves it.
+	attempted bool
+	left      bool
 }
 
 // legacyImportStoreKey is the 3.23-fix store key of a configured slot. The
@@ -249,10 +271,7 @@ func legacyImportTargetPath(stateDir string, identities providerSlotIdentities, 
 // legacyImportDisplaySlot names a slot without credentials. A proxy is shown
 // by address only; the store's \x1f user separator never reaches a log line.
 func legacyImportDisplaySlot(settings *connect.ProxySettings) string {
-	if settings == nil {
-		return "direct"
-	}
-	return "proxy:" + settings.Address
+	return providerSlotDisplay(settings)
 }
 
 func legacyImportClientID8(id connect.Id) string {
@@ -282,10 +301,15 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	if opts.disabled || opts.explicitCreate || opts.explicitAdopt || opts.stateDir == "" {
 		return result
 	}
+	if opts.narrator == nil {
+		opts.narrator = newLegacyImportNarrator(legacyImportLogWriter)
+	}
+	importStart := time.Now()
 	skipped := 0
 	skip := func(reason, detail string) {
 		skipped++
 		opts.recorder.legacyImportSkipped(reason, detail)
+		opts.narrator.line("skipped: %s: %s", reason, detail)
 	}
 
 	// Detection: a 3.23-fix store AND the retained seed. Without both, this is
@@ -351,9 +375,34 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		return result
 	}
 
+	// The migration case is real and every decision now names its evidence:
+	// the store, the key shape, whether sn already adopted this key, and
+	// whether the sign-in carries a network id.
+	keyShape := "normal"
+	if isAllZeroProviderSeed(seed) {
+		keyShape = "zero"
+	}
+	markerPresence := "absent"
+	if markerExists {
+		markerPresence = "present"
+	}
+	opts.narrator.detection(legacyClientJwtStoreName, len(store), keyShape, markerPresence, legacyImportID8(networkID))
+
+	// Every path past detection ends with the final account: what was
+	// imported, what decided to fall back, what was skipped, what was left
+	// for the next start, how long it ran and the bound that ended it.
+	phaseResult := legacyImportResultComplete
+	left := 0
+	imported := 0
+	newFallbacks := 0
+	summary := func(result string) {
+		opts.narrator.summary(imported, newFallbacks, skipped, left, time.Since(importStart), result)
+	}
+
 	journal, err := readLegacyImportJournal(opts.stateDir)
 	if err != nil {
 		skip("journal_invalid", err.Error())
+		summary("journal_invalid")
 		return result
 	}
 
@@ -366,14 +415,18 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	}
 	identities := newProviderSlotIdentities(providers)
 	var slots []*legacyImportSlot
+	custodied := 0
+	noStoreEntry := 0
 	for _, settings := range providers {
 		storeKey := legacyImportStoreKey(settings)
 		target := legacyImportTargetPath(opts.stateDir, identities, settings)
 		if _, err := os.Stat(target); err == nil {
+			custodied++
 			continue
 		}
 		entry, present := store[storeKey]
 		if !present {
+			noStoreEntry++
 			continue
 		}
 		slot := &legacyImportSlot{
@@ -430,82 +483,52 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		slot.clientID8 = legacyImportClientID8(clientID)
 	}
 
-	// Proof phase. Tier 1 compares the retained public key with the key the
-	// server holds for the client_id. A null or unreachable read is
-	// inconclusive, not a refusal, and falls through to tier 2: the same
-	// refresh the normal retained-credential path runs. Only a completed
-	// refresh that preserves the identity counts.
+	// Proof phase, bounded and narrated. Tier 1 compares the retained public
+	// key with the key the server holds for the client_id; a null or
+	// unreachable read is inconclusive, not a refusal, and tier 2 runs the
+	// same refresh the normal retained-credential path runs. The direct
+	// identity is proved first; the rest run with bounded concurrency under a
+	// per-proof deadline, a heartbeat and the total import budget. A phase
+	// stopped early (budget, unreachable API) leaves its untouched slots for
+	// the next start.
 	var prove []*legacyImportSlot
 	for _, slot := range slots {
 		if slot.state == "prove" {
 			prove = append(prove, slot)
 		}
 	}
+	// A slot whose saved entry failed validation is a decision taken before
+	// any proof; name it like every other resolved slot.
+	for _, slot := range slots {
+		if slot.state == "fallback" && !slot.fallbackRecorded {
+			opts.narrator.slotOutcome(legacyImportNarrateDisplay(slot.settings), "fallback", "reason="+slot.reason)
+		}
+	}
+	opts.narrator.mapping(len(providers), len(slots), custodied, noStoreEntry)
 	if len(prove) > 0 {
-		prover, closeProver, err := opts.newProver()
+		prover, closeProver, err := legacyImportBuildProver(ctx, opts)
 		if err != nil {
 			skip("proof_unavailable", err.Error())
+			// The proof never ran: the next start must prove every candidate
+			// again, and the startup gate decides what happens meanwhile.
+			summary("proof_unavailable")
 			return result
 		}
 		public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
-		var inconclusive []*legacyImportSlot
-		for _, slot := range prove {
-			serverKey, err := prover.ServerPublicKey(ctx, slot.clientID)
-			switch {
-			case err != nil:
-				slot.reason = "server_key_unavailable"
-				inconclusive = append(inconclusive, slot)
-			case len(serverKey) == 0:
-				slot.reason = "server_key_absent"
-				inconclusive = append(inconclusive, slot)
-			case !bytes.Equal(serverKey, public):
-				slot.state = "fallback"
-				slot.reason = "server_key_differs"
-			default:
-				slot.state = "commit"
-				slot.proof = "server_key"
-			}
-		}
-		for _, slot := range inconclusive {
-			// A transient read (the API was never reached) is retried within
-			// this start. If it stays unavailable the slot is deferred: the
-			// saved credential stays untouched, nothing is journaled, no new
-			// client is allocated, and the next start proves it again. Only a
-			// completed refusal is a fallback.
-			slot.state = "defer"
-			slot.reason = "refresh_unavailable"
-			var lastErr error
-			for attempt := 1; ; attempt++ {
-				err := prover.RefreshAccepted(ctx, slot.entry.ByClientJWT)
-				if err == nil {
-					slot.state = "commit"
-					slot.proof = "refresh"
-					slot.reason = ""
-					break
-				}
-				lastErr = err
-				if !legacyImportProofRetryable(err) {
-					slot.state = "fallback"
-					slot.reason = "refresh_rejected"
-					break
-				}
-				if ctx.Err() != nil || attempt >= legacyImportTransientAttempts {
-					break
-				}
-				select {
-				case <-ctx.Done():
-					return result
-				case <-time.After(legacyImportTransientBackoff):
-				}
-			}
-			if slot.state == "defer" {
-				slot.unreachable = legacyImportProofUnreachable(lastErr)
-			}
-		}
+		phaseResult, left = legacyImportProveAll(ctx, opts.narrator, prover, public, prove, opts.proveOptions())
 		closeProver()
+		if phaseResult == legacyImportResultCanceled {
+			summary(legacyImportResultCanceled)
+			return result
+		}
+		if left > 0 {
+			skipped++
+			opts.recorder.legacyImportSkipped(legacyImportLeftReason(phaseResult), fmt.Sprintf("%d slots left for the next start", left))
+		}
 	}
 	if ctx.Err() != nil {
 		// A canceled startup makes no permanent identity decision.
+		summary(legacyImportResultCanceled)
 		return result
 	}
 
@@ -526,6 +549,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			now.Unix()-slot.firstDeferredAt >= int64(legacyImportDeferralWindow/time.Second) {
 			slot.state = "fallback"
 			slot.reason = "proof_unavailable_bound"
+			opts.narrator.slotOutcome(legacyImportNarrateDisplay(slot.settings), "fallback", "reason="+slot.reason)
 		}
 	}
 
@@ -546,6 +570,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		}
 		if custody := legacySlotCustodyName(opts.stateDir, slot.target); custody != "" {
 			slot.state = "refuse"
+			opts.narrator.slotOutcome(legacyImportNarrateDisplay(slot.settings), "refused", "reason=sn_custody_present detail="+custody)
 			skip("sn_custody_present", custody)
 		}
 	}
@@ -562,6 +587,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		}
 	}
 	if len(commit) == 0 && len(fallback) == 0 && len(deferred) == 0 {
+		summary(phaseResult)
 		return result
 	}
 
@@ -573,10 +599,12 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	if (len(commit) > 0 || len(fallback) > 0) && !markerExists {
 		if err := writeLegacyImportNewFile(markerPath, marker); err != nil && !errors.Is(err, os.ErrExist) {
 			skip("marker_write_failed", err.Error())
+			summary("marker_write_failed")
 			return result
 		}
 		if opts.hooks.afterMarkerWrite != nil {
 			if err := opts.hooks.afterMarkerWrite(); err != nil {
+				summary("interrupted")
 				return result
 			}
 		}
@@ -584,7 +612,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 
 	// Commit step 2: the proven credentials. Never an overwrite, one file per
 	// slot, atomically.
-	imported := 0
+	imported = 0
 	for _, slot := range commit {
 		data := []byte(strings.TrimSpace(slot.entry.ByClientJWT))
 		if err := writeLegacyImportNewFile(slot.target, data); err != nil {
@@ -608,6 +636,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 				// The state reached here is the state of a killed import:
 				// the marker and the earlier credentials are durable, the
 				// rest is redone by the next start.
+				summary("interrupted")
 				return result
 			}
 		}
@@ -616,7 +645,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	// Commit step 3: the fallback decisions. The journal freezes them so a
 	// later start never imports these slots again. A sticky fallback loaded
 	// from the journal keeps the mint allowed but is not announced again.
-	newFallbacks := 0
+	newFallbacks = 0
 	for _, slot := range fallback {
 		journal.Slots[slot.storeKey] = legacyImportJournalSlot{
 			State:    "fallback",
@@ -651,6 +680,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	if imported > 0 || newFallbacks > 0 || skipped > 0 {
 		opts.recorder.legacyImportSummary(imported, newFallbacks, skipped)
 	}
+	summary(phaseResult)
 	return result
 }
 

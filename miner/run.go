@@ -157,6 +157,7 @@ Usage:
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
 		[--no-legacy-import]
+		[--legacy-import-budget=<dur>]
 		[--quarantine-rejected-sign-in]
         [--proxy_file=<proxy_file>] [--file=<file>]
         [--api_url=<api_url>]
@@ -176,6 +177,7 @@ Usage:
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
 		[--no-legacy-import]
+		[--legacy-import-budget=<dur>]
     	[--port=<port>]
         [--proxy_file=<proxy_file>] [--file=<file>]
         [--api_url=<api_url>]
@@ -286,6 +288,9 @@ Options:
 	--no-legacy-import               Disable the automatic import of 3.23-fix saved provider identities from
 	                                 .client_jwts.json; no legacy file is read for import and no sn state file is
 	                                 written, so startup behaves exactly as before this feature.
+	--legacy-import-budget=<dur>     Total time bound for the automatic 3.23-fix identity import (default 5m;
+	                                 also URNETWORK_LEGACY_IMPORT_BUDGET). On the bound the import stops loudly,
+	                                 keeps every slot already proven and leaves the rest for the next start.
 	--config=<path>                    Strict release-1.0 daemon/component configuration.
 	--v1-config=<path>                 claim-daemon-v2: also run the unchanged v1 claim daemon of this configuration in
 	                                   the same process; both use one relayer key and share its nonce admission.
@@ -428,6 +433,26 @@ Options:
 		DefaultConnectUrl,
 		operatorlist.DefaultUrl,
 	)
+}
+
+// parseLegacyImportBudget returns the total proving budget of the automatic
+// 3.23-fix identity import: --legacy-import-budget when given, else
+// URNETWORK_LEGACY_IMPORT_BUDGET, else 0 (the package default, 5m). A
+// malformed value is refused at parse time, like --max-memory: an operator
+// who asked for a specific bound must not silently get another.
+func parseLegacyImportBudget(opts docopt.Opts) time.Duration {
+	value, _ := opts.String("--legacy-import-budget")
+	if strings.TrimSpace(value) == "" {
+		value = strings.TrimSpace(os.Getenv("URNETWORK_LEGACY_IMPORT_BUDGET"))
+	}
+	if value == "" {
+		return 0
+	}
+	budget, err := time.ParseDuration(value)
+	if err != nil || budget <= 0 {
+		panic(fmt.Errorf("Bad --legacy-import-budget argument: %s", value))
+	}
+	return budget
 }
 
 // Run is the miner CLI entry point (the executable lives at cli/miner). It takes
@@ -796,6 +821,7 @@ func provide(opts docopt.Opts) {
 	allowClientRegistration, _ := opts.Bool("--allow-client-registration")
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
 	noLegacyImport, _ := opts.Bool("--no-legacy-import")
+	legacyImportBudget := parseLegacyImportBudget(opts)
 	// internal: an operator child of provide --all-operators --auto-register
 	quarantineRejectedSignIn, _ := opts.Bool("--quarantine-rejected-sign-in")
 	domainPath, _ := opts.String("--close-report-domain")
@@ -803,7 +829,7 @@ func provide(opts docopt.Opts) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, proxySourceOf: proxyManager.proxySourceOf(), memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, proxySourceOf: proxyManager.proxySourceOf(), memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, legacyImportBudget: legacyImportBudget, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -1036,8 +1062,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		explicitCreate: self.allowClientRegistration,
 		explicitAdopt:  self.adoptLegacyProviderKey,
 		recorder:       output,
-		newProver: func() (legacyImportProver, func(), error) {
-			return newSdkLegacyImportProver(ctx, self.apiUrl)
+		budget:         self.legacyImportBudget,
+		newProver: func(wait legacyImportProofDialWait) (legacyImportProver, func(), error) {
+			return newSdkLegacyImportProver(ctx, self.apiUrl, wait)
 		},
 	})
 	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: self.allowClientRegistration, AdoptLegacyKey: self.adoptLegacyProviderKey})
@@ -1104,7 +1131,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		critLog("SIGNAL: context cancelled — draining goroutines\nsource:\n%s", cancelSource.text())
 	}()
 
+	// The bring-up narration: per-slot auth outcomes and, while slots are
+	// pending, the running/pending/failed heartbeat. Declared before the
+	// worker closure; started once the launch list is fixed below.
+	bringUp := newProviderBringUpTracker(len(providers))
 	provideWithProxy := func(index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
+		display := providerSlotDisplay(proxySettings)
 		defer func() {
 			// Registered first, this runs after every real cleanup below.
 			// Keep cleanup causes even when an SDK/operation panics.
@@ -1206,6 +1238,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// (v33 returns waitErr down the same path).
 			if proxyCtx.Err() == nil {
 				output.observe(providerAuthenticationRecoveryEvent(admitErr), index, true, admitErr, 0, nil)
+				bringUp.authFailed(index, display, admitErr, providerAuthRetryToken(providerAuthGiveUpInfo{}))
 			}
 			return admitErr
 		}
@@ -1241,20 +1274,22 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// Fork hook: the ported v33 give-up/backoff accounting
 			// (proxy_manager_auth.go) records this identity's failed
 			// authentication, and gives up on it once it reaches the ceiling.
-			noteProviderAuthFailure(proxySettings, err)
+			// Its result names the retry half of the per-slot auth line below.
+			giveUp := noteProviderAuthFailure(proxySettings, err)
 			// Fork hook: the shared limiter learns from the completed
 			// attempt (v33 main.go reports after the failure accounting, so
 			// a first-ever success is already "proven" when it lands).
 			reportProviderAuthResult(proxySettings, err)
 			if proxyCtx.Err() == nil {
 				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
+				bringUp.authFailed(index, display, err, providerAuthRetryToken(giveUp))
 			}
 			return err
 		}
 		if reused {
-			tlog("[reuse] client_id: %s\n", clientId)
+			bringUp.authReused(index, clientId, display)
 		} else {
-			tlog("[new] client_id: %s\n", clientId)
+			bringUp.authNew(index, clientId, display)
 		}
 		// Fork hook: a completed authentication proves the identity and clears
 		// its failure/give-up history.
@@ -1385,6 +1420,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// index, so the diagnostics label a provider by the slot it was
 	// configured as, exactly as before.
 	launchSlots := scheduleProxyLaunch(providers, self.proxySourceOf, "")
+	// Start the bring-up heartbeat once the launch list is fixed; a run with
+	// no slots closes it immediately.
+	bringUp.start()
+	defer bringUp.stop()
 	var wg sync.WaitGroup
 	results := make(chan error, len(providers))
 	for _, slot := range launchSlots {
@@ -1411,6 +1450,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 						cancel()
 					}
 					output.observe(providerWorkerFailed, uint64(index), true, result, 0, nil)
+					if ctx.Err() == nil && !errors.Is(result, context.Canceled) && !errors.Is(result, context.DeadlineExceeded) {
+						bringUp.workerFailed(uint64(index))
+					}
 				}
 				results <- result
 			}()
