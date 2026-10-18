@@ -47,6 +47,12 @@ type proxyManagerConfig struct {
 	SelfHeal            bool
 	ApiHost             string
 	ApiPort             uint16
+	// ProxyFile is the operator-curated proxy source file (v33 Workflow A:
+	// --proxy_file / --file / PROXY_FILE). Empty means the legacy internal
+	// <state>/proxy config is the curated source (Workflow B). The resolved
+	// path is written to proxy.state.Source, the only switch every reader
+	// (summary, refresh, remove-dead, the reload engine) consults.
+	ProxyFile string
 }
 
 // defaultProxyManagerConfig mirrors v33's defaults: refresh 1h, cap 500,
@@ -161,11 +167,30 @@ func apiProbeHostPort(apiUrl string) (string, uint16) {
 	return u.Hostname(), port
 }
 
+// resolveProxyFile selects the file-backed curated source exactly as v33
+// (provider/main.go 4090-4098): --proxy_file wins, then --file, then the
+// PROXY_FILE environment variable; the resolved path has ~ expanded. Empty
+// means Workflow B (the internal <state>/proxy config).
+func resolveProxyFile(opts docopt.Opts) string {
+	proxyFile := proxyManagerEnvOrFlag(opts, "--proxy_file", "", "")
+	if proxyFile == "" {
+		proxyFile = proxyManagerEnvOrFlag(opts, "--file", "", "")
+	}
+	if proxyFile == "" {
+		proxyFile = strings.TrimSpace(os.Getenv("PROXY_FILE"))
+	}
+	if proxyFile == "" {
+		return ""
+	}
+	return expandPath(proxyFile)
+}
+
 // proxyManagerConfigFromOpts resolves the manager config from the provide
 // command's options and the environment.
 func proxyManagerConfigFromOpts(opts docopt.Opts, apiUrl string) proxyManagerConfig {
 	cfg := defaultProxyManagerConfig()
 	cfg.Urls = resolveProxyURLs(opts)
+	cfg.ProxyFile = resolveProxyFile(opts)
 	cfg.Refresh = proxyManagerEnvOrFlagDuration(opts, "--proxy_url_refresh", "PROXY_URL_REFRESH", cfg.Refresh)
 	cfg.Max = proxyManagerEnvOrFlagInt(opts, "--proxy_url_max", "PROXY_URL_MAX", cfg.Max)
 	cfg.DeadCleanupScope = proxyManagerEnvOrFlag(opts, "--proxy_dead_cleanup_scope", "PROXY_DEAD_CLEANUP_SCOPE", cfg.DeadCleanupScope)
@@ -229,6 +254,16 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	if state.Proxies == nil {
 		state.Proxies = map[string]ProxyEntry{}
 	}
+	// v33 main.go 4090-4121: the selected source file is recorded in
+	// proxy.state.Source, and Workflow B (no file configured) clears it. This
+	// is the writer every other reader of the switch needs - primarySource
+	// below, proxy summary/refresh/remove-dead and the reload engine. It runs
+	// on the start/import path only: a command reader must honor whatever the
+	// running provider selected, not re-decide the source from its own flags.
+	if importLegacy && state.Source != m.cfg.ProxyFile {
+		state.Source = m.cfg.ProxyFile
+		writeState = true
+	}
 	// Live health (v33 connect health parity): the persisted health seeds the
 	// registry on the first read after a restart, and any health this process
 	// has observed since is overlaid onto the entries the trim ranking reads.
@@ -240,6 +275,13 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	tag, primary, err := m.primarySource(state)
 	if err != nil {
 		return nil, nil, false, err
+	}
+	// v33 refuses a file-backed start whose source file read as empty or
+	// yielded no valid entries (shmLogFatal 20/21): silently falling back to
+	// the URL cache would provide with a curated pool of zero. Only the start
+	// path refuses; command readers surface the empty list as a normal diff.
+	if importLegacy && m.cfg.ProxyFile != "" && len(primary) == 0 {
+		return nil, nil, false, fmt.Errorf("proxy file %s contained no valid proxies (expected one host:port:user:pass per line)", m.cfg.ProxyFile)
 	}
 
 	desiredSet := make(map[string]*connect.ProxySettings, len(primary))
@@ -362,9 +404,17 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// file: it is the operator's curated config, and writing discovered
 	// entries into it would make them indistinguishable from curated ones.
 	m.mirrorLegacyProxyConfig()
+	// Provenance of the curated half follows the selected workflow (v33
+	// main.go `primarySource`): a configured source file tags its entries
+	// "file", Workflow B's internal config tags them "internal". The reload
+	// attribution and source-scoped removal read this tag.
+	primaryTag := "internal"
+	if m.cfg.ProxyFile != "" {
+		primaryTag = "file"
+	}
 	m.sourceOf = map[string]string{}
 	for _, s := range launch {
-		m.sourceOf[s.Key()] = "internal"
+		m.sourceOf[s.Key()] = primaryTag
 	}
 
 	// URL-sourced proxies only launch on the next start until P2 wires the hot
@@ -474,6 +524,12 @@ func (m *proxyManager) stop() {
 // config) atomically. The content is the config as read: the mirror does not
 // invent entries, it guarantees that the file a pre-port reader sees is whole
 // and parseable after the manager has touched the state directory.
+//
+// Which curated source is authoritative is decided by proxy.state.Source, not
+// by this file (v33 workflow selection): a configured source file (Workflow A)
+// is what the manager, summary, refresh and remove-dead read, and the legacy
+// internal config is only the Workflow B source. The mirror stays so a reader
+// that predates the Source field still sees the internal config whole.
 func (m *proxyManager) mirrorLegacyProxyConfig() {
 	cfg := readProxyConfig()
 	b, err := json.Marshal(cfg)

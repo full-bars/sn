@@ -94,6 +94,7 @@ Usage:
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
 		[--quarantine-rejected-sign-in]
+        [--proxy_file=<proxy_file>] [--file=<file>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
         [--proxy_url=<proxy_url>]... [--url=<url>]... [--URL=<URL>]...
@@ -111,6 +112,7 @@ Usage:
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
     	[--port=<port>]
+        [--proxy_file=<proxy_file>] [--file=<file>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
         [--proxy_url=<proxy_url>]... [--url=<url>]... [--URL=<URL>]...
@@ -309,7 +311,10 @@ Options:
     <proxy_user>                     SOCKS5 user
     <proxy_password>                 SOCKS5 password
     <key_address>                    SOCKS5 server as host:port, host:port:user:pass, host:port::, or key@host:port
-    --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port
+    --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port.
+                                     With provide/auth-provide it selects the file-backed proxy source the running
+                                     provider re-reads on reload; also PROXY_FILE.
+    --file=<file>                    Alias for --proxy_file (provide/auth-provide); with 'proxy paste', the input file.
     <url>                            A proxy list URL, for 'proxy add-source' and 'proxy remove-source'.
     <count>                          Max number of running proxies to keep, for 'proxy trim'. 0/off clears the cap.
     <pattern>                        Host substring for 'proxy exclude' (add). With --remove, deletes the pattern.
