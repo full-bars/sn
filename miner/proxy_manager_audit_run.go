@@ -359,10 +359,10 @@ func proxyAuditActEnabled(startupProxyAudit bool) bool {
 
 // hotRestartEnabled is v33's hot-restart switch (main.go hotRestartEnabled:
 // the "hot_restart" control key, then URNETWORK_HOT_RESTART, default on).
-// The miner's hot restart and its reload reconciler are P2: until they land,
-// a park would cancel a proxy with no path back, so the audit observes. P2
-// replaces this seam with the v33 resolution.
-var hotRestartEnabled = func() bool { return false }
+// The resolution lives beside the control socket (resolveHotRestartEnabled,
+// control_socket.go, P2); this indirection keeps the value overridable in
+// tests that exercise the audit's acting/observing split.
+var hotRestartEnabled = resolveHotRestartEnabled
 
 // The two reasons proxy audit can be observing only. They are machine-stable
 // strings carried on the control socket; `urnet-tools` turns them into advice.

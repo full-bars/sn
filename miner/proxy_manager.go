@@ -377,12 +377,11 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// hook (proxy_manager_scout.go).
 	installScoutScorer()
 
-	// Command audit ring: v33 main() runs initAuditRing + recordProcessStart at
-	// process start and forceAuditPersist at shutdown. The control socket that
-	// records commands is P2; the lifecycle entry and the persistence are wired
-	// here so `urnet-tools history` has the process record (proxy_manager_audit_ring.go).
-	initAuditRing()
-	recordProcessStart(false, false)
+	// Command audit ring: the process lifecycle (initAuditRing +
+	// recordProcessStart) is owned by the provide run path beside the control
+	// socket (run.go), which starts before this manager and records commands
+	// from the first one served. Only the shutdown persist stays here, so a
+	// standalone manager still writes what it appended.
 
 	ctx, cancel := context.WithCancel(parent)
 	m.cancel = cancel

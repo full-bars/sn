@@ -557,28 +557,44 @@ func TestReconcileAuditRingAfterHandoffStopsOnCancel(t *testing.T) {
 
 // --- focused wiring: the manager lifecycle (adapts audit_ring_wiring_test.go) -
 
-// The ring must be loaded and this process's start recorded when the manager
-// starts, and flushed when it stops - the miner's equivalent of the v33
-// main() startup/shutdown calls, since the miner's provide() is upstream.
-func TestManagerStartWiresTheAuditRingLifecycle(t *testing.T) {
+// The run path loads the ring and records this process's start; the manager
+// must preserve that ring (it starts after the control socket, which already
+// serves commands) and flush it when it stops. This is the miner's equivalent
+// of the v33 main() startup/shutdown calls, split across the two owners.
+func TestManagerKeepsTheAuditRingInitializedByTheRunPath(t *testing.T) {
 	dir := withTempHome(t)
 	prevRing := globalAuditRing
 	t.Cleanup(func() { globalAuditRing = prevRing })
+	// Simulate process start: no ring yet, so the run path's init loads this
+	// temp HOME's (empty) audit.json instead of inheriting earlier tests' ring.
+	globalAuditRing = nil
 	prevPersist := lastAuditPersist
 	t.Cleanup(func() { lastAuditPersist = prevPersist })
 	lastAuditPersist = time.Time{} // gate open so the start entry persists
+
+	// The provide run path owns the ring lifecycle, beside the control socket
+	// and before any manager starts (run.go: initControlAuditRing +
+	// recordControlProcessStart).
+	initControlAuditRing()
+	recordControlProcessStart()
+	ring := globalAuditRing
+	if ring == nil {
+		t.Fatal("the run path must init the audit ring")
+	}
+	entries, _ := ring.Entries(10, "")
+	if len(entries) != 1 || entries[0].Cmd != "start" || entries[0].Source != "boot" {
+		t.Fatalf("the run path must record this process's start entry, got %+v", entries)
+	}
 
 	m := newProxyManager(defaultProxyManagerConfig())
 	if _, _, err := m.start(context.Background()); err != nil {
 		t.Fatalf("manager start: %v", err)
 	}
-	ring := globalAuditRing
-	if ring == nil {
-		t.Fatal("manager start must init the audit ring")
-	}
-	entries, _ := ring.Entries(10, "")
-	if len(entries) != 1 || entries[0].Cmd != "start" || entries[0].Source != "boot" {
-		t.Fatalf("manager start must record this process's start entry, got %+v", entries)
+	// The manager must not re-init or re-record: the run path's one start
+	// entry survives, so commands served before the manager are not lost.
+	entries, _ = globalAuditRing.Entries(10, "")
+	if len(entries) != 1 || entries[0].Cmd != "start" {
+		t.Fatalf("manager start must not clobber the run path's ring, got %+v", entries)
 	}
 
 	m.stop()

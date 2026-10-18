@@ -618,9 +618,10 @@ func TestProxyAuditActEnabled_RequiresAuditAndHotRestart(t *testing.T) {
 	prev := hotRestartEnabled
 	t.Cleanup(func() { hotRestartEnabled = prev })
 
-	if hotRestartEnabled() {
-		t.Fatalf("hot restart must default off until P2 wires it: parking without it would cancel a proxy with no path back")
-	}
+	// Hot restart is wired now (P2, v33 default-on; TestHotRestartEnabledResolution
+	// covers the env/control-key resolution). Drive the switch explicitly here so
+	// this test measures the audit's acting/observing split.
+	hotRestartEnabled = func() bool { return false }
 	if proxyAuditActEnabled(true) {
 		t.Fatalf("hot restart off: must observe even with the startup value on")
 	}

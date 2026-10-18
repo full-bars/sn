@@ -562,10 +562,12 @@ func getHotSwapTrigger() func() error {
 	return hotSwapTrigger
 }
 
-// hotRestartEnabled reports whether the restart machinery is enabled:
+// resolveHotRestartEnabled reports whether the restart machinery is enabled:
 // the persisted hot_restart key when set, else URNETWORK_HOT_RESTART (on
-// unless it is "0"). This is the v33 default-on semantics.
-func hotRestartEnabled() bool {
+// unless it is "0"). This is the v33 default-on semantics. The audit/restart
+// callers go through the overridable hotRestartEnabled var
+// (proxy_manager_audit_run.go).
+func resolveHotRestartEnabled() bool {
 	if v, ok := globalControlState.get("hot_restart"); ok {
 		switch strings.ToLower(strings.TrimSpace(v)) {
 		case "off", "0", "false", "no":
@@ -797,7 +799,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		if limit > 100 {
 			limit = 100
 		}
-		entries, nextCursor := globalAuditRing.historyEntries(limit, req.Cursor)
+		entries, nextCursor := globalAuditRing.Entries(limit, req.Cursor)
 		return controlResponse{OK: true, Entries: entries, NextCursor: nextCursor}
 
 	case "ledger":
@@ -840,7 +842,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		return controlResponse{OK: true, Value: "shutting down"}
 
 	case "hotswap":
-		if !hotRestartEnabled() {
+		if !resolveHotRestartEnabled() {
 			return controlResponse{OK: false, Error: "hot restart is disabled (set hot_restart on or URNETWORK_HOT_RESTART=1 to enable)"}
 		}
 		hotSwap := getHotSwapTrigger()
@@ -921,7 +923,7 @@ func applyControlLiveSideEffect(key, value string) error {
 		globalProxyControlState.set(key, value)
 		tlog("[control] applied %s=%s to the running proxy manager\n", key, value)
 	case "hot_restart":
-		tlog("[control] hot_restart=%s (restart machinery %s)\n", value, onOffLabel(hotRestartEnabled()))
+		tlog("[control] hot_restart=%s (restart machinery %s)\n", value, onOffLabel(resolveHotRestartEnabled()))
 	default:
 		if controlUnsupportedKeys[key] {
 			// Persisted, but nothing in the miner reads it yet. Say so rather

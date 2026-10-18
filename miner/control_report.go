@@ -185,28 +185,10 @@ var minerControlTrimPreview = func(count int) (string, error) {
 	return "", fmt.Errorf("the control socket is not available in this build")
 }
 
-// proxyAuditStatus mirrors the v33 provider's proxy audit snapshot in the
-// control socket "status" and "audit" replies. The miner has no audit engine,
-// so every field stays zero and the socket reports the gap explicitly.
-type proxyAuditStatus struct {
-	Acting          bool               `json:"acting"`
-	NotActingReason string             `json:"not_acting_reason,omitempty"`
-	Parked          []proxyAuditParked `json:"parked,omitempty"`
-	WouldPark       int                `json:"would_park"`
-	Distrusted      bool               `json:"distrusted,omitempty"`
-	Thin            bool               `json:"thin_pass,omitempty"`
-	Parks24h        int                `json:"parks_24h"`
-	Paused          bool               `json:"paused,omitempty"`
-	PausedSince     time.Time          `json:"paused_since,omitempty"`
-	UpdatedAt       time.Time          `json:"updated_at"`
-}
-
-// proxyAuditParked is one proxy held out by the audit engine.
-type proxyAuditParked struct {
-	Addr  string    `json:"addr"`
-	User  string    `json:"user,omitempty"`
-	Until time.Time `json:"until"`
-}
+// proxyAuditStatus and its parked-proxy element are defined in
+// proxy_manager_audit_status.go (the P1(c) port). The control socket replies
+// with that snapshot; the miner has no audit engine, so the builder below
+// reports the gap explicitly.
 
 // minerControlAuditStatus returns the proxy audit engine's last tick, or
 // (nil, nil) when the miner has no audit engine. A non-nil error is reported
