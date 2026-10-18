@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -327,7 +328,9 @@ type pendingControlOp struct {
 
 // mergePendingControlOverrides applies the queue urnet-tools writes while the
 // provider was stopped, then removes it. A malformed queue is left on disk
-// for inspection rather than silently discarded.
+// for inspection rather than silently discarded. The log lines are the v33
+// mergePendingOverrides ones verbatim (provider/pending_overrides.go), so the
+// daemon log reads the same under either binary.
 func mergePendingControlOverrides(state *controlState) {
 	path, err := providerStatePath("pending_overrides.json")
 	if err != nil {
@@ -335,33 +338,52 @@ func mergePendingControlOverrides(state *controlState) {
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
+		if !os.IsNotExist(err) {
+			tlog("[control] failed to read pending_overrides.json, leaving it in place: %s\n", err)
+		}
 		return
 	}
 	var ops []pendingControlOp
 	if err := json.Unmarshal(data, &ops); err != nil {
-		importantLogf("[control] pending_overrides.json is unreadable (%v); leaving it in place\n", err)
+		tlog("[control] pending_overrides.json is malformed, leaving it in place for inspection: %s\n", err)
 		return
 	}
+	// Name each key that lands, not just the count: an operator who ran
+	// `urnet-tools set` while the provider was stopped needs to see THEIR
+	// setting registered on the next start.
+	applied := 0
+	var appliedDesc []string
 	for _, op := range ops {
+		var applyErr error
 		switch op.Op {
 		case "set":
-			if controlKeys[op.Key] {
-				state.setWithValue(op.Key, op.Value, SourcePending)
-			}
+			applyErr = state.setWithValue(op.Key, op.Value, SourcePending)
 		case "clear":
-			if controlKeys[op.Key] {
-				state.clear(op.Key)
-			}
+			applyErr = state.clear(op.Key)
+		default:
+			applyErr = fmt.Errorf("unknown op %q", op.Op)
 		}
+		if applyErr != nil {
+			tlog("[control] skipping invalid pending override (op=%q key=%q): %s\n", op.Op, op.Key, applyErr)
+			continue
+		}
+		if op.Op == "clear" {
+			appliedDesc = append(appliedDesc, "cleared "+op.Key)
+		} else {
+			appliedDesc = append(appliedDesc, op.Key+"="+op.Value)
+		}
+		applied++
 	}
-	if len(ops) > 0 {
+	if applied > 0 {
 		if err := state.persist(); err != nil {
-			importantLogf("[control] could not persist merged pending overrides: %v\n", err)
+			tlog("[control] applied %d pending override(s) in memory but failed to persist; leaving pending_overrides.json in place to retry next start: %s\n", applied, err)
 			return
 		}
+		tlog("⚙️ [control] applied %d queued override(s) from pending_overrides.json: %s\n",
+			applied, strings.Join(appliedDesc, ", "))
 	}
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
-		tlog("[control] could not remove the applied pending_overrides.json: %v\n", err)
+		tlog("[control] applied pending overrides but failed to remove pending_overrides.json: %s\n", err)
 	}
 }
 
