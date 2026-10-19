@@ -125,6 +125,8 @@ github.com/full-bars/connect v0.0.0-20261019001217-d5f3d3cc20a5 h1:h0G+xCHreQsSl
 github.com/full-bars/connect v0.0.0-20261019001217-d5f3d3cc20a5/go.mod h1:ijBmhQcFTkLp9/fbXTfDBZg1bjfjoT7T9SqSCbmwsQ0=
 github.com/full-bars/connect v0.0.0-20261019010923-67fe4d5b69d0 h1:64pwNjaxWpezY7Ahv7ObvnUJtnVzDn5sdeWZ2OTRagg=
 github.com/full-bars/connect v0.0.0-20261019010923-67fe4d5b69d0/go.mod h1:ijBmhQcFTkLp9/fbXTfDBZg1bjfjoT7T9SqSCbmwsQ0=
+github.com/full-bars/connect v0.0.0-20261019212336-448c2587b779 h1:JGf7wKtZrQFMnQHZ3TFYn8peeJZgJNKOfU5FP4QyRKc=
+github.com/full-bars/connect v0.0.0-20261019212336-448c2587b779/go.mod h1:ijBmhQcFTkLp9/fbXTfDBZg1bjfjoT7T9SqSCbmwsQ0=
 github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7zvxg=
 github.com/gagliardetto/binary v0.8.0/go.mod h1:2tfj51g5o9dnvsc+fL3Jxr22MuWzYXwx9wEoN0XQ7/c=
 github.com/gagliardetto/solana-go v1.21.0 h1:ZswwwDOFuD/7Hk/k3b6dyLetmvEJuyLmQU7xIziCZgo=
