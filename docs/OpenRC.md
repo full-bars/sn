@@ -137,7 +137,7 @@ zero-downtime hotswap unavailable: the provider is supervised by OpenRC's superv
 
 `update` then does an ordinary stop, binary swap and start, with a brief gap with no provider process. To restart without updating, use `rc-service urnetwork restart`. Background and measurements for the systemd path are on the [HotSwap](HotSwap.md) page.
 
-## urnet-tools command parity
+## Command parity with urnet-tools
 
 On a host where OpenRC is the running init system and the installer's `urnetwork` service exists, the lifecycle commands act on that service. The backend is chosen at run time by looking at the running init system, never by operating system. A host where systemd is running keeps the systemd behavior even if OpenRC is installed beside it.
 
