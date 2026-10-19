@@ -288,6 +288,56 @@ func TestProviderClientKeyMissingMarkerDoesNotBlessRetainedHistory(t *testing.T)
 // guards must execute before reading key bytes or replacing files: a rotation
 // never excuses a symlink, an unsafe mode, a second link or a key that differs
 // from its retained public identity.
+//
+// The fork's .provider_version stamp is not identity history. A provider that
+// ran the 3.23 line carries it beside the key, the cert and its legacy
+// credential, and it must not block the first-upgrade adoption those files
+// require.
+func TestProviderClientKeyAdoptsLegacyBesideVersionStamp(t *testing.T) {
+	dir := providerRegistrationPrivateDir(t)
+	path := filepath.Join(dir, ".provider.key")
+	if err := os.WriteFile(path, bytes.Repeat([]byte{23}, ed25519.SeedSize), 0600); err != nil {
+		t.Fatal(err)
+	}
+	for name, body := range map[string]string{
+		".provider.cert":    "synthetic provider certificate",
+		".provider_version": "v3.23.0-fix.32.10\n",
+	} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	credential := registrationTestToken(t, testClientId, "provider")
+	if err := os.WriteFile(filepath.Join(dir, ".provider.jwt"), []byte(credential), 0600); err != nil {
+		t.Fatal(err)
+	}
+	owner, err := OpenProviderClientKey(t.Context(), path, ProviderClientKeyOptions{AdoptLegacyKey: true})
+	if err != nil || owner == nil {
+		t.Fatalf("legacy adoption beside the fork version stamp was refused: %v", err)
+	}
+	defer owner.Close()
+	if _, err := os.Stat(filepath.Join(dir, ".provider.key.identity")); err != nil {
+		t.Fatal("adoption did not publish the identity marker", err)
+	}
+}
+
+// A version stamp alone is not retained history either: it must not turn a
+// genuinely fresh directory into a custody-recovery case.
+func TestProviderClientKeyCreatesBesideVersionStamp(t *testing.T) {
+	dir := providerRegistrationPrivateDir(t)
+	if err := os.WriteFile(filepath.Join(dir, ".provider_version"), []byte("v3.23.0-fix.32.10\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, ".provider.key")
+	owner, err := OpenProviderClientKey(t.Context(), path, ProviderClientKeyOptions{AllowCreate: true})
+	if err != nil || owner == nil {
+		t.Fatalf("a version stamp was treated as provider history: %v", err)
+	}
+	defer owner.Close()
+}
+
+// Unsafe, malformed and changed keys fail even with a new-create flag. The
+// namespace guards must execute before reading key bytes or replacing files.
 func TestProviderClientKeyRejectsChangedOrUnsafeCustody(t *testing.T) {
 	for _, fault := range []string{"mode", "symlink", "hardlink", "marker"} {
 		path := filepath.Join(providerRegistrationPrivateDir(t), ".provider.key")
