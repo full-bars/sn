@@ -77,7 +77,7 @@ func openProviderClientKey(ctx context.Context, keyPath string, options Provider
 			return nil, err
 		}
 		for _, name := range names {
-			if strings.HasPrefix(name, ".provider") && name != ".provider.key.registration.lock" {
+			if strings.HasPrefix(name, ".provider") && name != ".provider.key.registration.lock" && name != ".provider_version" {
 				return nil, &RegistrationRefusedError{Code: "provider_key_missing_with_retained_history"}
 			}
 		}
@@ -204,7 +204,10 @@ func admitProviderKeyMarker(store *registrationStore, adoptLegacy bool) error {
 	}
 	var history, credentials bool
 	for _, name := range names {
-		if !strings.HasPrefix(name, ".provider") || name == ".provider.key" || name == ".provider.key.registration.lock" {
+		// .provider_version is the fork's plain version stamp, not provider
+		// identity: the 3.23 line writes it beside the key, and it must not
+		// turn a bare seed into retained history in either scan.
+		if !strings.HasPrefix(name, ".provider") || name == ".provider.key" || name == ".provider.key.registration.lock" || name == ".provider_version" {
 			continue
 		}
 		history = true
