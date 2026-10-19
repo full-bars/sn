@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -1335,8 +1334,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}()
 
 		certPem, keyPem, _ := readProviderTlsCertAndKey()
-		extenderKeySeed, _ := readProviderExtenderKeySeed()
+		extenderKeySeed, _ := readProviderExtenderKeySeed(slotIdentities, proxySettings)
 		settings := ProviderDeviceSettings(self.closeReportDomainHash)
+		// The extender role binds this host's carrier ports and publishes this
+		// host's address, and it can do neither more than once per process: a
+		// second space's bind fails and its record names an address the host
+		// does not hold (an egress proxy's). Every slot of one run therefore
+		// competes for one role, and only the direct slot can honestly hold it
+		// -- the same rule the swarm members and hosted devices follow. The
+		// remaining slots still provide; they just do not listen.
+		settings.ProvideExtenderEnabled = proxySettings == nil
 		settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(seed, certPem, keyPem)
 		// the extender identity of this provider (connect/EXTENDER.md B1, G2).
 		// The space keeps no local state, so the seed lives here: without it
@@ -1396,7 +1403,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if !bytes.Equal(keyMaterial.GetClientKeySeed(), seed) {
 			return errors.New("provider device changed its retained registration key")
 		}
-		persistProviderAuxiliaryKeyMaterial(output, index, keyMaterial)
+		persistProviderAuxiliaryKeyMaterial(output, index, slotIdentities, proxySettings, keyMaterial)
 		observeProviderExtenderIdentity(output, index, keyMaterial.GetExtenderKeySeed())
 		// one line per change, so the activation prints once it settles and
 		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
@@ -1589,6 +1596,23 @@ func providerClientJwtPath(identities providerSlotIdentities, proxySettings *con
 	return providerStatePath(fmt.Sprintf(".provider-%x.jwt", sum[:8]))
 }
 
+// providerExtenderKeyPath gives each provider slot its own extender identity.
+// The identity also names the space's gossip peer, and one process runs one
+// gossip node per slot. A single file shared by every slot made those nodes
+// present one peer id to the mesh: they ignore each other's publications, and
+// the ones that reach the operator under that id supersede each other's
+// address set as fast as they publish. A slot keeps one identity across
+// launches so an activated extender keeps the id its record names. The name
+// follows the same slot identity as the client jwt path, so two usernames at
+// one host:port never share one extender identity either.
+func providerExtenderKeyPath(identities providerSlotIdentities, proxySettings *connect.ProxySettings) (string, error) {
+	if proxySettings == nil {
+		return providerStatePath(".provider.extender.key")
+	}
+	sum := identities.hash(proxySettings)
+	return providerStatePath(fmt.Sprintf(".provider.extender-%x.key", sum[:8]))
+}
+
 // readProviderClientKeySeed loads the Ed25519 seed for the provider
 // client's long-lived identity key from `~/.urnetwork/.provider.key`.
 // Returns (nil, nil) when the file does not exist — a fresh install.
@@ -1620,13 +1644,14 @@ func writeProviderClientKeySeed(seed []byte) error {
 	return os.WriteFile(p, seed, 0600)
 }
 
-// readProviderExtenderKeySeed loads the ed25519 seed of this provider's
-// extender identity from `~/.urnetwork/.provider.extender.key`
-// (connect/EXTENDER.md B1). Returns (nil, nil) when the file does not exist --
-// a provider that has not been an extender yet. The file is the raw 32-byte
-// seed; no encoding, exactly as the client key seed beside it.
-func readProviderExtenderKeySeed() ([]byte, error) {
-	p, err := providerStatePath(".provider.extender.key")
+// readProviderExtenderKeySeed loads the ed25519 seed of this provider slot's
+// extender identity from its state file -- `.provider.extender.key` for the
+// direct provider, one per proxy slot otherwise (connect/EXTENDER.md B1).
+// Returns (nil, nil) when the file does not exist -- a slot that has not been
+// an extender yet. The file is the raw 32-byte seed; no encoding, exactly as
+// the client key seed beside it.
+func readProviderExtenderKeySeed(identities providerSlotIdentities, proxySettings *connect.ProxySettings) ([]byte, error) {
+	p, err := providerExtenderKeyPath(identities, proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -1637,12 +1662,12 @@ func readProviderExtenderKeySeed() ([]byte, error) {
 	return b, err
 }
 
-// writeProviderExtenderKeySeed persists the extender identity seed to
-// `~/.urnetwork/.provider.extender.key` with 0600 permissions (sensitive
+// writeProviderExtenderKeySeed persists the extender identity seed of one
+// provider slot to its state file with 0600 permissions (sensitive
 // material -- anyone with this file can present this host's extender identity
 // to the mesh and to the operator).
-func writeProviderExtenderKeySeed(extenderKeySeed []byte) error {
-	p, err := providerStatePath(".provider.extender.key")
+func writeProviderExtenderKeySeed(identities providerSlotIdentities, proxySettings *connect.ProxySettings, extenderKeySeed []byte) error {
+	p, err := providerExtenderKeyPath(identities, proxySettings)
 	if err != nil {
 		return err
 	}
@@ -1778,9 +1803,18 @@ func RequireVersion() string {
 func proxyAuthAdd(opts docopt.Opts) {
 	proxyConfig := readProxyConfig()
 
-	key, _ := opts.String("key")
-	user, _ := opts.String("proxy_user")
-	password, _ := opts.String("proxy_password")
+	key, _ := opts.String("<key>")
+	if key == "" {
+		key, _ = opts.String("key")
+	}
+	user, _ := opts.String("<proxy_user>")
+	if user == "" {
+		user, _ = opts.String("proxy_user")
+	}
+	password, _ := opts.String("<proxy_password>")
+	if password == "" {
+		password, _ = opts.String("proxy_password")
+	}
 
 	if proxyConfig.Auths == nil {
 		proxyConfig.Auths = map[string]*ProxyAuth{}
@@ -1813,7 +1847,10 @@ func proxyAuthRemove(opts docopt.Opts) {
 		clear(proxyConfig.Auths)
 	} else {
 
-		key, _ := opts.String("key")
+		key, _ := opts.String("<key>")
+		if key == "" {
+			key, _ = opts.String("key")
+		}
 
 		if proxyConfig.Auths == nil {
 			proxyConfig.Auths = map[string]*ProxyAuth{}
@@ -1845,27 +1882,24 @@ func proxyAdd(opts docopt.Opts) {
 	}
 
 	for _, keyAddress := range allKeyAddress {
-		var key string
-		var proxyAddress string
-		i := strings.Index(keyAddress, "@")
-		if 0 <= i {
-			key = keyAddress[:i]
-			proxyAddress = keyAddress[i+1:]
-		} else {
-			key = ""
-			proxyAddress = keyAddress
-		}
-
-		address, user, password := parseProxyAddress(proxyAddress)
+		entry := parseProxyEntry(keyAddress, proxyConfig.Auths)
+		address, user, password := entry.address, entry.user, entry.password
 		if proxyConfig.Auths != nil {
-			proxyAuth, ok := proxyConfig.Auths[key]
-			if ok {
+			if proxyAuth, ok := proxyConfig.Auths[entry.key]; ok {
 				user = proxyAuth.User
 				password = proxyAuth.Password
 			}
 		}
 
-		if currentKey, ok := proxyConfig.Servers[proxyAddress]; ok && currentKey != key {
+		// Registered auth keys stay keyed by address alone, preventing credential
+		// duplication in dictionary keys and preserving auth rotation. Inline
+		// credentials store the canonical host:port:user:pass.
+		proxyKey := entry.address
+		if entry.key == "" && (entry.user != "" || entry.password != "") {
+			proxyKey = canonicalProxyKey(entry.address, entry.user, entry.password)
+		}
+
+		if currentKey, ok := proxyConfig.Servers[proxyKey]; ok && currentKey != entry.key {
 			if force, _ := opts.Bool("-f"); !force {
 				fmt.Printf(
 					"server %s (%s/%s) exists with different key. Change key? [yN]\n",
@@ -1889,10 +1923,112 @@ func proxyAdd(opts docopt.Opts) {
 			obfuscatePassword(password),
 		)
 
-		proxyConfig.Servers[proxyAddress] = key
+		proxyConfig.Servers[proxyKey] = entry.key
 	}
 
 	writeProxyConfig(proxyConfig)
+}
+
+// proxyEntry is one proxy list entry after parsing.
+type proxyEntry struct {
+	// key is a registered auth key name, empty for inline credentials.
+	key      string
+	address  string
+	user     string
+	password string
+}
+
+// parseProxyEntry reads one proxy list entry. Two inline credential forms are
+// accepted, and both keep working when a credential contains `:` or `@`:
+//
+//	user:pass@host:port
+//	host:port:user:pass
+//
+// In the first form the split is the last `@` that leaves a `host:port`, so an
+// `@` inside the password is not a separator; the userinfo splits at its first
+// `:`, so the password may contain colons. In the second form the address is
+// the first two fields, the user is the third, and everything after it is the
+// password.
+//
+// A prefix that names a registered auth key is a key and takes precedence,
+// which keeps historical `key@host:port` files working. A prefix with no colon
+// that names no auth stays a key, as it always has.
+func parseProxyEntry(keyAddress string, auths map[string]*ProxyAuth) proxyEntry {
+	keyAddress = strings.TrimSpace(keyAddress)
+	if i := strings.Index(keyAddress, "@"); 0 <= i {
+		prefix := keyAddress[:i]
+		if _, ok := auths[prefix]; ok {
+			return proxyEntry{key: prefix, address: keyAddress[i+1:]}
+		}
+	}
+	for i := strings.LastIndex(keyAddress, "@"); 0 <= i; i = strings.LastIndex(keyAddress[:i], "@") {
+		if validProxyAddress(keyAddress[i+1:]) {
+			userinfo := keyAddress[:i]
+			if j := strings.Index(userinfo, ":"); 0 <= j {
+				return proxyEntry{
+					address:  keyAddress[i+1:],
+					user:     userinfo[:j],
+					password: userinfo[j+1:],
+				}
+			}
+			return proxyEntry{key: userinfo, address: keyAddress[i+1:]}
+		}
+	}
+	if n := proxyAddressLen(keyAddress); 0 < n && n < len(keyAddress) && keyAddress[n] == ":"[0] {
+		rest := keyAddress[n+1:]
+		if i := strings.Index(rest, ":"); 0 <= i {
+			return proxyEntry{
+				address:  keyAddress[:n],
+				user:     rest[:i],
+				password: rest[i+1:],
+			}
+		}
+	}
+	return proxyEntry{address: keyAddress}
+}
+
+// canonicalProxyKey is the one shape stored in the proxy config for inline
+// credentials. Registered keys remain stored by address alone, preventing
+// credential leakage into dictionary keys and preserving auth rotation.
+func canonicalProxyKey(address string, user string, password string) string {
+	if user == "" && password == "" {
+		return address
+	}
+	return address + ":" + user + ":" + password
+}
+
+// proxyAddressLen returns the end of a leading host:port, or 0 when the text
+// does not start with one. A bracketed IPv6 host is one address, not fields.
+func proxyAddressLen(value string) int {
+	hostEnd := 0
+	if strings.HasPrefix(value, "[") {
+		i := strings.Index(value, "]")
+		if i < 0 {
+			return 0
+		}
+		hostEnd = i + 1
+	} else {
+		i := strings.Index(value, ":")
+		if i <= 0 {
+			return 0
+		}
+		hostEnd = i
+	}
+	if len(value) <= hostEnd || value[hostEnd] != ":"[0] {
+		return 0
+	}
+	portEnd := hostEnd + 1
+	for portEnd < len(value) && "0"[0] <= value[portEnd] && value[portEnd] <= "9"[0] {
+		portEnd += 1
+	}
+	if portEnd == hostEnd+1 {
+		return 0
+	}
+	return portEnd
+}
+
+func validProxyAddress(value string) bool {
+	return proxyAddressLen(value) == len(value)
 }
 
 func proxyRemove(opts docopt.Opts) {
@@ -1927,19 +2063,37 @@ func proxyRemove(opts docopt.Opts) {
 	}
 
 	for _, keyAddress := range allKeyAddress {
-		var key string
-		var address string
-		i := strings.Index(keyAddress, "@")
-		if 0 <= i {
-			key = keyAddress[:i]
-			address = keyAddress[i+1:]
-		} else {
-			key = ""
-			address = keyAddress
+		entry := parseProxyEntry(keyAddress, proxyConfig.Auths)
+		user, password := entry.user, entry.password
+		if proxyConfig.Auths != nil {
+			if auth, ok := proxyConfig.Auths[entry.key]; ok {
+				user = auth.User
+				password = auth.Password
+			}
 		}
 
-		if key == "" || proxyConfig.Servers[address] == key {
-			delete(proxyConfig.Servers, address)
+		// Delete by exact address or canonical address:user:password
+		delete(proxyConfig.Servers, entry.address)
+		if user != "" || password != "" {
+			delete(proxyConfig.Servers, canonicalProxyKey(entry.address, user, password))
+		}
+
+		// If removing by key@address, delete any server pointing to this key
+		if entry.key != "" {
+			for k, v := range proxyConfig.Servers {
+				if v == entry.key && (k == entry.address || strings.HasPrefix(k, entry.address+":")) {
+					delete(proxyConfig.Servers, k)
+				}
+			}
+		}
+
+		// If removing by address alone, remove all entries matching that address
+		if entry.key == "" && entry.user == "" && entry.password == "" {
+			for k := range proxyConfig.Servers {
+				if k == entry.address || strings.HasPrefix(k, entry.address+":") {
+					delete(proxyConfig.Servers, k)
+				}
+			}
 		}
 	}
 
@@ -2005,22 +2159,12 @@ func readProxySettingsLegacy() []*connect.ProxySettings {
 	return allProxySettings
 }
 
-// proxyAddressPattern parses "host:port[:user:pass]" (credentials optional,
-// IPv6 hosts in brackets). Compiled once at package init: the earlier
-// per-call MustCompile made every parse allocate a compiled program.
-var proxyAddressPattern = regexp.MustCompile("^(.*:\\d*):([^:]*):([^:]*)$")
-
+// parseProxyAddress splits one stored proxy-config key into its parts. It
+// accepts "host:port", "host:port:user:pass", and "user:pass@host:port";
+// the shapes are decided by parseProxyEntry.
 func parseProxyAddress(proxyAddress string) (address string, user string, password string) {
-	groups := proxyAddressPattern.FindStringSubmatch(proxyAddress)
-	if groups != nil {
-		address = groups[1]
-		user = groups[2]
-		password = groups[3]
-		return
-	}
-	// assume host:port
-	address = proxyAddress
-	return
+	entry := parseProxyEntry(proxyAddress, nil)
+	return entry.address, entry.user, entry.password
 }
 
 func obfuscateUser(user string) string {
