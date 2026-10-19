@@ -89,6 +89,10 @@ func bsdRequireRcScript(p Provider, service string) error {
 // rc.d start/stop need root (the script's own mkdir/chown/daemon -u require
 // it), so a non-root invocation that silently fails would look like success.
 // Output is returned in the error so a failure is diagnosable.
+//
+// The mapped action is the rc.d one*-prefixed command (onestart, onestop,
+// onerestart, onestatus), which bypasses the _enable flag guard so that
+// `_enable=NO` does not make start/restart silent no-ops.
 func bsdServiceControl(p Provider, action string) error {
 	service := bsdRcServiceName(p.Binary)
 	if err := bsdRequireRcScript(p, service); err != nil {
@@ -101,25 +105,34 @@ func bsdServiceControl(p Provider, action string) error {
 	// which is what the operator means by `auto-start off` + `start`. They
 	// print "Cannot 'start' <name>" and exit 0 when the service is genuinely
 	// absent, so the existence check above stays, and the exit-0 no-op is
-	// indistinguishable from success either way — hence the error path below
+	// indistinguishable from success either way - hence the error path below
 	// only fires on a real failure.
-	oneshot := "one" + action
-	if action == "status" {
-		oneshot = "onestatus"
+	var mapped string
+	switch action {
+	case "start":
+		mapped = "onestart"
+	case "stop":
+		mapped = "onestop"
+	case "restart":
+		mapped = "onerestart"
+	case "status":
+		mapped = "onestatus"
+	default:
+		mapped = action
 	}
 	var name string
 	var args []string
 	if os.Geteuid() == 0 {
-		name, args = "service", []string{service, oneshot}
+		name, args = "service", []string{service, mapped}
 	} else {
 		if _, err := exec.LookPath("sudo"); err != nil {
-			return fmt.Errorf("`service %s %s` needs root and sudo is not installed — run it as root", service, action)
+			return fmt.Errorf("`service %s %s` needs root and sudo is not installed - run it as root", service, action)
 		}
-		name, args = "sudo", []string{"service", service, oneshot}
+		name, args = "sudo", []string{"service", service, mapped}
 	}
 	out, err := bsdServiceRunFn(name, args...)
 	if err != nil {
-		return fmt.Errorf("service %s %s: %w (%s)", service, action, err, strings.TrimSpace(string(out)))
+		return fmt.Errorf("service %s %s: %w (%s)", service, mapped, err, strings.TrimSpace(string(out)))
 	}
 	return nil
 }
@@ -171,7 +184,11 @@ func setAutoUpdateSchedule(p Provider, label, interval string) error {
 	if interval == "off" {
 		return removeBSDUpdateCron(p)
 	}
-	tool, logDir, err := bsdScheduledUpdate(os.Geteuid(), bsdStagedToolIsRootOwned(), toolExePath(), bsdLogDir())
+	euid := os.Geteuid()
+	if euid != 0 && bsdTreeOwnedByRoot(p.Binary) {
+		return fmt.Errorf("auto-update for %s must be scheduled as root: %s is in the root-owned install tree, so an unprivileged cron job cannot replace it (run: sudo urnet-tools auto-update %s)", providerLabel(p), p.Binary, interval)
+	}
+	tool, logDir, err := bsdScheduledUpdate(euid, bsdStagedToolIsRootOwned(), toolExePath(), bsdLogDir())
 	if err != nil {
 		return err
 	}

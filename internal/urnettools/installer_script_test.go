@@ -124,13 +124,24 @@ func TestFreeBSDResolveServiceUserNeverEmpty(t *testing.T) {
 	// this process's own user (the `id -un` step). An earlier version asserted
 	// only non-emptiness, which `id -un` cannot violate, so the test could
 	// never fail (mutation-proved: deleting the logname branch did not matter,
-	// and neither would mis-resolving the fallthrough).
-	want, err := exec.Command("id", "-un").Output()
-	if err != nil {
-		t.Fatalf("id -un: %v", err)
+	// and neither would mis-resolving the fallthrough). The expectation mirrors
+	// the function's own order — logname first, id -un second — because
+	// glibc getlogin() reads /proc/self/loginuid, which survives sudo: a
+	// developer running `sudo go test` gets their own login name from the
+	// child's logname, not root from id -un.
+	want := ""
+	if out, err := exec.Command("logname").Output(); err == nil {
+		want = strings.TrimSpace(string(out))
 	}
-	if resolved != strings.TrimSpace(string(want)) {
-		t.Errorf("resolve_service_user = %q, want the current user %q", resolved, strings.TrimSpace(string(want)))
+	if want == "" {
+		out, err := exec.Command("id", "-un").Output()
+		if err != nil {
+			t.Fatalf("id -un: %v", err)
+		}
+		want = strings.TrimSpace(string(out))
+	}
+	if resolved != want {
+		t.Errorf("resolve_service_user = %q, want %q", resolved, want)
 	}
 }
 
@@ -458,7 +469,10 @@ func TestFreeBSDToolDigestLookup(t *testing.T) {
 		t.Error("could not find the jq digest expression in the installer; the marker moved and this test would otherwise pass vacuously")
 	} else {
 		expr := block[jqStart+len("jq -r --arg a \"$tool_asset\" '"):]
-		if end := strings.Index(expr, "' 2>/dev/null"); end >= 0 {
+		end := strings.Index(expr, "' 2>/dev/null")
+		if end < 0 {
+			t.Error("could not find the end of the jq digest expression; the marker moved and this test would otherwise pass vacuously")
+		} else {
 			expr = expr[:end]
 			for _, c := range cases {
 				t.Run("jq/"+c.name, func(t *testing.T) {

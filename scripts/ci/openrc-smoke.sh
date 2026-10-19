@@ -20,7 +20,6 @@ set -eu
 
 ROOT=/srv/fake-release
 SVC_USER=urnet
-DL="$ROOT/releases/download/$CI_TAG"
 FAILED=0
 
 say()  { echo "== $*"; }
@@ -91,7 +90,6 @@ else
 fi
 # shellcheck disable=SC2086
 $HTTPD_CMD -f -p 127.0.0.1:8099 -h "$ROOT" &
-HTTPD_PID=$!
 # Readiness check rather than a blind sleep.
 i=0
 while [ $i -lt 20 ]; do
@@ -125,6 +123,7 @@ ok "service user urnet exists"
 say "running the installer against the fake release"
 # The base-URL overrides are the seam that lets a branch build be installed.
 # They are exported so the installer's own subshell inherits them.
+export URNET_ALLOW_BASE_OVERRIDE=1
 export URNET_API_BASE="http://127.0.0.1:8099/api"
 export URNET_DL_BASE="http://127.0.0.1:8099"
 export URNET_MIRROR_BASE="http://127.0.0.1:8099/releases/download"
@@ -237,11 +236,16 @@ else
 fi
 
 # The provider must be running as the SERVICE user, not root. This is the
-# invariant the whole design rests on.
-if ps -o user,args 2>/dev/null | grep '[u]rnetwork provide' | grep -qv '^root'; then
-  ok "provider runs as a non-root user"
-else
+# invariant the whole design rests on. An empty process list is inconclusive
+# (busybox ps formats differ); a list whose provider line starts with root is
+# a violation and must fail.
+PROV=$(ps -o user,args 2>/dev/null | grep '[u]rnetwork provide' || true)
+if [ -z "$PROV" ]; then
   echo "   NOTE: could not confirm the provider's uid (ps output format differs on busybox)"
+elif echo "$PROV" | grep -q '^root'; then
+  fail "provider runs as root — the service-user invariant is broken"
+else
+  ok "provider runs as a non-root user"
 fi
 
 # --- is the provider ACTUALLY running? --------------------------------------
@@ -309,7 +313,9 @@ sleep 3
 # fires and the output so far is still there to assert on.
 timeout -k 2 8 "$TOOLS" logs -n 5 > /tmp/urnet-logs-out.txt 2>&1 || true
 LOGOUT=$(cat /tmp/urnet-logs-out.txt 2>/dev/null)
-if echo "$LOGOUT" | grep -qiE 'urnetwork|/var/log'; then
+# Error text also names urnetwork and /var/log (e.g. "open /var/log/...
+# permission denied"), so drop error lines before requiring a content match.
+if echo "$LOGOUT" | grep -viE 'error|fail|permission denied|cannot|no such' | grep -qiE 'urnetwork|/var/log'; then
   ok "logs readable while the service is STOPPED (reads the file, not the fd)"
 else
   fail "logs unreadable while stopped"

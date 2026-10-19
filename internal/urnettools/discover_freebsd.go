@@ -105,11 +105,34 @@ func discoverProcesses() []Provider {
 	// No live process at all: fall back to the standard install location so
 	// lifecycle commands still have a target on a stopped install, the way
 	// the Darwin path does.
+	//
+	// The user and state dir come from the rc.conf knob, not from the
+	// invoking user. A stopped install has no process to read credentials
+	// from, so the only honest answer to "which account does this service
+	// run as" is what the installer wrote to rc.conf. Falling back to the
+	// invoking user instead would make a non-root operator's `urnet-tools
+	// status` report the provider under their own name, and any lifecycle
+	// command that narrows by owner would pick the wrong identity — or, if
+	// the operator is root and the service runs as urnetwork, no identity at
+	// all. The state dir is resolved from that user's passwd home so it
+	// matches where the provider actually lives.
 	if len(out) == 0 {
 		if exe := installedBSDProvider(); exe != "" {
+			service := bsdRcServiceName(exe)
+			user := bsdRcConfUser(service)
+			stateDir := ""
+			home := ""
+			if user != "" {
+				if u, err := osuser.Lookup(user); err == nil {
+					home = u.HomeDir
+				}
+			}
+			if home != "" {
+				stateDir = filepath.Join(home, ".urnetwork")
+			}
 			out = append(out, Provider{
-				User:     currentUserName(),
-				StateDir: bsdStateDir(),
+				User:     user,
+				StateDir: stateDir,
 				Binary:   exe,
 				Running:  false,
 			})
@@ -160,11 +183,23 @@ func runProcstat(args ...string) string {
 }
 
 // installedBSDProvider locates the provider in the standard install location
-// used by the FreeBSD installer script.
+// used by the FreeBSD installer script. The per-home fallback follows the
+// installer's user, not the invoking process: an install made through sudo
+// wrote the tree under SUDO_USER's home, while os.UserHomeDir() under a root
+// shell resolves to /root and misses it. SUDO_USER first, then the invoking
+// home; neither resolving just drops the per-home candidates, the root-owned
+// tree is checked either way.
 func installedBSDProvider() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
+	home := ""
+	if sudoUser := os.Getenv("SUDO_USER"); sudoUser != "" {
+		if u, err := osuser.Lookup(sudoUser); err == nil {
+			home = u.HomeDir
+		}
+	}
+	if home == "" {
+		if h, err := os.UserHomeDir(); err == nil {
+			home = h
+		}
 	}
 	for _, c := range bsdProviderCandidates(home) {
 		if info, err := os.Stat(c); err == nil && !info.IsDir() {

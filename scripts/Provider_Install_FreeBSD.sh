@@ -273,14 +273,24 @@ logdir="/var/log/$service_name"
 
 ${service_name}_running_pid()
 {
-    [ -f "\$pidfile" ] || return 1
-    _pid="\$(cat "\$pidfile" 2>/dev/null)"
+    # Print the live provider pid, or nothing when it is not running.
+    # daemon(8) opens the pidfile with a hard-coded mode 0600 (pidfile_open
+    # in daemon.c, not configurable through -p/-P) and start runs as root, so
+    # an unprivileged one*status cannot read the file at all. When it is
+    # unreadable, fall back to scanning the process table.
+    if [ -f "\$pidfile" ] && [ -r "\$pidfile" ]; then
+        _pid="\$(cat "\$pidfile" 2>/dev/null)"
+        [ -n "\$_pid" ] || return 1
+        # ps, not kill -0: kill -0 returns EPERM (non-zero, same as ESRCH) for a
+        # process owned by another user, so an unprivileged service status would
+        # report "not running" while the provider is up. ps sees every process,
+        # so a pid ps lists is alive regardless of who owns it.
+        [ -n "\$(ps -p "\$_pid" -o pid= 2>/dev/null)" ] || return 1
+        echo "\$_pid"
+        return 0
+    fi
+    _pid="\$(ps -u "\${${service_name}_user}" -o pid=,args= 2>/dev/null | grep -F '$provider_bin provide' | awk '{print \$1; exit}')"
     [ -n "\$_pid" ] || return 1
-    # ps, not kill -0: kill -0 returns EPERM (non-zero, same as ESRCH) for a
-    # process owned by another user, so an unprivileged service status would
-    # report "not running" while the provider is up. ps sees every process,
-    # so a pid ps lists is alive regardless of who owns it.
-    [ -n "\$(ps -p "\$_pid" -o pid= 2>/dev/null)" ] || return 1
     echo "\$_pid"
 }
 
@@ -483,8 +493,8 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
                 actual=""
             fi
             if [ -n "$actual" ] && [ "$actual" = "$tool_digest" ]; then
-                mv -f "$tmpdir/$tool_asset" "$install_path/bin/urnet-tools"
-                chmod 755 "$install_path/bin/urnet-tools"
+                priv mv -f "$tmpdir/$tool_asset" "$install_path/bin/urnet-tools"
+                priv chmod 755 "$install_path/bin/urnet-tools"
             else
                 pr_warn "urnet-tools sha256 mismatch, falling back to shell wrapper"
                 install_wrapper_tool "$tmpdir" || true

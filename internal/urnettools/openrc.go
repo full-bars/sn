@@ -755,7 +755,7 @@ func openrcSetAutoUpdate(interval, toolPath string) error {
 // single quotes. The cron entry interpolates a filesystem path into a /bin/sh
 // script, so the path must survive quoting intact whatever it contains.
 func shellQuoteSingle(s string) string {
-	return "'" + strings.ReplaceAll(s, "'", `'"\''"`) + "'"
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
 func openrcUpdateCronScript(toolPath string) string {

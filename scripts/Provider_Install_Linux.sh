@@ -102,6 +102,38 @@ no_modify_bashrc=0
 update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
 
 api_base="https://api.github.com/repos/full-bars/sn"
+urnet_dl_base="https://dl.fullbars.xyz"
+urnet_github_dl_base="https://github.com/full-bars/sn/releases/download"
+
+# Base-URL overrides: URL seams exported by CI to serve a branch build from a
+# local fake release (see scripts/ci/openrc-smoke.sh). Defaults keep the
+# production endpoints. These variables appear only in this shell installer
+# and CI smoke scripts (not in Go urnet-tools). Overrides are gated behind
+# URNET_ALLOW_BASE_OVERRIDE=1 to prevent silent redirection of the trust chain.
+if [ "${URNET_ALLOW_BASE_OVERRIDE:-0}" = "1" ]; then
+    if [ -n "${URNET_API_BASE:-}" ]; then
+        api_base="$URNET_API_BASE"
+        echo "Note: URNET_API_BASE override active: $api_base"
+    fi
+    if [ -n "${URNET_DL_BASE:-}" ]; then
+        urnet_dl_base="$URNET_DL_BASE"
+        echo "Note: URNET_DL_BASE override active: $urnet_dl_base"
+    fi
+    if [ -n "${URNET_MIRROR_BASE:-}" ]; then
+        urnet_github_dl_base="$URNET_MIRROR_BASE"
+        echo "Note: URNET_MIRROR_BASE override active: $urnet_github_dl_base"
+    fi
+else
+    if [ -n "${URNET_API_BASE:-}" ]; then
+        echo "WARNING: ignoring URNET_API_BASE override; URNET_ALLOW_BASE_OVERRIDE=1 is required" >&2
+    fi
+    if [ -n "${URNET_DL_BASE:-}" ]; then
+        echo "WARNING: ignoring URNET_DL_BASE override; URNET_ALLOW_BASE_OVERRIDE=1 is required" >&2
+    fi
+    if [ -n "${URNET_MIRROR_BASE:-}" ]; then
+        echo "WARNING: ignoring URNET_MIRROR_BASE override; URNET_ALLOW_BASE_OVERRIDE=1 is required" >&2
+    fi
+fi
 
 install_path="$HOME/.local/share/urnetwork-provider"
 # Whether the install path was named explicitly with -i/--install. Guards the
@@ -1719,7 +1751,7 @@ install_openrc_units ()
 # URnetwork Provider — OpenRC service (written by Provider_Install_Linux.sh)
 #
 # supervise-daemon keeps the provider running and respawns it on exit
-# (5s initial delay, 5s backoff steps up to 60s, at most 10 restarts/hour).
+# (5s delay, at most 10 restarts/hour).
 # command_user makes the provider run
 # as '$openrc_user' with HOME=$openrc_home, so its state lives in
 # $openrc_home/.urnetwork.
@@ -1800,9 +1832,9 @@ EOF
     # do NOT install/enable one: hand the operator the exact steps instead.
     if ! id "$openrc_user" > /dev/null 2>&1; then
         pr_warn "User '%s' does not exist; the service is NOT installed (a unit with an unresolvable command_user fails at every start)." "$openrc_user"
-        pr_info "Create the service user and install as it:"
+        pr_info "Create the service user, then run the installer as root:"
         pr_info "    useradd -m -s /bin/sh %s    # or: adduser -D %s" "$openrc_user" "$openrc_user"
-        pr_info "    su - %s -c 'curl -fSsL %s | sh'" "$openrc_user" "$urnet_install_url"
+        pr_info "        curl -fSsL %s | sh" "$urnet_install_url"
         pr_info "The service script is staged at %s if you prefer to finish by hand." "$openrc_staged"
         return 0
     fi
@@ -1851,7 +1883,10 @@ EOF
         return 0
     fi
 
-    openrc_finalize_root_paths
+    if ! openrc_finalize_root_paths; then
+        rm -rf "$openrc_stage_dir"
+        exit 1
+    fi
 
     if ! cp "$openrc_staged" "$openrc_initd_file"; then
         pr_err "Failed to install %s" "$openrc_initd_file"
@@ -2408,7 +2443,7 @@ do_install ()
         pr_err "Could not resolve 'latest' tag to a specific version. GitHub API might be unreachable."
         exit 1
     fi
-    dl_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    dl_url="$urnet_github_dl_base/$tag/urnetwork-provider-$tag.tar.gz"
     mirror_url="$dl_url"
     
     pr_info "Downloading: %s" "$dl_url"
@@ -2511,7 +2546,7 @@ do_install ()
     tool_installed=0
     if [ -n "$tag" ] && [ "$tag" != "latest" ]; then
         tool_asset="urnet-tools-linux-$arch"
-        tool_dl_url="https://github.com/full-bars/sn/releases/download/$tag/$tool_asset"
+        tool_dl_url="$urnet_github_dl_base/$tag/$tool_asset"
         tool_mirror_url="$tool_dl_url"
 
         # Resolve the digest from the release API. Empty digest = the release
@@ -2859,8 +2894,8 @@ do_install ()
         pr_err "Could not resolve 'latest' tag to a specific version. GitHub API might be unreachable."
         exit 1
     fi
-    dl_url="https://dl.fullbars.xyz/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
-    mirror_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    dl_url="$urnet_dl_base/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    mirror_url="$urnet_github_dl_base/$tag/urnetwork-provider-$tag.tar.gz"
     
     pr_info "Downloading: %s" "$dl_url"
     
@@ -2962,8 +2997,8 @@ do_install ()
     tool_installed=0
     if [ -n "$tag" ] && [ "$tag" != "latest" ]; then
         tool_asset="urnet-tools-linux-$arch"
-        tool_dl_url="https://dl.fullbars.xyz/releases/download/$tag/$tool_asset"
-        tool_mirror_url="https://github.com/full-bars/sn/releases/download/$tag/$tool_asset"
+        tool_dl_url="$urnet_dl_base/releases/download/$tag/$tool_asset"
+        tool_mirror_url="$urnet_github_dl_base/$tag/$tool_asset"
 
         # Resolve the digest from the release API. Empty digest = the release
         # predates tool assets (or the asset is missing) → fall back to shell.
@@ -3638,6 +3673,42 @@ repair_pending_overrides_ownership() {
     return 0
 }
 
+# queue_target_home: the home whose provider will read the queued override.
+# Under OpenRC that is the service user's home (the provider resolves its own
+# os.UserHomeDir(), never root's). Otherwise the provider runs as the invoking
+# user (systemd user unit), and under sudo the invoking user is the sudo
+# parent, not root — mirroring do_optimize's resolution so both agree.
+queue_target_home ()
+{
+    if [ "${has_openrc:-0}" = "1" ]; then
+        openrc_user_home
+        return 0
+    fi
+    qth_user="$(logname 2>/dev/null || echo "${SUDO_USER:-$USER}")"
+    qth_home="$(getent passwd "$qth_user" 2>/dev/null | cut -d: -f6)"
+    [ -n "$qth_home" ] || qth_home="$HOME"
+    printf '%s' "$qth_home"
+}
+
+# queue_target_user: the owner matching queue_target_home, used to repair
+# ownership after a root-side queue write.
+queue_target_user ()
+{
+    if [ "${has_openrc:-0}" = "1" ]; then
+        printf '%s' "$openrc_user"
+        return 0
+    fi
+    logname 2>/dev/null || echo "${SUDO_USER:-$USER}"
+}
+
+# queue_repair_if_foreign HOME OWNER — a queue write by root into another
+# user's home leaves root-owned queue files the provider can neither lock nor
+# read; hand them back. A write into the caller's own home needs nothing.
+queue_repair_if_foreign ()
+{
+    [ "$1" = "$HOME" ] || repair_pending_overrides_ownership "$1" "$2"
+}
+
 # read_control_value KEY
 # Best-effort current value for KEY, for status display only (the running
 # provider's own in-memory state, if reachable, is the real source of
@@ -3715,15 +3786,25 @@ toggle_ramlogs ()
         on)
             confirm_restart "Enabling RAM logging requires restarting the URNetwork provider."
             pr_info "Enabling RAM logging..."
-            queue_pending_override "ramlogs" "on"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "ramlogs" "on" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after enabling RAM logging; aborting."
+                exit 1
+            fi
             pr_info "RAM logging enabled and service restarted."
             ;;
         off)
             confirm_restart "Disabling RAM logging requires restarting the URNetwork provider."
             pr_info "Disabling RAM logging..."
-            queue_pending_override "ramlogs" "off"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "ramlogs" "off" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after disabling RAM logging; aborting."
+                exit 1
+            fi
             pr_info "RAM logging disabled and service restarted."
             ;;
         "")
@@ -3780,19 +3861,29 @@ toggle_lowmode ()
             ram_mib=$(detect_mem_limit_mib)
             gomem_mib=$(( ram_mib * 85 / 100 ))
             pr_info "Dynamic GOMEMLIMIT set to ${gomem_mib}MiB (85%% of ${ram_mib}MiB detected RAM)"
-            queue_pending_override "profile" "lowmem"
-            queue_pending_override "gomemlimit" "${gomem_mib}MiB"
-            queue_pending_override "gogc" "50"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "profile" "lowmem" "$qh"
+            queue_pending_override "gomemlimit" "${gomem_mib}MiB" "$qh"
+            queue_pending_override "gogc" "50" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after enabling lowmode; aborting."
+                exit 1
+            fi
             pr_info "Lowmode enabled and service restarted."
             ;;
         off)
             confirm_restart "Disabling lowmode requires restarting the URNetwork provider."
             pr_info "Disabling lowmode..."
-            queue_pending_clear "profile"
-            queue_pending_clear "gomemlimit"
-            queue_pending_clear "gogc"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_clear "profile" "$qh"
+            queue_pending_clear "gomemlimit" "$qh"
+            queue_pending_clear "gogc" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after disabling lowmode; aborting."
+                exit 1
+            fi
             pr_info "Lowmode disabled and service restarted."
             ;;
         "")
@@ -3855,19 +3946,29 @@ toggle_ecomode ()
             ram_mib=$(detect_mem_limit_mib)
             gomem_mib=$(( ram_mib * 75 / 100 ))
             pr_info "Dynamic GOMEMLIMIT set to ${gomem_mib}MiB (75%% of ${ram_mib}MiB detected RAM)"
-            queue_pending_override "profile" "eco"
-            queue_pending_override "gomemlimit" "${gomem_mib}MiB"
-            queue_pending_override "gogc" "50"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "profile" "eco" "$qh"
+            queue_pending_override "gomemlimit" "${gomem_mib}MiB" "$qh"
+            queue_pending_override "gogc" "50" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after enabling eco mode; aborting."
+                exit 1
+            fi
             pr_info "Eco mode enabled and service restarted."
             ;;
         off)
             confirm_restart "Disabling eco mode requires restarting the URNetwork provider."
             pr_info "Disabling eco mode..."
-            queue_pending_clear "profile"
-            queue_pending_clear "gomemlimit"
-            queue_pending_clear "gogc"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_clear "profile" "$qh"
+            queue_pending_clear "gomemlimit" "$qh"
+            queue_pending_clear "gogc" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after disabling eco mode; aborting."
+                exit 1
+            fi
             pr_info "Eco mode disabled and service restarted."
             ;;
         "")
@@ -3894,15 +3995,25 @@ toggle_automode ()
         on)
             confirm_restart "Enabling auto-tune profile requires restarting the URNetwork provider."
             pr_info "Enabling auto-tune profile..."
-            queue_pending_override "profile" "auto"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "profile" "auto" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after enabling auto-tune; aborting."
+                exit 1
+            fi
             pr_info "Auto-tune enabled and service restarted."
             ;;
         off)
             confirm_restart "Disabling auto-tune profile requires restarting the URNetwork provider."
             pr_info "Disabling auto-tune profile..."
-            queue_pending_clear "profile"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_clear "profile" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after disabling auto-tune; aborting."
+                exit 1
+            fi
             pr_info "Auto-tune disabled and service restarted."
             ;;
         "")

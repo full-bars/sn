@@ -15,6 +15,22 @@ import (
 	"testing"
 )
 
+// rcServiceStub returns a stub dir holding an rc-service that records each
+// call in marker and exits 0. A shell function cannot stand in for
+// `rc-service`: the hyphen is legal in a bash function name but a syntax
+// error in dash (Ubuntu's /bin/sh), so the stub is a PATH entry like the
+// real command.
+func rcServiceStub(t *testing.T) (stubDir, marker string) {
+	t.Helper()
+	stubDir = t.TempDir()
+	marker = filepath.Join(t.TempDir(), "rc-service.called")
+	body := "#!/bin/sh\nprintf 'RC_SERVICE_CALLED\\n' >> '" + marker + "'\n"
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-service"), []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return stubDir, marker
+}
+
 // TestOpenRCRollbackRestoresPreviousBinary pins the core behaviour: after a
 // failed replacement, the previous binary is back in place.
 func TestOpenRCRollbackRestoresPreviousBinary(t *testing.T) {
@@ -36,14 +52,14 @@ func TestOpenRCRollbackRestoresPreviousBinary(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	out, err := runShellScript(t, `
+	stubDir, _ := rcServiceStub(t)
+	out, err := runShellScriptWithPath(t, stubDir, `
 install_path="`+dir+`"
 openrc_swap_pending=1
 openrc_units_stopped=0
 pr_warn() { printf 'WARN: %s\n' "$*"; }
 pr_err() { printf 'ERROR: %s\n' "$*"; }
 openrc_restore_update_entry() { printf 'RESTORED_UPDATE_ENTRY\n'; }
-rc-service() { :; }
 `+fn+`
 openrc_rollback_binary_swap
 `)
@@ -150,14 +166,14 @@ func TestOpenRCRollbackIsNoOpWithoutPendingSwap(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	out, err := runShellScript(t, `
+	stubDir, marker := rcServiceStub(t)
+	out, err := runShellScriptWithPath(t, stubDir, `
 install_path="`+dir+`"
 openrc_swap_pending=0
 openrc_units_stopped=0
 pr_warn() { printf 'WARN: %s\n' "$*"; }
 pr_err() { printf 'ERROR: %s\n' "$*"; }
 openrc_restore_update_entry() { printf 'RESTORED_UPDATE_ENTRY\n'; }
-rc-service() { printf 'RC_SERVICE_CALLED\n'; return 0; }
 `+fn+`
 openrc_rollback_binary_swap
 `)
@@ -166,6 +182,9 @@ openrc_rollback_binary_swap
 	}
 	if out != "" {
 		t.Errorf("with no pending swap the rollback must do nothing, got: %s", out)
+	}
+	if _, err := os.Stat(marker); err == nil {
+		t.Error("with no pending swap the rollback must not touch the service")
 	}
 	got, err := os.ReadFile(live)
 	if err != nil || string(got) != "NEW" {

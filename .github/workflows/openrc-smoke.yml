@@ -1,227 +1,232 @@
 name: OpenRC (Alpine) smoke
 
-# Restored from fix/ci-freebsd-release (ref 23cb98140) and adapted to the
-# miner/tools line: the provider CLI is now ./cli/miner and the client is
-# ./cmd/urnet-tools, so the OpenRC cell runs the real miner under a real
-# supervise-daemon service instead of the old fake-release + installer flow
-# (which does not exist at this commit — the harness marks those checks as
-# clearly-labelled TODO gates and they switch on by themselves when the code
-# lands).
-#
-# What still runs here, and is the reason this workflow exists: a stripped
-# Alpine container with OpenRC as the service manager proves the static miner
-# runs on musl, starts under supervise-daemon as a dedicated non-root user,
-# binds its control socket, is reachable by urnet-tools, survives a restart and
-# stops. The cross-build job also keeps the windows/darwin vet gate that caught
-# the linux-only symbol leaks on the old line.
-#
-# TRIGGERS: release tags + manual dispatch only. The earlier PR / main push /
-# weekly schedule triggers are gone: this cell belongs to the release distro
-# matrix now.
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'releases/**'
+  schedule:
+    # Weekly, so Alpine packaging drift (a moved package, a changed
+    # supervise-daemon flag, a new release tag layout) is caught even when no
+    # PR touches this code.
+    - cron: '37 4 * * 1'
   workflow_dispatch:
 
-permissions:
-  contents: read
-
-# ─────────────────────────── RELEASE GATING SWITCH ─────────────────────────
-# Gating is OFF: this workflow fails itself on a broken cell, but nothing in
-# release.yml depends on it, so it blocks no release creation. The single
-# operator-facing switch that turns the release matrix into a gate is the
-# clearly marked RELEASE_GATE_MODE switch in distro-matrix.yml (recipe in
-# docs/Distro-Matrix-CI.md §Release gating).
-# ---------------------------------------------------------------------------
+# Same rationale as unix-lifecycle.yml: a PR already triggers this, so push is
+# scoped to main. Rapid pushes to a PR supersede rather than stack.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  GO_VERSION: "1.27"
+  # A version tag that can never collide with a real release, so a misconfigured
+  # URL fails loudly instead of silently downloading a published build.
+  CI_TAG: v0.0.0-cislot
 
 jobs:
   openrc-smoke:
-    name: OpenRC service path (alpine)
+    name: OpenRC service path (${{ matrix.binarch }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - binarch: amd64
+          - binarch: arm64
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-          cache-dependency-path: go.sum
+          go-version: "1.27"
 
-      - name: Build the static payload
+      - name: Build urnet-tools and the fake provider
         env:
           GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+          # Build for the matrix arch, not the runner's arch: the smoke stages
+          # the tarball under linux/<binarch> and the installer inside the
+          # container asks for the arch IT runs as (from `arch`/uname -m),
+          # so the binaries must match the container platform. This was the
+          # arm64-leg failure: the runner is amd64, the build was amd64, the
+          # tarball was labelled arm64, and the container's uname -m -> amd64
+          # lookup found nothing ("Provider binary was not found in the
+          # tarball").
+          GOARCH: ${{ matrix.binarch }}
         run: |
           set -euo pipefail
-          mkdir -p out/evidence out/fixtures
-          # The container writes evidence as root; make the bind-mount target
-          # usable from both sides before Docker creates it itself.
-          chmod 777 out/evidence
           for attempt in 1 2 3; do
             echo "Build attempt $attempt..."
-            # CGO_ENABLED=0 is REQUIRED: a default build links glibc and cannot
-            # exec on musl Alpine.
-            if CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o out/miner ./cli/miner/ &&
-               CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o out/urnet-tools ./cmd/urnet-tools/; then
+            # CGO_ENABLED=0 is REQUIRED: a default build links glibc
+            # dynamically, and glibc binaries cannot exec on musl Alpine (the
+            # missing interpreter surfaces as "No such file or directory"),
+            # which would leave the service "started" but the provider dead.
+            if CGO_ENABLED=0 go build -o urnet-tools ./cmd/urnet-tools/; then
               echo "Build succeeded"; break
             fi
-            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
-            else echo "Build failed after 3 attempts"; exit 1; fi
+            if [ $attempt -lt 3 ]; then sleep 10; fi
+            if [ $attempt -eq 3 ]; then echo "Build failed after 3 attempts"; exit 1; fi
           done
-          file out/miner out/urnet-tools
+          # The fake provider stands in for the real provider: it answers
+          # --version and serves the control socket, which is what discovery and
+          # the update-verify step actually talk to. The real binary exits
+          # without a JWT, which would crash-respawn every 5s under
+          # supervise-daemon and make version polling time out.
+          CGO_ENABLED=0 go build -o urnetwork-fake ./cmd/fake-provider/
+          ls -la urnet-tools urnetwork-fake
 
-      - name: Mint the disposable CI JWT (refuses the production account)
-        env:
-          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
-          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+      - name: Stage a fake release the installer can fetch
+        # The installer normally pulls a published release. The base-URL
+        # overrides in Provider_Install_Linux.sh (URNET_API_BASE /
+        # URNET_DL_BASE / URNET_MIRROR_BASE) let a branch build be served from
+        # our own directory, so the installer's REAL download and extract path
+        # runs unmodified — that is the point of the smoke test.
         run: |
           set -euo pipefail
-          mkdir -p /tmp/mint
-          HOME=/tmp/mint ./out/miner auth \
-            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
-            --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
-          test -s /tmp/mint/.urnetwork/jwt || {
-            echo "::error::JWT mint failed (verification required?)"; tail -n 20 /tmp/mint/auth.log; exit 1; }
-          cp /tmp/mint/.urnetwork/jwt out/fixtures/jwt
-          chmod 600 out/fixtures/jwt
-          # Same refusal guard as shakedown.yml; the token is never printed.
-          python3 - <<'PY'
-          import base64, json
-          raw = open('out/fixtures/jwt').read().strip()
-          p = raw.split('.')[1] + '=' * (-len(raw.split('.')[1]) % 4)
-          d = json.loads(base64.urlsafe_b64decode(p))
-          print("minted a disposable JWT for account:", d.get('network_name'))
-          if d.get('network_name') == 'mesocyclone':
-              raise SystemExit("REFUSING: the minted JWT is the production account")
-          PY
-          rm -rf /tmp/mint
+          ROOT="$PWD/fake-release"
+          DL="$ROOT/releases/download/$CI_TAG"
+          mkdir -p "$DL"
+
+          # Provider tarball. The layout is NOT free-form: the installer
+          # extracts and then reads $workdir/linux/$arch/provider, so the path
+          # inside the archive must be exactly that or the install fails with
+          # "Provider binary was not found in the tarball".
+          # The installer derives `arch` from `arch`/uname -m and normalizes
+          # it (x86_64 -> amd64, aarch64 -> arm64, see get_arch in
+          # Provider_Install_Linux.sh). The archive path must use that same
+          # string or the lookup misses.
+          TARCH="${{ matrix.binarch }}"
+          STAGE="$PWD/stage"
+          mkdir -p "$STAGE/linux/$TARCH"
+          cp urnetwork-fake "$STAGE/linux/$TARCH/provider"
+          cp urnet-tools "$STAGE/linux/$TARCH/urnet-tools"
+          tar -czf "$DL/urnetwork-provider-$CI_TAG.tar.gz" -C "$STAGE" linux
+
+          # The tool binary is also fetched directly from the mirror path.
+          cp urnet-tools "$DL/urnet-tools-linux-${{ matrix.binarch }}"
+
+          # Release metadata, in the GitHub release shape the installer parses.
+          # The per-tag response MUST carry the tool asset with a sha256 digest:
+          # without a digest the installer treats the release as predating Go
+          # tool assets and falls back to copying the SHELL script as
+          # urnet-tools, so the modern download+verify path would never run.
+          mkdir -p "$ROOT/api/releases/tags"
+          cat > "$ROOT/api/latest.json" <<EOF
+          {"tag_name": "$CI_TAG"}
+          EOF
+          TOOL_DIGEST=$(sha256sum "$DL/urnet-tools-linux-${{ matrix.binarch }}" | awk '{print $1}')
+          cat > "$ROOT/api/releases/tags/$CI_TAG" <<EOF
+          {
+            "tag_name": "$CI_TAG",
+            "assets": [
+              {
+                "name": "urnet-tools-linux-${{ matrix.binarch }}",
+                "browser_download_url": "http://127.0.0.1:8099/releases/download/$CI_TAG/urnet-tools-linux-${{ matrix.binarch }}",
+                "digest": "sha256:$TOOL_DIGEST"
+              }
+            ]
+          }
+          EOF
+
+          # The installer script itself.
+          mkdir -p "$ROOT/stage"
+          cp scripts/Provider_Install_Linux.sh "$ROOT/stage/install.sh"
+
+          echo "fake release staged under $ROOT:"
+          find "$ROOT" -type f | sed "s|^$PWD/|  |"
+
+      - name: Set up QEMU for the arm64 leg
+        # The runner is amd64; the arm64 matrix leg runs an arm64 container,
+        # which needs binfmt_misc registration to execute under the kernel.
+        # amd64 is a no-op pass-through.
+        uses: docker/setup-qemu-action@v3
 
       - name: Install and exercise the service on a stripped Alpine
         # `docker run` on the HOST runner, deliberately NOT the `container:`
-        # job key: what is under test is the static Go binary under a real
-        # OpenRC service manager, in Alpine's musl userland.
+        # job key. Using container: would execute this inside Alpine's own musl
+        # userspace and destroy the premise: what is under test is a static Go
+        # binary plus a POSIX-shell installer running against a real Alpine
+        # root filesystem with OpenRC as init.
         #
         # --cap-add SYS_PTRACE is REQUIRED, not decoration. Docker strips
-        # CAP_SYS_PTRACE from the container's bounding set, so a client running
-        # as another user cannot read /proc/<pid>/exe for a process owned by
-        # the service user. Real hosts carry this capability by default.
+        # CAP_SYS_PTRACE from the container's bounding set, so a provider
+        # running as the service user cannot read /proc/<pid>/exe for a process
+        # owned by another uid. Any step that reads a version across users then
+        # false-fails with "could not determine version" although nothing is
+        # broken. Real hosts carry this capability by default.
+        env:
+          CI_TAG: ${{ env.CI_TAG }}
         run: |
           set -euo pipefail
-          docker run --rm --cap-add SYS_PTRACE \
-            -e BIN_DIR=/srv/bin \
-            -e REPO_DIR=/srv/repo \
-            -e JWT_FILE=/srv/fixtures/jwt \
-            -e OUT_DIR=/srv/out \
-            -e TIMEOUT_S=90 \
-            -v "$PWD/out:/srv/bin:ro" \
-            -v "$PWD/out/fixtures:/srv/fixtures:ro" \
-            -v "$PWD/out/evidence:/srv/out" \
-            -v "$PWD:/srv/repo:ro" \
-            -v "$PWD/.github/scripts/openrc-smoke.sh:/srv/openrc-smoke.sh:ro" \
-            alpine:latest sh /srv/openrc-smoke.sh 2>&1 | tee /tmp/openrc-smoke.log
+          docker run --rm \
+            --cap-add SYS_PTRACE \
+            --platform linux/${{ matrix.binarch }} \
+            -e CI_TAG="$CI_TAG" \
+            -v "$PWD/fake-release:/srv/fake-release:ro" \
+            -v "$PWD/scripts/ci/openrc-smoke.sh:/srv/smoke.sh:ro" \
+            alpine:latest \
+            sh /srv/smoke.sh 2>&1 | tee /tmp/openrc-smoke.log
 
-      - name: Publish the cell summary
-        if: always()
-        run: |
-          {
-            echo "### OpenRC smoke — alpine:latest"
-            echo
-            sed -n '/openrc-smoke summary/,$p' /tmp/openrc-smoke.log 2>/dev/null || echo "(no harness output)"
-          } >>"$GITHUB_STEP_SUMMARY" || true
-          if grep -q 'RESULT: PASS' /tmp/openrc-smoke.log 2>/dev/null; then exit 0; fi
-          echo "::error::OpenRC smoke failed"
-          exit 1
-
-      - name: Remove the staged JWT
-        if: always()
-        run: rm -f out/fixtures/jwt
-
-      - name: Upload the smoke evidence
+      - name: Upload the smoke log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: openrc-smoke-evidence
-          path: |
-            out/evidence/
-            /tmp/openrc-smoke.log
+          name: openrc-smoke-${{ matrix.binarch }}
+          path: /tmp/openrc-smoke.log
           if-no-files-found: warn
-          retention-days: 7
 
-  # urnet-tools ships for windows and macOS as well as linux, and the OpenRC
-  # backend is linux-only by construction (build-tagged stubs elsewhere). Every
-  # Linux-only symbol a SHARED call site reaches must also exist as an
-  # off-linux stub, or the windows/darwin release build breaks while linux CI
-  # stays green.
+  # The urnet-tools binary ships for windows and macOS as well as linux, and
+  # the OpenRC backend is linux-only by construction (//go:build !linux stubs in
+  # openrc_other.go). Every Linux-only symbol that a SHARED call site reaches
+  # must therefore also exist as an off-linux stub, or the windows/darwin
+  # release build breaks while linux CI stays green.
   #
   # `go vet` rather than `go build` on purpose: it type-checks the package AND
-  # its test files, which build alone would not catch. (The freebsd leg is
-  # tracked in freebsd.yml/portable-core.yml; there is no FreeBSD port of
-  # internal/urnettools yet.)
+  # its test files, which build alone would not catch.
   cross-build:
     name: urnet-tools cross-build (${{ matrix.goos }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         goos: [windows, darwin]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-          cache-dependency-path: go.sum
+          go-version: "1.27"
 
       - name: Vet urnettools for ${{ matrix.goos }}
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: amd64
-          CGO_ENABLED: "0"
         run: |
           set -euo pipefail
-          go vet ./internal/urnettools/
-          go build -o /dev/null ./cmd/urnet-tools
+          GOOS=${{ matrix.goos }} GOARCH=amd64 go vet ./internal/urnettools/
+          GOOS=${{ matrix.goos }} GOARCH=amd64 go build -o /dev/null ./cmd/urnet-tools
           echo "${{ matrix.goos }} cross-build OK"
 
   lint-shell:
-    name: Installer + release-matrix shell lint
+    name: Installer shell lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
+      - uses: actions/checkout@v4
       - name: dash + bash + shellcheck
         run: |
           set -euo pipefail
           # The installer runs under `sh` on Alpine, where sh is busybox ash.
           # Syntax bash accepts and ash rejects is a latent breakage that only
           # surfaces on a real Alpine box, so lint against dash as well as bash.
-          # The release-matrix harnesses (.github/scripts/*-smoke.sh) are POSIX
-          # sh for the same reason: the distro cells run them under the distro's
-          # own /bin/sh, musl Alpine included, so they get the same gate.
           sudo apt-get update -qq
-          sudo apt-get install -y -qq dash shellcheck
+          sudo apt-get install -y -qq dash
           rc=0
-          for f in scripts/Provider_Install_Linux.sh scripts/test_provider_install.sh \
-                   .github/scripts/distro-smoke.sh .github/scripts/systemd-smoke.sh \
-                   .github/scripts/openrc-smoke.sh .github/scripts/freebsd-smoke.sh; do
+          for f in scripts/Provider_Install_Linux.sh scripts/test_provider_install.sh; do
             echo "== $f =="
             dash -n  "$f" && echo "  dash OK"        || rc=1
             bash -n  "$f" && echo "  bash OK"        || rc=1
