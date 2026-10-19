@@ -97,9 +97,12 @@ func TestOpenRCInstallPathRejectsTraversal(t *testing.T) {
 		{root + "/../../../../etc", ""},
 		{root + "/../evil", ""},
 		{root + "/../../../../../../etc/shadow", ""},
+		{root + "/..", ""},
+		{root + "/sub/../..", ""},
 		// Legitimate paths must keep working.
 		{root, root},
 		{root + "/sub", root + "/sub"},
+		{root + "/sub/.", root + "/sub"},
 		{root + "/bin/urnetwork", root + "/bin/urnetwork"},
 	} {
 		t.Run(tc.path, func(t *testing.T) {

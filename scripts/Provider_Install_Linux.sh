@@ -385,6 +385,69 @@ get_current_date ()
 FORCE_IPV4=0
 FORCE=0
 
+# wget_common_opts returns flags every wget implementation accepts.
+#
+# BusyBox wget is not GNU wget. It rejects GNU-only options outright:
+# --connect-timeout is unknown (it spells the timeout -T SEC), and
+# --retry-connrefused may be absent depending on how BusyBox was built.
+# Passing an option it does not know makes it exit non-zero with
+# "unrecognized option" BEFORE any network attempt, which silently broke
+# every download on Alpine and Alpine-derived images (and wrote an index.html
+# into the working directory whenever something was listening on port 80).
+#
+# So: no capability probing at all. -T is understood by both implementations and
+# is the documented spelling on each; retries are done in the shell, which works
+# the same everywhere. Earlier revisions probed the real binary per flag, which
+# could stall for minutes on GNU wget (--retry-connrefused makes a refused
+# connection transient and it then retries ~20 times) and had the side effect
+# above. Static, portable flags cannot fail that way.
+wget_common_opts ()
+{
+    wopts="-T 10"
+    # -4 is not universal; --inet4-only is the GNU spelling and BusyBox
+    # recognises neither, so only pass it when the help text says so. Checking
+    # help text has no network side effects (unlike probing with a real fetch).
+    if [ "$FORCE_IPV4" -eq 1 ] && wget --help 2>&1 | grep -q -- '--inet4-only'; then
+        wopts="$wopts --inet4-only"
+    fi
+    echo "$wopts"
+}
+
+# wget_retry_download URL OUTPUT — wget with shell-level retries.
+wget_retry_download ()
+{
+    wr_url="$1"
+    wr_out="$2"
+    wr_opts="$(wget_common_opts)"
+    wr_n=0
+    while [ "$wr_n" -lt 3 ]; do
+        # shellcheck disable=SC2086  # wr_opts is intentionally word-split flags
+        if wget $wr_opts -O "$wr_out" "$wr_url"; then
+            return 0
+        fi
+        wr_n=$((wr_n + 1))
+        [ "$wr_n" -lt 3 ] && sleep 2
+    done
+    return 1
+}
+
+# wget_retry_fetch URL — same, to stdout.
+wget_retry_fetch ()
+{
+    wf_url="$1"
+    wf_opts="$(wget_common_opts)"
+    wf_n=0
+    while [ "$wf_n" -lt 3 ]; do
+        # shellcheck disable=SC2086  # wf_opts is intentionally word-split flags
+        if wget $wf_opts -qO- "$wf_url"; then
+            return 0
+        fi
+        wf_n=$((wf_n + 1))
+        [ "$wf_n" -lt 3 ] && sleep 2
+    done
+    return 1
+}
+
 network_fetch ()
 {
     url="$1"
@@ -1356,18 +1419,27 @@ openrc_stage_root_owned_tool ()
 openrc_resolve_parent ()
 {
     # Canonicalize the PARENT of p lexically, printing it on stdout.
+    # With --full, canonicalize the entire path instead of stripping the leaf.
     #
     # Lexical on purpose: the install tree usually does not exist yet, and
     # resolving through a symlink in a path that does not exist would let a
     # planted link choose where the installer writes. POSIX sh has no realpath,
     # and readlink -f on the parent can still be steered by a link the service
     # user owns, so collapse "." and ".." by hand.
+    _mode="parent"
+    if [ "$1" = "--full" ]; then
+        _mode="full"
+        shift
+    fi
     _rp="$1"
-    case "$_rp" in
-        */*) _rp="${_rp%/*}" ;;
-        *)   _rp="." ;;
-    esac
-    [ -n "$_rp" ] || _rp="/"
+    if [ "$_mode" = "parent" ]; then
+        case "$_rp" in
+            */*) _rp="${_rp%/*}" ;;
+            *)   _rp="." ;;
+        esac
+        [ -n "$_rp" ] || _rp="/"
+    fi
+    [ -n "$_rp" ] || _rp="."
 
     _abs=""
     case "$_rp" in
@@ -1622,13 +1694,14 @@ install_openrc_units ()
     #
     # Lexical resolution, not readlink -f: the tree may not exist yet, and a
     # planted symlink in a not-yet-created directory must not be able to steer
-    # this. Canonicalize the PARENT (which does exist) and re-append the leaf.
+    # this. Canonicalize the full path lexically to handle trailing ".." or "."
+    # components properly.
     openrc_resolved_parent="$(openrc_resolve_parent "$install_path")" || {
         pr_err "Could not resolve the parent directory of install path '%s'; refusing install." "$install_path"
         rm -rf "$openrc_stage_dir"
         exit 1
     }
-    openrc_resolved="$openrc_resolved_parent/$(basename "$install_path")"
+    openrc_resolved="$(openrc_resolve_parent --full "$install_path")"
     case "$openrc_resolved" in
         "$openrc_install_root"|"$openrc_install_root"/*)
             ;;
@@ -2063,10 +2136,12 @@ download_asset ()
 
     # Try wget fallback
     if command -v wget > /dev/null; then
-        if wget_retry_fetch "$url"; then
+        if wget_retry_download "$url" "$output"; then
             return 0
         fi
     fi
+
+    return 1
 }
 
 do_install ()
@@ -3308,6 +3383,17 @@ confirm_restart ()
         return 0
     fi
 
+    # Check for an interactive terminal before prompting
+    interactive_tty=""
+    if [ -c /dev/tty ] && { true < /dev/tty; } 2>/dev/null; then
+        interactive_tty="/dev/tty"
+    elif [ -t 0 ]; then
+        interactive_tty="/dev/stdin"
+    else
+        pr_err "Interactive terminal required for restart confirmation; re-run with -f or --force."
+        exit 1
+    fi
+
     if hot_restart_is_enabled; then
         printf "\n\e[1;33m🔄 WARNING: A Hot Restart Will Be Attempted 🔄\e[0m\n"
         printf "\e[1m%s\n" "$action"
@@ -3320,9 +3406,12 @@ confirm_restart ()
     
     while true; do
         printf "\e[1mAre you absolutely sure you want to proceed and restart the provider? (y/N): \e[0m"
-        read -r yn < /dev/tty
+        if ! read -r yn < "$interactive_tty"; then
+            pr_info "Command aborted. Provider was NOT restarted and your warmup is safe."
+            exit 1
+        fi
         case $yn in
-            [Yy]* ) return 0;;
+            [Yy]* ) restart_confirmed=1; return 0;;
             [Nn]* | "" ) pr_info "Command aborted. Provider was NOT restarted and your warmup is safe."; exit 1;;
             * ) echo "Please answer yes or no.";;
         esac
@@ -4297,7 +4386,11 @@ do_optimize ()
     actual_home=$(getent passwd "$actual_user" | cut -d: -f6)
 
     # Check if service is active and warn about restart before doing any work
-    if sudo -u "$actual_user" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $actual_user)/bus" systemctl --user is-active --quiet urnetwork.service 2>/dev/null; then
+    if [ "$has_openrc" -eq 1 ] && [ -f /etc/init.d/urnetwork ]; then
+        if rc-service urnetwork status >/dev/null 2>&1; then
+            confirm_restart "Applying kernel limits and OS optimizations requires restarting the URNetwork provider to bind the new system ulimits."
+        fi
+    elif sudo -u "$actual_user" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $actual_user)/bus" systemctl --user is-active --quiet urnetwork.service 2>/dev/null; then
         confirm_restart "Applying kernel limits and OS optimizations requires restarting the URNetwork provider to bind the new system ulimits."
     fi
 
@@ -4568,7 +4661,7 @@ EOF
         # Only a RUNNING service is restarted, and only after confirmation.
         # A stopped one just needs the new limits to apply at its next start.
         if rc-service urnetwork status >/dev/null 2>&1; then
-            confirm_restart "Applying the new limits restarts the URNetwork provider."
+            [ "${restart_confirmed:-0}" -eq 1 ] || confirm_restart "Applying the new limits restarts the URNetwork provider."
             pr_info "Restarting the urnetwork service to apply ulimits..."
             if rc-service urnetwork restart >/dev/null 2>&1; then
                 pr_info "Service restarted with the new limits."
@@ -4950,66 +5043,3 @@ case "$operation" in
         exit 1
         ;;
 esac
-
-# wget_common_opts returns flags every wget implementation accepts.
-#
-# BusyBox wget is not GNU wget. It rejects GNU-only options outright:
-# --connect-timeout is unknown (it spells the timeout -T SEC), and
-# --retry-connrefused may be absent depending on how BusyBox was built.
-# Passing an option it does not know makes it exit non-zero with
-# "unrecognized option" BEFORE any network attempt, which silently broke
-# every download on Alpine and Alpine-derived images (and wrote an index.html
-# into the working directory whenever something was listening on port 80).
-#
-# So: no capability probing at all. -T is understood by both implementations and
-# is the documented spelling on each; retries are done in the shell, which works
-# the same everywhere. Earlier revisions probed the real binary per flag, which
-# could stall for minutes on GNU wget (--retry-connrefused makes a refused
-# connection transient and it then retries ~20 times) and had the side effect
-# above. Static, portable flags cannot fail that way.
-wget_common_opts ()
-{
-    wopts="-T 10"
-    # -4 is not universal; --inet4-only is the GNU spelling and BusyBox
-    # recognises neither, so only pass it when the help text says so. Checking
-    # help text has no network side effects (unlike probing with a real fetch).
-    if [ "$FORCE_IPV4" -eq 1 ] && wget --help 2>&1 | grep -q -- '--inet4-only'; then
-        wopts="$wopts --inet4-only"
-    fi
-    echo "$wopts"
-}
-
-# wget_retry_download URL OUTPUT — wget with shell-level retries.
-wget_retry_download ()
-{
-    wr_url="$1"
-    wr_out="$2"
-    wr_opts="$(wget_common_opts)"
-    wr_n=0
-    while [ "$wr_n" -lt 3 ]; do
-        # shellcheck disable=SC2086  # wr_opts is intentionally word-split flags
-        if wget $wr_opts -O "$wr_out" "$wr_url"; then
-            return 0
-        fi
-        wr_n=$((wr_n + 1))
-        [ "$wr_n" -lt 3 ] && sleep 2
-    done
-    return 1
-}
-
-# wget_retry_fetch URL — same, to stdout.
-wget_retry_fetch ()
-{
-    wf_url="$1"
-    wf_opts="$(wget_common_opts)"
-    wf_n=0
-    while [ "$wf_n" -lt 3 ]; do
-        # shellcheck disable=SC2086  # wf_opts is intentionally word-split flags
-        if wget $wf_opts -qO- "$wf_url"; then
-            return 0
-        fi
-        wf_n=$((wf_n + 1))
-        [ "$wf_n" -lt 3 ] && sleep 2
-    done
-    return 1
-}
