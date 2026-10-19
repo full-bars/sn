@@ -209,15 +209,15 @@ for f in /var/log/urnetwork.log /var/log/urnetwork.err; do
     fail "$f missing or is a symlink"
   fi
 done
-LOG_DIR_OWNER=$(stat -c %u /var/log 2>/dev/null)
+LOG_DIR_OWNER=$(stat -c %u /var/log 2>/dev/null || true)
 if [ "$LOG_DIR_OWNER" = "0" ]; then
   ok "/var/log is root-owned (the service user cannot plant a name in it)"
 else
   fail "/var/log is owned by uid $LOG_DIR_OWNER, not root"
 fi
-SVC_UID=$(id -u "$SVC_USER" 2>/dev/null)
+SVC_UID=$(id -u "$SVC_USER" 2>/dev/null || true)
 for f in /var/log/urnetwork.log /var/log/urnetwork.err; do
-  fowner=$(stat -c %u "$f" 2>/dev/null)
+  fowner=$(stat -c %u "$f" 2>/dev/null || true)
   if [ "$fowner" = "$SVC_UID" ]; then
     ok "$f is owned by $SVC_USER (supervise-daemon can open it after dropping privileges)"
   else
@@ -397,7 +397,7 @@ fi
 say "verifying the root-owned auto-update tool"
 ROOT_TOOL=/usr/local/libexec/urnetwork/urnet-tools
 if [ -f "$ROOT_TOOL" ]; then
-  OWNER=$(stat -c %u "$ROOT_TOOL" 2>/dev/null)
+  OWNER=$(stat -c %u "$ROOT_TOOL" 2>/dev/null || true)
   if [ "$OWNER" = "0" ]; then
     ok "$ROOT_TOOL exists and is root-owned"
   else
@@ -406,7 +406,7 @@ if [ -f "$ROOT_TOOL" ]; then
   # Every ancestor must be root-owned and not group/world writable.
   d=$(dirname "$ROOT_TOOL"); bad=""
   while [ "$d" != "/" ] && [ -n "$d" ]; do
-    o=$(stat -c %u "$d" 2>/dev/null); m=$(stat -c %a "$d" 2>/dev/null)
+    o=$(stat -c %u "$d" 2>/dev/null || true); m=$(stat -c %a "$d" 2>/dev/null || true)
     [ "$o" = "0" ] || bad="$bad $d(owner=$o)"
     [ $((0$m & 022)) -eq 0 ] || bad="$bad $d(mode=$m)"
     d=$(dirname "$d")
