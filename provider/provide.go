@@ -413,6 +413,13 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	proxyBandwidth := RegisterProxyBandwidth(proxyIndex)
 
 	clientSettings := connect.DefaultClientSettings()
+	if clientSettings.ContractManagerSettings != nil {
+		if proxySettings != nil {
+			clientSettings.ContractManagerSettings.ProxyDescription = fmt.Sprintf("proxy[%d] (%s)", proxyIndex, proxySettings.Address)
+		} else if isNative {
+			clientSettings.ContractManagerSettings.ProxyDescription = "proxy[0] (direct)"
+		}
+	}
 	if seed, err := readProviderClientKeySeed(); err == nil && 0 < len(seed) {
 		clientSettings.ClientKeySeed = seed
 	} else if err != nil {
