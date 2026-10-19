@@ -63,12 +63,20 @@ var bsdServiceRunFn = func(name string, args ...string) ([]byte, error) {
 	return exec.Command(name, args...).CombinedOutput()
 }
 
+// bsdRcScriptExists reports whether an rc.d script is present. A var so tests
+// can exercise the lifecycle control path without a live FreeBSD host; the
+// default is the real filesystem check.
+var bsdRcScriptExists = func(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
 // bsdRequireRcScript returns an error unless an rc.d script exists for the
 // service. Without this check, sysrc happily writes `<name>_enable=YES` for a
 // service that does not exist and reports success, and `service <name> start`
 // fails with a bare "not found" that reads like a transient problem.
 func bsdRequireRcScript(p Provider, service string) error {
-	if _, err := os.Stat(bsdRcScriptPath(service)); err != nil {
+	if !bsdRcScriptExists(bsdRcScriptPath(service)) {
 		return fmt.Errorf("no rc.d script at %s for provider %s — install it first (urnet-tools install-service, or the installer script)",
 			bsdRcScriptPath(service), providerLabel(p))
 	}
@@ -86,15 +94,28 @@ func bsdServiceControl(p Provider, action string) error {
 	if err := bsdRequireRcScript(p, service); err != nil {
 		return err
 	}
+	// rc.d scripts without `command`/`procname` set (ours does not) leave
+	// rc_pid empty, so rc.subr cannot map the action onto a process and
+	// refuses start/stop/restart/status unless `<name>_enable` is YES. The
+	// `one*` variants bypass the rc.conf gate and drive the action directly,
+	// which is what the operator means by `auto-start off` + `start`. They
+	// print "Cannot 'start' <name>" and exit 0 when the service is genuinely
+	// absent, so the existence check above stays, and the exit-0 no-op is
+	// indistinguishable from success either way — hence the error path below
+	// only fires on a real failure.
+	oneshot := "one" + action
+	if action == "status" {
+		oneshot = "onestatus"
+	}
 	var name string
 	var args []string
 	if os.Geteuid() == 0 {
-		name, args = "service", []string{service, action}
+		name, args = "service", []string{service, oneshot}
 	} else {
 		if _, err := exec.LookPath("sudo"); err != nil {
 			return fmt.Errorf("`service %s %s` needs root and sudo is not installed — run it as root", service, action)
 		}
-		name, args = "sudo", []string{"service", service, action}
+		name, args = "sudo", []string{"service", service, oneshot}
 	}
 	out, err := bsdServiceRunFn(name, args...)
 	if err != nil {
@@ -120,7 +141,21 @@ func setAutoStart(p Provider, on bool) error {
 	if on {
 		value = "YES"
 	}
-	if out, err := exec.Command("sysrc", service+"_enable="+value).CombinedOutput(); err != nil {
+	// sysrc writes /etc/rc.conf, which is root-owned, so a non-root caller
+	// needs the same escalation bsdServiceControl uses. The installer installs
+	// the provider as a normal user, so without this `auto-start on|off` fails
+	// with a permission error from exactly the account it was installed for.
+	var name string
+	var args []string
+	if os.Geteuid() == 0 {
+		name, args = "sysrc", []string{service + "_enable=" + value}
+	} else {
+		if _, err := exec.LookPath("sudo"); err != nil {
+			return fmt.Errorf("auto-start needs root and sudo is not installed — run it as root")
+		}
+		name, args = "sudo", []string{"sysrc", service + "_enable=" + value}
+	}
+	if out, err := exec.Command(name, args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("auto-start %s: sysrc %s_enable=%s: %w (%s)",
 			providerLabel(p), service, value, err, strings.TrimSpace(string(out)))
 	}
@@ -302,7 +337,10 @@ func toolExePath() string {
 // returns an error.
 func renderBSDStatus(p Provider) error {
 	service := bsdRcServiceName(p.Binary)
-	cmd := exec.Command("service", service, "status")
+	// onestatus, like the control path: plain `status` is gated on
+	// `<name>_enable` being YES and exits 0 without reporting anything when it
+	// is not, which reads as a clean status for a service that is running.
+	cmd := exec.Command("service", service, "onestatus")
 	cmd.Stdout = stdoutWriter()
 	cmd.Stderr = stderrWriter()
 	return cmd.Run()
