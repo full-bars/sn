@@ -183,11 +183,23 @@ func runProcstat(args ...string) string {
 }
 
 // installedBSDProvider locates the provider in the standard install location
-// used by the FreeBSD installer script.
+// used by the FreeBSD installer script. The per-home fallback follows the
+// installer's user, not the invoking process: an install made through sudo
+// wrote the tree under SUDO_USER's home, while os.UserHomeDir() under a root
+// shell resolves to /root and misses it. SUDO_USER first, then the invoking
+// home; neither resolving just drops the per-home candidates, the root-owned
+// tree is checked either way.
 func installedBSDProvider() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
+	home := ""
+	if sudoUser := os.Getenv("SUDO_USER"); sudoUser != "" {
+		if u, err := osuser.Lookup(sudoUser); err == nil {
+			home = u.HomeDir
+		}
+	}
+	if home == "" {
+		if h, err := os.UserHomeDir(); err == nil {
+			home = h
+		}
 	}
 	for _, c := range bsdProviderCandidates(home) {
 		if info, err := os.Stat(c); err == nil && !info.IsDir() {

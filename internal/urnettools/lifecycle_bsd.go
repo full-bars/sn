@@ -69,14 +69,23 @@ logdir="/var/log/%[1]s"
 %[1]s_running_pid()
 {
     # Print the live provider pid, or nothing when it is not running.
-    [ -f "$pidfile" ] || return 1
-    _pid="$(cat "$pidfile" 2>/dev/null)"
+    # daemon(8) opens the pidfile with a hard-coded mode 0600 (pidfile_open
+    # in daemon.c, not configurable through -p/-P) and start runs as root, so
+    # an unprivileged one*status cannot read the file at all. When it is
+    # unreadable, fall back to scanning the process table.
+    if [ -f "$pidfile" ] && [ -r "$pidfile" ]; then
+        _pid="$(cat "$pidfile" 2>/dev/null)"
+        [ -n "$_pid" ] || return 1
+        # ps, not kill -0: kill -0 returns EPERM (non-zero, same as ESRCH) for a
+        # process owned by another user, so an unprivileged service status would
+        # report "not running" while the provider is up. ps sees every process,
+        # so a pid ps lists is alive regardless of who owns it.
+        [ -n "$(ps -p "$_pid" -o pid= 2>/dev/null)" ] || return 1
+        echo "$_pid"
+        return 0
+    fi
+    _pid="$(ps -u "${%[1]s_user}" -o pid=,args= 2>/dev/null | grep -F '%[4]s provide' | awk '{print $1; exit}')"
     [ -n "$_pid" ] || return 1
-    # ps, not kill -0: kill -0 returns EPERM (non-zero, same as ESRCH) for a
-    # process owned by another user, so an unprivileged service status would
-    # report "not running" while the provider is up. ps sees every process,
-    # so a pid ps lists is alive regardless of who owns it.
-    [ -n "$(ps -p "$_pid" -o pid= 2>/dev/null)" ] || return 1
     echo "$_pid"
 }
 

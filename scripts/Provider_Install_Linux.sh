@@ -1832,9 +1832,8 @@ EOF
     # do NOT install/enable one: hand the operator the exact steps instead.
     if ! id "$openrc_user" > /dev/null 2>&1; then
         pr_warn "User '%s' does not exist; the service is NOT installed (a unit with an unresolvable command_user fails at every start)." "$openrc_user"
-        pr_info "Create the service user and install as it:"
+        pr_info "Create the service user, then run the installer as root:"
         pr_info "    useradd -m -s /bin/sh %s    # or: adduser -D %s" "$openrc_user" "$openrc_user"
-        pr_info "    Create the user first, then run the installer as root:"
         pr_info "        curl -fSsL %s | sh" "$urnet_install_url"
         pr_info "The service script is staged at %s if you prefer to finish by hand." "$openrc_staged"
         return 0
@@ -3674,6 +3673,42 @@ repair_pending_overrides_ownership() {
     return 0
 }
 
+# queue_target_home: the home whose provider will read the queued override.
+# Under OpenRC that is the service user's home (the provider resolves its own
+# os.UserHomeDir(), never root's). Otherwise the provider runs as the invoking
+# user (systemd user unit), and under sudo the invoking user is the sudo
+# parent, not root — mirroring do_optimize's resolution so both agree.
+queue_target_home ()
+{
+    if [ "${has_openrc:-0}" = "1" ]; then
+        openrc_user_home
+        return 0
+    fi
+    qth_user="$(logname 2>/dev/null || echo "${SUDO_USER:-$USER}")"
+    qth_home="$(getent passwd "$qth_user" 2>/dev/null | cut -d: -f6)"
+    [ -n "$qth_home" ] || qth_home="$HOME"
+    printf '%s' "$qth_home"
+}
+
+# queue_target_user: the owner matching queue_target_home, used to repair
+# ownership after a root-side queue write.
+queue_target_user ()
+{
+    if [ "${has_openrc:-0}" = "1" ]; then
+        printf '%s' "$openrc_user"
+        return 0
+    fi
+    logname 2>/dev/null || echo "${SUDO_USER:-$USER}"
+}
+
+# queue_repair_if_foreign HOME OWNER — a queue write by root into another
+# user's home leaves root-owned queue files the provider can neither lock nor
+# read; hand them back. A write into the caller's own home needs nothing.
+queue_repair_if_foreign ()
+{
+    [ "$1" = "$HOME" ] || repair_pending_overrides_ownership "$1" "$2"
+}
+
 # read_control_value KEY
 # Best-effort current value for KEY, for status display only (the running
 # provider's own in-memory state, if reachable, is the real source of
@@ -3751,7 +3786,9 @@ toggle_ramlogs ()
         on)
             confirm_restart "Enabling RAM logging requires restarting the URNetwork provider."
             pr_info "Enabling RAM logging..."
-            queue_pending_override "ramlogs" "on" "$openrc_user_home"
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "ramlogs" "on" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
             if ! urnetwork_service_restart; then
                 pr_err "Failed to restart service after enabling RAM logging; aborting."
                 exit 1
@@ -3761,8 +3798,13 @@ toggle_ramlogs ()
         off)
             confirm_restart "Disabling RAM logging requires restarting the URNetwork provider."
             pr_info "Disabling RAM logging..."
-            queue_pending_override "ramlogs" "off"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "ramlogs" "off" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after disabling RAM logging; aborting."
+                exit 1
+            fi
             pr_info "RAM logging disabled and service restarted."
             ;;
         "")
@@ -3819,9 +3861,11 @@ toggle_lowmode ()
             ram_mib=$(detect_mem_limit_mib)
             gomem_mib=$(( ram_mib * 85 / 100 ))
             pr_info "Dynamic GOMEMLIMIT set to ${gomem_mib}MiB (85%% of ${ram_mib}MiB detected RAM)"
-            queue_pending_override "profile" "lowmem" "$openrc_user_home"
-            queue_pending_override "gomemlimit" "${gomem_mib}MiB" "$openrc_user_home"
-            queue_pending_override "gogc" "50" "$openrc_user_home"
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "profile" "lowmem" "$qh"
+            queue_pending_override "gomemlimit" "${gomem_mib}MiB" "$qh"
+            queue_pending_override "gogc" "50" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
             if ! urnetwork_service_restart; then
                 pr_err "Failed to restart service after enabling lowmode; aborting."
                 exit 1
@@ -3831,9 +3875,11 @@ toggle_lowmode ()
         off)
             confirm_restart "Disabling lowmode requires restarting the URNetwork provider."
             pr_info "Disabling lowmode..."
-            queue_pending_clear "profile" "$openrc_user_home"
-            queue_pending_clear "gomemlimit" "$openrc_user_home"
-            queue_pending_clear "gogc" "$openrc_user_home"
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_clear "profile" "$qh"
+            queue_pending_clear "gomemlimit" "$qh"
+            queue_pending_clear "gogc" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
             if ! urnetwork_service_restart; then
                 pr_err "Failed to restart service after disabling lowmode; aborting."
                 exit 1
@@ -3900,19 +3946,29 @@ toggle_ecomode ()
             ram_mib=$(detect_mem_limit_mib)
             gomem_mib=$(( ram_mib * 75 / 100 ))
             pr_info "Dynamic GOMEMLIMIT set to ${gomem_mib}MiB (75%% of ${ram_mib}MiB detected RAM)"
-            queue_pending_override "profile" "eco"
-            queue_pending_override "gomemlimit" "${gomem_mib}MiB"
-            queue_pending_override "gogc" "50"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "profile" "eco" "$qh"
+            queue_pending_override "gomemlimit" "${gomem_mib}MiB" "$qh"
+            queue_pending_override "gogc" "50" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after enabling eco mode; aborting."
+                exit 1
+            fi
             pr_info "Eco mode enabled and service restarted."
             ;;
         off)
             confirm_restart "Disabling eco mode requires restarting the URNetwork provider."
             pr_info "Disabling eco mode..."
-            queue_pending_clear "profile"
-            queue_pending_clear "gomemlimit"
-            queue_pending_clear "gogc"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_clear "profile" "$qh"
+            queue_pending_clear "gomemlimit" "$qh"
+            queue_pending_clear "gogc" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after disabling eco mode; aborting."
+                exit 1
+            fi
             pr_info "Eco mode disabled and service restarted."
             ;;
         "")
@@ -3939,15 +3995,25 @@ toggle_automode ()
         on)
             confirm_restart "Enabling auto-tune profile requires restarting the URNetwork provider."
             pr_info "Enabling auto-tune profile..."
-            queue_pending_override "profile" "auto"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_override "profile" "auto" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after enabling auto-tune; aborting."
+                exit 1
+            fi
             pr_info "Auto-tune enabled and service restarted."
             ;;
         off)
             confirm_restart "Disabling auto-tune profile requires restarting the URNetwork provider."
             pr_info "Disabling auto-tune profile..."
-            queue_pending_clear "profile"
-            urnetwork_service_restart
+            qh="$(queue_target_home)"; qu="$(queue_target_user)"
+            queue_pending_clear "profile" "$qh"
+            queue_repair_if_foreign "$qh" "$qu"
+            if ! urnetwork_service_restart; then
+                pr_err "Failed to restart service after disabling auto-tune; aborting."
+                exit 1
+            fi
             pr_info "Auto-tune disabled and service restarted."
             ;;
         "")

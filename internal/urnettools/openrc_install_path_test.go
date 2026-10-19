@@ -145,9 +145,13 @@ func TestOpenRCInstallTreeValidationRunsBeforeWrites(t *testing.T) {
 	if body == "" {
 		t.Fatal("could not extract install_openrc_units from the Linux installer")
 	}
-	if !strings.HasPrefix(body, "install_openrc_units") {
-		t.Fatal("extracted the wrong span for install_openrc_units: " +
-			strings.SplitN(body, "\n", 2)[0])
+	// Assert the DEFINITION line, not just the prefix: the extractor slices
+	// from the name, so a bare HasPrefix(body, "install_openrc_units") can
+	// never be false and guards nothing. The definition is the only shape
+	// that proves the span starts at the function, not at a mention.
+	firstLine := strings.SplitN(body, "\n", 2)[0]
+	if !strings.HasPrefix(firstLine, "install_openrc_units(") && !strings.HasPrefix(firstLine, "install_openrc_units ") {
+		t.Fatal("extracted the wrong span for install_openrc_units: " + firstLine)
 	}
 
 	resolvedIdx := strings.Index(body, "openrc_resolve_parent")
@@ -175,6 +179,10 @@ func TestOpenRCInstallTreeValidationRunsBeforeWrites(t *testing.T) {
 				finalizeLine = i
 			}
 		}
+	}
+	if resolvedLine < 0 {
+		t.Fatal("install_openrc_units never CALLS openrc_resolve_parent outside comments; " +
+			"the existence check above matched a comment mention only")
 	}
 	if finalizeLine >= 0 && resolvedLine >= 0 && finalizeLine < resolvedLine {
 		t.Errorf("openrc_finalize_root_paths is called on line %d, before the resolved-path "+

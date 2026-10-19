@@ -236,11 +236,16 @@ else
 fi
 
 # The provider must be running as the SERVICE user, not root. This is the
-# invariant the whole design rests on.
-if ps -o user,args 2>/dev/null | grep '[u]rnetwork provide' | grep -qv '^root'; then
-  ok "provider runs as a non-root user"
-else
+# invariant the whole design rests on. An empty process list is inconclusive
+# (busybox ps formats differ); a list whose provider line starts with root is
+# a violation and must fail.
+PROV=$(ps -o user,args 2>/dev/null | grep '[u]rnetwork provide' || true)
+if [ -z "$PROV" ]; then
   echo "   NOTE: could not confirm the provider's uid (ps output format differs on busybox)"
+elif echo "$PROV" | grep -q '^root'; then
+  fail "provider runs as root — the service-user invariant is broken"
+else
+  ok "provider runs as a non-root user"
 fi
 
 # --- is the provider ACTUALLY running? --------------------------------------
@@ -308,7 +313,9 @@ sleep 3
 # fires and the output so far is still there to assert on.
 timeout -k 2 8 "$TOOLS" logs -n 5 > /tmp/urnet-logs-out.txt 2>&1 || true
 LOGOUT=$(cat /tmp/urnet-logs-out.txt 2>/dev/null)
-if echo "$LOGOUT" | grep -qiE 'urnetwork|/var/log'; then
+# Error text also names urnetwork and /var/log (e.g. "open /var/log/...
+# permission denied"), so drop error lines before requiring a content match.
+if echo "$LOGOUT" | grep -viE 'error|fail|permission denied|cannot|no such' | grep -qiE 'urnetwork|/var/log'; then
   ok "logs readable while the service is STOPPED (reads the file, not the fd)"
 else
   fail "logs unreadable while stopped"
