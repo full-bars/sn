@@ -186,9 +186,11 @@ func TestOptimizeForDispatch(t *testing.T) {
 	if got, want := fnPtr(optimizeFor("darwin")), fnPtr(optimizeDarwin); got != want {
 		t.Errorf("optimizeFor(darwin) did not dispatch to optimizeDarwin")
 	}
-	// Unknown GOOSes still fall back to the Linux path rather than erroring.
-	if got, want := fnPtr(optimizeFor("freebsd")), fnPtr(optimizeLinux); got != want {
-		t.Errorf("optimizeFor(freebsd) should default to optimizeLinux")
+	// FreeBSD dispatches to its own optimizer: sharing no tunable name with
+	// Linux, routing it to optimizeLinux would report success while changing
+	// nothing.
+	if got, want := fnPtr(optimizeFor("freebsd")), fnPtr(optimizeFreeBSD); got != want {
+		t.Errorf("optimizeFor(freebsd) did not dispatch to optimizeFreeBSD")
 	}
 	// Sanity: the real runtime.GOOS on this test box must resolve to one of
 	// the branches without panicking.
