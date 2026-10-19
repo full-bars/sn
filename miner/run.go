@@ -1335,8 +1335,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}()
 
 		certPem, keyPem, _ := readProviderTlsCertAndKey()
-		extenderKeySeed, _ := readProviderExtenderKeySeed()
+		extenderKeySeed, _ := readProviderExtenderKeySeed(slotIdentities, proxySettings)
 		settings := ProviderDeviceSettings(self.closeReportDomainHash)
+		// The extender role binds this host's carrier ports and publishes this
+		// host's address, and it can do neither more than once per process: a
+		// second space's bind fails and its record names an address the host
+		// does not hold (an egress proxy's). Every slot of one run therefore
+		// competes for one role, and only the direct slot can honestly hold it
+		// -- the same rule the swarm members and hosted devices follow. The
+		// remaining slots still provide; they just do not listen.
+		settings.ProvideExtenderEnabled = proxySettings == nil
 		settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(seed, certPem, keyPem)
 		// the extender identity of this provider (connect/EXTENDER.md B1, G2).
 		// The space keeps no local state, so the seed lives here: without it
@@ -1396,7 +1404,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if !bytes.Equal(keyMaterial.GetClientKeySeed(), seed) {
 			return errors.New("provider device changed its retained registration key")
 		}
-		persistProviderAuxiliaryKeyMaterial(output, index, keyMaterial)
+		persistProviderAuxiliaryKeyMaterial(output, index, slotIdentities, proxySettings, keyMaterial)
 		observeProviderExtenderIdentity(output, index, keyMaterial.GetExtenderKeySeed())
 		// one line per change, so the activation prints once it settles and
 		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
@@ -1589,6 +1597,23 @@ func providerClientJwtPath(identities providerSlotIdentities, proxySettings *con
 	return providerStatePath(fmt.Sprintf(".provider-%x.jwt", sum[:8]))
 }
 
+// providerExtenderKeyPath gives each provider slot its own extender identity.
+// The identity also names the space's gossip peer, and one process runs one
+// gossip node per slot. A single file shared by every slot made those nodes
+// present one peer id to the mesh: they ignore each other's publications, and
+// the ones that reach the operator under that id supersede each other's
+// address set as fast as they publish. A slot keeps one identity across
+// launches so an activated extender keeps the id its record names. The name
+// follows the same slot identity as the client jwt path, so two usernames at
+// one host:port never share one extender identity either.
+func providerExtenderKeyPath(identities providerSlotIdentities, proxySettings *connect.ProxySettings) (string, error) {
+	if proxySettings == nil {
+		return providerStatePath(".provider.extender.key")
+	}
+	sum := identities.hash(proxySettings)
+	return providerStatePath(fmt.Sprintf(".provider.extender-%x.key", sum[:8]))
+}
+
 // readProviderClientKeySeed loads the Ed25519 seed for the provider
 // client's long-lived identity key from `~/.urnetwork/.provider.key`.
 // Returns (nil, nil) when the file does not exist — a fresh install.
@@ -1620,13 +1645,14 @@ func writeProviderClientKeySeed(seed []byte) error {
 	return os.WriteFile(p, seed, 0600)
 }
 
-// readProviderExtenderKeySeed loads the ed25519 seed of this provider's
-// extender identity from `~/.urnetwork/.provider.extender.key`
-// (connect/EXTENDER.md B1). Returns (nil, nil) when the file does not exist --
-// a provider that has not been an extender yet. The file is the raw 32-byte
-// seed; no encoding, exactly as the client key seed beside it.
-func readProviderExtenderKeySeed() ([]byte, error) {
-	p, err := providerStatePath(".provider.extender.key")
+// readProviderExtenderKeySeed loads the ed25519 seed of this provider slot's
+// extender identity from its state file -- `.provider.extender.key` for the
+// direct provider, one per proxy slot otherwise (connect/EXTENDER.md B1).
+// Returns (nil, nil) when the file does not exist -- a slot that has not been
+// an extender yet. The file is the raw 32-byte seed; no encoding, exactly as
+// the client key seed beside it.
+func readProviderExtenderKeySeed(identities providerSlotIdentities, proxySettings *connect.ProxySettings) ([]byte, error) {
+	p, err := providerExtenderKeyPath(identities, proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -1637,12 +1663,12 @@ func readProviderExtenderKeySeed() ([]byte, error) {
 	return b, err
 }
 
-// writeProviderExtenderKeySeed persists the extender identity seed to
-// `~/.urnetwork/.provider.extender.key` with 0600 permissions (sensitive
+// writeProviderExtenderKeySeed persists the extender identity seed of one
+// provider slot to its state file with 0600 permissions (sensitive
 // material -- anyone with this file can present this host's extender identity
 // to the mesh and to the operator).
-func writeProviderExtenderKeySeed(extenderKeySeed []byte) error {
-	p, err := providerStatePath(".provider.extender.key")
+func writeProviderExtenderKeySeed(identities providerSlotIdentities, proxySettings *connect.ProxySettings, extenderKeySeed []byte) error {
+	p, err := providerExtenderKeyPath(identities, proxySettings)
 	if err != nil {
 		return err
 	}

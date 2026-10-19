@@ -15,3 +15,8 @@ evm/lib
 sim-testnet/runs/
 sim-testnet/build/
 /build/
+
+# simulation-only proxy lists carry live credentials; never commit them
+test_proxy_do_not_include_to_git*.txt
+zzzsim.exe
+zzzsim
