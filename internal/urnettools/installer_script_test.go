@@ -355,11 +355,32 @@ func extractShellFunc(t *testing.T, script, name string) string {
 				heredocTag = ""
 			}
 		} else {
-			if idx := strings.Index(line, "<<"); idx >= 0 {
-				tag := strings.TrimSpace(line[idx+2:])
-				tag = strings.Trim(tag, "'\"")
-				if tag != "" && !strings.ContainsAny(tag, " \t;") {
-					heredocTag = tag
+			if idx := strings.Index(line, "<<"); idx >= 0 && !strings.HasPrefix(trimmed, "#") {
+				rem := line[idx+2:]
+				if !strings.HasPrefix(rem, "<") { // ignore here-strings <<<
+					rem = strings.TrimPrefix(rem, "-")
+					rem = strings.TrimSpace(rem)
+					var tag string
+					if strings.HasPrefix(rem, "'") {
+						if closeIdx := strings.Index(rem[1:], "'"); closeIdx >= 0 {
+							tag = rem[1 : 1+closeIdx]
+						}
+					} else if strings.HasPrefix(rem, "\"") {
+						if closeIdx := strings.Index(rem[1:], "\""); closeIdx >= 0 {
+							tag = rem[1 : 1+closeIdx]
+						}
+					} else {
+						end := strings.IndexAny(rem, " \t;<>|&)")
+						if end >= 0 {
+							tag = rem[:end]
+						} else {
+							tag = rem
+						}
+					}
+					tag = strings.Trim(tag, "'\"\\")
+					if tag != "" {
+						heredocTag = tag
+					}
 				}
 			} else if i > 0 && line == "}" {
 				endIdx = charCount + len(line)
@@ -506,6 +527,99 @@ func TestOpenRCPromptAuthNonInteractiveHop(t *testing.T) {
 	}
 	if !strings.Contains(fn, "stty -echo") && !strings.Contains(fn, "read -rs") {
 		t.Error("openrc_prompt_auth does not suppress echo (L1 violation)")
+	}
+}
+
+func TestExtractShellFuncHeredocHandling(t *testing.T) {
+	cases := []struct {
+		name   string
+		script string
+		want   string
+	}{
+		{
+			name: "dash heredoc <<-EOF with inner brace",
+			script: `some_func ()
+{
+	cat <<-EOF
+	line with } brace
+EOF
+	echo done
+}`,
+			want: `some_func ()
+{
+	cat <<-EOF
+	line with } brace
+EOF
+	echo done
+}`,
+		},
+		{
+			name: "single-quoted heredoc << 'EOF' with inner brace",
+			script: `single_quote () {
+	cat << 'EOF'
+	}
+EOF
+	return 0
+}`,
+			want: `single_quote () {
+	cat << 'EOF'
+	}
+EOF
+	return 0
+}`,
+		},
+		{
+			name: "dash and single-quoted heredoc <<- 'EOF' with space and inner brace",
+			script: `dash_single () {
+	cat <<- 'EOF'
+	}
+EOF
+}`,
+			want: `dash_single () {
+	cat <<- 'EOF'
+	}
+EOF
+}`,
+		},
+		{
+			name: "double-quoted heredoc << \"EOF\" with redirection and inner brace",
+			script: `double_quote ()
+{
+	cat << "EOF" > /dev/null
+	}
+EOF
+	exit 0
+}`,
+			want: `double_quote ()
+{
+	cat << "EOF" > /dev/null
+	}
+EOF
+	exit 0
+}`,
+		},
+		{
+			name: "heredoc with space before tag and pipe << EOF | grep",
+			script: `spaced_heredoc () {
+	cat << EOF | grep foo
+	}
+EOF
+}`,
+			want: `spaced_heredoc () {
+	cat << EOF | grep foo
+	}
+EOF
+}`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := extractShellFunc(t, tc.script, strings.Fields(tc.script)[0])
+			if got != tc.want {
+				t.Errorf("extractShellFunc mismatch:\ngot:\n%s\nwant:\n%s", got, tc.want)
+			}
+		})
 	}
 }
 
