@@ -55,6 +55,10 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 | `self-heal [on\|off\|status] [target]` | Toggle or query the resource-pressure self-healing monitor (`~/.urnetwork/proxy_self_heal`). |
 | `default [set <target> \| show \| clear]` | Persist, inspect, or clear the default provider target for the current user. |
 
+#### OpenRC (Alpine) command parity
+
+On a host where OpenRC is the running init system, the lifecycle commands (`start`, `stop`, `restart`, `auto-start`, `auto-update`, `logs`, `status`, `uninstall`) act on the installer's `urnetwork` service. The command table, the multi-provider selector rules and the root requirement are on the [Alpine Linux (OpenRC)](OpenRC.md#urnet-tools-command-parity) page.
+
 ### Proxy Management Commands
 
 | Command | What it does |
