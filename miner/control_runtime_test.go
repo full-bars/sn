@@ -64,18 +64,34 @@ func TestBeginControlRunLeavesFreshProviderRegistrationOpen(t *testing.T) {
 }
 
 // Guard on the collision itself: a `.provider*` file beside a missing key is
-// what clientauth reads as retained history, so if the breadcrumb ever moves
-// back into that namespace the test above must fail rather than silently
-// refuse registrations. This encodes the clientauth behavior the fix depends
-// on, not the miner's.
-func TestProviderVersionBreadcrumbWouldRefuseFreshRegistration(t *testing.T) {
+// what clientauth reads as retained history — except the fork's
+// `.provider_version` stamp, which records a release, not an identity, and
+// must not block a fresh registration or a legacy adoption. This encodes the
+// clientauth behavior the fix depends on, not the miner's.
+func TestProviderVersionBreadcrumbDoesNotRefuseFreshRegistration(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, ".provider_version"), []byte("v-old"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	owner, err := clientauth.OpenProviderClientKey(t.Context(), filepath.Join(dir, ".provider.key"), clientauth.ProviderClientKeyOptions{AllowCreate: true})
+	if err != nil || owner == nil {
+		t.Fatalf("the fork's version stamp refused a fresh registration: owner=%v err=%v", owner, err)
+	}
+	if err := owner.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// The version stamp is the only exception: every other `.provider*` file
+// still means retained custody and must refuse creation.
+func TestProviderCertBreadcrumbRefusesFreshRegistration(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".provider.cert"), []byte("synthetic"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	owner, err := clientauth.OpenProviderClientKey(t.Context(), filepath.Join(dir, ".provider.key"), clientauth.ProviderClientKeyOptions{AllowCreate: true})
 	var refused *clientauth.RegistrationRefusedError
 	if !errors.As(err, &refused) || refused.Code != "provider_key_missing_with_retained_history" || owner != nil {
-		t.Fatalf("a `.provider*` breadcrumb no longer refuses a fresh registration: owner=%v err=%v", owner, err)
+		t.Fatalf("a non-version .provider* breadcrumb no longer refuses a fresh registration: owner=%v err=%v", owner, err)
 	}
 }
