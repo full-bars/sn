@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -559,5 +560,89 @@ func TestFleetRenewalSuccessorReserveFundsExactSignerCeilings(t *testing.T) {
 	plan.Actions = slices.DeleteFunc(plan.Actions, func(action Action) bool { return action.ID == fleetRenewalFundingID(renewal.Round, "keeper") })
 	if err := validateFleetRenewalPlan(plan); err == nil {
 		t.Fatal("renewal accepted without its keeper funding action")
+	}
+}
+
+// Append derives its approved actions from one computation of the raw fleet
+// actions. Both allowance modes append exactly the independently derived
+// actions, every refusal is the one the former repeated computation gave, and
+// a budget shortfall reports exactly the independently computed actions.
+func TestFleetRenewalAppendComputesFleetActionsOnce(t *testing.T) {
+	t.Parallel()
+	fixture := newFleetRenewalTestFixture(t)
+	raw, err := fleetRenewalActions(fixture.base, fixture.renewal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spend, err := maximumActionSpend(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limit, err := addDecimalUint(fixture.base.MaximumSpend.EVMGasWei, spend.EVMGasWei)
+	if err != nil {
+		t.Fatal(err)
+	}
+	extended := cloneFleetRenewalForTest(t, fixture.renewal)
+	extended.AllowanceExtensionWei, extended.AllowanceTotalEVMWei, extended.AllowanceTotalTAORao = spend.EVMGasWei, limit, 250_000_000_000
+	reserved, err := fleetRenewalPlanActions(fixture.base, extended)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, mode := range []struct {
+		renewal FleetRenewal
+		want    []Action
+	}{{fixture.renewal, raw}, {extended, reserved}} {
+		plan, err := appendFleetRenewalPlan(fixture.base, mode.renewal)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(plan.Actions[len(fixture.base.Actions):], mode.want) {
+			t.Fatal("append differs from its independently derived renewal actions")
+		}
+	}
+	lowered := *fixture.base
+	lowered.Limits.TAORao = fixture.base.MaximumSpend.TAORao
+	for _, refusal := range []struct {
+		name   string
+		base   *SetupPlan
+		change func(*FleetRenewal)
+		want   string
+	}{
+		{"not-next-round", fixture.base, func(r *FleetRenewal) { r.Round = 2 }, "renewal does not extend the current plan"},
+		{"forged-binding", fixture.base, func(r *FleetRenewal) {
+			members := r.Fleets[0].Members
+			members[0].Binding.HotkeySignature = members[1].Binding.HotkeySignature
+		}, "renewal binding signatures or generation are invalid"},
+		{"reordered-fleets", fixture.base, func(r *FleetRenewal) { r.Fleets[0], r.Fleets[1] = r.Fleets[1], r.Fleets[0] }, "renewal fleet 2 has invalid identity, members, or UID"},
+		{"unmatched-extension", fixture.base, func(r *FleetRenewal) {
+			*r = cloneFleetRenewalForTest(t, extended)
+			r.AllowanceExtensionWei = DecimalUint("1")
+		}, "renewal successor allowance is incomplete or does not match fleet gas"},
+		{"lowered-limit", fixture.base, func(r *FleetRenewal) {
+			*r = cloneFleetRenewalForTest(t, extended)
+			r.AllowanceTotalTAORao = fixture.base.Limits.TAORao - 1
+		}, "renewal successor allowance differs from the reviewed fleet gas ceiling or lowers an existing limit"},
+		{"incomplete-allowance", fixture.base, func(r *FleetRenewal) { r.AllowanceTotalTAORao = 1 }, "renewal successor allowance fields are incomplete"},
+		{"changed-reserve", fixture.base, func(r *FleetRenewal) { r.CampaignReserveBeforeWei = DecimalUint("1") }, "renewal campaign reserve differs from source approval"},
+		{"budget-overflow", &lowered, func(*FleetRenewal) {}, "TAO plan maximum"},
+	} {
+		t.Run(refusal.name, func(t *testing.T) {
+			renewal := cloneFleetRenewalForTest(t, fixture.renewal)
+			refusal.change(&renewal)
+			if _, err := appendFleetRenewalPlan(refusal.base, renewal); err == nil || !strings.Contains(err.Error(), refusal.want) {
+				t.Fatalf("append error %v, want %q", err, refusal.want)
+			}
+		})
+	}
+	shortfall := cloneFleetRenewalForTest(t, fixture.renewal)
+	shortfall.CampaignLiabilityWei = shortfall.CampaignReserveBeforeWei
+	_, err = appendFleetRenewalPlan(fixture.base, shortfall)
+	var budget *fleetRenewalBudgetError
+	if !errors.As(err, &budget) {
+		t.Fatalf("budget shortfall error %v", err)
+	}
+	// The campaign liability changes no action, so raw is its exact census.
+	if !reflect.DeepEqual(budget.Actions, raw) || budget.Maximum != spend || budget.AvailableWei != "0" || budget.ShortfallWei != spend.EVMGasWei || !reflect.DeepEqual(budget.Renewal, shortfall) {
+		t.Fatal("budget shortfall differs from the independently computed renewal actions")
 	}
 }

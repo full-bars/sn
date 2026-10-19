@@ -34,7 +34,7 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 | `update [target]` | Update provider to the latest release (or `--tag <version>`). Digest-verified. |
 | `hotswap` (`hot-swap`) | Zero-downtime in-process binary reload: hands the live service to a verified candidate with no restart. |
 | `self-update` (`selfupdate`) | Update the tool binary itself without touching running providers. |
-| `logs [target] [N]` | Stream provider logs (N lines). RAMLOGS-aware. |
+| `logs [target] [N]` | Stream provider logs (N lines). RAMLOGS-aware. The ramlog and file views use a native follower, so they work on Windows (no `tail` needed) and wherever `tail` is missing. It prints the last N lines and then follows. If the log is rotated or replaced it finishes the old file and follows the new one from its start, and a truncated log is followed from its start. |
 | `version` (`--version`, `-v`) | Print stamped binary version and build metadata. |
 
 ### Provider and Session Commands
@@ -54,6 +54,10 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 | `session load <file> [target] [--allow-different-account]` | Decrypt and load an identity bundle into the provider. Automatically backs up current state first. Verifies account identity unless bypassed. |
 | `self-heal [on\|off\|status] [target]` | Toggle or query the resource-pressure self-healing monitor (`~/.urnetwork/proxy_self_heal`). |
 | `default [set <target> \| show \| clear]` | Persist, inspect, or clear the default provider target for the current user. |
+
+#### OpenRC (Alpine) command parity
+
+On a host where OpenRC is the running init system, the lifecycle commands (`start`, `stop`, `restart`, `auto-start`, `auto-update`, `logs`, `status`, `uninstall`) act on the installer's `urnetwork` service. The command table, the multi-provider selector rules and the root requirement are on the [Alpine Linux (OpenRC)](OpenRC.md#urnet-tools-command-parity) page.
 
 ### Proxy Management Commands
 

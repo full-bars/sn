@@ -1,5 +1,5 @@
-// Synthetic complete v4 preparation drives real approvals, files and finalized
-// reads. A private manager transport cannot execute any real system service.
+// Synthetic complete v4 or v5 preparation drives real approvals, files and
+// finalized reads. A private manager transport cannot execute any real service.
 package main
 
 import (
@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/urfoundation/sn/internal/durablefixture"
-	"golang.org/x/sys/unix"
+	"github.com/urfoundation/sn/internal/durablepath"
 )
 
 type rootPassiveHostFixture struct {
@@ -43,7 +43,13 @@ type rootPassiveHostFixture struct {
 
 func newRootPassiveHostFixture(t *testing.T) *rootPassiveHostFixture {
 	t.Helper()
-	chain := newBootstrapRootPassiveFixture(t)
+	return newRootPassiveHostFixtureForChain(t, newBootstrapRootPassiveFixture(t))
+}
+
+// Any fresh passive composition, v4 or one-role v5, receives the same host and
+// independent approval before its first custody claim.
+func newRootPassiveHostFixtureForChain(t *testing.T, chain *bootstrapChainFixture) *rootPassiveHostFixture {
+	t.Helper()
 	directory := filepath.Dir(chain.path)
 	root := filepath.Dir(directory)
 	if err := os.Chmod(root, 0755); err != nil {
@@ -96,7 +102,7 @@ func newRootPassiveHostFixture(t *testing.T) *rootPassiveHostFixture {
 	p.DurableVolumes = &chain.root.storage.Reference
 	p.Unit.Sha256 = monitorReadDigest(p.render())
 	f.approval = rootPassiveHostApproval{Schema: rootPassiveHostSchema, Plan: p}
-	h := &repairValidatorHost{rootUid: uint32(os.Geteuid()), trustRoot: trustRoot, machinePath: filepath.Join(directory, "machine-id"), bootPath: filepath.Join(directory, "boot-id"), cgroupRoot: filepath.Join(directory, "cgroup"), cgroupType: func(string) (int64, error) { return unix.CGROUP2_SUPER_MAGIC, nil }, execute: f.execute, monotonic: func() (uint64, error) { return 150, nil }}
+	h := &repairValidatorHost{rootUid: uint32(os.Geteuid()), trustRoot: trustRoot, machinePath: filepath.Join(directory, "machine-id"), bootPath: filepath.Join(directory, "boot-id"), cgroupRoot: filepath.Join(directory, "cgroup"), cgroupType: func(string) (int64, error) { return repairValidatorCgroup2Magic, nil }, execute: f.execute, monotonic: func() (uint64, error) { return 150, nil }}
 	h.storageCommand = serviceStorageTestTransport(t)
 	f.host = &rootPassiveHost{files: &validatorActivationHost{host: h, unitDirectory: unitDirectory}, gid: uint32(os.Getegid())}
 	repairValidatorTestWrite(t, h.machinePath, []byte(p.MachineId+"\n"), 0644)
@@ -256,9 +262,13 @@ func TestRootPassiveHostInstallsStartsAndRecovers(t *testing.T) {
 	}
 	// The actual observer can use this exact private runtime and isolated path;
 	// the synthetic host acknowledgment itself never claims monitor health.
+	// Dispatch the approved unit arguments so its original volume declaration
+	// enters through the same public parser used by the installed service.
 	p := f.approval.Plan
-	if code := runRootPassiveServiceCommand(t.Context(), []string{"run", "--config", p.Runtime.Path, "--accept-runtime-sha256", p.Runtime.Sha256}, io.Discard, io.Discard); code != 0 {
-		t.Fatal("installed runtime cannot read original authority", code)
+	ctx := durablepath.WithHost(t.Context(), f.chain.root.storage.Host)
+	var diagnostic bytes.Buffer
+	if code := runMain(ctx, strings.Fields(p.arguments()), io.Discard, &diagnostic); code != 0 {
+		t.Fatal("installed runtime cannot read original authority", code, diagnostic.String())
 	}
 	if _, err := os.Stat(f.chain.root.plan.PassiveService.CheckpointPath); err != nil {
 		t.Fatal(err)
@@ -274,6 +284,45 @@ func TestRootPassiveHostInstallsStartsAndRecovers(t *testing.T) {
 	}
 	if _, code, _ := f.command("start"); code == 0 || f.starts != 1 {
 		t.Fatal("finite exit renewed initial start")
+	}
+}
+
+// An already admitted store cannot lend its declaration to an undeclared
+// caller. Both public runtime entry and direct start preserve original state.
+func TestRootPassiveHostUndeclaredStoragePreservesAllowance(t *testing.T) {
+	f := newRootPassiveHostFixture(t)
+	f.require("claim", "claimed")
+	f.require("install", "installed")
+	p := f.approval.Plan
+	store := f.store()
+	defer store.close()
+	original, err := os.ReadFile(p.StatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint := mainnetNamespaceTest(t, p.CheckpointDirectory)
+	ctx := durablepath.WithHost(t.Context(), f.chain.root.storage.Host)
+	var diagnostic bytes.Buffer
+	args := []string{"run", "--config", p.Runtime.Path, "--accept-runtime-sha256", p.Runtime.Sha256}
+	if code := runRootPassiveServiceCommand(ctx, args, io.Discard, &diagnostic); code != 2 || !strings.Contains(diagnostic.String(), "explicit durable-volume declaration and hash are required") {
+		t.Fatal("undeclared runtime did not stop at storage admission", code, diagnostic.String())
+	}
+	if _, err := advanceRootPassiveHost(ctx, store, f.host, f.chain.preparation, "start", func() time.Time { return f.now }); err == nil || !strings.Contains(err.Error(), "explicit durable-volume declaration and hash are required") {
+		t.Fatal("undeclared direct start did not stop at storage admission", err)
+	}
+	retained, err := os.ReadFile(p.StatePath)
+	if err != nil || !bytes.Equal(original, retained) || f.starts != 0 || f.reloads != 1 {
+		t.Fatal("undeclared caller consumed original host allowance", err, f.starts, f.reloads)
+	}
+	if !reflect.DeepEqual(checkpoint, mainnetNamespaceTest(t, p.CheckpointDirectory)) {
+		t.Fatal("undeclared runtime changed prepared checkpoint custody")
+	}
+	if err := store.close(); err != nil {
+		t.Fatal(err)
+	}
+	f.require("start", "acknowledged-running")
+	if f.starts != 1 {
+		t.Fatal("storage refusal changed the original single start", f.starts)
 	}
 }
 
@@ -382,7 +431,7 @@ func TestRootPassiveHostPublicationFailureConsumesWithoutStarting(t *testing.T) 
 		}
 		return directory.Sync()
 	}
-	_, err := advanceRootPassiveHost(t.Context(), store, f.host, f.chain.preparation, "start", func() time.Time { return f.now })
+	_, err := advanceRootPassiveHost(f.chain.storageContext(t.Context()), store, f.host, f.chain.preparation, "start", func() time.Time { return f.now })
 	store.close()
 	if err == nil || !fired || f.starts != 0 {
 		t.Fatal("ambiguous reservation reached systemd", err, fired, f.starts)
@@ -414,7 +463,7 @@ func TestRootPassiveHostPostSyncExpiryConsumesWithoutStarting(t *testing.T) {
 		}
 		return directory.Sync()
 	}
-	_, err := advanceRootPassiveHost(t.Context(), store, f.host, f.chain.preparation, "start", func() time.Time { return f.now })
+	_, err := advanceRootPassiveHost(f.chain.storageContext(t.Context()), store, f.host, f.chain.preparation, "start", func() time.Time { return f.now })
 	store.close()
 	if err == nil || !fired || f.starts != 0 {
 		t.Fatal("expired durable reservation reached systemd", err, fired, f.starts)
@@ -549,5 +598,92 @@ func TestRootPassiveHostRejectsUnapprovedEnvelopeAndStartFlags(t *testing.T) {
 	}
 	if _, err := os.Stat(f.approval.Plan.StatePath); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("rejected authority created a claim", err)
+	}
+}
+
+// The command's own admission and claim, after its Linux-only host gate, so a
+// composition's original custody is exercised identically on any test host.
+func (self *rootPassiveHostFixture) claimAfterHostGate(t *testing.T) (rootPassiveHostRecord, error) {
+	t.Helper()
+	ctx := self.chain.storageContext(t.Context())
+	preparation, err := loadRootPassiveHostPreparation(ctx, self.approval)
+	if err == nil {
+		err = self.host.authority(ctx, self.approval.Plan, preparation)
+	}
+	if err != nil {
+		return rootPassiveHostRecord{}, err
+	}
+	custody, err := openBootstrapChainReadinessState(ctx, preparation)
+	if err != nil {
+		return rootPassiveHostRecord{}, err
+	}
+	defer custody.close()
+	store, err := openRootPassiveHostStore(ctx, self.approval, self.key, true, self.now, custody, rootObjectHash(preparation.Root.PassiveService.Policy))
+	if err != nil {
+		return rootPassiveHostRecord{}, err
+	}
+	record, err := store.load(ctx)
+	return record, errors.Join(err, store.validateOwner(), store.close())
+}
+
+// A one-role v5 composition reaches the same admission and original custody
+// claim as v4, whether or not the root seat uses the sole UR hotkey.
+func TestRootPassiveHostAdmitsSolePreparation(t *testing.T) {
+	for _, shared := range []bool{true, false} {
+		f := newRootPassiveHostFixtureForChain(t, newBootstrapChainSoleFixture(t, shared, nil))
+		before := f.chain.journals(t)
+		c := f.chain.preparation.Plan.Config
+		record, err := f.claimAfterHostGate(t)
+		if err != nil || record.Status != "claimed" || record.Approval.Plan.PlanHash != f.chain.preparation.Plan.ContentHash || c.Schema != bootstrapChainConfigSchemaV5 ||
+			len(c.Validators) != 1 || (c.RootValidator.Hotkey == c.Validators[0].Hotkey) != shared || !reflect.DeepEqual(before, f.chain.journals(t)) {
+			t.Fatal("passive host refused or changed a one-role preparation", shared, record.Status, err)
+		}
+	}
+}
+
+// v4 admission and its claimed record are unchanged; the host approval binds
+// only the preparation's file and plan hashes, never a schema of its own.
+func TestRootPassiveHostKeepsV4Admission(t *testing.T) {
+	f := newRootPassiveHostFixture(t)
+	record, err := f.claimAfterHostGate(t)
+	if err != nil || record.Status != "claimed" || f.chain.preparation.Plan.Config.Schema != bootstrapChainConfigSchemaV4 || len(f.chain.preparation.Plan.Config.Validators) != 2 ||
+		rootObjectHash(record.Approval) != rootObjectHash(f.approval) {
+		t.Fatal("passive host changed v4 admission", record.Status, err)
+	}
+}
+
+// A shared hotkey under a different root coldkey is refused before any host
+// claim, and a legacy v3 composition never acquires passive host authority.
+func TestRootPassiveHostRefusesForeignSoleOwnerAndLegacySchema(t *testing.T) {
+	f := newRootPassiveHostFixtureForChain(t, newBootstrapChainSoleFixture(t, true, nil))
+	custody := func() map[string]string {
+		state := map[string]string{}
+		for _, path := range []string{f.approval.Plan.StatePath, f.approval.Plan.StatePath + ".lock"} {
+			raw, err := os.ReadFile(path)
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			state[path] = string(raw)
+		}
+		return state
+	}
+	before := custody()
+	bootstrapChainSoleRootIdentity(t, f.chain, f.chain.config.Validators[0].Hotkey, "0x"+strings.Repeat("77", 32))
+	bootstrapRootTestWrite(t, f.chain.path, f.chain.config)
+	if _, err := f.claimAfterHostGate(t); err == nil || !strings.Contains(err.Error(), "must name one coldkey") {
+		t.Fatal("passive host admitted a shared hotkey under another coldkey", err)
+	}
+	legacy := newBootstrapChainFixture(t)
+	approval := f.approval
+	approval.Plan.Preparation = planFileReference{Path: legacy.path, Sha256: legacy.preparation.Plan.ConfigSha256}
+	approval.Plan.PlanHash, approval.Plan.RootPlanHash = legacy.preparation.Plan.ContentHash, legacy.preparation.Root.ContentHash
+	if _, err := loadRootPassiveHostPreparation(legacy.storageContext(t.Context()), approval); err == nil || !strings.Contains(err.Error(), "v4/v5 preparation differs") {
+		t.Fatal("passive host admitted legacy root custody", err)
+	}
+	if !reflect.DeepEqual(before, custody()) {
+		t.Fatal("refused passive host authority changed host custody")
 	}
 }

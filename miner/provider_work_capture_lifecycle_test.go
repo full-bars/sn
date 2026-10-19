@@ -155,8 +155,8 @@ func (self *providerWorkDeviceFixture) serveHttp(writer http.ResponseWriter, req
 }
 
 // The shared production constructor creates the real manager and worker. Only
-// this owner's TLS roots, finite dial boundary and unrelated extender opt-out
-// differ from ordinary launch settings.
+// this owner's TLS roots, finite dial boundary, loopback pump ingress and
+// unrelated extender opt-out differ from ordinary launch settings.
 func (self *providerWorkDeviceFixture) start(t *testing.T) func() {
 	_, close := self.startDevice(t, nil)
 	return close
@@ -185,6 +185,10 @@ func (self *providerWorkDeviceFixture) startDevice(t *testing.T, original *Provi
 	space := sdk.NewNetworkSpaceWithUrls(ctx, self.server.URL, "wss"+strings.TrimPrefix(self.server.URL, "https"), strategy)
 	settings := ProviderDeviceSettings([32]byte{})
 	settings.ProvideExtenderEnabled = false
+	// A loopback platform names its own pump ingress, as a loopback swarm
+	// connect_url must: the sdk default pump is a production host, which the
+	// auto transport would resolve and send to once its pump tier starts.
+	settings.DnsPumpHost = self.server.Listener.Addr().(*net.TCPAddr).IP.String()
 	settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(self.seed, nil, nil)
 	clientId := connect.Id(profile.Providers[0].ClientId)
 	token := providerRegistrationTestToken(t, clientId.String(), "retained-whole-work")

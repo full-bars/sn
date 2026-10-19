@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // A restored terminal publication must reconcile its original transaction
 // before the independent physical-adoption receipt can occupy its census slot.

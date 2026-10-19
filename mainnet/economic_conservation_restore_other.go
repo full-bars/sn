@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !darwin
 
 package main
 
@@ -9,6 +9,6 @@ import (
 )
 
 func runEconomicConservationRestore(_ context.Context, _ []string, _ io.Writer, stderr io.Writer, _ monitorServiceHooks) int {
-	fmt.Fprintln(stderr, "economic conservation restore requires linux durable owner support")
+	fmt.Fprintln(stderr, "economic conservation restore requires Linux or macOS durable owner support")
 	return 2
 }

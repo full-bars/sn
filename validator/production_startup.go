@@ -66,7 +66,14 @@ func (self *ReleaseSteerer) requestProductionPreparation(intent *SteeringIntent)
 // configuration renewals. Every historical identity/canonical/purpose check
 // still runs; the unrelated current tuple is not an initialization dependency.
 func dialProductionNativeHistory(ctx context.Context, cfg *ReleaseConfig) (*crv4.Chain, error) {
-	approval, err := ownerRecycleProductionApproval(cfg)
+	if err := validateReleaseProductionAuthorityHistory(cfg); err != nil {
+		return nil, err
+	}
+	original := cfg
+	if history := cfg.productionAuthorityHistory; history != nil && len(history.entries) != 0 {
+		original = history.entries[0].config
+	}
+	approval, err := ownerRecycleProductionApproval(original)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +85,11 @@ func dialProductionNativeHistory(ctx context.Context, cfg *ReleaseConfig) (*crv4
 		}
 		attempt, cancel := context.WithTimeout(ctx, releaseNativeEndpointTimeout(cfg))
 		native, err := crv4.DialChainAtContext(attempt, endpoint, block)
+		if err == nil {
+			// A signed opt-in installs successor admission before any shared
+			// read; without it this connection keeps exact runtime pins.
+			err = enableReleaseRuntimeSuccession(native, cfg)
+		}
 		if err == nil {
 			err = authenticateHistoricalNativeRuntimeAtContext(attempt, native, cfg, block)
 		}

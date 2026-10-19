@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Losing every member under the same approved root is not a fresh launch.
 package miner

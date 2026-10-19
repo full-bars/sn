@@ -141,6 +141,9 @@ func (self *monitorEconomicNativeState) validate(policy monitorEconomicNativePol
 		if err := self.ExecutionAccounting.validate(); err != nil {
 			return err
 		}
+		if !sameNativeTreasuryAuthority(self.ExecutionAccounting.Treasury, newNativeTreasuryAmounts(policy.Observation.Execution.Treasury)) {
+			return errors.New("native monitor retained another treasury authority")
+		}
 	} else if policy.Observation.Execution != nil && self.BatchCount != 0 {
 		return errors.New("native execution policy lost retained accounting")
 	}

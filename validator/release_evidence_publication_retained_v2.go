@@ -1,7 +1,7 @@
 //go:build linux || darwin
 
-// Stopped recovery reads the two authenticated retained replica namespaces.
-// Both transports share every publication, signature, census and payload check.
+// Stopped recovery reads every authenticated retained replica namespace. Both
+// transports share every publication, signature, census and payload check.
 package validator
 
 import (
@@ -17,14 +17,21 @@ type ValidatorEvidenceRetainedReplicaV2 struct {
 	ReadMetadata AttemptStreamV2MetadataReader
 }
 
-// The ordinary reader always uses both public HTTP origins. Stopped recovery
-// explicitly supplies both original retained stores, including uncached suffixes.
-func ReadRetainedValidatorEvidencePublicationV2(ctx context.Context, manifest *ValidatorEvidencePublicationV2Manifest, options ValidatorEvidencePublicationV2ReadOptions, replicas [2]ValidatorEvidenceRetainedReplicaV2) (*ValidatorEvidenceCensusV2Publication, error) {
-	return readValidatorEvidencePublicationV2(ctx, manifest, options, &replicas)
+// The ordinary reader always uses every public HTTP origin. Stopped recovery
+// explicitly supplies every original retained store, in configured origin
+// order, including uncached suffixes.
+func ReadRetainedValidatorEvidencePublicationV2(ctx context.Context, manifest *ValidatorEvidencePublicationV2Manifest, options ValidatorEvidencePublicationV2ReadOptions, replicas []ValidatorEvidenceRetainedReplicaV2) (*ValidatorEvidenceCensusV2Publication, error) {
+	if replicas == nil {
+		return nil, errors.New("retained publication requires every exact configured replica origin")
+	}
+	return readValidatorEvidencePublicationV2(ctx, manifest, options, replicas)
 }
 
-func ReadRetainedValidatorEvidenceDepositAuditV2(ctx context.Context, manifest *ValidatorEvidenceDepositAuditV2Manifest, options ValidatorEvidencePublicationV2ReadOptions, replicas [2]ValidatorEvidenceRetainedReplicaV2) (*ValidatorEvidenceCensusV2Publication, error) {
-	return readValidatorEvidenceDepositAuditV2(ctx, manifest, options, &replicas)
+func ReadRetainedValidatorEvidenceDepositAuditV2(ctx context.Context, manifest *ValidatorEvidenceDepositAuditV2Manifest, options ValidatorEvidencePublicationV2ReadOptions, replicas []ValidatorEvidenceRetainedReplicaV2) (*ValidatorEvidenceCensusV2Publication, error) {
+	if replicas == nil {
+		return nil, errors.New("retained publication requires every exact configured replica origin")
+	}
+	return readValidatorEvidenceDepositAuditV2(ctx, manifest, options, replicas)
 }
 
 type validatorEvidenceRetainedMetadataReaderV2 struct {
@@ -55,14 +62,19 @@ func (self validatorEvidenceRetainedMetadataReaderV2) ReadMetadata(ctx context.C
 	return raw, nil
 }
 
-func validatorEvidencePublicationV2Readers(options ValidatorEvidencePublicationV2ReadOptions, maximum uint64, retained *[2]ValidatorEvidenceRetainedReplicaV2) ([2]validatorEvidenceV2MetadataReader, error) {
-	var result [2]validatorEvidenceV2MetadataReader
+// A nil retained census selects the public HTTP origins; otherwise it must
+// name exactly one retained store for every configured origin, in order.
+func validatorEvidencePublicationV2Readers(options ValidatorEvidencePublicationV2ReadOptions, maximum uint64, retained []ValidatorEvidenceRetainedReplicaV2) ([]validatorEvidenceV2MetadataReader, error) {
 	// Construction preserves the original distinct-origin and finite-bound
 	// admission. It performs no HTTP request when retained stores are selected.
 	public, err := newReleaseEvidenceV2ReadersWithMetadataLimit(options.Origins, options.Bounds.Cut, maximum)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
+	if retained != nil && len(retained) != len(public) {
+		return nil, errors.New("retained publication requires every exact configured replica origin")
+	}
+	result := make([]validatorEvidenceV2MetadataReader, len(public))
 	for index := range result {
 		if retained == nil {
 			result[index] = public[index]
@@ -70,7 +82,7 @@ func validatorEvidencePublicationV2Readers(options ValidatorEvidencePublicationV
 		}
 		replica := retained[index]
 		if replica.Origin != options.Origins[index] || replica.ReadMetadata == nil {
-			return [2]validatorEvidenceV2MetadataReader{}, errors.New("retained publication requires both exact configured replica origins")
+			return nil, errors.New("retained publication requires every exact configured replica origin")
 		}
 		result[index] = validatorEvidenceRetainedMetadataReaderV2{read: replica.ReadMetadata, maximum: maximum}
 	}

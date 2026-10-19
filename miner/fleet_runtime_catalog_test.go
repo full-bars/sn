@@ -361,6 +361,16 @@ func testFleetCatalogReceiptWatch(t *testing.T, refusal string) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if refusal == "provisional" {
+		// Testnet compatibility installed on the watching view itself: the
+		// exact strict execution artifact still gains no receipt authority.
+		if err := view.EnableProvisionalRuntimeCompatibility(view.GenesisHash, func(crv4.AuthenticatedRuntimeArtifact) error {
+			t.Error("fleet receipt reached provisional observation")
+			return nil
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
 	before := fixture.count("state_getStorage")
 	called := false
 	admit := authority.executionAdmission(chain, prepared, crv4.FleetCommitmentWrite)
@@ -392,6 +402,9 @@ func testFleetCatalogReceiptWatch(t *testing.T, refusal string) {
 		if refusal == "cancel" && !errors.Is(err, context.Canceled) {
 			t.Fatal("execution callback cancellation was lost", err)
 		}
+		if refusal == "provisional" && err.Error() != "runtime view needs this owner's exact authenticated block artifact" {
+			t.Fatal("provisional receipt view refused for another reason", err)
+		}
 		return
 	}
 	fixture.stateLock.Lock()
@@ -420,4 +433,8 @@ func TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock(t *testing.T) {
 
 func TestFleetRuntimeCatalogWatchHonorsCallbackCancellation(t *testing.T) {
 	testFleetCatalogReceiptWatch(t, "cancel")
+}
+
+func TestFleetRuntimeCatalogWatchRefusesProvisionalExecutionView(t *testing.T) {
+	testFleetCatalogReceiptWatch(t, "provisional")
 }

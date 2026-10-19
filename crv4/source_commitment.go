@@ -97,6 +97,12 @@ func preparedSourceEncoding(prepared *PreparedSubmission) (call, fields, payload
 	call = append(call, encodeNetuid(prepared.Netuid)...)
 	call = append(call, 4, dataSHA256Variant)
 	call = append(call, hash...)
+	// Defense in depth: the bytes above hard-code the Sha256 variant, so this
+	// cannot fail today. It keeps a future edit from turning the source anchor
+	// into a fleet commitment the oracle would mirror.
+	if err := checkNotFleetCommitment(call[len(call)-34:]); err != nil {
+		return nil, nil, nil, err
+	}
 	commitIndex := byte(113)
 	if prepared.Mecid != nil {
 		commitIndex = 118
@@ -174,7 +180,7 @@ func (self *Chain) newSourceCommitmentBatchCall(netuid uint16, mecid *uint8, sou
 	if err := self.validateSourceRuntimeCapabilityAt(types.Hash{}, mecid); err != nil {
 		return types.Call{}, err
 	}
-	anchor, err := self.NewSetFleetCommitmentCall(netuid, source)
+	anchor, err := self.NewSetSourceCommitmentCall(netuid, source)
 	if err != nil {
 		return types.Call{}, err
 	}
@@ -369,7 +375,7 @@ func (self *Chain) SourceCommitmentSlotAtContext(ctx context.Context, netuid uin
 		return nil, err
 	}
 	if raw != nil {
-		return self.FleetCommitmentAtContext(ctx, netuid, hotkey, hash)
+		return self.SourceCommitmentAtContext(ctx, netuid, hotkey, hash)
 	}
 	lastKey, err := types.CreateStorageKey(self.Meta, CommitmentsPalletName, "LastCommitment", encodeNetuid(netuid), hotkey[:])
 	if err != nil {
@@ -637,7 +643,7 @@ func (self *Chain) verifyFinalizedSourceContext(ctx context.Context, prepared *P
 	hashRaw, _ := codec.HexDecodeString(prepared.SourceCommitment.Hash)
 	var hash [32]byte
 	copy(hash[:], hashRaw)
-	observed, err := postState.fleetCommitmentAtContext(ctx, prepared.Netuid, hotkey, receipt.BlockHash, verified.number)
+	observed, err := postState.commitmentAtContext(ctx, prepared.Netuid, hotkey, receipt.BlockHash, verified.number, decodeSourceCommitmentRegistrationFixedU32)
 	if err != nil {
 		return err
 	}

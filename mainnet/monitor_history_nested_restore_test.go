@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Nested original paths remain unchanged through public request/plan/apply and
 // actual EVM restart. No fixture moves a signed reference after its creation.

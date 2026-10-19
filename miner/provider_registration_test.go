@@ -45,6 +45,7 @@ type providerRegistrationTestRecord struct {
 // One fixture models versioned server dedup and deliberately non-idempotent
 // legacy allocation. Real PostgreSQL allocation is independently qualified.
 type providerRegistrationFixture struct {
+	walletHandler  http.HandlerFunc
 	test           *testing.T
 	dir            string
 	server         *httptest.Server
@@ -60,6 +61,8 @@ type providerRegistrationFixture struct {
 	status         int
 	malformed      bool
 	onCommit       func()
+	// the server rejects every network token renewal (401)
+	networkRefreshes int
 }
 
 // Explicit private parents keep both positive and negative custody fixtures
@@ -92,7 +95,13 @@ func providerRegistrationTestToken(t *testing.T, client, marker string) string {
 // DNS name, account or network endpoint is used by the fixture.
 func newProviderRegistrationFixture(t *testing.T) *providerRegistrationFixture {
 	t.Helper()
-	self := &providerRegistrationFixture{test: t, dir: providerRegistrationPrivateDir(t), requests: map[string][]byte{}, clients: map[string]string{}, refreshClients: map[string]int{}}
+	return newProviderRegistrationFixtureIn(t, providerRegistrationPrivateDir(t))
+}
+
+// A fixture whose state directory is dir, such as an operator directory.
+func newProviderRegistrationFixtureIn(t *testing.T, dir string) *providerRegistrationFixture {
+	t.Helper()
+	self := &providerRegistrationFixture{test: t, dir: dir, requests: map[string][]byte{}, clients: map[string]string{}, refreshClients: map[string]int{}}
 	t.Setenv("URNETWORK_STATE_DIR", self.dir)
 	if err := clientauth.WriteToken(filepath.Join(self.dir, "jwt"), providerRegistrationTestToken(t, "", "bootstrap")); err != nil {
 		t.Fatal(err)
@@ -195,6 +204,13 @@ func (self *providerRegistrationFixture) observeCustody(body []byte, request sdk
 // Allocation happens before a lost-reply barrier. A subsequent versioned call
 // can return only the same client; the legacy route allocates on every call.
 func (self *providerRegistrationFixture) serveHttp(w http.ResponseWriter, r *http.Request) {
+	self.stateLock.Lock()
+	walletHandler := self.walletHandler
+	self.stateLock.Unlock()
+	if walletHandler != nil && strings.HasPrefix(r.URL.Path, "/sn/") {
+		walletHandler(w, r)
+		return
+	}
 	body, err := io.ReadAll(io.LimitReader(r.Body, 16*1024))
 	closeErr := r.Body.Close()
 	if err != nil || closeErr != nil {
@@ -203,6 +219,13 @@ func (self *providerRegistrationFixture) serveHttp(w http.ResponseWriter, r *htt
 	}
 	if r.URL.Path == "/hello" {
 		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if r.URL.Path == "/auth/network-refresh" {
+		self.stateLock.Lock()
+		self.networkRefreshes++
+		self.stateLock.Unlock()
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	if r.URL.Path == "/auth/refresh" {
@@ -477,21 +500,23 @@ func TestProviderRegistrationSlotsSurviveCredentialAndOrderChanges(t *testing.T)
 	}
 	paths := map[string]bool{}
 	records := map[string]providerRegistrationTestRecord{}
-	for _, member := range []*connect.ProxySettings{nil, first, second} {
-		path, err := providerClientJwtPath(member)
+	members := []*connect.ProxySettings{nil, first, second}
+	identities := newProviderSlotIdentities(members)
+	for _, member := range members {
+		path, err := providerClientJwtPath(identities, member)
 		if err != nil || paths[path] {
 			t.Fatal("distinct provider slots shared a credential path")
 		}
 		paths[path] = true
 		raw, err := os.ReadFile(path + ".registration")
 		var record providerRegistrationTestRecord
-		if err != nil || json.Unmarshal(raw, &record) != nil || record.Scope.ClientSlot != providerRegistrationSlot(member) || record.Request.DeviceDescription != "provider" || record.ClientId == "" || record.DeviceId == "" || handoffs[record.ClientId] != 1 {
+		if err != nil || json.Unmarshal(raw, &record) != nil || record.Scope.ClientSlot != providerRegistrationSlot(identities, member) || record.Request.DeviceDescription != "provider" || record.ClientId == "" || record.DeviceId == "" || handoffs[record.ClientId] != 1 {
 			t.Fatal("provider slot did not retain its exact stable identity")
 		}
 		records[path] = record
 	}
 	rotated := *first
-	rotated.Auth = &proxy.Auth{User: "synthetic-rotated", Password: "synthetic-new-password"}
+	rotated.Auth = &proxy.Auth{User: first.Auth.User, Password: "synthetic-new-password"}
 	if err := fixture.run(t.Context(), false, hooks, second, &rotated, nil); !errors.Is(err, stop) {
 		t.Fatal(err)
 	}
@@ -514,18 +539,60 @@ func TestProviderRegistrationSlotsSurviveCredentialAndOrderChanges(t *testing.T)
 	}
 }
 
-// Two configured entries that parse to the same effective proxy are rejected
-// before workers, key creation or any HTTP allocation can begin.
+// Two configured entries that carry the same 3.23-fix identity (one address,
+// one user, a rotated password) are rejected before workers, key creation or
+// any HTTP allocation can begin.
 func TestProviderRegistrationRejectsDuplicateEffectiveSlots(t *testing.T) {
 	fixture := newProviderRegistrationFixture(t)
-	first := &connect.ProxySettings{Network: "tcp", Address: "192.0.2.20:1080", Auth: &proxy.Auth{User: "synthetic-one"}}
-	second := &connect.ProxySettings{Network: "tcp", Address: first.Address, Auth: &proxy.Auth{User: "synthetic-two"}}
+	first := &connect.ProxySettings{Network: "tcp", Address: "192.0.2.20:1080", Auth: &proxy.Auth{User: "synthetic-one", Password: "synthetic-password"}}
+	second := &connect.ProxySettings{Network: "tcp", Address: first.Address, Auth: &proxy.Auth{User: "synthetic-one", Password: "synthetic-rotated"}}
 	stop := errors.New("synthetic duplicate reached authentication")
 	err := fixture.run(t.Context(), true, providerRegistrationHooks{afterAuthenticated: func(string, connect.Id, []byte) error { return stop }}, first, second)
 	posts, legacy, _, _ := fixture.counts()
 	_, keyErr := os.Stat(filepath.Join(fixture.dir, ".provider.key"))
 	if err == nil || errors.Is(err, stop) || posts != 0 || legacy != 0 || !errors.Is(keyErr, os.ErrNotExist) {
 		t.Fatal("duplicate effective provider slots reached identity allocation")
+	}
+}
+
+// Two accounts behind one host:port are two identities, not a duplicate:
+// connect.ProxySettings.Key() is address + user, so both slots authenticate
+// with their own client id and their own credential file.
+func TestProviderRegistrationDistinctUsersShareOneAddress(t *testing.T) {
+	fixture := newProviderRegistrationFixture(t)
+	address, relayed := newSyntheticSocksRelay(t)
+	first := &connect.ProxySettings{Network: "tcp", Address: address, Auth: &proxy.Auth{User: "synthetic-one", Password: "synthetic-password"}}
+	second := &connect.ProxySettings{Network: "tcp", Address: address, Auth: &proxy.Auth{User: "synthetic-two", Password: "synthetic-password"}}
+	stop := errors.New("synthetic shared-address handoff")
+	var handoffLock sync.Mutex
+	handoffs := map[string]int{}
+	hooks := providerRegistrationHooks{afterAuthenticated: func(_ string, id connect.Id, _ []byte) error {
+		handoffLock.Lock()
+		defer handoffLock.Unlock()
+		handoffs[id.String()]++
+		return stop
+	}}
+	if err := fixture.run(t.Context(), true, hooks, first, second); !errors.Is(err, stop) {
+		t.Fatal(err)
+	}
+	posts, legacy, allocated, _ := fixture.counts()
+	if posts != 2 || legacy != 0 || allocated != 2 || len(handoffs) != 2 {
+		t.Fatalf("two accounts at one address allocated posts=%d legacy=%d allocated=%d handoffs=%v", posts, legacy, allocated, handoffs)
+	}
+	if atomic.LoadInt64(relayed) == 0 {
+		t.Fatal("shared-address slots bypassed their configured proxy")
+	}
+	identities := newProviderSlotIdentities([]*connect.ProxySettings{first, second})
+	firstPath, err := providerClientJwtPath(identities, first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondPath, err := providerClientJwtPath(identities, second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if firstPath == secondPath {
+		t.Fatal("two accounts at one address shared a credential path")
 	}
 }
 
@@ -591,6 +658,77 @@ func TestProviderRegistrationAdoptsLegacyAndRefusesLostCredential(t *testing.T) 
 	_, recordErr := os.Stat(clientPath + ".registration")
 	if markerErr != nil || !bytes.Equal(marker, retained) || seedErr != nil || !bytes.Equal(seed, retainedSeed) || !errors.Is(clientErr, os.ErrNotExist) || !errors.Is(recordErr, os.ErrNotExist) {
 		t.Fatal("provider lost legacy credential rewrote its original custody")
+	}
+}
+
+// v33 parity for URNETWORK_HOT_RESTART=0: every start registers a new client
+// with a new client_id, while the default keeps reusing. The retained
+// versioned identity is not refreshed; the fresh client replaces it in the
+// credential file and in custody, and the next default start loads the new
+// credential without a refusal.
+func TestProviderRegistrationHotRestartOffMintsFreshIdentity(t *testing.T) {
+	fixture := newProviderRegistrationFixture(t)
+	stop := errors.New("synthetic stop after authenticated provider")
+	authenticate := func(capture *connect.Id) providerRegistrationHooks {
+		return providerRegistrationHooks{afterAuthenticated: func(_ string, id connect.Id, _ []byte) error {
+			*capture = id
+			return stop
+		}}
+	}
+
+	// Default (hot restart on): the versioned registration allocates client A.
+	var first connect.Id
+	if err := fixture.run(t.Context(), true, authenticate(&first)); !errors.Is(err, stop) {
+		t.Fatalf("hot-restart-on run: %v", err)
+	}
+	posts, legacy, allocated, refreshes := fixture.counts()
+	if posts != 1 || legacy != 0 || allocated != 1 || refreshes != 0 || first == (connect.Id{}) {
+		t.Fatalf("hot-restart-on run: posts=%d legacy=%d allocated=%d refreshes=%d first=%s", posts, legacy, allocated, refreshes, first)
+	}
+
+	// URNETWORK_HOT_RESTART=0: a fresh client through the legacy route, never
+	// the retained credential.
+	setHotRestart(t, false)
+	var second connect.Id
+	if err := fixture.run(t.Context(), true, authenticate(&second)); !errors.Is(err, stop) {
+		t.Fatalf("hot-restart-off run: %v", err)
+	}
+	posts, legacy, allocated, refreshes = fixture.counts()
+	if posts != 1 || legacy != 1 || allocated != 2 || refreshes != 0 || second == (connect.Id{}) || second == first {
+		t.Fatalf("hot-restart-off run: posts=%d legacy=%d allocated=%d refreshes=%d first=%s second=%s", posts, legacy, allocated, refreshes, first, second)
+	}
+	credential, err := clientauth.ReadToken(filepath.Join(fixture.dir, ".provider.jwt"))
+	if err != nil || jwtClientId(credential) != second.String() {
+		t.Fatalf("hot-restart-off credential = %q err=%v, want the new client %s", credential, err, second)
+	}
+	// The replaced versioned operation cannot outlive its replacement...
+	if _, err := os.Stat(filepath.Join(fixture.dir, ".provider.jwt.registration")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("hot-restart-off run retained the replaced versioned record")
+	}
+	// ...and the new identity's existing-client custody names exactly it.
+	marker, err := os.ReadFile(filepath.Join(fixture.dir, ".provider.jwt.registration.existing"))
+	if err != nil || !bytes.Contains(marker, []byte(second.String())) || bytes.Contains(marker, []byte(first.String())) {
+		t.Fatalf("hot-restart-off existing-client custody = %s err=%v", marker, err)
+	}
+
+	// Back to the default: the new credential is loaded again (the refusals a
+	// stale record or marker would raise must not fire) and nothing allocates.
+	t.Setenv("URNETWORK_HOT_RESTART", "1")
+	var third connect.Id
+	if err := fixture.run(t.Context(), true, authenticate(&third)); !errors.Is(err, stop) {
+		t.Fatalf("default-after-off run: %v", err)
+	}
+	posts, legacy, allocated, refreshes = fixture.counts()
+	if posts != 1 || legacy != 1 || allocated != 2 || third != second {
+		t.Fatalf("default-after-off run: posts=%d legacy=%d allocated=%d refreshes=%d third=%s want %s", posts, legacy, allocated, refreshes, third, second)
+	}
+	if refreshes == 0 {
+		t.Fatal("default-after-off run did not exercise the retained credential")
+	}
+	for client := range fixture.refreshedClients() {
+		if client != second.String() {
+			t.Fatalf("default-after-off run refreshed %s, want only the fresh identity %s", client, second)
+		}
 	}
 }
 

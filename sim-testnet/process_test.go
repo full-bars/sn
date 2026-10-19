@@ -596,7 +596,34 @@ func TestConnectH3ReadinessProbeVerifiesDynamicOperatorIdentity(t *testing.T) {
 	}
 }
 
+// The restart test's supervised child. Its first attempt marks the counter,
+// waits until the supervisor has published its state and exits 17; the second
+// marks itself ready and idles until stopped. A supervisor stop sends TERM to
+// the whole group, and the trap makes the shell reap the sleep it waits on
+// before it exits. The second attempt idles rather than exec sleep, which
+// replaced the identity the supervisor had recorded, so the stop that ends it
+// is the supervisor's own.
+func supervisorRestartTestChild(dir, counterPath, readyPath, statePath, healthUrl string) ProcessSpec {
+	processDir := filepath.Join(dir, "processes")
+	return ProcessSpec{
+		ID: "restart-child", Role: "test", Identity: "test-child", Command: "/bin/sh",
+		Args: []string{"-c", `trap 'exit 143' TERM; if [ ! -e "$SIM_TEST_COUNTER" ]; then printf 'crashed once\n' >"$SIM_TEST_COUNTER"; while [ ! -e "$SIM_TEST_SUPERVISOR_STATE" ]; do sleep 0.01; done; exit 17; fi; printf 'ready\n' >"$SIM_TEST_READY"; while :; do sleep 1; done`}, WorkDir: dir,
+		Env: map[string]string{
+			"SIM_TEST_COUNTER": counterPath, "SIM_TEST_READY": readyPath,
+			"SIM_TEST_SUPERVISOR_STATE": statePath,
+		},
+		StdoutPath: filepath.Join(processDir, "child.stdout"), StderrPath: filepath.Join(processDir, "child.stderr"), RestartLimit: 2,
+		HealthURL: healthUrl,
+	}
+}
+
+// Stopping the restarted child leaves no process behind, which its private
+// owner proves.
 func TestSupervisorRestartsOncePublishesReadyAndStopsChildren(t *testing.T) {
+	runSupervisorDescendantOwnerTest(t, 0, 5*time.Minute, assertSupervisorRestartsOncePublishesReadyAndStopsChildrenTest)
+}
+
+func assertSupervisorRestartsOncePublishesReadyAndStopsChildrenTest(t *testing.T) {
 	dir := t.TempDir()
 	executable, err := os.Executable()
 	if err != nil {
@@ -606,7 +633,6 @@ func TestSupervisorRestartsOncePublishesReadyAndStopsChildren(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	counter := filepath.Join(dir, "child.counter")
 	readyPath := filepath.Join(dir, "child.ready")
 	health := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 		if _, err := os.Stat(readyPath); err != nil {
@@ -616,20 +642,7 @@ func TestSupervisorRestartsOncePublishesReadyAndStopsChildren(t *testing.T) {
 		writer.WriteHeader(http.StatusNoContent)
 	}))
 	defer health.Close()
-	processDir := filepath.Join(dir, "processes")
-	if err := os.MkdirAll(processDir, 0o700); err != nil {
-		t.Fatal(err)
-	}
-	spec := ProcessSpec{
-		ID: "restart-child", Role: "test", Identity: "test-child", Command: "/bin/sh",
-		Args: []string{"-c", `if [ ! -e "$SIM_TEST_COUNTER" ]; then printf 'crashed once\n' >"$SIM_TEST_COUNTER"; while [ ! -e "$SIM_TEST_SUPERVISOR_STATE" ]; do sleep 0.01; done; exit 17; fi; printf 'ready\n' >"$SIM_TEST_READY"; exec /bin/sleep 300`}, WorkDir: dir,
-		Env: map[string]string{
-			"SIM_TEST_COUNTER": counter, "SIM_TEST_READY": readyPath,
-			"SIM_TEST_SUPERVISOR_STATE": filepath.Join(dir, "supervisor.state.json"),
-		},
-		StdoutPath: filepath.Join(processDir, "child.stdout"), StderrPath: filepath.Join(processDir, "child.stderr"), RestartLimit: 2,
-		HealthURL: health.URL,
-	}
+	spec := supervisorRestartTestChild(dir, filepath.Join(dir, "child.counter"), readyPath, filepath.Join(dir, "supervisor.state.json"), health.URL)
 	manifest := SupervisorFile{Schema: "urnetwork-sim-supervisor-v1", DeploymentID: "test", BinaryHash: binaryHash, Specs: []ProcessSpec{spec}}
 	b, _ := json.Marshal(manifest)
 	manifestPath := filepath.Join(dir, "supervisor.json")
@@ -638,14 +651,28 @@ func TestSupervisorRestartsOncePublishesReadyAndStopsChildren(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
+	admitted := make(chan struct{})
 	go func() {
 		done <- superviseWithContractCleanup(ctx, dir, manifestPath, func(context.Context, string, []ProcessSpec, time.Time) error {
+			close(admitted)
 			return nil
 		})
 	}()
 	processLogs, err := initializeProcessLogGate(dir, manifest)
 	if err != nil {
 		t.Fatal(err)
+	}
+	// Authenticate the executable before the readiness clock starts, as the
+	// burst cooldown test does: under load a race binary can take longer to
+	// hash than the readiness budget, and no child starts before this
+	// pre-start callback.
+	select {
+	case <-admitted:
+	case err := <-done:
+		t.Fatalf("supervisor exited before authenticated admission: %v", err)
+	case <-time.After(time.Minute):
+		cancel()
+		t.Fatalf("supervisor did not reach authenticated admission; supervisor: %v", <-done)
 	}
 	if _, err := waitSupervisorReady(ctx, dir, manifest, processLogs, 30*time.Second); err != nil {
 		cancel()
@@ -728,9 +755,38 @@ func waitSupervisorRestartTestState(t *testing.T, path string, accept func(Proce
 	return SupervisorState{}
 }
 
+// The burst cooldown test's supervised child. Each attempt counts itself and
+// waits until the supervisor has published its PID; the first two then exit
+// 17, and the third idles until stopped. A supervisor stop sends TERM to the
+// whole group, and the trap makes the shell reap the helper it waits on before
+// it exits: a shell that died at once left its sleep or grep to the enclosing
+// subreaper. The third attempt idles rather than exec sleep, so the stop that
+// ends it is the supervisor's own, which signals only the recorded identity.
+func supervisorCooldownTestChild(dir, counterPath, statePath string) ProcessSpec {
+	processDir := filepath.Join(dir, "processes")
+	return ProcessSpec{
+		ID: "cooldown-child", Role: "test", Identity: "cooldown-child", Command: "/bin/sh",
+		Args:    []string{"-c", `trap 'exit 143' TERM; count=0; if [ -r "$SIM_TEST_COUNTER" ]; then IFS= read -r count < "$SIM_TEST_COUNTER"; fi; count=$((count+1)); printf '%s\n' "$count" > "$SIM_TEST_COUNTER"; while ! grep -Fq "\"pid\": $$" "$SIM_TEST_SUPERVISOR_STATE" 2>/dev/null; do sleep 0.01; done; if [ "$count" -lt 3 ]; then exit 17; fi; while :; do sleep 1; done`},
+		WorkDir: dir,
+		Env: map[string]string{
+			"SIM_TEST_COUNTER": counterPath, "SIM_TEST_SUPERVISOR_STATE": statePath,
+		},
+		StdoutPath: filepath.Join(processDir, "child.stdout"), StderrPath: filepath.Join(processDir, "child.stderr"), RestartLimit: 1,
+	}
+}
+
 // Reproduces the live failure: the last rapid crash leaves PID zero, then the
 // same supervisor generation starts exactly one fresh attempt after cooldown.
+// Stopping that attempt leaves no process behind; the release gate's subreaper
+// adopted its poll helper (sn-simulator-race-10 of run 5). Under -race at load
+// 25 the run took 30 seconds alone, so its private owner allows several times
+// that.
 func TestSupervisorRecoversStoppedChildAfterBurstCooldown(t *testing.T) {
+	runSupervisorDescendantOwnerTest(t, 0, 5*time.Minute, assertSupervisorRecoversStoppedChildAfterBurstCooldownTest)
+}
+
+// The final cancel stops the third attempt while it waits on a helper.
+func assertSupervisorRecoversStoppedChildAfterBurstCooldownTest(t *testing.T) {
 	dir := t.TempDir()
 	executable, err := os.Executable()
 	if err != nil {
@@ -740,21 +796,9 @@ func TestSupervisorRecoversStoppedChildAfterBurstCooldown(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	processDir := filepath.Join(dir, "processes")
-	if err := os.MkdirAll(processDir, 0o700); err != nil {
-		t.Fatal(err)
-	}
 	counterPath := filepath.Join(dir, "child.counter")
 	statePath := filepath.Join(dir, "supervisor.state.json")
-	spec := ProcessSpec{
-		ID: "cooldown-child", Role: "test", Identity: "cooldown-child", Command: "/bin/sh",
-		Args:    []string{"-c", `count=0; if [ -r "$SIM_TEST_COUNTER" ]; then IFS= read -r count < "$SIM_TEST_COUNTER"; fi; count=$((count+1)); printf '%s\n' "$count" > "$SIM_TEST_COUNTER"; while ! grep -Fq "\"pid\": $$" "$SIM_TEST_SUPERVISOR_STATE" 2>/dev/null; do sleep 0.01; done; if [ "$count" -lt 3 ]; then exit 17; fi; exec /bin/sleep 300`},
-		WorkDir: dir,
-		Env: map[string]string{
-			"SIM_TEST_COUNTER": counterPath, "SIM_TEST_SUPERVISOR_STATE": statePath,
-		},
-		StdoutPath: filepath.Join(processDir, "child.stdout"), StderrPath: filepath.Join(processDir, "child.stderr"), RestartLimit: 1,
-	}
+	spec := supervisorCooldownTestChild(dir, counterPath, statePath)
 	manifest := SupervisorFile{Schema: "urnetwork-sim-supervisor-v1", DeploymentID: "cooldown-test", BinaryHash: binaryHash, Specs: []ProcessSpec{spec}}
 	encoded, err := json.Marshal(manifest)
 	if err != nil {
@@ -878,29 +922,32 @@ func TestSupervisorRecoversStoppedChildAfterBurstCooldown(t *testing.T) {
 		t.Fatal(err)
 	}
 	finished = true
+	// The supervisor returns once its stopped child is no longer alive, and the
+	// child's own waiter then reaps it. Join that reap, so the private owner
+	// counts only processes that outlived their parent.
+	child := recovered.Processes[0]
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		if ticks, err := processStartTimeTicks(child.PID); err != nil || ticks != child.StartTimeTicks {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("stopped cooldown child %d was not reaped", child.PID)
+		}
+		<-time.After(10 * time.Millisecond)
+	}
 }
 
-// A restart executable can disappear while the child that mapped it is still
-// live. The failed cooldown launch remains an attempted restart and re-enters
-// the fresh burst's ordinary backoff instead of retrying in a tight loop.
-func TestSupervisorCooldownLaunchFailureConsumesFreshBurst(t *testing.T) {
-	dir := t.TempDir()
-	executable, err := os.Executable()
-	if err != nil {
-		t.Fatal(err)
-	}
-	binaryHash, err := fileSHA256(executable)
-	if err != nil {
-		t.Fatal(err)
-	}
-	processDir := filepath.Join(dir, "processes")
-	if err := os.MkdirAll(processDir, 0o700); err != nil {
-		t.Fatal(err)
-	}
-	counterPath := filepath.Join(dir, "child.counter")
-	statePath := filepath.Join(dir, "supervisor.state.json")
+// The failed cooldown test's supervised child, a script in dir that removes
+// itself on its third attempt. Each attempt counts itself, waits until the
+// supervisor has published its PID and exits 17. A supervisor stop sends TERM
+// to the whole group, and the trap makes the shell reap the helper it waits on
+// before it exits.
+func supervisorFailedCooldownTestChild(t *testing.T, dir, counterPath, statePath string) ProcessSpec {
+	t.Helper()
 	scriptPath := filepath.Join(dir, "child.sh")
 	script := `#!/bin/sh
+trap 'exit 143' TERM
 count=0
 if [ -r "$SIM_TEST_COUNTER" ]; then IFS= read -r count < "$SIM_TEST_COUNTER"; fi
 count=$((count+1))
@@ -912,13 +959,37 @@ exit 17
 	if err := os.WriteFile(scriptPath, []byte(script), 0o700); err != nil {
 		t.Fatal(err)
 	}
-	spec := ProcessSpec{
+	processDir := filepath.Join(dir, "processes")
+	return ProcessSpec{
 		ID: "failed-cooldown-child", Role: "test", Identity: "failed-cooldown-child", Command: scriptPath, WorkDir: dir,
 		Env: map[string]string{
 			"SIM_TEST_COUNTER": counterPath, "SIM_TEST_SUPERVISOR_STATE": statePath, "SIM_TEST_SCRIPT": scriptPath,
 		},
 		StdoutPath: filepath.Join(processDir, "child.stdout"), StderrPath: filepath.Join(processDir, "child.stderr"), RestartLimit: 2,
 	}
+}
+
+// A restart executable can disappear while the child that mapped it is still
+// live. The failed cooldown launch remains an attempted restart and re-enters
+// the fresh burst's ordinary backoff instead of retrying in a tight loop. No
+// attempt leaves a process behind, which the private owner proves.
+func TestSupervisorCooldownLaunchFailureConsumesFreshBurst(t *testing.T) {
+	runSupervisorDescendantOwnerTest(t, 0, 5*time.Minute, assertSupervisorCooldownLaunchFailureConsumesFreshBurstTest)
+}
+
+func assertSupervisorCooldownLaunchFailureConsumesFreshBurstTest(t *testing.T) {
+	dir := t.TempDir()
+	executable, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	binaryHash, err := fileSHA256(executable)
+	if err != nil {
+		t.Fatal(err)
+	}
+	counterPath := filepath.Join(dir, "child.counter")
+	statePath := filepath.Join(dir, "supervisor.state.json")
+	spec := supervisorFailedCooldownTestChild(t, dir, counterPath, statePath)
 	manifest := SupervisorFile{Schema: "urnetwork-sim-supervisor-v1", DeploymentID: "failed-cooldown-test", BinaryHash: binaryHash, Specs: []ProcessSpec{spec}}
 	encoded, err := json.Marshal(manifest)
 	if err != nil {
@@ -1844,7 +1915,7 @@ func TestSupervisorShutdownRejectsUnobservableLiveIdentity(t *testing.T) {
 // Reproduces a transaction-like subprocess that survives its group leader.
 // The supervisor must detect the old group and refuse an overlapping restart.
 func TestSupervisorDetectsDescendantAfterLeaderExit(t *testing.T) {
-	runSupervisorDescendantOwnerTest(t, assertSupervisorDescendantAfterLeaderExitTest)
+	runSupervisorDescendantOwnerTest(t, 1, 25*time.Second, assertSupervisorDescendantAfterLeaderExitTest)
 }
 
 // The leader really exits before its surviving group member is observed.
@@ -1993,17 +2064,30 @@ func TestInterruptedProvisioningRecoveryStopsOnlyTheRecordedKernelIdentity(t *te
 	}
 }
 
+// The recovery leaves the mismatched sleep alone, and the cleanup that kills it
+// joins its reap, which the private owner proves.
 func TestInterruptedProvisioningRecoveryNeverSignalsAReusedPID(t *testing.T) {
+	runSupervisorDescendantOwnerTest(t, 0, 25*time.Second, assertInterruptedProvisioningRecoveryNeverSignalsAReusedPidTest)
+}
+
+func assertInterruptedProvisioningRecoveryNeverSignalsAReusedPidTest(t *testing.T) {
 	dir := t.TempDir()
 	spec := ProcessSpec{
 		ID: "temporary-test", Role: "operator-api", Identity: "no:1", Command: "/bin/sleep", Args: []string{"300"}, WorkDir: dir,
 		StdoutPath: filepath.Join(dir, "temporary.stdout"), StderrPath: filepath.Join(dir, "temporary.stderr"),
 	}
-	command, err := startSpec(context.Background(), spec)
+	command, exited, err := startSpecWithExit(context.Background(), spec)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = syscall.Kill(-command.Process.Pid, syscall.SIGKILL) })
+	// A cleanup that only killed the sleep let the test process exit before
+	// the sleep's waiter reaped it, leaving it to the release gate's subreaper.
+	// That waiter and the private owner race for the reap, so no test can
+	// force the leak; joining the waiter here makes the owner's count exact.
+	t.Cleanup(func() {
+		_ = syscall.Kill(-command.Process.Pid, syscall.SIGKILL)
+		<-exited
+	})
 	identity, err := temporaryProcessIdentity(spec, command.Process.Pid)
 	if err != nil {
 		t.Fatal(err)

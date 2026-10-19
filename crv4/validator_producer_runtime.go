@@ -32,38 +32,8 @@ func ValidateValidatorProducerRuntimeArtifactContext(ctx context.Context, chain 
 	if artifact.Version.SpecName != "node-subtensor" || artifact.Version.SpecVersion == 0 || artifact.Version.TransactionVersion != 1 || artifact.Version.StateVersion != 1 {
 		return errors.New("validator producer runtime family or encoding version is unsupported")
 	}
-	baseline, err := runtimeProfileBaseline()
-	if err != nil {
+	if err := validateValidatorProducerMetadata(artifact.Metadata); err != nil {
 		return err
-	}
-	storageNamesKVs := map[string]string{
-		"System":      "Account Events",
-		"Timestamp":   "Now",
-		"Ethereum":    "BlockHash",
-		"Commitments": "CommitmentOf LastCommitment MaxSpace UsedSpaceOf",
-		PalletName:    "SubnetworkN Keys Uids Owner TotalHotkeyAlpha ValidatorPermit StakeThreshold SubnetOwner SubnetOwnerHotkey SubnetEpochIndex Tempo LastEpochBlock PendingEpochAt BlocksSinceLastStep RevealPeriodEpochs CommitRevealWeightsEnabled CommitRevealWeightsVersion MaxWeightsLimit WeightsVersionKey Weights LastUpdate MechanismCountCurrent",
-	}
-	callNamesKVs := map[string]string{
-		"Utility": "batch_all", "Commitments": "set_commitment",
-		PalletName: CallCommitTimelocked + " " + CallCommitTimelockedMech,
-	}
-	expectedKVs, err := runtimeProfileSelectedShape(baseline, storageNamesKVs, callNamesKVs, runtimeProfileEvents, true)
-	if err != nil {
-		return fmt.Errorf("validator producer baseline: %w", err)
-	}
-	actualKVs, err := runtimeProfileSelectedShape(artifact.Metadata, storageNamesKVs, callNamesKVs, runtimeProfileEvents, true)
-	if err != nil {
-		return fmt.Errorf("validator producer capability: %w", err)
-	}
-	var names []string
-	for name := range expectedKVs {
-		names = append(names, name)
-	}
-	slices.Sort(names)
-	for _, name := range names {
-		if !reflect.DeepEqual(actualKVs[name], expectedKVs[name]) {
-			return fmt.Errorf("validator producer consumed interface %s changed", name)
-		}
 	}
 	var raw json.RawMessage
 	if err := chain.API.Client.CallContext(ctx, &raw, "state_getRuntimeVersion", artifact.BlockHash.Hex()); err != nil {
@@ -83,6 +53,46 @@ func ValidateValidatorProducerRuntimeArtifactContext(ctx context.Context, chain 
 		return ValidateRuntimeArtifactOwnerContext(ctx, chain, artifact)
 	}
 	return ctx.Err()
+}
+
+// The producer's consumed storage, calls, events and complete signed-extension
+// shapes must equal the reviewed baseline that every approved production
+// artifact already satisfies. Unrelated metadata does not participate.
+func validateValidatorProducerMetadata(metadata *types.Metadata) error {
+	baseline, err := runtimeProfileBaseline()
+	if err != nil {
+		return err
+	}
+	storageNamesKVs := map[string]string{
+		"System":      "Account Events",
+		"Timestamp":   "Now",
+		"Ethereum":    "BlockHash",
+		"Commitments": "CommitmentOf LastCommitment MaxSpace UsedSpaceOf",
+		PalletName:    "SubnetworkN Keys Uids Owner TotalHotkeyAlpha ValidatorPermit StakeThreshold SubnetOwner SubnetOwnerHotkey SubnetEpochIndex Tempo LastEpochBlock PendingEpochAt BlocksSinceLastStep RevealPeriodEpochs CommitRevealWeightsEnabled CommitRevealWeightsVersion MaxWeightsLimit WeightsVersionKey Weights LastUpdate MechanismCountCurrent",
+	}
+	callNamesKVs := map[string]string{
+		"Utility": "batch_all", "Commitments": "set_commitment",
+		PalletName: CallCommitTimelocked + " " + CallCommitTimelockedMech,
+	}
+	expectedKVs, err := runtimeProfileSelectedShape(baseline, storageNamesKVs, callNamesKVs, runtimeProfileEvents, true)
+	if err != nil {
+		return fmt.Errorf("validator producer baseline: %w", err)
+	}
+	actualKVs, err := runtimeProfileSelectedShape(metadata, storageNamesKVs, callNamesKVs, runtimeProfileEvents, true)
+	if err != nil {
+		return fmt.Errorf("validator producer capability: %w", err)
+	}
+	var names []string
+	for name := range expectedKVs {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	for _, name := range names {
+		if !reflect.DeepEqual(actualKVs[name], expectedKVs[name]) {
+			return fmt.Errorf("validator producer consumed interface %s changed", name)
+		}
+	}
+	return nil
 }
 
 // Runtime tuple decoding has already validated the object framing. Its API
@@ -123,6 +133,28 @@ func (self *Chain) BindValidatorProducerRuntimeArtifactContext(ctx context.Conte
 	}
 	self.validatorProducerProof = artifact.authenticationProof
 	return nil
+}
+
+// Production signing names its approved anchor. Only this view's own exact
+// purpose proof satisfies it: one issued for that anchor, or for a successor
+// that this connection's installed policy admitted in place of that anchor.
+func (self *Chain) ValidateValidatorProducerRuntimeSuccessor(approved RuntimeArtifactIdentity) error {
+	if self == nil {
+		return errors.New("validator producer runtime view is unavailable or provisional")
+	}
+	anchor, err := canonicalRuntimeArtifactIdentity(approved)
+	if err != nil {
+		return err
+	}
+	proof := self.validatorProducerProof
+	if proof == nil || proof.successor == nil {
+		return self.ValidateValidatorProducerRuntime(approved)
+	}
+	policy := self.runtimeSuccessionPolicy()
+	if policy == nil || proof.successor.policy != policy || proof.successor.approved != anchor || proof.successor.artifact != proof.identity {
+		return errors.New("validator producer runtime successor lacks this connection's approved anchor")
+	}
+	return self.ValidateValidatorProducerRuntime(proof.identity)
 }
 
 // Matching exported version fields alone cannot authorize production signing.

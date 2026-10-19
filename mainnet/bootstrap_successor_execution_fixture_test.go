@@ -51,8 +51,19 @@ func newBootstrapSuccessorExecutionFixture(t *testing.T) *bootstrapSuccessorExec
 // is signed only after exact signature and transaction bytes are available.
 func newBootstrapSuccessorExecutionNonceFixture(t *testing.T, safeNonce string, outerNonce uint64) *bootstrapSuccessorExecutionFixture {
 	t.Helper()
+	return newBootstrapSuccessorExecutionOwnerFixture(t, safeNonce, outerNonce, false)
+}
+
+// The single-owner request schema is selected explicitly; its published Safe has
+// one owner at threshold one and the request carries one 65-byte signature.
+func newBootstrapSuccessorExecutionOwnerFixture(t *testing.T, safeNonce string, outerNonce uint64, singleOwner bool) *bootstrapSuccessorExecutionFixture {
+	t.Helper()
 	prepared, key, safeRequest, safeReference, archive := bootstrapSuccessorSafeTestInputs(t, "1.4.1", "Safe")
-	oracle := newSafeExecutionFixture(t, "1.4.1", "Safe")
+	oracle := newSafeExecutionOwnerFixture(t, "1.4.1", "Safe", singleOwner)
+	schema, modes, threshold := bootstrapSuccessorExecutionRequestSchema, []string{"raw", "raw"}, uint64(2)
+	if singleOwner {
+		schema, modes, threshold = bootstrapSuccessorExecutionSingleOwnerRequestSchema, []string{"raw"}, 1
+	}
 	relayer, err := crypto.ToECDSA(crypto.Keccak256([]byte("synthetic successor execution relayer")))
 	if err != nil {
 		t.Fatal(err)
@@ -83,10 +94,10 @@ func newBootstrapSuccessorExecutionNonceFixture(t *testing.T, safeNonce string, 
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := bootstrapSuccessorExecutionRequest{Schema: bootstrapSuccessorExecutionRequestSchema, SafeReviewHash: review.ContentHash, RegistryDirectory: registry,
+	request := bootstrapSuccessorExecutionRequest{Schema: schema, SafeReviewHash: review.ContentHash, RegistryDirectory: registry,
 		Owners: slices.Clone(oracle.owners), Singleton: common.BytesToAddress(crypto.Keccak256([]byte("synthetic singleton 1.4.1Safe")))}
 	draft := bootstrapSuccessorExecutionPlan{Review: review, Request: request}
-	signatures := oracle.signatures(draft.transaction(), "raw", "raw")
+	signatures := oracle.signatures(draft.transaction(), modes...)
 	request.SafeSignatures = bootstrapSuccessorExecutionTestRaw(t, "synthetic-safe-signatures.bin", signatures)
 	draft.Request, draft.SafeSignatures = request, "0x"+hex.EncodeToString(signatures)
 	outer, err := draft.outer(oracle.profile)
@@ -114,7 +125,7 @@ func newBootstrapSuccessorExecutionNonceFixture(t *testing.T, safeNonce string, 
 	f := &bootstrapSuccessorExecutionFixture{t: t, storage: storage, key: key, profile: oracle.profile, oracle: oracle, resolution: bootstrapSuccessorExecutionReconciliation{Status: "absent"}}
 	f.approval = bootstrapSuccessorExecutionTestSign(t, plan, key, oracle.profile)
 	f.observation = bootstrapSuccessorExecutionObservation{NativeNumber: safeRequest.StartNativeNumber, NativeHash: common.HexToHash(safeRequest.StartNativeHash),
-		Singleton: request.Singleton, Owners: slices.Clone(request.Owners), Threshold: 2, SafeNonce: safeNonce, RelayerNonce: outerNonce, RelayerPendingNonce: outerNonce,
+		Singleton: request.Singleton, Owners: slices.Clone(request.Owners), Threshold: threshold, SafeNonce: safeNonce, RelayerNonce: outerNonce, RelayerPendingNonce: outerNonce,
 		RelayerBalanceWei: review.Relayer.MaximumLiabilityWei, CoordinatorOwner: review.Transaction.Safe,
 		EvidenceRuntimeHash: p.AdoptedActions[7].Receipt.RuntimeHash, EvidenceGetterHash: p.AdoptedActions[7].Receipt.GetterHash}
 	pin, err := loadSafeReleasePin("1.4.1", "Safe")

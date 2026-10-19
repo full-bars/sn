@@ -1,0 +1,139 @@
+{
+  "schema": "code-docs-focused-delivery-v1",
+  "status": "REQUESTED_CODE_DOCS_FOCUSED_CHECKS_COMPLETE",
+  "scope": "Requested code, documentation and focused local qualification. No complete-suite, live mainnet readiness, signing, deployment or activation claim.",
+  "previous_checkpoint": {
+    "path": "carry-treasury-qualification-20261006.json",
+    "bytes": 14607,
+    "sha256": "85736661546dacfbe49f9384e0112a05a2b02efb4495cfd4a83ad1a45d94c605"
+  },
+  "qualified_scopes": {
+    "paired_all_package_builds": {
+      "result": "PASS",
+      "sources": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "875fbca2d3aa03be5997b43845549a911791c690",
+        "sn": "ff1ba7d2297a55ae02e29b593304872bd9490017"
+      },
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-paired-build-20261006/closed-user-readback-v1.json",
+        "bytes": 2865,
+        "sha256": "49f63bcefd33423be04c5689b15fd30287a034b9862a1b2ad657f182c574869e"
+      },
+      "source_record": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-paired-build-20261006/source-heads.json",
+        "bytes": 363,
+        "sha256": "f7df8a57ec0ae5c7b7372b8e4b2e5243ecab7afaef2b2eda7a5002241dd862bc"
+      },
+      "scope": "SN and Server go build ./... both exit0 with joined closed owners; compile-only evidence."
+    },
+    "server_operator": {
+      "result": "PASS",
+      "normal_top_level_roots": 51,
+      "normal_subtests": 2,
+      "race_top_level_roots": 27,
+      "package_counts": {
+        "normal": {
+          "api": 2,
+          "cli_all": 27,
+          "connect": 3,
+          "gossip": 3,
+          "router": 5,
+          "taskworker": 11
+        },
+        "race": {
+          "cli_all": 27
+        }
+      },
+      "consumed_sources": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "875fbca2d3aa03be5997b43845549a911791c690",
+        "sn": "ff1ba7d2297a55ae02e29b593304872bd9490017"
+      },
+      "closure_source_readback": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "875fbca2d3aa03be5997b43845549a911791c690",
+        "sn": "3a3fc0014b79a232dbedfa935adfbcc96f33d399"
+      },
+      "receipt": {
+        "path": "/home/by/rf-sn-provider-recovery-v1-20261005/operator-all-20261006/closed-receipt.json",
+        "bytes": 20312,
+        "sha256": "28ecbd5b652ced246d21a7228cce41d8482e0f0587869d7db36bcca4f432db69"
+      },
+      "scope": "Normal CLI/all, router, connect, API, taskworker and gossip selected tests; race scope is CLI/all only. No failure, skip or stderr; both scopes joined and closed.",
+      "source_addendum": {
+        "path": "/home/by/rf-sn-provider-recovery-v1-20261005/operator-all-20261006/consumed-source-addendum.json",
+        "bytes": 1052,
+        "sha256": "3b23f7b235d5e04f0d25c87332b96bd99d0599b86f51b7829faa56f9cd5beea8"
+      }
+    },
+    "website_guides": {
+      "result": "PASS",
+      "guides": [
+        "miner",
+        "validator",
+        "operator"
+      ],
+      "consumed_build_source": "85c91dc519c991c4d05603e874722135fe211783",
+      "postbuild_date_source": "1a119685e4f1e7711d3b57305eeadd11407bb3e1",
+      "postbuild_changed_paths": [
+        "ur.xyz/astro/page-dates.json"
+      ],
+      "built_pages": 95,
+      "internal_links_checked": 2511,
+      "dead_internal_links": 0,
+      "seo_audit": "PASS",
+      "page_date_urls_checked": 48,
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/website-guides-validation-20261006/result.json",
+        "bytes": 7047,
+        "sha256": "37765361ad683fd247c27c395d5e522194108c351bbecada73e79bcb9202d654"
+      },
+      "scope": "Local Astro main build, internal-link and SEO audits, and committed-date check. Source guides, Markdown mirrors, rendered HTML and generated metadata are pinned by the receipt. No full visual or network suite and no publication claim."
+    }
+  },
+  "sn_docs_only_successor": {
+    "compiled_source": "ff1ba7d2297a55ae02e29b593304872bd9490017",
+    "docs_head": "3a3fc0014b79a232dbedfa935adfbcc96f33d399",
+    "changed_paths": [
+      "mainnet/MAINNET.md",
+      "mainnet/PRELAUNCH-FIXES.md",
+      "mainnet/evidence/carry-treasury-qualification-20261006.json"
+    ],
+    "go_source_difference": false
+  },
+  "qualification_limits": [
+    "Earlier scopes and original failed attempts remain immutable in the linked indexes.",
+    "No aggregate full-suite pass is inferred from the selected normal and race runs.",
+    "The reserve only receives funds; its public address does not require spending custody.",
+    "The separately started upstream private-heap checks are outside this completed delivery selection and receive no pass credit here."
+  ],
+  "operational_inputs_outside_scope": {
+    "activation": "blocked",
+    "empty_selected_deployment_fields": [
+      "deployment_id",
+      "coordinator",
+      "settlement_vault",
+      "policy_hash",
+      "readiness_sha256"
+    ],
+    "remaining": [
+      "Owner/root/operator custody and roles",
+      "Registered recipient setup",
+      "Runtime authority",
+      "Deployment and activation"
+    ]
+  },
+  "retained_original_results": {
+    "website_precommit_dates": {
+      "exit": 1,
+      "reason": "generated correct content awaited Root commit",
+      "stderr": {
+        "bytes": 92,
+        "path": "/home/by/sn-testnet-root-fallback-20261005/website-guides-validation-20261006/dates.stderr",
+        "sha256": "499e82eb059b0d65d5b4ef83b0975d12a30ce9a11156f2d9030fc5d675250809"
+      },
+      "successor": "Page-date check exits0 after the generated-date-only commit; original check remains in the same receipt."
+    }
+  }
+}

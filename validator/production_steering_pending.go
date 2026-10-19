@@ -100,6 +100,37 @@ func (self *ReleaseSteerer) reconcileProductionPendingV2(ctx context.Context, cu
 	if nonce < current.Prepared.AccountNonce {
 		return false, fmt.Errorf("steering nonce gap at scanned block %d: finalized %d, prepared %d", number, nonce, current.Prepared.AccountNonce)
 	}
+	// Under the signed successor opt-in, a runtime replaced before inclusion
+	// must not strand the validator. Both artifacts passed the producer purpose
+	// check, so their ordered signed extensions include CheckSpecVersion, which
+	// binds these bytes to the spec that signed them; an installed runtime's
+	// spec only increases. Once the scanned boundary's own state runs a later
+	// spec, every unscanned block executes a runtime that rejects them. With no
+	// receipt through that boundary and an unspent nonce, the signed liability
+	// has ended and a fresh decision may proceed. Exact configs keep waiting.
+	if self.cfg.RuntimeSuccessorProfile != "" {
+		var signedRuntime, boundaryRuntime crv4.RuntimeVersionIdentity
+		err = self.productionRead(ctx, productionReadReceipt, current, func(readCtx context.Context) error {
+			signed, _, err := authenticateOwnerRecycleProductionArtifactAtContext(readCtx, &native, decisionCfg, preparedHash, true)
+			if err != nil {
+				return fmt.Errorf("authenticate retained signing runtime: %w", err)
+			}
+			latest, _, err := authenticateOwnerRecycleProductionArtifactAtContext(readCtx, &native, self.cfg, boundary, true)
+			if err != nil {
+				return fmt.Errorf("authenticate receipt boundary runtime: %w", err)
+			}
+			signedRuntime, boundaryRuntime = signed.Version, latest.Version
+			return nil
+		})
+		if err != nil {
+			return false, err
+		}
+		if boundaryRuntime.SpecName == signedRuntime.SpecName && boundaryRuntime.SpecVersion > signedRuntime.SpecVersion {
+			cause := fmt.Errorf("steering bytes signed under runtime %s/%d were not included through block %d, whose runtime %s/%d rejects their signed spec version",
+				signedRuntime.SpecName, signedRuntime.SpecVersion, number, boundaryRuntime.SpecName, boundaryRuntime.SpecVersion)
+			return false, self.intents.markFailedV2(ctx, current.VectorHash, cause)
+		}
+	}
 	if decisionCfg.ownerRecycleProduction.historicalOnly {
 		return false, &productionPendingReconciliation{nativeEpoch: state.SubnetEpochIndex, extrinsicHash: current.Prepared.ExtrinsicHash}
 	}

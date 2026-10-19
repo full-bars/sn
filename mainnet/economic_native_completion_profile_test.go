@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Completion framing preserves the original fee authority and generation
 // census. These controls exercise physical publication, not synthetic execution.

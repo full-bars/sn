@@ -1058,7 +1058,7 @@ func TestProxyStakeMEVBoundRejectsSandwichSlippage(t *testing.T) {
 func TestCommitmentParserTypeConfusionModelRejectsAlternateRuntimeFields(t *testing.T) {
 	for sequence := uint64(0); sequence < 256; sequence++ {
 		rejections, err := commitmentParserTypeConfusionModel(sequence)
-		if err != nil || rejections != 5 {
+		if err != nil || rejections != 6 {
 			t.Fatalf("sequence=%d rejections=%d error=%v", sequence, rejections, err)
 		}
 	}

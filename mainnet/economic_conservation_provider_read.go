@@ -4,10 +4,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"math/big"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -119,23 +121,8 @@ func readEconomicProviderOriginals(ctx context.Context, source economicConservat
 		return nil, nil, err
 	}
 	defer walletReader.CloseIdleConnections()
-	for _, member := range authority.ExpectedProviders {
-		expected, err := economicProviderWalletExpected(&authority, member)
-		if err != nil {
-			return nil, nil, economicProviderEvidenceError(err)
-		}
-		originals, verified, err := walletReader.ReadBounded(ctx, expected, remaining)
-		if err != nil {
-			return nil, nil, economicProviderEvidenceError(err)
-		}
-		if verified.Statement.NetworkId != member.NetworkId {
-			return nil, nil, errors.Join(errRpcIntegrity, protocol.ErrWalletMappingIntegrity)
-		}
-		value := economicProviderWalletOriginal{ClientId: member.ClientId, Originals: originals}
-		if err := charge(value); err != nil {
-			return nil, nil, err
-		}
-		result.Wallets = append(result.Wallets, value)
+	if err := readEconomicProviderWalletOriginals(ctx, walletReader, &authority, result, charge, func() uint64 { return remaining }); err != nil {
+		return nil, nil, err
 	}
 	result.Bindings, err = readEconomicProviderBindings(ctx, reader, census, &authority)
 	if err != nil {
@@ -163,6 +150,97 @@ func readEconomicProviderOriginals(ctx context.Context, source economicConservat
 		return nil, nil, err
 	}
 	return result, verified, ctx.Err()
+}
+
+// Acquires exactly the wallet chains economicProviderEarningWallets consults,
+// in its order: each expected provider's own chain that the roster pins; the
+// chain of every network some provider falls back to, because its own chain
+// is absent or verified with no consent effective at the epoch; and, for every
+// such network whose chain is in turn absent or not effective, its delegation
+// chain and the global consent chain through the head that the delegation
+// effective at the epoch names. charge reserves each retained chain before the
+// next read, which is bounded by what remains. The last mode reached has
+// nothing to fall back to, so its not-effective outcome is an error here.
+func readEconomicProviderWalletOriginals(ctx context.Context, walletReader *validator.HttpWalletMappingReader, authority *payoutartifact.WholeWorkAuthority, result *economicProviderOriginals, charge func(any) error, remaining func() uint64) error {
+	fallbackNetworkIds := map[[16]byte]bool{}
+	for _, member := range authority.ExpectedProviders {
+		expected, err := economicProviderWalletExpected(authority, member)
+		if errors.Is(err, protocol.ErrWalletMappingAbsent) {
+			fallbackNetworkIds[member.NetworkId] = true
+			continue
+		}
+		if err != nil {
+			return economicProviderEvidenceError(err)
+		}
+		originals, verified, err := walletReader.ReadBounded(ctx, expected, remaining())
+		if errors.Is(err, protocol.ErrWalletMappingNotEffective) {
+			fallbackNetworkIds[member.NetworkId] = true
+		} else if err != nil {
+			return economicProviderEvidenceError(err)
+		} else if verified.Statement.NetworkId != member.NetworkId {
+			return errors.Join(errRpcIntegrity, protocol.ErrWalletMappingIntegrity)
+		}
+		value := economicProviderWalletOriginal{ClientId: member.ClientId, Originals: originals}
+		if err := charge(value); err != nil {
+			return err
+		}
+		result.Wallets = append(result.Wallets, value)
+	}
+	networkIds := make([][16]byte, 0, len(fallbackNetworkIds))
+	for networkId := range fallbackNetworkIds {
+		networkIds = append(networkIds, networkId)
+	}
+	slices.SortFunc(networkIds, func(a [16]byte, b [16]byte) int {
+		return bytes.Compare(a[:], b[:])
+	})
+	// the networks whose delegation some provider falls back to, still ordered
+	hotkeyNetworkIds := [][16]byte{}
+	for _, networkId := range networkIds {
+		expected, err := economicNetworkWalletExpected(authority, networkId)
+		if errors.Is(err, protocol.ErrWalletMappingAbsent) {
+			hotkeyNetworkIds = append(hotkeyNetworkIds, networkId)
+			continue
+		}
+		if err != nil {
+			return economicProviderEvidenceError(err)
+		}
+		originals, _, err := walletReader.ReadNetworkBounded(ctx, expected, remaining())
+		if errors.Is(err, protocol.ErrWalletMappingNotEffective) {
+			hotkeyNetworkIds = append(hotkeyNetworkIds, networkId)
+		} else if err != nil {
+			return economicProviderEvidenceError(err)
+		}
+		value := economicNetworkWalletOriginal{NetworkId: networkId, Originals: originals}
+		if err := charge(value); err != nil {
+			return err
+		}
+		result.NetworkWallets = append(result.NetworkWallets, value)
+	}
+	for _, networkId := range hotkeyNetworkIds {
+		expected, err := economicHotkeyDelegationExpected(authority, networkId)
+		if err != nil {
+			return economicProviderEvidenceError(err)
+		}
+		delegations, delegation, err := walletReader.ReadHotkeyDelegationBounded(ctx, expected, remaining())
+		if err != nil {
+			return economicProviderEvidenceError(err)
+		}
+		delegationValue := economicHotkeyDelegationOriginal{NetworkId: networkId, Originals: delegations}
+		if err := charge(delegationValue); err != nil {
+			return err
+		}
+		consents, _, err := walletReader.ReadHotkeyConsentBounded(ctx, protocol.HotkeyWalletMappingHistoryExpectation{Subnet: authority.Domain.HotkeySubnet(), Hotkey: delegation.Statement.Hotkey, HeadHash: delegation.Statement.ConsentHeadHash, Generation: delegation.Statement.ConsentGeneration, Epoch: authority.Epoch}, remaining())
+		if err != nil {
+			return economicProviderEvidenceError(err)
+		}
+		consentValue := economicHotkeyConsentOriginal{NetworkId: networkId, Originals: consents}
+		if err := charge(consentValue); err != nil {
+			return err
+		}
+		result.HotkeyDelegations = append(result.HotkeyDelegations, delegationValue)
+		result.HotkeyConsents = append(result.HotkeyConsents, consentValue)
+	}
+	return ctx.Err()
 }
 
 // Unavailable original authority is retryable observation, not a contradicted

@@ -21,6 +21,8 @@ import (
 const economicConservationRole = "economic-conservation"
 
 type economicConservationSummary struct {
+	Treasury                       *economicConservationTreasurySummary        `json:"original_treasury_custody,omitempty"`
+	Progress                       *economicConservationProgressSummary        `json:"operational_progress,omitempty"`
 	OriginalFees                   *economicWholeFeeSummary                    `json:"original_complete_fee_census,omitempty"`
 	OriginalFinality               *economicConservationFinalitySummary        `json:"original_consensus_coverage,omitempty"`
 	Funding                        *economicConservationFundingSummary         `json:"original_funding_composition,omitempty"`
@@ -113,6 +115,13 @@ func (self *economicConservationState) summary(ctx context.Context, policy econo
 	if err != nil {
 		return result, err
 	}
+	result.Treasury, err = self.treasurySummary(policy)
+	if err != nil {
+		return result, err
+	}
+	if result.Treasury != nil {
+		result.Schema = "urnetwork-economic-conservation-sample-v2"
+	}
 	result.OpeningPrincipals, err = self.principalSummary(policy)
 	if err != nil {
 		return result, err
@@ -130,7 +139,7 @@ func (self *economicConservationState) summary(ctx context.Context, policy econo
 	}
 	if self.archiveView != nil {
 		result.ArchiveIndexEntries = self.archiveView.entries + self.archiveView.claimBasisEntries
-		result.ArchiveIndexBytes = self.archiveView.bytes + self.archiveView.claimBasisBytes
+		result.ArchiveIndexBytes = self.archiveView.bytes + self.archiveView.claimBasisBytes + self.archiveView.principalReservedBytes
 	}
 	for _, state := range self.ClaimStates {
 		result.ClaimStatuses = append(result.ClaimStatuses, state.Status)
@@ -230,6 +239,7 @@ func cloneEconomicConservation(value *economicConservationState, policies ...eco
 		return nil, err
 	}
 	result.archiveView = value.archiveView
+	result.principalProvisional = value.principalProvisional
 	result.Native.runtimeAdmission = value.Native.runtimeAdmission
 	return &result, nil
 }
@@ -275,6 +285,12 @@ func loadEconomicConservation(ctx context.Context, owner *monitorCheckpointStore
 }
 
 func saveEconomicConservation(ctx context.Context, owner *monitorCheckpointStore, policy economicConservationPolicy, state *economicConservationState) error {
+	if err := state.archiveView.requireLive(); err != nil {
+		return err
+	}
+	if state.principalProvisional != nil {
+		return errors.New("economic publication requires retained principal snapshot custody, not a provisional plan")
+	}
 	if err := state.validateClaimCheckpointPath(owner.path); err != nil {
 		return err
 	}
@@ -332,6 +348,9 @@ func sampleEconomicConservation(ctx context.Context, policy economicConservation
 }
 
 func sampleEconomicConservationWithNativeWorker(ctx context.Context, policy economicConservationPolicy, prior *economicConservationState, native, vault *rpcClient, now time.Time, hooks monitorServiceHooks, worker *economicConservationNativeWorker) (*economicConservationState, bool, bool, error) {
+	if err := prior.archiveView.requireLive(); err != nil {
+		return nil, false, false, err
+	}
 	if err := prior.requireEntitlementHistory(); err != nil {
 		return nil, false, false, err
 	}
@@ -612,6 +631,9 @@ func runEconomicConservationCommand(ctx context.Context, args []string, stdout, 
 	if err := state.validateClaimCheckpointPath(owner.path); err != nil {
 		return refuse(err)
 	}
+	if err := policy.PrincipalRetention.validatePaths(owner.path, *policyPath, *metricsPath, *feeRequest); err != nil {
+		return refuse(err)
+	}
 	if *metricsPath != "" {
 		metrics, err = openMonitorMetrics(*metricsPath, ctx)
 		if err != nil {
@@ -666,7 +688,21 @@ func runEconomicConservationCommand(ctx context.Context, args []string, stdout, 
 	if hooks.syncDirectory != nil {
 		owner.syncDirectory = func(file *os.File) error { return hooks.syncDirectory(economicConservationRole, "checkpoint", file) }
 	}
+	progress := newEconomicConservationProgress(state, owner.path, now())
+	nextSample := time.Duration(0)
+	if *follow {
+		nextSample = *interval
+	}
 	for ctx.Err() == nil {
+		// Principal facts advance only when this owner takes a completed native
+		// attempt. Compact before its successor starts; never replace a live
+		// worker's original cursor or discard its pending result.
+		if nativeWorker == nil || !nativeWorker.active {
+			state, archive, err = maintainEconomicPrincipalArchive(ctx, policy, owner, state, archive, hooks)
+			if err != nil {
+				return refuse(err)
+			}
+		}
 		if err := nativeWorker.start(state); err != nil {
 			return refuse(err)
 		}
@@ -708,6 +744,7 @@ func runEconomicConservationCommand(ctx context.Context, args []string, stdout, 
 		if err != nil {
 			return refuse(err)
 		}
+		summary.Progress = progress.observe(state, summary, now(), nextSample)
 		metricsAcknowledged := true
 		if metrics != nil {
 			if err := owner.requireOwner(); err != nil {

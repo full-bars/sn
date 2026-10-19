@@ -9,9 +9,11 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -1013,5 +1015,375 @@ func TestThrashRecoveryReportKeyedToRestartRecency(t *testing.T) {
 		if strings.Contains(l, "Thrash cleared by the restart") {
 			t.Fatalf("a stale restarts-ring entry must NOT claim a restart outcome: %q", l)
 		}
+	}
+}
+
+func TestThrashSupervisorKind(t *testing.T) {
+	tests := []struct {
+		name         string
+		env          map[string]string
+		files        map[string]bool
+		wantKind     string
+		wantRestarts bool
+	}{
+		{
+			name:         "systemd vars invocation",
+			env:          map[string]string{"INVOCATION_ID": "systemd-u123"},
+			wantKind:     "systemd",
+			wantRestarts: true,
+		},
+		{
+			name:         "systemd vars notify socket",
+			env:          map[string]string{"NOTIFY_SOCKET": "/run/systemd/notify"},
+			wantKind:     "systemd",
+			wantRestarts: true,
+		},
+		{
+			name:         "dockerenv is a supervisor with no opt-in",
+			files:        map[string]bool{"/.dockerenv": true},
+			wantKind:     "docker",
+			wantRestarts: true,
+		},
+		{
+			name:         "URNETWORK_CONTAINER=1 is a supervisor with no opt-in",
+			env:          map[string]string{"URNETWORK_CONTAINER": "1"},
+			wantKind:     "docker",
+			wantRestarts: true,
+		},
+		{
+			name:         "the retired exit-75 ack changes nothing",
+			files:        map[string]bool{"/.dockerenv": true},
+			env:          map[string]string{"URNETWORK_EXIT75_OK": "1"},
+			wantKind:     "docker",
+			wantRestarts: true,
+		},
+		{
+			name:         "an unknown init marker is not a supervisor",
+			env:          map[string]string{"URNETWORK_INIT": "openrc"},
+			wantKind:     "none",
+			wantRestarts: false,
+		},
+		{
+			name:         "none",
+			env:          map[string]string{},
+			wantKind:     "none",
+			wantRestarts: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			envFn := func(k string) string {
+				if tc.env != nil {
+					return tc.env[k]
+				}
+				return ""
+			}
+			fileFn := func(p string) bool {
+				if tc.files != nil {
+					return tc.files[p]
+				}
+				return false
+			}
+			gotKind, gotRestarts := thrashSupervisorKind(envFn, fileFn)
+			if gotKind != tc.wantKind || gotRestarts != tc.wantRestarts {
+				t.Errorf("thrashSupervisorKind() = (%q, %v), want (%q, %v)",
+					gotKind, gotRestarts, tc.wantKind, tc.wantRestarts)
+			}
+		})
+	}
+}
+
+func TestThrashExitGateContainer(t *testing.T) {
+	setupHarness := func(t *testing.T, env map[string]string, fileExists func(string) bool, checkWritable func() error) (exitCalled func() bool, exitCode func() int) {
+		home := withTempHome(t)
+		if err := globalControlState.set("proxy_self_heal", "on"); err == nil {
+			t.Cleanup(func() { _ = globalControlState.clear("proxy_self_heal") })
+		}
+		if err := os.MkdirAll(filepath.Join(home, ".urnetwork"), 0o700); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(home, ".urnetwork", "proxy_self_heal"), []byte("on\n"), 0o600); err != nil {
+			t.Fatalf("write override: %v", err)
+		}
+		ResetHotSwapStateForTest()
+		t.Cleanup(ResetHotSwapStateForTest)
+		restore := shrinkThrashDurations()
+		t.Cleanup(restore)
+
+		prevEnv := thrashEnvFn
+		prevFile := thrashFileExistsFn
+		prevWritable := thrashCheckCapDirWritableFn
+		prevExit := thrashExitFn
+		prevRead := thrashReadFn
+		t.Cleanup(func() {
+			thrashEnvFn = prevEnv
+			thrashFileExistsFn = prevFile
+			thrashCheckCapDirWritableFn = prevWritable
+			thrashExitFn = prevExit
+			thrashReadFn = prevRead
+		})
+
+		if env != nil {
+			thrashEnvFn = func(k string) string { return env[k] }
+		} else {
+			thrashEnvFn = func(string) string { return "" }
+		}
+		if fileExists != nil {
+			thrashFileExistsFn = fileExists
+		} else {
+			thrashFileExistsFn = func(string) bool { return false }
+		}
+		if checkWritable != nil {
+			thrashCheckCapDirWritableFn = checkWritable
+		}
+
+		calls := 0
+		var psiFull, swapIn uint64
+		thrashReadFn = func() thrashRead {
+			calls++
+			if calls == 1 {
+				return thrashRead{psiSomeOK: true, psiFullOK: true, psiSomeUnit: true, psiUnit: true, swapOK: true, swapUnit: true, ramAvailOK: true, ramAvailMiB: 500}
+			}
+			psiFull += 50_000_000
+			swapIn += 100_000
+			return thrashRead{
+				psiSomeTotal: psiFull, psiFullTotal: psiFull,
+				psiSomeOK: true, psiFullOK: true, psiSomeUnit: true, psiUnit: true,
+				swapIn: swapIn, swapOut: swapIn, swapOK: true, swapUnit: true,
+				unitSwapMiB: 3000, unitSwapOK: true,
+				hostSwapUsedMiB: 3300, hostSwapTotalMiB: 3300, hostSwapOK: true,
+				heapFrac: 3.1, heapUsedMiB: 2100, heapLimitMiB: 680, heapOK: true,
+				ramAvailMiB: 82, ramAvailOK: true,
+			}
+		}
+
+		var called atomic.Bool
+		var code atomic.Int32
+		code.Store(-1)
+		thrashExitFn = func(c int) {
+			code.Store(int32(c))
+			called.Store(true)
+		}
+
+		return called.Load, func() int { return int(code.Load()) }
+	}
+
+	t.Run("container with an unwritable cap dir refuses with persist-failed", func(t *testing.T) {
+		exitCalled, _ := setupHarness(t, map[string]string{"URNETWORK_CONTAINER": "1"}, nil, func() error {
+			return errors.New("state dir read-only")
+		})
+
+		rt := thrashRates{fullFrac: 0.5, fullOK: true, swapOK: true, swapInPS: 500, swapOutPS: 500}
+		rdUnit := thrashRead{unitSwapOK: true, unitSwapMiB: 3000, hostSwapOK: true, hostSwapUsedMiB: 3300, hostSwapTotalMiB: 3300}
+		esc := thrashEscalate(time.Now(), rt, rdUnit, true, "unit", 0.9, true)
+		if esc.Code != "persist-failed" || esc.Action != "alert" {
+			t.Fatalf("thrashEscalate got (%s, %s), want (alert, persist-failed)", esc.Action, esc.Code)
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 80*time.Millisecond)
+		defer cancel()
+		runThrashWatchdog(ctx, true)
+
+		if exitCalled() {
+			t.Fatal("thrashExitFn was called when cap dir is not writable")
+		}
+	})
+
+	t.Run("container with a writable cap dir calls exitFn 75", func(t *testing.T) {
+		exitCalled, exitCode := setupHarness(t, map[string]string{"URNETWORK_CONTAINER": "1"}, nil, nil)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		done := make(chan struct{})
+		go func() {
+			runThrashWatchdog(ctx, true)
+			close(done)
+		}()
+
+		select {
+		case <-done:
+		case <-time.After(4 * time.Second):
+			t.Fatal("watchdog timed out waiting for escalation")
+		}
+
+		if !exitCalled() {
+			t.Fatal("thrashExitFn was not called for a container with a writable cap dir")
+		}
+		if exitCode() != thrashExitCode {
+			t.Fatalf("exit code = %d, want thrashExitCode (%d)", exitCode(), thrashExitCode)
+		}
+		if st := readThrashCapState(); len(st.Restarts) == 0 {
+			t.Fatal("thrash cap state must record the restart")
+		}
+	})
+
+	t.Run("dockerenv with a writable cap dir calls exitFn 75", func(t *testing.T) {
+		dockerFile := func(p string) bool { return p == "/.dockerenv" }
+		exitCalled, exitCode := setupHarness(t, nil, dockerFile, nil)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		done := make(chan struct{})
+		go func() {
+			runThrashWatchdog(ctx, true)
+			close(done)
+		}()
+
+		select {
+		case <-done:
+		case <-time.After(4 * time.Second):
+			t.Fatal("watchdog timed out waiting for escalation")
+		}
+
+		if !exitCalled() {
+			t.Fatal("thrashExitFn was not called for dockerenv with a writable cap dir")
+		}
+		if exitCode() != thrashExitCode {
+			t.Fatalf("exit code = %d, want thrashExitCode (%d)", exitCode(), thrashExitCode)
+		}
+	})
+}
+
+// A hung volume must not stall the watchdog: the probe is bounded by the same
+// timeout as the cap write and a timeout is a failed probe.
+func TestThrashCapDirWritableBoundedTimesOut(t *testing.T) {
+	prevProbe, prevTimeout := thrashCheckCapDirWritableFn, thrashPersistTimeout
+	t.Cleanup(func() { thrashCheckCapDirWritableFn, thrashPersistTimeout = prevProbe, prevTimeout })
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release) })
+	thrashCheckCapDirWritableFn = func() error { <-release; return nil }
+	thrashPersistTimeout = 50 * time.Millisecond
+
+	start := time.Now()
+	err := thrashCapDirWritableBounded()
+	if err == nil {
+		t.Fatal("a probe that never returns must fail")
+	}
+	if time.Since(start) > 2*time.Second {
+		t.Fatalf("the probe was not bounded: took %v", time.Since(start))
+	}
+
+	thrashCheckCapDirWritableFn = func() error { return nil }
+	if err := thrashCapDirWritableBounded(); err != nil {
+		t.Fatalf("a healthy probe must pass: %v", err)
+	}
+}
+
+// A heap far over its soft limit on a box with little free RAM is a spiral in
+// the making: the runtime pins a core on collection, part of the heap swaps out,
+// and within minutes the process is too starved to run any responder. PSI can
+// still read calm in that window (the stalls have not started), so the heap and
+// the free RAM alone have to count, on the severe clock.
+func TestThrashMachineHeapRunawayEscalatesAtNinetySeconds(t *testing.T) {
+	runaway := thrashRead{heapOK: true, heapFrac: 1.5, ramAvailOK: true, ramAvailMiB: 119, ramTotalOK: true, ramTotalMiB: 1969}
+	calmPSI := thrashRates{fullFrac: 0.0006, fullOK: true}
+
+	m := &thrashMachine{state: thrashCalm, stateSince: thrashT0}
+	if st := m.step(thrashT0, calmPSI, runaway); st.cur != thrashUnderPressure {
+		t.Fatalf("t0: want under-pressure, got %v", st.cur)
+	}
+	if st := m.step(thrashT0.Add(80*time.Second), calmPSI, runaway); st.cur != thrashUnderPressure {
+		t.Fatalf("t+80s: want under-pressure, got %v", st.cur)
+	}
+	if st := m.step(thrashT0.Add(91*time.Second), calmPSI, runaway); st.cur != thrashThrashing {
+		t.Fatalf("t+91s: want thrashing, got %v", st.cur)
+	}
+
+	// it must not need PSI at all
+	m2 := &thrashMachine{state: thrashCalm, stateSince: thrashT0}
+	m2.step(thrashT0, thrashRates{}, runaway)
+	if st := m2.step(thrashT0.Add(91*time.Second), thrashRates{}, runaway); st.cur != thrashThrashing {
+		t.Fatalf("no PSI: want thrashing from the heap alone, got %v", st.cur)
+	}
+}
+
+func TestThrashMachineHeapOverLimitWithRoomToSpareIsNotARunaway(t *testing.T) {
+	calmPSI := thrashRates{fullFrac: 0.0006, fullOK: true}
+	for name, rd := range map[string]thrashRead{
+		"plenty of free RAM":    {heapOK: true, heapFrac: 1.5, ramAvailOK: true, ramAvailMiB: 4000, ramTotalOK: true, ramTotalMiB: 16000},
+		"heap only mildly over": {heapOK: true, heapFrac: 1.2, ramAvailOK: true, ramAvailMiB: 100, ramTotalOK: true, ramTotalMiB: 1969},
+		"free RAM unreadable":   {heapOK: true, heapFrac: 1.6},
+		"heap unreadable":       {ramAvailOK: true, ramAvailMiB: 100, ramTotalOK: true, ramTotalMiB: 1969},
+	} {
+		m := &thrashMachine{state: thrashCalm, stateSince: thrashT0}
+		m.step(thrashT0, calmPSI, rd)
+		if st := m.step(thrashT0.Add(10*time.Minute), calmPSI, rd); st.cur != thrashCalm {
+			t.Fatalf("%s: want calm, got %v", name, st.cur)
+		}
+	}
+}
+
+// On a box where PSI cannot be read, the heap rule is the only thing moving the
+// machine. When the heap recovers, the machine must relax and release the
+// freeze like any other, not hold its state for the rest of the process life
+// (which would freeze pool growth for days, and let one later sample be read as
+// a long-standing severe condition).
+func TestThrashMachineHeapRunawayWithoutPSIRelaxesWhenTheHeapRecovers(t *testing.T) {
+	runaway := thrashRead{heapOK: true, heapFrac: 1.6, ramAvailOK: true, ramAvailMiB: 100, ramTotalOK: true, ramTotalMiB: 1969}
+	healthy := thrashRead{heapOK: true, heapFrac: 0.5, ramAvailOK: true, ramAvailMiB: 900, ramTotalOK: true, ramTotalMiB: 1969}
+	noPSI := thrashRates{} // fullOK false: PSI unreadable on this box
+
+	m := &thrashMachine{state: thrashCalm, stateSince: thrashT0}
+	m.step(thrashT0, noPSI, runaway)
+	if st := m.step(thrashT0.Add(91*time.Second), noPSI, runaway); st.cur != thrashThrashing {
+		t.Fatalf("runaway for 91s without PSI: want thrashing, got %v", st.cur)
+	}
+
+	// the heap recovers; PSI is still unreadable
+	var cur thrashStateT
+	for i := 1; i <= 14; i++ {
+		cur = m.step(thrashT0.Add(91*time.Second+time.Duration(i)*time.Minute), noPSI, healthy).cur
+	}
+	if cur != thrashCalm {
+		t.Fatalf("after 14 minutes of a healthy heap the machine must be calm again, got %v", cur)
+	}
+
+	// hours later one runaway sample is a fresh start, not a continuation
+	later := thrashT0.Add(5 * time.Hour)
+	if st := m.step(later, noPSI, runaway); st.cur != thrashUnderPressure {
+		t.Fatalf("one runaway sample after hours of calm must only be under-pressure, got %v", st.cur)
+	}
+}
+
+// A PSI box that blinks (fullOK false for a tick) while the heap is fine must
+// keep holding its clocks: the neutral tick exists for exactly that.
+func TestThrashMachinePSIBlinkStillHoldsPSIDrivenClocks(t *testing.T) {
+	m := &thrashMachine{state: thrashCalm, stateSince: thrashT0}
+	severe := thrashRates{fullFrac: 0.30, fullOK: true}
+	healthyHeap := thrashRead{heapOK: true, heapFrac: 0.5, ramAvailOK: true, ramAvailMiB: 900, ramTotalOK: true, ramTotalMiB: 1969}
+	m.step(thrashT0, severe, healthyHeap)
+	m.step(thrashT0.Add(60*time.Second), thrashRates{}, healthyHeap) // PSI blinks
+	if st := m.step(thrashT0.Add(91*time.Second), severe, healthyHeap); st.cur != thrashThrashing {
+		t.Fatalf("the severe clock must survive a PSI blink, got %v", st.cur)
+	}
+}
+
+// A heap-runaway episode that reaches the restart gate must go through the same
+// attribution, supervisor and ring checks as a PSI-driven one.
+func TestThrashHeapRunawayStillNeedsAttributionToRestart(t *testing.T) {
+	rt := thrashRates{}
+	rd := thrashRead{heapOK: true, heapFrac: 1.6, ramAvailOK: true, ramAvailMiB: 100, ramTotalOK: true, ramTotalMiB: 1969}
+	esc := thrashEscalate(time.Now(), rt, rd, true, "unknown", 0, false)
+	if esc.Action == "restart" {
+		t.Fatalf("an unattributable runaway must alert, never restart blind, got %+v", esc)
+	}
+}
+
+// A restart driven by the heap rule must not read as a swap storm with "0%
+// stalled": the incident trail has to say what happened.
+func TestThrashOnsetMessageNamesAHeapRunaway(t *testing.T) {
+	rd := thrashRead{heapOK: true, heapFrac: 1.6, heapUsedMiB: 1500, heapLimitMiB: 945, ramAvailOK: true, ramAvailMiB: 100, ramTotalOK: true, ramTotalMiB: 1969, unitSwapOK: true, unitSwapMiB: 700}
+	msg := thrashOnsetMsg(thrashRates{fullFrac: 0.0006, fullOK: true}, rd, 0.8, true)
+	if !strings.Contains(msg, "heap") || !strings.Contains(msg, "1.6x") || strings.Contains(msg, "stalled ~0%") {
+		t.Fatalf("a heap runaway must be described as one: %q", msg)
+	}
+	if got := thrashRestartReason(thrashRates{fullFrac: 0.0006, fullOK: true}, rd); !strings.Contains(got, "heap runaway") {
+		t.Fatalf("the ledger reason must say heap runaway, got %q", got)
+	}
+	// a plain swap storm keeps its wording
+	storm := thrashRead{heapOK: true, heapFrac: 0.7, ramAvailOK: true, ramAvailMiB: 100, ramTotalOK: true, ramTotalMiB: 1969}
+	if got := thrashRestartReason(thrashRates{fullFrac: 0.4, fullOK: true, swapOK: true, swapInPS: 5000}, storm); !strings.Contains(got, "swap thrash") {
+		t.Fatalf("a swap storm keeps the swap wording, got %q", got)
 	}
 }

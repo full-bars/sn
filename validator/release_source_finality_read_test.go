@@ -60,17 +60,9 @@ func newReleaseSourceFinalityReadFixture(t *testing.T) *releaseSourceFinalityRea
 	})
 	receipt := installReleaseHistoricalReconcileReceipt(t, source.native, source.metadataHex, prepared, events)
 	historical := *source.native.chain
-	if err := authenticateHistoricalNativeRuntimeAtContext(t.Context(), &historical, &source.config, source.native.block); err != nil {
-		t.Fatal(err)
-	}
-	if err := historical.ValidatePreparedSource(prepared); err != nil {
-		t.Fatal(err)
-	}
-	eventsKey, err := types.CreateStorageKey(historical.Meta, "System", "Events")
-	if err != nil {
-		t.Fatal(err)
-	}
-	self := &releaseSourceFinalityReadFixture{source: source, receipt: receipt, chain: &historical, events: eventsKey.Hex()}
+	self := &releaseSourceFinalityReadFixture{source: source, receipt: receipt, chain: &historical}
+	// The runtime proof binds the exact transport client, so the fault seam is
+	// installed before authentication; faults stay nil until a test sets one.
 	api := *historical.API
 	original := api.Client
 	api.Client = &releaseHistoricalReconcileClient{receipt: receipt, validatorRuntimeIdentityTestClient: &validatorRuntimeIdentityTestClient{callContext: func(ctx context.Context, target any, method string, args ...any) error {
@@ -83,6 +75,18 @@ func newReleaseSourceFinalityReadFixture(t *testing.T) *releaseSourceFinalityRea
 		return original.CallContext(ctx, target, method, args...)
 	}}}
 	historical.API = &api
+	if err := authenticateHistoricalNativeRuntimeAtContext(t.Context(), &historical, &source.config, source.native.block); err != nil {
+		t.Fatal(err)
+	}
+	if err := historical.ValidatePreparedSource(prepared); err != nil {
+		t.Fatal(err)
+	}
+	eventsKey, err := types.CreateStorageKey(historical.Meta, "System", "Events")
+	if err != nil {
+		t.Fatal(err)
+	}
+	self.events = eventsKey.Hex()
+	self.requests = nil
 	return self
 }
 

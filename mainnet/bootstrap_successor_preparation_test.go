@@ -598,7 +598,9 @@ func TestBootstrapSuccessorPreparationSerializesBeforeClaimPublication(t *testin
 }
 
 // A fixed name that appears after the census must not be overwritten by stage
-// publication. The no-replace rename preserves both competing pieces of evidence.
+// publication. The member census reserves the exact pending member before its
+// stage is written, so the next boundary refuses the competing file as lost
+// custody, before the no-replace rename, and both pieces of evidence remain.
 func TestBootstrapSuccessorPreparationNeverOverwritesPublicationCollision(t *testing.T) {
 	for _, kind := range []string{"claim", "record"} {
 		approval, _, storage := newBootstrapSuccessorPreparationStorageTestApproval(t)
@@ -621,7 +623,7 @@ func TestBootstrapSuccessorPreparationNeverOverwritesPublicationCollision(t *tes
 		if store != nil {
 			store.close()
 		}
-		if retained == nil || err == nil || !strings.Contains(err.Error(), "publication refused an existing fixed name") || !maps.Equal(retained, bootstrapSuccessorPreparationTestFiles(t, directory)) {
+		if retained == nil || !errors.Is(err, durablevolume.ErrIdentity) || !strings.Contains(err.Error(), "pending successor publication changed its exact member") || !maps.Equal(retained, bootstrapSuccessorPreparationTestFiles(t, directory)) {
 			t.Fatalf("preparation overwrote a fixed-name publication collision: %s %v", kind, err)
 		}
 	}

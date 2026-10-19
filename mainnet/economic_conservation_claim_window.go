@@ -291,6 +291,10 @@ func (self *economicConservationArchiveView) setClaimBasis(policy economicConser
 	}
 	bytes := uint64(len(encoded)) + 256*entries
 	entryLimit, byteLimit := self.resources.IndexEntries/2, self.resources.IndexBytes/2
+	if self.principalReservedBytes > byteLimit {
+		return errMonitorEconomicCapacity
+	}
+	byteLimit -= self.principalReservedBytes
 	peakEntries, peakBytes := max(entries, self.claimBasisEntries), max(bytes, self.claimBasisBytes)
 	if peakEntries > entryLimit || self.entries > entryLimit-peakEntries || peakBytes > byteLimit || self.bytes > byteLimit-peakBytes {
 		return errors.New("economic Claim predecessor needs reviewed entry/byte capacity before admission")

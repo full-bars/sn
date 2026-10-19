@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Snapshot restore runs through the actual public command and the original
 // owner constructors. Restored logical paths stay unchanged where original

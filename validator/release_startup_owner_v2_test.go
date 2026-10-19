@@ -28,9 +28,9 @@ import (
 
 // Existing real startup proves the activation signatures, exact native history,
 // dormant disk census and protected destinations. Readers retain those origins.
-func newReleaseStartupOwnerV2TestFixture(t *testing.T) (*releaseRuntimeV2TestFixture, *ReleaseSteerer) {
+func newReleaseStartupOwnerV2TestFixture(t *testing.T, configure ...func(*ReleaseConfig)) (*releaseRuntimeV2TestFixture, *ReleaseSteerer) {
 	t.Helper()
-	fixture := newReleaseRuntimeV2TestFixture(t)
+	fixture := newReleaseRuntimeV2TestFixtureWithBounds(t, nil, configure...)
 	contexts := make([]*ReleaseMeasurementContext, len(fixture.runtimes))
 	for index, runtime := range fixture.runtimes {
 		operator := fixture.runtime.cfg.Operators[index]

@@ -29,41 +29,47 @@ func newEvmEscrowFixture(t *testing.T, uid uint16) *evmCreateFixture {
 	f.config.Plan.MaximumTotalWei = "2170000000"
 	f.config.Plan.MaximumAttempts = 5
 	f.publishConfig()
-	// PUSH selector; compare calldata selector; jump to the patched body.
-	dispatch := func(code []byte, signature string) ([]byte, int) {
-		code = append(code, 0x60, 0x00, 0x35, 0x60, 0xe0, 0x1c, 0x63)
-		code = append(code, crypto.Keccak256([]byte(signature))[:4]...)
-		code = append(code, 0x14, 0x60, 0x00, 0x57)
-		return code, len(code) - 2
+	f.installRegistrationPrecompiles(uid, [32]byte{32}, ss58.EvmMirrorPubkey(vault))
+	f.state.SetBalance(sender, uint256.NewInt(10_000_000_000_000), tracing.BalanceChangeUnspecified)
+	for hash := range f.history.states {
+		f.history.states[hash] = f.state.Copy()
 	}
-	neuron, uidJump := dispatch(nil, "getUid(uint16,bytes32)")
-	neuron, registerJump := dispatch(neuron, "registerLimit(uint16,bytes32,uint64)")
+	return f
+}
+
+// PUSH selector; compare calldata selector; jump to the patched body.
+func evmTestPrecompileDispatch(code []byte, signature string) ([]byte, int) {
+	code = append(code, 0x60, 0x00, 0x35, 0x60, 0xe0, 0x1c, 0x63)
+	code = append(code, crypto.Keccak256([]byte(signature))[:4]...)
+	code = append(code, 0x14, 0x60, 0x00, 0x57)
+	return code, len(code) - 2
+}
+
+// The neuron precompile registers one hotkey at a fixed UID and the
+// metagraph maps that UID to the hotkey and its owning coldkey.
+func (self *evmCreateFixture) installRegistrationPrecompiles(uid uint16, hotkey, coldkey [32]byte) {
+	neuron, uidJump := evmTestPrecompileDispatch(nil, "getUid(uint16,bytes32)")
+	neuron, registerJump := evmTestPrecompileDispatch(neuron, "registerLimit(uint16,bytes32,uint64)")
 	neuron = append(neuron, 0x60, 0x00, 0x60, 0x00, 0xfd)
 	neuron[uidJump] = byte(len(neuron))
 	// The UID word stays zero until registration; exists comes from storage.
 	neuron = append(neuron, 0x5b, 0x60, 0x00, 0x54, 0x60, 0x00, 0x52, 0x60, 0x00, 0x54, 0x61, byte(uid>>8), byte(uid), 0x02, 0x60, 0x20, 0x52, 0x60, 0x40, 0x60, 0x00, 0xf3)
 	neuron[registerJump] = byte(len(neuron))
 	neuron = append(neuron, 0x5b, 0x60, 0x01, 0x60, 0x00, 0x55, 0x00)
-	f.state.SetCode(common.HexToAddress("0x804"), neuron, tracing.CodeChangeUnspecified)
-	metagraph, hotkeyJump := dispatch(nil, "getHotkey(uint16,uint16)")
-	metagraph, coldkeyJump := dispatch(metagraph, "getColdkey(uint16,uint16)")
+	self.state.SetCode(common.HexToAddress("0x804"), neuron, tracing.CodeChangeUnspecified)
+	metagraph, hotkeyJump := evmTestPrecompileDispatch(nil, "getHotkey(uint16,uint16)")
+	metagraph, coldkeyJump := evmTestPrecompileDispatch(metagraph, "getColdkey(uint16,uint16)")
 	metagraph = append(metagraph, 0x60, 0x00, 0x60, 0x00, 0xfd)
-	mirror := ss58.EvmMirrorPubkey(vault)
 	for _, branch := range []struct {
 		jump int
 		word [32]byte
-	}{{jump: hotkeyJump, word: [32]byte{32}}, {jump: coldkeyJump, word: mirror}} {
+	}{{jump: hotkeyJump, word: hotkey}, {jump: coldkeyJump, word: coldkey}} {
 		metagraph[branch.jump] = byte(len(metagraph))
 		metagraph = append(metagraph, 0x5b, 0x7f)
 		metagraph = append(metagraph, branch.word[:]...)
 		metagraph = append(metagraph, 0x60, 0x00, 0x52, 0x60, 0x20, 0x60, 0x00, 0xf3)
 	}
-	f.state.SetCode(common.HexToAddress("0x802"), metagraph, tracing.CodeChangeUnspecified)
-	f.state.SetBalance(sender, uint256.NewInt(10_000_000_000_000), tracing.BalanceChangeUnspecified)
-	for hash := range f.history.states {
-		f.history.states[hash] = f.state.Copy()
-	}
-	return f
+	self.state.SetCode(common.HexToAddress("0x802"), metagraph, tracing.CodeChangeUnspecified)
 }
 
 // Three real completed ancestors precede the first escrow signature import.

@@ -1,0 +1,125 @@
+# SN25 mainnet protocol policy. The owner approved these values on October 7;
+# the policy is not installed yet. Its hash is bound into the contracts and the
+# validator, server and treasury configs. Comments and key order don't change
+# the hash; any value does.
+#
+# One operator and one validator, a one-day first epoch (epoch 0) and then a
+# steady seven-day cadence from epoch 1, the 32768 weight cap the treasury
+# policy requires, and the zero-price launch from price.yml (all rates 0,
+# equal_demand). The 10%/90% provider/reserve split is not a field here; it
+# lives in the separately hashed treasury policy.
+policy:
+  schema: urnetwork-policy-v1
+  network_profile: mainnet
+  policy_id: 1
+  # A fresh installation starts at 0. Later changes are scheduled successors
+  # with a greater policy_id and effective_epoch.
+  effective_epoch: 0
+  settlement:
+    # The initial cadence covers epoch 0 only: one day of 12-second blocks, so
+    # the validator can activate at epoch 1 a day after the contracts deploy
+    # instead of a week. The coordinator is initialized with these windows and
+    # the owner Safe schedules production_cadence from epoch 1, under the same
+    # policy hash. The settlement vault's immutable minimum claim window is
+    # derived from this epoch: 8 x 7200 blocks, about 8 days.
+    epoch_blocks: 7200
+    # The root window and close grace keep their production values, which the
+    # operator server applies when it closes and commits the previous epoch.
+    # Epoch 0 finalizes 8 hours in, inside its one-day length.
+    root_commit_window_blocks: 1200
+    finalize_offset_blocks: 2400
+    close_grace_blocks: 120
+    # Claims stay open 8 epochs (56 days) plus 1 epoch of grace.
+    claim_ttl_epochs: 8
+    claim_grace_epochs: 1
+    missed_root_action: carry_same_operator
+    expired_claim_action: carry_same_operator
+    shares_total_bps: 10000
+    rounding: largest_remainder_then_client_id_ascending
+  production_cadence:
+    # From epoch 1: seven days of 12-second blocks. Roots commit within 4 hours
+    # of an epoch's close and the epoch finalizes 48 hours in, after the audit
+    # window; 24 minutes of close grace.
+    after_accelerated_epochs: 1
+    epoch_blocks: 50400
+    root_commit_window_blocks: 1200
+    finalize_offset_blocks: 14400
+    close_grace_blocks: 120
+  steering:
+    # Launch spec: start theta at 0.3. It steers only the providers' 10%.
+    theta:
+      numerator: 3
+      denominator: 10
+    # The designed quality clamp, score smoothing and head fleet count.
+    quality_transform:
+      kind: clamp_ppm
+      minimum_ppm: 750000
+      maximum_ppm: 1000000
+    head_score_ema:
+      numerator: 1
+      denominator: 4
+    maximum_head_fleets: 200
+    # Required by the treasury policy. Each of the two reserve recipients takes
+    # 45% and the providers 10%, so every UID stays under the cap.
+    max_weight_limit_u16: 32768
+    empty_channel: cede_to_nonempty
+    arithmetic: integer_rational_v1
+  deposit:
+    unit: rao_per_gib
+    # At zero price no deposit is ever sent, so neither cap binds yet. Both must
+    # be nonzero, with the per-operator epoch cap at most the lifetime campaign
+    # cap; a successor policy sets real caps when deposits start.
+    epoch_cap_rao_per_operator: 10000000000
+    total_test_campaign_cap_rao: 196000000000
+    tier_snapshot: conviction_before_epoch
+    usage_lag_epochs: 1
+    usage_artifact: signed_payout_artifact_total_usage_bytes
+    mismatch_action: zero_pool_weight
+    unavailable_action: zero_pool_weight_after_root_window
+    # price.yml: tiers at 0 and 1000 alpha, every rate 0.
+    tiers:
+      - min_conviction_rao: 0
+        rate_numerator_rao_per_gib: 0
+        rate_denominator: 1
+      - min_conviction_rao: 1000000000000
+        rate_numerator_rao_per_gib: 0
+        rate_denominator: 1
+    zero_or_invalid_rate: halt
+    # An all-zero schedule requires equal_demand.
+    zero_rate_action: equal_demand
+  verify:
+    # Server's verify defaults, as on testnet. egress_hash_key_id must match the
+    # mainnet verify.yml, which holds the secret egress hash key.
+    trail_depth: 8
+    step_timeout_seconds: 30
+    step_timeout_grace_seconds: 5
+    trail_ttl_grace_seconds: 60
+    egress_ttl_seconds: 600
+    egress_refresh_seconds: 120
+    reliability_a_min: 8
+    stats_period_seconds: 900
+    egress_ipv4_prefix: 29
+    egress_ipv6_prefix: 48
+    egress_hash_key_id: mainnet-v1
+    soft_guardrails_enabled: false
+    hard_seed_per_minute_per_source: 40
+    hard_extend_per_minute_per_source: 240
+    hard_active_trails_per_source: 32
+  binding:
+    schema: urnetwork-fleet-binding-v1
+    changes_effective_next_epoch: true
+    # Fleets re-sign their bindings about every 3 months (12 seven-day epochs)
+    # instead of the 32-epoch contract default.
+    maximum_validity_epochs: 12
+    commitments_required: true
+    client_signature: ed25519
+    hotkey_signature: sr25519
+  safety:
+    # One operator (UR) and one validator (ur-mainnet) at launch, by owner
+    # decision. The validator scores UR's own pool, so nothing is masked.
+    minimum_healthy_no_count: 1
+    minimum_live_validator_count: 1
+    maximum_finalized_head_lag_blocks: 3
+    stop_on_runtime_change: true
+    stop_on_policy_mismatch: true
+    stop_on_index_gap: true

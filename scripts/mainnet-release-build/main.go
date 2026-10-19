@@ -50,6 +50,7 @@ type buildConfig struct {
 	Version         string          `json:"version"`
 	SourceDateEpoch int64           `json:"source_date_epoch"`
 	ContractCatalog string          `json:"contract_catalog,omitempty"`
+	DependencyMode  string          `json:"dependency_mode,omitempty"`
 	Go              toolPin         `json:"go"`
 	Forge           toolPin         `json:"forge"`
 	Solc            toolPin         `json:"solc"`
@@ -99,6 +100,7 @@ type buildManifest struct {
 	Version                 string                         `json:"version"`
 	SourceDateEpoch         int64                          `json:"source_date_epoch"`
 	ContractCatalog         string                         `json:"contract_catalog"`
+	DependencyMode          string                         `json:"dependency_mode,omitempty"`
 	Repositories            []repositoryPin                `json:"repositories"`
 	Roles                   []buildRole                    `json:"roles"`
 	Modules                 map[string][]buildModule       `json:"effective_modules"`
@@ -304,10 +306,24 @@ func verifyBuildTool(pin toolPin) error {
 	return nil
 }
 
+// Pinned mode takes the SDK, Connect and SCTP from checksum-bound modules;
+// local mode takes them and the gVisor fork from census checkouts. Omission
+// keeps the original pinned meaning of an existing config, and the manifest
+// always records the mode explicitly.
+func (self buildConfig) dependencyMode() string {
+	if self.DependencyMode == "" {
+		return "pinned"
+	}
+	return self.DependencyMode
+}
+
 // Fixed role/output scope avoids accidentally narrowing to a convenient subset.
 func (self buildConfig) validate() error {
 	if self.ContractCatalog != "" && self.ContractCatalog != "retained" && self.ContractCatalog != "fresh" {
 		return errors.New("contract catalogue must be retained or fresh")
+	}
+	if self.DependencyMode != "" && self.DependencyMode != "pinned" && self.DependencyMode != "local" {
+		return errors.New("dependency mode must be pinned or local")
 	}
 	label := regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$`)
 	if self.Schema != buildSchema || !label.MatchString(self.CandidateId) || !label.MatchString(self.Version) || self.SourceDateEpoch <= 0 {
@@ -323,6 +339,11 @@ func (self buildConfig) validate() error {
 		return errors.New("build output must be outside the source workspace")
 	}
 	wanted := map[string]string{"sn": "sn", "server": "server", "proxy": "proxy", "glog": "glog", "goidenticons": "goidenticons", "userwireguard": "userwireguard", "warp": "warp", "forge-std": "sn/evm/lib/forge-std", "openzeppelin-contracts": "sn/evm/lib/openzeppelin-contracts", "openzeppelin-contracts-upgradeable": "sn/evm/lib/openzeppelin-contracts-upgradeable"}
+	if self.dependencyMode() == "local" {
+		for _, name := range []string{"connect", "sdk", "gvisor"} {
+			wanted[name] = name
+		}
+	}
 	if len(self.Repositories) != len(wanted) {
 		return errors.New("release requires the complete source and Solidity library closure")
 	}

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The retained preparation export must carry enough original physical evidence
 // to verify native owner census after copying files to different inodes.

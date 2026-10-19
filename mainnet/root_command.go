@@ -248,6 +248,9 @@ func runRootCommandWithPolicy(ctx context.Context, args []string, stdout, stderr
 		if err != nil {
 			fmt.Fprintln(stderr, "root metrics admission failed")
 			publication.outcome, publication.disabled = "retrying", !rootMonitorStartupPending(err)
+			if publication.disabled {
+				publication.outcome = "unavailable"
+			}
 		}
 		defer func() {
 			if publication.store == nil {

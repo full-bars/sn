@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -45,10 +46,16 @@ func (self *attemptCutV2ReplicaTestStore) snapshot() (map[string][]byte, int, in
 }
 
 // Independent HTTP origins cannot read another replica's in-memory objects.
-func newAttemptCutV2ReplicaTestStores(t *testing.T) ([2]AttemptCutV2Replica, [2]*attemptCutV2ReplicaTestStore) {
+func newAttemptCutV2ReplicaTestStores(t *testing.T) ([]AttemptCutV2Replica, []*attemptCutV2ReplicaTestStore) {
 	t.Helper()
-	var replicas [2]AttemptCutV2Replica
-	var stores [2]*attemptCutV2ReplicaTestStore
+	return newAttemptCutV2ReplicaTestStoreCensus(t, 2)
+}
+
+// A single configured operator's own server holds the only public replica.
+func newAttemptCutV2ReplicaTestStoreCensus(t *testing.T, count int) ([]AttemptCutV2Replica, []*attemptCutV2ReplicaTestStore) {
+	t.Helper()
+	replicas := make([]AttemptCutV2Replica, count)
+	stores := make([]*attemptCutV2ReplicaTestStore, count)
 	for index := range replicas {
 		store := &attemptCutV2ReplicaTestStore{objects: map[string][]byte{}}
 		stores[index] = store
@@ -129,7 +136,7 @@ func TestAttemptCutV2ReplicaSealsRealM8AndFailedTerminal(t *testing.T) {
 	if err != nil || result == nil {
 		t.Fatalf("real replicated cut: %v", err)
 	}
-	if result.Cut.RecordCount != 10 || result.Cut.CompleteCount != 1 || result.Cut.FailedCount != 1 || result.Size == 0 || result.Origins != [2]string{replicas[0].Origin, replicas[1].Origin} {
+	if result.Cut.RecordCount != 10 || result.Cut.CompleteCount != 1 || result.Cut.FailedCount != 1 || result.Size == 0 || !slices.Equal(result.Origins, []string{replicas[0].Origin, replicas[1].Origin}) {
 		t.Fatalf("real cut census or origins changed: %+v", result)
 	}
 	for index, store := range stores {
@@ -245,7 +252,7 @@ func TestAttemptCutV2ReplicaRejectsOriginAliasesAndMissingWriters(t *testing.T) 
 		{"http://[::1]:80", "http://[0:0:0:0:0:0:0:1]"},
 		{"http://127.0.0.1", "http://[::ffff:127.0.0.1]"},
 	} {
-		var replicas [2]AttemptCutV2Replica
+		replicas := make([]AttemptCutV2Replica, len(origins))
 		for index := range replicas {
 			replicas[index] = AttemptCutV2Replica{Origin: origins[index], WriteRecords: write, WriteProofs: write, WriteMetadata: write}
 		}
@@ -253,7 +260,7 @@ func TestAttemptCutV2ReplicaRejectsOriginAliasesAndMissingWriters(t *testing.T) 
 			t.Errorf("origin aliases admitted: %v", origins)
 		}
 	}
-	replicas := [2]AttemptCutV2Replica{
+	replicas := []AttemptCutV2Replica{
 		{Origin: "https://first.test", WriteRecords: write, WriteProofs: write, WriteMetadata: write},
 		{Origin: "https://second.test", WriteRecords: write, WriteProofs: write},
 	}

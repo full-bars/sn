@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+	"time"
 )
 
 // This valid protected-file baseline is read before any refusal is injected.
@@ -132,9 +133,20 @@ func TestMonitorOperatorCredentialIncompleteRecheckCannotProveReplacement(t *tes
 	}
 }
 
+// A fixture worker can exit without ever reaching its success-only barrier.
+func TestMonitorOperatorBarrierObservesWorkerExit(t *testing.T) {
+	done := make(chan int)
+	close(done)
+	if _, err := waitMonitorTestEvent(t.Context(), done, make(chan struct{})); err == nil || !strings.Contains(err.Error(), "worker stopped") {
+		t.Fatal("exited worker was treated as a pending monitor barrier", err)
+	}
+}
+
 // The actual public multi-role command durably publishes the contradiction
 // without stopping a healthy validator. Restart retains the same incident.
 func TestMonitorOperatorCredentialContradictionPublishesAndPreservesPeer(t *testing.T) {
+	ctx, stop := context.WithTimeout(t.Context(), 30*time.Second)
+	defer stop()
 	fixture := newMonitorServicesFixture(t, "alpha")
 	policy := monitorOperatorTestPolicy()
 	policy.DatabaseFile = filepath.Join(fixture.directory, "operator.url")
@@ -150,11 +162,25 @@ func TestMonitorOperatorCredentialContradictionPublishesAndPreservesPeer(t *test
 	fixture.writePolicy(t)
 	url, entered, left := monitorServicesBlockedChain(t)
 	cancel, done, sink, _ := startMonitorOperatorTest(t, fixture, url, monitorServiceHooks{})
-	<-entered
-	first, peer := <-sink.events, <-sink.validators
+	if _, err := waitMonitorTestEvent(ctx, done, entered); err != nil {
+		t.Fatal(err)
+	}
+	first, err := waitMonitorTestEvent(ctx, done, sink.events)
+	if err != nil {
+		t.Fatal(err)
+	}
+	peer, err := waitMonitorTestEvent(ctx, done, sink.validators)
+	if err != nil {
+		t.Fatal(err)
+	}
 	cancel()
-	code := <-done
-	<-left
+	code, err := waitMonitorTestEvent(ctx, (<-chan int)(nil), done)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := waitMonitorTestEvent(ctx, (<-chan int)(nil), left); err != nil {
+		t.Fatal(err)
+	}
 	if code != 0 || peer != "alpha" || first.Publication != "published" || first.State == nil || first.State.ReadStatus != "invalid" || first.State.Read.Latest == nil || first.State.Read.Latest.FirstCode != "invalid" || first.State.Record != nil {
 		t.Fatal("public credential refusal lost severity or stopped its peer", code, peer, first)
 	}
@@ -164,9 +190,15 @@ func TestMonitorOperatorCredentialContradictionPublishesAndPreservesPeer(t *test
 		t.Fatal("actual metrics concealed the completed credential refusal", err)
 	}
 	cancel, done, sink, _ = startMonitorOperatorTest(t, fixture, url, monitorServiceHooks{})
-	second := <-sink.events
+	second, err := waitMonitorTestEvent(ctx, done, sink.events)
+	if err != nil {
+		t.Fatal(err)
+	}
 	cancel()
-	code = <-done
+	code, err = waitMonitorTestEvent(ctx, (<-chan int)(nil), done)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if code != 0 || second.State == nil || second.State.Read.Latest == nil || second.State.Read.Latest.Id != first.State.Read.Latest.Id || second.State.Read.Latest.Observations != 2 || second.State.Read.Latest.LastCode != "invalid" {
 		t.Fatal("restart erased or downgraded the original credential incident", code, second)
 	}

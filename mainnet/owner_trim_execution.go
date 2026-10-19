@@ -90,12 +90,13 @@ type ownerTrimReceiptCensus struct {
 // Coverage must include every canonical body through expiry or the finalized
 // head. Another transaction's nonce consumption is never successful expiry.
 type ownerTrimActionReconciliation struct {
-	Observation    ownerTrimObservation    `json:"observation"`
-	AnchorHash     string                  `json:"anchor_hash"`
-	CheckedFrom    uint64                  `json:"checked_from"`
-	CheckedThrough uint64                  `json:"checked_through"`
-	Receipt        *rootActionReceipt      `json:"receipt,omitempty"`
-	Census         *ownerTrimReceiptCensus `json:"receipt_census,omitempty"`
+	Observation    ownerTrimObservation       `json:"observation"`
+	AnchorHash     string                     `json:"anchor_hash"`
+	CheckedFrom    uint64                     `json:"checked_from"`
+	CheckedThrough uint64                     `json:"checked_through"`
+	Receipt        *rootActionReceipt         `json:"receipt,omitempty"`
+	Census         *ownerTrimReceiptCensus    `json:"receipt_census,omitempty"`
+	Multisig       *ownerTrimMultisigEvidence `json:"multisig,omitempty"`
 }
 
 // Validate envelope correspondence before any owner trusts an adapter result.
@@ -133,7 +134,7 @@ func (self ownerTrimActionReconciliation) validate(action ownerTrimAction, raw [
 	} else if self.Census != nil {
 		return errors.New("owner trim receipt census has no exact inclusion")
 	}
-	return nil
+	return self.validateMultisig(action)
 }
 
 // Original approval, public signature, attempt count and terminal evidence are
@@ -151,6 +152,7 @@ type ownerTrimRecord struct {
 	LastFinalizedHash string                               `json:"last_finalized_hash,omitempty"`
 	Reconciliation    *ownerTrimActionReconciliation       `json:"terminal_evidence,omitempty"`
 	Submission        *ownerTrimBestEffortSubmissionRecord `json:"best_effort_submission,omitempty"`
+	Multisig          *ownerTrimMultisigRecord             `json:"multisig,omitempty"`
 	ContentHash       string                               `json:"content_hash"`
 }
 
@@ -197,6 +199,9 @@ func (self ownerTrimRecord) validate(config ownerTrimExecutionConfig, key string
 		self.LastFinalized != 0 && (self.LastFinalized < action.BirthBlock || !rootCanonicalHash(self.LastFinalizedHash)) {
 		return errors.New("owner trim journal approval, checksum, position or allowance differs")
 	}
+	if self.Phase == "multisig" || self.Multisig != nil {
+		return self.validateMultisig(config, key)
+	}
 	var raw []byte
 	if self.Signature == "" {
 		if self.RawExtrinsic != "" || self.ExtrinsicHash != "" || self.Broadcasts != 0 || self.Phase != "reserved" && self.Phase != "signing" && self.Phase != "expired-unsigned" && self.Phase != "nonce-conflict" {
@@ -225,14 +230,20 @@ func (self ownerTrimRecord) validate(config ownerTrimExecutionConfig, key string
 		if self.Reconciliation != nil || self.Phase == "signed" && self.Broadcasts != 0 || self.Phase == "pending" && self.Broadcasts == 0 {
 			return errors.New("owner trim pending state has contradictory progress")
 		}
-	case "finalized", "dispatch-failed", "runtime-deviation", "fee-overrun", "expired", "expired-unsigned", "nonce-conflict":
+	case "finalized", "dispatch-failed", "runtime-deviation", "fee-overrun", "expired", "expired-unsigned", "nonce-conflict",
+		"approval-recorded", "executed", "inner-dispatch-failed", "cancelled", "outer-dispatch-failed", "finalized-state-conflict", "finalized-readback-pending":
 		if self.Reconciliation == nil {
 			return errors.New("owner trim terminal phase lacks canonical evidence")
 		}
 		if err := self.Reconciliation.validate(action, raw); err != nil {
 			return err
 		}
-		if ownerTrimTerminalPhase(action, *self.Reconciliation, len(raw) != 0) != self.Phase || self.LastFinalized != self.Reconciliation.Observation.FinalizedNumber || self.LastFinalizedHash != self.Reconciliation.Observation.FinalizedHash {
+		// Each record classifies its own action family; a step never borrows another.
+		phase := ownerTrimTerminalPhase(action, *self.Reconciliation, len(raw) != 0)
+		if action.Multisig != nil {
+			phase = ownerTrimMultisigPhase(action, *self.Reconciliation, len(raw) != 0)
+		}
+		if phase != self.Phase || self.LastFinalized != self.Reconciliation.Observation.FinalizedNumber || self.LastFinalizedHash != self.Reconciliation.Observation.FinalizedHash {
 			return errors.New("owner trim terminal phase contradicts finalized evidence")
 		}
 	default:
@@ -283,6 +294,9 @@ func (self *ownerTrimExecutor) step(ctx context.Context) (ownerTrimStepResult, e
 	result := ownerTrimStepResult{Status: "blocked"}
 	if ctx == nil || self.poisoned || self.store == nil {
 		return result, errors.Join(errors.New("owner trim requires context and an open durable owner"), self.failure)
+	}
+	if self.config.Action.Multisig != nil {
+		return result, errors.New("owner trim native multisig steps use their own ordered signatory owner")
 	}
 	record, err := self.store.load()
 	if err == nil {

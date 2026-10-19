@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Reviewed capacity covers serialized accepted paths. These public planners
 // must reserve the bytes an original successor really needs after escaping.

@@ -1,0 +1,445 @@
+{
+  "async_debit_source_correction": {
+    "causal_controls": "UNEXECUTED",
+    "control_addendum_limit": "Assertion-diagnostic precision only; same9 controls/11 designated failures, all execution pending. Original handoff and controls preserved.",
+    "control_handoff_v2": {
+      "bytes": 1296,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/async-debit-deadline-fix/evidence/CONTROL-HANDOFF-v2.json",
+      "sha256": "a9c4931d3b8818da0314446d838e6e3a28d93d1460f9339d2fc4855628f7ef0d"
+    },
+    "controls": {
+      "bytes": 13527,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/async-debit-deadline-fix/evidence/controls-v2.json",
+      "sha256": "901aca7a16dffbaf0a68a6f4a8e094b425c4ede0ac9228e2bd6b6d5f27d5f384"
+    },
+    "correction": [
+      "Use existing bounded server.InspectErrorCauses and require every observed leaf to be an exact allowed cancellation sentinel; incomplete or absent branches and hard siblings cannot authorize a page yield.",
+      "Keep debit visited-prefix, live-parent, stopped-child and exact page-deadline cause gates. Fix the original database fixture to require both retained marker and actual cancellation without changing financial terminal assertions.",
+      "Adjacent legacy settlement preserves the exact stopped transaction failure and previous cursor before any retry-state write, and grants normal yield only to the same complete cancellation-only graph. Public limit validation, 15-second owner and all SQL remain unchanged."
+    ],
+    "handoff": {
+      "bytes": 5597,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/async-debit-deadline-fix/evidence/HANDOFF.json",
+      "sha256": "b366bd3d7f524a443b445303a25fbab294e7b35219eaf54e8527e5fa2370cb26"
+    },
+    "independent_control_source_review": {
+      "bytes": 19930,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/async-debit-deadline-review/CONTROLS-24f75908-SOURCE-REVIEW.json",
+      "sha256": "bcde85ba3bd73c0b0ce4fa72d9df2ecdf309d1a329bae5a43cf078331d96cc49"
+    },
+    "merged_commit": "3ef7bd034d3167f68aff5e8cb2eb64ea1fe62135",
+    "normal": "UNEXECUTED",
+    "observed_server_main": "62104c486e960efbb17ea8dd235e54ff666545af",
+    "original_control_manifest_preserved": {
+      "bytes": 11639,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/async-debit-deadline-fix/evidence/controls.json",
+      "sha256": "7c2d67a5e1404d81be4face78b100734628019e9c2cd8c3a5c2ff745b6b29517"
+    },
+    "original_failed_root": "TestAsyncDebitPageDeadlineResumesCommittedAccounting",
+    "original_failure_preserved": true,
+    "race": "UNEXECUTED",
+    "scope_accounting": "Two new roots and nine controls are explicit additive owner obligations, not silently included in the preserved2863/393 catalog. This checkpoint performs no new whole-source union census.",
+    "scope_limit": "Six owned source blobs only; later Server main includes other source changes and receives no whole-module result inheritance.",
+    "selectors": {
+      "bytes": 5682,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/async-debit-deadline-fix/evidence/selectors.json",
+      "sha256": "5e4c38630c14bebc9ab456d55289a7cc1c54114e278f064049a5d2c872ecb7fc"
+    },
+    "six_owned_files": [
+      {
+        "bytes": 4802,
+        "equal_in_observed_server": "62104c486e960efbb17ea8dd235e54ff666545af",
+        "git_blob": "ef218358cd41039593d5c988be52c8c5acb372f3",
+        "path": "model/subscription_legacy_page_cause_test.go",
+        "sha256": "c86095d8ec75d9e437fb8523082731a8c290415a0f338c4a5661bf6a65670c03"
+      },
+      {
+        "bytes": 15391,
+        "equal_in_observed_server": "62104c486e960efbb17ea8dd235e54ff666545af",
+        "git_blob": "ca2a37de397d75aa25c20d937c4a76084f69edc9",
+        "path": "model/subscription_legacy_settlement.go",
+        "sha256": "9539caf2f1da8e484aaa1ac078de795ece9069a86e052302890df8cff82a6d7c"
+      },
+      {
+        "bytes": 808,
+        "equal_in_observed_server": "62104c486e960efbb17ea8dd235e54ff666545af",
+        "git_blob": "f975ce510f08f03070fbc5f61dd3d6c61807004f",
+        "path": "model/subscription_page_cancellation.go",
+        "sha256": "4318bf7150cd0a92e600fb485a41c43821a98ede6e76f997a0576cd276d9842b"
+      },
+      {
+        "bytes": 3055,
+        "equal_in_observed_server": "62104c486e960efbb17ea8dd235e54ff666545af",
+        "git_blob": "95eb8e46c9305d704ddf6dbec9f83dc2e9ac55e9",
+        "path": "model/subscription_page_cancellation_test.go",
+        "sha256": "cf228cc4f6bb4be5f959d9018a37286ace8c7674a58c0bb4e53565e77a0f01a5"
+      },
+      {
+        "bytes": 12232,
+        "equal_in_observed_server": "62104c486e960efbb17ea8dd235e54ff666545af",
+        "git_blob": "40fcc82ece20bf6aa4771cdf9e517e3309baeef0",
+        "path": "model/subscription_transfer_debit.go",
+        "sha256": "45161ab3af4019b172dbc4de2a7ff1d7733b0cb62b9aa231407fcd86a9b3ea5e"
+      },
+      {
+        "bytes": 10792,
+        "equal_in_observed_server": "62104c486e960efbb17ea8dd235e54ff666545af",
+        "git_blob": "4c4adce48dae0112f67a150f3108c94bfbdaead7",
+        "path": "model/subscription_transfer_debit_page_test.go",
+        "sha256": "8a997a92bf85e6c3107f67457404a6cdf6a8895549a270a3841c6d193be79af3"
+      }
+    ],
+    "source": "24f759084deb522adbe6fddf6a0cea2767c1fabf",
+    "source_ack": {
+      "bytes": 7069,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/async-debit-deadline-review/SOURCE-REVIEW-24f75908.json",
+      "sha256": "9422aed2132ca85749373f961d14dcbea4be76f57cd00b51ba9518bed2993887"
+    },
+    "status": "MERGED_SOURCE_FIXED_QUALIFICATION_PENDING",
+    "tests": {
+      "controls": 9,
+      "designated_control_failures_per_mode": 11,
+      "model_with_adjacent_count": 18,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "modified_existing_debit_roots": 3,
+      "new_roots": [
+        "TestSettlementPageCancellationRejectsIncompleteAndForeignCauses",
+        "TestLegacySettlementPageDeadlinePreservesJoinedFailureAndCommittedCursor"
+      ],
+      "required_model_count": 6,
+      "retained_original_debit_roots": 4,
+      "server_root_adjacent_count": 4,
+      "status": "UNEXECUTED",
+      "unchanged_busy_control": 1
+    },
+    "tree": "5c19fd370bc6759b864d8e7463e3bd81d8bb611f"
+  },
+  "author_execution": "NONE: receipt/source readback and documentation only.",
+  "documentation_base": "eabefa17f3be9d0a1038eff74d9e04fc5950b443",
+  "finite_launch_path_review": {
+    "conditional_limits": "New root lifecycle mutation is outside the selected existing-seat route; no new signer/submitter or newer runtime encoding authority is inferred.",
+    "finding": "Finite source review found no absent adapter on the selected existing-root-seat, reviewed470, owner-local Ledger and approved bootstrap/two-UR-start route. This is not general software qualification or launch acceptance.",
+    "post_activation_outcomes": "Three complete emission intervals and one full50400-block UR cycle remain postactivation acceptance outcomes.",
+    "remaining_external_inputs": "Actual owner/device approvals, identities, funding, signed configuration, installed contracts and loaded deployment authority.",
+    "review": {
+      "bytes": 16895,
+      "path": "/mnt/data/urnetwork/mainnet-launch-critical-path-review-20261005.json",
+      "sha256": "ec5a3a9c2a6520e2e1436f77cf8c6b0ec6a6d72526e848fc07517d6ba3fe4ca3"
+    }
+  },
+  "focused_core_compiler": {
+    "actual_body_roots": 0,
+    "actual_list_roots": 0,
+    "compiler_exit": -15,
+    "core_source": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+    "guard_failure": {
+      "detail": "owned resource observation failed",
+      "type": "Refused"
+    },
+    "original_wait": {
+      "bytes": 2463,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/evidence/core14-normal-compile.process-result.json",
+      "sha256": "7e30863dc371391d1522ce70afcdd3dea0611e6bf1858602054cb80063da02f1"
+    },
+    "receipt": {
+      "bytes": 6510,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/evidence/core14.owner.receipt.json",
+      "sha256": "38e14e4d08682ea8bccbb10d8dd4ae0d85e7fcbd072a4173b1147dffd12da3c4"
+    },
+    "resource_errors": [
+      {
+        "detail": "joint live process remains unstable after bounded snapshots",
+        "phase": "core14-normal-compile",
+        "type": "Refused"
+      }
+    ],
+    "retained_image": null,
+    "scope_limit": "Observer churn refusal is a harness outcome, not a product compiler diagnostic or test failure. Original Core026 222PASS/2FAIL remains separate; helper correction and actual focused requalification are pending.",
+    "selected_future_roots": 14,
+    "selection": {
+      "bytes": 3406,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/selection.json",
+      "sha256": "92cc28a142668a017082da8f32928f49aed541f8f351c506118a6fe59dc5b6e9"
+    },
+    "status": "COMPILER_STOPPED_BY_RESOURCE_OBSERVER_NO_IMAGE_OR_BODY",
+    "tree_joined": true,
+    "user_terminal": {
+      "bytes": 972,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/first-owner-closure.json",
+      "sha256": "af94ad8546f2d0256f7c5f6f8dab4c0bf5856acd5499e4ca73d4773faa4458d5"
+    }
+  },
+  "focused_server_compiler": {
+    "body_results_claimed": 0,
+    "compiler_exit": 0,
+    "image": {
+      "bytes": 87516736,
+      "device": 2081,
+      "inode": 20600902,
+      "links": 1,
+      "mode": "0500",
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model-normal-v1/model-normal.test",
+      "sha256": "24ba44cb0509463cfef16e11979b3942d8462733d19799f5c65318bed292c53f"
+    },
+    "original_wait": {
+      "bytes": 2618,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model-normal-v1/compiler.process-result.json",
+      "sha256": "cd235a2b8f89375974bddd7f29fa5c02549a489a2d71cbf14a90a1f1c98375c8"
+    },
+    "package": "./model",
+    "receipt": {
+      "bytes": 11150,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model-normal-v1/result.json",
+      "sha256": "7a4dbefcbdecbcaa56df819a398e7e896ac262f7675c6163d4ad3ec9f3f1b219"
+    },
+    "resource_errors": [],
+    "scope_limit": "Compilation on Serverf0b/Core11f99/SDK18f and SN494 Go inputs (documentation-only eabefa observed at close). No test body, race, control or later AsyncDebit source qualification.",
+    "source_heads_before": {
+      "connect": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+      "glog": "80a11b434ae90ae2221deb932daa21913919875a",
+      "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "gvisor": "c0783dba2eeff7b79692a7f122ffee5f8bd837c1",
+      "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "sdk": "18fca2edbbeac5566ef9c40027dba0e1d83be1d7",
+      "server": "f0b5238ffb663c6046c430b6542435fbc6ff0ceb",
+      "sn": "eabefa17f3be9d0a1038eff74d9e04fc5950b443",
+      "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+    },
+    "source_heads_observed": {
+      "connect": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+      "glog": "80a11b434ae90ae2221deb932daa21913919875a",
+      "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "gvisor": "c0783dba2eeff7b79692a7f122ffee5f8bd837c1",
+      "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "sdk": "18fca2edbbeac5566ef9c40027dba0e1d83be1d7",
+      "server": "f0b5238ffb663c6046c430b6542435fbc6ff0ceb",
+      "sn": "eabefa17f3be9d0a1038eff74d9e04fc5950b443",
+      "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+    },
+    "status": "NORMAL_COMPILE_PASS_BODY_PENDING",
+    "tree_joined": true,
+    "user_terminal": {
+      "bytes": 1360,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model-normal-unit-close-readback.json",
+      "sha256": "00e1e6598d809a4a06bc2938791366a151c1fb337b123ef855a229c34ac2b745"
+    }
+  },
+  "lessons": [
+    {
+      "finding": "Forecast full-selection output from measured volume with margin and stream event processing. The old64MiB guard joined the child before natural completion; preserve partial event outcomes and all unstarted/pending roots. Observed bytes and persisted bytes differ because the crossing chunk was refused before write.",
+      "future_work": "Composition owns an isolated future256MiB per-job output allowance with unchanged disk guards. No future pass or old-suite restart is implied.",
+      "kind": "full_suite_output_forecast"
+    },
+    {
+      "finding": "Rapid process creation/exit can defeat bounded snapshots. Preserve the original joined Wait and distinguish observer refusal from a product compile error; an independent Server compiler pass remains valid on its own exact inputs.",
+      "future_work": "Separate peer observer correction and focused Core qualification remain pending.",
+      "kind": "peer_process_observation"
+    },
+    {
+      "finding": "A page yield requires a complete graph of exact permitted cancellation causes plus owned completed progress. Joined cancellation is not always direct error equality, and a hard sibling must retain the original failure and cursor.",
+      "kind": "complete_cancellation_cause",
+      "qualification": "UNEXECUTED",
+      "source_fix": "24f759084deb522adbe6fddf6a0cea2767c1fabf"
+    },
+    {
+      "finding": "An implemented launch adapter and software test passes do not provide actual owner approval, device custody, funding or deployment. Postactivation interval outcomes remain separate from prelaunch adapter completeness.",
+      "kind": "activation_authority"
+    }
+  ],
+  "limits": "All original scopes, failures, skips, unfinished work and receipts remain. Optional MinIO is not required mainnet infrastructure. No deployment, signing, new authority, whole latest-source qualification or control kill is claimed.",
+  "original_fullmodel_partial_terminal": {
+    "actual_list_roots": 1865,
+    "actual_list_wait": {
+      "bytes": 3788,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal-list.process-result.json",
+      "sha256": "5fdea5c6bd4c7eca14bc0b9f3ae01708522ed1f6c50d042f5472e6b388657e5a"
+    },
+    "allowed_skip_roots": [],
+    "body_receipt": {
+      "bytes": 109550,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal.receipt.json",
+      "sha256": "3225039057da4e758878305eb68d882de8de2bc816db7b28603d47bc48ed41ab"
+    },
+    "body_wait": {
+      "bytes": 4241,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal.process-result.json",
+      "sha256": "03e9b2058fac0e9fb0a49cc8a14e052e75e577c029301d91e00fbf524dda412a"
+    },
+    "count_provenance": "Original body receipt retains empty counts/result null after the guard exception. Separate executor audit of the unchanged raw stream supplies partial observations; neither receipt is rewritten.",
+    "coverage_complete": false,
+    "failed_roots": [
+      "TestArinRemoteFullPopulationActualPGAndTwentyUnixOwners",
+      "TestArinRemoteFullPopulationEightHostsWithinTwoPipes",
+      "TestArinRemoteFullPopulationTwoHostPipesRolloverAndLatency",
+      "TestAsyncDebitPageDeadlineResumesCommittedAccounting",
+      "TestFp2BucketMembershipAndCommonGates",
+      "TestProviderWorkSessionPaidAndFreeAdmissionsKeepEqualOriginalWork",
+      "TestStatsQueryPlans"
+    ],
+    "historical_incorrect_unit_readback_preserved": {
+      "bytes": 3930,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal-owner-user-terminal-readback-v1.json",
+      "sha256": "16cf65702e096b1c8d8305a9d4c583afb336475b86558c050b93f8aa79637a92"
+    },
+    "limits": "Original d64 component only. Preserve partial passes, all failures/skips and unfinished roots. No complete suite, race, control or later-source qualification; do not restart the old full suite for bookkeeping.",
+    "mode": "normal",
+    "never_run": [
+      "TestAddAuthEmailOntoWalletOnlyAccount",
+      "TestAddAuthRefusesMalformedCredentials",
+      "TestAddAuthWithNoRecognizedMethodIsRefused",
+      "TestAddWalletAuthDoesNotSilentlyReplaceABoundWallet",
+      "TestAddWalletAuthSeesLegacyLowercaseBlockchainRow",
+      "TestBittensorAddressNetworkPrefixIsPinned",
+      "TestFilterWalletAuthsByBlockchain",
+      "TestHandleLoginWalletResolvesLegacyLowercaseBlockchainRow",
+      "TestMigratedWalletBlockchainCanonicalises",
+      "TestNetworkCreateDuplicateWalletReturnsStructuredError",
+      "TestRemoveAuthReconcilesScalarAuthTypeForNonCanonicalBlockchain",
+      "TestRemoveAuthRejectsScalarVocabularyValues",
+      "TestSS58ExhaustiveCanonicalitySweep",
+      "TestUseWalletAuthChallengeBittensorAddressGate",
+      "TestUseWalletAuthChallengeBlockchainSpellings",
+      "TestUseWalletAuthChallengeSignatureErrorsStay4xx",
+      "TestUseWalletAuthChallengeTimestampWindow",
+      "TestValidateWalletAuthDefaultsEmptyBlockchainToSolana",
+      "TestValidateWalletAuthMatrix",
+      "TestVerifySolanaSignatureLength",
+      "TestWalletAuthChallengeAttemptFailedRateLimit",
+      "TestWalletAuthChallengeAttemptSuccessfulDoNotCount",
+      "TestWalletAuthChallengeAttemptsErrorFormat",
+      "TestWalletAuthChallengeBindsBlockchainAndAddress",
+      "TestWalletAuthChallengeBittensorCreateAndUse",
+      "TestWalletAuthChallengeBittensorDenyMatrix",
+      "TestWalletAuthChallengeBittensorInvalidAddress",
+      "TestWalletAuthChallengeBittensorLateSignature",
+      "TestWalletAuthChallengeBittensorRawSignatureCliFormat",
+      "TestWalletAuthChallengeCreateAndUse",
+      "TestWalletAuthChallengeCreateBittensorInvalidAddress",
+      "TestWalletAuthChallengeCreateBittensorValidAddress",
+      "TestWalletAuthChallengeCreateInvalidAddress",
+      "TestWalletAuthChallengeCreateInvalidBlockchain",
+      "TestWalletAuthChallengeExpired",
+      "TestWalletAuthChallengeFutureTimestamp",
+      "TestWalletAuthChallengeInvalidPublicKey",
+      "TestWalletAuthChallengeInvalidSignature",
+      "TestWalletAuthChallengeLifetimeMatchesPublishedContract",
+      "TestWalletAuthChallengeMessageBittensorSignatureForms",
+      "TestWalletAuthChallengeMessageDenyRules",
+      "TestWalletAuthChallengeMessageRoundTrip",
+      "TestWalletAuthChallengeTimestampMismatch",
+      "TestWalletAuthChallengeUnsupportedBlockchain",
+      "TestWalletAuthTypeAcceptsEverySpelling",
+      "TestWalletMappingAcceptanceRetainsOriginalAndExactRetry",
+      "TestWalletMappingDirectoryChangeAndCancellationWithholdProjection",
+      "TestWalletMappingExpiryAndImmutableHistory",
+      "TestWalletMappingProjectionRollbackRetainsRetryAuthority",
+      "TestWalletMappingProspectiveSqlRefusesBackdatedAndDelayedConsent",
+      "TestWalletMappingProspectiveSqlRetryKeepsOriginalAcrossEpochAdvance",
+      "TestWalletMappingRejectsForeignCallerAndChangedIssuedMessage"
+    ],
+    "never_run_count": 52,
+    "output_guard": {
+      "child_exit": -15,
+      "crossing_chunk_not_retained_bytes": 1408,
+      "go_timeout_expired": false,
+      "limit_bytes": 67108864,
+      "natural_package_completion": false,
+      "observed_read_bytes": 67108865,
+      "retained_stdout_bytes": 67107457,
+      "tree_joined": true
+    },
+    "owner_terminal": {
+      "bytes": 126209,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal-owner.terminal.json",
+      "sha256": "eac0a468d06a2ec3027ea0a65b41ee9e10cdf134e8df94792178db69ca64302e"
+    },
+    "package": "./model",
+    "partial_event_audit": {
+      "bytes": 162564,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal-partial-terminal-event-audit-v1.json",
+      "sha256": "3e76b3a6691fc587b17f2acdba0378fdd58d7da0a6da09931b0d74f68cb89595"
+    },
+    "partial_observed_counts": {
+      "nested": {
+        "fail": 0,
+        "pass": 322,
+        "run": 323,
+        "skip": 0
+      },
+      "top_level": {
+        "fail": 7,
+        "pass": 1789,
+        "run": 1813,
+        "skip": 10
+      }
+    },
+    "raw_stdout": {
+      "bytes": 67107457,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal.stdout",
+      "sha256": "cea7c9fb9abd08d0cd6bd907ee441fe59d1302c41416488d0ac1ab4219d0a776"
+    },
+    "resource_cleanup": {
+      "cgroup_absent": true,
+      "cleanup_exit": 0,
+      "owned_database_resources_absent": true,
+      "resource_errors": [],
+      "resource_qualified": true,
+      "user_exit": 1,
+      "user_pid": 0
+    },
+    "selected_roots": 1865,
+    "skipped_roots": [
+      "TestAddReferralBonusesGrantsBothSides",
+      "TestClientScoreReaderSourceCosts",
+      "TestGeoLite2CitiesAsLegacyRowsResolveToThemselves",
+      "TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade",
+      "TestNetworkReferral",
+      "TestNetworkReferralCode",
+      "TestOnboardingRegistryFile",
+      "TestProConfig",
+      "TestReferralBonusCount",
+      "TestSubscriberGuardQueryPlan"
+    ],
+    "source_tuple": {
+      "core": "026b850248352b72255be7a966e391e0a15e74c1",
+      "server": "d64c9beb49a8637ce753103e9ea34521cc55f597",
+      "sn": "624cf1e00f45dac61bc5675e4a21eb2a8dd121e5"
+    },
+    "started_without_terminal": [
+      "TestSeedphraseUnlocksRemovingAWalletOnlyAccountsWallet",
+      "TestStAttemptUploadBudgetRejectsMissingOverflowAndInvertedCapacity",
+      "TestStAttemptUploadBudgetYAMLRejectsLossyAndUnknownNumbers",
+      "TestStAttemptUploadQuotaKeysKeepDeploymentAndAccountSeparate",
+      "TestStAttemptUploadQuotaRejectsInvalidAndCanceledBeforeRedis",
+      "TestStReservedUploadBudgetRejectsLossyOrMissingCapacity",
+      "TestStReservedUploadStableOwnerAndReplicaNamespaces"
+    ],
+    "started_without_terminal_count": 7,
+    "status": "CLOSED_INCOMPLETE_OUTPUT_GUARD",
+    "user_terminal": {
+      "bytes": 4362,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal-owner-user-terminal-readback-v2.json",
+      "sha256": "631654d0a5e5ce5a139097f7045cf265f9691caf19d90c5e36c636aeb4a9a916"
+    }
+  },
+  "prior_portable_checkpoint": {
+    "git_commit": "eabefa17f3be9d0a1038eff74d9e04fc5950b443",
+    "repository_path": "mainnet/evidence/focused-core-server-progress-20261005.json",
+    "sha256": "8d0b42df283aa1346ce9a33fe7a7af38304c67c3cc0e11fbf50b13841228c758"
+  },
+  "schema": "focused-compiler-and-incomplete-model-checkpoint-v1",
+  "scope_policy": {
+    "all_outcomes_open": true,
+    "core_operative_controls_preserved": 393,
+    "focused_deadline_utc": "2026-10-05T16:26:00Z",
+    "full_catalog_not_focused_execution_gate": true,
+    "master_roots_per_mode_preserved": 2863,
+    "original_outcomes_preserved": 38,
+    "source_recensus_performed": false
+  }
+}

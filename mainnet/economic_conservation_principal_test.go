@@ -117,7 +117,11 @@ func economicConservationPrincipalFixtureWithSource(t *testing.T, f *economicCon
 					}
 					body = append(body, raw)
 				}
-				root, err := rootExtrinsicsRoot(body, job.ExecutionStateVersion)
+				// Admitted system versions zero and one use extrinsics layout zero.
+				if job.ExecutionStateVersion > 1 {
+					t.Fatal("fixture system version is unsupported")
+				}
+				root, err := rootExtrinsicsRoot(body, 0)
 				if err != nil {
 					t.Fatal(err)
 				}

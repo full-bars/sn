@@ -12,6 +12,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 	"testing"
 
@@ -31,9 +32,9 @@ type releasePublicationV2TestFixture struct {
 	manifest    *ValidatorEvidencePublicationV2Manifest
 }
 
-func newReleasePublicationV2TestFixture(t *testing.T, trails bool) *releasePublicationV2TestFixture {
+func newReleasePublicationV2TestFixture(t *testing.T, trails bool, configure ...func(*ReleaseConfig)) *releasePublicationV2TestFixture {
 	t.Helper()
-	startup := newReleaseStartupV2TestFixture(t, true)
+	startup := newReleaseStartupV2TestFixtureWithBounds(t, true, nil, configure...)
 	startup.cfg.EvidenceV2.Bounds.Cut.Records.MaxPageBytes = 256 * 1024
 	if trails {
 		startup.trail(t, 0)
@@ -59,7 +60,7 @@ func newReleasePublicationV2TestFixture(t *testing.T, trails bool) *releasePubli
 	boundary := AttemptBoundary{SettlementEpoch: epoch, EVMBlock: 1500 + 500*(epoch-7), EVMBlockHash: attemptHex32([32]byte{byte(epoch), 0x71})}
 	self := &releasePublicationV2TestFixture{startup: startup, expected: make(map[uint64]AttemptCutV2Context), readOptions: ValidatorEvidencePublicationV2ReadOptions{
 		Window:  protocol.ValidatorEvidenceWindow{Epoch: epoch, StartBlock: 1001 + 500*(epoch-7), EndBlock: boundary.EVMBlock + 1, FinalizedBlock: boundary.EVMBlock + 1},
-		Origins: [2]string{startup.replicas[0].Origin, startup.replicas[1].Origin}, Bounds: startup.cfg.EvidenceV2.Bounds}}
+		Origins: startup.origins(), Bounds: startup.cfg.EvidenceV2.Bounds}}
 	for _, input := range startup.inputs {
 		expected := input.Context.InitialCut
 		expected.Boundary = boundary
@@ -72,7 +73,10 @@ func newReleasePublicationV2TestFixture(t *testing.T, trails bool) *releasePubli
 		t.Fatalf("actual closed census publication: %v", err)
 	}
 	self.publication = publication
-	noIds := []uint64{startup.inputs[0].Config.NoID, startup.inputs[1].Config.NoID}
+	noIds := make([]uint64, len(startup.inputs))
+	for index, input := range startup.inputs {
+		noIds[index] = input.Config.NoID
+	}
 	self.manifest, err = WriteValidatorEvidencePublicationV2Manifest(t.Context(), startup.cfg.StateDir, publication, noIds, self.readOptions.Bounds.MaxClosureBytes, self.readOptions.Bounds.MaxParticipants)
 	if err != nil {
 		t.Fatal(err)
@@ -91,12 +95,17 @@ func (self *releasePublicationV2TestFixture) options(t *testing.T) ValidatorEvid
 	bounds := self.readOptions.Bounds
 	options := ValidatorEvidenceCensusV2Options{Settlement: AttemptSettlementV2Options{Operators: make(map[uint64]AttemptSettlementV2OperatorOptions),
 		MaxParticipants: bounds.MaxParticipants, MaxTransitionBytes: bounds.MaxTransitionBytes, MaxClosureBytes: bounds.MaxClosureBytes},
-		Window: self.readOptions.Window, Hotkey: hotkey, Replicas: self.startup.replicas, SecondReplicaScratchDirectories: make(map[uint64]string)}
+		Window: self.readOptions.Window, Hotkey: hotkey, Replicas: slices.Clone(self.startup.replicas)}
+	if len(self.startup.replicas) == 2 {
+		options.SecondReplicaScratchDirectories = make(map[uint64]string)
+	}
 	options.PrivateKeys = make(map[uint64]ed25519.PrivateKey)
 	for index, input := range self.startup.inputs {
 		setup := self.startup.sealOptions(t, index)
 		options.PrivateKeys[input.Config.NoID] = input.PrivateKey
-		options.SecondReplicaScratchDirectories[input.Config.NoID] = filepath.Join(newAttemptSettlementRuntimeV2TestStateDir(t), "second")
+		if options.SecondReplicaScratchDirectories != nil {
+			options.SecondReplicaScratchDirectories[input.Config.NoID] = filepath.Join(newAttemptSettlementRuntimeV2TestStateDir(t), "second")
+		}
 		options.Settlement.Operators[input.Config.NoID] = AttemptSettlementV2OperatorOptions{Expected: self.expected[input.Config.NoID], Policy: self.startup.cfg.Policy,
 			Bounds: bounds.Cut, Measurement: AttemptCutV2MeasurementOptions{ExpectedConfig: setup.Stats.ExpectedConfig, MaxProviders: bounds.MaxProviders,
 				MaxEgressHashes: bounds.MaxEgressHashes, MaxFleetPrefixes: bounds.MaxFleetPrefixes, Replay: setup.Stats.Replay}}
@@ -192,7 +201,9 @@ func TestValidatorEvidencePublicationV2RefusesLocatorCensusDriftBeforeHttp(t *te
 	}
 	for _, mutate := range []func(*ValidatorEvidencePublicationV2Manifest){
 		func(value *ValidatorEvidencePublicationV2Manifest) { value.Members = value.Members[:1] },
-		func(value *ValidatorEvidencePublicationV2Manifest) { value.Origins[1] = value.Origins[0] },
+		func(value *ValidatorEvidencePublicationV2Manifest) {
+			value.Origins = []string{value.Origins[0], value.Origins[0]}
+		},
 		func(value *ValidatorEvidencePublicationV2Manifest) { value.Epoch++ },
 	} {
 		candidate := *fixture.manifest

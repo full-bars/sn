@@ -21,6 +21,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/urfoundation/sn/internal/durablesync"
 	"github.com/urfoundation/sn/protocol"
 	coreprotocol "github.com/urnetwork/connect/protocol"
 	"google.golang.org/protobuf/proto"
@@ -332,11 +333,7 @@ func TestWholeWorkExportsCompleteOriginalsForActualTrialProviderUniverse(t *test
 			t.Fatal("export readback", err)
 		}
 	}
-	directory, err := os.Open(root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := errors.Join(directory.Sync(), directory.Close()); err != nil {
+	if err := durablesync.SyncDir(root); err != nil {
 		t.Fatal(err)
 	}
 }

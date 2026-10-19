@@ -13,11 +13,12 @@ import (
 	"github.com/urfoundation/sn/validator"
 )
 
-// Both declarations must agree on one approved initial production scope while
+// Every declaration must agree on one approved initial production scope while
 // retaining separate validator IDs, hotkeys, configurations and custody paths.
+// The caller has already fixed the role count by schema: two, or v5's one.
 func validateBootstrapChainValidatorInspections(config bootstrapChainConfig, inspections []validator.ProductionBootstrapInspection) error {
-	if len(inspections) != 2 {
-		return errors.New("bootstrap chain requires two verified production config inspections")
+	if len(inspections) == 0 || len(inspections) != len(config.Validators) {
+		return errors.New("bootstrap chain requires a verified production config inspection for every UR role")
 	}
 	for index, inspection := range inspections {
 		role := config.Validators[index]
@@ -31,18 +32,23 @@ func validateBootstrapChainValidatorInspections(config bootstrapChainConfig, ins
 		if approval.Production == nil || len(inspection.DeclaredPaths) == 0 {
 			return errors.New("bootstrap chain validator lacks an initial production approval or custody namespaces")
 		}
+		if inspection.EvidenceActivationPending && config.Schema != bootstrapChainConfigSchemaV5 {
+			return errors.New("bootstrap chain admits an activation-pending validator config only under v5")
+		}
 		for _, expected := range config.Validators {
 			if !slices.ContainsFunc(approval.Production.ValidatorHotkeys, func(hotkey [32]byte) bool { return fmt.Sprintf("0x%x", hotkey) == expected.Hotkey }) {
 				return errors.New("bootstrap chain production validator census omits a protected UR role")
 			}
 		}
 	}
-	first, second := inspections[0], inspections[1]
-	first.Approval.ConfigHash, second.Approval.ConfigHash = [32]byte{}, [32]byte{}
-	first.Approval.ValidatorHotkey, second.Approval.ValidatorHotkey = [32]byte{}, [32]byte{}
-	if !reflect.DeepEqual(first.Approval, second.Approval) || first.PolicyHash != second.PolicyHash || first.Coordinator != second.Coordinator ||
-		first.SettlementVault != second.SettlementVault || first.DeployBlock != second.DeployBlock {
-		return errors.New("bootstrap chain validator approvals disagree on the initial production scope or contract declarations")
+	first := inspections[0]
+	first.Approval.ConfigHash, first.Approval.ValidatorHotkey = [32]byte{}, [32]byte{}
+	for _, second := range inspections[1:] {
+		second.Approval.ConfigHash, second.Approval.ValidatorHotkey = [32]byte{}, [32]byte{}
+		if !reflect.DeepEqual(first.Approval, second.Approval) || first.PolicyHash != second.PolicyHash || first.Coordinator != second.Coordinator ||
+			first.SettlementVault != second.SettlementVault || first.DeployBlock != second.DeployBlock {
+			return errors.New("bootstrap chain validator approvals disagree on the initial production scope or contract declarations")
+		}
 	}
 	return nil
 }

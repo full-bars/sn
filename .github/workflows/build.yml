@@ -102,6 +102,9 @@ jobs:
           echo "go test still flaking after 3 attempts"
           exit 1
 
+      - name: Run one-program (miner) tests
+        run: go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...
+
   lint:
     runs-on: ubuntu-latest
     permissions:
@@ -205,6 +208,10 @@ jobs:
         run: |
           chmod +x docker/scripts/test_pelican_gates.sh
           ./docker/scripts/test_pelican_gates.sh
+      - name: Docker exit 75 restart tests
+        run: |
+          chmod +x docker/scripts/test_exit75_restart.sh
+          ./docker/scripts/test_exit75_restart.sh
 
       - name: Shellcheck docker scripts (error severity)
         run: |

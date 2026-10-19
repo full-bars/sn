@@ -195,16 +195,24 @@ func TestProducerGateCustodySelectionCoversSimulatorCallEdges(t *testing.T) {
 		{path: "scenario.go", function: "runScenarioCampaignAttemptWithTimeout", callee: "runScenarioWithEvidenceRelay"},
 		{path: "evidence_relay_campaign.go", function: "runScenarioWithEvidenceRelay", callee: "runScenarioWithProbe"},
 		{path: "evidence_relay_campaign.go", function: "runScenarioWithEvidenceRelay", callee: "waitClosures"},
-		{path: "evidence_relay_campaign.go", function: "runScenarioWithEvidenceRelay", callee: "WaitThrough"},
+		{path: "evidence_relay_campaign.go", function: "runScenarioWithEvidenceRelay", callee: "WaitRange"},
 		{path: "evidence_relay_campaign.go", function: "runScenarioWithEvidenceRelay", callee: "WaitAuditPass"},
-		{path: "scenario.go", function: "Snapshot", callee: "inspectValidatorPathProofsCached"},
+		{path: "scenario.go", function: "Snapshot", callee: "precompileContinuationSnapshot"},
+		{path: "precompile_continuation.go", function: "precompileContinuationSnapshot", callee: "observe"},
+		{path: "scenario.go", function: "observeSnapshot", callee: "inspectValidators"},
+		{path: "scenario_validator_authority.go", function: "inspectValidators", callee: "inspectValidatorPathProofsCached"},
 		{path: "scenario.go", function: "inspectValidatorPathProofs", callee: "inspectValidatorPathProofsCached"},
-		{path: "scenario.go", function: "inspectValidatorPathProofsCached", callee: "loadFinalOperatorPathAuthority"},
+		{path: "scenario.go", function: "inspectValidatorPathProofsCached", callee: "loadScenarioPathAuthorityV2"},
+		// Without an activated rollover generation the original seeds apply;
+		// with one, each active seed still comes through the raw-only loader.
+		{path: "policy_rollover_observation_v2.go", function: "loadScenarioPathAuthorityV2", callee: "loadFinalOperatorPathAuthority"},
+		{path: "policy_rollover_observation_v2.go", function: "loadScenarioPathAuthorityV2", callee: "LoadRawSeedFile"},
 		{path: "scenario.go", function: "inspectValidatorPathProofsCached", callee: "VerifyProofRecord"},
 		{path: "scenario.go", function: "runScenarioWithProbe", callee: "waitClosures"},
 		{path: "scenario.go", function: "runScenarioWithProbe", callee: "collect"},
 		{path: "final_semantic_collect.go", function: "CollectFinalSemanticInputs", callee: "collectFinalValidatorInputsWithPathAuthority"},
-		{path: "final_semantic_collect.go", function: "CollectFinalSemanticInputs", callee: "loadFinalOperatorPathAuthority"},
+		{path: "final_semantic_collect.go", function: "CollectFinalSemanticInputs", callee: "loadFinalOperatorPathAuthorityV2"},
+		{path: "policy_rollover_observation_v2.go", function: "loadFinalOperatorPathAuthorityV2", callee: "loadScenarioPathAuthorityV2"},
 		{path: "final_semantic_collect.go", function: "collectFinalValidatorInputs", callee: "collectFinalValidatorInputsWithSeedObserver"},
 		{path: "final_semantic_collect.go", function: "collectFinalValidatorInputsWithSeedObserver", callee: "loadFinalOperatorPathAuthority"},
 		{path: "final_semantic_collect.go", function: "collectFinalValidatorInputsWithSeedObserver", callee: "collectFinalValidatorInputsWithPathAuthority"},
@@ -218,6 +226,10 @@ func TestProducerGateCustodySelectionCoversSimulatorCallEdges(t *testing.T) {
 		if !releaseClosureFunctionCalls(t, check.path, check.function)[check.callee] {
 			t.Errorf("%s omits actual simulator custody call %s", check.function, check.callee)
 		}
+	}
+	// Every observation runs the ordinary snapshot after any continuation turn.
+	if !releaseClosureFunctionCallArguments(t, "scenario.go", "Snapshot", "precompileContinuationSnapshot")["observeSnapshot"] {
+		t.Error("Snapshot omits actual simulator custody call observeSnapshot")
 	}
 	parsed, err := parser.ParseFile(token.NewFileSet(), "scenario.go", nil, 0)
 	if err != nil {
@@ -352,11 +364,12 @@ func TestProducerGateCustodySelectionCoversReleaseStartup(t *testing.T) {
 	for _, check := range []struct{ path, function, callee string }{
 		{path: "../validator/release_run.go", function: "RunRelease", callee: "runReleaseWithActivationSetup"},
 		{path: "../validator/release_run.go", function: "runReleaseWithActivationSetup", callee: "runReleaseWithStartupV2"},
-		{path: "../validator/release_run.go", function: "runReleaseWithStartupV2", callee: "openReleaseEvidenceV2DiskState"},
+		{path: "../validator/release_run.go", function: "runReleaseWithStartupV2", callee: "runReleaseWithStartupAndProgressV2"},
+		{path: "../validator/release_run.go", function: "runReleaseWithStartupAndProgressV2", callee: "openReleaseEvidenceV2DiskState"},
 		{path: "../validator/release_state_v2.go", function: "openReleaseEvidenceV2DiskState", callee: "openReleaseEvidenceV2DiskStateWithObserver"},
 		{path: "../validator/release_state_v2.go", function: "openReleaseEvidenceV2DiskStateWithObserver", callee: "loadClientSeed"},
 		{path: "../validator/release_state_v2.go", function: "openReleaseEvidenceV2DiskStateWithObserver", callee: "NewDiskAttemptLedger"},
-		{path: "../validator/release_run.go", function: "runReleaseWithStartupV2", callee: "startReleaseOperator"},
+		{path: "../validator/release_run.go", function: "runReleaseWithStartupAndProgressV2", callee: "startReleaseOperator"},
 		{path: "../validator/release_run.go", function: "loadReleaseAttemptState", callee: "loadReleaseAttemptStateWithObserver"},
 		{path: "../validator/release_run.go", function: "loadReleaseAttemptStateWithObserver", callee: "loadClientSeed"},
 		{path: "../validator/release_run.go", function: "loadReleaseAttemptStateWithObserver", callee: "NewAttemptLedger"},

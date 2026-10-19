@@ -58,7 +58,7 @@ func newReleaseMeasurementV2TestFixtureWithOperator(t *testing.T, completed int,
 
 // Full startup selects its signed activation before sealing any compact cut;
 // measurement-only callers retain their separately pinned synthetic anchor.
-func newReleaseMeasurementV2TestFixtureWithActivation(t *testing.T, completed int, create func(uint64) *attemptCutV2SealTestFixture, anchor func(*attemptCutV2SealTestFixture)) *releaseMeasurementV2TestFixture {
+func newReleaseMeasurementV2TestFixtureWithActivation(t testing.TB, completed int, create func(uint64) *attemptCutV2SealTestFixture, anchor func(*attemptCutV2SealTestFixture)) *releaseMeasurementV2TestFixture {
 	t.Helper()
 	fixture := &releaseMeasurementV2TestFixture{operators: map[uint64]*releaseMeasurementV2TestOperator{}}
 	artifact := &ReleaseMeasurementArtifact{
@@ -147,10 +147,24 @@ func newReleaseMeasurementV2TestFixtureWithActivation(t *testing.T, completed in
 	return fixture
 }
 
+// A test seals and signs its own copy of a shared provider's artifact; the
+// operators' sources, compact cuts and object readers stay shared.
+func copyReleaseMeasurementTestProvider(t testing.TB, shared *releaseMeasurementV2TestFixture) *releaseMeasurementV2TestFixture {
+	t.Helper()
+	provider := *shared
+	provider.artifact = cloneReleaseMeasurementArtifact(t, shared.artifact)
+	provider.operators = map[uint64]*releaseMeasurementV2TestOperator{}
+	for noID, operator := range shared.operators {
+		copied := *operator
+		provider.operators[noID] = &copied
+	}
+	return &provider
+}
+
 // Mainnet's historical v1 comparison has no append function or disk owner. Its
 // genuine records are cloned and verified before the production v1 cut codec;
 // legacy testnet controls retain the actual independently appended v1 store.
-func releaseMeasurementTestHistoricalCut(t *testing.T, seal *attemptCutV2SealTestFixture) *AttemptLedgerCut {
+func releaseMeasurementTestHistoricalCut(t testing.TB, seal *attemptCutV2SealTestFixture) *AttemptLedgerCut {
 	t.Helper()
 	identity := seal.expected.Identity
 	var ledger *AttemptLedger
@@ -201,7 +215,7 @@ func releaseMeasurementTestHistoricalCut(t *testing.T, seal *attemptCutV2SealTes
 
 // The independent existing v1 claim path, not the v2 result, determines every
 // raw head score and exact EMA transcript used as the compact test input.
-func (self *releaseMeasurementV2TestFixture) rebuildLegacy(t *testing.T) {
+func (self *releaseMeasurementV2TestFixture) rebuildLegacy(t testing.TB) {
 	t.Helper()
 	legacy := cloneReleaseMeasurementArtifact(t, self.artifact)
 	legacy.Schema = ReleaseMeasurementSchema
@@ -230,7 +244,9 @@ func (self *releaseMeasurementV2TestFixture) rebuildLegacy(t *testing.T) {
 	}
 	legacy.HeadEMA, self.artifact.HeadEMA = head, slices.Clone(head)
 	want, err := VerifyReleaseMeasurementArtifact(legacy)
-	if err != nil {
+	// The v1 oracle has no reserve fallback. An empty provider allocation still
+	// fixes its genuine head EMA transcript above but has no oracle decision.
+	if err != nil && !errors.Is(err, errNoPositiveUnmaskedWeights) {
 		t.Fatalf("complete genuine v1 measurement oracle: %v", err)
 	}
 	self.legacy, self.want = legacy, want
@@ -239,7 +255,7 @@ func (self *releaseMeasurementV2TestFixture) rebuildLegacy(t *testing.T) {
 // Every invocation owns new real replay scratch and an independent authority
 // snapshot. The tests change those observations explicitly when exercising an
 // actual different authenticated coordinator/native decision.
-func (self *releaseMeasurementV2TestFixture) options(t *testing.T) ReleaseMeasurementV2Options {
+func (self *releaseMeasurementV2TestFixture) options(t testing.TB) ReleaseMeasurementV2Options {
 	t.Helper()
 	artifact := self.artifact
 	options := ReleaseMeasurementV2Options{
@@ -253,7 +269,8 @@ func (self *releaseMeasurementV2TestFixture) options(t *testing.T) ReleaseMeasur
 		operator := self.operators[input.NoID]
 		currentKVs := map[connect.Id]FleetScoreKey{}
 		for _, binding := range artifact.Bindings {
-			if binding.NoID != input.NoID || !binding.Active || !binding.LiveUIDFound || binding.RecordUID != binding.LiveUID {
+			// A binding signed for another key is not the measured client's fleet.
+			if binding.NoID != input.NoID || !binding.Active || !binding.LiveUIDFound || binding.RecordUID != binding.LiveUID || binding.LocalClientKey != binding.ClientKey {
 				continue
 			}
 			clientID, _ := connect.ParseId(binding.ClientID)

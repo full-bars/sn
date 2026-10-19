@@ -24,6 +24,16 @@ type historicalReplayObservationProfile struct {
 	Rules                    []historicalReplayHookRule `json:"rules"`
 	MetadataSha256           *historicalReplayDigest    `json:"metadata_sha256,omitempty"`
 	PrincipalStoragePrefixes []string                   `json:"principal_storage_prefixes,omitempty"`
+	OriginalGlobals          []historicalOriginalGlobal `json:"original_globals,omitempty"`
+	EpochLayout              *string                    `json:"epoch_layout,omitempty"`
+	RecipientLayout          *string                    `json:"recipient_layout,omitempty"`
+}
+
+// The engine may expose only these existing globals to its read-only host.
+// It verifies export-only transformation before assigning a distinct cache key.
+type historicalOriginalGlobal struct {
+	GlobalIndex uint32 `json:"global_index"`
+	ExportName  string `json:"export_name"`
 }
 
 type historicalReplayHookRule struct {
@@ -33,6 +43,10 @@ type historicalReplayHookRule struct {
 	OffsetStart        uint32                    `json:"offset_start"`
 	OffsetEnd          uint32                    `json:"offset_end"`
 	Memory             []historicalNativeCapture `json:"memory,omitempty"`
+	HostSnapshot       *string                   `json:"host_snapshot,omitempty"`
+	StateReads         []string                  `json:"state_reads,omitempty"`
+	StorageCall        *historicalStorageCall    `json:"storage_call,omitempty"`
+	RecipientOwner     bool                      `json:"recipient_owner,omitempty"`
 }
 
 type historicalNativeCapture struct {
@@ -65,9 +79,15 @@ type historicalNativeMemory struct {
 	ElementCount *uint32 `json:"element_count,omitempty"`
 }
 
+type historicalExecutionStateValue struct {
+	KeyHex   string  `json:"key_hex"`
+	ValueHex *string `json:"value_hex"`
+}
+
 type historicalNativeObservation struct {
-	ExecutionPhaseHex *string                  `json:"execution_phase_hex"`
-	Memory            []historicalNativeMemory `json:"memory"`
+	ExecutionPhaseHex *string                          `json:"execution_phase_hex"`
+	Memory            []historicalNativeMemory         `json:"memory"`
+	ExecutionState    *[]historicalExecutionStateValue `json:"execution_state,omitempty"`
 }
 
 type historicalStorageReturn struct {
@@ -170,15 +190,30 @@ func (self *historicalReplayObservationProfile) validate(job historicalReplayJob
 	if self.PrincipalStoragePrefixes != nil && self.Schema != historicalNativeProfileSchema {
 		return errors.New("principal storage scope requires native profile")
 	}
+	if err := self.validateEpochLayout(); err != nil {
+		return err
+	}
+	if err := self.validateRecipientLayout(); err != nil {
+		return err
+	}
+	if err := self.validateOriginalGlobals(); err != nil {
+		return err
+	}
 	for index, rule := range self.Rules {
 		if !(historicalReplayPurpose(rule.Purpose) || self.Schema == historicalNativeProfileSchema && historicalNativePurpose(rule.Purpose)) || rule.FunctionBodySha256 == (historicalReplayDigest{}) || rule.OffsetStart >= rule.OffsetEnd {
 			return errors.New("historical observation rule identity or range differs")
+		}
+		if err := validateHistoricalStorageCallRule(self, rule); err != nil {
+			return err
+		}
+		if err := validateHistoricalHostSnapshotRule(self, rule); err != nil {
+			return err
 		}
 		if err := validateHistoricalNativeCaptures(rule); err != nil {
 			return err
 		}
 		for _, prior := range self.Rules[:index] {
-			if prior.FunctionIndex == rule.FunctionIndex && rule.OffsetStart < prior.OffsetEnd && prior.OffsetStart < rule.OffsetEnd {
+			if (prior.StorageCall != nil && rule.StorageCall != nil || prior.FunctionIndex == rule.FunctionIndex && rule.OffsetStart < prior.OffsetEnd && prior.OffsetStart < rule.OffsetEnd) && historicalStoragePathsOverlap(prior, rule) {
 				return errors.New("historical observation rules overlap")
 			}
 		}
@@ -253,7 +288,7 @@ func validateHistoricalReplayObservations(job historicalReplayJob, trace *histor
 			if observation.ValueHex == nil {
 				return errors.New("historical value-bearing observation omits bytes")
 			}
-		case "get", "read", "clear", "clear_prefix", "exists", "next_key":
+		case "get", "read", "clear", "clear_prefix", "exists", "next_key", "host":
 			if observation.ValueHex != nil {
 				return errors.New("historical request-only observation invents a value")
 			}
@@ -262,8 +297,14 @@ func validateHistoricalReplayObservations(job historicalReplayJob, trace *histor
 		}
 		matches := 0
 		for _, rule := range profile.Rules {
-			for _, frame := range observation.Stack {
-				if rule.FunctionIndex == frame.FunctionIndex && frame.FunctionOffset >= rule.OffsetStart && frame.FunctionOffset < rule.OffsetEnd {
+			for frameIndex := range observation.Stack {
+				if historicalRuleMatchesAt(rule, observation.Stack, frameIndex) {
+					if err := validateHistoricalHostSnapshotRecord(profile, rule, observation, frameIndex); err != nil {
+						return err
+					}
+					if rule.StorageCall != nil && rule.StorageCall.Operation != observation.Operation {
+						return errors.New("original storage call operation differs")
+					}
 					if rule.Purpose != observation.Purpose {
 						return errors.New("historical observation purpose contradicts original profile")
 					}
@@ -292,7 +333,10 @@ func validateHistoricalReplayObservations(job historicalReplayJob, trace *histor
 		return err
 	}
 	fees := trace.FeeEvents
-	if profile.MetadataSha256 == nil && fees == nil {
+	if !historicalProfileFeeEvents(profile) {
+		if fees != nil {
+			return errors.New("historical fee candidates lack explicit metadata-pinned fee callsites")
+		}
 		return nil
 	}
 	if profile.MetadataSha256 == nil || fees == nil || fees.MetadataSha256 != *profile.MetadataSha256 || fees.Authority != "original-runtime-metadata-and-unapproved-callsite-profile" || len(fees.Events) > len(observations) || len(fees.Candidates) > len(fees.Events) || fees.UnmatchedFeeEvents > uint64(len(fees.Events)) {

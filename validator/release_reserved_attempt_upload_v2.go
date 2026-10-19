@@ -40,23 +40,26 @@ func newReleaseAttemptUploadSourceV2(cfg *ReleaseConfig, input releaseEvidenceV2
 
 // The ordinary census validator admits every actual destination owner before
 // credentials or HTTP are used. Protected callbacks retain the original source
-// activation for either origin, including a different operator's JWT session.
-func releaseReservedAttemptUploadReplicasV2(cfg *ReleaseConfig, source *releaseAttemptUploadSourceV2, origins [2]string, runtimes []*releaseOperatorRuntime) ([2]AttemptCutV2Replica, error) {
-	var zero [2]AttemptCutV2Replica
+// activation for every origin, including a different operator's JWT session.
+func releaseReservedAttemptUploadReplicasV2(cfg *ReleaseConfig, source *releaseAttemptUploadSourceV2, origins []string, runtimes []*releaseOperatorRuntime) ([]AttemptCutV2Replica, error) {
 	replicas, err := releaseAttemptUploadReplicasV2(cfg, origins, runtimes)
 	if err != nil {
-		return zero, err
+		return nil, err
 	}
 	return bindReleaseReservedAttemptUploadReplicasV2(source, origins, runtimes, replicas)
 }
 
 // Binding checks the exact original activation and private signer against the
 // already admitted configured destinations; it grants no session readiness.
-func bindReleaseReservedAttemptUploadReplicasV2(source *releaseAttemptUploadSourceV2, origins [2]string, runtimes []*releaseOperatorRuntime, replicas [2]AttemptCutV2Replica) ([2]AttemptCutV2Replica, error) {
-	var zero [2]AttemptCutV2Replica
+// The admitted replicas are not modified; the bound routing is a new census.
+func bindReleaseReservedAttemptUploadReplicasV2(source *releaseAttemptUploadSourceV2, origins []string, runtimes []*releaseOperatorRuntime, admitted []AttemptCutV2Replica) ([]AttemptCutV2Replica, error) {
 	if source == nil {
-		return zero, errors.New("reserved upload source is unavailable")
+		return nil, errors.New("reserved upload source is unavailable")
 	}
+	if len(admitted) != len(origins) {
+		return nil, errors.New("reserved upload destinations differ from the admitted census")
+	}
+	replicas := make([]AttemptCutV2Replica, len(origins))
 	for index, origin := range origins {
 		var owner *releaseAttemptUploadV2
 		for _, runtime := range runtimes {
@@ -65,12 +68,12 @@ func bindReleaseReservedAttemptUploadReplicasV2(source *releaseAttemptUploadSour
 				break
 			}
 		}
-		if owner == nil {
-			return zero, errors.New("reserved upload destination disappeared after census admission")
+		if owner == nil || admitted[index].Origin != origin {
+			return nil, errors.New("reserved upload destination disappeared after census admission")
 		}
 		signer, err := newValidatorAttemptUploadSigner(source.activation, owner.noID, source.maximumIntentSeconds, ed25519.PrivateKey(source.privateKey[:]))
 		if err != nil {
-			return zero, err
+			return nil, err
 		}
 		writer := func(kind string) AttemptStreamV2ObjectWriter {
 			return func(ctx context.Context, hash string, raw []byte) error {
@@ -85,7 +88,7 @@ func bindReleaseReservedAttemptUploadReplicasV2(source *releaseAttemptUploadSour
 // Historical native observation requires the real immutable census and source
 // signer, independently of whether an API session can currently publish. No
 // callbacks escape this validator; retained proof never acquires write authority.
-func validateReleaseReservedAttemptCensusOwnershipV2(cfg *ReleaseConfig, origins [2]string, runtimes []*releaseOperatorRuntime) error {
+func validateReleaseReservedAttemptCensusOwnershipV2(cfg *ReleaseConfig, origins []string, runtimes []*releaseOperatorRuntime) error {
 	replicas, err := releaseAttemptUploadConfiguredReplicasV2(cfg, origins, runtimes)
 	if err != nil {
 		return err
@@ -104,12 +107,12 @@ func validateReleaseReservedAttemptCensusOwnershipV2(cfg *ReleaseConfig, origins
 
 // A closed census uploads every member with its own original activation/VPK.
 // The shared census body uses the first admitted member's reservation, while
-// payloads and consents keep their actual member owner at both destinations.
-func releaseReservedAttemptCensusReplicasV2(cfg *ReleaseConfig, origins [2]string, runtimes []*releaseOperatorRuntime) (map[uint64][2]AttemptCutV2Replica, error) {
+// payloads and consents keep their actual member owner at every destination.
+func releaseReservedAttemptCensusReplicasV2(cfg *ReleaseConfig, origins []string, runtimes []*releaseOperatorRuntime) (map[uint64][]AttemptCutV2Replica, error) {
 	if _, err := releaseAttemptUploadReplicasV2(cfg, origins, runtimes); err != nil {
 		return nil, err
 	}
-	result := make(map[uint64][2]AttemptCutV2Replica, len(runtimes))
+	result := make(map[uint64][]AttemptCutV2Replica, len(runtimes))
 	for _, runtime := range runtimes {
 		source := runtime.attemptSource
 		if source == nil || source.activation.NoID != runtime.measurement.NoID {
@@ -125,9 +128,9 @@ func releaseReservedAttemptCensusReplicasV2(cfg *ReleaseConfig, origins [2]strin
 }
 
 // Runtime sealing binds its actual ledger/source before delegating to the
-// complete sealer and independent dual public readback. This does not remove
-// the separate startup/submission/closed-census integration fence.
-func sealReleaseRuntimeAttemptCutV2(ctx context.Context, cfg *ReleaseConfig, source *releaseOperatorRuntime, expected AttemptCutV2Context, origins [2]string, runtimes []*releaseOperatorRuntime, serverKeys map[byte]ed25519.PublicKey, scratchDirectory string) (*AttemptCutV2Publication, error) {
+// complete sealer and independent public readback at every configured origin.
+// This does not remove the separate startup/submission/closed-census fence.
+func sealReleaseRuntimeAttemptCutV2(ctx context.Context, cfg *ReleaseConfig, source *releaseOperatorRuntime, expected AttemptCutV2Context, origins []string, runtimes []*releaseOperatorRuntime, serverKeys map[byte]ed25519.PublicKey, scratchDirectory string) (*AttemptCutV2Publication, error) {
 	if ctx == nil || cfg == nil || source == nil || source.attemptSource == nil || source.attemptLedger == nil || source.measurement == nil {
 		return nil, errors.New("reserved runtime sealing ownership is incomplete")
 	}

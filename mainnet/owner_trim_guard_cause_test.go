@@ -7,10 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"reflect"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -110,7 +112,9 @@ func TestOwnerTrimGuardReadFailurePreservesOriginalCause(t *testing.T) {
 				if phase == "current" {
 					block = fixture.afterHash
 				}
-				original := errors.New("synthetic owner trim read transport unavailable")
+				// Only a physical transport failure reaches the retry barrier
+				// since 33b27e64; an unclassified cause ends the read at once.
+				original := &net.OpError{Op: "read", Net: "tcp", Err: syscall.ECONNRESET}
 				var calls, waits atomic.Uint64
 				client.httpClient.Transport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
 					body, err := request.GetBody()

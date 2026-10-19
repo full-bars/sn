@@ -58,7 +58,7 @@ pub(super) struct Budget {
 }
 sp_externalities::decl_extension! { pub(super) struct HistoricalBudget(Budget); }
 
-fn charge(mut ext: &mut dyn Externalities, bytes: usize) {
+pub(super) fn charge(mut ext: &mut dyn Externalities, bytes: usize) {
     ext.extension::<HistoricalBudget>()
         .expect("historical budget absent")
         .0

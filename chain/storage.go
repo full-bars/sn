@@ -190,6 +190,17 @@ func ValidatorPermitAtContext(ctx context.Context, chain *crv4.Chain, netuid uin
 	return bool(permits[uid]), nil
 }
 
+// SubnetOwnerHotkeyAtContext reads the subnet owner hotkey at one block.
+// Present is false only when the runtime holds no owner hotkey for netuid.
+func SubnetOwnerHotkeyAtContext(ctx context.Context, chain *crv4.Chain, netuid uint16, blockHash types.Hash) ([32]byte, bool, error) {
+	var owner types.AccountID
+	present, err := readSubtensorStorage(ctx, chain, "SubnetOwnerHotkey", &owner, blockHash, NetuidArg(netuid))
+	if err != nil || !present {
+		return [32]byte{}, false, err
+	}
+	return [32]byte(owner), true, nil
+}
+
 // PoolReserves is the subnet's Dynamic TAO pool at one block.
 type PoolReserves struct {
 	TaoRao     uint64

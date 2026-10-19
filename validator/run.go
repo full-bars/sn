@@ -20,9 +20,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -39,6 +39,7 @@ import (
 
 	"github.com/urfoundation/sn/clientauth"
 	"github.com/urfoundation/sn/internal/durableinspect"
+	"github.com/urfoundation/sn/operatorlist"
 )
 
 const DefaultApiUrl = "https://api.bringyour.com"
@@ -75,13 +76,14 @@ func mainUsage() string {
 		`UR subnet validator.
 
 The default URLs are:
-    api_url: %s
-    connect_url: %s
+    api_url: %[1]s
+    connect_url: %[2]s
+    operators_url: %[3]s
 
 Usage:
     validator storage-inspect --durable-volumes=<path> --durable-volumes-sha256=<hash> --directory=<path>...
-    validator auth ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
-        [--api_url=<api_url>]
+    validator auth ([<auth_code>] | --user_auth=<user_auth> [--password=<password>] | --hotkey_seed_file=<path>) [-f]
+        [--api_url=<api_url> | --operator=<domain> [--operators-url=<url>] [--state_dir=<path>]]
         [-v...]
     validator init (--config=<path> | --state_dir=<path> [--hotkey_seed_file=<path>] [--no_id=<id>]...)
         [-v...]
@@ -93,12 +95,31 @@ Usage:
         [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [--limit_price_rao=<n>] [--allow_partial] [--fee_limit_rao=<n>] [--apply | --dry-run]
         [-v...]
+    validator take status --config=<path> [--netuid=<id>]
+        [-v...]
+    validator take set --take=<percent> --config=<path> --coldkey_seed_file=<path>
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [--fee_limit_rao=<n>] [--apply | --dry-run]
+        [-v...]
+    validator take childkey --netuid=<id> --take=<percent> --config=<path> --coldkey_seed_file=<path>
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [--fee_limit_rao=<n>] [--apply | --dry-run]
+        [-v...]
     validator activate --config=<path> [--relayer_key_file=<path>] [--apply | --dry-run]
+        [--rendered-config=<path> --successor-approval=<path> --original-authority=<path> [--approval-signature=<hex>]]
         [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
     validator run --config=<path> [--progress-file=<path>]
+        [--ledger_auditor_key_file=<path>] [--ledger_max_bytes=<n>]
         [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [(--native-gap-bridge=<path> --native-gap-bridge-sha256=<hash>)] [--startup-verified-progress]
+        [(--operators-refresh=<duration> [--operators-url=<url>] [--observe-unpinned-operators])]
         [-v...]
+    validator run --all-operators [--operators-url=<url>] [--operators-refresh=<duration>]
+        [(--auto-register --hotkey_seed_file=<path>)]
+        [--concurrency=<n>] [--m=<depth>]
+        [--rpc=<rpc_url>]... [--contract=<addr>] [--state_dir=<path>]
+        [--adopt-legacy-measurement-key] [-v...]
     validator run [--api_url=<api_url>] [--connect_url=<connect_url>]
         [--concurrency=<n>] [--m=<depth>]
         [--rpc=<rpc_url>]... [--contract=<addr>] [--state_dir=<path>]
@@ -118,8 +139,21 @@ Options:
                                  init/register/stake/activate/status accept it before its evidence_v2
                                  inputs are rendered; run does not.
 	--progress-file=<path>         Optional bounded operational JSON outside protocol state.
+    --ledger_auditor_key_file=<path>  Hex secp256k1 EVM key of the settlement v2 auditor, which sends
+                                 approvals, challenges and demands. Without it none is sent.
+    --ledger_max_bytes=<n>       Ledger objects new to custody that the settlement v2 audit fetches
+                                 per root, in bytes; raised operationally [default: 2147483648].
     --durable-volumes=<path>      Exact external durable-volume declaration; required for mainnet state.
     --durable-volumes-sha256=<hash>  SHA-256 of the complete declaration bytes; does not change signed config.
+    --native-gap-bridge=<path>   One-shot native gap bridge: canonical JSON naming the retained applied
+                                 intent (last_native_epoch, last_artifact_hash) and first_native_epoch.
+                                 It admits that one missed-native-epoch edge and idles release before
+                                 first_native_epoch; the signed config is unchanged. Keep it supplied
+                                 while the bridged edge is in the retained intent history.
+    --native-gap-bridge-sha256=<hash>  sha256:<64 lowercase hex> of the bridge file's exact bytes.
+    --startup-verified-progress  Keep the digests of completely verified history in the state directory,
+                                 signed by the hotkey, so the next start skips them instead of proving
+                                 the whole retained history again. Without it every start proves it all.
     --directory=<path>           Existing service directory for read-only physical inspection; repeatable.
     --coldkey_seed_file=<path>   sr25519 coldkey seed (64 hex chars or 32 raw bytes) that signs
                                  register_limit / add_stake. The release config carries no coldkey and
@@ -133,14 +167,41 @@ Options:
     --limit_price_rao=<n>        Use add_stake_limit with this maximum pool price in TAO rao per alpha
                                  instead of add_stake at the pool price.
     --allow_partial              With --limit_price_rao, allow a partial fill instead of fill-or-kill.
+    --take=<percent>             Take in percent, at most two decimals, rounded down to parts of 65535
+                                 (18 is 11796/65535); refused above the chain maximum. take set moves
+                                 the delegate take; take childkey sets the childkey take on --netuid.
+                                 take status shows both, for the config netuid and --netuid.
     --relayer_key_file=<path>    Hex secp256k1 EVM key that pays gas to publish the activations through
                                  the evidence journal; it receives no authority.
+    --rendered-config=<path>     With a signed schema 3 --config, whose evidence_v2 inputs are
+                                 activation-pending: the separate successor config activate writes; the
+                                 signed config is never rewritten. Canonical absolute path, like the next two.
+    --successor-approval=<path>  Where activate writes the approval key's re-approval of the successor.
+    --original-authority=<path>  Where activate writes the signed config and its approval as the
+                                 successor's immutable authority history.
+    --approval-signature=<hex>   The approval key's Ed25519 signature (128 lowercase hex) over the
+                                 successor approval signing message that activate printed. That
+                                 approval names the latest drained native epoch, in which the first
+                                 decision must be made; sign and re-run within that native epoch.
     --apply                      Sign, journal and broadcast. Without it every mutating command is a
                                  dry run that reads the live economics and reports what it would do.
     --dry-run                    Explicit dry run (the default).
     --no_id=<id>                 With init --state_dir, create <state_dir>/no-<id>/client.key for each
                                  operator; without any, create the flag-mode <state_dir>/.validator.key.
     --connect_url=<connect_url>  Custom connect (platform transport) URL.
+    --all-operators              Measure every operator in the operator list, each with its own state
+                                 under <state_dir>/operators/<domain>. Never steers.
+    --operators-url=<url>        Operator list location [default: %[3]s].
+    --operators-refresh=<duration>  Operator list refresh interval, a Go duration of at least 1m. Flag
+                                 mode refreshes hourly without it; production mode follows the list
+                                 only with it. With it, list drift is logged and written to
+                                 operators-report.json beside the list cache.
+    --observe-unpinned-operators  Also measure listed operators the config does not pin, for observation
+                                 only, under <config.state_dir>/observed-operators/<domain>.
+    --auto-register              Sign in with the hotkey where an operator has no JWT, and provision the
+                                 measurement identity of a pristine operator directory.
+    --operator=<domain>          Authenticate against this listed operator and write its JWT to
+                                 <state_dir>/operators/<domain>/jwt.
     --user_auth=<user_auth>      Login with a username.
     --password=<password>        Login with a password (prompted when omitted).
     --adopt-legacy-measurement-key  Assert the existing measurement seed is original when first adopting
@@ -152,13 +213,14 @@ Options:
     --netuid=<id>                Subnet netuid.
     --evm_key_file=<path>        Hex secp256k1 key file (stctl format). Its mirror is the
                                  validator coldkey [default: <state_dir>/evm.key].
-    --hotkey_seed_file=<path>    sr25519 hotkey seed file (created if missing)
-                                 [default: <state_dir>/hotkey.seed].
-    --state_dir=<path>           Validator state (vpk seed, proofs, stats)
+    --hotkey_seed_file=<path>    sr25519 hotkey seed file. init creates it when missing; auth and
+                                 auto-register only load it [default: <state_dir>/hotkey.seed].
+    --state_dir=<path>           Validator state (vpk seed, proofs, stats, operator list cache)
                                  [default: ~/.urnetwork/validator].
 `,
 		DefaultApiUrl,
 		DefaultConnectUrl,
+		operatorlist.DefaultUrl,
 	)
 }
 
@@ -187,6 +249,9 @@ func Run(args []string) {
 		registerCommand(opts)
 	} else if stakeCmd, _ := opts.Bool("stake"); stakeCmd {
 		stakeAddCommand(opts)
+	} else if takeCmd, _ := opts.Bool("take"); takeCmd {
+		// Before status: take status sets both commands.
+		takeCommand(opts)
 	} else if activateCmd, _ := opts.Bool("activate"); activateCmd {
 		activateCommand(opts)
 	} else if runCmd, _ := opts.Bool("run"); runCmd {
@@ -280,34 +345,75 @@ func dialChainFromOpts(opts docopt.Opts) (*ChainClient, error) {
 	return DialChain(rpcUrls, common.HexToAddress(contractStr))
 }
 
-// --- auth (mirrors provider auth: writes ~/.urnetwork/jwt) ---
+// --- auth (mirrors provider auth: writes ~/.urnetwork/jwt, or with
+// --operator that operator's jwt; see operators_auth.go) ---
 
 func auth(opts docopt.Opts) {
-	home, err := os.UserHomeDir()
+	// The overwrite question precedes signal handling, so an interrupt there
+	// still ends the command at once.
+	target, proceed, err := confirmAuthTarget(context.Background(), opts, os.Stdin, os.Stdout)
 	if err != nil {
 		panic(err)
 	}
-	urNetworkDir := filepath.Join(home, ".urnetwork")
-	jwtPath := filepath.Join(urNetworkDir, "jwt")
-
-	if _, err := os.Stat(jwtPath); !errors.Is(err, os.ErrNotExist) {
-		if force, _ := opts.Bool("-f"); !force {
-			fmt.Printf("%s exists. Overwrite? [yN]\n", jwtPath)
-			reader := bufio.NewReader(os.Stdin)
-			confirm, _ := reader.ReadString('\n')
-			if strings.ToLower(strings.TrimSpace(confirm)) != "y" {
-				return
-			}
-		}
+	if !proceed {
+		return
 	}
-
-	apiUrl := optString(opts, "--api_url", DefaultApiUrl)
-
 	event := connect.NewEventWithContext(context.Background())
 	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(event.Ctx())
 	defer cancel()
+	if err := writeAuthJwt(ctx, opts, target, os.Stdout); err != nil {
+		panic(err)
+	}
+}
 
+// The target, and whether to go on: an existing JWT is replaced only with -f
+// or a confirmation.
+func confirmAuthTarget(ctx context.Context, opts docopt.Opts, input io.Reader, output io.Writer) (authTarget, bool, error) {
+	target, err := authTargetFromOpts(ctx, opts)
+	if err != nil {
+		return authTarget{}, false, err
+	}
+	if _, err := os.Stat(target.jwtPath); !errors.Is(err, os.ErrNotExist) {
+		if force, _ := opts.Bool("-f"); !force {
+			fmt.Fprintf(output, "%s exists. Overwrite? [yN]\n", target.jwtPath)
+			reader := bufio.NewReader(input)
+			confirm, _ := reader.ReadString('\n')
+			if strings.ToLower(strings.TrimSpace(confirm)) != "y" {
+				return target, false, nil
+			}
+		}
+	}
+	return target, true, nil
+}
+
+// Signs in with the hotkey or a login and writes the network JWT. Only the
+// auth code and password prompts read the terminal.
+func writeAuthJwt(ctx context.Context, opts docopt.Opts, target authTarget, output io.Writer) error {
+	var byJwt string
+	var err error
+	if hotkeySeedFile := authHotkeySeedFile(opts); hotkeySeedFile != "" {
+		byJwt, err = hotkeyAuthJwt(ctx, target.apiUrl, hotkeySeedFile)
+	} else {
+		byJwt, err = loginNetworkJwt(ctx, opts, target.apiUrl, output)
+	}
+	if err != nil {
+		return err
+	}
+	if byJwt == "" {
+		return errors.New("the operator's answer has no network JWT")
+	}
+	if err := clientauth.WriteNetworkTokenWithContext(ctx, target.jwtPath, byJwt); err != nil {
+		return err
+	}
+	fmt.Fprintf(output, "Jwt written to %s\n", target.jwtPath)
+	return nil
+}
+
+// An auth code, or a user and password, prompting on the terminal for what
+// the options omit. An answer without a network JWT is refused: a JSON null
+// decodes to no answer at all.
+func loginNetworkJwt(ctx context.Context, opts docopt.Opts, apiUrl string, output io.Writer) (string, error) {
 	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
 	defer clientStrategy.Close()
 	api := sdk.NewApi(ctx, clientStrategy, apiUrl)
@@ -315,17 +421,16 @@ func auth(opts docopt.Opts) {
 		_ = api.CloseAndWait(context.Background())
 	}()
 
-	var byJwt string
 	if userAuth, err := opts.String("--user_auth"); err == nil && userAuth != "" {
 		var password string
 		if password, err = opts.String("--password"); err != nil || password == "" {
-			fmt.Print("Enter password: ")
+			fmt.Fprint(output, "Enter password: ")
 			passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
 			if err != nil {
-				panic(err)
+				return "", err
 			}
 			password = string(passwordBytes)
-			fmt.Printf("\n")
+			fmt.Fprintf(output, "\n")
 		}
 
 		loginResult, err := api.AuthLoginWithPasswordSyncWithContext(ctx, &sdk.AuthLoginWithPasswordArgs{
@@ -333,45 +438,49 @@ func auth(opts docopt.Opts) {
 			Password: password,
 		})
 		if err != nil {
-			panic(err)
+			return "", err
+		}
+		if loginResult == nil {
+			return "", errors.New("the operator's password login has no answer")
 		}
 		if loginResult.Error != nil {
-			panic(fmt.Errorf("%s", loginResult.Error.Message))
+			return "", fmt.Errorf("%s", loginResult.Error.Message)
 		}
 		if loginResult.VerificationRequired != nil {
-			panic(fmt.Errorf("verification required for %s. Use the app or web to complete account setup.", loginResult.VerificationRequired.UserAuth))
+			return "", fmt.Errorf("verification required for %s. Use the app or web to complete account setup.", loginResult.VerificationRequired.UserAuth)
 		}
-		byJwt = loginResult.Network.ByJwt
-	} else {
-		authCode, _ := opts.String("<auth_code>")
-		if authCode == "" {
-			fmt.Print("Enter auth code: ")
-			authCodeBytes, err := term.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				panic(err)
-			}
-			authCode = strings.TrimSpace(string(authCodeBytes))
-			fmt.Printf("\n")
+		if loginResult.Network == nil || loginResult.Network.ByJwt == "" {
+			return "", errors.New("the operator's password login has no network")
 		}
-
-		authCodeLoginResult, err := api.AuthCodeLoginSyncWithContext(ctx, &sdk.AuthCodeLoginArgs{
-			AuthCode: authCode,
-		})
+		return loginResult.Network.ByJwt, nil
+	}
+	authCode, _ := opts.String("<auth_code>")
+	if authCode == "" {
+		fmt.Fprint(output, "Enter auth code: ")
+		authCodeBytes, err := term.ReadPassword(int(syscall.Stdin))
 		if err != nil {
-			panic(err)
+			return "", err
 		}
-		if authCodeLoginResult.Error != nil {
-			panic(fmt.Errorf("%s", authCodeLoginResult.Error.Message))
-		}
-		byJwt = authCodeLoginResult.Jwt
+		authCode = strings.TrimSpace(string(authCodeBytes))
+		fmt.Fprintf(output, "\n")
 	}
 
-	if byJwt != "" {
-		if err := clientauth.WriteToken(jwtPath, byJwt); err != nil {
-			panic(err)
-		}
-		fmt.Printf("Jwt written to %s\n", jwtPath)
+	authCodeLoginResult, err := api.AuthCodeLoginSyncWithContext(ctx, &sdk.AuthCodeLoginArgs{
+		AuthCode: authCode,
+	})
+	if err != nil {
+		return "", err
 	}
+	if authCodeLoginResult == nil {
+		return "", errors.New("the operator's auth code login has no answer")
+	}
+	if authCodeLoginResult.Error != nil {
+		return "", fmt.Errorf("%s", authCodeLoginResult.Error.Message)
+	}
+	if authCodeLoginResult.Jwt == "" {
+		return "", errors.New("the operator's auth code login has no network JWT")
+	}
+	return authCodeLoginResult.Jwt, nil
 }
 
 // --- run ---
@@ -379,9 +488,27 @@ func auth(opts docopt.Opts) {
 func run(opts docopt.Opts) {
 	if configPath := optString(opts, "--config", ""); configPath != "" {
 		progressPath, _ := opts.String("--progress-file")
-		runReleaseConfig(configPath, progressPath, durablevolume.Reference{
+		reference := durablevolume.Reference{
 			Path: optString(opts, "--durable-volumes", ""), Sha256: optString(opts, "--durable-volumes-sha256", ""),
-		})
+		}
+		ledger, err := settlementV2RuntimeOptionsFromOpts(opts)
+		exitOnError("validator run", err)
+		// A malformed or unpinned bridge refuses before any release state opens.
+		bridge, err := nativeGapBridgeFromOpts(opts)
+		exitOnError("validator run", err)
+		// The operator list runs beside the release only when asked for; the
+		// release itself is started the same way either way.
+		if optString(opts, "--operators-refresh", "") != "" {
+			settings, err := productionOperatorListSettingsFromOpts(opts)
+			exitOnError("validator run", err)
+			runReleaseWithOperatorList(configPath, progressPath, reference, ledger, settings, bridge, optBool(opts, "--startup-verified-progress"))
+			return
+		}
+		runReleaseConfig(configPath, progressPath, reference, ledger, bridge, optBool(opts, "--startup-verified-progress"))
+		return
+	}
+	if optBool(opts, "--all-operators") {
+		runAllOperators(opts)
 		return
 	}
 	if err := rejectLegacySteeringOptions(opts); err != nil {
@@ -396,6 +523,18 @@ func run(opts docopt.Opts) {
 	if err := settings.run(ctx, os.Stdout); err != nil {
 		panic(err)
 	}
+}
+
+// Both bridge flags or neither. Without them release startup is unchanged.
+func nativeGapBridgeFromOpts(opts docopt.Opts) (*ReleaseNativeGapBridge, error) {
+	path, pin := optString(opts, "--native-gap-bridge", ""), optString(opts, "--native-gap-bridge-sha256", "")
+	if path == "" && pin == "" {
+		return nil, nil
+	}
+	if path == "" || pin == "" {
+		return nil, errors.New("--native-gap-bridge and --native-gap-bridge-sha256 must be given together")
+	}
+	return ReadReleaseNativeGapBridge(path, pin)
 }
 
 func rejectLegacySteeringOptions(opts docopt.Opts) error {

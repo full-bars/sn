@@ -5,6 +5,8 @@ repositories:
   discovery: auto
   sn: auto
   server: auto
+  # Retired: operator-proxy is no longer discovered, tested or locked. The
+  # inert key stays because it is part of this deployment's ConfigHash.
   operator_proxy: auto
   vault: auto
   platform_config: auto

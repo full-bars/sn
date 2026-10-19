@@ -4,13 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"slices"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -265,8 +268,10 @@ func TestClaimClockRestartRetainsUnfinalizedSignedReceipt(t *testing.T) {
 	if err := store.save(queue); err != nil {
 		t.Fatal(err)
 	}
+	// Recovery records the receipt's public observation behind a pointer, so
+	// a reloaded entry is compared by value, observation included.
 	retained, err := store.load()
-	if err != nil || *retained.Entries["70"] != *entry {
+	if err != nil || !reflect.DeepEqual(retained.Entries["70"], entry) {
 		t.Fatalf("recovered receipt lost durable identity: %v", err)
 	}
 	if native, _, _, sends := fixture.evidence(); native != 0 || len(sends) != 0 {
@@ -375,6 +380,26 @@ func TestClaimClockRootMismatchRequiresStableWitness(t *testing.T) {
 	}
 }
 
+// A failed or exited worker cannot leave a test waiting for an unreachable RPC.
+func waitClaimClockBarrier(ctx context.Context, blocked <-chan struct{}, done <-chan error) error {
+	select {
+	case <-blocked:
+		return nil
+	case err, present := <-done:
+		return errors.Join(fmt.Errorf("claim worker stopped before cancellation barrier (result=%t)", present), err)
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func TestClaimClockBarrierObservesWorkerExit(t *testing.T) {
+	done := make(chan error)
+	close(done)
+	if err := waitClaimClockBarrier(t.Context(), make(chan struct{}), done); err == nil || !strings.Contains(err.Error(), "worker stopped") {
+		t.Fatal("exited worker was treated as a pending RPC barrier", err)
+	}
+}
+
 func TestClaimClockCancellationClosesWithoutEvidenceOrSend(t *testing.T) {
 	for _, replay := range []bool{false, true} {
 		blocked := make(chan struct{})
@@ -388,15 +413,33 @@ func TestClaimClockCancellationClosesWithoutEvidenceOrSend(t *testing.T) {
 				return result, nil
 			}
 		})
-		ctx, cancel := context.WithCancel(t.Context())
+		// Enrollment must report fatal setup failures on the test goroutine.
+		var tx *types.Transaction
+		var from common.Address
+		var store *claimQueueStore
+		if replay {
+			var err error
+			tx, _, from, err = authenticateSignedClaim(fixture.cfg, fixture.entry)
+			if err != nil {
+				t.Fatal(err)
+			}
+			store = claimRetainedTestStore(t, fixture.cfg, fixture.entry)
+		}
+		ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 		done := make(chan error, 1)
+		t.Cleanup(func() {
+			cancel()
+			select {
+			case <-done:
+			case <-time.After(30 * time.Second):
+				t.Error("claim worker survived cancellation cleanup")
+			}
+		})
 		before := *fixture.entry
 		go func() {
+			defer close(done)
 			if replay {
-				tx, _, from, err := authenticateSignedClaim(fixture.cfg, fixture.entry)
-				if err == nil {
-					_, err = rebroadcastSignedClaimTest(t, ctx, fixture.cfg, tx, from)
-				}
+				_, err := rebroadcastSignedClaim(ctx, fixture.cfg, tx, from, store)
 				done <- err
 			} else {
 				claimed, err := queryClaimedFinalized(ctx, fixture.cfg, fixture.claim)
@@ -406,9 +449,16 @@ func TestClaimClockCancellationClosesWithoutEvidenceOrSend(t *testing.T) {
 				done <- err
 			}
 		}()
-		<-blocked
+		if err := waitClaimClockBarrier(ctx, blocked, done); err != nil {
+			t.Fatal(err)
+		}
 		cancel()
-		err := <-done
+		var err error
+		select {
+		case err = <-done:
+		case <-time.After(30 * time.Second):
+			t.Fatal("canceled claim worker did not join")
+		}
 		_, _, _, sends := fixture.evidence()
 		if !errors.Is(err, context.Canceled) || len(sends) != 0 || *fixture.entry != before {
 			t.Fatalf("canceled closing read changed authority replay=%t: %v sends=%v", replay, err, sends)

@@ -1,0 +1,134 @@
+name: Portable core (cross-OS)
+
+# Restored from fix/ci-freebsd-release (refs 928798776, feec50f3f) and adapted
+# to the miner/tools line: the provider CLI is now ./cli/miner and the client
+# is ./cmd/urnet-tools + ./internal/urnettools, so the old root/provider package
+# lists are replaced by the packages that exist here.
+#
+# What this covers: every target the release ships compiles, and the
+# platform-sensitive packages are vetted (vet type-checks test files too), then
+# the same packages run their deterministic tests natively on Windows and macOS
+# where the platform code actually executes. The deep FreeBSD kernel
+# verification lives in freebsd.yml and the release distro matrix.
+#
+# TRIGGERS: release tags + manual dispatch only. The earlier PR + main-push
+# triggers are deliberately gone: this is release-only CI, and the per-PR
+# quality gate is build.yml.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# ─────────────────────────── RELEASE GATING SWITCH ─────────────────────────
+# Gating is OFF: this workflow fails itself on a broken cell, but nothing in
+# release.yml depends on it, so it blocks no release creation. The single
+# operator-facing switch that turns the whole release matrix into a gate is the
+# clearly marked RELEASE_GATE_MODE switch in distro-matrix.yml (recipe in
+# docs/Distro-Matrix-CI.md §Release gating).
+# ---------------------------------------------------------------------------
+
+env:
+  GO_VERSION: "1.27"
+  # Packages that compile and vet on every target this workflow ships
+  # (linux/windows/darwin/freebsd where the port exists).
+  PORTABLE_PKGS: "./cli/miner ./cmd/urnet-tools ./cmd/urnet-docker ./internal/urnettools"
+
+jobs:
+  cross-build-vet:
+    name: build + vet (${{ matrix.goos }}/${{ matrix.goarch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {goos: linux, goarch: amd64}
+          - {goos: linux, goarch: arm64}
+          - {goos: windows, goarch: amd64}
+          - {goos: windows, goarch: arm64}
+          - {goos: darwin, goarch: amd64}
+          - {goos: darwin, goarch: arm64}
+          - {goos: freebsd, goarch: amd64}
+          - {goos: freebsd, goarch: arm64}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.goos }}" = "freebsd" ]; then
+            # TODO(freebsd-urnettools): ./internal/urnettools has no FreeBSD
+            # port at this commit (no discover_freebsd.go), so urnet-tools does
+            # not build for freebsd yet. The miner does, and is built here.
+            # When the port lands, add the portable package list back for
+            # freebsd — the same way freebsd.yml already gates it.
+            go build ./cli/miner ./miner
+          else
+            go build ./miner $PORTABLE_PKGS
+          fi
+
+      - name: Vet (type-checks the test files too)
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.goos }}" = "freebsd" ]; then
+            echo "TODO(freebsd-urnettools): vet needs the FreeBSD port of ./internal/urnettools; not available at this commit"
+            echo "NOTE: ./miner's test files import a fixture package with no freebsd build, so vetting it is not yet possible either"
+            exit 0
+          fi
+          go vet $PORTABLE_PKGS
+
+  native-tests:
+    name: focused tests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: urnet-tools package tests (discovery, lifecycle, control client)
+        shell: bash
+        env:
+          CGO_ENABLED: "0"
+        run: go test -count=1 -timeout 900s ./internal/urnettools/
+
+      - name: host-memory readers (platform-sensitive)
+        shell: bash
+        env:
+          CGO_ENABLED: "0"
+        run: go test -count=1 -timeout 300s -run 'TestHostMemoryReaders|TestEffectiveRAMLimit' ./internal/connectx/

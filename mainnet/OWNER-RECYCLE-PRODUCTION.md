@@ -101,7 +101,10 @@ Ordinary approval retention also retains the current approval, runtime documents
 and all selected bundles. Repeated retention is idempotent after a partial write;
 no fixed observation record or original bundle is replaced. The default loader
 can reload these exact bytes from private state after provisioning sources are
-lost. Archive and restart still authenticate the bytes and original signatures.
+lost. A source below a directory the validator account cannot search, such as
+bootstrap custody another account owns, counts as lost; any other source path
+error still refuses. Archive and restart still authenticate the bytes and
+original signatures.
 
 A successor's separately signed `production.activation_native_block` retains the
 original drained block/hash and first native epoch. Its runtime block interval

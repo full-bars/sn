@@ -24,7 +24,7 @@ func TestProducerGatePinsExactBlockRuntimeClientRegressionsNativeStakeCoverage(t
 	}
 }
 
-// Both ordinary entry points must forward to the same startup body, which
+// Every entry point must forward to the same startup body. Its ordinary branch
 // tests the signing hotkey after exact EVM registration and returns on refusal
 // before recovery, state loading or any worker launch. A retained activation
 // may supply the UID hint, but cannot skip the current native stake check.
@@ -45,6 +45,9 @@ func TestProducerGatePinsExactBlockRuntimeClientRegressionsNativeStakeStartup(t 
 	}{
 		{from: "RunRelease", to: "runReleaseWithActivationSetup", args: []string{"ctx", "configPath", "nil"}},
 		{from: "runReleaseWithActivationSetup", to: "runReleaseWithStartupV2", args: []string{"ctx", "configPath", "retainedSetup", "nil"}},
+		{from: "runReleaseWithStartupV2", to: "runReleaseWithStartupAndProgressV2", args: []string{"ctx", "configPath", "retainedSetup", "adoption", "nil", `""`}},
+		{from: "RunReleaseWithProgress", to: "runReleaseWithStartupAndProgressV2", args: []string{"ctx", "configPath", "nil", "nil", "nil", "progressPath"}},
+		{from: "RunReleaseWithNativeGapBridge", to: "runReleaseWithStartupAndProgressV2", args: []string{"ctx", "configPath", "nil", "nil", "bridge", "progressPath"}},
 	} {
 		function := functions[edge.from]
 		if function == nil || function.Body == nil || len(function.Body.List) != 1 {
@@ -63,13 +66,19 @@ func TestProducerGatePinsExactBlockRuntimeClientRegressionsNativeStakeStartup(t 
 			t.Fatalf("production entry %s bypasses %s", edge.from, edge.to)
 		}
 		for index, expected := range edge.args {
-			argument, ok := call.Args[index].(*ast.Ident)
-			if !ok || argument.Name != expected {
+			argument := ""
+			switch value := call.Args[index].(type) {
+			case *ast.Ident:
+				argument = value.Name
+			case *ast.BasicLit:
+				argument = value.Value
+			}
+			if argument != expected {
 				t.Fatalf("production entry %s changed argument %d from %s", edge.from, index, expected)
 			}
 		}
 	}
-	run := functions["runReleaseWithStartupV2"]
+	run := functions["runReleaseWithStartupAndProgressV2"]
 	if run == nil || run.Body == nil {
 		t.Fatal("real release startup body is absent")
 	}
@@ -99,7 +108,33 @@ func TestProducerGatePinsExactBlockRuntimeClientRegressionsNativeStakeStartup(t 
 	if len(registration) != 1 || len(hint) != 1 || len(stake) != 1 || registration[0] >= stake[0] || hint[0] >= stake[0] {
 		t.Fatal("native startup stake admission is absent, duplicated or before EVM registration")
 	}
-	activation := positions["loadReleaseEvidenceV2ActivationInputsWithRetainedSetup"]
+	// The stake admission is the else branch of the single production split.
+	// Everything after that statement runs after it on the ordinary path.
+	var startup *ast.IfStmt
+	var ordinary *ast.BlockStmt
+	for _, statement := range run.Body.List {
+		conditional, ok := statement.(*ast.IfStmt)
+		if !ok {
+			continue
+		}
+		condition, ok := conditional.Cond.(*ast.Ident)
+		alternative, alternativeOK := conditional.Else.(*ast.BlockStmt)
+		if ok && condition.Name == "production" && alternativeOK && stake[0] > alternative.Pos() && stake[0] < alternative.End() {
+			if startup != nil {
+				t.Fatal("ordinary startup stake admission has more than one production split")
+			}
+			startup, ordinary = conditional, alternative
+		}
+	}
+	if startup == nil {
+		t.Fatal("native startup stake admission is not the ordinary branch of the production split")
+	}
+	var activation []token.Pos
+	for _, position := range positions["loadReleaseEvidenceV2ActivationInputsWithRetainedSetup"] {
+		if position > ordinary.Pos() && position < ordinary.End() {
+			activation = append(activation, position)
+		}
+	}
 	if len(activation) != 2 || activation[0] >= hint[0] || activation[1] <= stake[0] {
 		t.Fatal("retained UID source or strict post-stake activation ordering changed")
 	}
@@ -115,7 +150,7 @@ func TestProducerGatePinsExactBlockRuntimeClientRegressionsNativeStakeStartup(t 
 		{position: hint[0], op: token.NEQ},
 	} {
 		matched := 0
-		for _, statement := range run.Body.List {
+		for _, statement := range ordinary.List {
 			conditional, ok := statement.(*ast.IfStmt)
 			if !ok || edge.position <= conditional.Body.Pos() || edge.position >= conditional.Body.End() {
 				continue
@@ -153,7 +188,7 @@ func TestProducerGatePinsExactBlockRuntimeClientRegressionsNativeStakeStartup(t 
 			t.Fatalf("startup operation %s disappeared without updating the custody guard", operation)
 		}
 		for _, position := range positions[operation] {
-			if position <= stake[0] {
+			if position <= startup.End() {
 				t.Fatalf("startup operation %s precedes native stake admission", operation)
 			}
 		}
@@ -175,7 +210,7 @@ func TestProducerGatePinsExactBlockRuntimeClientRegressionsNativeStakeStartup(t 
 		}
 	}
 	guarded := 0
-	for _, statement := range run.Body.List {
+	for _, statement := range ordinary.List {
 		conditional, ok := statement.(*ast.IfStmt)
 		if !ok {
 			continue
@@ -238,4 +273,150 @@ func TestProducerGatePinsExactBlockRuntimeClientRegressionsNativeStakeStartup(t 
 	if guarded != 1 {
 		t.Fatal("real release startup lacks exactly one fail-closed native stake admission")
 	}
+	// Since d1808f79 a production (owner-recycle) config takes the other branch:
+	// it recovers history, opens disk state and launches its workers before any
+	// current UID or stake check. Its refresh worker checks both once, before
+	// its first advance, and only then closes the readiness that trails and
+	// fresh intents wait for.
+	if len(positions["runProductionPreparationAndRefresh"]) != 1 {
+		t.Fatal("production startup lost its preparation refresh worker")
+	}
+	readinessAssigned, readinessPassed := false, false
+	ast.Inspect(run.Body, func(node ast.Node) bool {
+		switch value := node.(type) {
+		case *ast.AssignStmt:
+			if len(value.Lhs) == 1 && len(value.Rhs) == 1 && releaseStartupName(value.Lhs[0]) == "trailReady" && releaseStartupName(value.Rhs[0]) == "runtimeV2.preparation.ready" {
+				readinessAssigned = true
+			}
+		case *ast.KeyValueExpr:
+			if releaseStartupName(value.Key) == "trailReady" && releaseStartupName(value.Value) == "trailReady" {
+				readinessPassed = true
+			}
+		}
+		return true
+	})
+	if !readinessAssigned || !readinessPassed {
+		t.Fatal("production trails no longer wait for the preparation readiness")
+	}
+	for _, order := range []struct {
+		path, function string
+		steps          []string
+	}{
+		{path: "../validator/production_startup.go", function: "runProductionPreparationAndRefresh", steps: []string{"FindUidByHotkeyAtHashContext", "authenticateReleaseValidatorStakeContext", "advance", "close"}},
+		{path: "../validator/release_shutdown.go", function: "runReleaseOperatorWorkers", steps: []string{"<-operations.trailReady", "reportReleaseTrailEngineError"}},
+		{path: "../validator/release_submit_v2.go", function: "submitOnceV2", steps: []string{"requestProductionPreparation", "PrepareWeightsCRv4ExactAtContext", "beginV2", "submitPreparedNativeRuntimeContext"}},
+	} {
+		function := releaseStartupFunction(t, order.path, order.function)
+		steps := releaseStartupSteps(function)
+		var previous token.Pos
+		for _, step := range order.steps {
+			if len(steps[step]) != 1 || steps[step][0] <= previous {
+				t.Fatalf("%s lost its production readiness order at %s", order.function, step)
+			}
+			previous = steps[step][0]
+		}
+	}
+	// Readiness closes only on the iteration whose stake check and advance
+	// both succeeded; a fresh intent proceeds only once readiness has closed.
+	refresh := releaseStartupFunction(t, "../validator/production_startup.go", "runProductionPreparationAndRefresh")
+	closesOnSuccess := false
+	ast.Inspect(refresh.Body, func(node ast.Node) bool {
+		conditional, ok := node.(*ast.IfStmt)
+		if !ok || conditional.Else == nil {
+			return true
+		}
+		condition, ok := conditional.Cond.(*ast.BinaryExpr)
+		if !ok || condition.Op != token.NEQ || releaseStartupName(condition.X) != "err" || releaseStartupName(condition.Y) != "nil" {
+			return true
+		}
+		ast.Inspect(conditional.Else, func(node ast.Node) bool {
+			call, ok := node.(*ast.CallExpr)
+			if ok && releaseStartupName(call.Fun) == "close" && len(call.Args) == 1 && releaseStartupName(call.Args[0]) == "runtime.preparation.ready" {
+				closesOnSuccess = true
+			}
+			return true
+		})
+		return true
+	})
+	if !closesOnSuccess {
+		t.Fatal("production readiness can close without a successful stake check and advance")
+	}
+	request := releaseStartupFunction(t, "../validator/production_startup.go", "requestProductionPreparation")
+	readyReturnsNil, pendingReturnsError := false, false
+	ast.Inspect(request.Body, func(node ast.Node) bool {
+		clause, ok := node.(*ast.CommClause)
+		if !ok || len(clause.Body) == 0 {
+			return true
+		}
+		returned, ok := clause.Body[len(clause.Body)-1].(*ast.ReturnStmt)
+		if !ok || len(returned.Results) != 1 {
+			return true
+		}
+		result := releaseStartupName(returned.Results[0])
+		if receive, ok := clause.Comm.(*ast.ExprStmt); ok && releaseStartupName(receive.X) == "<-owner.ready" {
+			readyReturnsNil = result == "nil"
+		} else if clause.Comm == nil {
+			pendingReturnsError = result != "" && result != "nil"
+		}
+		return true
+	})
+	if !readyReturnsNil || !pendingReturnsError {
+		t.Fatal("a production intent can proceed before the preparation readiness")
+	}
+}
+
+// One function from one production source, parsed with its own file set.
+func releaseStartupFunction(t *testing.T, path, name string) *ast.FuncDecl {
+	t.Helper()
+	parsed, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, declaration := range parsed.Decls {
+		if function, ok := declaration.(*ast.FuncDecl); ok && function.Name.Name == name && function.Body != nil {
+			return function
+		}
+	}
+	t.Fatalf("production function %s is absent from %s", name, path)
+	return nil
+}
+
+// Positions of every named call and every receive from a named channel.
+func releaseStartupSteps(function *ast.FuncDecl) map[string][]token.Pos {
+	steps := map[string][]token.Pos{}
+	ast.Inspect(function.Body, func(node ast.Node) bool {
+		switch value := node.(type) {
+		case *ast.CallExpr:
+			switch callee := value.Fun.(type) {
+			case *ast.Ident:
+				steps[callee.Name] = append(steps[callee.Name], value.Pos())
+			case *ast.SelectorExpr:
+				steps[callee.Sel.Name] = append(steps[callee.Sel.Name], value.Pos())
+			}
+		case *ast.UnaryExpr:
+			if value.Op == token.ARROW {
+				name := releaseStartupName(value)
+				steps[name] = append(steps[name], value.Pos())
+			}
+		}
+		return true
+	})
+	return steps
+}
+
+// A dotted identifier, nil, or a receive from one; anything else is empty.
+func releaseStartupName(expression ast.Expr) string {
+	switch value := expression.(type) {
+	case *ast.Ident:
+		return value.Name
+	case *ast.SelectorExpr:
+		if owner := releaseStartupName(value.X); owner != "" {
+			return owner + "." + value.Sel.Name
+		}
+	case *ast.UnaryExpr:
+		if owner := releaseStartupName(value.X); value.Op == token.ARROW && owner != "" {
+			return "<-" + owner
+		}
+	}
+	return ""
 }

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // A synced but unacknowledged completion retains its original signed economic
 // policy even when a fault producer consistently rehashes its export inventory.

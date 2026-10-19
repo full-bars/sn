@@ -1,0 +1,106 @@
+{
+  "author_execution": false,
+  "cwd": "/home/by/urnetwork/sn/scripts/qualification",
+  "execution_gates": [
+    "Root selects exact finite invocation after current nativefee11 USER/child closes.",
+    "Retain actual raw38 results, original exit/tree wait and closed USER identity; no author tests/imports.",
+    "Historical H helper sources and original failed pair missing wait remain unchanged."
+  ],
+  "files": [
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/child_context.py",
+      "sha256": "5da518c352de3be98c38e4aec1c0eb75dfb9e26848073542b848fdaf2b8189a6"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/cargo_control.py",
+      "sha256": "f5a8daeff6a40d3a15a447858380dbc364d082e378d245cd1dff67cf17846bfc"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/owner_resource_guard.py",
+      "sha256": "e99e8223bbe657e8c67a9c236f82612e2d809920ed207d4f5bb67b9392279b9c"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/child_context_test.py",
+      "sha256": "95d76d1b84773ee4fe8a5f4702c97cf2d7126eed01320ec00fa8cfe16a114086"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/cargo_control_test.py",
+      "sha256": "1bd850f678eb4a37d1a4b388f1ac18069e41e5b970177008a3cd53ec388dcfca"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/go_test_image.py",
+      "sha256": "e8a4249e26a634aae08a1913cf3911828c0a694b8b47299edf52921741d3961f"
+    }
+  ],
+  "main_merge": "0bd3f545",
+  "resource_proposal_only": {
+    "child_timeout_seconds": 300,
+    "data_growth_bytes": 67108864,
+    "entry_data_bytes": 10737418240,
+    "entry_memory_bytes": 113816633344,
+    "log_limit_bytes": 8388608,
+    "memory_max_bytes": 536870912,
+    "memory_swap_max_bytes": 0,
+    "unit_runtime_seconds": 360,
+    "unit_stop_seconds": 90
+  },
+  "review": [
+    "Compiler census retries only three snapshots of the same start time, skips only observed death/absence, retains persistent live-read refusal and PID-reuse rejection.",
+    "Guard failures retain original exception and only a real completed child join; ChildContext durably writes its actual wait without context-verification PASS.",
+    "Repeated exception objects clear stale process evidence before any current launch result can be attached.",
+    "Thin owner-resource guard keeps96GiB host-memory and295833415680-byte Docker healthy floors, existing supplied data floor, and per-phase sampler hook.",
+    "Two real process-control suites cover failure cleanup, missing/changed inputs, log overflow, callback failures and deterministic census cut points; no application compiler is run by these tests."
+  ],
+  "root_count": 38,
+  "selectors": [
+    "child_context_test.ChildContextTests.test_missing_service_path_reproduces_old_launch_and_refuses_before_body",
+    "child_context_test.ChildContextTests.test_dynamic_tool_outside_goroot_and_exact_child_context_are_retained",
+    "child_context_test.ChildContextTests.test_poisoned_child_path_is_refused_even_when_explicit_go_version_works",
+    "child_context_test.ChildContextTests.test_wrong_tool_pin_or_relative_command_cannot_start_a_child",
+    "child_context_test.ChildContextTests.test_changed_child_directory_refuses_before_launch",
+    "child_context_test.ChildContextTests.test_replaced_executable_with_identical_bytes_refuses_before_launch",
+    "child_context_test.ChildContextTests.test_disappeared_dynamic_tool_is_not_accepted_from_successful_probe",
+    "child_context_test.ChildContextTests.test_interpreter_origin_is_bound_and_env_shebang_is_refused",
+    "child_context_test.ChildContextTests.test_fixture_environment_secret_values_are_not_published",
+    "child_context_test.ChildContextTests.test_wrong_actual_python_pin_refuses_before_any_tool_probe",
+    "child_context_test.ChildContextTests.test_checker_exception_after_wait_replays_exact_flat_result_without_rerunning",
+    "child_context_test.ChildContextTests.test_postcheck_failure_keeps_actual_wait_but_cannot_claim_verified_context",
+    "child_context_test.ChildContextTests.test_changed_retained_output_and_existing_outcome_cannot_replay_or_restart",
+    "child_context_test.ChildContextTests.test_go_image_entrypoint_executes_bound_dynamic_tool_and_retains_context",
+    "child_context_test.ChildContextTests.test_compiler_census_counts_bare_absolute_and_global_c_argv",
+    "child_context_test.ChildContextTests.test_unobservable_live_compiler_cannot_disappear_from_admission",
+    "child_context_test.ChildContextTests.test_compiler_census_retries_executable_loss_until_same_generation_exits",
+    "child_context_test.ChildContextTests.test_compiler_census_retries_executable_loss_without_losing_live_worker",
+    "child_context_test.ChildContextTests.test_compiler_census_empty_argv_checks_exit_before_refusing",
+    "child_context_test.ChildContextTests.test_compiler_census_reuse_during_failed_read_is_never_exit",
+    "child_context_test.ChildContextTests.test_compiler_census_persistent_permission_refusal_keeps_original_cause",
+    "child_context_test.ChildContextTests.test_resource_guard_exception_retains_actual_wait_without_context_pass",
+    "child_context_test.ChildContextTests.test_sampler_stop_exception_still_joins_and_retains_child",
+    "child_context_test.ChildContextTests.test_unverified_guard_cleanup_cannot_publish_a_joined_wait",
+    "child_context_test.ChildContextTests.test_owner_resource_guard_keeps_failure_and_actual_wait",
+    "child_context_test.ChildContextTests.test_reused_exception_cannot_relabel_a_prior_actual_wait",
+    "child_context_test.ChildContextTests.test_process_creation_failure_cannot_fabricate_an_actual_wait",
+    "cargo_control_test.CargoControlTests.test_same_package_old_mtime_stale_artifact_is_not_a_control",
+    "cargo_control_test.CargoControlTests.test_compiler_artifact_must_name_this_physical_crate",
+    "cargo_control_test.CargoControlTests.test_undeclared_source_and_dependency_changes_are_refused",
+    "cargo_control_test.CargoControlTests.test_mutating_frozen_baseline_does_not_relabel_the_control",
+    "cargo_control_test.CargoControlTests.test_exact_assertion_and_count_required_even_with_exit101",
+    "cargo_control_test.CargoControlTests.test_cargo_build_failure_and_filtered_zero_tests_are_not_causality",
+    "cargo_control_test.CargoControlTests.test_normal_leader_exit_refuses_and_reaps_remaining_descendant",
+    "cargo_control_test.CargoControlTests.test_failed_phase_joins_term_ignoring_leader_and_descendant",
+    "cargo_control_test.CargoControlTests.test_recipe_read_refuses_fifo_and_preexisting_oversize",
+    "cargo_control_test.CargoControlTests.test_reviewed_growth_must_fit_before_any_compiler_starts",
+    "cargo_control_test.CargoControlTests.test_actual_pipe_overflow_cancels_owned_process"
+  ],
+  "source_commit": "6a30d152",
+  "status": "SOURCE_ACK_CANONICAL_MERGE_VERIFIED_ACTUAL38_PENDING",
+  "suggested_argv": [
+    "/home/by/.pyenv/versions/3.14.7/bin/python3.14",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "child_context_test",
+    "cargo_control_test"
+  ]
+}

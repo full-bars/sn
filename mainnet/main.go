@@ -123,6 +123,9 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 			return 2
 		}
 	}
+	if len(args) != 0 && args[0] == "treasury" {
+		return runTreasuryCommand(ctx, args[1:], stdout, stderr)
+	}
 	if len(args) != 0 && args[0] == "storage-inventory" {
 		return runStorageInventory(ctx, args[1:], stdout, stderr)
 	}
@@ -174,6 +177,9 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	if len(args) != 0 && args[0] == "root-capabilities" {
 		return runRootCurrentCapabilitiesCommand(ctx, args[1:], stdout, stderr)
 	}
+	if len(args) != 0 && args[0] == "root-register" {
+		return runRootRegisterCommand(ctx, args[1:], stdout, stderr)
+	}
 	if len(args) != 0 && args[0] == "activate-root-passive" {
 		return runRootPassiveHostCommand(ctx, args[1:], stdout, stderr, now)
 	}
@@ -206,6 +212,9 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 	}
 	if len(args) != 0 && args[0] == "bootstrap-contracts" {
 		return runBootstrapContractCommand(ctx, args, stdout, stderr)
+	}
+	if len(args) != 0 && args[0] == "register-operator-pool" {
+		return runRegisterOperatorPoolCommand(ctx, args[1:], stdout, stderr)
 	}
 	if len(args) != 0 && args[0] == "bootstrap" {
 		return runBootstrapRootCommand(ctx, args, stdout, stderr)
@@ -283,10 +292,13 @@ func runMainWithMonitorHooks(ctx context.Context, args []string, stdout, stderr 
 		fmt.Fprintln(stderr, "storage reports: sn-mainnet storage-inventory|storage-verify --durable-volumes FILE --durable-volumes-sha256 sha256:DIGEST --root DIR --former-writer-fence FILE --former-writer-fence-sha256 sha256:DIGEST [--inventory FILE --inventory-sha256 sha256:DIGEST]; reports do not authorize restart")
 		fmt.Fprintln(stderr, "owner-local storage reports: storage-owner-inventory|storage-owner-verify selects only the owner-local declaration schema; --max-owner-attributes and --max-owner-attribute-bytes bound retained custody metadata; verification --compare-reviewed-rebound only reports comparison to an explicit target declaration")
 		fmt.Fprintln(stderr, "owner recycle custody: sn-mainnet owner-recycle observe|plan|reserve|export|inspect-request|ledger-plan|sign|import|import-reply|status|reconcile|submit-plan|submit [explicit policy, approval, original action and request pins]")
+		fmt.Fprintln(stderr, "root registration custody: sn-mainnet root-register observe|plan|reserve|export|inspect-request|ledger-plan|sign|import|import-reply|status|reconcile|submit-plan|submit|bootstrap-handoff [explicit operator, full balance exposure consent, approval and original request pins]")
+		fmt.Fprintln(stderr, "absent-seat bootstrap precursor: sn-mainnet bootstrap-chain root-registration <root-register subcommand>; finalized seat requires separate passive-service configuration and approval")
 		fmt.Fprintln(stderr, "offline root capabilities: sn-mainnet root-capabilities --metadata FILE --metadata-hash 0xHASH --runtime-source-commit COMMIT; call compatibility does not establish current participation or signing authority")
-		fmt.Fprintln(stderr, "offline owner handoff: sn-mainnet owner-signing inspect|sign|reply|verify|ledger-plan --request FILE --accept-request-hash HASH --trim-approval-key HEX --owner-account-id HEX --expected-genesis HEX [owner-local device custody, public response or proof flags]")
+		fmt.Fprintln(stderr, "offline owner handoff: sn-mainnet owner-signing inspect|sign|reply|verify|ledger-plan --request FILE --accept-request-hash HASH --trim-approval-key HEX --owner-account-id HEX --expected-genesis HEX [--signatory-account-id HEX for a native multisig owner step] [owner-local device custody, public response or proof flags]")
 		fmt.Fprintln(stderr, "offline artifacts: sn-mainnet safe-release-verify --version 1.4.1|1.5.0 --variant Safe|SafeL2 --archive ABSOLUTE_FILE")
 		fmt.Fprintln(stderr, "offline successor preparation: bootstrap-chain contract-successor-preview|contract-successor-prepare|contract-successor-resume --config FILE --run-dir DIR --accept-plan-hash HASH --request FILE [exact preparation approval flags]")
+		fmt.Fprintln(stderr, "settlement v2 activation: sn-mainnet register-operator-pool review|readback --rpc URL --settlement2 ADDRESS --no-id N --pool-hotkey 0xHOTKEY --first-epoch EPOCH [review: --safe ADDRESS --maximum-burn-rao RAO --value-wei WEI; readback: --transaction-hash 0xHASH]; review prints the Safe's call after an eth_call preflight and readback checks the registration; neither signs nor sends")
 		fmt.Fprintln(stderr, "usage: sn-mainnet inspect|monitor|runtime-snapshot|finalized-mapping|finalized-snapshot --rpc URL [identity flags]; subnet-discover --rpc URL --snapshot FILE; root-preview|root-monitor|subnet-preview|owner-trim-plan --rpc URL --policy FILE; owner-trim-recheck|owner-trim-reconcile --rpc URL --policy FILE --plan FILE --plan-hash sha256:DIGEST; owner-trim-qualify --rpc URL --policy FILE --window FILE; check-recycle-mode|observe-native-miner-emission --rpc URL --policy FILE; economic-reference --input FILE; source-lock --sn-dir DIR; plan --outline|--config FILE; bootstrap|bootstrap-chain plan|apply|resume --config FILE [local custody confirmation flags]; bootstrap-chain readiness --config FILE --run-dir DIR --accept-plan-hash HASH --rpc URL; bootstrap-chain contract-plan|contract-readiness|contract-successor-plan --config FILE [original custody confirmation flags]; bootstrap-contracts preview|plan|apply|resume --config FILE; release-inventory --config FILE")
 		return 2
 	}

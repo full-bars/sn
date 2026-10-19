@@ -442,6 +442,7 @@ func TestReleaseEvidenceV2DecisionLateFinalityAndCancellationDiscardAll(t *testi
 	t.Parallel()
 	fixture := newReleaseDecisionV2TestFixture(t)
 	fixture.regressFinality = true
+	fixture.chain.readRetryHooks = chainReadRetryTestHooks(1)
 	if observed, err := fixture.chain.readReleaseDecisionChainV2Context(t.Context(), fixture.query); err == nil || observed != nil || fixture.count("rootCommitments") != 2 {
 		t.Fatalf("late real finality regression retained partial authority: %v", err)
 	}

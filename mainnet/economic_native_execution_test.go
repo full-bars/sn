@@ -68,7 +68,7 @@ func nativeExecutionTestRecord(purpose string, function uint32, fields []nativeE
 // Every complete fixture emits and signs the exact original wire frame before
 // a fault is injected. Missing or contradictory data cannot become a negative
 // test pass at an unrelated setup boundary.
-func nativeExecutionTestConfigure(t *testing.T, source *economicEmissionFixture, fault func(uint64, *historicalReplayObservations)) {
+func nativeExecutionTestConfigure(t *testing.T, source *economicEmissionFixture, fault func(uint64, *historicalReplayObservations), storageJoin ...bool) {
 	t.Helper()
 	request := historicalReplayTestRequest(t, "0xf7")
 	root := filepath.Dir(request.Job.Path)
@@ -105,6 +105,10 @@ func nativeExecutionTestConfigure(t *testing.T, source *economicEmissionFixture,
 	provider.Operation, provider.KeyHex, provider.ValueHex = "set", "0x01", &stored
 	owner.Operation, owner.KeyHex, owner.ValueHex = "set", "0x02", &stored
 	profile.Rules = []historicalReplayHookRule{drainRule, epochRule, emissionRule, providerRule, ownerRule}
+	var census []historicalReplayObservation
+	if len(storageJoin) != 0 && storageJoin[0] {
+		census = nativeEpochLayoutTestRecords(t, source, profile, drains, &epoch)
+	}
 	profileRaw, err := json.Marshal(profile)
 	if err != nil {
 		t.Fatal(err)
@@ -118,7 +122,7 @@ func nativeExecutionTestConfigure(t *testing.T, source *economicEmissionFixture,
 	for number := uint64(101); number <= 102; number++ {
 		trace := historicalReplayObservations{ProfileSha256: historicalReplayDigest(sha256.Sum256(profileRaw)), SourceReviewSha256: profile.SourceReviewSha256, Authority: "caller-supplied-unapproved-callsite-profile", OriginalFunctionBodiesPreserved: true, Observations: []historicalReplayObservation{}}
 		if number == 101 {
-			trace.Observations = append(append([]historicalReplayObservation{}, drains...), epoch, emission, provider, owner)
+			trace.Observations = append(append(append([]historicalReplayObservation{}, drains...), census...), epoch, emission, provider, owner)
 			trace.HostCalls = uint64(len(trace.Observations))
 			for index := range trace.Observations {
 				trace.Observations[index].Ordinal = uint64(index + 1)
@@ -618,13 +622,13 @@ func TestEconomicNativeExecutionConsumesActualOriginalWasmReplay(t *testing.T) {
 		}
 		drains[index] = nativeExecutionDrain{Key: storageKey.Hex(), Fallback: make([]byte, 8)}
 	}
-	outcome, err := deriveNativeExecution(f.policy, admission, block, job, *report, drains)
+	outcome, err := deriveNativeExecution(f.policy, admission, block, job, *report, drains, nil)
 	if err != nil || outcome == nil || outcome.MinerAllocation != "100" || outcome.ProviderEntitlement != "9" || outcome.OwnerRecycled != "89" || outcome.CollateralCapture != "3" || outcome.FixedPointDust != "2" || report.RuntimeAdmitted || report.NativeFeeWithdrawalRefund {
 		t.Fatal("actual original program did not feed the accounting consumer", outcome, err)
 	}
 	// Omission after a real positive baseline cannot become a proof of absence.
 	report.HookObservations.Observations[0].StorageReturn = nil
-	if _, err := deriveNativeExecution(f.policy, admission, block, job, *report, drains); err == nil {
+	if _, err := deriveNativeExecution(f.policy, admission, block, job, *report, drains, nil); err == nil {
 		t.Fatal("caller-omitted actual return acquired original-Wasm amounts")
 	}
 }

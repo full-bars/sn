@@ -40,7 +40,7 @@ jobs:
         run: |
           for attempt in 1 2 3; do
             echo "Build attempt $attempt..."
-            if go build -o /tmp/provider ./provider/ && \
+            if go build -o /tmp/provider ./cmd/provider/ && \
                go build -o /tmp/urnet-tools ./cmd/urnet-tools/; then
               echo "Build succeeded"; break
             fi

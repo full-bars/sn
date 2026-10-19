@@ -43,17 +43,16 @@ func TestMonitorRestartRetainsMetricsWhileInitialReadPending(t *testing.T) {
 			}
 			url, entered, left := monitorServicesBlockedChain(t)
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			var stdout, stderr bytes.Buffer
 			done := make(chan struct{})
 			var exit int
+			run := prepareMonitorTestWithClock(t, ctx, []string{"monitor", "--rpc", url, "--expected-chain", "fixture-mainnet", "--expected-genesis", testGenesisHash, "--expected-evm-chain-id", "964", "--metrics-file", path}, &stdout, &stderr, func() time.Time { return base.Add(time.Hour) })
 			go func() {
 				defer close(done)
-				exit = runMonitorTestWithClock(t, ctx, []string{"monitor", "--rpc", url, "--expected-chain", "fixture-mainnet", "--expected-genesis", testGenesisHash, "--expected-evm-chain-id", "964", "--metrics-file", path}, &stdout, &stderr, func() time.Time { return base.Add(time.Hour) })
+				exit = run()
 			}()
-			defer func() {
-				cancel()
-				<-done
-			}()
+			defer joinMonitorTestWorker(t, cancel, done)
 			select {
 			case <-entered:
 			case <-done:

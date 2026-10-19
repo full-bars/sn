@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Public restoration must reach actual original execution without rewriting
 // signed physical authority. All keys, approval and routes are synthetic.

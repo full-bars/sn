@@ -910,7 +910,11 @@ func commitmentParserTypeConfusionModel(sequence uint64) (uint64, error) {
 	// two-field value deliberately ending in canonical Sha256 bytes: a suffix
 	// parser would accept it even though it is not the fleet protocol.
 	twoFieldsEndingInSHA := append(append(append([]byte(nil), prefix...), 0x08, 0x87, 0x83), hash[:]...)
+	// A one-field Sha256 is a validator source or untagged legacy fleet
+	// commitment, never the fleet protocol.
+	legacySHA := append(append(append([]byte(nil), prefix...), 0x04, 0x83), hash[:]...)
 	cases := [][]byte{
+		legacySHA,
 		twoFieldsEndingInSHA,
 		append(append([]byte(nil), prefix...), 0x04, 0x87),
 		append(append(append([]byte(nil), prefix...), 0x04, 0x83), make([]byte, 32)...),

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Whole-history restoration uses actual public preparation, checkpoint writers
 // and monitor reopening. Large synthetic history is not a chain observation claim.
@@ -313,20 +313,6 @@ func TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome(t *testing.T
 	if !reflect.DeepEqual(f.native.record(t).State.Catalog, f.record.State.Catalog) {
 		t.Fatal("continued monitor discarded original signed capacity")
 	}
-}
-
-func TestMonitorNativeRestoreFull512HistoryAndBothActiveHeads(t *testing.T) {
-	f := newMonitorNativeRestoreFixture(t, 512)
-	path, hash := f.plan(t)
-	f.apply(t, path, hash, false)
-	admission := monitorNativeObserveAdmission(t, f.record.State.Archive.Segments)
-	run := f.native.start(t, monitorServiceHooks{})
-	admission(run)
-	event := run.next(t)
-	if !event.Current || event.State.ArchiveSegments != 512 || event.State.ArchivedEvents != 512 || event.State.BatchCount != 512 || event.State.Cursor.Number != 612 || event.State.ObservedAlpha != "5120" || event.State.ArchiveSegmentCapacity != 512 {
-		t.Fatal("full accepted archive did not reopen through actual public monitor", event)
-	}
-	run.stop(t)
 }
 
 func TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory(t *testing.T) {

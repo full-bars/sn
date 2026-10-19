@@ -20,6 +20,9 @@ mod fee_census_tests;
 #[path = "historical_native_runtime_renewal_tests.rs"]
 mod runtime_renewal_tests;
 
+#[path = "historical_native_treasury_tests.rs"]
+mod treasury_tests;
+
 use super::*;
 use parity_scale_codec as codec;
 use std::{fs::OpenOptions, io::Write, os::unix::fs::OpenOptionsExt, path::Path};
@@ -148,6 +151,29 @@ fn fixture_with_runtime_upgrade(
     drained_activation: bool,
     fee_mode: Option<&str>,
     upgrade: Option<&[u8]>,
+) -> (HistoricalJob, sp_core::storage::Storage) {
+    fixture_with_treasury(
+        continuous,
+        principal,
+        effects,
+        yuma,
+        drained_activation,
+        fee_mode,
+        upgrade,
+        false,
+    )
+}
+
+// The explicit treasury fixture leaves every old program and profile unchanged.
+fn fixture_with_treasury(
+    continuous: bool,
+    principal: Option<Option<u64>>,
+    effects: Option<&str>,
+    yuma: Option<&str>,
+    drained_activation: bool,
+    fee_mode: Option<&str>,
+    upgrade: Option<&[u8]>,
+    treasury: bool,
 ) -> (HistoricalJob, sp_core::storage::Storage) {
     let allocation_count = yuma_capacity_tests::count(yuma);
     let capture = effects
@@ -423,6 +449,16 @@ fn fixture_with_runtime_upgrade(
             span(1700, epoch.len()), body, span(10000, 5), span(11000, upgrade.len())
         );
     }
+    if treasury {
+        assert!(
+            principal.is_none()
+                && effects.is_none()
+                && yuma.is_none()
+                && fee_mode.is_none()
+                && upgrade.is_none()
+        );
+        treasury_tests::program(&mut declarations, &mut body);
+    }
     let code = if allocation_count > 2 {
         yuma_capacity_tests::expand(allocation_count, &mut declarations, &mut body);
         if yuma_populated_tests::selected(yuma) {
@@ -432,7 +468,7 @@ fn fixture_with_runtime_upgrade(
     } else if upgrade.is_some() {
         wasm_with_heap(&declarations, &body, 128000)
     } else if fees.is_some() {
-        wasm_with_heap(&declarations, &body, 60000)
+        wasm_with_heap(&declarations, &body, fee_census_tests::HEAP)
     } else {
         wasm(&declarations, &body)
     };
@@ -456,6 +492,9 @@ fn fixture_with_runtime_upgrade(
     }
     if let Some(stock) = principal.flatten() {
         initial.top.insert(principal_key.to_vec(), words(&[stock]));
+    }
+    if treasury {
+        treasury_tests::initial(&mut initial);
     }
     let backing = TestExternalities::<Blake2Hasher>::new_with_code_and_state(
         &code,
@@ -509,6 +548,9 @@ fn fixture_with_runtime_upgrade(
     if yuma_populated_tests::selected(yuma) {
         yuma_populated_tests::expected(allocation_count, &mut expected);
     }
+    if treasury {
+        treasury_tests::expected(&mut expected);
+    }
     let backing = TestExternalities::<Blake2Hasher>::new_with_code_and_state(
         &code,
         expected.clone(),
@@ -525,7 +567,7 @@ fn fixture_with_runtime_upgrade(
     };
     let child = NativeHeader::new(
         101,
-        BlakeTwo256::ordered_trie_root(extrinsics.clone(), StateVersion::V1),
+        BlakeTwo256::ordered_trie_root(extrinsics.clone(), StateVersion::V0),
         *backing.backend.root(),
         parent.hash(),
         Digest::default(),
@@ -638,6 +680,9 @@ fn fixture_with_runtime_upgrade(
     if let Some(fees) = &fees {
         fees.profile(&code, &mut profile);
     }
+    if treasury {
+        treasury_tests::profile(&code, &mut profile);
+    }
     (
         HistoricalJob {
             schema: HISTORICAL_SCHEMA.to_owned(),
@@ -657,14 +702,19 @@ fn fixture_with_runtime_upgrade(
                 .into_iter()
                 .collect(),
             observation_profile: Some(profile),
-            principal_effects: effects.is_some(),
-            principal_queries: principal.map(|_| {
-                vec![principal::PrincipalQuery {
-                    hotkey: [0x11; 32],
-                    coldkey: [0x33; 32],
-                    netuid: 25,
-                }]
-            }),
+            principal_effects: effects.is_some() || treasury,
+            principal_queries: if treasury {
+                Some(treasury_tests::queries())
+            } else {
+                principal.map(|_| {
+                    vec![principal::PrincipalQuery {
+                        hotkey: [0x11; 32],
+                        coldkey: [0x33; 32],
+                        netuid: 25,
+                        availability: false,
+                    }]
+                })
+            },
         },
         expected,
     )
@@ -767,7 +817,7 @@ fn export_contiguous_jobs(
         let previous = jobs.last().unwrap();
         let child = NativeHeader::new(
             number,
-            BlakeTwo256::ordered_trie_root(Vec::<Vec<u8>>::new(), StateVersion::V1),
+            BlakeTwo256::ordered_trie_root(Vec::<Vec<u8>>::new(), StateVersion::V0),
             *expected.backend.root(),
             H256(previous.child_hash),
             Digest::default(),
@@ -1043,6 +1093,7 @@ fn historical_native_principal_exports_original_parent_jobs() {
         hotkey: [0x11; 32],
         coldkey: [0x33; 32],
         netuid: 25,
+        availability: false,
     }]);
     let error = super::capture_tests::collect(&missing)
         .err()

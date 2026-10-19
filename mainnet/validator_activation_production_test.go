@@ -171,7 +171,7 @@ func TestValidatorActivationProductionExcludesConstructorCountersOnly(t *testing
 	f, client, plans, mapping := newValidatorActivationContractFixture(t)
 	coordinator, reserve, vault := stabi.NewSTCoordinator(), stabi.NewSTReserveSink(), stabi.NewSTSettlementVault()
 	forbidden := map[string]bool{}
-	for _, data := range [][]byte{coordinator.PackCurrentEpoch(), coordinator.PackOperatorCount(), coordinator.PackCampaignReserved(), reserve.PackPrincipal(), vault.PackTotalCaptured(), vault.PackTotalPaid(), vault.PackPendingFunding(), vault.PackOutstandingLiability(), vault.PackEscrowAccounted()} {
+	for _, data := range [][]byte{coordinator.PackCurrentEpoch(), coordinator.PackOperatorCount(), coordinator.PackPolicyCount(), coordinator.PackCampaignReserved(), reserve.PackPrincipal(), vault.PackTotalCaptured(), vault.PackTotalPaid(), vault.PackPendingFunding(), vault.PackOutstandingLiability(), vault.PackEscrowAccounted()} {
 		forbidden["0x"+hex.EncodeToString(data)] = true
 	}
 	seen := map[string]bool{}
@@ -232,7 +232,7 @@ func TestValidatorActivationProductionRetainedProjectionCannotOpenPublicStart(t 
 	if code != 0 {
 		t.Fatal(diagnostic)
 	}
-	store, err := openValidatorActivationStore(t.Context(), f.approval, f.key, false, f.now)
+	store, err := openValidatorActivationStore(f.chain.storageContext(t.Context()), f.approval, f.key, false, f.now)
 	if err != nil {
 		t.Fatal(err)
 	}

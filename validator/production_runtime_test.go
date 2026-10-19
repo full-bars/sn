@@ -70,7 +70,7 @@ func newProductionRuntimeTestFixture(t *testing.T, historical bool) *productionR
 				ValidThroughNativeEpoch: 30, ActivationNativeHash: [32]byte(mainnetRuntimeTestBlock(101))},
 		},
 	}
-	rpc.native.API.Client.(*validatorRuntimeIdentityTestClient).callContext = func(ctx context.Context, result any, method string, args ...any) error {
+	rpc.client.callContext = func(ctx context.Context, result any, method string, args ...any) error {
 		if err := rpc.callContext(ctx, result, method, args...); err != nil {
 			return err
 		}
@@ -283,7 +283,7 @@ func TestProductionRuntimeConfigRefusesRelabelingAndOtherPurposes(t *testing.T) 
 func TestProductionRuntimeCancellationJoinsBeforeBinding(t *testing.T) {
 	fixture := newProductionRuntimeTestFixture(t, false)
 	started := make(chan struct{})
-	client := fixture.rpc.native.API.Client.(*validatorRuntimeIdentityTestClient)
+	client := fixture.rpc.client
 	original := client.callContext
 	client.callContext = func(ctx context.Context, result any, method string, args ...any) error {
 		if method == "state_getRuntimeVersion" {
@@ -355,7 +355,7 @@ func TestProductionRuntimeHistoryRejectsObservationScopeAndOverlap(t *testing.T)
 // replace the previous mutable signing view with partially accepted evidence.
 func TestProductionRuntimeClosingCanonicalCheckPreservesPriorView(t *testing.T) {
 	fixture := newProductionRuntimeTestFixture(t, false)
-	client := fixture.rpc.native.API.Client.(*validatorRuntimeIdentityTestClient)
+	client := fixture.rpc.client
 	original := client.callContext
 	finalityReads, canonicalReads := 0, 0
 	faulted := false

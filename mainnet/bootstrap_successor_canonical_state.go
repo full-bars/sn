@@ -104,6 +104,8 @@ func (self *bootstrapSuccessorCanonicalChain) safeState(ctx context.Context, pla
 			return result, errors.Join(errRpcIntegrity, errors.New("successor canonical Safe runtime differs from reviewed release"))
 		}
 	}
+	// The signed execution request selects the census; getters cannot choose it.
+	ownerCount, required := safeOwnerProfile(plan.Request.singleOwner())
 	owners, err := self.safeCall(ctx, plan, block, 160, "getOwners")
 	if err != nil {
 		return result, err
@@ -112,7 +114,7 @@ func (self *bootstrapSuccessorCanonicalChain) safeState(ctx context.Context, pla
 		return result, errors.Join(errRpcIntegrity, errors.New("successor canonical owner census differs"))
 	}
 	ownerAddresses, ok := owners[0].([]common.Address)
-	if !ok || len(ownerAddresses) != 3 {
+	if !ok || len(ownerAddresses) != ownerCount {
 		return result, errors.Join(errRpcIntegrity, errors.New("successor canonical owner census differs"))
 	}
 	result.Owners = slices.Clone(ownerAddresses)
@@ -128,11 +130,11 @@ func (self *bootstrapSuccessorCanonicalChain) safeState(ctx context.Context, pla
 		return result, errors.Join(errRpcIntegrity, errors.New("successor canonical threshold differs"))
 	}
 	thresholdNumber, ok := threshold[0].(*big.Int)
-	if !ok || !thresholdNumber.IsUint64() || thresholdNumber.Uint64() != 2 {
+	if !ok || !thresholdNumber.IsUint64() || thresholdNumber.Uint64() != uint64(required) {
 		return result, errors.Join(errRpcIntegrity, errors.New("successor canonical threshold differs"))
 	}
 	result.Threshold = thresholdNumber.Uint64()
-	for _, value := range []struct{ slot, expected uint64 }{{slot: 3, expected: 3}, {slot: 4, expected: 2}} {
+	for _, value := range []struct{ slot, expected uint64 }{{slot: 3, expected: uint64(ownerCount)}, {slot: 4, expected: uint64(required)}} {
 		word, err := self.word(ctx, plan.Review.Transaction.Safe, common.BigToHash(new(big.Int).SetUint64(value.slot)), block)
 		if err != nil {
 			return result, err

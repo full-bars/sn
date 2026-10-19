@@ -326,7 +326,7 @@ func provisionalValidatorSignedSourceTest(t *testing.T, fixture *provisionalVali
 	if err != nil {
 		t.Fatal(err)
 	}
-	anchor, err := signer.NewSetFleetCommitmentCall(prepared.Netuid, [32]byte(hash))
+	anchor, err := signer.NewSetSourceCommitmentCall(prepared.Netuid, [32]byte(hash))
 	if err != nil {
 		t.Fatal(err)
 	}

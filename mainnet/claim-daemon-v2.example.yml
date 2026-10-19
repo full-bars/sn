@@ -1,0 +1,14 @@
+# provider claim-daemon-v2 --config (VERSION2-LAUNCH.md step 13). Replace each
+# <...> placeholder with the input SETTLEMENT-V2-EXAMPLES.md names.
+schema_version: 2
+api_url: "<operator-api-url>"
+rpc:
+  - "<O2-evm-rpc-url>"
+chain_id: 964
+vault: "<vault2-address>"
+batcher: "<claim-batcher-address>"
+coldkeys:
+  - "<O22-coldkey-ss58>"
+key_file: "<O22-relayer-key-file>"
+state_dir: "<O22-state-dir>"
+poll_seconds: 30

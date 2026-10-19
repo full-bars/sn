@@ -1,0 +1,9 @@
+{
+  "schema": "urnetwork-storage-preparation-fence-v1",
+  "root_path": "/secure/ur-mainnet/run-v2",
+  "root_inode": "<root-inode>",
+  "purpose": "fresh",
+  "former_writers_stopped": true,
+  "no_previous_owner_state": true,
+  "evidence": "<fence-evidence>"
+}

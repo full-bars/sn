@@ -54,7 +54,7 @@ func newReleaseStatsV2RuntimeTestFixture(t *testing.T, completed, failed int) *r
 }
 
 // Census capacities are the genuine source's complete raw provider/hash set.
-func releaseStatsV2RuntimeTestFixtureFor(t *testing.T, source *attemptCutV2SealTestFixture, stats *StatsEngine, ledger *AttemptLedger) *releaseStatsV2RuntimeTestFixture {
+func releaseStatsV2RuntimeTestFixtureFor(t testing.TB, source *attemptCutV2SealTestFixture, stats *StatsEngine, ledger *AttemptLedger) *releaseStatsV2RuntimeTestFixture {
 	t.Helper()
 	seal, objects := newAttemptCutV2SealTestOptions(t, source)
 	raw := source.engine.stats.currentReleaseStatsMeasurement()
@@ -72,7 +72,7 @@ func releaseStatsV2RuntimeTestFixtureFor(t *testing.T, source *attemptCutV2SealT
 }
 
 // Replays use new scratch, not a reused verified-result cache or fake reader.
-func (self *releaseStatsV2RuntimeTestFixture) fresh(t *testing.T) releaseStatsV2Options {
+func (self *releaseStatsV2RuntimeTestFixture) fresh(t testing.TB) releaseStatsV2Options {
 	t.Helper()
 	options := self.options
 	options.Seal.ScratchDirectory = filepath.Join(t.TempDir(), "seal")

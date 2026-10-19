@@ -27,7 +27,7 @@ type ValidatorEvidenceDepositAuditV2Manifest struct {
 	Epoch       uint64                                          `json:"epoch"`
 	Subject     protocol.ValidatorEvidenceSubject               `json:"subject"`
 	Decision    ReleaseMeasurementV2Decision                    `json:"decision"`
-	Origins     [2]string                                       `json:"origins"`
+	Origins     []string                                        `json:"origins"`
 	CensusHash  [32]byte                                        `json:"census_hash"`
 	CensusBytes uint64                                          `json:"census_bytes"`
 	Members     []ValidatorEvidencePublicationV2MemberReference `json:"members"`

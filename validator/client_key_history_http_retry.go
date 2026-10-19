@@ -38,7 +38,7 @@ func retryableClientKeyObservationHttpError(failure error) bool {
 	}
 	switch failure := failure.(type) {
 	case *clientKeyObservationHttpStatusError:
-		return failure.status == http.StatusRequestTimeout || failure.status == http.StatusBadGateway || failure.status == http.StatusServiceUnavailable || failure.status == http.StatusGatewayTimeout
+		return failure.status == http.StatusRequestTimeout || failure.status == http.StatusTooEarly || failure.status == http.StatusInternalServerError || failure.status == http.StatusBadGateway || failure.status == http.StatusServiceUnavailable || failure.status == http.StatusGatewayTimeout
 	case interface{ Unwrap() []error }:
 		causes := failure.Unwrap()
 		if len(causes) == 0 {

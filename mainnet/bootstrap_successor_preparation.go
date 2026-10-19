@@ -244,9 +244,8 @@ func validateBootstrapSuccessorPreparationPaths(preparation bootstrapChainPrepar
 		}
 		seen[path], seen[path+".lock"] = true, true
 	}
-	inputs := []string{preparation.Plan.ConfigPath, c.OwnerTrimPolicy.Path, c.OwnerTrimPlan.Path, c.Contracts.Path, c.Root.Path,
-		c.Validators[0].Config.Path, c.Validators[1].Config.Path, preparation.Contracts.Config.Plan.Artifacts.Path,
-		preparation.Root.ServiceInput.Path, c.RootValidator.Approval.Path, requestPath}
+	inputs := append([]string{preparation.Plan.ConfigPath, c.OwnerTrimPolicy.Path, c.OwnerTrimPlan.Path, c.Contracts.Path, c.Root.Path}, c.validatorConfigPaths()...)
+	inputs = append(inputs, preparation.Contracts.Config.Plan.Artifacts.Path, preparation.Root.ServiceInput.Path, c.RootValidator.Approval.Path, requestPath)
 	if approvalPath != "" {
 		inputs = append(inputs, approvalPath)
 	}

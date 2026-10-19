@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 package validator
 
@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urnetwork/connect/durablevolume"
@@ -149,7 +151,7 @@ func TestDurableAttemptLedgerAnchorLossIsSticky(t *testing.T) {
 	if _, err := ledger.Head(); !errors.Is(err, durablevolume.ErrIdentity) {
 		t.Fatal("cached head ignored lost mandatory anchor", err)
 	}
-	if err := unix.Fsetxattr(int(file.Fd()), attemptLedgerCustodyAttribute, raw, unix.XATTR_CREATE); err != nil {
+	if err := durablesys.SetAttribute(int(file.Fd()), attemptLedgerCustodyAttribute, raw, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ledger.Head(); !errors.Is(err, durablevolume.ErrIdentity) {

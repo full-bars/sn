@@ -213,7 +213,7 @@ func (self nativeProducerRenewal) validate(policy economicEmissionPolicy, previo
 		return errors.New("native producer renewal adds no reviewed runtime, engine or resource scope")
 	}
 	profile := self.Next.Runtime
-	if profile.RuntimeSourceCommit != frontierMappingSourceCommit || profile.RuntimeVersion.SpecName == "" || profile.RuntimeVersion.SpecVersion == 0 || profile.RuntimeVersion.TransactionVersion == 0 || profile.RuntimeVersion.StateVersion != 1 || !rootCanonicalHash(profile.RuntimeCodeHash) || !rootCanonicalHash(profile.RuntimeMetadataHash) || !planSha256(self.Next.ReviewSha256) || self.Next.Profile == nil || self.Next.Profile.Schema != historicalNativeProfileSchema {
+	if profile.RuntimeSourceCommit != nativeExecutionRuntimeSource(self.Next.Treasury) || profile.RuntimeVersion.SpecName == "" || profile.RuntimeVersion.SpecVersion == 0 || profile.RuntimeVersion.TransactionVersion == 0 || profile.RuntimeVersion.StateVersion != 1 || !rootCanonicalHash(profile.RuntimeCodeHash) || !rootCanonicalHash(profile.RuntimeMetadataHash) || !planSha256(self.Next.ReviewSha256) || self.Next.Profile == nil || self.Next.Profile.Schema != historicalNativeProfileSchema {
 		return errors.New("native producer renewal lacks exact original runtime and callsite approval")
 	}
 	if err := nativeProducerReviewedProfile(self.Next); err != nil {
@@ -237,7 +237,7 @@ func nativeProducerReviewedProfile(authority nativeProducerAuthority) error {
 	if authority.Profile == nil || authority.ReviewSha256 != fmt.Sprintf("sha256:%x", authority.Profile.SourceReviewSha256) {
 		return errors.New("native producer callsite profile names a different original semantic review")
 	}
-	return errors.Join(authority.Profile.validate(historicalReplayJob{RuntimeCodeSha256: authority.Profile.RuntimeCodeSha256}), authority.Principal.validate(), authority.Yuma.validate(), authority.FeeCensus.validateProducer(authority))
+	return errors.Join(authority.Profile.validate(historicalReplayJob{RuntimeCodeSha256: authority.Profile.RuntimeCodeSha256}), authority.Principal.validate(), authority.Yuma.validate(), authority.FeeCensus.validateProducer(authority), authority.Treasury.validate(), validateNativeTreasuryPrincipal(authority.Treasury, authority.Principal), validateNativeTreasuryProfile(authority))
 }
 
 func loadNativeProducerAuthorities(ctx context.Context, policy economicEmissionPolicy) ([]nativeProducerReviewedAuthority, error) {

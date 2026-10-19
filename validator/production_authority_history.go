@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"syscall"
 
 	"github.com/urfoundation/sn/crv4"
 
@@ -57,7 +58,7 @@ type releaseProductionAuthorityEntry struct {
 // File witnesses remain exact when their bytes travel inside another approved
 // document. A hash, count or path change never weakens the original byte bound.
 func matchProductionAuthorityBytes(reference ReleaseEvidenceV2File, raw []byte, maximum uint64) error {
-	if err := reference.Validate(maximum); err != nil {
+	if err := validateRetainedSourceReference(reference, maximum); err != nil {
 		return err
 	}
 	if uint64(len(raw)) != reference.Bytes || reference.SHA256 != attemptHex32(sha256.Sum256(raw)) {
@@ -69,7 +70,11 @@ func matchProductionAuthorityBytes(reference ReleaseEvidenceV2File, raw []byte, 
 // Flat content-addressed names reuse the existing private state owner and
 // cannot overwrite either the old fixed record or another signed approval.
 func retainedProductionApprovalPath(cfg *ReleaseConfig) string {
-	return filepath.Join(cfg.StateDir, "owner-recycle-production-approval-"+strings.TrimPrefix(cfg.OwnerRecycleApproval.Approval.SHA256, "0x")+".json")
+	prefix := "owner-recycle-production-approval-"
+	if cfg.TreasuryApproval != nil {
+		prefix = "treasury-production-approval-"
+	}
+	return filepath.Join(cfg.StateDir, prefix+strings.TrimPrefix(productionEconomicSelection(cfg).Approval.SHA256, "0x")+".json")
 }
 
 // History lookup never trusts the source path to identify its contents.
@@ -81,6 +86,43 @@ func retainedProductionAuthorityPath(cfg *ReleaseConfig, hash string) string {
 // of the original provisioning directory.
 func retainedProductionRuntimePath(cfg *ReleaseConfig, hash string) string {
 	return filepath.Join(cfg.StateDir, "owner-recycle-production-runtime-"+strings.TrimPrefix(hash, "0x")+".json")
+}
+
+// After the signed path fails, each retained copy is read only at the signed
+// size and digest, so a location never changes the admitted bytes. Staging
+// mounts no state_dir and last tries the content-addressed name beside its
+// pinned config; a fixed record name is looked up in state_dir only.
+func readRetainedProductionFile(cfg *ReleaseConfig, reference ReleaseEvidenceV2File, maximum uint64, retained string, fixed ...string) ([]byte, error) {
+	raw, sourceErr := ReadReleaseEvidenceV2File(context.Background(), reference, maximum)
+	if sourceErr == nil {
+		return raw, nil
+	}
+	paths := append([]string{retained}, fixed...)
+	if cfg.stagingConfigDirectory != "" {
+		paths = append(paths, filepath.Join(cfg.stagingConfigDirectory, filepath.Base(retained)))
+	}
+	var err error
+	for _, path := range paths {
+		reference.Path = path
+		if raw, err = ReadReleaseEvidenceV2File(context.Background(), reference, maximum); err == nil {
+			return raw, nil
+		}
+	}
+	return nil, errors.Join(sourceErr, err)
+}
+
+// A signed source path below a directory this account cannot search, such as
+// bootstrap custody owned by another account, is unusable here exactly as an
+// absent one is: its retained copy is read instead, still only at the signed
+// size and digest. Only that EACCES is excused; every other error stays fatal.
+func validateRetainedSourceReference(reference ReleaseEvidenceV2File, maximum uint64) error {
+	return reference.validate(maximum, func(path string) error {
+		err := ValidateReleaseEvidenceV2Path(path)
+		if errors.Is(err, syscall.EACCES) {
+			return nil
+		}
+		return err
+	})
 }
 
 // Each original config must select exactly the already approved prefix. The
@@ -101,7 +143,7 @@ func loadReleaseProductionAuthorityHistory(cfg *ReleaseConfig) error {
 	}
 	remaining := uint64(maximumProductionAuthorityHistoryBytes)
 	for _, reference := range cfg.ProductionAuthorityHistory {
-		if err := reference.Validate(maximumProductionAuthorityBundleBytes); err != nil {
+		if err := validateRetainedSourceReference(reference, maximumProductionAuthorityBundleBytes); err != nil {
 			return err
 		}
 		if reference.Bytes > remaining {
@@ -116,14 +158,9 @@ func loadReleaseProductionAuthorityHistory(cfg *ReleaseConfig) error {
 	history := &releaseProductionAuthorityHistory{}
 	seenKVs := map[[32]byte]bool{}
 	for index, reference := range cfg.ProductionAuthorityHistory {
-		raw, sourceErr := ReadReleaseEvidenceV2File(context.Background(), reference, maximumProductionAuthorityBundleBytes)
-		if sourceErr != nil {
-			retained := reference
-			retained.Path = retainedProductionAuthorityPath(cfg, reference.SHA256)
-			raw, err = ReadReleaseEvidenceV2File(context.Background(), retained, maximumProductionAuthorityBundleBytes)
-			if err != nil {
-				return errors.Join(sourceErr, err)
-			}
+		raw, err := readRetainedProductionFile(cfg, reference, maximumProductionAuthorityBundleBytes, retainedProductionAuthorityPath(cfg, reference.SHA256))
+		if err != nil {
+			return err
 		}
 		original, err := decodeProductionAuthorityBundle(raw, cfg, history.entries, index)
 		if err != nil {
@@ -218,16 +255,48 @@ func decodeProductionAuthorityBundle(raw []byte, current *ReleaseConfig, prefix 
 
 // This first continuity class preserves policy, identities, operators, proof
 // bounds and custody. Runtime pins, approval history and polling may advance.
+// Rendering an activation-pending census and adopting settlement v2 are
+// separate exact classes. stable() keeps settlement_v2, so once adopted it can
+// be neither re-pointed nor removed.
 func validateProductionAuthorityContinuity(original, current *ReleaseConfig) error {
+	if productionSettlementV2AdoptionTransition(original, current) {
+		prior, err := ownerRecycleProductionApproval(original)
+		if err != nil {
+			return err
+		}
+		next, err := ownerRecycleProductionApproval(current)
+		if err != nil {
+			return err
+		}
+		return validateProductionSettlementV2Adoption(original, current, prior.Approval, next.Approval)
+	}
 	if err := validateProductionCapacityTransition(original, current); err != nil {
 		return err
+	}
+	if productionEvidenceRenderingTransition(original, current) {
+		prior, err := ownerRecycleProductionApproval(original)
+		if err != nil {
+			return err
+		}
+		next, err := ownerRecycleProductionApproval(current)
+		if err != nil {
+			return err
+		}
+		return validateProductionEvidenceRendering(original, current, prior.Approval, next.Approval)
+	}
+	// A renewal may newly opt in to successor admission, but cannot withdraw
+	// or change the profile under which original decisions were admitted.
+	if original.RuntimeSuccessorProfile != "" && current.RuntimeSuccessorProfile != original.RuntimeSuccessorProfile {
+		return errors.New("production authority continuity cannot withdraw or change runtime successor admission")
 	}
 	stable := func(cfg *ReleaseConfig) ([]byte, error) {
 		owned := *cfg
 		owned.RuntimeSpec, owned.TransactionVersion, owned.StateVersion = 0, 0, 0
 		owned.RuntimeCodeHash, owned.RuntimeMetadataHash = "", ""
+		owned.RuntimeSuccessorProfile = ""
 		owned.ProductionRuntimeApprovals, owned.ProductionAuthorityHistory = nil, nil
-		owned.OwnerRecycleApproval = &ReleaseOwnerRecycleApprovalConfig{Signer: cfg.OwnerRecycleApproval.Signer}
+		owned.OwnerRecycleApproval = &ReleaseOwnerRecycleApprovalConfig{Signer: productionEconomicSelection(cfg).Signer}
+		owned.TreasuryApproval = nil
 		owned.PollSeconds = 0
 		owned.EvidenceV2.Bounds = ReleaseEvidenceV2Bounds{}
 		owned.ProductionCapacityRevision = nil
@@ -250,14 +319,70 @@ func validateProductionAuthorityContinuity(original, current *ReleaseConfig) err
 		return err
 	}
 	a, b := prior.Approval, approved.Approval
+	treasuryTransition := a.Proposal.Treasury == nil && b.Proposal.Treasury != nil
+	if a.Proposal.Treasury != nil && b.Proposal.Treasury == nil {
+		return errors.New("treasury authority cannot be reinterpreted as an old owner-recycle policy")
+	}
+	if treasuryTransition {
+		if b.FirstNativeEpoch <= a.FirstNativeEpoch || b.Proposal.PolicyId <= a.Proposal.PolicyId ||
+			b.Proposal.EffectiveEpoch <= a.Proposal.EffectiveEpoch || ownerRecycleActivationBlock(&b) <= ownerRecycleActivationBlock(&a) ||
+			ownerRecycleActivationBlock(&b) != b.ValidFromNativeBlock {
+			return errors.New("treasury successor requires an explicit advancing drained economic activation")
+		}
+	} else if !reflect.DeepEqual(a.Proposal.Treasury, b.Proposal.Treasury) {
+		return errors.New("runtime or capacity continuity cannot change the signed treasury policy")
+	}
 	if a.ValidatorHotkey != b.ValidatorHotkey || a.NativeChain != b.NativeChain || a.SubnetOwner != b.SubnetOwner ||
 		a.Production.EpochScheduleProfile != b.Production.EpochScheduleProfile ||
-		a.ValidFromNativeBlock > b.ValidFromNativeBlock || a.FirstNativeEpoch != b.FirstNativeEpoch ||
-		a.Production.ActivationNativeHash != b.Production.ActivationNativeHash || ownerRecycleActivationBlock(&a) != ownerRecycleActivationBlock(&b) {
+		a.ValidFromNativeBlock > b.ValidFromNativeBlock || !treasuryTransition && (a.FirstNativeEpoch != b.FirstNativeEpoch ||
+		a.Production.ActivationNativeHash != b.Production.ActivationNativeHash || ownerRecycleActivationBlock(&a) != ownerRecycleActivationBlock(&b)) {
 		return errors.New("production authority continuity changes the original signer or economic activation")
 	}
 	if a.ValidFromNativeBlock == b.ValidFromNativeBlock && releaseNativeRuntimeIdentity(original) != releaseNativeRuntimeIdentity(current) {
 		return errors.New("production authority changes an exact runtime at the same activation block")
+	}
+	return nil
+}
+
+// Only a predecessor without settlement_v2 and a successor with it select the
+// adoption class. It is exclusive: no capacity, rendering or runtime change
+// can ride along with it.
+func productionSettlementV2AdoptionTransition(original, current *ReleaseConfig) bool {
+	return original.SettlementV2 == nil && current.SettlementV2 != nil
+}
+
+// Clears exactly what adoption changes: the added block, the authority
+// history and the approval's own content address. Selector and signer stay.
+func productionSettlementV2AdoptionProjection(cfg *ReleaseConfig) ([]byte, error) {
+	owned := *cfg
+	owned.SettlementV2, owned.ProductionAuthorityHistory = nil, nil
+	if cfg.OwnerRecycleApproval != nil {
+		owned.OwnerRecycleApproval = &ReleaseOwnerRecycleApprovalConfig{Signer: cfg.OwnerRecycleApproval.Signer}
+	}
+	if cfg.TreasuryApproval != nil {
+		owned.TreasuryApproval = &ReleaseTreasuryApprovalConfig{Signer: cfg.TreasuryApproval.Signer}
+	}
+	return json.Marshal(&owned)
+}
+
+// The successor adds exactly the settlement_v2 block and appends exactly one
+// history entry, the predecessor's bundle. Its approval is the old one
+// verbatim except the complete-config hash.
+func validateProductionSettlementV2Adoption(original, current *ReleaseConfig, prior, next OwnerRecycleApproval) error {
+	history := original.ProductionAuthorityHistory
+	if len(current.ProductionAuthorityHistory) != len(history)+1 || !slices.Equal(current.ProductionAuthorityHistory[:len(history)], history) {
+		return errors.New("settlement v2 adoption must append exactly one authority history entry")
+	}
+	before, beforeErr := productionSettlementV2AdoptionProjection(original)
+	after, afterErr := productionSettlementV2AdoptionProjection(current)
+	if err := errors.Join(beforeErr, afterErr); err != nil {
+		return err
+	}
+	if !bytes.Equal(before, after) {
+		return errors.New("settlement v2 adoption changes signed configuration beyond the added settlement_v2 block")
+	}
+	if productionCapacityEconomicHash(prior) != productionCapacityEconomicHash(next) {
+		return errors.New("settlement v2 adoption changes the approval beyond its config hash")
 	}
 	return nil
 }
@@ -381,15 +506,15 @@ func productionConfigForIntent(cfg *ReleaseConfig, intent *SteeringIntent) (*Rel
 	if err := validateReleaseProductionAuthorityHistory(cfg); err != nil {
 		return nil, err
 	}
-	if intent == nil || intent.OwnerRecycle == nil {
+	if intent == nil || productionEconomicIntent(intent) == nil {
 		return nil, errors.New("production intent lacks its original signed authority")
 	}
-	if bytes.Equal(intent.OwnerRecycle.Proof.Approval, cfg.ownerRecycleProduction.encoded) {
+	if bytes.Equal(productionEconomicIntent(intent).Proof.Approval, cfg.ownerRecycleProduction.encoded) {
 		return cfg, nil
 	}
 	if cfg.productionAuthorityHistory != nil {
 		for _, entry := range cfg.productionAuthorityHistory.entries {
-			if bytes.Equal(intent.OwnerRecycle.Proof.Approval, entry.config.ownerRecycleProduction.encoded) {
+			if bytes.Equal(productionEconomicIntent(intent).Proof.Approval, entry.config.ownerRecycleProduction.encoded) {
 				return entry.config, nil
 			}
 		}

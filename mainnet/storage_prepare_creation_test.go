@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 package main
 
@@ -15,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfoundation/sn/internal/durablepath"
@@ -288,7 +290,7 @@ func TestStoragePreparationCreationRestoreRefusesMissingRequestClosure(t *testin
 	if code := runMain(storage.target.ctx, []string{storage.command, "apply", "--plan", path, "--plan-sha256", hash}, &output, &diagnostic); code == 0 {
 		t.Fatal("an admission without its original separate request acquired restore authority")
 	}
-	if _, err := unix.Getxattr(f.source.root, connect.OriginalContractStoreAttribute, make([]byte, 4096)); !errors.Is(err, unix.ENODATA) {
+	if _, err := unix.Getxattr(f.source.root, connect.OriginalContractStoreAttribute, make([]byte, 4096)); !errors.Is(err, durablesys.ErrNoAttribute) {
 		t.Fatal("failed closure verification published a new birth marker", err)
 	}
 	for _, root := range []string{storage.heldSource, storage.archive} {

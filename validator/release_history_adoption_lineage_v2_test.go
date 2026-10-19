@@ -116,7 +116,7 @@ func TestReleaseHistoryAdoptionV2ReplaysEveryInteriorTerminal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	history.readers[0], history.readers[1] = reader, reader
+	history.readers = []*HTTPAttemptStreamV2Reader{reader, reader}
 	currentBytes, err := canonicalReleaseMeasurementBytes(current.artifact)
 	if err != nil {
 		t.Fatal(err)

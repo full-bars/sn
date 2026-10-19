@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -27,6 +28,7 @@ type OwnerRecycleAdmissionObservation struct {
 	FirstNativeEpoch          uint64                     `json:"first_native_epoch"`
 	Snapshot                  OwnerRecycleSnapshot       `json:"snapshot"`
 	RecognizedOwners          []OwnerRecycleRegistration `json:"recognized_owners"`
+	TreasuryRecipients        []TreasuryRecipient        `json:"treasury_recipients,omitempty"`
 	MinimumAllowedWeights     uint16                     `json:"minimum_allowed_weights"`
 	StoredMaximumWeightLimit  uint16                     `json:"stored_maximum_weight_limit"`
 	RuntimeMaximumWeightLimit uint16                     `json:"runtime_maximum_weight_limit"`
@@ -95,19 +97,8 @@ func observeOwnerRecycleAdmissionAt(ctx context.Context, cfg *ReleaseConfig, nat
 	var finality runtimeFinalityObservation
 	return crv4.ReadRuntimeObservationContext(operationCtx, native, func(ctx context.Context) (*OwnerRecycleAdmissionObservation, error) {
 		call := native.API.Client.CallContext
-		var nativeChain, evmChainId string
-		var genesis types.Hash
-		if err := call(ctx, &nativeChain, "system_chain"); err != nil {
+		if _, err := readRuntimeNetworkIdentity(ctx, native, approval.NativeChain, types.Hash(pin.GenesisHash)); err != nil {
 			return nil, err
-		}
-		if err := call(ctx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
-			return nil, err
-		}
-		if err := call(ctx, &evmChainId, "eth_chainId"); err != nil {
-			return nil, err
-		}
-		if nativeChain != approval.NativeChain || genesis != types.Hash(pin.GenesisHash) || native.GenesisHash != genesis || evmChainId != "0x3c4" {
-			return nil, errors.New("owner-recycle route differs from the independently approved mainnet name, genesis or EVM chain 964")
 		}
 		head, err := readRuntimeFinalityWitness(ctx, native)
 		if err != nil {
@@ -143,6 +134,11 @@ func observeOwnerRecycleAdmissionAt(ctx context.Context, cfg *ReleaseConfig, nat
 		if err != nil {
 			return nil, err
 		}
+		if approval.Proposal.Treasury != nil {
+			if err := treasuryStorageProfile(artifact.Metadata, entries); err != nil {
+				return nil, err
+			}
+		}
 		read := func(name string, limit int, required bool, args ...[]byte) ([]byte, error) {
 			key, err := types.CreateStorageKey(artifact.Metadata, crv4.PalletName, name, args...)
 			if err != nil {
@@ -174,11 +170,11 @@ func observeOwnerRecycleAdmissionAt(ctx context.Context, cfg *ReleaseConfig, nat
 			return raw, nil
 		}
 		netuid := binary.LittleEndian.AppendUint16(nil, pin.Netuid)
-		mode, err := readFixed("RecycleOrBurn", 1, false, netuid)
+		mode, err := readFixed("RecycleOrBurn", 1, approval.Proposal.Treasury != nil, netuid)
 		if err != nil {
 			return nil, err
 		}
-		if mode[0] != 1 {
+		if mode[0] > 1 || approval.Proposal.Treasury == nil && mode[0] != 1 {
 			return nil, errors.New("owner-recycle needs explicit finalized Recycle; absent or Burn mode cannot pass")
 		}
 		owner, err := readFixed("SubnetOwner", 32, false, netuid)
@@ -211,7 +207,7 @@ func observeOwnerRecycleAdmissionAt(ctx context.Context, cfg *ReleaseConfig, nat
 		if count == 0 || count > approval.MaximumSubnetUids {
 			return nil, errors.New("owner-recycle subnet census exceeds the approved nonzero bound")
 		}
-		snapshot := OwnerRecycleSnapshot{Runtime: pin, FinalizedHash: [32]byte(finalized), FinalizedNumber: number, MechanismCount: 1, RecycleModeScale: []byte{1}, SubnetOwner: approval.SubnetOwner}
+		snapshot := OwnerRecycleSnapshot{Runtime: pin, FinalizedHash: [32]byte(finalized), FinalizedNumber: number, MechanismCount: 1, RecycleModeScale: append([]byte(nil), mode...), SubnetOwner: approval.SubnetOwner}
 		byHotkey := make(map[[32]byte]OwnerRecycleRegistration, count)
 		for uid := uint32(0); uid < count; uid++ {
 			uidRaw := binary.LittleEndian.AppendUint16(nil, uint16(uid))
@@ -296,6 +292,49 @@ func observeOwnerRecycleAdmissionAt(ctx context.Context, cfg *ReleaseConfig, nat
 				return nil, errors.New("owner-recycle recognized owner identities changed")
 			}
 		}
+		// A recognized-owner validator is admitted only under treasury authority
+		// and only as the explicit subnet owner hotkey held by the subnet owner
+		// coldkey. No other owned or foreign hotkey can validate as an owner.
+		if slices.Contains(actualOwners, approval.ValidatorHotkey) {
+			if approval.Proposal.Treasury == nil || snapshot.SubnetOwnerHotkey == nil || *snapshot.SubnetOwnerHotkey != approval.ValidatorHotkey {
+				return nil, errors.New("owner-recycle validator is a recognized owner but not the explicit subnet owner hotkey")
+			}
+			coldkey, err := readFixed("Owner", 32, false, approval.ValidatorHotkey[:])
+			if err != nil {
+				return nil, err
+			}
+			if !bytes.Equal(coldkey, owner) {
+				return nil, errors.New("owner-validator hotkey is not held by the subnet owner coldkey")
+			}
+		}
+		var treasuryRecipients []TreasuryRecipient
+		if policy := approval.Proposal.Treasury; policy != nil {
+			if policy.MultisigAccount == snapshot.SubnetOwner {
+				return nil, errors.New("treasury custody became the subnet owner")
+			}
+			for _, recipient := range policy.Recipients {
+				registration, exists := byHotkey[recipient.Hotkey]
+				if !exists || registration.Uid != recipient.Uid || registration.RegistrationBlock != recipient.RegistrationBlock || ownerSet[recipient.Hotkey] ||
+					snapshot.SubnetOwnerHotkey != nil && *snapshot.SubnetOwnerHotkey == recipient.Hotkey {
+					return nil, errors.New("treasury exact recipient is absent, re-registered or recognized as a subnet owner")
+				}
+				coldkey, err := readFixed("Owner", 32, false, recipient.Hotkey[:])
+				if err != nil {
+					return nil, err
+				}
+				if !bytes.Equal(coldkey, policy.MultisigAccount[:]) {
+					return nil, errors.New("treasury recipient Owner differs from the approved native receiving account")
+				}
+				treasuryRecipients = append(treasuryRecipients, recipient)
+			}
+			destination, err := read("AutoStakeDestination", 32, false, policy.MultisigAccount[:], netuid)
+			if err != nil {
+				return nil, err
+			}
+			if policy.AutoStakeDestination == nil && destination != nil || policy.AutoStakeDestination != nil && !bytes.Equal(destination, policy.AutoStakeDestination[:]) {
+				return nil, errors.New("treasury auto-stake destination differs from the explicit signed policy")
+			}
+		}
 		minimum, err := readFixed("MinAllowedWeights", 2, true, netuid)
 		if err != nil {
 			return nil, err
@@ -312,8 +351,9 @@ func observeOwnerRecycleAdmissionAt(ctx context.Context, cfg *ReleaseConfig, nat
 			return nil, err
 		}
 		observation := &OwnerRecycleAdmissionObservation{
-			ApprovalHash: cfg.OwnerRecycleApproval.Approval.SHA256, ProposalHash: proposalHash, ConfigHash: approval.ConfigHash,
+			ApprovalHash: productionEconomicSelection(cfg).Approval.SHA256, ProposalHash: proposalHash, ConfigHash: approval.ConfigHash,
 			NativeEpoch: epoch, FirstNativeEpoch: approval.FirstNativeEpoch, Snapshot: snapshot, RecognizedOwners: recognized,
+			TreasuryRecipients:    treasuryRecipients,
 			MinimumAllowedWeights: binary.LittleEndian.Uint16(minimum), StoredMaximumWeightLimit: binary.LittleEndian.Uint16(storedCap),
 			RuntimeMaximumWeightLimit: 65535, SignedMaximumWeightLimit: cfg.Policy.Steering.MaxWeightLimitU16,
 			ApprovalAuthenticated: true, OwnerCensusAuthenticated: true, RecycleModeAuthenticated: true,
@@ -328,6 +368,12 @@ func observeOwnerRecycleAdmissionAt(ctx context.Context, cfg *ReleaseConfig, nat
 			observation.Blockers = []string{
 				"census alone does not authenticate the complete production decision, eligibility or source transaction",
 				"final Yuma/native miner allocation, recycled incentive and runtime-derived rounding tolerance are unobserved",
+			}
+		}
+		if approval.Proposal.Treasury != nil {
+			observation.Blockers = []string{
+				"census alone does not authenticate the complete production decision, eligibility or source transaction",
+				"execution-time owner exclusion, collateral, auto-stake credit and final native 10/90 outcome require independent observation",
 			}
 		}
 		return observation, nil

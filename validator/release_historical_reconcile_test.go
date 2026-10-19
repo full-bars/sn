@@ -142,7 +142,7 @@ func installReleaseHistoricalReconcileReceipt(t *testing.T, native *releaseNativ
 		if err != nil {
 			t.Fatal(err)
 		}
-		info, err := crv4.EncodeFleetCommitmentInfo([32]byte(hash))
+		info, err := crv4.EncodeSourceCommitmentInfo([32]byte(hash))
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -426,6 +426,54 @@ func TestPolicyRejectsInfeasibleMinimumBreadthWeightCap(t *testing.T) {
 	}
 }
 
+func TestPolicyAllowsOneOperatorAndOneValidatorOnMainnet(t *testing.T) {
+	p := mainnetSteadyCadenceTestPolicy(t)
+	p.Steering.MaxWeightLimitU16 = 32768
+	p.Safety.MinimumHealthyNOCount, p.Safety.MinimumLiveValidatorCount = 1, 1
+	if err := p.Validate(); err != nil {
+		t.Fatalf("mainnet one-operator one-validator policy was rejected: %v", err)
+	}
+	if _, err := p.HashHex(); err != nil {
+		t.Fatalf("mainnet one-operator one-validator policy cannot be hashed: %v", err)
+	}
+	// The reserve recipients widen a mainnet row to two UIDs, not further.
+	p.Steering.MaxWeightLimitU16 = 32767
+	if err := p.Validate(); err == nil {
+		t.Fatal("mainnet single-operator policy accepted a cap below two-UID capacity")
+	}
+}
+
+func TestPolicyRequiresPoolOnlyBreadthOnTestnet(t *testing.T) {
+	p, err := LoadPolicy(testPolicyPath(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.Safety.MinimumHealthyNOCount, p.Safety.MinimumLiveValidatorCount = 1, 1
+	p.Steering.MaxWeightLimitU16 = 32768
+	if err := p.Validate(); err == nil {
+		t.Fatal("testnet single-operator pool-only row accepted a cap below one u16 vector")
+	}
+	p.Steering.MaxWeightLimitU16 = 65535
+	if err := p.Validate(); err != nil {
+		t.Fatalf("testnet single-operator policy with a full cap was rejected: %v", err)
+	}
+}
+
+func TestPolicyRejectsZeroSafetyCounts(t *testing.T) {
+	for _, field := range []string{"operators", "validators"} {
+		p := mainnetSteadyCadenceTestPolicy(t)
+		p.Safety.MinimumHealthyNOCount, p.Safety.MinimumLiveValidatorCount = 1, 1
+		if field == "operators" {
+			p.Safety.MinimumHealthyNOCount = 0
+		} else {
+			p.Safety.MinimumLiveValidatorCount = 0
+		}
+		if err := p.Validate(); err == nil {
+			t.Fatalf("policy with zero minimum %s was accepted", field)
+		}
+	}
+}
+
 func TestPolicyAllowsExactlyFeasibleMinimumBreadthWeightCap(t *testing.T) {
 	p, err := LoadPolicy(testPolicyPath(t))
 	if err != nil {

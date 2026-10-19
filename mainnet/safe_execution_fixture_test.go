@@ -75,6 +75,13 @@ func safeExecutionOracleArtifacts(t *testing.T, pin safeReleasePin, variant stri
 // and address rather than a copied Go implementation of the signing algorithm.
 func newSafeExecutionFixture(t *testing.T, version, variant string) *safeExecutionFixture {
 	t.Helper()
+	return newSafeExecutionOwnerFixture(t, version, variant, false)
+}
+
+// Published setup installs either three owners at threshold two or one
+// separately derived owner at threshold one. Both use the same proxy address.
+func newSafeExecutionOwnerFixture(t *testing.T, version, variant string, singleOwner bool) *safeExecutionFixture {
+	t.Helper()
 	pin, _, members := safeReleaseTestInputs(t, version, variant)
 	self := &safeExecutionFixture{t: t}
 	singleton := common.BytesToAddress(crypto.Keccak256([]byte("synthetic singleton " + version + variant)))
@@ -97,8 +104,16 @@ func newSafeExecutionFixture(t *testing.T, version, variant string) *safeExecuti
 		t.Fatal(err)
 	}
 	self.state.SetState(proxy, common.Hash{}, common.BytesToHash(singleton[:]))
-	for i := 0; i < 3; i++ {
-		key, err := crypto.ToECDSA(crypto.Keccak256([]byte(fmt.Sprintf("synthetic pure Safe owner %d", i))))
+	count, threshold := 3, int64(2)
+	if singleOwner {
+		count, threshold = 1, 1
+	}
+	for i := 0; i < count; i++ {
+		label := fmt.Sprintf("synthetic pure Safe owner %d", i)
+		if singleOwner {
+			label = "synthetic single Safe owner"
+		}
+		key, err := crypto.ToECDSA(crypto.Keccak256([]byte(label)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -117,10 +132,10 @@ func newSafeExecutionFixture(t *testing.T, version, variant string) *safeExecuti
 		GasPrice: big.NewInt(0), Nonce: big.NewInt(17)}
 	chainConfig := *params.AllDevChainProtocolChanges
 	chainConfig.ChainID = new(big.Int).Set(self.transaction.ChainId)
-	self.vm = runtime.Config{ChainConfig: &chainConfig, State: self.state, Origin: self.owners[2],
+	self.vm = runtime.Config{ChainConfig: &chainConfig, State: self.state, Origin: self.owners[len(self.owners)-1],
 		BlockNumber: big.NewInt(38), Time: 128, GasLimit: 5_000_000, GasPrice: big.NewInt(2),
 		Value: big.NewInt(0), BaseFee: big.NewInt(1)}
-	setup, err := self.oracleAbi.Pack("setup", self.owners, big.NewInt(2), common.Address{}, []byte{},
+	setup, err := self.oracleAbi.Pack("setup", self.owners, big.NewInt(threshold), common.Address{}, []byte{},
 		common.Address{}, common.Address{}, big.NewInt(0), common.Address{})
 	if err != nil {
 		t.Fatal(err)

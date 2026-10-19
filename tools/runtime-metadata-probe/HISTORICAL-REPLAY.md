@@ -14,6 +14,12 @@ separate checks. Consensus seals are retained in the original header identity
 and removed only from the runtime execution input. No seal/finality verifier or
 source-to-code admission is supplied by this backend.
 
+The raw admitted system version remains zero or one and must equal original
+`Core_version`. Its storage layout is independent of the SDK's extrinsics-root
+layout: system version one uses storage V1 and extrinsics V0. Both body checks
+preserve complete SCALE-encoded opaque extrinsics and reject the wrong layout;
+there is no accept-either fallback.
+
 Capture executes `Core_execute_block` in the same onchain context as strict
 replay. In the pinned SDK, an explicit proved `:heappages` value selects static
 memory sizing only in that context; the offchain proof helper ignores it.
@@ -127,3 +133,132 @@ refuses attribution. Unlabelled same-phase balance events are not selected as
 gas. These facts still do not prove a complete failed-refund branch or establish
 cryptographic source review/finality. The top-level native fee authority remains
 false/null, including when a candidate pair is present.
+
+## Constructing an original callsite profile
+
+`runtime-observation-profile inspect WASM 0xSHA256 [FUNCTION_INDEX ...]` reads the
+exact original artifact, decompresses it within the existing 32 MiB bound, and
+emits a function/import/global census. Up to 32 selected functions also retain
+instruction bytes, function-relative offsets, and complete direct/indirect call
+operands (tail calls are distinct). This command does not instantiate Wasm. A
+name is a navigation aid; it is never evidence that a function has an economic
+meaning.
+
+`runtime-observation-profile assemble WASM PROPOSAL_JSON 0xPROPOSAL_SHA256` emits
+the existing compact `ObservationProfile` bytes, without a wrapper or trailing
+newline. The proposal has schema `urnetwork-original-wasm-profile-proposal-v1`,
+`profile` containing the intended original profile, and `reviewed_calls` with
+one entry per rule in the same order. Each entry repeats `function_index`,
+`offset_start`, `offset_end` and every call in that range from the inspection.
+Ranges must start and end at decoded instruction boundaries; code and body
+hashes, callees, original exported i32 memory bases, replay memory limits and
+all existing capture bounds must match. The output retains the separately
+supplied review digest; it does not create a reviewer signature or admission.
+
+The original runtime473 artifact has an unexported mutable i32 global0 and only
+`__data_end` and `__heap_base` global exports. The compiler therefore refuses a
+recipe that invents an exported `__stack_pointer`. Its instruction listing can
+support review of the actual stack/heap layouts, but does not derive a memory
+recipe, a financial label, or an approved production profile automatically.
+Original economic call ranges and layouts, complete principal storage/cause
+coverage, original-block replay and independent signed producer authority are
+still required before production observations can be admitted. No synthetic
+fixture address or whole-function name match substitutes for those inputs.
+
+A profile may now explicitly declare up to four `original_globals`, appended to
+its existing JSON field order. Each entry has `global_index` and the exact name
+`__urnetwork_observe_global_INDEX`; indices must be increasing. The engine
+permits only a defined original i32 global and an unused export name. It appends
+that export while proving every non-export section byte-identical and every
+original export unchanged and in order. Its execution-cache key hashes this
+export view, separately from the authenticated original `:code` and job hashes.
+The observer only reads the alias. Empty declarations preserve old wire bytes
+and the old executor identity. Capture and strict replay still require the same
+complete post-state result.
+
+This makes a reviewed original stack global accessible without inserting or
+changing instructions. It does not identify a selected caller's stack frame:
+a layout must account for the actual nested-call frames at that exact original
+host call. The focused Wasmtime regression checks a precise decoded call range
+and live original memory; actual runtime473 ranges and field layouts remain a
+separate review and execution obligation.
+
+A native epoch rule may explicitly set `host_snapshot` to
+`ext_allocator_malloc_version_1` or `ext_allocator_free_version_1`. The original
+range must be exactly one decoded direct call to that `env` import, with the
+original allocator ABI. It cannot select an indirect call, a wrapper function,
+or an ancestor frame. At that boundary the observer reads the selected memory
+before invoking the unchanged SDK allocator once. The resulting `host` record
+names the original host in `key_hex` and contains neither storage value nor
+storage-return fields. Existing transactions discard these records on rollback,
+cumulative evidence bounds remain charged, and an incomplete replay releases
+no report. Without this optional field, storage-only profiles retain their old
+serialization and behavior.
+
+This permits review of an original epoch vector that remains live after the
+last storage callback. It supplies no allocation amounts, UID mapping, epoch
+identity, or economic interpretation beyond the explicitly captured bytes.
+
+
+An explicit `epoch_layout: "single-mechanism-original-keys-v1"` joins these
+observations without inventing stack fields. The decoder requires the original
+mechanism-count option to select exactly one mechanism, then uses the saturated
+sum of the three original pending-tranche returns. `native-uid-census` rules
+retain original `Keys(netuid, uid)` gets; exact metadata types, dense unique UIDs,
+unique AccountIds and pre-epoch ordinals supply the roster. `native-epoch-index`
+retains the actual `SubnetEpochIndex` write. Neither a BTreeMap's order nor a
+later chain query supplies a missing UID or epoch. Yuma consumes the explicit,
+hash-bound joined total and identities while still requiring every original
+allocation stage. Legacy profiles omit this field and retain their old bytes.
+
+A selected drain may declare exactly two canonical `state_reads` keys (at most
+64 bytes each). They are observer reads of the current proof-backed execution
+overlay at that callback, retained separately as `execution_state` with explicit
+presence/absence; they are never labeled as Wasm memory or original runtime
+gets. Capture retains those parent inclusion/absence paths and executes the
+same bounded observer against its recorder, including the original execution
+phase. Strict replay independently samples the actual overlay. Replay charges
+key/value reads to the shared work budget, bounds each returned value to eight
+bytes, and preserves transaction rollback. Registration must be observed present;
+generation absence may use only the independently authenticated metadata default.
+A missing proof path or observation is not absence.
+
+The operational lesson is to adapt to the actual compiled layout with explicit
+provenance: a source variable need not survive in a stack slot, and a pure late
+vector need not coincide with a storage callback. These capabilities and their
+synthetic tests do not supply a complete runtime-473 economic profile, successful
+original-block replay or independent authority approval.
+
+
+A rule may restrict its semantic caller with `storage_call`: `operation` is
+`get`, `set` or `append`, and `path` is an innermost-first prefix of at most
+eight original call frames. Every frame pins `function_index`,
+`function_body_sha256`, `offset_start` and `offset_end`. The final frame equals
+the rule's semantic caller; each range is exactly one decoded direct call to
+the next inner function, ending at the exact original `env` host and ABI.
+The observer matches the full prefix before reading any memory. Sibling hosts
+with different stack frames cannot borrow a capture. Intersecting prefixes are
+refused even when their semantic callers have different depths; disjoint
+get/set prefixes may share one semantic caller. Unselected writes still enter
+the independent complete principal mutation census.
+
+`recipient_layout: "original-storage-credit-pairs-v1"` joins actual recipient
+storage reads and writes. Collateral and liquid amounts are separate causal
+pool deltas; fully captured recipients need no invented liquid callback.
+Original Owner, SubnetOwnerHotkey and AutoStakeDestination gets preserve actual
+presence and ordinals, including a zero-entitlement Owner read without a fake
+write. The owner-recycle branch skips its ordinary Owner get, so its exact
+get/set rules must explicitly set `recipient_owner: true`. This one fixed
+recipe reads `Owner(original captured hotkey)` through the live overlay and
+retains one `execution_state` key with null or exactly 32 bytes. It cannot
+select arbitrary keys or borrow a stale coldkey stack slot. Initial capture
+runs the same observer to retain this dynamic proof path; its temporary trace
+is discarded after the original post-state agrees. Only independent strict
+replay can publish observations. Missing proof remains refusal, not absence.
+
+An original `metadata_sha256` pin validates the runtime-generated layout even
+when fee accounting is unselected. Only explicit fee event callsite rules
+request fee candidate decoding; complete fee authority still requires the
+metadata pin. Full Yuma input capture is a separate optional profile extension,
+requiring authenticated settings, effective stake relations, weight/bond rows
+and commit queues when selected. Output vectors alone do not provide it.

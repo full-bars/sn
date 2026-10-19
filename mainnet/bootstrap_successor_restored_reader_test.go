@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Passive restored readers hold exact metadata descriptors; unchanged checks
 // read no member payloads, and any lost physical generation stays refused.
@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/internal/durablehead"
 	"github.com/urnetwork/connect/durablevolume"
@@ -228,7 +230,7 @@ func TestBootstrapSuccessorRestoredReaderRetainsMetadataLoss(t *testing.T) {
 			if err := os.Rename(held, path); err != nil {
 				t.Fatal(err)
 			}
-		} else if err := unix.Fsetxattr(int(head.root.Fd()), head.attribute, head.raw, unix.XATTR_CREATE); err != nil {
+		} else if err := durablesys.SetAttribute(int(head.root.Fd()), head.attribute, head.raw, unix.XATTR_CREATE); err != nil {
 			t.Fatal(err)
 		}
 		if err := owner.check(); !errors.Is(err, durablevolume.ErrIdentity) {

@@ -235,6 +235,13 @@ func releaseHeadV2ClientKeyRPC(artifact *ReleaseMeasurementArtifact, call chainB
 // operator's session. A real reader supplies framing, credentials and Close.
 func newReleaseHeadV2ClientKeyReader(t testing.TB, cfg *ReleaseConfig, noID uint64) *HTTPClientKeyHistoryReader {
 	t.Helper()
+	return newReleaseHeadV2ClientKeyHistoryReader(t, cfg, noID, func([16]byte) [][32]byte { return [][32]byte{{0x31}} })
+}
+
+// The history names each client's complete signed key sequence in generation
+// order; a rotation is a later generation, never a rewrite of an earlier one.
+func newReleaseHeadV2ClientKeyHistoryReader(t testing.TB, cfg *ReleaseConfig, noID uint64, history func(clientId [16]byte) [][32]byte) *HTTPClientKeyHistoryReader {
+	t.Helper()
 	owned := *cfg
 	domain := protocol.ClientKeyHistoryDomain{ChainID: cfg.ChainID, GenesisHash: common.HexToHash(cfg.GenesisHash), Netuid: cfg.Netuid, Coordinator: common.HexToAddress(cfg.Coordinator), SettlementVault: common.HexToAddress(cfg.SettlementVault), DeploymentIDHash: sha256.Sum256([]byte(cfg.DeploymentID)), PolicyHash: common.HexToHash(cfg.PolicyHash), NoID: noID}
 	endpoint := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -256,7 +263,7 @@ func newReleaseHeadV2ClientKeyReader(t testing.TB, cfg *ReleaseConfig, noID uint
 			}
 			response := protocol.ClientKeyObservationBatchResponse{Responses: make([]json.RawMessage, len(batch.Requests))}
 			for index, request := range batch.Requests {
-				body := releaseClientKeyTestResponse(t, owned.DeploymentID, domain, request, [][32]byte{{0x31}})
+				body := releaseClientKeyTestResponse(t, owned.DeploymentID, domain, request, history(request.ClientID))
 				if len(body) > releaseClientKeyHistoryTestResponseBytes {
 					t.Errorf("actual batch member exceeds its admitted fixture bound: %d", len(body))
 					http.Error(w, "excessive fixture body", 500)
@@ -290,7 +297,7 @@ func newReleaseHeadV2ClientKeyReader(t testing.TB, cfg *ReleaseConfig, noID uint
 			http.Error(w, "wrong client", 400)
 			return
 		}
-		encoded := releaseClientKeyTestResponse(t, owned.DeploymentID, domain, request, [][32]byte{{0x31}})
+		encoded := releaseClientKeyTestResponse(t, owned.DeploymentID, domain, request, history(request.ClientID))
 		if len(encoded) > releaseClientKeyHistoryTestResponseBytes {
 			t.Errorf("actual signed-response fixture exceeds its admitted bound: %d", len(encoded))
 			http.Error(w, "signed-response fixture exceeds its admitted bound", http.StatusInternalServerError)

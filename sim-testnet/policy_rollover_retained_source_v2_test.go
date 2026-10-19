@@ -25,6 +25,8 @@ import (
 
 // Advance the actual signed binding generation before preparing the next
 // approval. Every new window follows its predecessor and carries all actions.
+// Append verifies every round of its successor, so the retained bindings are
+// not verified here again and each approval is archived once, as it is made.
 func nextPolicyRolloverRenewalTestV2(t *testing.T, fleet *fleetRenewalTestFixture, source *SetupPlan, stateDir string) *SetupPlan {
 	t.Helper()
 	observation := fleet.observed
@@ -50,7 +52,7 @@ func nextPolicyRolloverRenewalTestV2(t *testing.T, fleet *fleetRenewalTestFixtur
 			account.Nonce++
 			observation.Accounts[manifest.Hotkey] = account
 			for index, member := range retained.Members {
-				binding, err := fleetRenewalBinding(*manifest, manifest.Members[index], member.Binding)
+				binding, err := manifest.Binding(manifest.Members[index], member.Binding.ValidFromEpoch, member.Binding.ValidToEpoch)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -74,12 +76,21 @@ func nextPolicyRolloverRenewalTestV2(t *testing.T, fleet *fleetRenewalTestFixtur
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, plan := range []*SetupPlan{source, successor} {
-		if _, err := archiveReviewedSetupPlan(stateDir, plan); err != nil {
-			t.Fatal(err)
-		}
-	}
+	archivePolicyRolloverRenewalTestV2(t, stateDir, successor)
 	return successor
+}
+
+// Publish exactly the bytes the reviewed-plan archive writes, under its
+// identity check, without decoding again an approval append just validated.
+func archivePolicyRolloverRenewalTestV2(t *testing.T, stateDir string, plan *SetupPlan) {
+	t.Helper()
+	raw, err := json.Marshal(plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := archiveReviewedSetupPlanBytes(stateDir, plan.PlanHash, append(raw, '\n')); err != nil {
+		t.Fatal(err)
+	}
 }
 
 // The fixture keeps the original activation bytes while six ordinary signed
@@ -90,6 +101,7 @@ func policyRolloverRoundSixTestV2(t *testing.T, fleet **fleetRenewalTestFixture)
 		f := g.fixture
 		owned := newFleetRenewalConfiguredTestFixture(t, f.cfg, f.plan, cloneRoleSecrets(f.roles))
 		*fleet = &owned
+		archivePolicyRolloverRenewalTestV2(t, f.stateDir, f.plan)
 		for round := 1; round <= 6; round++ {
 			f.plan = nextPolicyRolloverRenewalTestV2(t, &owned, f.plan, f.stateDir)
 		}

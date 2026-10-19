@@ -1,0 +1,211 @@
+{
+  "all_owner_blobs_equal_merged_main": true,
+  "author_execution": {
+    "binary_lists": 0,
+    "compilers": 0,
+    "database": 0,
+    "deployment": 0,
+    "production_changes": 0,
+    "test_bodies": 0
+  },
+  "callpath_source_review": [
+    {
+      "facts": "Schema3 selects loadOwnerRecycleProductionConfig, runtime history, authority history and public Validate before starting services.",
+      "path": "validator/config.go",
+      "stage": "current config authority",
+      "symbols": [
+        "LoadReleaseConfig",
+        "decodeReleaseConfigBytesMode"
+      ]
+    },
+    {
+      "facts": "Exact independently selected v2 approval bytes and signature bind the resolved config; schema routing alone is insufficient.",
+      "path": "validator/recycle_production_approval.go",
+      "stage": "production capsule admission",
+      "symbols": [
+        "loadOwnerRecycleProductionConfigBytes",
+        "ownerRecycleProductionApproval"
+      ]
+    },
+    {
+      "facts": "Retains original approval, checks actual hotkey, owns runtime/disk state and operator workers, then uses newReleaseSteererV2Context.",
+      "path": "validator/release_run.go",
+      "stage": "actual lifecycle",
+      "symbols": [
+        "RunRelease",
+        "runReleaseWithStartupAndProgressV2"
+      ]
+    },
+    {
+      "facts": "Authenticates/replays provider measurement, derives production owner row, prepares exact CRv4 source+weights, seals sidecar and begins durable V2 intent before submission.",
+      "path": "validator/release_submit_v2.go",
+      "stage": "measured row and signing",
+      "symbols": [
+        "newReleaseSteererV2Context",
+        "submitPreparedNativeRuntimeContext"
+      ]
+    },
+    {
+      "facts": "Normalized provider scores multiply by1/10; recognized unmasked owner allocation is9/(10*owner_count), subject to original weight caps and native postconditions.",
+      "path": "validator/recycle_planner.go",
+      "stage": "10/90 row"
+    },
+    {
+      "facts": "Exact prepared bytes acquire private submission authority only after durable intent replay; old historical owners cannot authorize fresh writes.",
+      "path": "validator/recycle_production_prepared.go",
+      "stage": "prepared grant",
+      "symbols": [
+        "validateOwnerRecyclePreparedAuthorization",
+        "retainOwnerRecyclePreparedAuthorization",
+        "ownerRecyclePreparedConfig"
+      ]
+    },
+    {
+      "facts": "Production archive decisions re-observe original lifecycle/native evidence and replay the production sidecar under the original authority.",
+      "path": "validator/release_archive_decision_v2.go",
+      "stage": "independent original replay"
+    },
+    {
+      "facts": "blocked-plan-v2 remains nonexecutable with ApplyAuthority=false and ActivationReady=false even when every opaque review input is supplied.",
+      "path": "mainnet/plan.go",
+      "stage": "review graph",
+      "symbols": [
+        "buildBootstrapPlan"
+      ]
+    },
+    {
+      "facts": "Public dispatch selects bootstrap, bootstrap-chain, bootstrap-contracts and owner-recycle separately from plan. loadBootstrapPlan has no executor caller.",
+      "path": "mainnet/main.go",
+      "stage": "separate actual bootstrap adapters"
+    },
+    {
+      "facts": "Checks prerequisites, exact retained original signed bytes and receipts, and sums prior graph attempts against the signed maximum before a new post.",
+      "path": "mainnet/evm_action.go",
+      "stage": "contract cumulative allowance",
+      "symbols": [
+        "advance"
+      ]
+    },
+    {
+      "facts": "Independent submission approval is retained once, reconciles before posting, increments durable cumulative allowance and never replaces original nonce/era/signature on uncertain reply.",
+      "path": "mainnet/owner_recycle_submission.go",
+      "stage": "owner-local recycle action",
+      "symbols": [
+        "submit"
+      ]
+    }
+  ],
+  "causal_controls": "UNEXECUTED",
+  "changed_existing_mainnet_root": [
+    "TestBootstrapPlanAllReviewInputsRemainUnvalidated"
+  ],
+  "compatibility": [
+    "Production branch predicates, signed config/approval formats, writer selection, nonces, journals and allowances are unchanged.",
+    "Newly emitted unsigned review-plan text and therefore its content hash change; original retained plans are untouched. No executor calls loadBootstrapPlan.",
+    "Existing legacy diagnostic prefix remains so current refusal tests and operator matching retain compatibility.",
+    "Adjacent old owner-trim plan token is preserved because it participates in bootstrap-chain custody hashes."
+  ],
+  "counts_per_mode": {
+    "all_go": 2776,
+    "connect": 224,
+    "mainnet": 302,
+    "server": 2027,
+    "server_controller": 95,
+    "server_full_model": 1865,
+    "sn": 517,
+    "sn_connect_vless": 749,
+    "validator": 68,
+    "vlessinterop": 8
+  },
+  "independent_compatibility_readback": {
+    "bytes": 5433,
+    "path": "/mnt/data/urnetwork/current-launch-boundaries-handoff-20261005/compatibility-1d4251f4.json",
+    "sha256": "b8b7660489fd8ea132e96b26929691a123a2f7a94554b6d6502ea037e80ebe1d"
+  },
+  "independent_review": "Recovery explicit source ACK pinned to exactce9/tree18115e; preserved in owner/root messages. No separately authored reviewer artifact was supplied.",
+  "intake": {
+    "bytes": 8557,
+    "path": "/mnt/data/urnetwork/current-launch-boundaries-handoff-20261005/intake.json",
+    "sha256": "37d4f71dcd721b2a70c0cf869a9e3cd2f8360e94a442d5959be2bf391e38d1ee"
+  },
+  "known_pending_source_work": [
+    {
+      "component": "Validator upload observer",
+      "issue": "Lower finalized-head handling is under correction by FixedBoundary; no successor is selected or qualified in this checkpoint."
+    },
+    {
+      "component": "PH12 earning-wallet producer/SDK",
+      "issue": "Explicit WalletMappingConsent path is under correction; generic login proof alone is insufficient. No new source roots or qualification are credited here."
+    },
+    {
+      "component": "ARIN full-population model fixtures",
+      "issue": "Actual PostgreSQL SQLSTATE53200 shared-memory failures during100000-row setup; source diagnosis ongoing, no population/owner assertion reduction or fix credited."
+    }
+  ],
+  "merged_main": "03b94755dfa13e5d562f6ed77b1a1d93860283f9",
+  "new_control_groups": 3,
+  "new_mainnet_roots": 0,
+  "new_roots": [
+    "TestOwnerRecycleLegacyWriterRefusalNamesProductionAuthority",
+    "TestOwnerRecycleProductionBoundaryKeepsCurrentAndHistoricalOwnersDistinct"
+  ],
+  "new_roots_per_mode": 2,
+  "normal": "UNEXECUTED",
+  "outcomes_closed": 0,
+  "owner_source": {
+    "author": "Bitprecipice <bitprecipice@proton.me>",
+    "clean": true,
+    "head": "ce9ec0f91f8260ba3479a5f7a9523c45755fe4d1",
+    "parent": "f0b7e52ab009746e05c3f6fb718243658881790d",
+    "path": "/mnt/data/urnetwork/sn-current-launch-boundaries-20261005",
+    "tree": "18115e7353624d268610088936e7ad79df3ad475"
+  },
+  "preserved_original_outcomes": 38,
+  "previous_identity_checkpoint": {
+    "bytes": 13769,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/sn/mainnet/evidence/runtime-identity-source-and-scope-20261005.json",
+    "sha256": "166d3d026bba8187408f105526fe0b9993a9d19af4487f32867991fc7b2f2095"
+  },
+  "race": "UNEXECUTED",
+  "remaining_authority_limits": [
+    "Live hardware/private keys, independently selected current mainnet approval and deployment inputs remain external.",
+    "Requested weight proportions do not prove finalized reveal/application, actual native allocation, recycling or economic acceptance.",
+    "No original38 launch outcome is closed by this narrow source review."
+  ],
+  "schema": "production-boundary-diagnostics-and-source-scope-v1",
+  "scope": {
+    "bytes": 2843,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/launch-boundary-successor/SCOPE-HANDOFF.json",
+    "sha256": "33e52004ffad05bb5a7766526f8de3135299dbe3a7e32ce97f7d626c4565c4d5"
+  },
+  "separate_existing_completion_recipe": {
+    "bytes": 21515,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/launch-boundary-successor/existing-boundary-completion-recipe.json",
+    "sha256": "68b0812c2e5928b25dc165766e1921dff4361be61189075a0686be9c116f326d"
+  },
+  "source_control_groups": 283,
+  "source_files": [
+    {
+      "git_blob": "a41aadc7aed028af3b3ef94da46138a1789b7e15",
+      "path": "mainnet/plan.go",
+      "sha256": "e50313deca564836520e1712f3b63e231f80b243031fa7036c225e01c13ade18"
+    },
+    {
+      "git_blob": "4f3a107bfc06b51ee2a291d38228d5aa89f1cc95",
+      "path": "mainnet/plan_test.go",
+      "sha256": "b20a5dec88f9160d7cc00e6054ebe9a54aa556eae5a7649ec2758320b8f43d77"
+    },
+    {
+      "git_blob": "22a184cb48b16284ba29d4b1c783ae39974ead5a",
+      "path": "validator/recycle_approval.go",
+      "sha256": "7338cd0e2f8b4b70258203fed015aadd9a42adede2199bc4ffdfc355de1800ee"
+    },
+    {
+      "git_blob": "acca978744ff813cb02f35f85749f120b791ad1b",
+      "path": "validator/recycle_production_boundary_test.go",
+      "sha256": "89090890718e82f6e1f27050f83a2c30f1d26d104159121a7ee61a3db82cd959"
+    }
+  ],
+  "source_review_result": "The two quoted refusal lines do not identify missing current launch implementations. Their legacy/review-only authority guards are intentional; only diagnostics and deterministic boundary tests changed.",
+  "status": "MERGED_DIAGNOSTIC_AND_TEST_SOURCE_UNQUALIFIED"
+}

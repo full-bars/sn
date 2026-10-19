@@ -151,7 +151,7 @@ func (self *ReleaseSteerer) gatherHeadV2(ctx context.Context, snapshot *ReleaseS
 	hotkeyUIDs = maps.Clone(hotkeyUIDs)
 	// Keep deployment routing and the genuine transport fixed across every
 	// synchronous client-key callback. The original owner still joins Close.
-	chain := &ChainClient{client: self.chain.client, coordinator: self.chain.coordinator, chainId: new(big.Int).Set(self.chain.chainId), contractAddr: self.chain.contractAddr, release: true}
+	chain := &ChainClient{client: self.chain.client, coordinator: self.chain.coordinator, chainId: new(big.Int).Set(self.chain.chainId), contractAddr: self.chain.contractAddr, release: true, readRetryHooks: self.chain.readRetryHooks}
 	// The actual domain/configuration and file owner cannot change during
 	// a synchronous current-key/HTTP/RPC callback.
 	keyConfig := *self.cfg
@@ -212,11 +212,17 @@ func (self *ReleaseSteerer) gatherHeadV2(ctx context.Context, snapshot *ReleaseS
 			binding := bindings[index]
 			observation := releaseDecisionBindingV2Observation(input.NoID, clientID, binding, hotkeyUIDs)
 			if binding.Active {
+				// Any registered hotkey can bind this client id under its own
+				// client key, so the binding says nothing about the client. Record
+				// the client's own key, or none, beside it; the shared eligibility
+				// rule excludes a binding signed for any other key.
 				clientKey, found, err := clientKeys[input.NoID](clientID)
-				if err != nil || !found || clientKey != binding.Record.ClientKey {
-					return result, errors.Join(fmt.Errorf("compact live head active client key differs for no_id %d client %s", input.NoID, clientID), err)
+				if err != nil {
+					return result, fmt.Errorf("compact live head client key read for no_id %d client %s: %w", input.NoID, clientID, err)
 				}
-				observation.LocalClientKey = releaseHex32(clientKey)
+				if found {
+					observation.LocalClientKey = releaseHex32(clientKey)
+				}
 				domain, request, err := releaseClientKeyDecisionV2(&keyConfig, input.NoID, hotkey, draft, clientID)
 				if err != nil {
 					return result, err
@@ -229,7 +235,7 @@ func (self *ReleaseSteerer) gatherHeadV2(ctx context.Context, snapshot *ReleaseS
 		}
 	}
 	// The entire independently pinned binding census exists before any live
-	// batch. Every returned client still joins its exact binding and key.
+	// batch. Every returned signed capture must state the client's local key.
 	for _, input := range draft.Inputs {
 		requests := keyRequestsKVs[input.NoID]
 		for start := 0; start < len(requests); start += protocol.MaxClientKeyObservationBatchClients {
@@ -242,8 +248,8 @@ func (self *ReleaseSteerer) gatherHeadV2(ctx context.Context, snapshot *ReleaseS
 			for index, capture := range captures {
 				position := keyPositionsKVs[input.NoID][start+index]
 				binding := &draft.Bindings[position]
-				if !capture.registration.Present || releaseHex32(capture.registration.PublicKey) != binding.LocalClientKey {
-					return result, errors.New("compact live head signed current key differs from its independently read binding")
+				if releaseCapturedLocalClientKeyV2(capture.registration) != binding.LocalClientKey {
+					return result, errors.New("compact live head signed current key differs from its independently read local key")
 				}
 				binding.ClientKeyObservationHash = capture.contentHash
 			}

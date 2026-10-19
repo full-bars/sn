@@ -836,6 +836,28 @@ any failed attestation. Complete producer coverage, including valid reused
 phases and affected replacements, precedes a live campaign write. Record its
 composed acceptance separately from each full command's actual result.
 
+The aggregate gate also takes `RELEASE_GATE_DEPENDENCY_MODE`, as the release
+builder takes `dependency_mode`. `pinned`, the default when it is unset or
+empty, is the sealed run above. `local` tests the working checkouts as they
+are:
+
+```bash
+RUN_SERVER_DB_TESTS=1 RELEASE_GATE_DEPENDENCY_MODE=local scripts/test-release-1.0-local.sh
+```
+
+It skips exactly the source freeze's provenance checks (clean, origin,
+upstream, fetch and at-origin at the start, and the final snapshot with its
+comparison), `TestReleaseLockMatchesCheckout` in `sn-all-normal` and as the
+final fence, and the runtime 454 source and runtime-metadata attestations,
+which read GitHub and the testnet archive node rather than the checkouts. It
+keeps the module inventory and tidy checks, the sourceguard and binding-toolchain
+preflights, patch hygiene, every test job and diagnostic mode. It never reads a
+vault checkout and needs no release-lock refresh. Any other value is refused
+before anything runs. The run prints its mode first, and a local pass ends with
+`[release-1.0] local release gate passed (local mode: working checkouts, not
+sealed)`: it qualifies those checkouts, not a sealed release. The producer gate
+has no local mode.
+
 The producer's ordinary capture, private fixtures, reopened prior replay,
 complete publication population and metadata census use independent admitted
 jobs. Exact source guards require every selected root to have one execution
@@ -1273,15 +1295,17 @@ shortfall without persisting or broadcasting transaction bytes.
   `server/local`; they never use shared PG or Redis services. PostgreSQL data
   volumes and containers carry the same complete release/config hash, and stale
   or unlabelled volumes are rejected instead of silently reusing old init hooks.
-- The locked `sn`, `server`, `operator-proxy`, `vault`, platform `config`,
-  `connect`, `sdk`, `glog`, `goidenticons`, `proxy`, `userwireguard`, and `xops`
-  repositories checked out beneath one parent. Repository discovery uses Go
-  module identity plus required resource files; `--sn-repo`, `--server-repo`,
-  `--operator-proxy-repo`, `--vault-repo`, and `--platform-config-repo` are
-  available when the layout differs. Operator-proxy is bound by both its
-  production-source hash and exact clean Git commit; the other executable Go
-  sources and non-secret operator config tree are content-locked as documented
-  in `release.lock.yml`.
+- The locked `sn`, `server`, `vault`, platform `config`, `connect`, `sdk`,
+  `glog`, `goidenticons`, `proxy`, `userwireguard`, and `xops` repositories
+  checked out beneath one parent. Repository discovery uses Go module identity
+  plus required resource files; `--sn-repo`, `--server-repo`, `--vault-repo`,
+  and `--platform-config-repo` are available when the layout differs. The
+  executable Go sources and non-secret operator config tree are content-locked
+  as documented in `release.lock.yml`. The retired `operator-proxy` repository
+  is not required: its `--operator-proxy-repo` override is gone, and its inert
+  `operator_proxy` config key and release-lock pins remain readable only so
+  existing deployment hashes stay valid. A fresh release-lock rendering drops
+  those pins.
 - Network reachability to the selected operational Substrate/EVM pair, public
   comparison endpoints, and existing MinIO service. Private fallback additionally
   requires the overlay gateway.
@@ -1833,7 +1857,7 @@ PATH=/home/by/.foundry/bin:$PATH \
 
 cd ../server
 WARP_ENV=main \
-BRINGYOUR_MINIO_HOSTNAME=172.28.208.177 \
+BRINGYOUR_MINIO_HOSTNAME=172.28.208.176 \
 SIM_TESTNET_LIVE_BLOB=1 \
 go test . -run '^TestLiveBlobStoreContentAddressedCanary$' -count=1
 ```

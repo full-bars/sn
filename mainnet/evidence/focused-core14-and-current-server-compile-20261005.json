@@ -1,0 +1,226 @@
+{
+  "author_execution": "NONE: only evidence reading, static validation and documentation.",
+  "core_normal14": {
+    "counts": {
+      "fail": 0,
+      "pass": 14,
+      "run": 14,
+      "skip": 0
+    },
+    "image": {
+      "bytes": 81045222,
+      "ctime_ns": 1791214426485993805,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 20600005,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791214426485993805,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/retry2/images/core14-normal.test",
+      "sha256": "7ce19ae0703c817b6689a13abcf24a1944c1bf7bd4af795139592951d82bb3f2",
+      "type": 32768,
+      "uid": 1000
+    },
+    "original_waits": {
+      "body": {
+        "bytes": 3448,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/retry2/evidence/core14-normal-body.process-result.json",
+        "sha256": "33061a3eee7d1656da6afacfc4089c15558761d293e921df4fc75f9826385809"
+      },
+      "compile": {
+        "bytes": 2343,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/retry2/evidence/core14-normal-compile.process-result.json",
+        "sha256": "94ee170900e50524cfe7cc62478398813107fd55ce1f5b700d8ef9739cd54c80"
+      },
+      "list": {
+        "bytes": 2355,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/retry2/evidence/core14-normal-list.process-result.json",
+        "sha256": "ba83c9488de728b2e81213839525186cb9bc3b81bf4e0999394b5dd912854bbd"
+      }
+    },
+    "package_pass": true,
+    "prior_failures": "Original Core026224 normal222PASS/2FAIL and original focused observer refusal remain unchanged. This actual retry does not rewrite either receipt.",
+    "receipt": {
+      "bytes": 37526,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/retry2/evidence/core14.owner.receipt.json",
+      "sha256": "a92a7879976ed16c5dcfabf52ef18dce7ad8131336dd8d02b77f1055a16b8438"
+    },
+    "remaining": "Race, eleven H1/cause control groups, remaining Core236 obligations and unaffected-current-input applicability remain separate.",
+    "resource_errors": [],
+    "roots": [
+      "TestDialH1MessagesProbeDeadlineFallsBackAfterReadGate",
+      "TestDialH1MessagesProbeDeadlinePreservesWholeBudget",
+      "TestDialH1MessagesProbeDeadlineRetainsHardReadAndCloseCauses",
+      "TestDialH1MessagesProbeReadCancellationPreservesCallerCause",
+      "TestDialH1MessagesStandaloneTotalBudget",
+      "TestHttpRequestCausesAbsentChildPreservesReservedSibling",
+      "TestHttpRequestCausesAdmitCompleteJoinedFrameBeforeCallbacks",
+      "TestHttpRequestCausesChargeAbsentChildrenWithinOriginalBudget",
+      "TestHttpRequestCausesChargeSingleAbsentChild",
+      "TestHttpRequestCausesReservePendingSiblingSlots",
+      "TestHttpRequestCausesRetainEmptyOriginalAfterOtherOverflow",
+      "TestHttpRequestExhaustionPublicBoundsNestedAbsentFrames",
+      "TestHttpRequestExhaustionPublicRetainsOriginalAfterOverflow",
+      "TestHttpUpgradePoliciesShareCauseFrameAdmission"
+    ],
+    "scope": "Twelve new H1/cause roots and the two original failed roots; exact normal mode only.",
+    "selection": {
+      "bytes": 3406,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/selection.json",
+      "sha256": "92cc28a142668a017082da8f32928f49aed541f8f351c506118a6fe59dc5b6e9"
+    },
+    "source": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+    "source_closure": {
+      "bytes": 931682,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/source-closure.json",
+      "sha256": "1a5e4bf6d685204ea4e70d8843a1ea07418301afebbb9d87c6ba79793d73b5d3"
+    },
+    "status": "PASS_NORMAL14",
+    "user_terminal": {
+      "bytes": 1863,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/retry2/canonical-closed-owner-readback-v2.json",
+      "sha256": "fad64ee3040c12db0dd0dac429c499d710cfc2ffcc44429b3713a7a7780eefe4"
+    }
+  },
+  "current_server_model_compile": {
+    "body_results_claimed": 0,
+    "compiler_exit": 0,
+    "image": {
+      "bytes": 87625496,
+      "device": 2081,
+      "inode": 20600991,
+      "links": 1,
+      "mode": "0500",
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model621-normal-v2/model-normal.test",
+      "sha256": "b4b7b99817be0db6cc18dc5b4e79dfd75c60697fc385801a41c7f28295152496"
+    },
+    "original_wait": {
+      "bytes": 2621,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model621-normal-v2/compiler.process-result.json",
+      "sha256": "e033aa8bb28e2b5dca57e771872f460f3f4f76640a10a84dd639ebcf1575553b"
+    },
+    "package": "./model",
+    "receipt": {
+      "bytes": 15775,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model621-normal-v2/result.json",
+      "sha256": "7d0c601ae6fe99ed0aadbde095363b6b7eb2f37b74f38d3e6cb0515d055c5735"
+    },
+    "resource_errors": [],
+    "scope_limit": "Current621 model compiler only. Earlier f0b compiler PASS remains a distinct input tuple; no current model, cancellation-fix body, race or control credit follows.",
+    "source_heads": {
+      "connect": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+      "glog": "80a11b434ae90ae2221deb932daa21913919875a",
+      "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "gvisor": "c0783dba2eeff7b79692a7f122ffee5f8bd837c1",
+      "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "sdk": "18fca2edbbeac5566ef9c40027dba0e1d83be1d7",
+      "server": "62104c486e960efbb17ea8dd235e54ff666545af",
+      "sn": "eabefa17f3be9d0a1038eff74d9e04fc5950b443",
+      "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+    },
+    "status": "NORMAL_COMPILE_PASS_BODY_PENDING",
+    "tree_joined": true,
+    "user_terminal": {
+      "bytes": 2404,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model621-normal-v2-closed-owner-readback.json",
+      "sha256": "7530987e013ce48c3644459d46b8904338039b92da00a19a64cfb937fb09a912"
+    }
+  },
+  "dashboard12_rerun": {
+    "counts": {
+      "fail": 0,
+      "pass": 12,
+      "skip": 0
+    },
+    "duration_seconds": 8.732,
+    "initial_loader_refusal": {
+      "error": "ModuleNotFoundError: No module named yaml while importing test_sn_mainnet_monitor",
+      "output": {
+        "bytes": 10770,
+        "path": "/mnt/data/sn-testnet/sol-focused-harness-20261005/evidence/dashboard-status12-run.out",
+        "sha256": "95f8d0a60bc7f0c576d2345c51cf17317fc42b8842bd33afd62d75c519ae20ba"
+      },
+      "test_bodies_run": 0
+    },
+    "output": {
+      "bytes": 2469,
+      "path": "/mnt/data/sn-testnet/sol-focused-harness-20261005/evidence/dashboard-status12-venv-run.out",
+      "sha256": "1aa59d780a400c2e043eb48f7c3403e5d5ef1a7a3af7f1789e63be14bb738773"
+    },
+    "producer_component": "624cf1e00f45dac61bc5675e4a21eb2a8dd121e5",
+    "receipt": {
+      "bytes": 11557,
+      "path": "/mnt/data/sn-testnet/sol-focused-harness-20261005/evidence/sol-dashboard-status12-qualification-v1.json",
+      "sha256": "7012f0cebf06c645dc6f69dfa9ab158871ae3fa1ba48b0af0d263b393cf93b32"
+    },
+    "scope_limit": "Same twelve existing PH15 consumer roots; original6.981s PASS retained separately, no new unique roots or producer/race/control/live-ingestion credit.",
+    "status": "PASS_SAME_TARGETED_DASHBOARD12",
+    "xops_source": "9a37239ebeebbb5efea4f63a56191f91f3c4ad8f"
+  },
+  "documentation_base": "58b2801559e15b684de4f25c5e739de628a39c0e",
+  "limits": "Old d64 fullmodel remains closed incomplete1789PASS/7FAIL/10SKIP plus7pending/52unstarted. Source corrections and other required bodies remain pending. Focused progress does not authorize deployment or erase original requirements.",
+  "prior_actual_checkpoint": {
+    "commit": "58b2801559e15b684de4f25c5e739de628a39c0e",
+    "repository_path": "mainnet/evidence/focused-compiler-and-model-stop-progress-20261005.json"
+  },
+  "python_harness": {
+    "bounds": {
+      "memory_bytes": 536870912,
+      "swap_bytes": 0,
+      "timeout_seconds": 300
+    },
+    "groups": [
+      {
+        "exit": 0,
+        "failed": 0,
+        "name": "peer_v5",
+        "original_output": {
+          "bytes": 4966,
+          "path": "/mnt/data/sn-testnet/sol-focused-harness-20261005/evidence/peer-v5-run.out",
+          "sha256": "ff9eaec6ab7fa6dce33097e27577056efcd402428b344eb568d700f24e6b7946"
+        },
+        "passed": 40
+      },
+      {
+        "exit": 0,
+        "failed": 0,
+        "name": "closure_v2",
+        "original_output": {
+          "bytes": 1286,
+          "path": "/mnt/data/sn-testnet/sol-focused-harness-20261005/evidence/closure-v2-run.out",
+          "sha256": "f9da385db292c8d4e2b026f0fe6c87b3b70c290ffb5f8674f210c9081db71dd3"
+        },
+        "passed": 7
+      },
+      {
+        "exit": 0,
+        "failed": 0,
+        "name": "future_log_budget",
+        "original_output": {
+          "bytes": 1641,
+          "path": "/mnt/data/sn-testnet/sol-focused-harness-20261005/evidence/log-budget-ten-run.out",
+          "sha256": "b468af0f7cb07792a2c04e8b3b0041f0164e7adaaccff4a3379da9f36cf73fbc"
+        },
+        "passed": 10
+      }
+    ],
+    "original_model_status_preserved": "FAIL_OR_INCOMPLETE",
+    "receipt": {
+      "bytes": 17874,
+      "path": "/mnt/data/sn-testnet/sol-focused-harness-20261005/evidence/sol-focused-python-harness-qualification-v1.json",
+      "sha256": "ca0ef551f9c0d27964db3b2f8077c89c8b114e3b4fbfb20236174d41b02452ad"
+    },
+    "scope_limit": "Ten future log-budget, forty peer-observer and seven closed-owner tests only. No product-master additions, model completion, causal-control kills or future suite outcomes are inferred.",
+    "status": "PASS_PYTHON_HARNESS_ONLY",
+    "total_passed": 57
+  },
+  "schema": "focused-core14-current-server-compile-checkpoint-v1",
+  "scope_preserved": {
+    "closed_outcomes": 0,
+    "core_control_groups": 393,
+    "master_roots_per_mode": 2863,
+    "original_outcome_ids": 38,
+    "source_catalog_recensus": false
+  }
+}

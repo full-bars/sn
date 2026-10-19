@@ -59,10 +59,7 @@ func (self *fleetMainnetTestFixture) rebuildNativeBlocksWithLock() error {
 	self.nativeBlocks, self.nativeHeaders = map[uint64]types.Hash{}, map[uint64]types.Header{}
 	parent := types.Hash{0x50}
 	for number := uint64(100); number <= self.nativeThrough; number++ {
-		extrinsics := []string{}
-		if number == self.nativeReceiptNumber && self.nativeBroadcast {
-			extrinsics = append(extrinsics, self.nativeSigned)
-		}
+		extrinsics := self.nativeBodyWithLock(number)
 		header, hash, err := fleetReceiptTestHeader(parent, number, extrinsics, number == self.nativeRuntimeUpdateAt)
 		if err != nil {
 			return err
@@ -72,4 +69,16 @@ func (self *fleetMainnetTestFixture) rebuildNativeBlocksWithLock() error {
 	}
 	self.head, self.receiptBlock = self.nativeBlocks[100], self.nativeBlocks[self.nativeReceiptNumber]
 	return nil
+}
+
+// The one extrinsic of a synthetic block: an earlier landed one, or the
+// current submission at the receipt height.
+func (self *fleetMainnetTestFixture) nativeBodyWithLock(number uint64) []string {
+	if landed, ok := self.nativeLanded[number]; ok {
+		return []string{landed}
+	}
+	if number == self.nativeReceiptNumber && self.nativeBroadcast {
+		return []string{self.nativeSigned}
+	}
+	return []string{}
 }

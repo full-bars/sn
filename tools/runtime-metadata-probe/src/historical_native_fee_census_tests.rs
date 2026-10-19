@@ -3,6 +3,36 @@
 
 use super::*;
 
+/// The Go public consumer serves these exact bytes as the original parent's
+/// runtime metadata. The program returns them from Metadata_metadata, so its
+/// profile pin names that parent metadata rather than a private layout.
+const CHAIN_METADATA: &[u8] = include_bytes!("../testdata/whole-fee-chain-metadata.scale");
+
+/// The chain metadata segment at 40000 ends below this heap base.
+pub(super) const HEAP: u32 = 400000;
+
+// Events use the chain metadata's layouts: Balances (5) Deposit 7 and
+// Withdraw 8, and Ethereum (21) Executed 0, reverted as Revert(Reverted).
+const DEPOSIT: u8 = 7;
+const WITHDRAW: u8 = 8;
+
+fn balance(index: u32, variant: u8, who: [u8; 32], amount: u64) -> Vec<u8> {
+    fee_record(
+        index,
+        5,
+        &[&[variant][..], &who, &amount.to_le_bytes()].concat(),
+    )
+}
+
+fn executed(index: u32, from: [u8; 20], to: [u8; 20], transaction_hash: [u8; 32]) -> Vec<u8> {
+    // Executed, its fields, ExitReason::Revert(Reverted) and empty extra data.
+    fee_record(
+        index,
+        21,
+        &[&[0][..], &from, &to, &transaction_hash, &[2, 0], &[0]].concat(),
+    )
+}
+
 // Fixed synthetic original paths include an unrelated payer and a nonpaying
 // body entry. Missing refund and observed zero are different program branches.
 pub(super) struct Program {
@@ -20,71 +50,13 @@ impl Program {
         let payer = blake2_256(&[b"evm:".as_slice(), &source].concat());
         let mut events = Vec::new();
         if mode != "quiet" {
-            events.push((
-                "fee-withdraw",
-                fee_record(
-                    0,
-                    5,
-                    &SyntheticBalanceEvents::Withdraw {
-                        who: payer,
-                        amount: 1000,
-                    }
-                    .encode(),
-                ),
-            ));
+            events.push(("fee-withdraw", balance(0, WITHDRAW, payer, 1000)));
             if mode == "complete" {
-                events.push((
-                    "fee-refund",
-                    fee_record(
-                        0,
-                        5,
-                        &SyntheticBalanceEvents::Deposit {
-                            who: payer,
-                            amount: 250,
-                        }
-                        .encode(),
-                    ),
-                ));
+                events.push(("fee-refund", balance(0, DEPOSIT, payer, 250)));
             }
-            events.push((
-                "ethereum-executed",
-                fee_record(
-                    0,
-                    18,
-                    &SyntheticEthereumEvents::Executed {
-                        from: source,
-                        to: [31; 20],
-                        transaction_hash: [41; 32],
-                        exit_reason: SyntheticExitReason::Revert,
-                        extra_data: vec![],
-                    }
-                    .encode(),
-                ),
-            ));
-            events.push((
-                "fee-withdraw",
-                fee_record(
-                    1,
-                    5,
-                    &SyntheticBalanceEvents::Withdraw {
-                        who: [99; 32],
-                        amount: 7,
-                    }
-                    .encode(),
-                ),
-            ));
-            events.push((
-                "fee-refund",
-                fee_record(
-                    1,
-                    5,
-                    &SyntheticBalanceEvents::Deposit {
-                        who: [99; 32],
-                        amount: 0,
-                    }
-                    .encode(),
-                ),
-            ));
+            events.push(("ethereum-executed", executed(0, source, [31; 20], [41; 32])));
+            events.push(("fee-withdraw", balance(1, WITHDRAW, [99; 32], 7)));
+            events.push(("fee-refund", balance(1, DEPOSIT, [99; 32], 0)));
         }
         Self {
             mode: mode.to_owned(),
@@ -93,7 +65,8 @@ impl Program {
     }
 
     pub(super) fn declarations(&self) -> String {
-        let metadata = fee_metadata().encode();
+        let metadata = CHAIN_METADATA.encode();
+        assert!(40000 + metadata.len() < HEAP as usize);
         let mut result = segment(40000, &metadata);
         result.push_str(&format!(
             "(func (export \"Metadata_metadata\") (param i32 i32) (result i64) (i64.const {}))",
@@ -171,7 +144,7 @@ impl Program {
     }
 
     pub(super) fn profile(&self, code: &[u8], profile: &mut observer::ObservationProfile) {
-        profile.metadata_sha256 = Some(sha2_256(&fee_metadata()));
+        profile.metadata_sha256 = Some(sha2_256(CHAIN_METADATA));
         for (index, (purpose, _)) in self.events.iter().enumerate() {
             profile
                 .rules

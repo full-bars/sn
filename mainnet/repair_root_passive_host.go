@@ -175,8 +175,8 @@ func (self *repairRootPassiveCustody) beforeStart(ctx context.Context, now time.
 }
 
 // Root continues through its original executable and storage-inspection gate.
-func (self *repairRootPassiveCustody) start(ctx context.Context) error {
-	return self.host.files.host.start(ctx, self.envelope.profile())
+func (self *repairRootPassiveCustody) start(ctx context.Context, dispatchCheck func() error) error {
+	return self.host.files.host.start(ctx, self.envelope.profile(), dispatchCheck)
 }
 
 // Fresh local checkpoint progress is attributed only while the acknowledged

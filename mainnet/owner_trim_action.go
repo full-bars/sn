@@ -22,6 +22,8 @@ const ownerTrimLedgerActionSchema = "urnetwork-mainnet-owner-trim-action-v2"
 const ownerTrimLedgerExecutionSchema = "urnetwork-mainnet-owner-trim-execution-v2"
 const ownerTrimBestEffortActionSchema = "urnetwork-mainnet-owner-trim-best-effort-action-v1"
 const ownerTrimBestEffortExecutionSchema = "urnetwork-mainnet-owner-trim-best-effort-execution-v1"
+const ownerTrimMultisigActionSchema = "urnetwork-mainnet-owner-trim-multisig-action-v1"
+const ownerTrimMultisigExecutionSchema = "urnetwork-mainnet-owner-trim-multisig-execution-v1"
 const ownerTrimBestEffortSelection = "reviewed-current-selection-with-explicit-inclusion-risks"
 const ownerTrimStateFile = "owner-trim-action.json"
 
@@ -57,6 +59,7 @@ type ownerTrimAction struct {
 	MetadataDigest          string             `json:"check_metadata_hash,omitempty"`
 	DerivationPath          string             `json:"signer_derivation_path,omitempty"`
 	LedgerMetadataHash      string             `json:"ledger_metadata_blake2b_256,omitempty"`
+	Multisig                *ownerTrimMultisig `json:"multisig,omitempty"`
 }
 
 // A fresh domain-specific approval covers the exact native action and owned
@@ -80,13 +83,35 @@ func (self ownerTrimExecutionConfig) signingBytes() []byte {
 func (self ownerTrimExecutionConfig) validSchemas() bool {
 	return self.Schema == ownerTrimExecutionSchema && self.Action.Schema == ownerTrimActionSchema ||
 		self.Schema == ownerTrimLedgerExecutionSchema && self.Action.Schema == ownerTrimLedgerActionSchema ||
-		self.Schema == ownerTrimBestEffortExecutionSchema && self.Action.Schema == ownerTrimBestEffortActionSchema
+		self.Schema == ownerTrimBestEffortExecutionSchema && self.Action.Schema == ownerTrimBestEffortActionSchema ||
+		self.Schema == ownerTrimMultisigExecutionSchema && self.Action.Schema == ownerTrimMultisigActionSchema
 }
 
 // A fresh best-effort approval retains the Ledger envelope without inheriting
 // the strict v2 execution guarantee or adopting a previously claimed action.
 func (self ownerTrimAction) ledgerSigning() bool {
-	return self.Schema == ownerTrimLedgerActionSchema || self.Schema == ownerTrimBestEffortActionSchema
+	return self.Schema == ownerTrimLedgerActionSchema || self.Schema == ownerTrimBestEffortActionSchema || self.Schema == ownerTrimMultisigActionSchema
+}
+
+// A native multisig owner keeps the best-effort selection and residual risks;
+// its approvals cannot fence the interval between signatories either.
+func (self ownerTrimAction) bestEffort() bool {
+	return self.Schema == ownerTrimBestEffortActionSchema || self.Schema == ownerTrimMultisigActionSchema
+}
+
+// The outer signer owns the nonce, era, fee and signature. A direct owner is
+// its own signer; a multisig step names one signatory of the owner account.
+func (self ownerTrimAction) signer() string {
+	if self.Multisig != nil {
+		return self.Multisig.Signatory
+	}
+	return self.Coldkey
+}
+
+// The capacity-only owner call, encoded identically direct or nested.
+func (self ownerTrimAction) trimCall() []byte {
+	call := binary.LittleEndian.AppendUint16(append([]byte(nil), self.CallIndex[:]...), self.Netuid)
+	return binary.LittleEndian.AppendUint16(call, self.MaximumUids)
 }
 
 // Every reopen verifies the independent approval instead of trusting a journal
@@ -132,6 +157,23 @@ func prepareOwnerTrimAction(action ownerTrimAction, metadataHex string) (ownerTr
 		return ownerTrimAction{}, err
 	}
 	action.CallIndex = [2]byte{call.PalletIndex, call.CallIndex}
+	if action.Multisig != nil {
+		// The inner call and hash are derived, never accepted from a template.
+		if err := action.Multisig.validate(action.Coldkey); err != nil {
+			return ownerTrimAction{}, err
+		}
+		deposit, err := ownerTrimMultisigProfile(metadata, len(action.Multisig.Signatories), action.Multisig.Threshold)
+		if err != nil {
+			return ownerTrimAction{}, err
+		}
+		multisig := action.Multisig.clone()
+		inner := action.trimCall()
+		multisig.InnerCall, multisig.CallHash = "0x"+hex.EncodeToString(inner), rootExtrinsicHash(inner)
+		if multisig.kind() == "first" && deposit > multisig.DepositLimitRao {
+			return ownerTrimAction{}, errors.New("owner trim multisig deposit exceeds its approved limit")
+		}
+		action.Multisig = &multisig
+	}
 	encoded, payload, err := action.encoding()
 	if err != nil {
 		return ownerTrimAction{}, err
@@ -142,8 +184,12 @@ func prepareOwnerTrimAction(action ownerTrimAction, metadataHex string) (ownerTr
 	return action, nil
 }
 
-// Reconstruct the six-byte direct owner call and reviewed mortal envelope.
+// Reconstruct the six-byte direct owner call, or the native multisig call that
+// nests it for one signatory, and the reviewed mortal envelope.
 func (self ownerTrimAction) encoding() ([]byte, []byte, error) {
+	if (self.Schema == ownerTrimMultisigActionSchema) != (self.Multisig != nil) {
+		return nil, nil, errors.New("owner trim native multisig custody requires its own approval domain")
+	}
 	if self.Schema == ownerTrimActionSchema {
 		if self.SignatureScheme != "" || self.MetadataDigest != "" || self.DerivationPath != "" || self.LedgerMetadataHash != "" {
 			return nil, nil, errors.New("owner trim v1 signature and metadata mode cannot change")
@@ -157,7 +203,7 @@ func (self ownerTrimAction) encoding() ([]byte, []byte, error) {
 		}
 	}
 	selection := ownerTrimSubsetRule
-	if self.Schema == ownerTrimBestEffortActionSchema {
+	if self.bestEffort() {
 		selection = ownerTrimBestEffortSelection
 	}
 	if self.Netuid != 25 || self.Network.NativeChain == "" || self.Network.EvmChainId != mainnetEvmChainId ||
@@ -182,8 +228,16 @@ func (self ownerTrimAction) encoding() ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	call := binary.LittleEndian.AppendUint16(append([]byte(nil), self.CallIndex[:]...), self.Netuid)
-	call = binary.LittleEndian.AppendUint16(call, self.MaximumUids)
+	call := self.trimCall()
+	if self.Multisig != nil {
+		if self.Multisig.Timepoint != nil && uint64(self.Multisig.Timepoint.Height) > self.BirthBlock {
+			return nil, nil, errors.New("owner trim multisig step predates its original approval timepoint")
+		}
+		call, err = self.Multisig.outerCall(self.Coldkey, call)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 	payload := append(append([]byte(nil), call...), era...)
 	payload = append(payload, rootCompact(uint64(self.Nonce))...)
 	mode := byte(0)
@@ -224,7 +278,7 @@ func (self ownerTrimAction) signed(signature []byte) ([]byte, error) {
 	if err := self.validate(); err != nil {
 		return nil, err
 	}
-	account, _ := hex.DecodeString(self.Coldkey[2:])
+	account, _ := hex.DecodeString(self.signer()[2:])
 	payload, _ := hex.DecodeString(self.Payload[2:])
 	if len(payload) > 256 {
 		digest := blake2b.Sum256(payload)

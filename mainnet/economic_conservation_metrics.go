@@ -37,7 +37,16 @@ func saveEconomicConservationMetrics(owner *monitorMetricsStore, summary *econom
 func renderEconomicConservationMetrics(summary *economicConservationSummary) ([]byte, error) {
 	value := economicConservationSummary{}
 	if summary != nil {
-		if summary.Schema != "urnetwork-economic-conservation-sample-v1" || summary.SampleAt.IsZero() || summary.SampleAt.Unix() < 0 || !planSha256(summary.PolicyHash) || !planSha256(summary.CheckpointHash) {
+		expectedSchema := "urnetwork-economic-conservation-sample-v1"
+		if summary.Treasury != nil {
+			expectedSchema = "urnetwork-economic-conservation-sample-v2"
+			if summary.Execution == nil || summary.Execution.Treasury == nil || summary.Treasury.Income == nil || !sameNativeTreasuryAuthority(summary.Treasury.Income, summary.Execution.Treasury) {
+				return nil, errors.New("treasury metrics lost their original income authority")
+			}
+		} else if summary.Execution != nil && summary.Execution.Treasury != nil {
+			return nil, errors.New("treasury metrics omitted their original custody summary")
+		}
+		if summary.Schema != expectedSchema || summary.SampleAt.IsZero() || summary.SampleAt.Unix() < 0 || !planSha256(summary.PolicyHash) || !planSha256(summary.CheckpointHash) {
 			return nil, errors.New("economic metrics require an original completed summary")
 		}
 		value = *summary
@@ -121,6 +130,28 @@ func renderEconomicConservationMetrics(summary *economicConservationSummary) ([]
 		{name: "vault_finalized_block", help: "Retained vault cursor; current and consensus coverage gauges are required separately.", value: value.VaultCursor.Number},
 	} {
 		fmt.Fprintf(&output, "# HELP sn_mainnet_conservation_%s %s\n# TYPE sn_mainnet_conservation_%s gauge\nsn_mainnet_conservation_%s %d\n", metric.name, metric.help, metric.name, metric.name, metric.value)
+	}
+	// Short TYPE records preserve the original 16 KiB owner profile. Exact
+	// source/known semantics for this fixed extension live in the command docs.
+	for _, metric := range economicConservationProgressMetrics(value) {
+		fmt.Fprintf(&output, "# TYPE sn_mainnet_conservation_%s gauge\nsn_mainnet_conservation_%s %d\n", metric.name, metric.name, metric.value)
+	}
+	// This fixed successor extension leaves every legacy textfile byte intact.
+	// Custody availability and definite spendability remain separate known bits.
+	if value.Treasury != nil {
+		for _, metric := range []struct {
+			name  string
+			value uint64
+		}{
+			{name: "treasury_split_known", value: bit(conformance.TreasuryWithinTolerance != nil)},
+			{name: "treasury_split_within_tolerance", value: bit(conformance.TreasuryWithinTolerance != nil && *conformance.TreasuryWithinTolerance)},
+			{name: "treasury_custody_complete", value: bit(value.Treasury.CauseCensusComplete && value.Treasury.StockCovered && value.Treasury.AvailabilityKnown)},
+			{name: "treasury_availability_known", value: bit(value.Treasury.AvailabilityKnown)},
+			{name: "treasury_income_spendability_known", value: bit(value.Treasury.IncomeUnlockedOrSpent != nil)},
+			{name: "treasury_income_unlocked_or_spent", value: bit(value.Treasury.IncomeUnlockedOrSpent != nil && *value.Treasury.IncomeUnlockedOrSpent)},
+		} {
+			fmt.Fprintf(&output, "# TYPE sn_mainnet_conservation_%s gauge\nsn_mainnet_conservation_%s %d\n", metric.name, metric.name, metric.value)
+		}
 	}
 	return []byte(output.String()), nil
 }

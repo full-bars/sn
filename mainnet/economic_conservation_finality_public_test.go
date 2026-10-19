@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Public conservation obtains these proofs from the actual capture/replay
 // producer. The original receipt reader, durable archive and restart own the

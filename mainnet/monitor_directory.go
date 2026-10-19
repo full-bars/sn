@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"golang.org/x/sys/unix"
+
 	"github.com/urfoundation/sn/internal/durablehead"
 	"github.com/urfoundation/sn/internal/durablepath"
 	"github.com/urnetwork/connect/durablevolume"
@@ -159,7 +161,7 @@ func (self *monitorDirectory) open(name string, flags int, mode uint32) (*os.Fil
 	if err := check(); err != nil {
 		return nil, err
 	}
-	fd, err := syscall.Openat(int(self.file.Fd()), name, flags|syscall.O_CLOEXEC|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, mode)
+	fd, err := unix.Openat(int(self.file.Fd()), name, flags|syscall.O_CLOEXEC|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, mode)
 	if err != nil {
 		if errors.Is(err, syscall.ELOOP) || errors.Is(err, syscall.ENOTDIR) {
 			return nil, errors.Join(&monitorOutputOwnershipError{reason: "monitor file became an alias or changed type"}, err)
@@ -241,7 +243,7 @@ func (self *monitorDirectory) publish(name string, raw []byte, mode os.FileMode,
 	if err != nil {
 		return err
 	}
-	defer syscall.Unlinkat(int(self.file.Fd()), temporary)
+	defer unix.Unlinkat(int(self.file.Fd()), temporary, 0)
 	if err := file.Chmod(mode); err != nil {
 		return errors.Join(err, file.Close())
 	}
@@ -252,7 +254,7 @@ func (self *monitorDirectory) publish(name string, raw []byte, mode os.FileMode,
 	if err := errors.Join(writeErr, file.Sync(), file.Close(), self.checkWrite()); err != nil {
 		return err
 	}
-	if err := syscall.Renameat(int(self.file.Fd()), temporary, int(self.file.Fd()), name); err != nil {
+	if err := unix.Renameat(int(self.file.Fd()), temporary, int(self.file.Fd()), name); err != nil {
 		return err
 	}
 	if syncDirectory == nil {

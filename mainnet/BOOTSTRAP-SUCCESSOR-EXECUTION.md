@@ -33,23 +33,33 @@ route, not independent proofs of consensus or distributed signer exclusivity.
 First retain the original eight successful receipts, the
 [signed local preparation](BOOTSTRAP-SUCCESSOR-PREPARATION.md), and its
 [exact offline Safe review](BOOTSTRAP-SUCCESSOR-SAFE-REVIEW.md). Independent
-signing systems supply two Safe signatures and one signed relayer transaction.
-These commands never read private keys or create a signature.
+signing systems supply the Safe signatures (two under the original profile, one
+under the single-owner profile) and one signed relayer transaction. These
+commands never read private keys or create a signature.
 
 The private execution request uses schema
-`urnetwork-mainnet-successor-execution-request-v1` and these fields:
+`urnetwork-mainnet-successor-execution-request-v1` for the original three-owner
+profile, or `urnetwork-mainnet-successor-execution-single-owner-request-v1` for
+the single-owner profile. Both have these fields:
 
 | Field | Meaning |
 | --- | --- |
 | `safe_review_hash` | Exact reconstructed review seal. |
 | `registry_directory` | Precreated private, dedicated nonce registry shared by every cooperating execution owner and signing system. |
-| `owners` | Three distinct, sorted nonzero owner addresses. Current membership is still unverified. |
+| `owners` | Three distinct, sorted nonzero owner addresses, or exactly one nonzero, non-sentinel owner under the single-owner schema. Current membership is still unverified. |
 | `singleton` | Independently selected singleton address for the reviewed Safe release. Current code and storage remain unverified. |
-| `safe_signatures` | `path` and `sha256` of exactly 130 binary signature bytes. |
+| `safe_signatures` | `path` and `sha256` of exactly 130 binary signature bytes, or 65 under the single-owner schema. |
 | `relayer_transaction` | `path` and `sha256` of the canonical binary signed EIP-1559 transaction. |
 
-This first profile permits two EIP-712 ECDSA signatures from the approved census,
-threshold two, no modules, zero guard/module guard and zero fallback handler.
+This first profile permits two EIP-712 ECDSA signatures from the approved census
+at threshold two. The single-owner profile permits one EIP-712 ECDSA signature
+(v 27 or 28) from its one owner at threshold one. Only the request schema
+selects the profile; owner count, signature length and observed Safe state never
+do. Both require no modules, zero guard/module guard and zero fallback handler.
+The SN25 launch uses the single-owner profile (owner decision, October 7) for
+SafeL2 1.4.1 `0x56F4Dad575576CC0B679FEf52899630f9F605418`, owner
+`0x16C372dbBb24cd8473345ab13971E40814C8658F`; owners can be added and the
+threshold raised later by a Safe transaction.
 Contract signatures, approved-hash signatures, `eth_sign`, trailing signature
 bytes, replacements and fee changes are unsupported. The outer envelope must
 match every retained relayer field and the exact encoded `execTransaction` call.

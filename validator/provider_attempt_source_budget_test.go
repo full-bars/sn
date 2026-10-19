@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Actual public reads prove that a caller reserve clips original acquisition
 // without changing its independently pinned authority or historical bytes.

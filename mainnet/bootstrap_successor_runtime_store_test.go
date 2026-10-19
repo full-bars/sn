@@ -117,11 +117,8 @@ func TestBootstrapSuccessorRuntimeRevisionRejectsEventRollback(t *testing.T) {
 		t.Fatal(err)
 	}
 	owner.close()
-	for _, suffix := range []string{".intent", ".json"} {
-		if err := os.WriteFile(filepath.Join(root, bootstrapSuccessorExecutionEventName(2)+suffix), malformed, 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
+	event := bootstrapSuccessorExecutionEventName(2)
+	bootstrapSuccessorExecutionTestRewrite(t, f.storageContext(t.Context()), root, rootObjectHash(f.approval), map[string][]byte{event + ".intent": malformed, event + ".json": malformed})
 	reopened, err := openBootstrapSuccessorExecutionStore(f.storageContext(t.Context()), f.approval.Plan, f.approval, f.profile, false, nil)
 	if reopened != nil {
 		reopened.close()
@@ -129,11 +126,7 @@ func TestBootstrapSuccessorRuntimeRevisionRejectsEventRollback(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "rolled back runtime revision authority") {
 		t.Fatal("counted event replay accepted a backward runtime revision", err)
 	}
-	for _, suffix := range []string{".intent", ".json"} {
-		if err := os.WriteFile(filepath.Join(root, bootstrapSuccessorExecutionEventName(2)+suffix), retained, 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
+	bootstrapSuccessorExecutionTestRewrite(t, f.storageContext(t.Context()), root, rootObjectHash(f.approval), map[string][]byte{event + ".intent": retained, event + ".json": retained})
 	owner = f.open(false, nil)
 	if owner.last.CumulativeAttempts != 10 || owner.last.RuntimeRevisionHash != owner.runtimeHistory.hash() || len(f.writes) != 0 {
 		t.Fatal("event repair renewed consumed runtime custody")
@@ -217,9 +210,9 @@ func TestBootstrapSuccessorRuntimeRevisionRejectsLostAndForkedHistory(t *testing
 	}
 	stage := owner.local.stageName(bootstrapSuccessorRuntimeName(1), bootstrapSuccessorRuntimeStageKind(rootObjectHash(first)))
 	owner.close()
-	if err := os.Remove(path); err != nil {
-		t.Fatal(err)
-	}
+	// The census acknowledges the removal, so the replay is what must refuse.
+	ctx, claim := f.storageContext(t.Context()), rootObjectHash(f.approval)
+	bootstrapSuccessorExecutionTestRewrite(t, ctx, root, claim, map[string][]byte{bootstrapSuccessorRuntimeName(1): nil})
 	reopened, err := openBootstrapSuccessorExecutionStore(f.storageContext(t.Context()), f.approval.Plan, f.approval, f.profile, false, nil)
 	if reopened != nil {
 		reopened.close()
@@ -227,10 +220,11 @@ func TestBootstrapSuccessorRuntimeRevisionRejectsLostAndForkedHistory(t *testing
 	if err == nil || !strings.Contains(err.Error(), "counted event lost its runtime revision authority") {
 		t.Fatal("missing counted runtime revision reopened execution custody", err)
 	}
-	if err := os.WriteFile(path, raw, 0600); err != nil {
-		t.Fatal(err)
-	}
+	bootstrapSuccessorExecutionTestRewrite(t, ctx, root, claim, map[string][]byte{bootstrapSuccessorRuntimeName(1): raw})
 	second := bootstrapSuccessorRuntimeTestNext(t, f, base, []bootstrapSuccessorRuntimeApproval{first})
+	// Each fault is undone on the same inode, so the next starts from intact
+	// custody: the census binds the revision's inode as well as its bytes.
+	held := filepath.Join(filepath.Dir(root), "synthetic-held-runtime-revision.json")
 	for _, fault := range []string{"changed bytes", "noncanonical bytes", "gap", "fork", "completed stage", "unsafe mode", "symlink"} {
 		var extra string
 		switch fault {
@@ -257,7 +251,7 @@ func TestBootstrapSuccessorRuntimeRevisionRejectsLostAndForkedHistory(t *testing
 		case "unsafe mode":
 			err = os.Chmod(path, 0644)
 		case "symlink":
-			if err := os.Remove(path); err != nil {
+			if err := os.Rename(path, held); err != nil {
 				t.Fatal(err)
 			}
 			target := bootstrapSuccessorExecutionTestRaw(t, "synthetic-linked-runtime.json", raw)
@@ -278,10 +272,15 @@ func TestBootstrapSuccessorRuntimeRevisionRejectsLostAndForkedHistory(t *testing
 				t.Fatal(err)
 			}
 		}
-		if err := os.Remove(path); err != nil {
-			t.Fatal(err)
+		switch fault {
+		case "symlink":
+			err = errors.Join(os.Remove(path), os.Rename(held, path))
+		case "unsafe mode":
+			err = os.Chmod(path, 0600)
+		default:
+			err = os.WriteFile(path, raw, 0600)
 		}
-		if err := os.WriteFile(path, raw, 0600); err != nil {
+		if err != nil {
 			t.Fatal(err)
 		}
 	}

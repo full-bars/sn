@@ -12,6 +12,8 @@ import (
 	"sync"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+
+	"github.com/urfoundation/sn/internal/durablesync"
 )
 
 type provisionalRuntimeCompatibility struct {
@@ -40,6 +42,9 @@ func (self *Chain) EnableProvisionalRuntimeCompatibility(expectedGenesis types.H
 	}
 	runtimeMetadataArtifactCacheInitialization.stateLock.Lock()
 	defer runtimeMetadataArtifactCacheInitialization.stateLock.Unlock()
+	if self.runtimeSuccession != nil {
+		return errors.New("provisional runtime compatibility cannot join mainnet successor admission")
+	}
 	if self.provisionalRuntime != nil {
 		if self.provisionalRuntime.genesis != expectedGenesis {
 			return errors.New("provisional runtime genesis changed")
@@ -349,9 +354,5 @@ func WriteProvisionalRuntimeObservation(directory string, artifact Authenticated
 		}
 		return err
 	}
-	dir, err := os.Open(directory)
-	if err != nil {
-		return err
-	}
-	return errors.Join(dir.Sync(), dir.Close())
+	return durablesync.SyncDir(directory)
 }

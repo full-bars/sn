@@ -462,3 +462,71 @@ func TestEconomicConservationPublicMoreThan128ReviewsRetainsOriginalLiabilities(
 		t.Fatal("an archived review reference became a new operational approval", code, diagnostic.String())
 	}
 }
+
+// Each cold head of a populated predecessor survives into its successor unless
+// compaction deliberately rebuilds it. A new archive field that carry neither
+// copies nor lists here fails, as the dropped Yuma summary (58e2aab48) would.
+func TestEconomicConservationArchiveSuccessorCarriesEveryColdHead(t *testing.T) {
+	// Compaction recomputes these from the exact original state; retireFinality
+	// and retireWholeFees rebuild the last two from its cold index.
+	rebuilt := map[string]bool{"Resources": true, "Native": true, "Vault": true, "ClaimHeads": true, "Finality": true, "OriginalFees": true}
+	var prior economicConservationArchive
+	fields := reflect.ValueOf(&prior).Elem()
+	for index := range fields.NumField() {
+		economicConservationTestPopulate(fields.Field(index), 3)
+		if fields.Field(index).IsZero() {
+			t.Fatal("guard did not populate archive field", fields.Type().Field(index).Name)
+		}
+	}
+	successor := economicConservationArchive{PoolBoundaries: map[string]economicEmissionBoundary{}}
+	successor.carry(&prior)
+	carried := reflect.ValueOf(successor)
+	for index := range fields.NumField() {
+		name := fields.Type().Field(index).Name
+		if rebuilt[name] {
+			delete(rebuilt, name)
+		} else if !reflect.DeepEqual(fields.Field(index).Interface(), carried.Field(index).Interface()) {
+			t.Error("successor archive dropped its predecessor's", name)
+		}
+	}
+	if len(rebuilt) != 0 {
+		t.Fatal("rebuilt archive fields no longer exist", rebuilt)
+	}
+}
+
+// Every reachable value becomes nonzero, so an uncopied field differs.
+func economicConservationTestPopulate(value reflect.Value, depth int) {
+	if depth < 0 {
+		return
+	}
+	switch value.Kind() {
+	case reflect.Pointer:
+		value.Set(reflect.New(value.Type().Elem()))
+		economicConservationTestPopulate(value.Elem(), depth-1)
+	case reflect.Struct:
+		for index := range value.NumField() {
+			if value.Type().Field(index).IsExported() {
+				economicConservationTestPopulate(value.Field(index), depth-1)
+			}
+		}
+	case reflect.Slice:
+		value.Set(reflect.MakeSlice(value.Type(), 1, 1))
+		economicConservationTestPopulate(value.Index(0), depth-1)
+	case reflect.Array:
+		economicConservationTestPopulate(value.Index(0), depth-1)
+	case reflect.Map:
+		key, element := reflect.New(value.Type().Key()).Elem(), reflect.New(value.Type().Elem()).Elem()
+		economicConservationTestPopulate(key, depth-1)
+		economicConservationTestPopulate(element, depth-1)
+		value.Set(reflect.MakeMap(value.Type()))
+		value.SetMapIndex(key, element)
+	case reflect.String:
+		value.SetString("x")
+	case reflect.Bool:
+		value.SetBool(true)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		value.SetInt(1)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		value.SetUint(1)
+	}
+}

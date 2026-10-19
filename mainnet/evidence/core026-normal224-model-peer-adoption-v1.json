@@ -1,0 +1,54 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "fresh_admission": {
+    "available": {
+      "/mnt/data": {
+        "bytes": 93133533184,
+        "inodes": 92371881
+      },
+      "/var/lib/docker": {
+        "bytes": 300608704512,
+        "inodes": 50982922
+      }
+    },
+    "lease_remaining_seconds": 16613.667306,
+    "lease_user": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "1067856030105",
+      "InvocationID": "e24af10045a14bcdb3e8a00ff536dcff",
+      "MainPID": "3567744",
+      "RuntimeMaxUSec": "8h"
+    },
+    "memory_available_bytes": 128752889856,
+    "model_user": {
+      "ActiveState": "active",
+      "InvocationID": "cf41e3aee35245a1b037cf956b0fe8f2",
+      "MainPID": "3623465"
+    },
+    "observed_utc": "2026-10-05T13:42:59.335714+00:00",
+    "scope": "One retained Core224 normal body alongside the unchanged model; no compiler or database work."
+  },
+  "held_extra_reserve_disk_bytes": 4294967296,
+  "held_extra_reserve_memory_bytes": 4294967296,
+  "history_count": 0,
+  "job_sha256": "0e1c20d31f05c475ffb068128021317b2723b28f76f014777af26cec05f4f1fb",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_active_data_floor_bytes": 84696223744,
+  "model_count": 1,
+  "resource_review": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/core224-model-peer-v1/resource-review-v1.json",
+    "sha256": "d4d393d0717d97e5c5875fdcdcee354cedf74a96c480236832bf6f908c972713"
+  },
+  "runner_sha256": "6f3d79ac67a09a54479d24543b202fa757ba64c3f5cb41c01e2aa3fae126e097",
+  "schema": "root-model-one-bounded-core224-adoption-v1",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_MODEL_PLUS_ONE_RETAINED_CORE224_SHORT"
+}

@@ -7,6 +7,7 @@ package validator
 import (
 	"context"
 	"reflect"
+	"slices"
 	"sync"
 	"testing"
 )
@@ -15,20 +16,20 @@ func TestValidatorEvidenceCensusV2PreservesEverySourceReplicaOwner(t *testing.T)
 	t.Parallel()
 	fixture := newEvidenceCensusV2TestFixture(t, 1, 1)
 	options := fixture.options(t)
-	options.Replicas = [2]AttemptCutV2Replica{}
-	options.ReplicasByOperator = make(map[uint64][2]AttemptCutV2Replica, len(fixture.operators))
+	options.Replicas = nil
+	options.ReplicasByOperator = make(map[uint64][]AttemptCutV2Replica, len(fixture.operators))
 	var mu sync.Mutex
 	written := make(map[uint64][2][]string)
 	var mutate sync.Once
 	for _, operator := range fixture.operators {
 		noID := operator.seal.expected.Identity.NoID
-		replicas := fixture.replicas
+		replicas := slices.Clone(fixture.replicas)
 		for index := range replicas {
 			write := replicas[index].WriteMetadata
 			replicas[index].WriteMetadata = func(ctx context.Context, hash string, raw []byte) error {
 				// Every owner must already be copied when the first external
 				// publisher is invoked, not looked up again between members.
-				mutate.Do(func() { options.ReplicasByOperator[11] = [2]AttemptCutV2Replica{} })
+				mutate.Do(func() { options.ReplicasByOperator[11] = make([]AttemptCutV2Replica, 2) })
 				mu.Lock()
 				counts := written[noID]
 				counts[index] = append(counts[index], hash)
@@ -68,15 +69,15 @@ func TestValidatorEvidenceCensusV2RejectsIncompleteOrMixedSourceReplicasBeforeIO
 		},
 		func(options *ValidatorEvidenceCensusV2Options) { options.Replicas = fixture.replicas },
 		func(options *ValidatorEvidenceCensusV2Options) {
-			options.ReplicasByOperator[11] = [2]AttemptCutV2Replica{}
+			options.ReplicasByOperator[11] = make([]AttemptCutV2Replica, 2)
 		},
 		func(options *ValidatorEvidenceCensusV2Options) {
-			options.ReplicasByOperator[11] = [2]AttemptCutV2Replica{fixture.replicas[1], fixture.replicas[0]}
+			options.ReplicasByOperator[11] = []AttemptCutV2Replica{fixture.replicas[1], fixture.replicas[0]}
 		},
 	} {
 		options := fixture.options(t)
-		options.Replicas = [2]AttemptCutV2Replica{}
-		options.ReplicasByOperator = map[uint64][2]AttemptCutV2Replica{9: fixture.replicas, 11: fixture.replicas}
+		options.Replicas = nil
+		options.ReplicasByOperator = map[uint64][]AttemptCutV2Replica{9: fixture.replicas, 11: fixture.replicas}
 		change(&options)
 		before := fixture.counts()
 		publication, err := PublishValidatorEvidenceClosedCensusV2(t.Context(), fixture.closure, options)

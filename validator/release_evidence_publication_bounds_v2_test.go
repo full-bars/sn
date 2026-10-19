@@ -20,7 +20,7 @@ func TestValidatorEvidencePublicationV2ManifestPreservesProtocolUint64Bounds(t *
 			t.Fatal(err)
 		}
 		manifest := ValidatorEvidencePublicationV2Manifest{Schema: ValidatorEvidencePublicationV2Schema, Kind: protocol.ValidatorEvidenceClosedCensus, Epoch: epoch,
-			Origins: [2]string{"https://one.example", "https://two.example"}, CensusHash: [32]byte{1}, CensusBytes: 1,
+			Origins: []string{"https://one.example", "https://two.example"}, CensusHash: [32]byte{1}, CensusBytes: 1,
 			Members: []ValidatorEvidencePublicationV2MemberReference{{NoId: ^uint64(0), SignedArtifactHash: [32]byte{2}, SignedArtifactBytes: 1}}}
 		encoded, err := json.MarshalIndent(manifest, "", "  ")
 		if err != nil {

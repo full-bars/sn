@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/sys/unix"
+
 	"github.com/urfoundation/sn/internal/durablehead"
 	"github.com/urnetwork/connect/durablevolume"
 )
@@ -222,12 +224,12 @@ func TestMonitorStartupPublicIdentityLossQuarantinesOnlyRole(t *testing.T) {
 	path, _ := monitorValidatorPaths(f.checkpointPath, f.metricsPath, "alpha")
 	ctx := monitorTestStorageContext(t, t.Context(), f.args(url))
 	name := durablehead.Attribute("mainnet-monitor-checkpoint", filepath.Base(path))
-	size, err := syscall.Getxattr(path+".lock", name, nil)
+	size, err := unix.Getxattr(path+".lock", name, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	original := make([]byte, size)
-	if _, err := syscall.Getxattr(path+".lock", name, original); err != nil {
+	if _, err := unix.Getxattr(path+".lock", name, original); err != nil {
 		t.Fatal(err)
 	}
 	terminal := make(chan int, 1)
@@ -235,7 +237,7 @@ func TestMonitorStartupPublicIdentityLossQuarantinesOnlyRole(t *testing.T) {
 	run := f.startWithContext(t, ctx, url, monitorServiceHooks{afterCheckpointOpen: func(_ context.Context, role string, _ *os.File) {
 		if role == "alpha" {
 			attempts.Add(1)
-			if err := syscall.Removexattr(path+".lock", name); err != nil {
+			if err := unix.Removexattr(path+".lock", name); err != nil {
 				panic(err)
 			}
 		}
@@ -250,7 +252,7 @@ func TestMonitorStartupPublicIdentityLossQuarantinesOnlyRole(t *testing.T) {
 	if exit := <-terminal; exit != 3 {
 		t.Fatal("missing original head was retried", exit)
 	}
-	if err := syscall.Setxattr(path+".lock", name, original, 1); err != nil {
+	if err := unix.Setxattr(path+".lock", name, original, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
 	run.again(t, "beta")
@@ -494,7 +496,7 @@ func TestMonitorStartupPublicAdmissionStatusDoesNotInventFreshMetrics(t *testing
 			}
 		case "identity":
 			name := durablehead.Attribute("mainnet-monitor-checkpoint", filepath.Base(path))
-			if err := syscall.Removexattr(path+".lock", name); err != nil {
+			if err := unix.Removexattr(path+".lock", name); err != nil {
 				t.Fatal(err)
 			}
 			reason, status = "custody-lost", "quarantined"
@@ -535,11 +537,13 @@ func TestMonitorStartupPublicAdmissionStatusDoesNotInventFreshMetrics(t *testing
 			}
 			return nil
 		}}
+		args := f.args(url)
+		ctx = monitorTestStorageContext(t, ctx, args)
 		go func() {
 			defer close(run.done)
-			run.exit = runMonitorStorageTestWithHooks(t, ctx, f.args(url), sink, &run.stderr, f.clock.now, hooks)
+			run.exit = runMainWithMonitorHooks(ctx, args, sink, &run.stderr, f.clock.now, hooks)
 		}()
-		t.Cleanup(func() { run.cancel(); <-run.done })
+		t.Cleanup(func() { joinMonitorTestWorker(t, run.cancel, run.done) })
 		nextStatus := func() monitorAdmissionEvent {
 			t.Helper()
 			select {

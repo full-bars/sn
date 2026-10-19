@@ -62,7 +62,9 @@ for target in "${miner_targets[@]}"; do
     build_target miner "$target"
 done
 
-for command in validator snclaim; do
+# commitment-oracle is the SN25 mainnet commitment oracle service
+# (commitmentoracle/, mainnet/LAUNCH.md "Commitment oracle").
+for command in validator snclaim commitment-oracle; do
     for target in "${operator_targets[@]}"; do
         build_target "$command" "$target"
     done

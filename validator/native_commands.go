@@ -310,10 +310,25 @@ func activateCommand(opts docopt.Opts) {
 	if reference.Path != "" || reference.Sha256 != "" {
 		ctx = durablevolume.WithReference(ctx, reference)
 	}
-	exitOnError("validator activate", RunReleaseActivation(ctx, ReleaseActivationOptions{
+	options := ReleaseActivationOptions{
 		ConfigPath: optString(opts, "--config", ""), RelayerKeyFile: expandHome(optString(opts, "--relayer_key_file", "")),
 		Apply: optBool(opts, "--apply"), Output: os.Stdout,
-	}))
+	}
+	options.Successor = releaseProductionSuccessorOptionsFromOpts(opts)
+	exitOnError("validator activate", RunReleaseActivation(ctx, options))
+}
+
+// A signed schema-3 config names its separate successor files; their paths
+// are taken verbatim and must already be canonical absolute paths.
+func releaseProductionSuccessorOptionsFromOpts(opts docopt.Opts) *ReleaseProductionSuccessorOptions {
+	successor := ReleaseProductionSuccessorOptions{
+		RenderedConfigPath: optString(opts, "--rendered-config", ""), SuccessorApprovalPath: optString(opts, "--successor-approval", ""),
+		OriginalAuthorityPath: optString(opts, "--original-authority", ""), ApprovalSignature: optString(opts, "--approval-signature", ""),
+	}
+	if successor == (ReleaseProductionSuccessorOptions{}) {
+		return nil
+	}
+	return &successor
 }
 
 // --- status --config ---

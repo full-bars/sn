@@ -95,7 +95,7 @@ func readRepairOperatorFile(ctx context.Context, host *repairValidatorHost, path
 	}
 	afterState, afterOk := after.Sys().(*syscall.Stat_t)
 	namedState, namedOk := named.Sys().(*syscall.Stat_t)
-	if !afterOk || !namedOk || !os.SameFile(info, after) || !os.SameFile(info, named) || stat.Uid != afterState.Uid || stat.Gid != afterState.Gid || stat.Nlink != afterState.Nlink || stat.Uid != namedState.Uid || stat.Gid != namedState.Gid || stat.Nlink != namedState.Nlink || stat.Ctim != afterState.Ctim || info.Mode() != after.Mode() || info.Mode() != named.Mode() || info.Size() != after.Size() || info.Size() != int64(len(raw)) || !info.ModTime().Equal(after.ModTime()) {
+	if !afterOk || !namedOk || !os.SameFile(info, after) || !os.SameFile(info, named) || stat.Uid != afterState.Uid || stat.Gid != afterState.Gid || stat.Nlink != afterState.Nlink || stat.Uid != namedState.Uid || stat.Gid != namedState.Gid || stat.Nlink != namedState.Nlink || repairStatChangeTime(stat) != repairStatChangeTime(afterState) || info.Mode() != after.Mode() || info.Mode() != named.Mode() || info.Size() != after.Size() || info.Size() != int64(len(raw)) || !info.ModTime().Equal(after.ModTime()) {
 		return nil, nil, errors.Join(errRpcIntegrity, errors.New("operator retained resource changed during observation"))
 	}
 	return raw, info, nil
@@ -136,12 +136,12 @@ func inspectRepairOperatorResourceAccess(ctx context.Context, host *repairValida
 		if bits&required != required {
 			return errors.Join(errRpcIntegrity, errors.New("operator taskworker credentials cannot consume an original selected resource"))
 		}
-		_, aclErr := unix.Getxattr(selected, "system.posix_acl_access", nil)
-		if aclErr == nil {
-			return errors.Join(errRpcIntegrity, errors.New("operator selected source has an undeclared access ACL"))
-		}
-		if !errors.Is(aclErr, unix.ENODATA) && !errors.Is(aclErr, unix.ENOTSUP) {
+		present, aclErr := repairOperatorAccessAcl(selected)
+		if aclErr != nil {
 			return repairValidatorObservationError("cannot observe operator selected resource access policy", aclErr, false)
+		}
+		if present {
+			return errors.Join(errRpcIntegrity, errors.New("operator selected source has an undeclared access ACL"))
 		}
 		if selected == host.trustRoot || selected == filepath.Dir(selected) {
 			return nil
@@ -201,12 +201,12 @@ func inspectRepairOperatorLookupAccess(ctx context.Context, host *repairValidato
 		if bits&required != required {
 			return errors.Join(errRpcIntegrity, errors.New("operator taskworker credentials cannot traverse an original resource lookup"))
 		}
-		_, aclErr := unix.Getxattr(selected, "system.posix_acl_access", nil)
-		if aclErr == nil {
-			return errors.Join(errRpcIntegrity, errors.New("operator resource lookup has an undeclared access ACL"))
-		}
-		if !errors.Is(aclErr, unix.ENODATA) && !errors.Is(aclErr, unix.ENOTSUP) {
+		present, aclErr := repairOperatorAccessAcl(selected)
+		if aclErr != nil {
 			return repairValidatorObservationError("cannot observe operator resource lookup access policy", aclErr, false)
+		}
+		if present {
+			return errors.Join(errRpcIntegrity, errors.New("operator resource lookup has an undeclared access ACL"))
 		}
 	}
 	return ctx.Err()
@@ -312,7 +312,7 @@ func inspectRepairOperatorTree(ctx context.Context, host *repairValidatorHost, t
 		if err != nil {
 			return err
 		}
-		entries = append(entries, repairOperatorResourceEntry{Path: relative, Device: uint64(stat.Dev), Inode: stat.Ino, Mode: stat.Mode, Uid: stat.Uid, Gid: stat.Gid})
+		entries = append(entries, repairOperatorResourceEntry{Path: relative, Device: uint64(stat.Dev), Inode: stat.Ino, Mode: uint32(stat.Mode), Uid: stat.Uid, Gid: stat.Gid})
 		children, err := directory.ReadDir(int(tree.MaximumFiles) + 1)
 		if err != nil && !errors.Is(err, io.EOF) {
 			return repairValidatorObservationError("cannot list complete operator resources", err, false)
@@ -345,7 +345,7 @@ func inspectRepairOperatorTree(ctx context.Context, host *repairValidatorHost, t
 			}
 			state := info.Sys().(*syscall.Stat_t)
 			relative, _ := filepath.Rel(tree.Path, name)
-			entries = append(entries, repairOperatorResourceEntry{Path: relative, Device: uint64(state.Dev), Inode: state.Ino, Mode: state.Mode, Uid: state.Uid, Gid: state.Gid, Size: info.Size(), Sha256: monitorReadDigest(raw)})
+			entries = append(entries, repairOperatorResourceEntry{Path: relative, Device: uint64(state.Dev), Inode: state.Ino, Mode: uint32(state.Mode), Uid: state.Uid, Gid: state.Gid, Size: info.Size(), Sha256: monitorReadDigest(raw)})
 		}
 		after, statErr := directory.Stat()
 		named, namedErr := os.Lstat(path)

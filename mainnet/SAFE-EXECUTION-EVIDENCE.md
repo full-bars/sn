@@ -85,8 +85,9 @@ canonical historical reauthentication and the executable transition remain open.
 An executable successor must bind the actual proxy to the recorded
 `initializerOwner`. A different new Safe requires separately authorized ownership
 migration and proof of that migration. It also needs exact current singleton/code,
-owners and 2-of-3 threshold, all module/guard/fallback paths, chain finality and
-pending Safe and relayer nonces. One durable owner must hold both the original and
+owners and threshold (2-of-3, or 1-of-1 under the explicit single-owner profile),
+all module/guard/fallback paths, chain finality and pending Safe and relayer
+nonces. One durable owner must hold both the original and
 successor liabilities. The anchor action then needs the approved inner call/value,
 digest and signatures, canonical outer receipt, committed Safe inner success,
 coordinator binding event/getter and the immutable evidence domain. These helpers

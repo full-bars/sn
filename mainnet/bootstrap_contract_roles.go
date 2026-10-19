@@ -46,6 +46,7 @@ type bootstrapContractRolePlan struct {
 	ActivationReady           bool                                `json:"activation_ready"`
 	NetworkEffects            bool                                `json:"network_effects"`
 	PendingChainPhases        []string                            `json:"pending_chain_phases"`
+	OwnerTrimPhase            string                              `json:"owner_trim_phase,omitempty"`
 	ContentHash               string                              `json:"content_hash"`
 }
 
@@ -97,7 +98,8 @@ func loadBootstrapContractRolePlan(ctx context.Context, path string) (bootstrapC
 		ContractPlanHash: preparation.Contracts.Config.Plan.hash(), Artifacts: preparation.Contracts.Config.Plan.Artifacts,
 		CoordinatorProxy: proxy.Address, CoordinatorImplementation: implementation.Address, SettlementVault: vault.Address,
 		EvidenceJournal: evidence.Address, EvidenceDomain: *evidence.EvidenceConstructor, InitialPolicyHash: policy,
-		Validators: bindings, DeclarationsVerified: true, PendingChainPhases: bootstrapChainPendingPhases()}
+		Validators: bindings, DeclarationsVerified: true, PendingChainPhases: bootstrapChainPendingPhasesForSchema(preparation.Plan.Config.Schema),
+		OwnerTrimPhase: preparation.Plan.OwnerTrimPhase}
 	result.ContentHash = rootObjectHash(result)
 	return result, nil
 }

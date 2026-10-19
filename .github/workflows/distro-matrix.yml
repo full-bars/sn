@@ -1,0 +1,1154 @@
+name: Distro matrix (release tags + manual)
+
+# Operator decisions (binding, 2026-10-18) — this workflow deliberately differs
+# from the earlier "every PR + nightly" proposal:
+#   * TRIGGERS: release tags only (mirroring release.yml's `v*` tag trigger)
+#     plus manual workflow_dispatch. No pull_request trigger and no schedule:
+#     the systemd, VM and Windows cells are far too slow for every PR.
+#   * LINUX MATRIX: Debian only (no Ubuntu), AlmaLinux only (no Rocky).
+#   * macOS: both runner architectures (macos-13 is x64, macos-14 is arm64).
+#   * Windows: control-socket parity, not just lifecycle.
+#   * FreeBSD: a real kernel cell (vmactions VM) running the shared
+#     .github/scripts/freebsd-smoke.sh harness.
+#   * PARALLELISM: every cell is independent. There is deliberately no
+#     per-cell parallelism cap, no serialised dependency chain between cells and
+#     no run-level serialisation group (see docs/Distro-Matrix-CI.md
+#     §Parallelism). The only edges are the fan-in edges: build-binaries feeds
+#     the cells, and the cells feed the summary.
+#   * Release gating: the summary job reports; see the GATING SWITCH block in
+#     the summary job for the one place an operator would make it block
+#     release creation.
+#   * Images are addressed by the operator-approved tags. Pinning digests is a
+#     documented one-step change: docs/Distro-Matrix-CI.md §Pinning.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.27"
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Static linux/amd64 payload shared by the container and systemd cells.
+  # CGO_ENABLED=0: the binaries must run on musl (Alpine) and on glibc 2.34+
+  # (AlmaLinux 9) with no dynamic loader dependency.
+  # --------------------------------------------------------------------------
+  build-binaries:
+    name: build static linux/amd64 binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Build the miner, urnet-tools and urnet-docker
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o out/miner ./cli/miner/ &&
+               CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o out/urnet-tools ./cmd/urnet-tools/ &&
+               CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o out/urnet-docker ./cmd/urnet-docker/; then
+              echo "Build succeeded"
+              break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+          file out/miner out/urnet-tools out/urnet-docker
+          sha256sum out/miner out/urnet-tools out/urnet-docker | tee out/SHA256SUMS
+          # The smoke scripts travel with the payload: the distro containers
+          # fetch them through the artifact REST API (see the smoke step), so
+          # they need no checkout, no git and no JS action — that is what makes
+          # the Alpine (musl) cell work, where the runner's injected Node cannot
+          # run.
+          cp .github/scripts/distro-smoke.sh out/distro-smoke.sh
+          cp .github/scripts/distro-features.sh out/distro-features.sh
+          cp .github/scripts/acceptance-matrix.sh out/acceptance-matrix.sh
+
+      - name: Upload the payload
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: distro-payload
+          path: out/
+          retention-days: 2
+          if-no-files-found: error
+
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+
+  # --------------------------------------------------------------------------
+  # Tier 1: control-plane smoke in every Linux distro image.
+  # `container:` is the job key on purpose: the smoke must run in the distro's
+  # own userland (its libc, its /bin/sh, its package manager), not in a
+  # runner-provided image. The JWT is minted by the smoke script itself, from
+  # GAUNTLET_USER/GAUNTLET_PW, into its isolated HOME; it is never printed.
+  # --------------------------------------------------------------------------
+  distro-smoke:
+    name: smoke (${{ matrix.slug }})
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read # the token is used below to fetch this run's payload artifact
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: debian:stable-slim
+            slug: debian-stable-slim
+          - image: almalinux:9
+            slug: almalinux-9
+          - image: fedora:latest
+            slug: fedora-latest
+          - image: opensuse/leap:15.6
+            slug: opensuse-leap-15.6
+          - image: opensuse/tumbleweed
+            slug: opensuse-tumbleweed
+          - image: archlinux:latest
+            slug: archlinux-latest
+          - image: alpine:latest
+            slug: alpine-latest
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      - name: Install curl + unzip in the distro image
+        # The payload comes from the run's artifact via the REST API, so the
+        # container needs an HTTP client and a zip extractor. Detected per
+        # package manager; verified against every image in the matrix.
+        run: |
+          set -eu
+          if command -v apt-get >/dev/null 2>&1; then
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl unzip ca-certificates
+          elif command -v dnf >/dev/null 2>&1; then
+            # --allowerasing: the RHEL-family images ship curl-minimal, which
+            # conflicts with the full curl package.
+            dnf install -y --allowerasing curl unzip ca-certificates
+          elif command -v zypper >/dev/null 2>&1; then
+            zypper --non-interactive --quiet install curl unzip ca-certificates
+          elif command -v pacman >/dev/null 2>&1; then
+            pacman -Sy --noconfirm --needed curl unzip ca-certificates
+          elif command -v apk >/dev/null 2>&1; then
+            apk add --no-cache curl unzip ca-certificates
+          else
+            echo "::error::no supported package manager in ${{ matrix.image }}"; exit 1
+          fi
+          curl --version | head -n 1
+          unzip -v | head -n 1
+
+      - name: Fetch the payload (artifact REST API; no JS action, so musl works)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          mkdir -p /tmp/payload
+          url="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ needs.build-binaries.outputs.artifact-id }}/zip"
+          # curl drops the Authorization header on the cross-host redirect to
+          # the blob store, which is exactly what the signed URL needs.
+          curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -o /tmp/payload.zip "$url"
+          unzip -q -o /tmp/payload.zip -d /tmp/payload
+          chmod +x /tmp/payload/miner /tmp/payload/urnet-tools /tmp/payload/distro-smoke.sh
+          ls -l /tmp/payload
+          # The binaries must run on this libc at all: the smoke asserts it too,
+          # but a failure here is unambiguous.
+          /tmp/payload/urnet-tools version
+
+      - name: Run the distro smoke (mints the disposable JWT into an isolated HOME)
+        # The script mints from GAUNTLET_USER/GAUNTLET_PW (shakedown.yml's
+        # pattern), refuses the production account, copies the token into
+        # $HOME_DIR/.urnetwork with mode 600, and never prints it. The
+        # identity/group/JWT layout is asserted cell by cell in the log.
+        env:
+          BIN_DIR: /tmp/payload
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+          HOME_DIR: /tmp/smoke/home
+          WORK_DIR: /tmp/smoke/work
+          STATE_DIR: /tmp/smoke/home/.urnetwork
+          OUT_DIR: /tmp/smoke/out
+          TIMEOUT_S: "90"
+        run: |
+          # POSIX sh: the runner's shell inside a container job is sh -e.
+          sh /tmp/payload/distro-smoke.sh 2>&1 | tee /tmp/smoke.log
+
+      - name: Publish the cell summary
+        if: always()
+        run: |
+          {
+            echo "### distro smoke — ${{ matrix.image }}"
+            echo
+            sed -n '/distro-smoke summary/,$p' /tmp/smoke.log 2>/dev/null || echo "(no smoke output)"
+            echo
+            echo '```'
+            cat /tmp/smoke/out/distro.txt 2>/dev/null || echo "(no distro identity recorded)"
+            echo '```'
+          } >>"$GITHUB_STEP_SUMMARY" || true
+          # The smoke's own output is the evidence; failing cells show it inline.
+          if grep -q 'RESULT: PASS' /tmp/smoke.log 2>/dev/null; then exit 0; fi
+          echo "::error::distro smoke failed for ${{ matrix.image }}"
+          exit 1
+
+  # --------------------------------------------------------------------------
+  # Tier 1b: feature matrix in the two representative libc families (glibc +
+  # musl). Runs .github/scripts/distro-features.sh in the distro's own
+  # userland against the same static payload: risky control surfaces first,
+  # then the URL-source pipeline, then the broad surface. netcat-openbsd is
+  # installed because the raw control-socket probes use `nc -U`; without it
+  # those checks degrade to SKIP-UNSUPPORTED instead of failing.
+  # --------------------------------------------------------------------------
+  distro-features:
+    name: features (${{ matrix.slug }})
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: read
+      actions: read # the token is used below to fetch this run's payload artifact
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: debian:stable-slim
+            slug: debian-stable-slim
+          - image: alpine:latest
+            slug: alpine-latest
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      - name: Install curl + unzip + netcat in the distro image
+        run: |
+          set -eu
+          if command -v apt-get >/dev/null 2>&1; then
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+              curl unzip ca-certificates netcat-openbsd
+          elif command -v apk >/dev/null 2>&1; then
+            apk add --no-cache curl unzip ca-certificates netcat-openbsd
+          else
+            echo "::error::no supported package manager in ${{ matrix.image }}"; exit 1
+          fi
+          nc -h 2>&1 | head -n 1 || true
+
+      - name: Fetch the payload (artifact REST API; no JS action, so musl works)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          mkdir -p /tmp/payload
+          url="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ needs.build-binaries.outputs.artifact-id }}/zip"
+          curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -o /tmp/payload.zip "$url"
+          unzip -q -o /tmp/payload.zip -d /tmp/payload
+          chmod +x /tmp/payload/miner /tmp/payload/urnet-tools /tmp/payload/distro-features.sh
+          ls -l /tmp/payload
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          set -eu
+          mkdir -p /tmp/mint /tmp/fixtures
+          HOME=/tmp/mint /tmp/payload/miner auth \
+            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
+          test -s /tmp/mint/.urnetwork/jwt || {
+            echo "::error::JWT mint failed (verification required?)"; tail -n 20 /tmp/mint/auth.log; exit 1; }
+          cp /tmp/mint/.urnetwork/jwt /tmp/fixtures/jwt
+          chmod 600 /tmp/fixtures/jwt
+          # Production-account refusal guard, decoded with POSIX tools: these
+          # images have no python3 and no jq. The token is never printed.
+          payload="$(cut -d. -f2 /tmp/fixtures/jwt | tr '_-' '/+')"
+          pad=$(( (4 - ${#payload} % 4) % 4 ))
+          i=0; while [ "$i" -lt "$pad" ]; do payload="$payload="; i=$((i + 1)); done
+          if printf '%s' "$payload" | base64 -d >/tmp/mint/jwt-payload.json 2>/dev/null &&
+             [ -s /tmp/mint/jwt-payload.json ]; then
+            if grep -q 'mesocyclone' /tmp/mint/jwt-payload.json; then
+              echo "::error::REFUSING: the minted JWT is the production account"; exit 1
+            fi
+            echo "minted a disposable JWT (account guarded, token never printed)"
+          else
+            echo "::warning::could not decode the JWT payload; the production-account guard was not applied"
+          fi
+          rm -rf /tmp/mint
+
+      - name: Run the feature matrix (the harness creates its isolated HOME)
+        env:
+          BIN_DIR: /tmp/payload
+          JWT_FILE: /tmp/fixtures/jwt
+          STATE_HOME: /tmp/feature-matrix/home
+          TIMEOUT: "900"
+        run: |
+          # POSIX sh on purpose: this runs in the distro's own shell. The
+          # harness never prints the token; its report file stays inside
+          # STATE_HOME.
+          set +e
+          sh /tmp/payload/distro-features.sh >/tmp/feature-matrix.log 2>&1
+          rc=$?
+          cat /tmp/feature-matrix.log
+          echo "harness rc=$rc"
+          exit "$rc"
+
+      - name: Publish the feature summary
+        if: always()
+        run: |
+          {
+            echo "### feature matrix — ${{ matrix.image }}"
+            echo
+            echo '```'
+            sed -n '/SUMMARY/,$p' /tmp/feature-matrix.log 2>/dev/null || echo "(no harness output)"
+            echo '```'
+          } >>"$GITHUB_STEP_SUMMARY" || true
+          # Make the skips/findings visible inline even when the job fails.
+          grep -E '^(FAIL|SKIP-NO-NETWORK|SKIP-UNSUPPORTED) ' /tmp/feature-matrix.log 2>/dev/null || true
+
+  # --------------------------------------------------------------------------
+  # Tier 1c: the acceptance matrix — the committed, repeatable form of the
+  # ad-hoc P2 acceptance workbench (scratch/p2b/acc1, scratch/p2d). Runs
+  # .github/scripts/acceptance-matrix.sh in the distro's own userland:
+  #   (a) the hot-restart identity reuse matrix (fresh mint -> reuse ->
+  #       URNETWORK_HOT_RESTART=0 new -> reuse -> renew keeps the id -> reuse;
+  #       .client_jwts.json keeps the v33 shape),
+  #   (b) the urnet-tools command surface against the running daemon
+  #       (version/status/snapshot/traffic/internals/goroutines/history, the
+  #       restored v33 commands, control keys incl. metrics on + the /metrics
+  #       scrape, logs, proxy commands with synthetic TEST-NET-1 entries),
+  #   (c) the urnet-docker runtime checks that apply to the miner line — this
+  #       SKIP-NO-DOCKER here, because container jobs have no docker daemon
+  #       (run the script locally with the host /var/run/docker.sock and a
+  #       docker CLI to exercise them),
+  #   (d) command-tree parity for the documented v33 inventories.
+  # netcat-openbsd is installed for the raw control-socket probes (traffic/
+  # internals/goroutines — the requests urnet-tools itself sends) and curl for
+  # the /metrics scrape; without them those checks SKIP with the tool named,
+  # never fail. The JWT is minted once here (the distro-features pattern),
+  # guarded against the production account, and passed via JWT_FILE env; the
+  # script also carries the guard and never prints the token.
+  # --------------------------------------------------------------------------
+  acceptance-matrix:
+    name: acceptance matrix (debian:stable-slim)
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read # the token is used below to fetch this run's payload artifact
+    container:
+      image: debian:stable-slim
+    steps:
+      - name: Install curl + unzip + netcat in the distro image
+        run: |
+          set -eu
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+            curl unzip ca-certificates netcat-openbsd
+          nc -h 2>&1 | head -n 1 || true
+
+      - name: Fetch the payload (artifact REST API; no JS action, so musl works)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          mkdir -p /tmp/payload
+          url="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ needs.build-binaries.outputs.artifact-id }}/zip"
+          curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -o /tmp/payload.zip "$url"
+          unzip -q -o /tmp/payload.zip -d /tmp/payload
+          chmod +x /tmp/payload/miner /tmp/payload/urnet-tools /tmp/payload/urnet-docker /tmp/payload/acceptance-matrix.sh
+          ls -l /tmp/payload
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          set -eu
+          mkdir -p /tmp/mint /tmp/fixtures
+          HOME=/tmp/mint /tmp/payload/miner auth \
+            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
+          test -s /tmp/mint/.urnetwork/jwt || {
+            echo "::error::JWT mint failed (verification required?)"; tail -n 20 /tmp/mint/auth.log; exit 1; }
+          cp /tmp/mint/.urnetwork/jwt /tmp/fixtures/jwt
+          chmod 600 /tmp/fixtures/jwt
+          # Production-account refusal guard, decoded with POSIX tools: this
+          # image has no python3 and no jq. The token is never printed.
+          payload="$(cut -d. -f2 /tmp/fixtures/jwt | tr '_-' '/+')"
+          pad=$(( (4 - ${#payload} % 4) % 4 ))
+          i=0; while [ "$i" -lt "$pad" ]; do payload="$payload="; i=$((i + 1)); done
+          if printf '%s' "$payload" | base64 -d >/tmp/mint/jwt-payload.json 2>/dev/null &&
+             [ -s /tmp/mint/jwt-payload.json ]; then
+            if grep -q 'mesocyclone' /tmp/mint/jwt-payload.json; then
+              echo "::error::REFUSING: the minted JWT is the production account"; exit 1
+            fi
+            echo "minted a disposable JWT (account guarded, token never printed)"
+          else
+            echo "::warning::could not decode the JWT payload; the production-account guard was not applied"
+          fi
+          rm -rf /tmp/mint
+
+      - name: Syntax-check the acceptance script
+        run: sh -n /tmp/payload/acceptance-matrix.sh || { echo "::error::acceptance-matrix.sh syntax error"; exit 1; }
+
+      - name: Run the acceptance matrix (the harness creates its isolated HOME)
+        env:
+          BIN_DIR: /tmp/payload
+          JWT_FILE: /tmp/fixtures/jwt
+          OUT_DIR: /tmp/acceptance-out
+          TIMEOUT_S: "90"
+          IDENTITY_TIMEOUT_S: "240"
+        run: |
+          # POSIX sh on purpose: this runs in the distro's own shell. The
+          # harness never prints the token; its report and logs stay inside
+          # OUT_DIR (the raw store is never copied; only a redacted rendering).
+          set +e
+          sh /tmp/payload/acceptance-matrix.sh >/tmp/acceptance-matrix.log 2>&1
+          rc=$?
+          cat /tmp/acceptance-matrix.log
+          echo "harness rc=$rc"
+          exit "$rc"
+
+      - name: Publish the acceptance summary
+        if: always()
+        run: |
+          {
+            echo "### acceptance matrix — debian:stable-slim"
+            echo
+            echo '```'
+            sed -n '/acceptance-matrix summary/,$p' /tmp/acceptance-matrix.log 2>/dev/null || echo "(no harness output)"
+            echo '```'
+          } >>"$GITHUB_STEP_SUMMARY" || true
+          # Make the skips/findings visible inline even when the job fails.
+          grep -E '^(FAIL|SKIP-[A-Z]+) ' /tmp/acceptance-matrix.log 2>/dev/null || true
+
+  # --------------------------------------------------------------------------
+  # Tier 2: systemd cells. A privileged container whose PID 1 is /sbin/init, so
+  # the miner runs under a real systemd unit: start, socket, urnet-tools, stop,
+  # restart, crash-restart. The harness also carries the clearly-marked
+  # CONDITIONAL/TODO checks for features that are not in the tree yet.
+  #
+  # Families: Debian, AlmaLinux, Fedora, openSUSE (Leap and Tumbleweed) and
+  # Arch — the same families as the container matrix minus Alpine, which has no
+  # systemd and is covered by openrc-smoke.yml instead.
+  # --------------------------------------------------------------------------
+  systemd:
+    name: systemd (${{ matrix.slug }})
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: debian:stable-slim
+            slug: debian-stable-slim
+          - image: almalinux:9
+            slug: almalinux-9
+          - image: fedora:latest
+            slug: fedora-latest
+          - image: opensuse/leap:15.6
+            slug: opensuse-leap-15.6
+          - image: opensuse/tumbleweed
+            slug: opensuse-tumbleweed
+          - image: archlinux:latest
+            slug: archlinux-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Self-test the exit-75 rejection matcher
+        # The matcher decides whether a probe run reached a rejected sign-in.
+        # It once read the UDP port ":40150" as a 401 status and a sandboxed
+        # non-rejection run as a rejection, so its regression fixtures run
+        # here on every release. No container is involved.
+        run: sh .github/scripts/systemd-smoke.sh --self-test
+
+      - name: Download the payload
+        uses: actions/download-artifact@v4
+        with:
+          name: distro-payload
+          path: payload
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          set -euo pipefail
+          # The payload's miner is a static linux/amd64 binary, so the mint
+          # needs no Go toolchain here.
+          chmod +x payload/miner payload/urnet-tools
+          mkdir -p /tmp/mint /tmp/fixtures
+          HOME=/tmp/mint ./payload/miner auth \
+            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
+          test -s /tmp/mint/.urnetwork/jwt || {
+            echo "::error::JWT mint failed (verification required?)"; tail -n 20 /tmp/mint/auth.log; exit 1; }
+          cp /tmp/mint/.urnetwork/jwt /tmp/fixtures/jwt
+          chmod 600 /tmp/fixtures/jwt
+          python3 - <<'PY'
+          import base64, json
+          raw = open('/tmp/fixtures/jwt').read().strip()
+          p = raw.split('.')[1] + '=' * (-len(raw.split('.')[1]) % 4)
+          d = json.loads(base64.urlsafe_b64decode(p))
+          print("minted a disposable JWT for account:", d.get('network_name'))
+          if d.get('network_name') == 'mesocyclone':
+              raise SystemExit("REFUSING: the minted JWT is the production account")
+          PY
+          rm -rf /tmp/mint
+
+      - name: Build the systemd image
+        # curl is installed where the family provides it (apt, dnf, zypper,
+        # pacman). When a family image cannot provide curl, netcat is the
+        # documented fallback client: the base images for every systemd family
+        # here carry `nc` (netcat-openbsd / nmap-ncat / gnu-netcat), and the
+        # harness itself talks to the control socket through urnet-tools, so
+        # neither client is load-bearing for the assertions.
+        run: |
+          set -euo pipefail
+          cat >"$RUNNER_TEMP/Dockerfile.systemd" <<'EOF'
+          ARG BASE
+          FROM ${BASE}
+          # systemd-in-docker: the container below is started with /sbin/init
+          # under --privileged --cgroupns=host with /sys/fs/cgroup mounted.
+          RUN set -eux; \
+              if command -v apt-get >/dev/null 2>&1; then \
+                apt-get update; \
+                DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends systemd systemd-sysv dbus procps util-linux; \
+                apt-get install -y --no-install-recommends curl || apt-get install -y --no-install-recommends netcat-openbsd; \
+                rm -rf /var/lib/apt/lists/*; \
+              elif command -v dnf >/dev/null 2>&1; then \
+                dnf install -y --allowerasing systemd dbus procps-ng util-linux; \
+                dnf install -y --allowerasing curl || dnf install -y nmap-ncat; \
+                dnf clean all; \
+              elif command -v zypper >/dev/null 2>&1; then \
+                zypper --non-interactive install systemd dbus-1 procps util-linux; \
+                zypper --non-interactive install curl || zypper --non-interactive install netcat-openbsd; \
+                zypper clean -a; \
+              elif command -v pacman >/dev/null 2>&1; then \
+                pacman -Sy --noconfirm --needed systemd dbus procps-ng util-linux; \
+                pacman -S --noconfirm --needed curl || pacman -S --noconfirm --needed gnu-netcat; \
+              else echo "no supported package manager"; exit 1; fi; \
+              command -v curl >/dev/null 2>&1 || command -v nc >/dev/null 2>&1 || echo "NOTE: neither curl nor netcat present; the harness uses urnet-tools over the socket"; \
+              rm -f /usr/sbin/policy-rc.d || true
+          CMD ["/sbin/init"]
+          EOF
+          docker build --build-arg "BASE=${{ matrix.image }}" \
+            -t "distro-systemd:${{ matrix.slug }}" \
+            -f "$RUNNER_TEMP/Dockerfile.systemd" "$RUNNER_TEMP"
+
+      - name: Start the privileged systemd container
+        run: |
+          set -euo pipefail
+          # The container writes evidence as root; create the bind-mount target
+          # on the runner first, or Docker creates a root-owned directory that
+          # neither the harness nor the artifact upload can use.
+          mkdir -p "$RUNNER_TEMP/evidence"
+          chmod 777 "$RUNNER_TEMP/evidence"
+          docker run -d --name systemd-smoke \
+            --privileged --cgroupns=host \
+            -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+            --tmpfs /run --tmpfs /run/lock \
+            -v "$PWD/payload:/opt/test:ro" \
+            -v "$PWD/.github/scripts:/opt/scripts:ro" \
+            -v "$PWD:/opt/repo:ro" \
+            -v "$RUNNER_TEMP/evidence:/srv/smoke/out" \
+            -v "/tmp/fixtures/jwt:/run/ci/jwt:ro" \
+            "distro-systemd:${{ matrix.slug }}" /sbin/init
+          # The unit's systemd must own PID 1 before the harness runs.
+          for i in $(seq 1 60); do
+            state="$(docker exec systemd-smoke systemctl is-system-running 2>/dev/null || true)"
+            case "$state" in running|degraded) echo "systemd ready: $state"; break ;; esac
+            [ "$i" = "60" ] && { echo "::error::systemd never became usable"; exit 1; }
+            sleep 1
+          done
+
+      - name: Run the systemd smoke
+        run: |
+          set -euo pipefail
+          docker exec \
+            -e BIN_DIR=/opt/test \
+            -e JWT_FILE=/run/ci/jwt \
+            -e REPO_DIR=/opt/repo \
+            -e OUT_DIR=/srv/smoke/out \
+            -e TIMEOUT_S=90 \
+            systemd-smoke sh /opt/scripts/systemd-smoke.sh 2>&1 | tee "$RUNNER_TEMP/systemd-smoke.log"
+
+      - name: Publish the cell summary
+        if: always()
+        run: |
+          set -uo pipefail
+          {
+            echo "### systemd cell — ${{ matrix.image }}"
+            echo
+            sed -n '/systemd-smoke summary/,$p' "$RUNNER_TEMP/systemd-smoke.log" 2>/dev/null || echo "(no harness output)"
+          } >>"$GITHUB_STEP_SUMMARY" || true
+          if grep -q 'RESULT: PASS' "$RUNNER_TEMP/systemd-smoke.log" 2>/dev/null; then exit 0; fi
+          echo "::error::systemd smoke failed for ${{ matrix.image }}"
+          exit 1
+
+      - name: Upload the systemd evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: systemd-evidence-${{ matrix.slug }}
+          path: |
+            ${{ runner.temp }}/evidence/
+            ${{ runner.temp }}/systemd-smoke.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Collect the container log
+        if: always()
+        run: |
+          docker logs systemd-smoke >"$RUNNER_TEMP/systemd-container.log" 2>&1 || true
+          docker rm -f systemd-smoke >/dev/null 2>&1 || true
+
+      - name: Upload the container log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: systemd-container-${{ matrix.slug }}
+          path: ${{ runner.temp }}/systemd-container.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  # --------------------------------------------------------------------------
+  # Windows: build, vet, unit tests, then the miner + urnet-tools NATIVELY with
+  # the control socket verified (path, listen, `urnet-tools status`).
+  # Parity note: if the control-socket transport does not work at this commit,
+  # the step records that explicitly with a marked TODO and does not fake a
+  # pass. Hard assertions apply only once the socket is up.
+  # --------------------------------------------------------------------------
+  windows:
+    name: windows-latest (control-socket parity)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Build the miner and urnet-tools for Windows
+        shell: bash
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if go build -o out/miner.exe ./cli/miner/ &&
+               go build -o out/urnet-tools.exe ./cmd/urnet-tools/ &&
+               go build -o out/urnet-docker.exe ./cmd/urnet-docker/; then
+              echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+          ls -l out
+
+      - name: Vet (type-checks tests too)
+        shell: bash
+        env:
+          GOOS: windows
+          CGO_ENABLED: "0"
+        # Package list is windows-clean at this commit: ./cli/... would pull
+        # payoutroster (unix.Openat), and ./miner's test files import a
+        # linux-only fixture package.
+        run: go vet ./cli/miner ./cmd/urnet-tools ./cmd/urnet-docker ./internal/urnettools
+
+      - name: Unit tests
+        shell: bash
+        env:
+          GOOS: windows
+          CGO_ENABLED: "0"
+        run: go test -count=1 -timeout 900s ./internal/urnettools/
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $mint = Join-Path $env:RUNNER_TEMP "mint"
+          New-Item -ItemType Directory -Force -Path $mint | Out-Null
+          $env:USERPROFILE = $mint
+          & ".\out\miner.exe" auth --user_auth="$env:GAUNTLET_USER" --password="$env:GAUNTLET_PW" --api_url=https://api.bringyour.com -f 2>&1 | Select-Object -Last 5
+          $jwt = Join-Path $mint ".urnetwork\jwt"
+          if (-not (Test-Path $jwt)) { throw "JWT mint failed (verification required?)" }
+          $raw = (Get-Content $jwt -Raw).Trim()
+          $p = $raw.Split('.')[1].Replace('-','+').Replace('_','/')
+          while ($p.Length % 4) { $p += '=' }
+          $json = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p)) | ConvertFrom-Json
+          Write-Host "minted a disposable JWT for account: $($json.network_name)"
+          if ($json.network_name -eq 'mesocyclone') { throw "REFUSING: the minted JWT is the production account" }
+          $fixture = Join-Path $env:RUNNER_TEMP "fixtures"
+          New-Item -ItemType Directory -Force -Path $fixture | Out-Null
+          Copy-Item $jwt (Join-Path $fixture "jwt") -Force
+
+      - name: Run the miner natively and verify the control socket
+        env:
+          JWT_FIXTURE: ${{ runner.temp }}/fixtures/jwt
+        run: |
+          $ErrorActionPreference = "Stop"
+          $home = Join-Path $env:RUNNER_TEMP "urnet-smoke-home"
+          $state = Join-Path $home ".urnetwork"
+          $installdir = Join-Path $state "provider"
+          New-Item -ItemType Directory -Force -Path $installdir | Out-Null
+          # Run through the standard install-shaped path (urnetwork.exe under
+          # %USERPROFILE%\.urnetwork\provider): discovery matches provider
+          # basenames and attributes %USERPROFILE%\.urnetwork as the state dir.
+          Copy-Item ".\out\miner.exe" (Join-Path $installdir "urnetwork.exe") -Force
+          Copy-Item $env:JWT_FIXTURE (Join-Path $state "jwt") -Force
+          Set-Content -Path (Join-Path $state "network.json") -Value '{"api_url":"https://api.bringyour.com","connect_url":"wss://connect.bringyour.com"}'
+          $env:USERPROFILE = $home
+          $sock = Join-Path $state "provider.sock"
+          $log = Join-Path $env:RUNNER_TEMP "miner.log"
+          $err = Join-Path $env:RUNNER_TEMP "miner.err"
+          $proc = Start-Process -FilePath (Join-Path $installdir "urnetwork.exe") `
+            -ArgumentList "provide", "--port=0", "--allow-client-registration" `
+            -RedirectStandardOutput $log -RedirectStandardError $err -PassThru
+          $waited = 0
+          while ($waited -lt 90 -and -not (Test-Path $sock)) {
+            Start-Sleep -Seconds 1
+            $waited++
+            if ($proc.HasExited) { break }
+          }
+          $listening = Test-Path $sock
+          Write-Host "expected control socket: $sock"
+          Write-Host "miner pid: $($proc.Id) exited: $($proc.HasExited) socket after ${waited}s: $listening"
+          if (-not $listening) {
+            Write-Host "----- miner stdout (tail) -----"; Get-Content $log -Tail 25 -ErrorAction SilentlyContinue
+            Write-Host "----- miner stderr (tail) -----"; Get-Content $err -Tail 25 -ErrorAction SilentlyContinue
+            Write-Host "::warning::WINDOWS-CONTROL-SOCKET: NOT AVAILABLE AT THIS HEAD — the miner did not bind $sock within 90s. TODO(windows-control-socket): record the failing transport, keep this cell non-gating, and assert path+listen+status once it lands. Nothing here is faked: the evidence above is the raw run."
+            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+            exit 0
+          }
+          Write-Host "CONTROL SOCKET PRESENT: $sock"
+          & ".\out\urnet-tools.exe" status --state-dir $state 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP "status.out") | Write-Host
+          if ($LASTEXITCODE -ne 0) { throw "urnet-tools status --state-dir exited $LASTEXITCODE with the socket up" }
+          $status = Get-Content (Join-Path $env:RUNNER_TEMP "status.out") -Raw
+          if ($status -notmatch [regex]::Escape($state)) {
+            Write-Warning "status output does not name the state dir $state; recorded, not failed (shape parity TODO)"
+          }
+          & ".\out\urnet-tools.exe" version 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP "version.out") | Write-Host
+          if ($LASTEXITCODE -ne 0) { throw "urnet-tools version exited $LASTEXITCODE with the socket up" }
+          if ((Get-Content (Join-Path $env:RUNNER_TEMP "version.out") -Raw) -notmatch 'running') {
+            throw "urnet-tools version does not report a running provider although the socket is up"
+          }
+          if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+          Start-Sleep -Seconds 2
+          Write-Host "OK: control socket bound, urnet-tools reached it over the socket"
+
+      - name: Upload the Windows evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-control-socket-evidence
+          path: |
+            ${{ runner.temp }}/miner.log
+            ${{ runner.temp }}/miner.err
+            ${{ runner.temp }}/status.out
+            ${{ runner.temp }}/version.out
+          if-no-files-found: warn
+          retention-days: 7
+
+  # --------------------------------------------------------------------------
+  # macOS: both runner architectures. Build + vet + unit tests, then the
+  # launchd lifecycle checks patterned on unix-lifecycle.yml's macos job.
+  # The miner control-socket probe is RECORD-ONLY (continue-on-error) so it can
+  # never fake a pass: its result is logged for the operator either way.
+  # --------------------------------------------------------------------------
+  macos:
+    name: macos (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Build the miner and urnet-tools
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if go build -o out/miner ./cli/miner/ && go build -o out/urnet-tools ./cmd/urnet-tools/; then
+              echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+          file out/miner out/urnet-tools
+
+      - name: Vet (type-checks tests too)
+        env:
+          GOOS: darwin
+          CGO_ENABLED: "0"
+        run: go vet ./cli/miner ./cmd/urnet-tools ./cmd/urnet-docker ./internal/urnettools
+
+      - name: Unit tests
+        env:
+          CGO_ENABLED: "0"
+        run: go test -count=1 -timeout 900s ./internal/urnettools/
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/mint"
+          HOME="$RUNNER_TEMP/mint" ./out/miner auth \
+            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f >"$RUNNER_TEMP/mint/auth.log" 2>&1 || true
+          test -s "$RUNNER_TEMP/mint/.urnetwork/jwt" || {
+            echo "::error::JWT mint failed (verification required?)"; tail -n 20 "$RUNNER_TEMP/mint/auth.log"; exit 1; }
+          cp "$RUNNER_TEMP/mint/.urnetwork/jwt" "$RUNNER_TEMP/ci-jwt"
+          chmod 600 "$RUNNER_TEMP/ci-jwt"
+          # Same refusal guard as shakedown.yml; the token itself is never printed.
+          python3 - <<'PY'
+          import base64, json, os
+          raw = open(os.environ['RUNNER_TEMP'] + '/ci-jwt').read().strip()
+          p = raw.split('.')[1] + '=' * (-len(raw.split('.')[1]) % 4)
+          d = json.loads(base64.urlsafe_b64decode(p))
+          print("minted a disposable JWT for account:", d.get('network_name'))
+          if d.get('network_name') == 'mesocyclone':
+              raise SystemExit("REFUSING: the minted JWT is the production account")
+          PY
+          rm -rf "$RUNNER_TEMP/mint"
+
+      - name: Create a fake install so discovery finds a target
+        run: |
+          mkdir -p "$HOME/.urnetwork"
+          cp ./out/urnet-tools "$HOME/.urnetwork/urnetwork"
+          echo "test-jwt-for-discovery" >"$HOME/.urnetwork/jwt"
+
+      - name: Verify discovery finds the fake provider
+        run: ./out/urnet-tools providers
+
+      - name: auto-update weekly
+        run: |
+          ./out/urnet-tools auto-update weekly || \
+            echo "NOTE: launchd bootstrap may require a session on the runner; treat as informational"
+
+      - name: Verify the weekly LaunchAgent plist exists
+        run: |
+          if [ -f "$HOME/Library/LaunchAgents/com.urnetwork.update.plist" ]; then
+            echo "OK: update agent plist written"
+            grep -A2 "StartCalendarInterval" "$HOME/Library/LaunchAgents/com.urnetwork.update.plist" | head -4
+          else
+            echo "WARN: no plist (runner limitation); informational"
+          fi
+
+      - name: auto-update off
+        run: ./out/urnet-tools auto-update off || true
+
+      - name: Verify the agent plist removed
+        run: |
+          if [ -f "$HOME/Library/LaunchAgents/com.urnetwork.update.plist" ]; then
+            echo "WARN: plist still present after off"
+          else
+            echo "OK: agent plist removed"
+          fi
+
+      - name: auto-start on (LaunchAgent)
+        run: ./out/urnet-tools auto-start on || true
+
+      - name: auto-start off
+        run: ./out/urnet-tools auto-start off || true
+
+      - name: Verify no agent plists remain
+        run: |
+          ls "$HOME/Library/LaunchAgents/" 2>/dev/null | grep -c "urnetwork" || echo "OK: no urnetwork agent plists"
+
+      # RECORD-ONLY: the operator's macOS scope is build/vet/tests + launchd
+      # lifecycle. The miner control socket on macOS is not asserted anywhere
+      # yet, so this step reports it without gating. TODO(macos-control-socket):
+      # promote to a hard cell once the macOS transport is verified.
+      - name: Control-socket probe on macOS (RECORD-ONLY)
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          if [ ! -s "$RUNNER_TEMP/ci-jwt" ]; then
+            echo "SKIP: no minted JWT fixture staged; probe not run"
+            exit 0
+          fi
+          home="$RUNNER_TEMP/macos-smoke-home"
+          rm -rf "$home"; mkdir -p "$home/.urnetwork"
+          cp "$RUNNER_TEMP/ci-jwt" "$home/.urnetwork/jwt"
+          chmod 600 "$home/.urnetwork/jwt"
+          printf '%s\n' '{"api_url":"https://api.bringyour.com","connect_url":"wss://connect.bringyour.com"}' >"$home/.urnetwork/network.json"
+          mkdir -p "$home/bin"; ln -sf "$PWD/out/miner" "$home/bin/provider"
+          HOME="$home" "$home/bin/provider" provide --port=0 --allow-client-registration >"$RUNNER_TEMP/macos-miner.log" 2>&1 &
+          pid=$!
+          w=0
+          while [ "$w" -lt 60 ] && [ ! -S "$home/.urnetwork/provider.sock" ]; do sleep 1; w=$((w+1)); done
+          if [ -S "$home/.urnetwork/provider.sock" ]; then
+            echo "RECORD: macOS control socket bound after ${w}s"
+            HOME="$home" ./out/urnet-tools status --state-dir "$home/.urnetwork" || echo "RECORD: status exited $?"
+          else
+            echo "RECORD: macOS control socket did NOT bind within 60s"
+            tail -n 20 "$RUNNER_TEMP/macos-miner.log" 2>/dev/null || true
+          fi
+          kill "$pid" 2>/dev/null || true
+          exit 0
+
+  # --------------------------------------------------------------------------
+  # FreeBSD: a real kernel cell, driven by the shared
+  # .github/scripts/freebsd-smoke.sh harness (the restored freebsd.yml runs the
+  # same harness plus the native test binaries). The miner builds for FreeBSD
+  # at this commit; urnet-tools does NOT (no internal/urnettools FreeBSD port),
+  # so the harness marks that layer CONDITIONAL/TODO instead of faking it, and
+  # activates those checks automatically once the port lands.
+  # --------------------------------------------------------------------------
+  freebsd:
+    name: freebsd 14.5 (miner on a real kernel)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Cross-build the FreeBSD payload on the runner
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o out/miner ./cli/miner/; then
+              echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+          file out/miner
+          # TODO(freebsd-urnettools): the FreeBSD port of internal/urnettools is
+          # not in this tree yet (no discover_freebsd.go). When it lands, this
+          # cell builds urnet-tools too and the harness asserts the discovery
+          # and lifecycle surface on the real kernel.
+          if [ -f internal/urnettools/discover_freebsd.go ]; then
+            GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o out/urnet-tools ./cmd/urnet-tools/
+            echo "urnet-tools FreeBSD port present: built"
+          else
+            echo "urnet-tools FreeBSD port absent at this commit (TODO): the cell asserts the miner only"
+          fi
+
+      - name: Mint the disposable CI JWT (refuses the production account)
+        # The token is staged under out/ so the VM sync picks it up; the file is
+        # removed again in the cleanup step below. Contents are never printed.
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          set -euo pipefail
+          chmod +x out/miner
+          mkdir -p /tmp/mint out/fixtures
+          HOME=/tmp/mint ./out/miner auth \
+            --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
+          test -s /tmp/mint/.urnetwork/jwt || {
+            echo "::error::JWT mint failed (verification required?)"; tail -n 20 /tmp/mint/auth.log; exit 1; }
+          cp /tmp/mint/.urnetwork/jwt out/fixtures/jwt
+          chmod 600 out/fixtures/jwt
+          python3 - <<'PY'
+          import base64, json
+          raw = open('out/fixtures/jwt').read().strip()
+          p = raw.split('.')[1] + '=' * (-len(raw.split('.')[1]) % 4)
+          d = json.loads(base64.urlsafe_b64decode(p))
+          print("minted a disposable JWT for account:", d.get('network_name'))
+          if d.get('network_name') == 'mesocyclone':
+              raise SystemExit("REFUSING: the minted JWT is the production account")
+          PY
+          rm -rf /tmp/mint
+
+      - name: Run the shared harness on a real FreeBSD kernel
+        uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc # v1
+        with:
+          release: "14.5"
+          mem: 4096
+          cpu: 2
+          sync: rsync
+          prepare: |
+            # procstat is base FreeBSD. Do NOT pkg-install it: a `|| true` here
+            # would hide a missing base tool and break every check downstream.
+            command -v procstat >/dev/null 2>&1 || {
+              echo "FATAL: procstat not present in the base image"
+              exit 1
+            }
+          run: |
+            set -e
+            export BIN_DIR="$PWD/out"
+            export REPO_DIR="$PWD"
+            export JWT_FILE="$PWD/out/fixtures/jwt"
+            export OUT_DIR="$PWD/out/freebsd-evidence"
+            mkdir -p "$OUT_DIR"
+            sh .github/scripts/freebsd-smoke.sh
+
+      - name: Collect the FreeBSD evidence
+        if: always()
+        run: |
+          set -uo pipefail
+          ls -la out out/fixtures out/freebsd-evidence 2>/dev/null || true
+          # The JWT must not linger in the workspace now that the VM has it.
+          rm -f out/fixtures/jwt
+
+      - name: Upload the FreeBSD evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freebsd-evidence
+          path: out/freebsd-evidence/
+          if-no-files-found: warn
+          retention-days: 7
+
+  # --------------------------------------------------------------------------
+  # Summary: aggregate this workflow's cells. Fails when a non-conditional cell
+  # failed. The FreeBSD / OpenRC / portable-core cells also exist as their own
+  # restored workflows (freebsd.yml, openrc-smoke.yml, portable-core.yml) and
+  # are listed here informationally.
+  # --------------------------------------------------------------------------
+  summary:
+    name: release-matrix summary
+    if: always()
+    needs: [build-binaries, distro-smoke, distro-features, acceptance-matrix, systemd, windows, macos, freebsd]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Report the matrix
+        env:
+          BUILD_BINARIES: ${{ needs.build-binaries.result }}
+          DISTRO_SMOKE: ${{ needs.distro-smoke.result }}
+          DISTRO_FEATURES: ${{ needs.distro-features.result }}
+          ACCEPTANCE_MATRIX: ${{ needs.acceptance-matrix.result }}
+          SYSTEMD: ${{ needs.systemd.result }}
+          WINDOWS: ${{ needs.windows.result }}
+          MACOS: ${{ needs.macos.result }}
+          FREEBSD: ${{ needs.freebsd.result }}
+        run: |
+          set -uo pipefail
+          fail=0
+          {
+            printf '%-28s %-10s %s\n' "CELL" "RESULT" "NOTES"
+            printf '%-28s %-10s %s\n' "----------------------------" "----------" "------------------------------"
+          } | tee /tmp/table.txt
+          row() { printf '%-28s %-10s %s\n' "$1" "$2" "$3" | tee -a /tmp/table.txt; }
+          check() {
+            # check <cell> <result> <notes> <conditional?>
+            if [ "$2" = "failure" ] || [ "$2" = "cancelled" ]; then
+              if [ "$4" = "conditional" ]; then row "$1" "$2" "$3 [conditional cell: recorded, not gating]"
+              else row "$1" "$2" "$3"; fail=1; fi
+            elif [ "$2" = "skipped" ]; then
+              row "$1" "$2" "$3 [skipped: a failed dependency upstream?]"
+            else
+              row "$1" "$2" "$3"
+            fi
+          }
+          row "build-binaries (linux/amd64)" "$BUILD_BINARIES" "miner + urnet-tools + urnet-docker, CGO_ENABLED=0"
+          check "distro-smoke (7 Linux images)" "$DISTRO_SMOKE" "debian, almalinux, fedora, leap 15.6, tumbleweed, arch, alpine"
+          check "distro-features (2 images)" "$DISTRO_FEATURES" "debian stable slim + alpine: risky surfaces, url pipeline, broad surface (glibc + musl)"
+          check "acceptance matrix (debian)" "$ACCEPTANCE_MATRIX" "hot-restart identity reuse, urnet-tools surface vs the daemon, urnet-docker runtime (SKIP-NO-DOCKER in container jobs), v33 parity"
+          check "systemd (6 images)" "$SYSTEMD" "install/start/socket/status/stop/restart/crash; TODO cells marked in the log"
+          check "windows-latest" "$WINDOWS" "build+vet+unit tests+miner+control socket (socket gap recorded, not faked)" conditional
+          check "macos-13 + macos-14" "$MACOS" "build+vet+unit tests+launchd lifecycle; macOS socket probe is record-only" conditional
+          check "freebsd 14.5 (vmactions)" "$FREEBSD" "miner on a real kernel; urnet-tools layer TODO while the port is absent"
+          row "freebsd.yml (vmactions)" "informational" "restored: shared harness + native test binaries when the port lands"
+          row "openrc-smoke.yml" "informational" "restored: Alpine OpenRC service smoke + cross-OS vet"
+          row "portable-core.yml" "informational" "restored: cross-OS build/vet + native OS tests"
+          echo
+          echo "MODE: report — the table above and this job's exit status gate this"
+          echo "workflow only. Release creation is not blocked today."
+          if [ "$fail" = "1" ]; then
+            echo "::error::one or more non-conditional distro-matrix cells failed"
+            exit 1
+          fi
+          echo "all non-conditional cells passed"
+
+      # ─────────────────────────── RELEASE GATING SWITCH ─────────────────────
+      # Today: report-only. The summary above fails THIS workflow when a
+      # non-conditional cell fails, but release.yml's create-release job does
+      # not depend on it, so no release is blocked.
+      #
+      # To make the matrix an explicit release gate, the operator flips exactly
+      # two things (full recipe in docs/Distro-Matrix-CI.md §Release gating):
+      #   1. here: change RELEASE_GATE_MODE to 'block' and uncomment the guard
+      #      step below, which fails the summary job on any cell failure — so
+      #      the status this workflow reports is a hard gate, and
+      #   2. in .github/workflows/release.yml, in the `create-release:` job
+      #      (line ~111), add the gating step/dependency described in the docs
+      #      so release creation waits for this workflow's conclusion.
+      # ----------------------------------------------------------------------
+      - name: Gating placeholder (inactive)
+        env:
+          RELEASE_GATE_MODE: report # TODO(release-gate): 'block' turns this workflow into a hard gate
+        run: |
+          echo "RELEASE_GATE_MODE=$RELEASE_GATE_MODE"
+          case "$RELEASE_GATE_MODE" in
+            block)
+              echo "::error::RELEASE_GATE_MODE=block is set, but the guard steps and the"
+              echo "::error::release.yml dependency are not wired in. See docs/Distro-Matrix-CI.md."
+              exit 1
+              ;;
+            report)
+              echo "report mode: matrix results are advisory for release creation"
+              ;;
+          esac

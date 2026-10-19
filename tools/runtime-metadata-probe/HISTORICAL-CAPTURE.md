@@ -18,6 +18,52 @@ sn-mainnet capture-historical-execution \
   --nodes /private/parent-trie-nodes
 ```
 
+For a native v2 profile, the same command can fill missing nodes from a selected
+archive RPC. Use an existing private cache covered by the usual durable-volume
+declaration. This mode is unsigned qualification; it does not construct or
+enroll a signed production producer:
+
+```
+sn-mainnet capture-historical-execution \
+  --engine /private/runtime-historical-capture \
+  --engine-sha256 sha256:EXACT_EXECUTABLE_DIGEST \
+  --request /private/request.json \
+  --request-sha256 sha256:EXACT_REQUEST_DIGEST \
+  --rpc https://SELECTED_ARCHIVE_RPC \
+  --expected-chain SELECTED_NATIVE_CHAIN \
+  --expected-genesis 0xEXACT_GENESIS_HASH \
+  --expected-evm-chain-id SELECTED_EVM_CHAIN_ID \
+  --cache-dir /private/capture-cache \
+  --durable-volumes /private/durable-volumes.json \
+  --durable-volumes-sha256 sha256:EXACT_DECLARATION_DIGEST \
+  --budget 900s
+```
+
+`--nodes` and archive mode are mutually exclusive. Before starting the worker,
+archive mode re-reads and compares the complete original parent/child/body,
+code, any declared metadata pin, and execution-state version with the input. Explicit
+principal queries stay in that exact unsigned request. One total deadline
+includes admission, RPC reads, missing-node refills, child join and closing
+selected-finality checks. The broker uses only `state_getReadProof` and, when
+needed, `state_getChildReadProof` at the exact parent; claimed RPC values or page
+boundaries do not establish completeness. Missing proof paths remain failures.
+
+The cache defaults to 1 GiB and 475,476 entries. `--cache-max-bytes` and
+`--cache-max-entries` select finite explicit ceilings within the existing
+producer-file profile; growth never deletes evidence or changes a request.
+An exclusive owner reserves the complete native boundary before writes.
+Content-addressed files retain the original RPC observation, exact request,
+raw nodes and successful `jobs/<job-sha256>.json`. The stdout report still
+uses the original capture grammar. Files from an incomplete attempt are not
+completed jobs and remain subject to the same capacity and custody checks.
+
+For a cache on the operator's local disk, explicitly add `--owner-local-cache`
+and supply its separately scoped `urnetwork-owner-local-volumes-v2` declaration.
+This uses the existing owner-local descriptor, identity, capacity and lease
+checks. It does not relabel an owner-local declaration as daemon storage or
+change the signed production producer's filesystem admission. The default
+archive mode continues to require the ordinary daemon-volume declaration.
+
 The request uses schema `urnetwork-historical-execution-capture-v1`. It pins
 the SCALE parent and child headers and their hashes, the complete SCALE
 extrinsic body, both original runtime-code digests, execution state version,
@@ -48,9 +94,10 @@ This capture does not authorize a runtime, source profile or finalized block.
 `production_selection` remain false; the top-level native debit remains null.
 Original-callsite observations are candidates, including the distinction
 between an absent refund and an actually observed zero. Actual chain use
-still requires a retained node backend or authenticated raw-node export,
-correspondence to the original deployed code and complete fee callsites,
-and independent parent/child finality admission. A prior runtime review,
-including v470, grants no authority to observed runtime472. The current
-deterministic fixtures are synthetic and do not assert that those external
-admissions have happened.
+still requires a complete retained backend or exact-parent archive proofs,
+correspondence to the original deployed code, and independent parent/child
+finality admission. Complete fee callsites are a separate requirement when
+fee authority is selected; a generic metadata pin does not select that
+authority. A prior runtime review grants no authority to another deployed
+runtime. The deterministic command fixtures are synthetic and do not assert
+that these external admissions have happened.

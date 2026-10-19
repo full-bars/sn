@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The actual public command reconstructs eight retained actions, original
 // signatures and restored nonce custody. All keys and routes are synthetic.

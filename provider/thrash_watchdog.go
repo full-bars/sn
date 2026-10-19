@@ -70,7 +70,10 @@ var (
 	thrashNowFn = time.Now
 	// thrashExitFn is the process exit used for the supervised restart; a test
 	// seam, production always os.Exit.
-	thrashExitFn = os.Exit
+	thrashExitFn                = os.Exit
+	thrashEnvFn                 = os.Getenv
+	thrashFileExistsFn          = defaultFileExists
+	thrashCheckCapDirWritableFn = defaultThrashCheckCapDirWritable
 	// thrashPersistTimeout bounds the anti-loop state write: a blocked flock
 	// must abort the escalation (alert), never stall the loop or exit without
 	// the record.
@@ -640,6 +643,9 @@ type thrashMachine struct {
 	lastAttempt    time.Time // throttles escalation attempts
 	heapWarned     bool
 	swapCritWarned bool
+	// heapDriven: the standing condition rests on the heap rule alone, so a
+	// healthy heap ends it even while PSI is unreadable.
+	heapDriven bool
 }
 
 // thrashStep is one machine advance.
@@ -653,20 +659,56 @@ type thrashStep struct {
 	cond bool
 }
 
+const (
+	// thrashHeapRunawayFrac is how far over its soft limit the live heap may be,
+	// with the box short of free RAM, before the heap alone counts as severe.
+	thrashHeapRunawayFrac = 1.4
+	// thrashHeapRunawayAvailFrac and thrashHeapRunawayAvailFloorMiB define "short
+	// of free RAM": under a tenth of the box, and never under 256 MiB.
+	thrashHeapRunawayAvailFrac     = 0.10
+	thrashHeapRunawayAvailFloorMiB = 256
+)
+
+// thrashHeapRunaway reports a heap well over its soft limit on a box short of
+// free RAM. It exists because the spiral it names starves every responder
+// within minutes while PSI still reads calm: the stalls start after the heap has
+// already run away. Both inputs must be readable; a box that cannot say how
+// much RAM is free is never judged on the heap alone.
+func thrashHeapRunaway(rd thrashRead) bool {
+	if !rd.heapOK || rd.heapFrac < thrashHeapRunawayFrac || !rd.ramAvailOK {
+		return false
+	}
+	low := int64(thrashHeapRunawayAvailFloorMiB)
+	if rd.ramTotalOK {
+		if tenth := int64(float64(rd.ramTotalMiB) * thrashHeapRunawayAvailFrac); tenth > low {
+			low = tenth
+		}
+	}
+	return rd.ramAvailMiB < low
+}
+
 // step advances the machine. Pure except for the machine's own bookkeeping:
 // all time comes from now, so tests drive it with a fake clock.
 func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thrashStep {
 	prev := m.state
 
-	if !rt.fullOK {
-		// PSI full unavailable (fresh baseline, source flip, unreadable): a
-		// NEUTRAL tick. Hold every clock and the state — a fake readable zero
-		// here used to read as calm and reset the sustain clocks, defeating
-		// detection exactly when sources flap.
-		return thrashStep{prev: prev, cur: m.state, changed: false, cond: false}
+	heapRunaway := thrashHeapRunaway(rd)
+	heapReadable := rd.heapOK && rd.ramAvailOK
+	if !rt.fullOK && !heapRunaway {
+		// A tick that only the heap rule was driving, now with a readable healthy
+		// heap, is a real calm reading: on a box without PSI nothing else would
+		// ever move the machine again, and the clocks and the freeze it set would
+		// hold for the life of the process.
+		if !(m.heapDriven && heapReadable) {
+			// PSI full unavailable (fresh baseline, source flip, unreadable): a
+			// NEUTRAL tick. Hold every clock and the state — a fake readable zero
+			// here used to read as calm and reset the sustain clocks, defeating
+			// detection exactly when sources flap.
+			return thrashStep{prev: prev, cur: m.state, changed: false, cond: false}
+		}
 	}
 
-	severe := rt.fullOK && rt.fullFrac >= thrashSevereFrac
+	severe := rt.fullOK && rt.fullFrac >= thrashSevereFrac || heapRunaway
 	swapCorr := rt.swapOK && (rt.swapInPS+rt.swapOutPS) >= thrashSwapCorroboratePS
 	refCorr := rt.refaultOK && rt.refaultPS >= thrashRefaultCorroboratePS
 	pgCorr := rt.pgscanOK && rt.pgscanPS >= thrashPgscanCorroboratePS
@@ -686,6 +728,12 @@ func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thras
 	// corroboration when available, and a stricter PSI-only bar when nothing
 	// corroborates (never AND with an unavailable signal).
 	thrashCond := severe || (mild && corr) || (!corrAvail && strict)
+	if thrashCond {
+		// the standing condition rests on the heap rule alone when PSI gives no
+		// reason of its own for it
+		psiSevere := rt.fullOK && rt.fullFrac >= thrashSevereFrac
+		m.heapDriven = !(psiSevere || (mild && corr) || (!corrAvail && strict))
+	}
 
 	if thrashCond {
 		if m.worseSince.IsZero() {
@@ -754,6 +802,9 @@ func (m *thrashMachine) step(now time.Time, rt thrashRates, rd thrashRead) thras
 			m.thrashSince = now
 		}
 	}
+	if m.state == thrashCalm {
+		m.heapDriven = false
+	}
 	return thrashStep{prev: prev, cur: m.state, changed: prev != m.state, condDur: condDur, cond: thrashCond}
 }
 
@@ -799,7 +850,32 @@ func fmtSwapMBs(pps float64) string {
 	return fmt.Sprintf("%.0f MB/s", pps/256.0)
 }
 
+// thrashRestartReason is the ledger reason for a restart: a heap runaway says so
+// instead of reading as a swap storm with no stalls.
+func thrashRestartReason(rt thrashRates, rd thrashRead) string {
+	if thrashHeapRunaway(rd) && !(rt.fullOK && rt.fullFrac >= thrashSevereFrac) {
+		return fmt.Sprintf("heap runaway: %.1fx its soft limit with %s RAM free", rd.heapFrac, fmtMiBHuman(rd.ramAvailMiB))
+	}
+	stall := 0.0
+	if v, ok := thrashStallFrac(rt); ok {
+		stall = v
+	}
+	swapClause := "swap activity unreadable"
+	if rt.swapOK {
+		swapClause = "swapping " + fmtSwapMBs(rt.swapInPS+rt.swapOutPS)
+	}
+	return fmt.Sprintf("swap thrash: %.0f%% of wall time stalled on memory, %s", stall*100, swapClause)
+}
+
 func thrashOnsetMsg(rt thrashRates, rd thrashRead, share float64, shareOK bool) string {
+	if thrashHeapRunaway(rd) && !(rt.fullOK && rt.fullFrac >= thrashSevereFrac) {
+		held := "an unmeasurable amount of the swap"
+		if rd.unitSwapOK {
+			held = fmtMiBHuman(rd.unitSwapMiB) + " of swap"
+		}
+		return fmt.Sprintf("🚨 [memory] The program's heap has run away: %.1fx its size limit (%s of %s) with only %s RAM free, and %s belongs to this provider. Memory is not stalling yet, but the box is about to.",
+			rd.heapFrac, fmtMiBHuman(rd.heapUsedMiB), fmtMiBHuman(rd.heapLimitMiB), fmtMiBHuman(rd.ramAvailMiB), held)
+	}
 	stallTxt := "memory is stalling"
 	if stall, ok := thrashStallFrac(rt); ok {
 		stallTxt = fmt.Sprintf("memory is currently stalled ~%.0f%% of the time", stall*100)
@@ -1134,10 +1210,16 @@ func thrashEscalate(now time.Time, rt thrashRates, rd thrashRead, selfHeal bool,
 	// restart policy must also restart on exit status 75. The shipped units
 	// use Restart=on-failure, which covers it; an operator override
 	// (Restart=no, Restart=on-success, or a policy that excludes status 75)
-	// leaves the provider dead after a restart attempt — provider unit
+	// leaves the provider dead after a restart attempt; provider unit
 	// overrides must restart on exit 75.
-	if os.Getenv("INVOCATION_ID") == "" && os.Getenv("NOTIFY_SOCKET") == "" {
-		return thrashEscalationAlert("no-supervisor", "not running under a service supervisor (systemd), so a self-exit would not be restarted; not restarting")
+	kind, restartsOn75 := thrashSupervisorKind(thrashEnvFn, thrashFileExistsFn)
+	if !restartsOn75 {
+		return thrashEscalationAlert("no-supervisor", "not running under a service supervisor (systemd, or a container whose start script restarts on exit 75), so a self-exit would not be restarted; not restarting")
+	}
+	if kind == "docker" {
+		if err := thrashCapDirWritableBounded(); err != nil {
+			return thrashEscalationAlert("persist-failed", fmt.Sprintf("state directory holding thrash_cap.json is not writable (%v); not restarting, to avoid an unthrottled restart loop", err))
+		}
 	}
 	st := readThrashCapState()
 	allowed, code, reason, n := thrashCapEscalationAllowed(st, now)
@@ -1162,14 +1244,6 @@ func thrashEscalate(now time.Time, rt thrashRates, rd thrashRead, selfHeal bool,
 	if persistErr != nil {
 		return thrashEscalationAlert("persist-failed", fmt.Sprintf("cannot persist the anti-loop restart record (%v); not restarting, to avoid an unthrottled restart loop", persistErr))
 	}
-	stall := 0.0
-	if v, ok := thrashStallFrac(rt); ok {
-		stall = v
-	}
-	swapClause := "swap activity unreadable"
-	if rt.swapOK {
-		swapClause = "swapping " + fmtSwapMBs(rt.swapInPS+rt.swapOutPS)
-	}
 	// Ledger: fire-and-forget but bounded, same reasoning as the cap write.
 	ledgerDone := make(chan struct{})
 	go func() {
@@ -1179,7 +1253,7 @@ func thrashEscalate(now time.Time, rt thrashRates, rd thrashRead, selfHeal bool,
 			From:   running,
 			To:     cap,
 			Mode:   "on",
-			Reason: fmt.Sprintf("swap thrash: %.0f%% of wall time stalled on memory, %s", stall*100, swapClause),
+			Reason: thrashRestartReason(rt, rd),
 		})
 		close(ledgerDone)
 	}()
@@ -1456,5 +1530,84 @@ func runThrashWatchdog(ctx context.Context, selfHealEnabled bool) {
 // thrashRestartable reports whether a supervised restart is possible at all
 // (used by the critical-state log line).
 func thrashRestartable() bool {
-	return os.Getenv("INVOCATION_ID") != "" || os.Getenv("NOTIFY_SOCKET") != ""
+	_, restarts := thrashSupervisorKind(thrashEnvFn, thrashFileExistsFn)
+	return restarts
+}
+
+func defaultFileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
+}
+
+// thrashCapDirWritableBounded runs the writability probe in a goroutine with
+// the same bounded wait as the cap write, so a hung volume aborts the
+// escalation (alert) instead of stalling the watchdog loop (rule 1: the
+// watchdog never blocks on I/O it does not own).
+func thrashCapDirWritableBounded() error {
+	done := make(chan error, 1)
+	probe := thrashCheckCapDirWritableFn // read here, not in the goroutine
+	go func() { done <- probe() }()
+	select {
+	case err := <-done:
+		return err
+	case <-time.After(thrashPersistTimeout):
+		return errors.New("timed out probing the state directory")
+	}
+}
+
+func defaultThrashCheckCapDirWritable() error {
+	dir, err := oomCapDir()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	f, err := os.CreateTemp(dir, ".thrash_cap_persist_probe_*")
+	if err != nil {
+		return err
+	}
+	name := f.Name()
+	defer os.Remove(name)
+	probeData := []byte("persistent-check")
+	if _, err := f.Write(probeData); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	readBack, err := os.ReadFile(name)
+	if err != nil {
+		return err
+	}
+	if string(readBack) != string(probeData) {
+		return errors.New("readback content mismatch")
+	}
+	return nil
+}
+
+// thrashSupervisorKind inspects environment variables and the filesystem to
+// identify the active supervisor and report whether it will restart the
+// provider on an exit status of 75. Returns "systemd", "docker", or "none".
+// OpenRC is not recognised: nothing in this tree marks it, so it stays "none"
+// exactly as before.
+func thrashSupervisorKind(env func(string) string, fileExists func(string) bool) (kind string, restartsOn75 bool) {
+	if env == nil {
+		env = os.Getenv
+	}
+	if fileExists == nil {
+		fileExists = defaultFileExists
+	}
+	if env("INVOCATION_ID") != "" || env("NOTIFY_SOCKET") != "" {
+		return "systemd", true
+	}
+	// A container's start script (the shipped image's entrypoint) treats exit
+	// 75 as a planned restart and loops, so a container is a supervisor with no
+	// opt-in. The writable-state-dir guard below still applies: without a
+	// durable restart record a self-exit could loop without its throttle.
+	if fileExists("/.dockerenv") || env("URNETWORK_CONTAINER") == "1" {
+		return "docker", true
+	}
+	return "none", false
 }

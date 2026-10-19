@@ -45,6 +45,7 @@ type OwnerRecycleProposal struct {
 	Remainder        string
 	OwnerAllocation  string
 	Runtime          OwnerRecycleRuntimePin
+	Treasury         *TreasuryPolicy `json:"treasury,omitempty"`
 }
 
 // Validates the proposed successor without weakening any parent-policy field.
@@ -53,17 +54,28 @@ func (self OwnerRecycleProposal) Validate(parent protocol.Policy) error {
 	if err != nil {
 		return err
 	}
-	if self.Schema != ownerRecycleProposalSchema || parent.NetworkProfile != "mainnet" || self.ParentPolicyHash != parentHash {
+	if (self.Schema != ownerRecycleProposalSchema && self.Schema != TreasuryProposalSchema) || parent.NetworkProfile != "mainnet" || self.ParentPolicyHash != parentHash {
 		return errors.New("owner-recycle requires its exact schema and unchanged mainnet parent policy hash")
 	}
 	if self.PolicyId <= parent.PolicyID || self.EffectiveEpoch <= parent.EffectiveEpoch {
 		return errors.New("owner-recycle successor policy and epoch must advance")
 	}
-	if self.ProviderShare != (protocol.Rational{Numerator: 1, Denominator: 10}) || self.Remainder != "recognized_owner_recycle" || self.OwnerAllocation != "equal_unmasked_registered" {
-		return errors.New("owner-recycle supports exactly the reviewed 10/90 proposal and equal owner allocation")
+	if self.Schema == TreasuryProposalSchema {
+		if self.Treasury == nil || self.Remainder != "ordinary_treasury_credit" || self.OwnerAllocation != "equal_exact_registered" ||
+			self.Treasury.MaxWeightLimitU16 != parent.Steering.MaxWeightLimitU16 || !crv4.ReviewedNativeOwnerSource(self.Runtime.SourceCommit) {
+			return errors.New("treasury proposal requires its complete public policy, ordinary credit source and unchanged cap")
+		}
+		if err := self.Treasury.Validate(); err != nil {
+			return err
+		}
+	} else if self.Treasury != nil || self.Remainder != "recognized_owner_recycle" || self.OwnerAllocation != "equal_unmasked_registered" {
+		return errors.New("owner-recycle supports only its original owner allocation without treasury authority")
+	}
+	if self.ProviderShare != (protocol.Rational{Numerator: 1, Denominator: 10}) {
+		return errors.New("economic successor requires exactly one tenth provider allocation")
 	}
 	if self.Runtime.GenesisHash == ([32]byte{}) || self.Runtime.CodeHash == ([32]byte{}) || self.Runtime.MetadataHash == ([32]byte{}) || self.Runtime.Netuid != 25 ||
-		self.Runtime.SourceCommit != ownerRecycleSourceCommit && self.Runtime.SourceCommit != ownerRecycleSourceCommit470 {
+		self.Runtime.SourceCommit != ownerRecycleSourceCommit && !crv4.ReviewedNativeOwnerSource(self.Runtime.SourceCommit) {
 		return errors.New("owner-recycle requires nonzero network/artifact pins, netuid 25 and the exact reviewed source profile")
 	}
 	version := self.Runtime.Version
@@ -81,6 +93,9 @@ func (self OwnerRecycleProposal) Hash(parent protocol.Policy) ([32]byte, error) 
 	encoded, err := json.Marshal(self)
 	if err != nil {
 		return [32]byte{}, err
+	}
+	if self.Schema == TreasuryProposalSchema {
+		return sha256.Sum256(append([]byte(TreasuryProposalSchema+"\n"), encoded...)), nil
 	}
 	return sha256.Sum256(encoded), nil
 }
@@ -133,6 +148,7 @@ type OwnerRecyclePreviewInput struct {
 // Owns its exact and quantized rows. WireProviderShare is the fraction of this
 // validator's integer row, before runtime masks, Yuma or emission accounting.
 // It is not a share of final miner allocation, a cap or a deferred entitlement.
+// ProviderShareError subtracts the row's exact target: 1/10, or 0 reserve-only.
 type OwnerRecyclePreview struct {
 	ProposalHash       [32]byte
 	FinalizedHash      [32]byte
@@ -155,6 +171,9 @@ func (self *OwnerRecyclePreview) AdmissionError() error {
 // Cap clipping or integer repair could change channel budgets, so this preview
 // refuses either requirement instead of redistributing between recipients.
 func PreviewOwnerRecycle(input OwnerRecyclePreviewInput) (*OwnerRecyclePreview, error) {
+	if input.Proposal.Treasury != nil {
+		return nil, errors.New("treasury preview requires the authenticated ordinary-recipient census")
+	}
 	proposalHash, err := input.Proposal.Hash(input.ParentPolicy)
 	if err != nil {
 		return nil, err
@@ -281,7 +300,7 @@ func PreviewOwnerRecycle(input OwnerRecyclePreviewInput) (*OwnerRecyclePreview, 
 	if err != nil {
 		return nil, fmt.Errorf("owner-recycle provider allocation unavailable; no owner-only or zero-incentive fallback: %w", err)
 	}
-	if err := completeOwnerRecycleRow(preview, input.ParentPolicy, uids, scores, ownerUidKVs); err != nil {
+	if err := completeOwnerRecycleRow(preview, input.ParentPolicy, uids, scores, ownerUidKVs, false); err != nil {
 		return nil, err
 	}
 	return preview, nil
@@ -289,10 +308,15 @@ func PreviewOwnerRecycle(input OwnerRecyclePreviewInput) (*OwnerRecyclePreview, 
 
 // Shared arithmetic consumes an already reconstructed normalized provider row.
 // Callers separately authenticate owner recognition, masks and provider identity;
-// this helper grants no validator eligibility or activation authority.
-func completeOwnerRecycleRow(preview *OwnerRecyclePreview, parent protocol.Policy, uids []uint16, scores []*big.Rat, ownerUidKVs map[uint16]bool) error {
-	if preview == nil || len(preview.OwnerUids) == 0 || len(uids) == 0 || len(uids) != len(scores) {
+// this helper grants no validator eligibility or activation authority. Only a
+// treasury caller that has proved its provider allocation empty may request
+// reserveOnly: the destinations then share the whole row and providers none.
+func completeOwnerRecycleRow(preview *OwnerRecyclePreview, parent protocol.Policy, uids []uint16, scores []*big.Rat, ownerUidKVs map[uint16]bool, reserveOnly bool) error {
+	if preview == nil || len(preview.OwnerUids) == 0 || len(uids) == 0 && !reserveOnly || len(uids) != len(scores) {
 		return errors.New("owner-recycle row lacks providers or usable owner destinations")
+	}
+	if reserveOnly && len(uids) != 0 {
+		return errors.New("reserve-only row cannot carry a provider allocation")
 	}
 	total := new(big.Rat)
 	for index, uid := range uids {
@@ -301,14 +325,15 @@ func completeOwnerRecycleRow(preview *OwnerRecyclePreview, parent protocol.Polic
 		}
 		total.Add(total, scores[index])
 	}
-	if total.Cmp(big.NewRat(1, 1)) != 0 {
+	if !reserveOnly && total.Cmp(big.NewRat(1, 1)) != 0 {
 		return errors.New("owner-recycle provider row is not exactly normalized")
 	}
+	providerShare, ownerTotal := economicRowShares(reserveOnly)
 	scoreUidKVs := map[uint16]*big.Rat{}
 	for i, uid := range uids {
-		scoreUidKVs[uid] = new(big.Rat).Mul(scores[i], big.NewRat(1, 10))
+		scoreUidKVs[uid] = new(big.Rat).Mul(scores[i], providerShare)
 	}
-	ownerShare := big.NewRat(9, 10*int64(len(preview.OwnerUids)))
+	ownerShare := new(big.Rat).Quo(ownerTotal, big.NewRat(int64(len(preview.OwnerUids)), 1))
 	for _, uid := range preview.OwnerUids {
 		scoreUidKVs[uid] = new(big.Rat).Set(ownerShare)
 	}
@@ -345,6 +370,16 @@ func completeOwnerRecycleRow(preview *OwnerRecyclePreview, parent protocol.Polic
 	}
 	preview.WireValues = wireValues
 	preview.WireProviderShare = new(big.Rat).SetFrac(new(big.Int).SetUint64(providerSum), new(big.Int).SetUint64(wireSum))
-	preview.ProviderShareError = new(big.Rat).Sub(preview.WireProviderShare, big.NewRat(1, 10))
+	preview.ProviderShareError = new(big.Rat).Sub(preview.WireProviderShare, providerShare)
 	return nil
+}
+
+// Exact row targets: the signed 1/10 provider and 9/10 destination split, or
+// for a reserve-only row no provider share and the whole row to destinations.
+// The share error is always measured against the row's own exact target.
+func economicRowShares(reserveOnly bool) (*big.Rat, *big.Rat) {
+	if reserveOnly {
+		return new(big.Rat), big.NewRat(1, 1)
+	}
+	return big.NewRat(1, 10), big.NewRat(9, 10)
 }

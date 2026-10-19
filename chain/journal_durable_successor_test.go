@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Adjacent controls retain original custody across pressure, restart and handoff.
 package chain

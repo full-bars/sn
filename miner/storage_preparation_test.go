@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // These fixtures run the same fixed adapters as the public command, then the
 // actual fleet/claim constructors. No target is enrolled by a test helper.
@@ -11,8 +11,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"syscall"
 	"testing"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/internal/durablepath"
@@ -57,8 +58,8 @@ func newMinerPreparationFixture(t *testing.T, ownerLocal bool) *minerPreparation
 		t.Fatal(err)
 	}
 	volume := config.Volumes[0]
-	var stat syscall.Stat_t
-	if err := syscall.Stat(root, &stat); err != nil {
+	var stat unix.Stat_t
+	if err := unix.Stat(root, &stat); err != nil {
 		t.Fatal(err)
 	}
 	write := func(name string, value any) durablevolume.Reference {

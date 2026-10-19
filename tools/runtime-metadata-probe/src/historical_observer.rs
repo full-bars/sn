@@ -27,12 +27,20 @@ pub struct HookRule {
     pub offset_end: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub memory: Vec<MemoryCapture>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub host_snapshot: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub state_reads: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub storage_call: Option<super::storage_call::StorageCall>,
+    #[serde(default, skip_serializing_if = "super::principal::is_false")]
+    pub recipient_owner: bool,
 }
 
 /// An admitted original callsite supplies the layout, never the captured bytes.
 /// Address arithmetic and every pointer read are checked against actual memory.
-/// Existing exported globals can anchor a reviewed stack layout; no export or
-/// original Wasm instruction is added to make a profile work.
+/// Existing exported globals or explicitly declared export-only aliases can
+/// anchor a reviewed layout; no original Wasm instruction or global is added.
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MemoryCapture {
@@ -112,9 +120,18 @@ pub struct StorageReturn {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
+pub struct ExecutionStateValue {
+    pub key_hex: String,
+    pub value_hex: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct NativeObservation {
     pub execution_phase_hex: Option<String>,
     pub memory: Vec<MemoryObservation>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub execution_state: Option<Vec<ExecutionStateValue>>,
 }
 
 /// Digests bind an independently supplied review reference. They do not prove
@@ -130,6 +147,12 @@ pub struct ObservationProfile {
     pub metadata_sha256: Option<[u8; 32]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub principal_storage_prefixes: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub original_globals: Vec<super::global_alias::OriginalGlobal>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub epoch_layout: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recipient_layout: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -231,6 +254,16 @@ fn bodies(wasm: &[u8]) -> Result<BTreeMap<u32, Vec<u8>>, ProbeError> {
     Ok(result)
 }
 
+/// Static profile construction shares the replay admission checks without
+/// exposing an observer or conferring execution/semantic approval.
+pub(crate) fn validate_profile(
+    profile: ObservationProfile,
+    code_hash: [u8; 32],
+    wasm: &[u8],
+) -> Result<(), ProbeError> {
+    HistoricalObserver::new(profile, code_hash, wasm, None).map(|_| ())
+}
+
 impl HistoricalObserver {
     pub(super) fn new(
         profile: ObservationProfile,
@@ -251,6 +284,8 @@ impl HistoricalObserver {
                 "observer profile, code or review reference differs",
             ));
         }
+        super::epoch_layout::state_keys(&profile)?;
+        super::recipient_layout::validate(&profile)?;
         let mut principal_prefixes: Vec<Vec<u8>> = Vec::new();
         if let Some(prefixes) = &profile.principal_storage_prefixes {
             if profile.schema != "urnetwork-original-wasm-native-observation-v2"
@@ -275,9 +310,50 @@ impl HistoricalObserver {
                 principal_prefixes.push(prefix);
             }
         }
+        for capture in profile.rules.iter().flat_map(|rule| &rule.memory) {
+            for global in [
+                capture.global.as_ref(),
+                capture
+                    .repeat
+                    .as_ref()
+                    .and_then(|repeat| repeat.count.global.as_ref()),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                if global.starts_with("__urnetwork_observe_global_")
+                    && !profile
+                        .original_globals
+                        .iter()
+                        .any(|alias| alias.export_name == *global)
+                {
+                    return Err(ProbeError::new("original capture alias is undeclared"));
+                }
+            }
+        }
+        for alias in &profile.original_globals {
+            let used = profile
+                .rules
+                .iter()
+                .flat_map(|rule| &rule.memory)
+                .any(|capture| {
+                    capture.global.as_ref() == Some(&alias.export_name)
+                        || capture.repeat.as_ref().is_some_and(|repeat| {
+                            repeat.count.global.as_ref() == Some(&alias.export_name)
+                        })
+                });
+            if profile.schema != "urnetwork-original-wasm-native-observation-v2" || !used {
+                return Err(ProbeError::new(
+                    "original global alias requires an exact native capture use",
+                ));
+            }
+        }
+        super::host_snapshot::validate(&profile, wasm)?;
+        super::storage_call::validate(&profile, wasm)?;
+        let observed = super::global_alias::expose(wasm, &profile.original_globals)?;
         let original = bodies(wasm)?;
         let mut normalized =
-            sc_executor_common::runtime_blob::RuntimeBlob::uncompress_if_needed(wasm)
+            sc_executor_common::runtime_blob::RuntimeBlob::uncompress_if_needed(&observed)
                 .map_err(|e| ProbeError::new(format!("observer SDK runtime normalization: {e}")))?;
         normalized
             .convert_memory_import_into_export()
@@ -308,12 +384,18 @@ impl HistoricalObserver {
             ) || profile.schema == "urnetwork-original-wasm-native-observation-v2"
                 && matches!(
                     rule.purpose.as_str(),
-                    "native-fee-exempt"
+                    "native-uid-census"
+                        | "native-epoch-index"
+                        | "native-fee-exempt"
                         | "native-fee-refund-zero"
                         | "native-drain"
                         | "native-epoch"
                         | "native-emission"
                         | "native-miner-credit"
+                        | "native-miner-capture"
+                        | "native-recipient-owner-hotkey"
+                        | "native-recipient-auto-stake"
+                        | "native-recipient-owner"
                         | "native-owner-recycle"
                         | "native-yuma-meta"
                         | "native-yuma-settings"
@@ -351,9 +433,11 @@ impl HistoricalObserver {
                 || rule.offset_start >= rule.offset_end
                 || rule.offset_end as usize > body.len()
                 || profile.rules[..index].iter().any(|prior| {
-                    prior.function_index == rule.function_index
-                        && prior.offset_start < rule.offset_end
-                        && rule.offset_start < prior.offset_end
+                    ((prior.storage_call.is_some() && rule.storage_call.is_some())
+                        || prior.function_index == rule.function_index
+                            && prior.offset_start < rule.offset_end
+                            && rule.offset_start < prior.offset_end)
+                        && super::storage_call::overlaps(prior, rule)
                 })
             {
                 return Err(ProbeError::new(
@@ -492,6 +576,73 @@ fn observe_value(
         }
         None
     };
+    // These are explicit observer reads of the SAME live proof/overlay. They
+    // are not relabeled runtime get calls or values from a later RPC reply.
+    let state_keys = ext
+        .extension::<HistoricalObserver>()
+        .map(|observer| {
+            observer
+                .0
+                .profile
+                .rules
+                .iter()
+                .find(|rule| super::storage_call::matches(rule, &observer.0.stack))
+                .map(|rule| {
+                    if let Some(call) = &rule.storage_call {
+                        assert_eq!(
+                            operation, call.operation,
+                            "observer original storage operation differs"
+                        );
+                    }
+                    if rule.recipient_owner {
+                        vec![(
+                            super::recipient_layout::owner_key(&observer.0.memory)
+                                .expect("observer original hotkey differs"),
+                            32usize,
+                            true,
+                        )]
+                    } else {
+                        rule.state_reads
+                            .iter()
+                            .map(|key| {
+                                (
+                                    hex::decode(&key[2..]).expect("observer validated state key"),
+                                    8usize,
+                                    false,
+                                )
+                            })
+                            .collect()
+                    }
+                })
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
+    let execution_state =
+        if state_keys.is_empty() {
+            None
+        } else {
+            Some(
+                state_keys
+                    .into_iter()
+                    .map(|(key, maximum, exact)| {
+                        super::hosts::charge(ext, key.len());
+                        let value = ext.storage(&key);
+                        assert!(
+                            value.as_ref().is_none_or(|bytes| bytes.len() <= maximum
+                                && (!exact || bytes.len() == maximum)),
+                            "observer execution-state value bound"
+                        );
+                        if let Some(raw) = &value {
+                            super::hosts::charge(ext, raw.len());
+                        }
+                        ExecutionStateValue {
+                            key_hex: format!("0x{}", hex::encode(&key)),
+                            value_hex: value.map(|bytes| format!("0x{}", hex::encode(bytes))),
+                        }
+                    })
+                    .collect(),
+            )
+        };
     let Some(observer) = ext.extension::<HistoricalObserver>() else {
         return;
     };
@@ -538,6 +689,7 @@ fn observe_value(
                 Some(NativeObservation {
                     execution_phase_hex: phase,
                     memory: observer.memory.clone(),
+                    execution_state,
                 })
             } else {
                 None
@@ -579,11 +731,7 @@ fn observe_value(
 fn selected_purpose(observer: &Observer) -> Option<String> {
     let mut selected = None;
     for rule in &observer.profile.rules {
-        if observer.stack.iter().any(|frame| {
-            frame.function_index == rule.function_index
-                && frame.function_offset >= rule.offset_start
-                && frame.function_offset < rule.offset_end
-        }) {
+        if super::storage_call::matches(rule, &observer.stack) {
             assert!(
                 selected.is_none(),
                 "observer ambiguous original callsite purpose"
@@ -718,13 +866,7 @@ impl<H: HostFunctions> HostFunctions for ObservedHosts<H> {
                         .profile
                         .rules
                         .iter()
-                        .filter(|rule| {
-                            stack.iter().any(|frame| {
-                                frame.function_index == rule.function_index
-                                    && frame.function_offset >= rule.offset_start
-                                    && frame.function_offset < rule.offset_end
-                            })
-                        })
+                        .filter(|rule| super::storage_call::matches(rule, &stack))
                         .collect();
                     assert!(rules.len() <= 1, "observer ambiguous memory callsite");
                     rules
@@ -816,6 +958,17 @@ impl<H: HostFunctions> HostFunctions for ObservedHosts<H> {
                                 .0;
                             observer.stack = stack;
                             observer.memory = memory;
+                            let snapshot = observer.profile.rules.iter().find_map(|rule| {
+                                let frame = observer.stack.first()?;
+                                (rule.function_index == frame.function_index
+                                    && frame.function_offset >= rule.offset_start
+                                    && frame.function_offset < rule.offset_end)
+                                    .then(|| rule.host_snapshot.clone())
+                                    .flatten()
+                            });
+                            if let Some(name) = snapshot {
+                                observe(ext, "host", name.as_bytes(), None);
+                            }
                         })
                         .expect("observer execution context absent");
                     }

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // These controls keep real queue files, locks, anchors and syncs. Kernel facts
 // and post-syscall barriers select the physical failure without wall-clock races.

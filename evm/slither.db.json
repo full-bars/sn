@@ -1,0 +1,9 @@
+[
+  {
+    "check": "locked-ether",
+    "impact": "Medium",
+    "confidence": "High",
+    "id": "4973ce9e54083c717c6ee0975736e48e5c4b663a58c077e06d2c33964a4bb701",
+    "description": "Contract locking ether found:\n\tContract STSubnetProbe (src/probe/STSubnetProbe.sol#42-324) has payable functions:\n\t - STSubnetProbe.receive() (src/probe/STSubnetProbe.sol#110)\n\t - STSubnetProbe.seedFromTao(bytes32,uint256) (src/probe/STSubnetProbe.sol#256-261)\n\tBut does not have a function to withdraw the ether\n"
+  }
+]

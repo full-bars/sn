@@ -111,7 +111,7 @@ func testResolvedConfig(t *testing.T) *ResolvedConfig {
 		Hyperparameters: hyperparameters,
 		Repos: RepoPaths{
 			SN: snRepo, Server: filepath.Join(filepath.Dir(snRepo), "server"), Vault: filepath.Join(filepath.Dir(snRepo), "vault"),
-			OperatorProxy: filepath.Join(filepath.Dir(snRepo), "operator-proxy"), PlatformConfig: filepath.Join(filepath.Dir(snRepo), "config"),
+			PlatformConfig: filepath.Join(filepath.Dir(snRepo), "config"),
 		},
 		Netuid: 7, ChainID: testnetChainID, Authority: "127.0.0.1:9944", OperationalRPCMode: rpcModePrivateAuthority,
 		OperationalSubstrate: "ws://127.0.0.1:9944", OperationalEVM: "http://127.0.0.1:9944", ObjectStoreHost: "127.0.0.1",

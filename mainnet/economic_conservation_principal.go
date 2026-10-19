@@ -80,7 +80,7 @@ func (self *economicConservationState) appendOpeningPrincipal(policy economicCon
 		return err
 	}
 	for _, observation := range outcome.OpeningPrincipals.Observations {
-		matched := false
+		matched := nativeTreasuryPrincipalQuery(policy.Native.Observation.Execution.Treasury, observation.Query, policy.Native.Observation.Netuid)
 		for _, route := range policy.Routes {
 			if route.Kind != "tail-pool" {
 				continue

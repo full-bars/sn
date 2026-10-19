@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Offline preparation uses public identity and exact reviewed bytes. It never
 // opens a signing owner, mutates a retained ledger, or authorizes its restart.
@@ -18,6 +18,8 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -318,7 +320,7 @@ func BuildAttemptLedgerPreparationCheckpoint(ctx context.Context, directory *os.
 		return nil, errors.Join(errors.New("prepared ledger checkpoint exceeds its bound"), err)
 	}
 	retained, err := readAttemptLedgerCustodyAttribute(directory)
-	if err != nil && !errors.Is(err, unix.ENODATA) {
+	if err != nil && !errors.Is(err, durablesys.ErrNoAttribute) {
 		return nil, err
 	}
 	if err == nil && !bytes.Equal(raw, retained) {

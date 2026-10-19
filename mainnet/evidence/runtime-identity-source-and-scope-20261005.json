@@ -1,0 +1,298 @@
+{
+  "adjacent_completion_recipes": [
+    {
+      "bytes": 16758,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/adjacent-existing14-recipe.json",
+      "sha256": "7e9ffc78b4b86729f093b4b5cf060551885379592c24168c76afc6948e3fdcc2"
+    },
+    {
+      "bytes": 28937,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/identity-successor/adjacent-existing28-recipe.json",
+      "sha256": "227f751e4c600fa6e23512b6302773138d37ec62b16f348aa4cd7794095af3a3"
+    }
+  ],
+  "all_owner_blobs_equal_merged_main": true,
+  "author_execution": {
+    "binary_lists": 0,
+    "compilers": 0,
+    "database": 0,
+    "deployment": 0,
+    "production_changes": 0,
+    "test_bodies": 0
+  },
+  "counts_per_mode": {
+    "all_go": 2774,
+    "connect": 224,
+    "mainnet": 302,
+    "server": 2027,
+    "server_controller": 95,
+    "server_full_model": 1865,
+    "sn": 515,
+    "sn_connect_vless": 747,
+    "validator": 66,
+    "vlessinterop": 8
+  },
+  "documentation_base": "8776b03884fcca74d827dc613bd8233d2dc5f7a3",
+  "finite_contract_audit_limit": {
+    "changed_reviewed_paths_at_later_identity1d425": [],
+    "qualification": "Finite no-confirmed-defect source review retains its original scope and limits. Later changed validator inputs are covered only by the separate identity source review, not by an invented whole-graph audit or execution.",
+    "review": {
+      "bytes": 40132,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-completion-audit-9a6446e5/review.json",
+      "sha256": "22993b6d52e3c662e7bd9139fde557d1555de784464e158f3e0d42714ad8091f"
+    },
+    "review_bound_commit": "9a6446e59545b3aba94f3937a3cc95da8ebf50ef",
+    "reviewed26_inputs_exact_at8776": true
+  },
+  "fullmodel_normal": {
+    "actual_list_roots": 1865,
+    "actual_list_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal-list.process-result.json",
+      "sha256": "5fdea5c6bd4c7eca14bc0b9f3ae01708522ed1f6c50d042f5472e6b388657e5a"
+    },
+    "body_pid": 3628898,
+    "invocation_id": "cf41e3aee35245a1b037cf956b0fe8f2",
+    "known_failed_root_names": [
+      "TestArinRemoteFullPopulationActualPGAndTwentyUnixOwners",
+      "TestArinRemoteFullPopulationEightHostsWithinTwoPipes",
+      "TestArinRemoteFullPopulationTwoHostPipesRolloverAndLatency"
+    ],
+    "known_failure_observation": {
+      "bytes": 2039,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/fullmodel-live-known-failures.json",
+      "sha256": "c9565ba855103c3789b0f8e83ef290ddf33d49d2f0c98e7e22dd2458a8ba96dd"
+    },
+    "normal_body_passes_claimed": 0,
+    "observation": {
+      "bytes": 1569,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/current-624-d64-fullmodel1865-v6-model-normal-actual-launch-readback.json",
+      "sha256": "d84195d91f660ca43e132b702421f981c8380f7532e76f5a8fad07dec055f9f6"
+    },
+    "observed_at": "2026-10-05T12:17:22.146183+00:00",
+    "owner_unit": "sn-current-624-d64-fullmodel1865-v6-model-normal-owner-20261005.service",
+    "source_tuple": {
+      "core": "026b850248352b72255be7a966e391e0a15e74c1",
+      "server": "d64c9beb49a8637ce753103e9ea34521cc55f597",
+      "sn": "624cf1e00f45dac61bc5675e4a21eb2a8dd121e5"
+    },
+    "status": "ACTUAL_LAUNCHED_KNOWN_FAILURES_TERMINAL_PENDING",
+    "terminal_result": null
+  },
+  "independent_source_review": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/validator-runtime-identity-cause/qualification/source-ack.json",
+    "sha256": "66d9f9f4c1985c1d80269cdb6775488af289e216dbc5ecaa8dcef3d10f7e591a"
+  },
+  "mechanism": {
+    "behavior": [
+      "Compare each completed approved native name, genesis and EVM chain identity before the next RPC and before late caller stop.",
+      "Null/empty replies are typed unavailable; present malformed/zero/different values stay hard.",
+      "Preserve complete original read errors and late caller cause; no fabricated mismatch on unread values.",
+      "Borrow existing default300-second operations and shorter caller deadlines, with unchanged underlying60-second RPC attempts.",
+      "Retain original independently approved route, selected block, artifact/finality/purpose checks and zero output on error."
+    ],
+    "defect": "Five fresh identity readers compared pinned values only after later reads, so a completed wrong value could be replaced by a subsequent timeout. Concrete genesis decoding also treated missing replies as hard failures.",
+    "limits": "Five actual public consumers compare each completed approved identity before a later RPC or late cancellation can replace it. Null/empty stays unavailable; malformed/present wrong data stays hard. Original300-second owners, shorter45-second caller fixtures and underlying attempt budgets remain unchanged. No signing, writes or new authority.",
+    "public_readers": [
+      "authenticateReleaseMainnetRuntimeAttempt",
+      "authenticateOwnerRecycleProductionArtifactAttempt",
+      "InspectProductionRuntimeContinuityContext",
+      "observeOwnerRecycleAdmissionAt",
+      "ValidatorUploadDeployment.authenticateNativeRuntimeRouteContext"
+    ]
+  },
+  "merged_main": "1d4251f4c3b586df8dd2c96602914797a67546c6",
+  "new_declarations": [
+    {
+      "blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+      "file": "validator/runtime_network_identity_test.go",
+      "line": 139,
+      "root": "TestRuntimeNetworkIdentityStopsAtFirstCompletedContradiction",
+      "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+    },
+    {
+      "blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+      "file": "validator/runtime_network_identity_test.go",
+      "line": 181,
+      "root": "TestRuntimeNetworkIdentityMissingReplyRemainsUnavailable",
+      "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+    },
+    {
+      "blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+      "file": "validator/runtime_network_identity_test.go",
+      "line": 207,
+      "root": "TestRuntimeNetworkIdentityMalformedReplyRemainsHard",
+      "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+    },
+    {
+      "blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+      "file": "validator/runtime_network_identity_test.go",
+      "line": 242,
+      "root": "TestRuntimeNetworkIdentityCompletedReplyPreservesLateContext",
+      "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+    },
+    {
+      "blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+      "file": "validator/runtime_network_identity_test.go",
+      "line": 300,
+      "root": "TestRuntimeNetworkIdentityPreservesMixedOriginalReadCause",
+      "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+    },
+    {
+      "blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+      "file": "validator/runtime_network_identity_test.go",
+      "line": 319,
+      "root": "TestRuntimeNetworkIdentityProductionOwnerRecoversAbsentGenesis",
+      "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+    },
+    {
+      "blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+      "file": "validator/runtime_network_identity_test.go",
+      "line": 358,
+      "root": "TestRuntimeNetworkIdentityApprovedReadsRetainOriginalBudget",
+      "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+    }
+  ],
+  "new_roots": [
+    "TestRuntimeNetworkIdentityStopsAtFirstCompletedContradiction",
+    "TestRuntimeNetworkIdentityMissingReplyRemainsUnavailable",
+    "TestRuntimeNetworkIdentityMalformedReplyRemainsHard",
+    "TestRuntimeNetworkIdentityCompletedReplyPreservesLateContext",
+    "TestRuntimeNetworkIdentityPreservesMixedOriginalReadCause",
+    "TestRuntimeNetworkIdentityProductionOwnerRecoversAbsentGenesis",
+    "TestRuntimeNetworkIdentityApprovedReadsRetainOriginalBudget"
+  ],
+  "preserved_outcomes": {
+    "all_previous_master_tuples_preserved": true,
+    "original263_controls_preserved": true,
+    "original38_ids_unchanged": true,
+    "outcomes_closed": 0
+  },
+  "previous_operator_checkpoint": {
+    "bytes": 21137,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/sn/mainnet/evidence/repair-dispatch-window-source-and-scope-20261005.json",
+    "sha256": "cf47481f6dcca68804d5f3ae80872786a1d807c166fd4d0673c45583b9dcdcbc"
+  },
+  "qualification": {
+    "control_bodies": "UNEXECUTED",
+    "controls_source_apply_check": "PASS_ON_EXACT_MERGED1d425",
+    "designated_failures_per_mode": 13,
+    "existing_adjacent28": "All28 are outside the prior59 master; retain separately as required normal/race qualification.",
+    "existing_root_bodies_changed": 0,
+    "new_control_groups": 11,
+    "new_roots_per_mode": 7,
+    "new_table_cases": 160,
+    "normal": "UNEXECUTED",
+    "race": "UNEXECUTED",
+    "shared_fixture_adaptation": "validator/runtime_identity_test.go:setValidatorRuntimeIdentityTestResult"
+  },
+  "schema": "runtime-identity-merged-source-and-scope-v1",
+  "scope": {
+    "bytes": 2545,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-8776-dispatch-window/identity-successor/SCOPE-HANDOFF.json",
+    "sha256": "e9ae72f1ba5ef55729309f789183b8e448b6bc1a82130491271457a3a7b141d2"
+  },
+  "separate_existing_adjacent_roots_per_mode": 42,
+  "source_control_groups": 280,
+  "source_files": [
+    {
+      "git_blob": "2820053700292a97f8d66cbfafa6b9e6208ba63d",
+      "path": "validator/mainnet_runtime_observation.go",
+      "sha256": "4a93a7f66fdf46445015a210099d41306430d7857e2285d190708a98e064b72f"
+    },
+    {
+      "git_blob": "c2e6b3b112aa81af9ac456273af12abe3bd9dfd6",
+      "path": "validator/production_runtime.go",
+      "sha256": "ac58708825baa153d420a2a011b8e214ccfb58adad2572f4a9cd77188334d771"
+    },
+    {
+      "git_blob": "9f697187b1459266f943e5dc085a29f61a24c97b",
+      "path": "validator/production_runtime_continuity.go",
+      "sha256": "05cf7c502779740f55d614017a9b6a3827d5169a07044932c8002d01649e38b8"
+    },
+    {
+      "git_blob": "a36c7e7fd4af65be76c359c3788c974bfa81b5e3",
+      "path": "validator/recycle_observation.go",
+      "sha256": "ac07b7eb6401ee5810b93859a528b2f3f03c8dd8dec9b9778a23f2e4560b5c9a"
+    },
+    {
+      "git_blob": "0e1aeedbce820538e8b5e684e4c2d039515cb014",
+      "path": "validator/runtime_identity_test.go",
+      "sha256": "7a34e81aa51d3198e1867fd71786e84fa594cfa5e79123e3b1d640a53dceb81c"
+    },
+    {
+      "git_blob": "f78eb1a59b5582b0ad62bc91b1ab97d08af558f3",
+      "path": "validator/runtime_network_identity.go",
+      "sha256": "44368bc386f8dd173166753e4c3933e2573ee843d978e88b9d8049f494b81188"
+    },
+    {
+      "git_blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+      "path": "validator/runtime_network_identity_test.go",
+      "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+    },
+    {
+      "git_blob": "4bf46cd5a4c26fb5f590d7cb672465b9a56c2b22",
+      "path": "validator/validator_upload_runtime.go",
+      "sha256": "e6049fd49ef6c803403ca0a20273953257852c3815ce47a8dc66d2b724ce7839"
+    }
+  ],
+  "source_intake": {
+    "bytes": 5254,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/validator-runtime-identity-cause/qualification/handoff.json",
+    "sha256": "9251dc276c1ceaae43b8ac8545214394f3f9d301af1f8f1a8cb49018d5af4f67"
+  },
+  "source_owner": {
+    "author": "Bitprecipice",
+    "clean": true,
+    "commit": "5ed5e3da7e2ebb8181eebac17214d8c8765e78b6",
+    "files": [
+      {
+        "git_blob": "2820053700292a97f8d66cbfafa6b9e6208ba63d",
+        "path": "validator/mainnet_runtime_observation.go",
+        "sha256": "4a93a7f66fdf46445015a210099d41306430d7857e2285d190708a98e064b72f"
+      },
+      {
+        "git_blob": "c2e6b3b112aa81af9ac456273af12abe3bd9dfd6",
+        "path": "validator/production_runtime.go",
+        "sha256": "ac58708825baa153d420a2a011b8e214ccfb58adad2572f4a9cd77188334d771"
+      },
+      {
+        "git_blob": "9f697187b1459266f943e5dc085a29f61a24c97b",
+        "path": "validator/production_runtime_continuity.go",
+        "sha256": "05cf7c502779740f55d614017a9b6a3827d5169a07044932c8002d01649e38b8"
+      },
+      {
+        "git_blob": "a36c7e7fd4af65be76c359c3788c974bfa81b5e3",
+        "path": "validator/recycle_observation.go",
+        "sha256": "ac07b7eb6401ee5810b93859a528b2f3f03c8dd8dec9b9778a23f2e4560b5c9a"
+      },
+      {
+        "git_blob": "0e1aeedbce820538e8b5e684e4c2d039515cb014",
+        "path": "validator/runtime_identity_test.go",
+        "sha256": "7a34e81aa51d3198e1867fd71786e84fa594cfa5e79123e3b1d640a53dceb81c"
+      },
+      {
+        "git_blob": "f78eb1a59b5582b0ad62bc91b1ab97d08af558f3",
+        "path": "validator/runtime_network_identity.go",
+        "sha256": "44368bc386f8dd173166753e4c3933e2573ee843d978e88b9d8049f494b81188"
+      },
+      {
+        "git_blob": "4b645e91c7c80f99eac03783c80cfd4a4966b379",
+        "path": "validator/runtime_network_identity_test.go",
+        "sha256": "7191061d795c2e2ec5c03627950b67c61b151a1f0d27da9f8521e205168557e2"
+      },
+      {
+        "git_blob": "4bf46cd5a4c26fb5f590d7cb672465b9a56c2b22",
+        "path": "validator/validator_upload_runtime.go",
+        "sha256": "e6049fd49ef6c803403ca0a20273953257852c3815ce47a8dc66d2b724ce7839"
+      }
+    ],
+    "parent": "9a6446e59545b3aba94f3937a3cc95da8ebf50ef",
+    "tree": "f2da7e0e6ce4c5e9845abbcccac82c0fafebd426",
+    "worktree": "/mnt/data/sn-testnet/mainnet-parallel-20261005/validator-runtime-identity-cause/sn"
+  },
+  "status": "MERGED_SOURCE_IMPLEMENTED_UNQUALIFIED",
+  "unselected_work_in_progress": [
+    "PH12 correction",
+    "Earning-wallet producer/SDK mapping-consent correction"
+  ]
+}

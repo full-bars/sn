@@ -27,7 +27,6 @@ type finalSemanticSupplementTestFixture struct {
 	result           *ScenarioResult
 	load             FinalArtifactLoader
 	stores           map[int]server.BlobStore
-	storeRoot        string
 	derivedFileCount int
 }
 
@@ -948,13 +947,34 @@ func finalSemanticCapturedPublicFixture(t *testing.T, cfg *ResolvedConfig, roles
 
 // Publication fixtures add real final outputs to the independently signed
 // original capture. Closure-only tests stop at that actual earlier boundary.
+// The outputs are the producer's own build, public seal and rendering, but not
+// its two complete artifact replays: run here, they would fill the process
+// verification cache and turn publication's own replay of these exact bytes
+// into a cache hit.
 func newFinalSemanticSupplementTestFixture(t *testing.T) *finalSemanticSupplementTestFixture {
 	t.Helper()
 	fixture, source := newFinalSemanticOriginalClosureTestFixture(t)
-	reader := func(_ context.Context, draft *FinalSemanticEvidence) (FinalSemanticChainReader, error) {
-		return &finalTestChainReader{evidence: draft}, nil
+	draft, err := BuildFinalSemanticEvidence(source)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if _, err := ProduceFinalSemanticOutputs(context.Background(), fixture.runDir, source, fixture.load, reader, func(string, []byte) error { return nil }); err != nil {
+	readerEvidence, err := finalSemanticEvidenceDetachedCopy(draft)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := finalValidatorReplayContextV2(context.Background(), fixture.load)
+	sealed, err := SealFinalSemanticEvidenceOnChain(ctx, draft, &finalTestChainReader{evidence: readerEvidence})
+	if err != nil {
+		t.Fatal(err)
+	}
+	markdown, err := RenderFinalSemanticEvidenceMarkdown(sealed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writePublicJSON(filepath.Join(fixture.runDir, finalSemanticEvidenceFilename), sealed); err != nil {
+		t.Fatal(err)
+	}
+	if err := atomicWrite(filepath.Join(fixture.runDir, finalSemanticMarkdownFilename), markdown, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return fixture
@@ -1078,16 +1098,18 @@ func newFinalSemanticOriginalClosureTestFixture(t *testing.T) (*finalSemanticSup
 		}
 		return append([]byte(nil), data...), nil
 	}
-	storeRoot := filepath.Join(stateDir, "object-store")
+	// Each operator replica is isolated and in memory: a local store would
+	// census its whole root on every write, which made one release-scale
+	// publication quadratic in its own objects and dominated these tests.
 	stores := make(map[int]server.BlobStore, cfg.Config.Topology.Operators)
 	for operator := 1; operator <= cfg.Config.Topology.Operators; operator++ {
 		prefix, err := operatorArtifactPrefix(cfg.Config, operator)
 		if err != nil {
 			t.Fatal(err)
 		}
-		stores[operator] = server.NewLocalBlobStore(storeRoot, prefix)
+		stores[operator] = newFixtureMemoryBlobStore(prefix)
 	}
-	return &finalSemanticSupplementTestFixture{cfg: cfg, roles: roles, stateDir: stateDir, runDir: runDir, result: result, load: load, stores: stores, storeRoot: storeRoot, derivedFileCount: derivedFileCount}, source
+	return &finalSemanticSupplementTestFixture{cfg: cfg, roles: roles, stateDir: stateDir, runDir: runDir, result: result, load: load, stores: stores, derivedFileCount: derivedFileCount}, source
 }
 
 // Materialize only the exact derived locators carried by the sealed fixture.
@@ -1113,18 +1135,30 @@ func writeFinalSemanticSupplementFixtureDerivedFiles(t *testing.T, runDir string
 		}
 	}
 	sort.Strings(paths)
+	// Every write is a durable atomic replacement with its own file and
+	// directory fsync, so bounded workers overlap that latency. Each object
+	// still passes the production writer and both identity checks.
+	cases := make([]finalSemanticTestCase, 0, len(paths))
 	for _, path := range paths {
 		reference := references[path]
 		data, ok := artifacts[path]
 		if !ok || uint64(len(data)) != reference.Size || !strings.EqualFold(bytesSHA256(data), reference.ContentHash) {
 			t.Fatalf("fixture derived artifact %s differs from its semantic locator", path)
 		}
-		locator, err := persistFinalCollectedArtifact(runDir, reference.Kind, path, data)
+		cases = append(cases, finalSemanticTestCase{name: path, verify: func(context.Context) error {
+			locator, err := persistFinalCollectedArtifact(runDir, reference.Kind, path, data)
+			if err != nil {
+				return err
+			}
+			if locator.URI != reference.URI || locator.Kind != reference.Kind || locator.SizeBytes != reference.Size || !strings.EqualFold(locator.ContentHash, reference.ContentHash) {
+				return errors.New("materialized fixture derived artifact changed identity")
+			}
+			return nil
+		}})
+	}
+	for index, err := range runFinalSemanticTestCases(context.Background(), cases) {
 		if err != nil {
-			t.Fatal(err)
-		}
-		if locator.URI != reference.URI || locator.Kind != reference.Kind || locator.SizeBytes != reference.Size || !strings.EqualFold(locator.ContentHash, reference.ContentHash) {
-			t.Fatalf("materialized fixture derived artifact %s changed identity", path)
+			t.Fatalf("fixture derived artifact %s: %v", cases[index].name, err)
 		}
 	}
 	return len(paths)

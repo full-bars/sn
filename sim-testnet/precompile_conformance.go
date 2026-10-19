@@ -21,6 +21,11 @@ import (
 	"github.com/urfoundation/sn/crv4"
 )
 
+// The tagged fleet CommitmentInfo: vec length, Data::Raw40, "urfleet1" and
+// the 32-byte hash (crv4.EncodeFleetCommitmentInfo). It was 34 bytes, one
+// Sha256 field, before fleet commitments were domain-separated.
+const precompileCommitmentEncodedBytes = 2 + crv4.FleetCommitmentFieldBytes
+
 // PrecompileConformanceEvidence is the durable M0B record. Each mutating
 // phase is one independently journaled action/transaction; dynamic alpha
 // amounts are derived from the prior finalized observation and never exceed
@@ -304,8 +309,8 @@ func (e *Executor) executePrecompileConformance(ctx context.Context, action Acti
 		}
 		probeHash := derive32(e.cfg, "precompile/commitment-replace")
 		encoded, err := crv4.EncodeFleetCommitmentInfo(probeHash)
-		if err != nil || len(encoded) != 34 {
-			return conformanceMismatch(fmt.Sprintf("precompile commitment encoding length=%d, want 34", len(encoded)), err)
+		if err != nil || len(encoded) != precompileCommitmentEncodedBytes {
+			return conformanceMismatch(fmt.Sprintf("precompile commitment encoding length=%d, want %d", len(encoded), precompileCommitmentEncodedBytes), err)
 		}
 		evidence.Commitment.ProbeHash = hexBytesValue(probeHash[:])
 		evidence.Commitment.CanonicalHash = hexBytesValue(canonical[:])
@@ -794,7 +799,7 @@ func validConformanceTransaction(hash, blockHash string, block uint64) bool {
 }
 
 func precompileEvidenceComplete(evidence *PrecompileConformanceEvidence) bool {
-	if evidence == nil || !evidence.Complete || !evidence.Commitment.Restored || evidence.Commitment.CanonicalGeneration != precompileCanonicalFleetGeneration || evidence.Commitment.EncodedProbeBytes != 34 || evidence.Commitment.ProbeHash == evidence.Commitment.CanonicalHash || !evidence.Battery.Passed || evidence.Seed.DeltaRao == 0 || evidence.Forward.AmountRao == 0 || evidence.Snapshot.BaselineRao == 0 || evidence.Dividend.DeltaRao == 0 || evidence.Transfer.AmountRao == 0 {
+	if evidence == nil || !evidence.Complete || !evidence.Commitment.Restored || evidence.Commitment.CanonicalGeneration != precompileCanonicalFleetGeneration || evidence.Commitment.EncodedProbeBytes != precompileCommitmentEncodedBytes || evidence.Commitment.ProbeHash == evidence.Commitment.CanonicalHash || !evidence.Battery.Passed || evidence.Seed.DeltaRao == 0 || evidence.Forward.AmountRao == 0 || evidence.Snapshot.BaselineRao == 0 || evidence.Dividend.DeltaRao == 0 || evidence.Transfer.AmountRao == 0 {
 		return false
 	}
 	if probeHash, ok := evidenceFixedHex(evidence.Commitment.ProbeHash, 32); !ok || new(big.Int).SetBytes(probeHash).Sign() == 0 {
@@ -1019,7 +1024,7 @@ func (e *Executor) verifyPrecompileConformancePostState(ctx context.Context, act
 	passed := false
 	switch action.ID {
 	case "precompile.commitment-write":
-		passed = evidence.Commitment.CanonicalGeneration == precompileCanonicalFleetGeneration && evidence.Commitment.EncodedProbeBytes == 34 && evidence.Commitment.ProbeHash != evidence.Commitment.CanonicalHash && validConformanceTransaction(evidence.Commitment.WriteTransactionHash, evidence.Commitment.WriteFinalizedHead.Hash, evidence.Commitment.WriteFinalizedHead.Number) && evidence.Commitment.WriteCommitmentBlock > 0
+		passed = evidence.Commitment.CanonicalGeneration == precompileCanonicalFleetGeneration && evidence.Commitment.EncodedProbeBytes == precompileCommitmentEncodedBytes && evidence.Commitment.ProbeHash != evidence.Commitment.CanonicalHash && validConformanceTransaction(evidence.Commitment.WriteTransactionHash, evidence.Commitment.WriteFinalizedHead.Hash, evidence.Commitment.WriteFinalizedHead.Number) && evidence.Commitment.WriteCommitmentBlock > 0
 	case "precompile.commitment-restore":
 		passed = evidence.Commitment.CanonicalGeneration == precompileCanonicalFleetGeneration && evidence.Commitment.Restored && evidence.Commitment.RestoreCommitmentBlock > evidence.Commitment.WriteCommitmentBlock && validConformanceTransaction(evidence.Commitment.RestoreTransactionHash, evidence.Commitment.RestoreFinalizedHead.Hash, evidence.Commitment.RestoreFinalizedHead.Number)
 	case "precompile.read-battery":

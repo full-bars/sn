@@ -60,6 +60,11 @@ func validateReleaseNativeSigningRuntime(native *crv4.Chain, cfg *ReleaseConfig)
 		if err := validateReleaseProductionRuntimeHistory(cfg); err != nil {
 			return err
 		}
+		if cfg.RuntimeSuccessorProfile != "" {
+			// The bound producer proof is either the approved artifact or a
+			// successor this connection admitted for exactly that anchor.
+			return native.ValidateValidatorProducerRuntimeSuccessor(releaseNativeRuntimeIdentity(cfg))
+		}
 		return native.ValidateValidatorProducerRuntime(releaseNativeRuntimeIdentity(cfg))
 	}
 	if uint32(native.Runtime.SpecVersion) == cfg.RuntimeSpec && uint32(native.Runtime.TransactionVersion) == cfg.TransactionVersion && native.Runtime.SpecName == "node-subtensor" {

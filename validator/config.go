@@ -78,18 +78,32 @@ type ReleaseConfig struct {
 
 	SourceRolePredecessorV2    *ReleaseEvidenceV2File             `yaml:"source_role_predecessor_v2,omitempty" json:"source_role_predecessor_v2,omitempty"`
 	OwnerRecycleApproval       *ReleaseOwnerRecycleApprovalConfig `yaml:"owner_recycle_approval,omitempty" json:"owner_recycle_approval,omitempty"`
+	TreasuryApproval           *ReleaseTreasuryApprovalConfig     `yaml:"treasury_approval,omitempty" json:"treasury_approval,omitempty"`
 	MainnetRuntimeApprovals    []ReleaseEvidenceV2File            `yaml:"mainnet_runtime_approvals,omitempty" json:"mainnet_runtime_approvals,omitempty"`
 	ProductionRuntimeApprovals []ReleaseEvidenceV2File            `yaml:"production_runtime_approvals,omitempty" json:"production_runtime_approvals,omitempty"`
 	ProductionAuthorityHistory []ReleaseEvidenceV2File            `yaml:"production_authority_history,omitempty" json:"production_authority_history,omitempty"`
 	ProductionCapacityRevision *ProductionCapacityRevision        `yaml:"production_capacity_revision,omitempty" json:"production_capacity_revision,omitempty"`
+	// Absent until adoption, so a config without it keeps its original hash.
+	SettlementV2 *ReleaseSettlementV2Config `yaml:"settlement_v2,omitempty" json:"settlement_v2,omitempty"`
 
 	ProvisionalDeferClosedNativeInput bool   `yaml:"provisional_defer_closed_native_input,omitempty" json:"provisional_defer_closed_native_input,omitempty"`
 	ProvisionalRuntimeCompatibility   string `yaml:"provisional_runtime_compatibility,omitempty" json:"provisional_runtime_compatibility,omitempty"`
+	RuntimeSuccessorProfile           string `yaml:"runtime_successor_profile,omitempty" json:"runtime_successor_profile,omitempty"`
 	historyAdoptionV2                 *ReleaseHistoryAdoptionV2
+	nativeGapBridge                   *ReleaseNativeGapBridge // only a pinned run --native-gap-bridge; no schema or config hash sees it
 	mainnetRuntimeHistory             *releaseMainnetRuntimeHistory
 	ownerRecycleProduction            *ownerRecycleProductionAuthority
 	productionRuntimeHistory          *releaseProductionRuntimeHistory
 	productionAuthorityHistory        *releaseProductionAuthorityHistory
+	// Server staging's pinned config directory, a last retained-copy location.
+	// Unexported, so neither the YAML/JSON schema nor any config hash sees it.
+	stagingConfigDirectory string
+	// Only the pre-activation bootstrap inspection sets this, before normalizing.
+	// It runs as another account than the validator, so declared custody paths
+	// are admitted by spelling and overlap alone, never stat'd or opened. Every
+	// validator loader leaves it unset and keeps the physical checks. Unexported
+	// like stagingConfigDirectory, so no schema or config hash sees it.
+	declaredPathsOnly bool
 }
 
 func LoadReleaseConfig(path string) (*ReleaseConfig, error) {
@@ -113,36 +127,58 @@ func LoadReleaseConfigPreActivation(path string) (*ReleaseConfig, error) {
 	return loadReleaseConfig(path, releaseConfigLoadMode{preActivation: true})
 }
 
+// LoadReleaseProductionConfigPreActivation authenticates a signed schema-3
+// configuration exactly as the producer loader does, except that its complete
+// evidence_v2 census is activation-pending: every entry is unrendered and
+// pre-declares all of its paths. Only `validator activate` uses it, to render
+// those inputs into a separate successor that the approval key re-approves;
+// RunRelease never does.
+func LoadReleaseProductionConfigPreActivation(path string) (*ReleaseConfig, error) {
+	return loadReleaseConfig(path, releaseConfigLoadMode{productionPreActivation: true})
+}
+
 // releaseConfigLoadMode selects which non-default admissions a loader grants.
 type releaseConfigLoadMode struct {
 	provisionalActivationObservation bool
 	preActivation                    bool
+	productionPreActivation          bool
 	ownerRecycleAdmission            bool
 	mainnetRuntimeObservation        bool
+	// Only server staging sets this: it mounts no validator state_dir.
+	stagingConfigDirectory string
 }
 
 func loadReleaseConfig(path string, mode releaseConfigLoadMode) (*ReleaseConfig, error) {
-	if strings.TrimSpace(path) == "" {
-		return nil, errors.New("validator config path is empty")
-	}
-	abs, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-	file, err := os.Open(abs)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	info, err := file.Stat()
-	if err != nil || !info.Mode().IsRegular() || info.Size() > maximumReleaseConfigBytes {
-		return nil, errors.Join(errors.New("validator config is not a bounded regular file"), err)
-	}
-	b, err := io.ReadAll(io.LimitReader(file, maximumReleaseConfigBytes+1))
+	abs, b, err := readReleaseConfigFile(path)
 	if err != nil {
 		return nil, err
 	}
 	return decodeReleaseConfigBytesMode(abs, b, mode)
+}
+
+// Reads the bounded regular file once; callers decode exactly these bytes.
+func readReleaseConfigFile(path string) (string, []byte, error) {
+	if strings.TrimSpace(path) == "" {
+		return "", nil, errors.New("validator config path is empty")
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return "", nil, err
+	}
+	file, err := os.Open(abs)
+	if err != nil {
+		return "", nil, err
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil || !info.Mode().IsRegular() || info.Size() > maximumReleaseConfigBytes {
+		return "", nil, errors.Join(errors.New("validator config is not a bounded regular file"), err)
+	}
+	b, err := io.ReadAll(io.LimitReader(file, maximumReleaseConfigBytes+1))
+	if err != nil {
+		return "", nil, err
+	}
+	return abs, b, nil
 }
 
 // The adoption caller must parse the same immutable bytes that its request
@@ -154,6 +190,12 @@ func decodeReleaseConfigBytes(abs string, b []byte) (*ReleaseConfig, error) {
 // Parse the exact borrowed document once, preserving the regular loader's
 // strict grammar and normalization without loading any approval or key.
 func decodeReleaseConfigDocument(abs string, b []byte) (*ReleaseConfig, error) {
+	return decodeReleaseConfigDocumentPaths(abs, b, false)
+}
+
+// The same decoder; declaredPathsOnly is fixed before normalization, which
+// would otherwise walk the declared custody paths as the calling account.
+func decodeReleaseConfigDocumentPaths(abs string, b []byte, declaredPathsOnly bool) (*ReleaseConfig, error) {
 	if len(b) == 0 || len(b) > maximumReleaseConfigBytes {
 		return nil, errors.New("validator config is empty or exceeds its byte bound")
 	}
@@ -176,6 +218,7 @@ func decodeReleaseConfigDocument(abs string, b []byte) (*ReleaseConfig, error) {
 	if err := validateProductionCapacityDocument(b); err != nil {
 		return nil, fmt.Errorf("decode validator capacity revision %s: %w", abs, err)
 	}
+	cfg.declaredPathsOnly = declaredPathsOnly
 	if err := cfg.normalize(filepath.Dir(abs)); err != nil {
 		return nil, err
 	}
@@ -196,6 +239,7 @@ func decodeReleaseConfigBytesMode(abs string, b []byte, mode releaseConfigLoadMo
 		}
 		cfg.Coordinator = strings.ToLower(cfg.Coordinator)
 		cfg.SettlementVault = strings.ToLower(cfg.SettlementVault)
+		cfg.stagingConfigDirectory = mode.stagingConfigDirectory
 		if err := loadOwnerRecycleProductionConfig(&cfg); err != nil {
 			return nil, fmt.Errorf("validator production config %s: %w", abs, err)
 		}
@@ -205,9 +249,19 @@ func decodeReleaseConfigBytesMode(abs string, b []byte, mode releaseConfigLoadMo
 		if err := loadReleaseProductionAuthorityHistory(&cfg); err != nil {
 			return nil, fmt.Errorf("validator production authority history %s: %w", abs, err)
 		}
-		if err := cfg.Validate(); err != nil {
+		if mode.productionPreActivation {
+			if err := cfg.validateProductionPreActivation(); err != nil {
+				return nil, fmt.Errorf("validator production pre-activation config %s: %w", abs, err)
+			}
+		} else if err := cfg.Validate(); errors.Is(err, ErrReleaseEvidenceV2ActivationPending) {
+			// The signed approval binds these unrendered references; the
+			// in-place completion that legacy configs allow cannot apply.
+			return nil, fmt.Errorf("validator production config %s: %w", abs, ErrReleaseProductionActivationPending)
+		} else if err != nil {
 			return nil, fmt.Errorf("validator production config %s: %w", abs, err)
 		}
+	} else if mode.productionPreActivation {
+		return nil, fmt.Errorf("validator config %s: production pre-activation requires a signed schema 3 config", abs)
 	} else if mode.mainnetRuntimeObservation {
 		if err := loadReleaseMainnetRuntimeHistory(&cfg); err != nil {
 			return nil, fmt.Errorf("validator runtime observation config %s: %w", abs, err)
@@ -219,8 +273,8 @@ func decodeReleaseConfigBytesMode(abs string, b []byte, mode releaseConfigLoadMo
 		if err := validateOwnerRecycleApprovalScope(&cfg); err != nil {
 			return nil, fmt.Errorf("validator admission config %s: %w", abs, err)
 		}
-		if cfg.OwnerRecycleApproval.Approval != (ReleaseEvidenceV2File{}) {
-			if err := cfg.OwnerRecycleApproval.Approval.Validate(maximumOwnerRecycleApprovalBytes); err != nil {
+		if productionEconomicSelection(&cfg).Approval != (ReleaseEvidenceV2File{}) {
+			if err := productionEconomicSelection(&cfg).Approval.Validate(maximumOwnerRecycleApprovalBytes); err != nil {
 				return nil, fmt.Errorf("validator admission config %s: %w", abs, err)
 			}
 		}
@@ -264,19 +318,24 @@ func configPath(base, value string) (string, error) {
 
 func (c *ReleaseConfig) normalize(base string) error {
 	// New evidence authority cannot acquire legitimacy through legacy cleaning.
+	// Bootstrap inspection checks the same spelling without walking ancestors.
 	if c.EvidenceV2.Schema != "" {
+		admitPath := ValidateReleaseEvidenceV2Path
+		if c.declaredPathsOnly {
+			admitPath = validateReleaseEvidenceV2PathSpelling
+		}
 		for _, path := range []string{c.StateDir, c.HotkeySeedFile} {
-			if err := ValidateReleaseEvidenceV2Path(path); err != nil {
+			if err := admitPath(path); err != nil {
 				return err
 			}
 		}
 		for _, operator := range c.Operators {
-			if err := ValidateReleaseEvidenceV2Path(operator.StateDir); err != nil {
+			if err := admitPath(operator.StateDir); err != nil {
 				return err
 			}
 			for _, path := range []string{operator.NetworkJWTFile, operator.ClientJWTFile, operator.ClientKeySeedFile} {
 				if path != "" {
-					if err := ValidateReleaseEvidenceV2Path(path); err != nil {
+					if err := admitPath(path); err != nil {
 						return err
 					}
 				}
@@ -388,7 +447,9 @@ func (c ReleaseConfig) validateWithMode(historical, provisionalActivationObserva
 		return errors.New("capacity revision requires original independently approved production authority")
 	}
 	if production {
-		if provisionalActivationObservation || preActivation || mainnetRuntimeObservation {
+		// Pre-activation is admitted only for a complete activation-pending
+		// census; the evidence check below then accepts those entries alone.
+		if provisionalActivationObservation || mainnetRuntimeObservation || preActivation && requireReleaseEvidenceV2ProductionPending(c.EvidenceV2.Operators) != nil {
 			return errors.New("mainnet production authority cannot authorize another config load purpose")
 		}
 		if err := validateOwnerRecycleProductionConfig(&c); err != nil {
@@ -413,7 +474,7 @@ func (c ReleaseConfig) validateWithMode(historical, provisionalActivationObserva
 	if !c.Production {
 		return errors.New("release config must explicitly set production: true")
 	}
-	if c.OwnerRecycleApproval != nil {
+	if productionEconomicSelection(&c) != nil {
 		if err := validateOwnerRecycleApprovalSelection(&c); err != nil {
 			return err
 		}
@@ -422,6 +483,9 @@ func (c ReleaseConfig) validateWithMode(historical, provisionalActivationObserva
 		return errors.New("provisional closed native input deferral requires chain 945 and testnet policy")
 	}
 	if err := validateReleaseProvisionalRuntimeCompatibility(&c); err != nil {
+		return err
+	}
+	if err := validateReleaseRuntimeSuccessorProfile(&c); err != nil {
 		return err
 	}
 	if historical && c.ProvisionalRuntimeCompatibility != "" && !provisionalActivationObservation {
@@ -438,6 +502,11 @@ func (c ReleaseConfig) validateWithMode(historical, provisionalActivationObserva
 	}
 	if !common.IsHexAddress(c.SettlementVault) || common.HexToAddress(c.SettlementVault) == (common.Address{}) {
 		return errors.New("settlement_vault is missing or zero")
+	}
+	if c.SettlementV2 != nil {
+		if err := c.SettlementV2.validate(); err != nil {
+			return err
+		}
 	}
 	genesis, err := parseHash32("genesis_hash", c.GenesisHash)
 	if err != nil {
@@ -576,13 +645,17 @@ func (c ReleaseConfig) validateWithMode(historical, provisionalActivationObserva
 			return fmt.Errorf("controlled no_id %d is not in the operator directory", id)
 		}
 	}
+	// Controlled pools and their fleets are masked; masking every operator
+	// leaves no provider weight in any epoch: a treasury validator could only
+	// submit its reserve-only row and any other validator no row at all.
+	if len(controlled) > 0 && len(controlled) == len(seenNO) {
+		return errors.New("controlled_no_ids covers every configured operator, leaving no weight to submit")
+	}
 	if c.SourceRolePredecessorV2 != nil {
 		if err := c.SourceRolePredecessorV2.Validate(ReleaseSourceRolePredecessorV2MaximumBytes); err != nil {
 			return fmt.Errorf("source role predecessor: %w", err)
 		}
 	}
-	if preActivation {
-		return c.EvidenceV2.ValidatePreActivation(c.Operators, c.StateDir, c.HotkeySeedFile)
-	}
-	return c.EvidenceV2.Validate(c.Operators, c.StateDir, c.HotkeySeedFile)
+	// Validate or ValidatePreActivation, declared-only for bootstrap inspection.
+	return c.EvidenceV2.validate(c.Operators, c.StateDir, c.HotkeySeedFile, preActivation, c.declaredPathsOnly)
 }

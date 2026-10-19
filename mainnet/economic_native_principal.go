@@ -7,19 +7,48 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
-	"reflect"
 )
 
 // The declaration fixes the decoder's complete SCALE grammar. A new runtime
 // returning another layout needs a separately implemented and reviewed schema.
 const historicalPrincipalLayout = "Option<StakeInfo{hotkey:AccountId32,coldkey:AccountId32,netuid:Compact<u16>,stake:Compact<u64>,locked:Compact<u64>,emission:Compact<u64>,tao_emission:Compact<u64>,drain:Compact<u64>,registered:bool}>"
+const nativePrincipalAvailabilitySchema = "urnetwork-original-parent-stake-api-v2"
+const historicalAvailabilityLayout = "BTreeMap<AccountId32,BTreeMap<u16,StakeAvailability{total:Compact<u64>,locked:Compact<u64>,available:Compact<u64>}>>"
+
+// A new read-only runtime API needs its own independently approved layout and
+// semantics. A caller-set transport flag alone grants no availability authority.
+type nativeAvailabilityPolicy struct {
+	Schema       string `json:"schema"`
+	Api          string `json:"runtime_api"`
+	LayoutSha256 string `json:"scale_layout_sha256"`
+	ReviewSha256 string `json:"independent_api_review_sha256"`
+}
+
+func (self *nativeAvailabilityPolicy) validate() error {
+	if self == nil {
+		return nil
+	}
+	if self.Schema != historicalAvailabilitySchema || self.Api != historicalAvailabilityApi || self.LayoutSha256 != monitorReadDigest([]byte(historicalAvailabilityLayout)) || !planSha256(self.ReviewSha256) {
+		return errors.New("native availability lacks independent original API/layout authority")
+	}
+	return nil
+}
+
+func nativePrincipalAuthoritySchema(authority *nativePrincipalPolicy) string {
+	if authority != nil && authority.Availability != nil {
+		return nativePrincipalAvailabilitySchema
+	}
+	return historicalPrincipalSchema
+}
 
 // The original observation policy and its signed execution/producer admission
 // both bind this API/layout review and exact parent/query census, without amounts.
 type nativePrincipalPolicy struct {
+	Availability *nativeAvailabilityPolicy     `json:"stake_availability_authority,omitempty"`
 	Effects      *nativePrincipalEffectsPolicy `json:"execution_effects,omitempty"`
 	Schema       string                        `json:"schema"`
 	Api          string                        `json:"runtime_api"`
@@ -33,10 +62,17 @@ func (self *nativePrincipalPolicy) validate() error {
 	if self == nil {
 		return nil
 	}
-	if self.Schema != historicalPrincipalSchema || self.Api != historicalPrincipalApi || self.LayoutSha256 != monitorReadDigest([]byte(historicalPrincipalLayout)) || !planSha256(self.ReviewSha256) || self.Parent.Number == 0 || !rootCanonicalHash(self.Parent.Hash) || self.Queries == nil {
+	if self.Schema != nativePrincipalAuthoritySchema(self) || self.Api != historicalPrincipalApi || self.LayoutSha256 != monitorReadDigest([]byte(historicalPrincipalLayout)) || !planSha256(self.ReviewSha256) || self.Parent.Number == 0 || !rootCanonicalHash(self.Parent.Hash) || self.Queries == nil {
 		return errors.New("native principal lacks independently pinned original API/layout/parent authority")
 	}
-	return errors.Join(validateHistoricalPrincipalQueries(self.Queries), self.Effects.validate())
+	selected := false
+	for _, query := range self.Queries {
+		selected = selected || query.Availability
+	}
+	if selected != (self.Availability != nil) {
+		return errors.New("native availability queries differ from independently selected successor authority")
+	}
+	return errors.Join(validateHistoricalPrincipalQueries(self.Queries), self.Effects.validate(), self.Availability.validate())
 }
 
 func (self *nativePrincipalPolicy) queriesAt(parent economicEmissionBoundary) []historicalPrincipalQuery {
@@ -95,13 +131,13 @@ func deriveNativePrincipal(policy economicEmissionPolicy, admission nativeExecut
 			return nil, errors.New("native principal query borrowed another subnet")
 		}
 	}
-	result := &nativePrincipalProjection{Schema: historicalPrincipalSchema, Authority: *authority, Parent: admission.Parent, ParentHeaderHex: job.ParentHeaderHex, Boundary: admission.Child, Runtime: admission.Runtime, AggregateHash: nativeExecutionEffectBasis(outcome), AdmissionHash: outcome.AdmissionHash, JobHash: outcome.JobHash, Observations: append([]historicalPrincipalObservation{}, report.OpeningPrincipals...)}
+	result := &nativePrincipalProjection{Schema: nativePrincipalAuthoritySchema(authority), Authority: *authority, Parent: admission.Parent, ParentHeaderHex: job.ParentHeaderHex, Boundary: admission.Child, Runtime: admission.Runtime, AggregateHash: nativeExecutionEffectBasis(outcome), AdmissionHash: outcome.AdmissionHash, JobHash: outcome.JobHash, Observations: append([]historicalPrincipalObservation{}, report.OpeningPrincipals...)}
 	result.ContentHash = result.hash()
 	return result, nil
 }
 
 func (self *nativePrincipalProjection) validate(policy economicEmissionPolicy, outcome nativeExecutionOutcome) error {
-	if self == nil || !outcome.AmountsAuthenticated || outcome.ContentHash != outcome.hash() || policy.Execution == nil || policy.Execution.Principal == nil || !reflect.DeepEqual(&self.Authority, policy.Execution.Principal) || self.Schema != historicalPrincipalSchema || self.ContentHash != self.hash() || self.Parent != self.Authority.Parent || self.Parent != policy.From || self.Boundary != outcome.Boundary || self.Parent.Number+1 != self.Boundary.Number || self.Runtime != policy.Runtime || self.AggregateHash != nativeExecutionEffectBasis(outcome) || self.AdmissionHash != outcome.AdmissionHash || self.JobHash != outcome.JobHash {
+	if self == nil || !outcome.AmountsAuthenticated || outcome.ContentHash != outcome.hash() || policy.Execution == nil || policy.Execution.Principal == nil || !reflect.DeepEqual(&self.Authority, policy.Execution.Principal) || self.Schema != nativePrincipalAuthoritySchema(&self.Authority) || self.ContentHash != self.hash() || self.Parent != self.Authority.Parent || self.Parent != policy.From || self.Boundary != outcome.Boundary || self.Parent.Number+1 != self.Boundary.Number || self.Runtime != policy.Runtime || self.AggregateHash != nativeExecutionEffectBasis(outcome) || self.AdmissionHash != outcome.AdmissionHash || self.JobHash != outcome.JobHash {
 		return errors.New("native principal projection differs from original API/runtime/execution authority")
 	}
 	if err := self.Authority.validate(); err != nil {

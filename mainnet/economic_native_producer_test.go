@@ -78,6 +78,44 @@ func nativeProducerTestHeader(t *testing.T, encoded string, expected historicalR
 	return result, uint64(header.Number)
 }
 
+// The Rust original appends pallet 7/event 250. Independently round-trip
+// matching metadata so the public path decodes its actual event bytes too.
+func nativeProducerTestMetadata(t *testing.T) (*types.Metadata, string, string) {
+	t.Helper()
+	return economicEmissionTestMetadata(t, func(value *types.Metadata) {
+		used := map[types.U8]bool{}
+		for _, pallet := range value.AsMetadataV14.Pallets {
+			used[pallet.Index] = true
+		}
+		var replacement types.U8
+		for index := 0; index < 256; index++ {
+			if !used[types.U8(index)] {
+				replacement = types.U8(index)
+				break
+			}
+		}
+		for index := range value.AsMetadataV14.Pallets {
+			pallet := &value.AsMetadataV14.Pallets[index]
+			if pallet.Name != "SubtensorModule" {
+				if pallet.Index == 7 {
+					pallet.Index = replacement
+				}
+				continue
+			}
+			pallet.Index = 7
+			events := value.AsMetadataV14.EfficientLookup[pallet.Events.Type.Int64()]
+			for variant := range events.Def.Variant.Variants {
+				item := &events.Def.Variant.Variants[variant]
+				if item.Name == "IncentiveAlphaEmittedToMiners" {
+					item.Index = 250
+				} else if item.Index == 250 {
+					t.Fatal("fixture event 250 is already occupied")
+				}
+			}
+		}
+	})
+}
+
 type nativeProducerPublicFixture struct {
 	ctx                  context.Context
 	source               *economicEmissionFixture
@@ -111,7 +149,20 @@ func nativeProducerPublicFixtureWithFee(t *testing.T, continuous bool, feePolicy
 // the next program's original profile. Ordinary fixtures retain exact inputs.
 func nativeProducerPublicFixtureWithRuntime(t *testing.T, continuous bool, feePolicy *nativeFeeCensusPolicy, runtimeRenewal bool, additionalJobs ...historicalReplayJob) *nativeProducerPublicFixture {
 	t.Helper()
+	return nativeProducerPublicFixtureWithTreasury(t, continuous, feePolicy, runtimeRenewal, nil, additionalJobs...)
+}
+
+// Treasury fixtures select their own original export and signed public policy.
+// Nil retains every historical producer fixture input and authority byte.
+func nativeProducerPublicFixtureWithTreasury(t *testing.T, continuous bool, feePolicy *nativeFeeCensusPolicy, runtimeRenewal bool, treasury *nativeTreasuryAuthority, additionalJobs ...historicalReplayJob) *nativeProducerPublicFixture {
+	t.Helper()
 	capturePath, replayPath, fixturePath := os.Getenv("URNETWORK_NATIVE_CAPTURE_ENGINE"), os.Getenv("URNETWORK_NATIVE_EXECUTION_ENGINE"), os.Getenv("URNETWORK_NATIVE_EXECUTION_FIXTURE")
+	if treasury != nil {
+		fixturePath = os.Getenv("URNETWORK_NATIVE_TREASURY_FIXTURE")
+		if capturePath == "" || replayPath == "" || fixturePath == "" {
+			t.Fatal("treasury producer requires explicit original export and capture/replay engines")
+		}
+	}
 	continuationDirectory := os.Getenv("URNETWORK_NATIVE_PRODUCER_FIXTURE")
 	if continuous && continuationDirectory != "" && !runtimeRenewal {
 		fixturePath = filepath.Join(continuationDirectory, "native-job-101.json")
@@ -150,43 +201,10 @@ func nativeProducerPublicFixtureWithRuntime(t *testing.T, continuous bool, feePo
 	source := newEconomicEmissionFixture(t)
 	source.policy.Network.NativeChain = "fixture-mainnet"
 	source.chain.action.Scope.NativeChain = "fixture-mainnet"
-	// The Rust original appends pallet 7/event 250. Independently round-trip
-	// matching metadata so the public path decodes its actual event bytes too.
-	metadata, metadataHex, metadataHash := economicEmissionTestMetadata(t, func(value *types.Metadata) {
-		used := map[types.U8]bool{}
-		for _, pallet := range value.AsMetadataV14.Pallets {
-			used[pallet.Index] = true
-		}
-		var replacement types.U8
-		for index := 0; index < 256; index++ {
-			if !used[types.U8(index)] {
-				replacement = types.U8(index)
-				break
-			}
-		}
-		for index := range value.AsMetadataV14.Pallets {
-			pallet := &value.AsMetadataV14.Pallets[index]
-			if pallet.Name != "SubtensorModule" {
-				if pallet.Index == 7 {
-					pallet.Index = replacement
-				}
-				continue
-			}
-			pallet.Index = 7
-			events := value.AsMetadataV14.EfficientLookup[pallet.Events.Type.Int64()]
-			for variant := range events.Def.Variant.Variants {
-				item := &events.Def.Variant.Variants[variant]
-				if item.Name == "IncentiveAlphaEmittedToMiners" {
-					item.Index = 250
-				} else if item.Index == 250 {
-					t.Fatal("fixture event 250 is already occupied")
-				}
-			}
-		}
-	})
+	metadata, metadataHex, metadataHash := nativeProducerTestMetadata(t)
 	source.chain.metadata, source.chain.metadataHex = metadata, metadataHex
 	source.policy.Runtime.RuntimeMetadataHash = metadataHash
-	source.policy.Runtime.RuntimeSourceCommit = frontierMappingSourceCommit
+	source.policy.Runtime.RuntimeSourceCommit = nativeExecutionRuntimeSource(treasury)
 	source.policy.Runtime.RuntimeCodeHash = nativeExecutionTestHex(job.RuntimeCodeBlake2b256[:])
 	source.policy.Runtime.RuntimeVersion.StateVersion = job.ExecutionStateVersion
 	source.chain.profile = source.policy.Runtime
@@ -228,6 +246,11 @@ func nativeProducerPublicFixtureWithRuntime(t *testing.T, continuous bool, feePo
 	source.incentive(t, 101, 25, amounts...)
 	if allocationCount > 2 {
 		source.policy.MaximumUids = uint16(allocationCount)
+		// The incentive event's vector has one slot per registered UID, so
+		// the RPC context registers the census the original epoch emits.
+		for _, number := range []uint64{parentNumber, childNumber} {
+			source.set(t, number, "SubnetworkN", binary.LittleEndian.AppendUint16(nil, uint16(allocationCount)))
+		}
 	}
 	source.chain.storageKVs[runtimeCodeStorageKey] = job.RuntimeCodeHex
 	ctx, filePolicy, files := nativeProducerTestFiles(t, nil)
@@ -345,7 +368,11 @@ func nativeProducerPublicFixtureWithRuntime(t *testing.T, continuous bool, feePo
 		jobs[hash], proofs[nativeExecutionTestHex(current.ParentHash[:])] = current, current.ProofNodesHex
 		certificates[hash] = nativeProducerTestCertificate(t, economicEmissionBoundary{Number: number, Hash: hash}, consensus, 20, 9)
 	}
-	filePolicy.Schema = nativeExecutionPolicySchema
+	if treasury != nil {
+		nativeTreasuryTestBindPolicy(t, treasury, source.policy)
+	}
+	filePolicy.Treasury = treasury
+	filePolicy.Schema = nativeTreasurySchema(treasury, nativeExecutionPolicySchema, nativeTreasuryExecutionPolicySchema)
 	filePolicy.ApprovalPublicKey = nativeExecutionTestHex(approval.Public().(ed25519.PublicKey))
 	filePolicy.ReviewSha256 = "sha256:" + hex.EncodeToString(job.ObservationProfile.SourceReviewSha256[:])
 	filePolicy.ProfileSha256 = monitorReadDigest(profileRaw)
@@ -358,6 +385,13 @@ func nativeProducerPublicFixtureWithRuntime(t *testing.T, continuous bool, feePo
 	}
 	if job.PrincipalEffects {
 		filePolicy.Principal.Effects = &nativePrincipalEffectsPolicy{Schema: nativePrincipalEffectsSchema, ReviewSha256: monitorReadDigest([]byte("synthetic complete original stake cause and top-storage review")), StoragePrefixes: job.ObservationProfile.PrincipalStoragePrefixes}
+	}
+	if treasury != nil {
+		if filePolicy.Principal == nil {
+			t.Fatal("treasury fixture omitted original principal queries")
+		}
+		filePolicy.Principal.Schema = nativePrincipalAvailabilitySchema
+		filePolicy.Principal.Availability = nativeTreasuryTestPrincipal(treasury, source.policy.From).Availability
 	}
 	for _, rule := range job.ObservationProfile.Rules {
 		if historicalYumaPurpose(rule.Purpose) {
@@ -382,6 +416,11 @@ func nativeProducerPublicFixtureWithRuntime(t *testing.T, continuous bool, feePo
 	source.policy.Execution = filePolicy
 	authority := nativeProducerAuthority{Schema: nativeProducerAuthoritySchema, Network: source.policy.Network, Netuid: source.policy.Netuid, Registration: *source.policy.SubnetRegistrationBlock, Generation: *source.policy.SubnetGeneration, From: source.policy.From, Runtime: source.policy.Runtime, ReviewSha256: filePolicy.ReviewSha256, Profile: job.ObservationProfile, CaptureEngine: filePolicy.Producer.CaptureEngine, ReplayEngine: filePolicy.Engine, Directory: filePolicy.Directory, Nodes: filePolicy.Producer.Nodes, MaximumJobs: filePolicy.Producer.MaximumJobs, MaximumBytes: filePolicy.Producer.MaximumBytes, MaximumEntries: filePolicy.Producer.MaximumEntries, Checkpoint: strecovery.NativeFinalityCheckpoint{Schema: strecovery.NativeFinalityCheckpointSchema, CodecProfile: strecovery.NativeFinalityCodecProfile, Genesis: source.policy.Network.GenesisHash, HeaderScale: job.ParentHeaderHex, SetId: 9, LiveState: "live", Authorities: []strecovery.GrandpaAuthority{{PublicKey: nativeExecutionTestHex(consensus.Public().(ed25519.PublicKey)), Weight: 1}}}, Providers: []nativeProducerProvider{{Hotkey: nativeExecutionTestHex(bytes.Repeat([]byte{0x11}, 32)), Coldkey: nativeExecutionTestHex(bytes.Repeat([]byte{0x33}, 32))}}}
 	authority.Principal = filePolicy.Principal
+	authority.Treasury = treasury
+	if treasury != nil {
+		authority.Schema = nativeTreasuryProducerAuthoritySchema
+		authority.Providers = []nativeProducerProvider{}
+	}
 	authority.Yuma = filePolicy.Yuma
 	authority.FeeCensus = filePolicy.FeeCensus
 	authority.MaximumDescendantHeaders = filePolicy.Producer.MaximumDescendantHeaders

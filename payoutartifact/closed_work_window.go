@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"time"
 
@@ -89,26 +90,40 @@ func (self *ClosedWorkWindowClock) matchesBoundaries(ctx context.Context, startB
 		if rlp.DecodeBytes(original.raw, &header) != nil || header.Number == nil || !header.Number.IsUint64() || header.Number.Uint64() != original.boundary.Number || header.Hash().Hex() != original.boundary.Hash {
 			return false
 		}
-		seconds := header.Time
-		switch self.HeaderProfile {
-		case "":
-		case FrontierWindowClockProfile:
-			content, rest, err := rlp.SplitList(original.raw)
-			count, countErr := rlp.CountValues(content)
-			if err != nil || countErr != nil || len(rest) != 0 || count != 15 {
-				return false
-			}
-			// The existing epoch policy uses the public JSON seconds projection.
-			// Raw Frontier stores milliseconds; their exact remainder stays hashed.
-			seconds /= 1000
-		default:
-			return false
-		}
-		if seconds > math.MaxInt64 || !time.Unix(int64(seconds), 0).UTC().Equal(original.clock) {
+		instant, err := WindowClockTime(self.HeaderProfile, original.raw)
+		if err != nil || !instant.Equal(original.clock) {
 			return false
 		}
 	}
 	return true
+}
+
+// Producers and this consumer derive a boundary instant only through the
+// header's declared profile. The empty profile is the ordinary EVM seconds header.
+func WindowClockTime(profile string, raw []byte) (time.Time, error) {
+	var header types.Header
+	if err := rlp.DecodeBytes(raw, &header); err != nil {
+		return time.Time{}, errors.Join(ErrClosedWorkIntegrity, err)
+	}
+	seconds := header.Time
+	switch profile {
+	case "":
+	case FrontierWindowClockProfile:
+		content, rest, err := rlp.SplitList(raw)
+		count, countErr := rlp.CountValues(content)
+		if err != nil || countErr != nil || len(rest) != 0 || count != 15 {
+			return time.Time{}, errors.Join(ErrClosedWorkIntegrity, errors.New("window clock header is not the Frontier RLP15 profile"))
+		}
+		// The existing epoch policy uses the public JSON seconds projection.
+		// Raw Frontier stores milliseconds; their exact remainder stays hashed.
+		seconds /= 1000
+	default:
+		return time.Time{}, fmt.Errorf("%w: window clock header profile %q is unknown", ErrClosedWorkUnavailable, profile)
+	}
+	if seconds > math.MaxInt64 {
+		return time.Time{}, errors.Join(ErrClosedWorkIntegrity, errors.New("window clock header time exceeds the Unix range"))
+	}
+	return time.Unix(int64(seconds), 0).UTC(), nil
 }
 
 // This is deliberately not a ProviderMeasurementsAuthenticated certificate.

@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -31,6 +32,8 @@ type productionAuthenticationTestOutput struct {
 	invalidOnce     sync.Once
 	unavailable     chan struct{}
 	unavailableOnce sync.Once
+	signInRejected  chan struct{}
+	signInOnce      sync.Once
 }
 
 func (self *productionAuthenticationTestOutput) Write([]byte) (int, error) {
@@ -52,6 +55,9 @@ func (self *productionAuthenticationTestOutput) WriteContext(ctx context.Context
 	}
 	if self.unavailable != nil && bytes.Contains(raw, []byte("code=authentication_unavailable ")) {
 		self.unavailableOnce.Do(func() { close(self.unavailable) })
+	}
+	if self.signInRejected != nil && bytes.Contains(raw, []byte("code=network_sign_in_rejected ")) && bytes.Contains(raw, []byte("cause=hard_error")) {
+		self.signInOnce.Do(func() { close(self.signInRejected) })
 	}
 	return len(raw), nil
 }
@@ -640,4 +646,55 @@ func (self productionAuthenticationDeadlineTestContext) Err() error {
 }
 func (self productionAuthenticationDeadlineTestContext) Value(key any) any {
 	return context.WithoutCancel(self.Context).Value(key)
+}
+
+// An operator that rejects the network JWT at registration latches only that
+// operator, with the code that names a new sign-in rather than custody
+// recovery; native observation continues.
+func TestProductionAuthenticationRunReleaseNamesARejectedSignIn(t *testing.T) {
+	fixture := newProductionStartupTestFixtureWithRegistration(t, true)
+	fixture.selectEmptyDeployment(t)
+	for index, op := range fixture.continuation.production.cfg.Operators {
+		if err := os.Remove(op.ClientJWTFile); err != nil {
+			t.Fatal(err)
+		}
+		fixture.origins[index].registrationRejected = true
+	}
+	output := &productionAuthenticationTestOutput{wait: make(chan struct{}), signInRejected: make(chan struct{})}
+	ctx, cancel := context.WithCancel(context.WithValue(t.Context(), releaseDiagnosticHooksKey{}, releaseDiagnosticHooks{writer: output}))
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- RunRelease(fixture.storageContext(ctx), fixture.configPath) }()
+	select {
+	case <-output.signInRejected:
+	case err := <-done:
+		t.Fatalf("a rejected sign-in stopped the public lifecycle: %v", err)
+	case <-t.Context().Done():
+		cancel()
+		err := <-done
+		t.Fatalf("a rejected sign-in was not named: %v", err)
+	}
+	cancel()
+	if err := <-done; err != nil && !errors.Is(err, context.Canceled) {
+		t.Fatal(err)
+	}
+}
+
+func TestProductionRegistrationRecoveryCodeNamesARejectedSignIn(t *testing.T) {
+	rejected := fmt.Errorf("registration: %w", &clientauth.NetworkCredentialRejectedError{})
+	if productionRegistrationRecoveryCode(rejected) != "network_sign_in_rejected" {
+		t.Fatal("a rejected sign-in lost its code")
+	}
+	if productionRegistrationRecoveryCode(&sdk.ClientControlResponseError{}) != "authentication_recovery_required" {
+		t.Fatal("custody recovery lost its code")
+	}
+	if !productionRegistrationLocalFailure(rejected) {
+		t.Fatal("a rejected sign-in did not latch its operator")
+	}
+	if wait, _ := productionRegistrationWait(rejected); wait {
+		t.Fatal("a rejected sign-in became an automatic retry")
+	}
+	if productionRegistrationLocalFailure(errors.Join(rejected, errors.New("synthetic shared custody failure"))) {
+		t.Fatal("a rejected sign-in hid a shared integrity cause")
+	}
 }

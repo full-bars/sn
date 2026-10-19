@@ -25,7 +25,6 @@ var (
 	releaseSHA256          = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 	releaseHex256          = regexp.MustCompile(`^0x[0-9a-f]{64}$`)
 	releaseImageDigest     = regexp.MustCompile(`^[^@[:space:]]+@sha256:[0-9a-f]{64}$`)
-	releaseAbigenVersion   = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
 )
 
 const (
@@ -538,19 +537,6 @@ func observeCleanGoReleaseSource(root string) (string, string, error) {
 	return hash, revision, nil
 }
 
-// Name the two independently checked fields exactly as they appear in the
-// release lock so observation and schema validation cannot drift apart.
-func observeOperatorProxyReleaseSource(root string) (map[string]string, error) {
-	hash, commit, err := observeCleanGoReleaseSource(root)
-	if err != nil {
-		return nil, err
-	}
-	return map[string]string{
-		"operator_proxy_go_source_hash": hash,
-		"operator_proxy_commit":         commit,
-	}, nil
-}
-
 func soliditySourceHash(snRoot string) (string, error) {
 	names, err := trackedFilesUnder(snRoot, []string{"evm/src", "evm/script"}, classifySolidityReleasePath)
 	if err != nil {
@@ -632,24 +618,15 @@ func parseFoundryVersion(output []byte) (string, string, error) {
 	return version, commit, nil
 }
 
-// The sole success line emitted by the shared binding-generator preflight is
-// the complete identity contract for release observation and generation.
+// The two pinned source/release banners retain their raw preflight identity;
+// only the structured release lock normalizes them to the module version.
 func parseAbigenVersion(output []byte) (string, error) {
-	const prefix = "abigen version "
-	const suffix = "-stable"
-	raw := string(output)
-	if !strings.HasSuffix(raw, "\n") || strings.Count(raw, "\n") != 1 || strings.Contains(raw, "\r") {
+	switch string(output) {
+	case "abigen version 1.17.0-stable\n", "abigen version 1.17.0-stable-0cf3d3ba\n":
+		return "1.17.0", nil
+	default:
 		return "", errors.New("abigen version output is malformed")
 	}
-	value := strings.TrimSuffix(raw, "\n")
-	if !strings.HasPrefix(value, prefix) || !strings.HasSuffix(value, suffix) {
-		return "", errors.New("abigen version output is malformed")
-	}
-	version := strings.TrimSuffix(strings.TrimPrefix(value, prefix), suffix)
-	if !releaseAbigenVersion.MatchString(version) {
-		return "", errors.New("abigen version output is malformed")
-	}
-	return version, nil
 }
 
 // Use the generator's own resolver and version policy so the release lock
@@ -836,7 +813,7 @@ var subtensorNodeReleaseFiles = []string{
 }
 
 func observeReleaseLockUnchecked(cfg *ResolvedConfig) (*releaseLockObservation, error) {
-	if cfg == nil || cfg.Repos.SN == "" || cfg.Repos.Server == "" || cfg.Repos.OperatorProxy == "" {
+	if cfg == nil || cfg.Repos.SN == "" || cfg.Repos.Server == "" {
 		return nil, errors.New("release repository paths are incomplete")
 	}
 	observation := &releaseLockObservation{EVMBuild: map[string]string{}, Repositories: map[string]string{}, Interfaces: map[string]string{}, Infrastructure: map[string]string{}}
@@ -886,13 +863,6 @@ func observeReleaseLockUnchecked(cfg *ResolvedConfig) (*releaseLockObservation, 
 			return nil, fmt.Errorf("hash %s module: %w", name, hashErr)
 		}
 		observation.Repositories[name+"_go_source_hash"] = hash
-	}
-	operatorProxyObservation, err := observeOperatorProxyReleaseSource(cfg.Repos.OperatorProxy)
-	if err != nil {
-		return nil, fmt.Errorf("observe operator-proxy module: %w", err)
-	}
-	for key, value := range operatorProxyObservation {
-		observation.Repositories[key] = value
 	}
 	observation.Repositories["sdk_mobile_build_tree_hash"], err = sdkMobileBuildTreeHash(modules["sdk"])
 	if err != nil {
@@ -972,26 +942,6 @@ func compareLockSection(name string, locked map[string]any, observed map[string]
 	return nil
 }
 
-// Require the independently versioned operator-proxy module to carry both its
-// exact clean commit and its production-source digest in the release schema.
-func validateReleaseRepositorySchema(repositories map[string]any) error {
-	sourceHash, err := lockString(repositories, "operator_proxy_go_source_hash")
-	if err != nil {
-		return err
-	}
-	if !releaseSHA256.MatchString(sourceHash) {
-		return errors.New("release lock repositories.operator_proxy_go_source_hash is not a canonical SHA-256 digest")
-	}
-	commit, err := lockString(repositories, "operator_proxy_commit")
-	if err != nil {
-		return err
-	}
-	if !releaseGitCommit.MatchString(commit) {
-		return errors.New("release lock repositories.operator_proxy_commit is not a canonical Git commit")
-	}
-	return nil
-}
-
 // Bind the operational testnet profile to the source and finalized Wasm
 // independently reviewed for runtime 467. Exact-commit testnet provenance is
 // distinct from a tagged mainnet proposal; no such proposal is asserted here.
@@ -1018,7 +968,8 @@ func validateReleaseLock(cfg *ResolvedConfig) error {
 	if err := compareLockSection("evm_build", cfg.Release.EVMBuild, observed.EVMBuild, releaseKeySet(releaseEVMAnnotationKeys)); err != nil {
 		return err
 	}
-	if err := compareLockSection("repositories", cfg.Release.Repositories, observed.Repositories, releaseKeySet(releaseRepositoryAnnotationKeys)); err != nil {
+	// Retired pins that an attested lock still carries are admitted unobserved.
+	if err := compareLockSection("repositories", cfg.Release.Repositories, observed.Repositories, releaseKeySet(releaseRepositoryAnnotationKeys, releaseRepositoryRetiredKeys)); err != nil {
 		return err
 	}
 	if err := compareLockSection("interfaces", cfg.Release.Interfaces, observed.Interfaces, nil); err != nil {

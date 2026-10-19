@@ -44,7 +44,7 @@ func newOwnerLedgerTranscript(request ownerSigningRequest, metadataProof []byte)
 		return ownerLedgerTranscript{}, errors.New("Ledger generic app cannot sign the retained sr25519/disabled-metadata owner v1 action")
 	}
 	payload, _ := hex.DecodeString(action.Payload[2:])
-	return ownerLedgerTranscriptForPayload(request.ContentHash, action.Coldkey, action.DerivationPath, action.MetadataDigest, payload, metadataProof)
+	return ownerLedgerTranscriptForPayload(request.ContentHash, action.signer(), action.DerivationPath, action.MetadataDigest, payload, metadataProof)
 }
 
 // Shared wire construction carries no call authority. Each caller validates its

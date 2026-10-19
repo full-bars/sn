@@ -111,7 +111,7 @@ func openBootstrapChainReadinessState(ctx context.Context, preparation bootstrap
 		return nil, err
 	}
 	if !bootstrapChainHasRootRole(preparation.Plan.Config.Schema) {
-		return nil, errors.New("bootstrap readiness requires the original accepted v3/v4 preparation; older custody cannot acquire new role scope")
+		return nil, errors.New("bootstrap readiness requires the original accepted v3/v4/v5 preparation; older custody cannot acquire new role scope")
 	}
 	self := &bootstrapChainReadinessState{}
 	defer func() {

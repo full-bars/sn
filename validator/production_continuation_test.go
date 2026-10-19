@@ -92,7 +92,7 @@ func installProductionContinuationNative(t *testing.T, fixture *productionContin
 	if err != nil {
 		t.Fatal(err)
 	}
-	info, err := crv4.EncodeFleetCommitmentInfo([32]byte(source))
+	info, err := crv4.EncodeSourceCommitmentInfo([32]byte(source))
 	if err != nil {
 		t.Fatal(err)
 	}

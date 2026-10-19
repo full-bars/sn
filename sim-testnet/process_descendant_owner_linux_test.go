@@ -1,7 +1,7 @@
 //go:build linux
 
-// The surviving-descendant regression owns a private subreaper process. It
-// must not send its intentionally orphaned child to the enclosing release gate.
+// Descendant regressions own a private subreaper process. None may send a
+// child it adopts, intended or leaked, to the enclosing release gate.
 package main
 
 import (
@@ -18,14 +18,16 @@ import (
 )
 
 // Subreaper state belongs to a dedicated test subprocess, never the shared
-// parallel test process. Cleanup kills the fixture first, then reaps it here.
-func runSupervisorDescendantOwnerTest(t *testing.T, run func(*testing.T)) {
+// parallel test process. Cleanup kills the fixture first, then reaps here
+// exactly the descendants that survive their parents: zero proves that the
+// fixture's parents waited for every process they started.
+func runSupervisorDescendantOwnerTest(t *testing.T, surviving int, timeout time.Duration, run func(*testing.T)) {
 	t.Helper()
 	const ownerKey = "SN_SUPERVISOR_DESCENDANT_TEST_OWNER"
 	if os.Getenv(ownerKey) != t.Name() {
-		ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(t.Context(), timeout+5*time.Second)
 		defer cancel()
-		command := exec.CommandContext(ctx, os.Args[0], "-test.run=^"+regexp.QuoteMeta(t.Name())+"$", "-test.count=1", "-test.timeout=25s")
+		command := exec.CommandContext(ctx, os.Args[0], "-test.run=^"+regexp.QuoteMeta(t.Name())+"$", "-test.count=1", "-test.timeout="+timeout.String())
 		command.Env = append(os.Environ(), ownerKey+"="+t.Name())
 		command.WaitDelay = 5 * time.Second
 		output, err := command.CombinedOutput()
@@ -57,8 +59,8 @@ func runSupervisorDescendantOwnerTest(t *testing.T, run func(*testing.T)) {
 				t.Errorf("unexpected descendant wait receipt: pid=%d status=%v", pid, status)
 			}
 		}
-		if reaped != 1 {
-			t.Errorf("private fixture must reap exactly its surviving descendant, got %d", reaped)
+		if reaped != surviving {
+			t.Errorf("private fixture must reap exactly %d surviving descendants, got %d", surviving, reaped)
 		}
 	})
 	run(t)

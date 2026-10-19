@@ -203,11 +203,8 @@ func TestBootstrapSuccessorSafeCurrentRevisionRejectsEventSubstitution(t *testin
 		t.Fatal(err)
 	}
 	owner.close()
-	for _, suffix := range []string{".intent", ".json"} {
-		if err := os.WriteFile(filepath.Join(root, bootstrapSuccessorExecutionEventName(2)+suffix), malformed, 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
+	event := bootstrapSuccessorExecutionEventName(2)
+	bootstrapSuccessorExecutionTestRewrite(t, f.storageContext(t.Context()), root, rootObjectHash(f.approval), map[string][]byte{event + ".intent": malformed, event + ".json": malformed})
 	reopened, err := openBootstrapSuccessorExecutionStore(f.storageContext(t.Context()), f.approval.Plan, f.approval, f.profile, false, nil)
 	if reopened != nil {
 		reopened.close()
@@ -215,11 +212,7 @@ func TestBootstrapSuccessorSafeCurrentRevisionRejectsEventSubstitution(t *testin
 	if err == nil || !strings.Contains(err.Error(), "changed counted current-policy authority") {
 		t.Fatal("counted event replay accepted a backward current policy", err)
 	}
-	for _, suffix := range []string{".intent", ".json"} {
-		if err := os.WriteFile(filepath.Join(root, bootstrapSuccessorExecutionEventName(2)+suffix), retained, 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
+	bootstrapSuccessorExecutionTestRewrite(t, f.storageContext(t.Context()), root, rootObjectHash(f.approval), map[string][]byte{event + ".intent": retained, event + ".json": retained})
 	owner = f.open(false, nil)
 	if owner.last.CumulativeAttempts != 10 || owner.last.SafeCurrentRevisionHash != rootObjectHash(second) || len(f.writes) != 0 {
 		t.Fatal("policy event repair renewed consumed custody")
@@ -250,11 +243,22 @@ func TestBootstrapSuccessorSafeCurrentRevisionRejectsLostAndForkedHistory(t *tes
 	second := bootstrapSuccessorSafeCurrentTestNext(t, f, base, owner.runtimeHistory, []bootstrapSuccessorSafeCurrentRevisionApproval{first})
 	stage := owner.local.stageName(bootstrapSuccessorSafeCurrentName(1), bootstrapSuccessorSafeCurrentStageKind(rootObjectHash(first)))
 	owner.close()
-	for _, fault := range []string{"missing", "signature", "noncanonical", "gap", "fork", "completed stage"} {
+	// The census acknowledges the removal, so the replay is what must refuse.
+	ctx, claim := f.storageContext(t.Context()), rootObjectHash(f.approval)
+	bootstrapSuccessorExecutionTestRewrite(t, ctx, root, claim, map[string][]byte{bootstrapSuccessorSafeCurrentName(1): nil})
+	reopened, err := openBootstrapSuccessorExecutionStore(f.storageContext(t.Context()), f.approval.Plan, f.approval, f.profile, false, nil)
+	if reopened != nil {
+		reopened.close()
+	}
+	if err == nil || !strings.Contains(err.Error(), "counted event lost its current-policy revision authority") {
+		t.Fatal("missing counted current policy reopened execution custody", err)
+	}
+	bootstrapSuccessorExecutionTestRewrite(t, ctx, root, claim, map[string][]byte{bootstrapSuccessorSafeCurrentName(1): raw})
+	// Each fault is undone on the same inode, so the next starts from intact
+	// custody: the census binds the revision's inode as well as its bytes.
+	for _, fault := range []string{"signature", "noncanonical", "gap", "fork", "completed stage"} {
 		var extra string
 		switch fault {
-		case "missing":
-			err = os.Remove(path)
 		case "signature":
 			changed := first
 			changed.Signature = strings.Repeat("00", 64)

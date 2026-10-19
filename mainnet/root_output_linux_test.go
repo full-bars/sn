@@ -71,8 +71,6 @@ func TestRootMonitorOutputPhysicalBlockedSinkKeepsFilesAndJoins(t *testing.T) {
 	clock := &monitorServicesTestClock{}
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	clock.seconds.Store(base.Unix())
-	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
 	completed, resume := make(chan struct{}), make(chan struct{})
 	hooks := monitorServiceHooks{
 		afterEvent: func(ctx context.Context, _ string) {
@@ -88,11 +86,13 @@ func TestRootMonitorOutputPhysicalBlockedSinkKeepsFilesAndJoins(t *testing.T) {
 		},
 		wait: func(ctx context.Context, _ string, _ time.Duration) bool { return ctx.Err() == nil },
 	}
-	done := make(chan int, 1)
 	args := []string{"root-monitor", "--rpc", server.URL, "--policy", rootTestPolicyFile(t, fixture.policy), "--checkpoint", checkpoint, "--metrics-file", metrics, "--metrics-role", "primary", "--samples", "8"}
-	go func() { done <- runMainWithMonitorHooks(ctx, args, writer, writer, clock.now, hooks) }()
+	ctx := monitorTestStorageContext(t, t.Context(), args)
+	run := startRootMonitorOutputTestRun(t, ctx, func(ctx context.Context) int {
+		return runMainWithMonitorHooks(ctx, args, writer, writer, clock.now, hooks)
+	})
 	for sample := 0; sample < 3; sample++ {
-		<-completed
+		run.event(t, completed)
 		values := monitorOutputTestMetrics(t, metrics)
 		if values[`sn_mainnet_root_monitor_sample_timestamp_seconds{role="primary"}`] != float64(base.Unix()+int64(sample)*10) || values[`sn_mainnet_root_monitor_current_observation{role="primary"}`] != 1 || values[`sn_mainnet_root_monitor_read_only_ready{role="primary"}`] != 1 {
 			t.Fatal("physically blocked output starved root observation")
@@ -102,11 +102,11 @@ func TestRootMonitorOutputPhysicalBlockedSinkKeepsFilesAndJoins(t *testing.T) {
 		}
 		if sample < 2 {
 			clock.seconds.Add(10)
-			resume <- struct{}{}
+			run.resume(t, resume)
 		}
 	}
-	cancel()
-	if code := <-done; code != 0 {
+	run.cancel()
+	if code := run.join(t); code != 0 {
 		t.Fatal("physical output fault changed cancellation exit", code)
 	}
 	connection, err := writer.SyscallConn()
@@ -147,7 +147,7 @@ func TestRootMonitorOutputPhysicalBlockedSinkKeepsFilesAndJoins(t *testing.T) {
 			t.Fatal("root pipe drain exceeded fixture bound")
 		}
 	}
-	store, err := openMonitorCheckpoint(checkpoint, identityExpectation{NativeChain: fixture.policy.NativeChain, GenesisHash: fixture.policy.GenesisHash, EvmChainId: 964})
+	store, err := openMonitorCheckpoint(checkpoint, identityExpectation{NativeChain: fixture.policy.NativeChain, GenesisHash: fixture.policy.GenesisHash, EvmChainId: 964}, ctx)
 	if err != nil {
 		t.Fatal("root checkpoint owner leaked")
 	}

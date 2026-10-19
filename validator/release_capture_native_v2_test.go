@@ -188,11 +188,9 @@ func TestReleaseNativeCaptureV2PreservesActualNativeStakeReads(t *testing.T) {
 			if err := transport.CallContext(ctx, &header, method, args...); err != nil {
 				return err
 			}
-			encoded, err := json.Marshal(header)
-			if err != nil {
-				return err
-			}
-			return json.Unmarshal(encoded, result)
+			// A node writes the number as 0x-prefixed hex, as strict receipt
+			// header admission requires; BlockNumber's own JSON omits the 0x.
+			return setReleaseHistoricalTestResult(result, releaseReceiptTestHeaderWire(header))
 		}
 		var raw json.RawMessage
 		if err := transport.CallContext(ctx, &raw, method, args...); err != nil {

@@ -164,7 +164,7 @@ func contractProxyPayload(artifact contractReleaseArtifact, plan evmPhasePlan, v
 // Initial policy block is an EVM observation, never the native checkpoint. The
 // same deterministic projection verifies online and retained completion hashes.
 func (self evmCreatePlan) receiptGetters(receipt evmCreateReceipt) ([]contractGetter, error) {
-	if self.ActionIndex != 4 {
+	if !self.actionIs("proxy-create") {
 		return self.Getters, nil
 	}
 	if self.ProxyConstructor == nil || receipt.BlockNumber == 0 {

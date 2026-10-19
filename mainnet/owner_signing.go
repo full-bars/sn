@@ -18,11 +18,14 @@ const ownerSigningRequestLimit = 4*maxMetadataRpcReplyBytes + 128*1024
 const ownerSigningReplyLimit = 16 * 1024
 
 // These pins come from the owner's independent review, never from request data.
+// Signatory names the device account of a native multisig owner's step and is
+// empty for a direct owner; Owner remains the subnet owner AccountId32.
 type ownerSigningTrust struct {
 	RequestHash string
 	ApprovalKey string
 	Owner       string
 	Genesis     string
+	Signatory   string
 }
 
 // Config includes the original exact call, nonce, era, custody and approval.
@@ -68,6 +71,9 @@ func newOwnerSigningRequest(config ownerTrimExecutionConfig, key, metadataHex st
 	}
 	request.ContentHash = rootObjectHash(request)
 	trust := ownerSigningTrust{RequestHash: request.ContentHash, ApprovalKey: key, Owner: config.Action.Coldkey, Genesis: config.Action.Network.GenesisHash}
+	if config.Action.Multisig != nil {
+		trust.Signatory = config.Action.Multisig.Signatory
+	}
 	return request, request.validate(trust)
 }
 
@@ -77,6 +83,11 @@ func (self ownerSigningRequest) validate(trust ownerSigningTrust) error {
 	if !planSha256(trust.RequestHash) || !rootCanonicalHash(trust.Owner) || !rootCanonicalHash(trust.Genesis) ||
 		self.Schema != ownerSigningRequestSchema || self.Config.Action.Coldkey != trust.Owner || self.Config.Action.Network.GenesisHash != trust.Genesis {
 		return errors.New("owner signing request differs from independent request, account or chain pins")
+	}
+	// A multisig step is signed only by its independently named signatory; the
+	// signer set must also derive the pinned owner, which encoding rechecks.
+	if multisig := self.Config.Action.Multisig; (multisig != nil) != (trust.Signatory != "") || multisig != nil && (multisig.Signatory != trust.Signatory || multisig.validate(trust.Owner) != nil) {
+		return errors.New("owner signing request differs from the independently named multisig signatory or owner signer set")
 	}
 	if err := self.Config.validate(trust.ApprovalKey); err != nil {
 		return err
@@ -130,6 +141,7 @@ type ownerSigningReply struct {
 	ActionHash      string `json:"action_request_hash"`
 	SignatureScheme string `json:"signature_scheme"`
 	Owner           string `json:"owner_account_id"`
+	Signatory       string `json:"signatory_account_id,omitempty"`
 	Signature       string `json:"signature"`
 	RawExtrinsic    string `json:"signed_extrinsic"`
 	ExtrinsicHash   string `json:"extrinsic_hash"`
@@ -142,9 +154,13 @@ func newOwnerSigningReply(request ownerSigningRequest, signature []byte) (ownerS
 	if err != nil {
 		return ownerSigningReply{}, err
 	}
-	return ownerSigningReply{Schema: ownerSigningReplySchema, RequestHash: request.ContentHash, ActionHash: action.RequestHash,
+	reply := ownerSigningReply{Schema: ownerSigningReplySchema, RequestHash: request.ContentHash, ActionHash: action.RequestHash,
 		SignatureScheme: request.SignatureScheme, Owner: action.Coldkey, Signature: hex.EncodeToString(signature),
-		RawExtrinsic: "0x" + hex.EncodeToString(raw), ExtrinsicHash: rootExtrinsicHash(raw)}, nil
+		RawExtrinsic: "0x" + hex.EncodeToString(raw), ExtrinsicHash: rootExtrinsicHash(raw)}
+	if action.Multisig != nil {
+		reply.Signatory = action.Multisig.Signatory
+	}
+	return reply, nil
 }
 
 // Verification includes native signature, account, payload and exact envelope;

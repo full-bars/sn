@@ -40,6 +40,9 @@ func (self *economicConservationNativeWorker) start(state *economicConservationS
 	if self == nil || self.active || self.ctx.Err() != nil || state.NativeHeld {
 		return nil
 	}
+	if err := state.archiveView.requireLive(); err != nil {
+		return err
+	}
 	policy, err := state.operatingPolicy(self.policy)
 	if err != nil {
 		return err

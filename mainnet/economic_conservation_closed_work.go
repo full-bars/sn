@@ -84,6 +84,11 @@ func (self *economicConservationEntitlementCensus) validateClosedWork(ctx contex
 		}
 		return ctx.Err()
 	}
+	// A public clock is only ever the mapped Frontier boundary read. Any other
+	// or absent profile would reinterpret its exact millisecond timestamps.
+	if self.WindowClock != nil && self.WindowClock.HeaderProfile != payoutartifact.FrontierWindowClockProfile {
+		return errors.New("economic original window clock declares another header profile than its mapped Frontier source")
+	}
 	known, err := readEconomicClosedWork(ctx, &self.Artifact, common.HexToAddress(self.RootSigner), self.WindowClock)
 	if err != nil {
 		return err

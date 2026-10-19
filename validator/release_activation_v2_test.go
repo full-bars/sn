@@ -212,6 +212,10 @@ func (self *releaseActivationV2TestFixture) Call(ctx context.Context, call map[s
 		if self.fault == "historical-reorg" {
 			return nil, errors.New("activation fixture historical hash is no longer canonical")
 		}
+		if self.fault == "historical-state-pruned" {
+			// A state-pruned provider answers recent views but not this anchor.
+			return nil, errors.New("failed to retrieve Runtime Api version")
+		}
 		currentEpoch := new(big.Int).SetUint64(expected.Domain.Epoch - 1)
 		if self.fault == "past-epoch" {
 			currentEpoch.SetUint64(expected.Domain.Epoch + 1)

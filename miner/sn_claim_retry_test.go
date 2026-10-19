@@ -34,7 +34,7 @@ func finiteClaimTestHooks() finiteClaimHooks {
 }
 
 func TestFiniteClaimCommandRecoversMinuteOutagesInBothReads(t *testing.T) {
-	setTestNetworkJwt(t, "synthetic-finite-read-token")
+	setTestProviderJwt(t)
 	var elapsed, poolStart atomic.Int64
 	poolStart.Store(-1)
 	var epochs, claims, mutations atomic.Int32
@@ -143,7 +143,7 @@ func TestFiniteClaimReadClassifiesEveryJoinedCause(t *testing.T) {
 // The actual SDK parser/status boundary must not turn terminal bodies into
 // repeated network reads. No test swaps the API object for a fake decoder.
 func TestFiniteClaimCommandRejectsTerminalResponsesWithoutRetry(t *testing.T) {
-	setTestNetworkJwt(t, "synthetic-finite-read-token")
+	setTestProviderJwt(t)
 	for _, response := range []struct {
 		status int
 		body   string
@@ -184,7 +184,7 @@ func TestFiniteClaimCommandCanceledBeforeEffects(t *testing.T) {
 }
 
 func TestFiniteClaimCommandCancellationJoinsActiveSdkRead(t *testing.T) {
-	setTestNetworkJwt(t, "synthetic-finite-read-token")
+	setTestProviderJwt(t)
 	entered, released := make(chan struct{}), make(chan struct{})
 	var reads atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

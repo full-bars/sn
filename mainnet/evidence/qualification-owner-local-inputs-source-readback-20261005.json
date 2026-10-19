@@ -1,0 +1,35 @@
+{
+  "schema": "qualification-owner-local-inputs-source-readback-v1",
+  "status": "SOURCE_REVIEWED_DETERMINISTIC12_PASS_RUNTIME_ADOPTION_PENDING",
+  "problem": "A whole-SN guard rejected allocator changes outside the Server target. Rust was already running under a plan that rehashed the unstarted Go peer bytes, so correcting the Go job would have invalidated healthy Rust. The Go owner remained unstarted; no product failure was inferred.",
+  "implementation": "Shared immutable USER command paths, unit, cgroup and limits; caller-local immutable adopted job/runner/source pins. The authenticated selected physical regular-file namespace is compared to base Git blobs, including ignored/index-hidden files, modes and missing/moved entries. Selected and ancestor symlinks are refused; unrelated subtrees are not traversed. Nonblocking no-follow open and descriptor/path identity checks refuse replacement races.",
+  "unchanged_guards": [
+    "shared fixed baseline and resource floors",
+    "actual USER generation/ancestry/cgroup/OOM",
+    "own active source and executable custody",
+    "durable actual waits and test classifications"
+  ],
+  "qualification": {
+    "path": "/home/by/sn-testnet-root-fallback-20261005/evidence/owner-local-inputs12-result.json",
+    "sha256": "cf184715c14e273bd95dcc24601e70ab6505c95c0733cbd3ce42871b45f5c325",
+    "cases": 12,
+    "actual_exit": 0
+  },
+  "scope_limit": "This helper does not infer dependency closure or qualify binaries; the caller must authenticate a complete scope and retain its existing resource/child guards. No live or historical adapter was changed.",
+  "prior_qualification": {
+    "path": "/home/by/sn-testnet-root-fallback-20261005/evidence/owner-local-inputs6-result.json",
+    "sha256": "8750bbf4377aa96dc577859e6a57b0305e604ecfd3232cfe58e4dcbf7351c0dd"
+  },
+  "prior_qualification_physical_predecessor": {
+    "path": "/home/by/sn-testnet-root-fallback-20261005/evidence/owner-local-inputs6-result-v2.json",
+    "sha256": "4455e165d9f0641eec29c7537b9a8ed34fce9d68a9b46b557503ddc89f4c3325",
+    "cases": 6,
+    "actual_exit": 0
+  },
+  "source_review": {
+    "reviewer": "/root/astra_native_witness_review",
+    "status": "SOURCE_ACK",
+    "helper_sha256": "ffc0617c619fd0d8a65f7350b32759d4c480148a87a2b22f42984aa68b09c939",
+    "tests_sha256": "6679803a0cd611783b7ed11aa369f951e1ca0da8a40dcd027a851898fee9ae3f"
+  }
+}

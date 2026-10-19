@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Public creation prepares one reviewed private inode in staging, then moves
 // that exact root. Neither planning nor a missing old root grants enrollment.
@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"testing"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/urfoundation/sn/chain"
 	"github.com/urfoundation/sn/internal/durablefixture"
@@ -48,8 +50,8 @@ func storagePreparationPrivateRootRequest(t *testing.T, f *storagePreparationCom
 	if err := json.Unmarshal(request["former_writer_fence"], &ref); err != nil {
 		t.Fatal(err)
 	}
-	var stat syscall.Stat_t
-	if err := syscall.Stat(parent, &stat); err != nil {
+	var stat unix.Stat_t
+	if err := unix.Stat(parent, &stat); err != nil {
 		t.Fatal(err)
 	}
 	fence, err := json.Marshal(map[string]any{"schema": durablevolume.PreparationFenceSchema, "root_path": f.root, "root_inode": 0, "parent_inode": stat.Ino, "purpose": "fresh", "former_writers_stopped": true, "no_previous_owner_state": true, "evidence": "synthetic new private namespace; no previous owner"})

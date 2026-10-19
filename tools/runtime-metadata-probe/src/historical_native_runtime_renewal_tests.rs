@@ -168,7 +168,7 @@ fn historical_native_runtime_renewal_exports_actual_upgrade_and_principal_jobs()
         );
         let child = NativeHeader::new(
             number,
-            BlakeTwo256::ordered_trie_root(Vec::<Vec<u8>>::new(), StateVersion::V1),
+            BlakeTwo256::ordered_trie_root(Vec::<Vec<u8>>::new(), StateVersion::V0),
             *expected.backend.root(),
             H256(previous.child_hash),
             Digest::default(),

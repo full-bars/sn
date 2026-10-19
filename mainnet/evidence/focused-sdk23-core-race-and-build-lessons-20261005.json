@@ -1,0 +1,247 @@
+{
+  "core_race14": {
+    "counts": {
+      "fail": 0,
+      "pass": 14,
+      "run": 14,
+      "skip": 0
+    },
+    "original_waits": {
+      "body": {
+        "bytes": 3443,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/race3/evidence/core14-race-body.process-result.json",
+        "sha256": "da4b48ee203125ecb10fc4db33775d494bb7a14cc3a253ada9640973d27edeb1"
+      },
+      "compile": {
+        "bytes": 2353,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/race3/evidence/core14-race-compile.process-result.json",
+        "sha256": "24b9811af3db455617745336efb1e4f1ae2b7cf7d9148fd0ba4dfd116606214d"
+      },
+      "list": {
+        "bytes": 2348,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/race3/evidence/core14-race-list.process-result.json",
+        "sha256": "bd7fc3d2243eda8ceb3100bfc4f3ae7fd1b0905cef9bd61e19d71e3a8827dd48"
+      }
+    },
+    "receipt": {
+      "bytes": 37894,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/race3/evidence/core14.owner.receipt.json",
+      "sha256": "148513101a786f434efbd7929f9641555c328d7f246eecd54289e231def68cee"
+    },
+    "retained_image": {
+      "bytes": 104357087,
+      "ctime_ns": 1791216211819585544,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 20600114,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791216211819585544,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/race3/images/core14-race.test",
+      "sha256": "9bce3f060234c159e2cc311e30dac3621964884cc180439991b6242fad10d485",
+      "type": 32768,
+      "uid": 1000
+    },
+    "roots": [
+      "TestDialH1MessagesProbeDeadlineFallsBackAfterReadGate",
+      "TestDialH1MessagesProbeDeadlinePreservesWholeBudget",
+      "TestDialH1MessagesProbeDeadlineRetainsHardReadAndCloseCauses",
+      "TestDialH1MessagesProbeReadCancellationPreservesCallerCause",
+      "TestDialH1MessagesStandaloneTotalBudget",
+      "TestHttpRequestCausesAbsentChildPreservesReservedSibling",
+      "TestHttpRequestCausesAdmitCompleteJoinedFrameBeforeCallbacks",
+      "TestHttpRequestCausesChargeAbsentChildrenWithinOriginalBudget",
+      "TestHttpRequestCausesChargeSingleAbsentChild",
+      "TestHttpRequestCausesReservePendingSiblingSlots",
+      "TestHttpRequestCausesRetainEmptyOriginalAfterOtherOverflow",
+      "TestHttpRequestExhaustionPublicBoundsNestedAbsentFrames",
+      "TestHttpRequestExhaustionPublicRetainsOriginalAfterOverflow",
+      "TestHttpUpgradePoliciesShareCauseFrameAdmission"
+    ],
+    "scope_limit": "The same focused14 now pass separately normally and with race detection. This does not qualify the entire Core236 catalog or eleven causal controls; original failures remain unchanged.",
+    "source_core": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+    "status": "PASS_RACE14",
+    "user_terminal": {
+      "bytes": 1847,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-core14/race3/canonical-closed-owner-readback-v2.json",
+      "sha256": "918fce2b2021aca238d6175490ef765505085f8e6b5c2970ad0da69e0976233c"
+    }
+  },
+  "documentation_base": "802f9862d34aca9ac5c0d6996ecfe9e9087232e3",
+  "lessons": [
+    {
+      "lesson": "Compile the deployable binary early on the selected dependency graph, then focused assertions and broader suites. A short canonical build check catches shared-package import errors before expensive fixtures and source-catalog work. No new coverage count or approval gate is added.",
+      "topic": "deployable_binary_first"
+    },
+    {
+      "lesson": "Validate every substantive approved field and its source/resource/intent bindings. Declared nonoperative provenance annotations such as adopted_by must not invalidate those identical approved fields. Preserve the refused original attempt and execute a separately bound successor; annotations cannot override approval.",
+      "topic": "approval_metadata"
+    }
+  ],
+  "limits": "No source recensus or author execution. Retain prior normal14, current Server621 compiler-only pass, and the original incomplete d64 fullmodel result. Actual deployable binary, remaining bodies/controls and activation authority remain separate.",
+  "mainnet34_build_failure": {
+    "body_roots": 0,
+    "cause": "# github.com/urfoundation/sn/miner\nminer/swarm.go:12:2: \"encoding/hex\" imported and not used\n",
+    "compiler_exit": 1,
+    "fix_commit": "802f9862d34aca9ac5c0d6996ecfe9e9087232e3",
+    "fix_handoff": {
+      "bytes": 2642,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/miner-swarm-import-fix/HANDOFF.json",
+      "sha256": "9c87b4f5238f0df2d185daa3e8e68dbb5355858897109ab3a866ee5c0e4733df"
+    },
+    "fix_scope": "Exactly one unused encoding/hex import removed from miner/swarm.go; no behavior, test-root or control delta.",
+    "image": null,
+    "list_roots": 0,
+    "original_wait": {
+      "bytes": 2310,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-mainnet34/normal-v1/evidence/mainnet34-normal-compile.process-result.json",
+      "sha256": "620f5bd7cd1ebd7bcfb13381c3a1f94af56b2c179d366a41c039931c18a69f03"
+    },
+    "receipt": {
+      "bytes": 15463,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-mainnet34/normal-v1/evidence/mainnet34.owner.receipt.json",
+      "sha256": "1bb70b992f53894380b772f8920f42c5299cc4713c6f40ef1ce76fce5a4f9c3e"
+    },
+    "scope_limit": "Actual failure is in canonical source, not an overlay-only mismatch. A successful corrected compiler or deployable binary is not inferred from the deletion.",
+    "status": "ORIGINAL_COMPILER_FAIL_SOURCE_FIX_MERGED_RETRY_PENDING",
+    "stderr": {
+      "bytes": 93,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-mainnet34/normal-v1/evidence/mainnet34-normal-compile.stderr",
+      "sha256": "493a6f012a587c737b5264340b3cfcd014b666970d46bdf48780faad7fae2a3b"
+    },
+    "tree_joined": true,
+    "user_terminal": {
+      "bytes": 3911,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-mainnet34/normal-v1/mainnet34-canonical-closed-readback-v1.json",
+      "sha256": "1f53d7f006614b3e8a7c94a0322941839b7a6aa824d61d979b682f4253dd8ba9"
+    }
+  },
+  "schema": "focused-sdk-core-race-build-checkpoint-v1",
+  "scope_preserved": {
+    "closed_outcomes": 0,
+    "core_control_groups": 393,
+    "master_roots_per_mode": 2863,
+    "new_controls": 0,
+    "new_product_roots": 0,
+    "original_outcomes": 38
+  },
+  "sdk_normal23": {
+    "counts": {
+      "fail": 0,
+      "pass": 23,
+      "run": 23,
+      "skip": 0
+    },
+    "original_waits": [
+      {
+        "bytes": 2669,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3-0-stage.process-result.json",
+        "sha256": "875dc4c7cff7dfef12e620b3df0ff86886a102fe59d64f4aa82e5ff65427e2f6"
+      },
+      {
+        "bytes": 2460,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3-1-graph-root.process-result.json",
+        "sha256": "748cb471790481fd2ba5d2ac774d4beb218d16999771a852c241d6dc17658c44"
+      },
+      {
+        "bytes": 2503,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3-2-compile.process-result.json",
+        "sha256": "f223a3b8a56a4a167982b55d7cf340809de0787098fb50052891fe7418213007"
+      },
+      {
+        "bytes": 3634,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3-3-list.process-result.json",
+        "sha256": "214b3e09134a2f9b8795ffa43fc6f9a2e89cd8c587597c605eaf1ba7f59ba09d"
+      },
+      {
+        "bytes": 2402,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3-4-go-version.process-result.json",
+        "sha256": "e96bfdacdb3ee3aea75c053810684f1d7ef1324c297cee39fffeec57f28d54df"
+      },
+      {
+        "bytes": 2433,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3-5-go-test2json.process-result.json",
+        "sha256": "ff10f735c00190ba7eb0d9d446092001e8ca71f99aa64c913217adc4d32bbaa0"
+      },
+      {
+        "bytes": 3960,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3-6-body.process-result.json",
+        "sha256": "344fee4193d5824feeeb6011859892f073d87b965ea1ddfe0c69196eff065903"
+      }
+    ],
+    "prior_annotation_refusal": {
+      "cause": "Exact whole adoption-dictionary equality rejected the additional adopted_by provenance annotation.",
+      "closed_readback": {
+        "bytes": 1476,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v2-failed-adoption.closed-readback.json",
+        "sha256": "ec898805b59eaa761521f3bafab06ca145a0b73b8e521a8500101d404561fe24"
+      },
+      "journal": {
+        "bytes": 2364,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v2-failed-adoption.journal.txt",
+        "sha256": "1d45ab5b3bb055c37a4fc5a408879cfe990ca17242bd4b64597c44e2be323c3c"
+      },
+      "stage_or_compiler_children": 0,
+      "test_bodies": 0
+    },
+    "receipt": {
+      "bytes": 27308,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3.receipt.json",
+      "sha256": "3460db0aa1d6a28ec8cca5b58725bc4a832ad3e1c87cfe5be4ef19d24a624687"
+    },
+    "remaining": "SDK race, nested generator-currentness and twelve SDK control groups remain unqualified. No SN/Server consumer result follows.",
+    "retained_image": {
+      "bytes": 83158787,
+      "ctime_ns": 1791216067879058472,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 120129469,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791216067879058472,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/sdk18-core11-focus23-normal-v3.test",
+      "sha256": "e5ede0d9b68fc44753a030f5fd1cd93181e962e55c0cb1fbdcf9e020e9a1f25a",
+      "type": 32768,
+      "uid": 1000
+    },
+    "roots": [
+      "TestApiSnEpochDecodesServerStringNoId",
+      "TestApiSnEpochNoIdWireBoundaries",
+      "TestApiSnSetWalletPreservesMappingAcceptance",
+      "TestApiSnWalletMappingChallengeApiLifetime",
+      "TestApiSnWalletMappingChallengePreservesProviderFields",
+      "TestApiSnWalletMappingChallengeRejectsInvalidIntervalsBeforeHttp",
+      "TestApiSnWalletMappingChallengeRequestContext",
+      "TestApiSubnetHeadlessBindings",
+      "TestApiSubnetPoolClaimEmptyLegacyColdkeyPreservesRequest",
+      "TestApiSubnetPoolClaimEscapesNoUserInputIntoQuery",
+      "TestApiSubnetPoolClaimLegacyColdkeyApiLifetime",
+      "TestApiSubnetPoolClaimLegacyColdkeyEscapesQuery",
+      "TestApiSubnetPoolClaimLegacyColdkeyRequestContext",
+      "TestDeviceLocalLoadsInvalidSavedPerformanceProfileAsAuto",
+      "TestDeviceLocalRefusesInvalidInitialPerformanceProfile",
+      "TestDeviceLocalRefusesInvalidPerformanceProfile",
+      "TestDeviceLocalRpcRefusesInvalidPerformanceProfile",
+      "TestDeviceRemoteRefusesInvalidPerformanceProfile",
+      "TestExtenderManualHostsNetworkStaysInProcess",
+      "TestNormalizeSavedPerformanceProfile",
+      "TestSnEpochNoIdDecodePreservesReceiver",
+      "TestUrlSpaceExtenderNetworkStaysInProcess",
+      "TestValidatePerformanceProfile"
+    ],
+    "scope": "Twelve PH12 roots, two existing API neighbors, seven performance-profile and two Hint fixture roots in the SDK root module.",
+    "source_core": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+    "source_manifest": {
+      "bytes": 1239922,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-claim-auth/sdk-evidence/next-idle-core11-v1/source-manifest-v2.json",
+      "sha256": "d1ed397e8795c475b97a7226e566ed2887f513a097c3464aac9441951b5d8b78"
+    },
+    "source_sdk": "18fca2edbbeac5566ef9c40027dba0e1d83be1d7",
+    "status": "PASS_NORMAL23",
+    "user_terminal": {
+      "bytes": 2911,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sdk18-core11-focus23-normal-v3-canonical-closed-owner-readback.json",
+      "sha256": "d73f417697d0829b7823f89985748ec43f8ac4be1b95f81b148b03dcd2017c60"
+    }
+  }
+}

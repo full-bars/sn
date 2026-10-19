@@ -110,6 +110,10 @@ func executeBuild(ctx context.Context, config buildConfig, rawConfig []byte) err
 	if manifest.ContractCatalog == "" {
 		manifest.ContractCatalog = "retained"
 	}
+	manifest.DependencyMode = config.dependencyMode()
+	if manifest.DependencyMode == "local" {
+		manifest.Limitations = append(manifest.Limitations, "Local dependency mode compiles the SDK, Connect, its SCTP fork and the gVisor fork from the recorded census checkouts; no published module checksum binds them.")
+	}
 	if err := writeBuildBytes(filepath.Join(config.Output, "inputs/config.json"), rawConfig); err != nil {
 		return err
 	}
@@ -140,8 +144,9 @@ func executeBuild(ctx context.Context, config buildConfig, rawConfig []byte) err
 			return err
 		}
 	}
-	// These three API-bearing replacements must retain immutable downloaded bytes,
-	// not merely a version label; both main modules already require the same sums.
+	// In pinned mode these three API-bearing replacements must retain immutable
+	// downloaded bytes, not merely a version label; both main modules already
+	// require the same sums. Local mode has no archive to retain.
 	for _, module := range manifest.Modules["sn"] {
 		if module.ZipPath != "" {
 			name := "module-" + strings.ReplaceAll(module.Path, "/", "-") + ".zip"

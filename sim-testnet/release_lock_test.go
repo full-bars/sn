@@ -637,69 +637,49 @@ func TestModuleRootRequiresExactModuleIdentity(t *testing.T) {
 	}
 }
 
-func TestOperatorProxyReleaseObservationBindsCleanCommitAndSource(t *testing.T) {
-	root := t.TempDir()
-	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/urnetwork/operator-proxy\n\ngo 1.26.3\n"), 0o600); err != nil {
-		t.Fatal(err)
+// Attested locks and archived approvals may still carry the retired
+// operator-proxy pins. Admission neither requires them nor relaxes their
+// canonical form, and an unreviewed repository field still fails closed.
+func TestReleaseLockAdmitsRetiredOperatorProxyPinsOnlyInCanonicalForm(t *testing.T) {
+	canonicalHash := "sha256:" + strings.Repeat("1", 64)
+	canonicalCommit := strings.Repeat("a", 40)
+	cases := []struct {
+		name     string
+		pins     map[string]any
+		admitted bool
+	}{
+		{name: "no retired pins", pins: map[string]any{}, admitted: true},
+		{name: "both retired pins", pins: map[string]any{"operator_proxy_go_source_hash": canonicalHash, "operator_proxy_commit": canonicalCommit}, admitted: true},
+		{name: "retired commit only", pins: map[string]any{"operator_proxy_commit": canonicalCommit}, admitted: true},
+		{name: "uppercase retired commit", pins: map[string]any{"operator_proxy_commit": strings.Repeat("A", 40)}},
+		{name: "branch retired commit", pins: map[string]any{"operator_proxy_commit": "synthetic-branch"}},
+		{name: "empty retired commit", pins: map[string]any{"operator_proxy_commit": ""}},
+		{name: "malformed retired source hash", pins: map[string]any{"operator_proxy_go_source_hash": "sha256:not-a-hash"}},
+		{name: "unreviewed repository field", pins: map[string]any{"operator_proxy_tree_hash": canonicalHash}},
 	}
-	source := filepath.Join(root, "proxy.go")
-	if err := os.WriteFile(source, []byte("package operatorproxy\n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	runTestGit(t, root, "add", "go.mod", "proxy.go")
-	runTestGit(t, root, "commit", "-qm", "initial operator proxy")
-	first, err := observeOperatorProxyReleaseSource(root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantCommit := strings.TrimSpace(string(testGitOutput(t, root, "rev-parse", "HEAD")))
-	wantHash, err := goReleaseSourceHash(root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(first) != 2 || first["operator_proxy_commit"] != wantCommit || first["operator_proxy_go_source_hash"] != wantHash {
-		t.Fatalf("operator-proxy observation = %+v, want commit=%s source=%s", first, wantCommit, wantHash)
-	}
-	if err := os.WriteFile(source, []byte("package operatorproxy\n\nconst Version = 2\n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := observeOperatorProxyReleaseSource(root); err == nil {
-		t.Fatal("dirty operator-proxy source was accepted")
-	}
-	runTestGit(t, root, "add", "proxy.go")
-	runTestGit(t, root, "commit", "-qm", "update operator proxy")
-	second, err := observeOperatorProxyReleaseSource(root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if second["operator_proxy_commit"] == first["operator_proxy_commit"] || second["operator_proxy_go_source_hash"] == first["operator_proxy_go_source_hash"] {
-		t.Fatalf("committed operator-proxy drift was not bound: first=%+v second=%+v", first, second)
-	}
-}
-
-func TestReleaseRepositorySchemaRequiresCanonicalOperatorProxyFields(t *testing.T) {
-	repositories := map[string]any{
-		"operator_proxy_go_source_hash": "sha256:" + strings.Repeat("1", 64),
-		"operator_proxy_commit":         strings.Repeat("a", 40),
-	}
-	if err := validateReleaseRepositorySchema(repositories); err != nil {
-		t.Fatal(err)
-	}
-	delete(repositories, "operator_proxy_commit")
-	if err := validateReleaseRepositorySchema(repositories); err == nil {
-		t.Fatal("release repository schema without an operator-proxy commit was accepted")
-	}
-	repositories["operator_proxy_commit"] = strings.Repeat("A", 40)
-	if err := validateReleaseRepositorySchema(repositories); err == nil {
-		t.Fatal("noncanonical operator-proxy commit was accepted")
-	}
-	repositories["operator_proxy_commit"] = strings.Repeat("a", 40)
-	repositories["operator_proxy_go_source_hash"] = "sha256:not-a-hash"
-	if err := validateReleaseRepositorySchema(repositories); err == nil {
-		t.Fatal("noncanonical operator-proxy source hash was accepted")
+	for _, testCase := range cases {
+		for _, admission := range []struct {
+			name     string
+			lock     *ReleaseLock
+			validate func(*ReleaseLock) error
+		}{
+			{name: "current", lock: testReleaseLockFixture(t), validate: validateReleaseLockStatic},
+			{name: "archived", lock: validatorEvidenceRuntime455TestLock(t), validate: validateValidatorEvidenceHistoricalReleaseLock},
+		} {
+			lock := admission.lock
+			delete(lock.Repositories, "operator_proxy_go_source_hash")
+			delete(lock.Repositories, "operator_proxy_commit")
+			for key, value := range testCase.pins {
+				lock.Repositories[key] = value
+			}
+			err := admission.validate(lock)
+			if testCase.admitted && err != nil {
+				t.Errorf("%s lock with %s was refused: %v", admission.name, testCase.name, err)
+			}
+			if !testCase.admitted && err == nil {
+				t.Errorf("%s lock with %s was admitted", admission.name, testCase.name)
+			}
+		}
 	}
 }
 
@@ -865,8 +845,41 @@ func TestFoundryStorageLayoutHashIsCanonicalAndComplete(t *testing.T) {
 	}
 }
 
+// The lock binds only the sibling source checkouts, but LoadResolved always
+// reads its vault's main/st.yml and wallet public keys, and the observation
+// fences every release repository as a clean checkout. This clean synthetic
+// testnet vault keeps the real sibling vault out of the check.
+func releaseLockCheckoutVault(t *testing.T) string {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "main"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	values := strings.Join([]string{
+		"testnet-netuid: 7",
+		"testnet-wallet: vault-wallet:wallets/absent",
+		"testnet-wallet-password: vault-file:wallets/absent.password",
+		"testnet-chain-id: 945",
+		"testnet-authority: 127.0.0.1:9944",
+		"testnet-minio-hostname: 127.0.0.1",
+		"testnet-operator-api-origins: [https://no1.example, https://no2.example]",
+		"testnet-spending-limit-tao-rao: 200000000000",
+		"testnet-spending-limit-alpha-rao: 20000000000000",
+		`testnet-spending-limit-evm-gas-wei: "160000000000000000000"`,
+	}, "\n") + "\n"
+	if err := os.WriteFile(filepath.Join(root, "main", "st.yml"), []byte(values), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runTestGit(t, root, "init", "-q")
+	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
+	runTestGit(t, root, "config", "user.name", "sim-testnet")
+	runTestGit(t, root, "add", ".")
+	runTestGit(t, root, "commit", "-qm", "synthetic testnet vault")
+	return root
+}
+
 func TestReleaseLockMatchesCheckout(t *testing.T) {
-	cfg, err := LoadResolved(LoadOptions{ConfigPath: "testnet.yml", RequireSecrets: false})
+	cfg, err := LoadResolved(LoadOptions{ConfigPath: "testnet.yml", VaultRepo: releaseLockCheckoutVault(t), RequireSecrets: false})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -966,5 +979,107 @@ func TestCompareLockSectionRejectsUnobservedField(t *testing.T) {
 	}
 	if err := compareLockSection("interfaces", locked, observed, map[string]struct{}{"stale_hash": {}}); err != nil {
 		t.Fatalf("explicit annotation was rejected: %v", err)
+	}
+}
+
+// Only the structured field drops the authenticated release's commit suffix;
+// parsing must leave the observed tool output untouched.
+func TestParseAbigenVersionAcceptsPinnedRelease(t *testing.T) {
+	const raw = "abigen version 1.17.0-stable-0cf3d3ba\n"
+	output := []byte(raw)
+	version, err := parseAbigenVersion(output)
+	if err != nil || version != "1.17.0" {
+		t.Fatalf("pinned release lock identity = %q, %v", version, err)
+	}
+	if string(output) != raw {
+		t.Fatalf("release parser rewrote the raw tool observation: %q", output)
+	}
+}
+
+// A semantic version alone is not authority for another release or commit.
+func TestParseAbigenVersionRejectsUnpinnedOutput(t *testing.T) {
+	for _, output := range []string{
+		"abigen version 1.17.1-stable\n",
+		"abigen version 1.16.7-stable\n",
+		"abigen version 1.17.1-stable-0cf3d3ba\n",
+		"abigen version 1.17.0-stable-00000000\n",
+		"abigen version 1.17.0-stable-0cf3d3ba-dirty\n",
+		"abigen version 1.17.0-stable-dirty\n",
+		"abigen version 1.17.0-unstable-0cf3d3ba\n",
+		"abigen version 1.17.0-stable-0CF3D3BA\n",
+		"abigen version 1.17.0-stable-0cf3d3ba4f7062fd2bbf2bda10972d528974e876\n",
+		"abigen version 1.17.0-stable-0cf3d3ba",
+		"abigen version 1.17.0-stable-0cf3d3ba\r\n",
+		" abigen version 1.17.0-stable-0cf3d3ba\n",
+		"abigen version 1.17.0-stable-0cf3d3ba \n",
+		"abigen version 1.17.0-stable-0cf3d3ba\n\n",
+		"abigen version 1.17.0-stable-0cf3d3ba\nextra\n",
+	} {
+		if version, err := parseAbigenVersion([]byte(output)); err == nil || version != "" {
+			t.Errorf("unpinned abigen output admitted: %q: version=%q, err=%v", output, version, err)
+		}
+	}
+}
+
+// Release observation uses the actual shared shell preflight, not an independent
+// resolver or a rewritten tool banner. Refused identities stop at that boundary.
+func TestObserveAbigenVersionUsesGeneratorPreflight(t *testing.T) {
+	snRoot := t.TempDir()
+	stabiRoot := filepath.Join(snRoot, "stabi")
+	if err := os.Mkdir(stabiRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for _, relative := range []string{"go.mod", "stabi/generate.sh"} {
+		data, err := os.ReadFile(filepath.Join("..", relative))
+		if err != nil {
+			t.Fatal(err)
+		}
+		mode := os.FileMode(0o600)
+		if relative == "stabi/generate.sh" {
+			mode = 0o700
+		}
+		if err := os.WriteFile(filepath.Join(snRoot, relative), data, mode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	pathDir := t.TempDir()
+	for _, name := range []string{"bash", "dirname"} {
+		target, err := exec.LookPath(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(target, filepath.Join(pathDir, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	abigen := filepath.Join(pathDir, "abigen")
+	t.Setenv("PATH", pathDir)
+	t.Setenv("ABIGEN", abigen)
+	for _, testCase := range []struct {
+		version  string
+		accepted bool
+	}{
+		{version: "1.17.0-stable", accepted: true},
+		{version: "1.17.0-stable-0cf3d3ba", accepted: true},
+		{version: "1.17.1-stable"},
+		{version: "1.17.1-stable-0cf3d3ba"},
+		{version: "1.17.0-stable-00000000"},
+		{version: "1.17.0-stable-0cf3d3ba-dirty"},
+		{version: "1.17.0-unstable-0cf3d3ba"},
+	} {
+		body := "#!/bin/sh\n[ \"$#\" -eq 1 ] && [ \"$1\" = --version ] || exit 64\nprintf '%s\\n' 'abigen version " + testCase.version + "'\n"
+		if err := os.WriteFile(abigen, []byte(body), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		version, err := observeAbigenVersion(snRoot)
+		if testCase.accepted {
+			if err != nil || version != "1.17.0" {
+				t.Errorf("actual %q preflight did not reach structured observation: %q, %v", testCase.version, version, err)
+			}
+		} else if err == nil || version != "" || !strings.Contains(err.Error(), "preflight abigen:") ||
+			!strings.Contains(err.Error(), "wrong abigen version at ") ||
+			!strings.Contains(err.Error(), "got 'abigen version "+testCase.version+"'") {
+			t.Errorf("actual %q preflight failed to refuse before parsing: %q, %v", testCase.version, version, err)
+		}
 	}
 }

@@ -23,6 +23,7 @@ func TestBootstrapSuccessorRuntimeRevisionCommandPreservesUpgradeCustody(t *test
 	chain, plan := f.original.contracts, f.approval.Plan
 	root := f.original.config.RunDirectory
 	original := bootstrapSuccessorPreparationTestFiles(t, root)
+	originalMembers := bootstrapSuccessorExecutionTestMemberCensus(t, root, false)
 	nonces := bootstrapSuccessorPreparationTestFiles(t, plan.Request.RegistryDirectory)
 	baseOverride := chain.override
 	var revisions []bootstrapSuccessorRuntimeApproval
@@ -187,11 +188,8 @@ func TestBootstrapSuccessorRuntimeRevisionCommandPreservesUpgradeCustody(t *test
 	if err := decodePlanJson(stdout.Bytes(), &result); err != nil || !result.InstallationComplete || result.RuntimeRevisionCount != 12 || result.RuntimeRevisionHash != rootObjectHash(revisions[11]) || result.CumulativeAttempts != 10 || result.SubmissionAttempted {
 		t.Fatal("later unapproved runtime erased original inclusion or retained liability", result, err)
 	}
-	for name, raw := range original {
-		retained, err := os.ReadFile(filepath.Join(root, name))
-		if err != nil || string(retained) != raw {
-			t.Fatal("runtime migration rewrote original receipts, signatures or adoption", name, err)
-		}
+	if name := bootstrapSuccessorExecutionTestChangedOriginal(t, root, original, originalMembers); name != "" {
+		t.Fatal("runtime migration rewrote original receipts, signatures or adoption", name)
 	}
 	retained, err := os.ReadFile(countedPath)
 	if err != nil || !bytes.Equal(countedRaw, retained) || !maps.Equal(nonces, bootstrapSuccessorPreparationTestFiles(t, plan.Request.RegistryDirectory)) {

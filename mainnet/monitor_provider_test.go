@@ -274,14 +274,17 @@ func TestMonitorProviderPublicRolesRecoverWithoutResettingPeer(t *testing.T) {
 			return false
 		}
 	}}
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	done := make(chan int, 1)
 	go func() {
-		done <- runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, nil, fixture.clock.now, hooks)
+		defer close(done)
+		done <- runMainWithMonitorHooks(ctx, args, sink, nil, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
 	observed := map[string]monitorProviderTestEvent{}
 	for range 2 {
-		event := sink.next(t)
+		event := monitorTestEvent(t, done, sink.events)
 		observed[event.Role] = event
 	}
 	if observed[one.Role].Status != "unavailable" || observed[one.Role].Current || observed[two.Role].Status != "ok" || !observed[two.Role].Current {
@@ -293,8 +296,8 @@ func TestMonitorProviderPublicRolesRecoverWithoutResettingPeer(t *testing.T) {
 		t.Fatal(err)
 	}
 	failing.Store(false)
-	resume[one.Role] <- struct{}{}
-	event := sink.next(t)
+	resumeMonitorTestWorker(t, done, resume[one.Role])
+	event := monitorTestEvent(t, done, sink.events)
 	if event.Role != one.Role || event.Status != "ok" || !event.Current || event.State.Incidents != 1 {
 		t.Fatal("provider recovery lost its original outage", event)
 	}
@@ -302,8 +305,8 @@ func TestMonitorProviderPublicRolesRecoverWithoutResettingPeer(t *testing.T) {
 	if err != nil || !bytes.Equal(before, after) {
 		t.Fatal("affected recovery reset peer checkpoint", err)
 	}
-	resume[two.Role] <- struct{}{}
-	event = sink.next(t)
+	resumeMonitorTestWorker(t, done, resume[two.Role])
+	event = monitorTestEvent(t, done, sink.events)
 	if event.Role != two.Role || event.State.Sequence != 2 || !event.Current {
 		t.Fatal("healthy provider did not retain its live lifetime", event)
 	}
@@ -439,22 +442,25 @@ func TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent(t *testing.T) {
 			return false
 		}
 	}}
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
-		done <- runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, nil, fixture.clock.now, hooks)
+		defer close(done)
+		done <- runMainWithMonitorHooks(ctx, args, sink, nil, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
 	// The second completed sample exports the actual first offer's drop count.
 	// An oversized diagnostic is best effort and does not terminate the owner.
-	<-attempted
-	resume <- struct{}{}
-	<-attempted
+	monitorTestEvent(t, done, attempted)
+	resumeMonitorTestWorker(t, done, resume)
+	monitorTestEvent(t, done, attempted)
 	checkpoint, metrics := monitorProviderPaths(fixture.checkpointPath, fixture.metricsPath, policy.Role)
 	metricBytes, err := os.ReadFile(metrics)
 	want := fmt.Sprintf("sn_mainnet_provider_output_dropped_total{role=%q,stream=\"events\"} 0\n", policy.Role)
 	if err != nil || !strings.Contains(string(metricBytes), want) {
 		t.Fatal("maximum-roster event was dropped by actual bounded exporter", string(metricBytes), err)
 	}
-	event := sink.next(t)
+	event := monitorTestEvent(t, done, sink.events)
 	if !event.Current || event.State.ReadyMembers != maxMonitorProviderMembers || event.State.ExpectedMembers != maxMonitorProviderMembers {
 		t.Fatal("maximum expected roster lost public readiness event", event)
 	}
@@ -514,16 +520,19 @@ func TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal(t *testing.T) 
 			return false
 		}
 	}}
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
-		done <- runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, nil, fixture.clock.now, hooks)
+		defer close(done)
+		done <- runMainWithMonitorHooks(ctx, args, sink, nil, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-done })
-	event := sink.next(t)
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
+	event := monitorTestEvent(t, done, sink.events)
 	if event.Current || event.CheckpointCurrent || event.State.Sequence != 1 {
 		t.Fatal("uncertain first publication claimed completed readiness", event)
 	}
-	resume <- struct{}{}
-	event = sink.next(t)
+	resumeMonitorTestWorker(t, done, resume)
+	event = monitorTestEvent(t, done, sink.events)
 	if !event.Current || !event.CheckpointCurrent || event.State.Sequence != 2 || closed.Load() != 1 {
 		t.Fatal("provider lost acknowledgement did not join/reopen original custody", event, closed.Load())
 	}

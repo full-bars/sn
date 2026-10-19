@@ -143,7 +143,7 @@ func TestMonitorServicesCommandRestartPreservesMetricsUntilActualRead(t *testing
 	// This defer precedes registered cleanup, so blocked physical I/O can finish
 	// before the command's real cancellation join.
 	defer close(release)
-	<-entered
+	restarted.barrier(t, entered)
 	retained, err := os.ReadFile(path)
 	if err != nil || !bytes.Equal(before, retained) {
 		t.Fatal("restart refreshed prior output before read completion", err)

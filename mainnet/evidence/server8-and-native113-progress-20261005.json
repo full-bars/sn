@@ -1,0 +1,434 @@
+{
+  "author_execution": {
+    "binary_list": 0,
+    "body": 0,
+    "compiler": 0,
+    "database": 0,
+    "production_changes": 0
+  },
+  "documentation_base": "f9df3d52ca92df123fdf7007264bfdd4384b6b78",
+  "native86_assets": {
+    "map": {
+      "bytes": 46074,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/rust-full113-recipe/NATIVE86-RETAINED-ENVIRONMENT-v2.json",
+      "sha256": "74acb421b30f00dfc580b8d668f252591b1aa76a8ea8c0eea7065036d6ea81a4"
+    },
+    "newly_ready_exporters": {
+      "conservation-drained": 5,
+      "producer-contiguous": 5
+    },
+    "pending_exporters": [],
+    "pending_originals": 0,
+    "pending_profiles": 0,
+    "predecessor_map_preserved": {
+      "bytes": 28657,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/rust-full113-recipe/NATIVE86-RETAINED-ENVIRONMENT-v1.json",
+      "sha256": "66eebe33aa5182bd909192899bc006f9c7d3867bc3a03e6e2af93b1fb3732547"
+    },
+    "previous_profile_records_preserved": 7,
+    "previous_protected_originals_preserved": 29,
+    "retained_originals": 38,
+    "retained_profiles": 9,
+    "status": "All9 original fixture profiles are ready. The two generic profiles have distinct actual five-job exports from passing original full113 exporter roots; no renewal substitution. Asset readiness does not qualify Go consumers."
+  },
+  "next_execution_state": {
+    "actual_resource_holder_readback": {
+      "bytes": 885,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/canonical-generation3-actual-readback-20261005.json",
+      "sha256": "51bf7cad9031d3d26646624d6f9836d1ee4efadecb4fd9696dadc98cf0a218a6"
+    },
+    "holder_receipt": {
+      "bytes": 41775,
+      "path": "/mnt/data/sn-testnet/sol-canonical-lease-generation3-108-20261005/holder-receipt-v1.json",
+      "sha256": "bcae9e28d9e1f3a2eca8cd239abf368fd02e0023005fa67c0d7ffaef674f0972"
+    },
+    "pid_at_readback": 3567744,
+    "scope": "This holder is resource admission, not a compiler or test result. Root reports a seven-unaffected-package compiler variant being prepared while two changing components are deferred; no launch or pass is inferred and source is unchanged.",
+    "status": "HELD_ACTUAL_RESOURCE_ADMISSION_ONLY"
+  },
+  "payment_status": "Published Serverd64 original-request continuity correction remains unexecuted in its10 new+2 changed roots and8 controls; frozen983 compiler PASS does not qualify it.",
+  "ph13_cancellation": {
+    "classification": "HONEST_UNKNOWN_WITH_NO_CURRENT_AUTHORIZING_CANCELLATION_OPERATION",
+    "finding": "Existing settled/adjudication operations and original reports cannot create an actual cancellation decision/time. Historical canceled rows remain in the census with unknown attribution; context cancellation and zero-byte cleanup are not cancellation authority.",
+    "scope": "No newly discovered execution bug or newly added authorizer/test gate. Preserve existing conservative assertions and original source authority boundaries.",
+    "source_audit": {
+      "bytes": 6668,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-cancellation-review/HANDOFF.json",
+      "sha256": "ee132cc26c8434c79e6da20e94c0481c0f2e72fcd4b2468e04d03ca0e74b2bc5"
+    }
+  },
+  "ph15_metrics_status": {
+    "classification": "SUPPORTED_EXPORTER_AND_STATUS_IMPLEMENTATION_GAP",
+    "current_metrics_source": {
+      "blob": "61c8ea59c1bdd05f79a3da0869cbc1c9b0da96b4",
+      "commit": "f9df3d52ca92df123fdf7007264bfdd4384b6b78",
+      "path": "mainnet/economic_conservation_metrics.go",
+      "sha256": "87b6d62e6f03cd4dcc67e74140bcd359a2d417714ed7fc8565e7c171daf7483e"
+    },
+    "finding": "Existing36 conservation gauges do not expose complete reliability/provider-window coverage and conservation progress/ETA. Monitoring and Dashboard are implementing truthful supported status; unavailable facts must stay unknown and cannot imply financial authority.",
+    "future_scope": "Add actual authored roots/controls when source freezes; no speculative count or pass.",
+    "owners": [
+      "/root/astra_monitoring_operations",
+      "/root/astra_domain_dashboard"
+    ],
+    "state": "IN_PROGRESS_UNFROZEN_UNQUALIFIED"
+  },
+  "retained_component_results": {
+    "bytes": 15015,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-499-983-coverage/final-status-v4/current-main-qualification-progress-20261005.json",
+    "sha256": "5442233d106a0980caeb327fa072fd6f9e413c3306d28a7e264f3d10f97591fb"
+  },
+  "rust113_actual": {
+    "actual_command": [
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/main-b13-renewal-normal-libtest-v1",
+      "--include-ignored",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "adoption": {
+      "bytes": 3922,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-main-b13-full113-body-adoption-v1-20261005.json",
+      "sha256": "24c03c901202389ada256bc08fd3210709db93c930088d2e1b66fea3f04d75fa"
+    },
+    "controls_passes_inferred": 0,
+    "fresh_list_matches_original_expected_roots": true,
+    "fresh_list_roots": 113,
+    "full_body_intent": {
+      "bytes": 2083,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-v1-02.intent.json",
+      "sha256": "b0e5b157a0d2f51d5f7dc7f518d04e171e9b377138b1b2a6fd275d0600859927"
+    },
+    "go_native86_passes_inferred": 0,
+    "job": {
+      "bytes": 129704,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-job-v1.json",
+      "sha256": "49b8ff7903e9009eefc898e8b0fc701e9fa5b7be98492ff5e31d0af75e20bb96"
+    },
+    "launch_intent": {
+      "bytes": 37135,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-v1.intent.json",
+      "sha256": "e8704c69b8ec9f6f42260680003d054867e91f1dad5f2923801f204be6ae1748"
+    },
+    "launch_observation_preserved": {
+      "authority": "Actual launch confirmed by Root and sole executor; body command intent retained.",
+      "invocation": "9fa10eddcea6461cad1f7c308342074a",
+      "main_pid": 3563554,
+      "unit": "sn-main-b13-full113-body-v1-20261005.service"
+    },
+    "original_controls": "Original7 Rust control groups remain separately required. Corrected renewal omission result is separately retained; it does not qualify all7.",
+    "outer_terminal": {
+      "active_state": "inactive",
+      "exit": 0,
+      "main_pid": 0,
+      "sub_state": "dead"
+    },
+    "phases": [
+      {
+        "classification": "PASS_LIST",
+        "exit": 0,
+        "operation": "list",
+        "receipt": {
+          "bytes": 14784,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-v1-01.receipt.json",
+          "sha256": "3158a89a77465b3deecd4cf9248b25edced5104d1201fc11676ba0ac4aa186e1"
+        },
+        "tree_joined": true,
+        "wait": {
+          "bytes": 2032,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-v1-01.process-result.json",
+          "sha256": "b97ec1f59593302c2d5cf1dded35d6c0d765c4dcc6ddf9e53fb91a16915edc91"
+        }
+      },
+      {
+        "classification": "PASS",
+        "exit": 0,
+        "operation": "full",
+        "receipt": {
+          "bytes": 18027,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-v1-02.receipt.json",
+          "sha256": "dccd42486a8bd3e0ce72b76dfd154ce8644cd07650de6d6a97884066a4840e02"
+        },
+        "tree_joined": true,
+        "wait": {
+          "bytes": 2233,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-v1-02.process-result.json",
+          "sha256": "17f4efd855b2f88d7e0b91740f55dcdb81e36dcac469b1964d8d3d81cdab0de4"
+        }
+      }
+    ],
+    "qualification_limit": "Normal Rust suite only. Original controls and current Go native86 consumers remain separately required; no Go/race/deployment result follows from Rust normal PASS. Original Rust38 37PASS/1FAIL and targeted renewal/control receipts remain unchanged.",
+    "receipt": {
+      "bytes": 54046,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-v1.receipt.json",
+      "sha256": "18d9e580c00009e8abd1c74f4b110aeb7778976f29cd4dc6e2315c66c9124359"
+    },
+    "receipt_source_tuples": {
+      "rust": {
+        "core": "7ca8e222e3496552146f2d97eb09237401662c99",
+        "server": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+        "sn": "b13a422536f2e247a0e01f70de9e1cb8569ff366"
+      }
+    },
+    "resource_errors": [],
+    "retained_compiled_image": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/main-b13-renewal-normal-libtest-v1",
+    "retained_export_files": 61,
+    "retained_image_sha256": "f31f0851298ee600208ab41faff8bfc6ffce9d55735233f5767fd07520a9f712",
+    "source_expected113": {
+      "bytes": 10809,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/rust-full113-recipe/EXPECTED-113.txt",
+      "sha256": "5f9464561d0e9587949c3df3345df6fd4bbeab4d56e56b11562c3eeacb2c6ccf"
+    },
+    "source_recipe": {
+      "bytes": 13032,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/rust-full113-recipe/FULL113-RECIPE.json",
+      "sha256": "87efd52983979863464968d377cd587a5a754995dedee667d97ac704afeb6880"
+    },
+    "status": "PASS_MAIN_RUST_FULL113",
+    "totals": {
+      "fail": 0,
+      "incomplete": 0,
+      "not_run": 0,
+      "pass": 113,
+      "planned": 113,
+      "run": 113,
+      "skip": 0
+    },
+    "user_terminal": {
+      "bytes": 2051,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-full113-body-v1-user-terminal-readback.json",
+      "sha256": "91616a61dde0b3000c3f04efe4925a77d26164419dc4eefb6af6d3ab6d70c2e9"
+    }
+  },
+  "schema": "server8-actual-compile-rust113-actual-pass-and-source-limits-v2",
+  "scope_counts": {
+    "go_roots_each_normal_race": 2733,
+    "native_original_restored_roots": 86,
+    "original_outcomes": 38,
+    "outcomes_closed": 0,
+    "payment_new_roots": 10,
+    "source_control_groups": 259
+  },
+  "selected_scope": {
+    "bytes": 2148,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5b873-d64-native86/HANDOFF.json",
+    "sha256": "61b549493116ec3b123138907422757625e1e2b581e447502f94465b719338c7"
+  },
+  "server8_actual": {
+    "body_passes_inferred": 0,
+    "control_kills_inferred": 0,
+    "earlier_precompiler_refusal_preserved": {
+      "bytes": 14450,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v1.receipt.json",
+      "sha256": "b19f8a6c325bebbe61e79b0cf9fd521da3f35d0c50a2fd8ede3f1eace9de6262"
+    },
+    "later_payment_graph_inheritance": false,
+    "normal_compiler_passes": 8,
+    "phases": [
+      {
+        "actual_wait": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-root.process-result.json",
+          "sha256": "670e944a9c46857a47b32c379c63eed83af49e7b8957c7bc8da4b399231a45a4"
+        },
+        "body_result": null,
+        "id": "root",
+        "mode": "normal",
+        "package": ".",
+        "receipt": {
+          "bytes": 9612,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-root.receipt.json",
+          "sha256": "596345d755db1e79dac8fac8b548979a160d0e14f6a3a72afede3b899afe551e"
+        },
+        "retained_image": {
+          "bytes": 79933400,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-server8-continuation-v2-root.test",
+          "sha256": "2679484d8ad4903b012a716c65fed6257ca67aa1438ab0b9623e557472fbedd4"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING"
+      },
+      {
+        "actual_wait": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-controller.process-result.json",
+          "sha256": "821503d9b6255e4a39b4e10b15ff51c4e3ae60ba61e618dbab519cef5d80309f"
+        },
+        "body_result": null,
+        "id": "controller",
+        "mode": "normal",
+        "package": "./controller",
+        "receipt": {
+          "bytes": 9675,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-controller.receipt.json",
+          "sha256": "4f47ec40bb920ef316d9a3c8e00ac547aec12119f1f088a0ff1f5dcfbe754ff6"
+        },
+        "retained_image": {
+          "bytes": 113238848,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-server8-continuation-v2-controller.test",
+          "sha256": "909be078daa88a065f86a976f4a12ef9293c0a190160114f56ea9717260213cf"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING"
+      },
+      {
+        "actual_wait": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-model.process-result.json",
+          "sha256": "a315fba37661a2208aa434374056cd44b3d410d94235a3348443e7907672877e"
+        },
+        "body_result": null,
+        "id": "model",
+        "mode": "normal",
+        "package": "./model",
+        "receipt": {
+          "bytes": 9634,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-model.receipt.json",
+          "sha256": "3f55e420fbcba69b8590ebb9229044182f386337f0e28391e5ba18228cf68862"
+        },
+        "retained_image": {
+          "bytes": 86928112,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-server8-continuation-v2-model.test",
+          "sha256": "d5bb878f7f408439d97efca5370b5bb3dca589f95f0c7dbaeaecd0d5a54e0d3f"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING"
+      },
+      {
+        "actual_wait": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-monitor.process-result.json",
+          "sha256": "bc83e2715b6956ea049236ecc8252a01ebbdba085d41047b89b06c25a018e58b"
+        },
+        "body_result": null,
+        "id": "monitor",
+        "mode": "normal",
+        "package": "./monitor",
+        "receipt": {
+          "bytes": 9650,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-monitor.receipt.json",
+          "sha256": "712e612b16f14a6638ac4515b699d71345850dae17c8ccd21c400539c48cdf9d"
+        },
+        "retained_image": {
+          "bytes": 95724152,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-server8-continuation-v2-monitor.test",
+          "sha256": "e50374b414933113b1cbd7ccf8d2290b859a566cc426784dcf95930e1fb478c2"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING"
+      },
+      {
+        "actual_wait": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-native-cli.process-result.json",
+          "sha256": "275600cb258f06e00d5bb942c884466a930da5371af464eb0418ad03f46d8807"
+        },
+        "body_result": null,
+        "id": "native-cli",
+        "mode": "normal",
+        "package": "./cli/stnativefees",
+        "receipt": {
+          "bytes": 9686,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-native-cli.receipt.json",
+          "sha256": "4d764fd6c7044ea554e5992c86f1f1a423ec3d1baa520bad560a79e11744698a"
+        },
+        "retained_image": {
+          "bytes": 73633816,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-server8-continuation-v2-native-cli.test",
+          "sha256": "40d7bdd9eed36701909c6af080a89590e253f8a25722c0ffd51bdb40ad06eff2"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING"
+      },
+      {
+        "actual_wait": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-api.process-result.json",
+          "sha256": "dd6be2f6d9b3f4dfafe7588fd703183b14e27d9e4d87fd37244bc8f1594b1e43"
+        },
+        "body_result": null,
+        "id": "api",
+        "mode": "normal",
+        "package": "./api",
+        "receipt": {
+          "bytes": 9618,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-api.receipt.json",
+          "sha256": "925e3fe28f47fa3d3660db335a5ee984462ca0ca581688db696b15dd7718f56c"
+        },
+        "retained_image": {
+          "bytes": 99272960,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-server8-continuation-v2-api.test",
+          "sha256": "e39b97e38e172e7900631e5ba9cd9f3ea06a0444ab512911612e3ea63b6c22ff"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING"
+      },
+      {
+        "actual_wait": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-proxy.process-result.json",
+          "sha256": "ce6ba18a1d85fa68efb3ecf7803f8e14647a0dead47e0c0d5f6c95e90ccb60b8"
+        },
+        "body_result": null,
+        "id": "proxy",
+        "mode": "normal",
+        "package": "./proxy",
+        "receipt": {
+          "bytes": 9636,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-proxy.receipt.json",
+          "sha256": "8c6324a1f9c7301fde6321e1a03ffe5e27d225d6ec2799b859343b441f61c38c"
+        },
+        "retained_image": {
+          "bytes": 128848248,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-server8-continuation-v2-proxy.test",
+          "sha256": "fcb3e8571931d6f4c6c1e0d4b828b4c1ed22c68ea03eff5c605047ddaa409c88"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING"
+      },
+      {
+        "actual_wait": {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-taskworker-work.process-result.json",
+          "sha256": "5b0a187e7b92d524e7202d8a3d32335f14f5c80b950ef102a484452d6c7313fc"
+        },
+        "body_result": null,
+        "id": "taskworker-work",
+        "mode": "normal",
+        "package": "./taskworker/work",
+        "receipt": {
+          "bytes": 9716,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-taskworker-work.receipt.json",
+          "sha256": "50eb8ae75b20cc1e09a7a1866f3623c71c3448a94a3e51c60b01e56a2dd82857"
+        },
+        "retained_image": {
+          "bytes": 110832416,
+          "links": 1,
+          "mode": 320,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/default-server8-continuation-v2-taskworker-work.test",
+          "sha256": "b840b502d6bfec66c2925b39eb0282ea78bfcdf2ba697f31ecb5a1c609c1c3cc"
+        },
+        "status": "COMPILE_PASS_BODY_PENDING"
+      }
+    ],
+    "race_passes_inferred": 0,
+    "receipt": {
+      "bytes": 48513,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2.receipt.json",
+      "sha256": "8515b4496d79a8c57651911f272717d4d8cacff258fb5217a4f08df392e53cff"
+    },
+    "source_tuple": {
+      "core": "026b850248352b72255be7a966e391e0a15e74c1",
+      "server": "9836322d6c06ce0207fd5d754b025fc48cb11c83",
+      "sn": "f0b7e52ab009746e05c3f6fb718243658881790d"
+    },
+    "user_terminal": {
+      "bytes": 3223,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2-user-terminal-readback.json",
+      "sha256": "98d871d6e75102fab3863414fed1baac572b46f23354785d29c2b97a34a74771"
+    }
+  },
+  "supersedes_unmerged_checkpoint": {
+    "bytes": 2139,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5b873-d64-native86/server8-rust113-checkpoint/HANDOFF.json",
+    "sha256": "5ddb293d8ee32f27880387973a8922b2c7ca1ae5f8be86f498f6b549a09ed227"
+  }
+}

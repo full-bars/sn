@@ -2,7 +2,6 @@ package miner
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"net"
 	"net/http"
@@ -27,7 +26,7 @@ func validProviderSwarmConfig(t *testing.T) ProviderSwarmConfig {
 	for _, name := range []string{"jwt", ".provider.jwt", ".provider.key"} {
 		value := []byte("token")
 		if name == ".provider.jwt" {
-			value = []byte("eyJhbGciOiJIUzI1NiJ9." + base64.RawURLEncoding.EncodeToString([]byte(`{"client_id":"00000000-0000-0000-0000-000000000001","device_id":"00000000-0000-0000-0000-000000000002"}`)) + ".c2ln")
+			value = []byte(financialTestJwt(t, "00000000-0000-0000-0000-000000000001", "swarm"))
 		}
 		if name == ".provider.key" {
 			value = make([]byte, 32)
@@ -262,6 +261,16 @@ func TestSetSwarmMemberWalletClosesOneShotStrategy(t *testing.T) {
 		connection net.Conn
 		state      http.ConnState
 	}
+	member := validProviderSwarmConfig(t).Members[0]
+	providerJwt, err := os.ReadFile(filepath.Join(member.StateDir, ".provider.jwt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := swarmMemberWalletKey(member)
+	if err != nil {
+		t.Fatal(err)
+	}
+	message := financialWalletMappingTestMessage(t, string(providerJwt), key.PublicKey(), 3, 65538, 1)
 	walletConnections := make(chan net.Conn, 1)
 	connectionStateEvents := make(chan connectionStateEvent, 16)
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -269,14 +278,41 @@ func TestSetSwarmMemberWalletClosesOneShotStrategy(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		if r.Method == http.MethodPost && r.URL.Path == "/auth/wallet-challenge" {
+		if r.Header.Get("Authorization") != "Bearer "+string(providerJwt) {
+			t.Error("one-shot wallet request lost provider authorization")
+			http.Error(w, "provider identity", http.StatusForbidden)
+			return
+		}
+		if r.Method == http.MethodGet && r.URL.Path == "/sn/epoch" {
+			_ = json.NewEncoder(w).Encode(sdk.SnEpochResult{Epoch: 2})
+			return
+		}
+		if r.Method == http.MethodPost && r.URL.Path == "/sn/wallet/consent" {
+			var args sdk.SnWalletMappingChallengeArgs
+			if err := json.NewDecoder(r.Body).Decode(&args); err != nil || args.ClientId == nil || args.ClientId.String() != "00000000-0000-0000-0000-000000000001" || args.ColdkeySs58 != member.Wallet || args.FromEpoch != 3 || args.ThroughEpoch != 65538 {
+				t.Error("one-shot challenge changed provider, wallet or interval", err)
+				http.Error(w, "mapping selection", http.StatusBadRequest)
+				return
+			}
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"message_template":"Sign in to URnetwork\nChallenge: lifecycle-test\nTimestamp: 1"}`))
+			_ = json.NewEncoder(w).Encode(sdk.SnWalletMappingChallengeResult{Message: message})
 			return
 		}
 		if r.Method != http.MethodPost || r.URL.Path != "/sn/wallet" {
 			t.Errorf("request = %s %s", r.Method, r.URL.Path)
 			http.Error(w, "unexpected request", http.StatusNotFound)
+			return
+		}
+		var args sdk.SnSetWalletArgs
+		if err := json.NewDecoder(r.Body).Decode(&args); err != nil || args.Message != message || args.ColdkeySs58 != member.Wallet {
+			t.Error("one-shot POST changed its issued original", err)
+			http.Error(w, "wallet original", http.StatusBadRequest)
+			return
+		}
+		_, receipt, err := financialWalletMappingTestReceipt(r.Context(), &args)
+		if err != nil {
+			t.Error("one-shot POST lacks a valid original coldkey signature", err)
+			http.Error(w, "wallet signature", http.StatusBadRequest)
 			return
 		}
 		connection, ok := r.Context().Value(connectionContextKey{}).(net.Conn)
@@ -291,7 +327,7 @@ func TestSetSwarmMemberWalletClosesOneShotStrategy(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{}`))
+		_ = json.NewEncoder(w).Encode(receipt)
 	}))
 	server.Config.ConnContext = func(ctx context.Context, connection net.Conn) context.Context {
 		return context.WithValue(ctx, connectionContextKey{}, connection)
@@ -305,11 +341,10 @@ func TestSetSwarmMemberWalletClosesOneShotStrategy(t *testing.T) {
 	server.Start()
 	t.Cleanup(server.Close)
 
-	member := validProviderSwarmConfig(t).Members[0]
 	member.APIURL = server.URL
 	settings := connect.DefaultClientStrategySettings()
 	settings.EnableResilient = false
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	t.Cleanup(cancel)
 	if err := setSwarmMemberWallet(ctx, member, settings); err != nil {
 		t.Fatal(err)

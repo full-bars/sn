@@ -29,7 +29,7 @@ func TestMonitorServicesCommandBlockedSourcePreservesPeer(t *testing.T) {
 	}}
 	run := fixture.start(t, url, hooks)
 	defer releaseOnce.Do(func() { close(release) })
-	<-entered
+	run.barrier(t, entered)
 	if event := run.next(t); event.Role != "beta" || event.Status != "observed" {
 		t.Fatal("blocked source suppressed its independent peer", event)
 	}

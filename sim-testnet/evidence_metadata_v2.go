@@ -222,6 +222,10 @@ func (self campaignEvidenceLimits) rawFileBytes(name string) uint64 {
 		if name == fmt.Sprintf("final-inputs/validators/validator-%d-steering-intents.json", validatorId) {
 			return max(uint64(maximumCampaignEvidenceRawFileBytes), self.metadata.intentBytes)
 		}
+		// A sealed store's segment is bounded as the store is.
+		if segment, found := strings.CutPrefix(name, fmt.Sprintf("final-inputs/validators/validator-%d-", validatorId)); found && validatorpkg.SteeringIntentSegmentName(segment) {
+			return max(uint64(maximumCampaignEvidenceRawFileBytes), self.metadata.intentBytes)
+		}
 	}
 	if campaignCompletionCommitNameV2(name, self.metadata.operators) {
 		return self.metadata.completionBytes + 2*maximumCampaignFileEnvelopeOverhead
@@ -374,13 +378,9 @@ func validateCampaignMetadataRawV2(limits campaignEvidenceLimits, name string, r
 	if bytesSHA256(raw) != "sha256:"+strings.TrimSuffix(strings.TrimPrefix(name, "final-inputs/validators/v2/"), ".bin") {
 		return errors.New("compact metadata source differs from its content-addressed path")
 	}
-	var intentFile struct {
-		Schema  string                        `json:"schema"`
-		Current *validatorpkg.SteeringIntent  `json:"current,omitempty"`
-		History []validatorpkg.SteeringIntent `json:"history"`
-	}
-	if err := decodeStrictJSONBytes(raw, &intentFile); err != nil || intentFile.Schema != validatorpkg.SteeringIntentSchema || intentFile.Current == nil && len(intentFile.History) == 0 {
-		return errors.Join(errors.New("oversized compact source is not the original bounded intent control"), err)
+	// The live intent file, sealed or not, or one of its sealed segments.
+	if !validatorpkg.SteeringIntentControl(raw) {
+		return errors.New("oversized compact source is not the original bounded intent control")
 	}
 	return nil
 }

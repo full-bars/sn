@@ -25,7 +25,7 @@ import (
 
 // Uses the reviewed map hashers and SCALE type shapes, with portable ids that
 // have no relationship to any captured production metadata.
-func recycleAdmissionTestMetadata(t *testing.T, mutate func(*types.Metadata)) (string, string, *types.Metadata) {
+func recycleAdmissionTestMetadata(t testing.TB, mutate func(*types.Metadata)) (string, string, *types.Metadata) {
 	t.Helper()
 	id := types.NewSi1LookupTypeIDFromUInt
 	primitive := func(kind types.Si0TypeDefPrimitive) types.Si1TypeDef {
@@ -90,9 +90,11 @@ func recycleAdmissionTestMetadata(t *testing.T, mutate func(*types.Metadata)) (s
 
 // One instance owns its RPC transcript and approval material. Tests mutate it
 // only before a synchronous observation, or across an explicit joined barrier.
+// The retained mock stays instrumentable through the approved route wrapper.
 type recycleAdmissionFixture struct {
 	cfg        *ReleaseConfig
 	chain      *crv4.Chain
+	client     *validatorRuntimeIdentityTestClient
 	approval   OwnerRecycleApproval
 	private    ed25519.PrivateKey
 	raw        []byte
@@ -112,7 +114,7 @@ type recycleAdmissionFixture struct {
 }
 
 // Signs only generated fixture authority and writes private bounded inputs.
-func newRecycleAdmissionFixture(t *testing.T, mutate func(*types.Metadata)) *recycleAdmissionFixture {
+func newRecycleAdmissionFixture(t testing.TB, mutate func(*types.Metadata)) *recycleAdmissionFixture {
 	t.Helper()
 	metadataHex, metadataHash, metadata := recycleAdmissionTestMetadata(t, mutate)
 	input := recycleTestInput(t)
@@ -258,6 +260,7 @@ func newRecycleAdmissionFixture(t *testing.T, mutate func(*types.Metadata)) *rec
 			return fmt.Errorf("unexpected owner-recycle RPC %s", method)
 		}
 	}}
+	fixture.client = client
 	fixture.chain = &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: &recycleAdmissionRouteClient{validatorRuntimeIdentityTestClient: client, route: cfg.Substrate[0]}}, GenesisHash: types.Hash(proposal.Runtime.GenesisHash)}
 	fixture.sign(t)
 	return fixture
@@ -275,7 +278,7 @@ func (self *recycleAdmissionRouteClient) URL() string {
 }
 
 // External signing is explicit in fixtures; production never owns this key.
-func (self *recycleAdmissionFixture) sign(t *testing.T) {
+func (self *recycleAdmissionFixture) sign(t testing.TB) {
 	t.Helper()
 	message, err := self.approval.SigningMessage()
 	if err != nil {
@@ -287,15 +290,15 @@ func (self *recycleAdmissionFixture) sign(t *testing.T) {
 		t.Fatal(err)
 	}
 	self.raw = append(raw, '\n')
-	self.cfg.OwnerRecycleApproval.Approval.Bytes = uint64(len(self.raw))
-	self.cfg.OwnerRecycleApproval.Approval.SHA256 = attemptHex32(sha256.Sum256(self.raw))
-	if err := os.WriteFile(self.cfg.OwnerRecycleApproval.Approval.Path, self.raw, 0600); err != nil {
+	productionEconomicSelection(self.cfg).Approval.Bytes = uint64(len(self.raw))
+	productionEconomicSelection(self.cfg).Approval.SHA256 = attemptHex32(sha256.Sum256(self.raw))
+	if err := os.WriteFile(productionEconomicSelection(self.cfg).Approval.Path, self.raw, 0600); err != nil {
 		t.Fatal(err)
 	}
 }
 
 // A real immutable writer must complete before any finalized RPC observation.
-func (self *recycleAdmissionFixture) retain(t *testing.T) {
+func (self *recycleAdmissionFixture) retain(t testing.TB) {
 	t.Helper()
 	if _, err := RetainOwnerRecycleApproval(t.Context(), self.cfg); err != nil {
 		t.Fatal(err)

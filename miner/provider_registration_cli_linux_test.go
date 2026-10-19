@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,8 +17,9 @@ import (
 	"time"
 )
 
-// The command retains its historic zero completion status while emitting
-// actionable, secret-free guidance for key/legacy/proxy admission failures.
+// The command exits nonzero while emitting actionable, secret-free guidance
+// for key/legacy/proxy admission failures: a refused startup must reach the
+// supervisor's restart policy, never read as a clean completion.
 func TestProviderRegistrationCliRefusalHasClosedGuidance(t *testing.T) {
 	if os.Getenv("SN_TEST_PROVIDER_REFUSAL_CHILD") == "1" {
 		Run([]string{"provide", "--api_url=" + os.Getenv("SN_TEST_PROVIDER_API"), "--connect_url=" + os.Getenv("SN_TEST_PROVIDER_CONNECT")})
@@ -35,12 +37,8 @@ func TestProviderRegistrationCliRefusalHasClosedGuidance(t *testing.T) {
 			}
 		}
 		if phase == "duplicate" {
-			dir := filepath.Join(privateHome, ".urnetwork")
-			if err := os.Mkdir(dir, 0700); err != nil {
-				t.Fatal(err)
-			}
 			raw, err := json.Marshal(ProxyConfig{Servers: map[string]string{"192.0.2.40:1080:synthetic-one:synthetic-password": "", "192.0.2.40:1080:synthetic-two:synthetic-password": ""}})
-			if err != nil || os.WriteFile(filepath.Join(dir, "proxy"), raw, 0600) != nil {
+			if err != nil || os.WriteFile(filepath.Join(fixture.dir, "proxy"), raw, 0600) != nil {
 				t.Fatal("could not retain synthetic duplicate proxy configuration")
 			}
 		}
@@ -58,7 +56,9 @@ func TestProviderRegistrationCliRefusalHasClosedGuidance(t *testing.T) {
 				leaked = true
 			}
 		}
-		if err != nil || !bytes.Contains(stdout.Bytes(), []byte(`"event":"startup_recovery_required"`)) || !bytes.Contains(stdout.Bytes(), []byte("--allow-client-registration")) || !bytes.Contains(stdout.Bytes(), []byte("--adopt-legacy-provider-key")) || leaked || posts != 0 || legacy != 0 || refreshed != 0 {
+		var exited *exec.ExitError
+		// exit 1: a refused startup must not read as a clean completion.
+		if !errors.As(err, &exited) || exited.ExitCode() != 1 || !bytes.Contains(stdout.Bytes(), []byte(`"event":"startup_recovery_required"`)) || !bytes.Contains(stdout.Bytes(), []byte("--allow-client-registration")) || !bytes.Contains(stdout.Bytes(), []byte("--adopt-legacy-provider-key")) || leaked || posts != 0 || legacy != 0 || refreshed != 0 {
 			t.Fatalf("actual provide command lost bounded custody recovery guidance: phase=%s error=%v stdout=%s stderr=%s", phase, err, stdout.String(), stderr.String())
 		}
 	}

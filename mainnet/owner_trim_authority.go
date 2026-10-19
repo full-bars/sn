@@ -175,8 +175,10 @@ func (self *ownerTrimCanonicalChain) readCurrentPredicates(operationCtx context.
 	if _, err := ownerTrimProxyEntry(runtime.metadata); err != nil {
 		return ownerTrimCurrentWindow{}, err
 	}
+	// The outer signer's nonce is checked; delegation is checked on the owner.
 	owner, _ := hex.DecodeString(action.Coldkey[2:])
-	account, exists, err := self.storage(operationCtx, runtime.metadata, "System", "Account", observation.FinalizedHash, owner)
+	signer, _ := hex.DecodeString(action.signer()[2:])
+	account, exists, err := self.storage(operationCtx, runtime.metadata, "System", "Account", observation.FinalizedHash, signer)
 	if err != nil || exists && len(account) != 56 {
 		return ownerTrimCurrentWindow{}, errors.Join(errors.New("owner trim current nonce is unavailable"), err)
 	}

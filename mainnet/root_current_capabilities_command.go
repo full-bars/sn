@@ -9,6 +9,8 @@ import (
 	"flag"
 	"fmt"
 	"io"
+
+	"github.com/urfoundation/sn/crv4"
 )
 
 // The caller independently supplies the exact metadata pin and reviewed source.
@@ -19,7 +21,7 @@ func runRootCurrentCapabilitiesCommand(ctx context.Context, args []string, stdou
 	path := flags.String("metadata", "", "local raw SCALE metadata14 file; no RPC URL or key material")
 	metadataHash := flags.String("metadata-hash", "", "independently supplied Blake2b-256 metadata hash")
 	source := flags.String("runtime-source-commit", "", "exact reviewed current-root source commit")
-	if err := flags.Parse(args); err != nil || flags.NArg() != 0 || ctx == nil || *path == "" || !rootCanonicalHash(*metadataHash) || *source != rootPassiveSource {
+	if err := flags.Parse(args); err != nil || flags.NArg() != 0 || ctx == nil || *path == "" || !rootCanonicalHash(*metadataHash) || !crv4.ReviewedNativeOwnerSource(*source) {
 		fmt.Fprintln(stderr, "root-capabilities requires --metadata, --metadata-hash and the exact reviewed --runtime-source-commit")
 		return 2
 	}

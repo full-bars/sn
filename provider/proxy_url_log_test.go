@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/urnetwork/connect"
 )
@@ -181,6 +182,10 @@ func urlReloadOutput(t *testing.T, warmupDone bool, urlAddrs ...string) string {
 	}
 	proxyWarmupDone.Store(warmupDone)
 	t.Cleanup(func() { proxyWarmupDone.Store(false) })
+	// the production gate reads the bounded grace from provide(); model it so
+	// a zero clock cannot silently disable the hold.
+	provideStartTime = time.Now()
+	t.Cleanup(func() { provideStartTime = time.Time{} })
 
 	reloader := &ProxyReloader{
 		cancelMap:   map[string]context.CancelFunc{},

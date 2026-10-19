@@ -79,14 +79,23 @@ func TestBootstrapSuccessorPreparationCommandRetainsActualV3Prefix(t *testing.T)
 	if _, code, _ := invoke("contract-successor-resume", approvalArgs...); code == 0 {
 		t.Fatal("public resume created an absent successor claim")
 	}
+	// Each journal is held aside and returned: retained custody binds its
+	// inode and checkpoint, so writing the same bytes back would lose it.
+	held := filepath.Join(filepath.Dir(f.config.RunDirectory), "synthetic-held-original-journal")
 	for _, path := range []string{f.preparation.childPaths()[0], filepath.Join(f.config.RunDirectory, bootstrapContractStateFile(7))} {
-		saved := before[path]
-		if err := os.Remove(path); err != nil {
+		saved, err := os.Stat(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Rename(path, held); err != nil {
 			t.Fatal(err)
 		}
 		_, code, diagnostic := invoke("contract-successor-prepare", approvalArgs...)
-		if err := os.WriteFile(path, []byte(saved), 0600); err != nil {
+		if err := os.Rename(held, path); err != nil {
 			t.Fatal(err)
+		}
+		if restored, err := os.Stat(path); err != nil || !os.SameFile(saved, restored) {
+			t.Fatal("fixture did not restore the original journal inode", filepath.Base(path), err)
 		}
 		if code == 0 || !strings.Contains(diagnostic, "original scope unresolved") {
 			t.Fatalf("public preparation trusted missing original retained custody %s: %d %s", filepath.Base(path), code, diagnostic)

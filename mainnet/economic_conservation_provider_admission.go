@@ -86,34 +86,20 @@ func (self *economicConservationArchiveView) verifyProviderOriginals(ctx context
 	if census.ClosedWork != nil && *census.ClosedWork != *closed {
 		return nil, errors.Join(errRpcIntegrity, errors.New("economic closed-work counters differ from complete original provider source"))
 	}
-	if len(originals.Wallets) != len(work.ExpectedProviders) {
-		return nil, protocol.ErrWalletMappingUnavailable
+	// the verified work roster is the authority's roster, in the same order
+	if len(authority.ExpectedProviders) != len(work.ExpectedProviders) {
+		return nil, errors.Join(errRpcIntegrity, protocol.ErrWalletMappingIntegrity)
 	}
-	wallets := make(map[[16]byte]*protocol.VerifiedWalletMapping, len(originals.Wallets))
 	ids := make([][16]byte, len(work.ExpectedProviders))
 	for index, provider := range work.ExpectedProviders {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		original := originals.Wallets[index]
-		if original.ClientId != provider.ClientId {
+		if authority.ExpectedProviders[index].ClientId != provider.ClientId || authority.ExpectedProviders[index].NetworkId != provider.NetworkId {
 			return nil, errors.Join(errRpcIntegrity, protocol.ErrWalletMappingIntegrity)
 		}
-		expected, err := economicProviderWalletExpected(&authority, authority.ExpectedProviders[index])
-		if err != nil {
-			return nil, economicProviderEvidenceError(err)
-		}
-		verified, err := protocol.VerifyWalletMappingHistory(ctx, original.Originals, expected)
-		if err != nil {
-			return nil, economicProviderEvidenceError(err)
-		}
-		if verified.Statement.NetworkId != provider.NetworkId {
-			return nil, errors.Join(errRpcIntegrity, protocol.ErrWalletMappingIntegrity)
-		}
-		if err := protocol.VerifyProspectiveWalletMapping(ctx, verified, common.HexToAddress(census.RootSigner), census.Start.Number, originals.Work.Clock.StartTime.Unix()); err != nil {
-			return nil, economicProviderEvidenceError(err)
-		}
-		ids[index], wallets[provider.ClientId] = provider.ClientId, verified
+		ids[index] = provider.ClientId
+	}
+	wallets, err := economicProviderEarningWallets(ctx, &authority, originals, common.HexToAddress(census.RootSigner), census.Start.Number, originals.Work.Clock.StartTime.Unix())
+	if err != nil {
+		return nil, err
 	}
 	bindings, _, err := validator.VerifyProviderAttemptBindings(ctx, originals.Bindings, economicProviderBindingExpectation(census, domain, ids))
 	if err != nil {
@@ -151,6 +137,15 @@ func (self *economicConservationArchiveView) verifyProviderOriginals(ctx context
 	}
 	measurement.WorkInventoryHash = work.InventoryHash
 	measurement.WalletOriginalsHash = rootObjectHash(originals.Wallets)
+	if 0 < len(originals.NetworkWallets) {
+		measurement.NetworkWalletOriginalsHash = rootObjectHash(originals.NetworkWallets)
+	}
+	if 0 < len(originals.HotkeyDelegations) {
+		measurement.HotkeyDelegationOriginalsHash = rootObjectHash(originals.HotkeyDelegations)
+	}
+	if 0 < len(originals.HotkeyConsents) {
+		measurement.HotkeyConsentOriginalsHash = rootObjectHash(originals.HotkeyConsents)
+	}
 	measurement.BindingOriginalsHash = rootObjectHash(originals.Bindings)
 	measurement.TrialAuthorityHash = selected.AttemptAuthority.SHA256
 	measurement.TrialOriginalsHash = hex.EncodeToString(attempts.OriginalHash[:])

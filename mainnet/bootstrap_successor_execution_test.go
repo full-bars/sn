@@ -110,15 +110,13 @@ func TestBootstrapSuccessorExecutionAdoptsExactFloorsWithoutSending(t *testing.T
 	f := newBootstrapSuccessorExecutionFixture(t)
 	directory := f.approval.Plan.Review.Preparation.Approval.Plan.Proposal.OriginalRunDirectory
 	original := bootstrapSuccessorPreparationTestFiles(t, directory)
+	originalMembers := bootstrapSuccessorExecutionTestMemberCensus(t, directory, false)
 	owner := f.open(true, nil)
 	if owner.last.CumulativeAttempts != 8 || owner.last.ReservedLifetimeWei != "1200000" || owner.last.Phase != "adopted" || owner.result().InstallationComplete || owner.result().CanonicalAdoptionVerified {
 		t.Fatal("execution claim reset original floors or claimed live authority")
 	}
-	for name, raw := range original {
-		actual, err := os.ReadFile(filepath.Join(directory, name))
-		if err != nil || string(actual) != raw {
-			t.Fatal("execution claim changed original prepared bytes", err)
-		}
+	if name := bootstrapSuccessorExecutionTestChangedOriginal(t, directory, original, originalMembers); name != "" {
+		t.Fatal("execution claim changed original prepared bytes", name)
 	}
 	if err := owner.close(); err != nil {
 		t.Fatal(err)

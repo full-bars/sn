@@ -13,6 +13,17 @@ import (
 	"github.com/urfoundation/sn/protocol"
 )
 
+// Internal server failures share the bounded read recovery window with gateway
+// failures. Unsupported methods and all other permanent statuses remain hard.
+func rpcReadRetryStatus(status int) bool {
+	switch status {
+	case http.StatusRequestTimeout, http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
 // Integer/date Retry-After and the archive's JSON seconds hint may lengthen a
 // transient HTTP retry. Conflicting hints choose the longer bounded delay;
 // malformed hints retain ordinary backoff and cannot extend the deadline.

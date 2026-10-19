@@ -1,0 +1,62 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "fresh_admission": {
+    "available": {
+      "/mnt/data": {
+        "bytes": 93114281984,
+        "inodes": 92370796
+      },
+      "/var/lib/docker": {
+        "bytes": 300600795136,
+        "inodes": 50982746
+      }
+    },
+    "lease_remaining_seconds": 16080.322944,
+    "lease_user": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "1067856030105",
+      "InvocationID": "e24af10045a14bcdb3e8a00ff536dcff",
+      "MainPID": "3567744",
+      "RuntimeMaxUSec": "8h"
+    },
+    "memory_available_bytes": 127151734784,
+    "model_user": {
+      "ActiveState": "active",
+      "InvocationID": "cf41e3aee35245a1b037cf956b0fe8f2",
+      "MainPID": "3623465"
+    },
+    "observed_utc": "2026-10-05T13:51:52.679695+00:00",
+    "scope": "Metadata-only successor; same retained Core224 normal body alongside unchanged model. Original prebody refusal retained; no compiler or DB work."
+  },
+  "held_extra_reserve_disk_bytes": 4294967296,
+  "held_extra_reserve_memory_bytes": 4294967296,
+  "history_count": 0,
+  "job_sha256": "d2c05a182e86e6c74ce9c153da8d72146bf72b83fabafad36a0b5d7bd14a7433",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_active_data_floor_bytes": 84696223744,
+  "model_count": 1,
+  "namespace_proof": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/core224-model-peer-v1/peer2-namespace-proof.json",
+    "sha256": "cf65af06e310661ffa55e46cd48277f1af35f4324afd671547de64b77cf0d2e4"
+  },
+  "prebody_predecessor": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-core224-v1-prebody-refusal-user-terminal-readback.json",
+    "sha256": "2fb7d3c190ff38c6c04bce2f051f7acf9a377df19b7cb99eebcbe6121f9ff6d5"
+  },
+  "resource_review": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/core224-model-peer-v1/resource-review-v1.json",
+    "sha256": "d4d393d0717d97e5c5875fdcdcee354cedf74a96c480236832bf6f908c972713"
+  },
+  "runner_sha256": "6f3d79ac67a09a54479d24543b202fa757ba64c3f5cb41c01e2aa3fae126e097",
+  "schema": "root-model-one-bounded-core224-adoption-v1",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_MODEL_PLUS_ONE_RETAINED_CORE224_SHORT"
+}

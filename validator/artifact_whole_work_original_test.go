@@ -39,6 +39,7 @@ func TestWholeWorkOriginalReadDoesNotAuthorizeMissingCuts(t *testing.T) {
 	var calls atomic.Int32
 	endpoint := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		calls.Add(1)
+		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(inventory)
 	}))
 	defer endpoint.Close()
@@ -85,7 +86,10 @@ func TestWholeWorkOriginalReadRefusesForeignSignedWindow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	endpoint := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { _ = json.NewEncoder(w).Encode(inventory) }))
+	endpoint := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(inventory)
+	}))
 	defer endpoint.Close()
 	reader, err := NewHttpWholeWorkInventoryReader(endpoint.URL, artifact.DeploymentID, artifact.Netuid)
 	if err != nil {

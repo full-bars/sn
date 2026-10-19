@@ -1,0 +1,22 @@
+{
+  "schema": "upstream-private-heap-focused-qualification-v1",
+  "status": "PASS",
+  "scope": "Seven retained-response Go roots, normal and race, on the newly integrated Server source; no mainnet activity or full-suite claim.",
+  "server_consumed_commit": "875fbca2d3aa03be5997b43845549a911791c690",
+  "normal": {
+    "top_level_pass": 7,
+    "subtest_pass": 2,
+    "exit": 0
+  },
+  "race": {
+    "top_level_pass": 7,
+    "subtest_pass": 2,
+    "exit": 0
+  },
+  "receipt": {
+    "path": "/home/by/rf-sn-provider-recovery-v1-20261005/privateheap7-20261006/closed-receipt.json",
+    "sha256": "cf9bf5a8182e52ba83e3b064037caa4c2376aa09e116240e8971c62cda74b457"
+  },
+  "original_failure_preserved": "Initial normal attempt had one passing root and six setup failures because the inherited long TMPDIR exceeded the Unix socket path limit. The same selector passed with a short private TMPDIR; no production source or assertions changed.",
+  "relation": "Additive evidence following code-delivery-checkpoint-20261006.json; does not replace its source tuples or earlier failures."
+}

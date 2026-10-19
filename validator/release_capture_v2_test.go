@@ -15,9 +15,14 @@ import (
 	"github.com/urfoundation/sn/crv4"
 )
 
-// Test-only limits use the already explicit fixture policy.
+// Test-only limits use the already explicit fixture policy. Every configured
+// operator's API origin is captured, in configured order.
 func releaseCaptureV2TestOptions(fixture *releaseBootstrapV2TestFixture) ReleaseEvidenceV2CaptureOptions {
-	return ReleaseEvidenceV2CaptureOptions{Hotkey: fixture.contexts[0].Activation.Hotkey, Origins: [2]string{fixture.cfg.Operators[0].APIURL, fixture.cfg.Operators[1].APIURL}, MaximumBytes: fixture.cfg.EvidenceV2.Bounds.MaxHistoryBytes, MaximumObjects: 4096, ThroughEpoch: 42}
+	origins := make([]string, len(fixture.cfg.Operators))
+	for index, operator := range fixture.cfg.Operators {
+		origins[index] = operator.APIURL
+	}
+	return ReleaseEvidenceV2CaptureOptions{Hotkey: fixture.contexts[0].Activation.Hotkey, Origins: origins, MaximumBytes: fixture.cfg.EvidenceV2.Bounds.MaxHistoryBytes, MaximumObjects: 4096, ThroughEpoch: 42}
 }
 
 // Both complete signed activation sources are copied before a missing

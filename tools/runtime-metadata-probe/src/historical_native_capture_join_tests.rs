@@ -13,7 +13,11 @@ fn committed_captures(trace: &observer::ObservationReport) -> Vec<&observer::Obs
         .iter()
         .filter(|value| value.purpose == "native-principal-vault-capture")
         .collect();
-    assert_eq!(records.len() % 2, 0, "original capture read/write pair absent");
+    assert_eq!(
+        records.len() % 2,
+        0,
+        "original capture read/write pair absent"
+    );
     let mutations = trace.principal_mutations.as_ref().unwrap();
     let mut captures = Vec::new();
     for pair in records.chunks_exact(2) {
@@ -62,7 +66,8 @@ fn committed_captures(trace: &observer::ObservationReport) -> Vec<&observer::Obs
             .filter(|value| value.ordinal == write.ordinal)
             .collect();
         assert_eq!(
-            matched.len(), 1,
+            matched.len(),
+            1,
             "original capture lacks its unique committed mutation"
         );
         let mutation = matched[0];
@@ -175,7 +180,7 @@ fn historical_native_vault_capture_exports_original_capture_sequences() {
     second.extrinsics_hex = vec![encoded(&vec![0x98u8; 32].encode())];
     let child = NativeHeader::new(
         102,
-        BlakeTwo256::ordered_trie_root(vec![vec![0x98u8; 32].encode()], StateVersion::V1),
+        BlakeTwo256::ordered_trie_root(vec![vec![0x98u8; 32].encode()], StateVersion::V0),
         root,
         H256(first.child_hash),
         Digest::default(),
@@ -308,7 +313,7 @@ fn historical_native_vault_capture_extrinsics_are_exact_opaque_bytes() {
         .unwrap();
         assert_eq!(
             *child.extrinsics_root(),
-            BlakeTwo256::ordered_trie_root(expected_body, StateVersion::V1),
+            BlakeTwo256::ordered_trie_root(expected_body, StateVersion::V0),
             "original capture header must commit the exact byte body"
         );
     }
@@ -338,7 +343,9 @@ fn historical_native_vault_capture_and_replay_refuse_nonexact_extrinsics() {
             .err()
             .expect("nonexact capture body was admitted");
         assert!(
-            capture_error.to_string().contains("capture extrinsic SCALE"),
+            capture_error
+                .to_string()
+                .contains("capture extrinsic SCALE"),
             "{name}: {capture_error}"
         );
         let replay_error = run(&changed)

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // These public consumers execute two original programs through both real
 // engines. RPC fixtures expose their independently exported roots and code;
@@ -79,6 +79,9 @@ func TestNativeRuntimeRenewalPublicMonitorUpgradeAndColdRestart(t *testing.T) {
 	t.Setenv("URNETWORK_NATIVE_PRODUCER_FIXTURE", directory)
 	t.Setenv("URNETWORK_NATIVE_EXECUTION_FIXTURE", filepath.Join(directory, "native-job-101.json"))
 	producer := nativeProducerPublicFixtureWithRuntime(t, true, nil, true)
+	// Native execution accounting starts only at a drained activation boundary
+	// (ad1e5b192); the emission fixture leaves 90 units pending at block 100.
+	producer.source.set(t, 100, "PendingServerEmission", make([]byte, 8))
 	f := &monitorEconomicTestFixture{source: producer.source, services: newMonitorServicesFixture(t), url: producer.source.client.url, policy: monitorEconomicNativePolicy{Role: "native-a", Observation: producer.source.policy, BatchBlocks: 1, HistoryEntries: 32, StallSeconds: 60, HistoricalFinality: "owned-rpc-assertion"}}
 	f.prepare(t)
 	f.ctx = durablefixture.New(t, t.Context(), f.services.directory, producer.source.policy.Execution.Directory).Context
@@ -284,7 +287,9 @@ func TestNativeRuntimeRenewalColdAdmissionRequiresSignedOriginalsAndReadPurposes
 	limited.RuntimeCatalog = append([]monitorEconomicRuntimeEntry{}, operating.Native.RuntimeCatalog...)
 	limited.RuntimeCatalog[1].Purposes = []string{economicRuntimeStatePurpose}
 	before, proofs := rootObjectHash(cold), producer.proofs.Load()
-	if _, err := observeMonitorEconomicNative(f.ctx, producer.source.client, limited, &cold); err == nil || !strings.Contains(err.Error(), "purpose") || rootObjectHash(cold) != before || producer.proofs.Load() != proofs {
+	// A catalog entry that withholds a purpose refuses that read with the bare
+	// profile-unavailable sentinel (881b967a5), not a decoding-layout failure.
+	if _, err := observeMonitorEconomicNative(f.ctx, producer.source.client, limited, &cold); !errors.Is(err, errRootReceiptProfileUnavailable) || err.Error() != errRootReceiptProfileUnavailable.Error() || rootObjectHash(cold) != before || producer.proofs.Load() != proofs {
 		t.Fatal("signed runtime bypassed explicit event read purpose before original capture", err)
 	}
 }

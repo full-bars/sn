@@ -94,6 +94,16 @@ func productionRegistrationWait(err error) (bool, bool) {
 	return wait, wait && blocked
 }
 
+// A registration the operator refused for its network sign-in (a 401 on the
+// request that carried network_jwt_file) needs a new sign-in written there,
+// not custody recovery; its code says so (VALIDATOR.md).
+func productionRegistrationRecoveryCode(err error) string {
+	if clientauth.IsNetworkCredentialRejected(err) {
+		return "network_sign_in_rejected"
+	}
+	return "authentication_recovery_required"
+}
+
 // Only API-local causes may latch this operator while native observation stays
 // alive. A local descriptor/ledger/intent error joined to them remains shared
 // failure; no arbitrary error text or generic hard leaf is downgraded here.
@@ -104,7 +114,7 @@ func productionRegistrationLocalFailure(err error) bool {
 			return true
 		}
 		switch value := cause.(type) {
-		case *sdk.ClientControlResponseError, *clientauth.RegistrationResponseIdentityError, *clientauth.RegistrationRefusedError, *sdk.NetworkClientRegistrationUnsupportedError:
+		case *sdk.ClientControlResponseError, *clientauth.RegistrationResponseIdentityError, *clientauth.RegistrationRefusedError, *sdk.NetworkClientRegistrationUnsupportedError, *clientauth.NetworkCredentialRejectedError:
 			return true
 		case *sdk.NetworkClientRegistrationUnavailableError, *clientauth.RegistrationRefreshUnavailableError:
 			return true // In a mixed local verdict, this never makes it retryable.
@@ -250,7 +260,7 @@ func newProductionReleaseOperator(ctx context.Context, cfg *ReleaseConfig, op Op
 					owner.cancelTrails()
 					api.Close()
 					observeProductionAuthentication(ctx, op.NoID, owner)
-					releaseDiagnostic(ctx, "operator", "authentication_recovery_required", 0, false, 0, releaseDiagnosticFacts{operatorId: op.NoID, operatorKnown: true, cause: releaseDiagnosticHardError})
+					releaseDiagnostic(ctx, "operator", productionRegistrationRecoveryCode(err), 0, false, 0, releaseDiagnosticFacts{operatorId: op.NoID, operatorKnown: true, cause: releaseDiagnosticHardError})
 					return nil // Latched; no automatic API retry or replacement.
 				}
 				return err
@@ -275,7 +285,7 @@ func newProductionReleaseOperator(ctx context.Context, cfg *ReleaseConfig, op Op
 		identity := connect.NewClient(ctx, clientId, outOfBand, settings)
 		instanceId := connect.NewId()
 		platform := connect.NewPlatformTransportWithDefaults(ctx, strategy, identity.RouteManager(), op.ConnectURL, &connect.ClientAuth{ByJwt: token, InstanceId: instanceId, AppVersion: RequireVersion()})
-		transport := NewTunnelTransport(ctx, strategy, TunnelTransportConfig{ApiUrl: op.APIURL, ConnectUrl: op.ConnectURL, ByClientJwt: credential, SourceClientId: clientId, CloseReportDomainHash: domainHash})
+		transport := NewTunnelTransport(ctx, strategy, TunnelTransportConfig{ApiUrl: op.APIURL, ConnectUrl: op.ConnectURL, ByClientJwt: credential, SourceClientId: clientId, CloseReportDomainHash: domainHash, Clients: op.Concurrency})
 		withdraw := func(code string) {
 			owner.recoveryRequired.Store(true)
 			owner.ready.Store(false)

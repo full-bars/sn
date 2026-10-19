@@ -35,7 +35,7 @@ func releaseMeasurementTestHash(index uint64) [32]byte {
 	return hash
 }
 
-func releaseMeasurementDepositAudit(t *testing.T, policy protocol.Policy, noID uint64) DepositAudit {
+func releaseMeasurementDepositAudit(t testing.TB, policy protocol.Policy, noID uint64) DepositAudit {
 	t.Helper()
 	conviction := big.NewInt(0)
 	usage := uint64(1 << 30)
@@ -62,7 +62,7 @@ func releaseMeasurementDepositAudit(t *testing.T, policy protocol.Policy, noID u
 }
 
 // cloneReleaseMeasurementArtifact makes mutations independent between tests.
-func cloneReleaseMeasurementArtifact(t *testing.T, artifact *ReleaseMeasurementArtifact) *ReleaseMeasurementArtifact {
+func cloneReleaseMeasurementArtifact(t testing.TB, artifact *ReleaseMeasurementArtifact) *ReleaseMeasurementArtifact {
 	t.Helper()
 	encoded, err := json.Marshal(artifact)
 	if err != nil {

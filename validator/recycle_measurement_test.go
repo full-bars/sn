@@ -17,6 +17,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -59,12 +60,119 @@ func newRecycleMeasurementFixtureWithHotkey(t *testing.T, completed int, setup f
 // A distinct policy is selected before the first proof, ledger signature or
 // proposal approval; existing economic fixtures retain their paid policy.
 func newRecycleMeasurementFixtureWithPolicy(t *testing.T, completed int, setup func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture), hotkey [32]byte, policy *protocol.Policy) *recycleMeasurementFixture {
-	return newRecycleMeasurementFixtureWithActivation(t, completed, setup, hotkey, policy, nil)
+	t.Helper()
+	return newRecycleMeasurementFixtureWithCensus(t, attemptCutV2SealTestProviders, completed, setup, hotkey, policy)
 }
 
-// The startup variant signs an actual activation record before compact proof
-// construction, with a ledger-owned first egress generation for empty history.
-func newRecycleMeasurementFixtureWithActivation(t *testing.T, completed int, setup func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture), hotkey [32]byte, policy *protocol.Policy, anchor func(*recycleAdmissionFixture, *attemptCutV2SealTestFixture)) *recycleMeasurementFixture {
+// The verifier's provider population completes the work census.
+func newRecycleMeasurementFixtureWithCensus(t *testing.T, providers, completed int, setup func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture), hotkey [32]byte, policy *protocol.Policy) *recycleMeasurementFixture {
+	t.Helper()
+	admission := newRecycleMeasurementTestAdmission(t, policy)
+	return newRecycleMeasurementFixtureWithProvider(t, admission, sharedRecycleMeasurementTestProvider(t, admission, providers, completed, hotkey), setup, hotkey)
+}
+
+// The smallest genuine census at the pool quality minimum: each complete M8
+// trail assigns all seven providers but its seed once, so eight complete
+// trails bring each to exactly the release policy's minimum of eight.
+const recycleQualityTestProviders, recycleQualityTestCompleted = 8, 8
+
+// Both operators' genuine M8 trails depend only on the network, policy and
+// census, and their compact cuts also on the activation hotkey, so each is
+// built once per test process and shared read-only. Every test seals and
+// signs its own copy of the artifact, and its cleanup confirms the sources
+// are as built.
+type recycleMeasurementTestSources struct {
+	provider    *releaseMeasurementV2TestFixture
+	headKVs     map[uint64]AttemptLedgerHead
+	snapshotKVs map[uint64]statsSnapshot
+	expectedKVs map[uint64]AttemptCutV2Context
+}
+
+type recycleMeasurementTestSourcesKey struct {
+	genesis, policy      string
+	providers, completed int
+	hotkey               [32]byte
+}
+
+var recycleMeasurementTestSourcesCache struct {
+	stateLock sync.Mutex
+	trailKVs  map[recycleMeasurementTestSourcesKey]map[uint64]*attemptCutV2SealTestFixture
+	sourceKVs map[recycleMeasurementTestSourcesKey]*recycleMeasurementTestSources
+}
+
+// The first test to need sources builds them under the process's owner. The
+// hotkey is named only after the trails, so every hotkey shares one census.
+func sharedRecycleMeasurementTestProvider(t *testing.T, admission *recycleAdmissionFixture, providers, completed int, hotkey [32]byte) *releaseMeasurementV2TestFixture {
+	t.Helper()
+	key := recycleMeasurementTestSourcesKey{genesis: admission.cfg.GenesisHash, policy: admission.cfg.PolicyHash, providers: providers, completed: completed, hotkey: hotkey}
+	cache := &recycleMeasurementTestSourcesCache
+	cache.stateLock.Lock()
+	defer cache.stateLock.Unlock()
+	sources := cache.sourceKVs[key]
+	if sources == nil {
+		owner, census := sharedTestFixtureOwner{T: t}, key
+		census.hotkey = [32]byte{}
+		trails := cache.trailKVs[census]
+		if trails == nil {
+			trails = map[uint64]*attemptCutV2SealTestFixture{}
+		}
+		identity := recycleMeasurementTestIdentity(admission)
+		provider := newReleaseMeasurementV2TestFixtureWithActivation(owner, completed, func(noId uint64) *attemptCutV2SealTestFixture {
+			if trails[noId] == nil {
+				selected := identity
+				selected.NoID = noId
+				trails[noId] = newAttemptCutV2SealTestFixtureForCensus(owner, 8, providers, completed, 1, false, admission.cfg.Policy, selected, attemptLedgerDiskTestLimits())
+			}
+			seal := *trails[noId]
+			seal.expected.Activation.Hotkey = hotkey
+			return &seal
+		}, nil)
+		sources = &recycleMeasurementTestSources{provider: provider, headKVs: map[uint64]AttemptLedgerHead{}, snapshotKVs: map[uint64]statsSnapshot{}, expectedKVs: map[uint64]AttemptCutV2Context{}}
+		for noID, operator := range provider.operators {
+			head, err := operator.seal.ledger.Head()
+			if err != nil {
+				t.Fatal(err)
+			}
+			sources.headKVs[noID], sources.snapshotKVs[noID], sources.expectedKVs[noID] = head, operator.seal.engine.stats.snapshotStats(), operator.seal.expected
+		}
+		if cache.sourceKVs == nil {
+			cache.trailKVs = map[recycleMeasurementTestSourcesKey]map[uint64]*attemptCutV2SealTestFixture{}
+			cache.sourceKVs = map[recycleMeasurementTestSourcesKey]*recycleMeasurementTestSources{}
+		}
+		cache.trailKVs[census], cache.sourceKVs[key] = trails, sources
+	}
+	t.Cleanup(func() { sources.check(t, key) })
+	return copyReleaseMeasurementTestProvider(t, sources.provider)
+}
+
+// A test that changed a shared ledger, Stats owner or cut context fails, and
+// the next test builds its sources again.
+func (self *recycleMeasurementTestSources) check(t *testing.T, key recycleMeasurementTestSourcesKey) {
+	t.Helper()
+	for noID, operator := range self.provider.operators {
+		head, err := operator.seal.ledger.Head()
+		if err == nil && head == self.headKVs[noID] && reflect.DeepEqual(operator.seal.expected, self.expectedKVs[noID]) && reflect.DeepEqual(operator.seal.engine.stats.snapshotStats(), self.snapshotKVs[noID]) {
+			continue
+		}
+		t.Errorf("test changed operator %d's shared measurement sources: %v", noID, err)
+		cache := &recycleMeasurementTestSourcesCache
+		cache.stateLock.Lock()
+		// Every hotkey's cuts of this census share its changed trails.
+		census := key
+		census.hotkey = [32]byte{}
+		delete(cache.trailKVs, census)
+		for other := range cache.sourceKVs {
+			if other.genesis == key.genesis && other.policy == key.policy && other.providers == key.providers && other.completed == key.completed {
+				delete(cache.sourceKVs, other)
+			}
+		}
+		cache.stateLock.Unlock()
+		return
+	}
+}
+
+// A distinct policy is selected before any source, proof or approval exists.
+func newRecycleMeasurementTestAdmission(t testing.TB, policy *protocol.Policy) *recycleAdmissionFixture {
 	t.Helper()
 	admission := newRecycleAdmissionFixture(t, nil)
 	if policy != nil {
@@ -72,30 +180,53 @@ func newRecycleMeasurementFixtureWithActivation(t *testing.T, completed int, set
 		admission.cfg.PolicyHash, _ = policy.HashHex()
 		admission.approval.Proposal.ParentPolicyHash, _ = policy.Hash()
 	}
-	identity := AttemptLedgerIdentity{DeploymentID: "synthetic-recycle-measured", ChainID: 964, GenesisHash: admission.cfg.GenesisHash,
+	return admission
+}
+
+// Every source declares the same mainnet ledger domain before its first record.
+func recycleMeasurementTestIdentity(admission *recycleAdmissionFixture) AttemptLedgerIdentity {
+	return AttemptLedgerIdentity{DeploymentID: "synthetic-recycle-measured", ChainID: 964, GenesisHash: admission.cfg.GenesisHash,
 		Netuid: 25, ValidatorID: 1, ValidatorUID: 7}
-	var activate func(*attemptCutV2SealTestFixture)
-	if anchor != nil {
-		activate = func(seal *attemptCutV2SealTestFixture) {
-			// The source already persisted this activation before its first
-			// trail. Repeating the declarative anchor cannot reinterpret it.
-			original := seal.expected.Activation
-			anchor(admission, seal)
-			if seal.expected.Activation != original {
-				t.Fatal("startup compact sealing changed its durable activation")
-			}
-		}
-	}
-	provider := newReleaseMeasurementV2TestFixtureWithActivation(t, completed, func(noId uint64) *attemptCutV2SealTestFixture {
+}
+
+// Both operators' genuine M8 sources under the admission's policy, signed for
+// the selected hotkey and without an activation record.
+func newRecycleMeasurementTestProvider(t testing.TB, admission *recycleAdmissionFixture, providers, completed int, hotkey [32]byte) *releaseMeasurementV2TestFixture {
+	t.Helper()
+	identity := recycleMeasurementTestIdentity(admission)
+	return newReleaseMeasurementV2TestFixtureWithActivation(t, completed, func(noId uint64) *attemptCutV2SealTestFixture {
 		selected := identity
 		selected.NoID = noId
-		if anchor == nil {
-			fixture := newAttemptCutV2SealTestFixtureForDomain(t, 8, completed, 1, false, admission.cfg.Policy, selected)
-			fixture.expected.Activation.Hotkey = hotkey
-			return fixture
+		fixture := newAttemptCutV2SealTestFixtureForCensus(t, 8, providers, completed, 1, false, admission.cfg.Policy, selected, attemptLedgerDiskTestLimits())
+		fixture.expected.Activation.Hotkey = hotkey
+		return fixture
+	}, nil)
+}
+
+// The startup variant signs an actual activation record before compact proof
+// construction, with a ledger-owned first egress generation for empty history.
+func newRecycleActivatedMeasurementTestProvider(t *testing.T, admission *recycleAdmissionFixture, providers, completed int, hotkey [32]byte, anchor func(*recycleAdmissionFixture, *attemptCutV2SealTestFixture)) *releaseMeasurementV2TestFixture {
+	t.Helper()
+	identity := recycleMeasurementTestIdentity(admission)
+	return newReleaseMeasurementV2TestFixtureWithActivation(t, completed, func(noId uint64) *attemptCutV2SealTestFixture {
+		selected := identity
+		selected.NoID = noId
+		return newRecycleActivatedMeasurementTestSource(t, admission, selected, hotkey, providers, completed, anchor)
+	}, func(seal *attemptCutV2SealTestFixture) {
+		// The source already persisted this activation before its first
+		// trail. Repeating the declarative anchor cannot reinterpret it.
+		original := seal.expected.Activation
+		anchor(admission, seal)
+		if seal.expected.Activation != original {
+			t.Fatal("startup compact sealing changed its durable activation")
 		}
-		return newRecycleActivatedMeasurementTestSource(t, admission, selected, hotkey, completed, anchor)
-	}, activate)
+	})
+}
+
+// The admission's operators, approval and native census follow the provider's
+// sources. Setup runs after the operators are declared, before any signature.
+func newRecycleMeasurementFixtureWithProvider(t testing.TB, admission *recycleAdmissionFixture, provider *releaseMeasurementV2TestFixture, setup func(*recycleAdmissionFixture, *releaseMeasurementV2TestFixture), hotkey [32]byte) *recycleMeasurementFixture {
+	t.Helper()
 	artifact := provider.artifact
 	artifact.NativeSnapshotBlock, artifact.NativeSnapshotHash = 100, admission.finalized.Hex()
 	for index := range artifact.Inputs {
@@ -148,7 +279,12 @@ func newRecycleMeasurementFixtureWithActivation(t *testing.T, completed int, set
 	if err != nil {
 		t.Fatal(err)
 	}
-	encoded, _, err := SealReleaseMeasurementArtifactV2(t.Context(), artifact, provider.options(t))
+	// Sealing proves only the canonical provider bytes. An empty allocation is
+	// sealed as the treasury producer would; every consumer below still replays
+	// it under its own authority, so other paths keep their original refusal.
+	options := provider.options(t)
+	options.treasuryReserveFallback = true
+	encoded, _, err := SealReleaseMeasurementArtifactV2(t.Context(), artifact, options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,9 +295,9 @@ func newRecycleMeasurementFixtureWithActivation(t *testing.T, completed int, set
 // M8 work. Its single local operator is the complete declared source census;
 // both independent sources are later joined by the public production root.
 // No activation marker or reconstructed counters are pasted into a snapshot.
-func newRecycleActivatedMeasurementTestSource(t *testing.T, admission *recycleAdmissionFixture, identity AttemptLedgerIdentity, hotkey [32]byte, completed int, anchor func(*recycleAdmissionFixture, *attemptCutV2SealTestFixture)) *attemptCutV2SealTestFixture {
+func newRecycleActivatedMeasurementTestSource(t *testing.T, admission *recycleAdmissionFixture, identity AttemptLedgerIdentity, hotkey [32]byte, providers, completed int, anchor func(*recycleAdmissionFixture, *attemptCutV2SealTestFixture)) *attemptCutV2SealTestFixture {
 	t.Helper()
-	fixture := newAttemptCutV2SealTestFixtureForDomain(t, 8, 0, 0, true, admission.cfg.Policy, identity)
+	fixture := newAttemptCutV2SealTestFixtureForCensus(t, 8, providers, 0, 0, true, admission.cfg.Policy, identity, attemptLedgerDiskTestLimits())
 	fixture.expected.Activation.Hotkey = hotkey
 	anchor(admission, fixture)
 	seal, _ := newAttemptCutV2SealTestOptions(t, fixture)
@@ -207,7 +343,7 @@ func (self *recycleMeasurementFixture) seal(t *testing.T) ([]byte, *OwnerRecycle
 // The row is derived through real proof replay, while the old wire and every
 // production send fence remain intact. Equal-share sums are independent checks.
 func TestOwnerRecycleMeasurementJoinsMeasuredRowAndBlockedIntent(t *testing.T) {
-	fixture := newRecycleMeasurementFixtureWithCompleted(t, 15)
+	fixture := newRecycleMeasurementFixtureWithCensus(t, recycleQualityTestProviders, recycleQualityTestCompleted, nil, [32]byte{0x15}, nil)
 	original := bytes.Clone(fixture.encoded)
 	encoded, intent := fixture.seal(t)
 	if intent.Status != OwnerRecycleDecisionBlocked || intent.ActivationReady || intent.NativeOutcomeVerified || len(intent.Blockers) != 4 {

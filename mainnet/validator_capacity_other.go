@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !darwin
 
 package main
 
@@ -8,9 +8,9 @@ import (
 	"io"
 )
 
-// The physical daemon inspection backend is explicitly Linux-scoped.
+// The physical daemon inspection backend is Linux- and macOS-scoped.
 func runValidatorCapacityPreview(_ context.Context, _ []string, _ io.Writer, stderr io.Writer) int {
-	fmt.Fprintln(stderr, "validator capacity preview requires the qualified Linux physical custody backend")
+	fmt.Fprintln(stderr, "validator capacity preview requires the qualified Linux or macOS physical custody backend")
 	return 2
 }
 

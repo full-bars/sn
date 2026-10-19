@@ -5,8 +5,8 @@
 This repository (`sn`) is the reference implementation of the UR Subnet — the EVM
 contract suite, miner and validator software, chain tooling, and the real-testnet
 integration harness. The operator/API implementation lives in the sibling `server`
-repository; provider probing, tunnel confinement, geolocation, bandwidth, and
-egress-health tooling live in the sibling `operator-proxy` repository.
+repository, which also runs provider egress probing (reachability, location,
+bandwidth and egress health) as recurring taskworker tasks.
 
 ![Who does what: customers, network operators, providers, validators and Yuma](diagrams/readme/01-roles.svg)
 
@@ -98,6 +98,8 @@ urnet-tools auto on
 Full guides: [Installation](docs/Installation.md), [Docker Deployment](docs/Docker-Deployment.md),
 [Adding Proxies](docs/Adding-Proxies.md), [urnet-tools](docs/urnet-tools-go.md).
 
+**Platforms:** Linux (systemd, and Alpine/OpenRC with a native boot-start service), macOS, Windows and FreeBSD. Alpine setup: [docs/OpenRC.md](docs/OpenRC.md); FreeBSD setup: [docs/FreeBSD.md](docs/FreeBSD.md).
+
 ### Uninstall
 
 **🐧 Linux**
@@ -174,10 +176,11 @@ pools until pricing is switched on.
 governance value, not per‑validator discretion. If no head fleet exists, the θ share cedes to
 the pools (`empty_channel: cede_to_nonempty`).
 
-> **Mainnet bootstrap plan.** [`mainnet/MAINNET.md`](mainnet/MAINNET.md) records a launch in
-> which provider weights fill **10%** of the native miner allocation and the other **90%** is
-> weighted to recognized owner hotkeys (`owner-recycle`), with existing SN25 miner
-> registrations reset. Read the emission figures above as the steady‑state design.
+> **Mainnet launch.** [`mainnet/MAINNET.md`](mainnet/MAINNET.md) records the SN25 launch.
+> Provider weights fill the **momentum** share of the native miner allocation, **10%** at
+> launch, and the reserve (`ur-reserve`) receives the rest, miner emissions × (1 − momentum),
+> so its share is not fixed. Existing SN25 miner registrations stay and are left to ordinary
+> pruning. Read the emission figures above as the steady‑state design.
 
 #### How validators score
 
@@ -253,7 +256,8 @@ leave 188 head slots.
 - **The buyback reserve is one‑way** — no contract function ever sources a transfer out of it.
 - **Split governance.** `STReserveSink` and `STSettlementVault` are non‑upgradeable from
   launch. Only `STCoordinator` is UUPS‑upgradeable: testnet uses a dedicated value‑capped
-  owner, and mainnet requires a distinct 2‑of‑3 Safe. A ≥1‑epoch upgrade timelock is planned
+  owner, and mainnet uses a distinct Safe, 1‑of‑1 at the SN25 launch (a Safe transaction can
+  add owners and raise the threshold later). A ≥1‑epoch upgrade timelock is planned
   for Phase 1 (§6.4.2, §16.3 M5); the current coordinator has none.
 
 ---
@@ -294,7 +298,9 @@ pays.
 Follow the provider documentation at <https://ur.xyz>. Providers work with network
 operators — the miner defaults to the reference operator, and you can point it at another
 operator with `provider choose_network <api_url> <connect_url>` (`--show` prints the network in
-effect, `--reset` returns to the default).
+effect, `--reset` returns to the default). `provider provide --all-operators` instead mines
+every operator listed at <https://ur.xyz/operators.yml>, one provider per operator (see
+[`miner/README.md`](miner/README.md#mining-every-listed-operator)).
 
 Providers register a `client_id` with the subnet, and are paid *inside* their NO's pool by
 **Merkle claim** against that NO's payout root (`provider claim`, or `snclaim submit` for an
@@ -303,7 +309,8 @@ can claim its own **top‑level miner UID** and be paid **directly** by validato
 steering — no pool, no operator in the payout path. The fleet registers that UID itself
 (`provider fleet register`: a burned `register_limit` signed by the fleet coldkey, dry run
 until `--apply`), publishes its manifest commitment (`provider fleet publish`) and links its
-`client_id`s to the hotkey with a **dual‑signed binding** (`provider fleet bind`) so
+`client_id`s to the hotkey with a **dual‑signed binding** (`provider fleet bind`, or
+`provider fleet sign` to sign locally and submit through the ur.io Top 200 page) so
 validators can attribute its measured breadth to that slot. See
 [`WHITEPAPER.md`](WHITEPAPER.md) §8.4, §11.4 and §16.1.
 
@@ -390,16 +397,19 @@ the finite UID budget and undermine the intended ~200-member head.
 | `chain/`, `crv4/`, `merkle/`, `ss58/`, `stabi/` | Supporting libraries (native registration/staking toolkit shared with the harness, commit‑reveal v4, Merkle trees, address encoding, contract bindings). |
 | `sim-testnet/` | Spend-capped Go harness for testnet setup, launch, scenarios, evidence, and analysis. |
 
-The release workspace also requires sibling `server` and `operator-proxy`
-checkouts. The testnet harness discovers both by Go module identity and binds
-the operator-proxy production source plus its exact clean Git commit into the
-release lock.
+The release workspace also requires a sibling `server` checkout, which the
+testnet harness discovers by Go module identity. The retired `operator-proxy`
+repository is no longer discovered, tested or locked. The existing testnet
+release lock and harness configs keep its inert fields so their published hashes
+stay valid; a fresh release-lock rendering drops them.
 
-SN pins the client-authentication SDK, Connect, and Connect's SCTP fork with
-versioned replacements in `go.mod`; these dependencies do not follow sibling
-checkout HEADs. Use `GOWORK=off` for this module graph. The remaining local
-replacements still require the release workspace. See the
-[source-graph correction and qualification handoff](mainnet/evidence/clientauth-source-graph-correction-20260929.md)
-for exact revisions and the independent module-resolution regression tests.
+SN's `go.mod` takes the client-authentication SDK, Connect, Connect's SCTP fork
+and the gVisor fork from the sibling checkouts, as a local release build does.
+A build version pins them to checksum-bound modules in a copy of the source
+first ([RELEASE-BUILD.md](mainnet/RELEASE-BUILD.md)), and `scripts/source-graph`
+accepts either form and nothing else. Use `GOWORK=off` for this module graph.
+The [source-graph correction and qualification handoff](mainnet/evidence/clientauth-source-graph-correction-20260929.md)
+records the earlier pinned revisions and the original module-resolution
+regression tests.
 The [incremental composition record](mainnet/evidence/incremental-source-composition-20260929.md)
 retains the completed SDK/MG06 checks and explicitly pending broad SDK race run.

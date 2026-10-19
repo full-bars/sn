@@ -263,12 +263,11 @@ func (self *ReleaseEvidenceV2Archive) readIntents(ctx context.Context, request *
 	if err != nil {
 		return err
 	}
-	var file steeringIntentFile
-	if err := decodeAttemptStreamV2JSON(raw, bounds.IntentFileLimit(), &file); err != nil {
-		return err
-	}
-	canonical, err := marshalAttemptSettlementV2JSON(ctx, &file, bounds.IntentFileLimit(), true, true)
-	if err != nil || file.Schema != steeringIntentSchema || !bytes.Equal(canonical, raw) {
+	// Sealed segments were captured as private sources under their own names.
+	intents, all, retained, err := ReadSteeringIntentHistory(ctx, raw, bounds.IntentFileLimit(), func(name string, maximum uint64) ([]byte, error) {
+		return owner.read(ctx, ReleaseEvidenceV2CaptureSource{Kind: "private", Name: name}, maximum)
+	})
+	if err != nil {
 		return errors.Join(errors.New("archive original intent store is not canonical"), err)
 	}
 	if request != nil {
@@ -284,23 +283,15 @@ func (self *ReleaseEvidenceV2Archive) readIntents(ctx context.Context, request *
 		if copy.DeploymentID != owner.cfg.DeploymentID || copy.ValidatorID != owner.cfg.ValidatorID || copy.CoordinatorStateDir != owner.cfg.StateDir {
 			return errors.New("archive adoption differs from its authenticated deployment namespace")
 		}
-		self.adoption, err = copy.matchPrefix(ctx, &file, raw, bounds.IntentFileLimit())
+		logical := make([]*SteeringIntent, len(intents))
+		for index := range intents {
+			logical[index] = &intents[index]
+		}
+		self.adoption, err = copy.matchPrefix(ctx, logical, true, bounds.IntentFileLimit())
 		if err != nil {
 			return err
 		}
 		history.historyAdoption = self.adoption
-	}
-	var wire struct {
-		Schema  string            `json:"schema"`
-		Current json.RawMessage   `json:"current"`
-		History []json.RawMessage `json:"history"`
-	}
-	if err := json.Unmarshal(raw, &wire); err != nil {
-		return err
-	}
-	all := append([]json.RawMessage(nil), wire.History...)
-	if len(wire.Current) != 0 && !bytes.Equal(bytes.TrimSpace(wire.Current), []byte("null")) {
-		all = append(all, wire.Current)
 	}
 	if len(all) == 0 {
 		return errors.New("archive has no actual native intent history")
@@ -309,14 +300,15 @@ func (self *ReleaseEvidenceV2Archive) readIntents(ctx context.Context, request *
 	var priorArtifact *ReleaseMeasurementArtifact
 	seen := map[string]bool{}
 	for index, encoded := range all {
-		var intent SteeringIntent
-		if err := decodeAttemptStreamV2JSON(encoded, bounds.IntentFileLimit(), &intent); err != nil {
+		intent := intents[index]
+		if err := validateSteeringIntentLifecycle(&intent, index < retained); err != nil {
 			return err
 		}
-		if err := validateSteeringIntentLifecycle(&intent, index < len(wire.History)); err != nil {
+		decisionCfg, err := productionConfigForIntent(&owner.cfg, &intent)
+		if err != nil {
 			return err
 		}
-		if err := requireOwnerRecycleProductionFirstIntent(&owner.cfg, previous, intent.SubnetEpoch); err != nil {
+		if err := requireOwnerRecycleProductionFirstIntent(decisionCfg, previous, intent.SubnetEpoch); err != nil {
 			return err
 		}
 		if err := intent.VerifyVectorHash(); err != nil {

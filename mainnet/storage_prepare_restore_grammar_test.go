@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Restoration preserves the runtime's original checkpoint grammar as well as
 // its history. A new physical root cannot legitimize a refused old head.

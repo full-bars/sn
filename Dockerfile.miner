@@ -1,0 +1,100 @@
+# sn miner image.
+#
+# Bakes the miner (cli/miner) in as the primary provider binary. The miner is
+# the program whose usage is written as `provider ...` and which carries
+# provide --all-operators, operators, auth --operator, wallet, claim,
+# claim-daemon(-v2) and fleet. The relay (cmd/provider) is kept beside it as
+# provider-relay for the proxy surface, direct mode and sn-status.
+#
+# No status server, no published port: the miner dials outbound only.
+
+# --- Build Stage ---
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
+
+ARG TARGETARCH
+ARG VERSION=v.unknown
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache git gcc musl-dev
+
+# Module manifests first, then the local replace trees the go.mod requires
+# before `go mod download` (third_party/).
+COPY go.mod go.sum ./
+COPY third_party/ ./third_party/
+
+RUN go mod download
+
+# Copy the rest of the source
+COPY . .
+
+RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    go build -trimpath \
+    -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
+    -o miner_bin ./cli/miner/ \
+    && GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    go build -trimpath \
+    -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
+    -o provider_relay_bin ./cmd/provider/ \
+    && GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    go build -trimpath \
+    -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
+    -o urnet_tools_bin ./cmd/urnet-tools/
+
+# --- Final Stage ---
+FROM alpine:latest
+
+ARG TARGETARCH
+ARG VERSION=v.unknown
+WORKDIR /app
+
+# Runtime dependencies: no vnStat and no busybox-extras (the traffic monitor
+# was retired in the 3.23-fix line; telemetry is Prometheus via urnet-tools).
+RUN apk update && apk add --no-cache \
+    tzdata iputils dos2unix \
+    jq tar curl htop wget procps \
+    iptables net-tools bind-tools \
+    ca-certificates ca-certificates-bundle bash \
+    gosu \
+  && rm -rf /var/cache/apk/*
+
+# Primary binary: the miner, under the same file name convention the relay
+# image uses, and exposed on PATH as `provider`.
+COPY --from=builder /app/miner_bin /app/urnetwork_${TARGETARCH}_stable
+# Relay kept available for the proxy surface, direct mode and sn-status.
+COPY --from=builder /app/provider_relay_bin /app/urnetwork_${TARGETARCH}_relay
+# Go client kept as urnet-tools-go; /usr/local/bin/urnet-tools is the
+# dispatcher below, which routes update/idle-update to the verified shell
+# update wrapper (/app/urnet-tools.sh) and everything else here.
+COPY --from=builder /app/urnet_tools_bin /usr/local/bin/urnet-tools-go
+
+COPY docker/miner/entrypoint.sh /app/entrypoint.sh
+COPY docker/miner/start_miner.sh /app/start_miner.sh
+COPY docker/miner/jwt_verify.sh /app/jwt_verify.sh
+COPY docker/miner/provider_env.sh /app/provider_env.sh
+# The shell update wrapper urnet-docker's in-place update expects at
+# /app/urnet-tools.sh (it sed-patches it from the host).
+COPY docker/miner/urnet-tools.sh /app/urnet-tools.sh
+COPY docker/miner/urnet-tools-dispatch.sh /usr/local/bin/urnet-tools
+
+# Shared docker/scripts helpers: the wrapper sources update_verify.sh, and
+# the urnet-tools surface exposes proxy-health/proxy-traffic/logs.
+COPY docker/scripts/update_verify.sh /app/update_verify.sh
+COPY docker/scripts/proxy-health.sh /app/proxy-health.sh
+COPY docker/scripts/proxy-traffic.sh /app/proxy-traffic.sh
+COPY docker/scripts/logs.sh /app/logs.sh
+
+RUN dos2unix /app/*.sh /usr/local/bin/urnet-tools && chmod +x /app/*.sh /usr/local/bin/urnet-tools \
+    && ln -sf /app/urnetwork_${TARGETARCH}_stable /usr/local/bin/provider \
+    && ln -sf /app/urnetwork_${TARGETARCH}_relay /usr/local/bin/provider-relay \
+    && ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health \
+    && ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic \
+    && ln -sf /app/logs.sh /usr/local/bin/logs \
+    && ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools-sh \
+    && ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh \
+    && ln -sf /app/jwt_verify.sh /usr/local/bin/jwt_verify.sh
+
+# State volume: a single known path an operator can mount.
+VOLUME ["/root/.urnetwork"]
+
+ENTRYPOINT ["/app/entrypoint.sh"]

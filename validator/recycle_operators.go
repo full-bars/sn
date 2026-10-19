@@ -17,11 +17,27 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/urfoundation/sn/stabi"
 	"github.com/urnetwork/connect"
 )
 
 const ownerRecycleOperatorEvidenceSchema = "urnetwork-owner-recycle-operator-evidence-v1"
+
+// A literal absent identity grants only bounded read recovery, never route
+// authority. Present invalid or different values remain independent hard errors.
+type ownerRecycleRouteUnavailableError struct{ method string }
+
+// Retain which physical identity response was absent without inventing a value.
+func (self *ownerRecycleRouteUnavailableError) Error() string {
+	return fmt.Sprintf("owner-recycle operator RPC identity is unavailable: %s", self.method)
+}
+
+// Absence is provider availability rather than a manufactured timeout.
+func (*ownerRecycleRouteUnavailableError) Timeout() bool { return false }
+
+// The strict retry classifier still inspects all independent hard siblings.
+func (*ownerRecycleRouteUnavailableError) Temporary() bool { return true }
 
 // These are exact coordinator facts. Decimal strings retain uint256 values;
 // no observed status claims successful HTTP delivery or operator independence.
@@ -99,17 +115,33 @@ func ObserveOwnerRecycleMeasurementOperators(ctx context.Context, authority *Own
 	ownedChain.readRetryHooks = chain.readRetryHooks
 	// The cached chain id from dialing is not authority after proxy retargeting.
 	checkRoute := func() error {
+		// Each completed identity is compared before another read or a late
+		// stop. Both physical requests borrow the same finite operation owner.
+		if err := ownedChain.retryChainRead(ctx, func(callCtx context.Context) error {
+			var chainId *hexutil.Big
+			if err := ownedChain.client.Client().CallContext(callCtx, &chainId, "eth_chainId"); err != nil {
+				return observeReleaseError(err)
+			}
+			if chainId == nil {
+				return &ownerRecycleRouteUnavailableError{method: "eth_chainId"}
+			}
+			if (*big.Int)(chainId).Cmp(new(big.Int).SetUint64(domain.ChainID)) != 0 {
+				return errors.New("owner-recycle operator RPC changed mainnet EVM chain id")
+			}
+			return callCtx.Err()
+		}); err != nil {
+			return err
+		}
 		return ownedChain.retryChainRead(ctx, func(callCtx context.Context) error {
-			chainId, err := ownedChain.client.ChainID(callCtx)
-			if err != nil {
-				return err
-			}
-			var genesis common.Hash
+			var genesis *common.Hash
 			if err := ownedChain.client.Client().CallContext(callCtx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
-				return err
+				return observeReleaseError(err)
 			}
-			if chainId == nil || chainId.Cmp(new(big.Int).SetUint64(domain.ChainID)) != 0 || genesis != common.Hash(domain.GenesisHash) {
-				return errors.New("owner-recycle operator RPC changed mainnet chain or native genesis")
+			if genesis == nil {
+				return &ownerRecycleRouteUnavailableError{method: "chain_getBlockHash"}
+			}
+			if *genesis != common.Hash(domain.GenesisHash) {
+				return errors.New("owner-recycle operator RPC changed native genesis")
 			}
 			return callCtx.Err()
 		})
@@ -117,7 +149,7 @@ func ObserveOwnerRecycleMeasurementOperators(ctx context.Context, authority *Own
 	if err := checkRoute(); err != nil {
 		return nil, err
 	}
-	artifact, verified, err := DecodeReleaseMeasurementArtifactV2(ctx, providerBytes, options)
+	artifact, verified, err := DecodeReleaseMeasurementArtifactV2(ctx, providerBytes, authority.providerOptions(options))
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +158,7 @@ func ObserveOwnerRecycleMeasurementOperators(ctx context.Context, authority *Own
 	}
 	query := releaseDecisionChainV2Query{domain: domain, policy: authority.config.Policy,
 		boundary:     AttemptBoundary{SettlementEpoch: artifact.SettlementEpoch, EVMBlock: artifact.EVMSnapshotBlock, EVMBlockHash: artifact.EVMSnapshotHash},
-		maxOperators: options.MaxOperators, maxControlBytes: options.MaxControlBytes}
+		maxOperators: options.MaxOperators, maxControlBytes: options.MaxControlBytes, settlementV2: releaseSettlementV2Addresses(&authority.config)}
 	for _, input := range artifact.Inputs {
 		operator := releaseDecisionChainV2OperatorQuery{noID: input.NoID}
 		// The full verifier already bounded and authenticated this membership.

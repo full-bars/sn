@@ -22,6 +22,13 @@ import (
 func newBootstrapContractRoleFixture(t *testing.T) (*bootstrapChainFixture, evmCreatePlan) {
 	t.Helper()
 	f := newBootstrapSuccessorCommandFixture(t)
+	return f, bootstrapContractRoleBind(t, f)
+}
+
+// Every producer config, one or two, is rebound to the evidence graph's actual
+// proxy, vault and policy initializer before local custody exists.
+func bootstrapContractRoleBind(t *testing.T, f *bootstrapChainFixture) evmCreatePlan {
+	t.Helper()
 	evidence, err := selectEvmCreatePlan(t.Context(), f.preparation.Contracts, "evidence-create", f.config.Contracts.Path)
 	if err != nil {
 		t.Fatal(err)
@@ -62,7 +69,7 @@ func newBootstrapContractRoleFixture(t *testing.T) (*bootstrapChainFixture, evmC
 	if err != nil {
 		t.Fatal(err)
 	}
-	return f, evidence
+	return evidence
 }
 
 // Matching foreign declarations remain individually signed and pass original

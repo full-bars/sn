@@ -98,17 +98,20 @@ type rpcReply struct {
 	Id      int             `json:"id"`
 	Result  json.RawMessage `json:"result"`
 	Error   *struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
+		Code    int             `json:"code"`
+		Message string          `json:"message"`
+		Data    json.RawMessage `json:"data"`
 	} `json:"error"`
 }
 
 // Retains the method and exact server code so optional read capabilities can
-// distinguish an unsupported method without parsing display text.
+// distinguish an unsupported method without parsing display text. data is the
+// server's raw error data, such as an eth_call's revert bytes.
 type rpcCallError struct {
 	method  string
 	code    int
 	message string
+	data    json.RawMessage
 }
 
 // Preserves the established RPC diagnostic spelling for existing callers.
@@ -205,7 +208,7 @@ func (self *rpcClient) callAdmittedReadResult(ctx context.Context, method string
 				// An interrupted body cannot erase a known terminal status.
 				if response.StatusCode >= http.StatusMultipleChoices && response.StatusCode < http.StatusBadRequest {
 					requestErr = errors.Join(fmt.Errorf("%w: %s: HTTP %d redirect from owned route", errRpcIntegrity, method, response.StatusCode), requestErr)
-				} else if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusRequestTimeout && response.StatusCode != http.StatusTooManyRequests && response.StatusCode != http.StatusBadGateway && response.StatusCode != http.StatusServiceUnavailable && response.StatusCode != http.StatusGatewayTimeout {
+				} else if response.StatusCode != http.StatusOK && !rpcReadRetryStatus(response.StatusCode) {
 					requestErr = errors.Join(fmt.Errorf("%s: HTTP %d", method, response.StatusCode), requestErr)
 				}
 				if !rpcReadTransportMayRetry(requestErr) {
@@ -232,7 +235,7 @@ func (self *rpcClient) callAdmittedReadResult(ctx context.Context, method string
 						attemptCancel()
 						return errors.Join(fmt.Errorf("%w: %s: reply has both result and error", errRpcIntegrity, method), requestErr)
 					}
-					requestErr = errors.Join(&rpcCallError{method: method, code: reply.Error.Code, message: reply.Error.Message}, requestErr)
+					requestErr = errors.Join(&rpcCallError{method: method, code: reply.Error.Code, message: reply.Error.Message, data: reply.Error.Data}, requestErr)
 					if !rpcTransientReadError(reply.Error.Code, reply.Error.Message) {
 						attemptCancel()
 						return requestErr
@@ -269,7 +272,7 @@ func (self *rpcClient) callAdmittedReadResult(ctx context.Context, method string
 			} else if readErr == nil && response.StatusCode >= http.StatusMultipleChoices && response.StatusCode < http.StatusBadRequest {
 				attemptCancel()
 				return errors.Join(fmt.Errorf("%w: %s: HTTP %d redirect from owned route", errRpcIntegrity, method, response.StatusCode), requestErr)
-			} else if readErr == nil && response.StatusCode != http.StatusRequestTimeout && response.StatusCode != http.StatusTooManyRequests && response.StatusCode != http.StatusBadGateway && response.StatusCode != http.StatusServiceUnavailable && response.StatusCode != http.StatusGatewayTimeout {
+			} else if readErr == nil && !rpcReadRetryStatus(response.StatusCode) {
 				attemptCancel()
 				return errors.Join(fmt.Errorf("%s: HTTP %d", method, response.StatusCode), requestErr)
 			} else if readErr == nil {

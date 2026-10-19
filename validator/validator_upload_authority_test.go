@@ -92,6 +92,10 @@ func newValidatorUploadAuthorityTestFixture(t *testing.T) *validatorUploadAuthor
 	if err != nil {
 		t.Fatal(err)
 	}
+	uidsKey, err := types.CreateStorageKey(metadata, "SubtensorModule", "Uids", binary.LittleEndian.AppendUint16(nil, 521), base.authority.Expected.Hotkey[:])
+	if err != nil {
+		t.Fatal(err)
+	}
 	base.native.chain.API.Client = &validatorRuntimeIdentityTestClient{callContext: func(ctx context.Context, result any, method string, args ...any) error {
 		base.native.ctx = ctx
 		if err := ctx.Err(); err != nil {
@@ -99,6 +103,16 @@ func newValidatorUploadAuthorityTestFixture(t *testing.T) *validatorUploadAuthor
 		}
 		if method == "chain_getFinalizedHead" {
 			return setValidatorRuntimeIdentityTestResult(result, self.currentHash.Hex())
+		}
+		if self.fault == "native-anchor-changed" && method == "chain_getBlockHash" && len(args) == 1 && args[0] == base.authority.Expected.NativeBlock {
+			return setValidatorRuntimeIdentityTestResult(result, types.Hash{0x77}.Hex())
+		}
+		if self.fault == "current-schedule-unavailable" && method == "state_getStorage" && len(args) == 2 && args[0] != timeKey.Hex() && args[1] == self.currentHash.Hex() {
+			return errors.New("fixture current native storage is unavailable")
+		}
+		if self.fault == "current-hotkey-unregistered" && method == "state_getStorage" && len(args) == 2 && args[0] == uidsKey.Hex() && args[1] == self.currentHash.Hex() {
+			// A deregistered hotkey has no reverse UID mapping at the current hash.
+			return setValidatorRuntimeIdentityTestResult(result, nil)
 		}
 		if method == "chain_getBlockHash" && len(args) == 1 && args[0] == uint64(101) {
 			self.currentCanonicalCalls++
@@ -310,6 +324,10 @@ func (self *validatorUploadAuthorityTestFixture) GetLogs(ctx context.Context, fi
 		return nil, nil
 	}
 	rows := make([]map[string]any, 0)
+	if self.fault == "empty-logs" {
+		// A log-pruned provider returns a well-formed empty range.
+		return rows, ctx.Err()
+	}
 	for _, event := range self.events {
 		if event.Block < uint64(from) || event.Block > uint64(to) {
 			continue

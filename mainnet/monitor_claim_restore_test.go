@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Actual public preparation, archive, restore and monitor continuation surround
 // synthetic claims. Original paths, unresolved amounts and review history stay

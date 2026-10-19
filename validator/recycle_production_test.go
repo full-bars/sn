@@ -16,6 +16,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -38,6 +39,8 @@ type ownerRecycleProductionTestFixture struct {
 	epoch          uint64
 	head           uint64
 	extrinsicsKVs  map[uint64][]string
+	blockLock      sync.Mutex
+	blocks         []ownerRecycleProductionTestBlock
 }
 
 // The complete reviewed producer interface is retained. Only missing owner
@@ -303,32 +306,59 @@ func (self *ownerRecycleProductionTestFixture) header(number uint64) types.Heade
 }
 
 // Hashes are fixed before approvals and artifacts select their native blocks.
+// Each height's header is kept with the body it commits; a changed body
+// rebuilds that height and every later one, as the parent chain requires.
 func (self *ownerRecycleProductionTestFixture) receiptBlock(number uint64) (types.Header, types.Hash) {
 	if number < 100 || number > 1000 {
 		self.test.Fatal("synthetic production header height is outside its fixture")
 	}
+	self.blockLock.Lock()
+	defer self.blockLock.Unlock()
 	parent := types.Hash{2}
-	var header types.Header
 	for current := uint64(100); current <= number; current++ {
-		header, parent = releaseReceiptTestHeader(self.test, parent, current, self.extrinsicsKVs[current]...)
+		index, extrinsics := int(current-100), self.extrinsicsKVs[current]
+		if index < len(self.blocks) && slices.Equal(self.blocks[index].extrinsics, extrinsics) {
+			parent = self.blocks[index].hash
+			continue
+		}
+		header, hash := releaseReceiptTestHeader(self.test, parent, current, extrinsics...)
+		self.blocks = append(self.blocks[:index], ownerRecycleProductionTestBlock{header: header, hash: hash, extrinsics: slices.Clone(extrinsics)})
+		parent = hash
 	}
-	return header, parent
+	block := self.blocks[number-100]
+	return block.header, block.hash
+}
+
+// One synthetic canonical height and the body its header commits.
+type ownerRecycleProductionTestBlock struct {
+	header     types.Header
+	hash       types.Hash
+	extrinsics []string
 }
 
 // Fresh proof scratch is supplied to every genuine replay, as in production.
 func (self *ownerRecycleProductionTestFixture) stage(t *testing.T) (*ownerRecycleProductionStage, *VerifiedReleaseMeasurement) {
 	t.Helper()
 	measurement := self.operator.measurement
-	_, provider, err := DecodeReleaseMeasurementArtifactV2(t.Context(), measurement.encoded, measurement.provider.options(t))
+	_, provider, err := DecodeReleaseMeasurementArtifactV2(t.Context(), measurement.encoded, self.providerOptions(t))
 	if err != nil {
 		t.Fatal(err)
 	}
 	stage, err := prepareOwnerRecycleProductionDecision(t.Context(), self.cfg, measurement.admission.chain, self.operator.chain,
-		measurement.encoded, measurement.provider.artifact, provider.Decision, measurement.provider.options(t))
+		measurement.encoded, measurement.provider.artifact, provider.Decision, self.providerOptions(t))
 	if err != nil {
 		t.Fatal(err)
 	}
 	return stage, provider.Decision
+}
+
+// Like the production submitter, only selected treasury authority admits an
+// empty provider allocation; owner-recycle fixtures keep the original refusal.
+func (self *ownerRecycleProductionTestFixture) providerOptions(t *testing.T) ReleaseMeasurementV2Options {
+	t.Helper()
+	options := self.operator.measurement.provider.options(t)
+	options.treasuryReserveFallback = treasuryReserveFallbackConfig(self.cfg)
+	return options
 }
 
 // This calls the real cryptographic preparation path and stores its exact
@@ -379,7 +409,7 @@ func (self *ownerRecycleProductionTestFixture) intentAndEnvelope(t *testing.T, s
 	if _, err := prepared.Validate(); err != nil {
 		t.Fatal(err)
 	}
-	envelope, envelopeHash, _, err := SealReleaseMeasurementEnvelopeV2(t.Context(), measurement.encoded, measurement.provider.artifact.SelfUID, self.hotkey, prepared.ExtrinsicHash, time.Unix(2_000_000_000, 0), measurement.provider.options(t))
+	envelope, envelopeHash, _, err := SealReleaseMeasurementEnvelopeV2(t.Context(), measurement.encoded, measurement.provider.artifact.SelfUID, self.hotkey, prepared.ExtrinsicHash, time.Unix(2_000_000_000, 0), self.providerOptions(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -411,6 +441,9 @@ func (self *ownerRecycleProductionTestFixture) intentAndEnvelope(t *testing.T, s
 		MeasurementArtifactHash: ReleaseMeasurementContentHash(measurement.encoded), MeasurementEnvelopeHash: envelopeHash, OwnerRecycle: sidecar,
 		Prepared: prepared, UIDs: row.UIDs, Scores: scores, MaskedUIDs: provider.MaskedUIDs, EligibleHeadUIDs: headSelectionUIDs(provider.EligibleHead),
 		SelectedHeadUIDs: headSelectionUIDs(provider.SelectedHead), RejectedHeadUIDs: headSelectionUIDs(provider.RejectedHead), StaleHeadBindings: provider.StaleBindings, DepositAudits: artifact.DepositAudits}
+	if self.cfg.TreasuryApproval != nil {
+		intent.Treasury, intent.OwnerRecycle = intent.OwnerRecycle, nil
+	}
 	for _, head := range provider.EligibleHead {
 		encoded, _ := rationalJSON([]*big.Rat{head.Score})
 		intent.EligibleHeadScores = append(intent.EligibleHeadScores, encoded[0])

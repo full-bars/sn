@@ -1,0 +1,72 @@
+{
+  "actual_core224": {
+    "bytes": 1487,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-fdd-core224-server-fixtures/core224-actual.json",
+    "sha256": "c1a27ac966d384b7baac58436c00114a298664306179942323faafd3f258432d"
+  },
+  "all38_preserved": true,
+  "author_execution": {
+    "binary_list": 0,
+    "compiler": 0,
+    "database": 0,
+    "live_rpc": 0,
+    "test_body": 0
+  },
+  "deadline_and_priority": {
+    "deadline_utc": "2026-10-05T16:26:00Z",
+    "strategy": "Usefully parallel focused compilers and tests first; full suites afterward. Preserve original obligations, exact source inputs and component evidence. Full catalog/controls are not prerequisites for focused validation."
+  },
+  "frozen_model_exceptions": {
+    "bytes": 3057,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-fdd-core224-server-fixtures/fullmodel-known-exceptions.json",
+    "sha256": "d5d3ee627cabc4d9ee055e8ca030a14d5a4b216c32ce35d6225dc0577c7a6e53"
+  },
+  "known_pending_source_work": [],
+  "latest_published_addendum": {
+    "bytes": 2302,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-fdd-core224-server-fixtures/latest-published-addendum.json",
+    "sha256": "4390c21fdf63377c616c89737210a7a7e33bcd8b6423ce7e86285ee5dc27f36b"
+  },
+  "latest_published_tuple": {
+    "connect": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+    "sdk": "18fca2edbbeac5566ef9c40027dba0e1d83be1d7",
+    "server": "f0b5238ffb663c6046c430b6542435fbc6ff0ceb",
+    "sn": "494c65becda9ce2c883cba04ff3b472639f41bd8",
+    "xops": "9a37239ebeebbb5efea4f63a56191f91f3c4ad8f"
+  },
+  "lessons": [
+    "A private H1 probe timer must not replace a real physical timeout with an unproven closed-pipe cause; manual cancellation still closes and joins, and fallback uses only the original remaining budget.",
+    "The bounded HTTP cause walker must charge complete child frames, absent slots and pending siblings before invoking foreign callbacks, preserving the original assertion and causes.",
+    "Large fixture seeders commit bounded512-row groups while keeping original population, timestamps, trigger events and plan assertions. The benchmark is an existing root and reused controls are not new coverage.",
+    "Paid/free fixtures must drive the real legacy settlement owner before comparing terminal originals. The source correction adds an actual Redis sibling without changing production weighting."
+  ],
+  "merged_source_additions": {
+    "new_core_roots": 12,
+    "new_operative_controls": 16,
+    "new_server_model_roots": 2,
+    "status": "UNQUALIFIED_NORMAL_RACE_CONTROLS"
+  },
+  "optional_retention": {
+    "bytes": 6152,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-fdd-core224-server-fixtures/optional-minio-retention.json",
+    "sha256": "ae42cf385dfd0563dc6fb484739405775b0451617496f3d310b07f4c1ea04244"
+  },
+  "schema": "focused-core-server-progress-v1",
+  "scope": {
+    "bytes": 4590,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-fdd-core224-server-fixtures/SCOPE-HANDOFF.json",
+    "sha256": "56e941cb7ed0c664ee8986feebcf292eba5ecc6d218cd355a99eeaa37fce4027"
+  },
+  "source_proof": {
+    "bytes": 33231,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-fdd-core224-server-fixtures/source-proof.json",
+    "sha256": "9c4730dc460f6cd023079d59b71c75747ed823cfdb17022f30a81ebabe301530"
+  },
+  "source_tuple": {
+    "connect": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+    "sdk": "e3f4f3fb56e59eb9fdb12c1f87594209c505e5e9",
+    "server": "f0b5238ffb663c6046c430b6542435fbc6ff0ceb",
+    "sn": "fdd3bff689427dcf092d89685e73afedc572f06f",
+    "xops": "9a37239ebeebbb5efea4f63a56191f91f3c4ad8f"
+  }
+}

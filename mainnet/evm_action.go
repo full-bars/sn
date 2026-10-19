@@ -8,9 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
 
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -51,32 +50,45 @@ type evmActionObservation struct {
 type evmActionChain interface {
 	reconcile(context.Context, evmCreatePlan, evmActionRecord) (evmActionObservation, error)
 	submit(context.Context, evmCreatePlan, evmActionRecord) error
+	submitEscrow(context.Context, evmCreatePlan, evmActionRecord) error
 }
 
 // The result explicitly separates one contract from the full installation.
+// Settlement v2 results name their own three contracts and omit the reserve.
 type evmCreateResult struct {
-	PlanHash             string                       `json:"plan_hash"`
-	Status               string                       `json:"status"`
-	Address              string                       `json:"reserve_address"`
-	VaultAddress         string                       `json:"vault_address,omitempty"`
-	CoordinatorAddress   string                       `json:"coordinator_implementation_address,omitempty"`
-	ExecutableAction     string                       `json:"executable_action,omitempty"`
-	SigningDigest        string                       `json:"signing_digest"`
-	UnsignedTransaction  string                       `json:"unsigned_transaction"`
-	TransactionHash      string                       `json:"transaction_hash,omitempty"`
-	Attempts             uint8                        `json:"attempts"`
-	Receipt              *evmCreateReceipt            `json:"receipt,omitempty"`
-	ReceiptObservation   string                       `json:"receipt_observation,omitempty"`
-	InstallationComplete bool                         `json:"installation_complete"`
-	ActivationReady      bool                         `json:"activation_ready"`
-	RemainingActions     []string                     `json:"remaining_actions"`
-	EscrowRegistration   *contractEscrowRegistration  `json:"escrow_registration,omitempty"`
-	ProxyAddress         string                       `json:"coordinator_proxy_address,omitempty"`
-	ProxyConstructor     *contractProxyConstructor    `json:"proxy_constructor,omitempty"`
-	ReserveBinding       *contractReserveBinding      `json:"reserve_binding,omitempty"`
-	VaultBinding         *contractVaultBinding        `json:"vault_binding,omitempty"`
-	EvidenceAddress      string                       `json:"validator_evidence_address,omitempty"`
-	EvidenceConstructor  *contractEvidenceConstructor `json:"evidence_constructor,omitempty"`
+	PlanHash                         string                          `json:"plan_hash"`
+	Status                           string                          `json:"status"`
+	Address                          string                          `json:"reserve_address,omitempty"`
+	VaultAddress                     string                          `json:"vault_address,omitempty"`
+	CoordinatorAddress               string                          `json:"coordinator_implementation_address,omitempty"`
+	ExecutableAction                 string                          `json:"executable_action,omitempty"`
+	SigningDigest                    string                          `json:"signing_digest"`
+	UnsignedTransaction              string                          `json:"unsigned_transaction"`
+	TransactionHash                  string                          `json:"transaction_hash,omitempty"`
+	Attempts                         uint8                           `json:"attempts"`
+	Receipt                          *evmCreateReceipt               `json:"receipt,omitempty"`
+	ReceiptObservation               string                          `json:"receipt_observation,omitempty"`
+	InstallationComplete             bool                            `json:"installation_complete"`
+	ActivationReady                  bool                            `json:"activation_ready"`
+	RemainingActions                 []string                        `json:"remaining_actions"`
+	EscrowRegistration               *contractEscrowRegistration     `json:"escrow_registration,omitempty"`
+	ProxyAddress                     string                          `json:"coordinator_proxy_address,omitempty"`
+	ProxyConstructor                 *contractProxyConstructor       `json:"proxy_constructor,omitempty"`
+	ReserveBinding                   *contractReserveBinding         `json:"reserve_binding,omitempty"`
+	VaultBinding                     *contractVaultBinding           `json:"vault_binding,omitempty"`
+	EvidenceAddress                  string                          `json:"validator_evidence_address,omitempty"`
+	EvidenceConstructor              *contractEvidenceConstructor    `json:"evidence_constructor,omitempty"`
+	Vault2Address                    string                          `json:"vault2_address,omitempty"`
+	Settlement2ImplementationAddress string                          `json:"settlement2_implementation_address,omitempty"`
+	Settlement2Address               string                          `json:"settlement2_address,omitempty"`
+	ClaimBatcherAddress              string                          `json:"claim_batcher_address,omitempty"`
+	Vault2Constructor                *contractVault2Constructor      `json:"vault2_constructor,omitempty"`
+	Settlement2Initializer           *contractSettlement2Initializer `json:"settlement2_initializer,omitempty"`
+	EscrowCollateral                 *contractEscrowCollateral       `json:"escrow_collateral,omitempty"`
+	EscrowTransactionHash            string                          `json:"escrow_transaction_hash,omitempty"`
+	EscrowAttempts                   uint8                           `json:"escrow_attempts,omitempty"`
+	EscrowSigningDigest              string                          `json:"escrow_signing_digest,omitempty"`
+	EscrowUnsignedTransaction        string                          `json:"escrow_unsigned_transaction,omitempty"`
 }
 
 // All mutable projections are copied on construction. Storage failure poisons
@@ -225,6 +237,15 @@ func copyEvmCreateProjection(source *evmCreatePlan, copiedPlans map[*evmCreatePl
 		constructor := *plan.VaultConstructor
 		plan.VaultConstructor = &constructor
 	}
+	if plan.Vault2Constructor != nil {
+		constructor := *plan.Vault2Constructor
+		plan.Vault2Constructor = &constructor
+	}
+	if plan.Settlement2Initializer != nil {
+		initializer := *plan.Settlement2Initializer
+		initializer.Auditors = append([]common.Address(nil), initializer.Auditors...)
+		plan.Settlement2Initializer = &initializer
+	}
 	return &plan
 }
 
@@ -250,7 +271,7 @@ func newEvmSelectedCreateOwner(plan evmCreatePlan, store evmActionStorage, prior
 	if err := record.validateForAction(plan.Config, plan.ActionIndex); err != nil {
 		return nil, err
 	}
-	if plan.ActionIndex >= 2 && record.Receipt != nil && record.Receipt.Status == 1 {
+	if (plan.ActionIndex >= 2 || plan.Config.Plan.settlementV2()) && record.Receipt != nil && record.Receipt.Status == 1 {
 		if err := validateEvmCreateCompletion(plan, record); err != nil {
 			return nil, err
 		}
@@ -276,31 +297,29 @@ func validateEvmCreateCompletion(plan evmCreatePlan, record evmActionRecord) err
 	}
 	r := record.Receipt
 	if r == nil {
-		name := []string{"reserve", "vault", "coordinator implementation", "escrow registration", "initialized proxy", "reserve recorder binding", "vault coordinator binding", "unanchored validator evidence"}[plan.ActionIndex]
-		return fmt.Errorf("action requires the exact retained successful %s postconditions", name)
+		return fmt.Errorf("action requires the exact retained successful %s postconditions", plan.actionName())
 	}
 	getters, err := plan.receiptGetters(*r)
 	if err != nil {
 		return err
 	}
 	expectedAddress := plan.Address.Hex()
-	if plan.ActionIndex == 3 || plan.ActionIndex == 5 || plan.ActionIndex == 6 {
+	if plan.Config.Plan.Actions[plan.ActionIndex].To != nil {
 		expectedAddress = ""
 	}
 	if r.Status != 1 || r.ContractAddress != expectedAddress || r.RuntimeHash != crypto.Keccak256Hash(plan.Runtime).Hex() || r.GetterHash != rootObjectHash(getters) || r.NativeNumber != record.ScanNumber || r.NativeHash != record.ScanHash {
-		name := []string{"reserve", "vault", "coordinator implementation", "escrow registration", "initialized proxy", "reserve recorder binding", "vault coordinator binding", "unanchored validator evidence"}[plan.ActionIndex]
-		return fmt.Errorf("action requires the exact retained successful %s postconditions", name)
+		return fmt.Errorf("action requires the exact retained successful %s postconditions", plan.actionName())
 	}
 	if len(plan.Storage) != 0 && r.StorageHash != rootObjectHash(plan.Storage) {
 		return errors.New("retained constructor storage postconditions differ")
 	}
-	if plan.ActionIndex == 3 && (plan.EscrowRegistration == nil || r.RegistrationHash != evmEscrowRegistrationHash(plan, *r)) {
+	if plan.actionIs("escrow-register", "escrow2-register") && (plan.EscrowRegistration == nil || r.RegistrationHash != evmEscrowRegistrationHash(plan, *r)) {
 		return errors.New("retained escrow registration postconditions differ")
 	}
-	if plan.ActionIndex == 5 && (plan.ReserveBinding == nil || r.RecorderBindingHash != evmReserveBindingHash(plan, *r)) {
+	if plan.actionIs("reserve-link") && (plan.ReserveBinding == nil || r.RecorderBindingHash != evmReserveBindingHash(plan, *r)) {
 		return errors.New("retained reserve recorder binding postconditions differ")
 	}
-	if plan.ActionIndex == 6 && (plan.VaultBinding == nil || r.VaultBindingHash != evmVaultBindingHash(plan, *r)) {
+	if plan.actionIs("vault-link", "vault2-link") && (plan.VaultBinding == nil || r.VaultBindingHash != evmVaultBindingHash(plan, *r)) {
 		return errors.New("retained vault coordinator binding postconditions differ")
 	}
 	action := plan.Config.Plan.Actions[plan.ActionIndex]
@@ -367,7 +386,7 @@ func validateEvmCreatePrerequisite(plan evmCreatePlan, record evmActionRecord) e
 				return errors.New("retained predecessor chain or inclusion order differs")
 			}
 		}
-		attempts += uint16(prior.Attempts)
+		attempts += uint16(prior.Attempts) + uint16(prior.EscrowAttempts)
 	}
 	if rootObjectHash(plan.Prerequisites[len(plan.Prerequisites)-1]) != record.PredecessorHash || attempts > uint16(plan.Config.Plan.MaximumAttempts) {
 		return errors.New("prerequisite custody or original graph attempt allowance changed")
@@ -409,6 +428,12 @@ func (self *evmCreateOwner) checkpointCustody(record evmActionRecord, prior []ev
 // Offline mode only retains public bytes. Online mode reconciles first; submit
 // additionally requires exact current admission and an unused finite attempt.
 func (self *evmCreateOwner) advance(ctx context.Context, signed []byte, online, submit bool) (evmCreateResult, error) {
+	return self.advanceWithEscrow(ctx, signed, nil, online, submit)
+}
+
+// Settlement v2's vault2 journal may also import the escrow registration's
+// original bytes, which its send then broadcasts back to back (A7).
+func (self *evmCreateOwner) advanceWithEscrow(ctx context.Context, signed, escrow []byte, online, submit bool) (evmCreateResult, error) {
 	var result evmCreateResult
 	if ctx == nil || submit && !online {
 		return result, errors.New("EVM operation context or online mode is invalid")
@@ -429,7 +454,7 @@ func (self *evmCreateOwner) advance(ctx context.Context, signed []byte, online, 
 	if err := record.validateForAction(self.plan.Config, self.plan.ActionIndex); err != nil {
 		return result, err
 	}
-	if self.plan.ActionIndex >= 2 && record.Receipt != nil && record.Receipt.Status == 1 {
+	if (self.plan.ActionIndex >= 2 || self.plan.Config.Plan.settlementV2()) && record.Receipt != nil && record.Receipt.Status == 1 {
 		if err := validateEvmCreateCompletion(self.plan, record); err != nil {
 			return result, err
 		}
@@ -442,7 +467,7 @@ func (self *evmCreateOwner) advance(ctx context.Context, signed []byte, online, 
 	plan.Prerequisites = prior
 	priorAttempts := uint16(0)
 	for _, record := range prior {
-		priorAttempts += uint16(record.Attempts)
+		priorAttempts += uint16(record.Attempts) + uint16(record.EscrowAttempts)
 	}
 	p := self.plan.Config.Plan
 	action := p.Actions[self.plan.ActionIndex]
@@ -455,11 +480,19 @@ func (self *evmCreateOwner) advance(ctx context.Context, signed []byte, online, 
 		if record.Signed != "" && record.Signed != encoded {
 			return result, errors.New("EVM custody already owns different original signed bytes")
 		}
+		if self.plan.actionIs("escrow2-register") && prior[0].EscrowSigned != "" && encoded != prior[0].EscrowSigned {
+			return result, errors.New("escrow registration custody must keep the bytes sent back to back with vault2")
+		}
 		if record.Signed == "" {
 			record.Signed, record.TransactionHash = encoded, tx.Hash().Hex()
 			if err := self.retain(&record); err != nil {
 				return result, err
 			}
+		}
+	}
+	if len(escrow) != 0 {
+		if err := self.retainEscrowFollow(&record, escrow); err != nil {
+			return result, err
 		}
 	}
 	status := "signature-awaiting-import"
@@ -496,7 +529,7 @@ func (self *evmCreateOwner) advance(ctx context.Context, signed []byte, online, 
 		}
 		status = observation.Status
 		if submit && observation.SendReady {
-			if record.Receipt != nil || uint16(record.Attempts)+priorAttempts >= uint16(p.MaximumAttempts) {
+			if record.Receipt != nil || uint16(record.Attempts)+uint16(record.EscrowAttempts)+priorAttempts >= uint16(p.MaximumAttempts) {
 				status = "attempt-allowance-exhausted"
 			} else {
 				if err := ctx.Err(); err != nil {
@@ -518,6 +551,11 @@ func (self *evmCreateOwner) advance(ctx context.Context, signed []byte, online, 
 					return self.result(record, "submission-uncertain"), err
 				}
 				status = "submitted-awaiting-canonical-receipt"
+				if record.EscrowSigned != "" {
+					if status, err = self.submitEscrowFollow(ctx, plan, &record, prior, priorAttempts); err != nil {
+						return self.result(record, status), err
+					}
+				}
 			}
 		}
 	}
@@ -533,10 +571,12 @@ func (self *evmCreateOwner) advance(ctx context.Context, signed []byte, online, 
 
 // Public signing material contains the exact envelope; it cannot sign itself.
 func (self *evmCreateOwner) result(record evmActionRecord, status string) evmCreateResult {
-	tx, _ := self.plan.Config.Plan.Actions[self.plan.ActionIndex].unsigned()
-	raw, _ := tx.MarshalBinary()
-	signer := types.LatestSignerForChainID(big.NewInt(mainnetEvmChainId))
-	result := evmCreateResult{PlanHash: self.plan.Config.Plan.hash(), Status: status, Address: self.plan.Address.Hex(), SigningDigest: signer.Hash(tx).Hex(), UnsignedTransaction: "0x" + hex.EncodeToString(raw), TransactionHash: record.TransactionHash, Attempts: record.Attempts, Receipt: record.Receipt, RemainingActions: []string{"vault-create", "coordinator-create", "escrow-register", "proxy-create", "reserve-link", "vault-link", "evidence-create", "evidence-anchor"}}
+	digest, unsigned := self.plan.Config.Plan.Actions[self.plan.ActionIndex].envelope()
+	result := evmCreateResult{PlanHash: self.plan.Config.Plan.hash(), Status: status, Address: self.plan.Address.Hex(), SigningDigest: digest, UnsignedTransaction: unsigned, TransactionHash: record.TransactionHash, Attempts: record.Attempts, Receipt: record.Receipt, RemainingActions: []string{"vault-create", "coordinator-create", "escrow-register", "proxy-create", "reserve-link", "vault-link", "evidence-create", "evidence-anchor"},
+		EscrowTransactionHash: record.EscrowTransactionHash, EscrowAttempts: record.EscrowAttempts}
+	if self.plan.Config.Plan.settlementV2() {
+		return evmV2CreateResult(self.plan, result)
+	}
 	if self.plan.ActionIndex >= 1 {
 		result.Address = self.plan.Reserve.Address.Hex()
 		result.VaultAddress = self.plan.Address.Hex()

@@ -95,8 +95,15 @@ func (self *ReleaseSteerer) scanProductionPendingReceipt(ctx context.Context, cu
 	}
 	finishedBudget := errors.New("production receipt scan completed its finite block allowance")
 	for remaining != 0 {
-		var scan *crv4.FinalizedExtrinsicScan
+		var scan, completed *crv4.FinalizedExtrinsicScan
 		err := self.productionRead(ctx, productionReadReceipt, current, func(readCtx context.Context) error {
+			if completed != nil {
+				// The owner retries a scan that completed only because its
+				// attempt's deadline had passed by the time it checked. That
+				// finalized coverage or receipt still holds; nothing is read again.
+				scan = completed
+				return nil
+			}
 			if remaining == 0 {
 				return finishedBudget
 			}
@@ -104,12 +111,16 @@ func (self *ReleaseSteerer) scanProductionPendingReceipt(ctx context.Context, cu
 			scan, err = native.ScanFinalizedExtrinsicRange(readCtx, txHash, crv4.FinalizedExtrinsicScanRange{
 				First: first, PreviousHash: previous, MaximumBlocks: min(remaining, crv4.ReceiptScanChunkBlockLimit),
 			})
-			if _, _, covered := scan.AbsenceBoundary(); err != nil && covered && ctx.Err() == nil && retryableProductionSteeringRead(err) {
-				// Preserve real completed bodies before the retry owner discards
-				// its expired attempt. The next attempt starts after this prefix.
+			// Preserve real completed bodies before the retry owner can discard
+			// this attempt, after a retryable failure or a late completion. A
+			// done caller fails the read anyway.
+			if _, _, covered := scan.AbsenceBoundary(); covered && ctx.Err() == nil && (err == nil || retryableProductionSteeringRead(err)) {
 				if retainErr := advance(scan); retainErr != nil {
 					return errors.Join(err, retainErr)
 				}
+			}
+			if err == nil {
+				completed = scan
 			}
 			return err
 		})
@@ -132,9 +143,7 @@ func (self *ReleaseSteerer) scanProductionPendingReceipt(ctx context.Context, cu
 			}
 			return nil, 0, types.Hash{}, wait("finalized receipt head has not reached original or retained coverage")
 		}
-		if err := advance(scan); err != nil {
-			return nil, 0, types.Hash{}, err
-		}
+		// Its attempt already retained this covered chunk.
 		if scan.ReachedFinalizedBoundary() {
 			return nil, number, hash, nil
 		}

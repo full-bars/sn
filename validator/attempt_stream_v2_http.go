@@ -82,7 +82,7 @@ func newHttpAttemptStreamV2Reader(origin string, bounds AttemptCutV2Bounds, meta
 	return &HTTPAttemptStreamV2Reader{
 		endpoint: *endpoint, metadataBytes: metadataBytes,
 		recordBytes: bounds.Records.MaxChunkBytes, proofBytes: bounds.Proofs.MaxChunkBytes,
-		client: &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error {
+		client: &http.Client{Transport: releaseAPIHTTPTransport, CheckRedirect: func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
 		}},
 	}, nil
@@ -217,6 +217,12 @@ func (self *attemptStreamV2HTTPBody) interruption() error {
 	return errors.Join(context.Cause(self.ctx), parentErr)
 }
 
+// This body's own I/O allowance expired while its caller was still live. The
+// HTTP/2 transport then reports only context.Canceled for the aborted stream.
+func (self *attemptStreamV2HTTPBody) ownDeadline() bool {
+	return context.Cause(self.ctx) == context.DeadlineExceeded && (self.parent == nil || self.parent.Err() == nil)
+}
+
 // Retains the first failure; bytes returned with an error are never authority.
 func (self *attemptStreamV2HTTPBody) Read(value []byte) (int, error) {
 	if self.closed {
@@ -252,7 +258,7 @@ func (self *attemptStreamV2HTTPBody) Read(value []byte) (int, error) {
 	_, _ = self.digest.Write(value[:count])
 	if err := self.interruption(); err != nil {
 		if readErr != nil {
-			readErr = &attemptStreamHttpReadError{cause: readErr}
+			readErr = &attemptStreamHttpReadError{cause: readErr, interrupted: self.ownDeadline()}
 		}
 		self.fault = errors.Join(readErr, err)
 		return count, self.fault
@@ -268,7 +274,8 @@ func (self *attemptStreamV2HTTPBody) Read(value []byte) (int, error) {
 		return count, io.EOF
 	}
 	if readErr != nil {
-		self.fault = &attemptStreamHttpReadError{cause: readErr}
+		// The caller is live, so the transport itself ended the stream early.
+		self.fault = &attemptStreamHttpReadError{cause: readErr, interrupted: true}
 		return count, self.fault
 	} else if count == 0 {
 		self.emptyReads++

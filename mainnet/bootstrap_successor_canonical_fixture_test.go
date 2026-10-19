@@ -47,6 +47,17 @@ func newBootstrapSuccessorCanonicalFixture(t *testing.T) *bootstrapSuccessorCano
 // command still reconstructs every approval and physical owner itself.
 func newBootstrapSuccessorCanonicalFixtureWithClaimGate(t *testing.T, beforeClaim func(*bootstrapSuccessorCanonicalFixture)) *bootstrapSuccessorCanonicalFixture {
 	t.Helper()
+	return newBootstrapSuccessorCanonicalOwnerFixture(t, beforeClaim, false)
+}
+
+// The single-owner variant installs a published one-owner/threshold-one Safe and
+// selects its separate request schema; every other original input is shared.
+func newBootstrapSuccessorCanonicalOwnerFixture(t *testing.T, beforeClaim func(*bootstrapSuccessorCanonicalFixture), singleOwner bool) *bootstrapSuccessorCanonicalFixture {
+	t.Helper()
+	schema, threshold := bootstrapSuccessorExecutionRequestSchema, 2
+	if singleOwner {
+		schema, threshold = bootstrapSuccessorExecutionSingleOwnerRequestSchema, 1
+	}
 	f := newBootstrapSuccessorCommandFixture(t)
 	bootstrapSuccessorCommandTestComplete(t, f)
 	request := bootstrapSuccessorTestRequest(f.contracts.config, f.preparation.Plan.ContentHash)
@@ -77,7 +88,7 @@ func newBootstrapSuccessorCanonicalFixtureWithClaimGate(t *testing.T, beforeClai
 		t.Fatal("canonical preparation claim", code, stderr.String())
 	}
 	pin, archivePath, members := safeReleaseTestInputs(t, "1.4.1", "Safe")
-	oracle := newSafeExecutionFixture(t, "1.4.1", "Safe")
+	oracle := newSafeExecutionOwnerFixture(t, "1.4.1", "Safe", singleOwner)
 	_, singletonArtifact, proxyArtifact := safeExecutionOracleArtifacts(t, pin, "Safe", members)
 	singleton := common.BytesToAddress(crypto.Keccak256([]byte("synthetic canonical singleton")))
 	func() {
@@ -86,7 +97,7 @@ func newBootstrapSuccessorCanonicalFixtureWithClaimGate(t *testing.T, beforeClai
 		f.contracts.state.SetCode(request.IntendedOwnerSafe, common.FromHex(proxyArtifact.Runtime), tracing.CodeChangeUnspecified)
 		f.contracts.state.SetCode(singleton, common.FromHex(singletonArtifact.Runtime), tracing.CodeChangeUnspecified)
 		f.contracts.state.SetState(request.IntendedOwnerSafe, common.Hash{}, common.BytesToHash(singleton[:]))
-		setup, err := oracle.oracleAbi.Pack("setup", oracle.owners, big.NewInt(2), common.Address{}, []byte{}, common.Address{}, common.Address{}, big.NewInt(0), common.Address{})
+		setup, err := oracle.oracleAbi.Pack("setup", oracle.owners, big.NewInt(int64(threshold)), common.Address{}, []byte{}, common.Address{}, common.Address{}, big.NewInt(0), common.Address{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -116,7 +127,7 @@ func newBootstrapSuccessorCanonicalFixtureWithClaimGate(t *testing.T, beforeClai
 		t.Fatal(err)
 	}
 	var signatures []byte
-	for _, owner := range oracle.keys[:2] {
+	for _, owner := range oracle.keys[:threshold] {
 		raw, err := crypto.Sign(review.Transaction.Digest[:], owner)
 		if err != nil {
 			t.Fatal(err)
@@ -130,7 +141,7 @@ func newBootstrapSuccessorCanonicalFixtureWithClaimGate(t *testing.T, beforeClai
 	// execution scope. Existing original root generations and heads are retained.
 	f.root.storage = durablefixture.New(t, t.Context(), append(append([]string{}, f.root.storage.Roots...), registry)...)
 	f.contracts.storage = f.root.storage
-	executionRequest := bootstrapSuccessorExecutionRequest{Schema: bootstrapSuccessorExecutionRequestSchema, SafeReviewHash: review.ContentHash,
+	executionRequest := bootstrapSuccessorExecutionRequest{Schema: schema, SafeReviewHash: review.ContentHash,
 		RegistryDirectory: registry, Owners: oracle.owners, Singleton: singleton,
 		SafeSignatures: bootstrapSuccessorExecutionTestRaw(t, "synthetic-canonical-safe-signatures.bin", signatures)}
 	draft := bootstrapSuccessorExecutionPlan{Review: review, Request: executionRequest, SafeSignatures: "0x" + hex.EncodeToString(signatures)}
@@ -336,7 +347,13 @@ func (self *bootstrapSuccessorCanonicalFixture) openRuntimeRevisions(revisions .
 // engine; they intentionally do not claim original-v3 custody authentication.
 func bootstrapSuccessorCanonicalSafeFixture(t *testing.T) (*bootstrapSuccessorCanonicalChain, *bootstrapSuccessorExecutionFixture, *evmCreateFixture) {
 	t.Helper()
-	model := newBootstrapSuccessorExecutionFixture(t)
+	return bootstrapSuccessorCanonicalSafeFixtureFor(t, newBootstrapSuccessorExecutionFixture(t))
+}
+
+// The same local RPC engine serves whichever explicitly selected owner profile
+// the model's published Safe was set up with.
+func bootstrapSuccessorCanonicalSafeFixtureFor(t *testing.T, model *bootstrapSuccessorExecutionFixture) (*bootstrapSuccessorCanonicalChain, *bootstrapSuccessorExecutionFixture, *evmCreateFixture) {
+	t.Helper()
 	chain := newEvmCreateFixture(t)
 	chain.state, chain.vm = model.oracle.state, model.oracle.vm
 	chain.vm.State = chain.state

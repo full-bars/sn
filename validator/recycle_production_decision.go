@@ -66,7 +66,7 @@ func ownerRecycleProductionProofBytes(ctx context.Context, proof *OwnerRecyclePr
 		return nil, err
 	}
 	encoded, err := json.Marshal(proof)
-	if err != nil || uint64(len(encoded))+1 > limit || proof.Schema != ownerRecycleProductionDecisionSchema {
+	if err != nil || uint64(len(encoded))+1 > limit || (proof.Schema != ownerRecycleProductionDecisionSchema && proof.Schema != treasuryProductionDecisionSchema) {
 		return nil, errors.Join(errors.New("owner-recycle production proof schema or complete byte bound differs"), err)
 	}
 	return append(encoded, '\n'), ctx.Err()
@@ -99,11 +99,14 @@ func prepareOwnerRecycleProductionDecision(ctx context.Context, cfg *ReleaseConf
 	proof := OwnerRecycleProductionProof{Schema: ownerRecycleProductionDecisionSchema,
 		Approval: bytes.Clone(authority.approval), Census: bytes.Clone(authority.census), OperatorEvidence: bytes.Clone(authority.operatorEvidence),
 		ProviderMeasurementHash: ReleaseMeasurementContentHash(measurement), Decision: options.Expected, Eligibility: *eligibility, Row: row}
+	if cfg.TreasuryApproval != nil {
+		proof.Schema = treasuryProductionDecisionSchema
+	}
 	encoded, err := ownerRecycleProductionProofBytes(ctx, &proof, options.MaxControlBytes)
 	if err != nil {
 		return nil, err
 	}
-	return &ownerRecycleProductionStage{authority: authority, proof: proof, encoded: encoded, sourceHash: ownerRecycleProductionSourceHash(measurement, encoded)}, nil
+	return &ownerRecycleProductionStage{authority: authority, proof: proof, encoded: encoded, sourceHash: productionEconomicSourceHash(measurement, encoded, proof.Schema)}, nil
 }
 
 // Length framing and a distinct domain prevent either swapping the unchanged
@@ -123,14 +126,34 @@ func ownerRecycleProductionSourceHash(measurement, proof []byte) [32]byte {
 // Source identity is selected by the explicit sidecar wire, not runtime version.
 // Authority and the exact resulting weights are authenticated by its caller.
 func releaseIntentNativeSourceHash(ctx context.Context, measurement []byte, intent *SteeringIntent) ([32]byte, error) {
-	if intent == nil || intent.OwnerRecycle == nil {
+	if intent != nil && intent.OwnerRecycle != nil && intent.Treasury != nil {
+		return [32]byte{}, errors.New("intent selects two economic successor authorities")
+	}
+	if intent == nil || productionEconomicIntent(intent) == nil {
 		return releaseNativeSourceHashV2(measurement), nil
 	}
-	proof, err := ownerRecycleProductionProofBytes(ctx, &intent.OwnerRecycle.Proof, maximumOwnerRecycleProductionProofBytes)
+	proof, err := ownerRecycleProductionProofBytes(ctx, &productionEconomicIntent(intent).Proof, maximumOwnerRecycleProductionProofBytes)
 	if err != nil {
 		return [32]byte{}, err
 	}
-	return ownerRecycleProductionSourceHash(measurement, proof), nil
+	return productionEconomicSourceHash(measurement, proof, productionEconomicIntent(intent).Proof.Schema), nil
+}
+
+// Treasury source commitments use an independent domain while retaining the
+// same length framing and the unchanged original provider measurement bytes.
+func productionEconomicSourceHash(measurement, proof []byte, schema string) [32]byte {
+	if schema != treasuryProductionDecisionSchema {
+		return ownerRecycleProductionSourceHash(measurement, proof)
+	}
+	hash := sha256.New()
+	hash.Write([]byte("urnetwork-validator-treasury-native-source-v1\x00"))
+	hash.Write(binary.LittleEndian.AppendUint64(nil, uint64(len(measurement))))
+	hash.Write(measurement)
+	hash.Write(binary.LittleEndian.AppendUint64(nil, uint64(len(proof))))
+	hash.Write(proof)
+	var result [32]byte
+	copy(result[:], hash.Sum(nil))
+	return result
 }
 
 // Hash only the canonical unsigned sidecar, after all bounded proof inputs have
@@ -142,7 +165,11 @@ func ownerRecycleProductionSigningDigest(sidecar *OwnerRecycleProductionIntent) 
 	if err != nil {
 		return [32]byte{}, err
 	}
-	return sha256.Sum256(append([]byte("urnetwork-validator-owner-recycle-envelope-v1\n"), raw...)), nil
+	domain := "urnetwork-validator-owner-recycle-envelope-v1\n"
+	if sidecar.Proof.Schema == treasuryProductionDecisionSchema {
+		domain = "urnetwork-validator-treasury-envelope-v1\n"
+	}
+	return sha256.Sum256(append([]byte(domain), raw...)), nil
 }
 
 // Only this private stage can reach the signer. The unsigned proposal format
@@ -183,13 +210,16 @@ func verifyOwnerRecycleProductionIntent(ctx context.Context, cfg *ReleaseConfig,
 	measurement []byte, artifact *ReleaseMeasurementArtifact, provider *VerifiedReleaseMeasurement,
 ) (*VerifiedReleaseMeasurement, error) {
 	if !isOwnerRecycleProductionConfig(cfg) {
-		if intent.OwnerRecycle != nil {
+		if intent.OwnerRecycle != nil || intent.Treasury != nil {
 			return nil, errors.New("owner-recycle sidecar cannot select production authority for a legacy configuration")
 		}
 		return provider, nil
 	}
-	if stage == nil || stage.authority == nil || intent.OwnerRecycle == nil || intent.Prepared == nil || intent.Prepared.SourceCommitment == nil {
+	if stage == nil || stage.authority == nil || productionEconomicIntent(intent) == nil || intent.Prepared == nil || intent.Prepared.SourceCommitment == nil {
 		return nil, errors.New("owner-recycle production intent lacks its independently observed signed sidecar")
+	}
+	if (cfg.TreasuryApproval != nil) != (intent.Treasury != nil) || intent.OwnerRecycle != nil && intent.Treasury != nil {
+		return nil, errors.New("economic sidecar is not selected by its exact independently signed configuration")
 	}
 	approval, err := ownerRecycleProductionApproval(cfg)
 	if err != nil {
@@ -200,14 +230,14 @@ func verifyOwnerRecycleProductionIntent(ctx context.Context, cfg *ReleaseConfig,
 		!bytes.Equal(stage.authority.approval, cfg.ownerRecycleProduction.encoded) {
 		return nil, errors.New("owner-recycle original production approval cannot be reinterpreted under another configuration")
 	}
-	sidecar := intent.OwnerRecycle
+	sidecar := productionEconomicIntent(intent)
 	encoded, err := ownerRecycleProductionProofBytes(ctx, &sidecar.Proof, cfg.EvidenceV2.Bounds.MaxControlBytes)
 	if err != nil || !bytes.Equal(encoded, stage.encoded) || sidecar.Hotkey != releaseHex32(approval.Approval.ValidatorHotkey) ||
 		intent.Prepared.EpochScheduleProfile != approval.Approval.Production.EpochScheduleProfile ||
 		sidecar.Hotkey != intent.Prepared.HotkeyHex || sidecar.PreparedExtrinsicHash != intent.Prepared.ExtrinsicHash ||
 		sidecar.ProviderEnvelopeHash != intent.MeasurementEnvelopeHash || sidecar.Proof.ProviderMeasurementHash != ReleaseMeasurementContentHash(measurement) ||
 		sidecar.Proof.Decision != releaseMeasurementV2Decision(artifact) ||
-		intent.Prepared.SourceCommitment.Hash != releaseHex32(ownerRecycleProductionSourceHash(measurement, encoded)) {
+		intent.Prepared.SourceCommitment.Hash != releaseHex32(productionEconomicSourceHash(measurement, encoded, sidecar.Proof.Schema)) {
 		return nil, errors.Join(errors.New("owner-recycle production intent differs from its exact proof, source or hotkey envelope"), err)
 	}
 	digest, err := ownerRecycleProductionSigningDigest(sidecar)

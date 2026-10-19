@@ -1,0 +1,96 @@
+{
+  "authorization_limits": "No actual two-job launch authorized by this review. The existing exclusive jobs remain unchanged and reject peers. Separate frozenjoint variants, deterministic lifecycle/census/floor tests, finalindependentreview and explicit Rootadoption are required. Numerical reservationrelease is onlyforprovenclosedformer-model slot; baseline/cap/healthyguards neverrebased.",
+  "closed_reservation_release_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected1ea-native-model30-closed-terminal-proof-v1.json",
+    "sha256": "819d8191629441e62f6e450e24a1d01cf0c5a649d4020d679fe0a0602efb9c92"
+  },
+  "other_closed_cohorts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+      "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+      "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+    }
+  ],
+  "prospective_basis": "Compiler4GiB is the aggregate seven-phase outputs/cache/log/scratch estimate, hard8GiB. Lightbody1GiB includes prebuiltGo8MB/Rust65MB mappings, serialfixednativeJIT/Yuma2048 work,49boundedlogs and29boundedexports<=624MiB payload, plusreceipts/tempfiles;hard2GiB. Neither sourcecounts nor oldpeak samples prove a futureupperbound; globalhealthyfloors andcgroupOOD refusal remain enforced.",
+  "read_only_snapshot": {
+    "canonical_user_properties": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "1023496138121",
+      "InvocationID": "1caad07516864b83a41fe0b39cba4257",
+      "MainPID": "2132303",
+      "RuntimeMaxUSec": "8h"
+    },
+    "data": {
+      "available_bytes": 19228262400,
+      "available_inodes": 92535472
+    },
+    "docker": {
+      "available_bytes": 301119823872,
+      "available_inodes": 50981284
+    },
+    "memory_available_bytes": 129773608960,
+    "remaining_lease_seconds": 3961.605503,
+    "utc": "2026-10-05T04:54:31.504521+00:00"
+  },
+  "required_peer_contract": [
+    "Exactly two USER-manager unit/full-cgroup identities, exact prospective runner/jobSHA and commandargv in the Root-adopted joint plan. No basename or UID-only wildcard.",
+    "Each role firstactualInvocationID/MainPID/starttime atomically published; never rebind a generation. Absent-before-first-start can remain pending without credit.",
+    "Known compiler/body process families outside the exact two cgroups refuse admission. No third workload, DB, dependency download or unrelated build admitted.",
+    "Peer departure requires exact expected terminal/job/adoption, originalstartedphase waits replayedjoined, sameunitInvocationID, MainPID0 and empty fullcgroup. Preserve ordinarypositiveFAIL; no inferred completion fromtime orabsence alone.",
+    "Each owner can signal/stop only its own process tree. Invalidpeer observations refuse its dependent nextphase; no broad cleanup or signalingpeer.",
+    "Canonical originalFLOCKinode/PID-start/USERinvocation/config and actualremaining horizon must cover each wholeowner plusstop beforestart. Currentexpiry06:00:33 is unchanged.",
+    "Both prebuiltbody and compiler retain original source/image provenance; newpairedadmission doesnotupgrade runtimequalification."
+  ],
+  "resource_accounting": {
+    "accounting_floor_bytes": 0,
+    "body_forecast_disk_bytes": 1073741824,
+    "body_forecast_memory_bytes": 1073741824,
+    "body_memory_max_bytes": 2147483648,
+    "compiler_forecast_disk_bytes": 4294967296,
+    "compiler_forecast_memory_bytes": 4294967296,
+    "compiler_memory_max_bytes": 8589934592,
+    "data_cap_bytes": 115964116992,
+    "data_minimum_available_bytes": 10737418240,
+    "former_model_hold_released_bytes": 4294967296,
+    "history_count": 0,
+    "margin": 2,
+    "maximum_concurrent_compilers": 1,
+    "maximum_concurrent_light_bodies": 1,
+    "memory_minimum_available_bytes": 113816633344,
+    "memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "original_data_baseline_bytes": 113681502208
+  },
+  "resource_guards": {
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "healthy_data_floor_bytes": 6307319808,
+    "healthy_memory_floor_bytes": 103079215104,
+    "shared_floor_formula": "max(6307319808, first_admission_available_bytes - 10737418240)",
+    "shared_growth_stop_bytes": 10737418240,
+    "shared_sample_rule": "One atomic immutable first-admission observation and common floor, bound by inode/hash and never reset during any phase or peer join/departure. Both runtime samplers and ChildContext minimum_free must use this same floor. No independent10GiB allowances."
+  },
+  "reviewed_exclusive_bases": {
+    "body_job": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/nativefee11-rust38-normal-job-v1.json",
+      "sha256": "1c8d64e698b0942a75de30c13642cbdcae1f419a00a7815161f8601455fb6fc6"
+    },
+    "body_runner": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-nativefee11-rust38-normal-v1.py",
+      "sha256": "f10713b27a61492e7dc5f17ab8a3c91d127a8e20f40e94a2c2e8c953198d1375"
+    },
+    "compiler_job": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-job-v1.json",
+      "sha256": "18664d74669f28756e7a1b27ea6a559fbcdaa2e25e290c06adb45b213acd3eac"
+    },
+    "compiler_runner": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-recovery-consumer-compiler-batch-v2.py",
+      "sha256": "3afe2aeb7720e078df8f593bac2085152a727bd5d2464b3632e048ecbdfe6121"
+    }
+  },
+  "schema": "future108-joint-one-compiler-one-light-body-prospective-resource-review-v1",
+  "status": "NUMERIC_SCOPE_APPROVED_PENDING_EXACT_JOINT_ADAPTER_JOBS_TESTS_AND_ROOT_ADOPTION"
+}

@@ -165,7 +165,8 @@ func ObserveProvisionalConfiguredIntentsV2(ctx context.Context, options Provisio
 
 func observeProvisionalIntentStoreV2(ctx context.Context, cfg *ReleaseConfig, hotkey [32]byte, result *ProvisionalIntentObservationV2) (_ *ProvisionalIntentObservationV2, resultErr error) {
 	limit := cfg.EvidenceV2.Bounds.IntentFileLimit()
-	custody := &releaseEvidenceV2StartupReferences{remaining: limit}
+	// The live file and every sealed segment it pins share the history allowance.
+	custody := &releaseEvidenceV2StartupReferences{remaining: cfg.EvidenceV2.Bounds.MaxHistoryBytes}
 	defer func() { resultErr = errors.Join(resultErr, custody.check(), custody.close(), ctx.Err()) }()
 	encoded, err := custody.read(ctx, filepath.Join(cfg.StateDir, "steering-intents.json"), limit, true)
 	if err != nil {
@@ -190,17 +191,11 @@ func observeProvisionalIntentStoreV2(ctx context.Context, cfg *ReleaseConfig, ho
 		result.State = "absent"
 		return result, nil
 	}
-	var file steeringIntentFile
-	if err := decodeAttemptStreamV2JSON(encoded, limit, &file); err != nil {
-		return result, err
-	}
-	canonical, err := marshalAttemptSettlementV2JSON(ctx, &file, limit, true, true)
-	if err != nil || !bytes.Equal(encoded, canonical) || file.Schema != SteeringIntentSchema || len(file.History) > 16384 {
+	all, _, retained, err := ReadSteeringIntentHistory(ctx, encoded, limit, func(name string, maximum uint64) ([]byte, error) {
+		return custody.read(ctx, filepath.Join(cfg.StateDir, filepath.FromSlash(name)), maximum, false)
+	})
+	if err != nil {
 		return result, errors.Join(errors.New("local intent store schema, bytes or census differs"), err)
-	}
-	all := append([]SteeringIntent(nil), file.History...)
-	if file.Current != nil {
-		all = append(all, *file.Current)
 	}
 	seen := make(map[string]bool, len(all))
 	// Retained provisional testnet history can omit native submissions for
@@ -213,7 +208,7 @@ func observeProvisionalIntentStoreV2(ctx context.Context, cfg *ReleaseConfig, ho
 		if err := ctx.Err(); err != nil {
 			return result, err
 		}
-		if err := validateSteeringIntentLifecycle(intent, index < len(file.History)); err != nil {
+		if err := validateSteeringIntentLifecycle(intent, index < retained); err != nil {
 			return result, err
 		}
 		if _, err := ReleasePolicyForHash(cfg, intent.PolicyHash); err != nil {

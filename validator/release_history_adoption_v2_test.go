@@ -106,6 +106,18 @@ func TestReleaseHistoryAdoptionV2PinsConfigNamespaceAndOptions(t *testing.T) {
 	}
 }
 
+// The logical history of an unsealed test file.
+func historyAdoptionTestAll(file *steeringIntentFile) []*SteeringIntent {
+	all := make([]*SteeringIntent, 0, len(file.History)+1)
+	for index := range file.History {
+		all = append(all, &file.History[index])
+	}
+	if file.Current != nil {
+		all = append(all, file.Current)
+	}
+	return all
+}
+
 // These inert intent values exercise only canonical prefix binding. They are
 // not submitted to, or accepted by, any native/measurement authentication API.
 func TestReleaseHistoryAdoptionV2RetainsExactPrefixAndOneFreshBridge(t *testing.T) {
@@ -123,7 +135,7 @@ func TestReleaseHistoryAdoptionV2RetainsExactPrefixAndOneFreshBridge(t *testing.
 		t.Fatal(err)
 	}
 	request.IntentPrefixCount, request.IntentPrefixSHA256, request.LastNativeEpoch, request.LastArtifactHash = 3, ReleaseMeasurementContentHash(encoded), 1405, all[2].MeasurementArtifactHash
-	owner, err := request.matchPrefix(t.Context(), &file, encoded, 1<<20)
+	owner, err := request.matchPrefix(t.Context(), historyAdoptionTestAll(&file), true, 1<<20)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +158,7 @@ func TestReleaseHistoryAdoptionV2RetainsExactPrefixAndOneFreshBridge(t *testing.
 		t.Fatal("first bridge became an unconditional future gap permission")
 	}
 	appended := steeringIntentFile{Schema: steeringIntentSchema, History: append(append([]SteeringIntent(nil), all...), fresh), Current: &later}
-	if _, err := request.matchPrefix(t.Context(), &appended, []byte("later canonical file is checked by caller"), 1<<20); err != nil {
+	if _, err := request.matchPrefix(t.Context(), historyAdoptionTestAll(&appended), true, 1<<20); err != nil {
 		t.Fatalf("append-only restart lost the original prefix: %v", err)
 	}
 	for _, fault := range []string{"receipt", "drop", "reorder", "source", "pending"} {
@@ -164,13 +176,13 @@ func TestReleaseHistoryAdoptionV2RetainsExactPrefixAndOneFreshBridge(t *testing.
 			copyAll[2].Status = "pending"
 		}
 		changed := steeringIntentFile{Schema: steeringIntentSchema, History: copyAll[:len(copyAll)-1], Current: &copyAll[len(copyAll)-1]}
-		if _, err := request.matchPrefix(t.Context(), &changed, encoded, 1<<20); err == nil {
+		if _, err := request.matchPrefix(t.Context(), historyAdoptionTestAll(&changed), true, 1<<20); err == nil {
 			t.Fatalf("%s changed the pinned historical prefix", fault)
 		}
 	}
 	cancelled, cancel := context.WithCancel(t.Context())
 	cancel()
-	if _, err := request.matchPrefix(cancelled, &file, encoded, 1<<20); !errors.Is(err, context.Canceled) {
+	if _, err := request.matchPrefix(cancelled, historyAdoptionTestAll(&file), true, 1<<20); !errors.Is(err, context.Canceled) {
 		t.Fatalf("prefix ignored cancellation: %v", err)
 	}
 }

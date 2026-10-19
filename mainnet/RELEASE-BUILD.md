@@ -7,17 +7,29 @@ an image or deploys. The output directory must be new and outside the source
 workspace. Keep scratch, compiler caches and output on a capacity-checked build
 volume, such as `/mnt/data`; do not consume the small system volume implicitly.
 
-For the pinned Go 1.26.6 toolchain, use physical clones with regular `.git`
-directories. Its VCS discovery omits stamps for linked worktrees whose `.git`
-is a file, even with `-buildvcs=true`; the release verifier correctly refuses
-the resulting executable. Preserve that failed attempt and build the same
-commits in a fresh output directory after correcting the checkout layout.
-Do not disable embedded VCS checks. Keep Docker/containerd build storage on
-the capacity-checked volume as well as the exported OCI files. With the
-containerd image store, `--data-root` alone is insufficient: explicitly select
-a separate containerd socket, root/state directories and namespaces, and verify
-the daemon's actual selected socket before building. Do not reconfigure or prune
-an existing daemon to make room for a release build.
+The pinned toolchain is Go 1.27.2: `go.mod` in SN and server requires it
+(`go 1.27.2`). The build names no Go version of its own. It pins the config's
+`go` executable by SHA-256 and runs it with `GOTOOLCHAIN=local`
+(`scripts/mainnet-release-build/main.go:168,297`), so a local toolchain older
+than `go.mod` requires is refused. Use
+physical clones with regular `.git` directories. The earlier Go 1.26.6
+toolchain omitted VCS stamps for linked worktrees whose `.git` is a file, even
+with `-buildvcs=true`, and the release verifier correctly refused those
+executables. Go 1.27.1 stamps linked worktrees, but the repository census still
+names physical checkout paths. If a verifier refuses missing stamps, preserve
+that failed attempt and build the same commits in a fresh output directory
+after correcting the checkout layout. Do not disable embedded VCS checks. Keep
+Docker/containerd build storage on the capacity-checked volume as well as the
+exported OCI files. With the containerd image store, `--data-root` alone is
+insufficient: explicitly select a separate containerd socket, root/state
+directories and namespaces, and verify the daemon's actual selected socket
+before building. Do not reconfigure or prune an existing daemon to make room for
+a release build.
+
+This composition targets Linux/amd64 server images and validates
+`GOOS=linux`/`GOARCH=amd64` in every binary's build information. The macOS
+`sn-mainnet` operator binary is built separately with the same pinned toolchain;
+see [MACOS.md](MACOS.md).
 
 This is the current role census, rather than the historical v11 seven-binary
 selection:
@@ -35,8 +47,9 @@ the `go`, `forge`, `solc` and `git` tool objects (`path`, `sha256`), and
 `repositories`. Each repository object supplies `name`, workspace-relative
 `path`, full Git `commit` and `tree`. The exact repository census is SN, server,
 proxy, glog, goidenticons, userwireguard, warp, and the three Solidity libraries
-forge-std, openzeppelin-contracts and openzeppelin-contracts-upgradeable. The
-first seven use their repository name as path; libraries use
+forge-std, openzeppelin-contracts and openzeppelin-contracts-upgradeable. Local
+dependency mode adds connect, sdk and gvisor. The code repositories use their
+repository name as path; libraries use
 `sn/evm/lib/<name>`. Tool paths must identify real executable files, not symlinks.
 The caller must provision reviewed module/compiler dependencies before the
 offline build. The manifest retains the complete config, input hashes, tool
@@ -47,6 +60,26 @@ keeps the checked-in `sim-testnet/contracts_gen.go` catalogue. `fresh` exports
 the exact current compiler bytes for review as the first unsigned mainnet plan's
 catalogue. Unknown values fail closed. Both modes keep the existing schema
 `urnetwork-contract-release-artifacts-v1` and select the same five contracts.
+
+`dependency_mode` selects where SN and server take the SDK, Connect, Connect's
+SCTP fork and the gVisor fork from. `local` builds from the working checkouts:
+both main modules must replace `github.com/urnetwork/sdk`,
+`github.com/urnetwork/connect`, `github.com/pion/sctp` and `gvisor.dev/gvisor`
+with exactly `../sdk`, `../connect`, `../connect/sctp` and `../gvisor`, and the
+census adds those three repositories. The builder binds each of them as it
+binds every other repository: a physical clean checkout at the recorded commit
+and tree, its module files retained, and its name and commit recorded for every
+module a binary links. No module archive is retained. `pinned`, which is also
+the meaning of an omitted field, so that an existing config keeps its meaning,
+admits only the checksum-bound versions in `validateReleaseModule`'s table
+(`scripts/mainnet-release-build/sources.go`), retains their three module
+archives and keeps the ten-repository census, so the gVisor fork must be a
+published module. Any other value fails closed, and the manifest records the
+mode explicitly. Main keeps the local substitutions and builds in local mode. A
+build version first pins a copy of SN and server and then builds that copy in
+pinned mode; see the
+[build version procedure](../scripts/mainnet-release-build/PIN-PROCEDURE.md).
+The settlement v2 launch builds in local mode.
 
 Fresh mode retains `inputs/contracts_gen.go` and
 `inputs/contracts-retained.json`, generates a separate
@@ -120,8 +153,8 @@ remain false.
 
 Both main modules resolve independently. The builder records their effective
 module graphs, exact module/go.mod sums, local module Git ownership and module
-file hashes. It retains the three API-bearing module zip files and SHA256
-hashes, and runs `go mod verify` before and after compilation. `GOWORK=off`,
+file hashes. In pinned mode it retains the three API-bearing module zip files
+and SHA256 hashes. It runs `go mod verify` before and after compilation. `GOWORK=off`,
 empty `GOFLAGS`, `GOENV=off`, `GOTOOLCHAIN=local`, `GOPROXY=off`, `GOSUMDB=off`
 and fixed compiler/platform settings prevent ambient workspace overrides or
 automatic toolchain/module downloads. Binary build info must independently

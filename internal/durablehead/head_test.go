@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // These controls use real files, xattrs, flock, rename and sync. Only kernel
 // volume facts are synthetic; crash tests join a distinct process.
@@ -16,6 +16,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/internal/durablepath"
@@ -181,7 +183,7 @@ func TestSnapshotHeadRequiresProvisionedAuthorityAndRetainedMember(t *testing.T)
 	if err := self.open(false); !errors.Is(err, durablevolume.ErrIdentity) {
 		t.Fatal("absent authority enrolled", err)
 	}
-	if _, err := unix.Getxattr(filepath.Join(self.root, testSpec.LockName), Attribute(testSpec.Kind, testSpec.Name), nil); !errors.Is(err, unix.ENODATA) {
+	if _, err := unix.Getxattr(filepath.Join(self.root, testSpec.LockName), Attribute(testSpec.Kind, testSpec.Name), nil); !errors.Is(err, durablesys.ErrNoAttribute) {
 		t.Fatal("checkpoint recreated", err)
 	}
 }
@@ -454,7 +456,7 @@ func TestSnapshotHeadAcknowledgmentObservedMismatchRemainsIdentity(t *testing.T)
 	self.owner.at = func(stage string) error {
 		if stage == "committed-synced" {
 			reached = true
-			return unix.Fsetxattr(int(self.lock.Fd()), Attribute(testSpec.Kind, testSpec.Name), original, unix.XATTR_REPLACE)
+			return durablesys.SetAttribute(int(self.lock.Fd()), Attribute(testSpec.Kind, testSpec.Name), original, unix.XATTR_REPLACE)
 		}
 		return nil
 	}

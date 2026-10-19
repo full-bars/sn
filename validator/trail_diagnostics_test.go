@@ -144,9 +144,9 @@ func TestTrailDiagnosticsRunContinuesAfterReadFailureWithOriginalProof(t *testin
 		t.Fatal("retained original signed proof did not verify")
 	}
 	lines := strings.Split(strings.TrimSpace(output.String()), "\n")
-	// postStep retains the timeout in an opaque fmt wrapper. Optional output
-	// preserves the seed kind while leaving that nested cause unknown.
-	if len(lines) != 2 || !strings.Contains(lines[0], "code=trail_failed operator_id=17 operator_known=true trail_kind=seed cause=unknown") ||
+	// postStep retains the timeout in the standard library's fmt wrapper, which
+	// optional output opens without calling any foreign error method.
+	if len(lines) != 2 || !strings.Contains(lines[0], "code=trail_failed operator_id=17 operator_known=true trail_kind=seed cause=timeout") ||
 		!strings.Contains(lines[1], "code=trail_complete operator_id=17") || !strings.Contains(lines[1], "depth=8 settlement_epoch=42 settlement_epoch_known=true") {
 		t.Fatal("trail diagnostic lost closed cause or original settlement identity")
 	}

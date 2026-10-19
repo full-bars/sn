@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -140,5 +141,33 @@ func TestReleaseGateEntrypointsRefuseInvalidStorageBeforePreflight(t *testing.T)
 		if err == nil || !strings.Contains(string(output), "SN_TEST_STORAGE_ROOT must be absolute") || strings.Contains(string(output), "preflight") {
 			t.Fatalf("gate %s bypassed early storage admission: %v\n%s", script, err, output)
 		}
+	}
+}
+
+// A go command under the adapter takes no telemetry upload token, so it
+// starts no telemetry child: cmd/go starts one the first time a day that it
+// takes the token and never waits for it, so a release gate's subreaper
+// adopted any child that outlived its short command. A fresh telemetry
+// directory, which cmd/go reads from TEST_TELEMETRY_DIR, always offers the
+// token, and the counter file there shows that cmd/go used that directory.
+func TestTestStorageGoCommandsStartNoTelemetryChild(t *testing.T) {
+	goCommand, err := exec.LookPath("go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	telemetryDir := t.TempDir()
+	command := storageCommand(t, t.TempDir(), goCommand, "env", "GOVERSION")
+	// Only the adapter may set the switch; the gate running this test does.
+	command.Env = slices.DeleteFunc(command.Env, func(entry string) bool { return strings.HasPrefix(entry, "GO_TELEMETRY_CHILD=") })
+	command.Env = append(command.Env, "TEST_TELEMETRY_DIR="+telemetryDir)
+	if output, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("go env under test storage: %v\n%s", err, output)
+	}
+	counters, err := filepath.Glob(filepath.Join(telemetryDir, "local", "*.count"))
+	if err != nil || len(counters) == 0 {
+		t.Fatalf("go did not use the fresh telemetry directory: counters=%q, %v", counters, err)
+	}
+	if _, err := os.Stat(filepath.Join(telemetryDir, "local", "upload.token")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("go took the telemetry upload token, so it started a telemetry child: %v", err)
 	}
 }

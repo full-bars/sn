@@ -1,6 +1,6 @@
-// One exclusive lease retains processed client registration across hop calls.
-// Request packet paths are private; shutdown owns the reusable identity and
-// waits until its last request, control operation and transport have joined.
+// Each exclusive lease retains processed client registration across hop calls.
+// Request packet paths are private; shutdown owns the reusable identities and
+// waits until their last request, control operation and transport have joined.
 package validator
 
 import (
@@ -14,8 +14,10 @@ import (
 )
 
 // The packet exchange and registration lifetime are separate ownership units.
+// A request's tunnel tries its family's first IP family (4 or 6) first, and
+// only that one when the family is pinned.
 type tunnelTransportClient interface {
-	postVerify(context.Context, connect.Id, []byte) ([]byte, error)
+	postVerify(ctx context.Context, hop connect.Id, body []byte, family hopIpFamily) ([]byte, error)
 	done() <-chan struct{}
 	closeAndWait(context.Context) error
 }
@@ -30,6 +32,14 @@ type tunnelClientRegistration struct {
 	err    error
 }
 
+// One retained identity and its pending registration. Exactly one request
+// owns a lease at a time; a lease's client and registration never move to
+// another lease.
+type tunnelClientLease struct {
+	client       tunnelTransportClient
+	registration *tunnelClientRegistration
+}
+
 // Retains exactly one generated client and its private generator. The
 // generator's initial destination is identity bookkeeping, not packet routing.
 type registeredTunnelClient struct {
@@ -41,9 +51,12 @@ type registeredTunnelClient struct {
 	// Kept until the request's real packet workers join, including a failed
 	// bounded close. The exclusive lease bounds this to one packet path.
 	packetCleanup *tunnelAttempt
+	// When the identity's attempts close their contracts; the lease
+	// serializes it.
+	contracts tunnelHopContracts
 }
 
-// Safe for concurrent callers: waiting for the single lease consumes each
+// Safe for concurrent callers: waiting for a free lease consumes each
 // request's original deadline. Application rejection does not retire a client.
 func (self *TunnelTransport) PostVerify(ctx context.Context, hop connect.Id, body []byte) ([]byte, error) {
 	if ctx == nil {
@@ -58,35 +71,41 @@ func (self *TunnelTransport) PostVerify(ctx context.Context, hop connect.Id, bod
 		stop()
 		cancel()
 	}()
+	var lease *tunnelClientLease
 	select {
 	case <-callCtx.Done():
-		return nil, callCtx.Err()
+		return nil, tunnelVerifyFailure(trailStageLease, callCtx.Err())
 	case <-self.ctx.Done():
 		return nil, self.ctx.Err()
-	case <-self.clientLease:
+	case lease = <-self.clientLeases:
 	}
-	defer func() { self.clientLease <- struct{}{} }()
+	defer func() { self.clientLeases <- lease }()
 	if err := errors.Join(callCtx.Err(), self.ctx.Err()); err != nil {
 		return nil, err
 	}
-	if self.client != nil {
+	if lease.client != nil {
 		select {
-		case <-self.client.done():
-			if err := self.retireClient(); err != nil {
+		case <-lease.client.done():
+			if err := self.retireClient(lease); err != nil {
 				return nil, err
 			}
 		default:
 		}
 	}
-	if self.client == nil {
-		if err := self.waitForClientRegistration(callCtx, hop); err != nil {
-			return nil, err
+	if lease.client == nil {
+		if err := self.waitForClientRegistration(callCtx, lease, hop); err != nil {
+			return nil, tunnelVerifyFailure(trailStageRegistration, err)
 		}
 	}
-	response, err := self.client.postVerify(callCtx, hop, body)
+	observation := newTunnelVerifyObservation(lease.client, hop)
+	// the trail engine alternates the family each hop tries first, and pins
+	// one after a source-egress-unresolved answer
+	response, err := lease.client.postVerify(observation.context(callCtx), hop, body, hopIpFamilyOf(ctx))
+	observation.close()
+	err = observation.failure(err)
 	select {
-	case <-self.client.done():
-		err = errors.Join(err, self.retireClient())
+	case <-lease.client.done():
+		err = errors.Join(err, self.retireClient(lease))
 	default:
 	}
 	return response, err
@@ -94,10 +113,10 @@ func (self *TunnelTransport) PostVerify(ctx context.Context, hop connect.Id, bod
 
 // Called only with the request lease. Preparation keeps its own finite budget,
 // while every waiter and the eventual packet exchange retain the step deadline.
-func (self *TunnelTransport) waitForClientRegistration(ctx context.Context, firstHop connect.Id) error {
-	if self.registration == nil {
+func (self *TunnelTransport) waitForClientRegistration(ctx context.Context, lease *tunnelClientLease, firstHop connect.Id) error {
+	if lease.registration == nil {
 		load := &tunnelClientRegistration{done: make(chan struct{})}
-		self.registration = load
+		lease.registration = load
 		newClient := self.newClient
 		go func() {
 			defer close(load.done)
@@ -122,7 +141,7 @@ func (self *TunnelTransport) waitForClientRegistration(ctx context.Context, firs
 			}
 		}()
 	}
-	load := self.registration
+	load := lease.registration
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -133,14 +152,14 @@ func (self *TunnelTransport) waitForClientRegistration(ctx context.Context, firs
 	if err := errors.Join(ctx.Err(), self.ctx.Err()); err != nil {
 		return err
 	}
-	self.registration = nil
-	self.client = load.client
+	lease.registration = nil
+	lease.client = load.client
 	if load.err != nil {
-		return errors.Join(load.err, self.retireClient())
+		return errors.Join(load.err, self.retireClient(lease))
 	}
 	select {
-	case <-self.client.done():
-		return errors.Join(errors.New("registered tunnel client closed during setup"), self.retireClient())
+	case <-lease.client.done():
+		return errors.Join(errors.New("registered tunnel client closed during setup"), self.retireClient(lease))
 	default:
 		return nil
 	}
@@ -148,36 +167,40 @@ func (self *TunnelTransport) waitForClientRegistration(ctx context.Context, firs
 
 // Called only with the lease. Failed retirement closes admission and leaves
 // the exact client with the parent worker for a final joined shutdown.
-func (self *TunnelTransport) retireClient() error {
-	if self.client == nil {
+func (self *TunnelTransport) retireClient(lease *tunnelClientLease) error {
+	if lease.client == nil {
 		return nil
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	if err := self.client.closeAndWait(ctx); err != nil {
+	if err := lease.client.closeAndWait(ctx); err != nil {
 		self.cancel()
 		return fmt.Errorf("retire registered tunnel client: %w", err)
 	}
-	self.client = nil
+	lease.client = nil
 	return nil
 }
 
 // Constructor-owned shutdown runs outside the client callback tree. It first
-// joins the exclusive request lease and any initial registration producer,
-// then closes the retained identity.
+// joins every exclusive request lease and any initial registration producer,
+// then closes each retained identity.
 func (self *TunnelTransport) run() {
 	defer close(self.closed)
 	<-self.ctx.Done()
-	<-self.clientLease
-	if self.registration != nil {
-		<-self.registration.done
-		self.client = self.registration.client
-		self.registration = nil
+	var closeErrors []error
+	for range self.clientCount {
+		lease := <-self.clientLeases
+		if lease.registration != nil {
+			<-lease.registration.done
+			lease.client = lease.registration.client
+			lease.registration = nil
+		}
+		if lease.client != nil {
+			closeErrors = append(closeErrors, lease.client.closeAndWait(context.Background()))
+			lease.client = nil
+		}
 	}
-	if self.client != nil {
-		self.closeErr = self.client.closeAndWait(context.Background())
-		self.client = nil
-	}
+	self.closeErr = errors.Join(closeErrors...)
 }
 
 // Stops admission and active requests without joining inside callbacks.
@@ -253,6 +276,7 @@ func (self *TunnelTransport) newRegisteredClient(ctx context.Context, firstHop c
 		return registered, fmt.Errorf("tunnel client setup: %w", err)
 	}
 	registered.client = client
+	registered.contracts.flush = client.Flush
 	var retireOnce sync.Once
 	registered.cleanup.retireClient = func(joinCtx context.Context) error {
 		retireOnce.Do(func() { registered.generator.RemoveClientWithArgs(client, args) })

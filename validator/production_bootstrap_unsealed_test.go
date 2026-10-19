@@ -22,9 +22,9 @@ import (
 
 // Replay only committed controls first, preserving the live producer's exact
 // ledger and import receipts for the separate unsealed observation.
-func productionBootstrapUnsealedTestFixture(t *testing.T) (releaseArchiveV2TestFixture, *ReleaseEvidenceV2Archive, *ProductionBootstrapCommittedObservation) {
+func productionBootstrapUnsealedTestFixture(t *testing.T, configure ...func(*ReleaseConfig)) (releaseArchiveV2TestFixture, *ReleaseEvidenceV2Archive, *ProductionBootstrapCommittedObservation) {
 	t.Helper()
-	f, observed, approved, _ := productionBootstrapCommittedTestFixture(t)
+	f, observed, approved, _ := productionBootstrapCommittedTestFixture(t, configure...)
 	history, err := readReleaseEvidenceV2HistoryFilesForUid(t.Context(), f.options.Config.StateDir, f.options.Config.EvidenceV2.Bounds, uint32(os.Geteuid()), 8192, true, releaseMeasurementInputV2ReadHooks{})
 	if err != nil {
 		t.Fatal(err)
@@ -234,9 +234,14 @@ func TestProductionBootstrapUnsealedIntentCannotDisappear(t *testing.T) {
 
 // Source replacement, extra aliases, removal and late publication are forced
 // after the held owner completes replay, including after its actual Close.
+// One fixture serves every fault: each reversible fault is undone, keeping
+// every inode, and the next positive held census must admit the restored
+// sources. The irreversible append comes last.
 func TestProductionBootstrapUnsealedClosingCustody(t *testing.T) {
-	for _, fault := range []string{"append", "intent", "links", "remove", "close", "later-close"} {
-		f, archive, current := productionBootstrapUnsealedTestFixture(t)
+	f, archive, current := productionBootstrapUnsealedTestFixture(t)
+	intentPath := filepath.Join(f.options.Config.StateDir, "steering-intents.json")
+	retained := filepath.Join(t.TempDir(), "ready")
+	for _, fault := range []string{"intent", "links", "remove", "close", "later-close", "append"} {
 		armed, changed := false, false
 		cause := errors.New("synthetic unsealed close failure")
 		hooks := releaseMeasurementInputV2ReadHooks{afterClose: func(file *os.File) error {
@@ -259,15 +264,16 @@ func TestProductionBootstrapUnsealedClosingCustody(t *testing.T) {
 		}
 		armed = true
 		path := filepath.Join(f.options.Config.Operators[0].StateDir, attemptLedgerReadyName)
+		alias := filepath.Join(f.options.Config.Operators[0].StateDir, "alias")
 		switch fault {
 		case "append":
 			productionBootstrapUnsealedTestPending(t, f, 0)
 		case "intent":
-			err = os.WriteFile(filepath.Join(f.options.Config.StateDir, "steering-intents.json"), []byte("{}\n"), 0o600)
+			err = os.WriteFile(intentPath, []byte("{}\n"), 0o600)
 		case "links":
-			err = os.Link(path, filepath.Join(f.options.Config.Operators[0].StateDir, "alias"))
+			err = os.Link(path, alias)
 		case "remove":
-			err = os.Remove(path)
+			err = errors.Join(os.Link(path, retained), os.Remove(path))
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -277,6 +283,17 @@ func TestProductionBootstrapUnsealedClosingCustody(t *testing.T) {
 		}
 		if fault == "later-close" && !changed {
 			t.Fatal("later owner did not mutate the already-closed intent boundary")
+		}
+		switch fault {
+		case "intent", "later-close":
+			err = os.Remove(intentPath)
+		case "links":
+			err = os.Remove(alias)
+		case "remove":
+			err = errors.Join(os.Link(retained, path), os.Remove(retained))
+		}
+		if err != nil {
+			t.Fatal(err)
 		}
 	}
 }
@@ -353,33 +370,44 @@ func TestProductionBootstrapUnsealedCancellationJoinsClose(t *testing.T) {
 
 // Neither missing state nor incomplete migration receipts can stand in for
 // an original empty ledger. Aliases and owner mismatches fail at acquisition.
+// One fixture serves every fault: each is undone, keeping every inode, and
+// the restored sources must be admitted again before the next fault.
 func TestProductionBootstrapUnsealedRejectsIncompleteSource(t *testing.T) {
+	f, archive, current := productionBootstrapUnsealedTestFixture(t)
+	root := f.options.Config.Operators[0].StateDir
+	ready, marker := filepath.Join(root, attemptLedgerReadyName), filepath.Join(root, attemptLedgerImportName)
+	retained := filepath.Join(t.TempDir(), "ready")
+	original, err := os.ReadFile(marker)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Lstat(ready)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, fault := range []string{"ledger", "ready", "marker", "legacy", "uid", "symlink", "unknown", "mode"} {
-		f, archive, current := productionBootstrapUnsealedTestFixture(t)
-		root := f.options.Config.Operators[0].StateDir
 		uid := uint32(os.Geteuid())
 		var err error
 		switch fault {
 		case "ledger":
 			err = os.Rename(filepath.Join(root, attemptLedgerStoreName), filepath.Join(root, "retained-ledger"))
 		case "ready":
-			err = os.Remove(filepath.Join(root, attemptLedgerReadyName))
+			err = errors.Join(os.Link(ready, retained), os.Remove(ready))
 		case "marker":
-			err = os.WriteFile(filepath.Join(root, attemptLedgerImportName), []byte("{}"), 0o600)
+			err = os.WriteFile(marker, []byte("{}"), 0o600)
 		case "legacy":
 			err = os.WriteFile(filepath.Join(root, attemptLedgerLegacyName), []byte{}, 0o600)
 		case "uid":
 			uid ^= 1
 		case "symlink":
-			path := filepath.Join(root, attemptLedgerReadyName)
-			if err := os.Rename(path, path+"-original"); err != nil {
+			if err := os.Rename(ready, ready+"-original"); err != nil {
 				t.Fatal(err)
 			}
-			err = os.Symlink(path+"-original", path)
+			err = os.Symlink(ready+"-original", ready)
 		case "unknown":
 			err = os.WriteFile(filepath.Join(root, attemptLedgerStoreName, "unexpected"), []byte("synthetic"), 0o600)
 		case "mode":
-			err = os.Chmod(filepath.Join(root, attemptLedgerReadyName), 0o640)
+			err = os.Chmod(ready, 0o640)
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -388,10 +416,30 @@ func TestProductionBootstrapUnsealedRejectsIncompleteSource(t *testing.T) {
 		if err == nil || got != nil || owner != nil {
 			t.Fatal("unproven local boundary admitted", fault, err)
 		}
-		if fault == "ledger" {
-			if err := os.Rename(filepath.Join(root, "retained-ledger"), filepath.Join(root, attemptLedgerStoreName)); err != nil {
-				t.Fatal(err)
-			}
+		err = nil
+		switch fault {
+		case "ledger":
+			err = os.Rename(filepath.Join(root, "retained-ledger"), filepath.Join(root, attemptLedgerStoreName))
+		case "ready":
+			err = errors.Join(os.Link(retained, ready), os.Remove(retained))
+		case "marker":
+			err = os.WriteFile(marker, original, 0o600)
+		case "legacy":
+			err = os.Remove(filepath.Join(root, attemptLedgerLegacyName))
+		case "symlink":
+			err = errors.Join(os.Remove(ready), os.Rename(ready+"-original", ready))
+		case "unknown":
+			err = os.Remove(filepath.Join(root, attemptLedgerStoreName, "unexpected"))
+		case "mode":
+			err = os.Chmod(ready, info.Mode().Perm())
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, owner, err := readProductionBootstrapUnsealed(t.Context(), f.options.Config, archive, current, nil, f.options.ScratchRoot, uint32(os.Geteuid()), releaseMeasurementInputV2ReadHooks{}); err != nil {
+			t.Fatal("restored local boundary was not admitted", fault, err)
+		} else if err := owner.close(); err != nil {
+			t.Fatal(err)
 		}
 	}
 }

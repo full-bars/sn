@@ -50,7 +50,7 @@ func (self *IntentStore) retainOwnerRecyclePreparedAuthorization(intent *Steerin
 	if !isOwnerRecycleProductionConfig(&self.v2.runtime.cfg) {
 		return nil
 	}
-	if intent == nil || intent.OwnerRecycle == nil || intent.Prepared == nil {
+	if intent == nil || productionEconomicIntent(intent) == nil || intent.Prepared == nil {
 		return errors.New("owner-recycle verified intent is incomplete")
 	}
 	decisionCfg, err := productionConfigForIntent(&self.v2.runtime.cfg, intent)

@@ -34,6 +34,17 @@ type releaseHttpGetRetryHooks struct {
 	wait        releaseSnapshotRetryWait
 }
 
+// Deadline admission cannot wait for the context timer to publish its error.
+func evidenceReadContextError(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if deadline, bounded := ctx.Deadline(); bounded && !time.Now().Before(deadline) {
+		return context.DeadlineExceeded
+	}
+	return nil
+}
+
 // Each attempt must close its response before returning. The first permanent
 // or mixed failure ends retry; cancellation and expiry preserve the last cause.
 func retryReleaseHttpGet(ctx context.Context, read func(context.Context) error, hooks releaseHttpGetRetryHooks) error {
@@ -51,15 +62,15 @@ func retryReleaseHttpGet(ctx context.Context, read func(context.Context) error, 
 	defer cancel()
 	var lastErr error
 	for {
-		if err := errors.Join(ctx.Err(), operationCtx.Err()); err != nil {
+		if err := errors.Join(evidenceReadContextError(ctx), evidenceReadContextError(operationCtx)); err != nil {
 			return errors.Join(lastErr, err)
 		}
 		lastErr = read(operationCtx)
 		if lastErr == nil {
-			return errors.Join(ctx.Err(), operationCtx.Err())
+			return errors.Join(evidenceReadContextError(ctx), evidenceReadContextError(operationCtx))
 		}
 		if !RetryableEvidenceTransportError(lastErr) {
-			return lastErr
+			return errors.Join(lastErr, evidenceReadContextError(ctx), evidenceReadContextError(operationCtx))
 		}
 		delay := releaseSnapshotStartupRetryDelay
 		var status *releaseHttpGetStatusError
@@ -67,7 +78,7 @@ func retryReleaseHttpGet(ctx context.Context, read func(context.Context) error, 
 			delay = max(delay, status.retryAfter)
 		}
 		if err := wait(operationCtx, delay); err != nil {
-			return errors.Join(lastErr, err, ctx.Err())
+			return errors.Join(lastErr, err, evidenceReadContextError(ctx), evidenceReadContextError(operationCtx))
 		}
 	}
 }

@@ -13,9 +13,21 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"syscall"
 	"testing"
 	"unicode/utf8"
 )
+
+// APFS refuses file names that are not UTF-8, so an occupied invalid-byte
+// namespace exists only on filesystems that keep raw bytes, as Linux does.
+func renameAttemptSettlementV2InvalidPath(t *testing.T, from, to string) {
+	t.Helper()
+	if err := os.Rename(from, to); errors.Is(err, syscall.EILSEQ) {
+		t.Skipf("filesystem refuses the non-UTF-8 name: %v", err)
+	} else if err != nil {
+		t.Fatal(err)
+	}
+}
 
 // Move only an actually empty v5 ledger, preserving its exact identity/prefix.
 // Then open a real disk ledger and reattach by the existing compatible API.
@@ -29,9 +41,7 @@ func runtimeAttemptSettlementV2MoveEmptyOperator(t *testing.T, fixture *attemptS
 	if err := participant.Ledger.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Rename(participant.StateDir, path); err != nil {
-		t.Fatal(err)
-	}
+	renameAttemptSettlementV2InvalidPath(t, participant.StateDir, path)
 	ledger, err := NewDiskAttemptLedger(t.Context(), path, operator.expected.Identity, attemptLedgerDiskTestCoordinator, operator.key, attemptLedgerDiskTestLimits())
 	if err != nil {
 		t.Fatal(err)
@@ -77,9 +87,7 @@ func TestAttemptSettlementRuntimeV2PathEncodingCoordinatorBeforeIO(t *testing.T)
 		if utf8.ValidString(path) {
 			t.Fatal("invalid-byte coordinator fixture became UTF-8")
 		}
-		if err := os.Rename(fixture.coordinator, path); err != nil {
-			t.Fatal(err)
-		}
+		renameAttemptSettlementV2InvalidPath(t, fixture.coordinator, path)
 		fixture.coordinator = path
 		participants := fixture.participants
 		if role == "recover" {

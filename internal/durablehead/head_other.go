@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !darwin
 
 // Unsupported hosts cannot silently downgrade declared custody to pathname I/O.
 package durablehead

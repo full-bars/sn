@@ -69,7 +69,7 @@ func (self *chainRpcMissingResponseError) Unwrap() error { return self.cause }
 // Backoff applies after a failure only; healthy owned-node reads have no quota
 // delay. Jitter prevents independent validators from retrying in lockstep.
 func (self *ChainClient) waitChainReadRetry(ctx context.Context, attempt int) error {
-	if err := ctx.Err(); err != nil {
+	if err := evidenceReadContextError(ctx); err != nil {
 		return err
 	}
 	delay := chainReadRetryDelay << min(attempt-1, chainReadRetryMaximumStep)
@@ -91,22 +91,26 @@ func (self *ChainClient) retryChainRead(ctx context.Context, read func(context.C
 	defer cancel()
 	var lastErr error
 	for attempt := 1; ; attempt++ {
-		if err := ctx.Err(); err != nil {
+		if err := evidenceReadContextError(ctx); err != nil {
 			return errors.Join(lastErr, err)
 		}
 		callCtx, callCancel := self.chainReadAttemptContext(ctx)
-		err := read(callCtx)
-		err = errors.Join(err, callCtx.Err())
-		callCancel()
+		err := evidenceReadContextError(callCtx)
 		if err == nil {
-			return ctx.Err()
+			err = read(callCtx)
 		}
-		lastErr = err
-		if !RetryableEvidenceTransportError(lastErr) {
+		err = errors.Join(err, evidenceReadContextError(callCtx))
+		callCancel()
+		ownerErr := evidenceReadContextError(ctx)
+		if err == nil {
+			return ownerErr
+		}
+		lastErr = errors.Join(err, ownerErr)
+		if ownerErr != nil || !RetryableEvidenceTransportError(lastErr) {
 			return lastErr
 		}
 		if err := self.waitChainReadRetry(ctx, attempt); err != nil {
-			return errors.Join(lastErr, err)
+			return errors.Join(lastErr, err, evidenceReadContextError(ctx))
 		}
 	}
 }
@@ -117,7 +121,7 @@ func (self *ChainClient) retryChainRead(ctx context.Context, read func(context.C
 func (self *ChainClient) readChainBatch(ctx context.Context, selector rpc.BlockNumberOrHash, calls []chainBatchCall, indices []int, outputs [][]byte, attempt int) error {
 	var lastErr error
 	for {
-		if err := ctx.Err(); err != nil {
+		if err := evidenceReadContextError(ctx); err != nil {
 			return errors.Join(lastErr, err)
 		}
 		raw := make([]hexutil.Bytes, len(indices))
@@ -134,21 +138,26 @@ func (self *ChainClient) readChainBatch(ctx context.Context, selector rpc.BlockN
 			}
 		}
 		callCtx, cancel := self.chainReadAttemptContext(ctx)
-		callErr := self.client.Client().BatchCallContext(callCtx, batch)
-		attemptErr := callCtx.Err()
+		callErr := evidenceReadContextError(callCtx)
+		if callErr == nil {
+			callErr = self.client.Client().BatchCallContext(callCtx, batch)
+		}
+		attemptErr := evidenceReadContextError(callCtx)
 		cancel()
 		pending, err := collectChainBatchReadResults(batch, raw, indices, outputs, callErr, attemptErr)
+		ownerErr := evidenceReadContextError(ctx)
+		err = errors.Join(err, ownerErr)
 		if err == nil {
-			return ctx.Err()
+			return nil
 		}
-		if !RetryableEvidenceTransportError(err) {
+		if ownerErr != nil || !RetryableEvidenceTransportError(err) {
 			return err
 		}
 		lastErr = err
 		if waitErr := self.waitChainReadRetry(ctx, attempt); waitErr != nil {
-			return errors.Join(err, waitErr)
+			return errors.Join(err, waitErr, evidenceReadContextError(ctx))
 		}
-		if ownerErr := ctx.Err(); ownerErr != nil {
+		if ownerErr := evidenceReadContextError(ctx); ownerErr != nil {
 			return errors.Join(err, ownerErr)
 		}
 		// A refused large request can succeed at smaller sizes. A singleton
@@ -164,7 +173,7 @@ func (self *ChainClient) readChainBatch(ctx context.Context, selector rpc.BlockN
 				return errors.Join(err, childErr)
 			}
 		}
-		return ctx.Err()
+		return evidenceReadContextError(ctx)
 	}
 }
 

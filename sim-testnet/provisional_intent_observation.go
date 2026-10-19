@@ -204,17 +204,12 @@ func inspectProvisionalValidatorIntentObserved(ctx context.Context, cfg *Resolve
 		if err != nil || bytesSHA256(raw) != local.StoreSHA256 {
 			return failure(errors.Join(errors.New("local intent store changed before projection"), err))
 		}
-		var file struct {
-			Schema  string                        `json:"schema"`
-			Current *validatorpkg.SteeringIntent  `json:"current,omitempty"`
-			History []validatorpkg.SteeringIntent `json:"history"`
-		}
-		if err := json.Unmarshal(raw, &file); err != nil || file.Schema != validatorpkg.SteeringIntentSchema {
+		// A sealed store's segments sit beside it in the same state directory.
+		all, err := decodeValidatorIntentBytes(raw, validatorId, func(name string, maximum uint64) ([]byte, error) {
+			return readValidatorEvidenceHistoricalFile(local.StateDirectory, name, int64(min(maximum, maximumCampaignEvidenceRawFileBytes)))
+		})
+		if err != nil {
 			return failure(errors.Join(errors.New("local intent projection store differs"), err))
-		}
-		all := append([]validatorpkg.SteeringIntent(nil), file.History...)
-		if file.Current != nil {
-			all = append(all, *file.Current)
 		}
 		if len(all) != len(local.Receipts) {
 			return failure(errors.New("local intent projection receipt census differs"))
