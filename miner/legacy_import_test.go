@@ -62,6 +62,7 @@ func legacyTestNetworkToken(networkID string) string {
 
 // fakeLegacyImportProver answers the two proof questions with fixed values.
 type fakeLegacyImportProver struct {
+	mu          sync.Mutex
 	serviceKey  map[string][]byte // client id -> server-held key; nil means null
 	publicErr   error
 	refreshErr  map[string]error
@@ -76,11 +77,19 @@ type fakeLegacyImportProver struct {
 }
 
 func (self *fakeLegacyImportProver) ServerPublicKey(ctx context.Context, clientID connect.Id) ([]byte, error) {
+	self.mu.Lock()
 	self.publicCalls++
-	if self.publicErr != nil {
-		return nil, self.publicErr
+	publicErr := self.publicErr
+	var key []byte
+	var ok bool
+	if self.serviceKey != nil {
+		key, ok = self.serviceKey[clientID.String()]
 	}
-	key, ok := self.serviceKey[clientID.String()]
+	self.mu.Unlock()
+
+	if publicErr != nil {
+		return nil, publicErr
+	}
 	if !ok {
 		return nil, fmt.Errorf("synthetic: no server key for %s", clientID.String()[:8])
 	}
@@ -88,6 +97,8 @@ func (self *fakeLegacyImportProver) ServerPublicKey(ctx context.Context, clientI
 }
 
 func (self *fakeLegacyImportProver) RefreshAccepted(ctx context.Context, token string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 	self.refreshCall++
 	if self.transientRemaining > 0 {
 		self.transientRemaining--

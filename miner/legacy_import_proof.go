@@ -214,9 +214,21 @@ func legacyImportProveSlot(ctx context.Context, narrator *legacyImportNarrator, 
 	slotCtx, slotCancel := context.WithTimeout(ctx, opts.proofTimeout)
 	defer slotCancel()
 	outcome := legacyImportProofOutcome{slot: slot}
+	if ctx.Err() != nil {
+		outcome.state = "defer"
+		outcome.reason = legacyImportReasonUnreachable
+		outcome.unreachable = true
+		return outcome
+	}
 	serverKey, err, _ := legacyImportBoundedProof(slotCtx, opts.proofTimeout, func(callCtx context.Context) ([]byte, error) {
 		return prover.ServerPublicKey(callCtx, slot.clientID)
 	})
+	if errors.Is(err, context.Canceled) || ctx.Err() != nil {
+		outcome.state = "defer"
+		outcome.reason = legacyImportReasonUnreachable
+		outcome.unreachable = true
+		return outcome
+	}
 	inconclusive := false
 	switch {
 	case err != nil:
@@ -254,11 +266,12 @@ func legacyImportProveSlot(ctx context.Context, narrator *legacyImportNarrator, 
 			return outcome
 		}
 		lastErr = refreshErr
-		if errors.Is(refreshErr, context.Canceled) {
+		if errors.Is(refreshErr, context.Canceled) || ctx.Err() != nil {
 			// The phase was stopped while this call was in flight (budget,
 			// short circuit, or the run's own context). A canceled call is no
 			// verdict about the identity: defer it, never fall back, so a
 			// stopped phase cannot mint over an unproven identity.
+			outcome.reason = legacyImportReasonUnreachable
 			outcome.unreachable = true
 			return outcome
 		}
@@ -354,7 +367,6 @@ func legacyImportProveAll(
 			select {
 			case sem <- struct{}{}:
 			case <-proofCtx.Done():
-				outcomes <- legacyImportProofOutcome{slot: slot, state: "defer", reason: legacyImportReasonUnreachable, unreachable: true}
 				return
 			}
 			defer func() { <-sem }()
