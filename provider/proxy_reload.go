@@ -1404,11 +1404,14 @@ func (r *ProxyReloader) reload() {
 			urlAdded++
 		}
 		// Defer unproven URL-sourced proxy launches until file-proxy warmup
-		// completes, so operator-curated proxies get an uncontested ramp.
-		// Promoted URL proxies (earnings >= 64 MiB) are known earners and
-		// should launch with the file list rather than be deferred.
+		// completes, so operator-curated proxies get an uncontested ramp —
+		// but only for a bounded grace period. A box whose file proxies
+		// cannot warm (saturation, expired credentials, a reload storm) must
+		// still be able to refill from the URL pool; otherwise this gate
+		// turns one slow startup into a permanently under-filled fleet.
 		isPromoted := proxyEarningsScore(key, time.Now()) >= earningsPromotionBytes
-		if sourceOf[key] == "url" && !isPromoted && !proxyWarmupDone.Load() {
+		if sourceOf[key] == "url" && !isPromoted && !proxyWarmupDone.Load() &&
+			time.Since(provideStartTime) < urlWarmupLaunchGrace {
 			warmupDeferred++
 			continue
 		}
@@ -1544,3 +1547,7 @@ func (r *ProxyReloader) reload() {
 }
 
 var proxyWarmupDone atomic.Bool
+
+// urlWarmupLaunchGrace bounds how long unproven URL-sourced proxies wait for
+// the file-sourced pool to finish its initial warmup before launching anyway.
+const urlWarmupLaunchGrace = 5 * time.Minute

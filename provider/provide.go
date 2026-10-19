@@ -1122,7 +1122,7 @@ func provideHandleAuthFailure(st *provideState, proxyCtx context.Context, proxyS
 				// permanently evicted by latency.
 				tlog("[proxy][init] proxy[%d] (%s) auth slow (deadline-cut); not a give-up, requeue with backoff: %v\n",
 					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
-				delay := proxyURLGiveUpRetryDelay(proxyURLGiveUpEvictAfterCycles - 1)
+				delay := proxyURLSlowAuthRetryDelay
 				globalProxyFailureHistory.SetBackoffUntil(proxySettings.Key(), time.Now().Add(delay))
 				if reloadPath, pathErr := proxyReloadPath(); pathErr == nil {
 					time.AfterFunc(delay, func() {
