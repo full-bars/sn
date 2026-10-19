@@ -642,6 +642,81 @@ test_sanitize_restart_dropins_effective_statuses() {
 }
 test_sanitize_restart_dropins_effective_statuses
 
+# --- TESTS: wget fallback (BusyBox flags, helper placement, retry output) ---
+# The installer falls back to wget when curl is missing or failing. BusyBox wget
+# (Alpine) rejects GNU-only options before it opens a connection, the helpers
+# must already be defined when install/update dispatch, and a retry must not
+# publish the truncated body of the attempt that failed.
+
+test_wget_helpers_defined_before_dispatch() {
+    local missing="" f
+    for f in wget_common_opts wget_retry_download wget_retry_fetch; do
+        command -v "$f" >/dev/null 2>&1 || missing="$missing $f"
+    done
+    # LIB_FILE is cut at the operation dispatch, so a helper defined below it is
+    # missing here — and "not found" at runtime, exactly when install/update
+    # need the wget fallback.
+    assert_eq "" "$missing" "wget helpers are defined before the operation dispatch"
+}
+test_wget_helpers_defined_before_dispatch
+
+test_download_asset_uses_portable_wget_flags() {
+    local tmp out rc saved_path
+    tmp="$(mktemp -d)"
+    out="$tmp/asset.tar.gz"
+    # BusyBox-shaped wget: -T/-q/-O are understood, GNU long options are not.
+    cat > "$tmp/wget" <<'WGET'
+#!/bin/sh
+out=/dev/stdout; want=0
+for a in "$@"; do
+    case "$a" in
+        -T|-q) ;;
+        -qO-) out=/dev/stdout ;;
+        -O) want=1 ;;
+        --*) echo "wget: unrecognized option '$a'" >&2; exit 1 ;;
+        -*) ;;
+        *) if [ "$want" = 1 ]; then out="$a"; want=0; fi ;;
+    esac
+done
+printf '%s' 'tarball-body' > "$out"
+WGET
+    printf '#!/bin/sh\nexit 7\n' > "$tmp/curl"
+    chmod +x "$tmp/wget" "$tmp/curl"
+    saved_path="$PATH"
+    PATH="$tmp:$PATH"
+    if download_asset "https://example.invalid/x.tar.gz" "$out" >/dev/null 2>&1; then rc=0; else rc=$?; fi
+    PATH="$saved_path"
+    assert_eq "0" "$rc" "download_asset succeeds through wget_retry_download on BusyBox flags"
+    assert_eq "tarball-body" "$(cat "$out" 2>/dev/null < /dev/null)" "download_asset writes the body the wget fallback downloaded"
+    rm -rf "$tmp"
+}
+test_download_asset_uses_portable_wget_flags
+
+test_wget_retry_fetch_drops_failed_attempts() {
+    local tmp res saved_path
+    tmp="$(mktemp -d)"
+    # First attempt: connection dropped mid-body (partial JSON, exit 1).
+    # Second attempt: complete body, exit 0.
+    cat > "$tmp/wget" <<'WGET'
+#!/bin/sh
+n=$(cat "$CALLS" 2>/dev/null || echo 0)
+n=$((n + 1)); echo "$n" > "$CALLS"
+if [ "$n" -eq 1 ]; then printf '%s' '{"tag_name": "v2026.1'; exit 1; fi
+printf '%s' '{"tag_name": "v2026.9.17-1789646883-meso"}'
+WGET
+    chmod +x "$tmp/wget"
+    saved_path="$PATH"
+    CALLS="$tmp/calls"
+    export CALLS
+    PATH="$tmp:$PATH"
+    res="$(wget_retry_fetch "https://example.invalid/api" 2>/dev/null)" || true
+    PATH="$saved_path"
+    unset CALLS
+    assert_eq '{"tag_name": "v2026.9.17-1789646883-meso"}' "$res" "a failed attempt's partial body is not published with the retry"
+    rm -rf "$tmp"
+}
+test_wget_retry_fetch_drops_failed_attempts
+
 echo "======================================"
 if [ $FAILS -eq 0 ]; then
     echo "🎉 All tests passed!"

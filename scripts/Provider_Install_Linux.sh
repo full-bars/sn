@@ -1107,22 +1107,12 @@ download_asset ()
         pr_warn "curl failed to download asset, trying wget fallback..."
     fi
 
-    # Try wget fallback
+    # Try wget fallback. Only portable flags here: BusyBox wget rejects
+    # --connect-timeout/--tries/--waitretry before it opens a connection, so
+    # the tarball never downloaded on Alpine when curl was absent. The retries
+    # this branch used to ask wget for are done in the shell instead.
     if command -v wget > /dev/null; then
-        # --tries=3: retry up to 3 times
-        # --waitretry=2: wait 2 seconds between retries
-        # --retry-connrefused: retry even if connection is refused on modern wget
-        opts="--connect-timeout=10 --tries=3 --waitretry=2"
-        if [ "$FORCE_IPV4" -eq 1 ]; then
-            opts="-4 $opts"
-        fi
-        
-        # Check if wget supports --retry-connrefused
-        if wget --help | grep -q "retry-connrefused"; then
-            opts="$opts --retry-connrefused"
-        fi
-
-        if wget $opts -O "$output" "$url"; then
+        if wget_retry_download "$url" "$output"; then
             return 0
         fi
     fi
@@ -3634,6 +3624,82 @@ do_session ()
     esac
 }
 
+# The wget helpers below MUST stay above the operation dispatch: install,
+# update and reinstall run do_install during dispatch, and do_install reaches
+# network_fetch/tls_fetch/download_asset well before the end of this file. A
+# function defined after the dispatch has not been read yet at that point, so
+# shell-level retries would fail as "not found" exactly when the wget fallback
+# is the only thing left.
+
+# wget_common_opts returns flags every wget implementation accepts.
+#
+# BusyBox wget is not GNU wget. It rejects GNU-only options outright:
+# --connect-timeout is unknown (it spells the timeout -T SEC), and
+# --retry-connrefused may be absent depending on how BusyBox was built.
+# Passing an option it does not know makes it exit non-zero with
+# "unrecognized option" BEFORE any network attempt, which silently broke
+# every download on Alpine and Alpine-derived images (and wrote an index.html
+# into the working directory whenever something was listening on port 80).
+#
+# So: no capability probing at all. -T is understood by both implementations and
+# is the documented spelling on each; retries are done in the shell, which works
+# the same everywhere. Earlier revisions probed the real binary per flag, which
+# could stall for minutes on GNU wget (--retry-connrefused makes a refused
+# connection transient and it then retries ~20 times) and had the side effect
+# above. Static, portable flags cannot fail that way.
+wget_common_opts ()
+{
+    wopts="-T 10"
+    # -4 is not universal; --inet4-only is the GNU spelling and BusyBox
+    # recognises neither, so only pass it when the help text says so. Checking
+    # help text has no network side effects (unlike probing with a real fetch).
+    if [ "$FORCE_IPV4" -eq 1 ] && wget --help 2>&1 | grep -q -- '--inet4-only'; then
+        wopts="$wopts --inet4-only"
+    fi
+    echo "$wopts"
+}
+
+# wget_retry_download URL OUTPUT — wget with shell-level retries.
+wget_retry_download ()
+{
+    wr_url="$1"
+    wr_out="$2"
+    wr_opts="$(wget_common_opts)"
+    wr_n=0
+    while [ "$wr_n" -lt 3 ]; do
+        # shellcheck disable=SC2086  # wr_opts is intentionally word-split flags
+        if wget $wr_opts -O "$wr_out" "$wr_url"; then
+            return 0
+        fi
+        wr_n=$((wr_n + 1))
+        [ "$wr_n" -lt 3 ] && sleep 2
+    done
+    return 1
+}
+
+# wget_retry_fetch URL — same, to stdout.
+wget_retry_fetch ()
+{
+    wf_url="$1"
+    wf_opts="$(wget_common_opts)"
+    wf_n=0
+    while [ "$wf_n" -lt 3 ]; do
+        # Capture the attempt rather than streaming it. A connection dropped
+        # mid-body leaves a truncated response on stdout, and the retry that
+        # succeeds then appends a whole one, so the caller (network_fetch,
+        # tls_fetch) would read two bodies spliced together as one release
+        # document or install script. Publish only the attempt that exits 0.
+        # shellcheck disable=SC2086  # wf_opts is intentionally word-split flags
+        if wf_body="$(wget $wf_opts -qO- "$wf_url")"; then
+            printf '%s' "$wf_body"
+            return 0
+        fi
+        wf_n=$((wf_n + 1))
+        [ "$wf_n" -lt 3 ] && sleep 2
+    done
+    return 1
+}
+
 case "$operation" in
     install|update|reinstall)
         do_install "$@"
@@ -3800,66 +3866,3 @@ case "$operation" in
         exit 1
         ;;
 esac
-
-# wget_common_opts returns flags every wget implementation accepts.
-#
-# BusyBox wget is not GNU wget. It rejects GNU-only options outright:
-# --connect-timeout is unknown (it spells the timeout -T SEC), and
-# --retry-connrefused may be absent depending on how BusyBox was built.
-# Passing an option it does not know makes it exit non-zero with
-# "unrecognized option" BEFORE any network attempt, which silently broke
-# every download on Alpine and Alpine-derived images (and wrote an index.html
-# into the working directory whenever something was listening on port 80).
-#
-# So: no capability probing at all. -T is understood by both implementations and
-# is the documented spelling on each; retries are done in the shell, which works
-# the same everywhere. Earlier revisions probed the real binary per flag, which
-# could stall for minutes on GNU wget (--retry-connrefused makes a refused
-# connection transient and it then retries ~20 times) and had the side effect
-# above. Static, portable flags cannot fail that way.
-wget_common_opts ()
-{
-    wopts="-T 10"
-    # -4 is not universal; --inet4-only is the GNU spelling and BusyBox
-    # recognises neither, so only pass it when the help text says so. Checking
-    # help text has no network side effects (unlike probing with a real fetch).
-    if [ "$FORCE_IPV4" -eq 1 ] && wget --help 2>&1 | grep -q -- '--inet4-only'; then
-        wopts="$wopts --inet4-only"
-    fi
-    echo "$wopts"
-}
-
-# wget_retry_download URL OUTPUT — wget with shell-level retries.
-wget_retry_download ()
-{
-    wr_url="$1"
-    wr_out="$2"
-    wr_opts="$(wget_common_opts)"
-    wr_n=0
-    while [ "$wr_n" -lt 3 ]; do
-        # shellcheck disable=SC2086  # wr_opts is intentionally word-split flags
-        if wget $wr_opts -O "$wr_out" "$wr_url"; then
-            return 0
-        fi
-        wr_n=$((wr_n + 1))
-        [ "$wr_n" -lt 3 ] && sleep 2
-    done
-    return 1
-}
-
-# wget_retry_fetch URL — same, to stdout.
-wget_retry_fetch ()
-{
-    wf_url="$1"
-    wf_opts="$(wget_common_opts)"
-    wf_n=0
-    while [ "$wf_n" -lt 3 ]; do
-        # shellcheck disable=SC2086  # wf_opts is intentionally word-split flags
-        if wget $wf_opts -qO- "$wf_url"; then
-            return 0
-        fi
-        wf_n=$((wf_n + 1))
-        [ "$wf_n" -lt 3 ] && sleep 2
-    done
-    return 1
-}
