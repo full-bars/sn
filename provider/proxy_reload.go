@@ -850,7 +850,20 @@ func (r *ProxyReloader) reload() {
 		tlog("[proxy] reload skipped: %v (waited %v)\n", err, time.Since(reloadStart).Round(time.Millisecond))
 		return
 	}
-	defer lockRelease()
+	// The cross-process lock protects the state file read below and the state
+	// write at the end of the pass. It must NOT span the plan/launch work:
+	// under load that work can take minutes (observed 7m5s), and holding the
+	// lock across it starves the health snapshot and every other reader, which
+	// is exactly when the fleet most needs to be observed. Release it after
+	// the read and reacquire only for the write.
+	lockReleased := false
+	releaseProxyLock := func() {
+		if !lockReleased {
+			lockReleased = true
+			lockRelease()
+		}
+	}
+	defer releaseProxyLock()
 	lockWait := time.Since(lockAcqStart)
 
 	proxyStateMu.Lock()
@@ -858,6 +871,7 @@ func (r *ProxyReloader) reload() {
 		r.state = newState
 	}
 	proxyStateMu.Unlock()
+	releaseProxyLock()
 
 	// Load desired set from the source. On a read error in Workflow A, SKIP the
 	// reload entirely — proceeding would diff against zero proxies and cancel the
@@ -1404,11 +1418,14 @@ func (r *ProxyReloader) reload() {
 			urlAdded++
 		}
 		// Defer unproven URL-sourced proxy launches until file-proxy warmup
-		// completes, so operator-curated proxies get an uncontested ramp.
-		// Promoted URL proxies (earnings >= 64 MiB) are known earners and
-		// should launch with the file list rather than be deferred.
+		// completes, so operator-curated proxies get an uncontested ramp —
+		// but only for a bounded grace period. A box whose file proxies
+		// cannot warm (saturation, expired credentials, a reload storm) must
+		// still be able to refill from the URL pool; otherwise this gate
+		// turns one slow startup into a permanently under-filled fleet.
 		isPromoted := proxyEarningsScore(key, time.Now()) >= earningsPromotionBytes
-		if sourceOf[key] == "url" && !isPromoted && !proxyWarmupDone.Load() {
+		if sourceOf[key] == "url" && !isPromoted && !proxyWarmupDone.Load() &&
+			time.Since(provideStartTime) < urlWarmupLaunchGrace {
 			warmupDeferred++
 			continue
 		}
@@ -1486,22 +1503,33 @@ func (r *ProxyReloader) reload() {
 	// hot restart, the only way to shed a goroutine stuck in a syscall.
 	// Skipping the write instead would drop the prune and ID bookkeeping
 	// this pass just computed.
-	proxyStateMu.Lock()
-	if diskState, err := readProxyState(); err == nil {
-		for addr, entry := range r.state.Proxies {
-			if diskEntry, ok := diskState.Proxies[addr]; ok {
-				entry.Health = diskEntry.Health
-				entry.DownSince = diskEntry.DownSince
-				entry.AuthFailures = diskEntry.AuthFailures
-				r.state.Proxies[addr] = entry
+	//
+	// The cross-process lock is reacquired only for this write: the pass above
+	// runs unlocked so a slow reload cannot starve health or launches. A
+	// failure to get the lock skips the write (the next reload persists); it
+	// must not abort the pass.
+	persistRelease, persistLockErr := acquireProxyLockWithRetry()
+	if persistLockErr != nil {
+		tlog("[proxy] warning: could not acquire proxy lock for the post-reload state write: %v\n", persistLockErr)
+	} else {
+		proxyStateMu.Lock()
+		if diskState, err := readProxyState(); err == nil {
+			for addr, entry := range r.state.Proxies {
+				if diskEntry, ok := diskState.Proxies[addr]; ok {
+					entry.Health = diskEntry.Health
+					entry.DownSince = diskEntry.DownSince
+					entry.AuthFailures = diskEntry.AuthFailures
+					r.state.Proxies[addr] = entry
+				}
 			}
 		}
+		r.state.NextID = currentProxyIDCounter()
+		if err := writeProxyState(r.state); err != nil {
+			tlog("[proxy] warning: could not write proxy.state after reload: %v\n", err)
+		}
+		proxyStateMu.Unlock()
+		persistRelease()
 	}
-	r.state.NextID = currentProxyIDCounter()
-	if err := writeProxyState(r.state); err != nil {
-		tlog("[proxy] warning: could not write proxy.state after reload: %v\n", err)
-	}
-	proxyStateMu.Unlock()
 
 	// Update systemd status counters: the configured count reflects
 	// the full desired set (file/internal + URL cache), and resolution
@@ -1544,3 +1572,7 @@ func (r *ProxyReloader) reload() {
 }
 
 var proxyWarmupDone atomic.Bool
+
+// urlWarmupLaunchGrace bounds how long unproven URL-sourced proxies wait for
+// the file-sourced pool to finish its initial warmup before launching anyway.
+const urlWarmupLaunchGrace = 5 * time.Minute

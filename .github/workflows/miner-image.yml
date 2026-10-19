@@ -1,0 +1,123 @@
+name: Miner Image
+
+# Builds the sn miner image (cli/miner baked in as `provider`, the relay kept
+# as provider-relay) from Dockerfile.miner and publishes it to ghcr.io.
+#
+# Publishing is gated to pushes to main and version tags. A manual dispatch on
+# any other ref builds without pushing, so a feature branch can never publish.
+# Tags are namespaced under `miner-` and `miner` so the relay image keeps
+# :latest and the egg contract asserted in build.yml stays intact.
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'releases/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-miner-image:
+    name: build and push the miner image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to the Container registry
+        if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for the miner image
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          flavor: |
+            latest=false
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=miner,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=miner,enable=${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-rc') && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') }}
+            type=ref,event=tag,prefix=miner-
+            type=sha,format=short,prefix=miner-
+
+      - name: Determine version for build
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo "dev")
+          fi
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Build the miner image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.miner
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+
+      - name: Assert a pre-release did not become the miner tag
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && (contains(github.ref, '-rc') || contains(github.ref, '-alpha') || contains(github.ref, '-beta')) }}
+        run: |
+          set -euo pipefail
+          REPO="full-bars/sn"
+          TAG="${GITHUB_REF_NAME}"
+          TOK=$(curl -sf "https://ghcr.io/token?scope=repository:${REPO}:pull&service=ghcr.io" \
+                | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+          ACCEPT='application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.docker.distribution.manifest.v2+json'
+          digest_of() {
+            curl -sfI -H "Authorization: Bearer ${TOK}" -H "Accept: ${ACCEPT}" \
+              "https://ghcr.io/v2/${REPO}/manifests/$1" 2>/dev/null \
+              | grep -i '^docker-content-digest' | tr -d '\r' | awk '{print $2}'
+          }
+          RC_DIGEST=$(digest_of "miner-${TAG}")
+          MINER_DIGEST=$(digest_of miner)
+          echo "pre-release tag miner-${TAG} = ${RC_DIGEST:-<none>}"
+          echo ":miner                      = ${MINER_DIGEST:-<none>}"
+          if [ -z "$RC_DIGEST" ]; then
+            echo "::error::could not resolve the digest for miner-${TAG}; refusing to pass this check blind"
+            exit 1
+          fi
+          if [ -n "$MINER_DIGEST" ] && [ "$MINER_DIGEST" = "$RC_DIGEST" ]; then
+            echo "::error:::miner now points at pre-release ${TAG}. Restore :miner to the current stable build before proceeding."
+            exit 1
+          fi
+          echo ":miner does not point at the pre-release - OK"

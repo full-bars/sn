@@ -6,27 +6,45 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
 )
 
 // Configuration is copied before workers start and is immutable for one run.
 type providerRunSettings struct {
-	wallet                  string
-	walletProof             *snWalletProof
-	apiUrl                  string
-	connectUrl              string
-	port                    int
-	proxySettings           []*connect.ProxySettings
+	wallet        string
+	walletProof   *snWalletProof
+	apiUrl        string
+	connectUrl    string
+	port          int
+	proxySettings []*connect.ProxySettings
+	// proxySourceOf is each proxy identity's provenance ("file", "internal",
+	// "url"), as the proxy manager recorded it when it built the launch set.
+	// The warmth launch ordering (proxy_manager_warmth.go) reads it to keep
+	// unproven URL-sourced identities behind the curated list; a nil map
+	// treats every proxy as trusted provenance.
+	proxySourceOf map[string]string
+	// the explicit --max-memory, or 0 when absent; the profile tiers use it
+	// to decide whether an operator value already wins
+	maxMemory               connect.ByteCount
 	memoryPlan              providerMemoryPlan
 	testEgressDialer        *connect.DialContextSettings
 	allowClientRegistration bool
 	adoptLegacyProviderKey  bool
+	// fork-only: automatic import of 3.23-fix saved identities is on by
+	// default; --no-legacy-import disables it entirely
+	noLegacyImport bool
+	// fork-only: the total proving budget of the automatic import; 0 takes
+	// the package default (5m). --legacy-import-budget and
+	// URNETWORK_LEGACY_IMPORT_BUDGET override it.
+	legacyImportBudget time.Duration
 	// an operator child of provide --all-operators --auto-register: a network
 	// sign-in the renewal call rejects is set aside and the child exits
 	quarantineRejectedSignIn bool
@@ -37,6 +55,16 @@ type providerRunSettings struct {
 	contractCapturePath      string
 	contractCaptureSha256    string
 	requireContractCapture   bool
+	// A spawned HotSwap candidate marks itself here: URNETWORK_HOTSWAP=1 with
+	// the IPC channel the parent handed over (fd 3 on Unix, the pipe named in
+	// the environment on Windows). The candidate ACKs the parent once its
+	// first slot is live, and only then binds the control socket and starts
+	// its own trigger/listener — the parent holds both until it yields.
+	hotSwapIPC       io.ReadWriteCloser
+	hotSwapCandidate bool
+	// opts is the parsed CLI options, threaded to the handoff trigger for the
+	// v33 signature (the handoff re-execs the same argv, not these options).
+	opts docopt.Opts
 }
 
 // This owner starts exactly one Serve goroutine after listener admission. Its

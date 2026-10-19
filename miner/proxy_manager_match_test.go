@@ -1,0 +1,149 @@
+package miner
+
+import (
+	"strings"
+	"testing"
+)
+
+// proxy_manager_match_test.go ports the v33 proxy_match_test.go coverage for
+// `proxy remove --match`: the collector must merge the internal config, the
+// state and the URL cache into source buckets removeDeadProxies can act on,
+// keyed by proxy identity so a credentialed entry is removed by identity and a
+// config entry and its state entry count as one proxy.
+
+func TestMatchProxyHostCollectorCases(t *testing.T) {
+	cases := []struct {
+		pattern, address string
+		want             bool
+	}{
+		{"dc.decodo.com", "dc.decodo.com:8001", true},
+		{"DECODO", "dc.decodo.com:8001", true}, // case-insensitive
+		{"decodo", "gate.smartproxy.com:7000", false},
+		{"191.3.", "191.3.44.7:1080", true},                 // IP prefix
+		{"8001", "dc.decodo.com:8001", false},               // never match port
+		{"user", "host.com:1080:user:pass", false},          // never match credentials
+		{"", "dc.decodo.com:8001", false},                   // empty pattern matches nothing
+		{"decodo", "dc.decodo.com:8001:alice:secret", true}, // credentialed form still matches host
+	}
+	for _, c := range cases {
+		if got := matchProxyHost(c.pattern, c.address); got != c.want {
+			t.Errorf("matchProxyHost(%q, %q) = %v, want %v", c.pattern, c.address, got, c.want)
+		}
+	}
+}
+
+func TestCollectMatchingProxies(t *testing.T) {
+	servers := map[string]string{
+		"dc.decodo.com:8001:alice:secret": "",
+		"gate.smartproxy.com:7000":        "",
+	}
+	stateProxies := map[string]ProxyEntry{
+		"dc.decodo.com:8002": {Source: "file"},
+		"dc.decodo.com:8003": {Source: "url"},
+		"1.2.3.4:1080":       {Source: "url"},
+	}
+	urlCache := map[string]ProxyURLEntry{
+		"dc.decodo.com:8003": {},
+		"1.2.3.4:1080":       {},
+		"dc.decodo.com:9999": {}, // cached but not in state (not yet launched)
+	}
+
+	addrsBySource, display := collectMatchingProxies("dc.decodo.com", &ProxyConfig{Servers: servers}, stateProxies, "/etc/proxies.txt", urlCache)
+
+	if got := addrsBySource["internal"]; len(got) != 1 || got[0] != identityKey("dc.decodo.com:8001", "alice") {
+		t.Errorf("internal = %q, want the credentialed identity key", got)
+	}
+	if got := addrsBySource["file"]; len(got) != 1 || got[0] != "dc.decodo.com:8002" {
+		t.Errorf("file = %v, want [dc.decodo.com:8002]", got)
+	}
+	// url matches come from both state (running) and cache (not yet launched), deduped
+	urlGot := map[string]bool{}
+	for _, a := range addrsBySource["url"] {
+		urlGot[a] = true
+	}
+	if len(urlGot) != 2 || !urlGot["dc.decodo.com:8003"] || !urlGot["dc.decodo.com:9999"] {
+		t.Errorf("url = %v, want dc.decodo.com:8003 and dc.decodo.com:9999", addrsBySource["url"])
+	}
+	if len(display) != 4 {
+		t.Errorf("display = %v, want 4 entries", display)
+	}
+}
+
+func TestCollectMatchingProxiesNoState(t *testing.T) {
+	// Provider never ran: state is empty, but proxy.json + URL cache still work.
+	servers := map[string]string{"dc.decodo.com:8001": ""}
+	urlCache := map[string]ProxyURLEntry{"dc.decodo.com:8002": {}}
+
+	addrsBySource, display := collectMatchingProxies("decodo", &ProxyConfig{Servers: servers}, nil, "", urlCache)
+
+	if len(addrsBySource["internal"]) != 1 || len(addrsBySource["url"]) != 1 {
+		t.Errorf("addrsBySource = %v, want 1 internal + 1 url", addrsBySource)
+	}
+	if len(display) != 2 {
+		t.Errorf("display = %v, want 2 entries", display)
+	}
+}
+
+// `proxy remove --match` hands its "internal" bucket to removeDeadProxies, which
+// matches proxy IDENTITY keys. A credentialed internal entry must therefore be
+// collected by identity, or the removal silently deletes nothing while the
+// command still prints "Removed N".
+func TestCollectMatchingProxies_CredentialedInternalIsRemovedByIdentity(t *testing.T) {
+	withTempHome(t)
+	writeProxyConfig(&ProxyConfig{
+		Servers: map[string]string{
+			"dc.decodo.com:8001:alice:secret": "",
+			"dc.decodo.com:8001:bob:hunter2":  "",
+			"dc.decodo.com:8002":              "ref",
+		},
+		Auths: map[string]*ProxyAuth{"ref": {User: "carol", Password: "pw"}},
+	})
+	cfg := readProxyConfig()
+
+	addrsBySource, display := collectMatchingProxies("decodo", cfg, nil, "", nil)
+	if err := removeDeadProxies(&ProxyState{}, addrsBySource); err != nil {
+		t.Fatal(err)
+	}
+	if left := readProxyConfig().Servers; len(left) != 0 {
+		t.Fatalf("every matching credentialed internal proxy must be removed, %d left: %v", len(left), left)
+	}
+	if len(display) != 3 {
+		t.Fatalf("display = %q, want one line per proxy", display)
+	}
+	for _, d := range display {
+		if strings.Contains(d, "\x1f") {
+			t.Fatalf("display leaks the raw identity key separator: %q", d)
+		}
+	}
+}
+
+// With proxy.state present, the same credentialed proxy shows up in both the
+// config and the state. It must be listed and counted once, not twice.
+func TestCollectMatchingProxies_ConfigAndStateAreOneProxy(t *testing.T) {
+	cfg := &ProxyConfig{Servers: map[string]string{"dc.decodo.com:8001:alice:secret": ""}}
+	state := map[string]ProxyEntry{identityKey("dc.decodo.com:8001", "alice"): {Source: "internal"}}
+
+	addrsBySource, display := collectMatchingProxies("decodo", cfg, state, "", nil)
+	if len(display) != 1 || len(addrsBySource["internal"]) != 1 {
+		t.Fatalf("one proxy must be one entry: display=%q internal=%q", display, addrsBySource["internal"])
+	}
+	if strings.Contains(display[0], "\x1f") || !strings.Contains(display[0], "dc.decodo.com:8001") {
+		t.Fatalf("display must name the address without the raw separator: %q", display[0])
+	}
+}
+
+// TestProxyRemoveMatchPatternParses proves the grammar carries the flag and
+// that a bare `proxy remove` still parses without it.
+func TestProxyRemoveMatchPatternParses(t *testing.T) {
+	opts := parseArgsForTest(t, []string{"proxy", "remove", "--match=dc.decodo.com", "--yes", "--preview"})
+	if pattern, _ := opts.String("--match"); pattern != "dc.decodo.com" {
+		t.Fatalf("--match parsed as %q", pattern)
+	}
+	if yes, _ := opts.Bool("--yes"); !yes {
+		t.Fatal("--yes lost")
+	}
+	if preview, _ := opts.Bool("--preview"); !preview {
+		t.Fatal("--preview lost")
+	}
+	parseArgsForTest(t, []string{"proxy", "remove", "--all"})
+}

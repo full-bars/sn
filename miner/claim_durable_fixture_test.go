@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
 
@@ -23,7 +24,53 @@ import (
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/internal/durablehead"
+	"github.com/urnetwork/connect/durablesys"
 )
+
+func claimV2PendingTemporary(dir string) string {
+	f, err := os.Open(dir)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	raw := make([]byte, 4096)
+	n, err := durablesys.GetAttribute(int(f.Fd()), durablehead.Attribute("provider-claim-queue", "claim-queue.json"), raw)
+	if err != nil {
+		return ""
+	}
+	var cp durablehead.Checkpoint
+	if err := json.Unmarshal(raw[:n], &cp); err != nil || cp.Pending == nil {
+		return ""
+	}
+	return cp.Pending.Temporary
+}
+
+// reconcileClaimV2TestTemporaries removes the durable-head create temporaries a
+// cancelled daemon can leave in a state directory. The Owner retains an
+// unanchored temporary and refuses to open over it by design
+// (checkTemporaryCensus); a test that asserts a later, unrelated refusal
+// reconciles the fixture's leftovers itself.
+func reconcileClaimV2TestTemporaries(t testing.TB, dirs ...string) {
+	t.Helper()
+	for _, dir := range dirs {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pending := claimV2PendingTemporary(dir)
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasPrefix(entry.Name(), ".durable-head-") {
+				continue
+			}
+			if pending != "" && entry.Name() == pending {
+				continue
+			}
+			if err := os.Remove(filepath.Join(dir, entry.Name())); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+}
 
 // Existing checkpoint metadata is never replaced, including negative fixtures.
 // Deliberately prewritten legacy-format fixtures are adopted only by this

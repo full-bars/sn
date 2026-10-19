@@ -5,7 +5,10 @@ package miner
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/urfoundation/sn/diagnostics"
@@ -41,7 +44,19 @@ const (
 	providerNetworkTokenRenewalWait
 	providerNetworkTokenRenewalStopped
 	providerNetworkSignInQuarantined
+	providerLegacyImportCommitted
+	providerLegacyImportFallback
+	providerLegacyImportSkipped
+	providerLegacyImportSummary
 )
+
+// LegacyImport reports the fork-only automatic import of 3.23-fix saved
+// identities for this run: slots that reused a saved client_id and slots that
+// fell back to a new client identity. Scalar counters only, never an identity.
+type providerLegacyImportStatus struct {
+	Imported int `json:"imported"`
+	Fallback int `json:"fallback"`
+}
 
 // The guidance of a rejected or no longer renewable network sign-in. The
 // operator form is the one a provide --all-operators child needs.
@@ -62,11 +77,12 @@ type providerExtenderObservation struct {
 // Optional operational delivery evidence is independent of status=ok, which
 // retains its existing process-liveness meaning. Counters describe one run.
 type providerDiagnosticStatus struct {
-	Schema         string               `json:"schema"`
-	Authentication diagnostics.Snapshot `json:"authentication"`
-	Keys           diagnostics.Snapshot `json:"keys"`
-	Extender       diagnostics.Snapshot `json:"extender"`
-	Runtime        diagnostics.Snapshot `json:"runtime"`
+	Schema         string                      `json:"schema"`
+	Authentication diagnostics.Snapshot        `json:"authentication"`
+	Keys           diagnostics.Snapshot        `json:"keys"`
+	Extender       diagnostics.Snapshot        `json:"extender"`
+	Runtime        diagnostics.Snapshot        `json:"runtime"`
+	LegacyImport   *providerLegacyImportStatus `json:"legacy_import,omitempty"`
 }
 
 // Tests observe actual construction and joined closure, without replacing the
@@ -80,7 +96,12 @@ type providerDiagnosticHooks struct {
 type providerDiagnosticHooksKey struct{}
 
 // Concurrent producers share only this explicit instance's four fixed queues.
-type providerDiagnostics struct{ exporter *diagnostics.Exporter }
+type providerDiagnostics struct {
+	exporter *diagnostics.Exporter
+
+	legacyImportImportedCount atomic.Int64
+	legacyImportFallbackCount atomic.Int64
+}
 
 // Refused sinks remain visible through snapshots; no synchronous fallback is
 // attempted. The owning run must close this object on every subsequent exit.
@@ -90,6 +111,51 @@ func newProviderDiagnostics(ctx context.Context, writer io.Writer) (*providerDia
 		return nil, err
 	}
 	return &providerDiagnostics{exporter: exporter}, nil
+}
+
+// providerDiagnosticFallbackWriter receives the records that must survive a
+// primary stream the exporter had to refuse. The exporter admits only writers
+// that can promise a bounded, cancellable write: a stdout redirected to a
+// regular file is refused, which used to drop the closed
+// startup_recovery_required message of a refused startup with it. The
+// fallback is a best-effort console write, like tlog. A variable so tests can
+// capture the fallback without touching the process stderr.
+var providerDiagnosticFallbackWriter io.Writer = os.Stderr
+
+// requiredDiagnostic selects the records that must not be hidden by a refused
+// primary stream: the custody/admission recovery message and the automatic
+// legacy import's decisions, which are the only account of why a 3.23-fix
+// state did or did not migrate. Ordinary status noise keeps the existing
+// best-effort contract.
+func requiredDiagnostic(code string) bool {
+	switch code {
+	case "startup_recovery_required",
+		"legacy_import_committed",
+		"legacy_import_fallback",
+		"legacy_import_skipped",
+		"legacy_import_summary":
+		return true
+	}
+	return false
+}
+
+// offerRecord delivers one complete bounded record through the exporter. When
+// a required record is refused because the destination is unavailable (a
+// refused sink, not a momentarily full queue), it is written to the fallback
+// so a startup refusal still names its recovery.
+func (self *providerDiagnostics) offerRecord(domain, code string, raw []byte) {
+	if self == nil || self.exporter == nil {
+		return
+	}
+	if self.exporter.Offer(domain, raw) {
+		return
+	}
+	if !requiredDiagnostic(code) || self.exporter.Snapshot(domain).Outcome != "unavailable" {
+		return
+	}
+	if providerDiagnosticFallbackWriter != nil {
+		fmt.Fprintf(providerDiagnosticFallbackWriter, "%s", raw)
+	}
 }
 
 // The original sink remains caller-owned; exporter descriptors and worker join.
@@ -105,7 +171,72 @@ func (self *providerDiagnostics) snapshot() *providerDiagnosticStatus {
 	if self == nil {
 		return nil
 	}
-	return &providerDiagnosticStatus{Schema: providerDiagnosticSchema, Authentication: self.exporter.Snapshot("authentication"), Keys: self.exporter.Snapshot("keys"), Extender: self.exporter.Snapshot("extender"), Runtime: self.exporter.Snapshot("runtime")}
+	return &providerDiagnosticStatus{
+		Schema:         providerDiagnosticSchema,
+		Authentication: self.exporter.Snapshot("authentication"),
+		Keys:           self.exporter.Snapshot("keys"),
+		Extender:       self.exporter.Snapshot("extender"),
+		Runtime:        self.exporter.Snapshot("runtime"),
+		LegacyImport: &providerLegacyImportStatus{
+			Imported: int(self.legacyImportImportedCount.Load()),
+			Fallback: int(self.legacyImportFallbackCount.Load()),
+		},
+	}
+}
+
+// The fork-only legacy import reports one line per slot plus one summary.
+// These records keep the fixed diagnostics schema; their added fields are
+// scalar display facts (a client id prefix, a slot name, a target filename),
+// never credentials.
+func (self *providerDiagnostics) legacyImportCommitted(clientID8, slot, target string) {
+	self.offerLegacyImport("authentication", "legacy_import_committed", clientID8, slot, "wrote "+target,
+		"The saved 3.23-fix identity was proven against the server key and imported; the original files are untouched and 3.23-fix rollback stays possible.")
+}
+
+func (self *providerDiagnostics) legacyImportFallback(clientID8, slot, reason string) {
+	self.offerLegacyImport("authentication", "legacy_import_fallback", clientID8, slot, "new client will be registered; reason="+reason,
+		"The saved 3.23-fix client_id "+clientID8+" could not be reused ("+reason+"); a new client identity is registered for this slot. The original files are untouched; --adopt-legacy-provider-key stays available as a manual override.")
+}
+
+func (self *providerDiagnostics) legacyImportSkipped(reason, detail string) {
+	self.offerLegacyImport("runtime", "legacy_import_skipped", "", "", reason+": "+detail, "")
+}
+
+func (self *providerDiagnostics) legacyImportSummary(imported, fallback, skipped int) {
+	self.legacyImportImportedCount.Store(int64(imported))
+	self.legacyImportFallbackCount.Store(int64(fallback))
+	self.offerLegacyImport("runtime", "legacy_import_summary", "", "",
+		fmt.Sprintf("imported=%d fallback=%d skipped=%d", imported, fallback, skipped),
+		"Automatic 3.23-fix identity import finished: imported slots reused their saved client_id, fallback slots register a new client identity.")
+}
+
+func (self *providerDiagnostics) offerLegacyImport(domain, code, clientID8, slot, detail, guidance string) {
+	if self == nil {
+		return
+	}
+	file := ""
+	if code == "legacy_import_committed" || code == "legacy_import_fallback" {
+		file = legacyClientJwtStoreName
+	}
+	record := struct {
+		Schema        string `json:"schema"`
+		Domain        string `json:"domain"`
+		Event         string `json:"event"`
+		Provider      uint64 `json:"provider"`
+		ProviderKnown bool   `json:"provider_known"`
+		Cause         string `json:"cause"`
+		RetryMs       uint64 `json:"retry_ms"`
+		ClientId8     string `json:"client_id8,omitempty"`
+		Slot          string `json:"slot,omitempty"`
+		Detail        string `json:"detail,omitempty"`
+		File          string `json:"file,omitempty"`
+		Guidance      string `json:"guidance,omitempty"`
+	}{Schema: providerDiagnosticSchema, Domain: domain, Event: code, Cause: "none", ClientId8: clientID8, Slot: slot, Detail: detail, File: file, Guidance: guidance}
+	raw, encodeErr := json.Marshal(record)
+	if encodeErr != nil {
+		return
+	}
+	self.offerRecord(domain, code, append(raw, '\n'))
 }
 
 // Preserve the existing wire vocabulary without invoking foreign methods.
@@ -228,5 +359,5 @@ func (self *providerDiagnostics) observeFile(event providerDiagnosticEvent, prov
 	if encodeErr != nil {
 		return // All fields above are scalar; no arbitrary marshaler is invoked.
 	}
-	self.exporter.Offer(domain, append(raw, '\n'))
+	self.offerRecord(domain, code, append(raw, '\n'))
 }

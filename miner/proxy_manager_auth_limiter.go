@@ -1,0 +1,393 @@
+package miner
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/urnetwork/connect"
+	"github.com/urnetwork/sdk"
+	"golang.org/x/time/rate"
+)
+
+// proxy_manager_auth_limiter.go ports the 3.23-fix v33 provider's
+// auth_rate_limiter.go: one process-wide AIMD rate in front of every outbound
+// auth attempt (first tries and retries alike), so hundreds of proxies
+// starting at once cannot each back off independently and still hammer the
+// API at full speed in aggregate.
+//
+// The rate adapts itself the way TCP congestion control does: every 429
+// halves it, and a sustained run of non-429 results creeps it back up. That
+// finds the API's actual safe throughput instead of relying on a hardcoded
+// guess, and starts aggressive (at the believed ceiling) rather than
+// slow-ramping from zero, since a cold start of hundreds of proxies shouldn't
+// take hours just because the steady-state rate is conservative.
+//
+// The miner's auth paths all reach the same API with the same credentials
+// shape, so they all feed and wait on this one limiter (v33 shares it the
+// same way):
+//   - the per-proxy sign-in inside provideWithProxy, through
+//     globalProxyAdmissionGate (proxy_manager_admission_gate.go), which waits
+//     on the limiter on the caller's behalf;
+//   - the direct (non-proxy) provider sign-in, reported with ReportResult;
+//   - the network-token renewal loop (startNetworkTokenRenewal), which is the
+//     miner's v33 renewal_watcher.go.
+type authRateLimiter struct {
+	limiter *rate.Limiter
+
+	mu                     sync.Mutex
+	min                    rate.Limit
+	max                    rate.Limit
+	successStreak          int
+	unprovenOverloadStreak int
+	lastAdjustedAt         time.Time
+	lastHeartbeatAt        time.Time
+}
+
+const (
+	// authRateIncreaseThreshold is the number of consecutive non-429 results
+	// required before creeping the rate up.
+	authRateIncreaseThreshold = 20
+	// authRateIncreaseStep is how much the rate grows per increase.
+	authRateIncreaseStep = rate.Limit(1.0)
+	// authRateDecreaseFactor is the multiplicative cut applied on a 429.
+	authRateDecreaseFactor = 0.5
+	// authRateAdjustCooldown is the minimum time between any two
+	// adjustments, so a burst of 429s already in flight before a cut takes
+	// effect doesn't keep cutting the rate further on every one of them.
+	authRateAdjustCooldown = 2 * time.Second
+	// authUnprovenOverloadThreshold is how many consecutive overload-looking
+	// errors through never-proven proxies — with no success of any kind
+	// landing in between — are required before treating them as a real
+	// signal about the API rather than noise from individually broken
+	// proxies. One bad proxy in a list of hundreds shouldn't cut the rate;
+	// dozens of unrelated proxies all failing back-to-back with nothing
+	// succeeding is what an actual outage looks like, even before any of
+	// them has individually proven itself. This is what keeps a mass
+	// timeout-based outage at cold start from being entirely invisible to
+	// the limiter just because no proxy has had the chance to prove itself
+	// yet.
+	authUnprovenOverloadThreshold = 8
+	// authRateHeartbeatInterval bounds how often decrease()/increase() will
+	// log while pinned at the floor or ceiling with no actual change to
+	// report. Without this, a long stretch at the floor produces zero
+	// "[authrate]" output at all (the early-return below the rate-equality
+	// check never logs), making it impossible to tell from logs alone
+	// whether the limiter is healthy-and-pinned or has stopped working.
+	authRateHeartbeatInterval = 60 * time.Second
+)
+
+// globalAuthRateLimiter is shared by every proxy goroutine in the process —
+// they're all authenticating against the same API, so the limit has to be
+// process-wide to mean anything.
+//
+// Burst is 50: v33 raised it deliberately, because with a small burst the
+// first queued proxies were released essentially simultaneously, before any
+// of their results could feed back into the AIMD logic — a guaranteed
+// 429/timeout cascade on cold start if the API can only handle a couple of
+// concurrent auths, which halved the rate before it ever had a chance to find
+// a stable point. The server-side ConnectionRateLimit already caps
+// connections per client IP hash (~200 conns/60s), so a low client-side rate
+// is unnecessary throttling on top of the server's own limits. The defaults
+// are high enough to rarely engage, while still providing 429 backoff
+// protection. Set URNETWORK_AUTH_UNLIMITED=true to bypass the limiter
+// entirely.
+var globalAuthRateLimiter = newAuthRateLimiter(20, 200, 50)
+
+func newAuthRateLimiter(min, max rate.Limit, burst int) *authRateLimiter {
+	return &authRateLimiter{
+		limiter: rate.NewLimiter(max, burst),
+		min:     min,
+		max:     max,
+	}
+}
+
+// fastAuthPath returns <state>/fast_auth. When this file exists (regardless
+// of content), the auth rate limiter is bypassed — every auth attempt fires
+// immediately. Same effect as URNETWORK_AUTH_UNLIMITED=true but takes effect
+// without restarting the provider.
+func fastAuthPath() (string, error) {
+	return providerStatePath("fast_auth")
+}
+
+// fastAuthEnabled returns true when the operator has opted out of auth rate
+// limiting: via the URNETWORK_AUTH_UNLIMITED env var, the control socket (see
+// control_state.go — `urnet-tools fast-auth on|off`), or the legacy
+// fast_auth marker file. Re-checked on every call so a change takes effect
+// immediately — no restart, and (via the socket) no polling delay either.
+func fastAuthEnabled() bool {
+	if os.Getenv("URNETWORK_AUTH_UNLIMITED") == "true" {
+		return true
+	}
+	if v, ok := globalControlState.get("fast_auth"); ok {
+		return strings.EqualFold(v, "on")
+	}
+	path, err := fastAuthPath()
+	if err != nil {
+		return false
+	}
+	_, err = os.Stat(path)
+	return err == nil
+}
+
+// reportProviderAuthResult feeds one completed sign-in back into the shared
+// limiter. It is the miner's port of the result-reporting half of the v33
+// auth ladder (main.go: ReportResultForProxy for an attempt through a proxy,
+// ReportResult for the direct identity's own attempt):
+//
+//   - through a proxy, the result is judged against that identity's proven
+//     history: a timeout through a never-successful proxy is the proxy's own
+//     broken hop, not API backpressure (see ReportResultForProxy);
+//   - the direct identity has no proxy hop that could fake an overload, so
+//     its timeout-family errors are always real signal.
+//
+// Call it after the ported failure/success hooks, so a first-ever success is
+// already recorded as proven, exactly as v33's ordering does.
+func reportProviderAuthResult(settings *connect.ProxySettings, err error) {
+	if settings != nil {
+		globalAuthRateLimiter.ReportResultForProxy(err, globalProvenProxies.HasSucceeded(settings.Key()))
+		return
+	}
+	globalAuthRateLimiter.ReportResult(err)
+}
+
+// renewNetworkTokenThroughAuthLimiter wraps the SDK's network-token refresh
+// with the same process-wide limiter every sign-in shares. It is the miner's
+// port of the v33 renewal_watcher.go pair (globalAuthRateLimiter.Wait before
+// the request, ReportResult after): the renewal is an auth-path API call, so
+// a renewal storm must not bypass the rate the sign-ins have measured, and a
+// renewal that hits a 429 or a timeout must teach the same limiter every
+// proxy feeds.
+func renewNetworkTokenThroughAuthLimiter(api *sdk.Api) func(context.Context, string) (*sdk.RefreshJwtResult, error) {
+	return func(ctx context.Context, token string) (*sdk.RefreshJwtResult, error) {
+		if err := globalAuthRateLimiter.Wait(ctx); err != nil {
+			return nil, err
+		}
+		result, err := api.NetworkRefreshSyncWithContextAndJwt(ctx, token)
+		globalAuthRateLimiter.ReportResult(err)
+		return result, err
+	}
+}
+
+// Wait blocks until the next auth attempt is allowed to proceed, or until ctx
+// is done.
+func (a *authRateLimiter) Wait(ctx context.Context) error {
+	if fastAuthEnabled() {
+		return nil
+	}
+	return a.limiter.Wait(ctx)
+}
+
+// ReportResult feeds the outcome of an auth attempt back into the limiter so
+// it can adapt. Call this after every attempt, success or failure.
+func (a *authRateLimiter) ReportResult(err error) {
+	if err == nil {
+		a.recordSuccessAndMaybeIncrease()
+		return
+	}
+	if isRateLimitedError(err) {
+		a.decrease("429 received")
+		return
+	}
+	if isOverloadError(err) {
+		// A timeout/connection failure means the API is struggling under
+		// the current load just as much as an explicit 429 — back off
+		// either way. Other errors (e.g. a bad JWT) say nothing about
+		// request rate, so leave the limiter where it is rather than
+		// treating them as progress.
+		a.decrease("timeout/connection error")
+	}
+}
+
+// ReportResultForProxy is like ReportResult, but for a result that came
+// through a specific proxy hop. A bare timeout/connection error through a
+// proxy that has never once succeeded is just as likely to be that proxy's
+// own broken SOCKS5 service — undetectable by the TCP-only reachability
+// probe in proxy_probe.go, which only confirms the port accepts a
+// connection — as it is real API backpressure. A single such error is
+// treated as no signal at all (same as the reachability-probe bypass)
+// instead of cutting the rate, so a list full of "port open, proxy broken"
+// entries can't throttle every other proxy the way a list full of dead
+// ports used to.
+//
+// But a long unbroken run of them (authUnprovenOverloadThreshold, with no
+// success of any kind landing in between) IS treated as real signal — a
+// mass outage doesn't wait for proxies to individually prove themselves
+// first, and without this, a timeout-based outage hitting entirely
+// never-proven proxies (the common case right at cold start or just after a
+// big batch of new proxies is added) would otherwise be completely invisible
+// to the limiter.
+//
+// An explicit 429 is unambiguous regardless of the proxy's track record —
+// the API said so itself — so it always counts immediately.
+func (a *authRateLimiter) ReportResultForProxy(err error, proxyHasSucceeded bool) {
+	if err == nil {
+		// A single success only proves one proxy is fine — with a 3-13%
+		// success rate against a mostly-dead public list, a success lands
+		// every ~8-30 attempts on average, which would otherwise reset the
+		// streak back to 0 almost every time it's about to cross
+		// authUnprovenOverloadThreshold. That defeats the whole point of
+		// the streak (catching a mass timeout-based outage hitting
+		// never-proven proxies): decay it instead of wiping it, so a real
+		// outage's signal still accumulates even with occasional successes
+		// mixed in.
+		a.decayUnprovenOverloadStreak()
+		a.recordSuccessAndMaybeIncrease()
+		return
+	}
+	if isRateLimitedError(err) {
+		a.clearUnprovenOverloadStreak()
+		a.decrease("429 received")
+		return
+	}
+	if !isOverloadError(err) {
+		return
+	}
+	if proxyHasSucceeded {
+		a.clearUnprovenOverloadStreak()
+		a.decrease("timeout/connection error via a proven proxy")
+		return
+	}
+	if a.bumpUnprovenOverloadStreak() {
+		a.decrease(fmt.Sprintf("%d unproven timeouts in a row with no success in between", authUnprovenOverloadThreshold))
+	}
+}
+
+func (a *authRateLimiter) clearUnprovenOverloadStreak() {
+	a.mu.Lock()
+	a.unprovenOverloadStreak = 0
+	a.mu.Unlock()
+}
+
+// decayUnprovenOverloadStreak reduces the streak by one instead of wiping
+// it, for a signal (a bare success) that's weaker than an explicit 429 or a
+// proven-proxy failure — see the call site in ReportResultForProxy.
+func (a *authRateLimiter) decayUnprovenOverloadStreak() {
+	a.mu.Lock()
+	if a.unprovenOverloadStreak > 0 {
+		a.unprovenOverloadStreak--
+	}
+	a.mu.Unlock()
+}
+
+// bumpUnprovenOverloadStreak increments the streak of overload-looking
+// errors from never-proven proxies, uninterrupted by any success or any
+// proven-proxy failure, and reports whether it just crossed
+// authUnprovenOverloadThreshold — the point where it stops looking like
+// scattered broken-proxy noise and starts looking like a real outage.
+func (a *authRateLimiter) bumpUnprovenOverloadStreak() bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.unprovenOverloadStreak++
+	if a.unprovenOverloadStreak < authUnprovenOverloadThreshold {
+		return false
+	}
+	a.unprovenOverloadStreak = 0
+	return true
+}
+
+// decrease cuts the rate. reason is purely for the log line, so operators
+// can tell a genuine 429 apart from a proven-proxy timeout or a mass
+// unproven-timeout trip instead of every cut being misreported as "429
+// received" regardless of what actually triggered it.
+func (a *authRateLimiter) decrease(reason string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.successStreak = 0
+	if !a.lastAdjustedAt.IsZero() && time.Since(a.lastAdjustedAt) < authRateAdjustCooldown {
+		// Already cut very recently — this result was likely in flight
+		// before that cut took effect. Let it land before cutting again.
+		return
+	}
+
+	oldRate := a.limiter.Limit()
+	newRate := rate.Limit(float64(oldRate) * authRateDecreaseFactor)
+	if newRate < a.min {
+		newRate = a.min
+	}
+	if newRate == oldRate {
+		a.maybeLogPinnedHeartbeat(reason)
+		return
+	}
+	a.limiter.SetLimit(newRate)
+	a.lastAdjustedAt = time.Now()
+	tlog("[proxy][authrate] The API pushed back (%s), so this provider is slowing its own sign-in attempts from %.2f to %.2f per second.\n", reason, float64(oldRate), float64(newRate))
+}
+
+// maybeLogPinnedHeartbeat logs that the rate is unchanged because it's
+// already at its floor or ceiling, at most once per
+// authRateHeartbeatInterval. Callers must hold a.mu.
+func (a *authRateLimiter) maybeLogPinnedHeartbeat(reason string) {
+	if !a.lastHeartbeatAt.IsZero() && time.Since(a.lastHeartbeatAt) < authRateHeartbeatInterval {
+		return
+	}
+	a.lastHeartbeatAt = time.Now()
+	limit := a.limiter.Limit()
+	if limit == a.min {
+		tlog("[proxy][authrate] Sign-in attempts are held at the minimum of %.2f per second; the API is still pushing back (latest trigger: %s).\n",
+			float64(limit), reason)
+	} else {
+		tlog("[proxy][authrate] Sign-in attempts are at the maximum of %.2f per second and the API is happy (latest trigger: %s).\n",
+			float64(limit), reason)
+	}
+}
+
+func (a *authRateLimiter) recordSuccessAndMaybeIncrease() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.successStreak++
+	if a.successStreak < authRateIncreaseThreshold {
+		return
+	}
+	a.successStreak = 0
+	if !a.lastAdjustedAt.IsZero() && time.Since(a.lastAdjustedAt) < authRateAdjustCooldown {
+		return
+	}
+
+	oldRate := a.limiter.Limit()
+	newRate := oldRate + authRateIncreaseStep
+	if newRate > a.max {
+		newRate = a.max
+	}
+	if newRate == oldRate {
+		a.maybeLogPinnedHeartbeat(fmt.Sprintf("%d clean attempts", authRateIncreaseThreshold))
+		return
+	}
+	a.limiter.SetLimit(newRate)
+	a.lastAdjustedAt = time.Now()
+	tlog("[proxy][authrate] The API is accepting sign-ins again (%d in a row), so the rate is creeping up from %.2f to %.2f per second.\n", authRateIncreaseThreshold, float64(oldRate), float64(newRate))
+}
+
+// CurrentRate reports the limiter's current requests/sec, for logging and
+// tests.
+func (a *authRateLimiter) CurrentRate() float64 {
+	return float64(a.limiter.Limit())
+}
+
+func isRateLimitedError(err error) bool {
+	return strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "Too Many Requests")
+}
+
+// isOverloadError reports whether err looks like a network/timeout failure
+// rather than a rejected token. The API doesn't always answer with an
+// explicit 429 under load — it can just stop responding in time — and that
+// looks identical to a rate-limit problem from the caller's perspective, so
+// it should drive the same backoff. Mirrors the cause classification in the
+// auth retry loop in the v33 provider's main.go.
+func isOverloadError(err error) bool {
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return true
+	}
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "Timeout") ||
+		strings.Contains(errMsg, "timeout") ||
+		strings.Contains(errMsg, "deadline exceeded") ||
+		strings.Contains(errMsg, "connection refused") ||
+		strings.Contains(errMsg, "no such host")
+}

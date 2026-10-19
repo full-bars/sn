@@ -37,6 +37,7 @@ Core Commands:
   dashboard               Status panel: state, settings, sources, warnings
   history [limit]         Show the provider's command audit trail
   autopilot log [limit]   Show the capacity decisions the provider made (OOM-aware cap, trim)
+  enforcement [history N] Show what the governors enforced (counts per day; or the newest N events)
   baseline [show|mark|compare]  Show this box's recorded behaviour, and compare an upgrade
 
 Performance & Tuning:
@@ -82,6 +83,12 @@ Proxy Management:
   show-ip [on|off|status] Show public IP on the dashboard label (was: ip-detect)
   direct [on|off]         Toggle providing on the machine's direct/local IP
   usage [graph[s] <view>] Traffic accounting: billable vs control, time-series
+
+Wallet Consent:
+  wallet status           Show the network wallet consent (read-only)
+  wallet challenge <ck>   Fetch the consent statement to sign (signs nothing)
+  wallet set <ck>         Submit a signed consent (--coldkey_seed_file: own workstation only)
+  wallet sign <ck>        Sign in the browser (Talisman); the seed never leaves the extension
 
 Maintenance:
   reinstall                     Reinstall provider
@@ -131,8 +138,10 @@ func buildRootCmd() *cobra.Command {
 	// Root -h/--help renders the same curated menu. Subcommands reset their own
 	// help template so they keep Cobra's per-command page (see newCobraCmd).
 	rootCmd.SetHelpTemplate(rootHelpMenu)
-	// The old dispatcher had no 'completion' subcommand; keep the surface stable.
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	// Shell completion: the modern cobra completion command (bash/zsh/fish/
+	// powershell) is registered, so `urnet-tools completion <shell>` works,
+	// matching the v33 client surface.
+	rootCmd.CompletionOptions.DisableDefaultCmd = false
 
 	rootCmd.PersistentFlags().String("unit", "", "systemd unit, e.g. urnetwork-native.service")
 	rootCmd.PersistentFlags().String("user", "", "OS user, e.g. urnet")
@@ -169,6 +178,7 @@ func buildRootCmd() *cobra.Command {
 		newSetCmd(),
 		newAuthCmd(),
 		newChooseNetworkCmd(),
+		newWalletCmd(),
 		newProxyCmd(),
 		newDirectCmd(),
 		newUsageCmd(),
@@ -184,6 +194,7 @@ func buildRootCmd() *cobra.Command {
 		newGetCmd(),
 		newHistoryCmd(),
 		newAutopilotCmd(),
+		newEnforcementCmd(),
 		newBaselineCmd(),
 		newMetricsCmd(),
 		newSmartDialerCmd(),
@@ -691,6 +702,8 @@ func newHistoryCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "history [limit] [--cursor <cursor>]",
 		Short:              "show command audit trail",
+		Long:               "Show this box's command audit trail: the urnet-tools commands run against a provider, newest last, with their outcome. Read-only: reads the provider's audit ring from its state dir; needs no root beyond the file's own permissions. --cursor continues a paged read from where the last page ended. Alias: audit.",
+		Example:            "  urnet-tools history\n  urnet-tools history 50\n  urnet-tools history 50 --cursor <cursor>",
 		Aliases:            []string{"audit"},
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -706,6 +719,8 @@ func newMetricsCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "metrics [status|on|off|listen <ip:port|auto>]",
 		Short:              "show, toggle, or move the Prometheus /metrics endpoint",
+		Long:               "Show, enable, disable, or move the provider's Prometheus /metrics endpoint. 'listen <ip:port|auto>' moves where it serves; 'auto' picks the listen address. Changes are applied to the running provider at its next tick, with no restart. Honors -n/--dry-run, which prints the plan and sends nothing.",
+		Example:            "  urnet-tools metrics\n  urnet-tools metrics on\n  urnet-tools metrics listen 0.0.0.0:9099",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if hasHelpFlag(args) {
@@ -916,6 +931,8 @@ func newSmartDialerCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "smart-dialer [status|on|off]",
 		Short:              "show or toggle latency-aware dialer preference (skip DPI-circumvention cost when the network does not need it)",
+		Long:               "Show or toggle the measured-cost transport preference: when the network does not need DPI circumvention, the provider prefers transport paths that avoid its cost. 'status' (the default) reports the current value; on and off change it. Applied to the running provider at its next tick, with no restart. Honors -n/--dry-run. Alias: smart_dialer.",
+		Example:            "  urnet-tools smart-dialer\n  urnet-tools smart-dialer on\n  urnet-tools smart-dialer off --unit urnetwork-native.service",
 		Aliases:            []string{"smart_dialer"},
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -1023,6 +1040,8 @@ func newProfileCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "profile [auto|turbo-v4|turbo-v8|eco|lowmem]",
 		Short:              "show or set the memory/GC tuning profile",
+		Long:               "Show or set the provider's memory/GC tuning profile: auto sizes the box, turbo-v4 and turbo-v8 raise throughput on RAM-rich machines, eco GC-tunes for low RAM, and lowmem shrinks buffers for maximum savings. With no argument it prints the current value and the settable profiles. A change takes effect on the provider's next restart; turbo, eco and lowmode are the runtime-settable equivalents. Alias: profiles.",
+		Example:            "  urnet-tools profile\n  urnet-tools profile auto\n  urnet-tools profile lowmem --unit urnetwork-native.service",
 		Aliases:            []string{"profiles"},
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -1160,6 +1179,8 @@ func newDashboardCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "dashboard [target]",
 		Short:              "rich provider status dashboard",
+		Long:               "A full-screen, read-only status view of one provider: identity and network, systemd state and uptime, proxy counts and health, bandwidth and client sessions, and the recent capacity decisions. Nothing changes: it reads the provider's state and control socket and prints the panel. Aliases: dash, panel.",
+		Example:            "  urnet-tools dashboard\n  urnet-tools dashboard --unit urnetwork-native.service",
 		Aliases:            []string{"dash", "panel"},
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

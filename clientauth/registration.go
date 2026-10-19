@@ -59,6 +59,21 @@ func (self *RegistrationRefreshUnavailableError) Error() string {
 }
 func (self *RegistrationRefreshUnavailableError) Unwrap() error { return self.cause }
 
+// IsRegistrationRefreshUnavailable reports whether err is a retryable
+// unavailable read: the API was never reached, so the saved identity has not
+// been refused and no permanent decision may be based on it.
+func IsRegistrationRefreshUnavailable(err error) bool {
+	var unavailable *RegistrationRefreshUnavailableError
+	return errors.As(err, &unavailable)
+}
+
+// NewRegistrationRefreshUnavailableError wraps the leaf read failure. The
+// cause is kept for classification: a server status means the API answered,
+// a network error means it was never reached.
+func NewRegistrationRefreshUnavailableError(cause error) error {
+	return &RegistrationRefreshUnavailableError{cause: cause}
+}
+
 // Only a completed remote reply can produce this cause. Local registration or
 // credential custody failures retain their original hard errors separately.
 type RegistrationResponseIdentityError struct{}
@@ -74,6 +89,19 @@ type registrationRecord struct {
 	Request   sdk.RegisterNetworkClientArgs `json:"request"`
 	ClientId  string                        `json:"client_id,omitempty"`
 	DeviceId  string                        `json:"device_id,omitempty"`
+}
+
+// The existing-client custody marker has exactly one shape: both the adoption
+// of observed custody and a completed fresh registration publish it, and the
+// retained-custody path compares the same bytes.
+func existingClientCustodyMarker(scope RegistrationScope, identity registrationTokenIdentity) ([]byte, error) {
+	return json.Marshal(struct {
+		Schema    string                `json:"schema"`
+		Scope     RegistrationScope     `json:"scope"`
+		Principal registrationPrincipal `json:"principal"`
+		ClientId  string                `json:"client_id"`
+		DeviceId  string                `json:"device_id"`
+	}{Schema: "urnetwork-existing-client-v1", Scope: scope, Principal: identity.registrationPrincipal, ClientId: identity.clientId, DeviceId: identity.deviceId})
 }
 
 // Test hooks can fail only after actual durable ownership boundaries. They do
@@ -251,13 +279,7 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 			}
 			// Observing existing custody consumes no creation authority. Its
 			// stable marker survives token loss and excludes bearer timestamps.
-			expected, err := json.Marshal(struct {
-				Schema    string                `json:"schema"`
-				Scope     RegistrationScope     `json:"scope"`
-				Principal registrationPrincipal `json:"principal"`
-				ClientId  string                `json:"client_id"`
-				DeviceId  string                `json:"device_id"`
-			}{Schema: "urnetwork-existing-client-v1", Scope: scope, Principal: identity.registrationPrincipal, ClientId: identity.clientId, DeviceId: identity.deviceId})
+			expected, err := existingClientCustodyMarker(scope, identity)
 			if err != nil {
 				return "", connect.Id{}, err
 			}

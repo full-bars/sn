@@ -1,0 +1,130 @@
+package miner
+
+// critlog.go ports the v33 provider's critical-event log
+// (provider/critlog.go) beside the hotswap handoff, which is its consumer:
+// the drain path records a candidate that died mid-handoff and the execve
+// path records a refused syscall.Exec, both after the point where normal
+// shutdown logging is no longer reached.
+//
+// Difference from the provider: the file lives in the miner's state dir
+// (URNETWORK_STATE_DIR honoured) rather than ~/.urnetwork.
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+	"sync"
+	"time"
+)
+
+const critLogMaxSize = 1 * 1024 * 1024
+
+// critLogMu serializes the open/stat/rotate/write sequence. Without it two
+// goroutines could both see the file over the limit and both rotate: one
+// truncates while the other is mid-append, and lines are lost or interleaved.
+// It is per process; a HotSwap parent and candidate still append independently
+// (O_APPEND keeps each line whole, and a rotation race between them can at
+// worst drop a diagnostic line).
+var critLogMu sync.Mutex
+
+// critLogInCriticalSection, when set by a test, runs inside the locked section
+// so the test can assert the lock is held there without depending on timing.
+var critLogInCriticalSection func()
+
+func critLogPath() (string, error) {
+	dir, err := providerStateDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "events.log"), nil
+}
+
+func critLog(format string, args ...any) {
+	critLogMu.Lock()
+	defer critLogMu.Unlock()
+	if critLogInCriticalSection != nil {
+		critLogInCriticalSection()
+	}
+	p, err := critLogPath()
+	if err != nil {
+		return
+	}
+	if err := os.MkdirAll(filepath.Dir(p), 0700); err != nil {
+		return
+	}
+
+	ts := time.Now().UTC().Format("2006-01-02T15:04:05")
+	msg := fmt.Sprintf("%s "+format+"\n", append([]any{ts}, args...)...)
+
+	f, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		return
+	}
+	// The handle changes when the file is rotated, so close whichever one is
+	// current on the way out instead of deferring a close on the first. The nil
+	// check covers the reopen failing after a rotation, which leaves f nil.
+	defer func() {
+		if f != nil {
+			f.Close()
+		}
+	}()
+
+	info, err := f.Stat()
+	if err != nil {
+		f.Write([]byte(msg))
+		return
+	}
+	if info.Size() > critLogMaxSize {
+		f.Close()
+		rotateCritLog(p)
+		f, err = os.OpenFile(p, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		if err != nil {
+			return
+		}
+	}
+
+	f.Write([]byte(msg))
+	f.Sync()
+}
+
+// rotateCritLog keeps the second half of the file, cutting at a line boundary
+// so no record is left truncated.
+func rotateCritLog(path string) {
+	b, err := os.ReadFile(path)
+	if err != nil || len(b) == 0 {
+		os.Remove(path)
+		return
+	}
+
+	half := len(b) / 2
+	start := 0
+	for i := half; i < len(b); i++ {
+		if b[i] == '\n' {
+			start = i + 1
+			break
+		}
+	}
+	if start == 0 {
+		start = half
+		for start > 0 && b[start-1] != '\n' {
+			start--
+		}
+	}
+
+	f, err := os.Create(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	f.Write(b[start:])
+	f.Sync()
+}
+
+func critLogPanic(r any, stack []byte) {
+	critLog("PANIC: %v\n%s", r, string(stack))
+
+	buf := make([]byte, 64*1024)
+	n := runtime.Stack(buf, true)
+	critLog("GOROUTINE DUMP:\n%s", string(buf[:n]))
+}

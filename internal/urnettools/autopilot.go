@@ -39,6 +39,7 @@ func newAutopilotCmd() *cobra.Command {
 			"(shadow decisions are 'would' actions that were not enforced) and operator trim results, " +
 			"newest last. The default is 20 entries, at most 200. Also prints the oom-cap control value; " +
 			"set it with `urnet-tools set oom-cap on|off|shadow`.",
+		Example:            "  urnet-tools autopilot log\n  urnet-tools autopilot log 50 --unit urnetwork-native.service",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if hasHelpFlag(args) {

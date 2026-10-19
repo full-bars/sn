@@ -102,6 +102,9 @@ jobs:
           echo "go test still flaking after 3 attempts"
           exit 1
 
+      - name: Run one-program (miner) tests
+        run: go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...
+
   lint:
     runs-on: ubuntu-latest
     permissions:
