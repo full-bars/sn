@@ -175,13 +175,13 @@ jobs:
           set -eu
           if command -v apt-get >/dev/null 2>&1; then
             apt-get update -qq
-            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl unzip ca-certificates
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl unzip tar ca-certificates
           elif command -v dnf >/dev/null 2>&1; then
-            dnf install -y --allowerasing curl unzip ca-certificates
+            dnf install -y --allowerasing curl unzip tar ca-certificates
           elif command -v pacman >/dev/null 2>&1; then
-            pacman -Sy --noconfirm --needed curl unzip ca-certificates
+            pacman -Sy --noconfirm --needed curl unzip tar ca-certificates
           elif command -v apk >/dev/null 2>&1; then
-            apk add --no-cache curl unzip ca-certificates
+            apk add --no-cache curl unzip tar ca-certificates
           else
             echo "::error::no supported package manager in ${{ matrix.image }}"; exit 1
           fi
@@ -273,17 +273,17 @@ jobs:
           set -eu
           if command -v apt-get >/dev/null 2>&1; then
             apt-get update -qq
-            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl unzip ca-certificates
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl unzip tar ca-certificates
           elif command -v dnf >/dev/null 2>&1; then
-            dnf install -y --allowerasing curl unzip ca-certificates
+            dnf install -y --allowerasing curl unzip tar ca-certificates
           elif command -v yum >/dev/null 2>&1; then
-            yum install -y curl unzip ca-certificates
+            yum install -y curl unzip tar ca-certificates
           elif command -v zypper >/dev/null 2>&1; then
-            zypper --non-interactive install curl unzip ca-certificates
+            zypper --non-interactive install curl unzip tar ca-certificates
           elif command -v pacman >/dev/null 2>&1; then
-            pacman -Sy --noconfirm --needed curl unzip ca-certificates
+            pacman -Sy --noconfirm --needed curl unzip tar ca-certificates
           elif command -v apk >/dev/null 2>&1; then
-            apk add --no-cache curl unzip ca-certificates
+            apk add --no-cache curl unzip tar ca-certificates
           else
             echo "::error::no supported package manager in ${{ matrix.image }}"; exit 1
           fi
@@ -362,22 +362,24 @@ jobs:
           - slug: noexec-tmp
             image: debian:12-slim
             flags: "--tmpfs /tmp:noexec,nosuid,size=512m"
-            pre: ""
+            pre_b64: ""
             extra_env: ""
           - slug: ipv6-off
             image: debian:12-slim
             flags: "--sysctl net.ipv6.conf.all.disable_ipv6=1"
-            pre: ""
+            pre_b64: ""
             extra_env: ""
           - slug: nonroot-sudo
             image: debian:12-slim
             flags: ""
-            pre: "apt-get update -qq && apt-get install -y -qq sudo >/dev/null 2>&1; useradd -m -s /bin/sh urnet && echo 'urnet ALL=(ALL) NOPASSWD:ALL' >/etc/sudoers.d/urnet"
-            extra_env: "-e INSTALL_USER=urnet"
+            # Root-only prep, then the harness itself runs as urnet so every
+            # pass (install, reinstall, tag switch, uninstall) uses that HOME.
+            pre_b64: "YXB0LWdldCB1cGRhdGUgLXFxICYmIGFwdC1nZXQgaW5zdGFsbCAteSAtcXEgY3VybCBqcSBzdWRvIGNhLWNlcnRpZmljYXRlcyA+L2Rldi9udWxsIDI+JjE7IHVzZXJhZGQgLW0gLXMgL2Jpbi9zaCB1cm5ldCAmJiBlY2hvICd1cm5ldCBBTEw9KEFMTCkgTk9QQVNTV0Q6QUxMJyA+L2V0Yy9zdWRvZXJzLmQvdXJuZXQ="
+            extra_env: ""
           - slug: no-autoinstall
             image: debian:12-slim
             flags: ""
-            pre: ""
+            pre_b64: ""
             extra_env: "-e URNET_NO_AUTOINSTALL=1"
           - slug: ubuntu-shaped
             # The four Ubuntu deltas that are not Debian defaults: a stub
@@ -385,12 +387,12 @@ jobs:
             # Debian-family cell covers them without a second distro family.
             image: debian:13-slim
             flags: ""
-            pre: "apt-get update -qq && apt-get install -y -qq systemd-resolved needrestart ufw netplan.io >/dev/null 2>&1; ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf 2>/dev/null || true; mkdir -p /snap/bin"
+            pre_b64: "YXB0LWdldCB1cGRhdGUgLXFxICYmIGFwdC1nZXQgaW5zdGFsbCAteSAtcXEgc3lzdGVtZC1yZXNvbHZlZCBuZWVkcmVzdGFydCB1ZncgbmV0cGxhbi5pbyA+L2Rldi9udWxsIDI+JjE7IGxuIC1zZiAvcnVuL3N5c3RlbWQvcmVzb2x2ZS9zdHViLXJlc29sdi5jb25mIC9ldGMvcmVzb2x2LmNvbmYgMj4vZGV2L251bGwgfHwgdHJ1ZTsgbWtkaXIgLXAgL3NuYXAvYmlu"
             extra_env: "-e PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
           - slug: cgroup-256m
             image: debian:12-slim
             flags: "--memory=256m --memory-swap=256m"
-            pre: ""
+            pre_b64: ""
             extra_env: ""
     steps:
       - name: Download the payload
@@ -407,9 +409,19 @@ jobs:
           mkdir -p payload2
           cp payload/provider2 payload2/provider
           cp payload/urnet-tools2 payload2/urnet-tools
-          # An empty pre-command must not become a leading "; cmd" in sh -c.
-          PRE='${{ matrix.pre }}'
-          if [ -n "$PRE" ]; then PRE="$PRE; "; fi
+          # The pre-command contains quotes and redirections; interpolating it
+          # into a shell assignment mangles both. It travels base64-encoded and
+          # is decoded into a file that the container runs, so no quoting layer
+          # can touch it.
+          printf '%s' '${{ matrix.pre_b64 }}' | base64 -d > pre.sh
+          # The non-root variant finishes the root prep, then re-execs the whole
+          # harness as urnet: su does NOT reset HOME, so every pass has to run
+          # inside that user's shell for the install tree to land in its home.
+          if [ '${{ matrix.slug }}' = 'nonroot-sudo' ]; then
+            INNER="su -s /bin/sh urnet -c 'HOME=/home/urnet sh /payload/installer-lifecycle.sh'"
+          else
+            INNER="sh /payload/installer-lifecycle.sh"
+          fi
           docker run --rm --init \
             ${{ matrix.flags }} \
             -v "$PWD/payload:/payload:ro" \
@@ -420,7 +432,8 @@ jobs:
             -e VARIANT='${{ matrix.slug }}' -e TIMEOUT_S=300 \
             ${{ matrix.extra_env }} \
             ${{ matrix.image }} \
-            sh -c "${PRE}sh /payload/installer-lifecycle.sh" 2>&1 | tee variant.log
+            -v "$PWD/pre.sh:/pre.sh:ro" \
+            sh -c "sh /pre.sh; $INNER" 2>&1 | tee variant.log
 
   # --------------------------------------------------------------------------
   # Tier 1: control-plane smoke in every Linux distro image.
@@ -466,17 +479,17 @@ jobs:
           set -eu
           if command -v apt-get >/dev/null 2>&1; then
             apt-get update -qq
-            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl unzip ca-certificates
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl unzip tar ca-certificates
           elif command -v dnf >/dev/null 2>&1; then
             # --allowerasing: the RHEL-family images ship curl-minimal, which
             # conflicts with the full curl package.
-            dnf install -y --allowerasing curl unzip ca-certificates
+            dnf install -y --allowerasing curl unzip tar ca-certificates
           elif command -v zypper >/dev/null 2>&1; then
             zypper --non-interactive --quiet install curl unzip ca-certificates
           elif command -v pacman >/dev/null 2>&1; then
-            pacman -Sy --noconfirm --needed curl unzip ca-certificates
+            pacman -Sy --noconfirm --needed curl unzip tar ca-certificates
           elif command -v apk >/dev/null 2>&1; then
-            apk add --no-cache curl unzip ca-certificates
+            apk add --no-cache curl unzip tar ca-certificates
           else
             echo "::error::no supported package manager in ${{ matrix.image }}"; exit 1
           fi
@@ -570,7 +583,7 @@ jobs:
             DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
               curl unzip ca-certificates netcat-openbsd
           elif command -v apk >/dev/null 2>&1; then
-            apk add --no-cache curl unzip ca-certificates netcat-openbsd
+            apk add --no-cache curl unzip tar ca-certificates netcat-openbsd
           else
             echo "::error::no supported package manager in ${{ matrix.image }}"; exit 1
           fi
@@ -1467,9 +1480,13 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x payload/*
+          mkdir -p payload2
+          cp payload/provider2 payload2/provider
+          cp payload/urnet-tools2 payload2/urnet-tools
           docker run --rm --init --platform linux/arm64 \
             -v "$PWD/payload:/payload:ro" \
-            -e BIN_DIR=/payload -e BIN_DIR2=/payload -e INSTALLER=/payload/installer.sh \
+            -v "$PWD/payload2:/payload2:ro" \
+            -e BIN_DIR=/payload -e BIN_DIR2=/payload2 -e INSTALLER=/payload/installer.sh \
             -e TAG='${{ env.INSTALLER_TAG }}' -e TAG2='${{ env.INSTALLER_TAG2 }}' \
             -e VARIANT='${{ matrix.slug }}' -e TIMEOUT_S=320 \
             ${{ matrix.image }} sh /payload/installer-lifecycle.sh 2>&1 | tee arm64.log
