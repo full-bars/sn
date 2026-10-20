@@ -137,6 +137,10 @@ jobs:
             exit 1
           fi
 
+      - name: Test the VirusTotal scan script
+        # Unit tests against a local stub of the v3 API: no key, no quota.
+        run: python3 .github/scripts/test_vt_scan.py
+
       - name: Docker update-source guard (fork-only release fetches)
         run: |
           # The docker self-update scripts must ONLY ever fetch provider
