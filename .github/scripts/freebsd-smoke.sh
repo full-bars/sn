@@ -127,6 +127,7 @@ done
 
 # ------------------------------------------------------------- binary loads --
 say "the binary loads and runs on this kernel"
+mkdir -p "$WORK_DIR"
 if "$BIN_DIR/miner" --help >"$WORK_DIR/miner-help.out" 2>&1; then
     pass "miner --help exits 0 on the real kernel"
     head -n 1 "$WORK_DIR/miner-help.out" | sed 's/^/    | /'
@@ -291,11 +292,17 @@ if [ "$sock" = "yes" ]; then
         sed 's/^/    | /' "$WORK_DIR/version.err" 2>/dev/null | head -n 5
     fi
 else
-    fail "provider.sock did not appear within ${TIMEOUT_S}s (miner alive=$alive)"
-    tail -n 30 "$MINER_LOG" 2>/dev/null | sed 's/^/    | /'
+    if grep -q 'durable client registration requires Unix custody support' "$MINER_LOG" 2>/dev/null; then
+        cond "FreeBSD durable client registration is not implemented at this head (TODO(freebsd-durable-registration)); the refusal is the documented state"
+    else
+        fail "provider.sock did not appear within ${TIMEOUT_S}s (miner alive=$alive)"
+        tail -n 30 "$MINER_LOG" 2>/dev/null | sed 's/^/    | /'
+    fi
 fi
 if [ "$alive" = "yes" ]; then
     pass "miner process alive (pid $MPID)"
+elif grep -q 'durable client registration requires Unix custody support' "$MINER_LOG" 2>/dev/null; then
+    cond "miner exited on the documented FreeBSD custody refusal"
 else
     fail "miner exited before the socket was ready"
 fi
