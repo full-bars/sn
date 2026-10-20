@@ -117,6 +117,7 @@ jobs:
           cp .github/scripts/distro-features.sh out/distro-features.sh
           cp .github/scripts/acceptance-matrix.sh out/acceptance-matrix.sh
           cp .github/scripts/lsm-smoke.sh out/lsm-smoke.sh
+          cp .github/scripts/installer-lifecycle.sh out/installer-lifecycle.sh
 
       - name: Upload the payload
         id: upload
