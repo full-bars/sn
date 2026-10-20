@@ -3720,8 +3720,16 @@ queue_repair_if_foreign ()
 # at all falls through to provider_state.json.
 read_control_value() {
     local key="$1"
-    local pending_file="$HOME/.urnetwork/pending_overrides.json"
-    local persisted_file="$HOME/.urnetwork/provider_state.json"
+    # Read from the same home the queue writes to. A root-run tuning command
+    # (the documented OpenRC path: queue_target_home resolves the service
+    # user's home) queues the override into that home, while $HOME under sudo
+    # is root's — so reading $HOME/.urnetwork reports "off" for a setting that
+    # is queued or already persisted for the provider.
+    local state_home
+    state_home="$(queue_target_home)"
+    [ -n "$state_home" ] || state_home="$HOME"
+    local pending_file="$state_home/.urnetwork/pending_overrides.json"
+    local persisted_file="$state_home/.urnetwork/provider_state.json"
     if [ -f "$pending_file" ]; then
         local last
         last=$(grep '"key": "'"$key"'"' "$pending_file" 2>/dev/null | tail -1)

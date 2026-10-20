@@ -192,6 +192,10 @@ install_wrapper_tool() {
     curl -fsSL "$github_raw/scripts/Provider_Install_FreeBSD.sh" -o "$_td/urnet-tools.wrapper" 2>/dev/null || return 1
     chmod 755 "$_td/urnet-tools.wrapper"
     priv mv -f "$_td/urnet-tools.wrapper" "$install_path/bin/urnet-tools"
+    # mv keeps the invoker's ownership when the temp dir is on the same
+    # filesystem, so the owner must be set explicitly: see do_install.
+    priv chown root:wheel "$install_path/bin/urnet-tools" 2>/dev/null || \
+        pr_warn "could not chown %s to root:wheel; a non-root owner can rewrite a binary root runs" "$install_path/bin/urnet-tools"
     priv chmod 755 "$install_path/bin/urnet-tools"
 }
 
@@ -289,7 +293,13 @@ ${service_name}_running_pid()
         echo "\$_pid"
         return 0
     fi
-    _pid="\$(ps -u "\${${service_name}_user}" -o pid=,args= 2>/dev/null | grep -F '$provider_bin provide' | awk '{print \$1; exit}')"
+    # -U selects processes by username; -u would only select the output
+    # format. The match is done in awk on the argv fields on purpose: a
+    # "grep -F '<binary> provide'" in this same pipeline carries the search
+    # string in its own argv, and "ps -U <service user>" lists that grep when
+    # the caller is the service user. The grep then matches itself and a
+    # stopped provider reports as running (and start skips a real start).
+    _pid="\$(ps -U "\${${service_name}_user}" -o pid=,args= 2>/dev/null | awk -v b='$provider_bin' '\$2 == b && \$3 == "provide" {print \$1; exit}')"
     [ -n "\$_pid" ] || return 1
     echo "\$_pid"
 }
@@ -494,6 +504,16 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
             fi
             if [ -n "$actual" ] && [ "$actual" = "$tool_digest" ]; then
                 priv mv -f "$tmpdir/$tool_asset" "$install_path/bin/urnet-tools"
+                # curl downloaded the asset as the INVOKING user, and mv is a
+                # rename (owner preserved) whenever $tmpdir shares the
+                # filesystem, so the owner has to be set here rather than
+                # inherited. The tool is run by root — `sudo urnet-tools
+                # update` and the weekly auto-update entry — so a
+                # SUDO_USER-owned copy would let the service user rewrite a
+                # binary root executes. The chown -R below is deliberately
+                # gated on id -u 0 and does not run on this sudo path.
+                priv chown root:wheel "$install_path/bin/urnet-tools" 2>/dev/null || \
+                    pr_warn "could not chown %s to root:wheel; a non-root owner can rewrite a binary root runs" "$install_path/bin/urnet-tools"
                 priv chmod 755 "$install_path/bin/urnet-tools"
             else
                 pr_warn "urnet-tools sha256 mismatch, falling back to shell wrapper"
