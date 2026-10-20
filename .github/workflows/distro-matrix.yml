@@ -205,8 +205,8 @@ jobs:
           BIN_DIR: /tmp/payload
           BIN_DIR2: /tmp/payload2
           INSTALLER: /tmp/payload/installer.sh
-          TAG: ${{ needs.build-binaries.outputs.tag }}
-          TAG2: ${{ needs.build-binaries.outputs.tag2 }}
+          TAG: ${{ env.INSTALLER_TAG }}
+          TAG2: ${{ env.INSTALLER_TAG2 }}
           VARIANT: ${{ matrix.slug }}
           OUT_DIR: /tmp/installer-out
           TIMEOUT_S: "300"
@@ -293,8 +293,8 @@ jobs:
           BIN_DIR: /tmp/payload
           BIN_DIR2: /tmp/payload2
           INSTALLER: /tmp/payload/installer.sh
-          TAG: ${{ needs.build-binaries.outputs.tag }}
-          TAG2: ${{ needs.build-binaries.outputs.tag2 }}
+          TAG: ${{ env.INSTALLER_TAG }}
+          TAG2: ${{ env.INSTALLER_TAG2 }}
           VARIANT: ${{ matrix.slug }}
           OUT_DIR: /tmp/installer-out
           TIMEOUT_S: "300"
@@ -377,17 +377,20 @@ jobs:
           mkdir -p payload2
           cp payload/provider2 payload2/provider
           cp payload/urnet-tools2 payload2/urnet-tools
+          # An empty pre-command must not become a leading "; cmd" in sh -c.
+          PRE='${{ matrix.pre }}'
+          if [ -n "$PRE" ]; then PRE="$PRE; "; fi
           docker run --rm --init \
             ${{ matrix.flags }} \
             -v "$PWD/payload:/payload:ro" \
             -v "$PWD/payload2:/payload2:ro" \
             -e BIN_DIR=/payload -e BIN_DIR2=/payload2 -e INSTALLER=/payload/installer.sh \
-            -e TAG='${{ needs.build-binaries.outputs.tag }}' \
-            -e TAG2='${{ needs.build-binaries.outputs.tag2 }}' \
+            -e TAG='${{ env.INSTALLER_TAG }}' \
+            -e TAG2='${{ env.INSTALLER_TAG2 }}' \
             -e VARIANT='${{ matrix.slug }}' -e TIMEOUT_S=300 \
             ${{ matrix.extra_env }} \
             ${{ matrix.image }} \
-            sh -c "${{ matrix.pre }}; sh /payload/installer-lifecycle.sh" 2>&1 | tee variant.log
+            sh -c "${PRE}sh /payload/installer-lifecycle.sh" 2>&1 | tee variant.log
 
   # --------------------------------------------------------------------------
   # Tier 1: control-plane smoke in every Linux distro image.
