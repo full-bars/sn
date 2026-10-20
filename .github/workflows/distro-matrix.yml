@@ -116,6 +116,7 @@ jobs:
           cp .github/scripts/distro-smoke.sh out/distro-smoke.sh
           cp .github/scripts/distro-features.sh out/distro-features.sh
           cp .github/scripts/acceptance-matrix.sh out/acceptance-matrix.sh
+          cp .github/scripts/lsm-smoke.sh out/lsm-smoke.sh
 
       - name: Upload the payload
         id: upload
@@ -347,6 +348,19 @@ jobs:
             flags: ""
             pre: ""
             extra_env: "-e URNET_NO_AUTOINSTALL=1"
+          - slug: ubuntu-shaped
+            # The four Ubuntu deltas that are not Debian defaults: a stub
+            # resolver, needrestart, ufw and netplan. Installed here so a
+            # Debian-family cell covers them without a second distro family.
+            image: debian:13-slim
+            flags: ""
+            pre: "apt-get update -qq && apt-get install -y -qq systemd-resolved needrestart ufw netplan.io >/dev/null 2>&1; ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf 2>/dev/null || true; mkdir -p /snap/bin"
+            extra_env: "-e PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
+          - slug: cgroup-256m
+            image: debian:12-slim
+            flags: "--memory=256m --memory-swap=256m"
+            pre: ""
+            extra_env: ""
     steps:
       - name: Download the payload
         uses: actions/download-artifact@v4
@@ -1350,10 +1364,165 @@ jobs:
   # restored workflows (freebsd.yml, openrc-smoke.yml, portable-core.yml) and
   # are listed here informationally.
   # --------------------------------------------------------------------------
+  # --------------------------------------------------------------------------
+  # arm64: the release ships linux-arm64 binaries, and the installer derives its
+  # arch from uname -m. Nothing tested that mapping or the tarball layout for
+  # arm64. Built per-arch here and run under QEMU in the distro image.
+  # --------------------------------------------------------------------------
+  build-binaries-arm64:
+    name: build static linux/arm64 binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+      - name: Build the installer payload for arm64
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          T1="$INSTALLER_TAG"; T2="$INSTALLER_TAG2"
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
+            -ldflags "-s -w -X main.Version=$T1 -X main.VersionStamp=URNET_VERSION_STAMP=$T1" -o out/provider ./cmd/provider/
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
+            -ldflags "-s -w -X main.Version=$T2 -X main.VersionStamp=URNET_VERSION_STAMP=$T2" -o out/provider2 ./cmd/provider/
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
+            -ldflags "-s -w -X main.Version=$T1" -o out/urnet-tools ./cmd/urnet-tools/
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
+            -ldflags "-s -w -X main.Version=$T2" -o out/urnet-tools2 ./cmd/urnet-tools/
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o out/release-server ./scripts/ci/fake-release-server
+          cp scripts/Provider_Install_Linux.sh out/installer.sh
+          cp .github/scripts/installer-lifecycle.sh out/installer-lifecycle.sh
+          file out/provider out/urnet-tools
+      - uses: actions/upload-artifact@v4
+        id: upload
+        with:
+          name: distro-payload-arm64
+          path: out/
+          retention-days: 2
+          if-no-files-found: error
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+
+  installer-arm64:
+    name: installer arm64 (${{ matrix.slug }})
+    if: github.event_name != 'pull_request'
+    needs: build-binaries-arm64
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { image: debian:12-slim, slug: debian-12-arm64 }
+          - { image: alpine:latest, slug: alpine-arm64 }
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: distro-payload-arm64
+          path: payload
+      - uses: docker/setup-qemu-action@v3
+      - name: Run the installer lifecycle under QEMU
+        run: |
+          set -euo pipefail
+          chmod +x payload/*
+          docker run --rm --init --platform linux/arm64 \
+            -v "$PWD/payload:/payload:ro" \
+            -e BIN_DIR=/payload -e BIN_DIR2=/payload -e INSTALLER=/payload/installer.sh \
+            -e TAG='${{ env.INSTALLER_TAG }}' -e TAG2='${{ env.INSTALLER_TAG2 }}' \
+            -e VARIANT='${{ matrix.slug }}' -e TIMEOUT_S=320 \
+            ${{ matrix.image }} sh /payload/installer-lifecycle.sh 2>&1 | tee arm64.log
+          grep -q 'RESULT: PASS' arm64.log
+
+  # --------------------------------------------------------------------------
+  # LSM cells: SELinux (AlmaLinux, enforcing by default) and AppArmor (Ubuntu).
+  # Containers cannot exercise either — the LSM is a host-kernel facility and
+  # the plain images ship neither the policy tools nor /sys/kernel/security —
+  # so these run in a full VM. Non-gating until they have a clean streak.
+  # --------------------------------------------------------------------------
+  lsm-selinux:
+    name: LSM selinux (almalinux vm)
+    if: github.event_name != 'pull_request'
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: distro-payload
+          path: payload
+      - name: SELinux smoke in an AlmaLinux VM
+        uses: vmactions/almalinux-vm@926c2897e439c5f5042bf83fb93c0f64aeb2737d # v1
+        with:
+          release: "9"
+          mem: 4096
+          cpu: 2
+          sync: rsync
+          run: |
+            set -e
+            chmod +x payload/*
+            export BIN_DIR="$PWD/payload"
+            export TAG='${{ env.INSTALLER_TAG }}'
+            export OUT_DIR="$PWD/lsm-out"
+            sh payload/lsm-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lsm-selinux-evidence
+          path: lsm-out/
+          if-no-files-found: warn
+          retention-days: 7
+
+  lsm-apparmor:
+    name: LSM apparmor (ubuntu vm)
+    if: github.event_name != 'pull_request'
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: distro-payload
+          path: payload
+      - name: AppArmor smoke in an Ubuntu VM
+        uses: vmactions/ubuntu-vm@3b554fb5d71472e2d3829d9a11160de0d91f463b # v1
+        with:
+          release: "24.04"
+          mem: 4096
+          cpu: 2
+          sync: rsync
+          run: |
+            set -e
+            chmod +x payload/*
+            export BIN_DIR="$PWD/payload"
+            export TAG='${{ env.INSTALLER_TAG }}'
+            export OUT_DIR="$PWD/lsm-out"
+            sh payload/lsm-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lsm-apparmor-evidence
+          path: lsm-out/
+          if-no-files-found: warn
+          retention-days: 7
+
   summary:
     name: release-matrix summary
     if: always()
-    needs: [build-binaries, installer-fast, installer-lifecycle, installer-variants, distro-smoke, distro-features, acceptance-matrix, systemd, windows, macos, freebsd]
+    needs: [build-binaries, build-binaries-arm64, installer-fast, installer-lifecycle, installer-arm64, installer-variants, lsm-selinux, lsm-apparmor, distro-smoke, distro-features, acceptance-matrix, systemd, windows, macos, freebsd]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -1363,6 +1532,9 @@ jobs:
           INSTALLER_FAST: ${{ needs.installer-fast.result }}
           INSTALLER_LIFECYCLE: ${{ needs.installer-lifecycle.result }}
           INSTALLER_VARIANTS: ${{ needs.installer-variants.result }}
+          INSTALLER_ARM64: ${{ needs.installer-arm64.result }}
+          LSM_SELINUX: ${{ needs.lsm-selinux.result }}
+          LSM_APPARMOR: ${{ needs.lsm-apparmor.result }}
           DISTRO_SMOKE: ${{ needs.distro-smoke.result }}
           DISTRO_FEATURES: ${{ needs.distro-features.result }}
           ACCEPTANCE_MATRIX: ${{ needs.acceptance-matrix.result }}
@@ -1392,7 +1564,10 @@ jobs:
           row "build-binaries (linux/amd64)" "$BUILD_BINARIES" "miner + urnet-tools + urnet-docker, CGO_ENABLED=0"
           check "installer-fast (4 images)" "$INSTALLER_FAST" "PR subset: debian 12, almalinux 9, arch, alpine; skipped on tag runs"
           check "installer-lifecycle (13 images)" "$INSTALLER_LIFECYCLE" "the real installer: deps, install, reinstall, tag switch, uninstall"
-          check "installer variants (4)" "$INSTALLER_VARIANTS" "noexec /tmp, ipv6 off, non-root+sudo, no-autoinstall refusal"
+          check "installer variants (6)" "$INSTALLER_VARIANTS" "noexec /tmp, ipv6 off, non-root+sudo, no-autoinstall refusal, ubuntu-shaped, 256m cgroup"
+          check "installer arm64 (2)" "$INSTALLER_ARM64" "debian 12 + alpine under QEMU; arm64 tarball and uname mapping"
+          check "LSM selinux (almalinux vm)" "$LSM_SELINUX" "enforcing; install, labels, no AVC for the provider" conditional
+          check "LSM apparmor (ubuntu vm)" "$LSM_APPARMOR" "enabled; install, no denial for the provider" conditional
           check "distro-smoke (7 Linux images)" "$DISTRO_SMOKE" "debian, almalinux, fedora, leap 16.0, tumbleweed, arch, alpine"
           check "distro-features (2 images)" "$DISTRO_FEATURES" "debian stable slim + alpine: risky surfaces, url pipeline, broad surface (glibc + musl)"
           check "acceptance matrix (debian)" "$ACCEPTANCE_MATRIX" "hot-restart identity reuse, urnet-tools surface vs the daemon, urnet-docker runtime (SKIP-NO-DOCKER in container jobs), v33 parity"
