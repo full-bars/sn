@@ -103,6 +103,8 @@ jobs:
             -ldflags "-s -w -X main.Version=$T2 -X main.VersionStamp=URNET_VERSION_STAMP=$T2" \
             -o out/provider2 ./cmd/provider/
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \
+            -ldflags "-s -w -X main.Version=$T1" -o out/urnet-tools ./cmd/urnet-tools/
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \
             -ldflags "-s -w -X main.Version=$T2" -o out/urnet-tools2 ./cmd/urnet-tools/
           CGO_ENABLED=0 go build -trimpath -o out/release-server ./scripts/ci/fake-release-server
           cp scripts/Provider_Install_Linux.sh out/installer.sh
@@ -210,7 +212,21 @@ jobs:
           VARIANT: ${{ matrix.slug }}
           OUT_DIR: /tmp/installer-out
           TIMEOUT_S: "300"
-        run: sh /tmp/payload/installer-lifecycle.sh 2>&1 | tee /tmp/installer.log
+        run: |
+          set +e
+          sh /tmp/payload/installer-lifecycle.sh >/tmp/installer.log 2>&1
+          rc=$?
+          cat /tmp/installer.log
+          exit $rc
+      - name: Upload the installer log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-log-${{ matrix.slug }}
+          path: /tmp/installer.log
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Publish the cell summary
         if: always()
         run: |
@@ -298,7 +314,21 @@ jobs:
           VARIANT: ${{ matrix.slug }}
           OUT_DIR: /tmp/installer-out
           TIMEOUT_S: "300"
-        run: sh /tmp/payload/installer-lifecycle.sh 2>&1 | tee /tmp/installer.log
+        run: |
+          set +e
+          sh /tmp/payload/installer-lifecycle.sh >/tmp/installer.log 2>&1
+          rc=$?
+          cat /tmp/installer.log
+          exit $rc
+      - name: Upload the installer log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-log-${{ matrix.slug }}
+          path: /tmp/installer.log
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Publish the cell summary
         if: always()
         run: |
