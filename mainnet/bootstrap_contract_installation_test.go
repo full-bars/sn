@@ -146,6 +146,7 @@ func TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor(t *testi
 	f := newBootstrapSuccessorCanonicalFixture(t)
 	chain, plan := f.original.contracts, f.approval.Plan
 	original := bootstrapSuccessorPreparationTestFiles(t, f.original.config.RunDirectory)
+	originalMembers := bootstrapSuccessorExecutionTestMemberCensus(t, f.original.config.RunDirectory, false)
 	seal := bootstrapContractInstallationTestProofs(t, f)
 	seal(true)
 	model := &bootstrapSuccessorExecutionFixture{t: t, approval: f.approval, key: f.key}
@@ -232,10 +233,8 @@ func TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor(t *testi
 	chain.state.SetState(proxy, clockSlot, originalClock)
 	chain.stateLock.Unlock()
 	seal(true)
-	for name, raw := range original {
-		if retained, err := os.ReadFile(filepath.Join(f.original.config.RunDirectory, name)); err != nil || string(retained) != raw {
-			t.Fatal("changed original custody", name, err)
-		}
+	if name := bootstrapSuccessorExecutionTestChangedOriginal(t, f.original.config.RunDirectory, original, originalMembers); name != "" {
+		t.Fatal("changed original custody", name)
 	}
 	// The final current proof follows historical recovery. Losing original
 	// custody at this boundary must prevent a otherwise complete readback.

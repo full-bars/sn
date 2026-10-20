@@ -33,6 +33,41 @@ type providerAttemptLookupResult struct {
 	ClosedUnreceived *protocol.ProviderAttemptClosedUnreceived `json:"closed_unreceived,omitempty"`
 }
 
+// providerAttemptHopEvent is one trail position's hop as the census last saw
+// it. assignedMs is the assignment's own time: a hop the server confirmed
+// after a 421 records the step's last 421 as its assigned_ms (VALIDATOR.md
+// §7.5), so its latency counts from the attributed attempt, while the
+// assignment still counts when it was made.
+type providerAttemptHopEvent struct {
+	hop        protocol.ProviderAttemptReceiptHop
+	confirmed  bool
+	assignedMs uint64
+}
+
+// next is the event once hop is seen again at the same trail position, or
+// ErrProviderAttemptsIntegrity when it is not the same hop one step on. A
+// position only advances from the same original pending hop to confirmed,
+// once. Confirming a pending hop may move its assigned_ms forward, to the
+// step's last 421, never back and never past the confirmation; nothing else
+// about the hop may change, and the assignment keeps its own time.
+func (self providerAttemptHopEvent) next(hop *protocol.ProviderAttemptReceiptHop, confirmed bool) (providerAttemptHopEvent, error) {
+	a, b := self.hop, *hop
+	a.ConfirmedMs, b.ConfirmedMs = 0, 0
+	a.EgressIpHash, b.EgressIpHash = [32]byte{}, [32]byte{}
+	if !self.confirmed && confirmed && a.AssignedMs <= b.AssignedMs && b.AssignedMs <= hop.ConfirmedMs {
+		b.AssignedMs = a.AssignedMs
+	}
+	x, _ := json.Marshal(a)
+	y, _ := json.Marshal(b)
+	if !bytes.Equal(x, y) || self.confirmed && !confirmed || self.confirmed && self.hop.ConfirmedMs != hop.ConfirmedMs {
+		return providerAttemptHopEvent{}, protocol.ErrProviderAttemptsIntegrity
+	}
+	if self.confirmed && self.hop.EgressIpHash != hop.EgressIpHash {
+		return providerAttemptHopEvent{}, protocol.ErrProviderAttemptsIntegrity
+	}
+	return providerAttemptHopEvent{hop: *hop, confirmed: confirmed, assignedMs: self.assignedMs}, nil
+}
+
 // Returned rows are staged until every independently expected lane succeeds.
 func (self *ProviderAttemptAuthoritySource) verifyRequests(ctx context.Context, original *ProviderAttemptOriginal, startMs, endMs uint64, live bool, budget *providerAttemptOriginalBudget) ([]VerifiedProviderAttemptRow, [32]byte, error) {
 	type laneKey struct {
@@ -71,11 +106,7 @@ func (self *ProviderAttemptAuthoritySource) verifyRequests(ctx context.Context, 
 		trail    connect.Id
 		position int
 	}
-	type event struct {
-		hop       protocol.ProviderAttemptReceiptHop
-		confirmed bool
-	}
-	events := map[eventKey]event{}
+	events := map[eventKey]providerAttemptHopEvent{}
 	digest := sha256.New()
 	_, _ = digest.Write([]byte("urnetwork-provider-request-complete-census-v1\x00"))
 	var totalRecords uint64
@@ -225,18 +256,11 @@ func (self *ProviderAttemptAuthoritySource) verifyRequests(ctx context.Context, 
 							return nil
 						}
 						key := eventKey{hotkey: validator.Hotkey, noId: lane.NoId, trail: body.Trail.TrailId, position: position}
-						value := event{hop: *hop, confirmed: confirmed}
+						value := providerAttemptHopEvent{hop: *hop, confirmed: confirmed, assignedMs: hop.AssignedMs}
 						if old, exists := events[key]; exists {
-							a, b := old.hop, value.hop
-							a.ConfirmedMs, b.ConfirmedMs = 0, 0
-							a.EgressIpHash, b.EgressIpHash = [32]byte{}, [32]byte{}
-							x, _ := json.Marshal(a)
-							y, _ := json.Marshal(b)
-							if !bytes.Equal(x, y) || old.confirmed && !confirmed || old.confirmed && old.hop.ConfirmedMs != hop.ConfirmedMs {
-								return protocol.ErrProviderAttemptsIntegrity
-							}
-							if old.confirmed && old.hop.EgressIpHash != hop.EgressIpHash {
-								return protocol.ErrProviderAttemptsIntegrity
+							var err error
+							if value, err = old.next(hop, confirmed); err != nil {
+								return err
 							}
 						} else if uint64(len(events)) >= self.authority.MaxRecords*16 {
 							return protocol.ErrProviderAttemptsCapacity
@@ -280,7 +304,7 @@ func (self *ProviderAttemptAuthoritySource) verifyRequests(ctx context.Context, 
 			row = &VerifiedProviderAttemptRow{NoId: key.noId, ClientId: [16]byte(value.hop.ClientId)}
 			rows[rowKey] = row
 		}
-		if value.hop.AssignedMs >= startMs && value.hop.AssignedMs < endMs {
+		if value.assignedMs >= startMs && value.assignedMs < endMs {
 			if row.Assignments == ^uint64(0) {
 				return nil, [32]byte{}, protocol.ErrProviderAttemptsCapacity
 			}

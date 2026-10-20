@@ -19,7 +19,6 @@ import (
 	gsrpcrpc "github.com/centrifuge/go-substrate-rpc-client/v4/rpc"
 	gsrpcstate "github.com/centrifuge/go-substrate-rpc-client/v4/rpc/state"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	gsrpcblock "github.com/centrifuge/go-substrate-rpc-client/v4/types/block"
 	"github.com/urfoundation/sn/crv4"
 )
 
@@ -280,22 +279,33 @@ func TestProvisionalRuntimeCompatibilityNativeRebroadcastRejectsUpgrade(t *testi
 	chain := provisionalRuntimeChainTest(t, cfg)
 	client := chain.API.Client.(*releaseRuntimeTestClient)
 	original := client.callContext
-	priorHash, currentHash := types.Hash{1}.Hex(), types.Hash{2}.Hex()
+	// The receipt scan admits only canonical bodies that their SCALE headers
+	// commit to, linked by parent hash. The shared fixture keys the reviewed
+	// runtime on types.Hash{1} and its successor on any other block.
+	priorHeader, prior := releaseReceiptTestHeader(t, types.Hash{0x30}, 200)
+	currentHeader, current := releaseReceiptTestHeader(t, prior, 201)
+	priorHash, currentHash := prior.Hex(), current.Hex()
+	fixtureHashes := map[string]string{priorHash: types.Hash{1}.Hex(), currentHash: types.Hash{2}.Hex()}
 	headerCalls := 0
 	var blockNumbers []uint64
 	var blockHashes []string
 	client.callContext = func(ctx context.Context, target any, method string, args ...any) error {
 		switch method {
+		case "chain_getFinalizedHead":
+			return setReleaseRuntimeTestResult(target, currentHash)
 		case "chain_getHeader":
 			if len(args) != 1 || args[0] != currentHash {
 				return fmt.Errorf("rebroadcast header arguments differ: %v", args)
 			}
-			result, ok := target.(*types.Header)
-			if !ok {
-				return fmt.Errorf("rebroadcast header result type %T", target)
+			if result, ok := target.(*types.Header); ok {
+				headerCalls++
+				*result = currentHeader
+				return nil
+			}
+			if err := setReleaseRuntimeTestResult(target, releaseReceiptTestHeaderWire(currentHeader)); err != nil {
+				return fmt.Errorf("rebroadcast header: %w", err)
 			}
 			headerCalls++
-			*result = types.Header{Number: 201}
 			return nil
 		case "chain_getBlockHash":
 			if len(args) != 1 {
@@ -320,19 +330,28 @@ func TestProvisionalRuntimeCompatibilityNativeRebroadcastRejectsUpgrade(t *testi
 			if len(args) != 1 || args[0] != priorHash && args[0] != currentHash {
 				return fmt.Errorf("rebroadcast block arguments differ: %v", args)
 			}
-			result, ok := target.(*gsrpcblock.SignedBlock)
-			if !ok {
-				return fmt.Errorf("rebroadcast block result type %T", target)
+			header := priorHeader
+			if args[0] == currentHash {
+				header = currentHeader
+			}
+			if err := setReleaseRuntimeTestResult(target, releaseReceiptTestBlockWire(header)); err != nil {
+				return fmt.Errorf("rebroadcast block: %w", err)
 			}
 			blockHashes = append(blockHashes, args[0].(string))
-			*result = gsrpcblock.SignedBlock{}
 			return nil
+		}
+		if len(args) != 0 {
+			if hash, ok := args[len(args)-1].(string); ok && fixtureHashes[hash] != "" {
+				args = append(slices.Clone(args[:len(args)-1]), fixtureHashes[hash])
+			}
 		}
 		return original(ctx, target, method, args...)
 	}
 	manager := &SubstrateManager{cfg: cfg, chain: chain}
 	_, _, err := manager.watchRaw(t.Context(), "plan", Action{ID: "action"}, []byte{1}, types.Hash{7}, 200, priorHash, false)
-	if headerCalls != 2 || !slices.Equal(blockNumbers, []uint64{200, 201, 200}) || !slices.Equal(blockHashes, []string{priorHash, currentHash}) {
+	// The scan first proves the finalized head canonical at its height, then
+	// reads 200 and 201; recovery rechecks 200 before authenticating runtimes.
+	if headerCalls != 2 || !slices.Equal(blockNumbers, []uint64{201, 200, 201, 200}) || !slices.Equal(blockHashes, []string{priorHash, currentHash}) {
 		t.Fatalf("rebroadcast recovery flow headers=%d numbers=%v hashes=%v", headerCalls, blockNumbers, blockHashes)
 	}
 	if err == nil || !strings.Contains(err.Error(), "native runtime changed across signing/recovery") {

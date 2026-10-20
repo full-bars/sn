@@ -4,6 +4,7 @@ package miner
 // lost response, source-bound TLS, redirects, and response-size failures.
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -12,70 +13,48 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"testing"
 
 	"github.com/urnetwork/connect"
-	"github.com/urnetwork/sdk"
-	"github.com/urnetwork/server/model"
 )
 
-// The server consumes the first signed write and closes before its reply. A
-// retry must leave the operation and obtain/sign a new challenge, not replay.
-func TestProviderSwarmControlWalletLostReplyNeedsFreshChallenge(t *testing.T) {
+// The member's current consent peer: epoch, prospective challenge and signed
+// write. Each test serves it behind its own TLS, source or reply boundary.
+func newSwarmControlWalletHttp(t *testing.T, member ProviderSwarmMember) *financialWalletMappingHttp {
+	t.Helper()
+	providerJwt, err := os.ReadFile(filepath.Join(member.StateDir, ".provider.jwt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := swarmMemberWalletKey(member)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return newFinancialWalletMappingHttp(t, string(providerJwt), member.Wallet, key.PublicKey())
+}
+
+// The server consumes the first signed write and closes before its reply. The
+// operation never retries it; a fresh operation replays the exact retained
+// original instead of signing a new challenge while that original is pending.
+func TestProviderSwarmControlWalletLostReplyReplaysRetainedOriginal(t *testing.T) {
 	swarm := newSwarmControlTestSwarm(t)
 	member := swarm.members["miner-1"]
-	var challenges, wallets atomic.Int32
-	var stateLock sync.Mutex
-	var walletArgs []*sdk.SnSetWalletArgs
+	f := newSwarmControlWalletHttp(t, member)
 	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.URL.Path == "/hello" {
-			return
-		}
-		if host, _, err := net.SplitHostPort(request.RemoteAddr); err != nil || host != member.SourceIP {
-			t.Errorf("wallet request lost its configured source: %s, %v", request.RemoteAddr, err)
-		}
-		if request.Method != http.MethodPost || request.Header.Get("Authorization") != "Bearer token" {
-			t.Error("wallet request lost its existing authorization")
-			http.Error(writer, "invalid wallet request", http.StatusUnauthorized)
-			return
-		}
-		writer.Header().Set("Content-Type", "application/json")
-		switch request.URL.Path {
-		case "/auth/wallet-challenge":
-			index := challenges.Add(1)
-			message := model.FormatWalletAuthChallengeMessage(fmt.Sprintf("lost-reply-%d", index), 1700000000+int64(index))
-			_ = json.NewEncoder(writer).Encode(sdk.AuthWalletChallengeResult{MessageTemplate: message})
-		case "/sn/wallet":
-			var args sdk.SnSetWalletArgs
-			if err := json.NewDecoder(request.Body).Decode(&args); err != nil {
-				t.Error(err)
-				return
+		if request.URL.Path != "/hello" {
+			if host, _, err := net.SplitHostPort(request.RemoteAddr); err != nil || host != member.SourceIP {
+				t.Errorf("wallet request lost its configured source: %s, %v", request.RemoteAddr, err)
 			}
-			stateLock.Lock()
-			walletArgs = append(walletArgs, &args)
-			stateLock.Unlock()
-			if valid, err := model.VerifyBittensorSignature(member.Wallet, args.Message, args.Signature); !valid || err != nil {
-				t.Errorf("wallet signature invalid: %v", err)
-			}
-			if wallets.Add(1) == 1 {
-				connection, _, err := writer.(http.Hijacker).Hijack()
-				if err != nil {
-					t.Error(err)
-					return
-				}
-				_ = connection.Close()
-				return
-			}
-			_, _ = writer.Write([]byte(`{}`))
-		default:
-			http.NotFound(writer, request)
 		}
+		f.serve(writer, request)
 	}))
 	t.Cleanup(server.Close)
 	member.APIURL = server.URL
+	f.loseAck = func() {}
 	settings := swarmWalletTestSettings()
 	settings.TlsConfig = server.Client().Transport.(*http.Transport).TLSClientConfig.Clone()
 	var err error
@@ -91,37 +70,29 @@ func TestProviderSwarmControlWalletLostReplyNeedsFreshChallenge(t *testing.T) {
 	}
 	waitSwarmControlTestResponse(t, startSwarmControlTestRequest(swarm, context.Background(), "enable"), http.StatusServiceUnavailable)
 	readSwarmControlTestStatus(t, swarm, "miner-1", "failed")
-	if challenges.Load() != 1 || wallets.Load() != 1 {
-		t.Fatalf("lost reply replayed a consumed challenge: challenges=%d wallets=%d", challenges.Load(), wallets.Load())
+	f.stateLock.Lock()
+	challenges, wallets := len(f.challengeRequests), len(f.walletBodies)
+	f.loseAck = nil
+	f.stateLock.Unlock()
+	if challenges != 1 || wallets != 1 {
+		t.Fatalf("lost reply was retried within its operation: challenges=%d wallets=%d", challenges, wallets)
 	}
 	waitSwarmControlTestResponse(t, startSwarmControlTestRequest(swarm, context.Background(), "enable"), http.StatusOK)
 	readSwarmControlTestStatus(t, swarm, "miner-1", "running")
-	stateLock.Lock()
-	defer stateLock.Unlock()
-	if challenges.Load() != 2 || wallets.Load() != 2 || len(walletArgs) != 2 {
-		t.Fatalf("fresh retry requests: challenges=%d wallets=%d args=%d", challenges.Load(), wallets.Load(), len(walletArgs))
-	}
-	if walletArgs[0].Message == walletArgs[1].Message || walletArgs[0].Signature == walletArgs[1].Signature {
-		t.Fatal("new enable reused its previous challenge or signature")
-	}
-	if valid, err := model.VerifyBittensorSignature(member.Wallet, walletArgs[1].Message, walletArgs[0].Signature); valid || err != nil {
-		t.Fatalf("old signature authorized new challenge: valid=%t, err=%v", valid, err)
+	f.stateLock.Lock()
+	defer f.stateLock.Unlock()
+	if len(f.challengeRequests) != 1 || len(f.walletBodies) != 2 || !bytes.Equal(f.walletBodies[0], f.walletBodies[1]) {
+		t.Fatalf("fresh enable did not replay its exact retained original: challenges=%d wallets=%d", len(f.challengeRequests), len(f.walletBodies))
 	}
 }
 
 // Following a temporary redirect would send the same signed payload twice.
 func TestProviderSwarmControlWalletDoesNotFollowSignedWriteRedirect(t *testing.T) {
 	member := validProviderSwarmConfig(t).Members[0]
+	f := newSwarmControlWalletHttp(t, member)
 	var wallets, redirected atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		writer.Header().Set("Content-Type", "application/json")
 		switch request.URL.Path {
-		case "/hello":
-			return
-		case "/auth/wallet-challenge":
-			_ = json.NewEncoder(writer).Encode(sdk.AuthWalletChallengeResult{
-				MessageTemplate: model.FormatWalletAuthChallengeMessage("redirect-test", 1700000000),
-			})
 		case "/sn/wallet":
 			wallets.Add(1)
 			writer.Header().Set("Location", "/replayed")
@@ -130,7 +101,7 @@ func TestProviderSwarmControlWalletDoesNotFollowSignedWriteRedirect(t *testing.T
 			redirected.Add(1)
 			_, _ = writer.Write([]byte(`{}`))
 		default:
-			http.NotFound(writer, request)
+			f.serve(writer, request)
 		}
 	}))
 	t.Cleanup(server.Close)
@@ -148,28 +119,25 @@ func TestProviderSwarmControlWalletDoesNotFollowSignedWriteRedirect(t *testing.T
 // A reply without a content length is still bounded before JSON decoding.
 func TestProviderSwarmControlWalletBoundsStreamedReply(t *testing.T) {
 	member := validProviderSwarmConfig(t).Members[0]
+	f := newSwarmControlWalletHttp(t, member)
+	// The epoch and consent replies stay under 2 KiB, so only the signed
+	// write's streamed reply can reach this bound.
+	const maxResponseBytes = 4096
 	var wallets atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		writer.Header().Set("Content-Type", "application/json")
-		switch request.URL.Path {
-		case "/hello":
+		if request.URL.Path != "/sn/wallet" {
+			f.serve(writer, request)
 			return
-		case "/auth/wallet-challenge":
-			_ = json.NewEncoder(writer).Encode(sdk.AuthWalletChallengeResult{
-				MessageTemplate: model.FormatWalletAuthChallengeMessage("body-limit-test", 1700000000),
-			})
-		case "/sn/wallet":
-			wallets.Add(1)
-			writer.(http.Flusher).Flush()
-			_, _ = writer.Write([]byte(strings.Repeat("x", 1024)))
-		default:
-			http.NotFound(writer, request)
 		}
+		wallets.Add(1)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.(http.Flusher).Flush()
+		_, _ = writer.Write([]byte(strings.Repeat("x", 4*maxResponseBytes)))
 	}))
 	t.Cleanup(server.Close)
 	member.APIURL = server.URL
 	settings := swarmWalletTestSettings()
-	settings.MaxHttpResponseBodyBytes = 256
+	settings.MaxHttpResponseBodyBytes = maxResponseBytes
 	err := setSwarmMemberWallet(context.Background(), member, settings)
 	if !errors.Is(err, connect.ErrHttpResponseBodyTooLarge) || wallets.Load() != 1 {
 		t.Fatalf("wallet reply bound: error=%v wallets=%d", err, wallets.Load())

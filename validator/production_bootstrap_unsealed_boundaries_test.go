@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"maps"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -27,14 +28,14 @@ import (
 
 // Both pending and complete trails occupy two older canonical boundaries.
 // The current ceiling alone cannot authenticate either historical hash.
-func productionBootstrapUnsealedBoundaryTestFixture(t *testing.T) (releaseArchiveV2TestFixture, *ReleaseEvidenceV2Archive, *ProductionBootstrapCommittedObservation, *ProductionBootstrapUnsealedObservation, *productionBootstrapUnsealedOwner) {
+func productionBootstrapUnsealedBoundaryTestFixture(t *testing.T, configure ...func(*ReleaseConfig)) (releaseArchiveV2TestFixture, *ReleaseEvidenceV2Archive, *ProductionBootstrapCommittedObservation, *ProductionBootstrapUnsealedObservation, *productionBootstrapUnsealedOwner) {
 	t.Helper()
-	f, archive, current := productionBootstrapUnsealedTestFixture(t)
+	f, archive, current := productionBootstrapUnsealedTestFixture(t, configure...)
 	for i := range 2 {
 		f.startup.boundary.EVMBlock++
 		f.startup.boundary.EVMBlockHash = attemptHex32([32]byte{0xc1 + byte(i)})
 		f.startup.blocks[f.startup.boundary.EVMBlock] = [32]byte{0xc1 + byte(i)}
-		for index := range 2 {
+		for index := range f.startup.disk.participants {
 			if i == 0 {
 				f.startup.trail(t, index)
 			} else {
@@ -207,9 +208,12 @@ func TestProductionBootstrapUnsealedBoundariesAuthenticateEmptyTail(t *testing.T
 
 // The old local-only proof admits these signed tails. Canonical chain changes
 // must refuse them, including a later operator after the first has completed.
+// Every fault is a chain view only, so one held census serves them all: the
+// restored chain authenticates it again before the next fault.
 func TestProductionBootstrapUnsealedBoundariesRejectHistoricalContradictions(t *testing.T) {
+	f, archive, _, inventory, owner := productionBootstrapUnsealedBoundaryTestFixture(t)
+	blocks, finalized := maps.Clone(f.startup.blocks), f.startup.finalized
 	for _, fault := range []string{"hash", "second-hash", "unfinalized", "epoch", "policy", "window", "inactive", "future-operator", "trailing"} {
-		f, archive, _, inventory, owner := productionBootstrapUnsealedBoundaryTestFixture(t)
 		rpcFixture := &productionBootstrapUnsealedBoundaryRpcFixture{releaseStartupV2TestFixture: f.startup, fault: fault}
 		if fault == "hash" {
 			f.startup.blocks[owner.tails[0].boundaries[0].Boundary.EVMBlock] = [32]byte{0xff}
@@ -230,6 +234,11 @@ func TestProductionBootstrapUnsealedBoundariesRejectHistoricalContradictions(t *
 			if ledger.TailBoundaryProof != nil {
 				t.Fatal("partial historical proof escaped into the original inventory", fault)
 			}
+		}
+		f.startup.blocks, f.startup.finalized = maps.Clone(blocks), finalized
+		restored := &productionBootstrapUnsealedBoundaryRpcFixture{releaseStartupV2TestFixture: f.startup}
+		if got, err := owner.authenticateTailBoundaries(t.Context(), archive, inventory, productionBootstrapUnsealedBoundaryTestChain(t, restored, nil)); err != nil || got == nil || restored.operatorReads.Load() != 4 {
+			t.Fatal("the restored chain did not authenticate the held census", fault, restored.operatorReads.Load(), err)
 		}
 	}
 }

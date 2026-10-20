@@ -1,0 +1,61 @@
+{
+  "all38_preserved": true,
+  "author_execution": {
+    "binary_list": 0,
+    "body": 0,
+    "compiler": 0,
+    "database": 0,
+    "live_rpc": 0
+  },
+  "controls": "UNEXECUTED",
+  "existing_six_neighbor_obligations": {
+    "bytes": 21012,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-ee813-route-identity/existing-adjacent-recipes.json",
+    "sha256": "c25702dbea8d568ecbcc7e12041a74d67e4dde863700012c26e6c189b6935228"
+  },
+  "frozen_model_input_followup": {
+    "bytes": 7896,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-ee813-route-identity/skip-inputs.json",
+    "sha256": "d83ecbfb182411c61403d12fd201b439a26c174494deb3ed4b6e87a8818a1cc6"
+  },
+  "frozen_model_result": "Original624/Core026/d64 cohort remains without a terminal result at this checkpoint, with four known failures and original input skips retained. New source does not inherit its body results.",
+  "known_pending_source_work": [],
+  "lessons": [
+    "Compare each completed identity before another read or a late stop.",
+    "Literal null remains retryable unavailable; present malformed, zero or different values stay hard.",
+    "Capture every original raw error once; all joined independent causes remain available.",
+    "Each physical identity gets its own 60-second attempt under the existing default 300-second or earlier caller operation.",
+    "Opening and closing checks share the same approved route; no financial replay, original-owner mutation, write or custody changes."
+  ],
+  "new_cases": 56,
+  "new_validator_roots": 9,
+  "normal": "UNEXECUTED",
+  "owner_intake": {
+    "bytes": 3685,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/recycle-route-identity/qualification/HANDOFF.json",
+    "sha256": "a8ed174f9a59265e9661438aae7933590d074001110d478d4a914839b8482d3d"
+  },
+  "race": "UNEXECUTED",
+  "resolved_source_followup": "Opening and closing checkRoute in ObserveOwnerRecycleMeasurementOperators now compare each completed identity before the next RPC. Null is bounded unavailability; present malformed or different identity remains hard. Existing300-second owner/per-physical60-second attempt or earlier caller budget is unchanged.",
+  "schema": "route-identity-and-skip-inputs-v1",
+  "scope": {
+    "bytes": 3446,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-ee813-route-identity/SCOPE-HANDOFF.json",
+    "sha256": "f407700f31a7f4494866f4c5e97d28547c4918f321b5e36affeec292e6adcd39"
+  },
+  "source_audit_limit": "This closes the specifically identified route source gap; it is not a new broad completeness audit or an execution result.",
+  "source_control_groups_added": 7,
+  "source_proof": {
+    "bytes": 10944,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-ee813-route-identity/source-proof.json",
+    "sha256": "e1c1a09ac11ce835da853070327954ef8930fce818c2d78592746cc201b3d0f7"
+  },
+  "source_tuple": {
+    "connect": "026b850248352b72255be7a966e391e0a15e74c1",
+    "sdk": "e3f4f3fb56e59eb9fdb12c1f87594209c505e5e9",
+    "server": "67467b263ff311da66ec96b3e9d007850bbfc627",
+    "sn": "ee81380ce97a7654979623d59164a178f6dca408",
+    "xops": "9a37239ebeebbb5efea4f63a56191f91f3c4ad8f"
+  },
+  "status": "MERGED_SOURCE_IMPLEMENTED_UNQUALIFIED"
+}

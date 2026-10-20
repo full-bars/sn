@@ -283,6 +283,10 @@ func TestBootstrapPlanAllReviewInputsRemainUnvalidated(t *testing.T) {
 	if plan.ApplyAuthority || plan.ActivationReady || plan.Status != "blocked" {
 		t.Fatal("all opaque supplied files enabled activation")
 	}
+	diagnostic := strings.Join(plan.ExecutionBlockers, "\n")
+	if !strings.Contains(diagnostic, "separate signed bootstrap and owner workflows") || strings.Contains(diagnostic, "not implemented") {
+		t.Fatal("review-only planner misreported the separate execution implementations", diagnostic)
+	}
 	for _, action := range plan.Actions {
 		if action.Executable || action.Status != "blocked" {
 			t.Fatal("opaque manifest enabled action")

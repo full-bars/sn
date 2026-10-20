@@ -19,14 +19,18 @@ import (
 
 // Provision only the independently configured private state roots. The actual
 // bootstrap authenticates signatures/native identity and initial EVM views.
-func newReleaseEvidenceV2DiskTestFixture(t *testing.T) (*releaseInitialBoundaryV2TestFixture, []releaseEvidenceV2ActivationInput) {
+func newReleaseEvidenceV2DiskTestFixture(t *testing.T, configure ...func(*ReleaseConfig)) (*releaseInitialBoundaryV2TestFixture, []releaseEvidenceV2ActivationInput) {
 	t.Helper()
-	fixture := newReleaseInitialBoundaryV2TestFixture(t, "")
+	fixture := newReleaseInitialBoundaryV2TestFixture(t, "", configure...)
 	inputs := fixture.inputs(t)
 	if history, err := authenticateReleaseEvidenceV2InitialHistory(t.Context(), &fixture.cfg, fixture.chain, inputs, nil); err != nil || history != nil {
 		t.Fatalf("actual pristine activation/boundary authority: %v", err)
 	}
-	for _, path := range append([]string{fixture.cfg.StateDir}, fixture.cfg.Operators[0].StateDir, fixture.cfg.Operators[1].StateDir) {
+	paths := []string{fixture.cfg.StateDir}
+	for _, operator := range fixture.cfg.Operators {
+		paths = append(paths, operator.StateDir)
+	}
+	for _, path := range paths {
 		if err := os.MkdirAll(path, 0o700); err != nil {
 			t.Fatal(err)
 		}

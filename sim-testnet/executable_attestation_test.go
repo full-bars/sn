@@ -355,6 +355,9 @@ func testReleaseExecutableSourceFixture(t *testing.T) (string, string) {
 	runTestGit(t, root, "commit", "-qm", "release source")
 	runTestGit(t, root, "config", "url.file://"+remote+".insteadOf", "git@github.com:urfoundation/sn.git")
 	runTestGit(t, root, "remote", "add", "origin", "git@github.com:urfoundation/sn.git")
+	// A user's url.<base>.pushInsteadOf outranks this local rewrite for a
+	// push; such a push must be refused rather than reach GitHub.
+	t.Setenv("GIT_ALLOW_PROTOCOL", "file")
 	runTestGit(t, root, "push", "-qu", "origin", "main")
 	return root, sourcePath
 }

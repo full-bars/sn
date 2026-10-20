@@ -75,11 +75,14 @@ func TestMonitorClaimPublicUnsignedLeafAdvancesWithoutPayment(t *testing.T) {
 	}}
 	done := make(chan struct{})
 	var exit int
+	t.Cleanup(cancel)
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
 		defer close(done)
-		exit = runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, &diagnostic, fixture.clock.now, hooks)
+		exit = runMainWithMonitorHooks(ctx, args, sink, &diagnostic, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
 	first := sink.next(t, done)
 	if !first.Current || first.State.MerkleProofs != 1 || first.State.ClaimedLeaves != 0 || first.State.Overdue != 1 || first.State.ProgressAt != initial {
 		t.Fatal("initial real worker did not retain unresolved proof", first)
@@ -178,11 +181,14 @@ func monitorClaimPublicPeerControl(t *testing.T, loseCheckpoint bool) {
 	var diagnostic bytes.Buffer
 	var exit int
 	done := make(chan struct{})
+	t.Cleanup(cancel)
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
 		defer close(done)
-		exit = runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, &diagnostic, fixture.clock.now, hooks)
+		exit = runMainWithMonitorHooks(ctx, args, sink, &diagnostic, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
 	observed := map[string]monitorClaimTestEvent{}
 	for range 2 {
 		event := sink.next(t, done)
@@ -403,11 +409,14 @@ func TestMonitorClaimPublicLostAckReopensExactCheckpoint(t *testing.T) {
 	var diagnostic bytes.Buffer
 	var exit int
 	done := make(chan struct{})
+	t.Cleanup(cancel)
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
 		defer close(done)
-		exit = runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, &diagnostic, fixture.clock.now, hooks)
+		exit = runMainWithMonitorHooks(ctx, args, sink, &diagnostic, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
 	first := sink.next(t, done)
 	if first.Current || first.CheckpointCurrent || first.State.AcceptedReceipts != 1 {
 		t.Fatal("uncertain save became acknowledged current history", first)

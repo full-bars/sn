@@ -94,6 +94,26 @@ ambient variables. Retain the context/tool receipts alongside source and
 resource admission. Preserve old frozen runners and receipts; use a new
 runner/output root for a correction.
 
+For a Python child, use `python = context.bind_python(selected_python_path,
+expected_real_interpreter_sha256)` and pass `python["path"]` unchanged as
+`argv[0]`. In particular, do not resolve a virtualenv's `bin/python3` before
+launching: Python discovers `pyvenv.cfg` relative to the invoked path, and the
+resolved base executable can have different installed modules. The explicit
+Python binding retains that invocation path, its finite final-component
+symlink chain, the separately hashed real ELF, and both virtualenv configuration
+locations (including their absence). It checks them before and after the
+child. Ordinary `bind` still requires a canonical executable path; it does not
+silently permit arbitrary tool aliases. Script and `-m unittest` arguments use
+the same preserved Python path and existing bounded process guard.
+
+Runner receipts now retain `runner_invocation` alongside `runner_executable`.
+Existing `runner_python` pins continue to authenticate the real executable;
+the additional record preserves the actual virtualenv invocation/configuration.
+This is interpreter context, not a complete Python dependency inventory: the
+caller still binds required packages and source inputs. Preserve original
+missing-module loader failures as failed outcomes, with separate labels for
+corrected executions.
+
 Each `ChildContext.run` now durably records the exact flat process-guard return
 in `LABEL.process-result.json` immediately after Wait/join, before postchecks or
 caller classification. A separate `LABEL.process-context.json` is written only

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -54,8 +55,6 @@ var releaseRepositoryObservedKeys = []string{
 	"goidenticons_go_source_hash",
 	"proxy_go_source_hash",
 	"userwireguard_go_source_hash",
-	"operator_proxy_go_source_hash",
-	"operator_proxy_commit",
 	"sdk_mobile_build_tree_hash",
 	"protocol_source_hash",
 	"platform_config_source_hash",
@@ -83,6 +82,15 @@ var releaseRepositoryAnnotationKeys = []string{
 	"sn_audited_base_commit",
 	"server_audited_base_commit",
 	"vault_audited_base_commit",
+}
+
+// The retired operator-proxy repository is no longer observed or required.
+// Previously attested locks keep its pins because published deployments and
+// archived approvals bind those exact bytes, so a present value is admitted in
+// its canonical form. A fresh rendering never carries it forward.
+var releaseRepositoryRetiredKeys = []string{
+	"operator_proxy_go_source_hash",
+	"operator_proxy_commit",
 }
 
 type releaseRepository struct {
@@ -169,14 +177,13 @@ func validateReleaseLockObservation(observation *releaseLockObservation) error {
 }
 
 func releaseObservationRepositories(cfg *ResolvedConfig) ([]releaseRepository, error) {
-	if cfg == nil || cfg.Repos.SN == "" || cfg.Repos.Server == "" || cfg.Repos.OperatorProxy == "" || cfg.Repos.Vault == "" || cfg.Repos.PlatformConfig == "" {
+	if cfg == nil || cfg.Repos.SN == "" || cfg.Repos.Server == "" || cfg.Repos.Vault == "" || cfg.Repos.PlatformConfig == "" {
 		return nil, errors.New("release repository paths are incomplete")
 	}
 	parent := filepath.Dir(cfg.Repos.SN)
 	repositories := []releaseRepository{
 		{Name: "sn", Root: cfg.Repos.SN},
 		{Name: "server", Root: cfg.Repos.Server},
-		{Name: "operator-proxy", Root: cfg.Repos.OperatorProxy},
 		{Name: "vault", Root: cfg.Repos.Vault},
 		{Name: "platform-config", Root: cfg.Repos.PlatformConfig},
 	}
@@ -288,7 +295,9 @@ func releaseLockObservedSection(section map[string]any, keys []string) (map[stri
 	return observed, nil
 }
 
-func validateReleaseLockSectionSchema(name string, section map[string]any, observedKeys, annotationKeys []string) error {
+// Observed and annotation keys are required. Retired keys are optional, but a
+// present retired value keeps the canonical form it was attested with.
+func validateReleaseLockSectionSchema(name string, section map[string]any, observedKeys, annotationKeys, retiredKeys []string) error {
 	if section == nil {
 		return fmt.Errorf("release lock section %s is missing", name)
 	}
@@ -302,16 +311,23 @@ func validateReleaseLockSectionSchema(name string, section map[string]any, obser
 			return fmt.Errorf("release lock field %s.%s is unresolved", name, key)
 		}
 	}
+	allowed := releaseKeySet(observedKeys, annotationKeys, retiredKeys)
 	for key := range section {
-		if _, ok := expected[key]; !ok {
+		if _, ok := allowed[key]; !ok {
 			return fmt.Errorf("release lock %s.%s is not in the release schema", name, key)
 		}
 	}
-	observed, err := releaseLockObservedSection(section, observedKeys)
+	checkedKeys := slices.Clone(observedKeys)
+	for _, key := range retiredKeys {
+		if _, ok := section[key]; ok {
+			checkedKeys = append(checkedKeys, key)
+		}
+	}
+	checked, err := releaseLockObservedSection(section, checkedKeys)
 	if err != nil {
 		return err
 	}
-	return validateObservedReleaseSection(name, observed, observedKeys)
+	return validateObservedReleaseSection(name, checked, checkedKeys)
 }
 
 func validateReleaseLockStatic(lock *ReleaseLock) error {
@@ -341,19 +357,16 @@ func validateReleaseLockStaticFields(lock *ReleaseLock) error {
 			return fmt.Errorf("dependency %s is not digest-pinned", name)
 		}
 	}
-	if err := validateReleaseLockSectionSchema("evm_build", lock.EVMBuild, releaseEVMObservedKeys, releaseEVMAnnotationKeys); err != nil {
+	if err := validateReleaseLockSectionSchema("evm_build", lock.EVMBuild, releaseEVMObservedKeys, releaseEVMAnnotationKeys, nil); err != nil {
 		return err
 	}
-	if err := validateReleaseLockSectionSchema("repositories", lock.Repositories, releaseRepositoryObservedKeys, releaseRepositoryAnnotationKeys); err != nil {
+	if err := validateReleaseLockSectionSchema("repositories", lock.Repositories, releaseRepositoryObservedKeys, releaseRepositoryAnnotationKeys, releaseRepositoryRetiredKeys); err != nil {
 		return err
 	}
-	if err := validateReleaseLockSectionSchema("interfaces", lock.Interfaces, releaseInterfaceObservedKeys, nil); err != nil {
+	if err := validateReleaseLockSectionSchema("interfaces", lock.Interfaces, releaseInterfaceObservedKeys, nil, nil); err != nil {
 		return err
 	}
-	if err := validateReleaseLockSectionSchema("infrastructure", lock.Infrastructure, releaseInfrastructureObservedKeys, nil); err != nil {
-		return err
-	}
-	if err := validateReleaseRepositorySchema(lock.Repositories); err != nil {
+	if err := validateReleaseLockSectionSchema("infrastructure", lock.Infrastructure, releaseInfrastructureObservedKeys, nil, nil); err != nil {
 		return err
 	}
 	for _, key := range releaseRepositoryAnnotationKeys {

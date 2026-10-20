@@ -22,19 +22,20 @@ const economicConservationArchiveRequestSchema = "urnetwork-economic-conservatio
 const economicConservationArchivePlanSchema = "urnetwork-economic-conservation-archive-plan-v1"
 
 type economicConservationArchiveRequest struct {
-	NativeRenewal      *economicConservationNativeRenewal `json:"native_approval_adoption,omitempty"`
-	ClaimWindows       []economicConservationClaimWindow  `json:"claim_windows,omitempty"`
-	FeeRevision        *economicConservationFeeRevision   `json:"native_fee_revision,omitempty"`
-	RetireNativeFees   bool                               `json:"retire_native_fees,omitempty"`
-	Schema             string                             `json:"schema"`
-	Policy             economicConservationPolicy         `json:"original_policy"`
-	Original           monitorHistoryReference            `json:"original"`
-	ArchivePath        string                             `json:"archive_path"`
-	FormerWriterFence  planFileReference                  `json:"former_writer_fence"`
-	FutureSegments     uint64                             `json:"future_segments"`
-	FutureIndexEntries uint64                             `json:"future_index_entries"`
-	FutureIndexBytes   uint64                             `json:"future_index_bytes"`
-	Renewal            *economicConservationRenewal       `json:"resource_renewal,omitempty"`
+	RetainPrincipalOriginals bool                               `json:"retain_principal_originals,omitempty"`
+	NativeRenewal            *economicConservationNativeRenewal `json:"native_approval_adoption,omitempty"`
+	ClaimWindows             []economicConservationClaimWindow  `json:"claim_windows,omitempty"`
+	FeeRevision              *economicConservationFeeRevision   `json:"native_fee_revision,omitempty"`
+	RetireNativeFees         bool                               `json:"retire_native_fees,omitempty"`
+	Schema                   string                             `json:"schema"`
+	Policy                   economicConservationPolicy         `json:"original_policy"`
+	Original                 monitorHistoryReference            `json:"original"`
+	ArchivePath              string                             `json:"archive_path"`
+	FormerWriterFence        planFileReference                  `json:"former_writer_fence"`
+	FutureSegments           uint64                             `json:"future_segments"`
+	FutureIndexEntries       uint64                             `json:"future_index_entries"`
+	FutureIndexBytes         uint64                             `json:"future_index_bytes"`
+	Renewal                  *economicConservationRenewal       `json:"resource_renewal,omitempty"`
 }
 
 type economicConservationArchivePlan struct {
@@ -179,7 +180,7 @@ func buildEconomicConservationArchivePlan(ctx context.Context, request economicC
 	}
 	archive := request.Original
 	archive.Path = request.ArchivePath
-	compacted, err := compactEconomicConservationWithFeeUpdates(ctx, request.Policy, state, archive, request.Renewal, request.RetireNativeFees, request.FeeRevision)
+	compacted, err := compactEconomicConservationWithPrincipalRetention(ctx, request.Policy, state, archive, request.Renewal, request.RetireNativeFees, request.FeeRevision, request.RetainPrincipalOriginals)
 	if err != nil {
 		return plan, nil, err
 	}
@@ -224,12 +225,15 @@ func buildEconomicConservationArchivePlan(ctx context.Context, request economicC
 	plan = economicConservationArchivePlan{Schema: economicConservationArchivePlanSchema, Request: request, Declaration: declaration, Archive: archive, Next: monitorHistoryReference{Path: request.Original.Path, Bytes: uint64(len(next)), Sha256: monitorReadDigest(next)}, Resources: resources}
 	plan.RequiredSegments = 2 * (uint64(len(compacted.Archive.Segments)) + request.FutureSegments)
 	plan.RequiredIndexEntries = 2 * (view.entries + view.claimBasisEntries + request.FutureIndexEntries)
-	plan.RequiredIndexBytes = 2 * (view.bytes + view.claimBasisBytes + request.FutureIndexBytes)
+	plan.RequiredIndexBytes = 2 * (view.bytes + view.claimBasisBytes + view.principalReservedBytes + request.FutureIndexBytes)
 	// Catalog paths and hot liabilities share one fixed head. Reserving an
 	// additional worst-case reference for each forecast segment avoids a count
 	// revision accidentally exhausting the serialized owner before publication.
 	// Admitted control characters can expand each pathname byte sixfold in JSON.
 	referenceBytes, feeSummaryBytes := uint64(6*maximumMonitorHistoryPath+256), uint64(0)
+	if request.RetainPrincipalOriginals {
+		referenceBytes += 6*maximumMonitorHistoryPath + 256
+	}
 	if request.RetireNativeFees {
 		// Each future retirement also names its proof segment and retains
 		// one bounded census header, even if this snapshot has no fees yet.

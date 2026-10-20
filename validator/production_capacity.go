@@ -156,12 +156,12 @@ func validateProductionCapacityTransition(original, current *ReleaseConfig) erro
 // The preview uses this same arithmetic without inventing a signature. Only
 // the loader's authenticated envelope path may admit the resulting successor.
 func validateProductionCapacityRevision(original, current *ReleaseConfig, prior, next OwnerRecycleApproval) error {
-	if original == nil || current == nil || original.OwnerRecycleApproval == nil || prior.Production == nil || next.Production == nil {
+	if original == nil || current == nil || productionEconomicSelection(original) == nil || prior.Production == nil || next.Production == nil {
 		return errors.New("capacity revision has no authenticated production predecessor")
 	}
 	revision := current.ProductionCapacityRevision
 	if revision == nil || revision.Schema != ProductionCapacityRevisionSchema || revision.Margin != 2 ||
-		revision.PredecessorConfigHash != attemptHex32(prior.ConfigHash) || revision.PredecessorApprovalSha256 != original.OwnerRecycleApproval.Approval.SHA256 ||
+		revision.PredecessorConfigHash != attemptHex32(prior.ConfigHash) || revision.PredecessorApprovalSha256 != productionEconomicSelection(original).Approval.SHA256 ||
 		revision.EconomicApprovalSha256 != productionCapacityEconomicHash(prior) || productionCapacityEconomicHash(next) != revision.EconomicApprovalSha256 ||
 		revision.ValidThroughNativeBlock != prior.ValidThroughNativeBlock || revision.ValidThroughNativeEpoch != prior.Production.ValidThroughNativeEpoch ||
 		len(revision.Sources) != len(original.EvidenceV2.Operators) || len(revision.Sources) != len(original.Operators) || len(revision.Sources) == 0 {

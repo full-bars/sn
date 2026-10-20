@@ -221,7 +221,7 @@ func evmReceiptFacts(raw json.RawMessage, record evmActionRecord, plan evmCreate
 	action := plan.Config.Plan.Actions[plan.ActionIndex]
 	fee, _ := evmWei(action.FeeCapWei)
 	expectedAddress := plan.Address.Hex()
-	if plan.ActionIndex == 3 || plan.ActionIndex == 5 || plan.ActionIndex == 6 {
+	if action.To != nil {
 		expectedAddress = ""
 		if !bytes.Equal(fields["contractAddress"], []byte("null")) {
 			return result, 0, errors.New("contract call receipt requires a null CREATE address")
@@ -232,7 +232,7 @@ func evmReceiptFacts(raw json.RawMessage, record evmActionRecord, plan evmCreate
 			return result, 0, errors.New("contract call receipt sender or target differs")
 		}
 	}
-	if plan.ActionIndex == 4 {
+	if plan.actionIs("proxy-create", "proxy2-create") {
 		from, fromErr := textField("from")
 		if !bytes.Equal(fields["to"], []byte("null")) || fromErr != nil || !common.IsHexAddress(from) || common.HexToAddress(from) != action.Sender {
 			return result, 0, errors.New("proxy receipt sender or CREATE target differs")
@@ -241,22 +241,22 @@ func evmReceiptFacts(raw json.RawMessage, record evmActionRecord, plan evmCreate
 	if result.TransactionHash != record.TransactionHash || !rootCanonicalHash(result.BlockHash) || result.BlockNumber == 0 || result.Status > 1 || result.GasUsed == 0 || result.GasUsed > action.Gas || values["effectiveGasPrice"].Cmp(fee) > 0 || result.Status == 1 && result.ContractAddress != expectedAddress || result.Status == 0 && result.ContractAddress != "" {
 		return result, 0, errors.New("EVM receipt contradicts the original CREATE")
 	}
-	if plan.ActionIndex == 3 {
+	if plan.actionIs("escrow-register", "escrow2-register") {
 		if err := evmEscrowReceiptEvent(fields, &result, values["transactionIndex"].Uint64(), plan); err != nil {
 			return result, 0, err
 		}
 	}
-	if plan.ActionIndex == 5 {
+	if plan.actionIs("reserve-link") {
 		if err := evmReserveLinkReceiptEvent(fields, &result, values["transactionIndex"].Uint64(), plan); err != nil {
 			return result, 0, err
 		}
 	}
-	if plan.ActionIndex == 6 {
+	if plan.actionIs("vault-link", "vault2-link") {
 		if err := evmVaultLinkReceiptEvent(fields, &result, values["transactionIndex"].Uint64(), plan); err != nil {
 			return result, 0, err
 		}
 	}
-	if plan.ActionIndex == 7 {
+	if plan.actionIs("evidence-create") {
 		if err := evmEvidenceCreateReceipt(fields, plan); err != nil {
 			return result, 0, err
 		}
@@ -416,7 +416,7 @@ func (self *evmOwnedChain) authenticateReceipt(ctx context.Context, plan evmCrea
 		}
 		for _, getter := range getters {
 			var output string
-			if err := self.read(ctx, "eth_call", []any{map[string]any{"to": plan.Address.Hex(), "data": getter.Data}, block}, &output); err != nil {
+			if err := self.read(ctx, "eth_call", []any{map[string]any{"to": getter.target(plan.Address), "data": getter.Data}, block}, &output); err != nil {
 				return receipt, err
 			}
 			if output != getter.Expected {
@@ -437,30 +437,36 @@ func (self *evmOwnedChain) authenticateReceipt(ctx context.Context, plan evmCrea
 		if len(plan.Storage) != 0 {
 			receipt.StorageHash = rootObjectHash(plan.Storage)
 		}
-		if plan.ActionIndex == 3 {
+		if plan.actionIs("escrow-register", "escrow2-register") {
 			if err := self.authenticateEscrowRegistration(ctx, plan, receipt, block); err != nil {
 				return receipt, err
 			}
 			receipt.RegistrationHash = evmEscrowRegistrationHash(plan, receipt)
 		}
-		if plan.ActionIndex == 4 {
+		if plan.actionIs("proxy-create", "proxy2-create") {
 			if err := self.authenticateProxyImplementation(ctx, plan, block); err != nil {
 				return receipt, err
 			}
 		}
-		if plan.ActionIndex == 5 {
+		if plan.actionIs("reserve-link") {
 			if err := self.authenticateReserveRecorder(ctx, plan, block); err != nil {
 				return receipt, err
 			}
 			receipt.RecorderBindingHash = evmReserveBindingHash(plan, receipt)
 		}
-		if plan.ActionIndex == 6 {
+		if plan.actionIs("vault-link") {
 			if err := self.authenticateVaultCoordinator(ctx, plan, block); err != nil {
 				return receipt, err
 			}
 			receipt.VaultBindingHash = evmVaultBindingHash(plan, receipt)
 		}
-		if plan.ActionIndex == 7 {
+		if plan.actionIs("vault2-link") {
+			if err := self.readbackSettlement2(ctx, plan, block); err != nil {
+				return receipt, err
+			}
+			receipt.VaultBindingHash = evmVaultBindingHash(plan, receipt)
+		}
+		if plan.actionIs("evidence-create") {
 			if err := self.authenticateEvidenceDependencies(ctx, plan, block); err != nil {
 				return receipt, err
 			}
@@ -625,22 +631,31 @@ func (self *evmOwnedChain) admitCurrent(ctx context.Context, plan evmCreatePlan,
 		result.Status = "pending-nonce-unresolved"
 		return result, nil
 	}
-	if plan.ActionIndex == 3 {
+	if plan.actionIs("escrow-register", "escrow2-register") {
 		if err := self.admitEscrowTarget(ctx, plan, block, code); err != nil {
 			return result, err
 		}
-	} else if plan.ActionIndex == 5 {
+	} else if plan.actionIs("reserve-link") {
 		if err := self.admitReserveLinkTarget(ctx, plan, block, code); err != nil {
 			return result, err
 		}
-	} else if plan.ActionIndex == 6 {
+	} else if plan.actionIs("vault-link") {
 		if err := self.admitVaultLinkTarget(ctx, plan, block, code); err != nil {
+			return result, err
+		}
+	} else if plan.actionIs("vault2-link") {
+		if err := self.admitVault2LinkTarget(ctx, plan, block); err != nil {
 			return result, err
 		}
 	} else if code != "0x" {
 		return result, errors.New("CREATE address already has pending code without its canonical receipt")
 	}
-	if plan.ActionIndex == 7 {
+	if plan.actionIs("vault2-create") {
+		if err := self.admitVault2Create(ctx, plan, block); err != nil {
+			return result, err
+		}
+	}
+	if plan.actionIs("evidence-create") {
 		if err := self.admitEvidenceCreate(ctx, plan, block); err != nil {
 			return result, err
 		}

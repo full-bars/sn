@@ -1,20 +1,21 @@
 # Chain preparation, readiness and retained trim action
 
 `sn-mainnet bootstrap-chain plan/apply/resume` binds the retained owner-trim
-review, two protected UR schema-3 configs, separately approved root-service
-config, signed contract phase and signed root phase to one durable local
-preparation. Apply prepares the existing reserve
+review, the protected UR schema-3 configs (two, or one under v5), separately
+approved root-service config, signed contract phase and signed root phase to one
+durable local preparation. Apply prepares the existing reserve
 CREATE custody owner and [root custody owners](BOOTSTRAP-ROOT.md). It does not
 open an RPC connection, import a signature, issue a transaction or start a
 service. These three preparation modes have no online or submission option.
 The separate `readiness` mode observes current finalized role prerequisites
-from an explicitly selected route after checking the original v3 custody.
+from an explicitly selected route after checking the original v3, v4 or v5
+custody.
 
 This closes the missing composition and restart boundary between the separate
 preparation commands. Every result retains `activation_ready: false`,
 `network_effects: false` and the outstanding chain phases. A successful local
 preparation does not establish a safe executed trim, full contract installation,
-two eligible validators, a running root role or realized native economics.
+eligible UR validators, a running root role or realized native economics.
 
 ## Offline contract installation prerequisites
 
@@ -224,26 +225,30 @@ sn-mainnet bootstrap-chain readiness --config /private/chain.json \
 ```
 
 The command reloads the original independently pinned approvals and requires
-the same accepted v3 plan and run directory. It opens all five existing markers
-read-only, takes nonblocking shared locks, and verifies the complete original
-journals and their signature lineage. Missing or interrupted state is unresolved;
-readiness never creates, repairs, signs, imports or advances it. Concurrent
+the same accepted v3, v4 or v5 plan and run directory. It opens all five existing
+markers (three for passive-root v4 or v5) read-only, takes nonblocking shared
+locks, and verifies the complete original journals and their signature lineage.
+Missing or interrupted state is unresolved; readiness never creates, repairs,
+signs, imports or advances it. Concurrent
 custody writers must finish before observation starts. V1/v2 journals retain
 their original resume behavior and cannot acquire v3 readiness scope.
 
 One bounded census at one authenticated finalized block checks the approved
-network, runtime code and metadata, subnet owner/generation, both UR hotkey,
-coldkey and registration generations, current activity and validator permits,
-signed native block windows, and the signed maximum subnet census count. The
-separate netuid-0 role checks its exact approved uid and registration generation,
-mortal action window and canonical era checkpoint. A canonical block recheck
+network, runtime code and metadata, subnet owner/generation, every UR role's
+hotkey, coldkey and registration generation (two roles, or v5's one), current
+activity and validator permits, signed native block windows, and the signed
+maximum subnet census count. The separate netuid-0 role checks its exact approved
+uid and registration generation, mortal action window and canonical era
+checkpoint. When a v5 root seat uses the sole UR hotkey, its netuid-0 and SN25
+registrations are still observed as separate roles. A canonical block recheck
 after the checkpoint read detects a changed finalized mapping. Original trim
 removal requests remain review evidence; completing these role checks does not
 claim the old miners were removed or that the trim is executable.
 
 Results use `urnetwork-mainnet-bootstrap-chain-readiness-v1`, bind the accepted
-plan, the five retained journal hashes, the complete census envelope and distinct
-majority/secondary/root blockers. `observed-prerequisites` means only the listed
+plan, the retained journal hashes (five, or three for v4 or v5), the complete
+census envelope and distinct blockers for each UR role (majority and secondary,
+or v5's sole) and for root. `observed-prerequisites` means only the listed
 read-only checks passed; `blocked` retains a complete observation with explicit
 conflicts. An unavailable route, unsupported or changed runtime, incomplete
 census or changed finalized mapping returns `unresolved`, with no partial role
@@ -254,10 +259,15 @@ observes again; it never reuses an earlier readiness result as authority.
 `activation_ready` remain false. Each role separately retains its missing
 activation prerequisites. These include the UR native epoch window and signed
 activation checkpoint, production admission/operator health, deployed contract
-verification, effective stake majority, and signing-device/global custody
-fencing. Root effective delegated stake, eligibility, nonce/weight requirements,
-independent current authority and actual service activation remain unresolved.
-All five original pending chain phases remain in every result.
+verification and signing-device/global custody fencing. The majority role, and
+v5's sole role, also keeps `EFFECTIVE_STAKE_MAJORITY_UNVERIFIED`: a sole
+validator must hold the consensus share by itself. Root effective delegated
+stake, eligibility, nonce/weight requirements, independent current authority and
+actual service activation remain unresolved. All five pending chain phases
+remain in every result. V5 seals its third phase as
+`one-ur-validator-production-admission-and-healthy-operators` instead of
+`two-ur-validator-production-admissions-and-healthy-operators`; every two-role
+schema keeps the original names and plan hashes.
 
 Exit 0 means the bounded observed prerequisites passed. Exit 3 means an
 observed blocker, integrity refusal or old-scope refusal; exit 1 means unresolved
@@ -372,7 +382,7 @@ The strict JSON configuration has these fields:
 
 | Field | Required value |
 | --- | --- |
-| `schema` | `urnetwork-mainnet-bootstrap-chain-config-v3` for new preparation |
+| `schema` | For new preparation: `urnetwork-mainnet-bootstrap-chain-config-v3` (legacy root custody, two UR roles), `-v4` ([passive root](ROOT-PASSIVE-SERVICE.md), two UR roles) or `-v5` (passive root, one UR role; the SN25 launch form, owner decision of October 7) |
 | `deployment_id` | Same independently chosen deployment as both child plans |
 | `netuid` | `25` |
 | `network` | Independently provisioned `native_chain`, `genesis_hash`, `evm_chain_id: 964` |
@@ -381,44 +391,52 @@ The strict JSON configuration has these fields:
 | `owner_trim_plan` | `{path, sha256}` for the retained safe partial owner-trim plan |
 | `contracts` | `{path, sha256}` for the signed [contract phase config](BOOTSTRAP-CONTRACTS.md) |
 | `root` | `{path, sha256}` for the [root bootstrap config](BOOTSTRAP-ROOT.md) |
-| `ur_validators` | Exactly two public role declarations described below |
+| `ur_validators` | Exactly two public role declarations described below, or exactly one under v5 |
 | `root_validator` | Independent netuid-0 role, action/config approval keys and pinned config approval described below |
 
 Each role declares `validator_id`, `hotkey_account_id`, `coldkey_account_id`,
 `registration_block`, `config: {path, sha256}`, `role`, `implementation`, and
 `approval_public_key_ed25519`. The roles are ordered `majority`, then
-`secondary`; both declare `implementation: "sn/validator"`. Each independent
-approval signer is a canonical nonzero `0x`-prefixed 32-byte Ed25519 public key.
-The IDs, hotkeys, config
-paths and config byte hashes must differ. Each exact registration generation
-must appear under `ur-validator` in the retained trim policy's protection set
-and in the selected plan's exact surviving generations.
-The separate root hotkey cannot count as either UR validator or appear in the
-requested trim removals. The planned reserve hotkey is also excluded from
-requested removals. The root's exact UID, hotkey, coldkey and registration block
-must match the retained excluded-root census.
+`secondary`; v5 has exactly one role, `sole`, and neither form accepts the
+other's labels. Every role declares `implementation: "sn/validator"`. Each
+independent approval signer is a canonical nonzero `0x`-prefixed 32-byte Ed25519
+public key. Two roles' IDs, hotkeys, config paths and config byte hashes must
+differ. Each exact registration generation must appear under `ur-validator` in
+the retained trim policy's protection set and in the selected plan's exact
+surviving generations. The separate root hotkey cannot count as a UR validator
+or appear in the requested trim removals. Only v5 lets the root seat use the sole
+UR hotkey, and only when both declare the same coldkey; the seat is still a
+separate root role and adds no second UR validator. The planned reserve hotkey is
+also excluded from requested removals. The root's exact UID, hotkey, coldkey and
+registration block must match the retained excluded-root census.
 
-V2 and v3 decode the exact pinned config bytes through the standard validator's
-strict grammar and full initial schema-3 validation, then verifies the declared
-content-addressed production approval and its domain-separated signature.
-Signed hotkey, validator ID, network and deployment must match the independently
-selected role. Runtime version, code/metadata and reviewed source must match
-the trim and signed child scopes; the approved subnet owner must match the trim
-policy. Both approvals include both protected UR hotkeys and agree on their
-initial policy, runtime, census, activation window and contract declarations.
+V2 through v5 decode the exact pinned config bytes through the standard
+validator's strict grammar and full initial schema-3 validation, then verify the
+declared content-addressed production approval and its domain-separated
+signature. Signed hotkey, validator ID, network and deployment must match the
+independently selected role. Runtime version, code/metadata and reviewed source
+must match the trim and signed child scopes; the approved subnet owner must match
+the trim policy. Every approval's production census includes every declared UR
+hotkey. Two approvals must also agree on their initial policy, runtime, census,
+activation window and contract declarations; a v5 approval has no peer.
 Distinct role custody namespaces cannot overlap other roles or bootstrap
-inputs, journals or lock markers.
+inputs, journals or lock markers. A v5 activation-pending config's declared
+custody paths are checked only for canonical spelling, distinctness and that
+overlap; they are never stat'd or opened, so bootstrap may run as an account
+other than the validator after the validator creates its private directories.
 
 The accepted plan retains these public signed facts under
 `ur_validator_config_inspections`. The result reports
 `ur_validator_configs_verified: true` and
-`two-signed-production-configs-verified-live-admission-pending`. This verifies
-config admission only. The intended majority label does not prove current
+`two-signed-production-configs-verified-live-admission-pending`; a v5 result,
+schema `urnetwork-mainnet-bootstrap-chain-result-v5`, reports
+`one-signed-production-config-verified-live-admission-pending`. This verifies
+config admission only. The intended majority or sole label does not prove current
 stake, permit, key ownership, binary identity or a healthy running service.
 Coldkey and registration generation are matched against the retained protected
 census; the producer approval itself signs the hotkey, not its live generation.
 Actual generation, current signed window, deployed contract addresses/code,
-operator evidence and health, runtime capability and two live validators remain
+operator evidence and health, runtime capability and the live validators remain
 pending. No credential or operator evidence contents are opened and no signature
 is created. The later [production path](VALIDATOR-PRODUCTION-RUNTIME.md) must
 perform its own current admission before starting a writer.
@@ -483,7 +501,7 @@ These facts authenticate offline configuration only. Current root eligibility,
 effective stake, seat retention, delegation and basket rights, source-to-Wasm
 authority, live route, global custody fencing, fee exposure, key possession and
 the actual service/binary remain unproved. No service loop or current-authority
-adapter is attached. The root role remains separate from both UR validators.
+adapter is attached. The root role remains separate from the UR validators.
 
 V3 supports the existing explicit-root-weight service only. The read-only
 observer's `accumulate_in_place` policy remains a separate workflow and requires
@@ -516,9 +534,10 @@ sn-mainnet bootstrap-chain apply --config /secure/ur-mainnet/chain-preparation.j
 sn-mainnet bootstrap-chain resume --config /secure/ur-mainnet/chain-preparation.json --run-dir /secure/ur-mainnet/run --accept-plan-hash "$CHAIN_PREPARATION_HASH"
 ```
 
-Plan is read-only and deterministic. The dedicated
-`urnetwork-mainnet-bootstrap-chain-preparation-v3` seal is SHA256 over that
-schema, a zero byte and canonical Go JSON with an empty `content_hash`.
+Plan is read-only and deterministic. The dedicated preparation seal,
+`urnetwork-mainnet-bootstrap-chain-preparation-v3`, `-v4` or `-v5` to match the
+config schema, is SHA256 over that schema, a zero byte and canonical Go JSON with
+an empty `content_hash`.
 Neither the blocked review graph hash nor an individual child plan hash is
 accepted as the local composition confirmation.
 
@@ -529,8 +548,8 @@ result continues to say
 facts or verified flag are added. V2 retains its two verified UR configs and
 original v2 result, without root-role inspection or verified fields. Neither old
 schema accepts a root-role declaration or acquires root-config authority.
-New `apply` requires v3. A new v3 plan cannot adopt or upgrade already claimed
-v1/v2 custody, even with a newly accepted hash.
+New `apply` requires v3, v4 or v5. A new plan cannot adopt or upgrade already
+claimed v1/v2 custody, even with a newly accepted hash.
 
 ## Ownership and recovery
 
@@ -582,6 +601,15 @@ scope; v1 recovery retains its existing compatibility check. Its separate
 [v3 qualification](evidence/root-role-admission-qualification-20260928.md)
 records 403 full normal roots and all 38 bootstrap-chain race roots. The
 earlier v1/v2 receipts below retain their original narrower scope.
+
+V5 adds deterministic regressions for one-role offline preparation under its own
+seal and phase names, unchanged two-role plan hashes, schema boundaries (one role
+under v4, two roles or a `majority` label under v5, legacy root custody under v5,
+a shared root hotkey under v4 or with a different coldkey), separate readiness
+observation of a shared hotkey with the retained stake-majority blocker, the sole
+role's contract declaration and receipt scan floor, and refusal by the two-unit
+[validator activation](VALIDATOR-ACTIVATION.md) owner. No qualification receipt
+for v5 is recorded here yet.
 
 V2 adds deterministic controls for real signed two-role admission, absent or
 wrong-domain signatures, independent signer/role/runtime/source disagreement,

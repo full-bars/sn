@@ -137,10 +137,8 @@ func TestEvmEvidenceCreateRejectsChangedConstructor(t *testing.T) {
 			t.Fatalf("changed evidence %s escaped selection rejection: %d %s", fault, code, diagnostic)
 		}
 		for _, name := range []string{evmCreateStateFile, evmVaultCreateStateFile, evmCoordinatorCreateStateFile, evmEscrowRegisterStateFile, evmProxyCreateStateFile, evmReserveLinkStateFile, evmVaultLinkStateFile, evmEvidenceCreateStateFile} {
-			for _, suffix := range []string{"", ".lock"} {
-				if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, name+suffix)); !errors.Is(err, os.ErrNotExist) {
-					t.Fatalf("changed constructor %s opened %s%s: %v", fault, name, suffix, err)
-				}
+			if err := f.unclaimed(name); err != nil {
+				t.Fatalf("changed constructor %s opened %s: %v", fault, name, err)
 			}
 		}
 	}
@@ -163,10 +161,8 @@ func TestEvmEvidenceCreateBindsApprovedDeploymentDomain(t *testing.T) {
 			t.Fatalf("evidence %s escaped deployment-domain selection rejection: %d %s", command, code, diagnostic)
 		}
 		for _, name := range []string{evmCreateStateFile, evmVaultCreateStateFile, evmCoordinatorCreateStateFile, evmEscrowRegisterStateFile, evmProxyCreateStateFile, evmReserveLinkStateFile, evmVaultLinkStateFile, evmEvidenceCreateStateFile} {
-			for _, suffix := range []string{"", ".lock"} {
-				if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, name+suffix)); !errors.Is(err, os.ErrNotExist) {
-					t.Fatalf("changed deployment domain opened %s%s: %v", name, suffix, err)
-				}
+			if err := f.unclaimed(name); err != nil {
+				t.Fatalf("changed deployment domain opened %s: %v", name, err)
 			}
 		}
 	}
@@ -536,7 +532,7 @@ func TestEvmEvidenceCreateRefusesRevertedVaultBinding(t *testing.T) {
 	if _, code, diagnostic := f.command("apply", "--action", "evidence-create"); code != 3 || !strings.Contains(diagnostic, "successful vault coordinator binding") {
 		t.Fatalf("reverted vault binding admitted evidence: %d %s", code, diagnostic)
 	}
-	if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmEvidenceCreateStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) {
+	if err := f.unclaimed(evmEvidenceCreateStateFile); err != nil {
 		t.Fatalf("reverted binding acquired evidence custody: %v", err)
 	}
 }

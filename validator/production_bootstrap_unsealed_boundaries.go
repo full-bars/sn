@@ -102,11 +102,11 @@ type productionBootstrapUnsealedTail struct {
 }
 
 // Borrows the live source owners through every real Rpc. The returned copy is
-// all-or-nothing across both operators, including empty tails. Local custody
+// all-or-nothing across every operator, including empty tails. Local custody
 // failures join transport errors before the enclosing retry owner classifies
 // them, so a timeout never hides a source change or refreshes protocol clocks.
 func (self *productionBootstrapUnsealedOwner) authenticateTailBoundaries(ctx context.Context, archive *ReleaseEvidenceV2Archive, inventory *ProductionBootstrapUnsealedObservation, chain *ChainClient) (result *ProductionBootstrapUnsealedObservation, resultErr error) {
-	if ctx == nil || self == nil || archive == nil || archive.closed || archive.owner == nil || archive.history == nil || inventory == nil || len(self.tails) != 2 || len(inventory.Ledgers) != 2 || chain == nil {
+	if ctx == nil || self == nil || archive == nil || archive.closed || archive.owner == nil || archive.history == nil || inventory == nil || validateReleaseEvidenceV2ReplicaCount(len(self.tails)) != nil || len(inventory.Ledgers) != len(self.tails) || chain == nil {
 		return nil, errors.New("unsealed tail boundary authentication lacks its replay owner")
 	}
 	defer func() {

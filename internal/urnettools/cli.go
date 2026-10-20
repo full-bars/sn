@@ -239,10 +239,16 @@ Proxy Management [target]:
   proxy trim <N>                  ✂   hold running proxies at N, shed worst first (F -> A)
   report [<url>|off]              📡  set report URL at runtime (no restart)
 
+Wallet Consent [target]:
+  wallet status                   🪪  show the network wallet consent (read-only)
+  wallet challenge <coldkey>      🪪  fetch the consent statement to sign (signs nothing)
+  wallet set <coldkey>            🪪  submit a signed consent (--coldkey_seed_file: own workstation only)
+  wallet sign <coldkey>           🪪  sign with the browser helper; the seed never leaves the extension
+
 Maintenance [target]:
   reinstall                       🔧  reinstall provider
   uninstall                       🗑   uninstall provider
-  auto-update <on|off>            ⏰  manage auto-update schedule
+  auto-update <daily|weekly|monthly|off>  ⏰  manage auto-update schedule
   auto-start <on|off>             ▶   toggle auto-start on login
 
 Providers are identified three ways (use any; the = form works too,
@@ -610,7 +616,12 @@ func renderStatusBase(p Provider) error {
 		renderStatusPanel(p)
 		return nil
 	}
-	if err := renderSystemctlStatus(p); err == nil {
+	// OpenRC host: show the supervisor's view only when the resolved target
+	// IS the service's supervised process (or no process was resolved); the
+	// table below carries the live control-socket view either way.
+	if openrcActive() && openrcServiceInstalled() && p.Unit == "" && (p.PID == 0 || providerSupervisedByOpenRCFn(p)) {
+		_ = renderOpenRCStatus()
+	} else if err := renderSystemctlStatus(p); err == nil {
 		return nil
 	} else if p.Unit != "" {
 		// Weird: unit set but systemctl failed; surface it.

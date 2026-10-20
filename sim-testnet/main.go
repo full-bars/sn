@@ -28,32 +28,32 @@ var version = "1.0"
 var defaultConfigPath = "sim-testnet/testnet.yml"
 
 type cliOptions struct {
-	DiagnosticOutput                                                                                                                string
-	ProvisionalReleaseRunID                                                                                                         string
-	WaitForTerminal                                                                                                                 bool
-	RolloverPlan, RolloverPlanHash                                                                                                  string
-	RolloverEpoch, RolloverGeneration                                                                                               uint64
-	RolloverSourceRole                                                                                                              bool
-	ProbeRecoveryExecute                                                                                                            bool
-	ProbeRecoveryReviseGas                                                                                                          bool
-	ProbeRecoveryBudget, ProbeRecoveryBudgetSHA256                                                                                  string
-	RelayContinuationPlan                                                                                                           string
-	RelayEndBlock                                                                                                                   uint64
-	RelaySlots                                                                                                                      uint64
-	RelaySourceLimitMultiplier                                                                                                      uint64
-	RenewalPlan, RenewalTransactionEvidence                                                                                         string
-	RenewalTransactions                                                                                                             []string
-	RenewalValidFrom, RenewalValidTo, RenewalFeePerGas                                                                              uint64
-	StrictHistoryAdoption, StrictHistoryAdoptionSHA256                                                                              string
-	FirstNativeEpoch                                                                                                                uint64
-	RepairArtifact, RepairArtifactSHA256, RepairBudget, RepairBudgetSHA256                                                          string
-	ProvisionalObservationTimeout                                                                                                   time.Duration
-	ProvisionalRPCAuthority                                                                                                         string
-	OwnedRPCAuthority                                                                                                               string
-	ThenReleaseCandidate                                                                                                            bool
-	Config, SNRepo, ServerRepo, OperatorProxyRepo, VaultRepo, PlatformConfigRepo, StateDir, PlanHash, Name, Manifest, RunID, Format string
-	Apply, Detach, ProvisionalResume, ProvisionalCapture, PrepareOnly                                                               bool
-	AllowanceOnly                                                                                                                   bool
+	DiagnosticOutput                                                                                             string
+	ProvisionalReleaseRunID                                                                                      string
+	WaitForTerminal                                                                                              bool
+	RolloverPlan, RolloverPlanHash                                                                               string
+	RolloverEpoch, RolloverGeneration                                                                            uint64
+	RolloverSourceRole                                                                                           bool
+	ProbeRecoveryExecute                                                                                         bool
+	ProbeRecoveryReviseGas                                                                                       bool
+	ProbeRecoveryBudget, ProbeRecoveryBudgetSHA256                                                               string
+	RelayContinuationPlan                                                                                        string
+	RelayEndBlock                                                                                                uint64
+	RelaySlots                                                                                                   uint64
+	RelaySourceLimitMultiplier                                                                                   uint64
+	RenewalPlan, RenewalTransactionEvidence                                                                      string
+	RenewalTransactions                                                                                          []string
+	RenewalValidFrom, RenewalValidTo, RenewalFeePerGas                                                           uint64
+	StrictHistoryAdoption, StrictHistoryAdoptionSHA256                                                           string
+	FirstNativeEpoch                                                                                             uint64
+	RepairArtifact, RepairArtifactSHA256, RepairBudget, RepairBudgetSHA256                                       string
+	ProvisionalObservationTimeout                                                                                time.Duration
+	ProvisionalRPCAuthority                                                                                      string
+	OwnedRPCAuthority                                                                                            string
+	ThenReleaseCandidate                                                                                         bool
+	Config, SNRepo, ServerRepo, VaultRepo, PlatformConfigRepo, StateDir, PlanHash, Name, Manifest, RunID, Format string
+	Apply, Detach, ProvisionalResume, ProvisionalCapture, PrepareOnly                                            bool
+	AllowanceOnly                                                                                                bool
 }
 
 func usage() {
@@ -89,7 +89,6 @@ Common options:
   --state-dir PATH    persistent state root (default <config-dir>/runs)
   --sn-repo PATH      repository discovery override
   --server-repo PATH  repository discovery override
-  --operator-proxy-repo PATH  repository discovery override
   --vault-repo PATH   repository discovery override
   --platform-config-repo PATH  platform config repository override
   --format human|json
@@ -153,7 +152,6 @@ func parseCLI(args []string) (string, cliOptions, error) {
 	fs.StringVar(&o.StateDir, "state-dir", "", "")
 	fs.StringVar(&o.SNRepo, "sn-repo", "", "")
 	fs.StringVar(&o.ServerRepo, "server-repo", "", "")
-	fs.StringVar(&o.OperatorProxyRepo, "operator-proxy-repo", "", "")
 	fs.StringVar(&o.VaultRepo, "vault-repo", "", "")
 	fs.StringVar(&o.PlatformConfigRepo, "platform-config-repo", "", "")
 	fs.StringVar(&o.PlanHash, "plan-hash", "", "")
@@ -523,7 +521,7 @@ func runMainWithReleaseDependencies(args []string, loadResolved resolvedConfigLo
 	if loadResolved == nil {
 		return errors.New("resolved configuration loader is unavailable")
 	}
-	resolved, err := loadResolved(LoadOptions{ConfigPath: o.Config, SNRepo: o.SNRepo, ServerRepo: o.ServerRepo, OperatorProxyRepo: o.OperatorProxyRepo, VaultRepo: o.VaultRepo, PlatformConfigRepo: o.PlatformConfigRepo, RequireSecrets: requireSecrets})
+	resolved, err := loadResolved(LoadOptions{ConfigPath: o.Config, SNRepo: o.SNRepo, ServerRepo: o.ServerRepo, VaultRepo: o.VaultRepo, PlatformConfigRepo: o.PlatformConfigRepo, RequireSecrets: requireSecrets})
 	if err != nil {
 		return err
 	}

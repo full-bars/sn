@@ -4,7 +4,6 @@ package validator
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -37,15 +36,9 @@ func loadReleaseProductionRuntimeHistory(cfg *ReleaseConfig) error {
 	}
 	encoded := make([][]byte, len(cfg.ProductionRuntimeApprovals))
 	for index, reference := range cfg.ProductionRuntimeApprovals {
-		raw, sourceErr := ReadReleaseEvidenceV2File(context.Background(), reference, maximumReleaseMainnetRuntimeApprovalBytes)
-		if sourceErr != nil {
-			retained := reference
-			retained.Path = retainedProductionRuntimePath(cfg, reference.SHA256)
-			var err error
-			raw, err = ReadReleaseEvidenceV2File(context.Background(), retained, maximumReleaseMainnetRuntimeApprovalBytes)
-			if err != nil {
-				return fmt.Errorf("production runtime history %d: %w", index+1, errors.Join(sourceErr, err))
-			}
+		raw, err := readRetainedProductionFile(cfg, reference, maximumReleaseMainnetRuntimeApprovalBytes, retainedProductionRuntimePath(cfg, reference.SHA256))
+		if err != nil {
+			return fmt.Errorf("production runtime history %d: %w", index+1, err)
 		}
 		encoded[index] = raw
 	}

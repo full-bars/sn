@@ -9,6 +9,7 @@
 
 pub mod replay;
 pub mod historical;
+pub mod observation_profile;
 
 use frame_metadata::{RuntimeMetadataPrefixed, META_RESERVED};
 use parity_scale_codec::Decode;

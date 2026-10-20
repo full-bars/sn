@@ -56,8 +56,11 @@ const (
 	precompileProbeRuntimeParameter = "precompile_probe_runtime_hash"
 	fleetRefreshBatcherParameter    = "activated_fleet_batcher"
 	fleetCommitmentStorageParameter = "commitment_storage_schema"
-	// Persisted compatibility identifier: runtime 454 retains this exact v452
-	// SCALE shape, and changing the string would orphan authenticated plans.
+	// Persisted compatibility identifier of the fixed-u32 exact-block
+	// attestation, which runtime 454 retains; changing the string would orphan
+	// authenticated plans. The attested CommitmentInfo is now the tagged fleet
+	// format (crv4.EncodeFleetCommitmentInfo), so a plan whose commitments were
+	// published untagged fails its storage reads and must be rebuilt.
 	fleetCommitmentStorageV2              = "runtime-452-fixed-u32-exact-block-attestation-v2"
 	fleetCommitmentParallelGroupParameter = "parallel_commitment_group"
 	fleetCommitmentParallelWorkers        = 10
@@ -1826,7 +1829,7 @@ func buildPlanWithFundingAllocationAndRelayConfig(cfg *ResolvedConfig, facts *Se
 		lifecycleTerminalBarrier = id
 	}
 	add(Action{ID: "lifecycle.terminal.installed", Kind: "local", Target: fmt.Sprintf("fleet:%d", fleetLifecycleCompanionFleet), Description: "prove all canonical companion clients are rebound for terminal live topology", DependsOn: []string{lifecycleTerminalBarrier}})
-	add(Action{ID: "precompile.commitment-write", Kind: "substrate-extrinsic", Target: "head-fleet:1", Description: "replace the exact generation-2 fleet commitment with a finalized one-field SHA-256 conformance commitment", Parameters: map[string]string{fleetCommitmentStorageParameter: fleetCommitmentStorageV2, "canonical_generation": strconv.FormatUint(precompileCanonicalFleetGeneration, 10)}, DependsOn: []string{"churn.tournament-complete"}})
+	add(Action{ID: "precompile.commitment-write", Kind: "substrate-extrinsic", Target: "head-fleet:1", Description: "replace the exact generation-2 fleet commitment with a finalized tagged fleet-format conformance commitment", Parameters: map[string]string{fleetCommitmentStorageParameter: fleetCommitmentStorageV2, "canonical_generation": strconv.FormatUint(precompileCanonicalFleetGeneration, 10)}, DependsOn: []string{"churn.tournament-complete"}})
 	add(Action{ID: "precompile.commitment-restore", Kind: "substrate-extrinsic", Target: "head-fleet:1", Description: "restore the exact generation-2 fleet hash and prove the restored finalized bytes", Parameters: map[string]string{fleetCommitmentStorageParameter: fleetCommitmentStorageV2, "canonical_generation": strconv.FormatUint(precompileCanonicalFleetGeneration, 10)}, DependsOn: []string{"precompile.commitment-write"}})
 	add(Action{ID: "precompile.read-battery", Kind: "evm-read", Target: "runtime-454-precompiles", Description: "prove Blake2, Ed25519, sr25519, metagraph, neuron, staking, live UID, absent UID, mirror custody, and minimum stake at one finalized head", DependsOn: []string{"precompile.commitment-restore", "precompile.probe-deploy"}})
 	add(Action{ID: "precompile.seed", Kind: "evm-transaction", Target: "validator:1", Description: "convert the approved TAO dust ceiling into probe-coldkey alpha and record exact live units", Parameters: map[string]string{"maximum_tao_rao": fmt.Sprint(facts.ProbeTAORao), "nominator_minimum_rao": fmt.Sprint(facts.NominatorMinimumRao)}, Spend: Spend{EVMGasWei: probeGasCaps["precompile.seed"]}, DependsOn: []string{"precompile.read-battery"}})

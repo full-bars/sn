@@ -75,7 +75,7 @@ func newSourceRolePredecessorTestFixtureV2(t *testing.T) *sourceRolePredecessorT
 		t.Fatal(err)
 	}
 	signer := &crv4.Chain{Meta: metadata, GenesisHash: f.native.genesis, Runtime: &types.RuntimeVersion{SpecName: "node-subtensor", SpecVersion: 455, TransactionVersion: 1}}
-	anchor, err := signer.NewSetFleetCommitmentCall(cfg.Netuid, releaseNativeSourceHashV2(f.measurement))
+	anchor, err := signer.NewSetSourceCommitmentCall(cfg.Netuid, releaseNativeSourceHashV2(f.measurement))
 	if err != nil {
 		t.Fatal(err)
 	}

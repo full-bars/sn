@@ -31,6 +31,9 @@ type measurementRunSettings struct {
 	contract         string
 	adoptLegacyKey   bool
 	strategySettings *connect.ClientStrategySettings
+	// the command that writes networkPath, named when its sign-in is rejected;
+	// empty is the single-operator `validator auth`
+	authCommand string
 }
 
 // Test observers stop only after actual authentication or worker completion.
@@ -84,6 +87,15 @@ func measurementAuthenticationRetryable(err error, depth int) bool {
 	}, depth, &remaining)
 }
 
+// A registration the server refused for its network sign-in needs a new
+// sign-in at networkPath, not measurement custody recovery.
+func measurementSignInRejected(networkPath string, authCommand string, err error) error {
+	if authCommand == "" {
+		authCommand = "validator auth"
+	}
+	return fmt.Errorf("the network sign-in at %s was rejected or has expired; run `%s` to sign in again: %w", networkPath, authCommand, err)
+}
+
 func authenticateMeasurement(ctx context.Context, api *sdk.Api, owner *clientauth.ValidatorMeasurementClientKeyOwner, networkPath string) (string, connect.Id, error) {
 	hooks, _ := ctx.Value(measurementRunHooksKey{}).(measurementRunHooks)
 	for {
@@ -100,6 +112,9 @@ func authenticateMeasurement(ctx context.Context, api *sdk.Api, owner *clientaut
 		}
 		if ctx.Err() != nil {
 			return "", connect.Id{}, errors.Join(err, ctx.Err())
+		}
+		if clientauth.IsNetworkCredentialRejected(err) {
+			return "", connect.Id{}, err
 		}
 		if !measurementAuthenticationRetryable(err, 0) {
 			return "", connect.Id{}, fmt.Errorf("measurement client identity requires recovery: %w", err)
@@ -202,6 +217,9 @@ func (self measurementRunSettings) run(parent context.Context, output io.Writer)
 	}()
 	token, id, err := authenticateMeasurement(ctx, api, owner, self.networkPath)
 	if err != nil {
+		if clientauth.IsNetworkCredentialRejected(err) {
+			return measurementSignInRejected(self.networkPath, self.authCommand, err)
+		}
 		return err
 	}
 	if hooks.afterAuthenticated != nil {
@@ -217,7 +235,7 @@ func (self measurementRunSettings) run(parent context.Context, output io.Writer)
 	platform := connect.NewPlatformTransportWithDefaults(ctx, strategy, identity.RouteManager(), self.connectUrl, &connect.ClientAuth{ByJwt: token, InstanceId: instanceId, AppVersion: RequireVersion()})
 	var durableCredential atomic.Value
 	durableCredential.Store(token)
-	transport := NewTunnelTransport(ctx, strategy, TunnelTransportConfig{ApiUrl: self.apiUrl, ConnectUrl: self.connectUrl, ByClientJwt: func() string { return durableCredential.Load().(string) }, SourceClientId: id})
+	transport := NewTunnelTransport(ctx, strategy, TunnelTransportConfig{ApiUrl: self.apiUrl, ConnectUrl: self.connectUrl, ByClientJwt: func() string { return durableCredential.Load().(string) }, SourceClientId: id, Clients: self.concurrency})
 	callbacks := &measurementAuthenticationCallbacks{owner: owner, original: token, cancel: cancel, afterPersist: hooks.afterRefreshPersisted, publish: func(refreshed string) {
 		durableCredential.Store(refreshed)
 		outOfBand.SetByJwt(refreshed)

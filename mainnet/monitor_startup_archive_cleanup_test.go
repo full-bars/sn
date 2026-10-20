@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 package main
 
@@ -93,11 +93,13 @@ func monitorStartupArchiveCleanup(t *testing.T, kind string) {
 			terminal <- exit
 		}
 	}}
+	args := f.services.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
 		defer close(run.done)
-		run.exit = runMonitorStorageTestWithHooks(t, ctx, f.services.args(url), sink, &run.stderr, f.services.clock.now, hooks)
+		run.exit = runMainWithMonitorHooks(ctx, args, sink, &run.stderr, f.services.clock.now, hooks)
 	}()
-	t.Cleanup(func() { run.cancel(); <-run.done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, run.cancel, run.done) })
 	var admission monitorAdmissionEvent
 	select {
 	case admission = <-sink.admissions:
@@ -237,11 +239,13 @@ func TestMonitorClaimRecoveryNestedCleanupCannotReacquire(t *testing.T) {
 			}
 		},
 	}
+	args := f.services.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
 		defer close(run.done)
-		run.exit = runMonitorStorageTestWithHooks(t, ctx, f.services.args(url), sink, &run.stderr, f.services.clock.now, hooks)
+		run.exit = runMainWithMonitorHooks(ctx, args, sink, &run.stderr, f.services.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-run.done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, run.done) })
 	select {
 	case exit := <-terminal:
 		if exit != 3 || reads.Load() != 2 || waits.Load() != 1 || !failed.Load() {
@@ -310,11 +314,13 @@ func TestMonitorStorageRecoveryCancellationRetainsCloseFailure(t *testing.T) {
 		},
 	}
 	run := &monitorServicesTestRun{cancel: cancel, done: make(chan struct{}), events: make(chan monitorServiceEvent, 32)}
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
 		defer close(run.done)
-		run.exit = runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), &monitorServicesTestWriter{events: run.events}, &run.stderr, fixture.clock.now, hooks)
+		run.exit = runMainWithMonitorHooks(ctx, args, &monitorServicesTestWriter{events: run.events}, &run.stderr, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-run.done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, run.done) })
 	select {
 	case <-run.done:
 	case <-time.After(time.Minute):

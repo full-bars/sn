@@ -1,7 +1,7 @@
 //go:build linux || darwin
 
 // The permissionless relay discovers a local locator, then obtains the actual
-// dual-signed bytes from both approved public origins. A locator is not proof
+// dual-signed bytes from every approved public origin. A locator is not proof
 // authority; the sender still authenticates chain state and exact inclusion.
 package validator
 
@@ -28,8 +28,9 @@ type ValidatorEvidencePublicationV2ReadOptions struct {
 	PreviousPolicy *protocol.Policy
 	Activations    []protocol.ValidatorEvidenceActivation
 	Window         protocol.ValidatorEvidenceWindow
-	Origins        [2]string
-	Bounds         ReleaseEvidenceV2Bounds
+	// The configured replica census: one origin, or two independent origins.
+	Origins []string
+	Bounds  ReleaseEvidenceV2Bounds
 }
 
 // Both the concrete HTTP reader and closed archive adapter use this exact
@@ -66,14 +67,14 @@ func decodeValidatorEvidencePublicationV2Json(ctx context.Context, raw []byte, l
 	return ctx.Err()
 }
 
-// Reads both entire origin views concurrently and joins them before returning
+// Reads every entire origin view concurrently and joins them before returning
 // any calldata. This verifies transport, complete membership and both consents,
 // not the truth of trails (the production publisher and final replay own that).
 func ReadValidatorEvidencePublicationV2(ctx context.Context, suppliedManifest *ValidatorEvidencePublicationV2Manifest, supplied ValidatorEvidencePublicationV2ReadOptions) (publication *ValidatorEvidenceCensusV2Publication, resultErr error) {
 	return readValidatorEvidencePublicationV2(ctx, suppliedManifest, supplied, nil)
 }
 
-func readValidatorEvidencePublicationV2(ctx context.Context, suppliedManifest *ValidatorEvidencePublicationV2Manifest, supplied ValidatorEvidencePublicationV2ReadOptions, retained *[2]ValidatorEvidenceRetainedReplicaV2) (publication *ValidatorEvidenceCensusV2Publication, resultErr error) {
+func readValidatorEvidencePublicationV2(ctx context.Context, suppliedManifest *ValidatorEvidencePublicationV2Manifest, supplied ValidatorEvidencePublicationV2ReadOptions, retained []ValidatorEvidenceRetainedReplicaV2) (publication *ValidatorEvidenceCensusV2Publication, resultErr error) {
 	if ctx == nil {
 		return nil, errors.New("evidence publication read context is absent")
 	}
@@ -88,6 +89,7 @@ func readValidatorEvidencePublicationV2(ctx context.Context, suppliedManifest *V
 	}
 	options := supplied
 	options.Activations = slices.Clone(supplied.Activations)
+	options.Origins = slices.Clone(supplied.Origins)
 	if err := options.Bounds.Cut.Records.Validate(); err != nil {
 		return nil, err
 	}
@@ -120,9 +122,10 @@ func readValidatorEvidencePublicationV2(ctx context.Context, suppliedManifest *V
 		return nil, err
 	}
 	ownedManifest := *suppliedManifest
+	ownedManifest.Origins = slices.Clone(suppliedManifest.Origins)
 	ownedManifest.Members = slices.Clone(suppliedManifest.Members)
 	manifest := &ownedManifest
-	if manifest.Epoch != options.Window.Epoch || manifest.Origins != options.Origins || len(manifest.Members) != len(options.Activations) {
+	if manifest.Epoch != options.Window.Epoch || !slices.Equal(manifest.Origins, options.Origins) || len(manifest.Members) != len(options.Activations) {
 		return nil, errors.New("evidence publication locator differs from configured epoch, origins or complete membership")
 	}
 	metadataLimit := max(attemptStreamV2MetadataBytes(options.Bounds.Cut), options.Bounds.MaxTransitionBytes)
@@ -141,8 +144,8 @@ func readValidatorEvidencePublicationV2(ctx context.Context, suppliedManifest *V
 	operationCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	var joined sync.WaitGroup
-	var observed [2]*ValidatorEvidenceCensusV2Publication
-	var failures [2]error
+	observed := make([]*ValidatorEvidenceCensusV2Publication, len(readers))
+	failures := make([]error, len(readers))
 	for index, reader := range readers {
 		joined.Add(1)
 		go func() {
@@ -158,20 +161,34 @@ func readValidatorEvidencePublicationV2(ctx context.Context, suppliedManifest *V
 		}()
 	}
 	joined.Wait()
-	if err := joinReplicaPublicationErrors(ctx.Err(), failures[:]); err != nil {
+	if err := joinReplicaPublicationErrors(ctx.Err(), failures); err != nil {
 		return nil, err
 	}
-	first, second := observed[0], observed[1]
-	if first == nil || second == nil || !bytes.Equal(first.Census, second.Census) || len(first.Members) != len(second.Members) {
-		return nil, errors.New("evidence publication public census replicas differ")
+	if err := matchValidatorEvidencePublicationV2Replicas(observed); err != nil {
+		return nil, err
 	}
-	for index, member := range first.Members {
-		other := second.Members[index]
-		if !bytes.Equal(member.Payload, other.Payload) || !bytes.Equal(member.SignedArtifact, other.SignedArtifact) || !bytes.Equal(member.Calldata, other.Calldata) {
-			return nil, errors.New("evidence publication public member replicas differ")
+	return observed[0], nil
+}
+
+// Every origin must return the same complete census, consents and payloads.
+// A single configured origin is compared only with its own complete view.
+func matchValidatorEvidencePublicationV2Replicas(observed []*ValidatorEvidenceCensusV2Publication) error {
+	if len(observed) == 0 || observed[0] == nil {
+		return errors.New("evidence publication public census replicas differ")
+	}
+	first := observed[0]
+	for _, second := range observed[1:] {
+		if second == nil || !bytes.Equal(first.Census, second.Census) || len(first.Members) != len(second.Members) {
+			return errors.New("evidence publication public census replicas differ")
+		}
+		for index, member := range first.Members {
+			other := second.Members[index]
+			if !bytes.Equal(member.Payload, other.Payload) || !bytes.Equal(member.SignedArtifact, other.SignedArtifact) || !bytes.Equal(member.Calldata, other.Calldata) {
+				return errors.New("evidence publication public member replicas differ")
+			}
 		}
 	}
-	return first, nil
+	return nil
 }
 
 // One bounded view includes the shared unsigned census, every public consent

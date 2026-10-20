@@ -317,7 +317,7 @@ func TestMainnetDurableUnitEffectsRejectMissingDeclaration(t *testing.T) {
 	if err := activation.install(t.Context(), plan, 0, planFileReference{}); err == nil || !bytes.Contains([]byte(err.Error()), []byte("durable")) {
 		t.Fatalf("direct installation escaped admission: %v", err)
 	}
-	if err := host.start(t.Context(), repairValidatorPlan{Unit: unit}); err == nil || !bytes.Contains([]byte(err.Error()), []byte("durable")) {
+	if err := host.start(t.Context(), repairValidatorPlan{Unit: unit}, func() error { return nil }); err == nil || !bytes.Contains([]byte(err.Error()), []byte("durable")) {
 		t.Fatalf("direct start escaped admission: %v", err)
 	}
 	files, err := os.ReadDir(root)
@@ -338,10 +338,10 @@ func TestMainnetDurableUnitRejectsDifferentControllerDeclaration(t *testing.T) {
 		return nil, nil
 	}}
 	plan := repairValidatorPlan{Unit: repairValidatorUnit{DurableVolumes: &fixture.Reference, Name: "synthetic-role.service"}, CommandTimeoutSeconds: 1}
-	if err := host.start(other.Context, plan); err == nil || calls != 0 {
+	if err := host.start(other.Context, plan, func() error { return nil }); err == nil || calls != 0 {
 		t.Fatal("different valid controller declaration reached unit start", calls, err)
 	}
-	if err := host.start(fixture.Context, plan); err == nil || calls != 0 {
+	if err := host.start(fixture.Context, plan, func() error { return nil }); err == nil || calls != 0 {
 		t.Fatal("declaration alone bypassed actual service-credential physical inspection", calls, err)
 	}
 }

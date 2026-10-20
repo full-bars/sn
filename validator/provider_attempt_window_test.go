@@ -12,6 +12,7 @@ import (
 	"errors"
 	"io"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -43,14 +44,20 @@ func newProviderAttemptWindowTestOwnerWithRequests(t *testing.T, seed byte, comp
 // callers retain their exact original clock; a new fixture never relabels a cut.
 func newProviderAttemptWindowTestOwnerForWindow(t *testing.T, seed byte, completed, failed int, before func(*attemptCutV2SealTestFixture), window *protocol.ValidatorEvidenceWindow) *providerAttemptWindowTestOwner {
 	t.Helper()
+	return newProviderAttemptWindowTestOwnerForCensus(t, seed, completed, failed, before, window, []uint64{9, 11})
+}
+
+// A validator measuring one operator publishes that lane at its only origin.
+func newProviderAttemptWindowTestOwnerForCensus(t *testing.T, seed byte, completed, failed int, before func(*attemptCutV2SealTestFixture), window *protocol.ValidatorEvidenceWindow, noIds []uint64) *providerAttemptWindowTestOwner {
+	t.Helper()
 	hotkey, err := crv4.KeypairFromSeed([32]byte{seed})
 	if err != nil {
 		t.Fatal(err)
 	}
-	replicas, stores := newAttemptCutV2ReplicaTestStores(t)
+	replicas, stores := newAttemptCutV2ReplicaTestStoreCensus(t, releaseEvidenceV2ReplicaCensus(len(noIds)))
 	fixture := &evidenceCensusV2TestFixture{hotkey: hotkey, replicas: replicas, stores: stores}
 	self := &providerAttemptWindowTestOwner{fixture: fixture}
-	for position, noId := range []uint64{9, 11} {
+	for position, noId := range noIds {
 		complete, failure := 0, 0
 		if position == 0 {
 			complete, failure = completed, failed
@@ -88,13 +95,16 @@ func newProviderAttemptWindowTestOwnerForWindow(t *testing.T, seed byte, complet
 	if window != nil {
 		options.Window = *window
 	}
-	self.read.Window, self.read.Origins = options.Window, [2]string{replicas[0].Origin, replicas[1].Origin}
+	self.read.Window = options.Window
+	for _, replica := range replicas {
+		self.read.Origins = append(self.read.Origins, replica.Origin)
+	}
 	self.read.Bounds = ReleaseEvidenceV2Bounds{Cut: fixture.operators[0].seal.bounds, MaxParticipants: options.Settlement.MaxParticipants, MaxTransitionBytes: options.Settlement.MaxTransitionBytes, MaxClosureBytes: options.Settlement.MaxClosureBytes}
 	publication, err := PublishValidatorEvidenceClosedCensusV2(t.Context(), fixture.closure, options)
 	if err != nil || publication == nil {
 		t.Fatalf("real owner closed publication: %v", err)
 	}
-	self.manifest, err = WriteValidatorEvidencePublicationV2Manifest(t.Context(), newAttemptSettlementRuntimeV2TestStateDir(t), publication, []uint64{9, 11}, options.Settlement.MaxClosureBytes, options.Settlement.MaxParticipants)
+	self.manifest, err = WriteValidatorEvidencePublicationV2Manifest(t.Context(), newAttemptSettlementRuntimeV2TestStateDir(t), publication, noIds, options.Settlement.MaxClosureBytes, options.Settlement.MaxParticipants)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,11 +122,21 @@ type providerAttemptWindowTestFixture struct {
 // Two distinct original validator signing keys own four genuine operator lanes.
 func newProviderAttemptWindowTestFixture(t *testing.T, trails bool) *providerAttemptWindowTestFixture {
 	t.Helper()
-	complete, failed := 0, 0
-	if trails {
-		complete, failed = 1, 1
+	return newProviderAttemptWindowTestFixtureForCensus(t, trails, []byte{51, 52}, []uint64{9, 11})
+}
+
+// Every registered validator measures the same configured operator census.
+// The first validator's first lane may carry real complete/failed trails.
+func newProviderAttemptWindowTestFixtureForCensus(t *testing.T, trails bool, seeds []byte, noIds []uint64) *providerAttemptWindowTestFixture {
+	t.Helper()
+	self := &providerAttemptWindowTestFixture{}
+	for index, seed := range seeds {
+		complete, failed := 0, 0
+		if trails && index == 0 {
+			complete, failed = 1, 1
+		}
+		self.owners = append(self.owners, newProviderAttemptWindowTestOwnerForCensus(t, seed, complete, failed, nil, nil, noIds))
 	}
-	self := &providerAttemptWindowTestFixture{owners: []*providerAttemptWindowTestOwner{newProviderAttemptWindowTestOwner(t, 51, complete, failed), newProviderAttemptWindowTestOwner(t, 52, 0, 0)}}
 	sort.Slice(self.owners, func(i, j int) bool {
 		a, b := self.owners[i].fixture.hotkey.PublicKey(), self.owners[j].fixture.hotkey.PublicKey()
 		return bytes.Compare(a[:], b[:]) < 0
@@ -128,7 +148,7 @@ func newProviderAttemptWindowTestFixture(t *testing.T, trails bool) *providerAtt
 	self.candidate.Schema = ProviderAttemptWindowSchema
 	for _, owner := range self.owners {
 		hotkey := owner.fixture.hotkey.PublicKey()
-		registry.Owners = append(registry.Owners, protocol.ProviderAttemptOwner{Hotkey: hotkey, NoIds: []uint64{9, 11}})
+		registry.Owners = append(registry.Owners, protocol.ProviderAttemptOwner{Hotkey: hotkey, NoIds: slices.Clone(noIds)})
 		self.candidate.Members = append(self.candidate.Members, ProviderAttemptWindowMember{Hotkey: hotkey, Manifest: *owner.manifest})
 	}
 	signed, err := protocol.SealProviderAttemptRegistry(t.Context(), registry, self.expectation, key)
@@ -338,7 +358,7 @@ func TestProviderAttemptWindowRefusesMixedTerminalFork(t *testing.T) {
 	hotkey := fixture.owners[1].fixture.hotkey.PublicKey()
 	owner := options.Validators[hotkey]
 	for noId, operator := range owner.Settlement.Operators {
-		operator.Expected.Boundary.EVMBlockHash = strings.Repeat("ab", 32)
+		operator.Expected.Boundary.EVMBlockHash = "0x" + strings.Repeat("ab", 32)
 		owner.Settlement.Operators[noId] = operator
 	}
 	options.Validators[hotkey] = owner

@@ -9,9 +9,11 @@ import (
 	"strings"
 
 	"github.com/urfoundation/sn/crv4"
+	"github.com/urfoundation/sn/validator"
 )
 
 const validatorActivationNativeSchema = "urnetwork-mainnet-validator-activation-native-v1"
+const validatorActivationNativeTreasurySchema = "urnetwork-mainnet-validator-activation-native-treasury-v1"
 
 // The signed maximum age admits new registrations before their first weights.
 // It does not prove weighted stake, economic majority or operator health.
@@ -40,17 +42,23 @@ type validatorActivationNativeReadiness struct {
 	MechanismCount               uint8                            `json:"mechanism_count"`
 	RecycleMode                  string                           `json:"recycle_mode"`
 	Roles                        [2]validatorActivationNativeRole `json:"roles"`
+	TreasuryPolicyHash           string                           `json:"treasury_policy_hash,omitempty"`
+	ActivationRecycleMode        string                           `json:"activation_recycle_mode,omitempty"`
 }
 
 // Old journals may omit this new projection and still reconcile their original
 // consumed starts. A new observation always constructs and validates it.
 func (self validatorActivationNativeReadiness) validate(readiness validatorActivationReadiness) error {
-	if self.Schema != validatorActivationNativeSchema || !planSha256(self.EvidenceHash) ||
+	legacy := self.Schema == validatorActivationNativeSchema
+	treasury := self.Schema == validatorActivationNativeTreasurySchema
+	if !legacy && !treasury || legacy && (self.RecycleMode != "Recycle" || self.TreasuryPolicyHash != "" || self.ActivationRecycleMode != "") ||
+		treasury && (!planSha256(self.TreasuryPolicyHash) || self.RecycleMode != "Recycle" && self.RecycleMode != "Burn" || self.ActivationRecycleMode != "Recycle" && self.ActivationRecycleMode != "Burn") ||
+		!planSha256(self.EvidenceHash) ||
 		self.RuntimeVersion.SpecName == "" || self.RuntimeVersion.SpecVersion == 0 || !rootCanonicalHash(self.RuntimeCodeHash) || !rootCanonicalHash(self.RuntimeMetadataHash) ||
 		self.ApprovedFirstNativeEpoch == 0 || self.ApprovedThroughNativeEpoch < self.ApprovedFirstNativeEpoch ||
 		self.NativeEpoch < self.ApprovedFirstNativeEpoch || self.NativeEpoch > self.ApprovedThroughNativeEpoch ||
 		self.ActivationBlock == 0 || self.ActivationBlock > readiness.FinalizedNumber || !rootCanonicalHash(self.ActivationHash) ||
-		self.ActivationEpoch != self.ApprovedFirstNativeEpoch || self.ActivationPendingServerAlpha != 0 || self.MechanismCount != 1 || self.RecycleMode != "Recycle" || len(readiness.Roles) != 2 {
+		self.ActivationEpoch != self.ApprovedFirstNativeEpoch || self.ActivationPendingServerAlpha != 0 || self.MechanismCount != 1 || len(readiness.Roles) != 2 {
 		return fmt.Errorf("%w: validator activation native scope, epoch or checkpoint differs", errRpcIntegrity)
 	}
 	for i, role := range self.Roles {
@@ -89,10 +97,55 @@ type validatorActivationNativeSample struct {
 	values   map[string]rootStorageValue
 }
 
+// Both already verified producer approvals select one economic domain. A
+// treasury label alone cannot relax the historical explicit-Recycle rule.
+func validatorActivationNativeTreasuryHash(preparation bootstrapChainPreparation) (string, error) {
+	if len(preparation.Plan.ValidatorInspections) != 2 {
+		return "", fmt.Errorf("%w: validator activation requires both original producer approvals", errRpcIntegrity)
+	}
+	hash := ""
+	for index, inspection := range preparation.Plan.ValidatorInspections {
+		approval := inspection.Approval
+		policy := approval.Proposal.Treasury
+		if (approval.Schema == validator.TreasuryApprovalSchema) != (policy != nil) {
+			return "", fmt.Errorf("%w: validator activation economic approval domain differs", errRpcIntegrity)
+		}
+		current := ""
+		if policy != nil {
+			value, err := policy.Hash()
+			if err != nil || approval.Proposal.Schema != validator.TreasuryProposalSchema || approval.Production == nil || approval.Production.Schema != validator.TreasuryProductionScope {
+				return "", fmt.Errorf("%w: validator activation treasury approval scope differs: %v", errRpcIntegrity, err)
+			}
+			current = fmt.Sprintf("sha256:%x", value)
+		}
+		if index != 0 && current != hash {
+			return "", fmt.Errorf("%w: validator activation producer treasury policies differ", errRpcIntegrity)
+		}
+		hash = current
+	}
+	return hash, nil
+}
+
+// Only the authenticated exact enum/default admitted by the reader has a name.
+func (self validatorActivationNativeSample) recycleMode() string {
+	switch self.Mode.EffectiveScale {
+	case "0x00":
+		return "Burn"
+	case "0x01":
+		return "Recycle"
+	default:
+		return ""
+	}
+}
+
 // Both boundaries use the exact producer artifact independently of the older
 // owner-trim census artifact. An approved hash never authorizes another codec.
 func (self *rpcClient) readValidatorActivationNativeSample(ctx context.Context, preparation bootstrapChainPreparation, readiness bootstrapChainReadiness, hash string, checkpoint bool) (validatorActivationNativeSample, error) {
 	empty := validatorActivationNativeSample{}
+	treasuryHash, err := validatorActivationNativeTreasuryHash(preparation)
+	if err != nil {
+		return empty, err
+	}
 	approval := preparation.Plan.ValidatorInspections[0].Approval
 	pin := approval.Proposal.Runtime
 	identity, metadata, err := self.readApprovedRuntimeAt(ctx, identityExpectation{NativeChain: approval.NativeChain,
@@ -115,7 +168,7 @@ func (self *rpcClient) readValidatorActivationNativeSample(ctx context.Context, 
 			}
 		}
 	}
-	modeKey, _, err := recycleModeStorage(metadata, preparation.Plan.Config.Netuid)
+	modeKey, modeFallback, err := recycleModeStorage(metadata, preparation.Plan.Config.Netuid)
 	if err != nil {
 		return empty, fmt.Errorf("%w: validator activation recycle codec: %v", errRpcIntegrity, err)
 	}
@@ -147,10 +200,18 @@ func (self *rpcClient) readValidatorActivationNativeSample(ctx context.Context, 
 	if err := self.callWithStorageAbsence(ctx, "state_getStorage", []any{modeKey.Hex(), hash}, &sample.Mode.RawStorage, true); err != nil {
 		return empty, err
 	}
-	if sample.Mode.RawStorage == nil || *sample.Mode.RawStorage != "0x01" {
+	if treasuryHash == "" && (sample.Mode.RawStorage == nil || *sample.Mode.RawStorage != "0x01") {
 		return empty, fmt.Errorf("%w: validator activation requires explicit finalized Recycle", errRpcIntegrity)
 	}
-	sample.Mode.EffectiveScale = *sample.Mode.RawStorage
+	if sample.Mode.RawStorage == nil {
+		sample.Mode.EffectiveScale = fmt.Sprintf("0x%x", modeFallback)
+		sample.Mode.ValueSource = "runtime-default"
+	} else {
+		sample.Mode.EffectiveScale = *sample.Mode.RawStorage
+	}
+	if sample.recycleMode() == "" {
+		return empty, fmt.Errorf("%w: validator activation native recycle mode is malformed", errRpcIntegrity)
+	}
 	sample.Storage = reader.evidence()
 	return sample, ctx.Err()
 }
@@ -167,6 +228,10 @@ func (self *rpcClient) observeValidatorActivationNative(ctx context.Context, pre
 	}
 	ctx, cancel := context.WithTimeout(ctx, self.retryWindow)
 	defer cancel()
+	treasuryHash, err := validatorActivationNativeTreasuryHash(preparation)
+	if err != nil {
+		return nil, err
+	}
 	approval := preparation.Plan.ValidatorInspections[0].Approval
 	production := approval.Production
 	if production == nil {
@@ -190,7 +255,10 @@ func (self *rpcClient) observeValidatorActivationNative(ctx context.Context, pre
 	result := &validatorActivationNativeReadiness{Schema: validatorActivationNativeSchema,
 		RuntimeVersion: approval.Proposal.Runtime.Version, RuntimeCodeHash: fmt.Sprintf("0x%x", approval.Proposal.Runtime.CodeHash), RuntimeMetadataHash: fmt.Sprintf("0x%x", approval.Proposal.Runtime.MetadataHash),
 		NativeEpoch: binary.LittleEndian.Uint64(current.values["SubnetEpochIndex"].data), ApprovedFirstNativeEpoch: approval.FirstNativeEpoch,
-		ApprovedThroughNativeEpoch: production.ValidThroughNativeEpoch, ActivationBlock: block, ActivationHash: fmt.Sprintf("0x%x", production.ActivationNativeHash), MechanismCount: 1, RecycleMode: "Recycle"}
+		ApprovedThroughNativeEpoch: production.ValidThroughNativeEpoch, ActivationBlock: block, ActivationHash: fmt.Sprintf("0x%x", production.ActivationNativeHash), MechanismCount: 1, RecycleMode: current.recycleMode()}
+	if treasuryHash != "" {
+		result.Schema, result.TreasuryPolicyHash = validatorActivationNativeTreasurySchema, treasuryHash
+	}
 	if result.NativeEpoch < result.ApprovedFirstNativeEpoch || result.NativeEpoch > result.ApprovedThroughNativeEpoch {
 		return nil, fmt.Errorf("%w: validator activation signed native epoch window is closed", errRpcIntegrity)
 	}
@@ -215,10 +283,16 @@ func (self *rpcClient) observeValidatorActivationNative(ctx context.Context, pre
 	}
 	result.ActivationEpoch = binary.LittleEndian.Uint64(checkpoint.values["SubnetEpochIndex"].data)
 	result.ActivationPendingServerAlpha = binary.LittleEndian.Uint64(checkpoint.values["PendingServerEmission"].data)
+	if treasuryHash != "" {
+		result.ActivationRecycleMode = checkpoint.recycleMode()
+	}
 	if checkpoint.Identity.FinalizedNumber != block || result.ActivationEpoch != result.ApprovedFirstNativeEpoch || result.ActivationPendingServerAlpha != 0 {
 		return nil, fmt.Errorf("%w: validator activation signed checkpoint is not the approved drained first epoch", errRpcIntegrity)
 	}
 	if checkpoint.Identity.FinalizedHash == current.Identity.FinalizedHash {
+		if checkpoint.Mode.EffectiveScale != current.Mode.EffectiveScale || (checkpoint.Mode.RawStorage == nil) != (current.Mode.RawStorage == nil) {
+			return nil, fmt.Errorf("%w: validator activation recycle mode changed at one native hash", errRpcIntegrity)
+		}
 		for name, value := range checkpoint.values {
 			if earlier, exists := current.values[name]; exists && (earlier.EffectiveScale != value.EffectiveScale || (earlier.RawStorage == nil) != (value.RawStorage == nil)) {
 				return nil, fmt.Errorf("%w: validator activation %s changed at one native hash", errRpcIntegrity, name)

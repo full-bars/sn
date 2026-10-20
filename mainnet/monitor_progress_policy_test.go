@@ -41,9 +41,12 @@ func monitorProgressPolicyPublicSample(t *testing.T, fixture *monitorServicesFix
 	hooks.wait = func(ctx context.Context, _ string, _ time.Duration) bool { <-ctx.Done(); return false }
 	sink := &monitorProgressRetrySink{events: make(chan monitorProgressRetryEvent, 4)}
 	var diagnostic bytes.Buffer
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	done := make(chan int, 1)
 	go func() {
-		done <- runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, &diagnostic, fixture.clock.now, hooks)
+		defer close(done)
+		done <- runMainWithMonitorHooks(ctx, args, sink, &diagnostic, fixture.clock.now, hooks)
 	}()
 	var exit int
 	select {

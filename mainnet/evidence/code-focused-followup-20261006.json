@@ -1,0 +1,138 @@
+{
+  "schema": "code-focused-qualification-followup-v1",
+  "status": "SELECTED_FOLLOWUP_CHECKS_PASS",
+  "scope": "Additive code and focused local tests only. No live mainnet capture/RPC, database migration, deployment, activation or financial authority.",
+  "previous_checkpoint": {
+    "path": "code-focused-qualification-20261006.json",
+    "bytes": 11759,
+    "sha256": "b03463f494238ebc2cc388dbbd74d1ffc141ff37cf76c2bb70ec60410bd7b928"
+  },
+  "qualified_scopes": {
+    "deadline_reads22": {
+      "result": "PASS",
+      "selected_roots": 22,
+      "groups": {
+        "chain_reads": 9,
+        "bootstrap_prefix": 7,
+        "steering_reads": 6
+      },
+      "sources": {
+        "sn": "bc3c20d0e0d19dacaf0b132014615d77e7914ee7",
+        "server": "948f12a7409a5b31a0ff31814b1363b1ad71763b",
+        "connect": "a5dfb3c7e9669f885c599925009fe922840ebf6b"
+      },
+      "changes": {
+        "chain_reads": "f664f40b4037a63073a7d6a0fde82bfc7cc20ad3",
+        "bootstrap_prefix": "d3ba5bbc028670251b892e774ad81eaeda6b2090",
+        "steering_reads": "4fa537c4b2135f01ee50356b1e2320c87c3ad88c"
+      },
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/focused-deadline22-20261006/closed-user-readback-v1.json",
+        "bytes": 4726,
+        "sha256": "1c301be5af2322ac14f86fd7db424a697f1e23e273e9f23a9eae5fa6a9307586"
+      },
+      "scope": "Exact selected roots, -vet=off; one run and pass each, zero failures/skips/unexpected roots. Owner closed. No full-suite or race claim.",
+      "source_review": {
+        "path": "/home/by/urnetwork-worktrees/retry-deadline-independent-review-20261006/SOURCE-ACK.json",
+        "bytes": 4880,
+        "sha256": "fabb5e25c4a352860e419d0c05f08192820d5c0a8ad5ae5ae23507aeae41937a",
+        "scope": "Independent source review; execution evidence is the separate closed deadline22 receipt."
+      }
+    },
+    "server_retry_taxonomy14": {
+      "result": "PASS",
+      "selected_roots": 14,
+      "sources": {
+        "server": "948f12a7409a5b31a0ff31814b1363b1ad71763b",
+        "sn": "e8944647687e129ab47bbc1682d55d9860ec7e5b"
+      },
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-taxonomy14-direct-20261006/result.json",
+        "bytes": 5004,
+        "sha256": "e914d76f1eb1a93ec9502b0f0562683dfd13fff620a1272ba5061758e6038959"
+      },
+      "scope": "Local pgwire fixtures under UMask0077; no real Postgres or RPC. The original default-mask TestMain setup failure is retained separately, and this workaround alone does not qualify the fixture repair."
+    },
+    "server_owned_fixture4": {
+      "result": "PASS",
+      "selected_roots": 4,
+      "sources": {
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "sn": "bc3c20d0e0d19dacaf0b132014615d77e7914ee7",
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e"
+      },
+      "change": "65b5d48ddb3ba3883bcee2dcefa816ca2d3ff9f1",
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-fixture4-defaultmask-20261006/result.json",
+        "bytes": 2469,
+        "sha256": "36022c317f079630e7b4c64bcce3bbf6ea6520ec50ea508cdf2837b9a7624271"
+      },
+      "scope": "Ordinary inherited umask, no override. Three fixture roots plus one taxonomy control pass; owner closed. No real database or RPC."
+    },
+    "durable_write_health": {
+      "result": "PASS",
+      "normal_selected_roots": 15,
+      "race_selected_roots": 2,
+      "sources": {
+        "connect": "501c172d47bd63c05a833d401d37da990d37a06e",
+        "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+        "sn": "bc3c20d0e0d19dacaf0b132014615d77e7914ee7"
+      },
+      "change": "fb43e77658515d166c3d8a93367a8ef76441df89",
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/storage-closed-user-readback-v1.json",
+        "bytes": 4752,
+        "sha256": "675c02182ada54e368f627d226d0e0cd27ef1be4c61b4dfa710a8091c47d05b6"
+      },
+      "scope": "Nine new write-health roots and six direct controls normally; two close/lifecycle roots with race detection. Exact selected tests, -vet=off; no full suite, live RPC, USB or production storage claim.",
+      "limits": [
+        "Fixed-size probe work does not bound synchronous kernel sync wall-clock latency.",
+        "The source review did not establish a bypass of preceding financial journal writes."
+      ]
+    }
+  },
+  "retained_original_failures": {
+    "server_default_mask_fixture": {
+      "result": "TESTMAIN_SETUP_FAILURE",
+      "selected_test_bodies_run": 0,
+      "fixture_mode": "0775",
+      "private_parent_mode": "0700",
+      "receipt": {
+        "path": "/home/by/sn-testnet-root-fallback-20261005/server-taxonomy14-direct-20261006/result.json",
+        "bytes": 5004,
+        "sha256": "e914d76f1eb1a93ec9502b0f0562683dfd13fff620a1272ba5061758e6038959"
+      },
+      "scope": "The ordinary-umask attempt refused its group-writable self-built generator before any selected case. It is not fourteen test-body failures."
+    }
+  },
+  "qualification_limits": [
+    "The previous checkpoint and all original failure receipts remain unchanged.",
+    "Each pass applies only to its recorded source, dependencies and selection; no aggregate full-suite result.",
+    "The three earlier source-only deadline follow-ons are now implemented and covered by deadline_reads22.",
+    "Operational evidence and activation: blocked remain unchanged."
+  ],
+  "economics": "10% providers / 90% received by ur-reserve, which sends no funds.",
+  "current_sources": {
+    "sn": "bc3c20d0e0d19dacaf0b132014615d77e7914ee7",
+    "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+    "connect": "501c172d47bd63c05a833d401d37da990d37a06e"
+  },
+  "current_all_package_builds": {
+    "result": "PASS",
+    "packages": [
+      "SN go build ./...",
+      "Server go build ./..."
+    ],
+    "sources": {
+      "sn": "bc3c20d0e0d19dacaf0b132014615d77e7914ee7",
+      "server": "a4da14a5ddf2c36763b7f9ba3c42c74710008afc",
+      "connect": "501c172d47bd63c05a833d401d37da990d37a06e"
+    },
+    "receipt": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/final-direct-20261006/hardening-current-builds-closed.json",
+      "bytes": 2253,
+      "sha256": "ec7d091837006608560fc3eb69aaf16e55b25cdc3dd4976b41d54c3079e4a099"
+    },
+    "scope": "Both exits zero, empty stdout/stderr and inactive owners. Compile-only scope."
+  }
+}

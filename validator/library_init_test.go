@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -17,7 +18,12 @@ func TestMain(m *testing.M) {
 		return
 	}
 	validatorLibraryStreamsIndependent = independentLibraryStreams(os.Stdout, os.Stderr)
-	os.Exit(m.Run())
+	code := m.Run()
+	if err := closeSharedTestFixtures(); err != nil && code == 0 {
+		fmt.Fprintln(os.Stderr, "shared test fixtures:", err)
+		code = 1
+	}
+	os.Exit(code)
 }
 
 // Separate nonnil file owners and descriptors are required. This predicate

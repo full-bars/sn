@@ -1,9 +1,9 @@
 package miner
 
 // sn_rpc.go — the minimal read-only JSON-RPC eth_call client behind
-// `provider claim` and `provider bind-head` (sn/PLAN.md 7.3, decision D-6).
+// `provider claim` (sn/PLAN.md 7.3, decision D-6).
 // The ABI encoding of the calls this sends is built with sn/stabi; only the
-// http transport lives here. Reads (noCommit payout root, headBindDigest) go
+// http transport lives here. Reads (noCommit payout root) go
 // through this stdlib client; signing and submission go through
 // sn/miner/onchain (go-ethereum). This is deliberately the read path only —
 // it is not the duplication target the stabi/merkle/ss58 packages replaced.

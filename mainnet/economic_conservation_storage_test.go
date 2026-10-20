@@ -80,6 +80,12 @@ func newEconomicConservationStorageRenewalFixture(t *testing.T) *economicConserv
 	t.Helper()
 	f, _ := newEconomicConservationPrincipalFixture(t, "yuma-legacy", true, nil)
 	f.source.policy.StorageProfile = economicConservationTestStorageProfile()
+	// The principal fixture declared archive reserves for its legacy 1 MiB
+	// head. The archive forecast scales with the selected profile's maximum,
+	// so declare them again for the 32 MiB head this fixture selects.
+	reserves := t.TempDir()
+	protectFreshEconomicConservationTestRoot(t, reserves)
+	f.ctx = economicConservationTestArchiveReserves(t, f.storage.Context, reserves, f.source.policy)
 	f.key = ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x51}, ed25519.SeedSize))
 	f.source.policy.Continuation = &economicConservationContinuationPolicy{Schema: economicConservationResourcesSchema, ApprovalPublicKey: "0x" + hex.EncodeToString(f.key.Public().(ed25519.PublicKey)), ReviewSha256: monitorReadDigest([]byte("synthetic original physical resource review")), Initial: economicConservationResources{ActiveFacts: f.source.policy.MaximumFacts, ReadBudgetSeconds: 300, ArchiveSegments: 128, IndexEntries: 65536, IndexBytes: 64 * 1024 * 1024}}
 	f.source.checkpoint = filepath.Join(filepath.Dir(f.source.checkpoint), "large-original-head.json")

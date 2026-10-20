@@ -198,6 +198,12 @@ func TestReload_WarmupGate_DefersThenLaunchesURLProxies(t *testing.T) {
 	// Start with warmup NOT done — URL proxies should be deferred
 	proxyWarmupDone.Store(false)
 	t.Cleanup(func() { proxyWarmupDone.Store(false) })
+	// provide() always sets provideStartTime before the reloader exists, and
+	// the hold is bounded to urlWarmupLaunchGrace from that moment. No test
+	// calls provide(), so model the invariant: left zero, time.Since
+	// saturates and the bounded gate can never hold.
+	provideStartTime = time.Now()
+	t.Cleanup(func() { provideStartTime = time.Time{} })
 
 	cancelMapMu := &sync.Mutex{}
 	reloader := &ProxyReloader{

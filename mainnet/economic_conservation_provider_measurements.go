@@ -59,21 +59,27 @@ type economicProviderTrialValue struct {
 // census. A cold reference must match the original held snapshot exactly;
 // possessing or hashing this projection alone supplies no authority.
 type economicConservationProviderMeasurement struct {
-	WorkInventoryHash    string `json:"work_inventory_hash"`
-	WalletOriginalsHash  string `json:"wallet_originals_hash"`
-	BindingOriginalsHash string `json:"binding_originals_hash"`
-	TrialAuthorityHash   string `json:"trial_authority_hash"`
-	TrialOriginalsHash   string `json:"trial_originals_hash"`
-	ArtifactHash         string `json:"artifact_hash"`
-	WorkAuthorityHash    string `json:"work_authority_hash"`
-	WorkWindowHash       string `json:"work_window_hash"`
-	TrialRegistryHash    string `json:"trial_registry_hash"`
-	TrialWindowHash      string `json:"trial_window_hash"`
-	ProviderHash         string `json:"provider_hash"`
-	Providers            uint64 `json:"providers"`
-	CompletedBytes       uint64 `json:"completed_bytes"`
-	Assignments          uint64 `json:"assignments"`
-	Confirmations        uint64 `json:"confirmations"`
+	WorkInventoryHash   string `json:"work_inventory_hash"`
+	WalletOriginalsHash string `json:"wallet_originals_hash"`
+	// the retained network consent chains; absent when no provider fell back
+	NetworkWalletOriginalsHash string `json:"network_wallet_originals_hash,omitempty"`
+	// the retained delegation and global hotkey consent chains; absent when no
+	// provider fell back to hotkey mode
+	HotkeyDelegationOriginalsHash string `json:"hotkey_delegation_originals_hash,omitempty"`
+	HotkeyConsentOriginalsHash    string `json:"hotkey_consent_originals_hash,omitempty"`
+	BindingOriginalsHash          string `json:"binding_originals_hash"`
+	TrialAuthorityHash            string `json:"trial_authority_hash"`
+	TrialOriginalsHash            string `json:"trial_originals_hash"`
+	ArtifactHash                  string `json:"artifact_hash"`
+	WorkAuthorityHash             string `json:"work_authority_hash"`
+	WorkWindowHash                string `json:"work_window_hash"`
+	TrialRegistryHash             string `json:"trial_registry_hash"`
+	TrialWindowHash               string `json:"trial_window_hash"`
+	ProviderHash                  string `json:"provider_hash"`
+	Providers                     uint64 `json:"providers"`
+	CompletedBytes                uint64 `json:"completed_bytes"`
+	Assignments                   uint64 `json:"assignments"`
+	Confirmations                 uint64 `json:"confirmations"`
 }
 
 // Validate the present complete components before considering missing ones, so

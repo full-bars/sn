@@ -77,11 +77,16 @@ func dialOne(ctx context.Context, url string) (*ethclient.Client, *big.Int, erro
 
 // ethCall runs eth_call against the contract and surfaces revert reasons.
 func ethCall(ctx context.Context, client *ethclient.Client, contract common.Address, data []byte) ([]byte, error) {
+	return ethCallAt(ctx, client, contract, data, nil)
+}
+
+// ethCallAt is ethCall at a block number, nil for the latest block.
+func ethCallAt(ctx context.Context, client *ethclient.Client, contract common.Address, data []byte, block *big.Int) ([]byte, error) {
 	message := ethereum.CallMsg{To: &contract, Data: append([]byte(nil), data...)}
 	out, err := retryOnchainRead(ctx, func(ctx context.Context) ([]byte, error) {
 		cctx, cancel := context.WithTimeout(ctx, callTimeout)
 		defer cancel()
-		return client.CallContract(cctx, message, nil)
+		return client.CallContract(cctx, message, block)
 	})
 	if err != nil {
 		return nil, revertError(err)
@@ -91,7 +96,8 @@ func ethCall(ctx context.Context, client *ethclient.Client, contract common.Addr
 
 // revertError augments an eth_call/eth_estimateGas error with the decoded
 // revert payload when the endpoint returned one: Error(string) require
-// reasons, Panic(uint256), or a custom error known to the settlement-vault ABI.
+// reasons, Panic(uint256), or a custom error known to the settlement-vault
+// or vault2 ABI.
 func revertError(err error) error {
 	data := onchainRevertData(err)
 	if len(data) == 0 {
@@ -101,12 +107,14 @@ func revertError(err error) error {
 		return fmt.Errorf("%w: revert %q", err, reason)
 	}
 	if len(data) >= 4 {
-		if pabi, aerr := parsedABI(); aerr == nil {
-			if custom, cerr := pabi.ErrorByID([4]byte(data[:4])); cerr == nil {
-				if vals, verr := custom.Unpack(data); verr == nil {
-					return fmt.Errorf("%w: revert %s%v", err, custom.Name, vals)
+		for _, parse := range []func() (*abi.ABI, error){parsedABI, parsedVault2ABI} {
+			if pabi, aerr := parse(); aerr == nil {
+				if custom, cerr := pabi.ErrorByID([4]byte(data[:4])); cerr == nil {
+					if vals, verr := custom.Unpack(data); verr == nil {
+						return fmt.Errorf("%w: revert %s%v", err, custom.Name, vals)
+					}
+					return fmt.Errorf("%w: revert %s", err, custom.Name)
 				}
-				return fmt.Errorf("%w: revert %s", err, custom.Name)
 			}
 		}
 	}
@@ -135,14 +143,19 @@ func estimateGas(ctx context.Context, client interface {
 	})
 }
 
+// errRevertedOnChain marks a mined transaction whose receipt reports failure.
+var errRevertedOnChain = errors.New("reverted on-chain")
+
 // txRequest is a prepared contract call for runTx.
 type txRequest struct {
 	contract        common.Address
 	from            common.Address
 	key             *ecdsa.PrivateKey
 	calldata        []byte
+	value           *big.Int // wei sent with the call; nil sends none
 	nonceFloor      uint64
-	gasLimit        uint64 // 0 = estimate + 20% headroom
+	gasLimit        uint64 // 0 = estimate + 20% headroom, and at least gasFloor
+	gasFloor        uint64 // the least gas limit of an estimated transaction
 	dryRun          bool
 	prepared        func(common.Hash, []byte) error
 	beforeBroadcast func(common.Hash) error
@@ -164,7 +177,7 @@ func runTx(
 	req txRequest,
 	printIntent func(gasEst uint64, gasErr error),
 ) (*types.Receipt, error) {
-	msg := ethereum.CallMsg{From: req.from, To: &req.contract, Data: req.calldata}
+	msg := ethereum.CallMsg{From: req.from, To: &req.contract, Data: req.calldata, Value: req.value}
 	if _, err := retryOnchainRead(ctx, func(ctx context.Context) ([]byte, error) {
 		cctx, cancel := context.WithTimeout(ctx, callTimeout)
 		defer cancel()
@@ -189,7 +202,7 @@ func runTx(
 
 	gasLimit := req.gasLimit
 	if gasLimit == 0 {
-		gasLimit = gasEst + gasEst/5 // +20% headroom
+		gasLimit = max(gasEst+gasEst/5, req.gasFloor) // +20% headroom
 	}
 	nonce, err := retryOnchainRead(ctx, func(ctx context.Context) (uint64, error) {
 		cctx, cancel := context.WithTimeout(ctx, callTimeout)
@@ -215,12 +228,16 @@ func runTx(
 			return nil, fmt.Errorf("runtime admission before EVM signing: %w", err)
 		}
 	}
+	value := big.NewInt(0)
+	if req.value != nil {
+		value = req.value
+	}
 	tx := types.NewTx(&types.LegacyTx{
 		Nonce:    nonce,
 		GasPrice: gasPrice,
 		Gas:      gasLimit,
 		To:       &req.contract,
-		Value:    big.NewInt(0),
+		Value:    value,
 		Data:     req.calldata,
 	})
 	signed, err := types.SignTx(tx, types.LatestSignerForChainID(chainID), req.key)
@@ -266,8 +283,8 @@ func runTx(
 		return nil, err
 	}
 	if receipt.Status != types.ReceiptStatusSuccessful {
-		return nil, fmt.Errorf("tx %s reverted on-chain (status 0, block %s, gas used %d)",
-			signed.Hash(), receipt.BlockNumber, receipt.GasUsed)
+		return nil, fmt.Errorf("tx %s %w (status 0, block %s, gas used %d)",
+			signed.Hash(), errRevertedOnChain, receipt.BlockNumber, receipt.GasUsed)
 	}
 	fmt.Printf("mined: block %s, status success, gas used %d; waiting for finality...\n", receipt.BlockNumber, receipt.GasUsed)
 	if err := waitFinalized(wctx, client, receipt); err != nil {

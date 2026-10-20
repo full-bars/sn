@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/urnetwork/connect/durablesys"
+
 	"github.com/urnetwork/connect/durablevolume"
 	"golang.org/x/sys/unix"
 )
@@ -332,7 +334,7 @@ func (self *bootstrapSuccessorPreparationStore) publish(kind, name string, raw [
 	if err := self.storage.checkWrite(self.directory); err != nil {
 		return err
 	}
-	if err := unix.Renameat2(fd, stage, fd, name, unix.RENAME_NOREPLACE); err != nil {
+	if err := durablesys.RenameNoReplace(fd, stage, fd, name); err != nil {
 		return errors.Join(errors.New("successor publication refused an existing fixed name"), err)
 	}
 	if err := self.checkpoint(kind + "-published"); err != nil {

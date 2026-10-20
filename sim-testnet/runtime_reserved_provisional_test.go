@@ -163,7 +163,7 @@ func TestRuntimeProvisionalStagingRejectsChangedSourceAndAuthority(t *testing.T)
 	}
 	manifestBefore := readCampaignSuccessionFixtureBytes(t, runtimeConfigManifestPath(stateDir))
 	cfg.provisionalResume.Record.PlanHash = "0x" + strings.Repeat("71", 32)
-	if err := RenderRuntimeConfigs(cfg, stateDir, roles); err == nil || !strings.Contains(err.Error(), "exact non-accepting approval") {
+	if err := RenderRuntimeConfigs(cfg, stateDir, roles); err == nil || !strings.Contains(err.Error(), "runtime plan reload differs from the admitted provisional non-accepting approval") {
 		t.Fatalf("provisional render admitted a different approval: %v", err)
 	}
 	cfg.provisionalResume.Record.PlanHash = plan.PlanHash

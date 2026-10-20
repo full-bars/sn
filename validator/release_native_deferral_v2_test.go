@@ -22,7 +22,7 @@ func newProvisionalClosedNativeInputFixture(t *testing.T) (*releaseStartupV2Test
 	fixture.reopen(t)
 	fixture.cfg.ProvisionalDeferClosedNativeInput = true
 	var history *releaseEvidenceV2StartupHistory
-	err := startReleaseEvidenceV2DiskStateOwned(t.Context(), &fixture.cfg, fixture.chain, fixture.nativeFixture.chain, fixture.inputs, fixture.keys, [2]string{fixture.replicas[0].Origin, fixture.replicas[1].Origin}, fixture.disk, fixture.nativeFixture.expected, attemptSettlementV2PhysicalIO(), &history)
+	err := startReleaseEvidenceV2DiskStateOwned(t.Context(), &fixture.cfg, fixture.chain, fixture.nativeFixture.chain, fixture.inputs, fixture.keys, fixture.origins(), fixture.disk, fixture.nativeFixture.expected, attemptSettlementV2PhysicalIO(), &history)
 	if err != nil || history == nil {
 		t.Fatalf("actual closed input startup: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestProvisionalClosedNativeInputPreservesPartialCensus(t *testing.T) {
 	fixture.reopen(t)
 	fixture.cfg.ProvisionalDeferClosedNativeInput = true
 	var history *releaseEvidenceV2StartupHistory
-	err := startReleaseEvidenceV2DiskStateOwned(t.Context(), &fixture.cfg, fixture.chain, fixture.nativeFixture.chain, fixture.inputs, fixture.keys, [2]string{fixture.replicas[0].Origin, fixture.replicas[1].Origin}, fixture.disk, fixture.nativeFixture.expected, attemptSettlementV2PhysicalIO(), &history)
+	err := startReleaseEvidenceV2DiskStateOwned(t.Context(), &fixture.cfg, fixture.chain, fixture.nativeFixture.chain, fixture.inputs, fixture.keys, fixture.origins(), fixture.disk, fixture.nativeFixture.expected, attemptSettlementV2PhysicalIO(), &history)
 	if err != nil || history == nil {
 		t.Fatalf("actual partial-input restart: %v", err)
 	}

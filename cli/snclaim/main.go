@@ -1,6 +1,6 @@
 // Command snclaim is the thin CLI entry point for the on-chain submission
-// library (github.com/urfoundation/sn/miner/onchain) — signs + broadcasts the
-// miner's claimMiner / bind-head / unbind-head actions. Folded under sn/miner;
+// library (github.com/urfoundation/sn/miner/onchain) — signs + broadcasts
+// settlement-vault claims (head binding is "provider fleet bind"). Folded under sn/miner;
 // all logic lives in the library so it is importable and testable. This
 // executable forwards os.Args and injects the build version.
 package main

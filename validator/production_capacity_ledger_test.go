@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Real retained signed records survive the new resource admission. The
 // capacity check cannot reset a ledger or replace its reviewed prefix.

@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/urfoundation/sn/internal/durablesync"
 	"github.com/urfoundation/sn/protocol"
 )
 
@@ -191,9 +192,5 @@ func writeFile(path string, raw []byte) (returnErr error) {
 	if err := os.Rename(temporaryPath, path); err != nil {
 		return err
 	}
-	parent, err := os.Open(directory)
-	if err != nil {
-		return err
-	}
-	return errors.Join(parent.Sync(), parent.Close())
+	return durablesync.SyncDir(directory)
 }

@@ -4,7 +4,10 @@ Generated Go bindings (abigen v2, go-ethereum v1.17.0) for the release contracts
 source of truth is the Foundry project in `evm/`; `./generate.sh` (also wired as
 `go generate ./stabi/...`) exports the artifact ABIs and regenerates the bindings.
 It resolves abigen from `ABIGEN`, `PATH`, `GOBIN`, or the first `GOPATH/bin`, in
-that order, and accepts only `abigen version 1.17.0-stable`. Install it with
+that order, and accepts only `abigen version 1.17.0-stable` from a source build or
+`abigen version 1.17.0-stable-0cf3d3ba` from the pinned release. Preflight preserves
+the observed version line; only the structured release lock records `1.17.0`.
+Install the source build with
 `go install github.com/ethereum/go-ethereum/cmd/abigen@v1.17.0`. The script also
 copies the legacy STSubnet ABI to `stctl/st_abi.json`; generated bindings and ABIs
 must never be edited by hand. Bindings are ABI-only (no bytecode); deployment

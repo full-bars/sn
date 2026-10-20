@@ -45,7 +45,7 @@ func reconcileOwnerTrimActualSubset(action ownerTrimAction, policy subnetCensusP
 	for _, blocker := range ownerTrimScopeChanges(before, after) {
 		// Best-effort correspondence describes already observed generations;
 		// open flags do not erase that evidence or supply activation authority.
-		if action.Schema == ownerTrimBestEffortActionSchema && blocker == "OWNER_TRIM_COMPETING_REGISTRATION_OR_REENTRY_NOT_FENCED" {
+		if action.bestEffort() && blocker == "OWNER_TRIM_COMPETING_REGISTRATION_OR_REENTRY_NOT_FENCED" {
 			continue
 		}
 		result.Blockers = append(result.Blockers, blocker)

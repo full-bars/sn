@@ -291,11 +291,11 @@ func TestValidatorActivationCurrentReobservesAnchorBeforeEveryStart(t *testing.T
 func TestValidatorActivationCurrentPostSyncRefusalNeverStarts(t *testing.T) {
 	for _, fault := range []string{"reference", "expiry", "rollback", "claim", "journal", "journal-tamper", "cancel", "anchor", "operator"} {
 		f := newValidatorActivationCurrentFixture(t)
-		store, err := openValidatorActivationStore(t.Context(), f.f.approval, f.f.key, false, f.f.now)
+		store, err := openValidatorActivationStore(f.f.chain.storageContext(t.Context()), f.f.approval, f.f.key, false, f.f.now)
 		if err != nil {
 			t.Fatal(err)
 		}
-		ctx, cancel := context.WithCancel(t.Context())
+		ctx, cancel := context.WithCancel(f.f.chain.storageContext(t.Context()))
 		fired := false
 		store.syncDirectory = func(directory *os.File) error {
 			if err := directory.Sync(); err != nil {
@@ -405,7 +405,7 @@ func TestValidatorActivationCurrentLostStartAcknowledgementCannotReplay(t *testi
 func TestValidatorActivationCurrentFirstClaimExcludesAlternateEnvelopes(t *testing.T) {
 	for _, removed := range []string{"", ".claim", ".lock"} {
 		f := newValidatorActivationCurrentFixture(t)
-		store, err := openValidatorActivationStore(t.Context(), f.f.approval, f.f.key, false, f.f.now)
+		store, err := openValidatorActivationStore(f.f.chain.storageContext(t.Context()), f.f.approval, f.f.key, false, f.f.now)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -414,11 +414,11 @@ func TestValidatorActivationCurrentFirstClaimExcludesAlternateEnvelopes(t *testi
 			t.Fatal(err)
 		}
 		record.CurrentAuthority = &f.authority.retained
-		control, err := f.f.host.host.control(t.Context(), f.f.approval.Plan.Units[0].Unit)
+		control, err := f.f.host.host.control(f.f.chain.storageContext(t.Context()), f.f.approval.Plan.Units[0].Unit)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := f.f.host.firstStartClaim(t.Context(), record, 0, true); err != nil {
+		if err := f.f.host.firstStartClaim(f.f.chain.storageContext(t.Context()), record, 0, true); err != nil {
 			t.Fatal(err)
 		}
 		if err := errors.Join(control.close(), store.close()); err != nil {
@@ -439,6 +439,9 @@ func TestValidatorActivationCurrentFirstClaimExcludesAlternateEnvelopes(t *testi
 		f.f.sign()
 		f.authority.retained.Approval.Authorization.ActivationHash = rootObjectHash(f.f.approval)
 		f.sign()
+		// Only this newly approved journal is freshly prepared; the original
+		// per-unit lifetime claims remain unchanged and must still refuse.
+		prepareMainnetSnapshotTest(t, f.f.approval.Plan.StatePath, "mainnet-validator-activation", 128*1024)
 		f.f.installed()
 		result, code, detail := f.f.command(t.Context(), "start", f.authority)
 		if code != 3 || result.Status != "source-refused" || f.f.starts != [2]int{} || !result.Units[0].StartAt.IsZero() {
@@ -512,7 +515,7 @@ func TestValidatorActivationCurrentPendingViewRejectsUncertainty(t *testing.T) {
 	if _, code, detail := f.f.command(t.Context(), "admit-current", f.authority); code != 0 {
 		t.Fatal(code, detail)
 	}
-	store, err := openValidatorActivationStore(t.Context(), f.f.approval, f.f.key, false, f.f.now)
+	store, err := openValidatorActivationStore(f.f.chain.storageContext(t.Context()), f.f.approval, f.f.key, false, f.f.now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -645,7 +648,7 @@ func TestValidatorActivationCurrentJournalRejectsNarrowedEvidence(t *testing.T) 
 	if _, code, detail := f.f.command(t.Context(), "admit-current", f.authority); code != 0 {
 		t.Fatal(code, detail)
 	}
-	store, err := openValidatorActivationStore(t.Context(), f.f.approval, f.f.key, false, f.f.now)
+	store, err := openValidatorActivationStore(f.f.chain.storageContext(t.Context()), f.f.approval, f.f.key, false, f.f.now)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -95,7 +95,7 @@ func admitValidatorEvidenceDepositAuditV2(manifest *ValidatorEvidenceDepositAudi
 			return 0, err
 		}
 	}
-	if len(options.Activations) == 0 || len(manifest.Members) != len(options.Activations) || uint64(len(options.Activations)) > options.Bounds.MaxParticipants || options.Bounds.MaxTransitionBytes > options.Bounds.MaxClosureBytes || manifest.Epoch != options.Window.Epoch || manifest.Subject != options.Window.Subject || manifest.Origins != options.Origins {
+	if len(options.Activations) == 0 || len(manifest.Members) != len(options.Activations) || uint64(len(options.Activations)) > options.Bounds.MaxParticipants || options.Bounds.MaxTransitionBytes > options.Bounds.MaxClosureBytes || manifest.Epoch != options.Window.Epoch || manifest.Subject != options.Window.Subject || !slices.Equal(manifest.Origins, options.Origins) {
 		return 0, errors.New("deposit audit locator differs from complete configured authority")
 	}
 	if options.Bounds.MaxArtifactBytes == 0 || options.Bounds.MaxControlBytes/8 == 0 {
@@ -127,7 +127,7 @@ func validateValidatorEvidenceDepositAuditV2Publication(ctx context.Context, pub
 	if err != nil {
 		return err
 	}
-	if publication == nil || publication.Origins != options.Origins || publication.CensusHash != manifest.CensusHash || sha256.Sum256(publication.Census) != manifest.CensusHash || uint64(len(publication.Census)) != manifest.CensusBytes || len(publication.Members) != len(manifest.Members) {
+	if publication == nil || !slices.Equal(publication.Origins, options.Origins) || publication.CensusHash != manifest.CensusHash || sha256.Sum256(publication.Census) != manifest.CensusHash || uint64(len(publication.Census)) != manifest.CensusBytes || len(publication.Members) != len(manifest.Members) {
 		return errors.New("deposit audit publication differs from its exact locator")
 	}
 	var census ValidatorEvidenceDepositAuditV2Census
@@ -192,13 +192,13 @@ func validateValidatorEvidenceDepositAuditV2Publication(ctx context.Context, pub
 	return ctx.Err()
 }
 
-// Both approved public origins must return every exact object. The result is
+// Every approved public origin must return every exact object. The result is
 // signed content ready for an independently bounded relay, not an audit verdict.
 func ReadValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *ValidatorEvidenceDepositAuditV2Manifest, supplied ValidatorEvidencePublicationV2ReadOptions) (publication *ValidatorEvidenceCensusV2Publication, resultErr error) {
 	return readValidatorEvidenceDepositAuditV2(ctx, suppliedManifest, supplied, nil)
 }
 
-func readValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *ValidatorEvidenceDepositAuditV2Manifest, supplied ValidatorEvidencePublicationV2ReadOptions, retained *[2]ValidatorEvidenceRetainedReplicaV2) (publication *ValidatorEvidenceCensusV2Publication, resultErr error) {
+func readValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *ValidatorEvidenceDepositAuditV2Manifest, supplied ValidatorEvidencePublicationV2ReadOptions, retained []ValidatorEvidenceRetainedReplicaV2) (publication *ValidatorEvidenceCensusV2Publication, resultErr error) {
 	if ctx == nil {
 		return nil, errors.New("deposit audit public read context is absent")
 	}
@@ -215,10 +215,12 @@ func readValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *
 	options.Policy = cloneReleasePolicy(supplied.Policy)
 	options.PreviousPolicy = cloneReleasePolicy(supplied.PreviousPolicy)
 	options.Activations = slices.Clone(supplied.Activations)
+	options.Origins = slices.Clone(supplied.Origins)
 	if _, err := admitValidatorEvidenceDepositAuditV2(suppliedManifest, options); err != nil {
 		return nil, err
 	}
 	manifest := *suppliedManifest
+	manifest.Origins = slices.Clone(suppliedManifest.Origins)
 	manifest.Members = slices.Clone(suppliedManifest.Members)
 	readers, err := validatorEvidencePublicationV2Readers(options, max(attemptStreamV2MetadataBytes(options.Bounds.Cut), options.Bounds.MaxTransitionBytes), retained)
 	if err != nil {
@@ -227,8 +229,8 @@ func readValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *
 	operationCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	var joined sync.WaitGroup
-	var observed [2]*ValidatorEvidenceCensusV2Publication
-	var failures [2]error
+	observed := make([]*ValidatorEvidenceCensusV2Publication, len(readers))
+	failures := make([]error, len(readers))
 	for index, reader := range readers {
 		joined.Add(1)
 		go func() {
@@ -244,16 +246,21 @@ func readValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *
 		}()
 	}
 	joined.Wait()
-	if err := joinReplicaPublicationErrors(ctx.Err(), failures[:]); err != nil {
+	if err := joinReplicaPublicationErrors(ctx.Err(), failures); err != nil {
 		return nil, err
 	}
-	first, second := observed[0], observed[1]
-	if first == nil || second == nil || !bytes.Equal(first.Census, second.Census) || len(first.Members) != len(second.Members) {
+	first := observed[0]
+	if first == nil {
 		return nil, errors.New("deposit audit public replicas differ")
 	}
-	for index, member := range first.Members {
-		if !bytes.Equal(member.Payload, second.Members[index].Payload) || !bytes.Equal(member.SignedArtifact, second.Members[index].SignedArtifact) {
-			return nil, errors.New("deposit audit member replicas differ")
+	for _, second := range observed[1:] {
+		if second == nil || !bytes.Equal(first.Census, second.Census) || len(first.Members) != len(second.Members) {
+			return nil, errors.New("deposit audit public replicas differ")
+		}
+		for index, member := range first.Members {
+			if !bytes.Equal(member.Payload, second.Members[index].Payload) || !bytes.Equal(member.SignedArtifact, second.Members[index].SignedArtifact) {
+				return nil, errors.New("deposit audit member replicas differ")
+			}
 		}
 	}
 	return first, nil

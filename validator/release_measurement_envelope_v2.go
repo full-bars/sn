@@ -76,7 +76,9 @@ func releaseMeasurementEnvelopeV2WireSize(ctx context.Context, envelope *Release
 				var runeValue rune
 				runeValue, width = utf8.DecodeRuneInString(value[index:])
 				encodedWidth = uint64(width)
-				if runeValue == utf8.RuneError && width == 1 || runeValue == '\u2028' || runeValue == '\u2029' {
+				if runeValue == utf8.RuneError && width == 1 {
+					encodedWidth = uint64(len(encodingJSONInvalidUTF8Replacement))
+				} else if runeValue == '\u2028' || runeValue == '\u2029' {
 					encodedWidth = 6
 				}
 			}

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Offline native checkpoint construction cannot label retained or canceled
 // observations as fresh authority. No runtime enrollment occurs in this helper.
@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"sync/atomic"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urnetwork/connect/durablevolume"
 	"golang.org/x/sys/unix"
@@ -79,7 +81,7 @@ func TestNativePreparationCheckpointRefusesRetainedIntent(t *testing.T) {
 			if raw, err := BuildFreshNativeJournalPreparationCheckpoint(t.Context(), root, scope); len(raw) != 0 || !errors.Is(err, durablevolume.ErrIdentity) {
 				t.Fatal("changed original members became fresh checkpoint authority", mode, err)
 			}
-			if _, err := unix.Getxattr(root.Name(), NativeJournalCustodyAttribute, make([]byte, 4096)); !errors.Is(err, unix.ENODATA) {
+			if _, err := unix.Getxattr(root.Name(), NativeJournalCustodyAttribute, make([]byte, 4096)); !errors.Is(err, durablesys.ErrNoAttribute) {
 				t.Fatal("read-only checkpoint construction enrolled the root", mode, err)
 			}
 		}()
@@ -111,7 +113,7 @@ func TestNativePreparationCanceledReadAdmitsNoAuthority(t *testing.T) {
 	if raw, err := BuildFreshNativeJournalPreparationCheckpoint(checked, root, scope); len(raw) != 0 || !errors.Is(err, context.Canceled) {
 		t.Fatal("canceled checkpoint construction admitted authority", err)
 	}
-	if _, err := unix.Getxattr(root.Name(), NativeJournalCustodyAttribute, make([]byte, 4096)); !errors.Is(err, unix.ENODATA) {
+	if _, err := unix.Getxattr(root.Name(), NativeJournalCustodyAttribute, make([]byte, 4096)); !errors.Is(err, durablesys.ErrNoAttribute) {
 		t.Fatal("canceled checkpoint construction enrolled the root", err)
 	}
 }

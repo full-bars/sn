@@ -8,10 +8,14 @@ This corrects the historical assumption that completing the netuid-0 role must
 include a recurring native root-weight signer. It does not make a running
 observer evidence of actual registration, retained stake or earnings.
 
-The standard UR `sn/validator` majority role and the required secondary role
-keep their separate configurations, signatures and admissions. Netuid 0 cannot
-count toward either UR role. The root hotkey retains its separately specified
-other-hardware custody. Its device and signature interface remain unspecified.
+The standard UR `sn/validator` roles keep their separate configurations,
+signatures and admissions: majority and secondary in a two-role bootstrap plan,
+or the one `sole` role of bootstrap v5 that the SN25 launch uses (owner decision,
+October 7). Netuid 0 never counts as a UR role. Under v5 the root seat may use
+the sole UR hotkey when both name the same coldkey; at launch that hotkey is
+`ur-mainnet`, owned by the `ur-mainnet` multisig. Otherwise the root hotkey
+retains its separately specified other-hardware custody. Its device and
+signature interface remain unspecified.
 Current root lifecycle operations need independently established root-owning
 or staker coldkey custody, or an explicitly permitted proxy. None of these
 identities inherits the subnet-owner Ledger, which remains owner-local setup
@@ -147,9 +151,10 @@ current finalized evidence, not inferred from a fund guide or a process PID.
    do not themselves establish indefinitely supervised operation. Never
    turn process recovery into automatic re-registration, staking, claim or
    trading authority.
-6. Join this root evidence with independently admitted majority and secondary
-   UR validator evidence. Declare the user's combined outcome only after both
-   protocol roles are actually evidenced. A metadata report closes none of
+6. Join this root evidence with independently admitted UR validator evidence:
+   the majority and secondary roles of a two-role plan, or the sole role at the
+   SN25 launch. Declare the user's combined outcome only after both protocol
+   roles, root and UR, are actually evidenced. A metadata report closes none of
    those live outcome gates.
 
 ## Offline command

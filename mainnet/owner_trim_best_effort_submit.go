@@ -21,8 +21,8 @@ type ownerTrimBestEffortChain struct {
 // The public caller must provide both independently trusted keys on every
 // restart. A retained policy never authorizes itself, and cannot be replaced.
 func newOwnerTrimBestEffortChain(store *ownerTrimStore, approval ownerTrimBestEffortApproval, key string) (*ownerTrimBestEffortChain, error) {
-	if store == nil {
-		return nil, errors.New("owner trim best-effort submission requires original physical custody")
+	if store == nil || store.config.Action.Multisig != nil {
+		return nil, errors.New("owner trim best-effort submission requires original direct-owner physical custody")
 	}
 	record, err := store.load()
 	if err != nil {
@@ -82,13 +82,27 @@ func (self *ownerTrimBestEffortChain) authorize(ctx context.Context, config owne
 	}
 	operationCtx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 	defer cancel()
-	guard, err := self.client.readOwnerTrimGuard(operationCtx, self.store.policy, action.PolicyHash, self.store.review, "recheck")
+	if err := self.bestEffortCurrentAdmits(operationCtx, self.store.policy, self.store.review, self.approval, action, observation); err != nil {
+		return err
+	}
+	_, err = self.store.load()
+	return errors.Join(err, operationCtx.Err())
+}
+
+// The reviewed census, protected generations and current nonce, proxy and
+// pruning predicates must all fit the exactly observed finalized block. Direct
+// owners and multisig approval steps share this admission unchanged.
+func (self *ownerTrimCanonicalChain) bestEffortCurrentAdmits(ctx context.Context, policy subnetCensusPolicy, review ownerTrimPlan, approval ownerTrimBestEffortApproval, action ownerTrimAction, observation ownerTrimObservation) error {
+	if observation.Census == nil {
+		return errors.New("owner trim best-effort admission lacks the current canonical census")
+	}
+	guard, err := self.client.readOwnerTrimGuard(ctx, policy, action.PolicyHash, review, "recheck")
 	if err != nil {
 		return err
 	}
 	matches := guard.ObservationMatches
-	if !matches && self.approval.RegistrationPolicy == ownerTrimAcceptRegistrationRisk && len(guard.ComparisonBlockers) != 0 {
-		before, after := self.store.review.Census.Observation, guard.CurrentCensus.Observation
+	if !matches && approval.RegistrationPolicy == ownerTrimAcceptRegistrationRisk && len(guard.ComparisonBlockers) != 0 {
+		before, after := review.Census.Observation, guard.CurrentCensus.Observation
 		matches = before.RegistrationAllowed == after.RegistrationAllowed && before.PowRegistrationAllowed == after.PowRegistrationAllowed
 		for _, blocker := range guard.ComparisonBlockers {
 			if blocker != "OWNER_TRIM_COMPETING_REGISTRATION_OR_REENTRY_NOT_FENCED" {
@@ -96,7 +110,7 @@ func (self *ownerTrimBestEffortChain) authorize(ctx context.Context, config owne
 			}
 		}
 	}
-	if !matches || guard.BaselineCensusHash != self.approval.BaselineCensusHash ||
+	if !matches || guard.BaselineCensusHash != approval.BaselineCensusHash ||
 		guard.CurrentCensus.Observation.Identity.FinalizedNumber != observation.FinalizedNumber ||
 		guard.CurrentCensus.Observation.Identity.FinalizedHash != observation.FinalizedHash {
 		return errors.New("owner trim best-effort current selection, protected generations or finalized census changed")
@@ -110,17 +124,16 @@ func (self *ownerTrimBestEffortChain) authorize(ctx context.Context, config owne
 	if rootObjectHash(previous) != rootObjectHash(guard.CurrentCensus.Observation) {
 		return errors.New("owner trim best-effort same-block censuses contradict")
 	}
-	window, err := self.readCurrentPredicates(operationCtx, action, observation, ownerTrimCurrentWindow{})
+	window, err := self.readCurrentPredicates(ctx, action, observation, ownerTrimCurrentWindow{})
 	if err != nil {
 		return err
 	}
 	for _, blocker := range window.Blockers {
-		if blocker != "OWNER_TRIM_PUBLIC_SUBNET_PRUNING_NOT_FENCED_THROUGH_EXPIRY" || self.approval.PublicPruningPolicy != ownerTrimAcceptPruningRisk {
+		if blocker != "OWNER_TRIM_PUBLIC_SUBNET_PRUNING_NOT_FENCED_THROUGH_EXPIRY" || approval.PublicPruningPolicy != ownerTrimAcceptPruningRisk {
 			return errors.New("owner trim best-effort current nonce, proxy or public-pruning predicates refuse submission")
 		}
 	}
-	_, err = self.store.load()
-	return errors.Join(err, operationCtx.Err())
+	return nil
 }
 
 // Policy bytes and their independent trust input survive every local boundary.

@@ -38,6 +38,11 @@ urnet-tools proxy refresh
 
 > Full proxy-loading walkthrough (including Windows): [Adding Proxies](Adding-Proxies.md).
 
+## 🧭 Other Platforms (Quick install)
+
+- **Alpine Linux (OpenRC):** the same install command, run from a root shell, installs a system service under `supervise-daemon`. See the [Alpine Linux (OpenRC) guide](https://github.com/full-bars/sn/wiki/OpenRC).
+- **FreeBSD:** installs an `rc.d` service from the FreeBSD installer script. See the [FreeBSD guide](https://github.com/full-bars/sn/wiki/FreeBSD).
+
 ## 🍎 macOS Installation
 
 The macOS installer is the equivalent of the Linux installer but uses `launchd` instead of `systemd`:
@@ -202,6 +207,10 @@ urnet-tools update
 ```
 
 > See [Adding Proxies](Adding-Proxies.md) for per-OS proxy-loading instructions and the Windows `.txt.txt` extension trap.
+
+### `urnet-tools` on Windows
+
+`urnet-tools` runs natively on Windows. It needs no `tail`, no `sudo` and no WSL: the log views use a built-in follower that survives log rotation, `urnet-tools start` creates `%USERPROFILE%\.urnetwork` before it launches the provider, and the commands that would need `sudo` on Linux are skipped. Rotating, clearing or updating a log no longer fails with "being used by another process", because the follower opens it with delete sharing.
 
 ### 📦 Tarball Install (Alternative)
 

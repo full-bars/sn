@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The original evm checkpoint and its archive occupy separate real roots.
 // Public preparation and restore retain exact paths and all co-owner metadata.

@@ -29,7 +29,7 @@ func validateSteeringIntentSuccessorWithGapsV2(previous, current *SteeringIntent
 // signed envelope, independent immutable input journal, scores and native source.
 // This private join returns no public verified token or final-acceptance claim.
 func (self *IntentStore) verifyMeasurementLineageV2(ctx context.Context, previousEncoded []byte, previousOptions ReleaseMeasurementV2Options, current *ReleaseMeasurementArtifact, currentOptions ReleaseMeasurementV2Options) error {
-	if self.v2.provisionalEpochGaps || self.v2.historyAdoption != nil || self.v2.runtime != nil && self.v2.runtime.history != nil {
+	if self.v2.provisionalEpochGaps || self.v2.historyAdoption != nil || self.v2.nativeGapBridge != nil || self.v2.runtime != nil && self.v2.runtime.history != nil {
 		previous, err := decodeReleaseMeasurementV2Bytes(ctx, previousEncoded, previousOptions.MaxArtifactBytes, previousOptions.MaxOperators)
 		if err != nil {
 			return err
@@ -42,6 +42,14 @@ func (self *IntentStore) verifyMeasurementLineageV2(ctx context.Context, previou
 				// Native and settlement clocks are independent. A real native
 				// successor may span two settlement windows; authenticate all
 				// intervening terminals without permitting a missed native epoch.
+				return self.v2.runtime.verifyMeasurementGapHistoryV2(ctx, previousEncoded, previous, previousOptions, current, currentOptions, false)
+			}
+			if self.v2.nativeGapBridge.allowsArtifactEdge(ReleaseMeasurementContentHash(previousEncoded), previous, current) {
+				// The one pinned missed-native edge gets the same strict
+				// terminal, ledger-cut and head-lineage replay as adoption.
+				if self.v2.runtime == nil || self.v2.runtime.history == nil || self.v2.runtime.history.retainedStartup || self.v2.runtime.history.nativeGapBridge != self.v2.nativeGapBridge {
+					return errors.New("native gap bridge lineage lacks its authenticated startup owner")
+				}
 				return self.v2.runtime.verifyMeasurementGapHistoryV2(ctx, previousEncoded, previous, previousOptions, current, currentOptions, false)
 			}
 			if !self.v2.historyAdoption.allowsArtifactEdge(ReleaseMeasurementContentHash(previousEncoded), previous, current) || self.v2.runtime.history == nil || self.v2.runtime.history.retainedStartup || self.v2.runtime.history.historyAdoption != self.v2.historyAdoption {

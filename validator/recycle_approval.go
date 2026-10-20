@@ -63,9 +63,12 @@ func OwnerRecycleConfigHash(cfg *ReleaseConfig) ([32]byte, error) {
 	if cfg == nil {
 		return [32]byte{}, errors.New("owner-recycle release configuration is absent")
 	}
+	if cfg.TreasuryApproval != nil {
+		return TreasuryConfigHash(cfg)
+	}
 	copy := *cfg
-	if cfg.OwnerRecycleApproval != nil {
-		copy.OwnerRecycleApproval = &ReleaseOwnerRecycleApprovalConfig{Signer: cfg.OwnerRecycleApproval.Signer}
+	if productionEconomicSelection(cfg) != nil {
+		copy.OwnerRecycleApproval = &ReleaseOwnerRecycleApprovalConfig{Signer: productionEconomicSelection(cfg).Signer}
 	}
 	raw, err := json.Marshal(copy)
 	if err != nil {
@@ -77,9 +80,17 @@ func OwnerRecycleConfigHash(cfg *ReleaseConfig) ([32]byte, error) {
 // Produces a bounded message for an external approval signer; it does not load
 // a key or infer that the caller is authorized to approve the deployment.
 func (self OwnerRecycleApproval) SigningMessage() ([]byte, error) {
-	if (self.Schema != ownerRecycleApprovalSchema && self.Schema != ownerRecycleProductionApprovalSchema) ||
+	if (self.Schema != ownerRecycleApprovalSchema && self.Schema != ownerRecycleProductionApprovalSchema && self.Schema != TreasuryApprovalSchema) ||
 		(self.Schema == ownerRecycleApprovalSchema) != (self.Production == nil) || len(self.OwnerHotkeys) > maximumOwnerRecycleApprovedHotkeys {
 		return nil, errors.New("owner-recycle approval schema or owner bound differs")
+	}
+	if (self.Schema == TreasuryApprovalSchema) != (self.Proposal.Treasury != nil) {
+		return nil, errors.New("treasury authority cannot be inserted into an owner-recycle signature domain")
+	}
+	if self.Proposal.Treasury != nil {
+		if err := self.Proposal.Treasury.Validate(); err != nil {
+			return nil, err
+		}
 	}
 	if self.Production != nil && len(self.Production.ValidatorHotkeys) > maximumOwnerRecycleApprovedHotkeys {
 		return nil, errors.New("owner-recycle production approval exceeds its validator bound")
@@ -92,6 +103,9 @@ func (self OwnerRecycleApproval) SigningMessage() ([]byte, error) {
 	if self.Production != nil {
 		domain = "urnetwork-owner-recycle-production-approval-signature-v2\n"
 	}
+	if self.Schema == TreasuryApprovalSchema {
+		domain = TreasuryApprovalSignatureDomain
+	}
 	digest := sha256.Sum256(append([]byte(domain), raw...))
 	return digest[:], nil
 }
@@ -99,8 +113,11 @@ func (self OwnerRecycleApproval) SigningMessage() ([]byte, error) {
 // Configuration scope can be resolved before an envelope exists, without an
 // invented reference. It never grants retention, observation or submission.
 func validateOwnerRecycleApprovalScope(cfg *ReleaseConfig) error {
-	if cfg == nil || cfg.OwnerRecycleApproval == nil {
+	if cfg == nil || productionEconomicSelection(cfg) == nil {
 		return errors.New("owner-recycle approved successor selection is absent")
+	}
+	if cfg.TreasuryApproval != nil && (cfg.OwnerRecycleApproval != nil || cfg.SchemaVersion != ReleaseMainnetProductionSchemaVersion) {
+		return errors.New("treasury approval requires an exclusive schema 3 production selector")
 	}
 	if (cfg.SchemaVersion != ReleaseValidatorSchemaVersion && cfg.SchemaVersion != ReleaseMainnetProductionSchemaVersion) || cfg.Release != "1.0" || cfg.ValidatorID == 0 || cfg.DeployBlock == 0 ||
 		strings.TrimSpace(cfg.DeploymentID) == "" || strings.ContainsAny(cfg.DeploymentID, "/\\.") ||
@@ -114,6 +131,9 @@ func validateOwnerRecycleApprovalScope(cfg *ReleaseConfig) error {
 		return errors.New("owner-recycle approval requires independent mainnet identity and no inherited provisional or policy history")
 	}
 	if _, err := parseHash32("owner-recycle mainnet genesis", cfg.GenesisHash); err != nil {
+		return err
+	}
+	if err := validateReleaseRuntimeSuccessorProfile(cfg); err != nil {
 		return err
 	}
 	if len(cfg.Substrate) == 0 || len(cfg.RPC) == 0 {
@@ -139,17 +159,19 @@ func validateOwnerRecycleApprovalScope(cfg *ReleaseConfig) error {
 	if !filepath.IsAbs(cfg.StateDir) || filepath.Clean(cfg.StateDir) != cfg.StateDir {
 		return errors.New("owner-recycle retained approval needs a canonical absolute state directory")
 	}
-	_, err = canonicalAttemptHex32("owner-recycle independent approval signer", cfg.OwnerRecycleApproval.Signer, false)
+	_, err = canonicalAttemptHex32("owner-recycle independent approval signer", productionEconomicSelection(cfg).Signer, false)
 	return err
 }
 
 // Custody and observation additionally need exact bytes selected by the config.
 // Neither the scope nor the selection inherits provisional runtime/history.
+// The signed source may lie in custody this account cannot search; readers
+// then use the retained copy, and bootstrap's strict read still refuses.
 func validateOwnerRecycleApprovalSelection(cfg *ReleaseConfig) error {
 	if err := validateOwnerRecycleApprovalScope(cfg); err != nil {
 		return err
 	}
-	return cfg.OwnerRecycleApproval.Approval.Validate(maximumOwnerRecycleApprovalBytes)
+	return validateRetainedSourceReference(productionEconomicSelection(cfg).Approval, maximumOwnerRecycleApprovalBytes)
 }
 
 // Signature admission precedes all storage observations and durable mutation.
@@ -173,7 +195,22 @@ func decodeOwnerRecycleApproval(cfg *ReleaseConfig, encoded []byte) (*OwnerRecyc
 	if err != nil || !bytes.Equal(encoded, append(canonical, '\n')) {
 		return nil, errors.Join(errors.New("owner-recycle approval must use canonical envelope bytes and one final newline"), err)
 	}
-	approval := &envelope.Approval
+	message, err := admitOwnerRecycleApproval(cfg, &envelope.Approval)
+	if err != nil {
+		return nil, err
+	}
+	key, _ := canonicalAttemptHex32("owner-recycle signer", productionEconomicSelection(cfg).Signer, false)
+	signature, err := hex.DecodeString(envelope.Signature)
+	if err != nil || len(signature) != ed25519.SignatureSize || envelope.Signature != hex.EncodeToString(signature) || !ed25519.Verify(key[:], message, signature) {
+		return nil, errors.New("owner-recycle successor approval signature differs from the independently pinned signer")
+	}
+	return &envelope, nil
+}
+
+// Every config-bound check precedes the signature, so an unsigned draft is
+// refused by the same rules before an external signer is asked to approve it.
+// Returns the exact message that signer must sign.
+func admitOwnerRecycleApproval(cfg *ReleaseConfig, approval *OwnerRecycleApproval) ([]byte, error) {
 	if err := validateOwnerRecycleProductionApproval(cfg, approval); err != nil {
 		return nil, err
 	}
@@ -196,25 +233,35 @@ func decodeOwnerRecycleApproval(cfg *ReleaseConfig, encoded []byte) (*OwnerRecyc
 		releaseHex32(pin.CodeHash) != cfg.RuntimeCodeHash || releaseHex32(pin.MetadataHash) != cfg.RuntimeMetadataHash {
 		return nil, errors.New("owner-recycle approved runtime and configured mainnet tuple differ")
 	}
-	if len(approval.OwnerHotkeys) == 0 || len(approval.OwnerHotkeys) > maximumOwnerRecycleApprovedHotkeys ||
-		uint64(len(approval.OwnerHotkeys))*10*uint64(cfg.Policy.Steering.MaxWeightLimitU16) < 9*65535 {
+	if len(approval.OwnerHotkeys) > maximumOwnerRecycleApprovedHotkeys || approval.Proposal.Treasury == nil &&
+		(len(approval.OwnerHotkeys) == 0 || uint64(len(approval.OwnerHotkeys))*10*uint64(cfg.Policy.Steering.MaxWeightLimitU16) < 9*65535) {
 		return nil, errors.New("owner-recycle approved destinations cannot fit the unchanged signed weight cap")
 	}
-	for index, hotkey := range approval.OwnerHotkeys {
-		if hotkey == ([32]byte{}) || hotkey == approval.ValidatorHotkey || index > 0 && bytes.Compare(approval.OwnerHotkeys[index-1][:], hotkey[:]) >= 0 {
-			return nil, errors.New("owner-recycle approved owner identities must be ordered, unique, nonzero and exclude validator self")
+	if policy := approval.Proposal.Treasury; policy != nil {
+		if policy.MultisigAccount == approval.SubnetOwner || treasuryRecipientHotkey(policy, approval.ValidatorHotkey) {
+			return nil, errors.New("treasury custody or recipients overlap subnet owner or validator self")
+		}
+		for _, recipient := range policy.Recipients {
+			if uint32(recipient.Uid) >= approval.MaximumSubnetUids || recipient.RegistrationBlock > approval.ValidFromNativeBlock {
+				return nil, errors.New("treasury approved registration is outside the signed census or activation")
+			}
+		}
+		for _, owner := range approval.OwnerHotkeys {
+			if treasuryRecipientHotkey(policy, owner) {
+				return nil, errors.New("treasury approved recipient is recognized as a subnet owner")
+			}
 		}
 	}
-	message, err := approval.SigningMessage()
-	if err != nil {
-		return nil, err
+	// Owner-recycle weights its owner census, so its validator is never in it.
+	// A treasury row never weights an owner: its census may hold the validator
+	// itself, which the census reader admits only as the explicit subnet owner
+	// hotkey under the subnet owner coldkey.
+	for index, hotkey := range approval.OwnerHotkeys {
+		if hotkey == ([32]byte{}) || hotkey == approval.ValidatorHotkey && approval.Proposal.Treasury == nil || index > 0 && bytes.Compare(approval.OwnerHotkeys[index-1][:], hotkey[:]) >= 0 {
+			return nil, errors.New("owner-recycle approved owner identities must be ordered, unique, nonzero and exclude validator self unless treasury-approved")
+		}
 	}
-	key, _ := canonicalAttemptHex32("owner-recycle signer", cfg.OwnerRecycleApproval.Signer, false)
-	signature, err := hex.DecodeString(envelope.Signature)
-	if err != nil || len(signature) != ed25519.SignatureSize || envelope.Signature != hex.EncodeToString(signature) || !ed25519.Verify(key[:], message, signature) {
-		return nil, errors.New("owner-recycle successor approval signature differs from the independently pinned signer")
-	}
-	return &envelope, nil
+	return approval.SigningMessage()
 }
 
 // Restarts consume the original immutable retained bytes, not a changed source
@@ -229,7 +276,7 @@ func readRetainedOwnerRecycleApproval(ctx context.Context, cfg *ReleaseConfig) (
 	if err := validateOwnerRecycleApprovalSelection(cfg); err != nil {
 		return nil, err
 	}
-	reference := cfg.OwnerRecycleApproval.Approval
+	reference := productionEconomicSelection(cfg).Approval
 	reference.Path = filepath.Join(cfg.StateDir, retainedOwnerRecycleApprovalName)
 	raw, err := ReadReleaseEvidenceV2File(ctx, reference, maximumOwnerRecycleApprovalBytes)
 	if err != nil {
@@ -238,9 +285,9 @@ func readRetainedOwnerRecycleApproval(ctx context.Context, cfg *ReleaseConfig) (
 	return decodeOwnerRecycleApproval(cfg, raw)
 }
 
-// A selected successor is never permission to send the parent's unchanged row.
-// Reconciliation may authenticate original receipts, but new sends remain shut
-// until measurement/envelope/intent/archive authority is migrated together.
+// Current schema-3 writers require the independently authenticated production
+// authority and its history. Legacy observation approvals remain read-only;
+// neither they nor a historical production owner can open a current writer.
 func ownerRecycleProductionBoundary(cfg *ReleaseConfig) error {
 	if isOwnerRecycleProductionConfig(cfg) {
 		if err := validateReleaseProductionAuthorityHistory(cfg); err != nil {
@@ -251,8 +298,8 @@ func ownerRecycleProductionBoundary(cfg *ReleaseConfig) error {
 		}
 		return nil
 	}
-	if cfg != nil && (cfg.Policy.NetworkProfile == "mainnet" || cfg.ChainID == 964 || cfg.OwnerRecycleApproval != nil) {
-		return errors.New("owner-recycle successor activation is blocked: authenticated measurement, envelope, intent and archive transition is not implemented; final native allocation remains unobserved")
+	if cfg != nil && (cfg.Policy.NetworkProfile == "mainnet" || cfg.ChainID == 964 || productionEconomicSelection(cfg) != nil) {
+		return errors.New("owner-recycle successor activation is blocked for this legacy configuration: current writes require independently authenticated schema-3 production authority and the concrete V2 measurement, envelope, durable intent and archive owners")
 	}
 	return nil
 }

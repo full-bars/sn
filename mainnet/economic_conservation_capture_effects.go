@@ -50,34 +50,18 @@ type economicConservationCaptureEffects struct {
 	After           string                        `json:"stock_after_capture_alpha"`
 }
 
-// Only already validated original replay values enter this private lookup.
-// Archived entries are reconstructed from owned original snapshots on reopen.
-func (self economicConservationState) captureExecutions(ctx context.Context) (map[uint64]economicConservationPrincipalExecution, error) {
-	values := map[uint64]economicConservationPrincipalExecution{}
-	if self.archiveView != nil {
-		for number, value := range self.archiveView.principalExecutions {
-			if err := ctx.Err(); err != nil {
-				return nil, err
-			}
-			values[number] = value
-		}
-	}
-	for _, value := range self.PrincipalExecutions {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		number := value.Projection.Boundary.Number
-		if _, exists := values[number]; exists {
-			return nil, errors.New("economic capture repeated original principal execution")
-		}
-		values[number] = value
-	}
-	return values, nil
-}
-
 // No elapsed-height estimate fills a missing block or an absent API result.
 // A nil result is incomplete evidence, not a zero-amount certificate.
 func deriveEconomicCaptureEffects(ctx context.Context, policy economicConservationPolicy, capture economicConservationCapture, prior *economicConservationCaptureEffects, query historicalPrincipalQuery, values map[uint64]economicConservationPrincipalExecution) (*economicConservationCaptureEffects, error) {
+	return deriveEconomicCaptureEffectsLookup(ctx, policy, capture, prior, query, func(number uint64) (economicConservationPrincipalExecution, bool, error) {
+		value, found := values[number]
+		return value, found, nil
+	})
+}
+
+// Production walks one authenticated cold segment at a time. The map adapter
+// above retains the original arithmetic fixture API without loading an archive.
+func deriveEconomicCaptureEffectsLookup(ctx context.Context, policy economicConservationPolicy, capture economicConservationCapture, prior *economicConservationCaptureEffects, query historicalPrincipalQuery, lookup func(uint64) (economicConservationPrincipalExecution, bool, error)) (*economicConservationCaptureEffects, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -112,7 +96,10 @@ func deriveEconomicCaptureEffects(ctx context.Context, policy economicConservati
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		value, exists := values[number]
+		value, exists, err := lookup(number)
+		if err != nil {
+			return nil, err
+		}
 		if !exists || number != first && value.Projection.Parent != previous || number == first && from.Ordinal == 0 && value.Projection.Parent != from.Boundary || number == first && from.Ordinal != 0 && value.Projection.Boundary != from.Boundary {
 			return nil, nil
 		}
@@ -218,7 +205,7 @@ func (self *economicConservationState) reconcileCaptureEffects(ctx context.Conte
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	values, err := self.captureExecutions(ctx)
+	lookup, err := self.captureExecutionLookup(ctx)
 	if err != nil {
 		return err
 	}
@@ -256,7 +243,7 @@ func (self *economicConservationState) reconcileCaptureEffects(ctx context.Conte
 				if err != nil {
 					return err
 				}
-				expected, err = deriveEconomicCaptureEffects(ctx, policy, *capture, previous[pool], query, values)
+				expected, err = deriveEconomicCaptureEffectsLookup(ctx, policy, *capture, previous[pool], query, lookup)
 				if err != nil {
 					return err
 				}

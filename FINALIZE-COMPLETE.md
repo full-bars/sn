@@ -3619,7 +3619,8 @@ These facts are safe to use for continuation. Re-read them before mutation.
 - Expected EVM chain ID: 945
 - Private fallback authority: sim-testnet:9944; it is not the active
   operational endpoint while the private node catches up.
-- MinIO endpoint host: 172.28.208.177, using the existing server/blob service.
+- MinIO endpoint host: 172.28.208.176 (edge-5 since 2026-10-12; edge-6's
+  172.28.208.177 before), using the existing server/blob service.
 - PostgreSQL and Redis: local, simulator-managed containers modeled after
   server/local. Do not redirect them to shared LAN services.
 - Operator API origins: the two loopback origins resolved from the

@@ -1,0 +1,106 @@
+{
+  "author_review": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/nativefee11-rust38-normal-author-review-v1.json",
+    "sha256": "beaea2726e49b059ecd05f76cb639958da1c8c3a8b7eb1c91a0186bc445d24df"
+  },
+  "bounds_precision": "1GiBprocess forecast is prospective for serial nativeJIT/fixed Yuma2048 cases, not a claimed RSSupperbound. Hard2GiB OOM refusal and96GiBhostfloor enforce the admitted envelope. 49 logs plus29 exportfiles at8MiB each bound624MiB payload; temporaryproofs/receipts share cumulative2GiBgrowthstop. Existing whole900s body budget caps49phase sequence even though individual timeouts sumlarger; exhaustion is incomplete, neverPASS.",
+  "counts": {
+    "completed_prior_exporter_excluded": 1,
+    "go_normal": 11,
+    "new_json_originals": 29,
+    "rust_exporters": 8,
+    "rust_normal_pending": 38,
+    "total": 49
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 1200,
+    "TimeoutStopSec": 90,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-nativefee11-rust38-normal-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-nativefee11-rust38-normal-v1-20261005.service"
+  },
+  "independent_readback": {
+    "all_binding_hashes_match": true,
+    "binding_count": 139,
+    "distinct_export_directories": 8,
+    "finite_actual_body_source_hashes_match": 44,
+    "fresh_export_parent_absent": true,
+    "metadata475_actual7joined_waits_bound": true,
+    "nativefee_image_origin": "88/Core07/ec3 compilePASS only;11normal bodies pending",
+    "no_list_required_for_false_pass_prevention": "Each exact process must report one actual selectedroot RUN and one terminal result; missing or filtered roots refuse qualification. No source-only declaration is counted as runtimePASS.",
+    "positive_rust_roots_exact_selection_and_addendum": true,
+    "rust_image_origin": "338/Core87/1ea libtestcompilePASS; priorcompletedprincipalexporter1 remains excluded"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/nativefee11-rust38-normal-job-v1.json",
+    "sha256": "1c8d64e698b0942a75de30c13642cbdcae1f419a00a7815161f8601455fb6fc6"
+  },
+  "limits": "No compiler, LIST, body, export, Docker or systemd action by reviewer. Normal49 only; no newmainnet, race, mutantcontrols, all113Rust, productionWasm or livechainqualification.",
+  "mechanism": "Existing ChildContext/process guard and images retained; ownUSERfullcgroup hard2GiB/Swap0, one cumulative2GiB growthfloor, global96GiBmemory and originalDocker/datahealthyfloors. Canonical lease identity/config/horizon checked beforeadmission. Eachphaseactualwait preserved; sampler stopsbeforetreejoin. OrdinaryGo1/Rust101 collected asFAIL, no causalPASS substitution. Unexpectedcensus/resource/custody/unjoined/timeout stops remaining. JSON originals protected0400/private0500 dirs with exactschema/files/size/identity hashes.",
+  "ordering": "If sevencompiler batch starts beforethisbody, Root must include everyactual7phase process-result pin in additional_predecessor_waits and verifycomposite terminal/unitinactive beforeadoption/launch. Samefrozenrunner replays thosepins and retains them. Emptycensus or imagepresence alone nevercreates predecessorPASS. Currentexclusiveadoption doesnotpermitcompiler/bodyoverlap orSolIndependent; prospectivejointvariant requiresseparatereview.",
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "1c8d64e698b0942a75de30c13642cbdcae1f419a00a7815161f8601455fb6fc6",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 0,
+    "runner_sha256": "f10713b27a61492e7dc5f17ab8a3c91d127a8e20f40e94a2c2e8c953198d1375",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_NATIVEFEE11_RUST38_SERIAL_SHORT_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-nativefee11-rust38-normal-adoption-20261005.json",
+  "resource_forecast": {
+    "basis": "Retained nativefee8MB/libtest65MB images, no new binaries. At most49 bounded8MiB phase logs plus29 bounded8MiB JSON originals=624MiB persistent payload; metadata and owned temporary files remain under the2GiB growth stop. Yuma2048 has6146 native-Yuma records and12 bounded full vectors, not64x2048 populated matrices. Each Wasm execution has1024-page64MiB linear cap; this is not a process RSS bound.1GiB is a prospective process forecast, hard2GiB/Swap0 enforced with96GiB host memory floor; any resource/OOM breach refuses qualification.",
+    "body_budget_seconds": 900,
+    "class": "exclusive standard SHORT",
+    "data_growth_stop_bytes": 2147483648,
+    "data_launch_bytes": 10737418240,
+    "hard_memory_bytes": 2147483648,
+    "margin": 2,
+    "memory_launch_bytes": 113816633344,
+    "prospective_data_bytes": 1073741824,
+    "prospective_memory_bytes": 1073741824,
+    "swap_bytes": 0
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-nativefee11-rust38-normal-v1.py",
+    "sha256": "f10713b27a61492e7dc5f17ab8a3c91d127a8e20f40e94a2c2e8c953198d1375"
+  },
+  "schema": "nativefee11-rust38-independent-admission-review-v1",
+  "scope": "49 exact serial normal roots: nativefee11 on88/Core07/ec3 plus38 Rust on retained338; original principal exporter1PASS/112filtered excluded. Eight Rust exporters retain29 JSON. No control, compiler, race, new Go mainnet/source or whole113 Rust qualification.",
+  "source_closures": {
+    "go": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-compiler-source-closure-v1.json",
+      "sha256": "80a9cb82e43bdb759d89b4eaca7b10956db9c339f4febc9aac2cac4ee1a1a7ad"
+    },
+    "rust": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-crate-source-closure-v1.json",
+      "sha256": "53daa0f98cb18ccdb70c60dc85455a939cfa46c1bc61cf348c1be7c698a07799"
+    }
+  },
+  "source_tuples": {
+    "go": {
+      "core": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+      "server": "ec3feae1cb35d8718dbbf33f5d11d6ab42206e3a",
+      "sn": "88bd7956d401fe6de1f764242e75e6ddf1a3653f"
+    },
+    "rust": {
+      "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+      "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+      "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+    }
+  },
+  "status": "READY_FOR_ROOT_ADOPTION_WHEN_EXCLUSIVE_SLOT_AND_ACTUAL_PREDECESSORS_QUALIFIED"
+}

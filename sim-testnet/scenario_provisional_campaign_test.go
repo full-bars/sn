@@ -45,6 +45,17 @@ func TestProvisionalFullCampaignSelectsLocalReceiptsWithoutChangingWork(t *testi
 		if err != nil {
 			t.Fatalf("%s provisional matrix cannot bind its real checks: %v", phase, err)
 		}
+		// A provisional release interval also owes the complete precompile
+		// dividend proof: one added, stricter assertion the strict run lacks.
+		continuation := func(check scenarioCheck) bool { return check.ID == "precompile_conformance_complete" }
+		if index := slices.IndexFunc(provisional.Checks, continuation); phase == "release-1.0" {
+			if index < 0 || slices.ContainsFunc(strict.Checks, continuation) {
+				t.Fatalf("%s provisional interval lost its precompile continuation proof", phase)
+			}
+			provisional.Checks = slices.Delete(slices.Clone(provisional.Checks), index, index+1)
+		} else if index >= 0 {
+			t.Fatalf("%s gained the release interval's precompile continuation proof", phase)
+		}
 		if provisional.GoalEpochs != strict.GoalEpochs || !reflect.DeepEqual(provisional.Faults, strict.Faults) ||
 			provisional.MatrixHash != strict.MatrixHash || provisional.AdversarialMatrixHash != strict.AdversarialMatrixHash || len(provisional.Checks) != len(strict.Checks) {
 			t.Fatalf("%s provisional mode changed the approved workload", phase)

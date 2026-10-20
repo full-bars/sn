@@ -7,12 +7,16 @@
 package validator
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
+	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -127,12 +131,31 @@ type validatorUploadOwnerSlots struct {
 
 // An immutable record has a cancellable admission generation. A refresh error
 // or a newer valid activation cancels every lease for a displaced generation.
+// The entry expires with the freshness of its own last complete verification,
+// so a retained entry never outlives the observation that admitted it.
 type validatorUploadAdmissionEntry struct {
-	record    protocol.ValidatorEvidenceActivation
-	published uint64
-	ctx       context.Context
-	cancel    context.CancelFunc
-	slots     *validatorUploadOwnerSlots
+	record     protocol.ValidatorEvidenceActivation
+	published  uint64
+	validUntil time.Time
+	ctx        context.Context
+	cancel     context.CancelFunc
+	slots      *validatorUploadOwnerSlots
+}
+
+// One completed or failed refresh, reported once by the owned loop. Counts
+// and causes are copies; the report retains no admission state.
+type validatorUploadRefreshReport struct {
+	started            time.Time
+	finished           time.Time
+	evmHeadAge         time.Duration
+	nativeHeadAge      time.Duration
+	ranges             uint64
+	events             uint64
+	admitted           int
+	retained           int
+	validUntil         time.Time
+	activationFailures map[[32]byte]error
+	err                error
 }
 
 // Safe for concurrent requests. The constructor owns its refresh goroutine;
@@ -147,17 +170,22 @@ type ValidatorUploadAdmission struct {
 	native           *crv4.Chain
 	config           ValidatorUploadAdmissionConfig
 	discoveryDigests [][32]byte
-	// Only the owned refresh loop accesses historical successes. Request-side
-	// diagnostics use seededFailures under stateLock.
-	seededHistory  map[[32]byte]VerifiedReleaseActivationV2
-	seededFailures map[[32]byte]error
-	stateLock      sync.Mutex
-	entries        map[[32]byte]*validatorUploadAdmissionEntry
-	ownerSlots     map[ValidatorUploadOwner]*validatorUploadOwnerSlots
-	validUntil     time.Time
-	lastError      error
-	closed         bool
-	leases         sync.WaitGroup
+	// The publication clock and report sink are fixed before the loop starts.
+	clock         func() time.Time
+	refreshReport func(validatorUploadRefreshReport)
+	// Only the owned refresh loop accesses verified immutable histories and the
+	// last refresh duration. Request-side diagnostics use activationFailures
+	// under stateLock.
+	verifiedHistory     map[[32]byte]VerifiedReleaseActivationV2
+	lastRefreshDuration time.Duration
+	activationFailures  map[[32]byte]error
+	stateLock           sync.Mutex
+	entries             map[[32]byte]*validatorUploadAdmissionEntry
+	ownerSlots          map[ValidatorUploadOwner]*validatorUploadOwnerSlots
+	validUntil          time.Time
+	lastError           error
+	closed              bool
+	leases              sync.WaitGroup
 }
 
 // File custody and canonical context syntax precede the first RPC. The API
@@ -215,6 +243,20 @@ func newValidatorUploadAdmissionState(ctx context.Context, chain *ChainClient, n
 			retainedContexts = append(retainedContexts, parsed)
 		}
 	}
+	// The signed mainnet producer config's opt-in also lets staging follow its
+	// validator across a compatible upgrade. Staging decodes only producer-
+	// profile interfaces, which crv4 checks for every successor. A different
+	// route genesis keeps the exact refusal that the refresh reports.
+	if owner := config.Deployment.productionRuntime; owner != nil && len(owner.successors) != 0 && native.GenesisHash == types.Hash(config.Deployment.GenesisHash) {
+		if err := native.EnableRuntimeSuccession(types.Hash(config.Deployment.GenesisHash), crv4.ValidatorProducerRuntimeProfile, owner.successors, func(successor crv4.RuntimeSuccessor) error {
+			fmt.Fprintf(os.Stderr, "validator staging: admitted runtime %s/%d code=%s metadata=%s at %s as a %s successor of approved %d\n",
+				successor.Artifact.Version.SpecName, successor.Artifact.Version.SpecVersion, successor.Artifact.CodeHash, successor.Artifact.MetadataHash,
+				successor.BlockHash.Hex(), crv4.ValidatorProducerRuntimeProfile, successor.Approved.Version.SpecVersion)
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
 	if config.ProvisionalRuntimeCompatibility != "" {
 		if err := native.EnableProvisionalRuntimeCompatibility(types.Hash(config.Deployment.GenesisHash), func(artifact crv4.AuthenticatedRuntimeArtifact) error {
 			return crv4.WriteProvisionalRuntimeObservation(config.RuntimeObservationDir, artifact)
@@ -224,11 +266,9 @@ func newValidatorUploadAdmissionState(ctx context.Context, chain *ChainClient, n
 	}
 	ownerCtx, cancel := context.WithCancel(ctx)
 	owner := &ValidatorUploadAdmission{ctx: ownerCtx, cancel: cancel, done: make(chan struct{}), ready: make(chan struct{}), chain: chain, native: native, config: config,
-		discoveryDigests: digests, entries: make(map[[32]byte]*validatorUploadAdmissionEntry), ownerSlots: make(map[ValidatorUploadOwner]*validatorUploadOwnerSlots), lastError: errors.New("validator staging admission has not refreshed")}
-	if config.ProvisionalSeededDiscoveryOnly {
-		owner.seededHistory = make(map[[32]byte]VerifiedReleaseActivationV2, len(digests))
-		owner.seededFailures = make(map[[32]byte]error, len(digests))
-	}
+		discoveryDigests: digests, clock: time.Now, refreshReport: printValidatorUploadRefreshReport,
+		verifiedHistory: make(map[[32]byte]VerifiedReleaseActivationV2, len(digests)), activationFailures: make(map[[32]byte]error, len(digests)),
+		entries: make(map[[32]byte]*validatorUploadAdmissionEntry), ownerSlots: make(map[ValidatorUploadOwner]*validatorUploadOwnerSlots), lastError: errors.New("validator staging admission has not refreshed")}
 	if config.ProvisionalRetainedContextAuthority {
 		if err := owner.installProvisionalRetainedContextAuthority(retainedContexts); err != nil {
 			cancel()
@@ -239,7 +279,8 @@ func newValidatorUploadAdmissionState(ctx context.Context, chain *ChainClient, n
 }
 
 // Never overlap refreshes or retry inside an observation. Each next attempt
-// starts after the fixed interval and has its own finite cancellation owner.
+// starts after the interval, or earlier so that it can publish before the
+// current state expires, and has its own finite cancellation owner.
 func (self *ValidatorUploadAdmission) run() {
 	defer close(self.done)
 	defer func() {
@@ -258,8 +299,10 @@ func (self *ValidatorUploadAdmission) run() {
 	first := true
 	for {
 		operationCtx, cancel := context.WithTimeout(self.ctx, time.Duration(self.config.MaximumRefreshSeconds)*time.Second)
-		err := self.refresh(operationCtx, time.Now())
+		started := self.clock()
+		err := self.refresh(operationCtx, started)
 		cancel()
+		self.lastRefreshDuration = self.clock().Sub(started)
 		if err != nil {
 			self.invalidate(err)
 		}
@@ -304,7 +347,7 @@ func (self *ValidatorUploadAdmission) seededReadinessErrorLocked() error {
 		return nil
 	}
 	for _, digest := range self.discoveryDigests {
-		if err := self.seededFailures[digest]; err != nil {
+		if err := self.activationFailures[digest]; err != nil {
 			return fmt.Errorf("provisional seeded admission incomplete for activation %x: %w", digest[:8], err)
 		}
 		if entry := self.entries[digest]; entry == nil || entry.ctx.Err() != nil {
@@ -314,6 +357,9 @@ func (self *ValidatorUploadAdmission) seededReadinessErrorLocked() error {
 	return nil
 }
 
+// The fixed interval is shortened when the published state would otherwise
+// expire before the next refresh, measured by the last refresh's duration,
+// can publish. One second bounds the loop's rate when no window remains.
 func (self *ValidatorUploadAdmission) nextRefreshDelay() time.Duration {
 	delay := time.Duration(self.config.RefreshSeconds) * time.Second
 	self.stateLock.Lock()
@@ -321,40 +367,45 @@ func (self *ValidatorUploadAdmission) nextRefreshDelay() time.Duration {
 	if self.config.ProvisionalSeededDiscoveryOnly && (self.lastError != nil || self.seededReadinessErrorLocked() != nil) {
 		return min(delay, 30*time.Second)
 	}
+	if self.lastError == nil && !self.validUntil.IsZero() {
+		lead := self.lastRefreshDuration + max(time.Second, self.lastRefreshDuration/4)
+		delay = max(time.Second, min(delay, self.validUntil.Sub(self.clock())-lead))
+	}
 	return delay
 }
 
-func (self *ValidatorUploadAdmission) recordSeededFailure(digest [32]byte, err error) {
-	if !self.config.ProvisionalSeededDiscoveryOnly {
-		return
-	}
+// Causes are request diagnostics, never authority. A success clears its own.
+func (self *ValidatorUploadAdmission) recordActivationFailure(digest [32]byte, err error) {
 	self.stateLock.Lock()
 	defer self.stateLock.Unlock()
 	if err == nil {
-		delete(self.seededFailures, digest)
+		delete(self.activationFailures, digest)
 	} else {
-		self.seededFailures[digest] = err
+		self.activationFailures[digest] = err
 	}
 }
 
+// A verified anchor without its original canonical hash is a contradiction,
+// never an unavailable read that may keep an earlier admission.
+var errValidatorUploadHistoryChanged = errors.New("verified historical canonical block changed")
+
 // Cache only successful exact configured activation proofs for this owner
-// lifecycle. Both chains must still cover their original canonical anchors;
-// current native eligibility is separately read on every refresh below.
+// lifecycle. A finalized anchor's original runtime, record and historical
+// eligibility cannot change, so later refreshes recheck only that both chains
+// still cover the original canonical anchors; current native eligibility is
+// separately read on every refresh below. A cache hit needs no archive state.
 func (self *ValidatorUploadAdmission) authenticateRefreshCandidate(ctx context.Context, digest [32]byte, observer ValidatorUploadObserver, nativeObserver ValidatorUploadNativeObserver) (VerifiedReleaseActivationV2, error) {
-	if !self.config.ProvisionalSeededDiscoveryOnly {
-		return self.chain.AuthenticateValidatorUploadActivationContext(ctx, self.native, self.config.Deployment, digest, observer)
-	}
-	if cached, ok := self.seededHistory[digest]; ok {
+	if cached, ok := self.verifiedHistory[digest]; ok {
 		var err error
 		changed := false
 		if observer.Number < cached.ObservedEVMBlock || nativeObserver.Number < cached.Publication.Record.NativeBlock {
-			err = errors.New("seeded history is ahead of the current finalized observers")
+			err = errors.New("verified history is ahead of the current finalized observers")
 		} else {
 			var canonical [32]byte
 			canonical, err = self.chain.BlockHashContext(ctx, cached.ObservedEVMBlock)
 			if err == nil && canonical != cached.ObservedEVMHash {
 				changed = true
-				err = errors.New("seeded historical EVM canonical block changed")
+				err = fmt.Errorf("%w: EVM block %d", errValidatorUploadHistoryChanged, cached.ObservedEVMBlock)
 			}
 		}
 		if err == nil {
@@ -362,14 +413,14 @@ func (self *ValidatorUploadAdmission) authenticateRefreshCandidate(ctx context.C
 			err = self.native.API.Client.CallContext(ctx, &canonical, "chain_getBlockHash", cached.Publication.Record.NativeBlock)
 			if err == nil && canonical != types.Hash(cached.Publication.Record.NativeHash).Hex() {
 				changed = true
-				err = errors.New("seeded historical native canonical block changed")
+				err = fmt.Errorf("%w: native block %d", errValidatorUploadHistoryChanged, cached.Publication.Record.NativeBlock)
 			}
 		}
 		if err = errors.Join(err, ctx.Err()); err != nil {
 			// Unavailability denies this refresh without erasing successful
 			// immutable work. Only an observed different hash invalidates it.
 			if changed {
-				delete(self.seededHistory, digest)
+				delete(self.verifiedHistory, digest)
 			}
 			return VerifiedReleaseActivationV2{}, err
 		}
@@ -379,7 +430,7 @@ func (self *ValidatorUploadAdmission) authenticateRefreshCandidate(ctx context.C
 	if err = errors.Join(err, ctx.Err()); err != nil {
 		return VerifiedReleaseActivationV2{}, err
 	}
-	self.seededHistory[digest] = verified
+	self.verifiedHistory[digest] = verified
 	return verified, nil
 }
 
@@ -403,9 +454,22 @@ func (self *ValidatorUploadAdmission) invalidate(err error) {
 
 // Refresh scans the finite complete anchor history, retaining at most one
 // latest authenticated activation per stable owner. Failed candidate reads
-// grant nothing and are revisited next refresh; an ineligible account's event
-// does not revoke an independently verified legitimate owner's admission.
-func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time) error {
+// grant nothing new, record their cause for the refused request and are
+// revisited next refresh; an ineligible account's event does not revoke an
+// independently verified legitimate owner's admission. A previously admitted
+// activation is checked again even when discovery omits it. If its reads fail,
+// rather than observe ineligibility, deregistration, a later publication of
+// its owner or a changed anchor, it keeps only the expiry of its last complete
+// verification. A refresh that finishes after its own freshness window
+// publishes nothing and fails with the measured cause.
+func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time) (resultErr error) {
+	report := validatorUploadRefreshReport{started: now}
+	defer func() {
+		report.finished, report.err = self.clock(), resultErr
+		if self.refreshReport != nil {
+			self.refreshReport(report)
+		}
+	}()
 	if err := errors.Join(ctx.Err(), self.ctx.Err()); err != nil {
 		return err
 	}
@@ -417,6 +481,8 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 	if err != nil {
 		return err
 	}
+	report.evmHeadAge = now.Sub(time.Unix(int64(observer.Timestamp), 0))
+	report.nativeHeadAge = now.Sub(time.UnixMilli(int64(nativeObserver.TimestampMillis)))
 	currentRuntime, err := self.config.Deployment.runtimeArtifactsAt(nativeObserver.Number, false)
 	if err != nil {
 		return err
@@ -431,6 +497,22 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 	}
 	next := make(map[ValidatorUploadOwner]VerifiedReleaseActivationV2)
 	seen := make(map[[32]byte]bool)
+	// Digests whose reads failed without observing ineligibility or a changed
+	// anchor. Only an entry already admitted by an earlier refresh survives.
+	unobserved := make(map[[32]byte]bool)
+	// Each owner's latest publication from discovery or an authenticated
+	// record, admitted or not. An older entry of that owner is superseded and
+	// is never retained through its own failed reads.
+	latestPublishedOwnerBlocks := make(map[ValidatorUploadOwner]uint64)
+	// Canonical event order also distinguishes rotations within one block.
+	latestPublishedOwnerEvents := make(map[ValidatorUploadOwner]ValidatorUploadActivationEvent)
+	superseded := func(owner ValidatorUploadOwner, digest [32]byte, published uint64) bool {
+		if latestPublishedOwnerBlocks[owner] > published {
+			return true
+		}
+		event, found := latestPublishedOwnerEvents[owner]
+		return found && event.Block == published && event.Digest != digest
+	}
 	// Current eligibility is read once per stable hotkey in this captured
 	// refresh. Its metadata and resolved UID come from the actual current hash.
 	current := make(map[[32]byte]bool)
@@ -442,16 +524,19 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 		seen[digest] = true
 		verified, err := self.authenticateRefreshCandidate(ctx, digest, observer, nativeObserver)
 		if err != nil {
-			self.recordSeededFailure(digest, fmt.Errorf("historical activation authentication: %w", err))
+			self.recordActivationFailure(digest, fmt.Errorf("historical activation authentication: %w", err))
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
-			return nil // No candidate authority survives an RPC/eligibility error.
+			unobserved[digest] = !errors.Is(err, errValidatorUploadHistoryChanged)
+			return nil // No new candidate authority survives an RPC/eligibility error.
 		}
 		record := verified.Publication.Record
 		if event != nil && (event.Hotkey != record.Hotkey || event.NoID != record.NoID || event.Epoch != record.Domain.Epoch || event.Block != verified.Publication.PublishedBlock) {
 			return errors.New("validator staging event conflicts with the canonical anchored record")
 		}
+		owner := ValidatorUploadOwner{Hotkey: record.Hotkey, OperatorNoID: record.NoID}
+		latestPublishedOwnerBlocks[owner] = max(latestPublishedOwnerBlocks[owner], verified.Publication.PublishedBlock)
 		eligible, checked := current[record.Hotkey]
 		if !checked {
 			observation, err := crv4.ReadValidatorScheduleAtContext(ctx, self.native, crv4.ValidatorScheduleQuery{GenesisHash: types.Hash(self.config.Deployment.GenesisHash), BlockHash: nativeObserver.Hash,
@@ -467,11 +552,19 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 			current[record.Hotkey] = eligible
 		}
 		if !eligible {
-			self.recordSeededFailure(digest, errors.Join(errors.New("current native hotkey lacks authenticated stake and permit"), currentErrors[record.Hotkey]))
+			switch err := currentErrors[record.Hotkey]; {
+			case err == nil:
+				self.recordActivationFailure(digest, errors.New("current native hotkey lacks authenticated stake and permit"))
+			case errors.Is(err, crv4.ErrValidatorScheduleHotkeyUnregistered):
+				// A deregistered hotkey is observed ineligibility, not a failed read.
+				self.recordActivationFailure(digest, fmt.Errorf("current native eligibility: %w", err))
+			default:
+				self.recordActivationFailure(digest, fmt.Errorf("current native eligibility read: %w", err))
+				unobserved[digest] = true
+			}
 			return nil
 		}
-		self.recordSeededFailure(digest, nil)
-		owner := ValidatorUploadOwner{Hotkey: record.Hotkey, OperatorNoID: record.NoID}
+		self.recordActivationFailure(digest, nil)
 		prior, exists := next[owner]
 		if !exists && uint64(len(next)) >= self.config.MaximumOwners {
 			return errors.New("validator staging owner census exceeds its bound")
@@ -498,7 +591,12 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 		if err != nil {
 			return err
 		}
+		report.ranges++
+		report.events += uint64(len(events))
 		for index := range events {
+			owner := ValidatorUploadOwner{Hotkey: events[index].Hotkey, OperatorNoID: events[index].NoID}
+			latestPublishedOwnerBlocks[owner] = max(latestPublishedOwnerBlocks[owner], events[index].Block)
+			latestPublishedOwnerEvents[owner] = events[index]
 			if err := admit(events[index].Digest, &events[index]); err != nil {
 				return err
 			}
@@ -515,6 +613,34 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 			return err
 		}
 	}
+	// A provider that serves recent logs but returns no rows for old ranges
+	// cannot silently drop an activation this owner already authenticated.
+	var previousDigests [][32]byte
+	func() {
+		self.stateLock.Lock()
+		defer self.stateLock.Unlock()
+		for digest := range self.entries {
+			previousDigests = append(previousDigests, digest)
+		}
+	}()
+	slices.SortFunc(previousDigests, func(a [32]byte, b [32]byte) int { return bytes.Compare(a[:], b[:]) })
+	for _, digest := range previousDigests {
+		if err := admit(digest, nil); err != nil {
+			return err
+		}
+	}
+	// A failed successor proof cannot resurrect the older generation even
+	// when that older proof and its current eligibility still read correctly.
+	for owner, verified := range next {
+		digest, err := verified.Publication.Record.Digest()
+		if err != nil {
+			return err
+		}
+		if superseded(owner, digest, verified.Publication.PublishedBlock) {
+			delete(next, owner)
+			self.recordActivationFailure(digest, errors.New("validator staging activation was superseded by a later publication"))
+		}
+	}
 	if err := errors.Join(ctx.Err(), self.ctx.Err()); err != nil {
 		return err
 	}
@@ -528,12 +654,40 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 	if nativeValidUntil.Before(validUntil) {
 		validUntil = nativeValidUntil
 	}
+	report.validUntil = validUntil
+	// The observers were captured at the start, so a slow refresh can finish
+	// after its own window. Publishing that state would refuse every request
+	// with no recorded cause while it looked like a successful refresh.
+	if published := self.clock(); !published.Before(validUntil) {
+		return fmt.Errorf("validator staging refresh finished after its freshness window: EVM head age %s and native head age %s at start, refresh took %s, maximum head age %ds",
+			report.evmHeadAge.Round(time.Millisecond), report.nativeHeadAge.Round(time.Millisecond), published.Sub(now).Round(time.Millisecond), self.config.MaximumHeadAgeSeconds)
+	}
 	var retired []context.CancelFunc
 	err = func() error {
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
 		if self.closed || self.ctx.Err() != nil {
 			return errors.New("validator staging cache is closed")
+		}
+		// An earlier entry whose reads failed keeps its own expiry unless the
+		// same owner's equal or later activation was admitted now, or a later
+		// one was discovered or authenticated. It replaces an older activation
+		// of its owner that was admitted in its place.
+		published := self.clock()
+		retainedOwnerDigests := make(map[ValidatorUploadOwner][32]byte)
+		for digest, retain := range unobserved {
+			entry := self.entries[digest]
+			if !retain || entry == nil || !published.Before(entry.validUntil) {
+				continue
+			}
+			owner := ValidatorUploadOwner{Hotkey: entry.record.Hotkey, OperatorNoID: entry.record.NoID}
+			if superseded(owner, digest, entry.published) {
+				continue
+			}
+			if admitted, exists := next[owner]; exists && admitted.Publication.PublishedBlock >= entry.published {
+				continue
+			}
+			retainedOwnerDigests[owner] = digest
 		}
 		// Owner slots never multiply under rotation or an overlapping request.
 		missing := uint64(0)
@@ -545,8 +699,11 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 		if uint64(len(self.ownerSlots))+missing > self.config.MaximumOwners {
 			return errors.New("validator staging retained owner-slot census exceeds its bound")
 		}
-		entries := make(map[[32]byte]*validatorUploadAdmissionEntry, len(next))
+		entries := make(map[[32]byte]*validatorUploadAdmissionEntry, len(next)+len(retainedOwnerDigests))
 		for owner, value := range next {
+			if _, retained := retainedOwnerDigests[owner]; retained {
+				continue
+			}
 			digest, err := value.Publication.Record.Digest()
 			if err != nil {
 				return err
@@ -561,20 +718,61 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 				entryCtx, cancel := context.WithCancel(self.ctx)
 				entry = &validatorUploadAdmissionEntry{record: value.Publication.Record, published: value.Publication.PublishedBlock, ctx: entryCtx, cancel: cancel, slots: slots}
 			}
+			entry.validUntil = validUntil
 			entries[digest] = entry
+		}
+		for _, digest := range retainedOwnerDigests {
+			entries[digest] = self.entries[digest]
 		}
 		for digest, entry := range self.entries {
 			if entries[digest] == nil {
 				retired = append(retired, entry.cancel)
 			}
 		}
+		// Discovered causes stay bounded by this refresh's candidates.
+		if !self.config.ProvisionalSeededDiscoveryOnly {
+			for digest := range self.activationFailures {
+				if !seen[digest] {
+					delete(self.activationFailures, digest)
+				}
+			}
+		}
+		report.admitted, report.retained = len(entries)-len(retainedOwnerDigests), len(retainedOwnerDigests)
+		report.activationFailures = maps.Clone(self.activationFailures)
 		self.entries, self.validUntil, self.lastError = entries, validUntil, nil
 		return nil
 	}()
 	for _, cancel := range retired {
 		cancel()
 	}
+	// Verified histories stay bounded by this refresh's candidates.
+	if err == nil && !self.config.ProvisionalSeededDiscoveryOnly {
+		for digest := range self.verifiedHistory {
+			if !seen[digest] {
+				delete(self.verifiedHistory, digest)
+			}
+		}
+	}
 	return err
+}
+
+// One line per refresh: its outcome, duration, head ages and every candidate
+// activation that was not admitted, so neither a silently dropped activation
+// nor a state published past its window can hide behind a generic refusal.
+func printValidatorUploadRefreshReport(report validatorUploadRefreshReport) {
+	digests := slices.SortedFunc(maps.Keys(report.activationFailures), func(a [32]byte, b [32]byte) int { return bytes.Compare(a[:], b[:]) })
+	causes := make([]string, 0, len(digests))
+	for _, digest := range digests {
+		causes = append(causes, fmt.Sprintf("%x: %v", digest[:8], report.activationFailures[digest]))
+	}
+	outcome := "published"
+	if report.err != nil {
+		outcome = "failed: " + report.err.Error()
+	}
+	line := fmt.Sprintf("validator staging refresh %s; took %s, EVM head age %s, native head age %s, %d ranges, %d events, %d admitted, %d retained, valid until %s; not admitted [%s]",
+		outcome, report.finished.Sub(report.started).Round(time.Millisecond), report.evmHeadAge.Round(time.Millisecond), report.nativeHeadAge.Round(time.Millisecond),
+		report.ranges, report.events, report.admitted, report.retained, report.validUntil.UTC().Format(time.RFC3339), strings.Join(causes, "; "))
+	fmt.Fprintln(os.Stderr, strings.ReplaceAll(line, "\n", " | "))
 }
 
 // A lease owns its joined cancellation hooks and at most one nonblocking
@@ -624,17 +822,30 @@ func (self *ValidatorUploadAdmission) beginAt(ctx context.Context, header string
 	if self.lastError != nil {
 		return nil, fmt.Errorf("validator staging activation is absent, stale or superseded: %w", self.lastError)
 	}
-	if entry == nil && self.config.ProvisionalSeededDiscoveryOnly {
-		if err := self.seededFailures[intent.ActivationHash]; err != nil {
+	// A retained entry keeps the expiry of its own last complete verification.
+	validUntil := self.validUntil
+	if entry != nil && entry.validUntil.Before(validUntil) {
+		validUntil = entry.validUntil
+	}
+	expired := !self.config.ProvisionalRetainedContextAuthority && !now.Before(validUntil)
+	if entry == nil || expired {
+		if err := self.activationFailures[intent.ActivationHash]; err != nil {
 			return nil, fmt.Errorf("validator staging activation %x is unavailable: %w", intent.ActivationHash[:8], err)
 		}
 	}
-	if self.closed || self.lastError != nil || (!self.config.ProvisionalRetainedContextAuthority && !now.Before(self.validUntil)) || entry == nil || entry.record.VPK != intent.VPK || entry.ctx.Err() != nil {
-		return nil, errors.New("validator staging activation is absent, stale or superseded")
+	switch {
+	case self.closed:
+		return nil, errors.New("validator staging activation is absent, stale or superseded: admission is closed")
+	case entry == nil:
+		return nil, fmt.Errorf("validator staging activation is absent, stale or superseded: activation %x is not admitted", intent.ActivationHash[:8])
+	case expired:
+		return nil, fmt.Errorf("validator staging activation is absent, stale or superseded: admission expired at %s", validUntil.UTC().Format(time.RFC3339))
+	case entry.record.VPK != intent.VPK || entry.ctx.Err() != nil:
+		return nil, fmt.Errorf("validator staging activation is absent, stale or superseded: activation %x names another key or was superseded", intent.ActivationHash[:8])
 	}
 	deadline := time.Unix(int64(intent.NotAfter), 0)
-	if !self.config.ProvisionalRetainedContextAuthority && self.validUntil.Before(deadline) {
-		deadline = self.validUntil
+	if !self.config.ProvisionalRetainedContextAuthority && validUntil.Before(deadline) {
+		deadline = validUntil
 	}
 	leaseCtx, cancel := context.WithDeadline(ctx, deadline)
 	lease := &ValidatorUploadLease{owner: self, entry: entry, intent: intent, ctx: leaseCtx, cancel: cancel, stopped: make(chan struct{})}

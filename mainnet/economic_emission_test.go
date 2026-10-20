@@ -403,6 +403,42 @@ func TestEconomicEmissionRejectsUnboundedPolicyAndPreservesCancellation(t *testi
 	economicEmissionAssertUnresolved(t, result)
 }
 
+// One read retains the 8 MiB base plus one admitted Yuma witness. The actual
+// populated 64x2048 epoch block (10,759,716 bytes; witness 10,655,293 under
+// a 15 MiB authority) fits a single-block page. A second witness block shares
+// the same allowance, so a page of several stays within base plus one witness
+// and the native page loop halves it to single blocks, each of which fits.
+func TestEconomicEmissionReadBudgetAdmitsOneYumaWitnessPerRead(t *testing.T) {
+	retained := func(size int) string { return strings.Repeat("x", size-2) }
+	base := economicEmissionReadBudget(economicEmissionPolicy{Execution: &nativeExecutionPolicy{}})
+	if err := base.retain(retained(economicEmissionBytesLimit)); err != nil {
+		t.Fatal("read without Yuma authority refused its exact 8 MiB base", err)
+	}
+	if err := base.retain(0); !errors.Is(err, errEconomicEmissionEvidenceCapacity) {
+		t.Fatal("read without Yuma authority exceeded its 8 MiB base", err)
+	}
+	witness := 15 * 1024 * 1024
+	policy := economicEmissionPolicy{Execution: &nativeExecutionPolicy{Yuma: &nativeYumaPolicy{MaximumWitnessBytes: uint64(witness)}}}
+	populated := economicEmissionReadBudget(policy)
+	if err := populated.retain(retained(10759716)); err != nil {
+		t.Fatal("actual populated 64x2048 epoch block exceeded base plus its admitted witness", err)
+	}
+	exact := economicEmissionReadBudget(policy)
+	if err := exact.retain(retained(economicEmissionBytesLimit + witness)); err != nil {
+		t.Fatal("read refused its exact base plus one admitted witness", err)
+	}
+	if err := exact.retain(0); !errors.Is(err, errEconomicEmissionEvidenceCapacity) {
+		t.Fatal("read exceeded base plus one admitted witness", err)
+	}
+	page := economicEmissionReadBudget(policy)
+	if err := page.retain(retained(witness)); err != nil {
+		t.Fatal("first witness block of a page was refused", err)
+	}
+	if err := page.retain(retained(witness)); !errors.Is(err, errEconomicEmissionEvidenceCapacity) {
+		t.Fatal("second witness block of one page acquired its own allowance", err)
+	}
+}
+
 // The public command publishes structured partial evidence and a nonzero exit
 // after malformed archive data. It exposes no custody/sign/submit flags.
 func TestEconomicEmissionCommandKeepsSuccessAndPartialOutcomeGatesUnresolved(t *testing.T) {

@@ -111,11 +111,14 @@ func TestMonitorClaimPublicExpectedPoolObservesAcceptedNotPaid(t *testing.T) {
 	var exit int
 	done := make(chan struct{})
 	hooks := monitorServiceHooks{wait: func(ctx context.Context, _ string, _ time.Duration) bool { <-ctx.Done(); return false }}
+	t.Cleanup(cancel)
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	go func() {
 		defer close(done)
-		exit = runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, &stderr, fixture.clock.now, hooks)
+		exit = runMainWithMonitorHooks(ctx, args, sink, &stderr, fixture.clock.now, hooks)
 	}()
-	t.Cleanup(func() { cancel(); <-done })
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
 	select {
 	case event := <-sink.events:
 		if !event.Current || !event.CheckpointCurrent || event.Status != "ok" || event.State.AcceptedReceipts != 1 || event.State.Deferred != 1 || event.State.Overdue != 0 {

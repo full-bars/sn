@@ -53,13 +53,17 @@ func TestParseCLIReleaseCommandsAndWriteGuardFlags(t *testing.T) {
 
 	command, options, err := parseCLI([]string{
 		"launch", "--apply", "--plan-hash", "sha256:approved", "--detach",
-		"--operator-proxy-repo", "/release/operator-proxy",
+		"--server-repo", "/release/server",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if command != "launch" || !options.Apply || !options.Detach || options.PlanHash != "sha256:approved" || options.OperatorProxyRepo != "/release/operator-proxy" {
+	if command != "launch" || !options.Apply || !options.Detach || options.PlanHash != "sha256:approved" || options.ServerRepo != "/release/server" {
 		t.Fatalf("write flags parsed incorrectly: command=%q options=%+v", command, options)
+	}
+	// The retired operator-proxy discovery override is no longer an input.
+	if _, _, err := parseCLI([]string{"doctor", "--operator-proxy-repo", "/release/operator-proxy"}); err == nil || !strings.Contains(err.Error(), "operator-proxy-repo") {
+		t.Fatalf("retired operator-proxy repository flag was accepted: %v", err)
 	}
 	command, options, err = parseCLI([]string{"analyze", "--manifest", "https://operator.example/manifest", "--run-id", "20260903T010203.000000000Z-production-soak"})
 	if err != nil || command != "analyze" || options.RunID != "20260903T010203.000000000Z-production-soak" {

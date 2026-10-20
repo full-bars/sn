@@ -90,10 +90,11 @@ func resumeRepairActiveValidator(ctx context.Context, store *repairActiveValidat
 	if err := store.save(record); err != nil {
 		return record.result(), err
 	}
-	// Recheck all physical custody and signed clocks after every durable cut.
-	actionCheck := func(join bool) (time.Time, uint64, error) {
-		stamp := now()
+	// Read wall time after the monotonic read, so that read cannot outlive the
+	// wall-clock authority check at the final start boundary.
+	actionClock := func(join bool) (time.Time, uint64, error) {
 		mono, err := host.monotonic()
+		stamp := now()
 		if err := errors.Join(err, ctx.Err()); err != nil {
 			return stamp, mono, repairValidatorObservationError("cannot read active repair action clock", err, false)
 		}
@@ -106,8 +107,15 @@ func resumeRepairActiveValidator(ctx context.Context, store *repairActiveValidat
 		if mono < record.JoinedMonotonicUsec || mono < record.StartMonotonicUsec {
 			return stamp, mono, errors.New("active repair monotonic clock moved backwards")
 		}
-		err = errors.Join(control.validate(), store.validateOwner(), host.activeClaim(ctx, store.approval, store.publicKey, false))
-		return stamp, mono, err
+		return stamp, mono, nil
+	}
+	// Recheck all physical custody and signed clocks after every durable cut.
+	actionCheck := func(join bool) (time.Time, uint64, error) {
+		stamp, mono, err := actionClock(join)
+		if err != nil {
+			return stamp, mono, err
+		}
+		return stamp, mono, errors.Join(control.validate(), store.validateOwner(), host.activeClaim(ctx, store.approval, store.publicKey, false))
 	}
 	manager, err := host.inspectActive(ctx, plan)
 	if err != nil {
@@ -203,7 +211,13 @@ func resumeRepairActiveValidator(ctx context.Context, store *repairActiveValidat
 			return finish("uncertain-consumed-start", err)
 		}
 		record.HighWaterAt = stamp
-		if err := host.start(ctx, p); err != nil {
+		if err := host.start(ctx, p, func() error {
+			dispatchAt, _, err := actionClock(true)
+			if err == nil {
+				record.HighWaterAt = dispatchAt
+			}
+			return err
+		}); err != nil {
 			return finish("uncertain-consumed-start", err)
 		}
 		manager, err = host.inspectActive(ctx, plan)

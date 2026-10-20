@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Public signed full-window transitions build actual original snapshots.
 // Counters observe source reads, decoding and physical fences; they do not

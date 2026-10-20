@@ -46,6 +46,7 @@ type bootstrapChainReadiness struct {
 	RootValidator            bootstrapChainRoleReadiness   `json:"root_validator"`
 	Blockers                 []string                      `json:"observation_blockers"`
 	PendingChainPhases       []string                      `json:"pending_chain_phases"`
+	OwnerTrimPhase           string                        `json:"owner_trim_phase,omitempty"`
 	CurrentAuthorityVerified bool                          `json:"current_authority_verified"`
 	NativeSigning            bool                          `json:"native_signing"`
 	NetworkEffects           bool                          `json:"network_effects"`
@@ -53,17 +54,21 @@ type bootstrapChainReadiness struct {
 	ContentHash              string                        `json:"content_hash"`
 }
 
-// Both role observations begin unresolved even when all offline approvals pass.
+// Every role observation begins unresolved even when all offline approvals pass.
+// A no-trim receipt records the owner's decision beside the unexecuted phase.
 func newBootstrapChainReadiness(preparation bootstrapChainPreparation) bootstrapChainReadiness {
 	result := bootstrapChainReadiness{Schema: bootstrapChainReadinessSchema, PlanHash: preparation.Plan.ContentHash,
-		Status: "unresolved", Blockers: []string{"CURRENT_FINALIZED_OBSERVATION_UNRESOLVED"}, PendingChainPhases: bootstrapChainPendingPhases()}
+		Status: "unresolved", Blockers: []string{"CURRENT_FINALIZED_OBSERVATION_UNRESOLVED"}, PendingChainPhases: bootstrapChainPendingPhasesForSchema(preparation.Plan.Config.Schema),
+		OwnerTrimPhase: preparation.Plan.OwnerTrimPhase}
 	for i, role := range preparation.Plan.Config.Validators {
 		approval := preparation.Plan.ValidatorInspections[i].Approval
 		result.UrValidators = append(result.UrValidators, bootstrapChainRoleReadiness{Role: role.Role, ValidatorId: role.ValidatorId,
 			Expected: role.subnetIdentityExpectation, ApprovedFromBlock: approval.ValidFromNativeBlock, ApprovedThroughBlock: approval.ValidThroughNativeBlock,
 			ObservationBlockers: []string{"CURRENT_FINALIZED_OBSERVATION_UNRESOLVED"},
 			ActivationBlockers:  []string{"NATIVE_EPOCH_APPROVAL_WINDOW_UNVERIFIED", "SIGNED_ACTIVATION_CHECKPOINT_UNVERIFIED", "PRODUCTION_ADMISSION_AND_OPERATOR_HEALTH_UNVERIFIED", "DEPLOYED_CONTRACTS_UNVERIFIED", "SIGNING_DEVICE_AND_GLOBAL_CUSTODY_FENCE_UNVERIFIED"}})
-		if role.Role == "majority" {
+		// The v5 sole validator inherits the majority role's stake requirement:
+		// it alone must hold the consensus share; no live read verifies it here.
+		if role.Role == "majority" || role.Role == "sole" {
 			result.UrValidators[i].ActivationBlockers = append(result.UrValidators[i].ActivationBlockers, "EFFECTIVE_STAKE_MAJORITY_UNVERIFIED")
 		}
 	}
@@ -89,7 +94,7 @@ func newBootstrapChainReadiness(preparation bootstrapChainPreparation) bootstrap
 // unresolved result. The route is observation-only and never approves submission.
 func runBootstrapChainReadiness(ctx context.Context, preparation bootstrapChainPreparation, rpcUrl string, retryWindow time.Duration, stdout, stderr io.Writer) int {
 	if !bootstrapChainHasRootRole(preparation.Plan.Config.Schema) {
-		fmt.Fprintln(stderr, "bootstrap readiness requires accepted v3/v4 scope; v1/v2 remain resumable at their original scope")
+		fmt.Fprintln(stderr, "bootstrap readiness requires accepted v3/v4/v5 scope; v1/v2 remain resumable at their original scope")
 		return 3
 	}
 	client, err := newRpcClient(rpcUrl, retryWindow)
@@ -117,11 +122,11 @@ func runBootstrapChainReadiness(ctx context.Context, preparation bootstrapChainP
 	return 0
 }
 
-// One deadline and one finalized census cover both subnet roles and root. No
+// One deadline and one finalized census cover every subnet role and root. No
 // historical trim census substitutes for current registration or approval time.
 func (self *rpcClient) observeBootstrapChainReadiness(ctx context.Context, preparation bootstrapChainPreparation) (result bootstrapChainReadiness, resultErr error) {
 	if err := preparation.validate(); err != nil || !bootstrapChainHasRootRole(preparation.Plan.Config.Schema) {
-		return result, errors.Join(errors.New("bootstrap readiness requires complete accepted v3/v4 preparation"), err)
+		return result, errors.Join(errors.New("bootstrap readiness requires complete accepted v3/v4/v5 preparation"), err)
 	}
 	result = newBootstrapChainReadiness(preparation)
 	if ctx == nil {

@@ -1,0 +1,95 @@
+{
+  "author_execution": false,
+  "author_handoff": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/hydration-compact-evidence-regression-handoff-v1.json",
+    "sha256": "c57c281ea327f74e50de1abe5281d1ab1c2fd7072bf4c23792cdfffb60ccf92b"
+  },
+  "changes": [
+    "Exact15 source selectors and tiny unittest entry with descriptions=False preserve original test docstrings and reviewed one-line census.",
+    "Both original joint owners stopped/empty; original compiler missing wait and short zero roots remain unqualified.",
+    "Qualified resource sampler/ChildContext/lease/cgroup/DB exclusions and64MiB cumulative growth are unchanged."
+  ],
+  "command": [
+    "/home/by/.pyenv/versions/3.14.7/bin/python3.14",
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-hydration15-regression-v1.py",
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/hydration15-compact-regression-job-v1.json"
+  ],
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 268435456,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 170,
+    "TimeoutStopSec": 10
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/hydration15-compact-regression-job-v1.json",
+    "sha256": "4db4749fdb15aac916c85a596b0ab4eade1d0cb6688d6847e0aa1989e5b45844"
+  },
+  "predecessor_wait_count": 68,
+  "preserved_incomplete_predecessors": [
+    {
+      "actual_phase_waits": [],
+      "job": {
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/useful-pair-v2/compiler.job.json",
+        "sha256": "6edd63b6dfb9718d1a067ef0c27bc49c995b96cb7dd3906ab2794f2e260c6dd0"
+      },
+      "readback": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-default-server5-v2-user-terminal-readback.json",
+        "sha256": "0a2bfe60a4d8e1a37b72d3a77938d88d60ef8655eedcf719a9557b3ba53157ee"
+      },
+      "terminal": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-default-server5-v2.receipt.json",
+        "sha256": "26828f289526be255b45104058049ae382c79f1aea658682c4e10dc405469a00"
+      }
+    },
+    {
+      "actual_phase_waits": [
+        {
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-nativefee11-v2-list-nativefee.process-result.json",
+          "sha256": "efeefb1fc1d6cfb6df0c8cc3b1a204266564ad6c546e831f19ccda1a26264b77"
+        }
+      ],
+      "job": {
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/useful-pair-v2/short.job.json",
+        "sha256": "6ef023bd1ed0c8324113c28c02591e2a3e478b04449b42f4100e41cbbaa74aa7"
+      },
+      "readback": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-nativefee11-v2-user-terminal-readback.json",
+        "sha256": "943d6058221fe08df27f0c21a725e336cb30aeeb92ccdf6434e99852b281087a"
+      },
+      "terminal": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-nativefee11-v2.joint-receipt.json",
+        "sha256": "2fc12deaca7165c22e381c71977fd757310e02b0e6c3c93f0efcb89abf867686"
+      }
+    }
+  ],
+  "required_root_adoption": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 67108864,
+    "data_minimum_available_bytes": 10737418240,
+    "history_count": 0,
+    "job_sha256": "4db4749fdb15aac916c85a596b0ab4eade1d0cb6688d6847e0aa1989e5b45844",
+    "margin": 2,
+    "memory_max_bytes": 268435456,
+    "memory_minimum_available_bytes": 113816633344,
+    "memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "runner_sha256": "d8cfdef030a78b6c0dc9f5303ae6168d59b95e09af218740c4192ea357dd96bf",
+    "short_count": 1,
+    "status": "ADOPTED_ONE_HYDRATION_COMPACT_EVIDENCE_REGRESSION_SUITE"
+  },
+  "required_root_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/hydration15-compact-regression-adoption-v1.json",
+  "root_count": 15,
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-hydration15-regression-v1.py",
+    "sha256": "d8cfdef030a78b6c0dc9f5303ae6168d59b95e09af218740c4192ea357dd96bf"
+  },
+  "source_handoff": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/hydration15-regression-execution-handoff-v1.json",
+    "sha256": "9e55e16fb9b24f39ae3bf650d9ebd6276d6aa6e5461d9804a3e3ac5e16e5db90"
+  },
+  "status": "SOURCE_REVIEWED_15_ROOTS_AWAITING_ROOT_ADOPTION"
+}

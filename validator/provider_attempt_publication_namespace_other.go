@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !darwin
 
 // Unsupported prepared physical custody remains explicit evidence unavailability.
 package validator

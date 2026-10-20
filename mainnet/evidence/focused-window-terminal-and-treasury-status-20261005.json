@@ -1,0 +1,378 @@
+{
+  "author_activity": "Read-only receipt/source comparison and documentation. No compiler, LIST, body, DB, signing or deployment executed by this author.",
+  "checkpoint_utc": "2026-10-05T16:26:00Z",
+  "deployable_build": {
+    "actual_timeout_seconds": 221,
+    "command": [
+      "go",
+      "build",
+      "./..."
+    ],
+    "component": "Server621",
+    "configured_phase_seconds": 600,
+    "executor_reported_owner_close": {
+      "ActiveState": "failed",
+      "ExecMainStatus": 1,
+      "MainPID": 0,
+      "source": "SolCurrentBuild explicit session report; original joined wait and terminal are pinned above.",
+      "unit": "sn-current-main-build-20261005.service"
+    },
+    "exit": -15,
+    "job": {
+      "bytes": 4033,
+      "path": "/mnt/data/sn-testnet/current-main-build-20261005/job.json",
+      "sha256": "70a5c5da849ab3553b06ba9b9e91124dfdc8fec8cc6f7d54c778957d415d2525"
+    },
+    "limit": "No successful deployable Server or SN build result from this attempt. The separately completed Server621 model-test compiler remains valid on its original inputs.",
+    "memory_peak_bytes": 3060326400,
+    "original_wait": {
+      "bytes": 2672,
+      "path": "/mnt/data/sn-testnet/current-main-build-20261005/server-all.process-result.json",
+      "sha256": "9c17a908b20c79fd3e1525055773210dd67317a0adb9687fc58f2049158cc513"
+    },
+    "receipt": {
+      "bytes": 9464,
+      "path": "/mnt/data/sn-testnet/current-main-build-20261005/server-all.receipt.json",
+      "sha256": "ae0b69b9e9f6ccfa6410d58e6533d991830848f02bc51936e16ebaa15964a037"
+    },
+    "resource_errors": [],
+    "sn_binaries": {
+      "built": 0,
+      "requested": [
+        "sn-mainnet",
+        "sn-miner",
+        "sn-validator",
+        "sn-snclaim"
+      ],
+      "started": 0
+    },
+    "source_heads": {
+      "connect": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+      "glog": "80a11b434ae90ae2221deb932daa21913919875a",
+      "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "gvisor": "c0783dba2eeff7b79692a7f122ffee5f8bd837c1",
+      "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "sdk": "18fca2edbbeac5566ef9c40027dba0e1d83be1d7",
+      "server": "62104c486e960efbb17ea8dd235e54ff666545af",
+      "sn": "802f9862d34aca9ac5c0d6996ecfe9e9087232e3",
+      "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+    },
+    "status": "SERVER_BUILD_TIMEOUT; FOUR_SN_BINARY_PHASES_NOT_STARTED",
+    "terminal": {
+      "bytes": 123,
+      "path": "/mnt/data/sn-testnet/current-main-build-20261005/terminal.json",
+      "sha256": "b246000487a1cb9fbf402edfaa37ef61c6b1ad474df2c7fe0a8aca9b9c731742"
+    },
+    "tree_joined": true,
+    "wait_record": {
+      "bytes": 1390,
+      "path": "/mnt/data/sn-testnet/current-main-build-20261005/server-all.wait.json",
+      "sha256": "9181773687ffe66b2b4c2310891e861ac14acc274d4c04942b57962f389e8027"
+    }
+  },
+  "documentation_base": "522ebae04f524c6c736207c495676de018d401aa",
+  "economic_successor": {
+    "authority": "The proposal supplies no keys, signatures, deployed identity, funding or activation. User preparation of public configuration does not establish execution.",
+    "custody": "User-confirmed hardware-Ledger multisig. Private keys never leave Ledger devices. vault/main/sn.yml carries only public account/signatory/threshold/device references; validators receive public inputs only.",
+    "design_commit": "522ebae04f524c6c736207c495676de018d401aa",
+    "historical_limit": "Preserve owner-recycle implementation and receipts as historical evidence. They do not qualify the treasury successor; all 38 original requirement rows remain intact.",
+    "policy": "10% native miner allocation to providers; 90% retained in a spendable native network-improvement treasury.",
+    "proposal": "mainnet/TREASURY-EMISSIONS.md",
+    "status": "SELECTED_DESIGN_IMPLEMENTATION_AND_QUALIFICATION_PENDING"
+  },
+  "forge_carry": {
+    "both_trees_joined": true,
+    "causal_kills": 0,
+    "compile_exit": 0,
+    "compile_stdout": {
+      "bytes": 92,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/executor-evidence-small-v4/normal-compile.stdout",
+      "sha256": "d08cb6f7f65eb5139c6915eccdf9dc9418e8057158f7d4a533069b04c92bc124"
+    },
+    "compile_wait": {
+      "bytes": 2367,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/executor-evidence-small-v4/normal-compile.process-result.json",
+      "sha256": "399e0fca25683ac02d6045138c159e74e339c15eefb19f861694ad29584c3410"
+    },
+    "compiled_files": 53,
+    "compiler_reported_seconds": 65.83,
+    "control_bodies_run": 0,
+    "control_groups_selected": 1,
+    "job": {
+      "bytes": 26172,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/forge-carry3-control1-small-job-v4.json",
+      "sha256": "fad38f2bdd1be83b90b3fe225a0a6c34edd8dd358005db56dc0737fee2866bdd"
+    },
+    "limit": "The original retained226 Forge results and exact source-reuse assessment remain separate. Successful compilation adds no carry-body or causal-control pass.",
+    "list_additional_compile_files": 10,
+    "list_exit": -15,
+    "list_stdout": {
+      "bytes": 36,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/executor-evidence-small-v4/normal-list.stdout",
+      "sha256": "6872d1b7a9661cb0a42dd09ff0ca2695235d82e058dd081dbff00320f8c84d19"
+    },
+    "list_timeout_seconds": 20,
+    "list_wait": {
+      "bytes": 3157,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/executor-evidence-small-v4/normal-list.process-result.json",
+      "sha256": "e4818408521d34a8c2cdf0fd742d1f5e2a00a05c8c8360e8e9cd48f370905747"
+    },
+    "owner_close": {
+      "bytes": 1837,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/small-v4-user-terminal-readback.json",
+      "sha256": "4609e9c318f97fc26ab978a0c91e90fad42bc96e89060ff31bf2cc253a6c921c"
+    },
+    "positive_bodies_run": 0,
+    "positive_roots_selected": 3,
+    "status": "NORMAL_BUILD_PASS; LIST_IMPLICIT_COMPILER_TIMEOUT; NO_TEST_BODY_OR_CONTROL",
+    "terminal": {
+      "bytes": 23790,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/contract-qualification-reuse-02e507ee/executor-evidence-small-v4/terminal.json",
+      "sha256": "93052e8fbcc613a2d82a87976efa5b379b88de60c266aac9dae197cd136faa61"
+    }
+  },
+  "operational_lessons": [
+    "Readiness ETA is a planning/reporting estimate, not a physical timeout. Keep adequate measured compiler/body timeouts and their cleanup/lease horizons; do not shrink a healthy phase to the remainder of an estimate.",
+    "Continue authorized work after the reporting checkpoint. Retain completed images, source bindings, LIST results and exact waits; run only unfinished or affected work under the next admitted scope.",
+    "A Forge LIST can trigger additional compilation. Select and budget its build scope explicitly; a short enumeration timeout cannot substitute for compiler allowance.",
+    "Preserve observer-startup failures and exact cleanup separately from product assertions. No test result exists when the body never starts."
+  ],
+  "retained_prior_results": {
+    "checkpoint": {
+      "bytes": 12390,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-802-focused-build-lessons/sn/mainnet/evidence/focused-sdk23-core-race-and-build-lessons-20261005.json",
+      "sha256": "93e2a4594185a1b455c05d7e8435a1309f18cce76516c71f5e9e1bfd56384beb"
+    },
+    "fullmodel": "Original d64 model remains guard-terminated and incomplete: 1813 RUN,1789 PASS,7 FAIL,10 SKIP,7 started pending,52 never started. No restart or later-source pass transfer.",
+    "summary": "Core14 normal/race PASS; SDK23 normal PASS with race/generator/controls pending; Server621 model compiler PASS; original mainnet34 unused-import failure and SDK annotation refusal remain retained."
+  },
+  "schema": "focused-window-terminal-and-treasury-status-v1",
+  "scope_preservation": {
+    "core_operative_control_groups": 393,
+    "go_master_roots_per_mode": 2863,
+    "limit": "All original rows/counts and separate completion scopes are unchanged. No successful whole-source readiness, treasury implementation or deployment is established.",
+    "original_outcomes": 38,
+    "original_outcomes_closed": 0,
+    "source_or_test_catalogue_changes": 0
+  },
+  "separate_db_observer_harness": {
+    "exit": 0,
+    "failed": 0,
+    "limit": "Four deterministic observer cases only; no Docker or integration body, no cancellation6 pass, no product-catalog count change.",
+    "passed": 4,
+    "receipt": {
+      "bytes": 2570,
+      "path": "/mnt/data/sn-testnet/sol-focused-harness-20261005/evidence/sol-db-v4-new4-deterministic-qualification-v1.json",
+      "sha256": "830d75f669112ee7848c066d8eec168488ea7280281de37e7ce112d3bc532bc2"
+    },
+    "scope": "Frozen DBv4 new deterministic cases only; lifecycle replacement read seam remains separate pending DBv5. No Docker/Go/compiler/network/runtime DB action or old tests.",
+    "status": "PASS_NEW_CASES_ONLY"
+  },
+  "server_cancellation6": {
+    "body_roots_run": 0,
+    "cleanup": {
+      "bytes": 481,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/evidence/six-owner.fallback-cleanup.json",
+      "sha256": "efb1e165b2fea53d0aef8e574fc6d939c51c369ce780c1ab14401a7cf21c9755"
+    },
+    "cleanup_errors": [],
+    "exact_owned_pg_and_network_removed": true,
+    "job": {
+      "bytes": 13702,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/model-six-body-job.json",
+      "sha256": "83cb4cb4b69d09a3e1ae2ec8f376f121c54cbe2c5d4cdb4f7e6ead8b5642816b"
+    },
+    "limit": "The peer observer refused startup before test execution. Cleanup success does not qualify the six cancellation roots. The original production failure and source correction remain separately recorded.",
+    "list_executed": false,
+    "original_wait": {
+      "bytes": 2966,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/evidence/six-owner.process-result.json",
+      "sha256": "7f5eb59c088415cea9507bff6aab5c59ef77d58526b6b5bcdf503241d6292aa1"
+    },
+    "owner_child_exit": -9,
+    "owner_close": {
+      "bytes": 1725,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/cancellation6-failed-owner-closed-readback-v1.json",
+      "sha256": "0b1fcece2860b342fd8abf9da2931e881f409c7b035c37dedbc6d53be54035ae"
+    },
+    "resource_errors": [
+      {
+        "detail": "",
+        "type": "AssertionError"
+      },
+      {
+        "detail": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/evidence/six-normal-v1-container-oom.txt",
+        "type": "MissingContainerOOMObservation"
+      }
+    ],
+    "selected_roots": [
+      "TestAsyncDebitPageDeadlinePreservesVisitedCursor",
+      "TestAsyncDebitPageDeadlinePreservesBusyCursor",
+      "TestAsyncDebitPageDeadlineKeepsForeignFailures",
+      "TestAsyncDebitPageDeadlineResumesCommittedAccounting",
+      "TestSettlementPageCancellationRejectsIncompleteAndForeignCauses",
+      "TestLegacySettlementPageDeadlinePreservesJoinedFailureAndCommittedCursor"
+    ],
+    "source_heads": {
+      "connect": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+      "glog": "80a11b434ae90ae2221deb932daa21913919875a",
+      "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "gvisor": "c0783dba2eeff7b79692a7f122ffee5f8bd837c1",
+      "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "sdk": "18fca2edbbeac5566ef9c40027dba0e1d83be1d7",
+      "server": "62104c486e960efbb17ea8dd235e54ff666545af",
+      "sn": "eabefa17f3be9d0a1038eff74d9e04fc5950b443",
+      "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+    },
+    "status": "DATABASE_STARTUP_OBSERVER_REFUSAL; NO_LIST_OR_BODY",
+    "terminal": {
+      "bytes": 11485,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-server-qualification-20261005/evidence/six-owner.terminal.json",
+      "sha256": "78b8890276d88acfb9130884a79b7c81628b50c814470aadaf0b428b4f84e6e6"
+    },
+    "tree_joined": true
+  },
+  "sn_normal3": {
+    "effective_source_tuple": {
+      "connect": "11f99c8f2b5c439625b35abec07de31e0987af2c",
+      "glog": "80a11b434ae90ae2221deb932daa21913919875a",
+      "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "gvisor": "c0783dba2eeff7b79692a7f122ffee5f8bd837c1",
+      "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "sdk": "18fca2edbbeac5566ef9c40027dba0e1d83be1d7",
+      "server": "62104c486e960efbb17ea8dd235e54ff666545af",
+      "sn": "802f9862d34aca9ac5c0d6996ecfe9e9087232e3",
+      "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+    },
+    "job": {
+      "bytes": 68688,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal3-owner-job-v1.json",
+      "sha256": "58310bf440d4deb971c7144f4fd305004b29a454b2c379ffcfb9db2177dc5eb4"
+    },
+    "limit": "Retain the compiled mainnet image and successful full LIST with their exact source binding. Two individual passes do not qualify mainnet34, validator88, miner84 or the treasury successor.",
+    "mainnet": {
+      "body_exit": 1,
+      "body_stdout": {
+        "bytes": 24385,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal-v1/evidence/mainnet-normal-body.stdout",
+        "sha256": "ae62ec96112807cd9b23f466cee609d980b90744a70ebb3fe3a84069ef8cf6da"
+      },
+      "body_wait": {
+        "bytes": 4497,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal-v1/evidence/mainnet-normal-body.process-result.json",
+        "sha256": "1801124d60869ce3576e433030c14bc1ccbdc97d0cd373916a9fe49fd2438848"
+      },
+      "compile_exit": 0,
+      "compile_wait": {
+        "bytes": 2310,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal-v1/evidence/mainnet-normal-compile.process-result.json",
+        "sha256": "3cd415bdfe82c2fd81c6a952c77b7b1033837248c3b2d96eeffb1f487ed1d1bb"
+      },
+      "full_list_exit": 0,
+      "full_list_roots": 2413,
+      "image_receipt_binding": {
+        "bytes": 130005656,
+        "links": 1,
+        "mode": 320,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal-v1/images/mainnet-normal.test",
+        "sha256": "134e40df870facd8b37100cffdeeddff142107d2c15096671faf8a3306aa262d"
+      },
+      "list_wait": {
+        "bytes": 2335,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal-v1/evidence/mainnet-normal-list.process-result.json",
+        "sha256": "c79bbd3969ef6020c6ca23e9009f6f2e0616a2cc51476c874220f6e2857d55fa"
+      },
+      "package_pass": false,
+      "pass": 2,
+      "passed_roots": [
+        "TestMainnetDurableUnitEffectsRejectMissingDeclaration",
+        "TestMainnetDurableUnitRejectsDifferentControllerDeclaration"
+      ],
+      "run": 4,
+      "selected": 34,
+      "skip": 1,
+      "skip_reason": "The real-host storage inspector requires a separately selected root-only synthetic /mnt/data fixture; this attempt did not provide it.",
+      "skipped_roots": [
+        "TestServiceStorageCredentialInspectorRealHost"
+      ],
+      "timeout_fail": 1,
+      "timeout_failed_roots": [
+        "TestOwnerRecyclePublicSubmitAndExhaustedReceiptRecovery"
+      ],
+      "timeout_reason": "The readiness-window cutoff minus the cleanup reserve clipped the test timeout to three seconds; the raw timeout remains an actual failure, not a demonstrated source defect.",
+      "timeout_seconds": 3,
+      "tree_joined": true,
+      "unrun": 30,
+      "unrun_roots": [
+        "TestBootstrapPlanAllReviewInputsRemainUnvalidated",
+        "TestBootstrapPlanCommandAndUnboundOutline",
+        "TestBootstrapPlanDeterministicBlockedGraph",
+        "TestOwnerRecyclePublicUncertainPostCannotRenewApproval",
+        "TestRepairActiveValidatorCommandStopsJoinsAndStartsOnce",
+        "TestRepairActiveValidatorDispatchClockReadFailureRetainsCause",
+        "TestRepairActiveValidatorStartReservationRechecksOldJoin",
+        "TestRepairActiveValidatorStartWindowAfterStorageInspection",
+        "TestRepairActiveValidatorStopRequiresRecoveryHeadroom",
+        "TestRepairOperatorPublicControllerOwnsDurablePendingAndCompletion",
+        "TestRepairOperatorPublicControllerRetriesUnavailableCensus",
+        "TestRepairOperatorRetainsOriginalAttemptsAndCompletesActualProcess",
+        "TestRepairOperatorStartWindowAfterOriginalCensus",
+        "TestRepairOperatorStartWindowAfterStorageInspection",
+        "TestRepairOperatorUncertainStartNeverAdoptsOrRetries",
+        "TestRepairRootPassiveContinuesExactOriginalCheckpoint",
+        "TestRepairRootPassiveExpiryAfterReservationDoesNotStart",
+        "TestRepairRootPassiveStartWindowAfterStorageInspection",
+        "TestRepairStartStorageFailurePrecedesClockRefusal",
+        "TestRepairValidatorPostSyncAuthorityRecheck",
+        "TestRepairValidatorStartWindowAfterStorageInspection",
+        "TestRootPassiveHostInstallsStartsAndRecovers",
+        "TestRootPassiveHostPostSyncExpiryConsumesWithoutStarting",
+        "TestRootPassiveHostStartWindowAfterStorageInspection",
+        "TestValidatorActivationCurrentPostSyncRefusalNeverStarts",
+        "TestValidatorActivationCurrentStartsBothExactUnitsOnce",
+        "TestValidatorActivationCurrentWindowAfterStorageInspection",
+        "TestValidatorActivationPartialStartSurvivesRestart",
+        "TestValidatorActivationPostSyncWindowConsumesWithoutStarting",
+        "TestValidatorActivationStartWindowAfterStorageInspection"
+      ]
+    },
+    "miner": {
+      "body_executed": false,
+      "compile_executed": false,
+      "list_executed": false
+    },
+    "owner_close": {
+      "bytes": 4121,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal-v1/sn-normal3-canonical-closed-readback-v1.json",
+      "sha256": "49e87f2067c18f086ef23d00906437c144c67a11f56a6f6cc0b1b8b61a08a835"
+    },
+    "resource_errors": [],
+    "source_closure": {
+      "bytes": 705756,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/dispatch-runtime-targeted-802-sdk18-server621-core11f/source-proof.json",
+      "sha256": "1d667c0fe235a9d7dce717d82d5b0ebdec40495b8be597406f3cd02384c27df9"
+    },
+    "status": "MAINNET_COMPILE_AND_LIST_PASS; BODY_PARTIAL; VALIDATOR_COMPILE_TIMEOUT; MINER_NOT_STARTED",
+    "terminal": {
+      "bytes": 53506,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal-v1/evidence/sn-normal3.owner.receipt.json",
+      "sha256": "745860da0cd754f6325a7ed9e3a1710615d026106579309ab3ad90f2b11514b6"
+    },
+    "validator": {
+      "body_executed": false,
+      "compile_exit": -15,
+      "list_executed": false,
+      "timeout_seconds": 55,
+      "tree_joined": true,
+      "wait": {
+        "bytes": 2636,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/focused-sn-normal3-802/normal-v1/evidence/validator-normal-compile.process-result.json",
+        "sha256": "32e82501d169e1575ed3a35afc951c51fd78e65604945137555754359994deec"
+      }
+    }
+  },
+  "status": "FOUR_ORIGINAL_ATTEMPTS_CLOSED_INCOMPLETE; CONTINUATION_REQUIRED"
+}

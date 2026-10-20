@@ -22,6 +22,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // Configuration is immutable during a call; counters alone need the lock.
@@ -282,8 +283,12 @@ func TestOwnerTrimGuardRejectsBaselineBeyondFinalizedHead(t *testing.T) {
 	client, fixture, policy, policyHash, plan := newOwnerTrimGuardFixture(t, false)
 	fixture.afterNumber = 99
 	fixture.afterHeader, fixture.afterHash = rootReceiptHeaderFixture(t, testGenesisHash, 99, nil, false)
+	// Since 45d862a5 a baseline beyond the finalized head waits for finality
+	// coverage, then is unavailable rather than an integrity contradiction.
+	// The lower head stays in place, so exhaust the real retry boundary.
+	client.retryWait = func(context.Context, time.Duration) error { return context.DeadlineExceeded }
 	result, err := client.readOwnerTrimGuard(t.Context(), policy, policyHash, plan, "recheck")
-	if !errors.Is(err, errRpcIntegrity) || result.ContentHash != "" || fixture.after.count("state_getStorage") != 0 {
+	if !errors.Is(err, errRpcObservationUnavailable) || errors.Is(err, errRpcIntegrity) || result.ContentHash != "" || fixture.after.count("state_getStorage") != 0 {
 		t.Fatalf("nonfinalized baseline admitted: %+v %v", result, err)
 	}
 }

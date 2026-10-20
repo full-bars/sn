@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
@@ -23,6 +24,9 @@ import (
 type ProviderClientKeyOwner struct {
 	store *registrationStore
 	seed  []byte
+	// rotationBackup names the timestamped file that preserves the key this
+	// open replaced, when explicit creation rotated an unusable retained key.
+	rotationBackup string
 }
 
 // These are separate operator decisions. Legacy adoption asserts that the
@@ -73,7 +77,7 @@ func openProviderClientKey(ctx context.Context, keyPath string, options Provider
 			return nil, err
 		}
 		for _, name := range names {
-			if strings.HasPrefix(name, ".provider") && name != ".provider.key.registration.lock" {
+			if strings.HasPrefix(name, ".provider") && name != ".provider.key.registration.lock" && name != ".provider_version" {
 				return nil, &RegistrationRefusedError{Code: "provider_key_missing_with_retained_history"}
 			}
 		}
@@ -95,29 +99,98 @@ func openProviderClientKey(ctx context.Context, keyPath string, options Provider
 	} else if err != nil {
 		return nil, err
 	}
-	if len(seed) != ed25519.SeedSize || bytes.Equal(seed, make([]byte, ed25519.SeedSize)) {
-		return nil, errors.New("provider client key must be an existing nonzero 32-byte seed")
+	// v33 accepted any nonempty raw seed as the provider client key
+	// (readProviderClientKeySeed, used when err == nil && 0 < len(seed)), and a
+	// live 3.23-fix provider can retain the all-zero seed. The all-zero seed is
+	// still a real identity: the server holds the public key it derives, so the
+	// key gate accepts it exactly as v33 did and only the loud zero-seed warning
+	// (miner/provider_key_warning.go) records the risk. A wrong length is the
+	// only malformed retained key.
+	zeroSeed := len(seed) == ed25519.SeedSize && bytes.Equal(seed, make([]byte, ed25519.SeedSize))
+	if len(seed) != ed25519.SeedSize && !options.AllowCreate {
+		return nil, errors.New("provider client key must be an existing 32-byte seed")
 	}
-	public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
-	expected := []byte("urnetwork-provider-client-key-v1\n0x" + hex.EncodeToString(public) + "\n")
-	marker, err := store.read(".provider.key.identity")
-	if errors.Is(err, os.ErrNotExist) {
-		if err := admitProviderKeyMarker(store, options.AdoptLegacyKey); err != nil {
+	// Explicit creation over a retained unusable key is the rotation path, not
+	// a recovery: the operator asked for a new durable identity. The replaced
+	// file is preserved as a timestamped backup before the fresh seed is
+	// published, and the marker is republished for the rotated key. A usable
+	// nonzero retained seed is never rotated by the flag.
+	rotationBackup := ""
+	rotated := false
+	if options.AllowCreate && (len(seed) != ed25519.SeedSize || zeroSeed) {
+		if len(seed) > 0 {
+			rotationBackup = ".provider.key-" + time.Now().UTC().Format("20060102T150405.000000Z") + ".bak"
+			if err := store.write(rotationBackup, seed); err != nil {
+				return nil, err
+			}
+		}
+		seed = make([]byte, ed25519.SeedSize)
+		if _, err := rand.Read(seed); err != nil {
 			return nil, err
 		}
-		if err := store.write(".provider.key.identity", expected); err != nil {
+		if err := ctx.Err(); err != nil {
 			return nil, err
+		}
+		if err := store.write(".provider.key", seed); err != nil {
+			return nil, err
+		}
+		if hooks.afterSeed != nil {
+			if err := hooks.afterSeed(); err != nil {
+				return nil, err
+			}
+		}
+		rotated = true
+	}
+	expected, err := ProviderKeyIdentityMarker(seed)
+	if err != nil {
+		return nil, err
+	}
+	marker, err := store.read(".provider.key.identity")
+	if errors.Is(err, os.ErrNotExist) {
+		if rotated {
+			// The retired key's marker cannot describe the rotated key and the
+			// retired key file is the retained history: republish the marker as
+			// part of the same explicit rotation decision.
+			if err := store.write(".provider.key.identity", expected); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := admitProviderKeyMarker(store, options.AdoptLegacyKey); err != nil {
+				return nil, err
+			}
+			if err := store.write(".provider.key.identity", expected); err != nil {
+				return nil, err
+			}
 		}
 	} else if err != nil {
 		return nil, err
 	} else if !bytes.Equal(marker, expected) {
-		return nil, errors.New("provider client key differs from its retained public identity")
+		if !rotated {
+			return nil, errors.New("provider client key differs from its retained public identity")
+		}
+		if err := store.write(".provider.key.identity", expected); err != nil {
+			return nil, err
+		}
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	self.seed = seed
+	self.rotationBackup = rotationBackup
 	return self, nil
+}
+
+// ProviderKeyIdentityMarker returns the .provider.key.identity marker bytes
+// for a raw 32-byte Ed25519 seed, or an error when the seed is not one. The
+// all-zero seed derives an ordinary marker: v33 used it as a real key and the
+// server can hold its public key, so the marker path must not refuse it. The
+// key owner and the automatic legacy import share this one derivation.
+func ProviderKeyIdentityMarker(seed []byte) ([]byte, error) {
+	if len(seed) != ed25519.SeedSize {
+		return nil, errors.New("provider client key must be an existing 32-byte seed")
+	}
+	public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
+	return []byte("urnetwork-provider-client-key-v1\n0x" + hex.EncodeToString(public) + "\n"), nil
 }
 
 // A bare retained seed can finish the key-before-marker crash window. Existing
@@ -131,7 +204,10 @@ func admitProviderKeyMarker(store *registrationStore, adoptLegacy bool) error {
 	}
 	var history, credentials bool
 	for _, name := range names {
-		if !strings.HasPrefix(name, ".provider") || name == ".provider.key" || name == ".provider.key.registration.lock" {
+		// .provider_version is the fork's plain version stamp, not provider
+		// identity: the 3.23 line writes it beside the key, and it must not
+		// turn a bare seed into retained history in either scan.
+		if !strings.HasPrefix(name, ".provider") || name == ".provider.key" || name == ".provider.key.registration.lock" || name == ".provider_version" {
 			continue
 		}
 		history = true
@@ -189,6 +265,25 @@ func (self *ProviderClientKeyOwner) LoadOrRegisterClientJwt(ctx context.Context,
 	return loadOrRegisterClientJwtInDirectory(ctx, api, networkPath, clientPath, "provider", scope, allowCreate, registrationHooks{}, self.store)
 }
 
+// RegisterFreshClientJwt registers a brand-new client for one provider slot
+// and replaces the slot credential with it. It is the URNETWORK_HOT_RESTART=0
+// contract (a fresh identity per start) and is deliberately a separate entry
+// from LoadOrRegisterClientJwt, so the retained-custody default cannot change
+// by accident: this path never reads the retained credential, while the
+// default owns reading, validating and refreshing it.
+func (self *ProviderClientKeyOwner) RegisterFreshClientJwt(ctx context.Context, api *sdk.Api, networkPath, clientPath, slot string, allowCreate bool) (string, connect.Id, error) {
+	if self == nil || self.store == nil || len(self.seed) != ed25519.SeedSize || !providerClientCredentialName(filepath.Base(clientPath)) || api == nil {
+		return "", connect.Id{}, errors.New("provider registration lacks its retained custody owner")
+	}
+	endpoint, err := api.NetworkClientRegistrationEndpoint()
+	if err != nil {
+		return "", connect.Id{}, err
+	}
+	public := ed25519.NewKeyFromSeed(self.seed).Public().(ed25519.PublicKey)
+	scope := RegistrationScope{Endpoint: endpoint, ClientKey: "0x" + hex.EncodeToString(public), ClientRole: "provider-v1", ClientSlot: slot}
+	return registerFreshClientJwtWithCustody(ctx, api, networkPath, clientPath, "provider", scope, allowCreate, self.store)
+}
+
 // A completed refresh can update only a credential in the key owner's original
 // directory. The enclosing API callback still validates its original identity.
 func (self *ProviderClientKeyOwner) PersistClientJwt(clientPath, token string) (returnErr error) {
@@ -219,6 +314,17 @@ func (self *ProviderClientKeyOwner) RejectClientJwt(clientPath string) (returnEr
 
 // Independent device settings receive their own immutable seed copy.
 func (self *ProviderClientKeyOwner) Seed() []byte { return slices.Clone(self.seed) }
+
+// RotationBackupName names the timestamped backup of the replaced key file
+// when this open rotated an unusable retained key, or "" otherwise. The name
+// is relative to the key owner's directory; the operator can restore it by
+// renaming the file back over .provider.key (and republishing its marker).
+func (self *ProviderClientKeyOwner) RotationBackupName() string {
+	if self == nil {
+		return ""
+	}
+	return self.rotationBackup
+}
 
 // Closing belongs to the enclosing service after every user has joined.
 func (self *ProviderClientKeyOwner) Close() error {

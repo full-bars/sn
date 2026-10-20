@@ -42,8 +42,8 @@ type releaseStartupV2TestFixture struct {
 	servers          []*mockVerifyServer
 	engines          []*TrailEngine
 	keys             map[uint64]map[byte]ed25519.PublicKey
-	replicas         [2]AttemptCutV2Replica
-	stores           [2]*attemptCutV2ReplicaTestStore
+	replicas         []AttemptCutV2Replica
+	stores           []*attemptCutV2ReplicaTestStore
 }
 
 // Independent pins are chosen by the existing actual bootstrap before any
@@ -53,9 +53,11 @@ func newReleaseStartupV2TestFixture(t *testing.T, active bool) *releaseStartupV2
 }
 
 // Larger real populations choose their finite bounds before disk admission.
-func newReleaseStartupV2TestFixtureWithBounds(t *testing.T, active bool, bounds *ReleaseEvidenceV2Bounds) *releaseStartupV2TestFixture {
+// A configured census, chosen before any signature, owns one replica store per
+// public origin: a single operator's only store, or two independent ones.
+func newReleaseStartupV2TestFixtureWithBounds(t *testing.T, active bool, bounds *ReleaseEvidenceV2Bounds, configure ...func(*ReleaseConfig)) *releaseStartupV2TestFixture {
 	t.Helper()
-	base, inputs := newReleaseEvidenceV2DiskTestFixture(t)
+	base, inputs := newReleaseEvidenceV2DiskTestFixture(t, configure...)
 	if bounds != nil {
 		base.cfg.EvidenceV2.Bounds = *bounds
 	}
@@ -63,7 +65,7 @@ func newReleaseStartupV2TestFixtureWithBounds(t *testing.T, active bool, bounds 
 	fixture.boundary = inputs[0].Context.InitialCut.Boundary
 	fixture.finalized = fixture.boundary.EVMBlock
 	fixture.blocks[fixture.finalized] = base.contexts[0].ObservedEVMHash
-	fixture.replicas, fixture.stores = newAttemptCutV2ReplicaTestStores(t)
+	fixture.replicas, fixture.stores = newAttemptCutV2ReplicaTestStoreCensus(t, releaseEvidenceV2ReplicaCensus(len(base.cfg.Operators)))
 	fixture.nativeFixture = newReleaseNativeValidatorUIDTestFixture(t, 2, inputs[0].Context.InitialCut.Activation.Hotkey)
 	fixture.prepareNative(t)
 	server := gethrpc.NewServer()
@@ -277,7 +279,16 @@ func (self *releaseStartupV2TestFixture) Call(ctx context.Context, call map[stri
 }
 
 func (self *releaseStartupV2TestFixture) start(ctx context.Context, physical attemptSettlementV2IO) error {
-	return startReleaseEvidenceV2DiskStateWithRuntime(ctx, &self.cfg, self.chain, self.nativeFixture.chain, self.inputs, self.keys, [2]string{self.replicas[0].Origin, self.replicas[1].Origin}, self.disk, self.nativeFixture.expected, physical)
+	return startReleaseEvidenceV2DiskStateWithRuntime(ctx, &self.cfg, self.chain, self.nativeFixture.chain, self.inputs, self.keys, self.origins(), self.disk, self.nativeFixture.expected, physical)
+}
+
+// The independent public origins in replica order, one per replica store.
+func (self *releaseStartupV2TestFixture) origins() []string {
+	origins := make([]string, len(self.replicas))
+	for index, replica := range self.replicas {
+		origins[index] = replica.Origin
+	}
+	return origins
 }
 
 func (self *releaseStartupV2TestFixture) reopen(t *testing.T) {

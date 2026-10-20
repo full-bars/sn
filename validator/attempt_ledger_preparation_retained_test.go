@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Nonempty inspection uses the real signed ledger reader without constructing
 // a writable owner. Original backend and migration bytes remain unchanged.

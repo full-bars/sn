@@ -1,0 +1,113 @@
+{
+  "schema": "urnetwork-mainnet-settlement-v2-contract-phase-config-v1",
+  "approval_public_key_ed25519": "<approval-public-key-ed25519>",
+  "plan": {
+    "schema": "urnetwork-mainnet-settlement-v2-contract-phase-v1",
+    "deployment_id": "sn25-mainnet-settlement-v2",
+    "network": {
+      "native_chain": "Bittensor",
+      "genesis_hash": "<O2-genesis-hash>",
+      "evm_chain_id": 964
+    },
+    "runtime": {
+      "runtime_source_commit": "<O3-runtime-source-commit>",
+      "runtime_version": {
+        "specName": "node-subtensor",
+        "specVersion": "<O3-spec-version>",
+        "transactionVersion": 1,
+        "stateVersion": 1
+      },
+      "runtime_code_hash": "<O3-runtime-code-hash>",
+      "runtime_metadata_hash": "<O3-runtime-metadata-hash>"
+    },
+    "route": {
+      "rpc_url": "<O2-evm-rpc-url>",
+      "read_retry_seconds": 60,
+      "send_timeout_seconds": 30
+    },
+    "run_directory": "/secure/ur-mainnet/run-v2",
+    "artifacts": {
+      "path": "/secure/ur-mainnet/settlement-v2-contracts.json",
+      "sha256": "<release-file-sha256>"
+    },
+    "source_lock_hash": "<O7-source-lock-hash>",
+    "custody_id": "<O7-custody-id>",
+    "custody_fence_hash": "<O7-custody-fence-hash>",
+    "cutover_evidence_hash": "<O7-cutover-evidence-hash>",
+    "start_native_number": "<O7-start-native-number>",
+    "start_native_hash": "<O7-start-native-hash>",
+    "valid_through_native": "<O7-valid-through-native>",
+    "maximum_attempts": 8,
+    "maximum_total_wei": "<O7-maximum-total-wei>",
+    "netuid": 25,
+    "actions": [
+      {
+        "id": "vault2-create",
+        "sender": "<O4-deployer-address>",
+        "nonce": "<O4-nonce>",
+        "to": null,
+        "data": "<vault2-create-data>",
+        "value_wei": "0",
+        "gas": 4000000,
+        "fee_cap_wei": "<O7-fee-cap-wei>",
+        "tip_cap_wei": "<O7-tip-cap-wei>"
+      },
+      {
+        "id": "escrow2-register",
+        "sender": "<O4-deployer-address>",
+        "nonce": "<O4-nonce+1>",
+        "to": "<vault2-address>",
+        "data": "<escrow2-register-data>",
+        "value_wei": "<O6-escrow-value-wei>",
+        "gas": 2500000,
+        "fee_cap_wei": "<O7-fee-cap-wei>",
+        "tip_cap_wei": "<O7-tip-cap-wei>"
+      },
+      {
+        "id": "settlement2-create",
+        "sender": "<O4-deployer-address>",
+        "nonce": "<O4-nonce+2>",
+        "to": null,
+        "data": "<settlement2-create-data>",
+        "value_wei": "0",
+        "gas": 3000000,
+        "fee_cap_wei": "<O7-fee-cap-wei>",
+        "tip_cap_wei": "<O7-tip-cap-wei>"
+      },
+      {
+        "id": "proxy2-create",
+        "sender": "<O4-deployer-address>",
+        "nonce": "<O4-nonce+3>",
+        "to": null,
+        "data": "<proxy2-create-data>",
+        "value_wei": "0",
+        "gas": 1000000,
+        "fee_cap_wei": "<O7-fee-cap-wei>",
+        "tip_cap_wei": "<O7-tip-cap-wei>"
+      },
+      {
+        "id": "vault2-link",
+        "sender": "<O4-deployer-address>",
+        "nonce": "<O4-nonce+4>",
+        "to": "<vault2-address>",
+        "data": "<vault2-link-data>",
+        "value_wei": "0",
+        "gas": 150000,
+        "fee_cap_wei": "<O7-fee-cap-wei>",
+        "tip_cap_wei": "<O7-tip-cap-wei>"
+      },
+      {
+        "id": "batcher-create",
+        "sender": "<O4-deployer-address>",
+        "nonce": "<O4-nonce+5>",
+        "to": null,
+        "data": "<batcher-create-data>",
+        "value_wei": "0",
+        "gas": 400000,
+        "fee_cap_wei": "<O7-fee-cap-wei>",
+        "tip_cap_wei": "<O7-tip-cap-wei>"
+      }
+    ]
+  },
+  "approval_signature_ed25519": ""
+}

@@ -336,8 +336,14 @@ func TestAttemptSettlementRunTrailReleasesUnassignedSeedReservation(t *testing.T
 		select {
 		case <-entered:
 		case <-finished:
-			cancel()
-			t.Fatalf("trail ended before seed request: %v", trailErr)
+			// The request closes entered before the trail can finish, so both
+			// may be ready; only an unentered request means the seed was skipped.
+			select {
+			case <-entered:
+			default:
+				cancel()
+				t.Fatalf("trail ended before seed request: %v", trailErr)
+			}
 		}
 		cancel()
 		<-finished

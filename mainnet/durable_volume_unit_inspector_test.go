@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 package main
 
@@ -14,7 +14,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"testing"
 
 	"github.com/urfoundation/sn/internal/durableinspect"
@@ -64,8 +63,8 @@ func TestServiceStorageCredentialInspectorRealHost(t *testing.T) {
 	if err := unix.Setxattr(root, durablevolume.RootGenerationAttribute, nonce, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
-	var state syscall.Stat_t
-	if err := syscall.Stat(root, &state); err != nil {
+	var state unix.Stat_t
+	if err := unix.Stat(root, &state); err != nil {
 		t.Fatal(err)
 	}
 	write := func(name string, raw []byte, mode os.FileMode) planFileReference {
@@ -124,7 +123,7 @@ func TestServiceStorageCredentialInspectorRealHost(t *testing.T) {
 	}
 	ctx := durablevolume.WithReference(t.Context(), reference)
 	plan := repairValidatorPlan{Unit: unit, Systemctl: manager, CommandTimeoutSeconds: 30}
-	if err := host.start(ctx, plan); err != nil || managerCalls != 1 {
+	if err := host.start(ctx, plan, func() error { return nil }); err != nil || managerCalls != 1 {
 		t.Fatal("actual service credential inspection failed", managerCalls, err)
 	}
 	if entries, err := os.ReadDir(root); err != nil || len(entries) != 0 {
@@ -139,14 +138,14 @@ func TestServiceStorageCredentialInspectorRealHost(t *testing.T) {
 	if err := os.Chown(root, 1000, 1000); err != nil {
 		t.Fatal(err)
 	}
-	if err := host.start(ctx, plan); !errors.Is(err, durablevolume.ErrIdentity) || managerCalls != 1 {
+	if err := host.start(ctx, plan, func() error { return nil }); !errors.Is(err, durablevolume.ErrIdentity) || managerCalls != 1 {
 		t.Fatal("replaced role root reached the manager", managerCalls, err)
 	}
 	if err := errors.Join(os.Remove(root), os.Rename(root+"-original", root)); err != nil {
 		t.Fatal(err)
 	}
 	plan.Unit.Binary.Sha256 = monitorReadDigest([]byte("another executable"))
-	if err := host.start(ctx, plan); err == nil || managerCalls != 1 {
+	if err := host.start(ctx, plan, func() error { return nil }); err == nil || managerCalls != 1 {
 		t.Fatal("different executable pin reached the manager", managerCalls, err)
 	}
 }

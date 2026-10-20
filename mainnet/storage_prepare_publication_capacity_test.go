@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 package main
 
@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/protocol"
 	"github.com/urfoundation/sn/validator"
@@ -48,7 +50,7 @@ func TestStoragePreparationPublicationRejectsUnexportableDeclaredCapacity(t *tes
 			if entries, err := os.ReadDir(f.source.root); err != nil || len(entries) != 0 {
 				t.Fatal("oversized original scope changed the empty target", dimension, err)
 			}
-			if _, err := unix.Getxattr(f.source.root, validator.ProviderAttemptPublicationNamespaceAttribute, make([]byte, 4096)); !errors.Is(err, unix.ENODATA) {
+			if _, err := unix.Getxattr(f.source.root, validator.ProviderAttemptPublicationNamespaceAttribute, make([]byte, 4096)); !errors.Is(err, durablesys.ErrNoAttribute) {
 				t.Fatal("oversized original scope published custody", dimension, err)
 			}
 		}()

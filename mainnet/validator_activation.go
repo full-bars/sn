@@ -399,7 +399,16 @@ func advanceValidatorActivation(ctx context.Context, store *validatorActivationS
 					return finish("partial", err)
 				}
 			}
-			if err := host.host.start(ctx, profile); err != nil {
+			if err := host.host.start(ctx, profile, func() error {
+				dispatchAt := now()
+				if err := validatorActivationWindow(ctx, plan, record.HighWaterAt, dispatchAt, evidence); err != nil {
+					return err
+				}
+				if current != nil {
+					return current.retained.Approval.window(ctx, record.HighWaterAt, dispatchAt)
+				}
+				return nil
+			}); err != nil {
 				unit.Status = "uncertain-consumed-start"
 				return finish("partial", err)
 			}

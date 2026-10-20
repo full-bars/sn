@@ -93,7 +93,9 @@ func TestSafeCurrentPublicReadFailurePreservesOriginalAttempt(t *testing.T) {
 			t.Fatal("failed actual final pending read changed original allowance/custody", fault, code, diagnostic, observations, sends)
 		}
 		if fault == "cancel" {
-			if !strings.Contains(diagnostic, context.Canceled.Error()) || !strings.Contains(diagnostic, errRpcObservationUnavailable.Error()) || strings.Contains(diagnostic, errRpcIntegrity.Error()) || strings.Contains(diagnostic, "Safe scoped pending authority word changed") {
+			// Since 33b27e64 a canceled request ends the read at once, before
+			// any retry window: one observation, reported as the cancellation.
+			if !strings.Contains(diagnostic, context.Canceled.Error()) || strings.Contains(diagnostic, "retry window exhausted") || strings.Contains(diagnostic, errRpcIntegrity.Error()) || strings.Contains(diagnostic, "Safe scoped pending authority word changed") {
 				t.Fatal("canceled public state observation asserted changed authority", diagnostic)
 			}
 		} else if !strings.Contains(diagnostic, errRpcIntegrity.Error()) || !strings.Contains(diagnostic, "Safe scoped pending authority word changed") {

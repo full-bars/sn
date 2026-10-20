@@ -1,0 +1,135 @@
+package miner
+
+import (
+	"encoding/json"
+	"os"
+)
+
+// seedEnvFromControlState ports the 3.23-fix v33 provider's startup env seed
+// (provider/startup_env_seed.go) onto the miner. It makes URNETWORK_PROFILE
+// and URNETWORK_RAMLOGS reflect the miner's own persisted/queued control
+// state, before initGlog() (called from this package's init(), i.e. before
+// Run()/main() even parses arguments) reads them via plain os.Getenv. Those
+// two settings - unlike every other control-socket key - are consumed that
+// early: initGlog decides whether to redirect stdout/stderr to a ramlog
+// (profile lowmem/eco or URNETWORK_RAMLOGS=1), and the profile tiers plus the
+// startup audit read URNETWORK_PROFILE later from the same environment, so a
+// normal loadControlState()+mergePendingControlOverrides() call inside
+// provide() runs far too late to affect them: by the time provide() is
+// reached, initGlog has already made its one-shot, unrepeatable decision from
+// whatever was in the environment.
+//
+// IMPORTANT - env source detection: any future "detect which source set this
+// env var" logic (file vs socket vs systemd vs default) MUST run BEFORE this
+// function. seedEnvFromControlState calls os.Setenv, which overwrites
+// whatever the real source was; after it runs, the miner can no longer tell
+// whether URNETWORK_PROFILE came from an explicit operator override, a
+// systemd drop-in, or this seeding. Source classification must snapshot the
+// original env before the seed writes.
+//
+// This intentionally does NOT call the real mergePendingControlOverrides()
+// (which persists and deletes pending_overrides.json) - that stays exactly
+// where it is, inside loadControlState's caller in provide(), as the single
+// owner of that file's lifecycle. This is a read-only peek at the same two
+// sources (provider_state.json, pending_overrides.json) purely to compute
+// what the env vars should be before initGlog() runs; the later call still
+// does the real merge-and-persist-and-delete once the process is actually
+// providing.
+//
+// Best-effort throughout: any error here (missing HOME, malformed file,
+// unreadable file) just means the env vars are left as whatever the
+// caller/systemd unit already set, exactly as if this function didn't
+// exist - never blocks or fails startup.
+func seedEnvFromControlState() {
+	values := map[string]string{}
+
+	if data, err := os.ReadFile(mustControlStatePath()); err == nil {
+		// Try the v2 envelope first (detected by the "version" field), then
+		// fall back to a legacy flat map. A v2 envelope has an int "version"
+		// field that fails to unmarshal into map[string]string, so the
+		// envelope format must be tried first.
+		var envelope controlStateEnvelope
+		if json.Unmarshal(data, &envelope) == nil && envelope.Version > 0 && envelope.Values != nil {
+			values = envelope.Values
+		} else {
+			// Decode into a temporary map first: json.Unmarshal can populate
+			// fields decoded before a later UnmarshalTypeError, so
+			// unmarshaling straight into values could seed URNETWORK_PROFILE
+			// from a partially-decoded, otherwise-invalid provider_state.json.
+			// A literal JSON "null" decodes successfully but leaves onDisk nil
+			// (not just empty), so only adopt it when non-nil - assigning a
+			// nil map to values would make the "set" overlay below panic on
+			// its first write.
+			var onDisk map[string]string
+			if json.Unmarshal(data, &onDisk) == nil && onDisk != nil {
+				values = onDisk
+			}
+		}
+	}
+
+	// Overlay anything urnet-tools queued while the miner wasn't running -
+	// this is the common "set profile before first start" case. Applied on
+	// top of the persisted snapshot, in order, same precedence as the real
+	// mergePendingControlOverrides().
+	if data, err := os.ReadFile(mustPendingOverridesPath()); err == nil {
+		var ops []pendingControlOp
+		if json.Unmarshal(data, &ops) == nil {
+			for _, op := range ops {
+				switch op.Op {
+				case "set":
+					values[op.Key] = op.Value
+				case "clear":
+					delete(values, op.Key)
+				}
+			}
+		}
+	}
+
+	if profile, ok := values["profile"]; ok && profile != "" {
+		os.Setenv("URNETWORK_PROFILE", profile)
+	}
+	if ramlogs, ok := values["ramlogs"]; ok {
+		// The client accepts on/off/1/0/true/false for ramlogs
+		// (validateControlValue); normalize the full boolean set instead of
+		// only the literal "on".
+		if isTruthyOn(ramlogs) {
+			os.Setenv("URNETWORK_RAMLOGS", "1")
+		} else {
+			os.Setenv("URNETWORK_RAMLOGS", "0")
+		}
+	}
+}
+
+// isTruthyOn reports whether a stored boolean-ish control-socket value means
+// "enabled". Consumers agree on the literal set validateControlValue admits
+// (on/off/1/0/true/false for ramlogs; plus yes/no for hot_restart), so a value
+// written through any path resolves the same way everywhere it's read.
+func isTruthyOn(v string) bool {
+	switch v {
+	case "on", "1", "true", "yes":
+		return true
+	default:
+		return false
+	}
+}
+
+// mustControlStatePath returns controlStatePath(), or "" on error (e.g. no
+// resolvable HOME) - os.ReadFile("") fails harmlessly, matching this file's
+// best-effort contract without needing every caller to handle the error.
+func mustControlStatePath() string {
+	path, err := controlStatePath()
+	if err != nil {
+		return ""
+	}
+	return path
+}
+
+// mustPendingOverridesPath is mustControlStatePath's counterpart for
+// pending_overrides.json.
+func mustPendingOverridesPath() string {
+	path, err := providerStatePath("pending_overrides.json")
+	if err != nil {
+		return ""
+	}
+	return path
+}

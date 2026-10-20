@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Shared bootstrap custody must restore its complete named owner union. These
 // controls use actual public plan/apply and the original runtime readers.

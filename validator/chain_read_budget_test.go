@@ -43,8 +43,14 @@ func chainReadRetryTestHooks(failures int) chainReadRetryHooks {
 				deadline = parent
 			}
 			owner := &chainReadRetryDeadline{Context: ctx, deadline: deadline, done: make(chan struct{})}
+			// Like context.WithTimeout, the logical deadline also ends with its
+			// caller, so an in-flight attempt observes the caller's expiry.
+			stop := context.AfterFunc(ctx, owner.finish)
 			budget := &chainReadTestBudget{deadline: owner}
-			return context.WithValue(owner, chainReadTestBudgetKey{}, budget), owner.finish
+			return context.WithValue(owner, chainReadTestBudgetKey{}, budget), func() {
+				stop()
+				owner.finish()
+			}
 		},
 		wait: func(ctx context.Context, _ time.Duration) error {
 			budget, ok := ctx.Value(chainReadTestBudgetKey{}).(*chainReadTestBudget)

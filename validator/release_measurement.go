@@ -68,7 +68,9 @@ type releaseMeasurementInputJournal struct {
 }
 
 // ReleaseBindingMeasurement records the exact coordinator binding and native
-// UID observation made for every provider in an input cut.
+// UID observation made for every provider in an input cut. LocalClientKey is
+// the measured client's own key, zero when it has none; an active row whose
+// ClientKey differs from it records a binding excluded from fleet membership.
 type ReleaseBindingMeasurement struct {
 	NoID                     uint64 `json:"no_id"`
 	ClientID                 string `json:"client_id"`
@@ -323,6 +325,15 @@ func releaseMeasurementStats(artifact *ReleaseMeasurementArtifact) (map[uint64]V
 // releaseMeasurementBindingObservations applies the common exact coordinator
 // and native eligibility rules to a provider identity census. It does not
 // interpret counters or authenticate a cut; each wire verifier does that.
+//
+// The coordinator accepts any registered hotkey's binding of any client id
+// under the binder's own client key, and a key rotation leaves a fleet's
+// binding on the old key. A binding makes its provider a fleet member only
+// when its key is the measured client's local key. On the compact wire any
+// other active binding is excluded: the provider is scored as unbound, never
+// as a member or stale, and the row's two keys record why. Every compact
+// caller takes those local keys from retained operator-signed captures; the
+// v1 transcript retains none, so it still refuses a mismatch.
 func releaseMeasurementBindingObservations(artifact *ReleaseMeasurementArtifact, providerKVs map[uint64]map[connect.Id]bool) (map[FleetScoreKey]map[[32]byte]bool, map[uint64]map[connect.Id]bool, map[uint16][]releaseHeadMember, []StaleHeadBinding, map[string]FleetScoreKey, error) {
 	fleets := map[FleetScoreKey]map[[32]byte]bool{}
 	bound := map[uint64]map[connect.Id]bool{}
@@ -330,6 +341,8 @@ func releaseMeasurementBindingObservations(artifact *ReleaseMeasurementArtifact,
 	activeFleetByProvider := map[string]FleetScoreKey{}
 	seenProvider := map[string]bool{}
 	providerOwner := map[string]uint64{}
+	excludedProviders := map[string]bool{}
+	excludeKeyMismatch := artifact.Schema == ReleaseMeasurementSchemaV2
 	priorKey := ""
 	for index, binding := range artifact.Bindings {
 		key := fmt.Sprintf("%020d:%s", binding.NoID, binding.ClientID)
@@ -388,11 +401,19 @@ func releaseMeasurementBindingObservations(artifact *ReleaseMeasurementArtifact,
 			priorKey = key
 			continue
 		}
-		if fleetID == ([32]byte{}) || hotkey == ([32]byte{}) || clientKey == ([32]byte{}) || localClientKey != clientKey || binding.Generation == 0 || binding.Cleaned || binding.CleanedAtEpoch != 0 || binding.ValidFromEpoch > artifact.SettlementEpoch || binding.ValidToEpoch < artifact.SettlementEpoch || binding.ValidToEpoch < binding.ValidFromEpoch {
-			return nil, nil, nil, nil, nil, fmt.Errorf("active binding %s is incomplete, mismatched or outside its epoch", binding.ClientID)
+		if fleetID == ([32]byte{}) || hotkey == ([32]byte{}) || clientKey == ([32]byte{}) || binding.Generation == 0 || binding.Cleaned || binding.CleanedAtEpoch != 0 || binding.ValidFromEpoch > artifact.SettlementEpoch || binding.ValidToEpoch < artifact.SettlementEpoch || binding.ValidToEpoch < binding.ValidFromEpoch {
+			return nil, nil, nil, nil, nil, fmt.Errorf("active binding %s is incomplete or outside its epoch", binding.ClientID)
 		}
 		if artifact.Policy.Binding.CommitmentsRequired && commitmentHash == ([32]byte{}) {
 			return nil, nil, nil, nil, nil, fmt.Errorf("active binding %s has no required commitment", binding.ClientID)
+		}
+		if localClientKey != clientKey {
+			if !excludeKeyMismatch {
+				return nil, nil, nil, nil, nil, fmt.Errorf("active binding %s client key differs from its measured local key", binding.ClientID)
+			}
+			excludedProviders[providerKey] = true
+			priorKey = key
+			continue
 		}
 		if !binding.LiveUIDFound || binding.LiveUID != binding.RecordUID {
 			priorKey = key
@@ -423,6 +444,9 @@ func releaseMeasurementBindingObservations(artifact *ReleaseMeasurementArtifact,
 	}
 	stale := make([]StaleHeadBinding, 0)
 	for _, binding := range artifact.Bindings {
+		if excludedProviders[fmt.Sprintf("%020d:%s", binding.NoID, binding.ClientID)] {
+			continue
+		}
 		if binding.Active && (!binding.LiveUIDFound || binding.LiveUID != binding.RecordUID) {
 			stale = append(stale, StaleHeadBinding{NoID: binding.NoID, ClientID: binding.ClientID, RecordUID: binding.RecordUID, LiveUID: binding.LiveUID, Found: binding.LiveUIDFound})
 		}
@@ -768,12 +792,14 @@ func VerifyReleaseMeasurementArtifact(artifact *ReleaseMeasurementArtifact) (*Ve
 	if err != nil {
 		return nil, err
 	}
-	return assembleReleaseMeasurement(artifact, statsByNO, fleets, bound, membersByUID, stale, controlled)
+	return assembleReleaseMeasurement(artifact, statsByNO, fleets, bound, membersByUID, stale, controlled, false)
 }
 
 // Only fully authenticated legacy or compact projections reach the common
-// exact top-200, EMA, pool, exclusion and vector mathematics.
-func assembleReleaseMeasurement(artifact *ReleaseMeasurementArtifact, statsByNO map[uint64]VerifiedReleaseStats, fleets map[FleetScoreKey]map[[32]byte]bool, bound map[uint64]map[connect.Id]bool, membersByUID map[uint16][]releaseHeadMember, stale []StaleHeadBinding, controlled map[uint64]bool) (*VerifiedReleaseMeasurement, error) {
+// exact top-200, EMA, pool, exclusion and vector mathematics. Only a mainnet
+// treasury caller may admit an empty provider allocation, which then yields no
+// provider row; every other caller keeps the no-positive-weight refusal.
+func assembleReleaseMeasurement(artifact *ReleaseMeasurementArtifact, statsByNO map[uint64]VerifiedReleaseStats, fleets map[FleetScoreKey]map[[32]byte]bool, bound map[uint64]map[connect.Id]bool, membersByUID map[uint16][]releaseHeadMember, stale []StaleHeadBinding, controlled map[uint64]bool, emptyProviders bool) (*VerifiedReleaseMeasurement, error) {
 	eligible, selection, err := releaseMeasurementHead(artifact, fleets)
 	if err != nil {
 		return nil, err
@@ -796,7 +822,7 @@ func assembleReleaseMeasurement(artifact *ReleaseMeasurementArtifact, statsByNO 
 	}
 	sort.Slice(maskedUIDs, func(i, j int) bool { return maskedUIDs[i] < maskedUIDs[j] })
 	uids, scores, err := BuildWeightVectorExact(poolWeights, selection.Selected, artifact.Policy.Steering.Theta, masked)
-	if err != nil {
+	if err != nil && (!emptyProviders || artifact.Policy.NetworkProfile != "mainnet" || !errors.Is(err, errNoPositiveUnmaskedWeights)) {
 		return nil, err
 	}
 	return &VerifiedReleaseMeasurement{

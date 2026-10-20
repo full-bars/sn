@@ -7,6 +7,14 @@ it does not accept a replacement plan, imported stake report or separate UID
 selection. It makes read-only RPC calls and consumes the existing signed
 operation allowance. Both original static units must already be installed.
 
+Like the rest of [`activate-validators`](VALIDATOR-ACTIVATION.md), it refuses a
+one-role v5 preparation. For the SN25 launch's one UR validator, the v5 `sole`
+role, `bootstrap-chain readiness` keeps `EFFECTIVE_STAKE_MAJORITY_UNVERIFIED`:
+that validator must hold the consensus share by itself, and a validator steers
+SN25 only while it holds more than kappa (50%) of validator stake. `admit-stake`
+is the only stake-capacity observation, so nothing here measures that share for
+a v5 launch.
+
 ```text
 sn-mainnet activate-validators admit-stake \
   --approval /absolute/activation-approval.json \
@@ -90,11 +98,11 @@ fractional I64F64 inputs and performs the actual two normalization truncations.
 The projection distinguishes three facts:
 
 - `capacity_share_lower_q32` includes every threshold/permit-eligible peer and
-  the registered owner, irrespective of current activity. Both UR roles need
-  eligible stake/permit and a strictly positive first coefficient. The majority
-  role must strictly exceed `max(Q/2, kappaQ, Q-kappaQ)`, where
-  `kappaQ = floor(Kappa * Q / 65535)`. This conservatively dominates both median
-  tails; endpoint kappa cannot satisfy it.
+  the registered owner, irrespective of current activity. Both UR roles of the
+  two-unit plan need eligible stake/permit and a strictly positive first
+  coefficient. The majority role must strictly exceed
+  `max(Q/2, kappaQ, Q-kappaQ)`, where `kappaQ = floor(Kappa * Q / 65535)`. This
+  conservatively dominates both median tails; endpoint kappa cannot satisfy it.
 - `active_share_lower_q32` includes only currently activity-eligible peers; an
   inactive role gets zero. `active_majority_bound_observed` reports this
   independently. Fresh registrations can pass capacity admission with zero

@@ -1,0 +1,252 @@
+{
+  "all_three_owner_blobs_equal_merged_main": true,
+  "author_execution": {
+    "binary_list": 0,
+    "compiler": 0,
+    "database": 0,
+    "deployment": 0,
+    "production_source_changes": 0,
+    "test_body": 0
+  },
+  "cause": "After transport replacement the native upload observer retained selected150 but treated authentic finalized149 as a permanent regression. It also closed only canonicality after Timestamp.Now and forgot its first zero selection on new public invocations under an existing owner.",
+  "change": "Reuse existing runtimeFinalityObservation.check/close and contextual SelectFinalityReadBlockContext. Authenticate fresh opening/closing finalized witnesses, preserve original selected/first/highest constraints, make lower-only coverage unavailable, and keep completed hash or identity contradictions hard through context cancellation. No new retry gate, budget, authority API or write retry.",
+  "control_bodies": "UNEXECUTED",
+  "counts_per_mode": {
+    "all_go": 2787,
+    "connect": 224,
+    "mainnet": 302,
+    "server": 2027,
+    "server_controller": 95,
+    "server_full_model": 1865,
+    "sn": 528,
+    "sn_connect_vless": 760,
+    "validator": 79,
+    "vlessinterop": 8
+  },
+  "documentation_base": "02e507ee631aca4d142225cc9d15e93a51f5e353",
+  "independent_source_review": {
+    "bytes": 1963,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/validator-runtime-identity-cause/qualification/upload-finality-peer-review.json",
+    "sha256": "573d0a906e8bbe275cf4fadd392de22559cf7b7395778663c696521e5707606a"
+  },
+  "known_pending_source_work": [
+    {
+      "component": "EVM decision closing finalized head",
+      "issue": "Lower-only fresh finalized coverage still receives a generic hard error; WholeFee owns a separate unmerged correction. No new root/control or closure credit is included."
+    },
+    {
+      "component": "SDK mapping-generation wire compatibility",
+      "issue": "Server mapping-generation NoId is serialized as a string while the selected SDK field is int64; a separate SDK correction is underway. SDKc53 remains source-only and no new successor is counted."
+    },
+    {
+      "component": "PH12 earning-wallet producer and Server consent",
+      "issue": "Explicit mapping-consent integration remains separately under implementation; generic login proof does not authorize earning-wallet publication."
+    },
+    {
+      "component": "ARIN full-population model fixtures",
+      "issue": "Previously observed SQLSTATE53200 setup failures remain actual; source correction is separate, and this checkpoint makes no fullmodel terminal or PASS claim."
+    }
+  ],
+  "merged_main": "02e507ee631aca4d142225cc9d15e93a51f5e353",
+  "new_case_count": 28,
+  "new_control_groups": 7,
+  "new_root_count": 11,
+  "new_roots": [
+    {
+      "body_sha256": "27fc88cf4802a0f791ddef35af3e475c70341e8f59acb8dabefb7e3a3835b13b",
+      "cases": 1,
+      "line": 107,
+      "name": "TestValidatorUploadFinalityReconnectLowerHeadRecoversOriginalSelection",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityReconnectLowerHeadRecoversOriginalSelection$"
+    },
+    {
+      "body_sha256": "49c700710434befc1c12cfce443afc6e0fe490264700af6f336e8b60e5865b2a",
+      "cases": 1,
+      "line": 132,
+      "name": "TestValidatorUploadFinalityClosingLowerHeadRemainsPending",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityClosingLowerHeadRemainsPending$"
+    },
+    {
+      "body_sha256": "91bf8a1ae498ecf6fb117f7a83cb7af04838c357184d0815a8a777c1929bc2a9",
+      "cases": 2,
+      "line": 148,
+      "name": "TestValidatorUploadFinalitySameHeightForkRemainsHard",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalitySameHeightForkRemainsHard$"
+    },
+    {
+      "body_sha256": "e7fdb88c494e7b326991cd9c4f27961bfd038813087da9cd1afc6501b4f6a801",
+      "cases": 1,
+      "line": 179,
+      "name": "TestValidatorUploadFinalityLowerHeadPreservesCanonicalConflict",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityLowerHeadPreservesCanonicalConflict$"
+    },
+    {
+      "body_sha256": "8d4d8b7bfb3fbb5092699be741bf0859342fc8f63f8cc6edecd4c7baa26a0ec3",
+      "cases": 8,
+      "line": 202,
+      "name": "TestValidatorUploadFinalitySeparatesMissingAndInvalidHeads",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalitySeparatesMissingAndInvalidHeads$"
+    },
+    {
+      "body_sha256": "cea1c2a3f3ff586e72817e15d00a8e967ba7abcc6cc44d3d1e460cde71cb94f7",
+      "cases": 6,
+      "line": 226,
+      "name": "TestValidatorUploadFinalityClosingTimeoutPreservesCauseAndNoResult",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityClosingTimeoutPreservesCauseAndNoResult$"
+    },
+    {
+      "body_sha256": "f50b4b9e02c16cd0b6d9c2102a925ed2ce1d932a8fcb55f90a475b8a1ec49431",
+      "cases": 1,
+      "line": 256,
+      "name": "TestValidatorUploadFinalityProductionRetryRetainsOriginalSelection",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityProductionRetryRetainsOriginalSelection$"
+    },
+    {
+      "body_sha256": "32ceadc53f7c740d5b5e141655fbc9c2043ccaf303e487e8538c589c3bf46973",
+      "cases": 4,
+      "line": 297,
+      "name": "TestValidatorUploadFinalityCompletedConflictDominatesLateContext",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityCompletedConflictDominatesLateContext$"
+    },
+    {
+      "body_sha256": "9f1ce26082aeb8276e115dbdb59aec5b1fb6a88815f9f5f3c458670b390b016c",
+      "cases": 1,
+      "line": 335,
+      "name": "TestValidatorUploadFinalityPreservesCompletedIdentityHardCause",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityPreservesCompletedIdentityHardCause$"
+    },
+    {
+      "body_sha256": "2b7ae3932eb91e79f9e360baf7edbd2750c583e33635c9b241160ff6fd43b6b1",
+      "cases": 2,
+      "line": 364,
+      "name": "TestValidatorUploadFinalityAcceptsStableAndAdvancedClosingHeads",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityAcceptsStableAndAdvancedClosingHeads$"
+    },
+    {
+      "body_sha256": "b481ed8f55d35f4c7a3463d73a252740e0d01618d2f7c5381d2e240a908eb70d",
+      "cases": 1,
+      "line": 382,
+      "name": "TestValidatorUploadFinalityRetainsHighestClosingWitness",
+      "path": "validator/validator_upload_finality_test.go",
+      "selector": "^TestValidatorUploadFinalityRetainsHighestClosingWitness$"
+    }
+  ],
+  "normal": "UNEXECUTED",
+  "outcomes_closed": 0,
+  "owner_source": {
+    "commit": "1c3c5806ff974eee95a627c87b4ca78cb0e88e7f",
+    "files": [
+      {
+        "blob": "1d67e5e88e1892ab1a1b84cbbac64dc78a08a790",
+        "bytes": 21149,
+        "path": "validator/adjacent_header_authority_test.go",
+        "sha256": "54bdca4458209188f442e96c6f6812f8464accf0fdf047f7b1e6bd4a8fa28c9a"
+      },
+      {
+        "blob": "7b1748c94634f7a9a22d46de88cf57de86c61793",
+        "bytes": 18581,
+        "path": "validator/validator_upload_authority.go",
+        "sha256": "75528c77373faebaf6367cff7f2829a96e491edb51eb7214c1942f3eaa593e3c"
+      },
+      {
+        "blob": "70dc14ed1f06d3eddf31a89b82ba869fcb2d087d",
+        "bytes": 17350,
+        "path": "validator/validator_upload_finality_test.go",
+        "sha256": "8378110a0ad411044f081a778568a9a0c47fa96175c4d02b227b0bfb7e0d7311"
+      }
+    ],
+    "parent": "1d4251f4c3b586df8dd2c96602914797a67546c6",
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/upload-observer-finality/sn",
+    "tree": "69091fa4c91e5bc798a2b86cc3162e16049a7ce4"
+  },
+  "preserved_original_outcomes": 38,
+  "race": "UNEXECUTED",
+  "schema": "upload-finality-merged-source-and-scope-v1",
+  "scope": {
+    "bytes": 2454,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-02e507-upload-finality/SCOPE-HANDOFF.json",
+    "sha256": "27e95021b1ede330f3c37fc03722859bf76d2697dca1767608e328d77d04575a"
+  },
+  "semantics": [
+    "A lower-only authentic finalized reply is bounded unavailability under the original owner; completed canonical/hash/identity contradictions remain hard.",
+    "Fresh closing finalized coverage follows actual timestamp storage; original selected block and first/highest finalized witnesses survive replacement and nested/public owner calls.",
+    "The original300-second budget and shorter caller deadlines remain unchanged; no additional write/retry authority is created.",
+    "All five earlier identity readers retain their merged identity checks."
+  ],
+  "separate_existing_completion_recipe": {
+    "bytes": 10044,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-02e507-upload-finality/existing-canonical-switch-recipe.json",
+    "sha256": "3fce1f0890c36dbed3281b5fb0cb8119c773c9989bb332713bbbb580bced593a"
+  },
+  "separate_sdk12_preserved": {
+    "bytes": 17041,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/sdk-c53-additive-docs/SDK-SELECTION.json",
+    "sha256": "23b44d9c40557bab20dae2fcbf5630298c336c2ca5013784c820112155ca5db2"
+  },
+  "source_apply_checks": [
+    {
+      "exact_02e507_apply_check": "PASS",
+      "execution": "UNEXECUTED",
+      "name": "01-lower-replacement-as-hard"
+    },
+    {
+      "exact_02e507_apply_check": "PASS",
+      "execution": "UNEXECUTED",
+      "name": "02-canonical-only-close"
+    },
+    {
+      "exact_02e507_apply_check": "PASS",
+      "execution": "UNEXECUTED",
+      "name": "03-forget-contextual-zero-selection"
+    },
+    {
+      "exact_02e507_apply_check": "PASS",
+      "execution": "UNEXECUTED",
+      "name": "04-drop-completed-hard-cause-at-cancellation"
+    },
+    {
+      "exact_02e507_apply_check": "PASS",
+      "execution": "UNEXECUTED",
+      "name": "05-legacy-nonnullable-opening-head"
+    },
+    {
+      "exact_02e507_apply_check": "PASS",
+      "execution": "UNEXECUTED",
+      "name": "06-skip-opening-finality-constraints"
+    },
+    {
+      "exact_02e507_apply_check": "PASS",
+      "execution": "UNEXECUTED",
+      "name": "07-hide-closing-conflict-as-unavailable"
+    }
+  ],
+  "source_control_groups": 290,
+  "source_intake": {
+    "bytes": 20153,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/upload-observer-finality/evidence/HANDOFF.json",
+    "sha256": "df7d323c92e953c2b2e3cacb03f2f9c7330aded52d93f44aeebf73b2ea435250"
+  },
+  "status": "MERGED_SOURCE_IMPLEMENTED_UNQUALIFIED",
+  "updated_case_count": 4,
+  "updated_existing_roots": [
+    {
+      "body_sha256": "f5df8072d08d871b33c40f507db489e4642cd89e88a9626a291e7a5e832e8977",
+      "cases": 4,
+      "line": 68,
+      "name": "TestAdjacentHeaderUploadRejectsCanonicalSwitch",
+      "path": "validator/adjacent_header_authority_test.go",
+      "selector": "^TestAdjacentHeaderUploadRejectsCanonicalSwitch$"
+    }
+  ],
+  "updated_root_count": 1
+}

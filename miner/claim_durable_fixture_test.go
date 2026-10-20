@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Only synthetic tests provision their owned private roots. Runtime queue
 // admission has no enrollment, absent-context or pathname-creation fallback.
@@ -13,15 +13,64 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/internal/durablehead"
+	"github.com/urnetwork/connect/durablesys"
 )
+
+func claimV2PendingTemporary(dir string) string {
+	f, err := os.Open(dir)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	raw := make([]byte, 4096)
+	n, err := durablesys.GetAttribute(int(f.Fd()), durablehead.Attribute("provider-claim-queue", "claim-queue.json"), raw)
+	if err != nil {
+		return ""
+	}
+	var cp durablehead.Checkpoint
+	if err := json.Unmarshal(raw[:n], &cp); err != nil || cp.Pending == nil {
+		return ""
+	}
+	return cp.Pending.Temporary
+}
+
+// reconcileClaimV2TestTemporaries removes the durable-head create temporaries a
+// cancelled daemon can leave in a state directory. The Owner retains an
+// unanchored temporary and refuses to open over it by design
+// (checkTemporaryCensus); a test that asserts a later, unrelated refusal
+// reconciles the fixture's leftovers itself.
+func reconcileClaimV2TestTemporaries(t testing.TB, dirs ...string) {
+	t.Helper()
+	for _, dir := range dirs {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pending := claimV2PendingTemporary(dir)
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasPrefix(entry.Name(), ".durable-head-") {
+				continue
+			}
+			if pending != "" && entry.Name() == pending {
+				continue
+			}
+			if err := os.Remove(filepath.Join(dir, entry.Name())); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+}
 
 // Existing checkpoint metadata is never replaced, including negative fixtures.
 // Deliberately prewritten legacy-format fixtures are adopted only by this
@@ -39,16 +88,16 @@ func claimQueueTestContext(t testing.TB, ctx context.Context, paths ...string) c
 		}
 		roots = append(roots, physical)
 		attribute := durablehead.Attribute("provider-claim-queue", "claim-queue.json")
-		if _, err := syscall.Getxattr(physical, attribute, nil); err == nil {
+		if _, err := unix.Getxattr(physical, attribute, nil); err == nil {
 			continue
 		}
-		var stat syscall.Stat_t
-		if err := syscall.Stat(physical, &stat); err != nil {
+		var stat unix.Stat_t
+		if err := unix.Stat(physical, &stat); err != nil {
 			t.Fatal(err)
 		}
 		checkpoint := durablehead.Checkpoint{Schema: durablehead.Schema, Kind: "provider-claim-queue", Name: "claim-queue.json", MaximumBytes: maximumClaimQueueBytes, DirectoryInode: stat.Ino}
 		filePath := filepath.Join(physical, "claim-queue.json")
-		err = syscall.Lstat(filePath, &stat)
+		err = unix.Lstat(filePath, &stat)
 		if err == nil && stat.Mode&syscall.S_IFMT == syscall.S_IFREG && stat.Mode&0077 == 0 && stat.Size <= maximumClaimQueueBytes {
 			raw, err := os.ReadFile(filePath)
 			if err != nil {
@@ -63,7 +112,7 @@ func claimQueueTestContext(t testing.TB, ctx context.Context, paths ...string) c
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := syscall.Setxattr(physical, attribute, raw, 1); err != nil {
+		if err := unix.Setxattr(physical, attribute, raw, unix.XATTR_CREATE); err != nil {
 			t.Fatal(err)
 		}
 		directory, err := os.Open(physical)

@@ -235,6 +235,131 @@ func TestHttpResponseRejectsSingleForeignIdentity(t *testing.T) {
 	}
 }
 
+// An exact reply without a result remains a failure with the public sentinel;
+// explicit null and typed rpc errors retain their separate meanings.
+func TestHttpResponseMissingResultRetainsFailureIdentity(t *testing.T) {
+	for _, response := range []string{
+		`{"jsonrpc":"2.0","id":1}`,
+		`{"jsonrpc":"2.0","id":1,"error":null}`,
+	} {
+		body := &httpResponseTestBody{reader: strings.NewReader(response)}
+		client := newHttpResponseClient(t, func(*http.Request) *http.Response {
+			return &http.Response{StatusCode: 200, ContentLength: -1, Body: body}
+		})
+		result := "unchanged"
+		if err := client.CallContext(context.Background(), &result, "synthetic_read"); !errors.Is(err, ErrNoResult) || result != "unchanged" || body.closes != 1 {
+			t.Errorf("missing result lost its failure identity: response=%s result=%q closes=%d err=%v", response, result, body.closes, err)
+		}
+	}
+}
+
+// A malformed or foreign envelope cannot acquire the exact reply's missing
+// result discriminator, even when it also omits its result member.
+func TestHttpResponseMissingResultCannotHideInvalidEnvelope(t *testing.T) {
+	for _, response := range []string{
+		`{"jsonrpc":"2.0","id":9}`,
+		`{"jsonrpc":"2.0","id":"1"}`,
+		`{"jsonrpc":"2.0","id":null}`,
+		`{"jsonrpc":"2.0","method":"synthetic_notice"}`,
+		`{"jsonrpc":"2.0","id":1,"method":"synthetic_request"}`,
+		`{"jsonrpc":"2.0","id":1,"params":[]}`,
+		`{"jsonrpc":"2.0","id":1,"params":null}`,
+		`{"jsonrpc":"1.0","id":1}`,
+		`{"id":1}`,
+		`{"jsonrpc":"1.0","id":1,"result":"accepted"}`,
+		`{"id":1,"result":"accepted"}`,
+		`{"jsonrpc":"2.0","id":1,"result":"accepted","error":{"code":-32080,"message":"synthetic refusal"}}`,
+		`{"jsonrpc":"2.0","id":1,"error":true}`,
+		`{"jsonrpc":"2.0","id":1,"result":true}`,
+		`{"jsonrpc":"2.0","id":1} {}`,
+		`{`,
+	} {
+		body := &httpResponseTestBody{reader: strings.NewReader(response)}
+		client := newHttpResponseClient(t, func(*http.Request) *http.Response {
+			return &http.Response{StatusCode: 200, ContentLength: -1, Body: body}
+		})
+		result := "unchanged"
+		if err := client.CallContext(context.Background(), &result, "synthetic_read"); err == nil || errors.Is(err, ErrNoResult) || result != "unchanged" || body.closes != 1 {
+			t.Errorf("invalid envelope gained reply authority: response=%s result=%q closes=%d err=%v", response, result, body.closes, err)
+		}
+	}
+}
+
+// Batch admission is atomic: a complete reply set with one missing result
+// returns the sentinel without publishing even its otherwise valid sibling.
+func TestHttpResponseBatchMissingResultRefusesBeforePublication(t *testing.T) {
+	for _, responses := range []string{
+		`[{"jsonrpc":"2.0","id":1,"result":"one"},{"jsonrpc":"2.0","id":2}]`,
+		`[{"jsonrpc":"2.0","id":2},{"jsonrpc":"2.0","id":1,"result":"one"}]`,
+	} {
+		body := &httpResponseTestBody{reader: strings.NewReader(responses)}
+		client := newHttpResponseClient(t, func(*http.Request) *http.Response {
+			return &http.Response{StatusCode: 200, ContentLength: -1, Body: body}
+		})
+		op := &requestOp{ids: []json.RawMessage{json.RawMessage("1"), json.RawMessage("2")}, resp: make(chan *jsonrpcMessage, 2)}
+		err := client.sendBatchHTTP(context.Background(), op, []*jsonrpcMessage{{Version: vsn, ID: op.ids[0], Method: "one"}, {Version: vsn, ID: op.ids[1], Method: "two"}})
+		if !errors.Is(err, ErrNoResult) || len(op.resp) != 0 || body.closes != 1 {
+			t.Errorf("missing batch result was not an atomic failure: response=%s replies=%d closes=%d err=%v", responses, len(op.resp), body.closes, err)
+		}
+	}
+}
+
+// Inspect the entire batch identity before classifying an omitted result;
+// response order cannot hide a later malformed, duplicate or foreign reply.
+func TestHttpResponseBatchMissingResultCannotHideInvalidEnvelope(t *testing.T) {
+	for _, response := range []string{
+		`{"jsonrpc":"2.0","id":9}`,
+		`{"jsonrpc":"2.0","id":1}`,
+		`{"jsonrpc":"2.0","id":"2"}`,
+		`{"jsonrpc":"2.0","method":"synthetic_notice"}`,
+		`{"jsonrpc":"2.0","id":2,"method":"synthetic_request"}`,
+		`{"jsonrpc":"2.0","id":2,"params":[]}`,
+		`{"jsonrpc":"1.0","id":2}`,
+		`{"id":2,"result":"two"}`,
+		`{"jsonrpc":"2.0","id":2,"result":"two","error":{"code":-32080,"message":"synthetic refusal"}}`,
+	} {
+		for _, responses := range []string{
+			`[{"jsonrpc":"2.0","id":1},` + response + `]`,
+			`[` + response + `,{"jsonrpc":"2.0","id":1}]`,
+		} {
+			body := &httpResponseTestBody{reader: strings.NewReader(responses)}
+			client := newHttpResponseClient(t, func(*http.Request) *http.Response {
+				return &http.Response{StatusCode: 200, ContentLength: -1, Body: body}
+			})
+			op := &requestOp{ids: []json.RawMessage{json.RawMessage("1"), json.RawMessage("2")}, resp: make(chan *jsonrpcMessage, 2)}
+			err := client.sendBatchHTTP(context.Background(), op, []*jsonrpcMessage{{Version: vsn, ID: op.ids[0], Method: "one"}, {Version: vsn, ID: op.ids[1], Method: "two"}})
+			if err == nil || errors.Is(err, ErrNoResult) || len(op.resp) != 0 || body.closes != 1 {
+				t.Errorf("invalid batch envelope gained reply authority: response=%s replies=%d closes=%d err=%v", responses, len(op.resp), body.closes, err)
+			}
+		}
+	}
+}
+
+// Successful null is not omission, and a well-formed rpc error keeps its code.
+func TestHttpResponseResultAndRpcErrorRemainDistinct(t *testing.T) {
+	for _, entry := range []struct {
+		member string
+		result string
+		code   int
+	}{
+		{member: `"result":"accepted"`, result: "accepted"},
+		{member: `"result":null`, result: "unchanged"},
+		{member: `"error":{"code":-32080,"message":"synthetic refusal"}`, result: "unchanged", code: -32080},
+	} {
+		body := &httpResponseTestBody{reader: strings.NewReader(`{"jsonrpc":"2.0","id":1,` + entry.member + `}`)}
+		client := newHttpResponseClient(t, func(*http.Request) *http.Response {
+			return &http.Response{StatusCode: 200, ContentLength: -1, Body: body}
+		})
+		result := "unchanged"
+		err := client.CallContext(context.Background(), &result, "synthetic_read")
+		var rpcError Error
+		if result != entry.result || body.closes != 1 || errors.Is(err, ErrNoResult) ||
+			entry.code == 0 && err != nil || entry.code != 0 && (!errors.As(err, &rpcError) || rpcError.ErrorCode() != entry.code) {
+			t.Errorf("result/error distinction changed: member=%s result=%q closes=%d err=%v", entry.member, result, body.closes, err)
+		}
+	}
+}
+
 func TestHttpResponsePreservesLargeNativeEvents(t *testing.T) {
 	// This exceeds the unrelated 5 MiB websocket/server-request limit and
 	// fills the existing 16 MiB raw-events contract after JSON hex expansion.

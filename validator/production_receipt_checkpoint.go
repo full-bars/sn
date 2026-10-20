@@ -49,7 +49,7 @@ type productionReceiptCheckpointOwner struct {
 
 // The complete original config identity survives an approved current renewal.
 func newProductionReceiptCheckpointOwner(self *ReleaseSteerer, cfg *ReleaseConfig, intent *SteeringIntent) (*productionReceiptCheckpointOwner, error) {
-	if self == nil || self.cfg == nil || self.hotkey == nil || cfg == nil || cfg.ownerRecycleProduction == nil || intent == nil || intent.Prepared == nil || intent.OwnerRecycle == nil {
+	if self == nil || self.cfg == nil || self.hotkey == nil || cfg == nil || cfg.ownerRecycleProduction == nil || intent == nil || intent.Prepared == nil || productionEconomicIntent(intent) == nil {
 		return nil, errors.New("receipt checkpoint lacks authenticated original intent ownership")
 	}
 	if err := validateOwnerRecycleProductionConfig(cfg); err != nil {
@@ -73,7 +73,7 @@ func newProductionReceiptCheckpointOwner(self *ReleaseSteerer, cfg *ReleaseConfi
 		CreatedAt    string   `json:"created_at"`
 	}{Domain: productionReceiptCheckpointSchema, Genesis: cfg.GenesisHash, ConfigHash: cfg.ownerRecycleProduction.configHash,
 		Hotkey: self.hotkey.PublicKey(), VectorHash: intent.VectorHash, EnvelopeHash: intent.MeasurementEnvelopeHash,
-		Approval: intent.OwnerRecycle.Signature, Extrinsic: intent.Prepared.ExtrinsicHash, PreparedAt: intent.Prepared.PreparedAtBlock,
+		Approval: productionEconomicIntent(intent).Signature, Extrinsic: intent.Prepared.ExtrinsicHash, PreparedAt: intent.Prepared.PreparedAtBlock,
 		PreparedHash: intent.Prepared.PreparedAtBlockHash, CreatedAt: intent.CreatedAt})
 	if err != nil {
 		return nil, err

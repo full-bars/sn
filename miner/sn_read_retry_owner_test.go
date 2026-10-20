@@ -164,10 +164,28 @@ func TestEthRpcReadHttpRecoversWithinFiveMinuteOwner(t *testing.T) {
 	}
 }
 
-// Cancellation happens only after a flushed incomplete response is observed.
+// Reports each read that hands the reader bytes of the actual body.
+type minerReadOwnerTestEnteredBody struct {
+	io.ReadCloser
+	enter func()
+}
+
+// The bytes are already the reader's when enter runs.
+func (self *minerReadOwnerTestEnteredBody) Read(p []byte) (int, error) {
+	n, err := self.ReadCloser.Read(p)
+	if 0 < n {
+		self.enter()
+	}
+	return n, err
+}
+
+// Cancellation happens only after the reader has received bytes of a flushed
+// incomplete response. The server's flush alone hands the reader no body: a
+// cancel before the transport returns the response leaves nothing to close.
 // The caller, actual body and server request all terminate without a retry.
 func TestEthRpcReadHttpOwnerCancellationClosesActiveBody(t *testing.T) {
 	entered, released := make(chan struct{}), make(chan struct{})
+	var enterOnce sync.Once
 	var calls, closes atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if calls.Add(1) != 1 {
@@ -178,7 +196,6 @@ func TestEthRpcReadHttpOwnerCancellationClosesActiveBody(t *testing.T) {
 		writer.WriteHeader(http.StatusOK)
 		_, _ = io.WriteString(writer, `{"jsonrpc":"2.0",`)
 		writer.(http.Flusher).Flush()
-		close(entered)
 		<-request.Context().Done()
 		close(released)
 	}))
@@ -188,7 +205,8 @@ func TestEthRpcReadHttpOwnerCancellationClosesActiveBody(t *testing.T) {
 	client := &http.Client{Transport: ethRpcTestTransport(func(request *http.Request) (*http.Response, error) {
 		response, err := transport.RoundTrip(request)
 		if err == nil {
-			response.Body = &minerReadOwnerTestBody{ReadCloser: response.Body, closes: &closes}
+			body := &minerReadOwnerTestEnteredBody{ReadCloser: response.Body, enter: func() { enterOnce.Do(func() { close(entered) }) }}
+			response.Body = &minerReadOwnerTestBody{ReadCloser: body, closes: &closes}
 		}
 		return response, err
 	})}

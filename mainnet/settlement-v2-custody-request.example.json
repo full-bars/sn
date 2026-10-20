@@ -1,0 +1,90 @@
+{
+  "schema": "urnetwork-storage-preparation-request-v1",
+  "purpose": "fresh",
+  "scope": "daemon",
+  "mount_path": "<mount-path>",
+  "filesystem_uuid": "<filesystem-uuid>",
+  "filesystem_type": "<filesystem-type>",
+  "min_available_bytes": 67108864,
+  "min_available_inodes": 1024,
+  "root_path": "/secure/ur-mainnet/run-v2",
+  "marker_path": "/secure/ur-mainnet/run-v2-custody/identity",
+  "lease_path": "/secure/ur-mainnet/run-v2-custody/root.lease",
+  "declaration_path": "/secure/ur-mainnet/run-v2-custody/durable-volumes.json",
+  "control_path": "/secure/ur-mainnet/run-v2-custody/preparation.jsonl",
+  "staging_directory": "/secure/ur-mainnet/run-v2-staging",
+  "former_writer_fence": {
+    "path": "/secure/ur-mainnet/run-v2-custody/former-writer.json",
+    "sha256": "<fence-file-sha256>"
+  },
+  "limits": {
+    "max_entries": 64,
+    "max_bytes": 1048576,
+    "max_depth": 4,
+    "max_owner_attributes": 8,
+    "max_owner_attribute_bytes": 32768,
+    "max_plan_bytes": 1048576
+  },
+  "owners": [
+    {
+      "kind": "mainnet-evm-action",
+      "relative_path": ".",
+      "purpose": "fresh",
+      "inputs": {
+        "schema": "urnetwork-snapshot-preparation-v1",
+        "name": "vault2-create.json",
+        "maximum_bytes": 524288
+      }
+    },
+    {
+      "kind": "mainnet-evm-action",
+      "relative_path": ".",
+      "purpose": "fresh",
+      "inputs": {
+        "schema": "urnetwork-snapshot-preparation-v1",
+        "name": "escrow2-register.json",
+        "maximum_bytes": 524288
+      }
+    },
+    {
+      "kind": "mainnet-evm-action",
+      "relative_path": ".",
+      "purpose": "fresh",
+      "inputs": {
+        "schema": "urnetwork-snapshot-preparation-v1",
+        "name": "settlement2-create.json",
+        "maximum_bytes": 524288
+      }
+    },
+    {
+      "kind": "mainnet-evm-action",
+      "relative_path": ".",
+      "purpose": "fresh",
+      "inputs": {
+        "schema": "urnetwork-snapshot-preparation-v1",
+        "name": "proxy2-create.json",
+        "maximum_bytes": 524288
+      }
+    },
+    {
+      "kind": "mainnet-evm-action",
+      "relative_path": ".",
+      "purpose": "fresh",
+      "inputs": {
+        "schema": "urnetwork-snapshot-preparation-v1",
+        "name": "vault2-link.json",
+        "maximum_bytes": 524288
+      }
+    },
+    {
+      "kind": "mainnet-evm-action",
+      "relative_path": ".",
+      "purpose": "fresh",
+      "inputs": {
+        "schema": "urnetwork-snapshot-preparation-v1",
+        "name": "batcher-create.json",
+        "maximum_bytes": 524288
+      }
+    }
+  ]
+}

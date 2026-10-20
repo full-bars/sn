@@ -48,6 +48,11 @@ func contractCode(encoded string, maximum int) ([]byte, error) {
 
 // Exact file identity is checked before any runtime, signer or journal opens.
 func loadContractRelease(ctx context.Context, reference planFileReference) (contractReleaseArtifacts, error) {
+	return loadContractReleaseOf(ctx, reference, "urnetwork-contract-release-artifacts-v1", "ReserveSink", "SettlementVault", "Coordinator", "ERC1967Proxy", "ValidatorEvidence")
+}
+
+// Each phase names its release schema and exact production artifact set.
+func loadContractReleaseOf(ctx context.Context, reference planFileReference, schema string, names ...string) (contractReleaseArtifacts, error) {
 	var envelope contractReleaseArtifacts
 	raw, hash, err := readBootstrapRootFile(ctx, reference.Path, 2*1024*1024)
 	if err != nil || !planSha256(reference.Sha256) || hash != reference.Sha256 {
@@ -56,10 +61,13 @@ func loadContractRelease(ctx context.Context, reference planFileReference) (cont
 	if err := decodePlanJson(raw, &envelope); err != nil {
 		return envelope, err
 	}
-	if envelope.Schema != "urnetwork-contract-release-artifacts-v1" || len(envelope.Artifacts) != 5 {
-		return envelope, errors.New("contract release must contain the five production artifacts")
+	if envelope.Schema != schema || len(envelope.Artifacts) != len(names) {
+		return envelope, errors.New("contract release must contain exactly its phase's production artifacts")
 	}
-	wanted := map[string]bool{"ReserveSink": true, "SettlementVault": true, "Coordinator": true, "ERC1967Proxy": true, "ValidatorEvidence": true}
+	wanted := map[string]bool{}
+	for _, name := range names {
+		wanted[name] = true
+	}
 	for _, artifact := range envelope.Artifacts {
 		if !wanted[artifact.Name] {
 			return envelope, errors.New("contract release has an unknown or duplicated artifact")
@@ -121,10 +129,20 @@ func (self contractReleaseArtifact) withImmutables(values map[string][]byte) ([]
 }
 
 // Getters are compared byte-for-byte at the canonical inclusion block, never
-// against an unpinned latest view or a successful receipt alone.
+// against an unpinned latest view or a successful receipt alone. A getter
+// reads its own contract unless it names a reviewed precompile.
 type contractGetter struct {
+	To       string `json:"to,omitempty"`
 	Data     string `json:"data"`
 	Expected string `json:"expected"`
+}
+
+// The address a getter calls: the precompile it names, or its contract.
+func (self contractGetter) target(contract common.Address) string {
+	if self.To != "" {
+		return self.To
+	}
+	return contract.Hex()
 }
 
 // Reviewed namespaced storage is checked only at the authenticated canonical

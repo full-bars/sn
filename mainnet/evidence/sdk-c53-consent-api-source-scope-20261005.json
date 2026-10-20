@@ -1,0 +1,148 @@
+{
+  "all8_source_hashes_and_blobs_verified": true,
+  "author_execution": {
+    "binary_list": 0,
+    "compiler": 0,
+    "database": 0,
+    "deployment": 0,
+    "generator": 0,
+    "production_source_changes": 0,
+    "test_body": 0
+  },
+  "compiler": "UNEXECUTED",
+  "counts_per_mode": {
+    "master_go_unchanged": 2776,
+    "master_mainnet_unchanged": 302,
+    "master_sn_unchanged": 517,
+    "master_validator_unchanged": 68,
+    "sdk_existing_api_separate": 2,
+    "sdk_nested_generator_separate": 1,
+    "sdk_new_separate": 9,
+    "sdk_targeted_separate_total": 12
+  },
+  "documentation_base": "f730c0b749371f7cf2c56c7c3fc696c2370dc756",
+  "existing_api_neighbors": [
+    "TestApiSubnetHeadlessBindings",
+    "TestApiSubnetPoolClaimEscapesNoUserInputIntoQuery"
+  ],
+  "existing_nested_generator_root": "TestGeneratedArtifactsMatchCurrentSDKSurface",
+  "frozen_evidence_limit": "The running current624/Core026/d64 fullmodel cohort retains its original older SDK source inputs. No newSDKc53 applicability, compiler/body PASS or end-to-end PH12 completion is inferred from that cohort.",
+  "generator_currentness": "UNEXECUTED",
+  "implemented_sdk_surface": [
+    "Optional original legacy coldkey proof selector is query-escaped; empty selector preserves the prior request. This selector grants no authorization.",
+    "Explicit earning-wallet mapping challenge carries provider/client and ordered nonnegative epoch interval through the authenticated API transport.",
+    "Set-wallet result preserves accepted mapping hash and generation for producer-side verification; actual Server acceptance remains its own authority.",
+    "Generated C binding companion files are checked in; their generator-currentness test has not run."
+  ],
+  "independent_source_review": "astra_deposit_wallet_review ACK exact c53cd78a; generator consistency remains unexecuted",
+  "master_source_control_groups_unchanged": 283,
+  "module_files": [
+    {
+      "blob": "f7954513e5c70b9cc8e0f5180560b592522f5ff8",
+      "path": "go.mod",
+      "same_as_1ca8": true,
+      "sha256": "65e4daffb6bb08ef33a5ab357a6bf57a0f97031ca387af75a81e21b519d17eaa"
+    },
+    {
+      "blob": "1203fc2e206cb766a9645d62a222c0ae6e6db513",
+      "path": "go.sum",
+      "same_as_1ca8": true,
+      "sha256": "578c03818a9fbdbfc5b95faa33a57c1c4e284c87629b7e9372759b01f31c9158"
+    },
+    {
+      "blob": "438a74f80f74b755a5ae43c376b705bd9352e558",
+      "path": "cgo/go.mod",
+      "same_as_1ca8": true,
+      "sha256": "09d2e2a62c375246f4095eaa337ac6ce07c93cf4140c87a898065c1535f25850"
+    },
+    {
+      "blob": "0262f8bb08379bfcafdd3570686741fd48035a8b",
+      "path": "cgo/go.sum",
+      "same_as_1ca8": true,
+      "sha256": "c0d64100f2a8096412faa001bd081347c64503e0522507e6e05bc2076963d1ca"
+    }
+  ],
+  "new_sdk_http_roots": [
+    "TestApiSubnetPoolClaimEmptyLegacyColdkeyPreservesRequest",
+    "TestApiSubnetPoolClaimLegacyColdkeyEscapesQuery",
+    "TestApiSubnetPoolClaimLegacyColdkeyRequestContext",
+    "TestApiSubnetPoolClaimLegacyColdkeyApiLifetime",
+    "TestApiSnWalletMappingChallengePreservesProviderFields",
+    "TestApiSnWalletMappingChallengeRejectsInvalidIntervalsBeforeHttp",
+    "TestApiSnSetWalletPreservesMappingAcceptance",
+    "TestApiSnWalletMappingChallengeRequestContext",
+    "TestApiSnWalletMappingChallengeApiLifetime"
+  ],
+  "normal": "UNEXECUTED",
+  "outcomes_closed": 0,
+  "preserved_original_outcomes": 38,
+  "race": "UNEXECUTED",
+  "remaining_ph12": "The SDK API subset is merged. Miner producer and Server consent integration are still separate work; independently accepted WalletMappingConsent and earning-wallet authority cannot be replaced by generic login proof.",
+  "schema": "sdk-c53-explicit-consent-api-source-scope-v1",
+  "sdk_main_commit": "c53cd78a43608daf8ff4f24f4800b509ca2f6087",
+  "sdk_original_base": "1ca8b35a43cfc00f5c4b8135470ab3347bd5c34e",
+  "sdk_separate_causal_control_catalog": "No separate SDK mutation-control catalog supplied in this handoff; original PH12/control obligations remain preserved.",
+  "sdk_tree": "1d7482b0623b0351c7364e81aff59cd56b96f2c4",
+  "selection": {
+    "bytes": 17041,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/sdk-c53-additive-docs/SDK-SELECTION.json",
+    "sha256": "23b44d9c40557bab20dae2fcbf5630298c336c2ca5013784c820112155ca5db2"
+  },
+  "source_closure_limit": "This is the exact8-file source delta and module-manifest comparison, not an actual resolved SDK test import/input graph or compiler closure.",
+  "source_files": [
+    {
+      "blob": "776f64c72496fff883d7d8d6c66e772c7ca93740",
+      "bytes": 11486,
+      "path": "api_sn.go",
+      "sha256": "e1b05518e8123c159f7eda08873bb2c4a86ba064585c460b35b2cb9f00cd4d2e"
+    },
+    {
+      "blob": "e4977131b6b6f176d1fd7a63bba8b1ba3bb169c1",
+      "bytes": 7731,
+      "path": "api_sn_pool_claim_test.go",
+      "sha256": "487ce5b9f3f3e7a3e7e4fd27a19d5133ebefb515d1a25fcd91033ecc8dc61aa2"
+    },
+    {
+      "blob": "986c2f1138d1392057c605e091a23e2a30eff0d8",
+      "bytes": 9938,
+      "path": "api_sn_wallet_mapping_test.go",
+      "sha256": "e321f4d7f7f5d6219b705352dbdfb0a68ac4f82b7c3b4edd3280c82fc2ffab8c"
+    },
+    {
+      "blob": "0168f560fd79ea0446b967915cb798d3bf9d7517",
+      "bytes": 169268,
+      "path": "cgo/coverage_report.txt",
+      "sha256": "ed8d2d5f57037a9474520dc7fd96b5b2224ce395e3c4709ca2a767363cfde04d"
+    },
+    {
+      "blob": "7a840c692a13dc40aeacb38255c7fc58e239932e",
+      "bytes": 649762,
+      "path": "cgo/exports_gen.go",
+      "sha256": "fb6df9785d0d822ffe224a6a039f84768f196e72f41c82b484c49caeddc6ad44"
+    },
+    {
+      "blob": "80e46ce27c9f79a2178c8df8ef8a5e51f0f8d050",
+      "bytes": 50946,
+      "path": "cgo/include/urnetwork_sdk.def",
+      "sha256": "6f0784015b72fcf484b7606a0ce93a8edf41e613576b9d572929d4ec91191dc1"
+    },
+    {
+      "blob": "2134306c73514e6c6dab02b1e08d431109d94865",
+      "bytes": 222073,
+      "path": "cgo/include/urnetwork_sdk.h",
+      "sha256": "42246a0174b74f598ccdb4641242f6e4378f7ebe64b579a84cddbacb5bc06823"
+    },
+    {
+      "blob": "e93c2bdfe94948b4d3798d0e640efc9db8621c89",
+      "bytes": 1116712,
+      "path": "cgo/include/urnetwork_sdk.hpp",
+      "sha256": "487ff25f104d2d6f35e754ece1dcda5e883969f4d623322229dc92cdf222854e"
+    }
+  ],
+  "source_intake": {
+    "bytes": 2853,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-claim-auth/SDK-HANDOFF.json",
+    "sha256": "0839f755375e830cccde91572a76fd3bc5c46d356e111f3511b55ee05b597d0c"
+  },
+  "status": "MERGED_SDK_SOURCE_TARGETED_QUALIFICATION_PENDING"
+}

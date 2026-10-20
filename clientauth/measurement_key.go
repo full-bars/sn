@@ -1,5 +1,7 @@
-// Measurement-only validators retain their pre-existing key and client. This
-// owner cannot generate a key or authorize a new server client allocation.
+// Measurement-only validators retain their pre-existing key and client. An
+// opened owner cannot generate a key or authorize a new server client
+// allocation; only first provisioning of a pristine directory can
+// (measurement_provision.go).
 package clientauth
 
 import (
@@ -26,6 +28,10 @@ type ValidatorMeasurementClientKeyOwner struct {
 	bootstrap     *registrationStore
 	clientPath    string
 	bootstrapPath string
+	// Set only by provisioning and spent by the one creation it authorizes.
+	provisioning bool
+	// Provisioning test observers; zero for every opened owner.
+	hooks measurementProvisionHooks
 }
 
 // Legacy adoption is an explicit assertion that the retained seed is original.
@@ -58,8 +64,7 @@ func OpenValidatorMeasurementClientKey(ctx context.Context, keyPath string, adop
 	if len(seed) != ed25519.SeedSize || bytes.Equal(seed, make([]byte, ed25519.SeedSize)) {
 		return nil, errors.New("measurement client key must be an existing nonzero 32-byte seed")
 	}
-	public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
-	expected := []byte("urnetwork-validator-measurement-client-key-v1\n0x" + hex.EncodeToString(public) + "\n")
+	expected := measurementKeyMarker(ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey))
 	marker, err := store.read(".validator.key.identity")
 	if errors.Is(err, os.ErrNotExist) {
 		if !adoptLegacyKey {
@@ -101,6 +106,12 @@ func OpenValidatorMeasurementClientKey(ctx context.Context, keyPath string, adop
 // global login directory is lazily retained when that operation needs it;
 // an existing client refresh does not need the powerful bootstrap credential.
 func (self *ValidatorMeasurementClientKeyOwner) LoadOrRegisterClientJwt(ctx context.Context, api *sdk.Api, networkPath string) (string, connect.Id, error) {
+	return self.loadOrRegisterClientJwt(ctx, api, networkPath, false)
+}
+
+// Creation is requested only by a provisioned owner's explicit call; the
+// registration guard still requires this directory's provisioning marker.
+func (self *ValidatorMeasurementClientKeyOwner) loadOrRegisterClientJwt(ctx context.Context, api *sdk.Api, networkPath string, allowCreate bool) (string, connect.Id, error) {
 	if self == nil || self.store == nil || len(self.seed) != ed25519.SeedSize || api == nil || filepath.Base(networkPath) != "jwt" {
 		return "", connect.Id{}, errors.New("measurement registration lacks retained custody")
 	}
@@ -132,8 +143,18 @@ func (self *ValidatorMeasurementClientKeyOwner) LoadOrRegisterClientJwt(ctx cont
 		}
 		return self.bootstrap, self.bootstrap.check()
 	}
-	token, id, err := loadOrRegisterClientJwtWithCustody(ctx, api, networkPath, self.clientPath, "validator measurement", scope, false, registrationHooks{}, self.store, bootstrapOwner)
+	token, id, err := loadOrRegisterClientJwtWithCustody(ctx, api, networkPath, self.clientPath, "validator measurement", scope, allowCreate, registrationHooks{}, self.store, bootstrapOwner)
 	if err != nil {
+		return "", connect.Id{}, err
+	}
+	if self.hooks.afterRegistration != nil {
+		if err := self.hooks.afterRegistration(); err != nil {
+			return "", connect.Id{}, err
+		}
+	}
+	// The operation is retained and its credential persisted, so a provisioning
+	// authority is spent durably here, whichever path completed it.
+	if err := spendMeasurementProvisioning(self.store, measurementKeyMarker(public)); err != nil {
 		return "", connect.Id{}, err
 	}
 	// Completed primary authentication needs only the client credential. Keep
@@ -183,6 +204,11 @@ func (self *ValidatorMeasurementClientKeyOwner) RejectClientJwt() (returnErr err
 
 // Seed returns a copy for the sole measurement transport's immutable settings.
 func (self *ValidatorMeasurementClientKeyOwner) Seed() []byte { return slices.Clone(self.seed) }
+
+// The public identity line shared by the identity and provisioning markers.
+func measurementKeyMarker(public ed25519.PublicKey) []byte {
+	return []byte("urnetwork-validator-measurement-client-key-v1\n0x" + hex.EncodeToString(public) + "\n")
+}
 
 // Close belongs to the enclosing runner after every user has joined.
 func (self *ValidatorMeasurementClientKeyOwner) Close() error {

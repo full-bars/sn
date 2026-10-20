@@ -15,7 +15,6 @@ import (
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	gsrpcblock "github.com/centrifuge/go-substrate-rpc-client/v4/types/block"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"golang.org/x/crypto/blake2b"
 
@@ -191,7 +190,9 @@ func TestAuthenticatedFinalizedExtrinsicBindsExactMetadataAndContext(t *testing.
 	raw := []byte{1, 2, 3, 4}
 	digest := blake2b.Sum256(raw)
 	extrinsicHash := types.Hash(digest)
-	blockHash := types.Hash{9}
+	// The receipt reader admits only a body its SCALE header commits to and
+	// reads the events as nullable storage.
+	header, blockHash := releaseReceiptTestHeader(t, types.Hash{8}, 9, codec.HexEncodeToString(raw))
 	calls := 0
 	client := &releaseRuntimeTestClient{callContext: func(ctx context.Context, result any, method string, args ...any) error {
 		if ctx.Value(callerContextKey{}) != callerContextValue {
@@ -203,13 +204,12 @@ func TestAuthenticatedFinalizedExtrinsicBindsExactMetadataAndContext(t *testing.
 		calls++
 		switch method {
 		case "chain_getBlock":
-			*(result.(*gsrpcblock.SignedBlock)) = gsrpcblock.SignedBlock{Block: gsrpcblock.Block{Extrinsics: []string{codec.HexEncodeToString(raw)}}}
+			return setReleaseRuntimeTestResult(result, releaseReceiptTestBlockWire(header, codec.HexEncodeToString(raw)))
 		case "state_getStorage":
-			*(result.(*string)) = encodedEvents
+			return setReleaseRuntimeTestResult(result, encodedEvents)
 		default:
 			return errors.New("unexpected finalized receipt RPC")
 		}
-		return nil
 	}}
 	sharedMetadata := types.NewMetadataV14()
 	chain := &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: client}, Meta: sharedMetadata}

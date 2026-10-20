@@ -1,0 +1,51 @@
+{
+  "author_execution": false,
+  "author_handoff": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-normal-body-source-handoff-v1.json",
+    "sha256": "8ed4e4cbd381821f35b16b95fa35638171fdce189a72294ccdfd8c9d1a4e9856"
+  },
+  "checked_binding_count": 209,
+  "executions": {
+    "body": 1,
+    "body_binary_seconds": 300,
+    "body_context_seconds": 360,
+    "list": 1,
+    "runtime_seconds": 600,
+    "stop_seconds": 90
+  },
+  "findings": [
+    "Exact original Main9 image/receipt/wait and package census retained; archived workspace tuple explicit.",
+    "Each actual LIST/body has separate original ChildContext wait and execution receipt; sampler joins before process-tree join.",
+    "Ordinary exit1 retains PASS/FAIL/SKIP/incomplete counts; malformed, contradictory, signal, custody or resource failure stops continuation.",
+    "One initial growth floor covers all selected phases; actual canonical USER generation and whole-owner plus per-phase horizons are checked.",
+    "Existing closed37/943/30 and c60 owned DB checks preserve unrelated stopped containers.",
+    "Thirteen deterministic classifier roots are source/AST reviewed only; no execution or PASS inferred."
+  ],
+  "image_origin": "Exact archived babb/7ca/3e1 Main9 workspace compiler inputs. Later default-module layout/source revisions require explicit actual-input applicability; this job does not confer that qualification.",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-nativefee11-normal-v1-job-v1.json",
+    "sha256": "be3273b6cfd41de40af7b2e917c17315a75e9eb6a5b7ae6548f3d0e633ff92df"
+  },
+  "remaining_gates": [
+    "Next selected job must append actual adapter30 and corrected Rust completed waits/USER readbacks if sequenced after them. Existing be327 job is not silently retargeted.",
+    "Future joint adapter runner and shared resource plan require separate exact review/adoption; exclusive original stays unchanged.",
+    "No default-layout source applicability or full459 forecast qualification is granted."
+  ],
+  "resource_class": {
+    "cumulative_cap_bytes": 115964116992,
+    "data_minimum_available_bytes": 10737418240,
+    "margin": 2,
+    "memory_max_bytes": 2147483648,
+    "memory_minimum_available_bytes": 113816633344,
+    "memory_swap_max_bytes": 0,
+    "one_cumulative_growth_bytes": 2147483648,
+    "original_baseline_bytes": 113681502208
+  },
+  "roots": 11,
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-published-main-sn-core-normal-bodies-v1.py",
+    "sha256": "b5ec4c5c62ebfb5be3422bfadc4e1ff8291e4e626fde5953a546373c64eb79c1"
+  },
+  "schema": "published-main-nativefee11-collector-independent-review-v1",
+  "status": "SOURCE_AND_PROSPECTIVE_EXCLUSIVE_CLASS_ACK_LATEST_ORDERED_PREDECESSOR_REQUIRED"
+}

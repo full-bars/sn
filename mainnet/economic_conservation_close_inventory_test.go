@@ -100,9 +100,12 @@ func TestEconomicCloseInventoryPublicArchiveRetainsOriginalChain(t *testing.T) {
 }
 
 // The window is built before artifact signing and before all real receipt tries.
-func economicCloseWindowTestConfigure(t *testing.T, source *economicConservationFixture, omit bool) *economicEntitlementFixture {
+func economicCloseWindowTestConfigure(t *testing.T, source *economicConservationFixture, omit bool, changes ...func(*payoutartifact.ClosedWorkCensus)) *economicEntitlementFixture {
 	t.Helper()
 	return configureEconomicClosedWorkFixture(t, source, func(c *payoutartifact.ClosedWorkCensus) {
+		for _, change := range changes {
+			change(c)
+		}
 		window := &payoutartifact.ClosedWorkWindow{Schema: payoutartifact.ClosedWorkWindowSchema, Start: c.WindowStart, End: c.WindowEnd, Records: []payoutartifact.ClosedWorkWindowRecord{}}
 		for _, row := range c.Records {
 			id, closed := row.ContractId, row.ClosedAt
@@ -159,5 +162,93 @@ func TestEconomicCloseWindowRetainedClockCannotSelfSealAuthority(t *testing.T) {
 	census.ContentHash = census.hash()
 	if err := census.validate(t.Context(), f.source.policy, record); err == nil || !strings.Contains(err.Error(), "counters differ") {
 		t.Fatal("self-sealed timestamps replaced exact original epoch headers", err)
+	}
+}
+
+// Snow's finalized Finney block 9,278,937 stores 1,791,949,860,000 ms, and its
+// 12-second Aura slots leave no remainder. The vault blocks keep that cadence.
+func economicCloseWindowMainnetTimes(t *testing.T) func(*monitorEvmFixture) {
+	t.Helper()
+	return func(vault *monitorEvmFixture) {
+		for number, block := range vault.blocks {
+			block.header.Time = 1791949860000 + number*12000
+		}
+		economicConservationTestEvmRehash(t, vault, nil)
+	}
+}
+
+// PH-15: the public clock reads raw Frontier milliseconds at mainnet scale.
+// Boundary blocks 0 and 10 store 1,791,949,860,000 and 1,791,949,980,000 ms,
+// 2026-10-14T03:51:00Z and 03:53:00Z. A window of exactly those instants is
+// matched, persisted, reloaded and revalidated on restart without a new read.
+func TestEconomicCloseWindowPublicClockMatchesMainnetMilliseconds(t *testing.T) {
+	f := economicCloseWindowTestConfigure(t, newEconomicConservationFixture(t, false, economicCloseWindowMainnetTimes(t)), false, func(c *payoutartifact.ClosedWorkCensus) {
+		c.WindowStart, c.WindowEnd = "2026-10-14T03:51:00Z", "2026-10-14T03:53:00Z"
+		for index := range c.Records {
+			c.Records[index].ClosedAt = "2026-10-14T03:52:00Z"
+		}
+	})
+	economicEntitlementFirstPage(t, f)
+	summary, code, issue := f.source.run(t, monitorServiceHooks{})
+	record := economicEntitlementRecord(t, f.source)
+	if code != 0 || record.Census == nil || record.Census.WindowClock == nil || record.Census.ClosedWork == nil {
+		t.Fatal("mainnet millisecond clock was not retained", code, issue, record)
+	}
+	clock := record.Census.WindowClock
+	if clock.HeaderProfile != payoutartifact.FrontierWindowClockProfile || !clock.StartTime.Equal(time.Date(2026, time.October, 14, 3, 51, 0, 0, time.UTC)) || !clock.EndTime.Equal(time.Date(2026, time.October, 14, 3, 53, 0, 0, time.UTC)) {
+		t.Fatal("raw Frontier milliseconds lost their original instants", clock)
+	}
+	if !record.Census.ClosedWork.WindowClockMatched || summary.OriginalEntitlements.ClockMatchedWindows != 1 || summary.OriginalEntitlements.ProviderMeasurementsAuthenticated || summary.TargetMet != nil {
+		t.Fatal("exact original window was not matched or became provider authority", summary)
+	}
+	if err := record.Census.validate(t.Context(), f.source.policy, record); err != nil {
+		t.Fatal("reloaded millisecond census failed its own validation", err)
+	}
+	before := record.Census.ContentHash
+	again, code, issue := f.source.run(t, monitorServiceHooks{})
+	if code != 0 || f.artifactReads.Load() != 2 || economicEntitlementRecord(t, f.source).Census.ContentHash != before || again.OriginalEntitlements.ClockMatchedWindows != 1 {
+		t.Fatal("restart lost or reacquired the retained millisecond clock", code, issue, again)
+	}
+}
+
+// PH-15: a retained public clock is the mapped Frontier read. Without this
+// refusal an absent or unknown profile would silently re-verify as unmatched.
+func TestEconomicCloseWindowRetainedClockRefusesAnotherHeaderProfile(t *testing.T) {
+	f := economicCloseWindowTestConfigure(t, newEconomicConservationFixture(t, false), false)
+	economicEntitlementFirstPage(t, f)
+	if _, code, issue := f.source.run(t, monitorServiceHooks{}); code != 0 {
+		t.Fatal(code, issue)
+	}
+	record := economicEntitlementRecord(t, f.source)
+	if record.Census == nil || record.Census.WindowClock == nil || record.Census.ClosedWork == nil || record.Census.ClosedWork.WindowClockMatched {
+		t.Fatal("unmatched original window clock was never retained")
+	}
+	if err := record.Census.validate(t.Context(), f.source.policy, record); err != nil {
+		t.Fatal("retained Frontier clock failed its own validation", err)
+	}
+	for _, profile := range []string{"", "frontier-legacy-rlp15-seconds"} {
+		census, clock := *record.Census, *record.Census.WindowClock
+		clock.HeaderProfile = profile
+		census.WindowClock = &clock
+		census.ContentHash = census.hash()
+		if err := census.validate(t.Context(), f.source.policy, record); err == nil || !strings.Contains(err.Error(), "declares another header profile") {
+			t.Fatal("retained clock was reread under another unit", profile, err)
+		}
+	}
+}
+
+// PH-15: a provider census keeps the clock its producer declared, including the
+// ordinary EVM seconds profile; only a public clock must be the mapped Frontier.
+func TestEconomicCloseWindowProviderClockKeepsProducerProfile(t *testing.T) {
+	for _, profile := range []string{"", payoutartifact.FrontierWindowClockProfile} {
+		clock := &payoutartifact.ClosedWorkWindowClock{HeaderProfile: profile}
+		census := &economicConservationEntitlementCensus{ProviderOriginals: &economicProviderOriginals{Work: &payoutartifact.WholeWorkInventory{Clock: clock}}, WindowClock: clock}
+		if err := census.validateClosedWork(t.Context(), true); err != nil {
+			t.Fatal("provider path reread its producer-declared clock", profile, err)
+		}
+	}
+	census := &economicConservationEntitlementCensus{WindowClock: &payoutartifact.ClosedWorkWindowClock{}}
+	if err := census.validateClosedWork(t.Context(), false); err == nil || !strings.Contains(err.Error(), "declares another header profile") {
+		t.Fatal("public path accepted an undeclared clock profile", err)
 	}
 }

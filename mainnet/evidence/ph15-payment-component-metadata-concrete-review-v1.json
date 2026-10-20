@@ -1,0 +1,102 @@
+{
+  "component_intakes": {
+    "payment": {
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-wallet-reconciliation/execution-d64/SOURCE-DELTA.json",
+      "sha256": "7a2c4a2749968731bb56730e52a643f9b0968bdfdb99caa9575509b51f80061f"
+    },
+    "ph15": {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261005/ph15-status-evidence/INTAKE.json",
+      "sha256": "c84b25f6071c948b722bf2b631e233ae2b941ff63e96c7f3ecd03b299165a853"
+    }
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 1080,
+    "TimeoutStopSec": 90
+  },
+  "forecast": {
+    "basis": "Sixteen fresh Go blobs under1MiB, retained hardlinks, two64MiB bounded graph outputs,4MiB staging log and bounded directory metadata fit the previously qualified1GiB metadata class. No global accounting, cap, margin or floor changes.",
+    "entry_data_bytes": 10737418240,
+    "entry_memory_bytes": 113816633344,
+    "growth_stop_bytes": 1073741824,
+    "memory_max_bytes": 2147483648
+  },
+  "fresh_bytes": 221122,
+  "fresh_files": 16,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/ph15-payment-component-metadata-job-v1.json",
+    "sha256": "29619e509c9986e5e8fe3284043ad40ba446bc260dbfe8f8b3dcd115fbe35329"
+  },
+  "parent_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-f0b-026b-983-compiler-source-closure-v1.json",
+    "sha256": "5ca984f2055fc5036b64ffd46cb93c6ead7521a21c7a9e6bc4372374567fa9ce"
+  },
+  "phase_bounds": {
+    "each_graph": 300,
+    "graphs": 2,
+    "stage": 180,
+    "total": 780
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 1073741824,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "29619e509c9986e5e8fe3284043ad40ba446bc260dbfe8f8b3dcd115fbe35329",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 2147483648,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "network_dependency_count": 0,
+    "runner_sha256": "ffbbe769d8999b01b2172b6b8ee6675a585f7433b6c99c8ffedc682c92867b1d",
+    "short_count": 0,
+    "status": "ADOPTED_CURRENT_COMPONENT_DELTA_CACHED_METADATA"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/ph15-payment-component-metadata-adoption-v1.json",
+  "required_successor_boundary": {
+    "adoption_contract": "Append every actual seven compiler phase wait and its closed USER readback; retain any ordinary or structural failures without fabricating missing waits. This metadata cannot overlap that exclusive owner.",
+    "job": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-job-v1.json",
+      "sha256": "92c868431f9cef7e35199faecdc0b12f3e23b5e08ae40ba209c25e4100c351f1"
+    },
+    "phase_ids": [
+      "onchain",
+      "validator",
+      "evmrpc",
+      "crv4",
+      "core",
+      "payoutartifact",
+      "vlessinterop"
+    ],
+    "unit": "sn-default-sn-core-vless7-normal-v1-20261005.service"
+  },
+  "reused_files": 35691,
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-current-component-delta-metadata-v1.py",
+    "sha256": "ffbbe769d8999b01b2172b6b8ee6675a585f7433b6c99c8ffedc682c92867b1d"
+  },
+  "runtime_source_change": "None. Exact already-qualified ffbbe runner and6ce9 stage helper reused.",
+  "source_delta_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-624cf1-d64-component-source-proof-v1.json",
+    "sha256": "503cf0b0fcb2972e54b80f51db21649fbf73ce26c54984c79a551ea1f1e5c1df"
+  },
+  "source_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-624cf1-d64-source-manifest-v1.json",
+    "sha256": "d55ccdc2c074c2ec5e5236b3db97382604de9497c7d7067bebf2ce042482dc1e"
+  },
+  "stage_helper": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/stage-current-component-delta-v1.py",
+    "sha256": "6ce9d4a38724d53ea439a30b1597fcf97d4599b30a223b06bddace2c67d29f84"
+  },
+  "status": "READY_FOR_ROOT_ADOPTION_AFTER_ACTUAL_SEVEN_OWNER_JOINS",
+  "validation": "Metadata-only JSON/Git/AST/pin readback. No stage, Go, test, compiler, service, network or cache mutation by author.",
+  "whole_owner_horizon_seconds": 1170
+}

@@ -134,26 +134,22 @@ func (request *ReleaseHistoryAdoptionV2) configure(cfg *ReleaseConfig, configPat
 // Reconstruct the original canonical file from the retained terminal prefix,
 // including lifecycle receipts and timestamps. Later append-only progress may
 // extend it; rewriting or dropping an original intent cannot satisfy the pin.
-func (request *ReleaseHistoryAdoptionV2) matchPrefix(ctx context.Context, file *steeringIntentFile, encoded []byte, limit uint64) (*releaseHistoryAdoptionV2, error) {
+// all is the complete logical history, sealed segments included; present says
+// whether an intent file exists. The pinned prefix is the canonical unsealed
+// file of its entries, so sealing never changes it.
+func (request *ReleaseHistoryAdoptionV2) matchPrefix(ctx context.Context, all []*SteeringIntent, present bool, limit uint64) (*releaseHistoryAdoptionV2, error) {
 	if request == nil {
 		return nil, nil
 	}
-	if ctx == nil || file == nil || file.Schema != steeringIntentSchema || limit == 0 {
+	if ctx == nil || limit == 0 {
 		return nil, errors.New("strict history adoption prefix owner is incomplete")
-	}
-	all := make([]*SteeringIntent, 0, len(file.History)+1)
-	for index := range file.History {
-		all = append(all, &file.History[index])
-	}
-	if file.Current != nil {
-		all = append(all, file.Current)
 	}
 	if uint64(len(all)) < request.IntentPrefixCount {
 		return nil, errors.New("strict history adoption lost an original intent")
 	}
 	owner := &releaseHistoryAdoptionV2{request: *request}
 	if request.IntentPrefixCount == 0 {
-		if len(all) == 0 && encoded != nil {
+		if len(all) == 0 && present {
 			return nil, errors.New("strict history adoption absence was replaced by a file")
 		}
 		if len(all) != 0 && all[0].SubnetEpoch != request.FirstNativeEpoch {

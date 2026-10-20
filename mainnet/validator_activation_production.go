@@ -90,15 +90,17 @@ func validatorActivationContractPlans(ctx context.Context, preparation bootstrap
 }
 
 // Constructor counters are not current invariants. Explicitly exclude only
-// accounting/census clocks, retain authority and pause checks, and substitute
-// the exact one-shot evidence anchor. Current policy/roots are checked by the
-// real client-key historical-authority reader at this same EVM boundary.
+// accounting/census clocks and the policy count, which grows when the owner
+// schedules the production cadence after an accelerated first epoch; retain
+// authority and pause checks, and substitute the exact one-shot evidence
+// anchor. Current policy/roots are checked by the real client-key
+// historical-authority reader at this same EVM boundary.
 func validatorActivationContractViews(plan evmCreatePlan, index int, evidence common.Address) ([]contractGetter, []contractStorageWord) {
 	coordinator, reserve, vault := stabi.NewSTCoordinator(), stabi.NewSTReserveSink(), stabi.NewSTSettlementVault()
 	var mutable [][]byte
 	switch index {
 	case 4:
-		mutable = [][]byte{coordinator.PackCurrentEpoch(), coordinator.PackOperatorCount(), coordinator.PackCampaignReserved()}
+		mutable = [][]byte{coordinator.PackCurrentEpoch(), coordinator.PackOperatorCount(), coordinator.PackPolicyCount(), coordinator.PackCampaignReserved()}
 	case 5:
 		mutable = [][]byte{reserve.PackPrincipal()}
 	case 6:

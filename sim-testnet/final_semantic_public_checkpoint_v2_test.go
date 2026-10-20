@@ -26,14 +26,22 @@ import (
 func TestFinalPublicValidatorSourcesV2NativeCheckpointAuthenticatesExactPublicState(t *testing.T) {
 	t.Parallel()
 	f := newFinalV2PublicRPCFixture(t)
-	f.nativeHead.Number = 100
+	// The checkpoint authenticates each native header by its SCALE hash, so
+	// every served block is a real header linked to its parent by that hash.
+	payoutParentHeader, payoutParentBlock := releaseReceiptTestHeader(t, gsrpctypes.Hash{0x27}, 89)
+	payoutHeader, payoutBlock := releaseReceiptTestHeader(t, payoutParentBlock, 90)
+	parentHeader, parentBlock := releaseReceiptTestHeader(t, gsrpctypes.Hash{0x25}, 99)
+	headHeader, headBlock := releaseReceiptTestHeader(t, parentBlock, 100)
+	finalizedHeader, finalizedBlock := releaseReceiptTestHeader(t, headBlock, 101)
+	f.nativeHead.Number, f.nativeHead.Hash = 100, headBlock.Hex()
 	f.reader.evidence.NativeTerminalHead = f.nativeHead
 	f.reader.evidence.Netuid = 521
 	f.reader.evidence.Window.BaselineHead = f.evmHead
 	f.reader.runtimeVersion = crv4.RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 455, TransactionVersion: 1, StateVersion: 1}
 	f.reader.runtimeCodeHash = common.Hash{0x61}.Hex()
-	parent, finalized := common.Hash{0x23}.Hex(), common.Hash{0x24}.Hex()
-	payout, payoutParent := common.Hash{0x29}.Hex(), common.Hash{0x28}.Hex()
+	parent, finalized := parentBlock.Hex(), finalizedBlock.Hex()
+	payout, payoutParent := payoutBlock.Hex(), payoutParentBlock.Hex()
+	headers := map[string]gsrpctypes.Header{payoutParent: payoutParentHeader, payout: payoutHeader, parent: parentHeader, f.nativeHead.Hash: headHeader, finalized: finalizedHeader}
 	hotkey, coldkey := [32]byte{11}, [32]byte{12}
 	metadata := gsrpctypes.NewMetadataV14()
 	metadata.MagicNumber = gsrpctypes.MagicNumber
@@ -153,21 +161,9 @@ func TestFinalPublicValidatorSourcesV2NativeCheckpointAuthenticatesExactPublicSt
 			}
 			result = map[uint64]string{0: testnetGenesis, 89: payoutParent, 90: payout, 99: parent, 100: f.nativeHead.Hash, 101: finalized}[number]
 		case "chain_getHeader":
-			number := map[string]uint64{payoutParent: 89, payout: 90, parent: 99, f.nativeHead.Hash: 100, finalized: 101}[lastHash]
-			parentHash := parent
-			if number == 99 {
-				parentHash = common.Hash{0x25}.Hex()
+			if header, ok := headers[lastHash]; ok {
+				result = releaseReceiptTestHeaderWire(header)
 			}
-			if number == 101 {
-				parentHash = f.nativeHead.Hash
-			}
-			if number == 90 {
-				parentHash = payoutParent
-			}
-			if number == 89 {
-				parentHash = common.Hash{0x27}.Hex()
-			}
-			result = map[string]any{"number": fmt.Sprintf("0x%x", number), "parentHash": parentHash, "stateRoot": common.Hash{}.Hex(), "extrinsicsRoot": common.Hash{}.Hex(), "digest": map[string]any{"logs": []string{}}}
 		case "chain_getFinalizedHead":
 			result = finalized
 		case "state_getRuntimeVersion":

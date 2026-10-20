@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/urfoundation/sn/crv4"
 )
 
 const rootCurrentCapabilitiesSchema = "urnetwork-mainnet-root-current-capabilities-v1"
@@ -146,7 +147,7 @@ func rootCurrentCallType(metadata *types.Metadata, id types.Si1LookupTypeID, sha
 // Only authenticated metadata enters this projection. A compatible interface
 // still cannot establish source-to-Wasm equality, current storage or custody.
 func inspectRootCurrentCapabilities(metadata *types.Metadata, metadataHash, fileHash, source string) (rootCurrentCapabilities, error) {
-	if metadata == nil || metadata.Version != 14 || source != rootPassiveSource || !rootCanonicalHash(metadataHash) || !planSha256(fileHash) {
+	if metadata == nil || metadata.Version != 14 || !crv4.ReviewedNativeOwnerSource(source) || !rootCanonicalHash(metadataHash) || !planSha256(fileHash) {
 		return rootCurrentCapabilities{}, errors.New("root capabilities require pinned metadata14 and the exact reviewed current-root source")
 	}
 	var variants []types.Si1Variant
@@ -225,6 +226,10 @@ func inspectRootCurrentCapabilities(metadata *types.Metadata, metadataHash, file
 		if call.MetadataStatus != "shape-supported" {
 			result.MetadataInterfaceCompatible = false
 			result.Blockers = append(result.Blockers, fmt.Sprintf("ROOT_CALL_INTERFACE_UNAVAILABLE:%s", spec.name))
+		}
+		if version, reviewed := rootRegisterReviewedSpec(source); spec.name == "root_register" && reviewed && call.MetadataStatus == "shape-supported" {
+			call.MutationAdapter = fmt.Sprintf("root-register-v1;requires-separate-%d-policy-operator-custody-and-whole-reducible-balance-exposure-approval", version)
+			result.MutationExecution = fmt.Sprintf("root_register-only:separate-%d-root-register-domain;other-current-root-mutations-not-implemented", version)
 		}
 		result.Calls = append(result.Calls, call)
 	}

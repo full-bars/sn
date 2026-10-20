@@ -52,6 +52,7 @@ type bootstrapContractReceiptAdmission struct {
 	ActivationReady              bool                                `json:"activation_ready"`
 	NetworkEffects               bool                                `json:"network_effects"`
 	PendingChainPhases           []string                            `json:"pending_chain_phases"`
+	OwnerTrimPhase               string                              `json:"owner_trim_phase,omitempty"`
 	ContentHash                  string                              `json:"content_hash"`
 }
 
@@ -79,7 +80,8 @@ func openBootstrapContractReceiptScope(ctx context.Context, path, directory, acc
 		return nil, err
 	}
 	preparation, err := loadBootstrapChainPreparation(ctx, path)
-	if err != nil || accepted != declaration.PreparationHash || accepted != preparation.Plan.ContentHash || directory != preparation.Plan.Config.RunDirectory {
+	if err != nil || accepted != declaration.PreparationHash || accepted != preparation.Plan.ContentHash || directory != preparation.Plan.Config.RunDirectory ||
+		len(declaration.Validators) != len(preparation.Plan.Config.Validators) {
 		return nil, errors.Join(errors.New("contract receipt original preparation or declaration differs"), err)
 	}
 	_, plans, err := prepareBootstrapContractReadiness(ctx, preparation.Contracts, preparation.Plan.Config.Contracts.Path)
@@ -162,9 +164,10 @@ func (self *bootstrapContractReceiptScope) close() error {
 }
 
 // The signed EVM scan floor is inclusive and may precede deployment. Native
-// heights cannot substitute for EVM event-indexing heights.
+// heights cannot substitute for EVM event-indexing heights. Each declared role
+// carries its own floor; its preparation fixes how many roles exist.
 func bootstrapContractReceiptScanFloor(validators []bootstrapContractValidatorBinding, records []evmActionRecord) (uint64, error) {
-	if len(validators) != 2 || len(records) != 8 {
+	if len(validators) == 0 || len(records) != 8 {
 		return 0, errors.New("contract receipt scan floor lacks its complete deployment scope")
 	}
 	var earliest uint64
@@ -279,7 +282,8 @@ func (self *bootstrapContractReceiptScope) inspect(ctx context.Context) (bootstr
 	result.CheckedThroughNativeHash, result.CheckedThroughNativeBlock = check.FinalizedHash, check.FinalizedNumber
 	result.FinalityAssumption, result.EarliestOriginalEvmBlock = "owned-rpc-assertion", earliest
 	result.CanonicalReceiptsVerified, result.HistoricalStateVerified, result.DeploymentScanFloorsVerified = true, true, true
-	result.PendingChainPhases = bootstrapChainPendingPhases()
+	result.PendingChainPhases = bootstrapChainPendingPhasesForSchema(self.preparation.Plan.Config.Schema)
+	result.OwnerTrimPhase = self.preparation.Plan.OwnerTrimPhase
 	result.ContentHash = rootObjectHash(result)
 	return result, nil
 }

@@ -64,11 +64,13 @@ type FinalCollectedPayoutArtifact struct {
 }
 
 type FinalCollectedValidatorInputs struct {
-	EvidenceV2             *FinalCollectedValidatorEvidenceV2 `json:"evidence_v2,omitempty"`
-	ValidatorID            uint64                             `json:"validator_id"`
-	PathVPK                string                             `json:"path_vpk"`
-	OperatorPaths          []FinalOperatorPathIdentity        `json:"operator_paths"`
-	IntentStore            FinalArtifactLocator               `json:"intent_store"`
+	EvidenceV2    *FinalCollectedValidatorEvidenceV2 `json:"evidence_v2,omitempty"`
+	ValidatorID   uint64                             `json:"validator_id"`
+	PathVPK       string                             `json:"path_vpk"`
+	OperatorPaths []FinalOperatorPathIdentity        `json:"operator_paths"`
+	IntentStore   FinalArtifactLocator               `json:"intent_store"`
+	// A sealed store's segments, in the order its live file pins them.
+	IntentSegments         []FinalArtifactLocator             `json:"intent_segments,omitempty"`
 	DishonestDepositIntent *FinalCollectedValidatorIntent     `json:"dishonest_deposit_intent,omitempty"`
 	Intents                []FinalCollectedValidatorIntent    `json:"intents"`
 	LifecycleIntents       []FinalCollectedValidatorIntent    `json:"lifecycle_intents,omitempty"`
@@ -1359,7 +1361,17 @@ func collectFinalValidatorInputsWithPathAuthority(cfg *ResolvedConfig, stateRoot
 		if err != nil {
 			return nil, err
 		}
-		intents, err := decodeValidatorIntentBytes(storeEntry.Data, validatorID)
+		// A sealed store's segments are collected beside it, as it pins them.
+		var segmentNames []string
+		var segmentData [][]byte
+		intents, err := decodeValidatorIntentBytes(storeEntry.Data, validatorID, func(name string, maximum uint64) ([]byte, error) {
+			entry, err := finalCollectedFileEntryWithLimit(stateRoot, filepath.ToSlash(filepath.Join("runtime", fmt.Sprintf("validator-%d", validatorID), "state", filepath.FromSlash(name))), int64(maximum))
+			if err != nil {
+				return nil, err
+			}
+			segmentNames, segmentData = append(segmentNames, name), append(segmentData, entry.Data)
+			return entry.Data, nil
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -1384,6 +1396,13 @@ func collectFinalValidatorInputsWithPathAuthority(cfg *ResolvedConfig, stateRoot
 			return nil, err
 		}
 		collected := FinalCollectedValidatorInputs{ValidatorID: uint64(validatorID), PathVPK: paths[0].PathVPK, OperatorPaths: append([]FinalOperatorPathIdentity(nil), paths...), IntentStore: storeLocator}
+		for index, name := range segmentNames {
+			locator, err := persistFinalCollectedArtifact(runRoot, "validator-steering-intent-segment", fmt.Sprintf("final-inputs/validators/validator-%d-%s", validatorID, name), segmentData[index])
+			if err != nil {
+				return nil, err
+			}
+			collected.IntentSegments = append(collected.IntentSegments, locator)
+		}
 		captureIntent := func(sequence int, intent *validatorpkg.SteeringIntent, collectAttempts bool) (FinalCollectedValidatorIntent, error) {
 			measurement, measurementData, err := collectFinalValidatorMeasurement(cfg, stateRoot, root, runRoot, validatorID, intent, terminal)
 			if err != nil {
@@ -1987,6 +2006,11 @@ func verifyFinalSemanticCollectedInputs(cfg *ResolvedConfig, value *FinalSemanti
 		if err := verifyFinalArtifact("collected validator intent store", validator.IntentStore, "validator-steering-intent-store"); err != nil {
 			return err
 		}
+		for _, segment := range validator.IntentSegments {
+			if err := verifyFinalArtifact("collected validator intent segment", segment, "validator-steering-intent-segment"); err != nil {
+				return err
+			}
+		}
 		if err := verifyFinalSettlementClosureLocators(validator.SettlementClosures, value.Window, false); err != nil {
 			return fmt.Errorf("collected validator %d terminal authority: %w", validator.ValidatorID, err)
 		}
@@ -2065,6 +2089,7 @@ func verifyFinalCollectedClosedGraph(ctx context.Context, cfg *ResolvedConfig, s
 			}
 		}
 		locators = append(locators, validator.IntentStore)
+		locators = append(locators, validator.IntentSegments...)
 		if validator.DishonestDepositIntent != nil {
 			locators = append(locators, validator.DishonestDepositIntent.Artifact, validator.DishonestDepositIntent.Measurement, validator.DishonestDepositIntent.Envelope)
 		}

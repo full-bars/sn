@@ -78,9 +78,36 @@ func (self *releaseEvidenceV2StartupReferences) read(ctx context.Context, path s
 	return encoded, owner.check()
 }
 
+// Owns an existing file's identity without reading its bytes, under the same
+// acquisition and allowance as read. Every later check refuses any change to
+// that identity. Archive custody has no physical identity to observe.
+func (self *releaseEvidenceV2StartupReferences) observe(ctx context.Context, path string, limit uint64) (attemptPrivateFileState, error) {
+	if self.closed || self.archive != nil || limit == 0 || self.remaining == 0 {
+		return attemptPrivateFileState{}, errors.New("startup reference identity owner is exhausted, closed or archived")
+	}
+	owner, err := acquireReleaseMeasurementInputV2Owner(ctx, path, min(limit, self.remaining), self.readHooks, false)
+	self.owners = append(self.owners, owner)
+	if err != nil {
+		return attemptPrivateFileState{}, err
+	}
+	state, err := owner.observeLeaf()
+	if err != nil {
+		return attemptPrivateFileState{}, err
+	}
+	self.remaining -= uint64(state.size)
+	return state, owner.check()
+}
+
 // No callback is allowed to turn a shortened or retargeted file into the same
 // authenticated reference set. Late errors survive all owner releases.
 func (self *releaseEvidenceV2StartupReferences) check() error {
+	return self.checkSince(0)
+}
+
+// Only the owners acquired at or after index, so a loop that checks each
+// entry's own files checks every owner once instead of all earlier ones again.
+// The loop's owner still checks the whole set before it uses any verdict.
+func (self *releaseEvidenceV2StartupReferences) checkSince(index int) error {
 	if self == nil || self.closed {
 		return errors.New("startup reference owner is closed")
 	}
@@ -88,7 +115,7 @@ func (self *releaseEvidenceV2StartupReferences) check() error {
 		return self.archive.check(self.archive.ctx)
 	}
 	var err error
-	for _, owner := range self.owners {
+	for _, owner := range self.owners[index:] {
 		err = errors.Join(err, owner.check())
 	}
 	return err
@@ -136,34 +163,45 @@ func (self *releaseEvidenceV2StartupHistory) readIntentReferences(ctx context.Co
 		return nil, err
 	}
 	if encoded == nil {
-		self.historyAdoption, err = self.cfg.historyAdoptionV2.matchPrefix(ctx, &steeringIntentFile{Schema: steeringIntentSchema}, nil, bounds.IntentFileLimit())
+		self.historyAdoption, err = self.cfg.historyAdoptionV2.matchPrefix(ctx, nil, false, bounds.MaxHistoryBytes)
 		if err != nil {
+			return nil, err
+		}
+		// A bridge always names a retained predecessor, so absence refuses it.
+		if self.nativeGapBridge, err = self.cfg.nativeGapBridge.matchHistory(ctx, nil); err != nil {
 			return nil, err
 		}
 		return owned, owned.check()
 	}
-	var file steeringIntentFile
-	if err := decodeAttemptStreamV2JSON(encoded, bounds.IntentFileLimit(), &file); err != nil {
-		return nil, err
-	}
-	canonical, err := marshalAttemptSettlementV2JSON(ctx, &file, bounds.IntentFileLimit(), true, true)
-	if err != nil || file.Schema != steeringIntentSchema || !bytes.Equal(encoded, canonical) {
+	file, err := decodeSteeringIntentFileV2(ctx, encoded, bounds.IntentFileLimit())
+	if err != nil {
 		return nil, errors.Join(errors.New("startup intent reference file is not canonical"), err)
 	}
-	self.historyAdoption, err = self.cfg.historyAdoptionV2.matchPrefix(ctx, &file, encoded, bounds.IntentFileLimit())
+	// A missing or changed sealed segment refuses startup like any other
+	// retained reference.
+	logical, err := readSteeringIntentHistoryV2(ctx, file, bounds.IntentFileLimit(), func(name string, maximum uint64) ([]byte, error) {
+		return owned.read(ctx, filepath.Join(self.cfg.StateDir, filepath.FromSlash(name)), maximum, false)
+	})
 	if err != nil {
 		return nil, err
 	}
-	all := make([]*SteeringIntent, 0, len(file.History)+1)
-	for index := range file.History {
-		all = append(all, &file.History[index])
+	all, retained := logical.all, logical.history
+	self.historyAdoption, err = self.cfg.historyAdoptionV2.matchPrefix(ctx, all, true, bounds.MaxHistoryBytes)
+	if err != nil {
+		return nil, err
 	}
-	if file.Current != nil {
-		all = append(all, file.Current)
+	self.nativeGapBridge, err = self.cfg.nativeGapBridge.matchHistory(ctx, all)
+	if err != nil {
+		return nil, err
 	}
 	seen := map[string]bool{}
 	var previous *SteeringIntent
 	var priorArtifact *ReleaseMeasurementArtifact
+	verified := releaseStartupVerifiedFrom(ctx)
+	digests, digestible := logical.digests, logical.digests != nil
+	if !digestible {
+		digests, digestible = releaseIntentV2EntryDigests(all)
+	}
 	// A retained provisional testnet startup may legitimately omit native
 	// submissions from epochs that were closed before this process resumed.
 	// The live runtime still authenticates every terminal around the gap; this
@@ -171,11 +209,11 @@ func (self *releaseEvidenceV2StartupHistory) readIntentReferences(ctx context.Co
 	// that already authenticated retained history too early.
 	allowProvisionalGaps := self.retainedStartup && provisionalClosedNativeInputEnabled(&self.cfg)
 	for index, intent := range all {
-		allowGap := allowProvisionalGaps || self.historyAdoption.allowsIntentEdge(previous, intent)
+		allowGap := allowProvisionalGaps || self.historyAdoption.allowsIntentEdge(previous, intent) || self.nativeGapBridge.allowsIntentEdge(previous, intent)
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		if err := validateSteeringIntentLifecycle(intent, index < len(file.History)); err != nil {
+		if err := validateSteeringIntentLifecycle(intent, index < retained); err != nil {
 			return nil, err
 		}
 		if err := intent.VerifyVectorHash(); err != nil {
@@ -232,23 +270,19 @@ func (self *releaseEvidenceV2StartupHistory) readIntentReferences(ctx context.Co
 			if artifact.PreviousArtifactHash != "" {
 				return nil, errors.New("startup intent history omits its first predecessor")
 			}
-		} else {
-			if artifact.PreviousArtifactHash != previous.MeasurementArtifactHash {
-				return nil, errors.New("startup intent artifact predecessor differs")
-			}
-			if priorArtifact.Schema == ReleaseMeasurementSchemaV2 && artifact.Schema != ReleaseMeasurementSchemaV2 ||
-				artifact.SettlementEpoch < priorArtifact.SettlementEpoch ||
-				!allowGap && !consecutiveNativeSettlementGapV2(priorArtifact, artifact) && priorArtifact.SettlementEpoch != ^uint64(0) && artifact.SettlementEpoch > priorArtifact.SettlementEpoch+1 ||
-				!releaseBlockAtOrBefore(priorArtifact.NativeSnapshotBlock, priorArtifact.NativeSnapshotHash, artifact.NativeSnapshotBlock, artifact.NativeSnapshotHash) ||
-				!releaseBlockAtOrBefore(priorArtifact.EVMSnapshotBlock, priorArtifact.EVMSnapshotHash, artifact.EVMSnapshotBlock, artifact.EVMSnapshotHash) {
-				return nil, errors.New("startup signed artifact lineage regresses or skips a boundary")
-			}
-			if err := verifyReleaseMeasurementHeadLineage(priorArtifact, artifact); err != nil {
-				return nil, err
-			}
+		} else if err := verifyStartupArtifactSuccessorV2(previous, priorArtifact, artifact, allowGap); err != nil {
+			return nil, err
 		}
-		if !self.retainedStartup {
-			if err := self.authenticateIntentChainReferenceWithKeyCustody(ctx, chain, native, runtime, intent, artifact, owned); err != nil {
+		// The intent store's complete verification of this exact prefix ran
+		// these same reads; otherwise they run at most once per process.
+		if !self.retainedStartup && !(digestible && verified.intentVerified(digests, index)) {
+			before, remaining := len(owned.owners), owned.remaining
+			if err := verified.onceIf("intent", releaseStartupVerifiedIntentInputs(intent, runtime), func() (bool, error) {
+				err := self.authenticateIntentChainReferenceWithKeyCustody(ctx, chain, native, runtime, intent, artifact, owned)
+				// A verdict that also took retained captures into this
+				// startup's custody is verified again by a later attempt.
+				return len(owned.owners) == before && owned.remaining == remaining, err
+			}); err != nil {
 				return nil, err
 			}
 		}
@@ -265,11 +299,54 @@ func (self *releaseEvidenceV2StartupHistory) readIntentReferences(ctx context.Co
 	return owned, owned.check()
 }
 
+// Signed artifact clocks never regress. A settlement boundary may be skipped
+// only across an admitted gap edge or a consecutive native successor, and the
+// head EMA prior state must equal the predecessor's output in every case.
+func verifyStartupArtifactSuccessorV2(previous *SteeringIntent, priorArtifact, artifact *ReleaseMeasurementArtifact, allowGap bool) error {
+	if artifact.PreviousArtifactHash != previous.MeasurementArtifactHash {
+		return errors.New("startup intent artifact predecessor differs")
+	}
+	if priorArtifact.Schema == ReleaseMeasurementSchemaV2 && artifact.Schema != ReleaseMeasurementSchemaV2 ||
+		artifact.SettlementEpoch < priorArtifact.SettlementEpoch ||
+		!allowGap && !consecutiveNativeSettlementGapV2(priorArtifact, artifact) && priorArtifact.SettlementEpoch != ^uint64(0) && artifact.SettlementEpoch > priorArtifact.SettlementEpoch+1 ||
+		!releaseBlockAtOrBefore(priorArtifact.NativeSnapshotBlock, priorArtifact.NativeSnapshotHash, artifact.NativeSnapshotBlock, artifact.NativeSnapshotHash) ||
+		!releaseBlockAtOrBefore(priorArtifact.EVMSnapshotBlock, priorArtifact.EVMSnapshotHash, artifact.EVMSnapshotBlock, artifact.EVMSnapshotHash) {
+		return errors.New("startup signed artifact lineage regresses or skips a boundary")
+	}
+	return verifyReleaseMeasurementHeadLineage(priorArtifact, artifact)
+}
+
 // Hash-derived namespace grammar precedes the first parent lookup; a declared
 // size can narrow but never enlarge either the per-file or aggregate bound.
 func (self *releaseEvidenceV2StartupHistory) readContentReference(ctx context.Context, owned *releaseEvidenceV2StartupReferences, path, hash string, size, limit uint64, envelope bool) ([]byte, error) {
-	if _, err := parseReleaseContentHash(hash); err != nil {
+	absolute, err := self.contentReferencePath(owned, path, hash, size, limit, envelope)
+	if err != nil {
 		return nil, err
+	}
+	encoded, err := owned.read(ctx, absolute, size, false)
+	if err != nil || uint64(len(encoded)) != size || ReleaseMeasurementContentHash(encoded) != hash {
+		return nil, errors.Join(errors.New("startup content reference bytes differ from the signed content address"), err)
+	}
+	return encoded, nil
+}
+
+// The identity of a content reference whose bytes this process has already
+// read and hashed, admitted exactly as readContentReference admits it.
+func (self *releaseEvidenceV2StartupHistory) observeContentReference(ctx context.Context, owned *releaseEvidenceV2StartupReferences, path, hash string, size, limit uint64, envelope bool) (attemptPrivateFileState, error) {
+	absolute, err := self.contentReferencePath(owned, path, hash, size, limit, envelope)
+	if err != nil {
+		return attemptPrivateFileState{}, err
+	}
+	state, err := owned.observe(ctx, absolute, size)
+	if err == nil && uint64(state.size) != size {
+		err = errors.New("startup content reference size differs from its signed content address")
+	}
+	return state, err
+}
+
+func (self *releaseEvidenceV2StartupHistory) contentReferencePath(owned *releaseEvidenceV2StartupReferences, path, hash string, size, limit uint64, envelope bool) (string, error) {
+	if _, err := parseReleaseContentHash(hash); err != nil {
+		return "", err
 	}
 	parts := []string{"measurements"}
 	if envelope {
@@ -279,13 +356,9 @@ func (self *releaseEvidenceV2StartupHistory) readContentReference(ctx context.Co
 	parts = append(parts, strings.TrimPrefix(hash, "sha256:")+".json")
 	want := filepath.ToSlash(filepath.Join(parts...))
 	if path != want || size == 0 || size > limit || size > owned.remaining {
-		return nil, errors.New("startup content reference path or finite size differs")
+		return "", errors.New("startup content reference path or finite size differs")
 	}
-	encoded, err := owned.read(ctx, filepath.Join(self.cfg.StateDir, filepath.FromSlash(want)), size, false)
-	if err != nil || uint64(len(encoded)) != size || ReleaseMeasurementContentHash(encoded) != hash {
-		return nil, errors.Join(errors.New("startup content reference bytes differ from the signed content address"), err)
-	}
-	return encoded, nil
+	return filepath.Join(self.cfg.StateDir, filepath.FromSlash(want)), nil
 }
 
 // Signature verification was performed by the explicit envelope decoder.

@@ -39,10 +39,10 @@ func validateValidatorReadRuntimeAtContext(ctx context.Context, chain *Chain, ar
 		}
 		return ctx.Err()
 	}
-	if artifact.authenticationProof != nil {
-		if err := ValidateRuntimeArtifactOwnerContext(ctx, chain, artifact); err != nil {
-			return err
-		}
+	// A strict artifact reads only with its own exact proof; a provisional
+	// view relabelled strict carries none.
+	if err := validateRuntimeArtifactReadOwnerContext(ctx, chain, artifact); err != nil {
+		return err
 	}
 	// Preserve the exact historical adapters already reviewed for this layout.
 	// New versions use the capability below without adding another spec entry.
@@ -94,8 +94,5 @@ func validateValidatorReadRuntimeAtContext(ctx context.Context, chain *Chain, ar
 	if err := validateProvisionalRuntimeApis(raw); err != nil {
 		return fmt.Errorf("validator stake selective-metagraph capability: %w", err)
 	}
-	if artifact.authenticationProof != nil {
-		return ValidateRuntimeArtifactOwnerContext(ctx, chain, artifact)
-	}
-	return ctx.Err()
+	return validateRuntimeArtifactReadOwnerContext(ctx, chain, artifact)
 }

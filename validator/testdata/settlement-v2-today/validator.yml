@@ -1,0 +1,247 @@
+schema_version: 3
+production: true
+release: "1.0"
+deployment_id: test-deployment
+validator_id: 1
+chain_id: 964
+genesis_hash: 0x9100000000000000000000000000000000000000000000000000000000000000
+runtime_spec: 9002
+transaction_version: 1
+state_version: 1
+runtime_code_hash: 0xa200000000000000000000000000000000000000000000000000000000000000
+runtime_metadata_hash: 0xb0fae6d022b74faf948e3b98463b98b46c4738e87348e24340f91146ededa4bf
+netuid: 25
+coordinator: 0x1111111111111111111111111111111111111111
+settlement_vault: 0x2222222222222222222222222222222222222222
+deploy_block: 10
+policy_hash: 0x3b5182ae6a5741eb417bfee4fce028391ecda6b3163141373f0dc64f8438dece
+rpc:
+    - https://evm.example
+substrate:
+    - wss://validator-runtime.test
+state_dir: /settlement-v2-fixture/001/private/state
+hotkey_seed_file: /settlement-v2-fixture/001/private/hotkey.seed
+controlled_no_ids: []
+trail_depth: 8
+poll_seconds: 2
+version_key: 0
+policy:
+    schema: urnetwork-policy-v1
+    network_profile: mainnet
+    policy_id: 1
+    effective_epoch: 0
+    settlement:
+        epoch_blocks: 300
+        root_commit_window_blocks: 50
+        finalize_offset_blocks: 150
+        close_grace_blocks: 5
+        claim_ttl_epochs: 8
+        claim_grace_epochs: 1
+        missed_root_action: carry_same_operator
+        expired_claim_action: carry_same_operator
+        shares_total_bps: 10000
+        rounding: largest_remainder_then_client_id_ascending
+    production_cadence:
+        after_accelerated_epochs: 5
+        epoch_blocks: 50400
+        root_commit_window_blocks: 60
+        finalize_offset_blocks: 180
+        close_grace_blocks: 6
+    steering:
+        theta:
+            numerator: 3
+            denominator: 10
+        quality_transform:
+            kind: clamp_ppm
+            minimum_ppm: 750000
+            maximum_ppm: 1000000
+        head_score_ema:
+            numerator: 1
+            denominator: 4
+        maximum_head_fleets: 200
+        max_weight_limit_u16: 32768
+        empty_channel: cede_to_nonempty
+        arithmetic: integer_rational_v1
+    deposit:
+        unit: rao_per_gib
+        epoch_cap_rao_per_operator: 10000000000
+        total_test_campaign_cap_rao: 196000000000
+        tier_snapshot: conviction_before_epoch
+        usage_lag_epochs: 1
+        usage_artifact: signed_payout_artifact_total_usage_bytes
+        mismatch_action: zero_pool_weight
+        unavailable_action: zero_pool_weight_after_root_window
+        tiers:
+            - min_conviction_rao: 0
+              rate_numerator_rao_per_gib: 1000000
+              rate_denominator: 1
+            - min_conviction_rao: 1000000000
+              rate_numerator_rao_per_gib: 800000
+              rate_denominator: 1
+            - min_conviction_rao: 10000000000
+              rate_numerator_rao_per_gib: 600000
+              rate_denominator: 1
+        zero_or_invalid_rate: halt
+    verify:
+        trail_depth: 8
+        step_timeout_seconds: 30
+        step_timeout_grace_seconds: 5
+        trail_ttl_grace_seconds: 60
+        egress_ttl_seconds: 600
+        egress_refresh_seconds: 120
+        reliability_a_min: 8
+        stats_period_seconds: 900
+        egress_ipv4_prefix: 29
+        egress_ipv6_prefix: 48
+        egress_hash_key_id: testnet-v1
+        soft_guardrails_enabled: false
+        hard_seed_per_minute_per_source: 40
+        hard_extend_per_minute_per_source: 240
+        hard_active_trails_per_source: 32
+    binding:
+        schema: urnetwork-fleet-binding-v1
+        changes_effective_next_epoch: true
+        maximum_validity_epochs: 32
+        commitments_required: true
+        client_signature: ed25519
+        hotkey_signature: sr25519
+    safety:
+        minimum_healthy_no_count: 2
+        minimum_live_validator_count: 2
+        maximum_finalized_head_lag_blocks: 3
+        stop_on_runtime_change: true
+        stop_on_policy_mismatch: true
+        stop_on_index_gap: true
+operators:
+    - no_id: 1
+      api_url: https://one.example
+      connect_url: wss://one.example/connect
+      artifact_signer: 0x1111111111111111111111111111111111111111
+      state_dir: /settlement-v2-fixture/001/private/no-1
+      network_jwt_file: /settlement-v2-fixture/001/private/no-1/network.jwt
+      client_jwt_file: /settlement-v2-fixture/001/private/no-1/client.jwt
+      client_key_seed_file: /settlement-v2-fixture/001/private/no-1/client.key
+      concurrency: 2
+    - no_id: 2
+      api_url: https://two.example
+      connect_url: wss://two.example/connect
+      artifact_signer: 0x2222222222222222222222222222222222222222
+      state_dir: /settlement-v2-fixture/001/private/no-2
+      network_jwt_file: /settlement-v2-fixture/001/private/no-2/network.jwt
+      client_jwt_file: /settlement-v2-fixture/001/private/no-2/client.jwt
+      client_key_seed_file: /settlement-v2-fixture/001/private/no-2/client.key
+      concurrency: 2
+evidence_v2:
+    schema: urnetwork-validator-runtime-evidence-v2
+    bounds:
+        disk:
+            maxrecordbytes: 65536
+            maxrecordcount: 128
+            maxtrailcount: 16
+            maxrawrecordbytes: 4194304
+            maxstoragebytes: 16777216
+            maxstoragefiles: 256
+            maxlegacybytes: 4194304
+            maxproofbytes: 1048576
+        cut:
+            maxheaderbytes: 4096
+            records:
+                maxdatabytes: 4194304
+                maxitems: 128
+                maxchunkbytes: 131072
+                maxchunks: 128
+                maxpages: 8
+                maxpagebytes: 4096
+                maxdescriptorsperpage: 16
+                maxmanifestbytes: 1024
+            proofs:
+                maxdatabytes: 4194304
+                maxitems: 128
+                maxchunkbytes: 131072
+                maxchunks: 128
+                maxpages: 8
+                maxpagebytes: 4096
+                maxdescriptorsperpage: 16
+                maxmanifestbytes: 1024
+        replay:
+            maxrecordbytes: 131072
+            maxproofbytes: 131072
+            maxtrails: 16
+            maxscratchbytes: 16777216
+            maxscratchfiles: 256
+        persistence:
+            maxsnapshotbytes: 2097152
+            maxjournalbytes: 16777216
+        head_ema:
+            maxfilebytes: 2097152
+            maxentries: 64
+            maxcontrolbytes: 8388608
+        max_providers: 128
+        max_egress_hashes: 128
+        max_fleet_prefixes: 128
+        max_operators: 2
+        max_head_entries: 64
+        max_artifact_bytes: 67108864
+        max_control_bytes: 67108864
+        max_input_journal_bytes: 4194304
+        max_participants: 2
+        max_transition_bytes: 1048576
+        max_closure_bytes: 4194304
+        max_history_bytes: 1048576
+    operators:
+        - no_id: 1
+          activation:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-1/activation.payload
+            bytes: 389
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          vpk_signature:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-1/vpk.signature
+            bytes: 64
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          hotkey_signature:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-1/hotkey.signature
+            bytes: 64
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          context:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-1/context.json
+            bytes: 32
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          history:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-1/history.json
+            bytes: 32
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          replay_scratch_root: /settlement-v2-fixture/001/private/scratch-v2/no-1/replay
+          seal_scratch_root: /settlement-v2-fixture/001/private/scratch-v2/no-1/seal
+        - no_id: 2
+          activation:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-2/activation.payload
+            bytes: 389
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          vpk_signature:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-2/vpk.signature
+            bytes: 64
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          hotkey_signature:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-2/hotkey.signature
+            bytes: 64
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          context:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-2/context.json
+            bytes: 32
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          history:
+            path: /settlement-v2-fixture/001/private/evidence-v2/no-2/history.json
+            bytes: 32
+            sha256: 0xabababababababababababababababababababababababababababababababab
+          replay_scratch_root: /settlement-v2-fixture/001/private/scratch-v2/no-2/replay
+          seal_scratch_root: /settlement-v2-fixture/001/private/scratch-v2/no-2/seal
+treasury_approval:
+    approval:
+        path: /settlement-v2-fixture/approval/treasury.json
+        bytes: 2956
+        sha256: 0xf47a1522bd9e53670d8b518c08a4f0596f18f65d7b8a2412d8cf2d5d4845f622
+    signer: 0xf80cccdce4ae1c07ae208a2adf99a310ae4207e0306fa0236110b06827bbb8d0
+production_authority_history:
+    - path: /settlement-v2-fixture/authority/original.json
+      bytes: 13624
+      sha256: 0x4a2d179d2f21c940722d2212449911c374f61688b3e2f303cbeced9da1701364

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Actual original requests, physical checkpoint bytes and real dual HTTP
 // stores exercise closure, restart, resource limits and publication ownership.
@@ -15,10 +15,14 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/urnetwork/connect/durablesys"
+
+	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/protocol"
 	"golang.org/x/sys/unix"
 )
@@ -183,7 +187,7 @@ func TestProviderRequestPublicationLostReplyRetainsExactOriginal(t *testing.T) {
 	if err := retainProviderAttemptPublication(t.Context(), path, raw, 1024*1024, 4*1024*1024, 32, namespace); err != nil {
 		t.Fatal(err)
 	}
-	replicas := fixture.base.owners[0].fixture.replicas
+	replicas := slices.Clone(fixture.base.owners[0].fixture.replicas)
 	owned := replicas[1].WriteMetadata
 	lost := errors.New("synthetic original upload reply lost")
 	replicas[1].WriteMetadata = func(ctx context.Context, hash string, body []byte) error {
@@ -244,7 +248,7 @@ func TestProviderRequestProductionRuntimePublishesClosedAndIdleWindows(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	preparationPath := filepath.Join(t.TempDir(), "original-request-preparation.json")
+	preparationPath := filepath.Join(identityTestStateDir(t), "original-request-preparation.json")
 	if err := os.WriteFile(preparationPath, preparationRaw, 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -260,9 +264,10 @@ func TestProviderRequestProductionRuntimePublishesClosedAndIdleWindows(t *testin
 	if err := fixture.runtime.advance(t.Context(), snapshot); err != nil {
 		t.Fatal(err)
 	}
+	custody := providerPublicationTestContext(t, fixture.startup.cfg.StateDir)
 	cursor := &providerAttemptPublicationCursor{}
 	for _, epoch := range []uint64{7, 8} {
-		if err := fixture.runtime.publishProviderRequestLane(t.Context(), op, fixture.runtimes[index], cursor); err != nil {
+		if err := fixture.runtime.publishProviderRequestLane(custody, op, fixture.runtimes[index], cursor); err != nil {
 			t.Fatalf("actual closed request publication %d: %v", epoch, err)
 		}
 		path, err := ProviderAttemptPublicationPath(fixture.startup.cfg.StateDir, epoch, op.NoID)
@@ -290,7 +295,7 @@ func TestProviderRequestProductionRuntimePublishesClosedAndIdleWindows(t *testin
 		}
 	}
 	restart := &providerAttemptPublicationCursor{}
-	if err := fixture.runtime.publishProviderRequestLane(t.Context(), op, fixture.runtimes[index], restart); err != nil {
+	if err := fixture.runtime.publishProviderRequestLane(custody, op, fixture.runtimes[index], restart); err != nil {
 		t.Fatal("retained old publication restart", err)
 	}
 }
@@ -338,6 +343,13 @@ func TestProviderRequestPublicationWorkerIsIndependentAndJoined(t *testing.T) {
 	}
 }
 
+// Publication custody opens through an explicit synthetic declaration of the
+// state root, as the validator's run context supplies one in production.
+func providerPublicationTestContext(t *testing.T, stateDir string) context.Context {
+	t.Helper()
+	return durablefixture.New(t, t.Context(), stateDir).Context
+}
+
 // Explicit offline fixture birth uses the same pure anchor generator as the
 // complete-owner preparation adapter. Runtime never creates this directory.
 func prepareProviderPublicationTestNamespace(t *testing.T, preparation ProviderAttemptPublicationPreparation) *ProviderAttemptPublicationNamespace {
@@ -360,14 +372,14 @@ func prepareProviderPublicationTestNamespace(t *testing.T, preparation ProviderA
 		directory.Close()
 		t.Fatal(err)
 	}
-	if err := unix.Fsetxattr(int(directory.Fd()), ProviderAttemptPublicationNamespaceAttribute, raw, unix.XATTR_CREATE); err != nil {
+	if err := durablesys.SetAttribute(int(directory.Fd()), ProviderAttemptPublicationNamespaceAttribute, raw, unix.XATTR_CREATE); err != nil {
 		directory.Close()
 		t.Fatal(err)
 	}
 	if err := errors.Join(directory.Sync(), directory.Close()); err != nil {
 		t.Fatal(err)
 	}
-	namespace, err := OpenProviderAttemptPublicationNamespace(t.Context(), preparation)
+	namespace, err := OpenProviderAttemptPublicationNamespace(providerPublicationTestContext(t, preparation.StateDir), preparation)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -390,7 +402,7 @@ func TestProviderRequestPublicationRefusesUnpreparedNamespaceWithoutWrites(t *te
 	if err := os.Mkdir(directory, 0700); err != nil {
 		t.Fatal(err)
 	}
-	if namespace, err := OpenProviderAttemptPublicationNamespace(t.Context(), preparation); err == nil || namespace != nil {
+	if namespace, err := OpenProviderAttemptPublicationNamespace(providerPublicationTestContext(t, state), preparation); err == nil || namespace != nil {
 		if namespace != nil {
 			_ = namespace.Close()
 		}

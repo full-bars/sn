@@ -228,7 +228,17 @@ func TestProductionRuntimeReplayRefusesPartialOrOverclaimedResults(t *testing.T)
 
 func TestProductionRuntimeReplayCancellationJoinsWorker(t *testing.T) {
 	// A private Unix socket is an explicit ready barrier, not a timing guess.
-	path := filepath.Join(t.TempDir(), "ready")
+	// Socket paths are capped near 104 bytes, below a long t.TempDir() path.
+	dir, err := os.MkdirTemp("/tmp", "sn-replay-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.RemoveAll(dir); err != nil {
+			t.Error(err)
+		}
+	})
+	path := filepath.Join(dir, "ready")
 	listener, err := net.Listen("unix", path)
 	if err != nil {
 		t.Fatal(err)

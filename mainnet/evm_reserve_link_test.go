@@ -631,7 +631,7 @@ func TestEvmReserveLinkRefusesRevertedProxy(t *testing.T) {
 	if _, code, diagnostic := f.command("apply", "--action", "reserve-link"); code != 3 || !strings.Contains(diagnostic, "successful initialized proxy") {
 		t.Fatalf("reverted proxy admitted reserve binding: %d %s", code, diagnostic)
 	}
-	if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmReserveLinkStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) {
+	if err := f.unclaimed(evmReserveLinkStateFile); err != nil {
 		t.Fatalf("reverted proxy acquired binding custody: %v", err)
 	}
 }

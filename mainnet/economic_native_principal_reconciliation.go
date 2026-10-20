@@ -9,17 +9,18 @@ import (
 )
 
 type nativePrincipalPoolEffects struct {
-	Query          historicalPrincipalQuery `json:"original_identity"`
-	Before         *string                  `json:"before_stock_alpha"`
-	After          *string                  `json:"after_stock_alpha"`
-	StockChange    *string                  `json:"net_stock_change_alpha"`
-	Deposits       string                   `json:"principal_deposits_alpha"`
-	Withdrawals    string                   `json:"principal_withdrawals_alpha"`
-	Refunds        string                   `json:"principal_refunds_alpha"`
-	VaultCaptures  string                   `json:"vault_stake_reductions_alpha"`
-	NativeEarnings string                   `json:"native_liquid_earnings_alpha"`
-	Residual       *string                  `json:"unexplained_stock_change_alpha"`
-	Complete       bool                     `json:"original_cause_census_complete"`
+	CapturedEarnings *string                  `json:"native_captured_earnings_alpha,omitempty"`
+	Query            historicalPrincipalQuery `json:"original_identity"`
+	Before           *string                  `json:"before_stock_alpha"`
+	After            *string                  `json:"after_stock_alpha"`
+	StockChange      *string                  `json:"net_stock_change_alpha"`
+	Deposits         string                   `json:"principal_deposits_alpha"`
+	Withdrawals      string                   `json:"principal_withdrawals_alpha"`
+	Refunds          string                   `json:"principal_refunds_alpha"`
+	VaultCaptures    string                   `json:"vault_stake_reductions_alpha"`
+	NativeEarnings   string                   `json:"native_liquid_earnings_alpha"`
+	Residual         *string                  `json:"unexplained_stock_change_alpha"`
+	Complete         bool                     `json:"original_cause_census_complete"`
 }
 
 type nativePrincipalReconciliation struct {
@@ -118,12 +119,40 @@ func (self nativePrincipalExecutionProjection) reconcile(outcome nativeExecution
 		}
 		// Independent native recipient accounting already retained liquid versus
 		// collateral. A principal cause cannot relabel deposits as native income.
-		liquid := new(big.Int)
+		liquid, captured := new(big.Int), new(big.Int)
 		if outcome.RecipientEffects == nil {
 			pool.Complete = false
 		} else {
 			for _, effect := range outcome.RecipientEffects.Effects {
-				if effect.Recipient.Hotkey != economicNativeFeeHash(query.Hotkey) || effect.Recipient.Coldkey != economicNativeFeeHash(query.Coldkey) {
+				if effect.Recipient.Coldkey != economicNativeFeeHash(query.Coldkey) {
+					continue
+				}
+				if effect.Treasury != nil {
+					// Collateral is staked at the original recipient before its
+					// lock; only liquid rewards follow AutoStakeDestination.
+					for _, part := range []struct {
+						hotkey   string
+						amount   string
+						captured bool
+					}{
+						{hotkey: effect.Recipient.Hotkey, amount: effect.Collateral, captured: true},
+						{hotkey: nativeTreasuryLiquidDestination(effect), amount: effect.Liquid},
+					} {
+						if part.hotkey != economicNativeFeeHash(query.Hotkey) {
+							continue
+						}
+						value, err := monitorEconomicInteger(part.amount)
+						if err != nil {
+							return result, err
+						}
+						liquid.Add(liquid, value)
+						if part.captured {
+							captured.Add(captured, value)
+						}
+					}
+					continue
+				}
+				if effect.Recipient.Hotkey != economicNativeFeeHash(query.Hotkey) {
 					continue
 				}
 				value, err := monitorEconomicInteger(effect.Liquid)
@@ -135,6 +164,11 @@ func (self nativePrincipalExecutionProjection) reconcile(outcome nativeExecution
 		}
 		if liquid.String() != pool.NativeEarnings {
 			pool.Complete = false
+		}
+		if outcome.Treasury != nil && [32]byte(query.Coldkey) == outcome.Treasury.Policy.MultisigAccount {
+			value := captured.String()
+			pool.CapturedEarnings = &value
+			pool.NativeEarnings = new(big.Int).Sub(liquid, captured).String()
 		}
 		allComplete = allComplete && pool.Complete
 		result.Pools = append(result.Pools, pool)

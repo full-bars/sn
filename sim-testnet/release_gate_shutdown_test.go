@@ -18,6 +18,10 @@ func TestReleaseShutdownPublicRuntimeReturnsOwnedWorkerResult(t *testing.T) {
 	for _, edge := range []struct{ from, to string }{
 		{from: "RunRelease", to: "runReleaseWithActivationSetup"},
 		{from: "runReleaseWithActivationSetup", to: "runReleaseWithStartupV2"},
+		{from: "runReleaseWithStartupV2", to: "runReleaseWithStartupAndProgressV2"},
+		// The progress and native gap bridge entries start the same body.
+		{from: "RunReleaseWithProgress", to: "runReleaseWithStartupAndProgressV2"},
+		{from: "RunReleaseWithNativeGapBridge", to: "runReleaseWithStartupAndProgressV2"},
 	} {
 		forwarded := false
 		for _, declaration := range parsed.Decls {
@@ -43,7 +47,7 @@ func TestReleaseShutdownPublicRuntimeReturnsOwnedWorkerResult(t *testing.T) {
 	matched, diskCloseJoined := false, false
 	for _, declaration := range parsed.Decls {
 		function, ok := declaration.(*ast.FuncDecl)
-		if !ok || function.Name.Name != "runReleaseWithStartupV2" || function.Body == nil {
+		if !ok || function.Name.Name != "runReleaseWithStartupAndProgressV2" || function.Body == nil {
 			continue
 		}
 		ast.Inspect(function.Body, func(node ast.Node) bool {
@@ -118,15 +122,18 @@ func TestReleaseShutdownPublicRuntimeReturnsOwnedWorkerResult(t *testing.T) {
 		{path: "../validator/release_shutdown.go", function: "runReleaseOperatorWorkers", callee: "reportReleaseTrailEngineError"},
 		{path: "../validator/release_shutdown.go", function: "runReleaseOperatorWorkers", callee: "Wait"},
 		{path: "../validator/release_shutdown.go", function: "runReleaseOperatorWorkers", callee: "close"},
-		{path: "../validator/release_steer.go", function: "Run", callee: "runReleaseSteeringLoopWithDeferral"},
-		{path: "../validator/release_steer.go", function: "Run", callee: "SubmitOnce"},
+		{path: "../validator/release_steer.go", function: "Run", callee: "runReleaseSteeringLoopWithPermissions"},
+		{path: "../validator/release_steer.go", function: "Run", callee: "runReleaseSteeringOperation"},
+		{path: "../validator/release_steer.go", function: "runReleaseSteeringOperation", callee: "operation"},
 		{path: "../validator/release_steer.go", function: "runReleaseSteeringLoop", callee: "runReleaseSteeringLoopWithDeferral"},
-		{path: "../validator/release_steer.go", function: "runReleaseSteeringLoopWithDeferral", callee: "runReleaseSteeringLoopWithWaitAndDeferral"},
+		{path: "../validator/release_steer.go", function: "runReleaseSteeringLoopWithDeferral", callee: "runReleaseSteeringLoopWithPermissions"},
+		{path: "../validator/release_steer.go", function: "runReleaseSteeringLoopWithPermissions", callee: "runReleaseSteeringLoopWithWaitAndPermissions"},
 		{path: "../validator/release_steer.go", function: "runReleaseSteeringLoopWithWait", callee: "runReleaseSteeringLoopWithWaitAndDeferral"},
-		{path: "../validator/release_steer.go", function: "runReleaseSteeringLoopWithWaitAndDeferral", callee: "releaseRuntimeError"},
+		{path: "../validator/release_steer.go", function: "runReleaseSteeringLoopWithWaitAndDeferral", callee: "runReleaseSteeringLoopWithWaitAndPermissions"},
+		{path: "../validator/release_steer.go", function: "runReleaseSteeringLoopWithWaitAndPermissions", callee: "releaseRuntimeError"},
 		{path: "../validator/release_steer.go", function: "SubmitOnce", callee: "recordReleasePendingError"},
 		{path: "../validator/release_steer.go", function: "reconcilePending", callee: "recordReleasePendingError"},
-		{path: "../validator/release_run.go", function: "runReleaseWithStartupV2", callee: "openReleaseEvidenceV2DiskState"},
+		{path: "../validator/release_run.go", function: "runReleaseWithStartupAndProgressV2", callee: "openReleaseEvidenceV2DiskState"},
 		{path: "../validator/release_state_v2.go", function: "openReleaseEvidenceV2DiskState", callee: "openReleaseEvidenceV2DiskStateWithObserver"},
 		{path: "../validator/release_state_v2.go", function: "openReleaseEvidenceV2DiskStateWithObserver", callee: "close"},
 		{path: "../validator/release_state_v2.go", function: "close", callee: "Close"},
@@ -138,6 +145,10 @@ func TestReleaseShutdownPublicRuntimeReturnsOwnedWorkerResult(t *testing.T) {
 		if !releaseClosureFunctionCalls(t, check.path, check.function)[check.callee] {
 			t.Errorf("%s omits actual shutdown call %s", check.function, check.callee)
 		}
+	}
+	// Each bounded steering operation runs the actual submission.
+	if !releaseClosureFunctionCallArguments(t, "../validator/release_steer.go", "Run", "runReleaseSteeringOperation")["SubmitOnce"] {
+		t.Error("Run omits actual shutdown call SubmitOnce")
 	}
 	if releaseClosureFunctionCalls(t, "../validator/release_shutdown_inner.go", "recordReleasePendingError")["update"] {
 		t.Fatal("uncertain pending error handler rewrites the restart authority")

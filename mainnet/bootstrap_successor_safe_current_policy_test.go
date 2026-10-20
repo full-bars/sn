@@ -28,10 +28,14 @@ func bootstrapSuccessorSafeCurrentTestProposal(t *testing.T, model *bootstrapSuc
 	}
 	evidence := bootstrapRootTestWrite(t, filepath.Join(bootstrapSuccessorExecutionTestDirectory(t), "synthetic-current-policy-review.json"), map[string]string{"scope": "synthetic review of current-only policy and pending limits"})
 	p := provenance.Provenance
+	policy := bootstrapSuccessorSafeCurrentPolicy
+	if plan.Request.Schema == bootstrapSuccessorExecutionSingleOwnerRequestSchema {
+		policy = bootstrapSuccessorSafeCurrentSingleOwnerPolicy
+	}
 	approval := bootstrapSuccessorSafeCurrentPolicyApproval{Authorization: bootstrapSuccessorSafeCurrentPolicyAuthorization{
 		Schema: bootstrapSuccessorSafeCurrentPolicySchema, ExecutionPlanHash: plan.hash(), CanonicalAuthorityHash: rootObjectHash(base),
 		Safe: p.Safe, Singleton: p.Singleton, Version: p.Version, Variant: p.Variant, SafeProxyRuntimeHash: p.SafeProxyRuntimeHash, SingletonRuntimeHash: p.SingletonRuntimeHash,
-		Runtime: base.Authorization.CurrentRuntime, ReviewEvidence: evidence, Policy: bootstrapSuccessorSafeCurrentPolicy}}
+		Runtime: base.Authorization.CurrentRuntime, ReviewEvidence: evidence, Policy: policy}}
 	message, err := approval.Authorization.signingBytes()
 	if err != nil {
 		t.Fatal(err)

@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,7 +21,8 @@ import (
 type releaseGateJobsFixture struct {
 	root       string
 	command    *exec.Cmd
-	output     bytes.Buffer
+	started    time.Time
+	output     releaseGateJobsOutput
 	files      map[string]*os.File
 	lines      map[string]chan string
 	readers    sync.WaitGroup
@@ -28,6 +30,36 @@ type releaseGateJobsFixture struct {
 	finished   chan struct{}
 	err        error
 }
+
+// The queue's combined stdout and stderr, which a missed deadline reads while
+// the queue may still be writing it.
+type releaseGateJobsOutput struct {
+	mu     sync.Mutex
+	output bytes.Buffer
+}
+
+func (self *releaseGateJobsOutput) Write(data []byte) (int, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	return self.output.Write(data)
+}
+
+func (self *releaseGateJobsOutput) String() string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	return self.output.String()
+}
+
+// A canceled queue's backstops. Its TERM trap runs once its current bounded
+// read returns, and its EXIT trap then joins its owners for up to 20 seconds
+// (release_gate_jobs_exit in scripts/release-gate-jobs.sh). The WaitDelay
+// outlasts that join, so Go's kill never lands mid-join, where it would leave
+// the queue's live owners to the release gate's subreaper, and the fixture's
+// own join deadline outlasts the WaitDelay.
+const (
+	releaseGateQueueFixtureWaitDelay    = 30 * time.Second
+	releaseGateQueueFixtureJoinDeadline = 40 * time.Second
+)
 
 // Uses the actual queue and subreaper with only machine capacity and the
 // external service cleanup callback supplied as deterministic boundaries.
@@ -104,12 +136,17 @@ func newReleaseGateJobsFixture(t *testing.T, body string) *releaseGateJobsFixtur
 source "$1"
 sn_repo="$2"; workspace="$3"
 release_gate_effective_resources() { RELEASE_GATE_CPUS=24; RELEASE_GATE_MEMORY=34359738368; }
+# Hold until the test writes the named control FIFO. Bash runs the trap of a
+# signal that lands before read(2) blocks only once read returns, so a hold
+# that a test signals rereads every second.
+release_gate_test_hold() { local line; until read -r -t 1 line < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/$1"; do :; done; }
 release_gate_jobs_init
 `+body, "release-jobs-test", helper, sn, workspace)
 	self.command.Env = append(os.Environ(), "TMPDIR="+self.root, "RELEASE_GATE_QUEUE_FIXTURE_ROOT="+self.root, "RELEASE_GATE_JOBS=2", "RELEASE_GATE_CONCURRENT_GATES=2", "SIM_TESTNET_LIVE_DEPENDENCIES=0")
 	self.command.Cancel = func() error { return self.command.Process.Signal(syscall.SIGTERM) }
-	self.command.WaitDelay = 20 * time.Second
+	self.command.WaitDelay = releaseGateQueueFixtureWaitDelay
 	self.command.Stdout, self.command.Stderr = &self.output, &self.output
+	self.started = time.Now()
 	if err := self.command.Start(); err != nil {
 		cancel()
 		t.Fatal(err)
@@ -122,7 +159,7 @@ release_gate_jobs_init
 		}
 		select {
 		case <-self.finished:
-		case <-time.After(25 * time.Second):
+		case <-time.After(releaseGateQueueFixtureJoinDeadline):
 			t.Error("foreground queue did not join after cancellation")
 			_ = self.command.Process.Kill()
 			<-self.finished
@@ -148,7 +185,7 @@ func (self *releaseGateJobsFixture) line(t *testing.T, name string) string {
 	case <-self.finished:
 		t.Fatalf("queue exited before %s barrier: %v\n%s", name, self.err, self.output.String())
 	case <-time.After(20 * time.Second):
-		t.Fatalf("queue did not reach %s barrier", name)
+		t.Fatalf("queue did not reach %s barrier\n%s", name, self.state())
 	}
 	return ""
 }
@@ -165,11 +202,52 @@ func (self *releaseGateJobsFixture) join(t *testing.T, status int) {
 	select {
 	case <-self.finished:
 	case <-time.After(20 * time.Second):
-		t.Fatal("queue did not join")
+		t.Fatalf("queue did not join\n%s", self.state())
 	}
 	if self.command.ProcessState.ExitCode() != status {
 		t.Fatalf("queue exit=%d want=%d error=%v\n%s", self.command.ProcessState.ExitCode(), status, self.err, self.output.String())
 	}
+}
+
+// For a missed deadline: what the queue and each of its descendants is doing,
+// with the wait channel and system call that show where a stalled one waits,
+// and the queue's output so far. An exited queue shows as an unreadable stat.
+func (self *releaseGateJobsFixture) state() string {
+	var report strings.Builder
+	pid := self.command.Process.Pid
+	fmt.Fprintf(&report, "queue pid %d started %v ago\n", pid, time.Since(self.started).Round(time.Millisecond))
+	children := map[int][]int{}
+	entries, _ := os.ReadDir("/proc")
+	for _, entry := range entries {
+		child, err := strconv.Atoi(entry.Name())
+		if err != nil {
+			continue
+		}
+		stat, err := os.ReadFile(filepath.Join("/proc", entry.Name(), "stat"))
+		if err != nil {
+			continue
+		}
+		// The parent follows the state, after the parenthesized command name.
+		if fields := strings.Fields(string(stat[bytes.LastIndexByte(stat, ')')+1:])); len(fields) > 1 {
+			if parent, err := strconv.Atoi(fields[1]); err == nil {
+				children[parent] = append(children[parent], child)
+			}
+		}
+	}
+	for pending := []int{pid}; len(pending) > 0; pending = pending[1:] {
+		process := filepath.Join("/proc", strconv.Itoa(pending[0]))
+		read := func(name string) string {
+			value, err := os.ReadFile(filepath.Join(process, name))
+			if err != nil {
+				return err.Error()
+			}
+			return strings.TrimSpace(strings.ReplaceAll(string(value), "\x00", " "))
+		}
+		fmt.Fprintf(&report, "process %d: stat=%q wchan=%q syscall=%q cmdline=%q\n", pending[0], read("stat"), read("wchan"), read("syscall"), read("cmdline"))
+		pending = append(pending, children[pending[0]]...)
+	}
+	fmt.Fprintf(&report, "output:\n%s", self.output.String())
+	return report.String()
 }
 
 func TestReleaseGateJobsRunReadyPhasesConcurrentlyAndJoinFailures(t *testing.T) {
@@ -238,7 +316,7 @@ func TestReleaseGateJobsCancellationReapsNewSessionBeforeServiceCleanup(t *testi
 	self := newReleaseGateJobsFixture(t, `
 phase_tree() { python3 "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/descendant.py" "$RELEASE_GATE_QUEUE_FIXTURE_ROOT" session; }
 release_gate_start tree phase_tree
-read -r hold < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-a"
+release_gate_test_hold control-a
 `)
 	pid := self.line(t, "events")
 	if err := os.WriteFile(filepath.Join(self.root, "descendant-pid"), []byte(pid), 0o600); err != nil {
@@ -295,6 +373,8 @@ func TestReleaseGateJobsUsePrivateArtifactsCachesAndSourceReferences(t *testing.
 [[ "$(readlink "$release_gate_root/lib")" == "$sn_repo/evm/lib" ]]
 [[ "${FOUNDRY_OUT%/*}" == "$release_gate_root" && "${SLITHER_FOUNDRY_OUT%/*}" == "$release_gate_root" ]]
 [[ "$release_gate_limit" == 2 && "$GOMAXPROCS" == 4 && "$GOFLAGS" == *-p=4 ]]
+[[ "$RAYON_NUM_THREADS" == 4 && "$CARGO_BUILD_JOBS" == 4 && "$RUST_TEST_THREADS" == 4 ]]
+[[ "$release_gate_mainnet_exports" == "$release_gate_root/mainnet-exports" && ! -e "$release_gate_mainnet_exports" ]]
 release_gate_complete
 `)
 	self.join(t, 0)
@@ -313,6 +393,21 @@ phase_check() {
 release_gate_start compiler phase_check
 release_gate_complete
 [[ "$(< "$release_gate_root/job-0/gotmp/witness")" == 'compiler scratch owned' ]]
+`)
+	self.join(t, 0)
+}
+
+// Portable-mode fixtures, the settlement v2 claim daemon's among them (E-5),
+// need every phase at umask 022, whether the gate itself runs at a
+// shared-group 0002 or a private 077.
+func TestReleaseGateJobsRunEveryPhaseAtUmask022(t *testing.T) {
+	self := newReleaseGateJobsFixture(t, `
+phase_mask() { [[ "$(umask)" == 0022 ]]; }
+umask 0002
+release_gate_start shared-group phase_mask
+umask 0077
+release_gate_start private phase_mask
+release_gate_complete
 `)
 	self.join(t, 0)
 }
@@ -363,10 +458,11 @@ func TestReleaseGateJobsExitPreservesOriginalParentFailure(t *testing.T) {
 }
 
 // Lose the completion endpoint only after admission. The real owner still
-// reaps its worker, but cannot publish proof, so services must remain untouched.
+// reaps its worker, but cannot publish proof, so services must remain
+// untouched, and so must the ./mainnet exports.
 func TestReleaseGateJobsLostOwnerRetainsServices(t *testing.T) {
 	self := newReleaseGateJobsFixture(t, `
-phase_hold() { printf 'held:%s\n' "$RELEASE_GATE_WORKER_PID" > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"; read -r release < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-a"; }
+phase_hold() { mkdir "$release_gate_mainnet_exports"; printf 'held:%s\n' "$RELEASE_GATE_WORKER_PID" > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"; read -r release < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-a"; }
 release_gate_start hold phase_hold
 printf 'root:%s\n' "$release_gate_root" > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"
 read -r continue < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-b"
@@ -408,6 +504,9 @@ exit 1
 	}
 	if !strings.Contains(self.output.String(), "private services retained") {
 		t.Fatalf("lost owner did not report unproven cleanup:\n%s", self.output.String())
+	}
+	if _, err := os.Stat(filepath.Join(root, "mainnet-exports")); err != nil {
+		t.Fatalf("lost owner permitted removing the exports: %v", err)
 	}
 }
 
@@ -705,20 +804,6 @@ func TestReleaseGateIsolationPinsPrivateResourcesAndFinalJoins(t *testing.T) {
 // Reuse the gate source guards' exact phase/admission grammar. Require actual
 // complete commands and owned working directories, with no extra shell branch
 // that could skip execution.
-// The simulator's five complementary owners retain its complete race census.
-const releaseGateSimulatorPopulationSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$"
-const releaseGateSimulatorSupplementSelector = "^(TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$"
-const releaseGateSimulatorSeparateSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$"
-const releaseGateSimulatorFinalSelector = "^TestFinal.*$"
-const releaseGateSimulatorHistorySelector = "^Test(Fleet|Historical|Runtime|Scenario).*$"
-const releaseGateSimulatorPartitionedSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica|TestFinal.*|Test(Fleet|Historical|Runtime|Scenario).*)$"
-const releaseGateSimulatorRaceCommand = "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1"
-const releaseGateSimulatorOrdinaryRaceCommand = releaseGateSimulatorRaceCommand + " -skip '" + releaseGateSimulatorPartitionedSelector + "'"
-const releaseGateSimulatorPopulationRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorPopulationSelector + "'"
-const releaseGateSimulatorSupplementRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorSupplementSelector + "'"
-const releaseGateSimulatorFinalRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorFinalSelector + "' -skip '" + releaseGateSimulatorSeparateSelector + "'"
-const releaseGateSimulatorHistoryRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorHistorySelector + "'"
-
 func verifyReleaseGateFullValidatorRace(script string) error {
 	phaseDefinitions := regexp.MustCompile(`(?ms)^[\t ]*release_phase_[a-z0-9_]+\(\) \{\n.*?^[\t ]*\}[\t ]*$`)
 	registry := phaseDefinitions.ReplaceAllString(script, "")
@@ -726,15 +811,10 @@ func verifyReleaseGateFullValidatorRace(script string) error {
 		phase   string
 		job     string
 		command string
+		body    []string
 	}{
-		{phase: "sn_all_normal", job: "sn-all-normal", command: "go test -parallel=4 -timeout 90m ./... -count=1"},
-		{phase: "sn_core_race", job: "sn-core-race", command: "go test -race ./crv4 ./miner/... ./protocol -count=1"},
-		{phase: "sn_validator_race", job: "sn-validator-race", command: "go test -race -parallel=4 -timeout 90m ./validator -count=1"},
-		{phase: "sn_simulator_race", job: "sn-simulator-race", command: releaseGateSimulatorOrdinaryRaceCommand},
-		{phase: "sn_simulator_populations_race", job: "sn-simulator-populations-race", command: releaseGateSimulatorPopulationRaceCommand},
-		{phase: "sn_simulator_supplements_race", job: "sn-simulator-supplements-race", command: releaseGateSimulatorSupplementRaceCommand},
-		{phase: "sn_simulator_final_race", job: "sn-simulator-final-race", command: releaseGateSimulatorFinalRaceCommand},
-		{phase: "sn_simulator_history_race", job: "sn-simulator-history-race", command: releaseGateSimulatorHistoryRaceCommand},
+		{phase: "sn_all_normal", job: "sn-all-normal", command: releaseGateAggregateNormalCommand, body: releaseGateAggregateNormalBody},
+		{phase: "sn_core_race", job: "sn-core-race", command: "go test -race -timeout 120m ./crv4 ./miner/... ./protocol -count=1"},
 	}
 	for _, group := range groups {
 		function := "release_phase_" + group.phase
@@ -750,7 +830,11 @@ func verifyReleaseGateFullValidatorRace(script string) error {
 				commands = append(commands, line)
 			}
 		}
-		if len(commands) != 2 || commands[0] != `cd "$sn_repo"` || commands[1] != group.command {
+		body := group.body
+		if body == nil {
+			body = []string{`cd "$sn_repo"`, group.command}
+		}
+		if !slices.Equal(commands, body) {
 			return fmt.Errorf("full gate phase %s changed its complete command or scoped budget", group.phase)
 		}
 		start := "release_gate_start " + group.job + " " + function
@@ -765,12 +849,19 @@ func verifyReleaseGateFullValidatorRace(script string) error {
 			return fmt.Errorf("full gate has conditional job admission: %v %v", conditions, err)
 		}
 	}
+	// The whole ./validator and ./sim-testnet packages run in their own normal
+	// and race shards.
+	for _, shards := range []releaseGateShards{releaseGateValidatorNormalShards, releaseGateValidatorRaceShards, releaseGateSimulatorNormalShards, releaseGateSimulatorRaceShards} {
+		if err := verifyReleaseGateShardJobs(script, shards); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 // The inherited combined core race command allowed less time than the measured
-// passing serial work alone. The dedicated full-validator allowance leaves
-// the other core packages on their original budgets.
+// passing serial work alone. The full validator's shards have their own
+// measured allowance, separate from the other core packages' budget.
 func TestReleaseGateJobsRequireIndependentCompleteValidatorRace(t *testing.T) {
 	t.Parallel()
 	encoded, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
@@ -779,101 +870,6 @@ func TestReleaseGateJobsRequireIndependentCompleteValidatorRace(t *testing.T) {
 	}
 	if err := verifyReleaseGateFullValidatorRace(string(encoded)); err != nil {
 		t.Fatalf("full validator race phase is not independently budgeted: %v", err)
-	}
-}
-
-// Reproduce the exhausted single-package clock's original ownership, then
-// reject omissions, overlaps, hidden owners and changes to any allowance.
-func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
-	t.Parallel()
-	encoded, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
-	if err != nil {
-		t.Fatal(err)
-	}
-	script := string(encoded)
-	sources := map[string]string{"population_test.go": "package main\nimport \"testing\"\n" +
-		"func TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier(t *testing.T) {}\n" +
-		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners(t *testing.T) {}\n" +
-		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwnersFuture(t *testing.T) {}\n" +
-		"func TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage(t *testing.T) {}\n" +
-		"func TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper(t *testing.T) {}\n" +
-		"func TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica(t *testing.T) {}\n" +
-		"func TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamperFuture(t *testing.T) {}\n" +
-		"func TestRuntimeFutureControl(t *testing.T) {}\n" +
-		"func TestOrdinaryControl(t *testing.T) {}\n"}
-	if err := verifyReleaseGateSimulatorRaceCensus(script, sources); err != nil {
-		t.Fatal(err)
-	}
-	const start = "release_gate_start sn-simulator-populations-race release_phase_sn_simulator_populations_race"
-	const definition = "release_phase_sn_simulator_populations_race() {\n  cd \"$sn_repo\"\n  " + releaseGateSimulatorPopulationRaceCommand + "\n}"
-	const supplementStart = "release_gate_start sn-simulator-supplements-race release_phase_sn_simulator_supplements_race"
-	const supplementDefinition = "release_phase_sn_simulator_supplements_race() {\n  cd \"$sn_repo\"\n  " + releaseGateSimulatorSupplementRaceCommand + "\n}"
-	previous := strings.Replace(script, releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorRaceCommand+" -skip '"+releaseGateSimulatorPopulationSelector+"'", 1)
-	previous = strings.Replace(previous, supplementDefinition, "", 1)
-	previous = strings.Replace(previous, supplementStart, "", 1)
-	if err := verifyReleaseGateSimulatorRaceCensus(previous, sources); err == nil {
-		t.Fatal("aggregate restored the timed-out supplement/complement package clock")
-	}
-	old := strings.Replace(script, releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorRaceCommand, 1)
-	old = strings.Replace(old, definition, "", 1)
-	old = strings.Replace(old, start, "", 1)
-	if err := verifyReleaseGateSimulatorRaceCensus(old, sources); err == nil {
-		t.Fatal("aggregate restored the serial population in one exhausted package clock")
-	}
-	for _, command := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand, releaseGateSimulatorSupplementRaceCommand, releaseGateSimulatorFinalRaceCommand, releaseGateSimulatorHistoryRaceCommand} {
-		for _, replacement := range []string{
-			releaseGateSimulatorRaceCommand,
-			strings.Replace(command, " -race", "", 1),
-			strings.Replace(command, " -count=1", "", 1),
-			strings.Replace(command, "-parallel=4", "-parallel=8", 1),
-			strings.Replace(command, "-timeout 90m", "-timeout 180m", 1),
-			strings.Replace(command, "-timeout 90m", "-timeout 45m", 1),
-			strings.Replace(command, "-timeout 90m", "-timeout 0", 1),
-			strings.Replace(command, ")$'", ")'", 1),
-			strings.Replace(command, "TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|", "", 1),
-			strings.Replace(command, "TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|", "", 1),
-			strings.Replace(command, "TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper", "TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper.*", 1),
-			strings.Replace(command, "-skip", "-run", 1),
-			strings.Replace(command, "-run", "-skip", 1),
-			"# " + command,
-			command + " -run '^$'",
-			command + " || true",
-			command + "\n  " + command,
-		} {
-			if replacement == command {
-				continue
-			}
-			if strings.Count(script, command) != 1 {
-				t.Fatal("mutation does not identify one simulator owner command")
-			}
-			if err := verifyReleaseGateSimulatorRaceCensus(strings.Replace(script, command, replacement, 1), sources); err == nil {
-				t.Fatalf("aggregate accepted changed simulator execution: %s", replacement)
-			}
-		}
-	}
-	for _, admission := range []string{start, supplementStart, "release_gate_start sn-simulator-race release_phase_sn_simulator_race", "release_gate_start sn-simulator-final-race release_phase_sn_simulator_final_race", "release_gate_start sn-simulator-history-race release_phase_sn_simulator_history_race"} {
-		for _, replacement := range []string{
-			"# " + admission,
-			admission + "\n" + admission,
-			"if false; then\n" + admission + "\nfi",
-			"release_phase_unused() {\n" + admission + "\n}",
-		} {
-			if err := verifyReleaseGateSimulatorRaceCensus(strings.Replace(script, admission, replacement, 1), sources); err == nil {
-				t.Fatalf("aggregate accepted changed simulator admission: %s", replacement)
-			}
-		}
-	}
-	for _, omitted := range []string{
-		"func TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier(t *testing.T) {}\n",
-		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners(t *testing.T) {}\n",
-		"func TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage(t *testing.T) {}\n",
-		"func TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper(t *testing.T) {}\n",
-		"func TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica(t *testing.T) {}\n",
-	} {
-		changed := map[string]string{"population_test.go": strings.Replace(sources["population_test.go"], omitted, "", 1)}
-		if err := verifyReleaseGateSimulatorRaceCensus(script, changed); err == nil {
-			t.Fatal("aggregate separate owner admitted a missing required root")
-		}
 	}
 }
 
@@ -968,7 +964,8 @@ func TestReleaseGateJobsRejectSubtensorInfrastructureScopeDrift(t *testing.T) {
 }
 
 // Commented, narrowed, disconnected or duplicated text cannot certify the
-// actual phase; a validator allowance cannot silently fund other core packages.
+// actual shards; a validator allowance cannot silently fund other core
+// packages.
 func TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions(t *testing.T) {
 	t.Parallel()
 	encoded, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
@@ -979,34 +976,38 @@ func TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions(t *testing.T)
 	if err := verifyReleaseGateFullValidatorRace(script); err != nil {
 		t.Fatal(err)
 	}
-	const command = "go test -race -parallel=4 -timeout 90m ./validator -count=1"
-	const core = "go test -race ./crv4 ./miner/... ./protocol -count=1"
-	const start = "release_gate_start sn-validator-race release_phase_sn_validator_race"
-	const definition = "release_phase_sn_validator_race() {\n  cd \"$sn_repo\"\n  " + command + "\n}"
+	command := releaseGateValidatorRaceShards.ownerCommand()
+	const core = "go test -race -timeout 120m ./crv4 ./miner/... ./protocol -count=1"
+	const start = "release_gate_start sn-validator-race-1 release_phase_sn_validator_race_1"
+	const definition = "release_phase_sn_validator_race_1() {\n  release_gate_validator_race_shard 1\n}"
+	source := "  cd \"$sn_repo\"\n  " + command + "\n"
+	deadline := "-timeout " + releaseGateValidatorRaceShards.flags[slices.Index(releaseGateValidatorRaceShards.flags, "-timeout")+1]
 	cases := []struct {
 		name        string
 		old         string
 		replacement string
 	}{
-		{name: "implicit deadline", old: command, replacement: "go test -race -parallel=4 ./validator -count=1"},
-		{name: "inherited short deadline", old: command, replacement: "go test -race -parallel=4 -timeout 10m ./validator -count=1"},
-		{name: "race omitted", old: command, replacement: "go test -parallel=4 -timeout 90m ./validator -count=1"},
-		{name: "reduced workers", old: command, replacement: "go test -race -parallel=2 -timeout 90m ./validator -count=1"},
-		{name: "cached execution", old: command, replacement: strings.Replace(command, " -count=1", "", 1)},
-		{name: "no test bodies", old: command, replacement: strings.Replace(command, "-count=1", "-count=0", 1)},
+		{name: "implicit deadline", old: command, replacement: strings.Replace(command, " "+deadline, "", 1)},
+		{name: "inherited short deadline", old: command, replacement: strings.Replace(command, deadline, "-timeout 10m", 1)},
+		{name: "race omitted", old: command, replacement: strings.Replace(command, " race ", " normal ", 1)},
+		{name: "reduced workers", old: command, replacement: strings.Replace(command, "-parallel=4", "-parallel=2", 1)},
+		{name: "one shard", old: "\nrelease_gate_validator_race_shards=" + strconv.Itoa(releaseGateValidatorRaceShards.count) + "\n", replacement: "\nrelease_gate_validator_race_shards=1\n"},
+		{name: "cached execution", old: releaseGateShardCommand, replacement: strings.Replace(releaseGateShardCommand, " -count=1", "", 1)},
+		{name: "no test bodies", old: releaseGateShardCommand, replacement: strings.Replace(releaseGateShardCommand, "-count=1", "-count=0", 1)},
 		{name: "compile only", old: command, replacement: command + " -run '^$'"},
 		{name: "narrowed population", old: command, replacement: command + " -run '^TestIntent'"},
 		{name: "commented command", old: command, replacement: "# " + command},
 		{name: "hidden failure", old: command, replacement: command + " || true"},
 		{name: "unreachable command", old: command, replacement: "if false; then\n  " + command + "\n  fi"},
-		{name: "different source", old: definition, replacement: strings.Replace(definition, `cd "$sn_repo"`, `cd "$workspace/server"`, 1)},
-		{name: "lost core runtime", old: core, replacement: "go test -race ./miner/... ./protocol -count=1"},
-		{name: "lost core miner", old: core, replacement: "go test -race ./crv4 ./protocol -count=1"},
-		{name: "lost core protocol", old: core, replacement: "go test -race ./crv4 ./miner/... -count=1"},
-		{name: "core budget leak", old: core, replacement: core + " -timeout 90m"},
+		{name: "different source", old: source, replacement: strings.Replace(source, `cd "$sn_repo"`, `cd "$workspace/server"`, 1)},
+		{name: "lost core runtime", old: core, replacement: "go test -race -timeout 120m ./miner/... ./protocol -count=1"},
+		{name: "lost core miner", old: core, replacement: "go test -race -timeout 120m ./crv4 ./protocol -count=1"},
+		{name: "lost core protocol", old: core, replacement: "go test -race -timeout 120m ./crv4 ./miner/... -count=1"},
+		{name: "implicit core deadline", old: core, replacement: strings.Replace(core, " -timeout 120m", "", 1)},
+		{name: "core budget leak", old: core, replacement: strings.Replace(core, "-timeout 120m", "-timeout 90m", 1)},
 		{name: "combined core owner", old: core, replacement: core + " ./validator"},
 		{name: "commented admission", old: start, replacement: "# " + start},
-		{name: "wrong admitted owner", old: start, replacement: "release_gate_start sn-validator-race release_phase_sn_core_race"},
+		{name: "wrong admitted owner", old: start, replacement: "release_gate_start sn-validator-race-1 release_phase_sn_core_race"},
 		{name: "nested admission", old: start, replacement: "release_phase_unused() {\n" + start + "\n}"},
 		{name: "unreachable admission", old: start, replacement: "if false; then\n" + start + "\nfi"},
 		{name: "empty loop admission", old: start, replacement: "for omitted in; do\n" + start + "\ndone"},
@@ -1034,46 +1035,62 @@ func TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions(t *testing.T)
 var releaseGateUncachedCommands = []struct {
 	phase   string
 	command string
+	// The function that runs the command, when it is no phase's own body.
+	function string
 }{
-	{phase: "sn_all_normal", command: "go test -parallel=4 -timeout 90m ./... -count=1"},
-	{phase: "sn_core_race", command: "go test -race ./crv4 ./miner/... ./protocol -count=1"},
-	{phase: "sn_validator_race", command: "go test -race -parallel=4 -timeout 90m ./validator -count=1"},
-	{phase: "sn_simulator_race", command: releaseGateSimulatorOrdinaryRaceCommand},
-	{phase: "sn_simulator_populations_race", command: releaseGateSimulatorPopulationRaceCommand},
-	{phase: "sn_simulator_supplements_race", command: releaseGateSimulatorSupplementRaceCommand},
-	{phase: "sn_simulator_final_race", command: releaseGateSimulatorFinalRaceCommand},
-	{phase: "sn_simulator_history_race", command: releaseGateSimulatorHistoryRaceCommand},
+	{phase: "sn_all_normal", command: releaseGateAggregateNormalCommand},
+	{phase: "sn_core_race", command: "go test -race -timeout 120m ./crv4 ./miner/... ./protocol -count=1"},
+	// Every shard of ./mainnet, ./validator and ./sim-testnet runs this one
+	// command of the shard owner.
+	{phase: "shards", function: "release_gate_shard", command: releaseGateShardCommand},
 	{phase: "server_unit", command: "go test . -run '^Test(PgResourcesRedirectMaintenancePoolAndRestore|DatabaseTimeMatchesPostgresPrecision)$' -count=1"},
 	{phase: "server_unit", command: "go test ./st ./startifact -count=1"},
-	{phase: "server_unit", command: "go test ./controller -run '^Test(CoreStClient(BlockHashes|FinalizedHead|Epoch)|CoreStClientBindingsAt|DecodeStRPCBlockIdentity|StatsAlphaPriceURLIsMainnetOnly|StatsGaugeVecReplaceDeletesStaleSeries|StConfig|StCompute|StBuild|StDeposit|StEstimate|StReplacement|StDecode|StEvent|StBroadcast|StClientStub|StTransactionCancellation|VerifyEvidenceRange|VerifyKeyRotation|VerifySyntheticSeedId|VerifyUsesUrForwardedAddress|VerifyIgnoresLegacyForwardedAddress|VerifyClampM|VerifyCachedResponseRoundTrip|VerifySeedRejectsMissingSignature|StripeReconcileCredentialsRequireNonblankAPIToken|AppleReconcileCredentialsRequireCompleteServerAPIIdentity|PlayReconcileCredentialsRequireOAuthPackageAndSKUs|SolanaReconcileCredentialsRequireNonblankHeliusAPIKey)' -count=1"},
+	{phase: "server_unit", command: "go test ./local/sn25golive -count=1"},
+	{phase: "server_unit", command: "go test ./controller -run '^Test(CoreStClient(BlockHashes|FinalizedHead|Epoch)|CoreStClientBindingsAt|DecodeStRPCBlockIdentity|StatsAlphaPriceURLIsMainnetOnly|StatsGaugeVecReplaceDeletesStaleSeries|StConfig|StCompute|StBuild|StDeposit(ArtifactUsagePinsSignerIdentityAndFinalizedBoundaries|AttemptRejectsChangedAuthorityWithoutRewritingIntent|Custody(BindsTwoOperatorSecretsAtCanonicalBoundary|RejectsDustAndKeepsPrincipalCeilings|RejectsSharedRoleKeysBeforeRpc|RejectsWrongOperatorGraphAndAuthority)|DeadlinePinsIntendedEpoch|Funding(KeepsExactPrincipalAndBoundedRounding|RejectsInvalidAndOverflowAmounts)|RetainedCalldataRejectsChangedRetryAmount|SizeRao|SizingZeroPriceSendsNothing|TierForConvictionUsesPreEpochTierExactly)$|StEstimate|StReplacementFee$|StDecode|StEvent|StBroadcast|StClientStub|StTransactionCancellation|VerifyEvidenceRange|VerifyKeyRotation|VerifySyntheticSeedId|VerifyUsesUrForwardedAddress|VerifyIgnoresLegacyForwardedAddress|VerifyClampM|VerifyCachedResponseRoundTrip|VerifySeedRejectsMissingSignature|StripeReconcileCredentialsRequireNonblankAPIToken|AppleReconcileCredentialsRequireCompleteServerAPIIdentity|PlayReconcileCredentialsRequireOAuthPackageAndSKUs|SolanaReconcileCredentialsRequireNonblankHeliusAPIKey)' -count=1"},
 	{phase: "server_unit", command: "go test ./session -run 'Test.*(UrForwardedAddress|LegacyForwardedHeaders|RemoteAddress)' -count=1"},
 	{phase: "server_unit", command: "go test ./router -run 'TestTrie' -count=1"},
-	{phase: "server_unit", command: "go test ./model -run '^Test(VerifyEgressExactIndexAndPrefixScoreAreIndependent|StTransactionAdvisoryLockKeyUsesEthereumNonceScope|StHeadBoundCkeysFromEvents|ParseHeadEventCkey)$' -count=1"},
+	{phase: "server_unit", command: "go test ./model -run '^Test(VerifyEgressExactIndexAndPrefixScoreAreIndependent|StTransactionAdvisoryLockKeyUsesEthereumNonceScope|StHeadBoundCkeysFromEvents(WindowOverlap|UnbindDodge)|ParseHeadEventCkey)$' -count=1"},
 	{phase: "server_unit", command: "go test ./taskworker/work -run '^TestStSettlementTasksRejectStaleCoordinatorPayloads$' -count=1"},
-	{phase: "server_unit", command: "go test ./monitor -count=1"},
-	{phase: "server_unit", command: "go test -race ./monitor -count=1"},
 	{phase: "connect", command: "go test . -run '^Test(Verify|Sn)' -count=1"},
 	{phase: "sdk", command: "go test . -run '^Test(ApiSubnet|ProviderLocalUserNatSettings)' -count=1"},
 	{phase: "server_db", command: "go test ./controller -run \"$controller_db_tests\" -count=1"},
 	{phase: "server_db", command: "go test ./model -run \"$model_db_tests\" -count=1"},
 	{phase: "server_db", command: "go test -race ./controller -run \"$controller_db_tests\" -count=1"},
 	{phase: "server_db", command: "go test -race ./model -run \"$model_db_tests\" -count=1"},
+	{phase: "server_db", command: "go test -timeout 90m ./monitor -count=1"},
+	{phase: "server_db", command: "go test -race -timeout 180m ./monitor -count=1"},
 }
+
+// A here-document can hide a body from the line census; a here-string
+// (<<<), which feeds a command one word, cannot.
+var releaseGateDocumentWrapper = regexp.MustCompile(`(^|[^<])<<($|[^<])`)
+
+// The bounded phase extractor ends at the first closing brace. Refuse nested
+// declarations before an incomplete one can look executable.
+var releaseGateUncachedNestedDeclaration = regexp.MustCompile(`(?m)^[\t ]*(function[\t ]+|[A-Za-z_][A-Za-z0-9_]*[\t ]*\([\t ]*\))`)
 
 // Check the existing line-oriented command contract, not a second shell runner.
 // Fixed body commands cannot be hidden, replaced by a list, or made compile-only.
+// Several commands share a phase, whose definitions are read once per script:
+// the isolation regressions' race run must fit its deadline as the gate grows.
 func verifyReleaseGateUncachedBodies(script string) error {
+	phaseDefinitions := map[string][][]string{}
 	for _, required := range releaseGateUncachedCommands {
-		pattern := regexp.MustCompile("(?ms)^[\\t ]*release_phase_" + regexp.QuoteMeta(required.phase) + "\\(\\) \\{\\n(.*?)^[\\t ]*\\}[\\t ]*$")
-		definitions := pattern.FindAllStringSubmatch(script, -1)
+		function := required.function
+		if function == "" {
+			function = "release_phase_" + required.phase
+		}
+		definitions, read := phaseDefinitions[function]
+		if !read {
+			pattern := regexp.MustCompile("(?ms)^[\\t ]*" + regexp.QuoteMeta(function) + "\\(\\) \\{\\n(.*?)^[\\t ]*\\}[\\t ]*$")
+			definitions = pattern.FindAllStringSubmatch(script, -1)
+			phaseDefinitions[function] = definitions
+		}
 		if len(definitions) != 1 {
 			return fmt.Errorf("uncached gate requires one %s phase", required.phase)
 		}
 		body := definitions[0][1]
-		// The bounded phase extractor ends at the first closing brace. Refuse
-		// nested declarations before an incomplete one can look executable.
-		nested := regexp.MustCompile(`(?m)^[\t ]*(function[\t ]+|[A-Za-z_][A-Za-z0-9_]*[\t ]*\([\t ]*\))`)
-		if nested.MatchString(body) {
+		if releaseGateUncachedNestedDeclaration.MatchString(body) {
 			return fmt.Errorf("uncached gate phase contains a nested function: %s", required.phase)
 		}
 		for _, line := range strings.Split(body, "\n") {
@@ -1081,7 +1098,7 @@ func verifyReleaseGateUncachedBodies(script string) error {
 			if line == required.command {
 				break
 			}
-			if !strings.HasPrefix(line, "#") && strings.Contains(line, "<<") {
+			if !strings.HasPrefix(line, "#") && releaseGateDocumentWrapper.MatchString(line) {
 				return fmt.Errorf("uncached gate body has an unsupported document wrapper: %s", required.phase)
 			}
 		}
@@ -1147,39 +1164,241 @@ func TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies(t *testing.T) {
 	if err := verifyReleaseGateUncachedBodies(script); err != nil {
 		t.Fatal(err)
 	}
-	for _, required := range releaseGateUncachedCommands {
+	for index, required := range releaseGateUncachedCommands {
 		if strings.Count(script, required.command) != 1 {
 			t.Fatalf("mutation lacks one actual %s body", required.phase)
 		}
-		for _, replacement := range []string{
-			strings.Replace(required.command, " -count=1", "", 1),
-			strings.Replace(required.command, "-count=1", "-count=0", 1),
-			required.command + " -count=2",
-			required.command + " -count=1",
-			required.command + " -run '^$'",
-			required.command + " -list '^Test'",
-			required.command + " || true",
-			"# " + required.command,
-			"if false; then\n" + required.command + "\nfi",
-			"release_unused_body() {\n" + required.command + "\n}",
-			"release_unused_body () {\n" + required.command + "\n}",
-			"function release_unused_body {\n" + required.command + "\n}",
-			"release_unused_body()\n{\n" + required.command + "\n}",
-			"(\n" + required.command + "\n)",
-			"{\n" + required.command + "\n}",
-			"cat <<'capture_body'\n" + required.command + "\ncapture_body",
-			required.command + "\n" + required.command,
-		} {
-			changed := strings.Replace(script, required.command, replacement, 1)
-			if err := verifyReleaseGateUncachedBodies(changed); err == nil {
-				t.Fatalf("uncached body admitted %s: %s", required.phase, replacement)
+		// Each mutation reads the whole gate again, so each body's mutations
+		// run in parallel: the isolation regressions' race run has three
+		// minutes.
+		t.Run(fmt.Sprintf("%02d-%s", index, required.phase), func(t *testing.T) {
+			t.Parallel()
+			for _, replacement := range []string{
+				strings.Replace(required.command, " -count=1", "", 1),
+				strings.Replace(required.command, "-count=1", "-count=0", 1),
+				required.command + " -count=2",
+				required.command + " -count=1",
+				required.command + " -run '^$'",
+				required.command + " -list '^Test'",
+				required.command + " || true",
+				"# " + required.command,
+				"if false; then\n" + required.command + "\nfi",
+				"release_unused_body() {\n" + required.command + "\n}",
+				"release_unused_body () {\n" + required.command + "\n}",
+				"function release_unused_body {\n" + required.command + "\n}",
+				"release_unused_body()\n{\n" + required.command + "\n}",
+				"(\n" + required.command + "\n)",
+				"{\n" + required.command + "\n}",
+				"cat <<'capture_body'\n" + required.command + "\ncapture_body",
+				"cat <<-capture_body\n" + required.command + "\ncapture_body",
+				required.command + "\n" + required.command,
+			} {
+				changed := strings.Replace(script, required.command, replacement, 1)
+				if err := verifyReleaseGateUncachedBodies(changed); err == nil {
+					t.Fatalf("uncached body admitted %s: %s", required.phase, replacement)
+				}
 			}
-		}
+		})
 	}
 	if err := verifyReleaseGateUncachedBodies(script + "\ngo test ./new-synthetic-package\n"); err == nil {
 		t.Fatal("new aggregate body omitted its fresh execution count")
 	}
 	if err := verifyReleaseGateUncachedBodies(script + "\ngo test ./... -run '^$'\n"); err == nil {
 		t.Fatal("an extra compile-only check changed the non-body census")
+	}
+}
+
+// The runner's await, on its real queue, joins exactly the named job, reaping
+// any other that completes first, and leaves that job's own exit, again once
+// joined; an unknown job is refused.
+func TestReleaseGateJobsAwaitJoinsTheNamedJob(t *testing.T) {
+	self := newReleaseGateJobsFixture(t, `
+phase_named() { printf 'named\n' > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"; read -r release < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-a"; return 7; }
+phase_other() { printf 'other:%s\n' "$PPID" > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"; read -r release < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-b"; }
+release_gate_start named phase_named
+release_gate_start other phase_other
+release_gate_await named
+printf 'awaited %s %s %s\n' "$RELEASE_GATE_AWAITED_EXIT" "$release_gate_active" "${release_gate_pending[*]}" > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"
+RELEASE_GATE_AWAITED_EXIT=
+release_gate_await named
+[[ "$RELEASE_GATE_AWAITED_EXIT" == 7 ]]
+if release_gate_await missing; then exit 90; fi
+status=0; release_gate_complete || status=$?
+exit "$status"
+`)
+	owner := ""
+	for range 2 {
+		if line := self.line(t, "events"); strings.HasPrefix(line, "other:") {
+			owner = strings.TrimPrefix(line, "other:")
+		} else if line != "named" {
+			t.Fatalf("unexpected admission event=%q", line)
+		}
+	}
+	if pid, err := strconv.Atoi(owner); err != nil || pid <= 0 {
+		t.Fatalf("invalid other owner PID=%q: %v", owner, err)
+	}
+	// The other job completes first: the await reaps its owner, whose process
+	// record then disappears, while the named job still runs.
+	self.write(t, "control-b", "release")
+	for deadline := time.Now().Add(20 * time.Second); ; time.Sleep(10 * time.Millisecond) {
+		if _, err := os.Stat(filepath.Join("/proc", owner)); os.IsNotExist(err) {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the await did not reap the job that completed first")
+		}
+	}
+	self.write(t, "control-a", "release")
+	if got := self.line(t, "events"); got != "awaited 7 0 0 0" {
+		t.Fatalf("the await returned %q", got)
+	}
+	self.join(t, 7)
+	if !strings.Contains(self.output.String(), "release gate: no admitted job missing to await\n") {
+		t.Fatalf("an unknown job was not refused:\n%s", self.output.String())
+	}
+}
+
+// The runner removes the ./mainnet exports, its private directory, once every
+// job has joined, on the gate's own completion and on an EXIT, and a failed
+// removal fails the gate.
+func TestReleaseGateJobsRemoveTheMainnetExportsAfterTheFinalJoin(t *testing.T) {
+	complete := newReleaseGateJobsFixture(t, `
+phase_build() { mkdir "$release_gate_mainnet_exports"; printf 'export\n' > "$release_gate_mainnet_exports/witness"; }
+release_gate_start build phase_build
+release_gate_complete
+[[ ! -e "$release_gate_mainnet_exports" ]]
+`)
+	complete.join(t, 0)
+	exit := newReleaseGateJobsFixture(t, `
+phase_hold() {
+  mkdir "$release_gate_mainnet_exports"
+  printf '%s\n' "$release_gate_mainnet_exports" > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"
+  read -r release < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-a"
+}
+release_gate_start hold phase_hold
+release_gate_test_hold control-b
+`)
+	exports := exit.line(t, "events")
+	if err := exit.command.Process.Signal(syscall.SIGTERM); err != nil {
+		t.Fatal(err)
+	}
+	exit.join(t, 143)
+	if _, err := os.Stat(exports); !os.IsNotExist(err) {
+		t.Fatalf("the EXIT kept the exports: %v", err)
+	}
+	failed := newReleaseGateJobsFixture(t, `
+# Mode bits cannot force an unlink failure when the gate runs as root. Keep
+# this failure boundary in the owner shell, for only its exact removal call;
+# the real phase and child owner still run and join normally.
+rm() {
+  if [[ "$#" == 3 && "$1" == -rf && "$2" == -- && "$3" == "$release_gate_mainnet_exports" ]]; then
+    printf '%s\n' "$release_gate_active" >> "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/remove-attempts"
+    return 73
+  fi
+  command rm "$@"
+}
+phase_build() {
+  mkdir "$release_gate_mainnet_exports"
+  printf 'export\n' > "$release_gate_mainnet_exports/witness"
+  printf '%s\n' "$release_gate_mainnet_exports" > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"
+  read -r release < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-a"
+}
+release_gate_start build phase_build
+status=0; release_gate_complete || status=$?
+printf '%s\n' "$status" > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/complete-status"
+exit "$status"
+`)
+	failedExports := failed.line(t, "events")
+	failed.write(t, "control-a", "release")
+	failed.join(t, 1)
+	// Completion must fail itself: a second refusal in EXIT must not hide a
+	// swallowed first error. Both attempts must follow the real final join.
+	for name, want := range map[string]string{
+		"complete-status": "1\n",
+		"remove-attempts": "0\n0\n",
+	} {
+		got, err := os.ReadFile(filepath.Join(failed.root, name))
+		if err != nil || string(got) != want {
+			t.Fatalf("%s=%q want=%q: %v", name, got, want, err)
+		}
+	}
+	if got, err := os.ReadFile(filepath.Join(failedExports, "witness")); err != nil || string(got) != "export\n" {
+		t.Fatalf("failed removal did not retain the export witness: %q, %v", got, err)
+	}
+}
+
+// A held queue that a test signals still runs its TERM trap when the signal
+// lands before read(2) blocks, which bash only notices once read returns.
+// Signaled as soon as it announces its hold, an untimed read misses most of
+// these signals and holds until the FIFO is written.
+func TestReleaseGateJobsHoldRunsATrapSignaledBeforeItBlocks(t *testing.T) {
+	for range 3 {
+		self := newReleaseGateJobsFixture(t, `
+printf 'holding\n' > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"
+release_gate_test_hold control-a
+`)
+		if got := self.line(t, "events"); got != "holding" {
+			t.Fatalf("hold barrier=%q", got)
+		}
+		if err := self.command.Process.Signal(syscall.SIGTERM); err != nil {
+			t.Fatal(err)
+		}
+		self.join(t, 143)
+	}
+}
+
+// A missed fixture deadline reports what the queue, the job's owner and its
+// worker are each doing, and the queue's output so far, so that a gate log
+// alone shows where a queue waited.
+func TestReleaseGateJobsMissedDeadlineReportsTheQueueAndItsJobs(t *testing.T) {
+	self := newReleaseGateJobsFixture(t, `
+phase_hold() { printf 'held\n' > "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/events"; read -r release < "$RELEASE_GATE_QUEUE_FIXTURE_ROOT/control-a"; }
+release_gate_start hold phase_hold
+release_gate_complete
+`)
+	if got := self.line(t, "events"); got != "held" {
+		t.Fatalf("held job barrier=%q", got)
+	}
+	state := self.state()
+	pid := self.command.Process.Pid
+	for _, want := range []string{
+		fmt.Sprintf("process %d: stat=\"%d (bash) ", pid, pid),
+		"release-gate-child.py",
+		"release-phase phase_hold",
+		"[release gate] private state ",
+	} {
+		if !strings.Contains(state, want) {
+			t.Fatalf("the deadline report omits %q:\n%s", want, state)
+		}
+	}
+	self.write(t, "control-a", "release")
+	self.join(t, 0)
+}
+
+// A canceled queue's fixture backstops outlast its EXIT join. At equal bounds,
+// as both were at 20 seconds, Go's kill at the WaitDelay could land as the
+// join ended and leave the queue's live owners to the release gate's
+// subreaper. The join's bound is read from the script it describes.
+func TestReleaseGateJobsFixtureBackstopsOutlastTheExitJoin(t *testing.T) {
+	data, err := os.ReadFile("../scripts/release-gate-jobs.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	match := regexp.MustCompile(`(?m)^release_gate_jobs_exit\(\) \{\n  local status="\$1" index joined=1 owned deadline=\$\(\(SECONDS \+ ([0-9]+)\)\)$`).FindSubmatch(data)
+	if match == nil {
+		t.Fatal("release_gate_jobs_exit declares no exit join deadline")
+	}
+	seconds, err := strconv.Atoi(string(match[1]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The TERM trap waits for one read of up to a second before the join
+	// starts, and SECONDS counts whole seconds.
+	join := time.Duration(seconds)*time.Second + 2*time.Second
+	if releaseGateQueueFixtureWaitDelay <= join {
+		t.Errorf("fixture WaitDelay %s does not outlast the queue's %s exit join", releaseGateQueueFixtureWaitDelay, join)
+	}
+	if releaseGateQueueFixtureJoinDeadline <= releaseGateQueueFixtureWaitDelay {
+		t.Errorf("fixture join deadline %s does not outlast its WaitDelay %s", releaseGateQueueFixtureJoinDeadline, releaseGateQueueFixtureWaitDelay)
 	}
 }

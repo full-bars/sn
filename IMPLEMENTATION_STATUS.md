@@ -79,7 +79,7 @@ exist on connect+server; `urfoundation/sn` on `main`). One decision open before 
 |---|---|---|
 | `sn` (crv4, merkle, ss58, stabi, stctl) | ✅ | ✅ `go test ./...` |
 | `sn/validator` (own module) | ✅ | ✅ incl. effort + head-steering + HF-4 self-mask tests |
-| `sn/snclaim` (own module) | ✅ | ✅ incl. bindHead calldata tests |
+| `sn/snclaim` (own module) | ✅ | ✅ incl. fleet binding calldata tests |
 | `sn/evm` (Foundry) | ✅ | ✅ **133/133** `forge test` (incl. HF-2 reseed-cap regression) |
 | `urnetwork/connect` (+provider) | ✅ | ✅ Verify/Sn/Bind + provider |
 | `urnetwork/server` | ✅ | ✅ pure-logic st/sn/verify controller + HF-1 replay model tests |
@@ -133,9 +133,13 @@ BRINGYOUR_REDIS_HOSTNAME=local-redis.bringyour.com go test ./model ./controller 
 - **Server exclusion** (`st_controller.go`/`st_model.go`): mirrors bindings via event sync into
   `st_head_binding`; drops head-bound providers from the pool `payoutRoot` (no double-pay). **Tier
   exclusivity is symmetric** — the same head-bound ckey set is removed from the pool on both sides.
-- **Tooling**: `provider bind-head`/`unbind-head` (stdlib: reads `headBindDigest` via eth_call, signs
-  with the client key, prints intent) + `snclaim bind-head`/`unbind-head` (submits; recomputes the
-  digest under its own sender and verifies the provider's sig before spending gas).
+- **Tooling**: `provider fleet bind` signs the canonical fleet binding with the client key seed and
+  the hotkey seed and submits it to the coordinator from a relayer EVM key (`provider fleet revoke`
+  ends it, `provider fleet status` reads it back). `provider fleet sign` builds the same binding and
+  only signs it locally (client key, and the hotkey if given), printing the `{binding,
+  client_signature}` payload the ur.io Top 200 page takes; it needs no RPC or relayer key. The
+  original bind-head/unbind-head commands of the provider and snclaim were removed; snclaim has no
+  head-binding commands.
 
 ## Build-time deviations that OVERRIDE the plan text (keep)
 - Deposits **push-then-credit** (no approve/transferStakeFrom in StakingV2 v3.2.7).

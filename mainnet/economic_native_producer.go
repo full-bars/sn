@@ -174,13 +174,47 @@ func (self *nativeProducerSession) finality(ctx context.Context, client *rpcClie
 // Only the actual original Initialization capture chooses registration/UID.
 // Missing approved providers are not reassigned to a later hotkey. No epoch
 // means no recipient allocation, but does not invent a zero-valued epoch.
-func nativeProducerRecipients(policy economicEmissionPolicy, authority *nativeProducerAuthority, report *historicalReplayReport) ([]nativeExecutionRecipient, error) {
-	if report == nil || report.HookObservations == nil {
+func nativeProducerRecipients(policy economicEmissionPolicy, authority *nativeProducerAuthority, report *historicalReplayReport, profile *historicalReplayObservationProfile, metadata *types.Metadata) ([]nativeExecutionRecipient, error) {
+	if report == nil || report.HookObservations == nil || profile == nil {
 		return nil, errors.New("native producer has no authenticated original trace")
+	}
+	layout, err := newNativeEpochStorageLayout(profile, metadata, policy.Netuid)
+	if err != nil {
+		return nil, err
+	}
+	var drains []*historicalReplayObservation
+	var drainKeys [3]nativeExecutionDrain
+	if layout != nil {
+		drainKeys, err = nativeExecutionDrainKeys(metadata, policy.Netuid)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var epoch *historicalReplayObservation
 	for index := range report.HookObservations.Observations {
 		record := &report.HookObservations.Observations[index]
+		if layout != nil {
+			if record.Purpose == "native-uid-census" || record.Purpose == "native-epoch-index" {
+				if err := layout.collect(*record); err != nil {
+					return nil, err
+				}
+				continue
+			}
+			if record.Purpose == "native-drain" {
+				netuid, err := nativeEpochDrainNetuid(*record, drainKeys)
+				if err != nil {
+					return nil, err
+				}
+				if netuid != uint64(policy.Netuid) {
+					continue
+				}
+				if epoch != nil || len(drains) == len(drainKeys) || record.Operation != "get" || record.KeyHex != drainKeys[len(drains)].Key || record.StorageReturn == nil {
+					return nil, errors.New("native provider original drain is incomplete or reordered")
+				}
+				drains = append(drains, record)
+				continue
+			}
+		}
 		if record.Purpose != "native-epoch" {
 			continue
 		}
@@ -198,24 +232,45 @@ func nativeProducerRecipients(policy economicEmissionPolicy, authority *nativePr
 	}
 	result := []nativeExecutionRecipient{}
 	if epoch == nil {
+		if layout != nil && (layout.hasRecords() || len(drains) != 0) {
+			return nil, errors.New("native provider original census has no completed epoch")
+		}
 		return result, nil
 	}
-	hotkeys, err := nativeCapture(*epoch, "hotkeys", -1)
-	if err != nil {
-		return nil, err
+	var hotkeys, uids []byte
+	var count int
+	if layout != nil {
+		raw, err := nativeCapture(*epoch, "registered", -1)
+		if err != nil || len(raw)%8 != 0 || len(raw)/8 > int(policy.MaximumUids) {
+			return nil, errors.New("native provider registration vector exceeds original UID bound")
+		}
+		count = len(raw) / 8
+		hotkeys, uids, _, err = layout.roster(*epoch, count, drains)
+		if err != nil {
+			return nil, err
+		}
+		if err := layout.validateGeneration(*drains[0], policy); err != nil {
+			return nil, err
+		}
+	} else {
+		hotkeys, err = nativeCapture(*epoch, "hotkeys", -1)
+		if err != nil {
+			return nil, err
+		}
+		if len(hotkeys)%32 != 0 || len(hotkeys)/32 > int(policy.MaximumUids) {
+			return nil, errors.New("native provider generation census exceeds original UID bound")
+		}
+		count = len(hotkeys) / 32
+		uids, err = nativeCapture(*epoch, "uids", count*2)
+		if err != nil {
+			return nil, err
+		}
 	}
-	if len(hotkeys)%32 != 0 || len(hotkeys)/32 > int(policy.MaximumUids) {
-		return nil, errors.New("native provider generation census exceeds original UID bound")
-	}
-	count := len(hotkeys) / 32
 	registered, err := nativeCaptureVector(*epoch, "registered", count)
 	if err != nil {
 		return nil, err
 	}
-	uids, err := nativeCapture(*epoch, "uids", count*2)
-	if err != nil {
-		return nil, err
-	}
+
 	approved := map[string]string{}
 	for _, provider := range authority.Providers {
 		approved[provider.Hotkey] = provider.Coldkey
@@ -363,11 +418,11 @@ func (self *nativeProducerSession) observe(ctx context.Context, client *rpcClien
 	if captured != nil && !reflect.DeepEqual(captured, report) {
 		return nil, errors.Join(errRpcIntegrity, errors.New("native capture and approved replay disagree on the original job"))
 	}
-	providers, err := nativeProducerRecipients(self.policy, self.authority, report)
+	providers, err := nativeProducerRecipients(self.policy, self.authority, report, job.ObservationProfile, metadata)
 	if err != nil {
 		return nil, err
 	}
-	admission := nativeExecutionAdmission{Yuma: self.authority.Yuma, Principal: self.authority.Principal, Schema: nativeExecutionAdmissionSchema, Network: self.policy.Network, Netuid: self.policy.Netuid, Registration: self.authority.Registration, Generation: self.authority.Generation, Parent: self.state.Cursor, Child: block.Boundary, Runtime: runtime, ReviewSha256: self.policy.Execution.ReviewSha256, ProfileSha256: self.policy.Execution.ProfileSha256, EngineSha256: self.policy.Execution.Engine.Sha256, Job: jobRef, Providers: providers, FinalityAuthority: "approved-anchor-and-verified-grandpa-original-execution"}
+	admission := nativeExecutionAdmission{Treasury: self.authority.Treasury, Yuma: self.authority.Yuma, Principal: self.authority.Principal, Schema: nativeTreasurySchema(self.authority.Treasury, nativeExecutionAdmissionSchema, nativeTreasuryExecutionAdmissionSchema), Network: self.policy.Network, Netuid: self.policy.Netuid, Registration: self.authority.Registration, Generation: self.authority.Generation, Parent: self.state.Cursor, Child: block.Boundary, Runtime: runtime, ReviewSha256: self.policy.Execution.ReviewSha256, ProfileSha256: self.policy.Execution.ProfileSha256, EngineSha256: self.policy.Execution.Engine.Sha256, Job: jobRef, Providers: providers, FinalityAuthority: "approved-anchor-and-verified-grandpa-original-execution"}
 	admission.FeeCensus = self.authority.FeeCensus
 	outcome, err := validateNativeExecutionReplay(ctx, self.policy, admission, block, metadata, job, report)
 	if err != nil {

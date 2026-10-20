@@ -7,8 +7,6 @@ package clientauth
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
@@ -22,6 +20,8 @@ import (
 
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
+
+	"github.com/urfoundation/sn/internal/durablesync"
 )
 
 type JwtRefreshListenerFunc func(string)
@@ -90,11 +90,7 @@ func WriteToken(path string, token string) (returnErr error) {
 	if err := os.Rename(tmpPath, path); err != nil {
 		return err
 	}
-	parent, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	return errors.Join(parent.Sync(), parent.Close())
+	return durablesync.SyncParent(path)
 }
 
 func RemoveToken(path string) error {
@@ -109,27 +105,19 @@ func rejectionPath(clientJwtPath string) string {
 	return clientJwtPath + ".rejected"
 }
 
-func networkCredentialFingerprint(path string, byJwt string) string {
-	generation := strings.TrimSpace(byJwt)
-	if info, err := os.Stat(path); err == nil {
-		generation += fmt.Sprintf("\n%d", info.ModTime().UnixNano())
-	}
-	sum := sha256.Sum256([]byte(generation))
-	return hex.EncodeToString(sum[:])
-}
-
 // MarkRejected removes a rejected client credential and records which
 // network-login token was present. Automatic restarts may not use that same
-// powerful bootstrap credential to recreate a revoked client. Running the
-// explicit auth command writes a new network JWT, whose different fingerprint
-// permits a deliberate bootstrap on the next start.
+// powerful bootstrap credential to recreate a revoked client, nor a renewal of
+// it (network_token.go). Running the explicit auth command writes a new
+// network JWT, whose different fingerprint permits a deliberate bootstrap on
+// the next start.
 func MarkRejected(clientJwtPath string, networkJwtPath string) error {
 	if err := RemoveToken(clientJwtPath); err != nil {
 		return err
 	}
 	marker := "blocked"
-	if networkJwt, err := ReadToken(networkJwtPath); err == nil {
-		marker = networkCredentialFingerprint(networkJwtPath, networkJwt)
+	if _, fingerprint, err := readNetworkCredential(networkJwtPath); err == nil {
+		marker = fingerprint
 	}
 	return WriteToken(rejectionPath(clientJwtPath), marker)
 }
@@ -173,7 +161,7 @@ func LoadOrCreateClientJwt(
 		return "", connect.Id{}, err
 	}
 
-	byJwt, err := ReadToken(networkJwtPath)
+	byJwt, fingerprint, err := readNetworkCredential(networkJwtPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return "", connect.Id{}, fmt.Errorf("network JWT does not exist at %s; run the auth command first", networkJwtPath)
@@ -181,7 +169,11 @@ func LoadOrCreateClientJwt(
 		return "", connect.Id{}, err
 	}
 	if marker, markerErr := ReadToken(rejectionPath(clientJwtPath)); markerErr == nil {
-		if marker == "blocked" || marker == networkCredentialFingerprint(networkJwtPath, byJwt) {
+		blocks, err := networkCredentialMarkerBlocks(networkJwtPath, fingerprint, marker)
+		if err != nil {
+			return "", connect.Id{}, err
+		}
+		if blocks {
 			return "", connect.Id{}, fmt.Errorf("the previous client JWT was rejected; run the auth command before restarting")
 		}
 		if err := clearRejection(clientJwtPath); err != nil {
@@ -196,7 +188,8 @@ func LoadOrCreateClientJwt(
 		DeviceSpec:        "",
 	})
 	if err != nil {
-		return "", connect.Id{}, err
+		// the request carried the network token: a 401 rejects the sign-in
+		return "", connect.Id{}, networkCredentialRejection(err)
 	}
 	if result == nil {
 		return "", connect.Id{}, errors.New("auth network client returned a null result")
@@ -226,6 +219,19 @@ func LoadOrCreateClientJwt(
 // only an unavailable request retains the already owned credential.
 func refreshStoredClientJwt(ctx context.Context, api *sdk.Api, networkPath, clientPath, token string, persist func(string) error) (string, connect.Id, error) {
 	return refreshStoredClientJwtWithReadiness(ctx, api, networkPath, clientPath, token, persist, true)
+}
+
+// ProbeClientJwtRefresh verifies the API still accepts a retained client
+// credential and that the refresh preserves its identity, without persisting
+// anything, allocating anything or marking a rejection: the probe owns no
+// custody. It runs the same refresh and the same identity validation the
+// normal retained-credential path runs.
+func ProbeClientJwtRefresh(ctx context.Context, api *sdk.Api, token string) error {
+	if api == nil {
+		return errors.New("client refresh probe has no api")
+	}
+	_, _, err := refreshStoredClientJwtWithCustody(ctx, api, token, func(string) error { return nil }, func() error { return nil }, func() error { return nil }, false)
+	return err
 }
 
 // Production observation does not need speculative API readiness. Its caller
@@ -282,7 +288,7 @@ func refreshStoredClientJwtWithCustody(ctx context.Context, api *sdk.Api, token 
 		return "", connect.Id{}, errors.Join(refreshErr, err)
 	}
 	if !allowUnavailable {
-		return "", connect.Id{}, &RegistrationRefreshUnavailableError{cause: refreshErr}
+		return "", connect.Id{}, NewRegistrationRefreshUnavailableError(refreshErr)
 	}
 	if err := ctx.Err(); err != nil {
 		return "", connect.Id{}, err

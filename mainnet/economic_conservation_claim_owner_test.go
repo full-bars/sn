@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Exact copied bytes do not move independently signed Claim authority to a
 // different prepared owner. Ordinary compaction and physical restore preserve
@@ -146,11 +146,11 @@ func TestEconomicConservationClaimOwnerRestoreRetainsArchivedPath(t *testing.T) 
 			}
 			return os.ReadFile(reference.Path)
 		}
-		if err := validateEconomicConservationRestoreHistory(f.ctx, f.source.policy, original, read, monitorServiceHooks{}); err != nil {
+		if err := validateEconomicConservationRestoreHistory(f.ctx, f.source.policy, original, read, nil, monitorServiceHooks{}); err != nil {
 			t.Fatal("original Claim restore path refused exact retained history", archived, err)
 		}
 		original.Path = filepath.Join(filepath.Dir(original.Path), "relabeled-original.json")
-		if err := validateEconomicConservationRestoreHistory(f.ctx, f.source.policy, original, read, monitorServiceHooks{}); err == nil || !strings.Contains(err.Error(), "moved the original checkpoint") {
+		if err := validateEconomicConservationRestoreHistory(f.ctx, f.source.policy, original, read, nil, monitorServiceHooks{}); err == nil || !strings.Contains(err.Error(), "moved the original checkpoint") {
 			t.Fatal("Claim restore relabeled an active or archived signed owner", archived, err)
 		}
 	}

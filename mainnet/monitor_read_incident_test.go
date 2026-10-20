@@ -241,7 +241,7 @@ func TestMonitorReadIncidentCommandCancellationPreservesOpenCheckpoint(t *testin
 	}}
 	blocked := fixture.start(t, url, hooks)
 	defer once.Do(func() { close(release) })
-	<-entered
+	blocked.barrier(t, entered)
 	blocked.cancel()
 	once.Do(func() { close(release) })
 	<-blocked.done

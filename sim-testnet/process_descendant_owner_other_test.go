@@ -3,9 +3,12 @@
 // Retain the existing non-Linux descendant assertion without Linux prctl.
 package main
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
-func runSupervisorDescendantOwnerTest(t *testing.T, run func(*testing.T)) {
+func runSupervisorDescendantOwnerTest(t *testing.T, surviving int, timeout time.Duration, run func(*testing.T)) {
 	t.Helper()
 	run(t)
 }

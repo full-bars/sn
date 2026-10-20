@@ -250,7 +250,23 @@ func TestCampaignEvidenceCanonicalStreamRejectsInvalidGrammarBeforeDigest(t *tes
 			t.Fatalf("invalid grammar case %d reached digest: hashes=%d error=%v", index, hashes, err)
 		}
 	}
-	boundary, key := evidenceCanonicalStreamSignedTest(t, json.RawMessage(strings.Repeat("[", 10000)+"0"+strings.Repeat("]", 10000)))
+	// jsonv2's encoder counts the envelope's own object toward the same
+	// 10,000-level limit, so the oracle signs a placeholder wire and splices
+	// the compact boundary payload into it before hashing.
+	deep := []byte(strings.Repeat("[", 10000) + "0" + strings.Repeat("]", 10000))
+	placeholder := []byte(`"synthetic-depth-boundary"`)
+	boundary, key := evidenceCanonicalStreamSignedTest(t, json.RawMessage(placeholder))
+	boundary.ContentHash, boundary.Signature = "", ""
+	wire, err := json.Marshal(boundary)
+	if err != nil || bytes.Count(wire, placeholder) != 1 {
+		t.Fatal("depth boundary oracle lost its unique placeholder", err)
+	}
+	digest := sha256.Sum256(bytes.Replace(wire, placeholder, deep, 1))
+	signature, err := crypto.Sign(digest[:], key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	boundary.Payload, boundary.ContentHash, boundary.Signature = deep, "sha256:"+hex.EncodeToString(digest[:]), "0x"+hex.EncodeToString(signature)
 	if err := verifyEvidence(boundary, &key.PublicKey); err != nil {
 		t.Fatal("standard maximum valid nesting depth was reduced", err)
 	}

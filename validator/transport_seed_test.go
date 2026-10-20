@@ -79,7 +79,7 @@ func TestFindProvidersSeedPickerRequestsBootstrapCandidates(t *testing.T) {
 		t.Fatalf("picked provider = %s, want %s", picked, providerID)
 	}
 	request := <-requests
-	if request.Count != 8 || request.RankMode != "quality" || !request.ForceMinimum || len(request.Specs) != 1 || !request.Specs[0].BestAvailable {
+	if request.Count != 8 || request.RankMode != "online" || !request.ForceMinimum || len(request.Specs) != 1 || !request.Specs[0].BestAvailable {
 		t.Fatalf("seed discovery request = %+v", request)
 	}
 	if len(request.ExcludeClientIDs) != 1 || request.ExcludeClientIDs[0] != selfID.String() {

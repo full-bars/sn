@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Work counters sit at actual decoding, hash and epoch-visit call sites. They
 // never supply evidence or replace a guard. Disk reads and public durable

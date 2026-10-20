@@ -82,7 +82,7 @@ func (self ownerRecycleConfig) validate(key string) error {
 	return nil
 }
 
-// Source semantics are restricted to the inspected470 owner/admin dispatch.
+// Exact source and artifact pins travel with the original owner/admin action.
 func (self ownerRecycleAction) runtime() rootReceiptProfile {
 	p := self.Policy
 	return rootReceiptProfile{RuntimeSourceCommit: p.RuntimeSourceCommit, RuntimeVersion: p.RuntimeVersion, RuntimeCodeHash: p.RuntimeCodeHash, RuntimeMetadataHash: p.RuntimeMetadataHash}
@@ -124,10 +124,10 @@ func (self ownerRecycleAction) encoding() ([]byte, []byte, error) {
 	if err := self.Policy.validate(); err != nil {
 		return nil, nil, err
 	}
-	if self.Schema != ownerRecycleActionSchema || self.Policy.RuntimeSourceCommit != rootPassiveSource || self.Policy.RuntimeVersion.SpecName != "node-subtensor" || self.Policy.RuntimeVersion.SpecVersion != 470 || self.Policy.RuntimeVersion.TransactionVersion != 1 || self.Policy.RuntimeVersion.StateVersion != 1 ||
+	if self.Schema != ownerRecycleActionSchema || !nativeOwnerRuntimeProfile(self.runtime()) ||
 		!planSha256(self.ObservationHash) || !planSha256(self.ReviewHash) || !planLabel(self.CustodyId) || !bootstrapRootAbsolutePath(self.StatePath) || filepath.Base(self.StatePath) != ownerRecycleStateFile ||
 		!rootCanonicalHash(self.Owner) || !rootCanonicalHash(self.BirthHash) || self.BirthBlock < self.SubnetRegistrationBlock || self.Nonce == math.MaxUint32 || self.FeeReserveRao == 0 {
-		return nil, nil, errors.New("recycle action has invalid reviewed470 scope, custody, era or allowance")
+		return nil, nil, errors.New("recycle action has invalid reviewed owner scope, custody, era or allowance")
 	}
 	for _, hash := range []string{self.Policy.GenesisHash, self.Policy.RuntimeCodeHash, self.Policy.RuntimeMetadataHash} {
 		if !rootCanonicalHash(hash) {

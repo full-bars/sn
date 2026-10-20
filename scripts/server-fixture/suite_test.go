@@ -8,6 +8,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"net/netip"
 	"os"
 	"os/exec"
@@ -17,8 +20,11 @@ import (
 	"testing"
 	"time"
 
+	clientconnect "github.com/urnetwork/connect"
 	serverpkg "github.com/urnetwork/server"
+	servercontroller "github.com/urnetwork/server/controller"
 	servermodel "github.com/urnetwork/server/model"
+	serversession "github.com/urnetwork/server/session"
 	"gopkg.in/yaml.v3"
 )
 
@@ -192,8 +198,8 @@ func TestServerFixtureSuiteUsesDocumentationIpOverrideWithoutMmdb(t *testing.T) 
 	if err := yaml.Unmarshal(encoded, &settings); err != nil {
 		t.Fatal(err)
 	}
-	if len(settings.All.IpOverrides) != 4 {
-		t.Fatalf("ip override count = %d, want 4", len(settings.All.IpOverrides))
+	if len(settings.All.IpOverrides) != 6 {
+		t.Fatalf("ip override count = %d, want 6", len(settings.All.IpOverrides))
 	}
 	for index, expected := range []struct {
 		Prefix  string
@@ -204,6 +210,8 @@ func TestServerFixtureSuiteUsesDocumentationIpOverrideWithoutMmdb(t *testing.T) 
 		{Prefix: "2001:db8::/32", Inside: "2001:db8::1", Outside: "::1"},
 		{Prefix: "127.0.0.0/8", Inside: "127.0.0.1", Outside: "128.0.0.1"},
 		{Prefix: "::1/128", Inside: "::1", Outside: "::2"},
+		{Prefix: "169.254.0.0/16", Inside: "169.254.0.1", Outside: "192.0.2.1"},
+		{Prefix: netip.PrefixFrom(clientconnect.LocalIpv6Prefix.Addr(), 96).String(), Inside: clientconnect.LocalIpv6Prefix.Addr().Next().String(), Outside: "2001:db8::1"},
 	} {
 		override := settings.All.IpOverrides[index]
 		prefix, err := netip.ParsePrefix(override.Subnet)
@@ -269,6 +277,119 @@ func TestServerFixtureSuiteLoopbackResolvesWithoutDatabases(t *testing.T) {
 	}
 }
 
+// Local carrier addresses come from the real default allocator, not incident
+// literals. The mapped form must pass the same request normalizer as h1.
+func TestServerFixtureSuiteLocalTunIpv4ResolvesWithoutDatabases(t *testing.T) {
+	requireSuiteFixtureLocalTunConsumer(t, "4")
+}
+
+// The default dual-stack tun's low local /96 is distinct from documentation
+// IPv6 and from the rest of the native-tunnel /64.
+func TestServerFixtureSuiteLocalTunIpv6ResolvesWithoutDatabases(t *testing.T) {
+	requireSuiteFixtureLocalTunConsumer(t, "6")
+}
+
+// A fresh consumer process binds the generated settings before Server's once
+// caches initialize. Missing databases are a tripwire, not a lookup fallback.
+func requireSuiteFixtureLocalTunConsumer(t *testing.T, family string) {
+	t.Helper()
+	const childVariable = "RELEASE_GATE_FIXTURE_LOCAL_TUN_TEST_CHILD"
+	const marker = "local-tun-location-consumer-complete"
+	if os.Getenv(childVariable) == family {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		for _, ipv4Only := range []bool{false, true} {
+			settings := clientconnect.DefaultTunSettings()
+			if ipv4Only {
+				settings.Mtu = 1280 - 1
+			}
+			tun, err := clientconnect.CreateTun(ctx, settings)
+			if err != nil {
+				t.Fatal(err)
+			}
+			addresses := tun.LocalAddresses()
+			if err := tun.Close(); err != nil {
+				t.Fatal(err)
+			}
+			wantCount := 2
+			if ipv4Only {
+				wantCount = 1
+			}
+			if len(addresses) != wantCount || !addresses[0].Is4() || !ipv4Only && !addresses[1].Is6() {
+				t.Fatalf("actual tun address families differ: %v", addresses)
+			}
+			matched := 0
+			for _, address := range addresses {
+				if address.Is4() != (family == "4") {
+					continue
+				}
+				matched++
+				rawAddresses := []netip.Addr{address}
+				if address.Is4() {
+					rawAddresses = append(rawAddresses, netip.AddrFrom16(address.As16()))
+				}
+				for _, rawAddress := range rawAddresses {
+					request := &http.Request{RemoteAddr: netip.AddrPortFrom(rawAddress, 1).String()}
+					resolved, err := serversession.ResolveClientAddressFromRequest(request)
+					if err != nil {
+						t.Fatal(err)
+					}
+					resolvedAddress, err := netip.ParseAddrPort(resolved)
+					if err != nil || resolvedAddress.Addr() != address || resolvedAddress.Port() != 1 {
+						t.Fatalf("actual request normalization differs: %s %v", resolved, err)
+					}
+					location, err := serverpkg.GetIpInfoFromString(resolvedAddress.Addr().String())
+					if err != nil || location == nil || location.CountryCode != "zz" || location.Country != "Fixture Country" || location.Region != "Fixture Region" || location.City != "Fixture City" {
+						t.Fatalf("actual local tun IPv%s location: %v %+v", family, err, location)
+					}
+					owner, err := serverpkg.GetArinInfo(resolvedAddress.Addr())
+					if err != nil || owner == nil || !slices.Equal(owner.OrgCountryCodes, []string{"zz"}) {
+						t.Fatalf("actual local tun IPv%s ownership: %v %+v", family, err, owner)
+					}
+				}
+			}
+			wantMatched := 1
+			if ipv4Only && family == "6" {
+				wantMatched = 0
+			}
+			if matched != wantMatched {
+				t.Fatalf("IPv%s consumer visited %d allocated addresses, want %d", family, matched, wantMatched)
+			}
+		}
+		t.Log(marker)
+		return
+	}
+	parent, source := suiteFixtureTestInputs(t)
+	report, err := createSuiteFixture(parent, source, "127.0.0.1:35431", "127.0.0.1:36371")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"mmdb/geolite2.mmdb", "arindb/arin.mmdb"} {
+		if _, err := os.Lstat(filepath.Join(report.Workspace, "config", name)); !os.IsNotExist(err) {
+			t.Fatalf("portable fixture unexpectedly has database %s: %v", name, err)
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	command := exec.CommandContext(ctx, os.Args[0], "-test.run=^"+t.Name()+"$", "-test.count=1", "-test.v")
+	command.WaitDelay = 5 * time.Second
+	for _, value := range os.Environ() {
+		name, _, _ := strings.Cut(value, "=")
+		if !strings.HasPrefix(name, "WARP_") && !strings.HasPrefix(name, "BRINGYOUR_") &&
+			name != childVariable && name != "URNETWORK_TEST_REAL_VAULT" {
+			command.Env = append(command.Env, value)
+		}
+	}
+	command.Env = append(command.Env, childVariable+"="+family, "URNETWORK_TEST_REAL_VAULT=",
+		"WARP_HOME="+report.Workspace, "WARP_CONFIG_HOME="+filepath.Join(report.Workspace, "config"),
+		"WARP_VAULT_HOME="+filepath.Join(report.Workspace, "vault"), "WARP_SITE_HOME="+filepath.Join(report.Workspace, "site"),
+		"WARP_ENV=local", "WARP_SERVICE=test")
+	output, err := command.CombinedOutput()
+	if err != nil || !strings.Contains(string(output), marker) {
+		t.Fatalf("actual local tun IPv%s location consumer: %v\n%s", family, err, output)
+	}
+}
+
 // The required physical pro.yml must be valid under the owning server parser,
 // while its synthetic values remain inert rather than copying a real product
 // plan into the portable fixture.
@@ -295,6 +416,59 @@ func TestServerFixtureSuiteProConfigIsSyntheticAndParseable(t *testing.T) {
 	}
 	if config.MaxReferrals != 0 || config.ReferralsCapped(0) || config.SeekerDataMultiplier() != 1 || config.ReferralGrantPeriod() <= 0 {
 		t.Fatal("portable Pro fixture lost the inert referral/task contract")
+	}
+}
+
+// The required physical x402.yml must load under the owning server's x402
+// loader and leave x402 off. The loader panics on a sku catalog that is not a
+// mapping, which takes down every process that reads it, such as a whole
+// controller test binary.
+func TestServerFixtureSuiteX402ConfigIsInertAndParseable(t *testing.T) {
+	parent, server := suiteFixtureTestInputs(t)
+	report, err := createSuiteFixture(parent, server, "127.0.0.1:35431", "127.0.0.1:36371")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("WARP_VAULT_HOME", filepath.Join(report.Workspace, "vault"))
+
+	config := servercontroller.X402()
+	if config.Enabled || servercontroller.X402Enabled() {
+		t.Fatal("portable x402 fixture unexpectedly enables x402")
+	}
+	if len(config.Skus) != 0 || len(config.Networks) != 0 || len(config.PayTo) != 0 {
+		t.Fatal("portable x402 fixture unexpectedly offers a sku, a network or a settlement address")
+	}
+}
+
+// The required physical helius.yml must carry a Helius webhook secret that the
+// owning server verifies. The server refuses every Helius webhook without one,
+// and before it failed closed, the missing key panicked on each webhook.
+func TestServerFixtureSuiteHeliusWebhookVerifiesSyntheticSecret(t *testing.T) {
+	parent, server := suiteFixtureTestInputs(t)
+	report, err := createSuiteFixture(parent, server, "127.0.0.1:35431", "127.0.0.1:36371")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("WARP_VAULT_HOME", filepath.Join(report.Workspace, "vault"))
+
+	verify := func(authorization string) (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panicked: %v", r)
+			}
+		}()
+		req := httptest.NewRequest(http.MethodPost, "/pay/solana", strings.NewReader("[]"))
+		if authorization != "" {
+			req.Header.Set("Authorization", authorization)
+		}
+		_, err = servercontroller.VerifyHeliusBody(nil, req)
+		return err
+	}
+	if err := verify(suiteFixtureHeliusWebhookAuthorization); err != nil {
+		t.Fatalf("the fixture's synthetic Helius secret did not verify: %v", err)
+	}
+	if err := verify(""); err == nil {
+		t.Fatal("a Helius webhook without the fixture's secret was accepted")
 	}
 }
 

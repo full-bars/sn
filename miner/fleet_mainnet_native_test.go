@@ -80,6 +80,7 @@ func (self *fleetMainnetTestFixture) nativeWebsocket(t *testing.T, register bool
 	if err != nil {
 		t.Fatal(err)
 	}
+	self.nativeEventsKey, self.nativeEvents = eventsKey.Hex(), codec.HexEncodeToString(raw)
 	commitmentKey, err := types.CreateStorageKey(metadata, "Commitments", "CommitmentOf", snchain.NetuidArg(25), self.manifest.Hotkey[:])
 	if err != nil {
 		t.Fatal(err)
@@ -165,6 +166,11 @@ func (self *fleetMainnetTestFixture) nativeWebsocket(t *testing.T, register bool
 						t.Error("invalid synthetic commitment")
 						return
 					}
+					// The slot takes the CommitmentInfo the extrinsic carries:
+					// tagged Raw40 or a pre-tag one-field Sha256.
+					if info, ok := self.submittedCommitmentInfo(); ok {
+						record = append(record[:12:12], info...)
+					}
 					binary.LittleEndian.PutUint32(record[8:12], uint32(self.nativeReceiptNumber))
 					self.storage[commitmentKey.Hex()] = codec.HexEncodeToString(record)
 					self.storage[lastKey.Hex()] = codec.HexEncodeToString(binary.LittleEndian.AppendUint32(nil, uint32(self.nativeReceiptNumber)))
@@ -223,20 +229,30 @@ func TestFleetMainnetPublishCommandSignsAndVerifiesApprovedReceipt(t *testing.T)
 }
 
 // Inclusion under new code cannot inherit the signing runtime's approval.
+// The execution runtime is admitted before any event decoding (e265cfd8),
+// so the upgraded inclusion is refused before a single storage read: neither
+// its events nor the commitment are decoded under the unapproved runtime.
 func TestFleetMainnetPublishCommandRejectsIncludedUpgradeWithoutResend(t *testing.T) {
 	fixture := newFleetMainnetTestFixture(t)
 	fixture.opts["--substrate"] = []string{fixture.nativeWebsocket(t, false)}
+	// Storage reads before signing (the validator-role guard) are allowed;
+	// only reads after the broadcast would decode under the new runtime.
+	readsAtSubmit := -1
 	fixture.stateLock.Lock()
 	fixture.hook = func(method string) {
 		if method == "author_submitAndWatchExtrinsic" {
 			fixture.version.SpecVersion++
+			readsAtSubmit = fixture.calls["state_getStorage"]
 		}
 	}
 	fixture.stateLock.Unlock()
 	if err := fleetPublish(fixture.durable.Context, fixture.opts, fixture.manifest); err == nil || !strings.Contains(err.Error(), "unreviewed identity") {
 		t.Fatalf("receipt upgrade: %v", err)
 	}
-	if fixture.count("author_submitAndWatchExtrinsic") != 1 || fixture.count("state_getStorage") != 1 {
+	fixture.stateLock.Lock()
+	submitted := readsAtSubmit
+	fixture.stateLock.Unlock()
+	if fixture.count("author_submitAndWatchExtrinsic") != 1 || submitted < 0 || fixture.count("state_getStorage") != submitted {
 		t.Fatal("receipt upgrade retried or decoded commitment under unapproved runtime")
 	}
 }
@@ -311,4 +327,26 @@ func TestFleetMainnetRegisterRejectsUpgradeDuringNonceReadBeforeSigning(t *testi
 	if fixture.count("payment_queryInfo") != 0 {
 		t.Fatal("upgrade during nonce read reached signed-byte quotation")
 	}
+}
+
+// The CommitmentInfo inside the last submitted extrinsic for the manifest's
+// hash: a tagged fleet field, or a pre-tag one-field Sha256.
+func (self *fleetMainnetTestFixture) submittedCommitmentInfo() ([]byte, bool) {
+	raw, err := codec.HexDecodeString(self.nativeSigned)
+	if err != nil {
+		return nil, false
+	}
+	hash, err := self.manifest.CommitmentHash()
+	if err != nil {
+		return nil, false
+	}
+	tagged, err := crv4.EncodeFleetCommitmentInfo(hash)
+	if err == nil && bytes.Contains(raw, tagged) {
+		return tagged, true
+	}
+	legacy, err := crv4.EncodeSourceCommitmentInfo(hash)
+	if err == nil && bytes.Contains(raw, legacy) {
+		return legacy, true
+	}
+	return nil, false
 }

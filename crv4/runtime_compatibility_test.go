@@ -10,8 +10,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -283,7 +286,11 @@ func TestProvisionalRuntimeCompatibilityExactArtifactAndFailureRecovery(t *testi
 	}
 }
 
-func TestProvisionalRuntimeCompatibilityActualSchedulePreservesEligibility(t *testing.T) {
+// Serves the schedule fixture under an unreviewed successor whose metadata
+// keeps the consumed interface; only 461 is reviewed. Compatibility is not
+// yet installed.
+func newProvisionalValidatorScheduleTestFixture(t *testing.T) (*validatorStakeTestFixture, ValidatorScheduleQuery) {
+	t.Helper()
 	fixture, query := newValidatorScheduleTestFixture(t)
 	identity := fixture.identity
 	metadata, _, encoded := provisionalRuntimeMetadataTest(t)
@@ -319,6 +326,12 @@ func TestProvisionalRuntimeCompatibilityActualSchedulePreservesEligibility(t *te
 		}
 		return priorHook(ctx, target, method, args...)
 	}
+	return fixture, query
+}
+
+func TestProvisionalRuntimeCompatibilityActualSchedulePreservesEligibility(t *testing.T) {
+	fixture, query := newProvisionalValidatorScheduleTestFixture(t)
+	identity := fixture.identity
 	if err := identity.chain.EnableProvisionalRuntimeCompatibility(query.GenesisHash, func(AuthenticatedRuntimeArtifact) error { return nil }); err != nil {
 		t.Fatal(err)
 	}
@@ -332,16 +345,77 @@ func TestProvisionalRuntimeCompatibilityActualSchedulePreservesEligibility(t *te
 	}
 }
 
+// Source signatures consume a proof issued by real local transport reads;
+// unobserved proofs and relabeled records cannot substitute signing authority.
 func TestProvisionalRuntimeCompatibilitySourceSignsActualDomainAndRejectsRelabeling(t *testing.T) {
-	metadata, hash, _ := provisionalRuntimeMetadataTest(t)
+	_, hash, encoded := provisionalRuntimeMetadataTest(t)
 	version := RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: provisionalRuntimeSuccessorTestSpec, TransactionVersion: 1, StateVersion: 1}
-	chain := &Chain{Meta: metadata, GenesisHash: types.Hash{8}, Runtime: &types.RuntimeVersion{SpecName: "node-subtensor", SpecVersion: types.U32(provisionalRuntimeSuccessorTestSpec), TransactionVersion: 1}}
-	if err := chain.EnableProvisionalRuntimeCompatibility(chain.GenesisHash, func(AuthenticatedRuntimeArtifact) error { return nil }); err != nil {
+	genesis, block := types.Hash{8}, types.Hash{4}
+	identity := RuntimeArtifactIdentity{Version: version, CodeHash: types.Hash{9}.Hex(), MetadataHash: hash}
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		var rpcRequest chainContextRPCRequest
+		if err := json.NewDecoder(request.Body).Decode(&rpcRequest); err != nil {
+			t.Error(err)
+			writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		expected := []json.RawMessage{json.RawMessage(fmt.Sprintf("%q", block.Hex()))}
+		var result any
+		switch rpcRequest.Method {
+		case "chain_getBlockHash":
+			expected = []json.RawMessage{json.RawMessage("0")}
+			result = genesis.Hex()
+		case "state_getRuntimeVersion":
+			result = map[string]any{"specName": version.SpecName, "specVersion": version.SpecVersion, "transactionVersion": version.TransactionVersion, "stateVersion": version.StateVersion, "apis": []any{[]any{"0x8375104b299b74c5", 2}}}
+		case "state_getStorageHash":
+			expected = append([]json.RawMessage{json.RawMessage(`"0x3a636f6465"`)}, expected...)
+			result = identity.CodeHash
+		case "state_getMetadata":
+			result = encoded
+		default:
+			t.Errorf("unexpected or mutating source runtime rpc %s", rpcRequest.Method)
+			writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if !reflect.DeepEqual(rpcRequest.Params, expected) {
+			t.Errorf("source runtime rpc %s lost its exact selector: %s", rpcRequest.Method, rpcRequest.Params)
+			writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		writeChainContextRPCResult(writer, rpcRequest, result)
+	}))
+	t.Cleanup(server.Close)
+	client, err := dialContextSubstrateClient(t.Context(), server.URL)
+	if err != nil {
 		t.Fatal(err)
 	}
-	identity := RuntimeArtifactIdentity{Version: version, CodeHash: types.Hash{9}.Hex(), MetadataHash: hash}
-	chain.provisionalRuntime.artifacts[identity] = AuthenticatedRuntimeArtifact{BlockHash: types.Hash{4}, GenesisHash: chain.GenesisHash, Version: version, CodeHash: identity.CodeHash, MetadataHash: hash, Metadata: metadata, CompatibilityProfile: ProvisionalRuntimeCompatibilityProfile}
-	chain.runtimeCompatibilityProof = &runtimeCompatibilityProof{owner: chain.provisionalRuntime, identity: identity, metadata: metadata}
+	t.Cleanup(client.Close)
+	chain := &Chain{API: &gsrpc.SubstrateAPI{Client: client}, GenesisHash: genesis}
+	observations := 0
+	if err := chain.EnableProvisionalRuntimeCompatibility(genesis, func(artifact AuthenticatedRuntimeArtifact) error {
+		observations++
+		if artifact.BlockHash != block || artifact.GenesisHash != genesis || artifact.Version != version || artifact.CodeHash != identity.CodeHash || artifact.MetadataHash != hash {
+			return errors.New("source runtime observation changed identity")
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	allowed, ok := ReviewedRuntimeArtifact(RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: ReviewedRuntimeSpecVersion, TransactionVersion: 1, StateVersion: 1})
+	if !ok {
+		t.Fatal("reviewed source fixture authority missing")
+	}
+	artifact, err := AuthenticateRuntimeArtifactAtContext(t.Context(), chain, block, allowed)
+	if err != nil || observations != 1 {
+		t.Fatalf("source runtime authentication: observations=%d err=%v", observations, err)
+	}
+	if err := chain.BindRuntimeArtifact(artifact); err != nil {
+		t.Fatal(err)
+	}
+	unobserved := *chain
+	proof := *chain.runtimeCompatibilityProof
+	proof.transport = runtimeTransportObservation{}
+	unobserved.runtimeCompatibilityProof = &proof
 	for _, mecid := range []*uint8{nil, new(uint8)} {
 		prepared, key := sourcePreparedTest(t)
 		prepared.Mecid = mecid
@@ -350,6 +424,9 @@ func TestProvisionalRuntimeCompatibilitySourceSignsActualDomainAndRejectsRelabel
 		signSourcePreparedTest(t, prepared, key, nil)
 		if err := chain.ValidatePreparedSource(prepared); err != nil {
 			t.Fatalf("actual metadata signed domain: %v", err)
+		}
+		if err := unobserved.ValidatePreparedSource(prepared); err == nil {
+			t.Fatal("source proof without its authenticated transport acquired signing authority")
 		}
 		strict := *chain
 		strict.provisionalRuntime = nil

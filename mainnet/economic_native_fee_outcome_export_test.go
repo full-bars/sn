@@ -20,7 +20,11 @@ import (
 func TestNativeFeeOutcomeExportSettlementFixtures(t *testing.T) {
 	directory := os.Getenv("URNETWORK_NATIVE_FEE_EXPORT_DIRECTORY")
 	if directory == "" {
+		// t.TempDir follows the umask; the output must be private under any.
 		directory = t.TempDir()
+		if err := os.Chmod(directory, 0700); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if !filepath.IsAbs(directory) || filepath.Clean(directory) != directory {
 		t.Fatal("set URNETWORK_NATIVE_FEE_EXPORT_DIRECTORY to the selected private fixture output directory")

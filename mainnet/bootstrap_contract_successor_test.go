@@ -38,7 +38,7 @@ func bootstrapSuccessorTestInspect(t *testing.T, f *evmCreateFixture, request bo
 	if err != nil {
 		t.Fatal(err)
 	}
-	return inspectBootstrapContractSuccessor(t.Context(), reserve, f.configPath, request, rootObjectHash(request))
+	return inspectBootstrapContractSuccessor(f.storage.Context, reserve, f.configPath, request, rootObjectHash(request))
 }
 
 // Execute the approved eight actions in the local EVM before any proposal can
@@ -58,6 +58,7 @@ func bootstrapSuccessorTestComplete(t *testing.T, f *evmCreateFixture) {
 // identical custody identity nor a reused original sender/nonce can be proposed.
 func TestBootstrapContractSuccessorRequestKeepsIncrementalScope(t *testing.T) {
 	f := newEvmEvidenceFixture(t)
+	prepared := bootstrapContractTestFresh(t, f.config.Plan.RunDirectory)
 	request := bootstrapSuccessorTestRequest(f.config, "sha256:"+strings.Repeat("cd", 32))
 	if err := request.validate(f.config); err != nil {
 		t.Fatal(err)
@@ -101,7 +102,7 @@ func TestBootstrapContractSuccessorRequestKeepsIncrementalScope(t *testing.T) {
 	if err := request.validate(config); err == nil || !strings.Contains(err.Error(), "overflows") {
 		t.Fatal("additive lifetime ceiling lost the original liability", err)
 	}
-	if len(bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)) != 0 || len(f.counts) != 0 {
+	if !reflect.DeepEqual(prepared, mainnetNamespaceTest(t, f.config.Plan.RunDirectory)) || len(f.counts) != 0 {
 		t.Fatal("request validation opened execution custody or a route")
 	}
 }
@@ -194,8 +195,16 @@ func TestBootstrapContractSuccessorRequiresCompleteOriginalCustody(t *testing.T)
 	if err == nil || !strings.Contains(err.Error(), "eight retained successful") || proposal.Schema != "" || !maps.Equal(before, bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)) {
 		t.Fatal("successor adopted an unfinished signed original action", err)
 	}
+	// The journal is held aside and returned, and the marker is rewritten in
+	// place: retained custody binds both inodes, so equal bytes in another
+	// file would not be the original owner's custody.
 	path := filepath.Join(f.config.Plan.RunDirectory, evmEvidenceCreateStateFile)
-	if err := os.Remove(path); err != nil {
+	held := filepath.Join(filepath.Dir(f.config.Plan.RunDirectory), "synthetic-held-original-evidence.json")
+	saved, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(path, held); err != nil {
 		t.Fatal(err)
 	}
 	for _, partial := range []bool{false, true} {
@@ -209,10 +218,17 @@ func TestBootstrapContractSuccessorRequiresCompleteOriginalCustody(t *testing.T)
 			t.Fatal("successor repaired missing or partial original custody", partial, err)
 		}
 	}
-	for _, suffix := range []string{"", ".lock"} {
-		if err := os.WriteFile(path+suffix, []byte(before[path+suffix]), 0600); err != nil {
-			t.Fatal(err)
-		}
+	if err := os.Rename(held, path); err != nil {
+		t.Fatal(err)
+	}
+	if restored, err := os.Stat(path); err != nil || !os.SameFile(saved, restored) {
+		t.Fatal("fixture did not restore the original evidence inode", err)
+	}
+	if err := os.WriteFile(path+".lock", []byte(before[path+".lock"]), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if !maps.Equal(before, bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)) {
+		t.Fatal("fixture did not restore the exact original custody bytes")
 	}
 	if _, code, diagnostic := f.command("resume", "--action", "evidence-create"); code != 0 {
 		t.Fatal("failed proposal leaked original ownership", diagnostic)
@@ -223,6 +239,7 @@ func TestBootstrapContractSuccessorRequiresCompleteOriginalCustody(t *testing.T)
 // alias one of the deployed contract addresses even before custody is opened.
 func TestBootstrapContractSuccessorRejectsChangedOwnerAndContractRelayer(t *testing.T) {
 	f := newEvmEvidenceFixture(t)
+	prepared := bootstrapContractTestFresh(t, f.config.Plan.RunDirectory)
 	request := bootstrapSuccessorTestRequest(f.config, "sha256:"+strings.Repeat("cd", 32))
 	request.IntendedOwnerSafe = common.Address{19: 198}
 	if _, err := bootstrapSuccessorTestInspect(t, f, request); err == nil || !strings.Contains(err.Error(), "exact configured owner") {
@@ -233,7 +250,7 @@ func TestBootstrapContractSuccessorRejectsChangedOwnerAndContractRelayer(t *test
 	if _, err := bootstrapSuccessorTestInspect(t, f, request); err == nil || !strings.Contains(err.Error(), "contract address") {
 		t.Fatal("successor proposed a contract as its relayer", err)
 	}
-	if len(bootstrapContractTestJournals(t, f.config.Plan.RunDirectory)) != 0 || len(f.counts) != 0 {
+	if !reflect.DeepEqual(prepared, mainnetNamespaceTest(t, f.config.Plan.RunDirectory)) || len(f.counts) != 0 {
 		t.Fatal("identity rejection opened original custody or a route")
 	}
 }

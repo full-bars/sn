@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // These controls reach the real public restore dispatcher and the unchanged
 // guarded validator constructor. No exported test-only preparation API exists.

@@ -278,8 +278,17 @@ func validateFleetRenewalAllowance(cfg *ResolvedConfig, renewal FleetRenewal, ra
 
 func fleetRenewalPlanActions(p *SetupPlan, renewal FleetRenewal) ([]Action, error) {
 	raw, err := fleetRenewalActions(p, renewal)
-	if err != nil || renewal.AllowanceExtensionWei.IsZero() {
+	if err != nil {
 		return raw, err
+	}
+	return fleetRenewalPlanActionsFromRaw(p, renewal, raw)
+}
+
+// Derive the approved append from one computation of its raw fleet actions;
+// the raw actions themselves are not modified.
+func fleetRenewalPlanActionsFromRaw(p *SetupPlan, renewal FleetRenewal, raw []Action) ([]Action, error) {
+	if renewal.AllowanceExtensionWei.IsZero() {
+		return raw, nil
 	}
 	spend, err := maximumActionSpend(raw)
 	if err != nil {
@@ -382,11 +391,11 @@ func appendFleetRenewalPlanForHistory(base *SetupPlan, renewal FleetRenewal, his
 	if renewal.SourcePlanHash != base.PlanHash || renewal.Round != uint64(len(base.FleetRenewals)+1) {
 		return nil, errors.New("renewal does not extend the current plan")
 	}
-	actions, err := fleetRenewalPlanActions(base, renewal)
+	rawActions, err := fleetRenewalActions(base, renewal)
 	if err != nil {
 		return nil, err
 	}
-	rawActions, err := fleetRenewalActions(base, renewal)
+	actions, err := fleetRenewalPlanActionsFromRaw(base, renewal, rawActions)
 	if err != nil {
 		return nil, err
 	}

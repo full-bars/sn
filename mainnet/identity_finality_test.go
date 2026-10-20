@@ -9,9 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"reflect"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 
@@ -323,24 +325,33 @@ func TestIdentityFinalityRetriesTransientClosingReads(t *testing.T) {
 
 // Cancellation at the retry barrier preserves the transport incident and
 // leaves no identity; it is never promoted to a stable canonical mismatch.
+// Only a physical transport failure reaches that barrier: a cause the read
+// owner cannot classify ends the read at once with the same incident.
 func TestIdentityFinalityClosingOutageRetainsTransportCause(t *testing.T) {
-	f := newIdentityFinalityFixture(t)
-	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
-	closing := false
-	f.after = func(method string, _ []any) { closing = closing || method == "state_getRuntimeVersion" }
-	transport := f.client.httpClient.Transport
-	outage := errors.New("synthetic finality route outage")
-	f.client.httpClient.Transport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
-		if closing {
-			return nil, outage
+	for _, c := range []struct {
+		outage error
+		waits  int
+	}{
+		{outage: &net.OpError{Op: "read", Net: "tcp", Err: syscall.ECONNRESET}, waits: 1},
+		{outage: errors.New("synthetic finality route outage")},
+	} {
+		f := newIdentityFinalityFixture(t)
+		ctx, cancel := context.WithCancel(t.Context())
+		closing, waits := false, 0
+		f.after = func(method string, _ []any) { closing = closing || method == "state_getRuntimeVersion" }
+		transport := f.client.httpClient.Transport
+		f.client.httpClient.Transport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
+			if closing {
+				return nil, c.outage
+			}
+			return transport.RoundTrip(request)
+		})
+		f.client.retryWait = func(context.Context, time.Duration) error { waits++; cancel(); return ctx.Err() }
+		identity, err := f.client.readIdentityAt(ctx, f.mapping.nativeHash)
+		cancel()
+		if errors.Is(err, context.Canceled) != (c.waits == 1) || waits != c.waits || !errors.Is(err, c.outage) || errors.Is(err, errRpcIntegrity) || identity != (chainIdentity{}) {
+			t.Fatalf("closing transport outage was reclassified or published: waits=%d %+v %v", waits, identity, err)
 		}
-		return transport.RoundTrip(request)
-	})
-	f.client.retryWait = func(context.Context, time.Duration) error { cancel(); return ctx.Err() }
-	identity, err := f.client.readIdentityAt(ctx, f.mapping.nativeHash)
-	if !errors.Is(err, context.Canceled) || !errors.Is(err, outage) || errors.Is(err, errRpcIntegrity) || identity != (chainIdentity{}) {
-		t.Fatalf("closing transport outage was reclassified or published: %+v %v", identity, err)
 	}
 }
 

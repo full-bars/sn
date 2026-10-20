@@ -62,6 +62,9 @@ func isAuthRestartFailure(err error) bool {
 // sudoAvailableFn reports whether passwordless sudo works for this user
 // (`sudo -n true`). Var seam for tests.
 var sudoAvailableFn = func() bool {
+	if runtime.GOOS == "windows" {
+		return false
+	}
 	out, err := exec.Command("sudo", "-n", "true").CombinedOutput()
 	if err != nil {
 		_ = out
@@ -131,6 +134,24 @@ func restartLadder(p Provider, stagedTool string) error {
 // one-time scoped polkit rule (after which plain `update -f` restarts on its
 // own, no sudo involved) and the immediate manual restart.
 func printRestartElevationGuidance(p Provider) {
+	// OpenRC has no polkit and no `systemctl restart`: the equivalent advice is
+	// `sudo rc-service urnetwork restart`, and the permanent fix is the pinned
+	// sudoers rule tracked as a follow-up rather than a polkit rule that would
+	// never be consulted. Printing the systemd text here would send an Alpine
+	// operator chasing a file and a command that do not exist on their box.
+	//
+	// Gate on active supervision, not on the init script's mere presence: a
+	// service that is installed but not yet started (a fresh install) has an
+	// init script but no supervised provider, and printing restart guidance
+	// there would be noise — the operator's real next step is `urnet-tools
+	// start`, not a sudo restart of a service that is not running.
+	if p.Supervisor == "openrc" || (p.Supervisor == "" && p.Unit == "" && providerSupervisedByOpenRCFn(p)) {
+		fmt.Print("\nThe provider binary was updated, but restarting the OpenRC service needs root.\n" +
+			"\nRestart it with:\n\n  sudo rc-service " + openrcServiceName + " restart\n\n" +
+			"\n(Under OpenRC every update ends in a service restart, and restarting a service is a root\n" +
+			"action - there is no per-user equivalent of `systemctl --user restart`.)\n\n")
+		return
+	}
 	unit := p.Unit
 	user := p.User
 	if user == "" {

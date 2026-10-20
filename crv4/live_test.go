@@ -2,10 +2,16 @@ package crv4
 
 import (
 	"crypto/rand"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 )
 
 // Live conformance tests (the SP-2 gate). Skipped unless SP2_LIVE=1.
@@ -13,7 +19,8 @@ import (
 //	SP2_LIVE=1 [SP2_SUBSTRATE=wss://...] [SP2_NETUID=N] [SP2_BLOCK_TIME=secs] go test ./crv4/ -run TestLive -v
 //
 // Nothing here submits an extrinsic; the tests read metadata/storage and
-// dry-encode a signed commit.
+// dry-encode a signed commit. The TestRecorded tests run the same checks on
+// every go test, against recordedChain instead of a public endpoint.
 func liveChain(t *testing.T) *Chain {
 	t.Helper()
 	if os.Getenv("SP2_LIVE") != "1" {
@@ -39,12 +46,101 @@ func liveNetuid() uint16 {
 	return 1
 }
 
+// The netuid whose schedule recordedChain serves.
+const recordedNetuid = 1
+
+// recordedChain dials a local JSON-RPC endpoint that serves the runtime-475
+// metadata and version captured read-only from Finney, one synthetic head,
+// and the SP-2 storage of recordedNetuid. Any other request fails the test.
+func recordedChain(t *testing.T) *Chain {
+	t.Helper()
+	metadata, wire := runtime475TestMetadata(t)
+	header, head := receiptTestHeader(t, types.Hash{4}, 1000, nil, 0)
+	storage := map[string]string{}
+	set := func(value any, item string, args ...[]byte) {
+		key, err := types.CreateStorageKey(metadata, PalletName, item, args...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if storage[key.Hex()], err = codec.EncodeToHex(value); err != nil {
+			t.Fatal(err)
+		}
+	}
+	netuid := encodeNetuid(recordedNetuid)
+	set(types.U16(CommitRevealVersion4), "CommitRevealWeightsVersion")
+	set(types.U64(1), "RevealPeriodEpochs", netuid)
+	set(types.U16(360), "Tempo", netuid)
+	set(types.U64(990), "LastEpochBlock", netuid)
+	set(types.U64(41), "SubnetEpochIndex", netuid)
+	set(types.U64(10), "BlocksSinceLastStep", netuid)
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		var call chainContextRPCRequest
+		if err := json.NewDecoder(request.Body).Decode(&call); err != nil {
+			t.Errorf("decode recorded RPC request: %v", err)
+			writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		params := make([]string, len(call.Params))
+		for index, param := range call.Params {
+			params[index] = string(param)
+		}
+		quoted := strconv.Quote(head.Hex())
+		var result any
+		switch {
+		case call.Method == "state_getMetadata" && len(params) == 0:
+			result = wire
+		case call.Method == "state_getRuntimeVersion" && len(params) == 0:
+			result = json.RawMessage(runtime475TestVersionReply)
+		case call.Method == "chain_getBlockHash" && len(params) == 1 && params[0] == "0":
+			result = types.Hash{8}.Hex()
+		case call.Method == "chain_getBlockHash" && (len(params) == 0 || len(params) == 1 && params[0] == "1000"):
+			result = head.Hex()
+		case call.Method == "chain_getHeader" && len(params) == 1 && params[0] == quoted:
+			result = receiptTestHeaderWire(header)
+		case call.Method == "state_getStorage" && (len(params) == 1 || len(params) == 2 && params[1] == quoted):
+			var key string
+			if err := json.Unmarshal(call.Params[0], &key); err != nil {
+				t.Errorf("recorded storage key %s: %v", params[0], err)
+			}
+			if value, ok := storage[key]; ok {
+				result = value
+			}
+		default:
+			t.Errorf("unexpected recorded RPC %s%v", call.Method, params)
+			writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		writeChainContextRPCResult(writer, call, result)
+	}))
+	t.Cleanup(server.Close)
+	chain, err := DialChain(server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(chain.API.Client.Close)
+	return chain
+}
+
 // TestLiveMetadataConformance verifies the live runtime exposes
 // commit_timelocked_weights / commit_timelocked_mechanism_weights with the
 // expected argument codecs, that every signed extension is either handled or
 // zero-size, and that all storage items this package reads exist.
 func TestLiveMetadataConformance(t *testing.T) {
-	chain := liveChain(t)
+	checkMetadataConformance(t, liveChain(t))
+}
+
+// The recorded runtime-475 metadata is conformant, with the call indices
+// that the live check only notes.
+func TestRecordedMetadataConformance(t *testing.T) {
+	report := checkMetadataConformance(t, recordedChain(t))
+	if report.SpecName != "node-subtensor" || report.SpecVersion != 475 || report.PalletIndex != 7 ||
+		report.CommitTimelocked.CallIndex != 113 || report.CommitMechanism.CallIndex != 118 || report.LegacyCrv3Present {
+		t.Errorf("recorded runtime-475 report = %+v", report)
+	}
+}
+
+func checkMetadataConformance(t *testing.T, chain *Chain) *MetadataReport {
+	t.Helper()
 	report, err := chain.CheckMetadata()
 	if err != nil {
 		t.Fatalf("CheckMetadata: %v", err)
@@ -68,12 +164,21 @@ func TestLiveMetadataConformance(t *testing.T) {
 	if report.CommitMechanism.Found && report.CommitMechanism.CallIndex != 118 {
 		t.Logf("note: %s call_index=%d (was 118 at v3.4.9-424)", CallCommitTimelockedMech, report.CommitMechanism.CallIndex)
 	}
+	return report
 }
 
 // TestLiveCommitRevealVersion asserts the chain's expected
 // commit_reveal_version equals the version this package submits by default.
 func TestLiveCommitRevealVersion(t *testing.T) {
-	chain := liveChain(t)
+	checkCommitRevealVersion(t, liveChain(t))
+}
+
+func TestRecordedCommitRevealVersion(t *testing.T) {
+	checkCommitRevealVersion(t, recordedChain(t))
+}
+
+func checkCommitRevealVersion(t *testing.T, chain *Chain) {
+	t.Helper()
 	v, err := chain.CommitRevealVersion()
 	if err != nil {
 		t.Fatalf("CommitRevealVersion: %v", err)
@@ -89,8 +194,28 @@ func TestLiveCommitRevealVersion(t *testing.T) {
 // the drand quicknet clock.
 func TestLiveEpochScheduleAndRound(t *testing.T) {
 	chain := liveChain(t)
-	netuid := liveNetuid()
+	// The public testnet targets standard 12s blocks (measured ~12-15s;
+	// SDK default block_time is 12.0). Fast blocks (0.25s) are a localnet
+	// docker feature (SP-3).
+	blockTime := 12.0
+	if v := os.Getenv("SP2_BLOCK_TIME"); v != "" {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			blockTime = f
+		}
+	}
+	checkEpochScheduleAndRound(t, chain, liveNetuid(), blockTime)
+}
 
+// The recorded schedule is read at its exact head, with every item decoded.
+func TestRecordedEpochScheduleAndRound(t *testing.T) {
+	state := checkEpochScheduleAndRound(t, recordedChain(t), recordedNetuid, 12.0)
+	if *state != (EpochScheduleState{LastEpochBlock: 990, SubnetEpochIndex: 41, Tempo: 360, BlocksSinceLastStep: 10, CurrentBlock: 1000}) {
+		t.Errorf("recorded schedule state = %+v", *state)
+	}
+}
+
+func checkEpochScheduleAndRound(t *testing.T, chain *Chain, netuid uint16, blockTime float64) *EpochScheduleState {
+	t.Helper()
 	state, err := chain.EpochScheduleState(netuid)
 	if err != nil {
 		t.Fatalf("EpochScheduleState: %v", err)
@@ -102,15 +227,6 @@ func TestLiveEpochScheduleAndRound(t *testing.T) {
 	rpe, err := chain.RevealPeriodEpochs(netuid)
 	if err != nil {
 		t.Fatalf("RevealPeriodEpochs: %v", err)
-	}
-	// The public testnet targets standard 12s blocks (measured ~12-15s;
-	// SDK default block_time is 12.0). Fast blocks (0.25s) are a localnet
-	// docker feature (SP-3).
-	blockTime := 12.0
-	if v := os.Getenv("SP2_BLOCK_TIME"); v != "" {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			blockTime = f
-		}
 	}
 	now := time.Now()
 	round, revealBlock, err := RevealRound(now, state, rpe, blockTime)
@@ -125,6 +241,7 @@ func TestLiveEpochScheduleAndRound(t *testing.T) {
 	if round <= current {
 		t.Errorf("reveal round %d not in the future (current %d)", round, current)
 	}
+	return state
 }
 
 // TestLiveDryRunExtrinsicEncoding builds and signs a full CRv4 commit
@@ -132,9 +249,15 @@ func TestLiveEpochScheduleAndRound(t *testing.T) {
 // submitting. Failure here means the signed-extension set or call encoding
 // changed.
 func TestLiveDryRunExtrinsicEncoding(t *testing.T) {
-	chain := liveChain(t)
-	netuid := liveNetuid()
+	checkDryRunExtrinsicEncoding(t, liveChain(t), liveNetuid())
+}
 
+func TestRecordedDryRunExtrinsicEncoding(t *testing.T) {
+	checkDryRunExtrinsicEncoding(t, recordedChain(t), recordedNetuid)
+}
+
+func checkDryRunExtrinsicEncoding(t *testing.T, chain *Chain, netuid uint16) {
+	t.Helper()
 	var seed [32]byte
 	if _, err := rand.Read(seed[:]); err != nil {
 		t.Fatal(err)

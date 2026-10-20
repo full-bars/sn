@@ -59,7 +59,7 @@ func validatorRuntimeIdentityTestMetadata(t *testing.T) string {
 	return encoded
 }
 
-// Assigns the two concrete raw RPC result types exercised by this boundary.
+// Assigns raw RPC result types, preserving JSON null for nullable string reads.
 func setValidatorRuntimeIdentityTestResult(result any, value any) error {
 	switch target := result.(type) {
 	case *json.RawMessage:
@@ -76,6 +76,12 @@ func setValidatorRuntimeIdentityTestResult(result any, value any) error {
 		}
 		*target = text
 		return nil
+	case **string:
+		encoded, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+		return json.Unmarshal(encoded, target)
 	default:
 		return fmt.Errorf("unexpected validator runtime RPC result type %T", result)
 	}

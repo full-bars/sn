@@ -1,0 +1,19 @@
+{
+  "data_available_bytes": 16853340160,
+  "expiry_monotonic_us": 1096656030105,
+  "holder_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-canonical-lease-generation3-108-20261005/holder-receipt-v1.json",
+    "sha256": "bcae9e28d9e1f3a2eca8cd239abf368fd02e0023005fa67c0d7ffaef674f0972"
+  },
+  "kernel_lock": [
+    "32: FLOCK  ADVISORY  WRITE 3567744 08:21:16941991 0 EOF"
+  ],
+  "memory_available_bytes": 129562800128,
+  "pid": 3567744,
+  "schema": "canonical-generation3-actual-root-readback-v1",
+  "scope": "Resource admission holder only; no compilation, test, financial authority or deployment outcome inferred.",
+  "starttime": "106785602",
+  "status": "HELD_ACTUAL",
+  "time_ns": 1791195979471581368,
+  "user_properties": "RuntimeMaxUSec=8h\nMainPID=3567744\nExecMainStartTimestampMonotonic=1067856030105\nActiveState=active\nInvocationID=e24af10045a14bcdb3e8a00ff536dcff\n"
+}

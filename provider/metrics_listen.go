@@ -91,6 +91,48 @@ func isTailscaleInterface(name string) bool {
 	return runtime.GOOS == "darwin" && strings.HasPrefix(lower, "utun")
 }
 
+// containerAddrsFunc lists a container's own interface addresses. A var so
+// tests can stub it.
+var containerAddrsFunc = interfaceUnicastAddrs
+
+func interfaceUnicastAddrs() []netip.Addr {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil
+	}
+	var out []netip.Addr
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			if prefix, err := netip.ParsePrefix(addr.String()); err == nil {
+				out = append(out, prefix.Addr().Unmap())
+			}
+		}
+	}
+	return out
+}
+
+// publiclyAddressed reports whether the box or container holds an address
+// that is routable on the public internet (global unicast, not private,
+// unique-local or Tailscale CGNAT). A bridged container only has a private
+// address. A container that shares the host's network (--network host) sees the
+// host's public addresses, and binding 0.0.0.0 there would publish /metrics
+// (which carries per-proxy series) on the public internet.
+func publiclyAddressed() bool {
+	for _, addr := range containerAddrsFunc() {
+		if addr.IsGlobalUnicast() && !addr.IsPrivate() && !tailscaleCGNAT.Contains(addr) {
+			return true
+		}
+	}
+	return false
+}
+
 func runningInContainer() bool {
 	for _, marker := range metricsContainerMarkers {
 		if _, err := os.Stat(marker); err == nil {
@@ -147,7 +189,15 @@ func listenMetrics(wait time.Duration) (net.Listener, error) {
 		return listenOrWait(addr, wait)
 	}
 
+	// The wide 0.0.0.0 bind is for a bridged container, where only ports the
+	// operator publishes are reachable. A container that shares a publicly
+	// addressed network gets the loopback + Tailscale behavior instead, so the
+	// default can never publish /metrics on a public interface.
 	container := runningInContainer()
+	if container && publiclyAddressed() {
+		metricsLog("[metrics] this container shares a publicly addressed network: /metrics stays on loopback and Tailscale only (use `urnet-tools metrics listen <ip:port>` to choose another address)\n")
+		container = false
+	}
 	host := "127.0.0.1"
 	if container {
 		host = "0.0.0.0"

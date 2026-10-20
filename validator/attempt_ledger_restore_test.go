@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Synthetic signed ledgers pass through physical export, the public fixed
 // adapter, real plan/apply publication and the original guarded runtime owner.

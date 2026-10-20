@@ -38,6 +38,7 @@ fi
 
 expected_go_ethereum_version="v1.17.0"
 expected_abigen_output="abigen version 1.17.0-stable"
+expected_abigen_release_output="abigen version 1.17.0-stable-0cf3d3ba"
 go_ethereum_version=""
 while read -r first second third _; do
     if [[ "$first" == "github.com/ethereum/go-ethereum" ]]; then
@@ -82,8 +83,8 @@ if ! actual_abigen_output="$("$abigen" --version 2>&1)"; then
     echo "could not read abigen version from $abigen: $actual_abigen_output" >&2
     exit 1
 fi
-if [[ "$actual_abigen_output" != "$expected_abigen_output" ]]; then
-    echo "wrong abigen version at $abigen: got '$actual_abigen_output', want '$expected_abigen_output'" >&2
+if [[ "$actual_abigen_output" != "$expected_abigen_output" && "$actual_abigen_output" != "$expected_abigen_release_output" ]]; then
+    echo "wrong abigen version at $abigen: got '$actual_abigen_output', want '$expected_abigen_output' or '$expected_abigen_release_output'" >&2
     echo "install it with: go install github.com/ethereum/go-ethereum/cmd/abigen@$expected_go_ethereum_version" >&2
     exit 1
 fi
@@ -100,6 +101,15 @@ jq -c .abi "$artifact_root/STCoordinator.sol/STCoordinator.json" > "$temporary_d
 jq -c .abi "$artifact_root/STSettlementVault.sol/STSettlementVault.json" > "$temporary_dir/STSettlementVault.abi.json"
 jq -c .abi "$artifact_root/STReserveSink.sol/STReserveSink.json" > "$temporary_dir/STReserveSink.abi.json"
 jq -c .abi "$artifact_root/STValidatorEvidence.sol/STValidatorEvidence.json" > "$temporary_dir/STValidatorEvidence.abi.json"
+jq -c .abi "$artifact_root/STSettlementVault2.sol/STSettlementVault2.json" > "$temporary_dir/STSettlementVault2.abi.json"
+jq -c .abi "$artifact_root/STSettlement2.sol/STSettlement2.json" > "$temporary_dir/STSettlement2.abi.json"
+jq -c .abi "$artifact_root/STClaimBatcher.sol/STClaimBatcher.json" > "$temporary_dir/STClaimBatcher.abi.json"
+# The two settlement v2 contracts and the claim batcher share struct types, so
+# one combined pass binds all three without duplicate type declarations.
+jq -n --slurpfile settlement "$temporary_dir/STSettlement2.abi.json" --slurpfile vault "$temporary_dir/STSettlementVault2.abi.json" \
+    --slurpfile batcher "$temporary_dir/STClaimBatcher.abi.json" \
+    '{contracts: {"STSettlement2.sol:STSettlement2": {abi: $settlement[0]}, "STSettlementVault2.sol:STSettlementVault2": {abi: $vault[0]}, "STClaimBatcher.sol:STClaimBatcher": {abi: $batcher[0]}}}' \
+    > "$temporary_dir/stsettlement2.combined.json"
 
 "$abigen" --v2 \
     --abi "$temporary_dir/STSubnet.abi.json" \
@@ -131,17 +141,26 @@ jq -c .abi "$artifact_root/STValidatorEvidence.sol/STValidatorEvidence.json" > "
     --type STValidatorEvidence \
     --out "$temporary_dir/stvalidatorevidence.go"
 
+"$abigen" --v2 \
+    --combined-json "$temporary_dir/stsettlement2.combined.json" \
+    --pkg stabi \
+    --out "$temporary_dir/stsettlement2.go"
+
 generated=(
     "STSubnet.abi.json:../evm/abi/STSubnet.abi.json"
     "STCoordinator.abi.json:../evm/abi/STCoordinator.abi.json"
     "STSettlementVault.abi.json:../evm/abi/STSettlementVault.abi.json"
     "STReserveSink.abi.json:../evm/abi/STReserveSink.abi.json"
     "STValidatorEvidence.abi.json:../evm/abi/STValidatorEvidence.abi.json"
+    "STSettlementVault2.abi.json:../evm/abi/STSettlementVault2.abi.json"
+    "STSettlement2.abi.json:../evm/abi/STSettlement2.abi.json"
+    "STClaimBatcher.abi.json:../evm/abi/STClaimBatcher.abi.json"
     "stsubnet.go:stsubnet.go"
     "stcoordinator.go:stcoordinator.go"
     "stsettlementvault.go:stsettlementvault.go"
     "streservesink.go:streservesink.go"
     "stvalidatorevidence.go:stvalidatorevidence.go"
+    "stsettlement2.go:stsettlement2.go"
     "STSubnet.abi.json:../stctl/st_abi.json"
 )
 
@@ -163,5 +182,5 @@ for entry in "${generated[@]}"; do
 done
 
 # stctl is a quarantined pre-1.0 monolith diagnostic. Keep its packaged ABI
-# coherent with the legacy STSubnet binding; release clients use the four
+# coherent with the legacy STSubnet binding; release clients use the other
 # generated bindings above and sim-testnet embeds the reviewed bytecode.

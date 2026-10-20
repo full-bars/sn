@@ -47,8 +47,9 @@ Quick jump:
 | `URNETWORK_PROFILE` | - | Advanced provider profile: `auto`, `lowmem`, `eco`, `turbo-v4`, or `turbo-v8`. For turbo, prefer `TURBO`. On systemd/native, set this with `urnet-tools turbo/eco/lowmode/auto` rather than a drop-in. |
 | `TURBO` | - | Set to `v4` or `v8` to enable turbo mode. Prefer this variable for Docker turbo mode. |
 | `URNETWORK_RAMLOGS` | `0` | Set to `1` to redirect provider logs to RAM instead of stdout. Cannot be used with Docker `--log-opt`. On systemd/native, set this with `urnet-tools ramlogs on\|off`. |
-| `URNETWORK_METRICS` | - | Exact bind address for the Prometheus `/metrics` endpoint, for example `100.64.0.10:9100`. Overrides `urnet-tools metrics listen`. Leave it unset and auto mode chooses: loopback plus the machine's Tailscale address on bare metal, every interface inside a container. Never bind a public interface. See [Monitoring](Monitoring.md). |
-| `URNETWORK_SKIP_AUDIT` | `0` | Set to `1` to skip the startup system audit (disk speed benchmark, ulimit, conntrack checks). Useful in Docker where host sysctls aren't visible. |
+| `URNETWORK_METRICS` | - | Exact bind address for the Prometheus `/metrics` endpoint, for example `100.64.0.10:9100`. Overrides `urnet-tools metrics listen`. Leave it unset and auto mode chooses: loopback plus the machine's Tailscale address on bare metal, and every interface inside a container only when every address it holds is private or unique-local; a container that shares a publicly addressed network stays on loopback plus Tailscale. Never bind a public interface. See [Monitoring](Monitoring.md). |
+| `URNETWORK_SKIP_AUDIT` | `0` | Set to `1` to skip the whole startup system audit (ulimit and conntrack checks, and the disk benchmark). |
+| `URNETWORK_DISK_BENCH` | unset | Controls only the startup disk write benchmark, which runs only under `URNETWORK_PROFILE=auto` and decides whether to switch to RAM logs. Unset: runs on bare metal and VMs, never inside a container, and never while the host disk is busy. `1`: also run it in a container (still skipped when the disk is busy). `0`: never run it. It is capped at 16 MiB and 3 s, writes only inside the state dir, and caches its result (see `urnet_disk_write_mbps` and `urnet_disk_slow` in `/metrics`). |
 
 ### 🌐 Proxy Feeds & Reaping
 
@@ -74,7 +75,7 @@ Quick jump:
 | :--- | :--- | :--- |
 | `ENABLE_VNSTAT` | `true` | Enables the traffic monitor on port 8080. |
 | `ENABLE_IP_CHECKER` | `false` | Diagnostic only. Prints your full public IP to container logs on startup via an external script. Distinct from dashboard identity reporting, which sends only a redacted IP. |
-| `/metrics` endpoint | auto (`9100`-`9103`) | The Prometheus metrics endpoint is enabled by default. In auto mode the listener binds loopback plus every Tailscale IPv4 address on bare metal, and every interface inside a container, trying the first free port in `9100`-`9103`. Scrape `http://<host>:<port>/metrics` from Prometheus or any compatible collector. Override the bind address with `URNETWORK_METRICS=ip:port`; disable with `urnet-tools metrics off`. |
+| `/metrics` endpoint | auto (`9100`-`9103`) | The Prometheus metrics endpoint is enabled by default. In auto mode the listener binds loopback plus every Tailscale IPv4 address on bare metal, and every interface inside a container only when every address it holds is private or unique-local (a container that shares a publicly addressed network stays on loopback plus Tailscale), trying the first free port in `9100`-`9103`. Scrape `http://<host>:<port>/metrics` from Prometheus or any compatible collector. Override the bind address with `URNETWORK_METRICS=ip:port`; disable with `urnet-tools metrics off`. |
 | `URNETWORK_PUBLIC_IP` | `<auto-detected>` | Override the public IP shown in the dashboard identity label. Display only; does not change the actual egress IP. Auto-set by Docker startup scripts. Create `~/.urnetwork/disable_ip_autodetect` or run `urnet-tools show-ip off` to prevent autodetection. See [Node-Identity.md](Node-Identity.md). |
 | `URNETWORK_HEALTH_INTERVAL` | `5m` | How often to emit a `[health]` heartbeat log line. Includes uptime, RAM stats, and active connection count. Accepts Go duration strings such as `10m` or `1h`. Minimum `1m`. |
 | `URNETWORK_PPROF` | - | Set to a `host:port` to enable the loopback-only diagnostics server (e.g. `127.0.0.1:6060`). Off by default. Serves `/debug/pprof/*`, `/metrics/pool`, and `/metrics/errors`; only literal loopback IPs are accepted (hostnames are rejected). Pull profiles via an SSH tunnel, e.g. `ssh -L 6060:127.0.0.1:6060 host` then `go tool pprof http://127.0.0.1:6060/debug/pprof/profile`. |
@@ -86,6 +87,7 @@ Quick jump:
 | `URNETWORK_AUTH_UNLIMITED` | `false` | Bypass the auth rate limiter; every auth attempt fires immediately. Equivalent to creating `~/.urnetwork/fast_auth`. Only for trusted or benchmark environments. |
 | `URNETWORK_SHM_LOG` | `/dev/shm/urnetwork.log` | Path for the RAM log. |
 | `URNETWORK_PROXY_HEALTH_DIR` | `<home>/.urnetwork` | Directory for persistent `proxy_health.state` and `proxy_traffic.state` files (Docker: `/root/.urnetwork`). |
+| `URNETWORK_CONTAINER` | unset | Set to `1` to mark the process as containerized when `/.dockerenv` is absent (Podman, Kubernetes and other runtimes). A container counts as a restart supervisor for the thrash watchdog's exit 75. |
 | `URNETWORK_CONTAINER_NAME` | `<container-id>` | Container name used in copy-paste `docker exec <name> tail -f` hints for RAM logs. |
 | `WARP_HOST` | `<hostname>` | Override the host string reported by the warp status endpoint. Diagnostic only. |
 
@@ -195,28 +197,20 @@ proxies plus the direct identity; `h3_proxies` is the proxy count only. In
 `/metrics` the same split is `urnet_h3_set_size` (the grand total) and
 `urnet_h3_proxy_set_size` (proxies only), alongside `urnet_h3_mode_info`.
 
-**Whether H3 offers DATAGRAM.** The engine enables the offer by default; sn
-gates it so an operator decides.
+**Whether H3 offers DATAGRAM.** QUIC DATAGRAM is always on at the upstream
+default in this build: the offer is made on every H3 connection, and a server
+that accepts sends its small frames to this provider as datagrams while a
+server that does not understand the offer echoes it back and the connection
+runs on the plain stream. There is no toggle and no environment variable.
 
-| Key | Values | Default | Command | Meaning |
-| :--- | :--- | :--- | :--- | :--- |
-| `h3_datagram` | `on`, `off` | `off` | `urnet-tools set h3-datagram on\|off` | Offer QUIC DATAGRAM when an H3 connection dials. A server that accepts sends its small frames to this provider as datagrams. A server that does not understand the offer echoes it back and the connection runs on the plain stream. There is no environment variable. |
-| `h3_datagram_send` | `on`, `off` | `off` | `urnet-tools set h3-datagram-send on\|off` | Also send small frames as datagrams on a connection where the server accepted DATAGRAM. Larger frames and everything else stay on the reliable stream. |
+The `h3_datagram` and `h3_datagram_send` control keys are accepted so 3.23-fix
+tooling does not fail, but they change nothing here: setting either one returns
+an explicit acknowledgement that datagrams stay on at the upstream default
+instead of claiming an effect the pinned connect revision cannot provide.
+Clearing them restores the same always-on default.
 
-Both keys are live: no restart. `h3-datagram` is read when an H3 connection
-dials, so changing it re-dials that connection with the new setting; a box with
-the offer off grows no datagram health fields. `h3-datagram-send` is read per
-message, so it takes effect on the next message with no reconnect.
-
-DATAGRAM only carries traffic on an H3 connection where the server accepted the
-offer, so turning it on one box first and watching `[health]` (`h3_dg_rx`,
-`dg_tx`, `dg_tx_stream`, `dg_tx_err`) and `/metrics` (`urnet_h3_datagram_*`) is
-the intended first step. There is no `offered`/`accepted` counter on this
-provider yet: the pinned connect revision exposes the data plane but not those
-counters.
-
-Which identities may offer datagrams follows the `h3` set, decided by the one
-predicate `snH3Eligible` in `provider/h3_mode.go`.
+Which identities carry the datagram-capable H3 connections follows the `h3`
+set above.
 
 ## 🎛️ Profile Selection
 
@@ -271,6 +265,10 @@ Memory pressure alone does not mean the box is thrashing. The watchdog watches f
 - A restart leaves a **thrash cap** (`~/.urnetwork/thrash_cap.json`): the next start begins with a smaller pool so it fits in RAM — about 60% of what was running before the restart, at least one proxy — and the cap expires 24 hours after the last restart. Nothing running before the restart sets no new cap (there is nothing to protect).
 
 The supervised restart needs a service unit that restarts on exit status 75. The shipped units use `Restart=on-failure`, which covers it. If you override the unit with a drop-in, use `Restart=on-failure` or `Restart=always`, keep 75 (or its name `TEMPFAIL`) out of `RestartPreventExitStatus`, and do not mark 75 a success in `SuccessExitStatus` — under `Restart=on-failure` systemd would then treat the watchdog exit as a clean stop. The installer warns when a drop-in weakens any of this.
+
+**In a container** the watchdog counts the container as a supervisor, the same as systemd, with no extra switch beyond self-heal. A container is recognised by `/.dockerenv`, or by `URNETWORK_CONTAINER=1` on runtimes without that file (Podman, Kubernetes). Use a restart policy that restarts on exit (`restart: unless-stopped` or `always`, or the shipped start scripts, which restart on exit 75 after 5 seconds). Before exiting, the watchdog proves that `~/.urnetwork` can be written and read back within a short timeout. If it cannot, it logs a `persist-failed` alert and does not restart, because a self-exit without its throttle record could loop. Keep `~/.urnetwork` on a persistent volume so the 3 restarts per 24 hours ceiling survives the restart.
+
+Where there is no watchdog to starve the same detection still runs, with a different action: a container's start script restarts the provider on exit 75 but has no sd_notify watchdog, so after 10 minutes without a tick the provider exits with status 75 itself and the container restarts it. It leaves the same lean start cap and counts against the same 3 per 24 hours ring, and the switch, the 30 minute startup grace and the resolution handling are identical to the systemd path; with self-heal off it logs what it would have done and keeps running. The exit is refused when the state directory holding `thrash_cap.json` is not writable, because a mounted volume that does not survive the restart would reset the throttle on every restart.
 
 All of this rides the existing self-heal switch (`URNETWORK_SELF_HEAL=1` or `urnet-tools self-heal on`). Off means off for actions: with self-heal off, the watchdog still senses and logs, so you can watch it work, but it never restarts anything.
 

@@ -159,14 +159,27 @@ func (self *ownerTrimCanonicalChain) reconcile(ctx context.Context, action owner
 			if err != nil || !exists {
 				return ownerTrimActionReconciliation{}, errors.Join(errors.New("owner trim inclusion has no complete event storage"), err)
 			}
-			receipt, err := nativeDecodeReceiptEvents(runtime.metadata, events, uint32(index), len(body), action.Coldkey, nil)
+			// A multisig step's outer signatory, not the owner account, pays the fee.
+			receipt, err := nativeDecodeReceiptEvents(runtime.metadata, events, uint32(index), len(body), action.signer(), nil)
 			if err != nil {
 				return ownerTrimActionReconciliation{}, err
 			}
 			receipt.BlockNumber, receipt.BlockHash, receipt.ExtrinsicIndex, receipt.RawExtrinsic = height, hashes[height], uint32(index), "0x"+hex.EncodeToString(raw)
 			receipt.ExecutionRuntimeVersion, receipt.ExecutionCodeHash, receipt.ExecutionMetadataHash = runtime.profile.RuntimeVersion, runtime.profile.RuntimeCodeHash, runtime.profile.RuntimeMetadataHash
 			result.Receipt = &receipt
-			result.Census = self.receiptCensus(operationCtx, action, hashes[height-1], hashes[height])
+			if action.Multisig == nil {
+				result.Census = self.receiptCensus(operationCtx, action, hashes[height-1], hashes[height])
+				continue
+			}
+			evidence, err := self.multisigInclusion(operationCtx, runtime.metadata, action, events, len(body), receipt)
+			if err != nil {
+				return ownerTrimActionReconciliation{}, err
+			}
+			result.Multisig = &evidence
+			// Only the executing approval can change the subnet census.
+			if action.Multisig.kind() == "final" {
+				result.Census = self.receiptCensus(operationCtx, action, hashes[height-1], hashes[height])
+			}
 		}
 	}
 	result.Observation = self.trimObservation(operationCtx, action, finalized, number)
@@ -199,7 +212,7 @@ func (self *ownerTrimCanonicalChain) trimObservation(ctx context.Context, action
 		if err != nil || action.CallIndex != [2]byte{call.PalletIndex, call.CallIndex} {
 			return errors.Join(errors.New("owner trim current call profile changed"), err)
 		}
-		account, _ := hex.DecodeString(action.Coldkey[2:])
+		account, _ := hex.DecodeString(action.signer()[2:])
 		row, exists, err := self.storage(ctx, runtime.metadata, "System", "Account", hash, account)
 		if err != nil || exists && len(row) != 56 {
 			return errors.Join(errors.New("owner trim account nonce layout is unavailable"), err)

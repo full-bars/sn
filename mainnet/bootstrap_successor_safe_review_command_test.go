@@ -94,16 +94,15 @@ func TestBootstrapSuccessorSafeReviewCommandReconstructsPreparedV3Custody(t *tes
 			t.Fatal("Safe review exposed execution or signature import", extra, code)
 		}
 	}
+	// Retained heads and the member census bind each file's inode, so a file
+	// written anew is lost custody: each is held aside and restored by rename.
 	for _, path := range []string{f.preparation.childPaths()[0], filepath.Join(f.config.RunDirectory, bootstrapContractStateFile(7)), filepath.Join(f.config.RunDirectory, bootstrapSuccessorPreparationFile)} {
-		saved, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err := os.Remove(path); err != nil {
+		held := filepath.Join(filepath.Dir(f.config.RunDirectory), "synthetic-held-"+filepath.Base(path))
+		if err := os.Rename(path, held); err != nil {
 			t.Fatal(err)
 		}
 		raw, code, diagnostic := invoke(t.Context())
-		if err := os.WriteFile(path, saved, 0600); err != nil {
+		if err := os.Rename(held, path); err != nil {
 			t.Fatal(err)
 		}
 		if code != 1 || len(raw) != 0 {

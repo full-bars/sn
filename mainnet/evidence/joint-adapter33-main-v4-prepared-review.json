@@ -1,0 +1,37 @@
+{
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-v4-pending-job.json",
+    "sha256": "71956917f5ee9083df302e8331861bf24abf4f409e7af71700bd018fae81e7d7"
+  },
+  "main_component_files": [
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/joint_peer_admission.py",
+      "sha256": "4a33f2431d78cc05f7f2afbe72cd38600f19e2432911b267dab03b2a568177a1"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/test_joint_peer_admission.py",
+      "sha256": "a5b1cd28cd05e5848eb6309ed0f7c563e77d445af2bba23df73c3233da14e6f5"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/child_context.py",
+      "sha256": "f8a3ae0caa810c8ed401b8c2a6558e9fc505a3d40eb02f586c7b78900b9cc0d0"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/scripts/qualification/cargo_control.py",
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    }
+  ],
+  "remaining": "Actual defaultmetadata composite14 joined original waits and closed USER readback required before final job seal and Root adoption.",
+  "resource_class": "Same reviewed pure-suite10GiB/106GiB entry,256MiB hard/Swap0,one64MiB growth,60s child/170s USER+10stop.",
+  "root_count": 33,
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-joint-adapter-main-tests-v4.py",
+    "sha256": "5b8be9299c969b1dd2fc903744890c075c88847eac7383e303552ace8d1e460a"
+  },
+  "scope": "One actual canonical-main33 root suite, original29PASS1FAIL and prebody refusal preserved. No product or joint-cohort qualification inferred.",
+  "source_handoff": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter33-main-source-handoff-v4.json",
+    "sha256": "5d5ecb8f2d5dda073f4684c3ee78b992d5a9427b9080b08ec2d0c43e4182672a"
+  },
+  "status": "PREPARED_ACTUAL_DEFAULT_METADATA_JOIN_REQUIRED"
+}

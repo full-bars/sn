@@ -23,6 +23,9 @@ type runtimeArtifactProof struct {
 	identity    RuntimeArtifactIdentity
 	metadata    *types.Metadata
 	transport   runtimeTransportObservation
+	// Present only when an explicit mainnet succession policy admitted this
+	// exact identity in place of the approved anchor named by the caller.
+	successor *runtimeSuccessorAdmission
 }
 
 // Exported artifact fields cannot transfer a proof to another tuple or owner.

@@ -67,7 +67,7 @@ func TestProvisionalMeasurementLineageV2AuthenticatesActualTerminalGap(t *testin
 	}
 	history := &releaseEvidenceV2StartupHistory{retainedStartup: true,
 		terminals: map[uint64]*AttemptSettlementClosureV2{}, terminalContexts: map[uint64]map[uint64]AttemptCutV2Context{},
-		keys: map[uint64]map[byte]ed25519.PublicKey{}, readers: [2]*HTTPAttemptStreamV2Reader{{}, {}}}
+		keys: map[uint64]map[byte]ed25519.PublicKey{}, readers: []*HTTPAttemptStreamV2Reader{{}, {}}}
 	current := previous
 	var last *releaseMeasurementV2SettlementTestFixture
 	for step := 0; step < 4; step++ {

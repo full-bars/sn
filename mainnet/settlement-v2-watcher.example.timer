@@ -1,0 +1,16 @@
+# Runs the settlement v2 watcher every hour. An hour is about 300 blocks at
+# 12 seconds, so vault2's 14,400-block challenge window (48 hours) holds about
+# 48 runs: the first comes within about 2% of the window, and the watcher still
+# checks a root after an outage of its host, RPC or the operator API of a day or
+# more. A run that is still sending a demand set is never started twice.
+[Unit]
+Description=Hourly settlement v2 watcher run
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+AccuracySec=1min
+Unit=sn-mainnet-settlement-v2-watcher.service
+
+[Install]
+WantedBy=timers.target

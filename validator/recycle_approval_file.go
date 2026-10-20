@@ -30,7 +30,7 @@ func RetainOwnerRecycleApproval(ctx context.Context, cfg *ReleaseConfig) (Releas
 		}
 		return reference, nil
 	}
-	raw, err := ReadReleaseEvidenceV2File(ctx, cfg.OwnerRecycleApproval.Approval, maximumOwnerRecycleApprovalBytes)
+	raw, err := ReadReleaseEvidenceV2File(ctx, productionEconomicSelection(cfg).Approval, maximumOwnerRecycleApprovalBytes)
 	if err != nil {
 		return ReleaseEvidenceV2File{}, err
 	}

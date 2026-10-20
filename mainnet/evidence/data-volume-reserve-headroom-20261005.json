@@ -1,0 +1,37 @@
+{
+  "accounting": "Original data baseline/cap, per-owner growth limits and 2x forecast margins remain unchanged.",
+  "additional_user_available_bytes": 80015912960,
+  "after_reserved_blocks": 4883783,
+  "after_reserved_percent": 1,
+  "authorization": "Standing storage cleanup and capacity preparation authorization; reversible non-root data-volume reservation change.",
+  "before_reserved_blocks": 24418918,
+  "before_reserved_percent": 5,
+  "block_count": 488378368,
+  "block_size_bytes": 4096,
+  "command": [
+    "sudo",
+    "-n",
+    "tune2fs",
+    "-m",
+    "1",
+    "/dev/sdc1"
+  ],
+  "command_exit": 0,
+  "device": "/dev/sdc1",
+  "filesystem": "ext4",
+  "filesystem_state": "clean",
+  "mount": "/mnt/data",
+  "observed_at": "2026-10-05T11:36:50.779364+00:00",
+  "observed_user_available_bytes": 95364083712,
+  "remaining_root_reserved_bytes": 20003975168,
+  "rollback": [
+    "sudo",
+    "-n",
+    "tune2fs",
+    "-r",
+    "24418918",
+    "/dev/sdc1"
+  ],
+  "schema": "data-volume-reserve-headroom-v1",
+  "status": "APPLIED_AND_VERIFIED"
+}

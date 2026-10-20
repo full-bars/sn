@@ -132,8 +132,10 @@ func TestReleaseClientKeyHistoryControlBudgetRefusesAndReusesOriginalCaptures(t 
 	beforeRefusals := bodyRefusals.Load()
 	options.MaxControlBytes = originalAllowance
 	refused, err := fixture.gather(t.Context(), options)
+	// HTTP 500 is a transient service status, so the refused batch gets its one
+	// final retry with the same nonce before the collection fails.
 	if err == nil || !reflect.DeepEqual(refused, releaseHeadResult{}) ||
-		!strings.Contains(err.Error(), "client-key batch returned HTTP 500") || bodyRefusals.Load()-beforeRefusals != 1 {
+		!strings.Contains(err.Error(), "client-key batch returned HTTP 500") || bodyRefusals.Load()-beforeRefusals != 2 {
 		t.Fatalf("original collection allowance did not fail at actual bounded response ownership: %v", err)
 	}
 	fixture.assertNoEMACommit(t)

@@ -69,7 +69,7 @@ func newReleaseHistoricalSourceTestFixture(t *testing.T) *releaseHistoricalSourc
 		t.Fatal(err)
 	}
 	signer := &crv4.Chain{Meta: metadata, GenesisHash: native.genesis, Runtime: &types.RuntimeVersion{SpecName: "node-subtensor", SpecVersion: 455, TransactionVersion: 1}}
-	anchor, err := signer.NewSetFleetCommitmentCall(521, sourceHash)
+	anchor, err := signer.NewSetSourceCommitmentCall(521, sourceHash)
 	if err != nil {
 		t.Fatal(err)
 	}

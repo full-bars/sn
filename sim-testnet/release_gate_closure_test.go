@@ -45,6 +45,51 @@ func releaseClosureFunctionCalls(t *testing.T, path, name string) map[string]boo
 	return nil
 }
 
+// A step handed to an owner as a function value is not a call by name.
+// Collect the names passed to one callee inside the actual production body.
+func releaseClosureFunctionCallArguments(t *testing.T, path, name, callee string) map[string]bool {
+	t.Helper()
+	parsed, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, declaration := range parsed.Decls {
+		function, ok := declaration.(*ast.FuncDecl)
+		if !ok || function.Name.Name != name || function.Body == nil {
+			continue
+		}
+		arguments := map[string]bool{}
+		ast.Inspect(function.Body, func(node ast.Node) bool {
+			call, ok := node.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			target := ""
+			switch owner := call.Fun.(type) {
+			case *ast.Ident:
+				target = owner.Name
+			case *ast.SelectorExpr:
+				target = owner.Sel.Name
+			}
+			if target != callee {
+				return true
+			}
+			for _, argument := range call.Args {
+				switch value := argument.(type) {
+				case *ast.Ident:
+					arguments[value.Name] = true
+				case *ast.SelectorExpr:
+					arguments[value.Sel.Name] = true
+				}
+			}
+			return true
+		})
+		return arguments
+	}
+	t.Fatalf("production closure function %s is absent from %s", name, path)
+	return nil
+}
+
 // Both gate paths retain the production closure and all its adjacent tests.
 func TestReleaseSemanticCensusPinsSettlementClosureRegressions(t *testing.T) {
 	producerBytes, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
@@ -87,13 +132,14 @@ func TestReleaseSemanticCensusPinsSettlementClosureRegressions(t *testing.T) {
 		{path: "../validator/attempt_settlement_legacy_recovery_owned.go", function: "recoverAttemptSettlementEpochOwned", callee: "publishAttemptSettlementOwnedClosure"},
 		{path: "../validator/release_run.go", function: "RunRelease", callee: "runReleaseWithActivationSetup"},
 		{path: "../validator/release_run.go", function: "runReleaseWithActivationSetup", callee: "runReleaseWithStartupV2"},
-		{path: "../validator/release_run.go", function: "runReleaseWithStartupV2", callee: "newReleaseRuntimeV2"},
+		{path: "../validator/release_run.go", function: "runReleaseWithStartupV2", callee: "runReleaseWithStartupAndProgressV2"},
+		{path: "../validator/release_run.go", function: "runReleaseWithStartupAndProgressV2", callee: "newReleaseRuntimeV2"},
 		{path: "../validator/release_runtime_v2.go", function: "newReleaseRuntimeV2", callee: "newReleaseRuntimeV2WithRuntime"},
 		{path: "../validator/release_runtime_v2.go", function: "newReleaseRuntimeV2WithRuntime", callee: "startReleaseEvidenceV2DiskStateOwned"},
 		{path: "../validator/release_startup_v2.go", function: "startReleaseEvidenceV2DiskStateOwned", callee: "recoverAttemptSettlementEpochV2"},
 		{path: "../validator/release_startup_v2.go", function: "startReleaseEvidenceV2DiskStateOwned", callee: "initializeAttemptSettlementEpochV2"},
-		{path: "../validator/release_run.go", function: "runReleaseWithStartupV2", callee: "runReleaseSettlementRefresh"},
-		{path: "../validator/release_run.go", function: "runReleaseWithStartupV2", callee: "runReleaseOperatorWorkers"},
+		{path: "../validator/release_run.go", function: "runReleaseWithStartupAndProgressV2", callee: "runReleaseSettlementRefresh"},
+		{path: "../validator/release_run.go", function: "runReleaseWithStartupAndProgressV2", callee: "runReleaseOperatorWorkers"},
 		{path: "../validator/release_shutdown.go", function: "runReleaseOperatorWorkers", callee: "Wait"},
 		{path: "../validator/trail.go", function: "RunTrail", callee: "beginAttempt"},
 		{path: "../validator/trail.go", function: "RunTrail", callee: "captureAttemptAssignment"},
@@ -136,8 +182,9 @@ func TestReleaseSemanticCensusPinsSettlementClosureRegressions(t *testing.T) {
 	}
 }
 
-// The original focused family is still part of both complete package owners;
-// its own duplicate implicit-deadline pair is not a separate certificate.
+// The original focused family is still part of both complete package owners,
+// the validator's normal and race shards; its own duplicate implicit-deadline
+// pair is not a separate certificate.
 const releaseSettlementClosureOwnerSelector = "^Test(Attempt(Settlement|Cut|Assignment)|ReleaseSettlementRefresh|ReleaseSteeringLoop)"
 
 // Require complete uncached normal/race owners before delegating any focused
@@ -207,8 +254,9 @@ func TestReleaseSemanticCensusRejectsIncompleteSettlementClosureOwners(t *testin
 		t.Fatal("aggregate accepted the original redundant implicit-deadline closure pair")
 	}
 	for _, command := range []string{
-		"go test -parallel=4 -timeout 90m ./... -count=1",
-		"go test -race -parallel=4 -timeout 90m ./validator -count=1",
+		releaseGateValidatorNormalShards.ownerCommand(),
+		releaseGateValidatorRaceShards.ownerCommand(),
+		releaseGateShardCommand,
 	} {
 		if strings.Count(script, command) != 1 {
 			t.Fatal("full closure owner is not unique", command)
@@ -221,19 +269,26 @@ func TestReleaseSemanticCensusRejectsIncompleteSettlementClosureOwners(t *testin
 			strings.Replace(command, " -count=1", "", 1),
 			"if false; then\n" + command + "\nfi",
 		} {
+			if replacement == command {
+				continue
+			}
 			if err := verifyReleaseGateSettlementClosureOwners(strings.Replace(script, command, replacement, 1)); err == nil {
 				t.Fatal("aggregate accepted incomplete closure owner", replacement)
 			}
 		}
 	}
-	const start = "release_gate_start sn-validator-race release_phase_sn_validator_race"
-	for _, replacement := range []string{
-		"# " + start,
-		"if false; then\n" + start + "\nfi",
-		"release_unused_owner() {\n" + start + "\n}",
+	for _, start := range []string{
+		"release_gate_start sn-validator-normal-1 release_phase_sn_validator_normal_1",
+		"release_gate_start sn-validator-race-1 release_phase_sn_validator_race_1",
 	} {
-		if err := verifyReleaseGateSettlementClosureOwners(strings.Replace(script, start, replacement, 1)); err == nil {
-			t.Fatal("aggregate accepted disconnected closure owner", replacement)
+		for _, replacement := range []string{
+			"# " + start,
+			"if false; then\n" + start + "\nfi",
+			"release_unused_owner() {\n" + start + "\n}",
+		} {
+			if err := verifyReleaseGateSettlementClosureOwners(strings.Replace(script, start, replacement, 1)); err == nil {
+				t.Fatal("aggregate accepted disconnected closure owner", replacement)
+			}
 		}
 	}
 }

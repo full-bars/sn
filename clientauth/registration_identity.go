@@ -76,6 +76,16 @@ func validRegistrationIdentityId(value string) bool {
 	return err == nil && id != (connect.Id{}) && id.String() == value
 }
 
+// JwtNetworkId returns the network_id claim of a token, or an error when the
+// token is malformed. A token without the claim returns the empty string.
+func JwtNetworkId(token string) (string, error) {
+	identity, err := registrationIdentity(token)
+	if err != nil {
+		return "", err
+	}
+	return identity.NetworkId, nil
+}
+
 // Used both during restart and before a live refresh listener persists a token.
 func ValidateRefreshedClientJwt(original, refreshed string) error {
 	before, beforeErr := registrationIdentity(original)

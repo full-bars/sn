@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // These controls run actual public preparation with explicit adverse starting
 // modes and exact future roots. Fixture repair never relaxes runtime custody.

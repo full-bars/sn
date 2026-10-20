@@ -98,8 +98,10 @@ type SubmitParams struct {
 	Key        *ecdsa.PrivateKey
 	Calldata   []byte
 	ChainID    *big.Int // optional; when set, the rpc's chain id must match it
+	Value      *big.Int // optional; wei sent with the call, nil sends none
 	NonceFloor uint64   // optional durable minimum, owned by the calling relayer
-	GasLimit   uint64   // 0 = estimate + 20% headroom
+	GasLimit   uint64   // 0 = estimate + 20% headroom, and at least GasFloor
+	GasFloor   uint64   // optional; the least gas limit of an estimated transaction
 	DryRun     bool
 	// Additional owner authority on this exact connection: nil height means
 	// current finalized state; a receipt supplies its canonical inclusion height.
@@ -146,6 +148,9 @@ func submit(ctx context.Context, p SubmitParams, mkPrint intentPrinter, hooks Su
 	if p.ChainID != nil {
 		p.ChainID = new(big.Int).Set(p.ChainID)
 	}
+	if p.Value != nil {
+		p.Value = new(big.Int).Set(p.Value)
+	}
 	from := crypto.PubkeyToAddress(p.Key.PublicKey)
 	client, chainID, rpcURL, err := dialFirst(ctx, p.Rpcs)
 	if err != nil {
@@ -187,7 +192,9 @@ func submit(ctx context.Context, p SubmitParams, mkPrint intentPrinter, hooks Su
 		from:            from,
 		key:             p.Key,
 		calldata:        p.Calldata,
+		value:           p.Value,
 		gasLimit:        p.GasLimit,
+		gasFloor:        p.GasFloor,
 		nonceFloor:      p.NonceFloor,
 		dryRun:          p.DryRun,
 		prepared:        hooks.Prepared,

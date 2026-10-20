@@ -16,7 +16,7 @@ import (
 )
 
 // Pin the selected families independently of their growing source population.
-const releaseGateCaptureSelector = "^Test(FinalArchive|FinalCompositeArchive|ArchivePreflight|FinalClaimQueueCapture|FinalCollected(Bundle|File|Chain)|FinalSemantic(PublicCapture|LaunchFoundation)|FinalContractCleanupCapture|VerifyFinalCollected|FleetLifecycle|CanonicalRPCReceiptLogs|ScenarioProcessLogGate|ReleaseAndProductionScenariosRequireProcessLogGate|ScenarioCompletion|ScenarioRunner(WritesCompleteEvidenceOnlyOnPass|FailureHasNoCompleteMarker)|PublishedScenarioCandidateKeepsFrozenHashWhenClockAdvances|PublishedCompletionCommits|CampaignEvidence|DirectScenarioCompletion|EvidenceFileHashes|ArchiveCurrentDeploymentPublication|VerifyPublishedEvidenceOrigin|ReleaseCandidateCampaign|ProductionCampaignCompletion|ReleaseCampaignGate|ExactReleaseCampaignGate|ScenarioCampaignAttempt|ProductionHandoff|InitialScenarioFailure|ProductionPolicyEvidence|PrepareSignedAttemptStateNamespace|ClassifyValidatorAttemptState|ValidatorStateNamespace|QualificationLauncher|SimulatorAttemptCutV2|ProducerGateStateSelection|ProducerGateCustodySelection|ProducerGateCaptureSelection|FinalCaptureV2|FinalCaptureCapacity|ScenarioNativeWarmupV2|ScenarioNativeObservationV2|StrictHistoryAdoption|FleetRenewal|OwnedRPC|OwnedRpc|CoordinatorRepairCarry|ProvisionalCoordinatorRepair)"
+const releaseGateCaptureSelector = "^Test(FinalArchive|FinalCompositeArchive|ArchivePreflight|FinalClaimQueueCapture|FinalCollected(Bundle|File|Chain)|FinalSemantic(PublicCapture|LaunchFoundation)|FinalContractCleanupCapture|VerifyFinalCollected|FleetLifecycle|CanonicalRPCReceiptLogs|ScenarioProcessLogGate|ReleaseAndProductionScenariosRequireProcessLogGate|ScenarioCompletion|ScenarioRunner(WritesCompleteEvidenceOnlyOnPass|FailureHasNoCompleteMarker)|PublishedScenarioCandidateKeepsFrozenHashWhenClockAdvances|PublishedCompletionCommits|CampaignEvidence|DirectScenarioCompletion|EvidenceFileHashes|ArchiveCurrentDeploymentPublication|VerifyPublishedEvidenceOrigin|ReleaseCandidateCampaign|ProductionCampaignCompletion|ReleaseCampaignGate|ExactReleaseCampaignGate|ScenarioCampaignAttempt|ProductionHandoff|InitialScenarioFailure|ProductionPolicyEvidence|PrepareSignedAttemptStateNamespace|ClassifyValidatorAttemptState|ValidatorStateNamespace|QualificationLauncher|SimulatorAttemptCutV2|ProducerGateStateSelection|ProducerGateCustodySelection|ProducerGateCaptureSelection|FinalCaptureV2|FinalCaptureCapacity|ScenarioNativeWarmupV2|ScenarioNativeObservationV2|StrictHistoryAdoption|FleetRenewal|OwnedRPC|OwnedRpc|CoordinatorRepairCarry|ProvisionalCoordinatorRepair|ProvisionalFleetRenewal)"
 
 const releaseGateCapturePopulationRoot = "TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners"
 
@@ -419,14 +419,14 @@ func TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak(t *testing.T)
 	if err := verifyReleaseGateFullValidatorRace(localScript); err != nil {
 		t.Fatalf("metadata budget changed an independent full-package owner: %v", err)
 	}
-	for _, fullRace := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand, releaseGateSimulatorSupplementRaceCommand} {
-		if strings.Count(localScript, fullRace) != 1 {
-			t.Fatal("full simulator race owner is not uniquely executable")
-		}
-		changedFull := strings.Replace(localScript, fullRace, strings.Replace(fullRace, "90m", "45m", 1), 1)
-		if err := verifyReleaseGateFullValidatorRace(changedFull); err == nil {
-			t.Fatal("metadata race budget replaced an independent full-simulator allowance")
-		}
+	fullRace := releaseGateSimulatorRaceShards.ownerCommand()
+	deadline := "-timeout " + releaseGateSimulatorRaceShards.flags[slices.Index(releaseGateSimulatorRaceShards.flags, "-timeout")+1]
+	if strings.Count(localScript, fullRace) != 1 || strings.Count(fullRace, deadline) != 1 {
+		t.Fatal("full simulator race owner is not uniquely executable")
+	}
+	changedFull := strings.Replace(localScript, fullRace, strings.Replace(fullRace, deadline, "-timeout 45m", 1), 1)
+	if err := verifyReleaseGateFullValidatorRace(changedFull); err == nil {
+		t.Fatal("metadata race budget replaced an independent full-simulator allowance")
 	}
 }
 

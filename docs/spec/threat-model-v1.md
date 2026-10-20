@@ -3,9 +3,11 @@
 The release-1.0 design of the UR subnet (Bittensor SN25, netuid 25) assumes Subtensor finalized state and runtime-454 precompiles are
 correct, at least two independently operated validators measure each NO, server
 Ed25519 and hotkey sr25519 secrets remain uncompromised, and the shared egress
-hash key is distributed only to authorized NOs/validators. Public artifacts are
-untrusted until their content hash, signature, finalized boundaries, and Merkle
-root reconstruct successfully.
+hash key is distributed only to authorized NOs/validators. The SN25 mainnet
+launch does not meet the two-validator assumption: by owner decision (October 7)
+it has one NO, UR, measured by one validator, UR's own, with no independent
+cross-check. Public artifacts are untrusted until their content hash,
+signature, finalized boundaries, and Merkle root reconstruct successfully.
 
 The system defends against cross-NO deposit credit, replayed/expired bindings,
 coordinator upgrades attempting custody theft, operator root omission, partial
@@ -41,5 +43,7 @@ boundary while the live happy path settles claims.
 Residual release-1.0 risks are validator collusion/Sybil stake, routing proofs
 that do not cryptographically prove honest transit, shared-hash key enumeration
 or leakage, runtime governance changes, and economic parameters validated only
-at testnet scale. Value caps, independent monitoring, key rotation, and a
-mainnet 2-of-3 Safe bound these risks; they do not eliminate them.
+at testnet scale. Value caps, independent monitoring, key rotation, and the
+mainnet governance Safe bound these risks; they do not eliminate them. At the
+SN25 launch that Safe is 1-of-1 (owner decision, October 7), so one owner key
+governs the coordinator until owners are added and the threshold raised.

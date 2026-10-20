@@ -31,7 +31,8 @@ type bootstrapChainRootValidator struct {
 }
 
 // Each strategy selects its exact implementation and independent approval
-// domain. The root role cannot count as either UR validator.
+// domain. The root role never counts as a UR validator; only v5 lets the root
+// seat's hotkey also be the sole UR validator's hotkey.
 func (self bootstrapChainRootValidator) validate() error {
 	if self.Strategy == rootPassiveStrategy {
 		if self.Role != "bittensor-root-validator" || self.Netuid == nil || *self.Netuid != 0 || self.Implementation != "sn/mainnet/root-passive-service" ||
@@ -88,7 +89,7 @@ func (self bootstrapChainRootInspection) validate(config bootstrapChainConfig, r
 	}
 	root, approval := self.Plan, self.Approval
 	scope := root.identityScope()
-	passive := config.Schema == bootstrapChainConfigSchemaV4
+	passive := bootstrapChainPassiveRoot(config.Schema)
 	if passive != (root.PassiveService != nil) || passive != (role.Strategy == rootPassiveStrategy) {
 		return errors.New("bootstrap chain schema cannot convert legacy root action authority to passive observation")
 	}
@@ -99,8 +100,15 @@ func (self bootstrapChainRootInspection) validate(config bootstrapChainConfig, r
 		return errors.New("bootstrap chain root service differs from its independent role, action approver or child scope")
 	}
 	for _, validator := range config.Validators {
-		if validator.Hotkey == role.Hotkey {
+		if validator.Hotkey != role.Hotkey {
+			continue
+		}
+		// The seat is still observed as root; it adds no second UR validator.
+		if config.Schema != bootstrapChainConfigSchemaV5 {
 			return errors.New("bootstrap chain root role cannot count as a UR validator")
+		}
+		if validator.Coldkey != role.Coldkey {
+			return errors.New("bootstrap chain shared root and UR hotkey must name one coldkey")
 		}
 	}
 	approvalSchema := bootstrapChainRootApprovalSchema

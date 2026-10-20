@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Fixed owner continuation retains actual private inodes and checkpoint bytes
 // across public-command interruption; no test helper enrolls target custody.

@@ -4,7 +4,7 @@ Every provider can serve Prometheus metrics at `/metrics`. This page covers enab
 
 ## Enable the metrics endpoint
 
-The provider listens on auto ports by default. It tries ports 9100, 9101, 9102, and 9103 in order and binds the first free one. On a container the listener binds `0.0.0.0`; on a native host it binds `127.0.0.1` plus a Tailscale auto-bind when a tailnet interface is present.
+The provider listens on auto ports by default. It tries ports 9100, 9101, 9102, and 9103 in order and binds the first free one. On a container the listener binds `0.0.0.0` when every address the container holds is private or unique-local; on a native host it binds `127.0.0.1` plus a Tailscale auto-bind when a tailnet interface is present. A container that shares a publicly addressed network keeps loopback plus Tailscale, so the endpoint never lands on a public interface.
 
 Control the endpoint with the manager tool:
 
@@ -120,9 +120,9 @@ The test file covers the two enabled rules. `prometheus.yml` lists `urnetwork.ym
 
 ## Metrics for QUIC DATAGRAM
 
-The `urnet_h3_datagram_*` families are served once the DATAGRAM gate is on or a
-connection has carried a datagram, so a box that never enables the feature
-serves none of them. Turn the feature on with `urnet-tools set h3-datagram on`.
+This build offers QUIC DATAGRAM on every H3 connection at the upstream
+always-on default: there is no gate to enable, no control key that changes it,
+and no environment variable.
 
 The H3 identity set itself is always exported:
 
@@ -132,21 +132,51 @@ The H3 identity set itself is always exported:
 | `urnet_h3_set_size` | gauge | | Grand total of running identities that run H3: proxies plus the direct identity. Under an `<int>` cap the direct identity is counted on top of the N proxies. |
 | `urnet_h3_proxy_set_size` | gauge | | Running proxies that run H3, excluding the direct identity. `urnet_h3_set_size` is this plus the direct identity when it runs. |
 
+The per-datagram families the 3.23-fix fork exports
+(`urnet_h3_datagram_rx_*`, `urnet_h3_datagram_tx_*`,
+`urnet_h3_datagram_offered_total`, `urnet_h3_datagram_accepted_total`,
+`urnet_h3_datagram_blackholes_total`) are not exported by this provider: those
+counters live inside the connect library, and the pinned revision sn builds
+against exposes the DATAGRAM data plane but not the counters the fork added.
+Until sn moves onto a connect revision that carries them, datagram traffic is
+not visible in `/metrics` here.
+
+## Metrics for streams, P2P transports and dial backoff
+
+These families come from the connect library the provider pins. The provider
+appends them to its own scrape, so a provider built against an older revision
+serves none of them.
+
 | Metric | Type | Labels | Meaning |
 |---|---|---|---|
-| `urnet_h3_datagram_rx_messages_total` | counter | | Messages received over DATAGRAM |
-| `urnet_h3_datagram_rx_bytes_total` | counter | | Bytes of messages received over DATAGRAM |
-| `urnet_h3_datagram_rx_dropped_total` | counter | | Received DATAGRAM messages dropped by the reassembly limit |
-| `urnet_h3_datagram_rx_timeouts_total` | counter | | Received DATAGRAM messages dropped by the reassembly timeout |
-| `urnet_h3_datagram_rx_rejected_total` | counter | `reason` | DATAGRAMs refused by the datagram layer: `malformed`, `duplicate`, `checksum` |
-| `urnet_h3_datagram_tx_messages_total` | counter | | Messages sent over DATAGRAM |
-| `urnet_h3_datagram_tx_bytes_total` | counter | | Bytes of messages sent over DATAGRAM |
-| `urnet_h3_datagram_tx_stream_messages_total` | counter | | Messages sent on the reliable stream of a connection that negotiated DATAGRAM, so the lane split is `tx_messages` against this |
-| `urnet_h3_datagram_tx_errors_total` | counter | | DATAGRAM send errors |
+| `urnet_stream_sequences_by_kind` | gauge | `kind` | Live stream sequences: `single` (this provider is one end of the stream) or `two_ended` (it relays between a source and a destination) |
+| `urnet_stream_sequences_opened_total` | counter | `kind` | Stream sequences started |
+| `urnet_stream_sequences_closed_total` | counter | `kind`, `reason` | Stream sequences ended: `transport_ended` (its P2P transport gave up on its own) or `cancelled` (platform close, reset, replacement or shutdown) |
+| `urnet_stream_sequence_lifetime_seconds` | histogram | `kind` | Lifetime of ended sequences, observed when they end (buckets 1 s, 10 s, 60 s, 5 min, 30 min, 1 h, 6 h, 24 h) |
+| `urnet_stream_open_requests_total` | counter | `result` | Platform stream-open requests by what the buffer did: `created` (started a new sequence), `existing` (reused a live one), `replaced` (cancelled an older one for the same stream id) |
+| `urnet_stream_control_frames_total` | counter | `type` | Stream control frames received: `open`, `close`, `reset` |
+| `urnet_p2p_transports_started_total` | counter | | P2P transports started |
+| `urnet_p2p_transports_stopped_total` | counter | | P2P transports stopped |
+| `urnet_p2p_connect_failures_total` | counter | | P2P connection attempts that returned an error (a connection that came up and then failed its readiness exchange is not counted) |
+| `urnet_tls_handshakes_total` | counter | `path`, `host`, `result` | Client TLS handshakes on the platform and API dial paths. `result` is `full`, `resumed` (resumed handshakes skip certificate verification) or `failed`; `path` names the dial strategy (`normal`, `normal_proxy`, the `resilient_*` modes); `host` is the target class (`api`, `connect`, `other`). 54 bounded series |
+| `urnet_dial_backoff_long_tier_active` | gauge | | Identities currently waiting in the long dial backoff tier because their own path keeps failing |
+| `urnet_dial_backoff_long_tier_entered_total` | counter | | Times an identity's dial backoff entered the long tier |
 
-The fork exports `urnet_h3_datagram_offered_total`, `urnet_h3_datagram_accepted_total`
-and `urnet_h3_datagram_blackholes_total` as well. This provider does not: those
-counters live inside the connect library, and the pinned revision sn builds
-against has the DATAGRAM data plane but not the gate and counters the fork
-added. Until sn moves onto a connect revision that carries them, an offered-but-
-not-accepted connection is not visible here.
+### Reading the stream sequence and P2P transport series
+
+Providers carry streams for their tunnel clients, and the P2P transports are
+the direct WebRTC hops those streams can use. None of these counters is
+touched per packet.
+
+- `urnet_stream_sequences_by_kind`: `single` tracks the client streams the provider is serving. `two_ended` is relay bookkeeping (the provider sits between a source and a destination) and a provider that does not relay should hold it near zero. `two_ended` stuck above 0 for more than half an hour, or either kind climbing while connections do not, means sequences are outliving their purpose.
+- `urnet_stream_sequences_closed_total`: in steady state sequences end in step with the connections that carried them. A `cancelled` count that stays near zero while `opened_total` keeps climbing is the shape of sequences that nothing ever closes.
+- `urnet_stream_sequence_lifetime_seconds`: healthy streams end with the connection that carried them, so the 1 s to 5 min buckets should dominate. Growth in the 1 h and up buckets is the one to watch; it is the shape of a sequence that outlived its transport. `+Inf` counts every ended sequence.
+- `urnet_stream_open_requests_total`: mostly `created` with some `existing` (the platform re-sends opens and the buffer reuses the live sequence). A rising `existing` rate against a flat `by_kind` means the platform is asking for streams the provider is only just reaping. `replaced` spikes during resets.
+- `urnet_stream_control_frames_total`: what the platform asked for. `open` counts StreamOpen frames alone; a reset carries its own type and its stream entries surface in `open_requests` (`created` or `replaced`), so read open frames against the sum of `created`, `existing` and `replaced` while remembering that a reset adds requests without adding open frames.
+- `urnet_p2p_transports_started_total` minus `stopped_total` is the live transport count; in steady churn the pair should move almost evenly, and a growing gap means transports are not stopping. `urnet_p2p_connect_failures_total` climbing at a fast steady rate means a peer is unreachable and the transport is retrying; a slow trickle is the normal cost of peers going away.
+- These counters are process-local: a restart resets them, so alert on rates and ratios, not absolute values.
+
+### Reading the handshake and backoff series
+
+- `urnet_tls_handshakes_total`: full handshakes are the expensive ones (certificate verification happens on each). A large `full` share from one `path` with few `failed` means that path is not taking its resumed-session cache; a rising `failed` share is the real connection problem. Resumed share per path is `sum(rate(urnet_tls_handshakes_total{result="resumed"}[5m])) by (path) / sum(rate(urnet_tls_handshakes_total[5m])) by (path)`.
+- `urnet_dial_backoff_long_tier_*`: `active` above zero is normal after trouble (an identity whose own path keeps failing is backed off at the long tier instead of burning the shared attempt budget). An `entered` rate that stays high while `active` is flat is ordinary churn; `active` growing across hours is a node whose paths keep failing.

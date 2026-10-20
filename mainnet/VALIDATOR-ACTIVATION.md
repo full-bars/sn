@@ -2,8 +2,11 @@
 
 `sn-mainnet activate-validators` supplies an actual Linux static-unit installer,
 current bootstrap admission and durable two-unit start/recovery owner. It is
-bound to the original accepted bootstrap v3 plan and both independently signed
-schema-3 UR configurations. Its [scoped independent qualification](evidence/validator-activation-qualification-20260930.md)
+bound to an original accepted two-role bootstrap plan (v3, or passive-root v4)
+and both independently signed schema-3 UR configurations. It refuses a one-role
+v5 preparation and is not the SN25 launch path: by owner decision (October 7) the
+launch has one UR validator, which runs as `validator run` through xops on snow
+([LAUNCH.md](LAUNCH.md#run-it-on-snow)). Its [scoped independent qualification](evidence/validator-activation-qualification-20260930.md)
 is sealed; no unit has been installed or started on a deployment host.
 
 The native prerequisite reader now makes additional executable progress toward
@@ -57,11 +60,12 @@ Go JSON of the typed envelope with `signature_ed25519` empty.
 
 The complete plan binds:
 
-- The original bootstrap config pathname and byte SHA-256, accepted v3 plan
-  hash, netuid 25, the distinct majority/secondary roles and their approved
-  producer config hashes. The original bootstrap admission still verifies
-  hotkeys, native registration generations, independent producer approvals,
-  operator configuration and separate custody namespaces.
+- The original bootstrap config pathname and byte SHA-256, accepted v3 or v4
+  plan hash, netuid 25, the distinct majority/secondary roles and their approved
+  producer config hashes. A v5 preparation's one `sole` role cannot fill the
+  `majority` unit, so admission refuses it. The original bootstrap admission
+  still verifies hotkeys, native registration generations, independent producer
+  approvals, operator configuration and separate custody namespaces.
 - One exact standard-validator binary, fixed `sn-mainnet-validator-majority.service`
   and `sn-mainnet-validator-secondary.service` files, runtime config destinations,
   operational working/progress directories, UID/GID and progress source per role.
@@ -198,6 +202,11 @@ truncated or different file requires explicit operator disposition. The unit
 profile is the existing qualified repair profile: `Type=exec`, numeric user/group,
 absolute `validator run --config=... --progress-file=...`, `Restart=no`,
 `KillMode=control-group`, no delegation, shell, environment files or hooks.
+
+Settlement v2 adoption later gives the validator a successor config and an
+auditor key on its command line, which this profile does not render.
+[SETTLEMENT-V2-ADOPTION.md](SETTLEMENT-V2-ADOPTION.md) gives that sequence and
+its commands.
 
 `install` performs a pinned, bounded `systemctl daemon-reload`, then verifies
 both loaded units and their dependencies. It does not enable, start, stop or

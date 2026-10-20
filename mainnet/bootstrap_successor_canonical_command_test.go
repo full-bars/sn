@@ -29,6 +29,7 @@ func TestBootstrapSuccessorCanonicalCommandExecutesAndRecovers(t *testing.T) {
 	f := newBootstrapSuccessorCanonicalFixture(t)
 	chain := f.original.contracts
 	original := bootstrapSuccessorPreparationTestFiles(t, f.original.config.RunDirectory)
+	originalMembers := bootstrapSuccessorExecutionTestMemberCensus(t, f.original.config.RunDirectory, false)
 	var publicOutput, publicError bytes.Buffer
 	publicArgs := []string{"contract-successor-execution-resume", "--config", f.original.path, "--run-dir", f.original.config.RunDirectory, "--accept-plan-hash", f.original.preparation.Plan.ContentHash}
 	publicArgs = append(append(publicArgs, f.paths...), f.approvalArgs...)
@@ -76,10 +77,8 @@ func TestBootstrapSuccessorCanonicalCommandExecutesAndRecovers(t *testing.T) {
 			t.Fatal("canonical restart lost exact successful installation or attempt custody", result)
 		}
 	}
-	for name, raw := range original {
-		if retained, err := os.ReadFile(filepath.Join(f.original.config.RunDirectory, name)); err != nil || string(retained) != raw {
-			t.Fatal("canonical execution changed original custody", name, err)
-		}
+	if name := bootstrapSuccessorExecutionTestChangedOriginal(t, f.original.config.RunDirectory, original, originalMembers); name != "" {
+		t.Fatal("canonical execution changed original custody", name)
 	}
 	func() {
 		chain.stateLock.Lock()

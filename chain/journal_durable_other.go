@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !darwin
 
 // Production custody has no implicit weaker fallback on unsupported platforms.
 package chain

@@ -1,0 +1,56 @@
+{
+  "author_review": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-author-review-v1.json",
+    "sha256": "a0f595b67efd72715cba8d7b7b8b4784ec42f82685ecaa1067bc91f90cd2430a"
+  },
+  "checks": {
+    "AST_runner_and_sealer": "PASS",
+    "all167_bindings_rehashed": true,
+    "all37_main_blob_pairs_rehashed": true,
+    "all74_old_and_main_source_paths_rehashed": true,
+    "no_Go_image_or_body": true,
+    "normal101_remains_failure": true,
+    "ordinary_failures_collected": true,
+    "requested_original_json": 29,
+    "roots": 38,
+    "source_before_after_main_branch_crate_tree_and_bytes": true,
+    "unique_roots": 38
+  },
+  "compiler_input_applicability": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/native-rust-main-babb-asset-applicability.json",
+    "sha256": "653722da37af0e4135da90c85278bccf49c88f54341a3029d364f2a9a7e53cc7"
+  },
+  "component_equality": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-component-equality-v1.json",
+    "sha256": "5713e3376a680093bd5bfe5179f21b071890604700add882a1bf727e8dfc17ff"
+  },
+  "execution": "No compiler, test/list/body, source staging, Docker, systemd action or lock acquisition by reviewer.",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-job-v1.json",
+    "sha256": "f06272f587805c2655d93335880b508c333dc4621edd2b17cfa08a1fb5796c83"
+  },
+  "resource_class": {
+    "body_budget_seconds": 900,
+    "cumulative_growth_stop_bytes": 2147483648,
+    "data_available_bytes": 10737418240,
+    "global_data_floor_bytes": 6307319808,
+    "global_memory_floor_bytes": 103079215104,
+    "margin": 2,
+    "memory_available_bytes": 113816633344,
+    "memory_max_bytes": 2147483648,
+    "prospective_disk_bytes": 1073741824,
+    "prospective_memory_bytes": 1073741824,
+    "swap_bytes": 0,
+    "unchanged_cumulative_cap_bytes": 115964116992,
+    "unchanged_original_baseline_bytes": 113681502208,
+    "whole_owner_plus_stop_seconds": 1290
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-rust38-main-normal-v1.py",
+    "sha256": "0f5b09c2d4a5e6d5f564fd77f6bd170eeecb3661cdb3d479ab5feb169d7ff949"
+  },
+  "schema": "rust38-main-normal-independent-review-v1",
+  "scope": "Retained338 libtest source/input equality to frozen SNmain babb qualifies applicability only; actual38 outcomes remain pending. Prior compiler/image tuple stays338/87/1ea. No Go main graph, Rust full113, race or control PASS inferred.",
+  "sequence": "Published-main metadata is already selected first. Root requires canonical successor after its actual joined terminal. Preserve this reviewed source/job as v1; seal only new job v2 with actual successor receipt, USER generation/invocation/expiry and metadata joined waits. Do not launch v1 against a new holder or reinterpret its old lease pin.",
+  "status": "SOURCE_AND_EXCLUSIVE_RESOURCE_SCOPE_ACK_NEW_LEASE_BINDING_PENDING"
+}

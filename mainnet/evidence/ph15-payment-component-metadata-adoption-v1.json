@@ -1,0 +1,70 @@
+{
+  "accounting_floor_bytes": 0,
+  "actual_seven_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1.receipt.json",
+    "sha256": "368b856bd75aedd3174c6db8b19b9ece19929a52b8d3a42e41e5c34910f26b56"
+  },
+  "actual_seven_user_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-user-terminal-readback.json",
+    "sha256": "10972bc8e02e9e93785e7587266cf7e5beae31b00683b4924f5c5bd2389e8710"
+  },
+  "additional_predecessor_waits": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-core.process-result.json",
+      "sha256": "2ffde6e6193edac4c9444faea126bf566306f9e7b6d46d37a7f6ccac07baffe0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-crv4.process-result.json",
+      "sha256": "c7c61631f6e27e07a28500c32baa010ca74fc9fd47ee384192e0c47963855544"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-evmrpc.process-result.json",
+      "sha256": "ce36694259e3a8ac65f9c7dbe796f6663bb10011e5a150d55bbe3830e687ce79"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-onchain.process-result.json",
+      "sha256": "8abf8f3164b25f821f04709922cd83c38c77fd9597da105e04b6767a2efa1dac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-payoutartifact.process-result.json",
+      "sha256": "6c4bd12b1895e295f37fac3f1ba3f299c0d3d16af49e6ad8b9bc8ba0e36dec94"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-validator.process-result.json",
+      "sha256": "621d4482533c4a7c6ccf381af3a17e1bf3c7dc45360381095bfc466445b05ba2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-sn-core-vless7-normal-v1-vlessinterop.process-result.json",
+      "sha256": "f39108ec0e58dc3caf3838af2ca5e3b3462a7d04e0fb9ef1359c85c4e8b1ad94"
+    }
+  ],
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 1073741824,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "independent_concrete_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/ph15-payment-component-metadata-concrete-review-v1.json",
+    "sha256": "533223f9b01ec5ec499027b9bf307a8137fa007329e0670942126eaa918b7cd7"
+  },
+  "job_sha256": "29619e509c9986e5e8fe3284043ad40ba446bc260dbfe8f8b3dcd115fbe35329",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 2147483648,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "network_dependency_count": 0,
+  "root_entry": {
+    "data_available_bytes": 15826432000,
+    "memory_available_bytes": 129577168896,
+    "time_ns": 1791197412083809930
+  },
+  "runner_sha256": "ffbbe769d8999b01b2172b6b8ee6675a585f7433b6c99c8ffedc682c92867b1d",
+  "schema": "root-ph15-payment-metadata-actual-predecessor-adoption-v1",
+  "scope": "One combined16-Go-file source stage and cached SN/Server graph refresh; no compiler, test or deployment result inferred.",
+  "short_count": 0,
+  "status": "ADOPTED_CURRENT_COMPONENT_DELTA_CACHED_METADATA"
+}

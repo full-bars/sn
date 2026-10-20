@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Real public preparation/export/restore surrounds the existing synthetic
 // native replay, vault RPC and Claim HTTP sources. Copied files retain exact
@@ -37,6 +37,8 @@ type economicConservationRestoreFixture struct {
 	retained  durablevolume.Config
 	future    string
 	readFiles func(*testing.T, string) map[string]string
+	// The cohort restores every retained root, leaving none untouched.
+	complete bool
 }
 
 // All actual and one future archive head are enrolled through public storage
@@ -287,6 +289,35 @@ func (self *economicConservationRestoreFixture) plan(t *testing.T) durablevolume
 	return result.Cohort
 }
 
+// A complete cohort restores every retained root, so no untouched marker or
+// reserve remains to keep; its declaration still holds each original root
+// path on its original mount, and nothing else.
+func economicConservationTestCompleteCohort(t *testing.T, retained durablevolume.Config, preparations []durablevolume.PreparationRequest, restored durablevolume.Config) {
+	t.Helper()
+	selected := map[string]bool{}
+	for _, request := range preparations {
+		selected[request.RootPath] = true
+	}
+	mounts := func(config durablevolume.Config) map[string]string {
+		result := map[string]string{}
+		for _, volume := range config.Volumes {
+			for _, root := range volume.StateRoots {
+				result[root.Path] = volume.MountPath
+			}
+		}
+		return result
+	}
+	original := mounts(retained)
+	for path := range original {
+		if !selected[path] {
+			t.Fatal("complete restore cohort left an original root untouched", path)
+		}
+	}
+	if !reflect.DeepEqual(mounts(restored), original) {
+		t.Fatal("complete restore cohort lost, added or moved an original root", restored)
+	}
+}
+
 // Exact same retained apply reconciles a lost output after publication. The
 // complete declaration keeps every untouched original reserve and root intact.
 func (self *economicConservationRestoreFixture) apply(t *testing.T, reference durablevolume.Reference, short bool) {
@@ -331,10 +362,14 @@ func (self *economicConservationRestoreFixture) apply(t *testing.T, reference du
 		if err := decodeMonitorHistoryInput(output.Bytes(), &restored); err != nil {
 			t.Fatal(err)
 		}
-		// Reuse the exact untouched-root reserve assertion from the qualified
-		// complete Claim cohort fixture; it reads declarations only.
-		check := &monitorClaimRestoreFixture{retained: self.retained, request: monitorClaimRestoreCohortRequest{Preparations: self.request.Preparations}}
-		check.unchangedHealthyAuthority(t, restored)
+		if self.complete {
+			economicConservationTestCompleteCohort(t, self.retained, self.request.Preparations, restored)
+		} else {
+			// Reuse the exact untouched-root reserve assertion from the qualified
+			// complete Claim cohort fixture; it reads declarations only.
+			check := &monitorClaimRestoreFixture{retained: self.retained, request: monitorClaimRestoreCohortRequest{Preparations: self.request.Preparations}}
+			check.unchangedHealthyAuthority(t, restored)
+		}
 		self.archive.ctx = durablepath.WithHost(durablevolume.WithReference(t.Context(), durablevolume.Reference{Path: path, Sha256: result.DeclarationSha256}), self.sources[0].storage.Host)
 	}
 	for index, target := range self.targets {
@@ -474,7 +509,7 @@ func TestEconomicConservationRestoreReadFailureCannotInventHistoryMismatch(t *te
 				return append(raw, ' '), nil
 			}
 			return raw, nil
-		}, monitorServiceHooks{})
+		}, nil, monitorServiceHooks{})
 		cancel()
 		if calls != 2 || fault != nil && (!errors.Is(err, fault) || strings.Contains(fmt.Sprint(err), "differ")) || fault == nil && (err == nil || !strings.Contains(err.Error(), "returned bytes differ")) {
 			t.Fatal("economic copied-source read lost its observed cause", calls, fault, err)

@@ -1,0 +1,46 @@
+{
+  "schema": "original-runtime473-profile17-assembly-checkpoint-v1",
+  "source_commit": "49ccc424b6dbe64166e28b3ecb87449f2c94774e",
+  "status": "ASSEMBLY_PASS_RUNTIME_REPLAY_PENDING",
+  "assembled_profile": {
+    "path": "/home/by/sn-testnet-root-fallback-20261005/rust-tools49/exports/unsigned17-profile.json",
+    "sha256": "6c9c387bcffe8c492d77764a9956927be5de2a0dede8663d2bf3a94c9840aae4",
+    "bytes": 20629,
+    "rules": 17
+  },
+  "evidence": [
+    {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/rust-tools49/evidence/profile-tools49.terminal.json",
+      "sha256": "815aef1d1fc1154d80bca446ea2c63693f8b18d082be7f97fd87691a6823ac4a"
+    },
+    {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/rust-tools49/evidence/unsigned17-assembly.receipt.json",
+      "sha256": "59d78904b172f09b7c2e7a31813a8ec662dd9c01527de61ad2a73dcb5a1d2a2d"
+    },
+    {
+      "path": "/home/by/sn-testnet-runtime473-capture-input-20261005/EPOCH-OBSERVATION.json",
+      "sha256": "18bbee53990dd0ef43e8fb3c2ccb0473d23d30ad3336c644885b75c5f2d32460"
+    },
+    {
+      "path": "/home/by/sn-testnet-runtime473-capture-input-20261005/capture-request.profile17.json",
+      "sha256": "93f6ba51b6872dae3185e4e0a5847ae97dabca43f484f103fccae88f367948a7"
+    },
+    {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/rust-tools49/evidence/closed-owner-readback-v1.json",
+      "sha256": "c581692b28162468b0aef450d610df5a667194f0cf188817594861bf3b50cc02"
+    }
+  ],
+  "epoch_input": {
+    "block": 9218962,
+    "hash": "0xcff0e3a3678187c4ecf43f2c9c1be7266c55d118aadf7a6a9663d618c2362daf",
+    "parent": 9218961,
+    "scope": "RPC-observed candidate; parent/child header hashes checked. Complete execution, trie and independent finality qualification remain pending."
+  },
+  "production_approval": false,
+  "remaining": [
+    "Original block capture with bounded archive proof feed",
+    "Strict replay with retained complete proof",
+    "Principal/Availability scope when selected",
+    "Registered reserve recipient setup and signed launch authorities"
+  ]
+}

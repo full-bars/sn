@@ -34,6 +34,7 @@ import (
 	"github.com/urfoundation/sn/merkle"
 	"github.com/urfoundation/sn/miner/onchain"
 	"github.com/urfoundation/sn/protocol"
+	"github.com/urfoundation/sn/ss58"
 )
 
 type ClaimDaemonConfig struct {
@@ -42,6 +43,7 @@ type ClaimDaemonConfig struct {
 	APIURL         string                      `yaml:"api_url" json:"api_url"`
 	RPC            []string                    `yaml:"rpc" json:"rpc"`
 	KeyFile        string                      `yaml:"key_file" json:"key_file"`
+	LegacyColdkey  string                      `yaml:"legacy_coldkey,omitempty" json:"legacy_coldkey,omitempty"`
 	JWTFile        string                      `yaml:"jwt_file,omitempty" json:"jwt_file,omitempty"`
 	StateDir       string                      `yaml:"state_dir" json:"state_dir"`
 	PollSeconds    int                         `yaml:"poll_seconds" json:"poll_seconds"`
@@ -97,6 +99,11 @@ func LoadClaimDaemonConfig(path string) (*ClaimDaemonConfig, error) {
 	if cfg.SchemaVersion != 1 || cfg.Release != "1.0" || cfg.APIURL == "" || len(cfg.RPC) == 0 || cfg.PollSeconds < 5 || cfg.PollSeconds > 3600 || cfg.LookbackEpochs > 256 {
 		return nil, errors.New("invalid release-1.0 claim daemon configuration")
 	}
+	if cfg.LegacyColdkey != "" {
+		if _, err := ss58.DecodeWithPrefix(cfg.LegacyColdkey, ss58.BittensorPrefix); err != nil {
+			return nil, fmt.Errorf("legacy original coldkey: %w", err)
+		}
+	}
 	if cfg.ProgressPool != nil {
 		if err := cfg.ProgressPool.Validate(); err != nil {
 			return nil, err
@@ -107,11 +114,11 @@ func LoadClaimDaemonConfig(path string) (*ClaimDaemonConfig, error) {
 	}
 	if cfg.JWTFile != "" {
 		info, err := os.Stat(cfg.JWTFile)
-		if err != nil {
-			return nil, fmt.Errorf("claim network JWT: %w", err)
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return nil, fmt.Errorf("claim JWT: %w", err)
 		}
-		if !info.Mode().IsRegular() || info.Mode().Perm()&0o077 != 0 {
-			return nil, errors.New("claim network JWT must be a private regular file")
+		if err == nil && (!info.Mode().IsRegular() || info.Mode().Perm()&0o077 != 0) {
+			return nil, errors.New("claim JWT must be a private regular file")
 		}
 	}
 	return &cfg, nil
@@ -631,9 +638,20 @@ func queryClaimedFinalizedObserved(ctx context.Context, cfg *ClaimDaemonConfig, 
 	return false, errors.Join(failures...)
 }
 
+// The v1 and v2 queues each prove that exact bytes are in acknowledged custody.
+type claimSignedCustody interface {
+	requireSigned(context.Context, *types.Transaction) error
+}
+
 // The caller already authenticated the exact signed transaction. Replaying
 // those bytes needs finalized chain authority, not a retained historical API.
-func rebroadcastSignedClaim(ctx context.Context, cfg *ClaimDaemonConfig, tx *types.Transaction, from common.Address, store *claimQueueStore) (bool, error) {
+func rebroadcastSignedClaim(ctx context.Context, cfg *ClaimDaemonConfig, tx *types.Transaction, from common.Address, store claimSignedCustody) (bool, error) {
+	return replaySignedClaim(ctx, cfg, tx, from, store, true)
+}
+
+// Only the v2 daemon replays without the preflight, and only bytes whose claim
+// its finalized watermark already covers, which can only revert in the vault.
+func replaySignedClaim(ctx context.Context, cfg *ClaimDaemonConfig, tx *types.Transaction, from common.Address, store claimSignedCustody, preflight bool) (bool, error) {
 	if err := store.requireSigned(ctx, tx); err != nil {
 		return false, err
 	}
@@ -674,11 +692,13 @@ func rebroadcastSignedClaim(ctx context.Context, cfg *ClaimDaemonConfig, tx *typ
 		// The vault checks the saved epoch, proof and claim status at the
 		// finalized head. A now-invalid intent remains a signed liability;
 		// it is never converted into a new transaction or erased.
-		_, preflightErr := client.CallContract(ctx, ethereum.CallMsg{From: from, To: tx.To(), Gas: tx.Gas(), GasPrice: tx.GasPrice(), Value: tx.Value(), Data: tx.Data()}, new(big.Int).SetUint64(finalized.Number))
-		if preflightErr != nil {
-			client.Close()
-			failures = append(failures, fmt.Errorf("finalized exact-claim preflight: %w", preflightErr))
-			continue
+		if preflight {
+			_, preflightErr := client.CallContract(ctx, ethereum.CallMsg{From: from, To: tx.To(), Gas: tx.Gas(), GasPrice: tx.GasPrice(), Value: tx.Value(), Data: tx.Data()}, new(big.Int).SetUint64(finalized.Number))
+			if preflightErr != nil {
+				client.Close()
+				failures = append(failures, fmt.Errorf("finalized exact-claim preflight: %w", preflightErr))
+				continue
+			}
 		}
 		if err := closeClaimFinalizedEVM(ctx, client, finalized); err != nil {
 			client.Close()
@@ -997,19 +1017,11 @@ func finalizedClaimReceipt(ctx context.Context, cfg *ClaimDaemonConfig, txHash s
 	return nil, errors.Join(failures...)
 }
 
+// Missing provider credentials are held; legacy mode requires an explicit
+// original coldkey and never changes the destination of retained signed work.
 func readClaimDaemonJWT(cfg *ClaimDaemonConfig) (string, error) {
-	if cfg.JWTFile == "" {
-		return readNetworkJwt()
-	}
-	b, err := os.ReadFile(cfg.JWTFile)
-	if err != nil {
-		return "", err
-	}
-	jwt := strings.TrimSpace(string(b))
-	if jwt == "" {
-		return "", errors.New("claim network JWT is empty")
-	}
-	return jwt, nil
+	token, _, err := readSnCredentials(snCredentialSelection{jwtFile: cfg.JWTFile, legacyNetwork: cfg.LegacyColdkey != ""})
+	return token, err
 }
 
 func runClaimDaemonWithAdmission(ctx context.Context, configPath string, admission *claimAdmission, initialDelay time.Duration, onReady func()) (runErr error) {
@@ -1056,13 +1068,19 @@ func runClaimDaemonWithStore(ctx context.Context, cfg *ClaimDaemonConfig, store 
 		defer closeCancel()
 		runErr = errors.Join(runErr, api.CloseAndWait(closeCtx))
 	}()
-	jwt, err := readClaimDaemonJWT(cfg)
-	if err != nil {
-		return err
-	}
-	api.SetByJwt(jwt)
-	if onReady != nil {
-		onReady()
+	claims := &claimCredentialApi{api: api, selection: snCredentialSelection{jwtFile: cfg.JWTFile, legacyNetwork: cfg.LegacyColdkey != ""}, legacyColdkey: cfg.LegacyColdkey, onReady: onReady}
+	credentialErr := claims.reload()
+	if credentialErr != nil {
+		retainedSigned := false
+		for _, entry := range queue.Entries {
+			if entry != nil && (entry.TxHash != "" || entry.RawTxHex != "") {
+				retainedSigned = true
+				break
+			}
+		}
+		if !retainedSigned {
+			return credentialErr
+		}
 	}
 	if initialDelay > 0 {
 		select {
@@ -1074,23 +1092,32 @@ func runClaimDaemonWithStore(ctx context.Context, cfg *ClaimDaemonConfig, store 
 	period := time.Duration(cfg.PollSeconds) * time.Second
 	epochCtx, epochCancel := context.WithCancel(ctx)
 	epochs, epochDone := startClaimEpochReader(epochCtx, period, func(ctx context.Context) (int64, error) {
-		return readClaimEpoch(ctx, strategy, cfg.APIURL, api.GetByJwt())
+		return readClaimEpoch(ctx, strategy, cfg.APIURL, "")
 	})
 	defer func() { epochCancel(); <-epochDone }()
 	ticker := time.NewTicker(period)
 	defer ticker.Stop()
+	saveCheckpoint := func(queue *ClaimQueue) error {
+		if err := store.save(queue); err != nil {
+			return err
+		}
+		if hooks, ok := ctx.Value(claimDaemonCheckpointHooksKey{}).(claimDaemonCheckpointHooks); ok && hooks.afterCheckpoint != nil {
+			hooks.afterCheckpoint(queue)
+		}
+		return nil
+	}
 	return runClaimQueue(ctx, queue, cfg.LookbackEpochs, epochs, ticker.C, func() <-chan struct{} {
 		return admission.ready(cfg.StateDir)
 	}, claimQueuePollHooks{
-		now: time.Now, save: store.save, latestEpoch: admission.observeEpoch,
+		now: time.Now, save: saveCheckpoint, latestEpoch: admission.observeEpoch,
 		begin: func(ctx context.Context, candidates []claimPollCandidate) (int, context.Context, func(), error) {
 			return beginClaimOperation(ctx, admission, cfg.StateDir, candidates)
 		},
 		reconcile: func(ctx context.Context, entry *ClaimQueueEntry) (string, error) {
-			return reconcileClaimEntry(ctx, cfg, api, entry, store)
+			return reconcileClaimEntry(ctx, cfg, claims, entry, store)
 		},
 		submit: func(ctx context.Context, entry *ClaimQueueEntry) error {
-			return submitClaimDirect(ctx, cfg, api, entry, store, queue, admission)
+			return submitClaimDirect(ctx, cfg, claims, entry, store, queue, admission)
 		},
 	})
 }

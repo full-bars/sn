@@ -38,6 +38,7 @@ type headEMAStoreV2Owner struct {
 	// native attempts have no EMA observation; fold the next actual input once.
 	provisionalEpochGaps bool
 	historyAdoption      *releaseHistoryAdoptionV2
+	nativeGapBridge      *releaseNativeGapBridgeV2
 }
 
 func (self *HeadEMAStore) allowsHeadEMAEpochGaps() bool {
@@ -46,11 +47,18 @@ func (self *HeadEMAStore) allowsHeadEMAEpochGaps() bool {
 
 // Only the first approved fresh epoch can bridge the adopted terminal state.
 // Advancing the store consumes this edge naturally; later skips stay strict.
+// A native gap bridge likewise admits one edge from its predecessor epoch.
 func (self *HeadEMAStore) allowsHeadEMAEpochGapTo(epoch uint64) bool {
 	if self.allowsHeadEMAEpochGaps() {
 		return true
 	}
-	if self == nil || self.v2 == nil || self.v2.historyAdoption == nil || self.lastSubnetEpoch == nil {
+	if self == nil || self.v2 == nil || self.lastSubnetEpoch == nil {
+		return false
+	}
+	if self.v2.nativeGapBridge.allowsHeadEMAEdge(*self.lastSubnetEpoch, epoch) {
+		return true
+	}
+	if self.v2.historyAdoption == nil {
 		return false
 	}
 	request := self.v2.historyAdoption.request

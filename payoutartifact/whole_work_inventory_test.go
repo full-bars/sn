@@ -238,6 +238,47 @@ func TestWholeWorkOmittedWholeContractAndSourceOwnerAreDetected(t *testing.T) {
 	}
 }
 
+// Every owner's complete end cut drops the first credited contract, or all of
+// them, while keeping its actual signature over the changed census.
+func wholeWorkOmitCreditedFromEndCuts(t *testing.T, fixture *wholeWorkTestFixture, all bool) {
+	t.Helper()
+	omitted := fixture.artifact.ClosedWork.Records[0].ContractId
+	for owner := range fixture.inventory.Owners {
+		fixture.changeCut(t, owner, 1, func(c *coreprotocol.OriginalWorkCut) {
+			kept := []coreprotocol.OriginalWorkContract{}
+			for _, contract := range c.Contracts {
+				if !all && contract.ContractId != omitted {
+					kept = append(kept, contract)
+				}
+			}
+			c.Contracts = kept
+		})
+	}
+}
+
+// PH-15: a credited contract that no complete SDK cut inventoried contradicts
+// the window. It is refused before the amount joins, which would only find its
+// reservation absent and report the whole census as an unknown.
+func TestWholeWorkCompleteCutsOmittingOneCreditedContractAreContradictions(t *testing.T) {
+	fixture := newWholeWorkTestFixture(t)
+	wholeWorkOmitCreditedFromEndCuts(t, fixture, false)
+	if _, err := VerifyWholeWorkInventoryWithWitness(t.Context(), fixture.artifact, fixture.inventory, fixture.expected); !errors.Is(err, ErrClosedWorkIntegrity) || errors.Is(err, ErrClosedWorkUnavailable) || !strings.Contains(err.Error(), "window includes work outside the independently complete SDK census") {
+		t.Fatal("complete SDK census omitting credited work became an unknown", err)
+	}
+}
+
+// PH-15: the attribution path joins its original outcomes after the same check,
+// so one or every credited contract missing from complete cuts is refused.
+func TestWholeWorkAttributionCutsOmittingCreditedWorkAreContradictions(t *testing.T) {
+	for _, all := range []bool{false, true} {
+		fixture := participantEvidenceFixture(t)
+		wholeWorkOmitCreditedFromEndCuts(t, fixture, all)
+		if _, err := VerifyWholeWorkInventoryWithWitness(t.Context(), fixture.artifact, fixture.inventory, fixture.expected); !errors.Is(err, ErrClosedWorkIntegrity) || errors.Is(err, ErrClosedWorkUnavailable) || !strings.Contains(err.Error(), "window includes work outside the independently complete SDK census") {
+			t.Fatal("attribution outcomes turned a contradictory complete census into an unknown", all, err)
+		}
+	}
+}
+
 func TestWholeWorkLateStartCannotDateTerminalWorkWithoutIndependentPriorContext(t *testing.T) {
 	fixture := newWholeWorkTestFixture(t)
 	for owner := range fixture.inventory.Owners {

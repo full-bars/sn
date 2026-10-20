@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The actual file-backed read adapters retain standard reader sentinels while
 // preserving a cancellation observed immediately after the real read.

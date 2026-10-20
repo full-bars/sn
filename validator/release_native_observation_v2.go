@@ -111,26 +111,28 @@ func readReleaseNativeSourceReferencesV2(ctx context.Context, cfg *ReleaseConfig
 			result = nil
 		}
 	}()
-	file := steeringIntentFile{Schema: SteeringIntentSchema}
+	var all []SteeringIntent
+	retained := 0
 	if raw != nil {
-		if err := decodeAttemptStreamV2JSON(raw, bounds.IntentFileLimit(), &file); err != nil {
-			return nil, err
-		}
-		canonical, err := marshalAttemptSettlementV2JSON(ctx, &file, bounds.IntentFileLimit(), true, true)
-		if err != nil || file.Schema != SteeringIntentSchema || !bytes.Equal(canonical, raw) {
+		// The live file pins every sealed segment, read through the same owner.
+		var err error
+		all, _, retained, err = ReadSteeringIntentHistory(ctx, raw, bounds.IntentFileLimit(), func(name string, maximum uint64) ([]byte, error) {
+			return owned.read(ctx, filepath.Join(cfg.StateDir, filepath.FromSlash(name)), maximum, false)
+		})
+		if err != nil {
 			return nil, errors.Join(errors.New("V2 native source store is not canonical"), err)
 		}
 	}
 	if adoption != nil && (adoption.DeploymentID != cfg.DeploymentID || adoption.ValidatorID != cfg.ValidatorID || adoption.CoordinatorStateDir != cfg.StateDir) {
 		return nil, errors.New("V2 native observation changes adopted namespace")
 	}
-	prefix, err := adoption.matchPrefix(ctx, &file, raw, bounds.IntentFileLimit())
+	logical := make([]*SteeringIntent, len(all))
+	for index := range all {
+		logical[index] = &all[index]
+	}
+	prefix, err := adoption.matchPrefix(ctx, logical, raw != nil, bounds.MaxHistoryBytes)
 	if err != nil {
 		return nil, err
-	}
-	all := append([]SteeringIntent(nil), file.History...)
-	if file.Current != nil {
-		all = append(all, *file.Current)
 	}
 	result = &ReleaseNativeSourceObservationV2{StoreSHA256: ReleaseMeasurementContentHash(raw)}
 	history := &releaseEvidenceV2StartupHistory{cfg: *cfg}
@@ -139,7 +141,7 @@ func readReleaseNativeSourceReferencesV2(ctx context.Context, cfg *ReleaseConfig
 	seen := map[string]bool{}
 	for index := range all {
 		intent := &all[index]
-		if err := validateSteeringIntentLifecycle(intent, index < len(file.History)); err != nil {
+		if err := validateSteeringIntentLifecycle(intent, index < retained); err != nil {
 			return nil, err
 		}
 		if err := intent.VerifyVectorHash(); err != nil {

@@ -118,6 +118,37 @@ func TestRuntimeArtifactMetadataValidatorScheduleRejectsMalformedRegistration(t 
 	}
 }
 
+// Only an absent reverse mapping at the queried block observes an unregistered
+// hotkey. Malformed bytes, and a mapping the same block returned and then
+// omits, remain refused reads rather than that observation.
+func TestRuntimeArtifactMetadataValidatorScheduleObservesUnregisteredHotkey(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		value        json.RawMessage
+		late         bool
+		unregistered bool
+	}{
+		{value: json.RawMessage("null"), unregistered: true},
+		{value: json.RawMessage(`"0x01"`)},
+		{value: json.RawMessage("null"), late: true},
+	} {
+		fixture, query := newValidatorScheduleTestFixture(t)
+		if test.late {
+			fixture.identity.after = func(method string, args ...any) {
+				if method == "state_getStorage" && fixture.identity.keyNames[args[0].(string)] == "SubnetEpochIndex" {
+					fixture.identity.storage["Uids"] = test.value
+				}
+			}
+		} else {
+			fixture.identity.storage["Uids"] = test.value
+		}
+		result, err := ReadValidatorScheduleAtContext(fixture.identity.ctx, fixture.identity.chain, query, fixture.identity.allowed...)
+		if err == nil || result != (ValidatorScheduleObservation{}) || errors.Is(err, ErrValidatorScheduleHotkeyUnregistered) != test.unregistered {
+			t.Fatalf("%s late=%v registration was misclassified: %+v, %v", test.value, test.late, result, err)
+		}
+	}
+}
+
 // All epoch bytes are consumed; neither null nor an extra byte can choose a
 // valid-looking zero or truncated historical native decision number.
 func TestRuntimeArtifactMetadataValidatorScheduleRejectsMalformedEpoch(t *testing.T) {

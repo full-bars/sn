@@ -1,0 +1,31 @@
+{
+  "schema": "mainnet-focused-qualification-checkpoint-v1",
+  "source_commit": "49ccc424b6dbe64166e28b3ecb87449f2c94774e",
+  "scope": "Focused results only; no deployment or actual runtime block replay claimed.",
+  "evidence": [
+    {
+      "scope": "mainnet_go21_and_binary",
+      "path": "/home/by/sn-testnet-root-fallback-20261005/mainnet-next-v1/run/evidence/closed-user-readback-v1.json",
+      "sha256": "8d03def6d96d99a25715042b603e6be08924a9e282789ff2896409fa90a1ac94",
+      "status": "PASS"
+    },
+    {
+      "scope": "rust18_capture_and_recipient_regressions",
+      "path": "/home/by/sn-testnet-root-fallback-20261005/rust-capture18/evidence/closed-owner-readback-v1.json",
+      "sha256": "1470c2ca88a0af497849169bd8e72338aaf14e73b801ce8f04c186a9f09aee50",
+      "status": "PASS"
+    },
+    {
+      "scope": "server_db12_cutoff_and_arin",
+      "path": "/home/by/sn-testnet-root-fallback-20261005/db12/closed-owner-readback-v1.json",
+      "sha256": "ec9ab2de6ede688edf88d5c8c5d0e043e5a4f0e72ed0a814fd732813e0c5d7d0",
+      "status": "PASS"
+    }
+  ],
+  "remaining": [
+    "Actual runtime473 profile CLI assembly and original block capture/replay",
+    "Registered reserve-owned recipient hotkeys with receiving-only setup",
+    "Independent runtime/economic approval and owner/contract deployment signatures",
+    "Contract deployment and reviewed activation configuration"
+  ]
+}

@@ -6,10 +6,8 @@ package main
 import (
 	"context"
 	"errors"
-	"math"
 	"math/big"
 	"strings"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -166,7 +164,9 @@ func readEconomicEntitlementCensus(ctx context.Context, policy economicConservat
 	if vaultAddress, ok := vaultValue.(common.Address); !ok || vaultAddress != common.HexToAddress(policy.Vault.Address) {
 		return nil, monitorEvmIntegrity("entitlement coordinator belongs to another vault")
 	}
-	windowClock := &payoutartifact.ClosedWorkWindowClock{}
+	// The mapped reader admits only Frontier's stored RLP15 header, whose raw
+	// timestamp is milliseconds. The clock declares that profile, never a unit.
+	windowClock := &payoutartifact.ClosedWorkWindowClock{HeaderProfile: payoutartifact.FrontierWindowClockProfile}
 	boundary := func(method string) (payoutartifact.Boundary, error) {
 		value, err := economicEntitlementScalar(ctx, coordinatorReader, commitHeader.Hash().Hex(), method, epoch)
 		if err != nil {
@@ -181,17 +181,18 @@ func readEconomicEntitlementCensus(ctx context.Context, policy economicConservat
 			return payoutartifact.Boundary{}, err
 		}
 		observed := payoutartifact.Boundary{Number: n.Uint64(), Hash: header.Hash().Hex()}
-		if header.Time > math.MaxInt64 {
-			return payoutartifact.Boundary{}, monitorEvmIntegrity("entitlement epoch clock exceeds original timestamp domain")
-		}
 		raw, err := rlp.EncodeToBytes(header)
 		if err != nil {
 			return payoutartifact.Boundary{}, err
 		}
+		instant, err := payoutartifact.WindowClockTime(windowClock.HeaderProfile, raw)
+		if err != nil {
+			return payoutartifact.Boundary{}, errors.Join(errRpcIntegrity, err)
+		}
 		if method == "epochStartBlock" {
-			windowClock.Start, windowClock.StartTime, windowClock.StartHeader = observed, time.Unix(int64(header.Time), 0).UTC(), raw
+			windowClock.Start, windowClock.StartTime, windowClock.StartHeader = observed, instant, raw
 		} else {
-			windowClock.End, windowClock.EndTime, windowClock.EndHeader = observed, time.Unix(int64(header.Time), 0).UTC(), raw
+			windowClock.End, windowClock.EndTime, windowClock.EndHeader = observed, instant, raw
 		}
 		return observed, nil
 	}

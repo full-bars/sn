@@ -190,6 +190,13 @@ func VerifyWholeWorkInventoryWithWitness(ctx context.Context, artifact *Artifact
 			return nil, errors.Join(ErrClosedWorkIntegrity, errors.New("SDK end cut omitted retained contract"))
 		}
 	}
+	// Every cut is complete, so a window row no owner inventoried contradicts
+	// it. Refuse before the amount and outcome joins can only find it absent.
+	for _, row := range owned.Window.Records {
+		if id, _ := closedWorkId(row.ContractId); contracts[id] == nil {
+			return nil, errors.Join(ErrClosedWorkIntegrity, errors.New("window includes work outside the independently complete SDK census"))
+		}
+	}
 	reservations := make(map[[16]byte]coreprotocol.OriginalWorkContract, len(contracts))
 	for id, contract := range contracts {
 		reservations[id] = coreprotocol.OriginalWorkContract{ContractId: id, StoredContract: contract.stored}

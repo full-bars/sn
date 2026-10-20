@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Real daemon GETs retain their original request identity while only the retry
 // clock advances. No fixture grants signing or submission authority.

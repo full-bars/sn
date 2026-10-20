@@ -244,9 +244,9 @@ func TestProductionBootstrapCommittedProtectedStatePath(t *testing.T) {
 
 // Local origins return the actual producer's detached, signed streams and
 // actual server keys. No source reader or replay result is injected.
-func productionBootstrapCommittedTestFixture(t *testing.T) (releaseArchiveV2TestFixture, ProductionBootstrapObservation, ProductionBootstrapPrefixObservation, *[2]atomic.Uint64) {
+func productionBootstrapCommittedTestFixture(t *testing.T, configure ...func(*ReleaseConfig)) (releaseArchiveV2TestFixture, ProductionBootstrapObservation, ProductionBootstrapPrefixObservation, *[2]atomic.Uint64) {
 	t.Helper()
-	f := newReleaseArchiveV2TestFixtureWithTrails(t, 1)
+	f := newReleaseArchiveV2TestFixtureWithTrails(t, 1, configure...)
 	reads := &[2]atomic.Uint64{}
 	for i, original := range f.options.Origins {
 		index, origin := i, original

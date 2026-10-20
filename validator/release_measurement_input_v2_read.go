@@ -231,7 +231,7 @@ func (self *releaseMeasurementInputV2Owner) finish() error {
 	if self.hooks.afterClose != nil {
 		self.closeErr = errors.Join(self.closeErr, self.hooks.afterClose(file))
 	}
-	witness, err := openAttemptPrivateDirectory(directory.path, directory.storageCtx)
+	witness, err := openAttemptPrivateDirectory(directory.path, attemptPrivateDirectoryWitnessContext(directory.storageCtx))
 	self.closeErr = errors.Join(self.closeErr, err)
 	if err == nil {
 		if witness.anchor.dev != directory.anchor.dev || witness.anchor.ino != directory.anchor.ino || witness.anchor.mode != directory.anchor.mode || witness.anchor.uid != directory.anchor.uid {
@@ -328,6 +328,26 @@ func (self *releaseMeasurementInputV2Owner) read() (encoded []byte, resultErr er
 		return nil, errors.Join(errors.New("compact input journal changed during its read"), err)
 	}
 	return encoded, self.check()
+}
+
+// The leaf's identity under the held parent, admitted as read admits a leaf
+// but without its bytes. Every later check refuses a change to this witness.
+func (self *releaseMeasurementInputV2Owner) observeLeaf() (attemptPrivateFileState, error) {
+	if err := validateReleaseMeasurementInputV2Limit(self.limit); err != nil {
+		return attemptPrivateFileState{}, err
+	}
+	if err := self.check(); err != nil {
+		return attemptPrivateFileState{}, err
+	}
+	state, err := self.directory.stat(self.name)
+	if err != nil {
+		return attemptPrivateFileState{}, err
+	}
+	self.observed, self.witness = true, &state
+	if !state.regular() || state.mode&0o077 != 0 || state.size < 0 || uint64(state.size) > self.limit {
+		return attemptPrivateFileState{}, errors.New("compact input journal is not a bounded private regular file")
+	}
+	return state, self.check()
 }
 
 // Initial absence is granted only after the actual parent Close, its final

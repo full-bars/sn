@@ -215,3 +215,25 @@ func (self *Chain) receiptBlockAt(ctx context.Context, hash types.Hash) (*receip
 	}
 	return &receiptBlock{header: decoded.Block.Header, number: number, extrinsics: decoded.Block.Extrinsics}, nil
 }
+
+// BlockExtrinsicsAtContext returns the header number and the SCALE bytes of
+// every extrinsic of the block at hash. The header must hash to hash and the
+// body must match the header's ordered extrinsics root, so an RPC cannot add,
+// drop or alter an extrinsic without the read failing.
+func (self *Chain) BlockExtrinsicsAtContext(ctx context.Context, hash types.Hash) (uint64, [][]byte, error) {
+	if ctx == nil || self == nil || self.API == nil || self.API.Client == nil || hash == (types.Hash{}) {
+		return 0, nil, errors.New("crv4: block extrinsics read is incomplete")
+	}
+	block, err := self.receiptBlockAt(ctx, hash)
+	if err != nil {
+		return 0, nil, err
+	}
+	extrinsics := make([][]byte, len(block.extrinsics))
+	for index, encoded := range block.extrinsics {
+		extrinsics[index], err = hex.DecodeString(strings.TrimPrefix(encoded, "0x"))
+		if err != nil {
+			return 0, nil, fmt.Errorf("crv4: decode block extrinsic %d: %w", index, err)
+		}
+	}
+	return block.number, extrinsics, ctx.Err()
+}

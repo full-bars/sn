@@ -2,9 +2,10 @@
 
 package validator
 
-// Replicated sealing joins two independently configured object publishers and
-// verifies their public HTTP copies. It does not activate a producer, decide
-// the required validator census, or submit an on-chain evidence commitment.
+// Replicated sealing joins the configured object publishers, one or two
+// independent ones, and verifies their public HTTP copies. It does not
+// activate a producer, decide the required validator census, or submit an
+// on-chain evidence commitment.
 
 import (
 	"context"
@@ -15,6 +16,7 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 
@@ -35,28 +37,44 @@ type AttemptCutV2Replica struct {
 	WriteMetadata AttemptStreamV2ObjectWriter
 }
 
+// Each replica is one configured operator's public origin. A single operator
+// holds the only copy; a larger census replicates to two independent origins.
+func releaseEvidenceV2ReplicaCensus(operators int) int {
+	return min(operators, 2)
+}
+
+// Every replicated publisher, reader and retained census holds one or two
+// origins; an empty or padded list is refused before any public I/O.
+func validateReleaseEvidenceV2ReplicaCount(count int) error {
+	if count < 1 || count > 2 {
+		return errors.New("evidence replicas must be one or two configured operator origins")
+	}
+	return nil
+}
+
 // The caller authenticates the independent origins and their storage ownership
 // through deployment configuration. No stream, disk or timeout cap is raised.
+// Replicas holds the configured replica census: one, or two independent.
 type AttemptCutV2ReplicaOptions struct {
 	ReplayBounds     AttemptCutV2ReplayBounds
 	ScratchDirectory string
 	ServerKeys       map[byte]ed25519.PublicKey
-	Replicas         [2]AttemptCutV2Replica
+	Replicas         []AttemptCutV2Replica
 }
 
-// A successful result binds the exact signed header bytes and both queried
-// origins. Partial immutable writes remain staged on error, but no publication
+// A successful result binds the exact signed header bytes and every queried
+// origin. Partial immutable writes remain staged on error, but no publication
 // result escapes. Availability here is observed, not guaranteed indefinitely.
 type AttemptCutV2Publication struct {
 	Cut         *AttemptCutV2
 	Replay      AttemptCutV2ReplayResult
 	ContentHash string
 	Size        uint64
-	Origins     [2]string
+	Origins     []string
 }
 
 // Seals through the real complete replay, then publishes the canonical signed
-// header to both replicas. The VPK stays local; operator storage callbacks do
+// header to every replica. The VPK stays local; operator storage callbacks do
 // not sign validator evidence or replace record/proof authentication.
 // Inputs must remain unchanged for this invocation. The caller retains all
 // scratch/staged objects and the sealer's cut/drain ownership obligations.
@@ -95,30 +113,33 @@ func SealReplicatedAttemptCutV2(ctx context.Context, ledger *AttemptLedger, expe
 	}
 	return &AttemptCutV2Publication{
 		Cut: cut, Replay: replay, ContentHash: contentHash, Size: uint64(len(raw)),
-		Origins: [2]string{options.Replicas[0].Origin, options.Replicas[1].Origin},
+		Origins: replicas.origins(),
 	}, nil
 }
 
 // Immutable configuration can serve independent cuts concurrently. Every
-// object operation owns its two bounded workers and all of their responses.
+// object operation owns one bounded worker per replica and all responses.
 type attemptCutV2Replicas struct {
-	replicas [2]AttemptCutV2Replica
-	readers  [2]*HTTPAttemptStreamV2Reader
+	replicas []AttemptCutV2Replica
+	readers  []*HTTPAttemptStreamV2Reader
 }
 
-// Resolve all origins, callbacks and bounds before invoking either publisher.
+// Resolve all origins, callbacks and bounds before invoking any publisher.
 // DNS aliases cannot establish independent ownership; deployment admission is
 // still responsible for that. Obvious same-origin aliases are rejected here.
-func newAttemptCutV2Replicas(bounds AttemptCutV2Bounds, replicas [2]AttemptCutV2Replica) (*attemptCutV2Replicas, error) {
+func newAttemptCutV2Replicas(bounds AttemptCutV2Bounds, replicas []AttemptCutV2Replica) (*attemptCutV2Replicas, error) {
 	return newAttemptCutV2ReplicasWithMetadataLimit(bounds, replicas, attemptStreamV2MetadataBytes(bounds))
 }
 
 // Terminal evidence uses its admitted transition allowance without changing
 // the stream schemas or the default cut publisher's metadata capacity.
-func newAttemptCutV2ReplicasWithMetadataLimit(bounds AttemptCutV2Bounds, replicas [2]AttemptCutV2Replica, metadataBytes uint64) (*attemptCutV2Replicas, error) {
-	self := &attemptCutV2Replicas{replicas: replicas}
-	var origins [2]string
-	for index, replica := range replicas {
+func newAttemptCutV2ReplicasWithMetadataLimit(bounds AttemptCutV2Bounds, replicas []AttemptCutV2Replica, metadataBytes uint64) (*attemptCutV2Replicas, error) {
+	if err := validateReleaseEvidenceV2ReplicaCount(len(replicas)); err != nil {
+		return nil, err
+	}
+	self := &attemptCutV2Replicas{replicas: slices.Clone(replicas), readers: make([]*HTTPAttemptStreamV2Reader, len(replicas))}
+	origins := make([]string, len(replicas))
+	for index, replica := range self.replicas {
 		if replica.WriteRecords == nil || replica.WriteProofs == nil || replica.WriteMetadata == nil {
 			return nil, errors.New("replicated attempt publisher is incomplete")
 		}
@@ -147,16 +168,26 @@ func newAttemptCutV2ReplicasWithMetadataLimit(bounds AttemptCutV2Bounds, replica
 		origins[index] = endpoint.Scheme + "://" + net.JoinHostPort(host, port)
 		self.readers[index] = reader
 	}
-	if origins[0] == origins[1] {
+	if len(origins) == 2 && origins[0] == origins[1] {
 		return nil, errors.New("replicated attempt origins are not distinct")
 	}
 	return self, nil
 }
 
-// No callback sees another callback's mutable bytes. This operation owns two
-// object copies, fixed data-read buffers, and at most two bounded metadata
-// readback bodies. No buffer or retained result grows with the stream history.
-// Any failure cancels siblings, but cancellation never substitutes for joining.
+// The exact configured origin of each replica, in publisher order.
+func (self *attemptCutV2Replicas) origins() []string {
+	origins := make([]string, len(self.replicas))
+	for index, replica := range self.replicas {
+		origins[index] = replica.Origin
+	}
+	return origins
+}
+
+// No callback sees another callback's mutable bytes. This operation owns one
+// object copy per replica, fixed data-read buffers, and at most one bounded
+// metadata readback body per replica. No buffer or retained result grows with
+// the stream history. Any failure cancels siblings, but cancellation never
+// substitutes for joining.
 func (self *attemptCutV2Replicas) writer(kind string) AttemptStreamV2ObjectWriter {
 	return func(ctx context.Context, contentHash string, raw []byte) error {
 		if ctx == nil {
@@ -187,7 +218,7 @@ func (self *attemptCutV2Replicas) writer(kind string) AttemptStreamV2ObjectWrite
 		ownedCtx, cancel := context.WithCancel(ctx)
 		defer cancel()
 		var workers sync.WaitGroup
-		var results [2]error
+		results := make([]error, len(self.replicas))
 		for index, replica := range self.replicas {
 			write := replica.WriteMetadata
 			if kind == AttemptStreamV2Records {
@@ -195,7 +226,7 @@ func (self *attemptCutV2Replicas) writer(kind string) AttemptStreamV2ObjectWrite
 			} else if kind == AttemptStreamV2Proofs {
 				write = replica.WriteProofs
 			}
-			// The original remains borrowed until both workers join. Callbacks
+			// The original remains borrowed until every worker joins. Callbacks
 			// own independent copies and may mutate them after returning.
 			data := append([]byte(nil), raw...)
 			workers.Add(1)
@@ -223,10 +254,7 @@ func (self *attemptCutV2Replicas) writer(kind string) AttemptStreamV2ObjectWrite
 			}(index, write, data)
 		}
 		workers.Wait()
-		if results[0] != nil || results[1] != nil {
-			return joinReplicaPublicationErrors(ctx.Err(), results[:])
-		}
-		return ctx.Err()
+		return joinReplicaPublicationErrors(ctx.Err(), results)
 	}
 }
 

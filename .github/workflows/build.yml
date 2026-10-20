@@ -102,6 +102,9 @@ jobs:
           echo "go test still flaking after 3 attempts"
           exit 1
 
+      - name: Run one-program (miner) tests
+        run: go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...
+
   lint:
     runs-on: ubuntu-latest
     permissions:
@@ -205,6 +208,10 @@ jobs:
         run: |
           chmod +x docker/scripts/test_pelican_gates.sh
           ./docker/scripts/test_pelican_gates.sh
+      - name: Docker exit 75 restart tests
+        run: |
+          chmod +x docker/scripts/test_exit75_restart.sh
+          ./docker/scripts/test_exit75_restart.sh
 
       - name: Shellcheck docker scripts (error severity)
         run: |
@@ -222,6 +229,36 @@ jobs:
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
+
+  freebsd-vet:
+    # The FreeBSD lifecycle backend is compiled but never run on a live
+    # kernel in a PR. `go vet` type-checks the package AND its test files
+    # for GOOS=freebsd, so a freebsd-only break (a symbol gated behind
+    # //go:build linux that a shared caller reaches) fails the PR instead
+    # of landing and breaking the FreeBSD release at cut time.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Go (native cache)
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Vet urnettools for freebsd
+        run: |
+          set -e
+          GOOS=freebsd GOARCH=amd64 go vet ./internal/urnettools/
+          GOOS=freebsd GOARCH=arm64 go vet ./internal/urnettools/
+          echo "freebsd vet OK"
 
   cross-build:
     # PR compile gate: a fork-adaptation stub our tests never hit (e.g. a

@@ -142,6 +142,21 @@ func (self *historicalNativeFeed) serve(ctx context.Context, input io.Reader, ou
 		for {
 			proof, err := reader.Read(ctx, self.parentHash, child, key)
 			if err != nil {
+				// Retain the refused attempt before the supervisor cancels the
+				// child. A bounded prefix is explicitly diagnostic, never proof.
+				// An already-ended owner cannot write; its returned error still
+				// carries the method, identity, stage and observed-reply digest.
+				var failure *strecovery.NativeExecutionProofReadFailure
+				if errors.As(err, &failure) {
+					raw, encodeErr := json.Marshal(failure)
+					if encodeErr == nil {
+						encodeErr = self.files.admitMargin(1)
+					}
+					if encodeErr == nil {
+						_, encodeErr = self.files.publish("proof-rpc/"+strings.TrimPrefix(monitorReadDigest(raw), "sha256:")+".json", raw, 128*1024)
+					}
+					err = errors.Join(err, encodeErr)
+				}
 				if errors.Is(err, strecovery.ErrNativeExecutionProofConflict) {
 					err = errors.Join(errRpcIntegrity, err)
 				}

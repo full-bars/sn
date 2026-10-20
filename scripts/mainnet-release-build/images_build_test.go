@@ -205,7 +205,7 @@ func TestImageBuildEnvironmentAndArgumentsStayOffline(t *testing.T) {
 func TestImageBuildFailureRetainsCommandAndNeverSeals(t *testing.T) {
 	pin, _ := imageTestParent(t, scratchImageDockerfile)
 	root := t.TempDir()
-	socketPath := filepath.Join(root, "daemon.sock")
+	socketPath := testSocketPath(t, "daemon.sock")
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		t.Fatal(err)

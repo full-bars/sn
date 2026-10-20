@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The bounded restore reader cannot return admitted bytes after cancellation
 // or a failed exact-size check, even if the underlying read filled its buffer.

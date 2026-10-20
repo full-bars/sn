@@ -22,8 +22,13 @@ type providerAuthenticationCallbacks struct {
 	provider       uint64
 	clientJwtPath  string
 	networkJwtPath string
-	cancel         context.CancelFunc
-	custody        *clientauth.ProviderClientKeyOwner
+	// identityKey is the slot's client JWT store key (jwtStoreKey). A
+	// platform-rejected credential also evicts the hot-restart store entry so
+	// a restart cannot hand the same poisoned identity straight back (the v33
+	// "Delete on rejection": provider/provider_auth.go watchReusedIdentity...).
+	identityKey string
+	cancel      context.CancelFunc
+	custody     *clientauth.ProviderClientKeyOwner
 }
 
 // Required token persistence precedes its existing global cancellation policy.
@@ -53,6 +58,15 @@ func (self *providerAuthenticationCallbacks) AuthLogout() {
 	if err != nil {
 		self.retainFailure(err)
 	}
+	// Fork hook: a rejected credential must not be reused on the next start
+	// either. The custody tombstone already blocks the durable-registration
+	// path; evicting the hot-restart store entry is what stops provideClientJWT
+	// from handing the same poisoned identity straight back.
+	if self.identityKey != "" {
+		if delErr := loadGlobalClientJWTStore().Delete(self.identityKey); delErr != nil {
+			tlog("⚠️ [jwt-store] failed to evict rejected identity for %s: %v\n", self.identityKey, delErr)
+		}
+	}
 	self.cancel()
 	if err != nil {
 		self.diagnostics.observe(providerRejectionSaveFailed, self.provider, true, err, 0, nil)
@@ -78,18 +92,18 @@ func (self *providerAuthenticationCallbacks) failure() error {
 
 // These key saves keep their existing best-effort startup semantics. Each real
 // failure remains visible as its own closed event; output never gates serving.
-func persistProviderKeyMaterial(output *providerDiagnostics, provider uint64, keyMaterial *sdk.DeviceLocalKeyMaterial) {
+func persistProviderKeyMaterial(output *providerDiagnostics, provider uint64, identities providerSlotIdentities, proxySettings *connect.ProxySettings, keyMaterial *sdk.DeviceLocalKeyMaterial) {
 	if seed := keyMaterial.GetClientKeySeed(); len(seed) > 0 {
 		if err := writeProviderClientKeySeed(seed); err != nil {
 			output.observe(providerClientKeySaveFailed, provider, true, err, 0, nil)
 		}
 	}
-	persistProviderAuxiliaryKeyMaterial(output, provider, keyMaterial)
+	persistProviderAuxiliaryKeyMaterial(output, provider, identities, proxySettings, keyMaterial)
 }
 
 // Device-generated TLS/extender state cannot overwrite the already owned and
 // fsynced client key that selected the durable registration operation.
-func persistProviderAuxiliaryKeyMaterial(output *providerDiagnostics, provider uint64, keyMaterial *sdk.DeviceLocalKeyMaterial) {
+func persistProviderAuxiliaryKeyMaterial(output *providerDiagnostics, provider uint64, identities providerSlotIdentities, proxySettings *connect.ProxySettings, keyMaterial *sdk.DeviceLocalKeyMaterial) {
 	certPem, keyPem := keyMaterial.GetProvideTlsCertificatePem(), keyMaterial.GetProvideTlsPrivateKeyPem()
 	if len(certPem) > 0 && len(keyPem) > 0 {
 		if err := writeProviderTlsCertAndKey(certPem, keyPem); err != nil {
@@ -97,7 +111,7 @@ func persistProviderAuxiliaryKeyMaterial(output *providerDiagnostics, provider u
 		}
 	}
 	if seed := keyMaterial.GetExtenderKeySeed(); len(seed) > 0 {
-		if err := writeProviderExtenderKeySeed(seed); err != nil {
+		if err := writeProviderExtenderKeySeed(identities, proxySettings, seed); err != nil {
 			output.observe(providerExtenderKeySaveFailed, provider, true, err, 0, nil)
 		}
 	}

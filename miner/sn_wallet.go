@@ -3,11 +3,12 @@ package miner
 // sn_wallet.go — `provider wallet set` / `provider wallet challenge` and the
 // `provide --wallet` startup set (sn/PLAN.md 7.3, decision D-2).
 //
-// `POST /sn/wallet` on the main network refuses a pasted address: the set
-// must carry the coldkey's sr25519 signature over the single-use challenge
-// issued by `POST /auth/wallet-challenge` (blockchain TAO, pinned to the
-// address), exactly what the ur.io wallet bridge sends. The CLI proves
-// possession of the coldkey one of two ways:
+// Provider commands authenticate the selected provider and obtain a canonical
+// prospective earning-wallet consent from `POST /sn/wallet/consent`. Its exact
+// coldkey signature is retained before `POST /sn/wallet`, so a lost response
+// can replay the original. Explicit --legacy-network-wallet keeps the older
+// login-proof projection path, which cannot establish release epoch consent.
+// The CLI proves possession of the coldkey one of two ways:
 //
 //   - --coldkey_seed_file=<path>: the 32-byte sr25519 seed (raw, or 64 hex
 //     chars with an optional 0x prefix). The keypair is derived the way
@@ -26,9 +27,8 @@ package miner
 // of type "bytes" signs, so the seed-file path signs that form. The signature
 // travels as hex, 0x-prefixed, 64 bytes.
 //
-// With neither option the request is sent unsigned, which only a deployment
-// with the `wallet_allow_unsigned` policy accepts (never main); the refusal
-// is explained with the two ways to sign.
+// A fresh provider consent always requires a signature. Only the explicitly
+// selected legacy path retains the old test-only unsigned policy behavior.
 
 import (
 	"context"
@@ -37,6 +37,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -63,6 +64,9 @@ or sign it elsewhere:
 // snWalletProof is how a wallet set proves possession of the coldkey. At most
 // one of the two forms is set; both empty means an unsigned set.
 type snWalletProof struct {
+	credentials  snCredentialSelection
+	fromEpoch    *int64
+	throughEpoch *int64
 	// SeedFile holds the coldkey's 32-byte sr25519 seed.
 	SeedFile string
 	// Message is the exact challenge text (or its one-line form with a
@@ -78,7 +82,10 @@ func (self *snWalletProof) unsigned() bool {
 
 // snWalletProofFromOpts reads --coldkey_seed_file, --message and --signature.
 func snWalletProofFromOpts(opts docopt.Opts) (*snWalletProof, error) {
-	proof := &snWalletProof{}
+	proof := &snWalletProof{credentials: snCredentialsFromOpts(opts)}
+	if proof.credentials.legacyNetwork && proof.credentials.jwtFile != "" {
+		return nil, errors.New("--provider-jwt and --legacy-network-wallet are separate wallet modes")
+	}
 	if seedFile, err := opts.String("--coldkey_seed_file"); err == nil {
 		proof.SeedFile = strings.TrimSpace(seedFile)
 	}
@@ -87,6 +94,22 @@ func snWalletProofFromOpts(opts docopt.Opts) (*snWalletProof, error) {
 	}
 	if signature, err := opts.String("--signature"); err == nil {
 		proof.Signature = strings.TrimSpace(signature)
+	}
+	from, _ := opts.String("--wallet-from-epoch")
+	through, _ := opts.String("--wallet-through-epoch")
+	if (from == "") != (through == "") {
+		return nil, errors.New("--wallet-from-epoch and --wallet-through-epoch go together")
+	}
+	if from != "" {
+		first, err := strconv.ParseInt(from, 10, 64)
+		if err != nil || first < 0 {
+			return nil, errors.New("invalid wallet earning epoch")
+		}
+		last, err := strconv.ParseInt(through, 10, 64)
+		if err != nil || last < first || last-first > 65535 {
+			return nil, errors.New("wallet earning interval must contain at most 65536 epochs")
+		}
+		proof.fromEpoch, proof.throughEpoch = &first, &last
 	}
 	if proof.SeedFile != "" && (proof.Message != "" || proof.Signature != "") {
 		return nil, errors.New("use either --coldkey_seed_file or --message with --signature, not both")
@@ -222,7 +245,7 @@ func snWalletSetArgs(ctx context.Context, api *sdk.Api, coldkeySs58 string, pubk
 }
 
 // snSetWallet validates the ss58 coldkey locally, proves possession of it
-// (snWalletProof) and idempotently sets it as the network's subnet claim
+// (snWalletProof) and idempotently sets it as the selected provider's subnet claim
 // wallet via the authenticated `POST /sn/wallet` route. Prints the result on
 // success. An unsigned set (no proof) is sent as the explicit fallback for a
 // deployment with the wallet_allow_unsigned policy, and its refusal explains
@@ -233,7 +256,11 @@ func snSetWallet(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 	if err != nil {
 		return fmt.Errorf("invalid ss58 coldkey %q: %s", coldkeySs58, err)
 	}
-	byJwt, err := readNetworkJwt()
+	selection := snCredentialSelection{}
+	if proof != nil {
+		selection = proof.credentials
+	}
+	byJwt, clientId, err := readSnCredentials(selection)
 	if err != nil {
 		return err
 	}
@@ -241,6 +268,10 @@ func snSetWallet(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 	defer func() {
 		_ = api.CloseAndWait(context.Background())
 	}()
+	if clientId != nil {
+		api.SetByJwt(byJwt)
+		return snSetProviderWallet(ctx, api, apiUrl, byJwt, clientId, coldkeySs58, pubkey, proof, selection)
+	}
 	if proof.unsigned() {
 		fmt.Printf("no coldkey proof given (--coldkey_seed_file, or --message with --signature): sending an unsigned wallet set, which the main network refuses\n")
 	}
@@ -248,6 +279,7 @@ func snSetWallet(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 	if err != nil {
 		return err
 	}
+	args.ClientId = clientId
 	api.SetByJwt(byJwt)
 	result, err := api.SnSetWalletSync(args)
 	if err != nil {
@@ -269,7 +301,7 @@ func snSetWallet(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 
 // snWalletChallengeText is what `provider wallet challenge` prints: the exact
 // bytes to sign, how to sign them, and the command that submits the result.
-func snWalletChallengeText(coldkeySs58 string, challenge *sdk.AuthWalletChallengeResult) string {
+func snWalletChallengeText(coldkeySs58 string, challenge *sdk.AuthWalletChallengeResult, selectionOptions ...string) string {
 	message := challenge.MessageTemplate
 	var b strings.Builder
 	fmt.Fprintf(&b, "Sign this message with the coldkey %s: sr25519, \"substrate\" signing context.\n", coldkeySs58)
@@ -279,8 +311,18 @@ func snWalletChallengeText(coldkeySs58 string, challenge *sdk.AuthWalletChalleng
 	fmt.Fprintf(&b, "\n----- message -----\n%s\n----- end -----\n", message)
 	fmt.Fprintf(&b, "message bytes (hex): 0x%s\n", hex.EncodeToString([]byte(message)))
 	fmt.Fprintf(&b, "\nThen, within that window, submit the 64-byte signature as hex:\n")
-	fmt.Fprintf(&b, "  provider wallet set %s --message='%s' --signature=0x<128 hex chars>\n", coldkeySs58, snEscapeMessage(message))
+	fmt.Fprintf(&b, "  provider wallet set %s --message='%s' --signature=0x<128 hex chars>", coldkeySs58, snEscapeMessage(message))
+	for _, option := range selectionOptions {
+		fmt.Fprintf(&b, " %s", option)
+	}
+	b.WriteByte('\n')
 	return b.String()
+}
+
+// Preserve the selected endpoint and private file even when a shell path
+// contains spaces or quotes. This is display text, never executed locally.
+func snWalletShellValue(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
 }
 
 // snPrintWalletChallenge implements `provider wallet challenge <coldkey_ss58>`.
@@ -297,7 +339,7 @@ func snPrintWalletChallenge(ctx context.Context, clientStrategy *connect.ClientS
 	if err != nil {
 		return err
 	}
-	_, err = io.WriteString(out, snWalletChallengeText(coldkeySs58, challenge))
+	_, err = io.WriteString(out, snWalletChallengeText(coldkeySs58, challenge, "--legacy-network-wallet", "--api_url="+snWalletShellValue(apiUrl)))
 	return err
 }
 
@@ -343,7 +385,38 @@ func walletChallenge(opts docopt.Opts) {
 	defer clientStrategy.Close()
 
 	coldkeySs58, _ := opts.String("<coldkey_ss58>")
-	if err := snPrintWalletChallenge(ctx, clientStrategy, apiUrl, coldkeySs58, os.Stdout); err != nil {
+	proof, proofErr := snWalletProofFromOpts(opts)
+	if proofErr != nil {
+		fmt.Fprintln(os.Stderr, proofErr)
+		os.Exit(1)
+	}
+	printChallenge := func() error {
+		if proof.credentials.legacyNetwork {
+			return snPrintWalletChallenge(ctx, clientStrategy, apiUrl, coldkeySs58, os.Stdout)
+		}
+		pubkey, err := ss58.DecodeWithPrefix(coldkeySs58, ss58.BittensorPrefix)
+		if err != nil {
+			return err
+		}
+		token, clientId, err := readSnCredentials(proof.credentials)
+		if err != nil {
+			return err
+		}
+		api := sdk.NewApi(ctx, clientStrategy, apiUrl)
+		defer api.CloseAndWait(context.Background())
+		api.SetByJwt(token)
+		message, err := snRequestWalletMapping(ctx, api, token, coldkeySs58, pubkey, clientId, proof)
+		if err != nil {
+			return err
+		}
+		path, err := snCredentialPath(proof.credentials)
+		if err != nil {
+			return err
+		}
+		_, err = io.WriteString(os.Stdout, snWalletChallengeText(coldkeySs58, &sdk.AuthWalletChallengeResult{MessageTemplate: message, ExpiresIn: 300}, "--provider-jwt="+snWalletShellValue(path), "--api_url="+snWalletShellValue(apiUrl)))
+		return err
+	}
+	if err := printChallenge(); err != nil {
 		fmt.Printf("subnet wallet challenge not issued: %s\n", err)
 		os.Exit(1)
 	}
@@ -365,28 +438,4 @@ func snProvideWalletMisuse(opts docopt.Opts) string {
 		return ""
 	}
 	return fmt.Sprintf("subnet wallet: %s given without --wallet=<coldkey_ss58>; no wallet is set", strings.Join(given, ", "))
-}
-
-// provideSetWallet is the `provide --wallet` startup set: validate and
-// register the coldkey before providing starts. A failure warns and does not
-// block providing — the wallet may already be set from a previous run, and
-// the call can be retried any time with `provider wallet set`.
-func provideSetWallet(ctx context.Context, apiUrl string, opts docopt.Opts) {
-	coldkeySs58, walletErr := opts.String("--wallet")
-	if walletErr != nil || coldkeySs58 == "" {
-		if misuse := snProvideWalletMisuse(opts); misuse != "" {
-			fmt.Printf("%s\n", misuse)
-		}
-		return
-	}
-	proof, err := snWalletProofFromOpts(opts)
-	if err == nil {
-		walletClientStrategy := connect.NewClientStrategyWithDefaults(ctx)
-		defer walletClientStrategy.Close()
-		err = snSetWallet(ctx, walletClientStrategy, apiUrl, coldkeySs58, proof)
-	}
-	if err != nil {
-		fmt.Printf("subnet wallet not set: %s\n", err)
-		fmt.Printf("continuing to provide. Retry with: provider wallet set <coldkey_ss58> --coldkey_seed_file=<path>\n")
-	}
 }

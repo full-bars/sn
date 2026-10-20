@@ -226,6 +226,63 @@ func TestRepairControllerRootRejectsNestedOutputAliasesBeforeWrites(t *testing.T
 	}
 }
 
+// The overlap census is path arithmetic. An overlapping output is refused with
+// exit 2 whether its validator namespace is absent or present.
+func TestRepairControllerRootOverlapRefusalIgnoresOutputAncestors(t *testing.T) {
+	f := newRepairRootPassiveFixture(t)
+	args, _ := repairControllerRootCommand(t, f)
+	declared := f.root.chain.preparation.Plan.ValidatorInspections[0].DeclaredPaths[0]
+	namespace := filepath.Dir(declared)
+	if _, err := os.Lstat(namespace); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("validator namespace is not absent", namespace, err)
+	}
+	overlaps := []struct{ checkpoint, metrics, diagnostic string }{
+		{declared, args[7], "write overlaps an original input"},
+		{filepath.Join(namespace, "controller.json"), filepath.Join(namespace, "controller.json.lock"), "output paths overlap"},
+	}
+	for _, state := range []string{"absent", "present"} {
+		if state == "present" {
+			if err := os.Mkdir(namespace, 0700); err != nil {
+				t.Fatal(err)
+			}
+		}
+		before := mainnetNamespaceTest(t, f.root.host.files.host.trustRoot)
+		for _, overlap := range overlaps {
+			changed := append([]string(nil), args...)
+			changed[5], changed[7] = overlap.checkpoint, overlap.metrics
+			var out, diagnostic bytes.Buffer
+			code := runRepairControllerCommandWithHost(f.ctx(), changed, &out, &diagnostic, func() time.Time { return f.root.now }, f.root.host.files.host)
+			if code != 2 || !strings.Contains(diagnostic.String(), overlap.diagnostic) || out.Len() != 0 || f.root.starts != 1 {
+				t.Fatal("overlap refusal depended on its output ancestors", state, overlap.checkpoint, code, diagnostic.String(), f.root.starts)
+			}
+		}
+		if !reflect.DeepEqual(before, mainnetNamespaceTest(t, f.root.host.files.host.trustRoot)) {
+			t.Fatal("overlap refusal changed original physical custody", state)
+		}
+	}
+}
+
+// A disjoint output below an absent directory is a valid configuration. Its
+// ancestor inspection stays retryable unavailability before any owner opens.
+func TestRepairControllerRootAbsentOutputAncestorIsUnavailable(t *testing.T) {
+	f := newRepairRootPassiveFixture(t)
+	args, _ := repairControllerRootCommand(t, f)
+	absent := filepath.Join(filepath.Dir(args[5]), "absent")
+	before := mainnetNamespaceTest(t, f.root.host.files.host.trustRoot)
+	for _, index := range []int{5, 7} {
+		changed := append([]string(nil), args...)
+		changed[index] = filepath.Join(absent, filepath.Base(args[index]))
+		var out, diagnostic bytes.Buffer
+		code := runRepairControllerCommandWithHost(f.ctx(), changed, &out, &diagnostic, func() time.Time { return f.root.now }, f.root.host.files.host)
+		if code != 1 || !strings.Contains(diagnostic.String(), "temporarily unavailable: cannot inspect validator repair ancestor") || out.Len() != 0 || f.root.starts != 1 {
+			t.Fatal("absent output ancestor was not retryable unavailability", changed[index], code, diagnostic.String(), f.root.starts)
+		}
+	}
+	if !reflect.DeepEqual(before, mainnetNamespaceTest(t, f.root.host.files.host.trustRoot)) {
+		t.Fatal("unavailable output ancestor changed original physical custody")
+	}
+}
+
 // A sibling .prom inside the sole root checkpoint directory would change its
 // fixed file census even if it did not replace the checkpoint's exact pathname.
 func TestRepairControllerRootRejectsCheckpointDirectoryOutputBeforeWrites(t *testing.T) {

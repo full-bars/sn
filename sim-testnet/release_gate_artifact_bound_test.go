@@ -149,6 +149,7 @@ func verifyReleaseArtifactBoundSourceGraph(sources map[string]string) error {
 	}
 	expected := map[string]int{
 		"config_evidence_v2.go:Validate":                                         2,
+		"recycle_measurement.go:ownerRecycleMeasurementLimit":                    2,
 		"release_client_key_authority_v2.go:newReleaseClientKeyAuthorityV2Reads": 1,
 		"release_decision_chain_v2.go:ownReleaseDecisionChainV2Query":            1,
 		"release_measurement_v2.go:ownReleaseMeasurementV2":                      2,
@@ -228,6 +229,7 @@ func TestProducerGateStateSelectionArtifactBoundGraphRejectsMissingAuthority(t *
 	}
 	for _, guard := range []struct{ path, comparison string }{
 		{path: "config_evidence_v2.go", comparison: "self.MaxControlBytes > maxReleaseMeasurementArtifactBytes"},
+		{path: "recycle_measurement.go", comparison: "options.MaxArtifactBytes > maxReleaseMeasurementArtifactBytes"},
 		{path: "release_client_key_authority_v2.go", comparison: "budget.limit > maxReleaseMeasurementArtifactBytes"},
 		{path: "release_decision_chain_v2.go", comparison: "query.maxControlBytes > maxReleaseMeasurementArtifactBytes"},
 	} {

@@ -59,6 +59,21 @@ func (self *RegistrationRefreshUnavailableError) Error() string {
 }
 func (self *RegistrationRefreshUnavailableError) Unwrap() error { return self.cause }
 
+// IsRegistrationRefreshUnavailable reports whether err is a retryable
+// unavailable read: the API was never reached, so the saved identity has not
+// been refused and no permanent decision may be based on it.
+func IsRegistrationRefreshUnavailable(err error) bool {
+	var unavailable *RegistrationRefreshUnavailableError
+	return errors.As(err, &unavailable)
+}
+
+// NewRegistrationRefreshUnavailableError wraps the leaf read failure. The
+// cause is kept for classification: a server status means the API answered,
+// a network error means it was never reached.
+func NewRegistrationRefreshUnavailableError(cause error) error {
+	return &RegistrationRefreshUnavailableError{cause: cause}
+}
+
 // Only a completed remote reply can produce this cause. Local registration or
 // credential custody failures retain their original hard errors separately.
 type RegistrationResponseIdentityError struct{}
@@ -74,6 +89,19 @@ type registrationRecord struct {
 	Request   sdk.RegisterNetworkClientArgs `json:"request"`
 	ClientId  string                        `json:"client_id,omitempty"`
 	DeviceId  string                        `json:"device_id,omitempty"`
+}
+
+// The existing-client custody marker has exactly one shape: both the adoption
+// of observed custody and a completed fresh registration publish it, and the
+// retained-custody path compares the same bytes.
+func existingClientCustodyMarker(scope RegistrationScope, identity registrationTokenIdentity) ([]byte, error) {
+	return json.Marshal(struct {
+		Schema    string                `json:"schema"`
+		Scope     RegistrationScope     `json:"scope"`
+		Principal registrationPrincipal `json:"principal"`
+		ClientId  string                `json:"client_id"`
+		DeviceId  string                `json:"device_id"`
+	}{Schema: "urnetwork-existing-client-v1", Scope: scope, Principal: identity.registrationPrincipal, ClientId: identity.clientId, DeviceId: identity.deviceId})
 }
 
 // Test hooks can fail only after actual durable ownership boundaries. They do
@@ -117,6 +145,9 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	if scope.Endpoint != endpoint {
 		return "", connect.Id{}, errors.New("registration scope differs from its configured API or deployment")
 	}
+	// Measurement creation is only a provisioned owner's call, in a directory
+	// whose provisioning marker names this exact client key.
+	measurementCreate := allowCreate && scope.ClientRole == "validator-measurement-v1" && measurementProvisioningAuthorized(directory, scope)
 	values := []string{scope.ClientKey}
 	if scope.ClientRole == "" {
 		if scope.ClientSlot != "" || scope.DeploymentId == "" || scope.ChainId == 0 || scope.Netuid == 0 || scope.OperatorNoId == 0 || scope.ValidatorId == 0 {
@@ -128,7 +159,7 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 			scope.DeploymentId != "" || scope.ChainId != 0 || scope.GenesisHash != "" || scope.Netuid != 0 || scope.ValidatorId != 0 || scope.OperatorNoId != 0 {
 			return "", connect.Id{}, errors.New("registration service role is unsupported or mixed with chain authority")
 		}
-		if scope.ClientRole == "validator-measurement-v1" && (scope.ClientSlot != "direct" || allowCreate) {
+		if scope.ClientRole == "validator-measurement-v1" && (scope.ClientSlot != "direct" || allowCreate && !measurementCreate) {
 			return "", connect.Id{}, errors.New("measurement registration requires its retained direct operation")
 		}
 		if scope.ClientSlot != "direct" {
@@ -144,7 +175,7 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 			return "", connect.Id{}, errors.New("registration scope has an invalid genesis or client key")
 		}
 	}
-	if bootstrapOwner != nil && (directory == nil || scope.ClientRole != "validator-measurement-v1" || allowCreate) {
+	if bootstrapOwner != nil && (directory == nil || scope.ClientRole != "validator-measurement-v1" || allowCreate && !measurementCreate) {
 		return "", connect.Id{}, errors.New("separate bootstrap custody is restricted to retained measurement work")
 	}
 	var owner *registrationStore
@@ -248,13 +279,7 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 			}
 			// Observing existing custody consumes no creation authority. Its
 			// stable marker survives token loss and excludes bearer timestamps.
-			expected, err := json.Marshal(struct {
-				Schema    string                `json:"schema"`
-				Scope     RegistrationScope     `json:"scope"`
-				Principal registrationPrincipal `json:"principal"`
-				ClientId  string                `json:"client_id"`
-				DeviceId  string                `json:"device_id"`
-			}{Schema: "urnetwork-existing-client-v1", Scope: scope, Principal: identity.registrationPrincipal, ClientId: identity.clientId, DeviceId: identity.deviceId})
+			expected, err := existingClientCustodyMarker(scope, identity)
 			if err != nil {
 				return "", connect.Id{}, err
 			}
@@ -277,7 +302,15 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	if record == nil && !allowCreate {
 		return "", connect.Id{}, &RegistrationRefusedError{Code: "legacy_identity_requires_explicit_recovery"}
 	}
-	bootstrap, err := readToken(networkPath)
+	// Path custody reads the token and its fingerprint from one file, so a
+	// renewal renamed in between cannot mix two files (network_token.go).
+	// Directory custody never compares fingerprints: any marker blocks.
+	var bootstrap, fingerprint string
+	if directory == nil {
+		bootstrap, fingerprint, err = readNetworkCredential(networkPath)
+	} else {
+		bootstrap, err = readToken(networkPath)
+	}
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return "", connect.Id{}, &RegistrationRefusedError{Code: "network_authentication_missing"}
@@ -289,7 +322,13 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 		return "", connect.Id{}, errors.New("registration bootstrap does not name a network principal")
 	}
 	if marker, err := readToken(rejectionPath(clientPath)); err == nil {
-		if directory != nil || marker == "blocked" || marker == networkCredentialFingerprint(networkPath, bootstrap) {
+		blocks := directory != nil
+		if !blocks {
+			if blocks, err = networkCredentialMarkerBlocks(networkPath, fingerprint, marker); err != nil {
+				return "", connect.Id{}, err
+			}
+		}
+		if blocks {
 			return "", connect.Id{}, &RegistrationRefusedError{Code: "client_revoked"}
 		}
 	} else if !errors.Is(err, os.ErrNotExist) {
@@ -346,7 +385,8 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	}
 	result, err := api.RegisterNetworkClientSyncWithContext(ctx, &record.Request)
 	if err != nil {
-		return "", connect.Id{}, err
+		// the request carried the bootstrap: a 401 rejects the network sign-in
+		return "", connect.Id{}, networkCredentialRejection(err)
 	}
 	if result.Error != nil {
 		return "", connect.Id{}, &RegistrationRefusedError{Code: result.Error.Code}

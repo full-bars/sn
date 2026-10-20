@@ -21,6 +21,8 @@ from cargo_control import MAXIMUM_LOG_BYTES, bounded_regular_bytes, require, run
 
 MAXIMUM_EXECUTABLE_BYTES = 512 * 1024 * 1024
 MAXIMUM_PROCESS_RECEIPT_BYTES = 1024 * 1024
+MAXIMUM_PYTHON_LINKS = 16
+MAXIMUM_PYTHON_CONFIG_BYTES = 64 * 1024
 
 
 def durable_json(path, value):
@@ -141,6 +143,68 @@ def bind_executable(path, expected=None, interpreter=False):
         os.close(descriptor)
 
 
+def bind_python_interpreter(path, expected=None):
+    """Keep Python's invocation path while independently binding its real ELF.
+
+    Python discovers a virtualenv beside the invoked path, before following
+    executable symlinks. Resolving argv[0] changes imports even when the real
+    interpreter bytes are identical. Only explicit final-component symlink
+    chains are allowed here; normal tool binding remains canonical and strict.
+    Dependency/source custody still belongs to the caller.
+    """
+    invocation = Path(path)
+    require(invocation.is_absolute(), "Python invocation must be absolute")
+    current, links, parents = invocation, [], {}
+    seen = set()
+    while True:
+        require(current.parent.resolve(strict=True) == current.parent,
+                "Python invocation parent aliases")
+        parent = current.parent.lstat()
+        parents[str(current.parent)] = {key: value for key, value in file_identity(parent).items()
+                                       if key in ("device", "inode", "mode", "uid", "gid")}
+        require(str(current) not in seen, "Python invocation symlink cycle")
+        seen.add(str(current))
+        before = current.lstat()
+        if not stat.S_ISLNK(before.st_mode):
+            break
+        require(len(links) < MAXIMUM_PYTHON_LINKS, "Python invocation symlink bound")
+        target = os.readlink(current)
+        require(file_identity(current.lstat()) == file_identity(before),
+                "Python invocation link changed while binding")
+        links.append({"path": str(current), "target": target, "identity": file_identity(before)})
+        selected = Path(target) if Path(target).is_absolute() else current.parent / target
+        current = Path(os.path.normpath(selected))
+    target = bind_executable(current, expected)
+    require("interpreter" not in target, "Python invocation must target a real ELF interpreter")
+    configuration = []
+    for directory in (invocation.parent, invocation.parent.parent):
+        config = directory / "pyvenv.cfg"
+        try:
+            before = config.lstat()
+        except FileNotFoundError:
+            configuration.append({"path": str(config), "identity": None, "sha256": None})
+            continue
+        require(stat.S_ISREG(before.st_mode), "Python configuration must be regular data")
+        raw = bounded_regular_bytes(config, MAXIMUM_PYTHON_CONFIG_BYTES)
+        require(file_identity(config.lstat()) == file_identity(before),
+                "Python configuration changed while binding")
+        configuration.append({"path": str(config), "identity": file_identity(before),
+                              "sha256": hashlib.sha256(raw).hexdigest()})
+    for link in links:
+        require(file_identity(Path(link["path"]).lstat()) == link["identity"]
+                and os.readlink(link["path"]) == link["target"],
+                "Python invocation link changed while binding")
+    require(str(invocation.resolve(strict=True)) == target["path"],
+            "Python invocation target changed while binding")
+    for parent, identity in parents.items():
+        info = file_identity(Path(parent).lstat())
+        require(all(info[key] == value for key, value in identity.items()),
+                "Python invocation parent changed while binding")
+    return {"kind": "python-invocation-v1", "path": str(invocation),
+            "sha256": target["sha256"], "target": target, "links": links,
+            "parents": parents, "configuration": configuration}
+
+
 class ChildContext:
     """Freeze one cwd and complete environment for probes and the actual child."""
 
@@ -156,7 +220,10 @@ class ChildContext:
         self._cwd_identity = self._directory_identity()
         self._environment_sha256 = self._environment_hash()
         self._executables = {}
-        self.runner = bind_executable(Path(sys.executable).resolve(strict=True))
+        self.runner_invocation = bind_python_interpreter(sys.executable)
+        # Existing runner pins authenticate the real executable. Keep that
+        # contract while also retaining the invocation/configuration context.
+        self.runner = self.runner_invocation["target"]
         if runner_pin is not None:
             require(isinstance(runner_pin, dict) and set(runner_pin) == {"path", "sha256"}
                     and runner_pin["path"] == self.runner["path"]
@@ -180,6 +247,14 @@ class ChildContext:
         self._executables[binding["path"]] = binding
         return copy.deepcopy(binding)
 
+    def bind_python(self, path, expected=None):
+        """Bind the selected Python path without resolving away its virtualenv."""
+        binding = bind_python_interpreter(path, expected)
+        previous = self._executables.get(binding["path"])
+        require(previous is None or previous == binding, "bound Python invocation changed")
+        self._executables[binding["path"]] = binding
+        return copy.deepcopy(binding)
+
     def verify(self):
         """Refuse changed context and tools before launching or sealing a result."""
         require(self.cwd.resolve(strict=True) == self.cwd
@@ -187,8 +262,11 @@ class ChildContext:
                 "child cwd identity changed")
         require(self._environment_hash() == self._environment_sha256,
                 "frozen child environment changed")
-        for binding in (self.runner, *self._executables.values()):
-            require(bind_executable(binding["path"], binding["sha256"]) == binding,
+        require(bind_python_interpreter(self.runner_invocation["path"], self.runner["sha256"])
+                == self.runner_invocation, "runner Python invocation changed")
+        for binding in self._executables.values():
+            binder = bind_python_interpreter if binding.get("kind") == "python-invocation-v1" else bind_executable
+            require(binder(binding["path"], binding["sha256"]) == binding,
                     "bound executable identity changed")
 
     def receipt(self):
@@ -199,7 +277,8 @@ class ChildContext:
                 "tool_environment": {key: self._environment[key] for key in (
                     "PATH", "GOENV", "GOTOOLCHAIN", "GOWORK", "GOFLAGS", "GOCACHE",
                     "GOMODCACHE", "TMPDIR") if key in self._environment},
-                "runner_executable": copy.deepcopy(self.runner)}
+                "runner_executable": copy.deepcopy(self.runner),
+                "runner_invocation": copy.deepcopy(self.runner_invocation)}
 
     def run(self, argv, output, label, timeout, log_limit=MAXIMUM_LOG_BYTES,
             minimum_free=0, process_guard=run_process):

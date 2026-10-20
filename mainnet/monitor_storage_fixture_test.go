@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"testing"
 
+	"golang.org/x/sys/unix"
+
 	"github.com/urfoundation/sn/internal/durablehead"
 )
 
@@ -33,7 +35,7 @@ func provisionMonitorTestCustodyProfile(t testing.TB, path, kind string, maximum
 	}
 	lockPath := path + ".lock"
 	attribute := durablehead.Attribute(kind, name)
-	if _, err := syscall.Getxattr(lockPath, attribute, nil); err == nil {
+	if _, err := unix.Getxattr(lockPath, attribute, nil); err == nil {
 		return
 	}
 	lock, err := os.OpenFile(lockPath, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
@@ -71,7 +73,7 @@ func provisionMonitorTestCustodyProfile(t testing.TB, path, kind string, maximum
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := syscall.Setxattr(lockPath, attribute, raw, 1); err != nil {
+	if err := unix.Setxattr(lockPath, attribute, raw, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
 	if err := lock.Sync(); err != nil {

@@ -125,9 +125,11 @@ trade is inferred. `BetaBasketRuntimeApi` changed v4→v5 with claim previews;
 this observer does not decode that API or authorize those trades.
 
 The [passive-root service](../../mainnet/ROOT-PASSIVE-SERVICE.md) is additive
-bootstrap v4 with fresh independent config approval. Legacy signed v3
-`explicit_root_weights` inputs, bytes, nonces and custody remain untouched.
-Both UR roles and the distinct netuid-0 role remain mandatory. Codec source
+bootstrap v4, or the one-validator v5, with fresh independent config approval.
+Legacy signed v3 `explicit_root_weights` inputs, bytes, nonces and custody remain
+untouched. The netuid-0 role remains mandatory beside the preparation's UR roles:
+both for v3/v4, or v5's one sole role at the SN25 launch, whose hotkey may also
+hold the root seat under the same coldkey. Codec source
 guards can name the actual reviewed v470 source in newly signed owner/validator
 inputs while all exact runtime pins and approval checks remain mandatory. This
 does not add470 to the legacy reviewed-testnet catalogue or automatically admit

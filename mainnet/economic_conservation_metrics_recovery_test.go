@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -159,6 +160,17 @@ func TestEconomicMetricsFollowAvailabilityKeepsCommittedProgress(t *testing.T) {
 	values := economicMetricsTestFile(t, path)
 	if values["vault_finalized_block"] != 13 || values["native_finalized_block"] != 102 || values["sample_healthy"] != 1 || values["target_known"] != 0 {
 		t.Fatal("recovered metrics lost original progress or fabricated conformance", values)
+	}
+	decoder := json.NewDecoder(&output)
+	var first, recovered economicConservationSummary
+	if err := decoder.Decode(&first); err != nil {
+		t.Fatal(err)
+	}
+	if err := decoder.Decode(&recovered); err != nil {
+		t.Fatal(err)
+	}
+	if first.Progress == nil || recovered.Progress == nil || first.Progress.SampleAttempts != 1 || recovered.Progress.SampleAttempts != 4 || first.Progress.ProcessId != recovered.Progress.ProcessId || !first.Progress.StartedAt.Equal(recovered.Progress.StartedAt) || recovered.Progress.CheckpointHash != recovered.CheckpointHash {
+		t.Fatal("metrics I/O recreated the operational owner or lost acknowledged attempts", first.Progress, recovered.Progress)
 	}
 }
 

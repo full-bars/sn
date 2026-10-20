@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The public preparation command refuses impossible combined allowances
 // before it creates either original request files or any target authority.
@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/validator"
 	"github.com/urnetwork/connect"
@@ -54,7 +56,7 @@ func TestStoragePreparationRequestCapacityRefusesBeforeOriginalEffects(t *testin
 	if _, err := os.Lstat(filepath.Join(f.root, validator.ProviderAttemptRequestJournalName)); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("capacity refusal created a request journal", err)
 	}
-	if _, err := unix.Getxattr(f.root, validator.ProviderAttemptRequestAttribute, nil); !errors.Is(err, unix.ENODATA) {
+	if _, err := unix.Getxattr(f.root, validator.ProviderAttemptRequestAttribute, nil); !errors.Is(err, durablesys.ErrNoAttribute) {
 		t.Fatal("capacity refusal created original request authority", err)
 	}
 }

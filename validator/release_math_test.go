@@ -10,7 +10,7 @@ import (
 	"github.com/urfoundation/sn/protocol"
 )
 
-func exactPolicy(t *testing.T) protocol.Policy {
+func exactPolicy(t testing.TB) protocol.Policy {
 	t.Helper()
 	p, err := protocol.LoadPolicy(filepath.Join("..", "deploy", "testnet", "policy-v1.yml"))
 	if err != nil {

@@ -17,6 +17,8 @@ sn-mainnet plan --outline > bootstrap-outline.json
 The outline has `status: unbound_outline`, no bound network or block, no content
 seal and all requirements marked `missing`. It keeps the work visible without
 relabeling the historical Snow testnet EVM945 observation as mainnet evidence.
+The current outline uses `urnetwork-mainnet-blocked-plan-v3`: 10% of native
+miner allocation targets providers and 90% targets the receive-only reserve.
 
 For an exact bound review, supply the intended mainnet identity separately
 from the snapshot:
@@ -32,7 +34,7 @@ does not mean automatic discovery or approval:
 
 ```json
 {
-  "schema": "urnetwork-mainnet-plan-config-v1",
+  "schema": "urnetwork-mainnet-plan-config-v2",
   "deployment_id": "ur-sn25-launch",
   "netuid": 25,
   "network": {
@@ -42,9 +44,25 @@ does not mean automatic discovery or approval:
   },
   "snapshot": {"path": "finalized-snapshot.json", "sha256": null},
   "source_lock": {"path": "source-lock.json", "sha256": null},
-  "release": {"path": "release-input.json", "sha256": null}
+  "release": {"path": "release-input.json", "sha256": null},
+  "treasury_destination": {
+    "schema": "urnetwork-native-treasury-destination-v1",
+    "profile": "mainnet",
+    "netuid": 25,
+    "genesis_hash": null,
+    "account_id": "0x1815103f41a8d1e24c55d380c6f843fb36d715b4322a4e4f02bff36dfe74a410",
+    "recipient_hotkeys": []
+  }
 }
 ```
+
+The destination is the supplied `ur-reserve` public account. Its genesis must
+match the separately selected network. An empty roster records the known
+destination while registration evidence remains missing; it cannot route
+emissions. No threshold, signatory, device, spend allowance or reserve fee
+balance is required or accepted in this public descriptor. The separate
+`treasury-policy` requirement still needs independently approved economics,
+the complete authenticated hotkey/UID/registration generations and eligibility.
 
 Every `sha256` is `sha256:` followed by 64 lowercase hexadecimal digits over
 the exact file bytes, including any final newline. It is different from an
@@ -66,7 +84,7 @@ The release-input JSON binds both internal seals and all runtime artifacts:
 
 ```json
 {
-  "schema": "urnetwork-mainnet-release-input-v1",
+  "schema": "urnetwork-mainnet-release-input-v2",
   "deployment_id": "ur-sn25-launch",
   "netuid": 25,
   "snapshot_content_hash": null,
@@ -98,7 +116,7 @@ at most 32 supplemental inputs are accepted. The combined snapshot is bounded
 to 26 MiB to accommodate maximum retained code/metadata hex plus framing.
 JSON rejects duplicate keys, unknown fields, overflow and trailing documents.
 
-The bound output has schema `urnetwork-mainnet-blocked-plan-v2`, `status: blocked`,
+The current bound output has schema `urnetwork-mainnet-blocked-plan-v3`, `status: blocked`,
 `apply_authority: false`, `activation_ready: false`, exact raw-file and internal
 hash references, native/EVM hashes and their independently decoded heights.
 Runtime byte hashes, the native header commitment, Frontier digest and raw EVM
@@ -111,10 +129,13 @@ reset, custody contract deployment, subnet registration, separate root and UR
 validator services, monitoring, emission activation and acceptance. Root service
 and operations preparation can proceed alongside subnet reset/deployment once
 their shared authority prerequisites are satisfied. Activation depends on all
-three branches. The root role never counts toward the required **two distinct
-UR validators and two healthy operators**.
+three branches. The root role never counts toward the UR validator and
+healthy-operator minimums. The graph's requirement text still names **two
+distinct UR validators and two healthy operators**; the approved SN25 policy sets
+both minimums to one (owner decision, October 7), and the launch has one UR
+validator and one operator.
 
-Schema v2 separates preconditions from action `postconditions`. A requirement's
+Schemas v2 and v3 separate preconditions from action `postconditions`. A requirement's
 `produced_by` names its sole producer, which must precede every consumer in the
 dependency graph. Contract inputs contain expected getter values; observed
 getter proofs follow installation. UR service inputs contain approved roles,
@@ -122,8 +143,12 @@ permits and configuration; revealed/applied rows follow activation. Approved
 10/90 mechanics and rounding are activation inputs; realized native economics
 are acceptance outputs. Validation rejects a same-action or downstream fact
 used as a prerequisite. Historical v1 outlines remain review evidence only.
-The [current v2 outline](evidence/blocked-plan-outline-v2-20260928.json) contains
+The [historical v2 outline](evidence/blocked-plan-outline-v2-20260928.json) contains
 ten review actions and 30 input/output requirements, all explicitly unvalidated.
+The current v3 graph retains those phases and counts, replacing `recycle-policy`
+with `treasury-policy` and requiring actual ordinary native treasury credits in
+the acceptance output. Receiving reserve funds requires no owner Recycle-mode
+transition.
 
 The operator has SN25 owner keys but no chain-Root administrative origin. The
 planned native reset therefore seeks the strongest safe owner-authorized trim,
@@ -137,12 +162,21 @@ authenticated census. Its prediction cannot satisfy this graph's reset or
 execution authority requirement. The [current offline outline](evidence/blocked-plan-outline-owner-trim-20260927.json)
 incorporates the partial-trim description under v1; it remains historical.
 
-The economic target is fixed to the requested **1/10 of native miner allocation
-before withholding**, with **9/10 owner-recycle**, observed-native-target assurance
-and no reserve credit. This is a requested policy, not proof that Yuma or an
-installed contract implements it. Activation requires approved allocation,
-quantization and owner-mode policy. Actual native allocation and realized
-remainder evidence are postconditions collected after activation.
+The current economic target is **1/10 of native miner allocation before
+withholding** for providers and **9/10 ordinary native treasury credit**, with
+observed-native-target assurance. The output's `reserve_credit: true` identifies
+the intended recipient role; it does not report an observed payment. Activation
+requires the exact public destination, complete native ownership and registered
+generations, owner exclusions, masks, cap, auto-stake policy and independently
+approved drained boundary. Actual native allocation and treasury reward,
+collateral and conservation evidence follow activation.
+
+Historical `urnetwork-mainnet-plan-config-v1` and
+`urnetwork-mainnet-release-input-v1` remain an explicit pair for replaying the
+original owner-recycle review. They emit their unchanged blocked-plan-v2 scope,
+reject a populated `treasury_destination`, and cannot mix with current v2 inputs. Use the
+current v2 input pair for a new launch review; changing only an old schema label
+does not supply the missing destination or native proofs.
 
 Exact missing interfaces remain explicit: semantic validators for runtime
 authority, release/artifacts, role/custody/limit manifests, complete generation
@@ -157,7 +191,8 @@ phase are implemented; actual live authority and the remaining chain bootstrap
 orchestration are distinct outstanding work.
 
 Identical input bytes produce identical bound output. `content_hash` is SHA256
-of `urnetwork-mainnet-blocked-plan-v2` plus a zero byte plus canonical Go JSON
+of the selected output schema (`urnetwork-mainnet-blocked-plan-v3` for current
+treasury reviews, v2 for historical owner recycling) plus a zero byte plus canonical Go JSON
 with `content_hash` set to the empty string. No wall-clock time or mutable
 source tree enters the hash. Exit 0 means only the review JSON was emitted;
 identity mismatch exits 3, malformed/missing input exits 2 with no partial output,

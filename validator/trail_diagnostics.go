@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/urfoundation/sn/diagnostics"
 	"github.com/urnetwork/connect"
 )
 
@@ -43,31 +42,11 @@ const (
 )
 
 // The real trail owner supplies its concrete classification. Diagnostic code
-// never searches arbitrary wrappers or calls their optional methods.
+// opens only the standard library's own wrappers and this package's concrete
+// types, and never calls another error's methods (trail_stage.go).
 func trailDiagnosticClassification(err error) (string, string) {
-	kind, cause := "unknown", "unknown"
-	if trailErr, ok := err.(*TrailError); ok && trailErr != nil {
-		switch trailErr.Kind {
-		case TrailErrorSeed:
-			kind = "seed"
-		case TrailErrorHop:
-			kind = "hop"
-		case TrailErrorProtocol:
-			kind = "protocol"
-		case TrailErrorUnknownOutcome:
-			kind = "unknown_final"
-		}
-		err = trailErr.Err
-	}
-	switch diagnostics.ClassifyCause(err) {
-	case diagnostics.CauseCanceled:
-		cause = "canceled"
-	case diagnostics.CauseTimeout:
-		cause = "timeout"
-	case diagnostics.CauseTransport:
-		cause = "transport"
-	}
-	return kind, cause
+	facts := trailFailureFactsOf(err)
+	return facts.kind, facts.cause
 }
 
 // Offering a fixed scalar record never waits for output. All trail workers in
@@ -84,10 +63,12 @@ func observeTrailDiagnostic(ctx context.Context, event trailDiagnosticCode, err 
 	}
 	code, kind, cause := "diagnostic_unknown", "unknown", "unknown"
 	depth, epoch := 0, uint64(0)
+	var failure *trailFailureFacts
 	switch event {
 	case trailDiagnosticFailed:
 		code = "trail_failed"
-		kind, cause = trailDiagnosticClassification(err)
+		facts := trailFailureFactsOf(err)
+		kind, cause, failure = facts.kind, facts.cause, &facts
 	case trailDiagnosticComplete:
 		code = "trail_complete"
 		if record != nil && connect.VerifyMMin <= record.M && record.M <= connect.VerifyMMax {
@@ -108,4 +89,9 @@ func observeTrailDiagnostic(ctx context.Context, event trailDiagnosticCode, err 
 	}
 	raw := []byte(fmt.Sprintf("validator diagnostic: domain=runtime code=%s operator_id=%d operator_known=%t trail_kind=%s cause=%s depth=%d settlement_epoch=%d settlement_epoch_known=%t\n", code, operator.id, operator.known, kind, cause, depth, epoch, epochKnown))
 	owner.exporter.Offer("runtime", raw)
+	if event == trailDiagnosticFailed || event == trailDiagnosticComplete {
+		if line := owner.trails.observe(owner.clock(), failure); line != nil {
+			owner.exporter.Offer("runtime", line)
+		}
+	}
 }

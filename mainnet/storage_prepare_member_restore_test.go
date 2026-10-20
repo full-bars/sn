@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Public preparation transfers reviewed staging inodes and opens the actual
 // member owner. Signed execution-root authority is a separate control below;
@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/internal/durablehead"
@@ -150,7 +152,7 @@ func assertStorageMemberRestoreBytes(t *testing.T, f *storageMemberRestoreFixtur
 	for _, source := range plan.Sources {
 		var stat unix.Stat_t
 		path := filepath.Join(f.storage.target.root, source.File.Path)
-		if err := unix.Stat(path, &stat); err != nil || stat.Ino != source.Identity.Inode || stat.Dev != source.Identity.Device {
+		if err := unix.Stat(path, &stat); err != nil || stat.Ino != source.Identity.Inode || durablesys.StatDevice(&stat) != source.Identity.Device {
 			t.Fatal("target did not receive the exact reviewed staging inode", source.File.Path, err)
 		}
 		if _, err := os.Lstat(source.Path); !os.IsNotExist(err) {
@@ -299,7 +301,7 @@ func TestStoragePreparationRestoreMemberRejectsChangedStageBeforeHead(t *testing
 		if code := runMain(f.storage.target.ctx, []string{"storage-prepare", "apply", "--plan", path, "--plan-sha256", hash}, &output, &diagnostic); code == 0 || output.Len() != 0 {
 			t.Fatal("changed staged member was admitted", change, code, diagnostic.String())
 		}
-		if _, err := unix.Getxattr(f.storage.target.root, durablehead.Attribute(f.spec.Kind, f.spec.Name), nil); !errors.Is(err, unix.ENODATA) {
+		if _, err := unix.Getxattr(f.storage.target.root, durablehead.Attribute(f.spec.Kind, f.spec.Name), nil); !errors.Is(err, durablesys.ErrNoAttribute) {
 			t.Fatal("refused staged member published target custody head", change, err)
 		}
 		retained, err := os.ReadFile(filepath.Join(f.storage.heldSource, f.name))
@@ -320,8 +322,21 @@ func TestStoragePreparationRestoreMemberRetainsOriginalExecutionRootGate(t *test
 		t.Fatal(err)
 	}
 	owner, err := openBootstrapSuccessorExecutionDirectory(ctx, f.storage.target.root, f.original, f.claim, nil)
-	if owner != nil || err == nil || !strings.Contains(err.Error(), "physical directory changed") {
+	if err == nil || !strings.Contains(err.Error(), "physical directory changed") {
 		t.Fatal("storage rebind silently rewrote signed original root authority", err)
+	}
+	// Final checkpoint refusal may return the already closed object. No
+	// retained descriptor or publication capability may escape that error.
+	if owner != nil {
+		if owner.file != nil || owner.members != nil && owner.members.head != nil {
+			t.Fatal("refused old root retained active descriptor custody")
+		}
+		if err := owner.publish("safe-inner-refused.json", "nonce", []byte("synthetic refused payload")); err == nil {
+			t.Fatal("refused old root retained publication authority")
+		}
+	}
+	if _, err := os.Stat(filepath.Join(f.storage.target.root, "safe-inner-refused.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("refused old root published another nonce member", err)
 	}
 	after, err := os.ReadFile(filepath.Join(f.storage.target.root, f.spec.Name))
 	if err != nil || !bytes.Equal(before, after) {

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The complete fixture executes actual M8 request custody, failed/idle cuts,
 // dual public replay and canonical Server originals under synthetic keys only.
@@ -18,6 +18,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"sync"
 	"testing"
@@ -43,6 +44,11 @@ type providerAttemptSourceTestFixture struct {
 	closed       bool
 	reads        int
 }
+
+// providerAttemptSourceTestReceiptTrailEdit, when not nil, edits the trail a
+// test receipt carries before the test server signs it, as a Server with
+// other timestamps would have issued it.
+var providerAttemptSourceTestReceiptTrailEdit func(trail *protocol.ProviderAttemptReceiptTrail)
 
 // The transport returns a raw ASSIGN/FINAL, while the actual Server retains
 // its typed cached-response envelope inside the signed original receipt.
@@ -92,6 +98,9 @@ func providerAttemptSourceTestReceipt(t *testing.T, seal *attemptCutV2SealTestFi
 		trail.Pending = &protocol.ProviderAttemptReceiptHop{ClientId: state.pending, NetworkId: &network, AssignedMs: trail.ActivityMs, AssignN: len(seal.server.providers) - len(state.confirmed)}
 	}
 	seal.server.mu.Unlock()
+	if edit := providerAttemptSourceTestReceiptTrailEdit; edit != nil {
+		edit(trail)
+	}
 	body := protocol.ProviderAttemptReceiptBody{Schema: protocol.ProviderAttemptReceiptDomain, Scope: &scope, PreviousDepth: len(trail.Hops) - 1, RecoveryMs: trail.ActivityMs, RequestMessage: request.Message, RequestSignature: request.RequestSignature, ResponseJson: string(cachedRaw), Trail: trail}
 	raw, err := json.Marshal(body)
 	if err != nil {
@@ -114,6 +123,13 @@ func newProviderAttemptSourceTestFixture(t *testing.T, failed bool) *providerAtt
 // window. Existing empty/failed callers retain their original scenario.
 func newProviderAttemptSourceTestFixtureWithCompleted(t *testing.T, failed, completed bool) *providerAttemptSourceTestFixture {
 	t.Helper()
+	return newProviderAttemptSourceTestFixtureForCensus(t, failed, completed, []byte{51, 52}, []uint64{9, 11})
+}
+
+// Every registered validator owns one lane per configured operator. A single
+// validator measuring a single operator reads that lane's only public origin.
+func newProviderAttemptSourceTestFixtureForCensus(t *testing.T, failed, completed bool, seeds []byte, noIds []uint64) *providerAttemptSourceTestFixture {
+	t.Helper()
 	self := &providerAttemptSourceTestFixture{windowKey: ed25519.NewKeyFromSeed(bytes.Repeat([]byte{83}, 32))}
 	firstBlock := uint64(1)
 	if completed {
@@ -122,8 +138,8 @@ func newProviderAttemptSourceTestFixtureWithCompleted(t *testing.T, failed, comp
 		firstBlock = 2
 	}
 	window := protocol.ValidatorEvidenceWindow{Epoch: 42, StartBlock: firstBlock, EndBlock: firstBlock + 100, FinalizedBlock: firstBlock + 100}
-	start := &types.Header{Number: new(big.Int).SetUint64(window.StartBlock), Time: 1700000000, GasLimit: 30000000, Extra: []byte("synthetic-provider-start")}
-	end := &types.Header{Number: new(big.Int).SetUint64(window.EndBlock), Time: 1700001000, GasLimit: 30000000, Extra: []byte("synthetic-provider-end")}
+	start := &types.Header{Number: new(big.Int).SetUint64(window.StartBlock), Difficulty: new(big.Int), Time: 1700000000, GasLimit: 30000000, Extra: []byte("synthetic-provider-start")}
+	end := &types.Header{Number: new(big.Int).SetUint64(window.EndBlock), Difficulty: new(big.Int), Time: 1700001000, GasLimit: 30000000, Extra: []byte("synthetic-provider-end")}
 	startRaw, err := json.Marshal(start)
 	if err != nil {
 		t.Fatal(err)
@@ -147,7 +163,7 @@ func newProviderAttemptSourceTestFixtureWithCompleted(t *testing.T, failed, comp
 			if err != nil || head.LastSequence != 0 {
 				t.Fatal("prospective fixture cannot relabel existing original records", err)
 			}
-			terminal := &types.Header{Number: new(big.Int).SetUint64(window.EndBlock - 1), Time: 1700000999, GasLimit: 30000000, Extra: []byte("synthetic-provider-terminal")}
+			terminal := &types.Header{Number: new(big.Int).SetUint64(window.EndBlock - 1), Difficulty: new(big.Int), Time: 1700000999, GasLimit: 30000000, Extra: []byte("synthetic-provider-terminal")}
 			boundary := AttemptBoundary{SettlementEpoch: window.Epoch, EVMBlock: window.EndBlock - 1, EVMBlockHash: terminal.Hash().Hex()}
 			seal.expected.Boundary = boundary
 			seal.engine.cfg.AttemptBoundaryResolver = func(ctx context.Context, pinned *AttemptBoundary, clients []connect.Id) (AttemptBoundary, []AttemptBinding, error) {
@@ -163,6 +179,9 @@ func newProviderAttemptSourceTestFixtureWithCompleted(t *testing.T, failed, comp
 				}
 				return boundary, bindings, nil
 			}
+			// Construction snapshots the resolver separately from config. Select
+			// the live resolver while the ledger is still empty, before any send.
+			seal.engine.resolve = seal.engine.cfg.AttemptBoundaryResolver
 		}
 		identity := ProviderAttemptRequestIdentity{Ledger: seal.ledger.identity, Coordinator: fmt.Sprintf("0x%x", seal.expected.Activation.Domain.Coordinator), ClientId: seal.engine.clientId, PolicyHash: seal.expected.Activation.Domain.PolicyHash}
 		preparation := ProviderAttemptRequestPreparation{Identity: identity, Limits: ProviderAttemptRequestLimits{MaxRecords: 1000, MaxRecordBytes: 8192, MaxJournalBytes: 8 * 1024 * 1024}, Birth: AttemptBoundary{SettlementEpoch: window.Epoch, EVMBlock: window.StartBlock, EVMBlockHash: start.Hash().Hex()}}
@@ -277,7 +296,10 @@ func newProviderAttemptSourceTestFixtureWithCompleted(t *testing.T, failed, comp
 		t.Cleanup(server.Close)
 		requests[seal] = requestFixture{preparation: preparation, cut: *cut, scope: scope, endpoint: server.URL + "/verify/original"}
 	}
-	self.base = &providerAttemptWindowTestFixture{owners: []*providerAttemptWindowTestOwner{newProviderAttemptWindowTestOwnerForWindow(t, 51, 0, 0, before, &window), newProviderAttemptWindowTestOwnerForWindow(t, 52, 0, 0, before, &window)}}
+	self.base = &providerAttemptWindowTestFixture{}
+	for _, seed := range seeds {
+		self.base.owners = append(self.base.owners, newProviderAttemptWindowTestOwnerForCensus(t, seed, 0, 0, before, &window, noIds))
+	}
 	sort.Slice(self.base.owners, func(i, j int) bool {
 		a, b := self.base.owners[i].fixture.hotkey.PublicKey(), self.base.owners[j].fixture.hotkey.PublicKey()
 		return bytes.Compare(a[:], b[:]) < 0
@@ -289,7 +311,7 @@ func newProviderAttemptSourceTestFixtureWithCompleted(t *testing.T, failed, comp
 	self.response.Window.Schema = ProviderAttemptWindowSchema
 	for _, owner := range self.base.owners {
 		hotkey := owner.fixture.hotkey.PublicKey()
-		registry.Owners = append(registry.Owners, protocol.ProviderAttemptOwner{Hotkey: hotkey, NoIds: []uint64{9, 11}})
+		registry.Owners = append(registry.Owners, protocol.ProviderAttemptOwner{Hotkey: hotkey, NoIds: slices.Clone(noIds)})
 		self.response.Window.Members = append(self.response.Window.Members, ProviderAttemptWindowMember{Hotkey: hotkey, Manifest: *owner.manifest})
 	}
 	signed, err := protocol.SealProviderAttemptRegistry(t.Context(), registry, expectation, registryKey)

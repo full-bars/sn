@@ -20,7 +20,7 @@ import (
 func TestPackageBuildMissingClosureRetainsAttempt(t *testing.T) {
 	pin, _ := imageTestParent(t, scratchImageDockerfile)
 	root := t.TempDir()
-	socket := filepath.Join(root, "daemon.sock")
+	socket := testSocketPath(t, "daemon.sock")
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
 		t.Fatal(err)

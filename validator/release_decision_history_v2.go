@@ -130,10 +130,14 @@ type releaseIntentDecisionSourcesV2 struct {
 	audits   []DepositAudit
 }
 
+// The intent's client-key captures are checked with the custody they acquire.
+// Startup shares one custody across every retained intent and checks all of
+// it at the end.
 func (self *releaseEvidenceV2StartupHistory) readIntentDecisionSourcesV2(ctx context.Context, chain *ChainClient, native *crv4.Chain, runtime crv4.RuntimeArtifactIdentity, intent *SteeringIntent, artifact *ReleaseMeasurementArtifact, custody *releaseEvidenceV2StartupReferences) (result releaseIntentDecisionSourcesV2, resultErr error) {
 	if ctx == nil || self == nil || intent == nil || artifact == nil || custody == nil || len(self.participants) == 0 {
 		return result, errors.New("historical decision reference owner is absent")
 	}
+	entryOwnerIndex := len(custody.owners)
 	defer func() {
 		if resultErr != nil {
 			result = releaseIntentDecisionSourcesV2{}
@@ -159,7 +163,7 @@ func (self *releaseEvidenceV2StartupHistory) readIntentDecisionSourcesV2(ctx con
 		return result, err
 	}
 	bounds := self.cfg.EvidenceV2.Bounds
-	query := releaseDecisionChainV2Query{domain: domain, boundary: AttemptBoundary{SettlementEpoch: artifact.SettlementEpoch, EVMBlock: artifact.EVMSnapshotBlock, EVMBlockHash: artifact.EVMSnapshotHash}, policy: self.cfg.Policy, maxOperators: bounds.MaxOperators, maxProviders: bounds.MaxProviders, maxControlBytes: bounds.MaxControlBytes}
+	query := releaseDecisionChainV2Query{domain: domain, boundary: AttemptBoundary{SettlementEpoch: artifact.SettlementEpoch, EVMBlock: artifact.EVMSnapshotBlock, EVMBlockHash: artifact.EVMSnapshotHash}, policy: self.cfg.Policy, maxOperators: bounds.MaxOperators, maxProviders: bounds.MaxProviders, maxControlBytes: bounds.MaxControlBytes, settlementV2: releaseSettlementV2Addresses(&self.cfg)}
 	if uint64(len(self.participants)) > bounds.MaxOperators {
 		return result, errors.New("historical decision operator census exceeds its bound")
 	}
@@ -298,15 +302,17 @@ func (self *releaseEvidenceV2StartupHistory) readIntentDecisionSourcesV2(ctx con
 	for index, source := range keySources {
 		registration, err := verifyReservedReleaseClientKeyCaptureV2(keyCtx, chain, source.encoded, source.maximum, source.domain, source.request, true)
 		position := keyPositions[index]
-		actual := observed.bindings[position]
-		matches := registration.Present && releaseHex32(registration.PublicKey) == actual.ClientKey && artifact.Bindings[position].LocalClientKey == actual.ClientKey
-		if err := releaseRpcObservationError(err, matches, errors.New("historical client key differs from its retained operator-signed capture")); err != nil {
+		// The retained capture, not the coordinator row, is the measured
+		// client's local key. A row signed for another key keeps it, and the
+		// shared eligibility rule excludes that binding as the collector did.
+		local := releaseCapturedLocalClientKeyV2(registration)
+		if err := releaseRpcObservationError(err, artifact.Bindings[position].LocalClientKey == local, errors.New("historical local client key differs from its retained operator-signed capture")); err != nil {
 			return result, err
 		}
-		result.bindings[position].LocalClientKey = actual.ClientKey
+		result.bindings[position].LocalClientKey = local
 		result.bindings[position].ClientKeyObservationHash = artifact.Bindings[position].ClientKeyObservationHash
 	}
-	if err := custody.check(); err != nil {
+	if err := custody.checkSince(entryOwnerIndex); err != nil {
 		return result, err
 	}
 	if len(artifact.DepositAudits) != len(observed.pools) {

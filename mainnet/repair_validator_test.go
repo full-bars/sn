@@ -22,8 +22,10 @@ import (
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/protocol"
-	"golang.org/x/sys/unix"
 )
+
+// The statfs magic of a legacy cgroup v1 hierarchy, refused by repair.
+const repairValidatorTestCgroupV1Magic = 0x27e0eb
 
 // The fake manager is deliberately separate from real filesystem custody.
 // No service manager, chain, real binary or production identity is touched.
@@ -110,7 +112,7 @@ func newRepairValidatorFixture(t *testing.T) *repairValidatorFixture {
 		if path != filepath.Join(directory, "cgroup") {
 			return 0, errors.New("synthetic cgroup root changed")
 		}
-		return unix.CGROUP2_SUPER_MAGIC, nil
+		return repairValidatorCgroup2Magic, nil
 	}
 	repairValidatorTestWrite(t, unit.File.Path, unit.render(), 0644)
 	repairValidatorTestWrite(t, unit.Binary.Path, []byte("synthetic validator release\n"), 0755)
@@ -357,7 +359,7 @@ func TestRepairValidatorUnifiedCgroupAndPrerequisites(t *testing.T) {
 		}
 		switch change {
 		case "v1":
-			fixture.host.cgroupType = func(string) (int64, error) { return unix.CGROUP_SUPER_MAGIC, nil }
+			fixture.host.cgroupType = func(string) (int64, error) { return repairValidatorTestCgroupV1Magic, nil }
 		case "unmounted":
 			fixture.host.cgroupType = func(string) (int64, error) { return 0, nil }
 		case "unavailable":
@@ -380,7 +382,7 @@ func TestRepairValidatorUnifiedCgroupAndPrerequisites(t *testing.T) {
 		} else if exit == 0 || fixture.starts != 0 || result.StartConsumed {
 			t.Fatal("unknown cgroup filesystem or inactive prerequisite admitted start", change, result, exit, detail, fixture.starts)
 		}
-		if filesystem, err := repairValidatorCgroupType(fixture.directory); err != nil || filesystem == unix.CGROUP2_SUPER_MAGIC {
+		if filesystem, err := repairValidatorCgroupType(fixture.directory); err != nil || filesystem == repairValidatorCgroup2Magic {
 			t.Fatal("actual ordinary filesystem was classified as cgroup v2", filesystem, err)
 		}
 	}
@@ -526,11 +528,11 @@ func TestRepairValidatorPublicationAmbiguityAndReopen(t *testing.T) {
 			}
 			return err
 		}
-		_, err = resumeRepairValidator(t.Context(), store, fixture.host, func() time.Time { return fixture.now })
+		_, err = resumeRepairValidator(fixture.storage.Context, store, fixture.host, func() time.Time { return fixture.now })
 		if err == nil || failAt == 2 && fixture.starts != 0 || failAt == 4 && fixture.starts != 1 {
 			t.Fatal("ambiguous publication crossed its action boundary", failAt, err, fixture.starts)
 		}
-		if _, err := resumeRepairValidator(t.Context(), store, fixture.host, func() time.Time { return fixture.now }); err == nil {
+		if _, err := resumeRepairValidator(fixture.storage.Context, store, fixture.host, func() time.Time { return fixture.now }); err == nil {
 			t.Fatal("ambiguous repair owner was reused")
 		}
 		if err := store.close(); err != nil {
@@ -557,7 +559,7 @@ func TestRepairValidatorPostSyncAuthorityRecheck(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		ctx, cancel := context.WithCancel(t.Context())
+		ctx, cancel := context.WithCancel(fixture.storage.Context)
 		writes := 0
 		store.syncDirectory = func(file *os.File) error {
 			err := file.Sync()
@@ -718,7 +720,7 @@ func TestRepairValidatorProcessHelper(t *testing.T) {
 			t.Fatal(err)
 		}
 		for {
-			_ = syscall.Pause()
+			time.Sleep(time.Hour)
 		}
 	case "overflow":
 		_, _ = os.Stdout.Write(bytes.Repeat([]byte("x"), 64*1024))

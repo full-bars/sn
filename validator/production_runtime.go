@@ -93,20 +93,9 @@ func authenticateOwnerRecycleProductionArtifactAttempt(ctx context.Context, nati
 	if err != nil || native.GenesisHash != expectedGenesis {
 		return empty, 0, errors.New("production runtime connection genesis differs from signed authority")
 	}
-	call := native.API.Client.CallContext
-	var nativeChain, evmChainId string
-	var genesis types.Hash
-	if err := call(ctx, &nativeChain, "system_chain"); err != nil {
+	genesis, err := readRuntimeNetworkIdentity(ctx, native, approved.Approval.NativeChain, expectedGenesis)
+	if err != nil {
 		return empty, 0, err
-	}
-	if err := call(ctx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
-		return empty, 0, err
-	}
-	if err := call(ctx, &evmChainId, "eth_chainId"); err != nil {
-		return empty, 0, err
-	}
-	if nativeChain != approved.Approval.NativeChain || genesis != expectedGenesis || evmChainId != "0x3c4" {
-		return empty, 0, errors.New("production runtime fresh native chain, genesis or EVM964 differs")
 	}
 	finalized, err := readRuntimeFinalityWitness(ctx, native)
 	if err != nil {

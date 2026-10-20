@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The real miner owners reopen restored custody after offline physical
 // rebinding. Every signature and transaction in these tests is synthetic.

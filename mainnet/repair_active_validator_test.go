@@ -558,7 +558,7 @@ func TestRepairActiveValidatorAmbiguousPublicationsRetainCuts(t *testing.T) {
 			}
 			return nil
 		}
-		r, err := resumeRepairActiveValidator(t.Context(), store, f.host, func() time.Time { return f.now })
+		r, err := resumeRepairActiveValidator(f.storage.Context, store, f.host, func() time.Time { return f.now })
 		if !injected || err == nil || !r.StopConsumed {
 			t.Fatal("publication cut not forced", phase, r, err)
 		}
@@ -618,7 +618,7 @@ func TestRepairActiveValidatorStartReservationRechecksOldJoin(t *testing.T) {
 			}
 			return nil
 		}
-		r, err := resumeRepairActiveValidator(t.Context(), store, f.host, func() time.Time { return f.now })
+		r, err := resumeRepairActiveValidator(f.storage.Context, store, f.host, func() time.Time { return f.now })
 		if !changed || err == nil || !r.StartConsumed || r.Generation != nil || f.stops != 1 || f.starts != 0 {
 			t.Fatal("post-start-reservation change admitted", change, r, err)
 		}
@@ -744,6 +744,7 @@ func TestRepairActiveValidatorLifetimeClaimExcludesStoppedTakeover(t *testing.T)
 	}
 	repairValidatorTestWrite(t, p.MonitorCheckpoint, raw, 0600)
 	f.approval.Plan.StatePath = filepath.Join(f.directory, "stopped-takeover.json")
+	prepareMainnetSnapshotTest(t, f.approval.Plan.StatePath, "mainnet-host-action", 64*1024)
 	f.repairValidatorFixture.sign()
 	f.repairValidatorFixture.claim()
 	r, exit, detail := f.repairValidatorFixture.command("resume")

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Actual public dispatch consumes exact signed config, stopped physical roots
 // and retained ledger heads. Only synthetic kernel facts and keys are supplied.
@@ -19,6 +19,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/urnetwork/connect/durablesys"
 
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/internal/durablepath"
@@ -79,7 +81,7 @@ func newValidatorCapacityCommandFixture(t *testing.T) *validatorCapacityCommandF
 		}
 		checkpoint, checkpointErr := validator.BuildAttemptLedgerPreparationCheckpoint(t.Context(), file, ledgerScope, census)
 		if checkpointErr == nil {
-			checkpointErr = unix.Fsetxattr(int(file.Fd()), "user.urnetwork.attempt-ledger-custody", checkpoint, unix.XATTR_CREATE)
+			checkpointErr = durablesys.SetAttribute(int(file.Fd()), "user.urnetwork.attempt-ledger-custody", checkpoint, unix.XATTR_CREATE)
 		}
 		if err := errors.Join(checkpointErr, file.Sync(), file.Close()); err != nil {
 			t.Fatal(err)

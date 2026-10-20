@@ -588,27 +588,43 @@ func TestBootstrapChainInitialRecoveryRefusesAmbiguousState(t *testing.T) {
 
 // Losing a completed child's entire path pair must not look like its first
 // invocation. This also covers loss of the complete nested root custody tree.
+// The absent marker is itself lost custody; a first invocation has explicitly
+// prepared empty markers, and preparing them again grants no allowance either.
 func TestBootstrapChainLostWholeChildRefusesFreshAllowance(t *testing.T) {
 	for _, child := range []string{"contracts", "root"} {
 		t.Run(child, func(t *testing.T) {
 			f := newBootstrapChainFixture(t)
 			f.result(t, "apply")
-			paths := f.preparation.childPaths()[1:2]
+			paths := f.preparation.childPaths()
+			kinds := []string{"mainnet-bootstrap-chain", "mainnet-evm-action", "mainnet-bootstrap-root", "mainnet-root-offline", "mainnet-root-service"}
+			limits := []int{rootServiceStoreLimit, 512 * 1024, 16 * 1024, rootOfflineStoreLimit, rootServiceStoreLimit}
+			lost := []int{1}
 			if child == "root" {
-				paths = f.preparation.childPaths()[2:]
+				lost = []int{2, 3, 4}
 			}
-			for _, path := range paths {
-				for _, candidate := range []string{path, path + ".lock"} {
+			if len(paths) != len(kinds) {
+				t.Fatal("fixture does not name every original child owner")
+			}
+			for _, index := range lost {
+				for _, candidate := range []string{paths[index], paths[index] + ".lock"} {
 					if err := os.Remove(candidate); err != nil {
 						t.Fatal(err)
 					}
 				}
 			}
-			original := f.journals(t)
-			var stdout, stderr bytes.Buffer
-			if code := f.command(t.Context(), "resume", &stdout, &stderr); code != 1 || stdout.Len() != 0 || !reflect.DeepEqual(original, f.journals(t)) || !strings.Contains(stderr.String(), "completed child disappeared") {
-				t.Fatal("lost complete custody tree became a fresh allowance", code, stderr.String())
+			refuse := func(diagnostic string) {
+				t.Helper()
+				original := f.journals(t)
+				var stdout, stderr bytes.Buffer
+				if code := f.command(t.Context(), "resume", &stdout, &stderr); code != 1 || stdout.Len() != 0 || !reflect.DeepEqual(original, f.journals(t)) || !strings.Contains(stderr.String(), diagnostic) {
+					t.Fatal("lost complete custody tree became a fresh allowance", code, stderr.String())
+				}
 			}
+			refuse("bootstrap child lost its preprovisioned marker")
+			for _, index := range lost {
+				prepareMainnetSnapshotTest(t, paths[index], kinds[index], limits[index])
+			}
+			refuse("completed child disappeared")
 		})
 	}
 }

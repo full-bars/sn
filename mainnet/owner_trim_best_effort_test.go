@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/urnetwork/connect/durablevolume"
 )
 
 // All mutable transport controls and posted bytes are serialized by stateLock.
@@ -379,10 +380,10 @@ func TestOwnerTrimBestEffortLostCustodyAfterPostReservationRefusesSend(t *testin
 		t.Fatal("post reservation boundary was not reached", err)
 	}
 	restore()
-	if !errors.Is(err, errRpcIntegrity) || len(f.sent()) != 0 {
+	if !errors.Is(err, durablevolume.ErrIdentity) || len(f.sent()) != 0 {
 		t.Fatal("lost exclusive marker admitted actual native post", err, f.sent())
 	}
-	if _, err := store.load(); !errors.Is(err, errRpcIntegrity) {
+	if _, err := store.load(); !errors.Is(err, durablevolume.ErrIdentity) {
 		t.Fatal("restored marker renewed failed submission owner", err)
 	}
 }
@@ -457,7 +458,7 @@ func TestOwnerTrimBestEffortMarkerReplacementDuringFinalRpcRefusesSend(t *testin
 	f.stateLock.Lock()
 	completed, faultErr := fired, replacementErr
 	f.stateLock.Unlock()
-	if !completed || faultErr != nil || !errors.Is(err, errRpcIntegrity) || len(f.sent()) != 0 {
+	if !completed || faultErr != nil || !errors.Is(err, durablevolume.ErrIdentity) || len(f.sent()) != 0 {
 		t.Fatal("last native read escaped physical custody", completed, faultErr, err, f.sent())
 	}
 }

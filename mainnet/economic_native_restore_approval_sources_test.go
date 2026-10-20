@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Compact restore inputs retain original signed-file authority and physical
 // copied custody. They do not increase Core's one-MiB owner-input envelope.

@@ -84,9 +84,11 @@ func TestEvmRetainedReturnedParentIdentityRemainsHard(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+		// The receipt identity, then the mapping route's identity, then the
+		// returned parent's identity each read system_chain once.
 		if input.Method == "system_chain" {
 			identities++
-			if identities == 2 {
+			if identities == 3 {
 				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(`{"jsonrpc":"2.0","id":1,"result":"synthetic-foreign-parent"}`))}, nil
 			}
 		}
@@ -94,7 +96,7 @@ func TestEvmRetainedReturnedParentIdentityRemainsHard(t *testing.T) {
 	})
 	chain.client.retryWait = func(context.Context, time.Duration) error { waits++; return context.DeadlineExceeded }
 	_, err = chain.authenticatePositionWithRuntimeHistory(t.Context(), f.config.Plan, record, *record.Receipt, 0, profiles)
-	if err == nil || !strings.Contains(err.Error(), "parent identity differs") || waits != 0 || identities != 2 ||
+	if err == nil || !strings.Contains(err.Error(), "parent identity differs") || waits != 0 || identities != 3 ||
 		!maps.Equal(before, bootstrapSuccessorPreparationTestFiles(t, f.config.Plan.RunDirectory)) || len(f.writes) != 1 {
 		t.Fatalf("returned parent identity conflict was weakened or changed custody: identities=%d waits=%d err=%v", identities, waits, err)
 	}

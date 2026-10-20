@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // These public restore controls execute the two distinct original-program
 // engines. The exported jobs are synthetic; restore grants no chain authority.

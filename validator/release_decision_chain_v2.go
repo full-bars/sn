@@ -37,6 +37,8 @@ type releaseDecisionChainV2Query struct {
 	maxOperators    uint64
 	maxProviders    uint64
 	maxControlBytes uint64
+	// The settlement v2 contracts of the decision's configuration (§9.1).
+	settlementV2 SettlementV2Addresses
 }
 
 // Uint256 values retain exact owned integers; no float or candidate audit is
@@ -281,19 +283,23 @@ func (self *ChainClient) ownReleaseDecisionChainV2Client(domain protocol.Validat
 // Both the EVM-only and native-plus-EVM entrypoints finish the same owned
 // request. Reusing a plan within this synchronous call is not cached authority.
 func (self *ChainClient) readOwnedReleaseDecisionChainV2Context(ctx context.Context, query releaseDecisionChainV2Query, budget releaseHeadV2Budget) (result *releaseDecisionChainV2Observation, resultErr error) {
+	chain, err := self.ownReleaseDecisionChainV2Client(query.domain)
+	if err != nil {
+		return nil, errors.Join(err, ctx.Err())
+	}
+	// Opening, financial views and closing coverage borrow this one owner.
+	// A lagging closing head cannot acquire another complete operation budget.
+	ctx, cancel := chain.chainReadOperationContext(ctx)
+	defer cancel()
 	defer func() {
 		resultErr = errors.Join(resultErr, ctx.Err())
 		if resultErr != nil {
 			result = nil
 		}
 	}()
-	chain, err := self.ownReleaseDecisionChainV2Client(query.domain)
-	if err != nil {
-		return nil, err
-	}
 	block, hash := query.boundary.EVMBlock, common.HexToHash(query.boundary.EVMBlockHash)
-	finalized, finalizedHash, err := chain.FinalizedBlockContext(ctx)
-	if err := releaseRpcObservationError(err, finalized >= block && (finalized != block || finalizedHash == hash), errors.New("decision EVM boundary is not finalized")); err != nil {
+	finalized, finalizedHash, err := chain.readReleaseDecisionFinalityV2Context(ctx, block, hash, block, hash)
+	if err != nil {
 		return nil, err
 	}
 	read := func(method string, calldata []byte) ([]byte, error) {
@@ -403,12 +409,16 @@ func (self *ChainClient) readOwnedReleaseDecisionChainV2Context(ctx context.Cont
 		}
 		observed.operators[index] = releaseDecisionChainV2Operator{noID: operator.noID, version: version, deposit: deposit, convictionAdded: added, conviction: conviction, convictionBefore: before}
 		if version.Active {
-			uid, found := observed.hotkeyUIDs[version.PoolHotkey]
+			poolHotkey, err := chain.releasePoolHotkeyContext(ctx, query.settlementV2, finalized, finalizedHash, block, hash, operator.noID, query.boundary.SettlementEpoch, version.PoolHotkey)
+			if err != nil {
+				return nil, err
+			}
+			uid, found := observed.hotkeyUIDs[poolHotkey]
 			if !found || poolUIDs[uid] || version.Coldkey == ([32]byte{}) || version.DepositHotkey == ([32]byte{}) || version.DepositSigner == (common.Address{}) || version.RootSigner == (common.Address{}) {
 				return nil, errors.New("decision active operator identity or unique pool UID is absent")
 			}
 			poolUIDs[uid] = true
-			observed.pools = append(observed.pools, ReleasePoolMeasurement{NoID: operator.noID, UID: uid, PoolHotkey: releaseHex32(version.PoolHotkey)})
+			observed.pools = append(observed.pools, ReleasePoolMeasurement{NoID: operator.noID, UID: uid, PoolHotkey: releaseHex32(poolHotkey)})
 		}
 		ids := make([][16]byte, len(operator.providerIDs))
 		for index, id := range operator.providerIDs {
@@ -438,8 +448,7 @@ func (self *ChainClient) readOwnedReleaseDecisionChainV2Context(ctx context.Cont
 	if err := releaseRpcObservationError(err, rechecked != nil && rechecked.Cmp(epoch) == 0, errors.New("decision epoch changed during complete observation")); err != nil {
 		return nil, err
 	}
-	finalBlock, finalHash, err := chain.FinalizedBlockContext(ctx)
-	if err := releaseRpcObservationError(err, finalBlock >= finalized && (finalBlock != finalized || finalHash == finalizedHash), errors.New("decision finality regressed during complete observation")); err != nil {
+	if _, _, err := chain.readReleaseDecisionFinalityV2Context(ctx, finalized, finalizedHash, block, hash); err != nil {
 		return nil, err
 	}
 	return observed, ctx.Err()

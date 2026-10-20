@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // Full provider and fee authority documents share a real prepared root. These
 // tests restore original custody with no completed VM job; the separate native

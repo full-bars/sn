@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
+	"path/filepath"
 	"slices"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -29,10 +30,15 @@ type validatorUploadRuntimeAuthority struct {
 	nativeRoutes []string
 	current      validatorUploadRuntimeWindow
 	history      []validatorUploadRuntimeWindow
+	// Approved anchors whose signed configs opted in to successor admission.
+	successors []crv4.RuntimeArtifactIdentity
 }
 
 // Parse exactly the content-addressed bytes, with the existing signature and
 // history loaders. Config paths name public approvals; seed files are not read.
+// The server mounts no validator path, so retained copies of those approvals
+// may sit beside the pinned config under their state_dir names; each must
+// still match its signed size and digest.
 func loadValidatorUploadRuntimeContext(ctx context.Context, deployment ValidatorUploadDeployment, reference ReleaseEvidenceV2File) (ValidatorUploadDeployment, error) {
 	if ctx == nil {
 		return ValidatorUploadDeployment{}, errors.New("validator staging runtime context is absent")
@@ -50,7 +56,7 @@ func loadValidatorUploadRuntimeContext(ctx context.Context, deployment Validator
 	if err != nil {
 		return ValidatorUploadDeployment{}, err
 	}
-	cfg, err := decodeReleaseConfigBytes(reference.Path, raw)
+	cfg, err := decodeReleaseConfigBytesMode(reference.Path, raw, releaseConfigLoadMode{stagingConfigDirectory: filepath.Dir(reference.Path)})
 	if err != nil {
 		return ValidatorUploadDeployment{}, err
 	}
@@ -80,6 +86,10 @@ func loadValidatorUploadRuntimeContext(ctx context.Context, deployment Validator
 	}
 	for _, window := range windows {
 		owner.history = append(owner.history, validatorUploadRuntimeWindow{from: window.from, through: window.through, artifact: window.artifact})
+	}
+	owner.successors, err = releaseRuntimeSuccessionAnchors(cfg)
+	if err != nil {
+		return ValidatorUploadDeployment{}, err
 	}
 	if err := ctx.Err(); err != nil {
 		return ValidatorUploadDeployment{}, err
@@ -151,20 +161,6 @@ func (self ValidatorUploadDeployment) authenticateNativeRuntimeRouteContext(ctx 
 		native.GenesisHash != types.Hash(self.GenesisHash) || !slices.Contains(owner.nativeRoutes, native.API.Client.URL()) {
 		return errors.New("validator staging native route differs from signed production authority")
 	}
-	var nativeChain, evmChainId string
-	var genesis types.Hash
-	call := native.API.Client.CallContext
-	if err := call(ctx, &nativeChain, "system_chain"); err != nil {
-		return err
-	}
-	if err := call(ctx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
-		return err
-	}
-	if err := call(ctx, &evmChainId, "eth_chainId"); err != nil {
-		return err
-	}
-	if nativeChain != owner.nativeChain || genesis != types.Hash(self.GenesisHash) || evmChainId != "0x3c4" {
-		return errors.New("validator staging native route has a different current network identity")
-	}
-	return ctx.Err()
+	_, err = readRuntimeNetworkIdentity(ctx, native, owner.nativeChain, types.Hash(self.GenesisHash))
+	return err
 }

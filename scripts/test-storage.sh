@@ -31,5 +31,11 @@ sn_test_storage_init() {
   export GOCACHE="$storage_root/gocache" GOMODCACHE="$storage_root/gomodcache" XDG_CACHE_HOME="$storage_root/cache"
   export CARGO_TARGET_DIR="$command_root/cargo-target"
   export RUNTIME_METADATA_PROBE_TARGET_DIR="$storage_root/cache/runtime-metadata-probe-target"
+  # cmd/go starts a telemetry child once a day, when it takes the upload
+  # token, and never waits for it, so a short go command can leave the child
+  # to a release gate's subreaper. GOTELEMETRY is computed and read only; the
+  # per-process switch is x/telemetry's GO_TELEMETRY_CHILD=2, which marks its
+  # own child's children and starts no child. Mode and counters are untouched.
+  export GO_TELEMETRY_CHILD=2
   printf '[test storage] root=%s; owner=%s; go-cache=%s; go-modules=%s\n' "$storage_root" "$command_root" "$GOCACHE" "$GOMODCACHE" >&2
 }

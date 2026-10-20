@@ -12,10 +12,13 @@ import {Vm} from "forge-std/Vm.sol";
 
 /// @dev Mock of IStaking (0x805, stakingV2). Tracks per-(hotkey, coldkey)
 ///      stake. The caller's coldkey (the EVM mirror the runtime would derive)
-///      must be registered with setColdkey.
+///      must be registered with setColdkey. Runtime 475's registration
+///      collateral (IStakingCollateral) locks part of a position: getStake
+///      includes it, and a move or transfer that digs into it is refused.
 contract MockStakingV2 {
     Vm private constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
     mapping(bytes32 => mapping(bytes32 => uint256)) public stakes; // hotkey -> coldkey -> rao
+    mapping(bytes32 => mapping(bytes32 => uint64)) public collateral; // hotkey -> coldkey -> locked rao
     mapping(address => bytes32) public callerColdkey;
     bool public failMoveStake;
     bool public failTransferStake;
@@ -32,14 +35,25 @@ contract MockStakingV2 {
     bytes public reentryData;
     bool public reentrySucceeded;
     bytes4 public reentryFailureSelector;
+    // A transfer to one of these coldkeys fails as the runtime refuses a
+    // precompile call: it consumes all the gas forwarded and returns no data.
+    mapping(bytes32 => bool) public exhaustTransferTo;
 
     // --- test configuration ---
     function setColdkey(address caller, bytes32 coldkey) external {
         callerColdkey[caller] = coldkey;
     }
 
+    function setExhaustTransferTo(bytes32 coldkey, bool exhaust) external {
+        exhaustTransferTo[coldkey] = exhaust;
+    }
+
     function setStake(bytes32 hotkey, bytes32 coldkey, uint256 amount) external {
         stakes[hotkey][coldkey] = amount;
+    }
+
+    function setCollateral(bytes32 hotkey, bytes32 coldkey, uint64 locked) external {
+        collateral[hotkey][coldkey] = locked;
     }
 
     function setFailMoveStake(bool fail) external {
@@ -122,6 +136,15 @@ contract MockStakingV2 {
         return nominatorMinimum;
     }
 
+    function getMinerCollateral(uint16, bytes32 hotkey, bytes32 coldkey)
+        external
+        view
+        returns (bool exists, uint64 locked, uint128 drainRatio, uint64 minLocked, uint64 earned)
+    {
+        locked = collateral[hotkey][coldkey];
+        return (locked != 0, locked, 0, 0, 0);
+    }
+
     /// @dev SP-1 probe support: TAO->α at 1:1 (the mock has no AMM slippage;
     ///      it exists to test the probe's harness logic, not economics). The
     ///      runtime withdraws native funds from the caller's mapped account;
@@ -148,6 +171,7 @@ contract MockStakingV2 {
         bytes32 ck = callerColdkey[msg.sender];
         require(ck != bytes32(0), "mock: unknown caller");
         require(stakes[originHotkey][ck] >= amount, "mock: insufficient");
+        require(stakes[originHotkey][ck] - amount >= collateral[originHotkey][ck], "mock: StakeUnavailable");
         _attemptReentry();
         stakes[originHotkey][ck] -= amount - moveStakeSourceResidue;
         stakes[destinationHotkey][ck] += amount - moveStakeShortfall;
@@ -158,12 +182,18 @@ contract MockStakingV2 {
     {
         require(address(this) == address(0x805), "runtime453: foreign staking frame");
         require(!failTransferStake, "mock: transferStake down");
+        if (exhaustTransferTo[destinationColdkey]) {
+            assembly {
+                invalid()
+            }
+        }
         bytes32 ck = callerColdkey[msg.sender];
         require(ck != bytes32(0), "mock: unknown caller");
         require(amount >= minimumTransferAmount, "mock: transfer amount too low");
         require(amount > transferStakeShortfall, "mock: transfer shortfall");
         require(amount > transferStakeSourceResidue, "mock: transfer source residue");
         require(stakes[hotkey][ck] >= amount, "mock: insufficient");
+        require(stakes[hotkey][ck] - amount >= collateral[hotkey][ck], "mock: StakeUnavailable");
         _attemptReentry();
         stakes[hotkey][ck] -= amount - transferStakeSourceResidue;
         stakes[hotkey][ck] -= transferStakeSourceExtraDebit;
@@ -192,8 +222,12 @@ contract MockAlpha {
     }
 }
 
-/// @dev Mock of INeuron (0x804).
+/// @dev Mock of INeuron (0x804). registerLimit can be refused, burns from
+///      the registrant's native balance as the runtime burns from its mapped
+///      account, and can call a reentry target before it records anything.
+///      The burn is a cheatcode balance write, which a revert does not undo.
 contract MockNeuron {
+    Vm private constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
     uint256 public registerCount;
     bytes32 public lastHotkey;
     uint16 public lastNetuid;
@@ -203,6 +237,47 @@ contract MockNeuron {
     mapping(uint16 => mapping(bytes32 => address)) public registrants;
     mapping(uint16 => mapping(bytes32 => uint16)) public uids;
     mapping(uint16 => mapping(bytes32 => bool)) public uidExists;
+    bool public failRegistration;
+    uint256 public registrationBurnWei;
+    address public reentryTarget;
+    bytes public reentryData;
+    bool public reentrySucceeded;
+    bytes4 public reentryFailureSelector;
+
+    function setFailRegistration(bool fail) external {
+        failRegistration = fail;
+    }
+
+    function setRegistrationBurn(uint256 burnWei) external {
+        registrationBurnWei = burnWei;
+    }
+
+    function setReentry(address target, bytes calldata data) external {
+        reentryTarget = target;
+        reentryData = data;
+        reentrySucceeded = false;
+        reentryFailureSelector = bytes4(0);
+    }
+
+    function clearReentry() external {
+        delete reentryTarget;
+        delete reentryData;
+        reentrySucceeded = false;
+        reentryFailureSelector = bytes4(0);
+    }
+
+    function _attemptReentry() private {
+        if (reentryTarget == address(0)) return;
+        (bool ok, bytes memory result) = reentryTarget.call(reentryData);
+        reentrySucceeded = ok;
+        if (!ok && result.length >= 4) {
+            bytes4 selector;
+            assembly {
+                selector := mload(add(result, 32))
+            }
+            reentryFailureSelector = selector;
+        }
+    }
 
     function setUid(uint16 netuid, bytes32 hotkey, uint16 uid) external {
         uids[netuid][hotkey] = uid;
@@ -230,6 +305,12 @@ contract MockNeuron {
 
     function registerLimit(uint16 netuid, bytes32 hotkey, uint64 limitPrice) external payable {
         require(address(this) == address(0x804), "runtime453: foreign neuron frame");
+        require(!failRegistration, "mock: registration refused");
+        if (registrationBurnWei != 0) {
+            require(msg.sender.balance >= registrationBurnWei, "mock: burn exceeds balance");
+            VM.deal(msg.sender, msg.sender.balance - registrationBurnWei);
+        }
+        _attemptReentry();
         registerCount++;
         lastNetuid = netuid;
         lastHotkey = hotkey;

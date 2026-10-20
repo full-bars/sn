@@ -71,28 +71,31 @@ type HarnessConfig struct {
 }
 
 type RepositoryConfig struct {
-	Discovery      string `yaml:"discovery" json:"discovery"`
-	SN             string `yaml:"sn" json:"sn"`
-	Server         string `yaml:"server" json:"server"`
-	OperatorProxy  string `yaml:"operator_proxy" json:"operator_proxy"`
-	Vault          string `yaml:"vault" json:"vault"`
-	PlatformConfig string `yaml:"platform_config" json:"platform_config"`
+	Discovery string `yaml:"discovery" json:"discovery"`
+	SN        string `yaml:"sn" json:"sn"`
+	Server    string `yaml:"server" json:"server"`
+	// The operator-proxy repository is retired and never discovered. Existing
+	// configs may still carry the key; it keeps its wire name and position so
+	// ConfigHash and archived authorities that embed the config are unchanged.
+	RetiredOperatorProxy string `yaml:"operator_proxy" json:"operator_proxy"`
+	Vault                string `yaml:"vault" json:"vault"`
+	PlatformConfig       string `yaml:"platform_config" json:"platform_config"`
 }
 
 func (r *RepositoryConfig) UnmarshalYAML(n *yaml.Node) error {
 	type raw RepositoryConfig
 	var v struct {
-		Discovery      string `yaml:"discovery"`
-		SN             string `yaml:"sn"`
-		Server         string `yaml:"server"`
-		OperatorProxy  string `yaml:"operator_proxy"`
-		Vault          string `yaml:"vault"`
-		PlatformConfig string `yaml:"platform_config"`
+		Discovery            string `yaml:"discovery"`
+		SN                   string `yaml:"sn"`
+		Server               string `yaml:"server"`
+		RetiredOperatorProxy string `yaml:"operator_proxy"`
+		Vault                string `yaml:"vault"`
+		PlatformConfig       string `yaml:"platform_config"`
 	}
 	if err := n.Decode(&v); err != nil {
 		return err
 	}
-	*r = RepositoryConfig{Discovery: v.Discovery, SN: v.SN, Server: v.Server, OperatorProxy: v.OperatorProxy, Vault: v.Vault, PlatformConfig: v.PlatformConfig}
+	*r = RepositoryConfig{Discovery: v.Discovery, SN: v.SN, Server: v.Server, RetiredOperatorProxy: v.RetiredOperatorProxy, Vault: v.Vault, PlatformConfig: v.PlatformConfig}
 	return nil
 }
 
@@ -353,7 +356,7 @@ type CompatibilityGate struct {
 	Decision string   `yaml:"decision" json:"decision"`
 }
 
-type RepoPaths struct{ SN, Server, OperatorProxy, Vault, PlatformConfig string }
+type RepoPaths struct{ SN, Server, Vault, PlatformConfig string }
 type ResolvedConfig struct {
 	// Derived only from a validated approved rate amendment, never from YAML.
 	previousPolicy *protocol.Policy
@@ -403,8 +406,8 @@ type ResolvedConfig struct {
 }
 
 type LoadOptions struct {
-	ConfigPath, SNRepo, ServerRepo, OperatorProxyRepo, VaultRepo, PlatformConfigRepo string
-	RequireSecrets                                                                   bool
+	ConfigPath, SNRepo, ServerRepo, VaultRepo, PlatformConfigRepo string
+	RequireSecrets                                                bool
 }
 
 func strictYAML(path string, out any) error {
@@ -1434,10 +1437,6 @@ func discoverRepos(configPath string, opts LoadOptions) (RepoPaths, error) {
 	if server == "" {
 		server = findSiblingModule(parent, "github.com/urnetwork/server")
 	}
-	operatorProxy := opts.OperatorProxyRepo
-	if operatorProxy == "" {
-		operatorProxy = findSiblingModule(parent, "github.com/urnetwork/operator-proxy")
-	}
 	vault := opts.VaultRepo
 	if vault == "" {
 		candidate := filepath.Join(parent, "vault")
@@ -1455,16 +1454,13 @@ func discoverRepos(configPath string, opts LoadOptions) (RepoPaths, error) {
 	if server == "" {
 		return RepoPaths{}, errors.New("cannot discover server repository; use --server-repo")
 	}
-	if operatorProxy == "" {
-		return RepoPaths{}, errors.New("cannot discover operator-proxy repository; use --operator-proxy-repo")
-	}
 	if vault == "" {
 		return RepoPaths{}, errors.New("cannot discover vault repository; use --vault-repo")
 	}
 	if platformConfig == "" {
 		return RepoPaths{}, errors.New("cannot discover platform config repository; use --platform-config-repo")
 	}
-	return RepoPaths{SN: cleanAbs(sn), Server: cleanAbs(server), OperatorProxy: cleanAbs(operatorProxy), Vault: cleanAbs(vault), PlatformConfig: cleanAbs(platformConfig)}, nil
+	return RepoPaths{SN: cleanAbs(sn), Server: cleanAbs(server), Vault: cleanAbs(vault), PlatformConfig: cleanAbs(platformConfig)}, nil
 }
 func findModule(start, module string) string {
 	d := cleanAbs(start)

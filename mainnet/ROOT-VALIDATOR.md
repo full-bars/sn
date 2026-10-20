@@ -211,7 +211,8 @@ configuration, rule installation, notification delivery or deployment is claimed
    those historical rights.
 5. Deploy this read-only observer into the existing alerts/on-call stack, record
    its executable/policy hashes and separately qualify the UR validators. Root
-   membership does not satisfy the requirement for a second UR validator.
+   membership never counts as a UR validator, even where the root seat and the
+   sole UR validator share a hotkey, as at the SN25 launch.
 
 Source references: [root admission and pruning](https://github.com/RaoFoundation/subtensor/blob/67dcf7f791dc495064c293f080a0702cb433e51e/pallets/subtensor/src/coinbase/root.rs),
 [root pruning order](https://github.com/RaoFoundation/subtensor/blob/67dcf7f791dc495064c293f080a0702cb433e51e/pallets/subtensor/src/subnets/registration.rs),

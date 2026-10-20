@@ -1,17 +1,15 @@
 //go:build darwin
 
-// Production guarded request custody requires the qualified Linux owner.
+// Darwin names the native change time Ctimespec.
 package validator
 
 import (
-	"errors"
 	"os"
+	"syscall"
 )
 
-func readProviderAttemptRequestAttribute(*os.File) ([]byte, bool, error) {
-	return nil, false, errors.New("provider request custody is unavailable on this platform")
+func sameProviderAttemptRequestFileStat(a, b os.FileInfo) bool {
+	left, ok := a.Sys().(*syscall.Stat_t)
+	right, other := b.Sys().(*syscall.Stat_t)
+	return ok && other && left.Ctimespec == right.Ctimespec && left.Mode == right.Mode && left.Uid == right.Uid && left.Gid == right.Gid && left.Nlink == right.Nlink
 }
-func writeProviderAttemptRequestAttribute(*os.File, []byte, bool) error {
-	return errors.New("provider request custody is unavailable on this platform")
-}
-func sameProviderAttemptRequestFileStat(os.FileInfo, os.FileInfo) bool { return false }

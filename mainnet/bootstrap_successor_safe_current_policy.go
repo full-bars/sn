@@ -17,6 +17,10 @@ const bootstrapSuccessorSafeCurrentPolicySchema = "urnetwork-mainnet-successor-s
 const bootstrapSuccessorSafeCurrentPolicyDomain = "urnetwork-mainnet-successor-safe-current-policy-proposal-approval-v1"
 const bootstrapSuccessorSafeCurrentPolicy = "proposed-current-authority-only;complete-finalized-safe-account-storage-prefix-and-exact-proxy-singleton-code-metadata-and-runtime;only-singleton-three-owner-links-two-of-three-threshold-nonce-and-empty-module-sentinel;all-other-storage-absent;no-deployment-or-delegatecall-history-claim;owned-rpc-finality-and-nonatomic-scoped-pending-assertions-not-complete-pending-proof;original-all-signer-cutover-no-other-live-signatures-and-relayer-transactions-required;retain-original-authority-history-receipts-signed-bytes-nonces-counted-attempts-window-fees-and-liabilities;production-submission-unavailable-pending-explicit-policy-approval-qualified-authenticator-and-custody-integration"
 
+// An explicitly selected single-owner execution names this separate census
+// text. Neither policy text can be accepted for the other owner profile.
+const bootstrapSuccessorSafeCurrentSingleOwnerPolicy = "proposed-current-authority-only;complete-finalized-safe-account-storage-prefix-and-exact-proxy-singleton-code-metadata-and-runtime;only-singleton-single-owner-link-one-of-one-threshold-nonce-and-empty-module-sentinel;all-other-storage-absent;no-deployment-or-delegatecall-history-claim;owned-rpc-finality-and-nonatomic-scoped-pending-assertions-not-complete-pending-proof;original-single-owner-and-relayer-signer-cutover-no-other-live-signatures-and-relayer-transactions-required;retain-original-authority-history-receipts-signed-bytes-nonces-counted-attempts-window-fees-and-liabilities;production-submission-unavailable-pending-explicit-policy-approval-qualified-authenticator-and-custody-integration"
+
 // Every execution/profile choice remains bound to original custody. Evidence is
 // a separate reviewer input; it is neither storage proof nor a capability token.
 type bootstrapSuccessorSafeCurrentPolicyAuthorization struct {
@@ -45,7 +49,7 @@ type bootstrapSuccessorSafeCurrentPolicyApproval struct {
 // approvals, and it explicitly carries the limitations that require review.
 func (self bootstrapSuccessorSafeCurrentPolicyAuthorization) signingBytes() ([]byte, error) {
 	if self.Schema != bootstrapSuccessorSafeCurrentPolicySchema || !planSha256(self.ExecutionPlanHash) || !planSha256(self.CanonicalAuthorityHash) ||
-		self.RuntimeRevisionHash != "" && !planSha256(self.RuntimeRevisionHash) || self.Policy != bootstrapSuccessorSafeCurrentPolicy ||
+		self.RuntimeRevisionHash != "" && !planSha256(self.RuntimeRevisionHash) || self.Policy != bootstrapSuccessorSafeCurrentPolicy && self.Policy != bootstrapSuccessorSafeCurrentSingleOwnerPolicy ||
 		!bootstrapRootAbsolutePath(self.ReviewEvidence.Path) || !planSha256(self.ReviewEvidence.Sha256) ||
 		self.Safe == (common.Address{}) || self.Singleton == (common.Address{}) || self.Safe == self.Singleton ||
 		self.SafeProxyRuntimeHash == (common.Hash{}) || self.SingletonRuntimeHash == (common.Hash{}) ||
@@ -70,6 +74,15 @@ func (self bootstrapSuccessorSafeCurrentPolicyApproval) validate(ctx context.Con
 		p.RuntimeRevisionHash != history.hash() || history.pendingHash != "" ||
 		p.Safe != plan.Review.Transaction.Safe || p.Singleton != plan.Request.Singleton || p.Version != plan.Review.Request.Version || p.Variant != plan.Review.Request.Variant {
 		return scope, errors.New("Safe current policy proposal changed retained execution or authority")
+	}
+	// The signed execution request selects the owner profile. Its proposal must
+	// name that exact census text; neither text can admit the other profile.
+	policy := bootstrapSuccessorSafeCurrentPolicy
+	if plan.Request.singleOwner() {
+		policy = bootstrapSuccessorSafeCurrentSingleOwnerPolicy
+	}
+	if p.Policy != policy {
+		return scope, errors.New("Safe current policy proposal differs from the execution owner profile")
 	}
 	if err := base.validate(ctx, plan); err != nil {
 		return scope, err
@@ -111,7 +124,7 @@ func (self bootstrapSuccessorSafeCurrentPolicyApproval) validate(ctx context.Con
 	if err != nil || len(raw) == 0 || hash != p.ReviewEvidence.Sha256 {
 		return scope, errors.Join(errors.New("Safe current policy proposal evidence is absent or changed"), err)
 	}
-	scope = safeCurrentStorageScope{Safe: p.Safe, Singleton: p.Singleton, Owners: slices.Clone(plan.Request.Owners), Nonce: plan.Review.Transaction.Nonce,
+	scope = safeCurrentStorageScope{Safe: p.Safe, Singleton: p.Singleton, Owners: slices.Clone(plan.Request.Owners), SingleOwner: plan.Request.singleOwner(), Nonce: plan.Review.Transaction.Nonce,
 		Version: p.Version, Variant: p.Variant, SafeProxyRuntimeHash: p.SafeProxyRuntimeHash, SingletonRuntimeHash: p.SingletonRuntimeHash, Runtime: p.Runtime}
 	if err := errors.Join(scope.validate(), ctx.Err()); err != nil {
 		return safeCurrentStorageScope{}, err

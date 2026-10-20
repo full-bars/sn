@@ -1,7 +1,8 @@
 //go:build linux || darwin
 
 // The production root joins authenticated startup, real live disk cuts,
-// complete durable terminal closure and dual-origin public census publication.
+// complete durable terminal closure and public census publication at every
+// replica origin.
 package validator
 
 import (
@@ -34,7 +35,7 @@ type releaseRuntimeV2 struct {
 	hotkey               *crv4.Keypair
 	disk                 *releaseEvidenceV2DiskState
 	history              *releaseEvidenceV2StartupHistory
-	origins              [2]string
+	origins              []string
 	runtimes             []*releaseOperatorRuntime
 	sources              map[uint64]*releaseAttemptUploadSourceV2
 	gate                 chan struct{}
@@ -46,12 +47,13 @@ type releaseRuntimeV2 struct {
 	preparation          *releaseProductionPreparation
 	nativeReservations   map[uint64]uint64                       // no_id -> native epoch, owned by gate
 	nativeInputNoIdKVs   map[uint64]*releaseRuntimeNativeInputV2 // one unpublished/adopting cut per operator, owned by gate
+	settlementV2Verified bool                                    // the settlement_v2 identity check passed, owned by gate
 }
 
 // Semantic startup is called while the complete disk census is still dormant.
 // Retained private cursor inputs escape only after actual recovery, reference
 // authentication, proof projection, coherent publication and every Close.
-func newReleaseRuntimeV2(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, hotkey *crv4.Keypair, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins [2]string, disk *releaseEvidenceV2DiskState) (*releaseRuntimeV2, error) {
+func newReleaseRuntimeV2(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, hotkey *crv4.Keypair, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins []string, disk *releaseEvidenceV2DiskState) (*releaseRuntimeV2, error) {
 	if cfg == nil {
 		return nil, errors.New("release V2 root configuration is absent")
 	}
@@ -62,7 +64,7 @@ func newReleaseRuntimeV2(ctx context.Context, cfg *ReleaseConfig, chain *ChainCl
 // The same private explicit-artifact boundary as semantic startup permits
 // genuine fixture metadata without changing configured production pins. It
 // still runs the complete real native, disk, reference and public replay.
-func newReleaseRuntimeV2WithRuntime(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, hotkey *crv4.Keypair, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins [2]string, disk *releaseEvidenceV2DiskState, runtime crv4.RuntimeArtifactIdentity) (*releaseRuntimeV2, error) {
+func newReleaseRuntimeV2WithRuntime(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, hotkey *crv4.Keypair, inputs []releaseEvidenceV2ActivationInput, serverKeys map[uint64]map[byte]ed25519.PublicKey, origins []string, disk *releaseEvidenceV2DiskState, runtime crv4.RuntimeArtifactIdentity) (*releaseRuntimeV2, error) {
 	if ctx == nil || cfg == nil || chain == nil || native == nil || hotkey == nil || disk == nil {
 		return nil, errors.New("release V2 root ownership is incomplete")
 	}
@@ -91,7 +93,7 @@ func newReleaseRuntimeV2WithRuntime(ctx context.Context, cfg *ReleaseConfig, cha
 	for _, participant := range history.participants {
 		disk.states[participant.NoID].uploadSource = sources[participant.NoID]
 	}
-	self := &releaseRuntimeV2{receiptCache: &productionReceiptCacheState{}, ctx: ctx, cfg: history.cfg, chain: chain, native: native, hotkey: ownHotkey, disk: disk, history: history, origins: origins, sources: sources,
+	self := &releaseRuntimeV2{receiptCache: &productionReceiptCacheState{}, ctx: ctx, cfg: history.cfg, chain: chain, native: native, hotkey: ownHotkey, disk: disk, history: history, origins: slices.Clone(origins), sources: sources,
 		gate: make(chan struct{}, 1), publications: maps.Clone(history.terminals), publicationContexts: maps.Clone(history.terminalContexts)}
 	if isOwnerRecycleProductionConfig(cfg) {
 		self.preparation = &releaseProductionPreparation{requested: make(chan struct{}), ready: make(chan struct{})}
@@ -145,7 +147,8 @@ func (self *releaseRuntimeV2) attach(runtimes []*releaseOperatorRuntime) error {
 }
 
 // Fresh child names use the existing independently configured root, with no
-// cleanup, implicit storage increase or reuse of completed replay scratch.
+// implicit storage increase or reuse of completed replay scratch. A release
+// run's replay retires each replay-root child once closed; seal scratch stays.
 func (self *releaseRuntimeV2) scratch(ctx context.Context, noId uint64, seal bool, purpose string) (string, error) {
 	var root string
 	for _, operator := range self.cfg.EvidenceV2.Operators {
@@ -190,6 +193,9 @@ func (self *releaseRuntimeV2) operator(ctx context.Context, expected AttemptCutV
 	if err != nil {
 		return AttemptSettlementV2OperatorOptions{}, err
 	}
+	if len(self.history.readers) == 0 {
+		return AttemptSettlementV2OperatorOptions{}, errors.New("release V2 replay has no public origin reader")
+	}
 	bounds, reader := self.cfg.EvidenceV2.Bounds, self.history.readers[0]
 	replayPolicy, err := ReleasePolicyForHash(&self.cfg, releaseHex32(expected.Activation.Domain.PolicyHash))
 	if err != nil {
@@ -198,7 +204,7 @@ func (self *releaseRuntimeV2) operator(ctx context.Context, expected AttemptCutV
 	return AttemptSettlementV2OperatorOptions{Expected: expected, Policy: replayPolicy, Bounds: bounds.Cut, Measurement: AttemptCutV2MeasurementOptions{
 		ExpectedConfig: ReleaseStatsConfig{AMin: self.cfg.Policy.Verify.ReliabilityAMin, AlphaNumerator: releasePoolAlphaNumerator, AlphaDenominator: releasePoolAlphaDenominator, LatRefMillis: releasePoolLatRefMillis},
 		MaxProviders:   bounds.MaxProviders, MaxEgressHashes: bounds.MaxEgressHashes, MaxFleetPrefixes: bounds.MaxFleetPrefixes,
-		Replay: AttemptCutV2ReplayOptions{Bounds: bounds.Replay, ScratchDirectory: path, ServerKeys: self.history.keys[expected.Identity.NoID], ReadMetadata: reader.ReadMetadata, OpenData: reader.OpenData}}}, nil
+		Replay: AttemptCutV2ReplayOptions{Bounds: bounds.Replay, ScratchDirectory: path, ServerKeys: self.history.keys[expected.Identity.NoID], ReadMetadata: reader.ReadMetadata, OpenData: reader.OpenData, origin: reader.endpoint.String(), prefetch: attemptStreamV2PrefetchDepth}}}, nil
 }
 
 func (self *releaseRuntimeV2) authority(ctx context.Context, contexts map[uint64]AttemptCutV2Context, purpose string) (AttemptSettlementV2Options, error) {
@@ -221,7 +227,7 @@ func (self *releaseRuntimeV2) authority(ctx context.Context, contexts map[uint64
 	return ownAttemptSettlementV2Options(ctx, options)
 }
 
-func (self *releaseRuntimeV2) seal(ctx context.Context, noId uint64, replicas [2]AttemptCutV2Replica, purpose string) (AttemptCutV2SealOptions, error) {
+func (self *releaseRuntimeV2) seal(ctx context.Context, noId uint64, replicas []AttemptCutV2Replica, purpose string) (AttemptCutV2SealOptions, error) {
 	paths, err := self.scratch(ctx, noId, true, purpose)
 	if err != nil {
 		return AttemptCutV2SealOptions{}, err
@@ -308,15 +314,21 @@ func (self *releaseRuntimeV2) publishWithReadHooks(ctx context.Context, snapshot
 		if err != nil {
 			return err
 		}
-		options := ValidatorEvidenceCensusV2Options{Settlement: authority, Window: window, PrivateKeys: make(map[uint64]ed25519.PrivateKey), Hotkey: self.hotkey, ReplicasByOperator: replicas, SecondReplicaScratchDirectories: make(map[uint64]string)}
+		options := ValidatorEvidenceCensusV2Options{Settlement: authority, Window: window, PrivateKeys: make(map[uint64]ed25519.PrivateKey), Hotkey: self.hotkey, ReplicasByOperator: replicas}
+		if len(self.origins) == 2 {
+			options.SecondReplicaScratchDirectories = make(map[uint64]string)
+		}
 		noIds := make([]uint64, 0, len(self.history.participants))
 		readOptions := ValidatorEvidencePublicationV2ReadOptions{Window: window, Origins: self.origins, Bounds: self.cfg.EvidenceV2.Bounds}
 		for _, participant := range self.history.participants {
 			noId := participant.NoID
 			options.PrivateKeys[noId] = ed25519.PrivateKey(self.sources[noId].privateKey[:])
-			options.SecondReplicaScratchDirectories[noId], err = self.scratch(ctx, noId, false, "census-replica-two")
-			if err != nil {
-				return err
+			// A single configured origin has no second public replay to own.
+			if options.SecondReplicaScratchDirectories != nil {
+				options.SecondReplicaScratchDirectories[noId], err = self.scratch(ctx, noId, false, "census-replica-two")
+				if err != nil {
+					return err
+				}
 			}
 			noIds = append(noIds, noId)
 			readOptions.Activations = append(readOptions.Activations, self.sources[noId].activation)
@@ -363,6 +375,15 @@ func (self *releaseRuntimeV2) advance(ctx context.Context, snapshot *ReleaseSnap
 func (self *releaseRuntimeV2) advanceOwned(ctx context.Context, snapshot *ReleaseSnapshot) error {
 	if snapshot == nil || snapshot.Epoch == nil || !snapshot.Epoch.IsUint64() || len(self.runtimes) == 0 {
 		return errors.New("release V2 live census or snapshot is unavailable")
+	}
+	// The first advance happens at startup's first finalized snapshot,
+	// production's before preparation is ready and legacy's before any worker
+	// starts. The settlement_v2 identity check runs there until it passes once.
+	if !self.settlementV2Verified {
+		if err := verifyReleaseSettlementV2Context(ctx, self.chain, &self.cfg, snapshot.BlockNumber, snapshot.BlockHash); err != nil {
+			return err
+		}
+		self.settlementV2Verified = true
 	}
 	if err := self.reconcileNativeInputsOwned(ctx, snapshot); err != nil {
 		return err
@@ -647,5 +668,8 @@ func (self *releaseRuntimeV2) refreshServerKeys(ctx context.Context) error {
 			self.history.keys[noId][version] = bytes.Clone(key)
 		}
 	}
+	// Cuts verified under an added version reach the startup verified
+	// progress record, so the record names that version before them.
+	releaseStartupVerifiedFrom(ctx).observeServerKeys(self.history.keys)
 	return nil
 }

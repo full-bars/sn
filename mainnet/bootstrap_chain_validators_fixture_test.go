@@ -138,12 +138,16 @@ func (self *bootstrapChainValidatorFixture) writeApproval(t *testing.T, envelope
 		t.Fatal(err)
 	}
 	raw = append(raw, '\n')
-	path := self.config.OwnerRecycleApproval.Approval.Path
+	selection := self.config.OwnerRecycleApproval
+	if self.config.TreasuryApproval != nil {
+		selection = self.config.TreasuryApproval
+	}
+	path := selection.Approval.Path
 	if err := os.WriteFile(path, raw, 0600); err != nil {
 		t.Fatal(err)
 	}
 	digest := sha256.Sum256(raw)
-	self.config.OwnerRecycleApproval.Approval = validator.ReleaseEvidenceV2File{Path: path, Bytes: uint64(len(raw)), SHA256: fmt.Sprintf("0x%x", digest)}
+	selection.Approval = validator.ReleaseEvidenceV2File{Path: path, Bytes: uint64(len(raw)), SHA256: fmt.Sprintf("0x%x", digest)}
 }
 
 // Marshal the already normalized fixture so signature identity stays exact.

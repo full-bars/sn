@@ -83,6 +83,7 @@ func TestBootstrapSuccessorSafeCurrentPublicAcceptanceResumesExactCustody(t *tes
 	owner := f.open(true, nil)
 	root, registry := owner.local.path, owner.registry.path
 	original := bootstrapSuccessorPreparationTestFiles(t, root)
+	originalMembers := bootstrapSuccessorExecutionTestMemberCensus(t, root, false)
 	nonces := bootstrapSuccessorPreparationTestFiles(t, registry)
 	base := bootstrapSuccessorCanonicalTestApproval(t, f.approval.Plan, f.key, bootstrapSuccessorCanonicalTestRuntime())
 	if err := owner.retainCanonicalAuthority(t.Context(), base); err != nil {
@@ -166,11 +167,8 @@ func TestBootstrapSuccessorSafeCurrentPublicAcceptanceResumesExactCustody(t *tes
 	if err != nil || !result.InstallationComplete || owner.last.SafeCurrentRevisionHash != rootObjectHash(legacy) || owner.last.ReservedLifetimeWei != counted.ReservedLifetimeWei || owner.last.CumulativeAttempts != counted.CumulativeAttempts || len(f.writes) != 0 {
 		t.Fatal("v2 import/runtime drift changed historical counted policy or liability", result, err)
 	}
-	for name, raw := range original {
-		retained, err := os.ReadFile(filepath.Join(root, name))
-		if err != nil || string(retained) != raw {
-			t.Fatal("public acceptance changed original signed custody", name, err)
-		}
+	if name := bootstrapSuccessorExecutionTestChangedOriginal(t, root, original, originalMembers); name != "" {
+		t.Fatal("public acceptance changed original signed custody", name)
 	}
 	retainedCounted, countedErr := owner.local.read(bootstrapSuccessorExecutionEventName(counted.Sequence) + ".json")
 	retainedLegacy, legacyErr := owner.local.read(bootstrapSuccessorSafeCurrentName(1))

@@ -140,16 +140,19 @@ contract ReleaseBindingPolicyTest is ReleaseBase {
             HEAD_HOTKEY, COMMITMENT, uint64(block.number), keccak256("equivocating-block")
         );
 
+        // After the roll the height is read with vm.getBlockNumber: via-IR may
+        // reuse an earlier block.number read, and the --ir-minimum coverage
+        // build passes the pre-roll height here.
         vm.roll(block.number + 1);
         bytes32 nextCommitment = keccak256("next-commitment");
         bytes32 nextBlockHash = keccak256("finalized-block-1001");
         vm.prank(oracle);
-        coordinator.mirrorCommitment(HEAD_HOTKEY, nextCommitment, uint64(block.number), nextBlockHash);
+        coordinator.mirrorCommitment(HEAD_HOTKEY, nextCommitment, uint64(vm.getBlockNumber()), nextBlockHash);
         (bytes32 commitment, bytes32 finalizedHash, uint64 finalizedBlock) =
             coordinator.mirroredCommitments(HEAD_HOTKEY);
         assertEq(commitment, nextCommitment);
         assertEq(finalizedHash, nextBlockHash);
-        assertEq(finalizedBlock, block.number);
+        assertEq(finalizedBlock, vm.getBlockNumber());
     }
 
     function test_clientSignedRevocationIsNextEpochOnly() public {

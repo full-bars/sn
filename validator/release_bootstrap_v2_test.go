@@ -80,7 +80,9 @@ func newReleaseBootstrapV2TestFixture(t *testing.T, configure ...func(*ReleaseCo
 	if err != nil {
 		t.Fatal(err)
 	}
-	for index, provider := range fixture.providers {
+	// A configured single-operator census signs only the first provider.
+	for index := range fixture.cfg.EvidenceV2.Operators {
+		provider := fixture.providers[index]
 		operator := &fixture.cfg.EvidenceV2.Operators[index]
 		seed := [32]byte{byte(0x41 + index)}
 		key := ed25519.NewKeyFromSeed(seed[:])

@@ -46,13 +46,18 @@ type ownerTrimBestEffortApproval struct {
 	ResidualRisks       []string           `json:"explicitly_accepted_residual_risks"`
 	PublicPruningPolicy string             `json:"public_pruning_policy,omitempty"`
 	RegistrationPolicy  string             `json:"registration_policy,omitempty"`
+	MultisigStep        string             `json:"multisig_step,omitempty"`
 	Signature           string             `json:"approval_signature_ed25519"`
 }
 
 // Empty fields preserve already signed conservative policies byte for byte.
-// Each weaker choice requires its own exact residual and independent signature.
+// Each weaker choice requires its own exact residual and independent signature;
+// every native multisig step additionally accepts the multisig interval risk.
 func (self ownerTrimBestEffortApproval) residuals() []string {
 	risks := ownerTrimBestEffortResiduals()
+	if self.MultisigStep != "" {
+		risks = append(risks, ownerTrimMultisigResidual)
+	}
 	if self.PublicPruningPolicy == ownerTrimAcceptPruningRisk {
 		risks = append(risks, ownerTrimPublicPruningResidual)
 	}
@@ -78,9 +83,16 @@ func (self ownerTrimBestEffortApproval) signingBytes() []byte {
 }
 
 // Exact config identity also binds network, owner, route, fee reserve and budget.
+// A multisig step policy names its step kind and binds that step's own bytes.
 func (self ownerTrimBestEffortApproval) validate(config ownerTrimExecutionConfig, key, extrinsicHash string) error {
 	action := config.Action
-	if self.Schema != ownerTrimBestEffortApprovalSchema || config.Schema != ownerTrimBestEffortExecutionSchema || action.Schema != ownerTrimBestEffortActionSchema ||
+	step := ""
+	if action.Multisig != nil {
+		step = action.Multisig.kind()
+	}
+	domain := config.Schema == ownerTrimBestEffortExecutionSchema && action.Schema == ownerTrimBestEffortActionSchema ||
+		config.Schema == ownerTrimMultisigExecutionSchema && action.Schema == ownerTrimMultisigActionSchema
+	if self.Schema != ownerTrimBestEffortApprovalSchema || !domain || self.MultisigStep != step ||
 		self.ConfigHash != rootObjectHash(config) || !rootCanonicalHash(extrinsicHash) || self.ExtrinsicHash != extrinsicHash || self.Runtime != action.Runtime ||
 		!planSha256(self.BaselineCensusHash) || !planSha256(self.ProtectedScopeHash) || self.InitialBroadcasts >= action.MaxBroadcasts ||
 		self.ValidFromBlock < action.BirthBlock || self.ValidFromBlock > self.ValidThroughBlock || self.ValidThroughBlock >= action.BirthBlock+action.Period ||

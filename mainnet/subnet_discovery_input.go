@@ -65,16 +65,16 @@ func readSubnetDiscoveryInput(path string) (runtimeSnapshot, string, error) {
 	return runtime, "sha256:" + hex.EncodeToString(digest[:]), nil
 }
 
-// The v470 observation codec has a finite scope. Matching these self-contained
+// The observation codec has a finite scope. Matching these self-contained
 // pins permits only reads; even correct official bytes do not approve mainnet.
 func validateSubnetDiscoveryRuntime(snapshot runtimeSnapshot) error {
-	version := crv4.RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 470, TransactionVersion: 1, StateVersion: 1}
+	version := snapshot.Version
 	identity := snapshot.Identity
 	if snapshot.Schema != runtimeSnapshotSchema || snapshot.Admission != "unapproved_observation" ||
 		identity.Schema != identitySchema || identity.NativeChain == "" || identity.EvmChainId != 964 ||
 		!rootCanonicalHash(identity.GenesisHash) || !rootCanonicalHash(identity.FinalizedHash) ||
-		snapshot.Version != version || identity.RuntimeSpec != uint64(version.SpecVersion) || identity.RuntimeTx != uint64(version.TransactionVersion) {
-		return errors.New("discovery requires an unapproved EVM-964 runtime470 snapshot with one complete identity")
+		!nativeOwnerRuntimeVersion(version) || identity.RuntimeSpec != uint64(version.SpecVersion) || identity.RuntimeTx != uint64(version.TransactionVersion) {
+		return errors.New("discovery requires an unapproved EVM-964 snapshot with one complete compatible runtime identity")
 	}
 	for _, artifact := range []struct {
 		name    string

@@ -26,6 +26,13 @@ func proxyURLGiveUpRetryDelay(giveUpCount int) time.Duration {
 	return delay + jitter
 }
 
+// proxyURLSlowAuthRetryDelay is the requeue delay for a URL-sourced proxy
+// whose ladder ended on deadline-cut attempts (slow, not broken). The give-up
+// ramp exists for genuine rejections and reaches 15 minutes; using it here
+// parked a working-but-slow proxy for the longest interval exactly when the
+// box was already struggling to recover.
+const proxyURLSlowAuthRetryDelay = 30 * time.Second
+
 // proxyAuthSlowRetryDelay is the backoff for an operator-curated proxy
 // (file/internal/direct) that has exhausted its fast retries. Rather than give
 // up, it keeps trying on a slow schedule:

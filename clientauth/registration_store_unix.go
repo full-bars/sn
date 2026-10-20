@@ -72,7 +72,7 @@ func openRegistrationStore(clientPath string) (_ *registrationStore, returnErr e
 		return nil, err
 	}
 	if err := unix.Flock(int(self.lock.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
-		return nil, errors.New("registration credential already has an active owner")
+		return nil, errRegistrationOwnerActive
 	}
 	return self, nil
 }
@@ -106,7 +106,7 @@ func openRegistrationStoreForOwner(clientPath string, owner *registrationStore) 
 		return nil, err
 	}
 	if err := unix.Flock(int(self.lock.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
-		return nil, errors.New("registration credential already has an active owner")
+		return nil, errRegistrationOwnerActive
 	}
 	if err := self.check(); err != nil {
 		return nil, err

@@ -1,0 +1,178 @@
+{
+  "schema": "original-capture-refill-and-retention-checkpoint-v1",
+  "checkpoint_utc": "2026-10-05T23:32:24Z",
+  "documentation_base": "d0ef0290ba5f5e5ebeec6d48752bd4c8a89bddc0",
+  "authority": "Evidence index only; no production approval, actual capture/replay success or Principal completeness.",
+  "supersedes_status_only": "original-capture-root-version-hardening-20261005.json; original failure/source evidence and all historical counts remain unchanged.",
+  "principal_retention": {
+    "status": "PASS",
+    "source_commit": "430463bd522d1502b9b26797d4020013f67de30f",
+    "selected": 20,
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "composition": "11 ordinary roots plus nine disjoint capture/replay consumer roots on the retained image; no new full-package run.",
+    "combined_result": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/mainnet-retention20-v1/combined20-qualification-v1.json",
+      "bytes": 5797,
+      "sha256": "d88c5779c15c0ea82b2c35cd9c0f11539cde333f8c5c14e25796ac0ac6df7a30"
+    },
+    "ordinary_closed_owner": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/mainnet-retention20-v1/run/evidence/closed-user-readback-v1.json",
+      "bytes": 8988,
+      "sha256": "0623f85505c253c115148670cc3c3e21ca22365451dbb6181439348a8ec96cea"
+    },
+    "native_closed_owner": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/mainnet-retention9-native-v1/run/evidence/closed-user-readback-v1.json",
+      "bytes": 5661,
+      "sha256": "6f709c3b438c5cf963b7a3b8cf025d437360704ad90f64c68ed6c31c121e66d6"
+    }
+  },
+  "original_rust_bodyroot11": {
+    "selected": 11,
+    "passed": 10,
+    "failed": 1,
+    "skipped": 0,
+    "terminal": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/rust-bodyroot11-v1/evidence/profile-bodyroot11.terminal.json",
+      "bytes": 31478,
+      "sha256": "1eafcb4a161b34f31aea0f3ea6d195730bd9b9c296c4f6902cc58d49962e46ce"
+    },
+    "original_failed_root": "historical::tests::extrinsics_root_tests::historical_extrinsics_root_uses_sdk_system_version_scope",
+    "failure_reason": "SDK StateVersion::try_from accepts raw2 as V1; the product v1 wire requires explicit raw0/1 admission.",
+    "actual_15_extrinsic_sdk_comparison": "PASS",
+    "regenerated_fixture_exports": 14,
+    "export_counts": {
+      "principal-effects": 7,
+      "vault-capture": 4,
+      "vault-sequence": 3
+    },
+    "preservation": "Keep original 10-pass/1-fail result separate from the scope3 successor. Fixture exports are not an original chain-block replay."
+  },
+  "raw_version_scope_successor": {
+    "source_commit": "8e0744ae39edb78cfc86b6eb66576952d7b6e963",
+    "main_merge_commit": "d0ef0290ba5f5e5ebeec6d48752bd4c8a89bddc0",
+    "source_handoff": {
+      "path": "/home/by/urnetwork-worktrees/runtime473-execution-version/handoff-8e0744ae/HANDOFF.json",
+      "bytes": 3553,
+      "sha256": "0ee5114f914ca61dbf7c59e44982512d98231593b290538113ff6dd32bb63892"
+    },
+    "source_ack": {
+      "path": "/home/by/urnetwork-worktrees/runtime473-execution-version/handoff-8e0744ae/SOURCE-ACK.json",
+      "bytes": 592,
+      "sha256": "b7e8096b78e78f83ff51e86ff80f57a4260541ffcd7e26171909aacd04d796ac"
+    },
+    "selection": {
+      "path": "/home/by/urnetwork-worktrees/runtime473-execution-version/handoff-8e0744ae/selection.json",
+      "bytes": 1289,
+      "sha256": "705bdc806f9736246d2ecf39b5ac0b04718661129855fc68f267ec4aaca5bef7"
+    },
+    "closed_owner": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/rust-scope3-v1/evidence/closed-owner-readback-v1.json",
+      "bytes": 5206,
+      "sha256": "8c65f2e4bff2b0325a0adf01e54d4947a891d75178d855b3ed9dc4b3e5fcaceb"
+    },
+    "selected": 3,
+    "passed": 3,
+    "failed": 0,
+    "all_six_compile_list_and_test_phases_joined": true,
+    "roots": [
+      "historical::tests::extrinsics_root_tests::historical_extrinsics_root_uses_sdk_system_version_scope",
+      "historical::tests::extrinsics_root_tests::historical_extrinsics_root_preserves_actual_runtime_version_guard",
+      "historical::tests::extrinsics_root_tests::historical_extrinsics_root_capture_and_replay_refuse_unsupported_raw_wire"
+    ],
+    "protected_capture_image": {
+      "bytes": 53486072,
+      "path": "/home/by/sn-testnet-root-fallback-20261005/rust-scope3-v1/images/runtime-historical-capture",
+      "sha256": "cab5522e47fb4fb4244b79cf58e7f8d5b7d5f7dcf2f6480b7c36027a4a91aa97"
+    },
+    "protected_proof_image": {
+      "bytes": 52257024,
+      "path": "/home/by/sn-testnet-root-fallback-20261005/rust-scope3-v1/images/runtime-historical-proof",
+      "sha256": "c69a20a7914734f5d11384c82e9252b906a875b96a0f6a0da02cd1687f273fc0"
+    },
+    "scope": "Explicit raw0/1 admission and exact Core_version equality. No current actual capture/replay pass transferred."
+  },
+  "actual_capture_v2": {
+    "block": 9218962,
+    "block_hash": "0xcff0e3a3678187c4ecf43f2c9c1be7266c55d118aadf7a6a9663d618c2362daf",
+    "closed_owner": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/original-epoch9218962-v2/run/evidence/closed-owner-readback-v1.json",
+      "bytes": 2877,
+      "sha256": "d203bc201bb90745d48346239b332d293280a443a1780a6ae8a23348eac27475"
+    },
+    "terminal": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/original-epoch9218962-v2/run/evidence/terminal.json",
+      "bytes": 25174,
+      "sha256": "0637d2a708c872db6a4f358fd43046710a0f29afb33087bb7965d288d913b048"
+    },
+    "stderr": {
+      "path": "/home/by/sn-testnet-root-fallback-20261005/original-epoch9218962-v2/run/evidence/original-capture.stderr",
+      "bytes": 1261,
+      "sha256": "abb373b6a1d2fa908d26cf1e59deffd1af95f9ff494952a64989eae44f95b47e"
+    },
+    "status": "FAIL_OR_INCOMPLETE",
+    "body_authentication": "PASSED; original runtime subsequently requested missing trie material.",
+    "reported_refusal": "receipt collection reply identity or result/error envelope differs",
+    "missing_trie_key_diagnostic": "0x31746db0a5a220f7326ba440e7898eddc40a983b1b27af68a90a934af7ab9a3f",
+    "capture_exit": 1,
+    "worker_joined": true,
+    "capture_report_bytes": 0,
+    "independent_replay_started": false,
+    "principal_result": false,
+    "raw_failing_http_rpc_reply_retained": false,
+    "exact_service_response_established": false,
+    "chain_root_conflict_established": false,
+    "interpretation": "A failed refill and missing node in the incomplete proof backend establish neither absent storage nor archive or chain corruption."
+  },
+  "proof_reader_hardening": {
+    "status": "SOURCE_WORK_IN_PROGRESS_UNQUALIFIED_AT_CHECKPOINT",
+    "source_findings": [
+      "Valid JSON gateway bytes could reach RPC envelope conflict classification before transient HTTP status handling. The original failing raw reply is unavailable, so that exact service response is not established.",
+      "The read-proof result struct was reused by per-retry validation; a fresh result candidate is required so omitted fields cannot inherit a prior reply."
+    ],
+    "inspected_predecessor_source": [
+      {
+        "path": "/home/by/urnetwork/server/strecovery/receipt_collect_rpc.go",
+        "bytes": 9648,
+        "sha256": "2075276fc6e2724b19d9c348cbe5b21c5b073acecd386864f60155ecbedbf4bd"
+      },
+      {
+        "path": "/home/by/urnetwork/server/strecovery/receipt_collect_retry.go",
+        "bytes": 2293,
+        "sha256": "42547b7de2bb47323173ae2f9fc5c851c1cb16d6935dd2849b629020e38da80a"
+      },
+      {
+        "path": "/home/by/urnetwork/server/strecovery/native_execution_proof_reader.go",
+        "bytes": 3296,
+        "sha256": "e20f1e38b04a9ab7f9397a28adc7b967818830a8d6145ef63fa5e99bd37b0720"
+      }
+    ],
+    "required_behavior": "Keep absence/unavailability distinct from completed contradictory proof evidence; validate each reply freshly, preserve exact parent/key and original deadline, publish only a complete validated proof.",
+    "inspected_server_commit": "62104c486e960efbb17ea8dd235e54ff666545af"
+  },
+  "root_seat_registration": {
+    "status": "IMPLEMENTATION_GAP_IN_EXISTING_PASSIVE_PATH",
+    "current_work": "Separate coldkey signing and exposure-policy workflow under development; no execution qualification or registration claimed.",
+    "authority_boundary": "A local signed exposure limit is not a runtime-enforced registration burn cap. Reserve receiving does not authorize reserve spending.",
+    "status_source": "Root implementation audit and assignment at this checkpoint; no new chain observation by this documentation task."
+  },
+  "activation": {
+    "status": "blocked",
+    "configuration_path": "/home/by/urnetwork/config/main/sn.yml",
+    "empty_required_fields": [
+      "deployment_id",
+      "coordinator",
+      "settlement_vault",
+      "policy_hash",
+      "readiness_sha256"
+    ],
+    "mainnet_ready": false,
+    "earnings_boundary": "2026-10-06 inclusive, unchanged and not launch authority"
+  },
+  "documentation_verification": {
+    "referenced_retained_evidence_sha256_checked": true,
+    "compiler_tests_vm_or_rpc_executed_by_documentation_author": false,
+    "original_body_header_and_receipts_modified": false
+  }
+}

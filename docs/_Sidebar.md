@@ -3,6 +3,8 @@
 
 #### Getting Started
 * **[Installation](Installation)**
+* **[Alpine Linux (OpenRC)](OpenRC)**
+* **[FreeBSD](FreeBSD)**
 * **[Configuration](Configuration)**
 * **[Docker Deployment](Docker-Deployment)**
 * **[Advanced Deployment](Advanced-Deployment)**
@@ -23,8 +25,11 @@
 * **[Node Identity](Node-Identity)**
 * **[Egress Security Policy](Egress-Security-Policy)**
 * **[Bittensor Operations](Bittensor-Operations)**
+* **[HotSwap](HotSwap)**
+* **[LAUNCH](LAUNCH)**
 
 #### Diagnostics and Reference
 * **[Troubleshooting](Troubleshooting)**
 * **[Log Message Reference](Log-Message-Reference)**
 * **[CI and Release Process](CI-and-Release-Process)**
+* **[Review Findings](REVIEW_FINDINGS)**

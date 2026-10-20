@@ -375,8 +375,14 @@ func (self *repairOperatorCustody) beforeStart(ctx context.Context, now time.Tim
 
 // The application resumes its own unchanged journals and policies. This fixed
 // effect cannot select init-tasks, SQL, a signer, another binary or a new quota.
-func (self *repairOperatorCustody) start(ctx context.Context) error {
+func (self *repairOperatorCustody) start(ctx context.Context, dispatchCheck func() error) error {
+	if dispatchCheck == nil {
+		return errors.New("operator start dispatch authority check is absent")
+	}
 	if err := self.inspectStorage(ctx); err != nil {
+		return err
+	}
+	if err := dispatchCheck(); err != nil {
 		return err
 	}
 	_, err := self.host.command(ctx, self.envelope.profile(), "--system", "--no-pager", "--no-ask-password", "--job-mode=fail", "start", "--", self.envelope.original.Plan.unitName())

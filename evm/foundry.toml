@@ -37,6 +37,16 @@ runs = 48
 depth = 48
 fail_on_revert = false
 
+# The settlement v2 lifecycle invariants (test/V2Invariant.t.sol,
+# VERSION2-FINAL.md §15.5) run a short campaign in the default profile and a
+# deep one in this profile. Both campaign sizes are set inline in that file,
+# because its default-profile sizes would override any set here (inline
+# config ignores profile names with a hyphen):
+#   FOUNDRY_PROFILE=v2_invariant forge test --match-path test/V2Invariant.t.sol
+[profile.v2_invariant.invariant]
+fail_on_revert = false
+show_metrics = true
+
 # RPC URLs are explicit operator inputs. In particular, mainnet scripts must
 # use the approved Snow route and must not inherit a public endpoint alias.
 

@@ -21,7 +21,7 @@ import (
 const ValidatorEvidencePublicationV2Schema = "urnetwork-validator-closed-evidence-publication-v2"
 
 // Hashes locate exact canonical ValidatorEvidenceSignedV2 objects containing
-// both public consents. A relay must read both origins and authenticate them.
+// both public consents. A relay must read every origin and authenticate them.
 type ValidatorEvidencePublicationV2MemberReference struct {
 	NoId                uint64   `json:"no_id"`
 	SignedArtifactHash  [32]byte `json:"signed_artifact_hash"`
@@ -30,11 +30,12 @@ type ValidatorEvidencePublicationV2MemberReference struct {
 
 // This type describes only a closed all-operator census. Audit commitments
 // have different logical slots and cannot be represented by this file grammar.
+// Origins names two independent replicas, or a single member's only origin.
 type ValidatorEvidencePublicationV2Manifest struct {
 	Schema      string                                          `json:"schema"`
 	Kind        byte                                            `json:"kind"`
 	Epoch       uint64                                          `json:"epoch"`
-	Origins     [2]string                                       `json:"origins"`
+	Origins     []string                                        `json:"origins"`
 	CensusHash  [32]byte                                        `json:"census_hash"`
 	CensusBytes uint64                                          `json:"census_bytes"`
 	Members     []ValidatorEvidencePublicationV2MemberReference `json:"members"`
@@ -51,6 +52,8 @@ func ValidatorEvidencePublicationV2ManifestPath(stateDir string, epoch uint64) (
 
 // Metadata limits reuse the approved closure/member capacities. Origin
 // syntax rejects credentials, paths and obvious aliases before any HTTP I/O.
+// One origin is admitted only as a single member's only replica, so a larger
+// census cannot be truncated to one origin and no census can be padded.
 func (self *ValidatorEvidencePublicationV2Manifest) validate(maxBytes, maxMembers uint64) error {
 	if err := validateReleaseMeasurementInputV2Limit(maxBytes); err != nil {
 		return err
@@ -59,7 +62,10 @@ func (self *ValidatorEvidencePublicationV2Manifest) validate(maxBytes, maxMember
 		maxMembers == 0 || len(self.Members) == 0 || uint64(len(self.Members)) > maxMembers || self.CensusHash == ([32]byte{}) || self.CensusBytes == 0 || self.CensusBytes > maxBytes {
 		return errors.New("closed evidence publication manifest or finite bounds differ")
 	}
-	var canonical [2]string
+	if len(self.Origins) != 2 && (len(self.Origins) != 1 || len(self.Members) != 1) {
+		return errors.New("closed evidence publication origins differ from its operator census")
+	}
+	canonical := make([]string, len(self.Origins))
 	for index, origin := range self.Origins {
 		parsed, err := url.Parse(origin)
 		if err != nil || origin == "" || uint64(len(origin)) > maxBytes || parsed.String() != origin || parsed.Hostname() == "" || parsed.User != nil || parsed.Opaque != "" ||
@@ -79,7 +85,7 @@ func (self *ValidatorEvidencePublicationV2Manifest) validate(maxBytes, maxMember
 		}
 		canonical[index] = parsed.Scheme + "://" + net.JoinHostPort(host, port)
 	}
-	if canonical[0] == canonical[1] {
+	if len(canonical) == 2 && canonical[0] == canonical[1] {
 		return errors.New("closed evidence publication origins are not independent")
 	}
 	for index, member := range self.Members {

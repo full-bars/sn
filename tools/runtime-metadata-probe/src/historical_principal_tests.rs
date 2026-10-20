@@ -4,11 +4,15 @@
 use super::*;
 use crate::historical::principal::{PrincipalQuery, STAKE_API};
 
+#[path = "historical_availability_tests.rs"]
+mod availability_tests;
+
 fn query() -> PrincipalQuery {
     PrincipalQuery {
         hotkey: [1; 32],
         coldkey: [2; 32],
         netuid: 25,
+        availability: false,
     }
 }
 

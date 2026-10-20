@@ -16,7 +16,9 @@ comes from the configured server and its network principal.
 - A known new installation or new proxy member requires
   `--allow-client-registration`. New key creation also requires no retained
   provider history. This flag never clears an operation, first-send anchor,
-  existing-client marker, rejection or key-identity mismatch.
+  existing-client marker, rejection or key-identity mismatch. The one retained
+  key it may replace is a zero or wrong-length `.provider.key` (the deliberate
+  rotation below), which is preserved as a timestamped backup first.
 - An ordinary restart with retained key/marker and operation or credential
   needs no creation flag. A persisted request can resume without the flag even
   if it has not received its first reply.
@@ -30,6 +32,21 @@ comes from the configured server and its network principal.
   side files. In that missing-marker case, any retained versioned operation,
   lock, first-send/existing marker, rejection or unknown provider history makes
   this a recovery case instead of an automatic upgrade.
+- v33 used any nonempty raw seed as the provider client key
+  (`readProviderClientKeySeed` plus the caller's `0 < len(seed)` check), so a
+  retained 32-byte seed is a usable key even when it is the all-zero seed: the
+  server already holds the public key it derives, the automatic legacy import
+  proves that saved identity, and the key gate opens on the derived marker. The
+  run does not refuse it. It is not silent either: the all-zero seed is a
+  publicly known key, so anyone can sign as this provider's client identity.
+  The run writes a `WARNING` to stderr (the stream that also carries startup
+  refusals, because a redirected diagnostic sink can be refused) and the
+  operator must rotate deliberately *after* the migration has preserved the
+  existing identities: `--allow-client-registration` over a zero or
+  wrong-length retained key mints a fresh seed and preserves the replaced file
+  as `.provider.key-<UTC timestamp>.bak` before republishing the new marker.
+  Only explicit creation rotates; a usable nonzero retained seed is never
+  replaced. Without the flag, a wrong length stays malformed and is refused.
 - Missing or unsafe key material, a key/marker mismatch, or a missing key marker
   with retained versioned history requires custody recovery. Neither flag
   repairs it. A bare existing seed with no provider history may finish the
@@ -57,12 +74,14 @@ retain their original bytes.
 
 The key owner locks `.provider.key.registration.lock` across all provider
 workers. It publishes and fsyncs `.provider.key`, then `.provider.key.identity`,
-before any API allocation. Each independent slot retains its existing JWT
-filename, plus `.registration`, `.registration.started`, and when adopting an
-existing token, `.registration.existing`. The existing 8-byte proxy filename
-suffix is only a path: the full scope digest is authoritative for local replay.
-Duplicate effective slots and duplicate credential paths are refused before
-workers start. A changed scope at an existing path is refused.
+before any API allocation. An explicit rotation (explicit creation over a zero
+or wrong-length retained key) publishes the timestamped backup of the replaced
+file first, then the fresh key and its marker. Each independent slot retains its
+existing JWT filename, plus `.registration`, `.registration.started`, and when
+adopting an existing token, `.registration.existing`. The existing 8-byte proxy
+filename suffix is only a path: the full scope digest is authoritative for local
+replay. Duplicate effective slots and duplicate credential paths are refused
+before workers start. A changed scope at an existing path is refused.
 
 The versioned loader fsyncs the original request and independent first-send
 anchor before POST. It validates the response against that request and original
@@ -90,14 +109,79 @@ Each API attempt has a 300-second ceiling. Only an entirely typed transient
 availability cause tree can retry, at one-second intervals under the service
 context, with the same retained operation. Completed refusals, unsupported
 routes, malformed replies, changed identity and local custody errors stop that
-worker. Cancellation retains the error and joins its owners. The CLI preserves
-its prior daemon-completion exit policy; the internal runner returns the cause.
+worker. Cancellation retains the error and joins its owners. The CLI keeps the
+prior daemon-completion exit policy for a run that served; a run that stopped at
+startup admission before any provider served exits with
+`providerStartupRefusedExitCode` (1) so a supervisor restarts rather than
+reading a refused startup as a clean completion.
 Admission failures offer a closed `startup_recovery_required` message with flag
-and custody guidance before the existing bounded diagnostic drain. Unavailable
-output remains best effort and never holds authentication or shutdown.
+and custody guidance before the existing bounded diagnostic drain. When the
+diagnostic destination itself was refused (a stdout redirected to a regular
+file cannot promise a bounded write), the recovery message and the automatic
+legacy import's decisions are still written to stderr. Unavailable output
+remains best effort and never holds authentication or shutdown.
 Live refresh checks stable principal, roles and client/device identity before
 persisting. SDK integrity notices cancel only their still-current credential
 generation, including protection against stale equal-byte replacement logins.
+
+## Network sign-in renewal
+
+The network JWT in the state directory's `jwt` (written by `provider auth`, or
+by the hotkey sign-in of `provide --all-operators --auto-register`) expires 30
+days after its sign-in. Providers run on their own client JWTs, which refresh
+themselves; the network JWT is read again only to register a client (a new
+slot, an interrupted registration) and by the supervisor's hourly hotkey wallet
+upkeep. So every `provide` process renews its state directory's network JWT
+(`miner/network_token_renewal.go`):
+
+- **When:** at the token's half-life, never sooner than 5 minutes after the
+  schedule is read. A token without an expiration, or an expired one, is
+  renewed at once while the server still accepts it.
+- **How:** `POST /auth/network-refresh` with the network JWT, over the first
+  provider's transport (direct, or the first proxy). The renewal must name the
+  same network, user, roles and principal, and no client.
+- **Write:** `clientauth.RenewNetworkToken`, under the token's registration owner
+  lock (`jwt.registration.lock`, the lock a measurement registration takes to
+  borrow it), and only while the file still holds the token it renewed. A
+  sign-in that replaced the file first wins. The file must be a regular file
+  with owner-only permissions and one link, in a directory without symlinked
+  components.
+- **Failures:** a transient failure retries after 10 s plus jitter doubling to
+  15 minutes; another 4xx (a server without the route answers 404) retries after
+  a day; a held owner lock retries only the write. A renewal that answers a
+  token itself due at once is spaced from 5 minutes, doubling to 7 days.
+- **Stops**, until a new sign-in replaces the file: a 401 (`network_sign_in_rejected`),
+  a refusal or an answer of another identity, an API key, or a file the custody
+  refuses (`network_sign_in_renewal_stopped`). Both diagnostics name the command
+  that signs in again. A provider slot whose registration gets a 401 reports
+  `network_sign_in_rejected` instead of `startup_recovery_required`.
+- **Quarantine** (only an operator child of `provide --all-operators --auto-register`,
+  which passes the internal `--quarantine-rejected-sign-in`): a 401 from the renewal
+  call itself sets the token aside instead (`clientauth.QuarantineNetworkToken`),
+  under the owner lock and only while the file still holds that token, as
+  `jwt.rejected-<unixnano>-<n>` with its mode and content; the newest 3 are kept.
+  The child reports `network_sign_in_quarantined` with the file and exits with
+  status 75, and the supervisor signs in again with the hotkey, rate limited
+  (docs/OPERATOR-DISCOVERY.md). The lineage stays until that sign-in replaces it.
+  Revoked provider clients stay blocked: provider custody blocks on any marker.
+
+**Rejection markers across renewals.** A rejected client's `.rejected` marker
+names the network JWT file by fingerprint (token and modification time), so that
+only an explicit sign-in permits recreating the client. A renewal continues the
+same sign-in, so it records the fingerprints of the file it replaces and of the
+file it writes in the token's lineage, `jwt.lineage`, before renaming the
+renewed file into place. A fingerprint marker blocks while the current file and
+the marker belong to the lineage; a crash at any step leaves a state that still
+blocks. An explicit sign-in (`provider auth`, `provider auth --operator` and
+the hotkey sign-in, through `clientauth.WriteNetworkTokenWithContext`) writes a
+file outside any lineage and removes the old lineage, which unblocks on purpose.
+It does so under the same owner lock as renewal: an unserialized sign-in landing
+between a renewal's lineage write and its rename would leave the renewal of the
+old sign-in current with no lineage, losing the sign-in and unblocking a revoked
+client. It waits up to 45 s for a held lock, then fails with "a running miner or
+validator is using <path>; stop it or try again" and writes nothing.
+`"blocked"` markers, and every marker in provider directory custody, block
+regardless, as before.
 
 ## Qualification and remaining scope
 

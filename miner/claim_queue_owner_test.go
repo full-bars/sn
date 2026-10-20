@@ -56,7 +56,7 @@ func claimQueueOwnerDaemonFixture(t *testing.T, handler ...http.HandlerFunc) (st
 	cfg.SchemaVersion, cfg.Release, cfg.PollSeconds, cfg.LookbackEpochs = 1, "1.0", 5, 2
 	cfg.APIURL, cfg.RPC = server.URL, []string{server.URL}
 	cfg.JWTFile = filepath.Join(t.TempDir(), "synthetic.jwt")
-	if err := os.WriteFile(cfg.JWTFile, []byte("synthetic-ownership-jwt\n"), 0o600); err != nil {
+	if err := os.WriteFile(cfg.JWTFile, []byte(financialTestJwt(t, financialTestClientId, "daemon-owner")), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	raw, err := yaml.Marshal(cfg)

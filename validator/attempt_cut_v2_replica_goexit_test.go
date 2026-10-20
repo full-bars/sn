@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"slices"
 	"sync/atomic"
 	"testing"
 )
@@ -56,7 +57,7 @@ func attemptCutV2ReplicaGoexitPublication(t *testing.T, completed, failed int) (
 	wantRecords := uint64(completed*8 + failed*2)
 	if result.Cut.RecordCount != wantRecords || result.Cut.CompleteCount != uint64(completed) || result.Cut.FailedCount != uint64(failed) ||
 		result.Replay.Records.ItemCount != wantRecords || result.Replay.CompleteCount != uint64(completed) || result.Replay.FailedCount != uint64(failed) ||
-		result.Origins != [2]string{replicas[0].Origin, replicas[1].Origin} {
+		!slices.Equal(result.Origins, []string{replicas[0].Origin, replicas[1].Origin}) {
 		t.Fatalf("accepted Goexit control did not retain the genuine census and origins: %+v", result)
 	}
 	objects, writes, reads := stores[0].snapshot()

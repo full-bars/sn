@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/urnetwork/connect"
@@ -24,7 +25,7 @@ func TestProviderExtenderKeySeedRoundTrips(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("URNETWORK_STATE_DIR", stateDir)
 
-	extenderKeySeed, err := readProviderExtenderKeySeed()
+	extenderKeySeed, err := readProviderExtenderKeySeed(providerSlotIdentities{}, nil)
 	if err != nil {
 		t.Fatalf("a fresh install failed to read: %s", err)
 	}
@@ -36,10 +37,10 @@ func TestProviderExtenderKeySeedRoundTrips(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := writeProviderExtenderKeySeed(extenderKeySeed); err != nil {
+	if err := writeProviderExtenderKeySeed(providerSlotIdentities{}, nil, extenderKeySeed); err != nil {
 		t.Fatal(err)
 	}
-	restoredKeySeed, err := readProviderExtenderKeySeed()
+	restoredKeySeed, err := readProviderExtenderKeySeed(providerSlotIdentities{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,6 +109,24 @@ func TestProviderSwarmMemberDisablesTheExtenderRole(t *testing.T) {
 	}
 }
 
+// The miner's provider extender tries udp 53 for its dns carrier beside udp
+// 4053, which the sdk default leaves off for every app (connect/EXTENDER.md
+// L2). Only the device settings the miner builds opt in.
+func TestProviderDeviceSettingsOptTheExtenderInToTheDnsPrivilegedPort(t *testing.T) {
+	if sdk.DefaultDeviceLocalSettings().ProvideExtenderDnsPrivilegedPort {
+		t.Fatal("the sdk default binds 53, so the miner setting proves nothing")
+	}
+	for _, domainHash := range [][32]byte{{}, {71}} {
+		settings := ProviderDeviceSettings(domainHash)
+		if !settings.ProvideExtenderDnsPrivilegedPort {
+			t.Fatalf("domain %x: the miner's extender does not try 53", domainHash[:1])
+		}
+		if !settings.ProvideExtenderEnabled {
+			t.Fatalf("domain %x: the miner's extender role is off", domainHash[:1])
+		}
+	}
+}
+
 // Callback state keeps closed scalar facts, including unknown versus disabled.
 // Repeated facts do not depend on arbitrary SDK error/address text.
 func TestProviderExtenderStatusLine(t *testing.T) {
@@ -152,3 +171,79 @@ func TestProviderExtenderStatusLine(t *testing.T) {
 		}
 	}
 }
+
+// Every slot of one process must hold its own extender identity file, so its
+// gossip node presents a distinct peer id from every sibling slot.
+func TestProviderExtenderKeyPathDistinctAcrossSlots(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+
+	first := &connect.ProxySettings{Network: "tcp", Address: "127.0.0.1:9001"}
+	second := &connect.ProxySettings{Network: "tcp", Address: "127.0.0.1:9002"}
+	slotIdentities := newProviderSlotIdentities([]*connect.ProxySettings{first, second})
+
+	firstPath, err := providerExtenderKeyPath(slotIdentities, first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondPath, err := providerExtenderKeyPath(slotIdentities, second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	directPath, err := providerExtenderKeyPath(slotIdentities, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if firstPath == secondPath || firstPath == directPath || secondPath == directPath {
+		t.Fatalf("slots share an extender identity file: %s %s %s", firstPath, secondPath, directPath)
+	}
+	// a slot's identity is stable across launches, so the operator keeps the
+	// peer id its record names
+	again, err := providerExtenderKeyPath(slotIdentities, &connect.ProxySettings{Network: "tcp", Address: "127.0.0.1:9001"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != firstPath {
+		t.Fatalf("the same slot moved from %s to %s", firstPath, again)
+	}
+
+	firstSeed, err := connect.NewExtenderKeySeed()
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondSeed, err := connect.NewExtenderKeySeed()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writeProviderExtenderKeySeed(slotIdentities, first, firstSeed); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeProviderExtenderKeySeed(slotIdentities, second, secondSeed); err != nil {
+		t.Fatal(err)
+	}
+	restoredFirst, err := readProviderExtenderKeySeed(slotIdentities, first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	restoredSecond, err := readProviderExtenderKeySeed(slotIdentities, second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(restoredFirst, firstSeed) || !bytes.Equal(restoredSecond, secondSeed) {
+		t.Fatal("one slot's identity overwrote another's")
+	}
+	// a proxy's credentials never enter the filename
+	if base := filepath.Base(firstPath); strings.Contains(base, "127.0.0.1") {
+		t.Fatalf("the extender identity file names its proxy: %s", base)
+	}
+	for _, path := range []string{firstPath, secondPath} {
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if mode := info.Mode().Perm(); mode != 0600 {
+			t.Fatalf("mode = %o, expected 0600", mode)
+		}
+	}
+}
+

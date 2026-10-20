@@ -383,7 +383,7 @@ func TestEvmEscrowRegisterRequiresCompletedCoordinator(t *testing.T) {
 		if _, code, diagnostic := f.command("apply", "--action", "escrow-register"); code != 3 {
 			t.Fatalf("%s predecessor admitted escrow: %d %s", stage, code, diagnostic)
 		}
-		if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmEscrowRegisterStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) || !maps.Equal(counts, f.counts) {
+		if err := f.unclaimed(evmEscrowRegisterStateFile); err != nil || !maps.Equal(counts, f.counts) {
 			t.Fatalf("%s predecessor acquired escrow custody: %v", stage, err)
 		}
 	}
@@ -459,7 +459,7 @@ func TestEvmEscrowRegisterFencesThreePredecessorCheckpoints(t *testing.T) {
 				}
 				return result
 			}
-			if _, code, diagnostic := f.command("resume", "--action", "escrow-register", "--online", "--submit"); code != 1 || !changed || !strings.Contains(diagnostic, "ancestry") || len(f.writes) != 3 {
+			if _, code, diagnostic := f.command("resume", "--action", "escrow-register", "--online", "--submit"); code != 1 || !changed || !strings.Contains(diagnostic, evmTestCheckpointRefusal(f, number, "ancestry")) || len(f.writes) != 3 {
 				t.Fatalf("escrow checkpoint %d refresh=%v accepted: %d %s", number, refresh, code, diagnostic)
 			}
 			f.override = nil
@@ -699,7 +699,7 @@ func TestEvmEscrowRegisterRefusesRevertedCoordinator(t *testing.T) {
 	if _, code, diagnostic := f.command("apply", "--action", "escrow-register"); code != 3 || !strings.Contains(diagnostic, "successful coordinator") {
 		t.Fatalf("reverted implementation admitted escrow: %d %s", code, diagnostic)
 	}
-	if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmEscrowRegisterStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) {
+	if err := f.unclaimed(evmEscrowRegisterStateFile); err != nil {
 		t.Fatalf("reverted implementation opened escrow journal: %v", err)
 	}
 }

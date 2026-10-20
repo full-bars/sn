@@ -360,37 +360,50 @@ func (e *Executor) verifyDishonestDepositPostState(ctx context.Context, action A
 }
 
 func readValidatorIntentFile(stateDir string, validatorID int) ([]validatorpkg.SteeringIntent, error) {
-	path := filepath.Join(stateDir, "runtime", fmt.Sprintf("validator-%d", validatorID), "state", "steering-intents.json")
-	data, err := os.ReadFile(path)
+	root := filepath.Join(stateDir, "runtime", fmt.Sprintf("validator-%d", validatorID), "state")
+	data, err := os.ReadFile(filepath.Join(root, "steering-intents.json"))
 	if err != nil {
 		return nil, err
 	}
-	return decodeValidatorIntentBytes(data, validatorID)
+	return decodeValidatorIntentBytes(data, validatorID, readValidatorIntentSegmentsFrom(root))
 }
 
-// Authenticates the same owned bytes that collection hashes and persists.
-func decodeValidatorIntentBytes(data []byte, validatorID int) ([]validatorpkg.SteeringIntent, error) {
-	var store struct {
-		Schema  string                        `json:"schema"`
-		Current *validatorpkg.SteeringIntent  `json:"current"`
-		History []validatorpkg.SteeringIntent `json:"history"`
+// No validator configuration admits a larger intent file or sealed segment
+// than its 64 MiB control bound.
+const validatorIntentFileMaximumBytes = 64 * 1024 * 1024
+
+// Reads the sealed segments a store pins from the state directory beside it.
+func readValidatorIntentSegmentsFrom(root string) func(string, uint64) ([]byte, error) {
+	return func(name string, maximum uint64) ([]byte, error) {
+		file, err := os.Open(filepath.Join(root, filepath.FromSlash(name)))
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+		return io.ReadAll(io.LimitReader(file, int64(maximum)+1))
 	}
-	if err := decodeStrictJSONBytes(data, &store); err != nil {
-		return nil, err
-	}
-	if store.Schema != validatorpkg.SteeringIntentSchema {
-		return nil, fmt.Errorf("validator %d intent schema %q", validatorID, store.Schema)
-	}
-	all := append([]validatorpkg.SteeringIntent(nil), store.History...)
-	if store.Current != nil {
-		all = append(all, *store.Current)
+}
+
+// Authenticates the same owned bytes that collection hashes and persists,
+// through the validator's own logical-history reader: a sealed store's
+// segments, read through readSegment, precede its live history.
+func decodeValidatorIntentBytes(data []byte, validatorID int, readSegment func(string, uint64) ([]byte, error)) ([]validatorpkg.SteeringIntent, error) {
+	all, _, err := decodeValidatorIntentHistory(data, validatorID, readSegment)
+	return all, err
+}
+
+// Also returns each intent's exact stored bytes, in the same order.
+func decodeValidatorIntentHistory(data []byte, validatorID int, readSegment func(string, uint64) ([]byte, error)) ([]validatorpkg.SteeringIntent, []json.RawMessage, error) {
+	all, raw, _, err := validatorpkg.ReadSteeringIntentHistory(context.Background(), data, validatorIntentFileMaximumBytes, readSegment)
+	if err != nil {
+		return nil, nil, fmt.Errorf("validator %d intent store: %w", validatorID, err)
 	}
 	for index := range all {
 		if err := all[index].VerifyVectorHash(); err != nil {
-			return nil, fmt.Errorf("validator %d intent %d: %w", validatorID, index, err)
+			return nil, nil, fmt.Errorf("validator %d intent %d: %w", validatorID, index, err)
 		}
 	}
-	return all, nil
+	return all, raw, nil
 }
 
 func validatorDishonestDepositEvidence(stateDir string, validatorID int, epoch, noID uint64, poolUID uint16, observedDepositRao string) (*DishonestDepositValidatorEvidence, error) {

@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 // The actual offline dispatcher must create only the fixed fresh formats that
 // their unchanged runtime owners can admit. No fixture enrolls the target.
@@ -124,6 +124,7 @@ func TestStoragePreparationCommandInitializesFixedSnapshotHeads(t *testing.T) {
 		{"mainnet-root-submission", "root-submission.json", rootSubmissionStoreLimit},
 		{"mainnet-root-offline", "root-offline.json", rootOfflineStoreLimit},
 		{"mainnet-owner-recycle", "owner-recycle.json", ownerRecycleStoreLimit},
+		{kind: "mainnet-root-register", name: rootRegisterStateFile, maximum: rootRegisterStoreLimit},
 		{"mainnet-owner-trim", "owner-trim.json", ownerTrimStoreLimit},
 		{"mainnet-evm-action", "evm-action.json", 512 * 1024},
 		{"mainnet-bootstrap-root", bootstrapRootProgressFile, 16 * 1024},

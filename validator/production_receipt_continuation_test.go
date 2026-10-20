@@ -35,6 +35,15 @@ func TestProductionReceiptChunkResumesDurableIntentAfterOutageAndEviction(t *tes
 	fixture := newProductionContinuationTestFixtureThrough(t, 230)
 	native := installProductionContinuationNative(t, fixture)
 	pending := fixture.beginAndLoseAcknowledgement(t, native)
+	// Begin verifies its entry before publishing it, so the owner's next read
+	// is that entry's first complete verification and starts its verify-once
+	// memo. Take that read here, untimed, as restart does before each later
+	// poll. Left to the outage poll below, it would run inside that poll's one
+	// intent-phase attempt, which at head 229 under race it can outlast, ending
+	// the poll before any receipt is read.
+	if _, err := fixture.steerer.intents.currentV2(t.Context()); err != nil {
+		t.Fatal(err)
+	}
 	original, err := os.ReadFile(fixture.steerer.intents.path)
 	if err != nil {
 		t.Fatal(err)
@@ -43,9 +52,20 @@ func TestProductionReceiptChunkResumesDurableIntentAfterOutageAndEviction(t *tes
 	fixture.production.epoch++
 	native.bodyReads, native.bodyErrorKVs = map[uint64]int{}, map[uint64]error{228: context.DeadlineExceeded}
 	productionReceiptContinuationTestCensus(native)
+	replayed := fixture.artifactReads.Load()
 	var wait *productionSteeringReadWait
-	if err := fixture.steerer.submitOnceV2(t.Context()); !errors.As(err, &wait) || !errors.Is(err, context.DeadlineExceeded) {
+	err = fixture.steerer.submitOnceV2(t.Context())
+	if !errors.As(err, &wait) || !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("late chunk outage became a terminal owner error: %v", err)
+	}
+	// The poll's timed reads replay no retained measurement, and only the
+	// injected chunk-two body outage may end it; an earlier wait would leave no
+	// prefix to check.
+	if requests := fixture.artifactReads.Load() - replayed; requests != 0 {
+		t.Fatalf("the outage poll replayed its retained measurement in a timed read: %d attempt-object requests", requests)
+	}
+	if wait.phase != productionReadReceipt || native.bodyReads[228] != 1 {
+		t.Fatalf("an earlier read, not the chunk-two outage, ended the poll (phase %d, %d block 228 reads): %v", wait.phase, native.bodyReads[228], err)
 	}
 	owner, err := newProductionReceiptCheckpointOwner(fixture.steerer, fixture.steerer.cfg, pending)
 	if err != nil {

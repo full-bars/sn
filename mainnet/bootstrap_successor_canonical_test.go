@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -83,27 +84,27 @@ func TestBootstrapSuccessorCanonicalCountedAuthoritySurvivesRestart(t *testing.T
 	if err := owner.retainCanonicalAuthority(t.Context(), other); err == nil {
 		t.Fatal("counted authority changed after restart")
 	}
-	path := filepath.Join(owner.local.path, bootstrapSuccessorCanonicalFile)
-	raw, err := os.ReadFile(path)
+	root := owner.local.path
+	raw, err := os.ReadFile(filepath.Join(root, bootstrapSuccessorCanonicalFile))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := owner.close(); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Remove(path); err != nil {
-		t.Fatal(err)
-	}
+	// The census binds each member's inode, and a rewritten file has the old
+	// one only if the filesystem happens to reuse it. The census acknowledges
+	// the removal, so the replay is what must refuse, and then the repair.
+	ctx, claim := f.storageContext(t.Context()), rootObjectHash(f.approval)
+	bootstrapSuccessorExecutionTestRewrite(t, ctx, root, claim, map[string][]byte{bootstrapSuccessorCanonicalFile: nil})
 	reopened, err := openBootstrapSuccessorExecutionStore(f.storageContext(t.Context()), f.approval.Plan, f.approval, f.profile, false, nil)
 	if reopened != nil {
 		reopened.close()
 	}
-	if err == nil {
-		t.Fatal("missing counted authority renewed execution custody")
+	if err == nil || !strings.Contains(err.Error(), "counted event lost its canonical authorization") {
+		t.Fatal("missing counted authority renewed execution custody", err)
 	}
-	if err := os.WriteFile(path, raw, 0600); err != nil {
-		t.Fatal(err)
-	}
+	bootstrapSuccessorExecutionTestRewrite(t, ctx, root, claim, map[string][]byte{bootstrapSuccessorCanonicalFile: raw})
 	owner = f.open(false, nil)
 	if owner.last.CumulativeAttempts != 9 || owner.canonicalAuthorityHash != rootObjectHash(approval) {
 		t.Fatal("authority repair changed original counted custody")

@@ -105,7 +105,7 @@ func (self *evidenceRelayRuntime) readClosedPublication(ctx context.Context, sou
 	}
 	window := protocol.ValidatorEvidenceWindow{Epoch: manifest.Epoch, StartBlock: start, EndBlock: end, FinalizedBlock: end}
 	active := source.forEpoch(manifest.Epoch)
-	options := validatorcomponent.ValidatorEvidencePublicationV2ReadOptions{Activations: active.activations, Window: window, Origins: self.origins, Bounds: active.bounds}
+	options := validatorcomponent.ValidatorEvidencePublicationV2ReadOptions{Activations: active.activations, Window: window, Origins: self.origins[:], Bounds: active.bounds}
 	if err := bindPolicyRatePublicationOptions(self.executor.cfg, self.executor.plan, &options); err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (self *evidenceRelayRuntime) readClosedPublication(ctx context.Context, sou
 			if readErr != nil {
 				return nil, readErr
 			}
-			publication, err = validatorcomponent.ReadRetainedValidatorEvidencePublicationV2(ctx, manifest, options, replicas)
+			publication, err = validatorcomponent.ReadRetainedValidatorEvidencePublicationV2(ctx, manifest, options, replicas[:])
 		} else {
 			publication, err = validatorcomponent.ReadValidatorEvidencePublicationV2(ctx, manifest, options)
 		}
@@ -161,7 +161,7 @@ func (self *evidenceRelayRuntime) readAuditPublication(ctx context.Context, sour
 	}
 	window := protocol.ValidatorEvidenceWindow{Epoch: manifest.Epoch, StartBlock: start, EndBlock: end, FinalizedBlock: block, Subject: manifest.Subject}
 	active := source.forEpoch(manifest.Epoch)
-	options := validatorcomponent.ValidatorEvidencePublicationV2ReadOptions{Activations: active.activations, Window: window, Origins: self.origins, Bounds: active.bounds}
+	options := validatorcomponent.ValidatorEvidencePublicationV2ReadOptions{Activations: active.activations, Window: window, Origins: self.origins[:], Bounds: active.bounds}
 	if err := bindPolicyRatePublicationOptions(self.executor.cfg, self.executor.plan, &options); err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func (self *evidenceRelayRuntime) readAuditPublication(ctx context.Context, sour
 			if readErr != nil {
 				return nil, readErr
 			}
-			publication, err = validatorcomponent.ReadRetainedValidatorEvidenceDepositAuditV2(ctx, manifest, options, replicas)
+			publication, err = validatorcomponent.ReadRetainedValidatorEvidenceDepositAuditV2(ctx, manifest, options, replicas[:])
 		} else {
 			publication, err = validatorcomponent.ReadValidatorEvidenceDepositAuditV2(ctx, manifest, options)
 		}

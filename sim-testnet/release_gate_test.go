@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -111,11 +112,11 @@ func TestReleaseGatesPinProviderAndTransportRegressions(t *testing.T) {
 
 const releaseAdversarialSelector = "^Test(Adversarial|Adversary|VerifyAdversary|RPCAdversary|ConsensusWeightComparison|Runtime454)"
 
-const releaseRuntimeClientSelector = "^Test(DialChainContext|FinalizedHeadContext|FinalizedBlock|BlockHashContext|BlockIdentityCache|ExactBlockIdentity|AccountNonceContext|ReleaseStateReaders|ReleaseExactBlock|ReleaseSnapshot|ReleaseSteeringSource|VerifyFinalizedExtrinsicContext|LocateFinalizedExtrinsic|FleetCommitmentAtContext|FleetCommitmentInfoRuntime|RuntimeArtifactMetadata|RuntimeMetadataAtContext|FleetRuntime|FleetFinalizedRuntime|BindFleetRuntime|DialFleetNativeContext|ReleaseEpochStartBlockAtContext|ReleaseConfigRequiresExactNativeRuntimeIdentity|InitialReleaseSnapshot|AuthenticatePinnedNativeRuntime|ReleaseNativeEndpointTimeout|ReleaseRuntime458|ReleaseRuntime459|ReleaseRuntime460|EVMCheckpoint)"
+const releaseRuntimeClientSelector = "^Test(DialChainContext|FinalizedHeadContext|FinalizedBlock|BlockHashContext|BlockIdentityCache|ExactBlockIdentity|AccountNonceContext|ReleaseStateReaders|ReleaseExactBlock|ReleaseSnapshot|ReleaseSteeringSource|VerifyFinalizedExtrinsicContext|LocateFinalizedExtrinsic|FleetCommitmentAtContext|FleetCommitmentInfoRuntime|RuntimeArtifactMetadata|RuntimeMetadataAtContext|FleetRuntime|FleetFinalizedRuntime|BindFleetRuntime|DialFleetNativeContext|ReleaseEpochStartBlockAtContext|ReleaseConfigRequiresExactNativeRuntimeIdentity|InitialReleaseSnapshot|AuthenticatePinnedNativeRuntime|ReleaseNativeEndpointTimeout|ReleaseRuntime459|ReleaseRuntime461|ReleaseRuntime467|ReleaseCurrentRuntime|RuntimeVersion|EVMCheckpoint)"
 
-const releaseSyntheticEVMIdentitySelector = "^Test(WaitFinalized|EVMBlockIdentity|ClaimReceiptIdentity|FinalizedClaimReceipt|UncertainClaimRetryable|SyntheticEVM|EthEVMBlockReader|EVMFinality|FinalizedEVMHead|BoundFinalizedEVMHead|ReceiptRequiresCanonicalHashAndFinalizedHeight|ProducerGatePinsSyntheticEVMIdentityRegressions)"
+const releaseSyntheticEVMIdentitySelector = "^Test(WaitFinalized|EVMBlockIdentity|ClaimReceiptIdentity|FinalizedClaimReceipt|SyntheticEVM|EthEVMBlockReader|EVMFinality|FinalizedEVMHead|BoundFinalizedEVMHead|ReceiptRequiresCanonicalHashAndFinalizedHeight|ProducerGatePinsSyntheticEVMIdentityRegressions)"
 
-const releaseSemanticIntegritySelector = "^Test(FinalNative|FinalPublicNative|FinalSemanticFleetAudit|FinalPublicFleetAudit|FinalSemanticVault|FinalSemanticCycleConviction|FinalSemanticCoordinatorRuntime|FinalSemanticCoordinatorUpgrade|FinalClaimPaymentLedger|FinalSemanticReceiptPayload|PublicFinalSemantic|FinalSemanticPoolOperatorVersion|FinalSemanticEpochDeposit|FinalPublicChainVerificationRejectsV2ReceiptOnlyTranscript|FinalSemanticDishonestDepositReceiptPayload|FinalSemanticEvidenceBuildRenderAndArtifacts|FinalSemanticArtifactVerificationCache|FinalSemantic(CampaignArtifactReferences|ReplicatedEnvelope)|FinalSemanticFixture|FinalSemanticOriginalClosure|FinalSemanticArtifactDeploymentAdmission|FinalAttemptFixtureLedgerMatchesDurableProductionWire|FinalFleetLifecycle|FinalSemanticFleetByUIDAt|FinalPayoutAssignmentsAt|FinalPayoutArtifact|FinalSemanticDeployment|FinalSemanticBuilder|FinalSemanticPoolRegistration|FinalSemantic(Pool|Head|Validator)UIDZero|FinalFleetGeneration|FinalSemanticHistorical|FinalSemanticEvidenceFailsClosed|FinalSemanticPathProofArtifact|FinalSemanticPoolAuditDistinguishesUnderpaymentFromRecovery|FinalSemanticDishonestDepositDecisionsAndPublicReplay|FinalSemanticSettlementAccountingBindsBothHeadsAndEventDeltas|FinalSemanticCarryModelFailsClosedOnAdjacentAccountingErrors|FinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins|PublicScenarioBundle|SemanticMismatchBranches|StateMismatchError|FinalEVMLogQueryRanges|FinalCollectedCoordinatorBaselines|FinalCollectorIncludesCompletedSettlementTail|FinalSettlementClosure|ReleaseHistoryRuntimeArtifacts|ProducerGatePinsCompleteAdversarialRegressions|ProducerGatePinsSyntheticEVMIdentityRegressions|ProducerGatePinsSemanticIntegrityRegressions|ProducerGatePinsExactBlockRuntimeClientRegressions|ReleaseSemanticCensus|FinalFleetRenewal|FinalValidatorAuthorityV2|FinalPublicValidatorSourcesV2)"
+const releaseSemanticIntegritySelector = "^Test(FinalNative|FinalPublicNative|FinalSemanticFleetAudit|FinalPublicFleetAudit|FinalSemanticVault|FinalSemanticCycleConviction|FinalSemanticCoordinatorRuntime|FinalSemanticCoordinatorUpgrade|FinalClaimPaymentLedger|FinalSemanticReceiptPayload|PublicFinalSemantic|FinalSemanticPoolOperatorVersion|FinalSemanticEpochDeposit|FinalPublicChainVerificationRejectsV2ReceiptOnlyTranscript|FinalSemanticDishonestDepositReceiptPayload|FinalSemanticEvidenceBuildRenderAndArtifacts|FinalSemanticArtifactVerificationCache|FinalSemantic(CampaignArtifactReferences|ReplicatedEnvelope)|FinalSemanticFixture|FinalSemanticOriginalClosure|FinalSemanticArtifactDeploymentAdmission|FinalAttemptFixtureLedgerMatchesDurableProductionWire|FinalFleetLifecycle|FinalSemanticFleetByUIDAt|FinalPayoutAssignmentsAt|FinalPayoutArtifact|FinalSemanticDeployment|FinalSemanticBuilder|FinalSemanticPoolRegistration|FinalSemantic(Pool|Head|Validator)UIDZero|FinalFleetGeneration|FinalSemanticHistorical|FinalSemanticEvidenceFailsClosed|FinalSemanticPathProofArtifact|FinalSemanticPoolAuditDistinguishesUnderpaymentFromRecovery|FinalSemanticPoolWeight|FinalSemanticDishonestDepositDecisionsAndPublicReplay|FinalSemanticSettlementAccountingBindsBothHeadsAndEventDeltas|FinalSemanticCarryModelFailsClosedOnAdjacentAccountingErrors|FinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins|PublicScenarioBundle|SemanticMismatchBranches|StateMismatchError|FinalEVMLogQueryRanges|FinalCollectedCoordinatorBaselines|FinalCollectorIncludesCompletedSettlementTail|FinalSettlementClosure|ReleaseHistoryRuntimeArtifacts|ProducerGatePinsCompleteAdversarialRegressions|ProducerGatePinsSyntheticEVMIdentityRegressions|ProducerGatePinsSemanticIntegrityRegressions|ProducerGatePinsExactBlockRuntimeClientRegressions|ReleaseSemanticCensus|FinalFleetRenewal|FinalValidatorAuthorityV2|FinalPublicValidatorSourcesV2)"
 
 // Extracts the exact sorted top-level test declarations selected from source.
 func releaseSelectedTestDeclarations(selector string, sources []string) ([]string, error) {
@@ -679,6 +680,8 @@ func TestProducerGatePinsSemanticIntegrityRegressions(t *testing.T) {
 		"TestFinalSemanticPathProofArtifactCount",
 		"TestFinalSemanticPathProofArtifactRejectsMalformedTrailingJSON",
 		"TestFinalSemanticPoolAuditDistinguishesUnderpaymentFromRecovery",
+		"TestFinalSemanticPoolWeightPricesAuditedUsageAtTheConvictionZeroTier",
+		"TestFinalSemanticPoolWeightBuilderRowsAgreeWithTheValidatorAndTheVerifier",
 		"TestFinalSemanticDishonestDepositDecisionsAndPublicReplay",
 		"TestFinalSemanticSettlementAccountingBindsBothHeadsAndEventDeltas",
 		"TestFinalSemanticCarryModelFailsClosedOnAdjacentAccountingErrors",
@@ -1215,6 +1218,7 @@ func TestReleaseSemanticCensusPinsCompleteRegressionSourceGroups(t *testing.T) {
 		{pattern: "final_semantic_artifact_authority_test.go", required: "^Test"},
 		{pattern: "final_semantic_source_builder_test.go", required: "^TestFinalSemanticBuilder"},
 		{pattern: "final_semantic_evidence_test.go", required: "^TestFinal(SemanticArtifactVerificationCache|AttemptFixtureLedger)"},
+		{pattern: "final_semantic_pool_weight_test.go", required: "^Test"},
 		{pattern: "final_semantic_chain_fixture_test.go", required: "^Test"},
 		{pattern: "final_semantic_path_proof_test.go", required: "^Test"},
 		{pattern: "final_semantic_settlement_tail_test.go", required: "^Test"},
@@ -1349,21 +1353,58 @@ func TestReleaseGatesRunSourceIntegrityBeforeSimulatorCompile(t *testing.T) {
 	}
 }
 
+// The command with longer, shorter, disabled and implicit deadlines than its
+// own number of minutes.
+func releaseGateChangedDeadlines(command string) []string {
+	current := regexp.MustCompile(` -timeout ([0-9]+)m `).FindStringSubmatch(command)
+	if current == nil {
+		panic("release gate command has no deadline of minutes: " + command)
+	}
+	minutes, _ := strconv.Atoi(current[1])
+	var changed []string
+	for _, deadline := range []string{" -timeout " + strconv.Itoa(2*minutes) + "m ", " -timeout " + strconv.Itoa(minutes/2) + "m ", " -timeout 0 ", " "} {
+		changed = append(changed, strings.Replace(command, current[0], deadline, 1))
+	}
+	return changed
+}
+
+// connect-all-normal runs the whole connect package in one process, with its
+// measured deadline; its race run and the shuffled ordering run in shards.
+var releaseGateConnectPackageJobs = []struct{ job, phase, command string }{
+	{job: "connect-all-normal", phase: "connect_all_normal", command: "go test -count=1 -timeout 240m ."},
+}
+
 // The aggregate certificate retains process-global ordering and residue that
-// exact-name shards erase, including one reproducible alternate ordering.
+// shards erase: connect's normal run stays one process. Its race run, about
+// ten hours, and the reproducible alternate ordering run in shards.
 func TestAggregateGateRunsUnshardedConnectRaceCertificates(t *testing.T) {
 	scriptBytes, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
 	script := string(scriptBytes)
-	for _, command := range []string{
-		"go test -count=1 -timeout 30m .",
-		"GOMAXPROCS=4 go test -race -count=1 -timeout 30m .",
-		"GOMAXPROCS=4 go test -race -count=1 -timeout 30m -shuffle=4535211000 .",
-	} {
-		if strings.Count(script, command) != 1 {
-			t.Errorf("aggregate gate has %d copies of %q, want exactly 1", strings.Count(script, command), command)
+	for _, job := range releaseGateConnectPackageJobs {
+		if strings.Count(script, job.command) != 1 {
+			t.Errorf("aggregate gate has %d copies of %q, want exactly 1", strings.Count(script, job.command), job.command)
+		}
+	}
+}
+
+// The connect package job is exactly its one unsharded command, admitted once,
+// unconditionally, and refuses a longer, shorter, disabled or implicit
+// deadline.
+func TestReleaseGateConnectJobsKeepTheirDeadlines(t *testing.T) {
+	t.Parallel()
+	script := readReleaseGateLocalScript(t)
+	for _, job := range releaseGateConnectPackageJobs {
+		body := []string{`cd "$workspace/connect"`, job.command}
+		if err := verifyReleaseGateExactPhase(script, job.job, job.phase, body); err != nil {
+			t.Fatal(err)
+		}
+		for _, changed := range releaseGateChangedDeadlines(job.command) {
+			if verifyReleaseGateExactPhase(strings.Replace(script, job.command, changed, 1), job.job, job.phase, body) == nil {
+				t.Fatalf("%s accepted %q", job.job, changed)
+			}
 		}
 	}
 }
@@ -1381,7 +1422,7 @@ func TestLocalReleaseGateRechecksCompleteWorkspaceAtEnd(t *testing.T) {
 	if err := verifyReleaseGatePrivateServiceProfile(script); err != nil {
 		t.Fatal(err)
 	}
-	const repositories = "release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard warp vault xops config)"
+	const repositories = "release_repos=(sn server connect sdk glog goidenticons proxy userwireguard warp gvisor vault xops config)"
 	if !strings.Contains(script, repositories) || !strings.Contains(script, `for repo in "${release_repos[@]}"`) {
 		t.Fatal("local release gate does not check every release repository")
 	}
@@ -1423,7 +1464,8 @@ func TestLocalReleaseGateRechecksCompleteWorkspaceAtEnd(t *testing.T) {
 		"StTransactionAttemptCandidatesConvergeOnOneWinner",
 		"StatsAlphaPriceURLIsMainnetOnly",
 		"StatsGaugeVecReplaceDeletesStaleSeries",
-		"go test -race ./monitor",
+		"go test -timeout 90m ./monitor -count=1",
+		"go test -race -timeout 180m ./monitor -count=1",
 		"ParallelEvalCancellationJoinsAttemptWorker",
 		"PlatformTransportCloseAndWaitJoinsPendingDial",
 		"StreamReplacementReceiveDoesNotJoinAndPublishesAfterOldExit",
@@ -1469,10 +1511,20 @@ func TestLocalReleaseGateRechecksCompleteWorkspaceAtEnd(t *testing.T) {
 		"sdk/build",
 		"go test ./cmd/mobileexports -count=1",
 		"go test -race ./cmd/mobileexports -count=1",
+		"sdk_sibling_contract_tests='^Test(SdkApiUrlsMatchServerRoutes|ApiAdminRoutesMatchTheServer|SdkModulesKeepConnectFingerprintDependencies|LicenseYmlUpToDate)$'",
+		`go test . -run "$sdk_sibling_contract_tests" -count=1`,
+		`go test -race . -run "$sdk_sibling_contract_tests" -count=1`,
+		`cd "$workspace/sdk/js"`,
+		`go run gen_openapi.go -spec "$workspace/connect/api/bringyour.yml" -check`,
+		"go run gen_types.go -check",
+		"go run gen_lag.go -check",
 		"DatabaseTimeMatchesPostgresPrecision",
 		"RouterRetainsDirectH3LoopbackSettings",
 		"RouterDirectH3LoopbackCompletesHandshake",
 		"TestConnectionVerifyEgressDisabledAvoidsVerifySettings",
+		"ConnectQuicHandshakeLimitCountsUnvalidatedHandshakes",
+		"ConnectHandlerBuildsUnvalidatedHandshakeLimitFromSettings",
+		"TestAuthorizationLeaseAttributesOnlyItsAdmissionCheck",
 		"TestConnectionVerifyEgressUsesControllerHashNamespace",
 		"TestIncrementRateLimitWindowResetsAtExactBoundary",
 		"TestPlatformPacketConnClampsQuic(SocketRequests|RequestToDeviceMemoryTarget)",
@@ -1488,7 +1540,9 @@ func TestLocalReleaseGateRechecksCompleteWorkspaceAtEnd(t *testing.T) {
 		"export WARP_SERVICE=test",
 		"go test -race ./controller -run \"$controller_db_tests\"",
 		"go test -race ./model -run \"$model_db_tests\"",
-		"go test -timeout 20m ./proxy -count=1",
+		"go test -timeout 40m ./proxy -count=1",
+		`go test -timeout 40m . ./cli/stnativefees ./controller ./model -run "$native_fee_settlement_tests" -count=1`,
+		`go test -race -timeout 40m . ./cli/stnativefees ./controller ./model -run "$native_fee_settlement_tests" -count=1`,
 	} {
 		if !strings.Contains(script, required) {
 			t.Errorf("local release gate omits operator regression %s", required)
@@ -1503,9 +1557,19 @@ func TestLocalReleaseGateRechecksCompleteWorkspaceAtEnd(t *testing.T) {
 		"AuthNetworkClientFeedsConfiguredProxyEgressNamespace",
 		"PaymentReconcile(SkipsStripeWithSKUOnlyVault|MalformedCredentialResourcesSkipAllStores)",
 		"TestConnectionVerifyEgressUsesControllerHashNamespace",
+		"ConnectQuicSpoofedSourceSpendsNoRateLimit",
+		"ConnectQuicValidatedSourceIsChargedAsBefore",
+		"ConnectH3ListenerBoundsUnvalidatedHandshakeFlood",
+		"ConnectStateQueryMetricActualHandshakes",
+		"SpoofedSourceTakesNoConnectionSlot",
+		"ServesAnEarlyApiRequestOnlyAfterTheHandshake",
 		"TestIncrementRateLimitWindowResetsAtExactBoundary",
 		"StTransactionIntentReservationUsesChainAccountNonceScope",
 		"StTransactionAttemptCandidatesConvergeOnOneWinner",
+		"go test -timeout 90m ./monitor -count=1",
+		"go test -race -timeout 180m ./monitor -count=1",
+		`go test -timeout 40m . ./cli/stnativefees ./controller ./model -run "$native_fee_settlement_tests" -count=1`,
+		`go test -race -timeout 40m . ./cli/stnativefees ./controller ./model -run "$native_fee_settlement_tests" -count=1`,
 	} {
 		if testIndex := strings.Index(script, databaseTest); databaseIndex < 0 || testIndex <= databaseIndex {
 			t.Errorf("database-backed operator regression %s is outside the isolated database gate", databaseTest)
@@ -1616,103 +1680,16 @@ func TestReleaseGatesPreflightBindingToolBeforeLongWork(t *testing.T) {
 	}
 }
 
-// The original complete race package exhausted its 90-minute shared clock
-// before its parallel roots could finish. The later complement also exhausted
-// its clock during full supplement publication and later short history roots.
-// All five owners retain that deadline and every root, including future roots.
+// The complete race package, then its five name-pattern owners, exhausted
+// their 90-minute clocks at gate load. Every root, including future roots, now
+// runs in exactly one of the simulator's race shards, each admitted with its
+// own deadline.
 func TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite(t *testing.T) {
-	scriptBytes, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
-	if err != nil {
+	t.Parallel()
+	if err := verifyReleaseGateShardJobs(readReleaseGateLocalScript(t), releaseGateSimulatorRaceShards); err != nil {
 		t.Fatal(err)
 	}
-	paths, err := filepath.Glob("*_test.go")
-	if err != nil || len(paths) == 0 {
-		t.Fatalf("aggregate simulator source census is absent: %v", err)
-	}
-	sources := map[string]string{}
-	for _, path := range paths {
-		encoded, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		sources[path] = string(encoded)
-	}
-	if err := verifyReleaseGateSimulatorRaceCensus(string(scriptBytes), sources); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// Verify actual admitted commands before projecting their complementary root
-// sets. AST declarations exclude TestMain and test-shaped text inside fixtures.
-// Whole-root selectors retain all descendants without a second subtest census.
-func verifyReleaseGateSimulatorRaceCensus(script string, sources map[string]string) error {
-	if err := verifyReleaseGateFullValidatorRace(script); err != nil {
-		return err
-	}
-	population := regexp.MustCompile(releaseGateSimulatorPopulationSelector)
-	supplement := regexp.MustCompile(releaseGateSimulatorSupplementSelector)
-	separate := regexp.MustCompile(releaseGateSimulatorSeparateSelector)
-	final := regexp.MustCompile(releaseGateSimulatorFinalSelector)
-	history := regexp.MustCompile(releaseGateSimulatorHistorySelector)
-	partitioned := regexp.MustCompile(releaseGateSimulatorPartitionedSelector)
-	seen := map[string]bool{}
-	ordinaryCount, populationCount, supplementCount, finalCount, historyCount := 0, 0, 0, 0, 0
-	for path, source := range sources {
-		parsed, err := parser.ParseFile(token.NewFileSet(), path, source, 0)
-		if err != nil {
-			return err
-		}
-		for _, declaration := range parsed.Decls {
-			function, ok := declaration.(*ast.FuncDecl)
-			if !ok || function.Recv != nil || !strings.HasPrefix(function.Name.Name, "Test") || function.Name.Name == "TestMain" {
-				continue
-			}
-			if function.Type.Params == nil || len(function.Type.Params.List) != 1 {
-				continue
-			}
-			pointer, ok := function.Type.Params.List[0].Type.(*ast.StarExpr)
-			if !ok {
-				continue
-			}
-			parameter, ok := pointer.X.(*ast.SelectorExpr)
-			if !ok || parameter.Sel.Name != "T" {
-				continue
-			}
-			name := function.Name.Name
-			if seen[name] {
-				return fmt.Errorf("aggregate simulator root is duplicated: %s", name)
-			}
-			seen[name] = true
-			// The guarded ordinary command has no -run filter: its sole -skip
-			// is exactly the disjoint union of the other anchored -run sets.
-			isPopulation, isSupplement := population.MatchString(name), supplement.MatchString(name)
-			isFinal, isHistory := final.MatchString(name) && !separate.MatchString(name), history.MatchString(name)
-			owners := 0
-			for _, selected := range []bool{isPopulation, isSupplement, isFinal, isHistory, !partitioned.MatchString(name)} {
-				if selected {
-					owners++
-				}
-			}
-			if owners != 1 || separate.MatchString(name) != (isPopulation || isSupplement) {
-				return fmt.Errorf("aggregate simulator root has overlapping or missing ownership: %s", name)
-			}
-			if isPopulation {
-				populationCount++
-			} else if isSupplement {
-				supplementCount++
-			} else if isFinal {
-				finalCount++
-			} else if isHistory {
-				historyCount++
-			} else {
-				ordinaryCount++
-			}
-		}
-	}
-	if populationCount != 2 || supplementCount != 3 || ordinaryCount == 0 || finalCount == 0 || historyCount == 0 || len(seen) != ordinaryCount+populationCount+supplementCount+finalCount+historyCount {
-		return fmt.Errorf("aggregate simulator census has %d population, %d supplement, %d final, %d history and %d ordinary roots", populationCount, supplementCount, finalCount, historyCount, ordinaryCount)
-	}
-	return nil
+	verifyReleaseGateShardsPartition(t, releaseGateSimulatorRaceShards, 1000)
 }
 
 // Keeps the additive contract-lane diagnostic in both release paths instead
@@ -1754,51 +1731,33 @@ func TestReleaseGatesExerciseContractSenderRoleDiagnostic(t *testing.T) {
 	}
 }
 
-// Keep operator-proxy checks inside the module directory and make every source
-// gate explicit. Mere patch-hygiene coverage cannot prove that the independent
-// module compiles, remains tidy, or passes its concurrent behavior suite.
-func assertOperatorProxyReleaseGate(t *testing.T, scriptPath, heading string) {
+// The reviewed classification of every tracked Go module in the release
+// repositories. A module is live when a released binary or library builds from
+// it; the source freeze verifies each live module tidy and only inventories
+// the others.
+var releaseSourceFreezeLiveModules = []string{
+	"connect", "connect/sctp", "glog", "goidenticons", "proxy", "sdk", "sdk/build",
+	"sdk/cgo", "sdk/js", "server", "sn", "sn/third_party/go-substrate-rpc-client",
+	"sn/third_party/npipe", "userwireguard", "warp", "xops/echo",
+}
+
+var releaseSourceFreezeNonReleaseModules = []string{
+	"connect/tools/flightgate-devices", "connect/vlessinterop", "sdk/cgo/build",
+	"sdk/packaging", "server/connect/sim-latency/baseline",
+}
+
+// The gVisor fork reaches release binaries through local replacements: its
+// repository provenance is checked, and its untidy module is only inventoried.
+var releaseSourceFreezeForkModules = []string{"gvisor"}
+
+// One of the freeze script's module arrays, in its declared order.
+func releaseSourceFreezeModuleArray(t *testing.T, script, name string) []string {
 	t.Helper()
-	scriptBytes, err := os.ReadFile(scriptPath)
-	if err != nil {
-		t.Fatal(err)
+	declarations := regexp.MustCompile(`(?m)^`+name+`=\(([^)]*)\)$`).FindAllStringSubmatch(script, -1)
+	if len(declarations) != 1 {
+		t.Fatalf("source freeze declares %s %d times, want 1", name, len(declarations))
 	}
-	script := string(scriptBytes)
-	const repositories = "release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard warp vault xops config)"
-	if strings.Count(script, repositories) != 1 || !strings.Contains(script, `for repo in "${release_repos[@]}"`) {
-		t.Fatalf("%s does not fence the complete release repository set", scriptPath)
-	}
-	start := strings.Index(script, heading)
-	if start < 0 {
-		t.Fatalf("%s has no operator-proxy gate", scriptPath)
-	}
-	section := script[start+len(heading):]
-	if end := strings.Index(section, "\necho \""); end >= 0 {
-		section = section[:end]
-	}
-	required := []string{
-		`cd "$workspace/operator-proxy"`,
-		"go mod tidy -diff",
-		"go build ./...",
-		"go vet ./...",
-		`unformatted="$(gofmt -l .)"`,
-		`if [[ -n "$unformatted" ]]`,
-		"gofmt -d .",
-		"go test -count=1 -timeout 20m ./...",
-		"go test -race -count=1 -timeout 20m ./...",
-	}
-	previous := -1
-	for _, command := range required {
-		if strings.Count(section, command) != 1 {
-			t.Errorf("%s operator-proxy gate has %d copies of %q", scriptPath, strings.Count(section, command), command)
-			continue
-		}
-		index := strings.Index(section, command)
-		if index <= previous {
-			t.Errorf("%s operator-proxy gate orders %q before its prerequisite", scriptPath, command)
-		}
-		previous = index
-	}
+	return strings.Fields(declarations[0][1])
 }
 
 // Construct all thirteen repositories and every classified Go module without
@@ -1812,21 +1771,17 @@ func releaseSourceFreezeFixture(t *testing.T) string {
 	}
 	var rewrites strings.Builder
 	branches := map[string]string{
-		"sn": "main", "server": "main", "operator-proxy": "main", "connect": "main",
-		"sdk": "main", "glog": "master", "goidenticons": "main", "proxy": "main",
-		"userwireguard": "master", "warp": "main", "vault": "main", "xops": "main", "config": "main",
+		"sn": "main", "server": "main", "connect": "main", "sdk": "main",
+		"glog": "master", "goidenticons": "main", "proxy": "main", "userwireguard": "master",
+		"warp": "main", "gvisor": "go", "vault": "main", "xops": "main", "config": "main",
 	}
 	origins := map[string]string{
-		"sn": "urfoundation/sn", "server": "urnetwork/server", "operator-proxy": "urnetwork/operator-proxy",
+		"sn": "urfoundation/sn", "server": "urnetwork/server",
 		"connect": "urnetwork/connect", "sdk": "urnetwork/sdk", "glog": "urnetwork/glog",
 		"goidenticons": "urnetwork/goidenticons", "proxy": "urnetwork/proxy", "userwireguard": "urnetwork/userwireguard",
-		"warp": "urnetwork/warp", "vault": "urnetwork/vault", "xops": "urnetwork/xops", "config": "urnetwork/config",
+		"warp": "urnetwork/warp", "gvisor": "urnetwork/gvisor", "vault": "urnetwork/vault", "xops": "urnetwork/xops", "config": "urnetwork/config",
 	}
-	modules := []string{
-		"connect", "glog", "goidenticons", "operator-proxy", "proxy", "sdk", "sdk/build",
-		"sdk/cgo", "sdk/js", "server", "server/connect/sim-latency/baseline", "sn",
-		"sn/third_party/npipe", "userwireguard", "warp", "xops/echo", "xops/router",
-	}
+	modules := slices.Concat(releaseSourceFreezeLiveModules, releaseSourceFreezeNonReleaseModules, releaseSourceFreezeForkModules)
 	for repo, branch := range branches {
 		root := filepath.Join(workspace, repo)
 		if err := os.MkdirAll(root, 0o700); err != nil {
@@ -1888,6 +1843,9 @@ func releaseSourceFreezeFixture(t *testing.T) string {
 	}
 	t.Setenv("GIT_CONFIG_GLOBAL", gitConfig)
 	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	// Git before 2.32 ignores GIT_CONFIG_GLOBAL; a missing rewrite must then
+	// refuse the GitHub transport rather than fetch from or push to it.
+	t.Setenv("GIT_ALLOW_PROTOCOL", "file")
 	return workspace
 }
 
@@ -1905,10 +1863,10 @@ func TestReleaseSourceFreezeRecordsCompleteCleanWorkspace(t *testing.T) {
 		t.Fatalf("source freeze recorded %d repositories, want 13: %s", len(lines), output)
 	}
 	expectedOrigins := map[string]string{
-		"sn": "github.com/urfoundation/sn", "server": "github.com/urnetwork/server", "operator-proxy": "github.com/urnetwork/operator-proxy",
+		"sn": "github.com/urfoundation/sn", "server": "github.com/urnetwork/server",
 		"connect": "github.com/urnetwork/connect", "sdk": "github.com/urnetwork/sdk", "glog": "github.com/urnetwork/glog",
 		"goidenticons": "github.com/urnetwork/goidenticons", "proxy": "github.com/urnetwork/proxy", "userwireguard": "github.com/urnetwork/userwireguard",
-		"warp": "github.com/urnetwork/warp", "vault": "github.com/urnetwork/vault", "xops": "github.com/urnetwork/xops", "config": "github.com/urnetwork/config",
+		"warp": "github.com/urnetwork/warp", "gvisor": "github.com/urnetwork/gvisor", "vault": "github.com/urnetwork/vault", "xops": "github.com/urnetwork/xops", "config": "github.com/urnetwork/config",
 	}
 	seen := map[string]bool{}
 	for _, line := range lines {
@@ -1970,6 +1928,75 @@ func TestReleaseSourceFreezeRequiresWarpProvenance(t *testing.T) {
 	runTestGit(t, warpRoot, "add", "README.md")
 	runTestGit(t, warpRoot, "commit", "-qm", "unpublished Warp source")
 	run("is not reachable from origin/main")
+}
+
+// Release builds compile the gVisor fork through the local replacements of SN
+// and the server, so the freeze holds it to the same provenance as every other
+// repository: present, clean, the reviewed origin and published on origin/go.
+// Its own module is inventoried and never verified tidy.
+func TestReleaseSourceFreezeRequiresGvisorProvenance(t *testing.T) {
+	workspace := releaseSourceFreezeFixture(t)
+	gvisorRoot := filepath.Join(workspace, "gvisor")
+	// The fork requires a module it never imports, which go mod tidy drops.
+	manifest := "module example.invalid/gvisor\n\ngo 1.24\n\nrequire example.invalid/glog v0.0.0\n\nreplace example.invalid/glog => ../glog\n"
+	if err := os.WriteFile(filepath.Join(gvisorRoot, "go.mod"), []byte(manifest), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runTestGit(t, gvisorRoot, "commit", "-qam", "leave the fork untidy")
+	runTestGit(t, gvisorRoot, "update-ref", "refs/remotes/origin/go", "HEAD")
+	runTestGit(t, gvisorRoot, "push", "-q", "--force", "origin", "HEAD:refs/heads/go")
+	var stderr strings.Builder
+	command := exec.Command("../scripts/check-release-source-freeze.sh", workspace)
+	command.Stderr = &stderr
+	output, err := command.Output()
+	if err != nil {
+		t.Fatalf("published gVisor fork was refused: %v\n%s", err, stderr.String())
+	}
+	if !regexp.MustCompile(`(?m)^gvisor\t[0-9a-f]{40}\torigin/go\tgithub\.com/urnetwork/gvisor$`).Match(output) {
+		t.Fatalf("source freeze did not record the gVisor fork's provenance:\n%s", output)
+	}
+	if strings.Contains(stderr.String(), "verify tidy Go module: gvisor") {
+		t.Fatalf("source freeze verified the inventoried gVisor fork tidy:\n%s", stderr.String())
+	}
+	run := func(want string) {
+		t.Helper()
+		output, err := exec.Command("../scripts/check-release-source-freeze.sh", workspace).CombinedOutput()
+		if err == nil || !strings.Contains(string(output), want) {
+			t.Fatalf("gVisor source admission wanted %q: %v\n%s", want, err, output)
+		}
+	}
+	retained := filepath.Join(workspace, ".retained-gvisor")
+	if err := os.Rename(gvisorRoot, retained); err != nil {
+		t.Fatal(err)
+	}
+	run("release repository is missing or not a Git checkout: " + gvisorRoot)
+	inventory, err := exec.Command("bash", "-c", `set -euo pipefail; source ../scripts/release-gate-jobs.sh; workspace="$1"; release_gate_diagnostic_inventory`, "bash", workspace).CombinedOutput()
+	if err == nil || !strings.Contains(string(inventory), "incomplete diagnostic Git checkout: gvisor") {
+		t.Fatalf("diagnostic inventory omitted the missing gVisor checkout: %v\n%s", err, inventory)
+	}
+	if err := os.Rename(retained, gvisorRoot); err != nil {
+		t.Fatal(err)
+	}
+	readme := filepath.Join(gvisorRoot, "README.md")
+	if err := os.WriteFile(readme, []byte("modified\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	run("tracked, staged, or untracked changes: gvisor")
+	if err := os.WriteFile(readme, []byte("fixture\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// A copied checkout without its remote cannot establish provenance.
+	runTestGit(t, gvisorRoot, "config", "--unset", "remote.origin.url")
+	run("release repository gvisor has unsupported origin URL: ")
+	runTestGit(t, gvisorRoot, "config", "remote.origin.url", "git@github.com:google/gvisor.git")
+	run("origin github.com/google/gvisor, want github.com/urnetwork/gvisor")
+	runTestGit(t, gvisorRoot, "config", "remote.origin.url", "git@github.com:urnetwork/gvisor.git")
+	if err := os.WriteFile(readme, []byte("unpublished\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runTestGit(t, gvisorRoot, "add", "README.md")
+	runTestGit(t, gvisorRoot, "commit", "-qm", "unpublished gVisor source")
+	run("is not reachable from origin/go")
 }
 
 // Cleanliness and provenance must be established before a tracked verifier can
@@ -2197,13 +2224,113 @@ func TestReleaseSourceFreezeExcludesNonReleaseDatasetQualification(t *testing.T)
 		t.Fatal(err)
 	}
 	script := string(scriptBytes)
-	if !strings.Contains(script, "non_release_modules=(server/connect/sim-latency/baseline)") ||
+	const dataset = "server/connect/sim-latency/baseline"
+	if !slices.Contains(releaseSourceFreezeModuleArray(t, script, "non_release_modules"), dataset) ||
+		slices.Contains(releaseSourceFreezeModuleArray(t, script, "live_modules"), dataset) ||
 		!strings.Contains(script, `"${live_modules[@]}" "${non_release_modules[@]}"`) ||
 		!strings.Contains(script, "GOWORK=off go mod tidy -diff") {
 		t.Fatal("source freeze does not classify the excluded dataset separately from every live tidy module")
 	}
 	if strings.Contains(script, "/verify.sh") || strings.Contains(script, "MANIFEST.sha256") {
 		t.Fatal("source freeze executes qualification for an excluded dataset")
+	}
+}
+
+// The freeze classifies exactly the reviewed census: a module cannot move
+// between the classes, join one or leave one without this review changing. Only
+// the live array reaches the tidy loop.
+func TestReleaseSourceFreezeClassifiesEveryReleaseModule(t *testing.T) {
+	scriptBytes, err := os.ReadFile("../scripts/check-release-source-freeze.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(scriptBytes)
+	if live := releaseSourceFreezeModuleArray(t, script, "live_modules"); !slices.Equal(live, releaseSourceFreezeLiveModules) {
+		t.Errorf("source freeze live modules %q, want %q", live, releaseSourceFreezeLiveModules)
+	}
+	if nonRelease := releaseSourceFreezeModuleArray(t, script, "non_release_modules"); !slices.Equal(nonRelease, releaseSourceFreezeNonReleaseModules) {
+		t.Errorf("source freeze non-release modules %q, want %q", nonRelease, releaseSourceFreezeNonReleaseModules)
+	}
+	if fork := releaseSourceFreezeModuleArray(t, script, "fork_modules"); !slices.Equal(fork, releaseSourceFreezeForkModules) {
+		t.Errorf("source freeze fork modules %q, want %q", fork, releaseSourceFreezeForkModules)
+	}
+	for _, module := range slices.Concat(releaseSourceFreezeNonReleaseModules, releaseSourceFreezeForkModules) {
+		if slices.Contains(releaseSourceFreezeLiveModules, module) {
+			t.Errorf("%s is classified both live and inventoried", module)
+		}
+	}
+	if strings.Count(script, `for module in "${live_modules[@]}"; do`) != 1 || strings.Count(script, "go mod tidy") != 1 {
+		t.Error("source freeze does not verify exactly the live modules tidy")
+	}
+}
+
+// Replace a fixture module's go.mod with one that requires its unused parent
+// module, which go mod tidy drops without a network, and publish the commit.
+func releaseSourceFreezeUntidyModule(t *testing.T, workspace, module string) {
+	t.Helper()
+	repo, relative, nested := strings.Cut(module, "/")
+	if !nested {
+		t.Fatalf("%s has no parent module to require", module)
+	}
+	root := filepath.Join(workspace, repo)
+	parent := strings.Repeat("../", strings.Count(relative, "/")+1)
+	manifest := "module example.invalid/" + strings.ReplaceAll(module, "/", "-") + "\n\ngo 1.24\n\nrequire example.invalid/" + repo + " v0.0.0\n\nreplace example.invalid/" + repo + " => " + parent + "\n"
+	if err := os.WriteFile(filepath.Join(root, filepath.FromSlash(relative), "go.mod"), []byte(manifest), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	branch := strings.TrimSpace(string(testGitOutput(t, root, "rev-parse", "--abbrev-ref", "HEAD")))
+	runTestGit(t, root, "commit", "-qam", "leave "+module+" untidy")
+	runTestGit(t, root, "update-ref", "refs/remotes/origin/"+branch, "HEAD")
+	runTestGit(t, root, "push", "-q", "--force", "origin", "HEAD:refs/heads/"+branch)
+}
+
+// The two modules that back a release replacement are live: the freeze refuses
+// either one untidy, at that module, before it reaches the next.
+func TestReleaseSourceFreezeRejectsUntidyReplacementModule(t *testing.T) {
+	for _, module := range []string{"connect/sctp", "sn/third_party/go-substrate-rpc-client"} {
+		t.Run(module, func(t *testing.T) {
+			workspace := releaseSourceFreezeFixture(t)
+			releaseSourceFreezeUntidyModule(t, workspace, module)
+			output, err := exec.Command("../scripts/check-release-source-freeze.sh", workspace).CombinedOutput()
+			if err == nil {
+				t.Fatalf("untidy live module %s was accepted:\n%s", module, output)
+			}
+			repo, _, _ := strings.Cut(module, "/")
+			if !strings.Contains(string(output), "diff current/go.mod tidy/go.mod") ||
+				!strings.Contains(string(output), "-require example.invalid/"+repo+" v0.0.0") {
+				t.Fatalf("untidy live module %s was refused without its tidy difference: %v\n%s", module, err, output)
+			}
+			verified := regexp.MustCompile(`(?m)^verify tidy Go module: (.+)$`).FindAllStringSubmatch(string(output), -1)
+			if len(verified) == 0 || verified[len(verified)-1][1] != module {
+				t.Fatalf("source freeze did not stop at untidy %s:\n%s", module, output)
+			}
+		})
+	}
+}
+
+// A non-release module is inventoried and never verified tidy: the freeze
+// records the complete workspace with every one of them left untidy.
+func TestReleaseSourceFreezeDoesNotTidyNonReleaseModules(t *testing.T) {
+	workspace := releaseSourceFreezeFixture(t)
+	for _, module := range releaseSourceFreezeNonReleaseModules {
+		releaseSourceFreezeUntidyModule(t, workspace, module)
+	}
+	var stderr strings.Builder
+	command := exec.Command("../scripts/check-release-source-freeze.sh", workspace)
+	command.Stderr = &stderr
+	output, err := command.Output()
+	if err != nil {
+		t.Fatalf("untidy non-release modules were refused: %v\n%s", err, stderr.String())
+	}
+	if lines := strings.Split(strings.TrimSpace(string(output)), "\n"); len(lines) != 13 {
+		t.Fatalf("source freeze recorded %d repositories, want 13: %s", len(lines), output)
+	}
+	verified := []string{}
+	for _, match := range regexp.MustCompile(`(?m)^verify tidy Go module: (.+)$`).FindAllStringSubmatch(stderr.String(), -1) {
+		verified = append(verified, match[1])
+	}
+	if !slices.Equal(verified, releaseSourceFreezeLiveModules) {
+		t.Fatalf("source freeze verified %q tidy, want exactly the live modules %q", verified, releaseSourceFreezeLiveModules)
 	}
 }
 
@@ -2696,7 +2823,7 @@ func TestProducerGatePinsRuntime458ArtifactAndEncodingRegressions(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, family := range []string{"Runtime461|", "Runtime460|", "Runtime459|", "Runtime458|", "CarriedFleetHistory|", "FinalSemanticRPC|"} {
+	for _, family := range []string{"Runtime461|", "Runtime460|", "Runtime459|", "Runtime458|", "ReleaseSubstrateDial|", "CarriedFleetHistory|", "FinalSemanticRPC|"} {
 		changedSelector := strings.Replace(selector, family, "", 1)
 		changed := strings.Replace(script, group.variable+"='"+selector+"'", group.variable+"='"+changedSelector+"'", 1)
 		if changed == script || verifyReleaseEvidenceV2GateGroup(changed, group) == nil {
@@ -2719,30 +2846,47 @@ func TestProducerGatePinsRuntime458ArtifactAndEncodingRegressions(t *testing.T) 
 	}
 }
 
-// Operator-proxy CI builds only against the reviewed sibling commits and uses
-// tidy's read-only diff mode instead of mutating its checkout before testing.
-func TestOperatorProxyCIPinsCurrentSiblingRevisions(t *testing.T) {
-	workflow, err := os.ReadFile("../../operator-proxy/.github/workflows/test.yml")
-	if err != nil {
-		t.Fatal(err)
-	}
-	text := string(workflow)
-	for _, revision := range []string{"9ac9a96c96f5e3c2d7fd6e928b28b471567d0a54", "2bdcce5f8be023947f26a247eb5665c56b69b2e3"} {
-		if strings.Count(text, revision) != 2 {
-			t.Errorf("operator-proxy CI revision %s appears %d times, want checkout and assertion", revision, strings.Count(text, revision))
+// Both gates, the source freeze and the diagnostic inventory fence one exact
+// repository set. The retired operator-proxy module is no longer checked out,
+// tested or frozen by any of them.
+func TestReleaseGatesFenceOneRepositorySetWithoutOperatorProxy(t *testing.T) {
+	const repositories = "sn server connect sdk glog goidenticons proxy userwireguard warp gvisor vault xops config"
+	declaration := "release_repos=(" + repositories + ")"
+	for _, gate := range []struct {
+		path        string
+		declaration string
+		loop        string
+	}{
+		{path: "../scripts/test-release-1.0-local.sh", declaration: declaration, loop: `for repo in "${release_repos[@]}"`},
+		{path: "../scripts/test-release-1.0-producer-gate.sh", declaration: declaration, loop: `for repo in "${release_repos[@]}"`},
+		{path: "../scripts/check-release-source-freeze.sh", declaration: declaration, loop: `for repo in "${release_repos[@]}"`},
+		// The diagnostic inventory can run before a gate declares its array.
+		{path: "../scripts/release-gate-jobs.sh", declaration: "for repo in " + repositories + "; do", loop: "for repo in " + repositories + "; do"},
+	} {
+		scriptBytes, err := os.ReadFile(gate.path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		script := string(scriptBytes)
+		if strings.Count(script, gate.declaration) != 1 || !strings.Contains(script, gate.loop) {
+			t.Errorf("%s does not fence the exact release repository set", gate.path)
+		}
+		for _, retired := range []string{"operator-proxy", "operator_proxy"} {
+			if strings.Contains(script, retired) {
+				t.Errorf("%s still names the retired %s repository", gate.path, retired)
+			}
 		}
 	}
-	if !strings.Contains(text, "run: go mod tidy -diff") || strings.Contains(text, "git diff --exit-code go.mod go.sum") {
-		t.Fatal("operator-proxy CI does not use an immutable tidy check")
+}
+
+// A diagnostic gate admits the complete current workspace; the retired
+// operator-proxy checkout is not part of its inventory.
+func TestReleaseGateDiagnosticInventoryAcceptsCompleteWorkspace(t *testing.T) {
+	workspace := releaseSourceFreezeFixture(t)
+	output, err := exec.Command("bash", "-c", `set -euo pipefail; source ../scripts/release-gate-jobs.sh; workspace="$1"; release_gate_diagnostic_inventory`, "bash", workspace).CombinedOutput()
+	if err != nil || len(output) != 0 {
+		t.Fatalf("complete workspace failed the diagnostic inventory: %v\n%s", err, output)
 	}
-}
-
-func TestLocalReleaseGateCoversCompleteOperatorProxyModule(t *testing.T) {
-	assertOperatorProxyReleaseGate(t, "../scripts/test-release-1.0-local.sh", `echo "[release-1.0] operator-proxy module"`)
-}
-
-func TestProducerReleaseGateCoversCompleteOperatorProxyModule(t *testing.T) {
-	assertOperatorProxyReleaseGate(t, "../scripts/test-release-1.0-producer-gate.sh", `echo "[release-1.0 producer] operator-proxy source and behavior"`)
 }
 
 func TestSolidityStaticGateCoversEveryDeployedRoot(t *testing.T) {
@@ -2837,7 +2981,7 @@ func TestProducerGateSeparatesCaptureFromProductionAnalysis(t *testing.T) {
 // Alternative order is immaterial, but each reviewed group and every actual
 // selected validator root must survive additions to the producer selector.
 func verifyReleaseProducerSelection(script string, sources []string) error {
-	const required = "Attempt|DiskAttempt|HTTPAttemptStreamV2|SealAttemptCutV2|TrailPolicyDepth|StatsWrite|StatsMultiBatch|StatsSettlement|Deposited|ReleaseMeasurement|IntentStore|SteeringIntent|MeasurementStats|ExactPoolQuality|HeadEMA|ReleaseSteeringLoop|ReleaseSettlementRefresh|ReleaseArchiveV2|ReleaseHistoryAdoptionV2|ReleaseNativeObservationV2"
+	const required = "Attempt|DiskAttempt|TrailPolicyDepth|StatsWrite|StatsMultiBatch|StatsSettlement|Deposited|ReleaseMeasurement|IntentStore|SteeringIntent|ExactPoolQuality|HeadEMA|ReleaseSteeringLoop|ReleaseSettlementRefresh|ReleaseArchiveV2|ReleaseHistoryAdoptionV2|ReleaseNativeObservationV2"
 	selector, err := releaseConnectPolicySelectorAssignment(script, "producer_tests")
 	if err != nil {
 		return err
@@ -2978,6 +3122,8 @@ func assertReleaseGateAssignmentFilterProfile(t *testing.T, scriptPath, gate str
 		"VerifySimulationAssignmentFilter(BlocksSeedPendingAndFutureAssignments|DoesNotAffectAnotherValidator)",
 		"StSyncChainEventsBatchesCanonicalEventBlocks",
 		"StTransactionIntentReservationUsesChainAccountNonceScope",
+		"StDepositCustody(ReconcilesPreparedFundingBeforeNewSizing|StagesRoundingOnceAndCreditsExactPrincipal|LostFundingReplyDoesNotRepeatTransfer|RetainsUnderfundedSuccessWithoutAnotherTransfer)",
+		"StReplacementWaitReadErrorCannotAuthorizeReplacement",
 	} {
 		if strings.Contains(beforeProfile, name) || !strings.Contains(databaseProfile, name) {
 			t.Errorf("database-backed %s test %s is not confined to the isolated profile", gate, name)

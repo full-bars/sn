@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"testing"
 
+	"golang.org/x/sys/unix"
+
 	"github.com/urfoundation/sn/internal/durablefixture"
 	"github.com/urfoundation/sn/internal/durablepath"
 	"github.com/urnetwork/connect/durablevolume"
@@ -46,7 +48,7 @@ func TestStorageInspectionPublicInventoryPreservesOwnerAttributesAndBounds(t *te
 	fixture, root, _ := storageInspectionTestFixture(t)
 	anchor := []byte(`{"synthetic":"completed-owner-head"}`)
 	attribute := "user.urnetwork.native-journal-custody"
-	if err := syscall.Setxattr(root, attribute, anchor, 1); err != nil {
+	if err := unix.Setxattr(root, attribute, anchor, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
 	args := storageCustodyTestFence(t, fixture, root)
@@ -77,7 +79,7 @@ func TestStorageInspectionPublicInventoryPreservesOwnerAttributesAndBounds(t *te
 	if code := runMain(fixture.Context, append(append([]string{"storage-inventory"}, args...), "--max-owner-attributes", "1", "--max-owner-attribute-bytes", "4096"), &stdout, &stderr); code != 0 {
 		t.Fatal("finite explicit bounds were not usable after refusal", code, stderr.String())
 	}
-	if err := syscall.Removexattr(root, attribute); err != nil {
+	if err := unix.Removexattr(root, attribute); err != nil {
 		t.Fatal(err)
 	}
 	stdout.Reset()
@@ -138,7 +140,7 @@ func TestStorageInspectionReboundComparisonRequiresExplicitOption(t *testing.T) 
 	args := storageCustodyTestFence(t, fixture, root)
 	anchor := []byte(`{"synthetic":"retained-original-physical-owner"}`)
 	attribute := "user.urnetwork.native-journal-custody"
-	if err := syscall.Setxattr(root, attribute, anchor, 1); err != nil {
+	if err := unix.Setxattr(root, attribute, anchor, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
 	var stdout, stderr bytes.Buffer
@@ -164,10 +166,10 @@ func TestStorageInspectionReboundComparisonRequiresExplicitOption(t *testing.T) 
 		t.Fatal(err)
 	}
 	nonce := bytes.Repeat([]byte{37}, durablevolume.RootGenerationBytes)
-	if err := syscall.Setxattr(root, durablevolume.RootGenerationAttribute, nonce, 1); err != nil {
+	if err := unix.Setxattr(root, durablevolume.RootGenerationAttribute, nonce, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
-	if err := syscall.Setxattr(root, attribute, anchor, 1); err != nil {
+	if err := unix.Setxattr(root, attribute, anchor, unix.XATTR_CREATE); err != nil {
 		t.Fatal(err)
 	}
 	config, err := durablevolume.Load(fixture.Reference)

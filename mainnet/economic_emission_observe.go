@@ -16,11 +16,23 @@ import (
 
 // A finite retained-byte budget includes repeated JSON state and header bytes,
 // separately from one bounded metadata artifact. No process-global budget.
+// An epoch block also retains its complete Yuma witness, which the signed
+// authority bounds to MaximumWitnessBytes (at most 32 MiB), and a block
+// carries at most one. So one read retains at most 8 MiB plus one admitted
+// witness, 40 MiB in all, and a single block with an admitted witness fits.
 type economicEmissionBudget struct {
-	used int
+	used, witness int
 }
 
-var errEconomicEmissionEvidenceCapacity = errors.New("native incentive retained evidence exceeds 8 MiB budget")
+var errEconomicEmissionEvidenceCapacity = errors.New("native incentive retained evidence exceeds its 8 MiB budget plus any admitted Yuma witness")
+
+// A validated policy's read budget: one admitted witness beyond the base.
+func economicEmissionReadBudget(policy economicEmissionPolicy) economicEmissionBudget {
+	if policy.Execution == nil || policy.Execution.Yuma == nil {
+		return economicEmissionBudget{}
+	}
+	return economicEmissionBudget{witness: int(policy.Execution.Yuma.MaximumWitnessBytes)}
+}
 
 // Accounting precedes retaining the value; an attempted block remains bounded
 // by the independent single-response/event/UID limits when this budget fills.
@@ -29,7 +41,7 @@ func (self *economicEmissionBudget) retain(value any) error {
 	if err != nil {
 		return err
 	}
-	if len(raw) > economicEmissionBytesLimit-self.used {
+	if len(raw) > economicEmissionBytesLimit+self.witness-self.used {
 		return errEconomicEmissionEvidenceCapacity
 	}
 	self.used += len(raw)
@@ -194,7 +206,7 @@ func observeEconomicEmissionCatalog(ctx context.Context, client *rpcClient, poli
 	if err := chain.network(readCtx); err != nil {
 		return result, err
 	}
-	budget := economicEmissionBudget{}
+	budget := economicEmissionReadBudget(policy)
 	var blocks map[uint64]economicEmissionBlock
 	if historical {
 		result.HistoricalFinality = "owned-rpc-assertion"

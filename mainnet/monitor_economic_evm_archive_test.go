@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 package main
 
@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/urnetwork/connect/durablevolume"
-	"golang.org/x/sys/unix"
 )
 
 // Test enrollment creates only explicitly fresh snapshot owners. The original
@@ -318,61 +317,6 @@ func TestMonitorEvmArchiveMissingRetainedSegmentStopsOnlyAffectedRole(t *testing
 	run.stop(t)
 }
 
-// Inotify delivers actual access events synchronously with the filesystem
-// operations. Nonblocking reads test an empty queue, never elapsed time.
-func TestMonitorEvmArchiveUnchangedChecksDoNotRereadPayload(t *testing.T) {
-	f := newMonitorEvmArchiveFixture(t, false)
-	plan, args := f.plan(t)
-	f.apply(t, args)
-	fd, err := unix.InotifyInit1(unix.IN_NONBLOCK | unix.IN_CLOEXEC)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer unix.Close(fd)
-	if _, err := unix.InotifyAddWatch(fd, f.archive, unix.IN_ACCESS); err != nil {
-		t.Fatal(err)
-	}
-	owner, raw, err := openMonitorHistoryReader(f.evm.ctx, plan.Archive)
-	if err != nil || !bytes.Equal(raw, f.original) {
-		t.Fatal("archive admission did not read original payload", err)
-	}
-	defer owner.close()
-	buffer := make([]byte, 4096)
-	if n, err := unix.Read(fd, buffer); err != nil || n == 0 {
-		t.Fatal("actual admission access was not observed", n, err)
-	}
-	for index := 0; index < 16; index++ {
-		if err := owner.check(); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if n, err := unix.Read(fd, buffer); n > 0 || !errors.Is(err, unix.EAGAIN) {
-		t.Fatal("unchanged archive reread its payload", n, err)
-	}
-	file, err := os.OpenFile(f.archive, os.O_WRONLY, 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := file.WriteAt([]byte{'!'}, 0); err != nil {
-		t.Fatal(err)
-	}
-	if err := errors.Join(file.Sync(), file.Close()); err != nil {
-		t.Fatal(err)
-	}
-	if err := owner.check(); !errors.Is(err, durablevolume.ErrIdentity) {
-		t.Fatal("changed immutable payload retained cache admission", err)
-	}
-	if n, err := unix.Read(fd, buffer); n > 0 || !errors.Is(err, unix.EAGAIN) {
-		t.Fatal("invalid immutable member was reread before refusal", n, err)
-	}
-	if err := owner.close(); err != nil {
-		t.Fatal(err)
-	}
-	if replacement, _, err := openMonitorHistoryReader(f.evm.ctx, plan.Archive); err == nil || replacement != nil {
-		t.Fatal("reopen admitted altered original archive", err)
-	}
-}
-
 func TestMonitorEvmArchivePublicRefusesOmittedAndForgedPrefix(t *testing.T) {
 	f := newMonitorEvmArchiveFixture(t, false)
 	_, args := f.plan(t)
@@ -412,14 +356,29 @@ func TestMonitorEvmArchivePublicRefusesOmittedAndForgedPrefix(t *testing.T) {
 			t.Fatal(err)
 		}
 		before := mainnetNamespaceTest(t, filepath.Dir(f.checkpoint))
-		run := f.evm.start(t, monitorServiceHooks{wait: func(context.Context, string, time.Duration) bool { return false }})
+		refused := make(chan int, 1)
+		run := f.evm.start(t, monitorServiceHooks{wait: func(context.Context, string, time.Duration) bool { return false }, afterWorker: func(role string, exit int) {
+			if role == f.evm.policy.Role {
+				refused <- exit
+			}
+		}})
+		// The refused owner joins on its own. The command also joins the chain
+		// role, whose first sample syncs durable write probes: a sample's bound.
 		select {
-		case <-run.done:
-			if run.exit != 3 || !strings.Contains(run.diagnostic.String(), "monitor EVM economic admission") {
-				t.Fatal("public reopen admitted unproved archive prefix", fault, run.exit, run.diagnostic.String())
+		case exit := <-refused:
+			if exit != 3 {
+				t.Fatal("public reopen admitted unproved archive prefix", fault, exit)
 			}
 		case <-time.After(10 * time.Second):
 			t.Fatal("refused archive owner did not join", fault)
+		}
+		select {
+		case <-run.done:
+			if run.exit != 3 || !strings.Contains(run.diagnostic.String(), "monitor "+f.evm.policy.Role+" admission:") {
+				t.Fatal("public reopen admitted unproved archive prefix", fault, run.exit, run.diagnostic.String())
+			}
+		case <-time.After(60 * time.Second):
+			t.Fatal("public command did not join after its independent chain sample", fault)
 		}
 		run.stop(t)
 		if len(run.sink.events) != 0 {

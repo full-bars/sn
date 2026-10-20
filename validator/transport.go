@@ -17,9 +17,13 @@ package validator
 // dials through itself), so no bytes of the verify exchange leave outside
 // the hop.
 //
-// Each request owns a fresh tunnel pinned to its exact hop. One exclusively
+// Each request owns a fresh tunnel pinned to its exact hop. Each exclusively
 // leased client retains processed key registration across sequential requests;
-// operator shutdown joins its final transport and identity retirement.
+// operator shutdown joins every final transport and identity retirement.
+//
+// IPv4 and IPv6 get equal attempts: the transport's requests alternate the
+// family their tunnel tries first, IPv4 for the first request, and each falls
+// back to the other family (connect IPV6.md C7, VALIDATOR.md §8.2).
 
 import (
 	"bytes"
@@ -29,8 +33,11 @@ import (
 	"fmt"
 	"io"
 	mathrand "math/rand"
+	"net"
 	"net/http"
+	"net/netip"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -50,22 +57,29 @@ type TunnelTransportConfig struct {
 	// SourceClientId is the validator's own client id — excluded from
 	// provider selection and used as the packet source.
 	SourceClientId connect.Id
+	// Clients is how many registered tunnel clients serve requests at once.
+	// Each request leases one exclusively, and waiting for a lease spends the
+	// request's step deadline, so a trail engine sets this to its concurrency.
+	// Zero means one.
+	Clients int
 }
 
 // TunnelTransport implements TrailTransport over real per-hop tunnels.
 // Every call is bounded by the caller's ctx (the engine's StepTimeout).
-// Initial registration has one bounded transport-owned lifetime across calls.
+// Each client's initial registration has one bounded transport-owned lifetime
+// across calls.
 type TunnelTransport struct {
 	ctx            context.Context
 	cancel         context.CancelFunc
 	clientStrategy *connect.ClientStrategy
 	cfg            TunnelTransportConfig
-	clientLease    chan struct{}
-	client         tunnelTransportClient
-	registration   *tunnelClientRegistration
-	newClient      func(context.Context, connect.Id) (tunnelTransportClient, error)
-	closed         chan struct{}
-	closeErr       error
+	// Free leases; clientCount of them exist for the transport's lifetime.
+	clientLeases chan *tunnelClientLease
+	clientCount  int
+	newClient    func(context.Context, connect.Id) (tunnelTransportClient, error)
+	createTun    func(context.Context, *connect.TunSettings) (*connect.Tun, error)
+	closed       chan struct{}
+	closeErr     error
 }
 
 type tunnelAttemptGenerator interface {
@@ -84,10 +98,12 @@ type tunnelAttemptTun interface {
 // completion: the packet pump must exit before the generator can retire its
 // clients and return their message buffers.
 type tunnelAttempt struct {
-	cancel         context.CancelFunc
-	generator      tunnelAttemptGenerator
-	tun            tunnelAttemptTun
-	packetClient   tunnelAttemptPacketClient
+	cancel       context.CancelFunc
+	generator    tunnelAttemptGenerator
+	tun          tunnelAttemptTun
+	packetClient tunnelAttemptPacketClient
+	// Closes the contracts a joined hop leaves open on its retained identity.
+	closeContracts func()
 	retireClient   func(context.Context) error
 	removeIdentity func(context.Context) error
 	pumpDone       <-chan struct{}
@@ -131,6 +147,12 @@ func (self *tunnelAttempt) closeAndWait(ctx context.Context) error {
 			closeErrors = append(closeErrors, fmt.Errorf("join tunnel packet pump: %w", ctx.Err()))
 		}
 	}
+	// A joined packet path sends nothing more for this hop, so its contracts
+	// close now and return their escrow instead of waiting out the send
+	// sequence's idle or ack timeout. An unjoined path retires the identity.
+	if self.closeContracts != nil && len(closeErrors) == 0 {
+		self.closeContracts()
+	}
 	if self.retireClient != nil {
 		if err := self.retireClient(ctx); err != nil {
 			closeErrors = append(closeErrors, fmt.Errorf("retire tunnel client: %w", err))
@@ -160,18 +182,61 @@ func (self *tunnelAttempt) closeAndWait(ctx context.Context) error {
 	return errors.Join(closeErrors...)
 }
 
+// Decides when a retained identity's joined attempts close their contracts.
+// Every joined attempt closes them, as a hop that has ended does, except one
+// answered source-egress-unresolved: the step resends through the same hop at
+// once, pinned to the other family (VALIDATOR.md §8.2), and the resend rides
+// the identity's open transfer sequence to the provider. Closing it would make
+// the resend open a new one, and the provider replaces the receive sequence it
+// holds for this identity only once the old one has exited: on a carrier it
+// does not know to be reliable it drops the new sequence's first packet
+// meanwhile (connect ReceiveBuffer.Pack), so the resend would wait out a
+// transfer resend, a second or more, inside the latency the server attributes
+// to the hop. The identity's next attempt through another hop closes what the
+// answered attempt kept. Each retained identity keeps its own: a resend that
+// leases another of the transport's clients rides that client's sequences.
+type tunnelHopContracts struct {
+	// the client's Flush: cancels the identity's transfer sequences, which
+	// close their contracts
+	flush func()
+	// the hop an answered attempt kept the contracts open for, or zero
+	kept connect.Id
+}
+
+// Runs before each attempt through hop.
+func (self *tunnelHopContracts) begin(hop connect.Id) {
+	if self.kept != (connect.Id{}) && self.kept != hop {
+		self.flush()
+	}
+	self.kept = connect.Id{}
+}
+
+// Returns what the attempt through hop, which ended with err, runs once its
+// packet path has joined.
+func (self *tunnelHopContracts) joined(hop connect.Id, err error) func() {
+	if errors.Is(err, errSourceEgressUnresolved) {
+		return func() { self.kept = hop }
+	}
+	return self.flush
+}
+
 func NewTunnelTransport(ctx context.Context, clientStrategy *connect.ClientStrategy, cfg TunnelTransportConfig) *TunnelTransport {
 	ownerCtx, cancel := context.WithCancel(ctx)
+	clientCount := max(cfg.Clients, 1)
 	self := &TunnelTransport{
 		ctx:            ownerCtx,
 		cancel:         cancel,
 		clientStrategy: clientStrategy,
 		cfg:            cfg,
-		clientLease:    make(chan struct{}, 1),
+		clientLeases:   make(chan *tunnelClientLease, clientCount),
+		clientCount:    clientCount,
 		closed:         make(chan struct{}),
 	}
 	self.newClient = self.newRegisteredClient
-	self.clientLease <- struct{}{}
+	self.createTun = connect.CreateTun
+	for range clientCount {
+		self.clientLeases <- &tunnelClientLease{}
+	}
 	go self.run()
 	return self
 }
@@ -187,6 +252,14 @@ func (self *TunnelTransport) currentByClientJwt() (string, error) {
 	return byClientJwt, nil
 }
 
+// A hop carries one /verify exchange of a few kilobytes, so every contract it
+// requests is this one small size. connect's defaults open at 1 MiB and size
+// each prefetched successor toward 128 MiB (32.75 MiB for the second contract),
+// and the platform escrows every grant from the validator's balance until the
+// contract closes. The platform raises a request to its own minimum grant. The
+// size stays well above the 16 KiB transport message ceiling a contract must fit.
+const tunnelContractTransferByteCount = connect.ByteCount(256 << 10)
+
 // Returns fresh settings for every derived tunnel client. Provider clients
 // advertise opportunistic encryption and may initiate the TLS session on their
 // return sequence. An encryption-off validator can carry the plaintext proof,
@@ -196,15 +269,28 @@ func (self *TunnelTransport) currentByClientJwt() (string, error) {
 func newTunnelClientSettings() *connect.ClientSettings {
 	clientSettings := connect.DefaultClientSettings()
 	clientSettings.EncryptionSettings.Mode = connect.EncryptionModeOpportunistic
+	// The reply to a provider-initiated handshake rides the validator's own
+	// regular contract to that provider. The default asks for a companion
+	// contract instead, which the platform refuses because public providers
+	// publish no stream key, so each such request waited out its timeout.
+	clientSettings.EncryptionSettings.EncryptionControlUseCompanion = false
 	// Providers must be able to read the derived client's identity key before
 	// the generator admits tunnel traffic, not merely after a delivery ack.
 	clientSettings.ClientKeyRegistrationRequired = true
+	// Equal initial and standard sizes keep every contract of a send sequence,
+	// including its prefetched successor, at the one small size.
+	contractSettings := clientSettings.ContractManagerSettings
+	contractSettings.InitialContractTransferByteCount = tunnelContractTransferByteCount
+	contractSettings.InitialNetworkPeerContractTransferByteCount = tunnelContractTransferByteCount
+	contractSettings.StandardContractTransferByteCount = tunnelContractTransferByteCount
 	return clientSettings
 }
 
 // Each lease constructs and joins its own exact-hop packet path. The
 // registered identity remains alive after request cancellation or rejection.
-func (self *registeredTunnelClient) postVerify(ctx context.Context, hop connect.Id, jsonBody []byte) (responseBody []byte, returnErr error) {
+// The tunnel's hostname dial tries family.first first, and only it when the
+// family is pinned.
+func (self *registeredTunnelClient) postVerify(ctx context.Context, hop connect.Id, jsonBody []byte, family hopIpFamily) (responseBody []byte, returnErr error) {
 	byClientJwt, err := self.owner.currentByClientJwt()
 	if err != nil {
 		return nil, err
@@ -219,8 +305,17 @@ func (self *registeredTunnelClient) postVerify(ctx context.Context, hop connect.
 	}
 	tunnelCtx, tunnelCancel := context.WithCancel(ctx)
 	attempt := &tunnelAttempt{cancel: tunnelCancel}
+	// The exclusive lease runs one hop at a time on this identity. Once this
+	// attempt's packet path has joined, the only data sequences left on the
+	// client belong to finished attempts, so flushing the client closes their
+	// contracts, except for the resend through this hop that a 421 leads to
+	// (tunnelHopContracts). The flush also restarts the client's control
+	// sequence; contract close reports retry until the platform acknowledges
+	// them.
+	self.contracts.begin(hop)
 	self.packetCleanup = attempt
 	defer func() {
+		attempt.closeContracts = self.contracts.joined(hop, returnErr)
 		closeErr := attempt.close()
 		if closeErr != nil {
 			// An unjoined packet path cannot share this identity with another hop.
@@ -231,7 +326,9 @@ func (self *registeredTunnelClient) postVerify(ctx context.Context, hop connect.
 		returnErr = errors.Join(returnErr, closeErr)
 	}()
 
-	tun, err := connect.CreateTunWithDefaults(tunnelCtx)
+	tunSettings := connect.DefaultTunSettings()
+	tunSettings.DialFirstIpFamily = family.first
+	tun, err := self.owner.createTun(tunnelCtx, tunSettings)
 	if err != nil {
 		return nil, fmt.Errorf("tunnel netstack: %w", err)
 	}
@@ -261,8 +358,17 @@ func (self *registeredTunnelClient) postVerify(ctx context.Context, hop connect.
 		}
 	})
 
+	// the family the request's one connection reached the server on, which a
+	// source-egress-unresolved answer rules out for the rest of the step
+	var landedIpFamily atomic.Int32
 	httpTransport := &http.Transport{
-		DialContext:       tun.DialContext,
+		DialContext: func(ctx context.Context, network string, address string) (net.Conn, error) {
+			conn, err := tun.DialContext(ctx, hopDialNetwork(network, family), address)
+			if err == nil {
+				landedIpFamily.Store(int32(connIpFamily(conn)))
+			}
+			return conn, err
+		},
 		DisableKeepAlives: true,
 		ForceAttemptHTTP2: false,
 	}
@@ -285,9 +391,57 @@ func (self *registeredTunnelClient) postVerify(ctx context.Context, hop connect.
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("verify post via %s: http %d: %s", hop, response.StatusCode, truncateForLog(responseBody))
+		return nil, tunnelVerifyStatusFailure(response.StatusCode, verifyPostError(hop, response.StatusCode, responseBody, int(landedIpFamily.Load())))
 	}
 	return responseBody, nil
+}
+
+// verifyPostError is the error for a /verify answer other than 200: the
+// server's retryable 421 is errSourceEgressUnresolved, for the family the
+// request reached the server on, only with exactly its body; every other
+// answer, 421 with any other body included, is an ordinary failed attempt.
+func verifyPostError(hop connect.Id, statusCode int, body []byte, ipFamily int) error {
+	if statusCode == http.StatusMisdirectedRequest && string(body) == verifySourceEgressUnresolvedBody {
+		return &sourceEgressUnresolvedError{hop: hop, ipFamily: ipFamily}
+	}
+	return fmt.Errorf("verify post via %s: http %d: %s", hop, statusCode, truncateForLog(body))
+}
+
+// hopDialNetwork narrows a hop request's dial to its family when the request
+// is pinned to it: "tcp" becomes "tcp4" or "tcp6", so the tunnel resolves and
+// dials that family alone, never falling back to the other.
+func hopDialNetwork(network string, family hopIpFamily) string {
+	if !family.pinned || network != "tcp" {
+		return network
+	}
+	switch family.first {
+	case 4:
+		return "tcp4"
+	case 6:
+		return "tcp6"
+	default:
+		return network
+	}
+}
+
+// connIpFamily is the family of the address a tunnel connection reached, or
+// 0 when it cannot tell. A netstack connection whose endpoint is no longer
+// connected, reset right after its handshake, has no remote address: gvisor's
+// gonet.TCPConn.RemoteAddr returns nil then, and this runs on net/http's dial
+// goroutine, where a panic would end the validator.
+func connIpFamily(conn net.Conn) int {
+	remote := conn.RemoteAddr()
+	if remote == nil {
+		return 0
+	}
+	addrPort, err := netip.ParseAddrPort(remote.String())
+	if err != nil {
+		return 0
+	}
+	if addrPort.Addr().Unmap().Is4() {
+		return 4
+	}
+	return 6
 }
 
 // Shared identities may still receive a previous hop's delayed packets. Only
@@ -313,9 +467,12 @@ func truncateForLog(b []byte) string {
 // validator-chosen entry hop from FindProviders2 (§4.1) — best-available
 // ranking, excluding the validator itself, choosing uniformly among the
 // returned candidates so consecutive trails spread their entry points.
-// ForceMinimum deliberately includes connected providers before they have
-// latency/speed history: trails are the measurement traffic that creates that
-// history, so strict discovery here would deadlock a freshly started operator.
+// The online rank mode samples every online provider: a validator measures the
+// whole fleet, and Quality's per-request subscriber validation is end-user
+// access policy that a seed hop does not need. ForceMinimum deliberately
+// includes connected providers before they have latency/speed history: trails
+// are the measurement traffic that creates that history, so strict discovery
+// here would deadlock a freshly started operator.
 func NewFindProvidersSeedPicker(api *sdk.Api, selfClientId connect.Id) SeedPicker {
 	return func(ctx context.Context) (connect.Id, error) {
 		selfId, err := sdk.ParseId(selfClientId.String())
@@ -330,7 +487,7 @@ func NewFindProvidersSeedPicker(api *sdk.Api, selfClientId connect.Id) SeedPicke
 			Specs:            specs,
 			Count:            8,
 			ExcludeClientIds: excludeClientIds,
-			RankMode:         "quality",
+			RankMode:         "online",
 			ForceMinimum:     true,
 		})
 		if err != nil {

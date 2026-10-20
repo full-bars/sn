@@ -16,11 +16,15 @@ type economicConservationYumaEvidence struct {
 	Outcome    nativeExecutionOutcome `json:"original_native_outcome"`
 }
 
+// ReserveOnlyAllocation sums the original miner tranches of retired epochs
+// whose actual weight inputs were the treasury reserve-only row. It is omitted
+// while zero, so archives without such an epoch keep their original bytes.
 type economicConservationYumaArchive struct {
 	Blocks                    uint64                   `json:"complete_original_blocks"`
 	Through                   economicEmissionBoundary `json:"through"`
 	MinerDenominator          string                   `json:"complete_miner_denominator_alpha"`
 	FullQuantizationTolerance string                   `json:"full_miner_quantization_tolerance_alpha"`
+	ReserveOnlyAllocation     string                   `json:"reserve_only_miner_allocation_alpha,omitempty"`
 }
 
 type economicConservationYumaSummary struct {
@@ -30,7 +34,25 @@ type economicConservationYumaSummary struct {
 	Current                   bool                             `json:"complete_through_native_cursor"`
 	MinerDenominator          *string                          `json:"complete_miner_denominator_alpha"`
 	FullQuantizationTolerance *string                          `json:"full_miner_quantization_tolerance_alpha"`
+	ReserveOnlyAllocation     *string                          `json:"reserve_only_miner_allocation_alpha,omitempty"`
 	Authority                 string                           `json:"authority"`
+}
+
+// Absent and zero reserve-only tranches are one retained amount; the sum is
+// returned empty while zero so ordinary archives keep their original bytes.
+func economicYumaReserveOnlySum(retained string, projection *string) (string, error) {
+	if retained == "" {
+		retained = "0"
+	}
+	added := "0"
+	if projection != nil {
+		added = *projection
+	}
+	total, err := economicConservationSum(retained, added)
+	if err != nil || total == "0" {
+		return "", err
+	}
+	return total, nil
 }
 
 // Admission reserves complete original witnesses before any engine or RPC is
@@ -136,6 +158,11 @@ func (self economicConservationState) validateYuma(ctx context.Context, policy e
 		if _, err := economicConservationSum(archived.MinerDenominator, archived.FullQuantizationTolerance); err != nil {
 			return err
 		}
+		if archived.ReserveOnlyAllocation != "" {
+			if _, err := economicConservationSum(archived.ReserveOnlyAllocation); err != nil || archived.ReserveOnlyAllocation == "0" {
+				return errors.Join(errors.New("economic Yuma archived reserve-only tranche is not a canonical positive amount"), err)
+			}
+		}
 		previous = archived.Through
 	}
 	for _, value := range self.Yuma {
@@ -161,6 +188,7 @@ func mergeEconomicYumaArchive(archive *economicConservationYumaArchive, projecti
 		return nil, errors.New("economic Yuma retirement cannot discard an unclosed calculation")
 	}
 	next := &economicConservationYumaArchive{Blocks: 1, Through: projection.Boundary, MinerDenominator: *projection.MinerDenominator, FullQuantizationTolerance: *projection.FullQuantizationTolerance}
+	retained := ""
 	if archive != nil {
 		if archive.Through != projection.Parent {
 			return nil, errors.New("economic Yuma retirement changed original predecessor")
@@ -175,6 +203,12 @@ func mergeEconomicYumaArchive(archive *economicConservationYumaArchive, projecti
 		if err != nil {
 			return nil, err
 		}
+		retained = archive.ReserveOnlyAllocation
+	}
+	var err error
+	next.ReserveOnlyAllocation, err = economicYumaReserveOnlySum(retained, projection.ReserveOnlyAllocation)
+	if err != nil {
+		return nil, err
 	}
 	return next, nil
 }
@@ -239,11 +273,12 @@ func (self economicConservationState) yumaSummary(ctx context.Context, policy ec
 		return nil, err
 	}
 	result := &economicConservationYumaSummary{Through: policy.Native.Observation.From, Current: true, Active: []nativeYumaProjection{}, Authority: "independently-admitted-complete-original-allocation-arithmetic; vault-and-provider-policy-conformance-remain-separate"}
-	denominator, tolerance := "0", "0"
+	denominator, tolerance, reserveOnly := "0", "0", ""
 	if self.Archive != nil && self.Archive.Yuma != nil {
 		result.Archived = self.Archive.Yuma
 		result.Through = result.Archived.Through
 		denominator, tolerance = result.Archived.MinerDenominator, result.Archived.FullQuantizationTolerance
+		reserveOnly = result.Archived.ReserveOnlyAllocation
 	}
 	for _, value := range self.Yuma {
 		projection := value.Projection
@@ -262,11 +297,18 @@ func (self economicConservationState) yumaSummary(ctx context.Context, policy ec
 		if err != nil {
 			return nil, err
 		}
+		reserveOnly, err = economicYumaReserveOnlySum(reserveOnly, projection.ReserveOnlyAllocation)
+		if err != nil {
+			return nil, err
+		}
 	}
 	result.Current = result.Current && result.Through == self.Native.Cursor
 	if result.Current {
 		result.MinerDenominator = &denominator
 		result.FullQuantizationTolerance = &tolerance
+		if reserveOnly != "" {
+			result.ReserveOnlyAllocation = &reserveOnly
+		}
 	}
 	return result, nil
 }

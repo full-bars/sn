@@ -89,7 +89,10 @@ A completed trail does **not** prove:
    *approximate*, not a precondition we can assume. v1 relies on an honest validator
    *majority* providing a clean baseline against which self-dealing and adversarial
    abandonment show up statistically (§7.5, §7.7); the structural defenses that make
-   it hold under adversarial validators are the §10 roadmap.
+   it hold under adversarial validators are the §10 roadmap. The SN25 mainnet launch
+   does not meet this assumption: by owner decision (October 7) UR runs the only
+   operator and the only UR validator, which scores UR's own pool, so no independent
+   validator cross-checks UR's scoring.
 3. Source IP cannot be spoofed (TCP return path) — so a request's source IP is
    evidence the packet truly egressed from that provider.
 4. Each eligible provider maps to exactly one egress IP, and that IP resolves to
@@ -264,11 +267,15 @@ Request body:
 ```
 
 Server:
-1. Resolve source IP → hop `client_id` `A` (§8.1). If unresolved → **poison path**
-   (§9), but proceed indistinguishably.
+1. Resolve source IP → hop `client_id` `A` (§8.1).
 2. Verify `seed_sig` is a valid SEED signature under `vpk` (Appendix A.1).
-3. Check `vpk`'s `client_id` is allowed to verify and is **not** `A` (a validator
-   may not seed through itself). Apply seed rate limits (§9).
+3. Check `vpk`'s `client_id` is allowed to verify (`vpk` is its registered key) and is
+   **not** `A` (a validator may not seed through itself). Apply seed rate limits (§9).
+   A `vpk` that is not registered → **poison path** (§9) whatever the source resolves
+   to, with a synthetic seed hop in `trail[0]`: the caller learns nothing of
+   resolution. Under a registered `vpk`, an unresolved source's first two attempts of
+   this signed SEED are answered as **retryable** (`421`, §8.2) with no trail; after
+   that → **poison path** (§9), but proceed indistinguishably.
 4. Check `A` is an eligible provider: `model.GetProvideModes(ctx, A)` is non-empty
    **and** `A` holds an eligibility token (§5.3).
 5. Create trail: `trail_id = server.NewId()`, `server_nonce` = 32 random bytes,
@@ -296,9 +303,17 @@ Server (all checks must pass; any failure → §4.4):
 4. Verify `extend_sig` is a valid EXTEND under the trail's `vpk` over the canonical
    path of those `client_id`s (Appendix A.2).
 5. **Check `C == pending_hop`** — the request truly egressed from the assigned
-   provider. (This is "caller `client_id` matches the tail.")
+   provider. (This is "caller `client_id` matches the tail.") If the source resolved
+   to no provider, or to another provider than the pending one (co-located providers
+   that indexed different families, §8.2), answer the first two such attempts of the
+   step as **retryable** (`421`, §8.2), changing nothing; the third fails the step
+   (§4.4).
 6. Confirm the hop: stamp `t_k = server.NowUtc()`, move pending → confirmed,
-   **record `latency = t_k − assigned_at` for provider `C` (§7)**.
+   **record `latency = t_k − assigned_at` for provider `C` (§7)**. With the server's
+   `hop_latency_from_attributed_attempt` on, a confirmed hop's `assigned_at` is the
+   start of the attempt that was attributed: the ASSIGN, or the step's last `421`, after
+   which the resend went (§7.5). Off, the default, it is the ASSIGN. The step's deadline
+   always counts from the ASSIGN.
 7. If `depth == M`: produce FINAL, mark `complete`, persist & publish proof (§3.3),
    return `{ status: "complete", proof }`.
    Else: sample next hop `D` (§5), append pending `D`, produce ASSIGN, return
@@ -313,7 +328,9 @@ response per trail). Do not double-count latency or advance depth.
 ### 4.4 Failure / expiry
 
 - If any EXTEND check fails, or the pending hop is not confirmed within `StepTimeout`
-  `T`, the step **fails**. Record the failure against the **pending next hop**
+  `T`, the step **fails**. The exception is a source that resolves to no provider, or
+  to another one: its first two attempts are retryable (§8.2). Record the failure
+  against the **pending next hop**
   (the provider that was never reached) — see §7.2 — and move the trail to
   `expired`. Do not publish.
 - Failures and expiries are the raw material for the statistics. They are inferred
@@ -331,7 +348,7 @@ without replacement within the trail**, from the eligible set:
 
 ```
 eligible(trail) = { c : c has an active ProvideMode }
-               ∩ { c : c has exactly one known egress IP (§8.1, §8.2) }
+               ∩ { c : c has a family whose one live egress attributes to c (§8.1, §8.2) }
                ∩ { c : c holds an eligibility token (§5.3) }
                \ { hops already in trail }  \ { validator's own client_id }
 ```
@@ -443,8 +460,12 @@ Per trail (`{vtr_<trail_id>}`):
 ```
 header        : vpk(32B), server_nonce(32B), M, status, created_at, last_activity
 hops          : ordered [ (client_id, assigned_at, confirmed_at|null, assign_n) ]
+                // a confirmed hop's assigned_at: its ASSIGN, or with
+                // hop_latency_from_attributed_attempt its attributed attempt's start (§7.5)
 pending       : (client_id, assigned_at, assign_n)         // the tail awaiting arrival
 last_response : cached JSON for idempotent retries (§4.3)
+unattributed  : per depth, the step's retryable answers and the last one's time (§8.2)
+window        : the head-hash scoring window of the trail's SEED (§8.1)
 ```
 Set `EXPIRE = TrailTTL`; an expired key whose status was `active` is an abandoned
 trail and should be swept into the failure stats (§7) by a reaper before/at expiry.
@@ -585,6 +606,21 @@ abandonment.
 > weighting samples by validator reputation and by §7.7's anomaly detection — do not
 > rely on per-step recording alone where validators are untrusted.
 
+**Count the attributed attempt only.** A step answered `421` (§8.2) should be measured
+from the step's last `421`, when the resend through the other family went, not from the
+ASSIGN: the attempt that landed on a family the provider has not indexed is not the
+provider's latency. With the server setting `hop_latency_from_attributed_attempt` on
+(a server-only key of `verify.yml`'s `settings`, read once at start),
+the server records that start as the confirmed hop's `assigned_ms`, so
+`confirmed_ms − assigned_ms`, the published percentiles and the provider-attempt
+receipts all exclude the `421`'d attempts; a step with no `421` keeps its ASSIGN time.
+The pending hop's record, and its `assigned_ms` in the receipt that assigned it, are
+unchanged, so a receipt check must accept a confirmed hop whose `assigned_ms` moved
+forward from its pending one's, no later than its `confirmed_ms`. The setting is off by
+default: a confirmed hop then keeps its ASSIGN time, the only record a current receipt
+check accepts, and its latency still holds the `421`'d attempts. A validator timing its
+own steps times the resend alone.
+
 ### 7.6 Exclude the seed hop
 
 Only the `M−1` **server-assigned** positions are unbiased random samples. The seed
@@ -642,9 +678,20 @@ today — **this is new work**:
   the original "known ip hashes from providers" so the table does not hold raw
   provider IPs at rest. Look up by hashing the source IP.
 
-Only providers satisfying the one-provider-⇄-one-egress-IP invariant (§8.2) are
-present in this index; everyone else is absent and therefore ineligible. Do the
+Only providers satisfying the one-provider-⇄-one-egress-IP-per-family invariant (§8.2)
+are present in this index; everyone else is absent and therefore ineligible. Do the
 lookup in **constant-ish time** regardless of hit/miss (§9).
+
+As built, the forward entry `verify_egress_v2_<hash>` names the one provider egressing
+from an exact address, in either family (keyed hash, never the raw IP), and an IPv6
+address also feeds the entry of its **/64** (§8.2). The reverse hash
+`{vce4_<clientId>}` holds one field per live address of that provider,
+`<address hash>_4` or `<address hash>_6_<its /64's hash>`, whose value carries the
+address's egress-IP-hash (below). A source resolves by its exact address's entry
+first; an IPv6 source falls back to its /64's entry only when no client holds the
+address and one client holds the /64. It resolves when that entry names the provider
+and the source's egress, its IPv4 address or its /64, is the only live egress of its
+family in the reverse hash.
 
 **Egress-IP-hash on the trail (head score, D27).** Two granularities, do not conflate:
 the reverse index above resolves a hop to a `client_id` at the **exact egress IP**
@@ -656,24 +703,129 @@ the reverse index above resolves a hop to a `client_id` at the **exact egress IP
 their own trails**. The prefix hash never exposes the raw exit IP, and coarsening to a
 prefix is what makes IPs *shareable*: two distinct exact exit IPs in the same prefix (two
 `client_id`s, possibly two fleets) collapse to one hash — counted **split** across the
-fleets claiming it (§11.1), so co-located supply is not double-counted.
+fleets claiming it (§11.1), so co-located supply is not double-counted. A provider
+records **one** hash per scoring window, the settlement epoch (a UTC hour when the
+server's epoch mirror is unknown). The first hop it confirms in a window pins its
+**IPv4 address's** egress-IP-hash while its IPv4 family attributes to it, else its IPv6
+address's, else the hop's own source's: a rule of its index, so no caller steers the
+pinned prefix by choosing the family the first hop lands on. Every hop it confirms in
+the window records the pin, whichever family it lands on and however its IPv4
+transport closes, reconnects or overlaps a new lease. The pin lives its window and a
+grace: an epoch of the mirror's length, or a mainnet epoch (50400 12-second blocks,
+seven days) when the mirror does not carry it. A trail's hops pin in the window of its
+SEED, so one trail never mixes two windows. A poison trail's hop reads the pin but
+never sets one. A second family does not double a provider's head score. The seed hop,
+which never scores (§7.6), records its own source's hash.
 
-### 8.2 Eligibility invariant: one provider ⇄ one egress IP
+### 8.2 Eligibility invariant: one provider ⇄ one egress IP per family
 
 The hop lookup must be unambiguous, so eligibility enforces a **bijection** between
-eligible providers and egress IPs. We do not attempt to disambiguate shared egress —
-we exclude.
+eligible providers and egress IPs within each address family. We do not attempt to
+disambiguate shared egress — we exclude.
 
-- **Exclude any `client_id` that currently has more than one egress IP.** A
-  multi-egress provider is simply not eligible to be sampled (§5.1) until it is back
-  to a single egress IP. (CGNAT-style ambiguity is explicitly a non-goal.)
+- **An IPv6 egress is its /64.** A host's temporary IPv6 addresses rotate inside its
+  /64 (RFC 8981), so its later connections leave from another address than its
+  transport's. The addresses of one /64 are one egress of the family, and an address no
+  client holds resolves through its /64 when one client holds it. Two providers in one
+  /64 each keep their own address and stay attributable; only an address of the /64
+  that neither holds, as a rotated temporary one, resolves to neither.
+- **Refuse a family with more than one egress IP.** A provider may hold one live IPv4
+  and one live IPv6 egress (connect `IPV6.md` A runs one transport per family), and a
+  hop resolves when its source is its family's only live egress for that provider. Of a
+  family with two live egress IPs (two IPv4 addresses, two IPv6 /64s) neither resolves.
+  The provider stays eligible (§5.1) while another family attributes to it: a hop that
+  lands on a shared, ambiguous or refused family is answered as retryable (below) and
+  resent on the other. A live address whose entry names *another* client, or is
+  ambiguous, does not attribute its family, and a hop from it is answered as
+  retryable too. (CGNAT-style ambiguity is explicitly a non-goal.)
 - **The reverse index must be unique.** If an egress IP is ever observed backing
   more than one `client_id`, that IP resolves to *no* provider — drop it, never guess.
 - Maintain the invariant where `proxy_client` egresses are allocated/released
-  (`network_client_proxy_model.go:583`): on a provider gaining a second egress IP,
-  remove it from the eligible index; on returning to a single egress IP, re-add it.
+  (`network_client_proxy_model.go:583`): on a provider gaining a second egress IP in
+  one family, remove it from the eligible index; on returning to one per family, re-add
+  it. Each address keeps its own lease and expiry, so one family's lapsing leaves the
+  other attributed.
 - **IPv6 / churn:** index both families; expire entries when a `proxy_client` is
   released so a reassigned IP is not miscredited to the previous holder.
+
+**Address family of a hop.** The validator gives IPv4 and IPv6 equal attempts. The hops of
+a trail (its SEED and EXTEND posts) alternate the family their tunnel tries first, and each
+trail starts on the family the trail before it did not, the first trail on IPv4. Over any
+two consecutive trails every depth therefore tries each family first once, whatever `M`.
+A retry of a hop keeps the hop's family, except after a `421` (below), which the validator
+resends pinned to the other family. Each request falls back to the other family when
+the first fails (connect `IPV6.md` C7). The source IP is the provider's egress on the
+family that landed, and it resolves when it is that family's only live egress for the
+provider. A request whose source the step cannot attribute is answered as retryable: a
+registered validator's SEED whose source resolves to no provider, and an EXTEND whose
+source resolves to no provider (a family the provider has no live indexed egress in, or
+one that is shared, ambiguous or refused) or to another provider than the pending one
+(a co-located provider's address: two providers behind one NAT, or in one /64, that
+indexed different families):
+
+- **Wire.** `421 Misdirected Request`, `Content-Type: text/plain; charset=utf-8`, body
+  `source-egress-unresolved` and a newline. No other `/verify` answer uses `421`.
+- **Nothing changed.** A SEED creates no trail and takes no active-trail slot; an
+  EXTEND leaves the trail active with the same pending hop; nothing is charged to or
+  credited to the provider, or recorded as its hop. The caller resends the identical
+  body through the same hop, its tunnel trying the other family first, within the step.
+- **When.** An EXTEND is answered so only once it is otherwise valid (trail active,
+  step not expired, path matching, `extend_sig` valid), a SEED after `seed_sig` is
+  verified and only under a registered `vpk`: any other SEED takes the poison path (§9)
+  as it always did.
+- **Cap.** Each step answers so at most twice: per trail and depth for an EXTEND, per
+  signed SEED (its `seed_sig`) for a SEED. The third unattributed attempt gets the old
+  answer: a SEED is poisoned (§9), an EXTEND fails the trail (`400 trail failed`, reason
+  `source-egress-unresolved`, or `source-egress-mismatch` for another provider's
+  source), so a genuine misroute still fails. A validator sends a step at most three
+  times.
+- **Latency.** With `hop_latency_from_attributed_attempt` on, a hop confirmed after a
+  `421` counts its latency from the step's last `421` (§7.5); off, the default, from the
+  ASSIGN.
+- **Metering.** Every attempt counts against the seed and EXTEND meters (§9).
+- **Validator.** After a `421` the validator resends the step's identical body through
+  the same hop pinned to the other family (`tcp4` or `tcp6`, never falling back), and no
+  later attempt of the step returns to a family a `421` ruled out: the family is the one
+  the answered request reached the server on. Once both are ruled out the step fails
+  without another request. A step holds `ExtendAttempts` = 3 attempts, which must stay at
+  least the server's `VerifyUnattributedAttemptLimit` (2) plus one: the first try, the
+  resend and one retry of it. The hop latency it records counts only the attempts from
+  the last `421` on, which the server attributed to the hop. It spaces every SEED
+  attempt, these resends included, across all its workers at three quarters of the
+  per-`vpk` hard limit, so the resends fit inside its seed pace rather than adding to it.
+  The resend rides the identity's open transfer sequences to the hop: the validator
+  closes an identity's contracts once each attempt's packet path has joined, except
+  after a `421`, and closes what that attempt kept before the identity's next attempt
+  through another hop. New sequences would cost the resend, inside the attributed
+  latency, the provider's replacement of the sequences it holds for the identity: on a
+  carrier it does not know to be reliable, connect drops the new sequence's first
+  packet until the sender resends it.
+
+**A second family does not double a provider's budgets.** Seeds under a registered
+`vpk` and EXTENDs from a resolved source also count against per-provider meters held
+to the same hard limits
+(`hard_seed_per_minute_per_source`, `hard_extend_per_minute_per_source`), so the two
+families' source IPs share one budget; the concurrent-trail cap
+(`hard_active_trails_per_source`) counts per `vpk`, whatever the source; and the head
+score's egress-IP-hash is one per provider per window (§8.1).
+
+**Rolling deploy.** The server's reverse index moved from v2 (bare exact-address
+hashes) to v4 (fields `<address hash>_4` and `<address hash>_6_<its /64's hash>`; the
+v3 layout never shipped). Writers feed only v4. The two versions share the exact
+address's forward entry, so each sees the other's claims on an address, and are judged
+apart in the reverse index: v2 under its own rule, the client's one live v2 address.
+v2 entries lapse one egress TTL after the last v2 writer stops, and withdrawals (proxy
+release, reaping) clear them before that. **Deploy order:** the API and the
+taskworker first (readers of both versions), then connect (the writers), then the
+validators (which handle the retryable answer). Turn `hop_latency_from_attributed_attempt`
+on only after every validator, third-party ones included, runs the receipt check that
+accepts a confirmed hop's `assigned_ms` moving forward to the step's last `421` (§7.5):
+a current validator resends any failed attempt, so it can confirm a hop after a `421`
+as soon as the server answers one, and its receipt check refuses the moved
+`assigned_ms`. **Rollback order:** turn `hop_latency_from_attributed_attempt` off
+first; then connect, so the writers return to v2 while the readers still read it; then
+the API and the taskworker. v4 entries left behind lapse within one egress TTL, and
+receipts issued while the setting was on keep their moved `assigned_ms`.
 
 > **Bijection (attribution) vs. splitting (head score) — no contradiction.** The
 > exact-IP bijection here keeps **hop attribution** unambiguous: one exact egress IP ⇄
@@ -705,7 +857,23 @@ we exclude.
 - **DoS bound.** Carrying poison trails to depth `M` costs server state, so rate-
   limit SEEDs per source IP and per `vpk` (Redis `INCR`+`EXPIRE`,
   `transport_rate_limit.go:124`), and optionally require a small proof-of-work on
-  SEED. Cap concurrent active trails per `vpk`.
+  SEED. Cap concurrent active trails per `vpk`. A registered key's resolved SEED and
+  any resolved EXTEND also count against the provider (§8.2); an unknown trail's EXTEND
+  does the same metering whether or not its source resolves.
+- **The retryable answer reveals resolution, to a registered key only.** An
+  unattributed source's first two attempts of a step are answered `421` instead of
+  being poisoned or failed (§8.2), so the caller learns whether its source resolves.
+  This is the cost of retrying on the other family (owner decision, 2026-10-13); the
+  cap bounds it to two answers per step. A SEED gets it only under a registered `vpk`,
+  an EXTEND only with a valid signature for that step. A SEED under any other key takes
+  the poison path whatever its source resolves to, with a synthetic `trail[0]` that
+  names no client, and its seeds do not count against a provider, so an address in a
+  provider's /64 (which resolves to it through the /64) or behind its NAT learns
+  nothing.
+- **Residual: a published key learns attribution.** A registered key is any key a
+  client published, so anyone who publishes one learns whether its source is
+  attributed, and a caller in a provider's /64 learns the provider in `trail[0]`, as a
+  neighbour behind a provider's NAT already can on main.
 
 ---
 
@@ -808,6 +976,15 @@ Before crediting any score to a UID, the validator independently rechecks the ca
 payload, commitment, active epoch interval and current UID. Any mismatch contributes
 zero head weight; it is never guessed.
 
+The coordinator checks that the binding's client key signed it, not that the key is the
+client's: any registered hotkey can bind any `client_id` under a key it holds, and a
+key rotation leaves a fleet's binding on the old key. So a binding also counts only
+when its `client_key` is the measured client's own key, as the operator's signed key
+history states it at the decision boundary. A binding signed for any other key
+contributes zero head weight and its provider is scored exactly as an unbound one. The
+measurement row keeps the coordinator key beside that signed key, so the exclusion
+replays from retained evidence, and the attempt goes on.
+
 **Binding ⊥ quality.** The binding proves *ownership* only; the trail (§1–§7) proves
 *quality*. They are kept strictly separate — identity says *whose* UID this is, the
 measurement says *how good* it is — and composed, never merged. Invalid bindings never
@@ -837,7 +1014,7 @@ for each NO-pool UID n:
     audit  deposit_n == floor(bytes_n × rate_gib(tier_n) / GiB + users_n × rate_user(tier_n)), capped   # signed payout artifact; else pool[n] = 0
     implied_demand_n = (bytes_n × rate_gib(0) / GiB + users_n × rate_user(0)) × min(1, cap / owed_n)  # audited usage at the conviction-zero tier
     implied_demand_n = 1                                                                         # while the signed policy's price is zero
-    pool[n] = implied_demand_n × Q_n       # §11.1; = 0 if this validator operates NO n (self-mask)
+    pool[n] = implied_demand_n × Q_n       # §11.1; = 0 if n is in this validator's controlled_no_ids (self-mask)
 normalize pool so Σ pool = 1 − θ
 
 w = head ⊕ pool                            # ONE vector over all miner UIDs
@@ -850,8 +1027,10 @@ hard-coded to `65535`, so changing that storage does not impose a native cap.
 Release 1.0 validators therefore load the cap from the exact signed policy,
 apply it before serialization, persist it with the intent, and audit the
 finalized applied vector using `max(value)/sum(values) ≤ cap/65535`. The testnet
-bootstrap uses `32768`, the smallest feasible cap with two positive recipients;
-production lowers it only as recipient breadth makes the requested cap feasible.
+bootstrap uses `32768`, the smallest feasible cap with two positive recipients; its
+feasibility check counts one pool per healthy operator. The approved mainnet policy
+also uses `32768`, which the treasury policy requires. On mainnet the check counts
+the treasury's two reserve recipients, so the cap holds with one operator.
 After half-up `u16` conversion, validators deterministically add the minimum
 rounding units to lower, positive entries in UID order until the same exact
 integer inequality holds; they never sign a rounded vector which exceeds it.
@@ -865,9 +1044,11 @@ and cumulative conviction by **summing finalized `Deposit` and `ConvictionAdded`
 NO's signed payout artifact for the previous epoch (`total_usage_bytes`, `total_users`), and
 reads the two‑component `rate(tier_n)` from the **signed policy's tier→rate schedule**
 (`WHITEPAPER.md` §7.3). The deposit must equal the artifact's usage priced at the NO's own
-tier; the weight prices the same usage at the conviction‑zero tier, so a NO that staked into
-a lower tier posts less α for the same usage and earns the same weight (the stake is a
-discount). Under the zero‑price launch mode (`zero_rate_action: equal_demand`, every rate 0)
+tier; the weight prices the same usage at the conviction‑zero tier, so below the per‑epoch cap a
+NO that staked into a lower tier posts less α for the same usage and earns the same weight (the
+stake is a discount). A capped NO's demand is truncated to `cap × rate(0) / rate(tier_n)` with one
+priced component, so at the cap a lower tier raises its weight. Under the zero‑price launch
+mode (`zero_rate_action: equal_demand`, every rate 0)
 no deposit is required or audited: each active NO's audit is recorded as `zero_price` /
 `zero_price_no_deposit_required` from chain state alone, every pool's implied demand is
 exactly 1, and `Q_n` alone steers the tail; the head, θ and the cede rule are unchanged.
@@ -901,11 +1082,102 @@ routable egress-IP-hashes (§11.1). Four rules keep the count honest:
   pool) **cannot** multiply credit — breadth of distinct routable score units is the
   only thing that moves the score.
 - **Self-weight mask + independent baseline, provisional until §10.** A validator's
-  head/tail vector zeroes its own UID and its own NO (§11.3); with an independent
-  validator majority (§1, §7.7) the κ-median tracks ground truth. Head rewards remain
+  head/tail vector zeroes its own UID and the NOs it lists in `controlled_no_ids`
+  (§11.3); a config may not list every configured NO, which would leave no weight.
+  With an independent validator majority (§1, §7.7) the κ-median tracks ground truth.
+  The SN25 launch has neither safeguard: its one UR validator is run by UR, lists no
+  NO and scores UR's own pool (owner decision, October 7). Head rewards remain
   **provisional** until the §10 structural defenses land; the `WHITEPAPER.md` §8.4
   score-dip protections (high `immunity_period`, the `score` EMA of §11.1, θ headroom)
   keep native deregistration churn from evicting a good top miner on one thin stretch.
+
+---
+
+## 12. Running against the operator list
+
+The operator list (`operators.yml`, published at `https://ur.xyz/operators.yml`; canonical
+copy `sn/operators.yml`) names each network operator's domain, API URL and Connect URL. It
+says where operators serve, never who is weighted or paid. The contract is
+`docs/OPERATOR-DISCOVERY.md` §4.
+
+**Flag mode: measure every listed operator.** This mode never steers.
+
+```
+validator run --all-operators [--operators-url=<url>] [--operators-refresh=<duration>]
+    [--auto-register --hotkey_seed_file=<path>] [--state_dir=<path>] ...
+```
+
+- The list is cached at `<state_dir>/operators.yml` and refreshed every
+  `--operators-refresh`, a Go duration of at least `1m` (default `1h`). The last good copy
+  stays in use while the list can't be fetched.
+- Each listed operator gets the existing measurement runner on its own URLs. Its state lives
+  in `<state_dir>/operators/<domain>/`: the network JWT `jwt`, the measurement key
+  `.validator.key`, and the client JWT `.validator.jwt`. The single-operator
+  `<state_dir>/.validator.key` and `~/.urnetwork/jwt` are not used.
+- List changes:
+  - a newly listed operator starts;
+  - a delisted one stops, and its state is kept;
+  - an operator whose URLs change restarts.
+- A failed runner restarts after 30 s, doubling to 10 min. One operator never stops another.
+- **Credentials without `--auto-register`.** An operator with no JWT logs
+  `operator <domain> is awaiting auth: validator auth --operator=<domain>` and is rechecked
+  every 5 minutes.
+- **Credentials with `--auto-register`.** The hotkey signs in through the operator's existing
+  wallet sign-in and writes the JWT. The pristine operator directory's measurement identity
+  is then provisioned (`validator/MEASUREMENT-CLIENT-AUTH.md`). The seed file must already
+  exist; it is never created.
+- Without `--auto-register`, a directory with no measurement identity is refused and retried,
+  and the log names the flags that provision it.
+- With `--operators-refresh`, the list report below is also written, to
+  `<state_dir>/operators-report.json`. In flag mode no operator is pinned.
+
+**Authenticating one operator.**
+
+```
+validator auth --operator=<domain> [--operators-url=<url>] [--state_dir=<path>]
+    ([<auth_code>] | --user_auth=<user_auth> [--password=<password>] | --hotkey_seed_file=<path>) [-f]
+```
+
+This resolves the operator from the list (cached at `<state_dir>/operators.yml`) and writes
+`<state_dir>/operators/<domain>/jwt`. `--hotkey_seed_file` signs in with the hotkey instead of
+an auth code or password. Without `--operator`, `validator auth` writes `~/.urnetwork/jwt` for
+`--api_url` as before.
+
+**Production mode: weights only from the signed config.**
+
+```
+validator run --config=<path> ... [--operators-refresh=<duration> [--operators-url=<url>] [--observe-unpinned-operators]]
+```
+
+- The list is used only with `--operators-refresh`. It is cached at
+  `<config.state_dir>/operators.yml`. It never changes the signed config's operators,
+  weights, evidence or protocol state; the release runs exactly as without it.
+- **Drift report.** It is logged at startup and at each list change, and written to
+  `<config.state_dir>/operators-report.json`. It covers:
+  - each pinned operator, matched to the list by normalized `api_url`, as listed or delisted,
+    with any `connect_url` mismatch;
+  - each listed operator the config does not pin.
+
+  The file has schema `urnetwork-validator-operator-list-report-v1` and mode 0600. It holds
+  at most 16 entries per section, plus an omitted count. It is operational output; nothing
+  reads it back.
+- **`--observe-unpinned-operators`** also runs the flag-mode runner for each listed operator
+  the config does not pin, for observation only, under
+  `<config.state_dir>/observed-operators/<domain>/`. It signs in and provisions with the
+  config's `hotkey_seed_file`. Its results never reach weights, evidence or production state.
+- **A rejected network sign-in.** When an operator rejects the network JWT a registration
+  carries (401: the sign-in expired, its credentials were rotated, or the network is gone),
+  the production operator latches with `code=network_sign_in_rejected` instead of
+  `authentication_recovery_required`, and native observation continues. Sign in again, write
+  the fresh network JWT to that operator's `network_jwt_file`, and restart. The measurement
+  runner reports `the network sign-in at <path> was rejected or has expired; run
+  `validator auth` to sign in again`, naming `validator auth --operator=<domain>` under
+  `--all-operators`. The validator never renews its own network JWTs. `validator auth` and
+  the hotkey sign-in write a network JWT under its registration owner lock, the lock a
+  miner's renewal and a measurement registration hold; a held lock is waited for up to
+  45 s, then reported as "a running miner or validator is using <path>".
+- Pinned operators keep their configured `network_jwt_file`. A missing one is reported as
+  before and never created.
 
 ---
 

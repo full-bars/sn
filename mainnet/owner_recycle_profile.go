@@ -1,5 +1,5 @@
 // Recycle authority observations retain exact finalized storage and authenticate
-// the470 call, enum, per-netuid rate key and state-based admin-window layout.
+// the reviewed call, enum, per-netuid rate key and state-based admin window.
 package main
 
 import (
@@ -110,7 +110,7 @@ func ownerRecycleCall(metadata *types.Metadata) ([2]byte, error) {
 			}
 			found++
 			if variant.Index != 80 || len(variant.Fields) != 2 || !variant.Fields[0].HasName || variant.Fields[0].Name != "netuid" || !rootTypeMatches(metadata, variant.Fields[0].Type, "u16", 0) || !variant.Fields[1].HasName || variant.Fields[1].Name != "recycle_or_burn" || variant.Fields[1].Type.Int64() != enumId.Int64() {
-				return result, errors.New("recycle call differs from reviewed470 netuid/enum encoding")
+				return result, errors.New("recycle call differs from reviewed netuid/enum encoding")
 			}
 			result = [2]byte{uint8(pallet.Index), uint8(variant.Index)}
 		}

@@ -12,6 +12,7 @@ import (
 	"errors"
 	"math/big"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -65,7 +66,7 @@ type evmPhasePlan struct {
 	MaximumAttempts     uint8                `json:"maximum_attempts"`
 	MaximumTotalWei     string               `json:"maximum_total_wei"`
 	Netuid              uint16               `json:"netuid"`
-	ReserveHotkey       string               `json:"reserve_hotkey"`
+	ReserveHotkey       string               `json:"reserve_hotkey,omitempty"`
 	Actions             []evmPhaseAction     `json:"actions"`
 }
 
@@ -105,6 +106,15 @@ func (self evmPhaseAction) unsigned() (*types.Transaction, error) {
 	return types.NewTx(&types.DynamicFeeTx{ChainID: big.NewInt(mainnetEvmChainId), Nonce: self.Nonce, To: self.To, Data: data, Value: value, Gas: self.Gas, GasFeeCap: fee, GasTipCap: tip, AccessList: types.AccessList{}}), nil
 }
 
+// The signing digest and exact unsigned bytes an external signer signs. Every
+// journal prints its envelope through this one encoding, so the same approved
+// action always prints the same bytes. Callers render only admitted actions.
+func (self evmPhaseAction) envelope() (string, string) {
+	tx, _ := self.unsigned()
+	raw, _ := tx.MarshalBinary()
+	return types.LatestSignerForChainID(big.NewInt(mainnetEvmChainId)).Hash(tx).Hex(), "0x" + hex.EncodeToString(raw)
+}
+
 // Public signed bytes are decoded, sender-recovered and compared to every
 // approved envelope field. Alternate valid signatures cannot replace custody.
 func (self evmPhaseAction) signed(raw []byte) (*types.Transaction, error) {
@@ -131,32 +141,53 @@ func (self evmPhaseAction) signed(raw []byte) (*types.Transaction, error) {
 	return &tx, nil
 }
 
-// Typed JSON and a dedicated domain prevent native approval reuse.
+// Typed JSON and a dedicated domain prevent native approval reuse. Each phase
+// has its own domain, so one phase's approval never verifies the other's plan.
 func (self evmPhasePlan) signingBytes() ([]byte, error) {
 	raw, err := json.Marshal(self)
-	return append([]byte(evmPhaseApprovalSchema+"\x00"), raw...), err
+	domain := evmPhaseApprovalSchema
+	if self.settlementV2() {
+		domain = evmPhase2ApprovalSchema
+	}
+	return append([]byte(domain+"\x00"), raw...), err
 }
 
 // The plan hash identifies all graph authority and does not depend on a file's
 // whitespace or an imported signature. Raw artifact identity is separately pinned.
 func (self evmPhasePlan) hash() string {
 	raw, _ := self.signingBytes()
+	domain := evmPhaseSchema
+	if self.settlementV2() {
+		domain = evmPhase2Schema
+	}
 	return rootObjectHash(struct {
 		Domain string
 		Bytes  []byte
-	}{Domain: evmPhaseSchema, Bytes: raw})
+	}{Domain: domain, Bytes: raw})
 }
 
 // Unsigned review enforces the same finite structure, identities, fee envelope
 // and key encoding. This check alone never admits an action owner or journal.
 func (self evmPhaseConfig) validateStructure() error {
 	p := self.Plan
-	if self.Schema != evmPhaseConfigSchema || p.Schema != evmPhaseSchema || !planLabel(p.DeploymentId) || p.Network.NativeChain == "" || p.Network.EvmChainId != mainnetEvmChainId || !rootCanonicalHash(p.Network.GenesisHash) || p.Netuid != 25 || !rootCanonicalHash(p.ReserveHotkey) || !planLabel(p.CustodyId) || !planSha256(p.CustodyFenceHash) || !planSha256(p.CutoverEvidenceHash) || !planSha256(p.SourceLockHash) || !planSha256(p.Artifacts.Sha256) || !bootstrapRootAbsolutePath(p.Artifacts.Path) || !bootstrapRootAbsolutePath(p.RunDirectory) || p.StartNativeNumber == 0 || !rootCanonicalHash(p.StartNativeHash) || p.ValidThroughNative <= p.StartNativeNumber || p.ValidThroughNative-p.StartNativeNumber > 7200 || p.MaximumAttempts == 0 || p.MaximumAttempts > 8 || len(p.Actions) == 0 || len(p.Actions) > 9 {
+	configSchema, planSchema, reserveHotkey, minimum := evmPhaseConfigSchema, evmPhaseSchema, rootCanonicalHash(p.ReserveHotkey), 1
+	ids := []string{"reserve-create", "vault-create", "coordinator-create", "escrow-register", "proxy-create", "reserve-link", "vault-link", "evidence-create", "evidence-anchor"}
+	if p.settlementV2() {
+		// The separate settlement v2 graph has no reserve and approves all five
+		// actions, and may add the claim batcher's CREATE.
+		configSchema, planSchema, reserveHotkey, minimum, ids = evmPhase2ConfigSchema, evmPhase2Schema, p.ReserveHotkey == "", len(evmV2Actions), append(evmV2ActionIds(), evmV2BatcherAction.id)
+	}
+	if self.Schema != configSchema || p.Schema != planSchema || !planLabel(p.DeploymentId) || p.Network.NativeChain == "" || p.Network.EvmChainId != mainnetEvmChainId || !rootCanonicalHash(p.Network.GenesisHash) || p.Netuid != 25 || !reserveHotkey || !planLabel(p.CustodyId) || !planSha256(p.CustodyFenceHash) || !planSha256(p.CutoverEvidenceHash) || !planSha256(p.SourceLockHash) || !planSha256(p.Artifacts.Sha256) || !bootstrapRootAbsolutePath(p.Artifacts.Path) || !bootstrapRootAbsolutePath(p.RunDirectory) || p.StartNativeNumber == 0 || !rootCanonicalHash(p.StartNativeHash) || p.ValidThroughNative <= p.StartNativeNumber || p.ValidThroughNative-p.StartNativeNumber > 7200 || p.MaximumAttempts == 0 || p.MaximumAttempts > 8 || len(p.Actions) < minimum || len(p.Actions) > len(ids) {
 		return errors.New("contract phase lacks exact identity, scope or finite bounds")
 	}
 	profile := p.Runtime
 	if !mainnetRuntimeCodecSource(profile.RuntimeSourceCommit) || profile.RuntimeVersion.SpecName == "" || profile.RuntimeVersion.SpecVersion == 0 || !rootCanonicalHash(profile.RuntimeCodeHash) || !rootCanonicalHash(profile.RuntimeMetadataHash) {
 		return errors.New("contract phase runtime/source approval is incomplete")
+	}
+	// The settlement v2 graph binds a reviewed source to its own runtime
+	// version. The original phase's recorded approvals keep their pairs.
+	if p.settlementV2() && !mainnetRuntimeCodecSourceVersion(profile) {
+		return errors.New("contract phase runtime version differs from the one its source commit was reviewed for")
 	}
 	if p.Route.ReadRetrySeconds < 60 || p.Route.ReadRetrySeconds > 900 || p.Route.SendTimeoutSeconds == 0 || p.Route.SendTimeoutSeconds > 60 {
 		return errors.New("contract phase transport bounds are invalid")
@@ -164,7 +195,6 @@ func (self evmPhaseConfig) validateStructure() error {
 	if err := p.Route.validate(); err != nil {
 		return err
 	}
-	ids := []string{"reserve-create", "vault-create", "coordinator-create", "escrow-register", "proxy-create", "reserve-link", "vault-link", "evidence-create", "evidence-anchor"}
 	total := new(big.Int)
 	seen := map[string]bool{}
 	for i, action := range p.Actions {
@@ -187,7 +217,7 @@ func (self evmPhaseConfig) validateStructure() error {
 		return errors.Join(errors.New("contract phase exceeds original total cost reservation"), err)
 	}
 	if p.Actions[0].To != nil || p.Actions[0].ValueWei != "0" {
-		return errors.New("reserve action must be a zero-value CREATE")
+		return errors.New("first contract action must be a zero-value CREATE")
 	}
 	key, err := rootReceiptHex(self.ApprovalPublicKey, 32)
 	if err != nil || len(key) != 32 {
@@ -222,27 +252,31 @@ func (self evmPhaseConfig) validate() error {
 
 // Selection preserves the whole approved graph. A vault projection retains its
 // reserve prerequisite without altering any signed plan field or legacy hash.
+// The settlement v2 graph uses Vault, Escrow, Coordinator and Proxy for vault2,
+// its escrow registration, the STSettlement2 implementation and the proxy.
 type evmCreatePlan struct {
-	Config              evmPhaseConfig
-	Address             common.Address
-	Runtime             []byte
-	Getters             []contractGetter
-	Storage             []contractStorageWord
-	ActionIndex         int
-	Reserve             *evmCreatePlan
-	Vault               *evmCreatePlan
-	Coordinator         *evmCreatePlan
-	Escrow              *evmCreatePlan
-	Proxy               *evmCreatePlan
-	ReserveLink         *evmCreatePlan
-	VaultLink           *evmCreatePlan
-	Prerequisites       []evmActionRecord
-	VaultConstructor    *contractVaultConstructor
-	EscrowRegistration  *contractEscrowRegistration
-	ProxyConstructor    *contractProxyConstructor
-	ReserveBinding      *contractReserveBinding
-	VaultBinding        *contractVaultBinding
-	EvidenceConstructor *contractEvidenceConstructor
+	Config                 evmPhaseConfig
+	Address                common.Address
+	Runtime                []byte
+	Getters                []contractGetter
+	Storage                []contractStorageWord
+	ActionIndex            int
+	Reserve                *evmCreatePlan
+	Vault                  *evmCreatePlan
+	Coordinator            *evmCreatePlan
+	Escrow                 *evmCreatePlan
+	Proxy                  *evmCreatePlan
+	ReserveLink            *evmCreatePlan
+	VaultLink              *evmCreatePlan
+	Prerequisites          []evmActionRecord
+	VaultConstructor       *contractVaultConstructor
+	EscrowRegistration     *contractEscrowRegistration
+	ProxyConstructor       *contractProxyConstructor
+	ReserveBinding         *contractReserveBinding
+	VaultBinding           *contractVaultBinding
+	EvidenceConstructor    *contractEvidenceConstructor
+	Vault2Constructor      *contractVault2Constructor
+	Settlement2Initializer *contractSettlement2Initializer
 }
 
 // A validation call owns its memo tables. Pointer identity preserves distinct
@@ -255,6 +289,9 @@ type evmSelectionValidation struct {
 // Only implemented selections may choose a journal or index approved actions.
 // Later invocations always recheck the current inputs and their exact hashes.
 func (self evmCreatePlan) validateSelection() error {
+	if self.Config.Plan.settlementV2() {
+		return self.validateV2Selection()
+	}
 	validation := evmSelectionValidation{configPlanHashes: map[*evmCreatePlan]string{}, validatedPlans: map[*evmCreatePlan]bool{}}
 	return validation.validate(&self)
 }
@@ -402,6 +439,9 @@ func (self *evmCreatePlan) validateSelectionWith(validation *evmSelectionValidat
 
 // The finite implemented prefix has at most seven predecessors, in graph order.
 func (self evmCreatePlan) priorPlan(index int) evmCreatePlan {
+	if self.Config.Plan.settlementV2() {
+		return *self.v2Prior()[index]
+	}
 	if index == 0 {
 		return *self.Reserve
 	}
@@ -425,6 +465,9 @@ func (self evmCreatePlan) priorPlan(index int) evmCreatePlan {
 
 // Completion names identify only the selected contract, never the whole graph.
 func (self evmCreatePlan) completedStatus() string {
+	if self.Config.Plan.settlementV2() {
+		return evmV2ActionAt(self.ActionIndex).completed
+	}
 	if self.ActionIndex == 7 {
 		return "evidence-created-unanchored"
 	}
@@ -451,6 +494,9 @@ func (self evmCreatePlan) completedStatus() string {
 
 // Call failure consumes the original nonce without suggesting another CREATE.
 func (self evmCreatePlan) revertedStatus() string {
+	if self.Config.Plan.settlementV2() {
+		return evmV2ActionAt(self.ActionIndex).reverted
+	}
 	if self.ActionIndex == 6 {
 		return "vault-binding-reverted-nonce-consumed"
 	}
@@ -463,9 +509,26 @@ func (self evmCreatePlan) revertedStatus() string {
 	return "create-reverted-nonce-consumed"
 }
 
+// Diagnostics name only the selected contract or call.
+func (self evmCreatePlan) actionName() string {
+	if self.Config.Plan.settlementV2() {
+		return evmV2ActionAt(self.ActionIndex).name
+	}
+	return []string{"reserve", "vault", "coordinator implementation", "escrow registration", "initialized proxy", "reserve recorder binding", "vault coordinator binding", "unanchored validator evidence"}[self.ActionIndex]
+}
+
+// Approved ids fix each action's kind. The settlement v2 graph shares the
+// escrow registration, initialized proxy and vault binding receipt kinds.
+func (self evmCreatePlan) actionIs(ids ...string) bool {
+	return slices.Contains(ids, self.Config.Plan.Actions[self.ActionIndex].Id)
+}
+
 // Explicit vault selection validates its sealed reservation without making
 // legacy reserve-only commands depend on unimplemented descendant semantics.
 func selectEvmCreatePlan(ctx context.Context, reserve evmCreatePlan, actionId, configPath string) (evmCreatePlan, error) {
+	if reserve.Config.Plan.settlementV2() {
+		return selectEvmV2Plan(ctx, reserve.Config, actionId, configPath)
+	}
 	if actionId == "reserve-create" {
 		return reserve, nil
 	}
@@ -720,6 +783,9 @@ func loadEvmCreatePlan(ctx context.Context, path string) (evmCreatePlan, error) 
 	}
 	if err := bootstrapRootDirectory(config.Plan.RunDirectory); err != nil {
 		return evmCreatePlan{}, err
+	}
+	if config.Plan.settlementV2() {
+		return selectEvmV2Plan(ctx, config, evmV2Actions[0].id, path)
 	}
 	return buildEvmCreatePlan(ctx, config, path)
 }

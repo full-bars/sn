@@ -84,27 +84,31 @@ func TestMonitorOutputBlockedSinkPreservesRoleFilesAndShutdown(t *testing.T) {
 			return false
 		}
 	}}
+	args := fixture.args(url)
+	ctx = monitorTestStorageContext(t, ctx, args)
 	done := make(chan int, 1)
 	go func() {
-		done <- runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, sink, fixture.clock.now, hooks)
+		defer close(done)
+		done <- runMainWithMonitorHooks(ctx, args, sink, sink, fixture.clock.now, hooks)
 	}()
+	t.Cleanup(func() { joinMonitorTestWorker(t, cancel, done) })
 	seen := map[string]bool{}
 	for len(seen) < 2 {
-		seen[<-sampled] = true
+		seen[monitorTestEvent(t, done, sampled)] = true
 	}
-	<-sink.entered
-	<-chainEntered
+	monitorTestEvent(t, done, sink.entered)
+	monitorTestEvent(t, done, chainEntered)
 	// More than the independent queue allowance forces drops for alpha.
 	for count := 0; count < 5; count++ {
-		resume["alpha"] <- struct{}{}
-		if <-sampled != "alpha" {
+		resumeMonitorTestWorker(t, done, resume["alpha"])
+		if monitorTestEvent(t, done, sampled) != "alpha" {
 			t.Fatal("unexpected role advanced")
 		}
 	}
 	fixture.clock.seconds.Add(10)
 	monitorServicesTestWrite(t, fixture.policy.Validators[1].ProgressFile, monitorServicesTestRecord(fixture.clock.now(), 2))
-	resume["beta"] <- struct{}{}
-	if <-sampled != "beta" {
+	resumeMonitorTestWorker(t, done, resume["beta"])
+	if monitorTestEvent(t, done, sampled) != "beta" {
 		t.Fatal("healthy role failed to advance")
 	}
 	_, alphaPath := monitorValidatorPaths(fixture.checkpointPath, fixture.metricsPath, "alpha")
@@ -117,11 +121,11 @@ func TestMonitorOutputBlockedSinkPreservesRoleFilesAndShutdown(t *testing.T) {
 		t.Fatal("log congestion starved independent role file", beta)
 	}
 	cancel()
-	if exit := <-done; exit != 0 {
+	if exit := monitorTestEvent(t, nil, done); exit != 0 {
 		t.Fatal("diagnostic outage changed core command result", exit)
 	}
-	<-sink.left
-	<-chainLeft
+	monitorTestEvent(t, nil, sink.left)
+	monitorTestEvent(t, nil, chainLeft)
 }
 
 // An early file admission failure closes the real exporter after cleanup even
@@ -133,6 +137,8 @@ func TestMonitorOutputEarlyAdmissionStillJoinsBlockedSink(t *testing.T) {
 		t.Fatal(err)
 	}
 	sink := &monitorBlockedOutput{entered: make(chan struct{}), left: make(chan struct{})}
+	// The chain worker runs beside the failing role; its RPC waits locally.
+	url, _, _ := monitorServicesBlockedChain(t)
 	closed := false
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
@@ -150,7 +156,7 @@ func TestMonitorOutputEarlyAdmissionStillJoinsBlockedSink(t *testing.T) {
 			cancel()
 		}
 	}}
-	if exit := runMonitorStorageTestWithHooks(t, ctx, fixture.args("http://rpc.example"), sink, sink, fixture.clock.now, hooks); exit != 3 || !closed {
+	if exit := runMonitorStorageTestWithHooks(t, ctx, fixture.args(url), sink, sink, fixture.clock.now, hooks); exit != 3 || !closed {
 		t.Fatal("early failure leaked admitted owners", exit, closed)
 	}
 	<-sink.entered

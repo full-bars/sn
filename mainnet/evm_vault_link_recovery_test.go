@@ -23,7 +23,7 @@ func TestEvmVaultLinkRequiresCompletedReserveLink(t *testing.T) {
 		if _, code, diagnostic := f.command("apply", "--action", "vault-link"); code != 3 {
 			t.Fatalf("%s reserve binding admitted vault binding: %d %s", stage, code, diagnostic)
 		}
-		if _, err := os.Lstat(filepath.Join(f.config.Plan.RunDirectory, evmVaultLinkStateFile) + ".lock"); !errors.Is(err, os.ErrNotExist) || !maps.Equal(counts, f.counts) {
+		if err := f.unclaimed(evmVaultLinkStateFile); err != nil || !maps.Equal(counts, f.counts) {
 			t.Fatalf("%s reserve binding opened vault custody: %v", stage, err)
 		}
 	}
@@ -133,7 +133,7 @@ func TestEvmVaultLinkFencesSixPredecessorCheckpoints(t *testing.T) {
 				t.Fatal("pending storage selector released the historical checkpoint barrier")
 			}
 			pendingObserved = false
-			if _, code, diagnostic := f.command("resume", "--action", "vault-link", "--online", "--submit"); code != 1 || !changed || refresh && !pendingObserved || !strings.Contains(diagnostic, "ancestry") || len(f.writes) != 6 {
+			if _, code, diagnostic := f.command("resume", "--action", "vault-link", "--online", "--submit"); code != 1 || !changed || refresh && !pendingObserved || !strings.Contains(diagnostic, evmTestCheckpointRefusal(f, number, "ancestry")) || len(f.writes) != 6 {
 				t.Fatalf("binding checkpoint %d refresh=%v accepted: %d %s", number, refresh, code, diagnostic)
 			}
 			f.override = nil
