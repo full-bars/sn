@@ -961,6 +961,14 @@ b1_hotswap() {
         client_skip hotswap-handoff hotswap-metrics-rebind
         return 0
     fi
+    # A handoff needs a supervisor to re-exec into. The distro container cells
+    # have no service manager, where the trigger is acked but nothing can
+    # complete it; the systemd cell asserts the hotswap surface instead.
+    if [ ! -d /run/systemd/system ] && ! command -v rc-service > /dev/null 2>&1; then
+        record SKIP-UNSUPPORTED hotswap-handoff "no service manager in this image: a handoff needs a supervisor to complete"
+        record SKIP-UNSUPPORTED hotswap-metrics-rebind "no handoff to assert"
+        return 0
+    fi
     start_live_miner miner-hotswap
     hs=""
     if [ "$LIVE" = "1" ]; then
