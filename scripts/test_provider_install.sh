@@ -283,6 +283,50 @@ test_pending_overrides_append_to_empty_array() {
 }
 test_pending_overrides_append_to_empty_array
 
+# read_control_value must read the queue/state files of the home the tuning
+# commands WRITE to (queue_target_home), not $HOME. A root-run tuning command
+# (the documented OpenRC path) queues into the service user's home while
+# $HOME is root's, so reading $HOME/.urnetwork reported "off" for a setting
+# that is queued — or already persisted — for the provider.
+test_read_control_value_uses_queue_target_home() {
+    local provider_home root_home
+    provider_home=$(mktemp -d)
+    root_home=$(mktemp -d)
+    mkdir -p "$provider_home/.urnetwork" "$root_home/.urnetwork"
+
+    # The provider's queue says "on"; root's own (stale) queue says "off".
+    printf '[\n  {"op": "set", "key": "ramlogs", "value": "on"}\n]\n' \
+        > "$provider_home/.urnetwork/pending_overrides.json"
+    printf '[\n  {"op": "set", "key": "ramlogs", "value": "off"}\n]\n' \
+        > "$root_home/.urnetwork/pending_overrides.json"
+
+    local saved_home="$HOME"
+    local orig_queue_target_home
+    orig_queue_target_home="$(declare -f queue_target_home)"
+    HOME="$root_home"
+    queue_target_home() { printf '%s' "$provider_home"; }
+
+    assert_eq "on" "$(read_control_value ramlogs)" \
+        "read_control_value reads the queued value from queue_target_home, not root's \$HOME"
+
+    # The persisted fallback must consult the same home.
+    rm -f "$provider_home/.urnetwork/pending_overrides.json"
+    printf '{\n  "ramlogs": "on"\n}\n' > "$provider_home/.urnetwork/provider_state.json"
+    printf '{\n  "ramlogs": "off"\n}\n' > "$root_home/.urnetwork/provider_state.json"
+    assert_eq "on" "$(read_control_value ramlogs)" \
+        "read_control_value falls through to queue_target_home's provider_state.json"
+
+    # A value that exists only in $HOME must not leak in.
+    rm -f "$provider_home/.urnetwork/provider_state.json"
+    assert_eq "" "$(read_control_value ramlogs)" \
+        "read_control_value does not read root's \$HOME state"
+
+    eval "$orig_queue_target_home"
+    HOME="$saved_home"
+    rm -rf "$provider_home" "$root_home"
+}
+test_read_control_value_uses_queue_target_home
+
 # --- TESTS: PATH setup (symlinks for non-interactive shells and root, rc blocks) ---
 path_test_env() {
     PT_HOME="$(mktemp -d)"

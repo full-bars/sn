@@ -84,7 +84,13 @@ logdir="/var/log/%[1]s"
         echo "$_pid"
         return 0
     fi
-    _pid="$(ps -u "${%[1]s_user}" -o pid=,args= 2>/dev/null | grep -F '%[4]s provide' | awk '{print $1; exit}')"
+    # -U selects processes by username; -u would only select the output
+    # format. The match is done in awk on the argv fields on purpose: a
+    # "grep -F '<binary> provide'" in this same pipeline carries the search
+    # string in its own argv, and "ps -U <service user>" lists that grep when
+    # the caller is the service user. The grep then matches itself and a
+    # stopped provider reports as running (and start skips a real start).
+    _pid="$(ps -U "${%[1]s_user}" -o pid=,args= 2>/dev/null | awk -v b='%[4]s' '$2 == b && $3 == "provide" {print $1; exit}')"
     [ -n "$_pid" ] || return 1
     echo "$_pid"
 }
@@ -210,9 +216,22 @@ func providerBinaryBasename(binary string) string {
 // process path, and a stopped install has no process to read credentials
 // from, so the rc.conf knob is the only honest answer.
 func bsdRcConfUser(service string) string {
-	out, err := exec.Command("sysrc", "-n", service+"_user").CombinedOutput()
+	out, err := exec.Command("sysrc", bsdRcConfUserArgs(service)...).CombinedOutput()
 	if err != nil {
 		return ""
 	}
 	return strings.TrimSpace(string(out))
+}
+
+// bsdRcConfUserArgs is the sysrc query behind bsdRcConfUser, split out so the
+// service scope is asserted by a test on any platform.
+//
+// -s makes sysrc read the service's own rc.conf.d overrides, i.e.
+// /etc/rc.conf.d/<service> and /usr/local/etc/rc.conf.d/<service>, the same
+// files load_rc_config consults. Without it a query reads only
+// /etc/rc.conf (and .local) and an operator's service-specific _user override
+// is invisible, so stopped-provider discovery lands on the wrong user and
+// state directory.
+func bsdRcConfUserArgs(service string) []string {
+	return []string{"-s", service, "-n", service + "_user"}
 }
