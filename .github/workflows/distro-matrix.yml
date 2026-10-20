@@ -886,7 +886,7 @@ jobs:
                 zypper --non-interactive install curl || zypper --non-interactive install netcat-openbsd; \
                 zypper clean -a; \
               elif command -v pacman >/dev/null 2>&1; then \
-                pacman -Sy --noconfirm --needed systemd dbus procps-ng util-linux; \
+                pacman -Syu --noconfirm --needed systemd systemd-sysvcompat dbus procps-ng util-linux; \
                 pacman -S --noconfirm --needed curl || pacman -S --noconfirm --needed gnu-netcat; \
               else echo "no supported package manager"; exit 1; fi; \
               command -v curl >/dev/null 2>&1 || command -v nc >/dev/null 2>&1 || echo "NOTE: neither curl nor netcat present; the harness uses urnet-tools over the socket"; \
@@ -1063,8 +1063,10 @@ jobs:
           JWT_FIXTURE: ${{ runner.temp }}/fixtures/jwt
         run: |
           $ErrorActionPreference = "Stop"
-          $home = Join-Path $env:RUNNER_TEMP "urnet-smoke-home"
-          $state = Join-Path $home ".urnetwork"
+          # $HOME is a read-only PowerShell automatic variable; assigning to it
+          # (case-insensitively) aborts the step before anything runs.
+          $smokeHome = Join-Path $env:RUNNER_TEMP "urnet-smoke-home"
+          $state = Join-Path $smokeHome ".urnetwork"
           $installdir = Join-Path $state "provider"
           New-Item -ItemType Directory -Force -Path $installdir | Out-Null
           # Run through the standard install-shaped path (urnetwork.exe under
@@ -1073,7 +1075,7 @@ jobs:
           Copy-Item ".\out\miner.exe" (Join-Path $installdir "urnetwork.exe") -Force
           Copy-Item $env:JWT_FIXTURE (Join-Path $state "jwt") -Force
           Set-Content -Path (Join-Path $state "network.json") -Value '{"api_url":"https://api.bringyour.com","connect_url":"wss://connect.bringyour.com"}'
-          $env:USERPROFILE = $home
+          $env:USERPROFILE = $smokeHome
           $sock = Join-Path $state "provider.sock"
           $log = Join-Path $env:RUNNER_TEMP "miner.log"
           $err = Join-Path $env:RUNNER_TEMP "miner.err"
@@ -1177,7 +1179,13 @@ jobs:
       - name: Unit tests
         env:
           CGO_ENABLED: "0"
-        run: go test -count=1 -timeout 900s ./internal/urnettools/
+          # macOS's default TMPDIR (/var/folders/...) nests the test name under
+          # it and blows the ~104-byte AF_UNIX sun_path limit, so every control
+          # socket test fails with "bind: invalid argument" before it runs.
+          TMPDIR: /tmp/mst
+        run: |
+          mkdir -p /tmp/mst
+          go test -count=1 -timeout 900s ./internal/urnettools/
 
       - name: Mint the disposable CI JWT (refuses the production account)
         env:
@@ -1326,6 +1334,9 @@ jobs:
             else echo "Build failed after 3 attempts"; exit 1; fi
           done
           file out/miner
+          # The JWT mint below runs on THIS runner, not in the VM. Minting with
+          # out/miner (a FreeBSD ELF) segfaults on Linux, so build a native one.
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o out/mint-miner ./cli/miner/
           # TODO(freebsd-urnettools): the FreeBSD port of internal/urnettools is
           # not in this tree yet (no discover_freebsd.go). When it lands, this
           # cell builds urnet-tools too and the harness asserts the discovery
@@ -1347,7 +1358,7 @@ jobs:
           set -euo pipefail
           chmod +x out/miner
           mkdir -p /tmp/mint out/fixtures
-          HOME=/tmp/mint ./out/miner auth \
+          HOME=/tmp/mint ./out/mint-miner auth \
             --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
             --api_url=https://api.bringyour.com -f >/tmp/mint/auth.log 2>&1 || true
           test -s /tmp/mint/.urnetwork/jwt || {
