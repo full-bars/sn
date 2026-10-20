@@ -97,6 +97,9 @@ func TestFreeBSDResolveServiceUserPrecedence(t *testing.T) {
 // never come back as an empty string, which would render an rc.d script with
 // an empty user= and silently start the provider as root.
 func TestFreeBSDResolveServiceUserNeverEmpty(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("service-user resolution differs off linux (macOS resolves the login user)")
+	}
 	skipWithoutPOSIXShell(t)
 	b, err := os.ReadFile("../../scripts/Provider_Install_FreeBSD.sh")
 	if err != nil {

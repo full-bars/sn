@@ -1,3 +1,5 @@
+//go:build linux
+
 package urnettools
 
 // Tests for the unitless-provider control work: dedup of duplicate RUNNING

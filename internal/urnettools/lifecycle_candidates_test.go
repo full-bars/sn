@@ -397,6 +397,9 @@ func TestLifecycleCandidates_DockerCLIAbsentExplicitTargetCleanFallthrough(t *te
 // On the narrowed auto-pick path the printed count comes from the POOL SIZE:
 // it must stay the systemd-only count even when containers exist on the box.
 func TestLifecycleCmds_NarrowedNoteCountExcludesDocker(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("systemd pool accounting is linux-only")
+	}
 	cur := currentUserName()
 	mine := Provider{User: cur, Unit: "urnetwork.service", Network: "mynet", StateDir: "/home/x/.urnetwork", Running: true}
 	others := Provider{User: "otheruser", Unit: "provider_beta-custom", Network: "n2", StateDir: "/home/o/.urnetwork", Running: true}
