@@ -52,12 +52,19 @@ func chooseNetworkCmdIn(opts docopt.Opts, dir string) error {
 		return nil
 	}
 
+	// The switch notice is about credentials issued by a DIFFERENT network, so
+	// it only belongs on a command that actually moves the effective api_url.
+	// Each branch compares before it writes or resets, while the previous
+	// selection is still on disk: resetting with nothing saved and re-saving
+	// the same URL pair leave the network where it was, and a false notice
+	// costs a single-use auth code.
 	if reset, _ := opts.Bool("--reset"); reset {
+		changed := apiUrlChanged(dir, DefaultApiUrl)
 		if err := resetNetworkConfig(dir); err != nil {
 			return fmt.Errorf("failed to reset network: %w", err)
 		}
 		fmt.Println("network reset to the main network")
-		if notice := networkSwitchNotice(dir); notice != "" {
+		if notice := networkSwitchNotice(dir, changed); notice != "" {
 			fmt.Println(notice)
 		}
 		return nil
@@ -72,6 +79,7 @@ func chooseNetworkCmdIn(opts docopt.Opts, dir string) error {
 		return fmt.Errorf("missing <connect_url>: %w", err)
 	}
 
+	changed := apiUrlChanged(dir, apiUrl)
 	if err := writeNetworkConfig(dir, apiUrl, connectUrl); err != nil {
 		return fmt.Errorf("network not saved: %w", err)
 	}
@@ -79,7 +87,7 @@ func chooseNetworkCmdIn(opts docopt.Opts, dir string) error {
 	if warning := insecureNetworkWarning(apiUrl, connectUrl); warning != "" {
 		fmt.Println(warning)
 	}
-	if notice := networkSwitchNotice(dir); notice != "" {
+	if notice := networkSwitchNotice(dir, changed); notice != "" {
 		fmt.Println(notice)
 	}
 	return nil
