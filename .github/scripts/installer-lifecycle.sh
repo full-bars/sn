@@ -57,8 +57,18 @@ printf 'order seed: %s\n' "$SEED"
 # shuffle: stdin lines -> same lines in a seeded random order (POSIX awk; no
 # shuf, which busybox does not reliably provide).
 shuffle() {
-    awk -v seed="$SEED" 'BEGIN { srand(seed) } { printf "%.6f\t%s\n", rand(), $0 }' \
-        | sort -n | cut -f 2-
+    if command -v awk > /dev/null 2>&1; then
+        awk -v seed="$SEED" 'BEGIN { srand(seed) } { printf "%.6f\t%s\n", rand(), $0 }' \
+            | sort -n | cut -f 2-
+    else
+        # A minimal image may ship no awk (Tumbleweed's base image does not).
+        # Fall back to a seeded rotation so the pass order still varies and the
+        # run does not die on a tool the harness does not actually need.
+        case $((SEED % 2)) in
+            0) cat ;;
+            *) sed '1!G;h;$!d' ;;
+        esac
+    fi
 }
 
 mkdir -p "$OUT_DIR"
