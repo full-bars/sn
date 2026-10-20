@@ -1642,7 +1642,9 @@ jobs:
           row "portable-core.yml" "informational" "restored: cross-OS build/vet + native OS tests"
           echo
           echo "MODE: report — the table above and this job's exit status gate this"
-          echo "workflow only. Release creation is not blocked today."
+          echo "workflow only. Release creation is gated separately, by the installer"
+          echo "tier check in release.yml (RELEASE_GATE_MODE=report until two clean"
+          echo "tag runs, then block)."
           if [ "$fail" = "1" ]; then
             echo "::error::one or more non-conditional distro-matrix cells failed"
             exit 1
