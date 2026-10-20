@@ -15,8 +15,13 @@ func claimStoreTestStore(t *testing.T, entries map[string]string) {
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	t.Setenv("URNETWORK_STATE_DIR", "")
-	if err := os.MkdirAll(filepath.Join(home, ".urnetwork"), 0o700); err != nil {
+	// os.UserHomeDir reads USERPROFILE on Windows, not HOME.
+	t.Setenv("USERPROFILE", home)
+	stateDir := filepath.Join(home, ".urnetwork")
+	// The override is what actually isolates the store on every OS; HOME alone
+	// leaves a Windows run pointing at the developer's real ~/.urnetwork.
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+	if err := os.MkdirAll(stateDir, 0o700); err != nil {
 		t.Fatal(err)
 	}
 	path, err := providerStatePath(".client_jwts.json")

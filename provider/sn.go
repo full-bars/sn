@@ -670,6 +670,13 @@ func runClaim(ctx context.Context, opts docopt.Opts) error {
 	if err != nil {
 		return fmt.Errorf("network config error: %w", err)
 	}
+	// Every request below carries the token, starting with the epoch lookup.
+	// Refuse cleartext to a remote host once, here, instead of only inside
+	// fetchPoolClaim after the token has already been sent.
+	apiUrl, err = hotkeywallet.SecureApiUrl(apiUrl)
+	if err != nil {
+		return err
+	}
 
 	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
 
