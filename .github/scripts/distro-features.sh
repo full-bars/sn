@@ -62,7 +62,7 @@
 # never pushes, tags, opens PRs, comments, or reruns workflows. It refuses to
 # run at all when its effective state dir, HOME, or an ambient
 # URNETWORK_STATE_DIR equals, contains, or lives inside the operator's real
-# state (/home/klets/.urnetwork) - client-level urnet-tools commands resolve
+# state (~/.urnetwork) - client-level urnet-tools commands resolve
 # their target through discovery, which attributes a provider's state dir to
 # the KERNEL owner's passwd home and falls back to <passwd home>/.urnetwork,
 # so an unadapted host makes them act on the operator's real provider. Every
@@ -333,7 +333,8 @@ adapt_home() {
 # state it uses overlaps that real state; the pinning below disables every
 # client-level check unless the passwd home IS the sandbox HOME.
 
-OPERATOR_STATE="/home/klets/.urnetwork"
+OPERATOR_HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6)"
+OPERATOR_STATE="${OPERATOR_HOME:-$HOME}/.urnetwork"
 
 canon_dir() {
     # Physical path for $1: resolve symlinks in the longest existing prefix

@@ -16,7 +16,7 @@ package provider
 //
 // ADAPTATION NOTES (v2026 migration):
 // - Ported from main to package provider.
-// - connect.* symbols checked against v2026 (/home/klets/h3-workspace/connect/):
+// - connect.* symbols checked against v2026 (the v2026 connect checkout):
 //   - connect.BringYourApi, connect.ClientStrategy, connect.SnSetWalletArgs,
 //     connect.SnPoolClaimArgs, connect.SnEpochResult, connect.NewEventWithContext,
 //     connect.NewClientStrategyWithDefaults are present in v2026.

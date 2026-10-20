@@ -19,7 +19,7 @@ import (
 // proxy_manager.go is the P1(a) manager that owns the desired proxy set and
 // produces the []*connect.ProxySettings the miner's provide loop launches.
 //
-// Design (see /home/klets/ur/scratch/sn-backup/one-program-plan.md section 2):
+// Design (see the one-program design notes, section 2):
 // the manager keeps the v33 two-store model - proxy.state (identity-keyed
 // desired/health bookkeeping) and proxy_url.json (URL-source cache) - while the
 // miner's legacy <state>/proxy internal config stays the operator's store for

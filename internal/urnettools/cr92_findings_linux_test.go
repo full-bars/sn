@@ -87,7 +87,8 @@ func TestDiscoverOpenRCServiceKeepsStoppedRecordForOtherUser(t *testing.T) {
 	// loop under test. The stub must actually declare command=/command_user=:
 	// the identity is parsed out of the init script and the function returns
 	// early when command is empty. userHomeDir reads the REAL /etc/passwd with no
-	// seam, so command_user must be a user that exists here — klets does, and
+	// seam, so command_user must be a user that exists here — the current user
+	// does, and
 	// it is not the "other user" the first case needs.
 	serviceUser := currentTestUser(t)
 	otherUser := serviceUser + "-other"

@@ -58,7 +58,7 @@
 # JWT contract: exactly like the release matrix. In CI the job mints a
 # disposable token from GAUNTLET_USER/GAUNTLET_PW once (shakedown.yml's
 # invocation) and passes it as JWT_FILE; the script also accepts JWT_FILE
-# locally (e.g. /home/klets/ur/scratch/p2-auth/.urnetwork/jwt). When JWT_FILE
+# locally (e.g. ~/scratch/p2-auth/.urnetwork/jwt). When JWT_FILE
 # is unset the script mints once itself from GAUNTLET_USER/GAUNTLET_PW into its
 # isolated HOME. Every path applies the production-account refusal guard (a
 # mesocyclone token fails the run), copies the token mode 600 into the state
@@ -78,7 +78,7 @@
 # client commands then exec the provider binary with HOME=<that passwd home>.
 # So a sandbox HOME outside the invoking user's passwd home (the operator's
 # host, where /etc/passwd cannot be adapted) makes client commands resolve to
-# the operator's real state (/home/klets/.urnetwork) even though every process
+# the operator's real state (~/.urnetwork) even though every process
 # runs with an isolated HOME. This harness therefore:
 #   1. refuses to run at all (exit 78) when its effective state dir, HOME, or
 #      an ambient URNETWORK_STATE_DIR equals, contains, or lives inside the
@@ -215,7 +215,8 @@ fi
 # commands resolved through discovery to the operator's real state while
 # every process ran with an isolated HOME.
 
-OPERATOR_STATE="/home/klets/.urnetwork"
+OPERATOR_HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6)"
+OPERATOR_STATE="${OPERATOR_HOME:-$HOME}/.urnetwork"
 
 canon_dir() {
     # Physical path for $1: resolve symlinks in the longest existing prefix
@@ -475,7 +476,7 @@ elif [ -n "$GAUNTLET_USER" ] && [ -n "$GAUNTLET_PW" ]; then
         JWT_READY=-1
     fi
 else
-    fail "jwt-source" "no disposable JWT: set JWT_FILE or GAUNTLET_USER/GAUNTLET_PW (local: JWT_FILE=/home/klets/ur/scratch/p2-auth/.urnetwork/jwt)"
+    fail "jwt-source" "no disposable JWT: set JWT_FILE or GAUNTLET_USER/GAUNTLET_PW (local: JWT_FILE=~/scratch/p2-auth/.urnetwork/jwt)"
     JWT_READY=-1
 fi
 
