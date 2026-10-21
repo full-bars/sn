@@ -132,6 +132,7 @@ func TestRelaunchListFollowsEligibility(t *testing.T) {
 // over the real set instead of an empty one.
 func TestCandidatesNotedBeforeACountSetting(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	h3RankingValue.Store(nil)
 	t.Cleanup(func() {
 		h3RankingValue.Store(nil)
 		noteH3Candidates(nil, h3Setting{Mode: h3ModeDirect})
