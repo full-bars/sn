@@ -22,10 +22,11 @@ the rest of the Bittensor field is in [`COMPARISON.md`](docs/design/COMPARISON.m
 the [glossary](#glossary) at the end.
 
 > [!NOTE]
-> This fork (`full-bars/sn`) ships the modern engine version of the 3.23-fix
-> provider. Install and operate it with the commands below; the subnet
-> mechanism documentation that follows still applies to the validator/miner
-> side of the system.
+> `full-bars/sn` is a fork of `urfoundation/sn`. Besides the subnet code, it
+> ships the provider (HTTP/3 over QUIC, IPv4 and IPv6) and `urnet-tools`, the
+> command line tool that installs, runs, checks and updates it. If you just want
+> to run a provider, use the **Quick Start** below. The subnet mechanism
+> sections after it describe the miner and validator side.
 
 ---
 
@@ -94,6 +95,16 @@ urnet-tools proxy add ~/proxies.txt
 urnet-tools proxy refresh
 urnet-tools auto on
 ```
+
+### Check and update
+
+```bash
+urnet-tools status      # is the provider running, and is it healthy
+urnet-tools logs        # follow the provider log
+urnet-tools update      # move to the latest release
+```
+
+If something looks wrong, see [Troubleshooting](docs/Troubleshooting.md) and the [Log Message Reference](docs/Log-Message-Reference.md). To watch several machines at once, see [Monitoring](docs/Monitoring.md).
 
 Full guides: [Installation](docs/Installation.md), [Docker Deployment](docs/Docker-Deployment.md),
 [Adding Proxies](docs/Adding-Proxies.md), [urnet-tools](docs/urnet-tools-go.md).

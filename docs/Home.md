@@ -1,6 +1,6 @@
 # Welcome to the SN Provider Documentation
 
-This documentation covers the SN provider for URNetwork, the production H3/QUIC provider in the [full-bars/sn](https://github.com/full-bars/sn) repository.
+This documentation covers the provider and its tools in the [full-bars/sn](https://github.com/full-bars/sn) repository, a fork of `urfoundation/sn` (the UR Subnet, Bittensor SN25).
 
 The provider serves dual-stack IPv4 and IPv6 traffic, uses HTTP/3 (QUIC) for its client connections, and is built for high-volume professional operation. You can run it as a native binary or in Docker, on Linux, macOS, or Windows.
 

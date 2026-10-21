@@ -1,5 +1,7 @@
 # Changelog
 
+Releases of this fork are tagged `v<YYYY.M.D>-<unix>-meso`. Tags without the `-meso` suffix come from upstream (`urfoundation/sn`) and are not releases of this fork. The newest entry below the unreleased list is the latest release of this fork.
+
 ## [Unreleased]
 
 ### Added
