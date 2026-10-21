@@ -17,7 +17,7 @@ This page is for regular operators. You run URnetwork nodes and you may have hea
 
 ## Which `provider` can sign the consent
 
-The signing commands are not in the sn builds most people run. The release `provider` download and the `:latest` image are built from `./cmd/provider` and have neither `provider wallet sign` nor `wallet status`, and that stays true for the next tags. The `:miner` image has had them since release `v2026.10.21-1077735390-meso`, but it exists only as a Docker image, and `wallet sign` serves its page on `127.0.0.1` inside the container, so a desktop browser cannot reach it. The normal path is to sign **on your own computer with a 3.23-fix or meso-miner `provider`**, below. The check is still worth running when a miner build runs natively on the computer with the browser, because such a build can sign on the machine it runs on:
+From release `v2026.10.21-1077735390-meso`, every sn build has `provider wallet sign` and `provider wallet status`: the release `provider` download, the `:latest` image and the `:miner` image. Older sn builds do not. Check yours:
 
 ```bash
 provider --help | grep 'wallet sign'
@@ -29,22 +29,22 @@ On Windows PowerShell, where `grep` does not exist:
 provider.exe --help | Select-String 'wallet sign'
 ```
 
-If that prints a line and the build runs natively on this computer, **skip the download below** and use it for Step 2 (everything in Step 2 and the status check works the same). Its `wallet set <coldkey>` without a signature only works with `--legacy-network-wallet`, which sends an unsigned request that is **not paid** (see [the old commands](#the-old-commands-in-this-fork-that-do-not-get-you-paid) below).
+If that prints a line, use that `provider` for Step 2. Its `wallet set <coldkey>` without a signature only works with `--legacy-network-wallet`, which sends an unsigned request that is **not paid** (see [the old commands](#the-old-commands-in-this-fork-that-do-not-get-you-paid) below).
 
-Otherwise, sign with a 3.23-fix (or meso-miner) `provider` program once, on your own computer. The consent covers your **whole account**, whichever line your nodes run:
+If nothing prints, your build is older. The consent covers your **whole account**, whichever line your nodes run, so you sign it once on your own computer with any current `provider`:
 
-1. Download a **3.23-fix** (or meso-miner) `provider` for your computer from the 3.23-fix releases page: <https://github.com/full-bars/urnetwork-3.23-fix/releases>. Pick the file named `urnetwork-provider-<version>-<platform>.tar.gz`, where `<platform>` is `linux-amd64`, `linux-arm64`, `darwin-amd64`, `darwin-arm64`, `windows-amd64`, `windows-arm64`, `freebsd-amd64` or `freebsd-arm64`. Unpack it. The `provider` (or `provider.exe`) file inside is what you need. You only run it for the signing steps. It does not replace anything on your nodes.
+1. Download the current sn `provider` for your computer from <https://github.com/full-bars/sn/releases> (a 3.23-fix or meso-miner `provider` works too). You only run it for the signing steps. It does not replace anything on your nodes.
 2. Or, once it is live, use the URnetwork app or ur.io. A plain "connect wallet" is **not enough**. It has to be the consent signing page. Whether that is live yet is **UNCONFIRMED**.
 
 ## Step 1: Check where you stand
 
-Run this on any node with a `provider` that has the command, or with the 3.23-fix binary you downloaded above. It only reads and changes nothing:
+Run this on any node with a current `provider`, or on your own computer with the `provider` you sign with. It only reads and changes nothing:
 
 ```bash
 provider wallet status
 ```
 
-`urnet-tools wallet status` works too, but only on a build that has `wallet status` (the check above). Otherwise use the 3.23-fix binary for the status check as well. For Docker, run it inside the container, for example `docker exec <container> provider wallet status`.
+`urnet-tools wallet status` works too, on a build that has `wallet status` (the check above). For Docker, run it inside the container, for example `docker exec <container> provider wallet status`.
 
 What the answer means:
 
@@ -60,7 +60,7 @@ What the answer means:
 
 ## Step 2: Sign the consent (on your own computer)
 
-Use an `sn` `provider` that has `wallet sign`, or the 3.23-fix `provider` you downloaded above. Do these on the computer with your wallet's browser extension, not on a node.
+Use a current `provider`. Do these on the computer with your wallet's browser extension, not on a node and not inside a container: the signing page only listens on `127.0.0.1`.
 
 1. **Have a wallet.** If you do not have a coldkey, install a Polkadot-style browser wallet extension (Talisman, SubWallet, Polkadot{.js} or Nova) and create an account. Write the recovery phrase on paper and keep it offline. The account address starts with `5`. This address is your coldkey.
 2. **Log in** to your URnetwork account with an auth code from the website:
@@ -103,8 +103,8 @@ The step is the same for everyone. Nothing changes on the nodes.
 
 | You run your nodes with | What to do |
 |---|---|
-| **sn Docker image (`:latest`) or sn installer** | Nothing in the containers. Sign once on your own computer: `provider auth`, then `provider wallet sign <coldkey>`, with a 3.23-fix or meso-miner `provider`. |
-| **sn miner image (`:miner`)** | Nothing to change in the containers. Only if you run a miner build natively on the computer with the browser: from `v2026.10.21-1077735390-meso` its `wallet sign` makes the account-wide consent like everywhere else; its signed `wallet set` stays one node per consent (see below) and wins over the account consent for that node, so prefer `wallet sign`. |
+| **sn Docker image (`:latest`) or sn installer** | Nothing in the containers. Sign once on your own computer: `provider auth`, then `provider wallet sign <coldkey>`, with a current sn `provider` (from `v2026.10.21-1077735390-meso`) or a 3.23-fix or meso-miner one. |
+| **sn miner image (`:miner`)** | Nothing to change in the containers. Sign on your own computer like everyone else. The miner's signed `wallet set` stays one node per consent (see below) and wins over the account consent for that node, so prefer `wallet sign`. |
 | **3.23-fix or meso-miner nodes** | Nothing on the node. Sign from your own computer. `urnet-tools wallet sign` refuses on a node on purpose. |
 | **The URnetwork app or ur.io** | The SDK the apps are built on can now request and submit a network consent (sdk `bf4076ff`). Whether the app version you have actually offers it is **not confirmed**. A plain "connect wallet" is **not enough**: it only makes a login-proof wallet. After using the app, run `provider wallet status` and do not assume a consent exists. |
 
@@ -121,11 +121,11 @@ These all send an address with **no signature**. That is the old login-proof pat
 | `provider sn-status` | Read-only dashboard. It reads the old-style wallet record, so it may say "not configured" even after you signed. **UNCONFIRMED** at the current head. Its rank lines are the bandwidth leaderboard, not Bittensor eligibility. |
 | `provider bind-head`, `provider unbind-head` | The older head-tier path (hotkey, registrant and contract flags). It is not the current fleet flow. Do not use it. See [Head Tier](Bittensor-Head-Tier.md). |
 
-The `urnet-tools wallet ...` group in this fork calls `provider wallet status|sign`. This fork's release `provider` does not have those two (only the `:miner` image does), so expect them to fail on a release install. Use the 3.23-fix binary on your computer instead. This has not been re-run on every setup.
+The `urnet-tools wallet ...` group in this fork calls `provider wallet status|sign`. Builds older than `v2026.10.21-1077735390-meso` do not have those two, so expect them to fail there; update first. This has not been re-run on every setup.
 
 ## One note on the miner image
 
-The `:miner` image's `provider` can do `wallet set <coldkey> --coldkey_seed_file=<path>` (or `--message` with `--signature`). That is a signed consent, but for **one node's client only**, and it wins over the account-wide consent for that node. Most operators do not want that. It also needs a coldkey seed file, which must never sit on a node. From release `v2026.10.21-1077735390-meso`, `:miner` also has `wallet sign`, which makes the **account-wide** consent instead; use that one unless you specifically want a per-node consent. Inside the Docker image the page stays on the container's `127.0.0.1`, so this only works when the miner build runs natively on the machine with the browser.
+The `:miner` image's `provider` can do `wallet set <coldkey> --coldkey_seed_file=<path>` (or `--message` with `--signature`). That is a signed consent, but for **one node's client only**, and it wins over the account-wide consent for that node. Most operators do not want that. It also needs a coldkey seed file, which must never sit on a node. `provider wallet sign` makes the **account-wide** consent instead; use that one, on your own computer, unless you specifically want a per-node consent.
 
 ## Troubleshooting
 
