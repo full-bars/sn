@@ -145,7 +145,7 @@ cannot prove repaired, and identifies expired bindings, absent positive native
 weights, below-threshold rate readiness, and missing current-window claims.
 Preserve both raw cuts and compare them with the eventual owner result. No skipped check is
 reported as passed; the full campaign, production interval, accounting replay
-and go/no-go decision remain open. See [the active execution record](../FINALIZE-ACTIVE.md).
+and go/no-go decision remain open. See the active execution record.
 
 **Latest update, 2026-09-24 21:17 UTC:** Two R43 startup retries also stopped
 before a signed interval. The first failed executable Git attestation because
@@ -154,7 +154,7 @@ revision `ce5f45a8`, passed the corrected operator resource preflight, and
 found a retained runtime-manifest reader that used the selected source-role
 config path to infer the original validator-2 seed path. The sealed original
 manifest is intact; the fleet is stopped, no recovery-43 attempt exists, and
-the reader fix is being qualified. See [FINALIZE-ACTIVE.md](../FINALIZE-ACTIVE.md).
+the reader fix is being qualified. See FINALIZE-ACTIVE.md.
 
 **Current status, 2026-09-24 21:04 UTC: R43 recovery startup failed before
 signing an interval.**
@@ -169,7 +169,7 @@ the pinned server requests `ip-ipinfo.mmdb`, which exists in the live config
 repository.
 The retained R42 active-fault record must be restored by the recovery driver.
 The exact service, binary hash and selection receipt are in
-[FINALIZE-ACTIVE.md](../FINALIZE-ACTIVE.md).
+FINALIZE-ACTIVE.md.
 
 **Current status, 2026-09-24: R42 started its real release interval but failed
 before terminal; `final_acceptance=false`.** The signed attempt
@@ -187,7 +187,7 @@ steering continuity caused the heartbeat to reject the full class set early.
 Read-only watchers still collect terminal diagnostics, while recovery fixes
 and a future-boundary R43 are prepared. This exception cannot be
 reported as a passing strict acceptance check. The exact current state and
-watcher artifact path are in [FINALIZE-ACTIVE.md](../FINALIZE-ACTIVE.md).
+watcher artifact path are in FINALIZE-ACTIVE.md.
 An independent finalized read at block **8,078,129** (hash
 `0xea7d377b2479e183f1900b1df979b900916837be9dce86a2fb142dd1627793e7`)
 found `policyCount()=3` on coordinator
@@ -1222,7 +1222,7 @@ remain required.
 
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). At the **22:57 UTC on 2026-09-14** observation
+FINALIZE.md. At the **22:57 UTC on 2026-09-14** observation
 cutoff, all **1,212 renewal transactions** across **202 fleets** remain
 finalized. The approved **6,000-alpha reserve repair remains unsubmitted** and
 the soak remains stopped. The lifetime approvals remain **37,250 alpha** and
@@ -1937,7 +1937,7 @@ evidence below retains its original scope and provenance. The tested historical
 EVM state and native storage are available on the LAN node.
 [Raw capability probes and the corrected native hash namespace](peerreview/evidence/FINAL-2-owned-rpc-transition-20260913/README.md).
 
-[FINAL.md](FINAL.md) remains report 1, preserved at SHA-256
+FINAL.md remains report 1, preserved at SHA-256
 `489fe5a367af6ce17541a0626fc052455f373d7792316593cc752d501cefd996`.
 Later finalizations will use `FINAL-3.md`, `FINAL-4.md`, and so on. This report
 records corrections to report 1 without rewriting its original results.

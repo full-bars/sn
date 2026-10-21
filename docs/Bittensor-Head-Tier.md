@@ -28,7 +28,7 @@ No figures are given here, because they change.
 
 ## Prerequisites checklist
 
-1. The network wallet consent is signed (with a 3.23-fix or meso-miner `provider`, see the [Quick Start](Bittensor-Quick-Start.md)). It covers every node you do not bind, except a node with its own per-provider consent, which wins for that node.
+1. The network wallet consent is signed (with an `sn` `provider` that has `wallet sign`, or a 3.23-fix or meso-miner one; see the [Quick Start](Bittensor-Quick-Start.md)). It covers every node you do not bind, except a node with its own per-provider consent, which wins for that node.
 2. A coldkey with enough TAO for the live burn, and a separate hotkey seed file.
 3. Nodes with stable, distinct egress IP ranges.
 4. One unique client key per bound node (see the blockers below).

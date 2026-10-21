@@ -25,7 +25,7 @@ official run, and section 5 lists the open product issues.
 note. This note says what is on `main`, what is still landing, the facts
 found during the last day that the deployer must act on, and the open
 product issues.
-[VERSION2-STATE.md](../../VERSION2-STATE.md) is the earlier orchestration log.
+VERSION2-STATE.md is the earlier orchestration log.
 
 ## 1. What is on main
 

@@ -88,7 +88,7 @@ Windows Defender may flag this one-liner. See the note below.
 ### After you install
 
 > [!TIP]
-> **Bittensor payouts:** most operators only need to sign one wallet consent, once, from their own computer. This fork's `provider` cannot sign it, so use a 3.23-fix or meso-miner `provider` for that one step. Nothing changes on your nodes. See the [Bittensor Quick Start](docs/Bittensor-Quick-Start.md).
+> **Bittensor payouts:** most operators only need to sign one wallet consent, once, from their own computer. Newer `sn` builds can sign it with `provider wallet sign`; if yours predates that (check with `provider --help`), use a 3.23-fix or meso-miner `provider` for that one step. Nothing changes on your nodes. See the [Bittensor Quick Start](docs/Bittensor-Quick-Start.md).
 
 After installation, authenticate and start providing:
 

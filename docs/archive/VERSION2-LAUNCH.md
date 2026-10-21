@@ -89,7 +89,7 @@ version. That is just overhead we can avoid." And: "Pull the latest main code
 on all repos. That is what the gate should use. If it fails, fix, commit,
 merge, push, pull, repeat."
 
-The orchestration log is [VERSION2-STATE.md](../../VERSION2-STATE.md), cited as
+The orchestration log is VERSION2-STATE.md, cited as
 STATE.md. It is a snapshot of 2026-10-13 20:15 UTC; its lines 1 to 286 keep
 the log's numbers. Step 5 has been run in production, on 2026-10-14
 (step 5). Unprefixed paths are in this repository.

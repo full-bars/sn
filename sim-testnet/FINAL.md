@@ -1,6 +1,6 @@
 # SN sim-testnet final report
 
-This report records the actual shortened testnet exercise and its later evidence corrections. The shortened [retained plan](../../temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/sn/FINALIZE-ACTIVE.md) governed that exercise. The current [full finalization request](../FINALIZE-ACTIVE.md) supersedes its waivers for future completion. **final_acceptance=false**: full release qualification and the full campaign remain incomplete. Failed and partial attempts remain evidence for independent peer review.
+This report records the actual shortened testnet exercise and its later evidence corrections. The shortened [retained plan](../../temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/sn/FINALIZE-ACTIVE.md) governed that exercise. The current full finalization request supersedes its waivers for future completion. **final_acceptance=false**: full release qualification and the full campaign remain incomplete. Failed and partial attempts remain evidence for independent peer review.
 
 **Current checkpoint, 2026-09-13.** The user approved the **35,000-alpha lifetime cap**, including one additional **3,750-alpha reserve repair**; the **6,000-alpha per-repair cap** is unchanged. The vault change is committed and pushed at `d4ea0cbdf49630d8e1afc3e2184858cb58940fd3`. Earlier entries below describing approval as pending are historical. No additional reserve transfer or soak launch has occurred.
 

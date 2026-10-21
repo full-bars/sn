@@ -23,10 +23,10 @@ reasoning effort `medium`) executes tests and gates; **Astra max**
 (`gpt-6-astra`, reasoning effort `max`) owns all implementation, debugging and fixes. This
 also governs the active mainnet qualification. Preserve earlier Terra receipts
 and completed work with their original attribution. Testnet is closed under
-[../FINALIZE.md](../FINALIZE.md); the historical campaign instructions below
+../FINALIZE.md; the historical campaign instructions below
 do not authorize a restart.
 
-This harness owns SN testnet finalization under [../FINALIZE.md](../FINALIZE.md).
+This harness owns SN testnet finalization under ../FINALIZE.md.
 Number finalization reports: [FINAL.md](FINAL.md) is report 1; the current
 finalization uses [FINAL-2.md](FINAL-2.md), followed by `FINAL-3.md`, `FINAL-4.md`,
 and so on. Preserve earlier reports and their evidence; record later corrections
@@ -509,7 +509,7 @@ roots. Keep expected causal assertion text unchanged. If historical input files
 need a canonical projection, preserve the originals and record the transformation
 before launch; do not drop tests or replace a failed product run with a formatting
 retry. Current source locations and qualified scopes are recorded in
-[`FINALIZE-COMPLETE.md`](../FINALIZE-COMPLETE.md#12-freeze-and-execution-record).
+FINALIZE-COMPLETE.md.
 
 Check the compiled list before admitting either test mode: its exact root names
 must equal the declared selection, and a required selection must not be empty.
