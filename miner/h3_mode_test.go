@@ -151,7 +151,12 @@ func TestApplyH3ModeRelaunchesOnlyOnAChange(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
 	t.Setenv("URNETWORK_H3", "")
 	h3AppliedSetting.Store(nil)
-	t.Cleanup(func() { h3AppliedSetting.Store(nil) })
+	t.Cleanup(func() {
+		h3AppliedSetting.Store(nil)
+		// the count steps at the end store a ranking; leaving it behind makes
+		// the next h3 ranking test see a stale one under shuffled order
+		h3RankingValue.Store(nil)
+	})
 	direct := h3Setting{Mode: h3ModeDirect}
 	if _, relaunch := applyH3Mode(direct); relaunch {
 		t.Fatal("the first application is the startup replay and must not relaunch")
