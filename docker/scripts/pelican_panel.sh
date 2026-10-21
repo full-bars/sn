@@ -10,6 +10,57 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
+# === Stop Forwarding ===
+# Same helpers as full-bars/urnetwork-3.23-fix docker/scripts/provider_common.sh,
+# kept inline because this script is standalone under the Pelican egg (and
+# busybox ash cannot rely on parallel edits in another file). `docker stop` /
+# panel STOP signals PID 1, which is this shell; with no default action for
+# SIGTERM the provider never hears it and Docker SIGKILLs the container after
+# the timeout, skipping the provider's clean shutdown.
+PROVIDER_CHILD_PID=""
+PROVIDER_STOPPING=0
+
+func_forward_stop() {
+    PROVIDER_STOPPING=1
+    if [ -n "$PROVIDER_CHILD_PID" ]; then
+        kill -TERM "$PROVIDER_CHILD_PID" 2>/dev/null || true
+    fi
+    # pkill returns 1 when nothing matches, and this runs inside the trap
+    # handler, where set -e would otherwise kill the supervisor itself
+    pkill -TERM -f "^$APP_DIR/urnetwork_.* provide" 2>/dev/null || true
+}
+
+func_install_stop_trap() {
+    trap func_forward_stop TERM INT
+}
+
+func_exit_if_stopping() {
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        log "[INFO] Stop requested; supervisor exiting."
+        exit 0
+    fi
+}
+
+# func_run_provider runs the provider in the background so the stop trap can
+# fire while it runs, and sets code to its exit status. `|| code=$?` keeps
+# the run alive under set -e for a crashed provider or a wait interrupted by
+# the TERM trap (status 143); wait repeats until the provider has really
+# exited, so a graceful shutdown is never cut short.
+func_run_provider() {
+    "$@" &
+    PROVIDER_CHILD_PID=$!
+    code=0
+    while :; do
+        wait "$PROVIDER_CHILD_PID" || code=$?
+        kill -0 "$PROVIDER_CHILD_PID" 2>/dev/null || break
+    done
+    PROVIDER_CHILD_PID=""
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        log "[INFO] Stop requested; UrNetwork exited (code=$code)."
+        exit 0
+    fi
+}
+
 # === Credential Validation ===
 func_check_credentials() {
     if [ -z "$USER_AUTH" ] || [ -z "$PASSWORD" ]; then
@@ -35,9 +86,11 @@ func_do_login() {
         
         log "[INFO] Attempting authentication..."
         
-        # Capture auth command output for parsing
-        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1) || true
-        AUTH_EXIT_CODE=$?
+        # Capture the auth command's real exit status: `|| true` followed by
+        # $? always recorded 0, hiding every failure code (same fix as the
+        # shared login loop in full-bars/urnetwork-3.23-fix provider_common.sh).
+        AUTH_EXIT_CODE=0
+        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1) || AUTH_EXIT_CODE=$?
         PANIC_LINE=$(echo "$AUTH_OUTPUT" | grep -E '^panic:' || true)
         
         if [ "${DEBUG:-false}" = "true" ]; then
@@ -126,12 +179,12 @@ func_get_architecture() {
 func_start_provider(){
     failures=0
     while :; do
+        func_exit_if_stopping
         log "[INFO] Starting UrNetwork (attempt #$((failures+1)))"
         PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
 		BIN_VER="$($PROVIDER_BIN --version)"
 		log "[INFO] Running UrNetwork build v${BIN_VER}"
-        # Capture the real exit code (set -e safe; bare `provide` would abort the loop on crash)
-        if "$PROVIDER_BIN" provide; then code=0; else code=$?; fi
+        func_run_provider "$PROVIDER_BIN" provide
         if [ "$code" -eq 0 ]; then
             log " [INFO] UrNetwork exited cleanly."
             break
@@ -162,15 +215,16 @@ func_start_provider_jwt(){
     log "[INFO] Running UrNetwork build v${BIN_VER}"
 
     # set -e safe: bare command + code=$? would abort before the error branch
-    if "$PROVIDER_BIN" auth-provide "$AUTHCODE" -f; then
+    func_run_provider "$PROVIDER_BIN" auth-provide "$AUTHCODE" -f
+    if [ "$code" -eq 0 ]; then
         log "[INFO] UrNetwork exited cleanly."
     else
-        code=$?
         log "[ERROR] UrNetwork exited with code=$code"
     fi
 }
 
 # Main
+func_install_stop_trap
 if [ "$BUILD" = "jwt" ]; then
   func_get_architecture
   func_report_identity

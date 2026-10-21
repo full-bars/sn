@@ -10,8 +10,10 @@
 #      fails on missing file / empty expected digest / absent hashing tool, names the
 #      download source in mismatch output.
 #   3. POSIX discipline: no `local`, sources clean under dash.
-#   4. Caller asset-selection filter: parenthesized jq shape pinned, broken shape
-#      rejected, first-wins multi-asset order.
+#   4. Tarball asset pickers: the arch picker takes the linux-<arch> per-arch
+#      tarball over any other platform's (freebsd first, the v34 regression),
+#      the fat picker takes the OS-less multi-arch tarball, both consumers
+#      call the shared helpers, and the stale inline OS list is gone.
 #   5. Source guard: no docker script names an upstream urnetwork repo in fetch URLs.
 #
 # HARNESS CONTRACT (regression-hardened): every assertion is evaluated INSIDE the t()
@@ -204,40 +206,75 @@ t "helper globals cleaned after successful call" true
 # --- Caller asset-selection filter (start_update.sh Download_API) ---
 # Regression: jq `select(A) and B` parses as `(select(A)) and B`, so the
 # un-parenthesized form errors "Cannot index boolean with string" on every
-# real release. Pin the CORRECT parenthesized expression + first-wins order.
-# start_update.sh must select the MULTI-ARCH fat tarball (Extract_Providers
-# pulls both linux/amd64 and linux/arm64 from one file), so per-arch assets
-# (which carry an -<os>-<goarch> token, darwin first) are excluded.
-JSON_MULTI='{"assets":[
+# real release.
+# --- Tarball asset pickers (upd_pick_arch_tarball_name / upd_pick_fat_tarball_name) ---
+# Regression: the old inline filters listed only darwin/linux/windows as
+# per-arch OS tokens, so the freebsd-amd64 tarball looked like the OS-less
+# fat tarball and sorted ahead of it; the nightly updater installed a FreeBSD
+# binary into a linux container and nightly login failed. The pickers live in
+# update_verify.sh and both update consumers call them. Fixture shaped like a
+# real stable release: freebsd sorts BEFORE linux and the fat tarball is
+# last, exactly the ordering that triggered the bug.
+JSON_V342='{"assets":[
   {"name":"urnet-tools-linux-amd64","digest":"sha256:1"},
-  {"name":"urnetwork-provider-v9-linux-amd64.tar.gz","digest":"sha256:2"},
-  {"name":"urnetwork-provider-v9.tar.gz","digest":"sha256:3"},
-  {"name":"urnetwork-provider-v9-darwin-amd64.tar.gz","digest":"sha256:4"}]}'
-sel="$(printf '%s' "$JSON_MULTI" | jq -r '.assets[] | select((.name | startswith("urnetwork-provider-")) and (.name | endswith(".tar.gz")) and ((.name | test("-darwin-|-linux-|-windows-")) | not)) | .name' | head -n1)"
-t "start_update asset filter picks the multi-arch fat tarball, never darwin" test "$sel" = "urnetwork-provider-v9.tar.gz"
+  {"name":"urnetwork-provider-v3.23.0-fix.34.2-darwin-amd64.tar.gz","digest":"sha256:2"},
+  {"name":"urnetwork-provider-v3.23.0-fix.34.2-freebsd-amd64.tar.gz","digest":"sha256:3"},
+  {"name":"urnetwork-provider-v3.23.0-fix.34.2-linux-amd64.tar.gz","digest":"sha256:4"},
+  {"name":"urnetwork-provider-v3.23.0-fix.34.2-linux-arm64.tar.gz","digest":"sha256:5"},
+  {"name":"urnetwork-provider-v3.23.0-fix.34.2-windows-amd64.tar.gz","digest":"sha256:6"},
+  {"name":"urnetwork-provider-v3.23.0-fix.34.2.tar.gz","digest":"sha256:7"}]}'
 
-# The broken (unparenthesized) shape must stay broken-and-unused: assert it
-# errors, so nobody reintroduces it thinking it works.
+got="$(upd_pick_arch_tarball_name "$JSON_V342" "amd64")"
+t "arch picker takes linux-amd64 over freebsd regardless of asset order" \
+    test "$got" = "urnetwork-provider-v3.23.0-fix.34.2-linux-amd64.tar.gz"
+
+got="$(upd_pick_arch_tarball_name "$JSON_V342" "arm64")"
+t "arch picker resolves the arm64 per-arch tarball" \
+    test "$got" = "urnetwork-provider-v3.23.0-fix.34.2-linux-arm64.tar.gz"
+
+got="$(upd_pick_fat_tarball_name "$JSON_V342")"
+t "fat picker takes the OS-less tarball, never freebsd or darwin" \
+    test "$got" = "urnetwork-provider-v3.23.0-fix.34.2.tar.gz"
+
+got="$(upd_pick_arch_tarball_name '{"assets":[{"name":"urnetwork-provider-v9-freebsd-amd64.tar.gz"}]}' "amd64")"
+t "arch picker empty without a linux asset (caller falls back to fat)" test -z "$got"
+
+# The digest lookup must follow the picked asset name end to end.
+got="$(upd_asset_digest_from_json "$JSON_V342" "$(upd_pick_arch_tarball_name "$JSON_V342" "amd64")")"
+t "digest lookup resolves the picked asset" test "$got" = "4"
+
+# The unparenthesized select+and shape must stay rejected: jq parses
+# `select(A) and B` as a boolean stage and errors on every real release, so
+# nobody reintroduces it thinking it works.
 broken_exit=0
-printf '%s' "$JSON_MULTI" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) and (.name | endswith(".tar.gz")) | .name' >/dev/null 2>&1 || broken_exit=1
+printf '%s' "$JSON_V342" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) and (.name | endswith(".tar.gz")) | .name' >/dev/null 2>&1 || broken_exit=1
 t "unparenthesized select+and stays rejected (would abort under set -e)" test "$broken_exit" -eq 1
+
+# Wiring guard: both update consumers must call the shared pickers, and the
+# old incomplete inline OS list must not reappear anywhere in docker/scripts.
+t "start_update.sh selects the fat tarball through the shared picker" \
+    grep -q 'upd_pick_fat_tarball_name' "$HERE/start_update.sh"
+t "nightly updater calls the shared arch picker" \
+    grep -q 'upd_pick_arch_tarball_name' "$HERE/start_nightly.sh"
+t "stale inline per-arch OS list is gone from docker/scripts" \
+    test -z "$(grep -rlE -- '-darwin-\|-linux-\|-windows-' "$HERE")"
 
 # Nightly asset mapping: URL->name match-back finds the API name even when
 # the URL layout changes above the filename segment.
-URL_V9="https://github.com/full-bars/sn/releases/download/v9/urnetwork-provider-v9.tar.gz"
+URL_V9="https://github.com/full-bars/sn/releases/download/v3.23.0-fix.34.2/urnetwork-provider-v3.23.0-fix.34.2.tar.gz"
 matched=""
-for upd_candidate in $(printf '%s\n' "$JSON_MULTI" | grep -oE '"name": *"[^"]+"' | sed -E 's/"name": *"([^"]+)"/\1/'); do
+for upd_candidate in $(printf '%s\n' "$JSON_V342" | grep -oE '"name": *"[^"]+"' | sed -E 's/"name": *"([^"]+)"/\1/'); do
     case "$URL_V9" in
         *"/$upd_candidate") matched="$upd_candidate"; break ;;
     esac
 done
-t "nightly URL-to-name match-back resolves the real API asset name" test "$matched" = "urnetwork-provider-v9.tar.gz"
+t "nightly URL-to-name match-back resolves the real API asset name" test "$matched" = "urnetwork-provider-v3.23.0-fix.34.2.tar.gz"
 
 # Basename last-resort path: an asset name absent from the JSON must NOT
 # match-back (guarding the match-back order) — basename of URL used only
 # after match-back exhausts candidates.
 BNAME="${URL_V9##*/}"
-t "basename fallback yields the filename segment" test "$BNAME" = "urnetwork-provider-v9.tar.gz"
+t "basename fallback yields the filename segment" test "$BNAME" = "urnetwork-provider-v3.23.0-fix.34.2.tar.gz"
 
 # --- Source guard: upstream repos must not appear in fetch URLs ---
 violations=""

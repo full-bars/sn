@@ -76,7 +76,7 @@ STUB_EOF
 
     local runner="$test_dir/runner.sh"
     {
-        echo "set -u"
+        echo "set -eu"
         echo "export TEST_DIR='$test_dir'"
         echo "APP_DIR='$test_dir/app'"
         echo "A_SYS_ARCH='amd64'"
@@ -84,11 +84,18 @@ STUB_EOF
         echo "JWT_FILE='$jwt_file'"
         echo "USER_AUTH=''"
         echo "PASSWORD=''"
+        # the stop-forwarding helpers are defined at the top of each start
+        # script; the extracted loop functions reference them under set -u,
+        # so set them here too (mirrors full-bars/urnetwork-3.23-fix).
+        echo "PROVIDER_STOPPING=0"
+        echo "PROVIDER_CHILD_PID=\"\""
         echo "log() { echo \"LOG: \$*\" >> '$test_dir/out.log'; }"
         echo "sleep() { :; }"
         echo "pgrep() { return 1; }"
         echo "func_do_login() { echo 'LOG: func_do_login called' >> '$test_dir/out.log'; }"
         echo "func_check_credentials() { echo 'LOG: func_check_credentials called' >> '$test_dir/out.log'; }"
+        extract_func "$REPO/docker/scripts/$script_file" func_exit_if_stopping
+        extract_func "$REPO/docker/scripts/$script_file" func_run_provider
         extract_func "$REPO/docker/scripts/$script_file" func_start_provider
         echo "func_start_provider"
     } > "$runner"

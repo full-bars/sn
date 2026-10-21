@@ -19,6 +19,58 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
+# === Stop Forwarding ===
+# Same helpers as full-bars/urnetwork-3.23-fix docker/scripts/provider_common.sh,
+# kept inline because this tree has no shared provider_common.sh (each start_*.sh
+# is standalone). `docker stop` signals PID 1, which is this shell; with no
+# default action for SIGTERM the provider never hears it and Docker SIGKILLs
+# the container after the timeout, skipping the provider's clean shutdown.
+PROVIDER_CHILD_PID=""
+PROVIDER_STOPPING=0
+
+func_forward_stop() {
+    PROVIDER_STOPPING=1
+    if [ -n "$PROVIDER_CHILD_PID" ]; then
+        kill -TERM "$PROVIDER_CHILD_PID" 2>/dev/null || true
+    fi
+    # a hotswap successor is not this shell's child; pkill returns 1 when
+    # nothing matches (the common no-hotswap case), and because this runs
+    # inside the trap handler, set -e would otherwise kill the supervisor
+    # itself mid-stop instead of waiting for the provider to exit
+    pkill -TERM -f "^$APP_DIR/urnetwork_.* provide" 2>/dev/null || true
+}
+
+func_install_stop_trap() {
+    trap func_forward_stop TERM INT
+}
+
+func_exit_if_stopping() {
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        log "[INFO] Stop requested; supervisor exiting."
+        exit 0
+    fi
+}
+
+# func_run_provider runs the provider in the background so the stop trap can
+# fire while it runs, and sets code to its exit status. `|| code=$?` keeps
+# the run alive under set -e for a crashed provider or a wait interrupted by
+# the TERM trap (status 143); wait repeats until the provider has really
+# exited, so a graceful shutdown is never cut short.
+func_run_provider() {
+    "$@" &
+    PROVIDER_CHILD_PID=$!
+    code=0
+    while :; do
+        wait "$PROVIDER_CHILD_PID" || code=$?
+        kill -0 "$PROVIDER_CHILD_PID" 2>/dev/null || break
+    done
+    PROVIDER_CHILD_PID=""
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        log "[INFO] Stop requested; UrNetwork exited (code=$code)."
+        exit 0
+    fi
+}
+
 # === Directory Validation ===
 func_check_dir() {
     [ -d "$APP_DIR" ] || {
@@ -179,11 +231,9 @@ func_start_provider(){
     failures=0
     reauth_attempts=0
     while :; do
+        func_exit_if_stopping
         log "[INFO] Starting UrNetwork (attempt #$((failures+1)))"
-        # Capture the real exit code. Reading $? after the `if ... fi` gave
-        # the compound's status, 0 whenever provide failed: every crash logged
-        # code=0 and the code 78 re-auth branch below could never run.
-        if "$PROVIDER_BIN" provide; then code=0; else code=$?; fi
+        func_run_provider "$PROVIDER_BIN" provide
         if [ "$code" -eq 0 ]; then
             if [ -f "$HOME/.urnetwork/update-pending" ]; then
                 rm -f "$HOME/.urnetwork/update-pending"
@@ -200,6 +250,7 @@ func_start_provider(){
                 while pgrep -f "urnetwork.*provide" >/dev/null 2>&1; do
                     sleep 2
                 done
+                func_exit_if_stopping
                 continue
             fi
             log "[INFO] UrNetwork exited cleanly."
@@ -284,6 +335,7 @@ func_bootstrap() {
 
 # === Main Entrypoint ===
 main() {
+    func_install_stop_trap
     func_bootstrap "$@"
 }
 
