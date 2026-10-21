@@ -71,7 +71,7 @@ All examples below mount a config volume at `/root/.urnetwork`. With this volume
 
 The examples below use `urfix` as the container name.
 
-#### With proxy benchmarking and reporting:
+#### With proxy benchmarking:
 
 ```bash
 docker run -d --name urfix \
@@ -80,7 +80,6 @@ docker run -d --name urfix \
   -e PROXY_URL='https://example.com/your-proxy-list.txt' \
   -e URNETWORK_PROXY_BENCHMARK=true \
   -e URNETWORK_PROXY_BENCHMARK_ENDPOINT=connect.bringyour.com:443 \
-  -e URNETWORK_REPORT_URL=http://report-server:8080 \
   ghcr.io/full-bars/sn:latest
 ```
 
@@ -89,7 +88,6 @@ docker run -d --name urfix \
 | `PROXY_URL` | Live proxy list URL, fetched and merged on interval (see [Proxy URL Sources](Proxy-URL-Sources.md)) |
 | `URNETWORK_PROXY_BENCHMARK=true` | Enables per-proxy latency probes (TCP connect every 5m, SOCKS5 every 15m) |
 | `URNETWORK_PROXY_BENCHMARK_ENDPOINT` | Target for SOCKS5 CONNECT probe (default `connect.bringyour.com:443`) |
-| `URNETWORK_REPORT_URL` | URL for bandwidth reporting. Can be changed at runtime via `urnet-tools report <url>` (writes `~/.urnetwork/report_url` via docker exec). |
 
 For additional containers, change the container name and volumes together.
 
@@ -332,29 +330,6 @@ View a single-pane fleet overview showing proxy counts by source (file vs URL), 
 
 ```sh
 docker exec -it <container> urnet-tools summary
-```
-
-## 📡 Report URL
-
-Set or check the report URL at runtime without restarting. Uses `~/.urnetwork/report_url` inside the container:
-
-```sh
-# Set report URL
-docker exec -it <container> sh -c 'echo "http://HUB_IP:8080" > "$HOME/.urnetwork/report_url"'
-
-# Check current URL
-docker exec -it <container> sh -c 'cat "$HOME/.urnetwork/report_url" 2>/dev/null || echo "not set"'
-
-# Disable
-docker exec -it <container> sh -c 'rm -f "$HOME/.urnetwork/report_url"'
-```
-
-Or use the Go `urnet-docker` binary, which handles `docker exec` transparently: it discovers provider containers and delegates commands into them:
-
-```sh
-urnet-docker report http://HUB_IP:8080
-urnet-docker report
-urnet-docker report off
 ```
 
 (The legacy PowerShell wrapper `urnet-tools.ps1` has been retired; the Go binary replaces it on every platform.)

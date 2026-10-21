@@ -5,7 +5,7 @@ from `mainnet/settlement-v2.unsigned.example.json`. No command builds the six
 actions' `data` fields, so the recipe derives them with `cast`, `jq`, `b2sum`
 and `xxd`, fills the example, runs `preview` and compares its answer with the
 owner inputs. It stops at a reviewed preview. Signing and `plan` follow in step
-8.3 of `VERSION2-LAUNCH.md`.
+8.3 of `docs/archive/VERSION2-LAUNCH.md`.
 
 What stands behind it:
 

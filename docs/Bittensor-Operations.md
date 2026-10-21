@@ -1,84 +1,141 @@
-# Bittensor Subnet Operations
+# Bittensor Subnet 25: Overview for Operators (sn fork)
 
-Operating guide for the subnet (Bittensor) command surface of the provider
-binary. `provider/sn.go` implements the Subnet pool bridge (`sn/PLAN.md` 7.3)
-backed by `sn/merkle` (inclusion proofs), `sn/stabi` (ABI packing),
-`sn/miner/onchain` (go-ethereum submission) and `sn_rpc.go` (stdlib `eth_call`).
+> [!TIP]
+> **Most operators can stop at the [Quick Start](Bittensor-Quick-Start.md).** You sign one message from your own computer and your nodes keep running as they are. Everything below is background, or for people who want more.
 
-## Identity & wallet model
+## The short version
 
-- **Network account token**: the provider authenticates to the control plane
-  with a signed JWT at `~/.urnetwork/jwt` (state paths honor the
-  `URNETWORK_STATE_DIR` environment variable).
-- **Claim coldkey (`ss58`)**: the Bittensor coldkey address (SS58, prefix `42`)
-  registered with the platform to receive pool emissions.
-- **Mirror account**: EVM smart contract accounts mirrored on Subtensor via
-  `evm:<H160 address>` hash derivation for non-custodial claims.
+- URnetwork is **Subnet 25 (SN25)** on Bittensor. Your nodes can earn the SN25 token (alpha, branded $UR) on top of normal URnetwork earnings.
+- You get paid by signing **one** consent with your Bittensor wallet (your coldkey). It says "pay every node on my URnetwork account to this coldkey". One signature covers all your nodes, now and later.
+- **This fork's release `provider` cannot sign the consent and has no `wallet status`.** Sign with a 3.23-fix or meso-miner `provider` on your own computer (or the app or ur.io once live). The consent covers your whole account whichever line the nodes run. Download pointer and steps are in the [Quick Start](Bittensor-Quick-Start.md).
+- Check where you stand with `provider wallet status`, run with that same 3.23-fix or meso-miner `provider`. Words you do not know are in the [Glossary](Bittensor-Glossary.md).
 
-## Commands (provider binary)
+## Pool or head: which one am I?
 
-### Register / update the claim wallet
+| | Pool tier (almost everyone) | Head tier (optional, advanced) |
+|---|---|---|
+| What it is | Your nodes earn inside URnetwork's shared pool. | You get your own seat (UID) on the subnet. |
+| What you do | Sign the consent once. | A long setup with keys, a fleet file, a burn and per-node binding. See [Head Tier](Bittensor-Head-Tier.md). |
+| How you are scored | By the work your nodes do in the pool: usage weighted by quality, with quality kept between 0.75 and 1.0. | By how many different IP ranges (/29 IPv4, /48 IPv6) your nodes served traffic through. |
+| How you are paid | Credited to your coldkey every epoch (7 days). A claim moves it to your wallet. | Paid directly to your hotkey every tempo (about 72 minutes). No claim. |
+| Where the money waits | In the settlement vault contract (`STSettlementVault` for v1, `STSettlementVault2` for v2). | Nowhere. It is paid by the network. |
+| Up-front cost | None. | A registration burn plus gas, and you can lose the seat. |
+| Earnings promise | None is promised. A share that rounds to zero pays nothing. | None is promised. The seat can be lost. |
 
-```bash
-provider wallet set 5FjfHgd4K3H5Vge2igPtBYyWRbRKdgH84roTCnWwwtNgAhU5
+If your head seat is lost, your nodes fall back to the pool. A node earns in only one tier at a time.
 
-# startup flag form:
-provider provide --wallet=5FjfHgd4K3H5Vge2igPtBYyWRbRKdgH84roTCnWwwtNgAhU5
-```
+## Claims, explained simply
 
-Registers the coldkey with the platform via the authenticated `POST /sn/wallet`
-route (`walletSet` in `provider/sn.go`), printing the derived pubkey on
-success. The wallet is only a payment destination — no transaction is signed
-or broadcast when linking it.
+Your pool earnings are credited to your coldkey. A **claim** is a small blockchain transaction that moves the credit into your wallet.
 
-### Real-time status & telemetry
+- Anyone can send the claim. The money always goes to your coldkey.
+- **Optional.** You can wait until the balance is worth the gas fee.
+- **Settlement v2** is planned to start around epoch 3 (about 2026-10-23). In v2, credit **never expires**. This start date is **unconfirmed**, so check with the project if it matters to you.
+- Before v2 (settlement v1, the earliest epochs), claims could expire. How that applies to the early epochs is **unconfirmed**.
+- The easiest way is a claim button in the apps or ur.io, if it is live. This is **unconfirmed**.
+- Command-line claims exist for people who want automation. They need an EVM key with TAO for gas. See [Claiming by hand](#claiming-by-hand-advanced). Claim daemons are in the miner image.
 
-```bash
-provider sn-status            # global rank, bandwidth, coldkey, epoch, payout share
-provider sn-status --json     # monitoring / Prometheus-friendly output
-```
+## Signing the consent (reference)
 
-### Epoch payout claim
-
-```bash
-# offline / air-gapped (recommended): prints ready-to-submit calldata for snclaim
-provider claim --epoch=1053
-
-# direct on-chain submission with a local key file and RPC endpoint:
-provider claim --epoch=1053 --rpc=https://rpc.subtensor.network \
-  --key_file=/path/to/coldkey_evm.key
-
-# simulate verification and root matching without broadcasting:
-provider claim --epoch=1053 --rpc=https://rpc.subtensor.network --dry-run
-```
-
-`claim` fetches the network's pool payout claim for the epoch, recomputes the
-Merkle leaf and checks the inclusion proof with `sn/merkle`, cross-checks the
-payout root on-chain via `eth_call` when `--rpc` is given, and builds the
-`claimMiner` calldata with the `sn/stabi` packer. With `--key_file` it signs
-and submits the transaction through `sn/miner/onchain`; without one it prints
-the calldata so credentials never touch the provider host.
-
-### Head miner delegation
+The Quick Start has the steps. In short, with a **3.23-fix or meso-miner** `provider` on your own computer:
 
 ```bash
-provider bind-head --hotkey=0x1234567890abcdef... \
-  --registrant=0xYourEvmAddress... --contract=0xContractAddress...
-provider unbind-head --hotkey=0x1234567890abcdef... [--contract=0xContractAddress...]
+provider auth <auth_code>
+provider wallet sign <coldkey_ss58>    # opens a local page for your wallet extension
+provider wallet status                 # confirm
 ```
 
-> [!IMPORTANT]
-> The `--registrant` address MUST equal the EVM transaction sender. The
-> head-bind digest binds cryptographically to this sender, and the transaction
-> reverts if the sender's Subtensor mirror does not match the hotkey's on-chain
-> coldkey.
+Releases: <https://github.com/full-bars/urnetwork-3.23-fix/releases>, file `urnetwork-provider-<version>-<platform>.tar.gz`.
 
-## Operational security
+Options on that binary:
 
-- Never pass tokens via CLI flags (`-jwt=...`, `-pass=...`) — they are visible
-  in `ps aux` / `/proc/<pid>/cmdline`.
-- Keep `~/.urnetwork/jwt` and private key files readable only by the service
-  account (`0600`).
-- For claiming, prefer the air-gapped path: `provider claim` without
-  `--key_file` emits calldata and never touches a private key on the provider
-  host.
+- `provider wallet sign [<coldkey_ss58>] [--port=<port>] [--no-open]`. Leave the address out to choose the account on the page.
+- No browser: `provider wallet challenge <coldkey_ss58>` prints the exact text (it signs nothing). Sign it elsewhere, then run `provider wallet set <coldkey_ss58> --message=<text> --signature=<hex>`.
+- `provider wallet set <coldkey_ss58> --coldkey_seed_file=<path>` signs from a seed file. Use it only on your own computer, never on a node.
+- `--wallet-from-epoch=<e> --wallet-through-epoch=<e>` pick an exact window. It spans at most 65,536 epochs. A newer consent must start at a later epoch than the one it replaces.
+
+### What this fork's own commands do
+
+| Command | Result |
+|---|---|
+| `provider wallet set <coldkey>` (sn release binary) | Refused. It only works with `--legacy-network-wallet`. |
+| `provider wallet set <coldkey> --legacy-network-wallet` | Old unsigned request. A login proof, **not paid**. |
+| `provider provide --wallet=<coldkey>` | The same unsigned request at startup. A failure is logged and the provider keeps providing. |
+| `provider wallet hotkey challenge|set|status` | Hotkey delegation. Not needed with one operator. `set` has `--replace-other-hotkey`. |
+| `provider wallet set <coldkey> --coldkey_seed_file=<path>` (miner image) | A signed consent for **one node's client** only. It wins over the account-wide consent for that node. |
+| `provider bind-head`, `unbind-head` (sn release binary) | The older head path (`--hotkey`, `--registrant`, `--contract`). Not the current fleet flow. Do not use it. |
+
+Docker users: you do not change the container command for this. A run that still passes `--wallet=<coldkey>` and `--legacy-network-wallet` can drop both.
+
+## Other pages, only if you need them
+
+- [Head Tier](Bittensor-Head-Tier.md): the advanced head-tier path. The fleet commands live in the miner image.
+- Hotkey delegation, multi-operator mode (`provide --all-operators`) and claim daemons are in the miner image (`ghcr.io/full-bars/sn:miner`, see [Miner Image](Miner-Image.md)). Most operators do not need them.
+
+## Claiming by hand (advanced)
+
+You do not need this if you use the app button or wait. `provider claim` logs in with the token of a client that served traffic, because only such a client has a payout. Pass exactly one of:
+
+| Flag | Credential |
+|---|---|
+| `--store-client=<key>` | One identity from `~/.urnetwork/.client_jwts.json`. The key is a proxy address or `direct`. |
+| `--provider-jwt=<path>` | A client token in a file. |
+| `--legacy-coldkey=<coldkey_ss58>` | The network token plus this coldkey. Only for an epoch without a provider artifact. |
+
+To print the claim calldata without sending anything (safe, keeps keys off the node):
+
+```bash
+provider claim --store-client=direct --epoch=<epoch>
+```
+
+To submit it yourself, add `--rpc=<rpc_url> --key_file=<path>`. Add `--dry-run` to check without sending. `provider snclaim` is a low-level tool that takes the calldata (`provider snclaim --help` lists its commands, including `v2 status`, `v2 claim` and `v2 check`).
+
+## The status dashboard (`sn-status`)
+
+Optional. It is a read-only summary:
+
+```bash
+provider sn-status
+provider sn-status --json
+```
+
+In this fork it reads the old-style wallet record. It may say the coldkey is "Not configured" even after you signed the consent. That is **UNCONFIRMED** at the current head, so use `wallet status` from a 3.23-fix or meso-miner `provider` to check the consent. The 3.23-fix dashboard has a green `Wallet consent` line; this fork's may not.
+
+> [!NOTE]
+> The "Global Rank" and tier lines on this screen are the URnetwork **bandwidth leaderboard**. They are **not** head-tier eligibility and have nothing to do with the Top 200 seats. Ignore them for Bittensor purposes. 
+
+## FAQ
+
+### Do I have to do anything?
+Run `provider wallet status` with a 3.23-fix or meso-miner `provider`. If it shows a network consent in effect, you are done. If not, sign once from your own computer. See the [Quick Start](Bittensor-Quick-Start.md). Nothing else is required, and your nodes keep providing either way.
+
+### I linked my wallet on the website or in the app. Am I paid?
+Not necessarily. The older "connect wallet" link is only a login proof, and payouts do not use it. A signed consent is what counts. Confirm with `provider wallet status`. If it says `NOT a consent`, sign once.
+
+### Why did my browser wallet not pop up?
+You probably ran the old unsigned path (`provide --wallet=`, `--legacy-network-wallet`). That sends an address without a signature, and without a signature nothing gets paid. Use `provider wallet sign` from a 3.23-fix or meso-miner binary, which does open your wallet.
+
+### What can the signature do?
+It covers every node on your URnetwork account. Your recovery phrase never leaves the wallet extension, which shows exactly what it signs. The signature cannot move your funds. It decides which wallet gets paid.
+
+### Do I need a UID to earn?
+No. Pool operators have no UID. Only head fleets hold a seat.
+
+### Do I need a hotkey?
+Not unless you do the head tier or sign in with a hotkey.
+
+### Do I need to renew the consent?
+No. It lasts 65,536 epochs. Sign again only to change the wallet.
+
+### What happens to claims while a claim daemon is stopped?
+Nothing is lost. Signed entries are saved and finished after a restart.
+
+### Is the head tier worth it?
+For most operators, no. See [Head Tier](Bittensor-Head-Tier.md) for what it takes and the current blockers. It needs `provider fleet ...`, which only the miner image (or a 3.23-fix or meso-miner `provider`) has.
+
+## Safety rules
+
+1. Never put a token or seed in a command line where `ps` can show it.
+2. Keep `~/.urnetwork/jwt` and any key files at mode `0600`.
+3. Give each container its own volume so state does not get mixed up.
+4. Seed files (coldkey, hotkey, client keys) belong on your own computer, never on a mining node. The tool never creates them for you.

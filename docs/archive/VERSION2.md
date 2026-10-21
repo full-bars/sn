@@ -3,8 +3,8 @@
 Prepared 2026-10-08 for the SN25 protocol and contract engineers. It describes
 why the launched pool-payment protocol cannot pay 100,000 providers, let alone
 the 1,000,000 expected within six months, and proposes the version-2 design
-that does. Read it with [mainnet/LAUNCH.md](mainnet/LAUNCH.md) and
-[WHITEPAPER.md](WHITEPAPER.md) §8 and §11.
+that does. Read it with [mainnet/LAUNCH.md](../../mainnet/LAUNCH.md) and
+[WHITEPAPER.md](../../WHITEPAPER.md) §8 and §11.
 
 Citations are `path:lines`. Unprefixed paths are this repository at `e1500f15`;
 `server/` paths are the operator server at `5342fd76`; `server-census/` is the

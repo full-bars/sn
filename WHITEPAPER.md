@@ -8,7 +8,7 @@ Version 2 (launch specification with settlement v2). Target chain: Bittensor / S
 promotes the completed v0.5 design to the normative release specification without changing its scope;
 version 2 changes only the pool tier's payout settlement, on mainnet from the switch epoch **E_s** (below).
 
-> **v2 — usage‑proportional, cumulative pool settlement (`VERSION2-FINAL.md`).** From the switch epoch
+> **v2 — usage‑proportional, cumulative pool settlement (`docs/archive/VERSION2-FINAL.md`).** From the switch epoch
 > **E_s** (the first epoch starting at least two days after the last activation gate passes), an operator
 > pool pays its providers **in proportion to verified usage only** — no per‑provider reliability factor,
 > no validator‑measurement gate. Each payout coldkey has **one cumulative account per pool that never
@@ -34,7 +34,7 @@ version 2 changes only the pool tier's payout settlement, on mainnet from the sw
 > (D23) wherever it appears below.
 
 > **v0.4 — conviction staking, validator-computed weights, IP-breadth head.** Simplification pass
-> (`WHITEPAPER_DISCUSS.md` D25–D28): the **contract stops weighting/validating deposits** — deposits are
+> (`docs/design/WHITEPAPER_DISCUSS.md` D25–D28): the **contract stops weighting/validating deposits** — deposits are
 > **conviction stake** (locked in the reserve, D23), their cumulative amount sets a NO's **tier → deposit
 > rate** (zero conviction = baseline; staking lowers it — the onboarding lever), and **validators weight
 > the pools themselves** by `implied_usage × quality` (`implied_usage` = audited usage at the baseline rate) from
@@ -151,7 +151,7 @@ inputs:
   (`850f2755`) since 2026‑10‑13, checked against `docs/spec/runtime-475-audit.md`, `runtime-477-audit.md`
   and `runtime-478-audit.md` and rehearsed on nodes built from each of those sources; any mainnet runtime
   change repeats the rehearsal before activation.
-- **`VERSION2-FINAL.md`** — the plan of record for **settlement v2**, the pool tier's usage‑proportional,
+- **`docs/archive/VERSION2-FINAL.md`** — the plan of record for **settlement v2**, the pool tier's usage‑proportional,
   cumulative‑account settlement from the switch epoch **E_s**: its contracts, ledger, audit, migration,
   activation gates and tests.
 
@@ -400,7 +400,7 @@ A condensed, current (dTAO‑era) reference. Identifiers are from `opentensor/su
   addresses, and a claim that the runtime's transfer floor refuses simply reverts and stays claimable.
   Because vault2 is immutable, it depends for good on the ABIs of `getStake`, `getMinerCollateral`,
   `moveStake` and `transferStake`: a runtime that changes one of them freezes every capture and claim
-  (`VERSION2-FINAL.md` §17).
+  (`docs/archive/VERSION2-FINAL.md` §17).
 
   > Precompile ABIs are **not formally versioned** (issue #2455). Pin a Subtensor release tag, target
   > **Staking V2** (`0x805`, not the legacy `0x801`), and re‑verify addresses/ABIs before launch.
@@ -498,7 +498,7 @@ runtime facts vault2 and `STSettlement2` (§3) rely on come from the local v451�
 mainnet runtimes 475, 477 and 478, checked against `docs/spec/runtime-475-audit.md`, `runtime-477-audit.md`
 and `runtime-478-audit.md`, and were measured on nodes built from them (`scripts/runtime-rehearsal/`,
 measurements in its `README.md`, whose runtime 478 section supersedes the earlier gas limits). Before
-deployment their exact bytecode must pass a rehearsal on such a node (R-1 to R-6, `VERSION2-FINAL.md` §15.8,
+deployment their exact bytecode must pass a rehearsal on such a node (R-1 to R-6, `docs/archive/VERSION2-FINAL.md` §15.8,
 driven by the Go harness in `rehearsal/`); it has passed on 475, and with the claim batcher's R-7 on 477 and
 478, and any mainnet runtime change repeats it.
 
@@ -640,7 +640,7 @@ the v1 lifecycle (timeline from `README.md`):
 ```
 
 From `E_s` (the pool's `firstEpoch`, set when the owner calls `registerOperatorPool`) each epoch follows the
-version 2 lifecycle (`VERSION2-FINAL.md` §5), in blocks after the epoch's end block `end(e)`:
+version 2 lifecycle (`docs/archive/VERSION2-FINAL.md` §5), in blocks after the epoch's end block `end(e)`:
 
 ```
   ≤ +1,200 (≈4h)     STSettlement2.closeOperatorEpoch(e,n), by anyone: vault2 captures the pool hotkey's
@@ -694,7 +694,7 @@ vault keeps paying the epochs before E_s and the credits it has accepted (§6.3)
    its own escrow hotkey. It snapshots each epoch's funding once, holds at most one pending root per pool,
    keeps every finalized root, and pays each account its cumulative balance less what it has already been
    paid. It fixes the 14,400-block challenge window itself and has no owner, pause or upgrade path once its
-   coordinator link is fixed, so its guarantees (`VERSION2-FINAL.md` §4.2) hold whatever `STSettlement2`
+   coordinator link is fixed, so its guarantees (`docs/archive/VERSION2-FINAL.md` §4.2) hold whatever `STSettlement2`
    does.
 5. **`STSettlement2` is UUPS-upgradeable by the owner.** It reads operators, windows, epoch boundaries and
    the pause flag from the coordinator. It registers v2 pools, answers `settlementAt` (which vault and pool
@@ -848,7 +848,7 @@ function sets subnet weights.
   while a validator sets weights, but in a tempo without weights Yuma's fallback pays validator emission by
   stake, and the rehearsal escrow earned that way. Only `assignSurplus`, a coordinator call capped at the
   escrow's surplus, credits surplus to a pool's funding. The first `STSettlement2` release never calls it;
-  a later upgrade adds a wrapper for the release 1.0 carry sweep (`VERSION2-FINAL.md` §16).
+  a later upgrade adds a wrapper for the release 1.0 carry sweep (`docs/archive/VERSION2-FINAL.md` §16).
 - **Locked stake in vault2.** Since runtime 475 (unchanged in 478) the runtime can lock part of each
   registration's price as collateral on the
   registering coldkey's position (a subnet's collateral lock share, 0 by default). `getStake` includes the
@@ -856,7 +856,7 @@ function sets subnet weights.
   therefore moves and counts only **movable** stake, `getStake` less the lock it reads with
   `getMinerCollateral`, in captures, `absorbStake` and the backing check, while its delta checks still
   compare whole positions. Accounts also reject incoming conviction-locked alpha unless they opt in, and
-  vault2 never does, so no third party can push a lock onto its positions (`VERSION2-FINAL.md` §7.3).
+  vault2 never does, so no third party can push a lock onto its positions (`docs/archive/VERSION2-FINAL.md` §7.3).
 - **TAO is only touched** for gas, registration burns (paid as call value) and, from E_s, vault2's demand
   fee, besides the owner's discretionary conversions. Every internal move is a same-subnet `moveStake` or
   `transferStake`, so participants pay AMM slippage only where α is bought for a deposit (§7.4) or sold to
@@ -888,7 +888,7 @@ with `checkPath` if it lowers an account of a finalized root, gives that account
 it behind an inconsistent node. If the tree is withheld, anyone can `demandPath` the on-chain opening of an
 account, proven against any finalized root, and the root cannot finalize until each demand is answered by
 an opening that shows no fault. An accrued v2 balance therefore survives a bad successor as long as someone
-challenges or demands during the 14,400-block window (`VERSION2-FINAL.md` §4.2).
+challenges or demands during the 14,400-block window (`docs/archive/VERSION2-FINAL.md` §4.2).
 
 **One runtime switch sits outside every contract.** The SN25 owner key (the `ur-owner` multisig), or the
 chain's root, can disable stake transfers on the subnet (`sudo_set_toggle_transfer`). Every `transferStake`
@@ -994,7 +994,7 @@ clamp and the cede rule are unchanged. This is a deliberate launch mode used whi
 of the network. Version 2 settles each pool's epochs from E_s through the v2 ledger rather than a payout
 artifact, and the signed policy's `deposit.usage_artifact` field is inert for those epochs. The deposit
 audit stays dormant at zero price, and a priced policy needs its own v2 deposit design
-(`VERSION2-FINAL.md` §9.4).
+(`docs/archive/VERSION2-FINAL.md` §9.4).
 
 ### 7.2 A deposit is conviction stake (D25)
 
@@ -1036,7 +1036,7 @@ conviction.
 ### 7.4 The reserve — staked, locked, compounding (the buyback)
 
 Every deposit is a **buyback** in the sense the leading revenue‑generating subnets use (Chutes'
-buy‑and‑**lock**, `COMPARISON.md`): usage revenue is converted to α and permanently removed from liquid
+buy‑and‑**lock**, `docs/design/COMPARISON.md`): usage revenue is converted to α and permanently removed from liquid
 supply, rather than recycled to participants who would re‑sell it.
 
 - **The flow.** The NO funds deposits by **buying α on‑market** from customer revenue — the buy leg is
@@ -1097,7 +1097,7 @@ reads, per NO `n`, straight off chain state and its own trails:
   deposit must equal `floor(bytes_n × rate_gib(tier_n) / GiB + users_n × rate_user(tier_n))`, capped, or
   the pool is zero‑weighted (the deposit audit). This is the release 1.0 audit, dormant at zero price;
   epochs from `E_s` have no signed payout artifact, so a priced policy needs its own v2 deposit design
-  (`VERSION2-FINAL.md` §9.4);
+  (`docs/archive/VERSION2-FINAL.md` §9.4);
 - **`tier_n`** — the NO's conviction tier, from its cumulative locked α before the epoch (§7.2, §7.5), and the
   published
   two‑component **`rate(tier_n)`** (§7.3);
@@ -1150,7 +1150,7 @@ median/clip/vtrust over many independent validators is what turns those into the
 The NO does not hold the pool, and in version 2 it no longer chooses the split either:
 `seed/INCENTIVES.md`'s "the network operator determines the payout from their mining slots" now means
 only that the NO supplies the usage and wallet records. For every epoch from the switch epoch `E_s` (the
-pool's v2 `firstEpoch`, `VERSION2-FINAL.md` §3, §6), provider `p` is **eligible** in NO `n`'s pool when
+pool's v2 `firstEpoch`, `docs/archive/VERSION2-FINAL.md` §3, §6), provider `p` is **eligible** in NO `n`'s pool when
 it has settled usage in the epoch's earning window, a payout coldkey selected by a signed consent (its
 own, else its network's, else a hotkey delegation), and no active fleet binding at either epoch boundary
 (head fleets are paid natively, §8.4). Its share is proportional to its **verified usage and nothing
@@ -1374,7 +1374,7 @@ median, θ takes effect only if a **stake-majority of validators run the same θ
 governance parameter*, not per-validator discretion.
 
 **θ is the load-bearing new decision, because it trades the two bets against each other.** Demand-coupling
-(`implied_usage × quality`, the headline bet of `COMPARISON.md`) lives entirely in the **`1−θ` tail`; the
+(`implied_usage × quality`, the headline bet of `docs/design/COMPARISON.md`) lives entirely in the **`1−θ` tail`; the
 head is pure routable-supply breadth (§8.4), *decoupled* from deposits.
 - **Large θ (head-heavy):** a big, trust-minimized meritocracy — but most emission is demand-*de*coupled,
   and a NO's best providers then earn from the subnet-funded head, not the NO's demand-weighted pool, so NO
@@ -1693,13 +1693,13 @@ balance is large relative to gas. A claim uses about 170,000 to 188,000 gas. Run
 list, so a claim's least gas limit is about 192,000 while that list is short and about 1.27M once third
 parties fill it (about 2.44M whatever the list on runtimes 475 and 477). Anyone can lengthen the list between
 an estimate and the claim's inclusion, so the claim tools and the SDK sign a claim at no less than 2.6M gas;
-only the gas used is paid (`docs/spec/runtime-478-audit.md`; `VERSION2-FINAL.md` §11). An optional,
+only the gas used is paid (`docs/spec/runtime-478-audit.md`; `docs/archive/VERSION2-FINAL.md` §11). An optional,
 stateless claim batcher (`STClaimBatcher`) claims many
 accounts in one transaction, each capped at its own gas so that a claim the runtime refuses cannot starve
 the others, and still only to each leaf's coldkey: from ten claims on it saves 15–18% of their gas, and
 a batch's gas limit grows by about 149,000 per claim where each claim sent alone is signed at 2.6M. One
 transaction holds up to 416 claims at the deepest tree on runtime 478 (418 on 475 and 477), and the claim
-tools send at most 32, under 1% more gas a claim (`VERSION2-FINAL.md` §10.2, R-7).
+tools send at most 32, under 1% more gas a claim (`docs/archive/VERSION2-FINAL.md` §10.2, R-7).
 Pausing settlement never stops claims. Claims are pull‑based, so settlement is `O(1)` on‑chain regardless of
 participant count, and each pool has its own root — **there is no global claim root**.
 
@@ -1909,7 +1909,7 @@ designs, §9.3/§13.6) is an open post‑launch question, not a committed roadma
   so, whether the parked **(X)**/**(Y)** designs are the right one — is left to a post‑launch iteration
   (D29), not pre‑committed here.
 - **Secured by v2 settlement** (epochs from the switch epoch `E_s`, from which a pool settles on v2;
-  §13.1, `VERSION2-FINAL.md` §3–§4): the promise is **accrual** — each eligible provider's usage share of
+  §13.1, `docs/archive/VERSION2-FINAL.md` §3–§4): the promise is **accrual** — each eligible provider's usage share of
   its pool is credited to its payout coldkey's account, never expires, and is delivered whenever anyone
   claims it. Whatever the owner-upgradeable `STSettlement2` coordinator does, the immutable
   `STSettlementVault2` (vault2) enforces (G1–G6): conservation
@@ -1929,7 +1929,7 @@ designs, §9.3/§13.6) is an open post‑launch question, not a committed roadma
   provider per week at 100k providers, so a 250k-gas claim at a 5 gwei base fee (≈ 0.19 α; the rehearsal
   measured 186,707 gas for an account's first claim and 169,606 for a later one) costs about 13 weeks of
   average earnings, and gas falls under 10% of a claim only after ≈ 131 weeks; both take ten times longer
-  at 1M providers (`VERSION2-FINAL.md` §3). A third party can also raise that cost: by filling vault2's own
+  at 1M providers (`docs/archive/VERSION2-FINAL.md` §3). A third party can also raise that cost: by filling vault2's own
   staking-hotkey list (up to 128 entries, each costing it a transfer above the floor) it makes every claim
   use about 1.26M gas instead of 0.15M, about 1 α at the same prices.
 - **Outside any contract** (chain-level powers that the release 1.0 vault faces too): the SN25 owner key
@@ -2004,7 +2004,7 @@ on NO hotkeys (violates no‑custody); a **single** contract miner UID with the 
 (collapses Yuma); and the earlier **per‑NO validator pool with a take‑0 custody hack** (fragile, and
 redundant with crypto‑validity — replaced by plain independent validators earning native dividends, §13.6).
 
-**v2 settlement (from `E_s`; owner decisions, October 11; `VERSION2-FINAL.md`).** The release-1.0 (v1)
+**v2 settlement (from `E_s`; owner decisions, October 11; `docs/archive/VERSION2-FINAL.md`).** The release-1.0 (v1)
 vault fixes a per-epoch entitlement of expiring per-coldkey shares, so a provider claims once per epoch,
 and only providers the validator has measured can be paid (at launch, a closed cohort of at most 2,000).
 v2 leaves the v1 contract set and policy v1 unchanged — they settle every earlier epoch and a later sweep
@@ -2115,7 +2115,7 @@ to a top slot, the chain's deregistration churn running the tournament. This is 
 field has the pool pattern (ComputeHorde, TPN, Vanta) *and* the direct-UID pattern, but **no subnet tiers
 them** — the norm is the opposite, *consolidate* behind one UID (Chutes: "never register more than one
 UID"); and every pooled tail elsewhere is paid **off-chain at operator discretion**, where ours is
-trustless (`COMPARISON.md`). *Rejected:* head-only (discards the 100k-provider on-ramp and the demand
+trustless (`docs/design/COMPARISON.md`). *Rejected:* head-only (discards the 100k-provider on-ramp and the demand
 signal); pool-only (the v0.1 design — leaves the best providers trusting a NO's split, one of thousands);
 and making top-level miners *contract-pooled* too (redundant — that is just another NO pool, and child
 hotkeys **cannot** route miner emission to sub-workers anyway, §8.4).
@@ -2269,7 +2269,7 @@ key (which would trigger the post-Spec-421 `miner_burned` penalty).
 7. **Indexer/explorer** (planned; not built). Surfaces `D_n`, pool quality `Q_n`, consensus weights, vtrust, the
    **independent‑validator stake share**, the **buyback reserve + demand ratio `R_e`** (§12.4), and
    roots — the public audit surface.
-8. **Version 2 payout settlement (`VERSION2-FINAL.md`; epochs from E_s).** Each epoch's pool funding is
+8. **Version 2 payout settlement (`docs/archive/VERSION2-FINAL.md`; epochs from E_s).** Each epoch's pool funding is
    allocated by usage alone and credited to per-account cumulative balances that never expire; the release
    1.0 contracts above are not modified or upgraded.
    - **Contracts.** The immutable `STSettlementVault2` ("vault2", `evm/src/STSettlementVault2.sol`) and the
@@ -2289,7 +2289,7 @@ key (which would trigger the post-Spec-421 `miner_burned` penalty).
      v2: a capturing close uses about 226,000 gas on runtime 478, but the limit a stake move needs grows with
      vault2's staking-hotkey list, which third parties can lengthen before the close is included, so the
      server signs every close at no less than 3,200,000 gas (what a capturing close needed through runtime
-     477), capped at the policy's `maximum_gas`, and today's `maximum_gas` is 1,000,000 (`VERSION2-FINAL.md`
+     477), capped at the policy's `maximum_gas`, and today's `maximum_gas` is 1,000,000 (`docs/archive/VERSION2-FINAL.md`
      §8.1, §13; `docs/spec/runtime-478-audit.md`).
    - **Validator.** From the pool's `firstEpoch` it weights the pool UID resolved through
      `STSettlement2.settlementAt`. It audits each pending root's ledger and, from its admitted auditor
@@ -2408,14 +2408,14 @@ faulted.
 7. **M6 — Decentralize further (deferred, §6.4.3):** trustless oracle (§13.5), permissionless bonded
    admission, on‑chain governance; advance the `VALIDATOR.md` §10 roadmap.
 
-**Version 2 (`VERSION2-FINAL.md`)** changes payout settlement on mainnet beside the ladder above. Its
+**Version 2 (`docs/archive/VERSION2-FINAL.md`)** changes payout settlement on mainnet beside the ladder above. Its
 runtime rehearsal (gate 2 of §16.4) runs on a node built from the source of mainnet's runtime (475 at
 first; rerun and passed on 477 and on 478, mainnet's runtime since 2026‑10‑13) (`scripts/runtime-rehearsal/`, a
 one-node `fast-runtime` dev chain with mainnet's EVM chain ID, driven by
 the Go harness in `rehearsal/`), not testnet: testnet's 360-block cadence cannot satisfy
 `epochBlocks >= rootCommitWindowBlocks + 14,400`, and the testnet campaign closed on 2026-09-28.
 
-- **Version 2 phase A — activation at E_s** (`VERSION2-FINAL.md` §12.1). Ships §16.1 item 8. With gates
+- **Version 2 phase A — activation at E_s** (`docs/archive/VERSION2-FINAL.md` §12.1). Ships §16.1 item 8. With gates
   1–4 of §16.4 met and the gate 5 software released, deploy vault2 and `STSettlement2` through the v2
   contract phase, with readback; adopt the validator config, re-sign the treasury approval and the operator
   gas policy, ship and configure the server, and check that the validator runs the adopted config and the
@@ -2425,7 +2425,7 @@ the Go harness in `rehearsal/`), not testnet: testnet's 360-block cadence cannot
   has changed and E_s moves. From E_s the validator weights the v2 pool UID, the server runs the v2 driver
   and the v1 driver stops; epoch `E_s − 1` completes on v1 in its normal windows, and v1 claims stay open
   until each v1 expiry.
-- **Later version 2 phases** (`VERSION2-FINAL.md` §16). Roster and evidence (signed work requests; the
+- **Later version 2 phases** (`docs/archive/VERSION2-FINAL.md` §16). Roster and evidence (signed work requests; the
   validator verifies consent chains); phase B, measurement (sampling frame, VRF cohort, stratified
   estimator, head budget, validator state bounds); phase C, the v1 carry sweep into vault2 at or after
   `E_s + 8`, once the last v1 expiry has passed, plus a second operator, a fractional approval quorum,
@@ -2463,7 +2463,7 @@ against finney at the Phase‑E mainnet promotion.)*
   `max_weight_limit_u16`, audit finalized vectors, and set a high `immunity_period` to protect the head
   from breadth-sampling-dip eviction.
 
-**Version 2 activation gates** (`VERSION2-FINAL.md` §14; test IDs from its §15). Version 2 phase A
+**Version 2 activation gates** (`docs/archive/VERSION2-FINAL.md` §14; test IDs from its §15). Version 2 phase A
 activates (the owner Safe sends `registerOperatorPool`) only when all six hold; E_s is the first epoch that
 starts at least two days after the last one passes.
 
@@ -2549,7 +2549,7 @@ starts at least two days after the last one passes.
 - **Validated path** — a completed `VALIDATOR.md` trail proof, id `keccak256(trail_id‖vpk‖server_key_id)`;
   self‑proving (NO `FINAL` + validator `vpk` sigs), verified off chain with Ed25519 (§9.1).
 - **Epoch (7 d)** — application settlement period; **tempo (360 blk)** — chain weight/emission cadence.
-- **Version 2 (v2) / `firstEpoch` / E_s** — the second version of payout settlement (`VERSION2-FINAL.md`).
+- **Version 2 (v2) / `firstEpoch` / E_s** — the second version of payout settlement (`docs/archive/VERSION2-FINAL.md`).
   It settles a pool's epochs from its `firstEpoch`, fixed when the owner Safe registers the pool through
   `STSettlement2`; earlier epochs settle under release 1.0 (v1). **E_s**, the switch epoch, is pool 1's
   `firstEpoch`: the first epoch that starts at least two days after the last activation gate passes (§16.4).
@@ -2557,7 +2557,7 @@ starts at least two days after the last one passes.
   and the escrow hotkey; it snapshots each epoch's funding, holds the pending root and every finalized root,
   runs challenges and demands, enforces the 14,400-block challenge window, and pays claims. It moves and
   counts only movable stake, never registration collateral (§6.3). Its guarantees hold whatever
-  `STSettlement2` does (`VERSION2-FINAL.md` §4.2).
+  `STSettlement2` does (`docs/archive/VERSION2-FINAL.md` §4.2).
 - **`STSettlement2`** — the owner-upgradeable (UUPS) v2 settlement coordinator beside the release 1.0 set. It
   reads operators, windows and pause from the v1 coordinator, holds the auditor set and approvals, and drives
   close, commit and finalize into vault2; `settlementAt(noId, epoch)` names the vault and pool hotkey that
@@ -2591,7 +2591,7 @@ starts at least two days after the last one passes.
 - **Carry** — release 1.0: an expired or unallocated remainder, or a missed root's funding, folded into the
   same NO's next finalized entitlement (§8.3). Version 2: within one root, the funding of a covered epoch
   with no eligible usage or with inputs declared unrecoverable, allocated with the next covered epoch that has
-  eligible usage (`VERSION2-FINAL.md` §6.4). Release 1.0's remaining carry reaches vault2 through the phase C
+  eligible usage (`docs/archive/VERSION2-FINAL.md` §6.4). Release 1.0's remaining carry reaches vault2 through the phase C
   sweep.
 - **Payout list / `share_bps` / claim expiry (release 1.0)** — for epochs before E_s, the NO's per-epoch
   `payoutRoot` over `(coldkey, share_bps)` leaves allocating exactly 10,000 bps; a leaf claims
@@ -2601,10 +2601,10 @@ starts at least two days after the last one passes.
 
 ---
 
-*End of WHITEPAPER.md version 2 — settlement v2 for epochs from E_s, specified in `VERSION2-FINAL.md` — on
+*End of WHITEPAPER.md version 2 — settlement v2 for epochs from E_s, specified in `docs/archive/VERSION2-FINAL.md` — on
 v1.0: validator effort bounty removed from scope (v1 = native dividends only; the
 `(X)`/`(Y)` bounty designs are parked, not a committed phase; §9, §13.6; decision D29 in
-`WHITEPAPER_DISCUSS.md`) — layered on v0.4 conviction staking + validator-computed weights + IP-breadth head
+`docs/design/WHITEPAPER_DISCUSS.md`) — layered on v0.4 conviction staking + validator-computed weights + IP-breadth head
 (D25–D28), v0.3 deposits-as-buybacks (locked, dividend-compounding reserve; miner pay = emission-only; §7.4,
 §12.4; D23), and the v0.2 two-tier miner side (pool on-ramp + direct top-level miners; §8.4–8.5, §10, §11.4,
 §14; D16–D20). This document fixes the architecture and the formulas; the contract source, the

@@ -88,7 +88,7 @@ Exclusion uses `proxy remove --match=<pattern>`. Matching removes proxies and pe
 | `eco [on\|off]` | Enable or disable the Eco profile (RAM-constrained hosts). |
 | `turbo [v4\|v8\|off]` | Enable Turbo V4 or Turbo V8 high-throughput modes. |
 | `ramlogs [on\|off]` | Enable or disable RAM-disk logging (`/dev/shm`). |
-| `report <url>` | Set the live bandwidth reporting URL (`report off` disables). |
+| `report <url>` | Leftover. It sets a bandwidth report URL, but the hub that received reports was removed, so it does nothing useful. It writes the lower-precedence file: a `report-url` set through the control socket takes precedence, so while that override exists `report <url>` cannot change the effective URL and `report off` cannot disable it. For fleet visibility use `metrics` (below). |
 | `profile [name]` | Show or set the memory and GC tuning profile (`auto`, `turbo-v4`, `turbo-v8`, `eco`, `lowmem`; `v4` and `v8` are accepted aliases). With no argument, prints the current profile and what each one is for. |
 | `metrics [status\|on\|off\|listen <ip:port\|auto>]` | Show where the Prometheus `/metrics` endpoint listens and the address to scrape, turn it on or off, or choose its listen address. Live, no restart, persisted. See [Monitoring](Monitoring). |
 
@@ -194,13 +194,13 @@ Runtime settings no longer go through hand-edited systemd drop-ins. The provider
 
 ```bash
 # Change a setting on a running provider. No restart.
-urnet-tools set report-interval 300
+urnet-tools set proxy-url-refresh 30m
 
 # Read one back
-urnet-tools set report-interval
+urnet-tools set proxy-url-refresh
 
 # Clear it
-urnet-tools set report-interval off
+urnet-tools set proxy-url-refresh off
 ```
 
 **When the provider is stopped**, the change is written to `~/.urnetwork/pending_overrides.json` instead (flock-guarded, so the CLI and the installer's shell helpers cannot lose each other's writes) and merged atomically on the next start.
@@ -208,7 +208,7 @@ urnet-tools set report-interval off
 **Confirming the change registered.** The CLI's exit code only tells you the request was accepted. The provider logs the change itself, which is the authoritative confirmation:
 
 ```text
-[control] set report-interval=300 rejected: <error>
+[control] set proxy-url-refresh=30m rejected: <error>
 [control] set gogc=on failed to persist, rolled back: <error>
 ```
 

@@ -33,7 +33,7 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 | `[proxy]` | Proxy lifecycle: add, remove, health, reload |
 | `[proxy-quality]` | Proxy quality grading events |
 | `[relay]` | Relay connection events |
-| `[report]` | Hub bandwidth report posts and results |
+| `[report]` | Leftover bandwidth report posts. The hub that received them was removed, so you should not see these on a normal setup. |
 | `[session]` | Identity session events |
 | `[profit]` | Profit heartbeat: earning yes/no, clients, rate |
 | `[startup]` | Startup phase markers and Ready summary |

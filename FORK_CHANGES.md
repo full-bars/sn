@@ -1,10 +1,12 @@
-# URNetwork H3/QUIC Fork: Custom Changes
+# Fork Changes (full-bars/sn)
 
-This document tracks all modifications made to the upstream URNetwork `sn` (connect v2026) codebase in this fork. Use this as a reference when rebasing to newer upstream versions.
+`full-bars/sn` is a fork of `urfoundation/sn`, the UR Subnet (Bittensor SN25) code. Its provider uses HTTP/3 (QUIC) and works with IPv4 and IPv6.
+
+This document tracks all modifications made to the upstream `sn` (connect v2026) codebase in this fork. Use this as a reference when rebasing to newer upstream versions.
 
 **Fork Based On**: urfoundation/sn (connect v2026: H3/QUIC transport + IPv6 dual-stack)
 **Repository**: github.com/full-bars/sn
-**Binary Versioning**: v2026.<month>.<day>-<epoch>-meso
+**Binary Versioning**: v2026.<month>.<day>-<epoch>-meso (releases of this fork carry the `-meso` suffix; tags without it come from upstream)
 
 ---
 

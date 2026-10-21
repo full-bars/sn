@@ -2,8 +2,8 @@
 
 Prepared 2026-10-11. This is the plan of record for version 2. It supersedes
 [VERSION2.md](VERSION2.md) and Part 2 of
-[VERSION2-REVIEW-RESPONSE.md](VERSION2-REVIEW-RESPONSE.md), resolves the meta
-review ([VERSION2-REVIEW-RESPONSE-META.md](VERSION2-REVIEW-RESPONSE-META.md),
+[VERSION2-REVIEW-RESPONSE.md](../../VERSION2-REVIEW-RESPONSE.md), resolves the meta
+review ([VERSION2-REVIEW-RESPONSE-META.md](../../VERSION2-REVIEW-RESPONSE-META.md),
 A1-A6) and records the owner decisions of 2026-10-11.
 
 Two rules govern every choice:

@@ -24,7 +24,10 @@
 * **[Baseline Recorder](Baseline)**
 * **[Node Identity](Node-Identity)**
 * **[Egress Security Policy](Egress-Security-Policy)**
+* **[Bittensor Quick Start](Bittensor-Quick-Start)**
 * **[Bittensor Operations](Bittensor-Operations)**
+* **[Bittensor Head Tier](Bittensor-Head-Tier)**
+* **[Bittensor Glossary](Bittensor-Glossary)**
 * **[HotSwap](HotSwap)**
 * **[LAUNCH](LAUNCH)**
 

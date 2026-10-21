@@ -81,8 +81,7 @@ Quick jump:
 | `URNETWORK_PPROF` | - | Set to a `host:port` to enable the loopback-only diagnostics server (e.g. `127.0.0.1:6060`). Off by default. Serves `/debug/pprof/*`, `/metrics/pool`, and `/metrics/errors`; only literal loopback IPs are accepted (hostnames are rejected). Pull profiles via an SSH tunnel, e.g. `ssh -L 6060:127.0.0.1:6060 host` then `go tool pprof http://127.0.0.1:6060/debug/pprof/profile`. |
 | `URNETWORK_PROXY_BENCHMARK` | - | Set to `true` to enable per-proxy latency monitoring. Off by default. Probes: TCP connect every 5 min (raw RTT to proxy port), SOCKS5 CONNECT every 15 min (end-to-end through proxy). Staggered startup jitter prevents thundering herd. ~104 GB/month at 10k proxies. |
 | `URNETWORK_PROXY_BENCHMARK_ENDPOINT` | `connect.bringyour.com:443` | Target for the SOCKS5 CONNECT latency probe. Measured end-to-end through each proxy. |
-| `URNETWORK_REPORT_URL` | - | HTTP URL of a reporting server. When set, the provider POSTs a JSON report with per-proxy metrics (Clients, TotalRx/Tx, BillableRx/Tx). Can be changed at runtime without restart by writing to `~/.urnetwork/report_url` (or using `urnet-tools report <url>`). |
-| `URNETWORK_REPORT_INTERVAL` | `5m` | How often bandwidth reports are posted to `URNETWORK_REPORT_URL`. Accepts Go duration strings such as `30s` or `2m`. Minimum `10s`. The `5m` default keeps the historical SQLite write volume modest across a large fleet; lower it where a more live dashboard matters. |
+| `URNETWORK_REPORT_URL`, `URNETWORK_REPORT_INTERVAL` | - | Leftover settings. The old hub that received bandwidth reports was removed, so nothing listens for them. Leave both unset. Use [Monitoring](Monitoring.md) (Prometheus `/metrics`) to watch a fleet. |
 | `URNETWORK_HEARTBEAT_INTERVAL` | `15s` | Provider heartbeat cadence (minimum `5s`). Shortening it fleet-wide can cause thundering-herd load on the reporting server. |
 | `URNETWORK_AUTH_UNLIMITED` | `false` | Bypass the auth rate limiter; every auth attempt fires immediately. Equivalent to creating `~/.urnetwork/fast_auth`. Only for trusted or benchmark environments. |
 | `URNETWORK_SHM_LOG` | `/dev/shm/urnetwork.log` | Path for the RAM log. |
@@ -139,15 +138,15 @@ cat ~/.urnetwork/events.log
 
 ```bash
 urnet-tools set                     # list current overrides
-urnet-tools set report-interval 300 # change one, live, no restart
-urnet-tools set report-interval off # clear it
+urnet-tools set proxy-url-refresh 30m # change one, live, no restart
+urnet-tools set proxy-url-refresh off # clear it
 ```
 
 **Confirming a change landed.** The provider logs every accepted and rejected
 change, which is the authoritative signal rather than the CLI's exit code:
 
 ```text
-⚙️ [control] set report-interval=300 (was unset)
+⚙️ [control] set proxy-url-refresh=30m (was unset)
 ⚙️ [control] applied 2 queued override(s) from pending_overrides.json: profile=v8, cleared gogc
 ❌ [control] set gogc=abc rejected: ...
 ```
@@ -223,7 +222,7 @@ set above.
 | Eco | `URNETWORK_PROFILE=eco` | RAM-constrained, full throughput | 1-2 GiB |
 | Lowmem | `URNETWORK_PROFILE=lowmem` | Minimum RAM, reduced throughput | < 1 GiB |
 
-See [High-Volume Performance Tuning](High-Volume-Performance-Tuning.md) for the detailed profile behavior and parameter tables.
+The profile names and their effects are summarized above.
 
 ## 🩺 Viewing proxy health
 

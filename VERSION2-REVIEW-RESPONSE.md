@@ -3,7 +3,7 @@
 Prepared 2026-10-09. Part 1 answers [VERSION2-REVIEW.md](VERSION2-REVIEW.md)
 finding by finding, checking each cited line against the code. Part 2 is the
 version-2 design that results; it is self-contained and supersedes
-[VERSION2.md](VERSION2.md).
+[VERSION2.md](docs/archive/VERSION2.md).
 
 Inputs and pins. Unprefixed paths are this repository at `e1500f15`.
 `server/` paths are the operator server at main `f08a0223`; the reviewer read

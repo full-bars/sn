@@ -18,14 +18,15 @@ links*. Bittensor's **Yuma Consensus** turns that measurement into emission. Eve
 denominated in the subnet's native token — **α**, branded **$UR**.
 
 The full specification is in [`WHITEPAPER.md`](WHITEPAPER.md); the design rationale versus
-the rest of the Bittensor field is in [`COMPARISON.md`](COMPARISON.md). Terms are defined in
+the rest of the Bittensor field is in [`COMPARISON.md`](docs/design/COMPARISON.md). Terms are defined in
 the [glossary](#glossary) at the end.
 
 > [!NOTE]
-> This fork (`full-bars/sn`) ships the modern engine version of the 3.23-fix
-> provider. Install and operate it with the commands below; the subnet
-> mechanism documentation that follows still applies to the validator/miner
-> side of the system.
+> `full-bars/sn` is a fork of `urfoundation/sn`. Besides the subnet code, it
+> ships the provider (HTTP/3 over QUIC, IPv4 and IPv6) and `urnet-tools`, the
+> command line tool that installs, runs, checks and updates it. If you just want
+> to run a provider, use the **Quick Start** below. The subnet mechanism
+> sections after it describe the miner and validator side.
 
 ---
 
@@ -86,6 +87,9 @@ Windows Defender may flag this one-liner. See the note below.
 
 ### After you install
 
+> [!TIP]
+> **Bittensor payouts:** most operators only need to sign one wallet consent, once, from their own computer. This fork's `provider` cannot sign it, so use a 3.23-fix or meso-miner `provider` for that one step. Nothing changes on your nodes. See the [Bittensor Quick Start](docs/Bittensor-Quick-Start.md).
+
 After installation, authenticate and start providing:
 
 ```bash
@@ -94,6 +98,16 @@ urnet-tools proxy add ~/proxies.txt
 urnet-tools proxy refresh
 urnet-tools auto on
 ```
+
+### Check and update
+
+```bash
+urnet-tools status      # is the provider running, and is it healthy
+urnet-tools logs        # follow the provider log
+urnet-tools update      # move to the latest release
+```
+
+If something looks wrong, see [Troubleshooting](docs/Troubleshooting.md) and the [Log Message Reference](docs/Log-Message-Reference.md). To watch several machines at once, see [Monitoring](docs/Monitoring.md).
 
 Full guides: [Installation](docs/Installation.md), [Docker Deployment](docs/Docker-Deployment.md),
 [Adding Proxies](docs/Adding-Proxies.md), [urnet-tools](docs/urnet-tools-go.md).
@@ -273,7 +287,7 @@ zero) and tiering miners into a trust‑minimized pooled tail plus a directly‑
 
 ![UR Subnet vs. the Bittensor norm — design‑decision alignment matrix](diagrams/comparison_matrix.png)
 
-Full analysis, per‑theme and per‑subnet, is in [`COMPARISON.md`](COMPARISON.md).
+Full analysis, per‑theme and per‑subnet, is in [`COMPARISON.md`](docs/design/COMPARISON.md).
 
 ---
 
@@ -294,6 +308,8 @@ that splits its pool among its providers. It directs the split; the immutable va
 pays.
 
 ### Register a provider (ingress or egress)
+
+**Most operators:** you only need the one-time wallet consent in the [Bittensor Quick Start](docs/Bittensor-Quick-Start.md). The claim, fleet and multi-operator material below is optional or advanced.
 
 Follow the provider documentation at <https://ur.xyz>. Providers work with network
 operators — the miner defaults to the reference operator, and you can point it at another
@@ -388,7 +404,7 @@ the finite UID budget and undermine the intended ~200-member head.
 |---|---|
 | [`WHITEPAPER.md`](WHITEPAPER.md) | The full subnet specification. |
 | [`VALIDATOR.md`](VALIDATOR.md) | The off‑chain routing‑verification (`/verify`) protocol. |
-| [`COMPARISON.md`](COMPARISON.md) | Design‑decision comparison versus the Bittensor field. |
+| [`COMPARISON.md`](docs/design/COMPARISON.md) | Design‑decision comparison versus the Bittensor field. |
 | [`diagrams/`](diagrams/) | The diagrams above (SVG sources + generators; README figures in `diagrams/readme/`, from `readme_figures.py`). |
 | `evm/` | Reserve sink, settlement vault, UUPS coordinator, tests, and generated artifacts. |
 | `validator/` | The validator binary. |
