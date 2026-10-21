@@ -66,167 +66,7 @@ func Main() {
 		initSHMLoggerWithHandover()
 	}
 
-	usage := fmt.Sprintf(
-		`Connect provider.
-
-The default URLs are:
-    api_url: %s
-    connect_url: %s
-
-Usage:
-    provider auth ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
-    	[--api_url=<api_url>]
-    	[--max-memory=<mem>]
-    	[-v...]
-    provider provide [--port=<port>]
-        [--api_url=<api_url>]
-        [--connect_url=<connect_url>]
-        [--wallet=<coldkey_ss58> [--legacy-network-wallet]]
-        [--hotkey_seed_file=<path>]
-        [--max-memory=<mem>]
-        [--proxy_file=<proxy_file>]
-        [--file=<file>]
-        [--proxy_url=<proxy_url>...]
-        [--url=<url>...]
-        [--URL=<URL>...]
-        [--proxy_url_refresh=<proxy_url_refresh>]
-        [--proxy_url_max=<proxy_url_max>]
-        [--proxy_dead_cleanup_scope=<proxy_dead_cleanup_scope>]
-        [--proxy_dead_cleanup_interval=<proxy_dead_cleanup_interval>]
-        [-v...]
-    provider auth-provide ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
-    	[--port=<port>]
-        [--api_url=<api_url>]
-        [--connect_url=<connect_url>]
-        [--wallet=<coldkey_ss58> [--legacy-network-wallet]]
-        [--hotkey_seed_file=<path>]
-        [--max-memory=<mem>]
-        [--proxy_file=<proxy_file>]
-        [--file=<file>]
-        [--proxy_url=<proxy_url>...]
-        [--url=<url>...]
-        [--URL=<URL>...]
-        [-v...]
-    provider wallet set <coldkey_ss58> [--legacy-network-wallet]
-        [--api_url=<api_url>]
-        [-v...]
-    provider wallet hotkey challenge <coldkey_ss58> --hotkey_seed_file=<path>
-        [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
-        [--api_url=<api_url>]
-        [-v...]
-    provider wallet hotkey set <coldkey_ss58> --hotkey_seed_file=<path>
-        [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]
-        [--replace-other-hotkey]
-        [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
-        [--api_url=<api_url>]
-        [-v...]
-    provider wallet hotkey status [--hotkey_seed_file=<path>]
-        [--api_url=<api_url>]
-        [-v...]
-    provider sn-status [--json]
-        [--api_url=<api_url>]
-        [-v...]
-    provider claim [--store-client=<key> | --provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
-        [--api_url=<api_url>]
-        [-v...]
-    provider bind-head --hotkey=<hex> --registrant=<registrant> --contract=<contract> [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
-        [-v...]
-    provider unbind-head --hotkey=<hex> [--contract=<contract>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
-        [-v...]
-    provider proxy auth add [<key>] <proxy_user> <proxy_password> [-f]
-    provider proxy auth remove [<key>] [--all]
-    provider proxy add [<key_address>...] [--proxy_file=<proxy_file>] [--file=<file>] [--url=<url>] [--URL=<URL>] [-f]
-    provider proxy remove [<key_address>...] [--all]
-    provider proxy remove --match=<pattern> [--yes] [--preview]
-    provider proxy remove-dead [--degraded[=<duration>]] [--auth-failures=<N>] [--source=<source>] [--yes] [--preview]
-    provider proxy activity
-    provider proxy refresh [--force]
-    provider proxy add-source <url>
-    provider proxy remove-source <url>
-    provider proxy exclude [<pattern>] [--remove]
-    provider proxy summary
-    provider proxy trim <count> [--preview]
-    provider direct [<state>]
-    provider proxy paste [--file=<file>]
-    provider logs [-n <lines>]
-    provider print-network-id <file>
-    provider choose_network <api_url> [<connect_url>]
-    provider choose_network --reset
-
-Options:
-    -h --help                        Show this help and exit.
-    --version                        Show version.
-    -v...                            Enable verbose mode. -v implies verbose level 1,
-    					                 -vv implies level 2... etc.
-    --json                           Output in JSON format for automated tooling.
-    -f                               Force overwrite the JWT token store file or proxy value, if exists.
-                                     By default, existing values will not be overwritten.
-    --api_url=<api_url>              Specify a custom API URL to use.
-    --connect_url=<connect_url>      Specify a custom connect URL to use.
-    <api_url>                        API URL to save as the chosen network (http:// or https://),
-                                     or a preset: main | beta.
-    <connect_url>                    Connect URL to save as the chosen network (ws:// or wss://).
-    --reset                          With choose_network, clear the saved network and revert to the main network.
-    --user_auth=<user_auth>	         Login with a username.
-    --password=<password>            Login with a password. If --user_auth is used, you will be prompted for your
-    					                 password anyways, if you don't specify it using this option.
-    -p --port=<port>                 Status server port [default: 0].
-    --max-memory=<mem>               Set the maximum amount of memory in bytes, or the suffixes b, kib, mib, gib may be used [This is a soft limit].
-    --wallet=<coldkey_ss58>          Also set the subnet claim wallet at startup, same as provider wallet set.
-                                     A failure is logged and does not block providing.
-    <coldkey_ss58>                   Subnet claim wallet: an ss58 coldkey address (prefix 42).
-    --legacy-network-wallet          Explicit network-wallet compatibility; allows unsigned subnet wallet set.
-    --hotkey_seed_file=<path>        Path to 0600 hotkey seed file.
-    --coldkey_seed_file=<path>       Path to 0600 coldkey seed file.
-    --replace-other-hotkey           hotkey set: replace the network's delegation to a different hotkey. Without it that is refused.
-    --message=<text>                 Statement message string to sign.
-    --signature=<hex>                64-byte sr25519 signature in hex (0x optional).
-    --wallet-from-epoch=<epoch>      First epoch of earning wallet mapping.
-    --wallet-through-epoch=<epoch>   Last epoch of earning wallet mapping.
-    --store-client=<key>             claim: use the client token of this identity from the store
-                                     (~/.urnetwork/.client_jwts.json; the key is a proxy address or "direct").
-                                     Pick a client that served traffic.
-    --provider-jwt=<path>            Path to provider JWT file for claim.
-    --legacy-coldkey=<coldkey_ss58>  Explicit legacy coldkey ss58 for claim on pre-mainnet epochs.
-    --epoch=<epoch>                  Epoch to fetch the subnet pool claim for. Defaults to the last
-                                     finalized epoch, which is the epoch before the current one.
-    --rpc=<rpc_url>                  EVM json-rpc endpoint used to check the payout root on-chain.
-                                     May be repeated; endpoints are tried in order until one answers.
-    --key_file=<key_file>            EVM private key file. When given, claim/bind-head/unbind-head sign
-                                     and submit the transaction (via --rpc); without it, the ready-to-submit
-                                     calldata is printed for the offline/air-gapped snclaim path.
-    --dry-run                        Build and sign the extrinsic but do not submit.
-    --hotkey=<hex>                   Head-tier miner hotkey as a 0x-optional 32-byte hex account id.
-    --registrant=<registrant>        The EVM address that will submit bindHead via snclaim (0x, 20 bytes).
-                                     The head-bind digest is bound to this address, so it MUST equal the
-                                     snclaim sender, whose mirror must be the hotkey's on-chain coldkey.
-    --contract=<contract>            STSubnet proxy contract address (0x, 20 bytes).
-    <key>                            Authentication key
-    <proxy_user>                     SOCKS5 user
-    <proxy_password>                 SOCKS5 password
-    <key_address>                    SOCKS5 server as host:port, host:port:user:pass, host:port::, or key@host:port
-    --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port
-    --proxy_url=<proxy_url>          A live proxy list URL. Repeatable. Additive with --proxy_file / internal config. Also settable via PROXY_URL (comma-separated for multiple).
-    --url=<url>                      Alias for --proxy_url.
-    --URL=<URL>                      Alias for --proxy_url.
-    --proxy_url_refresh=<dur>        How often to re-fetch --proxy_url sources and add new entries. Also settable via PROXY_URL_REFRESH.
-    --proxy_url_max=<n>              Cap on total proxies sourced from --proxy_url. 0 = unlimited, defaults to 500. Also settable via PROXY_URL_MAX.
-    --proxy_dead_cleanup_scope=<s>   Automatic dead-proxy cleanup scope: none, url, or all. Defaults to url (URL-sourced only). Also settable via PROXY_DEAD_CLEANUP_SCOPE.
-    --proxy_dead_cleanup_interval=<dur>  How often automatic cleanup runs, when scope isn't none. Also settable via PROXY_DEAD_CLEANUP_INTERVAL.
-    <url>                            A proxy list URL.
-    --match=<pattern>                Case-insensitive substring matched against proxy hosts (never port or
-                                     credentials). Removes matches from the proxy list, proxy file, and URL
-                                     cache, and excludes the pattern from future URL fetches. See 'proxy exclude'.
-    <pattern>                        Host substring for 'proxy exclude' (add). With --remove, deletes the pattern.
-                                     With no pattern, 'proxy exclude' lists active patterns.
-    --file=<file>                    A path to a proxy file (alias for --proxy_file, or input for 'proxy paste').
-    <state>                          Direct IP providing state: on | off | status. If omitted, reports current state.
-    <count>                          Max number of running proxies to keep. The A-F worst-graded above it are shed. 0/off clears the cap.
-    --force                          Bypass the 8-hour warmup protection gate.
-    -n <lines>                       Number of lines to show from the end of the log [default: 0].`,
-		DefaultApiUrl,
-		DefaultConnectUrl,
-	)
+	usage := mainUsage()
 
 	// Allow `provider help` as a friendlier alias for --help
 	if len(os.Args) == 2 && os.Args[1] == "help" {
@@ -282,6 +122,10 @@ Options:
 			hotkeyWalletCmd(opts)
 		} else if set, _ := opts.Bool("set"); set {
 			walletSet(opts)
+		} else if sign, _ := opts.Bool("sign"); sign {
+			walletSign(opts)
+		} else if status, _ := opts.Bool("status"); status {
+			walletStatus(opts)
 		}
 	} else if snStatus, _ := opts.Bool("sn-status"); snStatus {
 		snStatusCmd(opts)
@@ -571,3 +415,178 @@ var _ docopt.Opts
 
 // VersionStamp is an alternative version marker embedded as program data.
 var VersionStamp string
+
+// mainUsage is the docopt usage of the release provider.
+func mainUsage() string {
+	return fmt.Sprintf(
+		`Connect provider.
+
+The default URLs are:
+    api_url: %s
+    connect_url: %s
+
+Usage:
+    provider auth ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
+    	[--api_url=<api_url>]
+    	[--max-memory=<mem>]
+    	[-v...]
+    provider provide [--port=<port>]
+        [--api_url=<api_url>]
+        [--connect_url=<connect_url>]
+        [--wallet=<coldkey_ss58> [--legacy-network-wallet]]
+        [--hotkey_seed_file=<path>]
+        [--max-memory=<mem>]
+        [--proxy_file=<proxy_file>]
+        [--file=<file>]
+        [--proxy_url=<proxy_url>...]
+        [--url=<url>...]
+        [--URL=<URL>...]
+        [--proxy_url_refresh=<proxy_url_refresh>]
+        [--proxy_url_max=<proxy_url_max>]
+        [--proxy_dead_cleanup_scope=<proxy_dead_cleanup_scope>]
+        [--proxy_dead_cleanup_interval=<proxy_dead_cleanup_interval>]
+        [-v...]
+    provider auth-provide ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
+    	[--port=<port>]
+        [--api_url=<api_url>]
+        [--connect_url=<connect_url>]
+        [--wallet=<coldkey_ss58> [--legacy-network-wallet]]
+        [--hotkey_seed_file=<path>]
+        [--max-memory=<mem>]
+        [--proxy_file=<proxy_file>]
+        [--file=<file>]
+        [--proxy_url=<proxy_url>...]
+        [--url=<url>...]
+        [--URL=<URL>...]
+        [-v...]
+    provider wallet set <coldkey_ss58> [--legacy-network-wallet]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet sign <coldkey_ss58> [--port=<port>] [--no-open]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet status
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet hotkey challenge <coldkey_ss58> --hotkey_seed_file=<path>
+        [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet hotkey set <coldkey_ss58> --hotkey_seed_file=<path>
+        [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]
+        [--replace-other-hotkey]
+        [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet hotkey status [--hotkey_seed_file=<path>]
+        [--api_url=<api_url>]
+        [-v...]
+    provider sn-status [--json]
+        [--api_url=<api_url>]
+        [-v...]
+    provider claim [--store-client=<key> | --provider-jwt=<path> | --legacy-coldkey=<coldkey_ss58>] [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+        [--api_url=<api_url>]
+        [-v...]
+    provider bind-head --hotkey=<hex> --registrant=<registrant> --contract=<contract> [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+        [-v...]
+    provider unbind-head --hotkey=<hex> [--contract=<contract>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+        [-v...]
+    provider proxy auth add [<key>] <proxy_user> <proxy_password> [-f]
+    provider proxy auth remove [<key>] [--all]
+    provider proxy add [<key_address>...] [--proxy_file=<proxy_file>] [--file=<file>] [--url=<url>] [--URL=<URL>] [-f]
+    provider proxy remove [<key_address>...] [--all]
+    provider proxy remove --match=<pattern> [--yes] [--preview]
+    provider proxy remove-dead [--degraded[=<duration>]] [--auth-failures=<N>] [--source=<source>] [--yes] [--preview]
+    provider proxy activity
+    provider proxy refresh [--force]
+    provider proxy add-source <url>
+    provider proxy remove-source <url>
+    provider proxy exclude [<pattern>] [--remove]
+    provider proxy summary
+    provider proxy trim <count> [--preview]
+    provider direct [<state>]
+    provider proxy paste [--file=<file>]
+    provider logs [-n <lines>]
+    provider print-network-id <file>
+    provider choose_network <api_url> [<connect_url>]
+    provider choose_network --reset
+
+Options:
+    -h --help                        Show this help and exit.
+    --version                        Show version.
+    -v...                            Enable verbose mode. -v implies verbose level 1,
+    					                 -vv implies level 2... etc.
+    --json                           Output in JSON format for automated tooling.
+    -f                               Force overwrite the JWT token store file or proxy value, if exists.
+                                     By default, existing values will not be overwritten.
+    --api_url=<api_url>              Specify a custom API URL to use.
+    --connect_url=<connect_url>      Specify a custom connect URL to use.
+    <api_url>                        API URL to save as the chosen network (http:// or https://),
+                                     or a preset: main | beta.
+    <connect_url>                    Connect URL to save as the chosen network (ws:// or wss://).
+    --reset                          With choose_network, clear the saved network and revert to the main network.
+    --user_auth=<user_auth>	         Login with a username.
+    --password=<password>            Login with a password. If --user_auth is used, you will be prompted for your
+    					                 password anyways, if you don't specify it using this option.
+    -p --port=<port>                 Status server port [default: 0].
+    --max-memory=<mem>               Set the maximum amount of memory in bytes, or the suffixes b, kib, mib, gib may be used [This is a soft limit].
+    --no-open                        wallet sign: do not open the browser; only print the local address.
+                                     wallet sign serves the page on 127.0.0.1 only, for 15 minutes, and uses the
+                                     network login saved by "provider auth". --port is the page's port: 8765 when
+                                     omitted or 0 (a taken port falls back to any free one).
+    --wallet=<coldkey_ss58>          Also set the subnet claim wallet at startup, same as provider wallet set.
+                                     A failure is logged and does not block providing.
+    <coldkey_ss58>                   Subnet claim wallet: an ss58 coldkey address (prefix 42).
+    --legacy-network-wallet          Explicit network-wallet compatibility; allows unsigned subnet wallet set.
+    --hotkey_seed_file=<path>        Path to 0600 hotkey seed file.
+    --coldkey_seed_file=<path>       Path to 0600 coldkey seed file.
+    --replace-other-hotkey           hotkey set: replace the network's delegation to a different hotkey. Without it that is refused.
+    --message=<text>                 Statement message string to sign.
+    --signature=<hex>                64-byte sr25519 signature in hex (0x optional).
+    --wallet-from-epoch=<epoch>      First epoch of earning wallet mapping.
+    --wallet-through-epoch=<epoch>   Last epoch of earning wallet mapping.
+    --store-client=<key>             claim: use the client token of this identity from the store
+                                     (~/.urnetwork/.client_jwts.json; the key is a proxy address or "direct").
+                                     Pick a client that served traffic.
+    --provider-jwt=<path>            Path to provider JWT file for claim.
+    --legacy-coldkey=<coldkey_ss58>  Explicit legacy coldkey ss58 for claim on pre-mainnet epochs.
+    --epoch=<epoch>                  Epoch to fetch the subnet pool claim for. Defaults to the last
+                                     finalized epoch, which is the epoch before the current one.
+    --rpc=<rpc_url>                  EVM json-rpc endpoint used to check the payout root on-chain.
+                                     May be repeated; endpoints are tried in order until one answers.
+    --key_file=<key_file>            EVM private key file. When given, claim/bind-head/unbind-head sign
+                                     and submit the transaction (via --rpc); without it, the ready-to-submit
+                                     calldata is printed for the offline/air-gapped snclaim path.
+    --dry-run                        Build and sign the extrinsic but do not submit.
+    --hotkey=<hex>                   Head-tier miner hotkey as a 0x-optional 32-byte hex account id.
+    --registrant=<registrant>        The EVM address that will submit bindHead via snclaim (0x, 20 bytes).
+                                     The head-bind digest is bound to this address, so it MUST equal the
+                                     snclaim sender, whose mirror must be the hotkey's on-chain coldkey.
+    --contract=<contract>            STSubnet proxy contract address (0x, 20 bytes).
+    <key>                            Authentication key
+    <proxy_user>                     SOCKS5 user
+    <proxy_password>                 SOCKS5 password
+    <key_address>                    SOCKS5 server as host:port, host:port:user:pass, host:port::, or key@host:port
+    --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port
+    --proxy_url=<proxy_url>          A live proxy list URL. Repeatable. Additive with --proxy_file / internal config. Also settable via PROXY_URL (comma-separated for multiple).
+    --url=<url>                      Alias for --proxy_url.
+    --URL=<URL>                      Alias for --proxy_url.
+    --proxy_url_refresh=<dur>        How often to re-fetch --proxy_url sources and add new entries. Also settable via PROXY_URL_REFRESH.
+    --proxy_url_max=<n>              Cap on total proxies sourced from --proxy_url. 0 = unlimited, defaults to 500. Also settable via PROXY_URL_MAX.
+    --proxy_dead_cleanup_scope=<s>   Automatic dead-proxy cleanup scope: none, url, or all. Defaults to url (URL-sourced only). Also settable via PROXY_DEAD_CLEANUP_SCOPE.
+    --proxy_dead_cleanup_interval=<dur>  How often automatic cleanup runs, when scope isn't none. Also settable via PROXY_DEAD_CLEANUP_INTERVAL.
+    <url>                            A proxy list URL.
+    --match=<pattern>                Case-insensitive substring matched against proxy hosts (never port or
+                                     credentials). Removes matches from the proxy list, proxy file, and URL
+                                     cache, and excludes the pattern from future URL fetches. See 'proxy exclude'.
+    <pattern>                        Host substring for 'proxy exclude' (add). With --remove, deletes the pattern.
+                                     With no pattern, 'proxy exclude' lists active patterns.
+    --file=<file>                    A path to a proxy file (alias for --proxy_file, or input for 'proxy paste').
+    <state>                          Direct IP providing state: on | off | status. If omitted, reports current state.
+    <count>                          Max number of running proxies to keep. The A-F worst-graded above it are shed. 0/off clears the cap.
+    --force                          Bypass the 8-hour warmup protection gate.
+    -n <lines>                       Number of lines to show from the end of the log [default: 0].`,
+		DefaultApiUrl,
+		DefaultConnectUrl,
+	)
+}
