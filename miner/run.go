@@ -194,6 +194,12 @@ Usage:
     provider wallet challenge <coldkey_ss58> [--provider-jwt=<path> | --legacy-network-wallet] [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>]
         [--api_url=<api_url>]
         [-v...]
+    provider wallet sign <coldkey_ss58> [--port=<port>] [--no-open]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet status
+        [--api_url=<api_url>]
+        [-v...]
     provider wallet hotkey challenge <coldkey_ss58> --hotkey_seed_file=<path>
         [--wallet-from-epoch=<epoch> --wallet-through-epoch=<epoch>] [--operators-url=<url>]
         [-v...]
@@ -307,6 +313,10 @@ Options:
     				                 password anyways, if you don't specify it using this option.
     -p --port=<port>                 Status server port [default: 0].
     --max-memory=<mem>               Set the maximum amount of memory in bytes, or the suffixes b, kib, mib, gib may be used [This is a soft limit].
+    --no-open                        wallet sign: do not open the browser; only print the local address.
+                                     wallet sign serves the page on 127.0.0.1 only, for 15 minutes, and uses the
+                                     network login saved by "provider auth". --port is the page's port: 8765 when
+                                     omitted or 0 (a taken port falls back to any free one).
     --wallet-from-epoch=<epoch>     First prospective earning epoch in the signed provider mapping.
     --wallet-through-epoch=<epoch>  Last inclusive earning epoch; at most 65536 epochs.
                                      Omit both to use the next epoch through the finite 65536-epoch window.
@@ -532,6 +542,10 @@ func Run(args []string) {
 			walletSet(opts)
 		} else if challenge, _ := opts.Bool("challenge"); challenge {
 			walletChallenge(opts)
+		} else if sign, _ := opts.Bool("sign"); sign {
+			walletSign(opts)
+		} else if status, _ := opts.Bool("status"); status {
+			walletStatus(opts)
 		}
 	} else if snStatus, _ := opts.Bool("sn-status"); snStatus {
 		snStatusCmd(opts)
