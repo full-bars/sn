@@ -88,7 +88,7 @@ To print the claim calldata without sending anything (safe, keeps keys off the n
 provider claim --store-client=direct --epoch=<epoch>
 ```
 
-To submit it yourself, add `--rpc=<rpc_url> --key_file=<path>`. Add `--dry-run` to check without sending. `provider snclaim` is a low-level tool that takes the calldata (`provider snclaim --help` lists its commands, including `v2 status`, `v2 claim` and `v2 check`).
+To submit it yourself, add `--rpc=<rpc_url> --key_file=<path>`. Add `--dry-run` to check without sending. `snclaim` is a separate low-level binary that takes the calldata (`snclaim --help` lists its commands, including `v2 status`, `v2 claim` and `v2 check`).
 
 ## The status dashboard (`sn-status`)
 

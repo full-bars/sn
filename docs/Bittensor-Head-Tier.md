@@ -38,7 +38,7 @@ No figures are given here, because they change.
 
 All `fleet` commands below are in the **miner image's** `provider` program (`ghcr.io/full-bars/sn:miner`, or a 3.23-fix or meso-miner `provider`). The default sn release `provider` has **no** `fleet` group. It only has the older `bind-head` and `unbind-head`, which are not the current flow and should not be used. Run fleet commands on your own computer, not on a mining node. Seed files must be private files (mode `0600`) and never go on a mining node.
 
-1. **Build the manifest.** This is the fleet file that lists the hotkey, the coordinator, chain 964, subnet 25, the generation and the members. Upstream sn has a `provider fleet init` command to help with this, but this fork does not have it yet, so write the file by hand. Then check it:
+1. **Build the manifest.** This is the fleet file that lists the hotkey, the coordinator, chain 964, subnet 25, the generation and the members. Upstream sn has a fleet-init command to help with this, but this fork does not have it yet, so write the file by hand. Then check it:
    ```bash
    provider fleet manifest --manifest=<path>
    ```
