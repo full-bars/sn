@@ -18,12 +18,10 @@
 # CONDITIONAL/TODO and switch themselves on when the code lands (they are
 # file-existence gates over the synced repository, same policy as
 # systemd-smoke.sh):
-#   * TODO(freebsd-urnettools): internal/urnettools has no FreeBSD port yet, so
-#     urnet-tools cannot be built for freebsd and is neither exercised nor
-#     could be. Callers may still pass a urnet-tools binary: when they do, the
-#     discovery checks run.
-#   * TODO(freebsd-installer): scripts/Provider_Install_FreeBSD.sh (rc.d path)
-#   * TODO(freebsd-optimize): internal/urnettools/optimize_bsd.go (sysctl tuning)
+#   * internal/urnettools/discover_freebsd.go, optimize_bsd.go and
+#     scripts/Provider_Install_FreeBSD.sh are all in this tree, so urnet-tools
+#     is built and exercised here. The remaining gap is durable client
+#     registration (unix custody), recorded as a CONDITIONAL.
 #   * TODO(freebsd-miner-tests): the miner's test files import a fixture package
 #     with no freebsd build, so no miner test binary exists at this head.
 #

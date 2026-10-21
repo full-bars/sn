@@ -166,27 +166,29 @@ production one:
 
 ## Capability gaps (TODO gates, honest by design)
 
-Checks whose code is not in the tree at this commit are printed as
+Checks whose code is not in the tree at a given commit print
 `CONDITIONAL/TODO` with a named tag and switch themselves on when the code
-lands (file-existence greps over the synced repository):
+lands (file-existence greps over the synced repository).
 
-- `TODO(freebsd-urnettools)` — `internal/urnettools` has no FreeBSD port yet,
-  so `urnet-tools` cannot be cross-built for FreeBSD and the FreeBSD
-  discovery/lifecycle surface is not asserted. The miner itself builds and
-  runs, and its control socket is asserted on the real kernel.
-- `TODO(freebsd-miner-tests)` — `./miner`'s test files import
-  `internal/durablefixture`, which has no freebsd build, so no miner test
-  binary exists yet.
-- `TODO(freebsd-installer)` / `TODO(freebsd-optimize)` — no
-  `scripts/Provider_Install_FreeBSD.sh` and no
-  `internal/urnettools/optimize_bsd.go` on this line.
-- `TODO(openrc-installer)` — `scripts/Provider_Install_Linux.sh` has no OpenRC
-  branch yet; the OpenRC cell writes the equivalent unit itself and marks the
-  installer flow as a TODO.
-- `TODO(openrc-tools)` — no OpenRC discovery/log backend in
-  `internal/urnettools`; the targeted `status --state-dir` path is asserted.
-- `TODO(windows-control-socket)` / `TODO(macos-control-socket)` — recorded in
-  the workflow; promote to hard cells when the transport is verified.
+State on this line:
+
+- **FreeBSD** — `scripts/Provider_Install_FreeBSD.sh`,
+  `internal/urnettools/discover_freebsd.go` and `optimize_bsd.go` are all
+  present, and the cell runs the miner and `urnet-tools` on a real kernel. The
+  remaining gap is **durable client registration**: the provider refuses with
+  "durable client registration requires Unix custody support", which the
+  harness records as `CONDITIONAL/TODO(freebsd-durable-registration)` instead
+  of two failures.
+- **FreeBSD miner tests** — `internal/durablefixture` has no FreeBSD build, so
+  `TODO(freebsd-miner-tests)` remains; no miner test binary exists yet.
+- **OpenRC** — `scripts/Provider_Install_Linux.sh` does have an OpenRC branch
+  (install-tree redirect, init script, `rc_ulimit`, `rc-update` registration).
+  The container installer cells have no service manager, so service assertions
+  there are skipped; wiring the fake-release install flow through the OpenRC
+  branch remains `TODO(openrc-installer)`.
+- **Windows / macOS control socket** — recorded per cell
+  (`TODO(windows-control-socket)`, `TODO(macos-control-socket)`); promote to
+  hard assertions once the transport is verified on those platforms.
 
 ## Running the cells locally
 
