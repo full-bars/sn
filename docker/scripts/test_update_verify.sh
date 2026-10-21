@@ -208,13 +208,61 @@ t "helper globals cleaned after successful call" true
 # start_update.sh must select the MULTI-ARCH fat tarball (Extract_Providers
 # pulls both linux/amd64 and linux/arm64 from one file), so per-arch assets
 # (which carry an -<os>-<goarch> token, darwin first) are excluded.
-JSON_MULTI='{"assets":[
+# --- Release-asset pickers (start_update fat pick, container arch pick) ---
+# Fixture shaped like a real release: assets in the order GitHub returns them
+# (darwin, freebsd, linux, windows), the OS-less fat tarball last, plus decoys.
+# The container updater must take the linux tarball for its own arch and never a
+# freebsd asset that sorts earlier; start_update must take the fat tarball.
+JSON_MULTI='{"tag_name":"v9","assets":[
   {"name":"urnet-tools-linux-amd64","digest":"sha256:1"},
-  {"name":"urnetwork-provider-v9-linux-amd64.tar.gz","digest":"sha256:2"},
-  {"name":"urnetwork-provider-v9.tar.gz","digest":"sha256:3"},
-  {"name":"urnetwork-provider-v9-darwin-amd64.tar.gz","digest":"sha256:4"}]}'
-sel="$(printf '%s' "$JSON_MULTI" | jq -r '.assets[] | select((.name | startswith("urnetwork-provider-")) and (.name | endswith(".tar.gz")) and ((.name | test("-darwin-|-linux-|-windows-")) | not)) | .name' | head -n1)"
-t "start_update asset filter picks the multi-arch fat tarball, never darwin" test "$sel" = "urnetwork-provider-v9.tar.gz"
+  {"name":"urnetwork-provider-v9-darwin-amd64.tar.gz","digest":"sha256:2"},
+  {"name":"urnetwork-provider-v9-freebsd-amd64.tar.gz","digest":"sha256:3"},
+  {"name":"urnetwork-provider-v9-linux-amd64.tar.gz","digest":"sha256:4"},
+  {"name":"urnetwork-provider-v9-linux-musl-amd64.tar.gz","digest":"sha256:5"},
+  {"name":"urnetwork-provider-v9-windows-amd64.tar.gz","digest":"sha256:6"},
+  {"name":"urnetwork-provider-v9.tar.gz","digest":"sha256:7"}]}'
+FAT_PICK='.tag_name as $t | "urnetwork-provider-\($t).tar.gz" as $f | ([.assets[] | select(.name == $f) | .name][0] // empty)'
+ARCH_PICK='.tag_name as $t | "urnetwork-provider-\($t)-linux-\($arch).tar.gz" as $a | "urnetwork-provider-\($t).tar.gz" as $f | ([.assets[].name | select(. == $a)][0] // [.assets[].name | select(. == $f)][0] // empty)'
+
+sel="$(printf '%s' "$JSON_MULTI" | jq -r "$FAT_PICK")"
+t "start_update picks the fat tarball by exact name, never darwin or freebsd" test "$sel" = "urnetwork-provider-v9.tar.gz"
+
+sel_pc="$(printf '%s' "$JSON_MULTI" | jq -r --arg arch amd64 "$ARCH_PICK")"
+t "container updater prefers the linux arch tarball regardless of asset order" test "$sel_pc" = "urnetwork-provider-v9-linux-amd64.tar.gz"
+
+JSON_NO_LINUX='{"tag_name":"v9","assets":[
+  {"name":"urnetwork-provider-v9-darwin-amd64.tar.gz","digest":"sha256:1"},
+  {"name":"urnetwork-provider-v9-freebsd-amd64.tar.gz","digest":"sha256:2"},
+  {"name":"urnetwork-provider-v9.tar.gz","digest":"sha256:3"}]}'
+sel_nl="$(printf '%s' "$JSON_NO_LINUX" | jq -r --arg arch amd64 "$ARCH_PICK")"
+t "container updater falls back to the fat tarball when the arch asset is absent" test "$sel_nl" = "urnetwork-provider-v9.tar.gz"
+
+JSON_FBSD_ONLY='{"tag_name":"v9","assets":[
+  {"name":"urnetwork-provider-v9-darwin-amd64.tar.gz","digest":"sha256:1"},
+  {"name":"urnetwork-provider-v9-freebsd-amd64.tar.gz","digest":"sha256:2"}]}'
+sel_fb="$(printf '%s' "$JSON_FBSD_ONLY" | jq -r --arg arch amd64 "$ARCH_PICK")"
+t "container updater picks nothing when only other platforms are published" test -z "$sel_fb"
+
+dig="$(printf '%s' "$JSON_MULTI" | jq -r --arg f "$sel_pc" '.assets[] | select(.name == $f) | .digest')"
+t "digest lookup follows the picked asset name" test "$dig" = "sha256:4"
+
+# Drift guard: the stop contract is duplicated in every supervisor shell, so the
+# copies must stay byte-identical. A fix applied to one copy and not the others
+# leaves a container that still hangs on stop.
+stop_block() {
+  sed -n '/^# --- stop contract begin ---/,/^# --- stop contract end ---/p' "$HERE/$1"
+}
+STOP_FILES="start_stable.sh start_jwt.sh start_nightly.sh pelican_panel.sh"
+first_sum=""
+drift=0
+for f in $STOP_FILES; do
+  sum="$(stop_block "$f" | cksum)"
+  [ -z "$first_sum" ] && first_sum="$sum"
+  [ "$sum" = "$first_sum" ] || drift=1
+done
+t "stop contract is identical in every supervisor shell" test "$drift" -eq 0
+
+
 
 # The broken (unparenthesized) shape must stay broken-and-unused: assert it
 # errors, so nobody reintroduces it thinking it works.

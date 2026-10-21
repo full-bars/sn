@@ -90,6 +90,15 @@ STUB_EOF
         echo "func_do_login() { echo 'LOG: func_do_login called' >> '$test_dir/out.log'; }"
         echo "func_check_credentials() { echo 'LOG: func_check_credentials called' >> '$test_dir/out.log'; }"
         extract_func "$REPO/docker/scripts/$script_file" func_start_provider
+        # the loop now runs the provider behind the stop contract, so the stub
+        # needs those helpers and their globals or every iteration dies with
+        # "command not found" and reads as a crash
+        extract_func "$REPO/docker/scripts/$script_file" provider_run
+        extract_func "$REPO/docker/scripts/$script_file" func_sleep
+        extract_func "$REPO/docker/scripts/$script_file" provider_finish_stop
+        echo "STOPPING=0"
+        echo "PROVIDER_CHILD_PID=''"
+        echo "SLEEP_PID=''"
         echo "func_start_provider"
     } > "$runner"
 
