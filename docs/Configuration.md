@@ -81,8 +81,6 @@ Quick jump:
 | `URNETWORK_PPROF` | - | Set to a `host:port` to enable the loopback-only diagnostics server (e.g. `127.0.0.1:6060`). Off by default. Serves `/debug/pprof/*`, `/metrics/pool`, and `/metrics/errors`; only literal loopback IPs are accepted (hostnames are rejected). Pull profiles via an SSH tunnel, e.g. `ssh -L 6060:127.0.0.1:6060 host` then `go tool pprof http://127.0.0.1:6060/debug/pprof/profile`. |
 | `URNETWORK_PROXY_BENCHMARK` | - | Set to `true` to enable per-proxy latency monitoring. Off by default. Probes: TCP connect every 5 min (raw RTT to proxy port), SOCKS5 CONNECT every 15 min (end-to-end through proxy). Staggered startup jitter prevents thundering herd. ~104 GB/month at 10k proxies. |
 | `URNETWORK_PROXY_BENCHMARK_ENDPOINT` | `connect.bringyour.com:443` | Target for the SOCKS5 CONNECT latency probe. Measured end-to-end through each proxy. |
-| `URNETWORK_REPORT_URL`, `URNETWORK_REPORT_INTERVAL` | - | Leftover settings. The old hub that received bandwidth reports was removed, so nothing listens for them. Leave both unset. Use [Monitoring](Monitoring.md) (Prometheus `/metrics`) to watch a fleet. |
-| `URNETWORK_HEARTBEAT_INTERVAL` | `15s` | Provider heartbeat cadence (minimum `5s`). Shortening it fleet-wide can cause thundering-herd load on the reporting server. |
 | `URNETWORK_AUTH_UNLIMITED` | `false` | Bypass the auth rate limiter; every auth attempt fires immediately. Equivalent to creating `~/.urnetwork/fast_auth`. Only for trusted or benchmark environments. |
 | `URNETWORK_SHM_LOG` | `/dev/shm/urnetwork.log` | Path for the RAM log. |
 | `URNETWORK_PROXY_HEALTH_DIR` | `<home>/.urnetwork` | Directory for persistent `proxy_health.state` and `proxy_traffic.state` files (Docker: `/root/.urnetwork`). |

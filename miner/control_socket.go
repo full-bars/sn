@@ -337,14 +337,12 @@ var controlLiveEffectKeys = map[string]bool{
 // consumer at all yet; applyLiveSideEffect logs the gap explicitly so an
 // operator never believes a value took effect when nothing reads it.
 var controlUnsupportedKeys = map[string]bool{
-	"node_name":       true,
-	"report_url":      true,
-	"report_interval": true,
-	"baseline":        true,
-	"ip_version":      true,
-	"oom_cap":         true,
-	"profile":         true,
-	"ramlogs":         true,
+	"node_name":  true,
+	"baseline":   true,
+	"ip_version": true,
+	"oom_cap":    true,
+	"profile":    true,
+	"ramlogs":    true,
 }
 
 // controlNeedsRestart returns true if setting this key requires a provider
@@ -413,7 +411,7 @@ func applyControlLiveDefault(key string) error {
 func validateControlValue(key, value string) error {
 	valLower := strings.ToLower(value)
 	switch key {
-	case "report_interval", "proxy_url_refresh", "proxy_dead_cleanup_interval":
+	case "proxy_url_refresh", "proxy_dead_cleanup_interval":
 		d, err := time.ParseDuration(value)
 		if err != nil {
 			return fmt.Errorf("%s: invalid duration %q (use e.g. 30s, 5m, 1h)", key, value)
@@ -508,14 +506,6 @@ func validateControlValue(key, value string) error {
 		for _, c := range value {
 			if c < 32 || c > 126 {
 				return fmt.Errorf("node_name: must be printable ASCII (got 0x%02x)", c)
-			}
-		}
-	case "report_url":
-		if value != "" {
-			for _, c := range value {
-				if c == ' ' || c == '\n' || c == '\r' || c == '\t' {
-					return fmt.Errorf("report_url: must not contain whitespace (got %q)", value)
-				}
 			}
 		}
 	}

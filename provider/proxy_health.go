@@ -649,8 +649,7 @@ func DegradedProxies() []DegradedProxyEntry {
 // connect.ActiveConnectionCount(), an atomic counter incremented deep in
 // connect's IP-layer code (ip.go); v2026 connect exposes no equivalent.
 // Instead we sum the per-proxy client-session counts that this package
-// already tracks in proxy_health.go/bandwidth for the [health] report and
-// bandwidth_reporter.go, which is the same signal at proxy granularity.
+// already tracks in proxy_health.go/bandwidth for the [health] report, which is the same signal at proxy granularity.
 func activeConnectionCount() int64 {
 	_, _, _, bw, _ := ProxyHealthSnapshot()
 	var total int64
