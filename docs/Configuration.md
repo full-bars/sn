@@ -222,7 +222,7 @@ set above.
 | Eco | `URNETWORK_PROFILE=eco` | RAM-constrained, full throughput | 1-2 GiB |
 | Lowmem | `URNETWORK_PROFILE=lowmem` | Minimum RAM, reduced throughput | < 1 GiB |
 
-See [High-Volume Performance Tuning](High-Volume-Performance-Tuning.md) for the detailed profile behavior and parameter tables.
+The profile names and their effects are summarized above.
 
 ## 🩺 Viewing proxy health
 
