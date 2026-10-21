@@ -351,32 +351,10 @@ func provideLaunchGoroutines(st *provideState) {
 
 	st.nodeName = strings.TrimSpace(os.Getenv("URNETWORK_NODE_NAME"))
 
-	watcherName := st.nodeName
-	if watcherName == "" {
-		var err error
-		watcherName, err = os.Hostname()
-		if err != nil || watcherName == "" {
-			watcherName = "unknown"
-		}
-		if containerIDRe.MatchString(watcherName) {
-			watcherName = "provider"
-		}
-	}
-
 	st.wg.Add(1)
 	go connect.HandleError(func() {
 		defer st.wg.Done()
 		runHealthHeartbeat(st.ctx, provideStartTime, os.Getenv("URNETWORK_PROFILE"))
-	})
-	st.wg.Add(1)
-	go connect.HandleError(func() {
-		defer st.wg.Done()
-		runBandwidthReporter(st.ctx, watcherName, watcherName, os.Getenv("URNETWORK_REPORT_URL"), provideStartTime)
-	})
-	st.wg.Add(1)
-	go connect.HandleError(func() {
-		defer st.wg.Done()
-		runHeartbeatReporter(st.ctx, watcherName, watcherName, os.Getenv("URNETWORK_REPORT_URL"), provideStartTime)
 	})
 	st.wg.Add(1)
 	go connect.HandleError(func() {

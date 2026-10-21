@@ -74,8 +74,6 @@ type controlState struct {
 // says which ones need a restart (see needsRestart in control_socket.go).
 var controlKeys = map[string]bool{
 	"node_name":                   true,
-	"report_url":                  true,
-	"report_interval":             true,
 	"fast_auth":                   true,
 	"baseline":                    true,
 	"proxy_self_heal":             true,

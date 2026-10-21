@@ -76,7 +76,7 @@ type controlState struct {
 // controlKeys are the only settings the socket accepts.
 //
 // The first 9 mirror the existing ~/.urnetwork/* override files
-// (node_name, report_url, report_interval, fast_auth, proxy_self_heal,
+// (node_name, fast_auth, proxy_self_heal,
 // proxy_url_max, proxy_url_refresh, proxy_dead_cleanup_scope,
 // proxy_dead_cleanup_interval).
 //
@@ -103,8 +103,6 @@ type controlState struct {
 // queued while the provider wasn't running yet.
 var controlKeys = map[string]bool{
 	"node_name":                   true,
-	"report_url":                  true,
-	"report_interval":             true,
 	"fast_auth":                   true,
 	"proxy_self_heal":             true,
 	"proxy_audit":                 true,

@@ -1370,7 +1370,6 @@ auth|
 choose-network|choose_network
 wallet|
 proxy|
-report|
 reinstall|
 uninstall|
 auto-update|autoupdate
@@ -1429,7 +1428,6 @@ logs|
 auth|
 choose-network|choose_network
 summary|
-report|
 update|self-update,selfupdate
 idle-update|
 version|

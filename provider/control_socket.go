@@ -291,8 +291,6 @@ var liveEffectKeys = map[string]bool{
 	"proxy_self_heal":             true,
 	"proxy_audit":                 true,
 	"oom_cap":                     true,
-	"report_url":                  true,
-	"report_interval":             true,
 	"proxy_url_refresh":           true,
 	"proxy_url_max":               true,
 	"proxy_dead_cleanup_scope":    true,
@@ -313,7 +311,7 @@ func needsRestart(key string) bool {
 func validateControlValue(key, value string) error {
 	valLower := strings.ToLower(value)
 	switch key {
-	case "report_interval", "proxy_url_refresh", "proxy_dead_cleanup_interval":
+	case "proxy_url_refresh", "proxy_dead_cleanup_interval":
 		d, err := time.ParseDuration(value)
 		if err != nil {
 			return fmt.Errorf("%s: invalid duration %q (use e.g. 30s, 5m, 1h)", key, value)
@@ -399,14 +397,6 @@ func validateControlValue(key, value string) error {
 		for _, c := range value {
 			if c < 32 || c > 126 {
 				return fmt.Errorf("node_name: must be printable ASCII (got 0x%02x)", c)
-			}
-		}
-	case "report_url":
-		if value != "" {
-			for _, c := range value {
-				if c == ' ' || c == '\n' || c == '\r' || c == '\t' {
-					return fmt.Errorf("report_url: must not contain whitespace (got %q)", value)
-				}
 			}
 		}
 	}
