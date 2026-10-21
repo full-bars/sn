@@ -43,7 +43,7 @@ permissions:
   contents: read
 
 env:
-  GO_VERSION: "1.27"
+  GO_VERSION: "1.27.3"
   # Synthetic release tags for the installer lifecycle. The installer compares
   # strings, so the value only has to be stable within a run and differ between
   # the install and the tag-switch pass.
