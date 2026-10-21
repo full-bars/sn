@@ -10,7 +10,7 @@
 
 - URnetwork is **Subnet 25 (SN25)** on Bittensor. Your nodes can earn the SN25 token (alpha, branded $UR) on top of normal URnetwork earnings.
 - You get paid by signing **one** consent with your Bittensor wallet (your coldkey). It says "pay every node on my URnetwork account to this coldkey". One signature covers every node on your URnetwork account, now and later.
-- **Only `sn` builds newer than release `v2026.10.6-1064742750-meso` have `provider wallet sign` and `wallet status`.** If yours does not (`provider --help` will not list them), sign with a 3.23-fix or meso-miner `provider` on your own computer (or the app or ur.io once live). The consent covers your whole account whichever line the nodes run. Download pointer and steps are in the [Quick Start](Bittensor-Quick-Start.md).
+- **Only `sn` builds from release `v2026.10.21-1077735390-meso` onward have `provider wallet sign` and `wallet status`.** If yours does not (`provider --help` will not list them), sign with a 3.23-fix or meso-miner `provider` on your own computer (or the app or ur.io once live). The consent covers your whole account whichever line the nodes run. Download pointer and steps are in the [Quick Start](Bittensor-Quick-Start.md).
 - Check where you stand with `provider wallet status`, run with that same `provider`. Words you do not know are in the [Glossary](Bittensor-Glossary.md).
 
 ## Pool or head: which one am I?

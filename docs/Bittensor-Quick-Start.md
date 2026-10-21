@@ -17,7 +17,7 @@ This page is for regular operators. You run URnetwork nodes and you may have hea
 
 ## Which `provider` can sign the consent
 
-The `sn` fork's `provider` now has `provider wallet sign` and `provider wallet status`, but only builds newer than release `v2026.10.6-1064742750-meso` include them. Older release binaries and images do not. Check yours:
+The `sn` fork's `provider` now has `provider wallet sign` and `provider wallet status`, but only builds from release `v2026.10.21-1077735390-meso` onward include them. Release `v2026.10.6-1064742750-meso` and older binaries and images do not. Check yours:
 
 ```bash
 provider --help | grep 'wallet sign'
