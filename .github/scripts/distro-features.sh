@@ -1914,11 +1914,11 @@ b2_manipulations() {
 # BLOCK 3 — BROAD SURFACE
 # ---------------------------------------------------------------------------
 
-# The documented v33 client command surface: the 47-row inventory the parity
+# The documented v33 client command surface: the inventory the parity
 # audit pins (internal/urnettools/v33_command_surface_test.go keeps the same
 # table), plus the aliases and the wallet group. Every one must exist and
 # answer its own --help with rc=0; none of them touches a provider.
-V33_COMMANDS="providers status top sn-status start stop restart update idle-update self-update logs summary version default session turbo auto eco lowmode ramlogs optimize hotswap fast-auth get set rename auth choose-network wallet proxy report reinstall uninstall auto-update auto-start self-heal show-ip history autopilot enforcement baseline metrics smart-dialer profile dashboard config usage __do-restart"
+V33_COMMANDS="providers status top sn-status start stop restart update idle-update self-update logs summary version default session turbo auto eco lowmode ramlogs optimize hotswap fast-auth get set rename auth choose-network wallet proxy reinstall uninstall auto-update auto-start self-heal show-ip history autopilot enforcement baseline metrics smart-dialer profile dashboard config usage __do-restart"
 V33_ALIASES="list ps selfupdate hot-swap fastauth show set-node-name choose_network autoupdate autostart selfheal ip-detect ipdetect audit smart_dialer profiles dash panel"
 V33_WALLET_SUBS="status challenge set sign"
 
