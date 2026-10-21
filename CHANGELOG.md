@@ -4,6 +4,8 @@ Releases of this fork are tagged `v<YYYY.M.D>-<unix>-meso`. Tags without the `-m
 
 ## [Unreleased]
 
+## [v2026.10.21-1077735390-meso] — 2026-10-21
+
 ### Added
 
 - **The provider captures goroutine and heap profiles on the way into a stall**: it samples its goroutine count and its heap against the soft limit every 10 seconds and, on a build-up (1.5 times the 30-minute low and at least 20,000 goroutines, heap at 90%, heap at 120%), writes the biggest goroutine stacks, the full goroutine profile, a heap profile and the numbers to `~/.urnetwork/incidents/`. The goroutine-growth trigger waits 45 minutes after a start, because the count climbs on its own while the proxies authenticate. At most 6 a day, newest 8 kept, disk only. `URNETWORK_INCIDENT_CAPTURE=0` turns it off.
@@ -47,7 +49,7 @@ Releases of this fork are tagged `v<YYYY.M.D>-<unix>-meso`. Tags without the `-m
 - **The container start scripts treat exit 75 as a planned restart** ([#84](https://github.com/full-bars/sn/pull/84)): `start_stable.sh`, `start_nightly.sh`, `start_jwt.sh` and the provider loop of `pelican_panel.sh` counted 75 as a crash, which counted toward the three-crash JWT clear and slept 60 seconds. It now restarts after 5 seconds and leaves the JWT alone. Every other status is unchanged.
 
 - **`/metrics` is on by default**: the provider starts the Prometheus listener without any operator setup. The automatic bind is loopback plus the machine's Tailscale address on bare metal, and every interface inside a container only when every address it holds is private or unique-local; a container that shares a publicly addressed network stays on loopback and Tailscale instead of binding `0.0.0.0`. Override the address with `URNETWORK_METRICS=ip:port`; turn it off with `urnet-tools metrics off`. See [Monitoring](docs/Monitoring.md).
-- **`provider wallet set` and `provide --wallet` refuse without `--legacy-network-wallet`** ([#85](https://github.com/full-bars/sn/pull/85)): both sent an unsigned request that mainnet no longer accepts, and `provide --wallet` did it at every start. Use `provider wallet sign` or `provider wallet hotkey` instead.
+- **The unsigned wallet request is gone** ([#85](https://github.com/full-bars/sn/pull/85)): mainnet no longer accepts it. An unsigned `provider wallet set` is refused unless `--legacy-network-wallet` is given, and `provide --wallet` without a coldkey proof sets no wallet: the provider logs `subnet wallet not set: ...; continuing to provide` and keeps providing. Use `provider wallet sign` or `provider wallet hotkey` instead.
 - **Dependencies**: connect moved to the `0333da84` sync base and then pinned at its Go 1.27.3 floor, and the sdk moved to current upstream ([#108](https://github.com/full-bars/sn/pull/108), [#115](https://github.com/full-bars/sn/pull/115)).
 
 ### Removed
@@ -63,7 +65,6 @@ Releases of this fork are tagged `v<YYYY.M.D>-<unix>-meso`. Tags without the `-m
 - **The VirusTotal scan covers every release artifact** ([#109](https://github.com/full-bars/sn/pull/109)): it looks up the hash before uploading, scans identical bytes once, retries 429 and 5xx honouring `Retry-After`, sends files over 32 MiB through the upload URL, and reports `INCOMPLETE` with the per-file error when an artifact was not scanned (`VT_FAIL_ON_INCOMPLETE=1` makes that fatal).
 - **The installer runs on a distro matrix and gates publication**: a job runs the real installer against a fake release on Debian 12, AlmaLinux 9, Arch Linux and Alpine, plus hardening variants such as an Ubuntu-shaped host, and the release refuses to publish when it fails.
 - **The two shakedown workflows run together** ([#104](https://github.com/full-bars/sn/pull/104)) with a jittered mint.
-
 
 ## [v2026.10.6-1064742750-meso] — 2026-10-06
 

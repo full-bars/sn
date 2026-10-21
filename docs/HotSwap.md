@@ -21,7 +21,7 @@ There is nothing to set up and no script to run. Use the normal update command:
 
 ```bash
 urnet-tools update                          # latest release
-urnet-tools update --tag v2026.10.6-1064742750-meso   # a specific release (a downgrade works the same way)
+urnet-tools update --tag v2026.10.21-1077735390-meso   # a specific release (a downgrade works the same way)
 ```
 
 `urnet-tools update` decides for itself: it hands off to the new binary when the node is eligible and falls back to a normal restart when it is not, and it prints which one it did and why. `update -n` is a dry run, but it currently prints only the target version, not whether the update will hotswap or restart.

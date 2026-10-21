@@ -4,12 +4,8 @@ This page is the complete guide to running the URnetwork provider on FreeBSD (am
 
 The provider runs as an `rc.d` service named `urnetwork` under an unprivileged user. There is no hosted one-line installer for FreeBSD: you fetch the installer script and run it, and it downloads the release for your architecture.
 
-> [!WARNING]
-> **Release artifacts on sn:** as of `v2026.10.6-1064742750-meso`, sn releases do
-> not yet ship the FreeBSD provider binary or the `urnet-tools-freebsd-*` assets. The installer,
-> the rc.d service and the tuning below are all real in this repo, but `install` cannot fetch
-> FreeBSD binaries until the release pipeline publishes them (tracked follow-up). Everything on
-> this page applies as soon as that lands.
+> [!NOTE]
+> **Release artifacts on sn:** the FreeBSD provider binary and the `urnet-tools-freebsd-*` assets are published from `v2026.10.21-1077735390-meso` onward. Release `v2026.10.6-1064742750-meso` and older do not ship them, so `install` cannot fetch FreeBSD binaries from those; install the newest release.
 
 ## Before you start
 
@@ -31,7 +27,7 @@ sudo sh urnet-install.sh install
 To install a specific release instead of the latest:
 
 ```sh
-sudo sh urnet-install.sh install v2026.10.6-1064742750-meso
+sudo sh urnet-install.sh install v2026.10.21-1077735390-meso
 ```
 
 The installer takes `latest` by default, resolves the tag through the GitHub API, and falls back to `https://dl.fullbars.xyz/latest-version` when the API is rate limited. It supports `amd64` and `arm64`; any other architecture stops the install.
