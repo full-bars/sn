@@ -7,8 +7,8 @@
 
 - URnetwork is **Subnet 25 (SN25)** on Bittensor. Your nodes can earn the SN25 token (alpha, branded $UR) on top of normal URnetwork earnings.
 - You get paid by signing **one** consent with your Bittensor wallet (your coldkey). It says "pay every node on my URnetwork account to this coldkey". One signature covers all your nodes, now and later.
-- **This fork's release `provider` cannot sign the consent and has no `wallet status`.** Sign with a 3.23-fix or meso-miner `provider` on your own computer (or the app or ur.io once live). The consent covers your whole account whichever line the nodes run. Download pointer and steps are in the [Quick Start](Bittensor-Quick-Start.md).
-- Check where you stand with `provider wallet status`, run with that same 3.23-fix or meso-miner `provider`. Words you do not know are in the [Glossary](Bittensor-Glossary.md).
+- **Only `sn` builds newer than release `v2026.10.6-1064742750-meso` have `provider wallet sign` and `wallet status`.** If yours does not (`provider --help` will not list them), sign with a 3.23-fix or meso-miner `provider` on your own computer (or the app or ur.io once live). The consent covers your whole account whichever line the nodes run. Download pointer and steps are in the [Quick Start](Bittensor-Quick-Start.md).
+- Check where you stand with `provider wallet status`, run with that same `provider`. Words you do not know are in the [Glossary](Bittensor-Glossary.md).
 
 ## Pool or head: which one am I?
 
@@ -37,7 +37,7 @@ Your pool earnings are credited to your coldkey. A **claim** is a small blockcha
 
 ## Signing the consent (reference)
 
-The Quick Start has the steps. In short, with a **3.23-fix or meso-miner** `provider` on your own computer:
+The Quick Start has the steps. In short, with an `sn` `provider` that has `wallet sign` (or a **3.23-fix or meso-miner** one) on your own computer:
 
 ```bash
 provider auth <auth_code>
@@ -107,7 +107,7 @@ In this fork it reads the old-style wallet record. It may say the coldkey is "No
 ## FAQ
 
 ### Do I have to do anything?
-Run `provider wallet status` with a 3.23-fix or meso-miner `provider`. If it shows a network consent in effect, you are done. If not, sign once from your own computer. See the [Quick Start](Bittensor-Quick-Start.md). Nothing else is required, and your nodes keep providing either way.
+Run `provider wallet status` with an `sn` build that has it, or a 3.23-fix or meso-miner `provider`. If it shows a network consent in effect, you are done. If not, sign once from your own computer. See the [Quick Start](Bittensor-Quick-Start.md). Nothing else is required, and your nodes keep providing either way.
 
 ### I linked my wallet on the website or in the app. Am I paid?
 Not necessarily. The older "connect wallet" link is only a login proof, and payouts do not use it. A signed consent is what counts. Confirm with `provider wallet status`. If it says `NOT a consent`, sign once.
