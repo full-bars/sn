@@ -32,7 +32,7 @@ permissions:
 # ---------------------------------------------------------------------------
 
 env:
-  GO_VERSION: "1.27"
+  GO_VERSION: "1.27.3"
   # Packages that compile and vet on every target this workflow ships
   # (linux/windows/darwin/freebsd where the port exists).
   PORTABLE_PKGS: "./cli/miner ./cmd/urnet-tools ./cmd/urnet-docker ./internal/urnettools"
