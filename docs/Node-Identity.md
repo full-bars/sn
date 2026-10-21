@@ -1,6 +1,6 @@
 # Node Identity
 
-Each provider reports a dashboard label. Operators use this label to tell nodes apart in logs, reports, and dashboards.
+Each provider has a label. Use it to tell nodes apart in logs and in your Grafana dashboards.
 
 ## Setting the node name
 
@@ -14,10 +14,9 @@ provider provide ...
 The name is trimmed and used for:
 
 - the auth handshake identity,
-- the bandwidth report posting identity,
 - the health heartbeat label.
 
-The report and heartbeat paths also resolve the node name through the runtime override (`urnet-tools rename <name>`), falling back to the startup environment value.
+The heartbeat also resolves the node name through the runtime override (`urnet-tools rename <name>`), falling back to the startup environment value.
 
 ## Default label
 
