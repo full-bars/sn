@@ -28,8 +28,9 @@ Use the 3.23-fix `provider` you downloaded above.
 
 1. Log it in to your URnetwork account with an auth code from the website. This only saves your login. It does not start a node.
    ```bash
-   provider auth <auth_code>
+   provider auth
    ```
+   Paste the code when prompted rather than passing it as an argument: an argument shows up in `ps` and in your shell history.
 2. Sign the consent:
    ```bash
    provider wallet sign <your_coldkey_address>
@@ -40,7 +41,7 @@ Use the 3.23-fix `provider` you downloaded above.
    ```bash
    provider wallet status
    ```
-   A good result shows `network consent ... in effect now` (or `starts in 1 epoch(s)`) and a receipt line.
+   A good result shows `network consent ... in effect now` (or `starts in 1 epoch(s)`). The `receipt` line appears only when the platform returns a mapping hash, so a missing receipt is not a failure.
 
 Good to know:
 

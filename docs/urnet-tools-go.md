@@ -88,7 +88,7 @@ Exclusion uses `proxy remove --match=<pattern>`. Matching removes proxies and pe
 | `eco [on\|off]` | Enable or disable the Eco profile (RAM-constrained hosts). |
 | `turbo [v4\|v8\|off]` | Enable Turbo V4 or Turbo V8 high-throughput modes. |
 | `ramlogs [on\|off]` | Enable or disable RAM-disk logging (`/dev/shm`). |
-| `report <url>` | Leftover. It sets a bandwidth report URL, but the hub that received reports was removed, so it does nothing useful. For fleet visibility use `metrics` (below). |
+| `report <url>` | Leftover. It sets a bandwidth report URL, but the hub that received reports was removed, so it does nothing useful. It writes the lower-precedence file: a `report-url` set through the control socket takes precedence, so while that override exists `report <url>` cannot change the effective URL and `report off` cannot disable it. For fleet visibility use `metrics` (below). |
 | `profile [name]` | Show or set the memory and GC tuning profile (`auto`, `turbo-v4`, `turbo-v8`, `eco`, `lowmem`; `v4` and `v8` are accepted aliases). With no argument, prints the current profile and what each one is for. |
 | `metrics [status\|on\|off\|listen <ip:port\|auto>]` | Show where the Prometheus `/metrics` endpoint listens and the address to scrape, turn it on or off, or choose its listen address. Live, no restart, persisted. See [Monitoring](Monitoring). |
 
