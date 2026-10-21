@@ -9,7 +9,7 @@ per-PR quality gate remains `build.yml`.
 
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
-| `.github/workflows/distro-matrix.yml` | `v*` tags, `workflow_dispatch` | The matrix: container smoke, systemd, Windows, macOS, FreeBSD, summary |
+| `.github/workflows/distro-matrix.yml` | `v*` tags, `workflow_dispatch` | The matrix: the real installer, container smoke, systemd, Windows, macOS, FreeBSD, summary |
 | `.github/workflows/freebsd.yml` | `v*` tags, `workflow_dispatch` | Real FreeBSD kernel verification (restored, adapted to the miner/tools line) |
 | `.github/workflows/openrc-smoke.yml` | `v*` tags, `workflow_dispatch` | Alpine/OpenRC service smoke + cross-OS vet (restored) |
 | `.github/workflows/portable-core.yml` | `v*` tags, `workflow_dispatch` | Cross-OS build/vet matrix + native Windows/macOS tests (restored) |
@@ -20,8 +20,28 @@ per-PR quality gate remains `build.yml`.
 (`build-binaries`, `CGO_ENABLED=0` so it runs on musl and on glibc 2.34+) and
 fans it out to independent cells:
 
+- **`installer-fast` / `installer-lifecycle` — the real installer**: runs
+  `scripts/Provider_Install_Linux.sh` against a local fake release
+  (`scripts/ci/fake-release-server` + `.github/scripts/installer-lifecycle.sh`).
+  Four cells on installer-path pull requests; thirteen on tags (debian 12 and
+  13, almalinux 8/9/10, fedora, amazonlinux 2 and 2023, leap 16, tumbleweed,
+  arch, alpine, alpine 3.19). Each cell asserts the install tree, `.version`,
+  the binary's own reported version, a reinstall, a tag switch and an
+  uninstall, in a seeded (reproducible) order.
+- **`installer-arm64` — 2 cells under QEMU**: debian 12 and alpine from a
+  per-arch payload, which exercises the installer's `uname -m` mapping and the
+  arm64 tarball layout.
+- **`installer-variants` — 6 cells**: noexec `/tmp`, IPv6 disabled, non-root
+  with sudo, the `URNET_NO_AUTOINSTALL=1` refusal, an Ubuntu-shaped Debian
+  (systemd-resolved stub, needrestart, ufw, netplan, `/snap/bin`) and a 256 MiB
+  cgroup cap.
+- **`lsm-selinux` / `lsm-apparmor` — VMs, non-gating**: SELinux enforcing on
+  AlmaLinux and AppArmor on Ubuntu. Containers cannot exercise either (the LSM
+  is a host-kernel facility), and each harness first asserts the LSM is
+  actually active, so an inactive host is a CONDITIONAL rather than a silent
+  pass.
 - **`distro-smoke` — 7 container images**: `debian:stable-slim`,
-  `almalinux:9`, `fedora:latest`, `opensuse/leap:15.6`,
+  `almalinux:9`, `fedora:latest`, `opensuse/leap:16.0`,
   `opensuse/tumbleweed`, `archlinux:latest`, `alpine:latest`.
   No Ubuntu, no Rocky. Each cell runs `.github/scripts/distro-smoke.sh` in the
   distro's own userland: the binaries load, `miner provide` binds
@@ -29,7 +49,7 @@ fans it out to independent cells:
   and SIGTERM stops the miner cleanly.
 - **`systemd` — 6 images**: the same families minus Alpine, which has no
   systemd: `debian:stable-slim`, `almalinux:9`, `fedora:latest`,
-  `opensuse/leap:15.6`, `opensuse/tumbleweed`, `archlinux:latest`. A
+  `opensuse/leap:16.0`, `opensuse/tumbleweed`, `archlinux:latest`. A
   privileged container with `/sbin/init` as PID 1 installs
   `.github/scripts/systemd-smoke.sh`'s unit and drives
   start/socket/status/stop/restart/crash-restart through `systemctl`.
@@ -47,7 +67,7 @@ fans it out to independent cells:
   transport is not available at the checked-out commit the step records the raw
   evidence and a `TODO(windows-control-socket)` warning instead of faking a
   pass.
-- **`macos` — `macos-13` + `macos-14`**: build, vet, unit tests and the launchd
+- **`macos` — `macos-15-intel` (x64) + `macos-15` (arm64)**: build, vet, unit tests and the launchd
   lifecycle checks. The control-socket probe is record-only
   (`continue-on-error`, `TODO(macos-control-socket)`) so it can never fake a
   pass.
@@ -95,25 +115,36 @@ on:
 
 (no `pull_request`, no `schedule`).
 
-## Release gating (one switch, currently OFF)
+## Release gating (installer tier, report mode until two clean tags)
 
-Today the matrix is **report-only**: `summary` fails the workflow, and the
-workflow's conclusion is not consulted by `release.yml`, so a red matrix does
-not block a release.
+The gate is implemented in `release.yml`'s `create-release` job, in the step
+named "Gate on the installer matrix". It finds the `Distro matrix` run for the
+same commit (retrying while GitHub creates it), waits for it to complete
+(bounded at 60 minutes), then fails the release when any job whose name starts
+with `installer` concluded `failure` or `cancelled`.
 
-The operator-facing switch lives in exactly one place — the clearly marked
-`RELEASE GATING SWITCH` block at the bottom of `distro-matrix.yml`:
+It deliberately reads **installer job conclusions**, not the matrix workflow's
+own conclusion. That is what makes the gate installer-only: a red smoke,
+features, acceptance, systemd, LSM VM, Windows, macOS or FreeBSD cell is
+advisory and can never block a release. The reasoning is in the workflow
+comment: a red installer cell means a user's first command fails, which is
+worth blocking for; the slower cells carry infra flake.
 
-1. In `distro-matrix.yml`, set `RELEASE_GATE_MODE: block` (env of the
-   `Gating placeholder (inactive)` step) and wire the guard step it describes.
-2. In `.github/workflows/release.yml`, in the `create-release:` job, make
-   release creation wait for this workflow's conclusion (a step that checks
-   the workflow run's conclusion for the tag).
+`RELEASE_GATE_MODE` in that step is the switch:
+
+- `report` (current) — prints that the installer matrix is advisory and exits 0.
+- `block` — enforces the gate.
+
+Flipping to `block` is a one-line change in each `release.yml`, done only after
+**two clean TAG runs**. Every green so far came from `workflow_dispatch`; the
+tag path differs (`GITHUB_REF_NAME`, tag-scheme gating, concurrent release
+runners) and had never exercised the installer tier when this was written.
+
+`urnetwork-3.23-fix` and `meso-miner` carry the same step in their
+`release.yml`, pointing at their `Installer matrix` workflow.
 
 The restored `freebsd.yml`, `openrc-smoke.yml` and `portable-core.yml`
-workflows carry the same note: they fail themselves on a broken cell but block
-no release. Flipping the single switch above is what turns the release matrix
-into a gate.
+workflows still fail themselves on a broken cell but block no release.
 
 ## Disposable JWT handling
 
