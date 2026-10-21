@@ -3,10 +3,13 @@
 > [!TIP]
 > **Most operators can stop at the [Quick Start](Bittensor-Quick-Start.md).** You sign one message from your own computer and your nodes keep running as they are. Everything below is background, or for people who want more.
 
+> [!NOTE]
+> Checked against upstream server `50851997d`, connect `f1837db6`, sdk `23b3c7dd` and sn `83e6f48c2` (2026-10-21). Upstream is still changing the Bittensor side quickly. If a command prints something different from this page, trust the command.
+
 ## The short version
 
 - URnetwork is **Subnet 25 (SN25)** on Bittensor. Your nodes can earn the SN25 token (alpha, branded $UR) on top of normal URnetwork earnings.
-- You get paid by signing **one** consent with your Bittensor wallet (your coldkey). It says "pay every node on my URnetwork account to this coldkey". One signature covers all your nodes, now and later.
+- You get paid by signing **one** consent with your Bittensor wallet (your coldkey). It says "pay every node on my URnetwork account to this coldkey". One signature covers every node on your URnetwork account, now and later.
 - **Only `sn` builds newer than release `v2026.10.6-1064742750-meso` have `provider wallet sign` and `wallet status`.** If yours does not (`provider --help` will not list them), sign with a 3.23-fix or meso-miner `provider` on your own computer (or the app or ur.io once live). The consent covers your whole account whichever line the nodes run. Download pointer and steps are in the [Quick Start](Bittensor-Quick-Start.md).
 - Check where you stand with `provider wallet status`, run with that same `provider`. Words you do not know are in the [Glossary](Bittensor-Glossary.md).
 
@@ -30,9 +33,9 @@ Your pool earnings are credited to your coldkey. A **claim** is a small blockcha
 
 - Anyone can send the claim. The money always goes to your coldkey.
 - **Optional.** You can wait until the balance is worth the gas fee.
-- **Settlement v2** is planned to start around epoch 3 (about 2026-10-23). In v2, credit **never expires**. This start date is **unconfirmed**, so check with the project if it matters to you.
-- Before v2 (settlement v1, the earliest epochs), claims could expire. How that applies to the early epochs is **unconfirmed**.
-- The easiest way is a claim button in the apps or ur.io, if it is live. This is **unconfirmed**.
+- **Settlement v2** starts at epoch 3 (block 9,348,028, about 2026-10-23 18:10 UTC). Upstream's launch notes call that epoch decided but the launch **not sealed**, because it depends on release gates passing. In v2, credit **never expires**.
+- Before v2 (settlement v1, the earliest epochs), a claim stays open for 8 epochs plus 1 epoch of grace, and an expired claim is carried for the same operator (`claim_ttl_epochs`, `claim_grace_epochs` and `expired_claim_action` in upstream's `deploy/mainnet/policy-v1.yml`). What carrying means for one operator's payout is not documented here.
+- The SDK the apps are built on can sync pool claims (sdk `23b3c7dd`, `SnPoolClaimSync`). Whether the app you have shows a claim button is **not confirmed**.
 - Command-line claims exist for people who want automation. They need an EVM key with TAO for gas. See [Claiming by hand](#claiming-by-hand-advanced). Claim daemons are in the miner image.
 
 ## Signing the consent (reference)
@@ -40,7 +43,7 @@ Your pool earnings are credited to your coldkey. A **claim** is a small blockcha
 The Quick Start has the steps. In short, with an `sn` `provider` that has `wallet sign` (or a **3.23-fix or meso-miner** one) on your own computer:
 
 ```bash
-provider auth <auth_code>
+provider auth                            # prompts; paste the code at the prompt
 provider wallet sign <coldkey_ss58>    # opens a local page for your wallet extension
 provider wallet status                 # confirm
 ```
@@ -66,6 +69,15 @@ Options on that binary:
 | `provider bind-head`, `unbind-head` (sn release binary) | The older head path (`--hotkey`, `--registrant`, `--contract`). Not the current fleet flow. Do not use it. |
 
 Docker users: you do not change the container command for this. A run that still passes `--wallet=<coldkey>` and `--legacy-network-wallet` can drop both.
+
+## bind-head and unbind-head (old head-tier path)
+
+`provider bind-head` and `provider unbind-head` are the head-tier path from before the `provider fleet` group. The default sn release `provider` has only these two; the `fleet` group lives in the miner image (`ghcr.io/full-bars/sn:miner`). Do not use bind-head for new work. Their grammar in this fork is:
+
+```text
+provider bind-head --hotkey=<hex> --registrant=<registrant> --contract=<contract> [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+provider unbind-head --hotkey=<hex> [--contract=<contract>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
+```
 
 ## Other pages, only if you need them
 
