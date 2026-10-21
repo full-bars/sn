@@ -17,6 +17,12 @@ The `sn` fork's `provider` now has `provider wallet sign` and `provider wallet s
 provider --help | grep 'wallet sign'
 ```
 
+On Windows PowerShell, where `grep` does not exist:
+
+```powershell
+provider.exe --help | Select-String 'wallet sign'
+```
+
 If that prints a line, your `provider` can sign. **Skip the download below** and use it for Step 2 (everything in Step 2 and the status check works the same). Its `wallet set <coldkey>` without a signature only works with `--legacy-network-wallet`, which sends an unsigned request that is **not paid** (see [the old commands](#the-old-commands-in-this-fork-that-do-not-get-you-paid) below).
 
 If nothing prints, your build is older. That is fine. The consent covers your **whole account**, whichever line your nodes run. So you sign it with a 3.23-fix `provider` program instead, once, on your own computer:
