@@ -3557,12 +3557,12 @@ not a request to reopen testnet.
 ## Production hardening from sim-testnet
 
 Reviewed 2026-09-21 by Astra (`gpt-6-astra`, effort `max`) against source through
-SN `eb926565`, the [full finalization requirements](../FINALIZE.md),
+SN `eb926565`, the full finalization requirements,
 [incremental recovery policy](../sim-testnet/README.md#incremental-recovery-and-acceptance),
 [first report](../sim-testnet/FINAL.md),
 [independent peer review](../sim-testnet/peerreview/verify/README.md), retained
 failure bundles, and the corrective commits cited below. The
-[September 17 handoff](../FINALIZE-HANDOFF.md) is historical evidence of a stopped
+September 17 handoff is historical evidence of a stopped
 qualification, not the current execution instruction. The September 27 closure
 and MG gates above supersede its instructions to continue testnet.
 
