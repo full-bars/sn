@@ -33,11 +33,11 @@ func_forward_stop() {
     if [ -n "$PROVIDER_CHILD_PID" ]; then
         kill -TERM "$PROVIDER_CHILD_PID" 2>/dev/null || true
     fi
-    # a hotswap successor is not this shell's child; pkill returns 1 when
-    # nothing matches (the common no-hotswap case), and because this runs
-    # inside the trap handler, set -e would otherwise kill the supervisor
-    # itself mid-stop instead of waiting for the provider to exit
-    pkill -TERM -f "^$APP_DIR/urnetwork_.* provide" 2>/dev/null || true
+    # a hotswap successor is not this shell's child; skip the tracked child
+    # (already signalled above) so the provider sees exactly one TERM
+    for _successor in $(pgrep -f "^$APP_DIR/urnetwork_[^ ]* (auth-)?provide" 2>/dev/null); do
+        [ "$_successor" = "$PROVIDER_CHILD_PID" ] || kill -TERM "$_successor" 2>/dev/null || true
+    done
 }
 
 func_install_stop_trap() {
@@ -51,14 +51,34 @@ func_exit_if_stopping() {
     fi
 }
 
+# func_sleep is the interruptible supervisor sleep. busybox ash defers a
+# trapped signal until the foreground command returns, so a bare foreground
+# `sleep N` swallows a `docker stop` for its whole duration and Docker
+# SIGKILLs the container; backgrounding the sleep lets the trap run. The
+# wait keeps the elapsed time, and every sleep doubles as a stopping
+# checkpoint.
+func_sleep() {
+    sleep "$1" &
+    _sleep_pid=$!
+    wait "$_sleep_pid" || true
+    func_exit_if_stopping
+}
+
 # func_run_provider runs the provider in the background so the stop trap can
 # fire while it runs, and sets code to its exit status. `|| code=$?` keeps
 # the run alive under set -e for a crashed provider or a wait interrupted by
-# the TERM trap (status 143); wait repeats until the provider has really
+# the TERM trap (status 143): a bare failing wait would abort the supervisor
+# instead of handling the exit. wait repeats until the provider has really
 # exited, so a graceful shutdown is never cut short.
 func_run_provider() {
     "$@" &
     PROVIDER_CHILD_PID=$!
+    # a TERM that landed between the loop's stopping check and this spawn
+    # left the stop flag set with nobody to signal; forward now, otherwise
+    # wait would outlive the stop request while the fresh provider runs on
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        func_forward_stop
+    fi
     code=0
     while :; do
         wait "$PROVIDER_CHILD_PID" || code=$?
@@ -248,7 +268,7 @@ func_start_provider(){
                 failures=0
                 reauth_attempts=0
                 while pgrep -f "urnetwork.*provide" >/dev/null 2>&1; do
-                    sleep 2
+                    func_sleep 2
                 done
                 func_exit_if_stopping
                 continue
@@ -273,7 +293,7 @@ func_start_provider(){
                     log "[INFO] Re-authentication successful. Restarting provider..."
                     failures=0
                     reauth_attempts=0
-                    sleep 5
+                    func_sleep 5
                     continue
                 else
                     log "[ERROR] Re-authentication failed."
@@ -284,14 +304,14 @@ func_start_provider(){
                     log "[INFO] Re-authentication successful. Restarting provider..."
                     failures=0
                     reauth_attempts=0
-                    sleep 5
+                    func_sleep 5
                     continue
                 else
                     log "[ERROR] Re-authentication failed."
                 fi
             fi
             log "[CRITICAL] Token expired/revoked and re-auth unavailable. Set URNETWORK_AUTH_CODE and restart."
-            sleep 30
+            func_sleep 30
             exit 78
         fi
 
@@ -299,7 +319,7 @@ func_start_provider(){
             log "[INFO] UrNetwork requested planned restart (exit 75); restarting in 5s."
             failures=0
             reauth_attempts=0
-            sleep 5
+            func_sleep 5
             continue
         fi
 
@@ -315,7 +335,7 @@ func_start_provider(){
         fi
 
         log "[INFO] Waiting 60s before retry"
-        sleep 60
+        func_sleep 60
     done
 }
 

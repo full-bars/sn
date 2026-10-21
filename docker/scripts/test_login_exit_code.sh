@@ -88,6 +88,13 @@ run_login() {
         echo "DEBUG=false"
         echo "log() { echo \"\$*\" >> '$out/login.log'; }"
         echo "sleep() { :; }"
+        # func_do_login now starts its retry loop with the stopping check and
+        # sleeps through func_sleep; the runner needs the stop-flag state and
+        # both helpers before the login-loop extraction.
+        echo "PROVIDER_STOPPING=0"
+        echo "PROVIDER_CHILD_PID=\"\""
+        extract_func "$common" func_exit_if_stopping
+        extract_func "$common" func_sleep
         extract_func "$common" func_do_login
         echo 'func_do_login'
         echo 'echo "rc=$?"'

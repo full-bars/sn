@@ -25,9 +25,11 @@ func_forward_stop() {
     if [ -n "$PROVIDER_CHILD_PID" ]; then
         kill -TERM "$PROVIDER_CHILD_PID" 2>/dev/null || true
     fi
-    # pkill returns 1 when nothing matches, and this runs inside the trap
-    # handler, where set -e would otherwise kill the supervisor itself
-    pkill -TERM -f "^$APP_DIR/urnetwork_.* provide" 2>/dev/null || true
+    # a hotswap successor is not this shell's child; skip the tracked child
+    # (already signalled above) so the provider sees exactly one TERM
+    for _successor in $(pgrep -f "^$APP_DIR/urnetwork_[^ ]* (auth-)?provide" 2>/dev/null); do
+        [ "$_successor" = "$PROVIDER_CHILD_PID" ] || kill -TERM "$_successor" 2>/dev/null || true
+    done
 }
 
 func_install_stop_trap() {
@@ -41,14 +43,34 @@ func_exit_if_stopping() {
     fi
 }
 
+# func_sleep is the interruptible supervisor sleep. busybox ash defers a
+# trapped signal until the foreground command returns, so a bare foreground
+# `sleep N` swallows a `docker stop` for its whole duration and Docker
+# SIGKILLs the container; backgrounding the sleep lets the trap run. The
+# wait keeps the elapsed time, and every sleep doubles as a stopping
+# checkpoint.
+func_sleep() {
+    sleep "$1" &
+    _sleep_pid=$!
+    wait "$_sleep_pid" || true
+    func_exit_if_stopping
+}
+
 # func_run_provider runs the provider in the background so the stop trap can
 # fire while it runs, and sets code to its exit status. `|| code=$?` keeps
 # the run alive under set -e for a crashed provider or a wait interrupted by
-# the TERM trap (status 143); wait repeats until the provider has really
+# the TERM trap (status 143): a bare failing wait would abort the supervisor
+# instead of handling the exit. wait repeats until the provider has really
 # exited, so a graceful shutdown is never cut short.
 func_run_provider() {
     "$@" &
     PROVIDER_CHILD_PID=$!
+    # a TERM that landed between the loop's stopping check and this spawn
+    # left the stop flag set with nobody to signal; forward now, otherwise
+    # wait would outlive the stop request while the fresh provider runs on
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        func_forward_stop
+    fi
     code=0
     while :; do
         wait "$PROVIDER_CHILD_PID" || code=$?
@@ -81,8 +103,9 @@ func_do_login() {
     
     # Retry loop for authentication
     while true; do
+        func_exit_if_stopping
         log "[INFO] Sleeping 15s before obtaining new JWT..."
-        sleep 15
+        func_sleep 15
         
         log "[INFO] Attempting authentication..."
         
@@ -103,24 +126,24 @@ func_do_login() {
         # Check for success message in output
         if echo "$AUTH_OUTPUT" | grep -q "Jwt written to"; then
             log "[INFO] Authentication successful - JWT written"
-            sleep 5
+            func_sleep 5
             
             # Verify JWT file exists as backup check
             if [ -s "$JWT_FILE" ]; then
                 log "[INFO] JWT file verified at $JWT_FILE"
-                sleep 5
+                func_sleep 5
                 return 0
             else
                 log "[WARN] Success message found but JWT file missing - retrying"
                 log "[INFO] Will retry authentication in 1 minutes (60 seconds)..."
-                sleep 60
+                func_sleep 60
             fi
         else
             # Authentication failed - output exit code and auth output
             log "[ERROR] Authentication failed (exit code: $AUTH_EXIT_CODE)" >&2
 			log "[ERROR] $(echo "$PANIC_LINE" | tr '[:lower:]' '[:upper:]')" >&2
             log "[INFO] Will retry authentication in 5 minutes (300 seconds)..."
-            sleep 300
+            func_sleep 300
         fi
     done
 }
@@ -192,7 +215,7 @@ func_start_provider(){
         if [ "$code" -eq 75 ]; then
             log "[INFO] UrNetwork requested planned restart (exit 75); restarting in 5s."
             failures=0
-            sleep 5
+            func_sleep 5
             continue
         fi
         failures=$((failures+1))
@@ -204,7 +227,7 @@ func_start_provider(){
             failures=0
         fi
         log "[INFO] Waiting 60s before retry"
-        sleep 60
+        func_sleep 60
     done
 }
 

@@ -86,7 +86,8 @@ STUB_EOF
         echo "PASSWORD=''"
         # the stop-forwarding helpers are defined at the top of each start
         # script; the extracted loop functions reference them under set -u,
-        # so set them here too (mirrors full-bars/urnetwork-3.23-fix).
+        # so set them and extract the helpers WITH the loop functions from
+        # the SAME $script_file (mirrors full-bars/urnetwork-3.23-fix).
         echo "PROVIDER_STOPPING=0"
         echo "PROVIDER_CHILD_PID=\"\""
         echo "log() { echo \"LOG: \$*\" >> '$test_dir/out.log'; }"
@@ -95,6 +96,7 @@ STUB_EOF
         echo "func_do_login() { echo 'LOG: func_do_login called' >> '$test_dir/out.log'; }"
         echo "func_check_credentials() { echo 'LOG: func_check_credentials called' >> '$test_dir/out.log'; }"
         extract_func "$REPO/docker/scripts/$script_file" func_exit_if_stopping
+        extract_func "$REPO/docker/scripts/$script_file" func_sleep
         extract_func "$REPO/docker/scripts/$script_file" func_run_provider
         extract_func "$REPO/docker/scripts/$script_file" func_start_provider
         echo "func_start_provider"
