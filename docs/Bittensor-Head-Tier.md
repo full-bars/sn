@@ -33,10 +33,29 @@ Operators with **many distinct, stable public IP ranges** that are not shared wi
 
 ## What it costs and requires
 
-No TAO figures are given here, because they change.
+The live figures below are read from the chains by CI, so this page does not carry hand-maintained numbers. The bullets after the table explain what each figure means.
+
+<!-- BEGIN SN25 LIVE NUMBERS (generated) -->
+_Read from the chains by CI every hour. Values last changed on 2026-10-21._
+
+| | Value |
+|---|---|
+| Fleet seat registration burn | 0.0005 TAO (~$0.14) |
+| Burn floor | 0.0005 TAO |
+| Seats in use | 256 of 256 |
+| Registration open | yes |
+| Immunity after registering | 21,600 blocks (~3.0 days) |
+| Tempo | 360 blocks (~72 minutes) |
+| Gas price, chain 964 | 5.0 gwei |
+| One node binding | 245,301 gas, about 0.001227 TAO (~$0.34) |
+| Fleet commitments mirrored | 0 |
+| Fleet bindings ever made | 0 |
+| Commitment oracle | active, balance 0.0479 TAO |
+| Coordinator | not paused |
+<!-- END SN25 LIVE NUMBERS (generated) -->
 
 - **A registration burn.** Your fleet coldkey burns TAO to register the fleet hotkey's seat. The amount is live. `fleet register` reads it, prints it, and refuses above the limit you set with `--burn_limit_rao`. It only plans until you add `--apply`.
-- **You can lose the seat.** Nothing reserves a place for head fleets. When the subnet is full, a new registration removes the lowest-scoring seat that is past its immunity period. The SN25 immunity length is not stated here. A lost seat means the burn is gone.
+- **You can lose the seat.** Nothing reserves a place for head fleets. When the subnet is full, a new registration removes the lowest-scoring seat that is past its immunity period. The live table above carries the current seat count and immunity length. A lost seat means the burn is gone.
 - **Gas for each node you bind.** `fleet bind` sends one EVM transaction per node through a relayer key you fund. The other route is `fleet sign`, which signs locally and needs no relayer, and then you submit on the ur.io "Top 200" page. The server side of that page exists. It is not confirmed that the page itself is live for operators.
 - **Re-signing.** A binding lasts at most 12 epochs (`maximum_validity_epochs: 12`, about 3 months). Changes take effect from the next epoch.
 - **Several keys**, all as files on your own computer:
