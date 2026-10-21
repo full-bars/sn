@@ -48,7 +48,7 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 | `usage [graphs\|graph <view>] [target]` | Display traffic and billing accounting: billable relay bytes vs control-plane protocol overhead, with rolling time-series summaries. |
 | `choose-network <api> <connect> [target]` | Point provider to custom API and WebSocket signaling endpoints. Use `--reset` to restore the default endpoints. |
 | `fast-auth [on\|off\|status] [target]` | Toggle or check `~/.urnetwork/fast_auth` marker to bypass the auth rate limiter. Confirm-gated. |
-| `set [help \| <key> <val> \| <key> off \| <key>] [target]` | Get, set, or clear runtime provider state overrides (`node-name`, `report-interval`, `proxy-url-max`, `proxy-url-refresh`, `cleanup-scope`, `cleanup-interval`, `fast-auth`). Sent live over the provider control socket, or queued to `pending_overrides.json` if the provider is stopped. Confirm-gated. |
+| `set [help \| <key> <val> \| <key> off \| <key>] [target]` | Get, set, or clear runtime provider state overrides (`node-name`, `proxy-url-max`, `proxy-url-refresh`, `cleanup-scope`, `cleanup-interval`, `fast-auth`). Sent live over the provider control socket, or queued to `pending_overrides.json` if the provider is stopped. Confirm-gated. |
 | `rename <name> [target]` | Set the dashboard identity label on the backend. Alias for `set node-name <name>`. Writes `~/.urnetwork/node_name`, re-read on next tick. No restart. Use `off` to clear. |
 | `session save <file> [target]` | Export an encrypted identity bundle (AES-256-GCM) of provider JWT identity and state. Prompts for passphrase. |
 | `session load <file> [target] [--allow-different-account]` | Decrypt and load an identity bundle into the provider. Automatically backs up current state first. Verifies account identity unless bypassed. |
@@ -88,7 +88,6 @@ Exclusion uses `proxy remove --match=<pattern>`. Matching removes proxies and pe
 | `eco [on\|off]` | Enable or disable the Eco profile (RAM-constrained hosts). |
 | `turbo [v4\|v8\|off]` | Enable Turbo V4 or Turbo V8 high-throughput modes. |
 | `ramlogs [on\|off]` | Enable or disable RAM-disk logging (`/dev/shm`). |
-| `report <url>` | Leftover. It sets a bandwidth report URL, but the hub that received reports was removed, so it does nothing useful. It writes the lower-precedence file: a `report-url` set through the control socket takes precedence, so while that override exists `report <url>` cannot change the effective URL and `report off` cannot disable it. For fleet visibility use `metrics` (below). |
 | `profile [name]` | Show or set the memory and GC tuning profile (`auto`, `turbo-v4`, `turbo-v8`, `eco`, `lowmem`; `v4` and `v8` are accepted aliases). With no argument, prints the current profile and what each one is for. |
 | `metrics [status\|on\|off\|listen <ip:port\|auto>]` | Show where the Prometheus `/metrics` endpoint listens and the address to scrape, turn it on or off, or choose its listen address. Live, no restart, persisted. See [Monitoring](Monitoring). |
 
