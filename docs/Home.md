@@ -26,7 +26,10 @@ The provider serves dual-stack IPv4 and IPv6 traffic, uses HTTP/3 (QUIC) for its
 - [Monitoring](Monitoring) — Prometheus metrics and the Grafana stack
 - [Node Identity](Node-Identity) — dashboard labels, naming, and IP privacy
 - [Egress Security Policy](Egress-Security-Policy) — packet inspection: CFAA reputation, DMCA BitTorrent, web standards
-- [Bittensor Operations](Bittensor-Operations) — Subnet operations and status
+- [Bittensor Quick Start](Bittensor-Quick-Start) — do I need to do anything? (start here)
+- [Bittensor Operations](Bittensor-Operations): Subnet overview and FAQ
+- [Bittensor Head Tier](Bittensor-Head-Tier) — optional and advanced
+- [Bittensor Glossary](Bittensor-Glossary): plain meanings of the words
 
 ### Reference
 - [Log Message Reference](Log-Message-Reference) — what provider log lines mean

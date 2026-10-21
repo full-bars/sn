@@ -87,6 +87,9 @@ Windows Defender may flag this one-liner. See the note below.
 
 ### After you install
 
+> [!TIP]
+> **Bittensor payouts:** most operators only need to sign one wallet consent, once, from their own computer. This fork's `provider` cannot sign it, so use a 3.23-fix or meso-miner `provider` for that one step. Nothing changes on your nodes. See the [Bittensor Quick Start](docs/Bittensor-Quick-Start.md).
+
 After installation, authenticate and start providing:
 
 ```bash
@@ -305,6 +308,8 @@ that splits its pool among its providers. It directs the split; the immutable va
 pays.
 
 ### Register a provider (ingress or egress)
+
+**Most operators:** you only need the one-time wallet consent in the [Bittensor Quick Start](docs/Bittensor-Quick-Start.md). The claim, fleet and multi-operator material below is optional or advanced.
 
 Follow the provider documentation at <https://ur.xyz>. Providers work with network
 operators — the miner defaults to the reference operator, and you can point it at another
