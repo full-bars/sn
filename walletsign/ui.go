@@ -1,6 +1,6 @@
-package miner
+package walletsign
 
-// wallet_sign_ui.go -- `provider wallet sign`: one local page where a browser
+// ui.go -- `provider wallet sign`: one local page where a browser
 // wallet extension signs the network wallet consent.
 //
 // The page is served on 127.0.0.1 only, for a bounded time, with a visible
