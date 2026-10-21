@@ -33,10 +33,12 @@ func TestDocumentedCliCommandsExist(t *testing.T) {
 	for command := range usageCommands(string(providerToolUsage), "provider") {
 		commands["provider"][command] = true
 	}
-	// Two documented names are not usage entries: `provider help` is a
-	// runtime alias for --help, and `provider summary` appears only in a
-	// negated example ("`provider proxy summary`, not `provider summary`").
-	for _, documented := range []string{"help", "summary"} {
+	// Three documented names are not usage entries: `provider help` is a
+	// runtime alias for --help, `provider summary` appears only in a negated
+	// example ("`provider proxy summary`, not `provider summary`"), and
+	// `provider consent for client <id>` is a line that `provider wallet status`
+	// prints, quoted in the Bittensor Quick Start's table of what the answer means.
+	for _, documented := range []string{"help", "summary", "consent"} {
 		commands["provider"][documented] = true
 	}
 	for binary, set := range commands {
