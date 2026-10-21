@@ -41,7 +41,7 @@ duplicate index|pathId). A validator submits one honest small tree + `claimedEff
 → captures ~100% of every fee pool, undisputable.
 - **Bound:** fee pool only (φ·deposits default 10% + voluntary ω) — **miner principal is
   untouched** (needs NO-committed Merkle proof). Sybil-limited by UID registration.
-- **Why deferred, not fixed silently:** (1) `PLAN.md` explicitly defers "effort-bounty
+- **Why deferred, not fixed silently:** (1) `docs/design/PLAN.md` explicitly defers "effort-bounty
   coverage curve tuning" this iteration; (2) launch validators are **owner-run** (§10/§11.2)
   so no adversarial validator exists at launch; (3) the real fix is a protocol design
   choice. **README deviation-6 claims this is "mitigated by the dispute window" — that is

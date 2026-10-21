@@ -1,7 +1,7 @@
 # Bittensor Subnet Operations
 
 Operating guide for the subnet (Bittensor) command surface of the provider
-binary. `provider/sn.go` implements the Subnet pool bridge (`sn/PLAN.md` 7.3)
+binary. `provider/sn.go` implements the Subnet pool bridge (`docs/design/PLAN.md` 7.3)
 backed by `sn/merkle` (inclusion proofs), `sn/stabi` (ABI packing),
 `sn/miner/onchain` (go-ethereum submission) and `sn_rpc.go` (stdlib `eth_call`).
 

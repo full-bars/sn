@@ -1,7 +1,7 @@
 # Settlement v2 launch examples
 
 These are templates, and two command sequences, for the steps of the settlement
-v2 launch runbook, `VERSION2-LAUNCH.md`, that had none written. Replace every
+v2 launch runbook, `docs/archive/VERSION2-LAUNCH.md`, that had none written. Replace every
 `<...>` placeholder. A placeholder starting `O` and a number names an owner
 input of the runbook's section 3; the others name a value that a step produces
 or that is derived. In JSON and YAML a placeholder is a quoted string, also
