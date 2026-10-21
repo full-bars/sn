@@ -44,7 +44,7 @@ Run this on any node with a `provider` that has the command, or with the 3.23-fi
 provider wallet status
 ```
 
-On a systemd install you can also run `urnet-tools wallet status`. For Docker, run it inside the container, for example `docker exec <container> provider wallet status`.
+`urnet-tools wallet status` works too, but only on a build that has `wallet status` (the check above). Otherwise use the 3.23-fix binary for the status check as well. For Docker, run it inside the container, for example `docker exec <container> provider wallet status`.
 
 What the answer means:
 
