@@ -31,6 +31,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<unix>-meso`. Tags without the `-m
 
 - **`/metrics` is on by default**: the provider starts the Prometheus listener without any operator setup. The automatic bind is loopback plus the machine's Tailscale address on bare metal, and every interface inside a container only when every address it holds is private or unique-local; a container that shares a publicly addressed network stays on loopback and Tailscale instead of binding `0.0.0.0`. Override the address with `URNETWORK_METRICS=ip:port`; turn it off with `urnet-tools metrics off`. See [Monitoring](docs/Monitoring.md).
 
+### Security
+
+- **Go 1.27.3 blocks the eight compromised eMudhra intermediates (`CVE-2026-111943`)**: `go.mod`, the Dockerfile builder and every `setup-go` pin Go 1.27.3, so a binary built from this release carries the denylist. A binary built before it may continue trusting the intermediates, although an updated operating-system trust store may already reject them.
+
 ## [v2026.10.6-1064742750-meso] — 2026-10-06
 
 ### Added
