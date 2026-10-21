@@ -89,7 +89,7 @@ version. That is just overhead we can avoid." And: "Pull the latest main code
 on all repos. That is what the gate should use. If it fails, fix, commit,
 merge, push, pull, repeat."
 
-The orchestration log is [VERSION2-STATE.md](VERSION2-STATE.md), cited as
+The orchestration log is [VERSION2-STATE.md](../../VERSION2-STATE.md), cited as
 STATE.md. It is a snapshot of 2026-10-13 20:15 UTC; its lines 1 to 286 keep
 the log's numbers. Step 5 has been run in production, on 2026-10-14
 (step 5). Unprefixed paths are in this repository.
@@ -97,7 +97,7 @@ the log's numbers. Step 5 has been run in production, on 2026-10-14
 Conventions:
 
 - **Owner** is the owner, with the Ledger-held keys
-  ([mainnet/LAUNCH.md](mainnet/LAUNCH.md):161-166). **Operator** is whoever
+  ([mainnet/LAUNCH.md](../../mainnet/LAUNCH.md):161-166). **Operator** is whoever
   runs the UR server, the validator host and the tooling.
 - A bare § cites VERSION2-FINAL.md. This runbook's own parts are called
   sections and steps.
@@ -117,7 +117,7 @@ Conventions:
   bare digest is refused (`mainnet/plan_input.go:111-113`; connect
   `durablevolume/config.go:100-106`).
 - The templates for steps 8.2, 8.3, 10 and 13 are indexed in
-  [mainnet/SETTLEMENT-V2-EXAMPLES.md](mainnet/SETTLEMENT-V2-EXAMPLES.md).
+  [mainnet/SETTLEMENT-V2-EXAMPLES.md](../../mainnet/SETTLEMENT-V2-EXAMPLES.md).
   Replace every `<...>` placeholder in them. In JSON and YAML a placeholder
   is a quoted string, also where a number belongs: "write numbers bare"
   (:7-8). "A test fills each file's placeholders with synthetic values and
@@ -137,7 +137,7 @@ Conventions:
   - optionally `STClaimBatcher` (`evm/src/STClaimBatcher.sol`), immutable,
     ownerless and stateless (§10.2).
 - **Deployment tooling**
-  ([mainnet/BOOTSTRAP-CONTRACTS.md](mainnet/BOOTSTRAP-CONTRACTS.md)):
+  ([mainnet/BOOTSTRAP-CONTRACTS.md](../../mainnet/BOOTSTRAP-CONTRACTS.md)):
   - the settlement v2 phase of `sn-mainnet bootstrap-contracts` ("Settlement
     v2 contract phase");
   - `sn-mainnet register-operator-pool`, which reviews and reads back the
@@ -322,7 +322,7 @@ runbook, at steps 9 and 12.
 - Gate 2 ran on a node built from runtime 475's source. "Any runtime change on
   mainnet repeats this gate" (§14 gate 2).
 - Subtensor replaces its runtime every few days
-  ([mainnet/VALIDATOR-PRODUCTION-RUNTIME.md](mainnet/VALIDATOR-PRODUCTION-RUNTIME.md):39).
+  ([mainnet/VALIDATOR-PRODUCTION-RUNTIME.md](../../mainnet/VALIDATOR-PRODUCTION-RUNTIME.md):39).
   Step 2 checks it, and is repeated immediately before step 8 and before
   step 15.
 - Mainnet moved from 475 to 477 on 2026-10-12 and to 478 on 2026-10-13
@@ -481,8 +481,8 @@ steps 5, 8, 10 and 15 (VERSION2-FINAL.md §13, §17).
 | O11 | Whether to create the claim batcher | optional sixth action | 8, 13 | VERSION2-FINAL.md §8.5 |
 | O12 | The demand fee | decided: 750,000 rao, 750,000,000,000,000 wei (owner decision, 2026-10-12); the command has no default | 8 | VERSION2-FINAL.md §7.1; BOOTSTRAP-CONTRACTS.md:734-739 |
 | O13 | The re-signed operator gas policy: `revision`, `previous_policy_sha256`, `maximum_gas`, `maximum_intent_liability_wei`, `maximum_lifetime_liability_wei`, the validity window and the attempt caps | `maximum_gas` about 3.5M, and at least 3,200,000, the floor of every v1 and v2 close; intent liability at least 3 × `maximum_gas` × `maximum_fee_per_gas_wei`, 3.15·10^17 wei at 3.5M and 30 gwei; `maximum_lifetime_liability_wei` at least 2·10^19 once deposits are priced; `maximum_intent_attempts` at most 3; same bindings (step 5) | 5 | VERSION2-FINAL.md §8.1, §13; `server/local/sn25golive/gas.go:26-28`; `server/model/st_transaction_gas_model.go:95-112,332-368` |
-| O14 | The treasury re-sign inputs: the input file and the unsigned policy plan the live approval was drafted from, with their SHA-256, and the approval key's signature | unchanged; only `config_hash` may change. The written sequence is [mainnet/SETTLEMENT-V2-ADOPTION.md](mainnet/SETTLEMENT-V2-ADOPTION.md) | 10 | `mainnet/treasury_approval_test.go:534-557`; `validator/production_authority_history.go:368-388` |
-| O15 | The adopted validator config: its absolute path, the predecessor's retained authority bundle, the progress file, the durable-volume declaration, and how the service command line gains `--ledger_auditor_key_file` | all paths absolute; on snow the flag comes from xops `group_vars/validator.yml`, which renders it into `sn-validator.service`'s `ExecStart`; for a unit this repository renders, through the systemd drop-in [mainnet/validator-ledger-auditor.example.conf](mainnet/validator-ledger-auditor.example.conf) (step 10) | 10 | `validator/treasury_approval_draft.go:71-77`; `validator/run.go:112-117`; SETTLEMENT-V2-EXAMPLES.md:102-123 |
+| O14 | The treasury re-sign inputs: the input file and the unsigned policy plan the live approval was drafted from, with their SHA-256, and the approval key's signature | unchanged; only `config_hash` may change. The written sequence is [mainnet/SETTLEMENT-V2-ADOPTION.md](../../mainnet/SETTLEMENT-V2-ADOPTION.md) | 10 | `mainnet/treasury_approval_test.go:534-557`; `validator/production_authority_history.go:368-388` |
+| O15 | The adopted validator config: its absolute path, the predecessor's retained authority bundle, the progress file, the durable-volume declaration, and how the service command line gains `--ledger_auditor_key_file` | all paths absolute; on snow the flag comes from xops `group_vars/validator.yml`, which renders it into `sn-validator.service`'s `ExecStart`; for a unit this repository renders, through the systemd drop-in [mainnet/validator-ledger-auditor.example.conf](../../mainnet/validator-ledger-auditor.example.conf) (step 10) | 10 | `validator/treasury_approval_draft.go:71-77`; `validator/run.go:112-117`; SETTLEMENT-V2-EXAMPLES.md:102-123 |
 | O16 | The v2 pool hotkey (`poolHotkeyV2`) | new; nonzero; not the escrow hotkey; not used by another pool | 15 | `evm/src/STSettlementVault2.sol:166-171`; VERSION2-FINAL.md §12.1 |
 | O17 | The pool registration cap `maximumBurnRao` and the value sent | the rehearsal sent the cap × 10^9 wei at the runtime's default MaxBurn of 100 TAO | 15 | `rehearsal/stack_test.go:31-32,190-194` |
 | O18 | E_s and the registration date | decided: E_s is epoch 3, which starts at block 9,348,028, about 2026-10-23 18:10 UTC. The owner first chose epoch 2 (2026-10-13: "we are launching v2 now to be active the next ur epoch") and then moved E_s to epoch 3. The registration window is blocks 9,333,628 to 9,340,828, and every gate passes by block 9,333,628. Section 9 gives the schedule | 14, 15 | section 9; VERSION2-FINAL.md §12.1 step 5, §14 |
@@ -557,7 +557,7 @@ first exist.
      (`go.mod:3`, `go 1.27.2`; the server's `go.mod:3` is the same). Under
      `GOTOOLCHAIN=local` an older local toolchain is refused: "go: go.mod
      requires go >= 1.27.2 (running go …; GOTOOLCHAIN=local)". The command is
-     [mainnet/MACOS.md](mainnet/MACOS.md):24-29's:
+     [mainnet/MACOS.md](../../mainnet/MACOS.md):24-29's:
 
      ```bash
      GOTOOLCHAIN=local CGO_ENABLED=0 go build -mod=readonly -trimpath -buildvcs=true \
@@ -566,7 +566,7 @@ first exist.
 
   4. Build the production composition, which holds `cli/validator`,
      `cli/snclaim`, `cli/miner` and the server services
-     ([mainnet/RELEASE-BUILD.md](mainnet/RELEASE-BUILD.md):3-8,37-42), in the
+     ([mainnet/RELEASE-BUILD.md](../../mainnet/RELEASE-BUILD.md):3-8,37-42), in the
      local mode:
 
      ```bash
@@ -580,7 +580,7 @@ first exist.
        `go.mod:212-235`). `main` keeps these local substitutions.
      - The config selects the mode with `"dependency_mode": "local"` and lists
        connect, sdk and gvisor among its `repositories`
-       ([mainnet/RELEASE-BUILD.md](mainnet/RELEASE-BUILD.md), `dependency_mode`).
+       ([mainnet/RELEASE-BUILD.md](../../mainnet/RELEASE-BUILD.md), `dependency_mode`).
        Without the field the builder keeps the pinned mode, which accepts
        `github.com/urnetwork/sdk`, `github.com/urnetwork/connect` and
        `github.com/pion/sctp` only as checksum-bound released versions and
@@ -655,7 +655,7 @@ first exist.
     holds for runtime 478" ("Limits and assessment").
 
   The output is an unapproved observation, never an approval
-  ([mainnet/MAINNET.md](mainnet/MAINNET.md):1663).
+  ([mainnet/MAINNET.md](../../mainnet/MAINNET.md):1663).
 - **Observed already.** These are public nodes' answers, not the check of
   record. The owner's own `runtime-snapshot` above still decides, and it
   gives O3's version and hashes.
@@ -1331,16 +1331,16 @@ go run ./sim-testnet/gencontracts --release-v2-json evm/out sim-testnet/contract
 
 *8.2 Prepare custody.* Prepare one fresh `mainnet-evm-action` snapshot for each
 approved journal, with daemon scope (BOOTSTRAP-CONTRACTS.md:775-778 and "Runtime rehearsal (R-1)";
-[mainnet/OWNER-CUSTODY-PREPARATION.md](mainnet/OWNER-CUSTODY-PREPARATION.md):40-56,105-109).
+[mainnet/OWNER-CUSTODY-PREPARATION.md](../../mainnet/OWNER-CUSTODY-PREPARATION.md):40-56,105-109).
 
 - The journals are `vault2-create.json`, `escrow2-register.json`,
   `settlement2-create.json`, `proxy2-create.json`, `vault2-link.json` and, if
   O11, `batcher-create.json` (BOOTSTRAP-CONTRACTS.md:657-664).
 - Each holds at most 524,288 bytes (`mainnet/evm_action_store.go:361`).
 - The request and its fence are
-  [mainnet/settlement-v2-custody-request.example.json](mainnet/settlement-v2-custody-request.example.json)
+  [mainnet/settlement-v2-custody-request.example.json](../../mainnet/settlement-v2-custody-request.example.json)
   and
-  [mainnet/settlement-v2-custody-fence.example.json](mainnet/settlement-v2-custody-fence.example.json)
+  [mainnet/settlement-v2-custody-fence.example.json](../../mainnet/settlement-v2-custody-fence.example.json)
   (SETTLEMENT-V2-EXAMPLES.md:84-100). `TestSettlementV2LaunchCustodyRequestExample`
   plans and applies them, then opens vault2's journal under the declaration
   they return (`mainnet/settlement_v2_launch_examples_test.go:255-343`). Fill
@@ -1393,9 +1393,9 @@ approved journal, with daemon scope (BOOTSTRAP-CONTRACTS.md:775-778 and "Runtime
   - the owner, v1 coordinator, auditors and quorum are action 3's initializer
     (`mainnet/evm_v2_contracts.go:81-86,219-295`; `mainnet/evm_phase.go:37-47,58,77-82,180`).
 - Start from the example
-  [mainnet/settlement-v2.unsigned.example.json](mainnet/settlement-v2.unsigned.example.json)
+  [mainnet/settlement-v2.unsigned.example.json](../../mainnet/settlement-v2.unsigned.example.json)
   (SETTLEMENT-V2-EXAMPLES.md:32-77), and fill it with the recipe
-  [mainnet/SETTLEMENT-V2-FILL.md](mainnet/SETTLEMENT-V2-FILL.md).
+  [mainnet/SETTLEMENT-V2-FILL.md](../../mainnet/SETTLEMENT-V2-FILL.md).
   `TestSettlementV2LaunchPhaseConfigExample` fills the example with synthetic
   values and passes `preview` and, once signed, `plan`
   (`mainnet/settlement_v2_launch_examples_test.go:189-246`).
@@ -1654,7 +1654,7 @@ release of every app.
 
 - **Who.** Owner signs; operator runs.
 - The written command sequence is
-  [mainnet/SETTLEMENT-V2-ADOPTION.md](mainnet/SETTLEMENT-V2-ADOPTION.md).
+  [mainnet/SETTLEMENT-V2-ADOPTION.md](../../mainnet/SETTLEMENT-V2-ADOPTION.md).
   `TestSettlementV2AdoptionDocumentIsTheVA6Sequence` holds it word for word
   to the round that VA-6 runs (`mainnet/settlement_v2_adoption_test.go:60-131`).
   VA-6 is `TestTreasuryApprovalPlanResignsSettlementV2Adoption`: "settlement
@@ -1773,7 +1773,7 @@ release of every app.
        (`templates/sn-validator.service.j2`:3,15).
      - **For a unit the repository renders**, `sn-mainnet-validator-<role>.service`,
        restart it through the drop-in
-     [mainnet/validator-ledger-auditor.example.conf](mainnet/validator-ledger-auditor.example.conf)
+     [mainnet/validator-ledger-auditor.example.conf](../../mainnet/validator-ledger-auditor.example.conf)
      (SETTLEMENT-V2-EXAMPLES.md:102-123). Install it as
      `/etc/systemd/system/sn-mainnet-validator-<role>.service.d/ledger-auditor.conf`,
      run `systemctl daemon-reload` and restart the unit. Its first, empty
@@ -1797,7 +1797,7 @@ release of every app.
        own unit carries no such flag
        (`mainnet/repair_validator_authority.go:181-183`), and its installer
        never overwrites a unit
-       ([mainnet/VALIDATOR-ACTIVATION.md](mainnet/VALIDATOR-ACTIVATION.md):198-204).
+       ([mainnet/VALIDATOR-ACTIVATION.md](../../mainnet/VALIDATOR-ACTIVATION.md):198-204).
      - Three tests hold the drop-in to the rendered unit and to
        `validator run`'s usage: `TestSettlementV2LaunchAuditorDropInExample`,
        `validator/TestSettlementV2LaunchAuditorDropInParses` and
@@ -1839,7 +1839,7 @@ release of every app.
   loaded `ExecStart`, "validator repair loaded execution differs"
   (`mainnet/repair_validator_host.go:370-377,400-403`;
   `mainnet/validator_activation_host.go:42`;
-  [mainnet/VALIDATOR-REPAIR.md](mainnet/VALIDATOR-REPAIR.md):74-78;
+  [mainnet/VALIDATOR-REPAIR.md](../../mainnet/VALIDATOR-REPAIR.md):74-78;
   SETTLEMENT-V2-EXAMPLES.md:118-123).
   - On snow neither controller runs: xops renders and restarts
     `sn-validator.service` (sub-step 6), and none of this applies.
@@ -1994,9 +1994,9 @@ configured (§14 gate 6). Gate 5 completed at step 9.
 - **Do.**
   1. The watcher runs on a host other than the validator's (§10.2), against
      each pending root, from its commit until its window closes. Install
-     [mainnet/settlement-v2-watcher.example.service](mainnet/settlement-v2-watcher.example.service)
+     [mainnet/settlement-v2-watcher.example.service](../../mainnet/settlement-v2-watcher.example.service)
      and
-     [mainnet/settlement-v2-watcher.example.timer](mainnet/settlement-v2-watcher.example.timer)
+     [mainnet/settlement-v2-watcher.example.timer](../../mainnet/settlement-v2-watcher.example.timer)
      as `/etc/systemd/system/sn-mainnet-settlement-v2-watcher.service` and
      `.timer`, and enable the timer (SETTLEMENT-V2-EXAMPLES.md:143-161). The
      service runs as the system user `snclaim-watcher`. Its `ExecStart` is
@@ -2025,7 +2025,7 @@ configured (§14 gate 6). Gate 5 completed at step 9.
        real usage and holds the timer to 48 runs a window
        (`miner/onchain/v2_watcher_example_test.go:37-62`).
   2. The claim daemon config is
-     [mainnet/claim-daemon-v2.example.yml](mainnet/claim-daemon-v2.example.yml)
+     [mainnet/claim-daemon-v2.example.yml](../../mainnet/claim-daemon-v2.example.yml)
      (SETTLEMENT-V2-EXAMPLES.md:125-141; keys at
      `miner/claim_v2_daemon.go:51-112`):
      - `schema_version: 2`, `api_url`, `rpc`, `chain_id: 964`;

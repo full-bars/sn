@@ -18,7 +18,7 @@ links*. Bittensor's **Yuma Consensus** turns that measurement into emission. Eve
 denominated in the subnet's native token — **α**, branded **$UR**.
 
 The full specification is in [`WHITEPAPER.md`](WHITEPAPER.md); the design rationale versus
-the rest of the Bittensor field is in [`COMPARISON.md`](COMPARISON.md). Terms are defined in
+the rest of the Bittensor field is in [`COMPARISON.md`](docs/design/COMPARISON.md). Terms are defined in
 the [glossary](#glossary) at the end.
 
 > [!NOTE]
@@ -273,7 +273,7 @@ zero) and tiering miners into a trust‑minimized pooled tail plus a directly‑
 
 ![UR Subnet vs. the Bittensor norm — design‑decision alignment matrix](diagrams/comparison_matrix.png)
 
-Full analysis, per‑theme and per‑subnet, is in [`COMPARISON.md`](COMPARISON.md).
+Full analysis, per‑theme and per‑subnet, is in [`COMPARISON.md`](docs/design/COMPARISON.md).
 
 ---
 
@@ -388,7 +388,7 @@ the finite UID budget and undermine the intended ~200-member head.
 |---|---|
 | [`WHITEPAPER.md`](WHITEPAPER.md) | The full subnet specification. |
 | [`VALIDATOR.md`](VALIDATOR.md) | The off‑chain routing‑verification (`/verify`) protocol. |
-| [`COMPARISON.md`](COMPARISON.md) | Design‑decision comparison versus the Bittensor field. |
+| [`COMPARISON.md`](docs/design/COMPARISON.md) | Design‑decision comparison versus the Bittensor field. |
 | [`diagrams/`](diagrams/) | The diagrams above (SVG sources + generators; README figures in `diagrams/readme/`, from `readme_figures.py`). |
 | `evm/` | Reserve sink, settlement vault, UUPS coordinator, tests, and generated artifacts. |
 | `validator/` | The validator binary. |

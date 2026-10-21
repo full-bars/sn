@@ -2,7 +2,7 @@
 
 Reviewed 2026-10-09 against [VERSION2-REVIEW-RESPONSE.md](VERSION2-REVIEW-RESPONSE.md)
 (SHA-256 `15d9d4359f0acda460d64d99d19801d333347357d1037a3c206b5eea7d86a87c`),
-with [VERSION2-REVIEW.md](VERSION2-REVIEW.md) and [VERSION2.md](VERSION2.md)
+with [VERSION2-REVIEW.md](VERSION2-REVIEW.md) and [VERSION2.md](docs/archive/VERSION2.md)
 read in full. References `R:lines` below identify the response, including its
 superseding Part 2. Local source references are at `31dd6fd5`; the inspected
 implementation paths are unchanged from the documents' `e1500f15` pin.
