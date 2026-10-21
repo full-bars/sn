@@ -102,6 +102,7 @@ sn/                                  # Fork root (forked from urfoundation/sn)
 │   ├── shakedown.yml                # Pre-release shakedown (v2026.* tags + manual)
 │   ├── docker-shakedown.yml         # Deep Docker test matrix
 │   ├── dash-compat.yml              # Dash/POSIX installer compatibility
+│   ├── distro-matrix.yml            # Release matrix: real installer, smoke, systemd, Windows, macOS, FreeBSD
 │   ├── unix-lifecycle.yml           # urnet-tools Linux lifecycle (systemd)
 │   ├── windows-lifecycle.yml        # urnet-tools Windows lifecycle (schtasks)
 │   ├── tool-functional-smoke.yml    # Live-API JWT mint + tool smoke
