@@ -119,7 +119,7 @@ These all send an address with **no signature**. That is the old login-proof pat
 | `provider wallet set <coldkey> --legacy-network-wallet` | Sends the old unsigned request. Without that flag this fork's `wallet set` is refused. |
 | `provider provide --wallet=<coldkey>` and `auth-provide --wallet=...` | The same unsigned request at startup. If it fails it is only logged. The provider keeps providing. |
 | `provider sn-status` | Read-only dashboard. It reads the old-style wallet record, so it may say "not configured" even after you signed. **UNCONFIRMED** at the current head. Its rank lines are the bandwidth leaderboard, not Bittensor eligibility. |
-| `provider bind-head`, `provider unbind-head` | The older head-tier path (hotkey, registrant and contract flags). It is not the current fleet flow. Do not use it. See [Head Tier](Bittensor-Head-Tier.md). |
+| `provider bind-head`, `provider unbind-head` | The older head-tier path (hotkey, registrant and contract flags). It is not the current fleet flow. Do not use it. See [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier). |
 
 The `urnet-tools wallet ...` group in this fork calls `provider wallet status|sign`. Builds older than `v2026.10.21-1077735390-meso` do not have those two, so expect them to fail there; update first. This has not been re-run on every setup.
 
@@ -143,15 +143,15 @@ The `:miner` image's `provider` can do `wallet set <coldkey> --coldkey_seed_file
 |---|---|
 | `provider wallet hotkey ...` | Only for people who sign in with a hotkey across several operators. Today there is one operator. |
 | `provide --all-operators`, `provider operators` | Multi-operator mode (miner image). Today there is one operator. |
-| `provider fleet ...` | Head tier only (miner image). See [the head tier page](Bittensor-Head-Tier.md). |
+| `provider fleet ...` | Head tier only (miner image). See [the head tier page](/full-bars/sn/wiki/Bittensor-Head-Tier). |
 | `provider claim-daemon`, `claim-daemon-v2`, `snclaim` | Optional claim automation and a low-level tool. |
 | `provider claim` | Optional manual claim. |
 | `sn-status` | Optional dashboard. Its rank lines are the bandwidth leaderboard, not Bittensor eligibility. |
 
 ## When you DO need more
 
-- **You want the head tier** (your own seat on the subnet, paid directly). It is advanced, costs TAO up front, and only makes sense if you control many different public IP ranges. Most operators should not do it. Read [Bittensor Head Tier](Bittensor-Head-Tier.md) first. Keep your consent signed too: nodes you do not bind keep earning in the pool.
+- **You want the head tier** (your own seat on the subnet, paid directly). It is advanced, costs TAO up front, and only makes sense if you control many different public IP ranges. Most operators should not do it. Read [Bittensor Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier) first. Keep your consent signed too: nodes you do not bind keep earning in the pool.
 - **You sign in with a hotkey** (`--auto-register` with a hotkey seed file). That makes a **new** URnetwork account owned by the hotkey. Your website consent does not cover it.
 - **You want automatic claims.** Most people do not need this.
 
-For the full picture and a FAQ, see [Bittensor Operations](Bittensor-Operations.md). For plain meanings of the words, see the [Glossary](Bittensor-Glossary.md).
+For the full picture and a FAQ, see [Bittensor Operations](/full-bars/sn/wiki/Bittensor-Operations). For plain meanings of the words, see the [Glossary](/full-bars/sn/wiki/Bittensor-Glossary).

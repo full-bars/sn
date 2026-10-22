@@ -1,6 +1,6 @@
 # 🏔️ Alpine Linux (OpenRC)
 
-This page is the complete guide to running the URnetwork provider on Alpine Linux and other OpenRC distributions: install, authenticate, start, update, boot persistence and the limits of OpenRC supervision. For the other platforms and the general installer, see the [Installation Guide](Installation.md).
+This page is the complete guide to running the URnetwork provider on Alpine Linux and other OpenRC distributions: install, authenticate, start, update, boot persistence and the limits of OpenRC supervision. For the other platforms and the general installer, see the [Installation Guide](/full-bars/sn/wiki/Installation).
 
 The installer detects OpenRC on its own, so there is nothing new to type: the install command is the one every other Linux uses. This page walks through a first install from a root shell, which is how Alpine starts out.
 
@@ -69,9 +69,9 @@ tail -f /var/log/urnetwork.log
 
 `urnet-tools logs` follows the same file. If the service does not stay up, read `/var/log/urnetwork.err` as well as the main log. If you have not authenticated yet, go back to [Authenticate](#authenticate).
 
-A node with no proxy list configured serves traffic directly from the box's own address, reported by the `[direct]` prefix; see the [Log Message Reference](Log-Message-Reference.md).
+A node with no proxy list configured serves traffic directly from the box's own address, reported by the `[direct]` prefix; see the [Log Message Reference](/full-bars/sn/wiki/Log-Message-Reference).
 
-To add proxies, see [Adding Proxies](Adding-Proxies.md).
+To add proxies, see [Adding Proxies](/full-bars/sn/wiki/Adding-Proxies).
 
 ## Boot persistence
 
@@ -135,7 +135,7 @@ There is no zero-downtime HotSwap under OpenRC. HotSwap depends on the old proce
 zero-downtime hotswap unavailable: the provider is supervised by OpenRC's supervise-daemon, which has no sd_notify MainPID handoff; this update uses a stop/start service restart
 ```
 
-`update` then does an ordinary stop, binary swap and start, with a brief gap with no provider process. To restart without updating, use `rc-service urnetwork restart`. Background and measurements for the systemd path are on the [HotSwap](HotSwap.md) page.
+`update` then does an ordinary stop, binary swap and start, with a brief gap with no provider process. To restart without updating, use `rc-service urnetwork restart`. Background and measurements for the systemd path are on the [HotSwap](/full-bars/sn/wiki/HotSwap) page.
 
 ## Command parity with urnet-tools
 
@@ -154,7 +154,7 @@ On a host where OpenRC is the running init system and the installer's `urnetwork
 
 These commands need root, because they change a system service. Run as an ordinary user, a failing command adds a hint to re-run as root.
 
-**Several providers on one box.** `start` is not gated. But a `stop` or `restart` with no selector, on a box where the service runs beside another provider, is refused rather than acted on, because stopping only the service would leave the other provider running while the tool reported success. Name the target with `--user`, `--unit` or `--state-dir` (the selectors in [Targeting and Selectors](urnet-tools-go.md#targeting-and-selectors)):
+**Several providers on one box.** `start` is not gated. But a `stop` or `restart` with no selector, on a box where the service runs beside another provider, is refused rather than acted on, because stopping only the service would leave the other provider running while the tool reported success. Name the target with `--user`, `--unit` or `--state-dir` (the selectors in [Targeting and Selectors](/full-bars/sn/wiki/urnet-tools-go#targeting-and-selectors)):
 
 ```text
 N providers found on this box, specify a target: [alice (pid 4242)]
@@ -167,7 +167,7 @@ N providers found on this box, specify a target: [alice (pid 4242)]
 
 ## Watchdog and exit 75
 
-The provider's [swap-thrash watchdog](Configuration.md#swap-thrash-watchdog) restarts it by exiting with status 75 and letting the supervisor start it again. Under OpenRC:
+The provider's [swap-thrash watchdog](/full-bars/sn/wiki/Configuration#swap-thrash-watchdog) restarts it by exiting with status 75 and letting the supervisor start it again. Under OpenRC:
 
 - **There is no sd_notify watchdog.** `supervise-daemon` offers no systemd-style keep-alive, so after 10 minutes without a tick the provider exits with status 75 itself and `supervise-daemon` restarts it. The start cap and the 3 restarts per 24 hours ring are the same as under systemd.
 - **OpenRC counts as a supervisor.** The service script exports `URNETWORK_INIT=openrc`, because `supervise-daemon` sets neither `INVOCATION_ID` nor `NOTIFY_SOCKET`. Without that marker the provider could not tell it is supervised and would refuse the watchdog's restart.

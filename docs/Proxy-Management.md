@@ -36,7 +36,7 @@ refresh` or `--proxy_url` pickup actually applied what you expected.
 > its original identity, so your logs and traffic reports remain consistent
 > over time.
 
-See [Proxy Hot-Reload](Proxy-Hot-Reload.md) for the full mechanics, the
+See [Proxy Hot-Reload](/full-bars/sn/wiki/Proxy-Hot-Reload) for the full mechanics, the
 trigger file, and the edge-case behavior, including the safety guard that
 skips a reload when the source yields no usable proxies.
 
@@ -90,7 +90,7 @@ docker exec -it urfix urnet-tools proxy remove-dead
 > 2. **Inactive or dropped proxies:** proxies that were previously working
 >    but have been offline for an extended period.
 >
-> Proxies that proxy audit has parked (health `parked`) are resting, not failing, and are never listed here. See [Configuration](Configuration.md#proxy-audit).
+> Proxies that proxy audit has parked (health `parked`) are resting, not failing, and are never listed here. See [Configuration](/full-bars/sn/wiki/Configuration#proxy-audit).
 >
 > The tool prompts you separately for each category, allowing you to
 > selectively remove dead proxies while keeping inactive ones (in case they
@@ -100,7 +100,7 @@ docker exec -it urfix urnet-tools proxy remove-dead
 Proxies that fail continuously are also cleaned up automatically. File-sourced
 proxies that fail for 14 days are dropped from the active pool, persisted
 across reboots. URL-sourced proxies are cleaned up after 65 minutes of
-provider uptime. See [Proxy URL Sources](Proxy-URL-Sources.md) for the
+provider uptime. See [Proxy URL Sources](/full-bars/sn/wiki/Proxy-URL-Sources) for the
 cleanup scope controls. Use `proxy remove-dead` for immediate cleanup of
 known-bad entries.
 

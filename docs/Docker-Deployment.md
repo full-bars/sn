@@ -85,7 +85,7 @@ docker run -d --name urfix \
 
 | Env var | Purpose |
 |---|---|
-| `PROXY_URL` | Live proxy list URL, fetched and merged on interval (see [Proxy URL Sources](Proxy-URL-Sources.md)) |
+| `PROXY_URL` | Live proxy list URL, fetched and merged on interval (see [Proxy URL Sources](/full-bars/sn/wiki/Proxy-URL-Sources)) |
 | `URNETWORK_PROXY_BENCHMARK=true` | Enables per-proxy latency probes (TCP connect every 5m, SOCKS5 every 15m) |
 | `URNETWORK_PROXY_BENCHMARK_ENDPOINT` | Target for SOCKS5 CONNECT probe (default `connect.bringyour.com:443`) |
 
@@ -203,7 +203,7 @@ docker run -d \
 
 For another single-container deployment on the same host, copy your `docker-compose.yml` to a new folder and replace the `urfix` prefix with a unique name in `container_name`, `volumes`, and the top-level `volumes:` section.
 
-For 3, 5, or 10 nodes in one Compose file, use the [Multi-Container Scaling](Multi-Container-Scaling.md) guide.
+For 3, 5, or 10 nodes in one Compose file, use the [Multi-Container Scaling](/full-bars/sn/wiki/Multi-Container-Scaling) guide.
 
 ### 🔐 JWT Auth
 
@@ -336,7 +336,7 @@ docker exec -it <container> urnet-tools summary
 
 ## ♻️ Hot-Restart
 
-Client JWTs are reused across restarts by default. The write path and the read path both persist JWTs, so a container restart keeps existing client identities. What is stored, how to inspect it, and what mints a new identity: [Hot-Restart.md](Hot-Restart.md).
+Client JWTs are reused across restarts by default. The write path and the read path both persist JWTs, so a container restart keeps existing client identities. What is stored, how to inspect it, and what mints a new identity: [Hot-Restart.md](/full-bars/sn/wiki/Hot-Restart).
 
 **Disabling:**
 
@@ -574,7 +574,7 @@ This brings up:
 
 The metrics endpoint is enabled by default: no environment variables are needed. Override the bind address with `-e URNETWORK_METRICS=ip:port`; disable per container with `urnet-tools metrics off`.
 
-See the [Configuration](Configuration.md#-monitoring--telemetry) reference for the full list of telemetry variables.
+See the [Configuration](/full-bars/sn/wiki/Configuration#-monitoring--telemetry) reference for the full list of telemetry variables.
 
 ## 🐦 Pelican Panel
 
@@ -626,7 +626,7 @@ The egg ships with automated CI checks (`docker/scripts/test_pelican_gates.sh` f
 
 ## Letting the Thrash Watchdog Restart the Container's Provider
 
-The swap-thrash watchdog ([details](Configuration.md#swap-thrash-watchdog)) restarts the provider by exiting with status 75. Inside a container the watchdog counts the container as a supervisor, the same as systemd, so the provider restarts with no extra switch: self-heal is the one switch.
+The swap-thrash watchdog ([details](/full-bars/sn/wiki/Configuration#swap-thrash-watchdog)) restarts the provider by exiting with status 75. Inside a container the watchdog counts the container as a supervisor, the same as systemd, so the provider restarts with no extra switch: self-heal is the one switch.
 
 ```yaml
 services:

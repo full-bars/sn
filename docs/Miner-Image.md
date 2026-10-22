@@ -1,7 +1,7 @@
 # Miner image (sn)
 
 > [!TIP]
-> **Most operators can stop here.** You do not need the miner image to get paid. Sign the one-time wallet consent from your own computer (see the [Bittensor Quick Start](Bittensor-Quick-Start.md)). This page is for operators who want hotkey delegation, multi-operator mode, claim daemons or the head-tier fleet commands.
+> **Most operators can stop here.** You do not need the miner image to get paid. Sign the one-time wallet consent from your own computer (see the [Bittensor Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start)). This page is for operators who want hotkey delegation, multi-operator mode, claim daemons or the head-tier fleet commands.
 
 `Dockerfile.miner` builds the sn miner image. It bakes the miner (`cli/miner`)
 in as `provider`, the binary whose CLI carries `provide --all-operators`,

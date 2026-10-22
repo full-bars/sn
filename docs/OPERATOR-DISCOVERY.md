@@ -68,7 +68,7 @@ Owner, in order:
      (`5CyQFykVpfa9xgZVGgBsiNUpjbo1EihBTSkPvDC1FZbL1wxG`), whose coldkey is `ur-owner`. `ur-mainnet` keeps its root
      seat, UID 21, through the passive root service. The rest of this item is the October 6–7 design; its SN25
      validator role for `ur-mainnet`, and the `set_children` that served that role, are superseded
-     ([launch record](../mainnet/LAUNCH.md#as-launched--october-8)).
+     ([launch record](/full-bars/sn/blob/main/mainnet/LAUNCH.md#as-launched--october-8)).
    - A dedicated validator hotkey, `ur-mainnet`, runs on root (netuid 0) and validates SN25. The SN25 owner hotkey
      doesn't run it, and the owner Ledger signs none of its operations (owner decision). Others may child-hotkey to it
      on SN25, and we keep 18% of what their stake earns through it. Added October 7: `ur-owner` signs one

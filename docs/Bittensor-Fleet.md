@@ -1,7 +1,7 @@
 # Bittensor Fleet (Head Tier)
 
 > [!WARNING]
-> **Most operators can stop here.** This is the optional, advanced head tier. Not using it costs nothing, and a signed network consent already earns your nodes the pool share. Read [Bittensor Head Tier](Bittensor-Head-Tier.md) first, including its current blockers.
+> **Most operators can stop here.** This is the optional, advanced head tier. Not using it costs nothing, and a signed network consent already earns your nodes the pool share. Read [Bittensor Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier) first, including its current blockers.
 
 
 > [!NOTE]
@@ -11,7 +11,7 @@
 
 Read commands are safe to run anywhere. The write commands (`register`, `publish`, `bind`, `revoke`) and every seed file they read belong on a workstation or a locked-down host where possible, never a mining host: the fleet coldkey seed pays the registration burn, and the client and hotkey seeds sign bindings the whole fleet depends on.
 
-The rest of the Subnet 25 operations, including pool claims, wallet mapping and the claim daemons, are in [Bittensor operations](Bittensor-Operations.md).
+The rest of the Subnet 25 operations, including pool claims, wallet mapping and the claim daemons, are in [Bittensor operations](/full-bars/sn/wiki/Bittensor-Operations).
 
 ## What the fleet group is and who runs it
 
@@ -133,7 +133,7 @@ provider fleet bind \
 Before anything is sent, the command walks `--rpc` endpoints in order, checks the reported chain id against the manifest `chain_id`, simulates the call and estimates gas. With `--dry-run` it stops there and prints the intent without sending; without it, the transaction is sent and waited on through mining and finality.
 
 > [!WARNING]
-> On mainnet a bind reverts with `StaleCommitment()` until the commitment oracle has copied your published commitment to chain 964. As of sn `83e6f48c2` the oracle is built but not deployed. See [Head Tier: current blockers](Bittensor-Head-Tier.md#current-blockers).
+> On mainnet a bind reverts with `StaleCommitment()` until the commitment oracle has copied your published commitment to chain 964. As of sn `83e6f48c2` the oracle is built but not deployed. See [Head Tier: current blockers](/full-bars/sn/wiki/Bittensor-Head-Tier#current-blockers).
 
 ## sign
 
@@ -186,7 +186,7 @@ provider fleet register --manifest=/path/to/fleet-manifest.json --hotkey_seed_fi
 The declaration uses the owner-local schema `urnetwork-owner-local-volumes-v2` and lists the pre-provisioned state roots the journals may live under. The CLI never creates, enrolls or infers storage, and both flags must be given together. Without them a mainnet write fails early with `explicit durable-volume declaration and hash are required`.
 
 > [!NOTE]
-> This is a different schema from the claim daemons' declaration (`urnetwork-durable-volumes-v2`, see [Claim Daemons](Bittensor-Claim-Daemons.md#durable-volumes)). The daemons refuse an owner-local file, so you cannot reuse one declaration for both.
+> This is a different schema from the claim daemons' declaration (`urnetwork-durable-volumes-v2`, see [Claim Daemons](/full-bars/sn/wiki/Bittensor-Claim-Daemons#durable-volumes)). The daemons refuse an owner-local file, so you cannot reuse one declaration for both.
 
 ## Seed files
 
@@ -209,7 +209,7 @@ Mainnet fleet writes are crash-safe by retaining signed liabilities, not by trus
 
 ## bind-head and unbind-head
 
-`provider bind-head` and `provider unbind-head` are unchanged in this release: not removed, not renamed, kept beside the fleet group. They are the pre-fleet EVM-only path with their own grammar and `--key_file` flow; use the `provider fleet` group for new work. Their grammar is in [Bittensor operations](Bittensor-Operations.md#bind-head-and-unbind-head-old-head-tier-path).
+`provider bind-head` and `provider unbind-head` are unchanged in this release: not removed, not renamed, kept beside the fleet group. They are the pre-fleet EVM-only path with their own grammar and `--key_file` flow; use the `provider fleet` group for new work. Their grammar is in [Bittensor operations](/full-bars/sn/wiki/Bittensor-Operations#bind-head-and-unbind-head-old-head-tier-path).
 
 ## What to check after
 
