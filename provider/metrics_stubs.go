@@ -138,9 +138,6 @@ func retirePQE(c connect.PQECounts) {
 
 func pqeTotalCounts() PQETotalCounts {
 	encryptionManagers.mu.Lock()
-	n := len(encryptionManagers.set)
-	snapshot := make([]*connect.EncryptionSessionManager, n)
-	copy(snapshot, encryptionManagers.set)
 
 	var out PQETotalCounts
 	curveTotals := map[string]int64{}
@@ -157,8 +154,10 @@ func pqeTotalCounts() PQETotalCounts {
 		curveTotals[name] = count
 	}
 	pqeRetired.mu.Unlock()
-	encryptionManagers.mu.Unlock()
-	for _, m := range snapshot {
+	// Live counts are collected while the registry lock is held: an unregister
+	// after the unlock would add a manager's counts to pqeRetired and the loop
+	// would add them again.
+	for _, m := range encryptionManagers.set {
 		c := m.PQECounts()
 		out.ActivePQE += int(c.ActivePQE)
 		out.ActiveClas += int(c.ActiveClas)
@@ -178,6 +177,7 @@ func pqeTotalCounts() PQETotalCounts {
 			curveTotals[cc.Curve] += cc.Count
 		}
 	}
+	encryptionManagers.mu.Unlock()
 	if 0 < len(curveTotals) {
 		out.Curves = make([]connect.CurveCount, 0, len(curveTotals))
 		for name, count := range curveTotals {
