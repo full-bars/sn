@@ -419,19 +419,22 @@ jobs:
           $smokeHome = Join-Path $env:RUNNER_TEMP "reg-home"
           $state = Join-Path $smokeHome ".urnetwork"
           $installdir = Join-Path $state "provider"
-          New-Item -ItemType Directory -Force -Path $installdir | Out-Null
+          New-Item -ItemType Directory -Force -Path $state | Out-Null
           # .urnetwork exists on every installed Windows host, created with
           # whatever access its parent inherited, and the store adopts it only
           # when it is private. This is the repair its refusal names, applied
           # here so the round runs against an adopted directory the way an
           # operator's host does after icacls: no inherited ACE, full control
-          # for the account, SYSTEM and Administrators only. Children created
-          # afterwards inherit the same three accounts.
-          $private = @("$($env:USERNAME):F", "SYSTEM:F", "Administrators:F")
-          icacls $state /inheritance:r /grant:r $private | Out-Null
+          # for the account, SYSTEM and Administrators only, with the
+          # inheritance flags so children created afterwards carry the same
+          # three accounts. /T covers a child that already exists, which is why
+          # the directory is repaired before anything is created inside it.
+          $private = @("$($env:USERNAME):(OI)(CI)F", "SYSTEM:(OI)(CI)F", "Administrators:(OI)(CI)F")
+          icacls $state /inheritance:r /grant:r $private /T | Out-Null
+          New-Item -ItemType Directory -Force -Path $installdir | Out-Null
           Copy-Item ".\out\miner.exe" (Join-Path $installdir "urnetwork.exe") -Force
           Copy-Item $env:JWT_FIXTURE (Join-Path $state "jwt") -Force
-          icacls (Join-Path $state "jwt") /inheritance:r /grant:r $private | Out-Null
+          icacls (Join-Path $state "jwt") /inheritance:r /grant:r @("$($env:USERNAME):F", "SYSTEM:F", "Administrators:F") | Out-Null
           Set-Content -Path (Join-Path $state "network.json") -Value '{"api_url":"https://api.bringyour.com","connect_url":"wss://connect.bringyour.com"}'
           $env:USERPROFILE = $smokeHome
           $log = Join-Path $env:RUNNER_TEMP "provide.log"
