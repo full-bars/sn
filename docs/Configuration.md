@@ -47,7 +47,7 @@ Quick jump:
 | `URNETWORK_PROFILE` | - | Advanced provider profile: `auto`, `lowmem`, `eco`, `turbo-v4`, or `turbo-v8`. For turbo, prefer `TURBO`. On systemd/native, set this with `urnet-tools turbo/eco/lowmode/auto` rather than a drop-in. |
 | `TURBO` | - | Set to `v4` or `v8` to enable turbo mode. Prefer this variable for Docker turbo mode. |
 | `URNETWORK_RAMLOGS` | `0` | Set to `1` to redirect provider logs to RAM instead of stdout. Cannot be used with Docker `--log-opt`. On systemd/native, set this with `urnet-tools ramlogs on\|off`. |
-| `URNETWORK_METRICS` | - | Exact bind address for the Prometheus `/metrics` endpoint, for example `100.64.0.10:9100`. Overrides `urnet-tools metrics listen`. Leave it unset and auto mode chooses: loopback plus the machine's Tailscale address on bare metal, and every interface inside a container only when every address it holds is private or unique-local; a container that shares a publicly addressed network stays on loopback plus Tailscale. Never bind a public interface. See [Monitoring](Monitoring.md). |
+| `URNETWORK_METRICS` | - | Exact bind address for the Prometheus `/metrics` endpoint, for example `100.64.0.10:9100`. Overrides `urnet-tools metrics listen`. Leave it unset and auto mode chooses: loopback plus the machine's Tailscale address on bare metal, and every interface inside a container only when every address it holds is private or unique-local; a container that shares a publicly addressed network stays on loopback plus Tailscale. Never bind a public interface. See [Monitoring](/full-bars/sn/wiki/Monitoring). |
 | `URNETWORK_SKIP_AUDIT` | `0` | Set to `1` to skip the whole startup system audit (ulimit and conntrack checks, and the disk benchmark). |
 | `URNETWORK_DISK_BENCH` | unset | Controls only the startup disk write benchmark, which runs only under `URNETWORK_PROFILE=auto` and decides whether to switch to RAM logs. Unset: runs on bare metal and VMs, never inside a container, and never while the host disk is busy. `1`: also run it in a container (still skipped when the disk is busy). `0`: never run it. It is capped at 16 MiB and 3 s, writes only inside the state dir, and caches its result (see `urnet_disk_write_mbps` and `urnet_disk_slow` in `/metrics`). |
 
@@ -55,7 +55,7 @@ Quick jump:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PROXY_URL` | - | Live proxy list URL, fetched and merged on an interval. Comma-separate for multiple sources. See [Proxy URL Sources](Proxy-URL-Sources.md). |
+| `PROXY_URL` | - | Live proxy list URL, fetched and merged on an interval. Comma-separate for multiple sources. See [Proxy URL Sources](/full-bars/sn/wiki/Proxy-URL-Sources). |
 | `PROXY_URL_REFRESH` | `1h` | How often `PROXY_URL` is re-fetched to add new entries. |
 | `PROXY_URL_MAX` | `500` | Caps total proxies sourced from `PROXY_URL`. `0` = unlimited. |
 | `PROXY_DEAD_CLEANUP_SCOPE` | `url` | `none`, `url`, or `all`: which proxies the automatic dead-proxy cleanup may touch. Default `url` means only URL-sourced dead proxies are cleaned up automatically. |
@@ -76,7 +76,7 @@ Quick jump:
 | `ENABLE_VNSTAT` | `true` | Enables the traffic monitor on port 8080. |
 | `ENABLE_IP_CHECKER` | `false` | Diagnostic only. Prints your full public IP to container logs on startup via an external script. Distinct from dashboard identity reporting, which sends only a redacted IP. |
 | `/metrics` endpoint | auto (`9100`-`9103`) | The Prometheus metrics endpoint is enabled by default. In auto mode the listener binds loopback plus every Tailscale IPv4 address on bare metal, and every interface inside a container only when every address it holds is private or unique-local (a container that shares a publicly addressed network stays on loopback plus Tailscale), trying the first free port in `9100`-`9103`. Scrape `http://<host>:<port>/metrics` from Prometheus or any compatible collector. Override the bind address with `URNETWORK_METRICS=ip:port`; disable with `urnet-tools metrics off`. |
-| `URNETWORK_PUBLIC_IP` | `<auto-detected>` | Override the public IP shown in the dashboard identity label. Display only; does not change the actual egress IP. Auto-set by Docker startup scripts. Create `~/.urnetwork/disable_ip_autodetect` or run `urnet-tools show-ip off` to prevent autodetection. See [Node-Identity.md](Node-Identity.md). |
+| `URNETWORK_PUBLIC_IP` | `<auto-detected>` | Override the public IP shown in the dashboard identity label. Display only; does not change the actual egress IP. Auto-set by Docker startup scripts. Create `~/.urnetwork/disable_ip_autodetect` or run `urnet-tools show-ip off` to prevent autodetection. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity). |
 | `URNETWORK_HEALTH_INTERVAL` | `5m` | How often to emit a `[health]` heartbeat log line. Includes uptime, RAM stats, and active connection count. Accepts Go duration strings such as `10m` or `1h`. Minimum `1m`. |
 | `URNETWORK_PPROF` | - | Set to a `host:port` to enable the loopback-only diagnostics server (e.g. `127.0.0.1:6060`). Off by default. Serves `/debug/pprof/*`, `/metrics/pool`, and `/metrics/errors`; only literal loopback IPs are accepted (hostnames are rejected). Pull profiles via an SSH tunnel, e.g. `ssh -L 6060:127.0.0.1:6060 host` then `go tool pprof http://127.0.0.1:6060/debug/pprof/profile`. |
 | `URNETWORK_PROXY_BENCHMARK` | - | Set to `true` to enable per-proxy latency monitoring. Off by default. Probes: TCP connect every 5 min (raw RTT to proxy port), SOCKS5 CONNECT every 15 min (end-to-end through proxy). Staggered startup jitter prevents thundering herd. ~104 GB/month at 10k proxies. |
@@ -92,7 +92,7 @@ Quick jump:
 
 Location: `~/.urnetwork/proxy_probe.json`. Controls the stage-1 table-probe
 quality gate for URL-source proxy admission (see
-[Proxy URL Sources](Proxy-URL-Sources.md#-stage-1-quality-gate)). All
+[Proxy URL Sources](/full-bars/sn/wiki/Proxy-URL-Sources#stage-1-quality-gate)). All
 fields are optional; omitted fields keep their default. The file is
 re-read on a short cache (a few seconds), so changes take effect without
 a restart.
@@ -227,7 +227,7 @@ The profile names and their effects are summarized above.
 You can view the full list of never-up and dropped proxies, as well as a live event log of proxy state transitions:
 
 *   **Host**: Run `urnet-tools proxy health`.
-*   **Docker**: See [Docker Deployment](Docker-Deployment.md) for the `proxy-health` command.
+*   **Docker**: See [Docker Deployment](/full-bars/sn/wiki/Docker-Deployment) for the `proxy-health` command.
 
 > [!NOTE]
 > The proxy health files are stored in `URNETWORK_PROXY_HEALTH_DIR` (defaults to `<home>/.urnetwork` or `/root/.urnetwork` in Docker). Heartbeat intervals are tied to `URNETWORK_HEALTH_INTERVAL` (defaults to 5m).
@@ -292,7 +292,7 @@ A parked proxy is marked `parked` in `proxy.state`. It stays in your proxy file.
 
 `urnet-tools proxy audit status` shows whether audit is observing or acting (and, when observing, whether proxy audit or hot restart is the switch that is off), what is parked and for how long, and why a pass parked nothing. On Linux, `urnet-tools status` shows the count in the unit's status line (`3 parked by proxy audit`); parked proxies do not make it read `partial`.
 
-Proxy audit **pauses** when your paid proxy list cannot be read or is empty, since that list is what proves a proxy is yours to park. That is usually one skipped 5-minute pass while the file is being edited, but a missing or unreadable file keeps it paused until fixed. It logs `[proxy][audit] paused` and `resumed`, shows `proxy audit: PAUSED` in `proxy audit status`, and adds `proxy audit paused` to the unit's status line. Turning proxy audit off still releases parks while paused. The same is exported as `urnet_proxy_audit_*` gauges (see [Monitoring](Monitoring.md)). Log lines start with `[proxy][audit]`.
+Proxy audit **pauses** when your paid proxy list cannot be read or is empty, since that list is what proves a proxy is yours to park. That is usually one skipped 5-minute pass while the file is being edited, but a missing or unreadable file keeps it paused until fixed. It logs `[proxy][audit] paused` and `resumed`, shows `proxy audit: PAUSED` in `proxy audit status`, and adds `proxy audit paused` to the unit's status line. Turning proxy audit off still releases parks while paused. The same is exported as `urnet_proxy_audit_*` gauges (see [Monitoring](/full-bars/sn/wiki/Monitoring)). Log lines start with `[proxy][audit]`.
 
 Toggle or inspect at runtime:
 ```sh

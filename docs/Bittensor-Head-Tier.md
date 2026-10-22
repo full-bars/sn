@@ -1,7 +1,7 @@
 # Bittensor Head Tier (Optional and Advanced)
 
 > [!IMPORTANT]
-> **Most operators should not do this.** Not doing it costs you nothing. If you have signed the network wallet consent (see the [Quick Start](Bittensor-Quick-Start.md)), your nodes already earn in the pool. If you are not sure you want the head tier, you do not want it.
+> **Most operators should not do this.** Not doing it costs you nothing. If you have signed the network wallet consent (see the [Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start)), your nodes already earn in the pool. If you are not sure you want the head tier, you do not want it.
 
 > [!NOTE]
 > Checked against upstream sn `83e6f48c2`, server `50851997d`, connect `f1837db6` and sdk `23b3c7dd` (2026-10-21). The numbers on this page come from the approved mainnet policy (`deploy/mainnet/policy-v1.yml` in sn). Upstream is still changing this area quickly, so re-check [Current blockers](#current-blockers) before you spend anything.
@@ -66,7 +66,7 @@ _Live values · last changed 2026-10-22 21:28 UTC · checked hourly_
 
 ## Prerequisites checklist
 
-1. The network wallet consent is signed (with an `sn` `provider` that has `wallet sign`, or a 3.23-fix or meso-miner one; see the [Quick Start](Bittensor-Quick-Start.md)). It covers every node you do not bind, except a node with its own per-provider consent, which wins for that node.
+1. The network wallet consent is signed (with an `sn` `provider` that has `wallet sign`, or a 3.23-fix or meso-miner one; see the [Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start)). It covers every node you do not bind, except a node with its own per-provider consent, which wins for that node.
 2. A coldkey with enough TAO for the live burn, and a separate hotkey seed file.
 3. Nodes with stable, distinct egress IP ranges.
 4. One unique client key per bound node (see the blockers below).

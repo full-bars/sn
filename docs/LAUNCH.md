@@ -1,13 +1,13 @@
 # Release 1.0 testnet launch
 
 The supported release-1.0 installer and integration test is `sim-testnet`. The
-complete operator runbook is [`sim-testnet/README.md`](../sim-testnet/README.md).
+complete operator runbook is [`sim-testnet/README.md`](/full-bars/sn/blob/main/sim-testnet/README.md).
 Older instructions that created a subnet or deployed the monolithic `STSubnet`
 contract are retired and must not be used.
 
 This runbook covers the testnet campaign on netuid 521 (chain 945). The mainnet
 subnet is Bittensor SN25 (netuid 25); its promotion is planned separately in
-[`mainnet/MAINNET.md`](../mainnet/MAINNET.md).
+[`mainnet/MAINNET.md`](/full-bars/sn/blob/main/mainnet/MAINNET.md).
 
 ## Current gate
 

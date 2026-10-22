@@ -20,7 +20,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 | `docker/` | Start scripts and settings for the provider and miner containers. |
 | `Dockerfile`, `Dockerfile.miner` | Build the provider image and the miner image. |
 | `pelican/` | Egg file for the Pelican panel. |
-| `monitoring/` | Prometheus and Grafana bundle for watching a fleet (see [Monitoring](Monitoring.md)). |
+| `monitoring/` | Prometheus and Grafana bundle for watching a fleet (see [Monitoring](/full-bars/sn/wiki/Monitoring)). |
 | `scripts/` | Installers and uninstallers for Linux, macOS, Windows and FreeBSD, plus build and release check scripts. |
 | `deploy/` | A systemd unit for the provider, and the policy files for the test and main networks. |
 | `fake-release-server/` | A fake release server used to test the installer. |
@@ -66,7 +66,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 
 ## Automation
 
-`.github/workflows/` holds the build, release, test, security scan and wiki sync workflows. See [CI and Release Process](CI-and-Release-Process.md). `.githooks/commit-msg` rejects attribution trailers, so enable it with `git config core.hooksPath .githooks` before you commit here.
+`.github/workflows/` holds the build, release, test, security scan and wiki sync workflows. See [CI and Release Process](/full-bars/sn/wiki/CI-and-Release-Process). `.githooks/commit-msg` rejects attribution trailers, so enable it with `git config core.hooksPath .githooks` before you commit here.
 
 ## Build and test
 

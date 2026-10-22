@@ -1,7 +1,7 @@
 # Bittensor Subnet 25: Overview for Operators (sn fork)
 
 > [!TIP]
-> **Most operators can stop at the [Quick Start](Bittensor-Quick-Start.md).** You sign one message from your own computer and your nodes keep running as they are. Everything below is background, or for people who want more.
+> **Most operators can stop at the [Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start).** You sign one message from your own computer and your nodes keep running as they are. Everything below is background, or for people who want more.
 
 > [!NOTE]
 > Checked against upstream server `50851997d`, connect `f1837db6`, sdk `23b3c7dd` and sn `83e6f48c2` (2026-10-21). Upstream is still changing the Bittensor side quickly. If a command prints something different from this page, trust the command.
@@ -10,15 +10,15 @@
 
 - URnetwork is **Subnet 25 (SN25)** on Bittensor. Your nodes can earn the SN25 token (alpha, branded $UR) on top of normal URnetwork earnings.
 - You get paid by signing **one** consent with your Bittensor wallet (your coldkey). It says "pay every node on my URnetwork account to this coldkey". One signature covers every node on your URnetwork account, now and later.
-- **Every sn build from release `v2026.10.21-1077735390-meso` can sign**: the release `provider` download, the `:latest` image and the `:miner` image have `provider wallet sign` and `wallet status`. Older builds do not (`provider --help` will not list them); update, or sign with a 3.23-fix or meso-miner `provider`. Sign on your own computer, not inside a container. The consent covers your whole account whichever line the nodes run. Steps are in the [Quick Start](Bittensor-Quick-Start.md).
-- Check where you stand with `provider wallet status`, run with that same `provider`. Words you do not know are in the [Glossary](Bittensor-Glossary.md).
+- **Every sn build from release `v2026.10.21-1077735390-meso` can sign**: the release `provider` download, the `:latest` image and the `:miner` image have `provider wallet sign` and `wallet status`. Older builds do not (`provider --help` will not list them); update, or sign with a 3.23-fix or meso-miner `provider`. Sign on your own computer, not inside a container. The consent covers your whole account whichever line the nodes run. Steps are in the [Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start).
+- Check where you stand with `provider wallet status`, run with that same `provider`. Words you do not know are in the [Glossary](/full-bars/sn/wiki/Bittensor-Glossary).
 
 ## Pool or head: which one am I?
 
 | | Pool tier (almost everyone) | Head tier (optional, advanced) |
 |---|---|---|
 | What it is | Your nodes earn inside URnetwork's shared pool. | You get your own seat (UID) on the subnet. |
-| What you do | Sign the consent once. | A long setup with keys, a fleet file, a burn and per-node binding. See [Head Tier](Bittensor-Head-Tier.md). |
+| What you do | Sign the consent once. | A long setup with keys, a fleet file, a burn and per-node binding. See [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier). |
 | How you are scored | By the work your nodes do in the pool: usage weighted by quality, with quality kept between 0.75 and 1.0. | By how many different IP ranges (/29 IPv4, /48 IPv6) your nodes served traffic through. |
 | How you are paid | Credited to your coldkey every epoch (7 days). A claim moves it to your wallet. | Paid directly to your hotkey every tempo (about 72 minutes). No claim. |
 | Where the money waits | In the settlement vault contract (`STSettlementVault` for v1, `STSettlementVault2` for v2). | Nowhere. It is paid by the network. |
@@ -81,8 +81,8 @@ provider unbind-head --hotkey=<hex> [--contract=<contract>] [--rpc=<rpc_url>]...
 
 ## Other pages, only if you need them
 
-- [Head Tier](Bittensor-Head-Tier.md): the advanced head-tier path. The fleet commands live in the miner image.
-- Hotkey delegation, multi-operator mode (`provide --all-operators`) and claim daemons are in the miner image (`ghcr.io/full-bars/sn:miner`, see [Miner Image](Miner-Image.md)). Most operators do not need them.
+- [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier): the advanced head-tier path. The fleet commands live in the miner image.
+- Hotkey delegation, multi-operator mode (`provide --all-operators`) and claim daemons are in the miner image (`ghcr.io/full-bars/sn:miner`, see [Miner Image](/full-bars/sn/wiki/Miner-Image)). Most operators do not need them.
 
 ## Claiming by hand (advanced)
 
@@ -119,7 +119,7 @@ In this fork it reads the old-style wallet record. It may say the coldkey is "No
 ## FAQ
 
 ### Do I have to do anything?
-Run `provider wallet status` (every sn build from `v2026.10.21-1077735390-meso` has it). If it shows a network consent in effect, you are done. If not, sign once from your own computer. See the [Quick Start](Bittensor-Quick-Start.md). Nothing else is required, and your nodes keep providing either way.
+Run `provider wallet status` (every sn build from `v2026.10.21-1077735390-meso` has it). If it shows a network consent in effect, you are done. If not, sign once from your own computer. See the [Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start). Nothing else is required, and your nodes keep providing either way.
 
 ### I linked my wallet on the website or in the app. Am I paid?
 Not necessarily. The older "connect wallet" link is only a login proof, and payouts do not use it. A signed consent is what counts. Confirm with `provider wallet status`. If it says `NOT a consent`, sign once.
@@ -143,7 +143,7 @@ No. It lasts 65,536 epochs. Sign again only to change the wallet.
 Nothing already signed is lost: signed entries are saved and finished after a restart. Unsigned settlement-v1 claims are different, because they stay subject to claimability and expiry rules while the daemon is stopped, so claim them inside their window.
 
 ### Is the head tier worth it?
-For most operators, no. See [Head Tier](Bittensor-Head-Tier.md) for what it takes and the current blockers. It needs `provider fleet ...`, which only the miner image (or a 3.23-fix or meso-miner `provider`) has.
+For most operators, no. See [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier) for what it takes and the current blockers. It needs `provider fleet ...`, which only the miner image (or a 3.23-fix or meso-miner `provider`) has.
 
 ## Safety rules
 

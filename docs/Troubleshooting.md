@@ -29,7 +29,7 @@ failure and what happened.
 |------|---------|
 | 0 | Clean shutdown (SIGTERM or manual stop). |
 | 78 | The JWT is expired or invalid. The container startup script intercepts this code, deletes the stale JWT, and re-authenticates when an auth code is available (see Container troubleshooting). |
-| 75 | Planned restart requested by the swap-thrash watchdog. It is not a crash. Under systemd with `Restart=on-failure` the unit restarts the provider. In a container the start script restarts it after 5 seconds. See [Swap-thrash watchdog](Configuration.md#swap-thrash-watchdog). |
+| 75 | Planned restart requested by the swap-thrash watchdog. It is not a crash. Under systemd with `Restart=on-failure` the unit restarts the provider. In a container the start script restarts it after 5 seconds. See [Swap-thrash watchdog](/full-bars/sn/wiki/Configuration#swap-thrash-watchdog). |
 
 ## Container troubleshooting
 
@@ -105,7 +105,7 @@ systemctl --user show urnetwork.service -p Type,NotifyAccess   # drop --user for
 
 **Fix**: nothing manual. Run `urnet-tools update` on a build that includes the
 migration fix: the first update converts the unit to `Type=notify` and restarts
-once, and the updates after that hotswap (see [HotSwap](HotSwap.md#which-update-hotswaps)).
+once, and the updates after that hotswap (see [HotSwap](/full-bars/sn/wiki/HotSwap#which-update-hotswaps)).
 If the update prints `note: ... is Type=simple but its unit file cannot be
 migrated automatically`, `Type=` is set by a drop-in you control: change it
 there to `Type=notify` and `NotifyAccess=all`, then `systemctl daemon-reload`.

@@ -25,7 +25,7 @@ Point the provider at a URL and it will:
   widen the cleanup scope.
 - Coexist with your existing proxy file. A URL source is additive: you can run
   `--proxy_file` and `--proxy_url` at the same time. They share one hot-reload
-  pipeline (see [Proxy Management](Proxy-Management.md)).
+  pipeline (see [Proxy Management](/full-bars/sn/wiki/Proxy-Management)).
 
 ## Stage-1 quality gate
 

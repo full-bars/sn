@@ -168,7 +168,7 @@ not provider supply"). Consent works for child clients in both modes; providing 
 provisioning.
 
 The operator producer is implemented in this repository at `cli/payoutroster`, with reusable code in `payoutroster`.
-The [payout roster operator guide](../mainnet/PAYOUT-ROSTER.md) describes its dedicated authority host and key, Vault
+The [payout roster operator guide](/full-bars/sn/blob/main/mainnet/PAYOUT-ROSTER.md) describes its dedicated authority host and key, Vault
 configuration, explicit complete inventory, original-history assembly, review and digest pinning, signing, publication,
 approved inbox and durable recovery. Network heads from reviewed acceptance records select the full consent histories;
 the producer derives and signs a v2 roster when network inputs are present and retains v1 bytes otherwise. It uses the

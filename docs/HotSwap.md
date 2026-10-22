@@ -97,5 +97,5 @@ Set `URNETWORK_PPROF=127.0.0.1:6060` to expose pprof on loopback. During a swap 
 
 ## Related
 
-- [Troubleshooting: HotSwap declines on an existing node](Troubleshooting.md#hotswap-declines-on-an-existing-node)
-- [Monitoring: `urnet_hotswap_outcomes_total`](Monitoring.md)
+- [Troubleshooting: HotSwap declines on an existing node](/full-bars/sn/wiki/Troubleshooting#hotswap-declines-on-an-existing-node)
+- [Monitoring: `urnet_hotswap_outcomes_total`](/full-bars/sn/wiki/Monitoring)

@@ -82,7 +82,7 @@ cannot pile up unlimited parallel connections to the API.
 
 A proxy that passes the probe stages and wins an auth slot is then graded. The
 stage-1 table probe assigns an A-F grade (see the
-[Stage-1 Quality Gate](Proxy-URL-Sources.md) section in Proxy URL Sources).
+[Stage-1 Quality Gate](/full-bars/sn/wiki/Proxy-URL-Sources) section in Proxy URL Sources).
 Proxies that fail any probe stage or TLS verification are never admitted. They
 enter the failure and blacklist lifecycle instead.
 

@@ -1,6 +1,6 @@
 # Bittensor Glossary (Plain Words)
 
-New to this? Start with the [Quick Start](Bittensor-Quick-Start.md). This page explains the words.
+New to this? Start with the [Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start). This page explains the words.
 
 | Term | Plain meaning |
 |---|---|

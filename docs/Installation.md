@@ -36,7 +36,7 @@ urnet-tools proxy refresh
 > **Path Formatting**
 > You can use either `~/proxies.txt` or `/home/you/proxies.txt`. Both syntaxes work.
 
-> Full proxy-loading walkthrough (including Windows): [Adding Proxies](Adding-Proxies.md).
+> Full proxy-loading walkthrough (including Windows): [Adding Proxies](/full-bars/sn/wiki/Adding-Proxies).
 
 ## 🧭 Other Platforms (Quick install)
 
@@ -110,7 +110,7 @@ Unlike traditional services that run as root, this build defaults to a **systemd
 
 ## 🛠️ Post-Install Commands
 
-The installation includes the `urnet-tools` suite for management, a provider-aware Go binary. On multi-provider machines, pass a target (`--unit` / `--user` / `--network` / `--state-dir`) or the tool refuses. See [urnet-tools-go.md](urnet-tools-go.md).
+The installation includes the `urnet-tools` suite for management, a provider-aware Go binary. On multi-provider machines, pass a target (`--unit` / `--user` / `--network` / `--state-dir`) or the tool refuses. See [urnet-tools-go.md](/full-bars/sn/wiki/urnet-tools-go).
 
 | Command | Description |
 | :--- | :--- |
@@ -206,7 +206,7 @@ urnet-tools session load C:\Users\You\backup.urnsession
 urnet-tools update
 ```
 
-> See [Adding Proxies](Adding-Proxies.md) for per-OS proxy-loading instructions and the Windows `.txt.txt` extension trap.
+> See [Adding Proxies](/full-bars/sn/wiki/Adding-Proxies) for per-OS proxy-loading instructions and the Windows `.txt.txt` extension trap.
 
 ### `urnet-tools` on Windows
 

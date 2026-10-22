@@ -172,7 +172,7 @@ These routes replace the identity for every slot that connects. Turning reuse ba
 ## Interaction with the rest of the tool
 
 - **Proxy audit.** Parking a proxy that grades as junk requires reuse. With hot restart off the audit still runs, but it observes and logs `would-park` instead of parking, because every relaunch would otherwise mint a new identity.
-- **HotSwap.** A handover runs the replacement against the same state dir, so the incoming process presents the same identities as the outgoing one. The brief overlap where both processes hold connections is documented on the [HotSwap](HotSwap.md) page.
+- **HotSwap.** A handover runs the replacement against the same state dir, so the incoming process presents the same identities as the outgoing one. The brief overlap where both processes hold connections is documented on the [HotSwap](/full-bars/sn/wiki/HotSwap) page.
 - **Miner restart machinery.** On the miner the same key also gates the hotswap trigger: a hotswap request is refused with `hot restart is disabled` when the key is off.
 - **Session save and load.** `urnet-tools session save` bundles `.client_jwts.json` together with the account JWT and the proxy state, so loading that bundle on another box carries the same client ids with it. The backend keeps one resident per client, so two hosts running the same bundle displace each other rather than doubling throughput. It is a way to move a provider, not to clone one.
 
