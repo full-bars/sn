@@ -25,6 +25,7 @@ commit.
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import re
 import sys
@@ -77,7 +78,7 @@ def rpc(method: str, params: list) -> Any:
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
                 payload = json.loads(response.read())
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as err:
+        except (OSError, http.client.HTTPException, json.JSONDecodeError) as err:
             last = f"{method}: {err}"
             time.sleep(2 * (attempt + 1))
             continue
@@ -133,16 +134,21 @@ def tao_price() -> float:
             lambda payload: payload["price"],
         ),
     ]
-    for url, extract in endpoints:
-        try:
-            request = urllib.request.Request(url, headers={"User-Agent": "urnetwork-docs"})
-            with urllib.request.urlopen(request, timeout=20) as response:
-                price = float(extract(json.loads(response.read())))
-        except Exception:
-            continue
-        if price > 0:
-            return price
-    raise SystemExit("could not read a TAO price")
+    last = "no source attempt"
+    for attempt in range(3):
+        for url, extract in endpoints:
+            try:
+                request = urllib.request.Request(url, headers={"User-Agent": "urnetwork-docs"})
+                with urllib.request.urlopen(request, timeout=20) as response:
+                    price = float(extract(json.loads(response.read())))
+                if price > 0:
+                    return price
+                last = f"{url}: non-positive price {price}"
+            except (OSError, http.client.HTTPException, ValueError, KeyError, TypeError) as err:
+                last = f"{url}: {err}"
+            print(f"tao price source failed ({last}); attempt {attempt + 1} of 3", file=sys.stderr)
+        time.sleep(2 * (attempt + 1))
+    raise SystemExit(f"could not read a TAO price ({last})")
 
 
 def read_state() -> dict:
@@ -205,7 +211,7 @@ def render_body(state: dict) -> str:
         ("Tempo", f"{state['tempo']:,} blocks (~{tempo_minutes:.0f} minutes)"),
         ("Gas price, chain 964", f"{state['gas_price_wei'] / 1e9:.1f} gwei"),
         ("One node binding", f"{BIND_GAS:,} gas, about {per_bind_tao:.6f} TAO (~${usd(bind_usd)})"),
-        ("Commitment oracle", f"active, balance {state['oracle_balance_wei'] / 1e18:.4f} TAO" if state["oracle_is_active"] else "NOT the coordinator's active oracle"),
+        ("Commitment oracle address", f"matches the coordinator oracle(), balance {state['oracle_balance_wei'] / 1e18:.4f} TAO" if state["oracle_is_active"] else "does not match the coordinator oracle()"),
         ("Coordinator", "paused" if state["paused"] else "not paused"),
     ]
 
