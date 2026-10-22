@@ -34,6 +34,9 @@ func unregisterEncryptionManager(m *connect.EncryptionSessionManager) {
 	defer encryptionManagers.mu.Unlock()
 	for i, x := range encryptionManagers.set {
 		if x == m {
+			// Preserve this manager's lifetime counts before dropping it, or
+			// the exported _total series would decrease on every proxy exit.
+			retirePQE(m.PQECounts())
 			encryptionManagers.set = append(encryptionManagers.set[:i], encryptionManagers.set[i+1:]...)
 			return
 		}
