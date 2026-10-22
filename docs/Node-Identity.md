@@ -2,6 +2,8 @@
 
 Each provider has a label. Use it to tell nodes apart in logs and in your Grafana dashboards.
 
+The label is separate from the `client_id` the platform assigns to each slot. Those ids, and how they are kept stable across restarts by the provider and by the miner, are covered in [Hot-Restart.md](Hot-Restart.md).
+
 ## Setting the node name
 
 Set `URNETWORK_NODE_NAME` before starting the provider:
