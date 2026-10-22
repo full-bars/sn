@@ -75,6 +75,12 @@ const (
 	fileDeleteChildAccess     = 0x00010000
 	renameReplaceIfExistsFlag = 0x00000001
 	renamePosixSemanticsFlag  = 0x00000002
+	// the two ignore-read-only bits are not in this x/sys version. Both need
+	// Windows 10 1809 or later; an older host answers the call with an invalid
+	// parameter or an unknown information class, which the existing fallbacks
+	// already handle.
+	dispositionIgnoreReadOnlyFlag = 0x00000010
+	renameIgnoreReadOnlyFlag      = 0x00000040
 )
 
 // fileIDInfo has no host type in this x/sys version; the volume serial and the
@@ -847,7 +853,11 @@ func markDeleteDisposition(file *os.File) error {
 	// SetFileInformationByHandle takes, not the NT FILE_INFORMATION_CLASS value
 	// NtSetInformationFile takes
 	var extended struct{ Flags uint32 }
-	extended.Flags = windows.FILE_DISPOSITION_DELETE | windows.FILE_DISPOSITION_POSIX_SEMANTICS
+	// the ignore-read-only bit is what makes removal match unix unlinkat, which
+	// does not consult the file's own mode: without it an operator's attrib +r,
+	// a tool copying a 0444 mode, or a foreign holder of FILE_WRITE_ATTRIBUTES
+	// wedges removal for good.
+	extended.Flags = windows.FILE_DISPOSITION_DELETE | windows.FILE_DISPOSITION_POSIX_SEMANTICS | dispositionIgnoreReadOnlyFlag
 	err := windows.SetFileInformationByHandle(handle, windows.FileDispositionInfoEx, (*byte)(unsafe.Pointer(&extended)), uint32(unsafe.Sizeof(extended)))
 	if err == nil {
 		return nil
@@ -921,7 +931,10 @@ func renameRelative(leaf *os.File, parent *os.File, name string) error {
 	header := int(unsafe.Offsetof(fileRenameInfoEx{}.fileName))
 	buffer := make([]byte, header+nameBytes)
 	info := (*fileRenameInfoEx)(unsafe.Pointer(&buffer[0]))
-	info.flags = renameReplaceIfExistsFlag | renamePosixSemanticsFlag
+	// the ignore-read-only bit keeps a rename working over a leaf whose own mode
+	// says read-only, which unix renameat does not consult either, so a copied
+	// 0444 mode or an attrib +r cannot wedge publication
+	info.flags = renameReplaceIfExistsFlag | renamePosixSemanticsFlag | renameIgnoreReadOnlyFlag
 	info.rootDirectory = windows.Handle(parent.Fd())
 	info.fileNameLength = uint32(nameBytes)
 	copy(buffer[header:], unsafe.Slice((*byte)(unsafe.Pointer(&units[0])), len(units)*2))
@@ -935,7 +948,10 @@ func renameRelative(leaf *os.File, parent *os.File, name string) error {
 		if !errors.Is(status, windows.STATUS_SHARING_VIOLATION) {
 			break
 		}
-		time.Sleep(renameInterval)
+		// a final failed attempt has nobody left to wait for
+		if attempt < renameAttempts-1 {
+			time.Sleep(renameInterval)
+		}
 	}
 	return ntStatusError(status)
 }
@@ -946,7 +962,7 @@ func renameRelative(leaf *os.File, parent *os.File, name string) error {
 // ReplaceIfExists alone, and a retried attempt needs the extended flags again.
 func renameRelativeOnce(leaf, parent *os.File, buffer []byte, iosb *windows.IO_STATUS_BLOCK) error {
 	info := (*fileRenameInfoEx)(unsafe.Pointer(&buffer[0]))
-	info.flags = renameReplaceIfExistsFlag | renamePosixSemanticsFlag
+	info.flags = renameReplaceIfExistsFlag | renamePosixSemanticsFlag | renameIgnoreReadOnlyFlag
 	status := windows.NtSetInformationFile(windows.Handle(leaf.Fd()), iosb, &buffer[0], uint32(len(buffer)), ntFileRenameInformationEx)
 	if status == nil {
 		return nil
@@ -958,7 +974,10 @@ func renameRelativeOnce(leaf, parent *os.File, buffer []byte, iosb *windows.IO_S
 	if !errors.Is(status, windows.STATUS_INVALID_PARAMETER) && !errors.Is(status, windows.STATUS_NOT_SUPPORTED) && !errors.Is(status, windows.STATUS_INVALID_INFO_CLASS) {
 		return status
 	}
-	// the plain class reads the first word as ReplaceIfExists alone
+	// the plain class reads the first word as ReplaceIfExists alone. The
+	// ignore-read-only bit is deliberately not carried here: the class has no
+	// room for it, and a file system old enough to answer with an unknown
+	// information class does not need it.
 	buffer[0], buffer[1], buffer[2], buffer[3] = 1, 0, 0, 0
 	plain := (*fileRenameInfo)(unsafe.Pointer(&buffer[0]))
 	plain.rootDirectory = windows.Handle(parent.Fd())
@@ -1058,13 +1077,25 @@ func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal f
 // as a grant: only an allowed ACE confers access, and an ACE whose layout is not
 // an allowed ACE's is never read as one.
 //
-// An inherit-only entry confers nothing on this object, so on a leaf it is
-// skipped. On a directory it is exactly what its children take: an inherit-only
-// grant of write, delete-child or a conferring right to an account outside the
-// allowlist hands every file created inside the directory, by the store or by
-// plain pathname, to that account. Such an entry is reported as a grant so the
-// caller refuses the account; an inherit-only entry for an account inside the
-// allowlist is accepted exactly as before.
+// What one ACE grants is audited by what it confers, not by the object it is
+// written on. An entry without INHERIT_ONLY_ACE confers its rights on this
+// object, so it is audited with this object's mask: the directory mask for a
+// directory, the leaf mask for a leaf. An entry that also carries
+// OBJECT_INHERIT_ACE is copied to a plain-path file child, where it confers the
+// leaf mask; one that carries CONTAINER_INHERIT_ACE is copied to a subdirectory,
+// where it confers the directory mask plus, through that subdirectory's own
+// inheritable entries, the leaf mask on the files below it. Every one of those
+// is a way for an account outside the allowlist to reach a file the store's
+// plain-path writers create, so each is reported as a grant and the caller
+// refuses that account.
+//
+// The earlier reading audited a directory ACE only with the directory mask,
+// which carries no FILE_READ_DATA: an adopted directory whose DACL held
+// Users:(OI)(CI)(R) or Users:(OI)(CI)(IO)(GR) was accepted as custody, and every
+// file a plain-path writer then created in it, client JWTs and session tokens
+// included, was readable by every local user with no signal at all. On unix the
+// same directory is harmless because such a child carries its own 0600 mode; on
+// Windows an inherited ACE is the only thing that decides who may read it.
 func custodyAceGrant(ace *windows.ACCESS_ALLOWED_ACE, wholeDirectory bool) (uint32, error) {
 	var mask uint32
 	switch ace.Header.AceType {
@@ -1080,14 +1111,24 @@ func custodyAceGrant(ace *windows.ACCESS_ALLOWED_ACE, wholeDirectory bool) (uint
 	default:
 		return 0, errors.New("registration custody DACL has an unknown ACE type")
 	}
-	if ace.Header.AceFlags&windows.INHERIT_ONLY_ACE != 0 {
-		if !wholeDirectory {
-			return 0, nil
-		}
-		// the same audited rights, inherited by whatever is created inside
-		return mask & custodyAuditMask(true), nil
+	if mask == 0 {
+		return 0, nil
 	}
-	return mask & custodyAuditMask(wholeDirectory), nil
+	var audited uint32
+	if ace.Header.AceFlags&windows.INHERIT_ONLY_ACE == 0 {
+		audited |= custodyAuditMask(wholeDirectory)
+	}
+	if wholeDirectory {
+		if ace.Header.AceFlags&windows.OBJECT_INHERIT_ACE != 0 {
+			// a plain-path file child takes this entry as its own
+			audited |= custodyAuditMask(false)
+		}
+		if ace.Header.AceFlags&windows.CONTAINER_INHERIT_ACE != 0 {
+			// a subdirectory takes it, and hands it on to the files below
+			audited |= custodyAuditMask(true) | custodyAuditMask(false)
+		}
+	}
+	return mask & audited, nil
 }
 
 // maskThroughGenerics maps the generic rights an explicit ACE may carry to the
@@ -1109,14 +1150,23 @@ func maskThroughGenerics(mask uint32) uint32 {
 }
 
 // custodyAuditMask selects the rights no foreign account may hold: data read
-// and write, delete, and the two rights that would let the holder grant
-// themselves the rest.
+// and write, delete, and the rights that would let the holder grant themselves
+// the rest or rewrite what a reader sees.
+//
+// A leaf's mask carries FILE_WRITE_ATTRIBUTES and FILE_WRITE_EA as well. The
+// network token's lineage fingerprint, and the rejection marker keyed on it, is
+// sha256(token + LastWriteTime), so an account holding only
+// FILE_WRITE_ATTRIBUTES on a token could restamp that time and unblock a
+// rejection marker, which is the safety feature that stops a revoked client
+// being recreated. The same right also sets FILE_ATTRIBUTE_READONLY. On unix an
+// arbitrary mtime needs ownership, so the mask matches that.
 func custodyAuditMask(wholeDirectory bool) uint32 {
 	conferring := uint32(windows.DELETE | windows.WRITE_DAC | windows.WRITE_OWNER | windows.MAXIMUM_ALLOWED)
 	if wholeDirectory {
 		return uint32(windows.FILE_WRITE_DATA|windows.FILE_APPEND_DATA|fileDeleteChildAccess) | conferring
 	}
-	return uint32(windows.FILE_READ_DATA|windows.FILE_WRITE_DATA|windows.FILE_APPEND_DATA) | conferring
+	return uint32(windows.FILE_READ_DATA|windows.FILE_WRITE_DATA|windows.FILE_APPEND_DATA|
+		windows.FILE_WRITE_ATTRIBUTES|windows.FILE_WRITE_EA) | conferring
 }
 
 // privateCustodyDescriptor builds the descriptor a leaf is created with: the
@@ -1201,7 +1251,14 @@ var custodyAccounts struct {
 	defaultOwner   *windows.SID
 	systemSid      *windows.SID
 	administrators *windows.SID
-	ready          bool
+	// the two creator placeholders a volume root or ProgramData carries. They
+	// are not accounts: on inheritance the kernel substitutes the creating
+	// account's SID for CREATOR OWNER, and the owner of the object for OWNER
+	// RIGHTS, so neither can name an account outside the allowlist. Unix has no
+	// such entry, which is why they are accepted here rather than refused.
+	creatorOwner       *windows.SID
+	creatorOwnerRights *windows.SID
+	ready              bool
 }
 
 // custodySelfSid resolves the process token's user account once; the token's
@@ -1224,6 +1281,8 @@ func loadCustodyAccounts() {
 	custodyAccounts.defaultOwner = tokenDefaultOwner(token)
 	custodyAccounts.systemSid, _ = windows.CreateWellKnownSid(windows.WinLocalSystemSid)
 	custodyAccounts.administrators, _ = windows.CreateWellKnownSid(windows.WinBuiltinAdministratorsSid)
+	custodyAccounts.creatorOwner, _ = windows.CreateWellKnownSid(windows.WinCreatorOwnerSid)
+	custodyAccounts.creatorOwnerRights, _ = windows.CreateWellKnownSid(windows.WinCreatorOwnerRightsSid)
 	custodyAccounts.ready = custodyAccounts.processSid != nil && custodyAccounts.systemSid != nil && custodyAccounts.administrators != nil
 }
 
@@ -1274,7 +1333,9 @@ func custodyOwnerAcceptable(owner *windows.SID, self *windows.SID) bool {
 }
 
 // custodySidOutside reports whether an ACE's SID is nobody's account this
-// custody lets in: only the owner account, SYSTEM and Administrators.
+// custody lets in: only the owner account, SYSTEM, Administrators, and the two
+// creator placeholders, which stand for the creating account rather than for an
+// account of their own.
 func custodySidOutside(sid *windows.SID, self *windows.SID) bool {
 	if windows.EqualSid(sid, self) {
 		return false
@@ -1286,6 +1347,12 @@ func custodySidOutside(sid *windows.SID, self *windows.SID) bool {
 		return false
 	}
 	if custodyAccounts.administrators != nil && windows.EqualSid(sid, custodyAccounts.administrators) {
+		return false
+	}
+	if custodyAccounts.creatorOwner != nil && windows.EqualSid(sid, custodyAccounts.creatorOwner) {
+		return false
+	}
+	if custodyAccounts.creatorOwnerRights != nil && windows.EqualSid(sid, custodyAccounts.creatorOwnerRights) {
 		return false
 	}
 	return true
