@@ -431,10 +431,14 @@ jobs:
           # the directory is repaired before anything is created inside it.
           $private = @("$($env:USERNAME):(OI)(CI)F", "SYSTEM:(OI)(CI)F", "Administrators:(OI)(CI)F")
           icacls $state /inheritance:r /grant:r $private /T | Out-Null
+          # a native command does not honour $ErrorActionPreference, so a failed
+          # repair would surface later as a registration failure instead of here
+          if ($LASTEXITCODE -ne 0) { throw "icacls could not repair $state (exit $LASTEXITCODE)" }
           New-Item -ItemType Directory -Force -Path $installdir | Out-Null
           Copy-Item ".\out\miner.exe" (Join-Path $installdir "urnetwork.exe") -Force
           Copy-Item $env:JWT_FIXTURE (Join-Path $state "jwt") -Force
           icacls (Join-Path $state "jwt") /inheritance:r /grant:r @("$($env:USERNAME):F", "SYSTEM:F", "Administrators:F") | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "icacls could not repair the jwt (exit $LASTEXITCODE)" }
           Set-Content -Path (Join-Path $state "network.json") -Value '{"api_url":"https://api.bringyour.com","connect_url":"wss://connect.bringyour.com"}'
           $env:USERPROFILE = $smokeHome
           $log = Join-Path $env:RUNNER_TEMP "provide.log"

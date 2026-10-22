@@ -551,14 +551,20 @@ func (self *registrationStore) auditDirectoryCustody() error {
 // takes the creating token's default DACL instead, which is the state this
 // audit exists to refuse.
 func custodyDirectoryRefusal(dir string, sid *windows.SID, mask uint32) error {
-	remedy := fmt.Sprintf(`repair it with: icacls "%s" /inheritance:r /grant:r "%%USERNAME%%":(OI)(CI)F SYSTEM:(OI)(CI)F Administrators:(OI)(CI)F`, dir)
+	// the repair has to match the cause: an owner mismatch needs /setowner, an
+	// explicit foreign entry needs /remove, and only the inheritance case is
+	// fixed by re-granting. a single re-grant command would silently leave the
+	// foreign owner or the explicit entry in place.
+	own := fmt.Sprintf(`repair it with: icacls "%s" /inheritance:r /grant:r "%%USERNAME%%":(OI)(CI)F SYSTEM:(OI)(CI)F Administrators:(OI)(CI)F`, dir)
 	switch {
 	case sid != nil && mask != 0:
-		return fmt.Errorf("registration custody directory %s grants %s to %s; %s", dir, custodyRightNames(mask), sid.String(), remedy)
+		remove := fmt.Sprintf(`repair it with: icacls "%s" /remove:g "%s" /inheritance:r /grant:r "%%USERNAME%%":(OI)(CI)F SYSTEM:(OI)(CI)F Administrators:(OI)(CI)F`, dir, sid.String())
+		return fmt.Errorf("registration custody directory %s grants %s to %s; %s", dir, custodyRightNames(mask), sid.String(), remove)
 	case sid != nil:
-		return fmt.Errorf("registration custody directory %s is owned by %s rather than by this account; %s", dir, sid.String(), remedy)
+		take := fmt.Sprintf(`repair it with: icacls "%s" /setowner "%%USERNAME%%" && icacls "%s" /inheritance:r /grant:r "%%USERNAME%%":(OI)(CI)F SYSTEM:(OI)(CI)F Administrators:(OI)(CI)F`, dir, dir)
+		return fmt.Errorf("registration custody directory %s is owned by %s rather than by this account; %s", dir, sid.String(), take)
 	default:
-		return fmt.Errorf("registration custody directory %s is not private: its DACL allows every account access, or the process account cannot be resolved; %s", dir, remedy)
+		return fmt.Errorf("registration custody directory %s is not private: its DACL allows every account access, or the process account cannot be resolved; %s", dir, own)
 	}
 }
 
