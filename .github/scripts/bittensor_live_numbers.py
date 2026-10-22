@@ -144,7 +144,7 @@ def tao_price() -> float:
                 if price > 0:
                     return price
                 last = f"{url}: non-positive price {price}"
-            except (OSError, http.client.HTTPException, ValueError, KeyError) as err:
+            except (OSError, http.client.HTTPException, ValueError, KeyError, TypeError) as err:
                 last = f"{url}: {err}"
             print(f"tao price source failed ({last}); attempt {attempt + 1} of 3", file=sys.stderr)
         time.sleep(2 * (attempt + 1))
