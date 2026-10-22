@@ -418,6 +418,23 @@ func providerExtraMetrics() string {
 		fmt.Fprintf(&b, "# TYPE urnet_sessions_classical gauge\n")
 		fmt.Fprintf(&b, "urnet_sessions_classical %d\n", pq.ActiveClas)
 
+		// Handshake stages: attempts and tls_ok are per handshake (a rekey
+		// counts again), verified is per session. attempts minus tls_ok is
+		// failed TLS handshakes.
+		fmt.Fprintf(&b, "# HELP urnet_sessions_handshake_total Handshake events over the provider's lifetime.\n")
+		fmt.Fprintf(&b, "# TYPE urnet_sessions_handshake_total counter\n")
+		fmt.Fprintf(&b, "urnet_sessions_handshake_total{stage=\"attempts\"} %d\n", pq.Attempts)
+		fmt.Fprintf(&b, "urnet_sessions_handshake_total{stage=\"tls_ok\"} %d\n", pq.Established)
+		fmt.Fprintf(&b, "urnet_sessions_handshake_total{stage=\"verified\"} %d\n", pq.Verified)
+		fmt.Fprintf(&b, "urnet_sessions_handshake_total{stage=\"identity_failed\"} %d\n", pq.IdentityFailed)
+		if 0 < len(pq.Curves) {
+			fmt.Fprintf(&b, "# HELP urnet_sessions_curve_total Established handshakes by negotiated key-exchange curve.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_sessions_curve_total counter\n")
+			for _, cc := range pq.Curves {
+				fmt.Fprintf(&b, "urnet_sessions_curve_total{curve=%s} %d\n", prometheusLabelValue(cc.Curve), cc.Count)
+			}
+		}
+
 		// Hour/day/week are sliding windows and go down as sessions age out, so
 		// they are gauges. Only the lifetime count is a counter; rate() over a
 		// value that decreases reads every drop as a counter reset.

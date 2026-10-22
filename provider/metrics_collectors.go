@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -247,6 +248,12 @@ func runEarningWindows(ctx context.Context) {
 				c.ActivePQE, c.ActiveClas,
 				c.PQELifetime, c.ClasLifetime,
 				c.PQEHour, c.ClasHour, c.PQEDay, c.ClasDay, c.PQEWeek, c.ClasWeek)
+			curves := make([]string, 0, len(c.Curves))
+			for _, cc := range c.Curves {
+				curves = append(curves, fmt.Sprintf("%s=%d", cc.Curve, cc.Count))
+			}
+			tlog("🔐 [pqe] handshake stages: attempts=%d tls_ok=%d verified=%d identity_failed=%d | curves: %s\n",
+				c.Attempts, c.Established, c.Verified, c.IdentityFailed, strings.Join(curves, " "))
 			allPQE, allClas, _, _, _, _, _ := lifetimeStore.Snapshot()
 			tlog("🔐 [pqe] all-time: pqe=%d classical=%d\n", allPQE, allClas)
 		}
