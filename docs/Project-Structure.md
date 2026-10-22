@@ -2,7 +2,7 @@
 
 `full-bars/sn` is a fork of `urfoundation/sn`, the code for the UR Subnet (Bittensor SN25). It holds two things. The first is the provider you run to carry traffic, plus the tools that manage it (`urnet-tools` and `urnet-docker`). The second is the subnet code: smart contracts, miner and validator software, and chain tools. Most operators only need the first part.
 
-This page lists the top-level folders, grouped by what they are for. The sibling pages [README](README.md) and [FORK_CHANGES](FORK_CHANGES.md) explain what the fork adds on top of upstream.
+This page lists the top-level folders, grouped by what they are for. The sibling pages [README](https://github.com/full-bars/sn#readme) and [FORK_CHANGES](https://github.com/full-bars/sn/blob/main/FORK_CHANGES.md) explain what the fork adds on top of upstream.
 
 ## Provider and operator tools
 
@@ -20,7 +20,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 | `docker/` | Start scripts and settings for the provider and miner containers. |
 | `Dockerfile`, `Dockerfile.miner` | Build the provider image and the miner image. |
 | `pelican/` | Egg file for the Pelican panel. |
-| `monitoring/` | Prometheus and Grafana bundle for watching a fleet (see [Monitoring](docs/Monitoring.md)). |
+| `monitoring/` | Prometheus and Grafana bundle for watching a fleet (see [Monitoring](Monitoring.md)). |
 | `scripts/` | Installers and uninstallers for Linux, macOS, Windows and FreeBSD, plus build and release check scripts. |
 | `deploy/` | A systemd unit for the provider, and the policy files for the test and main networks. |
 | `fake-release-server/` | A fake release server used to test the installer. |
@@ -40,6 +40,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 | `commitmentoracle/` | The commitment oracle for the mainnet. |
 | `protocol/` | Shared data types for fleets, claims and evidence. |
 | `clientauth/`, `hotkeyauth/`, `hotkeywallet/` | Sign-in and wallet consent with a Bittensor hotkey. |
+| `walletsign/` | `provider wallet sign` and `provider wallet status`, shared by the release provider and the miner so every sn build can sign the network wallet consent. |
 | `operatorlist/`, `operators.yml` | The list of network operators and how it is refreshed. |
 | `nativefee/` | Checks fee data with an independently pinned verifier. |
 | `api/`, `price.yml` | The competition and price settings. |
@@ -57,7 +58,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 | `FORK_CHANGES.md` | What this fork changes compared with upstream. |
 | `WHITEPAPER.md`, `VALIDATOR.md` | The subnet specification and the validator check protocol. |
 | `SUBTENSOR-COMPATIBILITY.md` | Notes on Subtensor compatibility. |
-| `docs/` | The operator guides. A workflow copies these pages to the GitHub wiki. |
+| `docs/` | The operator guides, including this page. A workflow copies `docs/*.md` to the GitHub wiki. |
 | `docs/design/` | Design records and plans, such as the implementation plan and the comparison with other subnets. |
 | `docs/archive/` | Older plans and status notes kept for history, such as the version 2 documents. |
 | `docs/spec/` | Formal specifications and JSON schemas. |
@@ -65,7 +66,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 
 ## Automation
 
-`.github/workflows/` holds the build, release, test, security scan and wiki sync workflows. See [CI and Release Process](docs/CI-and-Release-Process.md).
+`.github/workflows/` holds the build, release, test, security scan and wiki sync workflows. See [CI and Release Process](CI-and-Release-Process.md). `.githooks/commit-msg` rejects attribution trailers, so enable it with `git config core.hooksPath .githooks` before you commit here.
 
 ## Build and test
 
