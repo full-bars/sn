@@ -56,7 +56,7 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 
 #### OpenRC (Alpine) command parity
 
-On a host where OpenRC is the running init system, the lifecycle commands (`start`, `stop`, `restart`, `auto-start`, `auto-update`, `logs`, `status`, `uninstall`) act on the installer's `urnetwork` service. The command table, the multi-provider selector rules and the root requirement are on the [Alpine Linux (OpenRC)](/full-bars/sn/wiki/OpenRC#urnet-tools-command-parity) page.
+On a host where OpenRC is the running init system, the lifecycle commands (`start`, `stop`, `restart`, `auto-start`, `auto-update`, `logs`, `status`, `uninstall`) act on the installer's `urnetwork` service. The command table, the multi-provider selector rules and the root requirement are on the [Alpine Linux (OpenRC)](/full-bars/sn/wiki/OpenRC#command-parity-with-urnet-tools) page.
 
 ### Proxy Management Commands
 

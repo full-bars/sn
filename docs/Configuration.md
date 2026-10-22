@@ -92,7 +92,7 @@ Quick jump:
 
 Location: `~/.urnetwork/proxy_probe.json`. Controls the stage-1 table-probe
 quality gate for URL-source proxy admission (see
-[Proxy URL Sources](/full-bars/sn/wiki/Proxy-URL-Sources#-stage-1-quality-gate)). All
+[Proxy URL Sources](/full-bars/sn/wiki/Proxy-URL-Sources#stage-1-quality-gate)). All
 fields are optional; omitted fields keep their default. The file is
 re-read on a short cache (a few seconds), so changes take effect without
 a restart.
