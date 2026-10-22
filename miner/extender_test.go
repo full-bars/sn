@@ -72,6 +72,27 @@ func TestProviderExtenderKeySeedRoundTrips(t *testing.T) {
 	}
 }
 
+// The device's key material names the measurement key file in the provider
+// state directory beside the extender seed, so the space, which keeps no local
+// state, serves the lag.dev measurement api under one key across launches
+// (lag.dev/PLAN.md C4). Without it no provider ever asked for a certificate.
+func TestProviderDeviceKeyMaterialNamesTheMeasurementKeyFile(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+	extenderKeySeed, err := connect.NewExtenderKeySeed()
+	if err != nil {
+		t.Fatal(err)
+	}
+	keyMaterial := providerDeviceKeyMaterial(nil, nil, nil, extenderKeySeed)
+	if !bytes.Equal(keyMaterial.GetExtenderKeySeed(), extenderKeySeed) {
+		t.Fatal("the key material did not carry the seed")
+	}
+	expected := filepath.Join(stateDir, ".provider.extender.measurement.key")
+	if got := keyMaterial.GetExtenderMeasurementKeyFile(); got != expected {
+		t.Fatalf("measurement key file = %q, expected %q", got, expected)
+	}
+}
+
 // A persisted seed still derives its identity; diagnostic observation does not
 // expose it or make malformed material a successful identity observation.
 func TestProviderExtenderIdentityIsReadableFromTheSeed(t *testing.T) {
