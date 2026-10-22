@@ -217,6 +217,11 @@ jobs:
           chmod +x docker/scripts/test_exit75_restart.sh
           ./docker/scripts/test_exit75_restart.sh
 
+      - name: Miner stop SIGTERM forwarding tests
+        run: |
+          chmod +x docker/miner/test_miner_stop.sh
+          ./docker/miner/test_miner_stop.sh
+
       - name: Docker stop SIGTERM forwarding tests
         run: |
           chmod +x docker/scripts/test_stop_forwarding.sh

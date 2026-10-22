@@ -170,11 +170,79 @@ func_provide() {
   fi
 
   log "[INFO] Starting the miner: $PROVIDER_BIN $*"
-  if "$PROVIDER_BIN" "$@"; then
+  if func_run_miner "$PROVIDER_BIN" "$@"; then
     PROVIDE_CODE=0
   else
     PROVIDE_CODE=$?
   fi
+}
+
+# === Stop Forwarding ===
+# `docker stop` sends SIGTERM to PID 1, which is this shell. A shell running as
+# PID 1 has no default action for SIGTERM, so without a trap the miner never
+# hears it and Docker SIGKILLs the container once the grace period expires,
+# skipping the miner's own shutdown. The miner runs as a child so the trap can
+# forward the signal and the supervisor can wait for the real exit code.
+MINER_STOPPING=0
+MINER_CHILD_PID=""
+
+func_forward_stop() {
+    MINER_STOPPING=1
+    if [ -n "$MINER_CHILD_PID" ]; then
+        kill -TERM "$MINER_CHILD_PID" 2>/dev/null || true
+    fi
+}
+
+func_install_stop_trap() {
+    trap func_forward_stop TERM INT
+}
+
+func_exit_if_stopping() {
+    if [ "$MINER_STOPPING" -eq 1 ]; then
+        log "[INFO] Stop requested; miner supervisor exiting."
+        exit 0
+    fi
+}
+
+# Interruptible sleep: busybox ash defers a trapped signal until the foreground
+# command returns, so a bare `sleep N` swallows `docker stop` for its whole
+# duration. Backgrounding the sleep lets the trap run, and both the entry and
+# post-spawn checks catch a stop that landed on a command boundary.
+func_sleep() {
+    func_exit_if_stopping
+    sleep "$1" &
+    _stop_sleep_pid=$!
+    if [ "$MINER_STOPPING" -eq 1 ]; then
+        kill "$_stop_sleep_pid" 2>/dev/null || true
+    fi
+    wait "$_stop_sleep_pid" || true
+    func_exit_if_stopping
+}
+
+# Run the miner in the background so the trap can fire while it runs, and keep
+# its real exit status. A TERM that landed between the loop's stopping check and
+# the spawn leaves the flag set with nobody to signal, so forward right after
+# the pid exists. wait repeats until the process is really gone, so a graceful
+# shutdown is never cut short.
+func_run_miner() {
+    "$@" &
+    MINER_CHILD_PID=$!
+    if [ "$MINER_STOPPING" -eq 1 ]; then
+        func_forward_stop
+    fi
+    _stop_code=0
+    while :; do
+        # a stop interrupts wait and leaves 143 behind; keep that only while
+        # the child is still alive, so a clean exit after the stop reports 0
+        if wait "$MINER_CHILD_PID"; then
+            _stop_code=0
+        else
+            _stop_code=$?
+        fi
+        kill -0 "$MINER_CHILD_PID" 2>/dev/null || break
+    done
+    MINER_CHILD_PID=""
+    return "$_stop_code"
 }
 
 func_bootstrap() {
@@ -254,7 +322,11 @@ func_run() {
   failures=0
   reauth_attempts=0
   while :; do
+    func_exit_if_stopping
     func_provide
+    # a stop that landed while provide was running must end the loop here,
+    # otherwise the next iteration goes back through re-auth
+    func_exit_if_stopping
     if [ "$PROVIDE_CODE" -eq 0 ]; then
       log "[INFO] The miner exited cleanly"
       return 0
@@ -262,7 +334,7 @@ func_run() {
     if [ "$PROVIDE_CODE" -eq 75 ]; then
       log "[INFO] The miner asked for a planned restart (exit 75); restarting in 5s"
       failures=0
-      sleep 5
+      func_sleep 5
       continue
     fi
     if [ "$PROVIDE_CODE" -eq 78 ]; then
@@ -282,7 +354,7 @@ func_run() {
         if func_authenticate "$auth_code" && [ -s "$SESSION_JWT" ]; then
           failures=0
           reauth_attempts=0
-          sleep 5
+          func_sleep 5
           continue
         fi
         log "[ERROR] Re-authentication failed"
@@ -296,9 +368,10 @@ func_run() {
       log "[ERROR] Too many consecutive crashes; exiting for the supervisor to restart"
       return 1
     fi
-    sleep 15
+    func_sleep 15
   done
 }
 
+func_install_stop_trap
 func_bootstrap
 func_run
