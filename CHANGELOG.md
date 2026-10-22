@@ -4,6 +4,20 @@ Releases of this fork are tagged `v<YYYY.M.D>-<unix>-meso`. Tags without the `-m
 
 ## [Unreleased]
 
+### Added
+
+- **PQE handshake stages and negotiated curves** ([#132](https://github.com/full-bars/sn/pull/132)): the `[pqe]` counters were stubbed out, so the line and the session metrics never emitted. The line now reports `attempts`, `tls_ok`, `verified` and `identity_failed` plus a per-curve histogram, and `/metrics` carries `urnet_sessions_handshake_total{stage=...}` and `urnet_sessions_curve_total{curve=...}`.
+
+### Fixed
+
+- **A `docker stop` skipped the shutdown path** ([#126](https://github.com/full-bars/sn/pull/126), [#131](https://github.com/full-bars/sn/pull/131)): the supervisor shell and the miner entrypoint were PID 1 with no SIGTERM action, so Docker SIGKILLed the container at the grace timeout. Both forward the signal now, and the updater picks this platform's tarball.
+- **The miner used a stale response cap** ([#135](https://github.com/full-bars/sn/pull/135)): `setSwarmMemberWallet` read a snapshot constant, so a raised default left the old 2 MiB cap and large responses failed with short reads.
+- **Lifetime session counters dropped on proxy exit** ([#133](https://github.com/full-bars/sn/pull/133)): a `_total` could decrease and `rate()` read it as a reset. A departing manager's counts fold into a provider-wide accumulator first.
+
+### Changed
+
+- **Two Bittensor claims are corrected** ([#134](https://github.com/full-bars/sn/pull/134)): the signed challenge quotes the message, and the stopped-daemon answer says unsigned v1 claims still expire.
+
 ## [v2026.10.21-1077735390-meso] — 2026-10-21
 
 ### Added
