@@ -217,6 +217,11 @@ jobs:
           chmod +x docker/scripts/test_exit75_restart.sh
           ./docker/scripts/test_exit75_restart.sh
 
+      - name: Miner stop SIGTERM forwarding tests
+        run: |
+          chmod +x docker/miner/test_miner_stop.sh
+          ./docker/miner/test_miner_stop.sh
+
       - name: Shellcheck docker scripts (error severity)
         run: |
           sudo apt-get install -y shellcheck >/dev/null 2>&1
