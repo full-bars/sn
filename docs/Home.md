@@ -32,6 +32,7 @@ The provider serves dual-stack IPv4 and IPv6 traffic, uses HTTP/3 (QUIC) for its
 - [Bittensor Glossary](Bittensor-Glossary): plain meanings of the words
 
 ### Reference
+- [Project Structure](Project-Structure) — what lives where in the repository
 - [Log Message Reference](Log-Message-Reference) — what provider log lines mean
 - [Troubleshooting](Troubleshooting) — common errors and their fixes
 - [CI and Release Process](CI-and-Release-Process) — workflows, tags, and cutting a release
