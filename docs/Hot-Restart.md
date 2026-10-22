@@ -105,7 +105,7 @@ On this fork the slot key is the proxy address plus the proxy auth user (`ProxyS
 
 The store keeps up to 10 timestamped snapshots taken before an overwrite, so a corrupted or truncated file can be inspected. Snapshots of identical content are at most one every 5 minutes, which stops a crash loop from cycling through every backup slot. A file that fails to parse is reported and the provider starts fresh instead of refusing to run.
 
-Entries whose slot has not reconnected for 30 days are pruned at load time.
+Entries whose `minted_at` is older than 30 days are pruned at load time.
 
 ## The miner line
 
@@ -134,10 +134,10 @@ Because the seed is shared per process, two slots from one process cannot both b
 | Restart, same state dir, same proxy target | Same `client_id` (reused) |
 | Stored token expired, server row still present | Renewed with the same `client_id` and `device_id` |
 | New proxy address | New slot, new `client_id` |
-| New proxy auth user at the same address | New slot on this fork's provider and on the miner; same slot on 3.23-fix and meso-miner |
+| New proxy auth user at the same address | New slot on this fork's provider; same miner slot, because the miner derives its slot from the network and proxy address only; same slot on 3.23-fix and meso-miner |
 | Different account or network (`~/.urnetwork/jwt` replaced) | Fresh mint, logged as `network_id mismatch` |
 | State dir wiped, new `HOME`, container recreated without its volume | Fresh mint |
-| Slot idle for more than 30 days | Provider entry pruned, fresh mint on return |
+| `minted_at` older than 30 days | Entry pruned, fresh mint on return |
 | Reuse turned off | Fresh mint on every start |
 
 Identities are per slot, never shared across hosts. A cloned state directory is not detected locally: the platform resolves it to the same scope, so the second host silently shares the identity instead of failing loudly.
@@ -191,9 +191,10 @@ These routes replace the identity for every slot that connects. Turning reuse ba
 ## Verifying reuse after a restart
 
 ```bash
-urnet-tools proxy ids > /tmp/before.txt
+ids() { urnet-tools proxy ids 2>/dev/null | awk '$1 != "PROXY" && NF >= 2 {print $1" "$2}' | sort; }
+ids > /tmp/before.txt
 urnet-tools restart -y
-urnet-tools proxy ids > /tmp/after.txt
+ids > /tmp/after.txt
 diff /tmp/before.txt /tmp/after.txt
 ```
 
