@@ -8,6 +8,16 @@ package clientauth
 // Descriptor-relative custody holds here as on Unix: leaf operations name the
 // directory through its open handle's RootDirectory, and every open tolerates
 // no reparse point where the Unix store tolerates no symlink.
+//
+// Ownership is deliberately more lenient here than the Unix euid check. A
+// custody object may be owned by the process account or by the token's default
+// owner, which is BUILTIN\Administrators for any elevated process, and every
+// access check allowlists Administrators and SYSTEM beside those two accounts.
+// An administrator's process really does own what it creates through its
+// default owner, and an administrator is the local equivalent of root, so a
+// directory an administrator planted is custody the same way a root-owned
+// directory is on Unix. Nothing outside that set is ever accepted, and a
+// refusal names the account and right that is outside it.
 
 import (
 	"bytes"
@@ -15,12 +25,14 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -171,12 +183,14 @@ func openRegistrationStoreForOwner(clientPath string, owner *registrationStore) 
 	return self, nil
 }
 
-// acquireOwnerLock takes the directory-wide exclusive owner lock over the lock
-// handle's first byte without waiting; a lock already held anywhere else in
-// the directory means the active owner keeps its registration custody. Every
-// open shares read, write and delete, so a held lock is the only way this call
-// loses: a lock violation alone is a held owner, and any other failure is
-// reported as itself rather than as a busy owner.
+// acquireOwnerLock takes the client's exclusive owner lock over the lock
+// handle's first byte without waiting; the lock file is per client
+// (<client>.registration.lock), the same lock the Unix store takes, so a
+// second store for the same client means the active owner keeps its
+// registration custody. Every open shares read, write and delete, so a held
+// lock is the only way this call loses: a lock violation alone is a held
+// owner, and any other failure is reported as itself rather than as a busy
+// owner.
 func (self *registrationStore) acquireOwnerLock() error {
 	if err := windows.LockFileEx(windows.Handle(self.lock.Fd()), windows.LOCKFILE_EXCLUSIVE_LOCK|windows.LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, &windows.Overlapped{}); err != nil {
 		if errors.Is(err, windows.ERROR_LOCK_VIOLATION) {
@@ -189,8 +203,12 @@ func (self *registrationStore) acquireOwnerLock() error {
 
 // openLeaf opens one existing leaf through the directory handle and accepts it
 // only on safe descriptor metadata, then applies the Unix no-symlink parity
-// audit.
+// audit. The name is validated here as it is on every other leaf operation, so
+// the read path refuses what the writing paths refuse.
 func (self *registrationStore) openLeaf(name string, access uint32) (*os.File, error) {
+	if invalidLeaf(name) {
+		return nil, errors.New("registration leaf is invalid")
+	}
 	file, err := ntOpenRelative(self.directory, name, access, windows.FILE_OPEN, windows.FILE_NON_DIRECTORY_FILE)
 	if err != nil {
 		return nil, err
@@ -239,8 +257,14 @@ func (self *registrationStore) ensureLeaf(name string, access uint32) (*os.File,
 	return file, nil
 }
 
+// invalidLeaf refuses a name that is not one plain component of the custody
+// directory. The NT object name space also resolves a stream of a leaf by
+// separating it with a colon and a path by a backslash, and filepath.Base does
+// not treat either as a separator on Windows, so both are refused here: a
+// name that named a stream would read or replace data beside a custody file
+// rather than the custody file itself.
 func invalidLeaf(name string) bool {
-	return name == "" || filepath.Base(name) != name || name == "." || name == ".."
+	return name == "" || filepath.Base(name) != name || name == "." || name == ".." || strings.ContainsAny(name, `:\/`)
 }
 
 func (self *registrationStore) open(name string, flags int) (*os.File, error) {
@@ -260,8 +284,10 @@ const (
 	custodyWriteAccess = windows.FILE_GENERIC_WRITE | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE
 	custodyLockAccess  = windows.FILE_GENERIC_READ | windows.FILE_GENERIC_WRITE | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE
 	// custodyTraverseAccess is what a component of the walk asks for: enough to
-	// list and stat it for the reparse refusal, and nothing that writes.
-	custodyTraverseAccess = windows.FILE_LIST_DIRECTORY | windows.FILE_TRAVERSE | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE
+	// traverse it and stat it for the reparse refusal, and nothing that reads
+	// its contents or writes. An ancestor where the account holds traverse but
+	// not list rights is enough, as an execute-only directory is on unix.
+	custodyTraverseAccess = windows.FILE_TRAVERSE | windows.FILE_READ_ATTRIBUTES | windows.SYNCHRONIZE
 )
 
 // Reopen checks only authenticate namespace identity; operations keep using
@@ -352,10 +378,10 @@ func (self *registrationStore) names(maximum int) ([]string, error) {
 }
 
 // Deletion uses the same owned directory as publication: one handle opened
-// through the custody handle, marked for deletion before its close. A leaf that
-// is a symlink is deleted as the link, exactly as unix unlinkat removes it. A
-// missing leaf is already absent; a successful removal is durable before the
-// caller proceeds.
+// through the custody handle, marked for deletion with POSIX semantics before
+// its close. A leaf that is a symlink is deleted as the link, exactly as unix
+// unlinkat removes it. A missing leaf is already absent; a successful removal
+// is durable before the caller proceeds.
 func (self *registrationStore) remove(name string) error {
 	if invalidLeaf(name) {
 		return errors.New("registration removal leaf is invalid")
@@ -363,7 +389,7 @@ func (self *registrationStore) remove(name string) error {
 	if err := self.check(); err != nil {
 		return err
 	}
-	file, err := ntOpenRelative(self.directory, name, windows.DELETE|windows.FILE_READ_ATTRIBUTES|windows.SYNCHRONIZE, windows.FILE_OPEN, windows.FILE_NON_DIRECTORY_FILE)
+	file, err := self.openForDelete(name)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return self.check()
@@ -375,6 +401,52 @@ func (self *registrationStore) remove(name string) error {
 		return err
 	}
 	return errors.Join(self.syncDirectory(), self.check())
+}
+
+// removeHeld removes one leaf through the custody handle with no custody check
+// of its own. It exists for the cleanup of a temporary this store created: the
+// check that refused the operation which produced the temporary would refuse
+// its cleanup in exactly the same way, and the temporary would be left behind
+// for good. Unix cleans up with an unconditional unlinkat on the held
+// directory descriptor for the same reason.
+func (self *registrationStore) removeHeld(name string) error {
+	if invalidLeaf(name) {
+		return errors.New("registration removal leaf is invalid")
+	}
+	file, err := self.openForDelete(name)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
+	}
+	closeErr := markDeleteDisposition(file)
+	return errors.Join(closeErr, file.Close())
+}
+
+// openForDelete opens one leaf for removal or rename through the custody
+// handle. Go's own path opens share read and write but not delete, so a
+// concurrent reader that opened the token by pathname (ReadToken,
+// readNetworkCredential) makes this open fail with a sharing violation for the
+// moment it holds the file. Unix has no such failure, and a removal there is
+// never refused by a reader, so the open is retried briefly before the
+// violation is reported.
+func (self *registrationStore) openForDelete(name string) (*os.File, error) {
+	const attempts = 20
+	const interval = 25 * time.Millisecond
+	var err error
+	for attempt := 0; attempt < attempts; attempt++ {
+		var file *os.File
+		file, err = ntOpenRelative(self.directory, name, windows.DELETE|windows.FILE_READ_ATTRIBUTES|windows.SYNCHRONIZE, windows.FILE_OPEN, windows.FILE_NON_DIRECTORY_FILE)
+		if err == nil {
+			return file, nil
+		}
+		if !errors.Is(err, windows.ERROR_SHARING_VIOLATION) {
+			return nil, err
+		}
+		time.Sleep(interval)
+	}
+	return nil, err
 }
 
 // Rename publishes complete bytes; a failed directory sync remains an error
@@ -403,7 +475,7 @@ func (self *registrationStore) write(name string, raw []byte) (returnErr error) 
 			returnErr = errors.Join(returnErr, file.Close())
 		}
 		if returnErr != nil {
-			returnErr = errors.Join(returnErr, self.remove(temporary))
+			returnErr = errors.Join(returnErr, self.removeHeld(temporary))
 		}
 	}()
 	if err := auditLeafCustody(file); err != nil {
@@ -434,7 +506,7 @@ func (self *registrationStore) renameLeaf(from, to string) error {
 	if err := self.check(); err != nil {
 		return err
 	}
-	leaf, err := ntOpenRelative(self.directory, from, windows.DELETE|windows.FILE_READ_ATTRIBUTES|windows.SYNCHRONIZE, windows.FILE_OPEN, windows.FILE_NON_DIRECTORY_FILE)
+	leaf, err := self.openForDelete(from)
 	if err != nil {
 		return err
 	}
@@ -451,10 +523,55 @@ func (self *registrationStore) syncDirectory() error {
 
 // auditDirectoryCustody is the Windows parity of the Unix Mode&0022 bound: a
 // directory owned by the process account, not writable by anyone outside its
-// custody allowlist.
+// custody allowlist. Windows hosts already carry a .urnetwork directory that
+// an earlier tool created with inherited access, so a refusal here names the
+// account and right that are outside custody and the command that repairs the
+// directory in place, rather than reporting that custody is impossible.
 func (self *registrationStore) auditDirectoryCustody() error {
 	return auditPrivateOwnership(windows.Handle(self.directory.Fd()), true,
-		errors.New("registration parent must be owned and not writable by other users"))
+		func(sid *windows.SID, mask uint32) error { return custodyDirectoryRefusal(self.path, sid, mask) })
+}
+
+// custodyDirectoryRefusal names what is outside custody and how to repair the
+// directory. An administrator can apply the private descriptor to a directory
+// the account owns without losing what is already in it.
+func custodyDirectoryRefusal(dir string, sid *windows.SID, mask uint32) error {
+	remedy := fmt.Sprintf(`repair it with: icacls "%s" /inheritance:r /grant:r "%%USERNAME%%":F SYSTEM:F Administrators:F`, dir)
+	switch {
+	case sid != nil && mask != 0:
+		return fmt.Errorf("registration custody directory %s grants %s to %s; %s", dir, custodyRightNames(mask), sid.String(), remedy)
+	case sid != nil:
+		return fmt.Errorf("registration custody directory %s is owned by %s rather than by this account; %s", dir, sid.String(), remedy)
+	default:
+		return fmt.Errorf("registration custody directory %s is not private: its DACL allows every account access, or the process account cannot be resolved; %s", dir, remedy)
+	}
+}
+
+// custodyRightNames names the audited rights an ACE carries, so a refusal can
+// say what the foreign account may do.
+func custodyRightNames(mask uint32) string {
+	names := make([]string, 0, 8)
+	for _, right := range []struct {
+		bit  uint32
+		name string
+	}{
+		{windows.FILE_READ_DATA, "read"},
+		{windows.FILE_WRITE_DATA, "write"},
+		{windows.FILE_APPEND_DATA, "append"},
+		{fileDeleteChildAccess, "delete-child"},
+		{windows.DELETE, "delete"},
+		{windows.WRITE_DAC, "change-permissions"},
+		{windows.WRITE_OWNER, "change-owner"},
+		{windows.MAXIMUM_ALLOWED, "maximum-allowed"},
+	} {
+		if mask&right.bit != 0 {
+			names = append(names, right.name)
+		}
+	}
+	if len(names) == 0 {
+		return fmt.Sprintf("access 0x%08x", mask)
+	}
+	return strings.Join(names, ", ")
 }
 
 // Releasing the lock and directory is part of the caller's completed result.
@@ -577,6 +694,12 @@ func refuseReparse(file *os.File) error {
 // because the duplicate cannot pick a different object on any NT version, and
 // because the child takes its own lock file handle: closing this one releases
 // nothing the owner holds.
+//
+// The duplicate shares the owner's FILE_OBJECT, including the directory
+// enumeration cursor that names() continues after its first call. Unix gets an
+// independent open file description from openat(".") instead. That is safe
+// here because names() seeks to the start before every census and is only ever
+// called on a store whose own handle is the one it enumerates.
 func selfChildOf(parent *os.File) (*os.File, error) {
 	process := windows.CurrentProcess()
 	var duplicate windows.Handle
@@ -671,14 +794,54 @@ func lastWriteNanos(handle windows.Handle) (int64, error) {
 	return filetime.Nanoseconds(), nil
 }
 
+// setLastWrite sets a leaf's last-write time through an open handle, which an
+// explicit set makes final: a file system updates the timestamp at cleanup for
+// a file it saw modified, and it leaves a timestamp the caller set alone.
+func setLastWrite(handle windows.Handle, nanos int64) error {
+	filetime := windows.NsecToFiletime(nanos)
+	basic := fileBasicInfoFields{
+		LastWriteTime: int64(filetime.HighDateTime)<<32 | int64(filetime.LowDateTime),
+	}
+	return windows.SetFileInformationByHandle(handle, windows.FileBasicInfo, (*byte)(unsafe.Pointer(&basic)), uint32(unsafe.Sizeof(basic)))
+}
+
+// lastWriteOf answers the last-write time of a closed leaf through a fresh
+// handle, which is the value every later reader of the file sees.
+func (self *registrationStore) lastWriteOf(name string) (int64, error) {
+	file, err := self.open(name, leafOpenRead)
+	if err != nil {
+		return 0, err
+	}
+	writeTime, statErr := lastWriteNanos(windows.Handle(file.Fd()))
+	return writeTime, errors.Join(statErr, file.Close())
+}
+
 // markDeleteDisposition marks an open leaf's handle for deletion; its close
-// completes the removal without walking a pathname. The class is the Win32
-// FILE_INFO_BY_HANDLE_CLASS value that SetFileInformationByHandle takes, not
-// the NT FILE_INFORMATION_CLASS value NtSetInformationFile takes.
+// completes the removal without walking a pathname. The extended class is
+// asked first with POSIX semantics: the name leaves the directory at once, so
+// a maintenance handle that shares delete cannot keep it visible as
+// STATUS_DELETE_PENDING while every later open answers access-denied instead
+// of not-found. Unix unlinkat has the same immediate semantics. FAT and exFAT,
+// which answer the extended class with an invalid-parameter error, and hosts
+// before Windows 10 1709 fall back to the legacy delete-on-close class.
 func markDeleteDisposition(file *os.File) error {
-	var info struct{ DeleteFile uint8 }
-	info.DeleteFile = 1
-	return windows.SetFileInformationByHandle(windows.Handle(file.Fd()), windows.FileDispositionInfo, (*byte)(unsafe.Pointer(&info)), uint32(unsafe.Sizeof(info)))
+	handle := windows.Handle(file.Fd())
+	// the class is the Win32 FILE_INFO_BY_HANDLE_CLASS value that
+	// SetFileInformationByHandle takes, not the NT FILE_INFORMATION_CLASS value
+	// NtSetInformationFile takes
+	var extended struct{ Flags uint32 }
+	extended.Flags = windows.FILE_DISPOSITION_DELETE | windows.FILE_DISPOSITION_POSIX_SEMANTICS
+	err := windows.SetFileInformationByHandle(handle, windows.FileDispositionInfoEx, (*byte)(unsafe.Pointer(&extended)), uint32(unsafe.Sizeof(extended)))
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, windows.ERROR_INVALID_PARAMETER) && !errors.Is(err, windows.ERROR_NOT_SUPPORTED) &&
+		!errors.Is(err, windows.ERROR_INVALID_FUNCTION) && !errors.Is(err, windows.ERROR_CALL_NOT_IMPLEMENTED) {
+		return err
+	}
+	var legacy struct{ DeleteFile uint8 }
+	legacy.DeleteFile = 1
+	return windows.SetFileInformationByHandle(handle, windows.FileDispositionInfo, (*byte)(unsafe.Pointer(&legacy)), uint32(unsafe.Sizeof(legacy)))
 }
 
 // fileRenameInfoEx is the FILE_RENAME_INFO layout of the extended class: the
@@ -710,9 +873,9 @@ const (
 
 // renameRelative renames an open leaf to a name relative to the custody
 // handle, so the target is bound to that handle's directory object rather than
-// to any pathname. The extended class is asked first; a host that does not know
-// it gets the plain class, which is equally handle-rooted and only lacks the
-// POSIX replace flags.
+// to any pathname. The extended class is asked first; a file system that does
+// not offer it gets the plain class, which is equally handle-rooted and only
+// lacks the POSIX replace flags.
 //
 // The call goes through NtSetInformationFile rather than
 // SetFileInformationByHandle because kernel32's FileRenameInfoEx path answers
@@ -725,8 +888,10 @@ func renameRelative(leaf *os.File, parent *os.File, name string) error {
 		return err
 	}
 	nameBytes := (len(units) - 1) * 2
-	// the two layouts share one header size and one name offset
-	const header = 20
+	// the two layouts differ only in their first word, so they put the name at
+	// the same offset on every architecture: 20 on amd64 and arm64, 12 on 386.
+	// It is taken from the layout rather than written down.
+	header := int(unsafe.Offsetof(fileRenameInfoEx{}.fileName))
 	buffer := make([]byte, header+nameBytes)
 	info := (*fileRenameInfoEx)(unsafe.Pointer(&buffer[0]))
 	info.flags = renameReplaceIfExistsFlag | renamePosixSemanticsFlag
@@ -738,7 +903,11 @@ func renameRelative(leaf *os.File, parent *os.File, name string) error {
 	if err == nil {
 		return nil
 	}
-	if !errors.Is(err, windows.STATUS_INVALID_PARAMETER) && !errors.Is(err, windows.STATUS_NOT_SUPPORTED) {
+	// the plain class is the FAT and exFAT path, and the path of a host older
+	// than the extended class: such a file system answers with an invalid
+	// parameter, with a not-supported status, or with an information class it
+	// does not know.
+	if !errors.Is(err, windows.STATUS_INVALID_PARAMETER) && !errors.Is(err, windows.STATUS_NOT_SUPPORTED) && !errors.Is(err, windows.STATUS_INVALID_INFO_CLASS) {
 		return err
 	}
 	// the plain class reads the first word as ReplaceIfExists alone
@@ -762,11 +931,9 @@ func auditLeafCustody(file *os.File) error {
 	if bh.FileAttributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 || bh.NumberOfLinks != 1 || size > maximumRegistrationBytes || size < 0 {
 		return errors.New("registration file has unsafe ownership, mode, links or size")
 	}
-	if err := auditPrivateOwnership(handle, false,
-		errors.New("registration file has unsafe ownership, mode, links or size")); err != nil {
-		return err
-	}
-	return nil
+	return auditPrivateOwnership(handle, false, func(*windows.SID, uint32) error {
+		return errors.New("registration file has unsafe ownership, mode, links or size")
+	})
 }
 
 // auditPrivateOwnership refuses an owner outside the custody accounts and any
@@ -774,11 +941,12 @@ func auditLeafCustody(file *os.File) error {
 // account, SYSTEM, Administrators}. wholeDirectory audits writes and the add
 // and delete-child rights, the Unix Mode&0022 bound; leaves audit reads,
 // writes, delete and the two rights that confer further access, the 0600
-// bound.
-func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal error) error {
+// bound. The refusal names the account and right through its caller, which
+// knows whether it can also offer a repair.
+func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal func(sid *windows.SID, mask uint32) error) error {
 	self, err := custodySelfSid()
 	if err != nil {
-		return refusal
+		return refusal(nil, 0)
 	}
 	sd, err := windows.GetSecurityInfo(handle, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
 	if err != nil {
@@ -789,7 +957,7 @@ func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal e
 		return err
 	}
 	if owner == nil || !custodyOwnerAcceptable(owner, self) {
-		return refusal
+		return refusal(owner, 0)
 	}
 	dacl, _, err := sd.DACL()
 	if err != nil {
@@ -798,7 +966,7 @@ func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal e
 	// A descriptor whose DACL pointer is nil carries a NULL DACL, which grants
 	// every account full access: the Unix 0777 case, refused here too.
 	if dacl == nil {
-		return refusal
+		return refusal(nil, 0)
 	}
 	for index := uint32(0); index < uint32(dacl.AceCount); index++ {
 		var ace *windows.ACCESS_ALLOWED_ACE
@@ -806,17 +974,18 @@ func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal e
 			return err
 		}
 		if ace == nil {
-			return refusal
+			return refusal(nil, 0)
 		}
 		granted, err := custodyAceGrant(ace, wholeDirectory)
 		if err != nil {
-			return errors.Join(refusal, err)
+			return errors.Join(refusal(nil, 0), err)
 		}
 		if granted == 0 {
 			continue
 		}
-		if custodySidOutside((*windows.SID)(unsafe.Pointer(&ace.SidStart)), self) {
-			return refusal
+		sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart))
+		if custodySidOutside(sid, self) {
+			return refusal(sid, granted)
 		}
 	}
 	return nil
@@ -888,7 +1057,7 @@ func privateCustodyDescriptor() ([]byte, error) {
 		return nil, err
 	}
 	acl := privateCustodyACL([]*windows.SID{self, custodyAccounts.systemSid, custodyAccounts.administrators})
-	owner := custordSidBytes(self)
+	owner := custodySidBytes(self)
 	ownerOffset := uint32(20)
 	daclOffset := ownerOffset + uint32(len(owner))
 	raw := make([]byte, int(daclOffset)+len(acl))
@@ -906,7 +1075,7 @@ func privateCustodyDescriptor() ([]byte, error) {
 func privateCustodyACL(accounts []*windows.SID) []byte {
 	size := 8
 	for _, account := range accounts {
-		size += aclAlignment(len(custordSidBytes(account)) + 8)
+		size += aclAlignment(len(custodySidBytes(account)) + 8)
 	}
 	acl := make([]byte, size)
 	acl[0] = aclRevision
@@ -914,7 +1083,7 @@ func privateCustodyACL(accounts []*windows.SID) []byte {
 	binary.LittleEndian.PutUint16(acl[4:], uint16(len(accounts)))
 	at := 8
 	for _, account := range accounts {
-		sid := custordSidBytes(account)
+		sid := custodySidBytes(account)
 		entry := aclAlignment(len(sid) + 8)
 		acl[at] = byte(windows.ACCESS_ALLOWED_ACE_TYPE)
 		binary.LittleEndian.PutUint16(acl[at+2:], uint16(entry))
@@ -927,9 +1096,9 @@ func privateCustodyACL(accounts []*windows.SID) []byte {
 
 func aclAlignment(size int) int { return (size + 3) &^ 3 }
 
-// custordSidBytes views a SID's own storage; a SID is one contiguous
+// custodySidBytes views a SID's own storage; a SID is one contiguous
 // revision, authority and subauthority block of GetLengthSid bytes.
-func custordSidBytes(sid *windows.SID) []byte {
+func custodySidBytes(sid *windows.SID) []byte {
 	length := int(windows.GetLengthSid(sid))
 	return (*[256]byte)(unsafe.Pointer(sid))[:length:length]
 }
@@ -973,14 +1142,25 @@ type custodyTokenOwner struct {
 }
 
 // tokenDefaultOwner answers the token's default owner, which is who owns what
-// an elevated administrator's process creates when no owner is named.
+// an elevated administrator's process creates when no owner is named. The
+// answer is a heap copy: the queried TOKEN_OWNER holds a pointer into the query
+// buffer itself, so answering with that pointer would leave custody comparing
+// every later owner and ACE against a frame that has already been reused.
 func tokenDefaultOwner(token windows.Token) *windows.SID {
 	var buffer [128]byte
 	var returned uint32
 	if err := windows.GetTokenInformation(token, uint32(windows.TokenOwner), &buffer[0], uint32(len(buffer)), &returned); err != nil {
 		return nil
 	}
-	return (*custodyTokenOwner)(unsafe.Pointer(&buffer[0])).Owner
+	owner := (*custodyTokenOwner)(unsafe.Pointer(&buffer[0])).Owner
+	if owner == nil || !owner.IsValid() {
+		return nil
+	}
+	copied, err := owner.Copy()
+	if err != nil || copied == nil || !copied.IsValid() {
+		return nil
+	}
+	return copied
 }
 
 // custodyOwnerAcceptable accepts the two owners a private custody object can

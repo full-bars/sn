@@ -291,6 +291,38 @@ jobs:
           Write-Host "OK: lifecycle test artifacts cleaned"
 
   # --------------------------------------------------------------------------
+  # windows-custody-unit-tests: the custody contract on a real Windows host,
+  # deterministically and with no secret. Its own job, deliberately: the
+  # registration round below needs GAUNTLET_USER and is skipped for a pull
+  # request from a fork, and a custody claim must not depend on a credential or
+  # on which account opened the pull request.
+  # --------------------------------------------------------------------------
+  windows-custody-unit-tests:
+    name: Windows custody unit tests
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.3"
+
+      - name: Run the clientauth custody tests
+        # The store opens, publishes, reads, removes and locks a real private
+        # directory on this runner. It refuses a junction component and a
+        # junction custody directory, a NULL DACL, an inherited foreign ACE, a
+        # leaf a foreign account may read and a leaf a foreign account owns,
+        # and a second process holding the owner lock. The shared registration,
+        # renewal, quarantine and measurement tests run here on Windows too.
+        shell: bash
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: go test ./clientauth/ -count=1 -v -timeout 10m
+
+  # --------------------------------------------------------------------------
   # windows-durable-registration: run the REAL provide --allow-client-registration
   # round with a real disposable account credential. This is the gate for the
   # clientauth Windows custody port: on a runner-native Windows binary, a fresh
@@ -303,18 +335,23 @@ jobs:
   # --------------------------------------------------------------------------
   windows-durable-registration:
     name: miner durable registration (provide --allow-client-registration)
+    # the custody contract itself is gated by the job above, which needs no
+    # secret and runs for every pull request
+    needs: windows-custody-unit-tests
     # A pull request from a fork has neither GAUNTLET_USER nor GAUNTLET_PW, so
     # the mint below would fail for a reason that is not the change's: the round
-    # is an integration check and is skipped there. The custody contract itself
-    # is gated by the unit tests in the step below, which need no secret.
+    # is an integration check and is skipped there.
     if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
-    # One disposable account credential, one mint at a time. The group is shared
-    # with tool-functional-smoke, whose header documents that concurrent mints
-    # with the same credential collide and one of them reports an authentication
-    # failure that is not a code failure.
-    concurrency:
-      group: gauntlet-account-mint
-      cancel-in-progress: false
+    # No job-level concurrency group. A GitHub concurrency group keeps one
+    # running job and at most one pending job, and a newly queued job cancels
+    # that pending one; the group is not scoped by ref or by workflow. The
+    # group this job shared with the two tool-functional-smoke mint jobs was
+    # therefore cancelling one of three queued checks on every run, and letting
+    # concurrent pull requests cancel each other's pending smoke jobs, to
+    # serialize a few-second mint inside jobs that run for thirty minutes. The
+    # collision it was meant to remove is one credential minted twice at once,
+    # and the mint step below retries that on the known empty-body
+    # authentication failure instead: a few seconds, and nothing is cancelled.
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -342,18 +379,6 @@ jobs:
             else echo "Build failed after 3 attempts"; exit 1; fi
           done
 
-      - name: Windows custody unit tests
-        # The custody claim is gated here, deterministically and with no
-        # secret: the store opens, publishes, reads, removes and locks a real
-        # private directory on this runner, and refuses a junction component, a
-        # NULL DACL and a DACL that grants a foreign account. The registration
-        # round below is the integration check on top of it, so a server-side
-        # refusal or rate limit cannot read as a custody failure.
-        shell: bash
-        env:
-          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
-        run: go test ./clientauth/ -count=1 -v
-
       - name: Mint the disposable CI JWT (refuses the production account)
         env:
           GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
@@ -364,9 +389,20 @@ jobs:
           $mint = Join-Path $env:RUNNER_TEMP "mint"
           New-Item -ItemType Directory -Force -Path $mint | Out-Null
           $env:USERPROFILE = $mint
-          & ".\out\miner.exe" auth --user_auth="$env:GAUNTLET_USER" --password="$env:GAUNTLET_PW" --api_url=https://api.bringyour.com -f 2>&1 | Select-Object -Last 5
           $jwt = Join-Path $mint ".urnetwork\jwt"
-          if (-not (Test-Path $jwt)) { throw "JWT mint failed (verification required?)" }
+          # The mint is the one step that must not run twice at the same moment
+          # on the same credential: the losing attempt answers "Authentication
+          # failed" with an empty error body, which reads as a code failure.
+          # Retrying absorbs that collision in seconds, without a concurrency
+          # group that would cancel or serialize whole jobs.
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $mint ".urnetwork")
+            & ".\out\miner.exe" auth --user_auth="$env:GAUNTLET_USER" --password="$env:GAUNTLET_PW" --api_url=https://api.bringyour.com -f 2>&1 | Select-Object -Last 5
+            if (Test-Path $jwt) { Write-Host "JWT minted on attempt $attempt"; break }
+            Write-Host "JWT mint failed on attempt $attempt, retrying in 10s..."
+            Start-Sleep -Seconds 10
+          }
+          if (-not (Test-Path $jwt)) { throw "JWT mint failed after 3 attempts (verification required?)" }
           $raw = (Get-Content $jwt -Raw).Trim()
           $p = $raw.Split('.')[1].Replace('-','+').Replace('_','/')
           while ($p.Length % 4) { $p += '=' }
@@ -384,8 +420,18 @@ jobs:
           $state = Join-Path $smokeHome ".urnetwork"
           $installdir = Join-Path $state "provider"
           New-Item -ItemType Directory -Force -Path $installdir | Out-Null
+          # .urnetwork exists on every installed Windows host, created with
+          # whatever access its parent inherited, and the store adopts it only
+          # when it is private. This is the repair its refusal names, applied
+          # here so the round runs against an adopted directory the way an
+          # operator's host does after icacls: no inherited ACE, full control
+          # for the account, SYSTEM and Administrators only. Children created
+          # afterwards inherit the same three accounts.
+          $private = @("$($env:USERNAME):F", "SYSTEM:F", "Administrators:F")
+          icacls $state /inheritance:r /grant:r $private | Out-Null
           Copy-Item ".\out\miner.exe" (Join-Path $installdir "urnetwork.exe") -Force
           Copy-Item $env:JWT_FIXTURE (Join-Path $state "jwt") -Force
+          icacls (Join-Path $state "jwt") /inheritance:r /grant:r $private | Out-Null
           Set-Content -Path (Join-Path $state "network.json") -Value '{"api_url":"https://api.bringyour.com","connect_url":"wss://connect.bringyour.com"}'
           $env:USERPROFILE = $smokeHome
           $log = Join-Path $env:RUNNER_TEMP "provide.log"
@@ -397,38 +443,45 @@ jobs:
             -ArgumentList "provide", "--port=0", "--allow-client-registration" `
             -RedirectStandardOutput $log -RedirectStandardError $err -PassThru
           Write-Host "provide pid: $($proc.Id)"
-          # Registration is durable custody, observable on disk: the client
-          # credential .provider.jwt published under the owner lock, and its
-          # immutable .provider.jwt.registration record. Missing either after
-          # the wait is a refusal: fail with the raw log evidence.
-          $waited = 0
-          while ($waited -lt 240) {
-            Start-Sleep -Seconds 5
-            $waited += 5
+          try {
+            # Registration is durable custody, observable on disk: the client
+            # credential .provider.jwt published under the owner lock, and its
+            # immutable .provider.jwt.registration record. Missing either after
+            # the wait is a refusal: fail with the raw log evidence.
             $credential = Join-Path $state ".provider.jwt"
             $record = Join-Path $state ".provider.jwt.registration"
-            if ((Test-Path $credential) -and ($credential | Get-Item).Length -gt 0 -and (Test-Path $record) -and ($record | Get-Item).Length -gt 0) { break }
-            if ($proc.HasExited) { break }
+            $waited = 0
+            while ($waited -lt 240) {
+              Start-Sleep -Seconds 5
+              $waited += 5
+              if ((Test-Path $credential) -and ($credential | Get-Item).Length -gt 0 -and (Test-Path $record) -and ($record | Get-Item).Length -gt 0) { break }
+              if ($proc.HasExited) { break }
+            }
+            Write-Host "after ${waited}s: credential present: $(Test-Path $credential), record present: $(Test-Path $record), exited: $($proc.HasExited)"
+            if (-not (Test-Path $credential)) {
+              Write-Host "----- provide stdout (tail) -----"; Get-Content $log -Tail 40 -ErrorAction SilentlyContinue
+              Write-Host "----- provide stderr (tail) -----"; Get-Content $err -Tail 40 -ErrorAction SilentlyContinue
+              throw "registration refused on Windows: .provider.jwt never appeared after ${waited}s"
+            }
+            if (-not (Test-Path $record)) {
+              Write-Host "----- provide stdout (tail) -----"; Get-Content $log -Tail 40 -ErrorAction SilentlyContinue
+              Write-Host "----- provide stderr (tail) -----"; Get-Content $err -Tail 40 -ErrorAction SilentlyContinue
+              throw "registration record missing on Windows: .provider.jwt.registration never appeared after ${waited}s"
+            }
+            $raw = (Get-Content $credential -Raw).Trim()
+            if ($raw -notlike '*.*.*') { throw "retained credential is not a JWT-shaped client credential: $raw" }
+            $recordJson = Get-Content $record -Raw
+            if ($recordJson -notlike '*urnetwork-durable-client-registration-v1*') { throw "registration record does not name its durable schema: $recordJson" }
+          } finally {
+            # The provider is stopped on every path, the successful one
+            # included: a live provider on the disposable account must not
+            # outlive the check or hold its registration custody open while the
+            # evidence is uploaded.
+            if ($proc -and -not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+              Write-Host "provide stopped"
+            }
           }
-          $credential = Join-Path $state ".provider.jwt"
-          $record = Join-Path $state ".provider.jwt.registration"
-          Write-Host "after ${waited}s: credential present: $(Test-Path $credential), record present: $(Test-Path $record), exited: $($proc.HasExited)"
-          if (-not (Test-Path $credential)) {
-            Write-Host "----- provide stdout (tail) -----"; Get-Content $log -Tail 40 -ErrorAction SilentlyContinue
-            Write-Host "----- provide stderr (tail) -----"; Get-Content $err -Tail 40 -ErrorAction SilentlyContinue
-            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
-            throw "registration refused on Windows: .provider.jwt never appeared after ${waited}s"
-          }
-          if (-not (Test-Path $record)) {
-            Write-Host "----- provide stdout (tail) -----"; Get-Content $log -Tail 40 -ErrorAction SilentlyContinue
-            Write-Host "----- provide stderr (tail) -----"; Get-Content $err -Tail 40 -ErrorAction SilentlyContinue
-            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
-            throw "registration record missing on Windows: .provider.jwt.registration never appeared after ${waited}s"
-          }
-          $raw = (Get-Content $credential -Raw).Trim()
-          if ($raw -notlike '*.*.*') { throw "retained credential is not a JWT-shaped client credential: $raw" }
-          $recordJson = Get-Content $record -Raw
-          if ($recordJson -notlike '*urnetwork-durable-client-registration-v1*') { throw "registration record does not name its durable schema: $recordJson" }
 
       - name: Upload the registration evidence
         if: always()

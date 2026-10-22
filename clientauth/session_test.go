@@ -94,8 +94,10 @@ func TestLoadOrCreateClientJwtBootstrapsAndPersists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Windows carries no permission bits: a file there reports 0666 whatever was
-	// asked for, so privacy comes from the descriptor audit, not from this check.
+	// Windows carries no permission bits: a file there reports 0666 whatever
+	// was asked for. This client.jwt is written by the plain WriteToken path
+	// (session.go), not by the custody store, so no descriptor audit covers it
+	// on Windows; its privacy there comes from the directory it lives in.
 	if runtime.GOOS != "windows" {
 		if got := info.Mode().Perm(); got != 0600 {
 			t.Fatalf("client JWT mode = %o, want 600", got)

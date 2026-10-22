@@ -1,5 +1,3 @@
-//go:build linux || darwin
-
 // Real custody and HTTP qualify the measurement-only role. Synthetic retained
 // operations model separately recovered originals, never new-run authority.
 package clientauth

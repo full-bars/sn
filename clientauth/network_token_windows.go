@@ -150,7 +150,7 @@ func RenewNetworkToken(path string, previous string, renewed string) (_ bool, re
 			returnErr = errors.Join(returnErr, file.Close())
 		}
 		if cleanup {
-			returnErr = errors.Join(returnErr, store.remove(temporary))
+			returnErr = errors.Join(returnErr, store.removeHeld(temporary))
 		}
 	}()
 	if err := auditLeafCustody(file); err != nil {
@@ -158,11 +158,22 @@ func RenewNetworkToken(path string, previous string, renewed string) (_ bool, re
 	}
 	_, writeErr := io.WriteString(file, renewed)
 	syncErr := file.Sync()
-	writeTime, statErr := lastWriteNanos(windows.Handle(file.Fd()))
+	// The renewal fingerprints the time the file carries once it is closed.
+	// A file system stamps a modified file's last-write time at cleanup, so
+	// the value read through the writing handle before the close can differ
+	// from the one every later reader computes its fingerprint from, and the
+	// renewal would then publish a member no lineage read ever matches. The
+	// time is set explicitly, which a cleanup stamp leaves alone, and then read
+	// back through a fresh handle after the close.
+	stampErr := setLastWrite(windows.Handle(file.Fd()), time.Now().UnixNano())
 	closeErr := file.Close()
 	closed = true
-	if err := errors.Join(writeErr, syncErr, statErr, closeErr); err != nil {
+	if err := errors.Join(writeErr, syncErr, stampErr, closeErr); err != nil {
 		return false, err
+	}
+	writeTime, statErr := store.lastWriteOf(temporary)
+	if statErr != nil {
+		return false, statErr
 	}
 	if hook := networkRenewalTestHooks.afterTemporary; hook != nil && hook() {
 		cleanup = false
