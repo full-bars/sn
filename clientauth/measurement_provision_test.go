@@ -1,5 +1,3 @@
-//go:build linux || darwin
-
 // Real custody and HTTP qualify first provisioning: one created client, crash
 // resumption before any send, replay after it, and refusal of every remnant.
 package clientauth

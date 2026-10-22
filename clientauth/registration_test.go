@@ -1,5 +1,3 @@
-//go:build linux || darwin
-
 package clientauth
 
 // Actual private files, fsync/rename ownership and configured HTTP calls
@@ -17,6 +15,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -430,6 +429,9 @@ func TestClientRegistrationPrivateCustodyRejectsLinksAndConcurrentOwner(t *testi
 		t.Fatal(err)
 	}
 	if err := os.Symlink(fixture.networkPath, fixture.clientPath+".registration"); err != nil {
+		if runtime.GOOS == "windows" {
+			t.Skipf("this host may not create a symlink: %v", err)
+		}
 		t.Fatal(err)
 	}
 	if _, err := fixture.register(t.Context(), true, registrationHooks{}); err == nil || fixture.postCount() != 0 {

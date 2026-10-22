@@ -1,11 +1,10 @@
-//go:build linux || darwin
-
 package clientauth
 
 import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -54,8 +53,13 @@ func TestQuarantineNetworkTokenSetsTheRejectedTokenAside(t *testing.T) {
 		t.Fatalf("the rejected token is still in place: %v", err)
 	}
 	info, err := os.Stat(quarantine.Path)
-	if err != nil || info.Mode().Perm() != 0600 {
-		t.Fatalf("set-aside file mode: %v %v", info, err)
+	if err != nil {
+		t.Fatalf("set-aside file: %v", err)
+	}
+	// Windows carries no permission bits; the custody descriptor is what keeps
+	// the set-aside file private there, and the store's audit is what tests it.
+	if runtime.GOOS != "windows" && info.Mode().Perm() != 0600 {
+		t.Fatalf("set-aside file mode: %v", info.Mode())
 	}
 	if token, _ := ReadToken(quarantine.Path); token != "sign-in-renewed" {
 		t.Fatalf("set-aside content = %q", token)

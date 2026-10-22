@@ -567,7 +567,10 @@ func Run(args []string) {
 		if _, err := opts.String("--operator"); err == nil {
 			operatorAuthCmd(opts)
 		} else {
-			auth(opts)
+			if err := auth(opts); err != nil {
+				fmt.Printf("%s\n", err)
+				os.Exit(1)
+			}
 		}
 	} else if provide_, _ := opts.Bool("provide"); provide_ {
 		if allOperators, _ := opts.Bool("--all-operators"); allOperators {
@@ -576,7 +579,10 @@ func Run(args []string) {
 			provide(opts)
 		}
 	} else if authProvide, _ := opts.Bool("auth-provide"); authProvide {
-		auth(opts)
+		if err := auth(opts); err != nil {
+			fmt.Printf("%s\n", err)
+			os.Exit(1)
+		}
 		provide(opts)
 	} else if logs, _ := opts.Bool("logs"); logs {
 		providerLogs(opts)
@@ -595,19 +601,20 @@ func Run(args []string) {
 }
 
 // Authentication shares the selected state directory with provider startup and claims.
-func auth(opts docopt.Opts) {
+// A custody refusal is the host's directory, not an invariant: it is returned
+// as a command failure with the store's own actionable message.
+func auth(opts docopt.Opts) error {
 	jwtPath, err := providerStatePath("jwt")
 	if err != nil {
 		panic(err)
 	}
 	if !confirmJwtOverwrite(opts, jwtPath) {
-		return
+		return nil
 	}
 
 	apiUrl, err := resolveApiUrl(opts)
 	if err != nil {
-		fmt.Printf("network config error: %s\n", err)
-		os.Exit(1)
+		return fmt.Errorf("network config error: %s", err)
 	}
 
 	// auth is short lived: only an explicit --max-memory sizes it
@@ -625,10 +632,11 @@ func auth(opts docopt.Opts) {
 	}
 	if byJwt != "" {
 		if err := clientauth.WriteNetworkTokenWithContext(ctx, jwtPath, byJwt); err != nil {
-			panic(err)
+			return fmt.Errorf("network token was not written: %w", err)
 		}
 		fmt.Printf("Jwt written to %s\n", jwtPath)
 	}
+	return nil
 }
 
 // Without -f, an existing jwt is replaced only when the user answers y.

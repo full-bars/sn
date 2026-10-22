@@ -1,5 +1,3 @@
-//go:build linux || darwin
-
 // Real private custody and the qualified versioned HTTP fixture cover provider
 // scope and first-key ownership. Every identity and credential is synthetic.
 package clientauth
@@ -13,6 +11,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -179,8 +178,13 @@ func TestProviderClientKeyCreationAndLifetimeAreExplicit(t *testing.T) {
 	info, statErr := os.Stat(path)
 	public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
 	marker, markerErr := os.ReadFile(filepath.Join(filepath.Dir(path), ".provider.key.identity"))
-	if readErr != nil || statErr != nil || markerErr != nil || !bytes.Equal(raw, seed) || info.Mode().Perm() != 0600 || !bytes.Contains(marker, []byte(hex.EncodeToString(public))) {
+	if readErr != nil || statErr != nil || markerErr != nil || !bytes.Equal(raw, seed) || !bytes.Contains(marker, []byte(hex.EncodeToString(public))) {
 		t.Fatal("provider key escaped before durable private identity")
+	}
+	// Windows carries no permission bits; the private custody descriptor is
+	// what keeps the key file private there.
+	if runtime.GOOS != "windows" && info.Mode().Perm() != 0600 {
+		t.Fatalf("provider key mode = %o, want 600", info.Mode().Perm())
 	}
 	seed[0] ^= 1
 	if bytes.Equal(seed, owner.Seed()) {
@@ -347,6 +351,12 @@ func TestProviderClientKeyRejectsChangedOrUnsafeCustody(t *testing.T) {
 		}
 		switch fault {
 		case "mode":
+			if runtime.GOOS == "windows" {
+				// Windows carries no permission bits: a mode change is not a
+				// custody fault there, and the descriptor equivalent is what
+				// the store refuses on it.
+				continue
+			}
 			if err := os.Chmod(path, 0644); err != nil {
 				t.Fatal(err)
 			}
@@ -355,6 +365,12 @@ func TestProviderClientKeyRejectsChangedOrUnsafeCustody(t *testing.T) {
 				t.Fatal(err)
 			}
 			if err := os.Symlink(path+".saved", path); err != nil {
+				if runtime.GOOS == "windows" {
+					// the privilege to create a symlink is the host's, not the
+					// store's: the Windows custody tests plant a junction and a
+					// substituted leaf instead
+					continue
+				}
 				t.Fatal(err)
 			}
 		case "hardlink":

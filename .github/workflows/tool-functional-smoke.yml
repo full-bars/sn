@@ -29,6 +29,14 @@ concurrency:
 
 jobs:
   native-functional-smoke:
+    # No mint concurrency group. A GitHub concurrency group holds one running
+    # job and at most one pending job, and a newly queued job cancels that
+    # pending one; it is also scoped by neither ref nor workflow. A group
+    # shared with the docker leg and the Windows registration job therefore
+    # cancelled unrelated smoke jobs and let concurrent pull requests cancel
+    # each other's pending jobs, while serializing thirty-minute jobs for a
+    # few-second mint. The collision it was meant to remove is the mint step
+    # below, which retries it; nothing else needs a lock.
     name: native functional smoke
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -157,6 +165,10 @@ jobs:
         if: always()
 
   docker-provider-functional:
+    # No mint concurrency group, for the reasons the native leg above records:
+    # the group cancelled unrelated jobs and did not serialize the mint it was
+    # named for. This leg's mint happens inside the container, so its own
+    # startup wait is where a collision shows up.
     name: docker-provider functional smoke
     runs-on: ubuntu-latest
     timeout-minutes: 30

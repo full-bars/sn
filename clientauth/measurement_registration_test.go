@@ -1,5 +1,3 @@
-//go:build linux || darwin
-
 // Real custody and HTTP qualify the measurement-only role. Synthetic retained
 // operations model separately recovered originals, never new-run authority.
 package clientauth
@@ -352,8 +350,8 @@ func TestMeasurementRegistrationAndCallbacksRejectReplacedRoot(t *testing.T) {
 		owner := openMeasurementFixtureOwner(t, keyPath, true)
 		dir := filepath.Dir(keyPath)
 		moved := dir + "-retained"
-		if err := os.Rename(dir, moved); err != nil {
-			t.Fatal(err)
+		if !renameRootToSimulateReplacement(t, dir, moved) {
+			continue
 		}
 		t.Cleanup(func() { _ = os.RemoveAll(moved) })
 		if err := os.Mkdir(dir, 0700); err != nil {
@@ -399,8 +397,8 @@ func TestMeasurementRegistrationSeparateBootstrapRetainsPhysicalOwner(t *testing
 		t.Fatal("measurement separate-bootstrap fixture did not reach retained replay")
 	}
 	moved := bootstrapDir + "-retained"
-	if err := os.Rename(bootstrapDir, moved); err != nil {
-		t.Fatal(err)
+	if !renameRootToSimulateReplacement(t, bootstrapDir, moved) {
+		return
 	}
 	t.Cleanup(func() { _ = os.RemoveAll(moved) })
 	if err := os.Mkdir(bootstrapDir, 0700); err != nil {

@@ -1,5 +1,3 @@
-//go:build linux || darwin
-
 package clientauth
 
 // URNETWORK_HOT_RESTART=0's fresh registration path never reads the retained
