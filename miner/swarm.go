@@ -335,7 +335,7 @@ func setSwarmMemberWallet(ctx context.Context, member ProviderSwarmMember, setti
 	defer client.CloseIdleConnections()
 	maxResponseBytes := settings.MaxHttpResponseBodyBytes
 	if maxResponseBytes <= 0 {
-		maxResponseBytes = connect.DefaultMaxHttpResponseBodyBytes
+		maxResponseBytes = connect.DefaultClientStrategySettings().MaxHttpResponseBodyBytes
 	}
 	httpRequest := func(ctx context.Context, method, requestUrl string, requestBytes []byte, byJwt string) ([]byte, error) {
 		requestCtx := ctx
