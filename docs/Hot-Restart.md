@@ -50,7 +50,7 @@ Reuse decisions are logged:
 
 ## Turning it off or on
 
-The `hot-restart` command is a `set` key, not a standalone subcommand. `urnet-tools hot-restart on` fails with `unknown command "hot-restart"`.
+`hot-restart` is a `set` key, not a standalone subcommand. Calling it without `set` fails with `unknown command`, so use the `set` form shown below.
 
 ```bash
 # Reuse off: the next start mints fresh identities
