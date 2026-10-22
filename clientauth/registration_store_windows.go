@@ -12,11 +12,13 @@ package clientauth
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"unsafe"
@@ -26,23 +28,41 @@ import (
 
 const maximumRegistrationBytes = 32 * 1024
 
-// Alternate leaf open modes, in place of the Unix store's flag arguments.
-const (
-	leafOpenRead = iota + 1
-	leafOpenWriteCreate
-)
+// Alternate leaf open mode, in place of the Unix store's flag argument.
+const leafOpenRead = iota + 1
 
-// NT create dispositions and options this store hands to NtCreateFile. They
-// are declared locally because the package's own NT option constants are
-// incomplete on the create side.
+// Every open shares read, write and delete, exactly as the Win32 handles the
+// Go runtime produces do, so LockFileEx is the only exclusion and a leaf open
+// while another handle holds it is never a sharing violation.
+const custodyShareAccess = windows.FILE_SHARE_READ | windows.FILE_SHARE_WRITE | windows.FILE_SHARE_DELETE
+
+// ACE, ACL and descriptor values the x/sys build in use does not name. The
+// custody audit classifies every ACE type it can meet on a file object, so it
+// needs the full set rather than the allowed and denied pair that package
+// declares.
 const (
-	ntDispositionOpen     = 0x00000001
-	ntDispositionCreate   = 0x00000002
-	ntDispositionOpenIf   = 0x00000003
-	ntOptionDirectoryFile = 0x00000001
-	ntOptionNonDirectory  = 0x00000040
-	objDontReparse        = 0x00001000
-	fileDeleteChildAccess = 0x00010000
+	aceAllowedCallback       = 9
+	aceAllowedObject         = 5
+	aceAllowedCallbackObject = 11
+	aceDeniedCallback        = 10
+	aceDeniedObject          = 6
+	aceDeniedCallbackObject  = 12
+	aceSystemAudit           = 2
+	aceSystemAlarm           = 3
+	aceSystemAuditObject     = 7
+	aceSystemAlarmObject     = 8
+	aceSystemMandatoryLabel  = 0x11
+	aceSystemResourceAttr    = 0x12
+	aceSystemTrustLabel      = 0x13
+	aceSystemScopedPolicy    = 0x14
+	aceSystemAccessFilter    = 0x15
+
+	aclRevision               = 2
+	fileAllAccess             = 0x001F01FF
+	descriptorRevision        = 1
+	fileDeleteChildAccess     = 0x00010000
+	renameReplaceIfExistsFlag = 0x00000001
+	renamePosixSemanticsFlag  = 0x00000002
 )
 
 // fileIDInfo has no host type in this x/sys version; the volume serial and the
@@ -71,14 +91,17 @@ func openRegistrationStore(clientPath string) (_ *registrationStore, returnErr e
 		return nil, errors.New("registration credential path is not canonical absolute")
 	}
 	dir := filepath.Dir(clientPath)
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	// Parents of the custody directory are created with the mode the OS
+	// chooses, as the Unix store's MkdirAll does for a path whose parents are
+	// not yet there; only the custody directory itself is created private.
+	if err := os.MkdirAll(filepath.Dir(dir), 0700); err != nil {
 		return nil, err
 	}
-	// The walk opens dir's every component by absolute path and refuses a
-	// reparse point on each, the Windows parity of the Unix component walk
-	// that refuses symlink components; the final handle is the custody
-	// handle every leaf open anchors to through RootDirectory.
-	directory, err := walkCustodyComponents(dir)
+	// The walk descends through each parent's own handle and refuses a reparse
+	// point at every component, the Windows parity of the Unix walk that
+	// refuses symlink components; the final handle is the custody handle every
+	// leaf open anchors to through RootDirectory.
+	directory, err := openCustodyDirectory(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +117,7 @@ func openRegistrationStore(clientPath string) (_ *registrationStore, returnErr e
 	if err := self.check(); err != nil {
 		return nil, err
 	}
-	self.lock, err = self.openLeaf(self.client+".registration.lock", windows.FILE_GENERIC_READ|windows.FILE_GENERIC_WRITE, ntDispositionOpenIf)
+	self.lock, err = self.ensureLeaf(self.client+".registration.lock", custodyLockAccess)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +131,10 @@ func openRegistrationStore(clientPath string) (_ *registrationStore, returnErr e
 // pathname selection. The handle remains tied to that directory identity
 // across reads, writes and retries; check refuses a renamed or replaced
 // visible namespace.
+//
+// The parent comparison is an exact string comparison, so a case or 8.3 short
+// name alias of the owner's directory refuses: the alias names the same
+// directory object, and failing closed there costs nothing.
 func openRegistrationStoreForOwner(clientPath string, owner *registrationStore) (_ *registrationStore, returnErr error) {
 	if owner == nil || owner.directory == nil || owner.lock == nil || !filepath.IsAbs(clientPath) || filepath.Clean(clientPath) != clientPath || filepath.Dir(clientPath) != owner.path {
 		return nil, errors.New("provider client custody differs from its retained directory owner")
@@ -115,8 +142,9 @@ func openRegistrationStoreForOwner(clientPath string, owner *registrationStore) 
 	if err := owner.check(); err != nil {
 		return nil, err
 	}
-	// Refresh from the owner's own handle: the child anchors to that same
-	// live directory without a second pathname selection.
+	// The child duplicates the owner's own handle: the same directory object,
+	// with no second pathname selection and no re-open of the directory by an
+	// empty object name that older NT versions resolve differently.
 	directory, err := selfChildOf(owner.directory)
 	if err != nil {
 		return nil, err
@@ -130,7 +158,7 @@ func openRegistrationStoreForOwner(clientPath string, owner *registrationStore) 
 	if err := self.check(); err != nil {
 		return nil, err
 	}
-	self.lock, err = self.openLeaf(self.client+".registration.lock", windows.FILE_GENERIC_READ|windows.FILE_GENERIC_WRITE, ntDispositionOpenIf)
+	self.lock, err = self.ensureLeaf(self.client+".registration.lock", custodyLockAccess)
 	if err != nil {
 		return nil, err
 	}
@@ -145,21 +173,25 @@ func openRegistrationStoreForOwner(clientPath string, owner *registrationStore) 
 
 // acquireOwnerLock takes the directory-wide exclusive owner lock over the lock
 // handle's first byte without waiting; a lock already held anywhere else in
-// the directory means the active owner keeps its registration custody.
+// the directory means the active owner keeps its registration custody. Every
+// open shares read, write and delete, so a held lock is the only way this call
+// loses: a lock violation alone is a held owner, and any other failure is
+// reported as itself rather than as a busy owner.
 func (self *registrationStore) acquireOwnerLock() error {
 	if err := windows.LockFileEx(windows.Handle(self.lock.Fd()), windows.LOCKFILE_EXCLUSIVE_LOCK|windows.LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, &windows.Overlapped{}); err != nil {
-		return errRegistrationOwnerActive
+		if errors.Is(err, windows.ERROR_LOCK_VIOLATION) {
+			return errRegistrationOwnerActive
+		}
+		return err
 	}
 	return nil
 }
 
-// openLeaf opens one leaf through the directory handle and accepts it only on
-// safe descriptor metadata, then applies the Unix no-symlink parity audit.
-func (self *registrationStore) openLeaf(name string, access uint32, disposition uint32) (*os.File, error) {
-	if name == "" || filepath.Base(name) != name || name == "." || name == ".." {
-		return nil, errors.New("registration leaf is invalid")
-	}
-	file, err := ntOpenRelative(self.directory, name, access, disposition, ntOptionNonDirectory)
+// openLeaf opens one existing leaf through the directory handle and accepts it
+// only on safe descriptor metadata, then applies the Unix no-symlink parity
+// audit.
+func (self *registrationStore) openLeaf(name string, access uint32) (*os.File, error) {
+	file, err := ntOpenRelative(self.directory, name, access, windows.FILE_OPEN, windows.FILE_NON_DIRECTORY_FILE)
 	if err != nil {
 		return nil, err
 	}
@@ -169,16 +201,68 @@ func (self *registrationStore) openLeaf(name string, access uint32, disposition 
 	return file, nil
 }
 
+// createLeaf creates one leaf through the directory handle with the private
+// descriptor, so the leaf inherits nothing from where its directory lives. It
+// does not audit: the caller audits inside its own cleanup scope, so a leaf
+// that fails its audit is still removed.
+func (self *registrationStore) createLeaf(name string, access uint32) (*os.File, error) {
+	if invalidLeaf(name) {
+		return nil, errors.New("registration leaf is invalid")
+	}
+	raw, err := privateCustodyDescriptor()
+	if err != nil {
+		return nil, err
+	}
+	file, createErr := ntOpenRelativeDescriptor(self.directory, name, access, windows.FILE_CREATE, (*windows.SECURITY_DESCRIPTOR)(unsafe.Pointer(&raw[0])))
+	runtime.KeepAlive(raw)
+	return file, createErr
+}
+
+// ensureLeaf opens one leaf, creating it with the private descriptor when it is
+// absent, and audits the result.
+func (self *registrationStore) ensureLeaf(name string, access uint32) (*os.File, error) {
+	if invalidLeaf(name) {
+		return nil, errors.New("registration leaf is invalid")
+	}
+	raw, err := privateCustodyDescriptor()
+	if err != nil {
+		return nil, err
+	}
+	file, openErr := ntOpenRelativeDescriptor(self.directory, name, access, windows.FILE_OPEN_IF, (*windows.SECURITY_DESCRIPTOR)(unsafe.Pointer(&raw[0])))
+	runtime.KeepAlive(raw)
+	if openErr != nil {
+		return nil, openErr
+	}
+	if err := auditLeafCustody(file); err != nil {
+		return nil, errors.Join(err, file.Close())
+	}
+	return file, nil
+}
+
+func invalidLeaf(name string) bool {
+	return name == "" || filepath.Base(name) != name || name == "." || name == ".."
+}
+
 func (self *registrationStore) open(name string, flags int) (*os.File, error) {
 	switch flags {
 	case leafOpenRead:
-		return self.openLeaf(name, windows.FILE_GENERIC_READ, ntDispositionOpen)
-	case leafOpenWriteCreate:
-		return self.openLeaf(name, windows.FILE_GENERIC_WRITE, ntDispositionCreate)
+		return self.openLeaf(name, custodyReadAccess)
 	default:
 		return nil, errors.New("registration leaf open mode is unsupported")
 	}
 }
+
+// The leaf and component masks. A plain generic mask does not include the
+// attribute and security reads that the leaf's own audit and the walk's
+// reparse refusal query, so every mask names them.
+const (
+	custodyReadAccess  = windows.FILE_GENERIC_READ | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE
+	custodyWriteAccess = windows.FILE_GENERIC_WRITE | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE
+	custodyLockAccess  = windows.FILE_GENERIC_READ | windows.FILE_GENERIC_WRITE | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE
+	// custodyTraverseAccess is what a component of the walk asks for: enough to
+	// list and stat it for the reparse refusal, and nothing that writes.
+	custodyTraverseAccess = windows.FILE_LIST_DIRECTORY | windows.FILE_TRAVERSE | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE
+)
 
 // Reopen checks only authenticate namespace identity; operations keep using
 // the original handle even if a path is maliciously changed in between.
@@ -212,16 +296,10 @@ func (self *registrationStore) anchorOf(handle windows.Handle) (custodyAnchor, e
 	return custodyAnchor{volumeSerial: raw.VolumeSerialNumber, fileId: raw.FileId}, nil
 }
 
-// adoptAnchor takes the anchor at custody open: directory identity, ordinary
-// (non reparse) kind, and one private owner.
+// adoptAnchor takes the anchor at custody open: directory identity and one
+// private owner. The reparse refusal happens earlier, on the walk that opened
+// this handle, and on the attributes of the very handle checked here.
 func (self *registrationStore) adoptAnchor() error {
-	var attributes uint32
-	if err := openAttributes(windows.Handle(self.directory.Fd()), &attributes); err != nil {
-		return err
-	}
-	if attributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
-		return errors.New("registration custody directory is a reparse point")
-	}
 	anchor, err := self.anchorOf(windows.Handle(self.directory.Fd()))
 	if err != nil {
 		return err
@@ -273,17 +351,19 @@ func (self *registrationStore) names(maximum int) ([]string, error) {
 	return names, self.check()
 }
 
-// Deletion uses the same owned directory as publication, by marking the leaf's
-// own opened handle for deletion before its close. A missing leaf is already
-// absent; a successful removal is durable before the caller proceeds.
+// Deletion uses the same owned directory as publication: one handle opened
+// through the custody handle, marked for deletion before its close. A leaf that
+// is a symlink is deleted as the link, exactly as unix unlinkat removes it. A
+// missing leaf is already absent; a successful removal is durable before the
+// caller proceeds.
 func (self *registrationStore) remove(name string) error {
-	if name == "" || filepath.Base(name) != name || name == "." || name == ".." {
+	if invalidLeaf(name) {
 		return errors.New("registration removal leaf is invalid")
 	}
 	if err := self.check(); err != nil {
 		return err
 	}
-	file, err := ntOpenRelative(self.directory, name, windows.DELETE|windows.SYNCHRONIZE, ntDispositionOpen, ntOptionNonDirectory)
+	file, err := ntOpenRelative(self.directory, name, windows.DELETE|windows.FILE_READ_ATTRIBUTES|windows.SYNCHRONIZE, windows.FILE_OPEN, windows.FILE_NON_DIRECTORY_FILE)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return self.check()
@@ -300,7 +380,7 @@ func (self *registrationStore) remove(name string) error {
 // Rename publishes complete bytes; a failed directory sync remains an error
 // and never licenses a second operation or a credential before durable handoff.
 func (self *registrationStore) write(name string, raw []byte) (returnErr error) {
-	if name == "" || filepath.Base(name) != name || name == "." || name == ".." || len(raw) == 0 || len(raw) > maximumRegistrationBytes {
+	if invalidLeaf(name) || len(raw) == 0 || len(raw) > maximumRegistrationBytes {
 		return errors.New("registration write exceeds its finite bound")
 	}
 	if err := self.check(); err != nil {
@@ -311,17 +391,29 @@ func (self *registrationStore) write(name string, raw []byte) (returnErr error) 
 		return err
 	}
 	temporary := ".registration-" + hex.EncodeToString(random[:])
-	file, err := self.open(temporary, leafOpenWriteCreate)
+	file, err := self.createLeaf(temporary, custodyWriteAccess)
 	if err != nil {
 		return err
 	}
+	closed := false
+	// The cleanup is registered before the leaf is audited, so a leaf that
+	// fails its own audit is removed rather than left in the directory.
 	defer func() {
+		if !closed {
+			returnErr = errors.Join(returnErr, file.Close())
+		}
 		if returnErr != nil {
 			returnErr = errors.Join(returnErr, self.remove(temporary))
 		}
 	}()
+	if err := auditLeafCustody(file); err != nil {
+		return err
+	}
 	_, writeErr := io.Copy(file, bytes.NewReader(raw))
-	if err := errors.Join(writeErr, file.Sync(), file.Close(), self.check()); err != nil {
+	syncErr := file.Sync()
+	closeErr := file.Close()
+	closed = true
+	if err := errors.Join(writeErr, syncErr, closeErr, self.check()); err != nil {
 		return err
 	}
 	if err := self.renameLeaf(temporary, name); err != nil {
@@ -330,26 +422,24 @@ func (self *registrationStore) write(name string, raw []byte) (returnErr error) 
 	return errors.Join(self.syncDirectory(), self.check())
 }
 
-// renameLeaf publishes one same-directory rename. Publication moves through
-// the pathname because the handle-rooted rename form needs the leaf open
-// across the rename; custody stays descriptor-relative because every leaf
-// operation routes through the directory handle and this rename only
-// completes while the anchored directory identity is still live at the same
-// pathname the walk verified. The delete disposition above keeps every other
-// directory mutation on the handle.
+// renameLeaf publishes one same-directory rename through the custody handle:
+// the source leaf is opened through that handle and the target is named
+// relative to it, so publication is descriptor-relative as on unix and a
+// component swapped in the visible namespace between check() and the rename is
+// never consulted.
 func (self *registrationStore) renameLeaf(from, to string) error {
+	if invalidLeaf(from) || invalidLeaf(to) {
+		return errors.New("registration rename leaf is invalid")
+	}
 	if err := self.check(); err != nil {
 		return err
 	}
-	source, err := windows.UTF16PtrFromString(filepath.Join(self.path, from))
+	leaf, err := ntOpenRelative(self.directory, from, windows.DELETE|windows.FILE_READ_ATTRIBUTES|windows.SYNCHRONIZE, windows.FILE_OPEN, windows.FILE_NON_DIRECTORY_FILE)
 	if err != nil {
 		return err
 	}
-	target, err := windows.UTF16PtrFromString(filepath.Join(self.path, to))
-	if err != nil {
-		return err
-	}
-	if err := windows.MoveFileEx(source, target, windows.MOVEFILE_REPLACE_EXISTING); err != nil {
+	renameErr := renameRelative(leaf, self.directory, to)
+	if err := errors.Join(renameErr, leaf.Close()); err != nil {
 		return err
 	}
 	return self.check()
@@ -384,81 +474,141 @@ func (self *registrationStore) close() error {
 	return err
 }
 
-// openDirectoryNoReparse opens one absolute directory by pathname, refusing a
-// reparse-backed tree, and returns a backup-semantics handle that admits at
-// least one FlushFileBuffers of its own.
-func openDirectoryNoReparse(path string) (*os.File, error) {
-	w, err := windows.UTF16PtrFromString(path)
+// openCustodyRoot opens the volume root that the descending walk starts from.
+// The root of a volume cannot be a reparse point, so it is the one component
+// that needs no attribute refusal of its own.
+func openCustodyRoot(volume string) (*os.File, error) {
+	name, err := windows.UTF16PtrFromString(volume + string(filepath.Separator))
 	if err != nil {
 		return nil, err
 	}
-	handle, err := windows.CreateFile(w, windows.GENERIC_READ|windows.GENERIC_WRITE, windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil, windows.OPEN_EXISTING, windows.FILE_FLAG_BACKUP_SEMANTICS, 0)
+	handle, err := windows.CreateFile(name,
+		windows.FILE_LIST_DIRECTORY|windows.FILE_TRAVERSE|windows.READ_CONTROL|windows.SYNCHRONIZE,
+		custodyShareAccess, nil, windows.OPEN_EXISTING,
+		windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
 	if err != nil {
 		return nil, err
 	}
-	file := os.NewFile(uintptr(handle), path)
-	var attributes uint32
-	if err := openAttributes(handle, &attributes); err != nil {
-		file.Close()
-		return nil, err
-	}
-	if attributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
-		return nil, errors.Join(errors.New("registration custody directory is a reparse point"), file.Close())
-	}
-	return file, nil
+	return os.NewFile(uintptr(handle), volume+string(filepath.Separator)), nil
 }
 
-// walkCustodyComponents opens dir's every component by absolute path, refusing
-// a reparse-backed tree at each step; only the final handle survives.
-func walkCustodyComponents(dir string) (*os.File, error) {
+// openCustodyDirectory walks dir from its volume root one component at a time,
+// opening each through its parent's own handle and refusing a reparse point on
+// the handle that comes back before descending further. That is the Windows
+// form of the Unix Openat(O_NOFOLLOW) chain: a junction or symlink anywhere on
+// the path is refused rather than followed, and every component is named
+// relative to the handle above it instead of by absolute pathname.
+//
+// Intermediate components ask only for traverse, list and read, so a standard
+// account reaches a directory deep in its profile without holding write rights
+// on the volume or on its parents. Only the final custody directory is created
+// if absent, carries the private descriptor, and holds the write access its
+// FlushFileBuffers needs.
+func openCustodyDirectory(dir string) (*os.File, error) {
 	volume := filepath.VolumeName(dir)
+	if volume == "" {
+		return nil, errors.New("registration custody path names no volume")
+	}
 	components := strings.Split(strings.TrimPrefix(strings.TrimPrefix(dir, volume), string(filepath.Separator)), string(filepath.Separator))
-	current, err := openDirectoryNoReparse(volume + string(filepath.Separator))
+	current, err := openCustodyRoot(volume)
 	if err != nil {
 		return nil, err
 	}
-	for _, component := range components {
+	for index, component := range components {
 		if component == "" {
 			continue
 		}
-		next, err := openDirectoryNoReparse(filepath.Join(volume+string(filepath.Separator), component))
+		var next *os.File
+		if index == len(components)-1 {
+			next, err = createCustodyDirectory(current, component)
+		} else {
+			next, err = ntOpenDirectoryRelative(current, component,
+				custodyTraverseAccess,
+				windows.FILE_OPEN, windows.FILE_DIRECTORY_FILE|windows.FILE_SYNCHRONOUS_IO_NONALERT|windows.FILE_OPEN_REPARSE_POINT)
+		}
 		closeErr := current.Close()
 		if err != nil {
 			return nil, errors.Join(err, closeErr)
+		}
+		if closeErr != nil {
+			return nil, errors.Join(closeErr, next.Close())
+		}
+		if err := refuseReparse(next); err != nil {
+			return nil, errors.Join(err, next.Close())
 		}
 		current = next
 	}
 	return current, nil
 }
 
-// selfChildOf opens "." relative to the owner's own custody handle; the child
-// anchors to the same live directory without another pathname selection.
-func selfChildOf(parent *os.File) (*os.File, error) {
-	file, err := ntOpenRelative(parent, ".", windows.GENERIC_READ|windows.GENERIC_WRITE, ntDispositionOpen, ntOptionDirectoryFile|windows.FILE_OPEN_FOR_BACKUP_INTENT)
+// createCustodyDirectory opens or creates the final custody component through
+// its parent's handle with the private descriptor, so a directory this store
+// creates inherits nothing from where it happens to live. An existing one is
+// opened unchanged and audited by the caller, which refuses it unless it is
+// already private.
+func createCustodyDirectory(parent *os.File, name string) (*os.File, error) {
+	descriptor, err := privateCustodyDescriptor()
 	if err != nil {
 		return nil, err
 	}
-	return file, nil
+	return ntOpenObject(parent, name,
+		windows.FILE_GENERIC_READ|windows.FILE_GENERIC_WRITE|windows.SYNCHRONIZE,
+		windows.FILE_OPEN_IF,
+		windows.FILE_DIRECTORY_FILE|windows.FILE_SYNCHRONOUS_IO_NONALERT|windows.FILE_OPEN_REPARSE_POINT,
+		windows.OBJ_CASE_INSENSITIVE|windows.OBJ_DONT_REPARSE, (*windows.SECURITY_DESCRIPTOR)(unsafe.Pointer(&descriptor[0])))
 }
 
-// ntOpenRelative opens one leaf through the parent's own RootDirectory with an
-// object attribute that refuses reparse encounters from this root on. That is
-// the Windows parity of Openat(O_NOFOLLOW), and it keeps every leaf operation
-// bounded by the custody handle rather than by the visible pathname.
-func ntOpenRelative(parent *os.File, name string, access uint32, disposition uint32, options uint32) (*os.File, error) {
+// refuseReparse is the walk's per-component refusal: the handle just opened
+// names a reparse point itself, so the tree beyond it is never entered.
+func refuseReparse(file *os.File) error {
+	var attributes uint32
+	if err := openAttributes(windows.Handle(file.Fd()), &attributes); err != nil {
+		return err
+	}
+	if attributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+		return errors.New("registration custody directory is a reparse point")
+	}
+	return nil
+}
+
+// selfChildOf duplicates the owner's custody handle, so the child store names
+// the same directory object without a second pathname selection. A duplicate
+// is used rather than a re-open of the directory by an empty object name
+// because the duplicate cannot pick a different object on any NT version, and
+// because the child takes its own lock file handle: closing this one releases
+// nothing the owner holds.
+func selfChildOf(parent *os.File) (*os.File, error) {
+	process := windows.CurrentProcess()
+	var duplicate windows.Handle
+	if err := windows.DuplicateHandle(process, windows.Handle(parent.Fd()), process, &duplicate, 0, false, windows.DUPLICATE_SAME_ACCESS); err != nil {
+		return nil, err
+	}
+	return os.NewFile(uintptr(duplicate), parent.Name()), nil
+}
+
+// ntOpenObject opens one object through the parent's own RootDirectory. The
+// attributes decide whether a reparse encounter is refused from this root on
+// (directory descent) or opened as the object it is (leaf operations, which
+// audit the attribute themselves).
+// OBJ_CASE_INSENSITIVE means a leaf name aliases by case, unlike a
+// case-sensitive unix filesystem. Only the owner can write the directory and an
+// alias resolves to the same file, so the exact-string census over these names
+// is unaffected.
+func ntOpenObject(parent *os.File, name string, access uint32, disposition uint32, options uint32, attributes uint32, descriptor *windows.SECURITY_DESCRIPTOR) (*os.File, error) {
 	w, err := windows.NewNTUnicodeString(name)
 	if err != nil {
 		return nil, err
 	}
 	oa := &windows.OBJECT_ATTRIBUTES{
-		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
-		RootDirectory: windows.Handle(parent.Fd()),
-		ObjectName:    w,
-		Attributes:    windows.OBJ_CASE_INSENSITIVE | objDontReparse,
+		Length:             uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
+		RootDirectory:      windows.Handle(parent.Fd()),
+		ObjectName:         w,
+		Attributes:         attributes,
+		SecurityDescriptor: descriptor,
 	}
 	var iosb windows.IO_STATUS_BLOCK
 	var handle windows.Handle
-	status := windows.NtCreateFile(&handle, access, oa, &iosb, nil, windows.FILE_ATTRIBUTE_NORMAL, 0, disposition, options, 0, 0)
+	status := windows.NtCreateFile(&handle, access, oa, &iosb, nil, windows.FILE_ATTRIBUTE_NORMAL, custodyShareAccess, disposition, options|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
 	if status != nil {
 		if nt, ok := status.(windows.NTStatus); ok {
 			return nil, nt.Errno()
@@ -466,6 +616,27 @@ func ntOpenRelative(parent *os.File, name string, access uint32, disposition uin
 		return nil, status
 	}
 	return os.NewFile(uintptr(handle), name), nil
+}
+
+// ntOpenRelative opens one leaf through the custody handle, keeping the leaf
+// itself rather than what it points at, so a symlink leaf is removed as a link
+// and a substituted one is refused by the caller's attribute audit.
+func ntOpenRelative(parent *os.File, name string, access uint32, disposition uint32, options uint32) (*os.File, error) {
+	return ntOpenObject(parent, name, access, disposition, options|windows.FILE_OPEN_REPARSE_POINT, windows.OBJ_CASE_INSENSITIVE, nil)
+}
+
+// ntOpenRelativeDescriptor is the creating form: a leaf this store creates
+// carries the private descriptor, so it inherits nothing from its directory.
+func ntOpenRelativeDescriptor(parent *os.File, name string, access uint32, disposition uint32, descriptor *windows.SECURITY_DESCRIPTOR) (*os.File, error) {
+	return ntOpenObject(parent, name, access, disposition, windows.FILE_NON_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT, windows.OBJ_CASE_INSENSITIVE, descriptor)
+}
+
+// ntOpenDirectoryRelative descends one directory component and refuses to
+// traverse a reparse point. OBJ_DONT_REPARSE needs Windows 10 1709 or later; an
+// older host fails the open, which refuses custody rather than following a
+// junction.
+func ntOpenDirectoryRelative(parent *os.File, name string, access uint32, disposition uint32, options uint32) (*os.File, error) {
+	return ntOpenObject(parent, name, access, disposition, options, windows.OBJ_CASE_INSENSITIVE|windows.OBJ_DONT_REPARSE, nil)
 }
 
 func openAttributes(handle windows.Handle, attributes *uint32) error {
@@ -501,12 +672,81 @@ func lastWriteNanos(handle windows.Handle) (int64, error) {
 }
 
 // markDeleteDisposition marks an open leaf's handle for deletion; its close
-// completes the removal without walking a pathname.
+// completes the removal without walking a pathname. The class is the Win32
+// FILE_INFO_BY_HANDLE_CLASS value that SetFileInformationByHandle takes, not
+// the NT FILE_INFORMATION_CLASS value NtSetInformationFile takes.
 func markDeleteDisposition(file *os.File) error {
-	var info struct{ DeleteFile uint32 }
+	var info struct{ DeleteFile uint8 }
 	info.DeleteFile = 1
+	return windows.SetFileInformationByHandle(windows.Handle(file.Fd()), windows.FileDispositionInfo, (*byte)(unsafe.Pointer(&info)), uint32(unsafe.Sizeof(info)))
+}
+
+// fileRenameInfoEx is the FILE_RENAME_INFO layout of the extended class: the
+// target name is relative to RootDirectory, and the flags carry the replace and
+// open-target semantics the plain class has no room for.
+type fileRenameInfoEx struct {
+	flags          uint32
+	rootDirectory  windows.Handle
+	fileNameLength uint32
+	fileName       [1]uint16
+}
+
+// fileRenameInfo is the same layout without the flags word, which is the class
+// Windows before 10 1607 understands.
+type fileRenameInfo struct {
+	replaceIfExists uint8
+	rootDirectory   windows.Handle
+	fileNameLength  uint32
+	fileName        [1]uint16
+}
+
+// NT information classes for the two rename forms. The extended class carries
+// the replace and open-target semantics; the plain class is what Windows before
+// 10 1607 understands.
+const (
+	ntFileRenameInformation   = 10
+	ntFileRenameInformationEx = 65
+)
+
+// renameRelative renames an open leaf to a name relative to the custody
+// handle, so the target is bound to that handle's directory object rather than
+// to any pathname. The extended class is asked first; a host that does not know
+// it gets the plain class, which is equally handle-rooted and only lacks the
+// POSIX replace flags.
+//
+// The call goes through NtSetInformationFile rather than
+// SetFileInformationByHandle because kernel32's FileRenameInfoEx path answers
+// ERROR_INVALID_PARAMETER for this exact buffer on a current Windows host,
+// where the NT class performs the same rename. Both are handle-rooted, so the
+// publication stays descriptor-relative either way.
+func renameRelative(leaf *os.File, parent *os.File, name string) error {
+	units, err := windows.UTF16FromString(name)
+	if err != nil {
+		return err
+	}
+	nameBytes := (len(units) - 1) * 2
+	// the two layouts share one header size and one name offset
+	const header = 20
+	buffer := make([]byte, header+nameBytes)
+	info := (*fileRenameInfoEx)(unsafe.Pointer(&buffer[0]))
+	info.flags = renameReplaceIfExistsFlag | renamePosixSemanticsFlag
+	info.rootDirectory = windows.Handle(parent.Fd())
+	info.fileNameLength = uint32(nameBytes)
+	copy(buffer[header:], unsafe.Slice((*byte)(unsafe.Pointer(&units[0])), len(units)*2))
 	iosb := &windows.IO_STATUS_BLOCK{}
-	return windows.NtSetInformationFile(windows.Handle(file.Fd()), iosb, (*byte)(unsafe.Pointer(&info)), uint32(unsafe.Sizeof(info)), windows.FileDispositionInfo)
+	err = windows.NtSetInformationFile(windows.Handle(leaf.Fd()), iosb, &buffer[0], uint32(len(buffer)), ntFileRenameInformationEx)
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, windows.STATUS_INVALID_PARAMETER) && !errors.Is(err, windows.STATUS_NOT_SUPPORTED) {
+		return err
+	}
+	// the plain class reads the first word as ReplaceIfExists alone
+	buffer[0], buffer[1], buffer[2], buffer[3] = 1, 0, 0, 0
+	plain := (*fileRenameInfo)(unsafe.Pointer(&buffer[0]))
+	plain.rootDirectory = windows.Handle(parent.Fd())
+	plain.fileNameLength = uint32(nameBytes)
+	return windows.NtSetInformationFile(windows.Handle(leaf.Fd()), iosb, &buffer[0], uint32(len(buffer)), ntFileRenameInformation)
 }
 
 // auditLeafCustody is the Windows parity of the Unix leaf stat bound: a
@@ -529,10 +769,12 @@ func auditLeafCustody(file *os.File) error {
 	return nil
 }
 
-// auditPrivateOwnership refuses an owner that is not the process account and
-// any allowlist ACE granting the audited data access to a SID outside
-// {owner account, SYSTEM, Administrators}. wholeDirectory audits writes only,
-// the Mode&0022 parity; leaves audit reads and writes, the 0600 parity.
+// auditPrivateOwnership refuses an owner outside the custody accounts and any
+// allowlist ACE granting the audited data access to a SID outside {owner
+// account, SYSTEM, Administrators}. wholeDirectory audits writes and the add
+// and delete-child rights, the Unix Mode&0022 bound; leaves audit reads,
+// writes, delete and the two rights that confer further access, the 0600
+// bound.
 func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal error) error {
 	self, err := custodySelfSid()
 	if err != nil {
@@ -546,15 +788,17 @@ func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal e
 	if err != nil {
 		return err
 	}
-	if owner == nil || !windows.EqualSid(owner, self) {
+	if owner == nil || !custodyOwnerAcceptable(owner, self) {
 		return refusal
 	}
 	dacl, _, err := sd.DACL()
 	if err != nil {
 		return err
 	}
+	// A descriptor whose DACL pointer is nil carries a NULL DACL, which grants
+	// every account full access: the Unix 0777 case, refused here too.
 	if dacl == nil {
-		return nil
+		return refusal
 	}
 	for index := uint32(0); index < uint32(dacl.AceCount); index++ {
 		var ace *windows.ACCESS_ALLOWED_ACE
@@ -562,33 +806,147 @@ func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal e
 			return err
 		}
 		if ace == nil {
+			return refusal
+		}
+		granted, err := custodyAceGrant(ace, wholeDirectory)
+		if err != nil {
+			return errors.Join(refusal, err)
+		}
+		if granted == 0 {
 			continue
 		}
-		const leafAuditMask = windows.FILE_READ_DATA | windows.FILE_WRITE_DATA | windows.FILE_APPEND_DATA
-		const directoryAuditMask = windows.FILE_WRITE_DATA | windows.FILE_APPEND_DATA | fileDeleteChildAccess
-		granted := uint32(ace.Mask) & directoryAuditMask
-		if !wholeDirectory {
-			granted = uint32(ace.Mask) & leafAuditMask
+		if custodySidOutside((*windows.SID)(unsafe.Pointer(&ace.SidStart)), self) {
+			return refusal
 		}
-		if granted == 0 || !custodySidOutside((*windows.SID)(unsafe.Pointer(&ace.SidStart)), self) {
-			continue
-		}
-		return refusal
 	}
 	return nil
+}
+
+// custodyAceGrant classifies one ACE by its own header before anything is read
+// as a grant: only an allowed ACE confers access, an inherit-only entry does
+// not apply to this object, and an ACE whose layout is not an allowed ACE's is
+// never read as one.
+func custodyAceGrant(ace *windows.ACCESS_ALLOWED_ACE, wholeDirectory bool) (uint32, error) {
+	if ace.Header.AceFlags&windows.INHERIT_ONLY_ACE != 0 {
+		return 0, nil
+	}
+	var mask uint32
+	switch ace.Header.AceType {
+	case windows.ACCESS_ALLOWED_ACE_TYPE, aceAllowedCallback:
+		mask = uint32(ace.Mask)
+	case windows.ACCESS_DENIED_ACE_TYPE, aceDeniedCallback, aceDeniedObject, aceDeniedCallbackObject,
+		aceSystemAudit, aceSystemAlarm, aceSystemAuditObject, aceSystemAlarmObject,
+		aceSystemMandatoryLabel, aceSystemResourceAttr, aceSystemTrustLabel, aceSystemScopedPolicy, aceSystemAccessFilter:
+		// a denial or a system entry confers nothing on a foreign account
+		return 0, nil
+	case aceAllowedObject, aceAllowedCallbackObject:
+		return 0, errors.New("registration custody DACL has an object ACE it cannot audit")
+	default:
+		return 0, errors.New("registration custody DACL has an unknown ACE type")
+	}
+	return maskThroughGenerics(mask) & custodyAuditMask(wholeDirectory), nil
+}
+
+// maskThroughGenerics maps the generic rights an explicit ACE may carry to the
+// file rights the access check would grant from them.
+func maskThroughGenerics(mask uint32) uint32 {
+	if mask&windows.GENERIC_ALL != 0 {
+		mask |= fileAllAccess
+	}
+	if mask&windows.GENERIC_READ != 0 {
+		mask |= windows.FILE_GENERIC_READ
+	}
+	if mask&windows.GENERIC_WRITE != 0 {
+		mask |= windows.FILE_GENERIC_WRITE
+	}
+	if mask&windows.GENERIC_EXECUTE != 0 {
+		mask |= windows.FILE_GENERIC_EXECUTE
+	}
+	return mask
+}
+
+// custodyAuditMask selects the rights no foreign account may hold: data read
+// and write, delete, and the two rights that would let the holder grant
+// themselves the rest.
+func custodyAuditMask(wholeDirectory bool) uint32 {
+	conferring := uint32(windows.DELETE | windows.WRITE_DAC | windows.WRITE_OWNER | windows.MAXIMUM_ALLOWED)
+	if wholeDirectory {
+		return uint32(windows.FILE_WRITE_DATA|windows.FILE_APPEND_DATA|fileDeleteChildAccess) | conferring
+	}
+	return uint32(windows.FILE_READ_DATA|windows.FILE_WRITE_DATA|windows.FILE_APPEND_DATA) | conferring
+}
+
+// privateCustodyDescriptor builds the self-relative descriptor every custody
+// object is created with: the process account as owner, and a protected DACL
+// granting full control to that account, SYSTEM and Administrators only. A
+// protected DACL inherits nothing from its parent, so a custody directory
+// under a shared temporary tree is as private as one under the profile, and
+// the owner is named explicitly rather than defaulted from the token.
+func privateCustodyDescriptor() ([]byte, error) {
+	self, err := custodySelfSid()
+	if err != nil {
+		return nil, err
+	}
+	acl := privateCustodyACL([]*windows.SID{self, custodyAccounts.systemSid, custodyAccounts.administrators})
+	owner := custordSidBytes(self)
+	ownerOffset := uint32(20)
+	daclOffset := ownerOffset + uint32(len(owner))
+	raw := make([]byte, int(daclOffset)+len(acl))
+	raw[0] = descriptorRevision
+	binary.LittleEndian.PutUint16(raw[2:], uint16(windows.SE_SELF_RELATIVE|windows.SE_DACL_PRESENT|windows.SE_DACL_PROTECTED))
+	binary.LittleEndian.PutUint32(raw[4:], ownerOffset)
+	binary.LittleEndian.PutUint32(raw[16:], daclOffset)
+	copy(raw[ownerOffset:], owner)
+	copy(raw[daclOffset:], acl)
+	return raw, nil
+}
+
+// privateCustodyACL builds one allowed-ACE ACL with full control for each
+// account, in the order given.
+func privateCustodyACL(accounts []*windows.SID) []byte {
+	size := 8
+	for _, account := range accounts {
+		size += aclAlignment(len(custordSidBytes(account)) + 8)
+	}
+	acl := make([]byte, size)
+	acl[0] = aclRevision
+	binary.LittleEndian.PutUint16(acl[2:], uint16(size))
+	binary.LittleEndian.PutUint16(acl[4:], uint16(len(accounts)))
+	at := 8
+	for _, account := range accounts {
+		sid := custordSidBytes(account)
+		entry := aclAlignment(len(sid) + 8)
+		acl[at] = byte(windows.ACCESS_ALLOWED_ACE_TYPE)
+		binary.LittleEndian.PutUint16(acl[at+2:], uint16(entry))
+		binary.LittleEndian.PutUint32(acl[at+4:], fileAllAccess)
+		copy(acl[at+8:], sid)
+		at += entry
+	}
+	return acl
+}
+
+func aclAlignment(size int) int { return (size + 3) &^ 3 }
+
+// custordSidBytes views a SID's own storage; a SID is one contiguous
+// revision, authority and subauthority block of GetLengthSid bytes.
+func custordSidBytes(sid *windows.SID) []byte {
+	length := int(windows.GetLengthSid(sid))
+	return (*[256]byte)(unsafe.Pointer(sid))[:length:length]
 }
 
 var custodyAccounts struct {
 	once           sync.Once
 	processSid     *windows.SID
+	defaultOwner   *windows.SID
 	systemSid      *windows.SID
 	administrators *windows.SID
 	ready          bool
 }
 
-// custodySelfSid resolves the process token's user account once; the two
-// known-system integrity accounts resolve beside it as the custody allowlist.
-// A failed resolution keeps custody refusing rather than loosening.
+// custodySelfSid resolves the process token's user account once; the token's
+// default owner and the two known-system accounts resolve beside it as the
+// custody allowlist. A failed resolution keeps custody refusing rather than
+// loosening.
 func custodySelfSid() (*windows.SID, error) {
 	custodyAccounts.once.Do(loadCustodyAccounts)
 	if !custodyAccounts.ready || custodyAccounts.processSid == nil {
@@ -602,15 +960,47 @@ func loadCustodyAccounts() {
 	if user, err := token.GetTokenUser(); err == nil && user.User.Sid != nil {
 		custodyAccounts.processSid = user.User.Sid
 	}
+	custodyAccounts.defaultOwner = tokenDefaultOwner(token)
 	custodyAccounts.systemSid, _ = windows.CreateWellKnownSid(windows.WinLocalSystemSid)
 	custodyAccounts.administrators, _ = windows.CreateWellKnownSid(windows.WinBuiltinAdministratorsSid)
 	custodyAccounts.ready = custodyAccounts.processSid != nil && custodyAccounts.systemSid != nil && custodyAccounts.administrators != nil
+}
+
+// custodyTokenOwner is the TOKEN_OWNER layout: one SID pointer into the query
+// buffer.
+type custodyTokenOwner struct {
+	Owner *windows.SID
+}
+
+// tokenDefaultOwner answers the token's default owner, which is who owns what
+// an elevated administrator's process creates when no owner is named.
+func tokenDefaultOwner(token windows.Token) *windows.SID {
+	var buffer [128]byte
+	var returned uint32
+	if err := windows.GetTokenInformation(token, uint32(windows.TokenOwner), &buffer[0], uint32(len(buffer)), &returned); err != nil {
+		return nil
+	}
+	return (*custodyTokenOwner)(unsafe.Pointer(&buffer[0])).Owner
+}
+
+// custodyOwnerAcceptable accepts the two owners a private custody object can
+// legitimately carry: the process account itself, and the token's default
+// owner. Any other owner is refused, so a directory planted by another account
+// never becomes custody.
+func custodyOwnerAcceptable(owner *windows.SID, self *windows.SID) bool {
+	if windows.EqualSid(owner, self) {
+		return true
+	}
+	return custodyAccounts.defaultOwner != nil && windows.EqualSid(owner, custodyAccounts.defaultOwner)
 }
 
 // custodySidOutside reports whether an ACE's SID is nobody's account this
 // custody lets in: only the owner account, SYSTEM and Administrators.
 func custodySidOutside(sid *windows.SID, self *windows.SID) bool {
 	if windows.EqualSid(sid, self) {
+		return false
+	}
+	if custodyAccounts.defaultOwner != nil && windows.EqualSid(sid, custodyAccounts.defaultOwner) {
 		return false
 	}
 	if custodyAccounts.systemSid != nil && windows.EqualSid(sid, custodyAccounts.systemSid) {

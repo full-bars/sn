@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -93,8 +94,12 @@ func TestLoadOrCreateClientJwtBootstrapsAndPersists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := info.Mode().Perm(); got != 0600 {
-		t.Fatalf("client JWT mode = %o, want 600", got)
+	// Windows carries no permission bits: a file there reports 0666 whatever was
+	// asked for, so privacy comes from the descriptor audit, not from this check.
+	if runtime.GOOS != "windows" {
+		if got := info.Mode().Perm(); got != 0600 {
+			t.Fatalf("client JWT mode = %o, want 600", got)
+		}
 	}
 }
 

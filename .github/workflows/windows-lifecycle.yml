@@ -303,6 +303,18 @@ jobs:
   # --------------------------------------------------------------------------
   windows-durable-registration:
     name: miner durable registration (provide --allow-client-registration)
+    # A pull request from a fork has neither GAUNTLET_USER nor GAUNTLET_PW, so
+    # the mint below would fail for a reason that is not the change's: the round
+    # is an integration check and is skipped there. The custody contract itself
+    # is gated by the unit tests in the step below, which need no secret.
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
+    # One disposable account credential, one mint at a time. The group is shared
+    # with tool-functional-smoke, whose header documents that concurrent mints
+    # with the same credential collide and one of them reports an authentication
+    # failure that is not a code failure.
+    concurrency:
+      group: gauntlet-account-mint
+      cancel-in-progress: false
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -329,6 +341,18 @@ jobs:
             if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
             else echo "Build failed after 3 attempts"; exit 1; fi
           done
+
+      - name: Windows custody unit tests
+        # The custody claim is gated here, deterministically and with no
+        # secret: the store opens, publishes, reads, removes and locks a real
+        # private directory on this runner, and refuses a junction component, a
+        # NULL DACL and a DACL that grants a foreign account. The registration
+        # round below is the integration check on top of it, so a server-side
+        # refusal or rate limit cannot read as a custody failure.
+        shell: bash
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: go test ./clientauth/ -count=1 -v
 
       - name: Mint the disposable CI JWT (refuses the production account)
         env:

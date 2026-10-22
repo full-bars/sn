@@ -29,6 +29,11 @@ concurrency:
 
 jobs:
   native-functional-smoke:
+    # This job mints with GAUNTLET_USER, and so does the Windows durable
+    # registration round: one mint at a time across both workflows.
+    concurrency:
+      group: gauntlet-account-mint
+      cancel-in-progress: false
     name: native functional smoke
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -157,6 +162,11 @@ jobs:
         if: always()
 
   docker-provider-functional:
+    # This job mints with GAUNTLET_USER, and so does the Windows durable
+    # registration round: one mint at a time across both workflows.
+    concurrency:
+      group: gauntlet-account-mint
+      cancel-in-progress: false
     name: docker-provider functional smoke
     runs-on: ubuntu-latest
     timeout-minutes: 30

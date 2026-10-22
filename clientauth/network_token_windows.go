@@ -139,20 +139,29 @@ func RenewNetworkToken(path string, previous string, renewed string) (_ bool, re
 		return false, err
 	}
 	temporary := networkRenewalLeftoverPrefix(name) + hex.EncodeToString(random[:])
-	file, err := store.open(temporary, leafOpenWriteCreate)
+	file, err := store.createLeaf(temporary, custodyWriteAccess)
 	if err != nil {
 		return false, err
 	}
 	cleanup := true
+	closed := false
 	defer func() {
+		if !closed {
+			returnErr = errors.Join(returnErr, file.Close())
+		}
 		if cleanup {
 			returnErr = errors.Join(returnErr, store.remove(temporary))
 		}
 	}()
+	if err := auditLeafCustody(file); err != nil {
+		return false, err
+	}
 	_, writeErr := io.WriteString(file, renewed)
 	syncErr := file.Sync()
 	writeTime, statErr := lastWriteNanos(windows.Handle(file.Fd()))
-	if err := errors.Join(writeErr, syncErr, statErr, file.Close()); err != nil {
+	closeErr := file.Close()
+	closed = true
+	if err := errors.Join(writeErr, syncErr, statErr, closeErr); err != nil {
 		return false, err
 	}
 	if hook := networkRenewalTestHooks.afterTemporary; hook != nil && hook() {
