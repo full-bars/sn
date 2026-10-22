@@ -10,6 +10,12 @@ Legend: **[redeploy]** needs the built artifact redeployed. **[installer]** need
 
 - **`docker stop` now reaches the supervisor and the miner** **[redeploy]** (<https://github.com/full-bars/sn/pull/126>, <https://github.com/full-bars/sn/pull/131>). The supervisor shell and the miner entrypoint were both PID 1 with no SIGTERM action, so a stop was ignored until Docker SIGKILLed the container at the grace timeout and the shutdown path was skipped. Both now forward the signal. The updater picks this platform's tarball.
 - **The miner reads the response cap from the strategy settings** **[redeploy]** (<https://github.com/full-bars/sn/pull/135>). `setSwarmMemberWallet` used a constant that is a snapshot of a default. When the library raised its default, this path kept the old 2 MiB cap and large provider responses failed with short reads.
+- **A stop during `provide` no longer re-authenticates** **[redeploy]**. A stop that landed while provide ran fell through to the next iteration and began re-auth. The flag is checked again before the exit code is read.
+- **A clean stop is no longer reported as 143** **[redeploy]**. A stop interrupts wait with 143, and the retry that reaps the real status only assigned on failure, so a clean shutdown looked like a signal death. A successful wait resets the status.
+
+## Windows
+
+- **Registration custody holds up on a real install** **[redeploy]** (<https://github.com/full-bars/sn/pull/128>). The first cut could not register at all: the component walk joined the volume root with one component instead of descending through the parent handle, so every real state directory failed at its first multi-level path, and it opened each component for write where a standard account has none. Children created in the custody directory now inherit the access the store grants, the audit honours a read-only leaf instead of masking every entry with the directory mask, a contended rename retries, and a refusal names the repair that fits: a setowner for a foreign owner, a remove for an explicit foreign entry, a re-grant only when a re-grant can help.
 
 ## Observability
 
