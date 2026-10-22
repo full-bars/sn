@@ -90,8 +90,11 @@ func TestLauncherSeedsTheReloaderWithTheLaunchedList(t *testing.T) {
 // The configured count feeds the systemd status line, so it has to be the
 // trimmed count or the box reports more proxies configured than it will run.
 func TestLauncherReportsTheTrimmedConfiguredCount(t *testing.T) {
-	if !launcherBody(t).hasCallWithFirstArg("setConfiguredProxyCount", "trimmedConfiguredCount(") {
-		t.Error("provideLauncherLoop() does not set the trimmed configured count; the status " +
+	// The launcher records the selection instead of calling the setter itself:
+	// noteTrimSelection stores the same trimmed count (pinned by
+	// TestNoteTrimSelection*) and also records what status needs.
+	if !launcherBody(t).hasCallWithFirstArg("noteTrimSelection", "") {
+		t.Error("provideLauncherLoop() does not record the trim selection; the status " +
 			"line would report the full desired count while a trim cap holds the pool lower")
 	}
 }

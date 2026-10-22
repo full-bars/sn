@@ -34,6 +34,11 @@ func TestNoteTrimSelectionRecordsDesiredAndCap(t *testing.T) {
 	if desired != 1200 || cap != 500 || source != trimCapOperator {
 		t.Fatalf("got desired=%d cap=%d source=%q, want 1200/500/%q", desired, cap, source, trimCapOperator)
 	}
+	// The systemd status line must keep reporting the trimmed count, not the
+	// full desired pool.
+	if got := configuredProxyCount(); got != 500 {
+		t.Fatalf("configured proxy count = %d, want the trimmed 500", got)
+	}
 }
 
 func TestNoteTrimSelectionClampsCapToDesired(t *testing.T) {
@@ -42,6 +47,9 @@ func TestNoteTrimSelectionClampsCapToDesired(t *testing.T) {
 
 	if _, cap, _, _ := currentTrimSelection(); cap != 300 {
 		t.Fatalf("cap = %d, want it clamped to the 300 configured", cap)
+	}
+	if got := configuredProxyCount(); got != 300 {
+		t.Fatalf("configured proxy count = %d, want 300", got)
 	}
 }
 
