@@ -1,0 +1,35 @@
+# Next release: draft (sn)
+
+**Status:** draft. Nothing is tagged or pushed. Base tag `v2026.10.21-1078274420`. Head: `main` after PR 135.
+**Tag at the cut:** sn tags are `vYYYY.MM.DD-<build>`. Rename this file to `releases/<tag>.md` at the cut.
+**Sourcing:** condensed from the merge commits and PR bodies in this window. Not re-verified line by line.
+
+Legend: **[redeploy]** needs the built artifact redeployed. **[installer]** needs the installer or unit refresh. **[no redeploy]** docs, CI or tests only.
+
+## Reliability
+
+- **`docker stop` now reaches the supervisor and the miner** **[redeploy]** (<https://github.com/full-bars/sn/pull/126>, <https://github.com/full-bars/sn/pull/131>). The supervisor shell and the miner entrypoint were both PID 1 with no SIGTERM action, so a stop was ignored until Docker SIGKILLed the container at the grace timeout and the shutdown path was skipped. Both now forward the signal. The updater picks this platform's tarball.
+- **The miner reads the response cap from the strategy settings** **[redeploy]** (<https://github.com/full-bars/sn/pull/135>). `setSwarmMemberWallet` used a constant that is a snapshot of a default. When the library raised its default, this path kept the old 2 MiB cap and large provider responses failed with short reads.
+
+## Observability
+
+- **PQE handshake stages and negotiated curves** **[redeploy]** (<https://github.com/full-bars/sn/pull/132>). The counters here were stubs: the total returned zeros because the pinned library had no tracker, so the `[pqe]` line and the session metrics never emitted at all. The pinned library now has the tracker. The line reports attempts, tls_ok, verified and identity_failed, plus a per-curve histogram, and `/metrics` carries `urnet_sessions_handshake_total{stage=...}` and `urnet_sessions_curve_total{curve=...}`.
+- **Lifetime counters survive a proxy exit** **[redeploy]** (<https://github.com/full-bars/sn/pull/133>). A manager was dropped when its proxy exited, so a `_total` could decrease and `rate()` read it as a reset. The counts fold into a provider-wide accumulator first, read under the registry lock so an exit is not counted twice.
+
+## Documentation
+
+- **Two Bittensor claims are corrected** **[no redeploy]** (<https://github.com/full-bars/sn/pull/134>). The signed challenge quotes the message, because an unquoted copy breaks verification. The stopped-daemon answer now says unsigned v1 claims still expire. The claim-daemon and consent wording already differed here and needed no change.
+
+## Deploy notes
+
+- **The provider needs a redeploy.** The counters, the stop handling and the response cap are all in the built artifact.
+- **The sn build needs the sn version symbol.** A build that copies the 3.23-fix flag line prints a version and still fails the stamp gate. Use `-X github.com/urfoundation/sn/provider.VersionStamp=URNET_VERSION_STAMP=<version>`.
+- **No installer change is required.** Unit files and the install flow are unchanged in this window.
+
+## Caveats
+
+- The stop fix is proven by a unit test and by the shakedown, not by a live fleet stop.
+- The curve histogram covers sessions that terminate on this node.
+- The session metrics depend on the pinned library version. A build pinned to an older commit reports nothing, and `Measured` stays false.
+
+**Full Changelog**: filled at the cut, from the base tag to the new tag.
