@@ -336,7 +336,7 @@ docker exec -it <container> urnet-tools summary
 
 ## ♻️ Hot-Restart
 
-Client JWTs are reused across restarts by default. The write path and the read path both persist JWTs, so a container restart keeps existing client identities.
+Client JWTs are reused across restarts by default. The write path and the read path both persist JWTs, so a container restart keeps existing client identities. What is stored, how to inspect it, and what mints a new identity: [Hot-Restart.md](Hot-Restart.md).
 
 **Disabling:**
 
