@@ -37,6 +37,93 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
+# === Stop Forwarding ===
+# Same helpers as full-bars/urnetwork-3.23-fix docker/scripts/provider_common.sh,
+# kept inline because this tree has no shared provider_common.sh (each start_*.sh
+# is standalone). `docker stop` signals PID 1, which is this shell; with no
+# default action for SIGTERM the provider never hears it and Docker SIGKILLs
+# the container after the timeout, skipping the provider's clean shutdown.
+PROVIDER_CHILD_PID=""
+PROVIDER_STOPPING=0
+
+func_forward_stop() {
+    PROVIDER_STOPPING=1
+    if [ -n "$PROVIDER_CHILD_PID" ]; then
+        kill -TERM "$PROVIDER_CHILD_PID" 2>/dev/null || true
+    fi
+    # a hotswap successor is not this shell's child; skip the tracked child
+    # (already signalled above) so the provider sees exactly one TERM
+    for _successor in $(pgrep -f "^$APP_DIR/urnetwork_[^ ]* (auth-)?provide" 2>/dev/null); do
+        [ "$_successor" = "$PROVIDER_CHILD_PID" ] || kill -TERM "$_successor" 2>/dev/null || true
+    done
+}
+
+func_install_stop_trap() {
+    trap func_forward_stop TERM INT
+}
+
+func_exit_if_stopping() {
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        # a hotswap successor is not our child, so wait cannot reap it; poll
+        # (bounded below Docker's 10s stop timeout) so PID 1 does not exit
+        # and SIGKILL the successor in the middle of its graceful shutdown
+        _stop_i=0
+        while [ "$_stop_i" -lt 8 ] \
+            && pgrep -f "^$APP_DIR/urnetwork_[^ ]* (auth-)?provide" >/dev/null 2>&1; do
+            sleep 1
+            _stop_i=$((_stop_i+1))
+        done
+        log "[INFO] Stop requested; supervisor exiting."
+        exit 0
+    fi
+}
+
+# func_sleep is the interruptible supervisor sleep. busybox ash defers a
+# trapped signal until the foreground command returns, so a bare foreground
+# `sleep N` swallows a `docker stop` for its whole duration and Docker
+# SIGKILLs the container; backgrounding the sleep lets the trap run. The
+# wait keeps the elapsed time, and every sleep doubles as a stopping
+# checkpoint. Both the entry and the post-spawn flag checks matter: a trap
+# consumed at a command boundary between them leaves the flag set with no
+# pending signal, and the sleep would otherwise run to its full duration.
+func_sleep() {
+    func_exit_if_stopping
+    sleep "$1" &
+    _sleep_pid=$!
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        kill "$_sleep_pid" 2>/dev/null || true
+    fi
+    wait "$_sleep_pid" || true
+    func_exit_if_stopping
+}
+
+# func_run_provider runs the provider in the background so the stop trap can
+# fire while it runs, and sets code to its exit status. `|| code=$?` keeps
+# the run alive under set -e for a crashed provider or a wait interrupted by
+# the TERM trap (status 143): a bare failing wait would abort the supervisor
+# instead of handling the exit. wait repeats until the provider has really
+# exited, so a graceful shutdown is never cut short.
+func_run_provider() {
+    "$@" &
+    PROVIDER_CHILD_PID=$!
+    # a TERM that landed between the loop's stopping check and this spawn
+    # left the stop flag set with nobody to signal; forward now, otherwise
+    # wait would outlive the stop request while the fresh provider runs on
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        func_forward_stop
+    fi
+    code=0
+    while :; do
+        wait "$PROVIDER_CHILD_PID" || code=$?
+        kill -0 "$PROVIDER_CHILD_PID" 2>/dev/null || break
+    done
+    PROVIDER_CHILD_PID=""
+    if [ "$PROVIDER_STOPPING" -eq 1 ]; then
+        log "[INFO] Stop requested; UrNetwork exited (code=$code)."
+        func_exit_if_stopping
+    fi
+}
+
 # === Directory Validation ===
 func_check_dir() {
     [ -d "$APP_DIR" ] || {
@@ -87,14 +174,10 @@ func_get_architecture() {
 }
 
 # === Release Asset Selection ===
-# Releases ship per-arch tarballs (urnetwork-provider-vX-linux-amd64.tar.gz,
-# ...-darwin-amd64.tar.gz, ...) PLUS a multi-arch fat tarball
-# (urnetwork-provider-vX.tar.gz) that contains linux/<arch>/provider for
-# every arch. darwin/windows assets sort first, so a blind head -n1 on
-# "any provider tarball" grabs a darwin binary (and GitHub's release JSON
-# is a single line, so naive line-grepping grabs the last token of the
-# whole body instead of any URL). Uses grep -oE, which works for both
-# one-line and pretty-printed JSON.
+# Tarball pickers live in update_verify.sh (upd_pick_arch_tarball_name /
+# upd_pick_fat_tarball_name); start_nightly.sh and start_update.sh share
+# them, so the per-arch OS token list and the first/linux preference can
+# never drift between the nightly updater and the image-side updater.
 # === Custom Network Selection ===
 # UR_API_URL / UR_CONNECT_URL let operators point the provider at a
 # custom API + connect backend without a custom-built binary, using
@@ -235,14 +318,15 @@ func_check_update() {
     ASSET_NAME=""
     DOWNLOAD_URL=""
     if command -v jq >/dev/null 2>&1 && [ -n "$RELEASE_JSON" ]; then
-        ASSET_NAME="$(printf '%s\n' "$RELEASE_JSON" \
-          | jq -r --arg arch "$A_SYS_ARCH" '
-              .assets[] | .name |
-              select((startswith("urnetwork-provider-")) and (endswith(".tar.gz")) and
-                     (contains("linux-" + $arch) or
-                      ((test("-darwin-|-linux-|-windows-")) | not)))
-            ' 2>/dev/null \
-          | head -n1)"
+        # Preference 1: per-arch tarball for this container (~11MB vs ~84MB).
+        # Preference 2: the multi-arch fat tarball (no OS token in the name);
+        # the extract step below can still pull linux/${A_SYS_ARCH}/provider
+        # from it. The pickers live in update_verify.sh so start_update.sh
+        # shares the exact same per-arch OS list; the freebsd-amd64 tarball
+        # slipped through the old inline filter (which only knew
+        # darwin/linux/windows) and the nightly would install it.
+        ASSET_NAME="$(upd_pick_arch_tarball_name "$RELEASE_JSON" "$A_SYS_ARCH")"
+        [ -n "$ASSET_NAME" ] || ASSET_NAME="$(upd_pick_fat_tarball_name "$RELEASE_JSON")"
         if [ -n "$ASSET_NAME" ]; then
             DOWNLOAD_URL="$(printf '%s\n' "$RELEASE_JSON" \
               | jq -r --arg f "$ASSET_NAME" '.assets[] | select(.name == $f) | .browser_download_url' 2>/dev/null)"
@@ -265,7 +349,7 @@ func_check_update() {
           | head -n1)"
         if [ -z "$DOWNLOAD_URL" ]; then
             DOWNLOAD_URL="$(printf '%s\n' "$CAND_URLS" \
-              | grep -Ev -- '-(darwin|linux|windows)-' \
+              | grep -Ev -- "-($UPD_PER_ARCH_OS_RES)-" \
               | head -n1)"
         fi
         [ -n "$DOWNLOAD_URL" ] || {
@@ -396,14 +480,17 @@ func_do_login() {
     
     # Retry loop for authentication
     while true; do
+        func_exit_if_stopping
         log "[INFO] Sleeping 15s before obtaining new JWT..."
-        sleep 15
+        func_sleep 15
         
         log "[INFO] Attempting authentication..."
         
-        # Capture auth command output for parsing
-        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1) || true
-        AUTH_EXIT_CODE=$?
+        # Capture the auth command's real exit status: `|| true` followed by
+        # $? always recorded 0, hiding every failure code (same fix as the
+        # shared login loop in full-bars/urnetwork-3.23-fix provider_common.sh).
+        AUTH_EXIT_CODE=0
+        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1) || AUTH_EXIT_CODE=$?
         PANIC_LINE=$(echo "$AUTH_OUTPUT" | grep -E '^panic:' || true)
         
         if [ "${DEBUG:-false}" = "true" ]; then
@@ -416,24 +503,24 @@ func_do_login() {
         # Check for success message in output
         if echo "$AUTH_OUTPUT" | grep -q "Jwt written to"; then
             log "[INFO] Authentication successful - JWT written"
-            sleep 5
+            func_sleep 5
             
             # Verify JWT file exists as backup check
             if [ -s "$JWT_FILE" ]; then
                 log "[INFO] JWT file verified at $JWT_FILE"
-                sleep 5
+                func_sleep 5
                 return 0
             else
                 log "[WARN] Success message found but JWT file missing - retrying"
                 log "[INFO] Will retry authentication in 1 minutes (60 seconds)..."
-                sleep 60
+                func_sleep 60
             fi
         else
             # Authentication failed - output exit code and auth output
             log "[ERROR] Authentication failed (exit code: $AUTH_EXIT_CODE)" >&2
 			log "[ERROR] $(echo "$PANIC_LINE" | tr '[:lower:]' '[:upper:]')" >&2
             log "[INFO] Will retry authentication in 5 minutes (300 seconds)..."
-            sleep 300
+            func_sleep 300
         fi
     done
 }
@@ -442,12 +529,12 @@ func_do_login() {
 func_start_provider(){
     failures=0
     while :; do
+        func_exit_if_stopping
         log "[INFO] Starting UrNetwork (attempt #$((failures+1)))"
         PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_nightly"
 		BIN_VER="$($PROVIDER_BIN --version)"
 		log "[INFO] Running UrNetwork build v${BIN_VER}"
-        # Capture the real exit code (set -e safe; bare `provide` would abort the loop on crash)
-        if "$PROVIDER_BIN" provide; then code=0; else code=$?; fi
+        func_run_provider "$PROVIDER_BIN" provide
         if [ "$code" -eq 0 ]; then
             if [ -f "$HOME/.urnetwork/update-pending" ]; then
                 rm -f "$HOME/.urnetwork/update-pending"
@@ -460,8 +547,9 @@ func_start_provider(){
                 log "[INFO] UrNetwork hotswap successor active; continuing supervision."
                 failures=0
                 while pgrep -f "urnetwork.*provide" >/dev/null 2>&1; do
-                    sleep 2
+                    func_sleep 2
                 done
+                func_exit_if_stopping
                 continue
             fi
             log " [INFO] UrNetwork exited cleanly."
@@ -474,20 +562,20 @@ func_start_provider(){
                 log "[INFO] Re-authenticating with USER_AUTH/PASSWORD..."
                 if "$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f && [ -s "$JWT_FILE" ]; then
                     log "[INFO] Re-authentication successful. Restarting provider..."
-                    sleep 5
+                    func_sleep 5
                     continue
                 else
                     log "[ERROR] Re-authentication failed."
                 fi
             fi
             log "[CRITICAL] Token expired/revoked and credentials unavailable. Check USER_AUTH/PASSWORD and restart."
-            sleep 30
+            func_sleep 30
             exit 78
         fi
         if [ "$code" -eq 75 ]; then
             log "[INFO] UrNetwork requested planned restart (exit 75); restarting in 5s."
             failures=0
-            sleep 5
+            func_sleep 5
             continue
         fi
         failures=$((failures+1))
@@ -499,7 +587,7 @@ func_start_provider(){
             failures=0
         fi
         log "[INFO] Waiting 60s before retry"
-        sleep 60
+        func_sleep 60
     done
 }
 
@@ -546,7 +634,9 @@ func_bootstrap() {
 
 # === Main Entrypoint ===
 main() {
+    func_install_stop_trap
     func_bootstrap
 }
 
 main "$@"
+

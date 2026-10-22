@@ -53,7 +53,7 @@ Releases: <https://github.com/full-bars/sn/releases>.
 Options on that binary:
 
 - `provider wallet sign [<coldkey_ss58>] [--port=<port>] [--no-open]`. Leave the address out to choose the account on the page.
-- No browser: `provider wallet challenge <coldkey_ss58>` prints the exact text (it signs nothing). Sign it elsewhere, then run `provider wallet set <coldkey_ss58> --message=<text> --signature=<hex>`.
+- No browser: `provider wallet challenge <coldkey_ss58>` prints the exact text (it signs nothing). Sign it elsewhere, then run `provider wallet set <coldkey_ss58> --message="<text>" --signature=<hex>`. Quote the message: it contains spaces and shell-significant characters, and an unquoted copy is split or altered, which makes a valid signature fail verification.
 - `provider wallet set <coldkey_ss58> --coldkey_seed_file=<path>` signs from a seed file. Use it only on your own computer, never on a node.
 - `--wallet-from-epoch=<e> --wallet-through-epoch=<e>` pick an exact window. It spans at most 65,536 epochs. A newer consent must start at a later epoch than the one it replaces.
 
@@ -140,7 +140,7 @@ Not unless you do the head tier or sign in with a hotkey.
 No. It lasts 65,536 epochs. Sign again only to change the wallet.
 
 ### What happens to claims while a claim daemon is stopped?
-Nothing is lost. Signed entries are saved and finished after a restart.
+Nothing already signed is lost: signed entries are saved and finished after a restart. Unsigned settlement-v1 claims are different, because they stay subject to claimability and expiry rules while the daemon is stopped, so claim them inside their window.
 
 ### Is the head tier worth it?
 For most operators, no. See [Head Tier](Bittensor-Head-Tier.md) for what it takes and the current blockers. It needs `provider fleet ...`, which only the miner image (or a 3.23-fix or meso-miner `provider`) has.

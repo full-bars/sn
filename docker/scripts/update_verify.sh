@@ -53,12 +53,51 @@ except (json.JSONDecodeError, KeyError, ValueError):
         null|None|"") return 1 ;;
     esac
     printf '%s\n' "$UPD_raw"
+    unset UPD_raw
 }
 
 # upd_asset_digest_from_json <release-json> <asset-name>
 # Kept as the stable caller-facing name used by all update paths.
 upd_asset_digest_from_json() {
     upd_json_digest_field "$@"
+}
+
+# --- Tarball asset selection -----------------------------------------------
+# A release ships one per-arch tarball per platform/GOARCH plus one OS-less
+# multi-arch fat tarball (urnetwork-provider-vX.tar.gz). The jq pickers
+# below resolve EXACT names keyed on the release tag (the stable-release
+# selector already guarantees the fat tarball asset exists with a sha256
+# digest), so decoys and wrong-platform assets can never win regardless of
+# sort order or new platforms; UPD_PER_ARCH_OS_RES only feeds the no-jq
+# grep fallback.
+UPD_PER_ARCH_OS_RES="darwin|freebsd|linux|windows"
+
+# UPD_release_tag <release-json>: prints the tag_name (UPD_ global because
+# POSIX sh has no function-local scope).
+UPD_release_tag() {
+    printf '%s' "$1" | jq -r '.tag_name // empty' 2>/dev/null
+}
+
+# upd_pick_arch_tarball_name <release-json> <goarch>
+# Prints the name of the linux-<goarch> per-arch tarball, or nothing when the
+# release carries none (the caller then falls back to the fat tarball).
+upd_pick_arch_tarball_name() {
+    UPD_tag="$(UPD_release_tag "$1")"
+    [ -n "$UPD_tag" ] || return 0
+    printf '%s' "$1" | jq -r --arg want "urnetwork-provider-${UPD_tag}-linux-${2}.tar.gz" \
+        '.assets[] | .name | select(. == $want)
+      ' 2>/dev/null | head -n1
+}
+
+# upd_pick_fat_tarball_name <release-json>
+# Prints the name of the OS-less multi-arch fat tarball, or nothing when the
+# release carries none.
+upd_pick_fat_tarball_name() {
+    UPD_tag="$(UPD_release_tag "$1")"
+    [ -n "$UPD_tag" ] || return 0
+    printf '%s' "$1" | jq -r --arg want "urnetwork-provider-${UPD_tag}.tar.gz" \
+        '.assets[] | .name | select(. == $want)
+      ' 2>/dev/null | head -n1
 }
 
 # upd_sha256_of <file>

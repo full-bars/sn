@@ -8,8 +8,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // metricsProviderLog formats timestamped log output for the metrics provider.
@@ -80,29 +84,112 @@ func getDohFailureCountStub() int64 {
 	return 0
 }
 
-// PQETotalCounts holds PQE/classical session counts for metrics.
-// The fork's pqeTotalCounts() summed connect.PQECounts (transfer_encrypt.go's
-// EncryptionSessionManager.PQECounts(), backed by pqe_tracker.go) across every
-// live encryptionManagers entry. v2026 connect's EncryptionSessionManager
-// (transfer_encrypt.go:3065) carries no PQE/classical session tracker at
-// all — the capability was removed upstream, not just renamed — so there is
-// no live data this package can read.
+// PQETotalCounts holds PQE/classical session counts for metrics, summed
+// across every live encryption manager.
 //
-// When Measured is false the remaining fields are zero and must NOT be
-// interpreted as "no sessions" — they mean "not tracked in v2026".
-// Callers (Prometheus, health heartbeat) should suppress or label the
-// metric as unavailable rather than emitting zero.
+// Measured is a capability flag: this build reads real counters from
+// connect.EncryptionSessionManager.PQECounts(), so a zero now means "no
+// sessions", not "not tracked".
 type PQETotalCounts struct {
 	ActivePQE, ActiveClas       int
 	PQELifetime, ClasLifetime   int
 	PQEHour, PQEDay, PQEWeek    int
 	ClasHour, ClasDay, ClasWeek int
-	Measured                    bool // false = upstream removed PQE accounting
+
+	// Handshake stages, lifetime. Attempts and Established are per handshake
+	// (a rekey counts again); Verified is per session. Attempts minus
+	// Established is failed TLS handshakes.
+	Attempts, Established, Verified, IdentityFailed int
+
+	// Curves is the lifetime negotiated-curve histogram, highest count first
+	// then by name.
+	Curves []connect.CurveCount
+
+	Measured bool
+}
+
+// pqeRetired accumulates the lifetime counts of managers that have
+// unregistered. Each proxy owns its manager, and dropping it on exit would
+// otherwise make the exported _total series decrease, which rate() reads as a
+// counter reset. Only monotonic values carry over; active and windowed counts
+// describe live sessions.
+var pqeRetired = struct {
+	mu     sync.Mutex
+	counts PQETotalCounts
+	curves map[string]int64
+}{curves: map[string]int64{}}
+
+// retirePQE folds a departing manager's lifetime counts into pqeRetired.
+// Caller holds encryptionManagers.mu, matching the lock order in
+// pqeTotalCounts.
+func retirePQE(c connect.PQECounts) {
+	pqeRetired.mu.Lock()
+	defer pqeRetired.mu.Unlock()
+	pqeRetired.counts.PQELifetime += int(c.PQELifetime)
+	pqeRetired.counts.ClasLifetime += int(c.ClasLifetime)
+	pqeRetired.counts.Attempts += int(c.Attempts)
+	pqeRetired.counts.Established += int(c.Established)
+	pqeRetired.counts.Verified += int(c.Verified)
+	pqeRetired.counts.IdentityFailed += int(c.IdentityFailed)
+	for _, cc := range c.Curves {
+		pqeRetired.curves[cc.Curve] += cc.Count
+	}
 }
 
 func pqeTotalCounts() PQETotalCounts {
-	// Measured: false — v2026 connect has no per-session PQE tracker.
-	// All numeric fields remain zero. Callers must check Measured before
-	// interpreting these as actual counts.
-	return PQETotalCounts{}
+	encryptionManagers.mu.Lock()
+
+	var out PQETotalCounts
+	curveTotals := map[string]int64{}
+	// Read retired totals under the registry lock so a concurrent unregister is
+	// not counted twice (once in the snapshot, once here).
+	pqeRetired.mu.Lock()
+	out.PQELifetime = pqeRetired.counts.PQELifetime
+	out.ClasLifetime = pqeRetired.counts.ClasLifetime
+	out.Attempts = pqeRetired.counts.Attempts
+	out.Established = pqeRetired.counts.Established
+	out.Verified = pqeRetired.counts.Verified
+	out.IdentityFailed = pqeRetired.counts.IdentityFailed
+	for name, count := range pqeRetired.curves {
+		curveTotals[name] = count
+	}
+	pqeRetired.mu.Unlock()
+	// Live counts are collected while the registry lock is held: an unregister
+	// after the unlock would add a manager's counts to pqeRetired and the loop
+	// would add them again.
+	for _, m := range encryptionManagers.set {
+		c := m.PQECounts()
+		out.ActivePQE += int(c.ActivePQE)
+		out.ActiveClas += int(c.ActiveClas)
+		out.PQELifetime += int(c.PQELifetime)
+		out.ClasLifetime += int(c.ClasLifetime)
+		out.PQEHour += int(c.PQEHour)
+		out.PQEDay += int(c.PQEDay)
+		out.PQEWeek += int(c.PQEWeek)
+		out.ClasHour += int(c.ClasHour)
+		out.ClasDay += int(c.ClasDay)
+		out.ClasWeek += int(c.ClasWeek)
+		out.Attempts += int(c.Attempts)
+		out.Established += int(c.Established)
+		out.Verified += int(c.Verified)
+		out.IdentityFailed += int(c.IdentityFailed)
+		for _, cc := range c.Curves {
+			curveTotals[cc.Curve] += cc.Count
+		}
+	}
+	encryptionManagers.mu.Unlock()
+	if 0 < len(curveTotals) {
+		out.Curves = make([]connect.CurveCount, 0, len(curveTotals))
+		for name, count := range curveTotals {
+			out.Curves = append(out.Curves, connect.CurveCount{Curve: name, Count: count})
+		}
+		sort.Slice(out.Curves, func(i, j int) bool {
+			if out.Curves[i].Count != out.Curves[j].Count {
+				return out.Curves[i].Count > out.Curves[j].Count
+			}
+			return out.Curves[i].Curve < out.Curves[j].Curve
+		})
+	}
+	out.Measured = true
+	return out
 }

@@ -222,6 +222,16 @@ jobs:
           chmod +x docker/miner/test_miner_stop.sh
           ./docker/miner/test_miner_stop.sh
 
+      - name: Docker stop SIGTERM forwarding tests
+        run: |
+          chmod +x docker/scripts/test_stop_forwarding.sh
+          ./docker/scripts/test_stop_forwarding.sh
+
+      - name: Login exit code tests
+        run: |
+          chmod +x docker/scripts/test_login_exit_code.sh
+          ./docker/scripts/test_login_exit_code.sh
+
       - name: Shellcheck docker scripts (error severity)
         run: |
           sudo apt-get install -y shellcheck >/dev/null 2>&1
