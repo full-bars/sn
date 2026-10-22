@@ -444,7 +444,10 @@ func (self *registrationStore) openForDelete(name string) (*os.File, error) {
 		if !errors.Is(err, windows.ERROR_SHARING_VIOLATION) {
 			return nil, err
 		}
-		time.Sleep(interval)
+		// the last attempt returns its own failure rather than waiting first
+		if attempt < attempts-1 {
+			time.Sleep(interval)
+		}
 	}
 	return nil, err
 }
@@ -535,8 +538,14 @@ func (self *registrationStore) auditDirectoryCustody() error {
 // custodyDirectoryRefusal names what is outside custody and how to repair the
 // directory. An administrator can apply the private descriptor to a directory
 // the account owns without losing what is already in it.
+//
+// The grant carries (OI)(CI) because the repaired directory has to pass that
+// access on to the files created inside it: a grant without the inherit flags
+// leaves the directory itself private while every child created by pathname
+// takes the creating token's default DACL instead, which is the state this
+// audit exists to refuse.
 func custodyDirectoryRefusal(dir string, sid *windows.SID, mask uint32) error {
-	remedy := fmt.Sprintf(`repair it with: icacls "%s" /inheritance:r /grant:r "%%USERNAME%%":F SYSTEM:F Administrators:F`, dir)
+	remedy := fmt.Sprintf(`repair it with: icacls "%s" /inheritance:r /grant:r "%%USERNAME%%":(OI)(CI)F SYSTEM:(OI)(CI)F Administrators:(OI)(CI)F`, dir)
 	switch {
 	case sid != nil && mask != 0:
 		return fmt.Errorf("registration custody directory %s grants %s to %s; %s", dir, custodyRightNames(mask), sid.String(), remedy)
@@ -659,12 +668,13 @@ func openCustodyDirectory(dir string) (*os.File, error) {
 }
 
 // createCustodyDirectory opens or creates the final custody component through
-// its parent's handle with the private descriptor, so a directory this store
-// creates inherits nothing from where it happens to live. An existing one is
-// opened unchanged and audited by the caller, which refuses it unless it is
-// already private.
+// its parent's handle with the inheritable private descriptor, so a directory
+// this store creates inherits nothing from where it happens to live and passes
+// its own allowlist on to every child created inside it by pathname. An
+// existing one is opened unchanged and audited by the caller, which refuses it
+// unless it is already private.
 func createCustodyDirectory(parent *os.File, name string) (*os.File, error) {
-	descriptor, err := privateCustodyDescriptor()
+	descriptor, err := privateCustodyDirectoryDescriptor()
 	if err != nil {
 		return nil, err
 	}
@@ -771,13 +781,20 @@ func openAttributes(handle windows.Handle, attributes *uint32) error {
 	return nil
 }
 
+// fileBasicInfoFields is the buffer the FileBasicInfo class takes. The Win32
+// FILE_BASIC_INFO it is named for is 36 bytes, but kernel32 forwards the class
+// to NtQueryInformationFile and NtSetInformationFile as FileBasicInformation,
+// whose NT layout carries a trailing reserved word: a 36-byte buffer is
+// refused with ERROR_BAD_LENGTH on a current host, measured, while 40 is
+// accepted. The reserved word is therefore carried explicitly rather than left
+// to the Go struct's alignment padding, which pads differently on 386.
 type fileBasicInfoFields struct {
 	CreationTime   int64
 	LastAccessTime int64
 	LastWriteTime  int64
 	ChangeTime     int64
 	FileAttributes uint32
-	reserved       uint32
+	Reserved       uint32
 }
 
 // lastWriteNanos returns the file's own last-write time, the Windows parity of
@@ -1038,17 +1055,21 @@ func auditPrivateOwnership(handle windows.Handle, wholeDirectory bool, refusal f
 }
 
 // custodyAceGrant classifies one ACE by its own header before anything is read
-// as a grant: only an allowed ACE confers access, an inherit-only entry does
-// not apply to this object, and an ACE whose layout is not an allowed ACE's is
-// never read as one.
+// as a grant: only an allowed ACE confers access, and an ACE whose layout is not
+// an allowed ACE's is never read as one.
+//
+// An inherit-only entry confers nothing on this object, so on a leaf it is
+// skipped. On a directory it is exactly what its children take: an inherit-only
+// grant of write, delete-child or a conferring right to an account outside the
+// allowlist hands every file created inside the directory, by the store or by
+// plain pathname, to that account. Such an entry is reported as a grant so the
+// caller refuses the account; an inherit-only entry for an account inside the
+// allowlist is accepted exactly as before.
 func custodyAceGrant(ace *windows.ACCESS_ALLOWED_ACE, wholeDirectory bool) (uint32, error) {
-	if ace.Header.AceFlags&windows.INHERIT_ONLY_ACE != 0 {
-		return 0, nil
-	}
 	var mask uint32
 	switch ace.Header.AceType {
 	case windows.ACCESS_ALLOWED_ACE_TYPE, aceAllowedCallback:
-		mask = uint32(ace.Mask)
+		mask = maskThroughGenerics(uint32(ace.Mask))
 	case windows.ACCESS_DENIED_ACE_TYPE, aceDeniedCallback, aceDeniedObject, aceDeniedCallbackObject,
 		aceSystemAudit, aceSystemAlarm, aceSystemAuditObject, aceSystemAlarmObject,
 		aceSystemMandatoryLabel, aceSystemResourceAttr, aceSystemTrustLabel, aceSystemScopedPolicy, aceSystemAccessFilter:
@@ -1059,7 +1080,14 @@ func custodyAceGrant(ace *windows.ACCESS_ALLOWED_ACE, wholeDirectory bool) (uint
 	default:
 		return 0, errors.New("registration custody DACL has an unknown ACE type")
 	}
-	return maskThroughGenerics(mask) & custodyAuditMask(wholeDirectory), nil
+	if ace.Header.AceFlags&windows.INHERIT_ONLY_ACE != 0 {
+		if !wholeDirectory {
+			return 0, nil
+		}
+		// the same audited rights, inherited by whatever is created inside
+		return mask & custodyAuditMask(true), nil
+	}
+	return mask & custodyAuditMask(wholeDirectory), nil
 }
 
 // maskThroughGenerics maps the generic rights an explicit ACE may carry to the
@@ -1091,18 +1119,35 @@ func custodyAuditMask(wholeDirectory bool) uint32 {
 	return uint32(windows.FILE_READ_DATA|windows.FILE_WRITE_DATA|windows.FILE_APPEND_DATA) | conferring
 }
 
-// privateCustodyDescriptor builds the self-relative descriptor every custody
-// object is created with: the process account as owner, and a protected DACL
-// granting full control to that account, SYSTEM and Administrators only. A
-// protected DACL inherits nothing from its parent, so a custody directory
-// under a shared temporary tree is as private as one under the profile, and
-// the owner is named explicitly rather than defaulted from the token.
+// privateCustodyDescriptor builds the descriptor a leaf is created with: the
+// process account as owner, and a protected DACL granting full control to that
+// account, SYSTEM and Administrators only. Its ACEs carry no inheritance flags
+// because a leaf has no children.
 func privateCustodyDescriptor() ([]byte, error) {
+	return privateCustodyDescriptorFor(false)
+}
+
+// privateCustodyDirectoryDescriptor is the descriptor a custody directory is
+// created with: the same allowlist, but every ACE inheritable. A protected
+// DACL with no inheritable entry propagates nothing, so a file created inside
+// the directory by plain pathname would take the creating token's default DACL
+// instead of custody's, which leaves it unwritable to a later reader or open to
+// an account outside the allowlist. Directory ACEs carry
+// OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE for that reason; leaves keep none.
+func privateCustodyDirectoryDescriptor() ([]byte, error) {
+	return privateCustodyDescriptorFor(true)
+}
+
+func privateCustodyDescriptorFor(inheritable bool) ([]byte, error) {
 	self, err := custodySelfSid()
 	if err != nil {
 		return nil, err
 	}
-	acl := privateCustodyACL([]*windows.SID{self, custodyAccounts.systemSid, custodyAccounts.administrators})
+	var flags uint8
+	if inheritable {
+		flags = windows.OBJECT_INHERIT_ACE | windows.CONTAINER_INHERIT_ACE
+	}
+	acl := privateCustodyACL([]*windows.SID{self, custodyAccounts.systemSid, custodyAccounts.administrators}, flags)
 	owner := custodySidBytes(self)
 	ownerOffset := uint32(20)
 	daclOffset := ownerOffset + uint32(len(owner))
@@ -1117,8 +1162,8 @@ func privateCustodyDescriptor() ([]byte, error) {
 }
 
 // privateCustodyACL builds one allowed-ACE ACL with full control for each
-// account, in the order given.
-func privateCustodyACL(accounts []*windows.SID) []byte {
+// account, in the order given, every ACE carrying the given inheritance flags.
+func privateCustodyACL(accounts []*windows.SID, flags uint8) []byte {
 	size := 8
 	for _, account := range accounts {
 		size += aclAlignment(len(custodySidBytes(account)) + 8)
@@ -1132,6 +1177,7 @@ func privateCustodyACL(accounts []*windows.SID) []byte {
 		sid := custodySidBytes(account)
 		entry := aclAlignment(len(sid) + 8)
 		acl[at] = byte(windows.ACCESS_ALLOWED_ACE_TYPE)
+		acl[at+1] = flags
 		binary.LittleEndian.PutUint16(acl[at+2:], uint16(entry))
 		binary.LittleEndian.PutUint32(acl[at+4:], fileAllAccess)
 		copy(acl[at+8:], sid)
@@ -1193,9 +1239,16 @@ type custodyTokenOwner struct {
 // buffer itself, so answering with that pointer would leave custody comparing
 // every later owner and ACE against a frame that has already been reused.
 func tokenDefaultOwner(token windows.Token) *windows.SID {
-	var buffer [128]byte
-	var returned uint32
-	if err := windows.GetTokenInformation(token, uint32(windows.TokenOwner), &buffer[0], uint32(len(buffer)), &returned); err != nil {
+	// the required length comes from a probe call, so a host whose default
+	// owner SID is longer than any fixed buffer still answers it rather than
+	// silently losing default-owner adoption
+	var needed uint32
+	_ = windows.GetTokenInformation(token, uint32(windows.TokenOwner), nil, 0, &needed)
+	if needed < uint32(unsafe.Sizeof(custodyTokenOwner{})) {
+		return nil
+	}
+	buffer := make([]byte, needed)
+	if err := windows.GetTokenInformation(token, uint32(windows.TokenOwner), &buffer[0], uint32(len(buffer)), &needed); err != nil {
 		return nil
 	}
 	owner := (*custodyTokenOwner)(unsafe.Pointer(&buffer[0])).Owner

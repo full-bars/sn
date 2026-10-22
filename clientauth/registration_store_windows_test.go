@@ -84,6 +84,201 @@ func TestRegistrationStoreCreatesPrivateDirectory(t *testing.T) {
 	}
 }
 
+// The directory the store creates carries its allowlist on to its children. A
+// protected DACL with no inheritable entry propagates nothing, so a file
+// created inside the directory by plain pathname (session.go's WriteToken, the
+// miner's writeFileAtomic siblings) would take the creating token's default
+// DACL: a later reader can fail to open it, or it can land with a foreign
+// default grant. The directory's ACEs are therefore inheritable, and a plain
+// os.WriteFile child reads back through a store.
+func TestRegistrationStoreChildrenInheritCustodyAccess(t *testing.T) {
+	path := newRegistrationStorePath(t)
+	store := openTestStore(t, path)
+
+	// every allow ACE on the directory itself is inheritable
+	handle := windows.Handle(store.directory.Fd())
+	sd, err := windows.GetSecurityInfo(handle, windows.SE_FILE_OBJECT, windows.DACL_SECURITY_INFORMATION)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dacl, _, err := sd.DACL()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dacl == nil || dacl.AceCount == 0 {
+		t.Fatal("custody directory carries no DACL")
+	}
+	inherit := uint8(windows.OBJECT_INHERIT_ACE | windows.CONTAINER_INHERIT_ACE)
+	for index := uint32(0); index < uint32(dacl.AceCount); index++ {
+		var ace *windows.ACCESS_ALLOWED_ACE
+		if err := windows.GetAce(dacl, index, &ace); err != nil {
+			t.Fatal(err)
+		}
+		if ace.Header.AceType != windows.ACCESS_ALLOWED_ACE_TYPE {
+			t.Fatalf("custody directory ACE %d is not an allowed ACE: %d", index, ace.Header.AceType)
+		}
+		if ace.Header.AceFlags&inherit != inherit {
+			t.Fatalf("custody directory ACE %d of SID %s carries flags 0x%02x, not OBJECT_INHERIT|CONTAINER_INHERIT",
+				index, (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String(), ace.Header.AceFlags)
+		}
+	}
+
+	// a sibling created by plain pathname inherits that allowlist
+	sibling := filepath.Join(store.path, "sibling.jwt")
+	if err := os.WriteFile(sibling, []byte("synthetic-sibling"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	inherited, err := inheritedAceCount(t, sibling)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if inherited == 0 {
+		t.Fatal("a sibling created by plain pathname inherited no access entry from the custody directory")
+	}
+
+	// the same store and a second one both read it through the leaf audit
+	raw, err := store.read("sibling.jwt")
+	if err != nil || string(raw) != "synthetic-sibling" {
+		t.Fatalf("the creating store cannot read a plain sibling: %q %v", raw, err)
+	}
+	second := openTestStore(t, filepath.Join(store.path, "second.jwt"))
+	if raw, err := second.read("sibling.jwt"); err != nil || string(raw) != "synthetic-sibling" {
+		t.Fatalf("a second store cannot read a plain sibling: %q %v", raw, err)
+	}
+}
+
+// inheritedAceCount answers how many ACEs of one file were inherited from its
+// parent rather than written on the file itself.
+func inheritedAceCount(t *testing.T, path string) (int, error) {
+	t.Helper()
+	name, err := windows.UTF16PtrFromString(path)
+	if err != nil {
+		return 0, err
+	}
+	handle, err := windows.CreateFile(name, windows.READ_CONTROL,
+		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil,
+		windows.OPEN_EXISTING, windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
+	if err != nil {
+		return 0, err
+	}
+	defer windows.CloseHandle(handle)
+	sd, err := windows.GetSecurityInfo(handle, windows.SE_FILE_OBJECT, windows.DACL_SECURITY_INFORMATION)
+	if err != nil {
+		return 0, err
+	}
+	dacl, _, err := sd.DACL()
+	if err != nil {
+		return 0, err
+	}
+	count := 0
+	for index := uint32(0); index < uint32(dacl.AceCount); index++ {
+		var ace *windows.ACCESS_ALLOWED_ACE
+		if err := windows.GetAce(dacl, index, &ace); err != nil {
+			return 0, err
+		}
+		if ace.Header.AceFlags&windows.INHERITED_ACE != 0 {
+			count++
+		}
+	}
+	return count, nil
+}
+
+// A leaf name is one component: the NT object name space separates a stream of
+// a leaf with a colon and a path with a backslash, and both are refused on
+// every operation, not only on the one that writes.
+func TestRegistrationStoreRefusesStreamAndPathLeafNames(t *testing.T) {
+	path := newRegistrationStorePath(t)
+	store := openTestStore(t, path)
+	for _, name := range []string{"leaf.jwt:hidden", `leaf\sub`, "leaf/sub"} {
+		// the predicate itself, which every operation consults
+		if !invalidLeaf(name) {
+			t.Fatalf("%q is not refused as an invalid leaf", name)
+		}
+		if err := store.write(name, []byte("synthetic")); err == nil {
+			t.Fatalf("write of %q was accepted", name)
+		}
+		if _, err := store.open(name, leafOpenRead); err == nil || !strings.Contains(err.Error(), "invalid") {
+			t.Fatalf("open of %q: %v, want an invalid leaf refusal", name, err)
+		}
+		if _, err := store.read(name); err == nil || !strings.Contains(err.Error(), "invalid") {
+			t.Fatalf("read of %q: %v, want an invalid leaf refusal", name, err)
+		}
+		if err := store.remove(name); err == nil || !strings.Contains(err.Error(), "invalid") {
+			t.Fatalf("remove of %q: %v, want an invalid leaf refusal", name, err)
+		}
+	}
+	if _, err := os.Lstat(filepath.Join(store.path, "leaf.jwt")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("a refused stream write left a file behind: %v", err)
+	}
+	if _, err := os.Lstat(filepath.Join(store.path, "leaf")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("a refused path write left a directory behind: %v", err)
+	}
+}
+
+// An inherit-only grant of write to an account outside the allowlist confers
+// nothing on the directory itself but everything on the files created inside
+// it, which the Unix store never exposes: 0700 keeps a foreign account out of
+// both. The audit refuses the entry and names the account.
+func TestRegistrationStoreRefusesInheritedOnlyForeignWrite(t *testing.T) {
+	path := newRegistrationStorePath(t)
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	self, err := custodySelfSid()
+	if err != nil {
+		t.Fatal(err)
+	}
+	system := testWellKnownSid(t, windows.WinLocalSystemSid)
+	administrators := testWellKnownSid(t, windows.WinBuiltinAdministratorsSid)
+	users := testWellKnownSid(t, windows.WinBuiltinUsersSid)
+	acl := custodyTestAcl(
+		custodyTestAce{sid: self, mask: fileAllAccess},
+		custodyTestAce{sid: system, mask: fileAllAccess},
+		custodyTestAce{sid: administrators, mask: fileAllAccess},
+		custodyTestAce{
+			sid:   users,
+			mask:  windows.FILE_GENERIC_WRITE,
+			flags: windows.INHERIT_ONLY_ACE | windows.OBJECT_INHERIT_ACE | windows.CONTAINER_INHERIT_ACE,
+		},
+	)
+	setTestDirectorySecurity(t, dir, windows.DACL_SECURITY_INFORMATION|windows.PROTECTED_DACL_SECURITY_INFORMATION, (*windows.ACL)(unsafe.Pointer(&acl[0])))
+	_, err = openRegistrationStore(path)
+	if err == nil {
+		t.Fatal("adopted a directory that hands its children to a foreign account")
+	}
+	if !strings.Contains(err.Error(), "S-1-5-32-545") || !strings.Contains(err.Error(), "icacls") {
+		t.Fatalf("the refusal does not name the account and the repair: %v", err)
+	}
+	// the repair it teaches must itself be inheritable, or following it
+	// reproduces the same exposure for the next child created by pathname
+	if !strings.Contains(err.Error(), "(OI)(CI)") {
+		t.Fatalf("the refusal teaches a grant that is not inheritable: %v", err)
+	}
+
+	// the same inherit-only entry for an account inside the allowlist is not an
+	// exposure: those accounts already hold full control of the directory
+	root := t.TempDir()
+	inside := filepath.Join(root, ".urnetwork")
+	if err := os.Mkdir(inside, 0700); err != nil {
+		t.Fatal(err)
+	}
+	allowlisted := custodyTestAcl(
+		custodyTestAce{sid: self, mask: fileAllAccess},
+		custodyTestAce{sid: system, mask: fileAllAccess},
+		custodyTestAce{sid: administrators, mask: fileAllAccess},
+		custodyTestAce{
+			sid:   administrators,
+			mask:  windows.FILE_GENERIC_WRITE,
+			flags: windows.INHERIT_ONLY_ACE | windows.OBJECT_INHERIT_ACE | windows.CONTAINER_INHERIT_ACE,
+		},
+	)
+	setTestDirectorySecurity(t, inside, windows.DACL_SECURITY_INFORMATION|windows.PROTECTED_DACL_SECURITY_INFORMATION, (*windows.ACL)(unsafe.Pointer(&allowlisted[0])))
+	adopted := openTestStore(t, filepath.Join(inside, "client.jwt"))
+	if err := adopted.write("client.jwt", []byte("synthetic")); err != nil {
+		t.Fatalf("an inherit-only ACE inside the allowlist refused custody: %v", err)
+	}
+}
 func TestRegistrationStoreRoundTrip(t *testing.T) {
 	path := newRegistrationStorePath(t)
 	store := openTestStore(t, path)
@@ -293,7 +488,7 @@ func TestRegistrationStoreRefusesForeignDacl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	acl := privateCustodyACL([]*windows.SID{self, world})
+	acl := privateCustodyACL([]*windows.SID{self, world}, 0)
 	setTestDirectorySecurity(t, dir, windows.DACL_SECURITY_INFORMATION|windows.PROTECTED_DACL_SECURITY_INFORMATION, (*windows.ACL)(unsafe.Pointer(&acl[0])))
 	if _, err := openRegistrationStore(path); err == nil || !strings.Contains(err.Error(), "icacls") {
 		t.Fatalf("adopted a DACL that grants a foreign account: %v", err)
