@@ -1534,7 +1534,7 @@ func (r *ProxyReloader) reload() {
 	// Update systemd status counters: the configured count reflects
 	// the full desired set (file/internal + URL cache), and resolution
 	// is OK since we found proxies. These are operator-facing only.
-	setConfiguredProxyCount(trimmedConfiguredCount(len(desiredSet)))
+	noteTrimSelection(len(desiredSet))
 	setProxyResolutionOK()
 
 	deferredTotal := deferredBackoff + warmupDeferred
