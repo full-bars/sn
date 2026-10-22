@@ -871,6 +871,16 @@ const (
 	ntFileRenameInformationEx = 65
 )
 
+// A publication replaces an existing leaf, and a reader that opened that leaf
+// by pathname (ReadToken, readNetworkCredential) shares read and write but not
+// delete, so the replace answers a sharing violation for the moment the reader
+// holds the file. Unix rename replaces a held target without a retry; the
+// Windows replace gets the same brief bound the open for delete has.
+const (
+	renameAttempts = 20
+	renameInterval = 25 * time.Millisecond
+)
+
 // renameRelative renames an open leaf to a name relative to the custody
 // handle, so the target is bound to that handle's directory object rather than
 // to any pathname. The extended class is asked first; a file system that does
@@ -899,23 +909,59 @@ func renameRelative(leaf *os.File, parent *os.File, name string) error {
 	info.fileNameLength = uint32(nameBytes)
 	copy(buffer[header:], unsafe.Slice((*byte)(unsafe.Pointer(&units[0])), len(units)*2))
 	iosb := &windows.IO_STATUS_BLOCK{}
-	err = windows.NtSetInformationFile(windows.Handle(leaf.Fd()), iosb, &buffer[0], uint32(len(buffer)), ntFileRenameInformationEx)
-	if err == nil {
+	var status error
+	for attempt := 0; attempt < renameAttempts; attempt++ {
+		status = renameRelativeOnce(leaf, parent, buffer, iosb)
+		if status == nil {
+			return nil
+		}
+		if !errors.Is(status, windows.STATUS_SHARING_VIOLATION) {
+			break
+		}
+		time.Sleep(renameInterval)
+	}
+	return ntStatusError(status)
+}
+
+// renameRelativeOnce is one publication attempt: the extended class, then the
+// plain class for the file system or host that does not offer it. The flags
+// word is rewritten on every attempt because the plain class reads it as
+// ReplaceIfExists alone, and a retried attempt needs the extended flags again.
+func renameRelativeOnce(leaf, parent *os.File, buffer []byte, iosb *windows.IO_STATUS_BLOCK) error {
+	info := (*fileRenameInfoEx)(unsafe.Pointer(&buffer[0]))
+	info.flags = renameReplaceIfExistsFlag | renamePosixSemanticsFlag
+	status := windows.NtSetInformationFile(windows.Handle(leaf.Fd()), iosb, &buffer[0], uint32(len(buffer)), ntFileRenameInformationEx)
+	if status == nil {
 		return nil
 	}
 	// the plain class is the FAT and exFAT path, and the path of a host older
 	// than the extended class: such a file system answers with an invalid
 	// parameter, with a not-supported status, or with an information class it
 	// does not know.
-	if !errors.Is(err, windows.STATUS_INVALID_PARAMETER) && !errors.Is(err, windows.STATUS_NOT_SUPPORTED) && !errors.Is(err, windows.STATUS_INVALID_INFO_CLASS) {
-		return err
+	if !errors.Is(status, windows.STATUS_INVALID_PARAMETER) && !errors.Is(status, windows.STATUS_NOT_SUPPORTED) && !errors.Is(status, windows.STATUS_INVALID_INFO_CLASS) {
+		return status
 	}
 	// the plain class reads the first word as ReplaceIfExists alone
 	buffer[0], buffer[1], buffer[2], buffer[3] = 1, 0, 0, 0
 	plain := (*fileRenameInfo)(unsafe.Pointer(&buffer[0]))
 	plain.rootDirectory = windows.Handle(parent.Fd())
-	plain.fileNameLength = uint32(nameBytes)
+	plain.fileNameLength = info.fileNameLength
 	return windows.NtSetInformationFile(windows.Handle(leaf.Fd()), iosb, &buffer[0], uint32(len(buffer)), ntFileRenameInformation)
+}
+
+// ntStatusError answers a rename failure as the Win32 errno every other
+// failure in this file does, ntOpenObject's mapping included, so a caller and
+// its log see ERROR_SHARING_VIOLATION rather than its NTSTATUS spelling. The
+// raw status is what the attempt decision and the retry compare against, so
+// only the value that leaves the function is mapped.
+func ntStatusError(status error) error {
+	if status == nil {
+		return nil
+	}
+	if nt, ok := status.(windows.NTStatus); ok {
+		return nt.Errno()
+	}
+	return status
 }
 
 // auditLeafCustody is the Windows parity of the Unix leaf stat bound: a

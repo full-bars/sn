@@ -18,6 +18,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -117,9 +118,77 @@ func TestRegistrationStoreRoundTrip(t *testing.T) {
 	if err := store.remove("client.jwt"); err != nil {
 		t.Fatalf("missing leaf removal: %v", err)
 	}
-	for _, name := range names {
+	// the census is taken after the replace and the removal, not before them:
+	// a snapshot from before the second write cannot see the temporary that
+	// write would leak
+	after, err := store.names(16)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range after {
 		if strings.HasPrefix(name, ".registration-") {
 			t.Fatalf("temporary leaf survived publication: %s", name)
+		}
+	}
+}
+
+// A publication that meets a leaf another handle holds open for a moment still
+// completes: the rename is retried while the holder shares no delete, which is
+// what Go's own path opens do, so a reader cannot make a write fail.
+func TestRegistrationStoreReplaceWaitsForAContendedLeaf(t *testing.T) {
+	path := newRegistrationStorePath(t)
+	store := openTestStore(t, path)
+	if err := store.write("client.jwt", []byte("first")); err != nil {
+		t.Fatal(err)
+	}
+	held, err := os.Open(filepath.Join(store.path, "client.jwt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	released := make(chan struct{})
+	go func() {
+		defer close(released)
+		time.Sleep(150 * time.Millisecond)
+		_ = held.Close()
+	}()
+	writeErr := store.write("client.jwt", []byte("second"))
+	<-released
+	if writeErr != nil {
+		t.Fatalf("replace of a leaf a reader held briefly: %v", writeErr)
+	}
+	if raw, err := store.read("client.jwt"); err != nil || string(raw) != "second" {
+		t.Fatalf("read after replace: %q %v", raw, err)
+	}
+}
+
+// A holder that never closes leaves the publication refused, and the refusal is
+// the Win32 sharing violation rather than the NTSTATUS spelling of it, as every
+// other failure this store reports is.
+func TestRegistrationStoreReplaceReportsAPersistentlyHeldLeaf(t *testing.T) {
+	path := newRegistrationStorePath(t)
+	store := openTestStore(t, path)
+	if err := store.write("client.jwt", []byte("first")); err != nil {
+		t.Fatal(err)
+	}
+	held, err := os.Open(filepath.Join(store.path, "client.jwt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer held.Close()
+	if err := store.write("client.jwt", []byte("second")); !errors.Is(err, windows.ERROR_SHARING_VIOLATION) {
+		t.Fatalf("replace of a leaf another handle holds: %v, want a sharing violation", err)
+	}
+	// a refused publication leaves the previous bytes and no temporary behind
+	if raw, err := store.read("client.jwt"); err != nil || string(raw) != "first" {
+		t.Fatalf("read after a refused replace: %q %v", raw, err)
+	}
+	names, err := store.names(16)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range names {
+		if strings.HasPrefix(name, ".registration-") {
+			t.Fatalf("temporary leaf survived a refused replace: %s", name)
 		}
 	}
 }
@@ -287,6 +356,70 @@ func setTestDirectorySecurity(t *testing.T, dir string, information windows.SECU
 	}
 }
 
+// seRestorePrivilege is the privilege that lets a process name an account
+// outside its own as an object's owner.
+const seRestorePrivilege = "SeRestorePrivilege"
+
+// enableTestPrivilege enables one privilege on this process's token and
+// answers the function that puts it back. An elevated runner holds
+// SeRestorePrivilege but leaves it disabled, so the owner write a test plants
+// is refused with access denied until the privilege is enabled here.
+func enableTestPrivilege(name string) (func(), error) {
+	var luid windows.LUID
+	if err := windows.LookupPrivilegeValue(nil, windows.StringToUTF16Ptr(name), &luid); err != nil {
+		return nil, fmt.Errorf("look up %s: %w", name, err)
+	}
+	var token windows.Token
+	if err := windows.OpenProcessToken(windows.CurrentProcess(), windows.TOKEN_ADJUST_PRIVILEGES|windows.TOKEN_QUERY, &token); err != nil {
+		return nil, fmt.Errorf("open this process's token: %w", err)
+	}
+	set := func(attributes uint32) error {
+		state := windows.Tokenprivileges{
+			PrivilegeCount: 1,
+			Privileges:     [1]windows.LUIDAndAttributes{{Luid: luid, Attributes: attributes}},
+		}
+		return windows.AdjustTokenPrivileges(token, false, &state, uint32(unsafe.Sizeof(state)), nil, nil)
+	}
+	if err := set(windows.SE_PRIVILEGE_ENABLED); err != nil {
+		windows.CloseHandle(windows.Handle(token))
+		return nil, fmt.Errorf("enable %s: %w", name, err)
+	}
+	// AdjustTokenPrivileges answers success for a privilege the token does not
+	// hold, so the state is read back rather than trusted: a developer's token
+	// outside the administrators group holds no SeRestorePrivilege at all
+	enabled, err := testPrivilegeEnabled(token, luid)
+	if err != nil || !enabled {
+		windows.CloseHandle(windows.Handle(token))
+		if err == nil {
+			err = errors.New("the token does not hold it")
+		}
+		return nil, fmt.Errorf("enable %s: %w", name, err)
+	}
+	return func() {
+		_ = set(0)
+		windows.CloseHandle(windows.Handle(token))
+	}, nil
+}
+
+// testPrivilegeEnabled reads one privilege's state back from the token, so a
+// privilege the token never held is not mistaken for an enabled one.
+func testPrivilegeEnabled(token windows.Token, luid windows.LUID) (bool, error) {
+	var needed uint32
+	if err := windows.GetTokenInformation(token, windows.TokenPrivileges, nil, 0, &needed); err == nil || needed == 0 {
+		return false, errors.New("the token answers no privilege list")
+	}
+	buffer := make([]byte, needed)
+	if err := windows.GetTokenInformation(token, windows.TokenPrivileges, &buffer[0], needed, &needed); err != nil {
+		return false, err
+	}
+	for _, entry := range (*windows.Tokenprivileges)(unsafe.Pointer(&buffer[0])).AllPrivileges() {
+		if entry.Luid == luid {
+			return entry.Attributes&windows.SE_PRIVILEGE_ENABLED != 0, nil
+		}
+	}
+	return false, errors.New("the token does not hold it")
+}
+
 // trySetTestPathSecurity rewrites the descriptor of one file or directory, so a
 // test can plant the inherited, permissive or foreign ACE that a real host
 // carries.
@@ -451,14 +584,21 @@ func TestRegistrationStoreRefusesInheritedForeignAce(t *testing.T) {
 }
 
 // A leaf owned by an account outside custody is refused, whatever its DACL
-// says. Changing an owner to another account needs SeRestorePrivilege, so an
-// unelevated host skips rather than fails.
+// says. Naming another account as an owner needs SeRestorePrivilege: an
+// elevated runner holds the privilege but leaves it disabled, so the test
+// enables it for the write and disables it again. A token that holds no such
+// privilege, which is every unelevated developer host, skips with that reason.
 func TestRegistrationStoreRefusesLeafWithForeignOwner(t *testing.T) {
 	path := newRegistrationStorePath(t)
 	store := openTestStore(t, path)
 	if err := store.write("client.jwt", []byte("synthetic")); err != nil {
 		t.Fatal(err)
 	}
+	restore, err := enableTestPrivilege(seRestorePrivilege)
+	if err != nil {
+		t.Skipf("changing an owner to LocalSystem needs SeRestorePrivilege, which this token cannot enable: %v", err)
+	}
+	defer restore()
 	foreign := testWellKnownSid(t, windows.WinLocalSystemSid)
 	if err := trySetTestPathSecurity(filepath.Join(store.path, "client.jwt"),
 		windows.OWNER_SECURITY_INFORMATION, nil, foreign); err != nil {
@@ -582,6 +722,34 @@ func TestRenewNetworkTokenFingerprintStaysInItsLineage(t *testing.T) {
 	}
 }
 
+// defaultOwnerMarker is the pattern that overwrites a dead stack frame: nonzero
+// and not a SID revision, so a SID read from a clobbered frame is never
+// mistaken for a real one.
+const defaultOwnerMarker = 0xa5
+
+// clobberSink keeps the marker write of clobberDeadFrames observable, so the
+// writes into each dead frame are not elided.
+var clobberSink byte
+
+// clobberDeadFrames overwrites the stack region a returned call used. Each
+// frame holds a non-escaping array larger than the token query buffer plus that
+// frame's own overhead, and the recursion grows the stack, so the region the
+// first token query occupied is written with the marker. A pointer left into
+// that dead frame then reads the marker instead of the SID, while a copy of the
+// SID still answers the same.
+//
+//go:noinline
+func clobberDeadFrames(depth int) {
+	var frame [1024]byte
+	for index := range frame {
+		frame[index] = defaultOwnerMarker
+	}
+	if depth > 0 {
+		clobberDeadFrames(depth - 1)
+	}
+	clobberSink = frame[depth%len(frame)] ^ byte(depth)
+}
+
 // The token's default owner is a copy of the SID, not a pointer into the query
 // buffer's frame: the predicates answer the same after other work has reused
 // that frame and the stack has moved.
@@ -604,19 +772,14 @@ func TestCustodyDefaultOwnerSurvivesOtherWork(t *testing.T) {
 	if !custodyOwnerAcceptable(owner, self) || custodySidOutside(owner, self) {
 		t.Fatalf("the predicate disagrees about the default owner %s", want)
 	}
-	// a fresh query, a copy of the copy, and other allocations between the two
-	// comparisons: anything the returned pointer aliased is overwritten here
+	// a fresh query, then a recursion that reuses and overwrites the dead frame
+	// with a marker: a pointer left into the query buffer now reads the marker,
+	// and only a real copy still answers the SID
 	fresh := tokenDefaultOwner(windows.GetCurrentProcessToken())
 	if fresh == nil || fresh.String() != want {
 		t.Fatalf("a second query answered %v, want %s", fresh, want)
 	}
-	for range 64 {
-		buffer := make([]byte, 4096)
-		for index := range buffer {
-			buffer[index] = 0x5a
-		}
-		_ = buffer
-	}
+	clobberDeadFrames(32)
 	again := custodyAccounts.defaultOwner
 	if again.String() != want {
 		t.Fatalf("the default owner changed to %s after other work, want %s", again.String(), want)
