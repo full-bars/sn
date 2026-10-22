@@ -324,6 +324,9 @@ func_run() {
   while :; do
     func_exit_if_stopping
     func_provide
+    # a stop that landed while provide was running must end the loop here,
+    # otherwise the next iteration goes back through re-auth
+    func_exit_if_stopping
     if [ "$PROVIDE_CODE" -eq 0 ]; then
       log "[INFO] The miner exited cleanly"
       return 0
