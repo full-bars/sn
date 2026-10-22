@@ -232,7 +232,13 @@ func_run_miner() {
     fi
     _stop_code=0
     while :; do
-        wait "$MINER_CHILD_PID" || _stop_code=$?
+        # a stop interrupts wait and leaves 143 behind; keep that only while
+        # the child is still alive, so a clean exit after the stop reports 0
+        if wait "$MINER_CHILD_PID"; then
+            _stop_code=0
+        else
+            _stop_code=$?
+        fi
         kill -0 "$MINER_CHILD_PID" 2>/dev/null || break
     done
     MINER_CHILD_PID=""

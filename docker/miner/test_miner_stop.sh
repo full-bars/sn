@@ -91,6 +91,10 @@ if wait_file "$out/stub.pid"; then
     else
         ok "miner stopped"
     fi
+    # a stop interrupts wait with 143; the clean exit after it must report 0
+    grep -q "stopped code=0" "$out/supervisor.log" 2>/dev/null \
+        && ok "stop reports a clean exit code" \
+        || bad "stop reported '$(tr -d '\n' <"$out/supervisor.log" 2>/dev/null)', want stopped code=0"
 else
     bad "stub miner never started"
     kill -KILL "$sup" 2>/dev/null
