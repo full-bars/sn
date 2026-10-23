@@ -364,7 +364,26 @@ run_rc_command "\$1"
 RCSCRIPT
 }
 
+# assert_state_path_safe runs BEFORE anything is installed. A symlink anywhere
+# in the service user's own path sends root's mkdir and chmod somewhere else,
+# and checking only the leaf misses a symlinked parent. It must happen early:
+# refusing after the binary has been renamed into place leaves a half-done
+# install. System ancestors above the home are not checked, because legitimately
+# symlinked system paths (/home -> /usr/home) would make every install refuse.
+assert_state_path_safe() {
+    if [ -L "$service_home" ]; then
+        pr_err "%s is a symlink; refusing to install through it" "$service_home"
+        exit 1
+    fi
+    if [ -L "$state_dir" ]; then
+        pr_err "%s is a symlink; refusing to create or chmod through it" "$state_dir"
+        exit 1
+    fi
+}
+
 do_install() {
+    # Before the download, before the binary, before any root write.
+    assert_state_path_safe
     version="${1:-latest}"
 
     # Refuse BEFORE downloading: an install that runs the internet-facing
@@ -549,14 +568,8 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
     # to the service user: that is where its own config and JWT live.
     if [ "$(id -u)" = "0" ]; then
         if [ "$service_user" != "root" ]; then
-            # A symlink here makes `mkdir -p` succeed through it and the chmod
-            # below dereference it, so a compromised service user could point
-            # root at an arbitrary directory. write_state_flag already refuses
-            # this; the install path must agree.
-            if [ -L "$state_dir" ]; then
-                pr_err "%s is a symlink; refusing to create or chmod through it" "$state_dir"
-                rm -rf "$tmpdir"; exit 1
-            fi
+            # assert_state_path_safe already refused a symlinked service home
+            # or state dir before anything was installed.
             mkdir -p "$state_dir"
             chown -R "$service_user" "$state_dir" 2>/dev/null || true
             chmod 700 "$state_dir" 2>/dev/null || true
