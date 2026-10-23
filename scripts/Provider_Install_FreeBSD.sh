@@ -568,10 +568,16 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
     # to the service user: that is where its own config and JWT live.
     if [ "$(id -u)" = "0" ]; then
         if [ "$service_user" != "root" ]; then
-            # assert_state_path_safe already refused a symlinked service home
-            # or state dir before anything was installed.
+            # Re-check here, not only at the top of do_install: the service
+            # user can replace the directory with a symlink between the two,
+            # and these are the root writes that would follow it. -h keeps the
+            # recursive chown from dereferencing anything that appears.
+            if [ -L "$state_dir" ]; then
+                pr_err "%s became a symlink during install; refusing to write through it" "$state_dir"
+                rm -rf "$tmpdir"; exit 1
+            fi
             mkdir -p "$state_dir"
-            chown -R "$service_user" "$state_dir" 2>/dev/null || true
+            chown -R -h "$service_user" "$state_dir" 2>/dev/null || true
             chmod 700 "$state_dir" 2>/dev/null || true
         fi
         chown -R root:wheel "$install_path" 2>/dev/null || \
