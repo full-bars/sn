@@ -131,8 +131,10 @@ jobs:
               echo "credentials rejected by the API; not retrying"
               exit 1
             fi
-            echo "mint attempt ${mint_attempt} failed; waiting 300s for the sign-in window to clear"
-            sleep 300
+            if [ "$mint_attempt" -lt 3 ]; then
+              echo "mint attempt ${mint_attempt} failed; waiting 300s for the sign-in window to clear"
+              sleep 300
+            fi
           done
           test "$mint_ok" = 1 || { echo "JWT mint failed after 3 attempts"; exit 1; }
           test -s /tmp/mint/.urnetwork/jwt || { echo "JWT mint failed (verification required?)"; exit 1; }

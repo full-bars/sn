@@ -101,8 +101,10 @@ jobs:
               echo "credentials rejected by the API; not retrying"
               exit 1
             fi
-            echo "mint attempt $attempt failed; waiting 300s for the sign-in window to clear"
-            sleep 300
+            if [ "$attempt" -lt 3 ]; then
+              echo "mint attempt $attempt failed; waiting 300s for the sign-in window to clear"
+              sleep 300
+            fi
           done
           test -s /tmp/mint/.urnetwork/jwt || { echo "JWT mint failed after 3 attempts"; exit 1; }
           if grep -qE '"(network_id|name)"\s*:\s*"(production|full-bars)"' /tmp/mint/.urnetwork/network.json 2>/dev/null; then
