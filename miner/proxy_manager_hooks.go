@@ -35,8 +35,9 @@ type proxyHealthStatus struct {
 var liveProxyHealthByKey = proxyLiveHealthSnapshot
 
 // degradedReaperFrozen reports whether an upstream outage makes proxy failures
-// meaningless (v33: the degraded-reaper freeze). P1(a) never freezes; the
-// outage detector is P2.
+// meaningless (v33: the degraded-reaper freeze). The reaper decides from its own
+// probe evidence (noProbeReachedTheAPI); this hook stays for the callers that
+// have no probe results of their own.
 var degradedReaperFrozen = func() bool { return false }
 
 // Proxy resolution statuses for the miner status surface and the direct-only
