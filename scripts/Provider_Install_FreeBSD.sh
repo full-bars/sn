@@ -458,6 +458,12 @@ do_install() {
     # is exactly the `update` case: the provider is still executing the file
     # being replaced. Staging next to the target and renaming is atomic, is
     # allowed over a running image, and never leaves a half-written binary.
+    # Staging an empty or non-executable file produces a provider that fails at
+    # exec time, after the old binary has already been renamed away.
+    if [ ! -s "$provider_src" ] || [ ! -x "$provider_src" ]; then
+        pr_err "Refusing to install %s: not a non-empty executable" "$provider_src"
+        rm -rf "$tmpdir"; exit 1
+    fi
     staged="$install_path/bin/.urnetwork.new.$$"
     priv cp "$provider_src" "$staged" || { pr_err "Failed to stage binary"; rm -f "$staged"; rm -rf "$tmpdir"; exit 1; }
     priv chmod 755 "$staged"
@@ -543,6 +549,14 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
     # to the service user: that is where its own config and JWT live.
     if [ "$(id -u)" = "0" ]; then
         if [ "$service_user" != "root" ]; then
+            # A symlink here makes `mkdir -p` succeed through it and the chmod
+            # below dereference it, so a compromised service user could point
+            # root at an arbitrary directory. write_state_flag already refuses
+            # this; the install path must agree.
+            if [ -L "$state_dir" ]; then
+                pr_err "%s is a symlink; refusing to create or chmod through it" "$state_dir"
+                rm -rf "$tmpdir"; exit 1
+            fi
             mkdir -p "$state_dir"
             chown -R "$service_user" "$state_dir" 2>/dev/null || true
             chmod 700 "$state_dir" 2>/dev/null || true
