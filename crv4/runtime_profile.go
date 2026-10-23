@@ -299,6 +299,8 @@ func ValidateProvisionalRuntimeMetadata(metadata *types.Metadata) error {
 // Runtime481/source6a972693 and runtime482/source8cf229f8 retain the consumed
 // selective-metagraph signature and all77 SCALE fields from API2. Their API3
 // declaration also includes the unrelated emission-weights method.
+// Runtime483 retains the same declared API3; captured finalized metadata is
+// pinned in runtime483_metadata_test.go. Full source approval remains separate.
 // This exception grants no source or artifact authority: each caller still
 // authenticates its exact block artifact and checks its consumed interfaces.
 func validateProvisionalRuntimeApis(raw json.RawMessage) error {
@@ -323,12 +325,12 @@ func validateProvisionalRuntimeApis(raw json.RawMessage) error {
 		}
 		value, err := decodeRuntimeVersionUint("SubnetInfoRuntimeApi", pair[1], 32)
 		if found || err != nil || value != 2 && value != 3 {
-			return errors.New("consumed SubnetInfoRuntimeApi is not version2 or reviewed runtime481/482 version3")
+			return errors.New("consumed SubnetInfoRuntimeApi is not version2 or reviewed runtime481/482/483 version3")
 		}
 		if value == 3 {
 			identity, err := DecodeRuntimeVersionIdentity(raw)
-			if err != nil || identity != (RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 481, TransactionVersion: 1, StateVersion: 1}) && identity != (RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 482, TransactionVersion: 1, StateVersion: 1}) {
-				return errors.Join(errors.New("consumed SubnetInfoRuntimeApi version3 requires the reviewed node-subtensor/481/1/1 or node-subtensor/482/1/1 tuple"), err)
+			if err != nil || identity != (RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 481, TransactionVersion: 1, StateVersion: 1}) && identity != (RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 482, TransactionVersion: 1, StateVersion: 1}) && identity != (RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 483, TransactionVersion: 1, StateVersion: 1}) {
+				return errors.Join(errors.New("consumed SubnetInfoRuntimeApi version3 requires the reviewed node-subtensor/481/1/1 or node-subtensor/482/1/1 or node-subtensor/483/1/1 tuple"), err)
 			}
 		}
 		found = true

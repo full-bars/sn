@@ -19,7 +19,7 @@ func TestRuntime482SelectiveMetagraphApiRejectsOtherIdentities(t *testing.T) {
 		field string
 		value any
 	}{
-		{"specVersion", 483}, {"specName", "other-runtime"}, {"transactionVersion", 2}, {"stateVersion", 2},
+		{"specVersion", 484}, {"specName", "other-runtime"}, {"transactionVersion", 2}, {"stateVersion", 2},
 	} {
 		t.Run(test.field, func(t *testing.T) {
 			var v map[string]any

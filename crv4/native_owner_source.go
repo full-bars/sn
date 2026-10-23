@@ -15,6 +15,10 @@ const NativeOwnerSource481 = "6a972693ae9580541225bd37696ac2fee26b8ae9"
 // Exact artifact/configuration approvals remain independently required.
 const NativeOwnerSource482 = "8cf229f8ef969389d054a4c161b53ffd164a041f"
 
+// Runtime483 uses the selected local source checkout under the same explicit
+// qualification waiver. Artifact identity remains separately pinned.
+const NativeOwnerSource483 = "d43691767756fabaec697aeb014eb788639cccf9"
+
 // Each reviewed source with the spec version its runtime/src/lib.rs declares.
 // A newly reviewed source is one more row. The number grants nothing by
 // itself: it only lets a consumer refuse a source named for another version.
@@ -30,6 +34,7 @@ var reviewedNativeOwnerSources = []struct {
 	{NativeOwnerSource479, 479},
 	{NativeOwnerSource481, 481},
 	{NativeOwnerSource482, 482},
+	{NativeOwnerSource483, 483},
 }
 
 // The ordinary credit, owner call and passive root interfaces share reviewed
@@ -65,7 +70,7 @@ func ReviewedNativeOwnerSpecSource(spec uint32) (string, bool) {
 // completion proof: each approval still proves the marker at its own activation.
 func ReviewedPostAlphaMigrationSource(source string) bool {
 	switch source {
-	case NativeOwnerSource473, NativeOwnerSource475, NativeOwnerSource477, NativeOwnerSource478, NativeOwnerSource479, NativeOwnerSource481, NativeOwnerSource482:
+	case NativeOwnerSource473, NativeOwnerSource475, NativeOwnerSource477, NativeOwnerSource478, NativeOwnerSource479, NativeOwnerSource481, NativeOwnerSource482, NativeOwnerSource483:
 		return true
 	default:
 		return false
