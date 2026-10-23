@@ -118,6 +118,18 @@ The test file covers the two enabled rules. `prometheus.yml` lists `urnetwork.ym
 | `urnet_tcp_time_wait` | gauge | | TCP sockets in TIME_WAIT (Linux) |
 | `urnet_tcp_orphans` | gauge | | Orphaned TCP sockets (Linux) |
 
+## Metrics for proxies that cannot carry traffic
+
+A proxy can pass its SOCKS login and still be unable to reach the platform: the dial through it times out inside the proxy's own connect step. These failures are counted in a category of their own and never as auth failures, because the auth counters drive renewing or deleting an identity, which is the wrong remedy for a bad proxy. The `[health][proxies]` line shows them as `proxy-leg:N`.
+
+| Series | Type | Meaning |
+|---|---|---|
+| `urnet_proxy_leg_failures` | gauge | Platform dials that failed inside the proxy's own connect step, summed over the proxies currently registered. Removing a proxy drops its count. |
+| `urnet_proxy_leg_shadow_flagged` | gauge | Proxies the shadow shed decision flags right now. |
+| `urnet_proxy_leg_shadow_shed_total` | counter | Proxies the shadow shed decision has flagged since the process started. |
+
+The shed decision is shadow only. A proxy is flagged when at least 5 proxy-leg failures in a row have gone 10 minutes without a platform dial succeeding through it, and a platform dial succeeded through some other path within the last 5 minutes. The second condition is the outage guard: when the platform itself is down every proxy shows the same failure and none is to blame, so nothing is flagged. A flagged proxy is logged once as `[proxy][shed] shadow: would shed ...` and nothing is changed. A platform dial that succeeds through the proxy ends its streak.
+
 ## Metrics for QUIC DATAGRAM
 
 This build offers QUIC DATAGRAM on every H3 connection at the upstream

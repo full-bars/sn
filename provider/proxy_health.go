@@ -31,6 +31,9 @@ type ProxyFailureCounters struct {
 	AuthFailures    atomic.Int64
 	TimeoutFailures atomic.Int64
 	TransportDrops  atomic.Int64
+	// ProxyLegFailures counts platform dials that failed inside the proxy's
+	// own connect step. A category of its own: see proxy_leg.go.
+	ProxyLegFailures atomic.Int64
 }
 
 // proxyHealth tracks one proxy's platform-transport liveness for the
@@ -50,6 +53,12 @@ type proxyHealth struct {
 	lastError       string
 	lastErrorAt     time.Time // when lastError was recorded (so a stale error reads as such)
 	regen           uint64    // incremented on each RegisterProxy; UnregisterProxy skips if stale
+
+	// proxy-leg streak (proxy_leg.go): consecutive failures inside the proxy's
+	// own connect step with no platform dial succeeding through it.
+	legStreak      int
+	legStreakSince time.Time
+	legWouldShed   bool // the shadow decision already reported this streak
 }
 
 // StagingWindowDuration is the shared duration used by both connectingStaleAfter
@@ -174,6 +183,9 @@ func RegisterProxy(index int, address, key string) uint64 {
 	h.lastError = ""
 	h.lastErrorAt = time.Time{}
 	h.failures = ProxyFailureCounters{}
+	h.legStreak = 0
+	h.legStreakSince = time.Time{}
+	h.legWouldShed = false
 
 	gen := proxyHealthGen.Add(1)
 	h.regen = gen
@@ -376,6 +388,9 @@ func formatProxyErrorEntry(index int, address string, failures *ProxyFailureCoun
 	}
 	if drops := failures.TransportDrops.Load(); drops > 0 {
 		parts = append(parts, fmt.Sprintf("drops:%d", drops))
+	}
+	if leg := failures.ProxyLegFailures.Load(); leg > 0 {
+		parts = append(parts, fmt.Sprintf("proxy-leg:%d", leg))
 	}
 	if lastError != "" {
 		if !lastErrorAt.IsZero() {

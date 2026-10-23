@@ -1,8 +1,27 @@
 # Changelog
 
-Releases of this fork are tagged `v<YYYY.M.D>-<unix>-meso`. Tags without the `-meso` suffix come from upstream (`urfoundation/sn`) and are not releases of this fork. The newest entry below the unreleased list is the latest release of this fork.
+Releases of this fork are tagged `v<YYYY.M.D>-<build>`, where the build number derives from the tagged commit's time. Releases before 2026.10.22 carried a `-meso` suffix. Upstream (`urfoundation/sn`) publishes tags in the same shape, so the newest entry below the unreleased list, not the tag list, is the latest release of this fork.
 
 ## [Unreleased]
+
+### Added
+
+- **The trim cap is visible** ([#151](https://github.com/full-bars/sn/pull/151)): with no argument `urnet-tools proxy trim` reports the effective cap and its source (operator, OOM or thrash), the configured pool size before the cap, how many proxies the cap holds back and the live counts, and `urnet-tools status` carries a `trim` row whenever a cap applies. The provider's effective cap wins over the `proxy_trim` file, and trim state is reported only from a complete pool, so an unreadable `proxy_url.json` cannot understate the pool.
+- **The extender keeps its lag.dev measurement key beside its identity seed** ([#158](https://github.com/full-bars/sn/pull/158)): the extender role had no local state to keep a measurement key in. It now writes a PEM private key to `.provider.extender.measurement.key` in the provider's state directory when the file is absent (mode 0600, direct slot only). Back it up with the rest of the state directory and treat it as secret.
+- **Proxies that pass login but cannot reach the platform are counted, and a shadow decision flags them** ([Monitoring](docs/Monitoring.md)): the dial through such a proxy times out inside the proxy's own connect step. That failure used to be filed under timeouts, which nothing sheds on, so the proxy parked its client in a one-minute retry loop indefinitely while status still counted it as authenticated. It is now a category of its own (`proxy-leg:N` on the `[health][proxies]` line, `urnet_proxy_leg_failures` in the scrape) and never counts as an auth failure, whose consumers renew or delete an identity. A proxy with 5 or more such failures in a row over 10 minutes, with no platform dial succeeding through it while another path reached the platform in the last 5 minutes, is logged once as `[proxy][shed] shadow: would shed ...` and counted in `urnet_proxy_leg_shadow_shed_total`. **Shadow only: nothing is shed.** The platform-outage guard keeps a down platform from flagging every proxy. Needs the connect library's `ControlDialObserver`.
+
+### Fixed
+
+- **URL proxies were held back for an hour behind proxies that never authenticate** ([#157](https://github.com/full-bars/sn/pull/157)): the warmup gate released on a ratio over every registered proxy, so a node with a dead proxy tail never crossed the gate and only a 60-minute backstop ended the hold, while the URL fetcher stayed parked behind the same flag. The fetcher's wait is now bounded to five minutes from the start (the reload gate shipped with the grace earlier), and the reload fires when the grace expires.
+- **The registration custody repair hints failed on non-English Windows** ([#146](https://github.com/full-bars/sn/pull/146)): the refusal messages named `SYSTEM` and `Administrators`, which icacls cannot resolve on a localized system. The grants now use the well-known SIDs (`*S-1-5-18`, `*S-1-5-32-544`).
+
+### Changed
+
+- **The lifetime counters say when they began** ([#152](https://github.com/full-bars/sn/pull/152), [#155](https://github.com/full-bars/sn/pull/155)): the store persists a start stamp written once, the `all-time` lines carry it, a pre-existing store reports an approximate start instead of inventing a date, and the scrape gains `urnet_lifetime_start_timestamp_seconds` and `urnet_lifetime_start_approximate`.
+- **The pins move together** ([#156](https://github.com/full-bars/sn/pull/156), [#158](https://github.com/full-bars/sn/pull/158), [#159](https://github.com/full-bars/sn/pull/159)): connect `42a8c3348` to `6eeb86ec7`, sdk `0fefcf85f57b` to `96c2b6eb`, server `0fd9ce9708ea` to `05cc5e86`. The newer connect removed APIs the older sdk used and adds the resident move code the newer sdk needs, so they cannot move independently.
+- **The live-numbers job signs its commits** ([#154](https://github.com/full-bars/sn/pull/154)): the scheduled SN25 cost-table refresh imports the CI signing key, refuses to push an unsigned commit, and the wiki mirror signs too.
+
+## [v2026.10.22-1078667780] — 2026-10-22
 
 ### Added
 
