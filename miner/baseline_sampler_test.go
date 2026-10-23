@@ -2,6 +2,7 @@ package miner
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -193,5 +194,36 @@ func TestBaselineControlKeyIsLiveAndDefaultsOn(t *testing.T) {
 	}
 	if resp := handleControlRequest(state, controlRequest{Cmd: "set", Key: "baseline", Value: "yes"}); resp.OK {
 		t.Fatal("only on and off may be accepted")
+	}
+}
+
+// One failed memory reader must not drop the readings that succeeded. The
+// host block still carries swap, psi and load, and only the memory fields go.
+func TestApplyBaselineHostKeepsTheBlockWhenMemoryIsMissing(t *testing.T) {
+	swap := int64(128)
+	host := baselineHost{SwapUsedMiB: &swap}
+
+	var partial baselineInputs
+	applyBaselineHost(&partial, host, errNoHostData)
+	if !partial.hostKnown {
+		t.Fatalf("host block dropped for errNoHostData; swap, psi and load were readable")
+	}
+	if partial.host.SwapUsedMiB == nil || *partial.host.SwapUsedMiB != swap {
+		t.Fatalf("swap reading lost: %v", partial.host.SwapUsedMiB)
+	}
+	if partial.host.MemAvailableMiB != nil {
+		t.Fatalf("memory reading invented: %v", *partial.host.MemAvailableMiB)
+	}
+
+	var failed baselineInputs
+	applyBaselineHost(&failed, host, errors.New("reader exploded"))
+	if failed.hostKnown {
+		t.Fatalf("host block kept for an unknown error")
+	}
+
+	var ok baselineInputs
+	applyBaselineHost(&ok, host, nil)
+	if !ok.hostKnown || ok.hostErr != nil {
+		t.Fatalf("clean reading: known=%v err=%v", ok.hostKnown, ok.hostErr)
 	}
 }

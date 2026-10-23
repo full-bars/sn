@@ -3,6 +3,7 @@ package miner
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"sort"
 	"strings"
@@ -456,10 +457,25 @@ func baselineCollect(now time.Time) baselineInputs {
 	in := baselineInputs{now: now, snap: snap}
 
 	host, herr := readBaselineHost()
-	in.host, in.hostKnown, in.hostErr = host, herr == nil, herr
+	applyBaselineHost(&in, host, herr)
 
 	in.gc, in.net = readBaselineGC(now), readBaselineNet()
 	return in
+}
+
+// applyBaselineHost decides how a host reading enters the sample. A memory
+// reading that failed is not a reason to drop swap, psi and load, which came
+// back fine: buildBaselineHost already omits just the two memory fields and
+// reports errNoHostData, so the block is still worth publishing.
+func applyBaselineHost(in *baselineInputs, host baselineHost, err error) {
+	switch {
+	case err == nil:
+		in.host, in.hostKnown = host, true
+	case errors.Is(err, errNoHostData):
+		in.host, in.hostKnown, in.hostErr = host, true, err
+	default:
+		in.hostErr = err
+	}
 }
 
 // currentVersionForBaseline is the running build, with the same "dev" fallback
