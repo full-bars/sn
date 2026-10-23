@@ -1419,13 +1419,13 @@ func (r *ProxyReloader) reload() {
 		}
 		// Defer unproven URL-sourced proxy launches until file-proxy warmup
 		// completes, so operator-curated proxies get an uncontested ramp —
-		// but only for a bounded grace period. A box whose file proxies
-		// cannot warm (saturation, expired credentials, a reload storm) must
-		// still be able to refill from the URL pool; otherwise this gate
-		// turns one slow startup into a permanently under-filled fleet.
+		// but only for a bounded grace period (urlWarmupHold). A box whose
+		// file proxies cannot warm (saturation, expired credentials, a node
+		// carrying a permanent tail of dead file proxies) must still be able
+		// to refill from the URL pool; otherwise this gate turns one slow
+		// startup into a permanently under-filled fleet.
 		isPromoted := proxyEarningsScore(key, time.Now()) >= earningsPromotionBytes
-		if sourceOf[key] == "url" && !isPromoted && !proxyWarmupDone.Load() &&
-			time.Since(provideStartTime) < urlWarmupLaunchGrace {
+		if sourceOf[key] == "url" && !isPromoted && urlWarmupHold() {
 			warmupDeferred++
 			continue
 		}
@@ -1582,3 +1582,15 @@ var proxyWarmupDone atomic.Bool
 // urlWarmupLaunchGrace bounds how long unproven URL-sourced proxies wait for
 // the file-sourced pool to finish its initial warmup before launching anyway.
 const urlWarmupLaunchGrace = 5 * time.Minute
+
+// urlWarmupHold reports whether unproven URL-sourced proxies must still wait
+// for the file-proxy warmup. Bounded by urlWarmupLaunchGrace from the moment
+// the process started, because paceMonitor's warmup bar is a ratio over every
+// registered proxy: a public-list node carries a permanent tail of file proxies
+// that never auth, the bar can stay out of reach for the whole run, and an
+// unbounded hold then blocks qualified URL replacements — and the URL fetcher —
+// behind proxies that are already dead. A zero provideStartTime (only reachable
+// without provide() having run) saturates time.Since and can never hold.
+func urlWarmupHold() bool {
+	return !proxyWarmupDone.Load() && time.Since(provideStartTime) < urlWarmupLaunchGrace
+}
