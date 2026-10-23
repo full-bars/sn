@@ -125,6 +125,11 @@ type minerMetricsCountersFile struct {
 	PID     int                               `json:"pid"`
 	Proxies map[int]minerMetricsProxyCounters `json:"proxies,omitempty"`
 	Control minerMetricsControlCounters       `json:"control"`
+	// Retired is the running total of entries a prune removed from Proxies.
+	// Without it urnet_*_total would step DOWN when an index ages out or the
+	// entry cap evicts it, and Prometheus reads a decrease as a counter reset,
+	// reporting most of the node's lifetime total as new traffic.
+	Retired minerMetricsByteTotals `json:"retired,omitempty"`
 }
 
 // minerMetricsCounterSnapshot is what the store reads from the live process:
@@ -151,6 +156,11 @@ type metricsCounterStore struct {
 	// contributing to the aggregate.
 	base     map[int]minerMetricsProxyCounters
 	restored bool
+
+	// retired holds the totals of entries a prune removed from base. base no
+	// longer carries them, so retiredTotals has to add them or the exported
+	// lifetime total would fall.
+	retired minerMetricsByteTotals
 
 	// applied is how much of the STORED totals this process has already folded
 	// into its live counters. A catch-up adds only the difference, so it can
@@ -268,6 +278,7 @@ func (s *metricsCounterStore) restore() error {
 		s.foreign = map[int]minerMetricsProxyCounters{}
 	}
 	s.foreign = mergeMetricsProxyCounters(s.foreign, file.Proxies)
+	s.retired = maxMinerMetricsByteTotals(s.retired, file.Retired)
 	// The control counters are process-global and restore has just added the
 	// stored value to them, so the baseline a catch-up adds on top is what
 	// restore applied, not the live value it now reads.
@@ -314,12 +325,21 @@ func (s *metricsCounterStore) catchUp() error {
 		return err
 	}
 
+	// Snapshot before the registry is copied: Register records its seed in
+	// s.applied before it publishes the entry, so taking this first means
+	// every slot seen here already has its record in the copy below. Taken
+	// after, a slot registered in the gap would have its stored total added
+	// on top of its own seed, then lose the seed when applied is committed.
+	// s.mu is not held here on purpose: Register takes r.mu then s.mu.
+	live := catchUpLiveSnapshot()
+
 	s.mu.Lock()
 	s.base = mergeMetricsProxyCounters(s.base, file.Proxies)
 	if s.foreign == nil {
 		s.foreign = map[int]minerMetricsProxyCounters{}
 	}
 	s.foreign = mergeMetricsProxyCounters(s.foreign, file.Proxies)
+	s.retired = maxMinerMetricsByteTotals(s.retired, file.Retired)
 	base := make(map[int]minerMetricsProxyCounters, len(s.foreign))
 	for index, counters := range s.foreign {
 		base[index] = counters
@@ -339,7 +359,7 @@ func (s *metricsCounterStore) catchUp() error {
 	// Add the part of the stored total this process has not folded in yet.
 	// Every live slot counts from zero at registration, so stored + own is the
 	// true continuation; a max would drop one side or the other.
-	for index, bw := range controlRuntime.bandwidthSnapshot() {
+	for index, bw := range live {
 		if bw == nil {
 			continue
 		}
@@ -355,7 +375,11 @@ func (s *metricsCounterStore) catchUp() error {
 	}
 
 	s.mu.Lock()
-	s.applied = applied
+	// Merge rather than replace: a slot registered after the copy above has
+	// already recorded its own seed, and replacing the map would drop it.
+	for index, counters := range applied {
+		s.applied[index] = maxMinerProxyCounters(s.applied[index], counters)
+	}
 	s.appliedControl = maxMinerControlCounters(appliedControl, file.Control)
 	s.controlAppliedSet = true
 	s.mu.Unlock()
@@ -523,6 +547,10 @@ func (s *metricsCounterStore) flush() error {
 	merged = mergeMetricsProxyCounters(merged, snap.Proxies)
 	proxies := pruneMetricsProxyCounters(merged, live, now)
 
+	// Anything the prune drops leaves base for good, so its totals move into
+	// the retired accumulator before base is replaced below.
+	retired := s.retireDropped(merged, proxies)
+
 	// Keep the merged map in memory too, pruned the same way: a proxy that
 	// unregisters right after this flush must not seed its replacement below
 	// the total just written, and the base must not grow for the life of a
@@ -548,6 +576,7 @@ func (s *metricsCounterStore) flush() error {
 		PID:     os.Getpid(),
 		Proxies: proxies,
 		Control: control,
+		Retired: retired,
 	}
 	if priorErr == nil && metricsCountersUnchanged(file, prior, now) {
 		return nil
@@ -598,13 +627,62 @@ func maxMinerProxyCounters(a, b minerMetricsProxyCounters) minerMetricsProxyCoun
 	}
 }
 
+// addMinerMetricsByteTotals sums two byte totals.
+func addMinerMetricsByteTotals(a, b minerMetricsByteTotals) minerMetricsByteTotals {
+	return minerMetricsByteTotals{
+		TotalRx:    a.TotalRx + b.TotalRx,
+		TotalTx:    a.TotalTx + b.TotalTx,
+		BillableRx: a.BillableRx + b.BillableRx,
+		BillableTx: a.BillableTx + b.BillableTx,
+	}
+}
+
+// maxMinerMetricsByteTotals takes the larger of two byte totals. The retired
+// accumulator is merged this way, never summed: during a hotswap two writers
+// each add the entries their own view dropped, and adding both would count the
+// same entry twice.
+func maxMinerMetricsByteTotals(a, b minerMetricsByteTotals) minerMetricsByteTotals {
+	return minerMetricsByteTotals{
+		TotalRx:    maxU64(a.TotalRx, b.TotalRx),
+		TotalTx:    maxU64(a.TotalTx, b.TotalTx),
+		BillableRx: maxU64(a.BillableRx, b.BillableRx),
+		BillableTx: maxU64(a.BillableTx, b.BillableTx),
+	}
+}
+
+// retireDropped folds the totals of entries a prune removed from base into the
+// retired accumulator and returns it. Every writer derives the same set from
+// its own view, so callers merge the persisted accumulator with max.
+func (s *metricsCounterStore) retireDropped(merged, kept map[int]minerMetricsProxyCounters) minerMetricsByteTotals {
+	var dropped minerMetricsByteTotals
+	for index, counters := range merged {
+		if _, ok := kept[index]; ok {
+			continue
+		}
+		dropped.TotalRx += counters.TotalRx
+		dropped.TotalTx += counters.TotalTx
+		dropped.BillableRx += counters.BillableRx
+		dropped.BillableTx += counters.BillableTx
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.retired = addMinerMetricsByteTotals(s.retired, dropped)
+	return s.retired
+}
+
+// catchUpLiveSnapshot is the live-registry read catchUp uses. It is a variable
+// so a test can register a slot in the window the ordering fix is about;
+// production never assigns it.
+var catchUpLiveSnapshot = func() map[int]*bandwidth.ProxyBandwidth {
+	return controlRuntime.bandwidthSnapshot()
+}
+
 // retiredTotals sums the stored totals of every index this process does not
 // run. A live index is skipped because its registry entry was seeded with the
 // same totals, so counting both would double it.
 func (s *metricsCounterStore) retiredTotals(live map[int]struct{}) minerMetricsByteTotals {
 	var totals minerMetricsByteTotals
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	for index, counters := range s.base {
 		if _, ok := live[index]; ok {
 			continue
@@ -614,6 +692,8 @@ func (s *metricsCounterStore) retiredTotals(live map[int]struct{}) minerMetricsB
 		totals.BillableRx += counters.BillableRx
 		totals.BillableTx += counters.BillableTx
 	}
+	totals = addMinerMetricsByteTotals(totals, s.retired)
+	s.mu.Unlock()
 	return totals
 }
 

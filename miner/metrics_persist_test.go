@@ -598,3 +598,84 @@ func TestMetricsCounterCatchUpAfterSeededRegistrationDoesNotDoubleCount(t *testi
 		t.Fatalf("seeded slot total_tx = %d, want 500", got)
 	}
 }
+
+// A prune removes an index from base. Its totals must move into the retired
+// accumulator first, or urnet_*_total steps DOWN when a proxy ages out and
+// Prometheus reads the decrease as a counter reset.
+func TestMetricsCounterTotalsStayMonotonicWhenAPruneDropsAnIndex(t *testing.T) {
+	h := newTestMetricsCounterStore(t)
+
+	old := h.now.Add(-60 * 24 * time.Hour).Unix()
+	h.store.setBase(map[int]minerMetricsProxyCounters{
+		1: {TotalRx: 1000, TotalTx: 500, BillableRx: 900, BillableTx: 400, LastSeen: old},
+	})
+	h.snap.Proxies[2] = minerMetricsProxyCounters{TotalRx: 10, TotalTx: 5, BillableRx: 10, BillableTx: 5}
+
+	if err := h.store.flush(); err != nil {
+		t.Fatalf("flush: %v", err)
+	}
+
+	live := map[int]struct{}{2: {}}
+	if got := h.store.retiredTotals(live); got.TotalRx != 1000 {
+		t.Fatalf("pruned index left the aggregate: TotalRx = %d, want 1000", got.TotalRx)
+	}
+
+	// A second flush must not add the same retired totals again.
+	if err := h.store.flush(); err != nil {
+		t.Fatalf("second flush: %v", err)
+	}
+	if got := h.store.retiredTotals(live); got.TotalRx != 1000 {
+		t.Fatalf("retired totals counted twice: TotalRx = %d, want 1000", got.TotalRx)
+	}
+
+	// And they survive a reload, or a restart would drop the history.
+	reloaded := newMetricsCounterStore(h.path)
+	reloaded.now = h.store.now
+	if err := reloaded.restore(); err != nil {
+		t.Fatalf("restore: %v", err)
+	}
+	if got := reloaded.retiredTotals(live); got.TotalRx != 1000 {
+		t.Fatalf("retired totals not persisted: TotalRx = %d, want 1000", got.TotalRx)
+	}
+}
+
+// A slot registered while catchUp reads the registry keeps its seed record.
+// Losing it makes the next catch-up add that stored total a second time.
+func TestCatchUpKeepsASlotRegisteredWhileItReadsTheRegistry(t *testing.T) {
+	h := newTestMetricsCounterStore(t)
+
+	file := minerMetricsCountersFile{
+		Version: metricsCounterStoreVersion,
+		SavedAt: h.now,
+		Proxies: map[int]minerMetricsProxyCounters{1: {TotalRx: 100}},
+	}
+	blob, err := json.Marshal(file)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if err := writeMetricsCounterFileAtomic(h.path, blob, 0o600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	prev := catchUpLiveSnapshot
+	t.Cleanup(func() { catchUpLiveSnapshot = prev })
+	catchUpLiveSnapshot = func() map[int]*bandwidth.ProxyBandwidth {
+		// Register published this slot and recorded its seed while catchUp was
+		// reading the registry.
+		h.store.mu.Lock()
+		h.store.applied[1] = minerMetricsProxyCounters{TotalRx: 100}
+		h.store.mu.Unlock()
+		return map[int]*bandwidth.ProxyBandwidth{}
+	}
+
+	if err := h.store.catchUp(); err != nil {
+		t.Fatalf("catchUp: %v", err)
+	}
+
+	h.store.mu.Lock()
+	got := h.store.applied[1]
+	h.store.mu.Unlock()
+	if got.TotalRx != 100 {
+		t.Fatalf("seed record lost by catch-up: %+v", got)
+	}
+}
