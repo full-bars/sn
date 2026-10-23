@@ -1394,7 +1394,7 @@ func provideLauncherLoop(st *provideState) func() {
 	// Adopt legacy bare-address slow-retry entries onto identity keys so a
 	// pre-upgrade proxy keeps its continuous 14-day drop clock.
 	globalProxySlowRetryState.Load().adoptLegacy(allProxySettings)
-	setConfiguredProxyCount(trimmedConfiguredCount(len(allProxySettings)))
+	noteTrimSelection(len(allProxySettings))
 
 	finishProxy := bannerPhase("Proxy load")
 	if 0 < len(allProxySettings) {

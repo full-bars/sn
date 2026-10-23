@@ -144,6 +144,9 @@ Operators can enforce a hard ceiling on running proxies without restarting
 the provider or wiping configuration files:
 
 ```sh
+# Report the cap in force, the configured pool and what the cap holds back
+urnet-tools proxy trim
+
 # Preview which proxies would be shed without making changes
 urnet-tools proxy trim 500 --preview
 
@@ -153,6 +156,12 @@ urnet-tools proxy trim 500
 # Remove the trim cap
 urnet-tools proxy trim off
 ```
+
+With no argument the command is read-only and prints the effective cap, where
+it came from (operator, OOM or thrash), the configured pool size before the
+cap, how many proxies the cap is holding back, and the live
+up/connecting/dropped/dead counts. `urnet-tools status` shows the same as a
+`trim` row on its live block whenever a cap applies.
 
 ### Docker (host-side)
 

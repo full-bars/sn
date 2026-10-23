@@ -66,7 +66,7 @@ On a host where OpenRC is the running init system, the lifecycle commands (`star
 | `proxy paste [target]` | Stream raw proxies from stdin or a pipe without creating host files. Auto-detects formats and URLs. |
 | `proxy clear [target]` | Remove all proxies and URL sources. Confirm-gated (`-f` bypasses the prompt). |
 | `proxy remove [addresses...] [target]` | Remove specific proxies or patterns. Use `--match=<pattern>` for host substring matches, or `--all` for a complete wipe. |
-| `proxy trim <N> [target] [--preview]` | Set a persistent hard cap of `<N>` running proxies. Sheds worst A-F reachability graded proxies first. `proxy trim off` clears the cap. |
+| `proxy trim [<N>] [target] [--preview]` | With `<N>`, set a persistent hard cap of `<N>` running proxies, shedding the worst A-F reachability graded proxies first. `proxy trim off` clears the cap. With no argument it reports the current cap, the configured pool size and how many proxies the cap is holding back. |
 | `proxy refresh [target] [--force]` | Reload the proxy list into the running provider without restarting. `--force` bypasses the warmup lockout. |
 | `proxy add-source <url> [target]` | Add a live URL proxy source. Fetched and probed immediately. |
 | `proxy remove-source <url> [target]` | Remove a URL proxy source. |
