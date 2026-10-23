@@ -491,7 +491,13 @@ do_install() {
     priv chmod 755 "$staged"
     priv mv -f "$staged" "$provider_bin" || { pr_err "Failed to install binary"; rm -f "$staged"; rm -rf "$tmpdir"; exit 1; }
 
-    printf '%s\n' "$tag" | priv tee "$install_path/version" > /dev/null
+    # Same rename-not-follow rule as the binary above. The version file lives
+    # in a directory the service user can write to, so a symlink planted at
+    # that name would redirect root's write. Write beside it and rename over
+    # it: rename replaces the entry instead of following it.
+    ver_tmp="$install_path/.version.new.$$"
+    printf '%s\n' "$tag" | priv tee "$ver_tmp" > /dev/null && \
+        priv mv -f "$ver_tmp" "$install_path/version"
 
     # Install the tool: the Go urnet-tools binary shipped as a release asset,
     # digest-verified; fall back to this shell script for releases that
