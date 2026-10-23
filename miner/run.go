@@ -807,6 +807,11 @@ func provide(opts docopt.Opts) {
 	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	defer stopSignals()
 
+	// A hot swap execs in place: the pid survives and the previous image's
+	// proxy.lock would read as held-by-a-live-holder, blocking every lock
+	// consumer until the max age ages it out. Clear it before the manager
+	// loops or any command can take the lock.
+	cleanStaleSelfProxyLock()
 	// The manager owns the desired proxy set (the legacy <state>/proxy config
 	// plus any URL-sourced cache) and keeps the state current while the
 	// providers run.

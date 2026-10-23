@@ -153,6 +153,46 @@ var proxyLockNonce uint64
 // this is assumed mid-write, not stale.
 var proxyLockWriteGrace = 5 * time.Second
 
+// processStart approximates this process's start time. A hot swap execs in
+// place: the pid survives and deferred cleanup never runs, so a proxy.lock
+// written by the previous image carries our own pid with an old timestamp
+// and would read as "held by a live holder" until proxyLockMaxAge ages it
+// out, blocking every lock consumer in the fresh image for up to an hour.
+var processStart = time.Now()
+
+// cleanStaleSelfProxyLock removes a proxy.lock that carries this process's
+// own pid but predates this process's start. Run it at startup, before the
+// first lock consumer, so an escalated hot restart is not greeted by its
+// own old lock.
+func cleanStaleSelfProxyLock() {
+	path, err := proxyLockPath()
+	if err != nil {
+		return
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	pid, ts, ok := parseLockContent(b)
+	if !ok || pid != os.Getpid() {
+		return
+	}
+	// Inclusive bound: a lock written by the previous image in the same
+	// integer second as this process's start must be cleaned too, and at
+	// cleanup time this image cannot yet hold a lock of its own (it runs
+	// before any local consumer).
+	if ts <= processStart.Unix() {
+		// Compare before removing, like the steal path: another holder
+		// could have replaced the file between the read and the remove.
+		if current, err := os.ReadFile(path); err != nil || string(current) != string(b) {
+			return
+		}
+		if os.Remove(path) == nil {
+			tlog("[proxy] removed a proxy.lock left behind by a previous image with this pid\n")
+		}
+	}
+}
+
 // proxyLockMaxAge is the outer bound: even if the holder appears alive
 // (Signal(0) succeeds), a lock older than this is unconditionally stale.
 // This prevents a PID-reuse scenario (OS reissues the same PID to an
