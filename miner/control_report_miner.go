@@ -95,6 +95,8 @@ func buildMinerSnapshot() (*nodeSnapshot, error) {
 	restart := snapshotRestart{Reason: restartState.Reason, CleanShutdown: restartState.CleanShutdown}
 
 	proxies, proxyNote := snapshotProxyCounts()
+	// An unreadable proxy state yields zero counts, which are not a reading.
+	proxiesKnown := proxyNote == ""
 	billable, total, clients, haveCounters := controlRuntime.counterTotals()
 	nowRate, avg1m, avg5m, seq, history := controlRuntime.rate.rates()
 	totalNow, totalAvg1m, totalAvg5m, totalHistory := controlRuntime.rate.totalHistory()
@@ -115,10 +117,11 @@ func buildMinerSnapshot() (*nodeSnapshot, error) {
 			HistorySeq:             seq,
 			HistoryBps:             history,
 		},
-		Clients:   clients,
-		Proxies:   proxies,
-		Restart:   restart,
-		Resources: collectMinerResources(),
+		Clients:      clients,
+		Proxies:      proxies,
+		ProxiesKnown: proxiesKnown,
+		Restart:      restart,
+		Resources:    collectMinerResources(),
 	}
 	if haveCounters {
 		snap.Traffic = &snapshotTraffic{

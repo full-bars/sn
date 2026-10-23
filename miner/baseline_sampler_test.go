@@ -2,6 +2,7 @@ package miner
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -225,5 +226,31 @@ func TestApplyBaselineHostKeepsTheBlockWhenMemoryIsMissing(t *testing.T) {
 	applyBaselineHost(&ok, host, nil)
 	if !ok.hostKnown || ok.hostErr != nil {
 		t.Fatalf("clean reading: known=%v err=%v", ok.hostKnown, ok.hostErr)
+	}
+}
+
+// Zero proxy counts from an unreadable state are not a measurement. Publishing
+// them made a node look like it had no proxies instead of an unknown count.
+func TestBaselineSampleOmitsProxiesWhenTheStateIsUnreadable(t *testing.T) {
+	snap := &nodeSnapshot{Version: "v1"}
+	in := baselineInputs{now: time.Now(), snap: snap}
+
+	unknown := buildBaselineSample(in)
+	if unknown.Proxies != nil {
+		t.Fatalf("published %+v for an unreadable proxy state", *unknown.Proxies)
+	}
+	body, err := json.Marshal(unknown)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if strings.Contains(string(body), `"proxies"`) {
+		t.Fatalf("unreadable state still published a proxies block: %s", body)
+	}
+
+	snap.ProxiesKnown = true
+	snap.Proxies.Up = 3
+	known := buildBaselineSample(in)
+	if known.Proxies == nil || known.Proxies.Up != 3 {
+		t.Fatalf("a known count was dropped: %+v", known.Proxies)
 	}
 }

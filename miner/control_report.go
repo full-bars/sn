@@ -38,8 +38,12 @@ type nodeSnapshot struct {
 	Clients  int64            `json:"clients"`
 	Sessions snapshotSessions `json:"sessions"`
 	Proxies  snapshotProxies  `json:"proxies"`
-	Pressure float64          `json:"pressure"`
-	Restart  snapshotRestart  `json:"restart"`
+	// ProxiesKnown is false when the proxy state could not be read. The
+	// counts are then zeros that mean "unknown", not "no proxies", and a
+	// sample must not publish them as if they were measurements.
+	ProxiesKnown bool            `json:"-"`
+	Pressure     float64         `json:"pressure"`
+	Restart      snapshotRestart `json:"restart"`
 
 	Resources snapshotResources `json:"resources"`
 

@@ -67,7 +67,7 @@ type baselineSample struct {
 	State       string `json:"state,omitempty"`
 	StateReason string `json:"state_reason,omitempty"`
 
-	Proxies baselineProxies `json:"proxies"`
+	Proxies *baselineProxies `json:"proxies,omitempty"`
 	// Desired is the configured pool size, and TrimCap the effective cap with
 	// its source, so a later comparison can see that capacity changed rather
 	// than reading a trimmed box as a regression.
@@ -209,11 +209,16 @@ func buildBaselineSample(in baselineInputs) baselineSample {
 	}
 	s.State = snap.State
 	s.StateReason = snap.StateReason
-	s.Proxies = baselineProxies{
-		Up:         snap.Proxies.Up,
-		Degraded:   snap.Proxies.Degraded,
-		Connecting: snap.Proxies.Connecting,
-		Dead:       snap.Proxies.Dead,
+	// Zeros from an unreadable proxy state are not a measurement. Omit the
+	// block rather than publish four zeros that read as "no proxies".
+	if snap.ProxiesKnown {
+		p := baselineProxies{
+			Up:         snap.Proxies.Up,
+			Degraded:   snap.Proxies.Degraded,
+			Connecting: snap.Proxies.Connecting,
+			Dead:       snap.Proxies.Dead,
+		}
+		s.Proxies = &p
 	}
 	s.Clients = snap.Clients
 	s.Sessions = baselineSessions{PQE: snap.Sessions.PQE, Classical: snap.Sessions.Classical}
