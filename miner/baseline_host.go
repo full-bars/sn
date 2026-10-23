@@ -42,7 +42,10 @@ func readBaselineHost() (baselineHost, error) {
 	if used, ok := readSwapUsedMiB(); ok {
 		raw.SwapUsed = &used
 	}
-	if some, err := readPSI("some"); err == nil {
+	// The resource file is /proc/pressure/memory; "some" is the line inside it
+	// that readPSI parses. Passing the line name here read a file that never
+	// exists, so the reading was silently omitted on every node.
+	if some, err := readPSI("memory"); err == nil {
 		raw.PSISome60 = &some
 	}
 	if full60, full300, err := readPSIFull(); err == nil {

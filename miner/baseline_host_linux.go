@@ -15,8 +15,15 @@ import (
 // memory and load. The non-Linux stub returns errNoHostReadings so a sample on
 // another platform omits these fields instead of writing zeros.
 
+// psiResourcePath resolves a PSI resource under /proc/pressure. It is a seam so
+// a test can prove which resource the reader opens: "some" is a LINE inside the
+// memory file, not a resource.
+var psiResourcePath = func(resource string) string {
+	return "/proc/pressure/" + resource
+}
+
 func readPSI(resource string) (avg60 float64, err error) {
-	b, err := os.ReadFile("/proc/pressure/" + resource)
+	b, err := os.ReadFile(psiResourcePath(resource))
 	if err != nil {
 		return 0, err
 	}
