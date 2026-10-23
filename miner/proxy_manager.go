@@ -360,6 +360,15 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	}
 	sortProxySettingsByKey(all)
 
+	// Record the trim decision the snapshot reports, from the full desired set:
+	// every configured proxy counts, including one a launch-time hold keeps
+	// back this cycle. Only the start path records it (importLegacy): that is
+	// the running provider's own decision, and a command reader must not
+	// fabricate one.
+	if importLegacy {
+		noteTrimSelection(len(all))
+	}
+
 	// Fork hook: v33's launch-time give-up backoff gate. A URL-sourced identity
 	// still inside its backoff window is held back instead of relaunched
 	// (proxy_manager_auth.go).

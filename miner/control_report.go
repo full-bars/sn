@@ -99,6 +99,14 @@ type snapshotProxies struct {
 	Degraded   int `json:"degraded"`
 	Connecting int `json:"connecting"`
 	Dead       int `json:"dead"`
+
+	// Configured is the pool size before the trim cap; TrimCap is the
+	// effective cap on running proxies (0 = none) and TrimCapSource says who
+	// set it. Omitted before the first trim decision, so a reader cannot
+	// mistake "not decided yet" for "no cap".
+	Configured    int    `json:"configured,omitempty"`
+	TrimCap       int    `json:"trim_cap,omitempty"`
+	TrimCapSource string `json:"trim_cap_source,omitempty"`
 }
 
 type snapshotRestart struct {

@@ -201,6 +201,13 @@ func snapshotProxyCounts() (snapshotProxies, string) {
 			counts.Connecting++
 		}
 	}
+	// Trim: only a process that made a trim decision reports one, so the fields
+	// are filled together and a command reader can never invent a selection.
+	if desired, cap, source, ok := currentTrimSelection(); ok {
+		counts.Configured = desired
+		counts.TrimCap = cap
+		counts.TrimCapSource = source
+	}
 	return counts, ""
 }
 
