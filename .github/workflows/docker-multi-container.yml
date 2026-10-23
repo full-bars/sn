@@ -9,8 +9,12 @@ on:
 # follow-up push otherwise leaves two full 40-minute-budget runs racing.
 # Cancel the superseded one; never cancel a run on main.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  # Every workflow that mints a JWT shares one account, so they have to
+  # queue behind each other. A per-workflow group let two workflows on the
+  # same PR mint at once, and each waited out the other's five-minute
+  # sign-in window only to fail again.
+  group: gauntlet-auth
+  cancel-in-progress: false
 
 jobs:
   multi-container:
