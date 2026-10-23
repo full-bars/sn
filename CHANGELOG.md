@@ -18,7 +18,7 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>`, where the build number d
 ### Changed
 
 - **The lifetime counters say when they began** ([#152](https://github.com/full-bars/sn/pull/152), [#155](https://github.com/full-bars/sn/pull/155)): the store persists a start stamp written once, the `all-time` lines carry it, a pre-existing store reports an approximate start instead of inventing a date, and the scrape gains `urnet_lifetime_start_timestamp_seconds` and `urnet_lifetime_start_approximate`.
-- **The pins move together** ([#156](https://github.com/full-bars/sn/pull/156), [#158](https://github.com/full-bars/sn/pull/158)): connect `42a8c3348` to `3b9bbd5bb`, sdk `0fefcf85f57b` to `96c2b6eb`, server `0fd9ce9708ea` to `05cc5e86`. The newer connect removed APIs the older sdk used and adds the resident move code the newer sdk needs, so they cannot move independently.
+- **The pins move together** ([#156](https://github.com/full-bars/sn/pull/156), [#158](https://github.com/full-bars/sn/pull/158), [#159](https://github.com/full-bars/sn/pull/159)): connect `42a8c3348` to `6eeb86ec7`, sdk `0fefcf85f57b` to `96c2b6eb`, server `0fd9ce9708ea` to `05cc5e86`. The newer connect removed APIs the older sdk used and adds the resident move code the newer sdk needs, so they cannot move independently.
 - **The live-numbers job signs its commits** ([#154](https://github.com/full-bars/sn/pull/154)): the scheduled SN25 cost-table refresh imports the CI signing key, refuses to push an unsigned commit, and the wiki mirror signs too.
 
 ## [v2026.10.22-1078667780] — 2026-10-22
