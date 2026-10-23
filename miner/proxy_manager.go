@@ -624,6 +624,15 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 		defer m.wg.Done()
 		runProxyEarningsRecorder(ctx)
 	}()
+	// Lifetime counter collector (v33 runLifetimeCollector): folds the live
+	// counters into the persisted all-time store once a minute, flushes on the
+	// store's throttle, and emits the dated all-time line. The store is also
+	// flushed at the two hotswap points (hotswap.go).
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runLifetimeCollector(ctx)
+	}()
 	// Direct-path egress grade (v33 proxy_direct_grade.go): read-only, persisted
 	// to its own direct_grade.json, gated on the operator's direct toggle
 	// (isDirectEnabled). v33 starts it unconditionally beside the reaper loops

@@ -527,6 +527,20 @@ func writeSeamLifetime(b *strings.Builder) {
 	fmt.Fprintf(b, "# HELP urnet_lifetime_billable_bytes_total Lifetime billable bytes transferred.\n")
 	fmt.Fprintf(b, "# TYPE urnet_lifetime_billable_bytes_total counter\n")
 	fmt.Fprintf(b, "urnet_lifetime_billable_bytes_total %d\n", lt.BillableBytes)
+	// What "lifetime" covers. Without this the counters above are undatable: a
+	// freshly reset file and a two-year-old file look alike.
+	if !lt.Since.IsZero() {
+		approxVal := 0
+		if lt.SinceApprox {
+			approxVal = 1
+		}
+		fmt.Fprintf(b, "# HELP urnet_lifetime_start_timestamp_seconds When the lifetime counters began accumulating.\n")
+		fmt.Fprintf(b, "# TYPE urnet_lifetime_start_timestamp_seconds gauge\n")
+		fmt.Fprintf(b, "urnet_lifetime_start_timestamp_seconds %d\n", lt.Since.Unix())
+		fmt.Fprintf(b, "# HELP urnet_lifetime_start_approximate Whether the start predates tracking (1 = earlier history not recorded).\n")
+		fmt.Fprintf(b, "# TYPE urnet_lifetime_start_approximate gauge\n")
+		fmt.Fprintf(b, "urnet_lifetime_start_approximate %d\n", approxVal)
+	}
 }
 
 func writeSeamErrors(b *strings.Builder) {
