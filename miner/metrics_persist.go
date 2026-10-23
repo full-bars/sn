@@ -152,6 +152,19 @@ type metricsCounterStore struct {
 	base     map[int]minerMetricsProxyCounters
 	restored bool
 
+	// applied is how much of the STORED totals this process has already folded
+	// into its live counters. A catch-up adds only the difference, so it can
+	// run twice (takeover and post-drain) without double counting, and it can
+	// add at all instead of taking the max, which discarded whichever side was
+	// smaller: the parent's drain bytes or this process's own.
+	applied        map[int]minerMetricsProxyCounters
+	appliedControl minerMetricsControlCounters
+	// controlAppliedSet marks appliedControl as initialised. The control
+	// counters are process-global and already hold this process's own commands,
+	// unlike a proxy slot that starts at zero, so the baseline is taken from
+	// the live counter at the first catch-up rather than assumed to be zero.
+	controlAppliedSet bool
+
 	// flushMu serialises flushes inside this process, so the periodic writer
 	// and a shutdown flush cannot interleave their read-merge-write sequences.
 	flushMu sync.Mutex
@@ -168,6 +181,7 @@ func newMetricsCounterStore(path string) *metricsCounterStore {
 		snapshot:   metricsCounterLiveSnapshot,
 		addControl: addMinerControlCounters,
 		base:       map[int]minerMetricsProxyCounters{},
+		applied:    map[int]minerMetricsProxyCounters{},
 	}
 }
 
@@ -225,19 +239,28 @@ func (s *metricsCounterStore) restore() error {
 		s.mu.Unlock()
 		return nil
 	}
-	s.restored = true
 	s.mu.Unlock()
 
 	file, err := s.load()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
+			// Nothing to restore. Latch: a store that does not exist yet is
+			// created by the first flush, not by a retry here.
+			s.mu.Lock()
+			s.restored = true
+			s.mu.Unlock()
 			return nil
 		}
+		// Leave restored false: a transient read failure must not permanently
+		// prevent a later restore from continuing the series.
 		return err
 	}
 
 	s.mu.Lock()
 	s.base = mergeMetricsProxyCounters(s.base, file.Proxies)
+	// Latch only after a successful load. Latching before it made a transient
+	// read failure permanent for the life of the process.
+	s.restored = true
 	s.mu.Unlock()
 	if s.addControl != nil {
 		s.addControl(file.Control)
@@ -269,20 +292,53 @@ func (s *metricsCounterStore) catchUp() error {
 		return err
 	}
 
+	// Serialise against flush. flush snapshots the base, merges outside the
+	// lock and writes the result back, so a catch-up that landed in that window
+	// was silently overwritten.
+	s.flushMu.Lock()
+	defer s.flushMu.Unlock()
+
 	s.mu.Lock()
 	s.base = mergeMetricsProxyCounters(s.base, file.Proxies)
 	base := make(map[int]minerMetricsProxyCounters, len(s.base))
 	for index, counters := range s.base {
 		base[index] = counters
 	}
+	applied := make(map[int]minerMetricsProxyCounters, len(s.applied))
+	for index, counters := range s.applied {
+		applied[index] = counters
+	}
+	appliedControl := s.appliedControl
+	controlAppliedSet := s.controlAppliedSet
 	s.mu.Unlock()
 
-	raiseMinerControlCounters(file.Control)
-	for index, bw := range controlRuntime.bandwidthSnapshot() {
-		if counters, ok := base[index]; ok {
-			raiseMetricsProxyBandwidth(bw, counters)
-		}
+	if !controlAppliedSet {
+		appliedControl = readMinerControlCounters()
 	}
+
+	// Add the part of the stored total this process has not folded in yet.
+	// Every live slot counts from zero at registration, so stored + own is the
+	// true continuation; a max would drop one side or the other.
+	for index, bw := range controlRuntime.bandwidthSnapshot() {
+		if bw == nil {
+			continue
+		}
+		counters, ok := base[index]
+		if !ok {
+			continue
+		}
+		addCounterDelta(bw, counters, applied[index])
+		applied[index] = counters
+	}
+	if s.addControl != nil {
+		s.addControl(controlCountersDelta(file.Control, appliedControl))
+	}
+
+	s.mu.Lock()
+	s.applied = applied
+	s.appliedControl = maxMinerControlCounters(appliedControl, file.Control)
+	s.controlAppliedSet = true
+	s.mu.Unlock()
 	return nil
 }
 
@@ -321,6 +377,66 @@ func raiseUint64(v *atomic.Uint64, want uint64) {
 			return
 		}
 	}
+}
+
+// addCounterDelta adds the part of stored that this process has not already
+// folded in. subFloor keeps a store that went backwards from lowering a
+// counter.
+func addCounterDelta(bw *bandwidth.ProxyBandwidth, stored, applied minerMetricsProxyCounters) {
+	if bw == nil {
+		return
+	}
+	bw.TotalRx.Add(subFloor(stored.TotalRx, applied.TotalRx))
+	bw.TotalTx.Add(subFloor(stored.TotalTx, applied.TotalTx))
+	bw.BillableRx.Add(subFloor(stored.BillableRx, applied.BillableRx))
+	bw.BillableTx.Add(subFloor(stored.BillableTx, applied.BillableTx))
+}
+
+func subFloor(v, applied uint64) uint64 {
+	if v <= applied {
+		return 0
+	}
+	return v - applied
+}
+
+// controlCountersDelta is addCounterDelta for the control counters, which are
+// added through a signed atomic.
+// readMinerControlCounters snapshots the live control counters, which are the
+// baseline a catch-up adds the stored remainder to.
+func readMinerControlCounters() minerMetricsControlCounters {
+	return minerMetricsControlCounters{
+		Acked: uint64(controlCmdsAcked.Load()),
+		Set:   uint64(controlCmdsSet.Load()),
+		Get:   uint64(controlCmdsGet.Load()),
+		Clear: uint64(controlCmdsClear.Load()),
+	}
+}
+
+func controlCountersDelta(stored, applied minerMetricsControlCounters) minerMetricsControlCounters {
+	return minerMetricsControlCounters{
+		Acked: subFloor(stored.Acked, applied.Acked),
+		Set:   subFloor(stored.Set, applied.Set),
+		Get:   subFloor(stored.Get, applied.Get),
+		Clear: subFloor(stored.Clear, applied.Clear),
+	}
+}
+
+// maxMinerControlCounters keeps the larger of two control totals, so a flush
+// cannot move the stored counters backwards.
+func maxMinerControlCounters(a, b minerMetricsControlCounters) minerMetricsControlCounters {
+	return minerMetricsControlCounters{
+		Acked: maxU64(a.Acked, b.Acked),
+		Set:   maxU64(a.Set, b.Set),
+		Get:   maxU64(a.Get, b.Get),
+		Clear: maxU64(a.Clear, b.Clear),
+	}
+}
+
+func maxU64(a, b uint64) uint64 {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // raiseInt64 is raiseUint64 for the control counters, which are signed
@@ -393,12 +509,19 @@ func (s *metricsCounterStore) flush() error {
 	// churning node.
 	s.setBase(proxies)
 
+	// A process that restored, or that flushed before catching up, can hold
+	// LOWER control totals than the store. Merge rather than assign, or the
+	// stored command counts move backwards.
+	control := snap.Control
+	if priorErr == nil {
+		control = maxMinerControlCounters(control, prior.Control)
+	}
 	file := minerMetricsCountersFile{
 		Version: metricsCounterStoreVersion,
 		SavedAt: now.UTC(),
 		PID:     os.Getpid(),
 		Proxies: proxies,
-		Control: snap.Control,
+		Control: control,
 	}
 	if priorErr == nil && metricsCountersUnchanged(file, prior, now) {
 		return nil
@@ -633,10 +756,19 @@ func metricsCounterLiveSnapshot() minerMetricsCounterSnapshot {
 // addMinerControlCounters adds a restored store's control counts into this
 // process's counters.
 func addMinerControlCounters(c minerMetricsControlCounters) {
-	controlCmdsAcked.Add(int64(c.Acked))
-	controlCmdsSet.Add(int64(c.Set))
-	controlCmdsGet.Add(int64(c.Get))
-	controlCmdsClear.Add(int64(c.Clear))
+	controlCmdsAcked.Add(int64(clampU64(c.Acked)))
+	controlCmdsSet.Add(int64(clampU64(c.Set)))
+	controlCmdsGet.Add(int64(clampU64(c.Get)))
+	controlCmdsClear.Add(int64(clampU64(c.Clear)))
+}
+
+// clampU64 keeps a stored counter representable as the int64 the atomics use.
+// Without it a corrupt or absurd store converts to a negative and subtracts.
+func clampU64(v uint64) uint64 {
+	if v > maxInt64Value {
+		return maxInt64Value
+	}
+	return v
 }
 
 func clampToUint64(v int64) uint64 {

@@ -353,11 +353,12 @@ func TestMetricsCounterCatchUpRaisesLiveProxies(t *testing.T) {
 	if err := store.catchUp(); err != nil {
 		t.Fatalf("catch up: %v", err)
 	}
-	// The raise takes the stored value instead of adding it, so the few bytes
-	// counted before the takeover are absorbed by the larger stored total;
-	// adding the two would count everything the parent counted twice.
-	if got := live.TotalRx.Load(); got != 100 {
-		t.Fatalf("caught-up total_rx = %d, want the stored 100", got)
+	// The catch-up ADDS the stored total to what this process already counted:
+	// the slot started at zero at registration, so 5 bytes served before the
+	// takeover are part of the series and must survive. Taking the max instead
+	// discarded exactly those bytes.
+	if got := live.TotalRx.Load(); got != 105 {
+		t.Fatalf("caught-up total_rx = %d, want 105 (stored 100 plus the 5 counted before the takeover)", got)
 	}
 	if got := live.TotalTx.Load(); got != 200 {
 		t.Fatalf("caught-up total_tx = %d, want the stored 200", got)
@@ -365,17 +366,18 @@ func TestMetricsCounterCatchUpRaisesLiveProxies(t *testing.T) {
 	if got := live.BillableRx.Load(); got != 10 {
 		t.Fatalf("caught-up billable_rx = %d, want the stored 10", got)
 	}
-	if got := live.BillableTx.Load(); got != 20 {
-		t.Fatalf("caught-up billable_tx = %d, want the stored 20", got)
+	if got := live.BillableTx.Load(); got != 22 {
+		t.Fatalf("caught-up billable_tx = %d, want 22 (stored 20 plus the 2 counted before the takeover)", got)
 	}
 	if got := controlCmdsAcked.Load(); got != acked+11 {
 		t.Fatalf("caught-up control.acked = %d, want %d", got, acked+11)
 	}
 
-	// Index 7 is live, so the aggregate counts its raised entry and must not
-	// add the same stored total again through the retired sum.
-	if _, _, totalRx, _, _, ok := controlRuntime.trafficTotals(); !ok || totalRx != 100 {
-		t.Fatalf("aggregate total_rx = %d (counted=%v), want the live 100 counted once", totalRx, ok)
+	// Index 7 is live, so the aggregate counts its entry and must not add the
+	// same stored total again through the retired sum. The entry itself is
+	// stored + own, which is why the total is 105 and not 100 or 110.
+	if _, _, totalRx, _, _, ok := controlRuntime.trafficTotals(); !ok || totalRx != 105 {
+		t.Fatalf("aggregate total_rx = %d (counted=%v), want 105 counted once", totalRx, ok)
 	}
 
 	// A catch-up after another writer's later flush raises again; one against
@@ -393,8 +395,10 @@ func TestMetricsCounterCatchUpRaisesLiveProxies(t *testing.T) {
 	if err := store.catchUp(); err != nil {
 		t.Fatalf("second catch-up: %v", err)
 	}
-	if got := live.TotalRx.Load(); got != 900 {
-		t.Fatalf("second catch-up total_rx = %d, want the stored 900", got)
+	// Only the part of the store this process has not folded in is added: 900
+	// stored, 100 already applied, so the live total moves by 800 to 905.
+	if got := live.TotalRx.Load(); got != 905 {
+		t.Fatalf("second catch-up total_rx = %d, want 905", got)
 	}
 	if got := live.TotalTx.Load(); got != 200 {
 		t.Fatalf("a store without total_tx lowered the live one: %d, want 200", got)
@@ -475,5 +479,44 @@ func TestMetricsCounterRestoreContinuesTheAggregate(t *testing.T) {
 	if totalRx != 101 || totalTx != 202 || billableRx != 13 || billableTx != 24 {
 		t.Fatalf("aggregate after the second registration = in %d/%d out %d/%d, want in 101/%d out 13/%d",
 			totalRx, billableRx, totalTx, billableTx, 202, 24)
+	}
+}
+
+// The drain window is the reason the catch-up adds instead of taking a max:
+// the parent keeps serving while the candidate accepts, so the stored total
+// already contains the parent's drain bytes and the candidate's own counters
+// were counted from zero at registration. The continuation is the sum, and a
+// max drops whichever side is smaller.
+func TestMetricsCounterCatchUpKeepsBothSidesOfTheDrainWindow(t *testing.T) {
+	h := newTestMetricsCounterStore(t)
+	h.setProxy(9, minerMetricsProxyCounters{TotalRx: 1050, TotalTx: 1050})
+	if err := h.store.flush(); err != nil {
+		t.Fatalf("parent drain flush: %v", err)
+	}
+
+	store := swapMetricsCounterStore(t, h.path)
+	resetControlRuntimeForTest()
+	t.Cleanup(resetControlRuntimeForTest)
+	registry := bandwidth.NewRegistry()
+	controlRuntime.setBandwidthRegistry(registry)
+
+	// The candidate served 150 bytes of its own before the catch-up ran.
+	live := registry.Register(9)
+	live.TotalRx.Add(150)
+	live.TotalTx.Add(150)
+
+	if err := store.catchUp(); err != nil {
+		t.Fatalf("catch up: %v", err)
+	}
+	if got := live.TotalRx.Load(); got != 1200 {
+		t.Fatalf("total_rx after the drain window = %d, want 1200 (1050 stored plus 150 served)", got)
+	}
+
+	// A second catch-up over the same store must not add the same bytes again.
+	if err := store.catchUp(); err != nil {
+		t.Fatalf("second catch up: %v", err)
+	}
+	if got := live.TotalRx.Load(); got != 1200 {
+		t.Fatalf("second catch-up double counted: total_rx = %d, want 1200", got)
 	}
 }
