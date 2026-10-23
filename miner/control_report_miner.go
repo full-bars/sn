@@ -203,7 +203,10 @@ func snapshotProxyCounts() (snapshotProxies, string) {
 	}
 	// Trim: only a process that made a trim decision reports one, so the fields
 	// are filled together and a command reader can never invent a selection.
+	// The presence flag carries a cleared cap: zero means "no cap", not
+	// "this build does not report".
 	if desired, cap, source, ok := currentTrimSelection(); ok {
+		counts.TrimReported = true
 		counts.Configured = desired
 		counts.TrimCap = cap
 		counts.TrimCapSource = source

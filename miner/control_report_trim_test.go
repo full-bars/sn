@@ -1,6 +1,9 @@
 package miner
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 // The snapshot's proxy block is the wire contract with urnet-tools
 // (internal/urnettools/snapshot.go, SnapshotProxies). A capped miner has to
@@ -45,5 +48,31 @@ func TestSnapshotOmitsTrimBeforeFirstDecision(t *testing.T) {
 	counts, _ := snapshotProxyCounts()
 	if counts.Configured != 0 || counts.TrimCap != 0 || counts.TrimCapSource != "" {
 		t.Fatalf("snapshot carried trim fields before the first decision: %+v", counts)
+	}
+}
+
+// A cleared cap is still a report. Without the presence flag the reader cannot
+// tell it from a provider build that predates trim reporting, so it falls back
+// to the operator file and a first-start decision is reported as "this build
+// does not report" instead of "no cap".
+func TestSnapshotReportsClearedCap(t *testing.T) {
+	withTempHome(t)
+	noteTrimSelection(9)
+
+	counts, _ := snapshotProxyCounts()
+	if counts.Configured != 9 || counts.TrimCap != 0 {
+		t.Fatalf("snapshot trim = configured %d, cap %d; want 9/0", counts.Configured, counts.TrimCap)
+	}
+	// The wire shape is what urnet-tools decodes, so pin the flag itself.
+	raw, err := json.Marshal(counts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wire map[string]any
+	if err := json.Unmarshal(raw, &wire); err != nil {
+		t.Fatal(err)
+	}
+	if wire["trim_reported"] != true {
+		t.Fatalf("cleared cap carries no trim_reported flag: %s", raw)
 	}
 }

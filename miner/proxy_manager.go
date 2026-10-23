@@ -365,7 +365,14 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	// back this cycle. Only the start path records it (importLegacy): that is
 	// the running provider's own decision, and a command reader must not
 	// fabricate one.
-	if importLegacy {
+	//
+	// Only a COMPLETE desired set counts. A failed proxy_url.json read leaves
+	// every URL-sourced proxy out of the set, so recording that length would
+	// understate the pool and clamp the cap below the count the operator
+	// configured; the last complete decision stays in place instead. On a first
+	// start there is none, and no report is better than a wrong one: the reader
+	// then falls back to the operator file.
+	if importLegacy && urlErr == nil {
 		noteTrimSelection(len(all))
 	}
 
