@@ -209,8 +209,11 @@ func TestFreeBSDInstallerNeverCopiesOntoRunningBinary(t *testing.T) {
 	if strings.Contains(body, `chown -R "$service_user" "$install_path"`) {
 		t.Error("do_install hands the install tree to the service user; a root-executed binary must stay root-owned")
 	}
+	// The state-dir chown carries -h: do_install re-checks the directory right
+	// before this root write, and the recursive pass must not dereference a
+	// symlink the service user swapped in between the two checks.
 	for _, want := range []string{
-		`chown -R "$service_user" "$state_dir"`,
+		`chown -R -h "$service_user" "$state_dir"`,
 		`chown -R root:wheel "$install_path"`,
 		`chmod -R go-w "$install_path"`,
 	} {
