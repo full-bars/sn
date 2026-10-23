@@ -42,6 +42,13 @@ const (
 	// URL-sourced address is permanently evicted (see evictProxyURLAddress)
 	// instead of requeued again.
 	proxyURLGiveUpEvictAfterCycles = 4
+
+	// proxyURLSlowAuthRetryDelay is the requeue delay for a URL-sourced proxy
+	// whose ladder ended on deadline-cut attempts (slow, not broken). The give-up
+	// ramp exists for genuine rejections and reaches 15 minutes; using it here
+	// parked a working-but-slow proxy for the longest interval exactly when the
+	// box was already struggling to recover.
+	proxyURLSlowAuthRetryDelay = 30 * time.Second
 )
 
 // proxyAuthMaxFailures returns the attempt ceiling for a proxy identity: the
@@ -116,9 +123,11 @@ func proxyAuthGiveUp(settings *connect.ProxySettings, urlSourced bool) proxyGive
 
 // proxyAuthSlowBackoff records a backoff WITHOUT give-up accounting, for the
 // two v33 cases where the failure is not evidence about the proxy (the backend
-// is degraded, or the attempt was cut short by a deadline).
+// is degraded, or the attempt was cut short by a deadline). The delay is the
+// short slow retry, not a step of the give-up ramp, so a working-but-slow
+// proxy comes back in 30 seconds instead of parking on a 15 minute interval.
 func proxyAuthSlowBackoff(key string) time.Duration {
-	delay := proxyURLGiveUpRetryDelay(proxyURLGiveUpEvictAfterCycles - 1)
+	delay := proxyURLSlowAuthRetryDelay
 	globalProxyFailureHistory.SetBackoffUntil(key, time.Now().Add(delay))
 	return delay
 }
