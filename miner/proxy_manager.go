@@ -30,11 +30,12 @@ import (
 // trigger for the P2 hot-reload watcher, so a newly fetched proxy joins the
 // pool on the next start (P2 makes that live).
 
-// proxyWarmupDone is set when the operator-curated proxies have finished their
-// initial ramp. v33 gates the first URL fetch on it so URL-sourced proxies never
-// compete for auth-rate-limiter slots with file proxies during startup. The
-// miner has no warmup signal yet, so P1(a) sets it as the manager starts and P2
-// replaces that with the real signal.
+// proxyWarmupDone is set when the operator-curated proxies have started
+// their initial ramp: the launch loop arms and notes the count in
+// proxy_manager_warmup.go, and urlWarmupLaunchGrace releases the hold by
+// time when the ramp never completes. v33 gates the first URL fetch and the
+// unproven URL launches on it so URL-sourced proxies never compete for
+// auth-rate-limiter slots with file proxies during startup.
 var proxyWarmupDone atomic.Bool
 
 // proxyManagerConfig is the runtime configuration of one manager instance.
@@ -516,8 +517,8 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 
 	// URL-sourced proxies only launch on the next start until P2 wires the hot
 	// reload watcher; the loops below still keep proxy_url.json and the trigger
-	// current.
-	proxyWarmupDone.Store(true)
+	// current. The warmup flag itself is owned by the launch loop
+	// (proxy_manager_warmup.go), not by the manager start.
 
 	// Recovery scouts: install the provider's ranking (v33 main.go provide()).
 	// The connect-side install is a seam until the pinned connect exports the

@@ -1454,6 +1454,21 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// from. The hook never blocks and changes nothing about the launches.
 	noteProviderWorkerLaunches()
 	launchSlots := scheduleProxyLaunch(providers, self.proxySourceOf, "")
+	// Arm the warmup signal (proxy_manager_warmup.go): the hold releases
+	// once every curated worker below has passed its stagger, so the URL
+	// pool and the URL fetcher wait for an uncontested curated ramp, bounded
+	// by urlWarmupLaunchGrace either way.
+	curatedWarmup := 0
+	for _, slot := range launchSlots {
+		if slot.Settings == nil {
+			// The direct slot carries no proxy settings and no ramp.
+			continue
+		}
+		if warmupIsCurated(self.proxySourceOf[slot.Settings.Key()]) {
+			curatedWarmup++
+		}
+	}
+	noteCuratedWarmupTotal(curatedWarmup)
 	// Start the bring-up heartbeat once the launch list is fixed; a run with
 	// no slots closes it immediately.
 	bringUp.start()
@@ -1497,6 +1512,22 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 			if ctx.Err() != nil {
 				return
+			}
+			var source string
+			if proxySettings != nil {
+				source = self.proxySourceOf[proxySettings.Key()]
+			}
+			if warmupIsCurated(source) {
+				noteCuratedWarmupLaunch()
+			}
+			// An unproven URL-sourced identity holds until the curated
+			// ramp completes or the grace elapses (proxy_manager_warmup.go,
+			// the relay's warmup launch gate); its curated peers are
+			// unaffected because each slot waits in its own goroutine.
+			if source == "url" && shouldDeferURLWarmupLaunch(source, proxySettings.Key(), time.Now()) {
+				if !waitURLWarmupHold(ctx) {
+					return
+				}
 			}
 			output.observe(providerStarted, uint64(index), true, nil, 0, nil)
 			result = provideWithProxy(uint64(index), proxySettings)
