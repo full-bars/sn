@@ -93,7 +93,7 @@ func TestLauncherReportsTheTrimmedConfiguredCount(t *testing.T) {
 	// The launcher records the selection instead of calling the setter itself:
 	// noteTrimSelection stores the same trimmed count (pinned by
 	// TestNoteTrimSelection*) and also records what status needs.
-	if !launcherBody(t).hasCallWithFirstArg("noteTrimSelection", "") {
+	if !launcherBody(t).hasCallWithFirstArg("noteTrimSelection", "len(allProxySettings)") {
 		t.Error("provideLauncherLoop() does not record the trim selection; the status " +
 			"line would report the full desired count while a trim cap holds the pool lower")
 	}
