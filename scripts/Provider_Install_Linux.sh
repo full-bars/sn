@@ -102,7 +102,7 @@ no_modify_bashrc=0
 update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
 
 api_base="https://api.github.com/repos/full-bars/sn"
-urnet_dl_base="https://dl.fullbars.xyz"
+urnet_dl_base="https://github.com/full-bars/sn"
 urnet_github_dl_base="https://github.com/full-bars/sn/releases/download"
 
 # Base-URL overrides: URL seams exported by CI to serve a branch build from a
@@ -2965,13 +2965,6 @@ do_install ()
     # If API failed and a specific tag was requested, just use the requested tag
     if [ "$tag" != "latest" ] && [ -z "$version_to_install" ]; then
         version_to_install="$tag"
-    fi
-
-    # Fallback: try dl.fullbars.xyz latest-version endpoint
-    if [ -z "$version_to_install" ]; then
-        if worker_version="$(network_fetch "https://dl.fullbars.xyz/latest-version" 2>/dev/null)"; then
-            version_to_install="$(printf "%s" "$worker_version" | tr -d '[:space:]')"
-        fi
     fi
 
     if [ -z "$version_to_install" ]; then
