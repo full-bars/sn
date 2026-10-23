@@ -212,7 +212,7 @@ require (
 // validator (and miner) import connect; connect imports glog. Replaces in a
 // dependency's go.mod are ignored, so the main module declares both.
 
-replace github.com/urnetwork/server => github.com/urnetwork/server v0.0.0-20261017012310-0fd9ce9708ea
+replace github.com/urnetwork/server => github.com/urnetwork/server v0.0.0-20261023020022-05cc5e86ef70
 
 // The server module also imports Warp; dependency replaces are not inherited.
 replace github.com/urnetwork/warp => github.com/urnetwork/warp v0.0.0-20260926170351-89a47cb6561d
@@ -223,7 +223,7 @@ replace github.com/urnetwork/proxy => github.com/urnetwork/proxy v0.0.0-20260923
 
 replace github.com/urnetwork/userwireguard => github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f
 
-replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20261019122108-0fefcf85f57b
+replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20261023004101-a9f1c1c70c58
 
 replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9
 
@@ -238,4 +238,4 @@ replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-sub
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261022010257-42a8c3348e8e
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261023004651-3b9bbd5bb084
