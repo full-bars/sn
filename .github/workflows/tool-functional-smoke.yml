@@ -99,9 +99,11 @@ jobs:
               echo "credentials rejected by the API; not retrying"
               exit 1
             fi
-            if grep -qi 'too many recent sign-in attempts' /tmp/mint.log; then
+            if grep -qiE 'too many recent sign-in attempts|attempts exhausted|authentication (request )?failed|exit code: 11' /tmp/mint.log; then
               # Honour the API's own sentence: "Please try again in N minutes".
               mins=$(grep -oiE 'again in [0-9]+ minute' /tmp/mint.log | grep -oE '[0-9]+' | head -1)
+              # The client hides the API's sentence, so an unnamed window defaults to the
+              # five minutes it documents.
               [ -n "$mins" ] || mins=5
               wait=$(( mins * 60 + RANDOM % 30 ))
               echo "sign-in rate limited on attempt $attempt; waiting ${wait}s, as the API asks"
