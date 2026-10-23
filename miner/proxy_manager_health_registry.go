@@ -206,11 +206,20 @@ func overlayLiveProxyHealth(proxies map[string]ProxyEntry) int {
 		if !ok {
 			continue
 		}
-		// a leg-only entry carries no health opinion; keep the persisted one
-		health := live.Health
-		if health == "" {
-			health = entry.Health
+		// A leg-only entry carries no health opinion. Merge its counter and
+		// leave every field it has no information about exactly as persisted:
+		// copying a zero AuthFailures or an empty DownSince would erase what
+		// the last real health observation recorded.
+		if live.Health == "" {
+			if entry.ProxyLegFailures == live.ProxyLegFailures {
+				continue
+			}
+			entry.ProxyLegFailures = live.ProxyLegFailures
+			proxies[key] = entry
+			changed++
+			continue
 		}
+		health := live.Health
 		downSince := ""
 		if !live.DownSince.IsZero() {
 			downSince = live.DownSince.Format(time.RFC3339)

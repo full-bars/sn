@@ -37,8 +37,31 @@ func isProxyLegError(err error) bool {
 	if err == nil || errors.Is(err, context.Canceled) {
 		return false
 	}
+	// The socks dialer wraps EVERY failure with Op "socks connect", including
+	// a failure to reach the proxy at all and a rejected login. The operation
+	// name alone therefore cannot tell "this proxy cannot carry traffic" from
+	// "this proxy is unreachable" or "the password is wrong", and those three
+	// have different remedies. The wrapped cause is what separates them.
 	var opErr *net.OpError
-	return errors.As(err, &opErr) && strings.HasPrefix(opErr.Op, "socks")
+	if !errors.As(err, &opErr) || !strings.HasPrefix(opErr.Op, "socks") {
+		return false
+	}
+	inner := opErr.Err
+	if inner == nil {
+		return false
+	}
+	// Could not reach the proxy: the inner error is a dial failure for the
+	// proxy address. That is a dead or blocked proxy, not a proxy that cannot
+	// carry traffic to the platform.
+	var innerOp *net.OpError
+	if errors.As(inner, &innerOp) && strings.HasPrefix(innerOp.Op, "dial") {
+		return false
+	}
+	// A rejected login is an auth failure, and auth has its own remedy.
+	if strings.Contains(strings.ToLower(inner.Error()), "authentication") {
+		return false
+	}
+	return true
 }
 
 // proxyLegObservingLogger forwards to the logger the settings already carried,

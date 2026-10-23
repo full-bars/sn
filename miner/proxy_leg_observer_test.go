@@ -6,6 +6,7 @@ package miner
 
 import (
 	"context"
+	"errors"
 	"net"
 	"testing"
 	"time"
@@ -21,8 +22,23 @@ func TestIsProxyLegErrorOnlyMatchesTheSocksConnectStep(t *testing.T) {
 	if isProxyLegError(&net.OpError{Op: "dial", Err: context.DeadlineExceeded}) {
 		t.Fatal("a plain dial failure is not a leg error")
 	}
+	// a failure to reach the proxy is not evidence about its ability to
+	// carry traffic: the inner error is a dial failure for the proxy address
+	proxyUnreachable := &net.OpError{Op: "socks connect", Err: &net.OpError{Op: "dial", Err: context.DeadlineExceeded}}
+	if isProxyLegError(proxyUnreachable) {
+		t.Fatal("an unreachable proxy was counted as a leg failure")
+	}
+	auth := &net.OpError{Op: "socks connect", Err: errors.New("socks: username/password authentication failed")}
+	if isProxyLegError(auth) {
+		t.Fatal("a rejected login was counted as a leg failure")
+	}
+	// the proxy answered and could not reach the destination: this is the
+	// leg failure the counter exists for
+	if !isProxyLegError(&net.OpError{Op: "socks connect", Err: errors.New("connect failed")}) {
+		t.Fatal("a proxy that answered and failed to connect was not counted")
+	}
 	if !isProxyLegError(&net.OpError{Op: "socks connect", Err: context.DeadlineExceeded}) {
-		t.Fatal("a socks connect failure is a leg error")
+		t.Fatal("a socks connect timeout is not counted")
 	}
 }
 
@@ -62,9 +78,9 @@ func TestShadowSweepFlagsOnceAndHonoursTheOutageGuard(t *testing.T) {
 	start := time.Now()
 	id := "proxy:sweep"
 	for i := 0; i < proxyLegShedStreak; i++ {
-		minerProxyLeg.RecordFailure(id, start.Add(time.Duration(i)*time.Minute))
+		minerProxyLeg.RecordFailure(id, start.Add(time.Duration(i)*3*time.Minute))
 	}
-	now := start.Add(proxyLegShedMinAge)
+	now := start.Add(proxyLegShedMinAge + 2*time.Minute)
 
 	proxyLegShadowSweep(now)
 	if _, flagged := proxyLegTotals(); flagged != 0 {
@@ -109,5 +125,40 @@ func TestLegFailureReachesTheProxyEntryWithoutTouchingAuthCounters(t *testing.T)
 	}
 	if entry.Health != "up" {
 		t.Fatalf("a leg failure changed health to %q", entry.Health)
+	}
+}
+
+func TestLegOnlyOverlayKeepsPersistedHealthFields(t *testing.T) {
+	proxyLiveHealthRegistry.Lock()
+	proxyLiveHealthRegistry.byKey = map[string]proxyLiveHealthEntry{}
+	proxyLiveHealthRegistry.Unlock()
+	minerProxyLeg = proxyLegTracker{}
+	defer func() {
+		minerProxyLeg = proxyLegTracker{}
+		proxyLiveHealthRegistry.Lock()
+		proxyLiveHealthRegistry.byKey = map[string]proxyLiveHealthEntry{}
+		proxyLiveHealthRegistry.Unlock()
+	}()
+
+	const key = "5.6.7.8:1080"
+	// a leg failure arrives before this process has made any health
+	// observation of its own
+	logger := &proxyLegObservingLogger{proxyLegId: key}
+	logger.ObserveControlDial("platform", "tcp", "platform.example:443", &net.OpError{Op: "socks connect", Err: errors.New("connect failed")})
+
+	proxies := map[string]ProxyEntry{key: {Health: "recently_offline", DownSince: "2026-10-23T08:00:00Z", AuthFailures: 7}}
+	overlayLiveProxyHealth(proxies)
+	entry := proxies[key]
+	if entry.ProxyLegFailures != 1 {
+		t.Fatalf("proxy_leg_failures = %d, expected 1", entry.ProxyLegFailures)
+	}
+	if entry.AuthFailures != 7 {
+		t.Fatalf("a leg-only overlay erased persisted auth failures: %d", entry.AuthFailures)
+	}
+	if entry.DownSince != "2026-10-23T08:00:00Z" {
+		t.Fatalf("a leg-only overlay erased the persisted down-since: %q", entry.DownSince)
+	}
+	if entry.Health != "recently_offline" {
+		t.Fatalf("a leg-only overlay changed health to %q", entry.Health)
 	}
 }

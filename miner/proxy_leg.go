@@ -38,6 +38,7 @@ const (
 type proxyLegEntry struct {
 	streak      int
 	streakStart time.Time
+	lastFailure time.Time
 	lastSuccess time.Time
 	flagged     bool
 }
@@ -69,6 +70,7 @@ func (self *proxyLegTracker) RecordFailure(id string, now time.Time) {
 	if entry.streak == 0 {
 		entry.streakStart = now
 	}
+	entry.lastFailure = now
 	entry.streak++
 }
 
@@ -80,6 +82,7 @@ func (self *proxyLegTracker) RecordSuccess(id string, now time.Time) {
 	entry := self.entry(id)
 	entry.streak = 0
 	entry.streakStart = time.Time{}
+	entry.lastFailure = time.Time{}
 	entry.lastSuccess = now
 	entry.flagged = false
 }
@@ -98,7 +101,10 @@ func (self *proxyLegTracker) Flagged(id string, now time.Time, platformReachedAt
 	if entry.streak < proxyLegShedStreak {
 		return false
 	}
-	if now.Sub(entry.streakStart) < proxyLegShedMinAge {
+	// The window is the span the failures actually cover, not the time since
+	// the sweep started looking: five failures inside four minutes have not
+	// shown a ten minute streak just because the clock has moved on.
+	if entry.lastFailure.Sub(entry.streakStart) < proxyLegShedMinAge {
 		return false
 	}
 	// outage guard: if no path reached the platform recently, the platform is

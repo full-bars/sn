@@ -15,16 +15,19 @@ func TestProxyLegFlagsOnlyAfterTheStreakAndTheWindow(t *testing.T) {
 	start := time.Date(2026, 10, 23, 9, 0, 0, 0, time.UTC)
 	tracker := &proxyLegTracker{}
 
+	// five failures inside two minutes: the clock moving on later does not
+	// turn that into a ten minute streak
 	for i := 0; i < proxyLegShedStreak; i++ {
-		tracker.RecordFailure("a", start.Add(time.Duration(i)*time.Minute))
+		tracker.RecordFailure("a", start.Add(time.Duration(i*30)*time.Second))
 	}
-	now := start.Add(5 * time.Minute)
+	now := start.Add(proxyLegShedMinAge)
 	if tracker.Flagged("a", now, now.Add(-time.Minute)) {
-		t.Fatal("flagged inside the ten minute window")
+		t.Fatal("a two minute streak flagged because ten minutes of clock had passed")
 	}
-	now = start.Add(proxyLegShedMinAge)
+	// a failure at the far end of the window makes the failures actually span it
+	tracker.RecordFailure("a", now)
 	if !tracker.Flagged("a", now, now.Add(-time.Minute)) {
-		t.Fatal("a full streak over the window did not flag")
+		t.Fatal("a streak spanning the window did not flag")
 	}
 	if tracker.Flagged("a", now, now.Add(-time.Minute)) {
 		t.Fatal("flagged twice; the caller would log it twice")
@@ -65,9 +68,9 @@ func TestProxyLegOutageGuardBlocksEveryFlag(t *testing.T) {
 	start := time.Date(2026, 10, 23, 9, 0, 0, 0, time.UTC)
 	tracker := &proxyLegTracker{}
 	for i := 0; i < proxyLegShedStreak; i++ {
-		tracker.RecordFailure("a", start.Add(time.Duration(i)*time.Minute))
+		tracker.RecordFailure("a", start.Add(time.Duration(i)*3*time.Minute))
 	}
-	now := start.Add(proxyLegShedMinAge)
+	now := start.Add(proxyLegShedMinAge + 2*time.Minute)
 	if tracker.Flagged("a", now, time.Time{}) {
 		t.Fatal("flagged with no path ever reaching the platform")
 	}
@@ -83,9 +86,9 @@ func TestProxyLegTotalsAndForget(t *testing.T) {
 		tracker.RecordFailure("a", start)
 	}
 	for i := 0; i < proxyLegShedStreak; i++ {
-		tracker.RecordFailure("b", start.Add(time.Duration(i)*time.Minute))
+		tracker.RecordFailure("b", start.Add(time.Duration(i)*3*time.Minute))
 	}
-	now := start.Add(proxyLegShedMinAge)
+	now := start.Add(proxyLegShedMinAge + 2*time.Minute)
 	tracker.Flagged("b", now, now.Add(-time.Minute))
 
 	failures, flagged := tracker.Totals()
