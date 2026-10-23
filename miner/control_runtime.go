@@ -413,16 +413,28 @@ func resetControlRuntimeForTest() {
 
 // runSampler takes one rate sample per second until ctx is done.
 func (s *controlRuntimeState) runSampler(ctx context.Context) {
-	ticker := time.NewTicker(time.Second)
+	s.runSamplerWith(ctx, time.Second)
+}
+
+// runSamplerWith is runSampler with the tick interval injectable, so a test
+// can step the miner's one always-on periodic loop without waiting on the wall
+// clock. The same loop drives the swap-thrash watchdog: run.go starts it as
+// `go controlRuntime.runSampler(ctx)` for the whole provide run, the miner has
+// no second supervisory process, and the watchdog samples the host at its own
+// (slower) interval through sampleIfDue.
+func (s *controlRuntimeState) runSamplerWith(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
+			swapThrashWatchGlobal.stop()
 			return
 		case now := <-ticker.C:
 			if billable, total, _, ok := s.counterTotals(); ok {
 				s.rate.sample(billable, total, now)
 			}
+			swapThrashWatchGlobal.sampleIfDue(now)
 		}
 	}
 }
