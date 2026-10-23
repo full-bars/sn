@@ -36,10 +36,10 @@ const (
 )
 
 type proxyLegEntry struct {
-	streak       int
-	streakStart  time.Time
-	lastSuccess  time.Time
-	flagged      bool
+	streak      int
+	streakStart time.Time
+	lastSuccess time.Time
+	flagged     bool
 }
 
 // proxyLegTracker holds the per-proxy leg evidence. The zero value is ready.
