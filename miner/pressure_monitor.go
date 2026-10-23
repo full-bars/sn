@@ -278,8 +278,16 @@ func parsePSISome(content string) (avg10, avg60 float64, err error) {
 // kernels built without PSI and on non-Linux hosts, where /proc/pressure does
 // not exist; callers leave that component at zero and the fallback sensors
 // score instead.
+// psiResourcePath resolves a PSI resource under /proc/pressure. It is a seam so
+// a test can prove which resource a reader opens: "some" is a LINE inside the
+// memory file, not a resource, so asking for it by name opens a path that never
+// exists.
+var psiResourcePath = func(resource string) string {
+	return "/proc/pressure/" + resource
+}
+
 func readPSI(resource string) (avg60 float64, err error) {
-	b, err := os.ReadFile("/proc/pressure/" + resource)
+	b, err := os.ReadFile(psiResourcePath(resource))
 	if err != nil {
 		return 0, err
 	}
