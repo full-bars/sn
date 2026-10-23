@@ -1683,6 +1683,10 @@ func EnableProfiling(addr string) error {
 // proxies (proxy_url_source.go:1118) and hot-reloaded proxies
 // (proxy_reload.go:648) both gate on proxyWarmupDone and would wait forever.
 func paceMonitor(ctx context.Context) {
+	// The URL warmup hold also ends by time, which paceMonitor does not see as
+	// a completion: schedule the reload that completion would have signaled.
+	graceReload := scheduleURLWarmupGraceReload()
+	defer graceReload.Stop()
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 	for {
@@ -1723,6 +1727,27 @@ func paceMonitor(ctx context.Context) {
 				up, total, pct, connectingN)
 		}
 	}
+}
+
+// scheduleURLWarmupGraceReload signals a proxy reload when the URL warmup hold
+// expires by time. urlWarmupHold lets URL-sourced proxies through
+// urlWarmupLaunchGrace after the process started even when the file-proxy
+// warmup never completes, but reload() skips a held proxy without arranging a
+// retry, and signalProxyReloadAfterWarmup otherwise fires only when paceMonitor
+// declares warmup done. A cached URL list that has not changed also writes no
+// trigger after the grace, so without this the held proxies would wait for the
+// hourly reconciler. The caller stops the timer; it does nothing when warmup
+// already completed, because that path signaled the reload itself.
+func scheduleURLWarmupGraceReload() *time.Timer {
+	wait := urlWarmupLaunchGrace - time.Since(provideStartTime)
+	if wait < 0 {
+		wait = 0
+	}
+	return time.AfterFunc(wait, func() {
+		if !proxyWarmupDone.Load() {
+			signalProxyReloadAfterWarmup()
+		}
+	})
 }
 
 // signalProxyReloadAfterWarmup nudges the URL-sourced proxy loop to pick up
