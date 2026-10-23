@@ -122,6 +122,25 @@ func scoreDegradedProxies(entries []DegradedProxyEntry, getContracts contractsAc
 	return scored
 }
 
+// scoresCarryNoRanking reports whether every candidate scored the same, which
+// is what an unreachable upstream produces: no bytes move, so every proxy's
+// contribution freezes at the same value. An ordering with no information in it
+// cannot say which proxies are under-performing, and reaping on it would cut a
+// healthy pool in half the moment the platform stops answering. One differing
+// score means the ranking is real again.
+func scoresCarryNoRanking(scored []scoredDegradedProxy) bool {
+	if len(scored) < 2 {
+		// Nothing to compare: one candidate cannot be ranked against anything.
+		return true
+	}
+	for _, s := range scored[1:] {
+		if s.score != scored[0].score {
+			return false
+		}
+	}
+	return true
+}
+
 // selectProxiesToReap picks which degraded proxies to cancel.
 func selectProxiesToReap(scored []scoredDegradedProxy, keep int, minDownTime time.Duration) []DegradedProxyEntry {
 	var toReap []DegradedProxyEntry
@@ -205,6 +224,9 @@ func runDegradedProxyReaper(ctx context.Context, proxyCancelMap map[string]conte
 		}
 
 		scored := scoreDegradedProxies(cancellable, liveContractsAcquired)
+		if scoresCarryNoRanking(scored) {
+			continue
+		}
 		keep := degradedReaperKeepCount(len(scored))
 		toReap := selectProxiesToReap(scored, keep, degradedReaperMinDownTime)
 
