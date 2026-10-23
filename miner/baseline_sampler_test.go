@@ -282,3 +282,27 @@ func TestPreviousVersionFallsBackToTheMarkerFile(t *testing.T) {
 		t.Fatalf("previous version = %q, want v-old-build from the marker file", got)
 	}
 }
+
+// The recorder writes its start mark when the manager starts, so a persisted
+// `set baseline off` has to be in force by then. It used to be applied later,
+// which made the switch look like it survived until the next restart.
+func TestPersistedBaselineOffAppliesBeforeTheManagerStarts(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+
+	state := newControlState()
+	if err := state.set("baseline", "off"); err != nil {
+		t.Fatalf("set: %v", err)
+	}
+	if err := state.persist(); err != nil {
+		t.Fatalf("persist: %v", err)
+	}
+
+	baselineEnabled.Store(true)
+	t.Cleanup(func() { baselineEnabled.Store(true) })
+
+	applyPersistedBaselineFlag()
+	if baselineIsEnabled() {
+		t.Fatalf("persisted baseline=off was not applied before the manager start")
+	}
+}

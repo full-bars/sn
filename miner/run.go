@@ -825,6 +825,12 @@ func provide(opts docopt.Opts) {
 	// The manager owns the desired proxy set (the legacy <state>/proxy config
 	// plus any URL-sourced cache) and keeps the state current while the
 	// providers run.
+	// The baseline recorder writes its start mark when the manager starts, so a
+	// persisted `set baseline off` has to be in force before then. This is a
+	// read-only peek at the same file the full load below uses, so the queued
+	// overrides and the load's error reporting stay exactly as they were.
+	applyPersistedBaselineFlag()
+
 	proxyManager := newProxyManager(proxyManagerConfigFromOpts(opts, apiUrl))
 	allProxySettings, _, err := proxyManager.start(ctx)
 	if err != nil {
@@ -1655,6 +1661,22 @@ func providerStateDir() (string, error) {
 }
 
 // Resolves one file in the selected state directory without creating it.
+// applyPersistedBaselineFlag puts a persisted `set baseline off` in force before
+// the proxy manager can write its start mark. The full control-state load runs
+// later and is untouched; this only reads the same file for one key.
+func applyPersistedBaselineFlag() {
+	early, err := loadControlState()
+	if err != nil {
+		return
+	}
+	if v, ok := early.get("baseline"); ok {
+		switch strings.ToLower(strings.TrimSpace(v)) {
+		case "off", "0", "false", "no":
+			baselineEnabled.Store(false)
+		}
+	}
+}
+
 func providerStatePath(name string) (string, error) {
 	dir, err := providerStateDir()
 	if err != nil {
