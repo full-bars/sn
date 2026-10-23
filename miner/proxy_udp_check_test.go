@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -42,6 +43,9 @@ type fakeSocks5Proxy struct {
 	// UDP address services
 	tcpExit string
 	udpExit string
+	// refuseConnect makes the TCP side refuse CONNECT, as a proxy with a
+	// broken TCP path would, so the TCP exit cannot be learned
+	refuseConnect bool
 
 	ln  net.Listener
 	udp *net.UDPConn
@@ -141,6 +145,11 @@ func (p *fakeSocks5Proxy) serveConn(conn net.Conn) {
 	}
 	switch request[1] {
 	case 0x01: // CONNECT: act as the address service
+		if p.refuseConnect {
+			// RFC 1928 reply 0x05: connection refused
+			conn.Write([]byte{0x05, 0x05, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
+			return
+		}
 		if _, err := conn.Write([]byte{0x05, 0x00, 0x00, 0x01, 127, 0, 0, 1, 0, 80}); err != nil {
 			return
 		}
@@ -295,8 +304,10 @@ func waitFor(t *testing.T, timeout time.Duration, what string, condition func() 
 func TestH3EligibilityExcludesDeadUDPRelay(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
 	oldState := globalControlState
+	previousStore := globalProxyUDPCheck
 	t.Cleanup(func() {
 		globalControlState = oldState
+		globalProxyUDPCheck = previousStore
 		h3RankingValue.Store(nil)
 		h3LaunchMutex.Lock()
 		h3LaunchEligible = map[string]bool{}
@@ -323,3 +334,258 @@ func TestH3EligibilityExcludesDeadUDPRelay(t *testing.T) {
 	})
 }
 
+// fakeProxyUDPCheckDeps points the check at one fake proxy: the fake answers
+// the STUN exchange itself, and accepts any destination the TCP exit service
+// names.
+func fakeProxyUDPCheckDeps(fake *fakeSocks5Proxy) proxyUDPCheckDeps {
+	deps := defaultProxyUDPCheckDeps()
+	deps.stunServers = []string{fake.udp.LocalAddr().String()}
+	deps.tcpExitServers = []udpCheckTcpExitServer{{address: "exit.test:80", host: "exit.test"}}
+	deps.replyTimeout = 100 * time.Millisecond
+	deps.stunAttempts = 1
+	deps.overallLimit = 3 * time.Second
+	return deps
+}
+
+// A relay that refuses UDP ASSOCIATE is UDP-unusable: H3 must not be attempted
+// through it, and the refusal is the reason reported.
+func TestCheckProxyUDPClassifiesDeadRelay(t *testing.T) {
+	fake := newFakeSocks5Proxy(t, fakeUDPRelayDead, "203.0.113.7", "203.0.113.7")
+	deps := fakeProxyUDPCheckDeps(fake)
+	udpDials := 0
+	dialUDP := deps.dialUDP
+	deps.dialUDP = func(ctx context.Context, settings *connect.ProxySettings) (net.PacketConn, error) {
+		udpDials++
+		return dialUDP(ctx, settings)
+	}
+
+	result := checkProxyUDPWith(deps, context.Background(), fake.settings())
+	if udpDials != 1 {
+		t.Fatalf("the injected udp dialer was used %d times, want 1", udpDials)
+	}
+	if result.Status != proxyUDPNoRelay {
+		t.Fatalf("status = %s, want no-relay (err %v)", result.Status, result.Err)
+	}
+	if result.Err == nil {
+		t.Fatal("a dead relay must say why")
+	}
+	if n := fake.associateCount(); n != 1 {
+		t.Fatalf("UDP ASSOCIATE attempted %d times, want 1", n)
+	}
+	if proxyUDPAllowsH3(result.Status) {
+		t.Fatal("a dead relay must not allow h3")
+	}
+}
+
+// A relay that accepts the association and then never answers is UDP-unusable
+// too: the datagrams go nowhere, which is what QUIC would see.
+func TestCheckProxyUDPClassifiesSilentRelay(t *testing.T) {
+	fake := newFakeSocks5Proxy(t, fakeUDPRelaySilent, "203.0.113.7", "203.0.113.7")
+	deps := fakeProxyUDPCheckDeps(fake)
+
+	result := checkProxyUDPWith(deps, context.Background(), fake.settings())
+	if result.Status != proxyUDPNoRelay {
+		t.Fatalf("status = %s, want no-relay (err %v)", result.Status, result.Err)
+	}
+	if n := fake.associateCount(); n != 1 {
+		t.Fatalf("UDP ASSOCIATE attempted %d times, want 1", n)
+	}
+	if proxyUDPAllowsH3(result.Status) {
+		t.Fatal("a silent relay must not allow h3")
+	}
+}
+
+// A relay that works but exits from another address than the proxy's TCP side
+// is the mismatch case: H3 is not used, and both addresses are reported.
+func TestCheckProxyUDPClassifiesExitMismatch(t *testing.T) {
+	fake := newFakeSocks5Proxy(t, fakeUDPRelayWorking, "203.0.113.7", "198.51.100.9")
+	deps := fakeProxyUDPCheckDeps(fake)
+
+	result := checkProxyUDPWith(deps, context.Background(), fake.settings())
+	if result.Status != proxyUDPExitMismatch {
+		t.Fatalf("status = %s, want exit-mismatch (err %v)", result.Status, result.Err)
+	}
+	if result.TCPExit != "203.0.113.7" || result.UDPExit != "198.51.100.9" {
+		t.Fatalf("exits = tcp %q udp %q, want tcp 203.0.113.7 udp 198.51.100.9", result.TCPExit, result.UDPExit)
+	}
+	if proxyUDPAllowsH3(result.Status) {
+		t.Fatal("an exit mismatch must not allow h3")
+	}
+}
+
+// A relay that works and exits where TCP does leaves H3 alone.
+func TestCheckProxyUDPAcceptsMatchingExit(t *testing.T) {
+	fake := newFakeSocks5Proxy(t, fakeUDPRelayWorking, "203.0.113.7", "203.0.113.7")
+	deps := fakeProxyUDPCheckDeps(fake)
+
+	result := checkProxyUDPWith(deps, context.Background(), fake.settings())
+	if result.Status != proxyUDPOK {
+		t.Fatalf("status = %s, want ok (err %v tcp %q udp %q)", result.Status, result.Err, result.TCPExit, result.UDPExit)
+	}
+	if result.TCPExit != result.UDPExit || result.UDPExit != "203.0.113.7" {
+		t.Fatalf("exits = tcp %q udp %q, want both 203.0.113.7", result.TCPExit, result.UDPExit)
+	}
+	if !proxyUDPAllowsH3(result.Status) {
+		t.Fatal("a working relay that exits where tcp does must allow h3")
+	}
+}
+
+// A relay that works but whose TCP exit cannot be learned is the unknown case:
+// the relay is still the proxy, so H3 is allowed and the check is repeated
+// sooner.
+func TestCheckProxyUDPAllowsH3WhenTCPExitIsUnknown(t *testing.T) {
+	fake := newFakeSocks5Proxy(t, fakeUDPRelayWorking, "203.0.113.7", "203.0.113.7")
+	fake.refuseConnect = true
+	deps := fakeProxyUDPCheckDeps(fake)
+
+	result := checkProxyUDPWith(deps, context.Background(), fake.settings())
+	if result.Status != proxyUDPUnknown {
+		t.Fatalf("status = %s, want unknown (err %v)", result.Status, result.Err)
+	}
+	if result.UDPExit != "203.0.113.7" {
+		t.Fatalf("udp exit = %q, want the working relay's exit", result.UDPExit)
+	}
+	if !proxyUDPAllowsH3(result.Status) {
+		t.Fatal("an unverifiable tcp exit must still allow h3")
+	}
+	if proxyUDPTTL(proxyUDPUnknown) >= proxyUDPTTL(proxyUDPOK) {
+		t.Fatal("an unknown verdict must be re-checked sooner than a settled one")
+	}
+}
+
+// The verdict is remembered per identity, so a second ask does not dial the
+// proxy again, and the h3 gate reads it.
+func TestProxyUDPCheckStoreRemembersTheVerdict(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	previous := globalProxyUDPCheck
+	t.Cleanup(func() { globalProxyUDPCheck = previous })
+
+	fake := newFakeSocks5Proxy(t, fakeUDPRelayDead, "203.0.113.7", "203.0.113.7")
+	deps := fakeProxyUDPCheckDeps(fake)
+	probes := 0
+	store := newProxyUDPCheckStore(func(ctx context.Context, settings *connect.ProxySettings) proxyUDPResult {
+		probes++
+		return checkProxyUDPWith(deps, ctx, settings)
+	})
+	globalProxyUDPCheck = store
+
+	now := time.Now()
+	first := store.Check(context.Background(), fake.settings(), now)
+	second := store.Check(context.Background(), fake.settings(), now.Add(time.Minute))
+	if first.Status != proxyUDPNoRelay || second.Status != proxyUDPNoRelay {
+		t.Fatalf("statuses = %s, %s, want no-relay twice", first.Status, second.Status)
+	}
+	if probes != 1 {
+		t.Fatalf("the store probed %d times within the result lifetime, want 1", probes)
+	}
+	if size := store.size(); size != 1 {
+		t.Fatalf("the store remembers %d identities, want 1", size)
+	}
+	if proxyUDPAdmitsH3(fake.settings().Key()) {
+		t.Fatal("a remembered no-relay verdict must keep the identity off h3")
+	}
+
+	// once the verdict is old the identity is checked again
+	store.Check(context.Background(), fake.settings(), now.Add(2*proxyUDPResultTTL))
+	if probes != 2 {
+		t.Fatalf("the store probed %d times after the verdict aged out, want 2", probes)
+	}
+}
+
+// A proxy that had H3 and then turns out to have a dead UDP relay is relaunched
+// so its identity comes back on H1, instead of failing QUIC until some
+// unrelated setting change.
+func TestDeadUDPRelayRelaunchesAnH3IdentityOntoH1(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	oldState := globalControlState
+	previous := globalProxyUDPCheck
+	t.Cleanup(func() {
+		globalControlState = oldState
+		globalProxyUDPCheck = previous
+		setH3IdentityRelauncher(nil)
+		h3LaunchMutex.Lock()
+		h3LaunchEligible = map[string]bool{}
+		h3LaunchMutex.Unlock()
+		h3RankingValue.Store(nil)
+	})
+
+	state := newControlState()
+	if err := state.set("h3", "all"); err != nil {
+		t.Fatal(err)
+	}
+	globalControlState = state
+
+	fake := newFakeSocks5Proxy(t, fakeUDPRelayDead, "203.0.113.7", "203.0.113.7")
+	settings := fake.settings()
+	key := settings.Key()
+	recordH3Launch(key, true)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	launcher := &fakeH3Relauncher{ctx: ctx, busy: map[string]bool{}}
+	setH3IdentityRelauncher(launcher)
+
+	deps := fakeProxyUDPCheckDeps(fake)
+	globalProxyUDPCheck = newProxyUDPCheckStore(func(ctx context.Context, settings *connect.ProxySettings) proxyUDPResult {
+		return checkProxyUDPWith(deps, ctx, settings)
+	})
+
+	// the provider run notes its candidates on every reload; that is what
+	// sweeps the admitted proxies
+	noteH3Candidates([]*connect.ProxySettings{settings}, h3Setting{Mode: h3ModeAll})
+
+	waitFor(t, 5*time.Second, "the dead relay to be checked", func() bool {
+		_, ok := globalProxyUDPCheck.cached(key)
+		return ok
+	})
+
+	waitFor(t, 5*time.Second, "the identity to be relaunched onto H1", func() bool {
+		launcher.mu.Lock()
+		defer launcher.mu.Unlock()
+		for _, detached := range launcher.detached {
+			if detached == key {
+				return true
+			}
+		}
+		return false
+	})
+
+	// the transport policy for the identity is H1 only
+	preferences := h3ModePreferences(h3Setting{Mode: h3ModeAll}, false, h3ProxyEligible(h3Setting{Mode: h3ModeAll}, key))
+	if len(preferences) != 1 || preferences[connect.TransportModeH1] != 1 {
+		t.Fatalf("preferences = %v, want H1 only", preferences)
+	}
+}
+
+// A sweep only starts checks for identities the setting admits that have no
+// fresh verdict, so a reload of an unchanged pool does not probe again.
+func TestRefreshProxyUDPChecksSkipsFreshAndUnadmitted(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	previous := globalProxyUDPCheck
+	t.Cleanup(func() { globalProxyUDPCheck = previous })
+
+	fake := newFakeSocks5Proxy(t, fakeUDPRelayDead, "203.0.113.7", "203.0.113.7")
+	deps := fakeProxyUDPCheckDeps(fake)
+	globalProxyUDPCheck = newProxyUDPCheckStore(func(ctx context.Context, settings *connect.ProxySettings) proxyUDPResult {
+		return checkProxyUDPWith(deps, ctx, settings)
+	})
+	settings := fake.settings()
+	key := settings.Key()
+
+	if n := refreshProxyUDPChecks(context.Background(), nil, h3Setting{Mode: h3ModeAll}); n != 0 {
+		t.Fatalf("a sweep over no candidates started %d checks", n)
+	}
+	if n := refreshProxyUDPChecks(context.Background(), []*connect.ProxySettings{settings}, h3Setting{Mode: h3ModeDirect}); n != 0 {
+		t.Fatalf("direct admits no proxy, but the sweep started %d checks", n)
+	}
+	if n := refreshProxyUDPChecks(context.Background(), []*connect.ProxySettings{settings}, h3Setting{Mode: h3ModeAll}); n != 1 {
+		t.Fatalf("the sweep started %d checks, want 1", n)
+	}
+	waitFor(t, 5*time.Second, "the sweep's check to land", func() bool {
+		_, ok := globalProxyUDPCheck.cached(key)
+		return ok
+	})
+	if n := refreshProxyUDPChecks(context.Background(), []*connect.ProxySettings{settings}, h3Setting{Mode: h3ModeAll}); n != 0 {
+		t.Fatalf("a fresh verdict was checked again: %d checks started", n)
+	}
+}
