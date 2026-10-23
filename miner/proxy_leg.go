@@ -125,6 +125,18 @@ func (self *proxyLegTracker) Totals() (failures int64, flagged int64) {
 	return failures, flagged
 }
 
+// Ids snapshots the proxies the tracker holds, which is what the shadow sweep
+// walks.
+func (self *proxyLegTracker) Ids() []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	ids := make([]string, 0, len(self.entries))
+	for id := range self.entries {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // Forget drops a proxy that left the pool, so its streak cannot outlive it.
 func (self *proxyLegTracker) Forget(id string) {
 	self.mu.Lock()

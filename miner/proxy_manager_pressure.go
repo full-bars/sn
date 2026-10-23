@@ -374,6 +374,8 @@ func runPoolController(ctx context.Context, configuredMax int, selfHealEnabled b
 			return
 		case <-ticker.C:
 		}
+		// Shadow only: reports the proxies it would shed, sheds none.
+		proxyLegShadowSweep(time.Now())
 		if !resolveSelfHealEnabled(selfHealEnabled) {
 			highSamples = 0
 			continue

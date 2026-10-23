@@ -13,6 +13,7 @@ import (
 	"errors"
 	"net"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -22,6 +23,11 @@ import (
 // proxy identity where there is one, so two accounts behind one gateway are
 // still two proxies, exactly as the bandwidth counters key them.
 var minerProxyLeg proxyLegTracker
+
+// lastPlatformDialOK is when any slot last reached the platform, in unix nanos.
+// The shadow decision's outage guard reads it: while nothing reaches the
+// platform, every proxy shows the same failure and none of them is to blame.
+var lastPlatformDialOK atomic.Int64
 
 // isProxyLegError reports whether a control dial failed inside the proxy's own
 // connect step. The socks dialer wraps that failure in a *net.OpError whose Op
@@ -49,9 +55,12 @@ func (self *proxyLegObservingLogger) ObserveControlDial(tag string, network stri
 	}
 	switch {
 	case err == nil:
-		minerProxyLeg.RecordSuccess(self.proxyLegId, time.Now())
+		now := time.Now()
+		lastPlatformDialOK.Store(now.UnixNano())
+		minerProxyLeg.RecordSuccess(self.proxyLegId, now)
 	case isProxyLegError(err):
 		minerProxyLeg.RecordFailure(self.proxyLegId, time.Now())
+		noteLiveProxyLegFailure(self.proxyLegId)
 	}
 }
 
@@ -67,6 +76,18 @@ func withProxyLegObserver(log connect.Logger, proxyLegId string) connect.Logger 
 		return log
 	}
 	return &proxyLegObservingLogger{Logger: log, proxyLegId: proxyLegId}
+}
+
+// proxyLegShadowSweep evaluates the shadow decision for every proxy the tracker
+// holds and logs each proxy it would shed, once. It sheds nothing.
+func proxyLegShadowSweep(now time.Time) {
+	lastOK := time.Unix(0, lastPlatformDialOK.Load())
+	for _, id := range minerProxyLeg.Ids() {
+		if minerProxyLeg.Flagged(id, now, lastOK) {
+			failures, _ := minerProxyLeg.Totals()
+			tlog("[proxy][leg] would shed %s: the platform dial fails inside the proxy connect step (%d in total); nothing is shed\n", id, failures)
+		}
+	}
 }
 
 // proxyLegTotals is what the scrape reports: summed streak and the number of
