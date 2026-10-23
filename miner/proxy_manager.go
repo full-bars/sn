@@ -374,6 +374,10 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	// start there is none, and no report is better than a wrong one: the reader
 	// then falls back to the operator file.
 	if importLegacy && urlErr == nil {
+		// The decision must run first: it is what writes this start's cap, and
+		// the note reports the cap in force. Running the note first made the
+		// snapshot describe the previous start's decision.
+		decideOOMCapStartup(len(all))
 		noteTrimSelection(len(all))
 	}
 
@@ -440,9 +444,7 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	// (importLegacy false), and a command must never re-decide the cap for a
 	// running process. The desired count is the untrimmed candidate list the
 	// trim selection is about to be applied to.
-	if importLegacy {
-		decideOOMCapStartup(len(all))
-	}
+	// The startup decision already ran above, before the trim note.
 
 	trimCap, trimSource, capErr := effectiveTrimCapSource()
 	if capErr != nil {
