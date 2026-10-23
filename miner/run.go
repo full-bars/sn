@@ -1661,19 +1661,45 @@ func providerStateDir() (string, error) {
 }
 
 // Resolves one file in the selected state directory without creating it.
-// applyPersistedBaselineFlag puts a persisted `set baseline off` in force before
-// the proxy manager can write its start mark. The full control-state load runs
-// later and is untouched; this only reads the same file for one key.
+// applyPersistedBaselineFlag puts the resolved `set baseline` value in force
+// before the proxy manager can write its start mark. The full control-state load
+// runs later and is untouched; this only reads the same file plus the queue
+// urnet-tools leaves while the provider is stopped, for one key.
 func applyPersistedBaselineFlag() {
 	early, err := loadControlState()
 	if err != nil {
 		return
 	}
-	if v, ok := early.get("baseline"); ok {
-		switch strings.ToLower(strings.TrimSpace(v)) {
-		case "off", "0", "false", "no":
-			baselineEnabled.Store(false)
+	// A queued `set baseline ...` lands on this start, so the value that takes
+	// effect has to be persisted-plus-queued: a queued off must stop the
+	// recorder before the start mark exists, and a queued on or clear must beat
+	// a persisted off. Only baseline ops are replayed here; the queue itself is
+	// consumed later by mergePendingControlOverrides, so nothing is persisted or
+	// removed at this point.
+	if ops, err := loadPendingControlOps(); err == nil {
+		for _, op := range ops {
+			if op.Key != "baseline" {
+				continue
+			}
+			switch op.Op {
+			case "set":
+				_ = early.setWithValue(op.Key, op.Value, SourcePending)
+			case "clear":
+				_ = early.clear(op.Key)
+			}
 		}
+	}
+	v, ok := early.get("baseline")
+	if !ok {
+		// Cleared, or never set: recording is on by default.
+		baselineEnabled.Store(true)
+		return
+	}
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "off", "0", "false", "no":
+		baselineEnabled.Store(false)
+	default:
+		baselineEnabled.Store(true)
 	}
 }
 

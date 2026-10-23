@@ -307,6 +307,82 @@ func TestPersistedBaselineOffAppliesBeforeTheManagerStarts(t *testing.T) {
 	}
 }
 
+// The queue urnet-tools writes while the provider is stopped has to reach the
+// same early decision as a persisted value: a queued off has to stop the
+// recorder before the start mark, and a queued on or clear has to beat a
+// persisted off. The early read must also leave the queue for the full load.
+func TestQueuedBaselineOverridesApplyBeforeTheManagerStarts(t *testing.T) {
+	cases := []struct {
+		name      string
+		persisted string // "" means nothing persisted
+		ops       []pendingControlOp
+		want      bool
+	}{
+		{
+			name: "queued off with nothing persisted stops the recorder",
+			ops:  []pendingControlOp{{Op: "set", Key: "baseline", Value: "off"}},
+			want: false,
+		},
+		{
+			name:      "queued clear beats a persisted off",
+			persisted: "off",
+			ops:       []pendingControlOp{{Op: "clear", Key: "baseline"}},
+			want:      true,
+		},
+		{
+			name:      "queued on beats a persisted off",
+			persisted: "off",
+			ops:       []pendingControlOp{{Op: "set", Key: "baseline", Value: "on"}},
+			want:      true,
+		},
+		{
+			name:      "queued off beats a persisted on",
+			persisted: "on",
+			ops:       []pendingControlOp{{Op: "set", Key: "baseline", Value: "off"}},
+			want:      false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+
+			if tc.persisted != "" {
+				state := newControlState()
+				if err := state.set("baseline", tc.persisted); err != nil {
+					t.Fatalf("set: %v", err)
+				}
+				if err := state.persist(); err != nil {
+					t.Fatalf("persist: %v", err)
+				}
+			}
+
+			queuePath, err := providerStatePath("pending_overrides.json")
+			if err != nil {
+				t.Fatalf("pending path: %v", err)
+			}
+			body, err := json.Marshal(tc.ops)
+			if err != nil {
+				t.Fatalf("marshal ops: %v", err)
+			}
+			if err := os.WriteFile(queuePath, body, 0o600); err != nil {
+				t.Fatalf("write queue: %v", err)
+			}
+
+			baselineEnabled.Store(!tc.want)
+			t.Cleanup(func() { baselineEnabled.Store(true) })
+
+			applyPersistedBaselineFlag()
+			if got := baselineIsEnabled(); got != tc.want {
+				t.Fatalf("baseline enabled = %v, want %v", got, tc.want)
+			}
+			if _, err := os.Stat(queuePath); err != nil {
+				t.Fatalf("early read consumed pending_overrides.json: %v", err)
+			}
+		})
+	}
+}
+
 // Unavailable counters leave zero clients and sessions, which read as "none"
 // rather than "not read". The sample must omit them instead.
 func TestBaselineSampleOmitsCountsWhenTheyWereNotRead(t *testing.T) {

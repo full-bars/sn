@@ -324,6 +324,28 @@ type pendingControlOp struct {
 	Value string `json:"value,omitempty"`
 }
 
+// loadPendingControlOps reads the queue urnet-tools writes while the provider is
+// stopped, without applying, persisting, or removing anything. Callers that need
+// a resolved value before the normal control-state load (the baseline flag at
+// startup runs before the manager can write its start mark) replay the keys they
+// care about from this list; mergePendingControlOverrides still owns consuming
+// the queue later in the same start.
+func loadPendingControlOps() ([]pendingControlOp, error) {
+	path, err := providerStatePath("pending_overrides.json")
+	if err != nil {
+		return nil, err
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var ops []pendingControlOp
+	if err := json.Unmarshal(data, &ops); err != nil {
+		return nil, err
+	}
+	return ops, nil
+}
+
 // mergePendingControlOverrides applies the queue urnet-tools writes while the
 // provider was stopped, then removes it. A malformed queue is left on disk
 // for inspection rather than silently discarded. The log lines are the v33
