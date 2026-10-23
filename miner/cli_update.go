@@ -171,22 +171,23 @@ func (self *minerRelease) version() string {
 	return strings.TrimPrefix(self.TagName, "v")
 }
 
-// asset picks this platform's download: a per-platform archive when the
-// release has one, else the archive of every platform.
+// asset picks this platform's miner download from the release.
+//
+// This fork's releases carry the miner in urnetwork-miner-<tag>-<os>-<arch>.tar.gz,
+// whose lone member is the miner binary named provider (provider.exe on
+// Windows), and that is the only archive taken here. The
+// urnetwork-provider-* archives hold the relay (cmd/provider), a different
+// program that has none of the miner's commands, and installing one over the
+// miner would silently remove the miner. Upstream's naming (no leading v, the
+// provider archive) is deliberately not accepted for the same reason.
 func (self *minerRelease) asset() (*minerReleaseAsset, error) {
-	version := self.version()
-	names := []string{
-		fmt.Sprintf("urnetwork-provider-%s-%s-%s.tar.gz", version, runtime.GOOS, runtime.GOARCH),
-		fmt.Sprintf("urnetwork-provider-%s.tar.gz", version),
-	}
-	for _, name := range names {
-		for i := range self.Assets {
-			if self.Assets[i].Name == name {
-				return &self.Assets[i], nil
-			}
+	name := fmt.Sprintf("urnetwork-miner-%s-%s-%s.tar.gz", self.TagName, runtime.GOOS, runtime.GOARCH)
+	for i := range self.Assets {
+		if self.Assets[i].Name == name {
+			return &self.Assets[i], nil
 		}
 	}
-	return nil, fmt.Errorf("release %s has no provider download", self.TagName)
+	return nil, fmt.Errorf("release %s has no miner download for %s/%s (looked for %s)", self.TagName, runtime.GOOS, runtime.GOARCH, name)
 }
 
 var minerUpdateClient = &http.Client{
