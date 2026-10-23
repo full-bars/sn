@@ -585,6 +585,11 @@ func TestStartupDiskBenchmarkWantedOnlyForTheAutoProfile(t *testing.T) {
 // write happens, the result lands in the state dir for /metrics, and a second
 // launch does not repeat the benchmark.
 func TestStartStartupDiskAuditDoesNotBlockStartup(t *testing.T) {
+	// The launch is guarded by a package-level sync.Once, so a second run in
+	// the same process (-count=2, a flake loop) would be a no-op and this test
+	// would wait ten seconds for a result nobody was going to write.
+	startupDiskAuditOnce = sync.Once{}
+	t.Cleanup(func() { startupDiskAuditOnce = sync.Once{} })
 	withBenchEnv(t, false, 0, true)
 	withFreeSpace(t, 500000)
 	t.Setenv("URNETWORK_PROFILE", profileAuto)
