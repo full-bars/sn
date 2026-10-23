@@ -81,9 +81,13 @@ jobs:
           # for this account from your network address. Please try again in 5
           # minutes". Riding that out needs a wait measured in minutes, not
           # seconds.
-          # Spread parallel PRs so they do not all sign in in the same second.
+          # The provider client hides the API's 429 body ("Too many recent
+          # sign-in attempts ... try again in 5 minutes"), so the log only ever
+          # says "attempts exhausted". Any failed mint therefore means that
+          # window: wait it out. A rejected credential is the one case that
+          # will never succeed, so it fails fast instead.
           sleep $((RANDOM % 45))
-          for attempt in 1 2 3 4; do
+          for attempt in 1 2 3; do
             rm -f /tmp/mint/.urnetwork/jwt
             HOME=/tmp/mint /tmp/provider auth \
               --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
@@ -93,27 +97,14 @@ jobs:
               echo "JWT minted OK on attempt $attempt"
               break
             fi
-            # A rejected credential will not fix itself. Fail fast instead of
-            # spending five attempts and five minutes on it.
-            if grep -qiE 'invalid (password|credentials|user)|user not found|unauthorized|401' /tmp/mint.log; then
+            if grep -qiE 'invalid (password|credentials|user)|user not found|unauthorized' /tmp/mint.log; then
               echo "credentials rejected by the API; not retrying"
               exit 1
             fi
-            if grep -qiE 'too many recent sign-in attempts|attempts exhausted|authentication (request )?failed|exit code: 11' /tmp/mint.log; then
-              # Honour the API's own sentence: "Please try again in N minutes".
-              mins=$(grep -oiE 'again in [0-9]+ minute' /tmp/mint.log | grep -oE '[0-9]+' | head -1)
-              # The client hides the API's sentence, so an unnamed window defaults to the
-              # five minutes it documents.
-              [ -n "$mins" ] || mins=5
-              wait=$(( mins * 60 + RANDOM % 30 ))
-              echo "sign-in rate limited on attempt $attempt; waiting ${wait}s, as the API asks"
-              sleep "$wait"
-            else
-              echo "JWT mint failed on attempt $attempt, retrying in 15s..."
-              sleep 15
-            fi
+            echo "mint attempt $attempt failed; waiting 300s for the sign-in window to clear"
+            sleep 300
           done
-          test -s /tmp/mint/.urnetwork/jwt || { echo "JWT mint failed after 4 attempts (the API message above says why)"; exit 1; }
+          test -s /tmp/mint/.urnetwork/jwt || { echo "JWT mint failed after 3 attempts"; exit 1; }
           if grep -qE '"(network_id|name)"\s*:\s*"(production|full-bars)"' /tmp/mint/.urnetwork/network.json 2>/dev/null; then
             echo "REFUSING: minted account looks like production"; exit 1
           fi
