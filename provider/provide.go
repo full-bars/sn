@@ -380,6 +380,8 @@ func provideLaunchGoroutines(st *provideState) {
 	baselineStart(st.ctx, currentVersionForBaseline(), previousVersionForBaseline())
 
 	go connect.HandleError(func() { paceMonitor(st.ctx) })
+	// Shadow only: reports the proxies it would shed, sheds none. See proxy_leg.go.
+	go connect.HandleError(func() { runProxyLegShadow(st.ctx) })
 }
 
 // provideWithProxy runs a single proxy's transport lifecycle.

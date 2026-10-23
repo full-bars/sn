@@ -64,7 +64,7 @@ func newProxyTransportHealth(ctx context.Context, index int) *proxyTransportHeal
 
 // logger wraps base so failed connect attempts reach noteConnectFailure.
 func (h *proxyTransportHealth) logger(base connect.Logger) connect.Logger {
-	return &transportFailureLogger{Logger: base, onAuthError: h.noteConnectFailure}
+	return &transportFailureLogger{Logger: base, onAuthError: h.noteConnectFailure, onControlDial: h.noteControlDial}
 }
 
 // start begins following t's connection state. It never marks the proxy up
@@ -143,7 +143,18 @@ func watchTransportConnection(ctx context.Context, proxyIndex int, t transportCo
 // V(1) enabled.
 type transportFailureLogger struct {
 	connect.Logger
-	onAuthError func(err error)
+	onAuthError   func(err error)
+	onControlDial func(tag string, err error)
+}
+
+// ObserveControlDial implements connect.ControlDialObserver: the connect
+// library hands this logger the typed result of every control dial, which is
+// how a failure inside the proxy's own connect step is told apart from an
+// unreachable platform. See proxy_leg.go.
+func (l *transportFailureLogger) ObserveControlDial(tag string, network string, addr string, err error) {
+	if l.onControlDial != nil {
+		l.onControlDial(tag, err)
+	}
 }
 
 func (l *transportFailureLogger) observe(format string, args []any) {
@@ -191,5 +202,22 @@ func (v *transportFailureVerbose) Infof(format string, args ...any) {
 	v.l.observe(format, args)
 	if v.inner.Enabled() {
 		v.inner.Infof(format, args...)
+	}
+}
+
+// noteControlDial classifies one control dial of this proxy's transport. Only
+// the platform dials are evidence: a success shows the proxy carries traffic
+// to the platform, a failure inside the proxy's connect step is a proxy-leg
+// failure, and anything else (a local cancellation, a failure past the connect
+// step) says nothing either way.
+func (h *proxyTransportHealth) noteControlDial(tag string, err error) {
+	if tag != "platform" {
+		return
+	}
+	switch {
+	case err == nil:
+		recordPlatformDialOK(h.index)
+	case isProxyLegError(err):
+		RecordProxyLegFailure(h.index, err)
 	}
 }
