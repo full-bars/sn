@@ -220,3 +220,36 @@ func TestRegistrySnapshot(t *testing.T) {
 		t.Fatalf("snapshot[1].TotalTx: expected 200, got %d", snap[1].TotalTx.Load())
 	}
 }
+
+// SetSeed preloads a newly created entry with the totals a previous process
+// recorded, and leaves entries that already existed untouched: the miner arms
+// it before registration begins, and a live entry must never be rewritten.
+func TestProxyRegistrySetSeedAppliesToNewEntries(t *testing.T) {
+	registry := NewRegistry()
+	existing := registry.Register(1)
+	existing.TotalRx.Add(5)
+
+	registry.SetSeed(func(index int) (uint64, uint64, uint64, uint64) {
+		if index != 2 {
+			t.Fatalf("seed called for index %d, want 2", index)
+		}
+		return 10, 20, 30, 40
+	})
+
+	if got := existing.TotalRx.Load(); got != 5 {
+		t.Fatalf("SetSeed changed an existing entry: total_rx = %d, want 5", got)
+	}
+	seeded := registry.Register(2)
+	if got := seeded.TotalRx.Load(); got != 10 {
+		t.Fatalf("seeded total_rx = %d, want 10", got)
+	}
+	if got := seeded.TotalTx.Load(); got != 20 {
+		t.Fatalf("seeded total_tx = %d, want 20", got)
+	}
+	if got := seeded.BillableRx.Load(); got != 30 {
+		t.Fatalf("seeded billable_rx = %d, want 30", got)
+	}
+	if got := seeded.BillableTx.Load(); got != 40 {
+		t.Fatalf("seeded billable_tx = %d, want 40", got)
+	}
+}

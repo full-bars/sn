@@ -401,6 +401,11 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 		// what carries the parent's final entries forward.
 		forceAuditPersist()
 		lifetimeStore.Flush()
+		// os.Exit below skips finishControlRun, so the periodic counter writer
+		// must be stopped and the parent's final totals written here. Without
+		// it every byte counted after the last tick is lost, and the
+		// successor's post-drain catch-up reads a store that stopped early.
+		stopMetricsCounterPersistence()
 		isHotSwapDraining.Store(false)
 		cancel()
 		// Release a run that unwound its slots at the yield; it must not exit
@@ -739,6 +744,10 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 			return err
 		}
 		yieldCoordinatorSession()
+		// Flush now, not only at the end of the drain: the candidate's own
+		// catch-up runs at takeover, before this drain finishes, and the store
+		// is the only place it can read these totals from.
+		flushMetricsCounters()
 		handoffDrainParent(ctx, cancel, session, parentPID)
 		return nil
 	}
@@ -780,6 +789,9 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		yieldCoordinatorSession()
 		flushRetentionEvents()
 		lifetimeStore.Flush()
+		// execve replaces this image, so the periodic writer dies with it and
+		// there is no shutdown path to flush. Write the final totals now.
+		stopMetricsCounterPersistence()
 
 		hotswapLog("⚡ [hotswap] Executing in-place syscall.Exec (container stays up)...\n")
 
@@ -843,6 +855,9 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 	// Yield the live coordinator session: the candidate has confirmed
 	// active takeover, so there is no window where neither process holds it.
 	yieldCoordinatorSession()
+	// Same reason as the Windows baton: the candidate catches up before this
+	// drain ends, so its totals have to be on disk at the yield.
+	flushMetricsCounters()
 
 	// Update systemd service manager with new MainPID (if running under systemd)
 	if os.Getenv("INVOCATION_ID") != "" || os.Getenv("NOTIFY_SOCKET") != "" {
@@ -989,6 +1004,10 @@ func (self providerRunSettings) hotSwapTakeoverCandidate(ctx context.Context, ca
 	// the audit merge, before the control socket -- so the socket and audit
 	// handoff steps keep their sequence.
 	startMetricsAfterTakeover(globalControlState)
+	// The parent writes the counter store once more at the end of its drain,
+	// which is after this takeover, so the same window the audit re-merge uses
+	// is when those final totals become readable.
+	go catchUpMetricsCountersAfterDrain(ctx)
 
 	// This process is now the provider: bind the socket the parent quiesced,
 	// and answer SIGUSR2 (and the control socket's hotswap command) ourselves.

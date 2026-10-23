@@ -129,6 +129,10 @@ func acceptsGzip(header string) bool {
 // stopMetrics shuts the /metrics listener down and forgets it. Safe to call
 // when nothing is running.
 func stopMetrics() error {
+	// The totals are flushed while this process is still the store's writer:
+	// a hotswap yields through here, and the promoted candidate restores
+	// whatever was on disk when it takes over.
+	flushMetricsCounters()
 	metricsMu.Lock()
 	if metricsUnregCloser != nil {
 		metricsUnregCloser()
@@ -218,6 +222,10 @@ func startMetricsAtStartup(state *controlState, hotSwapCandidate bool) {
 		metricsHandoffPending.Store(true)
 		return
 	}
+	// Restore the persisted cumulative counters before the listener can serve,
+	// and start the periodic writer. This runs whether or not /metrics is
+	// enabled: the store's cadence is what makes the totals survive a restart.
+	startMetricsCounterPersistence()
 	if metricsAddr := os.Getenv("URNETWORK_METRICS"); metricsAddr != "" {
 		tlog("[metrics] enabling Prometheus /metrics on %s\n", metricsAddr)
 		if ln, err := net.Listen("tcp", metricsAddr); err != nil {
@@ -235,6 +243,13 @@ func startMetricsAtStartup(state *controlState, hotSwapCandidate bool) {
 // address instead of moving to another port.
 func startMetricsAfterTakeover(state *controlState) {
 	metricsHandoffPending.Store(false)
+	// A promoted candidate becomes the counter store's writer now: restore the
+	// parent's last flush (it wrote one as it yielded) and start the cadence.
+	startMetricsCounterPersistence()
+	// The candidate registered its slots before the parent yielded, so the
+	// restore above only filled the base. Raise those live entries to the
+	// parent's totals before the first flush can publish a lower number.
+	catchUpMetricsCounters()
 	metricsMu.Lock()
 	running := metricsServer != nil
 	metricsMu.Unlock()
