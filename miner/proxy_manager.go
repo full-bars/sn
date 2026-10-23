@@ -348,7 +348,14 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 
 	urlState, urlErr := readProxyURLState()
 	if urlErr != nil {
-		tlog("[proxy][url] warning: could not read proxy_url.json: %v\n", urlErr)
+		// The writer renames into place, but a reader can still lose the race
+		// with a concurrent refresh. One retry costs a start nothing and keeps
+		// a transient read from shrinking the pool for the whole cycle.
+		time.Sleep(50 * time.Millisecond)
+		urlState, urlErr = readProxyURLState()
+	}
+	if urlErr != nil {
+		tlog("[proxy][url] warning: could not read proxy_url.json, launching without the URL-sourced proxies: %v\n", urlErr)
 	} else {
 		mergeProxyURLCache(desiredSet, sourceOf, urlState)
 	}
