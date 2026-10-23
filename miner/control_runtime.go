@@ -145,6 +145,10 @@ func finishControlRun(reason string) {
 		}
 	}
 	forceControlAuditPersist()
+	// Final counter store write, and the end of the periodic writer. The
+	// shutdown flush is free when the last periodic flush already wrote the
+	// same totals.
+	stopMetricsCounterPersistence()
 }
 
 // mustStatePathQuiet resolves one file in the state directory, or "".
@@ -165,8 +169,13 @@ func (s *controlRuntimeState) setRunningProxies(addresses []string) {
 	s.runningKeys = append([]string(nil), addresses...)
 }
 
-// setBandwidthRegistry publishes the run's per-proxy byte counters.
+// setBandwidthRegistry publishes the run's per-proxy byte counters. The
+// registry is seeded from the persisted counter store, so a restart continues
+// each proxy's cumulative totals instead of stepping back to zero.
 func (s *controlRuntimeState) setBandwidthRegistry(registry *bandwidth.ProxyRegistry) {
+	if registry != nil {
+		registry.SetSeed(metricsCounterProxySeedFunc)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.registry = registry
@@ -223,44 +232,66 @@ func (s *controlRuntimeState) bandwidthSnapshot() map[int]*bandwidth.ProxyBandwi
 }
 
 // trafficTotals reads the registry's per-direction byte sums and the live
-// client count. The second result is false when this run has no registry yet,
-// so /metrics can omit the counters instead of exporting a fabricated zero.
+// client count. Indices the previous process counted but this one does not run
+// still contribute through the persisted counter store, so the aggregate
+// continues across a restart; a live index is skipped there because its
+// registry entry was seeded with the same totals. The second result is false
+// when this run has no registry yet and nothing was restored, so /metrics can
+// omit the counters instead of exporting a fabricated zero.
 func (s *controlRuntimeState) trafficTotals() (billableRx, billableTx, totalRx, totalTx uint64, clients int64, ok bool) {
 	snapshot := s.bandwidthSnapshot()
-	if snapshot == nil {
-		return 0, 0, 0, 0, 0, false
-	}
-	for _, bw := range snapshot {
+	live := make(map[int]struct{}, len(snapshot))
+	for index, bw := range snapshot {
 		if bw == nil {
 			continue
 		}
+		live[index] = struct{}{}
 		billableRx += bw.BillableRx.Load()
 		billableTx += bw.BillableTx.Load()
 		totalRx += bw.TotalRx.Load()
 		totalTx += bw.TotalTx.Load()
 		clients += bw.Clients.Load()
 	}
+	retired := metricsCounters.retiredTotals(live)
+	billableRx += retired.BillableRx
+	billableTx += retired.BillableTx
+	totalRx += retired.TotalRx
+	totalTx += retired.TotalTx
+	if snapshot == nil && retired.isZero() {
+		return 0, 0, 0, 0, 0, false
+	}
 	return billableRx, billableTx, totalRx, totalTx, clients, true
 }
 
 // counterTotals reads the run's cumulative billable and total byte counts, and
-// the number of live clients, from the bandwidth registry. The second result
-// is false when this run has no registry yet (for example a snapshot taken
-// before the provide loop started).
+// the number of live clients, from the bandwidth registry, plus the persisted
+// totals of indices this run does not carry. The second result is false when
+// this run has no registry yet and nothing was restored (for example a snapshot
+// taken before the provide loop started).
 func (s *controlRuntimeState) counterTotals() (billable, total uint64, clients int64, ok bool) {
 	s.mu.Lock()
 	registry := s.registry
 	s.mu.Unlock()
-	if registry == nil {
-		return 0, 0, 0, false
-	}
-	for _, bw := range registry.Snapshot() {
-		if bw == nil {
-			continue
+
+	live := map[int]struct{}{}
+	if registry != nil {
+		snapshot := registry.Snapshot()
+		live = make(map[int]struct{}, len(snapshot))
+		for index, bw := range snapshot {
+			if bw == nil {
+				continue
+			}
+			live[index] = struct{}{}
+			billable += bw.BillableRx.Load() + bw.BillableTx.Load()
+			total += bw.TotalRx.Load() + bw.TotalTx.Load()
+			clients += bw.Clients.Load()
 		}
-		billable += bw.BillableRx.Load() + bw.BillableTx.Load()
-		total += bw.TotalRx.Load() + bw.TotalTx.Load()
-		clients += bw.Clients.Load()
+	}
+	retired := metricsCounters.retiredTotals(live)
+	billable += retired.BillableRx + retired.BillableTx
+	total += retired.TotalRx + retired.TotalTx
+	if registry == nil && retired.isZero() {
+		return 0, 0, 0, false
 	}
 	return billable, total, clients, true
 }

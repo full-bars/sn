@@ -998,6 +998,10 @@ func (self providerRunSettings) hotSwapTakeoverCandidate(ctx context.Context, ca
 	// the audit merge, before the control socket -- so the socket and audit
 	// handoff steps keep their sequence.
 	startMetricsAfterTakeover(globalControlState)
+	// The parent writes the counter store once more at the end of its drain,
+	// which is after this takeover, so the same window the audit re-merge uses
+	// is when those final totals become readable.
+	go catchUpMetricsCountersAfterDrain(ctx)
 
 	// This process is now the provider: bind the socket the parent quiesced,
 	// and answer SIGUSR2 (and the control socket's hotswap command) ourselves.

@@ -167,6 +167,10 @@ func (bw *ProxyBandwidth) Snapshot() *ProxyBandwidth {
 type ProxyRegistry struct {
 	mu       sync.RWMutex
 	counters map[int]*ProxyBandwidth
+	// seed, when set, preloads a freshly created entry with totals a previous
+	// process recorded, so cumulative counters continue across a restart
+	// instead of stepping back to zero.
+	seed func(index int) (totalRx, totalTx, billableRx, billableTx uint64)
 }
 
 // NewRegistry creates an empty registry.
@@ -174,6 +178,15 @@ func NewRegistry() *ProxyRegistry {
 	return &ProxyRegistry{
 		counters: make(map[int]*ProxyBandwidth),
 	}
+}
+
+// SetSeed installs the totals a newly registered index starts from. It only
+// affects entries created after the call: callers install it before
+// registration begins (the miner arms it from its persisted counter store).
+func (r *ProxyRegistry) SetSeed(seed func(index int) (totalRx, totalTx, billableRx, billableTx uint64)) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.seed = seed
 }
 
 // Register returns the bandwidth counter for the given proxy index,
@@ -192,6 +205,13 @@ func (r *ProxyRegistry) Register(index int) *ProxyBandwidth {
 		return bw
 	}
 	bw = &ProxyBandwidth{}
+	if r.seed != nil {
+		totalRx, totalTx, billableRx, billableTx := r.seed(index)
+		bw.TotalRx.Store(totalRx)
+		bw.TotalTx.Store(totalTx)
+		bw.BillableRx.Store(billableRx)
+		bw.BillableTx.Store(billableTx)
+	}
 	r.counters[index] = bw
 	return bw
 }
