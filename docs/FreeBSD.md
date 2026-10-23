@@ -30,7 +30,7 @@ To install a specific release instead of the latest:
 sudo sh urnet-install.sh install v2026.10.21-1077735390-meso
 ```
 
-The installer takes `latest` by default, resolves the tag through the GitHub API, and falls back to `https://dl.fullbars.xyz/latest-version` when the API is rate limited. It supports `amd64` and `arm64`; any other architecture stops the install.
+The installer takes `latest` by default and resolves the tag through the GitHub API. There is no mirror fallback on purpose: the branded mirror publishes a different repository's tags, so resolving through it would install the wrong provider. If the API is rate limited, pass the tag explicitly. It supports `amd64` and `arm64`; any other architecture stops the install.
 
 ### Service user
 
@@ -69,7 +69,7 @@ The account must already exist. Create one with `pw useradd urnet -m -s /bin/sh`
 
 The steps, in order:
 
-1. Downloads `urnetwork-provider-<tag>.tar.gz` from `dl.fullbars.xyz`, and from the GitHub release if that fails, and extracts `freebsd/<arch>/provider` from it.
+1. Downloads `urnetwork-provider-<tag>.tar.gz` from this repository's GitHub release and extracts `freebsd/<arch>/provider` from it.
 2. Installs the binary by staging it beside the target and renaming it, so an update over a running provider never fails with "Text file busy".
 3. Installs `urnet-tools`. It downloads the `urnet-tools-freebsd-<arch>` release asset and installs it only if its SHA-256 matches the digest GitHub publishes for the asset (read with `jq`, or with `python3` when `jq` is absent). `sha256(1)` from the base system does the check, with `openssl` as a fallback. If there is no digest to compare (neither `jq` nor `python3`), the download fails, or the sum does not match, it installs the installer script itself as a shell `urnet-tools` instead. The shell version covers `start`, `stop`, `restart`, `status`, `update`, `version`, `hot-restart`, `self-heal`, `session`, `proxy refresh|remove-dead|summary`, `auth` and `logs`. Install `jq` and re-run `update` to get the full Go tool.
 4. Writes the `rc.d` script and, with `sysrc`, sets `urnetwork_enable=YES` and `urnetwork_user=<service user>` only if they are not already set, so an operator's choice survives every update.

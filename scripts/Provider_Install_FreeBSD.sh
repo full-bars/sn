@@ -390,14 +390,15 @@ do_install() {
     tag="$(echo "$release_json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])' 2>/dev/null)"
 
     # GitHub API failed or rate-limited: for an explicit version we can trust
-    # the caller's tag directly; for "latest" fall back to the dl.fullbars.xyz
-    # Worker, which mirrors GitHub's latest-release tag at the edge.
+    # the caller's tag directly. For "latest" there is no trustworthy fallback
+    # here: the branded mirror serves the 3.23-fix fork's tags, so resolving
+    # through it would install a different repo's provider.
     if [ -z "$tag" ]; then
         if [ "$version" != "latest" ]; then
             tag="$version"
         else
-            pr_warn "Trying dl.fullbars.xyz fallback..."
-            tag="$(curl -fsSL "https://dl.fullbars.xyz/latest-version" 2>/dev/null | tr -d '[:space:]')"
+            pr_err "GitHub API did not return a release tag; pass an explicit version, e.g. install v2026.10.22-1078667780"
+            exit 1
         fi
     fi
 
@@ -413,18 +414,14 @@ do_install() {
         *)             pr_err "Unsupported architecture: %s" "$arch"; exit 1 ;;
     esac
 
-    tarball_url="https://dl.fullbars.xyz/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
-    mirror_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    tarball_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
     pr_info "Downloading %s..." "$tarball_url"
 
     tmpdir="$(mktemp -d)"
     if ! curl -fsSL "$tarball_url" -o "$tmpdir/provider.tar.gz"; then
-        pr_warn "Primary download failed, trying GitHub mirror..."
-        if ! curl -fsSL "$mirror_url" -o "$tmpdir/provider.tar.gz"; then
-            pr_err "Failed to download from both primary and mirror"
-            rm -rf "$tmpdir"
-            exit 1
-        fi
+        pr_err "Failed to download %s" "$tarball_url"
+        rm -rf "$tmpdir"
+        exit 1
     fi
 
     tar -xzf "$tmpdir/provider.tar.gz" -C "$tmpdir" || {
