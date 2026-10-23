@@ -69,6 +69,33 @@ var cliCommandHelp = map[string]struct {
 			"provider status --json     # for scripts and monitoring",
 		},
 	},
+	"direct": {
+		summary: "Show, or switch, whether this provider also serves traffic from its own direct IP, in\naddition to its proxies. 'on' enables it, 'off' leaves proxies only, and no argument\nreports the current setting. A running provider picks the change up on its next reload.",
+		examples: []string{
+			"provider direct            # report the current setting",
+			"provider direct off        # proxies only",
+		},
+	},
+	"logs": {
+		summary: "Print the last lines of the provider's RAM log (see URNETWORK_RAMLOGS), 20 by default.",
+		examples: []string{
+			"provider logs",
+			"provider logs -n 100",
+		},
+	},
+	"print-network-id": {
+		summary: "Read a JWT file and print its network_id claim, so a deployment can wire an account's\nnetwork id without decoding the token by hand.",
+		examples: []string{
+			"provider print-network-id ~/.urnetwork/jwt",
+		},
+	},
+	"sn-status": {
+		summary: "Show the node's mining telemetry from the read-only dashboard: rank, tier, bandwidth\nprovided, the registered coldkey and the current epoch. The rank lines are the bandwidth\nleaderboard, not Bittensor eligibility.",
+		examples: []string{
+			"provider sn-status",
+			"provider sn-status --json     # for scripts and monitoring",
+		},
+	},
 	"doctor": {
 		summary: "Look for why the miner can't sign in or connect: the state folder, DNS, the\nconnection, a TLS-inspecting proxy, the clock, and whether updates can install.",
 	},

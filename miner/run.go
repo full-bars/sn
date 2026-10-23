@@ -291,11 +291,13 @@ Options:
     --durable-volumes=<path>          Exact external storage declaration; fleet writes require the owner-local schema.
     --durable-volumes-sha256=<hash>   Reviewed sha256: digest; claim daemons require the daemon-volume schema.
     --auth-code-file=<path>          With setup, read the auth code from this file instead of asking.
-    --yes                            With setup, take the default answer to every question (no prompts).
+    --yes                            Take the default answer to every question: with setup, no prompts; with
+                                     'proxy remove-dead', skip the per-category confirmation prompts.
     --no-service                     With setup, don't install the background service.
     --system                         With setup and service, a system-wide service run as root, with its
                                      state in /var/lib/urnetwork. Needs sudo.
-    --json                           With status, print JSON for scripts and monitoring.
+    --json                           Output in JSON format for scripts and monitoring (status and other
+                                     commands that support it).
     --follow                         With service logs, keep printing new lines.
     --check                          With update, only say whether a newer release is out.
     --status                         With update, show the automatic update settings.
@@ -306,7 +308,6 @@ Options:
     --version                        Show version.
     -v                               Enable verbose mode. Repeat for higher levels:
                                      one -v means level 1, -vv means level 2, and so on.
-    --json                           Output in JSON format for automated tooling.
     -f                               Force overwrite the JWT token store file or proxy value, if exists.
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
@@ -444,8 +445,8 @@ Options:
     <proxy_password>                 SOCKS5 password
     <key_address>                    SOCKS5 server as host:port, host:port:user:pass, host:port::, or key@host:port
     --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port.
-                                     With provide/auth-provide it selects the file-backed proxy source the running
-                                     provider re-reads on reload; also PROXY_FILE.
+                                     With provide/auth-provide it selects the file-backed proxy source that the
+                                     running provider reads again on reload; also PROXY_FILE.
     --file=<file>                    Alias for --proxy_file (provide/auth-provide); with 'proxy paste', the input file.
     <url>                            A proxy list URL, for 'proxy add-source' and 'proxy remove-source'.
     <count>                          Max number of running proxies to keep, for 'proxy trim'. 0/off clears the cap.
@@ -460,7 +461,6 @@ Options:
     --auth-failures=<N>              With 'proxy remove-dead', also remove proxies with at least N auth failures
                                      per day of uptime.
     --source=<source>                With 'proxy remove-dead', only consider proxies from this source: url, file, or internal.
-    --yes                            With 'proxy remove-dead', skip the per-category confirmation prompts.
     --proxy_url=<proxy_url>          Fetch SOCKS5 proxies from this URL (repeatable). Also --url / --URL / PROXY_URL (comma-separated).
                                      List lines are host:port, host:port:user:pass, socks5://host:port or socks5://user:pass@host:port.
     --proxy_url_refresh=<dur>        How often to re-fetch the --proxy_url sources and add new entries (default 1h).

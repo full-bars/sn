@@ -102,7 +102,11 @@ func writeLegacyStartupRefusalState(t *testing.T, seed []byte) *legacyStartupRef
 
 // runLegacyRefusalChild re-enters the real public command with the state in
 // the environment, exactly as the operator ran it, with stdout redirected to
-// a regular file (the exporter refuses that sink) and stderr captured.
+// a regular file and stderr captured. The diagnostics exporter admits a
+// regular file as a sink, so its JSON events land in that file while the
+// human lines stay on stderr; the returned buffer carries both, because what
+// the tests pin is that the refusal is reported loudly, not which stream
+// carries each line.
 func runLegacyRefusalChild(t *testing.T, state *legacyStartupRefusalState, apiUrl string) (*bytes.Buffer, error) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(t.Context(), 150*time.Second)
@@ -124,7 +128,11 @@ func runLegacyRefusalChild(t *testing.T, state *legacyStartupRefusalState, apiUr
 	defer stdout.Close()
 	var stderr bytes.Buffer
 	command.Stdout, command.Stderr = stdout, &stderr
-	return &stderr, command.Run()
+	runErr := command.Run()
+	if raw, readErr := os.ReadFile(stdoutPath); readErr == nil {
+		stderr.Write(raw)
+	}
+	return &stderr, runErr
 }
 
 // The refused startup leaves the 3.23-fix files byte-identical, no sn

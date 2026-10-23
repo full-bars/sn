@@ -171,8 +171,9 @@ func TestCliParseErrorIsShort(t *testing.T) {
 	if _, stderr, _, done, code := runCliFront(t, "help", "bogus"); !done || code != 1 || !strings.Contains(stderr, `Unknown command "bogus"`) {
 		t.Fatalf("help bogus: done=%v code=%d %q", done, code, stderr)
 	}
+	// the fork's wallet sign and wallet status forms bring the list to 11 lines
 	message = cliParseError([]string{"wallet"}, []string{"wallet"})
-	if !strings.Contains(message, "provider wallet set <coldkey_ss58>") || 10 < strings.Count(message, "\n") {
+	if !strings.Contains(message, "provider wallet set <coldkey_ss58>") || 12 < strings.Count(message, "\n") {
 		t.Fatal(message)
 	}
 }
