@@ -331,6 +331,7 @@ var controlLiveEffectKeys = map[string]bool{
 	"hot_restart":                 true,
 	"proxy_audit":                 true,
 	"fast_auth":                   true,
+	"oom_cap":                     true,
 }
 
 // controlUnsupportedKeys are accepted and persisted but have no miner
@@ -340,7 +341,6 @@ var controlUnsupportedKeys = map[string]bool{
 	"node_name":  true,
 	"baseline":   true,
 	"ip_version": true,
-	"oom_cap":    true,
 	"profile":    true,
 	"ramlogs":    true,
 }
@@ -375,6 +375,10 @@ var controlLiveDefaults = map[string]string{
 	// Clearing audit reapplies the runtime default (off = observe mode),
 	// releasing the live override so the persisted value rules.
 	"proxy_audit": "off",
+	// Clearing the OOM cap key restores the feature's safe default: shadow,
+	// decide and log but enforce nothing. Any other choice would make a clear
+	// silently start (or keep) shedding proxies.
+	"oom_cap": "shadow",
 	// Clearing h3_datagram / h3_datagram_send restores the upstream
 	// default: offering and sending QUIC DATAGRAM is on. Nothing is
 	// toggled either way (see applyControlLiveSideEffect); the clear is
@@ -397,6 +401,14 @@ func applyControlLiveDefault(key string) error {
 		// direct-only default (h3DefaultModeName), which is what a restart
 		// would use, so the live state matches the persisted one.
 		return applyControlLiveSideEffect(key, h3DefaultModeName())
+	case "oom_cap":
+		// oomCapMode falls back to the mode this process read at startup
+		// whenever the live state has no value, so clearing only the live key
+		// left the old mode in force and made the clear a no-op. Drop the
+		// fallback here so a clear really returns to the environment and the
+		// safe default.
+		oomCapPersistedMode.Store("")
+		return applyControlLiveSideEffect(key, oomCapModeName(oomCapMode()))
 	}
 	def, ok := controlLiveDefaults[key]
 	if !ok {
@@ -1030,6 +1042,55 @@ func applyControlLiveSideEffect(key, value string) error {
 		tlog("[control] applied %s=%s to the running proxy manager\n", key, value)
 	case "proxy_audit":
 		return applyProxyAuditControlLive(value)
+	case "oom_cap":
+		// Read on every desired()/trim path by effectiveTrimCapSource, so this
+		// is live; log an acknowledgement so the operator sees the command was
+		// received. The value just persisted may not be what actually governs:
+		// the mode combines the URNETWORK_OOM_CAP env var with the persisted
+		// control value ("off" from either source wins, then "on" from either
+		// source beats "shadow"; see oomCapMode), so a control-socket "shadow"
+		// on a box with the env var set to "on" can silently keep enforcing.
+		// Log the EFFECTIVE mode, and call out the mismatch when the requested
+		// value did not actually take.
+		requested := strings.ToLower(value)
+		effective := oomCapModeName(oomCapMode())
+		if effective == requested {
+			importantLogf("✓ [oomcap] mode set to %s via control socket (the automatic cap applies on the next desired-set read)\n", requested)
+		} else {
+			importantLogf("✓ [oomcap] mode set to %s via control socket, but URNETWORK_OOM_CAP env overrides it: effective mode is %s (the automatic cap applies on the next desired-set read)\n", requested, effective)
+		}
+		// Say what the new mode MEANS for this pool, not just that the value
+		// landed. A mode switch that silently starts shedding a third of the
+		// pool reads as a mystery a day later; this names the cap in force and
+		// how many running proxies it would drop right now, so the operator can
+		// see the consequence before it happens.
+		if effective == oomCapModeName(oomCapOff) {
+			// "off" has to forget the standing cap, not just stop enforcing it,
+			// or the next "on" resumes a cap set days ago (see oomCapResetOnOff).
+			for _, line := range oomCapResetOnOff() {
+				importantLogf("%s\n", line)
+			}
+		} else if oomCapMode() == oomCapOn {
+			if cap, source, err := effectiveTrimCapSource(); err == nil && source == trimCapOOM {
+				running := oomCapRunning()
+				shed := max(0, running-cap)
+				importantLogf("[oomcap] mode on: enforcing automatic cap %d (%s), this sheds about %d of %d running proxies on the next desired-set read\n",
+					cap, source, shed, running)
+			} else if autoCap, autoSource := automaticTrimCapSource(); autoCap > 0 {
+				// An operator cap tighter than the automatic one masks it in
+				// the effective source, but the automatic cap still stands;
+				// claiming none is standing here would be false.
+				importantLogf("[oomcap] mode on: automatic cap %d (%s) is standing, but the operator trim cap is the effective limit\n", autoCap, autoSource)
+			} else {
+				importantLogf("[oomcap] mode on: no automatic cap is standing, so the pool is not trimmed by it until an OOM kill sets one\n")
+			}
+		}
+		// The kill switch must act NOW: with no poke, a quiescent node could
+		// keep enforcing a stale cap until some other event triggered a reload
+		// (hours later). The cap itself is re-read on every desired()/trim
+		// path, so this only has to wake anything already reading it.
+		triggerProxyReload()
+		return nil
 	case "hot_restart":
 		tlog("[control] hot_restart=%s (restart machinery %s)\n", value, onOffLabel(resolveHotRestartEnabled()))
 	case "fast_auth":

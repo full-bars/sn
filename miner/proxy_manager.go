@@ -348,7 +348,14 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 
 	urlState, urlErr := readProxyURLState()
 	if urlErr != nil {
-		tlog("[proxy][url] warning: could not read proxy_url.json: %v\n", urlErr)
+		// The writer renames into place, but a reader can still lose the race
+		// with a concurrent refresh. One retry costs a start nothing and keeps
+		// a transient read from shrinking the pool for the whole cycle.
+		time.Sleep(50 * time.Millisecond)
+		urlState, urlErr = readProxyURLState()
+	}
+	if urlErr != nil {
+		tlog("[proxy][url] warning: could not read proxy_url.json, launching without the URL-sourced proxies: %v\n", urlErr)
 	} else {
 		mergeProxyURLCache(desiredSet, sourceOf, urlState)
 	}
@@ -374,6 +381,10 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	// start there is none, and no report is better than a wrong one: the reader
 	// then falls back to the operator file.
 	if importLegacy && urlErr == nil {
+		// The decision must run first: it is what writes this start's cap, and
+		// the note reports the cap in force. Running the note first made the
+		// snapshot describe the previous start's decision.
+		decideOOMCapStartup(len(all))
 		noteTrimSelection(len(all))
 	}
 
@@ -432,7 +443,17 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 		m.state = state
 	}
 
-	trimCap, capErr := effectiveTrimCap()
+	// OOM-aware start cap (proxy_manager_oom_cap.go): the relay decides BEFORE
+	// its launch selection so a cap set since the last start applies to this
+	// very start (provider/provide.go), and the trim selection below is the
+	// miner's equivalent selection. Only the start path decides: this function
+	// is also the read the provide loop and the command paths use
+	// (importLegacy false), and a command must never re-decide the cap for a
+	// running process. The desired count is the untrimmed candidate list the
+	// trim selection is about to be applied to.
+	// The startup decision already ran above, before the trim note.
+
+	trimCap, trimSource, capErr := effectiveTrimCapSource()
 	if capErr != nil {
 		tlog("[proxy][trim] warn: could not read the trim target: %v\n", capErr)
 		trimCap = 0
@@ -448,12 +469,23 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 		launch, held = startupTrimSelection(all, trimCap, state.Proxies, gradeFor, earningsFor)
 		importantLogf("[proxy][trim] startup: cap=%d, launching %d of %d desired, holding %d worst-graded until the cap is raised\n",
 			trimCap, len(launch), len(all), len(held))
-		primeTrimCapSeen(trimCap, trimCapOperator)
+		primeTrimCapSeen(trimCap, trimSource)
 	} else {
 		launch = all
 		if trimCap > 0 {
-			primeTrimCapSeen(trimCap, trimCapOperator)
+			primeTrimCapSeen(trimCap, trimSource)
 		}
+	}
+	// The marker records what this start actually launched, so the next start's
+	// decision measures 80% of the pool that ran, not the configured size this
+	// start never opened. It is written in every mode, including off
+	// (oomCapRecordStart).
+	// The marker must be written under the SAME condition as the decision
+	// above. Recording a start when the decision was skipped makes the next
+	// desired() compare against a marker from this boot and forget an OOM kill
+	// that happened before it.
+	if importLegacy && urlErr == nil {
+		recordOOMCapStartup(len(launch))
 	}
 	// The h3 count setting ranks over the proxies this box runs, so the
 	// candidates are noted under every setting: switching to a count later
@@ -521,6 +553,12 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// fixed here, and the line reports what it actually runs (v33's
 	// setConfiguredProxyCount, called once the proxy list is resolved).
 	setProxyStatusPool(launch)
+
+	// How many proxies this start opened, for the OOM-cap bookkeeping and the
+	// live `set oom-cap on` report (proxy_manager_oom_cap.go). Nothing else
+	// reads it; the trim, the pressure loop and the reload all keep their own
+	// running counts.
+	setOOMCapRunningProxies(len(launch))
 	if writeState {
 		if err := writeProxyState(m.state); err != nil {
 			tlog("[proxy] warning: could not write proxy.state: %v\n", err)

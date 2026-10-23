@@ -293,21 +293,23 @@ var trimSelection struct {
 }
 
 // noteTrimSelection records the trim decision for a desired pool of `desired`
-// proxies. The cap is the effective operator cap, clamped to the desired count
-// because nothing can hold back more proxies than are configured.
+// proxies. The cap is the effective cap, clamped to the desired count because
+// nothing can hold back more proxies than are configured, and the source is
+// whichever of the operator file and the automatic OOM cap bound it
+// (effectiveTrimCapSource), so a shed driven by an automatic cap is not
+// reported as the operator's.
 func noteTrimSelection(desired int) {
-	cap, err := effectiveTrimCap()
+	cap, source, err := effectiveTrimCapSource()
 	if err != nil {
-		cap = 0
+		cap, source = 0, ""
 	}
 	if cap > desired {
 		cap = desired
 	}
-	source := ""
-	if cap > 0 {
-		// The operator file is the miner's only cap source; the automatic
-		// OOM and thrash caps are P2.
-		source = trimCapOperator
+	// A zero cap has no source: reporting one would read as "trimmed by X" on
+	// an untrimmed box.
+	if cap <= 0 {
+		source = ""
 	}
 	trimSelection.mu.Lock()
 	trimSelection.desired = desired
@@ -334,15 +336,16 @@ func resetTrimSelection() {
 	trimSelection.mu.Unlock()
 }
 
-// effectiveTrimCap returns the operator trim cap (0 = none). The OOM-derived
-// automatic cap (v33 effectiveTrimCapSource / oom_cap.go) is P2, so the port
-// reads the operator file only.
+// effectiveTrimCap is effectiveTrimCapSource without the source: the tightest
+// positive of the operator trim file and the automatic OOM cap
+// (proxy_manager_oom_cap.go). 0 means no cap.
 func effectiveTrimCap() (int, error) {
-	return readTrimTarget()
+	c, _, err := effectiveTrimCapSource()
+	return c, err
 }
 
 // trimmedConfiguredCount is the number of proxies this provider will actually
-// run: the desired count, capped by the operator trim target. The status line
+// run: the desired count, capped by the effective trim cap. The status line
 // uses it as its denominator, so a healthy box trimmed to N reads N/N, not
 // N/desired (which reads "critical" and teaches operators to ignore it).
 func trimmedConfiguredCount(desired int) int {
