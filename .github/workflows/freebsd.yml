@@ -402,19 +402,39 @@ jobs:
           cpu: 2
           sync: rsync
           prepare: |
-            # pkg/go are needed to run the real test suite on the kernel. These
-            # DO exist as packages; unlike procstat (base system) they must be
-            # installed, and a failed install here must fail the job rather than
-            # be swallowed by `|| true` — a missing compiler silently turns
-            # this job into a no-op that always passes.
-            pkg install -y go bash jq || {
-              echo "FATAL: failed to install the Go toolchain on the VM"
+            # Go must be exactly 1.27.3: go.mod requires it, and older 1.27.x
+            # sits below the CVE floor this repo pins. FreeBSD's package tree
+            # currently resolves `go` to go127 1.27.2, and mirrors 404 that
+            # package outright (seen 2026-10-23), so install the official
+            # tarball for the pinned version instead of depending on the
+            # package mirror for the compiler.
+            GO_VERSION="1.27.3"
+            fetch -q -o /tmp/go.tgz "https://go.dev/dl/go${GO_VERSION}.freebsd-amd64.tar.gz" || {
+              echo "FATAL: could not fetch Go ${GO_VERSION}"
+              exit 1
+            }
+            rm -rf /usr/local/go
+            tar -C /usr/local -xzf /tmp/go.tgz || {
+              echo "FATAL: could not unpack Go ${GO_VERSION}"
+              exit 1
+            }
+            export PATH="/usr/local/go/bin:$PATH"
+            # bash and jq stay packages. A failed install must fail the job
+            # rather than be swallowed by `|| true` — a missing tool silently
+            # turns this job into a no-op that always passes.
+            pkg install -y bash jq || {
+              echo "FATAL: failed to install bash/jq on the VM"
               exit 1
             }
             command -v go >/dev/null 2>&1 || {
-              echo "FATAL: go still not on PATH after pkg install"
+              echo "FATAL: go still not on PATH after the tarball install"
               exit 1
             }
+            got="$(go version | awk '{print $3}' | sed 's/^go//')"
+            if [ "$got" != "$GO_VERSION" ]; then
+              echo "FATAL: Go $got on the VM, want $GO_VERSION"
+              exit 1
+            fi
             go version
           run: |
             echo "=== run the FreeBSD Go tests ==="
