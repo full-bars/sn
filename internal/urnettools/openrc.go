@@ -866,6 +866,37 @@ func openrcCleanupService() {
 	}
 }
 
+// openrcInstallService writes the OpenRC init script and adds the service to
+// the default runlevel. It mirrors install_openrc_units in
+// scripts/Provider_Install_Linux.sh, including the deliberate omission of a
+// start: the provider has no credentials until it is authenticated as the
+// service user, so a start here would only crash-loop.
+//
+// The script is written with writeFileAtomic so a crash mid-write cannot leave
+// a half-written init script that rc would still try to source at boot.
+func openrcInstallService(binary, user, home string, dryRun bool) error {
+	if user == "" || user == "root" {
+		return fmt.Errorf("refusing to install %s as %q: the internet-facing relay must not run as root (pass --user <account>)", openrcServiceName, user)
+	}
+	if binary == "" {
+		return fmt.Errorf("install-service: no provider binary given (pass --binary <path>)")
+	}
+	if dryRun {
+		fmt.Printf("[dry-run] would write %s (user %s, binary %s), then run rc-update add %s default\n",
+			openrcInitScriptPath, user, binary, openrcServiceName)
+		return nil
+	}
+	if err := writeFileAtomic(openrcInitScriptPath, []byte(renderOpenRCServiceScript(openrcServiceName, binary, user, home)), 0o755); err != nil {
+		return fmt.Errorf("write OpenRC init script %s: %w%s", openrcInitScriptPath, err, openrcSudoHint(err))
+	}
+	if err := openrcRunFn(openrcUpdateArgv("add")...); err != nil {
+		return fmt.Errorf("rc-update add %s default: %w%s", openrcServiceName, err, openrcElevationHint())
+	}
+	fmt.Printf("Installed OpenRC service %s (user %s) and added it to the default runlevel.\n", openrcServiceName, user)
+	fmt.Printf("Authenticate as %s first, then start it: urnet-tools start\n", user)
+	return nil
+}
+
 // openrcCleanup removes the OpenRC lifecycle artifacts for an uninstall: the
 // service is stopped and de-registered, the init script is removed, and the
 // periodic auto-update entry is cleared. Every step is best-effort with a

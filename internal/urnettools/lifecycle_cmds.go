@@ -269,6 +269,94 @@ func cmdReinstall(args []string, force, dryRun bool) error {
 	return updateProviderWithRestart(p, cfg, stageToolForEscalation(cfg))
 }
 
+// cmdInstallService writes the platform service definition and enables it.
+//
+// It exists for the two init systems whose service scripts this package also
+// removes on uninstall and drives on start/stop/restart: OpenRC and FreeBSD
+// rc.d. Before it, the tool could control a service it had no way to create,
+// and lifecycle_freebsd.go told the operator to run `urnet-tools
+// install-service`, a command that was not registered. The installers still
+// write the same scripts; this is the tool-side path for a reinstall, a repair,
+// or a host whose service script was removed.
+//
+// It never installs the provider binary. The script points at an existing
+// binary; run the installer first.
+func cmdInstallService(args []string, _ bool, dryRun bool) error {
+	user, binary, err := parseInstallServiceArgs(args)
+	if err != nil {
+		return err
+	}
+	if user == "" {
+		// Under sudo the invoking account is the one that should own the
+		// service; $USER there is root, which would be refused below.
+		user = os.Getenv("SUDO_USER")
+	}
+	if user == "" {
+		user = currentUserName()
+	}
+	if user == "" || user == "root" {
+		return fmt.Errorf("install-service needs a non-root service user: pass --user <account> (the internet-facing relay must not run as root)")
+	}
+	if binary == "" {
+		binary = defaultServiceBinary(runtime.GOOS)
+	}
+	switch runtime.GOOS {
+	case "freebsd":
+		return installServiceFreeBSD(binary, user, dryRun)
+	case "linux":
+		if !openrcActive() {
+			return fmt.Errorf("install-service: this host runs systemd, so there is no init script to write; systemd units are installed by scripts/Provider_Install_Linux.sh")
+		}
+		home := homeForUser(user)
+		if home == "" {
+			return fmt.Errorf("user %s has no home directory: the provider state dir lives there, so the service would fail at every start", user)
+		}
+		return openrcInstallService(binary, user, home, dryRun)
+	}
+	return fmt.Errorf("install-service is only for OpenRC (Linux) and rc.d (FreeBSD); on %s use the platform installer script", runtime.GOOS)
+}
+
+// parseInstallServiceArgs parses the two flags install-service owns. It is
+// deliberately strict: a typo such as --usr would otherwise install a service
+// for the default account, which is exactly the silent wrong target the rest
+// of the lifecycle commands refuse.
+func parseInstallServiceArgs(args []string) (user, binary string, err error) {
+	set := func(flag, val string) error {
+		if val == "" {
+			return fmt.Errorf("%s requires a non-empty value", flag)
+		}
+		if flag == "--user" {
+			user = val
+		} else {
+			binary = val
+		}
+		return nil
+	}
+	for i := 0; i < len(args); i++ {
+		switch a := args[i]; {
+		case a == "--user" || a == "--binary":
+			if i+1 >= len(args) {
+				return "", "", fmt.Errorf("%s requires a value", a)
+			}
+			if err := set(a, args[i+1]); err != nil {
+				return "", "", err
+			}
+			i++
+		case strings.HasPrefix(a, "--user="):
+			if err := set("--user", strings.TrimPrefix(a, "--user=")); err != nil {
+				return "", "", err
+			}
+		case strings.HasPrefix(a, "--binary="):
+			if err := set("--binary", strings.TrimPrefix(a, "--binary=")); err != nil {
+				return "", "", err
+			}
+		default:
+			return "", "", fmt.Errorf("install-service: unexpected argument %q (accepted: --user <account>, --binary <path>)", a)
+		}
+	}
+	return user, binary, nil
+}
+
 // writeTimerUnitAtomic writes a timer unit file via temp+rename so a crash
 // never leaves a half-written unit. Platform-neutral (pure file I/O), shared
 // by the platform lifecycle implementations and the cross-platform tests.

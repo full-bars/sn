@@ -57,11 +57,8 @@ func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
-// bsdServiceRunFn runs a service-control command. Package var so tests can
-// intercept the invocation without a live rc.d.
-var bsdServiceRunFn = func(name string, args ...string) ([]byte, error) {
-	return exec.Command(name, args...).CombinedOutput()
-}
+// bsdServiceRunFn is declared in lifecycle_bsd.go so the install path and the
+// control path share one seam, and so the install path is testable off FreeBSD.
 
 // bsdRcScriptExists reports whether an rc.d script is present. A var so tests
 // can exercise the lifecycle control path without a live FreeBSD host; the
@@ -215,10 +212,18 @@ func bsdStagedToolIsRootOwned() bool {
 	return ok && st.Uid == 0
 }
 
-// cleanupLifecycle removes the auto-update cron entry on uninstall. The rc.d
-// script is removed by the uninstall command's own service handling.
+// cleanupLifecycle removes the auto-update cron entry and, when this provider
+// is the one the rc.d service launches, the service itself. Removing the
+// service for a different provider would take down a working relay; leaving it
+// behind for the service's own provider would leave rc.conf enabling a binary
+// this uninstall is about to delete.
 func cleanupLifecycle(p Provider) {
 	_ = removeBSDUpdateCron(p)
+	service := bsdRcServiceName(p.Binary)
+	script := bsdRcScriptPath(service)
+	if bsdRcScriptServesBinary(script, p.Binary) {
+		bsdRemoveService(service, os.Geteuid(), script)
+	}
 }
 
 // bsdLogDir is where the unattended update log is written: the provider's state
@@ -346,6 +351,27 @@ func toolExePath() string {
 		return filepath.Clean(exe)
 	}
 	return "urnet-tools"
+}
+
+// installServiceFreeBSD writes the rc.d script, enables the service through
+// sysrc and starts it. The binary's basename names the service, so a beta build
+// gets its own rc.d script instead of overwriting the stable one.
+func installServiceFreeBSD(binary, user string, dryRun bool) error {
+	if user == "" || user == "root" {
+		return fmt.Errorf("refusing to install a service that runs as root (pass --user <account>)")
+	}
+	home := homeForUser(user)
+	if home == "" {
+		return fmt.Errorf("user %s has no home directory: the provider state dir lives there, so the service would fail at every start", user)
+	}
+	service := bsdRcServiceName(binary)
+	return bsdInstallService(bsdServiceInstall{
+		Service: service,
+		Binary:  binary,
+		User:    user,
+		Home:    home,
+		Script:  bsdRcScriptPath(service),
+	}, os.Geteuid(), dryRun)
 }
 
 // renderBSDStatus runs `service <name> status`, the FreeBSD equivalent of
