@@ -24,12 +24,8 @@ on:
 # cancel-in-progress stays false for main: a main-branch validation run should
 # finish, not be cancelled by the next merge.
 concurrency:
-  # One gauntlet sign-in at a time across the whole repo. Every PR's smoke run
-  # authenticates the SAME account from the same runner range, and the API
-  # rate-limits per account per source address, so parallel branches starve
-  # each other: "Too many recent sign-in attempts ... try again in 5 minutes".
-  group: gauntlet-auth
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   native-functional-smoke:
@@ -85,7 +81,9 @@ jobs:
           # for this account from your network address. Please try again in 5
           # minutes". Riding that out needs a wait measured in minutes, not
           # seconds.
-          for attempt in 1 2 3 4 5; do
+          # Spread parallel PRs so they do not all sign in in the same second.
+          sleep $((RANDOM % 45))
+          for attempt in 1 2 3 4; do
             rm -f /tmp/mint/.urnetwork/jwt
             HOME=/tmp/mint /tmp/provider auth \
               --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" \
@@ -104,8 +102,8 @@ jobs:
             if grep -qi 'too many recent sign-in attempts' /tmp/mint.log; then
               # Honour the API's own sentence: "Please try again in N minutes".
               mins=$(grep -oiE 'again in [0-9]+ minute' /tmp/mint.log | grep -oE '[0-9]+' | head -1)
-              [ -n "$mins" ] || mins=1
-              wait=$(( mins * 60 + 15 ))
+              [ -n "$mins" ] || mins=5
+              wait=$(( mins * 60 + RANDOM % 30 ))
               echo "sign-in rate limited on attempt $attempt; waiting ${wait}s, as the API asks"
               sleep "$wait"
             else
@@ -113,7 +111,7 @@ jobs:
               sleep 15
             fi
           done
-          test -s /tmp/mint/.urnetwork/jwt || { echo "JWT mint failed after 5 attempts (the API message above says why)"; exit 1; }
+          test -s /tmp/mint/.urnetwork/jwt || { echo "JWT mint failed after 4 attempts (the API message above says why)"; exit 1; }
           if grep -qE '"(network_id|name)"\s*:\s*"(production|full-bars)"' /tmp/mint/.urnetwork/network.json 2>/dev/null; then
             echo "REFUSING: minted account looks like production"; exit 1
           fi

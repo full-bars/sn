@@ -23,12 +23,6 @@ permissions:
   contents: read
   actions: read
 
-# One gauntlet sign-in at a time repo-wide: the API rate-limits per account per
-# source address, so parallel branches starve each other.
-concurrency:
-  group: gauntlet-auth
-  cancel-in-progress: false
-
 jobs:
   docker-shakedown:
     runs-on: ubuntu-latest
@@ -135,9 +129,9 @@ jobs:
           # per account per source address with a five minute window. The
           # workflow-level concurrency group serializes the sign-in; this loop
           # rides out a window that is already open.
-          sleep $((RANDOM % 15))
+          sleep $((RANDOM % 60))
           mint_ok=0
-          for mint_attempt in 1 2 3 4 5; do
+          for mint_attempt in 1 2 3 4; do
             rm -rf /tmp/mint
             HOME=/tmp/mint /tmp/provider auth --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" --api_url=https://api.bringyour.com -f > /tmp/mint.log 2>&1 || true
             grep -vE '^I[0-9]{4}' /tmp/mint.log || true
@@ -148,8 +142,8 @@ jobs:
             fi
             if grep -qi 'too many recent sign-in attempts' /tmp/mint.log; then
               mins=$(grep -oiE 'again in [0-9]+ minute' /tmp/mint.log | grep -oE '[0-9]+' | head -1)
-              [ -n "$mins" ] || mins=1
-              wait=$(( mins * 60 + 15 ))
+              [ -n "$mins" ] || mins=5
+              wait=$(( mins * 60 + RANDOM % 30 ))
               echo "JWT mint attempt ${mint_attempt} rate limited; waiting ${wait}s, as the API asks"
               sleep "$wait"
             else
@@ -157,7 +151,7 @@ jobs:
               sleep $((mint_attempt * 15))
             fi
           done
-          test "$mint_ok" = 1 || { echo "JWT mint failed after 5 attempts (the API message above says why)"; exit 1; }
+          test "$mint_ok" = 1 || { echo "JWT mint failed after 4 attempts (the API message above says why)"; exit 1; }
           test -s /tmp/mint/.urnetwork/jwt || { echo "JWT mint failed (verification required?)"; exit 1; }
           cp /tmp/mint/.urnetwork/jwt /tmp/gauntlet.jwt
           # Same production-account refusal guard as shakedown.yml. Do NOT
