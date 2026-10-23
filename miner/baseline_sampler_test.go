@@ -216,6 +216,14 @@ func TestApplyBaselineHostKeepsTheBlockWhenMemoryIsMissing(t *testing.T) {
 		t.Fatalf("memory reading invented: %v", *partial.host.MemAvailableMiB)
 	}
 
+	// Every reader failed: errNoHostData still comes back, but there is
+	// nothing to publish and an empty block would be a lie.
+	var empty baselineInputs
+	applyBaselineHost(&empty, baselineHost{}, errNoHostData)
+	if empty.hostKnown {
+		t.Fatalf("published an empty host block when no reader produced anything")
+	}
+
 	var failed baselineInputs
 	applyBaselineHost(&failed, host, errors.New("reader exploded"))
 	if failed.hostKnown {

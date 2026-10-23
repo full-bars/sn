@@ -468,6 +468,13 @@ func baselineCollect(now time.Time) baselineInputs {
 	return in
 }
 
+// hostHasAnyReading reports whether at least one host field was read. A block
+// of nothing but nils is not a measurement and must not be published.
+func hostHasAnyReading(h baselineHost) bool {
+	return h.SwapUsedMiB != nil || h.PSISomeAvg60 != nil || h.PSIFullAvg60 != nil ||
+		h.PSIFullAvg300 != nil || h.Load1 != nil || h.MemAvailableMiB != nil
+}
+
 // applyBaselineHost decides how a host reading enters the sample. A memory
 // reading that failed is not a reason to drop swap, psi and load, which came
 // back fine: buildBaselineHost already omits just the two memory fields and
@@ -477,7 +484,14 @@ func applyBaselineHost(in *baselineInputs, host baselineHost, err error) {
 	case err == nil:
 		in.host, in.hostKnown = host, true
 	case errors.Is(err, errNoHostData):
-		in.host, in.hostKnown, in.hostErr = host, true, err
+		// errNoHostData covers both "the memory fields are missing" and "no
+		// reader produced anything". Only the first is worth publishing; the
+		// second would put an empty host block on every sample.
+		if hostHasAnyReading(host) {
+			in.host, in.hostKnown, in.hostErr = host, true, err
+		} else {
+			in.hostErr = err
+		}
 	default:
 		in.hostErr = err
 	}
