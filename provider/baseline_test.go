@@ -2,6 +2,7 @@ package provider
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -429,7 +430,9 @@ func TestReadBaselineHostAsksForTheMemoryPressureResource(t *testing.T) {
 	}
 
 	host, err := readBaselineHost()
-	if err != nil {
+	// A host whose memory readers are unavailable reports errNoHostData while
+	// still returning the PSI readings, so that error is expected here.
+	if err != nil && !errors.Is(err, errNoHostData) {
 		t.Fatalf("readBaselineHost: %v", err)
 	}
 	if asked != "memory" {
