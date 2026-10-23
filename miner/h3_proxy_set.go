@@ -55,8 +55,22 @@ var (
 )
 
 // h3ProxyEligible reports whether a proxied identity gets the fallback transports
-// under a setting. Candidates not yet ranked are not eligible.
+// under a setting. Candidates not yet ranked are not eligible. A proxy whose UDP
+// path cannot carry QUIC is not eligible either (see proxy_udp_check.go): its
+// identity stays on H1 rather than failing every QUIC attempt on a relay that
+// does not work or does not exit where the proxy's TCP side does. A proxy that
+// has not been checked yet is eligible, the same as the relay treats an
+// unverifiable one.
 func h3ProxyEligible(setting h3Setting, key string) bool {
+	if !h3ProxyModeEligible(setting, key) {
+		return false
+	}
+	return proxyUDPAdmitsH3(key)
+}
+
+// h3ProxyModeEligible is the mode half of h3ProxyEligible: what the setting
+// admits, before the proxy's own UDP path is considered.
+func h3ProxyModeEligible(setting h3Setting, key string) bool {
 	switch setting.Mode {
 	case h3ModeAll:
 		return true
@@ -65,6 +79,14 @@ func h3ProxyEligible(setting h3Setting, key string) bool {
 		return ranking != nil && ranking.cap == setting.Cap && ranking.keys[key]
 	}
 	return false
+}
+
+// h3ProxyLaunchedEligible reports whether a running identity was launched with
+// the fallback transports.
+func h3ProxyLaunchedEligible(key string) bool {
+	h3LaunchMutex.Lock()
+	defer h3LaunchMutex.Unlock()
+	return h3LaunchEligible[key]
 }
 
 // rankH3Proxies picks n proxies, keeping previous members that are still
@@ -136,10 +158,16 @@ func sameKeySet(a, b map[string]bool) bool {
 
 // noteH3Candidates records the proxies the provider runs and, under a count
 // setting, re-ranks them. It reports whether the ranked set changed.
+//
+// The proxies the setting admits have their UDP path checked in the background
+// (see proxy_udp_check.go), so the H3 gate has a verdict by the time an
+// identity asks for eligibility. The check is bounded and remembered, so a
+// reload of an unchanged pool does not probe again.
 func noteH3Candidates(candidates []*connect.ProxySettings, setting h3Setting) (changed bool) {
 	h3CandidatesMutex.Lock()
 	h3Candidates = candidates
 	h3CandidatesMutex.Unlock()
+	refreshProxyUDPChecks(context.Background(), candidates, setting)
 	return rerankH3(setting)
 }
 
