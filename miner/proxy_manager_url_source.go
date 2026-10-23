@@ -869,6 +869,25 @@ type reaperProbeTarget struct {
 	wasProbeOK bool
 }
 
+// noProbeReachedTheAPI reports whether a cycle's results say nothing about the
+// proxies themselves: every probe failed at or beyond the API stage while at
+// least one tunnel was up. That is what an unreachable platform looks like from
+// here, and demoting or blacklisting on it, with a 24h cooldown, would empty a
+// healthy pool exactly when it is needed. A single reachable answer proves the
+// platform is up, and then the results are the proxies' own verdict again.
+func noProbeReachedTheAPI(results []probeResult) bool {
+	tunnelUp := false
+	for _, r := range results {
+		switch r {
+		case probeAPIReachable:
+			return false
+		case probeSocks5Only, probeTLSFailed:
+			tunnelUp = true
+		}
+	}
+	return tunnelUp
+}
+
 // runURLProxyReaper iterates the URL cache and re-probes entries whose
 // ProbeOK is false (socks5-only from a previous fetch, or entries added
 // before the probe fields existed). Entries that fail proxyAPIMaxFails
@@ -1025,7 +1044,11 @@ func runURLProxyReaperOnce(ctx context.Context, apiHost string, apiPort uint16) 
 		// Grade-refresh counters for the per-cycle summary.
 		refreshedGrades := 0
 		tierChanges := 0
-		frozen := degradedReaperFrozen()
+		cycleResults := make([]probeResult, 0, len(results))
+		for _, r := range results {
+			cycleResults = append(cycleResults, r.result)
+		}
+		frozen := degradedReaperFrozen() || noProbeReachedTheAPI(cycleResults)
 		liveHealth := liveProxyHealthByKey()
 		heldBack := 0
 		defer func() {
