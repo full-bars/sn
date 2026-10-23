@@ -279,6 +279,61 @@ func resetTrimCapSeen() {
 	trimCapSourceSeen.Store("")
 }
 
+// trimSelection is the last trim decision this process made: the configured
+// pool size before the cap, the effective cap, and which source set it. The
+// control socket's snapshot reports it, so `urnet-tools proxy trim` and
+// `urnet-tools status` can show a reduced-capacity box from the provider's own
+// numbers instead of inferring it from the proxy count.
+var trimSelection struct {
+	mu      sync.Mutex
+	desired int
+	cap     int
+	source  string
+	set     bool
+}
+
+// noteTrimSelection records the trim decision for a desired pool of `desired`
+// proxies. The cap is the effective operator cap, clamped to the desired count
+// because nothing can hold back more proxies than are configured.
+func noteTrimSelection(desired int) {
+	cap, err := effectiveTrimCap()
+	if err != nil {
+		cap = 0
+	}
+	if cap > desired {
+		cap = desired
+	}
+	source := ""
+	if cap > 0 {
+		// The operator file is the miner's only cap source; the automatic
+		// OOM and thrash caps are P2.
+		source = trimCapOperator
+	}
+	trimSelection.mu.Lock()
+	trimSelection.desired = desired
+	trimSelection.cap = cap
+	trimSelection.source = source
+	trimSelection.set = true
+	trimSelection.mu.Unlock()
+}
+
+// currentTrimSelection returns the recorded selection. ok is false before the
+// first decision, so the snapshot omits the fields instead of reporting a zero
+// cap that reads as "this provider runs its full pool".
+func currentTrimSelection() (desired, cap int, source string, ok bool) {
+	trimSelection.mu.Lock()
+	defer trimSelection.mu.Unlock()
+	return trimSelection.desired, trimSelection.cap, trimSelection.source, trimSelection.set
+}
+
+// resetTrimSelection clears the record, so one test's decision cannot leak into
+// the next. Tests only.
+func resetTrimSelection() {
+	trimSelection.mu.Lock()
+	trimSelection.desired, trimSelection.cap, trimSelection.source, trimSelection.set = 0, 0, "", false
+	trimSelection.mu.Unlock()
+}
+
 // effectiveTrimCap returns the operator trim cap (0 = none). The OOM-derived
 // automatic cap (v33 effectiveTrimCapSource / oom_cap.go) is P2, so the port
 // reads the operator file only.

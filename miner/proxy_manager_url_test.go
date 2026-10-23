@@ -27,6 +27,8 @@ func withTempHome(t *testing.T) string {
 	t.Cleanup(func() { globalProxyFailureHistory = prevHistory })
 	resetTrimCapSeen()
 	t.Cleanup(resetTrimCapSeen)
+	resetTrimSelection()
+	t.Cleanup(resetTrimSelection)
 	// The stage-1 probe config resolver holds a parsed override snapshot for
 	// probeConfigTTL; a test that wrote an override would otherwise leak it
 	// into the next test's resolution (v33 resets it only around its own
