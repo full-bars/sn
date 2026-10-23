@@ -75,9 +75,9 @@ type baselineSample struct {
 	TrimCap       *int   `json:"trim_cap,omitempty"`
 	TrimCapSource string `json:"trim_cap_source,omitempty"`
 
-	Clients  int64            `json:"clients"`
-	Sessions baselineSessions `json:"sessions"`
-	Rate     baselineRate     `json:"rate"`
+	Clients  *int64            `json:"clients,omitempty"`
+	Sessions *baselineSessions `json:"sessions,omitempty"`
+	Rate     baselineRate      `json:"rate"`
 
 	Traffic   *baselineTraffic   `json:"traffic,omitempty"`
 	Contracts *baselineContracts `json:"contracts,omitempty"`
@@ -220,8 +220,14 @@ func buildBaselineSample(in baselineInputs) baselineSample {
 		}
 		s.Proxies = &p
 	}
-	s.Clients = snap.Clients
-	s.Sessions = baselineSessions{PQE: snap.Sessions.PQE, Classical: snap.Sessions.Classical}
+	// A nil snapshot or unavailable counters leave zeros that would read as
+	// "no clients, no sessions". Publish them only when they were read.
+	if snap.CountsKnown {
+		c := snap.Clients
+		s.Clients = &c
+		ses := baselineSessions{PQE: snap.Sessions.PQE, Classical: snap.Sessions.Classical}
+		s.Sessions = &ses
+	}
 	if snap.Rate.Avg5mBps != 0 {
 		r := int64(snap.Rate.Avg5mBps)
 		s.Rate.Avg5mBps = &r

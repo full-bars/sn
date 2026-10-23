@@ -120,6 +120,7 @@ func buildMinerSnapshot() (*nodeSnapshot, error) {
 		Clients:      clients,
 		Proxies:      proxies,
 		ProxiesKnown: proxiesKnown,
+		CountsKnown:  haveCounters,
 		Restart:      restart,
 		Resources:    collectMinerResources(),
 	}

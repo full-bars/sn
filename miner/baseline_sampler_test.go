@@ -306,3 +306,25 @@ func TestPersistedBaselineOffAppliesBeforeTheManagerStarts(t *testing.T) {
 		t.Fatalf("persisted baseline=off was not applied before the manager start")
 	}
 }
+
+// Unavailable counters leave zero clients and sessions, which read as "none"
+// rather than "not read". The sample must omit them instead.
+func TestBaselineSampleOmitsCountsWhenTheyWereNotRead(t *testing.T) {
+	in := baselineInputs{now: time.Now(), snap: &nodeSnapshot{Version: "v1"}}
+
+	unknown := buildBaselineSample(in)
+	if unknown.Clients != nil || unknown.Sessions != nil {
+		t.Fatalf("published counts that were never read: %v %v", unknown.Clients, unknown.Sessions)
+	}
+	body, _ := json.Marshal(unknown)
+	if strings.Contains(string(body), `"clients"`) || strings.Contains(string(body), `"sessions"`) {
+		t.Fatalf("unread counts still published: %s", body)
+	}
+
+	in.snap.CountsKnown = true
+	in.snap.Clients = 4
+	known := buildBaselineSample(in)
+	if known.Clients == nil || *known.Clients != 4 || known.Sessions == nil {
+		t.Fatalf("known counts dropped: %v %v", known.Clients, known.Sessions)
+	}
+}

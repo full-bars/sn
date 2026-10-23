@@ -37,7 +37,10 @@ type nodeSnapshot struct {
 	Rate     snapshotRate     `json:"rate"`
 	Clients  int64            `json:"clients"`
 	Sessions snapshotSessions `json:"sessions"`
-	Proxies  snapshotProxies  `json:"proxies"`
+	// CountsKnown is false when the counters were unavailable. Clients and
+	// Sessions are then zeros that mean "not read", not "none".
+	CountsKnown bool            `json:"-"`
+	Proxies     snapshotProxies `json:"proxies"`
 	// ProxiesKnown is false when the proxy state could not be read. The
 	// counts are then zeros that mean "unknown", not "no proxies", and a
 	// sample must not publish them as if they were measurements.
