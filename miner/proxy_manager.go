@@ -473,7 +473,11 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	// decision measures 80% of the pool that ran, not the configured size this
 	// start never opened. It is written in every mode, including off
 	// (oomCapRecordStart).
-	if importLegacy {
+	// The marker must be written under the SAME condition as the decision
+	// above. Recording a start when the decision was skipped makes the next
+	// desired() compare against a marker from this boot and forget an OOM kill
+	// that happened before it.
+	if importLegacy && urlErr == nil {
 		recordOOMCapStartup(len(launch))
 	}
 	// The h3 count setting ranks over the proxies this box runs, so the
