@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/urfoundation/sn/internal/durablesync"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -412,8 +414,11 @@ func atomicWrite(path string, data []byte, mode os.FileMode) error {
 		return err
 	}
 	if handle, err := os.Open(directory); err == nil {
-		handle.Sync()
-		handle.Close()
+		// Best-effort as before: the result is still discarded. This site
+		// routes through the shared helper only so the platform policy lives
+		// in one place instead of being restated here.
+		_ = durablesync.Sync(handle)
+		_ = handle.Close()
 	}
 	return nil
 }
