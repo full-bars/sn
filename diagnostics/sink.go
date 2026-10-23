@@ -1,5 +1,6 @@
 // Strict admission applies only to long-lived diagnostics. Unknown synchronous
-// Writers and ordinary files cannot promise cancellation and are never invoked.
+// Writers cannot promise cancellation and are never invoked. Regular files are
+// admitted per platform: a local file write has no peer that can stall it.
 package diagnostics
 
 import (

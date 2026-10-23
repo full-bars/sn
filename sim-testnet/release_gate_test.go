@@ -112,7 +112,7 @@ func TestReleaseGatesPinProviderAndTransportRegressions(t *testing.T) {
 
 const releaseAdversarialSelector = "^Test(Adversarial|Adversary|VerifyAdversary|RPCAdversary|ConsensusWeightComparison|Runtime454)"
 
-const releaseRuntimeClientSelector = "^Test(DialChainContext|FinalizedHeadContext|FinalizedBlock|BlockHashContext|BlockIdentityCache|ExactBlockIdentity|AccountNonceContext|ReleaseStateReaders|ReleaseExactBlock|ReleaseSnapshot|ReleaseSteeringSource|VerifyFinalizedExtrinsicContext|LocateFinalizedExtrinsic|FleetCommitmentAtContext|FleetCommitmentInfoRuntime|RuntimeArtifactMetadata|RuntimeMetadataAtContext|FleetRuntime|FleetFinalizedRuntime|BindFleetRuntime|DialFleetNativeContext|ReleaseEpochStartBlockAtContext|ReleaseConfigRequiresExactNativeRuntimeIdentity|InitialReleaseSnapshot|AuthenticatePinnedNativeRuntime|ReleaseNativeEndpointTimeout|ReleaseRuntime459|ReleaseRuntime461|ReleaseRuntime467|ReleaseCurrentRuntime|RuntimeVersion|EVMCheckpoint)"
+const releaseRuntimeClientSelector = "^Test(DialChainContext|FinalizedHeadContext|FinalizedBlock|BlockHashContext|BlockIdentityCache|ExactBlockIdentity|AccountNonceContext|ReleaseStateReaders|ReleaseExactBlock|ReleaseSnapshot|ReleaseSteeringSource|VerifyFinalizedExtrinsicContext|LocateFinalizedExtrinsic|FleetCommitmentAtContext|FleetCommitmentInfo|RuntimeArtifactMetadata|RuntimeMetadataAtContext|FleetRuntime|FleetFinalizedRuntime|BindFleetRuntime|DialFleetNativeContext|ReleaseEpochStartBlockAtContext|ReleaseConfigRequiresExactNativeRuntimeIdentity|InitialReleaseSnapshot|AuthenticatePinnedNativeRuntime|ReleaseNativeEndpointTimeout|ReleaseRuntime459|ReleaseRuntime461|ReleaseRuntime467|ReleaseCurrentRuntime|RuntimeVersion|EVMCheckpoint)"
 
 const releaseSyntheticEVMIdentitySelector = "^Test(WaitFinalized|EVMBlockIdentity|ClaimReceiptIdentity|FinalizedClaimReceipt|SyntheticEVM|EthEVMBlockReader|EVMFinality|FinalizedEVMHead|BoundFinalizedEVMHead|ReceiptRequiresCanonicalHashAndFinalizedHeight|ProducerGatePinsSyntheticEVMIdentityRegressions)"
 
@@ -1764,12 +1764,20 @@ func releaseSourceFreezeModuleArray(t *testing.T, script, name string) []string 
 // making ordinary tests depend on the developer's current dirty worktree.
 func releaseSourceFreezeFixture(t *testing.T) string {
 	t.Helper()
+	configCount := 0
+	if value, present := os.LookupEnv("GIT_CONFIG_COUNT"); present {
+		parsed, err := strconv.Atoi(value)
+		if err != nil || parsed < 0 {
+			t.Fatalf("invalid inherited Git configuration count: %q", value)
+		}
+		configCount = parsed
+	}
 	workspace := t.TempDir()
 	remoteRoot := filepath.Join(workspace, ".release-remotes")
 	if err := os.MkdirAll(remoteRoot, 0o700); err != nil {
 		t.Fatal(err)
 	}
-	var rewrites strings.Builder
+	var rewrites [][2]string
 	branches := map[string]string{
 		"sn": "main", "server": "main", "connect": "main", "sdk": "main",
 		"glog": "master", "goidenticons": "main", "proxy": "main", "userwireguard": "master",
@@ -1817,8 +1825,6 @@ func releaseSourceFreezeFixture(t *testing.T) string {
 			}
 		}
 		runTestGit(t, root, "init", "-q", "-b", branch)
-		runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-		runTestGit(t, root, "config", "user.name", "sim-testnet")
 		runTestGit(t, root, "add", ".")
 		runTestGit(t, root, "commit", "-qm", "fixture source")
 		originURL := "git@github.com:" + origins[repo] + ".git"
@@ -1835,16 +1841,19 @@ func releaseSourceFreezeFixture(t *testing.T) string {
 		if output, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("create %s fixture remote: %v\n%s", repo, err, output)
 		}
-		fmt.Fprintf(&rewrites, "[url \"file://%s\"]\n\tinsteadOf = %s\n", filepath.ToSlash(bareRoot), originURL)
+		rewrites = append(rewrites, [2]string{"url.file://" + filepath.ToSlash(bareRoot) + ".insteadOf", originURL})
 	}
-	gitConfig := filepath.Join(workspace, ".release-fixture.gitconfig")
-	if err := os.WriteFile(gitConfig, []byte(rewrites.String()), 0o600); err != nil {
-		t.Fatal(err)
+	// Append only local transport rewrites. Replacing the global configuration
+	// would discard the caller's identity before later fixture commits.
+	for index, rewrite := range rewrites {
+		suffix := strconv.Itoa(configCount + index)
+		t.Setenv("GIT_CONFIG_KEY_"+suffix, rewrite[0])
+		t.Setenv("GIT_CONFIG_VALUE_"+suffix, rewrite[1])
 	}
-	t.Setenv("GIT_CONFIG_GLOBAL", gitConfig)
+	t.Setenv("GIT_CONFIG_COUNT", strconv.Itoa(configCount+len(rewrites)))
 	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
-	// Git before 2.32 ignores GIT_CONFIG_GLOBAL; a missing rewrite must then
-	// refuse the GitHub transport rather than fetch from or push to it.
+	// A Git version without these rewrite controls must refuse the GitHub
+	// transport rather than fetch from or push to it.
 	t.Setenv("GIT_ALLOW_PROTOCOL", "file")
 	return workspace
 }
@@ -2051,8 +2060,6 @@ func TestReleaseSourceFreezeRefreshesRemoteBeforeAcceptingRevision(t *testing.T)
 	if output, err := command.CombinedOutput(); err != nil {
 		t.Fatalf("clone fixture SN remote: %v\n%s", err, output)
 	}
-	runTestGit(t, advanceRoot, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, advanceRoot, "config", "user.name", "sim-testnet")
 	if err := os.WriteFile(filepath.Join(advanceRoot, "remote.yml"), []byte("advanced\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -2093,8 +2100,6 @@ func TestReleaseSourceFreezeRetainsPublishedDependencyWhenUpstreamAdvances(t *te
 		if output, err := exec.Command("git", "clone", "-q", origin, advanceRoot).CombinedOutput(); err != nil {
 			t.Fatalf("clone dependency remote: %v\n%s", err, output)
 		}
-		runTestGit(t, advanceRoot, "config", "user.email", "sim-testnet@example.invalid")
-		runTestGit(t, advanceRoot, "config", "user.name", "sim-testnet")
 		remoteFile := filepath.Join(advanceRoot, "remote.yml")
 		if err := os.WriteFile(remoteFile, []byte("advanced\n"), 0o600); err != nil {
 			t.Fatal(err)

@@ -18,6 +18,10 @@ func TestDocumentedCliCommandsExist(t *testing.T) {
 	commands := map[string]map[string]bool{
 		"provider": usageCommands(mainUsage(), "provider"),
 	}
+	// the friendly aliases (start, login, network) are commands too
+	for alias := range cliAliasCommands() {
+		commands["provider"][alias] = true
+	}
 	onchainUsage, err := os.ReadFile(filepath.Join("onchain", "run.go"))
 	if err != nil {
 		t.Fatal(err)
@@ -96,15 +100,4 @@ func TestDocumentedCliCommandsExist(t *testing.T) {
 	if len(missing) > 0 {
 		t.Fatalf("documented commands missing from the CLI usage:\n  %s", strings.Join(missing, "\n  "))
 	}
-}
-
-// usageCommands returns the first word after the binary name on each docopt
-// usage line.
-func usageCommands(usage string, binary string) map[string]bool {
-	line := regexp.MustCompile(`(?m)^\s*` + binary + ` ([a-z][a-z0-9_-]*)`)
-	out := map[string]bool{}
-	for _, match := range line.FindAllStringSubmatch(usage, -1) {
-		out[match[1]] = true
-	}
-	return out
 }

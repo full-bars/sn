@@ -1,4 +1,4 @@
-//go:build !(linux || darwin || freebsd || openbsd || netbsd || dragonfly)
+//go:build !(linux || darwin || freebsd || openbsd || netbsd || dragonfly || windows)
 
 // Wallet custody has no fallback without relative no-follow I/O and a process
 // lease. Other read-only and legacy commands retain their portable builds.

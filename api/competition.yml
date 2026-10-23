@@ -1,6 +1,6 @@
 openapi: "3.1.0"
 info:
-  version: 2026.10.16
+  version: 2026.10.20
   title: URnetwork Competition API
   description: |
     Control-plane API for reproducible, cached sim-latency competition rounds.
@@ -36,11 +36,24 @@ info:
     queued staging work; it refuses to race a running staging evaluation.
 
     V2 is disabled by default and requires a prospectively approved frozen
-    provisional_reward_v2 policy and competition.reward.v2 capability. An open
+    provisional_reward_v2 policy and an explicit supported runtime capability.
+    competition.reward.v2 uses provisioned filesystem manifests;
+    competition.reward.v2.runtime-blob.v1 uses independently authenticated,
+    immutable retained runtime manifests. An open
     legacy round cannot change mode. Discovery, admission, and polling advertise
-    the immutable contract; legacy score URLs reject v2 with unsupported_decision_mode.
+    the immutable contract; legacy score URLs reject v2 with HTTP 409
+    unsupported_decision_mode. V2 admission uses POST /competition/v2/score;
+    persist its returned status_url for owned-job polling. Both discovery
+    contract fields absent means v1; an incomplete or unknown explicit contract
+    must fail loudly, never fall back to v1.
     V2 publishes only after close, complete authoritative drain, seal, and reveal.
     A provisional reward winner is not honesty approval, source approval, or payment.
+    Publication does not wait for integrity_review or source_approval. V2 rounds
+    never populate /competition/leaderboard, including include_staging=true;
+    use /competition/v2/rounds/{roundId}/result or its /decisions alias and the
+    separately authorized reward event feed. Unknown future decision actions,
+    reasons, or states must be rejected/quarantined for reconciliation, never
+    silently interpreted as no winner, approval, or settlement.
     Rankings and measurements remain immutable; authenticated retrospective
     findings append reward revisions. Carry-forward source is separately approved.
     The one-sided Welch alpha 0.05 is per candidate, not a season-wide error guarantee.
@@ -107,6 +120,12 @@ paths:
       tags: [Competition]
       security: []
       summary: Published non-secret run and scoring policy
+      description: |
+        Select active_round for production or staging_round for staging and
+        retain its round_id, decision_mode and required_api_capability. A v2
+        round advertises provisional_reward_v2 and the exact supported runtime
+        capability; use its versioned score and result URLs. Both contract
+        fields absent identify v1, not an unsupported explicit v2 contract.
       responses:
         "200":
           description: Current immutable competition policy and active round commitment.
@@ -122,10 +141,14 @@ paths:
       operationId: CompetitionLeaderboard
       tags: [Competition]
       security: []
-      summary: Published final results for completed epochs
+      summary: Published legacy v1 final results for completed epochs
       description: |
-        Returns only finalized production epochs by default. Set
-        include_staging=true to also return finalized staging epochs through
+        V2 rounds do not populate this endpoint, including include_staging=true.
+        Reconcile v2 using /competition/v2/rounds/{roundId}/result or its
+        /decisions alias and the separately scoped reward event feed; do not
+        wait for a v2 winner in this legacy projection.
+        Returns only finalized v1 production epochs by default. Set
+        include_staging=true to also return finalized v1 staging epochs through
         the same reconciliation shape. Staging epochs are explicitly marked
         and automatically name the highest-ranked placeable winner passing every gate,
         or publish winner_job_id as null if none qualifies. A staging winner
@@ -143,7 +166,7 @@ paths:
         - name: include_staging
           in: query
           required: false
-          description: Include finalized fee-free staging epochs after their embargo lifts.
+          description: Include finalized legacy v1 fee-free staging epochs after their embargo lifts. Explicit v2 staging uses the versioned round result and reward event contracts, not this legacy winner projection.
           schema:
             type: boolean
             default: false
@@ -190,6 +213,8 @@ paths:
       tags: [Competition operator]
       summary: Generate the next pre-production staging epoch
       description: |
+        Legacy v1 staging only. Explicit v2 staging is created by the fenced
+        supervisor after source activation; this route cannot bypass it.
         Creates the next independently numbered staging epoch, beginning with
         epoch zero. Staging submissions exercise authenticated patch
         validation, immutable artifact retention, cache identity, the real
@@ -232,6 +257,8 @@ paths:
       tags: [Competition operator]
       summary: Close current staging admission and preserve its FIFO
       description: |
+        Legacy v1 staging only; explicit v2 staging retains its frozen admission
+        window and is closed/drained by the v2 supervisor, not this route.
         Atomically stops accepting submissions for the current open staging
         epoch without canceling accepted jobs. The evaluator continues in FIFO
         order until every accepted job is terminal, then automatically names
@@ -259,7 +286,8 @@ paths:
       operationId: CompetitionGetRoundWorkload
       tags: [Competition]
       security: []
-      summary: Download the committed workload after epoch finalization
+      summary: Download the committed workload after round publication
+      description: Legacy v1 requires finalization; v2 requires close, complete drain, seal, and reveal, independently of integrity/source approval.
       parameters:
         - name: roundId
           in: path
@@ -296,6 +324,9 @@ paths:
       tags: [Competition]
       summary: Validate, cache, and enqueue an already canonical patch
       description: |
+        Legacy v1 admission only. An otherwise valid authorized request for a
+        v2 round returns 409 unsupported_decision_mode; use POST
+        /competition/v2/score as advertised by /competition/info.
         The response is asynchronous. Submitting identical canonical patch
         bytes for the same round returns the existing job and cannot buy
         another draw from evaluator noise. Accepted unique jobs are unbounded
@@ -367,6 +398,7 @@ paths:
       operationId: CompetitionGetScore
       tags: [Competition]
       summary: Poll one cached score job
+      description: Legacy v1 polling only. An owned v2 job returns 409 unsupported_decision_mode; follow the status_url returned by v2 admission instead.
       parameters:
         - name: jobId
           in: path
@@ -387,6 +419,8 @@ paths:
           $ref: "#/components/responses/CompetitionUnauthorized"
         "404":
           $ref: "#/components/responses/CompetitionNotFound"
+        "409":
+          $ref: "#/components/responses/CompetitionConflict"
         "503":
           $ref: "#/components/responses/CompetitionUnavailable"
 
@@ -427,7 +461,12 @@ paths:
       description: |
         Submitter only; legacy operators do not inherit this capability. Same
         canonical patch cache, fee agreement, FIFO and evaluator as v1. A v1
-        round is rejected. Persist status_url exactly; never guess a job URL.
+        round returns 409 unsupported_decision_mode. Discover the immutable
+        contract through /competition/info. Persist status_url exactly; never
+        guess a job URL or fall back to a legacy endpoint on a mode conflict.
+        Explicit v2 staging rounds are fee-free, have zero evaluator takeover
+        margin, and use shadow reward decisions. They still require every
+        evaluation gate, nine replicates, and exact activated-source readiness.
       requestBody:
         required: true
         content:
@@ -476,7 +515,10 @@ paths:
       security: []
       summary: Published evaluation seal and versioned reward decisions
       description: |
-        Returns 409 until close, complete drain and reveal. Scores, ranks, exact
+        Returns 409 round_not_published until close, complete authoritative
+        drain, seal and reveal; publication_at is max(sealed_at, reveal_at).
+        Publication does not wait for integrity_review or source_approval.
+        Scores, ranks, exact
         original completion timestamps and the seal never change. The current
         provisional recipient and review/settlement/source state may advance
         only through append-only records. Private findings and bearer actor
@@ -484,6 +526,13 @@ paths:
         remain. Neither approved source carry-forward nor a receipt approves
         the current reward candidate. source_approval belongs to that candidate;
         source_decision describes the separately selected reviewed incumbent.
+        A staging result and each reward decision carry staging: true and
+        settlement_mode: shadow. Staging elects the best gate-passing entry
+        without a significance/improvement requirement; this does not approve
+        its source or authorize money movement. Use the advertised v2 contract,
+        not the legacy leaderboard (even include_staging=true), to reconcile
+        provisional reward revisions. Unknown action, reason_code or state
+        values require explicit rejection/quarantine, not a no-winner default.
       parameters:
         - {name: roundId, in: path, required: true, schema: {type: string, format: uuid}}
       responses:
@@ -751,7 +800,8 @@ components:
       const: provisional_reward_v2
     CompetitionRequiredCapability:
       type: string
-      const: competition.reward.v2
+      enum: [competition.reward.v2, competition.reward.v2.runtime-blob.v1]
+      description: Frozen runtime transport contract; a runtime must support the exact advertised capability.
     CompetitionV2SubmissionPreflight:
       type: object
       additionalProperties: false
@@ -793,13 +843,20 @@ components:
       additionalProperties: false
       required: [round_id, environment, competition_id, season_id, epoch, sealed_at, publication_at, source_choice_at, policy_sha256, baseline_raw_score, takeover_margin, inventory_sha256, ranking_sha256, seal_sha256, terminal_counts, entries]
       properties:
+        staging:
+          type: boolean
+          default: false
+          description: Explicit fee-free staging mode bound into the seal digest; absent means historical production, not an inferred zero-margin mode.
         round_id: {type: string, format: uuid}
         environment: {type: string}
         competition_id: {type: string}
         season_id: {type: string}
         epoch: {type: integer}
         sealed_at: {type: string, format: date-time}
-        publication_at: {type: string, format: date-time}
+        publication_at:
+          type: string
+          format: date-time
+          description: Later of sealed_at and the frozen round reveal_at; close and complete authoritative drain are prerequisites for sealing, not a requirement for integrity/source approval.
         source_choice_at: {type: string, format: date-time}
         policy_sha256: {$ref: "#/components/schemas/Sha256"}
         baseline_sha256: {$ref: "#/components/schemas/Sha256"}
@@ -818,6 +875,10 @@ components:
       additionalProperties: false
       required: [round_id, environment, competition_id, season_id, revision, decision_sha256, seal_sha256, action, selected_job_id, reason_code, decided_at, settlement_policy_version, burn_policy_version, settlement_mode]
       properties:
+        staging:
+          type: boolean
+          default: false
+          description: True only for a mode-bound shadow staging decision; it cannot be replayed into a production reward inbox.
         round_id: {type: string, format: uuid}
         environment: {type: string}
         competition_id: {type: string}
@@ -826,11 +887,39 @@ components:
         previous_decision_sha256: {$ref: "#/components/schemas/Sha256"}
         decision_sha256: {$ref: "#/components/schemas/Sha256"}
         seal_sha256: {$ref: "#/components/schemas/Sha256"}
-        action: {type: string, enum: [elect, replace, no_winner, invalidated]}
-        selected_job_id: {type: [string, "null"], format: uuid}
+        action:
+          type: string
+          enum: [elect, replace, no_winner, invalidated]
+          description: |
+            elect is revision one's provisional selection; replace is a later
+            non-null selection, including restoration from no winner.
+            no_winner has a null recipient at any revision. invalidated is a
+            later terminal evaluation-integrity incident with null recipient,
+            no settlement anchor or review_id, and no permitted successor.
+            A review adds a reward revision only when the recipient changes;
+            approving the current recipient does not create another entitlement.
+        selected_job_id:
+          type: [string, "null"]
+          format: uuid
+          description: Non-null for elect/replace; null for no_winner/invalidated. Selection alone is not integrity approval, source approval, or payment.
         superseded_job_id: {type: string, format: uuid}
         superseded_revision: {type: integer, minimum: 1}
-        reason_code: {type: string}
+        reason_code:
+          type: string
+          enum: [first_eligible, no_submissions, no_gate_passing_candidate, no_significant_improvement, no_new_reward_entitlement, all_eligible_disqualified, EVALUATION_INTEGRITY_INCIDENT]
+          description: |
+            Complete case-sensitive decision reason set, distinct from sealed
+            entry ineligibility reasons and uppercase review reason_codes.
+            first_eligible accompanies elect/replace: the first eligible,
+            non-disqualified original ranked entry. no_winner reasons are
+            no_submissions (empty inventory), all_eligible_disqualified
+            (originally eligible entries exhausted), no_new_reward_entitlement
+            (no eligible entry and an exact repeat exclusion exists),
+            no_significant_improvement (a placeable non-gate-failing entry
+            exists but none is eligible), or no_gate_passing_candidate.
+            Exhausted eligibility takes precedence over repeat exclusion,
+            then improvement, then gate failure. invalidated requires
+            EVALUATION_INTEGRITY_INCIDENT, never a finding of candidate dishonesty.
         review_id: {type: string, format: uuid}
         decided_at: {type: string, format: date-time}
         effective_settlement_anchor:
@@ -971,17 +1060,47 @@ components:
       additionalProperties: false
       required: [decision_mode, required_api_capability, seal, reward_revision, provisional_reward_winner, integrity_review, source_approval, decisions, integrity_reviews, settlement_status, settlement_receipts, incidents, invalidated]
       properties:
+        staging:
+          type: boolean
+          default: false
+          description: Must match the sealed round and every reward decision. A staging winner remains provisional and does not approve source.
         decision_mode: {$ref: "#/components/schemas/CompetitionDecisionMode"}
         required_api_capability: {$ref: "#/components/schemas/CompetitionRequiredCapability"}
         seal: {$ref: "#/components/schemas/CompetitionEvaluationSeal"}
-        reward_revision: {type: integer, minimum: 1}
-        provisional_reward_winner: {type: [string, "null"], format: uuid}
-        integrity_review: {type: string, enum: [not_reviewed, approved, disqualified, not_applicable]}
-        source_approval: {type: string, enum: [pending, approved, rejected, deferred, not_applicable]}
-        decisions: {type: array, items: {$ref: "#/components/schemas/CompetitionRewardDecision"}}
+        reward_revision:
+          type: integer
+          minimum: 1
+          description: Current final element of the contiguous one-based decisions history; approval-only reviews need not advance it.
+        provisional_reward_winner:
+          type: [string, "null"]
+          format: uuid
+          description: Current decision's selected_job_id; a provisional reward does not wait for integrity or source approval and is not payment.
+        integrity_review:
+          type: string
+          enum: [not_reviewed, approved, disqualified, not_applicable]
+          description: Only reviews of the current provisional recipient count. Starts not_reviewed, affirmative/restored reward review projects approved, disqualification projects disqualified, and no current recipient means not_applicable.
+        source_approval:
+          type: string
+          enum: [pending, approved, rejected, deferred, not_applicable]
+          description: Current recipient's source review, initially pending and not_applicable with no recipient. Disqualification rejects source; reward restoration alone does not restore it. Distinct from the reviewed incumbent intent in source_decision.
+        decisions:
+          type: array
+          minItems: 1
+          description: Immutable contiguous reward revisions ordered by revision. Each successor authenticates its predecessor; scores, completion timestamps, sealed ranking and evidence remain unchanged.
+          items: {$ref: "#/components/schemas/CompetitionRewardDecision"}
         integrity_reviews: {type: array, items: {$ref: "#/components/schemas/CompetitionPublicIntegrityReview"}}
         source_decision: {$ref: "#/components/schemas/CompetitionSourceActivation"}
-        settlement_status: {type: string, enum: [pending, received, applied, confirmed, rejected]}
+        settlement_status:
+          type: string
+          enum: [pending, received, applied, confirmed, rejected]
+          description: |
+            Receipts for the current reward revision only, with precedence
+            confirmed > applied > rejected > received > pending. pending means
+            no receipt; received acknowledges delivery only; applied/confirmed
+            are external accounting claims, not proof of reversible transfer.
+            Historical receipts remain visible but do not settle a replacement.
+            Explicit shadow staging permits only pending, received, or rejected;
+            its receipts cannot assert applied_at or a chain transaction.
         settlement_receipts: {type: array, items: {$ref: "#/components/schemas/CompetitionSettlementReceipt"}}
         incidents: {type: array, items: {$ref: "#/components/schemas/CompetitionAutomationIncident"}}
         invalidated: {type: boolean}
@@ -990,6 +1109,20 @@ components:
       required: [target_round_id]
       description: Separately authorized reviewed source intent; public projection omits raw manifest and private Git refs.
       properties:
+        staging:
+          type: boolean
+          default: false
+          description: Immutable mode; staging source refs use only sim-latency-staging, never the production branches.
+        staging_round_window_seconds:
+          type: integer
+          minimum: 60
+          maximum: 604800
+          description: Frozen admission duration for explicit staging, omitted for production.
+        staging_preparation_seconds:
+          type: integer
+          minimum: 0
+          maximum: 57600
+          description: Frozen staging preparation delay; zero does not waive exact-source readiness or containment. Omitted for production and when zero.
         environment: {type: string}
         competition_id: {type: string}
         season_id: {type: string}
@@ -997,7 +1130,7 @@ components:
         expected_generation: {type: integer, format: int64}
         source_generation: {type: integer}
         target_epoch: {type: integer}
-        target_round_id: {type: string, format: uuid, description: Immutable reserved identity shared by readiness receipts and the later production round.}
+        target_round_id: {type: string, format: uuid, description: Immutable reserved identity shared by readiness receipts and the later round in the same explicit mode.}
         source_decision_digest: {$ref: "#/components/schemas/Sha256"}
         approved_patch_sha256: {$ref: "#/components/schemas/Sha256"}
         kind: {type: string}
@@ -1030,6 +1163,10 @@ components:
       additionalProperties: false
       required: [environment, competition_id, season_id, generation, target_round_id, role, actor_id, manifest_commit, manifest_sha256, source_lock_sha256, runtime_image_digest, qualification_sha256, ready, recorded_at]
       properties:
+        staging:
+          type: boolean
+          default: false
+          description: Must match the exact reserved source intent; a production acknowledgment cannot qualify staging or vice versa.
         environment: {type: string}
         competition_id: {type: string}
         season_id: {type: string}
@@ -1319,14 +1456,23 @@ components:
     CompetitionSeasonPolicy:
       type: object
       additionalProperties: false
+      description: Production policy remains six weekly $20 epochs. Explicit v2 staging freezes matching staging timing and a zero fee; a zero fee alone cannot select staging mode.
       required: [epoch_count, submission_window_seconds, preparation_window_seconds, submission_fee_usd]
+      oneOf:
+        - properties:
+            submission_fee_usd: {const: 20}
+            submission_window_seconds: {const: 604800}
+        - properties:
+            submission_fee_usd: {const: 0}
+            preparation_window_seconds: {maximum: 57600}
       properties:
         epoch_count:
           type: integer
           const: 6
         submission_window_seconds:
           type: integer
-          const: 604800
+          minimum: 60
+          maximum: 604800
         preparation_window_seconds:
           description: Time reserved for the same-round rebaseline before submissions open.
           type: integer
@@ -1334,8 +1480,8 @@ components:
           maximum: 604800
         submission_fee_usd:
           type: integer
-          const: 20
-          description: Fee collected exactly once by the Apex adapter for each admitted submission.
+          enum: [0, 20]
+          description: Production charges $20 exactly once per admitted submission. Explicit v2 staging requires zero and must not invoke the fee collector; legacy staging remains fee-free despite its historical production-policy projection.
 
     CompetitionGenerateRoundArgs:
       type: object
@@ -1403,10 +1549,10 @@ components:
         epoch:
           type: integer
           minimum: 0
-          description: Staging epochs begin at zero and advance independently; production epochs are 1 through 6.
+          description: Legacy staging epochs begin at zero and advance independently. Explicit v2 staging seasons and production seasons each use epochs 1 through 6.
         staging:
           type: boolean
-          description: True for a fee-free pre-production epoch evaluated against frozen source epoch zero and excluded from winner promotion and the production leaderboard.
+          description: True for a fee-free pre-production epoch, excluded from production rewards and branches. Legacy staging uses source epoch zero; explicit v2 staging binds its separately reviewed staging source generation and versioned provisional reward contract.
         status:
           type: string
           enum: [scheduled, open, grading, finalized, canceled, sealed]
@@ -1437,24 +1583,25 @@ components:
               format: date-time
             - type: "null"
         finalized_at:
+          description: Legacy v1 finalization only; omitted for v2, which publishes a seal and provisional reward history instead.
           oneOf:
             - type: string
               format: date-time
             - type: "null"
         winner_job_id:
-          description: Named automatic staging winner or approved production winner after publication; null when no candidate qualifies. Historical finalized winners are unchanged.
+          description: Legacy v1 named automatic staging winner or approved production winner after publication; null when no candidate qualifies and omitted for v2. Use the versioned result's provisional_reward_winner for v2. Historical finalized winners are unchanged.
           oneOf:
             - type: string
               format: uuid
             - type: "null"
         revealed_seed:
-          description: Production requires reveal_at and atomic post-review finalization. Staging requires actual admission close, complete FIFO drain, and automatic finalization, which may precede scheduled reveal_at after an explicit early close.
+          description: Legacy production requires reveal_at and post-review finalization; legacy staging requires close, drain and automatic finalization. V2 requires close, complete drain, seal, and reveal, without waiting for integrity/source approval.
           oneOf:
             - type: string
               pattern: "^[0-9a-f]{64}$"
             - type: "null"
         providers_url:
-          description: Production requires reveal_at and atomic post-review finalization. Staging requires actual admission close, complete FIFO drain, and automatic finalization, which may precede scheduled reveal_at after an explicit early close.
+          description: Legacy production requires reveal_at and post-review finalization; legacy staging requires close, drain and automatic finalization. V2 requires close, complete drain, seal, and reveal, without waiting for integrity/source approval.
           type: string
           pattern: "^/competition/round/[0-9a-f-]+/providers\\.yml$"
 
@@ -1576,7 +1723,7 @@ components:
           format: uuid
         staging:
           type: boolean
-          description: True for a fee-free staging-era job that enters the real FIFO evaluator against source epoch zero.
+          description: True for a fee-free staging job using the real FIFO evaluator. Legacy staging uses source epoch zero; explicit v2 staging uses its activated staging source and shadow reward contract.
         patch_sha256:
           $ref: "#/components/schemas/Sha256"
         state:
@@ -1586,6 +1733,7 @@ components:
         status_url:
           type: string
           pattern: "^/competition/(v2/)?score/[0-9a-f-]+$"
+          description: Persist and follow exactly with the owning submitter credential. V2 returns /competition/v2/score/{jobId}; the legacy polling URL rejects that job's contract.
 
     CompetitionScoreJobResult:
       type: object
@@ -1612,7 +1760,7 @@ components:
           format: uuid
         staging:
           type: boolean
-          description: True for a fee-free staging-era job evaluated against source epoch zero and published through polling after staging finalization.
+          description: True for a fee-free staging job. Legacy staging uses source epoch zero and automatic finalization; explicit v2 staging uses activated staging source and publishes after close, drain, seal, and reveal without waiting for review.
         patch_sha256:
           $ref: "#/components/schemas/Sha256"
         state:

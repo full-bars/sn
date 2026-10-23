@@ -2,23 +2,17 @@
 
 // Linux journal sockets use per-call nonblocking writes. Pipe/terminal handles
 // are reopened with independent flags; the caller's original fd never changes.
+// Regular files (nohup, systemd file:, CI captures) use the storage-bounded
+// file adapter shared with other platforms.
 package diagnostics
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
-	"time"
 
 	"golang.org/x/sys/unix"
 )
-
-// Only the single exporter worker writes or closes this private descriptor.
-type descriptorSink struct {
-	fd     int
-	socket bool
-}
 
 // Admission holds the original File's descriptor reference while inspecting
 // and duplicating it, preventing close/reuse from selecting an unrelated sink.
@@ -64,6 +58,9 @@ func newDescriptorSink(file *os.File) (ownedSink, error) {
 				return
 			}
 		case unix.S_IFIFO:
+		case unix.S_IFREG:
+			result, admissionErr = newFileSink(raw)
+			return
 		default:
 			admissionErr = errors.New("diagnostic file cannot promise nonblocking writes")
 			return
@@ -93,43 +90,5 @@ func newDescriptorSink(file *os.File) (ownedSink, error) {
 	return result, nil
 }
 
-// Every syscall is nonblocking. Short writes retain only this record's suffix;
-// the deadline/cancellation returns the exact prefix count to prevent splicing.
-func (self *descriptorSink) WriteContext(ctx context.Context, raw []byte) (int, error) {
-	written := 0
-	for written < len(raw) {
-		if err := ctx.Err(); err != nil {
-			return written, err
-		}
-		var count int
-		var err error
-		if self.socket {
-			count, err = unix.SendmsgN(self.fd, raw[written:], nil, nil, unix.MSG_DONTWAIT|unix.MSG_NOSIGNAL)
-		} else {
-			count, err = unix.Write(self.fd, raw[written:])
-		}
-		if count > 0 {
-			written += count
-		}
-		if err == nil && count > 0 {
-			continue
-		}
-		if errors.Is(err, unix.EINTR) {
-			continue
-		}
-		if err != nil && !errors.Is(err, unix.EAGAIN) && !errors.Is(err, unix.EWOULDBLOCK) {
-			return written, err
-		}
-		timer := time.NewTimer(10 * time.Millisecond)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			return written, ctx.Err()
-		case <-timer.C:
-		}
-	}
-	return written, nil
-}
-
-// The exporter joins its write before releasing this owned descriptor only.
-func (self *descriptorSink) Close() error { return unix.Close(self.fd) }
+// Linux suppresses SIGPIPE per call; the private fd is never the original 1/2.
+const socketSendFlags = unix.MSG_DONTWAIT | unix.MSG_NOSIGNAL

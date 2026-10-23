@@ -296,6 +296,11 @@ func ValidateProvisionalRuntimeMetadata(metadata *types.Metadata) error {
 
 // Metadata14 does not expose runtime API signatures. Pin the consumed API's
 // declared version separately; changes to other APIs do not affect admission.
+// Runtime481/source6a972693 and runtime482/source8cf229f8 retain the consumed
+// selective-metagraph signature and all77 SCALE fields from API2. Their API3
+// declaration also includes the unrelated emission-weights method.
+// This exception grants no source or artifact authority: each caller still
+// authenticates its exact block artifact and checks its consumed interfaces.
 func validateProvisionalRuntimeApis(raw json.RawMessage) error {
 	var version struct {
 		Apis []json.RawMessage `json:"apis"`
@@ -317,8 +322,14 @@ func validateProvisionalRuntimeApis(raw json.RawMessage) error {
 			continue
 		}
 		value, err := decodeRuntimeVersionUint("SubnetInfoRuntimeApi", pair[1], 32)
-		if found || err != nil || value != 2 {
-			return errors.New("consumed SubnetInfoRuntimeApi is not version2")
+		if found || err != nil || value != 2 && value != 3 {
+			return errors.New("consumed SubnetInfoRuntimeApi is not version2 or reviewed runtime481/482 version3")
+		}
+		if value == 3 {
+			identity, err := DecodeRuntimeVersionIdentity(raw)
+			if err != nil || identity != (RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 481, TransactionVersion: 1, StateVersion: 1}) && identity != (RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 482, TransactionVersion: 1, StateVersion: 1}) {
+				return errors.Join(errors.New("consumed SubnetInfoRuntimeApi version3 requires the reviewed node-subtensor/481/1/1 or node-subtensor/482/1/1 tuple"), err)
+			}
 		}
 		found = true
 	}

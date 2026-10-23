@@ -250,19 +250,11 @@ func (self *productionOperatorList) Close() {
 	self.refresher.Close()
 }
 
-// The pinned operators and state paths only: the strict document decode,
-// without the approvals, keys or validation the release runner applies.
+// The pinned operators and state paths only: resolve the same embedded or
+// explicit bytes, without the approvals, keys or validation the release
+// lifecycle applies (including its pending-activation handling).
 func decodeOperatorListReleaseConfig(path string) (*ReleaseConfig, error) {
-	abs, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-	file, err := os.Open(abs)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	raw, err := io.ReadAll(io.LimitReader(file, maximumReleaseConfigBytes+1))
+	abs, raw, err := readReleaseConfigFile(path)
 	if err != nil {
 		return nil, err
 	}

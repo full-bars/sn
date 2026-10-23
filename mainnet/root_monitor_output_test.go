@@ -178,8 +178,17 @@ func TestRootMonitorOutputMetricsAmbiguityAndOwnershipStayOptional(t *testing.T)
 	}
 }
 
+// An arbitrary synchronous writer has no admitted cancellation contract.
+// Counting actual calls makes refusal independent of its return behavior.
+type rootMonitorUnsupportedOutput struct{ calls atomic.Uint64 }
+
+func (self *rootMonitorUnsupportedOutput) Write(raw []byte) (int, error) {
+	self.calls.Add(1)
+	return len(raw), nil
+}
+
 // Missing metrics cannot be described as independently observable delivery.
-// A refused regular-file logger remains untouched while chain reads complete.
+// An unsupported callback remains untouched while chain reads complete.
 func TestRootMonitorOutputUnconfiguredAndCompactWire(t *testing.T) {
 	_, fixture := newRootFixture(t)
 	server := rootFixtureServer(t, fixture)
@@ -198,16 +207,12 @@ func TestRootMonitorOutputUnconfiguredAndCompactWire(t *testing.T) {
 	if strings.Contains(stdout.String(), "storage") || strings.Contains(stdout.String(), "hotkey") {
 		t.Fatal("daemon record contains full root census")
 	}
-	file, err := os.CreateTemp(mainnetPrivateTestDir(t), "unsupported")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer file.Close()
-	if code := runMain(t.Context(), args, file, file); code != 0 {
+	unsupported := &rootMonitorUnsupportedOutput{}
+	if code := runMain(t.Context(), args, unsupported, unsupported); code != 0 {
 		t.Fatal("unsupported logger altered core result", code)
 	}
-	if info, err := file.Stat(); err != nil || info.Size() != 0 {
-		t.Fatal("unsupported file logger was called")
+	if unsupported.calls.Load() != 0 {
+		t.Fatal("unsupported synchronous logger was called")
 	}
 	// Finite preview still provides its original complete evidence contract.
 	stdout.Reset()

@@ -1100,6 +1100,12 @@ copy `sn/operators.yml`) names each network operator's domain, API URL and Conne
 says where operators serve, never who is weighted or paid. The contract is
 `docs/OPERATOR-DISCOVERY.md` §4.
 
+**Choose measurement explicitly.** `validator run --measurement-only` runs the
+existing single-operator measurement path. Its API, Connect, concurrency, trail,
+state and legacy-key-adoption options are unchanged; add `--measurement-only`
+to earlier single-operator flag-mode commands. It cannot write weights. The
+existing `--all-operators` form below selects operator-list measurement.
+
 **Flag mode: measure every listed operator.** This mode never steers.
 
 ```
@@ -1146,9 +1152,27 @@ an auth code or password. Without `--operator`, `validator auth` writes `~/.urne
 **Production mode: weights only from the signed config.**
 
 ```
-validator run --config=<path> ... [--operators-refresh=<duration> [--operators-url=<url>] [--observe-unpinned-operators]]
+validator run [--config=<path>] ... [--operators-refresh=<duration> [--operators-url=<url>] [--observe-unpinned-operators]]
 ```
 
+- Without `--config`, `run` reads the document embedded from
+  `validator/release.yml` at build time. It does not read a `release.yml` from
+  the working directory or home directory. Relative paths in that document
+  resolve under `~/.urnetwork/validator`.
+- An explicit `--config` names the complete replacement document. A missing,
+  empty or invalid explicit file never falls back or merges with the embedded
+  one. Measurement flags cannot be combined with a release configuration.
+- Embedding the public defaults grants no production authority. The checked-in
+  document is intentionally incomplete and the normal validator refuses it
+  before starting production. A usable release profile still needs the reviewed
+  deployment, native runtime and policy pins, RPC routes, operator signers,
+  validator identity, credentials, activation evidence and independently signed
+  approval/history references. Those operator-specific inputs and required
+  durable-volume declarations are not supplied by the embedded document.
+  Use the approved complete config until those real inputs are available;
+  settlement-v2 adoption still follows `VERSION2-LAUNCH.md` step 10 and passes
+  the adopted, re-signed config explicitly. `init`, `register`, `activate` and
+  other commands retain their existing config requirements.
 - The list is used only with `--operators-refresh`. It is cached at
   `<config.state_dir>/operators.yml`. It never changes the signed config's operators,
   weights, evidence or protocol state; the release runs exactly as without it.

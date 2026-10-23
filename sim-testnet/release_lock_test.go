@@ -29,8 +29,6 @@ func testGitOutput(t *testing.T, root string, args ...string) []byte {
 func TestCleanGitSubtreeHashRejectsRuntimeAssetDrift(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	if err := os.Mkdir(filepath.Join(root, "all"), 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -80,8 +78,6 @@ func TestCleanGitSubtreeHashRejectsRuntimeAssetDrift(t *testing.T) {
 func TestSDKMobileBuildTreeHashBindsNestedModule(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	commandDir := filepath.Join(root, "build", "cmd", "mobileexports")
 	if err := os.MkdirAll(commandDir, 0o700); err != nil {
 		t.Fatal(err)
@@ -116,8 +112,6 @@ func TestSDKMobileBuildTreeHashBindsNestedModule(t *testing.T) {
 func TestSDKMobileBuildTreeHashRejectsIgnoredNestedWorktree(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	buildRoot := filepath.Join(root, "build")
 	if err := os.Mkdir(buildRoot, 0o700); err != nil {
 		t.Fatal(err)
@@ -195,8 +189,6 @@ func TestDigestNamedFilesRejectsSymlinksAndPathEscape(t *testing.T) {
 func TestDigestTrackedNamedFilesRejectsIgnoredUnreviewedInput(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	if err := os.WriteFile(filepath.Join(root, ".gitignore"), []byte("ignored.yml\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -218,8 +210,6 @@ func TestDigestTrackedNamedFilesRejectsIgnoredUnreviewedInput(t *testing.T) {
 func TestSoliditySourceHashCoversDeploymentScripts(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	for _, dir := range []string{"evm/src", "evm/script"} {
 		if err := os.MkdirAll(filepath.Join(root, dir), 0o700); err != nil {
 			t.Fatal(err)
@@ -253,8 +243,6 @@ func TestSoliditySourceHashCoversDeploymentScripts(t *testing.T) {
 func TestSoliditySourceHashCoversNestedLibrariesAndExcludesDependencyRoots(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	files := map[string]string{
 		"evm/src/Contract.sol":    "contract Contract {}\n",
 		"evm/src/lib/Library.sol": "library Library {}\n",
@@ -303,8 +291,6 @@ func TestSoliditySourceHashCoversNestedLibrariesAndExcludesDependencyRoots(t *te
 func TestSoliditySourceHashRejectsIgnoredNestedSource(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	for name, content := range map[string]string{
 		".gitignore":              "/evm/src/lib/ignored.sol\n",
 		"evm/script/Deploy.s.sol": "contract Deploy {}\n",
@@ -335,8 +321,6 @@ func TestSoliditySourceHashRejectsIgnoredNestedSource(t *testing.T) {
 func TestSolidityCompilerSettingsHashCoversFoundryAndRemappings(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	evmRoot := filepath.Join(root, "evm")
 	if err := os.Mkdir(evmRoot, 0o700); err != nil {
 		t.Fatal(err)
@@ -366,8 +350,6 @@ func TestSolidityCompilerSettingsHashCoversFoundryAndRemappings(t *testing.T) {
 func TestGoReleaseSourceHashCoversNestedSourceDirectoriesAndExcludesCaches(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	files := map[string]string{
 		"go.mod":                         "module example.invalid/release\n\ngo 1.26.3\n",
 		"lib/source.go":                  "package lib\n\nconst TopLevelValue = 1\n",
@@ -455,8 +437,6 @@ func TestGoReleaseSourceHashCoversNestedSourceDirectoriesAndExcludesCaches(t *te
 func TestTrackedFilesUnderUsesOneClassifierForFilesystemAndGitSets(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	files := map[string]string{
 		"build/excluded.go":        "package buildtool\n",
 		"cmd/x/lib/source.go":      "package lib\n",
@@ -503,8 +483,6 @@ func TestTrackedFilesUnderUsesOneClassifierForFilesystemAndGitSets(t *testing.T)
 func TestTrackedFilesUnderRejectsIgnoredIncludedAndAllowsIgnoredExcludedPaths(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	for name, content := range map[string]string{
 		".gitignore":  "/src/ignored.go\n/evm/lib/ignored.go\n",
 		"go.mod":      "module example.invalid/release\n\ngo 1.26.3\n",
@@ -566,8 +544,6 @@ func TestTrackedFilesUnderRejectsSymlinkedAndEscapingRoots(t *testing.T) {
 func TestCleanGitRevisionRejectsDependencyDrift(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	dependency := filepath.Join(root, "Library.sol")
 	if err := os.WriteFile(dependency, []byte("library Library {}\n"), 0o600); err != nil {
 		t.Fatal(err)
@@ -599,8 +575,6 @@ func TestCleanGitRevisionRejectsDependencyDrift(t *testing.T) {
 func TestCleanGitRevisionRejectsNestedWorktreePath(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	nested := filepath.Join(root, "nested")
 	if err := os.Mkdir(nested, 0o700); err != nil {
 		t.Fatal(err)
@@ -759,8 +733,6 @@ func TestGeneratedABIHashBindsFleetBatcher(t *testing.T) {
 func TestServerLocalDependencyHashCoversEveryPostgresInitHook(t *testing.T) {
 	serverRoot := t.TempDir()
 	runTestGit(t, serverRoot, "init", "-q")
-	runTestGit(t, serverRoot, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, serverRoot, "config", "user.name", "sim-testnet")
 	initDir := filepath.Join(serverRoot, "local", "postgres", "initdb")
 	if err := os.MkdirAll(initDir, 0o700); err != nil {
 		t.Fatal(err)
@@ -871,8 +843,6 @@ func releaseLockCheckoutVault(t *testing.T) string {
 		t.Fatal(err)
 	}
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	runTestGit(t, root, "add", ".")
 	runTestGit(t, root, "commit", "-qm", "synthetic testnet vault")
 	return root

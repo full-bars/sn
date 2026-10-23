@@ -341,8 +341,6 @@ func testReleaseExecutableSourceFixture(t *testing.T) (string, string) {
 	}
 	runTestGit(t, base, "init", "--bare", "-q", remote)
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	runTestGit(t, root, "branch", "-M", "main")
 	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/urfoundation/sn\n\ngo 1.26\n"), 0o600); err != nil {
 		t.Fatal(err)

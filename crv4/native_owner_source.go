@@ -9,6 +9,11 @@ const NativeOwnerSource475 = "d1718c99c34cf96abbf2bf09c0e9e48b945c76f5"
 const NativeOwnerSource477 = "5c6e83e2f4936f257234f246957f75684c35227c"
 const NativeOwnerSource478 = "850f2755bb05a3851f948489f0ab27b0645cebce"
 const NativeOwnerSource479 = "e66c7eed760efaa5a3b1c249b5a3369a9bc693cf"
+const NativeOwnerSource481 = "6a972693ae9580541225bd37696ac2fee26b8ae9"
+
+// Runtime482 launch admission follows the owner's explicit qualification waiver.
+// Exact artifact/configuration approvals remain independently required.
+const NativeOwnerSource482 = "8cf229f8ef969389d054a4c161b53ffd164a041f"
 
 // Each reviewed source with the spec version its runtime/src/lib.rs declares.
 // A newly reviewed source is one more row. The number grants nothing by
@@ -23,6 +28,8 @@ var reviewedNativeOwnerSources = []struct {
 	{NativeOwnerSource477, 477},
 	{NativeOwnerSource478, 478},
 	{NativeOwnerSource479, 479},
+	{NativeOwnerSource481, 481},
+	{NativeOwnerSource482, 482},
 }
 
 // The ordinary credit, owner call and passive root interfaces share reviewed
@@ -58,7 +65,7 @@ func ReviewedNativeOwnerSpecSource(spec uint32) (string, bool) {
 // completion proof: each approval still proves the marker at its own activation.
 func ReviewedPostAlphaMigrationSource(source string) bool {
 	switch source {
-	case NativeOwnerSource473, NativeOwnerSource475, NativeOwnerSource477, NativeOwnerSource478, NativeOwnerSource479:
+	case NativeOwnerSource473, NativeOwnerSource475, NativeOwnerSource477, NativeOwnerSource478, NativeOwnerSource479, NativeOwnerSource481, NativeOwnerSource482:
 		return true
 	default:
 		return false

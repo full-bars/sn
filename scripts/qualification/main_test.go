@@ -274,7 +274,7 @@ func testGitSource(t *testing.T) planSpec {
 	git("init", "-q")
 	testWrite(t, filepath.Join(plan.SourceRoot, "fixture.go"), "package fixture\n")
 	git("add", "fixture.go")
-	git("-c", "user.name=qualification-test", "-c", "user.email=qualification@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture")
+	git("-c", "commit.gpgsign=false", "commit", "-qm", "fixture")
 	hash, err := fileHash(filepath.Join(plan.SourceRoot, "fixture.go"))
 	if err != nil {
 		t.Fatal(err)

@@ -454,7 +454,7 @@ func releaseGateMigrationSuffixGroup(t *testing.T) releaseEvidenceV2GateGroup {
 	t.Helper()
 	return releaseEvidenceV2GateGroup{
 		phase: "server_db", job: "server-db", variable: "migration_suffix_tests",
-		alternatives: "MigrationsCurrentSuffix",
+		alternatives: "MigrationsCurrentSuffix|MigrationsDeviceClientVersionPublicationBoundary",
 		packages:     []string{"./monitor"},
 		sources:      map[string][]string{"./monitor": releaseEvidenceV2GateSources(t, []string{"../../server/monitor/migration_current_suffix_test.go"})},
 		commands: []string{

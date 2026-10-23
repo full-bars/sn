@@ -8,9 +8,16 @@ saturate at `uint64` maximum. A returned `true` means queued, not delivered.
 
 The Linux adapter accepts journal/stream sockets, pipes and terminals. It uses
 nonblocking operations on owned descriptors, preserves the caller's descriptor
-flags, and never closes the caller's original descriptor. Other platforms
-explicitly refuse file descriptors. Ordinary regular files and arbitrary
-`io.Writer` callbacks are unavailable, including typed-nil implementations.
+flags, and never closes the caller's original descriptor. Regular files are
+admitted on Linux, macOS and Windows through a private duplicate; macOS also
+admits terminals. Windows consoles and synchronous pipes block without a
+context, so a dedicated writer thread owns a duplicated handle behind a bounded
+queue (16 records, 256 KiB): the exporter's write only enqueues, a full queue
+drops and counts, and `Close` drains for one write budget, then ends the
+in-flight write with `CancelSynchronousIo` and joins before releasing the
+handle. For these devices a delivery means accepted by that writer. Other
+descriptors and arbitrary `io.Writer` callbacks are unavailable, including
+typed-nil implementations.
 Explicit `ContextWriter` embeddings must cancel their actual operation and join
 its effects; wrapping a blocking writer in an abandoned goroutine violates this
 contract. A known `bytes.Buffer` has a separate 1 MiB capture limit and may be
