@@ -332,6 +332,7 @@ var controlLiveEffectKeys = map[string]bool{
 	"proxy_audit":                 true,
 	"fast_auth":                   true,
 	"oom_cap":                     true,
+	"baseline":                    true,
 }
 
 // controlUnsupportedKeys are accepted and persisted but have no miner
@@ -339,7 +340,6 @@ var controlLiveEffectKeys = map[string]bool{
 // operator never believes a value took effect when nothing reads it.
 var controlUnsupportedKeys = map[string]bool{
 	"node_name":  true,
-	"baseline":   true,
 	"ip_version": true,
 	"profile":    true,
 	"ramlogs":    true,
@@ -367,6 +367,10 @@ var controlLiveDefaults = map[string]string{
 	// Clearing an explicit address goes back to auto, rebinding a running
 	// listener on loopback plus Tailscale.
 	"metrics_listen": "auto",
+	// Clearing the baseline key re-enables the recorder. Its default is ON,
+	// because a free upgrade baseline is the point: an explicit off must not
+	// outlive the clear that restores the default.
+	"baseline": "on",
 	// Clearing smart_dialer must restore the measured-cost preference to its
 	// off default.
 	"smart_dialer": "off",
@@ -1003,6 +1007,18 @@ func applyControlLiveSideEffect(key, value string) error {
 			was = "on"
 		}
 		tlog("⚙️ [control] applied smart_dialer=%s (was %s)\n", value, was)
+	case "baseline":
+		// Sampling is a goroutine that checks the flag each tick, so turning it
+		// off takes effect on the next tick and needs no restart and no signal.
+		// The file is deliberately left alone: it is the only copy of this
+		// box's pre-upgrade behaviour.
+		enabled := strings.EqualFold(value, "on")
+		was := "off"
+		if baselineIsEnabled() {
+			was = "on"
+		}
+		baselineEnabled.Store(enabled)
+		tlog("⚙️ [control] applied baseline=%s (was %s); the existing %s kept\n", value, was, baselineFileName)
 	case "h3":
 		// The mode (see h3Mode) is read when an identity builds its transport.
 		// A change relaunches the identities whose policy moved: the direct

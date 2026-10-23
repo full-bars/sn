@@ -716,6 +716,16 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 		defer m.wg.Done()
 		runProxyAudit(ctx, proxyAuditParkCancelMap, &proxyAuditParkCancelMu, proxyAuditStartupEnabled())
 	}()
+	// Baseline recorder (v33 provider baseline, baseline_sampler.go): one small
+	// local time series so a future upgrade has a before-and-after. The start
+	// mark is written here; the sampler checks the baseline key each tick, so
+	// `set baseline off` takes effect live. It runs on the manager context, so
+	// stop() joins it like every other loop.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		<-baselineStart(ctx, currentVersionForBaseline(), previousVersionForBaseline())
+	}()
 	return launch, held, nil
 }
 
