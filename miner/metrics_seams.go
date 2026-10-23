@@ -1,6 +1,9 @@
 package miner
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 // metrics_seams.go is the registration point for the v33 Prometheus families
 // the miner cannot source yet. The v33 provider (candidate/v33-ops,
@@ -104,6 +107,10 @@ type seamLifetime struct {
 	ContractsAcquired, ContractsDenied uint64
 	ProxiesRecovered, ProxiesLost      uint64
 	BillableBytes                      uint64
+	// Since is when the totals began accumulating; SinceApprox says the start
+	// predates tracking, so the totals include earlier history.
+	Since       time.Time
+	SinceApprox bool
 }
 
 // seamLoop is one supervised background loop.

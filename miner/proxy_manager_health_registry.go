@@ -334,6 +334,10 @@ func writeProxyHealthSnapshot(now time.Time) bool {
 	}
 	overlayed := overlayLiveProxyHealth(state.Proxies)
 	report := buildProxyHealthReport(state, now)
+	// Feed the persistent all-time store: this writer is the exclusive consumer
+	// of the heartbeat report, so transition deltas are captured exactly once,
+	// here (v33 health_heartbeat.go does the same).
+	noteHealthReportForLifetime(report)
 	writeProxyHealthState(dir, report, now)
 	writeProxyHealthEvents(dir, report, now)
 	writeProxyTrafficState(dir, report, now)

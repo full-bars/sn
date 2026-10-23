@@ -259,18 +259,9 @@ func yieldCoordinatorSession() {
 
 // --- lifetime metrics seam ---------------------------------------------------
 
-// hotswapLifetimeStore is the process's lifetime-counter store, flushed at the
-// two points a handoff bypasses the normal shutdown (the end of the parent's
-// drain, and just before an in-place execve). The v33 provider's
-// provider/lifetime_metrics.go did not come across with this port, so the
-// miner flushes nothing here yet; the seam keeps those call sites and their
-// ordering intact for the port that adds the counters.
-type hotswapLifetimeStore struct{}
-
-// Flush persists the lifetime counters. No-op until the counters are ported.
-func (*hotswapLifetimeStore) Flush() {}
-
-var lifetimeStore = &hotswapLifetimeStore{}
+// lifetimeStore (lifetime_metrics.go) is the process's all-time counter store.
+// The two call sites below flush it at the points a handoff bypasses the normal
+// shutdown (the end of the parent's drain, and just before an in-place execve).
 
 // restoreStdioBeforeExec is the per-OS implementation from the ported ramlog
 // (shmlog_linux.go restores the pre-redirect descriptors for an in-place
