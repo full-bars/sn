@@ -39,7 +39,7 @@ The installer does **not** start the service. It finishes by printing the comman
 
 ### Restart policy
 
-`supervise-daemon` restarts the provider when it exits. The delay before a restart starts at 5 seconds and grows by 5 seconds per restart up to a cap of 60 seconds, and the supervisor gives up after 10 restarts within one hour. The limit is deliberate: unlimited respawn would turn a broken binary into a tight crash loop.
+`supervise-daemon` restarts the provider 5 seconds after it exits. It gives up after 10 restarts within an hour, so a binary that cannot start stops instead of spinning. There is no growing backoff: `openrc-run(8)` exposes only a constant `respawn_delay`, `respawn_max` and `respawn_period`, and the delay between attempts stays at 5 seconds. An earlier revision of this page described a delay that stepped up to 60 seconds; that was never the behaviour, because `openrc-run` silently ignores a step or cap setting.
 
 ## Authenticate
 
