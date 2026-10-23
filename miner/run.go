@@ -1375,6 +1375,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if settings.ClientSettings.ContractManagerSettings != nil {
 			settings.ClientSettings.ContractManagerSettings.ProxyDescription = contractProxyDescription(index, proxyAddr)
 		}
+		// The transport's own logger observes control dials, so a dial that
+		// fails inside this slot's proxy connect step lands on this slot's
+		// leg evidence (proxy_leg.go, proxy_leg_observer.go).
+		proxyLegId := fmt.Sprintf("direct:%d", index)
+		if proxySettings != nil {
+			proxyLegId = proxySettings.Key()
+		}
+		settings.Log = withProxyLegObserver(settings.Log, proxyLegId)
 		// The extender role binds this host's carrier ports and publishes this
 		// host's address, and it can do neither more than once per process: a
 		// second space's bind fails and its record names an address the host
