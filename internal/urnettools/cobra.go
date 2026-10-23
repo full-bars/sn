@@ -185,6 +185,7 @@ func buildRootCmd() *cobra.Command {
 		newUninstallCmd(),
 		newAutoUpdateCmd(),
 		newAutoStartCmd(),
+		newInstallServiceCmd(),
 		newSelfHealCmd(),
 		newDoRestartCmd(), // HIDDEN internal entry point for the updater's escalated restart
 		newIPDetectCmd(),
@@ -643,6 +644,14 @@ func newAutoStartCmd() *cobra.Command {
 			return cmdAutoStart(rest, force, dryRun)
 		})
 	}), "Turn on or off whether the targeted provider's unit starts automatically on login. Honors --dry-run, which prints the plan and changes nothing.", "  urnet-tools auto-start on --unit urnetwork-native.service\n  urnet-tools auto-start off")
+}
+
+func newInstallServiceCmd() *cobra.Command {
+	return withHelp(newCobraCmd("install-service", "write and enable the OpenRC or rc.d service", nil, func(cmd *cobra.Command, args []string) error {
+		return parseGlobal(args, func(force, dryRun bool, rest []string) error {
+			return cmdInstallService(rest, force, dryRun)
+		})
+	}), "Write the platform service definition and enable it. On OpenRC (Alpine and other Linux OpenRC hosts) this writes /etc/init.d/<service> and runs rc-update add <service> default; it does not start the service, because the provider must be authenticated first. On FreeBSD it writes /usr/local/etc/rc.d/<service>, sets <service>_enable=YES and <service>_user with sysrc, and starts the service. It never installs the provider binary: run the platform installer first.", "  urnet-tools install-service --user urnet\n  urnet-tools install-service --user urnet --binary /usr/local/libexec/urnetwork-provider/bin/urnetwork")
 }
 
 func newSelfHealCmd() *cobra.Command {

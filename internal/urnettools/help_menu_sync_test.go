@@ -37,6 +37,10 @@ func TestRootHelpMenuListsEveryRegisteredCommand(t *testing.T) {
 		"reinstall":   "recovery path, documented separately",
 		"auto-start":  "installer plumbing",
 		"auto-update": "installer plumbing",
+		// install-service repairs or recreates the OpenRC/rc.d script that the
+		// platform installer normally writes. The install pages document it;
+		// it is not a command an operator needs in the everyday menu.
+		"install-service": "installer plumbing, documented in the platform install pages",
 	}
 
 	var missing []string

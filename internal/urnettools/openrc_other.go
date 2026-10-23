@@ -2,6 +2,8 @@
 
 package urnettools
 
+import "errors"
+
 // OpenRC is a Linux init system; every entry point is a no-op elsewhere so
 // the cross-platform call sites (cmdStart/cmdStop/cmdRestart, auto-start,
 // auto-update, restartProvider, hotSwapUnitOK, renderStatusBase) compile
@@ -10,6 +12,13 @@ package urnettools
 func openrcActive() bool { return false }
 
 func openrcServiceInstalled() bool { return false }
+
+// openrcInstallService is the off-Linux stub. cmdInstallService is compiled on
+// every platform and dispatches on runtime.GOOS, so the symbol must exist for
+// every build even though only Linux can reach it.
+func openrcInstallService(_, _, _ string, _ bool) error {
+	return errors.New("OpenRC service installation is only available on Linux")
+}
 
 func openrcRouteLifecycle(_ string, _ []string, _, _ bool) (bool, error) {
 	return false, nil

@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -157,6 +158,159 @@ run_rc_command "$1"
 
 // bsdRcScriptDir is where FreeBSD keeps rc.d service scripts.
 const bsdRcScriptDir = "/usr/local/etc/rc.d"
+
+// bsdRcScriptWriteFn writes the installed rc.d script. A var so tests point
+// the destination at a temp file instead of /usr/local/etc/rc.d.
+var bsdRcScriptWriteFn = writeFileAtomic
+
+// bsdServiceRunFn runs a service-control or sysrc command. Package var so
+// tests can intercept the invocation without a live rc.d.
+var bsdServiceRunFn = func(name string, args ...string) ([]byte, error) {
+	return exec.Command(name, args...).CombinedOutput()
+}
+
+// bsdServiceInstall is one rc.d service installation: the script to write and
+// the account to run the provider as.
+type bsdServiceInstall struct {
+	Service string
+	Binary  string
+	User    string
+	Home    string
+	Script  string
+}
+
+// bsdPrivilegedArgv prefixes a command with sudo when the caller is not root.
+// Writing the rc.d script, sysrc and `service start` all need root, and a
+// non-root invocation that failed silently would report a service that does
+// not exist.
+func bsdPrivilegedArgv(euid int, name string, args ...string) (string, []string, error) {
+	if euid == 0 {
+		return name, args, nil
+	}
+	if _, err := exec.LookPath("sudo"); err != nil {
+		return "", nil, fmt.Errorf("%s %s needs root and sudo is not installed: re-run as root", name, strings.Join(args, " "))
+	}
+	return "sudo", append([]string{name}, args...), nil
+}
+
+// bsdInstallService writes the rc.d script, flips the rc.conf knobs and starts
+// the service. It mirrors do_install_service in
+// scripts/Provider_Install_FreeBSD.sh, including the refusal to install a
+// service that runs as root: the provider is an internet-facing relay, and
+// sysrc would happily write root and every boot would then run it with full
+// privileges.
+//
+// euid is passed rather than read so the decision is testable on any platform.
+func bsdInstallService(in bsdServiceInstall, euid int, dryRun bool) error {
+	if in.User == "" || in.User == "root" {
+		return fmt.Errorf("refusing to install %s: it would run as %q, and the internet-facing relay must not run as root (pass --user <account>)", in.Service, in.User)
+	}
+	if in.Service == "" || in.Binary == "" || in.Script == "" {
+		return fmt.Errorf("install-service: incomplete rc.d target (service=%q binary=%q script=%q)", in.Service, in.Binary, in.Script)
+	}
+	// sysrc edits /etc/rc.conf, and `service onestart` drives rc.subr; both are
+	// root actions. onestart (not start) bypasses the _enable gate the way the
+	// rest of this package does, so a service enabled by this command starts
+	// even on a host whose rc.conf was not re-read.
+	steps := [][]string{
+		{"sysrc", in.Service + "_enable=YES"},
+		{"sysrc", in.Service + "_user=" + in.User},
+		{"service", in.Service, "onestart"},
+	}
+	if dryRun {
+		fmt.Printf("[dry-run] would write %s (user %s, binary %s), then run:\n", in.Script, in.User, in.Binary)
+		for _, s := range steps {
+			fmt.Printf("[dry-run]   %s\n", strings.Join(s, " "))
+		}
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(in.Script), 0o755); err != nil {
+		return fmt.Errorf("create rc.d directory %s: %w", filepath.Dir(in.Script), err)
+	}
+	if err := bsdRcScriptWriteFn(in.Script, []byte(renderBSDServiceScript(in.Service, in.Binary, in.User, in.Home)), 0o755); err != nil {
+		if os.IsPermission(err) {
+			return fmt.Errorf("write rc.d script %s: %w (re-run as root: sudo urnet-tools install-service)", in.Script, err)
+		}
+		return fmt.Errorf("write rc.d script %s: %w", in.Script, err)
+	}
+	for _, s := range steps {
+		name, args, err := bsdPrivilegedArgv(euid, s[0], s[1:]...)
+		if err != nil {
+			return err
+		}
+		out, err := bsdServiceRunFn(name, args...)
+		if err != nil {
+			return fmt.Errorf("%s %s: %w (%s)", name, strings.Join(args, " "), err, strings.TrimSpace(string(out)))
+		}
+	}
+	fmt.Printf("Installed rc.d service %s (user %s) and started it.\n", in.Service, in.User)
+	return nil
+}
+
+// bsdRcScriptServesBinary reports whether an installed rc.d script runs this
+// provider's binary. It is the target rule for uninstall: removing the rc.d
+// service is correct only when the provider being uninstalled is the one the
+// service actually launches. A bare provider on a box that also runs the
+// service must not take the service down.
+//
+// The binary is read from the script, not assumed from the service name:
+// install-service accepts --binary, and the shell installer has its own copy of
+// the template, so the name alone proves nothing. Two shapes count: the
+// generated start command ("<binary>" provide) and a command= assignment an
+// operator added by hand. A path that merely appears in a comment does not.
+func bsdRcScriptServesBinary(scriptPath, binary string) bool {
+	if scriptPath == "" || binary == "" {
+		return false
+	}
+	b, err := os.ReadFile(scriptPath)
+	if err != nil {
+		return false
+	}
+	want := filepath.Clean(binary)
+	quoted := `"` + want + `"`
+	for _, line := range strings.Split(string(b), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "command=") {
+			got := strings.Trim(strings.TrimSpace(strings.TrimPrefix(line, "command=")), `"'`)
+			if got != "" && filepath.Clean(got) == want {
+				return true
+			}
+			continue
+		}
+		if strings.Contains(line, quoted+" provide") {
+			return true
+		}
+	}
+	return false
+}
+
+// bsdRemoveService stops and de-registers an rc.d service and removes its
+// script. Every step is best-effort with a warning: uninstall must not abort
+// halfway, and a missing service is not an error.
+//
+// Leaving the script and the rc.conf flag behind is what makes an uninstall
+// dangerous: the binary is deleted, rc.conf still says enable=YES, and the next
+// boot starts a path that no longer exists.
+func bsdRemoveService(service string, euid int, scriptPath string) {
+	steps := [][]string{
+		{"service", service, "onestop"},
+		{"sysrc", "-x", service + "_enable", service + "_user"},
+	}
+	for _, s := range steps {
+		name, args, err := bsdPrivilegedArgv(euid, s[0], s[1:]...)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "uninstall: warning: %v\n", err)
+			continue
+		}
+		if out, err := bsdServiceRunFn(name, args...); err != nil {
+			fmt.Fprintf(os.Stderr, "uninstall: warning: %s %s: %v (%s)\n",
+				name, strings.Join(args, " "), err, strings.TrimSpace(string(out)))
+		}
+	}
+	if err := os.Remove(scriptPath); err != nil && !os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "uninstall: warning: could not remove %s: %v (run: sudo rm -f %s)\n", scriptPath, err, scriptPath)
+	}
+}
 
 // bsdRcScriptPath is the on-disk path of the rc.d script for a service name.
 func bsdRcScriptPath(service string) string {
