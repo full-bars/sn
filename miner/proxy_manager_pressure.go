@@ -374,6 +374,13 @@ func runPoolController(ctx context.Context, configuredMax int, selfHealEnabled b
 			return
 		case <-ticker.C:
 		}
+		// OOM-aware cap bookkeeping (proxy_manager_oom_cap.go): raise this
+		// start's peak to the launched count and refresh the marker heartbeat,
+		// both of which only write on change. Bookkeeping only, nothing is
+		// decided or shed here, and it runs before the self-heal gate below
+		// because the heartbeat has to prove this process is alive even when
+		// self-heal is off (see oomCapUpdatePeak).
+		oomCapUpdatePeak(oomCapRunning(), time.Now())
 		// Shadow only: reports the proxies it would shed, sheds none.
 		proxyLegShadowSweep(time.Now())
 		if !resolveSelfHealEnabled(selfHealEnabled) {

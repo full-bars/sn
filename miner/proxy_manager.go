@@ -432,7 +432,19 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 		m.state = state
 	}
 
-	trimCap, capErr := effectiveTrimCap()
+	// OOM-aware start cap (proxy_manager_oom_cap.go): the relay decides BEFORE
+	// its launch selection so a cap set since the last start applies to this
+	// very start (provider/provide.go), and the trim selection below is the
+	// miner's equivalent selection. Only the start path decides: this function
+	// is also the read the provide loop and the command paths use
+	// (importLegacy false), and a command must never re-decide the cap for a
+	// running process. The desired count is the untrimmed candidate list the
+	// trim selection is about to be applied to.
+	if importLegacy {
+		decideOOMCapStartup(len(all))
+	}
+
+	trimCap, trimSource, capErr := effectiveTrimCapSource()
 	if capErr != nil {
 		tlog("[proxy][trim] warn: could not read the trim target: %v\n", capErr)
 		trimCap = 0
@@ -448,12 +460,19 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 		launch, held = startupTrimSelection(all, trimCap, state.Proxies, gradeFor, earningsFor)
 		importantLogf("[proxy][trim] startup: cap=%d, launching %d of %d desired, holding %d worst-graded until the cap is raised\n",
 			trimCap, len(launch), len(all), len(held))
-		primeTrimCapSeen(trimCap, trimCapOperator)
+		primeTrimCapSeen(trimCap, trimSource)
 	} else {
 		launch = all
 		if trimCap > 0 {
-			primeTrimCapSeen(trimCap, trimCapOperator)
+			primeTrimCapSeen(trimCap, trimSource)
 		}
+	}
+	// The marker records what this start actually launched, so the next start's
+	// decision measures 80% of the pool that ran, not the configured size this
+	// start never opened. It is written in every mode, including off
+	// (oomCapRecordStart).
+	if importLegacy {
+		recordOOMCapStartup(len(launch))
 	}
 	// The h3 count setting ranks over the proxies this box runs, so the
 	// candidates are noted under every setting: switching to a count later
@@ -521,6 +540,12 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// fixed here, and the line reports what it actually runs (v33's
 	// setConfiguredProxyCount, called once the proxy list is resolved).
 	setProxyStatusPool(launch)
+
+	// How many proxies this start opened, for the OOM-cap bookkeeping and the
+	// live `set oom-cap on` report (proxy_manager_oom_cap.go). Nothing else
+	// reads it; the trim, the pressure loop and the reload all keep their own
+	// running counts.
+	setOOMCapRunningProxies(len(launch))
 	if writeState {
 		if err := writeProxyState(m.state); err != nil {
 			tlog("[proxy] warning: could not write proxy.state: %v\n", err)
