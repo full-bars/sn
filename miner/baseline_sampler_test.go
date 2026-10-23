@@ -262,3 +262,23 @@ func TestBaselineSampleOmitsProxiesWhenTheStateIsUnreadable(t *testing.T) {
 		t.Fatalf("a known count was dropped: %+v", known.Proxies)
 	}
 }
+
+// The sampler starts from the proxy manager, which can run before
+// beginControlRun has consumed the previous run's marker. When that happens the
+// in-process view is empty and the start mark used to record no previous
+// version at all, so an upgrade had no before-and-after.
+func TestPreviousVersionFallsBackToTheMarkerFile(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	resetControlRuntimeForTest()
+	t.Cleanup(resetControlRuntimeForTest)
+
+	marker := []byte(`{"reason":"clean","version":"v-old-build"}`)
+	if err := os.WriteFile(filepath.Join(dir, runStateFileName), marker, 0o600); err != nil {
+		t.Fatalf("write marker: %v", err)
+	}
+
+	if got := previousVersionForBaseline(); got != "v-old-build" {
+		t.Fatalf("previous version = %q, want v-old-build from the marker file", got)
+	}
+}

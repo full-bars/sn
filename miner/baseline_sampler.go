@@ -511,5 +511,25 @@ func currentVersionForBaseline() string {
 // the same restart marker the node snapshot uses. Empty on a first start, which
 // is correct: there was no previous version.
 func previousVersionForBaseline() string {
-	return readMinerRestartState().PreviousVersion
+	if v := readMinerRestartState().PreviousVersion; v != "" {
+		return v
+	}
+	// The sampler starts from the proxy manager, which can run before
+	// beginControlRun has consumed the previous run's marker. When that has not
+	// happened yet the in-process view is empty while the marker file still
+	// holds the answer, so read it directly rather than record a start mark
+	// with no previous version.
+	path, err := providerStatePath(runStateFileName)
+	if err != nil {
+		return ""
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	var marker runStateMarker
+	if err := json.Unmarshal(data, &marker); err != nil {
+		return ""
+	}
+	return marker.Version
 }
