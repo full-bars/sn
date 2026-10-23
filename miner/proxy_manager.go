@@ -553,6 +553,20 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 			runProxyURLFetcher(ctx, m.cfg.Urls, m.cfg.Refresh, m.cfg.Max, m.cfg.ApiHost, m.cfg.ApiPort, m.cfg.SelfHeal, m.gate)
 		}()
 	}
+	// Resource-pressure monitor (v33 runPressureMonitor): samples host PSI,
+	// memory, load, FD and the process's own growth every
+	// pressureSampleInterval and publishes the smoothed score that every
+	// pressure-driven actuator reads: the fetch stretch, probe concurrency,
+	// stale thresholds and the AIMD pool controller below. The pacing math
+	// landed earlier; without this loop the atomics were never written and
+	// all of it ran against a permanently calm box. It starts unconditionally
+	// beside the controller, as it does in v33; with self-heal off it ticks
+	// and publishes zero.
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		runPressureMonitor(ctx, m.cfg.SelfHeal)
+	}()
 	// AIMD pool controller (v33 runPoolController, T-07): computes and
 	// persists the URL pool's TargetPoolSize every poolControlInterval, and
 	// sheds the worst URL proxies back to the cache on a sustained-pressure
