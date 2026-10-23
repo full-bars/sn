@@ -659,6 +659,16 @@ type loginPrompts struct {
 	authCode func() (string, error)
 }
 
+// contractProxyDescription labels the path a contract ran on. The miner has no
+// proxy index, so the slot index and the address carry the same information the
+// relay's proxy[i] label did, and the direct slot says so.
+func contractProxyDescription(slot uint64, proxyAddr string) string {
+	if proxyAddr == "" {
+		return "proxy[0] (direct)"
+	}
+	return fmt.Sprintf("proxy[%d] (%s)", slot, proxyAddr)
+}
+
 func terminalLoginPrompts() loginPrompts {
 	stdin := int(syscall.Stdin)
 	return loginPrompts{
@@ -1358,6 +1368,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		certPem, keyPem, _ := readProviderTlsCertAndKey()
 		extenderKeySeed, _ := readProviderExtenderKeySeed(slotIdentities, proxySettings)
 		settings := ProviderDeviceSettings(self.closeReportDomainHash)
+		// Contract lifecycle lines name the path they ran on, so a contract
+		// that never establishes traces to a proxy instead of the whole box.
+		// The miner has no proxy index, so the slot index and the address
+		// stand in for the relay's proxy[i] label.
+		if settings.ClientSettings.ContractManagerSettings != nil {
+			settings.ClientSettings.ContractManagerSettings.ProxyDescription = contractProxyDescription(index, proxyAddr)
+		}
 		// The extender role binds this host's carrier ports and publishes this
 		// host's address, and it can do neither more than once per process: a
 		// second space's bind fails and its record names an address the host
