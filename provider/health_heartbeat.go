@@ -128,10 +128,11 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 		now := time.Now()
 		report := ProxyHealthHeartbeat(uptime >= deadConfirmDelay)
 		down := len(report.Dead) + len(report.Degraded)
-		tlog("❤️ [health][proxies] up=%d down=%d dead=%d degraded=%d recovered=%d lost=%d lifetime_recovered=%d lifetime_lost=%d\n",
+		tlog("❤️ [health][proxies] up=%d down=%d dead=%d degraded=%d recovered=%d lost=%d lifetime_recovered=%d lifetime_lost=%d (since-start %s)\n",
 			report.Up, down, len(report.Dead), len(report.Degraded),
 			len(report.Recovered), len(report.NewlyDegraded),
-			report.LifetimeRecovered, report.LifetimeLost)
+			report.LifetimeRecovered, report.LifetimeLost,
+			clockLabel(startTime))
 		// Feed the persistent all-time store: this loop is the exclusive
 		// consumer of the heartbeat report, so transition deltas are
 		// captured exactly once, here. Lost = up->down EVENTS only:

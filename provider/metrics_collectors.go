@@ -181,9 +181,11 @@ func runLifetimeCollector(ctx context.Context) {
 
 		// All-time rollup line (only once something changed since last tick).
 		a1, a2, a3, a4, a5, a6, a7 := lifetimeStore.Snapshot()
+		lifeSince, lifeApprox := lifetimeStore.Started()
 		if a1 != prevA1 || a2 != prevA2 || a3 != prevA3 || a4 != prevA4 || a5 != prevA5 || a6 != prevA6 || a7 != prevA7 {
 			if a1|a2|a3|a4|a5|a6|a7 != 0 {
-				tlog("♾️⚖️ [lifetime] all-time: post-quantum=%d classical=%d contracts_acquired=%d denied=%d proxies_recovered=%d lost=%d billable_total=%s\n",
+				tlog("♾️⚖️ [lifetime] all-time (%s): post-quantum=%d classical=%d contracts_acquired=%d denied=%d proxies_recovered=%d lost=%d billable_total=%s\n",
+					sinceLabel(lifeSince, lifeApprox),
 					a1, a2, a3, a4, a5, a6, fmtBytes(a7))
 			}
 			prevA1, prevA2, prevA3, prevA4, prevA5, prevA6, prevA7 = a1, a2, a3, a4, a5, a6, a7
@@ -244,8 +246,9 @@ func runEarningWindows(ctx context.Context) {
 		if c.Measured && (c.ActivePQE != 0 || c.ActiveClas != 0 || c.PQEHour != 0 || c.PQEDay != 0 ||
 			c.PQEWeek != 0 || c.PQELifetime != 0 || c.ClasHour != 0 || c.ClasDay != 0 ||
 			c.ClasWeek != 0 || c.ClasLifetime != 0) {
-			tlog("🔐 [pqe] direct-e2e tunnels terminated: live pqe=%d classical=%d | since-start: pqe=%d classical=%d | 1h: pqe=%d classical=%d | 24h: pqe=%d classical=%d | 7d: pqe=%d classical=%d\n",
+			tlog("🔐 [pqe] direct-e2e tunnels terminated: live pqe=%d classical=%d | since-start (%s): pqe=%d classical=%d | 1h: pqe=%d classical=%d | 24h: pqe=%d classical=%d | 7d: pqe=%d classical=%d\n",
 				c.ActivePQE, c.ActiveClas,
+				clockLabel(provideStartTime),
 				c.PQELifetime, c.ClasLifetime,
 				c.PQEHour, c.ClasHour, c.PQEDay, c.ClasDay, c.PQEWeek, c.ClasWeek)
 			curves := make([]string, 0, len(c.Curves))
@@ -255,7 +258,8 @@ func runEarningWindows(ctx context.Context) {
 			tlog("🔐 [pqe] handshake stages: attempts=%d tls_ok=%d verified=%d identity_failed=%d | curves: %s\n",
 				c.Attempts, c.Established, c.Verified, c.IdentityFailed, strings.Join(curves, " "))
 			allPQE, allClas, _, _, _, _, _ := lifetimeStore.Snapshot()
-			tlog("🔐 [pqe] all-time: pqe=%d classical=%d\n", allPQE, allClas)
+			allSince, allApprox := lifetimeStore.Started()
+			tlog("🔐 [pqe] all-time (%s): pqe=%d classical=%d\n", sinceLabel(allSince, allApprox), allPQE, allClas)
 		}
 
 		if ProxyHealthCount() == 0 {
