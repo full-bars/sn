@@ -529,6 +529,11 @@ func runProxyAudit(ctx context.Context, cancelMap map[string]context.CancelFunc,
 		case <-ticker.C:
 		}
 		g.runOnce()
+		// The audit tick is the miner's existing periodic proxy loop, so the
+		// systemd STATUS line rides it instead of starting a loop of its own.
+		// Park/pause changes land in the audit's publish; auth transitions
+		// refresh the live half immediately (proxy_manager_auth.go).
+		refreshProxySystemdStatus()
 	}
 }
 

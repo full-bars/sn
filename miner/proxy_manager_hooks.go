@@ -77,6 +77,10 @@ func setProxyResolutionStatus(status int32, reason string) {
 	if (status == proxyResolutionZeroValid) != (prev == proxyResolutionZeroValid) {
 		applyDirectOnlyH3Defaults()
 	}
+	// The zero-configured branches of the systemd STATUS line are read from
+	// this status, and resolution settles before any pool exists, so the line
+	// has to move with it (v33 refreshes STATUS from this setter too).
+	reportProxyStatusToSystemd()
 }
 
 // getProxyResolutionReason returns the last recorded resolution reason.

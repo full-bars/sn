@@ -500,6 +500,10 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	if err != nil {
 		return nil, nil, err
 	}
+	// Publish the launch set to the systemd STATUS line: this process's pool is
+	// fixed here, and the line reports what it actually runs (v33's
+	// setConfiguredProxyCount, called once the proxy list is resolved).
+	setProxyStatusPool(launch)
 	if writeState {
 		if err := writeProxyState(m.state); err != nil {
 			tlog("[proxy] warning: could not write proxy.state: %v\n", err)
