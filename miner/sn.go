@@ -36,6 +36,7 @@ import (
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
 
+	"github.com/urfoundation/sn/hotkeywallet"
 	"github.com/urfoundation/sn/merkle"
 	"github.com/urfoundation/sn/miner/onchain"
 	"github.com/urfoundation/sn/ss58"
@@ -103,6 +104,13 @@ func runFiniteClaim(parent context.Context, opts docopt.Opts, hooks finiteClaimH
 	apiUrl, err := resolveApiUrl(opts)
 	if err != nil {
 		return fmt.Errorf("network config: %w", err)
+	}
+	// Every read below carries the token, starting with the epoch lookup, and
+	// resolveApiUrl does not reject a url that embeds credentials or a query.
+	// Secure the endpoint once here, before any request is built.
+	apiUrl, err = hotkeywallet.SecureApiUrl(apiUrl)
+	if err != nil {
+		return err
 	}
 	settings := hooks.strategySettings
 	if settings == nil {
