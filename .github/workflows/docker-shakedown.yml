@@ -130,7 +130,7 @@ jobs:
           # window: wait it out. A rejected credential fails fast.
           sleep $((RANDOM % 60))
           mint_ok=0
-          for mint_attempt in 1 2 3; do
+          for mint_attempt in 1 2; do
             rm -rf /tmp/mint
             HOME=/tmp/mint /tmp/provider auth --user_auth="$GAUNTLET_USER" --password="$GAUNTLET_PW" --api_url=https://api.bringyour.com -f > /tmp/mint.log 2>&1 || true
             grep -vE '^I[0-9]{4}' /tmp/mint.log || true
@@ -139,12 +139,12 @@ jobs:
               echo "credentials rejected by the API; not retrying"
               exit 1
             fi
-            if [ "$mint_attempt" -lt 3 ]; then
+            if [ "$mint_attempt" -lt 2 ]; then
               echo "mint attempt ${mint_attempt} failed; waiting 300s for the sign-in window to clear"
               sleep 300
             fi
           done
-          test "$mint_ok" = 1 || { echo "JWT mint failed after 3 attempts"; exit 1; }
+          test "$mint_ok" = 1 || { echo "JWT mint failed after 2 attempts"; exit 1; }
           test -s /tmp/mint/.urnetwork/jwt || { echo "JWT mint failed (verification required?)"; exit 1; }
           cp /tmp/mint/.urnetwork/jwt /tmp/gauntlet.jwt
           # Same production-account refusal guard as shakedown.yml. Do NOT
