@@ -32,6 +32,27 @@ func mustSocketpair(t *testing.T) [2]int {
 	return fds
 }
 
+// mustSocketpairFiles returns the pair as *os.File values that own their
+// descriptors. Use it when the test hands an end to code that closes it:
+// os.File.Close is idempotent for the same object, while closing the raw
+// number a second time (the mustSocketpair cleanup) closes whatever the
+// process reused that number for in the meantime, and the os.File finalizer
+// would close it again after that.
+func mustSocketpairFiles(t *testing.T) (parent, child *os.File) {
+	t.Helper()
+	fds, err := hotSwapSocketpair()
+	if err != nil {
+		t.Fatalf("hotSwapSocketpair: %v", err)
+	}
+	parent = os.NewFile(uintptr(fds[0]), "test-hotswap-parent")
+	child = os.NewFile(uintptr(fds[1]), "test-hotswap-child")
+	t.Cleanup(func() {
+		_ = parent.Close()
+		_ = child.Close()
+	})
+	return parent, child
+}
+
 func TestHotSwapSocketpairIsCloseOnExec(t *testing.T) {
 	fds := mustSocketpair(t)
 	for _, fd := range fds {
@@ -76,8 +97,18 @@ func TestGetHotSwapChildIPCRejectsANonSocketDescriptor(t *testing.T) {
 func TestGetHotSwapChildIPCClaimsASocketDescriptor(t *testing.T) {
 	fds := mustSocketpair(t)
 	t.Setenv(EnvHotSwap, "1")
-	ipc, isChild := getHotSwapChildIPCFromFd(fds[0])
+	// The claimed file owns the descriptor it is given and closes it, so hand
+	// it a duplicate. Giving it fds[0] made ipc.Close and the mustSocketpair
+	// cleanup both close the same number, which by then can belong to another
+	// test's file.
+	dup, err := syscall.Dup(fds[0])
+	if err != nil {
+		t.Fatalf("dup: %v", err)
+	}
+	syscall.CloseOnExec(dup)
+	ipc, isChild := getHotSwapChildIPCFromFd(dup)
 	if !isChild {
+		syscall.Close(dup)
 		t.Fatal("did not claim candidate mode for a socket descriptor")
 	}
 	ipc.Close()
@@ -213,9 +244,7 @@ func TestHotSwapTakeoverCandidateAcksAndTakesOver(t *testing.T) {
 		_ = stopMetrics()
 	})
 
-	fds := mustSocketpair(t)
-	parentEnd := os.NewFile(uintptr(fds[0]), "test-hotswap-parent")
-	childEnd := os.NewFile(uintptr(fds[1]), "test-hotswap-child")
+	parentEnd, childEnd := mustSocketpairFiles(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -285,8 +314,7 @@ func TestHotSwapTakeoverCandidateRebindsMetrics(t *testing.T) {
 		_ = stopMetrics()
 	})
 
-	fds := mustSocketpair(t)
-	childEnd := os.NewFile(uintptr(fds[1]), "test-hotswap-child")
+	_, childEnd := mustSocketpairFiles(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -332,8 +360,7 @@ func TestHotSwapTakeoverCandidateHonorsMetricsOff(t *testing.T) {
 		_ = stopMetrics()
 	})
 
-	fds := mustSocketpair(t)
-	childEnd := os.NewFile(uintptr(fds[1]), "test-hotswap-child")
+	_, childEnd := mustSocketpairFiles(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
