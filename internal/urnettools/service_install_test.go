@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -308,7 +309,10 @@ func TestBSDInstallServiceWritesScriptAndEnables(t *testing.T) {
 	// rc runs an rc.d script only when it is executable. A 0644 file is
 	// silently ignored at boot, which looks exactly like a service that was
 	// never enabled.
-	if fi.Mode().Perm()&0o111 == 0 {
+	// Windows does not report unix permission bits: a file created 0755 comes
+	// back 0666 there, so the assertion would fail for a correct script. rc
+	// runs the script on FreeBSD, where the bit exists and is checked below.
+	if runtime.GOOS != "windows" && fi.Mode().Perm()&0o111 == 0 {
 		t.Errorf("installed rc.d script mode %v is not executable", fi.Mode().Perm())
 	}
 

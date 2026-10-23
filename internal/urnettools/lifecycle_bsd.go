@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -266,13 +267,16 @@ func bsdRcScriptServesBinary(scriptPath, binary string) bool {
 	if err != nil {
 		return false
 	}
-	want := filepath.Clean(binary)
+	// path.Clean, not filepath.Clean: the script is a FreeBSD rc.d file
+	// written with forward slashes, and on Windows filepath.Clean would
+	// rewrite the wanted path to backslashes and match nothing.
+	want := path.Clean(binary)
 	quoted := `"` + want + `"`
 	for _, line := range strings.Split(string(b), "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "command=") {
 			got := strings.Trim(strings.TrimSpace(strings.TrimPrefix(line, "command=")), `"'`)
-			if got != "" && filepath.Clean(got) == want {
+			if got != "" && path.Clean(got) == want {
 				return true
 			}
 			continue
