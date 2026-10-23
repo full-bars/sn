@@ -23,6 +23,12 @@ permissions:
   contents: read
   actions: read
 
+concurrency:
+  # Every workflow that mints a JWT shares one account, so they have to queue
+  # behind each other; a per-workflow group let two mint at once and starve it.
+  group: gauntlet-auth
+  cancel-in-progress: false
+
 jobs:
   docker-shakedown:
     runs-on: ubuntu-latest

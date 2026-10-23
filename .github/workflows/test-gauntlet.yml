@@ -3,6 +3,12 @@ name: Test Gauntlet Credentials
 on:
   workflow_dispatch:
 
+concurrency:
+  # Every workflow that mints a JWT shares one account, so they have to queue
+  # behind each other; a per-workflow group let two mint at once and starve it.
+  group: gauntlet-auth
+  cancel-in-progress: false
+
 jobs:
   test-auth:
     runs-on: ubuntu-latest

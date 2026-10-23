@@ -50,6 +50,12 @@ env:
   INSTALLER_TAG: v0.0.0-ci-${{ github.run_id }}-1
   INSTALLER_TAG2: v0.0.0-ci-${{ github.run_id }}-2
 
+concurrency:
+  # Every workflow that mints a JWT shares one account, so they have to queue
+  # behind each other; a per-workflow group let two mint at once and starve it.
+  group: gauntlet-auth
+  cancel-in-progress: false
+
 jobs:
   # --------------------------------------------------------------------------
   # Static linux/amd64 payload shared by the container and systemd cells.

@@ -5,6 +5,12 @@ on:
   # manual trigger doubles it). Dispatch deliberately when a soak is wanted.
   workflow_dispatch:
 
+concurrency:
+  # Every workflow that mints a JWT shares one account, so they have to queue
+  # behind each other; a per-workflow group let two mint at once and starve it.
+  group: gauntlet-auth
+  cancel-in-progress: false
+
 jobs:
   native-soak:
     name: Linux functional soak (accelerated, ~3h)
