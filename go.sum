@@ -117,8 +117,8 @@ github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMo
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
-github.com/full-bars/connect v0.0.0-20261023004651-3b9bbd5bb084 h1:MnhD8XO6xkD/LSNX3Ozb8j07dcj9KC8X5LZ/xg8xm0Y=
-github.com/full-bars/connect v0.0.0-20261023004651-3b9bbd5bb084/go.mod h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM=
+github.com/full-bars/connect v0.0.0-20261023042901-6eeb86ec7502 h1:h7K3/NIra4rlCWhedGVA5E7icSIuY+WY9CkvXTaT0Vw=
+github.com/full-bars/connect v0.0.0-20261023042901-6eeb86ec7502/go.mod h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM=
 github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7zvxg=
 github.com/gagliardetto/binary v0.8.0/go.mod h1:2tfj51g5o9dnvsc+fL3Jxr22MuWzYXwx9wEoN0XQ7/c=
 github.com/gagliardetto/solana-go v1.21.0 h1:ZswwwDOFuD/7Hk/k3b6dyLetmvEJuyLmQU7xIziCZgo=

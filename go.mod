@@ -238,4 +238,4 @@ replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-sub
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261023004651-3b9bbd5bb084
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261023042901-6eeb86ec7502
