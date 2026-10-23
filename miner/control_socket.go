@@ -401,6 +401,14 @@ func applyControlLiveDefault(key string) error {
 		// direct-only default (h3DefaultModeName), which is what a restart
 		// would use, so the live state matches the persisted one.
 		return applyControlLiveSideEffect(key, h3DefaultModeName())
+	case "oom_cap":
+		// oomCapMode falls back to the mode this process read at startup
+		// whenever the live state has no value, so clearing only the live key
+		// left the old mode in force and made the clear a no-op. Drop the
+		// fallback here so a clear really returns to the environment and the
+		// safe default.
+		oomCapPersistedMode.Store("")
+		return applyControlLiveSideEffect(key, oomCapModeName(oomCapMode()))
 	}
 	def, ok := controlLiveDefaults[key]
 	if !ok {

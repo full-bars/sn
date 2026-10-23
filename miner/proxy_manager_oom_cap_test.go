@@ -987,3 +987,24 @@ func captureImportantLog(t *testing.T, fn func()) string {
 	fn()
 	return strings.Join(lines, "\n")
 }
+
+// Clearing the control key must release the mode. oomCapMode falls back to the
+// mode read at startup whenever the live state has no value, so dropping only
+// the live key left the old value in force and the clear did nothing.
+func TestClearOOMCapControlReleasesThePersistedMode(t *testing.T) {
+	resetOOMCapStartupForTest()
+	t.Cleanup(resetOOMCapStartupForTest)
+	t.Setenv("URNETWORK_OOM_CAP", "")
+
+	oomCapPersistedMode.Store("on")
+	if got := oomCapModeName(oomCapMode()); got != "on" {
+		t.Fatalf("with only the persisted mode set, mode = %q, want on", got)
+	}
+
+	if err := applyControlLiveDefault("oom_cap"); err != nil {
+		t.Fatalf("applyControlLiveDefault(oom_cap): %v", err)
+	}
+	if got := oomCapModeName(oomCapMode()); got != "shadow" {
+		t.Fatalf("after clear, mode = %q, want the safe default shadow", got)
+	}
+}
