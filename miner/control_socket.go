@@ -80,14 +80,17 @@ type settingInfo struct {
 
 // controlResponse is one line of the socket protocol's reply.
 type controlResponse struct {
-	OK           bool                   `json:"ok"`
-	Value        string                 `json:"value,omitempty"`
-	Found        bool                   `json:"found,omitempty"`
-	Error        string                 `json:"error,omitempty"`
-	NeedsRestart bool                   `json:"needs_restart,omitempty"`
-	Entries      []CommandAudit         `json:"entries,omitempty"`
-	NextCursor   string                 `json:"next_cursor,omitempty"`
-	Settings     map[string]settingInfo `json:"settings,omitempty"`
+	OK           bool   `json:"ok"`
+	Value        string `json:"value,omitempty"`
+	Found        bool   `json:"found,omitempty"`
+	Error        string `json:"error,omitempty"`
+	NeedsRestart bool   `json:"needs_restart,omitempty"`
+	// ReloadWatcher reports whether this provider applies proxy.reload live.
+	// Clients use it to tell the operator the truth instead of assuming.
+	ReloadWatcher bool                   `json:"reload_watcher,omitempty"`
+	Entries       []CommandAudit         `json:"entries,omitempty"`
+	NextCursor    string                 `json:"next_cursor,omitempty"`
+	Settings      map[string]settingInfo `json:"settings,omitempty"`
 	// StartupValues maps restart-required keys to the values the running
 	// process actually started with; the dashboard compares them against the
 	// current values to decide whether a restart banner is warranted.
@@ -747,7 +750,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			settings[k] = si
 		}
 		snap, _ := minerControlAuditStatus()
-		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap}
+		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, ReloadWatcher: proxyReloadWatcherActive.Load()}
 
 	case "audit":
 		switch req.Action {

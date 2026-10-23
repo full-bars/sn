@@ -77,9 +77,10 @@ func cmdDirect(opts docopt.Opts) {
 		os.Exit(2)
 	}
 
-	// If the provider is running, trigger an immediate reload so the
-	// change takes effect without a restart. Hold proxyStateMu for the read
-	// so this cannot interleave with a reload's state write.
+	// If the provider is running, poke the reload trigger. A build with the
+	// reload watcher applies the change without a restart; this build applies it
+	// at its next start (see proxyChangeEffectNotice). Hold proxyStateMu for the
+	// read so this cannot interleave with a reload's state write.
 	proxyStateMu.Lock()
 	state, err := readProxyState()
 	proxyStateMu.Unlock()

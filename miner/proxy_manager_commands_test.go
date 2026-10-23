@@ -513,6 +513,7 @@ func TestProxyRefresh_UpToDateShortCircuits(t *testing.T) {
 }
 
 func TestProxyRefresh_ConfirmedDiffWritesReloadTrigger(t *testing.T) {
+	withProviderReloadState(t, false, true)
 	withTempHome(t)
 	feedStdin(t, "y\n")
 
@@ -539,8 +540,16 @@ func TestProxyRefresh_ConfirmedDiffWritesReloadTrigger(t *testing.T) {
 	if !strings.Contains(out, "  Removing:") || !strings.Contains(out, "  Adding:") {
 		t.Fatalf("diff body missing: %q", out)
 	}
-	if !strings.Contains(out, "Reload triggered. Provider will apply changes within 2 seconds.") {
-		t.Fatalf("trigger line missing: %q", out)
+	// The port promised a hot reload nothing performed. The output must say the
+	// change lands on the next start, and must not resurrect the old claim.
+	if strings.Contains(out, "within 2 seconds") || strings.Contains(out, "hot reload") {
+		t.Fatalf("output still promises a hot reload: %q", out)
+	}
+	if !strings.Contains(out, "next restart") {
+		t.Fatalf("output does not say when the change applies: %q", out)
+	}
+	if !strings.Contains(out, "Proxy refresh requested") {
+		t.Fatalf("refresh output must not claim the running state changed: %q", out)
 	}
 	if after, _ := readReloadSeq(reloadPath); after != before+1 {
 		t.Fatalf("reload trigger not written: %d -> %d", before, after)
@@ -574,6 +583,7 @@ func TestProxyTrim_ClearsCapWithoutARunningProvider(t *testing.T) {
 }
 
 func TestProxyTrim_SetsCapAndTriggersReload(t *testing.T) {
+	withProviderReloadState(t, false, true)
 	withTempHome(t)
 
 	if err := writeProxyState(&ProxyState{
@@ -588,8 +598,11 @@ func TestProxyTrim_SetsCapAndTriggersReload(t *testing.T) {
 	out := captureStdout(t, func() {
 		proxyTrim(docopt.Opts{"<count>": "42"})
 	})
-	if !strings.Contains(out, "proxy trim: cap set to 42 running proxies; reloading to shed the worst-graded above it") {
+	if !strings.Contains(out, "proxy trim: cap set to 42 running proxies") {
 		t.Fatalf("unexpected output: %q", out)
+	}
+	if !strings.Contains(out, "next provider restart") {
+		t.Fatalf("trim output does not say the shed waits for a restart: %q", out)
 	}
 	if cap, _ := readTrimTarget(); cap != 42 {
 		t.Fatalf("cap = %d, want 42", cap)
@@ -946,6 +959,7 @@ func TestProxyRemoveDead_PreviewChangesNothing(t *testing.T) {
 }
 
 func TestProxyRemoveDead_YesRemovesFromFileAndReportsNothingToRemove(t *testing.T) {
+	withProviderReloadState(t, false, true)
 	home := withTempHome(t)
 	proxyFilePath := filepath.Join(home, "proxy.txt")
 	if err := os.WriteFile(proxyFilePath, []byte("1.1.1.1:1080:u:p\n2.2.2.2:1080:u:p\n"), 0600); err != nil {
@@ -965,8 +979,16 @@ func TestProxyRemoveDead_YesRemovesFromFileAndReportsNothingToRemove(t *testing.
 	out := captureStdout(t, func() {
 		proxyRemoveDead(docopt.Opts{"--yes": true})
 	})
-	if !strings.Contains(out, "Removed 1 proxies. Reload triggered.") {
-		t.Fatalf("unexpected output: %q", out)
+	if !strings.Contains(out, "Removed 1 proxies.") {
+		t.Fatalf("removal summary missing: %q", out)
+	}
+	// The removal is real in the state file, but the running provider keeps
+	// dialing the proxy until it restarts; the output must not claim a reload.
+	if strings.Contains(out, "Reload triggered") {
+		t.Fatalf("output still promises a live reload: %q", out)
+	}
+	if !strings.Contains(out, "next restart") {
+		t.Fatalf("output does not say when the removal takes effect: %q", out)
 	}
 	if b, _ := os.ReadFile(proxyFilePath); string(b) != "2.2.2.2:1080:u:p\n" {
 		t.Fatalf("file after removal = %q", b)

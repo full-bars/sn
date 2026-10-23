@@ -328,7 +328,7 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 	}
 
 	fmt.Printf("Removed %d proxies matching %q. Pattern excluded from future URL fetches.\n", len(display), pattern)
-	fmt.Println("The running provider will apply the change via hot reload (no restart).")
+	fmt.Println(proxyChangeEffectNotice())
 }
 
 // ---- proxy clear / remove --all ----
@@ -554,7 +554,7 @@ func proxyRefresh(opts docopt.Opts) {
 		proxyCommandFatal(56, "could not write reload trigger: %v", err)
 	}
 
-	fmt.Println("Reload triggered. Provider will apply changes within 2 seconds.")
+	fmt.Println(proxyRefreshEffectNotice())
 }
 
 // ---- proxy trim ----
@@ -621,7 +621,7 @@ func proxyTrim(opts docopt.Opts) {
 	if err := writeTrimTarget(count); err != nil {
 		proxyCommandFatal(72, "could not write proxy trim cap: %v", err)
 	}
-	fmt.Printf("proxy trim: cap set to %d running proxies; reloading to shed the worst-graded above it\n", count)
+	fmt.Printf("proxy trim: cap set to %d running proxies; %s\n", count, proxyTrimEffectNotice())
 	triggerProxyReload()
 }
 
@@ -1008,5 +1008,5 @@ func proxyRemoveDead(opts docopt.Opts) {
 		proxyCommandFatal(62, "%v", err)
 	}
 
-	fmt.Printf("Removed %d proxies. Reload triggered.\n", len(toRemove))
+	fmt.Printf("Removed %d proxies. %s\n", len(toRemove), proxyChangeEffectNotice())
 }
