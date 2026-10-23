@@ -61,6 +61,10 @@ type ProxyEntry struct {
 	DownSince    string `json:"down_since,omitempty"`    // RFC3339, set when not up
 	Source       string `json:"source,omitempty"`        // "file", "internal", or "url" - where this address was first added from
 	AuthFailures int64  `json:"auth_failures,omitempty"` // cumulative auth errors this run
+	// ProxyLegFailures counts platform dials that failed inside this proxy's
+	// own connect step (proxy_leg.go). Its own category: a leg failure is not
+	// an auth failure and must not drive the auth remedies.
+	ProxyLegFailures int64 `json:"proxy_leg_failures,omitempty"`
 
 	Score       float64   `json:"score,omitempty"`        // stage-1 table probe result (ok/total), 0 = never graded
 	Graded      bool      `json:"graded,omitempty"`       // true once a stage-1 table probe recorded a DECIDABLE result

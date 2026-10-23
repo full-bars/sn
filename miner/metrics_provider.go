@@ -315,6 +315,17 @@ func writeProxyGradeMetrics(b *strings.Builder) {
 		fmt.Fprintf(b, "urnet_proxy_auth_failures %d\n", totalAuthFailures)
 	}
 
+	// --- proxies that cannot carry traffic (proxy_leg.go) ---
+	{
+		legFailures, legFlagged := proxyLegTotals()
+		fmt.Fprintf(b, "# HELP urnet_proxy_leg_failures Platform dials that failed inside the proxy's own connect step, summed over the proxies currently registered.\n")
+		fmt.Fprintf(b, "# TYPE urnet_proxy_leg_failures gauge\n")
+		fmt.Fprintf(b, "urnet_proxy_leg_failures %d\n", legFailures)
+		fmt.Fprintf(b, "# HELP urnet_proxy_leg_shadow_flagged Proxies the shadow shed decision flags right now; none are shed.\n")
+		fmt.Fprintf(b, "# TYPE urnet_proxy_leg_shadow_flagged gauge\n")
+		fmt.Fprintf(b, "urnet_proxy_leg_shadow_flagged %d\n", legFlagged)
+	}
+
 	// --- URL proxy grades ---
 	if urlErr == nil && urlState != nil {
 		var urlUngraded int

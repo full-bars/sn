@@ -46,10 +46,11 @@ const proxyHealthLogInterval = 60 * time.Second
 
 // proxyLiveHealthEntry is one identity's health as this process knows it.
 type proxyLiveHealthEntry struct {
-	Health       string
-	DownSince    time.Time
-	AuthFailures int64
-	LastSeen     time.Time
+	Health           string
+	DownSince        time.Time
+	AuthFailures     int64
+	ProxyLegFailures int64
+	LastSeen         time.Time
 }
 
 // proxyLiveHealthRegistry is the process-wide live health, keyed by proxy
@@ -93,6 +94,21 @@ func noteLiveProxyHealthFailure(key string) {
 	}
 	entry.AuthFailures++
 	entry.LastSeen = now
+	proxyLiveHealthRegistry.byKey[key] = entry
+}
+
+// noteLiveProxyLegFailure counts a dial that failed inside the proxy's own
+// connect step. It does not touch AuthFailures: the two drive different
+// remedies, and conflating them is what hid these proxies in the relay.
+func noteLiveProxyLegFailure(key string) {
+	if key == "" {
+		return
+	}
+	proxyLiveHealthRegistry.Lock()
+	defer proxyLiveHealthRegistry.Unlock()
+	entry := proxyLiveHealthRegistry.byKey[key]
+	entry.ProxyLegFailures++
+	entry.LastSeen = time.Now()
 	proxyLiveHealthRegistry.byKey[key] = entry
 }
 
@@ -187,7 +203,20 @@ func overlayLiveProxyHealth(proxies map[string]ProxyEntry) int {
 	defer proxyLiveHealthRegistry.Unlock()
 	for key, entry := range proxies {
 		live, ok := proxyLiveHealthRegistry.byKey[key]
-		if !ok || live.Health == "" {
+		if !ok {
+			continue
+		}
+		// A leg-only entry carries no health opinion. Merge its counter and
+		// leave every field it has no information about exactly as persisted:
+		// copying a zero AuthFailures or an empty DownSince would erase what
+		// the last real health observation recorded.
+		if live.Health == "" {
+			if entry.ProxyLegFailures == live.ProxyLegFailures {
+				continue
+			}
+			entry.ProxyLegFailures = live.ProxyLegFailures
+			proxies[key] = entry
+			changed++
 			continue
 		}
 		health := live.Health
@@ -195,12 +224,13 @@ func overlayLiveProxyHealth(proxies map[string]ProxyEntry) int {
 		if !live.DownSince.IsZero() {
 			downSince = live.DownSince.Format(time.RFC3339)
 		}
-		if entry.Health == health && entry.DownSince == downSince && entry.AuthFailures == live.AuthFailures {
+		if entry.Health == health && entry.DownSince == downSince && entry.AuthFailures == live.AuthFailures && entry.ProxyLegFailures == live.ProxyLegFailures {
 			continue
 		}
 		entry.Health = health
 		entry.DownSince = downSince
 		entry.AuthFailures = live.AuthFailures
+		entry.ProxyLegFailures = live.ProxyLegFailures
 		proxies[key] = entry
 		changed++
 	}

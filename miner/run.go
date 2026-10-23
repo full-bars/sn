@@ -659,6 +659,16 @@ type loginPrompts struct {
 	authCode func() (string, error)
 }
 
+// contractProxyDescription labels the path a contract ran on. The miner has no
+// proxy index, so the slot index and the address carry the same information the
+// relay's proxy[i] label did, and the direct slot says so.
+func contractProxyDescription(slot uint64, proxyAddr string) string {
+	if proxyAddr == "" {
+		return "proxy[0] (direct)"
+	}
+	return fmt.Sprintf("proxy[%d] (%s)", slot, proxyAddr)
+}
+
 func terminalLoginPrompts() loginPrompts {
 	stdin := int(syscall.Stdin)
 	return loginPrompts{
@@ -1183,6 +1193,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 
 		clientStrategySettings := connect.DefaultClientStrategySettings()
 		clientStrategySettings.ProxySettings = proxySettings
+		// Observe before authentication starts: the platform dials that run
+		// during bring-up go through this strategy, so a leg failure there is
+		// the same evidence as one during steady state.
+		proxyLegId := fmt.Sprintf("direct:%d", index)
+		if proxySettings != nil {
+			proxyLegId = proxySettings.Key()
+		}
+		clientStrategySettings.Log = withProxyLegObserver(clientStrategySettings.Log, proxyLegId)
 		// The test-egress seam binds a source address. Install it only while
 		// no proxy is configured: a non-nil DialContextSettings bypasses
 		// ProxySettings in connect's dial path (net.go), which would leak
@@ -1358,6 +1376,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		certPem, keyPem, _ := readProviderTlsCertAndKey()
 		extenderKeySeed, _ := readProviderExtenderKeySeed(slotIdentities, proxySettings)
 		settings := ProviderDeviceSettings(self.closeReportDomainHash)
+		// Contract lifecycle lines name the path they ran on, so a contract
+		// that never establishes traces to a proxy instead of the whole box.
+		// The miner has no proxy index, so the slot index and the address
+		// stand in for the relay's proxy[i] label.
+		if settings.ClientSettings.ContractManagerSettings != nil {
+			settings.ClientSettings.ContractManagerSettings.ProxyDescription = contractProxyDescription(index, proxyAddr)
+		}
+		// The transport's own logger observes control dials, so a dial that
+		// fails inside this slot's proxy connect step lands on this slot's
+		// leg evidence (proxy_leg.go, proxy_leg_observer.go).
+		settings.Log = withProxyLegObserver(settings.Log, proxyLegId)
 		// The extender role binds this host's carrier ports and publishes this
 		// host's address, and it can do neither more than once per process: a
 		// second space's bind fails and its record names an address the host
