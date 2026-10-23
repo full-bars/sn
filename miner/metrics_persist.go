@@ -157,7 +157,12 @@ type metricsCounterStore struct {
 	// run twice (takeover and post-drain) without double counting, and it can
 	// add at all instead of taking the max, which discarded whichever side was
 	// smaller: the parent's drain bytes or this process's own.
-	applied        map[int]minerMetricsProxyCounters
+	applied map[int]minerMetricsProxyCounters
+	// foreign is the last per-index total OBSERVED in the store file. It is
+	// deliberately separate from base, because flush rewrites base with this
+	// process's own live totals: using base as the catch-up source made the
+	// next catch-up add this process's own bytes a second time.
+	foreign        map[int]minerMetricsProxyCounters
 	appliedControl minerMetricsControlCounters
 	// controlAppliedSet marks appliedControl as initialised. The control
 	// counters are process-global and already hold this process's own commands,
@@ -182,6 +187,7 @@ func newMetricsCounterStore(path string) *metricsCounterStore {
 		addControl: addMinerControlCounters,
 		base:       map[int]minerMetricsProxyCounters{},
 		applied:    map[int]minerMetricsProxyCounters{},
+		foreign:    map[int]minerMetricsProxyCounters{},
 	}
 }
 
@@ -258,6 +264,15 @@ func (s *metricsCounterStore) restore() error {
 
 	s.mu.Lock()
 	s.base = mergeMetricsProxyCounters(s.base, file.Proxies)
+	if s.foreign == nil {
+		s.foreign = map[int]minerMetricsProxyCounters{}
+	}
+	s.foreign = mergeMetricsProxyCounters(s.foreign, file.Proxies)
+	// The control counters are process-global and restore has just added the
+	// stored value to them, so the baseline a catch-up adds on top is what
+	// restore applied, not the live value it now reads.
+	s.appliedControl = maxMinerControlCounters(s.appliedControl, file.Control)
+	s.controlAppliedSet = true
 	// Latch only after a successful load. Latching before it made a transient
 	// read failure permanent for the life of the process.
 	s.restored = true
@@ -284,6 +299,13 @@ func (s *metricsCounterStore) catchUp() error {
 	if s.storePath() == "" {
 		return nil
 	}
+	// Serialise against flush, and read inside it: a load taken before the lock
+	// can be a view the interleaving flush has already replaced. flush also
+	// rewrites base with this process's live totals, so the stored source for a
+	// catch-up is foreign, which only ever mirrors the file.
+	s.flushMu.Lock()
+	defer s.flushMu.Unlock()
+
 	file, err := s.load()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -292,16 +314,14 @@ func (s *metricsCounterStore) catchUp() error {
 		return err
 	}
 
-	// Serialise against flush. flush snapshots the base, merges outside the
-	// lock and writes the result back, so a catch-up that landed in that window
-	// was silently overwritten.
-	s.flushMu.Lock()
-	defer s.flushMu.Unlock()
-
 	s.mu.Lock()
 	s.base = mergeMetricsProxyCounters(s.base, file.Proxies)
-	base := make(map[int]minerMetricsProxyCounters, len(s.base))
-	for index, counters := range s.base {
+	if s.foreign == nil {
+		s.foreign = map[int]minerMetricsProxyCounters{}
+	}
+	s.foreign = mergeMetricsProxyCounters(s.foreign, file.Proxies)
+	base := make(map[int]minerMetricsProxyCounters, len(s.foreign))
+	for index, counters := range s.foreign {
 		base[index] = counters
 	}
 	applied := make(map[int]minerMetricsProxyCounters, len(s.applied))
@@ -509,6 +529,12 @@ func (s *metricsCounterStore) flush() error {
 	// churning node.
 	s.setBase(proxies)
 
+	// The file now holds this process's own totals, so the applied baseline has
+	// to advance to exactly what was written. Without this the next catch-up
+	// reads the file it just wrote, finds the whole value "new", and adds this
+	// process's own bytes a second time.
+	s.recordApplied(proxies)
+
 	// A process that restored, or that flushed before catching up, can hold
 	// LOWER control totals than the store. Merge rather than assign, or the
 	// stored command counts move backwards.
@@ -538,7 +564,38 @@ func (s *metricsCounterStore) proxySeed(index int) (minerMetricsProxyCounters, b
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	counters, ok := s.base[index]
+	if ok {
+		// A slot created after a restore STARTS at the seed rather than at
+		// zero, so the catch-up must treat the seed as already applied. Without
+		// this the next catch-up added the whole stored total a second time.
+		if s.applied == nil {
+			s.applied = map[int]minerMetricsProxyCounters{}
+		}
+		s.applied[index] = maxMinerProxyCounters(s.applied[index], counters)
+	}
 	return counters, ok
+}
+
+// recordApplied marks written totals as already folded into the live counters.
+func (s *metricsCounterStore) recordApplied(written map[int]minerMetricsProxyCounters) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for index, counters := range written {
+		if s.applied == nil {
+			s.applied = map[int]minerMetricsProxyCounters{}
+		}
+		s.applied[index] = maxMinerProxyCounters(s.applied[index], counters)
+	}
+}
+
+// maxMinerProxyCounters keeps the larger of two per-index totals.
+func maxMinerProxyCounters(a, b minerMetricsProxyCounters) minerMetricsProxyCounters {
+	return minerMetricsProxyCounters{
+		TotalRx:    maxU64(a.TotalRx, b.TotalRx),
+		TotalTx:    maxU64(a.TotalTx, b.TotalTx),
+		BillableRx: maxU64(a.BillableRx, b.BillableRx),
+		BillableTx: maxU64(a.BillableTx, b.BillableTx),
+	}
 }
 
 // retiredTotals sums the stored totals of every index this process does not

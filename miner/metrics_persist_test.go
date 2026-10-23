@@ -520,3 +520,81 @@ func TestMetricsCounterCatchUpKeepsBothSidesOfTheDrainWindow(t *testing.T) {
 		t.Fatalf("second catch-up double counted: total_rx = %d, want 1200", got)
 	}
 }
+
+// A flush rewrites the store, and with it the base, from this process's own
+// live totals. If the catch-up then reads that base as "the other writer's
+// value", the bytes this process served are added a second time. The catch-up
+// must read the foreign baseline, which only ever mirrors the file.
+func TestMetricsCounterCatchUpAfterOwnFlushDoesNotDoubleCount(t *testing.T) {
+	h := newTestMetricsCounterStore(t)
+	h.setProxy(11, minerMetricsProxyCounters{TotalRx: 1000})
+	if err := h.store.flush(); err != nil {
+		t.Fatalf("seed store: %v", err)
+	}
+
+	store := swapMetricsCounterStore(t, h.path)
+	resetControlRuntimeForTest()
+	t.Cleanup(resetControlRuntimeForTest)
+	registry := bandwidth.NewRegistry()
+	controlRuntime.setBandwidthRegistry(registry)
+
+	live := registry.Register(11)
+	if err := store.catchUp(); err != nil {
+		t.Fatalf("first catch-up: %v", err)
+	}
+	if got := live.TotalRx.Load(); got != 1000 {
+		t.Fatalf("after first catch-up total_rx = %d, want 1000", got)
+	}
+
+	// The candidate serves while the store is rewritten with its own totals.
+	live.TotalRx.Add(300)
+	if err := store.flush(); err != nil {
+		t.Fatalf("flush: %v", err)
+	}
+	if err := store.catchUp(); err != nil {
+		t.Fatalf("second catch-up: %v", err)
+	}
+	if got := live.TotalRx.Load(); got != 1300 {
+		t.Fatalf("after own flush total_rx = %d, want 1300: the catch-up added this process's own bytes", got)
+	}
+}
+
+// A slot registered after a restore starts at the seeded total rather than at
+// zero, so the next catch-up must not add that same total again.
+func TestMetricsCounterCatchUpAfterSeededRegistrationDoesNotDoubleCount(t *testing.T) {
+	h := newTestMetricsCounterStore(t)
+	h.setProxy(9, minerMetricsProxyCounters{TotalRx: 1000, TotalTx: 500})
+	if err := h.store.flush(); err != nil {
+		t.Fatalf("seed store: %v", err)
+	}
+
+	store := swapMetricsCounterStore(t, h.path)
+	resetControlRuntimeForTest()
+	t.Cleanup(resetControlRuntimeForTest)
+	registry := bandwidth.NewRegistry()
+	controlRuntime.setBandwidthRegistry(registry)
+
+	if err := store.restore(); err != nil {
+		t.Fatalf("restore: %v", err)
+	}
+	// Exactly what the registry seed function does for a proxy that registers
+	// after the restore: the slot starts at the stored totals.
+	seed, ok := store.proxySeed(9)
+	if !ok {
+		t.Fatalf("proxySeed(9) found no stored totals")
+	}
+	live := registry.Register(9)
+	// The registry's seed function already applied the stored totals at
+	// registration; adding them again here was the test's own bug.
+	_ = seed
+
+	if err := store.catchUp(); err != nil {
+		t.Fatalf("catch up: %v", err)
+	}
+	if got := live.TotalRx.Load(); got != 1000 {
+		t.Fatalf("seeded slot total_rx = %d, want 1000", got)
+	}
+	if got := live.TotalTx.Load(); got != 500 {
+		t.Fatalf("seeded slot total_tx = %d, want 500", got)
+	}
+}
