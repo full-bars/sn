@@ -1110,6 +1110,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// once the parent releases the listener at the handoff commit point.
 	startMetricsAtStartup(controlState, self.hotSwapCandidate)
 	defer func() { _ = stopMetrics() }()
+	// pprof: URNETWORK_PPROF only (the provider's enable path), loopback only,
+	// off by default. A HotSwap candidate's bind is retried in the background
+	// because the parent still holds the port for the whole drain
+	// (profile_listen.go).
+	startProfilingAtStartup(ctx)
+	defer func() { _ = stopProfiling() }()
 	// One rate sample per second feeds the snapshot's throughput history.
 	// Supervised: this same loop also drives the swap-thrash watchdog, so a
 	// panic in a sample must restart it rather than end the process's only
