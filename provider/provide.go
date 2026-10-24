@@ -848,11 +848,11 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	// that never gets through auth, or sits in slow retry, must not probe, and
 	// the scheduler keeps the probes behind the auth admission gate besides.
 	// See startSmartDialerProbes.
-	probeTag, probeAddr, probeViaSocks := "direct", "direct", false
+	probeAddr, probeViaSocks := "direct", false
 	if proxySettings != nil {
-		probeTag, probeAddr, probeViaSocks = "proxy", proxySettings.Address, true
+		probeAddr, probeViaSocks = proxySettings.Address, true
 	}
-	startSmartDialerProbes(proxyCtx, clientStrategy, st.apiUrl, probeTag, proxyIndex, probeAddr, probeViaSocks)
+	startSmartDialerProbes(proxyCtx, clientStrategy, st.apiUrl, smartDialerProbeOwner(identityKey), proxyIndex, probeAddr, probeViaSocks)
 
 	instanceId := connect.NewId()
 

@@ -446,6 +446,12 @@ func (c *lifetimeCollector) tick(now time.Time) {
 	lifetimeFoldCursor.store(c.prevPQE, c.prevClas, c.prevUp)
 	lifetimeStore.Add(pqeDelta, clasDelta, upDelta, 0, 0, 0, billable)
 	lifetimeStore.MaybeFlush(now)
+	// Error counts share the tick and its throttle. A failure event is rare, so
+	// waiting up to one flush interval costs nothing; the shutdown, hotswap and
+	// fatal exit paths flush unconditionally. The store loads on first use and
+	// both the accessor and MaybeFlush tolerate a nil store, so a collector that
+	// starts before the store exists cannot panic the loop.
+	persistentErrorStore().MaybeFlush(now)
 
 	a1, a2, a3, _, a5, a6, a7 := lifetimeStore.Snapshot()
 	// The store's denied total is not compared or printed: the miner has no

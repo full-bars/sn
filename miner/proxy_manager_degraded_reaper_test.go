@@ -524,3 +524,56 @@ func TestMinerDegradedReaperReleaseResetsDownClock(t *testing.T) {
 		t.Fatalf("down clock survived release (%v): the next cycle would reap it again", after)
 	}
 }
+
+// Release clears the clock, and the next down observation has to start a NEW
+// one. Without that the identity sits at health "down" with no clock, and
+// proxyLiveDegradedProxies skips a zero clock: the reaper could not see it
+// again at all, so the proxy was neither ranked nor reaped, and the reported
+// down-since never named the episode it was actually in.
+func TestMinerDegradedReaperFreshDownAfterReleaseStartsANewClock(t *testing.T) {
+	resetProxyLiveHealthRegistryForTest()
+	resetReapedProxyHoldsForTest()
+	t.Cleanup(func() {
+		resetProxyLiveHealthRegistryForTest()
+		resetReapedProxyHoldsForTest()
+	})
+
+	key := "198.51.100.78:443:released"
+
+	// The first episode: down for two hours, then held and released.
+	oldDown := time.Now().Add(-2 * time.Hour)
+	noteLiveProxyHealth(key, "recently_offline", oldDown)
+	holdReapedProxy(key, time.Now().Add(-time.Minute))
+	if released := releaseExpiredReapedProxyHolds(time.Now()); len(released) != 1 || released[0] != key {
+		t.Fatalf("released %v, want [%s]", released, key)
+	}
+	proxyLiveHealthRegistry.Lock()
+	afterRelease := proxyLiveHealthRegistry.byKey[key].DownSince
+	proxyLiveHealthRegistry.Unlock()
+	if !afterRelease.IsZero() {
+		t.Fatalf("precondition: release must clear the down clock, got %v", afterRelease)
+	}
+
+	// A fresh failure is a new episode, not a continuation of the old one.
+	before := time.Now()
+	noteLiveProxyHealthFailure(key)
+	proxyLiveHealthRegistry.Lock()
+	fresh := proxyLiveHealthRegistry.byKey[key].DownSince
+	proxyLiveHealthRegistry.Unlock()
+	if fresh.IsZero() {
+		t.Fatal("the fresh down left the clock unset: the reaper skips a zero clock, so the identity could never be reaped again")
+	}
+	if fresh.Before(before) {
+		t.Fatalf("the fresh down kept the old timestamp (%v, want >= %v)", fresh, before)
+	}
+	if !minerProxyStillDegraded(key) {
+		t.Fatal("the fresh episode must be visible to the reaper")
+	}
+	entries := proxyLiveDegradedProxies(time.Now())
+	if len(entries) != 1 {
+		t.Fatalf("degraded set = %+v, want the one identity", entries)
+	}
+	if entries[0].DownFor > time.Minute {
+		t.Fatalf("down-for = %v: the reported episode is the old one, not the fresh one", entries[0].DownFor)
+	}
+}

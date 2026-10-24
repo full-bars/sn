@@ -247,12 +247,23 @@ func writeProxyAuditMetrics(b *strings.Builder) {
 }
 
 // writeProxyGradeMetrics emits the provider's proxy grade and health
-// distribution from proxy.state, exactly as v33's providerExtraMetrics does.
+// distribution from proxy.state, the port of v33's providerExtraMetrics. The
+// live health registry is overlaid before the aggregates are summed: v33 reads
+// its in-memory state, while this port reads the file the health cycle
+// rewrites, so a fact the process has already observed — a confirmed transport
+// drop above all — would otherwise be missing from the scrape for up to
+// proxyHealthLogInterval.
 func writeProxyGradeMetrics(b *strings.Builder) {
 	state, stateErr := readProxyState()
 	urlState, urlErr := readProxyURLState()
 
 	if stateErr == nil {
+		// The same overlay the manager's health cycle and snapshotProxyCounts
+		// apply, so the scrape and the state written on the next cycle agree:
+		// health, down-since and the failure counters are reported as this
+		// process knows them, not as the last snapshot left them.
+		overlayLiveProxyHealth(state.Proxies)
+
 		fmt.Fprintf(b, "# HELP urnet_proxies_known Proxies in the provider's proxy state.\n")
 		fmt.Fprintf(b, "# TYPE urnet_proxies_known gauge\n")
 		fmt.Fprintf(b, "urnet_proxies_known %d\n", len(state.Proxies))

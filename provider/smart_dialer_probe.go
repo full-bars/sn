@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"math/rand"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -24,19 +26,65 @@ const (
 	smartDialerProbeStartJitter = 55 * time.Second
 )
 
+// applyPersistedSmartDialer hands the persisted preference to the dialer, once,
+// before any identity starts. This is the only writer of the runtime flag from
+// control state, and it is why smart_dialer is restart-required rather than
+// live (see liveEffectKeys in control_socket.go): the probe loop that feeds a
+// measurement is created per identity when it starts, so a `set` on a running
+// provider cannot create one and only persists the value for the next start.
+//
+// Replayed in both directions, including the off default: an unset key must put
+// the flag at off rather than leave whatever an earlier replay left behind.
+func applyPersistedSmartDialer(state *controlState) {
+	on := false
+	if v, ok := state.get("smart_dialer"); ok {
+		on = strings.EqualFold(strings.TrimSpace(v), "on")
+	}
+	connect.SetSmartDialer(on)
+}
+
+// smartDialerProbeOwner is the identity the shared-gateway hold keys on. It must
+// be stable across a proxy reload: the hold is renewed while the same proxy
+// keeps probing, so an identity built from the proxy's slot number would both
+// free an address another proxy is still probing (when the slots move) and lock
+// a proxy out of an address it already owns (when its slot number changes),
+// for the whole smartDialerGatewayHold. The key is the identity the rest of the
+// provider uses (see jwtStoreKey); it is hashed because the raw key carries the
+// proxy's user name and a separator that does not belong in a log-adjacent
+// string.
+func smartDialerProbeOwner(identityKey string) string {
+	if identityKey == "" || identityKey == "direct" {
+		return "direct"
+	}
+	sum := sha256.Sum256([]byte(identityKey))
+	return "proxy:" + hex.EncodeToString(sum[:8])
+}
+
 // startSmartDialerProbes measures, in the background, the connect cost of
 // every transport the strategy has not been able to measure on its own (the
 // first-choice transport always wins where it works, so the others are never
-// dialed; see connect.ClientStrategy.ProbeDialersWith). Everything is a no-op
-// while the smart dialer is off. Call it only after the proxy authenticated: a
-// proxy that never authenticates, or sits in slow retry, never probes.
+// dialed; see connect.ClientStrategy.ProbeDialersWith).
 //
-// index and addr identify the proxy in the logs; addr is host:port, never the
-// proxy key. A proxy reached through SOCKS skips the transports that behave
-// identically there.
-func startSmartDialerProbes(ctx context.Context, strategy *connect.ClientStrategy, apiUrl string, tag string, index int, addr string, viaSocks bool) {
+// A node with the smart dialer off starts nothing at all: no goroutine and no
+// timer. The check inside ProbeDialersWith already made an idle round cost no
+// network work, but the loop itself still cost one goroutine and its stack per
+// proxy, and on a node with thousands of proxies that is thousands of
+// goroutines that can never do anything. The preference is read here, when the
+// identity starts, so a node that turns it on at runtime begins probing on its
+// next start rather than within one interval.
+//
+// Call it only after the proxy authenticated: a proxy that never authenticates,
+// or sits in slow retry, never probes.
+//
+// owner is smartDialerProbeOwner's identity for this proxy, index and addr
+// identify the proxy in the logs; addr is host:port, never the proxy key. A
+// proxy reached through SOCKS skips the transports that behave identically
+// there.
+func startSmartDialerProbes(ctx context.Context, strategy *connect.ClientStrategy, apiUrl string, owner string, index int, addr string, viaSocks bool) {
+	if !connect.SmartDialerEnabled() {
+		return
+	}
 	delay := smartDialerProbeMinDelay + time.Duration(rand.Int63n(int64(smartDialerProbeStartJitter)))
-	owner := tag + "[" + strconv.Itoa(index) + "]"
 	options := connect.SmartDialerProbeOptions{
 		CollapseSocksTwins: viaSocks,
 		Gate: func(ctx context.Context) (func(), error) {
