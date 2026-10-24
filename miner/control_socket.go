@@ -566,17 +566,12 @@ func validateControlValue(key, value string) error {
 			return fmt.Errorf("gomemlimit: invalid byte count %q: %w", value, err)
 		}
 	case "gogc":
-		// "off" clears the override, the same as every other tuning key.
-		// "disabled" is the explicit value that turns collection off, kept
-		// distinct so a plain "off" never hands an operator an unbounded heap.
-		if valLower != "off" && valLower != "disabled" {
-			n, err := strconv.Atoi(value)
-			if err != nil {
-				return fmt.Errorf("gogc: must be an integer percentage, 'off' to clear, or 'disabled' to turn collection off (got %q)", value)
-			}
-			if n < 0 {
-				return fmt.Errorf("gogc: must be a non-negative percentage, 'off' to clear, or 'disabled' to turn collection off (got %q)", value)
-			}
+		// The same parse the live apply and the startup replay use, so a
+		// value that passes validation cannot mean something else when it is
+		// applied: a non-negative percentage, "off" to clear, or "disabled"
+		// to turn collection off.
+		if _, err := parseGoGCTarget(value); err != nil {
+			return fmt.Errorf("gogc: %w", err)
 		}
 	case "metrics":
 		switch valLower {
@@ -1060,23 +1055,20 @@ func applyControlLiveSideEffect(key, value string) error {
 			tlog("⚙️ [control] applied gomemlimit=%s\n", value)
 		}
 	case "gogc":
-		// Only "disabled" turns collection off. "off" is the clear value for
-		// every tuning key, so a set carrying it restores the runtime default.
-		if strings.EqualFold(value, "disabled") {
-			debug.SetGCPercent(-1)
+		// parseGoGCTarget is the same parse validation and the startup replay
+		// use, so the value means one thing in all three places. Only
+		// "disabled" turns collection off; "off" is the clear value for every
+		// tuning key, so a set carrying it restores the runtime default.
+		target, err := parseGoGCTarget(value)
+		if err != nil {
+			return fmt.Errorf("gogc: %w", err)
+		}
+		debug.SetGCPercent(target.Percent)
+		switch {
+		case target.Percent < 0:
 			tlog("⚙️ [control] applied gogc=disabled (garbage collection off; heap grows unbounded)\n")
-		} else if strings.EqualFold(value, "off") {
-			debug.SetGCPercent(100)
+		case target.Clear:
 			tlog("⚙️ [control] applied gogc=100 (off restores the default)\n")
-		} else {
-			percent, err := strconv.Atoi(value)
-			if err != nil {
-				return fmt.Errorf("gogc: %w", err)
-			}
-			if percent < 0 {
-				return fmt.Errorf("gogc: must be a non-negative percentage (got %d)", percent)
-			}
-			debug.SetGCPercent(percent)
 		}
 	case "smart_dialer":
 		// Transport choice keeps measuring either way (the measurement always
@@ -1158,7 +1150,7 @@ func applyControlLiveSideEffect(key, value string) error {
 		if effective == oomCapModeName(oomCapOff) {
 			// "off" has to forget the standing cap, not just stop enforcing it,
 			// or the next "on" resumes a cap set days ago (see oomCapResetOnOff).
-			for _, line := range oomCapResetOnOff() {
+			for _, line := range oomCapResetOnOff(time.Now()) {
 				importantLogf("%s\n", line)
 			}
 		} else if oomCapMode() == oomCapOn {

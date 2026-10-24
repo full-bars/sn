@@ -1,10 +1,9 @@
 package miner
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -222,38 +221,33 @@ func minerLedgerTail(limit int) (string, error) {
 	return ledgerTailFromFile(path, limit)
 }
 
-// ledgerTailFromFile reads at most the last limit JSON objects from path.
-// It is the miner's port of v33's ledgerTail; an absent file is not an error.
+// ledgerTailFromFile reads at most the last limit entries from path and renders
+// them as the JSON array the control socket's Value carries. It is the miner's
+// port of v33's ledgerTail: an absent file is an empty list, and a line that
+// does not parse (or carries no actor) is skipped rather than poisoning the
+// reply. The encoder re-emits the same {t,actor,action,from,to,mode,reason}
+// objects the writer appended, so `urnet-tools autopilot log` reads either
+// build's file.
+//
+// A scanner error after some entries parsed (an overlong or torn trailing line)
+// must not hide them: the ledger's promise is that one corrupt line cannot bury
+// the rest of the timeline. Only a file that yielded nothing is an error.
 func ledgerTailFromFile(path string, limit int) (string, error) {
-	data, err := os.ReadFile(path)
+	entries, err := ledgerTail(path, limit)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return "[]", nil
+		if len(entries) == 0 {
+			return "", err
 		}
+		tlog("[ledger] warn: %s: %v (serving the %d entries read before it)\n", path, err, len(entries))
+	}
+	if entries == nil {
+		entries = []ledgerEntry{}
+	}
+	b, err := json.Marshal(entries)
+	if err != nil {
 		return "", err
 	}
-	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
-	entries := make([]string, 0, limit)
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		if !isJSONObject(line) {
-			continue
-		}
-		entries = append(entries, line)
-		if len(entries) > limit {
-			entries = entries[1:]
-		}
-	}
-	return "[" + strings.Join(entries, ",") + "]", nil
-}
-
-// isJSONObject is a cheap well-formedness gate so a corrupt ledger line does
-// not poison the whole reply.
-func isJSONObject(s string) bool {
-	return strings.HasPrefix(s, "{") && strings.HasSuffix(s, "}")
+	return string(b), nil
 }
 
 // minerLedgerLimit clamps a ledger request the way v33 does: default 20, at

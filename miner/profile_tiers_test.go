@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"math"
 	"runtime/debug"
 	"testing"
 
@@ -148,18 +149,53 @@ func TestApplyTurboSettings(t *testing.T) {
 		}
 	}
 
-	// The tier's GOGC default is 200 unless the operator pinned GOGC or a
-	// persisted gogc.
+	// The per-provider constructor must not touch GOGC: the tier's GC default
+	// is process-wide and installed once by applyProfileGCPercent, so a
+	// constructor that wrote it would re-apply the tier value for every new
+	// provider and after the startup line that reports the value in force.
 	withControlState(t)
 	t.Setenv("URNETWORK_PROFILE", profileTurboV4)
 	debug.SetGCPercent(100)
 	applyTurboSettings(sdk.DefaultDeviceLocalSettings())
-	if got := debug.SetGCPercent(100); got != 200 {
-		t.Errorf("turbo GOGC = %d, want 200", got)
+	if got := debug.SetGCPercent(100); got != 100 {
+		t.Errorf("applyTurboSettings changed GOGC to %d; the process-wide tier knob belongs to applyProfileGCPercent", got)
 	}
 }
 
-func TestApplyTurboSettingsDefersToOperatorGOGC(t *testing.T) {
+// The tier's GOGC default is 200 (turbo) / 50 (eco) unless the operator pinned
+// GOGC in the environment or a persisted gogc is in force.
+func TestApplyProfileGCPercent(t *testing.T) {
+	cases := []struct {
+		profile string
+		want    int
+	}{
+		{profileEco, 50},
+		{profileTurboV4, 200},
+		{profileTurboV8, 200},
+		{profileLowmem, 100}, // no tier default: the runtime value stands
+		{profileAuto, 100},
+		{"", 100},
+	}
+	for _, c := range cases {
+		t.Run("tier "+c.profile, func(t *testing.T) {
+			clearTuningEnv(t)
+			preserveRuntimeTuning(t)
+			withControlState(t)
+			t.Setenv("URNETWORK_PROFILE", c.profile)
+			debug.SetGCPercent(100)
+
+			installed := applyProfileGCPercent(c.profile)
+			if got := debug.SetGCPercent(100); got != c.want {
+				t.Errorf("%s: GOGC = %d, want %d", c.profile, got, c.want)
+			}
+			if wantInstalled := c.want != 100; installed != wantInstalled {
+				t.Errorf("%s: applyProfileGCPercent reported %v, want %v", c.profile, installed, wantInstalled)
+			}
+		})
+	}
+}
+
+func TestApplyProfileGCPercentDefersToOperatorGOGC(t *testing.T) {
 	clearTuningEnv(t)
 	preserveRuntimeTuning(t)
 	withControlState(t)
@@ -167,7 +203,9 @@ func TestApplyTurboSettingsDefersToOperatorGOGC(t *testing.T) {
 	t.Setenv("URNETWORK_PROFILE", profileTurboV4)
 	t.Setenv("GOGC", "37")
 	debug.SetGCPercent(100)
-	applyTurboSettings(sdk.DefaultDeviceLocalSettings())
+	if applyProfileGCPercent(profileTurboV4) {
+		t.Errorf("applyProfileGCPercent installed a tier default over GOGC from the environment")
+	}
 	if got := debug.SetGCPercent(100); got != 100 {
 		t.Errorf("GOGC env must win: got %d, want 100", got)
 	}
@@ -175,7 +213,9 @@ func TestApplyTurboSettingsDefersToOperatorGOGC(t *testing.T) {
 	t.Setenv("GOGC", "")
 	globalControlState.set("gogc", "55")
 	debug.SetGCPercent(100)
-	applyTurboSettings(sdk.DefaultDeviceLocalSettings())
+	if applyProfileGCPercent(profileTurboV4) {
+		t.Errorf("applyProfileGCPercent installed a tier default over a persisted gogc")
+	}
 	if got := debug.SetGCPercent(100); got != 100 {
 		t.Errorf("persisted gogc must win: got %d, want 100", got)
 	}
@@ -186,14 +226,11 @@ func TestApplyEcoSettings(t *testing.T) {
 	preserveRuntimeTuning(t)
 	withControlState(t)
 
-	// Without a persisted value the tier sets GOGC 50 and a 75% RAM limit.
+	// Without a persisted value the tier sets a 75% RAM limit. Its GOGC 50
+	// default is process-wide and covered by TestApplyProfileGCPercent.
 	t.Setenv("URNETWORK_PROFILE", profileEco)
-	debug.SetGCPercent(100)
 	debug.SetMemoryLimit(999999999999)
-	applyEcoSettings(0)
-	if got := debug.SetGCPercent(100); got != 50 {
-		t.Errorf("eco GOGC = %d, want 50", got)
-	}
+	applyEcoSettings(profileEco, 0)
 	if got := debug.SetMemoryLimit(-1); got == 999999999999 {
 		t.Errorf("eco must set a memory limit")
 	}
@@ -201,7 +238,7 @@ func TestApplyEcoSettings(t *testing.T) {
 	// A persisted gomemlimit wins over the eco default.
 	globalControlState.set("gomemlimit", "512MiB")
 	debug.SetMemoryLimit(999999999999)
-	applyEcoSettings(0)
+	applyEcoSettings(profileEco, 0)
 	if got := debug.SetMemoryLimit(-1); got != 999999999999 {
 		t.Errorf("persisted gomemlimit must win: got %d", got)
 	}
@@ -209,9 +246,40 @@ func TestApplyEcoSettings(t *testing.T) {
 	// --max-memory wins too.
 	globalControlState.clear("gomemlimit")
 	debug.SetMemoryLimit(999999999999)
-	applyEcoSettings(64 * 1024 * 1024)
+	applyEcoSettings(profileEco, 64*1024*1024)
 	if got := debug.SetMemoryLimit(-1); got != 999999999999 {
 		t.Errorf("--max-memory must win: got %d", got)
+	}
+}
+
+// The tier is chosen by the RESOLVED profile, not by the raw spelling. "Eco"
+// canonicalizes to eco, so it must install both halves of that tier: the GOGC 50
+// default and the eco GOMEMLIMIT. Testing the raw environment here installed the
+// GOGC alone, leaving a box on the eco tier with the generic fallback limit.
+func TestApplyProfileProcessTuningResolvesANonCanonicalEcoSpelling(t *testing.T) {
+	clearTuningEnv(t)
+	preserveRuntimeTuning(t)
+	withControlState(t)
+	t.Setenv("URNETWORK_PROFILE", "Eco")
+	debug.SetGCPercent(100)
+	// A limit the generic fallback cannot be mistaken for: ensureMemoryLimit
+	// leaves a finite one alone, so only eco may move it here.
+	debug.SetMemoryLimit(math.MaxInt64)
+
+	limitTier, gcTier := applyProfileProcessTuning(0)
+	if gcTier != profileTierSource(profileEco) {
+		t.Fatalf("GOGC tier = %q, want %q", gcTier, profileTierSource(profileEco))
+	}
+	if got := debug.SetGCPercent(100); got != 50 {
+		t.Fatalf("GOGC = %d, want the eco default 50", got)
+	}
+	if limitTier != profileTierSource(profileEco) {
+		t.Fatalf("GOMEMLIMIT tier = %q, want %q: the resolved profile selects eco, not only its GOGC", limitTier, profileTierSource(profileEco))
+	}
+	if ram := detectEffectiveRAMLimitBytes(); ram > 0 {
+		if got, want := debug.SetMemoryLimit(-1), ram*75/100; got != want {
+			t.Fatalf("GOMEMLIMIT = %d, want the eco 75%% of RAM (%d)", got, want)
+		}
 	}
 }
 

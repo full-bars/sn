@@ -28,11 +28,12 @@ import (
 //     exactly as the relay does: the tighter of the OOM cap and the thrash cap,
 //     each reported with its own source so a shed is attributed to the rung
 //     that caused it.
-//   - The action ledger is absent. ledgerRecord/ledgerEntry are the relay's;
-//     the miner keeps only the returned log lines, which the startup path and
-//     the control socket write to the ramlog and events.log through
-//     importantLogf, and the thrash escalation writes its restart reason
-//     straight to events.log (thrash_escalation.go).
+//   - The action ledger (action_ledger.go) records each decision: the miner
+//     writes the same {t,actor,action,from,to,mode,reason} line the relay does,
+//     so `urnet-tools autopilot log` reads one timeline on either build. The
+//     returned log lines still go to the ramlog and events.log through
+//     importantLogf, and a thrash escalation adds its restart/alert entry to
+//     the same ledger from thrash_escalation.go and thrash_watchdog.go.
 
 const (
 	oomCapReduceFactor   = 0.8            // next cap = 80% of the proxies that were running at death
@@ -521,7 +522,7 @@ func readOOMKillEpoch() (string, int64) {
 // or a relax, and a relax is evaluated at start), so dropping a cap merely
 // because it is old would shed proxies mid-run on a healthy box. "off" is the
 // operator saying stop, and stop means no standing cap.
-func oomCapResetOnOff() []string {
+func oomCapResetOnOff(now time.Time) []string {
 	dir, err := oomCapDir()
 	if err != nil {
 		return nil
@@ -537,6 +538,8 @@ func oomCapResetOnOff() []string {
 		importantLogf("[oomcap] warn: could not clear the automatic cap %d (%v); it stays in place and is not enforced while the mode is off\n", from, werr)
 		return nil
 	}
+	ledgerRecord(ledgerEntry{Actor: "oomcap", Action: "clear", From: from, To: 0, Mode: oomCapModeName(oomCapOff),
+		Reason: "kill switch off"}, now)
 	return []string{"[oomcap] cleared the automatic start cap " + strconv.Itoa(from) + " -> none (the kill switch forgets the standing cap)"}
 }
 
@@ -566,7 +569,7 @@ func oomCapDecideDetailed(desired int, bootID string, oomKills int64, now time.T
 	if mode == oomCapOff {
 		// The operator's kill switch, not an OOM event: the cap is forgotten and
 		// no evidence is due. Action stays empty so nothing captures a bundle.
-		return oomCapStartupDecision{Lines: oomCapResetOnOff(), Condition: "the OOM cap is off"}
+		return oomCapStartupDecision{Lines: oomCapResetOnOff(now), Condition: "the OOM cap is off"}
 	}
 	dir, err := oomCapDir()
 	if err != nil {
@@ -595,11 +598,38 @@ func oomCapDecideDetailed(desired int, bootID string, oomKills int64, now time.T
 		st, d = oomCapOnCleanStart(st, desired, now)
 		msg = "no OOM since the last start"
 	}
-	_ = oomWriteJSON(statePath, st)
+	werr := oomWriteJSON(statePath, st)
 
 	if d.Action == "none" || d.Action == "" {
+		// No cap moved, but the state may still have: an OOM the cap cannot
+		// answer restarts the clean-window clock (oomCapOnOOM), and that
+		// reset exists only if this write lands. A failure here is reported
+		// like any other, or the next start relaxes a cap this one meant to
+		// hold - the silent half of the same reader/writer disagreement.
+		if werr != nil {
+			warnings = append(warnings, "[oomcap] warn: could not persist the cap state ("+werr.Error()+"); no cap change was due, but the clean-window clock could not be recorded")
+		}
 		return oomCapStartupDecision{Lines: warnings, Decision: d, Condition: msg}
 	}
+	modeName := "shadow"
+	if mode == oomCapOn {
+		modeName = "on"
+	}
+	// Persistence is what makes the cap exist: effectiveTrimCapSource reads
+	// this file, so an unpersisted decision is enforced by nothing. Recording
+	// it anyway would put an "applied" line in the audit trail for a cap the
+	// next read cannot find - the reader/writer disagreement the ledger exists
+	// to prevent. Say so instead, and leave the timeline to the last cap that
+	// really was persisted.
+	if werr != nil {
+		// Nothing was written, so no decision is reported and no bundle is due:
+		// captureOOMCapIncident skips an empty action, which is why this line
+		// says it in the log rather than in a Condition nothing would render.
+		return oomCapStartupDecision{
+			Lines: append(warnings, "[oomcap] warn: could not persist the cap state ("+werr.Error()+"); the decision ("+oomCapActionPhrase(d, mode == oomCapOn)+") was neither applied nor recorded"),
+		}
+	}
+	ledgerRecord(ledgerEntry{Actor: "oomcap", Action: d.Action, From: d.From, To: d.To, Mode: modeName, Reason: msg}, now)
 	verb, tail := "shadow: "+msg+": ", " (not enforced; set URNETWORK_OOM_CAP=on to enforce)"
 	if mode == oomCapOn {
 		verb, tail = "applied: "+msg+": ", ""

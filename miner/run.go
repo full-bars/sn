@@ -1180,11 +1180,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	mergePendingControlOverrides(controlState)
 	globalControlState = controlState
-	// The profile tiers' Go runtime knobs (profiles/memory, PM-04) come after
-	// the control state is loaded so a persisted `set gomemlimit|gogc` beats
-	// the tier default, and after the memory plan so the operator precedence
-	// in applyTurboMemoryLimit/applyEcoSettings/ensureMemoryLimit holds.
-	applyProfileProcessTuning(self.maxMemory)
+	// The profile tiers' Go runtime knobs (profiles/memory, PM-04) and the
+	// once-per-start resource check are one ordered step
+	// (applyStartupMemoryTuning). That step replays a persisted
+	// `set gomemlimit` and `set gogc` first, so the operator's pins survive a
+	// restart and the tiers skip their defaults for them (the provider's
+	// applyPersistedRuntimeTuning, in the miner's order: after the memory plan
+	// and the control-state load, before applyProfileProcessTuning). The check
+	// then reads the soft limit actually in force, and runs before the launch
+	// loop with the pool size this start opens (`proxy trim` already applied).
+	// Warnings only: nothing here changes a limit or refuses a start.
+	applyStartupMemoryTuning(self.maxMemory, len(self.proxySettings))
 	// Apply the resolved h3 setting once, before any provider builds its
 	// transport, so a later live change compares against the mode the running
 	// identities were actually built with (the v33 startup replay). The proxy
@@ -1232,6 +1238,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// once the parent releases the listener at the handoff commit point.
 	startMetricsAtStartup(controlState, self.hotSwapCandidate)
 	defer func() { _ = stopMetrics() }()
+	// pprof: URNETWORK_PPROF only (the provider's enable path), loopback only,
+	// off by default. A HotSwap candidate's bind is retried in the background
+	// because the parent still holds the port for the whole drain
+	// (profile_listen.go).
+	startProfilingAtStartup(ctx)
+	defer func() { _ = stopProfiling() }()
 	// One rate sample per second feeds the snapshot's throughput history.
 	// Supervised: this same loop also drives the swap-thrash watchdog, so a
 	// panic in a sample must restart it rather than end the process's only
@@ -1704,7 +1716,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// URL cache + operator trim cap). Its error is the reload's
 				// abort signal: a transient read failure must not be read as
 				// "no proxies" and cancel the fleet.
-				launch, _, _, err := newProxyManager(defaultProxyManagerConfig()).desired(false)
+				//
+				// desiredForReload, not desired: this read's set IS applied
+				// below, so a binding trim cap here is a live capacity
+				// decision and belongs in the action ledger. The command
+				// readers keep the silent read.
+				launch, _, _, err := newProxyManager(defaultProxyManagerConfig()).desiredForReload()
 				if err != nil {
 					return nil, err
 				}

@@ -1005,3 +1005,44 @@ func TestClearOOMCapControlReleasesThePersistedMode(t *testing.T) {
 		t.Fatalf("after clear, mode = %q, want the safe default shadow", got)
 	}
 }
+
+// A failed state write is the one thing the decision cannot survive: the
+// persisted file IS the cap, and the clean-window clock is what stops a cap
+// relaxing right after an OOM. "none" is not "nothing changed" - an OOM the cap
+// cannot answer still restarts that clock - so the failure has to be reported in
+// that branch too, not dropped on the early return.
+func TestOOMCapDecideReportsAWriteFailureWhenTheActionIsNone(t *testing.T) {
+	dir := oomCapTestEnv(t, "on")
+	// The previous start launched 50 and the counter rose: a kill is claimed,
+	// and 80% of 50 is below the 50 floor, so the decision is "none" while the
+	// clean-window clock restarts.
+	if err := oomWriteJSON(filepath.Join(dir, "run.marker"), oomMarker{
+		BootID:      "boot-A",
+		OOMKills:    5,
+		Proxies:     50,
+		StartedUnix: oomT0.Unix(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	// Block the write where oomWriteJSON cannot miss it: the .tmp file it
+	// writes and renames from is a directory, which fails for any user.
+	if err := os.Mkdir(filepath.Join(dir, "oom_cap.json.tmp"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	d := oomCapDecideDetailed(100, "boot-A", 6, oomT0.Add(time.Minute))
+	if d.Decision.Action != "none" {
+		t.Fatalf("a floor-bound OOM decision: want action none, got %+v", d.Decision)
+	}
+	joined := strings.Join(d.Lines, "\n")
+	if !strings.Contains(joined, "could not persist the cap state") {
+		t.Fatalf("an action-none decision that could not persist its clock reset must report the failure, got %q", joined)
+	}
+	if strings.Contains(joined, "applied:") || strings.Contains(joined, "would ") {
+		t.Fatalf("nothing was persisted, so no decision line may claim it was: %q", joined)
+	}
+	// The write really did fail, so no cap file exists to be read next start.
+	if _, err := os.Stat(filepath.Join(dir, "oom_cap.json")); !os.IsNotExist(err) {
+		t.Fatalf("the blocked write must leave no state file, stat err=%v", err)
+	}
+}
