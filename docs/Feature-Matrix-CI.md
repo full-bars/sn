@@ -150,7 +150,6 @@ from behavior/output, not from a commit hash).
 | `identity-restart-reuse` | identity changes across restart and no `.client_jwts.json` store exists | `feat/p2-hotswap` (`wt-sn-hotswap`, client-JWT store) |
 | `hot-restart-off` | `URNETWORK_HOT_RESTART=0` is accepted but reuse-vs-new is not observable without the store | `feat/p2-hotswap` (`wt-sn-hotswap`) |
 | `hotswap-handoff` | raw `hotswap` trigger answers `hotswap trigger not available` | `feat/p2-hotswap` (`wt-sn-hotswap`) |
-| `key-h3-limit` | `h3` persists but reports `requires a restart to take effect` | `feat/p2-h3` (`wt-sn-h3`) |
 | `key-ramlogs` | `ramlogs` persists but reports `requires a restart to take effect` | `feat/p2-ops` (`wt-sn-ops`) |
 | `metrics-bind` | `metrics on` is persisted but refused live (`the miner does not implement the v3.23 Prometheus /metrics exporter yet`) | `feat/p2-metrics` (`wt-sn-metrics`) |
 | `surface-metrics` | same exporter gap | `feat/p2-metrics` (`wt-sn-metrics`) |
