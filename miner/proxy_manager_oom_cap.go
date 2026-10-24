@@ -591,6 +591,7 @@ func oomCapDecideDetailed(desired int, bootID string, oomKills int64, now time.T
 
 	var d oomCapDecision
 	var msg string
+	prevSince := st.SinceUnix
 	if havePrev && oomKilledSinceMarker(&prev, bootID, oomKills, now) {
 		st, d = oomCapOnOOM(st, prev.Proxies, desired, now)
 		msg = "OOM kill since the last start (peak running " + strconv.Itoa(prev.Proxies) + ")"
@@ -607,7 +608,13 @@ func oomCapDecideDetailed(desired int, bootID string, oomKills int64, now time.T
 		// like any other, or the next start relaxes a cap this one meant to
 		// hold - the silent half of the same reader/writer disagreement.
 		if werr != nil {
-			warnings = append(warnings, "[oomcap] warn: could not persist the cap state ("+werr.Error()+"); no cap change was due, but the clean-window clock could not be recorded")
+			// A clean start with no standing cap changes nothing, so do not claim a
+			// clock reset that was never due; say which of the two was lost.
+			msg := "[oomcap] warn: could not persist the cap state (" + werr.Error() + ")"
+			if st.SinceUnix != prevSince {
+				msg += "; the clean-window reset could not be recorded"
+			}
+			warnings = append(warnings, msg)
 		}
 		return oomCapStartupDecision{Lines: warnings, Decision: d, Condition: msg}
 	}
