@@ -837,6 +837,13 @@ func provide(opts docopt.Opts) {
 		fmt.Fprintf(os.Stderr, "proxy state error: %s\n", err)
 		os.Exit(1)
 	}
+	// Registered BEFORE proxyManager.stop() on purpose: defers run LIFO, so
+	// this final drain runs AFTER the manager's loops have quiesced. A reload
+	// or trim evaluation inside desired()→noteTrimSelection while the manager
+	// is stopping queues a line after the flusher's own ctx.Done drain has
+	// already returned, and the startup drain below is long past; registering
+	// the drain after the stop defer would run it first and lose that line.
+	defer writeDeferredCrit()
 	defer proxyManager.stop()
 	// The manager's desired() read is side-effect free, so the h3 ranking over
 	// what this run serves is noted here, on the apply path: it must be in
@@ -848,6 +855,13 @@ func provide(opts docopt.Opts) {
 	// queued (an unparseable proxy_trim) is written straight away here rather
 	// than waiting for a reload that may be hours away.
 	writeDeferredCrit()
+	// Lines queued AFTER startup have no other consumer: the control socket's
+	// oom-cap apply and every reload that calls noteTrimSelection can queue
+	// one, and the startup drain above runs only once. Flush on a cadence and
+	// once when ctx ends; the deferred drain registered before
+	// proxyManager.stop() above covers whatever the manager queues while it
+	// is stopping.
+	go runDeferredCritFlusher(ctx, deferredCritFlushInterval)
 	providerCount := len(allProxySettings)
 	if providerCount == 0 {
 		providerCount = 1
