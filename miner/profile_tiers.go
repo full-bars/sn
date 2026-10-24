@@ -260,8 +260,12 @@ func applyPoolAutoSize(maxMemory connect.ByteCount) {
 // (env, --max-memory, persisted control value) wins. The tier's GOGC default
 // (50) is process-wide and installed by applyProfileGCPercent. Reports whether
 // it installed the GOMEMLIMIT, so the startup line can name the source.
-func applyEcoSettings(maxMemory connect.ByteCount) bool {
-	if os.Getenv("URNETWORK_PROFILE") != profileEco {
+//
+// profile is the resolved tier (effectiveProfile), not the raw environment: a
+// non-canonical spelling such as "Eco" still selects eco, and testing the raw
+// value here installed that tier's GOGC without its memory limit.
+func applyEcoSettings(profile string, maxMemory connect.ByteCount) bool {
+	if profile != profileEco {
 		return false
 	}
 
@@ -373,7 +377,7 @@ func applyProfileProcessTuning(maxMemory connect.ByteCount) (limitTier string, g
 	if applyTurboMemoryLimit(profile, maxMemory) {
 		limitTier = profileTierSource(profile)
 	}
-	if applyEcoSettings(maxMemory) {
+	if applyEcoSettings(profile, maxMemory) {
 		limitTier = profileTierSource(profile)
 	}
 	ensureMemoryLimit(maxMemory)

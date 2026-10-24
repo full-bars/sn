@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"math"
 	"runtime/debug"
 	"testing"
 
@@ -229,7 +230,7 @@ func TestApplyEcoSettings(t *testing.T) {
 	// default is process-wide and covered by TestApplyProfileGCPercent.
 	t.Setenv("URNETWORK_PROFILE", profileEco)
 	debug.SetMemoryLimit(999999999999)
-	applyEcoSettings(0)
+	applyEcoSettings(profileEco, 0)
 	if got := debug.SetMemoryLimit(-1); got == 999999999999 {
 		t.Errorf("eco must set a memory limit")
 	}
@@ -237,7 +238,7 @@ func TestApplyEcoSettings(t *testing.T) {
 	// A persisted gomemlimit wins over the eco default.
 	globalControlState.set("gomemlimit", "512MiB")
 	debug.SetMemoryLimit(999999999999)
-	applyEcoSettings(0)
+	applyEcoSettings(profileEco, 0)
 	if got := debug.SetMemoryLimit(-1); got != 999999999999 {
 		t.Errorf("persisted gomemlimit must win: got %d", got)
 	}
@@ -245,9 +246,40 @@ func TestApplyEcoSettings(t *testing.T) {
 	// --max-memory wins too.
 	globalControlState.clear("gomemlimit")
 	debug.SetMemoryLimit(999999999999)
-	applyEcoSettings(64 * 1024 * 1024)
+	applyEcoSettings(profileEco, 64*1024*1024)
 	if got := debug.SetMemoryLimit(-1); got != 999999999999 {
 		t.Errorf("--max-memory must win: got %d", got)
+	}
+}
+
+// The tier is chosen by the RESOLVED profile, not by the raw spelling. "Eco"
+// canonicalizes to eco, so it must install both halves of that tier: the GOGC 50
+// default and the eco GOMEMLIMIT. Testing the raw environment here installed the
+// GOGC alone, leaving a box on the eco tier with the generic fallback limit.
+func TestApplyProfileProcessTuningResolvesANonCanonicalEcoSpelling(t *testing.T) {
+	clearTuningEnv(t)
+	preserveRuntimeTuning(t)
+	withControlState(t)
+	t.Setenv("URNETWORK_PROFILE", "Eco")
+	debug.SetGCPercent(100)
+	// A limit the generic fallback cannot be mistaken for: ensureMemoryLimit
+	// leaves a finite one alone, so only eco may move it here.
+	debug.SetMemoryLimit(math.MaxInt64)
+
+	limitTier, gcTier := applyProfileProcessTuning(0)
+	if gcTier != profileTierSource(profileEco) {
+		t.Fatalf("GOGC tier = %q, want %q", gcTier, profileTierSource(profileEco))
+	}
+	if got := debug.SetGCPercent(100); got != 50 {
+		t.Fatalf("GOGC = %d, want the eco default 50", got)
+	}
+	if limitTier != profileTierSource(profileEco) {
+		t.Fatalf("GOMEMLIMIT tier = %q, want %q: the resolved profile selects eco, not only its GOGC", limitTier, profileTierSource(profileEco))
+	}
+	if ram := detectEffectiveRAMLimitBytes(); ram > 0 {
+		if got, want := debug.SetMemoryLimit(-1), ram*75/100; got != want {
+			t.Fatalf("GOMEMLIMIT = %d, want the eco 75%% of RAM (%d)", got, want)
+		}
 	}
 }
 
