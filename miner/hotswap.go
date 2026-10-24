@@ -466,6 +466,7 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 			// Restart=on-failure (or the Docker supervision loop) restarts the unit
 			// instead of leaving the node silently offline after a clean exit(0).
 			critLog("FATAL: hotswap candidate died during parent drain; exiting non-zero for supervisor restart")
+			captureIncidentBundle(incidentTriggerRestart, "hotswap candidate died during parent drain", nil)
 			exitFunc(1)
 			return
 		}
@@ -880,6 +881,7 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		if err := execInPlaceFunc(exe, args, cleanEnv); err != nil {
 			hotswapLog("CRITICAL [hotswap] syscall.Exec failed: %v\n", err)
 			critLog("FATAL: syscall.Exec failed during hotswap: %v", err)
+			captureIncidentBundle(incidentTriggerRestart, "syscall.Exec failed during hotswap: "+err.Error(), nil)
 			exitFunc(1)
 			return fmt.Errorf("syscall.Exec: %w", err)
 		}

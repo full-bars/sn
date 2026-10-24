@@ -540,18 +540,37 @@ func oomCapResetOnOff() []string {
 	return []string{"[oomcap] cleared the automatic start cap " + strconv.Itoa(from) + " -> none (the kill switch forgets the standing cap)"}
 }
 
+// oomCapStartupDecision is what the once-per-start decision concluded: the log
+// lines it produced, the decision itself, and the condition it was made under.
+// The decision is carried out of oomCapDecide so decideOOMCapStartup can report
+// it (and capture evidence) without re-deriving the state it already read.
+type oomCapStartupDecision struct {
+	Lines     []string
+	Decision  oomCapDecision
+	Condition string
+}
+
 // oomCapDecide runs once per start BEFORE the launch selection: it reads the
 // previous marker, decides what an OOM-aware cap does, persists the cap state and
 // returns the log lines. In "on" mode the persisted cap is then enforced by
 // effectiveTrimCapSource for this very start; otherwise it is only reported.
 func oomCapDecide(desired int, bootID string, oomKills int64, now time.Time) []string {
+	return oomCapDecideDetailed(desired, bootID, oomKills, now).Lines
+}
+
+// oomCapDecideDetailed is oomCapDecide that also reports what it decided, so the
+// caller can write the decision into an incident bundle instead of parsing it
+// back out of the log line.
+func oomCapDecideDetailed(desired int, bootID string, oomKills int64, now time.Time) oomCapStartupDecision {
 	mode := oomCapMode()
 	if mode == oomCapOff {
-		return oomCapResetOnOff()
+		// The operator's kill switch, not an OOM event: the cap is forgotten and
+		// no evidence is due. Action stays empty so nothing captures a bundle.
+		return oomCapStartupDecision{Lines: oomCapResetOnOff(), Condition: "the OOM cap is off"}
 	}
 	dir, err := oomCapDir()
 	if err != nil {
-		return nil
+		return oomCapStartupDecision{}
 	}
 	_ = os.MkdirAll(dir, 0o700)
 	statePath := filepath.Join(dir, "oom_cap.json")
@@ -579,13 +598,17 @@ func oomCapDecide(desired int, bootID string, oomKills int64, now time.Time) []s
 	_ = oomWriteJSON(statePath, st)
 
 	if d.Action == "none" || d.Action == "" {
-		return warnings
+		return oomCapStartupDecision{Lines: warnings, Decision: d, Condition: msg}
 	}
 	verb, tail := "shadow: "+msg+": ", " (not enforced; set URNETWORK_OOM_CAP=on to enforce)"
 	if mode == oomCapOn {
 		verb, tail = "applied: "+msg+": ", ""
 	}
-	return append(warnings, "[oomcap] "+verb+oomCapActionPhrase(d, mode == oomCapOn)+tail)
+	return oomCapStartupDecision{
+		Lines:     append(warnings, "[oomcap] "+verb+oomCapActionPhrase(d, mode == oomCapOn)+tail),
+		Decision:  d,
+		Condition: msg,
+	}
 }
 
 // oomCapActionPhrase words a decision for the log: "would reduce ..." in shadow,
@@ -753,9 +776,15 @@ func decideOOMCapStartup(desired int) {
 	oomCapStartupOnce.Do(func() {
 		oomCapLoadPersistedMode()
 		bootID, oomKills := oomCapEpoch()
-		for _, line := range oomCapDecide(desired, bootID, oomKills, time.Now()) {
+		decision := oomCapDecideDetailed(desired, bootID, oomKills, time.Now())
+		for _, line := range decision.Lines {
 			importantLogf("%s\n", line)
 		}
+		// An OOM-cap action that moved the cap (or held it at the reduction
+		// limit) is the one moment the decision is visible before the pool it
+		// sizes is built: capture there, not from a sampler that would have to
+		// guess which start was the OOM one.
+		captureOOMCapIncident(decision)
 	})
 }
 
