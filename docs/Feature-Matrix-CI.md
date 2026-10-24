@@ -43,8 +43,8 @@ release blocker in them is not masked by proxy churn.
 | `socket-hostile-input` | 5 hostile inputs (non-JSON, `{}`, traversal-shaped cmd, bad version, truncated JSON) get bounded JSON and the socket survives |
 | `control-key-live` | `set gogc=250` applies live, reads back, is logged, and changes `provider_state.json` (before/after fingerprint) |
 | `key-h3-limit` | `set h3=3` applies live and is reflected: readback, a `[control] … h3=3` log line, and the persisted `provider_state.json` value (a head without the live port self-detects to SKIP-UNSUPPORTED) |
-| `control-keys-live` | `proxy-url-refresh`/`proxy-url-max`/`smart-dialer`/`h1-plus` each report `applied live via control socket` with a matching readback and no restart warning (overrides cleared after) |
-| `control-keys-needs-restart` | `profile` reports `requires a restart to take effect`; `node-name` persists but reports no consumer, so no restart (the needs-restart semantics; overrides cleared after) |
+| `control-keys-live` | `proxy-url-refresh`/`proxy-url-max`/`h1-plus` each report `applied live via control socket` with a matching readback and no restart warning (overrides cleared after) |
+| `control-keys-needs-restart` | `profile` and `smart-dialer` report `requires a restart to take effect`; `node-name` persists but reports no consumer, so no restart (the needs-restart semantics; overrides cleared after) |
 | `metrics-bind` | `metrics on` applies and every reported listen address is inside the documented policy (loopback / Tailscale CGNAT; wildcard only inside a container) |
 | `metrics-scrape` | the running exporter answers an HTTP GET with a Prometheus payload (`# HELP urnet_…`), fetched with curl/wget/busybox (installed if missing) from the reported address |
 | `metrics-off-on` | `metrics off` stops the listener (scrape dead) and `metrics on` rebinds it |

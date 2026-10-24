@@ -282,11 +282,15 @@ func onOff(on bool) string {
 	return "off"
 }
 
+// Keys NOT in this set: profile (initGlog/SHMLogger is one-shot at startup),
+// ramlogs (stdout/stderr redirect is irreversible mid-process), smart_dialer
+// (the probe loop that feeds the measurement is created once per identity when
+// it starts, so a runtime enable would flip selection onto a measurement stream
+// nothing is feeding; the persisted value is replayed at startup instead).
 var liveEffectKeys = map[string]bool{
 	"gomemlimit":                  true,
 	"gogc":                        true,
 	"fast_auth":                   true,
-	"smart_dialer":                true,
 	"baseline":                    true,
 	"proxy_self_heal":             true,
 	"proxy_audit":                 true,
@@ -411,10 +415,6 @@ var liveDefaults = map[string]string{
 	// Clearing proxy_audit must return the engine to observe mode: the
 	// in-memory override survives a clear otherwise.
 	"proxy_audit": "off",
-	// Clearing smart_dialer must restore the measured-cost preference to its
-	// off default; without the entry, clear reported success while the live
-	// dialer stayed enabled until restart.
-	"smart_dialer": "off",
 	// Clearing the baseline key re-enables the recorder. Its default is ON,
 	// because a free upgrade baseline is the point: leaving it off after an
 	// operator cleared it would mean the file silently stops growing and
@@ -567,10 +567,20 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			controlLog("❌ [control] set %s=%s failed to persist, rolled back: %s\n", req.Key, req.Value, err)
 			return controlResponse{OK: false, Error: "set applied in memory but failed to persist: " + err.Error()}
 		}
-		if err := applyLiveSideEffect(req.Key, req.Value); err != nil {
-			controlLog("⚠️ [control] set %s=%s (was %s) persisted but live apply failed, takes effect on restart: %s\n",
-				req.Key, req.Value, formerValue(oldValue, hadOld), err)
-			return controlResponse{OK: false, Error: "persisted, but failed to apply live: " + err.Error()}
+		// Only a key classified live may take effect in this process. A
+		// restart-required key must not be half-applied here: the response
+		// below tells the operator the change waits for a restart, so an
+		// immediate effect for it would contradict that and, for smart_dialer,
+		// flip selection onto a measurement stream no probe loop is feeding.
+		if liveEffectKeys[req.Key] {
+			if err := applyLiveSideEffect(req.Key, req.Value); err != nil {
+				// Persisted fine — it'll take effect on the next restart — but
+				// the immediate, no-restart-needed part of it failed. Surface
+				// that distinction rather than claiming full success.
+				controlLog("⚠️ [control] set %s=%s (was %s) persisted but live apply failed, takes effect on restart: %s\n",
+					req.Key, req.Value, formerValue(oldValue, hadOld), err)
+				return controlResponse{OK: false, Error: "persisted, but failed to apply live: " + err.Error()}
+			}
 		}
 		controlLog("⚙️ [control] set %s=%s (was %s)\n", req.Key, req.Value, formerValue(oldValue, hadOld))
 		recordAndPersist(CommandAudit{
@@ -912,17 +922,6 @@ func applyLiveSideEffect(key, value string) error {
 		// (hours later). Reload drops or admits proxies per the new mode.
 		triggerProxyReload()
 		return nil
-	case "smart_dialer":
-		// Transport choice keeps measuring either way (the measurement always
-		// runs); this decides whether selection consults it. See
-		// connect.SetSmartDialer.
-		enabled := strings.EqualFold(value, "on")
-		previous := connect.SetSmartDialer(enabled)
-		was := "off"
-		if previous {
-			was = "on"
-		}
-		controlApplyLog("⚙️ [control] applied smart_dialer=%s (was %s)\n", value, was)
 	case "baseline":
 		// Sampling is a goroutine that checks the flag each tick, so turning it
 		// off takes effect on the next tick and needs no restart and no signal.
@@ -1175,11 +1174,11 @@ func applyPersistedRuntimeTuning(state *controlState) {
 			controlLog("[control] failed to apply persisted metrics=on: %s\n", err)
 		}
 	}
-	if v, ok := state.get("smart_dialer"); ok && strings.EqualFold(v, "on") {
-		if err := applyLiveSideEffect("smart_dialer", v); err != nil {
-			controlLog("[control] failed to apply persisted smart_dialer=%s: %s\n", v, err)
-		}
-	}
+	// smart_dialer is restart-required (it is not in liveEffectKeys), so this
+	// startup replay is the only thing that hands the persisted value to the
+	// dialer. A `set` on a running provider persists and reports needs_restart;
+	// the preference it changed takes effect here, on the next start.
+	applyPersistedSmartDialer(state)
 	// Replay the baseline key in BOTH directions, and apply the DEFAULT when
 	// there is no persisted value. Honouring only an explicit "on" would leave a
 	// stale off in place across a restart; but doing nothing when the value is
