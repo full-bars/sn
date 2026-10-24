@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -61,5 +62,51 @@ func TestControlIdentityKeyedBandwidthUsesTheIdentityIndex(t *testing.T) {
 	bobLabel := prometheusLabelValue(bob.Key())
 	if aliceLabel == bobLabel || !strings.Contains(out, aliceLabel) || !strings.Contains(out, bobLabel) {
 		t.Fatalf("the two accounts behind one gateway must have distinct series:\n%s", out)
+	}
+}
+
+// TestTrafficMetricsReadPoolStateOnce pins the scrape path's I/O: the
+// composition (urnet_proxy_pool_size) and the aggregate
+// (urnet_proxy_pool_health) are built from one member read, not one each. The
+// live-registry read is counted because it is the companion of the proxy.state
+// read in proxyPoolMembers: a second composition read cannot happen without a
+// second registry read.
+func TestTrafficMetricsReadPoolStateOnce(t *testing.T) {
+	withTempHome(t)
+	resetControlRuntimeForTest()
+	t.Cleanup(resetControlRuntimeForTest)
+	resetProxyLiveHealthRegistryForTest()
+	resetProxyPoolHealthForTest()
+	t.Cleanup(func() {
+		resetProxyLiveHealthRegistryForTest()
+		resetProxyPoolHealthForTest()
+	})
+
+	state, err := readProxyState()
+	if err != nil {
+		t.Fatalf("read proxy state: %v", err)
+	}
+	for i := 0; i < 4; i++ {
+		state.Proxies[fmt.Sprintf("10.0.0.%d:443", i)] = ProxyEntry{ID: i, Health: "up"}
+	}
+	if err := writeProxyState(state); err != nil {
+		t.Fatalf("write proxy state: %v", err)
+	}
+
+	reads := 0
+	prev := liveProxyHealthByKey
+	liveProxyHealthByKey = func() map[string]proxyHealthStatus {
+		reads++
+		return prev()
+	}
+	t.Cleanup(func() { liveProxyHealthByKey = prev })
+
+	var b strings.Builder
+	writeTrafficMetrics(&b)
+	if reads != 1 {
+		t.Fatalf("one scrape read the pool composition %d times, want 1:\n%s", reads, b.String())
+	}
+	if !strings.Contains(b.String(), `urnet_proxy_pool_size{status="up"} 4`) {
+		t.Fatalf("scrape did not publish the composition it read:\n%s", b.String())
 	}
 }

@@ -509,7 +509,9 @@ func runProxyHealthLog(ctx context.Context, interval time.Duration) {
 	if interval <= 0 {
 		interval = proxyHealthLogInterval
 	}
-	writeProxyHealthSnapshot(time.Now())
+	now := time.Now()
+	writeProxyHealthSnapshot(now)
+	logProxyPoolHealth(observeProxyPoolHealth(now, readProxyPoolComposition()))
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
@@ -518,6 +520,7 @@ func runProxyHealthLog(ctx context.Context, interval time.Duration) {
 			return
 		case now := <-ticker.C:
 			writeProxyHealthSnapshot(now)
+			logProxyPoolHealth(observeProxyPoolHealth(now, readProxyPoolComposition()))
 		}
 	}
 }
