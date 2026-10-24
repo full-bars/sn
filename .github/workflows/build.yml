@@ -65,6 +65,9 @@ jobs:
     # back to hosted: the 6-entry compile matrix runs in parallel there instead
     # of serialising one runner, and neither gains anything from a warm cache.
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
+    # no runner fallback exists: a job pinned to self-hosted queues until
+    # it times out, so bound that wait instead of inheriting the 6h default
+    timeout-minutes: 30
     permissions:
       contents: read
 
@@ -116,6 +119,9 @@ jobs:
 
   lint:
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
+    # no runner fallback exists: a job pinned to self-hosted queues until
+    # it times out, so bound that wait instead of inheriting the 6h default
+    timeout-minutes: 15
     permissions:
       contents: read
 
