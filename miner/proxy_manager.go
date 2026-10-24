@@ -301,11 +301,29 @@ func (m *proxyManager) primarySource(state *ProxyState) (tag string, settings []
 // (IDs, source tags, legacy-key adoption, StartedAt) and reports whether the
 // state needs writing.
 //
-// It must have NO effect on the running pool. The reload watcher calls it on
-// every reload and the command paths call it too, so anything that stops a
-// running identity (the h3 relaunch) belongs to the apply paths instead: see
-// applyH3CandidateSet and the reloader's onApplied hook.
+// It must have NO effect on the running pool. The reloader calls
+// desiredForReload; the command paths and the provide loop call this one, so
+// anything that stops a running identity (the h3 relaunch) belongs to the apply
+// paths instead: see applyH3CandidateSet and the reloader's onApplied hook. A
+// plain read also records nothing: computing the same selection a reload would
+// apply is not the same as applying it.
 func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
+	return m.desiredWith(importLegacy, false)
+}
+
+// desiredForReload is desired(false) for the reloader, whose caller applies the
+// set it returns to the running pool. That is the one read allowed to record a
+// live trim application: an operator `proxy trim` (or an automatic cap) binds
+// in startupTrimSelection, so without this the pool shrinks with no entry in
+// the timeline. The command readers keep desired(false), which stays silent.
+func (m *proxyManager) desiredForReload() (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
+	return m.desiredWith(false, true)
+}
+
+// desiredWith is the shared body of desired/desiredForReload. liveApply says
+// the caller is the reload path and will apply `launch` to a running pool, so a
+// binding trim cap is a capacity decision taken now.
+func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
 	state, err := readProxyState()
 	if err != nil {
 		return nil, nil, false, err
@@ -473,12 +491,34 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 		launch, held = startupTrimSelection(all, trimCap, state.Proxies, gradeFor, earningsFor)
 		importantLogf("[proxy][trim] startup: cap=%d, launching %d of %d desired, holding %d worst-graded until the cap is raised\n",
 			trimCap, len(launch), len(all), len(held))
+		// The capacity decision is recorded where it is taken. Two callers may
+		// take it: the start path, whose launch selection is the miner's
+		// launch-time trim application, and the reload path, whose identical
+		// selection is applied to a RUNNING pool when an operator `proxy trim`
+		// (or an automatic cap) lands mid-run. Command readers recompute the
+		// same selection without applying it and must record nothing.
+		//
+		// A failed proxy_url.json read rules BOTH out: the URL-sourced proxies
+		// are missing from `all`, so recording its length would understate the
+		// pool and claim a baseline the operator never configured (the same
+		// guard the OOM decision and the start marker use above/below).
+		switch {
+		case importLegacy && urlErr == nil:
+			ledgerTrimApplied(len(all), trimCap, trimSource, len(held), time.Now())
+		case liveApply && urlErr == nil:
+			ledgerTrimLiveApplied(len(all), trimCap, trimSource, len(held), time.Now())
+		}
 		primeTrimCapSeen(trimCap, trimSource)
 	} else {
 		launch = all
 		if trimCap > 0 {
 			primeTrimCapSeen(trimCap, trimSource)
 		}
+		// Nothing is held back any more (the cap was cleared, or the pool
+		// shrank under it), so a live application recorded earlier no longer
+		// describes the pool. Forget it: re-applying the same cap after a
+		// clear is a second real capacity drop and must reach the ledger.
+		forgetLiveTrimApplied()
 	}
 	// The marker records what this start actually launched, so the next start's
 	// decision measures 80% of the pool that ran, not the configured size this

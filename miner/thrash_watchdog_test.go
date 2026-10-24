@@ -48,6 +48,11 @@ func (s *scriptedSwapThrashSensor) read() swapThrashRead {
 // and a status file in a temp dir.
 func swapThrashTestWatch(t *testing.T, sensor *scriptedSwapThrashSensor, clock *time.Time, logs *[]string) (*swapThrashWatch, string) {
 	t.Helper()
+	// The watchdog records its decisions in the action ledger (<state
+	// dir>/autopilot.jsonl), so every rig gets its own state directory: a test
+	// that reaches an escalation must not append to the developer's real
+	// ~/.urnetwork.
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
 	path := filepath.Join(t.TempDir(), "thrash_status")
 	watch := newSwapThrashWatch(swapThrashOptions{
 		readFn:   sensor.read,

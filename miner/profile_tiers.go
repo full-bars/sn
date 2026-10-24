@@ -34,7 +34,15 @@ import (
 // Operator precedence for the Go runtime knobs is: GOMEMLIMIT/GOGC env >
 // a persisted control-socket value (urnet-tools set gomemlimit|gogc) > the
 // profile's default > ensureMemoryLimit's generic RAM-percentage fallback.
-// persistedRuntimeTuningActive is the middle gate, checked at every site.
+// persistedRuntimeTuningActive is the middle gate, checked at every site. The
+// persisted value has to be installed before the tiers run - the startup
+// replays do that (replayPersistedGoMemLimit, replayPersistedGoGC;
+// gomemlimit_startup.go, gogc_startup.go) - otherwise the gate says "the
+// operator pinned this" while a default is what the runtime runs under.
+//
+// GOGC is process-wide, so the tier's GOGC default is installed once by
+// applyProfileGCPercent in the startup step; the per-provider settings
+// constructors only carry the per-provider sizing.
 
 const (
 	profileAuto    = "auto"
@@ -85,9 +93,15 @@ func profileBenchmarksDisk(profile string) bool {
 // tuning key (gomemlimit/gogc) over the control socket. Such a value is
 // operator-explicit and must beat any profile default; the v33 comment on the
 // port explains why every defaulting site has to check it.
+//
+// "off" is the clear value and is not a pin, and the comparison is
+// case-insensitive because the socket's validation accepts "OFF" and stores it
+// verbatim. An exact match here made a persisted "OFF" suppress the tier
+// defaults while both startup replays skipped it - the gate saying "pinned"
+// while nothing was pinned, which is the bug the replays exist to prevent.
 func persistedRuntimeTuningActive(key string) bool {
 	v, ok := globalControlState.get(key)
-	return ok && v != "" && v != "off"
+	return ok && v != "" && !strings.EqualFold(v, "off")
 }
 
 // detectEffectiveRAMLimitBytes returns the effective RAM ceiling in bytes:
@@ -168,9 +182,12 @@ func applyTurboSettings(settings *sdk.DeviceLocalSettings) {
 	// that field (the fork applies the hook where it instantiates its own
 	// transfer settings), so nothing is assigned for it.
 
-	if os.Getenv("GOGC") == "" && !persistedRuntimeTuningActive("gogc") {
-		debug.SetGCPercent(200)
-	}
+	// The tier's GOGC default (200 here) is deliberately NOT set in this
+	// per-provider constructor: GOGC is process-wide, so applyProfileGCPercent
+	// installs it once at startup (applyProfileProcessTuning). Setting it here
+	// re-applied the tier value for every new provider after a live change,
+	// and it ran after the one startup line that reports the value in force,
+	// so that line could not name it.
 }
 
 // applyProfileDeviceSettings applies whichever tier is in force to one
@@ -187,17 +204,19 @@ func applyProfileDeviceSettings(settings *sdk.DeviceLocalSettings) {
 // profiles, unless an operator-explicit value already wins: the GOMEMLIMIT
 // env var, --max-memory, or a persisted control-socket gomemlimit (see
 // persistedRuntimeTuningActive for the full precedence order). Called once
-// per provide start, after the control state is loaded, so this guard sees
-// the persisted value.
-func applyTurboMemoryLimit(profile string, maxMemory connect.ByteCount) {
+// per provide start, after the control state is loaded and after the startup
+// replay installed a persisted pin, so this guard sees both. Reports whether
+// it installed the limit, so the startup line can name the source.
+func applyTurboMemoryLimit(profile string, maxMemory connect.ByteCount) bool {
 	if profile != profileTurboV4 && profile != profileTurboV8 {
-		return
+		return false
 	}
 	if os.Getenv("GOMEMLIMIT") != "" || maxMemory != 0 || persistedRuntimeTuningActive("gomemlimit") {
-		return
+		return false
 	}
 	ramBytes := detectEffectiveRAMLimitBytes()
 	debug.SetMemoryLimit(ramBytes * 80 / 100)
+	return true
 }
 
 // applyPoolAutoSize scales the message pool free-list capacity to RAM/32 at
@@ -236,23 +255,27 @@ func applyPoolAutoSize(maxMemory connect.ByteCount) {
 		poolBytes/1024/1024, connect.ByteCount(ram)/1024/1024)
 }
 
-// applyEcoSettings applies the eco tier's Go runtime knobs: GOGC 50 and an
-// explicit GOMEMLIMIT at 75% of effective RAM, both only when no
-// operator-explicit value (env, --max-memory, persisted control value) wins.
-func applyEcoSettings(maxMemory connect.ByteCount) {
-	if os.Getenv("URNETWORK_PROFILE") != profileEco {
-		return
-	}
-
-	if os.Getenv("GOGC") == "" && !persistedRuntimeTuningActive("gogc") {
-		debug.SetGCPercent(50)
+// applyEcoSettings applies the eco tier's Go soft memory limit: an explicit
+// GOMEMLIMIT at 75% of effective RAM, only when no operator-explicit value
+// (env, --max-memory, persisted control value) wins. The tier's GOGC default
+// (50) is process-wide and installed by applyProfileGCPercent. Reports whether
+// it installed the GOMEMLIMIT, so the startup line can name the source.
+//
+// profile is the resolved tier (effectiveProfile), not the raw environment: a
+// non-canonical spelling such as "Eco" still selects eco, and testing the raw
+// value here installed that tier's GOGC without its memory limit.
+func applyEcoSettings(profile string, maxMemory connect.ByteCount) bool {
+	if profile != profileEco {
+		return false
 	}
 
 	if os.Getenv("GOMEMLIMIT") == "" && maxMemory == 0 && !persistedRuntimeTuningActive("gomemlimit") {
 		ramBytes := detectEffectiveRAMLimitBytes()
 		ecoLimit := ramBytes * 75 / 100
 		debug.SetMemoryLimit(ecoLimit)
+		return true
 	}
+	return false
 }
 
 // ensureMemoryLimit guarantees every provider code path runs under a finite
@@ -264,15 +287,24 @@ func applyEcoSettings(maxMemory connect.ByteCount) {
 //
 // Order of precedence (first match wins):
 //  1. GOMEMLIMIT set in the environment (operator explicit)
-//  2. --max-memory flag (maxMemory > 0, applied earlier)
-//  3. a finite limit already set by any tier/profile - in the miner this
+//  2. a persisted control-socket gomemlimit (operator explicit, replayed at
+//     startup by replayPersistedGoMemLimit - including the value 0, which
+//     means no soft limit at all)
+//  3. --max-memory flag (maxMemory > 0, applied earlier)
+//  4. a finite limit already set by any tier/profile - in the miner this
 //     includes the default provider memory plan (provider_memory.go), which
 //     is why this is normally a no-op here
-//  4. this function's default: 80% of effective RAM, absolute headroom
+//  5. this function's default: 80% of effective RAM, absolute headroom
 //     capped at 1 GiB so a RAM-rich box does not claim RAM other tenants need.
 func ensureMemoryLimit(maxMemory connect.ByteCount) {
 	if os.Getenv("GOMEMLIMIT") != "" || maxMemory > 0 {
 		return // operator precedence, already applied
+	}
+	// A persisted pin is operator-explicit and outranks this fallback even when
+	// the runtime limit does not look finite: 0 means "no soft limit", and
+	// installing a default here would silently reverse that pin.
+	if persistedRuntimeTuningActive("gomemlimit") {
+		return
 	}
 	// A finite limit from a tier/profile means the box is already protected.
 	if cur := debug.SetMemoryLimit(-1); cur > 0 && cur < math.MaxInt64 {
@@ -300,14 +332,54 @@ func ensureMemoryLimit(maxMemory connect.ByteCount) {
 		float64(limit)/float64(mib), float64(ram)/float64(mib))
 }
 
+// applyProfileGCPercent installs the tier's GOGC default - eco 50, turbo-v4/v8
+// 200 - unless an operator-explicit value wins: GOGC in the environment, or a
+// persisted control-socket gogc (already replayed by
+// applyStartupMemoryTuning before this runs, so the pin is in force and the
+// tier skips for exactly the value the operator set). Reports whether it
+// installed a tier default, so the startup line can name the source.
+//
+// This is the one place a profile tier writes GOGC. The knob is process-wide,
+// so per-provider settings constructors must not set it: doing so re-applied
+// the tier value on every new provider and happened after the startup line
+// that reports the value in force.
+func applyProfileGCPercent(profile string) bool {
+	if os.Getenv("GOGC") != "" || persistedRuntimeTuningActive("gogc") {
+		return false
+	}
+	switch profile {
+	case profileEco:
+		debug.SetGCPercent(50)
+	case profileTurboV4, profileTurboV8:
+		debug.SetGCPercent(200)
+	default:
+		return false
+	}
+	return true
+}
+
 // applyProfileProcessTuning applies the process-wide half of the profile
-// tiers in v33's order: turbo memory limit, eco settings, then the generic
-// fallback. Call it once per provide start after the control state has been
-// loaded, so persistedRuntimeTuningActive sees the operator's socket-set
-// values.
-func applyProfileProcessTuning(maxMemory connect.ByteCount) {
+// tiers in v33's order: the tier's GOGC default, turbo memory limit, eco
+// settings, then the generic fallback. Call it once per provide start after the
+// control state has been loaded and after both startup replays
+// (replayPersistedGoMemLimit, replayPersistedGoGC), so
+// persistedRuntimeTuningActive sees the operator's socket-set values and the
+// tier guards and the fallback skip.
+//
+// It returns the label of the tier that installed each knob ("profile tier
+// eco"), or "" when no tier did - the one startup line names both sources from
+// that.
+func applyProfileProcessTuning(maxMemory connect.ByteCount) (limitTier string, gcTier string) {
 	profile := effectiveProfile()
-	applyTurboMemoryLimit(profile, maxMemory)
-	applyEcoSettings(maxMemory)
+	if applyProfileGCPercent(profile) {
+		gcTier = profileTierSource(profile)
+	}
+	if applyTurboMemoryLimit(profile, maxMemory) {
+		limitTier = profileTierSource(profile)
+	}
+	if applyEcoSettings(profile, maxMemory) {
+		limitTier = profileTierSource(profile)
+	}
 	ensureMemoryLimit(maxMemory)
+	return limitTier, gcTier
 }

@@ -335,35 +335,74 @@ func readCgroupAvailableMiB() int64 {
 	return -1
 }
 
-// readMemAvailFrac returns the available memory fraction this process can see,
-// taking the tighter of host MemAvailable and cgroup headroom against the
-// effective RAM. Host-only MemAvailable misleads inside Docker.
-func readMemAvailFrac() (float64, error) {
-	ram := detectEffectiveRAMLimitBytes()
-	host := readMemAvailableMiB()
-	if host < 0 && ram <= 0 {
-		return 0, fmt.Errorf("cannot read host memory")
-	}
-	var availMiB float64
-	cgroup := readCgroupAvailableMiB()
-	// Use >= for host so a legitimately read MemAvailable==0 (memory fully
-	// exhausted, right before OOM) still counts as max pressure rather than
-	// indistinguishable from no-data. readMemAvailableMiB returns -1 on error,
-	// so 0 is real data.
+// hostAvailMiB is the ONE definition of "free memory this process can use": the
+// tighter of host MemAvailable and the cgroup's headroom, or -1 when neither is
+// readable. Host-only MemAvailable misleads inside a container, where it
+// reports the host's RAM rather than the container limit. Both the pressure
+// fraction and the memory-headroom guard resolve free memory through it, so the
+// two cannot be computed from different notions of headroom. They do not share
+// a sample: each tick the guard reads it once and the pressure sampler reads it
+// again moments later, so the two numbers can differ slightly on a box in flux.
+//
+// A variable so a test can drive either consumer from a known memory state
+// instead of this host's real one; the file's other sensors are seams for the
+// same reason.
+var hostAvailMiB = readHostAvailMiB
+
+// effectiveRAMLimitBytes is detectEffectiveRAMLimitBytes behind a seam, so a
+// test can drive the RAM-sized decisions (the headroom threshold) from a known
+// or unreadable limit instead of this host's.
+var effectiveRAMLimitBytes = detectEffectiveRAMLimitBytes
+
+// The two source readers are seams so a test can prove the tighter value wins
+// without needing a memory-limited cgroup.
+var (
+	hostMemAvailableMiB = readMemAvailableMiB
+	cgroupAvailableMiB  = readCgroupAvailableMiB
+)
+
+func readHostAvailMiB() int64 {
+	// Prefer host availability, but never blank the signal when only a cgroup
+	// headroom is available (e.g. a container that cannot read /proc/meminfo).
+	h := hostMemAvailableMiB()
+	c := cgroupAvailableMiB()
 	switch {
-	case host >= 0 && cgroup >= 0:
-		availMiB = min(float64(host), float64(cgroup))
-	case host >= 0:
-		availMiB = float64(host)
-	case cgroup >= 0:
-		availMiB = float64(cgroup)
+	case h >= 0 && c >= 0:
+		return min(h, c)
+	case h >= 0:
+		// Host memory is readable but no cgroup headroom exists (bare metal,
+		// a VM, or a cgroup whose accounting we cannot read). Use the host
+		// signal rather than blanking it.
+		return h
+	case c >= 0:
+		return c
 	default:
+		return -1
+	}
+}
+
+// readMemAvailFrac returns the available memory fraction this process can see,
+// against the effective RAM. The numerator is hostAvailMiB, the same definition
+// the headroom guard uses, so the fraction cannot be computed from a different
+// notion of free memory than the guard's; it is taken from its own read of it,
+// though, so a fraction and a guard line from the same tick are two nearby
+// samples rather than one.
+func readMemAvailFrac() (float64, error) {
+	ram := effectiveRAMLimitBytes()
+	// hostAvailMiB returns -1 only when nothing is readable, so a real 0
+	// (memory fully exhausted, right before OOM) still counts as maximum
+	// pressure rather than being indistinguishable from no-data.
+	availMiB := hostAvailMiB()
+	if availMiB < 0 {
+		if ram <= 0 {
+			return 0, fmt.Errorf("cannot read host memory")
+		}
 		return 0, fmt.Errorf("cannot read host or cgroup memory availability")
 	}
 	if ram <= 0 {
 		return 0, fmt.Errorf("no RAM baseline for fraction")
 	}
-	return max(0, availMiB) * 1024 * 1024 / float64(ram), nil
+	return float64(max(0, availMiB)) * 1024 * 1024 / float64(ram), nil
 }
 
 // getSystemLoad reads /proc/loadavg and returns the 1-minute and 5-minute load
@@ -638,6 +677,19 @@ func (m *pressureMonitor) step(selfHealEnabled bool) {
 func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 	m := newPressureMonitor()
 
+	// The memory-headroom guard. It is observation only and runs on every tick
+	// BEFORE the self-heal gate, exactly as the provider runs it: a box going
+	// short is worth knowing about whether or not the actuators are armed, and
+	// the threshold depends only on how much RAM this process can use.
+	var headroom headroomTracker
+	ramLimit := effectiveRAMLimitBytes()
+	headroomLow := headroomLowForRAMLimit(ramLimit)
+	if ramLimit <= 0 {
+		// The threshold is a guess when RAM cannot be read; say so once, so the
+		// operator reading a "below 400 MiB" line knows where 400 came from.
+		tlog("[proxy][resources] memory headroom threshold %d MiB: effective RAM unreadable, using the cap\n", headroomLow)
+	}
+
 	// Log the active sensor set once at startup, as the relay does.
 	first := m.sample()
 	active := []string{"goro"}
@@ -664,6 +716,20 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+		}
+		// Real free memory, independent of the pressure score and of self-heal:
+		// log when the box gets short and when it recovers. This tick's reading
+		// feeds both the decision and the line; the pressure sampler below
+		// takes its own read of the same definition afterwards.
+		avail := hostAvailMiB()
+		if tr := headroom.Observe(avail, headroomLow); tr != "" {
+			// Only a transition needs the pool count: enumerating the running
+			// set copies it, dedups it into a map and sorts it under the
+			// bandwidth registry lock, which on a multi-thousand-proxy node is
+			// real work for an argument a steady-state tick would discard.
+			if line := headroomLogLine(tr, avail, headroomLow, headroomProxyCount(), runtime.NumGoroutine()); line != "" {
+				importantLogf("%s\n", line)
+			}
 		}
 		m.step(selfHealEnabled)
 	}

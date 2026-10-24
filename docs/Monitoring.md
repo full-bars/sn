@@ -87,7 +87,11 @@ curl -X POST http://127.0.0.1:9090/-/reload
 Nodes whose provider does not export a metric never match its rule, so a fleet with mixed versions is safe.
 
 > [!NOTE]
-> This provider does not export `urnet_billable_bytes_total`, so `UrnetworkNoBillableTraffic` never fires here until that family is exported. The other rules use metrics listed in the table below.
+> The miner exports `urnet_billable_bytes_total` once its provide run has
+> published the bandwidth registry, so `UrnetworkNoBillableTraffic` can fire on
+> a miner that is up but idle. Before there is a counter to read, the family is
+> omitted rather than reported as zero, so the rule has no series to match.
+> The other rules use metrics listed in the table below.
 
 ### Checking your changes
 

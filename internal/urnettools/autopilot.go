@@ -74,6 +74,17 @@ func parseAutopilotArgs(args []string) (limit int, t Target, err error) {
 	return limit, t, nil
 }
 
+// ledgerChange renders the capacity move of one entry. A thrash refusal moves
+// nothing, so its from/to are both zero on the wire; printing "0 -> 0" there
+// reads as an empty pool that was cut to nothing, which is the opposite of what
+// the entry says. The change column shows "-" for it.
+func ledgerChange(r ledgerRow) string {
+	if r.Action == "alert" && r.From == 0 && r.To == 0 {
+		return "-"
+	}
+	return fmt.Sprintf("%d -> %d", r.From, r.To)
+}
+
 // renderLedger formats the JSON array the provider returns as a timeline. Times
 // are shown in UTC (as recorded) so the view does not depend on the machine's
 // zone, and an unparseable time is shown as-is rather than dropping the entry.
@@ -89,7 +100,7 @@ func renderLedger(raw string) (string, error) {
 	actorW, actionW, changeW, modeW := 0, 0, 0, 0
 	changes := make([]string, len(rows))
 	for i, r := range rows {
-		changes[i] = fmt.Sprintf("%d -> %d", r.From, r.To)
+		changes[i] = ledgerChange(r)
 		actorW = max(actorW, len(r.Actor))
 		actionW = max(actionW, len(r.Action))
 		changeW = max(changeW, len(changes[i]))

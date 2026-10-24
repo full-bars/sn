@@ -11,10 +11,10 @@ package miner
 // multi-GB-swapped parent and bypasses the CLI's memory-headroom preflight,
 // exactly when headroom is gone.
 //
-// Difference from the relay: the relay records the action in its audit ledger
-// (ledgerRecord). The miner has no ledger, so the same facts go to the critical
-// log (events.log) through the watch's critf seam — the durable line an
-// operator can read after the restart.
+// Difference from the relay: none in the record. Both write the action to the
+// audit ledger (ledgerRecord), and this path additionally puts the same facts
+// on the critical log (events.log) through the watch's critf seam - the durable
+// line an operator can read even if the ledger write could not land.
 
 import (
 	"errors"
@@ -31,8 +31,8 @@ var (
 	// flock must abort the escalation (alert), never stall the loop or exit
 	// without the record.
 	swapThrashPersistTimeout = 5 * time.Second
-	// swapThrashRecordTimeout bounds the restart record's events.log write,
-	// the miner's stand-in for the relay's audit-ledger write.
+	// swapThrashRecordTimeout bounds the restart record's ledger and events.log
+	// writes, so a blocked lock cannot stall the watchdog's decision.
 	swapThrashRecordTimeout = 2 * time.Second
 
 	// swapThrashExitFn is the process exit used for the supervised restart; a
@@ -122,13 +122,20 @@ func (w *swapThrashWatch) escalate(now time.Time, rt swapThrashRates, rd swapThr
 	if persistErr != nil {
 		return swapThrashEscalationAlert("persist-failed", fmt.Sprintf("cannot persist the anti-loop restart record (%v); not restarting, to avoid an unthrottled restart loop", persistErr))
 	}
-	// The relay writes the action ledger here, fire-and-forget but bounded. The
-	// miner has no ledger: the same facts go to events.log, which survives the
-	// restart the line describes. The write is bounded for the same reason the
-	// relay bounds the ledger one — a blocked log lock must not stall the
-	// watchdog's decision.
+	// The restart is recorded twice, both fire-and-forget but bounded so a
+	// blocked lock cannot stall the watchdog's decision: the action ledger line
+	// (the same one the relay writes, so `urnet-tools autopilot log` shows this
+	// restart) and the events.log line that survives the restart it describes.
 	recordDone := make(chan struct{})
 	go func() {
+		ledgerRecord(ledgerEntry{
+			Actor:  "thrash",
+			Action: "restart",
+			From:   running,
+			To:     cap,
+			Mode:   "on",
+			Reason: swapThrashRestartReason(rt, rd),
+		}, now)
 		w.critf("[thrash] restart: %s (proxies %d -> %d)\n", swapThrashRestartReason(rt, rd), running, cap)
 		close(recordDone)
 	}()

@@ -2,6 +2,7 @@ package miner
 
 import (
 	"fmt"
+	"os"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -262,6 +263,17 @@ func mibf(byteCount connect.ByteCount) float64 {
 }
 
 // applyProviderProcessMemory installs the process-wide half of a plan.
+//
+// The soft limit is the plan's DEFAULT, not an override. GOMEMLIMIT in the
+// environment is the first entry in the documented operator precedence
+// (profile_tiers.go), and ensureMemoryLimit already ranks the plan-installed
+// limit below both the environment value and --max-memory. The Go runtime has
+// already installed the environment value before main runs, so installing the
+// plan's limit here would silently replace the operator's pin - and the
+// startup resource warning, which reports the limit actually in force, would
+// then stay silent on exactly the heavy-pool-under-a-small-pin case it exists
+// for. Skip it when GOMEMLIMIT is set, including "off": an operator who turned
+// the soft limit off keeps it off.
 func applyProviderProcessMemory(plan providerMemoryPlan) {
 	if 0 < plan.MessagePoolByteCount {
 		connect.ResizeMessagePools(plan.MessagePoolByteCount)
@@ -271,7 +283,7 @@ func applyProviderProcessMemory(plan providerMemoryPlan) {
 		// default settings are constructed
 		connect.SetMemoryBudget(plan.MemoryBudgetByteCount)
 	}
-	if 0 < plan.SoftLimitByteCount {
+	if 0 < plan.SoftLimitByteCount && os.Getenv("GOMEMLIMIT") == "" {
 		debug.SetMemoryLimit(plan.SoftLimitByteCount)
 	}
 }

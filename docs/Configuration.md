@@ -78,7 +78,7 @@ Quick jump:
 | `/metrics` endpoint | auto (`9100`-`9103`) | The Prometheus metrics endpoint is enabled by default. In auto mode the listener binds loopback plus every Tailscale IPv4 address on bare metal, and every interface inside a container only when every address it holds is private or unique-local (a container that shares a publicly addressed network stays on loopback plus Tailscale), trying the first free port in `9100`-`9103`. Scrape `http://<host>:<port>/metrics` from Prometheus or any compatible collector. Override the bind address with `URNETWORK_METRICS=ip:port`; disable with `urnet-tools metrics off`. |
 | `URNETWORK_PUBLIC_IP` | `<auto-detected>` | Override the public IP shown in the dashboard identity label. Display only; does not change the actual egress IP. Auto-set by Docker startup scripts. Create `~/.urnetwork/disable_ip_autodetect` or run `urnet-tools show-ip off` to prevent autodetection. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity). |
 | `URNETWORK_HEALTH_INTERVAL` | `5m` | How often the health heartbeat pulses: one `[health]` log line per pulse, plus the `heartbeat:` line it publishes into `proxy_health.state` (the stamp an external monitor checks to tell a wedged process from a quiet one — a heartbeat older than its own `stale_after` means the pulse loop stopped). Carries uptime, heap/sys MiB, goroutine, proxy and client counts. Accepts Go duration strings such as `10m` or `1h`. Minimum `1m`: a smaller duration is raised to `1m`, and only an unparseable value falls back to `5m`. |
-| `URNETWORK_PPROF` | - | Set to a `host:port` to enable the loopback-only diagnostics server (e.g. `127.0.0.1:6060`). Off by default. Serves `/debug/pprof/*`, `/metrics/pool`, and `/metrics/errors`; only literal loopback IPs are accepted (hostnames are rejected). Pull profiles via an SSH tunnel, e.g. `ssh -L 6060:127.0.0.1:6060 host` then `go tool pprof http://127.0.0.1:6060/debug/pprof/profile`. |
+| `URNETWORK_PPROF` | - | Set to a literal loopback `host:port` to enable the pprof diagnostics listener (e.g. `127.0.0.1:6060`). Off by default. Serves `/debug/pprof/*` (`heap`, `goroutine`, `allocs`, `block`, `mutex`, `threadcreate`, `profile`, `trace`, `cmdline`, `symbol`) and nothing else. Only literal loopback IPs (`127.0.0.1`, `::1`) are accepted: hostnames, `0.0.0.0`, `::` and any other interface are refused, because the endpoints have no authentication and a heap profile carries whatever the process holds in memory. A HotSwap candidate retries the bind in the background until the parent releases the port. Pull profiles via an SSH tunnel, e.g. `ssh -L 6060:127.0.0.1:6060 host` then `go tool pprof http://127.0.0.1:6060/debug/pprof/profile`. |
 | `URNETWORK_PROXY_BENCHMARK` | - | Set to `true` to enable per-proxy latency monitoring. Off by default. Probes: TCP connect every 5 min (raw RTT to proxy port), SOCKS5 CONNECT every 15 min (end-to-end through proxy). Staggered startup jitter prevents thundering herd. ~104 GB/month at 10k proxies. |
 | `URNETWORK_PROXY_BENCHMARK_ENDPOINT` | `connect.bringyour.com:443` | Target for the SOCKS5 CONNECT latency probe. Measured end-to-end through each proxy. |
 | `URNETWORK_AUTH_UNLIMITED` | `false` | Bypass the auth rate limiter; every auth attempt fires immediately. Equivalent to creating `~/.urnetwork/fast_auth`. Only for trusted or benchmark environments. |
@@ -177,7 +177,7 @@ with no restart.
 | :--- | :--- |
 | `off` | No identity runs H3. |
 | `direct` | The direct (native) identity only, which is what the sibling forks do. |
-| `<int>` | The N best proxies, best first, by grade then earnings. N is a positive integer. The number caps the PROXY set only: the direct identity is always additionally eligible and does not consume one of the N, so `h3 = 10` runs ten H3 proxies plus the direct identity. |
+| `<int>` | The N best proxies, best first, by grade then earnings. N is a positive integer. The number caps the PROXY set only: while direct providing is on, the direct identity is additionally eligible and does not consume one of the N, so `h3 = 10` with direct on runs ten H3 proxies plus the direct identity. |
 | `all` | Every identity. This is the default, matching sn before the key existed. |
 
 `on` is kept as an alias for `direct`, `0` as an alias for `off`, and `auto`
@@ -185,11 +185,11 @@ as an alias for `all`. Any other
 zero spelling (`00`, `+0`) is rejected rather than read as a count, because a
 count of zero would keep the direct identity eligible and mean `direct` instead.
 Set it with `urnet-tools set h3 direct` (and so on). A number caps the proxy set
-only: the direct identity always keeps H3 on top of the cap and never consumes
-one of the N, because it is the baseline path and costs one carrier. So
-`h3 = 10` runs ten H3 proxies plus the direct identity, eleven carriers in
-total. A change reconnects only the identities that join or leave the set; the
-rest keep their connections.
+only: while direct providing is on, the direct identity keeps H3 on top of the
+cap and never consumes one of the N, because it is the baseline path and costs
+one carrier. So `h3 = 10` with direct on runs ten H3 proxies plus the direct
+identity, eleven carriers in total. A change reconnects only the identities
+that join or leave the set; the rest keep their connections.
 
 The `[health]` line carries `h3=<mode>`, `h3_set=<n>` and `h3_proxies=<m>`.
 `h3_set` is the grand total of running identities that run H3, which is the

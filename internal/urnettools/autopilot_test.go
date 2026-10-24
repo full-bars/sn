@@ -80,6 +80,15 @@ func TestRenderLedgerEdgeCases(t *testing.T) {
 	if err != nil || !strings.Contains(got, "yesterday") {
 		t.Fatalf("bad timestamp: %q %v", got, err)
 	}
+	// A refusal/alert moves nothing, so from/to are both zero on the wire. The
+	// change column must not read "0 -> 0" (an empty pool) for it.
+	got, err = renderLedger(`[{"t":"2026-09-26T01:00:00Z","actor":"thrash","action":"alert","reason":"self-heal is off"}]`)
+	if err != nil {
+		t.Fatalf("alert row: %v", err)
+	}
+	if !strings.Contains(collapse(got), "thrash alert - self-heal is off") {
+		t.Fatalf("an alert must render its change as \"-\", got %q", got)
+	}
 }
 
 func collapse(s string) string { return strings.Join(strings.Fields(s), " ") }
