@@ -1227,6 +1227,44 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		rawCancel()
 		<-controlSamplerDone
 	}()
+	// The health heartbeat (v33 health_heartbeat.go): once immediately, then
+	// every URNETWORK_HEALTH_INTERVAL (5m default, 1m floor), it publishes this
+	// process's own health into the status file the proxy health cadence already
+	// writes, so an external monitor can tell a wedged process (a heartbeat that
+	// stopped advancing) from a quiet one. Supervised and joined like the
+	// sampler: a panic restarts the pulse rather than ending it, and the join
+	// cancels the run first so a shutdown never waits on a sleeping tick.
+	//
+	// The history-store prune is a second loop at the same cadence, not a step
+	// in the pulse: it reads three files, and a slow read there must not hold
+	// the stamp an external monitor judges this process by. It is joined with
+	// the same bounded grace, so a prune stuck in a syscall cannot hang exit.
+	heartbeatStart := controlRuntime.startedAtSnapshot()
+	if heartbeatStart.IsZero() {
+		heartbeatStart = time.Now()
+	}
+	healthHeartbeatDone := make(chan struct{})
+	go func() {
+		defer close(healthHeartbeatDone)
+		superviseLoop(ctx, newLoopRef("health_heartbeat"), func() {
+			runHealthHeartbeat(ctx, heartbeatStart, os.Getenv("URNETWORK_PROFILE"))
+		}, nil)
+	}()
+	defer func() {
+		rawCancel()
+		joinHealthLoop(healthHeartbeatDone, "health heartbeat")
+	}()
+	proxyHistoryPruneDone := make(chan struct{})
+	go func() {
+		defer close(proxyHistoryPruneDone)
+		superviseLoop(ctx, newLoopRef("proxy_history_prune"), func() {
+			runProxyHistoryPruneLoop(ctx, healthHeartbeatConfiguredInterval())
+		}, nil)
+	}()
+	defer func() {
+		rawCancel()
+		joinHealthLoop(proxyHistoryPruneDone, "proxy history prune")
+	}()
 	// systemd's watchdog runs from the start of the unit's life: feed it
 	// through the whole of startup, not only once the proxy list is loaded.
 	// Inert without WATCHDOG_USEC and without a self-exit supervisor
