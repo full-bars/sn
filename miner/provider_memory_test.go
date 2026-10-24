@@ -190,6 +190,9 @@ func TestProviderAuthMemoryPlanKeepsPoolSizing(t *testing.T) {
 // TestApplyProviderMemoryPlan installs the soft limit and the process budget,
 // and resizes pools only when the plan says so; the auth plan sets no budget.
 func TestApplyProviderMemoryPlan(t *testing.T) {
+	// The plan installs the default soft limit; an operator GOMEMLIMIT would
+	// (correctly) outrank it, so pin the environment for this assertion.
+	t.Setenv("GOMEMLIMIT", "")
 	previousSoftLimit := debug.SetMemoryLimit(-1)
 	defer debug.SetMemoryLimit(previousSoftLimit)
 	previousBudget := connect.MemoryBudget()
@@ -231,6 +234,35 @@ func TestApplyProviderMemoryPlan(t *testing.T) {
 	}
 	if got := connect.MemoryBudget(); got != 0 {
 		t.Fatalf("auth plan set process budget %d", got)
+	}
+}
+
+// TestApplyProviderMemoryPlanKeepsOperatorGOMEMLIMIT: GOMEMLIMIT in the
+// environment is the operator's explicit pin and outranks the plan's default
+// soft limit (the order profile_tiers.go documents). The Go runtime installs
+// the environment value before main, so the plan must leave the runtime limit
+// alone - otherwise the startup resource warning reads the plan and stays
+// silent on the heavy-pool-under-a-small-pin case it exists for. The rest of
+// the plan (the connect process budget) still applies.
+func TestApplyProviderMemoryPlanKeepsOperatorGOMEMLIMIT(t *testing.T) {
+	preserveRuntimeTuning(t)
+	previousBudget := connect.MemoryBudget()
+	t.Cleanup(func() { connect.SetMemoryBudget(previousBudget) })
+	connect.SetMemoryBudget(0)
+
+	t.Setenv("GOMEMLIMIT", "400MiB")
+	debug.SetMemoryLimit(400 * testMib) // what the runtime installed at boot
+
+	plan := newProviderMemoryPlan(0, 8*testGib, 1)
+	if plan.SoftLimitByteCount <= 400*testMib {
+		t.Fatalf("test needs a plan limit above the operator pin, got %d", plan.SoftLimitByteCount)
+	}
+	applyProviderProcessMemory(plan)
+	if got := debug.SetMemoryLimit(-1); got != 400*testMib {
+		t.Fatalf("plan overwrote operator GOMEMLIMIT: limit = %d, want %d", got, 400*testMib)
+	}
+	if got := connect.MemoryBudget(); got != plan.MemoryBudgetByteCount {
+		t.Errorf("process budget = %d, want the plan's %d; only the soft limit yields to the operator", got, plan.MemoryBudgetByteCount)
 	}
 }
 
