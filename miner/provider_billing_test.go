@@ -188,6 +188,48 @@ func TestProxyBillingSamplerRebaselinesOnDrop(t *testing.T) {
 	}
 }
 
+// TestProxyBillingSamplerKeepsBaselineAcrossNoDataSentinel pins the SDK's
+// negative "no data" sentinel against the re-baseline rule. A negative is not a
+// drop: the last real reading is still the mark, so when the cumulative figure
+// returns it must not be added to the counter a second time.
+func TestProxyBillingSamplerKeepsBaselineAcrossNoDataSentinel(t *testing.T) {
+	bw := &bandwidth.ProxyBandwidth{}
+	src := &fakeBillingSource{}
+	sampler := &proxyBillingSampler{bw: bw}
+
+	src.set(10_000, 20_000, 5_000, 6_000)
+	sampler.sample(src)
+	if got := bw.BillableTx.Load(); got != 10_000 {
+		t.Fatalf("billable tx baseline = %d, want 10000", got)
+	}
+
+	// One tick of "no data" on the relay counter. The counter must hold its
+	// value, and the other counters must keep folding.
+	src.set(-1, 20_500, 5_000, 6_000)
+	sampler.sample(src)
+	if got := bw.BillableTx.Load(); got != 10_000 {
+		t.Errorf("a no-data sentinel changed the counter: %d, want 10000", got)
+	}
+	if got := bw.BillableRx.Load(); got != 20_500 {
+		t.Errorf("the other direction stopped folding: %d, want 20500", got)
+	}
+
+	// The real cumulative figure returns at its former level: no new bytes,
+	// so nothing may be added.
+	src.set(10_000, 20_500, 5_000, 6_000)
+	sampler.sample(src)
+	if got := bw.BillableTx.Load(); got != 10_000 {
+		t.Fatalf("the sentinel zeroed the baseline and recounted the lifetime: %d, want 10000", got)
+	}
+
+	// Growth after the sentinel is counted exactly once.
+	src.set(10_500, 20_500, 5_000, 6_000)
+	sampler.sample(src)
+	if got := bw.BillableTx.Load(); got != 10_500 {
+		t.Fatalf("growth after the sentinel = %d, want 10500", got)
+	}
+}
+
 // TestProxyBillingSamplerIgnoresMissingReadings pins that a device with no
 // provider (the SDK returns nil readings) adds nothing rather than a zero.
 func TestProxyBillingSamplerIgnoresMissingReadings(t *testing.T) {

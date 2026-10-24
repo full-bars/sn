@@ -95,14 +95,14 @@ func (s *proxyBillingSampler) sample(src slotBillingSource) {
 		return
 	}
 	if stats := src.GetProviderPacketStats(); stats != nil {
-		s.fold(&s.relayIngress, nonNegative(stats.RemoteIngressByteCount), &s.bw.BillableTx)
-		s.fold(&s.relayEgress, nonNegative(stats.RemoteEgressByteCount), &s.bw.BillableRx)
+		s.fold(&s.relayIngress, stats.RemoteIngressByteCount, &s.bw.BillableTx)
+		s.fold(&s.relayEgress, stats.RemoteEgressByteCount, &s.bw.BillableRx)
 	}
 	if stats := src.GetProviderIngressContractStats(); stats != nil {
-		s.fold(&s.contractIngress, nonNegative(stats.ContractUsedByteCount), &s.bw.ContractUsedIngress)
+		s.fold(&s.contractIngress, stats.ContractUsedByteCount, &s.bw.ContractUsedIngress)
 	}
 	if stats := src.GetProviderEgressContractStats(); stats != nil {
-		s.fold(&s.contractEgress, nonNegative(stats.ContractUsedByteCount), &s.bw.ContractUsedEgress)
+		s.fold(&s.contractEgress, stats.ContractUsedByteCount, &s.bw.ContractUsedEgress)
 	}
 	s.sampleClients(src)
 }
@@ -192,24 +192,25 @@ func (s *proxyBillingSampler) releaseClients() {
 // that re-baseline is bounded by the sample interval: growth that lands in the
 // same sample as the drop is not separable from it and is lost with it.
 //
+// A negative reading is not a drop: it is the SDK's "no data" sentinel on some
+// counters. It carries no information about the cumulative figure at all, so
+// the mark is kept as it was. Re-baselining on it would turn the sentinel into
+// zero, and the next real reading would then add the whole lifetime total a
+// second time.
+//
 // The high-water rule the provider's observers use (`current <= high: add 0`)
 // is deliberately not reused for the contract figures: it never lowers the mark,
 // so on a churning slot the next contracts' bytes would be undercounted instead
 // of bounded by one interval.
-func (s *proxyBillingSampler) fold(last *uint64, reading uint64, counter *atomic.Uint64) {
-	if reading > *last {
-		counter.Add(reading - *last)
+func (s *proxyBillingSampler) fold(last *uint64, reading int64, counter *atomic.Uint64) {
+	if reading < 0 {
+		return
 	}
-	*last = reading
-}
-
-// nonNegative clamps an SDK byte count to zero. The pinch is a negative sentinel
-// for "no data" on some counters; a negative can never be a delta.
-func nonNegative(v int64) uint64 {
-	if v < 0 {
-		return 0
+	value := uint64(reading)
+	if value > *last {
+		counter.Add(value - *last)
 	}
-	return uint64(v)
+	*last = value
 }
 
 // watchProxyBilling samples one slot's billing readings on a cadence and returns
