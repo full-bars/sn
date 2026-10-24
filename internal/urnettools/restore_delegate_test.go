@@ -215,3 +215,20 @@ func TestValidateSetValue(t *testing.T) {
 		}
 	}
 }
+
+// TestControlEffectNote pins the wording the CLI prints for a classified
+// set/clear. An empty effect (an older provider) must keep the historical
+// "applied live" path, so it has no note.
+func TestControlEffectNote(t *testing.T) {
+	if note := controlEffectNote(controlEffectNone); !strings.Contains(note, "no consumer") {
+		t.Fatalf("none note = %q, must say the key has no consumer", note)
+	}
+	if note := controlEffectNote(controlEffectRestart); !strings.Contains(note, "next start") {
+		t.Fatalf("restart note = %q, must say it applies on the next start", note)
+	}
+	for _, effect := range []string{"", "live", "something-else"} {
+		if note := controlEffectNote(effect); note != "" {
+			t.Fatalf("effect %q note = %q, want empty", effect, note)
+		}
+	}
+}

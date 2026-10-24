@@ -170,11 +170,8 @@ func TestBaselineControlKeyIsLiveAndDefaultsOn(t *testing.T) {
 	t.Cleanup(func() { baselineEnabled.Store(true) })
 	baselineEnabled.Store(true)
 
-	if controlUnsupportedKeys["baseline"] {
-		t.Fatal("baseline is still listed as unsupported, so a set would be inert")
-	}
-	if !controlLiveEffectKeys["baseline"] {
-		t.Fatal("baseline must be a live-effect key, or set baseline off would not stop sampling")
+	if controlKeyEffect("baseline") != controlEffectLive {
+		t.Fatal("baseline is not classified live, so a set would not stop sampling")
 	}
 	if got := controlLiveDefaults["baseline"]; got != "on" {
 		t.Fatalf("clearing baseline must restore on, got %q", got)

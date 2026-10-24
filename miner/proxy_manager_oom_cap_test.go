@@ -809,11 +809,8 @@ func TestOOMCapControlKeyIsRegistered(t *testing.T) {
 	if !controlKeys["oom_cap"] {
 		t.Fatal("controlKeys has no oom_cap entry: the kill switch would never persist")
 	}
-	if !controlLiveEffectKeys["oom_cap"] {
-		t.Fatal("controlLiveEffectKeys has no oom_cap entry: the switch would need a restart")
-	}
-	if controlUnsupportedKeys["oom_cap"] {
-		t.Fatal("controlUnsupportedKeys still lists oom_cap: the switch applies live now")
+	if controlKeyEffect("oom_cap") != controlEffectLive {
+		t.Fatal("oom_cap is not classified live: the switch would need a restart")
 	}
 	if got := controlLiveDefaults["oom_cap"]; got != "shadow" {
 		t.Fatalf("controlLiveDefaults[oom_cap] = %q, want shadow (clearing the key must return to the safe default)", got)

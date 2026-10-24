@@ -147,6 +147,43 @@ func TestControlSocketRestartOnlyKeyReportsRestart(t *testing.T) {
 	}
 }
 
+// A key the miner accepts for compatibility only must not advertise a live
+// effect or a restart effect: neither one changes anything.
+func TestControlSocketNoEffectKeyReportsNoEffect(t *testing.T) {
+	state := newControlState()
+	path, cleanup := testControlSocket(t, state)
+	defer cleanup()
+
+	for _, key := range []string{"node_name", "ip_version"} {
+		resp := controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: key, Value: map[string]string{"node_name": "nyc-1", "ip_version": "ipv4"}[key]})
+		if !resp.OK {
+			t.Fatalf("set %s failed: %s", key, resp.Error)
+		}
+		if resp.NeedsRestart {
+			t.Fatalf("%s must not report needs_restart: a restart does not apply it either", key)
+		}
+		if resp.Effect != controlEffectNone {
+			t.Fatalf("%s effect = %q, want %q", key, resp.Effect, controlEffectNone)
+		}
+		resp = controlRequestJSON(t, path, controlRequest{Cmd: "clear", Key: key})
+		if !resp.OK || resp.NeedsRestart || resp.Effect != controlEffectNone {
+			t.Fatalf("clear %s = %+v, want ok with no effect and no restart", key, resp)
+		}
+	}
+
+	// profile/ramlogs are read at startup, so they are restart, not none.
+	resp := controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: "profile", Value: "eco"})
+	if !resp.NeedsRestart || resp.Effect != controlEffectRestart {
+		t.Fatalf("profile = %+v, want restart effect", resp)
+	}
+
+	// A live key stays live.
+	resp = controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: "proxy_url_max", Value: "42"})
+	if resp.NeedsRestart || resp.Effect != controlEffectLive {
+		t.Fatalf("proxy_url_max = %+v, want live effect", resp)
+	}
+}
+
 func TestControlSocketValidationAndCaps(t *testing.T) {
 	state := newControlState()
 	path, cleanup := testControlSocket(t, state)

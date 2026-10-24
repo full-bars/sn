@@ -245,7 +245,7 @@ var setKeyFiles = map[string]string{
 
 // setKeyHelps describes each key for `set help` / usage.
 var setKeyHelps = []string{
-	"  node-name           <string>      node name reported to the fleet (default: hostname)",
+	"  node-name           <string>      node name reported to the fleet (default: hostname). The miner has no node label: it persists this value but never sends it, so it has no effect there",
 	"  fast-auth           on|off        bypass auth rate limiter",
 	"  self-heal           on|off        dead proxy auto-cleanup & load gate",
 	"  proxy-url-max       <int>         max proxies from URL feeds (default: 500)",
@@ -308,9 +308,36 @@ Available keys:
 		fmt.Fprintln(os.Stderr, l)
 	}
 	fmt.Fprint(os.Stderr, `
+node-name and ip-version are provider keys the miner accepts for compatibility
+only: it persists them, but it publishes no node label and has no
+control-driven IP-version setting, so neither a live set nor a restart changes
+anything there.
+
 Duration format: Go-style, e.g. 30s, 5m, 1h, 24h.
 Byte format: Go-style, e.g. 256MiB, 1GiB, 500MB.
 `)
+}
+
+// Control reply effect values (controlResponse.Effect). They mirror the
+// provider's classification so the CLI can say what a write actually did
+// instead of always printing "applied live".
+const (
+	controlEffectRestart = "restart"
+	controlEffectNone    = "none"
+)
+
+// controlEffectNote is the parenthetical printed after a successful set or
+// clear when the target classified the effect. An empty effect means an older
+// build that did not classify: return "", and the caller keeps the historical
+// wording plus the needs_restart warning.
+func controlEffectNote(effect string) string {
+	switch effect {
+	case controlEffectNone:
+		return "persisted; this build has no consumer for this key, so nothing changed and no restart will change that"
+	case controlEffectRestart:
+		return "persisted; it is read at startup, so it takes effect on the next start"
+	}
+	return ""
 }
 
 // cmdSet restores `urnet-tools set <key> [<value>|off] [target]`: it manages the
@@ -404,9 +431,13 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 			fmt.Printf("[dry-run] would clear %s for %s and revert to startup default\n", key, providerLabel(p))
 			return nil
 		}
-		appliedLive, needsRestart, err := applyControlOverride(p, "clear", canonicalKey, "", false)
+		appliedLive, needsRestart, effect, err := applyControlOverrideEffect(p, "clear", canonicalKey, "", false)
 		if err != nil {
 			return err
+		}
+		if note := controlEffectNote(effect); note != "" {
+			fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), note)
+			return nil
 		}
 		if appliedLive {
 			fmt.Printf("%s cleared for %s (applied live via control socket)\n", key, providerLabel(p))
@@ -428,9 +459,13 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 		return nil
 	}
 
-	appliedLive, needsRestart, err := applyControlOverride(p, "set", canonicalKey, value, false)
+	appliedLive, needsRestart, effect, err := applyControlOverrideEffect(p, "set", canonicalKey, value, false)
 	if err != nil {
 		return err
+	}
+	if note := controlEffectNote(effect); note != "" {
+		fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), note)
+		return nil
 	}
 	if appliedLive {
 		fmt.Printf("%s set to %s for %s (applied live via control socket)\n", key, value, providerLabel(p))

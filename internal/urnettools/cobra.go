@@ -541,7 +541,7 @@ func newRenameCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "rename <name>",
 		Short:              "set dashboard display name",
-		Long:               "Set the provider's display name reported to the dashboard. Equivalent to `urnet-tools set node-name <name>`. The change takes effect on the provider's next tick — no restart needed. Clears the override with `urnet-tools rename off` (reverts to hostname).",
+		Long:               "Set the provider's display name reported to the dashboard. Equivalent to `urnet-tools set node-name <name>`. The change takes effect on the provider's next tick — no restart needed. The miner has no node label: it persists the value but never sends it, so this has no effect on a miner. Clears the override with `urnet-tools rename off` (reverts to hostname).",
 		Example:            "  urnet-tools rename us-west-2\n  urnet-tools rename off\n  urnet-tools rename my-node-3 --unit urnetwork-native.service",
 		Aliases:            []string{"set-node-name"},
 		DisableFlagParsing: true,
