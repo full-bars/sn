@@ -300,7 +300,20 @@ func (self *ProviderWorkCaptureProfile) apply(settings *sdk.DeviceLocalSettings,
 
 // Both production provider roles enter this constructor. The evidence worker
 // receives the same owner's dial and trust settings, with its own finite pool.
-func newProviderDeviceLocal(ctx context.Context, networkSpace *sdk.NetworkSpace, strategySettings *connect.ClientStrategySettings, token, description string, settings *sdk.DeviceLocalSettings, profile *ProviderWorkCaptureProfile, slot string, clientId connect.Id, contractProfiles ...*ProviderContractCaptureProfile) (*sdk.DeviceLocal, error) {
+//
+// h3Policy, when non-nil, is the provider carrier policy for this slot (see
+// h3SlotTransportSettings). The pinned sdk builds the provider, and its
+// carrier, on its own default Auto policy inside sdk.NewDeviceLocal and has no
+// settings field for the policy, so the policy is set immediately AFTER
+// construction and the sdk delivers it by make-before-break replacement. That
+// is not construction time: the default-policy carrier dials until the
+// replacement connects, and the caller's provide mode lands on whichever
+// generation is current then. h3_provider_policy.go records the window, what it
+// can carry, and why the miner cannot wait it out. The policy is read back, and
+// a policy the sdk refuses fails this constructor rather than leaving the slot
+// on the previous one. Nil keeps the sdk default (the tests, and the swarm run,
+// which the h3 control key does not govern).
+func newProviderDeviceLocal(ctx context.Context, networkSpace *sdk.NetworkSpace, strategySettings *connect.ClientStrategySettings, token, description string, settings *sdk.DeviceLocalSettings, profile *ProviderWorkCaptureProfile, slot string, clientId connect.Id, h3Policy *sdk.TransportSettings, contractProfiles ...*ProviderContractCaptureProfile) (*sdk.DeviceLocal, error) {
 	if ctx == nil {
 		return nil, errors.New("whole-work provider constructor requires its lifecycle owner")
 	}
@@ -361,8 +374,27 @@ func newProviderDeviceLocal(ctx context.Context, networkSpace *sdk.NetworkSpace,
 		capture.HttpClient = &http.Client{Transport: transport, Timeout: 60 * time.Second}
 	}
 	device, err := sdk.NewDeviceLocal(networkSpace, token, description, "", RequireVersion(), sdk.NewId(), settings)
-	if err != nil && transport != nil {
-		transport.CloseIdleConnections()
+	if err != nil {
+		if transport != nil {
+			transport.CloseIdleConnections()
+		}
+		return nil, err
 	}
-	return device, err
+	// The h3 mode reaches this slot's provider carrier here: the policy is set
+	// right after the sdk built the carrier on its own default, and the sdk
+	// replaces that carrier make-before-break (see h3_provider_policy.go). The
+	// setter returns nothing, so the read-back is what makes a refused policy
+	// loud: the slot fails to build instead of serving the previous policy.
+	if h3Policy != nil {
+		if err := h3ApplyProviderTransportSettings(device, h3Policy); err != nil {
+			closeCtx, closeCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			_ = device.CloseAndWait(closeCtx)
+			closeCancel()
+			if transport != nil {
+				transport.CloseIdleConnections()
+			}
+			return nil, err
+		}
+	}
+	return device, nil
 }

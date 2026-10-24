@@ -482,7 +482,10 @@ func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed fu
 	logoutSub := api.AddAuthLogoutListener(clientauth.AuthLogoutListenerFunc(func() {
 		failed(errSwarmAuthenticationRejected)
 	}))
-	device, err := newProviderDeviceLocal(memberCtx, networkSpace, strategySettings, byClientJWT, "provider swarm "+runtime.GOOS+" "+RequireVersion(), deviceSettings, workProfile, member.ID, clientId, contractProfile)
+	// The swarm run is not the provide run the h3 control key governs: it has
+	// no control socket, no per-identity relauncher and no proxy ranking, so a
+	// member keeps the sdk's provider carrier policy (nil).
+	device, err := newProviderDeviceLocal(memberCtx, networkSpace, strategySettings, byClientJWT, "provider swarm "+runtime.GOOS+" "+RequireVersion(), deviceSettings, workProfile, member.ID, clientId, nil, contractProfile)
 	if err != nil {
 		refreshSub.Close()
 		logoutSub.Close()

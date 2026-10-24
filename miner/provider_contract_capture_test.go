@@ -172,7 +172,7 @@ func TestProviderOriginalContractActualConstructorRefusesUnpreparedSource(t *tes
 	profile, seed := providerContractCaptureFixture(t)
 	settings := ProviderDeviceSettings([32]byte{})
 	settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(seed, nil, nil)
-	device, err := newProviderDeviceLocal(t.Context(), nil, nil, "", "synthetic unprepared contract source", settings, nil, "direct", connect.Id(profile.Providers[0].ClientId), &profile)
+	device, err := newProviderDeviceLocal(t.Context(), nil, nil, "", "synthetic unprepared contract source", settings, nil, "direct", connect.Id(profile.Providers[0].ClientId), nil, &profile)
 	if device != nil || !errors.Is(err, connect.ErrOriginalContractStoreIdentity) {
 		t.Fatal("actual constructor accepted an unprepared original source", device, err)
 	}
@@ -183,7 +183,7 @@ func TestProviderOriginalContractActualConstructorRefusesUnpreparedSource(t *tes
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 	settings.ContractManagerSettings.OriginalContractCapture = nil
-	device, err = newProviderDeviceLocal(ctx, nil, nil, "", "synthetic canceled contract source", settings, nil, "direct", connect.Id(profile.Providers[0].ClientId), &profile)
+	device, err = newProviderDeviceLocal(ctx, nil, nil, "", "synthetic canceled contract source", settings, nil, "direct", connect.Id(profile.Providers[0].ClientId), nil, &profile)
 	if device != nil || !errors.Is(err, context.Canceled) || settings.ContractManagerSettings.OriginalContractCapture != nil {
 		t.Fatal("canceled source constructor changed original ownership", device, err)
 	}

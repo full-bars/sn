@@ -12,7 +12,10 @@ import (
 // h3_mode.go). The key is the ONE user-facing limit on how many H3 (QUIC)
 // transport connections are active:
 //
-//	off     H1 only. No QUIC and no dns carrier is ever dialed.
+//	off     H1 only. Once the slot's carrier policy is in force no QUIC and no
+//	        dns carrier is dialed; a slot that is starting dials the sdk's
+//	        default policy until the make-before-break replacement connects
+//	        (see h3_provider_policy.go).
 //	direct  the default. The direct (native) identity runs every upstream
 //	        carrier as an automatic fallback: H1 is the primary, and H3, H3 over
 //	        dns and the dns pump are started in that order only while nothing
@@ -28,7 +31,7 @@ import (
 //	all     direct, plus the automatic fallbacks for every proxy.
 //
 // The setting is read when an identity builds its platform transport (see
-// platformTransportSettingsFor), so a change reaches an identity at its next
+// h3SlotTransportSettings), so a change reaches an identity at its next
 // (re)start; a change of setting relaunches the identities it affects (see
 // h3_mode_apply.go). The pinned full-bars/connect carries the transport mode
 // preferences and the H3 packet conn factory, but not the fork's process-wide

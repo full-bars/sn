@@ -42,7 +42,7 @@ func TestProviderWholeWorkActualConstructorRefusesUnpreparedCustody(t *testing.T
 		}
 		settings := ProviderDeviceSettings([32]byte{})
 		settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(seed, nil, nil)
-		device, err := newProviderDeviceLocal(t.Context(), nil, nil, "", "synthetic incomplete outbox", settings, loaded, "direct", connect.Id(profile.Providers[0].ClientId))
+		device, err := newProviderDeviceLocal(t.Context(), nil, nil, "", "synthetic incomplete outbox", settings, loaded, "direct", connect.Id(profile.Providers[0].ClientId), nil)
 		if device != nil || !errors.Is(err, connect.ErrOriginalWorkOutboxIdentity) {
 			t.Fatal("actual constructor bypassed prepared original custody", indexed, device, err)
 		}
@@ -68,7 +68,7 @@ func TestProviderWholeWorkActualConstructorPreservesCanceledCustody(t *testing.T
 	settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(seed, nil, nil)
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
-	device, err := newProviderDeviceLocal(ctx, nil, nil, "", "synthetic canceled outbox", settings, &profile, "direct", connect.Id(profile.Providers[0].ClientId))
+	device, err := newProviderDeviceLocal(ctx, nil, nil, "", "synthetic canceled outbox", settings, &profile, "direct", connect.Id(profile.Providers[0].ClientId), nil)
 	if device != nil || !errors.Is(err, context.Canceled) || settings.ContractManagerSettings.OriginalWorkCapture != nil {
 		t.Fatal("canceled actual constructor changed capture ownership", device, err)
 	}
@@ -111,7 +111,7 @@ func TestProviderWholeWorkActualConstructorRefusesUnapprovedRetainedKey(t *testi
 	}
 	settings := ProviderDeviceSettings([32]byte{})
 	settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(seed, nil, nil)
-	device, err := newProviderDeviceLocal(t.Context(), nil, nil, "", "synthetic key rotation without history approval", settings, loaded, "direct", connect.Id(profile.Providers[0].ClientId))
+	device, err := newProviderDeviceLocal(t.Context(), nil, nil, "", "synthetic key rotation without history approval", settings, loaded, "direct", connect.Id(profile.Providers[0].ClientId), nil)
 	if device != nil || !errors.Is(err, connect.ErrOriginalWorkOutboxIdentity) {
 		t.Fatal("retained leaf substituted its key for independent launch authority", device, err)
 	}

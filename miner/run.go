@@ -1448,13 +1448,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		settings.ProviderDialContextSettings = bandwidth.WrapDialContextSettings(
 			self.testEgressDialer, bw, proxyAddr,
 		)
-		// Record what this identity is being built with, so a later h3 change
-		// can tell whether it must be relaunched (see h3ProxiesToRelaunch).
-		// Before newProviderDeviceLocal: that call is where this slot's
-		// platform transport is built, so the row never claims a launch that
-		// has not happened. A nil settings is the direct identity, which has
-		// no per-proxy row.
-		noteH3Launch(proxySettings)
+		// The h3 mode reaches this slot's provider carrier as one read: the
+		// policy is built (and the launch row recorded) before
+		// newProviderDeviceLocal, which sets it on the device right after the
+		// sdk built the carrier on its own default. The row therefore never
+		// claims a launch that has not happened. See h3_provider_policy.go for
+		// the make-before-break window that setter opens.
 		device, err := newProviderDeviceLocal(
 			proxyCtx,
 			networkSpace,
@@ -1465,6 +1464,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			workProfile,
 			providerRegistrationSlot(slotIdentities, proxySettings),
 			clientId,
+			h3SlotTransportSettings(proxySettings),
 			contractProfile,
 		)
 		if err != nil {

@@ -192,7 +192,7 @@ func (self *providerWorkDeviceFixture) startDevice(t *testing.T, original *Provi
 	settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(self.seed, nil, nil)
 	clientId := connect.Id(profile.Providers[0].ClientId)
 	token := providerRegistrationTestToken(t, clientId.String(), "retained-whole-work")
-	device, err := newProviderDeviceLocal(ctx, space, strategy, token, "synthetic original-work provider", settings, profile, "direct", clientId, original)
+	device, err := newProviderDeviceLocal(ctx, space, strategy, token, "synthetic original-work provider", settings, profile, "direct", clientId, nil, original)
 	if err != nil {
 		cancel()
 		space.Close()
