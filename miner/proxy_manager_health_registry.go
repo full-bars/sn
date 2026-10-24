@@ -6,6 +6,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // proxy_manager_health_registry.go replaces the P1(a) no-op health seams with
@@ -346,7 +348,51 @@ func buildProxyHealthReport(state *ProxyState, now time.Time) proxyHealthReport 
 	for key, cur := range current {
 		proxyHealthRegistrySeen[key] = cur.bucket
 	}
+	// The traffic table is a per-identity snapshot of the same counters the
+	// provide loop publishes for the earnings recorder: one object per running
+	// slot, published under connect.ProxySettings.Key() and withdrawn when the
+	// slot exits. Filling it here is what makes proxy_traffic.state describe
+	// real traffic instead of an empty table.
+	report.Bandwidth = proxyTrafficBandwidth(state.Proxies, now)
 	return report
+}
+
+// proxyTrafficBandwidth maps the live per-identity counters onto the report's
+// v33-shaped traffic rows. Only identities the run has actually published
+// appear: a proxy held out of this start, or one whose slot has exited, has no
+// live counter and no row to show. The counters are copied, not aliased, so
+// the renderer reads one coherent snapshot while the relay keeps counting.
+func proxyTrafficBandwidth(proxies map[string]ProxyEntry, now time.Time) map[string]*proxyBandwidth {
+	live := proxyEarnBandwidthSnapshot()
+	if len(live) == 0 || len(proxies) == 0 {
+		return map[string]*proxyBandwidth{}
+	}
+	out := make(map[string]*proxyBandwidth, len(live))
+	for key, entry := range proxies {
+		bw := live[key]
+		if bw == nil {
+			continue
+		}
+		row := &proxyBandwidth{}
+		row.TotalRx.Store(bw.TotalRx.Load())
+		row.TotalTx.Store(bw.TotalTx.Load())
+		row.BillableRx.Store(bw.BillableRx.Load())
+		row.BillableTx.Store(bw.BillableTx.Load())
+		row.Clients.Store(bw.Clients.Load())
+		row.LatencyNs.Store(bw.LatencyNs.Load())
+		row.SocksLatencyNs.Store(bw.SocksLatencyNs.Load())
+		// Preserve the live session age, not just the counters: the traffic
+		// report's MAX AGE is the continuous presence window the relay has.
+		if age := bw.MaxAge(); 0 < age {
+			row.AddPresence(now.Add(-age))
+		}
+		// v33's traffic row names the proxy's address, not its full display
+		// identity: the table has a separate PROXY ID column for the account,
+		// and two accounts behind one gateway are still two rows.
+		address, _ := connect.SplitProxyKey(key)
+		out[fmt.Sprintf("proxy[%d] (%s)", entry.ID, address)] = row
+	}
+	return out
 }
 
 var (
