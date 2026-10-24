@@ -12,19 +12,16 @@ import (
 // benchmark, every other profile and a process whose logs already live in RAM
 // get the free-space check alone, because neither would act on a speed result.
 //
-// The audit runs in its own goroutine: the work is bounded (at most 16 MiB and
-// 3 s, plus a short grace for a write stuck in the kernel), but startup must not
-// wait even for that. The result lands in the state dir as disk-bench.json,
+// The audit runs in its own goroutine: the work is bounded by time (3 s, plus a
+// short grace for a write stuck in the kernel) with a 256 MiB ceiling that only a
+// very fast device reaches, and startup must not wait even for that. The result lands in the state dir as disk-bench.json,
 // which is what metricsSeamDiskBench reads on the next scrape, so /metrics
 // reports the audit without ever triggering it.
 //
-// MERGE HOOK (one line, owned by another change): miner/run.go must call
-// startStartupDiskAudit() once on the long-running provide path, immediately
-// after the providerRunSettings value is built and before settings.run runs the
-// providers. That file is held by an open PR, so the call is not part of this
-// branch; until it lands, nothing in a live process starts the audit and the
-// three urnet_disk_* families only appear when a result was recorded by another
-// run (the relay's own audit writes the same state-dir file).
+// It is started once from the provide path (miner/run.go, immediately after the
+// providerRunSettings value is built and before settings.run runs the
+// providers), which is the point where the state directory is known and startup
+// has not yet begun serving.
 var startupDiskAuditOnce sync.Once
 
 // startStartupDiskAudit starts the startup disk audit at most once per process,
@@ -46,7 +43,7 @@ func startStartupDiskAudit() {
 // startupDiskBenchmarkWanted reports whether the write benchmark may run. Only
 // the auto profile acts on its result, and a process whose logs are already in
 // RAM cannot change its mind: initGlog ran before provide(), so on lowmem, eco
-// and URNETWORK_RAMLOGS=1 the 16 MiB write would buy nothing.
+// and URNETWORK_RAMLOGS=1 the write would buy nothing.
 func startupDiskBenchmarkWanted() bool {
 	return profileBenchmarksDisk(effectiveProfile()) && !ramlogsRequested()
 }
