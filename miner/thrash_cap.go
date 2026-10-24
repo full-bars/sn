@@ -17,9 +17,12 @@ package miner
 // same as oom_cap.json and every other miner provider file.
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -29,6 +32,12 @@ const (
 	trimCapThrash = "thrashcap"
 
 	thrashCapFileName = "thrash_cap.json"
+
+	// thrashExitMarkerPrefix names the one-shot marker the thrash exit writes
+	// immediately before it exits 75: thrash_exit.<pid> beside thrash_cap.json.
+	// The pid in the name is the whole point — it binds the marker to the
+	// process that asked for the restart, not to a wall-clock instant.
+	thrashExitMarkerPrefix = "thrash_exit."
 
 	// thrashCapHold is how long an escalation's cap survives without a new
 	// escalation.
@@ -157,6 +166,13 @@ func thrashCapForNextStart(running int) int {
 // restarts ring with this escape appended, and a fresh expiry. Errors are
 // returned so the caller can log; the escalation itself never depends on the
 // write succeeding (the caller refuses the exit when it fails).
+//
+// This record is the anti-loop memory, NOT the exit-reason marker: the liveness
+// stall path writes it mid-life, and a persist goroutine that outlives its
+// timeout still lands after the watchdog refused to exit, so its presence says
+// nothing about how this process died. The exit-reason marker is the one-shot
+// thrash exit marker below (see requestThrashExit), which is written only at
+// the exit and is keyed by pid.
 func recordThrashEscalation(cap int, now time.Time) error {
 	path, err := thrashCapPath()
 	if err != nil {
@@ -187,6 +203,94 @@ func recordThrashEscalation(cap int, now time.Time) error {
 		Restarts:    append(recent, now.Unix()),
 	}
 	return oomWriteJSON(path, st)
+}
+
+// thrashExitMarkerPath is this file's one-shot exit marker for one pid:
+// thrash_exit.<pid>, in the same state directory as thrash_cap.json.
+func thrashExitMarkerPath(dir string, pid int) string {
+	return filepath.Join(dir, thrashExitMarkerPrefix+strconv.Itoa(pid))
+}
+
+// writeThrashExitMarker leaves thrash_exit.<this pid> in the state directory.
+func writeThrashExitMarker() error {
+	dir, err := oomCapDir()
+	if err != nil {
+		return err
+	}
+	// the directory must exist before the write, same as the record's
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	pid := os.Getpid()
+	return os.WriteFile(thrashExitMarkerPath(dir, pid), []byte(strconv.Itoa(pid)+"\n"), 0o600)
+}
+
+// requestThrashExit marks this process's imminent exit with the thrash code and
+// must be called immediately before the exit function, on every path that
+// exits 75 for a planned restart (the swap-thrash escalation and the liveness
+// self-exit).
+//
+// Exit 75 has two producers — this planned restart and the network sign-in
+// quarantine (run.go providerQuarantinedExitCode) — and a supervising
+// `provide --all-operators` has to name the right one for the operator. The
+// marker is keyed by this pid and written only here, at the exit, so it cannot
+// be produced by anything that keeps running: thrash_cap.json is written
+// mid-life by the liveness stall path and by a persist goroutine that can land
+// after its timeout without the exit being taken, and comparing its mtime with
+// the child's start time therefore reads a later genuine quarantine as a
+// thrash restart. A marker failure is logged to stderr and never blocks the
+// exit: the exit code must still be taken, and the cost is the wrong log line,
+// not a wrong action. The write itself is unbounded, so every production
+// caller uses requestThrashExitBounded below, which bounds it with
+// swapThrashPersistTimeout: a state directory hung in swap I/O must not keep
+// the exit from being taken.
+func requestThrashExit() {
+	if err := writeThrashExitMarker(); err != nil {
+		swapThrashExitNotef("[thrash] could not write the exit marker in the state directory (%v); a supervising `provide --all-operators` will read this planned restart as a network sign-in quarantine", err)
+	}
+}
+
+// thrashExitMarkerWriteFn writes the one-shot marker; a test seam for
+// requestThrashExitBounded (the real write is writeThrashExitMarker).
+var thrashExitMarkerWriteFn = writeThrashExitMarker
+
+// requestThrashExitBounded writes the exit marker with the same bounded wait as
+// the anti-loop record, and returns the error for the caller to log.
+//
+// writeThrashExitMarker runs MkdirAll and WriteFile with no limit, and both
+// callers run it immediately before the exit it explains. On a state directory
+// hung in swap I/O — the exact condition that fires the watchdog — the
+// unbounded write would keep the exit from ever being taken, so the node could
+// not restart. The restart contract is the exit status, not the marker: a
+// timeout here is returned for the caller to log and the exit proceeds.
+func requestThrashExitBounded() error {
+	done := make(chan error, 1)
+	write := thrashExitMarkerWriteFn // read here, not in the goroutine
+	go func() { done <- write() }()
+	select {
+	case err := <-done:
+		return err
+	case <-time.After(swapThrashPersistTimeout):
+		return errors.New("timed out writing the exit marker")
+	}
+}
+
+// clearThrashExitMarkers removes every exit marker in dir. A marker is
+// one-shot: the supervisor consumes it when it sees the exit, so one still here
+// belongs to a child whose exit nobody saw (the supervisor was killed first).
+// Clearing them before the next child runs keeps a reused pid from inheriting
+// another process's planned restart.
+func clearThrashExitMarkers(dir string) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasPrefix(entry.Name(), thrashExitMarkerPrefix) {
+			continue
+		}
+		_ = os.Remove(filepath.Join(dir, entry.Name()))
+	}
 }
 
 // undoThrashEscalation removes the ring entry for now and, if the cap on disk is

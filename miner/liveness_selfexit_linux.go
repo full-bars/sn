@@ -96,7 +96,20 @@ func runSelfExitLivenessWatchdog(ctx context.Context, gate func(episodeStart boo
 			continue
 		}
 		acting = true
-		critLog("🚨 [liveness] no progress for %s: exiting %d so the supervisor restarts the provider\n", livenessStaleAfter, swapThrashExitCode)
+		// Mark the exit for this pid immediately before taking it: 75 is
+		// shared with the network sign-in quarantine, and the restart
+		// record written above cannot tell the two apart because it is
+		// also written mid-life (this path keeps running when a stall
+		// resolves). See miner/operators_supervisor.go
+		// operatorChildThrashExited. The reason line goes to stderr only
+		// (swapThrashExitNotef) and the marker write is bounded: the state
+		// directory this loop is reacting to must not be able to stop the
+		// exit, and a critLog here would fsync events.log in exactly that
+		// directory.
+		swapThrashExitNotef("🚨 [liveness] no progress for %s: exiting %d so the supervisor restarts the provider", livenessStaleAfter, swapThrashExitCode)
+		if err := requestThrashExitBounded(); err != nil {
+			swapThrashExitNotef("[liveness] could not write the exit marker (%v); a supervising `provide --all-operators` will report this restart as a rejected sign-in", err)
+		}
 		swapThrashExitFn(swapThrashExitCode)
 	}
 }

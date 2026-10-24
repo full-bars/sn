@@ -114,6 +114,49 @@ func TestLivenessSelfExitRefusedWithoutSupervisor(t *testing.T) {
 	assertNoSelfExit(t, exited, func(ctx context.Context) { runSdWatchdog(ctx, livenessGate) })
 }
 
+// The exit announcement used to go through critLog, which appends to and fsyncs
+// events.log in the state directory whose hang this loop is reacting to: a
+// marker write that timed out then still never reached the exit. Here the marker
+// hangs and the stderr sink both records and hangs, so the exit can only be
+// reached if the announcement left events.log for a bounded stderr write.
+func TestLivenessSelfExitExitsWhenTheLogPathHangs(t *testing.T) {
+	exited := livenessSelfExitRig(t, map[string]string{"URNETWORK_INIT": "openrc"})
+	t.Setenv("URNETWORK_SELF_HEAL", "1")
+
+	release := make(chan struct{})
+	notes := make(chan string, 4)
+	prevMarker, prevStderr := thrashExitMarkerWriteFn, swapThrashStderrWriteFn
+	prevPersist, prevNote := swapThrashPersistTimeout, swapThrashExitNoteTimeout
+	t.Cleanup(func() {
+		close(release)
+		thrashExitMarkerWriteFn, swapThrashStderrWriteFn = prevMarker, prevStderr
+		swapThrashPersistTimeout, swapThrashExitNoteTimeout = prevPersist, prevNote
+	})
+	thrashExitMarkerWriteFn = func() error { <-release; return nil }
+	swapThrashStderrWriteFn = func(p []byte) (int, error) {
+		notes <- string(p)
+		<-release
+		return len(p), nil
+	}
+	swapThrashPersistTimeout = 25 * time.Millisecond
+	swapThrashExitNoteTimeout = 25 * time.Millisecond
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	go runSelfExitLivenessWatchdog(ctx, livenessGate)
+
+	waitSelfExit(t, exited, "a stalled miner whose exit log path hangs")
+
+	select {
+	case line := <-notes:
+		if !strings.Contains(line, "no progress") {
+			t.Fatalf("the exit announcement must reach stderr, got %q", line)
+		}
+	default:
+		t.Fatal("the exit announcement did not go to stderr, so it went to events.log in the hung state directory")
+	}
+}
+
 // Self-heal off: the miner keeps running and leaves no restart entry.
 func TestLivenessSelfExitRespectsTheSelfHealSwitch(t *testing.T) {
 	exited := livenessSelfExitRig(t, map[string]string{"URNETWORK_CONTAINER": "1"})

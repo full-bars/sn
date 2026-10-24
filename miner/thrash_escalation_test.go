@@ -353,3 +353,30 @@ func TestThrashCapSizesAndExpires(t *testing.T) {
 		t.Fatalf("a new escalation must re-arm the cap, got %d ok=%v", cap, ok)
 	}
 }
+
+// The marker write runs immediately before the exit, so it is bounded by the
+// same timeout as the anti-loop record: a state directory hung in swap I/O must
+// not keep the exit from being taken, or the supervised miner never restarts. A
+// timeout is returned for the caller to log, and the exit proceeds.
+func TestRequestThrashExitBoundedTimesOut(t *testing.T) {
+	prevWrite, prevTimeout := thrashExitMarkerWriteFn, swapThrashPersistTimeout
+	t.Cleanup(func() { thrashExitMarkerWriteFn, swapThrashPersistTimeout = prevWrite, prevTimeout })
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release) })
+	thrashExitMarkerWriteFn = func() error { <-release; return nil }
+	swapThrashPersistTimeout = 50 * time.Millisecond
+
+	start := time.Now()
+	err := requestThrashExitBounded()
+	if err == nil {
+		t.Fatal("a marker write that never returns must time out")
+	}
+	if took := time.Since(start); took > 2*time.Second {
+		t.Fatalf("the marker write was not bounded: took %v", took)
+	}
+
+	thrashExitMarkerWriteFn = func() error { return nil }
+	if err := requestThrashExitBounded(); err != nil {
+		t.Fatalf("a healthy marker write must pass: %v", err)
+	}
+}

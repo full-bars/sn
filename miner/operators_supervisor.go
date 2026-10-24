@@ -590,6 +590,12 @@ func operatorChildEnv(environ []string, directory string) []string {
 // A child that cannot start counts as one that exited at once.
 func (self *operatorSupervisor) start(domain string, state *operatorState, spec operatorChildSpec, now time.Time) {
 	directory := operatorlist.DomainStateDir(self.settings.baseStateDir, domain)
+	// A marker left in this directory belongs to the child that is gone: an
+	// exit marker is written only at an exit and consumed when the supervisor
+	// sees it, so anything still here means the supervisor never saw that
+	// exit. Clear it before the next child runs, so a reused pid cannot
+	// inherit another process's planned restart.
+	clearThrashExitMarkers(directory)
 	child, err := func() (operatorChildProcess, error) {
 		// a child without its proxies would provide from this host directly
 		if err := copyOperatorProxyFile(self.settings.baseStateDir, directory); err != nil {
@@ -636,6 +642,10 @@ func (self *operatorSupervisor) childExited(exit operatorChildExit) {
 		return
 	}
 	state.child = nil
+	// The thrash exit marker is pid-bound and one-shot: consume it before any
+	// branch, so no exit path can leave it behind for a later child.
+	directory := operatorlist.DomainStateDir(self.settings.baseStateDir, exit.domain)
+	thrashExited := operatorChildThrashExited(directory, exit.child.Pid())
 	if state.stopping {
 		state.stopping = false
 		state.killed = false
@@ -645,11 +655,13 @@ func (self *operatorSupervisor) childExited(exit operatorChildExit) {
 	if _, err := os.Stat(operatorJwtPath(self.settings.baseStateDir, exit.domain)); errors.Is(err, os.ErrNotExist) {
 		// the child set a rejected network sign-in aside, or the jwt went
 		// away: the credential check decides at once, without the crash
-		// backoff, and signs in again with --auto-register
+		// backoff, and signs in again with --auto-register. The cause only
+		// selects which of the two lines below is printed: the state changes
+		// and the forced credential check are the same either way.
 		state.credentialed = false
 		state.restartAt = time.Time{}
 		state.authCheckAt = time.Time{}
-		if operatorChildQuarantined(exit.err) {
+		if operatorChildQuarantined(exit.err, thrashExited) {
 			fmt.Fprintf(self.log, "operator %s: provider (pid %d) set its rejected network sign-in aside; checking its credentials\n", exit.domain, exit.child.Pid())
 		} else {
 			fmt.Fprintf(self.log, "operator %s: provider (pid %d) exited without a network sign-in; checking its credentials\n", exit.domain, exit.child.Pid())
@@ -666,9 +678,46 @@ func (self *operatorSupervisor) childExited(exit operatorChildExit) {
 	fmt.Fprintf(self.log, "operator %s: provider (pid %d) %s; restarting in %s\n", exit.domain, exit.child.Pid(), cause, delay)
 }
 
+// operatorChildThrashExited consumes the one-shot exit marker the thrash
+// producer writes immediately before it exits 75 (miner/thrash_cap.go
+// requestThrashExit): thrash_exit.<pid> in the child's state directory, named
+// for the exiting pid. Exit status 75 is shared by two planned stops: the
+// network sign-in quarantine (run.go providerQuarantinedExitCode) and the
+// swap-thrash / liveness watchdog's supervised restart. The marker is evidence
+// only because it carries THIS child's pid and is written only at the exit:
+// nothing that happened while the child kept running can explain its exit. The
+// thrash restart record (thrash_cap.json) cannot stand in for it — the liveness
+// stall path writes that record mid-life, and a persist goroutine that outlives
+// its timeout lands after the watchdog refused to exit, so its mtime against
+// the child's start time reads a later genuine quarantine as a thrash restart.
+//
+// The marker is consumed here, not merely read: it is one-shot, and a leftover
+// could only confuse a later child that reuses the pid.
+func operatorChildThrashExited(stateDir string, pid int) bool {
+	if stateDir == "" || pid <= 0 {
+		return false
+	}
+	path := thrashExitMarkerPath(stateDir, pid)
+	if _, err := os.Stat(path); err != nil {
+		return false
+	}
+	_ = os.Remove(path)
+	return true
+}
+
 // operatorChildQuarantined reports a child that exited because it set its
-// rejected network sign-in aside (providerQuarantinedExitCode).
-func operatorChildQuarantined(err error) bool {
+// rejected network sign-in aside (providerQuarantinedExitCode). A 75 the thrash
+// path marked with its exit marker is a planned memory restart, not a
+// quarantine: the child then has no JWT for the ordinary reason that it exited
+// before signing in again.
+//
+// The choice selects the log line only. Both branches make the same state
+// changes (the credential check is forced either way) and the next step is
+// decided by the set-aside token on disk, not by this answer.
+func operatorChildQuarantined(err error, thrashExited bool) bool {
+	if thrashExited {
+		return false
+	}
 	var exited interface{ ExitCode() int }
 	return errors.As(err, &exited) && exited.ExitCode() == providerQuarantinedExitCode
 }
