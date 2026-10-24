@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // metrics_traffic.go emits the v33 connect handler's traffic families from

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // Tests for metrics_profit.go: the port of the provider's [profit] line and the

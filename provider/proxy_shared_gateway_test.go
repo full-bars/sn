@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // A shared-gateway proxy provider hands one host:port to several accounts; the

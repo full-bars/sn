@@ -19,7 +19,7 @@ import (
 
 	"github.com/urnetwork/connect"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // auditParkPool is a reloader whose slots are recorded instead of served.

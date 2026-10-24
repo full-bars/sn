@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // proxy_manager_earnings_loop.go is the recording half of the 3.23-fix v33

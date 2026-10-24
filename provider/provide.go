@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/docopt/docopt-go"
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/connect/protocol"
 )

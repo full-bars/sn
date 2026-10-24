@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // perProxyEarnTracker tracks, per proxy address, the last time the proxy

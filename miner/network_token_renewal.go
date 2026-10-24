@@ -26,7 +26,7 @@ import (
 	"github.com/urnetwork/sdk"
 
 	"github.com/urfoundation/sn/clientauth"
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 const (

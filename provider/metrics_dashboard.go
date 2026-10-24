@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // The families below are the ones the shipped Grafana dashboards and alert

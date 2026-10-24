@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // registerProxyV2026 stubs for connect.RegisterProxy removed in v2026.

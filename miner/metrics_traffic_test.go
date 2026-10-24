@@ -8,7 +8,7 @@ import (
 	"github.com/urnetwork/connect"
 	"golang.org/x/net/proxy"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // TestControlIdentityKeyedBandwidthUsesTheIdentityIndex pins the key contract

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // Tests for the billable-vs-settled exposition: the two families must carry

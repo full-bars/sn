@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // lifetime_metrics.go ports the 3.23-fix v33 provider's all-time counter store

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 func TestCapProxyList(t *testing.T) {

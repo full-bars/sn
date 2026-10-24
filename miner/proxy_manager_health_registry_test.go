@@ -12,7 +12,7 @@ import (
 	"github.com/urnetwork/connect"
 	"golang.org/x/net/proxy"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // Tests for the fork-only health registry that replaces the P1(a) no-op

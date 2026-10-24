@@ -13,7 +13,7 @@ import (
 	"github.com/urnetwork/connect"
 	"golang.org/x/net/proxy"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // T-07 tests: the AIMD pool controller's ceiling and step math, the URL shed

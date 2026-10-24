@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 func dashboardTestBandwidth(rx, tx, billRx, billTx uint64, clients int64) *bandwidth.ProxyBandwidth {

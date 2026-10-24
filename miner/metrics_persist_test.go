@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // metrics_persist_test.go covers the counter store's write policy: an idle

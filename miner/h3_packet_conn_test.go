@@ -9,7 +9,7 @@ import (
 
 	"github.com/urnetwork/connect"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // h3_packet_conn_test.go pins the proxied-identity H3 endpoint port

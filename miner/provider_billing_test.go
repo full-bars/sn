@@ -8,7 +8,7 @@ import (
 
 	"github.com/urnetwork/sdk"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // Tests for provider_billing.go: the sampler that keeps a slot's billable and

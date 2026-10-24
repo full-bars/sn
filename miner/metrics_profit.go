@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // metrics_profit.go ports the profit / billable-rate surface of the 3.23-fix

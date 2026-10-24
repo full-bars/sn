@@ -23,7 +23,7 @@ package provider
 //   - api.NetworkGetRankingSync / connect.NetworkRankingResult from the fork
 //     extension are absent in v2026 upstream connect; replaced with local
 //     networkGetRankingSync using connect.HttpGetWithStrategy.
-// - Bandwidth counting imported from "github.com/urfoundation/sn/provider/bandwidth".
+// - Bandwidth counting imported from "github.com/urfoundation/sn/miner/bandwidth".
 // - State paths resolved via providerStatePath / providerStateDir honoring
 //   the URNETWORK_STATE_DIR environment variable and ~/.urnetwork directory.
 // - SNProvider struct and lifecycle added to coordinate proxy registration,
@@ -60,8 +60,8 @@ import (
 
 	"github.com/urfoundation/sn/hotkeywallet"
 	"github.com/urfoundation/sn/merkle"
+	"github.com/urfoundation/sn/miner/bandwidth"
 	"github.com/urfoundation/sn/miner/onchain"
-	"github.com/urfoundation/sn/provider/bandwidth"
 	"github.com/urfoundation/sn/ss58"
 	"github.com/urfoundation/sn/stabi"
 )

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // Tests for the per-proxy earn tracker, ported from the 3.23-fix v33

@@ -13,7 +13,7 @@ import (
 
 	"github.com/urnetwork/connect"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // fakeSocks5 is a minimal SOCKS5 server that speaks UDP ASSOCIATE, with a real

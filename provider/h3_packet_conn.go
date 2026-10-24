@@ -8,7 +8,7 @@ import (
 
 	"github.com/urnetwork/connect"
 
-	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urfoundation/sn/miner/bandwidth"
 )
 
 // newH3PacketConnFactory returns the PlatformTransportSettings.H3PacketConnFactory
