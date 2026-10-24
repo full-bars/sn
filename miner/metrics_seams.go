@@ -15,7 +15,9 @@ import (
 //
 //   - metricsSeamLifetime: lifetime_metrics.go (the persisted all-time store);
 //   - metricsSeamLoops: loop_supervisor.go (the supervised-loop registry);
-//   - metricsSeamDiskBench: disk_bench_metrics.go (the startup disk audit).
+//   - metricsSeamDiskBench: disk_bench_metrics.go (the startup disk audit);
+//   - metricsSeamContracts: contract_metrics.go (the provider contract feed,
+//     acquired only -- see the seam's comment for why denials are absent).
 //
 // Every other hook below is UNSUPPORTED, not merely pending. Each comment says
 // why, and the reason is one of two kinds: the data lives inside the pinned
@@ -33,13 +35,14 @@ var (
 	// read. urnet_sessions_* stays absent.
 	metricsSeamSessions func() *seamSessions
 
-	// UNSUPPORTED: v33 tracks contract outcomes per proxy inside connect. The
-	// pinned fork exports no such counter and the miner keeps no equivalent
-	// (baseline_sampler.go omits contract counts for the same reason). The
-	// all-time totals in lifetime_metrics.go are not a substitute: reporting
-	// them as urnet_contracts_total would present a persisted lifetime figure
-	// as this process's counter.
-	metricsSeamContracts func() (acquired, denied int64, ok bool)
+	// Wired by contract_metrics.go's init: this process's acquired contracts,
+	// counted from the provider contract feed the SDK publishes per slot. The
+	// miner owns no connect client, so it cannot see a per-contract status the
+	// way the provider does (provider/contract_metrics.go), and a refusal never
+	// reaches the stats feed it can see. seamContracts.DeniedKnown is therefore
+	// always false and the denied series stays absent: publishing a zero there
+	// would read as "nothing was refused", which the miner cannot verify.
+	metricsSeamContracts func() *seamContracts
 
 	// Wired by lifetime_metrics.go's init: the persisted all-time store.
 	metricsSeamLifetime func() *seamLifetime
@@ -108,6 +111,16 @@ type seamSessions struct {
 	PQELifetime, ClasLifetime   int64
 	PQEHour, PQEDay, PQEWeek    int64
 	ClasHour, ClasDay, ClasWeek int64
+}
+
+// seamContracts is one process-lifetime contract outcome reading.
+type seamContracts struct {
+	Acquired int64
+	// Denied is this process's refused contracts. DeniedKnown is false when the
+	// process has no source for refusals, in which case Denied is not a reading
+	// and must not be published.
+	Denied      int64
+	DeniedKnown bool
 }
 
 // seamLifetime is one persisted all-time reading.

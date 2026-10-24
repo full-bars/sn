@@ -207,7 +207,7 @@ func resetLifetimeFoldState(t *testing.T) {
 }
 
 // withLifetimeSeams installs the session and contract seams for a test.
-func withLifetimeSeams(t *testing.T, sessions func() *seamSessions, contracts func() (int64, int64, bool)) {
+func withLifetimeSeams(t *testing.T, sessions func() *seamSessions, contracts func() *seamContracts) {
 	t.Helper()
 	prevSessions, prevContracts := metricsSeamSessions, metricsSeamContracts
 	metricsSeamSessions, metricsSeamContracts = sessions, contracts
@@ -234,7 +234,9 @@ func TestLifetimeCollectorRestartDoesNotDoubleFold(t *testing.T) {
 		func() *seamSessions {
 			return &seamSessions{PQELifetime: pqe.Load(), ClasLifetime: clas.Load()}
 		},
-		func() (int64, int64, bool) { return up.Load(), deny.Load(), true },
+		func() *seamContracts {
+			return &seamContracts{Acquired: up.Load(), Denied: deny.Load(), DeniedKnown: true}
+		},
 	)
 
 	now := time.Now()
