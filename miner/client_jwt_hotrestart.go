@@ -301,10 +301,10 @@ type clientJWTProvideConfig struct {
 	ClientStrategySettings *connect.ClientStrategySettings
 	// ClientStrategy, when set, is the slot's own strategy (built from
 	// ClientStrategySettings) and the renewal runs on it instead of building a
-	// throwaway one. That is what makes the smart dialer's background probes
-	// (smart_dialer_probe.go) count for the renewal: they measure that
-	// strategy's dialers, and a throwaway per attempt would measure nothing
-	// that outlives the call.
+	// throwaway one. That is what makes the smart dialer's path probe
+	// (smart_dialer_scheduler.go) count for the renewal: the round measures
+	// the strategy that carries this dial, and a throwaway per attempt would
+	// measure nothing that outlives the call.
 	ClientStrategy *connect.ClientStrategy
 	// Mint mints a fresh client identity. Required.
 	Mint func(context.Context) (string, connect.Id, error)

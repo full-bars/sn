@@ -41,3 +41,19 @@ func TestSmartDialerKeyIsWiredIntoTheCLI(t *testing.T) {
 		t.Error("setKeyHelps has no smart-dialer line")
 	}
 }
+
+// `urnet-tools smart-dialer` must not tell an operator to restart. The key is
+// live (miner/control_socket.go classifies it so, and the miner's scheduler
+// makes the live case real), so help text that says "takes effect on the next
+// start" is the CLI promising a worse contract than the process keeps.
+func TestSmartDialerHelpDoesNotClaimARestartIsNeeded(t *testing.T) {
+	long := strings.ToLower(newSmartDialerCmd().Long)
+	for _, bad := range []string{"restart is required", "next start", "next restart"} {
+		if strings.Contains(long, bad) {
+			t.Fatalf("smart-dialer help still says %q: %s", bad, long)
+		}
+	}
+	if !strings.Contains(long, "immediately") {
+		t.Fatalf("smart-dialer help does not say the change applies immediately: %s", long)
+	}
+}
