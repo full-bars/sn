@@ -6,7 +6,7 @@ package miner
 // helpers.
 //
 // Port adaptations (the pinned full-bars/connect does not export the v33
-// connect registries, and the miner's control socket / hot restart are P2):
+// connect registries):
 //
 //   - the LIVE health registry is the fork-local one (proxyLiveHealthSnapshot,
 //     proxy_manager_health_registry.go);
@@ -422,7 +422,7 @@ func proxyAuditActEnabled(startupProxyAudit bool) bool {
 // hotRestartEnabled is v33's hot-restart switch (main.go hotRestartEnabled:
 // the "hot_restart" control key, then URNETWORK_HOT_RESTART, default on).
 // The resolution lives beside the control socket (resolveHotRestartEnabled,
-// control_socket.go, P2); this indirection keeps the value overridable in
+// control_socket.go); this indirection keeps the value overridable in
 // tests that exercise the audit's acting/observing split.
 var hotRestartEnabled = resolveHotRestartEnabled
 

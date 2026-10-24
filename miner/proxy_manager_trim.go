@@ -244,9 +244,9 @@ func startupTrimSelection(all []*connect.ProxySettings, cap int, state map[strin
 		k := p.Key()
 		keys = append(keys, k)
 		// Port hardening: v33 always passes a real earnings function (its own
-		// tests use a no-op), but the miner's earnings store is P1(c2), so a
-		// caller without one passes nil. Treat nil as "no earnings" rather
-		// than panicking on the first key.
+		// tests use a no-op), but a caller without the earnings store (tests,
+		// or a path that has not loaded it) passes nil. Treat nil as "no
+		// earnings" rather than panicking on the first key.
 		if earnings != nil {
 			if e := earnings(k); e > 0 {
 				traffic[k] = uint64(e)

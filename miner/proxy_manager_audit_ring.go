@@ -8,11 +8,11 @@ package miner
 //
 // The ring records one entry per control-socket operation and one per process
 // lifecycle event, keeps the newest 1000 in memory and persists them to
-// <state>/audit.json through a checksum envelope. The miner's control socket is
-// P2, so P1(c) wires the ring into the manager lifecycle (initAuditRing +
-// recordProcessStart at start, forceAuditPersist at stop) and leaves
-// recordAndPersist for P2's command handlers; the hotswap helpers are the
-// seams P2's hot restart calls at the handoff commit point.
+// <state>/audit.json through a checksum envelope. P1(c) wires the ring into the
+// manager lifecycle (initAuditRing + recordProcessStart at start,
+// forceAuditPersist at stop); recordAndPersist serves the control socket's
+// command handlers, and the hotswap helpers are the seams the hot restart
+// calls at the handoff commit point.
 
 import (
 	"context"
@@ -433,8 +433,8 @@ func formatAuditSummary(e CommandAudit) string {
 // --- hotswap handoff seams (ported from the same tree's hotswap.go) ---------
 
 // HotSwapDrainTimeout is how long the hotswap parent drains after the handoff.
-// The miner's hot restart is P2; the constant exists so the ring reconcile
-// below mirrors the v33 wait.
+// The miner's hot restart uses it; the ring reconcile below mirrors the v33
+// wait with the same value.
 const HotSwapDrainTimeout = 30 * time.Second
 
 // quiesceMu guards the control-socket quiesce hook, written from the trigger,

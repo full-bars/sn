@@ -19,13 +19,10 @@ import (
 // addresses to the cache. The persisted target is written from what the cut
 // really cancelled, never from what the AIMD step asked for (F-03).
 //
-// The pressure MONITOR itself (CPU/IO sampling, the GC governor, the thrash
-// watchdog) is still P2: nothing writes the pressure atomics yet, so
-// currentPressure() reports calm and every pressure-driven actuator
-// degenerates to its calm-box behavior exactly as it would on an idle
-// 3.23-fix box. The controller is deliberately complete against that seam:
-// when the monitor lands it starts writing setPressure/setPressureNoCPU and
-// the shrink path activates with no further porting.
+// The pressure MONITOR is pressure_monitor.go: it samples the host and writes
+// setPressure/setPressureNoCPU, so the actuators and the controller below read
+// a live score. Two separate v33 actuators are not ported and are not part of
+// the score: the GC governor and the thrash watchdog's freeze rung.
 //
 // The ported tests pin the ramp shapes, the ceiling behavior and the
 // controller's persistence.
@@ -54,19 +51,17 @@ func normalizeRamp(v, lo, hi float64) float64 {
 }
 
 // globalPressure is the actuating normalized pressure (0..1) every self-heal
-// actuator reads. The sampler that produces it is the pressure monitor, which
-// is P2; until it is wired nothing writes the atomic, so currentPressure()
-// reports calm.
+// actuator reads. pressure_monitor.go writes it on every sample; before the
+// first sample currentPressure() reports calm.
 var globalPressure atomic.Uint64
 
 // globalPressureNoCPU is the same score with the CPU component excluded. The
 // pool controller reads it outside the shrink regime so a busy core cannot pin
-// the pool below its ceiling forever (see runPoolController). No writer until
-// the monitor lands.
+// the pool below its ceiling forever (see runPoolController).
 var globalPressureNoCPU atomic.Uint64
 
-// currentPressure is this box's normalized pressure (0..1). P2 installs the
-// sampler behind setPressure; with no writer it stays calm.
+// currentPressure is this box's normalized pressure (0..1), as last published
+// by the monitor behind setPressure; it stays calm until the first sample.
 func currentPressure() float64 { return math.Float64frombits(globalPressure.Load()) }
 
 // setPressure is the pressure monitor's write seam.
@@ -368,9 +363,10 @@ func selectURLProxiesToShed(state *ProxyState, traffic map[string]uint64, earnin
 // down for work that never happened (F-03).
 //
 // Port adaptations from v33: the pressure monitor's grow-suppression guard
-// (gcTightening / thrashFreeze) is not ported because the GC governor and the
-// thrash watchdog are P2 - when they land, the guard from resource_pressure.go
-// is restored here; and nowFn() is the wall clock.
+// (gcTightening / thrashFreeze) is not ported because neither the GC governor
+// nor the watchdog's freeze rung is implemented in the miner; the guard from
+// resource_pressure.go can be restored when both exist. nowFn() is the wall
+// clock.
 func runPoolController(ctx context.Context, configuredMax int, selfHealEnabled bool) {
 	var highSamples int
 	var ceilingMemory aimdCeilingState

@@ -1039,7 +1039,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	defer func() { returnErr = errors.Join(returnErr, status.close()) }()
 
 	// The control socket is the daemon surface the unmodified urnet-tools and
-	// urnet-docker clients drive (P2). It starts beside the status server,
+	// urnet-docker clients drive. It starts beside the status server,
 	// before any provider child runs, so a command that arrives during startup
 	// is served. The control state is the miner's record of every socket-set
 	// setting; the queue urnet-tools wrote while the provider was stopped is

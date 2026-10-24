@@ -8,10 +8,9 @@ package miner
 // by value: readers never see a half-updated one.
 //
 // Port adaptation: v33's publish also feeds the systemd STATUS= line through
-// setProxyAuditSystemdState (provider/systemd_status.go). The miner has no
-// systemd notifier yet (P2's status surface consumes the same counters), so
-// the port keeps the counters and the setter and leaves the sd_notify delivery
-// to P2.
+// setProxyAuditSystemdState (provider/systemd_status.go). The miner's
+// systemd_status.go reads the same counters, so this setter is the whole
+// handoff.
 
 import (
 	"sort"
@@ -68,15 +67,15 @@ func proxyAuditStatusSnapshot() *proxyAuditStatus {
 
 // proxiesParked and proxyAuditPaused are the systemd STATUS line's proxy audit
 // state (v33 provider/systemd_status.go): the parked count and whether the
-// audit cannot act. P2's status surface reads them.
+// audit cannot act. The status line (systemd_status.go) reads them.
 var (
 	proxiesParked    atomic.Int64
 	proxyAuditPaused atomic.Bool
 )
 
 // setProxyAuditSystemdState records the parked count and the paused note for
-// the status line (v33 refreshes the systemd STATUS= line when either
-// changed; the miner's status surface is P2).
+// the status line (v33 refreshes the systemd STATUS= line when either changed;
+// the miner's systemd_status.go does the same).
 func setProxyAuditSystemdState(parked int, paused bool) {
 	if parked < 0 {
 		parked = 0

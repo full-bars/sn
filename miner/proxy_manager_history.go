@@ -14,9 +14,9 @@ import (
 // This file ports the 3.23-fix v33 provider's per-address proxy bookkeeping:
 // proxy_failure_history.go (lifetime failure/give-up/backoff history),
 // proxy_auth_history.go (the proven-proxy set) and proxy_slow_retry.go
-// (persisted slow-retry state). The miner's P1(a) does not yet drive the auth
-// pipeline from these (P1(b)/P2 wiring), but the state machines are ported in
-// full, with their tests, because the URL give-up/reload paths consume them.
+// (persisted slow-retry state). The miner's auth path drives them through
+// noteProviderAuthFailure/noteProviderAuthSuccess (proxy_manager_auth.go), and
+// the URL give-up/reload paths consume the same state.
 
 // proxyFailureHistory tracks, for the lifetime of this process, how many
 // auth attempts have failed for a given proxy address - across every

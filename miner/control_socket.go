@@ -103,7 +103,7 @@ type controlResponse struct {
 	// "version" command.
 	BuildVersion string `json:"build_version,omitempty"`
 	// MetricsAddrs are the addresses /metrics listens on. Empty when metrics
-	// is off (or, for the miner so far, not implemented).
+	// is off.
 	MetricsAddrs []string `json:"metrics_addrs,omitempty"`
 	// Snapshot is the live node picture, answered by "snapshot".
 	Snapshot *nodeSnapshot `json:"snapshot,omitempty"`
