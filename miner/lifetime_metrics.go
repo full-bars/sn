@@ -29,9 +29,13 @@ type lifetimeMetrics struct {
 	mu sync.Mutex
 
 	// Persistent totals (the authoritative numbers).
-	PQEOpens      uint64 `json:"pqe_opens"`
-	ClasOpens     uint64 `json:"clas_opens"`
-	ContractsUp   uint64 `json:"contracts_acquired"`
+	PQEOpens    uint64 `json:"pqe_opens"`
+	ClasOpens   uint64 `json:"clas_opens"`
+	ContractsUp uint64 `json:"contracts_acquired"`
+	// ContractsDeny is the v33 file's denied slot, kept so a persisted store
+	// round-trips unchanged. The miner has no denial source at all (see
+	// metrics_seams.go), so nothing increments it and nothing publishes it: a
+	// constant zero would read as "nothing was refused".
 	ContractsDeny uint64 `json:"contracts_denied"`
 	ProxiesRecov  uint64 `json:"proxies_recovered"`
 	ProxiesLost   uint64 `json:"proxies_lost"`
@@ -264,13 +268,12 @@ func lifetimeSeamSnapshot() *seamLifetime {
 	if lifetimeStore == nil {
 		return nil
 	}
-	pqe, clas, up, deny, recov, lost, bill := lifetimeStore.Snapshot()
+	pqe, clas, up, _, recov, lost, bill := lifetimeStore.Snapshot()
 	since, approx := lifetimeStore.Started()
 	return &seamLifetime{
 		SessionsPQE:       pqe,
 		SessionsClas:      clas,
 		ContractsAcquired: up,
-		ContractsDenied:   deny,
 		ProxiesRecovered:  recov,
 		ProxiesLost:       lost,
 		BillableBytes:     bill,
@@ -371,21 +374,21 @@ func lifetimeDelta(cur uint64, prev *uint64) uint64 {
 var lifetimeFoldCursor = &lifetimeFoldCursorState{}
 
 type lifetimeFoldCursorState struct {
-	mu                  sync.Mutex
-	set                 bool
-	pqe, clas, up, deny uint64
+	mu            sync.Mutex
+	set           bool
+	pqe, clas, up uint64
 }
 
-func (c *lifetimeFoldCursorState) load() (pqe, clas, up, deny uint64, ok bool) {
+func (c *lifetimeFoldCursorState) load() (pqe, clas, up uint64, ok bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.pqe, c.clas, c.up, c.deny, c.set
+	return c.pqe, c.clas, c.up, c.set
 }
 
-func (c *lifetimeFoldCursorState) store(pqe, clas, up, deny uint64) {
+func (c *lifetimeFoldCursorState) store(pqe, clas, up uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.pqe, c.clas, c.up, c.deny, c.set = pqe, clas, up, deny, true
+	c.pqe, c.clas, c.up, c.set = pqe, clas, up, true
 }
 
 // lifetimeBillableBaselines is the collector's per-identity billable baseline,
@@ -404,16 +407,16 @@ var lifetimeBillableBaselines = newLifetimeBillableFlip()
 // lifetimeFoldCursor; the billable baselines live in lifetimeBillableBaselines,
 // because they belong to the process, not to the run.
 type lifetimeCollector struct {
-	prevPQE, prevClas                                      uint64
-	prevUp, prevDeny                                       uint64
-	prevA1, prevA2, prevA3, prevA4, prevA5, prevA6, prevA7 uint64
-	flip                                                   *lifetimeBillableFlip
+	prevPQE, prevClas                              uint64
+	prevUp                                         uint64
+	prevA1, prevA2, prevA3, prevA5, prevA6, prevA7 uint64
+	flip                                           *lifetimeBillableFlip
 }
 
 func newLifetimeCollector() *lifetimeCollector {
 	c := &lifetimeCollector{flip: lifetimeBillableBaselines}
-	if pqe, clas, up, deny, ok := lifetimeFoldCursor.load(); ok {
-		c.prevPQE, c.prevClas, c.prevUp, c.prevDeny = pqe, clas, up, deny
+	if pqe, clas, up, ok := lifetimeFoldCursor.load(); ok {
+		c.prevPQE, c.prevClas, c.prevUp = pqe, clas, up
 	}
 	return c
 }
@@ -428,16 +431,10 @@ func (c *lifetimeCollector) tick(now time.Time) {
 			clasDelta = lifetimeDelta(nonNegativeUint64(pq.ClasLifetime), &c.prevClas)
 		}
 	}
-	var upDelta, denyDelta uint64
+	var upDelta uint64
 	if metricsSeamContracts != nil {
 		if contracts := metricsSeamContracts(); contracts != nil {
 			upDelta = lifetimeDelta(nonNegativeUint64(contracts.Acquired), &c.prevUp)
-			// A process with no refusal source reports DeniedKnown false; its
-			// zero is not a reading, so it contributes no delta and leaves the
-			// persisted denied total untouched.
-			if contracts.DeniedKnown {
-				denyDelta = lifetimeDelta(nonNegativeUint64(contracts.Denied), &c.prevDeny)
-			}
 		}
 	}
 	billable := c.flip.fold(proxyEarnBandwidthSnapshot(), now)
@@ -446,20 +443,23 @@ func (c *lifetimeCollector) tick(now time.Time) {
 	// from the live counter, where the reverse order would re-fold an
 	// already-persisted delta: a collector that panics in this window every
 	// restart would inflate the all-time totals without bound.
-	lifetimeFoldCursor.store(c.prevPQE, c.prevClas, c.prevUp, c.prevDeny)
-	lifetimeStore.Add(pqeDelta, clasDelta, upDelta, denyDelta, 0, 0, billable)
+	lifetimeFoldCursor.store(c.prevPQE, c.prevClas, c.prevUp)
+	lifetimeStore.Add(pqeDelta, clasDelta, upDelta, 0, 0, 0, billable)
 	lifetimeStore.MaybeFlush(now)
 
-	a1, a2, a3, a4, a5, a6, a7 := lifetimeStore.Snapshot()
-	if a1 != c.prevA1 || a2 != c.prevA2 || a3 != c.prevA3 || a4 != c.prevA4 ||
+	a1, a2, a3, _, a5, a6, a7 := lifetimeStore.Snapshot()
+	// The store's denied total is not compared or printed: the miner has no
+	// denial source, so it never moves and a constant denied=0 on the line
+	// would read as "nothing was refused" instead of "not measured".
+	if a1 != c.prevA1 || a2 != c.prevA2 || a3 != c.prevA3 ||
 		a5 != c.prevA5 || a6 != c.prevA6 || a7 != c.prevA7 {
-		if a1|a2|a3|a4|a5|a6|a7 != 0 {
+		if a1|a2|a3|a5|a6|a7 != 0 {
 			since, approx := lifetimeStore.Started()
-			tlog("♾️⚖️ [lifetime] all-time (%s): post-quantum=%d classical=%d contracts_acquired=%d denied=%d proxies_recovered=%d lost=%d billable_total=%s\n",
+			tlog("♾️⚖️ [lifetime] all-time (%s): post-quantum=%d classical=%d contracts_acquired=%d proxies_recovered=%d lost=%d billable_total=%s\n",
 				sinceLabel(since, approx),
-				a1, a2, a3, a4, a5, a6, formatBytes(a7))
+				a1, a2, a3, a5, a6, formatBytes(a7))
 		}
-		c.prevA1, c.prevA2, c.prevA3, c.prevA4, c.prevA5, c.prevA6, c.prevA7 = a1, a2, a3, a4, a5, a6, a7
+		c.prevA1, c.prevA2, c.prevA3, c.prevA5, c.prevA6, c.prevA7 = a1, a2, a3, a5, a6, a7
 	}
 }
 
