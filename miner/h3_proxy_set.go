@@ -67,8 +67,12 @@ var (
 // identity stays on H1 rather than failing every QUIC attempt on a relay that
 // does not work or does not exit where the proxy's TCP side does. A proxy that
 // has not been checked yet is eligible, the same as the relay treats an
-// unverifiable one.
+// unverifiable one. While the platform is unreachable no proxy is eligible (see
+// h3_outage_shed.go).
 func h3ProxyEligible(setting h3Setting, key string) bool {
+	if h3OutageShedding.Load() {
+		return false
+	}
 	if !h3ProxyModeEligible(setting, key) {
 		return false
 	}

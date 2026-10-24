@@ -406,7 +406,12 @@ func installProvideH3Relauncher(ctx context.Context, reloader *minerProxyReloade
 		return func() {}
 	}
 	setH3IdentityRelauncher(&minerH3Relauncher{ctx: ctx, reloader: reloader})
-	return func() { setH3IdentityRelauncher(nil) }
+	shedder := &h3OutageShedder{}
+	go runH3OutageShed(ctx, shedder)
+	return func() {
+		setH3IdentityRelauncher(nil)
+		resetH3OutageShed(shedder)
+	}
 }
 
 // relaunchIdentity stops one running identity so its next launch builds under
