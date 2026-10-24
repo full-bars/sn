@@ -1273,6 +1273,44 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		rawCancel()
 		<-controlSamplerDone
 	}()
+	// The health heartbeat (v33 health_heartbeat.go): once immediately, then
+	// every URNETWORK_HEALTH_INTERVAL (5m default, 1m floor), it publishes this
+	// process's own health into the status file the proxy health cadence already
+	// writes, so an external monitor can tell a wedged process (a heartbeat that
+	// stopped advancing) from a quiet one. Supervised and joined like the
+	// sampler: a panic restarts the pulse rather than ending it, and the join
+	// cancels the run first so a shutdown never waits on a sleeping tick.
+	//
+	// The history-store prune is a second loop at the same cadence, not a step
+	// in the pulse: it reads three files, and a slow read there must not hold
+	// the stamp an external monitor judges this process by. It is joined with
+	// the same bounded grace, so a prune stuck in a syscall cannot hang exit.
+	heartbeatStart := controlRuntime.startedAtSnapshot()
+	if heartbeatStart.IsZero() {
+		heartbeatStart = time.Now()
+	}
+	healthHeartbeatDone := make(chan struct{})
+	go func() {
+		defer close(healthHeartbeatDone)
+		superviseLoop(ctx, newLoopRef("health_heartbeat"), func() {
+			runHealthHeartbeat(ctx, heartbeatStart, os.Getenv("URNETWORK_PROFILE"))
+		}, nil)
+	}()
+	defer func() {
+		rawCancel()
+		joinHealthLoop(healthHeartbeatDone, "health heartbeat")
+	}()
+	proxyHistoryPruneDone := make(chan struct{})
+	go func() {
+		defer close(proxyHistoryPruneDone)
+		superviseLoop(ctx, newLoopRef("proxy_history_prune"), func() {
+			runProxyHistoryPruneLoop(ctx, healthHeartbeatConfiguredInterval())
+		}, nil)
+	}()
+	defer func() {
+		rawCancel()
+		joinHealthLoop(proxyHistoryPruneDone, "proxy history prune")
+	}()
 	// systemd's watchdog runs from the start of the unit's life: feed it
 	// through the whole of startup, not only once the proxy list is loaded.
 	// Inert without WATCHDOG_USEC and without a self-exit supervisor
@@ -1684,6 +1722,30 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if proxySettings != nil {
 			defer watchProxyTransportHealth(proxyCtx, proxySettings.Key(), device, proxyTransportWatchInterval)()
 		}
+		// Fork hook: charge this slot's relayed bytes to its counters, and its
+		// open provider contracts to the same counter's live client count, from
+		// the accounting the SDK keeps inside the device (provider_billing.go).
+		// Without the bytes, BillableRx/Tx and ContractUsed* never move and
+		// every billable and settled series this node publishes is a structural
+		// zero. Without the contracts, `clients` has no source at all: the
+		// network space's own dials are the node's control plane and are counted
+		// total-only (h3_packet_conn.go), not as clients.
+		// Registered after the close defer above, so the watch stops before the
+		// device it reads is closed. Every slot gets it, the direct identity
+		// included: it relays traffic and its bytes are part of the node's
+		// aggregate in the same scrape.
+		defer watchProxyBilling(proxyCtx, bw, device, providerBillingSampleInterval)()
+
+		// Fork hook: count this slot's acquired contracts for
+		// urnet_contracts_total. The provider reads its own per-index registry,
+		// fed by a connect contract status callback
+		// (provider/contract_metrics.go); the miner owns no connect client, so
+		// it counts the provider contract details the SDK publishes for this
+		// slot instead (contract_metrics.go). Registered for every slot,
+		// including the direct identity, because every slot is a full provider
+		// device with its own contract feed. Deferred after the device close, so
+		// the listeners stop before the device does.
+		defer registerContractOutcomes(device)()
 
 		// Always-on public mode includes network and friends/family service,
 		// matching the SDK's hierarchical provide contract.

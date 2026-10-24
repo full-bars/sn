@@ -195,12 +195,15 @@ func snapshotProxyCounts() (snapshotProxies, string) {
 		if liveStatus, ok := live[key]; ok && liveStatus.Health != "" {
 			health = liveStatus.Health
 		}
-		switch health {
-		case "up":
+		// One classifier shared with the pool aggregate (pool_health.go), so
+		// urnet_proxy_pool_size and urnet_proxy_pool_scope cannot disagree
+		// about which member went in which bucket.
+		switch proxyPoolMemberBucket(health) {
+		case proxyPoolHealthUp:
 			counts.Up++
-		case "dead", "inactive":
+		case proxyPoolHealthDead:
 			counts.Dead++
-		case "recently_offline", "offline", "long_offline", "parked":
+		case proxyPoolHealthDegraded:
 			counts.Degraded++
 		default:
 			counts.Connecting++

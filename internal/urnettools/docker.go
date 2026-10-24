@@ -93,9 +93,19 @@ func isDockerCandidate(image, name string) bool {
 		strings.Contains(nl, "meso-miner") || strings.Contains(nl, "meso_miner")
 }
 
-// containerStateDir resolves the provider state dir inside the container:
-// prefer $HOME from the container's env, else /root (the image default).
+// containerStateDir resolves the provider state dir inside the container: the
+// container's own URNETWORK_STATE_DIR when it runs with one, else $HOME from the
+// container's env, else /root (the image default).
+//
+// The override is required for the same reason as the host path: the miner
+// inside the container resolves its state dir from that variable
+// (miner.providerStateDir), so reading only HOME here made idle-update shell
+// `cat $HOME/.urnetwork/billable_rate` for a provider that writes its state
+// somewhere else entirely.
 func containerStateDir(c dockerContainer) string {
+	if dir := strings.TrimSpace(containerEnv(c, "URNETWORK_STATE_DIR")); dir != "" {
+		return dir
+	}
 	if home := containerEnv(c, "HOME"); home != "" {
 		return home + "/.urnetwork"
 	}

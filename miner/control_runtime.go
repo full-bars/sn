@@ -233,36 +233,64 @@ func (s *controlRuntimeState) bandwidthSnapshot() map[int]*bandwidth.ProxyBandwi
 	return registry.Snapshot()
 }
 
-// trafficTotals reads the registry's per-direction byte sums and the live
+// trafficReading is one coherent read of the registry's aggregate byte
+// counters: the sums the traffic block publishes, plus the engine's
+// per-contract totals kept beside billable as the settled cross-check.
+type trafficReading struct {
+	BillableRx, BillableTx                  uint64
+	TotalRx, TotalTx                        uint64
+	ContractUsedIngress, ContractUsedEgress uint64
+	Clients                                 int64
+	// OK is false when this run has no registry yet and nothing was restored,
+	// so /metrics can omit the counters instead of exporting a fabricated zero.
+	OK bool
+}
+
+// trafficReading reads the registry's per-direction byte sums and the live
 // client count. Indices the previous process counted but this one does not run
 // still contribute through the persisted counter store, so the aggregate
 // continues across a restart; a live index is skipped there because its
-// registry entry was seeded with the same totals. The second result is false
-// when this run has no registry yet and nothing was restored, so /metrics can
-// omit the counters instead of exporting a fabricated zero.
-func (s *controlRuntimeState) trafficTotals() (billableRx, billableTx, totalRx, totalTx uint64, clients int64, ok bool) {
+// registry entry was seeded with the same totals.
+//
+// The contract sums come from the same entries as the billable ones, so the
+// pair always covers the same set of slots and one scrape cannot compare a
+// slot's billable against a different slot's settled bytes.
+func (s *controlRuntimeState) trafficReading() trafficReading {
 	snapshot := s.bandwidthSnapshot()
+	var reading trafficReading
 	live := make(map[int]struct{}, len(snapshot))
 	for index, bw := range snapshot {
 		if bw == nil {
 			continue
 		}
 		live[index] = struct{}{}
-		billableRx += bw.BillableRx.Load()
-		billableTx += bw.BillableTx.Load()
-		totalRx += bw.TotalRx.Load()
-		totalTx += bw.TotalTx.Load()
-		clients += bw.Clients.Load()
+		reading.BillableRx += bw.BillableRx.Load()
+		reading.BillableTx += bw.BillableTx.Load()
+		reading.TotalRx += bw.TotalRx.Load()
+		reading.TotalTx += bw.TotalTx.Load()
+		reading.ContractUsedIngress += bw.ContractUsedIngress.Load()
+		reading.ContractUsedEgress += bw.ContractUsedEgress.Load()
+		reading.Clients += bw.Clients.Load()
 	}
 	retired := metricsCounters.retiredTotals(live)
-	billableRx += retired.BillableRx
-	billableTx += retired.BillableTx
-	totalRx += retired.TotalRx
-	totalTx += retired.TotalTx
+	reading.BillableRx += retired.BillableRx
+	reading.BillableTx += retired.BillableTx
+	reading.TotalRx += retired.TotalRx
+	reading.TotalTx += retired.TotalTx
+	reading.ContractUsedIngress += retired.ContractUsedIngress
+	reading.ContractUsedEgress += retired.ContractUsedEgress
 	if snapshot == nil && retired.isZero() {
-		return 0, 0, 0, 0, 0, false
+		return reading
 	}
-	return billableRx, billableTx, totalRx, totalTx, clients, true
+	reading.OK = true
+	return reading
+}
+
+// trafficTotals is the named-field view of trafficReading for its existing
+// callers (the control report and the rate sampler).
+func (s *controlRuntimeState) trafficTotals() (billableRx, billableTx, totalRx, totalTx uint64, clients int64, ok bool) {
+	r := s.trafficReading()
+	return r.BillableRx, r.BillableTx, r.TotalRx, r.TotalTx, r.Clients, r.OK
 }
 
 // counterTotals reads the run's cumulative billable and total byte counts, and

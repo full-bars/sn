@@ -16,7 +16,10 @@ import (
 //   - metricsSeamLifetime: lifetime_metrics.go (the persisted all-time store);
 //   - metricsSeamLoops: loop_supervisor.go (the supervised-loop registry);
 //   - metricsSeamErrors: metrics_errors.go (the persistent error counts);
-//   - metricsSeamDiskBench: disk_bench_metrics.go (the startup disk audit).
+//   - metricsSeamDiskBench: disk_bench_metrics.go (the startup disk audit);
+//   - metricsSeamContracts: contract_metrics.go (the provider contract feed:
+//     cumulative acquired plus the open book -- count, bytes, utilization.
+//     Denials have no signal at all; the hook comment says why).
 //
 // Every other hook below is UNSUPPORTED, not merely pending. Each comment says
 // why, and the reason is one of two kinds: the data lives inside the pinned
@@ -34,13 +37,27 @@ var (
 	// read. urnet_sessions_* stays absent.
 	metricsSeamSessions func() *seamSessions
 
-	// UNSUPPORTED: v33 tracks contract outcomes per proxy inside connect. The
-	// pinned fork exports no such counter and the miner keeps no equivalent
-	// (baseline_sampler.go omits contract counts for the same reason). The
-	// all-time totals in lifetime_metrics.go are not a substitute: reporting
-	// them as urnet_contracts_total would present a persisted lifetime figure
-	// as this process's counter.
-	metricsSeamContracts func() (acquired, denied int64, ok bool)
+	// Wired by contract_metrics.go's init: this process's acquired contracts
+	// and the open book (count, bytes, utilization), all read from the provider
+	// contract feed the SDK publishes per slot.
+	//
+	// UNSUPPORTED here: denials. A refusal never opens, so the manager never
+	// emits a stats event and the feed the miner can see never names one. The
+	// only refusal signal the pinned SDK exports is DeviceLocal.GetContractStatus,
+	// a windowed Premium/InsufficientBalance/NoPermission summary with no count;
+	// a real count would need an SDK-exported denial event (a
+	// ContractManager.AddContractStatusCallback-grade hook), which the pinned
+	// revision does not expose. So no denied series is published and none is
+	// passed up for rendering: a zero would read as "nothing was refused" and
+	// an "unknown" on every line would read as "checked, cannot tell" -- both
+	// claims the miner cannot back.
+	//
+	// On a fleet-wide scrape that makes this family's label set differ by one
+	// result: the provider publishes urnet_contracts_total{result="denied"}
+	// from its own denial counter, and the miner has no such series. A
+	// dashboard must read a miner's missing denied result as "not measured",
+	// never as zero.
+	metricsSeamContracts func() *seamContracts
 
 	// Wired by lifetime_metrics.go's init: the persisted all-time store.
 	metricsSeamLifetime func() *seamLifetime
@@ -110,12 +127,42 @@ type seamSessions struct {
 	ClasHour, ClasDay, ClasWeek int64
 }
 
+// seamContracts is one process-lifetime contract reading: the cumulative
+// acquired count, plus the open book (see contract_metrics.go).
+//
+// There is no denied field on purpose. The miner has no denial source at all
+// (see the metricsSeamContracts hook comment), so a constant denied=unknown --
+// or a zero -- would be a claim it cannot back. The gap lives in that comment
+// rather than on every rendered line.
+type seamContracts struct {
+	// Acquired is every contract the platform established since this process
+	// started, open or since closed. Cumulative; the [profit] contracts= field
+	// and urnet_contracts_total{result="acquired"} both mean this number.
+	Acquired int64
+	// Open is the contracts open right now. Open > 0 is what makes the open
+	// gauges a reading; at 0 they are absent, not a zero.
+	Open int
+	// OpenLimitBytes and OpenUsedBytes are summed over the open contracts
+	// only. OpenUsedBytes is per-contract, point-in-time usage as the feed
+	// last reported it -- not the cumulative settled bytes.
+	OpenLimitBytes int64
+	OpenUsedBytes  int64
+	// AvgUtilPct is the mean used/purchased over the open contracts that
+	// report a positive purchased size, as a percentage. NaN when undefined;
+	// the writer omits the gauge then rather than publishing 0%.
+	AvgUtilPct float64
+}
+
 // seamLifetime is one persisted all-time reading.
 type seamLifetime struct {
-	SessionsPQE, SessionsClas          uint64
-	ContractsAcquired, ContractsDenied uint64
-	ProxiesRecovered, ProxiesLost      uint64
-	BillableBytes                      uint64
+	SessionsPQE, SessionsClas uint64
+	// ContractsAcquired is the persisted all-time acquired total. There is no
+	// denied total here: the miner has no denial source (see the
+	// metricsSeamContracts hook), so the store's field is kept only to
+	// round-trip a v33 file and is never published.
+	ContractsAcquired             uint64
+	ProxiesRecovered, ProxiesLost uint64
+	BillableBytes                 uint64
 	// Since is when the totals began accumulating; SinceApprox says the start
 	// predates tracking, so the totals include earlier history.
 	Since       time.Time

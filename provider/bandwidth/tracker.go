@@ -192,7 +192,17 @@ type ProxyRegistry struct {
 	// seed, when set, preloads a freshly created entry with totals a previous
 	// process recorded, so cumulative counters continue across a restart
 	// instead of stepping back to zero.
-	seed func(index int) (totalRx, totalTx, billableRx, billableTx uint64)
+	seed func(index int) ProxySeed
+}
+
+// ProxySeed is the set of cumulative totals a newly registered index starts
+// from. The contract totals travel with billable on purpose: the two are
+// published as a cross-check against each other, so a restart must not resume
+// one and reset the other, which would read as drift that never happened.
+type ProxySeed struct {
+	TotalRx, TotalTx                        uint64
+	BillableRx, BillableTx                  uint64
+	ContractUsedIngress, ContractUsedEgress uint64
 }
 
 // NewRegistry creates an empty registry.
@@ -205,7 +215,7 @@ func NewRegistry() *ProxyRegistry {
 // SetSeed installs the totals a newly registered index starts from. It only
 // affects entries created after the call: callers install it before
 // registration begins (the miner arms it from its persisted counter store).
-func (r *ProxyRegistry) SetSeed(seed func(index int) (totalRx, totalTx, billableRx, billableTx uint64)) {
+func (r *ProxyRegistry) SetSeed(seed func(index int) ProxySeed) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.seed = seed
@@ -228,11 +238,13 @@ func (r *ProxyRegistry) Register(index int) *ProxyBandwidth {
 	}
 	bw = &ProxyBandwidth{}
 	if r.seed != nil {
-		totalRx, totalTx, billableRx, billableTx := r.seed(index)
-		bw.TotalRx.Store(totalRx)
-		bw.TotalTx.Store(totalTx)
-		bw.BillableRx.Store(billableRx)
-		bw.BillableTx.Store(billableTx)
+		seed := r.seed(index)
+		bw.TotalRx.Store(seed.TotalRx)
+		bw.TotalTx.Store(seed.TotalTx)
+		bw.BillableRx.Store(seed.BillableRx)
+		bw.BillableTx.Store(seed.BillableTx)
+		bw.ContractUsedIngress.Store(seed.ContractUsedIngress)
+		bw.ContractUsedEgress.Store(seed.ContractUsedEgress)
 	}
 	r.counters[index] = bw
 	return bw

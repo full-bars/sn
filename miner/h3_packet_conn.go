@@ -128,15 +128,26 @@ func providerSlotDialSettings(base *connect.DialContextSettings, proxySettings *
 // networkSpaceConnectSettings is the ConnectSettings one slot's network space is
 // built from (run.go, before sdk.NewNetworkSpaceWithUrls).
 //
-// It wraps the slot's dial path for bandwidth accounting as before, and it is
-// also where the slot's QUIC endpoint is decided for every non-platform
+// Every dial these settings make is the slot's OWN traffic to the platform —
+// the api, auth and the H1 tunnel — not a client's flow: client traffic
+// arrives through the tunnel and leaves by the relay the SDK owns, so nothing
+// on this settings object carries a client. It is therefore wrapped with
+// bandwidth.WrapConnectSettingsTotal, which counts those bytes into the TOTAL
+// and never into Clients or billable. Wrapping them as sessions (the plain
+// WrapConnectSettings) made the node's own auth dial read as a client: a slot
+// showed clients=1/serving=1 before it had served anyone, `idle` was
+// structurally 0, and the ✈️ [traffic] started marker fired at authentication
+// instead of at the first client. See bandwidth.WrapConnectSettingsTotal.
+//
+// It is also where the slot's QUIC endpoint is decided for every non-platform
 // carrier. A proxied slot's ConnectSettings has ProxySettings set and no
 // DialContextSettings (run.go deliberately leaves the test-egress seam off a
 // proxied slot), so the wrap's ProxySettings branch builds the factory from
 // that proxy and installs it. Without it the api's alt-h3 and alt-whodis
 // dialers would open a host socket and the identity's api request — with its
 // jwt — would reach the platform from this node's address while the proxy
-// carried none of it.
+// carried none of it. The total-only wrap is the same wrap with session
+// counting off, so the factory is installed exactly as before.
 //
 // A direct slot's settings carry no ProxySettings, so no factory is built and
 // the engine keeps its own socket, exactly as the direct device path does.
@@ -148,6 +159,20 @@ func networkSpaceConnectSettings(cs connect.ConnectSettings, proxySettings *conn
 	cs.ProxySettings = proxySettings
 	// The builder is newH3PacketConnFactory itself: the network space and the
 	// provider device of one slot must share one endpoint policy, not two that
-	// can drift.
-	return bandwidth.WrapConnectSettings(cs, bw, proxyAddr, newH3PacketConnFactory)
+	// can drift. Both wraps take it as the same parameter, so the control-plane
+	// accounting change cannot drop the endpoint seam.
+	return bandwidth.WrapConnectSettingsTotal(cs, bw, proxyAddr, newH3PacketConnFactory)
 }
+
+// Client counting does NOT live in this file. The miner has no relay-egress
+// dial seam of its own — sdk.DeviceLocalSettings.ProviderDialContextSettings is
+// handed to BOTH the provider carrier (the platform transport) and the exit
+// NAT's sockets (sdk device_local.go, newDeviceLocalPlatformTransportSettings-
+// ForProfile and providerLocalUserNatSettings), so wrapping it with session
+// counting would charge the node's own control dials as clients again.
+//
+// The platform's own grant is the honest signal: an OPEN provider contract is
+// exactly "the platform matched a client flow to this slot", and it closes when
+// that flow ends. proxyBillingSampler reads the two contract feeds on the same
+// cadence as the byte counters and maintains bw.Clients/AddSession from the set
+// of open contracts (provider_billing.go, sampleClients).

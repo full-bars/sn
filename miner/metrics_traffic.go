@@ -5,6 +5,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/urfoundation/sn/provider/bandwidth"
 )
@@ -12,8 +13,10 @@ import (
 // metrics_traffic.go emits the v33 connect handler's traffic families from
 // the miner's own bandwidth registry (run.go installs it with
 // controlRuntime.setBandwidthRegistry): the proxy pool composition, the
-// per-proxy byte counters, and the aggregate billable/total byte counters
-// plus the live client count.
+// per-proxy byte counters, the aggregate billable/total byte counters plus
+// the live client count, and the settled cross-check
+// (urnet_contract_used_bytes_total), read from the same entries as the
+// billable aggregate so the two are comparable in one scrape.
 //
 // The registry is keyed by the hash of a proxy's IDENTITY key
 // (run.go bwRegistry.Register(proxyIdentityBandwidthIndex(proxySettings)),
@@ -27,15 +30,23 @@ import (
 // even with an empty pool; the byte counters are omitted until a provide run
 // has published its registry, so a missing series means "not counting yet".
 func writeTrafficMetrics(b *strings.Builder) {
-	counts, _ := snapshotProxyCounts()
+	// One proxy.state read per scrape: the composition feeds both
+	// urnet_proxy_pool_size and the pool aggregate. The aggregate is passed the
+	// same value, so the two can never disagree about a member, and the
+	// pool-health mutex is never held across the read.
+	comp := readProxyPoolComposition()
+	counts := comp.Counts
 	fmt.Fprintf(b, "# HELP urnet_proxy_pool_size Proxy pool composition.\n")
 	fmt.Fprintf(b, "# TYPE urnet_proxy_pool_size gauge\n")
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"up\"} %d\n", counts.Up)
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"dead\"} %d\n", counts.Dead)
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"degraded\"} %d\n", counts.Degraded)
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"connecting\"} %d\n", counts.Connecting)
+	// The aggregate that composition cannot express: whether the pool failed as
+	// a unit or a few members did, and how low it got in the last hour.
+	writeProxyPoolHealthMetrics(b, proxyPoolHealth(time.Now(), comp))
 
-	billableRx, billableTx, totalRx, totalTx, clients, ok := controlRuntime.trafficTotals()
+	reading := controlRuntime.trafficReading()
 	perProxy := controlIdentityKeyedBandwidth()
 	if len(perProxy) > 0 {
 		// Each family is one contiguous block: HELP, TYPE, then its samples.
@@ -69,18 +80,30 @@ func writeTrafficMetrics(b *strings.Builder) {
 		fmt.Fprintf(b, "# TYPE urnet_proxy_session_age_seconds gauge\n")
 		b.WriteString(proxyAge.String())
 	}
-	if ok {
+	if reading.OK {
 		fmt.Fprintf(b, "# HELP urnet_billable_bytes_total Aggregate billable bytes for this provider.\n")
 		fmt.Fprintf(b, "# TYPE urnet_billable_bytes_total counter\n")
-		fmt.Fprintf(b, "urnet_billable_bytes_total{direction=\"in\"} %d\n", billableRx)
-		fmt.Fprintf(b, "urnet_billable_bytes_total{direction=\"out\"} %d\n", billableTx)
+		fmt.Fprintf(b, "urnet_billable_bytes_total{direction=\"in\"} %d\n", reading.BillableRx)
+		fmt.Fprintf(b, "urnet_billable_bytes_total{direction=\"out\"} %d\n", reading.BillableTx)
+		// The settled cross-check, from the same entries and in the same scrape
+		// as the billable series above: the engine's per-contract accounting is
+		// the number the platform settles on, so the difference between the two
+		// families is the drift this node is carrying. Same direction labels and
+		// the same in/out pairing as the provider's own dashboard
+		// (provider/metrics_dashboard.go), so one panel reads both fleets the
+		// same way. Emitted only when the billable series is: a settled figure
+		// with nothing to compare it against is not a cross-check.
+		fmt.Fprintf(b, "# HELP urnet_contract_used_bytes_total Bytes the platform contracts have used, from the engine's per-contract accounting, summed over the proxies this node counts (like urnet_billable_bytes_total, the totals continue across a restart): the quantity the platform settles on, kept as a cross-check against the counted billable bytes. in is receive-side contracts, out is send-side.\n")
+		fmt.Fprintf(b, "# TYPE urnet_contract_used_bytes_total counter\n")
+		fmt.Fprintf(b, "urnet_contract_used_bytes_total{direction=\"in\"} %d\n", reading.ContractUsedIngress)
+		fmt.Fprintf(b, "urnet_contract_used_bytes_total{direction=\"out\"} %d\n", reading.ContractUsedEgress)
 		fmt.Fprintf(b, "# HELP urnet_bytes_total Aggregate total bytes for this provider.\n")
 		fmt.Fprintf(b, "# TYPE urnet_bytes_total counter\n")
-		fmt.Fprintf(b, "urnet_bytes_total{direction=\"in\"} %d\n", totalRx)
-		fmt.Fprintf(b, "urnet_bytes_total{direction=\"out\"} %d\n", totalTx)
+		fmt.Fprintf(b, "urnet_bytes_total{direction=\"in\"} %d\n", reading.TotalRx)
+		fmt.Fprintf(b, "urnet_bytes_total{direction=\"out\"} %d\n", reading.TotalTx)
 		fmt.Fprintf(b, "# HELP urnet_clients_active Aggregate active clients across all proxies.\n")
 		fmt.Fprintf(b, "# TYPE urnet_clients_active gauge\n")
-		fmt.Fprintf(b, "urnet_clients_active %d\n", clients)
+		fmt.Fprintf(b, "urnet_clients_active %d\n", reading.Clients)
 	}
 }
 
