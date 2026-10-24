@@ -132,25 +132,18 @@ func (g *proxyAdmissionGate) Admit(ctx context.Context, failureCount int) (relea
 // always authenticating, so the window never opens and the probes it gated
 // simply never run. And auth is not the resource a probe disturbs: the probe
 // dials through a proxy's egress, so what it competes with is the client
-// traffic served on that egress. Both halves of that are why this now reads the
-// TRAFFIC clock instead:
+// traffic served on that egress. That is why this reads the TRAFFIC clock
+// instead:
 //
 //   - the path's counters must have carried no client session for d
 //     (bandwidth.ProxyBandwidth.TrafficIdleFor). Idleness is asked per path,
 //     not process-wide, because a node that serves clients continuously is
 //     never globally quiet and a path that is quiet right now is still a fine
 //     place to probe.
-//   - no auth attempt may be waiting or running at this instant. That is a veto
-//     on a moment, not a window: an auth attempt is short, so it never starves
-//     the probes, and it keeps a probe from adding a connect while auth is
-//     already struggling.
 //
-// It only reads atomics and the counters' session lock, which auth never takes,
-// so a probe polling it cannot make auth wait.
+// It only reads the counters' session lock, which auth never takes, so a probe
+// polling it cannot make auth wait.
 func (g *proxyAdmissionGate) QuietFor(counters []*bandwidth.ProxyBandwidth, d time.Duration) bool {
-	if 0 < g.inAdmit.Load() {
-		return false
-	}
 	for _, bw := range counters {
 		// TrafficIdleFor is negative while a session is open, so a counter that
 		// is serving right now is busy even when d is zero.

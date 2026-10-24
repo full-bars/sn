@@ -228,8 +228,7 @@ func TestAdmissionGateQuietForTracksTrafficNotAuth(t *testing.T) {
 		t.Fatal("a path with one serving identity reads as quiet")
 	}
 
-	// an auth attempt in flight is still a veto on the moment, and it does not
-	// leave the gate busy after it finishes
+	// auth activity miner-wide (inAdmit > 0) does not starve probes when the path has no client traffic
 	if !gate.QuietFor([]*bandwidth.ProxyBandwidth{bw}, 0) {
 		t.Fatal("quiet before any auth attempt")
 	}
@@ -237,8 +236,17 @@ func TestAdmissionGateQuietForTracksTrafficNotAuth(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if gate.QuietFor([]*bandwidth.ProxyBandwidth{bw}, 0) {
-		t.Fatal("quiet while an auth attempt is in flight")
+	if gate.inAdmit.Load() <= 0 {
+		t.Fatal("expected inAdmit to be positive during admitted auth")
+	}
+	if !gate.QuietFor([]*bandwidth.ProxyBandwidth{bw}, 0) {
+		t.Fatal("quiet while an auth attempt is in flight: auth activity must not starve probes")
+	}
+	// but actual client traffic on the path still keeps it from probing
+	bwActive := &bandwidth.ProxyBandwidth{}
+	bwActive.AddSession("client", time.Now())
+	if gate.QuietFor([]*bandwidth.ProxyBandwidth{bwActive}, 0) {
+		t.Fatal("path with active client session must not be quiet")
 	}
 	release()
 	if !gate.QuietFor([]*bandwidth.ProxyBandwidth{bw}, 0) {
