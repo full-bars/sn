@@ -1100,6 +1100,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		rawCancel()
 		<-controlSamplerDone
 	}()
+	// systemd's watchdog runs from the start of the unit's life: feed it
+	// through the whole of startup, not only once the proxy list is loaded.
+	// Inert without WATCHDOG_USEC and without a self-exit supervisor
+	// (liveness_watchdog.go).
+	startLivenessWatchdog(ctx)
 
 	keyPath, err := providerStatePath(".provider.key")
 	if err != nil {

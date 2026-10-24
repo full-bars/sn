@@ -295,7 +295,7 @@ var trimSelection struct {
 // noteTrimSelection records the trim decision for a desired pool of `desired`
 // proxies. The cap is the effective cap, clamped to the desired count because
 // nothing can hold back more proxies than are configured, and the source is
-// whichever of the operator file and the automatic OOM cap bound it
+// whichever of the operator file and the automatic caps (OOM, thrash) bound it
 // (effectiveTrimCapSource), so a shed driven by an automatic cap is not
 // reported as the operator's.
 func noteTrimSelection(desired int) {
@@ -337,7 +337,7 @@ func resetTrimSelection() {
 }
 
 // effectiveTrimCap is effectiveTrimCapSource without the source: the tightest
-// positive of the operator trim file and the automatic OOM cap
+// positive of the operator trim file and the automatic caps
 // (proxy_manager_oom_cap.go). 0 means no cap.
 func effectiveTrimCap() (int, error) {
 	c, _, err := effectiveTrimCapSource()

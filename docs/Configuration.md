@@ -269,6 +269,8 @@ Where there is no watchdog to starve the same detection still runs, with a diffe
 
 All of this rides the existing self-heal switch (`URNETWORK_SELF_HEAL=1` or `urnet-tools self-heal on`). Off means off for actions: with self-heal off, the watchdog still senses and logs, so you can watch it work, but it never restarts anything.
 
+**The miner runs the same watchdog.** `miner provide` carries the same ladder, gates, thrash cap (`<state dir>/thrash_cap.json`, honoured by the launch and reload trim alongside the OOM cap and the operator's `proxy_trim`), exit status 75 and 10-minute liveness self-exit as the provider. Its supervisor is the miner image's start script (which restarts on 75 after 5 seconds) or a systemd unit that restarts on failure; on a host with neither, the stall is detected and logged but never acted on, because a self-exit would not be restarted. The status file is `<state dir>/thrash_status` (`URNETWORK_STATE_DIR` honoured, `~/.urnetwork` by default) and the log lines start with `[miner][thrash]`; the escalation's restart line is written to `events.log`.
+
 Where to look:
 - `urnet-tools status`'s live block prints the current reading as one sentence (the `summary` field the provider persists to `~/.urnetwork/pressure_status`).
 - `~/.urnetwork/thrash_status` carries the machine-readable state for tooling.

@@ -462,6 +462,10 @@ func (s *controlRuntimeState) runSamplerWith(ctx context.Context, interval time.
 			swapThrashWatchGlobal.stop()
 			return
 		case now := <-ticker.C:
+			// Proof that this loop got its tick: the systemd watchdog ping
+			// depends on it (liveness_watchdog.go). A stalled process never
+			// reaches here, so the ping stops and the supervisor replaces it.
+			noteLivenessProgress()
 			if billable, total, _, ok := s.counterTotals(); ok {
 				s.rate.sample(billable, total, now)
 			}

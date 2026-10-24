@@ -1,0 +1,14 @@
+//go:build !linux
+
+package miner
+
+import "context"
+
+// The self-exit half of the stall defense covers containers, and it rides the
+// Linux-only thrash watchdog (its exit-75 escape, cap ring and state
+// directory). On every other platform only the systemd watchdog path exists.
+
+func livenessUnderSelfExitSupervisor() bool { return false }
+
+func runSelfExitLivenessWatchdog(ctx context.Context, gate func(episodeStart bool) (bool, string)) {
+}
