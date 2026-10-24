@@ -149,14 +149,15 @@ change, which is the authoritative signal rather than the CLI's exit code:
 ❌ [control] set gogc=abc rejected: ...
 ```
 
-`profile`, `ramlogs` and `smart_dialer` still require the restart that
-`urnet-tools` performs for you: buffer and worker sizing is baked into objects
-allocated once at startup, ramlogs is a live stdout redirect, and the smart
-dialer's probe loop is created once per identity when that identity starts, so a
-runtime enable would point selection at a measurement stream nothing feeds (and
-would report a live apply that cannot happen). The value is set through the
-socket either way, so `urnet-tools set` and `status` stay the single source of
-truth.
+`profile` and `ramlogs` still require the restart that `urnet-tools` performs
+for you: buffer and worker sizing is baked into objects allocated once at
+startup, and ramlogs is a live stdout redirect. `smart_dialer` no longer does.
+The probes that measure the alternatives run in one background scheduler over
+the distinct egress paths rather than one loop per identity, so the socket
+starts it when the preference goes on and cancels and joins it when it goes
+off: the change applies to the running provider with no restart. The value is
+set through the socket either way, so `urnet-tools set` and `status` stay the
+single source of truth.
 
 > [!TIP]
 > `urnet-tools status` reports whether the socket is actually bound. A running
