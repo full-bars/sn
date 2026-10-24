@@ -382,10 +382,10 @@ var proxyReloadWatcherActive atomic.Bool
 // A failed reload leaves the sequence unrecorded, so the change is retried on
 // the next tick instead of being silently dropped.
 func (r *minerProxyReloader) watch(ctx context.Context, path string, interval time.Duration) {
-	// Publish that this process now applies reloads, so the control socket can
-	// tell clients the truth and the operator messages follow the mechanism
-	// rather than a build-time flag.
-	proxyReloadWatcherActive.Store(true)
+	// Publish that this process now applies reloads only once the baseline has
+	// been read: "active" must mean "polling from a known sequence". Set any
+	// earlier and a reader can conclude the watcher will apply a change that
+	// its first tick will silently miss.
 	defer proxyReloadWatcherActive.Store(false)
 
 	// stop() ends this watcher, not just the run ctx: a yielded process must
@@ -405,6 +405,10 @@ func (r *minerProxyReloader) watch(ctx context.Context, path string, interval ti
 		interval = minerProxyReloadWatchInterval
 	}
 	lastSeq, _ := readReloadSeq(path)
+	// Publish only now: a reader that sees "active" must be able to rely on
+	// the watcher having a baseline, or it will write a change the first tick
+	// treats as already seen.
+	proxyReloadWatcherActive.Store(true)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {

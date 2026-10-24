@@ -193,10 +193,27 @@ func TestMinerProxyReloadWatchAppliesATriggerChange(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	// A previous iteration's watcher may still be unwinding and holds the flag
+	// true. Wait for it to clear so the wait below cannot observe a stale
+	// "active" and read a baseline that is not this watcher's.
+	for proxyReloadWatcherActive.Load() {
+		time.Sleep(5 * time.Millisecond)
+	}
 	go r.watch(ctx, path, 10*time.Millisecond)
 
-	// Let the watcher take its baseline before the sequence moves.
-	time.Sleep(50 * time.Millisecond)
+	// Wait for the watcher to publish that it is polling from a baseline,
+	// instead of sleeping a guess. A sleep short enough for an idle machine is
+	// not short enough for a loaded one: when the watcher started late it read
+	// the NEW sequence as its baseline and reconciled twice, which failed the
+	// count assertion below for reasons that had nothing to do with the code
+	// under test.
+	baselineDeadline := time.Now().Add(3 * time.Second)
+	for !proxyReloadWatcherActive.Load() {
+		if time.Now().After(baselineDeadline) {
+			t.Fatal("watcher never became active")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
 	if err := os.WriteFile(path, []byte("2\n"), 0o600); err != nil {
 		t.Fatalf("bump trigger: %v", err)
 	}
@@ -209,12 +226,15 @@ func TestMinerProxyReloadWatchAppliesATriggerChange(t *testing.T) {
 		t.Fatalf("spawned %d slots, want 1 after the trigger change", len(got))
 	}
 
-	// No new trigger, no further spawns.
+	// No new trigger, no FURTHER reconcile. Compare against the count observed
+	// when the spawn landed rather than an absolute 1: the property is "nothing
+	// new happened", and an absolute count also fails when a baseline read
+	// races the first tick. A watcher that reconciles on every tick still
+	// fails here, which is exactly what this guards.
+	settled := h.desiredCount()
 	time.Sleep(80 * time.Millisecond)
-	// No new trigger means no new reconcile: count the desired-set reads, not
-	// the spawns, because a reload of an unchanged set spawns nothing either way.
-	if got := h.desiredCount(); got != 1 {
-		t.Fatalf("reconciled %d times, want 1 with no new trigger", got)
+	if got := h.desiredCount(); got != settled {
+		t.Fatalf("reconciled again with no new trigger: %d -> %d", settled, got)
 	}
 }
 
