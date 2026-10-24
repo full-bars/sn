@@ -234,6 +234,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # The installer regression suite replays the pre-fix installer pinned
+          # by SHA. A depth-1 checkout cannot see that commit, so the only run
+          # that proves the test has teeth would be skipped.
+          fetch-depth: 0
           persist-credentials: false
       - name: dash + bash + shellcheck
         run: |
@@ -251,3 +255,14 @@ jobs:
             shellcheck -S error "$f" && echo "  shellcheck OK" || rc=1
           done
           exit $rc
+
+      - name: Installer shell rc symlink regression test
+        # The falsification half of this suite replays the pre-fix installer
+        # pinned by SHA; REQUIRE_FALSIFICATION makes a missing pin fail instead
+        # of skip, so the depth-1 checkout this job used to have cannot pass by
+        # skipping the run. The checkout above fetches full history for it.
+        env:
+          REQUIRE_FALSIFICATION: '1'
+        run: |
+          chmod +x scripts/test_provider_install_shellrc_symlink.sh
+          ./scripts/test_provider_install_shellrc_symlink.sh
