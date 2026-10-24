@@ -450,6 +450,10 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 		// what carries the parent's final entries forward.
 		forceAuditPersist()
 		lifetimeStore.Flush()
+		// This exit skips finishControlRun, so the error counts are written
+		// here too; the successor's counters would otherwise restart from the
+		// last periodic flush.
+		FlushPersistentErrors()
 		// os.Exit below skips finishControlRun, so the periodic counter writer
 		// must be stopped and the parent's final totals written here. Without
 		// it every byte counted after the last tick is lost, and the
@@ -842,6 +846,9 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		yieldCoordinatorSession()
 		flushRetentionEvents()
 		lifetimeStore.Flush()
+		// execve leaves no shutdown path; write the error counts with the rest
+		// of the state the successor will load.
+		FlushPersistentErrors()
 		// execve replaces this image, so the periodic writer dies with it and
 		// there is no shutdown path to flush. Write the final totals now.
 		stopMetricsCounterPersistence()
