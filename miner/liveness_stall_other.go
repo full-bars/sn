@@ -8,4 +8,4 @@ package miner
 
 func livenessGate(episodeStart bool) (bool, string) { return false, "not supported on this platform" }
 
-func recordLivenessStall() func() { return nil }
+func recordLivenessStall(note func(format string, args ...any)) func() { return nil }

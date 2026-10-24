@@ -318,6 +318,13 @@ func (self *providerDiagnostics) observeFile(event providerDiagnosticEvent, prov
 	case providerNetworkSignInQuarantined:
 		domain, code = "authentication", "network_sign_in_quarantined"
 	}
+	// Count the failure codes where they are classified. This is the only
+	// producer of the persistent error store (metrics_errors.go): the event
+	// stream is fixed and bounded, and counting here means the series can only
+	// move for an event the node actually recorded.
+	if persistentErrorCategory(code) {
+		IncrPersistentError(code)
+	}
 	if event != providerExtenderObserved {
 		extender = nil
 	}

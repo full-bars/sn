@@ -149,6 +149,8 @@ func finishControlRun(reason string) {
 	// shutdown flush is free when the last periodic flush already wrote the
 	// same totals.
 	stopMetricsCounterPersistence()
+	// The persistent error counts ride the same shutdown path.
+	FlushPersistentErrors()
 }
 
 // mustStatePathQuiet resolves one file in the state directory, or "".

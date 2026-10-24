@@ -891,6 +891,10 @@ type swapThrashOptions struct {
 	// exitNotef is the pre-exit diagnostic line: stderr only, never the state
 	// directory's events.log (thrash_exit_note.go).
 	exitNotef func(format string, args ...any)
+	// evidenceFn writes the incident bundle for an escalation that acted;
+	// nil means captureThrashIncident. A test substitutes a recorder (or a
+	// no-op) so the scripted-storm rig does not write the real state directory.
+	evidenceFn func(esc swapThrashEscalation, rt swapThrashRates, rd swapThrashRead, attr string, running int)
 }
 
 // swapThrashWatch is the watchdog's process-wide state: one machine, one
@@ -914,6 +918,10 @@ type swapThrashWatch struct {
 	runningFn        func() int
 	exitFn           func(int)
 	hotSwapBusyFn    func() bool
+	// evidenceFn writes the incident bundle for an escalation that acted. It
+	// defaults to captureThrashIncident; a test substitutes a recorder (or a
+	// no-op) so the scripted-storm tests do not write the real state directory.
+	evidenceFn func(esc swapThrashEscalation, rt swapThrashRates, rd swapThrashRead, attr string, running int)
 
 	tracker        swapThrashTracker
 	machine        swapThrashMachine
@@ -936,6 +944,7 @@ func newSwapThrashWatch(opts swapThrashOptions) *swapThrashWatch {
 		notef:      opts.notef,
 		critf:      opts.critf,
 		exitNotef:  opts.exitNotef,
+		evidenceFn: opts.evidenceFn,
 	}
 	if w.readFn == nil {
 		w.readFn = readSwapThrash
@@ -979,6 +988,17 @@ func newSwapThrashWatch(opts swapThrashOptions) *swapThrashWatch {
 	if w.hotSwapBusyFn == nil {
 		w.hotSwapBusyFn = swapThrashHotSwapBusy
 	}
+	if w.evidenceFn == nil {
+		// The evidence lines go out on the same bounded stderr note as the
+		// pre-exit diagnostics: this path may be inside the state-directory
+		// hang, and critLog would fsync events.log before the exit.
+		w.evidenceFn = func(esc swapThrashEscalation, rt swapThrashRates, rd swapThrashRead, attr string, running int) {
+			// Read w.exitNotef through the watch on every call, not once at
+			// construction: a test or a reconfigured watch that replaces it
+			// must redirect the capture's lines too.
+			_, _ = captureThrashIncident(esc, rt, rd, attr, running, w.exitNotef)
+		}
+	}
 	return w
 }
 
@@ -989,6 +1009,14 @@ func (w *swapThrashWatch) supervisorKind() (string, bool) { return w.supervisorK
 func (w *swapThrashWatch) capDirWritable() error          { return w.capDirWritableFn() }
 func (w *swapThrashWatch) running() int                   { return w.runningFn() }
 func (w *swapThrashWatch) hotSwapBusy() bool              { return w.hotSwapBusyFn() }
+
+// evidence records the escalation in an incident bundle. Never on the gate's
+// verdict path: a bundle that cannot be written must not change the action.
+func (w *swapThrashWatch) evidence(esc swapThrashEscalation, rt swapThrashRates, rd swapThrashRead, attr string) {
+	if w.evidenceFn != nil {
+		w.evidenceFn(esc, rt, rd, attr, esc.Running)
+	}
+}
 
 // swapThrashWatchGlobal is the watch the miner's always-on sampler loop
 // drives. It is a variable so a test can substitute a scripted watch.
@@ -1153,6 +1181,12 @@ func (w *swapThrashWatch) sample(now time.Time) {
 		esc := w.escalate(now, rt, rd, attr, share, shareOK)
 		switch esc.Action {
 		case "restart":
+			// Evidence before the exit: the bundle is what the next process
+			// cannot reconstruct (the sensors, the rings, the logs that rotate).
+			// The capture is bounded by incidentThrashWait, so the restart
+			// contract — the exit status — still holds on a hung state
+			// directory.
+			w.evidence(esc, rt, rd, attr)
 			// 75 alone cannot tell this planned memory restart from the
 			// network sign-in quarantine, which shares the code. Mark the
 			// exit for this pid immediately before taking it, so a
@@ -1178,6 +1212,9 @@ func (w *swapThrashWatch) sample(now time.Time) {
 				// A refusal is a decision the operator must be able to audit
 				// later: the log rotates, the ledger does not vanish silently.
 				ledgerRecord(ledgerEntry{Actor: "thrash", Action: "alert", Reason: esc.Reason}, now)
+				// Same dedupe for the bundle: one per refusal reason, not one
+				// every retry interval.
+				w.evidence(esc, rt, rd, attr)
 				w.lastActionCode = esc.Code
 				w.lastAction = esc.Reason
 			}

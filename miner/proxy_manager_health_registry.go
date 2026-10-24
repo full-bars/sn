@@ -134,9 +134,17 @@ func noteLiveProxyHealthDrop(key string) {
 	entry := proxyLiveHealthRegistry.byKey[key]
 	if entry.Health == "up" || entry.Health == "" {
 		entry.Health = "recently_offline"
-		if entry.DownSince.IsZero() {
-			entry.DownSince = now
-		}
+	}
+	// The down clock starts on the first down observation of an episode, which
+	// is not the same moment as the health transition. A release from a reap
+	// hold clears the clock and leaves Health where it was (see
+	// resetLiveProxyHealthDownClock), so the next failure on an identity that
+	// is still "recently_offline" is a NEW episode and must start a new clock
+	// here: gating this on the transition left DownSince zero, which the reaper
+	// reads as "not degraded" and skips, so the identity could never be ranked
+	// or reaped again until something observed it up first.
+	if entry.DownSince.IsZero() {
+		entry.DownSince = now
 	}
 	entry.TransportDrops++
 	entry.LastSeen = now
@@ -148,9 +156,9 @@ func noteLiveProxyHealthDrop(key string) {
 }
 
 // noteLiveProxyHealthFailure records an auth failure: the proxy is no longer
-// "up" (so it is not shielded from reaper demotion), its down clock starts if
-// it was up, and the auth failure count rises. v33 keeps the same pairing of
-// Health and AuthFailures in the health snapshot.
+// "up" (so it is not shielded from reaper demotion), its down clock starts if it
+// has none (a new episode), and the auth failure count rises. v33 keeps the same
+// pairing of Health and AuthFailures in the health snapshot.
 func noteLiveProxyHealthFailure(key string) {
 	noteLiveProxyHealthFailureCause(key, nil)
 }
@@ -170,9 +178,12 @@ func noteLiveProxyHealthFailureCause(key string, err error) {
 	entry := proxyLiveHealthRegistry.byKey[key]
 	if entry.Health == "up" || entry.Health == "" {
 		entry.Health = "recently_offline"
-		if entry.DownSince.IsZero() {
-			entry.DownSince = now
-		}
+	}
+	// A new episode starts a new clock even when Health already said down: a
+	// released identity keeps its health but has no clock (see
+	// resetLiveProxyHealthDownClock and the note in the drop path).
+	if entry.DownSince.IsZero() {
+		entry.DownSince = now
 	}
 	entry.AuthFailures++
 	entry.LastSeen = now
@@ -200,7 +211,10 @@ func noteLiveProxyLegFailure(key string) {
 // still carrying its old DownSince, so the next cycle ranks it as long-down and
 // reaps it again: the hold would pause the loop instead of ending it. Health is
 // left as it was because nothing has observed this proxy since it was reaped;
-// only the clock that gates the reaper's minimum down time is reset.
+// only the clock that gates the reaper's minimum down time is reset, and the
+// next down observation starts a fresh one (noteLiveProxyHealthFailureCause and
+// noteLiveProxyHealthDrop start the clock whenever it is unset, so the episode
+// after a release is timed from its own first failure).
 func resetLiveProxyHealthDownClock(keys []string, now time.Time) {
 	if len(keys) == 0 {
 		return
