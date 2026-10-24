@@ -15,6 +15,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -1008,6 +1009,10 @@ func provideWith(opts docopt.Opts, start bool) {
 	}
 	if code, ok := providerRunExitCode(err); ok {
 		stopSignals()
+		// A refused or quarantined startup is a fatal exit: the process is
+		// about to disappear with the evidence of what the run saw. The
+		// bundle is bounded and best effort, and cannot change the code.
+		captureIncidentBundle(incidentTriggerFatal, fmt.Sprintf("exit %d: %v", code, err), nil)
 		if errors.Is(err, errProviderStartupRefused) {
 			// The documented startup_recovery_required JSON is emitted by the
 			// run, but its diagnostic stream is best effort (a redirected
@@ -1019,6 +1024,7 @@ func provideWith(opts docopt.Opts, start bool) {
 	}
 	if err != nil && ctx.Err() == nil && (settings.requireWorkCapture || settings.workCapturePath != "" || settings.workCaptureSha256 != "" || settings.requireContractCapture || settings.contractCapturePath != "" || settings.contractCaptureSha256 != "") {
 		stopSignals()
+		captureIncidentBundle(incidentTriggerFatal, "capture launch refused: "+err.Error(), nil)
 		fmt.Fprintln(os.Stderr, "provider original capture launch refused; restore approved profiles, retained identity and prepared custody")
 		os.Exit(1)
 	}
@@ -1338,6 +1344,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// Registered first, this runs after every real cleanup below.
 			// Keep cleanup causes even when an SDK/operation panics.
 			if cause := recover(); cause != nil {
+				// The recover is the only record of this panic: the process
+				// keeps running, so the runtime prints nothing. Take the
+				// bounded evidence bundle before the cause is folded away.
+				captureIncidentBundle(incidentTriggerPanic,
+					fmt.Sprintf("provider slot %d panicked: %v", index, cause), debug.Stack())
 				if original, ok := cause.(error); ok {
 					returnErr = errors.Join(returnErr, original)
 				} else {
@@ -1807,6 +1818,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			var result error
 			defer func() {
 				if cause := recover(); cause != nil {
+					// Same recover, second registration: a panic in the slot
+					// goroutine before it reaches provideWithProxy.
+					captureIncidentBundle(incidentTriggerPanic,
+						fmt.Sprintf("provider slot %d goroutine panicked: %v", index, cause), debug.Stack())
 					if original, ok := cause.(error); ok {
 						result = original
 					} else {
