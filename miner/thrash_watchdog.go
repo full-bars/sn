@@ -1211,7 +1211,20 @@ func (w *swapThrashWatch) sample(now time.Time) {
 				w.critf("[thrash] detected but NOT restarting: %s\n", esc.Reason)
 				// A refusal is a decision the operator must be able to audit
 				// later: the log rotates, the ledger does not vanish silently.
-				ledgerRecord(ledgerEntry{Actor: "thrash", Action: "alert", Reason: esc.Reason}, now)
+				// The append ends in a blocking flock, so it runs in a
+				// goroutine with the same bounded wait as the restart record
+				// (thrash_escalation.go): a ledger held by another process must
+				// not stall the sample loop that owns every other watchdog
+				// deadline.
+				recordDone := make(chan struct{})
+				go func() {
+					ledgerRecord(ledgerEntry{Actor: "thrash", Action: "alert", Reason: esc.Reason}, now)
+					close(recordDone)
+				}()
+				select {
+				case <-recordDone:
+				case <-time.After(swapThrashRecordTimeout):
+				}
 				// Same dedupe for the bundle: one per refusal reason, not one
 				// every retry interval.
 				w.evidence(esc, rt, rd, attr)
