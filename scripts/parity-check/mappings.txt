@@ -1,0 +1,87 @@
+# Explicit provider -> miner renames.
+#
+# The comparator treats a file as present when a set of miner files jointly
+# holds at least half of its declarations (or, in the default exported-only
+# mode, every exported one). These pairs fall below that threshold because the
+# miner rewrote, renamed or split them, but a human has confirmed they are the
+# same behaviour, so the comparison must continue inside the miner files rather
+# than reporting the whole file as absent.
+#
+# A provider file may be mapped more than once: a split port needs several
+# miner files, and every listed target is paired. The declarations are then
+# compared against the whole miner package, so an entry lists the files that
+# carry the behaviour, not the only files a name may live in.
+#
+# format: <file|func|type> <provider-name> <miner-name>
+
+# Provider auth keeps the JWT renewal in renewal_watcher.go; the miner port
+# folded the hot-restart half into this file (its header says so).
+file renewal_watcher.go client_jwt_hotrestart.go
+
+# The miner's pressure monitor is the resource-pressure port; the provider
+# file also carries the trim and OOM policy that landed in proxy_manager_trim.go.
+file resource_pressure.go pressure_monitor.go
+
+# Same reaper, rewritten around the miner's proxy manager.
+file degraded_reaper.go proxy_manager_degraded_reaper.go
+
+# The provider's ProxyReloader interface is concrete in the miner, which
+# prefixes its package types (minerProxyReloader) to avoid the stutter.
+type ProxyReloader minerProxyReloader
+
+# cli_helpers.go is split between the CLI and the proxy manager: the address
+# parser landed in run.go, URL resolution in proxy_manager.go, confirm in
+# proxy_manager_commands.go, and env-var resolution became the manager's own.
+# (cmd_main.go needs no entry: the overlap matcher pairs it with run.go and
+# cmd_logs.go on its own, which is the one-to-many case this tool now handles.)
+file cli_helpers.go run.go
+file cli_helpers.go proxy_manager.go
+file cli_helpers.go proxy_manager_commands.go
+
+# The dashboard metrics writer is metrics_traffic.go in the miner (every family
+# except the two the v2026 SDK removed).
+file metrics_dashboard.go metrics_traffic.go
+
+# Pending control overrides were renamed (pendingControlOp) and consolidated
+# into control_state.go, with the file lock coming from filelock_*.go.
+file pending_overrides.go control_state.go
+file pending_overrides_lock_unix.go filelock_unix.go
+file pending_overrides_lock_windows.go filelock_windows.go
+
+# provider_auth.go is split three ways: the client JWT hot-restart lives in
+# client_jwt_hotrestart.go, registration in provider_registration.go, and
+# revocation/logout in provider_callbacks.go.
+file provider_auth.go client_jwt_hotrestart.go
+file provider_auth.go provider_registration.go
+file provider_auth.go provider_callbacks.go
+
+# provide.go (1800 lines) was rewritten as run.go plus the provider_* and
+# proxy_manager_warmup.go files. Mapping it also keeps the one exported entry
+# point (EnableProfiling) in the report, where it is a real gap.
+file provide.go run.go
+file provide.go provider_lifecycle.go
+file provide.go proxy_manager_warmup.go
+
+# The node-snapshot resource collector is collectMinerResources in
+# control_report_miner.go; the platform half is readProcResources ->
+# controlReportOpenFDs in control_report_resources_*.go.
+file node_snapshot_resources.go control_report_miner.go
+file node_snapshot_resources_linux.go control_report_resources_linux.go
+file node_snapshot_resources_other.go control_report_resources_other.go
+
+# The pressure count is oomCapRunning in proxy_manager_oom_cap.go. The miner
+# tracks the launch count on purpose instead of walking the health registry on
+# every pressure tick; the behaviour is present, the counting rule differs.
+file proxy_pressure_count.go proxy_manager_oom_cap.go
+
+# Restart-reason parsing is readMinerRestartState in control_report_miner.go,
+# fed by the marker snapshot in control_runtime.go.
+file restart_reason.go control_report_miner.go
+file restart_reason.go control_runtime.go
+
+# Semantic renames confirmed against the miner implementations.
+# The provider's CLI entry point is Main(); the miner exports Run(args).
+func Main Run
+func RecordProxyLegFailure noteLiveProxyLegFailure
+func SNLoadClientKey readProviderClientKeySeed
+func SetH3Mode applyH3Mode
