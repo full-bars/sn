@@ -1,6 +1,6 @@
 package miner
 
-// control_audit.go adapts the P2 control socket to the P1(c) audit ring
+// control_audit.go adapts the control socket to the audit ring
 // (proxy_manager_audit_ring.go). The daemon branch originally carried its own
 // reduced ring; after the rebase both existed. The socket now uses the full
 // v33 port (checksum envelope, hotswap persistence, union/dedupe) and this

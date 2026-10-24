@@ -1,12 +1,14 @@
 package miner
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/urnetwork/connect"
 )
@@ -341,5 +343,66 @@ func TestTrimGarbageWarningIsQueuedForEventsLog(t *testing.T) {
 	}
 	if !strings.Contains(string(b), "test queued line") {
 		t.Fatalf("writeDeferredCrit must write events.log, got %q", string(b))
+	}
+}
+
+// Runtime producers (the control socket's oom-cap apply, noteTrimSelection on
+// a reload) queue critical-log lines long after the startup drain ran. Without
+// a ticker and a shutdown flush they stay in memory for the life of the
+// process, so this pins both paths.
+func TestDeferredCritFlusherDrainsRuntimeLines(t *testing.T) {
+	drainDeferredCrit()
+	t.Cleanup(func() { drainDeferredCrit() })
+	stateDir := withTempHome(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		runDeferredCritFlusher(ctx, 5*time.Millisecond)
+		close(done)
+	}()
+
+	deferCritWrite("[proxy][trim] runtime queued line")
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		b, err := os.ReadFile(filepath.Join(stateDir, "events.log"))
+		if err == nil && strings.Contains(string(b), "runtime queued line") {
+			break
+		}
+		if time.Now().After(deadline) {
+			cancel()
+			<-done
+			t.Fatalf("runtime line never reached events.log: %q (err=%v)", string(b), err)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	// A line queued after the last tick must still be written by the
+	// shutdown drain.
+	deferCritWrite("[proxy][trim] shutdown queued line")
+	cancel()
+	<-done
+	b, err := os.ReadFile(filepath.Join(stateDir, "events.log"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), "shutdown queued line") {
+		t.Fatalf("shutdown drain missed the queued line: %q", string(b))
+	}
+
+	// The flusher has returned by the time proxyManager.stop() runs, so a
+	// reload or trim evaluation inside desired() during teardown queues a line
+	// with no background consumer left. provide() registers its final
+	// writeDeferredCrit BEFORE the stop defer, because defers run LIFO and the
+	// drain has to come after the manager is quiet; pin that a line queued
+	// this late still reaches events.log.
+	deferCritWrite("[proxy][trim] teardown queued line")
+	writeDeferredCrit()
+	b, err = os.ReadFile(filepath.Join(stateDir, "events.log"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), "teardown queued line") {
+		t.Fatalf("the post-stop teardown drain missed the queued line: %q", string(b))
 	}
 }

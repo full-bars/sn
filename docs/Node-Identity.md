@@ -2,6 +2,14 @@
 
 Each provider has a label. Use it to tell nodes apart in logs and in your Grafana dashboards.
 
+> [!NOTE]
+> The miner does not publish a node name. It accepts and persists
+> `node_name` (and `urnet-tools rename`) so 3.23-fix tooling keeps working, but
+> its client description is `provider <os> <version>` and no label reaches the
+> dashboard or the health heartbeat. Neither a live set nor a restart changes
+> that. Everything below applies to the relaying provider; see
+> [Miner Image](/full-bars/sn/wiki/Miner-Image) for the miner.
+
 The label is separate from the `client_id` the platform assigns to each slot. Those ids, and how they are kept stable across restarts by the provider and by the miner, are covered in [Hot-Restart.md](/full-bars/sn/wiki/Hot-Restart).
 
 ## Setting the node name

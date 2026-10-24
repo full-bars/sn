@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -86,12 +87,11 @@ func deferCritWrite(line string) {
 }
 
 // drainDeferredCrit returns and clears the queued lines without writing them.
-// Used where the caller wants the lines itself (tests, and the startup path
+// Used where the caller wants the lines itself (tests, and writeDeferredCrit
 // which writes them directly). It does NOT participate in batch ordering, so
-// only one such caller may run at a time; the startup path runs once per
-// process, before reloads exist. The reload path (P2) must serialise its
-// batches like the v33 drainDeferredCritFn so lines reach events.log in the
-// order the reloads that produced them ran.
+// only one such caller may run at a time: the startup path drains once, then
+// the single flusher goroutine owns it. critLogMu serialises the appends, so
+// lines reach events.log in queue order.
 func drainDeferredCrit() []string {
 	deferredCrit.Lock()
 	defer deferredCrit.Unlock()
@@ -106,6 +106,31 @@ func drainDeferredCrit() []string {
 func writeDeferredCrit() {
 	for _, line := range drainDeferredCrit() {
 		critLog("%s", line)
+	}
+}
+
+// deferredCritFlushInterval is how often the running process writes lines
+// queued after startup. Startup has its own one-shot drain; producers that run
+// later (the control socket's oom-cap apply, and the reload cycles that call
+// noteTrimSelection) queue into the same slice, and without this loop those
+// lines would sit in memory until process exit.
+const deferredCritFlushInterval = 30 * time.Second
+
+// runDeferredCritFlusher drains the deferred critical log on a cadence and once
+// more when ctx ends, so a line queued at runtime reaches events.log whether
+// the process runs for days or stops first. writeDeferredCrit is a no-op when
+// the queue is empty, so the idle cost is one ticker wake.
+func runDeferredCritFlusher(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			writeDeferredCrit()
+			return
+		case <-ticker.C:
+			writeDeferredCrit()
+		}
 	}
 }
 
@@ -219,9 +244,9 @@ func startupTrimSelection(all []*connect.ProxySettings, cap int, state map[strin
 		k := p.Key()
 		keys = append(keys, k)
 		// Port hardening: v33 always passes a real earnings function (its own
-		// tests use a no-op), but the miner's earnings store is P1(c2), so a
-		// caller without one passes nil. Treat nil as "no earnings" rather
-		// than panicking on the first key.
+		// tests use a no-op), but a caller without the earnings store (tests,
+		// or a path that has not loaded it) passes nil. Treat nil as "no
+		// earnings" rather than panicking on the first key.
 		if earnings != nil {
 			if e := earnings(k); e > 0 {
 				traffic[k] = uint64(e)

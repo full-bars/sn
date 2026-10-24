@@ -69,9 +69,10 @@ type controlState struct {
 
 // controlKeys are the settings the socket accepts. This is the v33 key
 // surface, unchanged, so the unmodified urnet-tools client validates and
-// sends exactly the keys it sends to a 3.23-fix provider. Keys the miner has
-// no live consumer for are still persisted and reported; the provider log
-// says which ones need a restart (see needsRestart in control_socket.go).
+// sends exactly the keys it sends to a 3.23-fix provider. Every key is
+// persisted and reported; controlKeyEffect (control_socket.go) says what a
+// write can actually do in this build, and node_name/ip_version in particular
+// are persisted but have no consumer here.
 var controlKeys = map[string]bool{
 	"node_name":                   true,
 	"fast_auth":                   true,

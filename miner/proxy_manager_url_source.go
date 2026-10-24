@@ -21,22 +21,22 @@ import (
 //
 // P1(a) adaptations, all deliberate:
 //   - resolveProxyURLMax/Refresh/Cleanup*/SelfHeal read a small in-process
-//     control-state map (proxyManagerControlState) instead of v33's control
-//     socket; P2 replaces that map's backing with the real socket state.
+//     control-state map (proxyManagerControlState) that the control socket
+//     writes (applyControlLiveSideEffect), so a set applies live.
 //   - the stage-1 table probe is P1(c): resolveProxyTableProbeConfig reports
 //     the kill switch off, so the fetcher admits on the stage-0 SOCKS5+API
 //     check exactly as v33 does with grading disabled.
 //   - the miner's provide loop reads the desired set at startup; the reload
-//     WATCHER that would apply a live trigger is P2, so the fetcher/reaper
-//     persist state and write the trigger for the next start (documented in
-//     the report).
-//   - liveProxyHealthByKey and degradedReaperFrozen are calm no-op seams (see
-//     proxy_manager_hooks.go) because the pinned connect does not export the
-//     health registry v33 uses; P2 wires them.
+//     watcher (proxy_reloader.go) applies a live add/remove trigger to the
+//     running pool, so a fetcher/reaper change takes effect without a restart.
+//   - liveProxyHealthByKey reads the miner's own health registry
+//     (proxy_manager_health_registry.go). The degraded-reaper freeze is decided
+//     by the reaper from its own probe evidence (proxy_outage_freeze.go), not
+//     from a connect registry the pin does not export.
 
-// proxyManagerControlState is the P1(a) stand-in for v33's globalControlState
-// (control_state.go). The control socket is P2; this map lets the override
-// resolvers (and the ported tests) exercise the same precedence without it.
+// proxyManagerControlState is the in-process live layer for v33's
+// globalControlState (control_state.go): the control socket writes it, and the
+// override resolvers read it before the override file and the startup default.
 type proxyManagerControlState struct {
 	mu     sync.Mutex
 	values map[string]string

@@ -112,9 +112,9 @@ func minerExtraMetrics() string {
 	writeTrafficMetrics(&b)
 
 	// --- Resource pressure ---
-	// currentPressure reads calm until the pressure monitor port lands
-	// (proxy_manager_pressure.go), which is the v33 behavior on a box whose
-	// monitor has not sampled yet.
+	// currentPressure is the pressure monitor's live score
+	// (proxy_manager_pressure.go); it reads 0 until the first sample, which is
+	// v33's behavior on a box whose monitor has not sampled yet.
 	pressure := currentPressure()
 	fmt.Fprintf(&b, "# HELP urnet_pressure_score Resource pressure (0=ok, 1=emergency).\n")
 	fmt.Fprintf(&b, "# TYPE urnet_pressure_score gauge\n")

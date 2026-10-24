@@ -73,14 +73,18 @@ type ProxyAuditParked struct {
 
 // controlResponse is one line response from the control socket.
 type controlResponse struct {
-	OK           bool                   `json:"ok"`
-	Value        string                 `json:"value,omitempty"`
-	Found        bool                   `json:"found,omitempty"`
-	Error        string                 `json:"error,omitempty"`
-	NeedsRestart bool                   `json:"needs_restart,omitempty"`
-	Entries      []AuditEntry           `json:"entries,omitempty"`
-	NextCursor   string                 `json:"next_cursor,omitempty"`
-	Settings     map[string]SettingInfo `json:"settings,omitempty"`
+	OK           bool   `json:"ok"`
+	Value        string `json:"value,omitempty"`
+	Found        bool   `json:"found,omitempty"`
+	Error        string `json:"error,omitempty"`
+	NeedsRestart bool   `json:"needs_restart,omitempty"`
+	// Effect is the server's classification of what a set/clear did: "live",
+	// "restart" or "none". Empty when the target predates the field, in which
+	// case needs_restart is the only signal.
+	Effect     string                 `json:"effect,omitempty"`
+	Entries    []AuditEntry           `json:"entries,omitempty"`
+	NextCursor string                 `json:"next_cursor,omitempty"`
+	Settings   map[string]SettingInfo `json:"settings,omitempty"`
 	// StartupValues maps restart-required keys to the values the running
 	// provider actually started with (from env vars set at startup).
 	// The dashboard compares these against current control-state values
@@ -511,23 +515,32 @@ func removeLegacyFile(stateDir, canonicalKey string) {
 }
 
 // applyControlOverride applies op ("set" or "clear") for key on provider p.
-// Returns (appliedLive, needsRestart, error).
+// Returns (appliedLive, needsRestart, error). The effect classification the
+// server sends is dropped here; callers that print what happened use
+// applyControlOverrideEffect.
 func applyControlOverride(p Provider, op, key, value string, dryRun bool) (bool, bool, error) {
+	applied, needsRestart, _, err := applyControlOverrideEffect(p, op, key, value, dryRun)
+	return applied, needsRestart, err
+}
+
+// applyControlOverrideEffect is applyControlOverride plus the server's effect
+// classification ("live", "restart" or "none"; empty from an older build).
+func applyControlOverrideEffect(p Provider, op, key, value string, dryRun bool) (appliedLive, needsRestart bool, effect string, err error) {
 	canonicalKey, ok := canonicalControlKey(key)
 	if !ok {
-		return false, false, fmt.Errorf("unknown key %q (see 'urnet-tools set help')", key)
+		return false, false, "", fmt.Errorf("unknown key %q (see 'urnet-tools set help')", key)
 	}
 	if p.StateDir == "" {
-		return false, false, fmt.Errorf("provider %s has no resolvable state dir", providerLabel(p))
+		return false, false, "", fmt.Errorf("provider %s has no resolvable state dir", providerLabel(p))
 	}
 	if op == "set" {
 		if err := validateControlValue(canonicalKey, value); err != nil {
-			return false, false, err
+			return false, false, "", err
 		}
 	}
 
 	if dryRun {
-		return false, false, nil
+		return false, false, "", nil
 	}
 
 	sockPath := filepath.Join(p.StateDir, "provider.sock")
@@ -539,10 +552,10 @@ func applyControlOverride(p Provider, op, key, value string, dryRun bool) (bool,
 
 	if dialErr == nil {
 		if !resp.OK {
-			return false, false, fmt.Errorf("%s", resp.Error)
+			return false, false, "", fmt.Errorf("%s", resp.Error)
 		}
 		removeLegacyFile(p.StateDir, canonicalKey)
-		return true, resp.NeedsRestart, nil
+		return true, resp.NeedsRestart, resp.Effect, nil
 	}
 
 	if isSocketUnavailable(dialErr) {
@@ -555,18 +568,38 @@ func applyControlOverride(p Provider, op, key, value string, dryRun bool) (bool,
 		// fake "queued" success for a config that will never apply.
 		// Only STOPPED providers are legitimately queued-to.
 		if p.Running {
-			return false, false, fmt.Errorf(
+			return false, false, "", fmt.Errorf(
 				"provider %s is running (pid %d) but its control socket %s is unreachable — not queuing a change that would never apply; check whether this provider is actually running on this host (docker container misattribution?) or restart it",
 				providerLabel(p), p.PID, sockPath)
 		}
 		if err := queuePendingOverrideIn(p.StateHome, p.StateDir, op, canonicalKey, value); err != nil {
-			return false, false, fmt.Errorf("queue pending override: %w", err)
+			return false, false, "", fmt.Errorf("queue pending override: %w", err)
 		}
 		removeLegacyFile(p.StateDir, canonicalKey)
-		return false, false, nil
+		return false, false, queuedControlKeyEffect(canonicalKey), nil
 	}
 
-	return false, false, fmt.Errorf("control socket %s: %w", sockPath, dialErr)
+	return false, false, "", fmt.Errorf("control socket %s: %w", sockPath, dialErr)
+}
+
+// queuedControlKeyEffect classifies a key whose override was queued because
+// the provider is stopped, where no socket exists to answer. Most keys return
+// "": their queued override really is applied at the next start, which is what
+// the caller's historical queued wording says. The no-effect keys do not: this
+// build has no consumer for them, so "takes effect on next start" would be the
+// same false promise the socket path avoids. Mirrors the provider's
+// controlNoEffectKeys (miner/control_socket.go); the CLI cannot import the
+// miner, so the two lists have to be kept in step.
+//
+// ip_version is deliberately absent: controlKeyCanonical does not map it, so
+// applySetOverride rejects it as an unknown key before any write and no
+// queued path can reach it. Add it here when the CLI can address it.
+func queuedControlKeyEffect(canonicalKey string) string {
+	switch canonicalKey {
+	case "node_name", "h3_datagram", "h3_datagram_send":
+		return controlEffectNone
+	}
+	return ""
 }
 
 // queryControlOverride retrieves the current value for canonicalKey on provider p. Checks the socket first, then pending_overrides.json, then legacy files.

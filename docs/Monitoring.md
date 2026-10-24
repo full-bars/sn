@@ -136,13 +136,20 @@ This build offers QUIC DATAGRAM on every H3 connection at the upstream
 always-on default: there is no gate to enable, no control key that changes it,
 and no environment variable.
 
-The H3 identity set itself is always exported:
+On the relaying provider, the H3 identity set itself is always exported:
 
 | Metric | Type | Labels | Meaning |
 |---|---|---|---|
 | `urnet_h3_mode_info` | gauge | `mode` | Value 1 for the resolved `h3` mode (`off`, `direct`, a proxy count, or `all`) |
 | `urnet_h3_set_size` | gauge | | Grand total of running identities that run H3: proxies plus the direct identity. Under an `<int>` cap the direct identity is counted on top of the N proxies. |
 | `urnet_h3_proxy_set_size` | gauge | | Running proxies that run H3, excluding the direct identity. `urnet_h3_set_size` is this plus the direct identity when it runs. |
+
+The miner does not export these three yet. Its H3 seam
+(`metricsSeamH3` in `miner/metrics_seams.go`) is unwired, because the direct
+identity's slot is owned locally by the provide run and the scrape has no
+accessor for it; the mode and the launched proxy set exist separately but the
+grand total cannot be computed outside that scope. A scrape from a miner
+therefore carries none of the `urnet_h3_*` families rather than a partial set.
 
 The per-datagram families the 3.23-fix fork exports
 (`urnet_h3_datagram_rx_*`, `urnet_h3_datagram_tx_*`,

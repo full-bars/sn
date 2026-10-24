@@ -80,14 +80,20 @@ type settingInfo struct {
 
 // controlResponse is one line of the socket protocol's reply.
 type controlResponse struct {
-	OK           bool                   `json:"ok"`
-	Value        string                 `json:"value,omitempty"`
-	Found        bool                   `json:"found,omitempty"`
-	Error        string                 `json:"error,omitempty"`
-	NeedsRestart bool                   `json:"needs_restart,omitempty"`
-	Entries      []CommandAudit         `json:"entries,omitempty"`
-	NextCursor   string                 `json:"next_cursor,omitempty"`
-	Settings     map[string]settingInfo `json:"settings,omitempty"`
+	OK           bool   `json:"ok"`
+	Value        string `json:"value,omitempty"`
+	Found        bool   `json:"found,omitempty"`
+	Error        string `json:"error,omitempty"`
+	NeedsRestart bool   `json:"needs_restart,omitempty"`
+	// Effect is what a set or clear did: "live" (applied to the running
+	// process), "restart" (consumed at the next start) or "none" (persisted
+	// for 3.23-fix compatibility, but nothing in this build reads it and no
+	// restart will change that). Empty from a build that does not classify;
+	// clients fall back to needs_restart alone.
+	Effect     string                 `json:"effect,omitempty"`
+	Entries    []CommandAudit         `json:"entries,omitempty"`
+	NextCursor string                 `json:"next_cursor,omitempty"`
+	Settings   map[string]settingInfo `json:"settings,omitempty"`
 	// StartupValues maps restart-required keys to the values the running
 	// process actually started with; the dashboard compares them against the
 	// current values to decide whether a restart banner is warranted.
@@ -97,7 +103,7 @@ type controlResponse struct {
 	// "version" command.
 	BuildVersion string `json:"build_version,omitempty"`
 	// MetricsAddrs are the addresses /metrics listens on. Empty when metrics
-	// is off (or, for the miner so far, not implemented).
+	// is off.
 	MetricsAddrs []string `json:"metrics_addrs,omitempty"`
 	// Snapshot is the live node picture, answered by "snapshot".
 	Snapshot *nodeSnapshot `json:"snapshot,omitempty"`
@@ -326,16 +332,13 @@ func formerValue(old string, had bool) string {
 // runtime without a restart. It is the subset of the v33 live set the miner
 // has a live consumer for: the Go runtime knobs, the dialer/upgrade toggles
 // the pinned connect exports, and the proxy-manager overrides the running
-// fetcher/reaper re-read on every cycle. Keys the miner has no consumer for
-// still persist (and the provider log says so); they report needs_restart.
+// fetcher/reaper re-read on every cycle.
 var controlLiveEffectKeys = map[string]bool{
 	"gomemlimit":                  true,
 	"gogc":                        true,
 	"smart_dialer":                true,
 	"h1_plus":                     true,
 	"h3":                          true,
-	"h3_datagram":                 true,
-	"h3_datagram_send":            true,
 	"metrics":                     true,
 	"metrics_listen":              true,
 	"proxy_self_heal":             true,
@@ -350,20 +353,79 @@ var controlLiveEffectKeys = map[string]bool{
 	"baseline":                    true,
 }
 
-// controlUnsupportedKeys are accepted and persisted but have no miner
-// consumer at all yet; applyLiveSideEffect logs the gap explicitly so an
-// operator never believes a value took effect when nothing reads it.
-var controlUnsupportedKeys = map[string]bool{
-	"node_name":  true,
-	"ip_version": true,
-	"profile":    true,
-	"ramlogs":    true,
+// controlRestartEffectKeys are accepted and persisted, have no live consumer,
+// but ARE consumed at startup: seedEnvFromControlState re-exports them as
+// URNETWORK_PROFILE and URNETWORK_RAMLOGS before initGlog reads them, so a
+// restart applies them even though a set on a running miner cannot. They are
+// the only keys that truthfully report needs_restart.
+var controlRestartEffectKeys = map[string]bool{
+	"profile": true,
+	"ramlogs": true,
+}
+
+// controlNoEffectKeys are accepted and persisted so unmodified 3.23-fix
+// tooling keeps working, but nothing in the miner reads them and no restart
+// changes that. node_name is not a miner label: its client description is
+// "provider <os> <version>" (minerProviderDescription), and it publishes no
+// node name. ip_version has no control-driven consumer either: the transport
+// family comes from the SDK/connect pin, not from this key. h3_datagram and
+// h3_datagram_send are the same case: the pinned connect offers and sends
+// QUIC DATAGRAM by default and exposes no runtime toggle, so there is nothing
+// a set could switch on or off (see applyControlLiveSideEffect). They must
+// never be reported as live-applied nor as restart-pending.
+var controlNoEffectKeys = map[string]bool{
+	"node_name":        true,
+	"ip_version":       true,
+	"h3_datagram":      true,
+	"h3_datagram_send": true,
+}
+
+// controlNoEffectDetail returns the key-specific half of the no-effect answer,
+// for keys whose reason is worth naming beyond "no consumer". Every key in
+// controlNoEffectKeys is answered by the same branch in
+// applyControlLiveSideEffect; this only chooses the wording, so a key can never
+// be intercepted by a second case (which would make that branch unreachable
+// for it) just to say something more specific.
+func controlNoEffectDetail(key string) string {
+	switch key {
+	case "h3_datagram", "h3_datagram_send":
+		// The h3 port is limit-only: the pinned upstream connect offers and
+		// sends QUIC DATAGRAM by default and carries no runtime toggle, so
+		// neither a set nor a restart can change the datagram lanes.
+		return "QUIC datagrams stay on at the upstream always-on default in this build"
+	}
+	return ""
+}
+
+// Effect values reported by the control socket for a set or clear.
+const (
+	controlEffectLive    = "live"
+	controlEffectRestart = "restart"
+	controlEffectNone    = "none"
+)
+
+// controlKeyEffect classifies what a write to key can do in this build. An
+// unclassified (unknown) key keeps the historical restart answer, so adding a
+// key to controlKeys without classifying it cannot silently claim a live
+// effect.
+func controlKeyEffect(key string) string {
+	switch {
+	case controlLiveEffectKeys[key]:
+		return controlEffectLive
+	case controlRestartEffectKeys[key]:
+		return controlEffectRestart
+	case controlNoEffectKeys[key]:
+		return controlEffectNone
+	}
+	return controlEffectRestart
 }
 
 // controlNeedsRestart returns true if setting this key requires a provider
-// restart to take effect: any key that cannot be applied live.
+// restart to take effect. A key with no consumer at all is false, not true:
+// telling an operator to restart for node_name or ip_version would promise an
+// effect the restart does not deliver.
 func controlNeedsRestart(key string) bool {
-	return !controlLiveEffectKeys[key]
+	return controlKeyEffect(key) == controlEffectRestart
 }
 
 // controlLiveDefaults maps live-applied keys to the runtime values clearing
@@ -398,12 +460,6 @@ var controlLiveDefaults = map[string]string{
 	// decide and log but enforce nothing. Any other choice would make a clear
 	// silently start (or keep) shedding proxies.
 	"oom_cap": "shadow",
-	// Clearing h3_datagram / h3_datagram_send restores the upstream
-	// default: offering and sending QUIC DATAGRAM is on. Nothing is
-	// toggled either way (see applyControlLiveSideEffect); the clear is
-	// reported through the same explicit always-on line as a set.
-	"h3_datagram":      "on",
-	"h3_datagram_send": "on",
 }
 
 // applyControlLiveDefault reapplies the runtime default for a live-applied
@@ -707,7 +763,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			Value:     req.Value,
 			OK:        true,
 		})
-		return controlResponse{OK: true, NeedsRestart: controlNeedsRestart(req.Key)}
+		return controlResponse{OK: true, NeedsRestart: controlNeedsRestart(req.Key), Effect: controlKeyEffect(req.Key)}
 
 	case "clear":
 		if req.Key == "" {
@@ -748,7 +804,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			Value:     oldValue,
 			OK:        true,
 		})
-		return controlResponse{OK: true, NeedsRestart: !liveCleared}
+		return controlResponse{OK: true, NeedsRestart: controlNeedsRestart(req.Key), Effect: controlKeyEffect(req.Key)}
 
 	case "status":
 		raw := state.statusSnapshot()
@@ -1061,12 +1117,6 @@ func applyControlLiveSideEffect(key, value string) error {
 		if previous != setting {
 			relaunchH3ProxiesNow(setting)
 		}
-	case "h3_datagram", "h3_datagram_send":
-		// The h3 port is limit-only: the pinned upstream connect offers and
-		// sends QUIC DATAGRAM by default and carries no runtime toggle, so
-		// there is nothing here to switch. The key is accepted and says so
-		// explicitly instead of claiming an effect it cannot have.
-		importantLogf("[control] %s=%s accepted; QUIC datagrams stay on at the upstream always-on default in this build\n", key, value)
 	case "h1_plus":
 		enabled := strings.EqualFold(value, "on")
 		connect.SetH1PlusDisabled(!enabled)
@@ -1146,10 +1196,26 @@ func applyControlLiveSideEffect(key, value string) error {
 		tlog("[control] fast_auth=%s: sign-in attempts %s the shared rate limiter (the legacy fast_auth marker file no longer decides)\n",
 			value, effect)
 	default:
-		if controlUnsupportedKeys[key] {
-			// Persisted, but nothing in the miner reads it yet. Say so rather
-			// than let the operator believe it took effect.
-			importantLogf("[control] %s=%s persisted, but the miner has no consumer for this key yet; it is inert until the P2 remainder wires it\n", key, value)
+		switch {
+		case controlNoEffectKeys[key]:
+			// Accepted and persisted for 3.23-fix tooling compatibility, but
+			// nothing in this build reads it. Say that plainly: neither the
+			// set nor a restart can change anything, so do not offer one.
+			// This arm is the ONLY place a no-effect key is answered, so it
+			// must stay reachable for every key in controlNoEffectKeys. A
+			// second case for h3_datagram* above would intercept those keys
+			// and leave this branch unreachable for them, so they keep their
+			// specific wording through controlNoEffectDetail instead.
+			if detail := controlNoEffectDetail(key); detail != "" {
+				importantLogf("[control] %s=%s accepted; %s, and no restart changes that\n", key, value, detail)
+				return nil
+			}
+			importantLogf("[control] %s=%s persisted for 3.23-fix compatibility, but this build has no consumer for it, so nothing changed and a restart will not change that\n", key, value)
+			return nil
+		case controlRestartEffectKeys[key]:
+			// Consumed at startup only (seedEnvFromControlState), so the
+			// honest answer is "next start", not "live" and not "inert".
+			importantLogf("[control] %s=%s persisted; this setting is read at startup, so it takes effect on the next restart\n", key, value)
 			return nil
 		}
 	}

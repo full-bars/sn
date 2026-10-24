@@ -100,9 +100,9 @@ func readDirectOverride() (bool, bool) {
 
 // isDirectEnabled returns true if direct providing should be active at startup.
 // Precedence: runtime toggle file (if present) > DISABLE_DIRECT_IP env var >
-// default (on), exactly as v33 direct.go. The `provider direct on|off` writer
-// that sets the toggle file is P2 (the miner has no direct transport command
-// yet); the read side is what gates the direct grade.
+// default (on), exactly as v33 direct.go. `provider direct on|off`
+// (cmd_direct.go) writes the toggle file; this read side gates the direct
+// grade and the direct slot's launch.
 func isDirectEnabled() bool {
 	if directOn, fileExists := readDirectOverride(); fileExists {
 		return directOn

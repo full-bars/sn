@@ -235,10 +235,14 @@ func TestH3ControlKeyDrivesTheLiveMode(t *testing.T) {
 // The datagram keys are accepted for client compatibility but drive nothing:
 // the pinned upstream connect offers and sends QUIC DATAGRAM by default and
 // carries no runtime switch, so the miner reports the always-on upstream
-// default instead of pretending to toggle it.
+// default instead of pretending to toggle it. Neither a set nor a restart
+// changes a lane, so the keys are classified as no-effect.
 func TestDatagramKeysReportTheUpstreamDefault(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
 	for _, key := range []string{"h3_datagram", "h3_datagram_send"} {
+		if got := controlKeyEffect(key); got != controlEffectNone {
+			t.Fatalf("%s effect = %q, want %q: the pinned connect has no datagram toggle", key, got, controlEffectNone)
+		}
 		if controlNeedsRestart(key) {
 			t.Fatalf("%s is accepted and has no restart-gated effect: controlNeedsRestart must be false", key)
 		}

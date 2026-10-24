@@ -25,10 +25,9 @@ import (
 // miner's legacy <state>/proxy internal config stays the operator's store for
 // curated proxies. On first start it imports the legacy entries into
 // proxy.state and mirrors the legacy file back so every existing reader keeps
-// working. The provide loop reads the manager's desired set once at startup;
-// the fetcher/reaper/cleanup loops keep the state current and write the reload
-// trigger for the P2 hot-reload watcher, so a newly fetched proxy joins the
-// pool on the next start (P2 makes that live).
+// working. The provide loop reads the manager's desired set at startup; the
+// fetcher/reaper/cleanup loops keep the state current and write the reload
+// trigger, which proxy_reloader.go applies to the running pool.
 
 // proxyWarmupDone is set when the operator-curated proxies have started
 // their initial ramp: the launch loop arms and notes the count in
@@ -578,9 +577,9 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// provenance; the warmth launch ordering reads it through
 	// proxySourceOf().
 
-	// URL-sourced proxies only launch on the next start until P2 wires the hot
-	// reload watcher; the loops below still keep proxy_url.json and the trigger
-	// current. The warmup flag itself is owned by the launch loop
+	// The loops below keep proxy_url.json, the trigger and the warmup flag
+	// current; a change reaches the running pool through proxy_reloader.go.
+	// The warmup flag itself is owned by the launch loop
 	// (proxy_manager_warmup.go), not by the manager start.
 
 	// Recovery scouts: install the provider's ranking (v33 main.go provide()).

@@ -34,13 +34,14 @@ import (
 //
 // Three v33 facilities this port cannot host yet are seams with a default:
 //
-//   - the control socket (P2): `proxy trim --preview` asks the running
-//     provider what it would shed (see previewViaControlSocket).
-//   - the live health surface (P1(c)/P2): proxy summary and proxy activity
-//     read the proxy_health.state / proxy_traffic.state files the provider
-//     writes when present and report zero counts when it does not.
-//   - contract metrics (P2): the v33 summary's "Contract Stats" block is not
-//     printed here because the miner has no equivalent counter yet.
+//   - the control socket: `proxy trim --preview` asks the running provider
+//     what it would shed (see previewViaControlSocket).
+//   - the live health surface: proxy summary and proxy activity read the
+//     proxy_health.state / proxy_traffic.state files the provider writes when
+//     present and report zero counts when it does not.
+//   - contract metrics: the v33 summary's "Contract Stats" block is not
+//     printed here because the miner has no equivalent counter (see
+//     metrics_seams.go).
 
 // proxyCommandFatal prints the v33 shmLogFatal line, records the same event in
 // the critical log (events.log), and exits with its code. v33's exit codes
@@ -100,9 +101,8 @@ func proxyHealthStateCounts() (up, down, dead, degraded int) {
 }
 
 // previewViaControlSocket asks the running provider what a trim would shed
-// (v33's dialControlSocket path). P2 wires the socket: the running provider
-// computes the preview because it is the only process that knows its running
-// set.
+// (v33's dialControlSocket path): the running provider computes the preview
+// because it is the only process that knows its running set.
 var previewViaControlSocket = previewViaControlSocketDial
 
 // ---- proxy add-source / remove-source ----
@@ -650,7 +650,7 @@ func atoiNonNegative(s string) (int, error) {
 // The live up/degraded counters come from the provider's health snapshot file
 // when it exists; the source, cache and blacklist counts come from
 // proxy.state and proxy_url.json. v33's Contract Stats block is not printed:
-// the miner has no equivalent counter until the P2 metrics port.
+// the miner has no equivalent counter (see metrics_seams.go).
 func proxySummary() {
 	state, _ := readProxyState()
 

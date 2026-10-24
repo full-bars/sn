@@ -147,6 +147,53 @@ func TestControlSocketRestartOnlyKeyReportsRestart(t *testing.T) {
 	}
 }
 
+// A key the miner accepts for compatibility only must not advertise a live
+// effect or a restart effect: neither one changes anything.
+func TestControlSocketNoEffectKeyReportsNoEffect(t *testing.T) {
+	state := newControlState()
+	path, cleanup := testControlSocket(t, state)
+	defer cleanup()
+
+	// h3_datagram* belong in this list: the side-effect arm answers them
+	// through the same no-effect branch, so a case of their own would
+	// intercept them and leave that branch unreachable. A regression that
+	// reintroduces one shows up here as an effect change instead of as
+	// silently unreachable code.
+	for _, tc := range []struct{ key, value string }{
+		{"node_name", "nyc-1"},
+		{"ip_version", "ipv4"},
+		{"h3_datagram", "on"},
+		{"h3_datagram_send", "on"},
+	} {
+		resp := controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: tc.key, Value: tc.value})
+		if !resp.OK {
+			t.Fatalf("set %s failed: %s", tc.key, resp.Error)
+		}
+		if resp.NeedsRestart {
+			t.Fatalf("%s must not report needs_restart: a restart does not apply it either", tc.key)
+		}
+		if resp.Effect != controlEffectNone {
+			t.Fatalf("%s effect = %q, want %q", tc.key, resp.Effect, controlEffectNone)
+		}
+		resp = controlRequestJSON(t, path, controlRequest{Cmd: "clear", Key: tc.key})
+		if !resp.OK || resp.NeedsRestart || resp.Effect != controlEffectNone {
+			t.Fatalf("clear %s = %+v, want ok with no effect and no restart", tc.key, resp)
+		}
+	}
+
+	// profile/ramlogs are read at startup, so they are restart, not none.
+	resp := controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: "profile", Value: "eco"})
+	if !resp.NeedsRestart || resp.Effect != controlEffectRestart {
+		t.Fatalf("profile = %+v, want restart effect", resp)
+	}
+
+	// A live key stays live.
+	resp = controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: "proxy_url_max", Value: "42"})
+	if resp.NeedsRestart || resp.Effect != controlEffectLive {
+		t.Fatalf("proxy_url_max = %+v, want live effect", resp)
+	}
+}
+
 func TestControlSocketValidationAndCaps(t *testing.T) {
 	state := newControlState()
 	path, cleanup := testControlSocket(t, state)

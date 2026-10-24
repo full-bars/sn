@@ -1307,7 +1307,9 @@ b1_control_key_semantics() {
     fi
 
     bad=""; checked=""
-    for kv in "profile=eco" "node-name=feature-matrix"; do
+    # profile is read at startup, so a set on a running miner still reports the
+    # needs-restart semantics.
+    for kv in "profile=eco"; do
         k="${kv%%=*}"; v="${kv#*=}"
         out="$(TS set "$k" "$v" -f 2>&1)"; rc=$?
         if [ "$rc" != "0" ] || ! printf '%s' "$out" | grep -q 'requires a restart to take effect'; then
@@ -1316,8 +1318,18 @@ b1_control_key_semantics() {
         checked="$checked $k"
         TS set "$k" off -f >/dev/null 2>&1 || true
     done
+    # node-name is accepted for 3.23-fix compatibility, but the miner has no
+    # consumer for it: it persists, and it must NOT claim a restart, or the
+    # harness would demand the false promise ("a restart applies it") that the
+    # control surface now refuses to make.
+    out="$(TS set node-name feature-matrix -f 2>&1)"; rc=$?
+    if [ "$rc" != "0" ] || printf '%s' "$out" | grep -q 'requires a restart to take effect' || ! printf '%s' "$out" | grep -q 'no consumer'; then
+        bad="$bad node-name(rc=$rc: $(printf '%s' "$out" | firstline))"
+    fi
+    checked="$checked node-name"
+    TS set node-name off -f >/dev/null 2>&1 || true
     if [ -z "$bad" ]; then
-        record PASS control-keys-needs-restart "restart-only keys report 'requires a restart to take effect' (checked:$checked; overrides cleared after)"
+        record PASS control-keys-needs-restart "restart semantics hold: profile reports 'requires a restart to take effect', node-name reports no consumer (checked:$checked; overrides cleared after)"
     else
         record FAIL control-keys-needs-restart "restart-required keys did not report their semantics:$bad"
     fi

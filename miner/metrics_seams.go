@@ -6,89 +6,96 @@ import (
 )
 
 // metrics_seams.go is the registration point for the v33 Prometheus families
-// the miner cannot source yet. The v33 provider (candidate/v33-ops,
+// the miner cannot source. The v33 provider (candidate/v33-ops,
 // provider/metrics_*.go) and the v33 connect handler (metrics_prometheus.go)
-// emit these; the miner's port names them here, and the emission stays with
-// the work that owns the data:
+// emit these; the miner names them here so a missing family has one obvious
+// place to look.
 //
-//   - grading/earnings (parallel P2): sessions, contract outcomes, the
-//     persisted lifetime store, and the per-category error counts;
-//   - connect-owned accounting the pinned fork no longer exports: the
-//     reconnect governor, transfer/dead-client/socket/transport/speedtest
-//     series, H1+ counters, H3 and the dual-stack family transport;
-//   - miner paths not ported yet: the startup disk benchmark, the enforcement
-//     log, and the peer-key cross-check.
+// Wired in this build:
 //
-// Every hook below is nil until its owner wires it. minerExtraMetrics omits a
-// family while its hook is nil, so a missing series means "not implemented",
-// never a fabricated zero. When a port lands, it sets the hook (in its own
-// file) and the family appears; nothing in the scrape has to change. The
-// supervised-loop registry is claimed by loop_supervisor.go, which is the miner
-// port of the provider's loop supervisor.
+//   - metricsSeamLifetime: lifetime_metrics.go (the persisted all-time store);
+//   - metricsSeamLoops: loop_supervisor.go (the supervised-loop registry);
+//   - metricsSeamDiskBench: disk_bench_metrics.go (the startup disk audit).
+//
+// Every other hook below is UNSUPPORTED, not merely pending. Each comment says
+// why, and the reason is one of two kinds: the data lives inside the pinned
+// connect fork and is not exported, or the miner never built the subsystem at
+// all. None of them can be filled from a value the miner already holds, so
+// wiring one would need new instrumentation rather than a registration.
+//
+// A hook stays nil until its owner sets it (in its own file). minerExtraMetrics
+// omits a family while its hook is nil, so a missing series means "not
+// implemented", never a fabricated zero.
 var (
-	// metricsSeamSessions is connect's PQE/classical session accounting:
-	// urnet_sessions_pqe, urnet_sessions_classical, urnet_sessions_opened_total
-	// and urnet_sessions_opened_recent. The miner's SDK does not expose the
-	// session split yet (see control_report_miner.go).
+	// UNSUPPORTED: the pinned SDK does not expose connect's PQE/classical
+	// session split (control_report_miner.go names the same gap for the
+	// snapshot), so the miner has no active or lifetime session counter to
+	// read. urnet_sessions_* stays absent.
 	metricsSeamSessions func() *seamSessions
 
-	// metricsSeamContracts is the contract outcome registry:
-	// urnet_contracts_total{result="acquired"|"denied"} (and the lifetime
-	// urnet_lifetime_contracts_total). v33 tracks it per proxy in
-	// contract_metrics.go; the earnings port owns the miner's copy.
+	// UNSUPPORTED: v33 tracks contract outcomes per proxy inside connect. The
+	// pinned fork exports no such counter and the miner keeps no equivalent
+	// (baseline_sampler.go omits contract counts for the same reason). The
+	// all-time totals in lifetime_metrics.go are not a substitute: reporting
+	// them as urnet_contracts_total would present a persisted lifetime figure
+	// as this process's counter.
 	metricsSeamContracts func() (acquired, denied int64, ok bool)
 
-	// metricsSeamLifetime is the persisted all-time store:
-	// urnet_lifetime_sessions_total, urnet_lifetime_contracts_total,
-	// urnet_lifetime_proxies_total and urnet_lifetime_billable_bytes_total.
+	// Wired by lifetime_metrics.go's init: the persisted all-time store.
 	metricsSeamLifetime func() *seamLifetime
 
-	// metricsSeamErrors is the persistent per-category error counts:
-	// urnet_lifetime_errors_total{category} and urnet_errors_total{category}.
+	// UNSUPPORTED: there is no persistent per-category error store in the
+	// miner; lifetime_metrics.go keeps session, contract, proxy-transition and
+	// billable-byte totals only.
 	metricsSeamErrors func() map[string]uint64
 
-	// metricsSeamLoops is the supervised background loop registry:
-	// urnet_loop_restarts_total{loop} and urnet_loop_up{loop}.
+	// Wired by loop_supervisor.go's init: the supervised-loop registry that
+	// every supervised loop in the run path registers into.
 	metricsSeamLoops func() []seamLoop
 
-	// metricsSeamDiskBench is the startup disk benchmark:
-	// urnet_disk_write_mbps, urnet_disk_slow and urnet_disk_bench_age_seconds.
+	// Wired by disk_bench_metrics.go's init: the startup disk audit's last
+	// reading, or nil when no benchmark has been recorded.
 	metricsSeamDiskBench func() *seamDiskBench
 
-	// metricsSeamDohFailures is connect's DNS-over-HTTPS failure counter:
-	// urnet_doh_failures_total. The pinned fork keeps DoH but exports no
-	// counter.
+	// UNSUPPORTED: the miner has no DNS-over-HTTPS dial path of its own (name
+	// resolution goes through the host stack and the pinned connect), so there
+	// is no failure counter to export.
 	metricsSeamDohFailures func() int64
 
-	// metricsSeamH1Plus is the H1+ upgrade accounting:
-	// urnet_h1_max_message_bytes and the urnet_h1plus_* counters. The fork
-	// keeps a per-settings H1PlusStats object but no process-global accessor.
+	// UNSUPPORTED: the pinned fork keeps H1PlusStats per client settings with
+	// no process-global accessor. The switch is exported on its own as
+	// urnet_h1plus_enabled (metrics_provider.go); the per-message counters are
+	// not reachable.
 	metricsSeamH1Plus func(b *strings.Builder) bool
 
-	// metricsSeamDualstack is the dual-stack family transport block:
-	// urnet_dualstack_* and urnet_ip_version.
+	// UNSUPPORTED: the dual-stack family-transport block belongs to connect's
+	// client internals, which the pinned revision does not export. The miner's
+	// own dual-stack behaviour (the direct slot and the proxy UDP checks) keeps
+	// no per-family counters.
 	metricsSeamDualstack func(b *strings.Builder) bool
 
-	// metricsSeamEnforcement is the durable enforcement log:
-	// urnet_enforcement_events, urnet_enforcement_events_total and the
-	// log-health counters.
+	// UNSUPPORTED: the miner has no durable enforcement log. Its
+	// enforcement-shaped decisions (pressure shed, OOM cap, proxy audit) log
+	// through the ramlog and events.log and keep no graded event counter.
 	metricsSeamEnforcement func(b *strings.Builder) bool
 
-	// metricsSeamPeerKeyCrosscheck is the out-of-band peer key cross-check:
-	// urnet_peer_key_crosscheck_total{result}.
+	// UNSUPPORTED: the miner has no out-of-band peer-key cross-check.
 	metricsSeamPeerKeyCrosscheck func(b *strings.Builder) bool
 
-	// metricsSeamGovern is the v33 connect block the pinned fork dropped:
-	// the reconnect governor (urnet_govern_*), transfer accounting
-	// (urnet_transfer_*), dead-client release (urnet_dead_client_*), the
-	// socket/connect-attempt byte accounting (urnet_socket_bytes_total,
-	// urnet_connect_attempt*_total), the runtime connection count
-	// (urnet_connections_active) and the categorized error counter
-	// (urnet_errors_total).
+	// UNSUPPORTED: the reconnect governor, the transfer/dead-client/socket
+	// accounting and urnet_connections_active are connect-internal in v33. The
+	// pinned fork exports none of them and the miner keeps no equivalent
+	// counters.
 	metricsSeamGovern func(b *strings.Builder) bool
 
-	// metricsSeamH3 is the H3 identity set and DATAGRAM accounting:
-	// urnet_h3_mode_info, urnet_h3_set_size and urnet_h3_datagram_*.
+	// UNSUPPORTED: the H3 mode (resolveH3Mode) and the launched proxy set
+	// (h3LaunchEligible) do exist, but the direct identity's slot is a local in
+	// the provide run (run.go) with no scrape-reachable accessor, so
+	// urnet_h3_set_size cannot be computed from outside that scope without new
+	// plumbing. The urnet_h3_datagram_* counters live inside connect and the
+	// pinned revision does not export them either. Emitting the mode alone
+	// would advertise an identity set the scrape cannot measure, so the family
+	// stays absent as a whole.
 	metricsSeamH3 func(b *strings.Builder) bool
 )
 

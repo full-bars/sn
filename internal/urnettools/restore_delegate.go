@@ -245,7 +245,7 @@ var setKeyFiles = map[string]string{
 
 // setKeyHelps describes each key for `set help` / usage.
 var setKeyHelps = []string{
-	"  node-name           <string>      node name reported to the fleet (default: hostname)",
+	"  node-name           <string>      node name reported to the fleet (default: hostname). The miner has no node label: it persists this value but never sends it, so it has no effect there",
 	"  fast-auth           on|off        bypass auth rate limiter",
 	"  self-heal           on|off        dead proxy auto-cleanup & load gate",
 	"  proxy-url-max       <int>         max proxies from URL feeds (default: 500)",
@@ -255,8 +255,8 @@ var setKeyHelps = []string{
 	"  hot-restart         on|off        preserve client JWTs across restarts",
 	"  oom-cap             on|off|shadow OOM-aware start cap: shadow logs what it would do (default), on enforces, off is the kill switch and forgets the standing cap",
 	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed)",
-	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply)",
-	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message)",
+	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply). The miner has no toggle: DATAGRAM stays on at the pinned connect default and neither a set nor a restart changes it",
+	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message). The miner has no toggle: the send lane stays on at the pinned connect default",
 	"  h3                  off|direct|N|all  which identities run H3: none, the direct identity only, the N best proxies, or all. N must be a positive integer (on == direct, 0 == off, auto == all). N caps the PROXY set only; the direct identity is always additionally eligible and does not consume one of the N, so h3=N runs N proxies plus the direct identity (default: all)",
 	"  gomemlimit          <bytes>       Go runtime memory limit (e.g. 256MiB, 1GiB)",
 	"  gogc      <int>|off|disabled     GC target percentage (default: 100). off clears; disabled turns GC off entirely (unbounded heap)",
@@ -308,9 +308,36 @@ Available keys:
 		fmt.Fprintln(os.Stderr, l)
 	}
 	fmt.Fprint(os.Stderr, `
+node-name and ip-version are provider keys the miner accepts for compatibility
+only: it persists them, but it publishes no node label and has no
+control-driven IP-version setting, so neither a live set nor a restart changes
+anything there.
+
 Duration format: Go-style, e.g. 30s, 5m, 1h, 24h.
 Byte format: Go-style, e.g. 256MiB, 1GiB, 500MB.
 `)
+}
+
+// Control reply effect values (controlResponse.Effect). They mirror the
+// provider's classification so the CLI can say what a write actually did
+// instead of always printing "applied live".
+const (
+	controlEffectRestart = "restart"
+	controlEffectNone    = "none"
+)
+
+// controlEffectNote is the parenthetical printed after a successful set or
+// clear when the target classified the effect. An empty effect means an older
+// build that did not classify: return "", and the caller keeps the historical
+// wording plus the needs_restart warning.
+func controlEffectNote(effect string) string {
+	switch effect {
+	case controlEffectNone:
+		return "persisted; this build has no consumer for this key, so nothing changed and no restart will change that"
+	case controlEffectRestart:
+		return "persisted; it is read at startup, so it takes effect on the next start"
+	}
+	return ""
 }
 
 // cmdSet restores `urnet-tools set <key> [<value>|off] [target]`: it manages the
@@ -404,14 +431,18 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 			fmt.Printf("[dry-run] would clear %s for %s and revert to startup default\n", key, providerLabel(p))
 			return nil
 		}
-		appliedLive, needsRestart, err := applyControlOverride(p, "clear", canonicalKey, "", false)
+		appliedLive, needsRestart, effect, err := applyControlOverrideEffect(p, "clear", canonicalKey, "", false)
 		if err != nil {
 			return err
 		}
 		if appliedLive {
+			if note := controlEffectNote(effect); note != "" {
+				fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), note)
+				return nil
+			}
 			fmt.Printf("%s cleared for %s (applied live via control socket)\n", key, providerLabel(p))
 		} else {
-			fmt.Printf("%s cleared for %s (provider not running; queued in pending_overrides.json, takes effect on next start)\n", key, providerLabel(p))
+			fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), queuedWriteNote(effect))
 		}
 		if needsRestart {
 			fmt.Printf("  ⚠ %s requires a restart to take effect\n", key)
@@ -428,19 +459,36 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 		return nil
 	}
 
-	appliedLive, needsRestart, err := applyControlOverride(p, "set", canonicalKey, value, false)
+	appliedLive, needsRestart, effect, err := applyControlOverrideEffect(p, "set", canonicalKey, value, false)
 	if err != nil {
 		return err
 	}
 	if appliedLive {
+		if note := controlEffectNote(effect); note != "" {
+			fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), note)
+			return nil
+		}
 		fmt.Printf("%s set to %s for %s (applied live via control socket)\n", key, value, providerLabel(p))
 	} else {
-		fmt.Printf("%s set to %s for %s (provider not running; queued in pending_overrides.json, takes effect on next start)\n", key, value, providerLabel(p))
+		fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), queuedWriteNote(effect))
 	}
 	if needsRestart {
 		fmt.Printf("  ⚠ %s requires a restart to take effect\n", key)
 	}
 	return nil
+}
+
+// queuedWriteNote is the parenthetical for a write that was queued because the
+// provider is stopped. The effect decides what may be promised: for a
+// no-effect key the queue changes nothing, so saying "takes effect on next
+// start" is false there and the note says so. An empty effect (an older
+// provider) and the live/restart keys keep the historical wording, which a
+// start does honour.
+func queuedWriteNote(effect string) string {
+	if effect == controlEffectNone {
+		return "provider not running; queued in pending_overrides.json, but this build has no consumer for this key, so nothing changed and no restart will change that"
+	}
+	return "provider not running; queued in pending_overrides.json, takes effect on next start"
 }
 
 // setFastAuthMarker sets or clears the auth-rate-limiter bypass marker in the

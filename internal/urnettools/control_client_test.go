@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -449,5 +450,62 @@ func TestProviderVersionFromSocket_ValidResponse(t *testing.T) {
 	}
 	if v != "3.23.1" {
 		t.Errorf("version = %q, want %q", v, "3.23.1")
+	}
+}
+
+// A stopped provider queues the override, but the queue cannot give a key an
+// effect it never had: node_name and the h3_datagram* keys have no consumer in
+// this build, so the queued path must say that instead of promising the next
+// start applies them (the socket path already reports effect=none). A live key
+// keeps the historical next-start wording, because a start does apply it.
+func TestControlSetQueuedReportsNoEffectKeyTruthfully(t *testing.T) {
+	dir := t.TempDir()
+	p := Provider{StateDir: dir} // no socket: the provider is stopped
+
+	for _, tc := range []struct{ cliKey, value string }{
+		{"node-name", "edge-prod-01"},
+		{"h3-datagram", "on"},
+	} {
+		var err error
+		out := captureStdout(t, func() {
+			err = applySetOverride(p, tc.cliKey, tc.value, false)
+		})
+		if err != nil {
+			t.Fatalf("applySetOverride(%s): %v", tc.cliKey, err)
+		}
+		if !strings.Contains(out, "queued in pending_overrides.json") {
+			t.Fatalf("%s queued output = %q, must say where the write went", tc.cliKey, out)
+		}
+		if !strings.Contains(out, "no consumer") {
+			t.Fatalf("%s queued output = %q, must say this build has no consumer for it", tc.cliKey, out)
+		}
+		if strings.Contains(out, "takes effect on next start") {
+			t.Fatalf("%s queued output = %q, must not promise a next-start effect", tc.cliKey, out)
+		}
+	}
+
+	// Reporting the true effect must not turn the queued set into a no-op.
+	b, err := os.ReadFile(filepath.Join(dir, "pending_overrides.json"))
+	if err != nil {
+		t.Fatalf("read pending overrides: %v", err)
+	}
+	var ops []pendingOp
+	if err := json.Unmarshal(b, &ops); err != nil {
+		t.Fatalf("unmarshal pending overrides: %v", err)
+	}
+	if len(ops) != 2 || ops[0].Key != "node_name" || ops[1].Key != "h3_datagram" {
+		t.Fatalf("queued ops = %+v, want node_name then h3_datagram", ops)
+	}
+
+	// A live key really is applied by the next start, so its wording stands.
+	var liveErr error
+	out := captureStdout(t, func() {
+		liveErr = applySetOverride(p, "proxy-url-refresh", "30s", false)
+	})
+	if liveErr != nil {
+		t.Fatalf("applySetOverride(proxy-url-refresh): %v", liveErr)
+	}
+	if !strings.Contains(out, "takes effect on next start") {
+		t.Fatalf("live key queued output = %q, want the next-start wording", out)
 	}
 }

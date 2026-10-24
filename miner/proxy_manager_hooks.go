@@ -5,24 +5,24 @@ import (
 	"time"
 )
 
-// This file holds the P1(a) seams for the v33 provider facilities that are NOT
+// This file holds the remaining seams for v33 provider facilities that are not
 // part of the URL-source port, so the ported pipeline compiles and behaves
 // sanely without them:
 //
-//   - the connect health registry (liveProxyHealthByKey, degraded freeze),
-//     which the pinned full-bars/connect in this tree does not export in the
-//     form v33 uses. P2 wires these when the miner's ops/observability port
-//     lands.
-//   - the control-socket / metrics status surface (resolution status, source
-//     failure warnings). The grade deltas and the fetcher/reaper countdown
-//     state below are no longer seams: the P1(c) grade summary reads them.
+//   - degradedReaperFrozen is a deliberate constant false: the reaper decides
+//     an outage from its own probe evidence (noProbeReachedTheAPI, see
+//     proxy_outage_freeze.go), so there is no second, connect-registry freeze
+//     input. liveProxyHealthByKey is no longer a seam: it reads the miner's
+//     own health registry (proxy_manager_health_registry.go), which the auth
+//     path and the health cadence fill.
+//   - the resolution status cells feed the status surface and the direct-only
+//     H3 default (systemd_status.go, h3_direct_default.go).
 //
-// Every one is a function variable (or a trivial state cell) with a calm
-// default, so P2 replaces the implementation without touching the ported
-// pipeline.
+// Each remaining one is a function variable (or a trivial state cell) with a
+// calm default, so tests can replace it without touching the ported pipeline.
 
 // proxyHealthStatus is the slice of a live proxy's health the URL reaper reads
-// (v33: connect.ProxyHealthStatus). P2 fills the registry behind
+// (v33: connect.ProxyHealthStatus). The miner's health registry fills it behind
 // liveProxyHealthByKey.
 type proxyHealthStatus struct {
 	Health string
@@ -41,7 +41,7 @@ var liveProxyHealthByKey = proxyLiveHealthSnapshot
 var degradedReaperFrozen = func() bool { return false }
 
 // Proxy resolution statuses for the miner status surface and the direct-only
-// H3 default (P2 consumes these). The values are the 3.23-fix v33 provider's
+// H3 default. The values are the 3.23-fix v33 provider's
 // (provider/systemd_status.go): the zero value is "no resolution attempted
 // yet", which is what keeps the direct-only H3 default off during startup.
 const (
@@ -92,8 +92,8 @@ func getProxyResolutionReason() string {
 	return ""
 }
 
-// warnProxySourceFailure reports a URL source failure to the operator surface.
-// P1(a) logs it; P2 routes it into the important buffer / status line.
+// warnProxySourceFailure reports a URL source failure to the operator surface:
+// importantLogf writes the ramlog line and the events.log copy.
 var warnProxySourceFailure = func(label, reason string) {
 	importantLogf("[proxy][url] WARNING: proxy source %s: %s — retrying\n", label, reason)
 }

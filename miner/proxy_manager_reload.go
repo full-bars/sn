@@ -16,11 +16,9 @@ import (
 // This file ports the v33 provider's cross-process proxy lock and reload
 // trigger (proxy_reload.go, lock and trigger halves). The URLs fetcher, the
 // reaper and the cleanup pass all write state under the lock and poke the
-// trigger file so a running provider applies the change. The miner's provide
-// loop reads the desired set at startup; the reload WATCHER that would apply
-// trigger files live is P2 (hot reload), but the lock and trigger files are
-// still the fork's cross-process contract and the ported tests assert their
-// sequences.
+// trigger file so a running provider applies the change. The miner applies a
+// trigger live through proxy_reloader.go, and the lock and trigger files stay
+// the fork's cross-process contract; the ported tests assert their sequences.
 
 func proxyReloadPath() (string, error) {
 	return providerStatePath("proxy.reload")
