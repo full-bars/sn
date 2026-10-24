@@ -60,7 +60,9 @@ su_payload() { # <write-limit 0|1> <command>
 # chown can only really change an owner as root, and root is the account whose
 # write the symlink hijacks, so re-run the suite under sudo when we can.
 if [ "$(id -u)" != 0 ] && [ "${SHELLRC_TEST_NO_SUDO:-0}" != 1 ] && sudo -n true 2>/dev/null; then
-    exec sudo -n env SHELLRC_TEST_NO_SUDO=1 TMPDIR="${TMPDIR:-/tmp}" \
+    exec sudo -n env SHELLRC_TEST_NO_SUDO=1 \
+        REQUIRE_FALSIFICATION="${REQUIRE_FALSIFICATION:-0}" \
+        TMPDIR="${TMPDIR:-/tmp}" \
         "$here/$(basename "$0")" "$@"
 fi
 
@@ -433,13 +435,18 @@ printf '\n-- falsification: the pre-fix version must still write through\n'
 # installer from `origin/main` stopped working the moment this fix landed:
 # main then IS the fixed version, and the block below would compare the fix
 # with itself and pass without touching the old code. The SHA is an ancestor
-# of main, so a normal clone still has it; a shallow CI checkout may not, and
-# then this run is skipped rather than silently passed. A rebase that changes
-# the parent must update this SHA.
+# of main, so a normal clone still has it. A missing pin is skipped locally but
+# FAILS when REQUIRE_FALSIFICATION=1, which is how CI invokes this suite: a
+# shallow checkout must never pass by skipping the only run that proves the test
+# has teeth. A rebase that changes the parent must update this SHA.
 prefix_commit=e4595f8efb6db6749675bb0f29007339cd571f79
 old="$tmpd/old.sh"
 if ! git -C "$here/.." show "$prefix_commit:scripts/$(basename "$installer")" > "$old" 2>/dev/null; then
-    skip "pre-fix commit $prefix_commit not available for the falsification run"
+    if [ "${REQUIRE_FALSIFICATION:-0}" = 1 ]; then
+        fail "pre-fix commit $prefix_commit is unavailable; refusing to pass without the falsification run (shallow clone? check out with fetch-depth: 0)"
+    else
+        skip "pre-fix commit $prefix_commit not available for the falsification run"
+    fi
 elif grep -qF '[ -L "$shell_rc" ]' "$old"; then
     # This is the failure mode the pin exists for: a reference that already
     # contains the guard would make every assertion below pass vacuously.
