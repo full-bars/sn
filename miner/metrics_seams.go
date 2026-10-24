@@ -51,6 +51,12 @@ var (
 	// passed up for rendering: a zero would read as "nothing was refused" and
 	// an "unknown" on every line would read as "checked, cannot tell" -- both
 	// claims the miner cannot back.
+	//
+	// On a fleet-wide scrape that makes this family's label set differ by one
+	// result: the provider publishes urnet_contracts_total{result="denied"}
+	// from its own denial counter, and the miner has no such series. A
+	// dashboard must read a miner's missing denied result as "not measured",
+	// never as zero.
 	metricsSeamContracts func() *seamContracts
 
 	// Wired by lifetime_metrics.go's init: the persisted all-time store.
