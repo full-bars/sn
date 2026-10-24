@@ -1177,7 +1177,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// pending, the running/pending/failed heartbeat. Declared before the
 	// worker closure; started once the launch list is fixed below.
 	bringUp := newProviderBringUpTracker(len(providers))
-	provideWithProxy := func(index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
+	provideWithProxy := func(slotCtx context.Context, index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
 		display := providerSlotDisplay(proxySettings)
 		defer func() {
 			// Registered first, this runs after every real cleanup below.
@@ -1190,7 +1190,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				}
 			}
 		}()
-		proxyCtx, proxyCancel := context.WithCancel(ctx)
+		proxyCtx, proxyCancel := context.WithCancel(slotCtx)
 		defer proxyCancel()
 
 		// A handoff's commit point (the parent's yieldCoordinatorSession) drops
@@ -1474,6 +1474,68 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return nil
 	}
 
+	// The live reloader: `proxy add`/`remove`/`trim` writes the reload trigger
+	// (proxy_manager_reload.go) and this applies the new desired set to the
+	// running provide without a restart. It is built before the launch loop
+	// because it must adopt the slots the loop starts (seed), and only for an
+	// unprofiled run: a profile run validates and registers a fixed slot set at
+	// start, and a slot appearing at runtime would bypass that gate.
+	var reloader *minerProxyReloader
+	if workProfile == nil && contractProfile == nil {
+		// Reloaded slots continue past the configured index range, so a slot
+		// added at runtime never collides with a configured slot's label.
+		var reloadSlotIndex atomic.Uint64
+		reloadSlotIndex.Store(uint64(len(providers)))
+		reloader = newMinerProxyReloader(
+			func() ([]*connect.ProxySettings, error) {
+				// The manager-backed desired set, read fresh (proxy.state +
+				// URL cache + operator trim cap). Its error is the reload's
+				// abort signal: a transient read failure must not be read as
+				// "no proxies" and cancel the fleet.
+				launch, _, _, err := newProxyManager(defaultProxyManagerConfig()).desired(false)
+				if err != nil {
+					return nil, err
+				}
+				desired := make([]*connect.ProxySettings, 0, len(launch))
+				for _, settings := range launch {
+					if settings == nil {
+						continue
+					}
+					desired = append(desired, settings)
+				}
+				return desired, nil
+			},
+			func(settings *connect.ProxySettings) (context.CancelFunc, error) {
+				// One identity per live address. provider_slot_identity.go
+				// classifies an address as shared once, at start, and the slot
+				// hash follows from it: a second identity at a live host:port
+				// would silently re-identify the running slot, so refuse it.
+				if err := reloader.reserveAddress(settings); err != nil {
+					return nil, err
+				}
+				index := reloadSlotIndex.Add(1) - 1
+				// The census was fixed at start (its ConfigHash is published to
+				// monitors), so admit the slot outside it: it serves, its
+				// progress just is not part of that census.
+				progress.admitLateSlot(providerRegistrationSlot(slotIdentities, settings))
+				slotCtx, slotCancel := context.WithCancel(ctx)
+				go func() {
+					if err := provideWithProxy(slotCtx, index, settings); err != nil {
+						tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", settings.Key(), index, err)
+					}
+				}()
+				return slotCancel, nil
+			},
+		)
+		reloader.onChange = func(keys []string) {
+			// Both describe what this run is really serving: the OOM cap counts
+			// running proxies, and the control surface is what
+			// `proxy trim --preview` reads.
+			setOOMCapRunningProxies(len(keys))
+			controlRuntime.setRunningProxies(keys)
+		}
+	}
+
 	// Launch ordering (W-02): v33's warmth/earnings prioritization
 	// (proxy_manager_warmth.go) decides the order the provider goroutines
 	// start in and the per-tier stagger between them, so the scarce auth-mint
@@ -1515,6 +1577,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		proxySettings := slot.Settings
 		baseDelay := slot.Delay
 		staggerDuration := slot.Stagger
+		// A proxy slot gets its own context, handed to the reloader: the
+		// reloader now owns that identity, so a later reload that drops or
+		// rotates it cancels this same context instead of leaving a second
+		// provider for the identity running. The direct slot carries no
+		// identity and keeps the run context.
+		slotCtx := ctx
+		if proxySettings != nil && reloader != nil {
+			var slotCancel context.CancelFunc
+			slotCtx, slotCancel = context.WithCancel(ctx)
+			reloader.seed(proxySettings, slotCancel)
+		}
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -1565,8 +1638,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				}
 			}
 			output.observe(providerStarted, uint64(index), true, nil, 0, nil)
-			result = provideWithProxy(uint64(index), proxySettings)
+			result = provideWithProxy(slotCtx, uint64(index), proxySettings)
 		}()
+	}
+	// Apply reload triggers for the rest of the run, and stop whatever it
+	// started on the way out: the reloader's slots are outside the launch
+	// WaitGroup, so nothing else would end them. This starts after the launch
+	// loop and before the join - the slots below run until the run ends.
+	if reloader != nil {
+		if reloadPath, err := proxyReloadPath(); err == nil {
+			go reloader.watch(ctx, reloadPath, 0)
+		}
+		defer reloader.stop()
 	}
 	wg.Wait()
 	cancel()

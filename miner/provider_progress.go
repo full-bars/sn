@@ -44,6 +44,9 @@ type providerProgressOwner struct {
 	started   time.Time
 	sequence  uint64
 	slots     map[string]providerProgressSlot
+	// lateSlots are slots admitted after the census was fixed (the live proxy
+	// reload); they serve outside the census and publish no progress.
+	lateSlots map[string]bool
 }
 
 // This source digest contains only configured routing/slot/public identity
@@ -89,7 +92,26 @@ func newProviderProgressOwner(mode string, members []providerProgressConfigMembe
 	if _, err := rand.Read(instance[:]); err != nil {
 		return nil, err
 	}
-	return &providerProgressOwner{source: source, instance: hex.EncodeToString(instance[:]), started: time.Now().UTC(), slots: slots}, nil
+	return &providerProgressOwner{source: source, instance: hex.EncodeToString(instance[:]), started: time.Now().UTC(), slots: slots, lateSlots: map[string]bool{}}, nil
+}
+
+// admitLateSlot marks a slot that joined the run after the census was fixed -
+// the live proxy reload adds one at runtime - as serving outside the census.
+// The census (and the ConfigHash published to monitors with it) describes the
+// configured launch set and cannot grow without re-keying that contract, so an
+// admitted late slot serves without progress instead of being refused. A slot
+// that was never configured and never admitted stays refused: startup slots
+// are all in the census, and a swarm member's ID must still match its owner.
+func (self *providerProgressOwner) admitLateSlot(slot string) {
+	if !protocol.ValidProviderSlot(slot) {
+		return
+	}
+	self.stateLock.Lock()
+	defer self.stateLock.Unlock()
+	if _, ok := self.slots[slot]; ok {
+		return
+	}
+	self.lateSlots[slot] = true
 }
 
 // A new admitted member consumes one generation; a stale teardown can only
@@ -108,7 +130,15 @@ func (self *providerProgressOwner) attach(ctx context.Context, slot string, devi
 		return 0, errors.New("provider observation owner is closed")
 	}
 	state, ok := self.slots[slot]
-	if !ok || state.generation == math.MaxUint64 {
+	if !ok {
+		if self.lateSlots[slot] {
+			// Admitted outside the census: nothing to publish for it, and the
+			// retire below (generation 0) is a no-op.
+			return 0, nil
+		}
+		return 0, errors.New("provider progress slot or generation is exhausted")
+	}
+	if state.generation == math.MaxUint64 {
 		return 0, errors.New("provider progress slot or generation is exhausted")
 	}
 	state.generation++
