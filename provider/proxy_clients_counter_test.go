@@ -30,7 +30,7 @@ func TestRelayEgressDial_DrivesActiveClientCounts(t *testing.T) {
 		},
 	}
 	// Same wrapping provideWithProxy applies to the LocalUserNat settings.
-	relay := bandwidth.WrapConnectSettings(base, proxyBandwidth, key)
+	relay := bandwidth.WrapConnectSettings(base, proxyBandwidth, key, nil)
 
 	a, err := relay.DialContextSettings.DialContext(context.Background(), "tcp", "1.2.3.4:443")
 	if err != nil {

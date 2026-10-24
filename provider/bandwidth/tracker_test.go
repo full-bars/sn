@@ -142,6 +142,83 @@ func TestPacketConnWriteToCountsBytes(t *testing.T) {
 	}
 }
 
+// sizedPacketConn is a net.PacketConn that also exposes the socket buffer
+// setters, the way the conns this wrapper is put around do: *net.UDPConn, and
+// the proxy's relay (provider/socks5_udp.go, socks5PacketConn).
+type sizedPacketConn struct {
+	net.PacketConn
+	readBuffer  int
+	writeBuffer int
+}
+
+func (c *sizedPacketConn) SetReadBuffer(bytes int) error {
+	c.readBuffer = bytes
+	return nil
+}
+
+func (c *sizedPacketConn) SetWriteBuffer(bytes int) error {
+	c.writeBuffer = bytes
+	return nil
+}
+
+// The counting wrapper must not hide the socket buffer sizing. quic-go asks for
+// larger buffers by type-asserting these methods and silently skips a conn that
+// does not expose them, and connect's own wrappers forward them for the same
+// reason (net_extender_memory.go, platform_packet_conn.go). Embedding
+// net.PacketConn hides them, so a proxied slot's H3 endpoint — the proxy's
+// relay, wrapped here — would keep the OS default buffers while the direct
+// path, which is not wrapped, gets the size the caller asked for.
+func TestPacketConnForwardsSocketBuffers(t *testing.T) {
+	sized := &sizedPacketConn{PacketConn: newMockPacketConn()}
+	bw := &ProxyBandwidth{}
+	pc := NewPacketConn(sized, bw, "proxy-2")
+
+	var _ interface{ SetReadBuffer(int) error } = pc
+	var _ interface{ SetWriteBuffer(int) error } = pc
+
+	if err := pc.SetReadBuffer(4 << 20); err != nil {
+		t.Fatalf("SetReadBuffer: %v", err)
+	}
+	if err := pc.SetWriteBuffer(2 << 20); err != nil {
+		t.Fatalf("SetWriteBuffer: %v", err)
+	}
+	if sized.readBuffer != 4<<20 {
+		t.Fatalf("read buffer = %d, want %d: the request did not reach the socket", sized.readBuffer, 4<<20)
+	}
+	if sized.writeBuffer != 2<<20 {
+		t.Fatalf("write buffer = %d, want %d: the request did not reach the socket", sized.writeBuffer, 2<<20)
+	}
+
+	// Sizing the socket must not disturb the accounting.
+	if _, err := pc.WriteTo([]byte("after sizing"), &net.UDPAddr{}); err != nil {
+		t.Fatalf("WriteTo: %v", err)
+	}
+	if got := bw.TotalTx.Load(); got != uint64(len("after sizing")) {
+		t.Fatalf("TotalTx = %d, want %d", got, len("after sizing"))
+	}
+}
+
+// A conn with no socket of its own to size is not an error: the caller asked
+// for larger buffers and QUIC works with the defaults. The alternative — an
+// error — would make quic-go treat a working endpoint as unusable.
+func TestPacketConnBufferForwardingWithoutSupportIsANoOp(t *testing.T) {
+	bw := &ProxyBandwidth{}
+	pc := NewPacketConn(newMockPacketConn(), bw, "proxy-2")
+
+	if err := pc.SetReadBuffer(4 << 20); err != nil {
+		t.Fatalf("SetReadBuffer on an unsizable conn: %v", err)
+	}
+	if err := pc.SetWriteBuffer(4 << 20); err != nil {
+		t.Fatalf("SetWriteBuffer on an unsizable conn: %v", err)
+	}
+	if _, err := pc.WriteTo([]byte("still counted"), &net.UDPAddr{}); err != nil {
+		t.Fatalf("WriteTo: %v", err)
+	}
+	if got := bw.TotalTx.Load(); got != uint64(len("still counted")) {
+		t.Fatalf("TotalTx = %d, want %d", got, len("still counted"))
+	}
+}
+
 func TestRegistryRegisterCreatesOnce(t *testing.T) {
 	reg := NewRegistry()
 	bw1 := reg.Register(0)

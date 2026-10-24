@@ -26,6 +26,7 @@ import (
 	"github.com/urnetwork/sdk"
 
 	"github.com/urfoundation/sn/clientauth"
+	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
 const (
@@ -353,6 +354,29 @@ type networkTokenRenewalHooks struct {
 
 type networkTokenRenewalHooksKey struct{}
 
+// networkTokenRenewalStrategySettings is the strategy the network token renewal
+// dials the api with: the first provider's proxy route, or the explicit dialer
+// when the run has one (the test-egress source).
+//
+// A proxied renewal takes the same QUIC endpoint seam a slot's network space
+// takes (see networkSpaceConnectSettings). connect's alt-h3 and alt-whodis
+// carriers read DialContextSettings.PacketConnFactory and never ProxySettings,
+// so without it the renewal's api call could leave from this host's address
+// while the proxy carried the tcp path of the same route. There is no tracker
+// here: the renewal is neither a client session nor billable, and
+// newH3PacketConnFactory relays through the proxy with or without one.
+func networkTokenRenewalStrategySettings(proxySettings *connect.ProxySettings, dialer *connect.DialContextSettings) *connect.ClientStrategySettings {
+	strategySettings := connect.DefaultClientStrategySettings()
+	strategySettings.ProxySettings = proxySettings
+	strategySettings.DialContextSettings = dialer
+	if dialer == nil {
+		strategySettings.ConnectSettings = bandwidth.WrapConnectSettings(
+			strategySettings.ConnectSettings, nil, "", newH3PacketConnFactory,
+		)
+	}
+	return strategySettings
+}
+
 // startNetworkTokenRenewal renews the state directory's network token for as
 // long as the run lasts. Its requests use the first provider's transport, the
 // direct one or the first proxy, so the renewal reaches the API the way that
@@ -360,9 +384,7 @@ type networkTokenRenewalHooksKey struct{}
 // API.
 func startNetworkTokenRenewal(ctx context.Context, apiUrl string, proxySettings *connect.ProxySettings, dialer *connect.DialContextSettings, networkJwtPath string, output *providerDiagnostics, quarantineRejected bool, onQuarantined func(clientauth.NetworkTokenQuarantine)) (stop func() error) {
 	renewalCtx, cancel := context.WithCancel(ctx)
-	strategySettings := connect.DefaultClientStrategySettings()
-	strategySettings.ProxySettings = proxySettings
-	strategySettings.DialContextSettings = dialer
+	strategySettings := networkTokenRenewalStrategySettings(proxySettings, dialer)
 	strategy := connect.NewClientStrategy(renewalCtx, strategySettings)
 	api := sdk.NewApi(renewalCtx, strategy, apiUrl)
 	renewer := newNetworkTokenRenewer(networkJwtPath, renewNetworkTokenThroughAuthLimiter(api), output)

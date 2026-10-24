@@ -106,7 +106,7 @@ func TestWrapConnectSettingsTotalCountsControlPlaneThroughTheProxy(t *testing.T)
 		ProxySettings: &connect.ProxySettings{Network: "tcp", Address: socks},
 	}
 	bw := &ProxyBandwidth{}
-	wrapped := WrapConnectSettingsTotal(cs, bw, "proxy-1")
+	wrapped := WrapConnectSettingsTotal(cs, bw, "proxy-1", stubPacketConnFactoryBuilder)
 	if wrapped.DialContextSettings == nil {
 		t.Fatal("a proxied identity must get a counting dial")
 	}
@@ -154,7 +154,7 @@ func TestWrapConnectSettingsRelayStillCountsAClientSession(t *testing.T) {
 		ProxySettings: &connect.ProxySettings{Network: "tcp", Address: socks},
 	}
 	bw := &ProxyBandwidth{}
-	wrapped := WrapConnectSettings(cs, bw, "proxy-1")
+	wrapped := WrapConnectSettings(cs, bw, "proxy-1", stubPacketConnFactoryBuilder)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -180,8 +180,8 @@ func TestRelayThenTotalWrapDoesNotDoubleCountRelayBytes(t *testing.T) {
 		ProxySettings: &connect.ProxySettings{Network: "tcp", Address: socks},
 	}
 	bw := &ProxyBandwidth{}
-	relay := WrapConnectSettings(base, bw, "proxy-1")
-	_ = WrapConnectSettingsTotal(base, bw, "proxy-1")
+	relay := WrapConnectSettings(base, bw, "proxy-1", stubPacketConnFactoryBuilder)
+	_ = WrapConnectSettingsTotal(base, bw, "proxy-1", stubPacketConnFactoryBuilder)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -200,13 +200,16 @@ func TestRelayThenTotalWrapDoesNotDoubleCountRelayBytes(t *testing.T) {
 // A direct identity keeps the engine's own dial, which races address families.
 func TestWrapConnectSettingsTotalLeavesADirectIdentityAlone(t *testing.T) {
 	cs := connect.ConnectSettings{}
-	wrapped := WrapConnectSettingsTotal(cs, &ProxyBandwidth{}, "direct")
+	wrapped := WrapConnectSettingsTotal(cs, &ProxyBandwidth{}, "direct", stubPacketConnFactoryBuilder)
 	if wrapped.DialContextSettings != nil {
 		t.Fatal("a direct identity must keep the engine's dial path")
 	}
-	// nil bandwidth is a no-op too
+	// The provider's control plane carries a proxied identity's API traffic,
+	// so its QUIC endpoint stays the proxy's even when there is no tracker to
+	// count into: the proxy route is the point, the counter is not.
 	proxied := connect.ConnectSettings{ProxySettings: &connect.ProxySettings{Network: "tcp", Address: "127.0.0.1:1"}}
-	if got := WrapConnectSettingsTotal(proxied, nil, "p"); got.DialContextSettings != nil {
-		t.Fatal("a nil tracker must leave the settings unchanged")
+	got := WrapConnectSettingsTotal(proxied, nil, "p", stubPacketConnFactoryBuilder)
+	if got.DialContextSettings == nil || got.DialContextSettings.PacketConnFactory == nil {
+		t.Fatal("a nil tracker dropped the proxied identity's QUIC endpoint, so its QUIC would leave from the host socket")
 	}
 }

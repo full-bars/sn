@@ -453,14 +453,26 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	// wrapping in place would also instrument the provider's own
 	// control-plane traffic to the platform API, double-counting it as
 	// billable proxy bandwidth.
-	relayConnectSettings := bandwidth.WrapConnectSettings(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey)
+	//
+	// newH3PacketConnFactory is passed as the builder so a proxied identity's
+	// ConnectSettings also carries its QUIC endpoint: connect's QUIC carriers
+	// read DialContextSettings.PacketConnFactory and never ProxySettings, so
+	// without it a proxied identity's QUIC would open a socket on this host.
+	// For this relay copy the field is inert (the NAT buffer settings read
+	// only the dial control and socket options), but the same wrap builds the
+	// control-plane copy below, where it is not.
+	relayConnectSettings := bandwidth.WrapConnectSettings(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey, newH3PacketConnFactory)
 	localUserNatSettings.TcpBufferSettings.ConnectSettings = relayConnectSettings
 	localUserNatSettings.UdpBufferSettings.ConnectSettings = relayConnectSettings
 	// The provider's own connections to the platform (API, auth, the H1 tunnel)
 	// count into the total only. This is a copy made after the relay copy above
 	// so relay bytes are not counted twice, and a direct identity keeps the
 	// engine's own dial. See bandwidth.WrapConnectSettingsTotal.
-	clientStrategySettings.ConnectSettings = bandwidth.WrapConnectSettingsTotal(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey)
+	//
+	// This copy is also what the strategy's non-platform QUIC carriers dial
+	// through (the api's alt-h3/alt-whodis dialers, the extender carriers), so
+	// it takes the factory for the same reason.
+	clientStrategySettings.ConnectSettings = bandwidth.WrapConnectSettingsTotal(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey, newH3PacketConnFactory)
 	remoteUserNatProviderSettings := connect.DefaultRemoteUserNatProviderSettings()
 
 	clientStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)

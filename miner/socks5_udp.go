@@ -20,8 +20,8 @@ import (
 // The UDP path check needs it (proxy_udp_check.go): the only way to learn
 // whether a proxy's relay works, and which address it exits from, is to send a
 // datagram through it. It is also the packet conn a proxied identity's QUIC
-// must use if the miner ever builds an H3 packet conn factory, so that QUIC
-// leaves through the identity's proxy instead of from the host.
+// uses (h3_packet_conn.go, newH3PacketConnFactory), so that QUIC leaves through
+// the identity's proxy instead of from the host.
 //
 // Design rules, each pinned by a test in the provider:
 //   - a proxy that will not relay UDP is an error, never a fallback to a socket
