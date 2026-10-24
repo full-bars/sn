@@ -1,6 +1,6 @@
 # v2026.10.23 (draft, sn)
 
-**Status:** ready to cut. Nothing is tagged or pushed. Base tag `v2026.10.22-1078667780`. Head: `main` as of the merge of PR 159 (`c158769aa`). PR 160 (upstream sync of `urfoundation/sn` `c9d96068`) is open and is not covered here.
+**Status:** ready to cut. Nothing is tagged or pushed. Base tag `v2026.10.22-1078667780`. Head: `main` as of the merge of PR 159 (`c158769aa`). PRs 218 and 219 are open and merge before the cut; they are covered here. PR 160 (upstream sync of `urfoundation/sn` `c9d96068`) is open and is not covered here.
 **At the cut:** the tag is `v2026.10.23-<build>` and the build number derives from the tagged commit's time, so compute it at the cut, rename this file to `releases/<tag>.md`, and replace TAG-TBD and DATE-TBD below. That rename is the same one `docs(release): name the notes for the cut` did last time.
 **Sourcing:** condensed from the merge commits and PR bodies in this window. The sn-own items were checked line by line against the delta in the pre-release review (progress entry #4713). Not yet confirmed on a live node.
 
@@ -21,6 +21,8 @@ This release moves the two libraries the provider is built on. The connect libra
 
 - **Proxies that cannot carry traffic are counted and flagged** **[redeploy]** (<https://github.com/full-bars/sn/pull/159>). A proxy can pass its SOCKS login and still be unable to reach the platform, with the dial dying inside the proxy's own connect step. Until now that surfaced only as a flattened `http request attempts exhausted` error filed under timeouts, so the auth counters drove the wrong remedies while the proxy parked its client in a one-minute retry loop and status still counted it as authenticated. The connect library now reports the typed result of every control dial, and a failure inside the proxy's own connect step is its own category: `proxy-leg:N` on the `[health][proxies]` line and `urnet_proxy_leg_failures` in the scrape, never an auth or timeout failure. In shadow mode a proxy with at least 5 such failures in a row over 10 minutes and no platform dial succeeding through it, while some other path reached the platform in the last 5 minutes, is flagged once and counted. Nothing is shed; the flag is evidence.
 
+- **The cached disk benchmark records its sampling shape** **[redeploy]** ([#218](https://github.com/full-bars/sn/pull/218)). The cache entry was valid for 24 hours whichever sampler wrote it, so an upgraded host would read an entry written by the old 16 MiB sampler, report its burst rate, and never run the new budgeted sample. The entry now records its sampling shape and an entry written by a different one is a miss. The first start after the update therefore runs the benchmark again.
+
 ## Operator tools
 
 - **`urnet-tools` reports the proxy trim cap** **[redeploy]** (<https://github.com/full-bars/sn/pull/151>). With no argument `urnet-tools proxy trim` reports the effective cap and which source set it (operator, OOM or thrash), the configured pool size before the cap, how many proxies the cap holds back and the live counts, and `urnet-tools status` carries a `trim` row whenever a cap applies, so a capped node does not read as a small one. The provider's effective cap wins over the value in the file, and trim state is reported only from a complete pool. See the Proxy Management and urnet-tools pages.
@@ -38,6 +40,7 @@ This release moves the two libraries the provider is built on. The connect libra
 - **Busy channels are kept through probe expiry and admission refusal** **[redeploy]**. Busy channels are preserved when a probe expires before it is written or local admission refuses it, probe custody is preserved, and native packet admission is isolated.
 - **Extra application pacing is disabled** **[redeploy]**, while delivery windows are preserved.
 - **Cached WebRTC answers are replayed for matching repeated offers** **[redeploy]**.
+- **A silent platform edge no longer drains egress through proxied H3** **[redeploy]** ([#219](https://github.com/full-bars/sn/pull/219)). The pinned `full-bars/connect` has no reconnect budget, so the miner sheds the dials instead. With `h3` set to `all` or a count, while the pool-wide auth outage detector reports the platform unreachable, no proxied identity is eligible for the fallback transports. The relaunch pass that already follows eligibility restarts them a few at a time and never one with a client, H1 keeps probing the platform, and the direct identity keeps its H3. The shed lets go only after the detector has stayed clear for five minutes, so a flapping backend does not relaunch the pool each time. One node on `h3 all` spent a flat 15.5 to 16.4 Mbit/s for about 15 hours of the 2026-10-23 outage, roughly 30 times more tx than rx.
 
 ## Network changes and discovery
 
@@ -88,6 +91,7 @@ This release moves the two libraries the provider is built on. The connect libra
 
 - **The provider needs a redeploy.** Every change above is in the built artifact. There is no installer or unit change.
 - **Upstream's own installer scripts are not part of this release.** The merged range also contains rewrites of upstream's Linux, macOS and Windows installer scripts and their `urnet-tools`. sn ships its own installer and does not use them.
+- **Only miners with `h3` set to `all` or a count change for the H3 shed.** Miners on the default `h3 direct` dial H3 from the direct identity alone. During an outage the log shows `[h3] platform unreachable: proxied identities drop H3 ...` once the detector window (5 minutes by default, `PROXY_OUTAGE_FREEZE_WINDOW`) has run, and `[h3] platform answering again` five minutes after it clears.
 - **Build with the sn version symbol:** `-X main.Version=<tag> -X main.VersionStamp=URNET_VERSION_STAMP=<tag>`, as the release workflow does.
 
 ## Caveats
@@ -97,6 +101,7 @@ This release moves the two libraries the provider is built on. The connect libra
 - The five-minute warmup grace is proven by unit tests and full provider test passes in both repos. The LA6 confirmation (the one-hour deferral becomes a launch a few minutes after the start) has not been recorded yet.
 - PR 160 (upstream sync of `urfoundation/sn` `c9d96068`) is open and not covered here. If it merges before the cut, this file and the changelog need entries for what it brings.
 - Nothing unmerged is covered here beyond that. If the in-flight log and metrics work merges before the cut, this file needs a section for it.
+- The H3 shed has not been run against a live outage. The first minutes of an outage still leak on an `h3 all` miner, because the detector needs its window. The connect dependency is still ungoverned, so a change that widens H3 elsewhere could reopen this.
 - Production result: PRODUCTION-TEST-TBD. Do not publish this line until a node has run the tagged build.
 
 **Full Changelog**: https://github.com/full-bars/sn/compare/v2026.10.22-1078667780...TAG-TBD
