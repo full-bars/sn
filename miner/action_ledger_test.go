@@ -394,6 +394,58 @@ func TestLiveTrimUpdateIsLedgeredOnce(t *testing.T) {
 	}
 }
 
+// A cap that stops binding is not a standing cap any more: the operator cleared
+// it (or the pool shrank under it) and the whole pool runs. Applying the same
+// cap again later drops capacity a SECOND time, so the dedupe has to be
+// forgotten on the clear path - trim 50 -> clear -> trim 50 is two decisions,
+// not a periodic re-apply of one.
+func TestLiveTrimClearThenTrimAgainIsLedgeredTwice(t *testing.T) {
+	dir := oomCapTestEnv(t, "off")
+	resetLiveTrimLedger()
+	t.Cleanup(resetLiveTrimLedger)
+	m := oomCapStartupFixture(t, 5)
+	if err := writeProxyState(&ProxyState{Source: m.cfg.ProxyFile, Proxies: map[string]ProxyEntry{}}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := writeTrimTarget(2); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := m.desiredForReload(); err != nil {
+		t.Fatal(err)
+	}
+	if got := ledgerEntries(t, dir); len(got) != 1 || got[0].To != 2 {
+		t.Fatalf("first trim: want one entry to 2, got %+v", got)
+	}
+
+	// The operator clears the cap: the whole pool is admitted again.
+	if err := writeTrimTarget(0); err != nil {
+		t.Fatal(err)
+	}
+	if launch, held, _, err := m.desiredForReload(); err != nil || len(launch) != 5 || len(held) != 0 {
+		t.Fatalf("cleared reload: launched %d, held %d, err %v; want the whole 5/0 pool", len(launch), len(held), err)
+	}
+	if got := ledgerEntries(t, dir); len(got) != 1 {
+		t.Fatalf("a clear is not a trim application and must not ledger, got %+v", got)
+	}
+
+	// The same cap again: capacity drops twice in this run and both drops are
+	// the operator's decisions.
+	if err := writeTrimTarget(2); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := m.desiredForReload(); err != nil {
+		t.Fatal(err)
+	}
+	got := ledgerEntries(t, dir)
+	if len(got) != 2 {
+		t.Fatalf("trim -> clear -> trim dropped capacity twice, want 2 entries, got %+v", got)
+	}
+	if e := got[1]; e.From != 5 || e.To != 2 || e.Mode != trimCapOperator+trimLiveModeSuffix || !strings.Contains(e.Reason, "held 3") {
+		t.Fatalf("second trim entry: %+v", e)
+	}
+}
+
 // A thrash restart is a capacity decision the operator finds out about only
 // after the process is gone, so it must be in the timeline.
 func TestThrashRestartIsLedgered(t *testing.T) {

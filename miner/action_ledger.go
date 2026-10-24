@@ -157,12 +157,21 @@ func noteLiveTrimApplied(cap int, source string) bool {
 	return true
 }
 
-// resetLiveTrimLedger forgets the recorded live application. Tests only: one
-// test's cap must not suppress the next test's entry.
-func resetLiveTrimLedger() {
+// forgetLiveTrimApplied drops the recorded live application so the next binding
+// trim records a fresh capacity drop. A clear - or a cap a shrunken pool no
+// longer reaches - means nothing is held back any more, so the same (cap,
+// source) applied again later is a new decision, not a periodic re-apply: trim
+// 50 -> clear -> trim 50 dropped capacity twice and must appear twice.
+func forgetLiveTrimApplied() {
 	lastLiveTrim.mu.Lock()
 	lastLiveTrim.cap, lastLiveTrim.source, lastLiveTrim.set = 0, "", false
 	lastLiveTrim.mu.Unlock()
+}
+
+// resetLiveTrimLedger forgets the recorded live application. Tests only: one
+// test's cap must not suppress the next test's entry.
+func resetLiveTrimLedger() {
+	forgetLiveTrimApplied()
 }
 
 // ledgerTrimApplied records the launch-time trim decision: a binding cap held

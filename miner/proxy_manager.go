@@ -514,6 +514,11 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 		if trimCap > 0 {
 			primeTrimCapSeen(trimCap, trimSource)
 		}
+		// Nothing is held back any more (the cap was cleared, or the pool
+		// shrank under it), so a live application recorded earlier no longer
+		// describes the pool. Forget it: re-applying the same cap after a
+		// clear is a second real capacity drop and must reach the ledger.
+		forgetLiveTrimApplied()
 	}
 	// The marker records what this start actually launched, so the next start's
 	// decision measures 80% of the pool that ran, not the configured size this
