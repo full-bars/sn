@@ -53,7 +53,14 @@ func newProxyAdmissionGate(limiter *authRateLimiter) *proxyAdmissionGate {
 		wake:        make(chan struct{}, 1),
 		concurrency: make(chan struct{}, proxyAdmissionMaxConcurrency),
 	}
-	go g.dispatchLoop()
+	// The dispatcher has no shutdown of its own: the gate is built for the life
+	// of the process (the global one at init), so a background context is its
+	// lifetime. It runs under the supervisor so a panic in one dispatch pass
+	// restarts it with backoff. Every proxy auth in the process waits on this
+	// loop, so a contained-but-dead dispatcher would wedge all of them until
+	// the process restarted.
+	ref := newLoopRef("proxy_admission_dispatch")
+	go func() { superviseLoop(context.Background(), ref, g.dispatchLoop, nil) }()
 	return g
 }
 
@@ -120,27 +127,74 @@ func (g *proxyAdmissionGate) remove(w *admissionWaiter) {
 	}
 }
 
+// dispatchLoop is the single admission dispatcher. Every proxy auth waits on
+// it, so it runs under superviseLoop (newProxyAdmissionGate): a panic ends one
+// run and the supervisor restarts the loop with backoff. dispatchOnce gives
+// back the in-flight slot a panicking pass had reserved, so the restarted loop
+// does not start life with proxyAdmissionMaxConcurrency permanently short.
 func (g *proxyAdmissionGate) dispatchLoop() {
 	for {
-		g.waitForWaiter()
-
-		// Block here until an in-flight slot is free, before even
-		// consulting the rate limiter, so the rate limiter's start rate is
-		// never used to release more concurrent attempts than this allows.
-		g.concurrency <- struct{}{}
-
-		if err := g.limiter.Wait(context.Background()); err != nil {
-			<-g.concurrency
+		if !g.dispatchOnce() {
+			// The limiter fails only on a canceled context, and this loop
+			// waits on context.Background(), so this is not an orderly end.
+			// Returning hands the loop to the supervisor, which restarts it
+			// with backoff instead of leaving every auth blocked on a dead
+			// dispatcher.
 			return
 		}
-		if !g.releaseWeightedRandom() {
-			// The waiter that justified entering this iteration was
-			// removed out from under us (e.g. its ctx was canceled) before
-			// we got to release anyone. Nobody is holding this slot — give
-			// it back instead of leaking it forever.
-			<-g.concurrency
-		}
 	}
+}
+
+// dispatchOnce runs one dispatch pass and reports whether the loop continues.
+//
+// The pass can panic (the release path samples weights, wakes a waiter and
+// touches the rate limiter). It must not take the in-flight concurrency slot it
+// reserved down with it: a leaked token per panic eats
+// proxyAdmissionMaxConcurrency and wedges every proxy auth for the life of the
+// process. So the slot is tracked here and handed back as the panic unwinds,
+// before the supervisor recovers and restarts the loop.
+func (g *proxyAdmissionGate) dispatchOnce() bool {
+	// held is true while this pass owns a concurrency slot it has not handed
+	// to a released waiter.
+	held := false
+	defer func() {
+		if !held {
+			return
+		}
+		// Non-blocking: a released waiter may have consumed this token
+		// already, in which case the count is balanced and there is nothing
+		// to give back. Blocking here would wedge the dispatcher — the exact
+		// failure this release exists to prevent.
+		select {
+		case <-g.concurrency:
+		default:
+		}
+	}()
+
+	g.waitForWaiter()
+
+	// Block here until an in-flight slot is free, before even
+	// consulting the rate limiter, so the rate limiter's start rate is
+	// never used to release more concurrent attempts than this allows.
+	g.concurrency <- struct{}{}
+	held = true
+
+	if err := g.limiter.Wait(context.Background()); err != nil {
+		<-g.concurrency
+		held = false
+		return false
+	}
+	if !g.releaseWeightedRandom() {
+		// The waiter that justified entering this iteration was
+		// removed out from under us (e.g. its ctx was canceled) before
+		// we got to release anyone. Nobody is holding this slot — give
+		// it back instead of leaking it forever.
+		<-g.concurrency
+	}
+	// Either way this pass no longer owns the slot: releaseWeightedRandom
+	// handed it to the waiter it released.
+	held = false
+	return true
 }
 
 func (g *proxyAdmissionGate) waitForWaiter() {
@@ -163,8 +217,12 @@ func (g *proxyAdmissionGate) waitForWaiter() {
 // there was no waiter left to release.
 func (g *proxyAdmissionGate) releaseWeightedRandom() bool {
 	g.mu.Lock()
+	// Deferred, so a panic while selecting or waking a waiter unwinds with the
+	// lock released: the supervisor restarts the dispatcher, and a mutex left
+	// held by the panicking pass would block that restart forever in
+	// waitForWaiter — every proxy auth with it.
+	defer g.mu.Unlock()
 	if len(g.waiters) == 0 {
-		g.mu.Unlock()
 		return false
 	}
 
@@ -187,7 +245,6 @@ func (g *proxyAdmissionGate) releaseWeightedRandom() bool {
 	w := g.waiters[chosen]
 	g.waiters = append(g.waiters[:chosen:chosen], g.waiters[chosen+1:]...)
 	close(w.ready)
-	g.mu.Unlock()
 
 	return true
 }

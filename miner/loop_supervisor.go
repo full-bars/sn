@@ -106,6 +106,14 @@ func loopStatusOf(name string) loopStatus {
 }
 
 func loopStatusLocked(name string) *loopStatus {
+	if loopStatuses == nil {
+		// A loop can be registered from another package-level initializer (the
+		// global admission gate builds its dispatcher at init), which may run
+		// before this file's map literal. Writing to a nil map would turn a
+		// registration into a panic during package init, so make the map here
+		// as well.
+		loopStatuses = map[string]*loopStatus{}
+	}
 	st, ok := loopStatuses[name]
 	if !ok {
 		st = &loopStatus{}

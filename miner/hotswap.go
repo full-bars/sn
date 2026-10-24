@@ -122,7 +122,17 @@ var (
 	executableFunc             = os.Executable
 	statFunc                   = os.Stat
 	syscallAccess              = checkExecAccess
+	// runHotSwapParentHandoffFunc is the handoff body runHotSwapHandoff
+	// invokes, the same way spawnCandidateFunc and execInPlaceFunc seam the
+	// steps it drives. A test replaces it with a panic to check the guard.
+	runHotSwapParentHandoffFunc = runHotSwapParentHandoff
 )
+
+// errCandidateWaitPanicked marks a candidate wait that panicked rather than
+// reporting the process's exit. A caller that only wants "did it exit" reads it
+// like any other error; the canary path uses it to kill a child whose exit it
+// could not confirm.
+var errCandidateWaitPanicked = errors.New("candidate wait panicked")
 
 // installPath is the executable path captured at process start, before any
 // updater could move the running binary aside.
@@ -293,10 +303,10 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 	// so if the ACK fails or times out we can still abort with the
 	// parent's transports untouched.
 	ackCh := make(chan readyResult, 1)
-	go func() {
+	goSafe("hotswap-baton-ack", func() {
 		msg, err := readHotswapMessage(session.Reader)
 		ackCh <- readyResult{msg, err}
-	}()
+	})
 
 	select {
 	case res := <-ackCh:
@@ -356,6 +366,32 @@ func finishHotSwapDrain(done chan struct{}) {
 	}
 }
 
+// monitorCandidateExit reports the candidate's exit on a buffered channel. The
+// wait runs on its own goroutine because a drain or a canary step wants to
+// time-box it, and the report must survive a panic inside Wait: a panic that
+// sent nothing would leave the drain monitor's select waiting out
+// HotSwapDrainTimeout with candidateDied still false, and the parent would exit
+// 0 on a dead candidate. Every outcome is reported, a panic as
+// errCandidateWaitPanicked.
+func monitorCandidateExit(name string, wait func() error) <-chan error {
+	ch := make(chan error, 1)
+	// Recovered inside the goroutine, not around it: the body's whole job is to
+	// turn a panic into a result, and a barrier outside would swallow the panic
+	// and leave the channel silent — the exact failure this replaces.
+	go func() {
+		var err error
+		defer func() {
+			if cause := recover(); cause != nil {
+				reportRecoveredPanic(name, cause)
+				err = fmt.Errorf("%w: %v", errCandidateWaitPanicked, cause)
+			}
+			ch <- err
+		}()
+		err = wait()
+	}()
+	return ch
+}
+
 // handoffDrainParent runs the common graceful-drain-then-exit logic shared by
 // both the Windows baton handoff and the Unix systemd handoff. It monitors the
 // candidate's liveness during the drain window, flushes retention events, and
@@ -366,6 +402,23 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 	hotswapLog("♻️⚡ [hotswap] Parent PID %d entering graceful stream drain (max %s)...\n", parentPID, HotSwapDrainTimeout)
 
 	go func() {
+		// This goroutine owns the parent's exit. By the time it runs the
+		// coordinator session is already yielded, so a panic anywhere below
+		// that escaped would either take the process down mid-drain or (if it
+		// were merely recovered) leave a parent alive with nothing to serve
+		// and nothing to end it. Contain it, release the drain latch so a run
+		// that unwound at the yield can finish, and exit non-zero so the
+		// supervisor restarts — the same outcome as a dead candidate.
+		defer func() {
+			if cause := recover(); cause != nil {
+				reportRecoveredPanic("hotswap-drain-monitor", cause)
+				isHotSwapDraining.Store(false)
+				cancel()
+				finishHotSwapDrain(drainDone)
+				exitFunc(1)
+			}
+		}()
+
 		// Monitor candidate child liveness during drain.
 		//
 		// Only when a real child process backs the session: Wait returns
@@ -377,11 +430,7 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 		// intended behaviour when there is no candidate process to outlive.
 		var childWaitCh <-chan error
 		if session.hasChildProcess() {
-			ch := make(chan error, 1)
-			go func() {
-				ch <- session.Wait()
-			}()
-			childWaitCh = ch
+			childWaitCh = monitorCandidateExit("hotswap-candidate-wait", session.Wait)
 		}
 
 		candidateDied := false
@@ -698,10 +747,10 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 
 	// Wait for READY from candidate with timeout
 	readyCh := make(chan readyResult, 1)
-	go func() {
+	goSafe("hotswap-ready-reader", func() {
 		msg, err := readHotswapMessage(session.Reader)
 		readyCh <- readyResult{msg, err}
-	}()
+	})
 
 	var childPID int
 	select {
@@ -769,12 +818,15 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 			hotswapLog("⚠️ [hotswap] Failed to send CANARY_DONE: %v\n", err)
 		}
 
-		waitCh := make(chan error, 1)
-		go func() {
-			waitCh <- session.Wait()
-		}()
+		waitCh := monitorCandidateExit("hotswap-canary-wait", session.Wait)
 		select {
-		case <-waitCh:
+		case werr := <-waitCh:
+			if errors.Is(werr, errCandidateWaitPanicked) {
+				// The wait could not confirm the canary exited. Kill it rather
+				// than execve while it may still be running.
+				hotswapLog("⚠️ [hotswap] Canary wait failed (%v); terminating canary\n", werr)
+				session.Kill()
+			}
 		case <-time.After(5 * time.Second):
 			hotswapLog("⚠️ [hotswap] Canary did not exit within 5s; terminating canary\n")
 			session.Kill()
@@ -874,6 +926,34 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 
 	handoffDrainParent(ctx, cancel, session, parentPID)
 	return nil
+}
+
+// hotSwapHandoff is the single entry point for the parent-side handoff, used by
+// both triggers: SIGUSR2 (hotswap_unix.go) and the control socket's `hotswap`
+// command.
+//
+// A panic in the handoff ends the process, non-zero. The handoff has a commit
+// point — yieldCoordinatorSession, after which the coordinator session is
+// yielded, the control socket quiesced and metrics persistence stopped — and a
+// panic past it would otherwise leave a parent that looks alive but serves
+// nothing, and never exits, while the candidate may already own traffic. That
+// is what the bare SIGUSR2 goroutine did before there was a barrier (the panic
+// unwound the process), and it is what the supervisor restarts from. Recovering
+// here instead of crashing keeps the reason: the panic and its stack, and a line
+// in events.log for the exit. Before the commit point the same reasoning is
+// weaker but the process is mid-handoff with a spawned candidate and a partially
+// yielded run; a restart from a known-good state is the only safe recovery, and
+// a panic (as opposed to the handoff's own abort paths, which return errors) is
+// a bug, not an expected abort.
+func hotSwapHandoff(ctx context.Context, cancel context.CancelFunc, opts docopt.Opts) error {
+	defer func() {
+		if cause := recover(); cause != nil {
+			reportRecoveredPanic("hotswap-handoff", cause)
+			critLog("FATAL: hotswap handoff panicked; exiting non-zero for supervisor restart: %v", cause)
+			exitFunc(1)
+		}
+	}()
+	return runHotSwapParentHandoffFunc(ctx, cancel, opts)
 }
 
 // candidateAckOnce makes the successor ACK the parent exactly once: the ack is
@@ -996,7 +1076,9 @@ func (self providerRunSettings) hotSwapTakeoverCandidate(ctx context.Context, ca
 	// The parent persists again at the end of its drain, from a ring without
 	// our entries. Re-merge and persist once that is over so a crash soon after
 	// takeover cannot lose our start entry.
-	go reconcileAuditRingAfterHandoff(ctx, HotSwapDrainTimeout+auditReconcileGrace)
+	goSafe("hotswap-audit-reconcile", func() {
+		reconcileAuditRingAfterHandoff(ctx, HotSwapDrainTimeout+auditReconcileGrace)
+	})
 
 	// Rebind /metrics: the candidate skipped the startup bind because the
 	// parent still held the address, and the parent releases its listener at
@@ -1007,7 +1089,9 @@ func (self providerRunSettings) hotSwapTakeoverCandidate(ctx context.Context, ca
 	// The parent writes the counter store once more at the end of its drain,
 	// which is after this takeover, so the same window the audit re-merge uses
 	// is when those final totals become readable.
-	go catchUpMetricsCountersAfterDrain(ctx)
+	goSafe("hotswap-metrics-catchup", func() {
+		catchUpMetricsCountersAfterDrain(ctx)
+	})
 
 	// This process is now the provider: bind the socket the parent quiesced,
 	// and answer SIGUSR2 (and the control socket's hotswap command) ourselves.
@@ -1019,7 +1103,7 @@ func (self providerRunSettings) hotSwapTakeoverCandidate(ctx context.Context, ca
 	}
 	startHotSwapSignalListener(ctx, cancel, self.opts)
 	setHotSwapTrigger(func() error {
-		return runHotSwapParentHandoff(ctx, cancel, self.opts)
+		return hotSwapHandoff(ctx, cancel, self.opts)
 	})
 }
 

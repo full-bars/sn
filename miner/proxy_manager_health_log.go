@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -349,7 +350,39 @@ var (
 	// pipe/log collector and stall the transfer sequence that called
 	// appendRetentionEvent.
 	retentionEventDropped atomic.Uint64
+
+	// retentionEventRunCtx is the context of the run that owns the writer. The
+	// writer is process-wide and started lazily from the event path, so it
+	// cannot take a run context as an argument; the run registers its context
+	// here (setRetentionEventRunContext) and the writer derives from it. Without
+	// that derivation a cancelled run could not stop the writer's supervisor,
+	// and the supervisor is what closes retentionEventDone: a writer panicking
+	// in its backoff would leave flushRetentionEvents waiting forever.
+	retentionEventRunMu        sync.Mutex
+	retentionEventRunCtx       context.Context
+	retentionEventWriterCancel context.CancelFunc
+
+	// newRetentionWriter is the writer constructor. A seam for the tests that
+	// exercise the shutdown contract: a panicking constructor stands in for a
+	// log directory that cannot be opened.
+	newRetentionWriter = func() retentionWriter { return newRetentionLogWriter() }
 )
+
+// retentionFlushTimeout and retentionFlushGrace bound how long shutdown waits
+// for the writer. The flush closes the channel and waits for the final drain;
+// if the writer is wedged anyway (a stuck write, a panic-and-backoff cycle) the
+// wait must still end, or shutdown and the hotswap drain monitor — which exits
+// the parent — hang before exit.
+const (
+	retentionFlushTimeout = 10 * time.Second
+	retentionFlushGrace   = 5 * time.Second
+)
+
+// retentionWriter is the sink the writer loop appends batches to.
+type retentionWriter interface {
+	write(events []string)
+	close()
+}
 
 // retentionEventBatch is how many buffered events the writer drains per file
 // write. Draining one at a time cost a full open/stat/write/close cycle PER
@@ -359,6 +392,55 @@ var (
 // open and one write.
 const retentionEventBatch = 64
 
+// setRetentionEventRunContext records the context of the run that owns the
+// retention writer. The writer lives as long as the process (it is started
+// lazily from the event path, and its flush is terminal), so it cannot be
+// handed a run context directly. The run registers its context here before it
+// starts serving, and a cancelled run then always ends the writer's supervisor
+// — which is what closes retentionEventDone, on the panic path too, where
+// nothing else can stop the restart backoff.
+func setRetentionEventRunContext(ctx context.Context) {
+	retentionEventRunMu.Lock()
+	defer retentionEventRunMu.Unlock()
+	retentionEventRunCtx = ctx
+	if ctx == nil || retentionEventWriterCancel == nil {
+		// No writer yet: retentionEventWriterContext derives the writer's
+		// context from the run context when it starts.
+		return
+	}
+	// The writer started before the run registered (it is created from the
+	// ingest path), so it derived from whatever was registered then. Wire this
+	// run's end to it explicitly. AfterFunc runs immediately if ctx already
+	// ended, which is the same outcome.
+	context.AfterFunc(ctx, retentionEventWriterCancel)
+}
+
+// retentionEventRunContext returns the registered run context, or a background
+// context when no run wired one (a CLI subcommand, a unit test). Background's
+// Done is nil, so a waiter on it blocks until its own timeout.
+func retentionEventRunContext() context.Context {
+	retentionEventRunMu.Lock()
+	defer retentionEventRunMu.Unlock()
+	if retentionEventRunCtx == nil {
+		return context.Background()
+	}
+	return retentionEventRunCtx
+}
+
+// retentionEventWriterContext builds the writer's context: a child of the run's,
+// so the writer's loop ends when the run does.
+func retentionEventWriterContext() (context.Context, context.CancelFunc) {
+	retentionEventRunMu.Lock()
+	defer retentionEventRunMu.Unlock()
+	parent := retentionEventRunCtx
+	if parent == nil {
+		parent = context.Background()
+	}
+	ctx, cancel := context.WithCancel(parent)
+	retentionEventWriterCancel = cancel
+	return ctx, cancel
+}
+
 // startRetentionEventWriter launches the single goroutine that performs the
 // retention file I/O off the hot path. It takes the first event blocking, then
 // drains whatever else is already queued without waiting, so a burst becomes
@@ -367,42 +449,110 @@ func startRetentionEventWriter() {
 	retentionEventOnce.Do(func() {
 		retentionEventCh = make(chan string, retentionEventBuffer)
 		retentionEventDone = make(chan struct{})
+		// The writer is a long-running loop, so it runs under the supervisor: a
+		// panic restarts it with backoff instead of ending retention logging
+		// for the rest of the process. Its one orderly end is the channel
+		// closing at shutdown, which is not a failure — that path cancels this
+		// context so the supervisor exits instead of reopening the log and
+		// ranging over a closed channel. The context derives from the run's, so
+		// a cancelled run ends the loop even when the writer is panicking and
+		// the supervisor is asleep in its backoff.
+		ctx, cancel := retentionEventWriterContext()
+		ref := newLoopRef("retention_event_writer")
 		go func() {
 			defer close(retentionEventDone)
-			w := newRetentionLogWriter()
-			defer w.close()
-			var lastReportedDropped uint64
-			reportDrops := func() {
-				if dropped := retentionEventDropped.Load(); dropped != lastReportedDropped {
-					fmt.Fprintf(os.Stderr, "[provider] warn: retention event buffer was full, dropped %d event(s)\n", dropped-lastReportedDropped)
-					lastReportedDropped = dropped
-				}
-			}
-			batch := make([]string, 0, retentionEventBatch)
-			for event := range retentionEventCh {
-				batch = append(batch[:0], event)
-				// Take whatever else is already queued, without blocking. A
-				// closed channel drains to what is left and then yields ok=false,
-				// so the outer range ends on the next turn.
-			drain:
-				for len(batch) < retentionEventBatch {
-					select {
-					case next, ok := <-retentionEventCh:
-						if !ok {
-							w.write(batch)
-							reportDrops()
-							return
-						}
-						batch = append(batch, next)
-					default:
-						break drain
-					}
-				}
-				w.write(batch)
-				reportDrops()
-			}
+			superviseRetentionEventWriter(ctx, ref, retentionEventCh, cancel)
 		}()
 	})
+}
+
+// superviseRetentionEventWriter drains events to the retention log until the
+// channel closes or ctx ends. Split out of startRetentionEventWriter so the
+// shutdown contract — a panicking writer must still end with the run rather
+// than sit in the supervisor's backoff while flushRetentionEvents waits — is
+// testable without the process-wide singleton.
+func superviseRetentionEventWriter(ctx context.Context, ref loopRef, events <-chan string, cancel context.CancelFunc) {
+	// The drop count is cumulative and outlives a run, so a restarted writer
+	// does not report the whole total as if it were new.
+	var lastReportedDropped uint64
+	reportDrops := func() {
+		if dropped := retentionEventDropped.Load(); dropped != lastReportedDropped {
+			fmt.Fprintf(os.Stderr, "[provider] warn: retention event buffer was full, dropped %d event(s)\n", dropped-lastReportedDropped)
+			lastReportedDropped = dropped
+		}
+	}
+	superviseLoop(ctx, ref, func() {
+		w := newRetentionWriter()
+		defer w.close()
+		retentionEventWriteLoop(ctx, events, w, reportDrops)
+		// Either the channel closed (the orderly end) or the run ended.
+		// Cancel in both cases: a close must end the supervisor rather than
+		// restart it over a closed channel, and the cancel is idempotent.
+		cancel()
+	}, nil)
+}
+
+// retentionEventWriteLoop performs the file I/O: it takes the first event
+// blocking, then drains whatever else is already queued without waiting, so a
+// burst becomes one write while an idle stream still costs nothing. It ends
+// when the channel closes or the run's context does; in both cases it writes
+// what is already buffered first, so a flush that closes the channel after the
+// run was cancelled still gets its final batch written.
+func retentionEventWriteLoop(ctx context.Context, events <-chan string, w retentionWriter, reportDrops func()) {
+	batch := make([]string, 0, retentionEventBatch)
+	for {
+		event, ok := nextRetentionEvent(ctx, events)
+		if !ok {
+			// Closed channel or an ended run: write the rest and stop.
+			writeRetentionBatch(w, batch)
+			reportDrops()
+			return
+		}
+		batch = append(batch[:0], event)
+		// Take whatever else is already queued, without blocking. A closed
+		// channel drains to what is left and then yields ok=false; the next
+		// pass through the loop sees that and exits after writing this batch.
+	drain:
+		for len(batch) < retentionEventBatch {
+			select {
+			case next, ok := <-events:
+				if !ok {
+					break drain
+				}
+				batch = append(batch, next)
+			default:
+				break drain
+			}
+		}
+		writeRetentionBatch(w, batch)
+		reportDrops()
+		batch = batch[:0]
+	}
+}
+
+// nextRetentionEvent waits for one event. ok is false when the channel closed
+// or the run's context ended. An event that is already queued wins over a
+// cancelled context, so a run that ends with events still buffered writes them
+// instead of dropping them on the floor.
+func nextRetentionEvent(ctx context.Context, events <-chan string) (event string, ok bool) {
+	select {
+	case event, ok = <-events:
+		return event, ok
+	default:
+	}
+	select {
+	case event, ok = <-events:
+		return event, ok
+	case <-ctx.Done():
+		return "", false
+	}
+}
+
+func writeRetentionBatch(w retentionWriter, batch []string) {
+	if len(batch) == 0 {
+		return
+	}
+	w.write(batch)
 }
 
 // retentionLogWriter appends retention lines to proxy_health.log, keeping the
@@ -556,6 +706,12 @@ func appendRetentionEvent(event string) {
 // concurrent appendRetentionEvent calls (retentionEventMu makes the close
 // and the closed-check atomic with respect to each other). Terminal: after
 // this call, appendRetentionEvent silently drops all events.
+//
+// The wait is bounded. The writer's context derives from the run's, so a
+// cancelled run ends the writer's supervisor; a writer that is wedged anyway (a
+// stuck write, a panicking constructor that keeps the supervisor in backoff)
+// must not hold shutdown — or the hotswap drain monitor, which owns the
+// parent's exit — past the timeout.
 func flushRetentionEvents() {
 	startRetentionEventWriter()
 	retentionEventMu.Lock()
@@ -563,8 +719,37 @@ func flushRetentionEvents() {
 		retentionEventClosed = true
 		close(retentionEventCh)
 	}
+	done := retentionEventDone
 	retentionEventMu.Unlock()
-	<-retentionEventDone
+	if !waitRetentionWriterDone(done, retentionEventRunContext(), retentionFlushTimeout, retentionFlushGrace) {
+		tlog("[retention] event writer did not finish within %s; buffered events may be lost\n", retentionFlushTimeout)
+	}
+}
+
+// waitRetentionWriterDone waits for the writer to close done, bounded by
+// timeout. runCtx is the run whose cancel also stops the writer: once it has
+// ended, the writer is already being stopped, so it only gets grace to finish
+// the batch in hand rather than the full timeout.
+func waitRetentionWriterDone(done <-chan struct{}, runCtx context.Context, timeout, grace time.Duration) bool {
+	timeoutTimer := time.NewTimer(timeout)
+	defer timeoutTimer.Stop()
+	select {
+	case <-done:
+		return true
+	case <-timeoutTimer.C:
+		return false
+	case <-runCtx.Done():
+		graceTimer := time.NewTimer(grace)
+		defer graceTimer.Stop()
+		select {
+		case <-done:
+			return true
+		case <-timeoutTimer.C:
+			return false
+		case <-graceTimer.C:
+			return false
+		}
+	}
 }
 
 // --- fork-local health report types (the pinned connect does not export the

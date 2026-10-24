@@ -183,7 +183,13 @@ func startHotSwapSignalListener(ctx context.Context, cancel context.CancelFunc, 
 				return
 			case sig := <-sigChan:
 				if sig == syscall.SIGUSR2 {
-					_ = runHotSwapParentHandoff(ctx, cancel, opts)
+					// The same guarded entry point the control socket's
+					// `hotswap` command runs: a panic ends the process
+					// non-zero rather than unwinding this listener and
+					// leaving a half-yielded parent alive.
+					if err := hotSwapHandoff(ctx, cancel, opts); err != nil {
+						hotswapLog("❌ [hotswap] handoff failed: %v\n", err)
+					}
 				}
 			}
 		}

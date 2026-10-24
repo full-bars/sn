@@ -184,8 +184,9 @@ type metricsCounterStore struct {
 	// and a shutdown flush cannot interleave their read-merge-write sequences.
 	flushMu sync.Mutex
 
-	stop chan struct{}
-	done chan struct{}
+	stop   chan struct{}
+	done   chan struct{}
+	cancel context.CancelFunc
 }
 
 func newMetricsCounterStore(path string) *metricsCounterStore {
@@ -730,34 +731,46 @@ func (s *metricsCounterStore) startFlush(interval time.Duration) {
 	}
 	stop := make(chan struct{})
 	done := make(chan struct{})
-	s.stop, s.done = stop, done
+	// The writer is a long-running loop, so it runs under the supervisor: a
+	// panic in one flush restarts the writer with backoff instead of ending
+	// persistence for the rest of the process. stopFlush cancels this context,
+	// so a shutdown that lands while the writer is panicking or backing off
+	// ends the supervisor instead of waiting out the backoff.
+	ctx, cancel := context.WithCancel(context.Background())
+	s.stop, s.done, s.cancel = stop, done, cancel
 	s.mu.Unlock()
 
+	ref := newLoopRef("metrics_counter_flush")
+	// Failures repeat every tick, so the last reported message is kept across
+	// runs: a restart must not re-log an unchanged failure.
+	var lastErr string
 	go func() {
 		defer close(done)
-		ticker := time.NewTicker(interval)
-		defer ticker.Stop()
-		var lastErr string
-		for {
-			select {
-			case <-ticker.C:
-				err := s.flush()
-				if err == nil {
-					lastErr = ""
-					continue
+		superviseLoop(ctx, ref, func() {
+			ticker := time.NewTicker(interval)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					err := s.flush()
+					if err == nil {
+						lastErr = ""
+						continue
+					}
+					// A state directory that cannot be written fails every tick.
+					// Report the first failure and then only a CHANGE, so a
+					// read-only home does not fill the log with one line per
+					// interval.
+					if msg := err.Error(); msg != lastErr {
+						tlog("[metrics] counter flush failed: %v\n", err)
+						lastErr = msg
+					}
+				case <-stop:
+					cancel()
+					return
 				}
-				// A state directory that cannot be written fails every tick.
-				// Report the first failure and then only a CHANGE, so a
-				// read-only home does not fill the log with one line per
-				// interval.
-				if msg := err.Error(); msg != lastErr {
-					tlog("[metrics] counter flush failed: %v\n", err)
-					lastErr = msg
-				}
-			case <-stop:
-				return
 			}
-		}
+		}, nil)
 	}()
 }
 
@@ -765,13 +778,17 @@ func (s *metricsCounterStore) startFlush(interval time.Duration) {
 // write.
 func (s *metricsCounterStore) stopFlush() {
 	s.mu.Lock()
-	stop, done := s.stop, s.done
-	s.stop, s.done = nil, nil
+	stop, done, cancel := s.stop, s.done, s.cancel
+	s.stop, s.done, s.cancel = nil, nil, nil
 	s.mu.Unlock()
 	if stop == nil {
 		return
 	}
 	close(stop)
+	if cancel != nil {
+		// Ends the supervisor even if the writer is mid-panic or in backoff.
+		cancel()
+	}
 	<-done
 }
 

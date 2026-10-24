@@ -157,34 +157,49 @@ func startControlSocket(ctx context.Context, state *controlState) (func(), error
 		return nil, fmt.Errorf("control socket ACL: %w", err)
 	}
 
-	go func() {
+	goSafe("control-socket-close-on-shutdown", func() {
 		<-ctx.Done()
 		ln.Close()
-	}()
+	})
 
+	// The accept loop is the control socket's long-running server loop, so it
+	// runs under the supervisor: a panic in it must not leave the socket file
+	// bound with nothing accepting for the rest of the process. Its one
+	// orderly end is the listener closing (shutdown, or a hotswap quiesce),
+	// which is not a failure — the run cancels acceptCtx so the supervisor
+	// exits instead of restarting a server whose listener is gone.
+	acceptCtx, acceptCancel := context.WithCancel(ctx)
+	acceptRef := newLoopRef("control_socket_accept")
 	go func() {
-		var acceptBackoff time.Duration
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				if acceptLoopShouldStop(err) {
-					return
+		defer acceptCancel()
+		superviseLoop(acceptCtx, acceptRef, func() {
+			var acceptBackoff time.Duration
+			for {
+				conn, err := ln.Accept()
+				if err != nil {
+					if acceptLoopShouldStop(err) {
+						acceptCancel()
+						return
+					}
+					// Anything else is transient (descriptor exhaustion during a
+					// connection spike is the realistic one). Returning here would
+					// leave the socket file on disk with nothing listening.
+					if acceptBackoff == 0 {
+						acceptBackoff = 5 * time.Millisecond
+					} else if acceptBackoff < time.Second {
+						acceptBackoff *= 2
+					}
+					tlog("⚠️ [control] accept failed, retrying in %s: %v\n", acceptBackoff, err)
+					time.Sleep(acceptBackoff)
+					continue
 				}
-				// Anything else is transient (descriptor exhaustion during a
-				// connection spike is the realistic one). Returning here would
-				// leave the socket file on disk with nothing listening.
-				if acceptBackoff == 0 {
-					acceptBackoff = 5 * time.Millisecond
-				} else if acceptBackoff < time.Second {
-					acceptBackoff *= 2
-				}
-				tlog("⚠️ [control] accept failed, retrying in %s: %v\n", acceptBackoff, err)
-				time.Sleep(acceptBackoff)
-				continue
+				acceptBackoff = 0
+				// One connection handler per connection: a panic in a command
+				// handler must end that connection, not the miner. The handler's
+				// own defer closes the connection as the panic unwinds.
+				goSafe("control-socket-conn", func() { handleControlConn(conn, state) })
 			}
-			acceptBackoff = 0
-			go handleControlConn(conn, state)
-		}
+		}, nil)
 	}()
 
 	var cleanupOnce sync.Once
@@ -934,10 +949,10 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		}
 		tlog("🛑 [control] shutdown requested via control socket\n")
 		// The cancel runs asynchronously so the client gets its ACK first.
-		go func() {
+		goSafe("control-socket-shutdown", func() {
 			time.Sleep(50 * time.Millisecond)
 			state.shutdownFn()
-		}()
+		})
 		return controlResponse{OK: true, Value: "shutting down"}
 
 	case "hotswap":
@@ -948,6 +963,10 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		if hotSwap == nil {
 			return controlResponse{OK: false, Error: "hotswap trigger not available"}
 		}
+		// The handoff is the same guarded entry point the SIGUSR2 listener
+		// runs (hotSwapHandoff): it owns its own panic handling and exits the
+		// process non-zero if it panics, so wrapping it in the barrier would
+		// only swallow the panic the guard exists to escalate.
 		go func() {
 			if err := hotSwap(); err != nil {
 				tlog("[hotswap] background handoff failed: %v\n", err)
@@ -1037,7 +1056,7 @@ func applyControlLiveSideEffect(key, value string) error {
 		previous, relaunch := applyH3Mode(setting)
 		tlog("[control] applied h3=%s (was %s)\n", setting, previous)
 		if relaunch {
-			go restartDirectIdentity()
+			goSafe("control-socket-h3-relaunch", restartDirectIdentity)
 		}
 		if previous != setting {
 			relaunchH3ProxiesNow(setting)
