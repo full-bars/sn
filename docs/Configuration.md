@@ -190,9 +190,12 @@ rest keep their connections.
 
 The `[health]` line carries `h3=<mode>`, `h3_set=<n>` and `h3_proxies=<m>`.
 `h3_set` is the grand total of running identities that run H3, which is the
-proxies plus the direct identity; `h3_proxies` is the proxy count only. In
-`/metrics` the same split is `urnet_h3_set_size` (the grand total) and
-`urnet_h3_proxy_set_size` (proxies only), alongside `urnet_h3_mode_info`.
+proxies plus the direct identity; `h3_proxies` is the proxy count only. On the
+relaying provider, `/metrics` carries the same split as `urnet_h3_set_size`
+(the grand total) and `urnet_h3_proxy_set_size` (proxies only), alongside
+`urnet_h3_mode_info`. The miner exports none of those three yet: its H3 metrics
+seam is unwired, so a scrape from a miner omits the whole family rather than
+reporting a mode it cannot size (see [Monitoring.md](/full-bars/sn/wiki/Monitoring)).
 
 **Whether H3 offers DATAGRAM.** QUIC DATAGRAM is always on at the upstream
 default in this build: the offer is made on every H3 connection, and a server
