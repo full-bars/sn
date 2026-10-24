@@ -59,7 +59,7 @@ jobs:
 
   test:
     name: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
 
@@ -106,7 +106,7 @@ jobs:
         run: go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
 
@@ -255,7 +255,7 @@ jobs:
     # for GOOS=freebsd, so a freebsd-only break (a symbol gated behind
     # //go:build linux that a shared caller reaches) fails the PR instead
     # of landing and breaking the FreeBSD release at cut time.
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
     steps:
@@ -286,7 +286,7 @@ jobs:
     # would otherwise catch at cut time. Compile every shippable binary here,
     # across the same GOOS x GOARCH matrix the release uses, so PRs fail on the
     # gap instead of the release.
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
     strategy:
