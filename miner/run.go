@@ -1732,6 +1732,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// nobody has ended.
 	if reloader != nil {
 		reloadWatchDone := make(chan struct{})
+		// The pool controller's pressure cut cancels through this same
+		// reloader (proxy_manager_pressure.go): the controller is started by
+		// the proxy manager, which runs before this reloader exists, so it
+		// reads the installed one when a cut fires. Clearing it on the way out
+		// keeps a late tick from cancelling into a pool this run no longer
+		// serves.
+		setPressureShedReloader(reloader)
+		defer setPressureShedReloader(nil)
 		if reloadPath, err := proxyReloadPath(); err == nil {
 			go func() {
 				defer close(reloadWatchDone)

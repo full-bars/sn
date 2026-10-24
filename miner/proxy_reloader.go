@@ -376,14 +376,16 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 // already been stopped (shutdown or a hotswap yield).
 var errProxyReloaderStopped = errors.New("proxy reloader stopped")
 
-// reap cancels the given identities, for the degraded-proxy reaper.
+// reap cancels the given identities, for the quality reaper and the pool
+// controller's pressure cut.
 //
 // It is the miner's proxyCancelMap half of the provider's reapProxies: cancel
 // each running slot under mu, release the address it claimed, forget it, and
 // publish the resulting running set once. The identities that were actually
 // cancelled are returned — a key this run is not running is skipped, because a
-// slot the reloader does not own is not the reaper's to cancel, and the caller
-// needs the exact set to record its hold against.
+// slot the reloader does not own is not the caller's to cancel, and the caller
+// needs the exact set to record its hold against (and, for a pressure cut, to
+// persist a target it can prove).
 //
 // A stopped reloader cancels nothing: stop() is terminal, and a reaper that
 // landed after a yield must not pretend it reaped anything.

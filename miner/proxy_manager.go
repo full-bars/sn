@@ -624,11 +624,12 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	m.startLoop(ctx, "pressure_monitor", func() { runPressureMonitor(ctx, m.cfg.SelfHeal) })
 	// AIMD pool controller (v33 runPoolController, T-07): computes and
 	// persists the URL pool's TargetPoolSize every poolControlInterval, and
-	// sheds the worst URL proxies back to the cache on a sustained-pressure
-	// cut. The fetcher and cleanup loops read the target back (gated on
-	// self-heal, see resolveEffectiveProxyURLMax), which is the half that
-	// makes the learned operating point real; v33 starts this loop
-	// unconditionally beside the fetcher, and so does the miner.
+	// on a sustained-pressure cut cancels the worst running URL slots through
+	// the live reloader before returning them to the cache. The fetcher and
+	// cleanup loops read the target back (gated on self-heal, see
+	// resolveEffectiveProxyURLMax), which is the half that makes the learned
+	// operating point real; v33 starts this loop unconditionally beside the
+	// fetcher, and so does the miner.
 	m.startLoop(ctx, "pool_controller", func() { runPoolController(ctx, m.cfg.Max, m.cfg.SelfHeal) })
 	m.startLoop(ctx, "url_reaper", func() { runURLProxyReaper(ctx, m.cfg.ApiHost, m.cfg.ApiPort, m.gate) })
 	// Paid/file-list proxy grading (v33 proxy_grade_paid.go): rides the
