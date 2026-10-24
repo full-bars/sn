@@ -3,6 +3,7 @@ package miner
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -131,6 +132,16 @@ type profitSample struct {
 	billableTotal uint64
 	settledTotal  uint64
 	totalsKnown   bool
+	// contractsAcquired, avgUtilPct and contractsKnown are the process
+	// contract accounting the scrape publishes, read from the same snapshot
+	// (contractStatsSnapshot) so the line and urnet_contracts_total cannot
+	// disagree. contractsAcquired is cumulative; avgUtilPct is the open book's
+	// mean utilization and NaN when undefined. contractsKnown says a slot has
+	// ever registered a contract feed -- before that these are unknown, not
+	// zero.
+	contractsAcquired int64
+	avgUtilPct        float64
+	contractsKnown    bool
 }
 
 // readProfitSample folds the two live registries into one profit reading.
@@ -168,18 +179,23 @@ func readProfitSample() profitSample {
 		s.settledTotal = totals.ContractUsedIngress + totals.ContractUsedEgress
 		s.totalsKnown = true
 	}
+	if stats, ok := contractStatsSnapshot(); ok {
+		s.contractsAcquired = stats.Acquired
+		s.avgUtilPct = stats.AvgUtilPct
+		s.contractsKnown = true
+	}
 	return s
 }
 
-// profitLine renders the [profit] line. The provider's trailing
-// `contracts=... denied=... avg_util=...` group is deliberately absent: the
-// provider reads globalContractMetrics per-tick deltas, and the miner has no
-// live contract counter at all — metrics_seams.go marks metricsSeamContracts
-// UNSUPPORTED and never wires it, noting that the persisted all-time totals in
-// lifetime_metrics.go are not a substitute. Printing those lifetime totals here
-// would present a cumulative figure as this process's tick, and printing 0
-// would claim "no contracts" when the truth is "unknown". The field is left out
-// so a missing group means unknown, not zero.
+// profitLine renders the [profit] line. The provider's
+// `contracts=... denied=... avg_util=...` group is rendered from the same
+// contract accounting the scrape publishes (contract_metrics.go): contracts= is
+// the cumulative acquired count and avg_util= the open book's mean utilization.
+// denied= is the one field the miner omits: a refused contract never opens and
+// the pinned SDK exports no denial event, so there is no count to print
+// (metrics_seams.go explains the gap). A missing denied field therefore means
+// "cannot measure", not zero. When no slot has ever registered a contract feed
+// the whole group is omitted, because an unknown is not a zero either.
 func profitLine(earning bool, s profitSample, delta uint64, elapsed float64) string {
 	status := "no"
 	profitEmoji := ""
@@ -201,6 +217,14 @@ func profitLine(earning bool, s profitSample, delta uint64, elapsed float64) str
 	// has no counters at all, because "unknown" must not read as zero bytes.
 	if s.totalsKnown {
 		line += fmt.Sprintf(" billable=%s settled=%s", formatBytes(s.billableTotal), formatBytes(s.settledTotal))
+	}
+	if s.contractsKnown {
+		line += fmt.Sprintf(" contracts=%d avg_util=", s.contractsAcquired)
+		if math.IsNaN(s.avgUtilPct) {
+			line += "n/a"
+		} else {
+			line += fmt.Sprintf("%.0f%%", s.avgUtilPct)
+		}
 	}
 	return line + "\n"
 }

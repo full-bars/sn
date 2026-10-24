@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -411,5 +412,53 @@ func TestBillableRateLandsWhereIdleUpdateLooks(t *testing.T) {
 	}
 	if _, err := os.Stat(healthDir); !os.IsNotExist(err) {
 		t.Fatalf("the writer touched the health dir %s (err=%v); the rate must not go there", healthDir, err)
+	}
+}
+
+// TestProfitLineCarriesContractAccounting pins the contracts= / avg_util= group
+// on the [profit] line: cumulative acquired and the open book's mean
+// utilization, from the same snapshot the scrape publishes, with an undefined
+// utilization rendered as n/a rather than a misleading 0%.
+func TestProfitLineCarriesContractAccounting(t *testing.T) {
+	line := profitLine(true, profitSample{
+		population: 1, proxiesUp: 1, serving: 1, clients: 1,
+		contractsKnown: true, contractsAcquired: 12, avgUtilPct: 37.5,
+	}, 1, 1)
+	if !strings.Contains(line, " contracts=12 avg_util=38%") {
+		t.Errorf("line = %q, want contracts=12 avg_util=38%%", line)
+	}
+
+	undefined := profitLine(false, profitSample{
+		contractsKnown: true, contractsAcquired: 3, avgUtilPct: math.NaN(),
+	}, 0, 1)
+	if !strings.Contains(undefined, "contracts=3 avg_util=n/a") {
+		t.Errorf("undefined utilization rendered as a number: %q", undefined)
+	}
+
+	// No slot has registered a contract feed: the group is absent, not zero.
+	if unknown := profitLine(false, profitSample{}, 0, 1); strings.Contains(unknown, "contracts=") {
+		t.Errorf("unsourced contract accounting claimed a reading: %q", unknown)
+	}
+}
+
+// TestReadProfitSampleCarriesContractAccounting pins the wiring: the sample the
+// heartbeat renders picks up contractStatsSnapshot, so the line cannot drift
+// from urnet_contracts_total.
+func TestReadProfitSampleCarriesContractAccounting(t *testing.T) {
+	withFreshContractOutcomes(t)
+	device := &fakeContractOutcomeSource{}
+	defer registerContractOutcomes(device)()
+
+	device.deliver(t, false, contractOpenDetail(t, "cccccccc-cccc-4ccc-8ccc-cccccccccccc", 1000, 500))
+
+	s := readProfitSample()
+	if !s.contractsKnown {
+		t.Fatal("readProfitSample did not see a registered contract feed")
+	}
+	if s.contractsAcquired != 1 {
+		t.Errorf("contracts acquired = %d, want 1", s.contractsAcquired)
+	}
+	if math.Abs(s.avgUtilPct-50) > 1e-9 {
+		t.Errorf("avg util = %v, want 50", s.avgUtilPct)
 	}
 }

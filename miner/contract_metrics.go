@@ -44,9 +44,10 @@ package miner
 //	urnet_contract_used_bytes                 used bytes over open contracts
 //	urnet_contract_utilization                mean used/purchased, open contracts, percent
 //
-// contractStatsSnapshot exposes the same reading to the [profit] line, which
-// lives on a sibling branch: cumulative acquired for contracts=, and the open
-// book for avg_util=%d%% (or n/a).
+// contractStatsSnapshot exposes the same reading to the [profit] line:
+// cumulative acquired for contracts=, and the open book for avg_util=%d%% (or
+// n/a). readProfitSample calls it once per heartbeat, so the line and the
+// scrape render one snapshot rather than two reads that could disagree.
 //
 // ContractUsedByteCount is a per-contract running figure that the feed
 // republishes each stats epoch; it is NOT the cumulative settled bytes this
