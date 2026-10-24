@@ -663,6 +663,19 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// store's throttle, and emits the dated all-time line. The store is also
 	// flushed at the two hotswap points (hotswap.go).
 	m.startLoop(ctx, "lifetime_collector", func() { runLifetimeCollector(ctx) })
+	// Profit heartbeat (v33 runProfitHeartbeat): the 15s [profit] line that
+	// answers "is billable traffic moving right now", distinct from the
+	// one-minute [earn] trend. It prints every tick while earning, immediately
+	// on the stop edge, and then throttles to 5m, so a quiet node stays quiet.
+	// [profit] is already an important-log marker; until this loop existed
+	// nothing in the miner ever emitted the line.
+	m.startLoop(ctx, "profit_heartbeat", func() { runProfitHeartbeat(ctx) })
+	// Billable rate writer (v33 runBillableRateWriter): publishes
+	// <state>/billable_rate every 10s, the file urnet-tools idle-update polls
+	// to tell a real traffic lull from a missing metric. Without it the
+	// consumer assumes ACTIVE traffic and waits out its whole timeout, so
+	// `urnet-tools idle-update` always burned 30m on this box.
+	m.startLoop(ctx, "billable_rate", func() { runBillableRateWriter(ctx) })
 	// Direct-path egress grade (v33 proxy_direct_grade.go): read-only, persisted
 	// to its own direct_grade.json, gated on the operator's direct toggle
 	// (isDirectEnabled). v33 starts it unconditionally beside the reaper loops
