@@ -1,0 +1,16 @@
+# Known-intentional provider -> miner gaps.
+#
+# Every entry needs a one-line reason: an allowlist without one becomes a list
+# of names nobody can safely delete. A file entry suppresses the file and every
+# declaration in it, so a reason never has to be repeated per helper.
+#
+# format: <file|func|type> <name> <reason>
+
+# Stubs for connect metrics symbols that the provider's v2026 connect pin
+# removed; they exist to keep provider call sites compiling, not to carry a
+# behaviour the miner would need.
+file metrics_stubs.go compile-time bridges for connect metrics symbols removed in v2026; no miner call sites
+
+# The !linux half of the provider's thrash watchdog. The miner's watchdog is
+# Linux-only and has no non-Linux call site to satisfy, so it needs no no-op.
+file thrash_watchdog_stub.go non-Linux no-op stub; the miner has no non-Linux watchdog call site
