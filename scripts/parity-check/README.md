@@ -108,15 +108,17 @@ file provider_auth.go provider_callbacks.go
 
 A `file` mapping to a provider or miner file that does not exist is a
 configuration error (exit `2`), not a silent pass. A `func` or `type` mapping is
-not validated: a target that does not exist reappears in section `(b)` as a
-declaration gap (exit `1`).
+validated the same way: its provider name must be a declaration the scan holds,
+and its miner target must exist. A mapping that could never apply (the source is
+absent) or that would report a ported declaration as a gap (the target is
+absent) is a configuration error, not a finding about the port.
 
 Validation sees the scan, not the disk. A run without `-tests` has no `_test.go`
 files in it, so a `file` mapping that names one is rejected with a message
-asking for `-tests`; a `func` or `type` mapping to a test-only symbol needs the
-same flag, and without it the declaration is reported as a gap. `-all` plays no
-part here — unexported declarations are always in the lookup tables, and the
-flag only decides which of them are compared.
+asking for `-tests`; a `func` or `type` mapping to a test-only symbol is refused
+with the same hint. `-all` plays no part here — unexported declarations are
+always in the lookup tables, and the flag only decides which of them are
+compared.
 
 ## Flags
 

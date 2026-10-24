@@ -466,6 +466,82 @@ func TestTestFileMappingNeedsTheTestsFlag(t *testing.T) {
 	}
 }
 
+// A func or type mapping is authoritative, so a target that the scan cannot see
+// is not a gap the report can fall back on. Only -tests puts _test.go
+// declarations in the lookup maps, so a mapping that names one must ask for the
+// flag rather than read as a missing symbol.
+func TestDeclMappingToTestOnlySymbolNeedsTheTestsFlag(t *testing.T) {
+	cases := []struct {
+		name     string
+		files    map[string]string
+		mappings string
+	}{
+		{
+			name: "func declared only in a provider test file",
+			files: map[string]string{
+				"provider/alpha.go":      "package provider\nfunc run() {}\n",
+				"provider/alpha_test.go": "package provider\nfunc BindHead() {}\n",
+				"miner/alpha.go":         "package miner\nfunc run() {}\nfunc bindHeadTier() {}\n",
+			},
+			mappings: "func BindHead bindHeadTier\n",
+		},
+		{
+			name: "type declared only in a miner test file",
+			files: map[string]string{
+				"provider/alpha.go":   "package provider\ntype Config struct{}\n",
+				"miner/alpha.go":      "package miner\n",
+				"miner/alpha_test.go": "package miner\ntype minerConfig struct{}\n",
+			},
+			mappings: "type Config minerConfig\n",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			opts := fixture(t, tc.files, "", tc.mappings)
+			_, _, err := run(opts)
+			if err == nil || !strings.Contains(err.Error(), "-tests") {
+				t.Fatalf("err = %v, want a hint that -tests is required", err)
+			}
+
+			opts.includeTests = true
+			rep, err := buildReport(opts)
+			if err != nil {
+				t.Fatalf("-tests: %v", err)
+			}
+			if len(rep.declGaps) != 0 {
+				t.Fatalf("-tests: declGaps = %v, want the mapping to resolve", rep.declGaps)
+			}
+		})
+	}
+}
+
+// A mapping that names a declaration no file holds is dead configuration: the
+// source side never applies, and the target side would turn a ported
+// declaration into a false gap. Both are rejected rather than ignored.
+func TestDeclMappingToMissingSymbolIsAnError(t *testing.T) {
+	files := map[string]string{
+		"provider/alpha.go": "package provider\nfunc run() {}\ntype Config struct{}\n",
+		"miner/alpha.go":    "package miner\nfunc run() {}\ntype Config struct{}\n",
+	}
+
+	for _, tc := range []struct {
+		mappings string
+		want     string
+	}{
+		{"func NoSuchFunc run\n", "provider func NoSuchFunc does not exist"},
+		{"func run noSuchFunc\n", "miner func noSuchFunc does not exist"},
+		{"type NoSuchType Config\n", "provider type NoSuchType does not exist"},
+		{"type Config noSuchType\n", "miner type noSuchType does not exist"},
+	} {
+		opts := fixture(t, files, "", tc.mappings)
+		_, _, err := run(opts)
+		if err == nil || !strings.Contains(err.Error(), tc.want) {
+			t.Fatalf("%q: err = %v, want %q", tc.mappings, err, tc.want)
+		}
+	}
+}
+
 func TestStampAndTestMethodAreNotTopLevelDeclarations(t *testing.T) {
 	opts := fixture(t, map[string]string{
 		"provider/alpha.go": "package provider\nfunc (c *Config) Run() {}\nfunc run() { f := func() {}; _ = f }\n",
