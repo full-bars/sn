@@ -1,0 +1,21 @@
+name: Runner probe
+# temporary: reports what the self-hosted runner has, so jobs are not moved
+# onto a machine that cannot build them. deleted after it reports.
+on:
+  pull_request:
+    paths: ['.github/workflows/runner-probe.yml']
+jobs:
+  probe:
+    runs-on: [self-hosted, alma]
+    steps:
+      - uses: actions/checkout@v4
+      - name: report toolchain
+        run: |
+          echo "host: $(uname -a)"
+          echo "user: $(id -un) uid=$(id -u)"
+          echo "cpus: $(nproc)"; free -g | head -2 || true
+          echo "go: $(command -v go || echo MISSING)"; go version 2>/dev/null || true
+          echo "docker: $(command -v docker || echo MISSING)"; docker version --format '{{.Server.Version}}' 2>/dev/null || true
+          echo "git: $(git --version)"
+          echo "disk: $(df -h . | tail -1)"
+          echo "workspace: $GITHUB_WORKSPACE"
