@@ -546,6 +546,12 @@ func Run(args []string) {
 			fmt.Fprintln(os.Stderr, "original contract launch requires its approved source profile and retained provider identity; no provider started")
 			os.Exit(1)
 		}
+		// Host limits are graded once, before any provider starts. A node with
+		// a file-descriptor ceiling too low for its sockets, or a conntrack
+		// table too small for them, looks healthy until it silently stops
+		// accepting clients. The check only reads, never exits, and reports
+		// nothing on a tuned host (system_audit.go).
+		startStartupHostAudit()
 	}
 
 	for _, command := range []struct {
