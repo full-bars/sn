@@ -888,6 +888,9 @@ type swapThrashOptions struct {
 	logf       func(format string, args ...any)
 	notef      func(format string, args ...any)
 	critf      func(format string, args ...any)
+	// exitNotef is the pre-exit diagnostic line: stderr only, never the state
+	// directory's events.log (thrash_exit_note.go).
+	exitNotef func(format string, args ...any)
 }
 
 // swapThrashWatch is the watchdog's process-wide state: one machine, one
@@ -900,6 +903,7 @@ type swapThrashWatch struct {
 	logf       func(format string, args ...any)
 	notef      func(format string, args ...any)
 	critf      func(format string, args ...any)
+	exitNotef  func(format string, args ...any)
 
 	// Escalation seams. Every one has a production default; tests inject them
 	// so no test exits the test process, writes the real state dir, or guesses
@@ -931,6 +935,7 @@ func newSwapThrashWatch(opts swapThrashOptions) *swapThrashWatch {
 		logf:       opts.logf,
 		notef:      opts.notef,
 		critf:      opts.critf,
+		exitNotef:  opts.exitNotef,
 	}
 	if w.readFn == nil {
 		w.readFn = readSwapThrash
@@ -952,6 +957,9 @@ func newSwapThrashWatch(opts swapThrashOptions) *swapThrashWatch {
 	}
 	if w.critf == nil {
 		w.critf = critLog
+	}
+	if w.exitNotef == nil {
+		w.exitNotef = swapThrashExitNotef
 	}
 	if w.selfHealFn == nil {
 		w.selfHealFn = func() bool { return resolveSelfHealEnabled(os.Getenv("URNETWORK_SELF_HEAL") == "1") }
@@ -1145,10 +1153,20 @@ func (w *swapThrashWatch) sample(now time.Time) {
 		esc := w.escalate(now, rt, rd, attr, share, shareOK)
 		switch esc.Action {
 		case "restart":
-			w.notef("%s\n", esc.Msg)
-			// os.Exit skips the defers: clear the stale status first.
-			clearSwapThrashStatusFile(w.statusPath)
-			w.exitFn(swapThrashExitCode)
+			// 75 alone cannot tell this planned memory restart from the
+			// network sign-in quarantine, which shares the code. Mark the
+			// exit for this pid immediately before taking it, so a
+			// supervising `provide --all-operators` names the right cause
+			// (miner/operators_supervisor.go operatorChildThrashExited).
+			// The restart record is not that marker: it is also written
+			// mid-life by the liveness path and by a persist goroutine
+			// that outlives its timeout.
+			//
+			// exitOnRestart is the shared pre-exit sequence: the reason line
+			// goes to stderr only (never events.log in the state directory
+			// whose hang this escalation exists for) and the status clear and
+			// the marker write are bounded, so the exit is always taken.
+			w.exitOnRestart("[thrash]", "%s", esc.Msg)
 			// A test seam replaced the exit: stop sampling cleanly instead of
 			// escalating again from a process that was told to die.
 			w.stopped = true

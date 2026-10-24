@@ -883,6 +883,137 @@ func TestOperatorSupervisorSignsInAgainAfterAQuarantine(t *testing.T) {
 	fixture.stop(syscall.SIGTERM, second)
 }
 
+// A child that exited 75 after the thrash path wrote its one-shot exit marker
+// is not reported as a network-sign-in quarantine, even though the JWT is gone
+// for the ordinary reason that the child stopped.
+func TestOperatorSupervisorDoesNotReportAThrashRestartAsAQuarantine(t *testing.T) {
+	fixture := newTestOperatorFixture(t)
+	fixture.authenticate("alpha.example")
+	fixture.publish(testListedOperator("alpha.example"))
+	fixture.run()
+	first := fixture.nextStart()
+	if err := os.Remove(operatorJwtPath(fixture.base, "alpha.example")); err != nil {
+		t.Fatal(err)
+	}
+	// The producer writes the restart record and then, immediately before its
+	// exit, the exit marker for its own pid.
+	directory := operatorlist.DomainStateDir(fixture.base, "alpha.example")
+	if err := os.WriteFile(filepath.Join(directory, thrashCapFileName), []byte(`{"restarts":[1]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(thrashExitMarkerPath(directory, first.pid), []byte("1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	from := fixture.journal.length()
+	first.exit <- testOperatorExit{code: providerQuarantinedExitCode}
+	fixture.journal.wait(t, from, "log operator alpha.example: provider (pid 1) exited without a network sign-in; checking its credentials")
+	for _, entry := range fixture.journal.entriesFrom(from) {
+		if strings.Contains(entry, "set its rejected network sign-in aside") {
+			t.Fatalf("a thrash restart was reported as a quarantine:\n%s", strings.Join(fixture.journal.entriesFrom(from), "\n"))
+		}
+	}
+	if _, err := os.Stat(thrashExitMarkerPath(directory, first.pid)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("the exit marker was not consumed: %v", err)
+	}
+	fixture.stop(syscall.SIGTERM)
+}
+
+// A thrash restart record written while the child kept running is not an exit:
+// the liveness stall path writes it mid-life, and a persist goroutine that
+// outlives its timeout lands after the watchdog refused to exit. When that same
+// child later sets a rejected sign-in aside, the exit is a real quarantine and
+// must be reported as one.
+func TestOperatorSupervisorDoesNotMaskAQuarantineWithAMidLifeRecord(t *testing.T) {
+	fixture := newTestOperatorFixture(t)
+	fixture.authenticate("alpha.example")
+	fixture.publish(testListedOperator("alpha.example"))
+	fixture.run()
+	first := fixture.nextStart()
+	// Mid-life: the record lands, the child keeps running.
+	directory := operatorlist.DomainStateDir(fixture.base, "alpha.example")
+	if err := os.WriteFile(filepath.Join(directory, thrashCapFileName), []byte(`{"restarts":[1]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// Then the child rejects its sign-in and exits, with no exit marker.
+	if err := os.Remove(operatorJwtPath(fixture.base, "alpha.example")); err != nil {
+		t.Fatal(err)
+	}
+	from := fixture.journal.length()
+	first.exit <- testOperatorExit{code: providerQuarantinedExitCode}
+	fixture.journal.wait(t, from, "log operator alpha.example: provider (pid 1) set its rejected network sign-in aside; checking its credentials")
+	for _, entry := range fixture.journal.entriesFrom(from) {
+		if strings.Contains(entry, "exited without a network sign-in") {
+			t.Fatalf("a real quarantine was masked by a record written mid-life:\n%s", strings.Join(fixture.journal.entriesFrom(from), "\n"))
+		}
+	}
+	fixture.stop(syscall.SIGTERM)
+}
+
+// An exit marker names one pid. Another operator's child (or an older process
+// that had this pid) cannot hand this child its planned restart.
+func TestOperatorSupervisorDoesNotReadAnotherPidsExitMarker(t *testing.T) {
+	fixture := newTestOperatorFixture(t)
+	fixture.authenticate("alpha.example")
+	fixture.publish(testListedOperator("alpha.example"))
+	fixture.run()
+	first := fixture.nextStart()
+	if err := os.Remove(operatorJwtPath(fixture.base, "alpha.example")); err != nil {
+		t.Fatal(err)
+	}
+	directory := operatorlist.DomainStateDir(fixture.base, "alpha.example")
+	if err := os.WriteFile(thrashExitMarkerPath(directory, first.pid+1), []byte("2\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	from := fixture.journal.length()
+	first.exit <- testOperatorExit{code: providerQuarantinedExitCode}
+	fixture.journal.wait(t, from, "log operator alpha.example: provider (pid 1) set its rejected network sign-in aside; checking its credentials")
+	fixture.stop(syscall.SIGTERM)
+}
+
+// A marker still in the directory when a child starts belongs to an exit the
+// supervisor never saw (it was killed before it could consume the marker). The
+// one-shot invariant only holds if start() sweeps them before the next child
+// runs: the fixture's next child reuses pid 1, so an inherited marker would
+// read that child's next exit as somebody else's planned restart. The sweep is
+// scoped to the marker prefix, so it must not touch anything else.
+func TestOperatorSupervisorClearsAStaleExitMarkerBeforeStarting(t *testing.T) {
+	fixture := newTestOperatorFixture(t)
+	fixture.authenticate("alpha.example")
+	directory := operatorlist.DomainStateDir(fixture.base, "alpha.example")
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	// pid 1 is the pid this fixture's first child gets, so this is exactly the
+	// reused-pid case the sweep exists for; the second is an older orphan.
+	markers := []string{
+		thrashExitMarkerPath(directory, 1),
+		thrashExitMarkerPath(directory, 424242),
+	}
+	for _, path := range markers {
+		if err := os.WriteFile(path, []byte("2\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	other := filepath.Join(directory, "operator_notes.txt")
+	if err := os.WriteFile(other, []byte("keep me"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	fixture.publish(testListedOperator("alpha.example"))
+	fixture.run()
+	child := fixture.nextStart()
+
+	for _, path := range markers {
+		if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("start() left the stale exit marker %s in place (err=%v)", filepath.Base(path), err)
+		}
+	}
+	if b, err := os.ReadFile(other); err != nil || string(b) != "keep me" {
+		t.Fatalf("the sweep must remove markers only, read %q (err=%v)", string(b), err)
+	}
+	fixture.stop(syscall.SIGTERM, child)
+}
+
 // Without --auto-register a child that exits with its jwt gone awaits a
 // manual sign-in, as before; nothing signs in by itself.
 func TestOperatorSupervisorWithoutAutoRegisterAwaitsAuthWithoutAJwt(t *testing.T) {
@@ -976,15 +1107,89 @@ func TestOperatorAutomaticSignInDoublesUpToADay(t *testing.T) {
 	}
 }
 
+// TestOperatorThrashExitMarkerIsTheProducersExitRequest ties the reader to the
+// real exit path: requestThrashExit is what the thrash watchdog and the liveness
+// self-exit call immediately before swapping in the 75 exit, and it writes into
+// the child's URNETWORK_STATE_DIR (the operator directory under
+// provide --all-operators).
+func TestOperatorThrashExitMarkerIsTheProducersExitRequest(t *testing.T) {
+	withTempHome(t)
+	stateDir, err := providerStateDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	requestThrashExit()
+	if !operatorChildThrashExited(stateDir, os.Getpid()) {
+		t.Fatalf("the producer's exit marker in %s was not read as this pid's planned restart", stateDir)
+	}
+	if operatorChildThrashExited(stateDir, os.Getpid()) {
+		t.Fatal("the one-shot exit marker was read twice")
+	}
+}
+
 // A real child process's exit status carries the quarantine.
 func TestOperatorChildQuarantinedReadsTheExitStatus(t *testing.T) {
 	err := exec.Command("sh", "-c", fmt.Sprintf("exit %d", providerQuarantinedExitCode)).Run()
-	if !operatorChildQuarantined(err) {
+	if !operatorChildQuarantined(err, false) {
 		t.Fatalf("exit %d was not a quarantine: %v", providerQuarantinedExitCode, err)
 	}
 	for _, other := range []error{nil, errors.New("exit status 75"), exec.Command("sh", "-c", "exit 1").Run()} {
-		if operatorChildQuarantined(other) {
+		if operatorChildQuarantined(other, false) {
 			t.Fatalf("%v read as a quarantine", other)
 		}
+	}
+}
+
+// TestOperatorChildQuarantinedDoesNotClaimAThrashRestart pins the shared exit
+// code: 75 with this child's one-shot exit marker is a planned memory restart,
+// not a sign-in quarantine, while a 75 without one remains a quarantine —
+// including when the only thrash trace on disk is a restart record written
+// mid-life, or an exit marker another pid wrote.
+func TestOperatorChildQuarantinedDoesNotClaimAThrashRestart(t *testing.T) {
+	exit75 := exec.Command("sh", "-c", fmt.Sprintf("exit %d", providerQuarantinedExitCode)).Run()
+	stateDir := t.TempDir()
+
+	// The restart record is written mid-life and says nothing about an exit:
+	// the liveness stall path writes it while the child keeps running, and a
+	// persist goroutine that outlived its timeout lands after the watchdog
+	// refused to exit. It must not explain a 75.
+	if err := os.WriteFile(filepath.Join(stateDir, thrashCapFileName), []byte(`{"restarts":[1]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if operatorChildThrashExited(stateDir, 1) {
+		t.Fatal("a restart record written mid-life was read as an exit marker")
+	}
+	if !operatorChildQuarantined(exit75, false) {
+		t.Fatalf("exit %d beside a mid-life restart record was not a quarantine", providerQuarantinedExitCode)
+	}
+
+	// A marker another process wrote is not this child's, even with a 75.
+	if err := os.WriteFile(thrashExitMarkerPath(stateDir, 2), []byte("2\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if operatorChildThrashExited(stateDir, 1) {
+		t.Fatal("another pid's exit marker was read as this child's")
+	}
+	if !operatorChildQuarantined(exit75, false) {
+		t.Fatalf("exit %d beside another pid's exit marker was not a quarantine", providerQuarantinedExitCode)
+	}
+
+	// No marker at all is the real quarantine.
+	if !operatorChildQuarantined(exit75, operatorChildThrashExited(t.TempDir(), 1)) {
+		t.Fatalf("exit %d without an exit marker was not a quarantine", providerQuarantinedExitCode)
+	}
+
+	// This child's own marker, and only once: a planned memory restart.
+	if err := os.WriteFile(thrashExitMarkerPath(stateDir, 1), []byte("1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if !operatorChildThrashExited(stateDir, 1) {
+		t.Fatal("this child's exit marker was not read as its planned restart")
+	}
+	if operatorChildQuarantined(exit75, true) {
+		t.Fatalf("exit %d with the thrash exit marker was reported as a quarantine", providerQuarantinedExitCode)
+	}
+	if operatorChildThrashExited(stateDir, 1) {
+		t.Fatal("the one-shot exit marker was read twice")
 	}
 }

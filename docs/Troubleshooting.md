@@ -29,7 +29,7 @@ failure and what happened.
 |------|---------|
 | 0 | Clean shutdown (SIGTERM or manual stop). |
 | 78 | The JWT is expired or invalid. The container startup script intercepts this code, deletes the stale JWT, and re-authenticates when an auth code is available (see Container troubleshooting). |
-| 75 | Planned restart requested by the swap-thrash watchdog, or by the liveness watchdog when a stalled process has made no progress for 10 minutes. It is not a crash. Under systemd with `Restart=on-failure` the unit restarts the provider; the miner image's start script restarts `miner provide` after 5 seconds. See [Swap-thrash watchdog](/full-bars/sn/wiki/Configuration#swap-thrash-watchdog). |
+| 75 | Planned restart requested by the swap-thrash watchdog, or by the liveness watchdog when a stalled process has made no progress for 10 minutes. It is not a crash. Under systemd with `Restart=on-failure` the unit restarts the provider; the miner image's start script restarts `miner provide` after 5 seconds. The same code also marks a rejected network sign-in set aside for a fresh sign-in. The thrash path leaves a one-shot `thrash_exit.<pid>` marker in the state directory immediately before it exits, and `provide --all-operators` uses that pid-bound marker to name the cause for the operator: the two exits are followed by the same credential check, so only the log line differs. See [Swap-thrash watchdog](/full-bars/sn/wiki/Configuration#swap-thrash-watchdog). |
 
 ## Container troubleshooting
 
@@ -43,7 +43,18 @@ If your container exits unexpectedly:
 5. **Exit 78** means the JWT expired. The script attempts automatic
    re-authentication when `URNETWORK_AUTH_CODE`, `USER_AUTH`, or `PASSWORD`
    are set correctly.
-6. **All other non-zero codes** indicate a configuration or environment
+6. **Exit 75** has two causes, so read the exit log before diagnosing. A
+   planned restart is not a fault: the swap-thrash watchdog, or the liveness
+   watchdog when the process has made no progress for 10 minutes, asks for
+   it; the start script restarts `miner provide` after 5 seconds and the JWT
+   is left alone, because the set-aside token on disk decides the next
+   sign-in. A rejected network sign-in set aside for a fresh sign-in shares
+   the code and is not a restart: check `USER_AUTH`/`PASSWORD` or
+   `URNETWORK_AUTH_CODE` before touching the token. A one-shot
+   `thrash_exit.<pid>` marker in the state directory marks the planned
+   restart, and `provide --all-operators` names the cause it saw in the
+   operator log.
+7. **All other non-zero codes** indicate a configuration or environment
    problem. The fatal message describes the specific issue.
 
 ### Fatal messages always write to both logs and stderr

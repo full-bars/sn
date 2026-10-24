@@ -65,6 +65,11 @@ func swapThrashTestWatch(t *testing.T, sensor *scriptedSwapThrashSensor, clock *
 		critf: func(format string, args ...any) {
 			*logs = append(*logs, "crit: "+formatLogLine(format, args...))
 		},
+		// The pre-exit line is stderr-only in production; the rig observes it
+		// here so a test can still assert the restart is announced.
+		exitNotef: func(format string, args ...any) {
+			*logs = append(*logs, "exit: "+formatLogLine(format, args...))
+		},
 	})
 	return watch, path
 }

@@ -328,7 +328,7 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 	// has observed since is overlaid onto the entries the trim ranking reads.
 	seedLiveProxyHealthFromState(state)
 	if overlaid := overlayLiveProxyHealth(state.Proxies); overlaid > 0 {
-		tlog("[proxy][health] overlaid live health onto %d prox%s before the desired-set build\n", overlaid, plural(overlaid, "y", "ies"))
+		tlog("[proxy][health] overlaid live health onto %s before the desired-set build\n", plural(overlaid, "proxy", "proxies"))
 	}
 
 	tag, primary, err := m.primarySource(state)
