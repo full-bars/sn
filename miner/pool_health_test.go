@@ -210,6 +210,35 @@ func TestProxyPoolHealthVerdictLadder(t *testing.T) {
 	}
 }
 
+// TestProxyPoolHealthConnectingMembersAreNotHealthy pins the pool that is still
+// coming up: some members are serving, the rest are still connecting, and none
+// has failed. That is the starting-up rung, not "healthy", and the sentence must
+// not tell the operator every proxy is up.
+func TestProxyPoolHealthConnectingMembersAreNotHealthy(t *testing.T) {
+	w := newProxyPoolHealthWindow(time.Minute)
+	r := w.observe(proxyPoolMemberCounts{Up: 2, Connecting: 6}, time.Minute)
+
+	if r.Verdict != poolVerdictStartingUp {
+		t.Errorf("verdict = %q for 2 up and 6 still connecting, want %q", r.Verdict, poolVerdictStartingUp)
+	}
+	if sentence := proxyPoolVerdictSentence(r); strings.Contains(sentence, "all 8 proxies up") {
+		t.Errorf("sentence claims the whole pool is up: %q", sentence)
+	}
+	if sentence := proxyPoolVerdictSentence(r); !strings.Contains(sentence, "2 of 8 proxies up so far") {
+		t.Errorf("sentence does not report the partial pool: %q", sentence)
+	}
+
+	// A degraded member with nothing down is a partial pool too: the healthy
+	// sentence counts every member as up, so it must not be reached here.
+	degraded := w.observe(proxyPoolMemberCounts{Up: 3, Degraded: 1}, time.Minute)
+	if degraded.Verdict == poolVerdictHealthy {
+		t.Errorf("verdict = %q with one degraded member, want a partial-pool rung", degraded.Verdict)
+	}
+	if sentence := proxyPoolVerdictSentence(degraded); strings.Contains(sentence, "all 4 proxies up") {
+		t.Errorf("sentence claims the whole pool is up: %q", sentence)
+	}
+}
+
 // TestProxyPoolHealthWarmingIsReportedNotTrusted pins the one deviation from the
 // provider's window: the provider refuses a verdict until a full hour of samples
 // exists, because a leak verdict guessed from three samples is worse than none.

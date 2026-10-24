@@ -338,8 +338,16 @@ func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval t
 		r.Verdict = poolVerdictStartingUp
 	case r.Up == 0:
 		r.Verdict = poolVerdictDown
-	case r.Down == 0:
+	case r.Up == r.Members:
+		// Every member is up and serving. Up == Members excludes anything
+		// still connecting or degraded, so the healthy sentence's "all N
+		// proxies up" is true here and only here.
 		r.Verdict = poolVerdictHealthy
+	case r.Connecting > 0 && r.Down == 0:
+		// Part of the pool is serving and the rest is still coming up, with
+		// nothing failed: that is the starting-up rung, not healthy. The
+		// sentence reports how far the pool has got.
+		r.Verdict = poolVerdictStartingUp
 	case r.Down*100 >= r.Members*poolAttentionDownPct:
 		r.Verdict = poolVerdictNeedsAttention
 	default:
@@ -445,6 +453,15 @@ func proxyPoolVerdictSentence(r proxyPoolHealthReading) string {
 	case poolVerdictStartingUp:
 		if r.Members == 0 {
 			return "❤️ [health] Verdict: starting up — no proxies configured yet; there is no pool to judge."
+		}
+		if r.WarmingRemaining <= 0 {
+			// The hour of history is already there; what is not whole is the
+			// pool itself, so the sentence must not promise a trend that
+			// already exists ("needs 0s more").
+			return fmt.Sprintf(
+				"❤️ [health] Verdict: starting up — %d of %d proxies up so far; the rest have not been observed up yet.",
+				r.Up, r.Members,
+			)
 		}
 		return fmt.Sprintf(
 			"❤️ [health] Verdict: starting up — %d of %d proxies up so far; the hour-long pool history needs %s more before it reports a trend.",
