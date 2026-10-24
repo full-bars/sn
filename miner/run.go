@@ -1058,11 +1058,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	mergePendingControlOverrides(controlState)
 	globalControlState = controlState
-	// The profile tiers' Go runtime knobs (profiles/memory, PM-04) come after
-	// the control state is loaded so a persisted `set gomemlimit|gogc` beats
-	// the tier default, and after the memory plan so the operator precedence
-	// in applyTurboMemoryLimit/applyEcoSettings/ensureMemoryLimit holds.
-	applyProfileProcessTuning(self.maxMemory)
+	// The profile tiers' Go runtime knobs (profiles/memory, PM-04) and the
+	// once-per-start resource check are one ordered step
+	// (applyStartupMemoryTuning). The tuning comes after the control state is
+	// loaded so a persisted `set gomemlimit|gogc` beats the tier default, and
+	// after the memory plan so the operator precedence in
+	// applyTurboMemoryLimit/applyEcoSettings/ensureMemoryLimit holds. The
+	// check then reads the soft limit actually in force, and runs before the
+	// launch loop with the pool size this start opens (`proxy trim` already
+	// applied). Warnings only: nothing here changes a limit or refuses a
+	// start.
+	applyStartupMemoryTuning(self.maxMemory, len(self.proxySettings))
 	// Apply the resolved h3 setting once, before any provider builds its
 	// transport, so a later live change compares against the mode the running
 	// identities were actually built with (the v33 startup replay). The proxy
