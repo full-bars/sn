@@ -22,14 +22,17 @@ import (
 // through effectiveTrimCapSource (the tightest of the operator trim and this
 // cap). The decision logic below is pure so it can be tested without a kernel.
 //
-// Two pieces of the relay's file are deliberately absent:
+// Two pieces of the relay's file:
 //
-//   - The thrash cap. activeThrashCap/trimCapThrash belong to the thrash
-//     watchdog, which the miner has not ported, so automaticTrimCapSource
-//     reports the OOM cap alone and keeps the relay's 0/"" contract.
-//   - The action ledger. ledgerRecord/ledgerEntry are the relay's; the miner
-//     keeps only the returned log lines, which the startup path and the
-//     control socket write to the ramlog and events.log through importantLogf.
+//   - The thrash cap (thrash_cap.go) is combined in automaticTrimCapSource
+//     exactly as the relay does: the tighter of the OOM cap and the thrash cap,
+//     each reported with its own source so a shed is attributed to the rung
+//     that caused it.
+//   - The action ledger is absent. ledgerRecord/ledgerEntry are the relay's;
+//     the miner keeps only the returned log lines, which the startup path and
+//     the control socket write to the ramlog and events.log through
+//     importantLogf, and the thrash escalation writes its restart reason
+//     straight to events.log (thrash_escalation.go).
 
 const (
 	oomCapReduceFactor   = 0.8            // next cap = 80% of the proxies that were running at death
@@ -114,11 +117,11 @@ const trimCapOOM = "oomcap"
 // caller that must not claim "no automatic cap" while an operator cap merely
 // masks one reads this instead of re-deriving the pair.
 //
-// The relay combines two automatic caps here, the OOM cap and the thrash cap.
-// The miner's thrash watchdog is detection and logging only (thrash_watchdog.go
-// says the relay's escalation rung, the thrash cap, is not ported), so only the
-// OOM half is reported here; the thrash half arrives with that rung and this
-// function's contract does not change when it does.
+// The relay combines two automatic caps here: the OOM cap (only in "on" mode)
+// and the thrash cap (written by a thrash escalation or a liveness stall, and
+// live until it expires 24h after the last one). The tighter binding cap wins
+// and the source names it, so a shed driven by a restart cap is not attributed
+// to the OOM rung.
 func automaticTrimCapSource() (int, string) {
 	auto := 0
 	autoSource := ""
@@ -130,6 +133,9 @@ func automaticTrimCapSource() (int, string) {
 		if st.Cap > 0 {
 			auto, autoSource = st.Cap, trimCapOOM
 		}
+	}
+	if cap, ok := activeThrashCap(time.Now()); ok && (auto <= 0 || cap < auto) {
+		auto, autoSource = cap, trimCapThrash
 	}
 	return auto, autoSource
 }

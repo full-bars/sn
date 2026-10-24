@@ -6,7 +6,10 @@ package miner
 // The miner had nothing of this: no swap reads, no PSI, no vmstat
 // pswpin/pswpout, no watchdog state and no status file. What is ported here is
 // the sensing, the reset-safe counter plumbing, the four-state detection
-// ladder, the human-readable attribution and the operator status file:
+// ladder, the human-readable attribution, the operator status file, and the
+// escalation rung: a supervised restart (exit 75), the thrash cap the next
+// start opens smaller with (thrash_cap.go), and the attribution / hot-swap /
+// supervisor / anti-loop gates (thrash_escalation.go):
 //
 //   - detect ACTIVITY, not level: swap usage alone is not thrash.
 //   - every state change logs one plain sentence with human units, who holds
@@ -17,12 +20,12 @@ package miner
 //     reads /proc and cgroup v2, thrash_sensors_other.go returns what little a
 //     platform without /proc can say (the heap), so darwin, freebsd and
 //     windows still build.
+//   - sensing and status are always visible; ESCALATION is gated on self-heal
+//     and on a real supervisor, so an unsupervised `miner provide` only logs.
 //
-// NOT ported: the relay's escalation rung (supervised restart, thrash cap,
-// ledger, hot-swap gate, freeze-growth). Those depend on relay-only state
-// (thrash_cap.json, the audit ledger, the hot-swap locks) and on a service
-// manager contract the miner does not have; this port stops at detection,
-// logging and status, which is what the miner can honestly act on.
+// NOT ported: the relay's freeze-growth rung (its pool controller is a
+// different shape here), and the audit ledger the relay records the restart
+// into (the miner has none; the reason goes to events.log instead).
 
 import (
 	"encoding/json"
@@ -459,6 +462,7 @@ type swapThrashMachine struct {
 	worseSince     time.Time
 	severeSince    time.Time
 	calmSince      time.Time
+	lastAttempt    time.Time // throttles escalation attempts
 	heapWarned     bool
 	swapCritWarned bool
 	// heapDriven: the standing condition rests on the heap rule alone, so a
@@ -727,8 +731,8 @@ func swapThrashClearedMsg(prefix string, rd swapThrashRead, rt swapThrashRates) 
 // ---------------------------------------------------------------------------
 
 // swapThrashSnapshot is the published, aggregator-ready view. The field names
-// are the relay's (thrashSnapshot) so an existing reader keeps working; the
-// restart-only fields are absent because the miner has no restart rung.
+// are the relay's (thrashSnapshot) so an existing reader keeps working,
+// including the restart-only fields now that the escalation rung exists.
 type swapThrashSnapshot struct {
 	State            string   `json:"state"`
 	SinceUnix        int64    `json:"since_unix"`
@@ -743,6 +747,8 @@ type swapThrashSnapshot struct {
 	HeapFrac         *float64 `json:"heap_frac"`       // vs the soft limit
 	Attribution      string   `json:"attribution"`     // unit | other | unknown
 	UnitShare        *float64 `json:"unit_swap_share"` // null when unknown
+	LastAction       string   `json:"last_action,omitempty"`
+	Restarts24h      int      `json:"restarts_24h"`
 	Summary          string   `json:"summary"`
 	Updated          string   `json:"updated"`
 }
@@ -761,11 +767,13 @@ func swapThrashPtrI(v int64, ok bool) *int64 {
 	return &v
 }
 
-func buildSwapThrashSnapshot(m *swapThrashMachine, rd swapThrashRead, rt swapThrashRates, attr string, share float64, shareOK bool, now time.Time) *swapThrashSnapshot {
+func buildSwapThrashSnapshot(m *swapThrashMachine, rd swapThrashRead, rt swapThrashRates, attr string, share float64, shareOK bool, restarts int, lastAction string, now time.Time) *swapThrashSnapshot {
 	s := &swapThrashSnapshot{
 		State:       m.state.String(),
 		SinceUnix:   m.stateSince.Unix(),
 		Attribution: attr,
+		LastAction:  lastAction,
+		Restarts24h: restarts,
 		Updated:     now.UTC().Format(time.RFC3339),
 	}
 	s.PSIFull = swapThrashPtrF(rt.fullFrac, rt.fullOK)
@@ -893,12 +901,25 @@ type swapThrashWatch struct {
 	notef      func(format string, args ...any)
 	critf      func(format string, args ...any)
 
-	tracker     swapThrashTracker
-	machine     swapThrashMachine
-	started     bool
-	lastAt      time.Time
-	announce    bool
-	snapshotPtr atomic.Pointer[swapThrashSnapshot]
+	// Escalation seams. Every one has a production default; tests inject them
+	// so no test exits the test process, writes the real state dir, or guesses
+	// at the host's supervisor.
+	selfHealFn       func() bool
+	supervisorKindFn func() (string, bool)
+	capDirWritableFn func() error
+	runningFn        func() int
+	exitFn           func(int)
+	hotSwapBusyFn    func() bool
+
+	tracker        swapThrashTracker
+	machine        swapThrashMachine
+	started        bool
+	stopped        bool
+	lastAt         time.Time
+	announce       bool
+	lastAction     string
+	lastActionCode string
+	snapshotPtr    atomic.Pointer[swapThrashSnapshot]
 }
 
 func newSwapThrashWatch(opts swapThrashOptions) *swapThrashWatch {
@@ -932,8 +953,34 @@ func newSwapThrashWatch(opts swapThrashOptions) *swapThrashWatch {
 	if w.critf == nil {
 		w.critf = critLog
 	}
+	if w.selfHealFn == nil {
+		w.selfHealFn = func() bool { return resolveSelfHealEnabled(os.Getenv("URNETWORK_SELF_HEAL") == "1") }
+	}
+	if w.supervisorKindFn == nil {
+		w.supervisorKindFn = func() (string, bool) { return thrashSupervisorKind(thrashEnvFn, thrashFileExistsFn) }
+	}
+	if w.capDirWritableFn == nil {
+		w.capDirWritableFn = thrashCapDirWritableBounded
+	}
+	if w.runningFn == nil {
+		w.runningFn = oomCapRunning
+	}
+	if w.exitFn == nil {
+		w.exitFn = func(code int) { swapThrashExitFn(code) }
+	}
+	if w.hotSwapBusyFn == nil {
+		w.hotSwapBusyFn = swapThrashHotSwapBusy
+	}
 	return w
 }
+
+// The accessors below keep escalate() readable and give every gate one place
+// to be injected from a test.
+func (w *swapThrashWatch) selfHeal() bool                 { return w.selfHealFn() }
+func (w *swapThrashWatch) supervisorKind() (string, bool) { return w.supervisorKindFn() }
+func (w *swapThrashWatch) capDirWritable() error          { return w.capDirWritableFn() }
+func (w *swapThrashWatch) running() int                   { return w.runningFn() }
+func (w *swapThrashWatch) hotSwapBusy() bool              { return w.hotSwapBusyFn() }
 
 // swapThrashWatchGlobal is the watch the miner's always-on sampler loop
 // drives. It is a variable so a test can substitute a scripted watch.
@@ -980,6 +1027,9 @@ func (w *swapThrashWatch) snapshot() *swapThrashSnapshot { return w.snapshotPtr.
 // sampleIfDue samples at most once per interval. The miner's existing 1Hz
 // loop calls it every second; the host is read at the watchdog's own pace.
 func (w *swapThrashWatch) sampleIfDue(now time.Time) {
+	if w.stopped {
+		return
+	}
 	if !w.started {
 		w.started = true
 		w.lastAt = now
@@ -1048,6 +1098,7 @@ func (w *swapThrashWatch) sample(now time.Time) {
 			// clearance sentence belongs to LEAVING the thrashing state,
 			// whichever calmer state it steps down to.
 			w.notef("%s\n", swapThrashClearedMsg("Thrash cleared", rd, rt))
+			w.lastActionCode = "" // a new episode must be able to alert again
 		case st.cur < swapThrashThrashing && st.prev >= swapThrashUnderPressure:
 			w.logf("[miner][thrash] memory pressure settling: %s\n", swapThrashDetailLine(rt, rd, attr))
 		}
@@ -1076,9 +1127,41 @@ func (w *swapThrashWatch) sample(now time.Time) {
 		}
 	}
 
-	snap := buildSwapThrashSnapshot(&w.machine, rd, rt, attr, share, shareOK, now)
+	// Publish status every tick (lock-free: atomics + one atomic rename). The
+	// restart ring is read here so `restarts_24h` always describes the same
+	// window the escalation gate below just judged.
+	restarts := len(thrashRestartsWithin(readThrashCapState(), now))
+	snap := buildSwapThrashSnapshot(&w.machine, rd, rt, attr, share, shareOK, restarts, w.lastAction, now)
 	w.snapshotPtr.Store(snap)
 	writeSwapThrashStatusFile(w.statusPath, snap)
+
+	// Escalation: throttled attempts while the condition ACTUALLY holds — the
+	// machine sits in thrashing through its relax window, and a denied earlier
+	// attempt must not land on an already-recovered box. A denied attempt does
+	// not burn the restart ring; only a restart does.
+	if st.cond && (w.machine.state == swapThrashThrashing || w.machine.state == swapThrashCritical) &&
+		now.Sub(w.machine.lastAttempt) >= swapThrashRetryInterval {
+		w.machine.lastAttempt = now
+		esc := w.escalate(now, rt, rd, attr, share, shareOK)
+		switch esc.Action {
+		case "restart":
+			w.notef("%s\n", esc.Msg)
+			// os.Exit skips the defers: clear the stale status first.
+			clearSwapThrashStatusFile(w.statusPath)
+			w.exitFn(swapThrashExitCode)
+			// A test seam replaced the exit: stop sampling cleanly instead of
+			// escalating again from a process that was told to die.
+			w.stopped = true
+		case "alert":
+			// Dedupe by reason CODE: re-arm reasons embed changing durations,
+			// so comparing the text re-alerts every retry.
+			if esc.Code != w.lastActionCode {
+				w.critf("[thrash] detected but NOT restarting: %s\n", esc.Reason)
+				w.lastActionCode = esc.Code
+				w.lastAction = esc.Reason
+			}
+		}
+	}
 }
 
 // swapThrashSensorLine names the active and unavailable sources for the
