@@ -14,8 +14,6 @@
 "area:provider":
   - changed-files:
       - any-glob-to-any-file:
-          - "provider/**"
-          - "cmd/provider/**"
           - "cli/miner/**"
           - "miner/**"
           - "internal/**"

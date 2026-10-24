@@ -49,7 +49,7 @@ jobs:
           for attempt in 1 2 3; do
             echo "Build attempt $attempt..."
             if GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -o out/urnet-tools ./cmd/urnet-tools/ && \
-               GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -o out/provider ./cmd/provider/; then
+               GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -o out/provider ./cli/miner/; then
               echo "Build succeeded"; break
             fi
             if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
@@ -65,7 +65,6 @@ jobs:
           # Pre-compile the test binaries for freebsd/amd64. They are then run
           # INSIDE the VM, so the real FreeBSD code paths execute against a
           # real kernel without needing a Go toolchain in the image.
-          GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go test -c -o out/provider.test ./provider
           GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go test -c -o out/urnettools.test ./internal/urnettools
           ls -la out/
 

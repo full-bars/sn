@@ -3,8 +3,7 @@
 # Bakes the miner (cli/miner) in as the primary provider binary. The miner is
 # the program whose usage is written as `provider ...` and which carries
 # provide --all-operators, operators, auth --operator, wallet, claim,
-# claim-daemon(-v2) and fleet. The relay (cmd/provider) is kept beside it as
-# provider-relay for the proxy surface, direct mode and sn-status.
+# claim-daemon(-v2) and fleet.
 #
 # No status server, no published port: the miner dials outbound only.
 
@@ -35,10 +34,6 @@ RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
     && GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
     go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
-    -o provider_relay_bin ./cmd/provider/ \
-    && GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
-    go build -trimpath \
-    -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
     -o urnet_tools_bin ./cmd/urnet-tools/
 
 # --- Final Stage ---
@@ -61,8 +56,6 @@ RUN apk update && apk add --no-cache \
 # Primary binary: the miner, under the same file name convention the relay
 # image uses, and exposed on PATH as `provider`.
 COPY --from=builder /app/miner_bin /app/urnetwork_${TARGETARCH}_stable
-# Relay kept available for the proxy surface, direct mode and sn-status.
-COPY --from=builder /app/provider_relay_bin /app/urnetwork_${TARGETARCH}_relay
 # Go client kept as urnet-tools-go; /usr/local/bin/urnet-tools is the
 # dispatcher below, which routes update/idle-update to the verified shell
 # update wrapper (/app/urnet-tools.sh) and everything else here.
@@ -86,7 +79,6 @@ COPY docker/scripts/logs.sh /app/logs.sh
 
 RUN dos2unix /app/*.sh /usr/local/bin/urnet-tools && chmod +x /app/*.sh /usr/local/bin/urnet-tools \
     && ln -sf /app/urnetwork_${TARGETARCH}_stable /usr/local/bin/provider \
-    && ln -sf /app/urnetwork_${TARGETARCH}_relay /usr/local/bin/provider-relay \
     && ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health \
     && ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic \
     && ln -sf /app/logs.sh /usr/local/bin/logs \

@@ -34,8 +34,8 @@ for arg in "$@"; do
   esac
 done
 
-echo "== gofmt (build.yml lint job scope: provider/)"
-unformatted=$(gofmt -l provider/)
+echo "== gofmt (build.yml lint job scope: miner/)"
+unformatted=$(gofmt -l miner/)
 if [ -n "$unformatted" ]; then
   echo "Files not gofmt-clean:"
   echo "$unformatted"
@@ -43,8 +43,8 @@ if [ -n "$unformatted" ]; then
 fi
 echo "  ok"
 
-echo "== go vet ./provider/... (build.yml lint job)"
-go vet ./provider/...
+echo "== go vet ./miner/... (build.yml lint job)"
+go vet ./miner/...
 echo "  ok"
 
 echo "== go vet ./internal/urnettools/ for freebsd (build.yml freebsd-vet job)"
@@ -81,8 +81,10 @@ else
   exit 1
 fi
 
-echo "== go test -short -race ./provider/... (build.yml test job)"
-go test -short -race -timeout 600s ./provider/...
+echo "== go test -short -race ./miner/bandwidth/... (build.yml race step)"
+go test -short -race -timeout 600s ./miner/bandwidth/...
+echo "== go test -short ./miner/... ./internal/urnettools/... ./cli/... ./cmd/... (build.yml test step)"
+go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...
 
 echo "== go test -short ./miner/... ./internal/urnettools/... ./cli/... ./cmd/... (build.yml test job)"
 go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...

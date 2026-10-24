@@ -94,7 +94,7 @@ jobs:
           for attempt in 1 2 3; do
             echo "=== go test attempt $attempt/3 ==="
             set +e
-            go test -short -race -timeout 600s ./provider/... 2>&1 | tee /tmp/gotest.out
+            go test -short -race -timeout 600s ./miner/bandwidth/... 2>&1 | tee /tmp/gotest.out
             rc=${PIPESTATUS[0]}
             set -e
             if [ "$rc" -eq 0 ]; then
@@ -145,11 +145,11 @@ jobs:
 
       - name: Run go vet
         run: |
-          go vet ./provider/...
+          go vet ./miner/... ./cli/... ./cmd/...
 
       - name: Check gofmt
         run: |
-          unformatted=$(gofmt -l provider/)
+          unformatted=$(gofmt -l miner/ cli/ cmd/ internal/)
           if [ -n "$unformatted" ]; then
             echo "Files not gofmt-clean:"
             echo "$unformatted"
@@ -345,8 +345,16 @@ jobs:
         run: |
           set -e
           for bin in provider urnet-tools urnet-docker; do
-            echo "=== go build ./cmd/${bin} (${GOOS}/${GOARCH}) ==="
-            go build -o /dev/null ./cmd/${bin}
+            case "$bin" in
+              provider)
+                echo "=== go build ./cli/miner (${GOOS}/${GOARCH}) ==="
+                go build -o /dev/null ./cli/miner
+                ;;
+              *)
+                echo "=== go build ./cmd/${bin} (${GOOS}/${GOARCH}) ==="
+                go build -o /dev/null ./cmd/${bin}
+                ;;
+            esac
           done
 
   build-and-push:

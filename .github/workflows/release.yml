@@ -49,7 +49,7 @@ jobs:
             if GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 \
                go build -trimpath \
                -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
-               -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/provider ./cmd/provider/; then
+               -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/provider ./cli/miner/; then
              echo "Build succeeded"; break
             fi
             if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
@@ -90,10 +90,10 @@ jobs:
             else echo "Build failed after 3 attempts"; exit 1; fi
           done
 
-      # The subnet miner (cli/miner): a different program from the relay above
-      # (cmd/provider), with the setup, status, doctor, service and update
-      # commands. Its self-update takes urnetwork-miner-<tag>-<os>-<arch>.tar.gz
-      # from this release, so it needs its own archive; see the miner tarballs
+      # The subnet miner (cli/miner): the provider binary above is now built
+      # from the same ./cli/miner source, kept under that name for urnet-tools
+      # discovery and the update tarballs. The separate miner artifact feeds the
+      # urnetwork-miner-<tag>-<os>-<arch>.tar.gz archive; see the miner tarballs
       # step below.
       - name: Build miner
         env:

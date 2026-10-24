@@ -23,7 +23,7 @@ jobs:
         run: |
           for attempt in 1 2 3; do
             echo "Build attempt $attempt..."
-            go build -o /tmp/provider ./cmd/provider/ && break
+            go build -o /tmp/provider ./cli/miner/ && break
             if [ $attempt -lt 3 ]; then
               echo "Build failed, retrying in 10s..."
               sleep 10

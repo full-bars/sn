@@ -104,10 +104,10 @@ jobs:
           T2="$INSTALLER_TAG2"
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \
             -ldflags "-s -w -X main.Version=$T1 -X main.VersionStamp=URNET_VERSION_STAMP=$T1" \
-            -o out/provider ./cmd/provider/
+            -o out/provider ./cli/miner/
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \
             -ldflags "-s -w -X main.Version=$T2 -X main.VersionStamp=URNET_VERSION_STAMP=$T2" \
-            -o out/provider2 ./cmd/provider/
+            -o out/provider2 ./cli/miner/
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \
             -ldflags "-s -w -X main.Version=$T1" -o out/urnet-tools ./cmd/urnet-tools/
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \
@@ -1454,9 +1454,9 @@ jobs:
           mkdir -p out
           T1="$INSTALLER_TAG"; T2="$INSTALLER_TAG2"
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
-            -ldflags "-s -w -X main.Version=$T1 -X main.VersionStamp=URNET_VERSION_STAMP=$T1" -o out/provider ./cmd/provider/
+            -ldflags "-s -w -X main.Version=$T1 -X main.VersionStamp=URNET_VERSION_STAMP=$T1" -o out/provider ./cli/miner/
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
-            -ldflags "-s -w -X main.Version=$T2 -X main.VersionStamp=URNET_VERSION_STAMP=$T2" -o out/provider2 ./cmd/provider/
+            -ldflags "-s -w -X main.Version=$T2 -X main.VersionStamp=URNET_VERSION_STAMP=$T2" -o out/provider2 ./cli/miner/
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
             -ldflags "-s -w -X main.Version=$T1" -o out/urnet-tools ./cmd/urnet-tools/
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \

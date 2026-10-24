@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Partition the module's packages into disjoint test shards.
 #
-# Balance, not hashing: the root package and ./provider carry roughly three
+# Balance, not hashing: the root package and ./miner carry roughly three
 # quarters of the test files between them, so a modulo-by-index split would
 # leave one shard doing most of the work and the wall-clock win with it.
-# Shard 0 takes the root package, shard 1 takes the provider tree, shard 2
+# Shard 0 takes the root package, shard 1 takes the miner tree, shard 2
 # takes everything else — INCLUDING any package added later, so a new package
 # can never fall outside the union. `--verify` proves that on every run: the
 # failure mode this guards against is a shard silently testing nothing.
@@ -22,8 +22,8 @@ shard_pkgs() {
     {
       pkg = $0
       if (pkg == mod)                                   s = 0
-      else if (pkg == mod "/provider" ||
-               index(pkg, mod "/provider/") == 1)       s = 1
+      else if (pkg == mod "/miner" ||
+               index(pkg, mod "/miner/") == 1)          s = 1
       else                                              s = 2
       if (s == idx) print pkg
     }'

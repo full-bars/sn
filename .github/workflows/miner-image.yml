@@ -1,7 +1,7 @@
 name: Miner Image
 
-# Builds the sn miner image (cli/miner baked in as `provider`, the relay kept
-# as provider-relay) from Dockerfile.miner and publishes it to ghcr.io.
+# Builds the sn miner image (cli/miner baked in as `provider`) from
+# Dockerfile.miner and publishes it to ghcr.io.
 #
 # Publishing is gated to pushes to main and version tags. A manual dispatch on
 # any other ref builds without pushing, so a feature branch can never publish.

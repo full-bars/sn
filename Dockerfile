@@ -25,7 +25,7 @@ COPY . .
 RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
     go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
-    -o provider_bin ./cmd/provider/ \
+    -o provider_bin ./cli/miner/ \
     && go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
     -o urnet_tools_bin ./cmd/urnet-tools/ \
