@@ -1175,8 +1175,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 
 	// The bring-up narration: per-slot auth outcomes and, while slots are
 	// pending, the running/pending/failed heartbeat. Declared before the
-	// worker closure; started once the launch list is fixed below.
-	bringUp := newProviderBringUpTracker(len(providers))
+	// worker closure; started once the launch list is fixed below. A direct
+	// slot the operator has turned off launches no worker at all (the handle
+	// parks it, direct_slot.go), so it must not leave the tally pending.
+	bringUpSlots := len(providers)
+	if !isDirectEnabled() {
+		if _, ok := directSlotIndex(providers); ok {
+			bringUpSlots--
+		}
+	}
+	bringUp := newProviderBringUpTracker(bringUpSlots)
 	provideWithProxy := func(slotCtx context.Context, index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
 		display := providerSlotDisplay(proxySettings)
 		defer func() {
@@ -1474,6 +1482,27 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return nil
 	}
 
+	// The native direct slot's handle. Its launch stays exactly the startup
+	// launch: provideWithProxy with nil settings. The handle is what the
+	// control path reaches so `provider direct off` stops a slot that is
+	// already serving and `provider direct on` starts it again without a
+	// restart (direct_slot.go). It is not a proxy identity, so it is never
+	// handed to the reloader's registry below.
+	var direct *directSlot
+	if directIndex, ok := directSlotIndex(providers); ok {
+		direct = newDirectSlot(
+			ctx,
+			func(slotCtx context.Context, index uint64) error {
+				return provideWithProxy(slotCtx, index, nil)
+			},
+			directIndex,
+			isDirectEnabled(),
+			func(index uint64) {
+				output.observe(providerStarted, index, true, nil, 0, nil)
+			},
+		)
+	}
+
 	// The live reloader: `proxy add`/`remove`/`trim` writes the reload trigger
 	// (proxy_manager_reload.go) and this applies the new desired set to the
 	// running provide without a restart. It is built before the launch loop
@@ -1533,6 +1562,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				return slotCancel, nil
 			},
 		)
+		if direct != nil {
+			// The control path for the native direct slot: every reload
+			// re-reads the persisted operator toggle and starts or stops the
+			// slot to match. The reloader only calls it - the slot stays
+			// outside the reloader's registry and its failure history
+			// (direct_slot.go).
+			reloader.onReload = func() {
+				applyDirectToggle(direct)
+			}
+		}
 		reloader.onChange = func(keys []string) {
 			// Both describe what this run is really serving: the OOM cap counts
 			// running proxies, and the control surface is what
@@ -1643,8 +1682,20 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 					return
 				}
 			}
-			output.observe(providerStarted, uint64(index), true, nil, 0, nil)
-			result = provideWithProxy(slotCtx, uint64(index), proxySettings)
+			if proxySettings != nil {
+				output.observe(providerStarted, uint64(index), true, nil, 0, nil)
+				result = provideWithProxy(slotCtx, uint64(index), proxySettings)
+				return
+			}
+			// The direct slot keeps one handle for the whole run (direct_slot.go).
+			// serve() runs provideWithProxy while the operator toggle is on,
+			// stops that launch when it goes off, and parks without returning so
+			// the run stays up for a later `direct on`. It narrates its own
+			// provider_started on every launch.
+			if direct == nil {
+				return
+			}
+			result = direct.serve()
 		}()
 	}
 	// Apply reload triggers for the rest of the run, and stop whatever it

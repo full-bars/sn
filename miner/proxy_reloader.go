@@ -83,6 +83,16 @@ type minerProxyReloader struct {
 	// knows the live set.
 	onChange func(keys []string)
 
+	// onReload, when set, runs at the start of every reload, before the desired
+	// proxy set is read. The provide run uses it for the native direct slot:
+	// that slot is not a proxy identity and never enters `running`, but its
+	// operator toggle travels on the same reload trigger as `proxy add`, so this
+	// is where the control path reaches it (direct_slot.go). Running it before
+	// the read means `provider direct off` still takes effect when proxy_url.json
+	// is unreadable and the proxy diff below aborts. Held under mu like the rest
+	// of the reload, so a direct stop cannot interleave with a proxy diff.
+	onReload func()
+
 	// addressOwners records which identity owns each host:port for this run.
 	// providerSlotIdentities resolves a configured address to a slot hash once,
 	// at start; a second identity appearing at a live address later would make
@@ -223,6 +233,13 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 	if r.stopped {
 		r.mu.Unlock()
 		return summary, errProxyReloaderStopped
+	}
+
+	// The operator's native direct toggle first, before the desired proxy set
+	// is read: the direct slot is not part of that diff, and a failed proxy
+	// read must not leave a `direct off` unapplied (direct_slot.go, onReload).
+	if r.onReload != nil {
+		r.onReload()
 	}
 
 	desired, err := r.desired()
