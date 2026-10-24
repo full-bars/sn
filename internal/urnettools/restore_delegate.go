@@ -254,7 +254,7 @@ var setKeyHelps = []string{
 	"  cleanup-interval    <duration>    dead proxy cleanup interval (default: 6h, min: 1m)",
 	"  hot-restart         on|off        preserve client JWTs across restarts",
 	"  oom-cap             on|off|shadow OOM-aware start cap: shadow logs what it would do (default), on enforces, off is the kill switch and forgets the standing cap",
-	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed)",
+	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed). Needs a restart: the probe loop is created per identity at start",
 	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply). The miner has no toggle: DATAGRAM stays on at the pinned connect default and neither a set nor a restart changes it",
 	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message). The miner has no toggle: the send lane stays on at the pinned connect default",
 	"  h3                  off|direct|N|all  which identities run H3: none, the direct identity only, the N best proxies, or all. N must be a positive integer (on == direct, 0 == off, auto == all). N caps the PROXY set only; the direct identity is always additionally eligible and does not consume one of the N, so h3=N runs N proxies plus the direct identity (default: all)",
@@ -294,7 +294,7 @@ func printSetHelp() {
 Usage: urnet-tools set <key> [<value>|off] [target]
 
 Runtime overrides are managed via the provider's control socket (~/.urnetwork/provider.sock).
-When the provider is running, changes take effect immediately without a restart.
+When the provider is running, changes take effect immediately without a restart; profile, ramlogs and smart-dialer need a restart.
 When the provider is not running, changes are queued in pending_overrides.json and apply on next startup.
 
 Set a value:  urnet-tools set <key> <value>
@@ -436,16 +436,22 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 			return err
 		}
 		if appliedLive {
-			if note := controlEffectNote(effect); note != "" {
-				fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), note)
-				return nil
+			switch {
+			case needsRestart:
+				// The socket accepted the clear; the running process keeps its
+				// current value. Saying "applied live" here would claim an effect
+				// on the process that does not happen.
+				fmt.Printf("%s cleared for %s (persisted; takes effect at the next start)\n", key, providerLabel(p))
+				fmt.Printf("  ⚠ %s requires a restart to take effect\n", key)
+			default:
+				if note := controlEffectNote(effect); note != "" {
+					fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), note)
+					return nil
+				}
+				fmt.Printf("%s cleared for %s (applied live via control socket)\n", key, providerLabel(p))
 			}
-			fmt.Printf("%s cleared for %s (applied live via control socket)\n", key, providerLabel(p))
 		} else {
 			fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), queuedWriteNote(effect))
-		}
-		if needsRestart {
-			fmt.Printf("  ⚠ %s requires a restart to take effect\n", key)
 		}
 		return nil
 	}
@@ -464,16 +470,21 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 		return err
 	}
 	if appliedLive {
-		if note := controlEffectNote(effect); note != "" {
-			fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), note)
-			return nil
+		switch {
+		case needsRestart:
+			// The same distinction as the clear path: accepted by the socket,
+			// adopted at the next start, not by the running process.
+			fmt.Printf("%s set to %s for %s (persisted; takes effect at the next start)\n", key, value, providerLabel(p))
+			fmt.Printf("  ⚠ %s requires a restart to take effect\n", key)
+		default:
+			if note := controlEffectNote(effect); note != "" {
+				fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), note)
+				return nil
+			}
+			fmt.Printf("%s set to %s for %s (applied live via control socket)\n", key, value, providerLabel(p))
 		}
-		fmt.Printf("%s set to %s for %s (applied live via control socket)\n", key, value, providerLabel(p))
 	} else {
 		fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), queuedWriteNote(effect))
-	}
-	if needsRestart {
-		fmt.Printf("  ⚠ %s requires a restart to take effect\n", key)
 	}
 	return nil
 }

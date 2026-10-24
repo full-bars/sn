@@ -217,5 +217,5 @@ func runSdWatchdog(ctx context.Context, gate func(episodeStart bool) (bool, stri
 	_ = notifySystemdWatchdog() // first feed right away
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	runSdWatchdogLoop(ctx, ticker.C, processLiveness, livenessStaleAfter, notifySystemdWatchdog, critLog, gate, recordLivenessStall, nil)
+	runSdWatchdogLoop(ctx, ticker.C, processLiveness, livenessStaleAfter, notifySystemdWatchdog, critLog, gate, func() func() { return recordLivenessStall(critLog) }, nil)
 }

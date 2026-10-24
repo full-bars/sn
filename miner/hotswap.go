@@ -450,6 +450,10 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 		// what carries the parent's final entries forward.
 		forceAuditPersist()
 		lifetimeStore.Flush()
+		// This exit skips finishControlRun, so the error counts are written
+		// here too; the successor's counters would otherwise restart from the
+		// last periodic flush.
+		FlushPersistentErrors()
 		// os.Exit below skips finishControlRun, so the periodic counter writer
 		// must be stopped and the parent's final totals written here. Without
 		// it every byte counted after the last tick is lost, and the
@@ -466,6 +470,7 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 			// Restart=on-failure (or the Docker supervision loop) restarts the unit
 			// instead of leaving the node silently offline after a clean exit(0).
 			critLog("FATAL: hotswap candidate died during parent drain; exiting non-zero for supervisor restart")
+			captureIncidentBundle(incidentTriggerRestart, "hotswap candidate died during parent drain", nil)
 			exitFunc(1)
 			return
 		}
@@ -841,6 +846,9 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		yieldCoordinatorSession()
 		flushRetentionEvents()
 		lifetimeStore.Flush()
+		// execve leaves no shutdown path; write the error counts with the rest
+		// of the state the successor will load.
+		FlushPersistentErrors()
 		// execve replaces this image, so the periodic writer dies with it and
 		// there is no shutdown path to flush. Write the final totals now.
 		stopMetricsCounterPersistence()
@@ -880,6 +888,7 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		if err := execInPlaceFunc(exe, args, cleanEnv); err != nil {
 			hotswapLog("CRITICAL [hotswap] syscall.Exec failed: %v\n", err)
 			critLog("FATAL: syscall.Exec failed during hotswap: %v", err)
+			captureIncidentBundle(incidentTriggerRestart, "syscall.Exec failed during hotswap: "+err.Error(), nil)
 			exitFunc(1)
 			return fmt.Errorf("syscall.Exec: %w", err)
 		}

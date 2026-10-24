@@ -59,7 +59,7 @@ jobs:
 
   test:
     name: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
 
@@ -74,7 +74,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
-          cache: true
+          # the self-hosted runner keeps $HOME between jobs, so its module and
+          # build caches are already on disk and the cache service would only
+          # upload and re-download them over a slow link. hosted runners (fork
+          # PRs) have no persistent disk, so they still use it.
+          cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
           cache-dependency-path: go.sum
 
       - name: Run Go Unit Tests
@@ -106,7 +110,7 @@ jobs:
         run: go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
 
@@ -121,7 +125,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
-          cache: true
+          # the self-hosted runner keeps $HOME between jobs, so its module and
+          # build caches are already on disk and the cache service would only
+          # upload and re-download them over a slow link. hosted runners (fork
+          # PRs) have no persistent disk, so they still use it.
+          cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
           cache-dependency-path: go.sum
 
       - name: Run go vet
@@ -234,7 +242,9 @@ jobs:
 
       - name: Shellcheck docker scripts (error severity)
         run: |
-          sudo apt-get install -y shellcheck >/dev/null 2>&1
+          # the self-hosted runner has shellcheck installed system-wide and no
+          # sudo; hosted runners are bare ubuntu images that need the apt step.
+          command -v shellcheck >/dev/null 2>&1 || sudo apt-get install -y shellcheck >/dev/null 2>&1
           status=0
           for f in docker/scripts/*.sh; do
             if ! shellcheck -S error "$f"; then
@@ -255,7 +265,7 @@ jobs:
     # for GOOS=freebsd, so a freebsd-only break (a symbol gated behind
     # //go:build linux that a shared caller reaches) fails the PR instead
     # of landing and breaking the FreeBSD release at cut time.
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
     steps:
@@ -269,7 +279,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
-          cache: true
+          # the self-hosted runner keeps $HOME between jobs, so its module and
+          # build caches are already on disk and the cache service would only
+          # upload and re-download them over a slow link. hosted runners (fork
+          # PRs) have no persistent disk, so they still use it.
+          cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
           cache-dependency-path: go.sum
 
       - name: Vet urnettools for freebsd
@@ -286,7 +300,7 @@ jobs:
     # would otherwise catch at cut time. Compile every shippable binary here,
     # across the same GOOS x GOARCH matrix the release uses, so PRs fail on the
     # gap instead of the release.
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
     strategy:
@@ -305,7 +319,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
-          cache: true
+          # the self-hosted runner keeps $HOME between jobs, so its module and
+          # build caches are already on disk and the cache service would only
+          # upload and re-download them over a slow link. hosted runners (fork
+          # PRs) have no persistent disk, so they still use it.
+          cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
           cache-dependency-path: go.sum
 
       - name: Compile shippable binaries for ${{ matrix.goos }}/${{ matrix.goarch }}

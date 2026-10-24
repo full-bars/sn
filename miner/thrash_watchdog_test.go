@@ -70,6 +70,11 @@ func swapThrashTestWatch(t *testing.T, sensor *scriptedSwapThrashSensor, clock *
 		exitNotef: func(format string, args ...any) {
 			*logs = append(*logs, "exit: "+formatLogLine(format, args...))
 		},
+		// Evidence is off for the scripted-storm rig: these tests drive the real
+		// action ladder into restarts and refusals, and a bundle per rung would
+		// land in the real state directory (the rig injects no state dir). The
+		// capture path has its own tests in incident_capture_test.go.
+		evidenceFn: func(swapThrashEscalation, swapThrashRates, swapThrashRead, string, int) {},
 	})
 	return watch, path
 }

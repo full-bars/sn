@@ -241,8 +241,12 @@ func TestRolloutDelayIsStableAndInsideTheWindow(t *testing.T) {
 	}
 }
 
-// fakeRelease writes a feed, and an archive of every platform holding a
-// provider script that prints version, as the release pipeline lays it out.
+// fakeRelease writes a feed, and archives laid out the way the release
+// pipeline does: an urnetwork-provider-* archive for every platform, and an
+// urnetwork-miner-<tag>-<os>-<arch> archive for this one. Both hold a member
+// named "provider" that prints the version, because that IS the miner binary's
+// name inside the miner archive (the miner installer takes only that archive,
+// and installs its member over the executable).
 func fakeRelease(t *testing.T, version string, corrupt bool, digest bool) string {
 	t.Helper()
 	dir := t.TempDir()
@@ -269,7 +273,17 @@ func fakeRelease(t *testing.T, version string, corrupt bool, digest bool) string
 	if digest {
 		asset["digest"] = "sha256:" + hex.EncodeToString(sum[:])
 	}
-	feed, _ := json.Marshal(map[string]any{"tag_name": "v" + version, "published_at": time.Now().UTC().Format(time.RFC3339), "assets": []any{asset}})
+	// the miner self-update looks only for its own archive, named by the tag
+	// (which carries a leading v) and this platform
+	minerName := "urnetwork-miner-v" + version + "-" + runtime.GOOS + "-" + runtime.GOARCH + ".tar.gz"
+	os.WriteFile(filepath.Join(dir, minerName), archive.Bytes(), 0644)
+	minerAsset := map[string]any{"name": minerName, "browser_download_url": minerName, "size": archive.Len()}
+	if digest {
+		// same bytes, so the same digest — including when it has been
+		// deliberately corrupted, which is what the refusal case needs
+		minerAsset["digest"] = "sha256:" + hex.EncodeToString(sum[:])
+	}
+	feed, _ := json.Marshal(map[string]any{"tag_name": "v" + version, "published_at": time.Now().UTC().Format(time.RFC3339), "assets": []any{asset, minerAsset}})
 	path := filepath.Join(dir, "release.json")
 	os.WriteFile(path, feed, 0644)
 	return path
@@ -524,11 +538,11 @@ func TestUpdateDownloadsOnlyFromGitHub(t *testing.T) {
 	for location, want := range map[string]bool{
 		"https://github.com/urnetwork/build/releases/download/v1/a.tar.gz": true,
 		"https://objects.githubusercontent.com/x":                          true,
-		"http://github.com/x":                                              false,
-		"https://example.com/a.tar.gz":                                     false,
-		"https://github.com.evil.example/a":                                false,
-		"a.tar.gz":                                                         false,
-		"file:///tmp/a.tar.gz":                                             false,
+		"http://github.com/x":               false,
+		"https://example.com/a.tar.gz":      false,
+		"https://github.com.evil.example/a": false,
+		"a.tar.gz":                          false,
+		"file:///tmp/a.tar.gz":              false,
 	} {
 		if minerTrustedDownload(location) != want {
 			t.Errorf("%s: want %v", location, want)

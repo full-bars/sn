@@ -279,6 +279,39 @@ func TestProxyTransportDropMetric_IsItsOwnSeries(t *testing.T) {
 	}
 }
 
+// The scrape reads proxy.state, which the 60s health cycle rewrites, so a drop
+// confirmed since the last snapshot lives only in the live registry. The
+// metrics writer overlays that registry (as the pool-health counts do), so an
+// operator sees the drop the process has already observed instead of the
+// count from up to a snapshot interval ago.
+func TestProxyTransportDropMetric_ScrapeSeesLiveDropBeforeSnapshot(t *testing.T) {
+	withTempHome(t)
+	resetProxyHealthReportStateForTest()
+	t.Cleanup(resetProxyHealthReportStateForTest)
+
+	const key = "203.0.113.17:1080"
+	if err := writeProxyState(&ProxyState{Proxies: map[string]ProxyEntry{
+		key: {ID: 1, Health: "up"},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+
+	// The transport watcher confirms a drop: only the live registry moves.
+	noteLiveProxyHealthDrop(key)
+	persisted, err := readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := persisted.Proxies[key].TransportDrops; got != 0 {
+		t.Fatalf("test setup: the drop reached proxy.state before the snapshot: %d", got)
+	}
+
+	out := minerExtraMetrics()
+	if !strings.Contains(out, "\nurnet_proxy_transport_drops 1\n") {
+		t.Fatalf("the scrape reported the persisted count, not the live drop:\n%s", out)
+	}
+}
+
 // A last-resort guard: the watcher must never count the auth path's error as a
 // drop. (The counter is a different field; this pins that the drop path only
 // moves TransportDrops.)
