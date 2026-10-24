@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -677,5 +678,53 @@ func TestCatchUpKeepsASlotRegisteredWhileItReadsTheRegistry(t *testing.T) {
 	h.store.mu.Unlock()
 	if got.TotalRx != 100 {
 		t.Fatalf("seed record lost by catch-up: %+v", got)
+	}
+}
+
+// TestSuperviseLoopRestartsMetricsCounterFlush covers the supervised form of
+// the periodic writer: a panic in one flush must restart the loop rather than
+// ending counter persistence for the rest of the process, and stopFlush must
+// still return promptly instead of waiting out a restart backoff.
+func TestSuperviseLoopRestartsMetricsCounterFlush(t *testing.T) {
+	const name = "metrics_counter_flush"
+	resetLoopStatus(name)
+
+	var writes atomic.Int32
+	store := newMetricsCounterStore(filepath.Join(t.TempDir(), "counters.json"))
+	store.snapshot = func() minerMetricsCounterSnapshot { return minerMetricsCounterSnapshot{} }
+	store.write = func(path string, data []byte, perm os.FileMode) error {
+		if writes.Add(1) == 1 {
+			panic("flush boom")
+		}
+		return nil
+	}
+	store.startFlush(2 * time.Millisecond)
+
+	deadline := time.Now().Add(5 * time.Second)
+	for loopStatusOf(name).Restarts < 1 {
+		if time.Now().After(deadline) {
+			t.Fatal("the supervisor never restarted the panicking counter flush")
+		}
+		time.Sleep(time.Millisecond)
+	}
+
+	// The restarted writer must keep flushing, not just have been counted.
+	deadline = time.Now().Add(5 * time.Second)
+	for writes.Load() < 2 {
+		if time.Now().After(deadline) {
+			t.Fatalf("the restarted writer stopped writing after %d flush(es)", writes.Load())
+		}
+		time.Sleep(time.Millisecond)
+	}
+
+	stopped := make(chan struct{})
+	go func() {
+		store.stopFlush()
+		close(stopped)
+	}()
+	select {
+	case <-stopped:
+	case <-time.After(5 * time.Second):
+		t.Fatal("stopFlush did not return after the writer was restarted by the supervisor")
 	}
 }

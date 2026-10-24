@@ -946,6 +946,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		rawCancel()
 	}
 	defer cancel()
+	// The retention event writer is process-wide and started lazily from the
+	// ingest path, so it cannot take this context as an argument. Register it
+	// here, before any provider is built: a cancelled run then ends the
+	// writer's supervisor, which is what closes its done channel — otherwise a
+	// panicking writer would sit in the supervisor's backoff while shutdown or
+	// the hotswap drain waits for it.
+	setRetentionEventRunContext(ctx)
 	// The control surface's run state: start time, the previous run's marker
 	// (restart reason and version), and a clean-exit marker for the next
 	// start. Declared before the child machinery so a clean return marks the
@@ -1077,7 +1084,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if !self.hotSwapCandidate {
 		startHotSwapSignalListener(ctx, cancel, self.opts)
 		setHotSwapTrigger(func() error {
-			return runHotSwapParentHandoff(ctx, cancel, self.opts)
+			return hotSwapHandoff(ctx, cancel, self.opts)
 		})
 	}
 	// /metrics: URNETWORK_METRICS binds a fixed address; otherwise the
@@ -1782,7 +1789,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// The quality reaper can only cancel what the reloader owns, so it is
 		// installed only when the reloader is (same condition: an unprofiled
 		// run). It shares the reloader's slots and stops with the run's ctx.
-		go newMinerDegradedReaper(reloader).run(ctx)
+		// It is a long-running ticker loop, so it runs under the supervisor: a
+		// panic in one pass restarts it with backoff instead of leaving the run
+		// without a reaper. Built once, so a restart resumes the same reaper
+		// rather than a fresh one.
+		reaper := newMinerDegradedReaper(reloader)
+		reaperRef := newLoopRef("degraded_reaper")
+		go func() {
+			superviseLoop(ctx, reaperRef, func() { reaper.run(ctx) }, nil)
+		}()
 		defer reloader.stop()
 		defer func() {
 			rawCancel()

@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -17,6 +18,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/docopt/docopt-go"
 )
 
 func TestSanitizeCandidateArgs(t *testing.T) {
@@ -214,4 +217,106 @@ func TestHotSwapControlSocketOwnerFinishIsIdempotentWithoutASocket(t *testing.T)
 	// able to finish without cleaning up a socket it does not own.
 	owner.finish()
 	owner.finish()
+}
+
+// TestHotSwapHandoffPanicEndsTheProcess covers the entry point both triggers use
+// (SIGUSR2 and the control socket's `hotswap` command). A panic in the handoff
+// used to be swallowed by the socket goroutine's barrier: the coordinator session
+// was already yielded, the socket quiesced and metrics persistence stopped, so
+// the parent looked alive and served nothing, and nothing ended it.
+func TestHotSwapHandoffPanicEndsTheProcess(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+
+	origExit := exitFunc
+	origHandoff := runHotSwapParentHandoffFunc
+	t.Cleanup(func() {
+		exitFunc = origExit
+		runHotSwapParentHandoffFunc = origHandoff
+	})
+
+	exitCh := make(chan int, 1)
+	exitFunc = func(code int) { exitCh <- code }
+	runHotSwapParentHandoffFunc = func(context.Context, context.CancelFunc, docopt.Opts) error {
+		panic("handoff exploded past the commit point")
+	}
+
+	hotSwapHandoff(context.Background(), func() {}, nil)
+
+	select {
+	case code := <-exitCh:
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1 (a panicked handoff must end the process non-zero)", code)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("a panic in the handoff neither returned nor exited: the process would live on with a half-yielded run")
+	}
+}
+
+// TestHotSwapHandoffReturnsErrorsUnchanged makes sure the guard only owns panics:
+// the handoff's own abort paths (a candidate that never came READY, an unusable
+// install path) must still come back as errors without exiting.
+func TestHotSwapHandoffReturnsErrorsUnchanged(t *testing.T) {
+	origExit := exitFunc
+	origHandoff := runHotSwapParentHandoffFunc
+	t.Cleanup(func() {
+		exitFunc = origExit
+		runHotSwapParentHandoffFunc = origHandoff
+	})
+
+	exited := make(chan int, 1)
+	exitFunc = func(code int) { exited <- code }
+	want := errors.New("candidate pre-flight timeout")
+	runHotSwapParentHandoffFunc = func(context.Context, context.CancelFunc, docopt.Opts) error {
+		return want
+	}
+
+	if err := hotSwapHandoff(context.Background(), func() {}, nil); !errors.Is(err, want) {
+		t.Fatalf("error = %v, want %v", err, want)
+	}
+	select {
+	case code := <-exited:
+		t.Fatalf("an aborted handoff exited with %d, want no exit", code)
+	default:
+	}
+}
+
+// TestMonitorCandidateExitReportsAPanic is the candidate-death signal: a panic in
+// session.Wait used to send nothing, so the drain monitor's select never fired on
+// the child channel, candidateDied stayed false, and the parent exited 0 on the
+// drain timeout with a dead candidate.
+func TestMonitorCandidateExitReportsAPanic(t *testing.T) {
+	ch := monitorCandidateExit("hotswap-test-candidate-wait", func() error {
+		panic("wait exploded")
+	})
+	select {
+	case err := <-ch:
+		if !errors.Is(err, errCandidateWaitPanicked) {
+			t.Fatalf("wait error = %v, want %v", err, errCandidateWaitPanicked)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("a panicking candidate wait reported nothing: the drain would read a dead candidate as alive")
+	}
+
+	// A normal exit still reports its own result, and a wait error is passed
+	// through rather than dressed up as a panic.
+	ch = monitorCandidateExit("hotswap-test-candidate-wait", func() error { return nil })
+	select {
+	case err := <-ch:
+		if err != nil {
+			t.Fatalf("wait error = %v, want nil", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("a normal candidate exit was not reported")
+	}
+
+	waitErr := errors.New("exit status 3")
+	ch = monitorCandidateExit("hotswap-test-candidate-wait", func() error { return waitErr })
+	select {
+	case err := <-ch:
+		if !errors.Is(err, waitErr) {
+			t.Fatalf("wait error = %v, want %v", err, waitErr)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("a candidate wait error was not reported")
+	}
 }

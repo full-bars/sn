@@ -623,10 +623,13 @@ var runOnceGate = make(chan struct{}, 1)
 func spawnRunOnce(a *proxyAuditor) {
 	select {
 	case runOnceGate <- struct{}{}:
-		go func() {
+		// The gate release is the goroutine's own defer, inside the guarded
+		// body, so a panic in runOnce still frees it: a stuck gate would
+		// silently stop every later control-socket tick from being honoured.
+		goSafe("proxy-audit-immediate-tick", func() {
 			defer func() { <-runOnceGate }()
 			a.runOnce()
-		}()
+		})
 	default:
 	}
 }
