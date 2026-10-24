@@ -960,19 +960,32 @@ func (self *smartDialerScheduler) busyBackoff(target *smartDialerTarget) time.Du
 	self.mutex.Lock()
 	counters := target.counters()
 	self.mutex.Unlock()
-	wait := self.config.trafficQuiet
-	for _, bw := range counters {
-		if bw == nil {
-			continue
-		}
-		if remaining := self.config.trafficQuiet - bw.TrafficIdleFor(); wait < remaining {
-			wait = remaining
+	var wait time.Duration
+	if len(counters) == 0 {
+		wait = self.config.trafficQuiet
+	} else {
+		for _, bw := range counters {
+			if bw == nil {
+				continue
+			}
+			idle := bw.TrafficIdleFor()
+			remaining := self.config.trafficQuiet
+			if 0 <= idle {
+				remaining -= idle
+			}
+			if wait < remaining {
+				wait = remaining
+			}
 		}
 	}
 	if wait < self.config.recheckMin {
 		wait = self.config.recheckMin
 	}
-	return wait + time.Duration(rand.Int63n(int64(self.config.recheckJitter)))
+	jitter := time.Duration(0)
+	if 0 < self.config.recheckJitter {
+		jitter = time.Duration(rand.Int63n(int64(self.config.recheckJitter)))
+	}
+	return wait + jitter
 }
 
 func (self *smartDialerScheduler) noteHeld(target *smartDialerTarget) {

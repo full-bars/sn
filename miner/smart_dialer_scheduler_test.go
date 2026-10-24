@@ -885,3 +885,35 @@ func TestSmartDialerShutdownAndHandoffRegisteredInRun(t *testing.T) {
 	if stopDefer < replay {
 		t.Fatal("defer stopSmartDialerScheduler() must be registered after replaySmartDialerAtStartup")
 	}
+}
+
+func TestSmartDialerBusyBackoffDerivedFromQuietWindow(t *testing.T) {
+	config := testSmartDialerConfig()
+	config.trafficQuiet = 2 * time.Minute
+	config.recheckMin = 2 * time.Second
+	config.recheckJitter = 0
+	scheduler := newTestSmartDialerScheduler(t, config)
+
+	// Target with no members backs off for full trafficQuiet window
+	target := &smartDialerTarget{path: smartDialerPath{address: "10.0.0.1:1080"}}
+	if got := scheduler.busyBackoff(target); got != 2*time.Minute {
+		t.Fatalf("expected 2m for empty target, got %v", got)
+	}
+
+	// Target with active client session (TrafficIdleFor < 0) backs off for full quiet window
+	bwActive := &bandwidth.ProxyBandwidth{}
+	bwActive.AddSession("client", time.Now())
+	memberActive := &smartDialerMember{bw: bwActive}
+	target.members = []*smartDialerMember{memberActive}
+	if got := scheduler.busyBackoff(target); got != 2*time.Minute {
+		t.Fatalf("expected 2m for active session, got %v", got)
+	}
+
+	// Target whose counter was never active (TrafficIdleFor >> trafficQuiet) clamps to recheckMin
+	bwNever := &bandwidth.ProxyBandwidth{}
+	memberNever := &smartDialerMember{bw: bwNever}
+	target.members = []*smartDialerMember{memberNever}
+	if got := scheduler.busyBackoff(target); got != 2*time.Second {
+		t.Fatalf("expected 2s clamped minimum for idle counter, got %v", got)
+	}
+}
