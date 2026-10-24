@@ -407,7 +407,7 @@ func installProvideH3Relauncher(ctx context.Context, reloader *minerProxyReloade
 	}
 	setH3IdentityRelauncher(&minerH3Relauncher{ctx: ctx, reloader: reloader})
 	shedder := &h3OutageShedder{}
-	go runH3OutageShed(ctx, shedder)
+	go runH3OutageShed(ctx, shedder, h3OutageEvidence)
 	return func() {
 		setH3IdentityRelauncher(nil)
 		resetH3OutageShed(shedder)

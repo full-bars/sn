@@ -286,6 +286,12 @@ const h3RelaunchMaxPasses = 60
 // alone and retried later: widening the transport set must never cut a live
 // session. A newer setting ends this pass, because its own pass takes over.
 func relaunchH3Proxies(ctx context.Context, relauncher h3IdentityRelauncher, setting h3Setting) {
+	relaunchH3ProxiesPaced(ctx, relauncher, setting, h3RelaunchInterval)
+}
+
+// relaunchH3ProxiesPaced is relaunchH3Proxies with the pause between relaunches
+// chosen by the caller, for a relaunch that must not arrive as a burst.
+func relaunchH3ProxiesPaced(ctx context.Context, relauncher h3IdentityRelauncher, setting h3Setting, interval time.Duration) {
 	for pass := 0; pass < h3RelaunchMaxPasses; pass++ {
 		if resolveH3Mode(globalControlState, currentProxyResolution()) != setting {
 			return
@@ -314,7 +320,7 @@ func relaunchH3Proxies(ctx context.Context, relauncher h3IdentityRelauncher, set
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(h3RelaunchInterval):
+			case <-time.After(interval):
 			}
 		}
 		if busy == 0 {
@@ -332,6 +338,11 @@ func relaunchH3Proxies(ctx context.Context, relauncher h3IdentityRelauncher, set
 // relaunchH3ProxiesNow runs a relaunch pass over the running provide run, in the
 // background. Nil relauncher (offline tools, unit tests) does nothing.
 func relaunchH3ProxiesNow(setting h3Setting) {
+	relaunchH3ProxiesNowPaced(setting, h3RelaunchInterval)
+}
+
+// relaunchH3ProxiesNowPaced is relaunchH3ProxiesNow at a chosen pace.
+func relaunchH3ProxiesNowPaced(setting h3Setting, interval time.Duration) {
 	relauncher := currentH3IdentityRelauncher()
 	if relauncher == nil {
 		return
@@ -342,6 +353,6 @@ func relaunchH3ProxiesNow(setting h3Setting) {
 				importantLogf("[h3] relaunch pass panicked: %v\n", cause)
 			}
 		}()
-		relaunchH3Proxies(relauncher.runContext(), relauncher, setting)
+		relaunchH3ProxiesPaced(relauncher.runContext(), relauncher, setting, interval)
 	}()
 }

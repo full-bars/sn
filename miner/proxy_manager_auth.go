@@ -143,6 +143,7 @@ func noteProviderAuthSuccess(settings *connect.ProxySettings) {
 	// Platform reachability: any authenticated proxy proves the backend is up,
 	// which clears the reaper freeze immediately.
 	proxyOutageTracker.success()
+	h3OutageEvidence.success()
 	globalProvenProxies.MarkSucceeded(key)
 	globalProxyFailureHistory.Reset(key)
 	globalProxySlowRetryState.ClearDropped(key)
@@ -177,6 +178,7 @@ func noteProviderAuthFailure(settings *connect.ProxySettings, err error) provide
 	// distinguishes a backend outage from a bad proxy, and it freezes the
 	// reaper so the outage cannot blacklist the healthy pool.
 	proxyOutageTracker.failure()
+	h3OutageEvidence.failure()
 	// Live health: a failed authentication means the proxy is not up right now,
 	// so the reaper stops shielding it and the traffic/health report shows it
 	// as degraded. The error travels with it so a timeout-family failure is
