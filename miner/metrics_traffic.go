@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/urfoundation/sn/provider/bandwidth"
-	"github.com/urnetwork/connect"
 )
 
 // metrics_traffic.go emits the v33 connect handler's traffic families from
@@ -16,10 +15,13 @@ import (
 // per-proxy byte counters, and the aggregate billable/total byte counters
 // plus the live client count.
 //
-// The registry is keyed by the hash of a proxy's address (run.go
-// bwRegistry.Register(int(addressHash(proxyAddr) & 0x7fffffff))), so the
-// per-proxy series recover the v33 identity-key label by re-hashing the
-// running slots' addresses (controlIdentityKeyedBandwidth).
+// The registry is keyed by the hash of a proxy's IDENTITY key
+// (run.go bwRegistry.Register(proxyIdentityBandwidthIndex(proxySettings)),
+// and that index is addressHash(settings.Key())), so the per-proxy series
+// recover the v33 identity-key label by hashing the same running slot key
+// (controlIdentityKeyedBandwidth). Hashing only the address would miss every
+// credentialed proxy: two accounts behind one gateway have different keys and
+// different counter indices.
 
 // writeTrafficMetrics emits the whole block. The pool composition is real
 // even with an empty pool; the byte counters are omitted until a provide run
@@ -82,9 +84,9 @@ func writeTrafficMetrics(b *strings.Builder) {
 	}
 }
 
-// controlIdentityKeyedBandwidth maps the run's bandwidth registry (keyed by
-// address hash) back onto the running slots' identity keys, the labels the
-// v33 per-proxy series use.
+// controlIdentityKeyedBandwidth maps the run's bandwidth registry (keyed by the
+// identity index) onto the running slots' identity keys, the labels the v33
+// per-proxy series use.
 func controlIdentityKeyedBandwidth() map[string]*bandwidth.ProxyBandwidth {
 	registry := controlRuntime.bandwidthSnapshot()
 	if registry == nil {
@@ -92,11 +94,15 @@ func controlIdentityKeyedBandwidth() map[string]*bandwidth.ProxyBandwidth {
 	}
 	out := make(map[string]*bandwidth.ProxyBandwidth)
 	for _, key := range controlRuntime.runningKeySnapshot() {
-		addr, _ := connect.SplitProxyKey(key)
-		if addr == "" {
+		if key == "" {
 			continue
 		}
-		idx := int(addressHash(addr) & 0x7fffffff)
+		// The registry index is addressHash(settings.Key()), and a running
+		// slot key IS settings.Key(). Hash the key, never the address
+		// SplitProxyKey would return: for a credentialed proxy the registry
+		// stored the counter under address+user, so an address-only lookup
+		// finds nothing and the proxy silently loses its series.
+		idx := int(addressHash(key) & 0x7fffffff)
 		if bw, ok := registry[idx]; ok && bw != nil {
 			out[key] = bw
 		}
