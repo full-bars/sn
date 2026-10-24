@@ -42,8 +42,9 @@ import (
 // byte count.
 //
 // gogc has the same shape (persisted, live-applied, no startup replay) and is
-// deliberately not handled here: a separate concern, with its own semantics
-// ("disabled" is not "off").
+// replayed by replayPersistedGoGC at the same point (gogc_startup.go), with its
+// own semantics documented there: "disabled" turns collection off, "off" is the
+// clear value and is not replayed.
 
 // replayPersistedGoMemLimit installs the persisted gomemlimit, if any, and
 // reports whether it did. The environment outranks it, and an absent, cleared
@@ -97,10 +98,12 @@ func goMemLimitSource(replayed bool, tier string) string {
 	}
 }
 
-// goMemLimitLogLine is the one line, logged once at startup, that names the Go
-// soft limit in force and its source. Without it the only record of a pin that
-// did not survive a restart is the absence of the line the socket logged when
-// it was set, which is indistinguishable from a pin that was never set.
+// goMemLimitLogLine is the soft-limit half of the one line, logged once at
+// startup, that names the Go runtime tuning in force and its source; the whole
+// line is goRuntimeTuningLogLine in gogc_startup.go, which appends the GC
+// setting. Without it the only record of a pin that did not survive a restart
+// is the absence of the line the socket logged when it was set, which is
+// indistinguishable from a pin that was never set.
 func goMemLimitLogLine(limit int64, source string) string {
 	if limit <= 0 || limit == math.MaxInt64 {
 		return fmt.Sprintf("[proxy][resources] Go soft memory limit unlimited (source: %s)", source)

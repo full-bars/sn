@@ -15,7 +15,9 @@ func ProviderDeviceSettings(domainHash [32]byte) *sdk.DeviceLocalSettings {
 	settings.ClientSettings.ContractManagerSettings.CloseReportDomainHash = domainHash
 	settings.ProvideExtenderDnsPrivilegedPort = true
 	// URNETWORK_PROFILE tiers (lowmem/turbo-v4/turbo-v8) are per-provider
-	// settings in v33; apply them here, next to every other constructor.
+	// settings in v33; apply them here, next to every other constructor. The
+	// tier's GOGC default is the exception: it is process-wide and installed
+	// once at startup by applyStartupMemoryTuning (applyProfileGCPercent).
 	applyProfileDeviceSettings(settings)
 	return settings
 }
