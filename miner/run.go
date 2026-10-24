@@ -1257,8 +1257,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		unregSlotCloser := RegisterCoordinatorCloser(proxyCancel)
 		defer unregSlotCloser()
 
-		clientStrategySettings := connect.DefaultClientStrategySettings()
-		clientStrategySettings.ProxySettings = proxySettings
+		// One place assembles the slot's client strategy settings: its proxy,
+		// the test-egress seam (direct slots only), the counters it is
+		// charged to, and the network space's QUIC endpoint. See
+		// slotClientStrategySettings. The closure keeps the run's side
+		// effects on them — the leg observer's log sink and the earnings
+		// publication below.
+		clientStrategySettings, bw, proxyAddr := slotClientStrategySettings(
+			proxySettings, bwRegistry, self.testEgressDialer,
+		)
 		// Observe before authentication starts: the platform dials that run
 		// during bring-up go through this strategy, so a leg failure there is
 		// the same evidence as one during steady state.
@@ -1267,27 +1274,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			proxyLegId = proxySettings.Key()
 		}
 		clientStrategySettings.Log = withProxyLegObserver(clientStrategySettings.Log, proxyLegId)
-		// The test-egress seam binds a source address. Install it only while
-		// no proxy is configured: a non-nil DialContextSettings bypasses
-		// ProxySettings in connect's dial path (net.go), which would leak
-		// dials around the proxy.
-		if proxySettings == nil {
-			clientStrategySettings.DialContextSettings = self.testEgressDialer
-		}
-		// Count through the proxy, not around it: wrap the ConnectSettings
-		// copy that carries ProxySettings with the proxy-preserving wrapper
-		// (see bandwidth.WrapConnectSettings).
-		bw := bwRegistry.Register(0) // direct connection by default
-		proxyAddr := ""
 		if proxySettings != nil {
-			proxyAddr = proxySettings.Address
-			// Key the counters by proxy IDENTITY (address, or address+user for
-			// a credentialed proxy), not by the bare address: two accounts
-			// behind one gateway are different paid proxies, and a counter
-			// shared between them would credit each identity with the other's
-			// bytes — the earnings store and the per-proxy earn tracker both
-			// key by identity, and the control report's totals are per proxy.
-			bw = bwRegistry.Register(proxyIdentityBandwidthIndex(proxySettings))
 			// Publish the same counter for the earnings recording loop
 			// (proxy_manager_earnings_loop.go), which folds it into the earned
 			// history and the earn tracker once a minute. Withdrawn when the
@@ -1296,9 +1283,6 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			publishProxyEarnBandwidth(proxySettings.Key(), bw)
 			defer unpublishProxyEarnBandwidth(proxySettings.Key())
 		}
-		clientStrategySettings.ConnectSettings = bandwidth.WrapConnectSettings(
-			clientStrategySettings.ConnectSettings, bw, proxyAddr,
-		)
 		networkSpace := sdk.NewNetworkSpaceWithUrls(proxyCtx, self.apiUrl, self.connectUrl, clientStrategySettings)
 		defer networkSpace.Close()
 		api := networkSpace.GetApi()
@@ -1466,8 +1450,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// Wrap ProviderDialContextSettings with bandwidth tracking too.
 		// The SDK copies this into its buffer dial paths; only the TCP
 		// DialContext is wrapped, so this counts TCP egress.
-		settings.ProviderDialContextSettings = bandwidth.WrapDialContextSettings(
-			self.testEgressDialer, bw, proxyAddr,
+		//
+		// The same settings carry the slot's H3 endpoint: the SDK hands their
+		// PacketConnFactory to the provider carrier as
+		// H3PacketConnFactory, which is what keeps a proxied identity's QUIC
+		// on its proxy's UDP relay instead of a socket on this host. A direct
+		// slot gets none, so its H3 keeps the engine's own
+		// wildcard-plus-physical-egress socket. See h3_packet_conn.go.
+		settings.ProviderDialContextSettings = providerSlotDialSettings(
+			self.testEgressDialer, proxySettings, bw, proxyAddr,
 		)
 		// Record what this identity is being built with, so a later h3 change
 		// can tell whether it must be relaunched (see h3ProxiesToRelaunch).
@@ -1839,6 +1830,61 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		returnErr = errors.Join(returnErr, errProviderNetworkSignInQuarantined)
 	}
 	return returnErr
+}
+
+// slotClientStrategySettings is the one place a slot's client strategy
+// settings are assembled: the proxy it dials through, whether the run's
+// test-egress seam applies, the bandwidth counters its traffic is charged to,
+// and the network space's QUIC endpoint (networkSpaceConnectSettings).
+//
+// Named rather than inlined so a test can read what the run asks of the sdk
+// without standing up a slot (h3_packet_conn_test.go), the same reason
+// swarmMemberDeviceSettings exists. The run keeps its own side effects on the
+// result: the earnings publication and the leg observer's log sink.
+//
+// Two rules live here, both of them the reason a proxied slot cannot be built
+// by hand at a call site:
+//
+//   - The test-egress seam is installed only while no proxy is configured. A
+//     non-nil DialContextSettings bypasses ProxySettings in connect's dial path
+//     (net.go), so installing it next to a proxy would leak that slot's dials
+//     around the proxy. A proxied slot therefore starts with no
+//     DialContextSettings of its own.
+//   - The counters are keyed by proxy IDENTITY (address, or address+user for a
+//     credentialed proxy), not by the bare address: two accounts behind one
+//     gateway are different paid proxies, and a counter shared between them
+//     would credit each identity with the other's bytes — the earnings store
+//     and the per-proxy earn tracker both key by identity, and the control
+//     report's totals are per proxy. The direct slot keeps index 0.
+//
+// The returned bw is the counter the caller must publish for the earnings
+// loop, and proxyAddr the slot's proxy address ("" for the direct slot).
+func slotClientStrategySettings(
+	proxySettings *connect.ProxySettings,
+	bwRegistry *bandwidth.ProxyRegistry,
+	testEgressDialer *connect.DialContextSettings,
+) (*connect.ClientStrategySettings, *bandwidth.ProxyBandwidth, string) {
+	clientStrategySettings := connect.DefaultClientStrategySettings()
+	clientStrategySettings.ProxySettings = proxySettings
+	if proxySettings == nil {
+		clientStrategySettings.DialContextSettings = testEgressDialer
+	}
+	// Count through the proxy, not around it, and give the space's own QUIC
+	// dialers (the api's alt-h3/alt-whodis carriers) the slot's proxy
+	// endpoint: for a proxied slot the wrap builds the H3 packet conn factory
+	// from that proxy, so no QUIC dial of this network space can open a host
+	// socket under the proxied identity. A direct slot gets no factory and
+	// keeps the engine's own socket. See networkSpaceConnectSettings.
+	bw := bwRegistry.Register(0) // direct connection by default
+	proxyAddr := ""
+	if proxySettings != nil {
+		proxyAddr = proxySettings.Address
+		bw = bwRegistry.Register(proxyIdentityBandwidthIndex(proxySettings))
+	}
+	clientStrategySettings.ConnectSettings = networkSpaceConnectSettings(
+		clientStrategySettings.ConnectSettings, proxySettings, bw, proxyAddr,
+	)
+	return clientStrategySettings, bw, proxyAddr
 }
 
 // errProviderNetworkSignInQuarantined ends a run whose rejected network

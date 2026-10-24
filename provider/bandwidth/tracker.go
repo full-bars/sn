@@ -347,6 +347,34 @@ func (pc *PacketConn) WriteTo(p []byte, addr net.Addr) (int, error) {
 	return n, err
 }
 
+// SetReadBuffer forwards the socket buffer sizing to the wrapped conn when it
+// offers one, and is a no-op when it does not.
+//
+// The H3 endpoint arrives here as the proxy's SOCKS5 UDP relay
+// (provider/socks5_udp.go, socks5PacketConn.SetReadBuffer), which sizes the
+// real UDP socket. Embedding net.PacketConn hides that method — the interface
+// has no SetReadBuffer — so without this forwarding a caller that asks quic-go
+// for larger buffers gets nil and no error, and the relay keeps the OS default.
+// At high datagram rates that is packet loss the caller asked to avoid, on the
+// one path (a proxied identity) where the socket is not the engine's own.
+//
+// A conn that cannot be sized is not an error: connect's own wrappers treat it
+// the same way (net_extender_memory.go, platform_packet_conn.go), and QUIC
+// works with default buffers.
+func (pc *PacketConn) SetReadBuffer(bytes int) error {
+	if sized, ok := pc.PacketConn.(interface{ SetReadBuffer(int) error }); ok {
+		return sized.SetReadBuffer(bytes)
+	}
+	return nil
+}
+
+func (pc *PacketConn) SetWriteBuffer(bytes int) error {
+	if sized, ok := pc.PacketConn.(interface{ SetWriteBuffer(int) error }); ok {
+		return sized.SetWriteBuffer(bytes)
+	}
+	return nil
+}
+
 func (pc *PacketConn) ProxyAddress() string { return pc.proxyAddr }
 
 // ContractStatsObserver returns the function a proxy's contract manager feeds

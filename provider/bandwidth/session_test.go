@@ -20,7 +20,7 @@ func egressSettings(bw *ProxyBandwidth, newConn func() net.Conn) connect.Connect
 			},
 		},
 	}
-	return WrapConnectSettings(cs, bw, "proxy-s")
+	return WrapConnectSettings(cs, bw, "proxy-s", nil)
 }
 
 func dialEgress(t *testing.T, cs connect.ConnectSettings) net.Conn {
