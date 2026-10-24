@@ -26,7 +26,7 @@ func TestNativeOwnerSource483BindsReviewedSourceAndSpec(t *testing.T) {
 			t.Fatal("unreviewed spelling resolved to a spec", source, spec, ok)
 		}
 	}
-	for _, spec := range []uint32{0, 480, 484} {
+	for _, spec := range []uint32{0, 480, 485} {
 		if source, ok := ReviewedNativeOwnerSpecSource(spec); ok || source != "" {
 			t.Fatal("adjacent unreviewed runtime inherited source483", spec, source, ok)
 		}

@@ -42,7 +42,7 @@ func TestRuntime481SelectiveMetagraphApiRejectsUnreviewedDeclarations(t *testing
 		value       any
 	}{
 		{"previous-spec", "specVersion", 480},
-		{"future-spec", "specVersion", 484},
+		{"future-spec", "specVersion", 485},
 		{"other-runtime", "specName", "other-runtime"},
 		{"transaction-version", "transactionVersion", 2},
 		{"state-version", "stateVersion", 2},
