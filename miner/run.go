@@ -1003,6 +1003,11 @@ func provideWith(opts docopt.Opts, start bool) {
 	settings.contractCapturePath, _ = opts.String("--original-contract-capture")
 	settings.contractCaptureSha256, _ = opts.String("--original-contract-capture-sha256")
 	settings.requireContractCapture, _ = opts.Bool("--require-original-contract-capture")
+	// The startup disk audit is bounded (16 MiB and 3 s) and runs in its own
+	// goroutine, so startup never waits for it. It writes disk-bench.json into
+	// the state dir, which is what the metrics seam reports on the next scrape;
+	// nothing on this path reads the result back.
+	startStartupDiskAudit()
 	// A complete-profile launch must report refusal to its supervisor, and a
 	// child that set its rejected network sign-in aside says so by its exit
 	// code. The owned run has joined every child before this exit decision.
