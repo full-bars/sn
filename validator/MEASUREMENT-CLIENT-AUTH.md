@@ -1,11 +1,11 @@
 # Measurement client custody
 
-The no-config `validator run` path measures trails only. Its primary `.validator.jwt`
+The explicit `validator run --measurement-only` path measures trails only. Its primary `.validator.jwt`
 authentication cannot create a client identity or generate a replacement key. Only the
 first provisioning of a pristine directory can, as described below. The runner cannot
 register a native validator or write weights.
-The schema-3 production `--config` dispatch and its approved operator scope remain
-separate. Earlier nonproduction release-config compatibility is outside this
+The release path, which uses the embedded document or an explicit `--config`,
+and its approved operator scope remain separate. Earlier nonproduction release-config compatibility is outside this
 migration. Existing ephemeral tunnel clients created by `TunnelTransport` through
 `NewApiMultiClientGenerator` also remain outside this primary-identity migration;
 their allocating API path is unchanged.

@@ -136,6 +136,14 @@ A network saved with "provider choose_network" replaces these defaults;
 operator list, by default %[3]s.
 
 Usage:
+    provider setup [--auth-code-file=<path>] [--yes] [--no-service] [--system] [-v...]
+    provider status [--json] [-v...]
+    provider doctor [-v...]
+    provider service install [--system] [-v...]
+    provider service uninstall [--system] [-v...]
+    provider service (start | stop | restart | status) [--system] [-v...]
+    provider service logs [--follow] [--system] [-v...]
+    provider update [--check | --status | --on | --off | --auto] [-v...]
     provider auth ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
     	[--api_url=<api_url>]
     	[--max-memory=<mem>]
@@ -220,6 +228,8 @@ Usage:
     provider claim-daemon-v2 --config=<path> [--v1-config=<path>] [--threshold-rao=<rao>] [--claim-now]
         [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
+    provider fleet init --chain_id=<n> --coordinator=<0xhex> --hotkey=<hotkey> [--netuid=<n>] [--fleet_id=<0xhex>] [--generation=<n>] [--client_seed_file=<path>] [--client_id=<hex>] [--member=<client_id>:<client_key>]...
+        [-v...]
     provider fleet manifest --manifest=<path>
         [-v...]
     provider fleet register --manifest=<path> --hotkey_seed_file=<path> --coldkey_seed_file=<path> --substrate=<ws_url>...
@@ -280,11 +290,24 @@ Options:
 	--require-original-contract-capture  Refuse startup without the complete original contract source profile and retained provider identity.
     --durable-volumes=<path>          Exact external storage declaration; fleet writes require the owner-local schema.
     --durable-volumes-sha256=<hash>   Reviewed sha256: digest; claim daemons require the daemon-volume schema.
+    --auth-code-file=<path>          With setup, read the auth code from this file instead of asking.
+    --yes                            Take the default answer to every question: with setup, no prompts; with
+                                     'proxy remove-dead', skip the per-category confirmation prompts.
+    --no-service                     With setup, don't install the background service.
+    --system                         With setup and service, a system-wide service run as root, with its
+                                     state in /var/lib/urnetwork. Needs sudo.
+    --json                           Output in JSON format for scripts and monitoring (status and other
+                                     commands that support it).
+    --follow                         With service logs, keep printing new lines.
+    --check                          With update, only say whether a newer release is out.
+    --status                         With update, show the automatic update settings.
+    --on                             With update, turn automatic updates on (the default).
+    --off                            With update, turn automatic updates off.
+    --auto                           With update, one automatic update check, as the service timer runs it.
     -h --help                        Show this help and exit.
     --version                        Show version.
     -v                               Enable verbose mode. Repeat for higher levels:
                                      one -v means level 1, -vv means level 2, and so on.
-    --json                           Output in JSON format for automated tooling.
     -f                               Force overwrite the JWT token store file or proxy value, if exists.
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
@@ -338,6 +361,8 @@ Options:
                                      chars with an optional 0x prefix) in a private file that is never created here.
                                      The CLI fetches the wallet challenge and signs it, proving the coldkey; refused
                                      unless the seed derives <coldkey_ss58>. The seed never leaves the host.
+                                     With fleet register: the same seed grammar for the fleet coldkey that signs
+                                     register_limit (the hotkey's owner); keep it off the mining hosts.
     --message=<text>                 With --wallet / wallet set: the challenge printed by "provider wallet challenge",
                                      signed elsewhere (a literal \n stands for a newline). Needs --signature.
                                      With wallet hotkey set: the statement "provider wallet hotkey challenge" printed.
@@ -346,14 +371,14 @@ Options:
                                      no trailing newline) or over that text wrapped in <Bytes>...</Bytes> (what a
                                      Polkadot extension signRaw of type "bytes" signs). Without --coldkey_seed_file
                                      or --message/--signature the set is sent unsigned, which the main network refuses.
-                                     With fleet register: the same seed grammar for the fleet coldkey that signs
-                                     register_limit (the hotkey's owner); keep it off the mining hosts.
     --burn_limit_rao=<n>             fleet register: maximum registration burn in rao passed to register_limit;
                                      the runtime rejects a higher live burn. Omitted: the burn observed at the read.
     --fee_limit_rao=<n>              fleet register: maximum native transaction fee in rao, checked with
                                      payment_queryInfo before broadcast [default: 10000000].
     --apply                          fleet register: sign, journal and broadcast. Without it the command is a dry
                                      run that reads the live burn economics and quotes the signed extrinsic.
+	--quarantine-rejected-sign-in        When the network rejects the saved sign-in, set it aside and exit 75 so
+	                                     the --all-operators supervisor signs in again and restarts this provider.
 	--test-egress-source-ip=<source_ip>  Integration-harness-only IPv4 loopback source bound to both
 	                                     platform control and provider exit sockets.
     <coldkey_ss58>                   Subnet claim wallet: an ss58 coldkey address (prefix 42).
@@ -366,7 +391,18 @@ Options:
 	--runtime-observation-dir=<path>   Absolute durable directory required with the provisional profile.
 	--mainnet-runtime-authority=<path>  Independently reviewed exact mainnet fleet runtime authority document.
 	--mainnet-runtime-authority-sha256=<hex>  Approved SHA-256 of the exact authority bytes (64 lowercase hex digits).
-	--manifest=<path>                  Canonical urnetwork-fleet-manifest-v1 JSON file.
+	--manifest=<path>                  Canonical urnetwork-fleet-manifest-v1 JSON file; fleet init prints one.
+	--chain_id=<n>                     fleet init: EVM chain id of the fleet coordinator.
+	--coordinator=<0xhex>              fleet init: 20-byte fleet coordinator contract address.
+	--hotkey=<hotkey>                  fleet init: fleet hotkey public key as 0x 32-byte hex or ss58.
+	--netuid=<n>                       fleet init: subnet netuid; default 25.
+	--fleet_id=<0xhex>                 fleet init: 32-byte fleet id; default 32 random bytes.
+	--generation=<n>                   fleet init: manifest generation; default 1.
+	--member=<client_id>:<client_key>  fleet init: one member, the client id as 16-byte hex or uuid and the
+	                                   client key as a 0x 32-byte Ed25519 public key; repeatable. Also
+	                                   with --client_seed_file and --client_id it adds this device.
+	                                   fleet init reads only local files, sends nothing and prints the
+	                                   manifest as fleet manifest does; save it as the --manifest file.
 	--client_id=<hex>                  Stable 16-byte UR client identity from the fleet manifest. fleet sign:
 	                                   optional with --client_seed_file (the member holding that key).
 	--client_seed_file=<path>          Raw or hex 32-byte Ed25519 client key seed (a provider's is
@@ -409,8 +445,8 @@ Options:
     <proxy_password>                 SOCKS5 password
     <key_address>                    SOCKS5 server as host:port, host:port:user:pass, host:port::, or key@host:port
     --proxy_file=<proxy_file>        A path to a file where each line contains on entry as host:port, host:port:user:pass, host:port::, or key@host:port.
-                                     With provide/auth-provide it selects the file-backed proxy source the running
-                                     provider re-reads on reload; also PROXY_FILE.
+                                     With provide/auth-provide it selects the file-backed proxy source that the
+                                     running provider reads again on reload; also PROXY_FILE.
     --file=<file>                    Alias for --proxy_file (provide/auth-provide); with 'proxy paste', the input file.
     <url>                            A proxy list URL, for 'proxy add-source' and 'proxy remove-source'.
     <count>                          Max number of running proxies to keep, for 'proxy trim'. 0/off clears the cap.
@@ -425,7 +461,6 @@ Options:
     --auth-failures=<N>              With 'proxy remove-dead', also remove proxies with at least N auth failures
                                      per day of uptime.
     --source=<source>                With 'proxy remove-dead', only consider proxies from this source: url, file, or internal.
-    --yes                            With 'proxy remove-dead', skip the per-category confirmation prompts.
     --proxy_url=<proxy_url>          Fetch SOCKS5 proxies from this URL (repeatable). Also --url / --URL / PROXY_URL (comma-separated).
                                      List lines are host:port, host:port:user:pass, socks5://host:port or socks5://user:pass@host:port.
     --proxy_url_refresh=<dur>        How often to re-fetch the --proxy_url sources and add new entries (default 1h).
@@ -469,12 +504,21 @@ func parseLegacyImportBudget(opts docopt.Opts) time.Duration {
 // the subnet's provider: it runs the provide/proxy/auth flows plus the on-chain
 // wallet / claim / fleet actions (formerly connect/provider).
 func Run(args []string) {
+	defer recoverCliPanic(args, os.Stderr)
+	if code, done := minerServiceRun(args); done {
+		os.Exit(code)
+	}
+	typed := args
+	args, done, code := cliFront(args, os.Stdout, os.Stderr)
+	if done {
+		os.Exit(code)
+	}
 	// docopt alone would answer these with the whole usage text
 	if err := operatorArgsError(args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	opts, err := docopt.ParseArgs(mainUsage(), args, RequireVersion())
+	opts, err := cliParser(args, typed, os.Stdout, os.Stderr).ParseArgs(mainUsage(), args, RequireVersion())
 
 	if err != nil {
 		panic(err)
@@ -500,6 +544,22 @@ func Run(args []string) {
 		if err != nil || contractProfile != nil && allowRegistration {
 			fmt.Fprintln(os.Stderr, "original contract launch requires its approved source profile and retained provider identity; no provider started")
 			os.Exit(1)
+		}
+	}
+
+	for _, command := range []struct {
+		name string
+		run  func(docopt.Opts, io.Writer, io.Writer) int
+	}{
+		// service first: its subcommands reuse the words status and start
+		{"service", serviceCmd},
+		{"setup", setupCmd},
+		{"status", func(opts docopt.Opts, stdout io.Writer, _ io.Writer) int { return statusCmd(opts, stdout) }},
+		{"doctor", func(opts docopt.Opts, stdout io.Writer, _ io.Writer) int { return doctorCmd(opts, stdout) }},
+		{"update", updateCmd},
+	} {
+		if chosen, _ := opts.Bool(command.name); chosen {
+			os.Exit(command.run(opts, os.Stdout, os.Stderr))
 		}
 	}
 
@@ -576,7 +636,7 @@ func Run(args []string) {
 		if allOperators, _ := opts.Bool("--all-operators"); allOperators {
 			provideAllOperatorsCmd(opts)
 		} else {
-			provide(opts)
+			provideWith(opts, 0 < len(typed) && typed[0] == "start")
 		}
 	} else if authProvide, _ := opts.Bool("auth-provide"); authProvide {
 		if err := auth(opts); err != nil {
@@ -635,6 +695,13 @@ func auth(opts docopt.Opts) error {
 			return fmt.Errorf("network token was not written: %w", err)
 		}
 		fmt.Printf("Jwt written to %s\n", jwtPath)
+		if cliIsTerminal(os.Stdout) {
+			signIn := readMinerSignIn()
+			if signIn.networkName != "" {
+				fmt.Printf("Signed in to network %q.\n", signIn.networkName)
+			}
+			fmt.Println("Next: provider start")
+		}
 	}
 	return nil
 }
@@ -674,7 +741,7 @@ func terminalLoginPrompts() loginPrompts {
 	return loginPrompts{
 		password: func() (string, error) {
 			fmt.Print("Enter password: ")
-			passwordBytes, err := term.ReadPassword(stdin)
+			passwordBytes, err := readHiddenInterruptible(stdin)
 			if err != nil {
 				return "", err
 			}
@@ -683,7 +750,7 @@ func terminalLoginPrompts() loginPrompts {
 		},
 		authCode: func() (string, error) {
 			return readAuthCode(os.Stdin, os.Stdout, term.IsTerminal(stdin), func() ([]byte, error) {
-				return term.ReadPassword(stdin)
+				return readHiddenInterruptible(stdin)
 			})
 		},
 	}
@@ -779,6 +846,23 @@ func applyProviderMemoryTarget(
 }
 
 func provide(opts docopt.Opts) {
+	provideWith(opts, false)
+}
+
+// provideWith is provide, or provider start when start is set: start asks
+// before registering a new device and, in a terminal, reports in plain lines.
+func provideWith(opts docopt.Opts, start bool) {
+	if !providePreflight(opts, start, os.Stdin, os.Stdout, os.Stderr) {
+		os.Exit(minerExitNeedsSetup)
+	}
+	var ui *startTerminalUi
+	if start && cliIsTerminal(os.Stdout) && cliIsTerminal(os.Stderr) && cliVerbosity(os.Args[1:]) == 0 && os.Getenv("PROVIDER_DEBUG") == "" {
+		ui = newStartTerminalUi(os.Stdout)
+	}
+	var out io.Writer = os.Stdout
+	if ui != nil {
+		out = ui
+	}
 	port, _ := opts.Int("--port")
 
 	apiUrl, err := resolveApiUrl(opts)
@@ -816,6 +900,9 @@ func provide(opts docopt.Opts) {
 
 	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	defer stopSignals()
+	// on Windows, the service's supervisor asks through an inherited event
+	ctx, stopService := minerServiceStopContext(ctx)
+	defer stopService()
 
 	// A hot swap execs in place: the pid survives and the previous image's
 	// proxy.lock would read as held-by-a-live-holder, blocking every lock
@@ -912,7 +999,13 @@ func provide(opts docopt.Opts) {
 	// A complete-profile launch must report refusal to its supervisor, and a
 	// child that set its rejected network sign-in aside says so by its exit
 	// code. The owned run has joined every child before this exit decision.
-	err = settings.run(ctx, os.Stdout)
+	if ui != nil {
+		ui.begin()
+	}
+	err = settings.run(ctx, out)
+	if ui != nil {
+		ui.finish(err, ctx.Err() != nil)
+	}
 	if code, ok := providerRunExitCode(err); ok {
 		stopSignals()
 		if errors.Is(err, errProviderStartupRefused) {
@@ -927,6 +1020,11 @@ func provide(opts docopt.Opts) {
 	if err != nil && ctx.Err() == nil && (settings.requireWorkCapture || settings.workCapturePath != "" || settings.workCaptureSha256 != "" || settings.requireContractCapture || settings.contractCapturePath != "" || settings.contractCaptureSha256 != "") {
 		stopSignals()
 		fmt.Fprintln(os.Stderr, "provider original capture launch refused; restore approved profiles, retained identity and prepared custody")
+		os.Exit(1)
+	}
+	if start && err != nil && ctx.Err() == nil {
+		// provide has always exited 0 here; start tells a service it failed
+		stopSignals()
 		os.Exit(1)
 	}
 }
@@ -1038,6 +1136,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// Per-slot sessions: the control snapshot counts connected/ready slots
 	// through this owner.
 	controlRuntime.setProviderProgress(progress)
+	// provider status reads this; it stops before progress closes
+	defer startMinerStatusFile(ctx, progress)()
 	status, err := newProviderStatusServer(self.port, output, cancel, progress)
 	if err != nil {
 		output.observe(providerStatusFailed, 0, false, err, 0, nil)

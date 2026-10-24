@@ -4,7 +4,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -58,6 +60,60 @@ func rootOutputFullPipe(t *testing.T) (*os.File, *os.File, int) {
 		t.Fatal("physical pipe fixture failed", err, fillErr)
 	}
 	return reader, writer, flags
+}
+
+// A regular-file destination is supported, unlike an arbitrary synchronous
+// callback. The public command joins its exporter before the caller reads or
+// appends, so the real descriptor adapter and caller ownership are exercised.
+func TestRootMonitorOutputRegularFileKeepsCompactWireAndCallerHandle(t *testing.T) {
+	_, fixture := newRootFixture(t)
+	server := rootFixtureServer(t, fixture)
+	file, err := os.CreateTemp(mainnetPrivateTestDir(t), "root-output")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+	original, err := file.Stat()
+	if err != nil {
+		t.Fatal(err)
+	}
+	args := []string{"root-monitor", "--rpc", server.URL, "--policy", rootTestPolicyFile(t, fixture.policy)}
+	if code := runMain(t.Context(), args, file, file); code != 0 {
+		t.Fatal("regular file logger altered core result", code)
+	}
+	info, err := file.Stat()
+	if err != nil || !os.SameFile(original, info) || !info.Mode().IsRegular() || info.Size() == 0 || info.Size() > 4096 {
+		t.Fatal("regular file output was absent, unbounded or lost caller ownership", err)
+	}
+	raw, err := os.ReadFile(file.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	var event rootMonitorEvent
+	if err := decoder.Decode(&event); err != nil || event.Schema != rootDiagnosticEventSchema || event.Sample != 1 || event.Publication != "unconfigured" || event.Snapshot != nil || event.Observation == nil || !event.Observation.ReadOnlyReady || event.Observation.ActivationReady || !planSha256(event.Observation.ContentHash) || !planSha256(event.Observation.PolicyHash) {
+		t.Fatal("regular file lost the compact current observation", err)
+	}
+	if event.Diagnostics == nil || event.Diagnostics.Events == nil || event.Diagnostics.Events.Delivered != 0 {
+		t.Fatal("first file event acknowledged its own delivery")
+	}
+	if err := decoder.Decode(&rootMonitorEvent{}); !errors.Is(err, io.EOF) {
+		t.Fatal("regular file has an extra or partial record", err)
+	}
+	if bytes.Contains(raw, []byte("storage")) || bytes.Contains(raw, []byte("hotkey")) {
+		t.Fatal("regular file contains a full root census")
+	}
+	const callerLine = "caller retains the output handle\n"
+	if _, err := file.WriteString(callerLine); err != nil {
+		t.Fatal("exporter closed the caller's handle", err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	final, err := os.ReadFile(file.Name())
+	if err != nil || !bytes.Equal(final, append(raw, []byte(callerLine)...)) {
+		t.Fatal("exporter changed the caller's file position or record", err)
+	}
 }
 
 // Real command samples/checkpoints/metrics continue while both log streams are

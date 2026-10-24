@@ -109,7 +109,7 @@ Usage:
         [--rendered-config=<path> --successor-approval=<path> --original-authority=<path> [--approval-signature=<hex>]]
         [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
-    validator run --config=<path> [--progress-file=<path>]
+    validator run [--config=<path>] [--progress-file=<path>]
         [--ledger_auditor_key_file=<path>] [--ledger_max_bytes=<n>]
         [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [(--native-gap-bridge=<path> --native-gap-bridge-sha256=<hash>)] [--startup-verified-progress]
@@ -120,7 +120,7 @@ Usage:
         [--concurrency=<n>] [--m=<depth>]
         [--rpc=<rpc_url>]... [--contract=<addr>] [--state_dir=<path>]
         [--adopt-legacy-measurement-key] [-v...]
-    validator run [--api_url=<api_url>] [--connect_url=<connect_url>]
+    validator run --measurement-only [--api_url=<api_url>] [--connect_url=<connect_url>]
         [--concurrency=<n>] [--m=<depth>]
         [--rpc=<rpc_url>]... [--contract=<addr>] [--state_dir=<path>]
         [--adopt-legacy-measurement-key] [-v...]
@@ -135,7 +135,9 @@ Options:
     -v...                        Verbose level (repeatable).
     -f                           Force overwrite the JWT token store file, if exists.
     --api_url=<api_url>          Custom API URL.
-	--config=<path>                Strict release-1.0 production configuration; the only weight-writing mode.
+	--config=<path>                Complete replacement for the embedded release.yml used by run when omitted.
+                                 The bundled template is incomplete; production requires reviewed pins,
+                                 credentials and signed authority in a complete document.
                                  init/register/stake/activate/status accept it before its evidence_v2
                                  inputs are rendered; run does not.
 	--progress-file=<path>         Optional bounded operational JSON outside protocol state.
@@ -189,6 +191,7 @@ Options:
     --no_id=<id>                 With init --state_dir, create <state_dir>/no-<id>/client.key for each
                                  operator; without any, create the flag-mode <state_dir>/.validator.key.
     --connect_url=<connect_url>  Custom connect (platform transport) URL.
+    --measurement-only          Measure one operator using the flag options; never steers.
     --all-operators              Measure every operator in the operator list, each with its own state
                                  under <state_dir>/operators/<domain>. Never steers.
     --operators-url=<url>        Operator list location [default: %[3]s].
@@ -486,34 +489,70 @@ func loginNetworkJwt(ctx context.Context, opts docopt.Opts, apiUrl string, outpu
 // --- run ---
 
 func run(opts docopt.Opts) {
-	if configPath := optString(opts, "--config", ""); configPath != "" {
-		progressPath, _ := opts.String("--progress-file")
-		reference := durablevolume.Reference{
-			Path: optString(opts, "--durable-volumes", ""), Sha256: optString(opts, "--durable-volumes-sha256", ""),
+	exitOnError("validator run", dispatchValidatorRun(opts, validatorRunHandlers{
+		release: runReleaseFromOpts, measurement: runMeasurementFromOpts, allOperators: runAllOperators,
+	}))
+}
+
+// Keep CLI selection separate from the runners' network, key and state work.
+// The actual entry point and its regression tests use this same dispatch.
+type validatorRunHandlers struct {
+	release      func(docopt.Opts, string)
+	measurement  func(docopt.Opts)
+	allOperators func(docopt.Opts)
+}
+
+func dispatchValidatorRun(opts docopt.Opts, handlers validatorRunHandlers) error {
+	if !optBool(opts, "run") {
+		return errors.New("validator run dispatch requires the run command")
+	}
+	configPath, explicitConfig := opts["--config"].(string)
+	if explicitConfig && strings.TrimSpace(configPath) == "" {
+		return errors.New("--config requires a nonempty file path")
+	}
+	measurement, allOperators := optBool(opts, "--measurement-only"), optBool(opts, "--all-operators")
+	if (measurement || allOperators) && explicitConfig || measurement && allOperators {
+		return errors.New("choose release configuration or one measurement mode")
+	}
+	if measurement || allOperators {
+		if err := rejectLegacySteeringOptions(opts); err != nil {
+			return err
 		}
-		ledger, err := settlementV2RuntimeOptionsFromOpts(opts)
-		exitOnError("validator run", err)
-		// A malformed or unpinned bridge refuses before any release state opens.
-		bridge, err := nativeGapBridgeFromOpts(opts)
-		exitOnError("validator run", err)
-		// The operator list runs beside the release only when asked for; the
-		// release itself is started the same way either way.
-		if optString(opts, "--operators-refresh", "") != "" {
-			settings, err := productionOperatorListSettingsFromOpts(opts)
-			exitOnError("validator run", err)
-			runReleaseWithOperatorList(configPath, progressPath, reference, ledger, settings, bridge, optBool(opts, "--startup-verified-progress"))
-			return
+		if allOperators {
+			handlers.allOperators(opts)
+		} else {
+			handlers.measurement(opts)
 		}
-		runReleaseConfig(configPath, progressPath, reference, ledger, bridge, optBool(opts, "--startup-verified-progress"))
+		return nil
+	}
+	// An omitted path is the bundled document. An explicit path always names
+	// the whole replacement document; a missing file never selects defaults.
+	handlers.release(opts, configPath)
+	return nil
+}
+
+func runReleaseFromOpts(opts docopt.Opts, configPath string) {
+	progressPath, _ := opts.String("--progress-file")
+	reference := durablevolume.Reference{
+		Path: optString(opts, "--durable-volumes", ""), Sha256: optString(opts, "--durable-volumes-sha256", ""),
+	}
+	ledger, err := settlementV2RuntimeOptionsFromOpts(opts)
+	exitOnError("validator run", err)
+	// A malformed or unpinned bridge refuses before any release state opens.
+	bridge, err := nativeGapBridgeFromOpts(opts)
+	exitOnError("validator run", err)
+	// The operator list runs beside the release only when asked for; the
+	// release itself is started the same way either way.
+	if optString(opts, "--operators-refresh", "") != "" {
+		settings, err := productionOperatorListSettingsFromOpts(opts)
+		exitOnError("validator run", err)
+		runReleaseWithOperatorList(configPath, progressPath, reference, ledger, settings, bridge, optBool(opts, "--startup-verified-progress"))
 		return
 	}
-	if optBool(opts, "--all-operators") {
-		runAllOperators(opts)
-		return
-	}
-	if err := rejectLegacySteeringOptions(opts); err != nil {
-		panic(err)
-	}
+	runReleaseConfig(configPath, progressPath, reference, ledger, bridge, optBool(opts, "--startup-verified-progress"))
+}
+
+func runMeasurementFromOpts(opts docopt.Opts) {
 	settings, err := measurementSettingsFromOpts(opts)
 	if err != nil {
 		panic(err)

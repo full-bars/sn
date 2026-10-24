@@ -24,7 +24,7 @@ func TestWeightWritingCLIRequiresReleaseConfig(t *testing.T) {
 	if err := rejectLegacySteeringOptions(opts); err == nil || !strings.Contains(err.Error(), "--config") {
 		t.Fatalf("legacy steering defense did not fail closed: %v", err)
 	}
-	measurement, err := parseValidatorArgsForTest(t, []string{"run", "--api_url=http://127.0.0.1:8080", "--connect_url=ws://127.0.0.1:8081"})
+	measurement, err := parseValidatorArgsForTest(t, []string{"run", "--measurement-only", "--api_url=http://127.0.0.1:8080", "--connect_url=ws://127.0.0.1:8081"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -957,7 +957,7 @@ if [[ "${RUN_SERVER_DB_TESTS:-0}" == "1" ]]; then
     test_env_validate_suite_resource_manifest "$TEST_ENV_SUITE_RESOURCE_MANIFEST" "$WARP_VAULT_HOME" "$WARP_CONFIG_HOME"
     # Real JWT/body ownership, signed key history and reserved Redis quotas use
     # this gate's private services; neither a compile nor Forge exercises them.
-    evidence_source_tests='^Test(StAttempt|StReserved|StClientKeyHistory|StClientKeyPublication|StClientKeyRegistrationCohort|StClientKeyRegistrationReadiness|SnAttempt|SnReserved|SnClientKey|MigrationCatalog|PublishedMigration|MainVersion650MigratesThroughClientKeyAppend|TransferContractOpenPlanRepairMigrationOrder|ApplyDbMigrations|ContractResultErrorSeparatesReliabilityFromAccountFailures)'
+    evidence_source_tests='^Test(StAttempt|StReserved|StClientKeyHistory|StClientKeyPublication|StClientKeyRegistrationCohort|StClientKeyRegistrationReadiness|SnAttempt|SnReserved|SnClientKey|MigrationCatalog|PublishedMigration|MainVersion650MigratesThroughClientKeyAppend|TransferContractOpenPlanRepairMigrationOrder|ApplyDbMigrations|ContractResultErrorSeparatesReliabilityFromAccountFailures|AccountFeedbackNetwork|FeedbackIndexFollowsPublishedAutomationMigrations|RedisCanceled|RedisHealthyPublication|RedisConfirmedPublication)'
     go test ./api -run "$evidence_source_tests" -count=1
     go test -race ./api -run "$evidence_source_tests" -count=1
     go test ./api/handlers -run "$evidence_source_tests" -count=1
@@ -1014,7 +1014,7 @@ if [[ "${RUN_SERVER_DB_TESTS:-0}" == "1" ]]; then
     # The monitor's schema contracts of the published migration suffix, from
     # 794 on, where settlement v2's migrations 821 and 822 are appended, read a
     # real database's catalog.
-    migration_suffix_tests='^Test(MigrationsCurrentSuffix)'
+    migration_suffix_tests='^Test(MigrationsCurrentSuffix|MigrationsDeviceClientVersionPublicationBoundary)'
     go test ./monitor -run "$migration_suffix_tests" -count=1
     go test -race ./monitor -run "$migration_suffix_tests" -count=1
     # Run the complete operator proxy surface. Its real network/DB roots have a

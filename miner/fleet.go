@@ -168,6 +168,10 @@ func closeFleetNative(chain *crv4.Chain) {
 }
 
 func fleetCommand(opts docopt.Opts) error {
+	// init creates the manifest the other fleet commands load.
+	if mustBoolOpt(opts, "init") {
+		return fleetInit(opts, os.Stdout, fleetInitRandom)
+	}
 	ctx := minerStorageContext(context.Background(), opts)
 	manifest, err := loadFleetManifest(fleetOpt(opts, "--manifest"))
 	if err != nil {
@@ -175,10 +179,7 @@ func fleetCommand(opts docopt.Opts) error {
 	}
 	switch {
 	case mustBoolOpt(opts, "manifest"):
-		canonical, _ := manifest.Canonical()
-		hash, _ := manifest.CommitmentHash()
-		fmt.Printf("%s\ncommitment_sha256: 0x%x\nmembers: %d\n", canonical, hash, len(manifest.Members))
-		return nil
+		return printFleetManifest(os.Stdout, manifest)
 	case mustBoolOpt(opts, "register"):
 		return fleetRegister(ctx, opts, manifest)
 	case mustBoolOpt(opts, "publish"):

@@ -8,8 +8,6 @@ import (
 	"errors"
 	"io"
 	"math"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -141,22 +139,13 @@ type refusedWriter struct{ calls atomic.Int64 }
 // A bounded counting fixture proves an arbitrary Writer was never called.
 func (self *refusedWriter) Write(raw []byte) (int, error) { self.calls.Add(1); return len(raw), nil }
 
-// Regular files retain their exact contents and unknown callbacks are unused.
+// Unknown callbacks are unused. Regular files are admitted: see sink_file_test.go.
 func TestExporterRefusesUninterruptibleSinksAndInvalidCensus(t *testing.T) {
 	unknown := &refusedWriter{}
 	if owner, err := New(t.Context(), unknown, []string{"same", "same"}); owner != nil || err == nil {
 		t.Fatal("duplicate census admitted")
 	}
-	path := filepath.Join(t.TempDir(), "ordinary.log")
-	if err := os.WriteFile(path, []byte("retained"), 0600); err != nil {
-		t.Fatal(err)
-	}
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer file.Close()
-	for _, sink := range []io.Writer{unknown, file, (*barrierWriter)(nil)} {
+	for _, sink := range []io.Writer{unknown, (*barrierWriter)(nil)} {
 		owner, err := New(t.Context(), sink, []string{"alpha"})
 		if err != nil {
 			t.Fatal(err)
@@ -168,9 +157,8 @@ func TestExporterRefusesUninterruptibleSinksAndInvalidCensus(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	raw, err := os.ReadFile(path)
-	if err != nil || string(raw) != "retained" || unknown.calls.Load() != 0 {
-		t.Fatal("refused destination invoked", err)
+	if unknown.calls.Load() != 0 {
+		t.Fatal("refused destination invoked")
 	}
 }
 

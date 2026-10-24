@@ -143,7 +143,7 @@ func TestProviderAttemptSourceFailedFixtureRetainsOriginalWindow(t *testing.T) {
 // Sol supplies a distinct protected output directory. Exact failed-only export
 // remains separate; these originals contain successful complete M8 paths too.
 func TestProviderAttemptSourceExportsActualCompletedFailedIdleOriginals(t *testing.T) {
-	root := os.Getenv("URNETWORK_PROVIDER_ATTEMPT_COMPLETED_FIXTURE_DIR")
+	root := os.Getenv("URNETWORK_PROVIDER_ATTEMPT_COMPLETED_EXPORT_DIR")
 	if root != "" {
 		t.Setenv("URNETWORK_PROVIDER_ATTEMPT_FIXTURE_DIR", root)
 	} else {

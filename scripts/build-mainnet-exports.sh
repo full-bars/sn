@@ -107,8 +107,8 @@ rm -rf -- "${target:?}"
 mkdir -m 700 -- "$output/provider-attempt" "$output/provider-work" "$output/economic-fee"
 (
   cd "$sn_repo"
-  URNETWORK_PROVIDER_ATTEMPT_COMPLETED_FIXTURE_DIR="$output/provider-attempt" go test ./validator -run '^TestProviderAttemptSourceExportsActualCompletedFailedIdleOriginals$' -count=1
-  URNETWORK_PROVIDER_WORK_ATTEMPT_ARTIFACT="$output/provider-attempt/artifact.json" URNETWORK_PROVIDER_WORK_FIXTURE_DIR="$output/provider-work" go test ./payoutartifact -run '^TestWholeWorkExportsCompleteOriginalsForActualTrialProviderUniverse$' -count=1
+  URNETWORK_PROVIDER_ATTEMPT_COMPLETED_EXPORT_DIR="$output/provider-attempt" go test ./validator -run '^TestProviderAttemptSourceExportsActualCompletedFailedIdleOriginals$' -count=1
+  URNETWORK_PROVIDER_WORK_ATTEMPT_ARTIFACT="$output/provider-attempt/artifact.json" URNETWORK_PROVIDER_WORK_EXPORT_DIR="$output/provider-work" go test ./payoutartifact -run '^TestWholeWorkExportsCompleteOriginalsForActualTrialProviderUniverse$' -count=1
 )
 (
   cd "$workspace/server"

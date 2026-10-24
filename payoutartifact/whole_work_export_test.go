@@ -306,7 +306,7 @@ func TestWholeWorkExportsCompleteOriginalsForActualTrialProviderUniverse(t *test
 	if err != nil || verified == nil || !verified.Complete || !verified.AttributionComplete || verified.Credited != 7 || verified.Reports == nil || verified.Reports.ClosedWork.UsageBytes != 700 || len(verified.ExpectedProviders) != len(fixture.artifact.Providers) {
 		t.Fatal("exported original universe did not pass the actual public verifier", verified, err)
 	}
-	root := os.Getenv("URNETWORK_PROVIDER_WORK_FIXTURE_DIR")
+	root := os.Getenv("URNETWORK_PROVIDER_WORK_EXPORT_DIR")
 	if root == "" {
 		return
 	}

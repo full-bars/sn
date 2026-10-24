@@ -168,6 +168,7 @@ func TestReleaseBuildLocalReplaceOutsideCensusIsRefused(t *testing.T) {
 // A local build binds each sibling like every other repository: a physical
 // clean checkout at the recorded commit and tree.
 func TestReleaseBuildLocalModeRefusesDirtyMovedOrLinkedSibling(t *testing.T) {
+	requireIdentity := guardGitFixtureIdentity(t)
 	git, err := exec.LookPath("git")
 	if err != nil {
 		t.Fatal(err)
@@ -186,7 +187,7 @@ func TestReleaseBuildLocalModeRefusesDirtyMovedOrLinkedSibling(t *testing.T) {
 	output := t.TempDir()
 	run := func(args ...string) string {
 		t.Helper()
-		raw, err := buildQuery(t.Context(), root, append(buildEnvironment(output), "GIT_AUTHOR_NAME=synthetic", "GIT_AUTHOR_EMAIL=synthetic@example.invalid", "GIT_COMMITTER_NAME=synthetic", "GIT_COMMITTER_EMAIL=synthetic@example.invalid"), git, args...)
+		raw, err := buildQuery(t.Context(), root, buildEnvironment(output), git, args...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -195,6 +196,7 @@ func TestReleaseBuildLocalModeRefusesDirtyMovedOrLinkedSibling(t *testing.T) {
 	run("init", "--quiet")
 	run("add", "--", "go.mod")
 	run("commit", "--quiet", "-m", "synthetic sibling")
+	requireIdentity(root)
 	repo := repositoryPin{Name: "sdk", Path: "sdk", Commit: run("rev-parse", "HEAD"), Tree: run("rev-parse", "HEAD^{tree}")}
 	config := buildConfig{Workspace: workspace, Output: output, DependencyMode: "local", Git: toolPin{Path: git}, Repositories: []repositoryPin{repo}}
 	if err := verifyBuildSources(t.Context(), config); err != nil {
@@ -217,6 +219,7 @@ func TestReleaseBuildLocalModeRefusesDirtyMovedOrLinkedSibling(t *testing.T) {
 		t.Error("modified sibling source was accepted")
 	}
 	run("commit", "--quiet", "-am", "move the sibling")
+	requireIdentity(root)
 	if err := verifyBuildSources(t.Context(), config); err == nil {
 		t.Error("sibling moved from its recorded commit was accepted")
 	}

@@ -627,7 +627,7 @@ func TestMeasurementRefreshValidatesIdentityBeforePersistenceAndPublication(t *t
 }
 
 func TestMeasurementCliPreservesProductionDispatchAndNoCreateFlag(t *testing.T) {
-	for _, args := range [][]string{{"run", "--state_dir=/synthetic/measurement", "--adopt-legacy-measurement-key"}, {"run", "--config=/synthetic/production.yml"}} {
+	for _, args := range [][]string{{"run", "--measurement-only", "--state_dir=/synthetic/measurement", "--adopt-legacy-measurement-key"}, {"run", "--config=/synthetic/production.yml"}} {
 		opts, err := parseValidatorArgsForTest(t, args)
 		if err != nil {
 			t.Fatal(err)

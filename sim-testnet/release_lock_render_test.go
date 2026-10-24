@@ -254,8 +254,6 @@ func TestReleaseLockRenderingDropsRetiredOperatorProxyPins(t *testing.T) {
 func TestCleanReleaseRepositorySnapshotRejectsDirtyAndMissingWorktrees(t *testing.T) {
 	root := t.TempDir()
 	runTestGit(t, root, "init", "-q")
-	runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-	runTestGit(t, root, "config", "user.name", "sim-testnet")
 	source := filepath.Join(root, "source.go")
 	if err := os.WriteFile(source, []byte("package source\n"), 0o600); err != nil {
 		t.Fatal(err)
@@ -312,8 +310,6 @@ func releaseObservationWorkspaceTest(t *testing.T) (string, *ResolvedConfig) {
 			}
 		}
 		runTestGit(t, root, "init", "-q")
-		runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
-		runTestGit(t, root, "config", "user.name", "sim-testnet")
 		runTestGit(t, root, "add", ".")
 		runTestGit(t, root, "commit", "-qm", "review local source")
 	}

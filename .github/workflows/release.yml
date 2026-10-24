@@ -90,6 +90,28 @@ jobs:
             else echo "Build failed after 3 attempts"; exit 1; fi
           done
 
+      # The subnet miner (cli/miner): a different program from the relay above
+      # (cmd/provider), with the setup, status, doctor, service and update
+      # commands. Its self-update takes urnetwork-miner-<tag>-<os>-<arch>.tar.gz
+      # from this release, so it needs its own archive; see the miner tarballs
+      # step below.
+      - name: Build miner
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          VERSION=${GITHUB_REF_NAME:-latest}
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 \
+               go build -trimpath \
+               -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
+               -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/miner ./cli/miner/; then
+             echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+
       - name: Upload provider artifact
         uses: actions/upload-artifact@v4
         with:
@@ -107,6 +129,12 @@ jobs:
         with:
           name: urnet-docker-${{ matrix.goos }}-${{ matrix.goarch }}
           path: bin/${{ matrix.goos }}/${{ matrix.goarch }}/urnet-docker
+
+      - name: Upload miner artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: miner-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/${{ matrix.goos }}/${{ matrix.goarch }}/miner
 
   create-release:
     name: Create Release
@@ -293,6 +321,12 @@ jobs:
           name: urnet-docker-windows-arm64
           path: tool_tmp/windows/arm64/
 
+      - name: Download miner artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: miner-*
+          path: miner_tmp
+
       - name: Prepare binaries
         run: |
           VERSION=${GITHUB_REF_NAME:-latest}
@@ -428,6 +462,31 @@ jobs:
           echo "Created release assets:"
           ls -lh urnetwork-provider-*.tar.gz urnetwork-monitoring-*.tar.gz
 
+      - name: Create miner tarballs
+        run: |
+          VERSION=${GITHUB_REF_NAME:-latest}
+          # One archive per platform whose only member is the miner named
+          # provider (provider.exe on Windows). That is exactly what the miner's
+          # own update looks for and installs over the running binary. The
+          # urnetwork-provider-* archives above hold the relay, a different
+          # program, so the miner must never be pointed at them.
+          mkdir -p per-miner
+          for plat in linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 windows-amd64 windows-arm64 freebsd-amd64 freebsd-arm64; do
+            member=provider
+            case "$plat" in windows-*) member=provider.exe ;; esac
+            src="miner_tmp/miner-${plat}/miner"
+            test -f "$src" || { echo "missing miner build for ${plat}" >&2; exit 1; }
+            mkdir -p "per-miner/${plat}"
+            cp "$src" "per-miner/${plat}/${member}"
+            chmod +x "per-miner/${plat}/${member}"
+            archive="urnetwork-miner-${VERSION}-${plat}.tar.gz"
+            tar -czf "$archive" -C "per-miner/${plat}" "${member}"
+            test "$(tar -tzf "$archive")" = "${member}" || { echo "unexpected members in ${archive}" >&2; exit 1; }
+          done
+          rm -rf per-miner
+          echo "Created miner assets:"
+          ls -lh urnetwork-miner-*.tar.gz
+
       - name: Set release body source
         id: body_src
         run: |
@@ -449,6 +508,7 @@ jobs:
           files: |
             urnetwork-provider-*.tar.gz
             urnetwork-monitoring-*.tar.gz
+            urnetwork-miner-*.tar.gz
             urnet-tools-*
             urnet-docker-*
           draft: false

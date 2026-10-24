@@ -557,12 +557,12 @@ func TestEvmV2PhaseBindsReviewedSourceToItsSpecVersion(t *testing.T) {
 		changed.Plan.Runtime.RuntimeSourceCommit, changed.Plan.Runtime.RuntimeVersion.SpecVersion = source, spec
 		return changed
 	}
-	reviewed := map[string]uint32{crv4.NativeOwnerSource470: 470, crv4.NativeOwnerSource473: 473, crv4.NativeOwnerSource475: 475, crv4.NativeOwnerSource477: 477, crv4.NativeOwnerSource478: 478, crv4.NativeOwnerSource479: 479}
+	reviewed := map[string]uint32{crv4.NativeOwnerSource470: 470, crv4.NativeOwnerSource473: 473, crv4.NativeOwnerSource475: 475, crv4.NativeOwnerSource477: 477, crv4.NativeOwnerSource478: 478, crv4.NativeOwnerSource479: 479, crv4.NativeOwnerSource481: 481}
 	for source, spec := range reviewed {
 		if err := pair(f.config, source, spec).validateStructure(); err != nil {
 			t.Fatalf("reviewed source %s refused at its own version %d: %v", source, spec, err)
 		}
-		for _, other := range []uint32{spec - 1, spec + 1, 470, 473, 475, 477, 478, 479} {
+		for _, other := range []uint32{spec - 1, spec + 1, 470, 473, 475, 477, 478, 479, 481} {
 			if other == spec {
 				continue
 			}
@@ -571,14 +571,14 @@ func TestEvmV2PhaseBindsReviewedSourceToItsSpecVersion(t *testing.T) {
 			}
 		}
 	}
-	for _, spec := range []uint32{1, 475, 477, 478, 479, 480} {
+	for _, spec := range []uint32{1, 475, 477, 478, 479, 480, 481} {
 		if err := pair(f.config, frontierMappingSourceCommit, spec).validateStructure(); err != nil {
 			t.Fatalf("frontier mapping source refused at version %d: %v", spec, err)
 		}
 	}
 	// A predecessor's review on the runtime that replaced it, as an unsigned
-	// draft: 475's on 477, 477's on 478, and 478's on 479.
-	for source, spec := range map[string]uint32{crv4.NativeOwnerSource475: 477, crv4.NativeOwnerSource477: 478, crv4.NativeOwnerSource478: 479} {
+	// draft: each predecessor's review cannot name its successor's runtime.
+	for source, spec := range map[string]uint32{crv4.NativeOwnerSource475: 477, crv4.NativeOwnerSource477: 478, crv4.NativeOwnerSource478: 479, crv4.NativeOwnerSource479: 481} {
 		draft := pair(f.config, source, spec)
 		draft.Signature = ""
 		raw, err := json.Marshal(draft)

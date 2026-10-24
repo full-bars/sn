@@ -48,14 +48,14 @@ type rootRegisterPolicy struct {
 
 // Root registration admits only sources whose registration semantics were
 // reviewed, each bound to its own exact spec number. Sources 473, 475, 477,
-// 478 and 479 share root.rs, the root pruning, replacement and burn rules, and
+// 478, 479 and 481 share root.rs, the root pruning, replacement and burn rules, and
 // these constants. From 479, root_register refuses TooManyStakingHotkeys when it
 // creates a new hotkey for a coldkey whose staking-hotkey list already holds
 // 256 entries (create_account_if_non_existent); the observation does not read
 // that list, so the coldkey must stay far below it.
 func rootRegisterReviewedSpec(source string) (uint32, bool) {
 	switch source {
-	case crv4.NativeOwnerSource473, crv4.NativeOwnerSource475, crv4.NativeOwnerSource477, crv4.NativeOwnerSource478, crv4.NativeOwnerSource479:
+	case crv4.NativeOwnerSource473, crv4.NativeOwnerSource475, crv4.NativeOwnerSource477, crv4.NativeOwnerSource478, crv4.NativeOwnerSource479, crv4.NativeOwnerSource481:
 		return crv4.ReviewedNativeOwnerSourceSpec(source)
 	default:
 		return 0, false

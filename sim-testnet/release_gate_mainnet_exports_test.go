@@ -53,9 +53,9 @@ var releaseGateMainnetGoExporters = []struct {
 	checkout, directory, command, test string
 	variables                          []string
 }{
-	{"sn", "validator", `URNETWORK_PROVIDER_ATTEMPT_COMPLETED_FIXTURE_DIR="$output/provider-attempt" go test ./validator -run '^TestProviderAttemptSourceExportsActualCompletedFailedIdleOriginals$' -count=1`, "TestProviderAttemptSourceExportsActualCompletedFailedIdleOriginals", []string{"URNETWORK_PROVIDER_ATTEMPT_COMPLETED_FIXTURE_DIR"}},
-	{"sn", "payoutartifact", `URNETWORK_PROVIDER_WORK_ATTEMPT_ARTIFACT="$output/provider-attempt/artifact.json" URNETWORK_PROVIDER_WORK_FIXTURE_DIR="$output/provider-work" go test ./payoutartifact -run '^TestWholeWorkExportsCompleteOriginalsForActualTrialProviderUniverse$' -count=1`, "TestWholeWorkExportsCompleteOriginalsForActualTrialProviderUniverse", []string{"URNETWORK_PROVIDER_WORK_ATTEMPT_ARTIFACT", "URNETWORK_PROVIDER_WORK_FIXTURE_DIR"}},
-	{"server", "strecovery", `URNETWORK_ECONOMIC_FEE_EXPORT_DIR="$output/economic-fee" go test ./strecovery -run '^TestExportEconomicConservationFeeInputs$' -count=1`, "TestExportEconomicConservationFeeInputs", []string{"URNETWORK_ECONOMIC_FEE_EXPORT_DIR"}},
+	{checkout: "sn", directory: "validator", command: `URNETWORK_PROVIDER_ATTEMPT_COMPLETED_EXPORT_DIR="$output/provider-attempt" go test ./validator -run '^TestProviderAttemptSourceExportsActualCompletedFailedIdleOriginals$' -count=1`, test: "TestProviderAttemptSourceExportsActualCompletedFailedIdleOriginals", variables: []string{"URNETWORK_PROVIDER_ATTEMPT_COMPLETED_EXPORT_DIR"}},
+	{checkout: "sn", directory: "payoutartifact", command: `URNETWORK_PROVIDER_WORK_ATTEMPT_ARTIFACT="$output/provider-attempt/artifact.json" URNETWORK_PROVIDER_WORK_EXPORT_DIR="$output/provider-work" go test ./payoutartifact -run '^TestWholeWorkExportsCompleteOriginalsForActualTrialProviderUniverse$' -count=1`, test: "TestWholeWorkExportsCompleteOriginalsForActualTrialProviderUniverse", variables: []string{"URNETWORK_PROVIDER_WORK_ATTEMPT_ARTIFACT", "URNETWORK_PROVIDER_WORK_EXPORT_DIR"}},
+	{checkout: "server", directory: "strecovery", command: `URNETWORK_ECONOMIC_FEE_EXPORT_DIR="$output/economic-fee" go test ./strecovery -run '^TestExportEconomicConservationFeeInputs$' -count=1`, test: "TestExportEconomicConservationFeeInputs", variables: []string{"URNETWORK_ECONOMIC_FEE_EXPORT_DIR"}},
 }
 
 // The builder's native-fee export: the mainnet.test image it builds where the
@@ -713,8 +713,8 @@ const releaseGateMainnetFakeGo = `#!/usr/bin/env bash
 printf 'go %s|%s|%s\n' "$*" "$PWD" "$(env | grep '^URNETWORK_' | LC_ALL=C sort | tr '\n' ' ')" >> "$FAKE_CALLS"
 [[ "$2" != "${FAKE_FAIL:-}" ]] || exit 1
 case "$2" in
-  ./validator) for name in authority artifact original; do printf '{"%s":1}' "$name" > "$URNETWORK_PROVIDER_ATTEMPT_COMPLETED_FIXTURE_DIR/$name.json"; done; mkdir -m 700 "$URNETWORK_PROVIDER_ATTEMPT_COMPLETED_FIXTURE_DIR/scratch" ;;
-  ./payoutartifact) [[ -f "$URNETWORK_PROVIDER_WORK_ATTEMPT_ARTIFACT" ]] && printf '{"work":1}' > "$URNETWORK_PROVIDER_WORK_FIXTURE_DIR/inventory.json" ;;
+  ./validator) for name in authority artifact original; do printf '{"%s":1}' "$name" > "$URNETWORK_PROVIDER_ATTEMPT_COMPLETED_EXPORT_DIR/$name.json"; done; mkdir -m 700 "$URNETWORK_PROVIDER_ATTEMPT_COMPLETED_EXPORT_DIR/scratch" ;;
+  ./payoutartifact) [[ -f "$URNETWORK_PROVIDER_WORK_ATTEMPT_ARTIFACT" ]] && printf '{"work":1}' > "$URNETWORK_PROVIDER_WORK_EXPORT_DIR/inventory.json" ;;
   ./strecovery) printf '{"fee":1}' > "$URNETWORK_ECONOMIC_FEE_EXPORT_DIR/success.json" ;;
   -c) cp -- "$(dirname -- "$0")/mainnet.test" "$4" ;;
 esac
@@ -757,8 +757,6 @@ func newReleaseGateMainnetExportsBuild(t *testing.T) *releaseGateMainnetExportsB
 	for _, repository := range []string{"sn", "server"} {
 		checkout := filepath.Join(self.workspace, repository)
 		runTestGit(t, checkout, "init", "-q")
-		runTestGit(t, checkout, "config", "user.email", "sim-testnet@example.invalid")
-		runTestGit(t, checkout, "config", "user.name", "sim-testnet")
 		if err := os.WriteFile(filepath.Join(checkout, "README.md"), []byte(repository+"\n"), 0o600); err != nil {
 			t.Fatal(err)
 		}

@@ -32,8 +32,6 @@ func sourceLockTestRepository(t *testing.T, dir string, files map[string]string)
 		}
 	}
 	sourceLockTestGit(t, dir, "init", "-q")
-	sourceLockTestGit(t, dir, "config", "user.name", "Fixture")
-	sourceLockTestGit(t, dir, "config", "user.email", "fixture@example.test")
 	sourceLockTestGit(t, dir, "add", ".")
 	sourceLockTestGit(t, dir, "-c", "commit.gpgsign=false", "commit", "-qm", "synthetic source")
 	return sourceLockTestGit(t, dir, "rev-parse", "HEAD")

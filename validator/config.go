@@ -1,10 +1,10 @@
 package validator
 
 // config.go contains the fail-closed release-1.0 validator configuration.
-// The legacy flag surface remains measurement-only for development. Every
-// weight-writing validator must be started with --config and all operator
-// contexts are declared explicitly. In particular, credentials, state and
-// statistics are never shared between network operators.
+// Explicit measurement modes cannot write weights. The release runner reads
+// the embedded document unless --config names a complete replacement. Both
+// require the same signed authority and explicit operator contexts. Credentials,
+// state and statistics are never shared between network operators.
 
 import (
 	"bytes"
@@ -156,8 +156,12 @@ func loadReleaseConfig(path string, mode releaseConfigLoadMode) (*ReleaseConfig,
 	return decodeReleaseConfigBytesMode(abs, b, mode)
 }
 
-// Reads the bounded regular file once; callers decode exactly these bytes.
+// Returns the embedded document for an omitted path; otherwise reads the bounded
+// regular file once. Callers decode exactly these bytes without merging defaults.
 func readReleaseConfigFile(path string) (string, []byte, error) {
+	if path == "" {
+		return readBundledReleaseConfig()
+	}
 	if strings.TrimSpace(path) == "" {
 		return "", nil, errors.New("validator config path is empty")
 	}

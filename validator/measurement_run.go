@@ -51,7 +51,7 @@ type measurementRunHooks struct {
 }
 type measurementRunHooksKey struct{}
 
-// The no-config path deliberately does not call LoadIdentity: that helper may
+// The measurement path deliberately does not call LoadIdentity: that helper may
 // generate a new key and load unrelated signing keys. This path only measures.
 func measurementSettingsFromOpts(opts docopt.Opts) (measurementRunSettings, error) {
 	stateDir := optString(opts, "--state_dir", "")

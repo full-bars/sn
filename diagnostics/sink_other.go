@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !darwin && !windows
 
 // Other platforms retain explicit context writers and bounded memory sinks.
 // Their descriptor adapters must be qualified before daemon output is admitted.

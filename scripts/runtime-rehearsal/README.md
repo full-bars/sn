@@ -3,9 +3,14 @@
 Activation gate 2 (`VERSION2-FINAL.md` §14) runs the exact release bytecode of
 the settlement contracts against the real Subtensor precompiles. Anvil cannot
 run them, the testnet campaign closed and there is no localnet, so this
-directory builds a node from the upstream source of runtime 479, which
-mainnet (EVM chain 964) has run since block 9,286,202, and starts a one-node
-dev chain on it. The Go harness and its tests are in `rehearsal/`. The gate first
+directory builds a node from the pinned runtime 481 source and
+starts a one-node dev chain on it. The owned-route snapshot at finalized
+block 9,320,004 on 2026-10-19 reported runtime 481 on mainnet (EVM chain 964).
+The local runtime 481 gate 2 qualification passed on 2026-10-19; its source
+review, captured-Wasm interface execution and complete R results are recorded
+in [Runtime 481](#runtime-481). The broader 96-phase release gate has not passed,
+and production owner approvals remain pending. The Go harness and its tests
+are in `rehearsal/`. The gate first
 ran on runtime 475; its measurements below are of that run, and
 [Runtime 477](#runtime-477) and [Runtime 478](#runtime-478) record the reruns.
 Runtime 478 changes the gas limit a stake move needs, so its section
@@ -20,14 +25,12 @@ PROTOC=/path/to/protoc CARGO_TARGET_DIR=/path/to/target \
 
 `build.sh` clones `https://github.com/opentensor/subtensor.git` into the
 checkout directory if it does not exist and checks out
-`e66c7eed760efaa5a3b1c249b5a3369a9bc693cf`, the head of upstream PR #3256
-(branch `release-479`), which upstream main merged as `f4786f90` with the same
-tree. Mainnet installed runtime 479 before upstream published a tag or a
-release for it, so the script checks the commit's tree,
-`b44c231f8dc95ba2f4e6e1bac6e377e387e47677`, and, once upstream publishes a tag
-`v479`, that the tag names that tree. It then requires a clean tree,
-`spec_version: 479` in `runtime/src/lib.rs` and every digest of
-`docs/spec/runtime-v479-source.sha256`, and builds:
+`6a972693ae9580541225bd37696ac2fee26b8ae9`, whose tree is
+`587abd7462d0cee0de4d0ec8bdf0df6a71cd947f`. The captured upstream tag `v481`
+names that commit; the script checks the tag's tree when the remote returns
+it. It then requires a clean tree, `spec_version: 481` in
+`runtime/src/lib.rs` and every digest of
+`docs/spec/runtime-v481-source.sha256`, and builds:
 
 ```sh
 cargo build --locked --profile release -p node-subtensor \
@@ -51,6 +54,34 @@ build, which then resolves unlocked dependencies and fails
 `jq`, `xxd` and `b2sum`. Finally the script checks that the dev chain's
 genesis `:code` is the built Wasm byte for byte and writes the record
 `release/runtime-rehearsal-build.txt` in the target directory.
+
+The 481 source manifest has 211 entries: the prior 479 manifest's 206 paths
+and all five additional build paths changed by the 479-to-481 source delta.
+All 39 changed runtime or node build paths are covered. This pins the source
+inputs; it does not establish source-to-release-Wasm reproducibility.
+
+Run the complete gate after the 481 source and metadata review is closed:
+
+```sh
+RUNTIME_REHEARSAL_NODE=/path/to/target/release/node-subtensor \
+  go test -tags runtime_rehearsal -count=1 -v -timeout=90m ./rehearsal/
+RUNTIME_REHEARSAL_NODE=/path/to/target/release/node-subtensor \
+  go test -tags runtime_rehearsal -count=1 -v -timeout=30m ./mainnet/ \
+  -run '^TestR1SettlementV2Phase$'
+```
+
+Both commands must pass, and every node-start line must name
+`node-subtensor/481, reviewed source 6a972693ae9580541225bd37696ac2fee26b8ae9`.
+The catalog also admits older reviewed runtimes, so a passing package alone
+does not establish which runtime was exercised. Execute the captured mainnet
+Wasm in a separate non-authoring local genesis and compare its code hash,
+runtime version and exact metadata bytes with the captured 481 artifacts.
+That verifies `Core_version` and `Metadata_metadata`; it does not establish
+equivalence of every function body to the source build. Retain fresh source,
+binary, artifact and result receipts, then re-read the current finalized
+runtime on the approved route before deployment. The historical 475, 477 and
+478 measurements below remain results of those runtimes; current 481 results
+are recorded separately.
 
 Measured on a 24-thread host shared with other jobs. On 2026-10-11, for
 runtime 475 at `-j 10`, the build from scratch took about 37 minutes (2,243 s
@@ -557,3 +588,60 @@ and left the account claimable; signed at 2,600,000 it paid. The claim tools
 therefore sign a claim at its estimate with 20% and never below
 `onchain.ClaimBatchGasPerClaim`, the limit every claim needed on 475 and 477;
 the review gives the matching rule for closes and its bound.
+
+## Runtime 481
+
+The local runtime 481 gate 2 qualification passed on 2026-10-19 for source
+`6a972693ae9580541225bd37696ac2fee26b8ae9`, tree
+`587abd7462d0cee0de4d0ec8bdf0df6a71cd947f`. The
+[consumed-interface review](../../docs/spec/runtime-v481-review.md) records the
+finalized snapshot, exact source/release/artifact pins, semantic changes and
+closed evidence hashes. This qualification does not credit the broader
+96-phase release gate, which has not passed, or the pending production owner
+approvals.
+
+| Check | Actual result |
+| --- | --- |
+| Source and metadata | 211 source files verified; consumed selective-metagraph method and all 77 fields unchanged; strict 479-to-481 metadata delta verified |
+| Build guards | Three deterministic controls passed: reviewed pins, old-tag refusal and changed-source refusal |
+| API/catalog regressions | Baseline two expected API2-only failures; fixed 24 roots and 22 negative subcases passed under `-race`, with retained API2 and independent-authority controls |
+| Node build | Pinned Rust 1.89 release node with `metadata-hash fast-runtime`; session 43737 joined exit 0 |
+| Captured chain Wasm | Session 93353 joined exit 0; exact code hash, complete version/API reply and metadata bytes matched at one non-authoring local genesis |
+| Complete rehearsal package | Session 16800 joined exit 0; all 11 roots and 28 nested cases passed in 351.759s |
+| Separate R1 deployment rehearsal | Session 95789 joined exit 0; `TestR1SettlementV2Phase` passed in 26.93s, package 26.993s |
+
+The package command exercised smoke, transient storage, stake-exit admission,
+ledger/Merkle, R2, R3, both R4 roots, R5 with R6 and both R7 roots. All ten
+package node-start lines and the separate R1 node line named exactly
+`node-subtensor/481, reviewed source 6a972693ae9580541225bd37696ac2fee26b8ae9`.
+Neither invocation had a failed or skipped test. The actual commands used
+`-tags runtime_rehearsal -count=1 -v`, `GOMAXPROCS=4`, `GOFLAGS=-p=2`, and the
+90-minute package / 30-minute R1 timeouts shown above. The node binary SHA-256
+was `cf5e271549c5e9ea5cb4c6eb8ea2ec2610aa6bcc08a423f9343ed5f5618b0961`.
+
+R1 completed vault creation, escrow registration, settlement implementation,
+initialized proxy, vault linkage and claim-batcher creation through the real
+local precompiles and receipt/state readback. Vault creation and escrow
+registration shared block 32. Each action stayed within its approved test gas
+limit; the review records all six measurements. Its custody and approval were
+synthetic test fixtures; installation completion retained
+`ActivationReady=false` and supplies no production signing authority.
+
+API3 is admitted only for the exact `node-subtensor/481/1/1` tuple. It adds an
+emission-weights query while preserving the consumed selective-metagraph
+interface. Runtime 481 does change the five-bucket emission allocation, root
+baseline and accrued-owner refund semantics; passing metadata and rehearsal
+checks does not mean all economic behavior is unchanged. Source catalog
+membership remains separate from current artifact authentication, owner
+approval and migration completion.
+
+The captured production Wasm SHA-256 is
+`48225f3199bf317966d0214588bc45fb49c28c3e7bd510293bb4da7d6aea224b`, matching
+the official release asset. The built fast-runtime Wasm is a different
+artifact, SHA-256
+`dbd9fe4eac85aea63092f220af4f77b3405ca908100d5d4fa2721e1d0bac4461`.
+Independent source-to-production-Wasm reproducibility is not established.
+Captured-Wasm execution proves only the locally executed `Core_version` and
+`Metadata_metadata` results; its retained raw shutdown-task message and owned
+cleanup are documented in the review. Fresh finalized runtime/code/metadata
+observations and production approvals remain required before deployment.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the runtime-rehearsal node (VERSION2-FINAL.md §14 gate 2): upstream
-# subtensor at the runtime-479 commit with fast blocks, and records the runtime
+# subtensor at the runtime-482 candidate commit with fast blocks, and records the runtime
 # Wasm hash. Usage: build.sh <subtensor-checkout-dir>
 #
 # CARGO_TARGET_DIR selects the build directory (default <checkout>/target) and
@@ -9,21 +9,20 @@
 set -euo pipefail
 
 sn_repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-repository="https://github.com/opentensor/subtensor.git"
-# Mainnet installed runtime 479 before upstream published a tag or a release
-# for it. The reviewed source is the head of PR #3256 (branch release-479),
-# which upstream main merged as f4786f90 with the same tree. A tag v479, once
-# upstream publishes one, must name that tree.
-tag="v479"
-commit="e66c7eed760efaa5a3b1c249b5a3369a9bc693cf"
-tree="b44c231f8dc95ba2f4e6e1bac6e377e387e47677"
+repository="https://github.com/RaoFoundation/subtensor.git"
+# The v482 source candidate and tag must name this exact tree. These build
+# pins do not establish runtime compatibility; the source review, exact
+# on-chain Wasm execution and complete R battery remain separate gates.
+tag="v482"
+commit="8cf229f8ef969389d054a4c161b53ffd164a041f"
+tree="4cfd29d8d12499775e2b1cbabf64e6fa41f1f7cf"
 # Upstream's localnet (scripts/localnet.sh, fast_runtime=True) builds the
 # workspace with "pow-faucet metadata-hash fast-runtime". metadata-hash is also
 # in mainnet's release build and fast-runtime gives fast blocks. pow-faucet only
 # adds a proof-of-work faucet call and drops the default subnet-registration
 # rate limit to 0, so it is left out: the runtime keeps mainnet's call set.
 features="metadata-hash fast-runtime"
-manifest="$sn_repo/docs/spec/runtime-v479-source.sha256"
+manifest="$sn_repo/docs/spec/runtime-v482-source.sha256"
 
 source_dir="${1:?usage: build.sh <subtensor-checkout-dir>}"
 jobs="${RUNTIME_REHEARSAL_JOBS:-10}"
@@ -52,7 +51,7 @@ mkdir -p "$target_dir"
 target_dir="$(cd "$target_dir" && pwd)"
 [[ "$(git -C "$source_dir" rev-parse HEAD)" == "$commit" ]] || fail "checkout HEAD is not $commit"
 [[ -z "$(git -C "$source_dir" status --porcelain=v1 --untracked-files=all)" ]] || fail "checkout $source_dir is not clean"
-grep -Eq '^[[:space:]]*spec_version: 479,$' "$source_dir/runtime/src/lib.rs" || fail "runtime/src/lib.rs does not declare spec_version 479"
+grep -Eq '^[[:space:]]*spec_version: 482,$' "$source_dir/runtime/src/lib.rs" || fail "runtime/src/lib.rs does not declare spec_version 482"
 (cd "$source_dir" && sha256sum --check --quiet --strict "$manifest") || fail "checkout differs from $manifest"
 command -v "${PROTOC:-protoc}" >/dev/null || fail "protoc is missing: install protobuf-compiler or set PROTOC"
 
