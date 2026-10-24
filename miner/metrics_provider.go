@@ -259,6 +259,7 @@ func writeProxyGradeMetrics(b *strings.Builder) {
 		gradeDist := map[string]int{"A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0, "ungraded": 0}
 		healthDist := map[string]int{}
 		var totalAuthFailures int64
+		var totalTransportDrops int64
 		for _, entry := range state.Proxies {
 			if entry.Graded {
 				tier := proxyGradeTier(entry.Score)
@@ -268,6 +269,7 @@ func writeProxyGradeMetrics(b *strings.Builder) {
 			}
 			healthDist[entry.Health]++
 			totalAuthFailures += entry.AuthFailures
+			totalTransportDrops += entry.TransportDrops
 		}
 		fmt.Fprintf(b, "# HELP urnet_proxy_grades Count by grade tier.\n")
 		fmt.Fprintf(b, "# TYPE urnet_proxy_grades gauge\n")
@@ -313,6 +315,7 @@ func writeProxyGradeMetrics(b *strings.Builder) {
 		fmt.Fprintf(b, "# HELP urnet_proxy_auth_failures Auth failures summed over the proxies currently in state.\n")
 		fmt.Fprintf(b, "# TYPE urnet_proxy_auth_failures gauge\n")
 		fmt.Fprintf(b, "urnet_proxy_auth_failures %d\n", totalAuthFailures)
+		writeProxyTransportDropMetric(b, totalTransportDrops)
 	}
 
 	// --- proxies that cannot carry traffic (proxy_leg.go) ---

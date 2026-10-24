@@ -22,6 +22,10 @@ import (
 //   - the auth path (noteProviderAuthSuccess / noteProviderAuthFailure): a
 //     proxy that just authenticated is "up"; one that just failed is not, so
 //     the URL reaper stops shielding it from demotion;
+//   - the transport path (proxy_transport_health.go): a live slot's provider
+//     transport is watched, so an identity that authenticated and then lost its
+//     connection is marked down and counted in TransportDrops. Without it a
+//     dead relay stayed "up" until something else observed a failure;
 //   - the persisted proxy.state health, seeded at manager start and overlaid
 //     after each health cycle, so health survives a restart exactly as v33's
 //     state write does.
@@ -50,7 +54,14 @@ type proxyLiveHealthEntry struct {
 	DownSince        time.Time
 	AuthFailures     int64
 	ProxyLegFailures int64
-	LastSeen         time.Time
+	// TransportDrops counts connections this identity's platform transport
+	// had and then lost (proxy_transport_health.go). Kept apart from
+	// AuthFailures because a transport that dies after authenticating is not a
+	// rejected login, and apart from ProxyLegFailures because a leg failure is
+	// a dial that never established anything while a drop is a live connection
+	// going away.
+	TransportDrops int64
+	LastSeen       time.Time
 	// LastFailureTimeout records that the most recent failure recorded for this
 	// identity was timeout-family (the connect deadline cut the attempt short)
 	// rather than a refusal, reset or rejection. The quality reaper reads it to
@@ -68,17 +79,70 @@ var proxyLiveHealthRegistry = struct {
 }{byKey: map[string]proxyLiveHealthEntry{}}
 
 // noteLiveProxyHealthUp records a successful, live proxy: the reaper shields
-// it and its down clock is cleared.
+// it and its down clock is cleared. TransportDrops survives the reset: a
+// re-authentication says nothing about connections this identity lost, and
+// zeroing the drop count here would erase the transport evidence on the next
+// successful login.
 func noteLiveProxyHealthUp(key string) {
 	if key == "" {
 		return
 	}
 	proxyLiveHealthRegistry.Lock()
 	defer proxyLiveHealthRegistry.Unlock()
+	entry := proxyLiveHealthRegistry.byKey[key]
 	proxyLiveHealthRegistry.byKey[key] = proxyLiveHealthEntry{
-		Health:   "up",
-		LastSeen: time.Now(),
+		Health:         "up",
+		TransportDrops: entry.TransportDrops,
+		LastSeen:       time.Now(),
 	}
+}
+
+// noteLiveProxyTransportUp records that the identity's platform transport has
+// routes again (proxy_transport_health.go). Unlike noteLiveProxyHealthUp it
+// does not start a fresh entry: a reconnect is not a new identity, so the
+// failure counters survive it. Resetting them here would make the drop count
+// vanish on the very recovery that proves it, and would fold the auth and
+// transport histories back into one.
+func noteLiveProxyTransportUp(key string) {
+	if key == "" {
+		return
+	}
+	proxyLiveHealthRegistry.Lock()
+	defer proxyLiveHealthRegistry.Unlock()
+	entry := proxyLiveHealthRegistry.byKey[key]
+	entry.Health = "up"
+	entry.DownSince = time.Time{}
+	entry.LastSeen = time.Now()
+	proxyLiveHealthRegistry.byKey[key] = entry
+}
+
+// noteLiveProxyHealthDrop records one lost platform transport connection: the
+// identity was carrying traffic through its proxy and stopped. It is the
+// transport half of the provider's RecordProxyTransportDrop + markProxyDown
+// pair (provider/proxy_health.go): the proxy is no longer "up", so the reaper
+// stops shielding it and its down clock starts, and the drop is counted in
+// TransportDrops — never in AuthFailures, which counts rejected logins.
+func noteLiveProxyHealthDrop(key string) {
+	if key == "" {
+		return
+	}
+	now := time.Now()
+	proxyLiveHealthRegistry.Lock()
+	defer proxyLiveHealthRegistry.Unlock()
+	entry := proxyLiveHealthRegistry.byKey[key]
+	if entry.Health == "up" || entry.Health == "" {
+		entry.Health = "recently_offline"
+		if entry.DownSince.IsZero() {
+			entry.DownSince = now
+		}
+	}
+	entry.TransportDrops++
+	entry.LastSeen = now
+	// A drop is not a timeout-family attempt. Leaving a previous true here
+	// would keep the quality reaper treating the identity as slow-but-working
+	// and skip it, which is the shielding this path exists to remove.
+	entry.LastFailureTimeout = false
+	proxyLiveHealthRegistry.byKey[key] = entry
 }
 
 // noteLiveProxyHealthFailure records an auth failure: the proxy is no longer
@@ -221,10 +285,11 @@ func seedLiveProxyHealthFromState(state *ProxyState) int {
 			}
 		}
 		proxyLiveHealthRegistry.byKey[key] = proxyLiveHealthEntry{
-			Health:       entry.Health,
-			DownSince:    downSince,
-			AuthFailures: entry.AuthFailures,
-			LastSeen:     now,
+			Health:         entry.Health,
+			DownSince:      downSince,
+			AuthFailures:   entry.AuthFailures,
+			TransportDrops: entry.TransportDrops,
+			LastSeen:       now,
 		}
 		seeded++
 	}
@@ -264,13 +329,14 @@ func overlayLiveProxyHealth(proxies map[string]ProxyEntry) int {
 		if !live.DownSince.IsZero() {
 			downSince = live.DownSince.Format(time.RFC3339)
 		}
-		if entry.Health == health && entry.DownSince == downSince && entry.AuthFailures == live.AuthFailures && entry.ProxyLegFailures == live.ProxyLegFailures {
+		if entry.Health == health && entry.DownSince == downSince && entry.AuthFailures == live.AuthFailures && entry.ProxyLegFailures == live.ProxyLegFailures && entry.TransportDrops == live.TransportDrops {
 			continue
 		}
 		entry.Health = health
 		entry.DownSince = downSince
 		entry.AuthFailures = live.AuthFailures
 		entry.ProxyLegFailures = live.ProxyLegFailures
+		entry.TransportDrops = live.TransportDrops
 		proxies[key] = entry
 		changed++
 	}
