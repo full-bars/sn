@@ -401,6 +401,9 @@ func TestShedPoolToTargetDoesNotShortenALongerBackoff(t *testing.T) {
 	}}); err != nil {
 		t.Fatal(err)
 	}
+	// A shed only cancels slots this process is running, so both identities
+	// have to be live for the cut to pick one.
+	installShedPool(t, "2.2.2.2:1080", "1.1.1.1:1080")
 	long := time.Now().Add(24 * time.Hour)
 	hist.SetBackoffUntil("2.2.2.2:1080", long)
 
@@ -432,6 +435,10 @@ func TestShedPoolToTargetRemovesCredentialedURLProxyFromCache(t *testing.T) {
 	}}); err != nil {
 		t.Fatal(err)
 	}
+	installShedPoolSettings(t,
+		(&connect.ProxySettings{Network: "tcp", Address: "2.2.2.2:1080", Auth: &proxy.Auth{User: "u"}}),
+		(&connect.ProxySettings{Network: "tcp", Address: "1.1.1.1:1080"}),
+	)
 
 	shedPoolToTarget(1)
 
@@ -477,6 +484,10 @@ func TestShedPoolToTargetKeepsCredentialedEarner(t *testing.T) {
 	}}); err != nil {
 		t.Fatal(err)
 	}
+	installShedPoolSettings(t,
+		(&connect.ProxySettings{Network: "tcp", Address: "1.1.1.1:1080", Auth: &proxy.Auth{User: "u"}}),
+		(&connect.ProxySettings{Network: "tcp", Address: "2.2.2.2:1080"}),
+	)
 
 	shedPoolToTarget(1)
 
@@ -578,6 +589,15 @@ func TestRunPoolControllerShrinksAndShedsUnderPressure(t *testing.T) {
 	if err := writeProxyURLState(&ProxyURLState{Cache: cache, TargetPoolSize: 145}); err != nil {
 		t.Fatal(err)
 	}
+	// The cut has to have slots to cancel: install the live reloader the
+	// controller's shed cancels through, seeded with all 145 identities.
+	pool := installShedPool(t, func() []string {
+		addrs := make([]string, 0, len(proxies))
+		for addr := range proxies {
+			addrs = append(addrs, addr)
+		}
+		return addrs
+	}()...)
 
 	cancel, done := withTempAimdController(t, 0)
 	defer func() {
@@ -618,6 +638,24 @@ func TestRunPoolControllerShrinksAndShedsUnderPressure(t *testing.T) {
 	}
 	if len(state.Cache) != cut {
 		t.Fatalf("cache size = %d, want the pool shed down to the target %d", len(state.Cache), cut)
+	}
+	// The recorded cut has to be a real one: exactly the over-target slots
+	// were cancelled through the reloader, and none of them survives in the
+	// cache.
+	cancelled := pool.cancelledKeys()
+	if len(cancelled) != 145-cut {
+		t.Fatalf("cancelled %d slots, want %d (145 down to %d)", len(cancelled), 145-cut, cut)
+	}
+	// The recorded target has to describe the cut that really happened: it is
+	// the old pool minus the slots this process actually stopped.
+	if state.TargetPoolSize != 145-len(cancelled) {
+		t.Fatalf("persisted target = %d, want 145 - %d cancelled = %d", state.TargetPoolSize, len(cancelled), 145-len(cancelled))
+	}
+	for _, key := range cancelled {
+		addr, _ := connect.SplitProxyKey(key)
+		if _, still := state.Cache[addr]; still {
+			t.Fatalf("cancelled proxy %s is still in the URL cache", key)
+		}
 	}
 	// Every shed address is held for at least the shed backoff.
 	for addr := range proxies {

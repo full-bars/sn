@@ -14,8 +14,10 @@ import (
 // module (resource_pressure.go) that the URL fetch/reaper/cleanup loops use,
 // plus the AIMD pool controller T-07: the loop that discovers and PERSISTS the
 // URL pool's TargetPoolSize (proxy_url.json), the regrowth ceiling that stops
-// the loop sawtoothing after a pressure cut, and the shed path that returns
-// over-target URL proxies to the cache.
+// the loop sawtoothing after a pressure cut, and the shed path that cancels the
+// over-target URL slots through the live reloader and then returns their
+// addresses to the cache. The persisted target is written from what the cut
+// really cancelled, never from what the AIMD step asked for (F-03).
 //
 // The pressure MONITOR itself (CPU/IO sampling, the GC governor, the thrash
 // watchdog) is still P2: nothing writes the pressure atomics yet, so
@@ -353,11 +355,17 @@ func selectURLProxiesToShed(state *ProxyState, traffic map[string]uint64, earnin
 }
 
 // runPoolController runs the AIMD loop: every poolControlInterval it reads
-// pressure, steps the target, persists it, and - on a shrink - sheds the worst
-// URL-sourced proxies down to the new target via the same removeDeadProxies
-// path the cleanup job uses (cache removal, NO blacklist, so shed addresses
-// re-enter through a normal fetch+probe once the box recovers and the target
-// grows back).
+// pressure, steps the target, persists it, and - on a shrink - cancels the
+// worst RUNNING URL-sourced slots down to the new target through the live
+// reloader, then clears the ones it really cancelled out of the cache via the
+// same removeDeadProxies path the cleanup job uses (cache removal, NO
+// blacklist, so shed addresses re-enter through a normal fetch+probe once the
+// box recovers and the target grows back).
+//
+// The persisted target is written from what the cut actually achieved, not
+// from the AIMD step: a target below the number of slots still running is a
+// claim that memory was returned when it was not, and it ratchets the pool
+// down for work that never happened (F-03).
 //
 // Port adaptations from v33: the pressure monitor's grow-suppression guard
 // (gcTightening / thrashFreeze) is not ported because the GC governor and the
@@ -439,68 +447,232 @@ func runPoolController(ctx context.Context, configuredMax int, selfHealEnabled b
 		if tc, _ := effectiveTrimCap(); tc > 0 {
 			next = capURLTarget(next, tc, paidProxyCount())
 		}
-		if next != urlState.TargetPoolSize {
+		// A calm/grow step is written straight through. A shrink is decided
+		// after the cut instead: the target has to describe the pool that is
+		// really running once the shed is done, because only a cancelled slot
+		// returns the memory the controller is trying to recover. Persisting
+		// the AIMD step first ratcheted the target down for proxies that were
+		// never stopped (F-03).
+		shrink := pressure > aimdShrinkAbove
+		if !shrink && next != urlState.TargetPoolSize {
 			urlState.TargetPoolSize = next
 			if err := writeProxyURLState(urlState); err != nil {
 				tlog("[proxy][pressure] warn: could not persist target: %v\n", err)
 			}
 		}
 		release()
-		if next != target {
-			tlog("[proxy][pressure] %s", aimdMoveMessage(target, next, cacheSize, pressure))
+
+		if !shrink {
+			if next != target {
+				tlog("[proxy][pressure] %s", aimdMoveMessage(target, next, cacheSize, pressure))
+			}
+			continue
 		}
 
-		if pressure > aimdShrinkAbove {
-			// Remember where pressure hit so regrowth stops short of it.
-			ceilingMemory.record(ceilingHit(target, cacheSize), time.Now())
-			shedPoolToTarget(next)
-			highSamples = 0 // one cut per sustained-high episode; re-arm
+		// Remember where pressure hit so regrowth stops short of it.
+		ceilingMemory.record(ceilingHit(target, cacheSize), time.Now())
+		shed := shedPoolToTarget(next)
+		achieved := pressureShedTarget(target, next, shed)
+		if achieved != urlState.TargetPoolSize {
+			persistProxyURLTarget(achieved)
 		}
+		if achieved < target {
+			tlog("[proxy][pressure] %s", aimdMoveMessage(target, achieved, cacheSize, pressure))
+			if achieved != next {
+				tlog("[proxy][pressure] target held at %d instead of %d: cancelled %d of %d candidate url proxies (pressure=%.2f)\n",
+					achieved, next, shed.Cancelled, shed.Requested, pressure)
+			}
+		}
+		highSamples = 0 // one cut per sustained-high episode; re-arm
 	}
 }
 
-// shedPoolToTarget removes the worst URL proxies until the live url-sourced
-// count is at most target. Healthy sheds are logged individually - removing an
+// pressureShedTarget returns the target to persist for a sustained-pressure
+// cut that asked for next, given what the shed reported and the target recorded
+// before the cut.
+//
+// The rule is the point of the cut: the recorded target may never sit below the
+// number of URL slots still running, because that is a claim that memory was
+// returned when it was not. A cut that cancelled nothing leaves the target
+// exactly where it was (no reloader, nothing running, or the reloader refusing
+// the cancel); a full cut lands on next, which is what is left running; and a
+// cut that could only be partly enforced lands on the pool that remains.
+func pressureShedTarget(target, next int, shed pressureShedResult) int {
+	if shed.Cancelled == 0 {
+		return target
+	}
+	achieved := next
+	if achieved < shed.Pool {
+		achieved = shed.Pool
+	}
+	if achieved > target {
+		// A shed never raises the target, even when the running pool had grown
+		// past the recorded one.
+		achieved = target
+	}
+	return achieved
+}
+
+// persistProxyURLTarget writes the URL pool target, leaving the rest of
+// proxy_url.json as it is on disk now: a shed changes the cache between the
+// controller's read and this write, and the target decision is made after it.
+func persistProxyURLTarget(target int) {
+	release, err := acquireProxyLock()
+	if err != nil {
+		tlog("[proxy][pressure] warn: could not persist target: %v\n", err)
+		return
+	}
+	defer release()
+	urlState, err := readProxyURLState()
+	if err != nil {
+		tlog("[proxy][pressure] warn: could not persist target: %v\n", err)
+		return
+	}
+	if urlState.TargetPoolSize == target {
+		return
+	}
+	urlState.TargetPoolSize = target
+	if err := writeProxyURLState(urlState); err != nil {
+		tlog("[proxy][pressure] warn: could not persist target: %v\n", err)
+	}
+}
+
+// pressureShedReloader is the live reloader the pool controller cancels
+// through, installed by the serving run (run.go) once it has built one.
+//
+// The controller is started by the proxy manager, which is built before the
+// run knows its slot set, so the reloader cannot be a constructor argument
+// here. A manager-only process (and any CLI path) never installs one, and a
+// shed there is a no-op: with no reloader nothing owns a slot, so nothing can
+// be cancelled and nothing may be reported as shed.
+var pressureShedReloader atomic.Pointer[minerProxyReloader]
+
+// setPressureShedReloader installs (or, with nil, clears) the reloader a
+// pressure cut cancels through. Clearing on run exit keeps a later shed from
+// cancelling into a pool the run no longer serves.
+func setPressureShedReloader(r *minerProxyReloader) { pressureShedReloader.Store(r) }
+
+// livePressureShedReloader returns the installed reloader, or nil.
+func livePressureShedReloader() *minerProxyReloader { return pressureShedReloader.Load() }
+
+// pressureShedResult reports what one over-target cut actually did, so the
+// controller can persist a target the pool really reached.
+type pressureShedResult struct {
+	// Applied reports that a live reloader was installed, so the cut could
+	// cancel slots at all. False means the whole cut was a no-op.
+	Applied bool
+	// Running is how many URL-sourced slots the reloader was serving before
+	// the cut. Only running slots hold memory and only they can be cancelled.
+	Running int
+	// Requested is how many of those the ranking selected for removal.
+	Requested int
+	// Cancelled is how many slots the reloader really stopped.
+	Cancelled int
+	// Pool is how many URL-sourced slots are still running after the cut.
+	Pool int
+}
+
+// shedPoolToTarget cancels the worst RUNNING URL-sourced slots until at most
+// target of them are left. Healthy sheds are logged individually - removing an
 // earning proxy is deliberate and visible, never silent.
-func shedPoolToTarget(target int) {
+//
+// Two things differ from the v33 provider it ports, both deliberate:
+//
+//   - the provider sheds by editing proxy.state and the URL cache and lets its
+//     reload watcher notice on the next trigger (writeReloadTrigger is
+//     debounced), so the slot keeps its memory until that round trip lands.
+//     The miner cancels through the live reloader first (reloader.reap, the
+//     same seam the degraded reaper uses) and only then clears the cache, so a
+//     cut frees the slots it claims to have freed;
+//   - the cut is measured on the RUNNING set, not on proxy.state. State also
+//     holds dead, backed-off and trim-held entries; counting those could cancel
+//     a pool below the target while reporting a smaller cut.
+//
+// What is kept from the provider: no blacklist (a shed address may re-enter
+// through a normal fetch once the box recovers) and the one-hour shed backoff,
+// applied to every identity actually cancelled. In the miner that backoff is
+// also the hold - dropBackoffHeldURLProxies keeps a URL-sourced identity out of
+// the desired set for its window - so the shed needs no second hold mechanism.
+func shedPoolToTarget(target int) pressureShedResult {
+	var result pressureShedResult
+	reloader := livePressureShedReloader()
+	if reloader == nil {
+		return result
+	}
 	state, err := readProxyState()
 	if err != nil {
-		return
+		return result
 	}
-	urlCount := 0
-	for _, e := range state.Proxies {
-		if e.Source == "url" {
-			urlCount++
+
+	// The candidates are exactly what this process is serving: the reloader's
+	// running set, restricted to URL-sourced identities. A state entry the
+	// reloader is not running holds no slot, so cancelling it would free no
+	// memory and removing it from the cache would be unreported eviction.
+	live := &ProxyState{Proxies: map[string]ProxyEntry{}}
+	for _, key := range reloader.runningKeys() {
+		if entry, ok := state.Proxies[key]; ok && entry.Source == "url" {
+			live.Proxies[key] = entry
 		}
 	}
-	excess := urlCount - target
+	result.Applied = true
+	result.Running = len(live.Proxies)
+	result.Pool = result.Running
+	excess := result.Running - target
 	if excess <= 0 {
-		return
+		return result
 	}
 
 	// Per-proxy traffic for last-resort ranking, keyed by proxy identity to
 	// match state.Proxies.
 	traffic := runningProxyEarnings()
 	now := time.Now()
-	earnings := make(map[string]float64, len(state.Proxies))
-	for addr, e := range state.Proxies {
-		if e.Source == "url" {
-			earnings[addr] = proxyEarningsScore(addr, now)
+	earnings := make(map[string]float64, len(live.Proxies))
+	for addr := range live.Proxies {
+		earnings[addr] = proxyEarningsScore(addr, now)
+	}
+
+	shed := selectURLProxiesToShed(live, traffic, earnings, excess)
+	result.Requested = len(shed)
+	if len(shed) == 0 {
+		return result
+	}
+	for _, addr := range shed {
+		if live.Proxies[addr].Health == "up" {
+			tlog("[proxy][pressure] shedding HEALTHY proxy %s (last resort, pool over target)\n", proxyKeyDisplay(addr))
 		}
 	}
 
-	shed := selectURLProxiesToShed(state, traffic, earnings, excess)
-	for _, addr := range shed {
-		if state.Proxies[addr].Health == "up" {
-			tlog("[proxy][pressure] shedding HEALTHY proxy %s (last resort, pool over target)\n", proxyKeyDisplay(addr))
-		}
-		applyShedBackoff(addr, time.Now())
+	// Cancel first. reap returns only the identities it really stopped: a slot
+	// that stopped on its own, or one this reloader does not own, is not a
+	// shed and must not be counted or backed off.
+	cancelled := reloader.reap(shed)
+	result.Cancelled = len(cancelled)
+	if len(cancelled) == 0 {
+		return result
 	}
-	if err := removeDeadProxies(state, map[string][]string{"url": shed}); err != nil {
-		tlog("[proxy][pressure] warn: shed failed: %v\n", err)
-		return
+	result.Pool = result.Running - result.Cancelled
+
+	// Backoff before the cache write: removeDeadProxies writes the reload
+	// trigger, and the desired-set build that reload performs consults this
+	// backoff (dropBackoffHeldURLProxies). The order keeps the reload a shed
+	// itself triggers from re-adding the identity it just cancelled.
+	for _, key := range cancelled {
+		applyShedBackoff(key, now)
 	}
-	tlog("[proxy][pressure] shed %d url proxies to reach target %d\n", len(shed), target)
+	if err := removeDeadProxies(state, map[string][]string{"url": cancelled}); err != nil {
+		// The slots are gone either way, so the result is still truthful; say
+		// that the cache write did not land so the next fetch can explain the
+		// re-appearance.
+		tlog("[proxy][pressure] warn: cancelled %d url proxies but could not clear the cache: %v\n", result.Cancelled, err)
+		return result
+	}
+	if result.Cancelled < result.Requested {
+		tlog("[proxy][pressure] shed %d of %d ranked url proxies: the rest were no longer running, so they held no slot; pool now %d (target %d)\n",
+			result.Cancelled, result.Requested, result.Pool, target)
+		return result
+	}
+	tlog("[proxy][pressure] shed %d url proxies to reach target %d\n", result.Cancelled, result.Pool)
+	return result
 }
 
 // paidRunningCount is how many of the running proxies are paid or file
