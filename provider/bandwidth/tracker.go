@@ -122,6 +122,28 @@ func (self *ProxyBandwidth) MaxAge() time.Duration {
 	return self.ageLocked()
 }
 
+// TrafficIdleFor reports how long this counter has been without a client
+// session: NEGATIVE while any session is open (so even a zero quiet window
+// reads as busy), and otherwise the time since the last one started or ended.
+//
+// It is the traffic half of the smart dialer's gate (miner/smart_dialer_scheduler.go):
+// a probe dials through the same egress a counter's clients are served on, so
+// the probe may only start once the counter has been quiet for its window. A
+// counter that never carried a session is idle since the zero time, which is
+// what a fresh process wants.
+//
+// The lock it takes is the one AddSession/RemoveSession take on the relay-egress
+// dial, never one the byte counters take: this is read from a probe gate, and a
+// probe must not be able to make a packet wait.
+func (self *ProxyBandwidth) TrafficIdleFor() time.Duration {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	if 0 < len(self.sessions) {
+		return -1
+	}
+	return time.Since(self.lastActivity)
+}
+
 func (self *ProxyBandwidth) ageLocked() time.Duration {
 	if self.presenceSince.IsZero() {
 		return 0

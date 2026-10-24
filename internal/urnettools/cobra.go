@@ -930,7 +930,7 @@ func newSmartDialerCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "smart-dialer [status|on|off]",
 		Short:              "show or toggle latency-aware dialer preference (skip DPI-circumvention cost when the network does not need it)",
-		Long:               "Show or toggle the measured-cost transport preference: when the network does not need DPI circumvention, the provider prefers transport paths that avoid its cost. 'status' (the default) reports the current value; on and off change it. The change is persisted and takes effect at the provider's next start, which is when the probe loop that measures connect costs is created; it reports that a restart is needed. Honors -n/--dry-run. Alias: smart_dialer.",
+		Long:               "Show or toggle the measured-cost transport preference: when the network does not need DPI circumvention, the provider prefers transport paths that avoid its cost. 'status' (the default) reports the current value; on and off change the value and apply to the running provider immediately, with no restart: the probes that measure the alternatives run in one background scheduler over the distinct egress paths, and switching the preference on starts it and switching it off cancels and joins it. Honors -n/--dry-run. Alias: smart_dialer.",
 		Example:            "  urnet-tools smart-dialer\n  urnet-tools smart-dialer on\n  urnet-tools smart-dialer off --unit urnetwork-native.service",
 		Aliases:            []string{"smart_dialer"},
 		DisableFlagParsing: true,
@@ -1021,6 +1021,8 @@ func printSmartDialerStatus(w io.Writer, resp controlResponse) {
 		fmt.Fprintln(w, "  The provider prefers the transport that measures fastest on this network.")
 		fmt.Fprintln(w, "  A transport that stops working here is automatically avoided, so this is")
 		fmt.Fprintln(w, "  safe on networks that need DPI circumvention.")
+		fmt.Fprintln(w, "  Probes run in the background, one per egress path, and only while that")
+		fmt.Fprintln(w, "  path is not serving clients.")
 		fmt.Fprintln(w, "Turn off with: urnet-tools smart-dialer off")
 		return
 	}

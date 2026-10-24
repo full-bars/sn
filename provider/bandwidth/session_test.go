@@ -6,6 +6,7 @@ import (
 	"net"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/urnetwork/connect"
 )
@@ -173,5 +174,27 @@ func TestNewSessionConn_ConcurrentDialClose(t *testing.T) {
 	wg.Wait()
 	if got := bw.Clients.Load(); got != 0 {
 		t.Fatalf("Clients after concurrent dial/close = %d, want 0", got)
+	}
+}
+
+// TrafficIdleFor is the smart dialer's traffic clock: it must read NEGATIVE
+// while a client session is open (so even a zero quiet window is busy) and the
+// time since the last session started or ended once the path is idle.
+func TestTrafficIdleForTracksClientSessions(t *testing.T) {
+	bw := &ProxyBandwidth{}
+	if idle := bw.TrafficIdleFor(); idle <= 0 {
+		t.Fatalf("a counter that never carried a session reads %v, want idle (positive)", idle)
+	}
+	bw.AddSession("client", time.Now())
+	if idle := bw.TrafficIdleFor(); 0 <= idle {
+		t.Fatalf("a counter with a live session reads %v, want negative (busy)", idle)
+	}
+	bw.RemoveSession("client")
+	if idle := bw.TrafficIdleFor(); idle < 0 {
+		t.Fatalf("a counter with no session reads %v, want the time since the last one", idle)
+	}
+	time.Sleep(10 * time.Millisecond)
+	if idle := bw.TrafficIdleFor(); idle < 5*time.Millisecond {
+		t.Fatalf("idle age %v did not grow with time", idle)
 	}
 }

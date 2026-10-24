@@ -4,6 +4,10 @@ import (
 	"context"
 	"math/rand"
 	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
 // proxy_manager_admission_gate.go ports the 3.23-fix v33 provider's
@@ -40,6 +44,18 @@ type proxyAdmissionGate struct {
 	mu      sync.Mutex
 	waiters []*admissionWaiter
 	wake    chan struct{}
+
+	// inAdmit counts attempts that are waiting for a slot or running with one:
+	// incremented on entry to Admit, decremented when Admit fails or when the
+	// returned release runs. QuietFor reads only this atomic, so a probe
+	// polling it can never contend with auth for g.mu.
+	//
+	// The gate used to keep a last-activity clock beside it, for an auth-idle
+	// window the smart dialer's probes waited out. That window is gone (see
+	// QuietFor): a node running thousands of identities is never auth-idle for
+	// two minutes, so the clock only made the probes wait forever, and what a
+	// probe disturbs is the egress path's client traffic, not the auth budget.
+	inAdmit atomic.Int64
 }
 
 type admissionWaiter struct {
@@ -83,12 +99,17 @@ func (g *proxyAdmissionGate) Admit(ctx context.Context, failureCount int) (relea
 		weight: 1.0 / float64(failureCount+1),
 		ready:  make(chan struct{}),
 	}
+	g.inAdmit.Add(1)
 	g.push(w)
 
 	select {
 	case <-w.ready:
-		return func() { <-g.concurrency }, nil
+		return func() {
+			<-g.concurrency
+			g.inAdmit.Add(-1)
+		}, nil
 	case <-ctx.Done():
+		defer g.inAdmit.Add(-1)
 		g.remove(w)
 		select {
 		case <-w.ready:
@@ -100,6 +121,37 @@ func (g *proxyAdmissionGate) Admit(ctx context.Context, failureCount int) (relea
 		}
 		return nil, ctx.Err()
 	}
+}
+
+// QuietFor reports whether background probing may touch the network right now,
+// for an egress path whose client traffic is accounted by counters.
+//
+// It used to be the AUTH-idle window: no identity waiting for or running an
+// auth attempt, and none for at least d. On the provider's handful of
+// identities that is reachable; on a miner running thousands, some slot is
+// always authenticating, so the window never opens and the probes it gated
+// simply never run. And auth is not the resource a probe disturbs: the probe
+// dials through a proxy's egress, so what it competes with is the client
+// traffic served on that egress. That is why this reads the TRAFFIC clock
+// instead:
+//
+//   - the path's counters must have carried no client session for d
+//     (bandwidth.ProxyBandwidth.TrafficIdleFor). Idleness is asked per path,
+//     not process-wide, because a node that serves clients continuously is
+//     never globally quiet and a path that is quiet right now is still a fine
+//     place to probe.
+//
+// It only reads the counters' session lock, which auth never takes, so a probe
+// polling it cannot make auth wait.
+func (g *proxyAdmissionGate) QuietFor(counters []*bandwidth.ProxyBandwidth, d time.Duration) bool {
+	for _, bw := range counters {
+		// TrafficIdleFor is negative while a session is open, so a counter that
+		// is serving right now is busy even when d is zero.
+		if bw != nil && bw.TrafficIdleFor() < d {
+			return false
+		}
+	}
+	return true
 }
 
 func (g *proxyAdmissionGate) push(w *admissionWaiter) {

@@ -1202,6 +1202,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// resolution is still Pending here; a settled direct-only node picks its
 	// default up on the first settle (see h3_direct_default.go).
 	replayH3ModeAtStartup(controlState)
+	// The measured-cost preference is a live-applied key, so its persisted
+	// value has to be replayed here or a restart loses it and the scheduler
+	// (smart_dialer_scheduler.go) starts with no preference to feed.
+	replaySmartDialerAtStartup(controlState)
+	defer stopSmartDialerScheduler()
+	unregSmartDialer := RegisterCoordinatorCloser(stopSmartDialerScheduler)
+	defer unregSmartDialer()
 	initControlAuditRing()
 	// A HotSwap successor labels its start entry "hotswap". A Docker in-place
 	// execve successor is not a spawned candidate (no IPC descriptor) but the
@@ -1418,6 +1425,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			proxyLegId = proxySettings.Key()
 		}
 		clientStrategySettings.Log = withProxyLegObserver(clientStrategySettings.Log, proxyLegId)
+		// The one strategy the run itself drives for this identity. The slot's
+		// API and its device keep the strategies the SDK builds from these
+		// same settings (the space builds one, and a non-hosted device shares
+		// it), which the run cannot name; this one carries the dials the run
+		// makes itself — the wallet proof and the client-identity renewal — and
+		// it is what the smart dialer probes (see smart_dialer_scheduler.go).
+		// One strategy per slot, built where the slot's settings are assembled,
+		// so the measured transport order and the dial actually taken are the
+		// same dialer set.
+		clientStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)
+		defer clientStrategy.Close()
 		if proxySettings != nil {
 			// Publish the same counter for the earnings recording loop
 			// (proxy_manager_earnings_loop.go), which folds it into the earned
@@ -1495,6 +1513,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			IdentityKey:            identityKey,
 			ApiUrl:                 self.apiUrl,
 			ClientStrategySettings: clientStrategySettings,
+			ClientStrategy:         clientStrategy,
 			Mint: func(mintCtx context.Context) (string, connect.Id, error) {
 				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
 			},
@@ -1529,6 +1548,28 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		noteProviderAuthSuccess(proxySettings)
 		reportProviderAuthResult(proxySettings, nil)
 
+		// The smart dialer ranks transports it has measured, and the
+		// first-choice transport always wins where it works, so the others are
+		// never dialed and never measured. This identity joins its EGRESS PATH
+		// in the process's one probe scheduler (smart_dialer_scheduler.go): a
+		// path is probed once however many identities share it, and the
+		// scheduler owns the startup grace, the traffic-idle gate and the
+		// process budget. Registered only now, after this identity
+		// authenticated: an identity that never gets through auth, or sits in
+		// slow retry, must not be a probe target.
+		//
+		// The path is the proxy's address, not the slot label: a reload hands
+		// the same proxy a new slot index, and the address is what the dial
+		// outcome belongs to.
+		probeAddr, probeViaSocks := "", false
+		if proxySettings != nil {
+			probeAddr, probeViaSocks = proxySettings.Address, true
+		}
+		stopSmartDialerIdentity := startSmartDialerIdentity(clientStrategy, bw, self.apiUrl, int(index), probeAddr, probeViaSocks)
+		// Registered after the strategy's own close, so it runs first: a round
+		// dialing with this strategy is joined before the strategy goes away.
+		defer stopSmartDialerIdentity()
+
 		// Each authenticated slot owns its optional wallet set. A fresh or
 		// proxy provider never borrows the direct provider's credential.
 		if self.wallet != "" {
@@ -1540,9 +1581,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				proof.credentials.jwtFile = clientJwtPath
 			}
 			proof.credentials.original = byClientJwt
-			walletStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)
-			walletErr := snSetWallet(proxyCtx, walletStrategy, self.apiUrl, self.wallet, &proof)
-			walletStrategy.Close()
+			// The slot's own strategy, not a throwaway: the same dialer set the
+			// smart dialer probes, so the wallet's route is the measured one.
+			walletErr := snSetWallet(proxyCtx, clientStrategy, self.apiUrl, self.wallet, &proof)
 			if hooks, ok := proxyCtx.Value(providerRegistrationHooksKey{}).(providerRegistrationHooks); ok && hooks.afterWallet != nil {
 				if err := hooks.afterWallet(walletErr); err != nil {
 					return errors.Join(walletErr, err)

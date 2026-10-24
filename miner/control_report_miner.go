@@ -152,6 +152,7 @@ func buildMinerSnapshot() (*nodeSnapshot, error) {
 		notes = append(notes, "traffic counters cover TCP through the connect engine; billable bytes come from the relay observers")
 	}
 	notes = append(notes, "sessions.pqe/classical are not exposed by the miner SDK (reported as 0)")
+	notes = append(notes, smartDialerNote())
 	if proxyNote != "" {
 		notes = append(notes, proxyNote)
 	}

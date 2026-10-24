@@ -333,10 +333,18 @@ func formerValue(old string, had bool) string {
 // has a live consumer for: the Go runtime knobs, the dialer/upgrade toggles
 // the pinned connect exports, and the proxy-manager overrides the running
 // fetcher/reaper re-read on every cycle.
+//
+// smart_dialer is live again, and this time the claim is kept: the probes it
+// enables live in one scheduler goroutine over egress paths
+// (smart_dialer_scheduler.go) that the set starts and the clear stops, so a
+// running miner begins probing at once instead of waiting for identities to
+// re-authenticate (they never do: a slot authenticates once). A key that is in
+// this table must have a case in applyControlLiveSideEffect; controlKeyEffect
+// derives its answer from this membership, so a key cannot be live here and
+// restart-required there.
 var controlLiveEffectKeys = map[string]bool{
 	"gomemlimit":                  true,
 	"gogc":                        true,
-	"smart_dialer":                true,
 	"h1_plus":                     true,
 	"h3":                          true,
 	"metrics":                     true,
@@ -351,13 +359,19 @@ var controlLiveEffectKeys = map[string]bool{
 	"fast_auth":                   true,
 	"oom_cap":                     true,
 	"baseline":                    true,
+	"smart_dialer":                true,
 }
 
 // controlRestartEffectKeys are accepted and persisted, have no live consumer,
-// but ARE consumed at startup: seedEnvFromControlState re-exports them as
-// URNETWORK_PROFILE and URNETWORK_RAMLOGS before initGlog reads them, so a
-// restart applies them even though a set on a running miner cannot. They are
-// the only keys that truthfully report needs_restart.
+// but ARE consumed at startup: seedEnvFromControlState re-exports profile and
+// ramlogs as URNETWORK_PROFILE and URNETWORK_RAMLOGS before initGlog reads
+// them. A restart applies them; a set on a running miner cannot. They are the
+// only keys that truthfully report needs_restart.
+//
+// smart_dialer was in this table while its probe loops were per identity and
+// created inside the slot goroutine: no live case could start them, so the
+// honest answer was "next start". The scheduler made the live case possible, so
+// it moved back to controlLiveEffectKeys and out of here.
 var controlRestartEffectKeys = map[string]bool{
 	"profile": true,
 	"ramlogs": true,
@@ -431,6 +445,11 @@ func controlNeedsRestart(key string) bool {
 // controlLiveDefaults maps live-applied keys to the runtime values clearing
 // them reapplies. Values absent here fall through to the next layer (legacy
 // override file, then startup default), which is exactly what v33 does.
+//
+// smart_dialer is the one entry here that is not live-applied: it is the
+// startup default (replaySmartDialerAtStartup), and clearing the key has to
+// restore the same off that a state with no opinion resolves to, so it is
+// declared here rather than in a second table with the same value.
 var controlLiveDefaults = map[string]string{
 	// Zero is a zero-byte limit to the Go runtime, not "unlimited": the apply
 	// path maps any non-positive value to math.MaxInt64.
@@ -448,8 +467,11 @@ var controlLiveDefaults = map[string]string{
 	// because a free upgrade baseline is the point: an explicit off must not
 	// outlive the clear that restores the default.
 	"baseline": "on",
-	// Clearing smart_dialer must restore the measured-cost preference to its
-	// off default.
+	// Clearing smart_dialer restores the measured-cost preference to its off
+	// default and stops the probe scheduler (applyControlLiveSideEffect), so a
+	// clear is as live as the set that turned it on. It is also the value
+	// replaySmartDialerAtStartup uses for a state with no opinion, which is why
+	// the default is declared here once and not in the key registries.
 	"smart_dialer": "off",
 	// Clearing h1_plus restores the default: H1+ upgrades allowed.
 	"h1_plus": "on",
@@ -1070,16 +1092,6 @@ func applyControlLiveSideEffect(key, value string) error {
 		case target.Clear:
 			tlog("⚙️ [control] applied gogc=100 (off restores the default)\n")
 		}
-	case "smart_dialer":
-		// Transport choice keeps measuring either way (the measurement always
-		// runs); this decides whether selection consults it.
-		enabled := strings.EqualFold(value, "on")
-		previous := connect.SetSmartDialer(enabled)
-		was := "off"
-		if previous {
-			was = "on"
-		}
-		tlog("⚙️ [control] applied smart_dialer=%s (was %s)\n", value, was)
 	case "baseline":
 		// Sampling is a goroutine that checks the flag each tick, so turning it
 		// off takes effect on the next tick and needs no restart and no signal.
@@ -1113,6 +1125,29 @@ func applyControlLiveSideEffect(key, value string) error {
 		enabled := strings.EqualFold(value, "on")
 		connect.SetH1PlusDisabled(!enabled)
 		tlog("⚙️ [control] applied h1_plus=%s (upstream default on; takes effect on the next connect)\n", onOffLabel(enabled))
+	case "smart_dialer":
+		// Both halves are live, and both are needed for the set to mean
+		// anything: the preference decides whether selection consults the
+		// measurements, and the scheduler (smart_dialer_scheduler.go) is what
+		// produces them. Flipping the preference without the scheduler left a
+		// running miner ranking transports it would never measure, which is
+		// exactly why this key used to be restart-required; the scheduler is
+		// started and joined here instead, so no restart is involved.
+		enabled := strings.EqualFold(value, "on")
+		previous := connect.SetSmartDialer(enabled)
+		if enabled {
+			started := startSmartDialerScheduler()
+			state := "already running"
+			if started {
+				state = "started"
+			}
+			tlog("⚙️ [control] applied smart_dialer=on (was %s): probing %d egress paths over %d identities (scheduler %s)\n",
+				onOffLabel(previous), globalSmartDialerScheduler.paths(), globalSmartDialerScheduler.identities(), state)
+		} else {
+			stopSmartDialerScheduler()
+			tlog("⚙️ [control] applied smart_dialer=off (was %s): probes cancelled and the scheduler joined; %d egress paths parked\n",
+				onOffLabel(previous), globalSmartDialerScheduler.paths())
+		}
 	case "metrics":
 		return applyMetricsLive(value)
 	case "metrics_listen":
