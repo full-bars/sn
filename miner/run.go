@@ -1030,6 +1030,9 @@ func provideWith(opts docopt.Opts, start bool) {
 			// regular-file stdout refuses it). Name the refusal on stderr too:
 			// a refused startup that leaves no trace reads as a clean exit.
 			fmt.Fprintf(os.Stderr, "provider startup refused: %v\n", err)
+			if hint := registrationRefusalHint(err); hint != "" {
+				fmt.Fprintln(os.Stderr, hint)
+			}
 		}
 		exitProviderRun(code)
 		// The exit seam only returns under test.
@@ -2174,6 +2177,20 @@ const providerStartupRefusedExitCode = 1
 // prove, a missing or mismatched key identity marker, an unusable key). The
 // run's own error stays unwrap-able; this sentinel only selects the exit code.
 var errProviderStartupRefused = errors.New("provider startup refused")
+
+// registrationRefusalHint says how to proceed after a refusal that needs an
+// explicit decision about this device's identity. The refusal itself is a safety
+// rule and unchanged; the line it prints just did not say what to do next.
+func registrationRefusalHint(err error) string {
+	if err == nil {
+		return ""
+	}
+	text := err.Error()
+	if !strings.Contains(text, "requires_explicit_recovery") {
+		return ""
+	}
+	return `If this is a new device, register it on purpose: run "provider start" in a terminal, run "provider setup", or add --allow-client-registration to "provider provide". If it already had an identity, restore its state folder from backup instead.`
+}
 
 // providerStartupRefusalError keeps the refusal cause in the error chain while
 // marking the run for the nonzero startup exit.
