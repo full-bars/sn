@@ -9,6 +9,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // This file ports the 3.23-fix v33 provider's stage-0 dual-stage probe
@@ -332,7 +334,18 @@ func probeAndFilterProxyURLLines(ctx context.Context, lines []string, apiHost st
 		go func(i int, address, user, password string) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			results[i] = result{i, probeProxy(ctx, address, user, password, apiHost, apiPort)}
+			// A panic in one probe is contained here, not left to unwind the
+			// worker: the url_fetcher loop is supervised (loop_supervisor.go),
+			// but its supervisor recovers on the loop's goroutine, so a bare
+			// worker panic would still end the process. connect.HandleError
+			// logs it with a stack, and the slot keeps the same
+			// probeDead verdict the parse-failure path above uses: a proxy
+			// whose probe did not complete is not admitted.
+			r := probeDead
+			connect.HandleError(func() {
+				r = probeProxy(ctx, address, user, password, apiHost, apiPort)
+			})
+			results[i] = result{i, r}
 		}(i, address, user, password)
 	}
 	wg.Wait()

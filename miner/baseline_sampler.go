@@ -432,17 +432,44 @@ func baselineStart(ctx context.Context, version, previous string) <-chan struct{
 	return done
 }
 
-// baselineRun samples until ctx is cancelled. The first sample is delayed, so a
-// sample at t=0 does not measure a pool that has not launched yet.
+// baselineSampleLoop is the sampler without the start mark, for the manager's
+// supervisor (proxy_manager.go): the mark says when the baseline began, so a
+// restart after a panic must not write a second one; only the sampling resumes.
+func baselineSampleLoop(ctx context.Context) {
+	baselineRun(ctx, make(chan struct{}))
+}
+
+// baselineFirstSampleWait waits the cold-start delay, or until ctx ends; false
+// means ctx ended. A seam for tests.
+var baselineFirstSampleWait = func(ctx context.Context) bool {
+	t := time.NewTimer(baselineFirstSampleDelay)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-t.C:
+		return true
+	}
+}
+
+// baselineFirstSampleDone marks that this process already paid the cold-start
+// delay. The delay exists so the first sample does not measure a pool that has
+// not launched yet, which is a cold-start concern: after a supervised restart
+// (baseline_sampler is supervised, proxy_manager.go) the pool is already up, so
+// the restart resumes sampling promptly instead of losing another five minutes
+// of the series.
+var baselineFirstSampleDone atomic.Bool
+
+// baselineRun samples until ctx is cancelled. The first sample is delayed on a
+// cold start, so a sample at t=0 does not measure a pool that has not launched
+// yet; a restart in the same process resumes immediately.
 func baselineRun(ctx context.Context, done chan<- struct{}) {
 	defer close(done)
 	interval := resolveBaselineInterval()
-	first := time.NewTimer(baselineFirstSampleDelay)
-	defer first.Stop()
-	select {
-	case <-ctx.Done():
-		return
-	case <-first.C:
+	if !baselineFirstSampleDone.Swap(true) {
+		if !baselineFirstSampleWait(ctx) {
+			return
+		}
 	}
 	baselineRecord(buildBaselineSample(baselineCollect(time.Now())))
 

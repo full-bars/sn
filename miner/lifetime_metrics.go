@@ -362,16 +362,109 @@ func lifetimeDelta(cur uint64, prev *uint64) uint64 {
 	return d
 }
 
+// lifetimeFoldCursor is where the last fold left the four scrape-seam counters
+// (the deltas' high-water mark). Those are process-lifetime values, so a
+// supervised restart of the collector that began again from zero would fold
+// their whole running total into the persisted all-time store a second time.
+// Resuming from the cursor keeps the fold monotonic across restarts; in a fresh
+// process the cursor is unset, which is exactly the old zero start.
+var lifetimeFoldCursor = &lifetimeFoldCursorState{}
+
+type lifetimeFoldCursorState struct {
+	mu                  sync.Mutex
+	set                 bool
+	pqe, clas, up, deny uint64
+}
+
+func (c *lifetimeFoldCursorState) load() (pqe, clas, up, deny uint64, ok bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.pqe, c.clas, c.up, c.deny, c.set
+}
+
+func (c *lifetimeFoldCursorState) store(pqe, clas, up, deny uint64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.pqe, c.clas, c.up, c.deny, c.set = pqe, clas, up, deny, true
+}
+
+// lifetimeBillableBaselines is the collector's per-identity billable baseline,
+// hoisted out of runLifetimeCollector so it survives a supervised restart. Its
+// prev/departed maps are as long-lived as the counters they baseline: those are
+// the provide run's process-lifetime counters, so rebuilding the flip on
+// restart would treat every live identity as a first sighting (dropping a
+// transition) or, worse, fold its whole history again (double-counting it).
+// Rebuilding from the persisted store is not an alternative: the store keeps
+// one all-time billable total, not a per-identity baseline.
+var lifetimeBillableBaselines = newLifetimeBillableFlip()
+
+// lifetimeCollector is one collector run's state: the last folded value of each
+// scrape-seam counter, and the previous all-time totals behind the dated line.
+// A supervised restart builds a new one, which resumes the counters from
+// lifetimeFoldCursor; the billable baselines live in lifetimeBillableBaselines,
+// because they belong to the process, not to the run.
+type lifetimeCollector struct {
+	prevPQE, prevClas                                      uint64
+	prevUp, prevDeny                                       uint64
+	prevA1, prevA2, prevA3, prevA4, prevA5, prevA6, prevA7 uint64
+	flip                                                   *lifetimeBillableFlip
+}
+
+func newLifetimeCollector() *lifetimeCollector {
+	c := &lifetimeCollector{flip: lifetimeBillableBaselines}
+	if pqe, clas, up, deny, ok := lifetimeFoldCursor.load(); ok {
+		c.prevPQE, c.prevClas, c.prevUp, c.prevDeny = pqe, clas, up, deny
+	}
+	return c
+}
+
+// tick folds one interval of live counters into the all-time store and emits
+// the dated line when the totals moved.
+func (c *lifetimeCollector) tick(now time.Time) {
+	var pqeDelta, clasDelta uint64
+	if metricsSeamSessions != nil {
+		if pq := metricsSeamSessions(); pq != nil {
+			pqeDelta = lifetimeDelta(nonNegativeUint64(pq.PQELifetime), &c.prevPQE)
+			clasDelta = lifetimeDelta(nonNegativeUint64(pq.ClasLifetime), &c.prevClas)
+		}
+	}
+	var upDelta, denyDelta uint64
+	if metricsSeamContracts != nil {
+		if up, deny, ok := metricsSeamContracts(); ok {
+			upDelta = lifetimeDelta(nonNegativeUint64(up), &c.prevUp)
+			denyDelta = lifetimeDelta(nonNegativeUint64(deny), &c.prevDeny)
+		}
+	}
+	billable := c.flip.fold(proxyEarnBandwidthSnapshot(), now)
+	// The high-water mark is published before the effect. A panic between the
+	// two then loses at most this tick's delta, which the next tick re-reads
+	// from the live counter, where the reverse order would re-fold an
+	// already-persisted delta: a collector that panics in this window every
+	// restart would inflate the all-time totals without bound.
+	lifetimeFoldCursor.store(c.prevPQE, c.prevClas, c.prevUp, c.prevDeny)
+	lifetimeStore.Add(pqeDelta, clasDelta, upDelta, denyDelta, 0, 0, billable)
+	lifetimeStore.MaybeFlush(now)
+
+	a1, a2, a3, a4, a5, a6, a7 := lifetimeStore.Snapshot()
+	if a1 != c.prevA1 || a2 != c.prevA2 || a3 != c.prevA3 || a4 != c.prevA4 ||
+		a5 != c.prevA5 || a6 != c.prevA6 || a7 != c.prevA7 {
+		if a1|a2|a3|a4|a5|a6|a7 != 0 {
+			since, approx := lifetimeStore.Started()
+			tlog("♾️⚖️ [lifetime] all-time (%s): post-quantum=%d classical=%d contracts_acquired=%d denied=%d proxies_recovered=%d lost=%d billable_total=%s\n",
+				sinceLabel(since, approx),
+				a1, a2, a3, a4, a5, a6, formatBytes(a7))
+		}
+		c.prevA1, c.prevA2, c.prevA3, c.prevA4, c.prevA5, c.prevA6, c.prevA7 = a1, a2, a3, a4, a5, a6, a7
+	}
+}
+
 // runLifetimeCollector folds the live counters into the all-time store once per
 // earnCheckInterval, flushes on its throttle, and emits the dated all-time line
 // when something moved. Session and contract deltas come from the scrape seams
 // when those counters exist; until then they contribute nothing and the store
 // still persists the deltas that do exist (billable, transitions).
 func runLifetimeCollector(ctx context.Context) {
-	var prevPQE, prevClas uint64
-	var prevUp, prevDeny uint64
-	var prevA1, prevA2, prevA3, prevA4, prevA5, prevA6, prevA7 uint64
-	flip := newLifetimeBillableFlip()
+	c := newLifetimeCollector()
 
 	ticker := time.NewTicker(earnCheckInterval)
 	defer ticker.Stop()
@@ -381,35 +474,7 @@ func runLifetimeCollector(ctx context.Context) {
 			lifetimeStore.Flush()
 			return
 		case now := <-ticker.C:
-			var pqeDelta, clasDelta uint64
-			if metricsSeamSessions != nil {
-				if pq := metricsSeamSessions(); pq != nil {
-					pqeDelta = lifetimeDelta(nonNegativeUint64(pq.PQELifetime), &prevPQE)
-					clasDelta = lifetimeDelta(nonNegativeUint64(pq.ClasLifetime), &prevClas)
-				}
-			}
-			var upDelta, denyDelta uint64
-			if metricsSeamContracts != nil {
-				if up, deny, ok := metricsSeamContracts(); ok {
-					upDelta = lifetimeDelta(nonNegativeUint64(up), &prevUp)
-					denyDelta = lifetimeDelta(nonNegativeUint64(deny), &prevDeny)
-				}
-			}
-			billable := flip.fold(proxyEarnBandwidthSnapshot(), now)
-			lifetimeStore.Add(pqeDelta, clasDelta, upDelta, denyDelta, 0, 0, billable)
-			lifetimeStore.MaybeFlush(now)
-
-			a1, a2, a3, a4, a5, a6, a7 := lifetimeStore.Snapshot()
-			if a1 != prevA1 || a2 != prevA2 || a3 != prevA3 || a4 != prevA4 ||
-				a5 != prevA5 || a6 != prevA6 || a7 != prevA7 {
-				if a1|a2|a3|a4|a5|a6|a7 != 0 {
-					since, approx := lifetimeStore.Started()
-					tlog("♾️⚖️ [lifetime] all-time (%s): post-quantum=%d classical=%d contracts_acquired=%d denied=%d proxies_recovered=%d lost=%d billable_total=%s\n",
-						sinceLabel(since, approx),
-						a1, a2, a3, a4, a5, a6, formatBytes(a7))
-				}
-				prevA1, prevA2, prevA3, prevA4, prevA5, prevA6, prevA7 = a1, a2, a3, a4, a5, a6, a7
-			}
+			c.tick(now)
 		}
 	}
 }

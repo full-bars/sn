@@ -107,6 +107,18 @@ type minerProxyReloader struct {
 	// watchCancel ends the watcher, so stop() does not leave it polling a
 	// trigger for a process that has yielded.
 	watchCancel context.CancelFunc
+
+	// lastSeq is the reload trigger sequence this process has already applied,
+	// and seeded records that it has been read once. The baseline belongs to
+	// the reloader, not to one watch() call: the supervisor restarts watch()
+	// after a panic, and a fresh baseline on every restart would adopt the
+	// sequence of the reload that panicked - or of a trigger written while the
+	// watcher waited out a backoff of up to loopBackoffMax - as already
+	// applied. The operator's `proxy add` would then be dropped with no log.
+	// Only the first watch seeds it, and it advances only after a reload
+	// really succeeded, so a restart retries the pending sequence.
+	lastSeq int64
+	seeded  bool
 }
 
 func newMinerProxyReloader(
@@ -164,6 +176,38 @@ func (r *minerProxyReloader) notify(keys []string) {
 	if r.onChange != nil {
 		r.onChange(keys)
 	}
+}
+
+// reloadSeq returns the last applied trigger sequence and whether a baseline
+// has been taken yet.
+func (r *minerProxyReloader) reloadSeq() (int64, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.lastSeq, r.seeded
+}
+
+// seedReloadSeq records the first baseline this process reads. It is a no-op
+// once seeded: only the first watch() may adopt a sequence, so a restart can
+// never swallow a change the previous watcher did not apply.
+func (r *minerProxyReloader) seedReloadSeq(seq int64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.seeded {
+		return
+	}
+	r.lastSeq = seq
+	r.seeded = true
+}
+
+// advanceReloadSeq records seq as applied, after a reload really succeeded. The
+// assignment is unconditional, like the local baseline it replaces: the trigger
+// file is written as current+1, so if it is ever recreated from scratch the
+// sequence goes backwards, and refusing to move the baseline with it would
+// re-apply every tick until it climbed past the old value.
+func (r *minerProxyReloader) advanceReloadSeq(seq int64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.lastSeq = seq
 }
 
 // seed records an identity this run already launched itself, with the cancel
@@ -226,12 +270,23 @@ func (r *minerProxyReloader) releaseAddress(settings *connect.ProxySettings) {
 // brief window where the identity is not served; if the replacement fails to
 // start it is not served at all, and the summary says so (Lost) rather than
 // implying a clean swap.
+//
+// A panic anywhere in the body — the desired read, the direct toggle, a slot's
+// cancel — releases mu on the way out. The watcher is supervised and restarted
+// after a panic, and the restart has to be able to reach the reloader: a lock
+// left held would deadlock the retry of the very sequence the panic
+// interrupted, which looks exactly like the trigger being lost.
 func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 	var summary minerReloadSummary
 
 	r.mu.Lock()
+	locked := true
+	defer func() {
+		if locked {
+			r.mu.Unlock()
+		}
+	}()
 	if r.stopped {
-		r.mu.Unlock()
 		return summary, errProxyReloaderStopped
 	}
 
@@ -246,7 +301,6 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 	if err != nil {
 		// Leave the pool exactly as it is. A failed read is not permission to
 		// stop serving.
-		r.mu.Unlock()
 		return summary, fmt.Errorf("reload aborted, running set left as-is: %w", err)
 	}
 
@@ -309,6 +363,7 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 
 	keys := r.sortedRunningKeysLocked()
 	r.mu.Unlock()
+	locked = false
 
 	// Publish the applied set: the OOM cap and the control surface's running
 	// set both describe what this run is really serving.
@@ -397,7 +452,9 @@ var proxyReloadWatcherActive atomic.Bool
 // contract, which is what the CLI's "no restart" promise is measured against.
 //
 // A failed reload leaves the sequence unrecorded, so the change is retried on
-// the next tick instead of being silently dropped.
+// the next tick instead of being silently dropped. The record is on the
+// reloader, so a watcher the supervisor restarts after a panic resumes from the
+// last sequence that really applied and retries the one that did not.
 func (r *minerProxyReloader) watch(ctx context.Context, path string, interval time.Duration) {
 	// Publish that this process now applies reloads only once the baseline has
 	// been read: "active" must mean "polling from a known sequence". Set any
@@ -421,7 +478,15 @@ func (r *minerProxyReloader) watch(ctx context.Context, path string, interval ti
 	if interval <= 0 {
 		interval = minerProxyReloadWatchInterval
 	}
-	lastSeq, _ := readReloadSeq(path)
+	// Seed the baseline once for the reloader's whole life, not once per
+	// watch(). The supervisor restarts this watcher after a panic, and the
+	// sequence that was being applied when it died must stay pending: a fresh
+	// read here would adopt it as the new baseline and the change would never
+	// be retried (see lastSeq on minerProxyReloader).
+	if _, seeded := r.reloadSeq(); !seeded {
+		seq, _ := readReloadSeq(path)
+		r.seedReloadSeq(int64(seq))
+	}
 	// Publish only now: a reader that sees "active" must be able to rely on
 	// the watcher having a baseline, or it will write a change the first tick
 	// treats as already seen.
@@ -438,7 +503,10 @@ func (r *minerProxyReloader) watch(ctx context.Context, path string, interval ti
 				tlog("[proxy] reload trigger read failed: %v\n", err)
 				continue
 			}
-			if seq == lastSeq {
+			// The baseline is the reloader's, so a watcher restarted after a
+			// panic resumes from the last sequence that really applied.
+			lastSeq, _ := r.reloadSeq()
+			if int64(seq) == lastSeq {
 				continue
 			}
 			tlog("🔄 [proxy] reload requested (trigger #%d, was #%d)\n", seq, lastSeq)
@@ -450,7 +518,10 @@ func (r *minerProxyReloader) watch(ctx context.Context, path string, interval ti
 				tlog("[proxy] reload failed: %v (will retry)\n", err)
 				continue
 			}
-			lastSeq = seq
+			// Advanced only on success: a panic before here, or a failed
+			// reload, leaves the sequence pending for the restart or the next
+			// tick to retry.
+			r.advanceReloadSeq(int64(seq))
 			tlog("✅ [proxy] reload complete: %s\n", summary)
 		}
 	}

@@ -56,11 +56,15 @@ const (
 	gradingGatePollEvery = time.Second
 )
 
-// The three open reasons, named in the single opened line.
+// The four open reasons, named in the single opened line.
 const (
 	gradingGateReasonRunning  = "running"
 	gradingGateReasonPlateau  = "plateau"
 	gradingGateReasonDeadline = "deadline"
+	// gradingGateReasonFailedOpen is used when the loop that was supposed to
+	// decide the gate ends before it decides. The dependents are released
+	// rather than parked until shutdown.
+	gradingGateReasonFailedOpen = "failed open"
 )
 
 // gradingGateRunning reads the running half of the existing per-slot
@@ -265,12 +269,38 @@ func (g *gradingGate) decideLocked(now time.Time) (string, bool) {
 	return "", false
 }
 
+// failOpen opens the gate because the loop that was supposed to decide it
+// ended before it could. The gated loops (url_fetcher, url_reaper,
+// paid_grader) wait on done, and nothing else ever closes it, so a gate left
+// held would park them until shutdown while the process looked healthy. Failing
+// open keeps them running against whatever the pool really is, and says so
+// loudly.
+//
+// It is idempotent: a gate that already opened keeps its decided reason, so a
+// panic after the decision cannot rewrite it.
+func (g *gradingGate) failOpen(cause string) {
+	if g == nil {
+		return
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.opened {
+		return
+	}
+	g.opened = true
+	g.openReason = gradingGateReasonFailedOpen + ": " + cause
+	close(g.done)
+	g.logOpened()
+}
+
 // logOpened writes the one line that names why the gate opened. The deadline
-// is the never-wait-forever exit, so it is written loudly (ramlog plus
-// events.log), not only to the ramlog.
+// is the never-wait-forever exit and a failed open is the loss of the
+// decision, so both are written loudly (ramlog plus events.log), not only to
+// the ramlog.
 func (g *gradingGate) logOpened() {
 	line := "grading gate opened: " + g.openReason + "\n"
-	if strings.HasPrefix(g.openReason, gradingGateReasonDeadline) {
+	if strings.HasPrefix(g.openReason, gradingGateReasonDeadline) ||
+		strings.HasPrefix(g.openReason, gradingGateReasonFailedOpen) {
 		importantLogf("%s", line)
 		return
 	}

@@ -3,6 +3,7 @@ package miner
 import (
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -188,5 +189,99 @@ func TestLifetimeBillableDeltasPerIdentity(t *testing.T) {
 	a.BillableRx.Store(10)
 	if got := flip.fold(bw, now.Add(5*time.Minute)); got != 0 {
 		t.Fatalf("a counter reset must add nothing, got %d", got)
+	}
+}
+
+// resetLifetimeFoldState clears the process-wide fold state the collector keeps
+// across restarts, so a test starts from a fresh process.
+func resetLifetimeFoldState(t *testing.T) {
+	t.Helper()
+	prevCursor := lifetimeFoldCursor
+	prevFlip := lifetimeBillableBaselines
+	lifetimeFoldCursor = &lifetimeFoldCursorState{}
+	lifetimeBillableBaselines = newLifetimeBillableFlip()
+	t.Cleanup(func() {
+		lifetimeFoldCursor = prevCursor
+		lifetimeBillableBaselines = prevFlip
+	})
+}
+
+// withLifetimeSeams installs the session and contract seams for a test.
+func withLifetimeSeams(t *testing.T, sessions func() *seamSessions, contracts func() (int64, int64, bool)) {
+	t.Helper()
+	prevSessions, prevContracts := metricsSeamSessions, metricsSeamContracts
+	metricsSeamSessions, metricsSeamContracts = sessions, contracts
+	t.Cleanup(func() { metricsSeamSessions, metricsSeamContracts = prevSessions, prevContracts })
+}
+
+// A supervised restart of the collector must not fold the process counters a
+// second time: the new run resumes from the high-water mark the last one left.
+// A counter that really moved after the restart still folds, and only by its
+// increase.
+func TestLifetimeCollectorRestartDoesNotDoubleFold(t *testing.T) {
+	withTempHome(t)
+	store := withLifetimeStore(t)
+	resetLifetimeFoldState(t)
+	resetProxyEarnBandwidthForTest()
+	t.Cleanup(resetProxyEarnBandwidthForTest)
+
+	var pqe, clas, up, deny atomic.Int64
+	pqe.Store(10)
+	clas.Store(4)
+	up.Store(3)
+	deny.Store(1)
+	withLifetimeSeams(t,
+		func() *seamSessions {
+			return &seamSessions{PQELifetime: pqe.Load(), ClasLifetime: clas.Load()}
+		},
+		func() (int64, int64, bool) { return up.Load(), deny.Load(), true },
+	)
+
+	now := time.Now()
+	newLifetimeCollector().tick(now)
+	if a, b, c, d, _, _, _ := store.Snapshot(); a != 10 || b != 4 || c != 3 || d != 1 {
+		t.Fatalf("first fold = %d %d %d %d, want 10 4 3 1", a, b, c, d)
+	}
+
+	// The restart: a new collector run against the same process counters.
+	newLifetimeCollector().tick(now.Add(time.Minute))
+	if a, b, c, d, _, _, _ := store.Snapshot(); a != 10 || b != 4 || c != 3 || d != 1 {
+		t.Fatalf("restart re-folded the counters: %d %d %d %d, want 10 4 3 1", a, b, c, d)
+	}
+
+	// A genuine increase must still fold, and only the increase.
+	pqe.Add(5)
+	up.Add(2)
+	newLifetimeCollector().tick(now.Add(2 * time.Minute))
+	if a, b, c, d, _, _, _ := store.Snapshot(); a != 15 || b != 4 || c != 5 || d != 1 {
+		t.Fatalf("after an increase = %d %d %d %d, want 15 4 5 1", a, b, c, d)
+	}
+}
+
+// The billable baselines are per identity and belong to the process, not to one
+// collector run: a restart must fold the traffic an identity carried across the
+// restart instead of treating it as a first sighting (dropping it) or folding
+// its whole history again.
+func TestLifetimeCollectorRestartKeepsBillableBaselines(t *testing.T) {
+	withTempHome(t)
+	store := withLifetimeStore(t)
+	resetLifetimeFoldState(t)
+	resetProxyEarnBandwidthForTest()
+	t.Cleanup(resetProxyEarnBandwidthForTest)
+
+	bw := &bandwidth.ProxyBandwidth{}
+	publishProxyEarnBandwidth("203.0.113.7:1081", bw)
+	bw.BillableRx.Store(1000) // a joining identity's history is its baseline
+
+	now := time.Now()
+	newLifetimeCollector().tick(now)
+	if _, _, _, _, _, _, bill := store.Snapshot(); bill != 0 {
+		t.Fatalf("the first sighting must be a baseline, folded %d", bill)
+	}
+
+	bw.BillableRx.Store(1500) // 500 bytes across the restart
+	newLifetimeCollector().tick(now.Add(time.Minute))
+	if _, _, _, _, _, _, bill := store.Snapshot(); bill != 500 {
+		t.Fatalf("billable folded across the restart = %d, want 500", bill)
 	}
 }

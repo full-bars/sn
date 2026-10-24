@@ -306,14 +306,24 @@ func runPaidProxyGradeOnce(ctx context.Context, apiHost string, apiPort uint16) 
 		go func(i int, t gradeTarget) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			results[i] = gradeResult{
+			// The identity is copied before the probe runs, so a panicking
+			// probe still produces a well-formed result for the apply phase
+			// instead of a zero entry with an empty key. The panic itself is
+			// contained here: the paid_grader loop is supervised
+			// (loop_supervisor.go), but that recovery runs on the loop's
+			// goroutine, so an unrecovered worker panic would still take the
+			// process down with every slot.
+			r := gradeResult{
 				key:              t.key,
 				addr:             t.addr,
 				snapshotGradedAt: t.snapshotGradedAt,
 				user:             t.user,
 				password:         t.password,
-				table:            probeTableThroughProxy(ctx, t.addr, t.user, t.password, apiHost, apiPort, probeCfg),
 			}
+			connect.HandleError(func() {
+				r.table = probeTableThroughProxy(ctx, t.addr, t.user, t.password, apiHost, apiPort, probeCfg)
+			})
+			results[i] = r
 		}(i, t)
 	}
 	wg.Wait()

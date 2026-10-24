@@ -450,3 +450,64 @@ func TestProviderWorkerLaunchHookStartsTheDeadlineClock(t *testing.T) {
 		t.Fatal("a repeated hook call must not move the launch time")
 	}
 }
+
+// TestStartupGateFailsOpenWhenItsLoopPanics is the containment case: the gate
+// decides from the running accounting, and if that decision loop panics the
+// panic is contained by startLoopOnce (a one-shot is not restarted), so the
+// gated loops must be released instead of parked until shutdown. The open line
+// names the failed open, so the lost decision is visible rather than silent.
+func TestStartupGateFailsOpenWhenItsLoopPanics(t *testing.T) {
+	withTempHome(t)
+	logs := captureGateLogs(t)
+
+	gate := newGradingGate(4) // held: none of the four desired workers is up
+	var observations atomic.Int32
+	gate.runningCount = func() int {
+		if observations.Add(1) == 1 {
+			panic("boom in the gate observer")
+		}
+		return 0
+	}
+	m := &proxyManager{gate: gate}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// A dependent parks on the gate before the gate loop runs, which is the
+	// production ordering: the gated loops start beside the gate.
+	waited := make(chan bool, 1)
+	go func() { waited <- gate.wait(ctx) }()
+
+	m.startLoopOnce(func() { m.runGradingGate(ctx) })
+
+	select {
+	case opened := <-waited:
+		if !opened {
+			t.Fatal("the dependent was released by the context, not by a failed-open gate")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("dependent stayed parked after the gate loop panicked")
+	}
+	if !gate.isOpen() {
+		t.Fatal("gate is not open after its loop panicked")
+	}
+	if got := gate.openReason; !strings.HasPrefix(got, gradingGateReasonFailedOpen) {
+		t.Fatalf("open reason = %q, want the failed-open reason", got)
+	}
+	if !strings.Contains(logs.String(), "grading gate opened: failed open") {
+		t.Fatalf("failed-open line missing, got %q", logs.String())
+	}
+
+	// The one-shot is still joined: a contained panic must not leave the
+	// manager's stop() waiting on a goroutine that is already gone.
+	joined := make(chan struct{})
+	go func() {
+		m.wg.Wait()
+		close(joined)
+	}()
+	select {
+	case <-joined:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the gate's one-shot was not joined after its panic")
+	}
+}

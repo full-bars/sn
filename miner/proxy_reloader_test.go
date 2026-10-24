@@ -8,6 +8,7 @@ import (
 	"slices"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -235,6 +236,99 @@ func TestMinerProxyReloadWatchAppliesATriggerChange(t *testing.T) {
 	time.Sleep(80 * time.Millisecond)
 	if got := h.desiredCount(); got != settled {
 		t.Fatalf("reconciled again with no new trigger: %d -> %d", settled, got)
+	}
+}
+
+// A reload that panics must leave its trigger sequence pending. The supervisor
+// restarts the watcher, and the restart must retry the sequence the panic
+// interrupted: a baseline local to watch() would re-read that sequence as the
+// new starting point, so the operator's `proxy add` would be applied never and
+// logged never.
+func TestMinerProxyReloadWatchRetriesTheTriggerAfterAPanic(t *testing.T) {
+	const loopName = "test-reload-watch-panic"
+	resetLoopStatus(loopName)
+	t.Cleanup(func() { resetLoopStatus(loopName) })
+
+	h := &reloadTestHarness{desired: []*connect.ProxySettings{
+		reloadTestSettings("198.51.100.40:443", "", ""),
+	}}
+	r := h.reloader()
+
+	// The first reconcile — the one for trigger #2 — panics. Every later
+	// attempt must reach the harness, which is what proves the sequence was
+	// retried rather than adopted as the new baseline.
+	baseDesired := r.desired
+	var reconcileAttempts atomic.Int32
+	r.desired = func() ([]*connect.ProxySettings, error) {
+		if reconcileAttempts.Add(1) == 1 {
+			panic("boom in the reload")
+		}
+		return baseDesired()
+	}
+
+	path := filepath.Join(t.TempDir(), "proxy.reload")
+	if err := os.WriteFile(path, []byte("1\n"), 0o600); err != nil {
+		t.Fatalf("seed trigger: %v", err)
+	}
+
+	// The supervisor's backoff is stubbed to zero so the restart is immediate;
+	// the panic and the carried-over baseline are what this exercises.
+	origSleep := loopSleep
+	defer func() { loopSleep = origSleep }()
+	loopSleep = func(ctx context.Context, d time.Duration) bool { return ctx.Err() == nil }
+
+	// A previous test's watcher may still be unwinding and holds the flag
+	// true. Wait for it to clear so the wait below means THIS watcher.
+	for proxyReloadWatcherActive.Load() {
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		superviseLoop(ctx, newLoopRef(loopName), func() { r.watch(ctx, path, 5*time.Millisecond) }, nil)
+	}()
+
+	// Wait for the first watcher to publish its baseline before moving the
+	// trigger: that baseline is what the restart must not re-read.
+	baselineDeadline := time.Now().Add(3 * time.Second)
+	for !proxyReloadWatcherActive.Load() {
+		if time.Now().After(baselineDeadline) {
+			t.Fatal("watcher never became active")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if err := os.WriteFile(path, []byte("2\n"), 0o600); err != nil {
+		t.Fatalf("bump trigger: %v", err)
+	}
+
+	// The panic is contained, the watcher restarts, and the restarted watcher
+	// re-reads trigger #2 and applies it.
+	deadline := time.Now().Add(5 * time.Second)
+	for len(h.spawnedKeys()) == 0 && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("supervisor did not stop after cancellation")
+	}
+
+	if got := reconcileAttempts.Load(); got != 2 {
+		t.Fatalf("reconcile attempts = %d, want 2 (the panicking reload, then the retry)", got)
+	}
+	if got := h.spawnedKeys(); len(got) != 1 {
+		t.Fatalf("spawned %v, want the trigger applied once by the restarted watcher", got)
+	}
+	if st := loopStatusOf(loopName); st.Restarts != 1 {
+		t.Fatalf("restarts = %d, want 1 (the panicking watcher restarted)", st.Restarts)
+	}
+	// The baseline finally records the sequence that was really applied.
+	if seq, seeded := r.reloadSeq(); !seeded || seq != 2 {
+		t.Fatalf("baseline = %d (seeded=%v), want 2 after the retry succeeded", seq, seeded)
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/urnetwork/connect"
 	"golang.org/x/time/rate"
 )
 
@@ -979,7 +980,17 @@ func probeAndGradeProxyURLLines(ctx context.Context, lines []string, apiHost str
 		go func(i int, address string, user, password string) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			stage1Results[i] = probeTableThroughProxy(ctx, address, user, password, "", 0, cfg)
+			// One panicking table pass must not unwind the worker: the
+			// fetcher loop is supervised (loop_supervisor.go), but that
+			// recovery runs on the loop's goroutine, not on this one. The
+			// zero tableProbeResult carries no sample width and no verdict,
+			// so a failed pass leaves the address unqualified and undecided,
+			// exactly like a pass whose stage-0 gate returned no verdict.
+			var tr tableProbeResult
+			connect.HandleError(func() {
+				tr = probeTableThroughProxy(ctx, address, user, password, "", 0, cfg)
+			})
+			stage1Results[i] = tr
 		}(i, address, creds.user, creds.password)
 	}
 	wg.Wait()
