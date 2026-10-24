@@ -13,6 +13,8 @@ A start mark at launch (with the version and the previous version), then one sam
 
 A sample carries the node state and its reason, the proxies running against the desired count, the trim cap, billable and total traffic and the lifetime billable counter, connected clients, contracts, process memory, host memory available, swap used, pressure stall (PSI) averages, load, the restart reason, the OOM kill counter and the top error categories. On Linux, host memory is the tighter of the host and the provider's cgroup, with `avail_source` naming which supplied it, so a container is not compared against a systemd box as if it were like for like. Off Linux there is no `/proc`, cgroup or PSI to read, so those fields are omitted and the rest still records.
 
+The miner writes the same file and the same start mark, but its sampler does not read the desired count, the trim cap, contracts, the OOM kill count or the error categories yet, so those fields are absent from a miner's samples.
+
 ## Commands
 
 | Command | What it does |
