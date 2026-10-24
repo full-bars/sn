@@ -430,9 +430,14 @@ func (c *lifetimeCollector) tick(now time.Time) {
 	}
 	var upDelta, denyDelta uint64
 	if metricsSeamContracts != nil {
-		if up, deny, ok := metricsSeamContracts(); ok {
-			upDelta = lifetimeDelta(nonNegativeUint64(up), &c.prevUp)
-			denyDelta = lifetimeDelta(nonNegativeUint64(deny), &c.prevDeny)
+		if contracts := metricsSeamContracts(); contracts != nil {
+			upDelta = lifetimeDelta(nonNegativeUint64(contracts.Acquired), &c.prevUp)
+			// A process with no refusal source reports DeniedKnown false; its
+			// zero is not a reading, so it contributes no delta and leaves the
+			// persisted denied total untouched.
+			if contracts.DeniedKnown {
+				denyDelta = lifetimeDelta(nonNegativeUint64(contracts.Denied), &c.prevDeny)
+			}
 		}
 	}
 	billable := c.flip.fold(proxyEarnBandwidthSnapshot(), now)

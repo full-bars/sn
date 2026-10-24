@@ -497,14 +497,19 @@ func writeSeamContracts(b *strings.Builder) {
 	if metricsSeamContracts == nil {
 		return
 	}
-	acquired, denied, ok := metricsSeamContracts()
-	if !ok {
+	contracts := metricsSeamContracts()
+	if contracts == nil {
 		return
 	}
 	fmt.Fprintf(b, "# HELP urnet_contracts_total Cumulative contract outcomes.\n")
 	fmt.Fprintf(b, "# TYPE urnet_contracts_total counter\n")
-	fmt.Fprintf(b, "urnet_contracts_total{result=\"acquired\"} %d\n", acquired)
-	fmt.Fprintf(b, "urnet_contracts_total{result=\"denied\"} %d\n", denied)
+	fmt.Fprintf(b, "urnet_contracts_total{result=\"acquired\"} %d\n", contracts.Acquired)
+	// A refused contract never opens, so it never reaches the provider contract
+	// feed the miner counts from (contract_metrics.go). Omit the label rather
+	// than publish a zero that reads as "nothing was refused".
+	if contracts.DeniedKnown {
+		fmt.Fprintf(b, "urnet_contracts_total{result=\"denied\"} %d\n", contracts.Denied)
+	}
 }
 
 func writeSeamLifetime(b *strings.Builder) {

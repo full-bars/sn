@@ -1613,6 +1613,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// aggregate in the same scrape.
 		defer watchProxyBilling(proxyCtx, bw, device, providerBillingSampleInterval)()
 
+		// Fork hook: count this slot's acquired contracts for
+		// urnet_contracts_total. The provider reads its own per-index registry,
+		// fed by a connect contract status callback
+		// (provider/contract_metrics.go); the miner owns no connect client, so
+		// it counts the provider contract details the SDK publishes for this
+		// slot instead (contract_metrics.go). Registered for every slot,
+		// including the direct identity, because every slot is a full provider
+		// device with its own contract feed. Deferred after the device close, so
+		// the listeners stop before the device does.
+		defer registerContractOutcomes(device)()
+
 		// Always-on public mode includes network and friends/family service,
 		// matching the SDK's hierarchical provide contract.
 		device.SetProvideControlMode(sdk.ProvideControlModeAlways)

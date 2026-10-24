@@ -40,8 +40,10 @@ import (
 //     proxy_health.state / proxy_traffic.state files the provider writes when
 //     present and report zero counts when it does not.
 //   - contract metrics: the v33 summary's "Contract Stats" block is not
-//     printed here because the miner has no equivalent counter (see
-//     metrics_seams.go).
+//     printed here. The miner now counts acquired contracts for the scrape
+//     (urnet_contracts_total, contract_metrics.go), but it has no per-proxy
+//     split and no refusal count, so the block's numbers cannot be reproduced
+//     faithfully in this output.
 
 // proxyCommandFatal prints the v33 shmLogFatal line, records the same event in
 // the critical log (events.log), and exits with its code. v33's exit codes
@@ -650,7 +652,8 @@ func atoiNonNegative(s string) (int, error) {
 // The live up/degraded counters come from the provider's health snapshot file
 // when it exists; the source, cache and blacklist counts come from
 // proxy.state and proxy_url.json. v33's Contract Stats block is not printed:
-// the miner has no equivalent counter (see metrics_seams.go).
+// the miner's contract count is scrape-only (urnet_contracts_total,
+// contract_metrics.go) and has no per-proxy split.
 func proxySummary() {
 	state, _ := readProxyState()
 
