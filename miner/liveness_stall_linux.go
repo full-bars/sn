@@ -35,7 +35,18 @@ func livenessGate(episodeStart bool) (bool, string) {
 // that times out may still land later, so the returned undo always waits for the
 // write to finish before it removes exactly what this call added. It runs when a
 // stall resolves itself before the supervisor acts.
-func recordLivenessStall() func() {
+//
+// note is the sink for the lines this writes while the caller is deciding to
+// exit, and it is a parameter because the two callers must not share one. The
+// self-exit loop runs this immediately before it writes the marker and exits,
+// and critLog appends to and fsyncs events.log in the state directory whose
+// hang fired the stall, with no timeout: one stuck fsync there would keep the
+// restart from ever happening. That caller passes the bounded stderr sink
+// (swapThrashExitNotef). The systemd caller withholds a ping instead of
+// exiting, so its line belongs in events.log and it passes critLog. The undo
+// below keeps critLog: progress resumed, so the process is not exiting and the
+// durable line is the right one.
+func recordLivenessStall(note func(format string, args ...any)) func() {
 	now := time.Now()
 	prev := readThrashCapState()
 	cap := 0
@@ -59,14 +70,14 @@ func recordLivenessStall() func() {
 	case err := <-done:
 		done <- err // keep it for undo
 		if err != nil {
-			critLog("[liveness] could not record the lean start cap: %v\n", err)
+			note("[liveness] could not record the lean start cap: %v\n", err)
 			return nil
 		}
 		if cap > 0 {
-			critLog("[liveness] the next start is capped at %d proxies (60%% of what was running)\n", cap)
+			note("[liveness] the next start is capped at %d proxies (60%% of what was running)\n", cap)
 		}
 	case <-time.After(livenessRecordTimeout):
-		critLog("[liveness] timed out recording the lean start cap; it will be undone if the stall resolves\n")
+		note("[liveness] timed out recording the lean start cap; it will be undone if the stall resolves\n")
 	}
 	return undo
 }

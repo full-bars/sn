@@ -87,7 +87,10 @@ func runSelfExitLivenessWatchdog(ctx context.Context, gate func(episodeStart boo
 		// could loop without it (the write is bounded, so a failure or a timeout
 		// lands here rather than blocking the decision).
 		before := len(readThrashCapState().Restarts)
-		_ = recordLivenessStall()
+		// The lean-start-cap line is written on the way to the exit, so it goes
+		// to the bounded stderr sink, not events.log in the state directory
+		// this loop is reacting to (see recordLivenessStall's note parameter).
+		_ = recordLivenessStall(swapThrashExitNotef)
 		if len(readThrashCapState().Restarts) <= before {
 			if !passive {
 				passive = true

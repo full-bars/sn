@@ -147,13 +147,73 @@ func TestLivenessSelfExitExitsWhenTheLogPathHangs(t *testing.T) {
 
 	waitSelfExit(t, exited, "a stalled miner whose exit log path hangs")
 
-	select {
-	case line := <-notes:
-		if !strings.Contains(line, "no progress") {
-			t.Fatalf("the exit announcement must reach stderr, got %q", line)
+	// The lean-start-cap line precedes the announcement now, so scan every line
+	// the sink received rather than asserting on the first one.
+	var got []string
+	for drained := false; !drained; {
+		select {
+		case line := <-notes:
+			got = append(got, line)
+		default:
+			drained = true
 		}
-	default:
-		t.Fatal("the exit announcement did not go to stderr, so it went to events.log in the hung state directory")
+	}
+	found := false
+	for _, line := range got {
+		if strings.Contains(line, "no progress") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("the exit announcement did not go to stderr, so it went to events.log in the hung state directory (got %q)", got)
+	}
+}
+
+// The lean-start-cap line is written on the way to the exit, so it must not go
+// through critLog either. events.log is a FIFO with no reader here — what a state
+// directory hung in swap I/O looks like to open(2) — and before this was fixed
+// recordLivenessStall opened it there, blocked, and the loop never reached the
+// marker write or the exit. The exit must still be taken, and the cap line must
+// reach the bounded stderr sink instead.
+func TestLivenessSelfExitSurvivesAHungEventsLog(t *testing.T) {
+	stateDir := t.TempDir()
+	muffleExitNote(t, stateDir)
+	exited := livenessSelfExitRig(t, map[string]string{"URNETWORK_CONTAINER": "1"})
+	// The rig points the state dir at its own temp dir; the muffled one is the
+	// directory this test needs the loop to meet.
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+	t.Setenv("URNETWORK_SELF_HEAL", "1")
+
+	notes := make(chan string, 8)
+	prevStderr := swapThrashStderrWriteFn
+	t.Cleanup(func() { swapThrashStderrWriteFn = prevStderr })
+	swapThrashStderrWriteFn = func(p []byte) (int, error) {
+		notes <- string(p)
+		return len(p), nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	go runSelfExitLivenessWatchdog(ctx, livenessGate)
+
+	waitSelfExit(t, exited, "a stalled miner whose state directory hangs")
+	if cap, ok := activeThrashCap(time.Now()); !ok || cap != 300 {
+		t.Fatalf("the exit must leave the lean start cap (300 of 500), got %d ok=%v", cap, ok)
+	}
+
+	sawCap := false
+	for {
+		select {
+		case line := <-notes:
+			if strings.Contains(line, "capped at 300 proxies") {
+				sawCap = true
+			}
+		default:
+			if !sawCap {
+				t.Fatal("the lean-start-cap line did not reach the bounded stderr sink, so it went to events.log in the hung state directory")
+			}
+			return
+		}
 	}
 }
 
@@ -233,13 +293,13 @@ func TestLivenessRecordStallKeepsAnExistingCap(t *testing.T) {
 	t.Cleanup(func() { oomCapRunningProxies.Store(prevRunning) })
 	oomCapRunningProxies.Store(500)
 
-	recordLivenessStall()
+	recordLivenessStall(critLog)
 	if cap, ok := activeThrashCap(time.Now()); !ok || cap != 300 {
 		t.Fatalf("first stall: cap 300 expected, got %d ok=%v", cap, ok)
 	}
 	oomCapRunningProxies.Store(300)
 	time.Sleep(1100 * time.Millisecond) // a distinct ring timestamp
-	recordLivenessStall()
+	recordLivenessStall(critLog)
 	if cap, _ := activeThrashCap(time.Now()); cap != 300 {
 		t.Fatalf("a stall under a standing cap must keep it, not compound to %d", cap)
 	}
