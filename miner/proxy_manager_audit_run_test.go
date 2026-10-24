@@ -202,6 +202,7 @@ type auditHarness struct {
 	called      map[string]*bool
 	mu          sync.Mutex
 	parkedMarks []string
+	unparked    []string
 	logs        []string
 	hist        *proxyFailureHistory
 }
@@ -209,6 +210,9 @@ type auditHarness struct {
 type govHarness = auditHarness
 
 func newAuditHarness(addrs ...string) *auditHarness {
+	// A park now records the reloader hold (proxy_manager_audit_park.go), which
+	// is process-wide. Tests must not inherit one from an earlier test.
+	resetReapedProxyHoldsForTest()
 	h := &auditHarness{
 		now:      auditEpoch,
 		entries:  map[string]ProxyEntry{},
@@ -256,9 +260,17 @@ func newAuditHarness(addrs ...string) *auditHarness {
 		},
 		rand:           func() float64 { return 0.5 },
 		failureHistory: h.hist,
-		cancelMap:      h.cancels,
-		cancelMu:       &h.mu,
-		log:            func(f string, a ...any) { h.logs = append(h.logs, fmt.Sprintf(f, a...)) },
+		// The map-shaped park seam: parkProxies over a plain cancel map, which
+		// is the provider's shape. The live seam is the reloader
+		// (proxy_manager_audit_park_test.go); this keeps the tick-level tests
+		// independent of it.
+		park: func(keys []string, stillEligible func(string) bool, onParked func(string)) []string {
+			return parkProxies(keys, h.cancels, &h.mu, stillEligible, onParked)
+		},
+		unpark: func(keys []string) {
+			h.unparked = append(h.unparked, keys...)
+		},
+		log: func(f string, a ...any) { h.logs = append(h.logs, fmt.Sprintf(f, a...)) },
 	}
 	h.g = newProxyAuditor(auditCfg(), env)
 	return h
@@ -403,6 +415,12 @@ func TestProxyAuditRunOnce_TurningActOffReleasesParks(t *testing.T) {
 	if !h.hist.Eligible("a:1", h.now) {
 		t.Fatalf("turning self-heal off must clear proxy audit's backoff so reload relaunches it")
 	}
+	// The park's hold must go too, and the desired set be re-applied: clearing
+	// only the backoff would leave the identity out of the pool until its hold
+	// lapsed.
+	if !slices.Equal(h.unparked, []string{"a:1"}) {
+		t.Fatalf("unparked = %v, want [a:1]", h.unparked)
+	}
 	if h.logged("released") == 0 {
 		t.Fatalf("expected a release log line, got %v", h.logs)
 	}
@@ -420,6 +438,11 @@ func TestProxyAuditRunOnce_GoodRegradeAfterDwellRestores(t *testing.T) {
 
 	if !h.hist.Eligible("a:1", h.now) {
 		t.Fatalf("a healthy regrade should clear the backoff so the hourly reload restores it")
+	}
+	// A restored proxy is handed back to the reloader, or the hold would keep it
+	// out of the desired set until the park window ended anyway.
+	if !slices.Equal(h.unparked, []string{"a:1"}) {
+		t.Fatalf("unparked = %v, want [a:1]", h.unparked)
 	}
 }
 
@@ -766,8 +789,7 @@ func TestRunProxyAudit_ExitsOnCancelledContext(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		var mu sync.Mutex
-		runProxyAudit(ctx, map[string]context.CancelFunc{}, &mu, false)
+		runProxyAudit(ctx, false)
 		close(done)
 	}()
 	select {
@@ -967,8 +989,7 @@ func TestRunProxyAudit_PublishesAStatusBeforeTheFirstTick(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	var mu sync.Mutex
-	runProxyAudit(ctx, map[string]context.CancelFunc{}, &mu, false)
+	runProxyAudit(ctx, false)
 
 	st := proxyAuditStatusSnapshot()
 	if st == nil {

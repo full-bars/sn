@@ -675,10 +675,12 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	m.startLoop(ctx, "grade_summary", func() { runProxyGradeSummary(ctx) })
 	// Proxy audit (v33 proxy_audit_run.go): parks proven-junk paid/file proxies
 	// when the audit switch is on AND hot restart is on, and only logs
-	// would-park otherwise (the miner's hot restart is P2, so it observes). 5
-	// minute cadence, like v33.
+	// would-park otherwise. Parks cancel the proxy's slot through the live
+	// reloader (proxy_manager_audit_park.go) and hold it out of the desired set
+	// until its backoff lapses, so the park really stops the slot and a release
+	// really puts it back. 5 minute cadence, like v33.
 	m.startLoop(ctx, "proxy_audit", func() {
-		runProxyAudit(ctx, proxyAuditParkCancelMap, &proxyAuditParkCancelMu, proxyAuditStartupEnabled())
+		runProxyAudit(ctx, proxyAuditStartupEnabled())
 	})
 	// Baseline recorder (v33 provider baseline, baseline_sampler.go): one small
 	// local time series so a future upgrade has a before-and-after. The start
@@ -737,16 +739,6 @@ func (m *proxyManager) runGradingGate(ctx context.Context) {
 	}()
 	m.gate.run(ctx)
 }
-
-// proxyAuditParkCancelMap is the per-address cancel map proxy audit parks
-// through. v33 builds it in its provide loop (proxyCancelMap/proxyCancelMu);
-// the miner's provide loop does not register per-proxy cancels yet (the hot
-// reload reconciler is P2), so the map stays empty and a park finds nothing to
-// cancel until P2 fills it. The audit still evaluates grades and reports.
-var (
-	proxyAuditParkCancelMap = map[string]context.CancelFunc{}
-	proxyAuditParkCancelMu  sync.Mutex
-)
 
 // stop cancels the loops and waits for them.
 func (m *proxyManager) stop() {

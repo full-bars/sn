@@ -10,15 +10,20 @@ package miner
 //
 //   - the LIVE health registry is the fork-local one (proxyLiveHealthSnapshot,
 //     proxy_manager_health_registry.go);
-//   - the per-proxy client count is a seam (proxyAuditClients): the miner has
-//     no live per-proxy client counter yet, so clients reports "unknown" and
-//     the audit vetoes a park it cannot measure, exactly as v33 treats a
-//     registry miss. The earnings score and the recency signal are the real
-//     store (proxy_manager_earnings_store.go) and tracker
+//   - the per-proxy client count comes from the bandwidth counters the provide
+//     loop already publishes per identity (proxyEarnBandwidthRegistry,
+//     proxy_manager_earnings_loop.go), which is the miner's stand-in for v33's
+//     connect.ProxyBandwidthByKey(addr).Clients;
+//   - park acts through the live reloader (proxy_reloader.go), which owns the
+//     running slots: cancelling a slot is only possible where the slot is
+//     started, and the manager starts before the provide loop builds the
+//     reloader, so the seam resolves it per tick (proxy_manager_audit_park.go).
+//     A park records the degraded reaper's hold so the reloader will not put the
+//     identity straight back, and a release drops that hold and re-applies the
+//     desired set, which is what lets an unparked proxy return;
+//   - the earnings score and the recency signal are the real store
+//     (proxy_manager_earnings_store.go) and tracker
 //     (proxy_manager_earn_tracker.go);
-//   - hotRestartEnabled is a seam: the miner's hot restart and its reload
-//     reconciler are P2, so until they land parking would cancel a proxy with
-//     no path back and the audit stays in observe mode;
 //   - the audit-enabled resolution keeps the in-memory override, the control
 //     state stand-in (globalProxyControlState, proxy_manager_url_source.go),
 //     the override file and the startup value, in v33's order.
@@ -60,6 +65,12 @@ import (
 // cancel and the backoff would see the address not running and eligible, and
 // relaunch what was just parked. It must not take proxyStateMu or the
 // cross-process proxy lock, which stay outside the cancel lock.
+//
+// This is the provider's map shape, kept as the audit's map seam (the tick
+// tests park through it). The live park goes through the reloader, which owns
+// the running slots and has to see the cancel to keep its own bookkeeping
+// truthful — minerProxyReloader.cancelSlots, reached via liveProxyAuditPark
+// (proxy_manager_audit_park.go).
 func parkProxies(toPark []string, cancelMap map[string]context.CancelFunc, cancelMu *sync.Mutex, stillEligible func(addr string) bool, onParked func(addr string)) []string {
 	var parked []string
 	for _, addr := range toPark {
@@ -98,8 +109,9 @@ type proxyAuditEnv struct {
 	// health is the LIVE registry. Running must come from here, never from
 	// proxy.state Health, which goes stale after a park.
 	health func() map[string]proxyHealthStatus
-	// clients is the active client count; known is false when the bandwidth
-	// registry has no entry (unknown is not idle).
+	// clients is the active client count for a proxy identity; known is false
+	// when the bandwidth registry publishes no entry for it (unknown is not
+	// idle: a proxy we cannot measure might be carrying sessions).
 	clients        func(addr string) (n int64, known bool)
 	earningsScore  func(addr string, now time.Time) float64
 	earnedRecently func(addr string) bool
@@ -108,16 +120,26 @@ type proxyAuditEnv struct {
 	// on). False means observe: log would-park, touch nothing, and give back
 	// anything already parked.
 	act func() bool
-	// notActingReason says why act is false (one of proxy auditReason values);
+	// notActingReason says why act is false (one of proxyAuditReason values);
 	// optional, empty when unknown.
 	notActingReason func() string
 	markParked      func(addrs []string)
 	rand            func() float64
 	// failureHistory carries the relaunch backoff the reload path enforces.
 	failureHistory *proxyFailureHistory
-	cancelMap      map[string]context.CancelFunc
-	cancelMu       *sync.Mutex
-	log            func(format string, args ...any)
+	// park stops running slots. It is the reloader's cancelSlots
+	// (proxy_reloader.go), reached through liveProxyAuditPark
+	// (proxy_manager_audit_park.go): the reloader owns the slots, so only it
+	// can cancel one. stillEligible re-checks each identity under the cancel
+	// lock, and onParked records the park, its backoff and its hold there too,
+	// so a reload cannot relaunch the identity between the cancel and the
+	// record.
+	park func(keys []string, stillEligible func(addr string) bool, onParked func(addr string)) []string
+	// unpark drops the holds of identities proxy audit is handing back and
+	// re-applies the desired set, so they can rejoin the pool. Nil (or a park
+	// that does not use holds) makes releases a no-op.
+	unpark func(keys []string)
+	log    func(format string, args ...any)
 }
 
 // proxyAuditor drives proxyAuditTick against the live process. Not safe for
@@ -167,6 +189,10 @@ func (g *proxyAuditor) runOnceLocked() {
 			for _, addr := range released {
 				g.releaseBackoff(addr)
 			}
+			// Drop the holds too, and re-apply the desired set: a park that is
+			// called off must put the proxy back, not leave it out of the pool
+			// until its hold lapses.
+			g.unpark(released)
 			g.env.log("[proxy][audit] released %d parked proxies (audit is not acting)\n", len(released))
 		}
 	}
@@ -224,6 +250,12 @@ func (g *proxyAuditor) runOnceLocked() {
 			g.env.log("[proxy][audit] released %s (no longer in the paid proxy list)\n", proxyKeyDisplay(addr))
 		}
 	}
+	if len(res.Release) > 0 {
+		// The parks are given back: drop their holds and re-apply the desired
+		// set once, so the identities return on this tick rather than on the
+		// next unrelated reload trigger.
+		g.unpark(res.Release)
+	}
 
 	note := ""
 	switch {
@@ -267,8 +299,11 @@ func (g *proxyAuditor) observe(res proxyAuditResult, proxies []proxyAuditProxy) 
 	g.announced = current
 }
 
+// park cancels the proxies the tick selected, through the live park seam (the
+// reloader). A proxy that cannot be cancelled through it is not parked and is
+// not recorded: the audit only claims what it actually did.
 func (g *proxyAuditor) park(now time.Time, res proxyAuditResult, proxies []proxyAuditProxy) {
-	if len(res.Park) == 0 {
+	if len(res.Park) == 0 || g.env.park == nil {
 		return
 	}
 	score := map[string]float64{}
@@ -277,12 +312,28 @@ func (g *proxyAuditor) park(now time.Time, res proxyAuditResult, proxies []proxy
 	}
 	toPark := make([]string, 0, len(res.Park))
 	for _, p := range res.Park {
+		// The direct slot is not a proxy: it carries no paid entry and no
+		// identity counters, and stopping it would take the box's own egress
+		// down. It can only reach this list through a corrupt paid set, so it
+		// is filtered rather than trusted.
+		if p.Addr == directProxyKey {
+			continue
+		}
 		toPark = append(toPark, p.Addr)
 	}
+	if len(toPark) == 0 {
+		return
+	}
 	until := map[string]time.Time{}
-	parked := parkProxies(toPark, g.env.cancelMap, g.env.cancelMu, g.stillEligible, func(addr string) {
+	parked := g.env.park(toPark, g.stillEligible, func(addr string) {
 		u := g.st.commitPark(g.cfg, addr, now, g.env.rand())
 		g.env.failureHistory.ExtendBackoffUntil(addr, u)
+		// The hold is what keeps the reloader from re-adding the identity on
+		// its next desired-set build: proxy.state still lists it, because a
+		// park rests a proxy instead of removing it. It is recorded here, under
+		// the reloader's cancel lock, so a reload cannot slip in between the
+		// cancel and the hold.
+		setReapedProxyHold(addr, u)
 		until[addr] = u
 	})
 	for _, addr := range parked {
@@ -291,6 +342,16 @@ func (g *proxyAuditor) park(now time.Time, res proxyAuditResult, proxies []proxy
 	if len(parked) > 0 {
 		g.env.markParked(parked)
 	}
+}
+
+// unpark hands the named identities back: the holds that kept them out of the
+// desired set are dropped and the desired set is re-applied, so they rejoin the
+// pool now instead of when the hold happens to lapse.
+func (g *proxyAuditor) unpark(keys []string) {
+	if g.env.unpark == nil || len(keys) == 0 {
+		return
+	}
+	g.env.unpark(keys)
 }
 
 // remarkLost re-asserts the parked mark on parks from earlier ticks whose
@@ -478,15 +539,26 @@ func markProxiesParked(addrs []string) {
 
 // proxyAuditClients is the live client count per proxy identity. v33 reads
 // connect.ProxyBandwidthByKey(addr).Clients; the pinned full-bars/connect does
-// not export the bandwidth registry and the miner has no live per-proxy
-// counters yet (see proxy_manager_health_log.go), so "unknown" is reported
-// until P2 wires a source. Unknown is not idle: the audit vetoes the park.
-var proxyAuditClients = func(addr string) (int64, bool) { return 0, false }
+// not export the bandwidth registry, so the miner reads the counters its own
+// provide loop publishes per identity (proxyEarnBandwidthRegistry), which the
+// earnings recorder folds in from the same objects. Unknown (no entry) is not
+// idle: the proxy's slot is not running, or it is the direct slot, which is not
+// a proxy and carries no identity key, so the audit vetoes the park.
+func proxyAuditClients(addr string) (int64, bool) {
+	if addr == directProxyKey {
+		return 0, false
+	}
+	bw := proxyEarnBandwidthFor(addr)
+	if bw == nil {
+		return 0, false
+	}
+	return bw.Clients.Load(), true
+}
 
 // newLiveProxyAuditor wires a proxyAuditor to the real registries. start is
 // the process start, used both as the memory boundary (grades stamped earlier
 // are not evidence) and for the tracker warm-up.
-func newLiveProxyAuditor(cancelMap map[string]context.CancelFunc, cancelMu *sync.Mutex, startupProxyAudit bool, start time.Time) *proxyAuditor {
+func newLiveProxyAuditor(startupProxyAudit bool, start time.Time) *proxyAuditor {
 	g := newProxyAuditor(defaultProxyAuditConfig(), proxyAuditEnv{
 		now:      time.Now,
 		readPaid: liveReadPaid,
@@ -504,8 +576,8 @@ func newLiveProxyAuditor(cancelMap map[string]context.CancelFunc, cancelMu *sync
 		markParked:      markProxiesParked,
 		rand:            rand.Float64,
 		failureHistory:  globalProxyFailureHistory,
-		cancelMap:       cancelMap,
-		cancelMu:        cancelMu,
+		park:            liveProxyAuditPark,
+		unpark:          liveProxyAuditUnpark,
 		log:             tlog,
 	})
 	g.st.notBefore = start
@@ -513,8 +585,8 @@ func newLiveProxyAuditor(cancelMap map[string]context.CancelFunc, cancelMu *sync
 }
 
 // runProxyAudit is proxy audit's ticker loop.
-func runProxyAudit(ctx context.Context, cancelMap map[string]context.CancelFunc, cancelMu *sync.Mutex, startupProxyAudit bool) {
-	g := newLiveProxyAuditor(cancelMap, cancelMu, startupProxyAudit, time.Now())
+func runProxyAudit(ctx context.Context, startupProxyAudit bool) {
+	g := newLiveProxyAuditor(startupProxyAudit, time.Now())
 	currentProxyAuditor.Store(g)
 	defer currentProxyAuditor.Store(nil)
 	// Say whether proxy audit will act right away: the first tick is minutes
