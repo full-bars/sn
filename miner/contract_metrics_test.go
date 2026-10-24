@@ -16,6 +16,7 @@ package miner
 
 import (
 	"math"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -545,6 +546,55 @@ func TestContractClosedMemoryIsBounded(t *testing.T) {
 	closed.forget(1)
 	if len(closed.index) != 1 || !closed.has(contractKey{slot: 2, id: "other"}) {
 		t.Fatalf("forget left %d ids: %+v", len(closed.index), closed.index)
+	}
+}
+
+// TestContractClosedSetForgetKeepsEvictionOrder pins the ring's order across a
+// slot retirement. forget used to rebuild the ring by iterating the index map,
+// which left the survivors in random order, so the next eviction took an
+// arbitrary id instead of the oldest one.
+func TestContractClosedSetForgetKeepsEvictionOrder(t *testing.T) {
+	var closed contractClosedSet
+	for i := 0; i < contractClosedMemory; i += 1 {
+		key := contractKey{slot: 1, id: strconv.Itoa(i)}
+		if i%2 == 1 {
+			key.slot = 2
+		}
+		closed.add(key)
+	}
+	closed.forget(2)
+
+	want := make([]contractKey, 0, contractClosedMemory/2)
+	for i := 0; i < contractClosedMemory; i += 2 {
+		want = append(want, contractKey{slot: 1, id: strconv.Itoa(i)})
+	}
+	if !reflect.DeepEqual(closed.ring, want) {
+		first := 0
+		for first < len(want) && first < len(closed.ring) && closed.ring[first] == want[first] {
+			first += 1
+		}
+		got := closed.ring[first:]
+		if len(got) > 4 {
+			got = got[:4]
+		}
+		expect := want[first:]
+		if len(expect) > 4 {
+			expect = expect[:4]
+		}
+		t.Fatalf("forget reordered the ring at %d of %d: got %+v, want %+v", first, len(want), got, expect)
+	}
+
+	// Refill the ring and add one past capacity: the eviction must take the
+	// oldest surviving id, not one that forget shuffled to the front.
+	for i := 0; i < contractClosedMemory/2; i += 1 {
+		closed.add(contractKey{slot: 3, id: "fill-" + strconv.Itoa(i)})
+	}
+	closed.add(contractKey{slot: 3, id: "after"})
+	if closed.has(contractKey{slot: 1, id: "0"}) {
+		t.Fatal("eviction took a later id: the oldest surviving id outlived the bound")
+	}
+	if !closed.has(contractKey{slot: 1, id: "2"}) {
+		t.Fatal("eviction took more than the oldest surviving id")
 	}
 }
 

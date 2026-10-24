@@ -180,18 +180,27 @@ func (self *contractClosedSet) add(key contractKey) {
 
 // forget drops everything remembered for one slot. A retired slot's ids can
 // never be reported again, so keeping them would only hold memory.
+//
+// The survivors keep their order: the ring is walked from its oldest entry
+// rather than rebuilt from the index map. Map iteration would put the survivors
+// in random order, so the next eviction would take an arbitrary id instead of
+// the oldest -- and forgetting a recent id early lets a late duplicate
+// tombstone be counted as a new contract.
 func (self *contractClosedSet) forget(slot int64) {
 	if len(self.index) == 0 {
 		return
 	}
-	self.ring = self.ring[:0]
-	for key := range self.index {
+	old := self.ring
+	kept := make([]contractKey, 0, len(old))
+	for i := 0; i < len(old); i += 1 {
+		key := old[(self.next+i)%len(old)]
 		if key.slot == slot {
 			delete(self.index, key)
 			continue
 		}
-		self.ring = append(self.ring, key)
+		kept = append(kept, key)
 	}
+	self.ring = kept
 	self.next = 0
 }
 
