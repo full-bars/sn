@@ -140,6 +140,9 @@ func noteProviderAuthSuccess(settings *connect.ProxySettings) {
 		return
 	}
 	key := settings.Key()
+	// Platform reachability: any authenticated proxy proves the backend is up,
+	// which clears the reaper freeze immediately.
+	proxyOutageTracker.success()
 	globalProvenProxies.MarkSucceeded(key)
 	globalProxyFailureHistory.Reset(key)
 	globalProxySlowRetryState.ClearDropped(key)
@@ -170,6 +173,10 @@ func noteProviderAuthFailure(settings *connect.ProxySettings, err error) provide
 		return providerAuthGiveUpInfo{}
 	}
 	key := settings.Key()
+	// Platform reachability: a run of failures with no success anywhere is what
+	// distinguishes a backend outage from a bad proxy, and it freezes the
+	// reaper so the outage cannot blacklist the healthy pool.
+	proxyOutageTracker.failure()
 	// Live health: a failed authentication means the proxy is not up right now,
 	// so the reaper stops shielding it and the traffic/health report shows it
 	// as degraded.
@@ -180,6 +187,21 @@ func noteProviderAuthFailure(settings *connect.ProxySettings, err error) provide
 	failures := globalProxyFailureHistory.RecordFailure(key)
 	if failures < proxyAuthMaxFailures(key) {
 		return providerAuthGiveUpInfo{}
+	}
+	// The ladder assumes the failure is evidence about the proxy. During a
+	// backend outage it is not: every proxy is failing, so climbing the ramp
+	// backs off healthy identities and evicts URL-sourced ones for a fault that
+	// is not theirs. Route those attempts to the short slow-retry backoff
+	// instead — the same distinction v33 draws when the backend is degraded.
+	//
+	// The check is against the recorded state, so a proxy that never
+	// authenticates is still counted here once the outage clears; the freeze
+	// defers the verdict, it does not erase it.
+	if !proxyGiveUpMayCount() {
+		retryIn := proxyAuthSlowBackoff(key)
+		tlog("[proxy][auth] %s failed %d times during a backend outage; slow retry in %s instead of the give-up ladder\n",
+			proxyKeyDisplay(key), failures, formatDuration(retryIn))
+		return providerAuthGiveUpInfo{retryIn: retryIn}
 	}
 	result := proxyAuthGiveUp(settings, isURLSourcedProxyKey(key))
 	info := providerAuthGiveUpInfo{giveUp: result.giveUp, retryIn: result.retryIn, evicted: result.evicted}

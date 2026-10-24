@@ -1597,4 +1597,4 @@ func outageEvictionHoldLog(what string) {
 // proxyGiveUpMayCount reports whether a failed authentication counts toward
 // evicting the proxy. During an outage every proxy fails to authenticate, so it
 // must not.
-func proxyGiveUpMayCount() bool { return !degradedReaperFrozen() }
+func proxyGiveUpMayCount() bool { return !proxyAuthOutageFrozen() }
