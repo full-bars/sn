@@ -198,20 +198,23 @@ func applyH3CandidateSet(candidates []*connect.ProxySettings, setting h3Setting)
 }
 
 // noteH3Launch records, for one identity that is starting, whether it is being
-// built with the fallback transports, so a later change of setting can tell
-// which running identities must be relaunched (see h3ProxiesToRelaunch). The
-// provide run calls it as each proxy slot builds its transport; the direct
-// identity carries no row here.
+// built with the fallback transports under `setting`, and returns that
+// eligibility so the caller builds the carrier policy from the same decision.
+// The provide run calls it as each proxy slot builds its transport; the direct
+// identity carries no row here (it is always eligible, mode off excepted).
 //
-// The read and the record are one call so the decision cannot land between a
-// launch's own eligibility read and its registration.
-func noteH3Launch(settings *connect.ProxySettings) {
+// The setting is passed in rather than read here so the launch row and the
+// provider carrier policy the device is built with cannot disagree: a change
+// landing between two reads would leave a relaunch rebuilding an identity that
+// was already built with the new mode, or one that never will be.
+func noteH3Launch(settings *connect.ProxySettings, setting h3Setting) bool {
 	if settings == nil {
-		return
+		return false
 	}
 	key := settings.Key()
-	setting := resolveH3Mode(globalControlState, currentProxyResolution())
-	recordH3Launch(key, h3ProxyEligible(setting, key))
+	eligible := h3ProxyEligible(setting, key)
+	recordH3Launch(key, eligible)
+	return eligible
 }
 
 // rerankH3 recomputes the ranked set for a count setting from the last noted
