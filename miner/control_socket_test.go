@@ -154,20 +154,30 @@ func TestControlSocketNoEffectKeyReportsNoEffect(t *testing.T) {
 	path, cleanup := testControlSocket(t, state)
 	defer cleanup()
 
-	for _, key := range []string{"node_name", "ip_version"} {
-		resp := controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: key, Value: map[string]string{"node_name": "nyc-1", "ip_version": "ipv4"}[key]})
+	// h3_datagram* belong in this list: the side-effect arm answers them
+	// through the same no-effect branch, so a case of their own would
+	// intercept them and leave that branch unreachable. A regression that
+	// reintroduces one shows up here as an effect change instead of as
+	// silently unreachable code.
+	for _, tc := range []struct{ key, value string }{
+		{"node_name", "nyc-1"},
+		{"ip_version", "ipv4"},
+		{"h3_datagram", "on"},
+		{"h3_datagram_send", "on"},
+	} {
+		resp := controlRequestJSON(t, path, controlRequest{Cmd: "set", Key: tc.key, Value: tc.value})
 		if !resp.OK {
-			t.Fatalf("set %s failed: %s", key, resp.Error)
+			t.Fatalf("set %s failed: %s", tc.key, resp.Error)
 		}
 		if resp.NeedsRestart {
-			t.Fatalf("%s must not report needs_restart: a restart does not apply it either", key)
+			t.Fatalf("%s must not report needs_restart: a restart does not apply it either", tc.key)
 		}
 		if resp.Effect != controlEffectNone {
-			t.Fatalf("%s effect = %q, want %q", key, resp.Effect, controlEffectNone)
+			t.Fatalf("%s effect = %q, want %q", tc.key, resp.Effect, controlEffectNone)
 		}
-		resp = controlRequestJSON(t, path, controlRequest{Cmd: "clear", Key: key})
+		resp = controlRequestJSON(t, path, controlRequest{Cmd: "clear", Key: tc.key})
 		if !resp.OK || resp.NeedsRestart || resp.Effect != controlEffectNone {
-			t.Fatalf("clear %s = %+v, want ok with no effect and no restart", key, resp)
+			t.Fatalf("clear %s = %+v, want ok with no effect and no restart", tc.key, resp)
 		}
 	}
 

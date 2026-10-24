@@ -255,8 +255,8 @@ var setKeyHelps = []string{
 	"  hot-restart         on|off        preserve client JWTs across restarts",
 	"  oom-cap             on|off|shadow OOM-aware start cap: shadow logs what it would do (default), on enforces, off is the kill switch and forgets the standing cap",
 	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed)",
-	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply)",
-	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message)",
+	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply). The miner has no toggle: DATAGRAM stays on at the pinned connect default and neither a set nor a restart changes it",
+	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message). The miner has no toggle: the send lane stays on at the pinned connect default",
 	"  h3                  off|direct|N|all  which identities run H3: none, the direct identity only, the N best proxies, or all. N must be a positive integer (on == direct, 0 == off, auto == all). N caps the PROXY set only; the direct identity is always additionally eligible and does not consume one of the N, so h3=N runs N proxies plus the direct identity (default: all)",
 	"  gomemlimit          <bytes>       Go runtime memory limit (e.g. 256MiB, 1GiB)",
 	"  gogc      <int>|off|disabled     GC target percentage (default: 100). off clears; disabled turns GC off entirely (unbounded heap)",
@@ -435,14 +435,14 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 		if err != nil {
 			return err
 		}
-		if note := controlEffectNote(effect); note != "" {
-			fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), note)
-			return nil
-		}
 		if appliedLive {
+			if note := controlEffectNote(effect); note != "" {
+				fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), note)
+				return nil
+			}
 			fmt.Printf("%s cleared for %s (applied live via control socket)\n", key, providerLabel(p))
 		} else {
-			fmt.Printf("%s cleared for %s (provider not running; queued in pending_overrides.json, takes effect on next start)\n", key, providerLabel(p))
+			fmt.Printf("%s cleared for %s (%s)\n", key, providerLabel(p), queuedWriteNote(effect))
 		}
 		if needsRestart {
 			fmt.Printf("  ⚠ %s requires a restart to take effect\n", key)
@@ -463,19 +463,32 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 	if err != nil {
 		return err
 	}
-	if note := controlEffectNote(effect); note != "" {
-		fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), note)
-		return nil
-	}
 	if appliedLive {
+		if note := controlEffectNote(effect); note != "" {
+			fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), note)
+			return nil
+		}
 		fmt.Printf("%s set to %s for %s (applied live via control socket)\n", key, value, providerLabel(p))
 	} else {
-		fmt.Printf("%s set to %s for %s (provider not running; queued in pending_overrides.json, takes effect on next start)\n", key, value, providerLabel(p))
+		fmt.Printf("%s set to %s for %s (%s)\n", key, value, providerLabel(p), queuedWriteNote(effect))
 	}
 	if needsRestart {
 		fmt.Printf("  ⚠ %s requires a restart to take effect\n", key)
 	}
 	return nil
+}
+
+// queuedWriteNote is the parenthetical for a write that was queued because the
+// provider is stopped. The effect decides what may be promised: for a
+// no-effect key the queue changes nothing, so saying "takes effect on next
+// start" is false there and the note says so. An empty effect (an older
+// provider) and the live/restart keys keep the historical wording, which a
+// start does honour.
+func queuedWriteNote(effect string) string {
+	if effect == controlEffectNone {
+		return "provider not running; queued in pending_overrides.json, but this build has no consumer for this key, so nothing changed and no restart will change that"
+	}
+	return "provider not running; queued in pending_overrides.json, takes effect on next start"
 }
 
 // setFastAuthMarker sets or clears the auth-rate-limiter bypass marker in the

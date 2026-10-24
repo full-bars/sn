@@ -576,10 +576,30 @@ func applyControlOverrideEffect(p Provider, op, key, value string, dryRun bool) 
 			return false, false, "", fmt.Errorf("queue pending override: %w", err)
 		}
 		removeLegacyFile(p.StateDir, canonicalKey)
-		return false, false, "", nil
+		return false, false, queuedControlKeyEffect(canonicalKey), nil
 	}
 
 	return false, false, "", fmt.Errorf("control socket %s: %w", sockPath, dialErr)
+}
+
+// queuedControlKeyEffect classifies a key whose override was queued because
+// the provider is stopped, where no socket exists to answer. Most keys return
+// "": their queued override really is applied at the next start, which is what
+// the caller's historical queued wording says. The no-effect keys do not: this
+// build has no consumer for them, so "takes effect on next start" would be the
+// same false promise the socket path avoids. Mirrors the provider's
+// controlNoEffectKeys (miner/control_socket.go); the CLI cannot import the
+// miner, so the two lists have to be kept in step.
+//
+// ip_version is deliberately absent: controlKeyCanonical does not map it, so
+// applySetOverride rejects it as an unknown key before any write and no
+// queued path can reach it. Add it here when the CLI can address it.
+func queuedControlKeyEffect(canonicalKey string) string {
+	switch canonicalKey {
+	case "node_name", "h3_datagram", "h3_datagram_send":
+		return controlEffectNone
+	}
+	return ""
 }
 
 // queryControlOverride retrieves the current value for canonicalKey on provider p. Checks the socket first, then pending_overrides.json, then legacy files.

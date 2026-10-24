@@ -324,8 +324,6 @@ var controlLiveEffectKeys = map[string]bool{
 	"smart_dialer":                true,
 	"h1_plus":                     true,
 	"h3":                          true,
-	"h3_datagram":                 true,
-	"h3_datagram_send":            true,
 	"metrics":                     true,
 	"metrics_listen":              true,
 	"proxy_self_heal":             true,
@@ -355,12 +353,33 @@ var controlRestartEffectKeys = map[string]bool{
 // changes that. node_name is not a miner label: its client description is
 // "provider <os> <version>" (minerProviderDescription), and it publishes no
 // node name. ip_version has no control-driven consumer either: the transport
-// family comes from the SDK/connect pin, not from this key. They must never
-// be reported as live-applied nor as restart-pending; applyControlLiveSideEffect
-// logs the gap explicitly.
+// family comes from the SDK/connect pin, not from this key. h3_datagram and
+// h3_datagram_send are the same case: the pinned connect offers and sends
+// QUIC DATAGRAM by default and exposes no runtime toggle, so there is nothing
+// a set could switch on or off (see applyControlLiveSideEffect). They must
+// never be reported as live-applied nor as restart-pending.
 var controlNoEffectKeys = map[string]bool{
-	"node_name":  true,
-	"ip_version": true,
+	"node_name":        true,
+	"ip_version":       true,
+	"h3_datagram":      true,
+	"h3_datagram_send": true,
+}
+
+// controlNoEffectDetail returns the key-specific half of the no-effect answer,
+// for keys whose reason is worth naming beyond "no consumer". Every key in
+// controlNoEffectKeys is answered by the same branch in
+// applyControlLiveSideEffect; this only chooses the wording, so a key can never
+// be intercepted by a second case (which would make that branch unreachable
+// for it) just to say something more specific.
+func controlNoEffectDetail(key string) string {
+	switch key {
+	case "h3_datagram", "h3_datagram_send":
+		// The h3 port is limit-only: the pinned upstream connect offers and
+		// sends QUIC DATAGRAM by default and carries no runtime toggle, so
+		// neither a set nor a restart can change the datagram lanes.
+		return "QUIC datagrams stay on at the upstream always-on default in this build"
+	}
+	return ""
 }
 
 // Effect values reported by the control socket for a set or clear.
@@ -426,12 +445,6 @@ var controlLiveDefaults = map[string]string{
 	// decide and log but enforce nothing. Any other choice would make a clear
 	// silently start (or keep) shedding proxies.
 	"oom_cap": "shadow",
-	// Clearing h3_datagram / h3_datagram_send restores the upstream
-	// default: offering and sending QUIC DATAGRAM is on. Nothing is
-	// toggled either way (see applyControlLiveSideEffect); the clear is
-	// reported through the same explicit always-on line as a set.
-	"h3_datagram":      "on",
-	"h3_datagram_send": "on",
 }
 
 // applyControlLiveDefault reapplies the runtime default for a live-applied
@@ -1085,12 +1098,6 @@ func applyControlLiveSideEffect(key, value string) error {
 		if previous != setting {
 			relaunchH3ProxiesNow(setting)
 		}
-	case "h3_datagram", "h3_datagram_send":
-		// The h3 port is limit-only: the pinned upstream connect offers and
-		// sends QUIC DATAGRAM by default and carries no runtime toggle, so
-		// there is nothing here to switch. The key is accepted and says so
-		// explicitly instead of claiming an effect it cannot have.
-		importantLogf("[control] %s=%s accepted; QUIC datagrams stay on at the upstream always-on default in this build\n", key, value)
 	case "h1_plus":
 		enabled := strings.EqualFold(value, "on")
 		connect.SetH1PlusDisabled(!enabled)
@@ -1175,6 +1182,15 @@ func applyControlLiveSideEffect(key, value string) error {
 			// Accepted and persisted for 3.23-fix tooling compatibility, but
 			// nothing in this build reads it. Say that plainly: neither the
 			// set nor a restart can change anything, so do not offer one.
+			// This arm is the ONLY place a no-effect key is answered, so it
+			// must stay reachable for every key in controlNoEffectKeys. A
+			// second case for h3_datagram* above would intercept those keys
+			// and leave this branch unreachable for them, so they keep their
+			// specific wording through controlNoEffectDetail instead.
+			if detail := controlNoEffectDetail(key); detail != "" {
+				importantLogf("[control] %s=%s accepted; %s, and no restart changes that\n", key, value, detail)
+				return nil
+			}
 			importantLogf("[control] %s=%s persisted for 3.23-fix compatibility, but this build has no consumer for it, so nothing changed and a restart will not change that\n", key, value)
 			return nil
 		case controlRestartEffectKeys[key]:
