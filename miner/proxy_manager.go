@@ -600,17 +600,16 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// (proxy_manager_gate.go).
 	m.gate = newGradingGate(len(launch))
 	processGradingGate.Store(m.gate)
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		m.gate.run(ctx)
-	}()
+	// Every long-lived manager goroutine below starts through startLoop:
+	// joined on m.wg for shutdown, supervised for panics (loop_supervisor.go).
+	// The grading gate is the one exception: it is a one-shot wait that returns
+	// by design once the gate opens, so supervising it would restart it against
+	// an already-open gate. startLoopOnce joins it the same way.
+	m.startLoopOnce(func() { m.gate.run(ctx) })
 	if len(m.cfg.Urls) > 0 {
-		m.wg.Add(1)
-		go func() {
-			defer m.wg.Done()
+		m.startLoop(ctx, "url_fetcher", func() {
 			runProxyURLFetcher(ctx, m.cfg.Urls, m.cfg.Refresh, m.cfg.Max, m.cfg.ApiHost, m.cfg.ApiPort, m.cfg.SelfHeal, m.gate)
-		}()
+		})
 	}
 	// Resource-pressure monitor (v33 runPressureMonitor): samples host PSI,
 	// memory, load, FD and the process's own growth every
@@ -621,11 +620,7 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// all of it ran against a permanently calm box. It starts unconditionally
 	// beside the controller, as it does in v33; with self-heal off it ticks
 	// and publishes zero.
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		runPressureMonitor(ctx, m.cfg.SelfHeal)
-	}()
+	m.startLoop(ctx, "pressure_monitor", func() { runPressureMonitor(ctx, m.cfg.SelfHeal) })
 	// AIMD pool controller (v33 runPoolController, T-07): computes and
 	// persists the URL pool's TargetPoolSize every poolControlInterval, and
 	// sheds the worst URL proxies back to the cache on a sustained-pressure
@@ -633,100 +628,85 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// self-heal, see resolveEffectiveProxyURLMax), which is the half that
 	// makes the learned operating point real; v33 starts this loop
 	// unconditionally beside the fetcher, and so does the miner.
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		runPoolController(ctx, m.cfg.Max, m.cfg.SelfHeal)
-	}()
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		runURLProxyReaper(ctx, m.cfg.ApiHost, m.cfg.ApiPort, m.gate)
-	}()
+	m.startLoop(ctx, "pool_controller", func() { runPoolController(ctx, m.cfg.Max, m.cfg.SelfHeal) })
+	m.startLoop(ctx, "url_reaper", func() { runURLProxyReaper(ctx, m.cfg.ApiHost, m.cfg.ApiPort, m.gate) })
 	// Paid/file-list proxy grading (v33 proxy_grade_paid.go): rides the
 	// reaper ticker cadence and grades non-URL proxies read-only on the
 	// paid stale sweep, so proxy.state carries the Score/Graded fields the
 	// trim, audit and summary read.
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
+	m.startLoop(ctx, "paid_grader", func() {
 		runPaidProxyGrader(ctx, m.cfg.ApiHost, m.cfg.ApiPort, m.gate)
-	}()
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		pruneURLProxyBlacklist(ctx)
-	}()
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
+	})
+	m.startLoop(ctx, "url_blacklist_pruner", func() { pruneURLProxyBlacklist(ctx) })
+	m.startLoop(ctx, "url_cleanup", func() {
 		runProxyURLCleanup(ctx, m.cfg.DeadCleanupScope, m.cfg.DeadCleanupInterval, m.cfg.SelfHeal)
-	}()
+	})
 	// Health cadence: writes proxy_health.state / proxy_health.log /
 	// proxy_traffic.state / usage_history.jsonl and persists the overlaid
 	// health back into proxy.state, so the proxy subcommands and the reaper
 	// see live health (v33's health heartbeat).
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		runProxyHealthLog(ctx, proxyHealthLogInterval)
-	}()
+	m.startLoop(ctx, "health_log", func() { runProxyHealthLog(ctx, proxyHealthLogInterval) })
 	// Earnings recording loop (v33 runEarningWindows, recording half): folds
 	// the live per-identity billable counters into the per-proxy earn tracker
 	// (the paid grader's earn-skip and the audit's park decision) and the
 	// persisted earnings store (the launch ranking, the trim tiebreak and the
 	// scout) once a minute.
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		runProxyEarningsRecorder(ctx)
-	}()
+	m.startLoop(ctx, "earnings_recorder", func() { runProxyEarningsRecorder(ctx) })
 	// Lifetime counter collector (v33 runLifetimeCollector): folds the live
 	// counters into the persisted all-time store once a minute, flushes on the
 	// store's throttle, and emits the dated all-time line. The store is also
 	// flushed at the two hotswap points (hotswap.go).
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		runLifetimeCollector(ctx)
-	}()
+	m.startLoop(ctx, "lifetime_collector", func() { runLifetimeCollector(ctx) })
 	// Direct-path egress grade (v33 proxy_direct_grade.go): read-only, persisted
 	// to its own direct_grade.json, gated on the operator's direct toggle
 	// (isDirectEnabled). v33 starts it unconditionally beside the reaper loops
 	// with the same cadence; the same here.
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		runDirectGrader(ctx)
-	}()
+	m.startLoop(ctx, "direct_grader", func() { runDirectGrader(ctx) })
 	// Grade summary (v33 proxy_grade_summary.go): a pure-read A-F snapshot of
 	// the running set every proxy_grades.json interval, on the important/disk
 	// logs and <state>/grades. It never probes, so it is safe at fleet size.
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
-		runProxyGradeSummary(ctx)
-	}()
+	m.startLoop(ctx, "grade_summary", func() { runProxyGradeSummary(ctx) })
 	// Proxy audit (v33 proxy_audit_run.go): parks proven-junk paid/file proxies
 	// when the audit switch is on AND hot restart is on, and only logs
 	// would-park otherwise (the miner's hot restart is P2, so it observes). 5
 	// minute cadence, like v33.
-	m.wg.Add(1)
-	go func() {
-		defer m.wg.Done()
+	m.startLoop(ctx, "proxy_audit", func() {
 		runProxyAudit(ctx, proxyAuditParkCancelMap, &proxyAuditParkCancelMu, proxyAuditStartupEnabled())
-	}()
+	})
 	// Baseline recorder (v33 provider baseline, baseline_sampler.go): one small
 	// local time series so a future upgrade has a before-and-after. The start
-	// mark is written here; the sampler checks the baseline key each tick, so
-	// `set baseline off` takes effect live. It runs on the manager context, so
-	// stop() joins it like every other loop.
+	// mark is written here, once, outside the supervisor: a restart after a
+	// panic must not re-mark the baseline as beginning now. The sampler checks
+	// the baseline key each tick, so `set baseline off` takes effect live. It
+	// runs on the manager context, so stop() joins it like every other loop.
+	baselineRecord(baselineStartSample(currentVersionForBaseline(), previousVersionForBaseline(), time.Now()))
+	m.startLoop(ctx, "baseline_sampler", func() { baselineSampleLoop(ctx) })
+	return launch, held, nil
+}
+
+// startLoop joins one long-lived manager loop on the manager's wait group and
+// runs it under superviseLoop (loop_supervisor.go). The wait group is the
+// shutdown path: stop() cancels ctx and waits, and the supervisor returns as
+// soon as the loop does. The supervisor is the panic path: a panic in the loop
+// is logged, counted, and the loop restarted with a bounded backoff instead of
+// taking the process down with every proxy slot in it.
+func (m *proxyManager) startLoop(ctx context.Context, name string, fn func()) {
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
-		<-baselineStart(ctx, currentVersionForBaseline(), previousVersionForBaseline())
+		superviseLoop(ctx, name, fn, nil)
 	}()
-	return launch, held, nil
+}
+
+// startLoopOnce joins a goroutine that is expected to return on its own (the
+// grading gate opens and the loop ends by design), so it is contained but not
+// restarted.
+func (m *proxyManager) startLoopOnce(fn func()) {
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		connect.HandleError(fn)
+	}()
 }
 
 // proxyAuditParkCancelMap is the per-address cancel map proxy audit parks

@@ -362,6 +362,32 @@ func lifetimeDelta(cur uint64, prev *uint64) uint64 {
 	return d
 }
 
+// lifetimeFoldCursor is where the last fold left the four scrape-seam counters
+// (the deltas' high-water mark). Those are process-lifetime values, so a
+// supervised restart of the collector that began again from zero would fold
+// their whole running total into the persisted all-time store a second time.
+// Resuming from the cursor keeps the fold monotonic across restarts; in a fresh
+// process the cursor is unset, which is exactly the old zero start.
+var lifetimeFoldCursor = &lifetimeFoldCursorState{}
+
+type lifetimeFoldCursorState struct {
+	mu                  sync.Mutex
+	set                 bool
+	pqe, clas, up, deny uint64
+}
+
+func (c *lifetimeFoldCursorState) load() (pqe, clas, up, deny uint64, ok bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.pqe, c.clas, c.up, c.deny, c.set
+}
+
+func (c *lifetimeFoldCursorState) store(pqe, clas, up, deny uint64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.pqe, c.clas, c.up, c.deny, c.set = pqe, clas, up, deny, true
+}
+
 // runLifetimeCollector folds the live counters into the all-time store once per
 // earnCheckInterval, flushes on its throttle, and emits the dated all-time line
 // when something moved. Session and contract deltas come from the scrape seams
@@ -372,6 +398,9 @@ func runLifetimeCollector(ctx context.Context) {
 	var prevUp, prevDeny uint64
 	var prevA1, prevA2, prevA3, prevA4, prevA5, prevA6, prevA7 uint64
 	flip := newLifetimeBillableFlip()
+	if pqe, clas, up, deny, ok := lifetimeFoldCursor.load(); ok {
+		prevPQE, prevClas, prevUp, prevDeny = pqe, clas, up, deny
+	}
 
 	ticker := time.NewTicker(earnCheckInterval)
 	defer ticker.Stop()
@@ -398,6 +427,9 @@ func runLifetimeCollector(ctx context.Context) {
 			billable := flip.fold(proxyEarnBandwidthSnapshot(), now)
 			lifetimeStore.Add(pqeDelta, clasDelta, upDelta, denyDelta, 0, 0, billable)
 			lifetimeStore.MaybeFlush(now)
+			// Remember the high-water mark actually folded, so a restart of
+			// this loop resumes instead of re-folding the whole counter.
+			lifetimeFoldCursor.store(prevPQE, prevClas, prevUp, prevDeny)
 
 			a1, a2, a3, a4, a5, a6, a7 := lifetimeStore.Snapshot()
 			if a1 != prevA1 || a2 != prevA2 || a3 != prevA3 || a4 != prevA4 ||

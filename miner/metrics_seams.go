@@ -17,12 +17,14 @@ import (
 //     reconnect governor, transfer/dead-client/socket/transport/speedtest
 //     series, H1+ counters, H3 and the dual-stack family transport;
 //   - miner paths not ported yet: the startup disk benchmark, the enforcement
-//     log, the peer-key cross-check, and the supervised-loop registry.
+//     log, and the peer-key cross-check.
 //
 // Every hook below is nil until its owner wires it. minerExtraMetrics omits a
 // family while its hook is nil, so a missing series means "not implemented",
 // never a fabricated zero. When a port lands, it sets the hook (in its own
-// file) and the family appears; nothing in the scrape has to change.
+// file) and the family appears; nothing in the scrape has to change. The
+// supervised-loop registry is claimed by loop_supervisor.go, which is the miner
+// port of the provider's loop supervisor.
 var (
 	// metricsSeamSessions is connect's PQE/classical session accounting:
 	// urnet_sessions_pqe, urnet_sessions_classical, urnet_sessions_opened_total

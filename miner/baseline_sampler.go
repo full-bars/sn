@@ -432,6 +432,13 @@ func baselineStart(ctx context.Context, version, previous string) <-chan struct{
 	return done
 }
 
+// baselineSampleLoop is the sampler without the start mark, for the manager's
+// supervisor (proxy_manager.go): the mark says when the baseline began, so a
+// restart after a panic must not write a second one; only the sampling resumes.
+func baselineSampleLoop(ctx context.Context) {
+	baselineRun(ctx, make(chan struct{}))
+}
+
 // baselineRun samples until ctx is cancelled. The first sample is delayed, so a
 // sample at t=0 does not measure a pool that has not launched yet.
 func baselineRun(ctx context.Context, done chan<- struct{}) {

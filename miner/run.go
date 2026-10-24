@@ -1084,7 +1084,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	startMetricsAtStartup(controlState, self.hotSwapCandidate)
 	defer func() { _ = stopMetrics() }()
 	// One rate sample per second feeds the snapshot's throughput history.
-	go controlRuntime.runSampler(ctx)
+	// Supervised: this same loop also drives the swap-thrash watchdog, so a
+	// panic in a sample must restart it rather than end the process's only
+	// always-on sampler (loop_supervisor.go).
+	go superviseLoop(ctx, "control_sampler", func() { controlRuntime.runSampler(ctx) }, nil)
 
 	keyPath, err := providerStatePath(".provider.key")
 	if err != nil {
