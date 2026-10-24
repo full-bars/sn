@@ -51,6 +51,13 @@ type proxyLiveHealthEntry struct {
 	AuthFailures     int64
 	ProxyLegFailures int64
 	LastSeen         time.Time
+	// LastFailureTimeout records that the most recent failure recorded for this
+	// identity was timeout-family (the connect deadline cut the attempt short)
+	// rather than a refusal, reset or rejection. The quality reaper reads it to
+	// keep a slow-but-working proxy out of its candidate set: latency is not
+	// under-performance, and reaping on it shrinks the pool exactly when the
+	// network is struggling (see isTimeoutFamilyError).
+	LastFailureTimeout bool
 }
 
 // proxyLiveHealthRegistry is the process-wide live health, keyed by proxy
@@ -79,6 +86,15 @@ func noteLiveProxyHealthUp(key string) {
 // it was up, and the auth failure count rises. v33 keeps the same pairing of
 // Health and AuthFailures in the health snapshot.
 func noteLiveProxyHealthFailure(key string) {
+	noteLiveProxyHealthFailureCause(key, nil)
+}
+
+// noteLiveProxyHealthFailureCause is noteLiveProxyHealthFailure with the error
+// that caused it, so the reason survives in the registry: a timeout-family
+// failure marks the identity as slow rather than broken, and the quality reaper
+// skips it on that basis (selectMinerProxiesToReap). A nil error records the
+// failure with no reason, exactly as before.
+func noteLiveProxyHealthFailureCause(key string, err error) {
 	if key == "" {
 		return
 	}
@@ -94,6 +110,7 @@ func noteLiveProxyHealthFailure(key string) {
 	}
 	entry.AuthFailures++
 	entry.LastSeen = now
+	entry.LastFailureTimeout = isTimeoutFamilyError(err)
 	proxyLiveHealthRegistry.byKey[key] = entry
 }
 
@@ -110,6 +127,29 @@ func noteLiveProxyLegFailure(key string) {
 	entry.ProxyLegFailures++
 	entry.LastSeen = time.Now()
 	proxyLiveHealthRegistry.byKey[key] = entry
+}
+
+// resetLiveProxyHealthDownClock clears the down clock for identities released
+// from a reap hold. Without it a released identity returns to the desired set
+// still carrying its old DownSince, so the next cycle ranks it as long-down and
+// reaps it again: the hold would pause the loop instead of ending it. Health is
+// left as it was because nothing has observed this proxy since it was reaped;
+// only the clock that gates the reaper's minimum down time is reset.
+func resetLiveProxyHealthDownClock(keys []string, now time.Time) {
+	if len(keys) == 0 {
+		return
+	}
+	proxyLiveHealthRegistry.Lock()
+	defer proxyLiveHealthRegistry.Unlock()
+	for _, key := range keys {
+		entry, ok := proxyLiveHealthRegistry.byKey[key]
+		if !ok {
+			continue
+		}
+		entry.DownSince = time.Time{}
+		entry.LastSeen = now
+		proxyLiveHealthRegistry.byKey[key] = entry
+	}
 }
 
 // noteLiveProxyHealth records an observed health state for an identity (used

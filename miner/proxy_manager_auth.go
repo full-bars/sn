@@ -179,8 +179,9 @@ func noteProviderAuthFailure(settings *connect.ProxySettings, err error) provide
 	proxyOutageTracker.failure()
 	// Live health: a failed authentication means the proxy is not up right now,
 	// so the reaper stops shielding it and the traffic/health report shows it
-	// as degraded.
-	noteLiveProxyHealthFailure(key)
+	// as degraded. The error travels with it so a timeout-family failure is
+	// recorded as "slow", not "broken" (the quality reaper skips those).
+	noteLiveProxyHealthFailureCause(key, err)
 	// systemd STATUS line: the identity is no longer authenticated (v33's
 	// proxyWentDown, refreshed on the transition).
 	markProxyStatusDown(key)

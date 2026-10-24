@@ -304,6 +304,48 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 // already been stopped (shutdown or a hotswap yield).
 var errProxyReloaderStopped = errors.New("proxy reloader stopped")
 
+// reap cancels the given identities, for the degraded-proxy reaper.
+//
+// It is the miner's proxyCancelMap half of the provider's reapProxies: cancel
+// each running slot under mu, release the address it claimed, forget it, and
+// publish the resulting running set once. The identities that were actually
+// cancelled are returned — a key this run is not running is skipped, because a
+// slot the reloader does not own is not the reaper's to cancel, and the caller
+// needs the exact set to record its hold against.
+//
+// A stopped reloader cancels nothing: stop() is terminal, and a reaper that
+// landed after a yield must not pretend it reaped anything.
+func (r *minerProxyReloader) reap(keys []string) []string {
+	r.mu.Lock()
+	if r.stopped {
+		r.mu.Unlock()
+		return nil
+	}
+	var cancelled []string
+	for _, key := range keys {
+		slot, ok := r.running[key]
+		if !ok {
+			continue
+		}
+		slot.cancel()
+		delete(r.running, key)
+		r.releaseAddress(slot.settings)
+		cancelled = append(cancelled, key)
+	}
+	if len(cancelled) == 0 {
+		r.mu.Unlock()
+		return nil
+	}
+	sort.Strings(cancelled)
+	running := r.sortedRunningKeysLocked()
+	r.mu.Unlock()
+
+	// Publish outside the lock, like reload and stop: the OOM cap and the
+	// control surface's running set must describe what is really served.
+	r.notify(running)
+	return cancelled
+}
+
 // stop cancels every slot the reloader started, for shutdown and for a hotswap
 // yield (the successor takes the pool over and this process must not keep
 // holding sessions).
@@ -340,10 +382,10 @@ var proxyReloadWatcherActive atomic.Bool
 // A failed reload leaves the sequence unrecorded, so the change is retried on
 // the next tick instead of being silently dropped.
 func (r *minerProxyReloader) watch(ctx context.Context, path string, interval time.Duration) {
-	// Publish that this process now applies reloads, so the control socket can
-	// tell clients the truth and the operator messages follow the mechanism
-	// rather than a build-time flag.
-	proxyReloadWatcherActive.Store(true)
+	// Publish that this process now applies reloads only once the baseline has
+	// been read: "active" must mean "polling from a known sequence". Set any
+	// earlier and a reader can conclude the watcher will apply a change that
+	// its first tick will silently miss.
 	defer proxyReloadWatcherActive.Store(false)
 
 	// stop() ends this watcher, not just the run ctx: a yielded process must
@@ -363,6 +405,10 @@ func (r *minerProxyReloader) watch(ctx context.Context, path string, interval ti
 		interval = minerProxyReloadWatchInterval
 	}
 	lastSeq, _ := readReloadSeq(path)
+	// Publish only now: a reader that sees "active" must be able to rely on
+	// the watcher having a baseline, or it will write a change the first tick
+	// treats as already seen.
+	proxyReloadWatcherActive.Store(true)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
