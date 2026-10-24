@@ -333,10 +333,14 @@ func formerValue(old string, had bool) string {
 // has a live consumer for: the Go runtime knobs, the dialer/upgrade toggles
 // the pinned connect exports, and the proxy-manager overrides the running
 // fetcher/reaper re-read on every cycle.
+//
+// smart_dialer is deliberately absent (see controlRestartEffectKeys): the
+// preference and the probe loops it enables are per-identity, and a slot that
+// already authenticated never re-runs the start path, so "live" would be a
+// claim the process cannot keep.
 var controlLiveEffectKeys = map[string]bool{
 	"gomemlimit":                  true,
 	"gogc":                        true,
-	"smart_dialer":                true,
 	"h1_plus":                     true,
 	"h3":                          true,
 	"metrics":                     true,
@@ -354,13 +358,27 @@ var controlLiveEffectKeys = map[string]bool{
 }
 
 // controlRestartEffectKeys are accepted and persisted, have no live consumer,
-// but ARE consumed at startup: seedEnvFromControlState re-exports them as
-// URNETWORK_PROFILE and URNETWORK_RAMLOGS before initGlog reads them, so a
-// restart applies them even though a set on a running miner cannot. They are
-// the only keys that truthfully report needs_restart.
+// but ARE consumed at startup: seedEnvFromControlState re-exports profile and
+// ramlogs as URNETWORK_PROFILE and URNETWORK_RAMLOGS before initGlog reads
+// them, and replaySmartDialerAtStartup applies the persisted measured-cost
+// preference before any identity dials or probes. A restart applies them; a
+// set on a running miner cannot. They are the only keys that truthfully report
+// needs_restart.
+//
+// smart_dialer is here on purpose, and the miner and the provider agree on it.
+// Neither half of the key can be applied to a running process: the preference
+// would change transport selection under slots that are already dialing, and
+// the probes it enables are per-identity loops started only after that identity
+// authenticated (smart_dialer_probe.go). Miner slots authenticate exactly once
+// at start and their steady-state JWT refreshes never re-enter that path, so a
+// live "on" would flip a preference and then never measure anything for the
+// life of the process. An honest needs_restart beats a live claim that mostly
+// does not happen, and the restart is cheap: hot restart reuses the client
+// logins.
 var controlRestartEffectKeys = map[string]bool{
-	"profile": true,
-	"ramlogs": true,
+	"profile":      true,
+	"ramlogs":      true,
+	"smart_dialer": true,
 }
 
 // controlNoEffectKeys are accepted and persisted so unmodified 3.23-fix
@@ -431,6 +449,11 @@ func controlNeedsRestart(key string) bool {
 // controlLiveDefaults maps live-applied keys to the runtime values clearing
 // them reapplies. Values absent here fall through to the next layer (legacy
 // override file, then startup default), which is exactly what v33 does.
+//
+// smart_dialer is the one entry here that is not live-applied: it is the
+// startup default (replaySmartDialerAtStartup), and clearing the key has to
+// restore the same off that a state with no opinion resolves to, so it is
+// declared here rather than in a second table with the same value.
 var controlLiveDefaults = map[string]string{
 	// Zero is a zero-byte limit to the Go runtime, not "unlimited": the apply
 	// path maps any non-positive value to math.MaxInt64.
@@ -449,7 +472,9 @@ var controlLiveDefaults = map[string]string{
 	// outlive the clear that restores the default.
 	"baseline": "on",
 	// Clearing smart_dialer must restore the measured-cost preference to its
-	// off default.
+	// off default. It is also the value replaySmartDialerAtStartup uses for a
+	// state with no opinion, which is why the default is declared here once and
+	// not in the key registries.
 	"smart_dialer": "off",
 	// Clearing h1_plus restores the default: H1+ upgrades allowed.
 	"h1_plus": "on",
@@ -1078,16 +1103,6 @@ func applyControlLiveSideEffect(key, value string) error {
 			}
 			debug.SetGCPercent(percent)
 		}
-	case "smart_dialer":
-		// Transport choice keeps measuring either way (the measurement always
-		// runs); this decides whether selection consults it.
-		enabled := strings.EqualFold(value, "on")
-		previous := connect.SetSmartDialer(enabled)
-		was := "off"
-		if previous {
-			was = "on"
-		}
-		tlog("⚙️ [control] applied smart_dialer=%s (was %s)\n", value, was)
 	case "baseline":
 		// Sampling is a goroutine that checks the flag each tick, so turning it
 		// off takes effect on the next tick and needs no restart and no signal.

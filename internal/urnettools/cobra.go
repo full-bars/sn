@@ -930,7 +930,7 @@ func newSmartDialerCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "smart-dialer [status|on|off]",
 		Short:              "show or toggle latency-aware dialer preference (skip DPI-circumvention cost when the network does not need it)",
-		Long:               "Show or toggle the measured-cost transport preference: when the network does not need DPI circumvention, the provider prefers transport paths that avoid its cost. 'status' (the default) reports the current value; on and off change it. Applied to the running provider at its next tick, with no restart. Honors -n/--dry-run. Alias: smart_dialer.",
+		Long:               "Show or toggle the measured-cost transport preference: when the network does not need DPI circumvention, the provider prefers transport paths that avoid its cost. 'status' (the default) reports the current value; on and off change the persisted value. A change takes effect on the provider's next start (a restart is required): the probes that measure the alternatives run per identity and start only when an identity authenticates, so a running provider cannot pick the change up live. Honors -n/--dry-run. Alias: smart_dialer.",
 		Example:            "  urnet-tools smart-dialer\n  urnet-tools smart-dialer on\n  urnet-tools smart-dialer off --unit urnetwork-native.service",
 		Aliases:            []string{"smart_dialer"},
 		DisableFlagParsing: true,
