@@ -922,12 +922,15 @@ func provide(opts docopt.Opts) {
 			// a refused startup that leaves no trace reads as a clean exit.
 			fmt.Fprintf(os.Stderr, "provider startup refused: %v\n", err)
 		}
-		os.Exit(code)
+		exitProviderRun(code)
+		// The exit seam only returns under test.
+		return
 	}
 	if err != nil && ctx.Err() == nil && (settings.requireWorkCapture || settings.workCapturePath != "" || settings.workCaptureSha256 != "" || settings.requireContractCapture || settings.contractCapturePath != "" || settings.contractCaptureSha256 != "") {
 		stopSignals()
 		fmt.Fprintln(os.Stderr, "provider original capture launch refused; restore approved profiles, retained identity and prepared custody")
-		os.Exit(1)
+		exitProviderRun(1)
+		return
 	}
 }
 
@@ -973,6 +976,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// run; a crash or kill leaves no marker, which reads as "unclean".
 	beginControlRun(time.Now())
 	defer func() {
+		// A run that returns a non-nil error skips finishControlRun below; the
+		// caller then leaves through os.Exit, which skips whatever the caller
+		// deferred. Write the counts here, bounded, so the failures of a run
+		// that is already dying are recorded instead of disappearing with it.
+		// On a clean return this is a no-op: finishControlRun flushes the same
+		// store a few lines later.
+		flushPersistentErrorsAtExit()
 		if returnErr == nil {
 			finishControlRun("clean")
 			// events.log keeps the clean shutdown across a reboot that wipes
@@ -1948,6 +1958,24 @@ func providerRunExitCode(err error) (int, bool) {
 		return providerStartupRefusedExitCode, true
 	}
 	return 0, false
+}
+
+// exitProviderRun terminates the process with code after settings.run reported
+// a failure that must end it.
+//
+// os.Exit skips every deferred call, including the one that runs
+// finishControlRun's shutdown flush, so the failure categories counted while the
+// run went down -- a startup refusal, a worker panic, a refused capture profile,
+// a quarantined sign-in -- would never reach disk. Those are precisely the
+// events a crash-loop investigation needs, so the pending counts are written
+// here, bounded and panic-proof: a state disk that is itself the reason the node
+// is dying must not keep the process alive.
+//
+// exitFunc is the package's exit seam (hotswap.go's test hooks), so a test can
+// drive this path and observe the code without taking the test binary down.
+func exitProviderRun(code int) {
+	flushPersistentErrorsAtExit()
+	exitFunc(code)
 }
 
 // Resolves the shared auth, network, proxy and provider state directory.

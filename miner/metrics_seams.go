@@ -15,6 +15,7 @@ import (
 //
 //   - metricsSeamLifetime: lifetime_metrics.go (the persisted all-time store);
 //   - metricsSeamLoops: loop_supervisor.go (the supervised-loop registry);
+//   - metricsSeamErrors: metrics_errors.go (the persistent error counts);
 //   - metricsSeamDiskBench: disk_bench_metrics.go (the startup disk audit).
 //
 // Every other hook below is UNSUPPORTED, not merely pending. Each comment says
@@ -44,9 +45,8 @@ var (
 	// Wired by lifetime_metrics.go's init: the persisted all-time store.
 	metricsSeamLifetime func() *seamLifetime
 
-	// UNSUPPORTED: there is no persistent per-category error store in the
-	// miner; lifetime_metrics.go keeps session, contract, proxy-transition and
-	// billable-byte totals only.
+	// Wired by metrics_errors.go's init: the persistent per-category error
+	// store, counted from the provider diagnostics failure codes.
 	metricsSeamErrors func() map[string]uint64
 
 	// Wired by loop_supervisor.go's init: the supervised-loop registry that
