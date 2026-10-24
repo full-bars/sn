@@ -18,7 +18,11 @@ type mockControlServer struct {
 	mu       sync.Mutex
 	requests []controlRequest
 	values   map[string]string
-	closed   bool
+	// needsRestart is answered per key on set/clear, so a test can exercise
+	// the restart-required wording the provider sends for a key like
+	// smart_dialer. Absent keys answer false, as a live key does.
+	needsRestart map[string]bool
+	closed       bool
 }
 
 // value returns the current value for key and whether it is set, taking the
@@ -72,13 +76,14 @@ func (s *mockControlServer) handleConn(conn net.Conn) {
 			delete(s.values, req.Key)
 		}
 		val, found := s.values[req.Key]
+		needsRestart := s.needsRestart[req.Key]
 		s.mu.Unlock()
 
 		switch req.Cmd {
 		case "set":
-			_ = json.NewEncoder(conn).Encode(controlResponse{OK: true})
+			_ = json.NewEncoder(conn).Encode(controlResponse{OK: true, NeedsRestart: needsRestart})
 		case "clear":
-			_ = json.NewEncoder(conn).Encode(controlResponse{OK: true})
+			_ = json.NewEncoder(conn).Encode(controlResponse{OK: true, NeedsRestart: needsRestart})
 		case "get":
 			_ = json.NewEncoder(conn).Encode(controlResponse{OK: true, Value: val, Found: found})
 		default:

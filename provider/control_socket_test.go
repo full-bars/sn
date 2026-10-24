@@ -14,7 +14,62 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
+
+// TestSmartDialerSetRequiresRestart pins the classification the probe-loop gate
+// made necessary. The probe loop that feeds the measurement is created once per
+// identity when it starts, so a live enable would flip selection onto a stream
+// nothing is feeding. The control surface the CLI reads must therefore report a
+// restart is needed, and the set must not touch the running dialer.
+func TestSmartDialerSetRequiresRestart(t *testing.T) {
+	withTempHome(t)
+	resetGlobalControlStateForTest()
+	previous := connect.SetSmartDialer(false)
+	defer connect.SetSmartDialer(previous)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cleanup, err := startControlSocket(ctx, globalControlState)
+	if err != nil {
+		t.Fatalf("startControlSocket: %v", err)
+	}
+	defer cleanup()
+
+	for _, value := range []string{"on", "off"} {
+		resp, err := dialControlSocket(controlRequest{Cmd: "set", Key: "smart_dialer", Value: value})
+		if err != nil {
+			t.Fatalf("dial set smart_dialer=%s: %v", value, err)
+		}
+		if !resp.OK {
+			t.Fatalf("set smart_dialer=%s rejected: %s", value, resp.Error)
+		}
+		if !resp.NeedsRestart {
+			t.Errorf("set smart_dialer=%s did not report needs_restart: a live enable cannot start its probe loop", value)
+		}
+		if got, found := globalControlState.get("smart_dialer"); !found || got != value {
+			t.Errorf("set smart_dialer=%s did not persist: got %q found=%v", value, got, found)
+		}
+		if connect.SmartDialerEnabled() {
+			t.Errorf("set smart_dialer=%s changed the running dialer; that effect belongs to the next start", value)
+		}
+	}
+
+	resp, err := dialControlSocket(controlRequest{Cmd: "clear", Key: "smart_dialer"})
+	if err != nil {
+		t.Fatalf("dial clear smart_dialer: %v", err)
+	}
+	if !resp.OK {
+		t.Fatalf("clear smart_dialer rejected: %s", resp.Error)
+	}
+	if !resp.NeedsRestart {
+		t.Error("clear smart_dialer did not report needs_restart")
+	}
+	if connect.SmartDialerEnabled() {
+		t.Error("clear smart_dialer changed the running dialer; that effect belongs to the next start")
+	}
+}
 
 func resetGlobalControlStateForTest() {
 	globalControlState.txMu.Lock()
@@ -734,8 +789,9 @@ func TestProfileAliasCanonicalization(t *testing.T) {
 
 func TestEveryControlKeyClassified(t *testing.T) {
 	restartOnly := map[string]bool{
-		"profile": true,
-		"ramlogs": true,
+		"profile":      true,
+		"ramlogs":      true,
+		"smart_dialer": true, // probe loop is created per identity at start; a live enable would never probe
 	}
 
 	for key := range controlKeys {

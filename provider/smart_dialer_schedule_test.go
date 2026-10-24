@@ -177,6 +177,53 @@ func TestSchedulerLetsOneProxyOwnASharedGateway(t *testing.T) {
 	release()
 }
 
+// probeOwnerInSlot is the identity the provider hands the scheduler for proxy
+// key in a pool where that proxy sits in slot. The slot is accepted so the call
+// mirrors the old slot-keyed signature: an identity that started using it again
+// fails the renumber test below.
+func probeOwnerInSlot(key string, slot int) string {
+	return smartDialerProbeOwner(key)
+}
+
+// The gateway hold must follow the proxy, not its slot number. It used to be
+// keyed by `tag + "[" + index + "]"`, so a reload that renumbered the pool
+// either freed an address another proxy was still probing, or -- the case here
+// -- locked the same proxy out of an address it already owned for the whole
+// smartDialerGatewayHold (two hours by default).
+func TestSchedulerGatewayHoldFollowsTheProxyAcrossASlotRenumber(t *testing.T) {
+	clock := &fakeClock{}
+	clock.at.Store(time.Now().UnixNano())
+	clock.advance(time.Hour)
+	s := testScheduler(clock, func(time.Duration) bool { return true })
+	s.start = clock.now().Add(-time.Hour)
+
+	const gateway = "gw.example:1080"
+	// Two proxies behind one gateway: the session is in the user name, so the
+	// addresses match while the identities differ.
+	proxyA := "gw.example:1080\u001fsession-a"
+	proxyB := "gw.example:1080\u001fsession-b"
+
+	release, err := s.Gate(context.Background(), gateway, probeOwnerInSlot(proxyA, 3))
+	if err != nil {
+		t.Fatalf("first proxy: %v", err)
+	}
+	release()
+
+	// The provider reloads and renumbers the pool: A moves from slot 3 to slot
+	// 7. The address A owns must still admit A.
+	release, err = s.Gate(context.Background(), gateway, probeOwnerInSlot(proxyA, 7))
+	if err != nil {
+		t.Fatalf("the same proxy was refused after a slot renumber, so the hold is keyed by its slot: %v", err)
+	}
+	release()
+
+	// Another proxy behind the same gateway is still refused: the hold was
+	// renewed, not dropped.
+	if _, err := s.Gate(context.Background(), gateway, probeOwnerInSlot(proxyB, 0)); !errors.Is(err, errSmartDialerGatewayShared) {
+		t.Fatalf("second proxy on the shared gateway: err = %v, want errSmartDialerGatewayShared", err)
+	}
+}
+
 func testRound(leaderBefore string, leader string, results ...connect.ProbeTransportResult) connect.ProbeRound {
 	return connect.ProbeRound{PreviousLeader: leaderBefore, Leader: leader, Results: results}
 }

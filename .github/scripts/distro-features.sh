@@ -1263,7 +1263,7 @@ b1_control_key_semantics() {
         return 0
     fi
     bad=""; checked=""
-    for kv in "proxy_url_refresh=90s" "proxy_url_max=450" "smart_dialer=on" "proxy_dead_cleanup_scope=url"; do
+    for kv in "proxy_url_refresh=90s" "proxy_url_max=450" "proxy_dead_cleanup_scope=url"; do
         k="${kv%%=*}"; v="${kv#*=}"
         out="$(TS set "$k" "$v" -f 2>&1)"; rc=$?
         rb="$(TS get "$k" 2>&1)"
@@ -1307,13 +1307,17 @@ b1_control_key_semantics() {
     fi
 
     bad=""; checked=""
-    # profile is read at startup, so a set on a running miner still reports the
-    # needs-restart semantics.
-    for kv in "profile=eco"; do
+    # profile and smart_dialer are read at startup (the probe loop is created
+    # per identity when it starts), so a set on a running provider reports the
+    # needs-restart semantics; smart_dialer also must NOT claim a live apply,
+    # which is what it used to do.
+    for kv in "profile=eco" "smart_dialer=on"; do
         k="${kv%%=*}"; v="${kv#*=}"
         out="$(TS set "$k" "$v" -f 2>&1)"; rc=$?
         if [ "$rc" != "0" ] || ! printf '%s' "$out" | grep -q 'requires a restart to take effect'; then
             bad="$bad $k(rc=$rc: $(printf '%s' "$out" | firstline))"
+        elif printf '%s' "$out" | grep -q 'applied live'; then
+            bad="$bad $k(claimed a live apply for a restart-required key)"
         fi
         checked="$checked $k"
         TS set "$k" off -f >/dev/null 2>&1 || true
@@ -1329,7 +1333,7 @@ b1_control_key_semantics() {
     checked="$checked node-name"
     TS set node-name off -f >/dev/null 2>&1 || true
     if [ -z "$bad" ]; then
-        record PASS control-keys-needs-restart "restart semantics hold: profile reports 'requires a restart to take effect', node-name reports no consumer (checked:$checked; overrides cleared after)"
+        record PASS control-keys-needs-restart "restart semantics hold: profile and smart_dialer report 'requires a restart to take effect', node-name reports no consumer (checked:$checked; overrides cleared after)"
     else
         record FAIL control-keys-needs-restart "restart-required keys did not report their semantics:$bad"
     fi
