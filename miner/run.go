@@ -1503,7 +1503,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 					}
 					desired = append(desired, settings)
 				}
-				return desired, nil
+				// Identities the quality reaper cancelled are held out until
+				// their window elapses (proxy_manager_degraded_reaper.go).
+				// Without this the very next reload would re-add the proxy the
+				// reaper just judged: the desired set still contains it,
+				// because the reaper does not rewrite proxy.state or the URL
+				// cache.
+				return filterReapHeldProxySettings(desired, time.Now()), nil
 			},
 			func(settings *connect.ProxySettings) (context.CancelFunc, error) {
 				// One identity per live address. provider_slot_identity.go
@@ -1649,6 +1655,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if reloadPath, err := proxyReloadPath(); err == nil {
 			go reloader.watch(ctx, reloadPath, 0)
 		}
+		// The quality reaper can only cancel what the reloader owns, so it is
+		// installed only when the reloader is (same condition: an unprofiled
+		// run). It shares the reloader's slots and stops with the run's ctx.
+		go newMinerDegradedReaper(reloader).run(ctx)
 		defer reloader.stop()
 	}
 	wg.Wait()
