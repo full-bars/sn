@@ -112,9 +112,25 @@ type profitSample struct {
 	// connecting counts identities whose last health note was "connecting",
 	// which is what the provider's warmup test consumes.
 	connecting int
-	clients    int64
-	serving    int
-	billable   uint64
+	// clients is the number of live client contracts across the published
+	// slots (see proxyBillingSampler.sampleClients), and serving is how many
+	// identities have at least one.
+	clients int64
+	serving int
+	// billableByKey is the identity-keyed billable total of every published
+	// slot. It is a map rather than a sum because the heartbeat must delta per
+	// identity — see profitHeartbeat.billableDelta.
+	billableByKey map[string]uint64
+	// billableTotal and settledTotal are the run's cumulative sums over the
+	// bandwidth registry, the same figures /metrics publishes as
+	// urnet_billable_bytes_total and urnet_contract_used_bytes_total. They are
+	// read from the registry rather than folded from the live snapshot above so
+	// the log line and the scrape cannot disagree, and settledTotal is what the
+	// platform's contracts have used — carrying it here is what lets a human
+	// reading the log see the drift between the two without opening Grafana.
+	billableTotal uint64
+	settledTotal  uint64
+	totalsKnown   bool
 }
 
 // readProfitSample folds the two live registries into one profit reading.
@@ -135,12 +151,22 @@ func readProfitSample() profitSample {
 		}
 	}
 	for _, p := range bw {
-		s.billable += p.BillableRx.Load() + p.BillableTx.Load()
 		c := p.Clients.Load()
 		s.clients += c
 		if c > 0 {
 			s.serving++
 		}
+	}
+	if len(bw) > 0 {
+		s.billableByKey = make(map[string]uint64, len(bw))
+		for key, p := range bw {
+			s.billableByKey[key] = p.BillableRx.Load() + p.BillableTx.Load()
+		}
+	}
+	if totals := controlRuntime.trafficReading(); totals.OK {
+		s.billableTotal = totals.BillableRx + totals.BillableTx
+		s.settledTotal = totals.ContractUsedIngress + totals.ContractUsedEgress
+		s.totalsKnown = true
 	}
 	return s
 }
@@ -167,15 +193,40 @@ func profitLine(earning bool, s profitSample, delta uint64, elapsed float64) str
 	}
 	warmup := s.connecting >= profitWarmupConnecting
 	reason := earningReason(earning, s.proxiesUp, s.clients, warmup)
-	return fmt.Sprintf("%s[profit] earning=%s reason=%s clients=%d rate=%s proxies_up=%d serving=%d idle=%d\n",
+	line := fmt.Sprintf("%s[profit] earning=%s reason=%s clients=%d rate=%s proxies_up=%d serving=%d idle=%d",
 		profitEmoji, status, reason, s.clients, formatRate(float64(delta)/elapsed), s.proxiesUp, s.serving, idle)
+	// The billable-vs-settled cross-check, cumulative over the run. Both
+	// numbers are printed when the registry has published either, so drift is
+	// visible here and not only in a scrape; neither is printed when the run
+	// has no counters at all, because "unknown" must not read as zero bytes.
+	if s.totalsKnown {
+		line += fmt.Sprintf(" billable=%s settled=%s", formatBytes(s.billableTotal), formatBytes(s.settledTotal))
+	}
+	return line + "\n"
 }
 
 // profitHeartbeat is the state the provider's runProfitHeartbeat carries across
-// ticks: the previous billable total and tick time for the delta, plus the log
-// throttle and the traffic-transition markers.
+// ticks: the previous per-identity billable totals and tick time for the delta,
+// plus the log throttle and the traffic-transition markers.
 type profitHeartbeat struct {
-	prevBillable uint64
+	// prevBillable is keyed by proxy IDENTITY, not summed. The delta has to be
+	// per identity for two reasons the provider's scalar sum gets wrong:
+	//
+	//   - The registry keeps one counter per identity INDEX for the life of the
+	//     process (bandwidth.ProxyRegistry.Register). A slot that leaves drops
+	//     out of the published snapshot, so the summed total falls, and when
+	//     the same identity is re-added its counter comes back with its whole
+	//     history — which a scalar delta reads as one enormous burst and
+	//     reports as `earning=yes`.
+	//   - A departure understates the next tick: the sum loses that identity's
+	//     bytes before the tick that would have counted them.
+	//
+	// Reading the map instead makes a returning identity a fresh baseline (it
+	// is absent from prev, so it contributes nothing) and keeps every other
+	// identity's growth exactly as it happened. billableRateTracker.rate does
+	// the same for the file the idle-update tool polls; the two must agree, or
+	// [profit] would claim earnings the idle gate cannot see.
+	prevBillable map[string]uint64
 	prevSet      bool
 	prevTickTime time.Time
 	lastLogTime  time.Time
@@ -187,6 +238,24 @@ func newProfitHeartbeat(now time.Time) *profitHeartbeat {
 	return &profitHeartbeat{prevTickTime: now}
 }
 
+// billableDelta returns the billable bytes the snapshot grew by since the last
+// tick, summed over identities present in both, and re-baselines the map.
+//
+// A counter that went backwards (a slot rebuilt inside the same identity)
+// contributes zero rather than wrapping, and an identity that left the snapshot
+// is dropped from the baseline so its return is not counted as a burst — the
+// same two guards billableRateTracker.rate applies.
+func (h *profitHeartbeat) billableDelta(now map[string]uint64) uint64 {
+	var delta uint64
+	for key, cur := range now {
+		if prev, ok := h.prevBillable[key]; ok && cur >= prev {
+			delta += cur - prev
+		}
+	}
+	h.prevBillable = now
+	return delta
+}
+
 // tick folds one sample and returns the lines to emit (none, one, or a traffic
 // marker plus the line). Returning lines instead of logging keeps the cadence
 // and the throttle testable without a log seam; runProfitHeartbeat writes them
@@ -196,13 +265,14 @@ func (h *profitHeartbeat) tick(now time.Time, s profitSample) []string {
 	// so a node that has not started its pool yet cannot report a rate.
 	if s.population == 0 {
 		h.prevSet = false
+		h.prevBillable = nil
 		return nil
 	}
 
 	// First sample only establishes the baseline; the provider `continue`s here
 	// without logging, because a delta needs two points.
 	if !h.prevSet {
-		h.prevBillable = s.billable
+		h.prevBillable = s.billableByKey
 		h.prevTickTime = now
 		h.prevSet = true
 		return nil
@@ -212,11 +282,7 @@ func (h *profitHeartbeat) tick(now time.Time, s profitSample) []string {
 	if elapsed < 1 {
 		elapsed = 1
 	}
-	var delta uint64
-	if s.billable >= h.prevBillable {
-		delta = s.billable - h.prevBillable
-	}
-	h.prevBillable = s.billable
+	delta := h.billableDelta(s.billableByKey)
 	h.prevTickTime = now
 
 	// Earning needs BOTH bytes moving and clients matched: bytes can only move
@@ -315,8 +381,30 @@ func (t *billableRateTracker) rate(now time.Time, bw map[string]*bandwidth.Proxy
 	return uint64(float64(totalDelta) / elapsed)
 }
 
-// writeBillableRate atomically writes the aggregate rate to
-// <health dir>/billable_rate, the file urnet-tools idle-update polls. The
+// billableRatePath resolves the file urnet-tools idle-update polls:
+// <provider state dir>/billable_rate — URNETWORK_STATE_DIR when set, else
+// <home>/.urnetwork.
+//
+// It deliberately does NOT go through proxyHealthDir(). Those are two separate
+// knobs: URNETWORK_PROXY_HEALTH_DIR relocates proxy_health.state and
+// proxy_traffic.state, and nothing in internal/urnettools reads it. Resolving
+// the rate through the health dir made writer and reader disagree in exactly
+// the deployments that set that variable: idle-update looked in the state dir,
+// found nothing, and because an ABSENT file means "metric unknown, assume
+// active traffic" it waited out its full 30m timeout on a silent node. The rate
+// has to land where the reader looks, so it follows the reader's rule — the
+// same one providerStateDir applies to the JWT, provider.sock and the rest of
+// the miner's state.
+func billableRatePath() (string, bool) {
+	dir, err := providerStateDir()
+	if err != nil {
+		return "", false
+	}
+	return filepath.Join(dir, "billable_rate"), true
+}
+
+// writeBillableRate atomically writes the aggregate rate to the path
+// billableRatePath names, the file urnet-tools idle-update polls. The
 // provider's writeRate: tmp file plus rename so a reader never sees a partial
 // number (a torn "12" out of "1234" would read as idle and let an update land
 // mid-transfer).
@@ -328,15 +416,15 @@ func (t *billableRateTracker) rate(now time.Time, bw map[string]*bandwidth.Proxy
 // rate file itself is 0644, as the provider writes it, because it holds a byte
 // count and idle-update may read it as another user inside a container.
 func writeBillableRate(rate uint64) {
-	dir, ok := proxyHealthDir()
+	path, ok := billableRatePath()
 	if !ok {
 		return
 	}
+	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		tlog("[billable_rate] warn: cannot create health dir %s: %v\n", dir, err)
+		tlog("[billable_rate] warn: cannot create state dir %s: %v\n", dir, err)
 		return
 	}
-	path := filepath.Join(dir, "billable_rate")
 	tmp := path + ".tmp"
 	content := strconv.FormatUint(rate, 10) + "\n"
 	if err := os.WriteFile(tmp, []byte(content), 0o644); err != nil {

@@ -1599,6 +1599,19 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if proxySettings != nil {
 			defer watchProxyTransportHealth(proxyCtx, proxySettings.Key(), device, proxyTransportWatchInterval)()
 		}
+		// Fork hook: charge this slot's relayed bytes to its counters, and its
+		// open provider contracts to the same counter's live client count, from
+		// the accounting the SDK keeps inside the device (provider_billing.go).
+		// Without the bytes, BillableRx/Tx and ContractUsed* never move and
+		// every billable and settled series this node publishes is a structural
+		// zero. Without the contracts, `clients` has no source at all: the
+		// network space's own dials are the node's control plane and are counted
+		// total-only (h3_packet_conn.go), not as clients.
+		// Registered after the close defer above, so the watch stops before the
+		// device it reads is closed. Every slot gets it, the direct identity
+		// included: it relays traffic and its bytes are part of the node's
+		// aggregate in the same scrape.
+		defer watchProxyBilling(proxyCtx, bw, device, providerBillingSampleInterval)()
 
 		// Always-on public mode includes network and friends/family service,
 		// matching the SDK's hierarchical provide contract.

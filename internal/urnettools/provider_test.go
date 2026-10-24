@@ -300,6 +300,25 @@ func TestStateDirFor(t *testing.T) {
 	if got := stateDirFor(map[string]string{}); got != "" {
 		t.Errorf("expected empty state dir without HOME, got %q", got)
 	}
+	// URNETWORK_STATE_DIR is the override the miner itself honours
+	// (providerStateDir). Discovery has to resolve the same directory or
+	// idle-update polls a billable_rate the provider never writes there.
+	override := map[string]string{
+		"HOME":                "/home/urnet",
+		"URNETWORK_STATE_DIR": "/home/urnet/state/",
+	}
+	if got, want := stateDirFor(override), filepath.Join("/home/urnet", "state"); got != want {
+		t.Errorf("stateDirFor(URNETWORK_STATE_DIR) = %q, want %q", got, want)
+	}
+	// An override only (no HOME) still resolves: the provider does not need HOME
+	// for it either, and discovery must not fall back to an empty state dir.
+	if got, want := stateDirFor(map[string]string{"URNETWORK_STATE_DIR": "/srv/urnet"}), "/srv/urnet"; got != want {
+		t.Errorf("stateDirFor(override only) = %q, want %q", got, want)
+	}
+	// Blank is not an override.
+	if got, want := stateDirFor(map[string]string{"HOME": "/home/urnet", "URNETWORK_STATE_DIR": "  "}), filepath.Join("/home/urnet", ".urnetwork"); got != want {
+		t.Errorf("stateDirFor(blank override) = %q, want %q", got, want)
+	}
 }
 
 // TestParsePID sanity.

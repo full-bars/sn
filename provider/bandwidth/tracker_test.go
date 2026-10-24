@@ -306,11 +306,18 @@ func TestProxyRegistrySetSeedAppliesToNewEntries(t *testing.T) {
 	existing := registry.Register(1)
 	existing.TotalRx.Add(5)
 
-	registry.SetSeed(func(index int) (uint64, uint64, uint64, uint64) {
+	registry.SetSeed(func(index int) ProxySeed {
 		if index != 2 {
 			t.Fatalf("seed called for index %d, want 2", index)
 		}
-		return 10, 20, 30, 40
+		return ProxySeed{
+			TotalRx:             10,
+			TotalTx:             20,
+			BillableRx:          30,
+			BillableTx:          40,
+			ContractUsedIngress: 50,
+			ContractUsedEgress:  60,
+		}
 	})
 
 	if got := existing.TotalRx.Load(); got != 5 {
@@ -328,5 +335,13 @@ func TestProxyRegistrySetSeedAppliesToNewEntries(t *testing.T) {
 	}
 	if got := seeded.BillableTx.Load(); got != 40 {
 		t.Fatalf("seeded billable_tx = %d, want 40", got)
+	}
+	// The contract totals ride along with billable: a restart that resumed one
+	// and reset the other would publish drift that never happened.
+	if got := seeded.ContractUsedIngress.Load(); got != 50 {
+		t.Fatalf("seeded contract_used_ingress = %d, want 50", got)
+	}
+	if got := seeded.ContractUsedEgress.Load(); got != 60 {
+		t.Fatalf("seeded contract_used_egress = %d, want 60", got)
 	}
 }

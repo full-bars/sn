@@ -100,8 +100,16 @@ func TestReadProfitSampleFromRegistries(t *testing.T) {
 	if s.serving != 1 {
 		t.Errorf("serving = %d, want 1", s.serving)
 	}
-	if s.billable != 157 {
-		t.Errorf("billable = %d, want 157", s.billable)
+	// The per-identity split is what the heartbeat deltas, so pin the entries
+	// rather than only their sum.
+	if got := s.billableByKey["198.51.100.7:443"]; got != 150 {
+		t.Errorf("billable of 198.51.100.7 = %d, want 150 (100 rx + 50 tx)", got)
+	}
+	if got := s.billableByKey["198.51.100.8:443"]; got != 7 {
+		t.Errorf("billable of 198.51.100.8 = %d, want 7 (0 rx + 7 tx)", got)
+	}
+	if got := s.billableByKey["198.51.100.7:443"] + s.billableByKey["198.51.100.8:443"]; got != 157 {
+		t.Errorf("billable = %d, want 157", got)
 	}
 }
 
@@ -114,12 +122,12 @@ func TestProfitHeartbeatFromKnownState(t *testing.T) {
 
 	sample := func(proxiesUp, connecting int, clients int64, serving int, billable uint64) profitSample {
 		return profitSample{
-			population: 2,
-			proxiesUp:  proxiesUp,
-			connecting: connecting,
-			clients:    clients,
-			serving:    serving,
-			billable:   billable,
+			population:    2,
+			proxiesUp:     proxiesUp,
+			connecting:    connecting,
+			clients:       clients,
+			serving:       serving,
+			billableByKey: map[string]uint64{"a": billable},
 		}
 	}
 
@@ -170,12 +178,64 @@ func TestProfitHeartbeatFromKnownState(t *testing.T) {
 func TestProfitHeartbeatSkipsWithNoRegisteredProxy(t *testing.T) {
 	base := time.Date(2026, 10, 24, 12, 0, 0, 0, time.UTC)
 	h := newProfitHeartbeat(base)
-	empty := profitSample{population: 0, billable: 5000}
+	empty := profitSample{population: 0, billableByKey: map[string]uint64{"a": 5000}}
 	if got := h.tick(base, empty); got != nil {
 		t.Fatalf("first empty tick emitted %v", got)
 	}
 	if got := h.tick(base.Add(15*time.Second), empty); got != nil {
 		t.Fatalf("empty tick emitted %v, want no lines", got)
+	}
+}
+
+// TestProfitHeartbeatDeltaIsPerIdentity pins the two artefacts a scalar sum
+// produces when a proxy leaves and comes back.
+//
+// The bandwidth registry keeps one counter per identity INDEX for the life of
+// the process, so an identity that is unpublished and later republished comes
+// back with its byte history intact. Summing first loses that identity's bytes
+// on the tick it departs (real traffic on the remaining identities is masked),
+// and re-adds the whole history on the tick it returns (a phantom earning=yes
+// burst). Deltas per identity have neither artefact: a departure contributes
+// nothing, and a return is a fresh baseline.
+func TestProfitHeartbeatDeltaIsPerIdentity(t *testing.T) {
+	base := time.Date(2026, 10, 24, 12, 0, 0, 0, time.UTC)
+	h := newProfitHeartbeat(base)
+
+	sample := func(billable map[string]uint64) profitSample {
+		return profitSample{
+			population:    2,
+			proxiesUp:     2,
+			clients:       1,
+			serving:       1,
+			billableByKey: billable,
+		}
+	}
+
+	// Baseline: two identities with history behind them.
+	if got := h.tick(base, sample(map[string]uint64{"a": 1000, "b": 500})); got != nil {
+		t.Fatalf("baseline tick emitted %v", got)
+	}
+
+	// "b" departs while "a" moves 300 bytes. The summed total FALLS
+	// (1000+300+500 -> 1300 is below the previous 1500), which a scalar delta
+	// reads as zero and reports as no traffic. Per identity the 300 is visible.
+	got := strings.Join(h.tick(base.Add(15*time.Second), sample(map[string]uint64{"a": 1300})), "")
+	if !strings.Contains(got, "earning=yes") {
+		t.Fatalf("a departure masked real traffic on the remaining identity: %q", got)
+	}
+	if !strings.Contains(got, "rate=20 B/s") {
+		t.Fatalf("rate = %q, want the 300 bytes over 15s (20 B/s)", got)
+	}
+
+	// "b" returns with its counter intact (the registry reuses the entry). Its
+	// 500 bytes were already counted before it left, so the tick is 0 — the
+	// scalar sum would report a 500-byte phantom burst as earning=yes.
+	got = strings.Join(h.tick(base.Add(30*time.Second), sample(map[string]uint64{"a": 1300, "b": 500})), "")
+	if strings.Contains(got, "earning=yes") {
+		t.Fatalf("a returning identity produced a phantom earning burst: %q", got)
+	}
+	if !strings.Contains(got, "rate=0 B/s") {
+		t.Fatalf("returning identity was counted as traffic: %q", got)
 	}
 }
 
@@ -221,7 +281,11 @@ func TestBillableRateTrackerFromKnownState(t *testing.T) {
 // the real file writer, must leave the number idle-update expects on disk.
 func TestBillableRateCollectorPublishesRate(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("URNETWORK_PROXY_HEALTH_DIR", dir)
+	// The state dir is where the consumer reads; the health dir is set to a
+	// DIFFERENT directory on purpose, so a writer that resolves the health dir
+	// fails here instead of silently landing where idle-update never looks.
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	t.Setenv("URNETWORK_PROXY_HEALTH_DIR", filepath.Join(t.TempDir(), "health"))
 
 	resetProxyEarnBandwidthForTest()
 	t.Cleanup(resetProxyEarnBandwidthForTest)
@@ -262,7 +326,7 @@ func TestBillableRateCollectorPublishesRate(t *testing.T) {
 // "no traffic, safe to update", absent means "unknown, assume busy".
 func TestBillableRateZeroWhenPoolEmpty(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("URNETWORK_PROXY_HEALTH_DIR", dir)
+	t.Setenv("URNETWORK_STATE_DIR", dir)
 
 	resetProxyEarnBandwidthForTest()
 	t.Cleanup(resetProxyEarnBandwidthForTest)
@@ -283,13 +347,13 @@ func TestBillableRateZeroWhenPoolEmpty(t *testing.T) {
 	}
 }
 
-// TestBillableRateWriterCreatesHealthDir pins that the writer makes its
-// directory: URNETWORK_PROXY_HEALTH_DIR may point somewhere the miner has not
-// created, and a metric that silently never appears would put idle-update back
-// on the assume-active path.
-func TestBillableRateWriterCreatesHealthDir(t *testing.T) {
-	dir := filepath.Join(t.TempDir(), "health")
-	t.Setenv("URNETWORK_PROXY_HEALTH_DIR", dir)
+// TestBillableRateWriterCreatesStateDir pins that the writer makes its
+// directory: URNETWORK_STATE_DIR may point somewhere the miner has not created,
+// and a metric that silently never appears would put idle-update back on the
+// assume-active path.
+func TestBillableRateWriterCreatesStateDir(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "state")
+	t.Setenv("URNETWORK_STATE_DIR", dir)
 
 	writeBillableRate(42)
 
@@ -298,7 +362,7 @@ func TestBillableRateWriterCreatesHealthDir(t *testing.T) {
 		t.Fatalf("reading billable_rate from a directory that did not exist: %v", err)
 	}
 	if string(got) != "42\n" {
-		t.Fatalf("billable_rate = %q, want %q", string(got), "42\n")
+		t.Fatalf("billable_rate = %q, want %q", got, "42\n")
 	}
 	// The state dir holds the JWT and key material; creating it must not make
 	// it world-readable.
@@ -307,6 +371,45 @@ func TestBillableRateWriterCreatesHealthDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	if perm := info.Mode().Perm(); perm != 0o700 {
-		t.Fatalf("health dir mode = %o, want 700", perm)
+		t.Fatalf("state dir mode = %o, want 700", perm)
+	}
+}
+
+// TestBillableRateLandsWhereIdleUpdateLooks pins the writer/reader contract of
+// the two directory knobs. URNETWORK_PROXY_HEALTH_DIR relocates the health
+// snapshots and nothing in internal/urnettools reads it; idle-update resolves
+// <provider state dir>/billable_rate, where the state dir is URNETWORK_STATE_DIR
+// when set and <home>/.urnetwork otherwise. So with the two variables pointing
+// at different directories the rate must land in the state one — under the
+// health dir it is invisible to the consumer, which then reads "no metric" as
+// "active traffic" and waits out its whole 30m timeout on a silent node.
+func TestBillableRateLandsWhereIdleUpdateLooks(t *testing.T) {
+	stateDir := t.TempDir()
+	healthDir := filepath.Join(t.TempDir(), "health")
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+	t.Setenv("URNETWORK_PROXY_HEALTH_DIR", healthDir)
+
+	path, ok := billableRatePath()
+	if !ok {
+		t.Fatal("billableRatePath reported no state dir with URNETWORK_STATE_DIR set")
+	}
+	// Exactly what idle-update opens: filepath.Join(StateDir, "billable_rate"),
+	// with StateDir resolved from the provider's URNETWORK_STATE_DIR.
+	want := filepath.Join(stateDir, "billable_rate")
+	if path != want {
+		t.Fatalf("billableRatePath = %q, want %q — the path idle-update polls", path, want)
+	}
+
+	writeBillableRate(4096)
+
+	got, err := os.ReadFile(want)
+	if err != nil {
+		t.Fatalf("the file idle-update polls was not written: %v", err)
+	}
+	if string(got) != "4096\n" {
+		t.Fatalf("billable_rate = %q, want %q", got, "4096\n")
+	}
+	if _, err := os.Stat(healthDir); !os.IsNotExist(err) {
+		t.Fatalf("the writer touched the health dir %s (err=%v); the rate must not go there", healthDir, err)
 	}
 }

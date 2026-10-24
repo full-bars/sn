@@ -163,10 +163,25 @@ var readEnviron = func(pid int) map[string]string {
 	return env
 }
 
-// stateDirFor returns the provider state directory for a process: the
-// process's HOME + "/.urnetwork", falling back to the well-known path
-// convention if HOME is unavailable.
+// stateDirFor returns the provider state directory for a process:
+// URNETWORK_STATE_DIR when the process was started with it, else
+// $HOME/.urnetwork.
+//
+// The override is read from the provider's OWN environment (discovery reads
+// /proc/<pid>/environ or the container's inspect env), which is the only place
+// it can be learned: the miner resolves its state dir the same way
+// (miner.providerStateDir), so honouring it here is what keeps discovery and
+// the provider pointing at the same directory. Ignoring it left every
+// override deployment describing a state dir the provider does not use — the
+// JWT read, the control socket and idle-update's billable_rate all missed.
+//
+// Like HOME, this value comes from the target process and is not trusted on its
+// own; callers run the result through resolveDiscoveredStateDir, which rejects
+// anything outside the kernel-attributed owner home.
 func stateDirFor(env map[string]string) string {
+	if dir := strings.TrimSpace(env["URNETWORK_STATE_DIR"]); dir != "" {
+		return filepath.Clean(dir)
+	}
 	if home := env["HOME"]; home != "" {
 		return filepath.Join(home, ".urnetwork")
 	}

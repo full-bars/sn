@@ -83,7 +83,7 @@ Quick jump:
 | `URNETWORK_PROXY_BENCHMARK_ENDPOINT` | `connect.bringyour.com:443` | Target for the SOCKS5 CONNECT latency probe. Measured end-to-end through each proxy. |
 | `URNETWORK_AUTH_UNLIMITED` | `false` | Bypass the auth rate limiter; every auth attempt fires immediately. Equivalent to creating `~/.urnetwork/fast_auth`. Only for trusted or benchmark environments. |
 | `URNETWORK_SHM_LOG` | `/dev/shm/urnetwork.log` | Path for the RAM log. |
-| `URNETWORK_PROXY_HEALTH_DIR` | `<home>/.urnetwork` | Directory for persistent `proxy_health.state` and `proxy_traffic.state` files (Docker: `/root/.urnetwork`). |
+| `URNETWORK_PROXY_HEALTH_DIR` | `<home>/.urnetwork` | Directory for persistent `proxy_health.state` and `proxy_traffic.state` files (Docker: `/root/.urnetwork`). Health files only — `billable_rate`, which `urnet-tools update --idle` polls, always lives in the state dir (`URNETWORK_STATE_DIR`, else `<home>/.urnetwork`), so relocating health files never hides the rate from `idle-update`. |
 | `URNETWORK_CONTAINER` | unset | Set to `1` to mark the process as containerized when `/.dockerenv` is absent (Podman, Kubernetes and other runtimes). A container counts as a restart supervisor for the thrash watchdog's exit 75. |
 | `URNETWORK_CONTAINER_NAME` | `<container-id>` | Container name used in copy-paste `docker exec <name> tail -f` hints for RAM logs. |
 | `WARP_HOST` | `<hostname>` | Override the host string reported by the warp status endpoint. Diagnostic only. |

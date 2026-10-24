@@ -319,15 +319,17 @@ func TestNetworkSpaceConnectSettingsPutsAProxiedSlotOnItsProxy(t *testing.T) {
 	}
 	conn.Close()
 
-	// The direct slot is still counted, and still has no factory: the engine's
-	// own pinned socket is its correct egress.
+	// The direct slot keeps the engine's own dial. WrapConnectSettingsTotal
+	// leaves a setting with neither a proxy nor a dial of its own alone, which
+	// is deliberate: installing a dial context there would replace connect's
+	// own dual-stack address race with a plain dial. Nothing on a direct
+	// network space is a client either, so the only cost is that this node's
+	// own control-plane bytes go uncounted on that path — the same trade the
+	// provider makes for its direct identity.
 	direct := connect.DefaultClientStrategySettings()
 	direct.ConnectSettings = networkSpaceConnectSettings(direct.ConnectSettings, nil, bw, "")
-	if direct.ConnectSettings.DialContextSettings == nil {
-		t.Fatal("the direct slot's network space lost the bandwidth wrap")
-	}
-	if direct.ConnectSettings.DialContextSettings.PacketConnFactory != nil {
-		t.Fatal("the direct slot's network space grew a QUIC endpoint factory, so its QUIC would leave from a wildcard socket instead of the engine's pinned one")
+	if direct.ConnectSettings.DialContextSettings != nil {
+		t.Fatal("the direct slot's network space grew a dial context, replacing the engine's own dual-stack dial")
 	}
 	if direct.ConnectSettings.ProxySettings != nil {
 		t.Fatal("the direct slot's network space has a proxy")
@@ -362,6 +364,68 @@ func TestNetworkSpaceConnectSettingsPutsAProxiedSlotOnItsProxy(t *testing.T) {
 	explicit := networkTokenRenewalStrategySettings(settings, egress)
 	if explicit.ConnectSettings.DialContextSettings != egress {
 		t.Fatal("the renewal replaced the caller's explicit dialer")
+	}
+}
+
+// TestNetworkSpaceControlPlaneIsNotAClient pins the accounting class of every
+// dial the slot's network space makes: the api, auth and H1 tunnel are the
+// node's OWN traffic to the platform. They are bytes on this node's link (so
+// they belong in Total) but no client is behind them, so they must never move
+// Clients — that is what made a freshly authenticated, unserving slot report
+// clients=1/serving=1 and fire the traffic marker.
+//
+// The client half is the session wrap on the relay-egress path
+// (bandwidth.WrapConnectSettings with session=true), proven here on the same
+// proxy so the test also shows the two wraps differ in exactly one counter.
+func TestNetworkSpaceControlPlaneIsNotAClient(t *testing.T) {
+	proxy := newFakeSocks5Proxy(t, fakeUDPRelayWorking, "203.0.113.7", "203.0.113.7")
+	settings := proxy.settings()
+	stubH3UDPVerdict(t, settings, proxyUDPOK)
+	bw := &bandwidth.ProxyBandwidth{}
+
+	// The slot's network space, built exactly as run.go builds it.
+	space := connect.DefaultClientStrategySettings()
+	space.ProxySettings = settings
+	space.ConnectSettings = networkSpaceConnectSettings(space.ConnectSettings, settings, bw, settings.Address)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	conn, err := space.ConnectSettings.DialContext(ctx, "tcp", "203.0.113.9:443")
+	if err != nil {
+		t.Fatalf("the control-plane dial did not go through the proxy: %v", err)
+	}
+	if _, err := conn.Write([]byte("auth")); err != nil {
+		t.Fatalf("writing on the control-plane connection: %v", err)
+	}
+
+	// While the dial is OPEN — which is how a slot's api/tunnel connection
+	// spends its life — it must still not read as a client.
+	if got := bw.Clients.Load(); got != 0 {
+		t.Fatalf("Clients = %d with one control-plane dial open, want 0: the node's own auth dial must not read as a client", got)
+	}
+	conn.Close()
+	if got := bw.TotalTx.Load(); got == 0 {
+		t.Fatal("the control-plane dial was not counted into Total")
+	}
+	if got := bw.BillableRx.Load() + bw.BillableTx.Load(); got != 0 {
+		t.Fatalf("billable = %d after a control-plane dial, want 0: billable is relay accounting, not this node's link", got)
+	}
+
+	// A real client flow on the relay-egress seam is still a session: one live
+	// client while the connection is open, none after it closes.
+	relay := connect.DefaultClientStrategySettings()
+	relay.ProxySettings = settings
+	relay.ConnectSettings = bandwidth.WrapConnectSettings(relay.ConnectSettings, bw, settings.Address, newH3PacketConnFactory)
+	clientConn, err := relay.ConnectSettings.DialContext(ctx, "tcp", "203.0.113.9:443")
+	if err != nil {
+		t.Fatalf("the relay-egress dial did not go through the proxy: %v", err)
+	}
+	if got := bw.Clients.Load(); got != 1 {
+		t.Fatalf("Clients = %d while a client flow is open, want 1", got)
+	}
+	clientConn.Close()
+	if got := bw.Clients.Load(); got != 0 {
+		t.Fatalf("Clients = %d after the client flow closed, want 0", got)
 	}
 }
 
@@ -541,11 +605,13 @@ func TestProxiedSlotQuicEndpointIsNotAHostSocket(t *testing.T) {
 	}
 
 	// The direct slot keeps both of the engine's own endpoints: a factory here
-	// would replace its pinned socket with an unpinned wildcard one.
+	// would replace its pinned socket with an unpinned wildcard one, and a dial
+	// context would replace the engine's own dual-stack dial. The total-only
+	// wrap leaves a direct setting with no proxy and no dial untouched.
 	if settings := providerSlotDialSettings(nil, nil, bw, ""); settings == nil || settings.PacketConnFactory != nil {
 		t.Fatal("the direct slot's provider device grew a QUIC endpoint factory")
 	}
-	if settings := networkSpaceConnectSettings(connect.DefaultClientStrategySettings().ConnectSettings, nil, bw, "").DialContextSettings; settings == nil || settings.PacketConnFactory != nil {
-		t.Fatal("the direct slot's network space grew a QUIC endpoint factory")
+	if settings := networkSpaceConnectSettings(connect.DefaultClientStrategySettings().ConnectSettings, nil, bw, "").DialContextSettings; settings != nil {
+		t.Fatal("the direct slot's network space grew a dial context, replacing the engine's own dial path")
 	}
 }
