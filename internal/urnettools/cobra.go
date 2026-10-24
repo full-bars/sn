@@ -1014,6 +1014,8 @@ func printSmartDialerStatus(w io.Writer, resp controlResponse) {
 		fmt.Fprintln(w, "  The provider prefers the transport that measures fastest on this network.")
 		fmt.Fprintln(w, "  A transport that stops working here is automatically avoided, so this is")
 		fmt.Fprintln(w, "  safe on networks that need DPI circumvention.")
+		fmt.Fprintln(w, "  Probes run in the background, one per egress path, and only while that")
+		fmt.Fprintln(w, "  path is not serving clients.")
 		fmt.Fprintln(w, "Turn off with: urnet-tools smart-dialer off")
 		return
 	}

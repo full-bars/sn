@@ -909,3 +909,20 @@ func (self *smartDialerScheduler) record(target *smartDialerTarget, member *smar
 	self.mutex.Unlock()
 	logProbeRound(target.path.label(), identities, member.index, round)
 }
+
+// smartDialerNote renders the smart dialer's state for the snapshot's
+// miner_notes: whether the scheduler is up and what it is watching. It is the
+// outside check on the live toggle -- an operator who just set the key can see
+// the dispatcher and the path count without a restart and without log access.
+func smartDialerNote() string {
+	if !connect.SmartDialerEnabled() && !smartDialerSchedulerRunning() {
+		return "smart dialer: off (no probe scheduler running)"
+	}
+	scheduler := globalSmartDialerScheduler
+	state := "running"
+	if !smartDialerSchedulerRunning() {
+		state = "stopped (preference on, nothing probing)"
+	}
+	return fmt.Sprintf("smart dialer: %s, %d egress paths over %d identities, %d probes admitted this process",
+		state, scheduler.paths(), scheduler.identities(), scheduler.probes.Load())
+}
