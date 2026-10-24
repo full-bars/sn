@@ -65,6 +65,12 @@ type ProxyEntry struct {
 	// own connect step (proxy_leg.go). Its own category: a leg failure is not
 	// an auth failure and must not drive the auth remedies.
 	ProxyLegFailures int64 `json:"proxy_leg_failures,omitempty"`
+	// TransportDrops counts platform transport connections this identity had
+	// and then lost (proxy_transport_health.go). Its own category for the same
+	// reason the provider keeps TransportDrops beside AuthFailures: a relay
+	// that dies after authenticating is not a rejected login, and the two need
+	// different remedies.
+	TransportDrops int64 `json:"transport_drops,omitempty"`
 
 	Score       float64   `json:"score,omitempty"`        // stage-1 table probe result (ok/total), 0 = never graded
 	Graded      bool      `json:"graded,omitempty"`       // true once a stage-1 table probe recorded a DECIDABLE result

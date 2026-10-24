@@ -1489,6 +1489,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			returnErr = errors.Join(returnErr, device.CloseAndWait(context.Background()))
 		}()
 
+		// Fork hook: drive this identity's live health from its platform
+		// transport's real connection state (proxy_transport_health.go). The
+		// provider marks a proxy up only once its transport has registered
+		// routes and down when that connection drops; without the same watch
+		// here, a proxy that authenticated and then lost its relay stayed "up"
+		// and kept its slot. Registered after the close defer above, so the
+		// stop runs first and the close itself is never read as a drop.
+		if proxySettings != nil {
+			defer watchProxyTransportHealth(proxyCtx, proxySettings.Key(), device, proxyTransportWatchInterval)()
+		}
+
 		// Always-on public mode includes network and friends/family service,
 		// matching the SDK's hierarchical provide contract.
 		device.SetProvideControlMode(sdk.ProvideControlModeAlways)
