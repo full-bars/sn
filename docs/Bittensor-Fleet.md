@@ -5,7 +5,7 @@
 
 
 > [!NOTE]
-> In this fork the `fleet` group is in the **miner image's** `provider` (`ghcr.io/full-bars/sn:miner`). The default release `provider` has only the older `bind-head` and `unbind-head`, which are not the current flow. Run fleet commands on your own computer, never on a mining node.
+> In this fork the release `provider` is built from the miner and has the `fleet` group. The older `bind-head` and `unbind-head` commands belonged to the archived relay and are gone. Run fleet commands on your own computer, never on a mining node.
 
 `provider fleet` drives the head-tier lifecycle for one fleet node from a single canonical manifest: the burned registration of the fleet hotkey, commitment publication, the dual-signed client and hotkey binding, local submission signing, status and revocation. It is the group a Top 200 head-tier operator runs.
 
@@ -209,7 +209,7 @@ Mainnet fleet writes are crash-safe by retaining signed liabilities, not by trus
 
 ## bind-head and unbind-head
 
-`provider bind-head` and `provider unbind-head` are unchanged in this release: not removed, not renamed, kept beside the fleet group. They are the pre-fleet EVM-only path with their own grammar and `--key_file` flow; use the `provider fleet` group for new work. Their grammar is in [Bittensor operations](/full-bars/sn/wiki/Bittensor-Operations#bind-head-and-unbind-head-old-head-tier-path).
+These were the pre-fleet EVM-only commands. They belonged to the archived relay (git tag `archive/provider-relay-2026-10-24`) and are no longer in `provider`. Use `provider fleet bind` and `provider fleet revoke`.
 
 ## What to check after
 

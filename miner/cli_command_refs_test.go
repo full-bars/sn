@@ -27,16 +27,6 @@ func TestDocumentedCliCommandsExist(t *testing.T) {
 		t.Fatal(err)
 	}
 	commands["snclaim"] = usageCommands(string(onchainUsage), "snclaim")
-	// The provider tool (cmd/provider -> provider.Main) keeps its own docopt
-	// usage. Fork adaptation: docs point at `provider <cmd>` for that tool, so
-	// check its usage too rather than claiming the miner handles those commands.
-	providerToolUsage, err := os.ReadFile(filepath.Join("..", "provider", "cmd_main.go"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for command := range usageCommands(string(providerToolUsage), "provider") {
-		commands["provider"][command] = true
-	}
 	// Three documented names are not usage entries: `provider help` is a
 	// runtime alias for --help, `provider summary` appears only in a negated
 	// example ("`provider proxy summary`, not `provider summary`"), and

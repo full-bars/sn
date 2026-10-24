@@ -66,18 +66,13 @@ Options on that binary:
 | `provider provide --wallet=<coldkey>` | The same unsigned request at startup. A failure is logged and the provider keeps providing. |
 | `provider wallet hotkey challenge|set|status` | Hotkey delegation. Not needed with one operator. `set` has `--replace-other-hotkey`. |
 | `provider wallet set <coldkey> --coldkey_seed_file=<path>` (miner image) | A signed consent for **one node's client** only. It wins over the account-wide consent for that node. |
-| `provider bind-head`, `unbind-head` (sn release binary) | The older head path (`--hotkey`, `--registrant`, `--contract`). Not the current fleet flow. Do not use it. |
+| `bind-head`, `unbind-head` (removed) | The older head path (`--hotkey`, `--registrant`, `--contract`). It belonged to the archived relay and the release `provider` no longer has it. Use `provider fleet bind`. |
 
 Docker users: you do not change the container command for this. A run that still passes `--wallet=<coldkey>` and `--legacy-network-wallet` can drop both.
 
-## bind-head and unbind-head (old head-tier path)
+## bind-head and unbind-head (removed)
 
-`provider bind-head` and `provider unbind-head` are the head-tier path from before the `provider fleet` group. The default sn release `provider` has only these two; the `fleet` group lives in the miner image (`ghcr.io/full-bars/sn:miner`). Do not use bind-head for new work. Their grammar in this fork is:
-
-```text
-provider bind-head --hotkey=<hex> --registrant=<registrant> --contract=<contract> [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
-provider unbind-head --hotkey=<hex> [--contract=<contract>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
-```
+`bind-head` and `unbind-head` were the head-tier commands from before the `provider fleet` group. They lived in the relay, which is archived (git tag `archive/provider-relay-2026-10-24`), and the release `provider` is now built from the miner and does not have them. Use `provider fleet bind` and `provider fleet revoke`.
 
 ## Other pages, only if you need them
 

@@ -119,7 +119,7 @@ These all send an address with **no signature**. That is the old login-proof pat
 | `provider wallet set <coldkey> --legacy-network-wallet` | Sends the old unsigned request. Without that flag this fork's `wallet set` is refused. |
 | `provider provide --wallet=<coldkey>` and `auth-provide --wallet=...` | The same unsigned request at startup. If it fails it is only logged. The provider keeps providing. |
 | `provider sn-status` | Read-only dashboard. It reads the old-style wallet record, so it may say "not configured" even after you signed. **UNCONFIRMED** at the current head. Its rank lines are the bandwidth leaderboard, not Bittensor eligibility. |
-| `provider bind-head`, `provider unbind-head` | The older head-tier path (hotkey, registrant and contract flags). It is not the current fleet flow. Do not use it. See [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier). |
+| `bind-head`, `unbind-head` | The older head-tier commands (hotkey, registrant and contract flags). They belonged to the relay, which is archived, and the release `provider` no longer has them. Use `provider fleet bind` instead. See [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier). |
 
 The `urnet-tools wallet ...` group in this fork calls `provider wallet status|sign`. Builds older than `v2026.10.21-1077735390-meso` do not have those two, so expect them to fail there; update first. This has not been re-run on every setup.
 

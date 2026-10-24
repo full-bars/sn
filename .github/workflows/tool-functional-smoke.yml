@@ -128,7 +128,7 @@ jobs:
 
       - name: Start provider (real session)
         run: |
-          nohup /tmp/provider provide > /tmp/provider.log 2>&1 &
+          nohup /tmp/provider provide --allow-client-registration > /tmp/provider.log 2>&1 &
           echo $! > /tmp/provider.pid
           sleep 20
           if kill -0 $(cat /tmp/provider.pid) 2>/dev/null; then
@@ -168,7 +168,7 @@ jobs:
           echo "client ids before restart:"; cat /tmp/ids-before.txt
           kill -TERM "$(cat /tmp/provider.pid)" 2>/dev/null || true
           for _ in $(seq 1 30); do kill -0 "$(cat /tmp/provider.pid)" 2>/dev/null || break; sleep 1; done
-          nohup /tmp/provider provide >> /tmp/provider.log 2>&1 &
+          nohup /tmp/provider provide --allow-client-registration >> /tmp/provider.log 2>&1 &
           echo $! > /tmp/provider.pid
           sleep 30
           kill -0 "$(cat /tmp/provider.pid)" 2>/dev/null || { tail -30 /tmp/provider.log; exit 1; }

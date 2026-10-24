@@ -74,7 +74,7 @@ _Live values · last changed 2026-10-24 09:32 UTC · checked hourly_
 
 ## Order of steps
 
-All `fleet` commands below are in the **miner image's** `provider` program (`ghcr.io/full-bars/sn:miner`, or a 3.23-fix or meso-miner `provider`). The default sn release `provider` has **no** `fleet` group. It only has the older `bind-head` and `unbind-head`, which are not the current flow and should not be used. Run fleet commands on your own computer, not on a mining node. Seed files must be private files (mode `0600`) and never go on a mining node.
+All `fleet` commands below are in the **miner image's** `provider` program (`ghcr.io/full-bars/sn:miner`, or a 3.23-fix or meso-miner `provider`). The old `bind-head` and `unbind-head` commands belonged to the archived relay and no longer exist; use `fleet bind`. Run fleet commands on your own computer, not on a mining node. Seed files must be private files (mode `0600`) and never go on a mining node.
 
 0. **Keep the network consent signed.** It covers every node you do not bind, except a node with its own per-provider consent, which wins for that node.
 
