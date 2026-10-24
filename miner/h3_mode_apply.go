@@ -78,9 +78,13 @@ func replayH3ModeAtStartup(state *controlState) {
 // facility: stop one identity and let its worker start it again under the
 // current setting. Nil outside a provide run (offline tools, unit tests).
 type h3IdentityRelauncher interface {
-	// detachForRelaunch stops one running identity, or reports false when it is
-	// not running. The identity's worker loop notices the request and runs it
-	// again with the current setting.
+	// detachForRelaunch stops one running identity and lets this run's own
+	// bookkeeping start it again under the current setting (the provide run
+	// re-spawns it through its reloader), or reports false when the run is not
+	// serving it. It must remove the identity from whatever map the run uses to
+	// decide what is already running: a detach that left that map alone would
+	// make the next reconcile treat the identity as unchanged and never start
+	// it again.
 	detachForRelaunch(key string) bool
 	// hasClients reports whether an identity is serving clients right now. The
 	// relaunch pass leaves such an identity alone and retries it later.

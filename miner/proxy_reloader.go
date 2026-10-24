@@ -92,6 +92,13 @@ type minerProxyReloader struct {
 	// is unreadable and the proxy diff below aborts. Held under mu like the rest
 	// of the reload, so a direct stop cannot interleave with a proxy diff.
 	onReload func()
+	// onApplied, when set, is called after a reload has applied a new desired
+	// set, with the settings it applied (nil entries filtered out). It runs
+	// without mu held, so a callback that reads the reloader back cannot
+	// deadlock it. The provide run uses it as the APPLY half of the h3
+	// candidate set: the desired read is side-effect free, so the ranking and
+	// any identity relaunch are driven from here (see applyH3CandidateSet).
+	onApplied func(applied []*connect.ProxySettings)
 
 	// addressOwners records which identity owns each host:port for this run.
 	// providerSlotIdentities resolves a configured address to a slot hash once,
@@ -369,7 +376,105 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 	// set both describe what this run is really serving.
 	r.notify(keys)
 
+	// The apply half: the desired read this reload just did is side-effect
+	// free, so the ranking and any relaunch it implies are driven from here,
+	// with the pool already reconciled and no lock held.
+	if r.onApplied != nil {
+		applied := make([]*connect.ProxySettings, 0, len(desired))
+		for _, settings := range desired {
+			if settings != nil {
+				applied = append(applied, settings)
+			}
+		}
+		r.onApplied(applied)
+	}
+
 	return summary, errors.Join(errs...)
+}
+
+// installProvideH3Relauncher publishes the provide run's per-identity relaunch
+// facility for the life of the run, and returns the function that clears it.
+//
+// It is the run's wiring for F-04: the h3 relaunch pass only ever starts when a
+// relauncher is published, and before this existed `set h3 ...` reported a live
+// change and did nothing. A nil reloader (a profile run, which owns a fixed,
+// validated slot set) publishes nothing: there is no slot bookkeeping to detach
+// through, so a relaunch could not remove the running identity and would only
+// claim an effect it cannot have.
+func installProvideH3Relauncher(ctx context.Context, reloader *minerProxyReloader) (clear func()) {
+	if reloader == nil {
+		return func() {}
+	}
+	setH3IdentityRelauncher(&minerH3Relauncher{ctx: ctx, reloader: reloader})
+	return func() { setH3IdentityRelauncher(nil) }
+}
+
+// relaunchIdentity stops one running identity so its next launch builds under
+// the current setting, and reports false when this run is not serving it.
+//
+// The slot is cancelled and dropped from the bookkeeping in ONE critical
+// section, then the pool is reconciled by a reload. That ordering is the whole
+// point: a detach that left the bookkeeping alone would make the next diff
+// report the identity "unchanged" and never spawn it again - the identity would
+// be silently gone until a restart. Detaching through here is what lets an h3
+// mode change reconnect an identity without a restart (see
+// minerH3Relauncher).
+//
+// The reload respawns every identity the desired set claims and this run is not
+// serving, so the replacement is accounted for exactly like any other slot
+// (address claim, progress census admission, onChange publication). A failure
+// is logged and the identity stays down, which the reloader's own summary and
+// next reload report like any other lost slot.
+func (r *minerProxyReloader) relaunchIdentity(key string) bool {
+	r.mu.Lock()
+	slot, ok := r.running[key]
+	if !ok {
+		r.mu.Unlock()
+		return false
+	}
+	slot.cancel()
+	delete(r.running, key)
+	r.releaseAddress(slot.settings)
+	r.mu.Unlock()
+
+	if _, err := r.reload(); err != nil {
+		tlog("[h3] reload after detaching %s failed: %v\n", key, err)
+	}
+	return true
+}
+
+// minerH3Relauncher is the provide run's h3IdentityRelauncher: the per-identity
+// relaunch facility the h3 relaunch pass drives (h3_proxy_set.go). It is backed
+// by the live reloader, which owns the slots and their cancels, so a relaunch is
+// a detach the reloader itself accounts for rather than one imposed from
+// outside it.
+type minerH3Relauncher struct {
+	ctx      context.Context
+	reloader *minerProxyReloader
+}
+
+func (r *minerH3Relauncher) detachForRelaunch(key string) bool {
+	return r.reloader.relaunchIdentity(key)
+}
+
+// hasClients reports whether the identity is serving clients right now, so the
+// relaunch pass can leave a live session alone and retry it later. v33 reads
+// connect.ProxyBandwidthByKey(addr).Clients; the pinned connect does not export
+// that registry, so the miner's own identity-keyed counters - the same objects
+// the earnings recorder folds - are the equivalent.
+func (r *minerH3Relauncher) hasClients(key string) bool {
+	return h3IdentityHasClients(key)
+}
+
+func (r *minerH3Relauncher) runContext() context.Context { return r.ctx }
+
+// h3IdentityHasClients is "is this identity serving clients now", read from the
+// live per-identity bandwidth counters the provide loop publishes when a slot
+// installs its counter and withdraws when it exits. An identity with no
+// published counter is not running here, which is not busy.
+func h3IdentityHasClients(key string) bool {
+	bw := proxyEarnBandwidthFor(key)
+	return bw != nil && bw.Clients.Load() > 0
 }
 
 // errProxyReloaderStopped reports a reload refused because the reloader has

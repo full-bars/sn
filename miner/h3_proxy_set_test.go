@@ -178,6 +178,14 @@ func (f *fakeH3Relauncher) hasClients(key string) bool {
 	return f.busy[key]
 }
 
+// detachedKeys copies the identities detached so far, under the lock: a
+// relaunch pass runs on its own goroutine while a test reads.
+func (f *fakeH3Relauncher) detachedKeys() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]string(nil), f.detached...)
+}
+
 func (f *fakeH3Relauncher) runContext() context.Context { return f.ctx }
 
 // A live change detaches the identities whose eligibility moved, one per

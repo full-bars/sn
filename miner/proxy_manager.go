@@ -301,6 +301,11 @@ func (m *proxyManager) primarySource(state *ProxyState) (tag string, settings []
 // importLegacy is true (manager start) it also brings proxy.state up to date
 // (IDs, source tags, legacy-key adoption, StartedAt) and reports whether the
 // state needs writing.
+//
+// It must have NO effect on the running pool. The reload watcher calls it on
+// every reload and the command paths call it too, so anything that stops a
+// running identity (the h3 relaunch) belongs to the apply paths instead: see
+// applyH3CandidateSet and the reloader's onApplied hook.
 func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
 	state, err := readProxyState()
 	if err != nil {
@@ -488,14 +493,14 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 		recordOOMCapStartup(len(launch))
 	}
 	// The h3 count setting ranks over the proxies this box runs, so the
-	// candidates are noted under every setting: switching to a count later
-	// ranks over the real set at once instead of an empty one. A ranking that
-	// moved relaunches the identities that joined or left it (see
-	// h3_proxy_set.go); the reload path itself starts nothing.
-	setting := resolveH3Mode(globalControlState, currentProxyResolution())
-	if noteH3Candidates(launch, setting) {
-		relaunchH3ProxiesNow(setting)
-	}
+	// candidates are noted by the APPLY paths, never here: a mode change can
+	// relaunch identities (see applyH3CandidateSet in h3_proxy_set.go), and
+	// this function is a read. It is called by the provide loop, by the reload
+	// watcher's desired closure and by the command paths (readProxySettings),
+	// and a relaunch started from a read would detach slots the reloader still
+	// lists as unchanged - it would never re-spawn them. The provide run notes
+	// its candidate set after the manager start and after every applied reload
+	// (run.go), which is also what keeps the ranking current.
 
 	// Settle the resolution state (v33 proxy_reload.go): the direct-only H3
 	// default, the status line and the snapshot all read it. Only a node with

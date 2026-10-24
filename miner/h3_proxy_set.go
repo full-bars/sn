@@ -28,6 +28,13 @@ import (
 // does so a few at a time (reconnect storms are the thing to avoid on a node
 // that runs hundreds of identities).
 //
+// The relaunch is only ever started from an APPLY path (applyH3CandidateSet: the
+// provide run's manager start and its applied reloads; a control-key change;
+// a UDP-check verdict). The desired-set read (proxyManager.desired) must stay
+// side-effect free: the reload watcher calls it on every reload, and a relaunch
+// issued from a read detaches running slots outside the reloader's bookkeeping,
+// which then lists them as unchanged and never re-spawns them.
+//
 // Port adaptation: the pinned full-bars/connect does not export the fork's
 // per-proxy bandwidth registry (connect.ProxyBandwidthByKey), so "does this
 // proxy have clients" is asked of the running provide run through the
@@ -159,16 +166,52 @@ func sameKeySet(a, b map[string]bool) bool {
 // noteH3Candidates records the proxies the provider runs and, under a count
 // setting, re-ranks them. It reports whether the ranked set changed.
 //
-// The proxies the setting admits have their UDP path checked in the background
-// (see proxy_udp_check.go), so the H3 gate has a verdict by the time an
-// identity asks for eligibility. The check is bounded and remembered, so a
-// reload of an unchanged pool does not probe again.
+// It is the read half of applyH3CandidateSet: nothing here starts or stops an
+// identity. The proxies the setting admits have their UDP path checked in the
+// background (see proxy_udp_check.go), so the H3 gate has a verdict by the time
+// an identity asks for eligibility. The check is bounded and remembered, so
+// noting an unchanged pool does not probe again.
 func noteH3Candidates(candidates []*connect.ProxySettings, setting h3Setting) (changed bool) {
 	h3CandidatesMutex.Lock()
 	h3Candidates = candidates
 	h3CandidatesMutex.Unlock()
 	refreshProxyUDPChecks(context.Background(), candidates, setting)
 	return rerankH3(setting)
+}
+
+// applyH3CandidateSet is the APPLY path for a new candidate set: it notes the
+// proxies the run serves and, when the resulting ranking moved, relaunches the
+// identities that joined or left it. The provide run calls it after the manager
+// start and after every reload it applied (run.go), so the candidate set and the
+// ranking track what the box actually runs.
+//
+// It must not be called from a desired-set read (proxyManager.desired): the read
+// runs on every reload, and a relaunch started there detaches slots the reloader
+// still believes are running, so its next diff reports them unchanged and they
+// are never spawned again.
+func applyH3CandidateSet(candidates []*connect.ProxySettings, setting h3Setting) (relaunched bool) {
+	if !noteH3Candidates(candidates, setting) {
+		return false
+	}
+	relaunchH3ProxiesNow(setting)
+	return true
+}
+
+// noteH3Launch records, for one identity that is starting, whether it is being
+// built with the fallback transports, so a later change of setting can tell
+// which running identities must be relaunched (see h3ProxiesToRelaunch). The
+// provide run calls it as each proxy slot builds its transport; the direct
+// identity carries no row here.
+//
+// The read and the record are one call so the decision cannot land between a
+// launch's own eligibility read and its registration.
+func noteH3Launch(settings *connect.ProxySettings) {
+	if settings == nil {
+		return
+	}
+	key := settings.Key()
+	setting := resolveH3Mode(globalControlState, currentProxyResolution())
+	recordH3Launch(key, h3ProxyEligible(setting, key))
 }
 
 // rerankH3 recomputes the ranked set for a count setting from the last noted
@@ -253,10 +296,14 @@ func relaunchH3Proxies(ctx context.Context, relauncher h3IdentityRelauncher, set
 				busy++
 				continue
 			}
+			// Forget the old launch BEFORE detaching: the relauncher starts the
+			// replacement as part of the detach, and that launch records its
+			// own row. Forgetting afterwards would erase the fresh row and the
+			// identity would never be relaunched again.
+			forgetH3Launch(key)
 			if relauncher.detachForRelaunch(key) {
 				relaunched++
 			}
-			forgetH3Launch(key)
 			select {
 			case <-ctx.Done():
 				return

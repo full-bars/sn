@@ -838,6 +838,12 @@ func provide(opts docopt.Opts) {
 		os.Exit(1)
 	}
 	defer proxyManager.stop()
+	// The manager's desired() read is side-effect free, so the h3 ranking over
+	// what this run serves is noted here, on the apply path: it must be in
+	// place before any identity below builds its transport, and a count set
+	// later ranks this real set instead of an empty one. No relauncher is
+	// published yet, so nothing is restarted: this is the startup half.
+	applyH3CandidateSet(allProxySettings, resolveH3Mode(globalControlState, currentProxyResolution()))
 	// Startup holds no reload lock, so any critical-log line the cap lookup
 	// queued (an unparseable proxy_trim) is written straight away here rather
 	// than waiting for a reload that may be hours away.
@@ -1442,6 +1448,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		settings.ProviderDialContextSettings = bandwidth.WrapDialContextSettings(
 			self.testEgressDialer, bw, proxyAddr,
 		)
+		// Record what this identity is being built with, so a later h3 change
+		// can tell whether it must be relaunched (see h3ProxiesToRelaunch).
+		// Before newProviderDeviceLocal: that call is where this slot's
+		// platform transport is built, so the row never claims a launch that
+		// has not happened. A nil settings is the direct identity, which has
+		// no per-proxy row.
+		noteH3Launch(proxySettings)
 		device, err := newProviderDeviceLocal(
 			proxyCtx,
 			networkSpace,
@@ -1599,6 +1612,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			setOOMCapRunningProxies(len(keys))
 			controlRuntime.setRunningProxies(keys)
 		}
+		reloader.onApplied = func(applied []*connect.ProxySettings) {
+			// The apply half of the h3 candidate set: desired() itself is a
+			// pure read, so the ranking over the set this reload just applied
+			// is noted here, and a ranking that moved relaunches the
+			// identities that joined or left it.
+			applyH3CandidateSet(applied, resolveH3Mode(globalControlState, currentProxyResolution()))
+		}
 	}
 
 	// Launch ordering (W-02): v33's warmth/earnings prioritization
@@ -1740,6 +1760,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// serves.
 		setPressureShedReloader(reloader)
 		defer setPressureShedReloader(nil)
+		// Publish the run's per-identity relaunch facility: an h3 mode change
+		// reconnects the identities whose eligibility moved through the
+		// reloader (see minerH3Relauncher), without a restart. Cleared on the
+		// way out so a later offline read (CLI, tests) sees no run.
+		clearH3Relauncher := installProvideH3Relauncher(ctx, reloader)
+		defer clearH3Relauncher()
 		if reloadPath, err := proxyReloadPath(); err == nil {
 			go func() {
 				defer close(reloadWatchDone)
