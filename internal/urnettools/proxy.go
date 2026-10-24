@@ -226,7 +226,7 @@ func withProxyRemoveYes(opArgs []string, force bool) []string {
 
 func cmdProxy(args []string, force, dryRun bool) error {
 	if len(args) == 0 {
-		return fmt.Errorf("proxy requires a subcommand: add <file> | paste | clear | remove | refresh | add-source <url> | remove-source <url> | health | traffic | ids | remove-dead | trim [<N>] | audit")
+		return fmt.Errorf("proxy requires a subcommand: add <file> | paste | clear | remove | refresh | add-source <url> | remove-source <url> | health | traffic | ids | remove-dead | trim [<N>] | audit | summary | exclude | activity")
 	}
 	sub := args[0]
 	rest := args[1:]
@@ -579,7 +579,7 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 		pasteArgs = append(pasteArgs, positionals...)
 		return providerSubcommand(p, pasteArgs...)
 
-	case "health", "traffic", "ids", "remove-dead":
+	case "health", "traffic", "ids", "remove-dead", "summary", "exclude", "activity":
 		// These are single-target subcommands (selectTarget, not
 		// selectTargets) — batch flags are meaningless here and must not be
 		// silently dropped.
@@ -600,6 +600,14 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 			return cmdProxyTrafficTarget(p)
 		case "ids":
 			return cmdProxyIDsTarget(p)
+		case "summary", "activity":
+			return providerSubcommand(p, append([]string{"proxy", sub}, positionals...)...)
+		case "exclude":
+			if dryRun {
+				fmt.Printf("[dry-run] would run proxy exclude on %s\n", providerLabel(p))
+				return nil
+			}
+			return providerSubcommand(p, append([]string{"proxy", "exclude"}, positionals...)...)
 		default: // remove-dead
 			if dryRun {
 				fmt.Printf("[dry-run] would remove dead/degraded proxies on %s\n", providerLabel(p))
@@ -617,7 +625,7 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 		}
 		return cmdProxyAuditTarget(p, positionals, dryRun)
 	default:
-		return fmt.Errorf("unknown proxy subcommand %q (add|paste|clear|health|traffic|ids|refresh|remove-dead|add-source|remove-source|trim|audit)", sub)
+		return fmt.Errorf("unknown proxy subcommand %q (add|paste|clear|remove|refresh|add-source|remove-source|health|traffic|ids|remove-dead|trim|audit|summary|exclude|activity)", sub)
 	}
 
 	// Destructive gate for clear/remove; add/refresh are additive.

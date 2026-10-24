@@ -175,7 +175,7 @@ func TestV33ProxySubcommandSurface(t *testing.T) {
 	if err == nil {
 		t.Fatal("bare `proxy` must report the subcommand surface")
 	}
-	for _, sub := range []string{"add", "paste", "clear", "remove", "refresh", "add-source", "remove-source", "health", "traffic", "ids", "remove-dead", "trim", "audit"} {
+	for _, sub := range []string{"add", "paste", "clear", "remove", "refresh", "add-source", "remove-source", "health", "traffic", "ids", "remove-dead", "trim", "audit", "summary", "exclude", "activity"} {
 		if !strings.Contains(err.Error(), sub) {
 			t.Errorf("proxy subcommand %q is no longer named by the dispatcher: %v", sub, err)
 		}
