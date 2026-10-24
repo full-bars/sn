@@ -601,6 +601,14 @@ func oomCapDecideDetailed(desired int, bootID string, oomKills int64, now time.T
 	werr := oomWriteJSON(statePath, st)
 
 	if d.Action == "none" || d.Action == "" {
+		// No cap moved, but the state may still have: an OOM the cap cannot
+		// answer restarts the clean-window clock (oomCapOnOOM), and that
+		// reset exists only if this write lands. A failure here is reported
+		// like any other, or the next start relaxes a cap this one meant to
+		// hold - the silent half of the same reader/writer disagreement.
+		if werr != nil {
+			warnings = append(warnings, "[oomcap] warn: could not persist the cap state ("+werr.Error()+"); no cap change was due, but the clean-window clock could not be recorded")
+		}
 		return oomCapStartupDecision{Lines: warnings, Decision: d, Condition: msg}
 	}
 	modeName := "shadow"
@@ -614,11 +622,11 @@ func oomCapDecideDetailed(desired int, bootID string, oomKills int64, now time.T
 	// to prevent. Say so instead, and leave the timeline to the last cap that
 	// really was persisted.
 	if werr != nil {
+		// Nothing was written, so no decision is reported and no bundle is due:
+		// captureOOMCapIncident skips an empty action, which is why this line
+		// says it in the log rather than in a Condition nothing would render.
 		return oomCapStartupDecision{
 			Lines: append(warnings, "[oomcap] warn: could not persist the cap state ("+werr.Error()+"); the decision ("+oomCapActionPhrase(d, mode == oomCapOn)+") was neither applied nor recorded"),
-			// nothing was written, so no decision is reported and no bundle is due;
-			// the condition says why the audit trail stops here
-			Condition: "the cap state could not be persisted",
 		}
 	}
 	ledgerRecord(ledgerEntry{Actor: "oomcap", Action: d.Action, From: d.From, To: d.To, Mode: modeName, Reason: msg}, now)
