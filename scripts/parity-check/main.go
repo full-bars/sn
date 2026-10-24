@@ -488,12 +488,103 @@ func loadConfigPath(root, path string, allowlist bool) ([]configEntry, error) {
 	return parseConfig(path, allowlist)
 }
 
+// validateDeclMappings checks that every func or type mapping resolves in the
+// scan the comparison runs on. The mapping is authoritative — namePresent does
+// not fall back to the provider name once one exists — so a mapping naming a
+// declaration the scan does not hold either never applies (source side) or
+// reports a ported declaration as a gap (target side). Both are configuration
+// errors, not findings about the port.
+//
+// Only -tests puts _test.go declarations into those maps, so a mapping that
+// names one is refused with a hint instead of claiming a symbol that is on disk
+// does not exist. That is the same rule the file mappings follow.
+func validateDeclMappings(kind string, mappings map[string]string, providerPkg, minerPkg *packageDecls, providerDir, minerDir string, includeTests bool) error {
+	if len(mappings) == 0 {
+		return nil
+	}
+	providerNames, minerNames := providerPkg.funcs, minerPkg.funcs
+	if kind == "type" {
+		providerNames, minerNames = providerPkg.types, minerPkg.types
+	}
+
+	names := make([]string, 0, len(mappings))
+	for name := range mappings {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		if !providerNames[name] {
+			return missingDeclError("provider", kind, name, providerDir, includeTests)
+		}
+		target := mappings[name]
+		if !minerNames[target] {
+			return missingDeclError("miner", kind, target, minerDir, includeTests)
+		}
+	}
+	return nil
+}
+
+// missingDeclError names a declaration a mapping could not resolve and, when
+// the only reason is the scan's -tests setting, asks for that flag instead of
+// claiming the declaration does not exist.
+func missingDeclError(role, kind, name, dir string, includeTests bool) error {
+	if !includeTests {
+		if inTests, err := declaredInTestFiles(dir, kind, name); err == nil && inTests {
+			return fmt.Errorf("%s %s %s is declared only in _test.go files, and only -tests scans those", role, kind, name)
+		}
+	}
+	return fmt.Errorf("%s %s %s does not exist", role, kind, name)
+}
+
+// declaredInTestFiles reports whether a _test.go file in dir declares name as a
+// top-level func (kind "func") or a type (kind "type"). The scan that built the
+// lookup maps skipped those files, so it cannot answer this itself; the
+// question only comes up for a mapping that did not resolve.
+func declaredInTestFiles(dir, kind, name string) (bool, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false, err
+	}
+	fset := token.NewFileSet()
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), "_test.go") {
+			continue
+		}
+		parsed, err := parser.ParseFile(fset, filepath.Join(dir, entry.Name()), nil, parser.SkipObjectResolution)
+		if err != nil {
+			return false, err
+		}
+		for _, decl := range parsed.Decls {
+			switch decl := decl.(type) {
+			case *ast.FuncDecl:
+				if kind == "func" && decl.Recv == nil && decl.Name != nil && decl.Name.Name == name {
+					return true, nil
+				}
+			case *ast.GenDecl:
+				if kind != "type" || decl.Tok != token.TYPE {
+					continue
+				}
+				for _, spec := range decl.Specs {
+					typeSpec, ok := spec.(*ast.TypeSpec)
+					if ok && typeSpec.Name != nil && typeSpec.Name.Name == name {
+						return true, nil
+					}
+				}
+			}
+		}
+	}
+	return false, nil
+}
+
 func buildReport(opts options) (*report, error) {
-	providerPkg, err := scanPackage(filepath.Join(opts.root, opts.provider), opts.includeTests)
+	providerDir := filepath.Join(opts.root, opts.provider)
+	minerDir := filepath.Join(opts.root, opts.miner)
+	providerPkg, err := scanPackage(providerDir, opts.includeTests)
 	if err != nil {
 		return nil, err
 	}
-	minerPkg, err := scanPackage(filepath.Join(opts.root, opts.miner), opts.includeTests)
+	minerPkg, err := scanPackage(minerDir, opts.includeTests)
 	if err != nil {
 		return nil, err
 	}
@@ -539,6 +630,17 @@ func buildReport(opts options) (*report, error) {
 				return nil, failMapped("miner file", target, "mapping "+name+" -> "+target)
 			}
 		}
+	}
+	// Declaration mappings are validated against the same scan the comparison
+	// uses, for the same reason and with the same -tests hint: a mapping is
+	// authoritative, so one whose source does not exist silently never applies
+	// and one whose target does not exist turns a ported declaration into a
+	// false gap.
+	if err := validateDeclMappings("func", funcMappings, providerPkg, minerPkg, providerDir, minerDir, opts.includeTests); err != nil {
+		return nil, err
+	}
+	if err := validateDeclMappings("type", typeMappings, providerPkg, minerPkg, providerDir, minerDir, opts.includeTests); err != nil {
+		return nil, err
 	}
 
 	allowedFile := map[string]string{}
