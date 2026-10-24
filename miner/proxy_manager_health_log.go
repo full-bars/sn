@@ -136,11 +136,24 @@ func parseProxyString(s string) (string, string) {
 
 // formatStateFile renders the complete current-state snapshot (uncapped).
 func formatStateFile(r proxyHealthReport, now time.Time) string {
+	return formatStateFileWithHeartbeat(r, now, healthHeartbeatSnapshot())
+}
+
+// formatStateFileWithHeartbeat renders the status file with an explicit
+// heartbeat, so the writer's output can be pinned by a test and the heartbeat
+// cadence stays independent of this file's cadence.
+//
+// A nil heartbeat omits the line: no ` heartbeat: ` line must read as "this
+// process has never pulsed", not as healthy.
+func formatStateFileWithHeartbeat(r proxyHealthReport, now time.Time, hb *healthHeartbeat) string {
 	var b strings.Builder
 	down := len(r.Dead) + len(r.Degraded)
 	fmt.Fprintf(&b, "=======================================================================\n")
 	fmt.Fprintf(&b, " URNETWORK PROXY HEALTH REPORT\n")
 	fmt.Fprintf(&b, " Updated: %s\n", now.UTC().Format(time.RFC3339))
+	if line := healthHeartbeatStatusLine(hb); line != "" {
+		b.WriteString(line)
+	}
 	// "Down" is the total of the two down buckets. Name them inline (dropped =
 	// was up, now down; never-up = never connected) so the sum is obvious and
 	// the word "degraded" is not reused for a hard gone state.

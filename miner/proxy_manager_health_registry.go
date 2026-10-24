@@ -45,9 +45,12 @@ import (
 //     cadence, so the ported proxy subcommands have real content to read.
 
 // proxyHealthLogInterval is how often the process writes its health snapshot.
-// v33 writes from its provider heartbeat (a few seconds); the miner has no
-// heartbeat loop, so the port uses a calm fixed cadence that also bounds how
-// stale proxy.state's health column can be.
+// v33 writes it from its provider heartbeat (a few seconds). The miner keeps the
+// two cadences apart on purpose: the heartbeat (health_heartbeat.go) pulses at
+// URNETWORK_HEALTH_INTERVAL, 5 minutes by default, and publishes the process
+// picture, while this writer runs every 60s so proxy.state's health column stays
+// fresh for the reaper. proxy_health.state carries both stamps (Updated: for
+// this writer, heartbeat: for the pulse).
 const proxyHealthLogInterval = 60 * time.Second
 
 // proxyLiveHealthEntry is one identity's health as this process knows it.
@@ -509,6 +512,10 @@ func runProxyHealthLog(ctx context.Context, interval time.Duration) {
 	if interval <= 0 {
 		interval = proxyHealthLogInterval
 	}
+	// Publish the cadence this writer actually runs at, so the heartbeat line
+	// this writer renders reports a stale_after that matches the file's real
+	// refresh rate (staleAfter) instead of assuming the 60s default.
+	proxyHealthWriterCadence.Store(int64(interval))
 	writeProxyHealthSnapshot(time.Now())
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -522,13 +529,12 @@ func runProxyHealthLog(ctx context.Context, interval time.Duration) {
 	}
 }
 
-// proxyHealthRegistrySummary is the one-line state of the registry for the
-// per-cycle log (up/degraded/dead counts and the auth-failure total).
-func proxyHealthRegistrySummary() string {
+// proxyHealthRegistryCounts is the registry's up/degraded/dead tally and the
+// auth-failure total, under one lock so a heartbeat cannot report an
+// impossible pair (an identity counted up in one line and dead in the next).
+func proxyHealthRegistryCounts() (up, degraded, dead int, authFailures int64) {
 	proxyLiveHealthRegistry.Lock()
 	defer proxyLiveHealthRegistry.Unlock()
-	up, degraded, dead := 0, 0, 0
-	var authFailures int64
 	for _, entry := range proxyLiveHealthRegistry.byKey {
 		switch proxyHealthBucket(entry.Health) {
 		case "up":
@@ -540,6 +546,13 @@ func proxyHealthRegistrySummary() string {
 		}
 		authFailures += entry.AuthFailures
 	}
+	return
+}
+
+// proxyHealthRegistrySummary is the one-line state of the registry for the
+// per-cycle log (up/degraded/dead counts and the auth-failure total).
+func proxyHealthRegistrySummary() string {
+	up, degraded, dead, authFailures := proxyHealthRegistryCounts()
 	return fmt.Sprintf("live health: up=%d degraded=%d dead=%d auth_failures=%d", up, degraded, dead, authFailures)
 }
 
