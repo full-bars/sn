@@ -16,6 +16,8 @@ jobs:
           echo "cpus: $(nproc)"; free -g | head -2 || true
           echo "go: $(command -v go || echo MISSING)"; go version 2>/dev/null || true
           echo "docker: $(command -v docker || echo MISSING)"; docker version --format '{{.Server.Version}}' 2>/dev/null || true
+          echo "gcc: $(command -v gcc || echo MISSING)"; gcc --version 2>/dev/null | head -1 || true
+          echo "make: $(command -v make || echo MISSING)"
           echo "git: $(git --version)"
           echo "disk: $(df -h . | tail -1)"
           echo "workspace: $GITHUB_WORKSPACE"
