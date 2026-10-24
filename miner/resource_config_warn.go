@@ -254,10 +254,10 @@ func resourceConfigWarningsOnce() {
 }
 
 // applyStartupMemoryTuning runs the startup steps that have to stay in this
-// order: replay the persisted operator pin, install the profile/operator Go
-// runtime knobs, then report once what RAM ceiling this process tunes against,
-// which soft limit is actually in force, and whether that limit is short for
-// the pool it is about to launch.
+// order: replay the persisted operator pins (gomemlimit and gogc), install the
+// profile/operator Go runtime knobs, then report once what RAM ceiling this
+// process tunes against, which soft limit and GC setting are actually in
+// force, and whether that limit is short for the pool it is about to launch.
 //
 // The order is load-bearing. resourceConfigWarningsOnce reads
 // debug.SetMemoryLimit(-1); on eco/turbo nodes the tier code in
@@ -268,22 +268,29 @@ func resourceConfigWarningsOnce() {
 // order a runtime property a test drives directly instead of source line
 // order.
 //
-// The replay comes first for the same reason the tiers have to see it: a
-// persisted `urnet-tools set gomemlimit` is already treated as "the operator
-// pinned this" by persistedRuntimeTuningActive, so it must be in force before
-// anything that would otherwise install a default, or the pin is skipped and
-// lost at the same time (gomemlimit_startup.go). The environment still
-// outranks it, and the memory plan's default has already been installed by the
-// caller before the control state is loaded.
+// The replays come first for the same reason the tiers have to see them: a
+// persisted `urnet-tools set gomemlimit|gogc` is already treated as "the
+// operator pinned this" by persistedRuntimeTuningActive, so it must be in force
+// before anything that would otherwise install a default, or the pin is
+// skipped and lost at the same time (gomemlimit_startup.go, gogc_startup.go).
+// The environment still outranks both, and the memory plan's default has
+// already been installed by the caller before the control state is loaded.
 func applyStartupMemoryTuning(maxMemory connect.ByteCount, proxies int) {
-	replayed := replayPersistedGoMemLimit()
-	tier := applyProfileProcessTuning(maxMemory)
+	memLimitReplayed := replayPersistedGoMemLimit()
+	gcReplayed := replayPersistedGoGC()
+	limitTier, gcTier := applyProfileProcessTuning(maxMemory)
 	ceilingBytes, ceilingSource := warningRAMCeiling()
 	importantLogf("%s\n", ramCeilingLogLine(ceilingBytes, ceilingSource))
-	// The line that answers "which soft limit am I actually running": it is
-	// read after every site that can install one, so it names the limit the
-	// process runs under rather than an intention.
-	importantLogf("%s\n", goMemLimitLogLine(debug.SetMemoryLimit(-1), goMemLimitSource(replayed, tier)))
+	// The line that answers "which Go runtime knobs am I actually running": it
+	// is read after every site that can install one, so it names the values the
+	// process runs under rather than an intention. One line for both knobs -
+	// they are answered by the same start, and two lines could disagree about
+	// which one they describe.
+	gcPercent, gcOK := readGOGCPercent()
+	importantLogf("%s\n", goRuntimeTuningLogLine(
+		debug.SetMemoryLimit(-1), goMemLimitSource(memLimitReplayed, limitTier),
+		int(gcPercent), gcOK, goGCSource(gcReplayed, gcTier),
+	))
 	resourceConfigLaunchCount.Store(int64(proxies))
 	resourceConfigWarningsOnce()
 }

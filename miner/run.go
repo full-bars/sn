@@ -1161,8 +1161,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// The profile tiers' Go runtime knobs (profiles/memory, PM-04) and the
 	// once-per-start resource check are one ordered step
 	// (applyStartupMemoryTuning). That step replays a persisted
-	// `set gomemlimit` first, so the operator's pin survives a restart and the
-	// tiers skip their defaults for it (the provider's
+	// `set gomemlimit` and `set gogc` first, so the operator's pins survive a
+	// restart and the tiers skip their defaults for them (the provider's
 	// applyPersistedRuntimeTuning, in the miner's order: after the memory plan
 	// and the control-state load, before applyProfileProcessTuning). The check
 	// then reads the soft limit actually in force, and runs before the launch
