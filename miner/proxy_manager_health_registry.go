@@ -516,7 +516,9 @@ func runProxyHealthLog(ctx context.Context, interval time.Duration) {
 	// this writer renders reports a stale_after that matches the file's real
 	// refresh rate (staleAfter) instead of assuming the 60s default.
 	proxyHealthWriterCadence.Store(int64(interval))
-	writeProxyHealthSnapshot(time.Now())
+	now := time.Now()
+	writeProxyHealthSnapshot(now)
+	logProxyPoolHealth(observeProxyPoolHealth(now, readProxyPoolComposition()))
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
@@ -525,6 +527,7 @@ func runProxyHealthLog(ctx context.Context, interval time.Duration) {
 			return
 		case now := <-ticker.C:
 			writeProxyHealthSnapshot(now)
+			logProxyPoolHealth(observeProxyPoolHealth(now, readProxyPoolComposition()))
 		}
 	}
 }

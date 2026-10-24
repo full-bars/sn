@@ -5,6 +5,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/urfoundation/sn/provider/bandwidth"
 )
@@ -29,13 +30,21 @@ import (
 // even with an empty pool; the byte counters are omitted until a provide run
 // has published its registry, so a missing series means "not counting yet".
 func writeTrafficMetrics(b *strings.Builder) {
-	counts, _ := snapshotProxyCounts()
+	// One proxy.state read per scrape: the composition feeds both
+	// urnet_proxy_pool_size and the pool aggregate. The aggregate is passed the
+	// same value, so the two can never disagree about a member, and the
+	// pool-health mutex is never held across the read.
+	comp := readProxyPoolComposition()
+	counts := comp.Counts
 	fmt.Fprintf(b, "# HELP urnet_proxy_pool_size Proxy pool composition.\n")
 	fmt.Fprintf(b, "# TYPE urnet_proxy_pool_size gauge\n")
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"up\"} %d\n", counts.Up)
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"dead\"} %d\n", counts.Dead)
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"degraded\"} %d\n", counts.Degraded)
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"connecting\"} %d\n", counts.Connecting)
+	// The aggregate that composition cannot express: whether the pool failed as
+	// a unit or a few members did, and how low it got in the last hour.
+	writeProxyPoolHealthMetrics(b, proxyPoolHealth(time.Now(), comp))
 
 	reading := controlRuntime.trafficReading()
 	perProxy := controlIdentityKeyedBandwidth()
