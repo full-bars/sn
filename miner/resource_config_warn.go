@@ -46,18 +46,11 @@ import (
 //     launched list (proxy_manager.go), so a held-back slot is not counted as a
 //     proxy this box has to carry.
 //   - The heap limit is the Go soft limit in force, whichever source set it:
-//     GOMEMLIMIT in the environment, --max-memory, a profile tier (eco 75%,
-//     turbo 80%) or the default provider memory plan (provider_memory.go). It
-//     is read after applyProfileProcessTuning, so it is the limit the process
-//     actually runs under, not the pre-tier value.
-//
-//     A persisted `urnet-tools set gomemlimit` is not in that list in this
-//     build: the control socket applies it live, but the miner has no startup
-//     replay for it (the provider's applyPersistedRuntimeTuning was not
-//     ported), so it does not survive a restart. That is a separate
-//     startup-precedence bug: when it is fixed the replay belongs after the
-//     memory plan and before applyProfileProcessTuning, and this check will
-//     read the persisted value with no change here.
+//     GOMEMLIMIT in the environment, a persisted `urnet-tools set gomemlimit`
+//     (replayed at startup, gomemlimit_startup.go), --max-memory, a profile
+//     tier (eco 75%, turbo 80%) or the default provider memory plan
+//     (provider_memory.go). It is read after applyProfileProcessTuning, so it
+//     is the limit the process actually runs under, not the pre-tier value.
 //   - The RAM ceiling is the tightest cgroup v2 memory.max/memory.high on this
 //     process's cgroup or an ancestor, else cgroup v1, else the host's physical
 //     memory (see warningRAMCeiling). That can be TIGHTER than what the tier
@@ -260,10 +253,11 @@ func resourceConfigWarningsOnce() {
 	})
 }
 
-// applyStartupMemoryTuning runs the two startup steps that have to stay in this
-// order: install the profile/operator Go runtime knobs, then report once what
-// RAM ceiling this process tunes against and whether the limits it runs under
-// are short for the pool it is about to launch.
+// applyStartupMemoryTuning runs the startup steps that have to stay in this
+// order: replay the persisted operator pin, install the profile/operator Go
+// runtime knobs, then report once what RAM ceiling this process tunes against,
+// which soft limit is actually in force, and whether that limit is short for
+// the pool it is about to launch.
 //
 // The order is load-bearing. resourceConfigWarningsOnce reads
 // debug.SetMemoryLimit(-1); on eco/turbo nodes the tier code in
@@ -273,10 +267,23 @@ func resourceConfigWarningsOnce() {
 // process actually runs under. Keeping both steps in one function makes that
 // order a runtime property a test drives directly instead of source line
 // order.
+//
+// The replay comes first for the same reason the tiers have to see it: a
+// persisted `urnet-tools set gomemlimit` is already treated as "the operator
+// pinned this" by persistedRuntimeTuningActive, so it must be in force before
+// anything that would otherwise install a default, or the pin is skipped and
+// lost at the same time (gomemlimit_startup.go). The environment still
+// outranks it, and the memory plan's default has already been installed by the
+// caller before the control state is loaded.
 func applyStartupMemoryTuning(maxMemory connect.ByteCount, proxies int) {
-	applyProfileProcessTuning(maxMemory)
+	replayed := replayPersistedGoMemLimit()
+	tier := applyProfileProcessTuning(maxMemory)
 	ceilingBytes, ceilingSource := warningRAMCeiling()
 	importantLogf("%s\n", ramCeilingLogLine(ceilingBytes, ceilingSource))
+	// The line that answers "which soft limit am I actually running": it is
+	// read after every site that can install one, so it names the limit the
+	// process runs under rather than an intention.
+	importantLogf("%s\n", goMemLimitLogLine(debug.SetMemoryLimit(-1), goMemLimitSource(replayed, tier)))
 	resourceConfigLaunchCount.Store(int64(proxies))
 	resourceConfigWarningsOnce()
 }

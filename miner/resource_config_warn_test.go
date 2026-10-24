@@ -457,11 +457,14 @@ func TestStartupMemoryTuningWarnsOnTheOperatorGOMEMLIMIT(t *testing.T) {
 	if gathered != 400*testMiB {
 		t.Fatalf("the check read limit %d, want the operator's 400 MiB in force", gathered)
 	}
-	if len(lines) != 2 {
-		// one ceiling line plus the one heap warning
-		t.Fatalf("got %d lines %q, want a ceiling line and the one heap warning", len(lines), lines)
+	if len(lines) != 3 {
+		// the ceiling line, the soft-limit source line, and the one heap warning
+		t.Fatalf("got %d lines %q, want the ceiling line, the limit-source line and the one heap warning", len(lines), lines)
 	}
-	warning := lines[1]
+	if source := lines[1]; !strings.Contains(source, "400 MiB") || !strings.Contains(source, "env GOMEMLIMIT") {
+		t.Fatalf("the limit-source line %q must name the operator's 400 MiB and the env source", source)
+	}
+	warning := lines[2]
 	for _, want := range []string{"GOMEMLIMIT=400 MiB", "4000 proxies"} {
 		if !strings.Contains(warning, want) {
 			t.Fatalf("warning %q does not name %q", warning, want)
