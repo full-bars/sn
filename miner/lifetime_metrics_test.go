@@ -116,7 +116,10 @@ func TestLifetimeMaybeFlushThrottles(t *testing.T) {
 	}
 }
 
-// The scrape carries the persisted totals and the two start gauges.
+// The scrape carries the persisted totals and the two start gauges. There is no
+// denied series: the miner has no denial source, so the store's denied slot is
+// never incremented and never published -- a constant 0 would read as "nothing
+// was refused" rather than "not measured".
 func TestLifetimeMetricsExposeTotalsAndStartGauges(t *testing.T) {
 	store := withLifetimeStore(t)
 	store.Add(1, 2, 3, 4, 5, 6, 7)
@@ -125,7 +128,6 @@ func TestLifetimeMetricsExposeTotalsAndStartGauges(t *testing.T) {
 		`urnet_lifetime_sessions_total{encryption="pqe"} 1`,
 		`urnet_lifetime_sessions_total{encryption="classical"} 2`,
 		`urnet_lifetime_contracts_total{result="acquired"} 3`,
-		`urnet_lifetime_contracts_total{result="denied"} 4`,
 		`urnet_lifetime_proxies_total{event="recovered"} 5`,
 		`urnet_lifetime_proxies_total{event="lost"} 6`,
 		`urnet_lifetime_billable_bytes_total 7`,
@@ -135,6 +137,9 @@ func TestLifetimeMetricsExposeTotalsAndStartGauges(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Fatalf("scrape is missing %q", want)
 		}
+	}
+	if strings.Contains(out, `urnet_lifetime_contracts_total{result="denied"}`) {
+		t.Fatalf("the denied label was published with no denial source:\n%s", out)
 	}
 }
 
@@ -225,38 +230,37 @@ func TestLifetimeCollectorRestartDoesNotDoubleFold(t *testing.T) {
 	resetProxyEarnBandwidthForTest()
 	t.Cleanup(resetProxyEarnBandwidthForTest)
 
-	var pqe, clas, up, deny atomic.Int64
+	var pqe, clas, up atomic.Int64
 	pqe.Store(10)
 	clas.Store(4)
 	up.Store(3)
-	deny.Store(1)
 	withLifetimeSeams(t,
 		func() *seamSessions {
 			return &seamSessions{PQELifetime: pqe.Load(), ClasLifetime: clas.Load()}
 		},
 		func() *seamContracts {
-			return &seamContracts{Acquired: up.Load(), Denied: deny.Load(), DeniedKnown: true}
+			return &seamContracts{Acquired: up.Load()}
 		},
 	)
 
 	now := time.Now()
 	newLifetimeCollector().tick(now)
-	if a, b, c, d, _, _, _ := store.Snapshot(); a != 10 || b != 4 || c != 3 || d != 1 {
-		t.Fatalf("first fold = %d %d %d %d, want 10 4 3 1", a, b, c, d)
+	if a, b, c, d, _, _, _ := store.Snapshot(); a != 10 || b != 4 || c != 3 || d != 0 {
+		t.Fatalf("first fold = %d %d %d %d, want 10 4 3 0", a, b, c, d)
 	}
 
 	// The restart: a new collector run against the same process counters.
 	newLifetimeCollector().tick(now.Add(time.Minute))
-	if a, b, c, d, _, _, _ := store.Snapshot(); a != 10 || b != 4 || c != 3 || d != 1 {
-		t.Fatalf("restart re-folded the counters: %d %d %d %d, want 10 4 3 1", a, b, c, d)
+	if a, b, c, d, _, _, _ := store.Snapshot(); a != 10 || b != 4 || c != 3 || d != 0 {
+		t.Fatalf("restart re-folded the counters: %d %d %d %d, want 10 4 3 0", a, b, c, d)
 	}
 
 	// A genuine increase must still fold, and only the increase.
 	pqe.Add(5)
 	up.Add(2)
 	newLifetimeCollector().tick(now.Add(2 * time.Minute))
-	if a, b, c, d, _, _, _ := store.Snapshot(); a != 15 || b != 4 || c != 5 || d != 1 {
-		t.Fatalf("after an increase = %d %d %d %d, want 15 4 5 1", a, b, c, d)
+	if a, b, c, d, _, _, _ := store.Snapshot(); a != 15 || b != 4 || c != 5 || d != 0 {
+		t.Fatalf("after an increase = %d %d %d %d, want 15 4 5 0", a, b, c, d)
 	}
 }
 

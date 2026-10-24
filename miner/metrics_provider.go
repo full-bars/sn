@@ -3,6 +3,7 @@ package miner
 import (
 	"fmt"
 	"maps"
+	"math"
 	"runtime"
 	"runtime/metrics"
 	"slices"
@@ -504,12 +505,40 @@ func writeSeamContracts(b *strings.Builder) {
 	fmt.Fprintf(b, "# HELP urnet_contracts_total Cumulative contract outcomes.\n")
 	fmt.Fprintf(b, "# TYPE urnet_contracts_total counter\n")
 	fmt.Fprintf(b, "urnet_contracts_total{result=\"acquired\"} %d\n", contracts.Acquired)
-	// A refused contract never opens, so it never reaches the provider contract
-	// feed the miner counts from (contract_metrics.go). Omit the label rather
-	// than publish a zero that reads as "nothing was refused".
-	if contracts.DeniedKnown {
-		fmt.Fprintf(b, "urnet_contracts_total{result=\"denied\"} %d\n", contracts.Denied)
+	// No denied label. A refused contract never opens, so it never reaches the
+	// provider contract feed the miner counts from, and the pinned SDK exports
+	// no denial event (metrics_seams.go). Publishing 0 would read as "nothing
+	// was refused", and an "unknown" would read as "checked, cannot tell" --
+	// neither is a claim this process can back.
+	//
+	// The open book below is a gauge over the contracts open right now. With
+	// none open there is no current reading, so the family is omitted rather
+	// than published as zero: a zero would claim "measured, nothing open" in a
+	// process that may simply not be providing yet.
+	if contracts.Open <= 0 {
+		return
 	}
+	fmt.Fprintf(b, "# HELP urnet_contracts_open Contracts open right now, counted once per platform grant even when both the egress and ingress feed report it.\n")
+	fmt.Fprintf(b, "# TYPE urnet_contracts_open gauge\n")
+	fmt.Fprintf(b, "urnet_contracts_open %d\n", contracts.Open)
+	fmt.Fprintf(b, "# HELP urnet_contract_limit_bytes Bytes purchased, summed over the contracts open now.\n")
+	fmt.Fprintf(b, "# TYPE urnet_contract_limit_bytes gauge\n")
+	fmt.Fprintf(b, "urnet_contract_limit_bytes %d\n", contracts.OpenLimitBytes)
+	// Per-contract, point-in-time usage as the feed last reported it -- not the
+	// cumulative settled bytes (urnet_lifetime_billable_bytes_total). It falls
+	// when a contract closes, because a closed contract leaves the open set.
+	fmt.Fprintf(b, "# HELP urnet_contract_used_bytes Bytes used so far on the contracts open now, per contract as last reported. Point-in-time open book, not cumulative settled bytes.\n")
+	fmt.Fprintf(b, "# TYPE urnet_contract_used_bytes gauge\n")
+	fmt.Fprintf(b, "urnet_contract_used_bytes %d\n", contracts.OpenUsedBytes)
+	// A contract with no purchased bytes has no utilization to average; with
+	// none sized, the mean is undefined and the gauge is omitted rather than
+	// published as 0%, which would claim nothing was used.
+	if math.IsNaN(contracts.AvgUtilPct) {
+		return
+	}
+	fmt.Fprintf(b, "# HELP urnet_contract_utilization Mean used/purchased over the contracts open now, in percent. Contracts with no positive purchased size are skipped.\n")
+	fmt.Fprintf(b, "# TYPE urnet_contract_utilization gauge\n")
+	fmt.Fprintf(b, "urnet_contract_utilization %g\n", contracts.AvgUtilPct)
 }
 
 func writeSeamLifetime(b *strings.Builder) {
@@ -527,7 +556,10 @@ func writeSeamLifetime(b *strings.Builder) {
 	fmt.Fprintf(b, "# HELP urnet_lifetime_contracts_total Lifetime contract outcomes.\n")
 	fmt.Fprintf(b, "# TYPE urnet_lifetime_contracts_total counter\n")
 	fmt.Fprintf(b, "urnet_lifetime_contracts_total{result=\"acquired\"} %d\n", lt.ContractsAcquired)
-	fmt.Fprintf(b, "urnet_lifetime_contracts_total{result=\"denied\"} %d\n", lt.ContractsDenied)
+	// No denied label: the miner has no denial source (metrics_seams.go), so
+	// this total could only report a zero that reads as "nothing was refused".
+	// The store keeps the field for v33 file compatibility; it is not a reading
+	// here and is not published.
 	fmt.Fprintf(b, "# HELP urnet_lifetime_proxies_total Lifetime proxy transitions.\n")
 	fmt.Fprintf(b, "# TYPE urnet_lifetime_proxies_total counter\n")
 	fmt.Fprintf(b, "urnet_lifetime_proxies_total{event=\"recovered\"} %d\n", lt.ProxiesRecovered)
