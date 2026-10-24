@@ -242,7 +242,9 @@ jobs:
 
       - name: Shellcheck docker scripts (error severity)
         run: |
-          sudo apt-get install -y shellcheck >/dev/null 2>&1
+          # the self-hosted runner has shellcheck installed system-wide and no
+          # sudo; hosted runners are bare ubuntu images that need the apt step.
+          command -v shellcheck >/dev/null 2>&1 || sudo apt-get install -y shellcheck >/dev/null 2>&1
           status=0
           for f in docker/scripts/*.sh; do
             if ! shellcheck -S error "$f"; then
