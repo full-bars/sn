@@ -291,9 +291,12 @@ var reapedProxyHold = struct {
 	until map[string]time.Time
 }{until: map[string]time.Time{}}
 
-// holdReapedProxy records that key was cancelled for under-performing and may
-// not be re-added before until.
-func holdReapedProxy(key string, until time.Time) {
+// setReapedProxyHold records that key is held out of the desired-set build
+// until until. It touches only the hold: the failure history is the caller's to
+// write, because the two callers set the backoff differently (the degraded
+// reaper places its minimum-down window outright, proxy audit extends the
+// ladder rung it computed, so a longer backoff someone else placed survives).
+func setReapedProxyHold(key string, until time.Time) {
 	if key == "" {
 		return
 	}
@@ -305,11 +308,35 @@ func holdReapedProxy(key string, until time.Time) {
 		reapedProxyHold.until[key] = until
 	}
 	reapedProxyHold.Unlock()
+}
 
-	// Mirror into the give-up history: URL-sourced identities are held out by
-	// dropBackoffHeldURLProxies, curated ones by filterReapHeldProxySettings.
-	// The same window in both places keeps the two gates from disagreeing.
+// holdReapedProxy records that key was cancelled for under-performing and may
+// not be re-added before until, and mirrors the window into the give-up history
+// so the existing URL-sourced gate (dropBackoffHeldURLProxies) honors it too.
+func holdReapedProxy(key string, until time.Time) {
+	setReapedProxyHold(key, until)
+	if key == "" {
+		return
+	}
+	// URL-sourced identities are held out by dropBackoffHeldURLProxies, curated
+	// ones by filterReapHeldProxySettings. The same window in both places keeps
+	// the two gates from disagreeing.
 	globalProxyFailureHistory.SetBackoffUntil(key, until)
+}
+
+// releaseReapedProxyHold drops key's hold early and reports whether it was
+// held, so a released identity may rejoin the pool on the next desired-set
+// build. The failure-history backoff is left alone: the caller releases exactly
+// the window it owns (proxy audit's takeOwnBackoff), and a longer one someone
+// else placed stays.
+func releaseReapedProxyHold(key string) bool {
+	reapedProxyHold.Lock()
+	defer reapedProxyHold.Unlock()
+	if _, ok := reapedProxyHold.until[key]; !ok {
+		return false
+	}
+	delete(reapedProxyHold.until, key)
+	return true
 }
 
 // reapedProxyHoldActive reports whether key is still inside its hold window.

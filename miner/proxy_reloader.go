@@ -481,8 +481,9 @@ func h3IdentityHasClients(key string) bool {
 // already been stopped (shutdown or a hotswap yield).
 var errProxyReloaderStopped = errors.New("proxy reloader stopped")
 
-// reap cancels the given identities, for the quality reaper and the pool
-// controller's pressure cut.
+// cancelSlots cancels the given identities, for the degraded-proxy reaper, the
+// pool controller's pressure cut, and proxy audit's park. reap is the
+// reaper-shaped wrapper over it.
 //
 // It is the miner's proxyCancelMap half of the provider's reapProxies: cancel
 // each running slot under mu, release the address it claimed, forget it, and
@@ -492,30 +493,50 @@ var errProxyReloaderStopped = errors.New("proxy reloader stopped")
 // needs the exact set to record its hold against (and, for a pressure cut, to
 // persist a target it can prove).
 //
-// A stopped reloader cancels nothing: stop() is terminal, and a reaper that
-// landed after a yield must not pretend it reaped anything.
-func (r *minerProxyReloader) reap(keys []string) []string {
-	r.mu.Lock()
-	if r.stopped {
-		r.mu.Unlock()
-		return nil
-	}
+// stillEligible, when set, re-checks one identity immediately before its cancel
+// and under the same lock, so a proxy that recovered (or picked up clients)
+// between the snapshot and the act is skipped. onCancelled, when set, runs for
+// each identity that is really cancelled, also under the lock: proxy audit
+// records its park and backoff there, because a reload running between the
+// cancel and the record would see the identity not running and eligible, and
+// relaunch what was just parked. Neither callback may take this lock, and both
+// run in a per-identity scope so a panic cannot leave it held.
+//
+// A stopped reloader cancels nothing: stop() is terminal, and a caller that
+// landed after a yield must not pretend it cancelled anything.
+func (r *minerProxyReloader) cancelSlots(keys []string, stillEligible func(key string) bool, onCancelled func(key string)) []string {
 	var cancelled []string
 	for _, key := range keys {
-		slot, ok := r.running[key]
-		if !ok {
-			continue
-		}
-		slot.cancel()
-		delete(r.running, key)
-		r.releaseAddress(slot.settings)
-		cancelled = append(cancelled, key)
+		// One function per identity so the lock is released by defer even when
+		// a callback panics.
+		func() {
+			r.mu.Lock()
+			defer r.mu.Unlock()
+			if r.stopped {
+				return
+			}
+			if stillEligible != nil && !stillEligible(key) {
+				return
+			}
+			slot, ok := r.running[key]
+			if !ok {
+				return
+			}
+			if onCancelled != nil {
+				onCancelled(key)
+			}
+			slot.cancel()
+			delete(r.running, key)
+			r.releaseAddress(slot.settings)
+			cancelled = append(cancelled, key)
+		}()
 	}
 	if len(cancelled) == 0 {
-		r.mu.Unlock()
 		return nil
 	}
 	sort.Strings(cancelled)
+
+	r.mu.Lock()
 	running := r.sortedRunningKeysLocked()
 	r.mu.Unlock()
 
@@ -523,6 +544,12 @@ func (r *minerProxyReloader) reap(keys []string) []string {
 	// control surface's running set must describe what is really served.
 	r.notify(running)
 	return cancelled
+}
+
+// reap cancels the given identities, for the degraded-proxy reaper. It is
+// cancelSlots without the audit hooks.
+func (r *minerProxyReloader) reap(keys []string) []string {
+	return r.cancelSlots(keys, nil, nil)
 }
 
 // stop cancels every slot the reloader started, for shutdown and for a hotswap
@@ -545,6 +572,8 @@ func (r *minerProxyReloader) stop() {
 	}
 	keys := r.sortedRunningKeysLocked()
 	r.mu.Unlock()
+	// Nothing can be parked through this reloader any more.
+	currentMinerProxyReloader.CompareAndSwap(r, nil)
 	r.notify(keys)
 }
 
@@ -553,6 +582,18 @@ func (r *minerProxyReloader) stop() {
 // really does take effect without a restart rather than following a
 // build-time flag. It is set by the watcher below; no reader is wired yet.
 var proxyReloadWatcherActive atomic.Bool
+
+// currentMinerProxyReloader is the reloader of the running provide loop, or nil
+// when this process is not serving (a profile run pins its slot set and builds
+// none). It is the only handle anything outside the provide loop has on the
+// running slots, so proxy audit parks through it (proxy_manager_audit_park.go):
+// a park has to cancel the slot the reloader owns, not a copy of its cancel.
+//
+// It is a process-wide pointer rather than a parameter because the manager
+// starts its audit loop before the provide run builds the reloader; the audit
+// resolves it per tick, so a nil now and a value later is the normal startup
+// order.
+var currentMinerProxyReloader atomic.Pointer[minerProxyReloader]
 
 // watch polls the reload trigger until ctx ends, applying a reload whenever the
 // sequence number changes. The interval matches the provider's two-second

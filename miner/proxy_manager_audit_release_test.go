@@ -55,15 +55,18 @@ func TestAuditReleaseByAddressReleasesIdentityKeyedParks(t *testing.T) {
 
 	// The control-socket release path (v33 control_socket.go): resolve the
 	// operator-typed address to identity keys, then release each under the
-	// auditor lock, clearing the backoff this audit set.
+	// auditor lock, clearing the backoff this audit set and handing the holds
+	// back to the reloader so the proxies can run again.
 	h.g.mu.Lock()
 	known := h.g.st.parkedAddrs()
 	known = append(known, h.hist.Keys()...)
-	for _, key := range resolveAuditReleaseKeys("gw.example:1080", known) {
+	keys := resolveAuditReleaseKeys("gw.example:1080", known)
+	for _, key := range keys {
 		h.g.st.release(key)
 		h.g.releaseBackoff(key)
 		h.hist.Reset(key)
 	}
+	h.g.unpark(keys)
 	h.g.mu.Unlock()
 
 	for _, k := range []string{u1, u2} {
@@ -73,6 +76,11 @@ func TestAuditReleaseByAddressReleasesIdentityKeyedParks(t *testing.T) {
 		if !h.hist.Eligible(k, h.now) {
 			t.Errorf("%q backoff not cleared after release by its address", k)
 		}
+	}
+	// A release that does not unpark leaves the identity out of the desired set
+	// until its hold lapses, which is the bug this step exists to prevent.
+	if want := []string{u1, u2}; !reflect.DeepEqual(h.unparked, want) {
+		t.Errorf("unparked = %v, want %v", h.unparked, want)
 	}
 	if !h.g.st.isParked(survivor) {
 		t.Errorf("a proxy at a different address must stay parked")

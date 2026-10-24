@@ -1619,6 +1619,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// identities that joined or left it.
 			applyH3CandidateSet(applied, resolveH3Mode(globalControlState, currentProxyResolution()))
 		}
+		// Publish the slot owner for proxy audit's park (proxy_manager_audit_park.go):
+		// the audit loop was started by the manager before this reloader
+		// existed, so it resolves the pointer per tick and parks nothing until
+		// it finds one. Clearing it is stop()'s job.
+		currentMinerProxyReloader.Store(reloader)
 	}
 
 	// Launch ordering (W-02): v33's warmth/earnings prioritization

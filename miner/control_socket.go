@@ -821,6 +821,9 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 				for _, addr := range released {
 					a.releaseBackoff(addr)
 				}
+				// Drop the holds and re-apply the desired set, or the proxies
+				// this just released would stay out of the pool.
+				a.unpark(released)
 				a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
 				a.mu.Unlock()
 				tlog("[proxy][audit] released all %d parked proxies via control socket\n", len(released))
@@ -842,6 +845,9 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 					globalProxyFailureHistory.Reset(key)
 				}
 			}
+			// Same as --all: the holds go with the parks, and the desired set is
+			// re-applied so a released proxy can actually run again.
+			a.unpark(keys)
 			a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
 			a.mu.Unlock()
 			// Name what was released by address (never the raw identity key,

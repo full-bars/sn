@@ -70,10 +70,12 @@ func unpublishProxyEarnBandwidth(key string) {
 	delete(proxyEarnBandwidthRegistry.byKey, key)
 }
 
-// proxyEarnBandwidthFor returns the live counter published for one identity, or
-// nil when the identity is not running here. It is the targeted read for a
-// single-key question (see h3IdentityHasClients), so a caller asking about one
-// identity does not copy the whole snapshot.
+// proxyEarnBandwidthFor returns the live counters published for one proxy
+// identity, or nil when this process publishes none — the slot is not running,
+// or the identity is not a proxy at all (the direct slot has no key and is
+// never published). It is the targeted read for single-key questions, so a
+// caller asking about one identity (the h3 relauncher's client check, the
+// audit's client count) does not copy the whole snapshot.
 func proxyEarnBandwidthFor(key string) *bandwidth.ProxyBandwidth {
 	if key == "" {
 		return nil

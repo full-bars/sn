@@ -596,11 +596,13 @@ type proxyHealthReport struct {
 }
 
 // proxyBandwidth is the per-proxy traffic snapshot the traffic report renders.
-// The miner has no live per-proxy throughput counters yet (they come from the
-// connect client's proxy bandwidth registry, which the pinned connect does not
-// expose), so every counter stays at its zero value until P2 wires a source;
-// the counters exist now so the renderer, the sort and the file format are the
-// v33 ones.
+// The live counters are the identity-keyed *bandwidth.ProxyBandwidth the
+// provide loop publishes (proxyEarnBandwidthRegistry,
+// proxy_manager_earnings_loop.go), and proxy audit's client count reads them
+// directly (proxyAuditClients). This fork-local shape exists only because the
+// pinned connect does not export the v33 connect.ProxyHealthReport /
+// ProxyBandwidth types; nothing fills the report's Bandwidth map yet, so the
+// traffic report the miner writes is still empty.
 type proxyBandwidth struct {
 	TotalRx, TotalTx, BillableRx, BillableTx atomic.Uint64
 	Clients                                  atomic.Int64
