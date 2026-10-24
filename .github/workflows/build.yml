@@ -59,7 +59,15 @@ jobs:
 
   test:
     name: test
+    # Split across both pools on purpose. test and lint stay on the self-hosted
+    # runner because its go module and build caches live on disk between jobs,
+    # which is what makes the race suite cheap. cross-build and freebsd-vet go
+    # back to hosted: the 6-entry compile matrix runs in parallel there instead
+    # of serialising one runner, and neither gains anything from a warm cache.
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
+    # no runner fallback exists: a job pinned to self-hosted queues until
+    # it times out, so bound that wait instead of inheriting the 6h default
+    timeout-minutes: 30
     permissions:
       contents: read
 
@@ -111,6 +119,9 @@ jobs:
 
   lint:
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
+    # no runner fallback exists: a job pinned to self-hosted queues until
+    # it times out, so bound that wait instead of inheriting the 6h default
+    timeout-minutes: 15
     permissions:
       contents: read
 
@@ -265,7 +276,7 @@ jobs:
     # for GOOS=freebsd, so a freebsd-only break (a symbol gated behind
     # //go:build linux that a shared caller reaches) fails the PR instead
     # of landing and breaking the FreeBSD release at cut time.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -283,7 +294,7 @@ jobs:
           # build caches are already on disk and the cache service would only
           # upload and re-download them over a slow link. hosted runners (fork
           # PRs) have no persistent disk, so they still use it.
-          cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+          cache: true
           cache-dependency-path: go.sum
 
       - name: Vet urnettools for freebsd
@@ -300,7 +311,7 @@ jobs:
     # would otherwise catch at cut time. Compile every shippable binary here,
     # across the same GOOS x GOARCH matrix the release uses, so PRs fail on the
     # gap instead of the release.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     strategy:
@@ -323,7 +334,7 @@ jobs:
           # build caches are already on disk and the cache service would only
           # upload and re-download them over a slow link. hosted runners (fork
           # PRs) have no persistent disk, so they still use it.
-          cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+          cache: true
           cache-dependency-path: go.sum
 
       - name: Compile shippable binaries for ${{ matrix.goos }}/${{ matrix.goarch }}
