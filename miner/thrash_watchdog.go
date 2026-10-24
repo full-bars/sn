@@ -1175,6 +1175,9 @@ func (w *swapThrashWatch) sample(now time.Time) {
 			// so comparing the text re-alerts every retry.
 			if esc.Code != w.lastActionCode {
 				w.critf("[thrash] detected but NOT restarting: %s\n", esc.Reason)
+				// A refusal is a decision the operator must be able to audit
+				// later: the log rotates, the ledger does not vanish silently.
+				ledgerRecord(ledgerEntry{Actor: "thrash", Action: "alert", Reason: esc.Reason}, now)
 				w.lastActionCode = esc.Code
 				w.lastAction = esc.Reason
 			}

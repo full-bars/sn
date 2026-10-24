@@ -1158,7 +1158,7 @@ func applyControlLiveSideEffect(key, value string) error {
 		if effective == oomCapModeName(oomCapOff) {
 			// "off" has to forget the standing cap, not just stop enforcing it,
 			// or the next "on" resumes a cap set days ago (see oomCapResetOnOff).
-			for _, line := range oomCapResetOnOff() {
+			for _, line := range oomCapResetOnOff(time.Now()) {
 				importantLogf("%s\n", line)
 			}
 		} else if oomCapMode() == oomCapOn {

@@ -1577,7 +1577,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// URL cache + operator trim cap). Its error is the reload's
 				// abort signal: a transient read failure must not be read as
 				// "no proxies" and cancel the fleet.
-				launch, _, _, err := newProxyManager(defaultProxyManagerConfig()).desired(false)
+				//
+				// desiredForReload, not desired: this read's set IS applied
+				// below, so a binding trim cap here is a live capacity
+				// decision and belongs in the action ledger. The command
+				// readers keep the silent read.
+				launch, _, _, err := newProxyManager(defaultProxyManagerConfig()).desiredForReload()
 				if err != nil {
 					return nil, err
 				}
