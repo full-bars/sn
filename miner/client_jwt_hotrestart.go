@@ -299,6 +299,13 @@ type clientJWTProvideConfig struct {
 	ApiUrl                 string
 	Description            string
 	ClientStrategySettings *connect.ClientStrategySettings
+	// ClientStrategy, when set, is the slot's own strategy (built from
+	// ClientStrategySettings) and the renewal runs on it instead of building a
+	// throwaway one. That is what makes the smart dialer's background probes
+	// (smart_dialer_probe.go) count for the renewal: they measure that
+	// strategy's dialers, and a throwaway per attempt would measure nothing
+	// that outlives the call.
+	ClientStrategy *connect.ClientStrategy
 	// Mint mints a fresh client identity. Required.
 	Mint func(context.Context) (string, connect.Id, error)
 	// FreshMint registers a brand-new client identity with a new client_id.
@@ -537,11 +544,17 @@ func renewStoredClientJWT(
 
 // renewClientJWTWithSlotStrategy runs one renewal call on a client strategy
 // built from the slot's settings, so the dial takes the same proxy route the
-// slot itself uses. The temporary strategy is closed before returning.
+// slot itself uses. A strategy the slot owns is used as it is (the smart
+// dialer's probes measure it, so it carries the measured transport order); a
+// throwaway is closed before returning.
 func renewClientJWTWithSlotStrategy(ctx context.Context, cfg clientJWTProvideConfig, networkJwt string, clientId connect.Id, description string) (string, error) {
-	var strategy *connect.ClientStrategy
-	if cfg.ClientStrategySettings != nil {
+	strategy := cfg.ClientStrategy
+	owned := false
+	if strategy == nil && cfg.ClientStrategySettings != nil {
 		strategy = connect.NewClientStrategy(ctx, cfg.ClientStrategySettings)
+		owned = true
+	}
+	if owned {
 		defer strategy.Close()
 	}
 	return renewClientJWTFn(ctx, cfg.ApiUrl, networkJwt, clientId, description, strategy)
