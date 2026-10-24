@@ -70,6 +70,19 @@ func unpublishProxyEarnBandwidth(key string) {
 	delete(proxyEarnBandwidthRegistry.byKey, key)
 }
 
+// proxyEarnBandwidthFor returns the live counter published for one identity, or
+// nil when the identity is not running here. It is the targeted read for a
+// single-key question (see h3IdentityHasClients), so a caller asking about one
+// identity does not copy the whole snapshot.
+func proxyEarnBandwidthFor(key string) *bandwidth.ProxyBandwidth {
+	if key == "" {
+		return nil
+	}
+	proxyEarnBandwidthRegistry.Lock()
+	defer proxyEarnBandwidthRegistry.Unlock()
+	return proxyEarnBandwidthRegistry.byKey[key]
+}
+
 // proxyEarnBandwidthSnapshot copies the live identity-keyed counters. The map
 // is copied so the recorder folds a stable snapshot while the provide loop
 // publishes and withdraws slots.
