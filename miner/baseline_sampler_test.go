@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -402,5 +403,86 @@ func TestBaselineSampleOmitsCountsWhenTheyWereNotRead(t *testing.T) {
 	known := buildBaselineSample(in)
 	if known.Clients == nil || *known.Clients != 4 || known.Sessions == nil {
 		t.Fatalf("known counts dropped: %v %v", known.Clients, known.Sessions)
+	}
+}
+
+// baselineSampleLines counts the sample lines the recorder has written.
+func baselineSampleLines(t *testing.T) int {
+	t.Helper()
+	path, err := baselinePath()
+	if err != nil {
+		t.Fatalf("baselinePath: %v", err)
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return 0
+	}
+	n := 0
+	for _, line := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		if strings.Contains(line, `"kind":"sample"`) {
+			n++
+		}
+	}
+	return n
+}
+
+// waitForBaselineSamples waits for the recorder to have written want sample
+// lines, so a test can assert on a sampler that is running in a goroutine.
+func waitForBaselineSamples(t *testing.T, want int) bool {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if baselineSampleLines(t) >= want {
+			return true
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	return baselineSampleLines(t) >= want
+}
+
+// The first-sample delay is a cold-start rule: after a supervised restart the
+// pool is already up, so the sampler must resume promptly instead of losing
+// another baselineFirstSampleDelay of the series.
+func TestBaselineRunSkipsFirstSampleDelayOnRestart(t *testing.T) {
+	withTempHome(t)
+	prevWait := baselineFirstSampleWait
+	prevDone := baselineFirstSampleDone.Load()
+	prevEnabled := baselineEnabled.Load()
+	baselineFirstSampleWait = func(ctx context.Context) bool { return ctx.Err() == nil }
+	baselineFirstSampleDone.Store(false)
+	baselineEnabled.Store(true)
+	t.Cleanup(func() {
+		baselineFirstSampleWait = prevWait
+		baselineFirstSampleDone.Store(prevDone)
+		baselineEnabled.Store(prevEnabled)
+	})
+
+	var waits atomic.Int32
+	baselineFirstSampleWait = func(ctx context.Context) bool {
+		waits.Add(1)
+		return ctx.Err() == nil
+	}
+	// runOnce starts the sampler, waits for the sample that follows the (seamed)
+	// cold start, then stops it.
+	runOnce := func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+		go baselineRun(ctx, done)
+		if !waitForBaselineSamples(t, baselineSampleLines(t)+1) {
+			cancel()
+			t.Fatal("baseline sampler did not take a sample")
+		}
+		cancel()
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			t.Fatal("baselineRun did not return after cancellation")
+		}
+	}
+
+	runOnce() // cold start pays the delay
+	runOnce() // restart must not
+	if got := waits.Load(); got != 1 {
+		t.Fatalf("first-sample waits = %d, want 1 (only the cold start pays it)", got)
 	}
 }

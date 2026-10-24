@@ -604,8 +604,9 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// joined on m.wg for shutdown, supervised for panics (loop_supervisor.go).
 	// The grading gate is the one exception: it is a one-shot wait that returns
 	// by design once the gate opens, so supervising it would restart it against
-	// an already-open gate. startLoopOnce joins it the same way.
-	m.startLoopOnce(func() { m.gate.run(ctx) })
+	// an already-open gate. startLoopOnce joins it the same way, and
+	// runGradingGate fails it open if that one-shot dies before opening it.
+	m.startLoopOnce(func() { m.runGradingGate(ctx) })
 	if len(m.cfg.Urls) > 0 {
 		m.startLoop(ctx, "url_fetcher", func() {
 			runProxyURLFetcher(ctx, m.cfg.Urls, m.cfg.Refresh, m.cfg.Max, m.cfg.ApiHost, m.cfg.ApiPort, m.cfg.SelfHeal, m.gate)
@@ -691,10 +692,14 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 // is logged, counted, and the loop restarted with a bounded backoff instead of
 // taking the process down with every proxy slot in it.
 func (m *proxyManager) startLoop(ctx context.Context, name string, fn func()) {
+	// The registry entry is resolved here, on the manager's goroutine: the
+	// loop's series exists before its goroutine can fail, and the loop's own
+	// goroutine never reads the supervisor's registry (loop_supervisor.go).
+	ref := newLoopRef(name)
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
-		superviseLoop(ctx, name, fn, nil)
+		superviseLoop(ctx, ref, fn, nil)
 	}()
 }
 
@@ -707,6 +712,24 @@ func (m *proxyManager) startLoopOnce(fn func()) {
 		defer m.wg.Done()
 		connect.HandleError(fn)
 	}()
+}
+
+// runGradingGate runs the gate's deciding loop as the manager's one-shot, and
+// fails the gate open if that loop ends before it opens it. The gate is the
+// only thing that releases url_fetcher, url_reaper and paid_grader: a panic
+// here is contained by startLoopOnce (the loop is not restarted, because it is
+// a one-shot), so without this the dependents would stay parked until shutdown
+// while the process still looked healthy (proxy_manager_gate.go).
+func (m *proxyManager) runGradingGate(ctx context.Context) {
+	defer func() {
+		// A shutdown is not a failure: the dependents' waits return on the
+		// same context at the same time.
+		if ctx.Err() != nil {
+			return
+		}
+		m.gate.failOpen("the gate loop ended before it opened")
+	}()
+	m.gate.run(ctx)
 }
 
 // proxyAuditParkCancelMap is the per-address cancel map proxy audit parks

@@ -37,7 +37,8 @@ func TestNextLoopBackoff(t *testing.T) {
 // A panicking loop must be contained, restarted, counted, and backed off; onFail
 // must run after every failure so a loop's actuators can fail neutral.
 func TestSuperviseLoopRestartsAfterPanic(t *testing.T) {
-	resetLoopStatus("test-miner-panic")
+	const name = "test-miner-panic"
+	resetLoopStatus(name)
 	origSleep := loopSleep
 	defer func() { loopSleep = origSleep }()
 	var sleeps []time.Duration
@@ -51,7 +52,10 @@ func TestSuperviseLoopRestartsAfterPanic(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		superviseLoop(ctx, "test-miner-panic", func() {
+		// The registry entry is resolved on the caller's side, as every real
+		// caller does (loop_supervisor.go).
+		ref := newLoopRef(name)
+		superviseLoop(ctx, ref, func() {
 			if runs.Add(1) >= 4 {
 				cancel() // stop after the 4th run
 				return
@@ -80,7 +84,7 @@ func TestSuperviseLoopRestartsAfterPanic(t *testing.T) {
 			t.Fatalf("backoff sleeps = %v, want %v", sleeps, want)
 		}
 	}
-	if st := loopStatusOf("test-miner-panic"); st.Restarts != 3 || st.Up {
+	if st := loopStatusOf(name); st.Restarts != 3 || st.Up {
 		t.Fatalf("status = %+v, want 3 restarts and not up after stop", st)
 	}
 }
@@ -89,7 +93,8 @@ func TestSuperviseLoopRestartsAfterPanic(t *testing.T) {
 // instead of spinning. Every run after the first is preceded by exactly one
 // sleep, and the sleeps grow until the cap.
 func TestSuperviseLoopBacksOffOnRepeatedPanic(t *testing.T) {
-	resetLoopStatus("test-miner-backoff")
+	const name = "test-miner-backoff"
+	resetLoopStatus(name)
 	origSleep := loopSleep
 	defer func() { loopSleep = origSleep }()
 	var sleeps []time.Duration
@@ -99,7 +104,7 @@ func TestSuperviseLoopBacksOffOnRepeatedPanic(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	superviseLoop(ctx, "test-miner-backoff", func() { panic("boom") }, nil)
+	superviseLoop(ctx, newLoopRef(name), func() { panic("boom") }, nil)
 
 	want := []time.Duration{
 		loopBackoffBase,
@@ -120,7 +125,7 @@ func TestSuperviseLoopBacksOffOnRepeatedPanic(t *testing.T) {
 	// Five runs were actually restarted; the sixth backoff ended the supervisor
 	// before another run started, and a restart that never happened is not
 	// counted.
-	if st := loopStatusOf("test-miner-backoff"); st.Restarts != 5 || st.Up {
+	if st := loopStatusOf(name); st.Restarts != 5 || st.Up {
 		t.Fatalf("status = %+v, want 5 restarts and not up", st)
 	}
 }
@@ -128,7 +133,8 @@ func TestSuperviseLoopBacksOffOnRepeatedPanic(t *testing.T) {
 // A normal long-running loop is not restarted: it runs once, and cancelling the
 // context is a clean stop.
 func TestSuperviseLoopNormalLoopNotRestarted(t *testing.T) {
-	resetLoopStatus("test-miner-normal")
+	const name = "test-miner-normal"
+	resetLoopStatus(name)
 	origSleep := loopSleep
 	defer func() { loopSleep = origSleep }()
 
@@ -138,7 +144,7 @@ func TestSuperviseLoopNormalLoopNotRestarted(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		superviseLoop(ctx, "test-miner-normal", func() {
+		superviseLoop(ctx, newLoopRef(name), func() {
 			if runs.Add(1) == 1 {
 				close(started)
 			}
@@ -155,7 +161,7 @@ func TestSuperviseLoopNormalLoopNotRestarted(t *testing.T) {
 	if got := runs.Load(); got != 1 {
 		t.Fatalf("runs = %d, want 1 (a normal loop is not restarted)", got)
 	}
-	if st := loopStatusOf("test-miner-normal"); st.Restarts != 0 || st.Up {
+	if st := loopStatusOf(name); st.Restarts != 0 || st.Up {
 		t.Fatalf("status = %+v, want 0 restarts and not up", st)
 	}
 }
@@ -163,7 +169,8 @@ func TestSuperviseLoopNormalLoopNotRestarted(t *testing.T) {
 // A shutdown during the backoff must stop the supervisor without counting a
 // restart that never happened, and without waiting out the backoff.
 func TestSuperviseLoopStopsOnContextCancel(t *testing.T) {
-	resetLoopStatus("test-miner-cancel-backoff")
+	const name = "test-miner-cancel-backoff"
+	resetLoopStatus(name)
 	origSleep := loopSleep
 	defer func() { loopSleep = origSleep }()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -172,14 +179,47 @@ func TestSuperviseLoopStopsOnContextCancel(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		superviseLoop(ctx, "test-miner-cancel-backoff", func() { panic("boom") }, nil)
+		superviseLoop(ctx, newLoopRef(name), func() { panic("boom") }, nil)
 	}()
 	select {
 	case <-done:
 	case <-time.After(5 * time.Second):
 		t.Fatal("supervisor did not return when cancelled during the backoff")
 	}
-	if st := loopStatusOf("test-miner-cancel-backoff"); st.Restarts != 0 || st.Up {
+	if st := loopStatusOf(name); st.Restarts != 0 || st.Up {
+		t.Fatalf("status = %+v, want 0 restarts and not up", st)
+	}
+}
+
+// A cancel that lands after the backoff but before the next run is a shutdown,
+// not a run: fn must not be invoked on a dead context, and the restart must not
+// be counted.
+func TestSuperviseLoopDoesNotStartOnCancelledContext(t *testing.T) {
+	const name = "test-miner-cancelled-entry"
+	resetLoopStatus(name)
+	origSleep := loopSleep
+	defer func() { loopSleep = origSleep }()
+	// A zero sleep keeps the test off the wall clock; the entry check must
+	// return before fn or the sleep is reached at all.
+	loopSleep = func(ctx context.Context, d time.Duration) bool { return true }
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	var runs atomic.Int32
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		superviseLoop(ctx, newLoopRef(name), func() { runs.Add(1) }, nil)
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("supervisor did not return on an already-cancelled context")
+	}
+	if got := runs.Load(); got != 0 {
+		t.Fatalf("runs = %d, want 0: fn must not start on a cancelled context", got)
+	}
+	if st := loopStatusOf(name); st.Restarts != 0 || st.Up {
 		t.Fatalf("status = %+v, want 0 restarts and not up", st)
 	}
 }
@@ -187,14 +227,15 @@ func TestSuperviseLoopStopsOnContextCancel(t *testing.T) {
 // A loop that returns while the context is live is a failure too, not a clean
 // exit: without this a silently ended loop is never noticed.
 func TestSuperviseLoopRestartsAfterUnexpectedReturn(t *testing.T) {
-	resetLoopStatus("test-miner-return")
+	const name = "test-miner-return"
+	resetLoopStatus(name)
 	origSleep := loopSleep
 	defer func() { loopSleep = origSleep }()
 	loopSleep = func(ctx context.Context, d time.Duration) bool { return ctx.Err() == nil }
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var runs atomic.Int32
-	superviseLoop(ctx, "test-miner-return", func() {
+	superviseLoop(ctx, newLoopRef(name), func() {
 		if runs.Add(1) >= 2 {
 			cancel()
 		}
@@ -202,7 +243,7 @@ func TestSuperviseLoopRestartsAfterUnexpectedReturn(t *testing.T) {
 	if got := runs.Load(); got != 2 {
 		t.Fatalf("runs = %d, want 2", got)
 	}
-	if st := loopStatusOf("test-miner-return"); st.Restarts != 1 {
+	if st := loopStatusOf(name); st.Restarts != 1 {
 		t.Fatalf("restarts = %d, want 1", st.Restarts)
 	}
 }
@@ -242,6 +283,9 @@ func TestMinerLoopSupervisorMetricsSeam(t *testing.T) {
 // The manager's wait group still joins a supervised loop: a panic restarts it
 // in place, and cancelling stops it and releases the join.
 func TestMinerLoopSupervisorStartLoopJoins(t *testing.T) {
+	const name = "test-miner-start-loop"
+	resetLoopStatus(name)
+	t.Cleanup(func() { resetLoopStatus(name) })
 	origSleep := loopSleep
 	defer func() { loopSleep = origSleep }()
 	loopSleep = func(ctx context.Context, d time.Duration) bool { return ctx.Err() == nil }
@@ -251,7 +295,7 @@ func TestMinerLoopSupervisorStartLoopJoins(t *testing.T) {
 	var runs atomic.Int32
 	first := make(chan struct{}, 1)
 	second := make(chan struct{}, 1)
-	m.startLoop(ctx, "test-miner-start-loop", func() {
+	m.startLoop(ctx, name, func() {
 		if runs.Add(1) == 1 {
 			first <- struct{}{}
 			panic("boom")
@@ -278,5 +322,8 @@ func TestMinerLoopSupervisorStartLoopJoins(t *testing.T) {
 	}
 	if got := runs.Load(); got != 2 {
 		t.Fatalf("runs = %d, want 2 (one panic, one restarted run)", got)
+	}
+	if st := loopStatusOf(name); st.Restarts != 1 {
+		t.Fatalf("restarts = %d, want 1", st.Restarts)
 	}
 }

@@ -1086,8 +1086,20 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// One rate sample per second feeds the snapshot's throughput history.
 	// Supervised: this same loop also drives the swap-thrash watchdog, so a
 	// panic in a sample must restart it rather than end the process's only
-	// always-on sampler (loop_supervisor.go).
-	go superviseLoop(ctx, "control_sampler", func() { controlRuntime.runSampler(ctx) }, nil)
+	// always-on sampler (loop_supervisor.go). It is also joined at exit, like
+	// every other supervised loop: the join cancels the run through the raw
+	// cancel func first, so a shutdown never waits on a sampler whose context
+	// nobody has ended yet, and the SIGNAL line still names the real first
+	// canceller rather than this join.
+	controlSamplerDone := make(chan struct{})
+	go func() {
+		defer close(controlSamplerDone)
+		superviseLoop(ctx, newLoopRef("control_sampler"), func() { controlRuntime.runSampler(ctx) }, nil)
+	}()
+	defer func() {
+		rawCancel()
+		<-controlSamplerDone
+	}()
 
 	keyPath, err := providerStatePath(".provider.key")
 	if err != nil {
@@ -1705,15 +1717,33 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// started on the way out: the reloader's slots are outside the launch
 	// WaitGroup, so nothing else would end them. This starts after the launch
 	// loop and before the join - the slots below run until the run ends.
+	//
+	// The watcher itself is supervised and joined: a panic in a reload must
+	// restart the watcher (a bare goroutine would take the process down), and
+	// the run must not return while it is still polling a trigger for a
+	// process that no longer serves. The join is registered last, so it runs
+	// first (LIFO) and the watcher is stopped before its slots are cancelled;
+	// it cancels through the raw cancel func, so it cannot wait on a context
+	// nobody has ended.
 	if reloader != nil {
+		reloadWatchDone := make(chan struct{})
 		if reloadPath, err := proxyReloadPath(); err == nil {
-			go reloader.watch(ctx, reloadPath, 0)
+			go func() {
+				defer close(reloadWatchDone)
+				superviseLoop(ctx, newLoopRef("reloader_watch"), func() { reloader.watch(ctx, reloadPath, 0) }, nil)
+			}()
+		} else {
+			close(reloadWatchDone)
 		}
 		// The quality reaper can only cancel what the reloader owns, so it is
 		// installed only when the reloader is (same condition: an unprofiled
 		// run). It shares the reloader's slots and stops with the run's ctx.
 		go newMinerDegradedReaper(reloader).run(ctx)
 		defer reloader.stop()
+		defer func() {
+			rawCancel()
+			<-reloadWatchDone
+		}()
 	}
 	wg.Wait()
 	cancel()
