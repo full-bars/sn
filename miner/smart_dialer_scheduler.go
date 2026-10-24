@@ -115,6 +115,11 @@ const (
 	// again. The jitter keeps a thousand waiters from polling in step.
 	smartDialerRecheckMin    = 2 * time.Second
 	smartDialerRecheckJitter = 4 * time.Second
+	// smartDialerStopTimeout bounds the join in Stop. A cancel reaches a probe
+	// through its context, but a transport connect already in the kernel does
+	// not have to return from it, and Stop is called from the control socket:
+	// one stuck dial must not be able to hold a control command open forever.
+	smartDialerStopTimeout = 5 * time.Second
 )
 
 // errSmartDialerPathBusy ends a round because the path started serving
@@ -347,6 +352,13 @@ type smartDialerScheduler struct {
 	lifeMutex sync.Mutex
 	cancel    context.CancelFunc
 	done      chan struct{}
+	// stopping is true between the cancel and the end of the join in Stop, so
+	// a Start that finds a live cancel can say why it refused instead of
+	// reporting a scheduler that is not actually probing.
+	stopping bool
+	// stopTimeout bounds the join in Stop. A field so a test can watch the
+	// bound without waiting out the process window.
+	stopTimeout time.Duration
 
 	// deferred counts rounds that had to wait for their path to go quiet.
 	deferred atomic.Int64
@@ -356,13 +368,14 @@ type smartDialerScheduler struct {
 
 func newSmartDialerScheduler(config smartDialerConfig, startTime time.Time) *smartDialerScheduler {
 	self := &smartDialerScheduler{
-		config:    config,
-		startTime: startTime,
-		now:       time.Now,
-		sleep:     sleepContext,
-		slots:     make(chan struct{}, config.maxInFlight),
-		targets:   map[smartDialerPath]*smartDialerTarget{},
-		wake:      make(chan struct{}, 1),
+		config:      config,
+		startTime:   startTime,
+		now:         time.Now,
+		sleep:       sleepContext,
+		slots:       make(chan struct{}, config.maxInFlight),
+		targets:     map[smartDialerPath]*smartDialerTarget{},
+		wake:        make(chan struct{}, 1),
+		stopTimeout: smartDialerStopTimeout,
 	}
 	self.probe = self.probeWithConnect
 	return self
@@ -450,17 +463,31 @@ func (self *smartDialerScheduler) Register(path smartDialerPath, member *smartDi
 // Unregister removes a member from its target, dropping the target when the
 // last identity on the path withdraws, and waits out a round that is dialing
 // with it.
+//
+// The round lock comes FIRST, and the removal happens under it. A round selects
+// its member and dials under roundMu, so taking it here both waits out a round
+// that already captured this member and stops a new round from selecting it
+// while it is being withdrawn. Removing first and waiting afterwards left the
+// window the other way round: a round could read the member, the removal could
+// complete (and the caller close the strategy), and only then the round took
+// roundMu and dialed the closed strategy.
 func (self *smartDialerScheduler) Unregister(target *smartDialerTarget, member *smartDialerMember) {
 	if target == nil || member == nil {
 		return
 	}
+	self.roundMu.Lock()
+	defer self.roundMu.Unlock()
 	self.mutex.Lock()
+	// the trailing slots are cleared as well: the reslice below leaves the
+	// withdrawn pointers in the backing array, and they would keep the strategy
+	// and its counter reachable for the life of the target
 	members := target.members[:0]
 	for _, other := range target.members {
 		if other != member {
 			members = append(members, other)
 		}
 	}
+	clear(target.members[len(members):])
 	target.members = members
 	if len(target.members) == 0 {
 		if self.targets[target.path] == target {
@@ -471,10 +498,6 @@ func (self *smartDialerScheduler) Unregister(target *smartDialerTarget, member *
 		}
 	}
 	self.mutex.Unlock()
-	// The round holds roundMu for its whole length: taking it here waits for a
-	// probe that captured this member before the removal above.
-	self.roundMu.Lock()
-	self.roundMu.Unlock()
 }
 
 // paths reports how many egress paths are registered.
@@ -570,6 +593,9 @@ func (self *smartDialerScheduler) Start() bool {
 	self.lifeMutex.Lock()
 	defer self.lifeMutex.Unlock()
 	if self.cancel != nil {
+		if self.stopping {
+			tlog("[smart-dialer] the previous scheduler run has not joined yet (a probe connect is still returning from its cancel): not starting a second dispatcher beside it\n")
+		}
 		return false
 	}
 	self.mutex.Lock()
@@ -585,16 +611,44 @@ func (self *smartDialerScheduler) Start() bool {
 }
 
 // Stop cancels the dispatcher and joins it, including any in-flight round.
+//
+// lifeMutex is held across the cancel AND the join. Clearing the cancel before
+// the join let a Start that arrived while the first dispatcher was still
+// exiting see no run at all and spawn a second one; and a second Stop that
+// arrived in the same window returned without joining. The join is part of the
+// lifecycle, so it belongs inside the same critical section.
+//
+// The join is bounded by stopTimeout. Stop is called from the control socket's
+// live side effect (smart_dialer off), and a probe connect that does not
+// return from its cancel would otherwise hold that command - and any write
+// behind it - open indefinitely. When the bound is hit the cancel/done pair is
+// left in place: the next Stop retries the join, and Start refuses to run a
+// second dispatcher beside the one that is still going away.
 func (self *smartDialerScheduler) Stop() {
 	self.lifeMutex.Lock()
-	cancel, done := self.cancel, self.done
-	self.cancel, self.done = nil, nil
-	self.lifeMutex.Unlock()
-	if cancel == nil {
+	defer self.lifeMutex.Unlock()
+	if self.cancel == nil {
 		return
 	}
+	cancel, done := self.cancel, self.done
+	self.stopping = true
+	defer func() { self.stopping = false }()
 	cancel()
-	<-done
+	timeout := self.stopTimeout
+	if timeout <= 0 {
+		timeout = smartDialerStopTimeout
+	}
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-done:
+		// cleared only now, with the goroutine gone and the mutex still held:
+		// between the cancel and this point a run is in flight and no Start
+		// may see it as absent
+		self.cancel, self.done = nil, nil
+	case <-timer.C:
+		tlog("⚠️ [smart-dialer] the probe scheduler did not join within %s: a probe connect is not returning from its cancel; the next stop retries the join\n", timeout)
+	}
 }
 
 // Running reports whether the dispatcher goroutine is up.
@@ -701,15 +755,22 @@ func (self *smartDialerScheduler) probeTarget(ctx context.Context, target *smart
 		self.reschedule(target, self.hourEnd(now))
 		return
 	}
+	// The round lock is taken BEFORE the member is read, and held for the whole
+	// round. Unregister withdraws a member under this same lock, so a strategy
+	// that is picked here cannot be closed between the pick and the dial; it
+	// used to be read under the registry mutex alone, and a withdrawal could
+	// complete (and the caller close the strategy) before the round took
+	// roundMu.
+	self.roundMu.Lock()
 	self.mutex.Lock()
 	member := target.nextMember()
+	heldBefore := target.held
 	self.mutex.Unlock()
 	if member == nil {
+		self.roundMu.Unlock()
 		self.reschedule(target, now.Add(self.config.pathInterval))
 		return
 	}
-	heldBefore := self.held(target)
-	self.roundMu.Lock()
 	self.probe(ctx, target, member)
 	self.roundMu.Unlock()
 	if ctx.Err() != nil {
@@ -726,11 +787,10 @@ func (self *smartDialerScheduler) probeTarget(ctx context.Context, target *smart
 		return
 	}
 	if self.held(target) != heldBefore {
-		// the path is serving clients: ask again after the recheck window
-		// rather than after a full path interval, so a path that goes quiet
-		// soon is probed soon
+		// the path is serving clients: ask again when the quiet window it is
+		// waiting on could actually have elapsed, not every recheck tick
 		self.deferred.Add(1)
-		self.reschedule(target, self.now().Add(self.recheck()))
+		self.reschedule(target, self.now().Add(self.busyBackoff(target)))
 		return
 	}
 	self.reschedule(target, now.Add(self.config.pathInterval))
@@ -885,6 +945,31 @@ func (self *smartDialerScheduler) hourEnd(now time.Time) time.Time {
 
 func (self *smartDialerScheduler) recheck() time.Duration {
 	return self.config.recheckMin + time.Duration(rand.Int63n(int64(self.config.recheckJitter)))
+}
+
+// busyBackoff is how long a path that is carrying clients waits before its next
+// round. The gate holds a round off for the TRAFFIC-QUIET window, so a recheck
+// of a few seconds cannot find the path quiet and only spins: the wait is the
+// remainder of that window (TrafficIdleFor is negative while a session is open,
+// which reads as the whole window from now), with the usual jitter so a
+// thousand waiters do not poll in step.
+func (self *smartDialerScheduler) busyBackoff(target *smartDialerTarget) time.Duration {
+	self.mutex.Lock()
+	counters := target.counters()
+	self.mutex.Unlock()
+	wait := self.config.trafficQuiet
+	for _, bw := range counters {
+		if bw == nil {
+			continue
+		}
+		if remaining := self.config.trafficQuiet - bw.TrafficIdleFor(); wait < remaining {
+			wait = remaining
+		}
+	}
+	if wait < self.config.recheckMin {
+		wait = self.config.recheckMin
+	}
+	return wait + time.Duration(rand.Int63n(int64(self.config.recheckJitter)))
 }
 
 func (self *smartDialerScheduler) noteHeld(target *smartDialerTarget) {
