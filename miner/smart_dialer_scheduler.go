@@ -606,7 +606,11 @@ func (self *smartDialerScheduler) Start() bool {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	self.cancel, self.done = cancel, done
-	go connect.HandleError(func() { self.run(ctx, done) })
+	ref := newLoopRef("smart_dialer")
+	go func() {
+		defer close(done)
+		superviseLoop(ctx, ref, func() { self.run(ctx) }, nil)
+	}()
 	return true
 }
 
@@ -661,8 +665,7 @@ func (self *smartDialerScheduler) Running() bool {
 // run is the one scheduler goroutine: it takes due targets off the heap, runs
 // their round, and sleeps until the next due time or summary window. It owns
 // the summary window too, so stopping the scheduler stops that wakeup with it.
-func (self *smartDialerScheduler) run(ctx context.Context, done chan struct{}) {
-	defer close(done)
+func (self *smartDialerScheduler) run(ctx context.Context) {
 	summaryAt := self.now().Add(self.config.summaryInterval)
 	for {
 		now := self.now()

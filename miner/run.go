@@ -1195,6 +1195,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// value has to be replayed here or a restart loses it and the scheduler
 	// (smart_dialer_scheduler.go) starts with no preference to feed.
 	replaySmartDialerAtStartup(controlState)
+	defer stopSmartDialerScheduler()
+	unregSmartDialer := RegisterCoordinatorCloser(stopSmartDialerScheduler)
+	defer unregSmartDialer()
 	initControlAuditRing()
 	// A HotSwap successor labels its start entry "hotswap". A Docker in-place
 	// execve successor is not a spawned candidate (no IPC descriptor) but the

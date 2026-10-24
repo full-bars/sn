@@ -845,3 +845,43 @@ func TestSmartDialerIdentityIsRegisteredAfterAuthAndStoppedBeforeTheClose(t *tes
 		t.Fatal("the registration is not joined before the strategy is closed")
 	}
 }
+
+func TestSmartDialerRegisteredWithLoopSupervisor(t *testing.T) {
+	scheduler := newTestSmartDialerScheduler(t, testSmartDialerConfig())
+	if !scheduler.Start() {
+		t.Fatal("expected scheduler to start")
+	}
+	defer scheduler.Stop()
+	found := false
+	for _, loop := range supervisedLoopSeam() {
+		if loop.Name == "smart_dialer" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("expected smart_dialer loop to be registered in loop supervisor")
+	}
+}
+
+func TestSmartDialerShutdownAndHandoffRegisteredInRun(t *testing.T) {
+	source, err := os.ReadFile("run.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(source)
+	replay := strings.Index(text, "replaySmartDialerAtStartup(controlState)")
+	stopDefer := strings.Index(text, "defer stopSmartDialerScheduler()")
+	unregCloser := strings.Index(text, "RegisterCoordinatorCloser(stopSmartDialerScheduler)")
+	if replay < 0 {
+		t.Fatal("replaySmartDialerAtStartup not found in run.go")
+	}
+	if stopDefer < 0 {
+		t.Fatal("defer stopSmartDialerScheduler() not registered in run.go")
+	}
+	if unregCloser < 0 {
+		t.Fatal("RegisterCoordinatorCloser(stopSmartDialerScheduler) not registered in run.go")
+	}
+	if stopDefer < replay {
+		t.Fatal("defer stopSmartDialerScheduler() must be registered after replaySmartDialerAtStartup")
+	}
