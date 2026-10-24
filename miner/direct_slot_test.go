@@ -301,3 +301,109 @@ func TestDirectToggleFollowsThePersistedFile(t *testing.T) {
 		t.Fatalf("starts = %d, want 2 (no duplicate session)", got)
 	}
 }
+
+// A persisted off at boot must park the slot: no session starts, and a later
+// `direct on` starts exactly one. Without this, the boot path — which no other
+// test exercises, since they all construct the slot enabled — could start a
+// direct session an operator had explicitly turned off.
+func TestDirectSlotBootDisabledParksUntilEnabled(t *testing.T) {
+	fake := newDirectSlotFake()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	slot := newDirectSlot(ctx, fake.launch, 0, false, nil)
+	directSlotServe(slot)
+
+	time.Sleep(50 * time.Millisecond)
+	if got := fake.starts.Load(); got != 0 {
+		t.Fatalf("a boot-disabled slot started %d session(s)", got)
+	}
+	if slot.running() {
+		t.Fatal("a boot-disabled slot must not be running")
+	}
+
+	if !slot.setEnabled(true) {
+		t.Fatal("direct on must report a change")
+	}
+	fake.waitStarted(t, 1)
+	waitFor(t, time.Second, "the direct slot to be running", slot.running)
+}
+
+// Parking blocks in waitEnabled. If that select ever stops watching the run
+// context, a direct-only provider hangs on shutdown instead of exiting.
+func TestDirectSlotParkedExitsOnContextCancel(t *testing.T) {
+	fake := newDirectSlotFake()
+	ctx, cancel := context.WithCancel(context.Background())
+	slot := newDirectSlot(ctx, fake.launch, 0, false, nil)
+	serveDone := directSlotServe(slot)
+
+	time.Sleep(50 * time.Millisecond)
+	cancel()
+
+	select {
+	case err := <-serveDone:
+		if err != nil {
+			t.Fatalf("a parked slot must exit cleanly on shutdown: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("a parked direct slot did not exit on context cancellation")
+	}
+	if got := fake.starts.Load(); got != 0 {
+		t.Fatalf("shutdown started %d session(s)", got)
+	}
+}
+
+// directSlotSlowFake holds its teardown open, so a test can toggle off and on
+// while the previous session is still unwinding.
+type directSlotSlowFake struct {
+	starts   atomic.Int32
+	exits    atomic.Int32
+	teardown chan struct{}
+}
+
+func (f *directSlotSlowFake) launch(ctx context.Context, index uint64) error {
+	f.starts.Add(1)
+	<-ctx.Done()
+	<-f.teardown
+	f.exits.Add(1)
+	return nil
+}
+
+// An operator can turn direct off and straight back on. The second session must
+// wait for the first to finish tearing down: two direct sessions at once would
+// mean two providers on the same IP, which is the thing the toggle exists to
+// prevent.
+func TestDirectSlotRapidOffOnDoesNotOverlapSessions(t *testing.T) {
+	fake := &directSlotSlowFake{teardown: make(chan struct{})}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	slot := newDirectSlot(ctx, fake.launch, 0, true, nil)
+	directSlotServe(slot)
+
+	waitFor(t, 2*time.Second, "the first direct launch to start", func() bool {
+		return fake.starts.Load() == 1
+	})
+
+	if !slot.setEnabled(false) {
+		t.Fatal("direct off must report a change")
+	}
+	if !slot.setEnabled(true) {
+		t.Fatal("direct on must report a change")
+	}
+
+	// While the first session is still unwinding, no second session may start.
+	time.Sleep(100 * time.Millisecond)
+	if got := fake.starts.Load(); got != 1 {
+		t.Fatalf("a second session started during teardown: starts = %d", got)
+	}
+	if got := fake.exits.Load(); got != 0 {
+		t.Fatalf("teardown finished while held: exits = %d", got)
+	}
+
+	close(fake.teardown)
+	waitFor(t, 2*time.Second, "the first session to finish tearing down", func() bool {
+		return fake.exits.Load() == 1
+	})
+	waitFor(t, 2*time.Second, "the second direct launch to start", func() bool {
+		return fake.starts.Load() == 2
+	})
+}

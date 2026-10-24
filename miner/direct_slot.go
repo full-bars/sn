@@ -179,6 +179,15 @@ func (d *directSlot) waitEnabled() bool {
 			return false
 		}
 		if d.enabled {
+			// Drop a wake token left by an "on" that landed while a launch was
+			// unwinding: this path returns without reading the channel, and the
+			// stale token would otherwise cost one redundant loop the next time
+			// the slot parks. Correctness never depended on it; the channel
+			// state just stays clean.
+			select {
+			case <-d.wake:
+			default:
+			}
 			d.mu.Unlock()
 			return true
 		}
