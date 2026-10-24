@@ -2572,6 +2572,9 @@ func proxyAuthAdd(opts docopt.Opts) {
 	}
 
 	writeProxyConfig(proxyConfig)
+	// Tell a running provider: its reloader applies the stored list on the
+	// trigger, and without it the change waits for the next start.
+	triggerProxyReload()
 }
 
 func proxyAuthRemove(opts docopt.Opts) {
@@ -2594,6 +2597,9 @@ func proxyAuthRemove(opts docopt.Opts) {
 	}
 
 	writeProxyConfig(proxyConfig)
+	// Tell a running provider: its reloader applies the stored list on the
+	// trigger, and without it the change waits for the next start.
+	triggerProxyReload()
 }
 
 func proxyAdd(opts docopt.Opts) {
@@ -2661,6 +2667,9 @@ func proxyAdd(opts docopt.Opts) {
 	}
 
 	writeProxyConfig(proxyConfig)
+	// Tell a running provider: its reloader applies the stored list on the
+	// trigger, and without it the change waits for the next start.
+	triggerProxyReload()
 }
 
 // proxyEntry is one proxy list entry after parsing.
@@ -2782,6 +2791,8 @@ func proxyRemove(opts docopt.Opts) {
 		if err := clearProxyStores(); err != nil {
 			fmt.Fprintf(os.Stderr, "warning: %v\n", err)
 		}
+		// a partial reset still changed the list: tell a running provider
+		triggerProxyReload()
 		return
 	}
 
@@ -2832,6 +2843,9 @@ func proxyRemove(opts docopt.Opts) {
 	}
 
 	writeProxyConfig(proxyConfig)
+	// Tell a running provider: its reloader applies the stored list on the
+	// trigger, and without it the change waits for the next start.
+	triggerProxyReload()
 }
 
 type ProxyConfig struct {
