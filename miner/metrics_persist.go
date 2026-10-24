@@ -92,7 +92,13 @@ type minerMetricsProxyCounters struct {
 	TotalTx    uint64 `json:"total_tx"`
 	BillableRx uint64 `json:"billable_rx"`
 	BillableTx uint64 `json:"billable_tx"`
-	LastSeen   int64  `json:"last_seen_unix"`
+	// The engine's per-contract totals travel with billable because the two are
+	// a cross-check: if only billable survived a restart, every restart would
+	// reopen a drift between them that is a bookkeeping artifact, not traffic
+	// the platform settled differently.
+	ContractUsedIngress uint64 `json:"contract_used_ingress"`
+	ContractUsedEgress  uint64 `json:"contract_used_egress"`
+	LastSeen            int64  `json:"last_seen_unix"`
 }
 
 // minerMetricsControlCounters is the control socket's cumulative command
@@ -106,14 +112,17 @@ type minerMetricsControlCounters struct {
 
 // minerMetricsByteTotals is a sum of the byte fields, without LastSeen.
 type minerMetricsByteTotals struct {
-	TotalRx    uint64
-	TotalTx    uint64
-	BillableRx uint64
-	BillableTx uint64
+	TotalRx             uint64
+	TotalTx             uint64
+	BillableRx          uint64
+	BillableTx          uint64
+	ContractUsedIngress uint64
+	ContractUsedEgress  uint64
 }
 
 func (t minerMetricsByteTotals) isZero() bool {
-	return t.TotalRx == 0 && t.TotalTx == 0 && t.BillableRx == 0 && t.BillableTx == 0
+	return t.TotalRx == 0 && t.TotalTx == 0 && t.BillableRx == 0 && t.BillableTx == 0 &&
+		t.ContractUsedIngress == 0 && t.ContractUsedEgress == 0
 }
 
 // minerMetricsCountersFile is the on-disk shape. PID and SavedAt are written
@@ -407,6 +416,8 @@ func raiseMetricsProxyBandwidth(bw *bandwidth.ProxyBandwidth, counters minerMetr
 	raiseUint64(&bw.TotalTx, counters.TotalTx)
 	raiseUint64(&bw.BillableRx, counters.BillableRx)
 	raiseUint64(&bw.BillableTx, counters.BillableTx)
+	raiseUint64(&bw.ContractUsedIngress, counters.ContractUsedIngress)
+	raiseUint64(&bw.ContractUsedEgress, counters.ContractUsedEgress)
 }
 
 // raiseUint64 moves *v up to want, and never down. The compare-and-swap loop
@@ -435,6 +446,8 @@ func addCounterDelta(bw *bandwidth.ProxyBandwidth, stored, applied minerMetricsP
 	bw.TotalTx.Add(subFloor(stored.TotalTx, applied.TotalTx))
 	bw.BillableRx.Add(subFloor(stored.BillableRx, applied.BillableRx))
 	bw.BillableTx.Add(subFloor(stored.BillableTx, applied.BillableTx))
+	bw.ContractUsedIngress.Add(subFloor(stored.ContractUsedIngress, applied.ContractUsedIngress))
+	bw.ContractUsedEgress.Add(subFloor(stored.ContractUsedEgress, applied.ContractUsedEgress))
 }
 
 func subFloor(v, applied uint64) uint64 {
@@ -621,20 +634,24 @@ func (s *metricsCounterStore) recordApplied(written map[int]minerMetricsProxyCou
 // maxMinerProxyCounters keeps the larger of two per-index totals.
 func maxMinerProxyCounters(a, b minerMetricsProxyCounters) minerMetricsProxyCounters {
 	return minerMetricsProxyCounters{
-		TotalRx:    maxU64(a.TotalRx, b.TotalRx),
-		TotalTx:    maxU64(a.TotalTx, b.TotalTx),
-		BillableRx: maxU64(a.BillableRx, b.BillableRx),
-		BillableTx: maxU64(a.BillableTx, b.BillableTx),
+		TotalRx:             maxU64(a.TotalRx, b.TotalRx),
+		TotalTx:             maxU64(a.TotalTx, b.TotalTx),
+		BillableRx:          maxU64(a.BillableRx, b.BillableRx),
+		BillableTx:          maxU64(a.BillableTx, b.BillableTx),
+		ContractUsedIngress: maxU64(a.ContractUsedIngress, b.ContractUsedIngress),
+		ContractUsedEgress:  maxU64(a.ContractUsedEgress, b.ContractUsedEgress),
 	}
 }
 
 // addMinerMetricsByteTotals sums two byte totals.
 func addMinerMetricsByteTotals(a, b minerMetricsByteTotals) minerMetricsByteTotals {
 	return minerMetricsByteTotals{
-		TotalRx:    a.TotalRx + b.TotalRx,
-		TotalTx:    a.TotalTx + b.TotalTx,
-		BillableRx: a.BillableRx + b.BillableRx,
-		BillableTx: a.BillableTx + b.BillableTx,
+		TotalRx:             a.TotalRx + b.TotalRx,
+		TotalTx:             a.TotalTx + b.TotalTx,
+		BillableRx:          a.BillableRx + b.BillableRx,
+		BillableTx:          a.BillableTx + b.BillableTx,
+		ContractUsedIngress: a.ContractUsedIngress + b.ContractUsedIngress,
+		ContractUsedEgress:  a.ContractUsedEgress + b.ContractUsedEgress,
 	}
 }
 
@@ -644,10 +661,12 @@ func addMinerMetricsByteTotals(a, b minerMetricsByteTotals) minerMetricsByteTota
 // same entry twice.
 func maxMinerMetricsByteTotals(a, b minerMetricsByteTotals) minerMetricsByteTotals {
 	return minerMetricsByteTotals{
-		TotalRx:    maxU64(a.TotalRx, b.TotalRx),
-		TotalTx:    maxU64(a.TotalTx, b.TotalTx),
-		BillableRx: maxU64(a.BillableRx, b.BillableRx),
-		BillableTx: maxU64(a.BillableTx, b.BillableTx),
+		TotalRx:             maxU64(a.TotalRx, b.TotalRx),
+		TotalTx:             maxU64(a.TotalTx, b.TotalTx),
+		BillableRx:          maxU64(a.BillableRx, b.BillableRx),
+		BillableTx:          maxU64(a.BillableTx, b.BillableTx),
+		ContractUsedIngress: maxU64(a.ContractUsedIngress, b.ContractUsedIngress),
+		ContractUsedEgress:  maxU64(a.ContractUsedEgress, b.ContractUsedEgress),
 	}
 }
 
@@ -664,6 +683,8 @@ func (s *metricsCounterStore) retireDropped(merged, kept map[int]minerMetricsPro
 		dropped.TotalTx += counters.TotalTx
 		dropped.BillableRx += counters.BillableRx
 		dropped.BillableTx += counters.BillableTx
+		dropped.ContractUsedIngress += counters.ContractUsedIngress
+		dropped.ContractUsedEgress += counters.ContractUsedEgress
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -839,6 +860,8 @@ func mergeMetricsProxyCounters(a, b map[int]minerMetricsProxyCounters) map[int]m
 		prior.TotalTx = max(prior.TotalTx, counters.TotalTx)
 		prior.BillableRx = max(prior.BillableRx, counters.BillableRx)
 		prior.BillableTx = max(prior.BillableTx, counters.BillableTx)
+		prior.ContractUsedIngress = max(prior.ContractUsedIngress, counters.ContractUsedIngress)
+		prior.ContractUsedEgress = max(prior.ContractUsedEgress, counters.ContractUsedEgress)
 		prior.LastSeen = max(prior.LastSeen, counters.LastSeen)
 		out[index] = prior
 	}
@@ -898,10 +921,12 @@ func metricsCounterLiveSnapshot() minerMetricsCounterSnapshot {
 			continue
 		}
 		snap.Proxies[index] = minerMetricsProxyCounters{
-			TotalRx:    bw.TotalRx.Load(),
-			TotalTx:    bw.TotalTx.Load(),
-			BillableRx: bw.BillableRx.Load(),
-			BillableTx: bw.BillableTx.Load(),
+			TotalRx:             bw.TotalRx.Load(),
+			TotalTx:             bw.TotalTx.Load(),
+			BillableRx:          bw.BillableRx.Load(),
+			BillableTx:          bw.BillableTx.Load(),
+			ContractUsedIngress: bw.ContractUsedIngress.Load(),
+			ContractUsedEgress:  bw.ContractUsedEgress.Load(),
 		}
 	}
 	return snap
@@ -1003,12 +1028,19 @@ var metricsCounters = newMetricsCounterStore("")
 
 // metricsCounterProxySeedFunc is installed on a new bandwidth registry so each
 // proxy's counters start from the totals the previous process recorded.
-func metricsCounterProxySeedFunc(index int) (totalRx, totalTx, billableRx, billableTx uint64) {
+func metricsCounterProxySeedFunc(index int) bandwidth.ProxySeed {
 	counters, ok := metricsCounters.proxySeed(index)
 	if !ok {
-		return 0, 0, 0, 0
+		return bandwidth.ProxySeed{}
 	}
-	return counters.TotalRx, counters.TotalTx, counters.BillableRx, counters.BillableTx
+	return bandwidth.ProxySeed{
+		TotalRx:             counters.TotalRx,
+		TotalTx:             counters.TotalTx,
+		BillableRx:          counters.BillableRx,
+		BillableTx:          counters.BillableTx,
+		ContractUsedIngress: counters.ContractUsedIngress,
+		ContractUsedEgress:  counters.ContractUsedEgress,
+	}
 }
 
 // startMetricsCounterPersistence arms the store at the miner's state-dir path,

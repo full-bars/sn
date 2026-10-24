@@ -134,16 +134,27 @@ func waitForIdle(ctx context.Context, stateDir string, running bool, opts IdleUp
 			continue
 		}
 
+		// A stopped provider relays nothing, whatever its last written rate
+		// says — so this check comes BEFORE the found/rate branches. A
+		// provider that stopped (or crashed) while busy leaves a stale file
+		// above threshold; checking only on !found let that stale rate reset
+		// the quiet timer until opts.Timeout (30m) expired.
+		if !running {
+			// Provider is stopped; traffic is guaranteed to be 0
+			fmt.Printf("[idle-update] Provider is not running — traffic is zero, proceeding.\n")
+			return nil
+		}
+
 		if !found {
-			if !running {
-				// Provider is stopped; traffic is guaranteed to be 0
-				fmt.Printf("[idle-update] Provider is not running — traffic is zero, proceeding.\n")
-				return nil
-			}
 			missingCount++
 			if missingCount < 3 {
-				// Newly booted provider may take up to 15s to emit its first tick
-				fmt.Printf("[idle-update] Waiting for initial rate metric (%ds)...\n", int(elapsed.Round(time.Second).Seconds()))
+				// Newly booted provider may take up to 15s to emit its first tick.
+				// Report how long the metric has been MISSING, not how long this
+				// wait has run: a metric that disappears minutes in would
+				// otherwise print a total-elapsed number next to a comment about
+				// a fresh provider.
+				fmt.Printf("[idle-update] Waiting for initial rate metric (missing for %s)...\n",
+					time.Duration(missingCount)*idlePollInterval)
 			} else {
 				fmt.Printf("[idle-update] billable_rate metric not found; assuming active traffic...\n")
 			}
