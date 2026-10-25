@@ -217,7 +217,7 @@ tighten `maxStrategiesPerIdentity` to 3, `maxTransportsPerIdentity` to 1,
   `connect.NewExtenderDirectory.func1`, `connect.NewExtenderPingReporter.func1`,
   `sdk.(*NetworkSpace).startExtenderStatusWatch.func1`) even with
   `DisableExtenderNetwork`, because `NewNetworkSpaceWithUrls` builds the
-  directory whenever the api url names a dotted host (sdk network_space.go:1311-1313).
+  directory whenever the api url names a dotted host (sdk network_space.go:1317-1319).
 - The fake api answers 404 to `/auth/refresh`; the token manager retries it
   (about 120-150 requests across 50 identities while settling). It does not
   prevent settling.
