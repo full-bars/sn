@@ -15,6 +15,57 @@ import (
 	"github.com/urnetwork/connect"
 )
 
+// controlReachedIdentities is the set of proxies that have reached the control
+// plane in THIS process. It is monotonic on purpose and it is NOT a liveness
+// count: a proxy that reached once and then died stays in the set.
+//
+// Why it exists at all: proxy.state carries each proxy's persisted grade, so a
+// process that has not completed a single dial can still render a few hundred
+// "up" proxies from a previous run's measurements, which reads as a healthy
+// pool at uptime=0s. Membership here is evidence this process produced.
+//
+// Why the health line calls it "reached" and not "up": with no signal that a
+// slot stopped reaching, a monotonic count cannot answer "is it up now". Saying
+// "up" would replace the persisted lie with a liveness lie. The word in the log
+// line is what the number can support.
+//
+// Keyed by the slot's display identity, not by its slot index. run.go gives a
+// proxy a new index after a reload, and an index-keyed counter would then count
+// the same proxy twice. Display is the proxy address ("proxy:<addr>") or
+// "direct"; two credentialed entries on one address share a display and would
+// collapse into one count - the miner launches one slot per proxy address, so
+// that shape does not occur here, and using connect.ProxySettings.Key() would
+// mean threading a new argument through run.go while #230 owns that file.
+var controlReachedIdentities = struct {
+	sync.Mutex
+	byKey map[string]struct{}
+}{byKey: map[string]struct{}{}}
+
+// controlReachedCount is the number of distinct proxies that reached the
+// control plane since this process started.
+func controlReachedCount() int {
+	controlReachedIdentities.Lock()
+	defer controlReachedIdentities.Unlock()
+	return len(controlReachedIdentities.byKey)
+}
+
+// noteControlReachedIdentity records one proxy's first reach; callers hold no
+// lock.
+func noteControlReachedIdentity(identity string) {
+	controlReachedIdentities.Lock()
+	defer controlReachedIdentities.Unlock()
+	controlReachedIdentities.byKey[identity] = struct{}{}
+}
+
+// resetControlReached exists for tests: the set is process-wide on purpose (the
+// health line has no other handle on the bring-up tracker), so a test that
+// asserts a fresh value has to start from empty.
+func resetControlReached() {
+	controlReachedIdentities.Lock()
+	defer controlReachedIdentities.Unlock()
+	controlReachedIdentities.byKey = map[string]struct{}{}
+}
+
 // providerBringUpHeartbeatInterval is the heartbeat cadence while slots are
 // pending. A variable so tests can shorten it.
 var providerBringUpHeartbeatInterval = 10 * time.Second
@@ -240,6 +291,11 @@ func (self *providerBringUpTracker) controlReached(index uint64, display string,
 		return
 	}
 	self.reached[index] = true
+	// Counted per proxy identity, not per slot index: a reload gives the same
+	// proxy a new index, and the health line must not count it twice. The guard
+	// above already returns early for an index that reached before, so this is
+	// the belt to that braces.
+	noteControlReachedIdentity(display)
 	if watch := self.watches[index]; watch != nil {
 		watch.Stop()
 		delete(self.watches, index)

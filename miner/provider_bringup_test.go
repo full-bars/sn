@@ -115,6 +115,9 @@ func TestProviderBringUpStartStopIdempotent(t *testing.T) {
 }
 
 func TestProviderBringUpControlReachedUpdatesFinalTally(t *testing.T) {
+	resetControlReached()
+	t.Cleanup(resetControlReached)
+
 	buffer := captureProviderBringUpLog(t)
 	tracker := newProviderBringUpTracker(1)
 	tracker.start()
@@ -155,5 +158,42 @@ func TestProviderAuthRetryToken(t *testing.T) {
 				t.Fatalf("retry token = %q, want %q", got, testCase.want)
 			}
 		})
+	}
+}
+
+// TestControlReachedCountsEachSlotOnce pins the counter the health line reports
+// as up: only slots that reached the control plane in this process, and one
+// increment per slot however many times its dial succeeds (a reconnect must not
+// make the pool look bigger).
+func TestControlReachedCountsEachSlotOnce(t *testing.T) {
+	resetControlReached()
+	t.Cleanup(resetControlReached)
+
+	captureProviderBringUpLog(t)
+
+	tracker := newProviderBringUpTracker(2)
+	tracker.start()
+	defer tracker.shutdown()
+
+	if got := controlReachedCount(); got != 0 {
+		t.Fatalf("fresh process reports up=%d, want 0", got)
+	}
+
+	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct")
+	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct") // duplicate
+	if got := controlReachedCount(); got != 1 {
+		t.Fatalf("after one slot reached twice, reached=%d, want 1", got)
+	}
+
+	tracker.controlReached(1, "proxy:198.51.100.1:1080", 10*time.Millisecond, "proxy")
+	if got := controlReachedCount(); got != 2 {
+		t.Fatalf("after two slots, reached=%d, want 2", got)
+	}
+
+	// A reload hands the same proxy a new slot index. The count is keyed by
+	// identity, so the second index must not add a second proxy.
+	tracker.controlReached(7, "proxy:198.51.100.1:1080", 10*time.Millisecond, "proxy")
+	if got := controlReachedCount(); got != 2 {
+		t.Fatalf("after a reload re-reached the same proxy, reached=%d, want 2 (index-keyed counting would say 3)", got)
 	}
 }
