@@ -6,18 +6,21 @@ import "github.com/urnetwork/connect"
 // run one family-agnostic transport instead of the v4-pinned, v6-pinned and
 // standby group.
 //
-// A proxied identity: yes. The pinned transports dial from this host, while the
-// slot's own dial goes through a SOCKS proxy, so a pinned v6 transport has no
-// route to the platform and can only fail repeatedly. The family-agnostic
-// transport hands the proxy a hostname, so a proxy with v6 egress can still
-// reach the platform over v6.
+// A proxied identity drops the group only once its proxy is KNOWN not to carry
+// IPv6. Absent evidence keeps the group, because a proxy that does carry v6 can
+// then still be classified dual-stack, and losing that is worse than one run of
+// two idle transports. The verdict comes from the slot's own dial path
+// (proxy_v6_observe.go), so it costs no probe and no extra goroutine.
 //
-// The direct identity: no. It dials on this host's own routes, so both pinned
-// transports can honestly succeed there, and dropping them would cost the
-// dual-stack record for a provider that has real IPv6.
+// The direct identity: never. It dials on this host's own routes, so both
+// pinned transports can honestly succeed there, and dropping them would cost
+// the dual-stack record for a provider that has real IPv6.
 //
 // 3.23 gates this the same way in provider/family_transport.go:
 // useFamilyTransports returns false for a proxied identity.
-func providerDisablesFamilyTransports(proxySettings *connect.ProxySettings) bool {
-	return proxySettings != nil
+func providerDisablesFamilyTransports(proxySettings *connect.ProxySettings, verdict v6Verdict) bool {
+	if proxySettings == nil {
+		return false
+	}
+	return verdict == v6No
 }

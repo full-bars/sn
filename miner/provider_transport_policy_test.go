@@ -4,26 +4,57 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/urnetwork/connect"
 )
 
-// TestProviderDisablesFamilyTransports pins the slot policy: proxied identities
-// get one family-agnostic transport, the direct identity keeps the group. The
-// two cases are the whole rule, and getting it backwards costs either the
-// direct slot's dual-stack record or every proxied slot two transports that can
-// only fail.
+// TestProviderDisablesFamilyTransports pins the policy table. The group is
+// dropped only on positive evidence that the proxy cannot carry IPv6, so a
+// proxy that might is never demoted on a guess.
 func TestProviderDisablesFamilyTransports(t *testing.T) {
-	if providerDisablesFamilyTransports(nil) {
-		t.Fatal("the direct slot was given one transport; it has real routes for both pins")
-	}
-	for _, settings := range []*connect.ProxySettings{
-		{Network: "tcp", Address: "198.51.100.1:1080"},
-		{Network: "tcp", Address: "203.0.113.7:1080", Auth: nil},
+	proxied := &connect.ProxySettings{Network: "tcp", Address: "198.51.100.1:1080"}
+	for _, c := range []struct {
+		name    string
+		proxy   *connect.ProxySettings
+		verdict v6Verdict
+		want    bool
+	}{
+		{"direct slot keeps the group", nil, v6No, false},
+		{"no verdict keeps the group", proxied, v6Unknown, false},
+		{"yes keeps the group", proxied, v6Yes, false},
+		{"known no drops to one transport", proxied, v6No, true},
 	} {
-		if !providerDisablesFamilyTransports(settings) {
-			t.Fatalf("proxied slot %s kept the family group; a pinned dial cannot leave the proxy", settings.Address)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			if got := providerDisablesFamilyTransports(c.proxy, c.verdict); got != c.want {
+				t.Fatalf("decision = %v, want %v", got, c.want)
+			}
+		})
+	}
+}
+
+// TestProviderFamilyTransportTTLs: a no buys 15 minutes, a yes six hours, and
+// expiry returns the proxy to unknown, which means the group again.
+func TestProviderFamilyTransportTTLs(t *testing.T) {
+	now := time.Date(2026, 10, 25, 12, 0, 0, 0, time.UTC)
+	proxied := &connect.ProxySettings{Network: "tcp", Address: "198.51.100.1:1080"}
+	for _, c := range []struct {
+		name    string
+		verdict v6Verdict
+		age     time.Duration
+		want    bool
+	}{
+		{"no at 14m59s still drops the group", v6No, 14*time.Minute + 59*time.Second, true},
+		{"no at 15m returns the group", v6No, 15 * time.Minute, false},
+		{"yes at 6h returns the group", v6Yes, 6 * time.Hour, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			ledger := newV6Ledger(func() time.Time { return now })
+			ledger.entries[v6LedgerKey(proxied)] = v6Entry{Verdict: c.verdict, CheckedAt: now.Add(-c.age)}
+			if got := providerDisablesFamilyTransports(proxied, ledger.Verdict(v6LedgerKey(proxied))); got != c.want {
+				t.Fatalf("decision = %v, want %v", got, c.want)
+			}
+		})
 	}
 }
 
@@ -38,7 +69,7 @@ func TestRunSetsDisableFamilyTransports(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assignment := "settings.DisablePlatformFamilyTransports = providerDisablesFamilyTransports(proxySettings)"
+	assignment := "settings.DisablePlatformFamilyTransports = providerDisablesFamilyTransports(proxySettings, v6Verdicts().Verdict(v6LedgerKey(proxySettings)))"
 	if !strings.Contains(string(source), assignment) {
 		t.Fatalf("miner/run.go no longer sets DisablePlatformFamilyTransports (%q); a proxied identity would rebuild the family group", assignment)
 	}

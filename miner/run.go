@@ -1694,7 +1694,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// runs one transport per proxy. The direct slot keeps the group, since
 		// it dials on this host's own routes and can honestly prove both
 		// families.
-		settings.DisablePlatformFamilyTransports = providerDisablesFamilyTransports(proxySettings)
+		settings.DisablePlatformFamilyTransports = providerDisablesFamilyTransports(proxySettings, v6Verdicts().Verdict(v6LedgerKey(proxySettings)))
 		settings.KeyMaterial = providerDeviceKeyMaterial(seed, certPem, keyPem, extenderKeySeed)
 		applyProviderMemoryTarget(settings, self.memoryPlan.DeviceMemoryTargetByteCount)
 		// Wrap ProviderDialContextSettings with bandwidth tracking too.
@@ -1710,6 +1710,25 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		settings.ProviderDialContextSettings = providerSlotDialSettings(
 			self.testEgressDialer, proxySettings, bw, proxyAddr,
 		)
+		// IPv6 evidence comes from the dials this slot already makes: the v6
+		// pin hands its attempt to this wrapper with the network narrowed to
+		// tcp6 and the connect-v6 hostname as the target, so the SOCKS reply
+		// or error is right here. No probe, no extra goroutine, and it is
+		// independent of which transport generation is installed.
+		if dialSettings := settings.ProviderDialContextSettings; dialSettings != nil {
+			if observer := newV6DialObserver(
+				dialSettings.DialContext,
+				proxySettings,
+				networkSpace.GetPlatformUrlV6(),
+				networkSpace.GetPlatformUrlV4(),
+				networkSpace.GetPlatformUrl(),
+				v6Verdicts(),
+				v6Persister().Save,
+				nil,
+			); observer != nil {
+				dialSettings.DialContext = observer.DialContext
+			}
+		}
 		// The h3 mode reaches this slot's provider carrier as one read: the
 		// policy is built (and the launch row recorded) before
 		// newProviderDeviceLocal, which sets it on the device right after the
