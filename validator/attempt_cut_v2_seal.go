@@ -246,7 +246,16 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 // full server/proof/lifecycle checks still run against fetched staged bytes.
 func walkAttemptCutV2SealPrefix(ctx context.Context, ledger *AttemptLedger, head AttemptLedgerHead, expected AttemptCutV2Context, depth int, visit func(AttemptRecord) error) error {
 	store, ok := ledger.disk.(*attemptRecordStore)
-	if !ok || store == nil || expected.FirstSequence == 0 || expected.FirstSequence > head.LastSequence || head.LastSequence == ^uint64(0) {
+	if !ok || store == nil {
+		return errors.New("compact attempt source requires a checked immutable disk prefix")
+	}
+	return walkAttemptCutV2Prefix(ctx, func(sequence uint64) (AttemptRecord, error) { return store.Read(ctx, sequence) }, head, expected, depth, visit)
+}
+
+// Both the live sealer and stopped recovery authenticate the same original
+// range and root; recovery supplies its exclusively retained read-only reader.
+func walkAttemptCutV2Prefix(ctx context.Context, read func(uint64) (AttemptRecord, error), head AttemptLedgerHead, expected AttemptCutV2Context, depth int, visit func(AttemptRecord) error) error {
+	if expected.FirstSequence == 0 || expected.FirstSequence > head.LastSequence || head.LastSequence == ^uint64(0) {
 		return errors.New("compact attempt source requires a checked immutable disk prefix")
 	}
 	previous, count := expected.PriorRoot, uint64(0)
@@ -254,7 +263,7 @@ func walkAttemptCutV2SealPrefix(ctx context.Context, ledger *AttemptLedger, head
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		record, err := store.Read(ctx, sequence)
+		record, err := read(sequence)
 		if err != nil {
 			return err
 		}
