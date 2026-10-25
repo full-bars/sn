@@ -4,10 +4,12 @@ package miner
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -106,51 +108,125 @@ func reportTrimFailure(warned *bool, warnTime *time.Time, path string, err error
 // progress and watch what the pipe reader does meanwhile.
 var ramLogTrim = trimRAMLog
 
-// ramLogSink is one RAM log file (the main log or the important buffer) and
-// the lock that orders the pipe reader's writes against the trim, the sync and
-// the rotation.
+// ramLogSink is one RAM log file (the main log or the important buffer).
+//
+// The pipe reader (pumpRAMLog) is the only writer, and every glog/tlog write
+// in the process waits on it once the 64 KiB pipe buffer is full. So the
+// reader must never wait on the slow work: the trim (an in-place rewrite of up
+// to ~3.3 MiB of the 5 MiB main log every 5 s), the 500 ms Sync, or the
+// important buffer's rotation. mu covers exactly one reader write or one cheap
+// state change, nothing longer:
+//
+//   - trim sets trimming under mu and rewrites the file without it. Writes
+//     that arrive meanwhile are appended to pending instead of the file; the
+//     trim flushes pending in one write under mu, then clears trimming. Lines
+//     are neither lost nor reordered: everything written before trimming was
+//     set is in the file the trim reads, everything after lands behind the kept
+//     tail in arrival order.
+//   - sync calls Sync on a snapshot of the descriptor and takes no lock.
+//   - rotate (the on-disk important buffer) renames and opens a file, then
+//     swaps the descriptor under mu.
+//
+// The trim stays in place, on the same inode, rather than writing a new file
+// and renaming it over the old one. Everything that follows the log follows
+// the descriptor: the `tail -f` hint printed at startup, `docker exec ... tail
+// -n N -f` in urnet-tools (internal/urnettools/cli_docker.go cmdDockerLogs),
+// docker/scripts/logs.sh, scripts/Provider_Install_Linux.sh, and the miner's
+// own `logs` command (cmd_logs.go providerLogs, which reopens only when the
+// descriptor's size shrinks behind its position). A rename would leave every
+// one of them reading the unlinked old inode, silent, after the first trim.
+// Truncation they already handle.
 type ramLogSink struct {
-	mu sync.Mutex
-	f  *os.File
+	f atomic.Pointer[os.File] // swapped only under mu (rotate); read freely
+
+	mu       sync.Mutex
+	trimming bool   // a trim is rewriting the file: writes go to pending
+	pending  []byte // writes held back during a trim, in arrival order
+
+	slow sync.Mutex // serializes trim and rotate with each other
 }
 
 func newRAMLogSink(f *os.File) *ramLogSink {
-	return &ramLogSink{f: f}
+	s := &ramLogSink{}
+	s.f.Store(f)
+	return s
 }
 
-// Write appends p. It is the only call the pipe reader makes.
+// Write appends p, or queues it behind a trim in progress. It is the only call
+// the pipe reader makes, and it holds mu for one write at most.
 func (s *ramLogSink) Write(p []byte) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.f.Write(p)
+	if s.trimming {
+		s.pending = append(s.pending, p...)
+		return len(p), nil
+	}
+	return s.f.Load().Write(p)
 }
 
-// trim bounds the file in place (see trimRAMLog).
+// trim bounds the file in place (see trimRAMLog) without holding mu for the
+// rewrite.
 func (s *ramLogSink) trim(maxSize, ratio int64) error {
+	s.slow.Lock()
+	defer s.slow.Unlock()
+	f := s.f.Load()
+	if fi, err := f.Stat(); err == nil && fi.Size() <= maxSize {
+		return nil // the common case: no reason to divert the writes
+	}
+
+	s.mu.Lock()
+	s.trimming = true
+	s.mu.Unlock()
+
+	err := ramLogTrim(f, maxSize, ratio)
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return ramLogTrim(s.f, maxSize, ratio)
+	s.trimming = false
+	if len(s.pending) > 0 {
+		_, werr := f.Write(s.pending)
+		s.pending = nil // release the memory; trims are seconds apart
+		if werr != nil {
+			return errors.Join(err, fmt.Errorf("write lines held during trim: %w", werr))
+		}
+	}
+	return err
 }
 
-// sync flushes the file so a follower sees new lines promptly.
+// sync flushes the file so a follower sees new lines promptly. It takes no
+// lock: an fsync that stalls in the kernel must not stall the reader. If a
+// rotation closes the snapshot first, Sync returns an error and the next tick
+// syncs the new file.
 func (s *ramLogSink) sync() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.f.Sync()
+	return s.f.Load().Sync()
 }
 
 // rotate moves the file to path+".1" once it passes max (see
-// rotateImportantLog) and swaps in the fresh one.
+// rotateImportantLog) and swaps in the fresh one. Only the swap holds mu. A
+// reader write that lands on the old descriptor between the rename and the
+// swap goes to path+".1", ahead of everything written to the new file, so
+// order holds across the two files.
 func (s *ramLogSink) rotate(path string, max int64) error {
+	s.slow.Lock()
+	defer s.slow.Unlock()
+	cur := s.f.Load()
+	next, err := rotateImportantLog(cur, path, max)
+	if err != nil || next == nil {
+		return err
+	}
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	return rotateImportantLog(&s.f, path, max)
+	s.f.Store(next)
+	s.mu.Unlock()
+	cur.Close()
+	return nil
 }
 
 func (s *ramLogSink) close() {
+	s.slow.Lock()
+	defer s.slow.Unlock()
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.f.Close()
+	s.f.Load().Close()
 }
 
 // pumpRAMLog drains the ramlog pipe into main and mirrors complete important

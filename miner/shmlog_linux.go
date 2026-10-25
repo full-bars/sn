@@ -264,22 +264,17 @@ func mustMinerStateDir() string {
 	return dir
 }
 
-// rotateImportantLog moves the on-disk important log to path+".1" once it
-// passes max and reopens it, so a previous file is always kept and nothing is
-// rewritten in place. The caller holds the buffer's mutex.
-func rotateImportantLog(f **os.File, path string, max int64) error {
-	info, err := (*f).Stat()
+// rotateImportantLog moves the on-disk important log to path+".1" once cur
+// passes max and opens a fresh file at path, so a previous file is always kept
+// and nothing is rewritten in place. It returns the fresh file, or nil when no
+// rotation was due; the caller swaps it in and closes cur.
+func rotateImportantLog(cur *os.File, path string, max int64) (*os.File, error) {
+	info, err := cur.Stat()
 	if err != nil || info.Size() < max {
-		return err
+		return nil, err
 	}
 	if err := os.Rename(path, path+".1"); err != nil {
-		return err
+		return nil, err
 	}
-	next, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600)
-	if err != nil {
-		return err
-	}
-	(*f).Close()
-	*f = next
-	return nil
+	return os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600)
 }
