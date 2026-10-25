@@ -145,3 +145,82 @@ device_local_provider_move_test.go:86-115, client_limit_status_test.go:86-104).
   default, so its heap numbers are for the default target.
 - Numbers are for an idle, connected provider with no clients, contracts or
   traffic.
+
+## Results (harness built)
+
+Test: `TestPerIdentityResourceGuard` in miner/per_identity_resource_test.go.
+Skipped under `-short`; about 5 s of test time at N=50 (plus the package
+build).
+
+Command, run three times:
+
+    go test ./miner/ -run 'TestPerIdentityResourceGuard$' -count=1 -timeout 300s -v
+
+| run | settle | slot goroutines / identity (fakes excluded) | all goroutines / identity | heap / identity after GC | strategies / identity | transports / identity (pinned) | platform upgrades / identity (open) |
+|---|---|---|---|---|---|---|---|
+| 1 | 4.2 s | 49.5 | 63.5 | 820 KiB | 5.00 | 3.00 (2.00) | 5.18 (1.00) |
+| 2 | 5.0 s | 48.8 | 61.3 | 799 KiB | 5.00 | 3.00 (2.00) | 5.46 (1.00) |
+| 3 | 4.8 s | 48.6 | 60.8 | 799 KiB | 5.00 | 3.00 (2.00) | 6.60 (1.00) |
+
+After teardown 1 slot goroutine remained above the baseline in each run (the
+allowance is 10).
+
+"Strategies" counts `connect.NewClientStrategy.func1` entry goroutines (one per
+`ClientStrategy`); "transports" counts `connect.NewPlatformTransportWithTargetMode.func1`;
+"pinned" counts `connect.(*PlatformTransport).runFamilyHoldWatcher`, which only
+a family-pinned transport starts. These three are the host-independent
+signal: the group builds its transports whatever the host's interfaces say.
+
+Asserted upper bounds (in the test, with the measured values beside them):
+strategies <= 5, transports <= 3, pinned <= 2, open platform connections of one
+identity <= 3, slot goroutines <= 80 per identity, heap <= 2 MiB per identity,
+and teardown back to within 10 goroutines of the baseline.
+
+### Detecting the group-vs-plain difference
+
+A one-off run (not committed) with the platform url set to the ip literal
+`wss://127.0.0.1:<port>`, which makes the group build only its standby, is a
+stand-in for task E's `DisablePlatformFamilyTransports`:
+
+| shape | slot goroutines / identity | heap / identity | strategies | transports (pinned) |
+|---|---|---|---|---|
+| family group (base) | 48.6 to 49.5 | 799 to 820 KiB | 5.00 | 3.00 (2.00) |
+| plain standby only | 39.2 | 754 KiB | 3.00 | 1.00 (0.00) |
+
+So the harness separates the two shapes by 2 strategies, 2 transports and
+about 10 goroutines per identity; heap moves only about 50-65 KiB per idle
+identity, which is inside run-to-run noise at a 2 MiB bound, so the
+structural counts, not heap, are the regression signal. When task E lands,
+tighten `maxStrategiesPerIdentity` to 3, `maxTransportsPerIdentity` to 1,
+`maxPinnedPerIdentity` to 0 and the goroutine bound accordingly.
+
+### Findings along the way
+
+- Host dependence. Whether the pinned transports DIAL depends on the host:
+  `pinnedFamilySupported` (connect transport_family.go:179-193) asks
+  `probeFamilySupport` (connect control_family.go:503-536), which wants a
+  global unicast, non-reserved interface address of the family. On this
+  machine the only address is in 192.0.2.0/24, which connect treats as
+  reserved, so both pinned transports sleep and only the standby connects
+  (all platform upgrades go to `connect.<domain>`). On a CI runner with a
+  private or public v4 address the v4 pinned transport would dial. The
+  structural counts are unaffected; the goroutine and open-connection numbers
+  could differ there. UNVERIFIED on such a host. connect has no exported
+  seam to pin the probe (`controlFamilyLedger.probe`, control_family.go:181-185,
+  and `controlFamilyProbeSource.interfaces`, control_family.go:443-448, are
+  unexported); the smallest seam would be an exported test setter in connect
+  for that probe. Not built.
+- What a pinned dial does through a SOCKS5 proxy (by name, or resolved
+  locally first) is therefore not exercised here. UNVERIFIED.
+- A proxied slot still builds an extender directory, its ping reporter and
+  the space's extender status watch (one goroutine each per identity:
+  `connect.NewExtenderDirectory.func1`, `connect.NewExtenderPingReporter.func1`,
+  `sdk.(*NetworkSpace).startExtenderStatusWatch.func1`) even with
+  `DisableExtenderNetwork`, because `NewNetworkSpaceWithUrls` builds the
+  directory whenever the api url names a dotted host (sdk network_space.go:1311-1313).
+- The fake api answers 404 to `/auth/refresh`; the token manager retries it
+  (about 120-150 requests across 50 identities while settling). It does not
+  prevent settling.
+- The platform sees about 5 to 6.6 upgrades per identity during bring-up for
+  one connection that stays open; the strategy races its dialers and drops
+  the losers. Settled counts are stable.
