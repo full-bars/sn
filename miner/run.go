@@ -1466,6 +1466,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			proxyLegId = proxySettings.Key()
 		}
 		clientStrategySettings.Log = withProxyLegObserver(clientStrategySettings.Log, proxyLegId)
+		// Name the slot in its select lines, and report its first successful
+		// dial: the evidence that this proxy is talking to the control plane.
+		slotDisplay := providerSlotDisplay(proxySettings)
+		clientStrategySettings.Log = withSlotSelectLabel(clientStrategySettings.Log, slotSelectLabel(index, proxyAddr), func(dur time.Duration, via string) {
+			bringUp.controlReached(index, slotDisplay, dur, via)
+		})
 		// The one strategy the run itself drives for this identity. The slot's
 		// API and its device keep the strategies the SDK builds from these
 		// same settings (the space builds one, and a non-hosted device shares
@@ -1937,7 +1943,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// Start the bring-up heartbeat once the launch list is fixed; a run with
 	// no slots closes it immediately.
 	bringUp.start()
-	defer bringUp.stop()
+	defer bringUp.shutdown()
 	var wg sync.WaitGroup
 	results := make(chan error, len(providers))
 	for _, slot := range launchSlots {

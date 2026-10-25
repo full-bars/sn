@@ -58,7 +58,7 @@ func TestProviderBringUpNarratesAuthOutcomes(t *testing.T) {
 		"♻️ client_id: " + directID.String() + " (reused) provider=0 slot=direct",
 		"✨ client_id: " + proxyID.String() + " (new) provider=1 slot=proxy:10.0.0.1:1080",
 		"[auth] provider 2 failed: synthetic refused (slot proxy:10.0.0.2:1080, retry in 15m)",
-		"providers: 2 running, 0 pending, 1 failed (client ids: 1 reused, 1 new)",
+		"providers: 2 running, 0 pending, 1 failed (client ids: 1 reused, 1 new; control plane reached: 0)",
 	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("bring-up lines miss %q:\n%s", want, text)

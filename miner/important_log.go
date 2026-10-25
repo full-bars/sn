@@ -25,6 +25,9 @@ var importantLogMarkers = []string{
 	// ids: N reused, M new)"): the one line that says how many identities
 	// survived a restart, kept for hours alongside the per-slot client_id lines.
 	"providers: ",
+	// Each slot's first successful dial, and the warning for a slot that
+	// authenticated but never reached the control plane.
+	"[control] provider",
 	"Permanently removed",
 	"[proxy][authrate]",
 	// The reconnect governor's once-a-minute verdict (shadow mode: observing
