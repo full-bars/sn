@@ -904,7 +904,7 @@ func probeSocks5Connect(ctx context.Context, address, user, password string, ip 
 		return false, true
 	}
 
-	connectFrame := socks5ConnectV4(ip, port)
+	connectFrame := socks5Connect(ip, port)
 	if _, err := conn.Write(connectFrame); err != nil {
 		return false, true
 	}
