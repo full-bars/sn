@@ -22,6 +22,23 @@ func TestProbeHostTableKeepsReputationClassOut(t *testing.T) {
 	}
 }
 
+// TestProbeHostTableKeepsKnownDeadHostsOut: two hosts were removed because they
+// could never pass a TLS probe on :443 - speedtest.tele2.net refuses the
+// connection, and connectivity-check.ubuntu.com never completed the probe the
+// table exists to run. Restoring either one brought a live provider's direct
+// grade back to F, so the table must not carry them again.
+func TestProbeHostTableKeepsKnownDeadHostsOut(t *testing.T) {
+	knownDead := map[string]string{
+		"speedtest.tele2.net":           "refuses :443",
+		"connectivity-check.ubuntu.com": "never completes the :443 probe",
+	}
+	for _, host := range probeHostNames {
+		if why, dead := knownDead[host]; dead {
+			t.Errorf("probe host %q is a known never-pass host (%s); it must not be in the table", host, why)
+		}
+	}
+}
+
 // TestProbeHostTableStillHasHealthHosts: removing a reputation-class host must
 // replace it, not shrink the table. The block sizes the probe samples from, so
 // a silently smaller table changes every pass.
@@ -29,9 +46,9 @@ func TestProbeHostTableStillHasHealthHosts(t *testing.T) {
 	if len(probeHostNames) < 100 {
 		t.Fatalf("probe host table has %d entries, want the full table (>= 100)", len(probeHostNames))
 	}
-	// The two hosts the reputation-class entries displaced; both are ordinary
-	// reachable health endpoints.
-	for _, want := range []string{"connectivity-check.ubuntu.com", "speedtest.tele2.net"} {
+	// The two hosts that replaced the known-dead entries; both are infrastructure
+	// endpoints that exist to be fetched and verify a TLS handshake on :443.
+	for _, want := range []string{"www.iana.org", "www.debian.org"} {
 		found := false
 		for _, host := range probeHostNames {
 			if host == want {
