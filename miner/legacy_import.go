@@ -55,6 +55,15 @@ const legacyImportTransientAttempts = 3
 
 var legacyImportTransientBackoff = 2 * time.Second
 
+// legacyImportAdoptUnproven reports whether saved credentials are committed
+// without the two-tier network proof. The saved JWT is this node's own
+// credential and the connect layer's sign-in is the real gate, so proving
+// every slot first turns a sub-second file import into a multi-minute
+// network crawl. Opt-in until it has proved itself on the fleet.
+func legacyImportAdoptUnproven() bool {
+	return os.Getenv("URNETWORK_LEGACY_IMPORT_ADOPT") == "1"
+}
+
 // A persistent partial outage (the API answers, but the proof reads stay
 // unavailable) is bounded so the provider still starts, minting a new identity
 // exactly as the documented fallback: three consecutive answered failures or
@@ -429,13 +438,22 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			noStoreEntry++
 			continue
 		}
+		// Adopt-first (URNETWORK_LEGACY_IMPORT_ADOPT=1) commits the saved entry
+		// without the two-tier network proof, because the connect layer's
+		// sign-in is the proof. It is applied AFTER identity validation below:
+		// an entry that is not this network's, or carries no token or a
+		// mismatched client id, must fall back rather than be written to the
+		// credential store just because the opt-in is on.
+		state := "prove"
+		proof := ""
 		slot := &legacyImportSlot{
 			storeKey: storeKey,
 			display:  legacyImportDisplaySlot(settings),
 			target:   target,
 			settings: settings,
 			entry:    entry,
-			state:    "prove",
+			state:    state,
+			proof:    proof,
 		}
 		// The saved client_id is the display identity even when its entry
 		// later fails validation, so the fallback warning can name it.
@@ -468,9 +486,11 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		slots = append(slots, slot)
 	}
 
-	// Validate every candidate entry before any proof or write.
+	// Validate every candidate entry before any proof or write. A slot already
+	// decided (sticky fallback from a previous start) keeps that decision.
+	adopt := legacyImportAdoptUnproven()
 	for _, slot := range slots {
-		if slot.state != "prove" {
+		if slot.state == "fallback" {
 			continue
 		}
 		clientID, reason, ok := legacyEntryIdentity(slot.entry, networkID)
@@ -481,6 +501,10 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		}
 		slot.clientID = clientID
 		slot.clientID8 = legacyImportClientID8(clientID)
+		if adopt {
+			slot.state = "commit"
+			slot.proof = "legacy_jwt"
+		}
 	}
 
 	// Proof phase, bounded and narrated. Tier 1 compares the retained public

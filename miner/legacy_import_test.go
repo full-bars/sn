@@ -1141,3 +1141,40 @@ func TestLegacyImportTotalOutageKeepsDeferring(t *testing.T) {
 	}
 	fixture.assertOriginalsUntouched()
 }
+
+// TestLegacyImportAdoptStillValidatesEveryCandidate is the regression the
+// adopt-first opt-in introduced: it moved a slot straight to "commit", and the
+// validation pass only looked at slots still in "prove", so a foreign or
+// malformed entry reached the credential write and was recorded as imported.
+// Validation now runs first and adopt only promotes what passed.
+func TestLegacyImportAdoptStillValidatesEveryCandidate(t *testing.T) {
+	t.Setenv("URNETWORK_LEGACY_IMPORT_ADOPT", "1")
+
+	fixture := newLegacyImportFixture(t, true, 1)
+	storeKey := fixture.proxySettings[0].Key()
+	store, err := readLegacyStoreRaw(fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	entry := store[storeKey]
+	entry.NetworkID = connect.NewId().String() // another network's credential
+	store[storeKey] = entry
+	raw, _ := json.MarshalIndent(store, "", "  ")
+	fixture.write(legacyClientJwtStoreName, raw)
+	fixture.captureOriginals()
+
+	result := fixture.run(legacyImportHooks{})
+	if !result.mintSlots[storeKey] {
+		t.Fatal("adopt-first imported a credential from another network; it must fall back")
+	}
+	if _, err := os.Stat(fixture.target(fixture.proxySettings[0])); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("a foreign-network entry was written to the credential store because the opt-in was on")
+	}
+	if _, fallback, _, _ := fixture.recorder.counts(); fallback != 1 {
+		t.Fatalf("fallback records = %d, want 1", fallback)
+	}
+	if !strings.Contains(fixture.recorder.text(), "network_id_mismatch") {
+		t.Fatalf("reason missing from record: %s", fixture.recorder.text())
+	}
+	fixture.assertOriginalsUntouched()
+}

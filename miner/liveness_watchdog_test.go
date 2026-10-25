@@ -157,8 +157,8 @@ func TestLivenessProgressStartupGrace(t *testing.T) {
 	}
 }
 
-// The interval is a third of systemd's WATCHDOG_USEC, never under a second,
-// and absent when the unit does not enable the watchdog.
+// The interval is a third of systemd's WATCHDOG_USEC, with no floor near the
+// timeout, and absent when the unit does not enable the watchdog.
 func TestLivenessWatchdogInterval(t *testing.T) {
 	cases := []struct {
 		usec string
@@ -170,7 +170,8 @@ func TestLivenessWatchdogInterval(t *testing.T) {
 		{"nonsense", 0, false},
 		{"3000000", time.Second, true},          // 3s / 3 = 1s
 		{"1200000000", 400 * time.Second, true}, // 20m / 3
-		{"1000", time.Second, true},             // clamped to the one-second floor
+		{"1000", 10 * time.Millisecond, true},   // pathological 1ms: clamped far below the timeout
+		{"3000000", time.Second, true},          // 3s / 3, unchanged: still a third of the timeout
 	}
 	for _, tc := range cases {
 		got, ok := sdWatchdogInterval(func(string) string { return tc.usec })

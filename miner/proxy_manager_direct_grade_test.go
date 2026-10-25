@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"errors"
 	"io"
 	"math/big"
 	"net"
@@ -53,7 +54,7 @@ func seedDirectDNS(t *testing.T, names []string, ip string) {
 	probeDNSCache.Lock()
 	defer probeDNSCache.Unlock()
 	for _, h := range names {
-		probeDNSCache.m[h] = probeDNSCachedIP{ip: net.ParseIP(ip), at: time.Now()}
+		probeDNSCache.m[h] = probeDNSCachedIP{ips: []net.IP{net.ParseIP(ip)}, at: time.Now()}
 		delete(probeDNSCache.fail, h)
 	}
 	t.Cleanup(func() {
@@ -485,5 +486,71 @@ func TestIsDirectEnabled_ToggleAndEnv(t *testing.T) {
 	t.Setenv("DISABLE_DIRECT_IP", "")
 	if isDirectEnabled() {
 		t.Fatal("toggle file 'off' must disable")
+	}
+}
+
+// TestProbeDirectTargetsFallsBackToAnotherAddress pins the multi-address probe:
+// a host whose first address refuses still passes when another address answers.
+// Pinning a single record is what scored healthy hosts F while a real TLS client
+// reached them fine.
+func TestProbeDirectTargetsFallsBackToAnotherAddress(t *testing.T) {
+	cfg := directTestConfig(t)
+	inner := directDial
+	var tried []string
+	directDial = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		tried = append(tried, addr)
+		if strings.HasPrefix(addr, "203.0.113.9:") {
+			return nil, errors.New("connect: connection refused")
+		}
+		return inner(ctx, network, addr)
+	}
+	t.Cleanup(func() { directDial = inner })
+
+	ips := []net.IP{net.ParseIP("203.0.113.9"), net.ParseIP("192.0.2.10")}
+	outcome, attempted, addr := probeDirectTargets(context.Background(), ips, "example.com", 443, cfg.TargetTimeout)
+	if outcome != directReachable || !attempted {
+		t.Fatalf("outcome=%v attempted=%v addr=%q, want reachable through the fallback", outcome, attempted, addr)
+	}
+	if len(tried) < 2 {
+		t.Fatalf("dialed %v, want the second address tried after the first refused", tried)
+	}
+}
+
+// TestProbeDirectTargetsKeepsInterceptionOverUnreachable: one address completed
+// TCP and failed certificate verification, a later address never connected.
+// The host outcome must stay "intercepted" — the later failure is not evidence
+// against the interception that was actually observed.
+func TestProbeDirectTargetsKeepsInterceptionOverUnreachable(t *testing.T) {
+	old := probeDirectTargetFn
+	defer func() { probeDirectTargetFn = old }()
+	// The intercepting address is probed first; the dead one must not undo it.
+	probeDirectTargetFn = func(_ context.Context, ip net.IP, _ string, _ uint16, _ time.Duration) (directProbeOutcome, bool) {
+		if ip.String() == "1.1.1.1" {
+			return directIntercepted, true
+		}
+		return directUnreachable, true
+	}
+
+	ips := []net.IP{net.ParseIP("1.1.1.1"), net.ParseIP("2.2.2.2")}
+	outcome, attempted, _ := probeDirectTargets(context.Background(), ips, "example.com", 443, 4*time.Second)
+	if !attempted {
+		t.Fatal("attempted = false, want true: both addresses were dialed")
+	}
+	if outcome != directIntercepted {
+		t.Fatalf("outcome = %v, want directIntercepted: a later unreachable address must not erase an observed interception", outcome)
+	}
+}
+
+// TestProbeDirectTargetsAllUnattemptedIsNotEvidence: box-side failures leave the
+// outcome unattempted, so the caller records no verdict about the host.
+func TestProbeDirectTargetsAllUnattemptedIsNotEvidence(t *testing.T) {
+	old := probeDirectTargetFn
+	defer func() { probeDirectTargetFn = old }()
+	probeDirectTargetFn = func(context.Context, net.IP, string, uint16, time.Duration) (directProbeOutcome, bool) {
+		return directUnattempted, false
+	}
+	ips := []net.IP{net.ParseIP("1.1.1.1"), net.ParseIP("2.2.2.2")}
+	if _, attempted, _ := probeDirectTargets(context.Background(), ips, "example.com", 443, time.Second); attempted {
+		t.Fatal("attempted = true with no limiter grant; a box-side failure is not host evidence")
 	}
 }

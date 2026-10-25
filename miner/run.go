@@ -859,6 +859,10 @@ func provide(opts docopt.Opts) {
 // provideWith is provide, or provider start when start is set: start asks
 // before registering a new device and, in a terminal, reports in plain lines.
 func provideWith(opts docopt.Opts, start bool) {
+	// Pet systemd's watchdog before anything can block. A unit that sets
+	// WatchdogSec= kills a service that never checks in, so without this a
+	// healthy provider is restarted at every interval (Result=timeout).
+	startSystemdWatchdog()
 	if !providePreflight(opts, start, os.Stdin, os.Stdout, os.Stderr) {
 		os.Exit(minerExitNeedsSetup)
 	}
@@ -1405,6 +1409,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// its identity is staged and before any provider child starts, the same
 	// line the v33 provider writes from provideSetupMemory.
 	providerStartupCritLog()
+
+	// READY=1 marks startup complete for a Type=notify unit, and this is the
+	// same point the 3.23-fix provider sends it. It deliberately does NOT wait
+	// for any proxy to authenticate: proxy auth can back off for hours or fail
+	// during an API outage, and gating READY on it makes systemd time the start
+	// job out (90s) and SIGTERM a healthy provider. Proxy health is reported
+	// continuously through STATUS= instead. notifySystemdReady was ported from
+	// the relay with no caller, which is why the unit never left "activating".
+	if err := notifySystemdReady(); err != nil {
+		tlog("[systemd] READY=1 notify failed: %s\n", err)
+	}
 
 	// events.log records the shutdown cause too: the first canceller's stack,
 	// or v33's parent-cancellation text when the startup signal handler

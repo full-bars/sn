@@ -90,9 +90,15 @@ func noteLivenessProgress() {
 	processLiveness.tick()
 }
 
+// minWatchdogEvery is the floor for a watchdog ping interval. It is deliberately
+// far below any real timeout: a one-second floor made the interval equal the
+// timeout for a unit with WatchdogSec=1s, so a single late tick was a kill.
+// Only a pathological WATCHDOG_USEC reaches this clamp.
+const minWatchdogEvery = 10 * time.Millisecond
+
 // sdWatchdogInterval is how often to ping, derived from systemd's WATCHDOG_USEC:
-// a third of the timeout, never under one second. ok is false when the watchdog
-// is not enabled for this process.
+// a third of the timeout, with no floor near the timeout itself. ok is false
+// when the watchdog is not enabled for this process.
 //
 // WATCHDOG_PID is deliberately ignored. sd_watchdog_enabled() disables the
 // watchdog in a process whose pid differs, but a hot-swap candidate becomes the
@@ -103,7 +109,7 @@ func sdWatchdogInterval(getenv func(string) string) (time.Duration, bool) {
 		return 0, false
 	}
 	interval := time.Duration(usec) * time.Microsecond / 3
-	return max(interval, time.Second), true
+	return max(interval, minWatchdogEvery), true
 }
 
 // runSdWatchdogLoop pings on every tick while progress is fresh. While it is
