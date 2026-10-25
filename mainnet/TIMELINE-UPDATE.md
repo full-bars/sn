@@ -1,12 +1,14 @@
 # Version 2 timeline update
 
-Updated October 24, 2026, at 16:40 UTC. This document supplies the revised schedule for [the user-facing timeline](timeline.html); that HTML has not yet been updated.
+Updated October 25, 2026, after the paired production configuration rollout. This document supplies the revised schedule for [the user-facing timeline](timeline.html); that HTML has not yet been updated.
 
 ## Current status
 
 **Epoch 3 was missed. Epoch 4 is the proposed first v2 epoch, conditional on completing activation before it starts.** Registration cannot retroactively activate an epoch that has already begun.
 
 A read-only check at finalized block **9,354,702** (block timestamp October 24, 16:40:12 UTC) found runtime **484** and operator 1's v2 pool **unregistered**, with `firstEpoch = 0`. Contracts being deployed and service images being published do not establish that activation is complete.
+
+The runtime 484 service rollout and paired v2 server configuration have now been verified on all six production hosts. Datacenter maintenance is complete. Activation remains pending validator history recovery and finalized pool registration; a Ledger signature has not been requested or submitted.
 
 The prepared registration selects epoch 4. It must finalize **before block 9,398,428**. Until registration finalizes and its state is verified, describe this date as a target, not a confirmed activation.
 
@@ -29,8 +31,8 @@ If registration is not finalized before epoch 4 begins, **epoch 4 is no longer e
 
 ## Work required before confirming activation
 
-- Complete datacenter maintenance and verify production service health. Edges were intentionally offline; this update does not authorize changing the maintenance hold.
-- Complete and verify the runtime 484 service rollout, paired server configuration, and validator recovery. Published images alone are not evidence of running versions.
+- Datacenter maintenance and the paired runtime/configuration rollout are complete. All 20 API instances report ready with the new configuration. Preserve concurrent developer image updates.
+- Restore the missing immutable public attempt metadata and verify validator recovery to current epoch processing. The validator is running but remains in history read-wait; activation is not yet ready.
 - Refresh registration preflight against finalized state, then use the owner's Ledger through the governance Safe to finalize the prepared operator-pool registration. Read back the actual registered pool, assigned UID, and `firstEpoch`; no contract redeployment is needed.
 - Verify watcher operation against the registered pool and retain the transaction and finalized-state evidence. After epoch 4, verify root commitment, challenge expiry, finalization, and claim availability separately.
 
