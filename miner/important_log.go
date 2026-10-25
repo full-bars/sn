@@ -21,6 +21,10 @@ var importantLogMarkers = []string{
 	"[pace]",
 	"client_id",
 	"instance_id",
+	// The bring-up tally ("providers: R running, P pending, F failed (client
+	// ids: N reused, M new)"): the one line that says how many identities
+	// survived a restart, kept for hours alongside the per-slot client_id lines.
+	"providers: ",
 	"Permanently removed",
 	"[proxy][authrate]",
 	// The reconnect governor's once-a-minute verdict (shadow mode: observing

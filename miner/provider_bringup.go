@@ -29,9 +29,12 @@ func providerSlotDisplay(settings *connect.ProxySettings) string {
 }
 
 // providerBringUpLine is the heartbeat's line: the live tally of the run's
-// provider slots.
-func providerBringUpLine(running, pending, failed int) string {
-	return fmt.Sprintf("providers: %d running, %d pending, %d failed", running, pending, failed)
+// provider slots, and how many of the authenticated ones kept their client id
+// across the restart (reused) versus were minted (new). The counts trail the
+// stable "N running, N pending, N failed" prefix so existing readers of it
+// still match.
+func providerBringUpLine(running, pending, failed, reused, minted int) string {
+	return fmt.Sprintf("providers: %d running, %d pending, %d failed (client ids: %d reused, %d new)", running, pending, failed, reused, minted)
 }
 
 // providerBringUpTracker counts the launch list's slots by bring-up state.
@@ -39,22 +42,39 @@ func providerBringUpLine(running, pending, failed int) string {
 // (their device follows immediately); failed slots' workers returned an error
 // before they could run. Safe for the concurrent provider workers.
 type providerBringUpTracker struct {
-	mu       sync.Mutex
-	total    int
-	running  int
-	failed   int
-	states   map[uint64]string
-	started  bool
-	finished bool
-	stopCh   chan struct{}
+	mu      sync.Mutex
+	total   int
+	running int
+	failed  int
+	states  map[uint64]string
+	// identities is each authenticated slot's latest outcome: true when the
+	// slot kept its client id, false when it was minted.
+	identities map[uint64]bool
+	started    bool
+	finished   bool
+	stopCh     chan struct{}
 }
 
 func newProviderBringUpTracker(total int) *providerBringUpTracker {
 	return &providerBringUpTracker{
-		total:  total,
-		states: map[uint64]string{},
-		stopCh: make(chan struct{}),
+		total:      total,
+		states:     map[uint64]string{},
+		identities: map[uint64]bool{},
+		stopCh:     make(chan struct{}),
 	}
+}
+
+// identityCounts returns how many authenticated slots reused their client id
+// and how many were minted. The caller must hold mu.
+func (self *providerBringUpTracker) identityCounts() (reused, minted int) {
+	for _, wasReused := range self.identities {
+		if wasReused {
+			reused++
+		} else {
+			minted++
+		}
+	}
+	return reused, minted
 }
 
 // start emits the opening heartbeat and begins the periodic one. It is a no-op
@@ -119,23 +139,28 @@ func (self *providerBringUpTracker) emit() {
 	}
 	self.mu.Lock()
 	pending := self.total - self.running - self.failed
-	line := providerBringUpLine(self.running, pending, self.failed)
+	reused, minted := self.identityCounts()
+	line := providerBringUpLine(self.running, pending, self.failed, reused, minted)
 	self.mu.Unlock()
 	tlog("%s\n", line)
 }
 
 // authReused narrates one slot's reused authentication and moves it to
-// running.
+// running. The leading text matches the line the v3.23 provider and
+// docs/Hot-Restart.md document, so a grep for "(reused)" finds every slot that
+// kept its identity; the slot follows it.
 func (self *providerBringUpTracker) authReused(index uint64, clientID connect.Id, display string) {
 	self.apply(index, "running", func() {
-		tlog("[reuse] client_id: %s (provider %d, slot %s)\n", clientID, index, display)
+		self.identities[index] = true
+		tlog("♻️ client_id: %s (reused) provider=%d slot=%s\n", clientID, index, display)
 	})
 }
 
 // authNew narrates one slot's fresh authentication and moves it to running.
 func (self *providerBringUpTracker) authNew(index uint64, clientID connect.Id, display string) {
 	self.apply(index, "running", func() {
-		tlog("[new] client_id: %s (provider %d, slot %s)\n", clientID, index, display)
+		self.identities[index] = false
+		tlog("✨ client_id: %s (new) provider=%d slot=%s\n", clientID, index, display)
 	})
 }
 
@@ -187,7 +212,8 @@ func (self *providerBringUpTracker) apply(index uint64, state string, print func
 	if final {
 		self.finished = true
 	}
-	line := providerBringUpLine(self.running, pending, self.failed)
+	reused, minted := self.identityCounts()
+	line := providerBringUpLine(self.running, pending, self.failed, reused, minted)
 	self.mu.Unlock()
 	if final {
 		tlog("%s\n", line)
