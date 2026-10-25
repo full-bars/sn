@@ -78,6 +78,7 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+
       - name: Set up Go (native cache)
         uses: actions/setup-go@v5
         with:
@@ -88,6 +89,52 @@ jobs:
           # PRs) have no persistent disk, so they still use it.
           cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
           cache-dependency-path: go.sum
+
+      - name: Make the module cache writable
+        # The self-hosted runner keeps its module cache warm between jobs and
+        # leaves it owned by the account that seeded it, so a branch that adds
+        # a module version cannot download it: go fails on the .mod.lock with
+        # "permission denied" and the job reports setup failed before a single
+        # test runs. Repair the ownership when sudo allows it, which keeps the
+        # warm cache; when it does not, move the cache somewhere this job can
+        # write. A cold download is slower but it keeps the gate honest instead
+        # of letting a dependency change look untested.
+        #
+        # Runs after setup-go on purpose: the toolchain is on PATH only from
+        # there, and this step needs `go env` to find the cache in use.
+        run: |
+          set -euo pipefail
+          cache="$(go env GOMODCACHE)"
+          # A writable cache root is not enough: go writes the version file and
+          # the lock under cache/download/<module>/@v, and that subtree can be
+          # owned by another account while the root is fine. Probe by actually
+          # creating a file in the tree go will write to.
+          probe_writable() {
+            local dir="$1"
+            mkdir -p "$dir" 2>/dev/null || return 1
+            local probe="$dir/.write-probe.$$"
+            ( : > "$probe" ) 2>/dev/null || return 1
+            rm -f "$probe"
+          }
+          if probe_writable "$cache" && probe_writable "$cache/cache/download"; then
+            echo "module cache writable: $cache"
+            exit 0
+          fi
+          if sudo -n true 2>/dev/null; then
+            sudo chown -R "$(id -u):$(id -g)" "$cache"
+            if probe_writable "$cache" && probe_writable "$cache/cache/download"; then
+              echo "module cache chowned: $cache"
+              exit 0
+            fi
+          fi
+          fallback="${RUNNER_TEMP:-/tmp}/go-mod-cache"
+          mkdir -p "$fallback"
+          # Job-scoped on purpose: `go env -w` would persist this short-lived
+          # path into the runner account's config, so a later job would resolve
+          # GOMODCACHE to a directory that no longer holds the warm cache.
+          echo "GOMODCACHE=$fallback" >> "$GITHUB_ENV"
+          echo "module cache relocated: $fallback"
+
 
       - name: Run Go Unit Tests
         run: |
@@ -132,6 +179,7 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+
       - name: Set up Go (native cache)
         uses: actions/setup-go@v5
         with:
@@ -142,6 +190,52 @@ jobs:
           # PRs) have no persistent disk, so they still use it.
           cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
           cache-dependency-path: go.sum
+
+      - name: Make the module cache writable
+        # The self-hosted runner keeps its module cache warm between jobs and
+        # leaves it owned by the account that seeded it, so a branch that adds
+        # a module version cannot download it: go fails on the .mod.lock with
+        # "permission denied" and the job reports setup failed before a single
+        # test runs. Repair the ownership when sudo allows it, which keeps the
+        # warm cache; when it does not, move the cache somewhere this job can
+        # write. A cold download is slower but it keeps the gate honest instead
+        # of letting a dependency change look untested.
+        #
+        # Runs after setup-go on purpose: the toolchain is on PATH only from
+        # there, and this step needs `go env` to find the cache in use.
+        run: |
+          set -euo pipefail
+          cache="$(go env GOMODCACHE)"
+          # A writable cache root is not enough: go writes the version file and
+          # the lock under cache/download/<module>/@v, and that subtree can be
+          # owned by another account while the root is fine. Probe by actually
+          # creating a file in the tree go will write to.
+          probe_writable() {
+            local dir="$1"
+            mkdir -p "$dir" 2>/dev/null || return 1
+            local probe="$dir/.write-probe.$$"
+            ( : > "$probe" ) 2>/dev/null || return 1
+            rm -f "$probe"
+          }
+          if probe_writable "$cache" && probe_writable "$cache/cache/download"; then
+            echo "module cache writable: $cache"
+            exit 0
+          fi
+          if sudo -n true 2>/dev/null; then
+            sudo chown -R "$(id -u):$(id -g)" "$cache"
+            if probe_writable "$cache" && probe_writable "$cache/cache/download"; then
+              echo "module cache chowned: $cache"
+              exit 0
+            fi
+          fi
+          fallback="${RUNNER_TEMP:-/tmp}/go-mod-cache"
+          mkdir -p "$fallback"
+          # Job-scoped on purpose: `go env -w` would persist this short-lived
+          # path into the runner account's config, so a later job would resolve
+          # GOMODCACHE to a directory that no longer holds the warm cache.
+          echo "GOMODCACHE=$fallback" >> "$GITHUB_ENV"
+          echo "module cache relocated: $fallback"
+
 
       - name: Run go vet
         run: |
