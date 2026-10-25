@@ -29,9 +29,15 @@ func providerSlotDisplay(settings *connect.ProxySettings) string {
 }
 
 // providerBringUpLine is the heartbeat's line: the live tally of the run's
-// provider slots.
-func providerBringUpLine(running, pending, failed int) string {
-	return fmt.Sprintf("providers: %d running, %d pending, %d failed", running, pending, failed)
+// provider slots, and how many of the authenticated ones kept their client id
+// across the restart (reused) versus were minted (new), and how many have
+// completed a dial to the control plane. A reused id alone proves only that a
+// stored login was found; the reached count is the evidence that the slot is
+// talking to the platform. The counts trail the
+// stable "N running, N pending, N failed" prefix so existing readers of it
+// still match.
+func providerBringUpLine(running, pending, failed, reused, minted, reached int) string {
+	return fmt.Sprintf("providers: %d running, %d pending, %d failed (client ids: %d reused, %d new; control plane reached: %d)", running, pending, failed, reused, minted, reached)
 }
 
 // providerBringUpTracker counts the launch list's slots by bring-up state.
@@ -39,11 +45,23 @@ func providerBringUpLine(running, pending, failed int) string {
 // (their device follows immediately); failed slots' workers returned an error
 // before they could run. Safe for the concurrent provider workers.
 type providerBringUpTracker struct {
-	mu       sync.Mutex
-	total    int
-	running  int
-	failed   int
-	states   map[uint64]string
+	mu      sync.Mutex
+	total   int
+	running int
+	failed  int
+	states  map[uint64]string
+	// identities is each authenticated slot's latest outcome: true when the
+	// slot kept its client id, false when it was minted.
+	identities map[uint64]bool
+	// reached is the slots whose first dial through their proxy succeeded.
+	reached map[uint64]bool
+	// watches holds each authenticated slot's pending "never reached" check.
+	watches map[uint64]*time.Timer
+	// closed is set at shutdown, so a late watch stays silent. stop() alone is
+	// also called when the last slot resolves, and the watches must outlive
+	// that: they exist to report the slots that authenticated and then never
+	// reached the control plane.
+	closed   bool
 	started  bool
 	finished bool
 	stopCh   chan struct{}
@@ -51,10 +69,26 @@ type providerBringUpTracker struct {
 
 func newProviderBringUpTracker(total int) *providerBringUpTracker {
 	return &providerBringUpTracker{
-		total:  total,
-		states: map[uint64]string{},
-		stopCh: make(chan struct{}),
+		total:      total,
+		states:     map[uint64]string{},
+		identities: map[uint64]bool{},
+		reached:    map[uint64]bool{},
+		watches:    map[uint64]*time.Timer{},
+		stopCh:     make(chan struct{}),
 	}
+}
+
+// identityCounts returns how many authenticated slots reused their client id
+// and how many were minted. The caller must hold mu.
+func (self *providerBringUpTracker) identityCounts() (reused, minted int) {
+	for _, wasReused := range self.identities {
+		if wasReused {
+			reused++
+		} else {
+			minted++
+		}
+	}
+	return reused, minted
 }
 
 // start emits the opening heartbeat and begins the periodic one. It is a no-op
@@ -75,8 +109,12 @@ func (self *providerBringUpTracker) start() {
 	if pending <= 0 {
 		return
 	}
+	// Read the interval here, not inside the goroutine: the variable is a test
+	// seam, and a goroutine that starts late would read it while the test that
+	// shortened it is restoring it.
+	interval := providerBringUpHeartbeatInterval
 	go func() {
-		ticker := time.NewTicker(providerBringUpHeartbeatInterval)
+		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
 			select {
@@ -118,25 +156,100 @@ func (self *providerBringUpTracker) emit() {
 		return
 	}
 	self.mu.Lock()
+	if self.closed {
+		self.mu.Unlock()
+		return
+	}
 	pending := self.total - self.running - self.failed
-	line := providerBringUpLine(self.running, pending, self.failed)
+	reused, minted := self.identityCounts()
+	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reached))
 	self.mu.Unlock()
 	tlog("%s\n", line)
 }
 
 // authReused narrates one slot's reused authentication and moves it to
-// running.
+// running. The leading text matches the line the v3.23 provider and
+// docs/Hot-Restart.md document, so a grep for "(reused)" finds every slot that
+// kept its identity; the slot follows it.
 func (self *providerBringUpTracker) authReused(index uint64, clientID connect.Id, display string) {
 	self.apply(index, "running", func() {
-		tlog("[reuse] client_id: %s (provider %d, slot %s)\n", clientID, index, display)
+		self.identities[index] = true
+		self.watchControl(index, display)
+		tlog("♻️ client_id: %s (reused) provider=%d slot=%s\n", clientID, index, display)
 	})
 }
 
 // authNew narrates one slot's fresh authentication and moves it to running.
 func (self *providerBringUpTracker) authNew(index uint64, clientID connect.Id, display string) {
 	self.apply(index, "running", func() {
-		tlog("[new] client_id: %s (provider %d, slot %s)\n", clientID, index, display)
+		self.identities[index] = false
+		self.watchControl(index, display)
+		tlog("✨ client_id: %s (new) provider=%d slot=%s\n", clientID, index, display)
 	})
+}
+
+// providerControlGrace is how long an authenticated slot may go without a
+// successful dial before it is called out. A variable so tests can shorten it.
+var providerControlGrace = 60 * time.Second
+
+// shutdown ends the tracker's heartbeat and cancels every pending control
+// check. Called when the run ends.
+func (self *providerBringUpTracker) shutdown() {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	self.closed = true
+	for index, watch := range self.watches {
+		watch.Stop()
+		delete(self.watches, index)
+	}
+	self.mu.Unlock()
+	self.stop()
+}
+
+// watchControl starts the slot's "never reached the control plane" check. The
+// caller holds mu.
+func (self *providerBringUpTracker) watchControl(index uint64, display string) {
+	if self.reached[index] {
+		return
+	}
+	if previous := self.watches[index]; previous != nil {
+		previous.Stop()
+	}
+	self.watches[index] = time.AfterFunc(providerControlGrace, func() {
+		self.mu.Lock()
+		reached, closed := self.reached[index], self.closed
+		self.mu.Unlock()
+		if !reached && !closed {
+			tlog("⚠️ [control] provider %d (%s) authenticated but has not reached the control plane after %s\n", index, display, formatDuration(providerControlGrace))
+		}
+	})
+}
+
+// controlReached records a slot's first successful dial through its proxy and
+// narrates it once. When the final tally was already emitted, it emits an
+// updated tally with the reached slot included.
+func (self *providerBringUpTracker) controlReached(index uint64, display string, dur time.Duration, via string) {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	if self.reached[index] {
+		self.mu.Unlock()
+		return
+	}
+	self.reached[index] = true
+	if watch := self.watches[index]; watch != nil {
+		watch.Stop()
+		delete(self.watches, index)
+	}
+	shouldEmit := self.finished
+	self.mu.Unlock()
+	tlog("📡 [control] provider %d (%s) reached the control plane via %s in %dms\n", index, display, via, dur.Milliseconds())
+	if shouldEmit {
+		self.emit()
+	}
 }
 
 // authFailed narrates one slot's failed authentication, with the reason and
@@ -187,7 +300,8 @@ func (self *providerBringUpTracker) apply(index uint64, state string, print func
 	if final {
 		self.finished = true
 	}
-	line := providerBringUpLine(self.running, pending, self.failed)
+	reused, minted := self.identityCounts()
+	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reached))
 	self.mu.Unlock()
 	if final {
 		tlog("%s\n", line)
