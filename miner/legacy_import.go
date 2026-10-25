@@ -438,16 +438,14 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			noStoreEntry++
 			continue
 		}
-		// Adopt-first (URNETWORK_LEGACY_IMPORT_ADOPT=1): the saved entry is
-		// this node's own credential, so it is committed as-is and the
-		// connect layer's sign-in is the proof. The two-tier network proof
-		// is reserved for adoptions that fail, not for every slot.
+		// Adopt-first (URNETWORK_LEGACY_IMPORT_ADOPT=1) commits the saved entry
+		// without the two-tier network proof, because the connect layer's
+		// sign-in is the proof. It is applied AFTER identity validation below:
+		// an entry that is not this network's, or carries no token or a
+		// mismatched client id, must fall back rather than be written to the
+		// credential store just because the opt-in is on.
 		state := "prove"
 		proof := ""
-		if legacyImportAdoptUnproven() {
-			state = "commit"
-			proof = "legacy_jwt"
-		}
 		slot := &legacyImportSlot{
 			storeKey: storeKey,
 			display:  legacyImportDisplaySlot(settings),
@@ -488,9 +486,11 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		slots = append(slots, slot)
 	}
 
-	// Validate every candidate entry before any proof or write.
+	// Validate every candidate entry before any proof or write. A slot already
+	// decided (sticky fallback from a previous start) keeps that decision.
+	adopt := legacyImportAdoptUnproven()
 	for _, slot := range slots {
-		if slot.state != "prove" {
+		if slot.state == "fallback" {
 			continue
 		}
 		clientID, reason, ok := legacyEntryIdentity(slot.entry, networkID)
@@ -501,6 +501,10 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		}
 		slot.clientID = clientID
 		slot.clientID8 = legacyImportClientID8(clientID)
+		if adopt {
+			slot.state = "commit"
+			slot.proof = "legacy_jwt"
+		}
 	}
 
 	// Proof phase, bounded and narrated. Tier 1 compares the retained public
