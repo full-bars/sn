@@ -165,7 +165,7 @@ func TestPublishHealthHeartbeatCountsEveryBucket(t *testing.T) {
 			}
 			// And the operator-facing log line, which is where a wrong count was
 			// easiest to miss.
-			want := fmt.Sprintf("proxies=%d up=0 last_known_up=%d down=%d", wantTotal, c.wantUp, c.wantDown)
+			want := fmt.Sprintf("proxies=%d reached=0 last_known_up=%d down=%d", wantTotal, c.wantUp, c.wantDown)
 			if !strings.Contains(line.String(), want) {
 				t.Fatalf("log line missing %q:\n%s", want, line.String())
 			}
@@ -191,7 +191,8 @@ func TestHealthUpIsThisProcessControlEvidence(t *testing.T) {
 		"198.51.100.2:1080": "up",
 		"198.51.100.3:1080": "up",
 	})
-	controlReachedSlots.Add(2)
+	noteControlReachedIdentity("proxy:198.51.100.1:1080")
+	noteControlReachedIdentity("proxy:198.51.100.2:1080")
 
 	now := time.Date(2026, 10, 24, 12, 0, 0, 0, time.UTC)
 	hb := publishHealthHeartbeat(now, now.Add(-time.Hour), "default", healthHeartbeatDefaultInterval)
@@ -200,7 +201,7 @@ func TestHealthUpIsThisProcessControlEvidence(t *testing.T) {
 		t.Fatalf("counts = up %d last_known_up %d total %d, want 2/3/3",
 			hb.ProxiesUp, hb.LastKnownUp, hb.Proxies)
 	}
-	if want := "up=2 last_known_up=3"; !strings.Contains(line.String(), want) {
+	if want := "reached=2 last_known_up=3"; !strings.Contains(line.String(), want) {
 		t.Fatalf("log line missing %q:\n%s", want, line.String())
 	}
 }
@@ -357,14 +358,16 @@ func TestPublishHealthHeartbeatRecordFields(t *testing.T) {
 		"at", "interval_seconds", "stale_after_seconds", "uptime_seconds",
 		"version", "profile", "host", "pid",
 		"heap_mib", "sys_mib", "goroutines",
-		"proxies", "proxies_up", "proxies_down", "clients", "counts_known",
+		"proxies", "proxies_up", "last_known_up", "proxies_down", "clients", "counts_known",
 	} {
 		if _, ok := fields[name]; !ok {
 			t.Errorf("heartbeat record is missing field %q: %s", name, data)
 		}
 	}
-	if len(fields) != 16 {
-		t.Errorf("heartbeat record has %d fields, want the 16 named ones: %s", len(fields), data)
+	// last_known_up joins the set so a monitor reading the file can still see
+	// the persisted grade after proxies_up changed meaning to "reached here".
+	if len(fields) != 17 {
+		t.Errorf("heartbeat record has %d fields, want the 17 named ones: %s", len(fields), data)
 	}
 }
 

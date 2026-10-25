@@ -179,11 +179,18 @@ func TestControlReachedCountsEachSlotOnce(t *testing.T) {
 	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct")
 	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct") // duplicate
 	if got := controlReachedCount(); got != 1 {
-		t.Fatalf("after one slot reached twice, up=%d, want 1", got)
+		t.Fatalf("after one slot reached twice, reached=%d, want 1", got)
 	}
 
 	tracker.controlReached(1, "proxy:198.51.100.1:1080", 10*time.Millisecond, "proxy")
 	if got := controlReachedCount(); got != 2 {
-		t.Fatalf("after two slots, up=%d, want 2", got)
+		t.Fatalf("after two slots, reached=%d, want 2", got)
+	}
+
+	// A reload hands the same proxy a new slot index. The count is keyed by
+	// identity, so the second index must not add a second proxy.
+	tracker.controlReached(7, "proxy:198.51.100.1:1080", 10*time.Millisecond, "proxy")
+	if got := controlReachedCount(); got != 2 {
+		t.Fatalf("after a reload re-reached the same proxy, reached=%d, want 2 (index-keyed counting would say 3)", got)
 	}
 }

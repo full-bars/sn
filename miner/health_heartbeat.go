@@ -127,10 +127,15 @@ type healthHeartbeatRecord struct {
 	SysMiB        uint64  `json:"sys_mib"`
 	Goroutines    int     `json:"goroutines"`
 	Proxies       int     `json:"proxies"`
-	ProxiesUp     int     `json:"proxies_up"`
-	ProxiesDown   int     `json:"proxies_down"`
-	Clients       int64   `json:"clients"`
-	CountsKnown   bool    `json:"counts_known"`
+	// ProxiesUp is the count of proxies that reached the control plane in this
+	// process. The JSON name is kept for monitors that already read it, but the
+	// figure is monotonic: it answers "has this process proven a dial", not "is
+	// it up now". LastKnownUp is the persisted grade it used to report.
+	ProxiesUp   int   `json:"proxies_up"`
+	LastKnownUp int   `json:"last_known_up"`
+	ProxiesDown int   `json:"proxies_down"`
+	Clients     int64 `json:"clients"`
+	CountsKnown bool  `json:"counts_known"`
 }
 
 // healthHeartbeatCurrent is the last pulse, nil before the first one. An atomic
@@ -197,6 +202,7 @@ func (h *healthHeartbeat) record() healthHeartbeatRecord {
 		Goroutines:    h.Goroutines,
 		Proxies:       h.Proxies,
 		ProxiesUp:     h.ProxiesUp,
+		LastKnownUp:   h.LastKnownUp,
 		ProxiesDown:   h.ProxiesDown,
 		Clients:       h.Clients,
 		CountsKnown:   h.CountsKnown,
@@ -398,7 +404,7 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 	// pool rather than this process's progress through it.
 	persistedUp, degraded, dead, _ := proxyHealthRegistryCounts()
 	lastKnownUp := persistedUp
-	up := controlReachedCount()
+	reached := controlReachedCount()
 	down := degraded + dead
 	_, _, clients, countsKnown := controlRuntime.counterTotals()
 
@@ -422,7 +428,7 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 		SysMiB:      sysBytes / 1024 / 1024,
 		Goroutines:  runtime.NumGoroutine(),
 		Proxies:     lastKnownUp + down,
-		ProxiesUp:   up,
+		ProxiesUp:   reached,
 		LastKnownUp: lastKnownUp,
 		ProxiesDown: down,
 		Clients:     clients,
@@ -438,7 +444,11 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 		buildLine += " host=" + hb.Host
 	}
 	tlog("%s\n", buildLine)
-	tlog("❤️ [health] uptime=%s profile=%s heap=%dMiB sys=%dMiB goroutines=%d proxies=%d up=%d last_known_up=%d down=%d clients=%d interval=%s\n",
+	// "reached", not "up": this count only rises, so it says a proxy got to the
+	// control plane at some point in this process, not that it is up now. The
+	// word is the whole point of the fix - a figure that cannot fall must not be
+	// labelled with a word that implies it can.
+	tlog("❤️ [health] uptime=%s profile=%s heap=%dMiB sys=%dMiB goroutines=%d proxies=%d reached=%d last_known_up=%d down=%d clients=%d interval=%s\n",
 		hb.Uptime, hb.Profile, hb.HeapMiB, hb.SysMiB, hb.Goroutines,
 		hb.Proxies, hb.ProxiesUp, hb.LastKnownUp, hb.ProxiesDown, hb.Clients, hb.Interval)
 
