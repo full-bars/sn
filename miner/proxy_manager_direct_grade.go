@@ -216,6 +216,10 @@ func writeDirectGrade(g directGrade) error {
 	return atomicWriteFile(p, b, 0600)
 }
 
+// probeDirectTargetFn is probeDirectTarget, replaced in tests to drive the
+// per-address outcome matrix without real sockets.
+var probeDirectTargetFn = probeDirectTarget
+
 // probeDirectTargets dials each address in turn and succeeds if ANY of them
 // completes a verified TLS handshake. Pinning one record failed a host whose
 // first address was dead while its others answered, which is how healthy hosts
@@ -241,7 +245,7 @@ func probeDirectTargets(
 	lastAddr := ""
 	for _, ip := range ips {
 		lastAddr = ip.String()
-		o, a := probeDirectTarget(ctx, ip, host, port, per)
+		o, a := probeDirectTargetFn(ctx, ip, host, port, per)
 		if !a {
 			continue
 		}
@@ -249,7 +253,14 @@ func probeDirectTargets(
 		if o == directReachable {
 			return directReachable, true, lastAddr
 		}
-		outcome = o
+		// Interception is evidence that the path WORKS up to the certificate:
+		// a later address that cannot connect says nothing about it, so it must
+		// not overwrite it. Otherwise a host with one intercepting address and
+		// one dead address is reported as simply unreachable and dropped from
+		// Intercepted, hiding an attempted interception.
+		if o == directIntercepted || outcome != directIntercepted {
+			outcome = o
+		}
 	}
 	return outcome, attempted, lastAddr
 }

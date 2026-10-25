@@ -515,3 +515,42 @@ func TestProbeDirectTargetsFallsBackToAnotherAddress(t *testing.T) {
 		t.Fatalf("dialed %v, want the second address tried after the first refused", tried)
 	}
 }
+
+// TestProbeDirectTargetsKeepsInterceptionOverUnreachable: one address completed
+// TCP and failed certificate verification, a later address never connected.
+// The host outcome must stay "intercepted" — the later failure is not evidence
+// against the interception that was actually observed.
+func TestProbeDirectTargetsKeepsInterceptionOverUnreachable(t *testing.T) {
+	old := probeDirectTargetFn
+	defer func() { probeDirectTargetFn = old }()
+	// The intercepting address is probed first; the dead one must not undo it.
+	probeDirectTargetFn = func(_ context.Context, ip net.IP, _ string, _ uint16, _ time.Duration) (directProbeOutcome, bool) {
+		if ip.String() == "1.1.1.1" {
+			return directIntercepted, true
+		}
+		return directUnreachable, true
+	}
+
+	ips := []net.IP{net.ParseIP("1.1.1.1"), net.ParseIP("2.2.2.2")}
+	outcome, attempted, _ := probeDirectTargets(context.Background(), ips, "example.com", 443, 4*time.Second)
+	if !attempted {
+		t.Fatal("attempted = false, want true: both addresses were dialed")
+	}
+	if outcome != directIntercepted {
+		t.Fatalf("outcome = %v, want directIntercepted: a later unreachable address must not erase an observed interception", outcome)
+	}
+}
+
+// TestProbeDirectTargetsAllUnattemptedIsNotEvidence: box-side failures leave the
+// outcome unattempted, so the caller records no verdict about the host.
+func TestProbeDirectTargetsAllUnattemptedIsNotEvidence(t *testing.T) {
+	old := probeDirectTargetFn
+	defer func() { probeDirectTargetFn = old }()
+	probeDirectTargetFn = func(context.Context, net.IP, string, uint16, time.Duration) (directProbeOutcome, bool) {
+		return directUnattempted, false
+	}
+	ips := []net.IP{net.ParseIP("1.1.1.1"), net.ParseIP("2.2.2.2")}
+	if _, attempted, _ := probeDirectTargets(context.Background(), ips, "example.com", 443, time.Second); attempted {
+		t.Fatal("attempted = true with no limiter grant; a box-side failure is not host evidence")
+	}
+}
