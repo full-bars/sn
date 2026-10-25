@@ -156,6 +156,10 @@ func (self *providerBringUpTracker) emit() {
 		return
 	}
 	self.mu.Lock()
+	if self.closed {
+		self.mu.Unlock()
+		return
+	}
 	pending := self.total - self.running - self.failed
 	reused, minted := self.identityCounts()
 	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reached))
@@ -224,7 +228,8 @@ func (self *providerBringUpTracker) watchControl(index uint64, display string) {
 }
 
 // controlReached records a slot's first successful dial through its proxy and
-// narrates it once.
+// narrates it once. When the final tally was already emitted, it emits an
+// updated tally with the reached slot included.
 func (self *providerBringUpTracker) controlReached(index uint64, display string, dur time.Duration, via string) {
 	if self == nil {
 		return
@@ -239,8 +244,12 @@ func (self *providerBringUpTracker) controlReached(index uint64, display string,
 		watch.Stop()
 		delete(self.watches, index)
 	}
+	shouldEmit := self.finished
 	self.mu.Unlock()
 	tlog("📡 [control] provider %d (%s) reached the control plane via %s in %dms\n", index, display, via, dur.Milliseconds())
+	if shouldEmit {
+		self.emit()
+	}
 }
 
 // authFailed narrates one slot's failed authentication, with the reason and

@@ -42,7 +42,7 @@ func TestProviderBringUpNarratesAuthOutcomes(t *testing.T) {
 	buffer := captureProviderBringUpLog(t)
 	tracker := newProviderBringUpTracker(3)
 	tracker.start()
-	defer tracker.stop()
+	defer tracker.shutdown()
 
 	directID := connect.NewId()
 	proxyID := connect.NewId()
@@ -112,6 +112,31 @@ func TestProviderBringUpStartStopIdempotent(t *testing.T) {
 	tracker.workerFailed(0)
 	tracker.authReused(0, connect.NewId(), "direct")
 	tracker.stop()
+}
+
+func TestProviderBringUpControlReachedUpdatesFinalTally(t *testing.T) {
+	buffer := captureProviderBringUpLog(t)
+	tracker := newProviderBringUpTracker(1)
+	tracker.start()
+	defer tracker.shutdown()
+
+	tracker.authReused(0, connect.NewId(), "direct")
+	initial := providerBringUpLine(1, 0, 0, 1, 0, 0)
+	if !strings.Contains(buffer.String(), initial) {
+		t.Fatalf("final tally missing %q:\n%s", initial, buffer.String())
+	}
+
+	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct")
+	want := providerBringUpLine(1, 0, 0, 1, 0, 1)
+	if !strings.Contains(buffer.String(), want) {
+		t.Fatalf("bring-up lines miss %q:\n%s", want, buffer.String())
+	}
+
+	tallies := strings.Count(buffer.String(), "providers:")
+	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct")
+	if count := strings.Count(buffer.String(), "providers:"); count != tallies {
+		t.Fatalf("second controlReached added another tally line: %d -> %d\n%s", tallies, count, buffer.String())
+	}
 }
 
 func TestProviderAuthRetryToken(t *testing.T) {
