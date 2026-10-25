@@ -1401,6 +1401,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// The control socket's snapshot and traffic replies read these counters.
 	controlRuntime.setBandwidthRegistry(bwRegistry)
 
+	// The IPv6 pin of the proxied slots (proxy_v6_pin_controller.go): one
+	// controller for the run, its verdicts in their own file. A hot-swap
+	// candidate reads the file but writes it only from its takeover on
+	// (hotswap.go), so the parent's last verdicts are merged, not clobbered.
+	v6LedgerPath := mustStatePathQuiet("v6-ledger.json")
+	v6Verdicts := loadV6Ledger(v6LedgerPath, nil)
+	v6Pins := newV6PinController(v6Verdicts, newV6LedgerPersister(v6LedgerPath, v6Verdicts, !self.hotSwapCandidate))
+	setProcessV6Pins(v6Pins)
+	defer setProcessV6Pins(nil)
+	defer v6Pins.start(ctx)()
+
 	// events.log records the start of this run - version, pid, host - once
 	// its identity is staged and before any provider child starts, the same
 	// line the v33 provider writes from provideSetupMemory.
@@ -1749,6 +1760,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if proxySettings != nil {
 			defer watchProxyTransportHealth(proxyCtx, proxySettings.Key(), device, proxyTransportWatchInterval)()
 		}
+		// Step 2: a proxied slot whose proxy has proven IPv6 egress also runs
+		// an IPv6-pinned transport, so the platform records it dual-stack;
+		// every other slot keeps its one transport and pays only a periodic
+		// probe. The slot never waits on it. A nil proxySettings (the direct
+		// slot, which keeps the family group) registers nothing. Deferred
+		// after the device close, so it stops first.
+		defer v6Pins.register(proxyCtx, proxySettings, display, device, networkSpace.GetPlatformUrlV6(), v6ControlPlatformUrl(networkSpace))()
 		// Fork hook: charge this slot's relayed bytes to its counters, and its
 		// open provider contracts to the same counter's live client count, from
 		// the accounting the SDK keeps inside the device (provider_billing.go).
