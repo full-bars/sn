@@ -257,9 +257,22 @@ func initSHMLogger() {
 		go func() {
 			for {
 				time.Sleep(5 * time.Second)
-				fMu.Lock()
-				err := trimRAMLog(f, shmLogMaxSize, shmLogTrimRatio)
-				fMu.Unlock()
+				// The tail is read outside the lock and only the in-place
+				// rewrite holds it: the pipe reader keeps draining while most of
+				// the cap is read, so a trim cannot fill the 64 KiB pipe and
+				// block every glog emit behind it. The file keeps its inode, so
+				// `tail -f` and `provider logs` keep following it.
+				_, err := trimRAMLogInPlace(
+					f,
+					shmLogMaxSize,
+					shmLogTrimRatio,
+					func(body func()) {
+						fMu.Lock()
+						defer fMu.Unlock()
+						body()
+					},
+					nil,
+				)
 				if err != nil {
 					reportTrimFailure(&mainTrimWarned, &mainTrimWarnTime, shmLogPath, err)
 				}
@@ -270,9 +283,10 @@ func initSHMLogger() {
 		go func() {
 			for {
 				time.Sleep(500 * time.Millisecond)
-				fMu.Lock()
+				// An fsync beside an append write on one descriptor is safe, so
+				// the sync does not take the writer's lock. Holding it across the
+				// fsync was the other half of the convoy.
 				f.Sync()
-				fMu.Unlock()
 			}
 		}()
 	})
