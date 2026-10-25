@@ -1685,6 +1685,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// -- the same rule the swarm members and hosted devices follow. The
 		// remaining slots still provide; they just do not listen.
 		settings.ProvideExtenderEnabled = proxySettings == nil
+		// A proxied identity runs one family-agnostic transport, not the
+		// v4-pinned/v6-pinned/standby group: a pinned transport dials from
+		// this host, and behind a SOCKS proxy that dial cannot leave the
+		// proxy, so the pins exist only to fail. 3.23 gates the group the same
+		// way (provider/family_transport.go, useFamilyTransports returns false
+		// for a proxied identity), which is why a production 3.23 provider
+		// runs one transport per proxy. The direct slot keeps the group, since
+		// it dials on this host's own routes and can honestly prove both
+		// families.
+		settings.DisablePlatformFamilyTransports = providerDisablesFamilyTransports(proxySettings)
 		settings.KeyMaterial = providerDeviceKeyMaterial(seed, certPem, keyPem, extenderKeySeed)
 		applyProviderMemoryTarget(settings, self.memoryPlan.DeviceMemoryTargetByteCount)
 		// Wrap ProviderDialContextSettings with bandwidth tracking too.
