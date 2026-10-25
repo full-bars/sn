@@ -17,7 +17,7 @@ import (
 func TestCmdStopWindows_PIDZero(t *testing.T) {
 	// Create a temp state dir and a mock socket that responds to
 	// shutdown and then closes itself after a short delay.
-	tmpDir := t.TempDir()
+	tmpDir := socketTempDir(t)
 	sockPath := filepath.Join(tmpDir, "provider.sock")
 
 	ln, err := net.Listen("unix", sockPath)

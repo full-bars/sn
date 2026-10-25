@@ -21,6 +21,13 @@ var importantLogMarkers = []string{
 	"[pace]",
 	"client_id",
 	"instance_id",
+	// The bring-up tally ("providers: R running, P pending, F failed (client
+	// ids: N reused, M new)"): the one line that says how many identities
+	// survived a restart, kept for hours alongside the per-slot client_id lines.
+	"providers: ",
+	// Each slot's first successful dial, and the warning for a slot that
+	// authenticated but never reached the control plane.
+	"[control] provider",
 	"Permanently removed",
 	"[proxy][authrate]",
 	// The reconnect governor's once-a-minute verdict (shadow mode: observing
@@ -40,6 +47,10 @@ var importantLogMarkers = []string{
 	// The per-cycle headline (what a URL fetch did to the pool) and the launch
 	// line (URL proxies actually starting) are rare and high-value.
 	"[proxy][url] cycle:",
+	// The summary line only says "N failed"; this per-source line carries the
+	// actual error (timeout, DNS, status) and is the only record of why a list
+	// could not be fetched once the ring rolls.
+	"[proxy][url] fetch failed for",
 	"[proxy][url] source ",
 	"[proxy][url] launching",
 	"[proxy][url] reaper: refreshed grade",
