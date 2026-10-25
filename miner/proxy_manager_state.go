@@ -72,6 +72,16 @@ type ProxyEntry struct {
 	// different remedies.
 	TransportDrops int64 `json:"transport_drops,omitempty"`
 
+	// Ipv6Verdict, Ipv6CheckedAt, Ipv6Class and Ipv6Failures are the persisted
+	// per-proxy IPv6 ledger (pinned_ipv6_ledger.go). It exists so a restart does
+	// not re-learn a proxy's IPv6 support with a fresh dial storm: the LA7 run
+	// spent a core and 43,620 failed tcp6 dials proving the same 500 facts on
+	// every start. Empty verdict means no evidence yet, which is not "no".
+	Ipv6Verdict   string    `json:"ipv6_verdict,omitempty"` // "yes", "no", or "" for unknown
+	Ipv6CheckedAt time.Time `json:"ipv6_checked_at,omitempty"`
+	Ipv6Class     string    `json:"ipv6_class,omitempty"`    // why, for the operator (pinned_ipv6_ledger.go)
+	Ipv6Failures  int       `json:"ipv6_failures,omitempty"` // consecutive isolated v6 failures
+
 	Score       float64   `json:"score,omitempty"`        // stage-1 table probe result (ok/total), 0 = never graded
 	Graded      bool      `json:"graded,omitempty"`       // true once a stage-1 table probe recorded a DECIDABLE result
 	Failed      []string  `json:"failed,omitempty"`       // target hostnames that did not answer the last stage-1 pass
