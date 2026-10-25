@@ -306,17 +306,7 @@ func_start_provider(){
         PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
 		BIN_VER="$($PROVIDER_BIN --version)"
 		log "[INFO] Running UrNetwork build v${BIN_VER}"
-        # --allow-client-registration is required on a first run: without it the
-        # provider custody gate refuses to create .provider.key and the process
-        # exits 1, leaving a container that is Up with a valid JWT but has no
-        # provider in it (the smoke job's first in-container command then fails
-        # with "no providers found on this box"). The gate is still the safety
-        # net: with AllowCreate set it refuses anyway when any retained .provider*
-        # history exists (provider_key_missing_with_retained_history), so this
-        # cannot silently replace a lost identity. Every other lane already passes
-        # the flag (tool-functional-smoke.yml, systemd-smoke.sh, distro-smoke.sh,
-        # freebsd-smoke.sh, lsm-smoke.sh).
-        func_run_provider "$PROVIDER_BIN" provide --allow-client-registration
+        func_run_provider "$PROVIDER_BIN" provide
         if [ "$code" -eq 0 ]; then
             if [ -f "$HOME/.urnetwork/update-pending" ]; then
                 rm -f "$HOME/.urnetwork/update-pending"
