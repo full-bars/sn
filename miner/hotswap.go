@@ -1114,6 +1114,10 @@ func (self providerRunSettings) hotSwapTakeoverCandidate(ctx context.Context, ca
 	setHotSwapTrigger(func() error {
 		return hotSwapHandoff(ctx, cancel, self.opts)
 	})
+	// The parent moved MAINPID to this process; it is now the unit's main
+	// process and has finished starting. READY is idempotent for a unit that
+	// is already active.
+	announceStartupComplete()
 }
 
 // ResetHotSwapStateForTest resets draining state and closers for test isolation.

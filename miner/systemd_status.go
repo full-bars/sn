@@ -279,3 +279,24 @@ func reportProxyStatusToSystemd() {
 	defer proxyStatusSendMu.Unlock()
 	_ = notifySystemdStatus(systemdStatusLine())
 }
+
+// announceStartupComplete tells systemd the unit has finished starting
+// (READY=1). A Type=notify unit is held in "activating" until it arrives and
+// is killed when TimeoutStartSec (90 s by default) runs out, so the provider
+// must send it; 3.23-fix sends it at the same point (provider/main.go).
+//
+// READY is the startup barrier, not a health signal. It is sent once the
+// process is self-managing: control state loaded, queued overrides drained
+// and the control socket bound. Everything after that is a retry loop that
+// supervises itself, so no proxy authentication, no control-plane contact and
+// no serving may gate it: proxy auth backs off for hours against a
+// rate-limited API, and a start gated on it would be killed while retrying
+// correctly. Health travels on STATUS= (notifySystemdStatus).
+//
+// A failed send is logged, never fatal: without a notify socket the call is
+// already a no-op, and a unit that is not Type=notify ignores the message.
+var announceStartupComplete = func() {
+	if err := notifySystemdReady(); err != nil {
+		tlog("[systemd] READY=1 notify failed: %s\n", err)
+	}
+}
