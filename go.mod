@@ -223,7 +223,7 @@ replace github.com/urnetwork/proxy => github.com/urnetwork/proxy v0.0.0-20260923
 
 replace github.com/urnetwork/userwireguard => github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f
 
-replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20261023061624-4115b3168758
+replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20261025111055-c010db6bbd7e
 
 replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9
 
@@ -238,4 +238,4 @@ replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-sub
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261023042901-6eeb86ec7502
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261025034911-49d75e264480

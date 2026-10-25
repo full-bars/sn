@@ -1314,6 +1314,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		rawCancel()
 		joinHealthLoop(proxyHistoryPruneDone, "proxy history prune")
 	}()
+	// Startup barrier. The control socket is bound and control state is
+	// loaded, so the miner is self-managing; the proxy launch below is retry
+	// loops that supervise themselves. READY must not wait for any proxy: see
+	// announceStartupComplete. A HotSwap candidate does not own the unit yet
+	// and signals after its takeover (hotSwapTakeoverCandidate).
+	if !self.hotSwapCandidate {
+		announceStartupComplete()
+	}
 	// systemd's watchdog runs from the start of the unit's life: feed it
 	// through the whole of startup, not only once the proxy list is loaded.
 	// Inert without WATCHDOG_USEC and without a self-exit supervisor
@@ -1466,6 +1474,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			proxyLegId = proxySettings.Key()
 		}
 		clientStrategySettings.Log = withProxyLegObserver(clientStrategySettings.Log, proxyLegId)
+		// Name the slot in its select lines, and report its first successful
+		// dial: the evidence that this proxy is talking to the control plane.
+		slotDisplay := providerSlotDisplay(proxySettings)
+		clientStrategySettings.Log = withSlotSelectLabel(clientStrategySettings.Log, slotSelectLabel(index, proxyAddr), func(dur time.Duration, via string) {
+			bringUp.controlReached(index, slotDisplay, dur, via)
+		})
 		// The one strategy the run itself drives for this identity. The slot's
 		// API and its device keep the strategies the SDK builds from these
 		// same settings (the space builds one, and a non-hosted device shares
@@ -1671,6 +1685,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// -- the same rule the swarm members and hosted devices follow. The
 		// remaining slots still provide; they just do not listen.
 		settings.ProvideExtenderEnabled = proxySettings == nil
+		// A proxied identity runs one family-agnostic transport, not the
+		// v4-pinned/v6-pinned/standby group: a pinned transport dials from
+		// this host, and behind a SOCKS proxy that dial cannot leave the
+		// proxy, so the pins exist only to fail. 3.23 gates the group the same
+		// way (provider/family_transport.go, useFamilyTransports returns false
+		// for a proxied identity), which is why a production 3.23 provider
+		// runs one transport per proxy. The direct slot keeps the group, since
+		// it dials on this host's own routes and can honestly prove both
+		// families.
+		settings.DisablePlatformFamilyTransports = providerDisablesFamilyTransports(proxySettings)
 		settings.KeyMaterial = providerDeviceKeyMaterial(seed, certPem, keyPem, extenderKeySeed)
 		applyProviderMemoryTarget(settings, self.memoryPlan.DeviceMemoryTargetByteCount)
 		// Wrap ProviderDialContextSettings with bandwidth tracking too.
@@ -1937,7 +1961,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// Start the bring-up heartbeat once the launch list is fixed; a run with
 	// no slots closes it immediately.
 	bringUp.start()
-	defer bringUp.stop()
+	defer bringUp.shutdown()
 	var wg sync.WaitGroup
 	results := make(chan error, len(providers))
 	for _, slot := range launchSlots {
@@ -2138,6 +2162,12 @@ func slotClientStrategySettings(
 	clientStrategySettings.ProxySettings = proxySettings
 	if proxySettings == nil {
 		clientStrategySettings.DialContextSettings = testEgressDialer
+	} else {
+		// Only the direct slot keeps the extender network client and the gossip
+		// node. Every slot builds its own network space and the SDK starts
+		// both for each one, so with hundreds of proxy identities that is
+		// hundreds of directories, clients and gossip nodes on one machine.
+		clientStrategySettings.DisableExtenderNetwork = true
 	}
 	// Count through the proxy, not around it, and give the space's own QUIC
 	// dialers (the api's alt-h3/alt-whodis carriers) the slot's proxy
