@@ -11,7 +11,7 @@ import (
 type Target struct {
 	Unit      string // systemd unit name, e.g. "urnetwork-native.service"
 	User      string // OS user, e.g. "urnet"
-	Network   string // JWT network_name, e.g. "tacogonzalez3000" (NOT unique per box — see matchKey)
+	Network   string // JWT network_name, e.g. "mynetwork" (NOT unique per box — see matchKey)
 	NetworkID string // JWT network_id — the TRUE unique account identity
 	StateDir  string // explicit state directory path
 	PID       int    // running process pid — the most specific selector (disambiguates identical user/net/state-dir rows)

@@ -388,14 +388,14 @@ func TestUsageGraphsArgsPreservesTrailingFlags(t *testing.T) {
 
 // TestUsageGraphArgsPreservesTrailingFlags mirrors the above for
 // `usage graph <view> --flags`, the other documented example
-// (`usage graph month --network tacogonzalez3000`).
+// (`usage graph month --network mynetwork`).
 func TestUsageGraphArgsPreservesTrailingFlags(t *testing.T) {
-	args := []string{"graph", "month", "--network", "tacogonzalez3000"}
+	args := []string{"graph", "month", "--network", "mynetwork"}
 	targetArgs, view := usageGraphArgs(args, 0)
 	if view != "month" {
 		t.Fatalf("usageGraphArgs(%v, 0) view = %q, want %q", args, view, "month")
 	}
-	want := []string{"--network", "tacogonzalez3000"}
+	want := []string{"--network", "mynetwork"}
 	if len(targetArgs) != len(want) {
 		t.Fatalf("usageGraphArgs(%v, 0) targetArgs = %v, want %v", args, targetArgs, want)
 	}

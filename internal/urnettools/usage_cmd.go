@@ -24,7 +24,7 @@ func newUsageCmd() *cobra.Command {
 			"  urnet-tools usage            # summary cards (default)\n" +
 			"  urnet-tools usage graphs     # all three time-series\n" +
 			"  urnet-tools usage graph day  # single view: day | hour | month",
-		Example:            "  urnet-tools usage\n  urnet-tools usage graphs --unit mynetwork-provider\n  urnet-tools usage graph month --network tacogonzalez3000",
+		Example:            "  urnet-tools usage\n  urnet-tools usage graphs --unit mynetwork-provider\n  urnet-tools usage graph month --network mynetwork",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			for _, a := range args {
