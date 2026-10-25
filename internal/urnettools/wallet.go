@@ -94,7 +94,21 @@ func refuseSeedSigningOnFleetNode(workstation bool, what string) error {
 	if workstation || !onFleetNode() {
 		return nil
 	}
-	return fmt.Errorf(`%s touches your coldkey's signing material and is for your OWN workstation, never a fleet node. This box looks like a fleet member (a provider service or provider environment is present), and a fleet node needs nothing here. If this really is your own workstation, pass %s and run it again`, what, walletWorkstationFlag)
+	// A provider installed on this box does not make it a fleet node: the
+	// operator runs one on their own workstation too, so the detection alone
+	// is not a reason to demand a flag. Ask a human once instead.
+	if stdinIsInteractive() {
+		fmt.Fprintf(os.Stderr, "\n%s touches your coldkey's signing material. This box also runs a provider, which normally never holds one.\n", what)
+		line, err := confirmStdinRead("Continue on this machine? [y/N] ")
+		if err == nil {
+			switch strings.ToLower(strings.TrimSpace(line)) {
+			case "y", "yes":
+				return nil
+			}
+		}
+		return fmt.Errorf("cancelled: %s did not run", what)
+	}
+	return fmt.Errorf(`%s touches your coldkey's signing material and is for your OWN workstation, never a fleet node. This box looks like a fleet member (a provider service or provider environment is present), and a fleet node needs nothing here. If this really is your own workstation, run it in a terminal (it will ask you to confirm), or pass %s in a script`, what, walletWorkstationFlag)
 }
 
 func newWalletCmd() *cobra.Command {
