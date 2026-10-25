@@ -542,9 +542,7 @@ func probeTableThroughProxy(ctx context.Context, address, user, password, apiHos
 			baseUnresolved++
 			continue
 		}
-		dialStarted := time.Now()
-		answered, attempted := probeSocks5Connect(ctx, address, user, password, ip, 443, cfg.TargetTimeout)
-		dialElapsed := time.Since(dialStarted)
+		answered, attempted, dialElapsed := probeSocks5Connect(ctx, address, user, password, ip, 443, cfg.TargetTimeout)
 		if !attempted {
 			// Box-side failure (limiter denial / caller deadline): no evidence
 			// about the proxy. Excluded from Total exactly like an unresolved
@@ -617,9 +615,7 @@ func probeTableThroughProxy(ctx context.Context, address, user, password, apiHos
 				unresolvedGrowth++
 				continue
 			}
-			dialStarted := time.Now()
-			answered, attempted := probeSocks5Connect(ctx, address, user, password, ip, 443, cfg.TargetTimeout)
-			dialElapsed := time.Since(dialStarted)
+			answered, attempted, dialElapsed := probeSocks5Connect(ctx, address, user, password, ip, 443, cfg.TargetTimeout)
 			if !attempted {
 				// Box-side failure: no evidence; exclude from Total (CRITICAL-1).
 				res.SampleWidth++
@@ -865,7 +861,11 @@ var globalProbeDialLimiter = rate.NewLimiter(rate.Limit(maxProbeDialsPerSec), ma
 // exclude unattempted hosts from Total exactly like an unresolvable host
 // (positive-evidence-only: box-side failures never convict). answered is only
 // meaningful when attempted=true.
-func probeSocks5Connect(ctx context.Context, address, user, password string, ip net.IP, port uint16, timeout time.Duration) (answered, attempted bool) {
+// It returns the connect cost as well, measured from the moment the rate
+// limiter granted a token: a pass that queues behind a crowded bucket would
+// otherwise report a fast proxy as slow, and the number is meant to describe the
+// proxy, not this box's queueing.
+func probeSocks5Connect(ctx context.Context, address, user, password string, ip net.IP, port uint16, timeout time.Duration) (answered, attempted bool, dial time.Duration) {
 	// Global dial rate limit, applied here (one call per sampled health target,
 	// through the proxy). Wait blocks long enough to hold the long-term ceiling
 	// flat; it is cancellable via ctx so a shutdown or a timed-out caller is not
@@ -877,12 +877,22 @@ func probeSocks5Connect(ctx context.Context, address, user, password string, ip 
 	cancelWait()
 	if err != nil {
 		// Box-side: limiter denial is not evidence about the proxy.
-		return false, false
+		return false, false, 0
 	}
 	if ctx.Err() != nil {
 		// Caller deadline/shutdown raced the token grant: not evidence either.
-		return false, false
+		return false, false, 0
 	}
+	// The clock starts HERE, after the grant: everything below is the proxy's
+	// own cost.
+	start := time.Now()
+	answered, attempted = socks5ConnectGranted(ctx, address, user, password, ip, port, timeout)
+	return answered, attempted, time.Since(start)
+}
+
+// socks5ConnectGranted runs one SOCKS5 CONNECT after the limiter has granted a
+// token, with no queueing inside the measurement.
+func socks5ConnectGranted(ctx context.Context, address, user, password string, ip net.IP, port uint16, timeout time.Duration) (answered, attempted bool) {
 	dialCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	var d net.Dialer

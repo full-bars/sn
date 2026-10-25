@@ -15,10 +15,10 @@ import (
 
 func TestProxyGradeFor_PaidWinsWhenBothGraded(t *testing.T) {
 	paid := &ProxyState{Proxies: map[string]ProxyEntry{
-		"1.2.3.4:1080": {Score: 0.95, Graded: true, Failed: []string{"a.com"}},
+		"1.2.3.4:1080": {Score: 0.95, Graded: true, Failed: []string{"a.com"}, DialMS: 42},
 	}}
 	url := &ProxyURLState{Cache: map[string]ProxyURLEntry{
-		"1.2.3.4:1080": {Score: 0.82, Graded: true},
+		"1.2.3.4:1080": {Score: 0.82, Graded: true, DialMS: 900},
 	}}
 
 	info, ok := proxyGradeFor("1.2.3.4:1080", paid, url)
@@ -34,6 +34,9 @@ func TestProxyGradeFor_PaidWinsWhenBothGraded(t *testing.T) {
 	if len(info.Failed) != 1 || info.Failed[0] != "a.com" {
 		t.Errorf("Failed = %v, want paid store's [a.com]", info.Failed)
 	}
+	if info.DialMS != 42 {
+		t.Errorf("DialMS = %d, want the paid store's 42: the cost must come from the store that owns the grade, not the other one", info.DialMS)
+	}
 }
 
 func TestProxyGradeFor_URLUsedWhenPaidNotGraded(t *testing.T) {
@@ -41,7 +44,7 @@ func TestProxyGradeFor_URLUsedWhenPaidNotGraded(t *testing.T) {
 		"1.2.3.4:1080": {Score: 0.0, Graded: false}, // exists but never graded
 	}}
 	url := &ProxyURLState{Cache: map[string]ProxyURLEntry{
-		"1.2.3.4:1080": {Score: 0.71, Graded: true},
+		"1.2.3.4:1080": {Score: 0.71, Graded: true, DialMS: 137},
 	}}
 
 	info, ok := proxyGradeFor("1.2.3.4:1080", paid, url)
@@ -53,6 +56,9 @@ func TestProxyGradeFor_URLUsedWhenPaidNotGraded(t *testing.T) {
 	}
 	if info.Tier != "C" {
 		t.Errorf("Tier = %q, want C for 0.71", info.Tier)
+	}
+	if info.DialMS != 137 {
+		t.Errorf("DialMS = %d, want the URL store's 137: a URL-graded proxy keeps no grade in proxy.state, so this is the only place its cost can travel", info.DialMS)
 	}
 }
 
