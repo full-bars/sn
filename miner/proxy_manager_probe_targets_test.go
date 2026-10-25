@@ -43,8 +43,11 @@ func TestProbeHostTableKeepsKnownDeadHostsOut(t *testing.T) {
 // replace it, not shrink the table. The block sizes the probe samples from, so
 // a silently smaller table changes every pass.
 func TestProbeHostTableStillHasHealthHosts(t *testing.T) {
-	if len(probeHostNames) < 100 {
-		t.Fatalf("probe host table has %d entries, want the full table (>= 100)", len(probeHostNames))
+	// Exactly, not "at least": a table that silently shrinks changes every
+	// pass that samples from it, and only an exact count notices. A deliberate
+	// table change updates this number in the same commit.
+	if len(probeHostNames) != 127 {
+		t.Fatalf("probe host table has %d entries, want 127", len(probeHostNames))
 	}
 	// The two hosts that replaced the known-dead entries; both are infrastructure
 	// endpoints that exist to be fetched and verify a TLS handshake on :443.
