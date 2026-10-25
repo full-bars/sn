@@ -322,17 +322,27 @@ jobs:
 
       - name: urnet-docker proxy add-source (URL source)
         run: |
-          # Serve the two-line source list from the runner for this step only,
-          # so the fetch cannot depend on a third-party repo or hand the
-          # provider a list big enough to die on.
-          (cd /tmp/docker-test && setsid python3 -m http.server 8099 --bind 0.0.0.0 >/tmp/http-server.log 2>&1 &)
-          sleep 2
-          curl -fsS http://127.0.0.1:8099/proxies.txt
-          /tmp/urnet-docker proxy add-source "http://host.docker.internal:8099/proxies.txt"
+          # DIAGNOSTIC BRANCH: the original third-party list, with memory and
+          # kill-reason instrumentation, to settle whether the exit-137 death
+          # was an OOM or a provider restart.
+          ( for i in $(seq 1 120); do
+              docker stats --no-stream --format '{{.MemUsage}} {{.CPUPerc}}' urnet-test >> /tmp/mem.log 2>/dev/null || break
+              sleep 1
+            done ) &
+          set +e
+          /tmp/urnet-docker proxy add-source "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt"
+          rc=$?
+          set -e
+          echo "add-source rc=$rc"
+          echo "--- memory samples ---"
+          tail -40 /tmp/mem.log || true
+          echo "--- container state ---"
+          docker inspect urnet-test --format 'OOMKilled={{.State.OOMKilled}} exit={{.State.ExitCode}} restarts={{.RestartCount}} status={{.State.Status}}' || true
+          exit $rc
 
       - name: urnet-docker proxy remove-source (the URL source)
         run: |
-          /tmp/urnet-docker proxy remove-source "http://host.docker.internal:8099/proxies.txt"
+          /tmp/urnet-docker proxy remove-source "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt"
 
       - name: urnet-docker proxy clear
         run: /tmp/urnet-docker proxy clear --force urnet-test
