@@ -2144,6 +2144,12 @@ func slotClientStrategySettings(
 	clientStrategySettings.ProxySettings = proxySettings
 	if proxySettings == nil {
 		clientStrategySettings.DialContextSettings = testEgressDialer
+	} else {
+		// Only the direct slot keeps the extender network client and the gossip
+		// node. Every slot builds its own network space and the SDK starts
+		// both for each one, so with hundreds of proxy identities that is
+		// hundreds of directories, clients and gossip nodes on one machine.
+		clientStrategySettings.DisableExtenderNetwork = true
 	}
 	// Count through the proxy, not around it, and give the space's own QUIC
 	// dialers (the api's alt-h3/alt-whodis carriers) the slot's proxy
