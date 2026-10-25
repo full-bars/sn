@@ -308,9 +308,13 @@ func TestHeartbeatHostLabelFrom(t *testing.T) {
 func TestPublishHealthHeartbeatRecordFields(t *testing.T) {
 	withTempHome(t)
 	resetHealthHeartbeatForTest()
+	// The control-reached set is process-wide, so a test that asserts this
+	// process has dialed nothing must start from empty whatever ran before it.
+	resetControlReached()
 	t.Cleanup(func() {
 		resetHealthHeartbeatForTest()
 		resetProxyHealthReportStateForTest()
+		resetControlReached()
 	})
 	captureHeartbeatLog(t)
 
