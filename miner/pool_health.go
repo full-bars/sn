@@ -192,8 +192,17 @@ func proxyPoolMembers() (map[string]string, string) {
 // from the same value, so a scrape cannot publish a composition and a verdict
 // taken from different reads, and a scrape performs one proxy.state read rather
 // than one per consumer.
+//
+// Counts is what the pool aggregate judges, and its Up is honest: a member is
+// up only by proxyHonestlyUp (provider_bringup.go), the rule the health and
+// [profit] lines share. A member the registry grades up without that evidence
+// is counted Connecting there: nothing in this process has observed it up yet.
+// Registry is the plain registry composition (persisted grades with the live
+// overlay), which urnet_proxy_pool_size publishes and the aggregate prints only
+// as last_known_up.
 type proxyPoolComposition struct {
 	Counts   proxyPoolMemberCounts
+	Registry proxyPoolMemberCounts
 	StateErr string
 }
 
@@ -202,9 +211,29 @@ type proxyPoolComposition struct {
 func readProxyPoolComposition() proxyPoolComposition {
 	members, stateErr := proxyPoolMembers()
 	return proxyPoolComposition{
-		Counts:   countProxyPoolMembers(members),
+		Counts:   countProxyPoolMembers(honestProxyPoolMembers(members, proxyControlEvidenceKeys())),
+		Registry: countProxyPoolMembers(members),
 		StateErr: stateErr,
 	}
+}
+
+// honestProxyPoolMembers re-buckets the registry composition by proxyHonestlyUp:
+// an evidenced, not-down member is up; a member graded up without evidence is
+// connecting (last known up, not observed here); every other bucket stays.
+func honestProxyPoolMembers(members map[string]string, evidence map[string]struct{}) map[string]string {
+	out := make(map[string]string, len(members))
+	for key, bucket := range members {
+		_, evidenced := evidence[key]
+		switch {
+		case proxyHonestlyUp(evidenced, bucket):
+			out[key] = proxyPoolHealthUp
+		case bucket == proxyPoolHealthUp:
+			out[key] = proxyPoolHealthConnecting
+		default:
+			out[key] = bucket
+		}
+	}
+	return out
 }
 
 // proxyPoolSample is one tick's cross-section. The ring holds these rather than
@@ -247,12 +276,16 @@ type proxyPoolHealthReading struct {
 	// poolScopeNone when everything is up.
 	Scope string
 
-	Members    int
-	Up         int
-	Down       int
-	Degraded   int
-	Dead       int
-	Connecting int
+	Members int
+	// Up is the honest count (proxyHonestlyUp). LastKnownUp is the registry's
+	// up figure, persisted grades included, printed beside it as
+	// last_known_up and never used for the verdict.
+	Up          int
+	LastKnownUp int
+	Down        int
+	Degraded    int
+	Dead        int
+	Connecting  int
 
 	// Floor is the lowest up-count over the window: the worst the pool got,
 	// not the worst it is.
@@ -403,6 +436,7 @@ func proxyPoolHealthAt(now time.Time, comp proxyPoolComposition, force bool) pro
 		return proxyPoolHealthState.last
 	}
 	reading := proxyPoolHealthState.window.observe(comp.Counts, proxyPoolHealthInterval)
+	reading.LastKnownUp = comp.Registry.Up
 	reading.StateError = comp.StateErr
 	proxyPoolHealthState.last = reading
 	proxyPoolHealthState.lastAt = now
@@ -435,8 +469,8 @@ func resetProxyPoolHealthForTest() {
 // hour's floor and the scope.
 func proxyPoolHealthLine(r proxyPoolHealthReading) string {
 	line := fmt.Sprintf(
-		"❤️ [health][proxies] up=%d down=%d dead=%d degraded=%d connecting=%d members=%d floor=%d dips=%d verdict=%q scope=%s",
-		r.Up, r.Down, r.Dead, r.Degraded, r.Connecting, r.Members, r.Floor, r.Dips, r.Verdict, r.Scope,
+		"❤️ [health][proxies] up=%d last_known_up=%d down=%d dead=%d degraded=%d connecting=%d members=%d floor=%d dips=%d verdict=%q scope=%s",
+		r.Up, r.LastKnownUp, r.Down, r.Dead, r.Degraded, r.Connecting, r.Members, r.Floor, r.Dips, r.Verdict, r.Scope,
 	)
 	if r.StateError != "" {
 		line += fmt.Sprintf(" state_error=%q", r.StateError)

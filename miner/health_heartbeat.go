@@ -99,10 +99,14 @@ type healthHeartbeat struct {
 	Goroutines int
 
 	Proxies int
-	// ProxiesUp counts the proxies that reached the control plane in THIS
-	// process. LastKnownUp is the persisted grade, kept beside it so a restart
-	// cannot present an inherited pool as if this process had proven it.
+	// ProxiesUp is honestProxiesUp(): the proxies a live slot holds
+	// control-plane evidence for in THIS process right now. It falls when a
+	// slot exits or loses its credential. ReachedEver is the monotonic
+	// companion (proxies that reached at least once here), log-only.
+	// LastKnownUp is the persisted grade, kept beside them so a restart cannot
+	// present an inherited pool as if this process had proven it.
 	ProxiesUp   int
+	ReachedEver int
 	LastKnownUp int
 	ProxiesDown int
 	Clients     int64
@@ -127,10 +131,9 @@ type healthHeartbeatRecord struct {
 	SysMiB        uint64  `json:"sys_mib"`
 	Goroutines    int     `json:"goroutines"`
 	Proxies       int     `json:"proxies"`
-	// ProxiesUp is the count of proxies that reached the control plane in this
-	// process. The JSON name is kept for monitors that already read it, but the
-	// figure is monotonic: it answers "has this process proven a dial", not "is
-	// it up now". LastKnownUp is the persisted grade it used to report.
+	// ProxiesUp is honestProxiesUp(): proxies currently holding control-plane
+	// evidence in this process. LastKnownUp is the persisted grade proxies_up
+	// used to report, kept for monitors that want it under its real name.
 	ProxiesUp   int   `json:"proxies_up"`
 	LastKnownUp int   `json:"last_known_up"`
 	ProxiesDown int   `json:"proxies_down"`
@@ -398,13 +401,14 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 	// figure that reported 300-400 up at uptime=0s, so it is reported as
 	// last_known_up and never as up.
 	//
-	// up comes from the bring-up tracker's own control-plane evidence
-	// (controlReached), which exists only for slots that completed a dial in
-	// this process. proxies stays the pool size so the line still describes the
-	// pool rather than this process's progress through it.
+	// up is honestProxiesUp() (provider_bringup.go), the same figure the
+	// [profit] and [health][proxies] lines print: proxies whose slot reached
+	// the control plane in this process and still holds that evidence.
+	// proxies stays the pool size so the line still describes the pool rather
+	// than this process's progress through it.
 	persistedUp, degraded, dead, _ := proxyHealthRegistryCounts()
 	lastKnownUp := persistedUp
-	reached := controlReachedCount()
+	up := honestProxiesUp()
 	down := degraded + dead
 	_, _, clients, countsKnown := controlRuntime.counterTotals()
 
@@ -428,7 +432,8 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 		SysMiB:      sysBytes / 1024 / 1024,
 		Goroutines:  runtime.NumGoroutine(),
 		Proxies:     lastKnownUp + down,
-		ProxiesUp:   reached,
+		ProxiesUp:   up,
+		ReachedEver: proxiesReachedEver(),
 		LastKnownUp: lastKnownUp,
 		ProxiesDown: down,
 		Clients:     clients,
@@ -444,13 +449,11 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 		buildLine += " host=" + hb.Host
 	}
 	tlog("%s\n", buildLine)
-	// "reached", not "up": this count only rises, so it says a proxy got to the
-	// control plane at some point in this process, not that it is up now. The
-	// word is the whole point of the fix - a figure that cannot fall must not be
-	// labelled with a word that implies it can.
-	tlog("❤️ [health] uptime=%s profile=%s heap=%dMiB sys=%dMiB goroutines=%d proxies=%d reached=%d last_known_up=%d down=%d clients=%d interval=%s\n",
+	// up can fall (a slot exit or a rejected credential withdraws it), so it
+	// may carry the word. reached_ever only rises and says so in its name.
+	tlog("❤️ [health] uptime=%s profile=%s heap=%dMiB sys=%dMiB goroutines=%d proxies=%d up=%d reached_ever=%d last_known_up=%d down=%d clients=%d interval=%s\n",
 		hb.Uptime, hb.Profile, hb.HeapMiB, hb.SysMiB, hb.Goroutines,
-		hb.Proxies, hb.ProxiesUp, hb.LastKnownUp, hb.ProxiesDown, hb.Clients, hb.Interval)
+		hb.Proxies, hb.ProxiesUp, hb.ReachedEver, hb.LastKnownUp, hb.ProxiesDown, hb.Clients, hb.Interval)
 
 	return hb
 }

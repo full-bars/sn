@@ -15,55 +15,172 @@ import (
 	"github.com/urnetwork/connect"
 )
 
-// controlReachedIdentities is the set of proxies that have reached the control
-// plane in THIS process. It is monotonic on purpose and it is NOT a liveness
-// count: a proxy that reached once and then died stays in the set.
+// proxyControlEvidence is what this process can say about its proxies from
+// its own control-plane dials. It replaces a monotonic "reached" set: a count
+// that can only rise answers "did this proxy ever get through", not "is it up",
+// and the health line, the [profit] line and the [health][proxies] line all
+// need the second answer.
 //
-// Why it exists at all: proxy.state carries each proxy's persisted grade, so a
-// process that has not completed a single dial can still render a few hundred
-// "up" proxies from a previous run's measurements, which reads as a healthy
-// pool at uptime=0s. Membership here is evidence this process produced.
+// live counts, per proxy identity, the provider slots that are holding
+// control-plane evidence right now: a slot adds its identity when its first
+// dial through its proxy succeeds and removes it when the slot exits or its
+// credential is rejected (controlEvidence.lost). It is a count rather than a
+// flag because two slot indexes can serve the same proxy at once (a reload
+// hands the proxy a new index while the old slot drains), and the old slot
+// exiting must not take the new one's evidence with it.
 //
-// Why the health line calls it "reached" and not "up": with no signal that a
-// slot stopped reaching, a monotonic count cannot answer "is it up now". Saying
-// "up" would replace the persisted lie with a liveness lie. The word in the log
-// line is what the number can support.
+// ever is the monotonic set the previous version reported, kept because it is
+// a cheap answer to a different question (has this process ever proven this
+// proxy) and printed only as reached_ever, never as up.
 //
-// Keyed by the slot's display identity, not by its slot index. run.go gives a
-// proxy a new index after a reload, and an index-keyed counter would then count
-// the same proxy twice. Display is the proxy address ("proxy:<addr>") or
-// "direct"; two credentialed entries on one address share a display and would
-// collapse into one count - the miner launches one slot per proxy address, so
-// that shape does not occur here, and using connect.ProxySettings.Key() would
-// mean threading a new argument through run.go while #230 owns that file.
-var controlReachedIdentities = struct {
+// Identities are connect.ProxySettings.Key(), the key proxy.state and the live
+// health registry use, so a pool line can match evidence to members one by
+// one. The direct slot has no proxy identity and is not counted: every surface
+// that reads this reports proxies.
+//
+// Why any of this exists: proxy.state carries each proxy's persisted grade, so
+// a process that has not completed a single dial can still render a few
+// hundred "up" proxies from a previous run, which reads as a healthy pool at
+// uptime=0s. That persisted figure survives only as last_known_up.
+var proxyControlEvidence = struct {
 	sync.Mutex
-	byKey map[string]struct{}
-}{byKey: map[string]struct{}{}}
+	live map[string]int
+	ever map[string]struct{}
+}{live: map[string]int{}, ever: map[string]struct{}{}}
 
-// controlReachedCount is the number of distinct proxies that reached the
-// control plane since this process started.
-func controlReachedCount() int {
-	controlReachedIdentities.Lock()
-	defer controlReachedIdentities.Unlock()
-	return len(controlReachedIdentities.byKey)
+// controlEvidence is one slot's hold on its proxy's evidence. It is created per
+// slot launch, so it is also per slot index and per relaunch of an index.
+//
+// closed makes the slot's evidence one-way: a dial callback that lands after
+// the slot exited (the SDK's goroutines can outlive the slot's return) must not
+// re-add an identity nothing will ever remove again.
+type controlEvidence struct {
+	key    string
+	mu     sync.Mutex
+	held   bool
+	closed bool
 }
 
-// noteControlReachedIdentity records one proxy's first reach; callers hold no
-// lock.
-func noteControlReachedIdentity(identity string) {
-	controlReachedIdentities.Lock()
-	defer controlReachedIdentities.Unlock()
-	controlReachedIdentities.byKey[identity] = struct{}{}
+// newControlEvidence returns the hold for one slot launch. An empty key (the
+// direct slot) yields a hold whose reached and lost do nothing.
+func newControlEvidence(key string) *controlEvidence {
+	return &controlEvidence{key: key}
 }
 
-// resetControlReached exists for tests: the set is process-wide on purpose (the
-// health line has no other handle on the bring-up tracker), so a test that
-// asserts a fresh value has to start from empty.
+// reached records the slot's first successful control-plane dial. Repeated
+// calls, and calls after lost, change nothing.
+func (self *controlEvidence) reached() {
+	if self == nil || self.key == "" {
+		return
+	}
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	if self.held || self.closed {
+		return
+	}
+	self.held = true
+	// Lock order is always the slot's mu, then the process set's.
+	proxyControlEvidence.Lock()
+	proxyControlEvidence.live[self.key]++
+	proxyControlEvidence.ever[self.key] = struct{}{}
+	proxyControlEvidence.Unlock()
+}
+
+// lost withdraws the slot's evidence: the slot exited or its credential was
+// rejected. Idempotent, and it only ever removes what this slot added, so the
+// count cannot go negative and cannot exceed the slots that are holding it.
+func (self *controlEvidence) lost() {
+	if self == nil || self.key == "" {
+		return
+	}
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.closed = true
+	if !self.held {
+		return
+	}
+	self.held = false
+	proxyControlEvidence.Lock()
+	if n := proxyControlEvidence.live[self.key] - 1; n > 0 {
+		proxyControlEvidence.live[self.key] = n
+	} else {
+		delete(proxyControlEvidence.live, self.key)
+	}
+	proxyControlEvidence.Unlock()
+}
+
+// proxyControlEvidenceKeys is the raw evidence: every proxy at least one live
+// slot holds control-plane evidence for. Callers apply proxyHonestlyUp.
+func proxyControlEvidenceKeys() map[string]struct{} {
+	proxyControlEvidence.Lock()
+	defer proxyControlEvidence.Unlock()
+	keys := make(map[string]struct{}, len(proxyControlEvidence.live))
+	for key := range proxyControlEvidence.live {
+		keys[key] = struct{}{}
+	}
+	return keys
+}
+
+// proxyHonestlyUp is the rule every "up" applies to one proxy: a live slot
+// holds control-plane evidence for it (evidenced), AND its in-process health
+// bucket (proxyPoolMemberBucket) is not degraded or dead, because
+// proxy_transport_health.go can watch a transport drop without the slot
+// exiting. A persisted grade can never make a proxy up on its own: without a
+// dial in this process there is no evidence.
+func proxyHonestlyUp(evidenced bool, bucket string) bool {
+	if !evidenced {
+		return false
+	}
+	switch bucket {
+	case proxyPoolHealthDegraded, proxyPoolHealthDead:
+		return false
+	}
+	return true
+}
+
+// honestProxyUpKeys is the one definition of "up" the health line, the [profit]
+// line and the [health][proxies] line report: the proxies this process can
+// vouch for right now (proxyHonestlyUp over the live health registry). The pool
+// line applies the same rule to its own single registry read
+// (honestProxyPoolMembers) so a scrape still reads the registry once.
+func honestProxyUpKeys() map[string]struct{} {
+	keys := proxyControlEvidenceKeys()
+	if len(keys) == 0 {
+		return keys
+	}
+	// Read the registry outside the evidence lock: the two locks are never
+	// held together from this side.
+	for key, status := range liveProxyHealthByKey() {
+		if _, ok := keys[key]; ok && !proxyHonestlyUp(true, proxyPoolMemberBucket(status.Health)) {
+			delete(keys, key)
+		}
+	}
+	return keys
+}
+
+// honestProxiesUp is len(honestProxyUpKeys()), the count every "up" field
+// prints.
+func honestProxiesUp() int {
+	return len(honestProxyUpKeys())
+}
+
+// proxiesReachedEver is the monotonic count: proxies that reached the control
+// plane at least once in this process, whether or not they still do. It is
+// printed as reached_ever and must never be reported as up.
+func proxiesReachedEver() int {
+	proxyControlEvidence.Lock()
+	defer proxyControlEvidence.Unlock()
+	return len(proxyControlEvidence.ever)
+}
+
+// resetControlReached exists for tests: the evidence is process-wide on purpose
+// (the health, profit and pool lines have no handle on the slots), so a test
+// that asserts a fresh value has to start from empty.
 func resetControlReached() {
-	controlReachedIdentities.Lock()
-	defer controlReachedIdentities.Unlock()
-	controlReachedIdentities.byKey = map[string]struct{}{}
+	proxyControlEvidence.Lock()
+	defer proxyControlEvidence.Unlock()
+	proxyControlEvidence.live = map[string]int{}
+	proxyControlEvidence.ever = map[string]struct{}{}
 }
 
 // providerBringUpHeartbeatInterval is the heartbeat cadence while slots are
@@ -290,12 +407,11 @@ func (self *providerBringUpTracker) controlReached(index uint64, display string,
 		self.mu.Unlock()
 		return
 	}
+	// The health surfaces do not count from here: reached is per index and
+	// only ever set, which is right for the bring-up narration and wrong for
+	// "up". Their evidence is the slot's controlEvidence, which run.go
+	// withdraws when the slot exits or loses its credential.
 	self.reached[index] = true
-	// Counted per proxy identity, not per slot index: a reload gives the same
-	// proxy a new index, and the health line must not count it twice. The guard
-	// above already returns early for an index that reached before, so this is
-	// the belt to that braces.
-	noteControlReachedIdentity(display)
 	if watch := self.watches[index]; watch != nil {
 		watch.Stop()
 		delete(self.watches, index)

@@ -1469,7 +1469,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// Name the slot in its select lines, and report its first successful
 		// dial: the evidence that this proxy is talking to the control plane.
 		slotDisplay := providerSlotDisplay(proxySettings)
+		// The same dial is this slot's control-plane evidence for the health
+		// surfaces' "up" (provider_bringup.go honestProxyUpKeys). It is held
+		// only while the slot runs: registered before the strategy, space and
+		// API closes below, so it is withdrawn after them, and a dial callback
+		// that lands later cannot re-add it.
+		controlHold := newControlEvidence("")
+		if proxySettings != nil {
+			controlHold = newControlEvidence(proxySettings.Key())
+		}
+		defer controlHold.lost()
 		clientStrategySettings.Log = withSlotSelectLabel(clientStrategySettings.Log, slotSelectLabel(index, proxyAddr), func(dur time.Duration, via string) {
+			controlHold.reached()
 			bringUp.controlReached(index, slotDisplay, dur, via)
 		})
 		// The one strategy the run itself drives for this identity. The slot's
@@ -1641,7 +1652,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 		}
 
-		callbacks := &providerAuthenticationCallbacks{diagnostics: output, provider: index, clientJwtPath: clientJwtPath, networkJwtPath: networkJwtPath, identityKey: identityKey, cancel: cancel, custody: keyOwner}
+		callbacks := &providerAuthenticationCallbacks{diagnostics: output, provider: index, clientJwtPath: clientJwtPath, networkJwtPath: networkJwtPath, identityKey: identityKey, cancel: cancel, custody: keyOwner, rejected: controlHold.lost}
 		boundRefresh := &providerBoundRefresh{original: byClientJwt, callbacks: callbacks}
 		refreshSub := api.AddJwtRefreshListener(boundRefresh)
 		integritySub := api.AddClientRefreshIntegrityListener(boundRefresh)

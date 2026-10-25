@@ -3,6 +3,8 @@ package miner
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -158,39 +160,155 @@ func TestProviderAuthRetryToken(t *testing.T) {
 	}
 }
 
-// TestControlReachedCountsEachSlotOnce pins the counter the health line reports
-// as up: only slots that reached the control plane in this process, and one
-// increment per slot however many times its dial succeeds (a reconnect must not
-// make the pool look bigger).
-func TestControlReachedCountsEachSlotOnce(t *testing.T) {
+// TestControlEvidenceIsCurrentNotEver pins the figure every "up" surface
+// prints: proxies a live slot holds control-plane evidence for right now. It
+// rises on a slot's first dial, falls when that slot exits, and counts a proxy
+// once however many slot indexes hold it (a reload hands the same proxy a new
+// index while the old slot drains). The monotonic count survives only as
+// reached_ever.
+func TestControlEvidenceIsCurrentNotEver(t *testing.T) {
 	resetControlReached()
 	t.Cleanup(resetControlReached)
 
-	captureProviderBringUpLog(t)
-
-	tracker := newProviderBringUpTracker(2)
-	tracker.start()
-	defer tracker.shutdown()
-
-	if got := controlReachedCount(); got != 0 {
+	const proxy = "198.51.100.1:1080"
+	if got := honestProxiesUp(); got != 0 {
 		t.Fatalf("fresh process reports up=%d, want 0", got)
 	}
 
-	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct")
-	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct") // duplicate
-	if got := controlReachedCount(); got != 1 {
-		t.Fatalf("after one slot reached twice, reached=%d, want 1", got)
+	// The direct slot has no proxy identity: it is not a proxy and must not
+	// pad a proxies figure.
+	direct := newControlEvidence("")
+	direct.reached()
+	if got := honestProxiesUp(); got != 0 {
+		t.Fatalf("direct slot counted as a proxy: up=%d, want 0", got)
 	}
 
-	tracker.controlReached(1, "proxy:198.51.100.1:1080", 10*time.Millisecond, "proxy")
-	if got := controlReachedCount(); got != 2 {
-		t.Fatalf("after two slots, reached=%d, want 2", got)
+	// Slot index 3 reaches, twice (the dial callback is once per launch, but
+	// the hold must not depend on that).
+	first := newControlEvidence(proxy)
+	first.reached()
+	first.reached()
+	if got := honestProxiesUp(); got != 1 {
+		t.Fatalf("after one slot reached twice, up=%d, want 1", got)
 	}
 
-	// A reload hands the same proxy a new slot index. The count is keyed by
-	// identity, so the second index must not add a second proxy.
-	tracker.controlReached(7, "proxy:198.51.100.1:1080", 10*time.Millisecond, "proxy")
-	if got := controlReachedCount(); got != 2 {
-		t.Fatalf("after a reload re-reached the same proxy, reached=%d, want 2 (index-keyed counting would say 3)", got)
+	// A reload launches index 7 for the same proxy while index 3 drains.
+	reload := newControlEvidence(proxy)
+	reload.reached()
+	if got := honestProxiesUp(); got != 1 {
+		t.Fatalf("two slot indexes for one proxy: up=%d, want 1 (counting per index would say 2)", got)
+	}
+
+	// The old slot exits: the new one still holds evidence, so the proxy is
+	// still up.
+	first.lost()
+	if got := honestProxiesUp(); got != 1 {
+		t.Fatalf("after the drained slot exited, up=%d, want 1 (the reloaded slot still holds it)", got)
+	}
+
+	// The reloaded slot exits too: nothing vouches for the proxy any more.
+	reload.lost()
+	if got := honestProxiesUp(); got != 0 {
+		t.Fatalf("after every slot for the proxy exited, up=%d, want 0 (a monotonic count would say 1)", got)
+	}
+
+	// lost is idempotent and never drives the count negative, and a dial
+	// callback that lands after the slot exited does not resurrect it.
+	reload.lost()
+	first.lost()
+	reload.reached()
+	if got := honestProxiesUp(); got != 0 {
+		t.Fatalf("after a repeated lost and a late reached, up=%d, want 0", got)
+	}
+	if got := proxiesReachedEver(); got != 1 {
+		t.Fatalf("reached_ever=%d, want 1 (one proxy reached at some point)", got)
+	}
+}
+
+// TestControlEvidenceUpIsNotATransportDrop pins the other half of the rule: a
+// slot can stay alive while proxy_transport_health.go watches its transport
+// drop, and a proxy the live registry has seen go down is not up however
+// recently its slot dialed.
+func TestControlEvidenceUpIsNotATransportDrop(t *testing.T) {
+	resetControlReached()
+	resetProxyLiveHealthRegistryForTest()
+	t.Cleanup(func() {
+		resetControlReached()
+		resetProxyLiveHealthRegistryForTest()
+	})
+
+	const proxy = "198.51.100.2:1080"
+	hold := newControlEvidence(proxy)
+	defer hold.lost()
+	hold.reached()
+	noteLiveProxyHealth(proxy, "up", time.Time{})
+	if got := honestProxiesUp(); got != 1 {
+		t.Fatalf("evidenced proxy graded up: up=%d, want 1", got)
+	}
+	noteLiveProxyHealthDrop(proxy)
+	if got := honestProxiesUp(); got != 0 {
+		t.Fatalf("after a watched transport drop, up=%d, want 0", got)
+	}
+}
+
+// TestControlEvidenceConcurrentSlots runs many slot holds over a few proxies
+// at once. Under -race this is the data-race check; in any mode the count must
+// stay within [0, live holds] throughout and land on zero once every slot is
+// gone.
+func TestControlEvidenceConcurrentSlots(t *testing.T) {
+	resetControlReached()
+	t.Cleanup(resetControlReached)
+
+	const slots = 64
+	var wg sync.WaitGroup
+	for i := 0; i < slots; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			hold := newControlEvidence(fmt.Sprintf("198.51.100.%d:1080", i%4))
+			hold.reached()
+			if got := honestProxiesUp(); got < 0 || got > 4 {
+				t.Errorf("up=%d during churn, want within [0, 4]", got)
+			}
+			hold.lost()
+			hold.reached()
+			hold.lost()
+		}(i)
+	}
+	wg.Wait()
+	if got := honestProxiesUp(); got != 0 {
+		t.Fatalf("after every slot exited, up=%d, want 0", got)
+	}
+	if got := proxiesReachedEver(); got != 4 {
+		t.Fatalf("reached_ever=%d, want 4", got)
+	}
+}
+
+// TestAuthLogoutWithdrawsControlEvidence pins the auth-loss hook: a rejected
+// credential withdraws the slot's evidence at once, without waiting for the
+// cancel to unwind the slot.
+func TestAuthLogoutWithdrawsControlEvidence(t *testing.T) {
+	resetControlReached()
+	t.Cleanup(resetControlReached)
+
+	hold := newControlEvidence("198.51.100.3:1080")
+	hold.reached()
+	if got := honestProxiesUp(); got != 1 {
+		t.Fatalf("before logout, up=%d, want 1", got)
+	}
+	dir := t.TempDir()
+	cancelled := false
+	callbacks := &providerAuthenticationCallbacks{
+		clientJwtPath:  filepath.Join(dir, "client.jwt"),
+		networkJwtPath: filepath.Join(dir, "network.jwt"),
+		cancel:         func() { cancelled = true },
+		rejected:       hold.lost,
+	}
+	callbacks.AuthLogout()
+	if !cancelled {
+		t.Fatal("AuthLogout did not cancel")
+	}
+	if got := honestProxiesUp(); got != 0 {
+		t.Fatalf("after the platform rejected the credential, up=%d, want 0", got)
 	}
 }

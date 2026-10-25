@@ -105,11 +105,17 @@ type profitSample struct {
 	// has no registered proxy at all, and the tick is skipped exactly as the
 	// provider skips it.
 	population int
-	// proxiesUp counts identities classified up. A published slot is NOT
-	// evidence of "up": the provide loop publishes its counters before
+	// proxiesUp is honestProxiesUp() (provider_bringup.go), the one "up" the
+	// health line and the [health][proxies] line also print. A published slot
+	// is NOT evidence of "up": the provide loop publishes its counters before
 	// authentication starts (run.go), so a slot that is still dialing, or one
-	// that keeps failing auth, is published but not up.
+	// that keeps failing auth, is published but not up. Nor is a registry "up":
+	// that grade is seeded from proxy.state at start, so it survives only as
+	// lastKnownUp.
 	proxiesUp int
+	// lastKnownUp counts registry identities graded up, persisted grades
+	// included. Printed as last_known_up and never fed to the earning reason.
+	lastKnownUp int
 	// connecting counts identities whose last health note was "connecting",
 	// which is what the provider's warmup test consumes.
 	connecting int
@@ -149,13 +155,13 @@ func readProfitSample() profitSample {
 	health := proxyLiveHealthSnapshot()
 	bw := proxyEarnBandwidthSnapshot()
 
-	s := profitSample{population: len(health)}
+	s := profitSample{population: len(health), proxiesUp: honestProxiesUp()}
 	for _, h := range health {
 		// proxyHealthBucket maps up->up, connecting/other->degraded,
 		// ""/dead/inactive->dead. Only "up" is up, as in the provider's
 		// classifyProxyHealth, where "connecting" is its own class.
 		if proxyHealthBucket(h.Health) == "up" {
-			s.proxiesUp++
+			s.lastKnownUp++
 		}
 		if h.Health == "connecting" {
 			s.connecting++
@@ -209,8 +215,8 @@ func profitLine(earning bool, s profitSample, delta uint64, elapsed float64) str
 	}
 	warmup := s.connecting >= profitWarmupConnecting
 	reason := earningReason(earning, s.proxiesUp, s.clients, warmup)
-	line := fmt.Sprintf("%s[profit] earning=%s reason=%s clients=%d rate=%s proxies_up=%d serving=%d idle=%d",
-		profitEmoji, status, reason, s.clients, formatRate(float64(delta)/elapsed), s.proxiesUp, s.serving, idle)
+	line := fmt.Sprintf("%s[profit] earning=%s reason=%s clients=%d rate=%s proxies_up=%d last_known_up=%d serving=%d idle=%d",
+		profitEmoji, status, reason, s.clients, formatRate(float64(delta)/elapsed), s.proxiesUp, s.lastKnownUp, s.serving, idle)
 	// The billable-vs-settled cross-check, cumulative over the run. Both
 	// numbers are printed when the registry has published either, so drift is
 	// visible here and not only in a scrape; neither is printed when the run

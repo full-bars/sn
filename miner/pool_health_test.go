@@ -348,9 +348,11 @@ func TestProxyPoolHealthReadsRegistryState(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
 	resetProxyLiveHealthRegistryForTest()
 	resetProxyPoolHealthForTest()
+	resetControlReached()
 	t.Cleanup(func() {
 		resetProxyLiveHealthRegistryForTest()
 		resetProxyPoolHealthForTest()
+		resetControlReached()
 	})
 
 	state, err := readProxyState()
@@ -378,9 +380,38 @@ func TestProxyPoolHealthReadsRegistryState(t *testing.T) {
 	noteLiveProxyHealth("10.0.0.2:443", "up", time.Time{})
 	noteLiveProxyHealth("10.0.0.3:443", "recently_offline", time.Now())
 
-	r := proxyPoolHealth(time.Now().Add(2*time.Minute), readProxyPoolComposition())
-	if r.Up != 3 || r.Down != 1 || r.Degraded != 1 {
-		t.Fatalf("after one failure: up=%d down=%d degraded=%d, want 3/1/1", r.Up, r.Down, r.Degraded)
+	// The registry grades three members up, but no slot in this process holds
+	// control-plane evidence for any of them (a restart seeds exactly this from
+	// proxy.state). up must not take the grade; it surfaces as last_known_up
+	// and the members count as not yet observed here. The composition metric
+	// still publishes the registry's buckets.
+	comp := readProxyPoolComposition()
+	if comp.Registry.Up != 3 {
+		t.Fatalf("registry composition up=%d, want 3", comp.Registry.Up)
+	}
+	r := proxyPoolHealth(time.Now().Add(time.Minute), comp)
+	if r.Up != 0 || r.LastKnownUp != 3 || r.Connecting != 3 || r.Down != 1 {
+		t.Fatalf("with no control evidence: up=%d last_known_up=%d connecting=%d down=%d, want 0/3/3/1",
+			r.Up, r.LastKnownUp, r.Connecting, r.Down)
+	}
+	if line := proxyPoolHealthLine(r); !strings.Contains(line, "up=0 last_known_up=3 ") {
+		t.Fatalf("pool line does not separate up from last_known_up: %s", line)
+	}
+
+	// Slots for every member reach the control plane. The degraded member's
+	// evidence does not make it up: its transport was watched going down.
+	for i := 0; i < 4; i++ {
+		hold := newControlEvidence(fmt.Sprintf("10.0.0.%d:443", i))
+		t.Cleanup(hold.lost)
+		hold.reached()
+	}
+
+	r = proxyPoolHealth(time.Now().Add(2*time.Minute), readProxyPoolComposition())
+	if r.Up != 3 || r.Down != 1 || r.Degraded != 1 || r.LastKnownUp != 3 {
+		t.Fatalf("after one failure: up=%d down=%d degraded=%d last_known_up=%d, want 3/1/1/3", r.Up, r.Down, r.Degraded, r.LastKnownUp)
+	}
+	if want := honestProxiesUp(); r.Up != want {
+		t.Fatalf("pool up=%d but honestProxiesUp()=%d: the surfaces disagree", r.Up, want)
 	}
 	if r.Scope != poolScopeIsolated {
 		t.Errorf("scope = %q, want %q: one member down is not the pool failing", r.Scope, poolScopeIsolated)

@@ -35,7 +35,9 @@ func writeTrafficMetrics(b *strings.Builder) {
 	// same value, so the two can never disagree about a member, and the
 	// pool-health mutex is never held across the read.
 	comp := readProxyPoolComposition()
-	counts := comp.Counts
+	// The composition metric keeps the registry's buckets (persisted grades
+	// with the live overlay); the aggregate below judges the honest Counts.
+	counts := comp.Registry
 	fmt.Fprintf(b, "# HELP urnet_proxy_pool_size Proxy pool composition.\n")
 	fmt.Fprintf(b, "# TYPE urnet_proxy_pool_size gauge\n")
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"up\"} %d\n", counts.Up)

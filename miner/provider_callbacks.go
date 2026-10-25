@@ -29,6 +29,11 @@ type providerAuthenticationCallbacks struct {
 	identityKey string
 	cancel      context.CancelFunc
 	custody     *clientauth.ProviderClientKeyOwner
+	// rejected withdraws the slot's control-plane evidence the moment the
+	// platform rejects its credential, before the cancel below has unwound the
+	// slot: a logged-out identity is not up, however recently it dialed. Nil
+	// is allowed.
+	rejected func()
 }
 
 // Required token persistence precedes its existing global cancellation policy.
@@ -49,6 +54,9 @@ func (self *providerAuthenticationCallbacks) JwtRefreshed(jwt string) {
 // A rejected credential is tombstoned before requesting shutdown. A failed
 // tombstone is retained, without blocking cancellation on an output write.
 func (self *providerAuthenticationCallbacks) AuthLogout() {
+	if self.rejected != nil {
+		self.rejected()
+	}
 	var err error
 	if self.custody != nil {
 		err = self.custody.RejectClientJwt(self.clientJwtPath)

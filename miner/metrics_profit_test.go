@@ -69,15 +69,18 @@ func publishTestProxy(t *testing.T, key string, rx, tx, clients uint64) *bandwid
 }
 
 // TestReadProfitSampleFromRegistries pins that the collector reads the miner's
-// two live registries and classifies them the way the provider classifies its
-// health snapshot: only "up" is up, a connecting identity is not up, and the
-// byte/client aggregates come from the published counters.
+// two live registries: proxies_up is the honest count (honestProxiesUp), the
+// registry's "up" grade survives only as last_known_up, a connecting identity
+// is not last-known-up either, and the byte/client aggregates come from the
+// published counters.
 func TestReadProfitSampleFromRegistries(t *testing.T) {
 	resetProxyEarnBandwidthForTest()
 	resetProxyLiveHealthRegistryForTest()
+	resetControlReached()
 	t.Cleanup(func() {
 		resetProxyEarnBandwidthForTest()
 		resetProxyLiveHealthRegistryForTest()
+		resetControlReached()
 	})
 
 	publishTestProxy(t, "198.51.100.7:443", 100, 50, 2)
@@ -85,15 +88,30 @@ func TestReadProfitSampleFromRegistries(t *testing.T) {
 	noteLiveProxyHealth("198.51.100.7:443", "up", time.Time{})
 	noteLiveProxyHealth("198.51.100.8:443", "connecting", time.Time{})
 
+	// The registry grades .7 up, but no slot in this process has reached the
+	// control plane through it: that is an inherited grade, not "up".
+	if s := readProfitSample(); s.proxiesUp != 0 || s.lastKnownUp != 1 {
+		t.Fatalf("with no control evidence: proxiesUp = %d lastKnownUp = %d, want 0/1", s.proxiesUp, s.lastKnownUp)
+	}
+
+	hold := newControlEvidence("198.51.100.7:443")
+	t.Cleanup(hold.lost)
+	hold.reached()
+
 	s := readProfitSample()
 	if s.population != 2 {
 		t.Errorf("population = %d, want 2", s.population)
 	}
-	if s.proxiesUp != 1 {
-		t.Errorf("proxiesUp = %d, want 1 (a connecting identity is not up)", s.proxiesUp)
+	if s.proxiesUp != 1 || s.lastKnownUp != 1 {
+		t.Errorf("proxiesUp = %d lastKnownUp = %d, want 1/1 (a connecting identity is not last-known-up)", s.proxiesUp, s.lastKnownUp)
 	}
 	if s.connecting != 1 {
 		t.Errorf("connecting = %d, want 1", s.connecting)
+	}
+	// The slot exits: proxies_up follows it down, the grade does not.
+	hold.lost()
+	if s := readProfitSample(); s.proxiesUp != 0 || s.lastKnownUp != 1 {
+		t.Errorf("after the slot exited: proxiesUp = %d lastKnownUp = %d, want 0/1", s.proxiesUp, s.lastKnownUp)
 	}
 	if s.clients != 2 {
 		t.Errorf("clients = %d, want 2", s.clients)
@@ -125,6 +143,7 @@ func TestProfitHeartbeatFromKnownState(t *testing.T) {
 		return profitSample{
 			population:    2,
 			proxiesUp:     proxiesUp,
+			lastKnownUp:   2,
 			connecting:    connecting,
 			clients:       clients,
 			serving:       serving,
@@ -141,7 +160,7 @@ func TestProfitHeartbeatFromKnownState(t *testing.T) {
 	got := h.tick(base.Add(15*time.Second), sample(2, 0, 3, 1, 1000+15360))
 	want := []string{
 		"✈️ [traffic] started (clients=3)\n",
-		"💰 [profit] earning=yes reason=- clients=3 rate=1.0 KB/s proxies_up=2 serving=1 idle=1\n",
+		"💰 [profit] earning=yes reason=- clients=3 rate=1.0 KB/s proxies_up=2 last_known_up=2 serving=1 idle=1\n",
 	}
 	if strings.Join(got, "") != strings.Join(want, "") {
 		t.Fatalf("earning tick lines:\n got %q\nwant %q", got, want)
@@ -151,7 +170,7 @@ func TestProfitHeartbeatFromKnownState(t *testing.T) {
 	got = h.tick(base.Add(30*time.Second), sample(2, 0, 0, 0, 1000+15360))
 	want = []string{
 		"🛬 [traffic] stopped (was=3 clients)\n",
-		"[profit] earning=no reason=idle clients=0 rate=0 B/s proxies_up=2 serving=0 idle=2\n",
+		"[profit] earning=no reason=idle clients=0 rate=0 B/s proxies_up=2 last_known_up=2 serving=0 idle=2\n",
 	}
 	if strings.Join(got, "") != strings.Join(want, "") {
 		t.Fatalf("stop tick lines:\n got %q\nwant %q", got, want)
@@ -166,7 +185,7 @@ func TestProfitHeartbeatFromKnownState(t *testing.T) {
 	// reported as warmup rather than as no-demand.
 	got = h.tick(base.Add(30*time.Second+profitIdleLogInterval), sample(1, profitWarmupConnecting, 0, 0, 1000+15360))
 	want = []string{
-		"[profit] earning=no reason=warmup clients=0 rate=0 B/s proxies_up=1 serving=0 idle=1\n",
+		"[profit] earning=no reason=warmup clients=0 rate=0 B/s proxies_up=1 last_known_up=2 serving=0 idle=1\n",
 	}
 	if strings.Join(got, "") != strings.Join(want, "") {
 		t.Fatalf("warmup tick lines:\n got %q\nwant %q", got, want)

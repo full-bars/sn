@@ -165,7 +165,7 @@ func TestPublishHealthHeartbeatCountsEveryBucket(t *testing.T) {
 			}
 			// And the operator-facing log line, which is where a wrong count was
 			// easiest to miss.
-			want := fmt.Sprintf("proxies=%d reached=0 last_known_up=%d down=%d", wantTotal, c.wantUp, c.wantDown)
+			want := fmt.Sprintf("proxies=%d up=0 reached_ever=0 last_known_up=%d down=%d", wantTotal, c.wantUp, c.wantDown)
 			if !strings.Contains(line.String(), want) {
 				t.Fatalf("log line missing %q:\n%s", want, line.String())
 			}
@@ -191,8 +191,12 @@ func TestHealthUpIsThisProcessControlEvidence(t *testing.T) {
 		"198.51.100.2:1080": "up",
 		"198.51.100.3:1080": "up",
 	})
-	noteControlReachedIdentity("proxy:198.51.100.1:1080")
-	noteControlReachedIdentity("proxy:198.51.100.2:1080")
+	one := newControlEvidence("198.51.100.1:1080")
+	two := newControlEvidence("198.51.100.2:1080")
+	t.Cleanup(one.lost)
+	t.Cleanup(two.lost)
+	one.reached()
+	two.reached()
 
 	now := time.Date(2026, 10, 24, 12, 0, 0, 0, time.UTC)
 	hb := publishHealthHeartbeat(now, now.Add(-time.Hour), "default", healthHeartbeatDefaultInterval)
@@ -201,7 +205,25 @@ func TestHealthUpIsThisProcessControlEvidence(t *testing.T) {
 		t.Fatalf("counts = up %d last_known_up %d total %d, want 2/3/3",
 			hb.ProxiesUp, hb.LastKnownUp, hb.Proxies)
 	}
-	if want := "reached=2 last_known_up=3"; !strings.Contains(line.String(), want) {
+	if want := "up=2 reached_ever=2 last_known_up=3"; !strings.Contains(line.String(), want) {
+		t.Fatalf("log line missing %q:\n%s", want, line.String())
+	}
+
+	// One slot exits. up is "currently reached", so it falls; reached_ever
+	// remembers; the persisted grade does not move. The on-disk record carries
+	// the same split.
+	one.lost()
+	line.Reset()
+	hb = publishHealthHeartbeat(now.Add(time.Minute), now.Add(-time.Hour), "default", healthHeartbeatDefaultInterval)
+	if hb.ProxiesUp != 1 || hb.ReachedEver != 2 || hb.LastKnownUp != 3 {
+		t.Fatalf("after a slot exit: up %d reached_ever %d last_known_up %d, want 1/2/3",
+			hb.ProxiesUp, hb.ReachedEver, hb.LastKnownUp)
+	}
+	if record := hb.record(); record.ProxiesUp != 1 || record.LastKnownUp != 3 {
+		t.Fatalf("after a slot exit the record says proxies_up %d last_known_up %d, want 1/3",
+			record.ProxiesUp, record.LastKnownUp)
+	}
+	if want := "up=1 reached_ever=2 last_known_up=3"; !strings.Contains(line.String(), want) {
 		t.Fatalf("log line missing %q:\n%s", want, line.String())
 	}
 }
