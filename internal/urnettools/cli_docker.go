@@ -133,7 +133,7 @@ Advanced:
 
 Targeting flags (required when more than one provider container exists):
   --unit <name>          container name (mapped to Unit)
-  --network <name>       JWT network name, e.g. tacogonzalez3000
+  --network <name>       JWT network name, e.g. mynetwork
   --network-id <id>      JWT network id
   --state-dir <path>     state dir INSIDE the container (rarely needed)
 

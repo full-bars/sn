@@ -12,8 +12,8 @@ import (
 
 // TestDecodeJWT verifies network identity extraction from a real JWT shape.
 func TestDecodeJWT(t *testing.T) {
-	// Build a real JWT: base64url(payload) with the tacogonzalez3000 shape.
-	payload := `{"network_name":"tacogonzalez3000","network_id":"019c3c0c-436c-6b8b-68a3-2d21dd48a50c","exp":1788344762}`
+	// Build a real JWT: base64url(payload) with the mynetwork shape.
+	payload := `{"network_name":"mynetwork","network_id":"019c3c0c-436c-6b8b-68a3-2d21dd48a50c","exp":1788344762}`
 	payloadB64 := base64.RawURLEncoding.EncodeToString([]byte(payload))
 	jwt := "header." + payloadB64 + ".sig"
 	path := filepath.Join(t.TempDir(), "jwt")
@@ -24,8 +24,8 @@ func TestDecodeJWT(t *testing.T) {
 	if err != nil {
 		t.Fatalf("decodeJWT: %v", err)
 	}
-	if net != "tacogonzalez3000" {
-		t.Errorf("network_name = %q, want tacogonzalez3000", net)
+	if net != "mynetwork" {
+		t.Errorf("network_name = %q, want mynetwork", net)
 	}
 	if id != "019c3c0c-436c-6b8b-68a3-2d21dd48a50c" {
 		t.Errorf("network_id = %q", id)
@@ -58,12 +58,12 @@ func TestDecodeJWTMissingFile(t *testing.T) {
 // TestSelectTargetSingleProvider: with one provider and no target, the safe
 // default is to select it.
 func TestSelectTargetSingleProvider(t *testing.T) {
-	providers := []Provider{{User: "urnet", Unit: "urnetwork-native.service", Network: "tacogonzalez3000"}}
+	providers := []Provider{{User: "urnet", Unit: "urnetwork-native.service", Network: "mynetwork"}}
 	p, err := selectTarget(providers, Target{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if p.Network != "tacogonzalez3000" {
+	if p.Network != "mynetwork" {
 		t.Errorf("selected %s", p.Network)
 	}
 }
@@ -107,10 +107,10 @@ func TestSelectTargetSameUserAmbiguousRefuses(t *testing.T) {
 // TestSelectTargetByNetwork: explicit network targeting resolves exactly.
 func TestSelectTargetByNetwork(t *testing.T) {
 	providers := []Provider{
-		{User: "urnet", Unit: "urnetwork-native.service", Network: "tacogonzalez3000"},
+		{User: "urnet", Unit: "urnetwork-native.service", Network: "mynetwork"},
 		{User: "urnetwork-beta", Unit: "urnetwork-beta.service", Network: "beta-test"},
 	}
-	p, err := selectTarget(providers, Target{Network: "tacogonzalez3000"})
+	p, err := selectTarget(providers, Target{Network: "mynetwork"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestSelectTargetByNetwork(t *testing.T) {
 
 // TestSelectTargetNoMatch: a target matching nothing is an error.
 func TestSelectTargetNoMatch(t *testing.T) {
-	providers := []Provider{{User: "urnet", Network: "tacogonzalez3000"}}
+	providers := []Provider{{User: "urnet", Network: "mynetwork"}}
 	if _, err := selectTarget(providers, Target{Network: "nope"}); err == nil {
 		t.Fatal("expected error for non-matching target")
 	}

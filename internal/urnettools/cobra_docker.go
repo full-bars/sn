@@ -100,7 +100,7 @@ func buildDockerRootCmd() *cobra.Command {
 	rootCmd.SetHelpTemplate(dockerRootHelpMenu)
 
 	rootCmd.PersistentFlags().String("unit", "", "container name (mapped to Unit)")
-	rootCmd.PersistentFlags().String("network", "", "JWT network name, e.g. tacogonzalez3000")
+	rootCmd.PersistentFlags().String("network", "", "JWT network name, e.g. mynetwork")
 	rootCmd.PersistentFlags().String("network-id", "", "JWT network id")
 	rootCmd.PersistentFlags().String("state-dir", "", "state dir INSIDE the container")
 	rootCmd.PersistentFlags().BoolP("force", "f", false, "bypass the confirm gate")
@@ -148,7 +148,7 @@ func newDockerProvidersCmd() *cobra.Command {
 func newDockerStatusCmd() *cobra.Command {
 	return withHelp(newCobraCmd("status [target]", "detailed status of one container", nil, func(cmd *cobra.Command, args []string) error {
 		return cmdDockerStatus(args)
-	}), "Show detailed status for one provider container: image, running state, in-container state dir, network identity, and JWT expiry. Target it with --unit (the container name), --network, --network-id, --state-dir, or a bare container name.", "  urnet-docker status\n  urnet-docker status mynetwork-provider\n  urnet-docker status --network tacogonzalez3000")
+	}), "Show detailed status for one provider container: image, running state, in-container state dir, network identity, and JWT expiry. Target it with --unit (the container name), --network, --network-id, --state-dir, or a bare container name.", "  urnet-docker status\n  urnet-docker status mynetwork-provider\n  urnet-docker status --network mynetwork")
 }
 
 func newDockerTopCmd() *cobra.Command {

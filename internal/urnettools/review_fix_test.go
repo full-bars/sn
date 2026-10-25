@@ -83,7 +83,7 @@ func TestParseTargetFlagsLenientPreserves(t *testing.T) {
 // error (matchProvider would silently apply the first set field) on
 // conflicting targeting flags.
 func TestParseTargetFlagsConflictingRejected(t *testing.T) {
-	_, _, err := parseTargetFlags([]string{"--unit", "urnetwork-native.service", "--network", "tacogonzalez3000"})
+	_, _, err := parseTargetFlags([]string{"--unit", "urnetwork-native.service", "--network", "mynetwork"})
 	if err == nil {
 		t.Fatal("conflicting targeting flags must error")
 	}

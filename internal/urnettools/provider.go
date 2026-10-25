@@ -68,7 +68,7 @@ type Provider struct {
 	IdentityRestricted bool
 
 	// Network is the JWT network_name claim — the identity of the account
-	// this provider serves (e.g. "tacogonzalez3000"). This is the ground
+	// this provider serves (e.g. "mynetwork"). This is the ground
 	// truth used for targeting; paths are only used to locate state.
 	Network string
 	// NetworkID is the JWT network_id claim.

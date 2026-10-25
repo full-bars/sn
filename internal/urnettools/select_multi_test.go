@@ -8,11 +8,11 @@ import (
 	"testing"
 )
 
-// threeProviders is the canonical multi-provider fixture: taco's native,
-// our beta, and our alpha — the exact shape of a busy taco box.
+// threeProviders is the canonical multi-provider fixture: the mainnet native,
+// our beta, and our alpha — the exact shape of a busy multi-provider box.
 func threeProviders() []Provider {
 	return []Provider{
-		{User: "urnet", Unit: "urnetwork-native.service", Network: "tacogonzalez3000", StateDir: "/home/urnet/.urnetwork"},
+		{User: "urnet", Unit: "urnetwork-native.service", Network: "mynetwork", StateDir: "/home/urnet/.urnetwork"},
 		{User: "urnetwork-beta", Unit: "urnetwork-beta.service", Network: "beta-test", StateDir: "/home/urnetwork-beta/.urnetwork"},
 		{User: "urnetwork-alpha", Unit: "urnetwork-alpha.service", Network: "mesocyclone", StateDir: "/home/urnetwork-alpha/.urnetwork"},
 	}
@@ -164,12 +164,12 @@ func TestSelectTargetsSameUserAmbiguousRefuses(t *testing.T) {
 
 // TestSelectTargetsSingleProviderDefaults: one provider, no criteria -> it.
 func TestSelectTargetsSingleProviderDefaults(t *testing.T) {
-	ps := []Provider{{User: "urnet", Unit: "urnetwork-native.service", Network: "tacogonzalez3000"}}
+	ps := []Provider{{User: "urnet", Unit: "urnetwork-native.service", Network: "mynetwork"}}
 	got, err := selectTargets(ps, Target{}, nil, nil, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(got) != 1 || got[0].Network != "tacogonzalez3000" {
+	if len(got) != 1 || got[0].Network != "mynetwork" {
 		t.Errorf("want the single provider, got %+v", got)
 	}
 }
@@ -198,7 +198,7 @@ func TestSelectTargetsAmbiguousLabel(t *testing.T) {
 // TestSelectTargetsExplicitTargetStillSingle: an explicit --network target
 // still resolves to exactly one provider even with batch flags present.
 func TestSelectTargetsExplicitTargetStillSingle(t *testing.T) {
-	got, err := selectTargets(threeProviders(), Target{Network: "tacogonzalez3000"}, nil, nil, false)
+	got, err := selectTargets(threeProviders(), Target{Network: "mynetwork"}, nil, nil, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -249,15 +249,15 @@ func TestSelectTargetsAllSemantics(t *testing.T) {
 // state dirs — the scenario the user asked about.
 func twoSameNetwork() []Provider {
 	return []Provider{
-		{User: "urnet", Unit: "urnetwork-native.service", Network: "tacogonzalez3000", NetworkID: "019c3c0c-436c-6b8b-68a3-2d21dd48a50c", StateDir: "/home/urnet/.urnetwork"},
-		{User: "urnetwork-beta", Unit: "urnetwork-beta.service", Network: "tacogonzalez3000", NetworkID: "019f1234-aaaa-bbbb-cccc-dddddddddddd", StateDir: "/home/urnetwork-beta/.urnetwork"},
+		{User: "urnet", Unit: "urnetwork-native.service", Network: "mynetwork", NetworkID: "019c3c0c-436c-6b8b-68a3-2d21dd48a50c", StateDir: "/home/urnet/.urnetwork"},
+		{User: "urnetwork-beta", Unit: "urnetwork-beta.service", Network: "mynetwork", NetworkID: "019f1234-aaaa-bbbb-cccc-dddddddddddd", StateDir: "/home/urnetwork-beta/.urnetwork"},
 	}
 }
 
 // TestSelectTargetSameNetworkNameAmbiguous: --network with a duplicate name
 // must refuse (can't tell which one) — the operator must add --network-id.
 func TestSelectTargetSameNetworkNameAmbiguous(t *testing.T) {
-	_, err := selectTarget(twoSameNetwork(), Target{Network: "tacogonzalez3000"})
+	_, err := selectTarget(twoSameNetwork(), Target{Network: "mynetwork"})
 	if err == nil {
 		t.Fatal("expected ambiguity error: same network name on two providers")
 	}

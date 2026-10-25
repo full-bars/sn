@@ -173,7 +173,7 @@ Providers are identified three ways (use any; the = form works too,
 e.g. --user=urnet is the same as --user urnet):
   --unit <name>          systemd unit, e.g. urnetwork-native.service
   --user <user>          OS user, e.g. urnet
-  --network <name>       JWT network name (account identity), e.g. tacogonzalez3000
+  --network <name>       JWT network name (account identity), e.g. mynetwork
   --network-id <id>      JWT network id - TRUE unique identity; use when two providers
                          share the same network name (e.g. mainnet + beta copies)
 
