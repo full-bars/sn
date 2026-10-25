@@ -216,6 +216,44 @@ func writeDirectGrade(g directGrade) error {
 	return atomicWriteFile(p, b, 0600)
 }
 
+// probeDirectTargets dials each address in turn and succeeds if ANY of them
+// completes a verified TLS handshake. Pinning one record failed a host whose
+// first address was dead while its others answered, which is how healthy hosts
+// scored zero.
+func probeDirectTargets(
+	ctx context.Context,
+	ips []net.IP,
+	host string,
+	port uint16,
+	timeout time.Duration,
+) (directProbeOutcome, bool, string) {
+	if len(ips) == 0 {
+		return directUnattempted, false, ""
+	}
+	// Split the target budget so one blackholed address cannot eat it all,
+	// with a floor that still allows a real handshake.
+	per := timeout / time.Duration(len(ips))
+	if per < 1500*time.Millisecond {
+		per = 1500 * time.Millisecond
+	}
+	outcome := directUnreachable
+	attempted := false
+	lastAddr := ""
+	for _, ip := range ips {
+		lastAddr = ip.String()
+		o, a := probeDirectTarget(ctx, ip, host, port, per)
+		if !a {
+			continue
+		}
+		attempted = true
+		if o == directReachable {
+			return directReachable, true, lastAddr
+		}
+		outcome = o
+	}
+	return outcome, attempted, lastAddr
+}
+
 // probeDirectTarget dials ip:port from the box's own egress and reports whether
 // the destination accepted the connection. attempted=false means the BOX could
 // not send (limiter denial or caller deadline), which is not evidence about the
@@ -285,12 +323,12 @@ func probeTableDirect(ctx context.Context, cfg proxyTableProbeConfig) tableProbe
 		if ctx.Err() != nil {
 			break
 		}
-		ip := resolveProbeTarget(ctx, host)
-		if ip == nil {
+		ips := resolveProbeTargets(ctx, host)
+		if len(ips) == 0 {
 			unresolved++
 			continue
 		}
-		outcome, attempted := probeDirectTarget(ctx, ip, host, 443, cfg.TargetTimeout)
+		outcome, attempted, addr := probeDirectTargets(ctx, ips, host, 443, cfg.TargetTimeout)
 		if !attempted {
 			unresolved++
 			continue
@@ -301,9 +339,11 @@ func probeTableDirect(ctx context.Context, cfg proxyTableProbeConfig) tableProbe
 			res.OK++
 		case directIntercepted:
 			intercepted++
-			res.Failed = append(res.Failed, host+" (intercepted)")
+			res.Failed = append(res.Failed, fmt.Sprintf("%s (intercepted %s)", host, addr))
 		default:
-			res.Failed = append(res.Failed, host)
+			// Name the address that failed and how many were tried, so a zero
+			// is diagnosable from the log instead of an opaque hostname.
+			res.Failed = append(res.Failed, fmt.Sprintf("%s (unreachable %s of %d)", host, addr, len(ips)))
 		}
 	}
 	// Same decidability rule as the proxy probe: a sample gutted by the box's
