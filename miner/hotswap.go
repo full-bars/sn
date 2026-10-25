@@ -399,6 +399,9 @@ func monitorCandidateExit(name string, wait func() error) <-chan error {
 func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session *HotswapParentSession, parentPID int) {
 	isHotSwapDraining.Store(true)
 	drainDone := beginHotSwapDrain()
+	// From here this parent's closing transports produce only stale IPv6
+	// evidence, and the successor owns v6-ledger.json: write once and stop.
+	stopV6LedgerWritesForDrain()
 	hotswapLog("♻️⚡ [hotswap] Parent PID %d entering graceful stream drain (max %s)...\n", parentPID, HotSwapDrainTimeout)
 
 	go func() {
@@ -1087,6 +1090,11 @@ func (self providerRunSettings) hotSwapTakeoverCandidate(ctx context.Context, ca
 	// takeover cannot lose our start entry.
 	goSafe("hotswap-audit-reconcile", func() {
 		reconcileAuditRingAfterHandoff(ctx, HotSwapDrainTimeout+auditReconcileGrace)
+	})
+	// The IPv6 verdicts take the same two steps: merge the parent's file and
+	// become its writer now, and merge once more after the parent's drain.
+	goSafe("hotswap-v6-ledger", func() {
+		takeOverV6LedgerAfterHandoff(ctx, HotSwapDrainTimeout+auditReconcileGrace)
 	})
 
 	// Rebind /metrics: the candidate skipped the startup bind because the
