@@ -157,3 +157,33 @@ func TestProviderAuthRetryToken(t *testing.T) {
 		})
 	}
 }
+
+// TestControlReachedCountsEachSlotOnce pins the counter the health line reports
+// as up: only slots that reached the control plane in this process, and one
+// increment per slot however many times its dial succeeds (a reconnect must not
+// make the pool look bigger).
+func TestControlReachedCountsEachSlotOnce(t *testing.T) {
+	resetControlReached()
+	t.Cleanup(resetControlReached)
+
+	captureProviderBringUpLog(t)
+
+	tracker := newProviderBringUpTracker(2)
+	tracker.start()
+	defer tracker.shutdown()
+
+	if got := controlReachedCount(); got != 0 {
+		t.Fatalf("fresh process reports up=%d, want 0", got)
+	}
+
+	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct")
+	tracker.controlReached(0, "direct", 10*time.Millisecond, "direct") // duplicate
+	if got := controlReachedCount(); got != 1 {
+		t.Fatalf("after one slot reached twice, up=%d, want 1", got)
+	}
+
+	tracker.controlReached(1, "proxy:198.51.100.1:1080", 10*time.Millisecond, "proxy")
+	if got := controlReachedCount(); got != 2 {
+		t.Fatalf("after two slots, up=%d, want 2", got)
+	}
+}

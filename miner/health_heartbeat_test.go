@@ -138,6 +138,11 @@ func TestPublishHealthHeartbeatCountsEveryBucket(t *testing.T) {
 			withTempHome(t)
 			resetHealthHeartbeatForTest()
 			t.Cleanup(resetHealthHeartbeatForTest)
+			// Nothing has reached the control plane in this process, so the
+			// persisted grade must not surface as "up" no matter how many
+			// entries say up.
+			resetControlReached()
+			t.Cleanup(resetControlReached)
 			line := captureHeartbeatLog(t)
 			seedLiveHeartbeatHealth(t, c.healths)
 
@@ -145,24 +150,58 @@ func TestPublishHealthHeartbeatCountsEveryBucket(t *testing.T) {
 			hb := publishHealthHeartbeat(now, now.Add(-time.Hour), "default", healthHeartbeatDefaultInterval)
 
 			wantTotal := c.wantUp + c.wantDown
-			if hb.ProxiesUp != c.wantUp || hb.ProxiesDown != c.wantDown || hb.Proxies != wantTotal {
-				t.Fatalf("counts = up %d down %d total %d, want %d/%d/%d",
-					hb.ProxiesUp, hb.ProxiesDown, hb.Proxies, c.wantUp, c.wantDown, wantTotal)
+			// c.wantUp is the PERSISTED grade now: it may only appear as
+			// last_known_up, while up reports this process's own evidence.
+			if hb.ProxiesUp != 0 || hb.LastKnownUp != c.wantUp || hb.ProxiesDown != c.wantDown || hb.Proxies != wantTotal {
+				t.Fatalf("counts = up %d last_known_up %d down %d total %d, want 0/%d/%d/%d",
+					hb.ProxiesUp, hb.LastKnownUp, hb.ProxiesDown, hb.Proxies, c.wantUp, c.wantDown, wantTotal)
 			}
 			// The on-disk record is what an external monitor reads: pin the same
-			// three numbers there, not only on the in-memory snapshot.
+			// numbers there, not only on the in-memory snapshot.
 			record := hb.record()
-			if record.ProxiesUp != c.wantUp || record.ProxiesDown != c.wantDown || record.Proxies != wantTotal {
-				t.Fatalf("record counts = up %d down %d total %d, want %d/%d/%d",
-					record.ProxiesUp, record.ProxiesDown, record.Proxies, c.wantUp, c.wantDown, wantTotal)
+			if record.ProxiesUp != 0 || record.ProxiesDown != c.wantDown || record.Proxies != wantTotal {
+				t.Fatalf("record counts = up %d down %d total %d, want 0/%d/%d",
+					record.ProxiesUp, record.ProxiesDown, record.Proxies, c.wantDown, wantTotal)
 			}
 			// And the operator-facing log line, which is where a wrong count was
 			// easiest to miss.
-			want := fmt.Sprintf("proxies=%d up=%d down=%d", wantTotal, c.wantUp, c.wantDown)
+			want := fmt.Sprintf("proxies=%d up=0 last_known_up=%d down=%d", wantTotal, c.wantUp, c.wantDown)
 			if !strings.Contains(line.String(), want) {
 				t.Fatalf("log line missing %q:\n%s", want, line.String())
 			}
 		})
+	}
+}
+
+// TestHealthUpIsThisProcessControlEvidence is the other half: once slots have
+// actually reached the control plane here, up reports them, and it reports them
+// independently of what the persisted grade says. Without this the previous
+// test would pass just as well if up were hardcoded to zero.
+func TestHealthUpIsThisProcessControlEvidence(t *testing.T) {
+	withTempHome(t)
+	resetHealthHeartbeatForTest()
+	t.Cleanup(resetHealthHeartbeatForTest)
+	resetControlReached()
+	t.Cleanup(resetControlReached)
+	line := captureHeartbeatLog(t)
+	// The whole pool is graded up in the state file, AND two slots have dialed
+	// here: up must read 2, not the 3 the grade claims.
+	seedLiveHeartbeatHealth(t, map[string]string{
+		"198.51.100.1:1080": "up",
+		"198.51.100.2:1080": "up",
+		"198.51.100.3:1080": "up",
+	})
+	controlReachedSlots.Add(2)
+
+	now := time.Date(2026, 10, 24, 12, 0, 0, 0, time.UTC)
+	hb := publishHealthHeartbeat(now, now.Add(-time.Hour), "default", healthHeartbeatDefaultInterval)
+
+	if hb.ProxiesUp != 2 || hb.LastKnownUp != 3 || hb.Proxies != 3 {
+		t.Fatalf("counts = up %d last_known_up %d total %d, want 2/3/3",
+			hb.ProxiesUp, hb.LastKnownUp, hb.Proxies)
+	}
+	if want := "up=2 last_known_up=3"; !strings.Contains(line.String(), want) {
+		t.Fatalf("log line missing %q:\n%s", want, line.String())
 	}
 }
 
@@ -293,8 +332,11 @@ func TestPublishHealthHeartbeatRecordFields(t *testing.T) {
 	if hb.PID != os.Getpid() {
 		t.Fatalf("pid = %d, want %d", hb.PID, os.Getpid())
 	}
-	if hb.ProxiesUp != 1 || hb.ProxiesDown != 0 || hb.Proxies != 1 {
-		t.Fatalf("proxy counts = up %d down %d total %d, want 1/0/1", hb.ProxiesUp, hb.ProxiesDown, hb.Proxies)
+	// A live-health observation is not control-plane evidence: this process has
+	// dialed nothing, so the entry surfaces as last_known_up while up stays 0.
+	if hb.ProxiesUp != 0 || hb.LastKnownUp != 1 || hb.ProxiesDown != 0 || hb.Proxies != 1 {
+		t.Fatalf("proxy counts = up %d last_known_up %d down %d total %d, want 0/1/0/1",
+			hb.ProxiesUp, hb.LastKnownUp, hb.ProxiesDown, hb.Proxies)
 	}
 	if hb.Goroutines <= 0 {
 		t.Fatalf("goroutines = %d, want a live reading", hb.Goroutines)

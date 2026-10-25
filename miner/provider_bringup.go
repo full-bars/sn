@@ -10,10 +10,35 @@ package miner
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/urnetwork/connect"
 )
+
+// controlReachedSlots counts the slots that have reached the control plane in
+// THIS process, and is the definition of "up" the health line reports.
+//
+// The distinction matters after a restart: proxy.state carries each proxy's
+// persisted grade, so a process that has not completed a single dial can still
+// render a few hundred "up" proxies from a previous run's measurements, which
+// reads as a healthy pool at uptime=0s. A slot only counts here once its own
+// dial through its own proxy succeeded, which is evidence this process
+// produced rather than evidence it inherited.
+var controlReachedSlots atomic.Int64
+
+// controlReachedCount is the number of slots that reached the control plane
+// since this process started.
+func controlReachedCount() int {
+	return int(controlReachedSlots.Load())
+}
+
+// resetControlReached exists for tests: the counter is process-wide on purpose
+// (the health line has no other handle on the bring-up tracker), so a test that
+// asserts a fresh value has to start from zero.
+func resetControlReached() {
+	controlReachedSlots.Store(0)
+}
 
 // providerBringUpHeartbeatInterval is the heartbeat cadence while slots are
 // pending. A variable so tests can shorten it.
@@ -240,6 +265,10 @@ func (self *providerBringUpTracker) controlReached(index uint64, display string,
 		return
 	}
 	self.reached[index] = true
+	// One increment per slot, ever: the guard above returns for an already
+	// reached slot, so a reconnect cannot inflate the "up" the health line
+	// reports for this process.
+	controlReachedSlots.Add(1)
 	if watch := self.watches[index]; watch != nil {
 		watch.Stop()
 		delete(self.watches, index)

@@ -98,8 +98,12 @@ type healthHeartbeat struct {
 	SysMiB     uint64
 	Goroutines int
 
-	Proxies     int
+	Proxies int
+	// ProxiesUp counts the proxies that reached the control plane in THIS
+	// process. LastKnownUp is the persisted grade, kept beside it so a restart
+	// cannot present an inherited pool as if this process had proven it.
 	ProxiesUp   int
+	LastKnownUp int
 	ProxiesDown int
 	Clients     int64
 	// CountsKnown is false when the byte/client counters were not published
@@ -382,7 +386,19 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 	// real dead count, so a fully dead pool reported proxies=0 up=0 down=0 — a
 	// healthy-looking pool that had failed completely. The status file's own
 	// report computes down the same way (len(r.Dead)+len(r.Degraded)).
-	up, degraded, dead, _ := proxyHealthRegistryCounts()
+	// proxyHealthRegistryCounts returns the PERSISTED health - proxy.state's
+	// grades, seeded at manager start - so a process that has dialed nothing
+	// yet still sees a pool full of previous-run "up" entries. That is the
+	// figure that reported 300-400 up at uptime=0s, so it is reported as
+	// last_known_up and never as up.
+	//
+	// up comes from the bring-up tracker's own control-plane evidence
+	// (controlReached), which exists only for slots that completed a dial in
+	// this process. proxies stays the pool size so the line still describes the
+	// pool rather than this process's progress through it.
+	persistedUp, degraded, dead, _ := proxyHealthRegistryCounts()
+	lastKnownUp := persistedUp
+	up := controlReachedCount()
 	down := degraded + dead
 	_, _, clients, countsKnown := controlRuntime.counterTotals()
 
@@ -405,8 +421,9 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 		HeapMiB:     heapBytes / 1024 / 1024,
 		SysMiB:      sysBytes / 1024 / 1024,
 		Goroutines:  runtime.NumGoroutine(),
-		Proxies:     up + down,
+		Proxies:     lastKnownUp + down,
 		ProxiesUp:   up,
+		LastKnownUp: lastKnownUp,
 		ProxiesDown: down,
 		Clients:     clients,
 		CountsKnown: countsKnown,
@@ -421,9 +438,9 @@ func publishHealthHeartbeat(now time.Time, startTime time.Time, profile string, 
 		buildLine += " host=" + hb.Host
 	}
 	tlog("%s\n", buildLine)
-	tlog("❤️ [health] uptime=%s profile=%s heap=%dMiB sys=%dMiB goroutines=%d proxies=%d up=%d down=%d clients=%d interval=%s\n",
+	tlog("❤️ [health] uptime=%s profile=%s heap=%dMiB sys=%dMiB goroutines=%d proxies=%d up=%d last_known_up=%d down=%d clients=%d interval=%s\n",
 		hb.Uptime, hb.Profile, hb.HeapMiB, hb.SysMiB, hb.Goroutines,
-		hb.Proxies, hb.ProxiesUp, hb.ProxiesDown, hb.Clients, hb.Interval)
+		hb.Proxies, hb.ProxiesUp, hb.LastKnownUp, hb.ProxiesDown, hb.Clients, hb.Interval)
 
 	return hb
 }
