@@ -441,6 +441,7 @@ func runPaidProxyGradeOnce(ctx context.Context, apiHost string, apiPort uint16) 
 				entry.Score = r.table.Score
 				entry.Graded = true
 				entry.Failed = capFailedList(r.table.Failed)
+				entry.DialMS = r.table.DialMS
 				entry.LastDecided = probeDone
 				graded++
 				if oldTier != newTier {
