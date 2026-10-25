@@ -1684,7 +1684,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// competes for one role, and only the direct slot can honestly hold it
 		// -- the same rule the swarm members and hosted devices follow. The
 		// remaining slots still provide; they just do not listen.
-		settings.ProvideExtenderEnabled = proxySettings == nil
+		//
+		// A proxied slot also runs one family-agnostic platform transport
+		// instead of the v4-pinned, v6-pinned and standby group. See
+		// applyProviderSlotRoleSettings.
+		applyProviderSlotRoleSettings(settings, proxySettings)
 		settings.KeyMaterial = providerDeviceKeyMaterial(seed, certPem, keyPem, extenderKeySeed)
 		applyProviderMemoryTarget(settings, self.memoryPlan.DeviceMemoryTargetByteCount)
 		// Wrap ProviderDialContextSettings with bandwidth tracking too.
@@ -2175,6 +2179,23 @@ func slotClientStrategySettings(
 		clientStrategySettings.ConnectSettings, proxySettings, bw, proxyAddr,
 	)
 	return clientStrategySettings, bw, proxyAddr
+}
+
+// applyProviderSlotRoleSettings sets the two device settings that differ
+// between the direct slot and a proxied slot.
+//
+//   - ProvideExtenderEnabled: only the direct slot can hold the extender role
+//     (one carrier bind and one published address per host).
+//   - DisablePlatformFamilyTransports: a proxied slot gets one
+//     family-agnostic platform transport, which is 3.23's shape for a proxied
+//     identity (provider/family_transport.go, useFamilyTransports). The
+//     family-pinned transports exist to prove this host's own v4 and v6
+//     paths, which a proxied identity does not dial from. The direct slot
+//     keeps the group.
+func applyProviderSlotRoleSettings(settings *sdk.DeviceLocalSettings, proxySettings *connect.ProxySettings) {
+	proxied := proxySettings != nil
+	settings.ProvideExtenderEnabled = !proxied
+	settings.DisablePlatformFamilyTransports = proxied
 }
 
 // errProviderNetworkSignInQuarantined ends a run whose rejected network
