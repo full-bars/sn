@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -153,5 +154,57 @@ func TestV6LedgerPersisterThrottles(t *testing.T) {
 	}
 	if got := readV6File(t, path).Entries["a"].Verdict; got != v6No {
 		t.Fatalf("SaveNow did not write the latest verdict: %v", got)
+	}
+}
+
+// TestV6LedgerPersisterConcurrentWritesDoNotCorrupt: writers share one temp
+// path, so an unserialized pair could interleave a write and a rename and one
+// could delete the other's file. Whatever the ordering, the file must parse and
+// keep what was recorded before Stop.
+func TestV6LedgerPersisterConcurrentWritesDoNotCorrupt(t *testing.T) {
+	now := time.Date(2026, 10, 25, 12, 0, 0, 0, time.UTC)
+	path := testV6Path(t)
+	ledger := newV6Ledger(func() time.Time { return now })
+	ledger.Record("keep", v6Yes)
+	persister := newV6LedgerPersister(path, ledger)
+	if err := persister.SaveNow(); err != nil {
+		t.Fatal(err)
+	}
+
+	done := make(chan struct{})
+	for i := 0; i < 8; i++ {
+		go func() {
+			defer func() { done <- struct{}{} }()
+			for j := 0; j < 20; j++ {
+				_ = persister.SaveNow()
+			}
+		}()
+	}
+	persister.Stop()
+	for i := 0; i < 8; i++ {
+		<-done
+	}
+	if got := readV6File(t, path).Entries["keep"].Verdict; got != v6Yes {
+		t.Fatalf("the entry recorded before Stop is %v; a concurrent write corrupted the file", got)
+	}
+}
+
+// TestV6PersisterIsOneInstance: two slot setups racing must not each build a
+// persister with its own mutex and throttle over one path.
+func TestV6PersisterIsOneInstance(t *testing.T) {
+	var wg sync.WaitGroup
+	got := make([]*v6LedgerPersister, 8)
+	for i := range got {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			got[i] = v6Persister()
+		}(i)
+	}
+	wg.Wait()
+	for i := 1; i < len(got); i++ {
+		if got[i] != got[0] {
+			t.Fatal("concurrent callers got different persisters over the same file")
+		}
 	}
 }

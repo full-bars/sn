@@ -692,6 +692,9 @@ func auth(opts docopt.Opts) error {
 
 	ctx, cancel := context.WithCancel(event.Ctx())
 	defer cancel()
+	// Flush the IPv6 verdicts on the way out: Save() is throttled, so the last
+	// flip of a run can still be in memory when the slots stop.
+	defer v6Persister().Stop()
 
 	byJwt, err := networkLogin(ctx, opts, apiUrl, terminalLoginPrompts())
 	if err != nil {

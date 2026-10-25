@@ -56,7 +56,13 @@ type v6LedgerPersister struct {
 	path   string
 	ledger *v6Ledger
 
-	mu       sync.Mutex
+	mu sync.Mutex
+	// writeMu serializes the whole check-and-write sequence. mu alone is not
+	// enough: a writer that passes the stopped check before Stop() sets the
+	// flag could still write after Stop() returned, and two writers share one
+	// temp path, so their WriteFile and rename could interleave and one could
+	// remove the other's file.
+	writeMu  sync.Mutex
 	stopped  bool
 	lastSave time.Time
 	// now is a seam for the save throttle, so tests do not sleep.
@@ -86,14 +92,18 @@ func (self *v6LedgerPersister) Save() {
 	_ = self.SaveNow()
 }
 
-// SaveNow merges and writes, ignoring the throttle.
+// SaveNow merges and writes, ignoring the throttle. The write lock is held for
+// the whole sequence so no write can start after Stop has set the flag and
+// finished its own write.
 func (self *v6LedgerPersister) SaveNow() error {
+	self.writeMu.Lock()
+	defer self.writeMu.Unlock()
 	self.mu.Lock()
-	if self.stopped {
-		self.mu.Unlock()
+	stopped := self.stopped
+	self.mu.Unlock()
+	if stopped {
 		return nil
 	}
-	self.mu.Unlock()
 	return self.saveMerged()
 }
 
@@ -101,6 +111,8 @@ func (self *v6LedgerPersister) SaveNow() error {
 // drain path calls it before its closing transports can produce failures that
 // would otherwise overwrite a successor's fresher entries.
 func (self *v6LedgerPersister) Stop() {
+	self.writeMu.Lock()
+	defer self.writeMu.Unlock()
 	self.mu.Lock()
 	if self.stopped {
 		self.mu.Unlock()
@@ -164,18 +176,21 @@ var (
 // dir still gets a usable in-memory ledger; it just cannot persist.
 func v6Verdicts() *v6Ledger {
 	processV6LedgerOnce.Do(func() {
-		processV6Ledger = loadV6Ledger(mustStatePathQuiet("v6-ledger.json"), nil)
+		path := mustStatePathQuiet("v6-ledger.json")
+		processV6Ledger = loadV6Ledger(path, nil)
+		processV6Persister = newV6LedgerPersister(path, processV6Ledger)
 	})
 	return processV6Ledger
 }
 
-// v6Persister is the writer for the run-wide ledger.
+// v6Persister is the writer for the run-wide ledger. It is built inside the
+// same Once as the ledger: two racing slot setups must not each get a persister
+// with its own mutex and throttle over the same path.
 func v6Persister() *v6LedgerPersister {
 	processV6LedgerOnce.Do(func() {
-		processV6Ledger = loadV6Ledger(mustStatePathQuiet("v6-ledger.json"), nil)
+		path := mustStatePathQuiet("v6-ledger.json")
+		processV6Ledger = loadV6Ledger(path, nil)
+		processV6Persister = newV6LedgerPersister(path, processV6Ledger)
 	})
-	if processV6Persister == nil {
-		processV6Persister = newV6LedgerPersister(mustStatePathQuiet("v6-ledger.json"), processV6Ledger)
-	}
 	return processV6Persister
 }

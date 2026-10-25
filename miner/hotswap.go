@@ -399,6 +399,10 @@ func monitorCandidateExit(name string, wait func() error) <-chan error {
 func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session *HotswapParentSession, parentPID int) {
 	isHotSwapDraining.Store(true)
 	drainDone := beginHotSwapDrain()
+	// The candidate already loaded the ledger at spawn. From here the parent's
+	// closing transports only produce stale failures, so flush once and stop
+	// writing: a later parent write would land after the successor's.
+	v6Persister().Stop()
 	hotswapLog("♻️⚡ [hotswap] Parent PID %d entering graceful stream drain (max %s)...\n", parentPID, HotSwapDrainTimeout)
 
 	go func() {
