@@ -227,9 +227,15 @@ jobs:
           go build -o /tmp/urnet-tools ./cmd/urnet-tools/
 
       - name: Prepare proxy file
-        run: |
+        run: |-
           mkdir -p /tmp/docker-test
           printf '127.0.0.1:10001\n127.0.0.1:10002\n' > /tmp/docker-test/proxy.txt
+          # A tiny source list served from the runner. The URL-source test only
+          # needs a reachable http URL, and pointing it at a third-party list
+          # (monosans/proxy-list, tens of thousands of lines) made CI depend on
+          # that repo and fed the provider a list large enough to die on the
+          # stage-1 probe. Kept local so the test is hermetic and fast.
+          printf '127.0.0.1:10001\n127.0.0.1:10002\n' > /tmp/docker-test/proxies.txt
 
       - name: Start provider container (BUILD=stable, user/pass auth)
         # The Docker provider authenticates itself with USER_AUTH/PASSWORD
@@ -237,6 +243,7 @@ jobs:
         run: |
           docker run -d --name urnet-test \
             --restart=unless-stopped \
+            --add-host=host.docker.internal:host-gateway \
             --cap-add=NET_ADMIN --cap-add=NET_RAW \
             --sysctl net.ipv4.ip_forward=1 \
             -e BUILD=stable \
@@ -315,11 +322,17 @@ jobs:
 
       - name: urnet-docker proxy add-source (URL source)
         run: |
-          /tmp/urnet-docker proxy add-source "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt"
+          # Serve the two-line source list from the runner for this step only,
+          # so the fetch cannot depend on a third-party repo or hand the
+          # provider a list big enough to die on.
+          (cd /tmp/docker-test && setsid python3 -m http.server 8099 --bind 0.0.0.0 >/tmp/http-server.log 2>&1 &)
+          sleep 2
+          curl -fsS http://127.0.0.1:8099/proxies.txt
+          /tmp/urnet-docker proxy add-source "http://host.docker.internal:8099/proxies.txt"
 
       - name: urnet-docker proxy remove-source (the URL source)
         run: |
-          /tmp/urnet-docker proxy remove-source "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt"
+          /tmp/urnet-docker proxy remove-source "http://host.docker.internal:8099/proxies.txt"
 
       - name: urnet-docker proxy clear
         run: /tmp/urnet-docker proxy clear --force urnet-test
@@ -363,6 +376,9 @@ jobs:
           # container's own writable layer (no named config volume in this
           # job), so removing the container wipes the client JWT. Runs even
           # when the job fails (if: always()).
+          # Container logs first: when a step fails because the provider died,
+          # the reason is only in here (the exec returns 137 and nothing else).
+          docker logs urnet-test 2>&1 | tail -80 || true
           docker stop urnet-test 2>/dev/null || true
           docker rm -f urnet-test 2>/dev/null || true
           echo "container stopped"
