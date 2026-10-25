@@ -223,6 +223,9 @@ func notifySystemdReady() error { return nil }
 // notifySystemdWatchdog is a no-op on Windows (no systemd).
 func notifySystemdWatchdog() error { return nil }
 
+// startSystemdWatchdog is inert on Windows: there is no systemd to pet.
+func startSystemdWatchdog() {}
+
 // notifySystemdStatus is a no-op on Windows (no systemd).
 func notifySystemdStatus(text string) error { return nil }
 

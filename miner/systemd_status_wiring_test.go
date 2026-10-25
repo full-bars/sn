@@ -104,3 +104,19 @@ func TestProxyStatusRefreshesOnResolutionChange(t *testing.T) {
 func TestSystemdStatusComposerIsUsedByThePublisher(t *testing.T) {
 	requireCall(t, "systemd_status.go", "reportProxyStatusToSystemd", "", "notifySystemdStatus(systemdStatusLine())")
 }
+
+// TestProvideSignalsReady keeps READY=1 wired to the start of the provider run.
+// The unit is Type=notify, so a provider that never sends it is killed by
+// systemd at TimeoutStartSec while perfectly healthy - the cycle that reset
+// every import attempt. It must NOT wait on proxy auth: auth can back off for
+// hours, and the relay deliberately reports proxy health through STATUS=
+// instead. notifySystemdReady already existed with no caller.
+func TestProvideSignalsReady(t *testing.T) {
+	requireCall(t, "run.go", "run", "providerRunSettings", "notifySystemdReady()")
+}
+
+// TestProvidePetsSystemdWatchdog keeps WATCHDOG=1 wired: a unit that sets
+// WatchdogSec= kills a service that never pets it, whatever its health.
+func TestProvidePetsSystemdWatchdog(t *testing.T) {
+	requireCall(t, "run.go", "provideWith", "", "startSystemdWatchdog()")
+}

@@ -859,6 +859,10 @@ func provide(opts docopt.Opts) {
 // provideWith is provide, or provider start when start is set: start asks
 // before registering a new device and, in a terminal, reports in plain lines.
 func provideWith(opts docopt.Opts, start bool) {
+	// Pet systemd's watchdog before anything can block. A unit that sets
+	// WatchdogSec= kills a service that never checks in, so without this a
+	// healthy provider is restarted at every interval (Result=timeout).
+	startSystemdWatchdog()
 	if !providePreflight(opts, start, os.Stdin, os.Stdout, os.Stderr) {
 		os.Exit(minerExitNeedsSetup)
 	}
@@ -1030,9 +1034,6 @@ func provideWith(opts docopt.Opts, start bool) {
 			// regular-file stdout refuses it). Name the refusal on stderr too:
 			// a refused startup that leaves no trace reads as a clean exit.
 			fmt.Fprintf(os.Stderr, "provider startup refused: %v\n", err)
-			if hint := registrationRefusalHint(err); hint != "" {
-				fmt.Fprintln(os.Stderr, hint)
-			}
 		}
 		exitProviderRun(code)
 		// The exit seam only returns under test.
@@ -1397,6 +1398,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// its identity is staged and before any provider child starts, the same
 	// line the v33 provider writes from provideSetupMemory.
 	providerStartupCritLog()
+
+	// READY=1 marks startup complete for a Type=notify unit, and this is the
+	// same point the 3.23-fix provider sends it. It deliberately does NOT wait
+	// for any proxy to authenticate: proxy auth can back off for hours or fail
+	// during an API outage, and gating READY on it makes systemd time the start
+	// job out (90s) and SIGTERM a healthy provider. Proxy health is reported
+	// continuously through STATUS= instead. notifySystemdReady was ported from
+	// the relay with no caller, which is why the unit never left "activating".
+	if err := notifySystemdReady(); err != nil {
+		tlog("[systemd] READY=1 notify failed: %s\n", err)
+	}
 
 	// events.log records the shutdown cause too: the first canceller's stack,
 	// or v33's parent-cancellation text when the startup signal handler
@@ -2177,20 +2189,6 @@ const providerStartupRefusedExitCode = 1
 // prove, a missing or mismatched key identity marker, an unusable key). The
 // run's own error stays unwrap-able; this sentinel only selects the exit code.
 var errProviderStartupRefused = errors.New("provider startup refused")
-
-// registrationRefusalHint says how to proceed after a refusal that needs an
-// explicit decision about this device's identity. The refusal itself is a safety
-// rule and unchanged; the line it prints just did not say what to do next.
-func registrationRefusalHint(err error) string {
-	if err == nil {
-		return ""
-	}
-	text := err.Error()
-	if !strings.Contains(text, "requires_explicit_recovery") {
-		return ""
-	}
-	return `If this is a new device, register it on purpose: run "provider start" in a terminal, run "provider setup", or add --allow-client-registration to "provider provide". If it already had an identity, restore its state folder from backup instead.`
-}
 
 // providerStartupRefusalError keeps the refusal cause in the error chain while
 // marking the run for the nonzero startup exit.

@@ -262,6 +262,33 @@ func notifySystemdStatus(text string) error {
 	return nil
 }
 
+// startSystemdWatchdog pets the unit's watchdog for the life of the process.
+// The miner published STATUS but never petted, so a unit carrying WatchdogSec=
+// killed a healthy provider at every interval (systemd Result=timeout). That
+// restart is what reset the 3.23-fix identity import before it could commit.
+func startSystemdWatchdog() {
+	usec := os.Getenv("WATCHDOG_USEC")
+	if usec == "" {
+		return
+	}
+	interval, err := time.ParseDuration(usec + "us")
+	if err != nil || interval <= 0 {
+		return
+	}
+	every := interval / 3
+	if every < time.Second {
+		every = time.Second
+	}
+	go func() {
+		ticker := time.NewTicker(every)
+		defer ticker.Stop()
+		for range ticker.C {
+			// A missing socket is never fatal: keep pacing anyway.
+			_ = notifySystemdWatchdog()
+		}
+	}()
+}
+
 // notifySystemdWatchdog sends WATCHDOG=1, which restarts the watchdog timer of a
 // unit that sets WatchdogSec=. It is a no-op without a notify socket.
 func notifySystemdWatchdog() error {
