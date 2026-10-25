@@ -55,6 +55,15 @@ const legacyImportTransientAttempts = 3
 
 var legacyImportTransientBackoff = 2 * time.Second
 
+// legacyImportAdoptUnproven reports whether saved credentials are committed
+// without the two-tier network proof. The saved JWT is this node's own
+// credential and the connect layer's sign-in is the real gate, so proving
+// every slot first turns a sub-second file import into a multi-minute
+// network crawl. Opt-in until it has proved itself on the fleet.
+func legacyImportAdoptUnproven() bool {
+	return os.Getenv("URNETWORK_LEGACY_IMPORT_ADOPT") == "1"
+}
+
 // A persistent partial outage (the API answers, but the proof reads stay
 // unavailable) is bounded so the provider still starts, minting a new identity
 // exactly as the documented fallback: three consecutive answered failures or
@@ -429,13 +438,24 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			noStoreEntry++
 			continue
 		}
+		// Adopt-first (URNETWORK_LEGACY_IMPORT_ADOPT=1): the saved entry is
+		// this node's own credential, so it is committed as-is and the
+		// connect layer's sign-in is the proof. The two-tier network proof
+		// is reserved for adoptions that fail, not for every slot.
+		state := "prove"
+		proof := ""
+		if legacyImportAdoptUnproven() {
+			state = "commit"
+			proof = "legacy_jwt"
+		}
 		slot := &legacyImportSlot{
 			storeKey: storeKey,
 			display:  legacyImportDisplaySlot(settings),
 			target:   target,
 			settings: settings,
 			entry:    entry,
-			state:    "prove",
+			state:    state,
+			proof:    proof,
 		}
 		// The saved client_id is the display identity even when its entry
 		// later fails validation, so the fallback warning can name it.
