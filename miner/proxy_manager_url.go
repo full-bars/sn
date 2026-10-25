@@ -84,6 +84,10 @@ type ProxyURLEntry struct {
 	// Failed lists the target hostnames that did not answer the last
 	// stage-1 pass, for diagnostics and fleet reporting.
 	Failed []string `json:"failed,omitempty"`
+	// DialMS is the median connect cost of the targets that answered the last
+	// stage-1 pass, in milliseconds. Reachability alone rates a fleet whose
+	// median dial is over 1.5 s as perfect; this keeps the cost visible.
+	DialMS int64 `json:"dial_ms,omitempty"`
 	// LastGraded is when the last GENUINE stage-1 grade landed for this
 	// entry (distinct from LastProbe, which is also bumped by liveness-only
 	// re-checks).
@@ -456,6 +460,7 @@ func applyProxyGradeToEntry(entry *ProxyURLEntry, g proxyURLGrade, gradedAt time
 		entry.Score = g.Score
 		entry.Graded = true
 		entry.Failed = capFailedList(g.Failed)
+		entry.DialMS = g.DialMS
 		// Stamp the grade time ONLY on a genuine stage-1 verdict. A
 		// socks5-only or undecidable probe never reaches here, so
 		// LastGraded stays at its prior value (or zero = never graded).

@@ -18,6 +18,11 @@ type proxyGradeInfo struct {
 	Failed     []string `json:"failed,omitempty"`
 	Tier       string   `json:"tier,omitempty"`
 	LastGraded int64    `json:"last_graded,omitempty"` // unix ts, 0 = never
+	// DialMS is the median connect cost of the targets that answered, so the
+	// cost travels with the grade it was measured beside. 0 = not measured.
+	// Read from whichever store owns the grade: proxy.state for a paid/file
+	// proxy, proxy_url.json for a URL one.
+	DialMS int64 `json:"dial_ms,omitempty"`
 }
 
 // proxyGradeFor resolves the A-F grade for a proxy identity key (address, or
@@ -36,6 +41,7 @@ func proxyGradeFor(key string, paid *ProxyState, url *ProxyURLState) (proxyGrade
 				Graded: true,
 				Failed: entry.Failed,
 				Tier:   proxyGradeTier(entry.Score),
+				DialMS: entry.DialMS,
 			}
 			if !entry.LastGraded.IsZero() {
 				info.LastGraded = entry.LastGraded.Unix()
@@ -51,6 +57,7 @@ func proxyGradeFor(key string, paid *ProxyState, url *ProxyURLState) (proxyGrade
 				Graded: true,
 				Failed: entry.Failed,
 				Tier:   proxyGradeTier(entry.Score),
+				DialMS: entry.DialMS,
 			}
 			if !entry.LastGraded.IsZero() {
 				info.LastGraded = entry.LastGraded.Unix()

@@ -8,6 +8,7 @@ import (
 	"hash/fnv"
 	"net"
 	"os"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -376,6 +377,24 @@ type tableProbeResult struct {
 	// verification failed — the direct pass's middlebox signal. The proxy path
 	// never sets it (its CONNECT reply cannot be forged locally).
 	Intercepted int
+	// DialMS is the median connect cost of the targets that answered, in
+	// milliseconds, or 0 when none did. Reachability alone let a fleet whose
+	// median dial was over 1.5 s grade as perfect: it is still correct to
+	// admit those proxies, but the cost must be visible, and it is already
+	// measured here for free.
+	DialMS int64
+}
+
+// medianDialMS returns the median connect cost of the targets that answered,
+// in milliseconds, or 0 when none answered. The median rather than the mean so
+// a single stalled host on a shared path cannot misreport the whole proxy.
+func medianDialMS(latencies []time.Duration) int64 {
+	if len(latencies) == 0 {
+		return 0
+	}
+	sorted := slices.Clone(latencies)
+	slices.Sort(sorted)
+	return sorted[len(sorted)/2].Milliseconds()
 }
 
 // qualified reports whether the pass clears the given bar. A pass that
@@ -509,6 +528,7 @@ func probeTableThroughProxy(ctx context.Context, address, user, password, apiHos
 	// Answered/Sent semantics: a DNS failure on the box is the box's problem,
 	// not the proxy's, and must not convict it.
 	res := tableProbeResult{SampleWidth: len(hosts), Failed: []string{}}
+	var dialLatencies []time.Duration
 	baseUnresolved := 0
 	unresolvedGrowth := 0
 
@@ -522,7 +542,7 @@ func probeTableThroughProxy(ctx context.Context, address, user, password, apiHos
 			baseUnresolved++
 			continue
 		}
-		answered, attempted := probeSocks5Connect(ctx, address, user, password, ip, 443, cfg.TargetTimeout)
+		answered, attempted, dialElapsed := probeSocks5Connect(ctx, address, user, password, ip, 443, cfg.TargetTimeout)
 		if !attempted {
 			// Box-side failure (limiter denial / caller deadline): no evidence
 			// about the proxy. Excluded from Total exactly like an unresolved
@@ -534,6 +554,7 @@ func probeTableThroughProxy(ctx context.Context, address, user, password, apiHos
 		res.Total++
 		if answered {
 			res.OK++
+			dialLatencies = append(dialLatencies, dialElapsed)
 		} else {
 			res.Failed = append(res.Failed, host)
 		}
@@ -594,7 +615,7 @@ func probeTableThroughProxy(ctx context.Context, address, user, password, apiHos
 				unresolvedGrowth++
 				continue
 			}
-			answered, attempted := probeSocks5Connect(ctx, address, user, password, ip, 443, cfg.TargetTimeout)
+			answered, attempted, dialElapsed := probeSocks5Connect(ctx, address, user, password, ip, 443, cfg.TargetTimeout)
 			if !attempted {
 				// Box-side failure: no evidence; exclude from Total (CRITICAL-1).
 				res.SampleWidth++
@@ -605,6 +626,7 @@ func probeTableThroughProxy(ctx context.Context, address, user, password, apiHos
 			res.SampleWidth++
 			if answered {
 				res.OK++
+				dialLatencies = append(dialLatencies, dialElapsed)
 			} else {
 				res.Failed = append(res.Failed, host)
 			}
@@ -621,6 +643,8 @@ func probeTableThroughProxy(ctx context.Context, address, user, password, apiHos
 			}
 		}
 	}
+
+	res.DialMS = medianDialMS(dialLatencies)
 
 	// Decidable = the box's resolver let us reach a quorum of the sample AND
 	// the context survived the pass. The denominator is the number of hosts
@@ -837,7 +861,11 @@ var globalProbeDialLimiter = rate.NewLimiter(rate.Limit(maxProbeDialsPerSec), ma
 // exclude unattempted hosts from Total exactly like an unresolvable host
 // (positive-evidence-only: box-side failures never convict). answered is only
 // meaningful when attempted=true.
-func probeSocks5Connect(ctx context.Context, address, user, password string, ip net.IP, port uint16, timeout time.Duration) (answered, attempted bool) {
+// It returns the connect cost as well, measured from the moment the rate
+// limiter granted a token: a pass that queues behind a crowded bucket would
+// otherwise report a fast proxy as slow, and the number is meant to describe the
+// proxy, not this box's queueing.
+func probeSocks5Connect(ctx context.Context, address, user, password string, ip net.IP, port uint16, timeout time.Duration) (answered, attempted bool, dial time.Duration) {
 	// Global dial rate limit, applied here (one call per sampled health target,
 	// through the proxy). Wait blocks long enough to hold the long-term ceiling
 	// flat; it is cancellable via ctx so a shutdown or a timed-out caller is not
@@ -849,12 +877,22 @@ func probeSocks5Connect(ctx context.Context, address, user, password string, ip 
 	cancelWait()
 	if err != nil {
 		// Box-side: limiter denial is not evidence about the proxy.
-		return false, false
+		return false, false, 0
 	}
 	if ctx.Err() != nil {
 		// Caller deadline/shutdown raced the token grant: not evidence either.
-		return false, false
+		return false, false, 0
 	}
+	// The clock starts HERE, after the grant: everything below is the proxy's
+	// own cost.
+	start := time.Now()
+	answered, attempted = socks5ConnectGranted(ctx, address, user, password, ip, port, timeout)
+	return answered, attempted, time.Since(start)
+}
+
+// socks5ConnectGranted runs one SOCKS5 CONNECT after the limiter has granted a
+// token, with no queueing inside the measurement.
+func socks5ConnectGranted(ctx context.Context, address, user, password string, ip net.IP, port uint16, timeout time.Duration) (answered, attempted bool) {
 	dialCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	var d net.Dialer
@@ -906,6 +944,10 @@ type proxyURLGrade struct {
 	// Score and Failed record the stage-1 table probe for grading.
 	Score  float64
 	Failed []string
+	// DialMS mirrors tableProbeResult.DialMS: the median connect cost of the
+	// targets that answered. Carried through so the persisted entry can show
+	// how fast a proxy actually is, not merely that it answered.
+	DialMS int64
 }
 
 // probeAndGradeProxyURLLines runs the full staged probe over the lines:
@@ -997,7 +1039,7 @@ func probeAndGradeProxyURLLines(ctx context.Context, lines []string, apiHost str
 
 	grades := make(map[string]proxyURLGrade, len(lines))
 	for i, tr := range stage1Results {
-		g := proxyURLGrade{Score: tr.Score, Failed: tr.Failed, Decidable: tr.Decidable}
+		g := proxyURLGrade{Score: tr.Score, Failed: tr.Failed, Decidable: tr.Decidable, DialMS: tr.DialMS}
 		if tr.qualified(cfg.PassBar) {
 			g.Qualified = true
 		}

@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/time/rate"
+
 	"github.com/urnetwork/connect"
 )
 
@@ -140,7 +142,7 @@ func TestReview_ProbeSocks5Connect_ShortReplyIsNotSuccess(t *testing.T) {
 	})
 	defer cleanup()
 
-	if answered, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, 2*time.Second); answered {
+	if answered, _, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, 2*time.Second); answered {
 		t.Error("a 1-byte CONNECT reply was scored as a SynAck; io.ReadFull must reject partial frames")
 	}
 }
@@ -159,7 +161,7 @@ func TestReview_ProbeSocks5Connect_RejectsWrongVersion(t *testing.T) {
 	})
 	defer cleanup()
 
-	if answered, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); answered {
+	if answered, _, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); answered {
 		t.Error("a non-SOCKS5 responder was scored as a SynAck")
 	}
 }
@@ -171,7 +173,7 @@ func TestReview_ProbeSocks5Connect_AuthRequiredWithCredsScores(t *testing.T) {
 	addr, cleanup := listenSocks5AuthRequired(t, 0x00)
 	defer cleanup()
 
-	if answered, _ := probeSocks5Connect(context.Background(), addr, "user", "pass", net.ParseIP("93.184.216.34"), 443, time.Second); !answered {
+	if answered, _, _ := probeSocks5Connect(context.Background(), addr, "user", "pass", net.ParseIP("93.184.216.34"), 443, time.Second); !answered {
 		t.Fatal("an auth-required proxy with correct RFC 1929 credentials must complete the CONNECT")
 	}
 }
@@ -190,7 +192,7 @@ func TestReview_ProbeSocks5Connect_AuthRequiredNoCredsFails(t *testing.T) {
 	})
 	defer cleanup()
 
-	if answered, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); answered {
+	if answered, _, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); answered {
 		t.Error("an auth-required proxy with no credentials must not be scored as a SynAck")
 	}
 }
@@ -215,7 +217,7 @@ func TestReview_ProbeSocks5Connect_DomainReplyAccepted(t *testing.T) {
 	})
 	defer cleanup()
 
-	if answered, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); !answered {
+	if answered, _, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); !answered {
 		t.Error("a short-domain CONNECT reply must be scored as a SynAck (parsed by ATYP, not fixed length)")
 	}
 }
@@ -242,7 +244,7 @@ func TestReview_ProbeSocks5Connect_IPv6ReplyAccepted(t *testing.T) {
 	})
 	defer cleanup()
 
-	if answered, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); !answered {
+	if answered, _, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); !answered {
 		t.Error("an IPv6 BND.ADDR CONNECT reply must be scored as a SynAck (parsed by ATYP, not fixed length)")
 	}
 }
@@ -268,7 +270,7 @@ func TestReview_ProbeSocks5Connect_TruncatedDomainReplyRejected(t *testing.T) {
 	})
 	defer cleanup()
 
-	if answered, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); answered {
+	if answered, _, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, time.Second); answered {
 		t.Error("a truncated domain reply must not be scored as a SynAck")
 	}
 }
@@ -1453,4 +1455,39 @@ func seedProbeDNSForAddress(t *testing.T, address string, passes ...uint64) {
 			delete(probeDNSCache.m, h)
 		}
 	})
+}
+
+// TestProbeSocks5ConnectExcludesTheLimiterWait pins the measurement to the
+// proxy's own cost. A pass that queues behind a crowded token bucket used to
+// report the queueing as dial latency, which charged a fast proxy for this
+// box's congestion.
+func TestProbeSocks5ConnectExcludesTheLimiterWait(t *testing.T) {
+	addr, connects, cleanup := listenSocks5Sequenced(t, func(int) byte { return 0x00 })
+	defer cleanup()
+
+	oldLimiter := globalProbeDialLimiter
+	// Burst of one, one token per second: the first call runs immediately, the
+	// second must queue about a second.
+	globalProbeDialLimiter = rate.NewLimiter(rate.Limit(1), 1)
+	defer func() { globalProbeDialLimiter = oldLimiter }()
+
+	if answered, attempted, _ := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, 5*time.Second); !answered || !attempted {
+		t.Fatalf("first probe = answered %v attempted %v, want both true", answered, attempted)
+	}
+
+	started := time.Now()
+	answered, attempted, dial := probeSocks5Connect(context.Background(), addr, "", "", net.ParseIP("93.184.216.34"), 443, 5*time.Second)
+	queued := time.Since(started)
+	if !answered || !attempted {
+		t.Fatalf("second probe = answered %v attempted %v, want both true", answered, attempted)
+	}
+	if queued < 300*time.Millisecond {
+		t.Skipf("the second call did not queue (waited %s); the bucket was refilled, nothing to measure", queued)
+	}
+	if dial > queued/2 {
+		t.Fatalf("reported dial %s out of %s wall clock: the limiter wait is inside the measurement", dial, queued)
+	}
+	if connects != nil && connects.Load() < 2 {
+		t.Fatalf("server saw %d connects, want 2", connects.Load())
+	}
 }

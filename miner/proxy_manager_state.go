@@ -75,6 +75,7 @@ type ProxyEntry struct {
 	Score       float64   `json:"score,omitempty"`        // stage-1 table probe result (ok/total), 0 = never graded
 	Graded      bool      `json:"graded,omitempty"`       // true once a stage-1 table probe recorded a DECIDABLE result
 	Failed      []string  `json:"failed,omitempty"`       // target hostnames that did not answer the last stage-1 pass
+	DialMS      int64     `json:"dial_ms,omitempty"`      // median connect cost of the targets that answered, ms
 	LastGraded  time.Time `json:"last_graded,omitempty"`  // when the last stage-1 pass ran
 	LastDecided time.Time `json:"last_decided,omitempty"` // when the last DECIDABLE stage-1 pass landed
 	Pending     bool      `json:"pending,omitempty"`      // reached but not decidable on the last stage-1 pass
