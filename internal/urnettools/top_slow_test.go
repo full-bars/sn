@@ -368,7 +368,7 @@ func TestTopHealthyCadenceIsUnchangedByTheCompletionRule(t *testing.T) {
 // it, and the request and reply get only what is left; setting the deadline after
 // the dial gave them a second full budget.
 func TestSocketRequestDeadlineIsFixedBeforeDialing(t *testing.T) {
-	dir := t.TempDir()
+	dir := socketTempDir(t)
 	path := filepath.Join(dir, "p.sock")
 	ln, err := net.Listen("unix", path)
 	if err != nil {

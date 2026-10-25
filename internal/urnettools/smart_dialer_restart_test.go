@@ -17,7 +17,7 @@ import (
 // state, which the provider applies as off at startup), so both paths are
 // pinned here.
 func TestSmartDialerSetAndClearSayRestartNotLive(t *testing.T) {
-	dir := t.TempDir()
+	dir := socketTempDir(t)
 	sockPath := filepath.Join(dir, "provider.sock")
 	srv := startMockControlServer(t, sockPath)
 	defer srv.Close()
