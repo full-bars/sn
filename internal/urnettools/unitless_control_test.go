@@ -274,7 +274,7 @@ func TestProviderOperationalNotes_Unitless(t *testing.T) {
 func TestProviderOperationalNotes_NoUnitlessNoNote(t *testing.T) {
 	// A unit-backed running provider whose control socket is up must get no
 	// notes; stopped rows never get notes.
-	stateDir := t.TempDir()
+	stateDir := socketTempDir(t)
 	sockPath := stateDir + "/provider.sock"
 	ln, err := net.Listen("unix", sockPath)
 	if err != nil {

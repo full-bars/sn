@@ -44,7 +44,7 @@ func TestNoClientDialsControlSock(t *testing.T) {
 // listener at provider.sock receives the request the metrics command sends.
 // Without the fix the command dials control.sock and never arrives.
 func TestMetricsCommandReachesProviderSocket(t *testing.T) {
-	dir := t.TempDir()
+	dir := socketTempDir(t)
 	sock := filepath.Join(dir, "provider.sock")
 
 	ln, err := net.Listen("unix", sock)
