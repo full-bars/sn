@@ -267,17 +267,12 @@ func notifySystemdStatus(text string) error {
 // killed a healthy provider at every interval (systemd Result=timeout). That
 // restart is what reset the 3.23-fix identity import before it could commit.
 func startSystemdWatchdog() {
-	usec := os.Getenv("WATCHDOG_USEC")
-	if usec == "" {
+	// Same derivation as the liveness loop (sdWatchdogInterval), so the two
+	// cannot disagree about the cadence and a unit with a short WatchdogSec gets
+	// a ping well inside its timeout instead of one at the timeout.
+	every, ok := sdWatchdogInterval(os.Getenv)
+	if !ok {
 		return
-	}
-	interval, err := time.ParseDuration(usec + "us")
-	if err != nil || interval <= 0 {
-		return
-	}
-	every := interval / 3
-	if every < time.Second {
-		every = time.Second
 	}
 	go func() {
 		ticker := time.NewTicker(every)
