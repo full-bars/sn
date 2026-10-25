@@ -1314,6 +1314,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		rawCancel()
 		joinHealthLoop(proxyHistoryPruneDone, "proxy history prune")
 	}()
+	// Startup barrier. The control socket is bound and control state is
+	// loaded, so the miner is self-managing; the proxy launch below is retry
+	// loops that supervise themselves. READY must not wait for any proxy: see
+	// announceStartupComplete. A HotSwap candidate does not own the unit yet
+	// and signals after its takeover (hotSwapTakeoverCandidate).
+	if !self.hotSwapCandidate {
+		announceStartupComplete()
+	}
 	// systemd's watchdog runs from the start of the unit's life: feed it
 	// through the whole of startup, not only once the proxy list is loaded.
 	// Inert without WATCHDOG_USEC and without a self-exit supervisor
