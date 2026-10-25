@@ -115,6 +115,9 @@ func TestProviderBringUpStartStopIdempotent(t *testing.T) {
 }
 
 func TestProviderBringUpControlReachedUpdatesFinalTally(t *testing.T) {
+	resetControlReached()
+	t.Cleanup(resetControlReached)
+
 	buffer := captureProviderBringUpLog(t)
 	tracker := newProviderBringUpTracker(1)
 	tracker.start()
