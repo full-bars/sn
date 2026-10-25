@@ -5,7 +5,9 @@ package miner
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -98,4 +100,92 @@ func reportTrimFailure(warned *bool, warnTime *time.Time, path string, err error
 	*warned = true
 	*warnTime = now
 	fmt.Fprintf(os.Stderr, "[ramlogs] warning: cannot trim %s, leaving it oversized rather than losing history: %v\n", path, err)
+}
+
+// ramLogTrim is trimRAMLog behind a seam, so a test can hold a trim in
+// progress and watch what the pipe reader does meanwhile.
+var ramLogTrim = trimRAMLog
+
+// ramLogSink is one RAM log file (the main log or the important buffer) and
+// the lock that orders the pipe reader's writes against the trim, the sync and
+// the rotation.
+type ramLogSink struct {
+	mu sync.Mutex
+	f  *os.File
+}
+
+func newRAMLogSink(f *os.File) *ramLogSink {
+	return &ramLogSink{f: f}
+}
+
+// Write appends p. It is the only call the pipe reader makes.
+func (s *ramLogSink) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.f.Write(p)
+}
+
+// trim bounds the file in place (see trimRAMLog).
+func (s *ramLogSink) trim(maxSize, ratio int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return ramLogTrim(s.f, maxSize, ratio)
+}
+
+// sync flushes the file so a follower sees new lines promptly.
+func (s *ramLogSink) sync() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.f.Sync()
+}
+
+// rotate moves the file to path+".1" once it passes max (see
+// rotateImportantLog) and swaps in the fresh one.
+func (s *ramLogSink) rotate(path string, max int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return rotateImportantLog(&s.f, path, max)
+}
+
+func (s *ramLogSink) close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.f.Close()
+}
+
+// pumpRAMLog drains the ramlog pipe into main and mirrors complete important
+// lines into imp (nil disables the mirror) until r fails. Both tlog and glog
+// output flow through this pipe, so this captures [profit]/[earn]/[health]/etc.
+// regardless of which logger emits. Every glog/tlog write in the process waits
+// on this loop once the 64 KiB pipe buffer is full, so it must never wait on
+// anything slow.
+func pumpRAMLog(r io.Reader, main, imp *ramLogSink) {
+	buf := make([]byte, 32*1024)
+	var lineBuf []byte // accumulates a partial trailing line across reads
+	for {
+		n, err := r.Read(buf)
+		if n > 0 {
+			main.Write(buf[:n])
+			if imp != nil {
+				lineBuf = append(lineBuf, buf[:n]...)
+				for {
+					i := bytes.IndexByte(lineBuf, '\n')
+					if i < 0 {
+						break
+					}
+					line := lineBuf[:i+1] // include newline
+					if isImportantLogLine(string(line)) {
+						imp.Write(line)
+					}
+					lineBuf = lineBuf[i+1:]
+				}
+				if len(lineBuf) > 1<<20 { // guard a pathological no-newline stream
+					lineBuf = lineBuf[:0]
+				}
+			}
+		}
+		if err != nil {
+			return
+		}
+	}
 }

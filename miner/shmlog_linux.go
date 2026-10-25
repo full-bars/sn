@@ -3,7 +3,6 @@
 package miner
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -151,7 +150,7 @@ func initSHMLogger() {
 		dup2(int(w.Fd()), int(os.Stdout.Fd()))
 		dup2(int(w.Fd()), int(os.Stderr.Fd()))
 
-		var fMu sync.Mutex
+		mainLog := newRAMLogSink(f)
 
 		// Second buffer: high-value lines only. Best-effort; nil disables mirroring.
 		// O_RDWR for the same reason as the main log: the trimmer reads before
@@ -163,88 +162,46 @@ func initSHMLogger() {
 			impPath, impMax = shmImportantLogPath, int64(shmImportantLogMaxSizeRAM)
 			fImp, impErr = os.OpenFile(impPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 		}
+		var impLog *ramLogSink // nil disables mirroring; its file is swapped when it rotates
 		if impErr != nil {
 			fmt.Fprintf(os.Stderr, "failed to open important log: %v\n", impErr)
-			fImp = nil
-		} else if impPath != shmImportantLogPath {
-			// the RAM file from before the move is never written again; leaving it
-			// would show operators stale data
-			os.Remove(shmImportantLogPath)
+		} else {
+			impLog = newRAMLogSink(fImp)
+			if impPath != shmImportantLogPath {
+				// the RAM file from before the move is never written again; leaving it
+				// would show operators stale data
+				os.Remove(shmImportantLogPath)
+			}
 		}
-		impEnabled := fImp != nil // fImp itself is swapped under fImpMu when it rotates
-		var fImpMu sync.Mutex
 
 		go func() {
-			defer fMu.Lock()
-			defer f.Close()
-			defer fMu.Unlock()
-			defer r.Close()
-			defer w.Close()
-
-			buf := make([]byte, 32*1024)
-			var lineBuf []byte // accumulates a partial trailing line across reads
-
-			for {
-				n, err := r.Read(buf)
-				if n > 0 {
-					fMu.Lock()
-					f.Write(buf[:n])
-					fMu.Unlock()
-
-					// Mirror complete important lines into the small buffer. Both
-					// tlog and glog output flow through this pipe, so this captures
-					// [profit]/[earn]/[health]/etc. regardless of which logger emit.
-					if impEnabled {
-						lineBuf = append(lineBuf, buf[:n]...)
-						for {
-							i := bytes.IndexByte(lineBuf, '\n')
-							if i < 0 {
-								break
-							}
-							line := lineBuf[:i+1] // include newline
-							if isImportantLogLine(string(line)) {
-								fImpMu.Lock()
-								fImp.Write(line)
-								fImpMu.Unlock()
-							}
-							lineBuf = lineBuf[i+1:]
-						}
-						if len(lineBuf) > 1<<20 { // guard a pathological no-newline stream
-							lineBuf = lineBuf[:0]
-						}
-					}
-				}
-				if err != nil {
-					break
-				}
-			}
+			pumpRAMLog(r, mainLog, impLog)
+			// Unreachable in practice: this process holds w open, so the read
+			// never sees EOF. Close in a valid order if it ever does.
+			w.Close()
+			r.Close()
+			mainLog.close()
 		}()
 
 		// Keep the important buffer bounded. On disk it rotates by rename (one
 		// previous file, no in-place rewrite, no periodic fsync: the lines are
 		// rare and a crash may lose the last few seconds). The RAM fallback is
 		// trimmed in place like the main log.
-		if impEnabled {
+		if impLog != nil {
 			go func() {
 				for {
 					time.Sleep(5 * time.Second)
-					fImpMu.Lock()
+					var err error
 					if impPath == shmImportantLogPath {
-						err := trimRAMLog(fImp, impMax, shmLogTrimRatio)
-						if err == nil {
-							fImp.Sync()
+						if err = impLog.trim(impMax, shmLogTrimRatio); err == nil {
+							impLog.sync()
 						}
-						if err != nil {
-							fImpMu.Unlock()
-							reportTrimFailure(&impTrimWarned, &impTrimWarnTime, impPath, err)
-							continue
-						}
-					} else if err := rotateImportantLog(&fImp, impPath, impMax); err != nil {
-						fImpMu.Unlock()
-						reportTrimFailure(&impTrimWarned, &impTrimWarnTime, impPath, err)
-						continue
+					} else {
+						err = impLog.rotate(impPath, impMax)
 					}
-					fImpMu.Unlock()
+					if err != nil {
+						reportTrimFailure(&impTrimWarned, &impTrimWarnTime, impPath, err)
+					}
 				}
 			}()
 		}
@@ -257,10 +214,7 @@ func initSHMLogger() {
 		go func() {
 			for {
 				time.Sleep(5 * time.Second)
-				fMu.Lock()
-				err := trimRAMLog(f, shmLogMaxSize, shmLogTrimRatio)
-				fMu.Unlock()
-				if err != nil {
+				if err := mainLog.trim(shmLogMaxSize, shmLogTrimRatio); err != nil {
 					reportTrimFailure(&mainTrimWarned, &mainTrimWarnTime, shmLogPath, err)
 				}
 			}
@@ -270,9 +224,7 @@ func initSHMLogger() {
 		go func() {
 			for {
 				time.Sleep(500 * time.Millisecond)
-				fMu.Lock()
-				f.Sync()
-				fMu.Unlock()
+				mainLog.sync()
 			}
 		}()
 	})
