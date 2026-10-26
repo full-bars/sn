@@ -109,11 +109,10 @@ func TestProviderBringUpCountsControlReachedAndWarnsWhenMissing(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	text := buffer.String()
-	if !strings.Contains(text, "📡 [control] provider 0 (proxy:10.0.0.1:1080) reached the control plane via fragment in 120ms") {
-		t.Fatalf("reached line missing:\n%s", text)
-	}
-	if strings.Count(text, "provider 0 (proxy:10.0.0.1:1080) reached") != 1 {
-		t.Fatalf("reached narrated more than once:\n%s", text)
+	// The dial is already in the log as the library's select line, so the
+	// tracker must not narrate it a second time.
+	if strings.Contains(text, "reached the control plane via") {
+		t.Fatalf("reached narrated a second time:\n%s", text)
 	}
 	// No individual per-slot warning for the unreached slot.
 	if strings.Contains(text, "provider 1 (proxy:10.0.0.2:1080) authenticated but has not reached the control plane") {
