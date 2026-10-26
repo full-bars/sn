@@ -904,6 +904,8 @@ func printToolVersionAndProviders() {
 		fmt.Println("  no providers discovered")
 		return
 	}
+	toolPath := toolLineage()
+	mismatched := false
 	for _, p := range providers {
 		status := "running"
 		if !p.Running {
@@ -919,5 +921,31 @@ func printToolVersionAndProviders() {
 		}
 		fmt.Printf("  %s: %s (%s, pid %d)%s\n",
 			providerLabel(p), version, status, p.PID, stale)
+		// A version mismatch is ordinary drift; a lineage mismatch means the
+		// tool and the provider are different engines, and the tool's own
+		// updater would replace the provider with the wrong one.
+		providerPath := providerLineage(p.Binary)
+		if lineageMismatch(toolPath, providerPath) {
+			mismatched = true
+			fmt.Printf("  WARN %s is from %s, this tool is from %s\n",
+				providerLabel(p), providerPath, toolPath)
+			// Print the exact fix instead of performing it. Replacing a
+			// running binary on an unattended host is a blast radius the tool
+			// does not need: the download is two lines the operator can run.
+			providerVersion := p.Version
+			if providerVersion == "" {
+				providerVersion = providerVersionReadOnly(p.Binary)
+			}
+			if repo, ok := releaseRepoForProvider(providerPath, providerVersion); ok && providerVersion != "" {
+				if self, err := os.Executable(); err == nil {
+					goos, goarch := hostPlatform()
+					fmt.Println("  fix: install the tool from the provider's own release:")
+					fmt.Println(toolInstallHint(repo, providerVersion, self, goos, goarch))
+				}
+			}
+		}
+	}
+	if mismatched {
+		fmt.Println("  this tool's updater would replace that provider with the wrong engine; do not run `urnet-tools update` until it matches.")
 	}
 }
