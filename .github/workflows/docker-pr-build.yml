@@ -1,0 +1,109 @@
+name: docker-pr-build
+
+# Pre-merge coverage for the Docker image. docker-shakedown.yml only runs on
+# workflow_dispatch and v2026.* tags and pulls the PUBLISHED image, so a change
+# under docker/ or to the Dockerfile reached main with no Docker check at all.
+# This builds the image from the checkout and runs the subset of the shakedown
+# that needs no credentials and no network. The authenticated checks stay in
+# tool-functional-smoke.yml (docker-provider-functional) and docker-shakedown.yml.
+#
+# It never mints a JWT, so it deliberately does NOT join the gauntlet-auth
+# group: that group allows one running and one pending run repo-wide, and a
+# newer pending run cancels the older one, which would silently drop this
+# check. Its own group is per PR head ref, with cancel-in-progress so a push
+# supersedes the previous run of the same branch, as build.yml does.
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docker/**'
+      - 'Dockerfile'
+      - 'Dockerfile.miner'
+      - 'cmd/urnet-docker/**'
+      - '.github/workflows/docker-pr-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  docker-pr-build:
+    name: docker image build + credential-free checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      IMG: sn-pr:local
+      # Distinct from the default so the version assertions below prove the
+      # build arg reached the binaries, not a coincidental default.
+      WANT_VERSION: pr-docker-build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Syntax-check the image scripts
+        run: |
+          for f in docker/scripts/*.sh docker/miner/*.sh; do
+            bash -n "$f" || { echo "::error file=$f::shell syntax error"; exit 1; }
+          done
+
+      - name: Build image from checkout
+        run: docker build --build-arg VERSION="$WANT_VERSION" -t "$IMG" .
+
+      - name: Binaries report the stamped version
+        run: |
+          for bin in urnet-docker urnet-tools; do
+            out=$(docker run --rm --entrypoint "$bin" "$IMG" version 2>&1) \
+              || { echo "::error::$bin version exited non-zero: $out"; exit 1; }
+            echo "$bin version: $out"
+            printf '%s' "$out" | grep -qF "$WANT_VERSION" \
+              || { echo "::error::$bin version does not contain $WANT_VERSION"; exit 1; }
+          done
+
+      - name: Entrypoint starts and fails fast without credentials
+        run: |
+          set +e
+          out=$(docker run --rm "$IMG" 2>&1)
+          rc=$?
+          set -e
+          echo "$out"
+          [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 without USER_AUTH/PASSWORD, got $rc"; exit 1; }
+          echo "$out" | grep -qF "Script version:" \
+            || { echo "::error::entrypoint did not print its version banner"; exit 1; }
+          echo "$out" | grep -qF "USER_AUTH or PASSWORD not set" \
+            || { echo "::error::start_stable.sh did not report the missing credentials"; exit 1; }
+
+      - name: Entrypoint rejects an unknown BUILD
+        run: |
+          set +e
+          out=$(docker run --rm -e BUILD=bogus "$IMG" 2>&1)
+          rc=$?
+          set -e
+          echo "$out"
+          [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 for BUILD=bogus, got $rc"; exit 1; }
+          echo "$out" | grep -qF "Invalid build: bogus" \
+            || { echo "::error::entrypoint did not report the invalid build"; exit 1; }
+
+      - name: urnet-docker status on an empty box
+        # No provider container exists in the throwaway container, so status
+        # must refuse with its documented message (internal/urnettools/
+        # select_multi.go) and exit 1, and providers must report none and
+        # exit 0.
+        run: |
+          set +e
+          out=$(docker run --rm --entrypoint urnet-docker "$IMG" status 2>&1)
+          rc=$?
+          set -e
+          echo "$out"
+          [ "$rc" -eq 1 ] || { echo "::error::urnet-docker status: expected exit 1, got $rc"; exit 1; }
+          echo "$out" | grep -qF "no providers found on this box" \
+            || { echo "::error::urnet-docker status did not report an empty box"; exit 1; }
+          out=$(docker run --rm --entrypoint urnet-docker "$IMG" providers 2>&1)
+          echo "$out"
+          echo "$out" | grep -qF "no provider containers found" \
+            || { echo "::error::urnet-docker providers did not report an empty box"; exit 1; }
