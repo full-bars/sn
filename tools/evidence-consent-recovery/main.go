@@ -336,6 +336,11 @@ func writeRecoveryProjectionWithHooks(ctx context.Context, path string, raw []by
 		writeErr = errors.Join(writeErr, io.ErrShortWrite)
 	}
 	if err := errors.Join(writeErr, file.Sync(), file.Close()); err != nil {
+		// The file exists but its bytes may be short or unflushed. Remove it
+		// through the directory descriptor: a retry with the same path would
+		// otherwise fail with EEXIST, and a partial file reads like a valid
+		// export to anything scanning the directory without the receipt.
+		_ = unix.Unlinkat(int(directory.Fd()), filepath.Base(path), 0)
 		return err
 	}
 	if err := errors.Join(directory.Sync(), ctx.Err()); err != nil {
