@@ -111,11 +111,13 @@ fi
 # Assign EXPECTED_BASE BEFORE the guard references it: under set -u, using an
 # unset variable aborts the run at startup. This was after the
 # guard, so every run died in its first second and then graded RELEASE_OK).
-EXPECTED_BASE=$(echo "$EXPECTED_VERSION" | grep -oE "v3\.23\.0-fix\.[0-9]+" | head -1)
+EXPECTED_BASE=$(echo "$EXPECTED_VERSION" | grep -oE "v3\.23\.0-fix\.[0-9]+|v20[0-9]{2}\.[0-9]+\.[0-9]+-[0-9]+" | head -1)
 # EXPECTED_BASE empty would make grep -qE "" match anything, so every version
-# check would vacuously pass on a future v3.24 tag. Guard it.
+# check would vacuously pass on a future v3.24 tag. Guard it. Both tag schemes
+# are accepted: the v3.23.0-fix.N lineage and the date-epoch scheme this fork
+# tags with now (v2026.10.26-1793016775).
 if [ -z "$EXPECTED_BASE" ]; then
-  echo "FAIL: EXPECTED_VERSION $EXPECTED_VERSION does not match v3.23.0-fix.N pattern" | tee -a "$REPORT"
+  echo "FAIL: EXPECTED_VERSION $EXPECTED_VERSION does not match v3.23.0-fix.N or v<date>-<epoch>" | tee -a "$REPORT"
   exit 75
 fi
 # TOOL_VERSION is read AFTER the install in section A/C.
