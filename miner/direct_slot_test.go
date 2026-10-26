@@ -178,6 +178,45 @@ func TestDirectSlotIndexFindsTheNilEntry(t *testing.T) {
 	}
 }
 
+// Proxies are additional egress, not a replacement: a run with proxies still
+// gets one direct slot when direct providing is on, and loses it only when the
+// operator turns direct off.
+func TestWithDirectSlotKeepsTheDirectSlotBesideProxies(t *testing.T) {
+	proxyA := &connect.ProxySettings{}
+	proxyB := &connect.ProxySettings{}
+	cases := []struct {
+		name    string
+		proxies []*connect.ProxySettings
+		enabled bool
+		wantLen int
+		wantNil bool
+	}{
+		{"proxies and direct on", []*connect.ProxySettings{proxyA, proxyB}, true, 3, true},
+		{"proxies and direct off", []*connect.ProxySettings{proxyA}, false, 1, false},
+		{"no proxies and direct off", nil, false, 1, true},
+		{"no proxies and direct on", nil, true, 1, true},
+	}
+	for _, tc := range cases {
+		got := withDirectSlot(tc.proxies, tc.enabled)
+		if len(got) != tc.wantLen {
+			t.Fatalf("%s: len=%d want %d", tc.name, len(got), tc.wantLen)
+		}
+		last := got[len(got)-1]
+		if (last == nil) != tc.wantNil {
+			t.Fatalf("%s: last entry nil=%v want %v", tc.name, last == nil, tc.wantNil)
+		}
+		if _, ok := directSlotIndex(got); ok != tc.wantNil {
+			t.Fatalf("%s: direct slot present=%v want %v", tc.name, ok, tc.wantNil)
+		}
+		// A proxy keeps the position its settings were published under.
+		for i := range tc.proxies {
+			if got[i] != tc.proxies[i] {
+				t.Fatalf("%s: proxy %d moved", tc.name, i)
+			}
+		}
+	}
+}
+
 // The reloader applies the operator's direct toggle and leaves the proxy pool
 // alone: the direct slot is not a proxy identity and never enters the
 // reloader's registry.

@@ -935,6 +935,10 @@ func provideWith(opts docopt.Opts, start bool) {
 		fmt.Fprintf(os.Stderr, "proxy state error: %s\n", err)
 		os.Exit(1)
 	}
+	// The direct slot is part of the run, not a fallback for a run with no
+	// proxies: it carries the host's own egress and it is the only slot that can
+	// hold the extender role. See withDirectSlot.
+	allProxySettings = withDirectSlot(allProxySettings, isDirectEnabled())
 	// Registered BEFORE proxyManager.stop() on purpose: defers run LIFO, so
 	// this final drain runs AFTER the manager's loops have quiesced. A reload
 	// or trim evaluation inside desired()→noteTrimSelection while the manager
