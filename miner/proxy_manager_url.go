@@ -735,9 +735,22 @@ func removeExcludePattern(state *ProxyURLState, pattern string) bool {
 
 // ---- SSRF guard (v33 ssrf_guard.go) ----
 
-// ssrfAllowLoopback allows loopback dials/redirects when true. This is used
-// exclusively in unit tests to allow httptest.NewServer mock endpoints.
+// ssrfAllowLoopback allows loopback dials/redirects when true. Tests use it
+// directly.
 var ssrfAllowLoopback atomic.Bool
+
+// ssrfAllowPrivate allows loopback AND private (RFC1918) targets when true.
+// It exists for the integration smoke tests, whose fixture server is reached
+// over the Docker bridge (172.17.0.1) rather than loopback. Production never
+// sets it, and the unit-test switch above stays loopback-only so a private
+// address is still refused there.
+var ssrfAllowPrivate atomic.Bool
+
+func init() {
+	if os.Getenv("URNETWORK_ALLOW_PRIVATE_SOURCES") == "1" {
+		ssrfAllowPrivate.Store(true)
+	}
+}
 
 // isBlockedSourceIP reports whether ip must never be contacted by a fetcher.
 func isBlockedSourceIP(ip net.IP) bool {
@@ -745,6 +758,9 @@ func isBlockedSourceIP(ip net.IP) bool {
 		return true // unresolvable - treat as unsafe
 	}
 	if ssrfAllowLoopback.Load() && ip.IsLoopback() {
+		return false
+	}
+	if ssrfAllowPrivate.Load() && (ip.IsLoopback() || ip.IsPrivate()) {
 		return false
 	}
 	return ip.IsLoopback() ||

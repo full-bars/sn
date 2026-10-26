@@ -2,8 +2,14 @@ name: tool-functional-smoke
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+  # Main-branch validation runs on a schedule, not on every merge. A merge
+  # entering the shared gauntlet-auth group cancels the older *pending* PR
+  # run (GitHub keeps only one pending run per group), so push:main starved
+  # PR verification: the PR's smoke silently disappeared and the checks list
+  # showed a cancelled run with no jobs. Daily validation of main plus the
+  # pre-merge PR run covers the same ground without evicting anyone.
+  schedule:
+    - cron: '0 6 * * *'
   pull_request:
     paths-ignore:
       - '**/*.md'
@@ -226,6 +232,14 @@ jobs:
           go build -o /tmp/urnet-docker ./cmd/urnet-docker/
           go build -o /tmp/urnet-tools ./cmd/urnet-tools/
 
+      - name: Build provider image from checkout
+        # The smoke must exercise THIS commit's provider, not the published
+        # ghcr.io image. Pulling :main meant a PR could only ever test main's
+        # code, so a workflow assertion added on a branch could never see the
+        # branch's behavior. Build locally and tag it for the run step.
+        run: |
+          docker build -t sn-smoke:local .
+
       - name: Prepare proxy file
         run: |-
           mkdir -p /tmp/docker-test
@@ -235,6 +249,7 @@ jobs:
           # (monosans/proxy-list, tens of thousands of lines) made CI depend on
           # that repo and fed the provider a list large enough to die on the
           # stage-1 probe. Kept local so the test is hermetic and fast.
+          #
           printf '127.0.0.1:10001\n127.0.0.1:10002\n' > /tmp/docker-test/proxies.txt
 
       - name: Start provider container (BUILD=stable, user/pass auth)
@@ -249,8 +264,9 @@ jobs:
             -e BUILD=stable \
             -e USER_AUTH="$GAUNTLET_USER" \
             -e PASSWORD="$GAUNTLET_PW" \
+            -e URNETWORK_ALLOW_PRIVATE_SOURCES=1 \
             -v /tmp/docker-test/proxy.txt:/app/proxy.txt \
-            ghcr.io/full-bars/sn:main
+            sn-smoke:local
           echo "container started; waiting for auth..."
           sleep 60
           docker ps --filter name=urnet-test --format "{{.Names}} {{.Status}}"
@@ -326,9 +342,22 @@ jobs:
           # so the fetch cannot depend on a third-party repo or hand the
           # provider a list big enough to die on.
           (cd /tmp/docker-test && setsid python3 -m http.server 8099 --bind 0.0.0.0 >/tmp/http-server.log 2>&1 &)
-          sleep 2
-          curl -fsS http://127.0.0.1:8099/proxies.txt
-          /tmp/urnet-docker proxy add-source "http://host.docker.internal:8099/proxies.txt"
+          # Bounded readiness retry instead of a fixed sleep: a slow server start
+          # must not fail the step before add-source runs.
+          curl -fsS --retry 10 --retry-delay 1 --retry-connrefused http://127.0.0.1:8099/proxies.txt
+          out=$(/tmp/urnet-docker proxy add-source "http://host.docker.internal:8099/proxies.txt" 2>&1)
+          rc=$?
+          echo "$out"
+          # add-source only records the URL; the provider fetches asynchronously
+          # and logs the result. "fetched N lines" proves the CONTAINER fetched
+          # and parsed the source. A failure prints "fetch failed"/"refusing"
+          # instead, which is exactly the false green this assertion closes.
+          if [ "$rc" -ne 0 ] || ! printf '%s' "$out" | grep -q "fetched 2 lines"; then
+            echo "::error::container did not fetch the URL source"
+            /tmp/urnet-docker summary || true
+            exit 1
+          fi
+          echo "container fetched the URL source"
 
       - name: urnet-docker proxy remove-source (the URL source)
         run: |
