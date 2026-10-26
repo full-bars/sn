@@ -326,9 +326,25 @@ jobs:
           # so the fetch cannot depend on a third-party repo or hand the
           # provider a list big enough to die on.
           (cd /tmp/docker-test && setsid python3 -m http.server 8099 --bind 0.0.0.0 >/tmp/http-server.log 2>&1 &)
-          sleep 2
-          curl -fsS http://127.0.0.1:8099/proxies.txt
+          # Bounded readiness retry instead of a fixed sleep: a slow server start
+          # must not fail the step before add-source runs.
+          curl -fsS --retry 10 --retry-delay 1 --retry-connrefused http://127.0.0.1:8099/proxies.txt
           /tmp/urnet-docker proxy add-source "http://host.docker.internal:8099/proxies.txt"
+          # add-source only records the URL; the provider fetches asynchronously.
+          # Poll the summary until the fetched addresses are cached, so this step
+          # proves the CONTAINER fetched the source rather than just registering it.
+          cached=0
+          for i in $(seq 1 20); do
+            cached=$(/tmp/urnet-docker summary 2>/dev/null | sed -n 's/^  Cached addresses:   \([0-9][0-9]*\)$/\1/p' | head -1)
+            [ "${cached:-0}" -ge 2 ] && break
+            sleep 2
+          done
+          if [ "${cached:-0}" -lt 2 ]; then
+            echo "::error::container never cached the fetched source (cached=${cached:-0})"
+            /tmp/urnet-docker summary || true
+            exit 1
+          fi
+          echo "container cached $cached addresses from the URL source"
 
       - name: urnet-docker proxy remove-source (the URL source)
         run: |
