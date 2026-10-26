@@ -100,15 +100,25 @@ func authBackoffPath() (string, error) {
 
 func readAuthBackoffState() authBackoffState {
 	var st authBackoffState
+	// The provider's one store holds the streak. The standalone file is the
+	// fallback for a node whose store cannot be opened, which is the same state
+	// the store migrated from.
+	if store := providerStoreInstance(); store != nil {
+		store.load(providerStoreBucketState, providerStoreKeyAuthBackoff, &st)
+		return st
+	}
 	if path, err := authBackoffPath(); err == nil {
 		oomReadJSON(path, &st)
 	}
 	return st
 }
 
-// writeAuthBackoffState is temp + fsync + rename, under the same state-file
-// lock oomWriteJSON uses so a HotSwap parent and candidate cannot interleave.
+// writeAuthBackoffState stores the streak in the provider store. The file path
+// below stays as the fallback when the store is unavailable.
 func writeAuthBackoffState(st authBackoffState) error {
+	if store := providerStoreInstance(); store != nil {
+		return store.save(providerStoreBucketState, providerStoreKeyAuthBackoff, st)
+	}
 	path, err := authBackoffPath()
 	if err != nil {
 		return err

@@ -23,6 +23,7 @@ require (
 	github.com/urnetwork/sdk v0.0.0
 	github.com/urnetwork/server v0.0.0
 	github.com/vedhavyas/go-subkey/v2 v2.0.0
+	go.etcd.io/bbolt v1.4.3
 	golang.org/x/crypto v0.57.0
 	golang.org/x/net v0.60.0
 	golang.org/x/sys v0.48.0
