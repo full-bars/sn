@@ -107,6 +107,9 @@ type providerBringUpTracker struct {
 	identities map[uint64]bool
 	// reached is the slots whose first dial through their proxy succeeded.
 	reached map[uint64]bool
+	// reachedIdentities dedupes reached by proxy identity: a reload gives the
+	// same proxy a new slot index, and the count must not double.
+	reachedIdentities map[string]bool
 	// watches holds each authenticated slot's pending "never reached" check.
 	watches map[uint64]*time.Timer
 	// overdue is the slots whose grace expired without reaching the control
@@ -138,15 +141,16 @@ type providerBringUpTracker struct {
 
 func newProviderBringUpTracker(total int) *providerBringUpTracker {
 	return &providerBringUpTracker{
-		total:      total,
-		states:     map[uint64]string{},
-		identities: map[uint64]bool{},
-		reached:    map[uint64]bool{},
-		watches:    map[uint64]*time.Timer{},
-		overdueSet: map[uint64]bool{},
-		displays:   map[uint64]string{},
-		authAt:     map[uint64]time.Time{},
-		stopCh:     make(chan struct{}),
+		total:             total,
+		states:            map[uint64]string{},
+		identities:        map[uint64]bool{},
+		reached:           map[uint64]bool{},
+		reachedIdentities: map[string]bool{},
+		watches:           map[uint64]*time.Timer{},
+		overdueSet:        map[uint64]bool{},
+		displays:          map[uint64]string{},
+		authAt:            map[uint64]time.Time{},
+		stopCh:            make(chan struct{}),
 	}
 }
 
@@ -264,7 +268,7 @@ func (self *providerBringUpTracker) emit() {
 	}
 	pending := self.total - self.running - self.failed
 	reused, minted := self.identityCounts()
-	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reached))
+	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reachedIdentities))
 	self.mu.Unlock()
 	tlog("%s\n", line)
 }
@@ -276,18 +280,19 @@ func (self *providerBringUpTracker) emitStartupSummary() {
 		return
 	}
 	self.mu.Lock()
-	if self.closed {
+	if self.closed || self.total == 0 {
 		self.mu.Unlock()
 		return
 	}
+	total := self.total
 	running := self.running
-	pending := self.total - self.running - self.failed
+	pending := total - self.running - self.failed
 	failed := self.failed
 	reused, minted := self.identityCounts()
-	reached := len(self.reached)
+	reached := len(self.reachedIdentities)
 	self.mu.Unlock()
 	tlog("[startup] %d slots: %d auth ok, %d pending, %d failed (%d reused, %d new); control-connected %d\n",
-		self.total, running, pending, failed, reused, minted, reached)
+		total, running, pending, failed, reused, minted, reached)
 }
 
 // authReused narrates one slot's reused authentication and moves it to
@@ -372,6 +377,10 @@ func (self *providerBringUpTracker) watchControl(index uint64, display string) {
 // is repeated. A count that changes prints on the next tick.
 const providerControlSummaryInterval = 5 * time.Minute
 
+// providerControlChangeGap is the shortest gap between two tallies that report
+// a changed count: a pool that flaps would otherwise print on every tick.
+const providerControlChangeGap = time.Minute
+
 // reportOverdue prints one tally for the slots whose grace expired without
 // reaching the control plane: how many of the authenticated identities are
 // still not connected, how long the oldest has waited, and a bounded sample of
@@ -384,41 +393,42 @@ func (self *providerBringUpTracker) reportOverdue() {
 		return
 	}
 	self.mu.Lock()
-	if self.closed || len(self.overdue) == 0 {
+	if self.closed {
 		self.mu.Unlock()
 		return
 	}
 	now := time.Now()
 	notConnected := 0
 	oldestAge := time.Duration(0)
+	sample := make([]string, 0, providerControlNameLimit)
 	for index := range self.identities {
-		if self.reached[index] {
+		if self.reached[index] || self.states[index] != "running" {
 			continue
 		}
 		notConnected++
+		if len(sample) < providerControlNameLimit {
+			sample = append(sample, strings.TrimPrefix(self.displays[index], "proxy:"))
+		}
 		if authAt, ok := self.authAt[index]; ok {
 			if age := now.Sub(authAt); oldestAge < age {
 				oldestAge = age
 			}
 		}
 	}
-	// The queue orders the sample by expiry; every entry in it is already
-	// counted above, so it is drained here whether or not a line is due.
-	sample := make([]string, 0, providerControlNameLimit)
-	for _, index := range self.overdue {
-		if providerControlNameLimit <= len(sample) {
-			break
-		}
-		sample = append(sample, strings.TrimPrefix(self.displays[index], "proxy:"))
-	}
 	self.overdue = nil
 	self.overdueSet = map[uint64]bool{}
 	if notConnected == 0 {
+		// A later wave must print even when it lands on the same count as the
+		// wave before this quiet stretch.
+		self.lastNotConnected = 0
+		self.lastSummaryAt = time.Time{}
 		self.mu.Unlock()
 		return
 	}
-	due := notConnected != self.lastNotConnected || self.lastSummaryAt.IsZero() ||
-		providerControlSummaryInterval <= now.Sub(self.lastSummaryAt)
+	since := now.Sub(self.lastSummaryAt)
+	due := self.lastSummaryAt.IsZero() ||
+		(notConnected != self.lastNotConnected && providerControlChangeGap <= since) ||
+		providerControlSummaryInterval <= since
 	self.lastNotConnected = notConnected
 	if due {
 		self.lastSummaryAt = now
@@ -433,10 +443,11 @@ func (self *providerBringUpTracker) reportOverdue() {
 		notConnected, identities, formatDuration(providerControlGrace), formatDuration(oldestAge), strings.Join(sample, ", "))
 }
 
-// controlReached records a slot's first successful dial through its proxy and
-// narrates it once. When the final tally was already emitted, it emits an
-// updated tally with the reached slot included.
-func (self *providerBringUpTracker) controlReached(index uint64, display string, dur time.Duration, via string) {
+// controlReached records a slot's first successful dial through its proxy. The
+// dial itself is already in the log as the library's [net][s]select line, which
+// carries the slot label, the transport and the duration, so this adds no
+// narration of its own; the tally and the health line report the aggregate.
+func (self *providerBringUpTracker) controlReached(index uint64, display string, _ time.Duration, _ string) {
 	if self == nil {
 		return
 	}
@@ -451,13 +462,13 @@ func (self *providerBringUpTracker) controlReached(index uint64, display string,
 	// above already returns early for an index that reached before, so this is
 	// the belt to that braces.
 	noteControlReachedIdentity(display)
+	self.reachedIdentities[display] = true
 	if watch := self.watches[index]; watch != nil {
 		watch.Stop()
 		delete(self.watches, index)
 	}
 	shouldEmit := self.finished
 	self.mu.Unlock()
-	tlog("📡 [control] provider %d (%s) reached the control plane via %s in %dms\n", index, display, via, dur.Milliseconds())
 	if shouldEmit {
 		self.emit()
 	}
