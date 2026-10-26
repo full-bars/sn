@@ -1,0 +1,246 @@
+//go:build linux || darwin
+
+package validator
+
+import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"reflect"
+	"testing"
+)
+
+type preparedAuditRecoveryTestFixture struct {
+	fixture  *depositAuditPublicationV2TestFixture
+	manifest *ValidatorEvidenceDepositAuditV2Manifest
+	path     string
+	prepared []byte
+	locator  []byte
+}
+
+// The complete fixture uses the normal source reader, signer and publisher.
+func newPreparedAuditRecoveryTestFixture(t *testing.T) *preparedAuditRecoveryTestFixture {
+	t.Helper()
+	fixture := newDepositAuditPublicationV2TestFixture(t, "positive")
+	if err := fixture.base.runtime.publishDepositAuditV2(t.Context(), fixture.artifact); err != nil {
+		t.Fatal(err)
+	}
+	manifest, prepared := fixture.retained(t)
+	path, err := ValidatorEvidenceDepositAuditV2ManifestPath(fixture.base.runtime.cfg.StateDir, manifest.Epoch, manifest.Subject)
+	if err != nil {
+		t.Fatal(err)
+	}
+	locator, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &preparedAuditRecoveryTestFixture{fixture: fixture, manifest: manifest, path: path, prepared: prepared, locator: locator}
+}
+
+// Readers must preserve their actual selected bytes even when refusing them.
+func (self *preparedAuditRecoveryTestFixture) unchanged(t *testing.T, prepared, locator []byte) {
+	t.Helper()
+	actual, err := os.ReadFile(self.path)
+	if err != nil || !bytes.Equal(actual, locator) {
+		t.Fatalf("read-only projection changed completed locator: %v", err)
+	}
+	path := filepath.Join(self.fixture.base.runtime.cfg.StateDir, "evidence-deposit-audit-prepared", filepath.Base(self.path))
+	actual, err = os.ReadFile(path)
+	if err != nil || !bytes.Equal(actual, prepared) {
+		t.Fatalf("read-only projection changed selected prepared bytes: %v", err)
+	}
+}
+
+// The real producer persists original consent before public object loss.
+func TestPreparedDepositAuditRecoveryExportsOriginalAfterPublicLoss(t *testing.T) {
+	fixture := newDepositAuditPublicationV2TestFixture(t, "positive")
+	if err := fixture.base.runtime.publishDepositAuditV2(t.Context(), fixture.artifact); err != nil {
+		t.Fatal(err)
+	}
+	manifest, originalPrepared := fixture.retained(t)
+	var original releaseDepositAuditPreparedV2
+	if err := json.Unmarshal(originalPrepared, &original); err != nil {
+		t.Fatal(err)
+	}
+	path, err := ValidatorEvidenceDepositAuditV2ManifestPath(fixture.base.runtime.cfg.StateDir, manifest.Epoch, manifest.Subject)
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalLocator, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, store := range fixture.base.stores {
+		store.stateLock.Lock()
+		clear(store.objects)
+		store.stateLock.Unlock()
+	}
+	if _, err := ReadValidatorEvidenceDepositAuditV2(t.Context(), manifest, fixture.options); err == nil {
+		t.Fatal("synthetic public audit objects were not lost")
+	}
+	posts, reads := fixture.posts.Load(), fixture.publicReads.Load()
+	publication, err := ReadPreparedValidatorEvidenceDepositAuditV2(t.Context(), fixture.base.runtime.cfg.StateDir, sha256.Sum256(originalLocator), uint64(len(originalLocator)), fixture.options)
+	if err != nil || !reflect.DeepEqual(publication, original.Publication) {
+		t.Fatalf("original prepared public bytes unavailable after object loss: %v", err)
+	}
+	if fixture.posts.Load() != posts || fixture.publicReads.Load() != reads {
+		t.Fatal("read-only projection used a public callback")
+	}
+	actualLocator, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(actualLocator, originalLocator) {
+		t.Fatalf("read-only projection changed completed locator: %v", err)
+	}
+	preparedPath := filepath.Join(fixture.base.runtime.cfg.StateDir, "evidence-deposit-audit-prepared", filepath.Base(path))
+	actualPrepared, err := os.ReadFile(preparedPath)
+	if err != nil || !bytes.Equal(actualPrepared, originalPrepared) {
+		t.Fatalf("read-only projection changed original prepared signatures: %v", err)
+	}
+}
+
+// Original coordinates and independent locator pins cannot be substituted.
+func TestPreparedDepositAuditRecoveryRejectsChangedAuthority(t *testing.T) {
+	f := newPreparedAuditRecoveryTestFixture(t)
+	for _, name := range []string{"hash", "bytes", "activation", "window"} {
+		t.Run(name, func(t *testing.T) {
+			hash, size := sha256.Sum256(f.locator), uint64(len(f.locator))
+			options := f.fixture.options
+			options.Activations = append(options.Activations[:0:0], options.Activations...)
+			switch name {
+			case "hash":
+				hash[0] ^= 1
+			case "bytes":
+				size++
+			case "activation":
+				options.Activations[0].VPK[0] ^= 1
+			case "window":
+				options.Window.FinalizedBlock = options.Window.EndBlock - 1
+			}
+			publication, err := ReadPreparedValidatorEvidenceDepositAuditV2(t.Context(), f.fixture.base.runtime.cfg.StateDir, hash, size, options)
+			if err == nil || publication != nil {
+				t.Fatal("changed independent authority exposed public bytes")
+			}
+			f.unchanged(t, f.prepared, f.locator)
+		})
+	}
+}
+
+// Corrupt retained public fields cannot be replaced by newly generated bytes.
+func TestPreparedDepositAuditRecoveryRejectsCorruptOriginal(t *testing.T) {
+	f := newPreparedAuditRecoveryTestFixture(t)
+	path := filepath.Join(f.fixture.base.runtime.cfg.StateDir, "evidence-deposit-audit-prepared", filepath.Base(f.path))
+	for _, name := range []string{"signature", "census", "payload", "schema"} {
+		t.Run(name, func(t *testing.T) {
+			var retained releaseDepositAuditPreparedV2
+			if err := json.Unmarshal(f.prepared, &retained); err != nil {
+				t.Fatal(err)
+			}
+			switch name {
+			case "signature":
+				retained.Publication.Members[0].Evidence.HotkeySignature[0] ^= 1
+			case "census":
+				retained.Publication.Census[0] ^= 1
+			case "payload":
+				retained.Publication.Members[0].Payload[0] ^= 1
+			case "schema":
+				retained.Schema = "unsupported"
+			}
+			raw, err := marshalAttemptSettlementV2JSON(t.Context(), &retained, f.fixture.options.Bounds.MaxArtifactBytes, false, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, raw, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			publication, err := ReadPreparedValidatorEvidenceDepositAuditV2(t.Context(), f.fixture.base.runtime.cfg.StateDir, sha256.Sum256(f.locator), uint64(len(f.locator)), f.fixture.options)
+			if err == nil || publication != nil {
+				t.Fatal("corrupt original consent custody exposed public bytes")
+			}
+			f.unchanged(t, raw, f.locator)
+		})
+	}
+}
+
+// Missing or aliased custody never opens the producer's create/sign branch.
+func TestPreparedDepositAuditRecoveryRefusesMissingOrAliasedCustody(t *testing.T) {
+	f := newPreparedAuditRecoveryTestFixture(t)
+	path := filepath.Join(f.fixture.base.runtime.cfg.StateDir, "evidence-deposit-audit-prepared", filepath.Base(f.path))
+	preserved := filepath.Join(t.TempDir(), "original-prepared.json")
+	if err := os.Rename(path, preserved); err != nil {
+		t.Fatal(err)
+	}
+	publication, err := ReadPreparedValidatorEvidenceDepositAuditV2(t.Context(), f.fixture.base.runtime.cfg.StateDir, sha256.Sum256(f.locator), uint64(len(f.locator)), f.fixture.options)
+	if err == nil || publication != nil {
+		t.Fatal("missing custody exposed replacement public bytes")
+	}
+	if _, err := os.Lstat(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("missing prepared custody was created: %v", err)
+	}
+	if err := os.Symlink(preserved, path); err != nil {
+		t.Fatal(err)
+	}
+	publication, err = ReadPreparedValidatorEvidenceDepositAuditV2(t.Context(), f.fixture.base.runtime.cfg.StateDir, sha256.Sum256(f.locator), uint64(len(f.locator)), f.fixture.options)
+	if err == nil || publication != nil {
+		t.Fatal("aliased private custody exposed public bytes")
+	}
+	f.unchanged(t, f.prepared, f.locator)
+}
+
+// A late real descriptor close or cancellation revokes the whole projection.
+func TestPreparedDepositAuditRecoveryRefusesLateFailure(t *testing.T) {
+	f := newPreparedAuditRecoveryTestFixture(t)
+	path := filepath.Join(f.fixture.base.runtime.cfg.StateDir, "evidence-deposit-audit-prepared", filepath.Base(f.path))
+	for _, name := range []string{"close", "cancel"} {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			observed := false
+			late := errors.New("synthetic late close refusal")
+			hooks := releaseMeasurementInputV2ReadHooks{afterClose: func(file *os.File) error {
+				if file.Name() != path {
+					return nil
+				}
+				observed = true
+				if name == "cancel" {
+					cancel()
+					return nil
+				}
+				return late
+			}}
+			publication, err := readPreparedValidatorEvidenceDepositAuditV2(ctx, f.fixture.base.runtime.cfg.StateDir, sha256.Sum256(f.locator), uint64(len(f.locator)), f.fixture.options, hooks)
+			if !observed || err == nil || publication != nil || name == "close" && !errors.Is(err, late) || name == "cancel" && !errors.Is(err, context.Canceled) {
+				t.Fatalf("late %s exposed a partial projection: %v", name, err)
+			}
+			f.unchanged(t, f.prepared, f.locator)
+		})
+	}
+}
+
+// A locator changed during the genuine prepared read revokes the projection.
+func TestPreparedDepositAuditRecoveryRefusesLocatorReplacement(t *testing.T) {
+	f := newPreparedAuditRecoveryTestFixture(t)
+	path := filepath.Join(f.fixture.base.runtime.cfg.StateDir, "evidence-deposit-audit-prepared", filepath.Base(f.path))
+	changed := *f.manifest
+	changed.Members = append(changed.Members[:0:0], changed.Members...)
+	changed.Members[0].SignedArtifactHash[0] ^= 1
+	raw, err := marshalAttemptSettlementV2JSON(t.Context(), &changed, f.fixture.options.Bounds.MaxClosureBytes, true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	observed := false
+	hooks := releaseMeasurementInputV2ReadHooks{afterClose: func(file *os.File) error {
+		if file.Name() == path {
+			observed = true
+			return os.WriteFile(f.path, raw, 0o600)
+		}
+		return nil
+	}}
+	publication, err := readPreparedValidatorEvidenceDepositAuditV2(t.Context(), f.fixture.base.runtime.cfg.StateDir, sha256.Sum256(f.locator), uint64(len(f.locator)), f.fixture.options, hooks)
+	if !observed || err == nil || publication != nil {
+		t.Fatal("locator replacement exposed public bytes from a stale independent pin")
+	}
+	f.unchanged(t, f.prepared, raw)
+}

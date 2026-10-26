@@ -10,6 +10,8 @@ import (
 	"time"
 
 	gojwt "github.com/golang-jwt/jwt/v5"
+
+	"github.com/urfoundation/sn/operatorlist"
 )
 
 // What the friendly commands (start, status, setup, service, update) read
@@ -187,6 +189,10 @@ func readMinerSignIn() minerSignIn {
 	if err != nil {
 		return minerSignIn{}
 	}
+	return readMinerSignInFile(path)
+}
+
+func readMinerSignInFile(path string) minerSignIn {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return minerSignIn{}
@@ -213,6 +219,10 @@ func readMinerDevice() minerDevice {
 	if err != nil {
 		return minerDevice{}
 	}
+	return readMinerDeviceIn(dir)
+}
+
+func readMinerDeviceIn(dir string) minerDevice {
 	device := minerDevice{}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -235,6 +245,36 @@ func readMinerDevice() minerDevice {
 		device.clientId = unverifiedJwtString(strings.TrimSpace(string(raw)), "client_id")
 	}
 	return device
+}
+
+// readMinerOperatorIdentity is the sign-in and device of the first operator
+// directory (operatorlist.DomainStateDir, in name order) that carries either.
+// provide --all-operators keeps each operator's jwt and provider identity
+// there, never at the top of the state directory, so status reads them when
+// the top has none. Display only: the supervisor decides which operators run.
+//
+// Both halves come from that one directory. Read independently they can
+// describe two operators as one identity: sign-in from the first directory
+// that had a jwt, device from a later one that had a key. Registered feeds
+// needs_setup, so the mix could also show a signed-in operator as registered
+// when its own device is not.
+func readMinerOperatorIdentity(base string) (minerSignIn, minerDevice) {
+	entries, err := os.ReadDir(filepath.Join(base, "operators"))
+	if err != nil {
+		return minerSignIn{}, minerDevice{}
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		dir := operatorlist.DomainStateDir(base, entry.Name())
+		signIn := readMinerSignInFile(filepath.Join(dir, "jwt"))
+		device := readMinerDeviceIn(dir)
+		if signIn.signedIn || device.registered || device.hasHistory {
+			return signIn, device
+		}
+	}
+	return minerSignIn{}, minerDevice{}
 }
 
 // unverifiedJwtString reads one claim for display only. The server verifies

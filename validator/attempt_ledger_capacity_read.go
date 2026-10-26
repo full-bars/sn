@@ -121,6 +121,12 @@ func ReadStoppedAttemptLedgerCapacity(ctx context.Context, stateDir string, iden
 // storage limits, byte identity, locking, close errors and cancellation remain
 // admission conditions on every call.
 func readStoppedAttemptLedgerCapacity(ctx context.Context, stateDir string, identity AttemptLedgerIdentity, coordinator string, vpk ed25519.PublicKey, limits AttemptLedgerDiskLimits, reuse *StoppedAttemptLedgerCapacityCache, prefix ...AttemptLedgerHead) (result StoppedAttemptLedgerCapacity, resultErr error) {
+	return withStoppedAttemptLedger(ctx, stateDir, identity, coordinator, vpk, limits, reuse, nil, prefix...)
+}
+
+// A visitor borrows the verified read-only backend under the stopped-writer
+// fence. It must join all work before returning and never retain the store.
+func withStoppedAttemptLedger(ctx context.Context, stateDir string, identity AttemptLedgerIdentity, coordinator string, vpk ed25519.PublicKey, limits AttemptLedgerDiskLimits, reuse *StoppedAttemptLedgerCapacityCache, visit func(*attemptRecordStore) error, prefix ...AttemptLedgerHead) (result StoppedAttemptLedgerCapacity, resultErr error) {
 	if ctx == nil || ctx.Err() != nil || !filepath.IsAbs(stateDir) || filepath.Clean(stateDir) != stateDir || validateAttemptLedgerIdentity(identity, vpk) != nil {
 		return result, errors.New("stopped ledger capacity owner is invalid")
 	}
@@ -249,6 +255,11 @@ func readStoppedAttemptLedgerCapacity(ctx context.Context, stateDir string, iden
 		}
 	} else if store.head != priorVerification.capacity.Head {
 		return result, errors.New("stopped ledger cached head differs from current storage")
+	}
+	if visit != nil {
+		if err := visit(store); err != nil {
+			return result, err
+		}
 	}
 	if err := db.Close(); err != nil {
 		closed = true
