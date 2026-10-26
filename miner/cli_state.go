@@ -10,6 +10,8 @@ import (
 	"time"
 
 	gojwt "github.com/golang-jwt/jwt/v5"
+
+	"github.com/urfoundation/sn/operatorlist"
 )
 
 // What the friendly commands (start, status, setup, service, update) read
@@ -187,6 +189,10 @@ func readMinerSignIn() minerSignIn {
 	if err != nil {
 		return minerSignIn{}
 	}
+	return readMinerSignInFile(path)
+}
+
+func readMinerSignInFile(path string) minerSignIn {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return minerSignIn{}
@@ -213,6 +219,10 @@ func readMinerDevice() minerDevice {
 	if err != nil {
 		return minerDevice{}
 	}
+	return readMinerDeviceIn(dir)
+}
+
+func readMinerDeviceIn(dir string) minerDevice {
 	device := minerDevice{}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -235,6 +245,32 @@ func readMinerDevice() minerDevice {
 		device.clientId = unverifiedJwtString(strings.TrimSpace(string(raw)), "client_id")
 	}
 	return device
+}
+
+// readMinerOperatorIdentity is the sign-in and device of the first operator
+// directory (operatorlist.DomainStateDir, in name order) that has them. provide
+// --all-operators keeps each operator's jwt and provider identity there, never
+// at the top of the state directory, so status reads them when the top has
+// none. Display only: the supervisor decides which operators run.
+func readMinerOperatorIdentity(base string) (minerSignIn, minerDevice) {
+	signIn, device := minerSignIn{}, minerDevice{}
+	entries, err := os.ReadDir(filepath.Join(base, "operators"))
+	if err != nil {
+		return signIn, device
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		dir := operatorlist.DomainStateDir(base, entry.Name())
+		if !signIn.signedIn {
+			signIn = readMinerSignInFile(filepath.Join(dir, "jwt"))
+		}
+		if operatorDevice := readMinerDeviceIn(dir); !device.registered && (operatorDevice.registered || !device.hasHistory) {
+			device = operatorDevice
+		}
+	}
+	return signIn, device
 }
 
 // unverifiedJwtString reads one claim for display only. The server verifies

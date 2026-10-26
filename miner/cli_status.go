@@ -68,6 +68,10 @@ func buildMinerStatusReport(now time.Time) (minerStatusReport, int) {
 	report := minerStatusReport{Version: cliBareVersion(), StateDir: dir, Problems: []string{}}
 	signIn := readMinerSignIn()
 	device := readMinerDevice()
+	if !signIn.signedIn && !device.hasHistory {
+		// provide --all-operators: every operator's state is below the top
+		signIn, device = readMinerOperatorIdentity(dir)
+	}
 	report.SignedIn = signIn.signedIn
 	report.Network = signIn.networkName
 	report.Registered = device.registered
