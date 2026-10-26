@@ -37,7 +37,6 @@ const (
 	// The bucket for small keyed records. Each record is one JSON value.
 	providerStoreBucketState = "state"
 	// The record keys the provider keeps today.
-	providerStoreKeyAuthBackoff        = "auth_backoff"
 	providerStoreKeyExtenderActivation = "extender_activation"
 	// How long to wait for another process's lock before giving up. The
 	// provider is the only writer, so a wait means a stale process is holding
@@ -62,10 +61,6 @@ func openProviderStore(path string) (*providerStore, error) {
 		return nil, fmt.Errorf("open %s: %w", path, err)
 	}
 	store := &providerStore{db: db, path: path}
-	if err := store.migrate(); err != nil {
-		db.Close()
-		return nil, err
-	}
 	return store, nil
 }
 
@@ -148,47 +143,6 @@ func (s *providerStore) delete(bucket, key string) error {
 		}
 		return b.Delete([]byte(key))
 	})
-}
-
-// migrate imports the state the previous layout left in standalone files, so a
-// node that updates does not lose its auth streak or its activation budget. A
-// file that has been imported is renamed rather than deleted: it is the only
-// copy of that state if this one is wrong.
-func (s *providerStore) migrate() error {
-	migrations := []struct {
-		fileName string
-		key      string
-	}{
-		{"auth_backoff.json", providerStoreKeyAuthBackoff},
-	}
-	for _, m := range migrations {
-		path, err := providerStatePath(m.fileName)
-		if err != nil {
-			return err
-		}
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return err
-		}
-		var exists any
-		if s.load(providerStoreBucketState, m.key, &exists) {
-			continue
-		}
-		var value map[string]any
-		if err := json.Unmarshal(raw, &value); err != nil || len(value) == 0 {
-			// An unreadable file is left in place; the streak it may have held
-			// is worth less than the operator's ability to see it.
-			continue
-		}
-		if err := s.save(providerStoreBucketState, m.key, json.RawMessage(raw)); err != nil {
-			return err
-		}
-		_ = os.Rename(path, path+".migrated")
-	}
-	return nil
 }
 
 var (
