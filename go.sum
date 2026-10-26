@@ -119,8 +119,14 @@ github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/full-bars/connect v0.0.0-20261025034911-49d75e264480 h1:tQWyfJxtnaQAohI4U6Mmes2aYdqT9eYFsq9PzMvh3hI=
 github.com/full-bars/connect v0.0.0-20261025034911-49d75e264480/go.mod h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM=
+github.com/full-bars/connect v0.0.0-20261026105146-cff307c11f6e h1:Tm8HtpHOSiZldEyHTKv+pA5AIKmL6l7UHdkSwyaqb98=
+github.com/full-bars/connect v0.0.0-20261026105146-cff307c11f6e/go.mod h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM=
 github.com/full-bars/sdk v0.0.0-20261025144057-e702dddf97c6 h1:KDUgNP/bk6PrHMegKJaOqhBeh99IXGbsJ+CnleCA75I=
 github.com/full-bars/sdk v0.0.0-20261025144057-e702dddf97c6/go.mod h1:WLi1Xb+RAlK/wQuIahzrRzjPbUCaVRBkWwdIeejxnNI=
+github.com/full-bars/sdk v0.0.0-20261026105149-bbf73d59d7ad h1:TP0JOxJMDVn0t7Hh2/hJmP0sG+1is7CvOfI+2997Vto=
+github.com/full-bars/sdk v0.0.0-20261026105149-bbf73d59d7ad/go.mod h1:WLi1Xb+RAlK/wQuIahzrRzjPbUCaVRBkWwdIeejxnNI=
+github.com/full-bars/sdk v0.0.0-20261026105612-d9e2cd4f4c15 h1:niFz3DNCtGqimbpeBADKislBDXdQMMo33ulpIRhXeRE=
+github.com/full-bars/sdk v0.0.0-20261026105612-d9e2cd4f4c15/go.mod h1:WLi1Xb+RAlK/wQuIahzrRzjPbUCaVRBkWwdIeejxnNI=
 github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7zvxg=
 github.com/gagliardetto/binary v0.8.0/go.mod h1:2tfj51g5o9dnvsc+fL3Jxr22MuWzYXwx9wEoN0XQ7/c=
 github.com/gagliardetto/solana-go v1.21.0 h1:ZswwwDOFuD/7Hk/k3b6dyLetmvEJuyLmQU7xIziCZgo=
