@@ -1453,6 +1453,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 	}
 	bringUp := newProviderBringUpTracker(bringUpSlots)
+	// Slots that completed authentication at least once during this run, kept
+	// apart from the tracker because a slot that later fails leaves "running".
+	var authenticatedSlots atomic.Int64
 	provideWithProxy := func(slotCtx context.Context, index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
 		display := providerSlotDisplay(proxySettings)
 		defer func() {
@@ -1619,6 +1622,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 			return err
 		}
+		authenticatedSlots.Add(1)
 		if reused {
 			bringUp.authReused(index, clientId, display)
 		} else {
@@ -2139,8 +2143,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	wg.Wait()
 	cancel()
 	close(results)
+	var slotResults []error
 	for result := range results {
+		slotResults = append(slotResults, result)
 		returnErr = errors.Join(returnErr, result)
+	}
+	if parent.Err() == nil {
+		if noSlot := noSlotAuthenticatedError(int(authenticatedSlots.Load()), len(launchSlots), slotResults); noSlot != nil {
+			tlog("[provider] %v\n", noSlot)
+			returnErr = errors.Join(returnErr, noSlot)
+		}
 	}
 	// A handed-off parent must outlive the slots the yield cancelled: the drain
 	// window keeps in-flight streams alive until the successor owns the
@@ -2275,6 +2287,60 @@ func startupRefusal(ctx context.Context, err error) error {
 	return &providerStartupRefusalError{cause: err}
 }
 
+// errProviderNoSlotAuthenticated ends a run in which every launched slot
+// failed and none authenticated. Without it the provide command returns
+// normally and the process exits 0, which Restart=on-failure never restarts.
+var errProviderNoSlotAuthenticated = errors.New("no provider slot authenticated")
+
+// providerNoSlotAuthenticatedExitCode matches a startup refusal: the node
+// served nothing and a supervisor must retry.
+const providerNoSlotAuthenticatedExitCode = 1
+
+type providerNoSlotAuthenticatedError struct {
+	tried  int
+	top    string
+	topNum int
+}
+
+func (self *providerNoSlotAuthenticatedError) Error() string {
+	return fmt.Sprintf("%v: tried %d slots, top failure (%d): %s", errProviderNoSlotAuthenticated, self.tried, self.topNum, self.top)
+}
+func (self *providerNoSlotAuthenticatedError) Is(target error) bool {
+	return target == errProviderNoSlotAuthenticated
+}
+
+// noSlotAuthenticatedError is non-nil only when slots were launched, none ever
+// authenticated, and every slot ended with an error. A run with at least one
+// authenticated slot (partial failure) keeps its existing exit behaviour, as
+// does a run whose slots ended cleanly.
+func noSlotAuthenticatedError(authenticated, tried int, results []error) error {
+	if authenticated > 0 || tried == 0 || len(results) < tried {
+		return nil
+	}
+	counts := map[string]int{}
+	var order []string
+	for _, result := range results {
+		if result == nil {
+			return nil
+		}
+		reason := result.Error()
+		if len(reason) > 200 {
+			reason = reason[:200]
+		}
+		if counts[reason] == 0 {
+			order = append(order, reason)
+		}
+		counts[reason]++
+	}
+	top := order[0]
+	for _, reason := range order {
+		if counts[reason] > counts[top] {
+			top = reason
+		}
+	}
+	return &providerNoSlotAuthenticatedError{tried: tried, top: top, topNum: counts[top]}
+}
+
 // providerRunExitCode is the process exit code a run's error asks for, if any.
 func providerRunExitCode(err error) (int, bool) {
 	if errors.Is(err, errProviderNetworkSignInQuarantined) {
@@ -2282,6 +2348,9 @@ func providerRunExitCode(err error) (int, bool) {
 	}
 	if errors.Is(err, errProviderStartupRefused) {
 		return providerStartupRefusedExitCode, true
+	}
+	if errors.Is(err, errProviderNoSlotAuthenticated) {
+		return providerNoSlotAuthenticatedExitCode, true
 	}
 	return 0, false
 }
