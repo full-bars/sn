@@ -104,7 +104,8 @@ func TestProviderBringUpCountsControlReachedAndWarnsWhenMissing(t *testing.T) {
 	tracker.controlReached(0, "proxy:10.0.0.1:1080", 5*time.Millisecond, "normal") // second is ignored
 
 	deadline := time.Now().Add(2 * time.Second)
-	for !strings.Contains(buffer.String(), "provider 1 (proxy:10.0.0.2:1080) authenticated but has not reached the control plane") && time.Now().Before(deadline) {
+	// Wait for the overdue tick to fire and emit the summary.
+	for strings.Count(buffer.String(), "identities authenticated but not control-connected") == 0 && time.Now().Before(deadline) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	text := buffer.String()
@@ -114,15 +115,79 @@ func TestProviderBringUpCountsControlReachedAndWarnsWhenMissing(t *testing.T) {
 	if strings.Count(text, "provider 0 (proxy:10.0.0.1:1080) reached") != 1 {
 		t.Fatalf("reached narrated more than once:\n%s", text)
 	}
-	if !strings.Contains(text, "provider 1 (proxy:10.0.0.2:1080) authenticated but has not reached the control plane") {
-		t.Fatalf("missing warning for the slot that never reached:\n%s", text)
+	// No individual per-slot warning for the unreached slot.
+	if strings.Contains(text, "provider 1 (proxy:10.0.0.2:1080) authenticated but has not reached the control plane") {
+		t.Fatalf("unexpected individual warning for unreached slot:\n%s", text)
 	}
 	if strings.Contains(text, "provider 0 (proxy:10.0.0.1:1080) authenticated but has not") {
 		t.Fatalf("warned about a slot that did reach:\n%s", text)
+	}
+	// Summary carries total and sample.
+	if !strings.Contains(text, "⚠️ [control] 1 of 2 identities authenticated but not control-connected after") {
+		t.Fatalf("missing the not-connected summary with oldest age:\n%s", text)
+	}
+	if !strings.Contains(text, "oldest") {
+		t.Fatalf("summary missing oldest age:\n%s", text)
+	}
+	if !strings.Contains(text, "sample:") {
+		t.Fatalf("summary missing sample:\n%s", text)
 	}
 	// The next tally carries the count.
 	tracker.emit()
 	if !strings.Contains(buffer.String(), "control plane reached: 1)") {
 		t.Fatalf("tally lacks the reached count:\n%s", buffer.String())
+	}
+}
+
+// TestProviderBringUpCapsPerSlotControlWarnings pins the flood boundary: a
+// start where no identity reaches the control plane names at most
+// providerControlNameLimit slots per tick and reports the total with a sample
+// in the summary, so 465 identities do not produce 465 warnings.
+func TestProviderBringUpCapsPerSlotControlWarnings(t *testing.T) {
+	oldGrace := providerControlGrace
+	oldInterval := providerBringUpHeartbeatInterval
+	providerControlGrace = 20 * time.Millisecond
+	providerBringUpHeartbeatInterval = 10 * time.Millisecond
+	defer func() {
+		providerControlGrace = oldGrace
+		providerBringUpHeartbeatInterval = oldInterval
+	}()
+
+	buffer := captureProviderBringUpLog(t)
+	total := providerControlNameLimit * 2
+	tracker := newProviderBringUpTracker(total)
+	tracker.start()
+	defer tracker.shutdown()
+
+	for index := 0; index < total; index++ {
+		tracker.authReused(uint64(index), connect.NewId(), fmt.Sprintf("proxy:10.0.0.%d:1080", index+1))
+	}
+
+	deadline := time.Now().Add(2 * time.Second)
+	// Wait for the overdue tick to fire and emit the summary.
+	for strings.Count(buffer.String(), "identities authenticated but not control-connected") == 0 && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	text := buffer.String()
+	// No individual per-slot warnings should be emitted.
+	named := strings.Count(text, "authenticated but has not reached the control plane")
+	if named != 0 {
+		t.Fatalf("expected zero individual warnings, got %d:\n%s", named, text)
+	}
+	// One wave of expiries is one tally, not one per slot. The size limit is 5
+	// slots per tick in the old design; with the shared summary it must be a
+	// single line for the whole wave.
+	if summaries := strings.Count(text, "identities authenticated but not control-connected"); summaries != 1 {
+		t.Fatalf("expected one summary line for %d expiring slots, got %d:\n%s", total, summaries, text)
+	}
+	// Summary should carry the total and a sample.
+	if !strings.Contains(text, fmt.Sprintf("%d of %d identities authenticated but not control-connected", total, total)) {
+		t.Fatalf("summary does not carry the total not-connected count:\\n%s", text)
+	}
+	if !strings.Contains(text, "sample:") {
+		t.Fatalf("summary missing sample:\\n%s", text)
+	}
+	if strings.Contains(text, "oldest") == false {
+		t.Fatalf("summary missing oldest age:\\n%s", text)
 	}
 }

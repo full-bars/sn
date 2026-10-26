@@ -9,6 +9,7 @@ package miner
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -108,14 +109,31 @@ type providerBringUpTracker struct {
 	reached map[uint64]bool
 	// watches holds each authenticated slot's pending "never reached" check.
 	watches map[uint64]*time.Timer
+	// overdue is the slots whose grace expired without reaching the control
+	// plane, in the order they expired. The heartbeat tick drains it into one
+	// tally, so a fleet-wide outage prints one line per tick instead of one
+	// warning per identity.
+	overdue    []uint64
+	overdueSet map[uint64]bool
+	displays   map[uint64]string
+	// authAt is when each authenticated slot was admitted, so the tally can
+	// report the age of the wait rather than the age of the process.
+	authAt map[uint64]time.Time
+	// lastNotConnected and lastSummaryAt rate-limit the tally: a change in the
+	// count prints on the next tick, an unchanged count at most once per
+	// providerControlSummaryInterval. Without the second rule one stuck slot
+	// would print every tick for the life of the process.
+	lastNotConnected int
+	lastSummaryAt    time.Time
 	// closed is set at shutdown, so a late watch stays silent. stop() alone is
 	// also called when the last slot resolves, and the watches must outlive
 	// that: they exist to report the slots that authenticated and then never
 	// reached the control plane.
-	closed   bool
-	started  bool
-	finished bool
-	stopCh   chan struct{}
+	closed    bool
+	started   bool
+	startedAt time.Time
+	finished  bool
+	stopCh    chan struct{}
 }
 
 func newProviderBringUpTracker(total int) *providerBringUpTracker {
@@ -125,6 +143,9 @@ func newProviderBringUpTracker(total int) *providerBringUpTracker {
 		identities: map[uint64]bool{},
 		reached:    map[uint64]bool{},
 		watches:    map[uint64]*time.Timer{},
+		overdueSet: map[uint64]bool{},
+		displays:   map[uint64]string{},
+		authAt:     map[uint64]time.Time{},
 		stopCh:     make(chan struct{}),
 	}
 }
@@ -154,16 +175,46 @@ func (self *providerBringUpTracker) start() {
 		return
 	}
 	self.started = true
+	self.startedAt = time.Now()
 	pending := self.total - self.running - self.failed
 	self.mu.Unlock()
-	self.emit()
-	if pending <= 0 {
-		return
-	}
 	// Read the interval here, not inside the goroutine: the variable is a test
 	// seam, and a goroutine that starts late would read it while the test that
 	// shortened it is restoring it.
 	interval := providerBringUpHeartbeatInterval
+	// The overdue reporter drains its queue a few slots per tick. It outlives
+	// the heartbeat below on purpose: the heartbeat stops once every slot has
+	// authenticated, but a slot that authenticated and never dialed is exactly
+	// the one still worth naming.
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for range ticker.C {
+			self.mu.Lock()
+			closed := self.closed
+			self.mu.Unlock()
+			if closed {
+				return
+			}
+			self.reportOverdue()
+		}
+	}()
+	// Emit a startup summary after one heartbeat interval so the counts have
+	// settled. Use the same interval as the heartbeat so tests can shorten both
+	// together.
+	go func() {
+		time.Sleep(interval)
+		self.mu.Lock()
+		closed := self.closed
+		self.mu.Unlock()
+		if !closed {
+			self.emitStartupSummary()
+		}
+	}()
+	self.emit()
+	if pending <= 0 {
+		return
+	}
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
@@ -218,6 +269,27 @@ func (self *providerBringUpTracker) emit() {
 	tlog("%s\n", line)
 }
 
+// emitStartupSummary emits a one-line summary of the bring-up after the
+// first heartbeat interval so the operator sees the pool split at a glance.
+func (self *providerBringUpTracker) emitStartupSummary() {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	if self.closed {
+		self.mu.Unlock()
+		return
+	}
+	running := self.running
+	pending := self.total - self.running - self.failed
+	failed := self.failed
+	reused, minted := self.identityCounts()
+	reached := len(self.reached)
+	self.mu.Unlock()
+	tlog("[startup] %d slots: %d auth ok, %d pending, %d failed (%d reused, %d new); control-connected %d\n",
+		self.total, running, pending, failed, reused, minted, reached)
+}
+
 // authReused narrates one slot's reused authentication and moves it to
 // running. The leading text matches the line the v3.23 provider and
 // docs/Hot-Restart.md document, so a grep for "(reused)" finds every slot that
@@ -259,23 +331,106 @@ func (self *providerBringUpTracker) shutdown() {
 	self.stop()
 }
 
+// providerControlNameLimit is how many not-yet-connected slots one tick may
+// name. Beyond it the summary's count and sample carry the scale: a start in
+// which the control plane is unreachable for every identity would otherwise
+// print one warning per slot, which is the flood this cap removes.
+const providerControlNameLimit = 5
+
 // watchControl starts the slot's "never reached the control plane" check. The
-// caller holds mu.
+// caller holds mu. The check only queues the slot: the line is printed by
+// reportOverdue, so arrivals from many slots at once share one tick and one
+// summary instead of printing concurrently.
 func (self *providerBringUpTracker) watchControl(index uint64, display string) {
 	if self.reached[index] {
 		return
 	}
+	self.displays[index] = display
+	self.authAt[index] = time.Now()
 	if previous := self.watches[index]; previous != nil {
 		previous.Stop()
 	}
 	self.watches[index] = time.AfterFunc(providerControlGrace, func() {
 		self.mu.Lock()
 		reached, closed := self.reached[index], self.closed
+		if !reached && !closed && !self.overdueSet[index] {
+			self.overdue = append(self.overdue, index)
+			self.overdueSet[index] = true
+		}
 		self.mu.Unlock()
+		// Promptness without the flood: reportOverdue prints only when the
+		// not-connected count changed or its repeat interval elapsed, so the
+		// first expiry of a wave prints and the rest of the wave is folded
+		// into the next due tally.
 		if !reached && !closed {
-			tlog("⚠️ [control] provider %d (%s) authenticated but has not reached the control plane after %s\n", index, display, formatDuration(providerControlGrace))
+			self.reportOverdue()
 		}
 	})
+}
+
+// providerControlSummaryInterval is how often an unchanged not-connected count
+// is repeated. A count that changes prints on the next tick.
+const providerControlSummaryInterval = 5 * time.Minute
+
+// reportOverdue prints one tally for the slots whose grace expired without
+// reaching the control plane: how many of the authenticated identities are
+// still not connected, how long the oldest has waited, and a bounded sample of
+// their addresses. One line per tick replaces the one-warning-per-slot flood,
+// and an unchanged count is repeated at most once per
+// providerControlSummaryInterval, so a single stuck slot cannot print for the
+// life of the process.
+func (self *providerBringUpTracker) reportOverdue() {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	if self.closed || len(self.overdue) == 0 {
+		self.mu.Unlock()
+		return
+	}
+	now := time.Now()
+	notConnected := 0
+	oldestAge := time.Duration(0)
+	for index := range self.identities {
+		if self.reached[index] {
+			continue
+		}
+		notConnected++
+		if authAt, ok := self.authAt[index]; ok {
+			if age := now.Sub(authAt); oldestAge < age {
+				oldestAge = age
+			}
+		}
+	}
+	// The queue orders the sample by expiry; every entry in it is already
+	// counted above, so it is drained here whether or not a line is due.
+	sample := make([]string, 0, providerControlNameLimit)
+	for _, index := range self.overdue {
+		if providerControlNameLimit <= len(sample) {
+			break
+		}
+		sample = append(sample, strings.TrimPrefix(self.displays[index], "proxy:"))
+	}
+	self.overdue = nil
+	self.overdueSet = map[uint64]bool{}
+	if notConnected == 0 {
+		self.mu.Unlock()
+		return
+	}
+	due := notConnected != self.lastNotConnected || self.lastSummaryAt.IsZero() ||
+		providerControlSummaryInterval <= now.Sub(self.lastSummaryAt)
+	self.lastNotConnected = notConnected
+	if due {
+		self.lastSummaryAt = now
+	}
+	identities := len(self.identities)
+	self.mu.Unlock()
+
+	if !due {
+		return
+	}
+	tlog("⚠️ [control] %d of %d identities authenticated but not control-connected after %s; oldest %s; sample: %s\n",
+		notConnected, identities, formatDuration(providerControlGrace), formatDuration(oldestAge), strings.Join(sample, ", "))
 }
 
 // controlReached records a slot's first successful dial through its proxy and
@@ -312,7 +467,11 @@ func (self *providerBringUpTracker) controlReached(index uint64, display string,
 // what happens next (retry), and moves it to failed.
 func (self *providerBringUpTracker) authFailed(index uint64, display string, reason error, retry string) {
 	self.apply(index, "failed", func() {
-		tlog("[auth] provider %d failed: %v (slot %s, retry %s)\n", index, reason, display, retry)
+		line := fmt.Sprintf("[auth] provider %d failed: %v (slot %s, retry %s)", index, reason, display, retry)
+		if strings.Contains(reason.Error(), "legacy_identity_requires_explicit_recovery") {
+			line += "; action: run with --adopt-legacy-provider-key or clear this slot's identity"
+		}
+		tlog("%s\n", line)
 	})
 }
 

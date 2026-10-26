@@ -569,20 +569,24 @@ func noteProxyUDPVerdict(settings *connect.ProxySettings, previous *proxyUDPResu
 }
 
 // logProxyUDPResult says so once per change of answer for an identity, so a
-// fleet of proxies produces one line each, not one per attempt.
+// fleet of proxies produces one line each, not one per attempt. The slot is
+// named in the same `slot=proxy:<addr>` form every other provider line uses,
+// so one grep for a slot finds its UDP verdict next to its auth and control
+// lines, and each line that disables h3 says what to do about it.
 func logProxyUDPResult(settings *connect.ProxySettings, previous *proxyUDPResult, result proxyUDPResult) {
 	if previous != nil && previous.Status == result.Status {
 		return
 	}
+	slot := providerSlotDisplay(settings)
 	switch result.Status {
 	case proxyUDPOK:
-		tlog("[proxy][udp] (%s) udp relay ok, exit %s matches tcp; h3 allowed\n", settings.Address, result.UDPExit)
+		tlog("[proxy][udp] slot=%s udp relay ok, exit %s matches tcp; h3 allowed\n", slot, result.UDPExit)
 	case proxyUDPExitMismatch:
-		tlog("[proxy][udp] (%s) udp exits from %s but tcp from %s; h3 not used for this proxy\n", settings.Address, result.UDPExit, result.TCPExit)
+		tlog("[proxy][udp] slot=%s udp relay exits from %s but tcp from %s; h3 disabled for this slot, tcp only; action: check where udp and tcp egress diverge on this proxy\n", slot, result.UDPExit, result.TCPExit)
 	case proxyUDPNoRelay:
-		tlog("[proxy][udp] (%s) no udp relay (%v); h3 not used for this proxy, tcp modes only\n", settings.Address, result.Err)
+		tlog("[proxy][udp] slot=%s udp relay unavailable (%v); h3 disabled for this slot, tcp only; action: check proxy credentials\n", slot, result.Err)
 	default:
-		tlog("[proxy][udp] (%s) udp relay works (exit %s) but the tcp exit could not be learned (%v); h3 allowed, checking again soon\n", settings.Address, result.UDPExit, result.Err)
+		tlog("[proxy][udp] slot=%s udp relay works (exit %s) but the tcp exit could not be learned (%v); h3 allowed, checking again soon\n", slot, result.UDPExit, result.Err)
 	}
 }
 
