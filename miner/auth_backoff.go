@@ -27,8 +27,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/urnetwork/connect"
 	"github.com/urfoundation/sn/clientauth"
+	"github.com/urnetwork/connect"
 )
 
 const (

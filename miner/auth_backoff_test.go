@@ -143,10 +143,10 @@ func TestAuthBackoffMetricsRender(t *testing.T) {
 		// A future last-failure keeps the elapsed-time deduction from shaving
 		// the wait between the write and the render.
 		LastFailureUnix: now.Add(time.Hour).Unix(),
-		TotalFailures:       40,
-		TotalWaits:          7,
-		TotalStops:          1,
-		TotalRecoveries:     2,
+		TotalFailures:   40,
+		TotalWaits:      7,
+		TotalStops:      1,
+		TotalRecoveries: 2,
 	}
 	if err := writeAuthBackoffState(st); err != nil {
 		t.Fatal(err)
