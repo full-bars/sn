@@ -29,6 +29,7 @@ Docs-only changes skip CI through `paths-ignore`.
 | Wiki sync (`wiki-sync.yml`) | docs push | Copies `docs/*.md` into the wiki |
 | Shakedown (`shakedown.yml`) | `v2026.*` tags, manual | Full pre-release shakedown on a clean runner |
 | Docker shakedown (`docker-shakedown.yml`) | `v2026.*` tags, manual | Deep Docker test matrix |
+| Docker PR build (`docker-pr-build.yml`) | pull requests touching `docker/` or the Dockerfile | Builds the image from the checkout and runs the credential-free checks |
 | Functional soak (`functional-soak.yml`) | manual | Three-hour soak |
 | Test gauntlet (`test-gauntlet.yml`) | manual | Full gauntlet, manually dispatched |
 
