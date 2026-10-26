@@ -2343,7 +2343,7 @@ func (self *providerNoSlotAuthenticatedError) Is(target error) bool {
 // authenticated slot (partial failure) keeps its existing exit behaviour, as
 // does a run whose slots ended cleanly.
 func noSlotAuthenticatedError(authenticated, tried int, results []error) error {
-	if authenticated > 0 || tried == 0 || len(results) < tried {
+	if authenticated > 0 || tried == 0 || len(results) != tried {
 		return nil
 	}
 	counts := map[string]int{}
