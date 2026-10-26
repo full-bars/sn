@@ -28,6 +28,7 @@ failure and what happened.
 | Code | Meaning |
 |------|---------|
 | 0 | Clean shutdown (SIGTERM or manual stop). |
+| 1 | The provider exited with an error. The usual cause is that no launched slot authenticated in this run: the log carries `[provider] no provider slot authenticated: tried N slots, top failure ...`. A restart may succeed, so systemd restarts it on failure and the container start script waits 60 seconds before retrying. See [No slot authenticated](#no-slot-authenticated). |
 | 78 | The JWT is expired or invalid. The container startup script intercepts this code, deletes the stale JWT, and re-authenticates when an auth code is available (see Container troubleshooting). |
 | 75 | Planned restart requested by the swap-thrash watchdog, or by the liveness watchdog when a stalled process has made no progress for 10 minutes. It is not a crash. Under systemd with `Restart=on-failure` the unit restarts the provider; the miner image's start script restarts `miner provide` after 5 seconds. The same code also marks a rejected network sign-in set aside for a fresh sign-in. The thrash path leaves a one-shot `thrash_exit.<pid>` marker in the state directory immediately before it exits, and `provide --all-operators` uses that pid-bound marker to name the cause for the operator: the two exits are followed by the same credential check, so only the log line differs. See [Swap-thrash watchdog](/full-bars/sn/wiki/Configuration#swap-thrash-watchdog). |
 | 79 | Authentication stopped after 30 failed logins over at least 2 hours. The node is parked deliberately, not crash-looping. Fix the credentials, then start the unit or container again; the first successful login clears the streak. Under systemd the unit sets `RestartPreventExitStatus=79`, and the miner image's start script stays stopped instead of re-authenticating. |
@@ -40,6 +41,22 @@ at least two hours and every attempt was refused. The streak lives in
 stopped, lifetime total, last reason). Fix the credentials (`urnetwork auth`,
 or the container's `USER_AUTH`/`PASSWORD`), then start the provider again. A
 successful login resets the file; deleting it also resets the streak.
+
+### No slot authenticated
+
+Every launched slot ended with an error before any of them authenticated, so
+the run ends instead of waiting with nothing running. The line names the count
+and the most common failure, for example `tried 2 slots, top failure (2):
+provider client identity requires recovery: http request attempts exhausted`.
+That wording points at the path, not the credentials: a slot whose proxy
+refuses the connection or never reaches the platform produces it, and `-v`
+prints one line per slot with the transport detail.
+
+Check, in this order: that the proxies in `<state>/proxy` still answer (a dead
+list produces this on every restart), that the box can reach the platform
+directly, and only then the account. `urnet-tools proxy health` shows the
+per-address verdict, and `urnet-tools proxy remove-dead` drops the ones that
+will never answer.
 
 ## Container troubleshooting
 

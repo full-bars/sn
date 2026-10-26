@@ -6,7 +6,7 @@ This document tracks all modifications made to the upstream `sn` (connect v2026)
 
 **Fork Based On**: urfoundation/sn (connect v2026: H3/QUIC transport + IPv6 dual-stack)
 **Repository**: github.com/full-bars/sn
-**Binary Versioning**: v2026.<month>.<day>-<epoch>-meso (releases of this fork carry the `-meso` suffix; tags without it come from upstream)
+**Binary Versioning**: `v2026.<month>.<day>-<epoch>` for releases of this fork since 2026.10.22, which dropped the `-meso` suffix; upstream publishes tags in the same shape, so read the CHANGELOG entry rather than the tag to tell the two apart
 
 ---
 
@@ -429,3 +429,25 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 **How to Identify in New Upstream**: `internal/urnettools/log_stream.go` and `openFollowFile`.
 
 **Status**: ported from 3.23-fix PR #795. The two follow-up fixes (tail window, long paths) are on the `port/windows-log-follow-leftovers` branch. A live `urnet-tools proxy health` run against a Windows provider has not been done.
+
+---
+
+## 33. The 2026.10.24 Window: Log Verbosity, Auth Backoff and Sync Corrections
+
+**Purpose**: one identity's problem printed once per identity, a node whose credentials were rejected kept retrying with no exit status that said so, and a status report could describe two operators as one identity.
+
+**Files Modified**: `miner/run.go`, `miner/provider_bringup.go`, `miner/health_heartbeat.go`, `miner/auth_backoff.go`, `miner/cli_start.go`, `miner/cli_state.go`, `miner/cli_status.go`, `miner/system_audit.go`, `internal/urnettools/legacy_cmds.go`, `tools/evidence-consent-recovery/main.go`, `api/competition.yml`, `.github/workflows/tool-functional-smoke.yml`
+
+**Change**:
+- **One control-plane tally per wave, not per slot.** A start whose identities authenticate and never reach the control plane printed one warning per slot; 465 in the LA7 trace that motivated this. The line is now one per tick with the count, the oldest wait measured from that slot's own authentication time, and a sample of addresses, repeated at most every five minutes while the count is unchanged.
+- **Refusals name their fix.** A recoverable legacy-key refusal ends with `action: run with --adopt-legacy-provider-key or clear this slot's identity`; a UDP relay refusal names the slot and says H3 is off for it. A `[startup]` line after the first heartbeat splits the pool into auth ok, pending, failed, reused and new, and control-connected.
+- **Trace lines leave default verbosity.** `reason=ack_lifetime` sequence exits are V(1) with every field intact, because an expiry is the ordinary outcome for a destination with no route; every other exit reason stays at info. `[api-token]` lines carry `client=<id>` parsed from the bearer, and an extender's gossip node logs one startup line with its peer, network, role and listener count.
+- **Auth backoff and exit 79.** A start whose every slot ends in a credential rejection or a 429 records the streak in `<state>/auth_backoff.json`, waits 60 seconds from 10 failures and 300 from 20, and stops with exit 79 once 30 failures span two hours. The shipped units set `RestartPreventExitStatus=79`; the container supervisor keeps the container up but parked. A run with no authenticated slot and every slot ended also exits 1 now, so a supervisor restarts it instead of reading a normal return.
+- **Status identity comes from one operator directory.** With `provide --all-operators` the report read the jwt and the device independently, so it could take sign-in from one operator and the device from another; `registered` feeds `needs_setup`, so a signed-in operator could read as registered. Both now come from the same directory, the first in name order that has either.
+- **The consent-recovery export removes itself on a failed write**, so a retry is not blocked by `EEXIST` and a stub cannot be read as an export.
+- **The competition schema pins the reviewer model to its reasoning** (`gpt-5.4-mini` to `xhigh`, `gpt-6.1-sol` to `max`) in the request and in the public projection, so the mismatched pairs the frozen policy names are rejected.
+- **The docker smoke starts on its direct path.** The job mounted two dead localhost proxies at startup; with the no-slot exit the provider ended 16 seconds in and every later step found nothing to act on.
+
+**How to Identify in New Upstream**: `providerBringUpTracker.emit` and `emitStartupSummary` in `miner/provider_bringup.go`, `recordSendSequenceExit` in `full-bars/connect` (`transfer_sequence_exit.go`), the `[api-token]` logger in `full-bars/sdk` (`device_token_manager.go`), `readMinerOperatorIdentity` in `miner/cli_state.go`, and the `allOf` block on `CompetitionIntegrityReviewRequest` in `api/competition.yml`.
+
+**Status**: shipping in this release. The last five are corrections to files the upstream sync brought in, so they are candidates to send upstream rather than carry as fork divergence.
