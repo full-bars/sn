@@ -97,6 +97,9 @@ type controlResponse struct {
 	// answered by "status". Empty when metrics is off or the provider
 	// predates the field.
 	MetricsAddrs []string `json:"metrics_addrs,omitempty"`
+	// HostCapability is what the provider measured about this host's
+	// reachability, answered by "status". Absent from older providers.
+	HostCapability *HostCapability `json:"host_capability,omitempty"`
 	// Snapshot is the live node snapshot, answered by "snapshot". Absent
 	// from providers that predate the command.
 	Snapshot *NodeSnapshot `json:"snapshot,omitempty"`

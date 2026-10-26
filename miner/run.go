@@ -1079,6 +1079,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		hooks.afterCreate(output)
 	}
 	ctx, rawCancel := context.WithCancel(parent)
+	// Measure what this host can reach, off the critical path. The activation
+	// budget charges a pass for the posts it will really spend, so a host
+	// without IPv6 must not be charged for a second family it cannot use.
+	go watchHostCapability(ctx)
 	// Record what first cancelled the run for the SIGNAL line in events.log:
 	// whichever caller cancels first (signal handler goroutine, control-socket
 	// shutdown, quarantine, or a failed worker) leaves its stack, the same
@@ -1460,7 +1464,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if _, directPresent := directSlotIndex(providers); directPresent && isDirectEnabled() {
 		var extenderWait time.Duration
 		var extenderUsed int
-		extenderAllowed, extenderWait, extenderUsed = extenderActivationAllow(time.Now(), extenderActivationPostsPerPass)
+		extenderAllowed, extenderWait, extenderUsed = extenderActivationAllow(time.Now(), hostActivationPosts())
 		if !extenderAllowed {
 			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
 				extenderUsed, extenderActivationBudget, formatDuration(extenderWait))

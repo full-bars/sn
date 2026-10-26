@@ -94,6 +94,9 @@ type controlResponse struct {
 	Entries    []CommandAudit         `json:"entries,omitempty"`
 	NextCursor string                 `json:"next_cursor,omitempty"`
 	Settings   map[string]settingInfo `json:"settings,omitempty"`
+	// HostCapability reports what this host can reach, which is why an
+	// activation pass is charged one post or two.
+	HostCapability *hostCapability `json:"host_capability,omitempty"`
 	// StartupValues maps restart-required keys to the values the running
 	// process actually started with; the dashboard compares them against the
 	// current values to decide whether a restart banner is warranted.
@@ -835,7 +838,8 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			settings[k] = si
 		}
 		snap, _ := minerControlAuditStatus()
-		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap}
+		hostCap := readHostCapability()
+		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, HostCapability: &hostCap}
 
 	case "audit":
 		switch req.Action {
