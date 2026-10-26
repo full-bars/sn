@@ -23,7 +23,6 @@ Docs-only changes skip CI through `paths-ignore`.
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| CFAA blocklist sync (`cfaa-blocklist-sync.yml`) | cron twice daily, repository dispatch | Syncs the packed IP blocklist from upstream |
 | CodeQL (`codeql.yml`) | weekly schedule | Security analysis |
 | Upstream monitor (`upstream_monitor.yml`) | schedule | Watches upstream commits and PRs for files shared with this fork |
 | Wiki sync (`wiki-sync.yml`) | docs push | Copies `docs/*.md` into the wiki |
