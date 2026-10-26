@@ -172,8 +172,14 @@ func TestProviderRunEndsWithAQuarantinedSignIn(t *testing.T) {
 				}
 				return
 			}
-			if errors.Is(err, errProviderNetworkSignInQuarantined) || exits || set {
-				t.Fatalf("without the flag: err = %v, exit %t, set aside %t", err, exits, set)
+			if errors.Is(err, errProviderNetworkSignInQuarantined) || set {
+				t.Fatalf("without the flag: err = %v, set aside %t", err, set)
+			}
+			// The run may still ask for the retryable no-slot exit: the sign-in
+			// was rejected and no slot authenticated, which is the case that exit
+			// covers. Only the quarantine code would be wrong here.
+			if exits && code != providerNoSlotAuthenticatedExitCode {
+				t.Fatalf("without the flag: exit %d %t", code, exits)
 			}
 			if token, err := clientauth.ReadToken(jwtPath); err != nil || token != expired {
 				t.Fatalf("without the flag the sign-in moved: %v", err)
