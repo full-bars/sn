@@ -2,6 +2,7 @@ package miner
 
 import (
 	"net"
+	"strings"
 	"testing"
 )
 
@@ -106,14 +107,24 @@ func TestPrivateSourcesEnabledExactOne(t *testing.T) {
 func TestSSRFDialContextLiteralIP(t *testing.T) {
 	setSSRFFlags(t, false, false)
 	for _, addr := range []string{"10.0.0.1:80", "127.0.0.1:80", "[::1]:80", "169.254.169.254:80", "[::ffff:10.0.0.1]:80"} {
-		if _, err := ssrfDialContext(t.Context(), "tcp", addr); err == nil {
-			t.Errorf("flag off: dial %s was not refused", addr)
-		}
+		requireSSRFRefusal(t, addr)
 	}
 	setSSRFFlags(t, false, true)
 	for _, addr := range []string{"169.254.169.254:80", "[fe80::1]:80", "[::ffff:169.254.169.254]:80", "0.0.0.0:80"} {
-		if _, err := ssrfDialContext(t.Context(), "tcp", addr); err == nil {
-			t.Errorf("flag on: dial %s was not refused", addr)
-		}
+		requireSSRFRefusal(t, addr)
+	}
+}
+
+// requireSSRFRefusal proves the guard answered, not that the address was
+// merely unreachable: a connection error would pass a bare err != nil check
+// even if the guard stopped rejecting the address.
+func requireSSRFRefusal(t *testing.T, addr string) {
+	t.Helper()
+	_, err := ssrfDialContext(t.Context(), "tcp", addr)
+	if err == nil {
+		t.Fatalf("dial %s was not refused", addr)
+	}
+	if !strings.Contains(err.Error(), "SSRF guard") {
+		t.Fatalf("dial %s was refused for the wrong reason: %v", addr, err)
 	}
 }
