@@ -1412,7 +1412,8 @@ components:
           description: >-
             Historical mode requires exact literal existing Go files. In
             mono_root_v1, literal mono-root files and repository subtrees such
-            as connect/** are supported; unknown repositories are refused.
+            as connect/** are supported, including regular text file creation
+            and deletion; unknown repositories are refused.
           items:
             type: string
         forbidden_paths:
@@ -1794,9 +1795,19 @@ components:
             rewrite this value: use LF (`0x0a`) line endings, no CR bytes,
             and exactly one final LF (the value must end in `\n` but not
             `\n\n`). File sections must be sorted lexicographically by path
-            and use canonical `diff --git`, `--- a/path`, `+++ b/path`, and
-            valid `@@` hunk forms. Only regular 100644 modifications to the
-            published allowlist are accepted. Preserve the final LF when
+            and use canonical `diff --git` and valid `@@` hunk forms. Historical
+            policies accept only regular 100644 modifications with matching
+            `--- a/path` and `+++ b/path` headers. When the frozen policy explicitly
+            uses `path_base: mono_root_v1` and its evaluator is qualified for that
+            mode, regular text files may also be created or deleted: use exactly
+            `new file mode 100644` or `deleted file mode 100644`, `/dev/null` only
+            on the absent side, and one complete hunk with zero lines on that
+            side. Standard empty-file operations may instead contain only the
+            100644 mode and an index identifying the absent object and exact
+            empty SHA-1 blob (canonical abbreviation of at least seven digits).
+            Binary files, symlinks, executable or submodule modes, mode changes,
+            renames, copies, mixed/duplicate operation metadata, and protected
+            paths remain refused. Preserve the final LF when
             encoding JSON; shell command substitution commonly removes it.
 
     CompetitionScoreAcceptedResult:
