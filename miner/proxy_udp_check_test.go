@@ -3,9 +3,11 @@ package miner
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -587,5 +589,36 @@ func TestRefreshProxyUDPChecksSkipsFreshAndUnadmitted(t *testing.T) {
 	})
 	if n := refreshProxyUDPChecks(context.Background(), []*connect.ProxySettings{settings}, h3Setting{Mode: h3ModeAll}); n != 0 {
 		t.Fatalf("a fresh verdict was checked again: %d checks started", n)
+	}
+}
+
+// TestProxyUDPLogNamesSlotAndNextAction pins the operator text: the slot is
+// named in the same slot=proxy:<addr> form as the auth and control lines, the
+// loss of h3 is stated as a consequence for this slot, and a verdict that
+// disables h3 names what to check. The relay-ok line stays one short sentence.
+func TestProxyUDPLogNamesSlotAndNextAction(t *testing.T) {
+	previous := proxyManagerLogWriter
+	buffer := &providerBringUpLogBuffer{}
+	proxyManagerLogWriter = buffer
+	t.Cleanup(func() { proxyManagerLogWriter = previous })
+
+	settings := &connect.ProxySettings{Network: "socks5", Address: "65.111.8.178:1081"}
+	logProxyUDPResult(settings, nil, proxyUDPResult{Status: proxyUDPNoRelay, Err: errors.New("socks5: authentication failed")})
+	logProxyUDPResult(settings, nil, proxyUDPResult{Status: proxyUDPOK, UDPExit: "65.111.8.178"})
+
+	text := buffer.String()
+	want := "[proxy][udp] slot=proxy:65.111.8.178:1081 udp relay unavailable (socks5: authentication failed); h3 disabled for this slot, tcp only; action: check proxy credentials\n"
+	if !strings.Contains(text, want) {
+		t.Fatalf("missing the no-relay line:\n%s", text)
+	}
+	ok := "[proxy][udp] slot=proxy:65.111.8.178:1081 udp relay ok, exit 65.111.8.178 matches tcp; h3 allowed\n"
+	if !strings.Contains(text, ok) {
+		t.Fatalf("missing the concise ok line:\n%s", text)
+	}
+	if strings.Count(text, "action:") != 1 {
+		t.Fatalf("an ok verdict should not carry an action clause:\n%s", text)
+	}
+	if strings.Contains(text, "tcp modes only") {
+		t.Fatalf("old wording survived:\n%s", text)
 	}
 }
