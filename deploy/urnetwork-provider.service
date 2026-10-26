@@ -8,9 +8,10 @@ Type=simple
 ExecStart=/usr/local/bin/urnetwork provide
 Restart=on-failure
 RestartSec=5
-# 78 is EX_CONFIG: the provider's credentials were rejected, so a retry cannot
-# succeed and would only hammer the sign-in endpoint every 5 seconds.
-RestartPreventExitStatus=78
+# 80 is minerExitAuthStopped: the persisted streak reached 30 refusals over
+# at least 2 hours, so systemd must not restart it. Fix the credentials, then
+# start the unit again.
+RestartPreventExitStatus=80
 Environment=HOME=/root
 Environment=URNETWORK_RAMLOGS=0
 
