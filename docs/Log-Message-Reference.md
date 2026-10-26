@@ -6,6 +6,7 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 
 | Prefix | Meaning |
 |--------|---------|
+| `[api-token]` | API bearer refresh: scheduled refresh, retry, rejection. Carries `client=<id>` |
 | `[audit]` | System auditor warnings: host limits below recommended values |
 | `[auth]` | Login and token authentication events |
 | `[billable_rate]` | Billable transfer rate sampling |
@@ -13,6 +14,7 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 | `[direct]` | Direct providing (no proxy) status |
 | `[earn]` | Per-minute earning windows: billable_1m, billable_5m, billable_15m, billable_60m |
 | `[encryption]` | Packet encryption subsystem events |
+| `[gossip]` | Extender mesh: node startup identity, peer connections, applied records |
 | `[health]` | Health heartbeat: uptime, profile, heap, sys, connections |
 | `[hot-restart]` | Hot-restart enablement and trigger events |
 | `[hotswap]` | Zero-downtime binary reload handoff: candidate, promos, takeovers |
@@ -41,6 +43,21 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 | `[systemd]` | systemd integration events |
 | `[traffic]` | Data-plane traffic: rx/tx rates, clients |
 
+## Verbosity
+
+`-v` is V(1) and `-vv` is V(2). Lines at those levels are trace detail and are absent by default.
+
+- `[s]event=sequence_exit reason=ack_lifetime ...` is V(1). An ack-lifetime expiry is the ordinary outcome for a destination with no route, and a start with hundreds of unreachable identities printed one full line per identity at default verbosity. Every other `sequence_exit` reason stays at info, and the ack-lifetime line keeps every field, so `-v` reproduces the old output exactly.
+
+## Lines added or changed in this release
+
+- **Control-plane tally.** One line per wave replaces one warning per slot: `⚠️ [control] 465 of 465 identities authenticated but not control-connected after 1m; oldest 3m12s; sample: 203.0.113.9:1081, 198.51.100.4:1081`. It prints when the not-connected count changes and repeats an unchanged count at most every five minutes, so a single stuck slot cannot print for the life of the process. `oldest` is the longest wait of a slot that authenticated and has not dialed, not the process's uptime.
+- **Auth refusal with an action.** A slot the platform refuses for a recoverable legacy key now ends its line with the fix: `[auth] provider 497 failed: ... (slot proxy:84.21.166.105:1080, retry next start); action: run with --adopt-legacy-provider-key or clear this slot's identity`.
+- **Startup summary.** After the first heartbeat interval: `[startup] 500 slots: 465 auth ok, 31 pending, 4 failed (500 reused, 0 new); control-connected 232`.
+- **UDP relay refusal.** `[proxy][udp] slot=proxy:65.111.8.178:1081 udp relay unavailable (...); h3 disabled for this slot, tcp only; action: check proxy credentials`.
+- **Gossip startup.** `[gossip] peer=<peer id> network=<network host> role=<member|extender> listen_addrs=N operator_addrs=N started`.
+- **Attributable token lines.** Every `[api-token]` line carries `client=<id>` parsed from the bearer, for example `[api-token] client=019f7191… jwt refresh failed. Will retry in 96.17s. err = http request attempts exhausted`. A legacy bearer without the claim prints no tag rather than a fabricated one.
+
 ## Exit codes
 
 All nonzero exit codes write `FATAL [exit N]: ...` to stderr and the shm log.
@@ -57,7 +74,7 @@ All nonzero exit codes write `FATAL [exit N]: ...` to stderr and the shm log.
 | 70-76 | URL-source and direct-providing failures: missing URL (70), proxy lock (71, 75), direct providing enable/disable (72), proxy_url.json write (73-74), proxy_url.json read (76) |
 | 72 | Could not enable or disable direct providing |
 | 78 | JWT expired or invalid; startup scripts intercept this code to re-authenticate |
-| 79 | Authentication stopped after 30 failed logins over at least 2 hours; fix the credentials and restart |
+| 79 | Authentication stopped after 30 failed logins over at least 2 hours; fix the credentials and restart. The shipped units set `RestartPreventExitStatus=79`, so systemd does not restart it |
 | 80-82 | Proxy paste failures: input file, temp file, executable path |
 
 ## Log files
