@@ -59,6 +59,9 @@ type authBackoffState struct {
 	Stopped             bool   `json:"stopped"`
 	StoppedAtUnix       int64  `json:"stopped_at_unix"`
 	TotalFailures       int64  `json:"total_failures_lifetime"`
+	TotalWaits          int64  `json:"total_waits_lifetime"`
+	TotalStops          int64  `json:"total_stops_lifetime"`
+	TotalRecoveries     int64  `json:"total_recoveries_lifetime"`
 	LastReason          string `json:"last_reason"`
 }
 
@@ -217,6 +220,7 @@ func recordAuthSuccess(now time.Time) (previous authBackoffState) {
 		return previous
 	}
 	st := previous
+	st.TotalRecoveries++
 	st.ConsecutiveFailures = 0
 	st.FirstFailureUnix = 0
 	st.LastFailureUnix = 0
@@ -308,6 +312,8 @@ func runAuthBackoffWait(ctx context.Context) error {
 	wait := authBackoffDelay(st, now)
 	logAuthBackoffBanner(st, wait, now)
 	if wait > 0 {
+		st.TotalWaits++
+		_ = writeAuthBackoffState(st)
 		notifySystemdStatus(fmt.Sprintf("auth backoff, %d failures, next login in %s",
 			st.ConsecutiveFailures, wait.Round(time.Second)))
 		tlog("[auth-backoff] %d consecutive failures, next login in %s\n",
@@ -344,7 +350,59 @@ func authBackoffTerminal(now time.Time, reason string) error {
 	}
 	st.Stopped = true
 	st.StoppedAtUnix = now.Unix()
+	st.TotalStops++
 	_ = writeAuthBackoffState(st)
 	logAuthStopBanner(st, now)
+	streak := time.Duration(0)
+	if st.FirstFailureUnix > 0 {
+		streak = now.Sub(time.Unix(st.FirstFailureUnix, 0))
+	}
+	captureIncidentBundle(incidentTriggerAuthStop,
+		fmt.Sprintf("authentication stopped after %d failures over %s", st.ConsecutiveFailures, streak.Round(time.Minute)), nil)
 	return errProviderAuthStopped
+}
+
+// writeAuthBackoffMetrics renders the streak and its lifetime counters. The
+// state file is the persistent store: every transition already rewrites it, so
+// the counters survive a restart without a second file. The counters only go
+// up; the streak gauges fall back to 0 on recovery.
+func writeAuthBackoffMetrics(b *strings.Builder) {
+	st := readAuthBackoffState()
+	now := authBackoffNow()
+	wait := authBackoffDelay(st, now)
+	streak := 0.0
+	if st.FirstFailureUnix > 0 {
+		streak = now.Sub(time.Unix(st.FirstFailureUnix, 0)).Seconds()
+		if streak < 0 {
+			streak = 0
+		}
+	}
+	stopped := 0
+	if st.Stopped {
+		stopped = 1
+	}
+	fmt.Fprintf(b, "# HELP urnet_auth_consecutive_failures Counted sign-in refusals in the current streak (401 or 429).\n")
+	fmt.Fprintf(b, "# TYPE urnet_auth_consecutive_failures gauge\n")
+	fmt.Fprintf(b, "urnet_auth_consecutive_failures %d\n", st.ConsecutiveFailures)
+	fmt.Fprintf(b, "# HELP urnet_auth_backoff_wait_seconds Wait before the next sign-in; 0 when idle.\n")
+	fmt.Fprintf(b, "# TYPE urnet_auth_backoff_wait_seconds gauge\n")
+	fmt.Fprintf(b, "urnet_auth_backoff_wait_seconds %.0f\n", wait.Seconds())
+	fmt.Fprintf(b, "# HELP urnet_auth_backoff_streak_seconds Age of the current failure streak; 0 when idle.\n")
+	fmt.Fprintf(b, "# TYPE urnet_auth_backoff_streak_seconds gauge\n")
+	fmt.Fprintf(b, "urnet_auth_backoff_streak_seconds %.0f\n", streak)
+	fmt.Fprintf(b, "# HELP urnet_auth_backoff_stopped 1 once the node has decided to stop after repeated refusals.\n")
+	fmt.Fprintf(b, "# TYPE urnet_auth_backoff_stopped gauge\n")
+	fmt.Fprintf(b, "urnet_auth_backoff_stopped %d\n", stopped)
+	fmt.Fprintf(b, "# HELP urnet_auth_all_slots_failed_total Lifetime runs where every slot was refused for its credentials.\n")
+	fmt.Fprintf(b, "# TYPE urnet_auth_all_slots_failed_total counter\n")
+	fmt.Fprintf(b, "urnet_auth_all_slots_failed_total %d\n", st.TotalFailures)
+	fmt.Fprintf(b, "# HELP urnet_auth_backoff_waits_total Lifetime backoff waits before a first sign-in.\n")
+	fmt.Fprintf(b, "# TYPE urnet_auth_backoff_waits_total counter\n")
+	fmt.Fprintf(b, "urnet_auth_backoff_waits_total %d\n", st.TotalWaits)
+	fmt.Fprintf(b, "# HELP urnet_auth_backoff_stops_total Lifetime terminal stops after repeated refusals.\n")
+	fmt.Fprintf(b, "# TYPE urnet_auth_backoff_stops_total counter\n")
+	fmt.Fprintf(b, "urnet_auth_backoff_stops_total %d\n", st.TotalStops)
+	fmt.Fprintf(b, "# HELP urnet_auth_backoff_recoveries_total Lifetime recoveries from a non-zero failure streak.\n")
+	fmt.Fprintf(b, "# TYPE urnet_auth_backoff_recoveries_total counter\n")
+	fmt.Fprintf(b, "urnet_auth_backoff_recoveries_total %d\n", st.TotalRecoveries)
 }

@@ -85,6 +85,9 @@ func minerExtraMetrics() string {
 	fmt.Fprintf(&b, "urnet_control_commands_total{cmd=\"clear\"} %d\n", controlCmdsClear.Load())
 	fmt.Fprintf(&b, "urnet_control_commands_total{cmd=\"any\"} %d\n", controlCmdsAcked.Load())
 
+	// --- Authentication backoff ---
+	writeAuthBackoffMetrics(&b)
+
 	// --- Proxy audit ---
 	// Counts only; proxy addresses stay on the control socket. Emitted at zero
 	// before the first tick so panels and alerts have a stable series.

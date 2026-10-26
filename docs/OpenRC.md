@@ -173,6 +173,16 @@ The provider's [swap-thrash watchdog](/full-bars/sn/wiki/Configuration#swap-thra
 - **OpenRC counts as a supervisor.** The service script exports `URNETWORK_INIT=openrc`, because `supervise-daemon` sets neither `INVOCATION_ID` nor `NOTIFY_SOCKET`. Without that marker the provider could not tell it is supervised and would refuse the watchdog's restart.
 - **Declined handoffs are recorded.** When `update` declines HotSwap on a supervised provider, the decline ledger records the reason `openrc`.
 
+## Authentication backoff and exit 79
+
+`supervise-daemon` has no `RestartPreventExitStatus`. A node that stops with
+exit 79 is restarted by the service, then waits on the persisted streak
+before its next login (300 seconds once the count is 20 or more), so it makes
+one attempt per five minutes rather than every five seconds. To park it, run
+`rc-service urnetwork stop`, fix the credentials, then start it again. While
+the streak is non-zero `urnet-tools status` prints an `Auth` line with the
+failure count and the next attempt.
+
 ## Uninstall
 
 As root:

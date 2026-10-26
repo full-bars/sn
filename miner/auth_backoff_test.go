@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -128,5 +131,78 @@ func TestAuthBackoffHotSwapCandidateDoesNotWaitOrCount(t *testing.T) {
 	}
 	if code, ok := providerRunExitCode(err); ok && code == minerExitAuthStopped {
 		t.Fatalf("candidate asked for the stop code: %v", err)
+	}
+}
+
+func TestAuthBackoffMetricsRender(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	now := time.Now()
+	st := authBackoffState{
+		ConsecutiveFailures: 12,
+		FirstFailureUnix:    now.Add(-time.Hour).Unix(),
+		// A future last-failure keeps the elapsed-time deduction from shaving
+		// the wait between the write and the render.
+		LastFailureUnix: now.Add(time.Hour).Unix(),
+		TotalFailures:       40,
+		TotalWaits:          7,
+		TotalStops:          1,
+		TotalRecoveries:     2,
+	}
+	if err := writeAuthBackoffState(st); err != nil {
+		t.Fatal(err)
+	}
+	var b strings.Builder
+	writeAuthBackoffMetrics(&b)
+	out := b.String()
+	for _, want := range []string{
+		"urnet_auth_consecutive_failures 12",
+		"urnet_auth_backoff_wait_seconds 60",
+		"urnet_auth_backoff_stopped 0",
+		"urnet_auth_all_slots_failed_total 40",
+		"urnet_auth_backoff_waits_total 7",
+		"urnet_auth_backoff_stops_total 1",
+		"urnet_auth_backoff_recoveries_total 2",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in:\n%s", want, out)
+		}
+	}
+}
+
+// The state file is the persistent counter store: a restart reads back the
+// lifetime totals, and a recovery clears only the streak.
+func TestAuthBackoffCountersSurviveRestart(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	now := time.Now()
+	recordAuthFailure(now, "401")
+	recordAuthFailure(now.Add(time.Minute), "429")
+	st := readAuthBackoffState()
+	if st.ConsecutiveFailures != 2 || st.TotalFailures != 2 {
+		t.Fatalf("after two failures: %+v", st)
+	}
+	recordAuthSuccess(now.Add(2 * time.Minute))
+	st = readAuthBackoffState()
+	if st.ConsecutiveFailures != 0 || st.FirstFailureUnix != 0 {
+		t.Fatalf("recovery must clear the streak: %+v", st)
+	}
+	if st.TotalFailures != 2 || st.TotalRecoveries != 1 {
+		t.Fatalf("lifetime totals must survive the reset: %+v", st)
+	}
+}
+
+// A state file written before the lifetime totals existed must still load.
+func TestAuthBackoffOldStateFileLoads(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	old := `{"consecutive_auth_failures":3,"first_failure_unix":1700000000,"last_failure_unix":1700000060}`
+	if err := os.WriteFile(filepath.Join(dir, authBackoffFileName), []byte(old), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	st := readAuthBackoffState()
+	if st.ConsecutiveFailures != 3 || st.LastFailureUnix != 1700000060 {
+		t.Fatalf("old file did not load: %+v", st)
+	}
+	if st.TotalFailures != 0 || st.TotalWaits != 0 || st.TotalStops != 0 || st.TotalRecoveries != 0 {
+		t.Fatalf("new counters must default to zero: %+v", st)
 	}
 }
