@@ -244,6 +244,15 @@ jobs:
         run: |-
           mkdir -p /tmp/docker-test
           printf '127.0.0.1:10001\n127.0.0.1:10002\n' > /tmp/docker-test/proxy.txt
+          # The container starts with an EMPTY proxy file instead. Since #247
+          # the miner exits nonzero when no launched slot authenticated, and
+          # these two entries are deliberately dead, so a container started
+          # with them ends its provider about 16 seconds in and every later
+          # step finds nothing to act on ("no providers found on this box").
+          # Direct providing keeps one slot authenticated and the provider
+          # alive; `proxy add` below then adds these entries at runtime, which
+          # is exactly what that step exists to test.
+          : > /tmp/docker-test/startup-proxy.txt
           # A tiny source list served from the runner. The URL-source test only
           # needs a reachable http URL, and pointing it at a third-party list
           # (monosans/proxy-list, tens of thousands of lines) made CI depend on
@@ -265,7 +274,7 @@ jobs:
             -e USER_AUTH="$GAUNTLET_USER" \
             -e PASSWORD="$GAUNTLET_PW" \
             -e URNETWORK_ALLOW_PRIVATE_SOURCES=1 \
-            -v /tmp/docker-test/proxy.txt:/app/proxy.txt \
+            -v /tmp/docker-test/startup-proxy.txt:/app/proxy.txt \
             sn-smoke:local
           echo "container started; waiting for auth..."
           sleep 60
