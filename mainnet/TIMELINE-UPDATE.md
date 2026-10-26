@@ -1,6 +1,10 @@
 # Version 2 timeline update
 
-Updated October 25, 2026, after the paired production configuration rollout. This document supplies the revised schedule for [the user-facing timeline](timeline.html); that HTML has not yet been updated.
+**Unpublished internal hand-off.** This document carries the revised schedule for
+[the user-facing timeline](timeline.html); that page still publishes the superseded
+dates until it is regenerated, so do not link this file as the public schedule.
+
+Updated October 25, 2026, after the paired production configuration rollout.
 
 ## Current status
 
