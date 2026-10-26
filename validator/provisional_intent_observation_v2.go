@@ -1,9 +1,9 @@
 //go:build linux || darwin
 
-package validator
-
 // Local runtime status is deliberately separate from authenticated V2 replay.
 // This observer owns no ledger, writes nothing and performs no chain requests.
+package validator
+
 import (
 	"bytes"
 	"context"
@@ -35,6 +35,9 @@ type ProvisionalConfiguredIntentObservationV2Options struct {
 	ValidatorID                           uint64
 	Netuid                                uint16
 	Hotkey                                [32]byte
+	// Both fields are required when an independently approved bridge is supplied.
+	// Empty fields preserve ordinary consecutive and provisional history rules.
+	NativeGapBridgePath, NativeGapBridgeSha256 string
 }
 
 // Receipts are recorded runtime claims, not independently verified chain facts.
@@ -159,6 +162,15 @@ func ObserveProvisionalConfiguredIntentsV2(ctx context.Context, options Provisio
 	if cfg.DeploymentID != options.DeploymentID || cfg.ValidatorID != options.ValidatorID || cfg.Netuid != options.Netuid || cfg.StateDir != options.StateDir {
 		return result, errors.New("local configured intent observation differs from its approved identity")
 	}
+	if options.NativeGapBridgePath != "" || options.NativeGapBridgeSha256 != "" {
+		bridge, err := ReadReleaseNativeGapBridge(options.NativeGapBridgePath, options.NativeGapBridgeSha256)
+		if err != nil {
+			return result, err
+		}
+		if err := bridge.configure(cfg); err != nil {
+			return result, err
+		}
+	}
 	result.StateDirectory, result.HandoffSHA256 = cfg.StateDir, options.HandoffSHA256
 	return observeProvisionalIntentStoreV2(ctx, cfg, options.Hotkey, result)
 }
@@ -188,6 +200,9 @@ func observeProvisionalIntentStoreV2(ctx context.Context, cfg *ReleaseConfig, ho
 	finalized, applied := 0, 0
 	result.RecordedFinalizedIntents, result.RecordedAppliedIntents = &finalized, &applied
 	if encoded == nil {
+		if cfg.nativeGapBridge != nil {
+			return result, errors.New("local intent observation has no retained bridge history")
+		}
 		result.State = "absent"
 		return result, nil
 	}
@@ -196,6 +211,17 @@ func observeProvisionalIntentStoreV2(ctx context.Context, cfg *ReleaseConfig, ho
 	})
 	if err != nil {
 		return result, errors.Join(errors.New("local intent store schema, bytes or census differs"), err)
+	}
+	var bridgeOwner *releaseNativeGapBridgeV2
+	if cfg.nativeGapBridge != nil {
+		intents := make([]*SteeringIntent, len(all))
+		for index := range all {
+			intents[index] = &all[index]
+		}
+		bridgeOwner, err = cfg.nativeGapBridge.matchHistory(ctx, intents)
+		if err != nil {
+			return result, err
+		}
 	}
 	seen := make(map[string]bool, len(all))
 	// Retained provisional testnet history can omit native submissions for
@@ -225,7 +251,11 @@ func observeProvisionalIntentStoreV2(ctx context.Context, cfg *ReleaseConfig, ho
 		}
 		seen[intent.VectorHash] = true
 		if index > 0 {
-			if err := validateSteeringIntentSuccessorWithGapsV2(&all[index-1], intent, allowProvisionalGaps); err != nil {
+			allowGap := allowProvisionalGaps
+			if bridgeOwner != nil {
+				allowGap = bridgeOwner.allowsIntentEdge(&all[index-1], intent)
+			}
+			if err := validateSteeringIntentSuccessorWithGapsV2(&all[index-1], intent, allowGap); err != nil {
 				return result, err
 			}
 		}
