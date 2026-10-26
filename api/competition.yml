@@ -62,9 +62,9 @@ info:
     claims, never proof that an already transferred reward can be clawed back.
     No replacement burn formula or actual Apex money-movement API is invented here.
     Six seven-day admission windows may have arbitrarily long grading drains.
-    Prospectively adopted winner_review_policy elected_winner_sol61max_v1 makes
+    Prospectively adopted winner_review_policy elected_winner_gpt54mini_xhigh_v1 makes
     integrity review part of automatic epoch closing, after public provisional
-    election. Only the elected winner is reviewed by the qualified Sol 6.1 max
+    election. Only the elected winner is reviewed by the qualified GPT-5.4 mini xhigh
     broker; a substantiated rejection publishes reasons and re-elects from the
     original seal. Approval then gates the exact winner's isolated build and
     qualification before the successor opens. No eligible recipient means
@@ -72,7 +72,9 @@ info:
     pauses progression; it never silently approves or selects another source.
     The review deadline is durable per elected decision and is not reset by a
     retry. Historical policies without this opt-in retain independent source
-    choice and their original preparation schedule.
+    choice and their original preparation schedule. Historical
+    elected_winner_sol61max_v1 records retain gpt-6.1-sol/max provenance; neither
+    old policy nor review digests are relabeled by a provider upgrade.
   contact:
     name: URnetwork
     email: support@ur.xyz
@@ -976,12 +978,12 @@ components:
         expected_replacement_job_id: {type: string, format: uuid}
         expected_decision_sha256:
           $ref: "#/components/schemas/Sha256"
-          description: Required by elected_winner_sol61max_v1; binds the exact current reward decision and durable review window.
+          description: Required by each elected-winner policy; binds the exact current reward decision and durable review window.
         reviewer_model:
           type: string
-          enum: [gpt-6.1-sol]
-          description: Required broker provenance under the elected-winner policy, not independent model attestation.
-        reviewer_reasoning: {type: string, enum: [max]}
+          enum: [gpt-5.4-mini, gpt-6.1-sol]
+          description: Required broker provenance pinned by the frozen policy; new mini/xhigh and historical Sol/max cannot be mixed or relabeled. Not independent model attestation.
+        reviewer_reasoning: {type: string, enum: [xhigh, max]}
     CompetitionIntegrityReviewResult:
       type: object
       additionalProperties: false
@@ -1013,8 +1015,8 @@ components:
             idempotency_key: {type: string, const: ""}
             expected_revision: {type: integer}
             expected_decision_sha256: {$ref: "#/components/schemas/Sha256"}
-            reviewer_model: {type: string, enum: [gpt-6.1-sol]}
-            reviewer_reasoning: {type: string, enum: [max]}
+            reviewer_model: {type: string, enum: [gpt-5.4-mini, gpt-6.1-sol]}
+            reviewer_reasoning: {type: string, enum: [xhigh, max]}
             job_id: {type: string, format: uuid}
             patch_sha256: {$ref: "#/components/schemas/Sha256"}
             base_source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
@@ -1164,7 +1166,7 @@ components:
         review_id: {type: string, format: uuid}
         review_decision_digest: {$ref: "#/components/schemas/Sha256"}
         reward_decision_digest: {$ref: "#/components/schemas/Sha256"}
-        winner_review_policy: {type: string, enum: [elected_winner_sol61max_v1]}
+        winner_review_policy: {type: string, enum: [elected_winner_gpt54mini_xhigh_v1, elected_winner_sol61max_v1]}
         winner_review: {$ref: "#/components/schemas/CompetitionWinnerReviewCheckpoint"}
         manifest_commit: {$ref: "#/components/schemas/GitSha"}
         manifest_sha256: {$ref: "#/components/schemas/Sha256"}
@@ -1381,8 +1383,8 @@ components:
         source_activation_generation: {type: integer, minimum: 1}
         winner_review_policy:
           type: string
-          enum: [elected_winner_sol61max_v1]
-          description: Optional prospective opt-in; absent preserves the historical independent source-choice flow. Requires zero source-choice/preparation delays and a fresh approved frozen policy.
+          enum: [elected_winner_gpt54mini_xhigh_v1, elected_winner_sol61max_v1]
+          description: New seasons use mini/xhigh; historical Sol/max records preserve their original provenance. Absent preserves the earlier independent source-choice flow. Requires zero source-choice/preparation delays and a fresh approved frozen policy.
         winner_review_timeout_seconds: {type: integer, minimum: 60, maximum: 86400}
     CompetitionPatchPolicy:
       type: object
