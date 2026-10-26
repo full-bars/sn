@@ -1389,6 +1389,16 @@ components:
       additionalProperties: false
       required: [max_patch_bytes, allowed_paths, forbidden_paths]
       properties:
+        path_base:
+          type: string
+          enum: ["", mono_root_v1]
+          description: >-
+            Empty or absent retains historical server-relative literal-file
+            screening. mono_root_v1 prefixes each diff path with its locked
+            repository name, for example connect/resident_contract_manager.go
+            for the connect repository or server/db.go for server. Use only
+            when advertised by the round's immutable policy and supported by
+            its qualified evaluator and source-promotion pipeline.
         max_patch_bytes:
           type: integer
           minimum: 1
@@ -1397,14 +1407,20 @@ components:
           type: array
           minItems: 1
           uniqueItems: true
-          description: Exact literal existing Go files; glob patterns are rejected.
+          description: >-
+            Historical mode requires exact literal existing Go files. In
+            mono_root_v1, literal mono-root files and repository subtrees such
+            as connect/** are supported; unknown repositories are refused.
           items:
             type: string
         forbidden_paths:
           type: array
           minItems: 1
           uniqueItems: true
-          description: Must explicitly include `connect/sim-latency/**`; that tree is also denied independently by the validator.
+          description: >-
+            Must explicitly include connect/sim-latency/** in historical mode
+            or server/connect/sim-latency/** in mono_root_v1. The evaluator
+            tree and repository metadata are also denied independently.
           items:
             type: string
 
