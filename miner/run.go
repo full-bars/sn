@@ -2292,14 +2292,23 @@ func startupRefusal(ctx context.Context, err error) error {
 // normally and the process exits 0, which Restart=on-failure never restarts.
 var errProviderNoSlotAuthenticated = errors.New("no provider slot authenticated")
 
-// providerNoSlotAuthenticatedExitCode matches a startup refusal: the node
-// served nothing and a supervisor must retry.
+// providerNoSlotAuthenticatedExitCode is a retryable failure: the slots could
+// not reach or complete auth, and a restart may succeed.
 const providerNoSlotAuthenticatedExitCode = 1
+
+// providerCredentialsRejectedExitCode is a terminal failure: every slot was
+// rejected for its credentials (EX_CONFIG). A supervisor must not retry it,
+// because a wrong password cannot fix itself and a 5-second restart loop only
+// hammers the sign-in endpoint.
+const providerCredentialsRejectedExitCode = 78
 
 type providerNoSlotAuthenticatedError struct {
 	tried  int
 	top    string
 	topNum int
+	// credentialsRejected is true only when every slot failure was a
+	// clientauth rejection, never a transient network or protocol failure.
+	credentialsRejected bool
 }
 
 func (self *providerNoSlotAuthenticatedError) Error() string {
@@ -2318,10 +2327,14 @@ func noSlotAuthenticatedError(authenticated, tried int, results []error) error {
 		return nil
 	}
 	counts := map[string]int{}
+	credentialsRejected := true
 	var order []string
 	for _, result := range results {
 		if result == nil {
 			return nil
+		}
+		if !clientauth.IsNetworkCredentialRejected(result) {
+			credentialsRejected = false
 		}
 		reason := result.Error()
 		if len(reason) > 200 {
@@ -2338,7 +2351,12 @@ func noSlotAuthenticatedError(authenticated, tried int, results []error) error {
 			top = reason
 		}
 	}
-	return &providerNoSlotAuthenticatedError{tried: tried, top: top, topNum: counts[top]}
+	return &providerNoSlotAuthenticatedError{
+		tried:               tried,
+		top:                 top,
+		topNum:              counts[top],
+		credentialsRejected: credentialsRejected,
+	}
 }
 
 // providerRunExitCode is the process exit code a run's error asks for, if any.
@@ -2350,6 +2368,10 @@ func providerRunExitCode(err error) (int, bool) {
 		return providerStartupRefusedExitCode, true
 	}
 	if errors.Is(err, errProviderNoSlotAuthenticated) {
+		var noSlot *providerNoSlotAuthenticatedError
+		if errors.As(err, &noSlot) && noSlot.credentialsRejected {
+			return providerCredentialsRejectedExitCode, true
+		}
 		return providerNoSlotAuthenticatedExitCode, true
 	}
 	return 0, false

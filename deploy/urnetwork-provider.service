@@ -8,6 +8,9 @@ Type=simple
 ExecStart=/usr/local/bin/urnetwork provide
 Restart=on-failure
 RestartSec=5
+# 78 is EX_CONFIG: the provider's credentials were rejected, so a retry cannot
+# succeed and would only hammer the sign-in endpoint every 5 seconds.
+RestartPreventExitStatus=78
 Environment=HOME=/root
 Environment=URNETWORK_RAMLOGS=0
 
