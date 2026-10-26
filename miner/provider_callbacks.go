@@ -5,6 +5,7 @@ package miner
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
@@ -161,6 +162,20 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		return true
 	}()
 	if changed {
+		// The operator budgets activation posts per client per hour and its
+		// refusal already names the wait, so the wait is persisted here: the
+		// activation loop's own backoff lives in memory and a restart would
+		// otherwise post into the same refusal.
+		if observation.Known && observation.Enabled {
+			switch {
+			case observation.ActivatedV4 || observation.ActivatedV6:
+				recordExtenderActivationSucceeded()
+			case observation.ActivationFailed:
+				if wait := recordExtenderActivationRefused(time.Now()); 0 < wait {
+					tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
+				}
+			}
+		}
 		self.diagnostics.observe(providerExtenderObserved, self.provider, true, nil, 0, &observation)
 	}
 }

@@ -1452,6 +1452,20 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		critLog("SIGNAL: context cancelled — draining goroutines\nsource:\n%s", cancelSource.text())
 	}()
 
+	// The operator budgets activation posts per client per hour, and one pass
+	// posts once per family, so a start asks the persisted budget before it runs
+	// the extender role. A held start still provides; it just does not listen or
+	// activate, and the line says when the role comes back.
+	extenderAllowed := true
+	if _, directPresent := directSlotIndex(providers); directPresent && isDirectEnabled() {
+		var extenderWait time.Duration
+		var extenderUsed int
+		extenderAllowed, extenderWait, extenderUsed = extenderActivationAllow(time.Now(), extenderActivationPostsPerPass)
+		if !extenderAllowed {
+			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
+				extenderUsed, extenderActivationBudget, formatDuration(extenderWait))
+		}
+	}
 	// The bring-up narration: per-slot auth outcomes and, while slots are
 	// pending, the running/pending/failed heartbeat. Declared before the
 	// worker closure; started once the launch list is fixed below. A direct
@@ -1730,7 +1744,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// competes for one role, and only the direct slot can honestly hold it
 		// -- the same rule the swarm members and hosted devices follow. The
 		// remaining slots still provide; they just do not listen.
-		settings.ProvideExtenderEnabled = proxySettings == nil
+		settings.ProvideExtenderEnabled = proxySettings == nil && extenderAllowed
 		// A proxied identity runs one family-agnostic transport, not the
 		// v4-pinned/v6-pinned/standby group: a pinned transport dials from
 		// this host, and behind a SOCKS proxy that dial cannot leave the
