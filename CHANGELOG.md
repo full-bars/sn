@@ -8,6 +8,7 @@ Everything below merged after `v2026.10.22-1078667780`. The miner is the program
 
 ### Added
 
+- **Authentication backoff and a terminal stop**: a start whose every slot fails with a credential rejection or a rate-limit refusal records the streak in `<state>/auth_backoff.json`, waits 60 seconds from 10 failures and 300 from 20, and stops with exit 79 once 30 failures span two hours. The unit sets `RestartPreventExitStatus=79`, which reaches existing nodes when the unit is redeployed; without it the node keeps retrying on the backoff schedule.
 - **A proxied slot can prove IPv6 when its proxy carries it** ([#237](https://github.com/full-bars/sn/pull/237)): a slot whose proxy has proven v6 egress runs one extra transport pinned to v6 through that same proxy, so the identity is recorded dual-stack instead of IPv4-only. The pin is asked for only after a staged probe proves the proxy's v6 path.
 - **A proxied identity runs one family-agnostic transport** ([#232](https://github.com/full-bars/sn/pull/232)): this is the shape production 3.23 runs. A pinned transport dials from the host and cannot leave a SOCKS proxy, so the proxied identity had no route to the platform on v6; the direct identity keeps the v4/v6/standby group.
 - **An IPv6 probe classifier and verdict ledger** ([#231](https://github.com/full-bars/sn/pull/231)): pure building blocks, not yet wired into a dial path. One SOCKS5 CONNECT outcome becomes a yes, no or unknown verdict for "can this proxy carry IPv6", and a per-proxy ledger persists it with trust windows.

@@ -1331,7 +1331,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// Inert without WATCHDOG_USEC and without a self-exit supervisor
 	// (liveness_watchdog.go).
 	startLivenessWatchdog(ctx)
-
+	// The streak's wait belongs to a fresh start whose node is actually
+	// restarting. A HotSwap candidate must authenticate immediately so the
+	// handoff can take over, and the parent still owns the persisted state.
+	if !self.hotSwapCandidate {
+		if err := runAuthBackoffWait(ctx); err != nil {
+			return err
+		}
+	}
 	keyPath, err := providerStatePath(".provider.key")
 	if err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
@@ -1623,6 +1630,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			return err
 		}
 		authenticatedSlots.Add(1)
+		// A successful login ends the streak. This is the running-provider
+		// path too: a reload that authenticates must clear it, never add to it.
+		if previous := recordAuthSuccess(authBackoffNow()); previous.ConsecutiveFailures > 0 {
+			logAuthRecoveredBanner(previous, authBackoffNow())
+		}
 		if reused {
 			bringUp.authReused(index, clientId, display)
 		} else {
@@ -2152,6 +2164,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		if noSlot := noSlotAuthenticatedError(int(authenticatedSlots.Load()), len(launchSlots), slotResults); noSlot != nil {
 			tlog("[provider] %v\n", noSlot)
 			returnErr = errors.Join(returnErr, noSlot)
+			// A HotSwap candidate is a fresh process but not a fresh node:
+			// the parent is still serving, so its failure must not touch the
+			// persisted streak or ask for the terminal stop.
+			var noSlotErr *providerNoSlotAuthenticatedError
+			if !self.hotSwapCandidate && errors.As(noSlot, &noSlotErr) && noSlotErr.credentialsRejected {
+				if stopErr := authBackoffTerminal(authBackoffNow(), noSlot.Error()); stopErr != nil {
+					returnErr = errors.Join(returnErr, stopErr)
+				}
+			}
 		}
 	}
 	// A handed-off parent must outlive the slots the yield cancelled: the drain
@@ -2292,14 +2313,22 @@ func startupRefusal(ctx context.Context, err error) error {
 // normally and the process exits 0, which Restart=on-failure never restarts.
 var errProviderNoSlotAuthenticated = errors.New("no provider slot authenticated")
 
-// providerNoSlotAuthenticatedExitCode matches a startup refusal: the node
-// served nothing and a supervisor must retry.
+// providerNoSlotAuthenticatedExitCode is a retryable failure: the slots could
+// not reach or complete auth, and a restart may succeed.
 const providerNoSlotAuthenticatedExitCode = 1
+
+// errProviderAuthStopped is the terminal stop after repeated authentication
+// refusals. The persisted streak, not a single run, owns the decision.
+var errProviderAuthStopped = errors.New("authentication stopped after repeated refusals")
 
 type providerNoSlotAuthenticatedError struct {
 	tried  int
 	top    string
 	topNum int
+	// credentialsRejected is true only when every slot failure was a
+	// credential rejection or a rate-limit refusal, never a transient network
+	// or protocol failure.
+	credentialsRejected bool
 }
 
 func (self *providerNoSlotAuthenticatedError) Error() string {
@@ -2318,10 +2347,14 @@ func noSlotAuthenticatedError(authenticated, tried int, results []error) error {
 		return nil
 	}
 	counts := map[string]int{}
+	credentialsRejected := true
 	var order []string
 	for _, result := range results {
 		if result == nil {
 			return nil
+		}
+		if !authFailureCounts(result) {
+			credentialsRejected = false
 		}
 		reason := result.Error()
 		if len(reason) > 200 {
@@ -2338,7 +2371,12 @@ func noSlotAuthenticatedError(authenticated, tried int, results []error) error {
 			top = reason
 		}
 	}
-	return &providerNoSlotAuthenticatedError{tried: tried, top: top, topNum: counts[top]}
+	return &providerNoSlotAuthenticatedError{
+		tried:               tried,
+		top:                 top,
+		topNum:              counts[top],
+		credentialsRejected: credentialsRejected,
+	}
 }
 
 // providerRunExitCode is the process exit code a run's error asks for, if any.
@@ -2348,6 +2386,9 @@ func providerRunExitCode(err error) (int, bool) {
 	}
 	if errors.Is(err, errProviderStartupRefused) {
 		return providerStartupRefusedExitCode, true
+	}
+	if errors.Is(err, errProviderAuthStopped) {
+		return minerExitAuthStopped, true
 	}
 	if errors.Is(err, errProviderNoSlotAuthenticated) {
 		return providerNoSlotAuthenticatedExitCode, true

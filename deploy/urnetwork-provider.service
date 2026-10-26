@@ -8,6 +8,10 @@ Type=simple
 ExecStart=/usr/local/bin/urnetwork provide
 Restart=on-failure
 RestartSec=5
+# 79 is minerExitAuthStopped: the persisted streak reached 30 refusals over
+# at least 2 hours, so systemd must not restart it. Fix the credentials, then
+# start the unit again.
+RestartPreventExitStatus=79
 Environment=HOME=/root
 Environment=URNETWORK_RAMLOGS=0
 

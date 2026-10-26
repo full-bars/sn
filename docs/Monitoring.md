@@ -121,6 +121,18 @@ The test file covers the two enabled rules. `prometheus.yml` lists `urnetwork.ym
 | `urnet_conntrack_used_ratio` | gauge | | `nf_conntrack_count` over `nf_conntrack_max` (Linux, when conntrack is loaded). Overflow drops packets silently |
 | `urnet_tcp_time_wait` | gauge | | TCP sockets in TIME_WAIT (Linux) |
 | `urnet_tcp_orphans` | gauge | | Orphaned TCP sockets (Linux) |
+| `urnet_auth_consecutive_failures` | gauge | | Counted sign-in refusals in the current streak (401 or 429) |
+| `urnet_auth_backoff_wait_seconds` | gauge | | Wait before the next sign-in; 0 when idle |
+| `urnet_auth_backoff_streak_seconds` | gauge | | Age of the current failure streak; 0 when idle |
+| `urnet_auth_backoff_stopped` | gauge | | 1 once the node has decided to stop after repeated refusals |
+| `urnet_auth_all_slots_failed_total` | counter | | Lifetime runs where every slot was refused for its credentials |
+| `urnet_auth_backoff_waits_total` | counter | | Lifetime backoff waits before a first sign-in |
+| `urnet_auth_backoff_stops_total` | counter | | Lifetime terminal stops after repeated refusals |
+| `urnet_auth_backoff_recoveries_total` | counter | | Lifetime recoveries from a non-zero failure streak |
+
+The auth series are read from `auth_backoff.json` in the state directory, so
+the counters survive a restart without a second store. They are exported at
+zero before the first failure, so panels and alerts have a stable series.
 
 ## Metrics for proxies that cannot carry traffic
 

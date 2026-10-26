@@ -184,6 +184,21 @@ func statusCmd(opts docopt.Opts, stdout io.Writer) int {
 	} else {
 		w.row(false, "Signed in", "no")
 	}
+	if st := readAuthBackoffState(); st.ConsecutiveFailures > 0 {
+		now := time.Now()
+		streak := time.Duration(0)
+		if st.FirstFailureUnix > 0 {
+			streak = now.Sub(time.Unix(st.FirstFailureUnix, 0))
+		}
+		detail := fmt.Sprintf("%d failed logins over %s", st.ConsecutiveFailures, streak.Round(time.Minute))
+		switch {
+		case st.Stopped:
+			detail += ", stopped; fix the credentials and restart"
+		case authBackoffDelay(st, now) > 0:
+			detail += fmt.Sprintf(", next attempt in %s", authBackoffDelay(st, now).Round(time.Second))
+		}
+		w.warn("Auth", detail)
+	}
 	switch {
 	case report.ClientId != "":
 		w.row(true, "Device", "registered, miner identity "+shortId(report.ClientId))

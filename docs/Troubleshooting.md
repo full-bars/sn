@@ -30,6 +30,16 @@ failure and what happened.
 | 0 | Clean shutdown (SIGTERM or manual stop). |
 | 78 | The JWT is expired or invalid. The container startup script intercepts this code, deletes the stale JWT, and re-authenticates when an auth code is available (see Container troubleshooting). |
 | 75 | Planned restart requested by the swap-thrash watchdog, or by the liveness watchdog when a stalled process has made no progress for 10 minutes. It is not a crash. Under systemd with `Restart=on-failure` the unit restarts the provider; the miner image's start script restarts `miner provide` after 5 seconds. The same code also marks a rejected network sign-in set aside for a fresh sign-in. The thrash path leaves a one-shot `thrash_exit.<pid>` marker in the state directory immediately before it exits, and `provide --all-operators` uses that pid-bound marker to name the cause for the operator: the two exits are followed by the same credential check, so only the log line differs. See [Swap-thrash watchdog](/full-bars/sn/wiki/Configuration#swap-thrash-watchdog). |
+| 79 | Authentication stopped after 30 failed logins over at least 2 hours. The node is parked deliberately, not crash-looping. Fix the credentials, then start the unit or container again; the first successful login clears the streak. Under systemd the unit sets `RestartPreventExitStatus=79`, and the miner image's start script stays stopped instead of re-authenticating. |
+
+### Authentication stopped after repeated failures
+
+A node exits 79 only after the provider has asked for a sign-in 30 times over
+at least two hours and every attempt was refused. The streak lives in
+`auth_backoff.json` in the state directory (count, first and last failure,
+stopped, lifetime total, last reason). Fix the credentials (`urnetwork auth`,
+or the container's `USER_AUTH`/`PASSWORD`), then start the provider again. A
+successful login resets the file; deleting it also resets the streak.
 
 ## Container troubleshooting
 

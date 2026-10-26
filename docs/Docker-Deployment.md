@@ -643,3 +643,5 @@ services:
 ```
 
 The start scripts (`start_stable.sh`, `start_nightly.sh`, `start_jwt.sh` and the provider loop of the Pelican egg) treat exit 75 as a planned restart: they wait 5 seconds, restart the provider and leave the JWT alone. Without a writable, persistent `~/.urnetwork` the watchdog logs `persist-failed` and never exits. On runtimes that do not create `/.dockerenv` (Podman, Kubernetes) also set `URNETWORK_CONTAINER=1`.
+
+Exit 79 is the terminal stop after repeated authentication failures. The miner image's start script keeps the container up but parked: it logs one CRITICAL line and makes no further login attempt until the container is restarted, because a Docker restart policy ignores `RestartPreventExitStatus`. Fix `USER_AUTH`/`PASSWORD` and restart the container. An older start script that does not know 79 treats it as a crash and exits after three attempts; the Docker restart policy then starts it again, and the persisted streak waits 300 seconds before each login, so the loop is slow rather than tight.

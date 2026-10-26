@@ -24,7 +24,7 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 | Command | What it does |
 |---|---|
 | `providers` (`list`, `ps`) | List providers. Your own OS user's by default, or all providers on the box with `--all` (JWT identities, systemd units, state dirs). |
-| `status [target]` | Show detailed status. On Linux it shows a live `systemctl status` view; on Windows/macOS it renders a styled panel. The live block's pressure row prints the provider's one-sentence pressure summary (the `summary` from `~/.urnetwork/pressure_status`) when the provider writes it; older providers show the bare score. |
+| `status [target]` | Show detailed status. On Linux it shows a live `systemctl status` view; on Windows/macOS it renders a styled panel. The live block's pressure row prints the provider's one-sentence pressure summary (the `summary` from `~/.urnetwork/pressure_status`) when the provider writes it; older providers show the bare score. When the auth backoff streak is non-zero it also prints an `Auth` line with the failure count and the next attempt. |
 | `start [target]` | Start provider service/process. |
 | `stop [target]` | Stop provider service/process. |
 | `restart [target]` | Restart provider service/process. |

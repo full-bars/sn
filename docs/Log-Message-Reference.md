@@ -57,6 +57,7 @@ All nonzero exit codes write `FATAL [exit N]: ...` to stderr and the shm log.
 | 70-76 | URL-source and direct-providing failures: missing URL (70), proxy lock (71, 75), direct providing enable/disable (72), proxy_url.json write (73-74), proxy_url.json read (76) |
 | 72 | Could not enable or disable direct providing |
 | 78 | JWT expired or invalid; startup scripts intercept this code to re-authenticate |
+| 79 | Authentication stopped after 30 failed logins over at least 2 hours; fix the credentials and restart |
 | 80-82 | Proxy paste failures: input file, temp file, executable path |
 
 ## Log files

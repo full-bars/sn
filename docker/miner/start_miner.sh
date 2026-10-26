@@ -362,6 +362,16 @@ func_run() {
       log "[CRITICAL] Session rejected and re-auth unavailable; exiting 78"
       return 78
     fi
+    if [ "$PROVIDE_CODE" -eq 79 ]; then
+      # A Docker restart policy ignores RestartPreventExitStatus, so exiting
+      # would re-auth in a tight loop. Stay up but parked until an operator
+      # fixes the credentials and restarts the container.
+      log "[CRITICAL] Authentication stopped after repeated failures (exit 79); the node is parked. Fix USER_AUTH/PASSWORD, then restart the container."
+      while :; do
+        func_exit_if_stopping
+        func_sleep 3600
+      done
+    fi
     failures=$((failures + 1))
     log "[WARN] The miner crashed (#$failures, code=$PROVIDE_CODE)"
     if [ "$failures" -ge 3 ]; then

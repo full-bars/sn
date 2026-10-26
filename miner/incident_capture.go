@@ -138,6 +138,10 @@ const (
 	// incidentTriggerThrash is one swap-thrash escalation: either the
 	// supervised restart that exits 75, or the denial that refuses to restart.
 	incidentTriggerThrash incidentTrigger = "thrash"
+	// incidentTriggerAuthStop is the terminal stop after repeated
+	// authentication refusals: one bundle records what the node was doing
+	// when it parked.
+	incidentTriggerAuthStop incidentTrigger = "auth_stop"
 )
 
 // Pacing, from the provider: one capture per trigger per cooldown, and a
