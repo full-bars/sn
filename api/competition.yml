@@ -956,6 +956,17 @@ components:
       type: object
       additionalProperties: false
       required: [idempotency_key, expected_revision, job_id, patch_sha256, base_source_lock_sha256, score_sha256, baseline_sha256, artifact_manifest_sha256, criteria_version, reward_disposition, source_disposition, reason_codes, public_explanation, withheld_evidence_explanation, private_evidence_sha256, findings]
+      allOf:
+        - if:
+            properties: {reviewer_model: {const: gpt-5.4-mini}}
+            required: [reviewer_model]
+          then:
+            properties: {reviewer_reasoning: {const: xhigh}}
+        - if:
+            properties: {reviewer_model: {const: gpt-6.1-sol}}
+            required: [reviewer_model]
+          then:
+            properties: {reviewer_reasoning: {const: max}}
       properties:
         idempotency_key: {type: string, minLength: 1, maxLength: 128}
         expected_revision: {type: integer, minimum: 1}
@@ -1011,6 +1022,17 @@ components:
           type: object
           description: Original evidence identities with explicitly redacted private request content. Request digest continues to identify the original private record.
           additionalProperties: false
+          allOf:
+            - if:
+                properties: {reviewer_model: {const: gpt-5.4-mini}}
+                required: [reviewer_model]
+              then:
+                properties: {reviewer_reasoning: {const: xhigh}}
+            - if:
+                properties: {reviewer_model: {const: gpt-6.1-sol}}
+                required: [reviewer_model]
+              then:
+                properties: {reviewer_reasoning: {const: max}}
           properties:
             idempotency_key: {type: string, const: ""}
             expected_revision: {type: integer}
