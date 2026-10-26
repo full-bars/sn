@@ -746,8 +746,14 @@ var ssrfAllowLoopback atomic.Bool
 // address is still refused there.
 var ssrfAllowPrivate atomic.Bool
 
+// privateSourcesEnabled reports whether the URNETWORK_ALLOW_PRIVATE_SOURCES
+// value enables ssrfAllowPrivate. Only the exact string "1" does.
+func privateSourcesEnabled(v string) bool {
+	return v == "1"
+}
+
 func init() {
-	if os.Getenv("URNETWORK_ALLOW_PRIVATE_SOURCES") == "1" {
+	if privateSourcesEnabled(os.Getenv("URNETWORK_ALLOW_PRIVATE_SOURCES")) {
 		ssrfAllowPrivate.Store(true)
 	}
 }
