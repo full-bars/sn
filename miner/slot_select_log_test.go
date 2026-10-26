@@ -172,7 +172,13 @@ func TestProviderBringUpCapsPerSlotControlWarnings(t *testing.T) {
 	// No individual per-slot warnings should be emitted.
 	named := strings.Count(text, "authenticated but has not reached the control plane")
 	if named != 0 {
-		t.Fatalf("expected zero individual warnings, got %d:\\n%s", named, text)
+		t.Fatalf("expected zero individual warnings, got %d:\n%s", named, text)
+	}
+	// One wave of expiries is one tally, not one per slot. The size limit is 5
+	// slots per tick in the old design; with the shared summary it must be a
+	// single line for the whole wave.
+	if summaries := strings.Count(text, "identities authenticated but not control-connected"); summaries != 1 {
+		t.Fatalf("expected one summary line for %d expiring slots, got %d:\n%s", total, summaries, text)
 	}
 	// Summary should carry the total and a sample.
 	if !strings.Contains(text, fmt.Sprintf("%d of %d identities authenticated but not control-connected", total, total)) {
