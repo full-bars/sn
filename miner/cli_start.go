@@ -23,11 +23,12 @@ const minerExitNeedsSetup = 3
 
 // minerExitAuthStopped is the terminal stop after repeated authentication
 // refusals. It is distinct from 78 (JWT expired or invalid: the container
-// entrypoint clears the session and re-authenticates on it) and from 75 (the
-// quarantine/watchdog restart). The unit sets RestartPreventExitStatus=80 so
-// systemd does not restart it; a supervisor without that setting treats it as
-// another failure and the persisted streak keeps the backoff in force.
-const minerExitAuthStopped = 80
+// entrypoint clears the session and re-authenticates on it), from 75 (the
+// quarantine/watchdog restart), and from 80-82 (proxy paste failures). The
+// unit sets RestartPreventExitStatus=79 so systemd does not restart it; a
+// supervisor without that setting treats it as another failure and the
+// persisted streak keeps the backoff in force.
+const minerExitAuthStopped = 79
 
 // cliTerminal is the terminal, once provider start has sent stderr to its
 // log. Messages meant for a person go here.

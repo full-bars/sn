@@ -109,8 +109,10 @@ conflict is logged and `AUTH` wins.
    reminder line is always logged.
 4. Authentication runs once when no session exists, then `provide` runs under a
    small supervisor: exit 75 restarts after 5s, exit 78 clears the session and
-   re-authenticates (up to 3 times), other crashes exit after 3 attempts so the
-   container or systemd restart policy takes over.
+   re-authenticates (up to 3 times), exit 79 parks the container (it stays up
+   but makes no further login attempt) until the credentials are fixed, and
+   other crashes exit after 3 attempts so the container or systemd restart
+   policy takes over.
 
 ## Inside the image
 

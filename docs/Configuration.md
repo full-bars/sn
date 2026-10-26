@@ -317,3 +317,17 @@ urnet-tools proxy audit release --all
 
 > [!NOTE]
 > The ramp anchors (PSI 10%/60%, MemAvailable 25%/5%, load 1.0/3.0 per core, etc.) are properties of what each metric means: e.g. "a box stalled on memory 60% of the time is exhausted" holds regardless of core count or RAM size. They are not per-server capacity tuning knobs.
+
+## 🔐 Authentication backoff
+
+When a start has no authenticated slot and every slot failed with a credential
+rejection or a 429, the miner records the failure in
+`<state>/auth_backoff.json` and waits before the next login: none for the
+first 9 failures, 60 seconds from 10, and 300 seconds from 20. The time
+already spent restarting counts against the wait.
+
+After 30 failures spanning at least 2 hours the node stops with exit 79
+(`minerExitAuthStopped`). Under systemd the unit sets
+`RestartPreventExitStatus=79`; the miner image's supervisor keeps the
+container up but parked. Fix the credentials, then start it again. The first
+successful login resets the file; deleting it also resets the streak.
