@@ -249,6 +249,7 @@ jobs:
           # (monosans/proxy-list, tens of thousands of lines) made CI depend on
           # that repo and fed the provider a list large enough to die on the
           # stage-1 probe. Kept local so the test is hermetic and fast.
+          #
           printf '127.0.0.1:10001\n127.0.0.1:10002\n' > /tmp/docker-test/proxies.txt
 
       - name: Start provider container (BUILD=stable, user/pass auth)
@@ -344,22 +345,19 @@ jobs:
           # Bounded readiness retry instead of a fixed sleep: a slow server start
           # must not fail the step before add-source runs.
           curl -fsS --retry 10 --retry-delay 1 --retry-connrefused http://127.0.0.1:8099/proxies.txt
-          /tmp/urnet-docker proxy add-source "http://host.docker.internal:8099/proxies.txt"
-          # add-source only records the URL; the provider fetches asynchronously.
-          # Poll the summary until the fetched addresses are cached, so this step
-          # proves the CONTAINER fetched the source rather than just registering it.
-          cached=0
-          for i in $(seq 1 20); do
-            cached=$(/tmp/urnet-docker summary 2>/dev/null | sed -n 's/^  Cached addresses:   \([0-9][0-9]*\)$/\1/p' | head -1)
-            [ "${cached:-0}" -ge 2 ] && break
-            sleep 2
-          done
-          if [ "${cached:-0}" -lt 2 ]; then
-            echo "::error::container never cached the fetched source (cached=${cached:-0})"
+          out=$(/tmp/urnet-docker proxy add-source "http://host.docker.internal:8099/proxies.txt" 2>&1)
+          rc=$?
+          echo "$out"
+          # add-source only records the URL; the provider fetches asynchronously
+          # and logs the result. "fetched N lines" proves the CONTAINER fetched
+          # and parsed the source. A failure prints "fetch failed"/"refusing"
+          # instead, which is exactly the false green this assertion closes.
+          if [ "$rc" -ne 0 ] || ! printf '%s' "$out" | grep -q "fetched 2 lines"; then
+            echo "::error::container did not fetch the URL source"
             /tmp/urnet-docker summary || true
             exit 1
           fi
-          echo "container cached $cached addresses from the URL source"
+          echo "container fetched the URL source"
 
       - name: urnet-docker proxy remove-source (the URL source)
         run: |
