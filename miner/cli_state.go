@@ -248,29 +248,33 @@ func readMinerDeviceIn(dir string) minerDevice {
 }
 
 // readMinerOperatorIdentity is the sign-in and device of the first operator
-// directory (operatorlist.DomainStateDir, in name order) that has them. provide
-// --all-operators keeps each operator's jwt and provider identity there, never
-// at the top of the state directory, so status reads them when the top has
-// none. Display only: the supervisor decides which operators run.
+// directory (operatorlist.DomainStateDir, in name order) that carries either.
+// provide --all-operators keeps each operator's jwt and provider identity
+// there, never at the top of the state directory, so status reads them when
+// the top has none. Display only: the supervisor decides which operators run.
+//
+// Both halves come from that one directory. Read independently they can
+// describe two operators as one identity: sign-in from the first directory
+// that had a jwt, device from a later one that had a key. Registered feeds
+// needs_setup, so the mix could also show a signed-in operator as registered
+// when its own device is not.
 func readMinerOperatorIdentity(base string) (minerSignIn, minerDevice) {
-	signIn, device := minerSignIn{}, minerDevice{}
 	entries, err := os.ReadDir(filepath.Join(base, "operators"))
 	if err != nil {
-		return signIn, device
+		return minerSignIn{}, minerDevice{}
 	}
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
 		dir := operatorlist.DomainStateDir(base, entry.Name())
-		if !signIn.signedIn {
-			signIn = readMinerSignInFile(filepath.Join(dir, "jwt"))
-		}
-		if operatorDevice := readMinerDeviceIn(dir); !device.registered && (operatorDevice.registered || !device.hasHistory) {
-			device = operatorDevice
+		signIn := readMinerSignInFile(filepath.Join(dir, "jwt"))
+		device := readMinerDeviceIn(dir)
+		if signIn.signedIn || device.registered || device.hasHistory {
+			return signIn, device
 		}
 	}
-	return signIn, device
+	return minerSignIn{}, minerDevice{}
 }
 
 // unverifiedJwtString reads one claim for display only. The server verifies

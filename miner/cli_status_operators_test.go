@@ -42,6 +42,31 @@ func TestMinerStatusReadsAllOperatorsSignIn(t *testing.T) {
 	}
 }
 
+// Two operator directories must not be merged into one identity: the report
+// takes sign-in and device from the same directory, the first in name order
+// that carries either.
+func TestMinerStatusDoesNotMixOperatorIdentities(t *testing.T) {
+	dir := phase2State(t)
+	signedIn := operatorlist.DomainStateDir(dir, "bringyour.com")
+	keyed := operatorlist.DomainStateDir(dir, "mail.bringyour.com")
+	for _, d := range []string{signedIn, keyed} {
+		if err := os.MkdirAll(d, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeState(t, signedIn, "jwt", fakeJwt(map[string]any{"network_name": "tao-from-signin"}))
+	writeState(t, keyed, ".provider.key", strings.Repeat("k", 32))
+	writeState(t, keyed, ".provider.jwt", fakeJwt(map[string]any{"client_id": "01a15cc0-0000-0000-0000-00000000c21f"}))
+
+	report, _ := buildMinerStatusReport(time.Now())
+	if !report.SignedIn || report.Network != "tao-from-signin" {
+		t.Fatalf("signed-in operator not reported: %+v", report)
+	}
+	if report.Registered || report.ClientId != "" {
+		t.Fatalf("device of another operator directory reported as this one's: %+v", report)
+	}
+}
+
 // An operator directory without a jwt is awaiting auth: no sign-in.
 func TestMinerStatusOperatorAwaitingAuth(t *testing.T) {
 	dir := phase2State(t)
