@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/urfoundation/sn/clientauth"
@@ -49,6 +50,12 @@ const (
 
 	authBackoffReminderEvery = 5 * time.Minute
 )
+
+// authBackoffMu serializes the streak file's read-modify-write. Every slot of a
+// start authenticates at once, so without it each of them reads the same
+// pre-reset state, logs its own recovery banner and adds one to the recovery
+// count.
+var authBackoffMu sync.Mutex
 
 // authBackoffState is the persisted streak. The file is the source of truth;
 // the metrics counters are separate and monotonic.
@@ -195,6 +202,8 @@ func allAuthFailuresCount(results []error) bool {
 }
 
 func recordAuthFailure(now time.Time, reason string) authBackoffState {
+	authBackoffMu.Lock()
+	defer authBackoffMu.Unlock()
 	st := readAuthBackoffState()
 	st.ConsecutiveFailures++
 	st.TotalFailures++
@@ -215,6 +224,8 @@ func recordAuthFailure(now time.Time, reason string) authBackoffState {
 // increments anything: a running provider that authenticates is the healthy
 // path and must not touch the failure counter.
 func recordAuthSuccess(now time.Time) (previous authBackoffState) {
+	authBackoffMu.Lock()
+	defer authBackoffMu.Unlock()
 	previous = readAuthBackoffState()
 	if previous.ConsecutiveFailures == 0 {
 		return previous
@@ -243,11 +254,20 @@ func authBanner(title string, lines ...string) string {
 	return b.String()
 }
 
-func logAuthBackoffBanner(st authBackoffState, wait time.Duration, now time.Time) {
-	streak := time.Duration(0)
-	if st.FirstFailureUnix > 0 {
-		streak = now.Sub(time.Unix(st.FirstFailureUnix, 0))
+// authStreakSince is the streak length, clamped at zero: a clock that moved
+// backwards must not print a negative duration.
+func authStreakSince(firstUnix int64, now time.Time) time.Duration {
+	if firstUnix <= 0 {
+		return 0
 	}
+	if streak := now.Sub(time.Unix(firstUnix, 0)); streak > 0 {
+		return streak
+	}
+	return 0
+}
+
+func logAuthBackoffBanner(st authBackoffState, wait time.Duration, now time.Time) {
+	streak := authStreakSince(st.FirstFailureUnix, now)
 	banner := authBanner("AUTH FAILURE BACKOFF ACTIVE",
 		fmt.Sprintf("consecutive failures: %d", st.ConsecutiveFailures),
 		fmt.Sprintf("streak: %s since the first failure", streak.Round(time.Second)),
@@ -270,10 +290,7 @@ func logAuthBackoffTier(st authBackoffState, wait time.Duration) {
 }
 
 func logAuthStopBanner(st authBackoffState, now time.Time) {
-	streak := time.Duration(0)
-	if st.FirstFailureUnix > 0 {
-		streak = now.Sub(time.Unix(st.FirstFailureUnix, 0))
-	}
+	streak := authStreakSince(st.FirstFailureUnix, now)
 	banner := authBanner("AUTHENTICATION STOPPED",
 		fmt.Sprintf("credentials rejected %d times over %s", st.ConsecutiveFailures, streak.Round(time.Minute)),
 		fmt.Sprintf("node stopped with exit code %d (minerExitAuthStopped)", minerExitAuthStopped),
@@ -286,10 +303,7 @@ func logAuthStopBanner(st authBackoffState, now time.Time) {
 }
 
 func logAuthRecoveredBanner(previous authBackoffState, now time.Time) {
-	streak := time.Duration(0)
-	if previous.FirstFailureUnix > 0 {
-		streak = now.Sub(time.Unix(previous.FirstFailureUnix, 0))
-	}
+	streak := authStreakSince(previous.FirstFailureUnix, now)
 	banner := authBanner("AUTHENTICATION RECOVERED",
 		fmt.Sprintf("recovered after %d consecutive failures over %s", previous.ConsecutiveFailures, streak.Round(time.Minute)),
 		"the failure streak is reset",
@@ -310,8 +324,8 @@ func runAuthBackoffWait(ctx context.Context) error {
 		return nil
 	}
 	wait := authBackoffDelay(st, now)
-	logAuthBackoffBanner(st, wait, now)
 	if wait > 0 {
+		logAuthBackoffBanner(st, wait, now)
 		st.TotalWaits++
 		_ = writeAuthBackoffState(st)
 		notifySystemdStatus(fmt.Sprintf("auth backoff, %d failures, next login in %s",
