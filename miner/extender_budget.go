@@ -18,22 +18,21 @@ import "time"
 
 const (
 	// extenderActivationBudget is the operator's six per hour minus one. The
-	// spare attempt covers what one start can spend beyond its two family
-	// posts: a hello check or a resumed pass.
+	// spare attempt covers what one start can spend beyond its family posts:
+	// a hello check or a resumed pass.
 	extenderActivationBudget = 5
 	// extenderActivationWindow is the operator's window.
 	extenderActivationWindow = time.Hour
-	// extenderActivationPostsPerPass is what one pass posts on a dual-stack
-	// host. Counting both keeps the budget safe on a host without v6, where the
-	// pass posts once.
-	extenderActivationPostsPerPass = 2
 
 	// The refusal backoff: the first refusal holds the next attempt for
-	// extenderRefusalBackoff and doubles with each further refusal, up to
-	// extenderRefusalBackoffMax. The activation loop reasons the same way; this
-	// copy exists because the loop forgets it across a restart.
+	// extenderRefusalBackoff and doubles with each further refusal, capped at
+	// the operator's own window. A cap longer than the window would park a
+	// healthy host for longer than the server itself ever would.
 	extenderRefusalBackoff    = 10 * time.Minute
-	extenderRefusalBackoffMax = 6 * time.Hour
+	extenderRefusalBackoffMax = extenderActivationWindow
+	// extenderRefusalDecay drops a refusal streak that has gone quiet, so
+	// refusals spread over weeks cannot pin a host at the maximum wait.
+	extenderRefusalDecay = 24 * time.Hour
 )
 
 type extenderActivationState struct {
@@ -44,6 +43,9 @@ type extenderActivationState struct {
 	BackoffUntilUnix int64 `json:"backoff_until_unix,omitempty"`
 	// Refusals is the current refusal streak, which doubles the wait.
 	Refusals int `json:"refusals,omitempty"`
+	// LastRefusalUnix bounds the streak in time, so a refusal from weeks ago
+	// does not escalate today's.
+	LastRefusalUnix int64 `json:"last_refusal_unix,omitempty"`
 }
 
 func readExtenderActivationState() extenderActivationState {
@@ -109,7 +111,13 @@ func extenderActivationAllow(now time.Time, posts int) (allow bool, wait time.Du
 // next start honours it instead of posting again into the same refusal.
 func recordExtenderActivationRefused(now time.Time) time.Duration {
 	state := readExtenderActivationState()
+	// A streak that has gone quiet starts over: refusals spread across weeks
+	// are not one escalating incident.
+	if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
+		state.Refusals = 0
+	}
 	state.Refusals++
+	state.LastRefusalUnix = now.Unix()
 	wait := extenderRefusalBackoff
 	for i := 1; i < state.Refusals; i++ {
 		wait *= 2
