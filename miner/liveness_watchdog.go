@@ -194,6 +194,37 @@ func livenessApplies() bool {
 	return livenessUnderSelfExitSupervisor()
 }
 
+// A systemd unit carrying WatchdogSec= is fed twice: startSystemdWatchdog
+// (hotswap_unix.go) pets through the whole of startup, then the gated loop
+// below takes over and may WITHHOLD the ping when the provider stalls, which is
+// what makes systemd restart it. The ungated startup pinger must therefore stop
+// as soon as the gated loop is feeding; two feeders, one ungated, would re-arm
+// the timer forever and the stall would never reach systemd.
+var (
+	sdWatchdogStopMu sync.Mutex
+	sdWatchdogStop   chan struct{}
+	// sdWatchdogUngated is true while the startup pinger is still running. It
+	// exists so a test can prove the handover happened, not just the wiring.
+	sdWatchdogUngated atomic.Bool
+)
+
+// stopSystemdWatchdog hands the pings over to the gated liveness loop. Called
+// only after that loop has sent its own first ping, so the unit is never left
+// unpetted in between. A no-op when the startup pinger never ran.
+func stopSystemdWatchdog() {
+	sdWatchdogStopMu.Lock()
+	stop := sdWatchdogStop
+	sdWatchdogStop = nil
+	sdWatchdogStopMu.Unlock()
+	if stop != nil {
+		close(stop)
+	}
+	// Cleared here rather than only in the goroutine's defer so callers (and
+	// tests) observe the handover as soon as the stop is requested; the
+	// goroutine's own defer is idempotent.
+	sdWatchdogUngated.Store(false)
+}
+
 // runSdWatchdog is the feed itself. It logs through the critical log, not the
 // ramlog pipe: the ramlog reader may be the thing that is starved, and a log
 // call that blocks must not stop the ping decision.
@@ -221,6 +252,10 @@ func runSdWatchdog(ctx context.Context, gate func(episodeStart bool) (bool, stri
 	}
 	processLiveness.note()      // the start is progress
 	_ = notifySystemdWatchdog() // first feed right away
+	// The gated loop owns the pings from here, so the ungated startup pinger
+	// must stop: left running it would re-arm systemd's timer forever and the
+	// withhold below could never fire.
+	stopSystemdWatchdog()
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	runSdWatchdogLoop(ctx, ticker.C, processLiveness, livenessStaleAfter, notifySystemdWatchdog, critLog, gate, func() func() { return recordLivenessStall(critLog) }, nil)

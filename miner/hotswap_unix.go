@@ -266,6 +266,13 @@ func notifySystemdStatus(text string) error {
 // The miner published STATUS but never petted, so a unit carrying WatchdogSec=
 // killed a healthy provider at every interval (systemd Result=timeout). That
 // restart is what reset the 3.23-fix identity import before it could commit.
+//
+// This is the STARTUP pinger only. It exists so the unit is petted before the
+// gated liveness loop starts (that loop is started later, once the miner is
+// ready, and the whole of startup must be covered). It must hand over to the
+// gated loop as soon as that loop is feeding: an unconditional ticker running
+// beside the gate keeps re-arming systemd's timer forever, so the gate could
+// never withhold a ping and a stalled provider would never be restarted.
 func startSystemdWatchdog() {
 	// Same derivation as the liveness loop (sdWatchdogInterval), so the two
 	// cannot disagree about the cadence and a unit with a short WatchdogSec gets
@@ -274,12 +281,27 @@ func startSystemdWatchdog() {
 	if !ok {
 		return
 	}
+	sdWatchdogStopMu.Lock()
+	if sdWatchdogStop != nil {
+		sdWatchdogStopMu.Unlock()
+		return
+	}
+	stop := make(chan struct{})
+	sdWatchdogStop = stop
+	sdWatchdogStopMu.Unlock()
+	sdWatchdogUngated.Store(true)
 	go func() {
+		defer sdWatchdogUngated.Store(false)
 		ticker := time.NewTicker(every)
 		defer ticker.Stop()
-		for range ticker.C {
-			// A missing socket is never fatal: keep pacing anyway.
-			_ = notifySystemdWatchdog()
+		for {
+			select {
+			case <-stop:
+				return
+			case <-ticker.C:
+				// A missing socket is never fatal: keep pacing anyway.
+				_ = notifySystemdWatchdog()
+			}
 		}
 	}()
 }
