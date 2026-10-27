@@ -1673,6 +1673,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			ApiUrl:                 self.apiUrl,
 			ClientStrategySettings: clientStrategySettings,
 			ClientStrategy:         clientStrategy,
+			// A capture launch's recorded client must be the one this slot
+			// presents, and the store is consulted before custody: an entry
+			// for another client is never reused or written over the slot.
+			Retained: retained,
 			Mint: func(mintCtx context.Context) (string, connect.Id, error) {
 				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, retained, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
 					// The registration path is the only observer of what happened
