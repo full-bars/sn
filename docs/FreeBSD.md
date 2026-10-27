@@ -9,7 +9,7 @@ The provider runs as an `rc.d` service named `urnetwork` under an unprivileged u
 
 ## Before you start
 
-The base system has no `jq`, no `python3` and no `curl`. The first two are optional: the release tag is read with `jq`, then `python3`, then a `sed` extraction that needs only the base system, and `jq` is what lets the installer verify the Go `urnet-tools` asset (see [What the installer does](#what-the-installer-does)). `curl` is not optional, because the installer downloads the release with `curl`: `fetch` can retrieve the script itself, but it cannot replace `curl` inside it. Install all three, plus `sudo` for the `rc.d` steps:
+The base system has no `jq`, no `python3` and no `curl`. The first two are optional: the release tag is read with `jq`, then `python3`, then a `sed` extraction that needs only the base system, and `jq` is what lets the installer verify the Go `urnet-tools` asset (see [What the installer does](#what-the-installer-does)). `curl` is not optional, because the installer downloads the release with `curl`: `fetch` can retrieve the script itself, but it cannot replace `curl` inside it. Install `curl`, `sudo` and, recommended, `jq`:
 
 ```sh
 pkg install -y curl sudo jq
