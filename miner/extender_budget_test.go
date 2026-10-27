@@ -549,6 +549,7 @@ func TestExtenderActivationBudgetKeepsEveryConcurrentReport(t *testing.T) {
 // is honoured and one it outlived is not.
 func TestExtenderActivationGateRechecksOnRelaunch(t *testing.T) {
 	testExtenderState(t)
+	writeAccountToken(t, extenderTestAccountA)
 	writeHostCapability(hostCapability{IPv6Usable: true, CheckedAtUnix: time.Now().Unix()})
 	gate := newExtenderActivationGate()
 
@@ -559,11 +560,18 @@ func TestExtenderActivationGateRechecksOnRelaunch(t *testing.T) {
 		t.Fatal("the launch that spends the startup verdict must be allowed")
 	}
 	accountId := extenderActivationUserId()
+	if accountId != extenderTestAccountA {
+		t.Fatalf("account id = %q, want %q: the test must charge a signed-in account, not the unidentified fallback",
+			accountId, extenderTestAccountA)
+	}
 	record, _ := readExtenderActivationRecord(accountId)
 	state := record.Accounts[extenderActivationAccountKey(accountId)]
 	if len(state.Attempts) != postsPerDualStackPass {
 		t.Fatalf("attempts=%d after one start, want %d: the startup posts were charged twice",
 			len(state.Attempts), postsPerDualStackPass)
+	}
+	if _, ok := record.Accounts[extenderActivationUnidentifiedAccount]; ok {
+		t.Fatalf("the start was charged to the unidentified key: %+v", record.Accounts)
 	}
 
 	// The operator refuses the activation, so the listener records a hold. A
