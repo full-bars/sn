@@ -18,7 +18,8 @@ func TestNoHardcodedRepoRefs(t *testing.T) {
 	// fix_hint.go names the old repo on purpose: when a provider runs the
 	// 3.23-fix lineage, the tool it needs is published there. That is a
 	// deliberate cross-lineage map, not a stale reference left by a rename,
-	// and TestReleaseRepoForProvider pins it.
+	// and TestReleaseRepoForProvider pins it. Matched on the exact relative
+	// path, so a nested file of the same name is still checked.
 	allowed := map[string]bool{
 		"fix_hint.go": true,
 	}

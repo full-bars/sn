@@ -27,21 +27,36 @@ func TestReleaseRepoForProvider(t *testing.T) {
 	}
 }
 
-// The hint has to be copy-pasteable on its own: repo, tag, asset and the path
-// the shell already resolves, all in one line.
+// The hint has to be copy-pasteable on its own, and it must never write over
+// the running tool: a download that dies halfway would replace a working
+// binary with a truncated one.
 func TestToolInstallHint(t *testing.T) {
-	hint := toolInstallHint("full-bars/sn", "v2026.10.26-1793016775", "/home/u/bin/urnet-tools", "linux", "amd64")
+	self := "/home/u/bin/urnet-tools"
+	hint := toolInstallHint("full-bars/sn", "v2026.10.26-1793016775", self, "linux", "amd64")
 	for _, want := range []string{
 		"https://github.com/full-bars/sn/releases/download/v2026.10.26-1793016775/urnet-tools-linux-amd64",
-		"/home/u/bin/urnet-tools",
-		"chmod +x",
+		"-o " + self + ".new",
+		"chmod +x " + self + ".new",
+		"mv " + self + ".new " + self,
 	} {
 		if !strings.Contains(hint, want) {
 			t.Errorf("hint missing %q:\n%s", want, hint)
 		}
 	}
-	win := toolInstallHint("full-bars/sn", "v2026.10.26-1793016775", `C:\tools\urnet-tools`, "windows", "amd64")
-	if !strings.Contains(win, ".exe") || !strings.Contains(win, "cannot be replaced") {
-		t.Errorf("windows hint must stage and warn, got:\n%s", win)
+	if strings.Contains(hint, "-o "+self+" ") {
+		t.Errorf("hint writes straight over the running tool:\n%s", hint)
+	}
+
+	// A path that already ends in .exe must not gain a second one, and the
+	// move has to wait until the tool exits.
+	winSelf := `C:	ools\urnet-tools.exe`
+	win := toolInstallHint("full-bars/sn", "v2026.10.26-1793016775", winSelf, "windows", "amd64")
+	if strings.Contains(win, ".exe.exe") {
+		t.Errorf("windows hint doubles the suffix:\n%s", win)
+	}
+	for _, want := range []string{winSelf + ".new", "move /Y " + winSelf + ".new " + winSelf, "once this tool has exited"} {
+		if !strings.Contains(win, want) {
+			t.Errorf("windows hint missing %q:\n%s", want, win)
+		}
 	}
 }
