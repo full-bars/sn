@@ -66,9 +66,8 @@ needs a human:
   use its saved identity mints one, saves it, and serves.
 
 `--allow-client-registration` is still accepted so existing units, scripts and
-images keep working, and it is ignored. There is no `--no-client-registration`,
-and we do not intend to add one: a provider that cannot mint cannot serve, and a
-host you want stopped is a host you stop.
+images keep working, and it is ignored. A provider that cannot mint cannot
+serve, and a host you want stopped is a host you stop.
 
 ## What a mint costs
 

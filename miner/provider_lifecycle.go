@@ -36,9 +36,10 @@ type providerRunSettings struct {
 	maxMemory        connect.ByteCount
 	memoryPlan       providerMemoryPlan
 	testEgressDialer *connect.DialContextSettings
-	// fork-only: creating a provider client is permitted by default so a unit
-	// needs no flag; --no-client-registration is the explicit off switch and
-	// arrives here as false (run.go, operators_cmd.go).
+	// fork-only: creating a provider client is always permitted, so a unit needs
+	// no flag and a slot that cannot use its saved identity mints one. The old
+	// --allow-client-registration is accepted and ignored (run.go,
+	// operators_cmd.go).
 	allowClientRegistration bool
 	// the operator's own --allow-client-registration. Device-level identity
 	// decisions (a first key, the automatic legacy import, a capture launch)
