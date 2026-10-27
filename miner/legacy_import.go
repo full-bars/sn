@@ -176,6 +176,10 @@ type legacyImportOptions struct {
 	providers     []*connect.ProxySettings
 	disabled      bool
 	explicitAdopt bool
+	// captureLaunch means a profile declares this run, so the identity each
+	// slot presents must already exist: importing a saved identity here would
+	// write custody the capture profile never recorded.
+	captureLaunch bool
 	recorder      legacyImportRecorder
 	// narrator receives the human-readable import story. nil falls back to
 	// the package writer (stderr), so a run always narrates itself.
@@ -310,7 +314,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	if opts.recorder == nil {
 		opts.recorder = nopLegacyImportRecorder{}
 	}
-	if opts.disabled || opts.explicitAdopt || opts.stateDir == "" {
+	if opts.disabled || opts.explicitAdopt || opts.captureLaunch || opts.stateDir == "" {
 		return result
 	}
 	if opts.narrator == nil {

@@ -1177,7 +1177,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if contractProfile != nil {
 		captureEvent = providerContractCaptureRequired
 	}
-	if workProfile != nil || contractProfile != nil {
+	captureLaunch := workProfile != nil || contractProfile != nil
+	if captureLaunch {
 		slots := make([]string, 0, len(providers))
 		for _, proxy := range providers {
 			slots = append(slots, providerRegistrationSlot(slotIdentities, proxy))
@@ -1388,13 +1389,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		providers:      self.proxySettings,
 		disabled:       self.noLegacyImport,
 		explicitAdopt:  self.adoptLegacyProviderKey,
+		captureLaunch:  captureLaunch,
 		recorder:       output,
 		budget:         self.legacyImportBudget,
 		newProver: func(wait legacyImportProofDialWait) (legacyImportProver, func(), error) {
 			return newSdkLegacyImportProver(ctx, self.apiUrl, wait)
 		},
 	})
-	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: providerKeyCreatePermitted(self.explicitClientRegistration, keyPath), AdoptLegacyKey: self.adoptLegacyProviderKey})
+	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: providerKeyCreatePermitted(self.explicitClientRegistration, keyPath) && !captureLaunch, AdoptLegacyKey: self.adoptLegacyProviderKey})
 	if err != nil {
 		if ctx.Err() == nil {
 			output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)

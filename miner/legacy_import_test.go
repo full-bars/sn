@@ -1177,3 +1177,28 @@ func TestLegacyImportAdoptStillValidatesEveryCandidate(t *testing.T) {
 	}
 	fixture.assertOriginalsUntouched()
 }
+
+// A capture launch presents identities that already exist, so the automatic
+// import must not adopt or write anything: custody it created would be a
+// client the profile never recorded, and the slot refusal comes later.
+func TestLegacyImportDoesNothingOnACaptureLaunch(t *testing.T) {
+	fixture := newLegacyImportFixture(t, true, 2)
+	fixture.captureOriginals()
+	result := runLegacyProviderImport(context.Background(), legacyImportOptions{
+		stateDir:       fixture.dir,
+		networkJwtPath: filepath.Join(fixture.dir, "jwt"),
+		providers:      fixture.proxySettings,
+		captureLaunch:  true,
+		recorder:       fixture.recorder,
+		newProver: func(legacyImportProofDialWait) (legacyImportProver, func(), error) {
+			return fixture.prover, func() {}, nil
+		},
+	})
+	if len(result.mintSlots) != 0 {
+		t.Fatalf("a capture launch allowed minting: %v", result.mintSlots)
+	}
+	if committed, _, _, _ := fixture.recorder.counts(); committed != 0 {
+		t.Fatalf("a capture launch committed %d slots, want none", committed)
+	}
+	fixture.assertOriginalsUntouched()
+}
