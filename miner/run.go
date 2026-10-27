@@ -1190,11 +1190,6 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			output.observe(providerContractCaptureRequired, 0, false, err, 0, nil)
 			return err
 		}
-		if self.explicitClientRegistration {
-			err := errors.New("original capture launch requires retained provider identity and cannot allocate registration")
-			output.observe(captureEvent, 0, false, err, 0, nil)
-			return err
-		}
 	}
 	progressMembers := make([]providerProgressConfigMember, 0, len(providers))
 	for _, proxy := range providers {
@@ -1639,9 +1634,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 			return admitErr
 		}
+		// A capture launch must present the client identity its profile
+		// recorded for this slot, and that profile only compares the identity
+		// when the device is built (provider_work_capture.go apply) — after a
+		// mint would have registered a replacement and written it over the
+		// slot's credential. Creation authority is withheld here instead, so
+		// the slot either presents the retained client or refuses.
+		slot := providerRegistrationSlot(slotIdentities, proxySettings)
+		captureRefusal := captureLaunchIdentityRefusal(workProfile, contractProfile, slot)
 		// The explicit flag always allocates; the automatic import enables a
 		// new registration only for this slot's recorded fallback.
-		allowCreate := self.allowClientRegistration || legacyImport.mintAllowed(legacyImportStoreKey(proxySettings))
+		allowCreate := providerSlotCreatePermitted(self.allowClientRegistration, legacyImport.mintAllowed(legacyImportStoreKey(proxySettings)), captureRefusal)
 		// Fork hook: the ported v33 hot-restart reuse (client_jwt_hotrestart.go)
 		// sits in front of the durable-registration mint. With hot restart on
 		// (the v33 default), a stored client JWT for this proxy identity is
@@ -1661,7 +1664,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			ClientStrategySettings: clientStrategySettings,
 			ClientStrategy:         clientStrategy,
 			Mint: func(mintCtx context.Context) (string, connect.Id, error) {
-				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
+				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
 					// The registration path is the only observer of what happened
 					// to this slot's identity; hand it to the start's aggregate
 					// rather than re-deriving it from the credential or a line.
@@ -1669,11 +1672,21 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				})
 			},
 			FreshMint: func(mintCtx context.Context) (string, connect.Id, error) {
-				return authenticateProviderFresh(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
+				return authenticateProviderFresh(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, output, index)
 			},
 		})
 		release()
 		if err != nil {
+			// Creation withheld for a capture launch surfaces as the
+			// registration path's refusal: name the identity the profile
+			// expects so the operator reads the cause rather than an off
+			// switch that no longer exists, and record it where the capture
+			// launch's own admission failures go.
+			var refused *clientauth.RegistrationRefusedError
+			captureDenied := captureRefusal != nil && errors.As(err, &refused)
+			if captureDenied {
+				err = fmt.Errorf("%w: %w", captureRefusal, err)
+			}
 			// Fork hook: the ported v33 give-up/backoff accounting
 			// (proxy_manager_auth.go) records this identity's failed
 			// authentication, and gives up on it once it reaches the ceiling.
@@ -1686,8 +1699,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			if proxyCtx.Err() == nil {
 				// Creation switched off is an operator decision with its own
 				// single line (authFailed), not a custody event: it must not
-				// also raise startup_recovery_required.
-				if !clientauth.IsRegistrationDisabled(err) {
+				// also raise startup_recovery_required. A capture launch's
+				// withheld creation is the opposite: it is exactly the custody
+				// decision that launch refused.
+				if captureDenied {
+					output.observe(captureEvent, index, true, err, 0, nil)
+				} else if !clientauth.IsRegistrationDisabled(err) {
 					output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
 				}
 				bringUp.authFailed(index, display, err, providerAuthRetryToken(giveUp))

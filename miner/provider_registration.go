@@ -41,6 +41,51 @@ func providerRegistrationSlot(identities providerSlotIdentities, settings *conne
 	return "proxy-sha256:" + hex.EncodeToString(sum[:])
 }
 
+// A capture launch must present the client identity its original profile
+// recorded for each slot. The profile only compares that identity when the
+// device is built (provider_work_capture.go apply), which is after the
+// registration path would have registered a replacement and written it over
+// the slot's credential, so the decision is made here instead: nil when no
+// capture profile is active, and otherwise the refusal this slot's
+// registration attempt must not get past.
+func captureLaunchIdentityRefusal(work *ProviderWorkCaptureProfile, contract *ProviderContractCaptureProfile, slot string) error {
+	if work == nil && contract == nil {
+		return nil
+	}
+	if clientId, ok := captureLaunchClientId(work, contract, slot); ok {
+		return fmt.Errorf("capture launch slot %q must present its retained client identity %s; registering a replacement is refused", slot, clientId)
+	}
+	return fmt.Errorf("capture launch has no recorded client identity for slot %q; registering a replacement is refused", slot)
+}
+
+// The work profile owns the roster and the contract profile mirrors its
+// identities, so the work profile is asked first.
+func captureLaunchClientId(work *ProviderWorkCaptureProfile, contract *ProviderContractCaptureProfile, slot string) (connect.Id, bool) {
+	if work != nil {
+		for _, provider := range work.Providers {
+			if provider.Slot == slot {
+				return connect.Id(provider.ClientId), true
+			}
+		}
+	}
+	if contract != nil {
+		for _, provider := range contract.Providers {
+			if provider.Slot == slot {
+				return connect.Id(provider.ClientId), true
+			}
+		}
+	}
+	return connect.Id{}, false
+}
+
+// Creation authority for one provider slot. A capture launch withholds it
+// whatever the operator flag and the automatic import decided: the identity it
+// must present is the one the profile recorded, so a mint here would be a
+// replacement.
+func providerSlotCreatePermitted(allowClientRegistration bool, legacyImportMint bool, captureRefusal error) bool {
+	return captureRefusal == nil && (allowClientRegistration || legacyImportMint)
+}
+
 // Full slot and legacy credential-path uniqueness both precede all workers.
 // A truncated filename collision is a refusal, never a shared client identity.
 func validateProviderRegistrationSlots(providers []*connect.ProxySettings) error {
