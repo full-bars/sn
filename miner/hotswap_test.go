@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -116,6 +117,51 @@ func TestHandoffBatonSendTakeoverRejectsANonAckMessage(t *testing.T) {
 	}
 	if err := handoffBatonSendTakeover(session, 1, 2); err == nil {
 		t.Fatal("expected the handoff to abort when the candidate does not ACK")
+	}
+}
+
+// The candidate touches no provider state until TAKEOVER, so its first open of
+// provider_state.db comes right after it. That open must not meet the parent's
+// bbolt lock: the parent releases the store before it sends TAKEOVER.
+func TestHandoffBatonReleasesTheStateStoreBeforeTakeover(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+
+	// The parent holds the store, as a running provider does.
+	if providerStoreInstance() == nil {
+		t.Fatal("the parent's store did not open")
+	}
+
+	parentConn, candidateConn := net.Pipe()
+	t.Cleanup(func() { _ = candidateConn.Close() })
+	session := &HotswapParentSession{Reader: bufio.NewReader(parentConn), Writer: parentConn}
+
+	opened := make(chan error, 1)
+	go func() {
+		msg, err := readHotswapMessage(bufio.NewReader(candidateConn))
+		if err != nil || msg.Type != HotswapMsgTakeover {
+			opened <- fmt.Errorf("candidate saw %q (%v), want TAKEOVER", msg.Type, err)
+			return
+		}
+		// The candidate opens the store as its run starts, which is after this
+		// message. The parent is still alive and draining.
+		store, openErr := openProviderStore(filepath.Join(dir, providerStoreFileName))
+		if store != nil {
+			_ = store.Close()
+		}
+		// ACK either way, so a slow open is a test failure and not the
+		// parent's ACK timeout.
+		_, _ = io.WriteString(candidateConn, `{"type":"ACK"}`+"\n")
+		opened <- openErr
+	}()
+
+	if err := handoffBatonSendTakeover(session, os.Getpid(), 4242); err != nil {
+		t.Fatalf("handoff: %s", err)
+	}
+	if openErr := <-opened; openErr != nil {
+		t.Fatalf("the candidate could not open the store the parent released: %s", openErr)
 	}
 }
 

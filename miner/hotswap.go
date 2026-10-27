@@ -287,6 +287,16 @@ type readyResult struct {
 // ACK, confirming the candidate has assumed live traffic. Returns nil on
 // success, or kills the session and returns an error on failure/timeout.
 func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID int) error {
+	// Give provider_state.db up before the candidate can act on TAKEOVER. The
+	// candidate touches no provider state until this message (run.go runs the
+	// handshake before the provider run starts), so its first store open lands
+	// right after the ACK; without this release that open meets this process's
+	// bbolt lock, waits out providerStoreOpenTimeout and records the store
+	// unavailable for the next 30s. A parent that still needs the store while it
+	// drains reopens it lazily.
+	closeProviderStore()
+	hotswapLog("⚡ [hotswap] Released %s for the candidate\n", providerStoreFileName)
+
 	// Send TAKEOVER to candidate FIRST before yielding
 	if err := writeHotswapMessage(session.Writer, HotswapMessage{
 		Type:    HotswapMsgTakeover,
