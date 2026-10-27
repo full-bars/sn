@@ -347,3 +347,18 @@ func TestLedgerConcurrent(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+// The next probe is scheduled at exactly the end of the verdict's window, and
+// Verdict only trusts an answer inside it. The change-only log guard therefore
+// has to read the last recorded answer, or every round looks like a change.
+func TestLedgerLastKeepsTheAnswerPastItsWindow(t *testing.T) {
+	l, c := newTestLedger()
+	l.Record(px, v6No)
+	c.advance(v6NoTTL)
+	if got := l.Verdict(px); got != v6Unknown {
+		t.Fatalf("Verdict at the window's end = %s, want unknown", got)
+	}
+	if got := l.Last(px); got != v6No {
+		t.Fatalf("Last at the window's end = %s, want no", got)
+	}
+}
