@@ -384,3 +384,18 @@ func TestProxyPasteUsageAndFileFlag(t *testing.T) {
 		t.Fatalf("--file = %q, want /tmp/list.txt", file)
 	}
 }
+
+// The prompt is the only place a Windows user is told how to finish the paste,
+// and the wrong key there hangs the command: Ctrl+Z suspends the process in a
+// shell that has job control, while a native console needs it to send EOF.
+func TestPasteEndHintNamesBothWindowsKeys(t *testing.T) {
+	windows := pasteEndHint("windows")
+	if !strings.Contains(windows, "Ctrl+D") || !strings.Contains(windows, "Ctrl+Z then Enter") {
+		t.Fatalf("windows hint = %q, want both keys named", windows)
+	}
+	for _, goos := range []string{"linux", "darwin", "freebsd"} {
+		if got := pasteEndHint(goos); got != "Ctrl+D" {
+			t.Fatalf("%s hint = %q, want Ctrl+D", goos, got)
+		}
+	}
+}
