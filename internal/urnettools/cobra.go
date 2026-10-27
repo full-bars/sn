@@ -1321,7 +1321,6 @@ func cmdDashboard(args []string) error {
 		sockPath := filepath.Join(p.StateDir, "provider.sock")
 		if resp, err := sendSocketRequest(sockPath, controlRequest{Cmd: "status"}); err == nil && resp.OK {
 			startupValues = resp.StartupValues
-			fmt.Println("  " + formatHostCapability(resp.HostCapability, time.Now()))
 		}
 		// Keys whose values are boolean-like but may be stored in different
 		// representations ("on" vs "1", "true" vs "yes") across the control
