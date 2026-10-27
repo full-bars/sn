@@ -27,6 +27,9 @@ const (
 	// Failures use a different format ("... = %s dur=%dms"), so matching the
 	// whole string cannot mistake one for the other.
 	slotSelectSuccessFormat = slotSelectPrefix + "%s dur=%dms\n"
+	// slotFamilyDialPrefix starts connect's per-dial address-family decision.
+	// It repeats unchanged on every dial, so the wrapper prints it on change.
+	slotFamilyDialPrefix = "[family]dial "
 )
 
 // slotSelectLabel names a slot the way the v3.23 provider does.
@@ -43,6 +46,12 @@ type slotSelectLogger struct {
 	// reached is called once, with the first successful dial through this slot.
 	reached func(dur time.Duration, via string)
 	once    sync.Once
+
+	// familyLast is the last [family]dial decision this slot printed, so an
+	// unchanged decision is not repeated on every dial. A dial that fails still
+	// prints, because the failure is the reason to look at the decision.
+	mu         sync.Mutex
+	familyLast string
 }
 
 // withSlotSelectLabel wraps log so the slot's select lines carry its label. A
@@ -67,5 +76,26 @@ func (self *slotSelectLogger) Infof(format string, args ...any) {
 		}
 		format = slotSelectPrefix + self.label + " " + format[len(slotSelectPrefix):]
 	}
-	self.Logger.Infof(format, args...)
+	// The wrapper is not the call site. glog would stamp this file and line on
+	// every line the slot's strategy logs through it, which is long and untrue,
+	// so they all go out in the provider's own tab format instead. Select lines
+	// carry the slot label; everything else keeps its own text.
+	if strings.HasPrefix(format, slotFamilyDialPrefix) {
+		message := fmt.Sprintf(format, args...)
+		// A family decision repeats for the life of the slot: the same tag
+		// picks the same family on every dial. Print it when it changes, and
+		// always when the dial failed, since that is when the decision matters.
+		self.mu.Lock()
+		repeat := message == self.familyLast && !strings.Contains(message, "err=")
+		if !repeat {
+			self.familyLast = message
+		}
+		self.mu.Unlock()
+		if repeat {
+			return
+		}
+		tlog("%s", message)
+		return
+	}
+	tlog(format, args...)
 }

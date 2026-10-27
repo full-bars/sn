@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"sync"
@@ -32,21 +33,34 @@ func (self *captureLogger) text() string {
 
 func TestSlotSelectLabelNamesTheProxyOnSuccessAndFailure(t *testing.T) {
 	base := &captureLogger{}
+	var buf bytes.Buffer
+	prev := proxyManagerLogWriter
+	proxyManagerLogWriter = &buf
+	defer func() { proxyManagerLogWriter = prev }()
 	log := withSlotSelectLabel(base, slotSelectLabel(17, "65.111.15.115:1081"), nil)
 
 	log.Infof("🌐 [net][s]select: %s dur=%dms\n", "normal success=2 error=0", int64(153))
 	log.Infof("🌐 [net][s]select: %s = %s dur=%dms\n", "fragment success=0 error=3", "i/o timeout", int64(15000))
 	log.Infof("unrelated %d\n", 7)
 
-	text := base.text()
+	// Select lines carry the slot label and no wrapper location; anything else
+	// on the logger still passes through untouched.
+	text := buf.String()
 	for _, want := range []string{
 		"🌐 [net][s]select: proxy[17] (65.111.15.115:1081) normal success=2 error=0 dur=153ms",
 		"🌐 [net][s]select: proxy[17] (65.111.15.115:1081) fragment success=0 error=3 = i/o timeout dur=15000ms",
-		"unrelated 7",
 	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q in:\n%s", want, text)
 		}
+	}
+	if strings.Contains(text, "slot_select_log.go") {
+		t.Fatalf("select line kept a wrapper location:\n%s", text)
+	}
+	// Every info line through this wrapper is emitted in the tab format, so the
+	// slot's own strategy lines stop claiming the wrapper's file:line too.
+	if !strings.Contains(text, "unrelated 7") {
+		t.Fatalf("non-select line did not reach the tab stream: %s", text)
 	}
 }
 
@@ -81,10 +95,20 @@ func TestSlotSelectReportsOnlyTheFirstOwnSuccess(t *testing.T) {
 
 func TestSlotSelectLabelEscapesPercent(t *testing.T) {
 	base := &captureLogger{}
+	var buf bytes.Buffer
+	prev := proxyManagerLogWriter
+	proxyManagerLogWriter = &buf
+	defer func() { proxyManagerLogWriter = prev }()
 	log := withSlotSelectLabel(base, "proxy[1] (a%sb)", nil)
 	log.Infof("🌐 [net][s]select: %s dur=%dms\n", "x", int64(1))
-	if !strings.Contains(base.text(), "proxy[1] (a%sb) x dur=1ms") {
-		t.Fatalf("label was formatted: %s", base.text())
+	line := buf.String()
+	if !strings.Contains(line, "proxy[1] (a%sb) x dur=1ms") {
+		t.Fatalf("label was formatted: %s", line)
+	}
+	// The wrapper is not the call site: stamping this file would be long and
+	// untrue, and the label already names the slot.
+	if strings.Contains(line, "slot_select_log.go") {
+		t.Fatalf("select line kept a wrapper location: %s", line)
 	}
 }
 
@@ -188,5 +212,37 @@ func TestProviderBringUpCapsPerSlotControlWarnings(t *testing.T) {
 	}
 	if strings.Contains(text, "oldest") == false {
 		t.Fatalf("summary missing oldest age:\\n%s", text)
+	}
+}
+
+// A family decision repeats on every dial for the life of the slot, so an
+// unchanged decision prints once. A failure prints every time: that is the
+// case where the decision is the thing to look at.
+func TestSlotSelectPrintsFamilyDialOnlyOnChange(t *testing.T) {
+	base := &captureLogger{}
+	var buf bytes.Buffer
+	prev := proxyManagerLogWriter
+	proxyManagerLogWriter = &buf
+	defer func() { proxyManagerLogWriter = prev }()
+	log := withSlotSelectLabel(base, slotSelectLabel(1, "10.0.0.1:1080"), nil)
+
+	const auto4 = "[family]dial tag=api net=tcp family=4 policy=auto demoted=none\n"
+	log.Infof(auto4)
+	log.Infof(auto4)
+	log.Infof(auto4)
+	if n := strings.Count(buf.String(), "tag=api"); n != 1 {
+		t.Fatalf("unchanged decision printed %d times, want 1:\n%s", n, buf.String())
+	}
+
+	log.Infof("[family]dial tag=api net=tcp family=6 policy=auto demoted=none\n")
+	if n := strings.Count(buf.String(), "tag=api"); n != 2 {
+		t.Fatalf("changed decision printed %d times total, want 2:\n%s", n, buf.String())
+	}
+
+	const failed = "[family]dial tag=api net=tcp family=? policy=auto demoted=none err=socks connect tcp: connection refused\n"
+	log.Infof(failed)
+	log.Infof(failed)
+	if n := strings.Count(buf.String(), "connection refused"); n != 2 {
+		t.Fatalf("repeated failure printed %d times, want 2:\n%s", n, buf.String())
 	}
 }
