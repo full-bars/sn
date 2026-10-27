@@ -222,6 +222,16 @@ func renderLiveBlock(s *NodeSnapshot, o liveOpts, pressureSummary string) string
 		fmt.Sprintf("%d dead", s.Proxies.Dead),
 	}})
 
+	// Identity provenance for this run, beside the pool counts: which slots
+	// kept the client id they had before the restart and which were minted
+	// now. Per run, so it is not a lifetime total and it drops as slots leave.
+	if c := s.ClientIDs; c != nil {
+		emit(liveRow{label: "client ids", sep: ", ", segs: []string{
+			fmt.Sprintf("%d reused", c.Reused),
+			fmt.Sprintf("%d minted", c.Minted) + " (this run)",
+		}})
+	}
+
 	// Trim: only when a cap is in force, and only when the provider reported
 	// one. The configured count is the pool size before the cap, so the row
 	// says how much capacity the cap is holding back.

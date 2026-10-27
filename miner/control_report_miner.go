@@ -124,6 +124,12 @@ func buildMinerSnapshot() (*nodeSnapshot, error) {
 		Restart:      restart,
 		Resources:    collectMinerResources(),
 	}
+	// The running pool's identity provenance, when a provide run has started.
+	// A provider that has not run yet omits the block rather than claiming
+	// that no slot reused its id.
+	if reused, minted, live := providerClientIDCounts(); live {
+		snap.ClientIDs = &snapshotClientIDs{Reused: reused, Minted: minted}
+	}
 	if haveCounters {
 		snap.Traffic = &snapshotTraffic{
 			BillableBytes:   billable,

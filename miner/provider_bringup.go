@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -82,25 +83,14 @@ func providerSlotDisplay(settings *connect.ProxySettings) string {
 	return "proxy:" + settings.Address
 }
 
-// pendingLocked is the slots that have neither authenticated nor failed. It
-// clamps at zero: a reload can raise the total after slots have already failed,
-// so the subtraction can go negative, and an operator line reading
-// "489 running, -191 pending" costs more trust than a zero ever would.
-// Callers must hold mu.
-func (self *providerBringUpTracker) pendingLocked() int {
-	pending := self.total - self.running - self.failed
-	if pending < 0 {
-		return 0
-	}
-	return pending
-}
-
 // providerBringUpLine is the heartbeat's line: the live tally of the run's
-// provider slots, and how many of the authenticated ones kept their client id
-// across the restart (reused) versus were minted (new), and how many have
-// completed a dial to the control plane. A reused id alone proves only that a
-// stored login was found; the reached count is the evidence that the slot is
-// talking to the platform. The counts trail the
+// provider slots, and how many of the slots running right now kept their client
+// id across the restart (reused) versus were minted (new), and how many have
+// completed a dial to the control plane. The client-id pair describes the same
+// population as the running count, which is also the population the metrics and
+// the status payload report: a slot that failed or was removed is in neither. A
+// reused id alone proves only that a stored login was found; the reached count
+// is the evidence that the slot is talking to the platform. The counts trail the
 // stable "N running, N pending, N failed" prefix so existing readers of it
 // still match.
 func providerBringUpLine(running, pending, failed, reused, minted, reached int) string {
@@ -116,9 +106,17 @@ type providerBringUpTracker struct {
 	total   int
 	running int
 	failed  int
+	// stopped counts the slots whose worker exited without failing: a reloader
+	// removal or a shutdown cancels the slot's context, which is not a failure
+	// to report but is a slot the run no longer serves. Pending is what is left
+	// after running, failed and stopped, so a stopped slot does not reappear as
+	// work still to come.
+	stopped int
 	states  map[uint64]string
 	// identities is each authenticated slot's latest outcome: true when the
-	// slot kept its client id, false when it was minted.
+	// slot kept its client id, false when it was minted. It is the run's
+	// history, not a liveness signal: the readers count only the slots whose
+	// state is still "running".
 	identities map[uint64]bool
 	// identityOutcomes is each slot's latest identity decision, keyed like
 	// identities. A slot can decide twice in one start (a refused credential,
@@ -180,10 +178,17 @@ func newProviderBringUpTracker(total int) *providerBringUpTracker {
 	}
 }
 
-// identityCounts returns how many authenticated slots reused their client id
-// and how many were minted. The caller must hold mu.
-func (self *providerBringUpTracker) identityCounts() (reused, minted int) {
-	for _, wasReused := range self.identities {
+// runningIdentityCounts returns how many of the slots running right now reused
+// their client id and how many minted one. A slot that authenticated and then
+// failed or was removed keeps its entry in identities (that is the run's
+// history) but is in neither count, which is what makes these the same numbers
+// the heartbeat, the metrics and the status payload report. The caller must
+// hold mu.
+func (self *providerBringUpTracker) runningIdentityCounts() (reused, minted int) {
+	for index, wasReused := range self.identities {
+		if self.states[index] != "running" {
+			continue
+		}
 		if wasReused {
 			reused++
 		} else {
@@ -191,6 +196,60 @@ func (self *providerBringUpTracker) identityCounts() (reused, minted int) {
 		}
 	}
 	return reused, minted
+}
+
+// pendingLocked is the slots still waiting on an outcome: launched, and neither
+// running, failed nor stopped. It clamps at zero because a reload can raise the
+// total after slots have already failed, and an operator line reading
+// "489 running, -191 pending" costs more trust than a zero ever would.
+// Callers must hold mu.
+func (self *providerBringUpTracker) pendingLocked() int {
+	pending := self.total - self.running - self.failed - self.stopped
+	if pending < 0 {
+		return 0
+	}
+	return pending
+}
+
+// providerBringUpCurrent is the run's bring-up tracker. The /metrics scrape and
+// the status payload read their client-id counts from it, so all three
+// surfaces report the same numbers instead of each keeping its own tally. Nil
+// before a run starts and again once it ends, which is what makes both read
+// zero rather than the previous run's counts.
+var providerBringUpCurrent atomic.Pointer[providerBringUpTracker]
+
+// setProviderBringUpTracker publishes the run's tracker; nil clears it.
+func setProviderBringUpTracker(tracker *providerBringUpTracker) {
+	providerBringUpCurrent.Store(tracker)
+}
+
+// providerClientIDCounts is the running slots split by how this run's identity
+// started: reused from a stored login, or minted. live is false when no run has
+// begun, so a caller that reports provenance can say "not measured" instead of
+// publishing zeros.
+func providerClientIDCounts() (reused, minted int, live bool) {
+	tracker := providerBringUpCurrent.Load()
+	if tracker == nil {
+		return 0, 0, false
+	}
+	tracker.mu.Lock()
+	defer tracker.mu.Unlock()
+	reused, minted = tracker.runningIdentityCounts()
+	return reused, minted, true
+}
+
+// writeProviderClientIDMetrics renders the running slots by identity
+// provenance. The counts follow the live tracker, so a slot that comes up adds
+// to one of them and a slot that leaves running drops out of both; with no run
+// started there is no tracker and both read 0.
+func writeProviderClientIDMetrics(b *strings.Builder) {
+	reused, minted, _ := providerClientIDCounts()
+	fmt.Fprintf(b, "# HELP urnet_provider_client_ids_reused Running provider slots whose client id was reused from a stored login this run.\n")
+	fmt.Fprintf(b, "# TYPE urnet_provider_client_ids_reused gauge\n")
+	fmt.Fprintf(b, "urnet_provider_client_ids_reused %d\n", reused)
+	fmt.Fprintf(b, "# HELP urnet_provider_client_ids_minted Running provider slots whose client id was minted this run.\n")
+	fmt.Fprintf(b, "# TYPE urnet_provider_client_ids_minted gauge\n")
+	fmt.Fprintf(b, "urnet_provider_client_ids_minted %d\n", minted)
 }
 
 // start emits the opening heartbeat and begins the periodic one. It is a no-op
@@ -293,7 +352,7 @@ func (self *providerBringUpTracker) emit() {
 		return
 	}
 	pending := self.pendingLocked()
-	reused, minted := self.identityCounts()
+	reused, minted := self.runningIdentityCounts()
 	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reachedIdentities))
 	self.mu.Unlock()
 	tlog("%s\n", line)
@@ -316,13 +375,8 @@ func (self *providerBringUpTracker) emitStartupSummary() {
 	total := self.total
 	running := self.running
 	failed := self.failed
-	pending := total - running - failed
-	if pending < 0 {
-		// A reload can raise the total after slots already failed, so the
-		// subtraction can go negative. Zero is the honest floor.
-		pending = 0
-	}
-	reused, minted := self.identityCounts()
+	pending := self.pendingLocked()
+	reused, minted := self.runningIdentityCounts()
 	reached := len(self.reachedIdentities)
 	summary := fmt.Sprintf("[startup] %d slots: %d auth ok, %d pending, %d failed (%d reused, %d new); control-connected %d",
 		total, running, pending, failed, reused, minted, reached)
@@ -548,6 +602,9 @@ func (self *providerBringUpTracker) shutdown() {
 		delete(self.watches, index)
 	}
 	self.mu.Unlock()
+	// A finished run publishes nothing: the gauges and the status payload must
+	// read zero, not the tally of the run that just ended.
+	providerBringUpCurrent.CompareAndSwap(self, nil)
 	self.stop()
 }
 
@@ -720,6 +777,46 @@ func (self *providerBringUpTracker) workerFailed(index uint64) {
 	self.apply(index, "failed", nil)
 }
 
+// slotStopped records a slot whose worker has exited without failing it. This
+// is the reloader's removal and the run's own shutdown: the slot's context is
+// cancelled, so provideWithProxy returns context.Canceled, and the tally used
+// to keep the slot "running" until the run ended. A slot nobody serves must not
+// be counted as running, nor reported by the client-id gauges that read the
+// same states, so every exit path calls this, clean cancellation included.
+func (self *providerBringUpTracker) slotStopped(index uint64) {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	current := self.states[index]
+	switch current {
+	case "failed", "stopped":
+		// Already out of the running tally: a failed slot is counted as a
+		// failure and a stopped one as gone, and either would be counted twice
+		// by moving it again.
+		self.mu.Unlock()
+		return
+	case "running":
+		self.running--
+	}
+	self.stopped++
+	self.states[index] = "stopped"
+	// A stop can be the last thing the run was waiting for, and no tally would
+	// print it: apply moves the count, a stop only removes work, so the final
+	// line is emitted from here too.
+	final := self.pendingLocked() <= 0 && !self.finished
+	if final {
+		self.finished = true
+	}
+	reused, minted := self.runningIdentityCounts()
+	line := providerBringUpLine(self.running, self.pendingLocked(), self.failed, reused, minted, len(self.reached))
+	self.mu.Unlock()
+	if final {
+		tlog("%s\n", line)
+		self.stop()
+	}
+}
+
 // apply updates one slot under the lock, prints its line (when any), and emits
 // the final tally exactly once when the last pending slot resolves.
 func (self *providerBringUpTracker) apply(index uint64, state string, print func()) {
@@ -754,7 +851,7 @@ func (self *providerBringUpTracker) apply(index uint64, state string, print func
 	if final {
 		self.finished = true
 	}
-	reused, minted := self.identityCounts()
+	reused, minted := self.runningIdentityCounts()
 	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reached))
 	self.mu.Unlock()
 	if final {
