@@ -149,7 +149,22 @@ var (
 	globalProviderStoreMu   sync.Mutex
 	globalProviderStore     *providerStore
 	globalProviderStorePath string
+	// A failed open is not retried on every call. bbolt's open waits on the
+	// file lock, so a second process or a damaged file would otherwise stall
+	// every caller that asks for the store and repeat the same log line for as
+	// long as the process lives. The failure is counted, and the open is tried
+	// again on a timer or immediately when the state directory moves.
+	globalProviderStoreFailedPath string
+	globalProviderStoreRetryAt    time.Time
 )
+
+// providerStoreRetryInterval bounds how often a failed open is retried.
+const providerStoreRetryInterval = 30 * time.Second
+
+// providerStoreUnavailableCategory is the persistent error category the scrape
+// exposes for a store that would not open, so a host running without its store
+// is visible instead of only logged.
+const providerStoreUnavailableCategory = "state_store_unavailable"
 
 // providerStoreInstance returns the process-wide store, opening it on first
 // use. A nil store is not fatal: callers fall back to their previous storage
@@ -168,6 +183,10 @@ func providerStoreInstance() *providerStore {
 	if globalProviderStore != nil && globalProviderStorePath == path {
 		return globalProviderStore
 	}
+	now := time.Now()
+	if globalProviderStore == nil && globalProviderStoreFailedPath == path && now.Before(globalProviderStoreRetryAt) {
+		return nil
+	}
 	if globalProviderStore != nil {
 		_ = globalProviderStore.Close()
 		globalProviderStore = nil
@@ -175,8 +194,12 @@ func providerStoreInstance() *providerStore {
 	store, err := openProviderStore(path)
 	if err != nil {
 		tlog("[state] store unavailable: %s\n", err)
+		IncrPersistentError(providerStoreUnavailableCategory)
+		globalProviderStoreFailedPath = path
+		globalProviderStoreRetryAt = now.Add(providerStoreRetryInterval)
 		return nil
 	}
+	globalProviderStoreFailedPath = ""
 	globalProviderStore, globalProviderStorePath = store, path
 	return store
 }
@@ -189,4 +212,9 @@ func closeProviderStore() {
 		_ = globalProviderStore.Close()
 		globalProviderStore = nil
 	}
+	// A deliberate close (hotswap, a moved state directory, a test) clears the
+	// failure throttle: the next call should try the open rather than inherit
+	// an interval from a failure that no longer applies.
+	globalProviderStoreFailedPath = ""
+	globalProviderStoreRetryAt = time.Time{}
 }
