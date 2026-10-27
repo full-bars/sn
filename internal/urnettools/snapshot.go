@@ -40,6 +40,10 @@ type NodeSnapshot struct {
 	// Traffic is billable versus total bytes. Nil from a provider that
 	// predates it.
 	Traffic *SnapshotTraffic `json:"traffic,omitempty"`
+	// ClientIDs is the running slots split by how this run's identity
+	// started. Nil from a provider that predates the field or has not started
+	// a provide run, so zeros never mean "measured, all minted".
+	ClientIDs *SnapshotClientIDs `json:"client_ids,omitempty"`
 }
 
 // SnapshotTraffic mirrors the provider's traffic block: session byte totals
@@ -137,6 +141,14 @@ type SnapshotProxies struct {
 	Configured    int    `json:"configured,omitempty"`
 	TrimCap       int    `json:"trim_cap,omitempty"`
 	TrimCapSource string `json:"trim_cap_source,omitempty"`
+}
+
+// SnapshotClientIDs is the running provider slots by how this run's identity
+// started: reused from a stored login, or minted. Per run, not a lifetime
+// total.
+type SnapshotClientIDs struct {
+	Reused int `json:"reused"`
+	Minted int `json:"minted"`
 }
 
 type SnapshotRestart struct {
