@@ -72,15 +72,43 @@ type providerStore struct {
 }
 
 func openProviderStore(path string) (*providerStore, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
+	// A file that did not exist before this open is a new entry in its
+	// parent directory. bbolt syncs the database pages it writes, but not
+	// the directory block that names the file, so a power cut just after
+	// creation can leave the file unlinked or zero length.
+	_, statErr := os.Stat(path)
+	created := errors.Is(statErr, os.ErrNotExist)
 	db, err := bbolt.Open(path, 0o600, &bbolt.Options{Timeout: providerStoreOpenTimeout})
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", path, err)
 	}
+	if created {
+		if syncErr := providerStoreSyncDir(dir); syncErr != nil {
+			// The database is open and its own pages are synced, so the
+			// process can use the store; what is missing is the guarantee
+			// that the directory entry survives a crash. That is worth a
+			// line, not refusing a store that works.
+			tlog("[state] created %s but could not sync %s: %s\n", path, dir, syncErr)
+		}
+	}
 	store := &providerStore{db: db, path: path}
 	return store, nil
+}
+
+// providerStoreSyncDir flushes one directory entry, which is what makes a
+// freshly created database file durable before its first write. A variable so
+// a test can observe the sync and its failure without a crash.
+var providerStoreSyncDir = func(dir string) error {
+	handle, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer handle.Close()
+	return handle.Sync()
 }
 
 func (s *providerStore) Close() error {
@@ -205,7 +233,10 @@ func (s *providerStore) appendBounded(bucket string, value any, keep int) error 
 // this way: one commit instead of one per slot, so the startup does not wait on
 // a disk sync per identity before any worker runs.
 func (s *providerStore) appendBoundedMany(bucket string, values []any, keep int) error {
-	if s == nil || len(values) == 0 {
+	if s == nil {
+		return errProviderStoreClosed
+	}
+	if len(values) == 0 {
 		return nil
 	}
 	raw := make([][]byte, 0, len(values))
@@ -219,7 +250,13 @@ func (s *providerStore) appendBoundedMany(bucket string, values []any, keep int)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.db == nil {
-		return nil
+		// The caller records outcomes and markers through this path, so a
+		// dropped append has to say so: nil here would report a write that
+		// never landed, the same way save and delete would.
+		if s.released {
+			return errProviderStoreReleased
+		}
+		return errProviderStoreClosed
 	}
 	return s.db.Update(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
