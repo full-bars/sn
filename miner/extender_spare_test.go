@@ -236,10 +236,11 @@ func TestProviderExtenderStatusRecordsARefusalForAPartlyActivatedPass(t *testing
 
 	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
 	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{
-		Enabled:             true,
-		ActivatedV4:         true,
-		LastActivationTime:  now.Unix(),
-		LastActivationError: "the operator refused the v6 post",
+		Enabled:               true,
+		ActivatedV4:           true,
+		LastActivationTime:    now.Unix(),
+		LastActivationError:   "the operator refused the v6 post",
+		LastActivationRefused: true,
 	})
 	if !listener.last.ActivatedV4 || listener.last.ActivatedV6 || !listener.last.ActivationFailed {
 		t.Fatalf("observation = %+v, want the mixed pass the status described", listener.last)

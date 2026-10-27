@@ -664,7 +664,7 @@ func TestExtenderActivationListenerRefusalHoldsTheAccount(t *testing.T) {
 	account := extenderActivationUserId()
 
 	listener := newProviderExtenderStatusListener(nil, 0, account)
-	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true, LastActivationError: "refused"})
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true, LastActivationError: "refused", LastActivationRefused: true})
 	now := time.Now()
 	if allow, wait, _ := extenderActivationAllow(now, postsPerDualStackPass, account); allow {
 		t.Fatalf("a start inside the refusal the listener recorded was allowed (wait=%s): the listener did not key the account", wait)

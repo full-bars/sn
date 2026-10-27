@@ -206,17 +206,14 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 				// v4 and failed v6 carries both, and testing the activation
 				// first would report that pass as a success, record no
 				// refusal and strand the retry the failure earned.
-				//
-				// The retry is funded before this failure's wait is recorded,
-				// so the wait that decides is the one already standing: a
-				// retry is not charged until it can run.
 				if failed {
+					// The retry is funded before this failure's wait is
+					// recorded, so the wait that decides is the one already
+					// standing: a retry is not charged until it can run.
 					if family, spent := extenderActivationSpendSpare(time.Now(), self.account, observation.activationPass()); spent {
 						tlog("[extender] activation failed on %s; the leftover post funds one retry\n", family)
 					}
-					if wait := recordExtenderActivationRefused(time.Now(), self.account); 0 < wait {
-						tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
-					}
+					self.chargeActivationFailure(observation)
 				}
 			case observation.ActivatedV4 || observation.ActivatedV6:
 				// Reached only by a pass with no failed family, which is what
@@ -225,6 +222,23 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 			}
 		}
 		self.diagnostics.observe(providerExtenderObserved, self.provider, true, nil, 0, &observation)
+	}
+}
+
+// chargeActivationFailure persists the wait a refusal implies, and records
+// nothing for a failure the operator did not refuse. LastActivationError is set
+// for every failed attempt, including one that never reached the operator, so
+// it says a family is not activated and not why: a dns failure, a dial timeout
+// and a reset all set it, while LastActivationRefused is set only by an answer
+// that came back activated: false. Holding the next start for the former spends
+// this host's budget on a wait the operator never asked for.
+func (self *providerExtenderStatusListener) chargeActivationFailure(observation providerExtenderObservation) {
+	if !observation.ActivationRefused {
+		tlog("[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held\n", observation.ActivatedV4, observation.ActivatedV6)
+		return
+	}
+	if wait := recordExtenderActivationRefused(time.Now(), self.account); 0 < wait {
+		tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
 	}
 }
 
