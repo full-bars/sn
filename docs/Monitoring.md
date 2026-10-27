@@ -134,6 +134,37 @@ The auth series are read from `auth_backoff.json` in the state directory, so
 the counters survive a restart without a second store. They are exported at
 zero before the first failure, so panels and alerts have a stable series.
 
+## Reading the pool health line
+
+`[health][proxies]` is one line per interval, and every field is a count of
+proxies in that state at the moment of the tick:
+
+```
+❤️ [health][proxies] up=482 down=551 dead=127 degraded=424 connecting=44 members=1077 target=500 floor=482 dips=60 verdict="mostly healthy" scope=isolated
+```
+
+| Field | Meaning |
+|---|---|
+| `up` | Serving and reachable now. |
+| `down` | `degraded` plus `dead`. |
+| `dead` | Failed outright. |
+| `degraded` | Reachable but failing some checks. |
+| `connecting` | Registered, not yet observed either way. |
+| `members` | Every proxy the registry knows. |
+| `target` | The pool size the operator asked for (`proxy_url_max`), or `0` when it is unknown. |
+| `floor` | The lowest `up` count over the history window, not the current value. |
+| `dips` | How many times the pool went below its floor in the window. |
+| `verdict` | `starting up`, `down`, `needs attention`, `mostly healthy`, or `healthy`. |
+| `scope` | Whether the failure is `none`, `isolated` to specific proxies, or the `pool` failing as a unit. |
+
+**Judge the pool against `target`, not `members`.** A pool trimmed to 500 keeps
+the members it has seen, so `members` can be far larger than the number of
+proxies the provider is actually serving from. When `target` is known the
+verdict measures the shortfall against it: 482 up against a target of 500 is
+96% and mostly healthy, while the same 482 against 1077 members would read as
+half the pool being down. `target=0` means the limit could not be read, and the
+verdict then falls back to judging every member.
+
 ## Metrics for proxies that cannot carry traffic
 
 A proxy can pass its SOCKS login and still be unable to reach the platform: the dial through it times out inside the proxy's own connect step. These failures are counted in a category of their own and never as auth failures, because the auth counters drive renewing or deleting an identity, which is the wrong remedy for a bad proxy. The `[health][proxies]` line shows them as `proxy-leg:N`.
