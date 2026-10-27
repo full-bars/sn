@@ -47,6 +47,11 @@ type slotSelectLogger struct {
 	reached func(dur time.Duration, via string)
 	once    sync.Once
 
+	// callerSink records that the caller supplied the logger. That sink is the
+	// caller's own stream, so the lines keep going there; only the library
+	// default is replaced by the provider's tab format (see Infof).
+	callerSink bool
+
 	// familyLast is the last [family]dial decision this slot printed, so an
 	// unchanged decision is not repeated on every dial. A dial that fails still
 	// prints, because the failure is the reason to look at the decision.
@@ -57,10 +62,11 @@ type slotSelectLogger struct {
 // withSlotSelectLabel wraps log so the slot's select lines carry its label. A
 // nil log resolves to the library default, as the strategy would.
 func withSlotSelectLabel(log connect.Logger, label string, reached func(dur time.Duration, via string)) connect.Logger {
+	callerSink := log != nil
 	if log == nil {
 		log = connect.DefaultLogger()
 	}
-	return &slotSelectLogger{Logger: log, label: label, reached: reached}
+	return &slotSelectLogger{Logger: log, label: label, reached: reached, callerSink: callerSink}
 }
 
 func (self *slotSelectLogger) Infof(format string, args ...any) {
@@ -99,9 +105,17 @@ func (self *slotSelectLogger) Infof(format string, args ...any) {
 			return
 		}
 	}
-	// The wrapper is not the call site. glog would stamp this file and line on
-	// every line the slot's strategy logs through it, which is long and untrue,
-	// so they all go out in the provider's own tab format instead. Select lines
-	// carry the slot label; everything else keeps its own text.
+	// Deliver the line once, where the caller pointed it. A supplied sink is
+	// the caller's stream and saw every one of these lines before this wrapper
+	// existed, so it still gets them, through the logger, the way the rest of
+	// the package forwards. The library default is glog, which would stamp this
+	// file and line on a line the dialer produced — long and untrue — so that
+	// case, and only that case, goes out in the provider's own tab format.
+	// Either way the label is already in the rendered text, so a % in a proxy
+	// address or account stays a character.
+	if self.callerSink {
+		self.Logger.Infof("%s", message)
+		return
+	}
 	tlog("%s", message)
 }
