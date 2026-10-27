@@ -105,15 +105,24 @@ refusal stands and the log says so.
 
 ## Recognising what happened
 
-The provider does not print a line per slot: on a five-hundred slot host that is
-five hundred lines saying almost the same thing. It reports the shape of the
-start instead, in the startup summary, and names a problem only when there is
-one.
+The line an operator actually watches is printed per slot, as it always has been:
 
-The summary reports how many slots came up and, when any identity was decided in
-this start, how the decisions went: minted new, minted replacement, adopted, and
-revoked. A start that reused every saved identity says nothing extra, so a
-healthy host's line is the same one it always printed.
+```
+♻️ client_id: 4f2c… (reused) provider=12 slot=proxy:203.0.113.9:1081
+✨ client_id: 91bd… (new)    provider=13 slot=proxy:198.51.100.4:1081
+```
+
+`(reused)` means the slot kept the identity it had; `(new)` means it is a different
+client from the last start. Grepping for `(reused)` finds every slot that kept
+its identity, and `docs/Hot-Restart.md` treats an empty diff of those lines plus
+all-`reused` as proof that a restart changed nothing. A `(new)` line for a slot
+you did not touch is the one worth investigating.
+
+On top of that per-slot detail, the provider reports the shape of the start in
+the startup summary. It does not repeat the per-slot story: it counts how the
+decisions went — minted new, minted replacement, adopted, revoked — and says
+nothing extra when every slot reused its identity, so a healthy host's line is
+the one it always printed.
 
 When replacements pass a small share of the slots that decided, one warning
 follows, naming both likely causes rather than guessing between them:

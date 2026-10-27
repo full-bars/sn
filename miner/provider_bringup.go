@@ -439,11 +439,21 @@ func (self *providerBringUpTracker) adoptIdentities(displays []string) {
 // running. The leading text matches the line the v3.23 provider and
 // docs/Hot-Restart.md document, so a grep for "(reused)" finds every slot that
 // kept its identity; the slot follows it.
+// The per-slot identity lines are the ones an operator greps on every start to
+// see whether the proxies came up with the identity they should have, and
+// docs/Hot-Restart.md documents them by shape. They are constants so that a
+// change to one is a visible diff and the test beside them fails if the shape
+// moves.
+const (
+	providerClientIdReusedFormat = "♻️ client_id: %s (reused) provider=%d slot=%s\n"
+	providerClientIdNewFormat    = "✨ client_id: %s (new) provider=%d slot=%s\n"
+)
+
 func (self *providerBringUpTracker) authReused(index uint64, clientID connect.Id, display string) {
 	self.apply(index, "running", func() {
 		self.identities[index] = true
 		self.watchControl(index, display)
-		tlog("♻️ client_id: %s (reused) provider=%d slot=%s\n", clientID, index, display)
+		tlog(providerClientIdReusedFormat, clientID, index, display)
 	})
 }
 
@@ -452,7 +462,7 @@ func (self *providerBringUpTracker) authNew(index uint64, clientID connect.Id, d
 	self.apply(index, "running", func() {
 		self.identities[index] = false
 		self.watchControl(index, display)
-		tlog("✨ client_id: %s (new) provider=%d slot=%s\n", clientID, index, display)
+		tlog(providerClientIdNewFormat, clientID, index, display)
 	})
 }
 
