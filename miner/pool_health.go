@@ -195,6 +195,11 @@ func proxyPoolMembers() (map[string]string, string) {
 type proxyPoolComposition struct {
 	Counts   proxyPoolMemberCounts
 	StateErr string
+	// Target is the pool size the operator asked for (proxy_url_max). Members
+	// above it are surplus the trim never intends to serve, so the verdict
+	// judges the pool against Target rather than against every member it can
+	// see. Zero means unknown, and the verdict falls back to Members.
+	Target int
 }
 
 // readProxyPoolComposition performs the single proxy.state read a caller needs
@@ -204,6 +209,7 @@ func readProxyPoolComposition() proxyPoolComposition {
 	return proxyPoolComposition{
 		Counts:   countProxyPoolMembers(members),
 		StateErr: stateErr,
+		Target:   resolveProxyURLMax(0),
 	}
 }
 
@@ -253,6 +259,8 @@ type proxyPoolHealthReading struct {
 	Degraded   int
 	Dead       int
 	Connecting int
+	// Target is the pool size the operator asked for; 0 means unknown.
+	Target int
 
 	// Floor is the lowest up-count over the window: the worst the pool got,
 	// not the worst it is.
@@ -273,8 +281,14 @@ type proxyPoolHealthReading struct {
 	StateError string
 }
 
-// observe records one tick and returns the resulting reading.
+// observe records one tick with no known target, for callers that judge by
+// every member observed.
 func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval time.Duration) proxyPoolHealthReading {
+	return w.observeFor(counts, 0, interval)
+}
+
+// observeFor records one tick against the pool size the operator asked for.
+func (w *proxyPoolHealthWindow) observeFor(counts proxyPoolMemberCounts, target int, interval time.Duration) proxyPoolHealthReading {
 	if interval <= 0 {
 		interval = proxyPoolHealthInterval
 	}
@@ -291,6 +305,7 @@ func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval t
 		Degraded:   counts.Degraded,
 		Dead:       counts.Dead,
 		Connecting: counts.Connecting,
+		Target:     target,
 		Floor:      counts.Up,
 	}
 	// The floor is only comparable across ticks with the same member count. A
@@ -326,6 +341,19 @@ func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval t
 		}
 	}
 
+	denom := r.Members
+	shortfall := r.Down
+	if r.Target > 0 {
+		// Judge the pool the operator asked for. Members above the target are
+		// surplus the trim never serves; counting them as down makes every
+		// trimmed host look half dead and buries the real number.
+		denom = r.Target
+		shortfall = r.Target - r.Up
+		if shortfall < 0 {
+			shortfall = 0
+		}
+	}
+
 	switch {
 	case r.Members == 0:
 		// Nothing to judge. The same rung the provider's heartbeat uses before
@@ -338,23 +366,32 @@ func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval t
 		r.Verdict = poolVerdictStartingUp
 	case r.Up == 0:
 		r.Verdict = poolVerdictDown
-	case r.Up == r.Members:
-		// Every member is up and serving. Up == Members excludes anything
-		// still connecting or degraded, so the healthy sentence's "all N
-		// proxies up" is true here and only here.
+	case r.Up >= denom:
+		// Every slot the pool is asked to serve is up and serving. Surplus
+		// members still connecting or degraded do not make it unhealthy.
 		r.Verdict = poolVerdictHealthy
 	case r.Connecting > 0 && r.Down == 0:
 		// Part of the pool is serving and the rest is still coming up, with
 		// nothing failed: that is the starting-up rung, not healthy. The
 		// sentence reports how far the pool has got.
 		r.Verdict = poolVerdictStartingUp
-	case r.Down*100 >= r.Members*poolAttentionDownPct:
+	case shortfall*100 >= denom*poolAttentionDownPct:
 		r.Verdict = poolVerdictNeedsAttention
 	default:
 		r.Verdict = poolVerdictMostlyHealthy
 	}
 
 	switch {
+	case r.Target > 0 && r.Up*2 < r.Target:
+		// Fewer than half of the pool the operator asked for is serving. One
+		// bad proxy cannot do that.
+		r.Scope = poolScopePool
+	case r.Target > 0 && r.Up >= r.Target:
+		// The pool serves its target; failing surplus members are not a pool
+		// event and not this host's problem either.
+		r.Scope = poolScopeNone
+	case r.Target > 0:
+		r.Scope = poolScopeIsolated
 	case r.Down == 0:
 		r.Scope = poolScopeNone
 	case 2*r.Down >= r.Members:
@@ -402,7 +439,7 @@ func proxyPoolHealthAt(now time.Time, comp proxyPoolComposition, force bool) pro
 	if !force && proxyPoolHealthState.seen && now.Sub(proxyPoolHealthState.lastAt) < proxyPoolHealthInterval {
 		return proxyPoolHealthState.last
 	}
-	reading := proxyPoolHealthState.window.observe(comp.Counts, proxyPoolHealthInterval)
+	reading := proxyPoolHealthState.window.observeFor(comp.Counts, comp.Target, proxyPoolHealthInterval)
 	reading.StateError = comp.StateErr
 	proxyPoolHealthState.last = reading
 	proxyPoolHealthState.lastAt = now
@@ -429,14 +466,23 @@ func resetProxyPoolHealthForTest() {
 	proxyPoolHealthState.seen = false
 }
 
+// judged is the denominator the verdict is expressed against: the pool size the
+// operator asked for when it is known, otherwise every member observed.
+func (r proxyPoolHealthReading) judged() int {
+	if r.Target > 0 {
+		return r.Target
+	}
+	return r.Members
+}
+
 // proxyPoolHealthLine renders the machine-readable aggregate. It uses the same
 // prefix and the same field names as provider/health_heartbeat.go's
 // [health][proxies] line, then the two facts that line has no field for: the
 // hour's floor and the scope.
 func proxyPoolHealthLine(r proxyPoolHealthReading) string {
 	line := fmt.Sprintf(
-		"❤️ [health][proxies] up=%d down=%d dead=%d degraded=%d connecting=%d members=%d floor=%d dips=%d verdict=%q scope=%s",
-		r.Up, r.Down, r.Dead, r.Degraded, r.Connecting, r.Members, r.Floor, r.Dips, r.Verdict, r.Scope,
+		"❤️ [health][proxies] up=%d down=%d dead=%d degraded=%d connecting=%d members=%d target=%d floor=%d dips=%d verdict=%q scope=%s",
+		r.Up, r.Down, r.Dead, r.Degraded, r.Connecting, r.Members, r.Target, r.Floor, r.Dips, r.Verdict, r.Scope,
 	)
 	if r.StateError != "" {
 		line += fmt.Sprintf(" state_error=%q", r.StateError)
@@ -483,13 +529,13 @@ func proxyPoolVerdictSentence(r proxyPoolHealthReading) string {
 		return line
 	case poolVerdictNeedsAttention:
 		return fmt.Sprintf(
-			"❤️ [health] Verdict: needs attention — only %d of %d proxies up, %d down (%d dead, %d failing). %s",
-			r.Up, r.Members, r.Down, r.Dead, r.Degraded, r.scopeSentence(),
+			"❤️ [health] Verdict: needs attention — only %d of %d wanted proxies up, %d down of %d members (%d dead, %d failing). %s",
+			r.Up, r.judged(), r.Down, r.Members, r.Dead, r.Degraded, r.scopeSentence(),
 		)
 	default:
 		return fmt.Sprintf(
-			"❤️ [health] Verdict: mostly healthy — %d of %d proxies up, %d down (%d dead, %d failing). %s",
-			r.Up, r.Members, r.Down, r.Dead, r.Degraded, r.scopeSentence(),
+			"❤️ [health] Verdict: mostly healthy — %d of %d wanted proxies up, %d down of %d members (%d dead, %d failing). %s",
+			r.Up, r.judged(), r.Down, r.Members, r.Dead, r.Degraded, r.scopeSentence(),
 		)
 	}
 }

@@ -542,3 +542,30 @@ func TestProxyPoolHealthScopeExcludesConnectingMembers(t *testing.T) {
 		t.Errorf("fully down scope = %q, want %q", got, poolScopePool)
 	}
 }
+
+// A trimmed pool carries members the trim never serves. Judged against every
+// member, 482 serving out of a 500 target reads as "needs attention" with the
+// pool scoped to the network; judged against the target it is 96% healthy.
+func TestPoolHealthJudgesAgainstTheTargetNotSurplusMembers(t *testing.T) {
+	w := newProxyPoolHealthWindow(time.Hour)
+	r := w.observeFor(proxyPoolMemberCounts{
+		Up: 482, Degraded: 424, Dead: 127, Connecting: 44,
+	}, 500, time.Minute)
+	if r.Verdict == poolVerdictNeedsAttention {
+		t.Fatalf("482 up against a 500 target read as %q (down=%d members=%d)", r.Verdict, r.Down, r.Members)
+	}
+	if r.Verdict != poolVerdictMostlyHealthy {
+		t.Fatalf("verdict = %q, want %q", r.Verdict, poolVerdictMostlyHealthy)
+	}
+	if r.Scope == poolScopePool {
+		t.Fatalf("scope = %q for an 18-slot shortfall; the pool is not down as a unit", r.Scope)
+	}
+	if got := r.judged(); got != 500 {
+		t.Fatalf("judged denominator = %d, want the 500 target", got)
+	}
+	// Without a target the old reading still applies to every member.
+	blind := w.observe(proxyPoolMemberCounts{Up: 482, Degraded: 424, Dead: 127, Connecting: 44}, time.Minute)
+	if blind.Verdict != poolVerdictNeedsAttention {
+		t.Fatalf("targetless verdict = %q, want needs attention", blind.Verdict)
+	}
+}
