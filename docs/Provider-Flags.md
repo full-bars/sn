@@ -105,21 +105,34 @@ refusal stands and the log says so.
 
 ## Recognising what happened
 
-Every start reports the outcome per slot, one line each:
+The provider does not print a line per slot: on a five-hundred slot host that is
+five hundred lines saying almost the same thing. It reports the shape of the
+start instead, in the startup summary, and names a problem only when there is
+one.
 
-- `minted new identity (first start)` — there was no saved identity; this is a
-  fresh slot.
-- `minted replacement (saved identity rejected)` — the platform refused the
-  saved identity, so a new one was minted.
-- `adopted identity (legacy)` — a 3.23-fix identity was verified and taken over
-  unchanged.
-- `client_revoked` — the platform revoked this identity; it is not replaced.
+The summary reports how many slots came up and, when any identity was decided in
+this start, how the decisions went: minted new, minted replacement, adopted, and
+revoked. A start that reused every saved identity says nothing extra, so a
+healthy host's line is the same one it always printed.
 
-The first two are the pair worth watching. A few `minted new identity` on a
-fresh host is normal. A wave of `minted replacement` means the platform is
-refusing identities that used to work, which is a different problem from a bad
-proxy — and the two are otherwise easy to confuse, because both show up as slots
-that are not serving.
+When replacements pass a small share of the slots that decided, one warning
+follows, naming both likely causes rather than guessing between them:
+
+```
+⚠️ [identity] 37 of 500 slots minted a replacement identity this start; check first
+that the state directory is intact, then whether the platform is refusing identities
+that used to work
+```
+
+That order matters. A wrong mount, a restore older than the identities, or a
+permissions change all look like a wave of first-start mints, and none of them is
+the platform's fault. Only after the state directory is confirmed should you
+suspect the platform.
+
+For the per-slot detail — which slot, which outcome, what reason, when — every
+outcome is appended to the `identity_events` record in `provider_state.db`. That
+is where you look up the individual slot, and the record is bounded so it cannot
+grow without limit.
 
 Work through it in this order. First, confirm the state directory is the one you
 think it is, because a wrong mount or a restore from before the identities
