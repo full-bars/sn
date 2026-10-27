@@ -137,11 +137,11 @@ type providerExtenderStatusListener struct {
 	stateLock sync.Mutex
 	observed  bool
 	last      providerExtenderObservation
-	// chargedAttempt is the LastActivationTime this listener already charged
-	// as a refusal. The error stays set while the attempt stands, so without
-	// it a changed fact beside that error would be charged as a fresh refusal.
+	// chargedAttempt is the LastActivationTime this listener already handled.
+	// The error stays set while the attempt stands, so without it a changed
+	// fact beside that error would be charged as a fresh failure.
 	chargedAttempt int64
-	refusalCharged bool
+	failureCharged bool
 	diagnostics    *providerDiagnostics
 	provider       uint64
 	// account is the sign-in account this slot provides under
@@ -174,24 +174,24 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 			Revoked:           status.RevokedTime != 0,
 		}
 	}
-	changed, refused := func() (bool, bool) {
+	changed, failed := func() (bool, bool) {
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
 		if self.observed && self.last == observation {
 			return false, false
 		}
 		self.observed, self.last = true, observation
-		// A refusal is the attempt's, not the observation's. The error stays
+		// A failure is the attempt's, not the observation's. The error stays
 		// set while the attempt stands, so only an attempt this listener has
-		// not charged yet is a fresh refusal. An active family wins, as it
-		// did before: the operator signed that activation.
-		refused := observation.Known && observation.Enabled && observation.ActivationFailed &&
-			!observation.ActivatedV4 && !observation.ActivatedV6 &&
-			(!self.refusalCharged || self.chargedAttempt != observation.ActivationTime)
-		if refused {
-			self.refusalCharged, self.chargedAttempt = true, observation.ActivationTime
+		// not handled yet is handled again: a standing error re-read beside
+		// another changed fact is the same failure. An activated family does
+		// not clear it, because the two per-family flags are independent.
+		failed := observation.Known && observation.Enabled && observation.ActivationFailed &&
+			(!self.failureCharged || self.chargedAttempt != observation.ActivationTime)
+		if failed {
+			self.failureCharged, self.chargedAttempt = true, observation.ActivationTime
 		}
-		return true, refused
+		return true, failed
 	}()
 	if changed {
 		// The operator budgets activation posts per account per hour and its
@@ -200,14 +200,57 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		// otherwise post into the same refusal.
 		if observation.Known && observation.Enabled {
 			switch {
-			case observation.ActivatedV4 || observation.ActivatedV6:
-				recordExtenderActivationSucceeded(self.account)
-			case refused:
-				if wait := recordExtenderActivationRefused(time.Now(), self.account); 0 < wait {
-					tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
+			case observation.ActivationFailed:
+				// A failed family is decided before any activation: the two
+				// per-family flags are independent, so a pass that activated
+				// v4 and failed v6 carries both, and testing the activation
+				// first would report that pass as a success, record no
+				// refusal and strand the retry the failure earned.
+				if failed {
+					// The retry is funded before this failure's wait is
+					// recorded, so the wait that decides is the one already
+					// standing: a retry is not charged until it can run.
+					if family, spent := extenderActivationSpendSpare(time.Now(), self.account, observation.activationPass()); spent {
+						tlog("[extender] activation failed on %s; the leftover post funds one retry\n", family)
+					}
+					self.chargeActivationFailure(observation)
 				}
+			case observation.ActivatedV4 || observation.ActivatedV6:
+				// Reached only by a pass with no failed family, which is what
+				// makes a success safe to record.
+				recordExtenderActivationSucceeded(self.account)
 			}
 		}
 		self.diagnostics.observe(providerExtenderObserved, self.provider, true, nil, 0, &observation)
+	}
+}
+
+// chargeActivationFailure persists the wait a refusal implies, and records
+// nothing for a failure the operator did not refuse. LastActivationError is set
+// for every failed attempt, including one that never reached the operator, so
+// it says a family is not activated and not why: a dns failure, a dial timeout
+// and a reset all set it, while LastActivationRefused is set only by an answer
+// that came back activated: false. Holding the next start for the former spends
+// this host's budget on a wait the operator never asked for.
+func (self *providerExtenderStatusListener) chargeActivationFailure(observation providerExtenderObservation) {
+	if !observation.ActivationRefused {
+		tlog("[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held\n", observation.ActivatedV4, observation.ActivatedV6)
+		return
+	}
+	if wait := recordExtenderActivationRefused(time.Now(), self.account); 0 < wait {
+		tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
+	}
+}
+
+// activationPass is what the status says this pass did, per family. A pass
+// posts v4, and posts v6 only where this host's own measurement says v6 is
+// usable, which is the same count the budget charged the start.
+func (observation providerExtenderObservation) activationPass() extenderActivationPass {
+	return extenderActivationPass{
+		V4: extenderActivationFamilyResult{Tried: true, Activated: observation.ActivatedV4},
+		V6: extenderActivationFamilyResult{
+			Tried:     readHostCapability().IPv6Usable,
+			Activated: observation.ActivatedV6,
+		},
 	}
 }
