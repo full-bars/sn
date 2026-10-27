@@ -36,7 +36,9 @@ import (
 // errProviderStoreReleased reports that this process gave provider_state.db to
 // a hotswap candidate. The candidate owns the file now: the parent neither
 // reopens it, because that open would take the bbolt lock the candidate's next
-// write waits on, nor reports a write as landed when it did not.
+// write waits on, nor reports a write as landed when it did not. Only an
+// aborted handoff, which leaves the parent serving, takes the file back
+// (restoreProviderStoreAfterAbortedHandoff).
 var errProviderStoreReleased = errors.New("provider state store released to the hotswap candidate")
 
 // errProviderStoreClosed reports a write on a handle that was closed without a
@@ -95,8 +97,9 @@ func (s *providerStore) Close() error {
 }
 
 // release closes the file for a hotswap candidate and marks the handle, so a
-// save that arrives behind it says the write was lost. It is terminal for the
-// process: nothing reopens a released file.
+// save that arrives behind it says the write was lost. The handle is terminal:
+// nothing reopens it, and a parent whose handoff aborts opens a fresh one
+// (restoreProviderStoreAfterAbortedHandoff).
 func (s *providerStore) release() error {
 	if s == nil {
 		return nil
@@ -193,7 +196,8 @@ var (
 	// globalProviderStoreReleased is set once provider_state.db is handed to a
 	// hotswap candidate and stays set: the candidate owns the file now, so the
 	// parent must not open it again. A lazy reopen in the drain would take the
-	// bbolt lock the candidate's first write waits on.
+	// bbolt lock the candidate's first write waits on. Only an aborted handoff
+	// clears it, because the parent keeps serving and has to write its state.
 	globalProviderStoreReleased bool
 	// A failed open is not retried on every call. bbolt's open waits on the
 	// file lock, so a second process or a damaged file would otherwise stall
@@ -266,13 +270,14 @@ func openProviderStoreForProcess() (*providerStore, error) {
 	return store, nil
 }
 
-// releaseProviderStore gives provider_state.db to the hotswap candidate for
-// the rest of this process's life. The close is marked on the handle, so a save
-// a slot still had queued during the drain reports the lost write, and the
+// releaseProviderStore gives provider_state.db to the hotswap candidate for the
+// rest of this process's life. The close is marked on the handle, so a save a
+// slot still had queued during the drain reports the lost write, and the
 // process-wide flag refuses every later open: the candidate's open and its
-// writes must not meet a lock this parent took back. An aborted handoff keeps
-// the refusal too, because a candidate that received TAKEOVER may already hold
-// the file and is being killed.
+// writes must not meet a lock this parent took back. A handoff that aborts
+// while the parent keeps serving takes the file back
+// (restoreProviderStoreAfterAbortedHandoff); a handoff that succeeds leaves it
+// released.
 func releaseProviderStore() {
 	globalProviderStoreMu.Lock()
 	defer globalProviderStoreMu.Unlock()
@@ -287,9 +292,40 @@ func releaseProviderStore() {
 	globalProviderStoreRetryAt = time.Time{}
 }
 
+// restoreProviderStoreAfterAbortedHandoff takes provider_state.db back when a
+// handoff aborts while this process keeps running. The release is right on the
+// success path because the candidate owns the file there, but an abort leaves
+// the parent serving, and a parent whose released flag stayed set would fail
+// every state write for the rest of its life, warning once as if the file had
+// gone to a successor: activation records, host capability and every marker
+// would be dropped with no way back.
+//
+// The release already dropped the handle and the failed-open throttle, so this
+// clears the refusal and asks for the open again. A reopen that fails is
+// reported, not fatal: the candidate may hold the bbolt lock, and then the
+// parent keeps serving with the failure counted and every state write reporting
+// the loss, which is louder than a write that looks landed.
+func restoreProviderStoreAfterAbortedHandoff() error {
+	globalProviderStoreMu.Lock()
+	globalProviderStoreReleased = false
+	globalProviderStoreMu.Unlock()
+
+	if _, err := openProviderStoreForProcess(); err != nil {
+		if errors.Is(err, bbolt.ErrTimeout) {
+			hotswapLog("⚠️ [hotswap] Handoff aborted, but the candidate still holds %s: the parent keeps serving and its state writes fail until the candidate exits\n", providerStoreFileName)
+		} else {
+			hotswapLog("⚠️ [hotswap] Handoff aborted and %s did not reopen (%v): the parent keeps serving without its state store\n", providerStoreFileName, err)
+		}
+		return err
+	}
+	hotswapLog("⚡ [hotswap] Handoff aborted: reopened %s for the parent\n", providerStoreFileName)
+	return nil
+}
+
 // closeProviderStore releases the file. Safe to call when it was never opened.
 // This is the reset path (a moved state directory, a test); a handoff uses
-// releaseProviderStore, which is terminal.
+// releaseProviderStore, which hands the file to the candidate and is terminal
+// unless the handoff aborts.
 func closeProviderStore() {
 	globalProviderStoreMu.Lock()
 	defer globalProviderStoreMu.Unlock()

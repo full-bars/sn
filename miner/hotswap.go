@@ -292,9 +292,10 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 	// handshake before the provider run starts), so its first store open lands
 	// right after the ACK; without this release that open meets this process's
 	// bbolt lock, waits out providerStoreOpenTimeout and records the store
-	// unavailable for the next 30s. The release is terminal: the parent keeps
-	// draining without the file rather than reopening what the candidate now
-	// owns, and a save that still arrives reports the lost write.
+	// unavailable for the next 30s. On success the release stands: the parent
+	// finishes its drain without the file rather than reopening what the
+	// candidate owns, and a save that still arrives reports the lost write.
+	// Every abort below takes the file back, because the parent keeps serving.
 	releaseProviderStore()
 	hotswapLog("⚡ [hotswap] Released %s for the candidate\n", providerStoreFileName)
 
@@ -305,7 +306,7 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 		Version: RequireVersion(),
 	}); err != nil {
 		hotswapLog("❌ [hotswap] Failed to send TAKEOVER: %v. Aborting handoff; live provider retained.\n", err)
-		session.Kill()
+		abortBatonHandoff(session)
 		return err
 	}
 
@@ -323,17 +324,28 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 	case res := <-ackCh:
 		if res.err != nil || res.msg.Type != HotswapMsgAck {
 			hotswapLog("❌ [hotswap] Candidate failed active takeover (%v). Aborting handoff; live provider retained.\n", res.err)
-			session.Kill()
+			abortBatonHandoff(session)
 			return fmt.Errorf("candidate takeover unconfirmed: %v", res.err)
 		}
 		hotswapLog("♻️⚡ [hotswap] Candidate PID %d confirmed active takeover (ACK received)!\n", childPID)
 	case <-time.After(HotSwapAckTimeout):
 		hotswapLog("❌ [hotswap] Candidate takeover ACK timed out (>%s). Aborting handoff; live provider retained.\n", HotSwapAckTimeout)
-		session.Kill()
+		abortBatonHandoff(session)
 		return fmt.Errorf("candidate takeover ACK timed out (>%s)", HotSwapAckTimeout)
 	}
 
 	return nil
+}
+
+// abortBatonHandoff ends a handoff the parent is abandoning and takes back the
+// store it released for a successor that never confirmed. The parent keeps
+// serving, so leaving the store released would fail every state write for the
+// rest of its life.
+func abortBatonHandoff(session *HotswapParentSession) {
+	// Kill the candidate first: if it already opened the file, its exit
+	// releases the bbolt lock the reopen waits on.
+	session.Kill()
+	restoreProviderStoreAfterAbortedHandoff()
 }
 
 // hotSwapDrainDone is closed when the parent's drain finishes, immediately

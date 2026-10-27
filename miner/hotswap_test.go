@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/docopt/docopt-go"
+	"go.etcd.io/bbolt"
 )
 
 func TestSanitizeCandidateArgs(t *testing.T) {
@@ -111,8 +112,10 @@ func TestHotSwapExecutablePathPrefersTheCapturedInstallPath(t *testing.T) {
 }
 
 func TestHandoffBatonSendTakeoverRejectsANonAckMessage(t *testing.T) {
-	// The baton releases the process-wide store before it sends TAKEOVER, so
-	// the test must reset it even though the handoff aborts.
+	// The baton releases the process-wide store before it sends TAKEOVER and
+	// an aborted handoff reopens it, so the test keeps its own state
+	// directory instead of the host's.
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
 	closeProviderStore()
 	t.Cleanup(closeProviderStore)
 
@@ -167,6 +170,105 @@ func TestHandoffBatonReleasesTheStateStoreBeforeTakeover(t *testing.T) {
 	}
 	if openErr := <-opened; openErr != nil {
 		t.Fatalf("the candidate could not open the store the parent released: %s", openErr)
+	}
+}
+
+// A handoff aborts when the TAKEOVER write fails, and the parent keeps
+// serving. The store it released for a candidate that never got the message
+// must come back, or every state write for the rest of the parent's life would
+// fail: activation records, host capability, every marker.
+func TestHandoffBatonRestoresTheStateStoreWhenTakeoverFails(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+
+	if err := providerStoreInstance().save(providerStoreBucketState, "probe", map[string]int{"count": 1}); err != nil {
+		t.Fatalf("seed the parent's record: %s", err)
+	}
+
+	// The candidate's pipe is gone by the time TAKEOVER is written.
+	session := &HotswapParentSession{Writer: brokenIPCEWriter{errors.New("broken pipe")}}
+	if err := handoffBatonSendTakeover(session, os.Getpid(), 4244); err == nil {
+		t.Fatal("the handoff was expected to abort when the TAKEOVER write fails")
+	}
+
+	if err := providerStoreInstance().save(providerStoreBucketState, "probe", map[string]int{"count": 2}); err != nil {
+		t.Fatalf("save after the aborted handoff = %v, want nil: the parent's state writes stayed dead", err)
+	}
+	var got map[string]int
+	if !providerStoreInstance().load(providerStoreBucketState, "probe", &got) || got["count"] != 2 {
+		t.Fatalf("record after the aborted handoff = %+v, want count 2: the write did not land", got)
+	}
+}
+
+// The candidate may already hold provider_state.db when the handoff aborts. The
+// parent then keeps serving with its state writes failing, and the abort has to
+// say who holds the file instead of pretending the store came back.
+func TestHandoffBatonReportsAStoreTheCandidateStillHolds(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+
+	if err := providerStoreInstance().save(providerStoreBucketState, "probe", map[string]int{"count": 1}); err != nil {
+		t.Fatalf("seed the parent's record: %s", err)
+	}
+
+	// The candidate takes the file as it acts on TAKEOVER, then the write
+	// fails: the handoff aborts with the bbolt lock still taken.
+	candidate := &lockHoldingWriter{t: t, path: filepath.Join(dir, providerStoreFileName), err: errors.New("broken pipe")}
+	t.Cleanup(candidate.close)
+	session := &HotswapParentSession{Writer: candidate}
+
+	out := captureStdout(t, func() {
+		if err := handoffBatonSendTakeover(session, os.Getpid(), 4245); err == nil {
+			t.Fatal("the handoff was expected to abort when the TAKEOVER write fails")
+		}
+	})
+
+	// The reopen cannot take a lock the candidate holds: the failure is the
+	// lock timeout, the store stays unavailable and the line says why.
+	if _, err := openProviderStoreForProcess(); !errors.Is(err, bbolt.ErrTimeout) {
+		t.Fatalf("reopen while the candidate holds the file = %v, want %v", err, bbolt.ErrTimeout)
+	}
+	if store := providerStoreInstance(); store != nil {
+		t.Fatal("the parent reopened the file the candidate holds")
+	}
+	if !strings.Contains(out, "candidate still holds") {
+		t.Fatalf("the abort did not say the candidate holds %s: %q", providerStoreFileName, out)
+	}
+}
+
+// brokenIPCEWriter fails every write, the way a candidate that died mid
+// handshake does.
+type brokenIPCEWriter struct{ err error }
+
+func (w brokenIPCEWriter) Write([]byte) (int, error) { return 0, w.err }
+
+// lockHoldingWriter fails the TAKEOVER write after taking provider_state.db,
+// the way a candidate that already acted on the message and exited badly would
+// leave it.
+type lockHoldingWriter struct {
+	t    *testing.T
+	path string
+	err  error
+	db   *bbolt.DB
+}
+
+func (w *lockHoldingWriter) Write([]byte) (int, error) {
+	db, err := bbolt.Open(w.path, 0o600, &bbolt.Options{Timeout: 100 * time.Millisecond})
+	if err != nil {
+		w.t.Errorf("the candidate could not take %s: %s", w.path, err)
+	} else {
+		w.db = db
+	}
+	return 0, w.err
+}
+
+func (w *lockHoldingWriter) close() {
+	if w.db != nil {
+		_ = w.db.Close()
 	}
 }
 
