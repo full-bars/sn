@@ -10,7 +10,12 @@ package miner
 
 import (
 	"context"
+	cryptorand "crypto/rand"
+	"encoding/binary"
+	"errors"
+	"fmt"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -18,11 +23,18 @@ const (
 	// providerStoreKeyHostCapability is the store record this file owns.
 	providerStoreKeyHostCapability = "host_capability"
 
-	// A 1-byte UDP send is the cheapest test that exercises the kernel's route
-	// decision. net.Dial succeeds on a blackholed v6 route, which is why the
-	// Android egress probe was changed to send rather than dial.
-	ipv6ProbeTarget  = "[2001:4860:4860::8888]:53"
-	ipv6ProbeTimeout = 1500 * time.Millisecond
+	// The target is a resolver, so the probe asks it a real question and waits
+	// for the answer. A send the kernel accepts proves only that a route
+	// exists: a blackholed v6 path accepts the write and returns nothing, and
+	// that is indistinguishable from a working path until something comes
+	// back.
+	ipv6ProbeTarget    = "[2001:4860:4860::8888]:53"
+	ipv6ProbeQueryName = "example.com"
+	ipv6ProbeTimeout   = 1500 * time.Millisecond
+
+	// ipv6ProbeReplyMax is one udp dns message: the classic 512-byte limit,
+	// which any answer to this query fits in.
+	ipv6ProbeReplyMax = 512
 
 	// Cadence. A host that has had IPv6 recently is probably flapping or
 	// waiting for a tunnel, and restoring it doubles what a pass earns, so it
@@ -68,22 +80,119 @@ func writeHostCapability(cap hostCapability) {
 	}
 }
 
-// probeIPv6Usable sends one byte over IPv6 and reports whether the kernel
-// accepted it. A host with no global v6 address is rejected without a syscall.
+// ipv6ProbeConn is the part of a connected udp socket the probe needs. A test
+// supplies net.Pipe rather than a real socket.
+type ipv6ProbeConn interface {
+	SetWriteDeadline(time.Time) error
+	SetReadDeadline(time.Time) error
+	Write([]byte) (int, error)
+	Read([]byte) (int, error)
+	Close() error
+}
+
+// ipv6GlobalAddressPresent is the address precheck. It is a variable so a test
+// can show the short circuit without depending on this host's own addresses.
+var ipv6GlobalAddressPresent = hasGlobalIPv6Address
+
+// probeIPv6Usable asks the resolver a dns question over IPv6 and reports
+// whether an answer came back. A host with no global v6 address is rejected
+// without a syscall, and an answer that does not answer this query is not
+// usable: the operator spends activation posts on what this says.
 func probeIPv6Usable() (bool, string) {
-	if !hasGlobalIPv6Address() {
+	if !ipv6GlobalAddressPresent() {
 		return false, "no global ipv6 address"
 	}
 	conn, err := net.DialTimeout("udp6", ipv6ProbeTarget, ipv6ProbeTimeout)
 	if err != nil {
 		return false, err.Error()
 	}
-	defer conn.Close()
-	_ = conn.SetWriteDeadline(time.Now().Add(ipv6ProbeTimeout))
-	if _, err := conn.Write([]byte{0}); err != nil {
+	return probeIPv6Reply(conn, ipv6ProbeTimeout)
+}
+
+// probeIPv6Reply runs one query over conn and reports whether a reply answered
+// it, with the reason it did not in the second value.
+func probeIPv6Reply(conn ipv6ProbeConn, timeout time.Duration) (bool, string) {
+	id, query, err := newIPv6ProbeQuery()
+	if err != nil {
+		return false, err.Error()
+	}
+	reply, err := ipv6ProbeExchange(conn, query, timeout)
+	if err != nil {
+		return false, err.Error()
+	}
+	if err := checkIPv6ProbeReply(reply, id); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
+}
+
+// ipv6ProbeExchange writes the query and waits for one reply. The wait is what
+// the probe measures: a path that accepts the send and returns nothing is not
+// usable, and only the read can tell that apart from a path that works.
+func ipv6ProbeExchange(conn ipv6ProbeConn, query []byte, timeout time.Duration) ([]byte, error) {
+	defer conn.Close()
+	if err := conn.SetWriteDeadline(time.Now().Add(timeout)); err != nil {
+		return nil, err
+	}
+	if _, err := conn.Write(query); err != nil {
+		return nil, err
+	}
+	if err := conn.SetReadDeadline(time.Now().Add(timeout)); err != nil {
+		return nil, err
+	}
+	reply := make([]byte, ipv6ProbeReplyMax)
+	n, err := conn.Read(reply)
+	if err != nil {
+		var netErr net.Error
+		if errors.As(err, &netErr) && netErr.Timeout() {
+			return nil, fmt.Errorf("query sent, nothing came back within %s: %w", timeout, err)
+		}
+		return nil, err
+	}
+	return reply[:n], nil
+}
+
+// checkIPv6ProbeReply reports why a reply does not answer the query.
+func checkIPv6ProbeReply(reply []byte, id uint16) error {
+	if len(reply) < 12 {
+		return fmt.Errorf("reply is %d bytes, too short for a dns header", len(reply))
+	}
+	if got := binary.BigEndian.Uint16(reply[0:2]); got != id {
+		return fmt.Errorf("reply id %d does not answer query id %d", got, id)
+	}
+	return nil
+}
+
+// newIPv6ProbeQuery builds a minimal A query with a random id: a 12-byte
+// header with recursion desired and one question, so any conforming resolver
+// answers it and the answer is evidence about the path.
+func newIPv6ProbeQuery() (uint16, []byte, error) {
+	var raw [2]byte
+	if _, err := cryptorand.Read(raw[:]); err != nil {
+		return 0, nil, err
+	}
+	id := binary.BigEndian.Uint16(raw[:])
+	return id, ipv6ProbeQuery(id), nil
+}
+
+// ipv6ProbeQuery is the query wire form for one id.
+func ipv6ProbeQuery(id uint16) []byte {
+	name := make([]byte, 0, len(ipv6ProbeQueryName)+2)
+	for _, label := range strings.Split(ipv6ProbeQueryName, ".") {
+		name = append(name, byte(len(label)))
+		name = append(name, label...)
+	}
+	name = append(name, 0)
+
+	query := make([]byte, 12, 12+len(name)+4)
+	binary.BigEndian.PutUint16(query[0:2], id)
+	// The flags word: recursion desired, and this is a query, not a response.
+	binary.BigEndian.PutUint16(query[2:4], 0x0100)
+	binary.BigEndian.PutUint16(query[4:6], 1)
+	query = append(query, name...)
+	query = binary.BigEndian.AppendUint16(query, 1)
+	query = binary.BigEndian.AppendUint16(query, 1)
+	return query
 }
 
 // hasGlobalIPv6Address reports whether any interface carries a routable v6
