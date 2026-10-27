@@ -1457,19 +1457,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}()
 
 	// The operator budgets activation posts per client per hour, and one pass
-	// posts once per family, so a start asks the persisted budget before it runs
-	// the extender role. The client is the identity the direct slot provides
-	// under, because that is the unit the server enforces. A held start still
-	// provides; it just does not listen or activate, and the line says when the
-	// role comes back.
-	extenderAllowed := true
-	if _, directPresent := directSlotIndex(providers); directPresent && isDirectEnabled() {
-		var extenderWait time.Duration
-		var extenderUsed int
-		extenderAllowed, extenderWait, extenderUsed = extenderActivationAllow(time.Now(), hostActivationPosts(), extenderActivationClientId())
-		if !extenderAllowed {
-			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
-				extenderUsed, extenderActivationBudget, formatDuration(extenderWait))
+	// posts once per family, so the direct slot asks the persisted budget
+	// before each launch. The client is the identity the direct slot provides
+	// under. A held launch still provides; it just does not listen or activate,
+	// and the gate's line says when the role comes back. The gate keeps the
+	// startup verdict for the first launch and re-decides every relaunch, so a
+	// `provider direct on` after a hold honours it, and one after the hold
+	// expired is let back in without a restart.
+	var extenderGate *extenderActivationGate
+	if _, directPresent := directSlotIndex(providers); directPresent {
+		extenderGate = newExtenderActivationGate()
+		if isDirectEnabled() {
+			extenderGate.decideAtStart()
 		}
 	}
 	// The bring-up narration: per-slot auth outcomes and, while slots are
@@ -1750,7 +1749,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// competes for one role, and only the direct slot can honestly hold it
 		// -- the same rule the swarm members and hosted devices follow. The
 		// remaining slots still provide; they just do not listen.
-		settings.ProvideExtenderEnabled = proxySettings == nil && extenderAllowed
+		settings.ProvideExtenderEnabled = proxySettings == nil && extenderGate != nil && extenderGate.allowLaunch()
 		// A proxied identity runs one family-agnostic transport, not the
 		// v4-pinned/v6-pinned/standby group: a pinned transport dials from
 		// this host, and behind a SOCKS proxy that dial cannot leave the

@@ -1,20 +1,30 @@
 package miner
 
 // extender_budget.go keeps this provider's own activation posts under the
-// operator's per-client budget.
+// operator's activation budget.
 //
-// The operator allows six activation posts per client per hour and records every
-// attempt (`controller.ExtenderActivateRateLimit` in urnetwork/server), because
-// each activation costs it several dials back to the caller. One activation pass
+// The operator allows six activation posts an hour and records every attempt
+// (`controller.ExtenderActivateRateLimit` in urnetwork/server), because each
+// activation costs it several dials back to the caller. One activation pass
 // posts once per family it supports, so a start on a dual-stack host spends a
 // third of the budget. The activation loop's own backoff lives in memory, which
 // means a restart forgets it; the record here is what makes the budget survive a
 // restart or a reboot.
 //
-// The record is keyed by client identity, because that is the unit the server
-// enforces. A host that heals its identity has a new client and a full budget
-// at the server, so it must not be throttled by the identity it replaced, and
-// two hosts that provide under one client id are one client to the operator.
+// The record is keyed by the client the direct slot provides under: the
+// identity the status listener records against, and the one a heal replaces. A
+// host that heals must not be throttled by the identity it replaced. A start
+// that cannot name its client yet charges the unidentified key, which the
+// first client it names inherits (adoptUnidentified), so registering does not
+// hand that client a budget the start already spent.
+//
+// That is not quite the operator's key.
+// ExtenderActivateRateLimit is enforced per user
+// (model.CheckAndRecordAccountActionRateLimit is passed
+// clientSession.ByJwt.UserId), and every client of one sign-in shares its
+// user, so a healed client starts fresh here while the operator's window still
+// holds the account's posts. Keying this record by the account is a separate
+// change; until then a heal can under-count against the operator.
 //
 // The record is a section of provider_state.db (state_store.go), not a file of
 // its own.
@@ -56,7 +66,9 @@ const (
 	// slot has no readable client credential: the start is about to mint a
 	// client, so there is no identity to charge yet. The posts still count,
 	// so a host that restarts in a loop without ever registering is not handed
-	// a fresh budget by every start.
+	// a fresh budget by every start. The first client this host names inherits
+	// the entry (adoptUnidentified), so those posts are charged to the identity
+	// that spent them.
 	extenderActivationUnidentifiedClient = "unidentified"
 )
 
@@ -105,6 +117,14 @@ func (legacy extenderActivationLegacy) present() bool {
 // a fresh one without copying a lock.
 var extenderBudgetWarnOnce = new(sync.Once)
 
+// extenderActivationRecordMu serialises the record's read-modify-write. The
+// store makes a load and a save each atomic, but the record is one value: two
+// slots' status listeners can report a refusal and an activation at once, and
+// without this lock each loads the same map and the later save drops the
+// other's change. One lock for the whole record is enough; the section is a
+// small json decode, a map update and one bbolt transaction.
+var extenderActivationRecordMu sync.Mutex
+
 // warnExtenderBudgetUnenforced says the record could not be read or written.
 // The budget is best effort by design (a host must never stop providing
 // because its own state file is read-only), so this line is the only evidence
@@ -144,13 +164,15 @@ func writeExtenderActivationRecord(record extenderActivationRecord, client strin
 
 // extenderActivationRecordForClient loads the record and adopts a pre-client
 // flat record onto client, so every write path persists the new shape and the
-// first start after an upgrade charges the history it inherited.
+// first start after an upgrade charges the history it inherited. It also moves
+// what a start spent before it could name its client onto that client.
 func extenderActivationRecordForClient(client string) extenderActivationRecord {
 	record, _ := readExtenderActivationRecord(client)
 	if record.Clients == nil {
 		record.Clients = map[string]extenderActivationState{}
 	}
 	record.adoptLegacy(client)
+	record.adoptUnidentified(client)
 	return record
 }
 
@@ -172,6 +194,39 @@ func (record *extenderActivationRecord) adoptLegacy(client string) {
 		LastRefusalUnix:  legacy.LastRefusalUnix,
 	}
 	record.extenderActivationLegacy = extenderActivationLegacy{}
+}
+
+// adoptUnidentified charges what a start spent before it could name its client
+// to the first client it can name. Those posts were this host's, made moments
+// before it registered under that client, and the operator counted them at the
+// time, so leaving them on the shared key would hand the new client a fresh
+// budget for posts it has already sent. A refusal recorded before the identity
+// was known carries too: it is the operator holding this host, not the name it
+// had not written yet.
+func (record *extenderActivationRecord) adoptUnidentified(client string) {
+	if client == extenderActivationUnidentifiedClient {
+		return
+	}
+	pending, ok := record.Clients[extenderActivationUnidentifiedClient]
+	if !ok {
+		return
+	}
+	delete(record.Clients, extenderActivationUnidentifiedClient)
+	state := record.Clients[client]
+	state.Attempts = append(state.Attempts, pending.Attempts...)
+	if state.BackoffUntilUnix < pending.BackoffUntilUnix {
+		state.BackoffUntilUnix = pending.BackoffUntilUnix
+	}
+	if state.Refusals < pending.Refusals {
+		state.Refusals = pending.Refusals
+	}
+	if state.LastRefusalUnix < pending.LastRefusalUnix {
+		state.LastRefusalUnix = pending.LastRefusalUnix
+	}
+	if state.LastUsedUnix < pending.LastUsedUnix {
+		state.LastUsedUnix = pending.LastUsedUnix
+	}
+	record.Clients[client] = state
 }
 
 // extenderActivationClientKey is the record key for one client id. A start
@@ -258,6 +313,8 @@ func pruneExtenderAttempts(state *extenderActivationState, now time.Time, window
 // the direct slot provides under (extenderActivationClientId).
 func extenderActivationAllow(now time.Time, posts int, clientId string) (allow bool, wait time.Duration, used int) {
 	client := extenderActivationClientKey(clientId)
+	extenderActivationRecordMu.Lock()
+	defer extenderActivationRecordMu.Unlock()
 	record := extenderActivationRecordForClient(client)
 	state := record.Clients[client]
 	used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
@@ -292,6 +349,8 @@ func extenderActivationAllow(now time.Time, posts int, clientId string) (allow b
 // refusal.
 func recordExtenderActivationRefused(now time.Time, clientId string) time.Duration {
 	client := extenderActivationClientKey(clientId)
+	extenderActivationRecordMu.Lock()
+	defer extenderActivationRecordMu.Unlock()
 	record := extenderActivationRecordForClient(client)
 	state := record.Clients[client]
 	// A streak that has gone quiet starts over: refusals spread across weeks
@@ -319,7 +378,62 @@ func recordExtenderActivationRefused(now time.Time, clientId string) time.Durati
 // the next start may activate again. Other clients in the record are untouched.
 func recordExtenderActivationSucceeded(clientId string) {
 	client := extenderActivationClientKey(clientId)
+	extenderActivationRecordMu.Lock()
+	defer extenderActivationRecordMu.Unlock()
 	record := extenderActivationRecordForClient(client)
 	delete(record.Clients, client)
 	writeExtenderActivationRecord(record, client)
+}
+
+// extenderActivationGate decides the direct slot's extender role once per
+// launch. The startup decision is charged before the slots are built, so the
+// first launch spends that verdict instead of charging twice; every relaunch
+// asks the record again, because a relaunch posts again and the hold the
+// record persisted may have expired, or been recorded, since the process
+// started. One verdict frozen at startup got both directions wrong: a slot
+// relaunched after its hold expired stayed out of the role until the next
+// process, and one relaunched inside a hold went back in.
+type extenderActivationGate struct {
+	mu sync.Mutex
+	// pending is the startup verdict no launch has spent yet.
+	pending bool
+	allow   bool
+}
+
+// newExtenderActivationGate returns a gate with no decision made. The run
+// makes one when its direct slot is enabled at startup; a direct slot the
+// operator turns on later makes its first decision at its first launch.
+func newExtenderActivationGate() *extenderActivationGate {
+	return &extenderActivationGate{}
+}
+
+// decideAtStart charges this start's posts and keeps the verdict for the first
+// launch, so a hold is logged once, before the slots come up, and the launch
+// that follows does not charge the same posts again.
+func (gate *extenderActivationGate) decideAtStart() bool {
+	allow := gate.allowLaunch()
+	gate.mu.Lock()
+	gate.pending, gate.allow = true, allow
+	gate.mu.Unlock()
+	return allow
+}
+
+// allowLaunch reports whether this launch may run the extender role. It spends
+// the startup verdict once and asks the record on every later launch, resolving
+// the client afresh because the slot may have written its credential since the
+// process started.
+func (gate *extenderActivationGate) allowLaunch() bool {
+	gate.mu.Lock()
+	pending, allow := gate.pending, gate.allow
+	gate.pending = false
+	gate.mu.Unlock()
+	if pending {
+		return allow
+	}
+	allow, wait, used := extenderActivationAllow(time.Now(), hostActivationPosts(), extenderActivationClientId())
+	if !allow {
+		tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
+			used, extenderActivationBudget, formatDuration(wait))
+	}
+	return allow
 }

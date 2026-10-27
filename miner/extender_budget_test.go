@@ -355,3 +355,105 @@ func TestProviderStoreRoundTripsARecord(t *testing.T) {
 		t.Fatal("an absent record must report false")
 	}
 }
+
+// A start that cannot name its client charges the unidentified key, and the
+// client it registers as inherits those posts: the operator counted them when
+// they were sent, so the new identity must not open on a fresh budget.
+func TestExtenderActivationBudgetChargesTheStartBeforeRegistration(t *testing.T) {
+	testExtenderState(t)
+	now := time.Unix(1_800_000_000, 0)
+
+	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, ""); !allow || used != 0 {
+		t.Fatalf("unregistered start: allow=%v used=%d, want allow=true used=0", allow, used)
+	}
+	// The host registers as a client and starts again a minute later.
+	allow, _, used := extenderActivationAllow(now.Add(time.Minute), postsPerDualStackPass, extenderTestClientA)
+	if !allow {
+		t.Fatal("the first named start must be allowed: four posts are within the budget")
+	}
+	if used != postsPerDualStackPass {
+		t.Fatalf("named start used=%d, want the %d posts the unregistered start sent", used, postsPerDualStackPass)
+	}
+	// Four posts are counted now, so the next start would post six and is held.
+	if allow, _, used := extenderActivationAllow(now.Add(2*time.Minute), postsPerDualStackPass, extenderTestClientA); allow {
+		t.Fatalf("the start after the inherited posts was allowed with used=%d", used)
+	}
+	record, _ := readExtenderActivationRecord(extenderTestClientA)
+	if _, ok := record.Clients[extenderActivationUnidentifiedClient]; ok {
+		t.Fatalf("the unidentified entry survived the hand-over: %+v", record.Clients)
+	}
+}
+
+// A refusal recorded while the client was still unnamed holds the client the
+// host then registers as: it was the operator holding this host, not the name
+// the host had not written yet.
+func TestExtenderActivationRefusalBeforeRegistrationHoldsTheNamedClient(t *testing.T) {
+	testExtenderState(t)
+	now := time.Unix(1_800_000_000, 0)
+
+	recordExtenderActivationRefused(now, "")
+	allow, wait, _ := extenderActivationAllow(now.Add(time.Minute), postsPerDualStackPass, extenderTestClientA)
+	if allow {
+		t.Fatal("a start inside the refusal recorded before registration must be held")
+	}
+	if want := extenderRefusalBackoff - time.Minute; wait != want {
+		t.Fatalf("held wait=%s, want %s", wait, want)
+	}
+}
+
+// The record is one value, so two slots' listeners reporting at once must not
+// lose one another's write: every client that reported is in the record.
+func TestExtenderActivationBudgetKeepsEveryConcurrentReport(t *testing.T) {
+	testExtenderState(t)
+	now := time.Unix(1_800_000_000, 0)
+	const clients = 24
+
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	for i := 0; i < clients; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			<-start
+			recordExtenderActivationRefused(now, extenderTestClient(i))
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+
+	record, _ := readExtenderActivationRecord(extenderTestClient(0))
+	if len(record.Clients) != clients {
+		t.Fatalf("clients in the record = %d, want %d: a concurrent report was lost", len(record.Clients), clients)
+	}
+}
+
+// The direct slot decides once per launch. The launch that follows the startup
+// decision spends that verdict instead of charging the same posts twice, and a
+// relaunch asks the record again, so a hold recorded since the process started
+// is honoured and one it outlived is not.
+func TestExtenderActivationGateRechecksOnRelaunch(t *testing.T) {
+	testExtenderState(t)
+	writeHostCapability(hostCapability{IPv6Usable: true, CheckedAtUnix: time.Now().Unix()})
+	gate := newExtenderActivationGate()
+
+	if !gate.decideAtStart() {
+		t.Fatal("a start with a fresh budget must be allowed")
+	}
+	if !gate.allowLaunch() {
+		t.Fatal("the launch that spends the startup verdict must be allowed")
+	}
+	clientId := extenderActivationClientId()
+	record, _ := readExtenderActivationRecord(clientId)
+	state := record.Clients[extenderActivationClientKey(clientId)]
+	if len(state.Attempts) != postsPerDualStackPass {
+		t.Fatalf("attempts=%d after one start, want %d: the startup posts were charged twice",
+			len(state.Attempts), postsPerDualStackPass)
+	}
+
+	// The operator refuses the activation, so the listener records a hold. A
+	// relaunch inside it must not post again.
+	recordExtenderActivationRefused(time.Now(), clientId)
+	if gate.allowLaunch() {
+		t.Fatal("a relaunch inside the recorded hold must not run the role")
+	}
+}
