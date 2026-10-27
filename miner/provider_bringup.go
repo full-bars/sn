@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -157,7 +158,23 @@ func newProviderBringUpTracker(total int) *providerBringUpTracker {
 // identityCounts returns how many authenticated slots reused their client id
 // and how many were minted. The caller must hold mu.
 func (self *providerBringUpTracker) identityCounts() (reused, minted int) {
-	for _, wasReused := range self.identities {
+	return self.countIdentities(false)
+}
+
+// runningIdentityCounts is identityCounts restricted to the slots running
+// right now. A slot that authenticated and then failed keeps its entry in
+// identities, so the unrestricted tally describes the whole run while this one
+// describes the live pool.
+func (self *providerBringUpTracker) runningIdentityCounts() (reused, minted int) {
+	return self.countIdentities(true)
+}
+
+// countIdentities is the one tally both readers share. The caller must hold mu.
+func (self *providerBringUpTracker) countIdentities(runningOnly bool) (reused, minted int) {
+	for index, wasReused := range self.identities {
+		if runningOnly && self.states[index] != "running" {
+			continue
+		}
 		if wasReused {
 			reused++
 		} else {
@@ -165,6 +182,47 @@ func (self *providerBringUpTracker) identityCounts() (reused, minted int) {
 		}
 	}
 	return reused, minted
+}
+
+// providerBringUpCurrent is the run's bring-up tracker. The /metrics scrape and
+// the status payload read their client-id counts from it, so all three
+// surfaces report the same numbers instead of each keeping its own tally. Nil
+// before a run starts and again once it ends, which is what makes both read
+// zero rather than the previous run's counts.
+var providerBringUpCurrent atomic.Pointer[providerBringUpTracker]
+
+// setProviderBringUpTracker publishes the run's tracker; nil clears it.
+func setProviderBringUpTracker(tracker *providerBringUpTracker) {
+	providerBringUpCurrent.Store(tracker)
+}
+
+// providerClientIDCounts is the running slots split by how this run's identity
+// started: reused from a stored login, or minted. live is false when no run has
+// begun, so a caller that reports provenance can say "not measured" instead of
+// publishing zeros.
+func providerClientIDCounts() (reused, minted int, live bool) {
+	tracker := providerBringUpCurrent.Load()
+	if tracker == nil {
+		return 0, 0, false
+	}
+	tracker.mu.Lock()
+	defer tracker.mu.Unlock()
+	reused, minted = tracker.runningIdentityCounts()
+	return reused, minted, true
+}
+
+// writeProviderClientIDMetrics renders the running slots by identity
+// provenance. The counts follow the live tracker, so a slot that comes up adds
+// to one of them and a slot that leaves running drops out of both; with no run
+// started there is no tracker and both read 0.
+func writeProviderClientIDMetrics(b *strings.Builder) {
+	reused, minted, _ := providerClientIDCounts()
+	fmt.Fprintf(b, "# HELP urnet_provider_client_ids_reused Running provider slots whose client id was reused from a stored login this run.\n")
+	fmt.Fprintf(b, "# TYPE urnet_provider_client_ids_reused gauge\n")
+	fmt.Fprintf(b, "urnet_provider_client_ids_reused %d\n", reused)
+	fmt.Fprintf(b, "# HELP urnet_provider_client_ids_minted Running provider slots whose client id was minted this run.\n")
+	fmt.Fprintf(b, "# TYPE urnet_provider_client_ids_minted gauge\n")
+	fmt.Fprintf(b, "urnet_provider_client_ids_minted %d\n", minted)
 }
 
 // start emits the opening heartbeat and begins the periodic one. It is a no-op
@@ -333,6 +391,9 @@ func (self *providerBringUpTracker) shutdown() {
 		delete(self.watches, index)
 	}
 	self.mu.Unlock()
+	// A finished run publishes nothing: the gauges and the status payload must
+	// read zero, not the tally of the run that just ended.
+	providerBringUpCurrent.CompareAndSwap(self, nil)
 	self.stop()
 }
 

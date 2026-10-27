@@ -1482,6 +1482,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 	}
 	bringUp := newProviderBringUpTracker(bringUpSlots)
+	// Publish the tracker so the /metrics scrape and the status payload report
+	// the same client-id provenance the heartbeat prints.
+	setProviderBringUpTracker(bringUp)
 	// Slots that completed authentication at least once during this run, kept
 	// apart from the tracker because a slot that later fails leaves "running".
 	var authenticatedSlots atomic.Int64

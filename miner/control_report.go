@@ -40,6 +40,9 @@ type nodeSnapshot struct {
 	// Sessions are then zeros that mean "not read", not "none".
 	CountsKnown bool            `json:"-"`
 	Proxies     snapshotProxies `json:"proxies"`
+	// ClientIDs is the live pool's identity provenance for this run, beside
+	// the proxy counts. Omitted until a provide run has started.
+	ClientIDs *snapshotClientIDs `json:"client_ids,omitempty"`
 	// ProxiesKnown is false when the proxy state could not be read. The
 	// counts are then zeros that mean "unknown", not "no proxies", and a
 	// sample must not publish them as if they were measurements.
@@ -113,6 +116,16 @@ type snapshotProxies struct {
 	Configured    int    `json:"configured,omitempty"`
 	TrimCap       int    `json:"trim_cap,omitempty"`
 	TrimCapSource string `json:"trim_cap_source,omitempty"`
+}
+
+// snapshotClientIDs is the running slots split by how this run's identity
+// started: reused from a stored login, or minted. It is per run, not a
+// lifetime total. The node snapshot carries it as a pointer so a provider
+// whose provide run has not started omits the block instead of reporting two
+// zeros that would read as "every slot minted".
+type snapshotClientIDs struct {
+	Reused int `json:"reused"`
+	Minted int `json:"minted"`
 }
 
 type snapshotRestart struct {

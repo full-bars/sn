@@ -88,6 +88,9 @@ func minerExtraMetrics() string {
 	// --- Authentication backoff ---
 	writeAuthBackoffMetrics(&b)
 
+	// --- Client id provenance for this run ---
+	writeProviderClientIDMetrics(&b)
+
 	// --- Proxy audit ---
 	// Counts only; proxy addresses stay on the control socket. Emitted at zero
 	// before the first tick so panels and alerts have a stable series.
