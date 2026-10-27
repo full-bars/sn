@@ -75,7 +75,7 @@ type operatorSupervisorSettings struct {
 	maxMemory               connect.ByteCount
 	verbosity               int
 	allowClientRegistration bool
-	port                 int
+	port                    int
 	// forwarded to every child so the kill switch also reaches the fleet path
 	noLegacyImport bool
 }
