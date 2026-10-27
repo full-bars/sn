@@ -203,11 +203,30 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 			case observation.ActivatedV4 || observation.ActivatedV6:
 				recordExtenderActivationSucceeded(self.account)
 			case refused:
+				// The retry is funded before this failure's wait is recorded,
+				// so the wait that decides is the one already standing: a
+				// retry is not charged until it can run.
+				if family, spent := extenderActivationSpendSpare(time.Now(), self.account, observation.activationPass()); spent {
+					tlog("[extender] activation failed on %s; the leftover post funds one retry\n", family)
+				}
 				if wait := recordExtenderActivationRefused(time.Now(), self.account); 0 < wait {
 					tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
 				}
 			}
 		}
 		self.diagnostics.observe(providerExtenderObserved, self.provider, true, nil, 0, &observation)
+	}
+}
+
+// activationPass is what the status says this pass did, per family. A pass
+// posts v4, and posts v6 only where this host's own measurement says v6 is
+// usable, which is the same count the budget charged the start.
+func (observation providerExtenderObservation) activationPass() extenderActivationPass {
+	return extenderActivationPass{
+		V4: extenderActivationFamilyResult{Tried: true, Activated: observation.ActivatedV4},
+		V6: extenderActivationFamilyResult{
+			Tried:     readHostCapability().IPv6Usable,
+			Activated: observation.ActivatedV6,
+		},
 	}
 }
