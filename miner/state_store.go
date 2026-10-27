@@ -153,12 +153,24 @@ func (s *providerStore) delete(bucket, key string) error {
 // drop share one transaction, so a reader never meets a key without its value
 // and a crash cannot leave the bucket a record too long.
 func (s *providerStore) appendBounded(bucket string, value any, keep int) error {
-	if s == nil {
+	return s.appendBoundedMany(bucket, []any{value}, keep)
+}
+
+// appendBoundedMany adds records in one transaction, with the same bound and
+// key discipline as appendBounded. A start that adopts a whole pool writes them
+// this way: one commit instead of one per slot, so the startup does not wait on
+// a disk sync per identity before any worker runs.
+func (s *providerStore) appendBoundedMany(bucket string, values []any, keep int) error {
+	if s == nil || len(values) == 0 {
 		return nil
 	}
-	raw, err := json.Marshal(value)
-	if err != nil {
-		return err
+	raw := make([][]byte, 0, len(values))
+	for _, value := range values {
+		encoded, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+		raw = append(raw, encoded)
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -170,23 +182,28 @@ func (s *providerStore) appendBounded(bucket string, value any, keep int) error 
 		if err != nil {
 			return err
 		}
-		seq, err := b.NextSequence()
-		if err != nil {
-			return err
+		for _, value := range raw {
+			seq, err := b.NextSequence()
+			if err != nil {
+				return err
+			}
+			key := make([]byte, 8)
+			binary.BigEndian.PutUint64(key, seq)
+			if err := b.Put(key, value); err != nil {
+				return err
+			}
+			if keep <= 0 || seq <= uint64(keep) {
+				continue
+			}
+			// This append created the oldest record worth keeping, so the one
+			// before it is the only record that has to go.
+			oldest := make([]byte, 8)
+			binary.BigEndian.PutUint64(oldest, seq-uint64(keep))
+			if err := b.Delete(oldest); err != nil {
+				return err
+			}
 		}
-		key := make([]byte, 8)
-		binary.BigEndian.PutUint64(key, seq)
-		if err := b.Put(key, raw); err != nil {
-			return err
-		}
-		if keep <= 0 || seq <= uint64(keep) {
-			return nil
-		}
-		// This append created the oldest record worth keeping, so the one
-		// before it is the only record that has to go.
-		oldest := make([]byte, 8)
-		binary.BigEndian.PutUint64(oldest, seq-uint64(keep))
-		return b.Delete(oldest)
+		return nil
 	})
 }
 

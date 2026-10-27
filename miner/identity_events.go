@@ -75,13 +75,29 @@ var identityEventStoreOnce sync.Once
 // serving when this runs, so a failed open or write costs the durable copy and
 // nothing else.
 func recordProviderIdentityEvent(display string, outcome minerIdentityOutcome, reason string) {
+	recordProviderIdentityEvents([]string{display}, outcome, reason)
+}
+
+// recordProviderIdentityEvents appends one record per display in a single
+// transaction. The automatic legacy import hands over a whole pool before any
+// worker runs, and a commit per slot would put a disk sync per identity in
+// front of the first proxy; a pool of 500 adopted identities on block storage
+// is seconds of startup for records that say one thing.
+func recordProviderIdentityEvents(displays []string, outcome minerIdentityOutcome, reason string) {
+	if len(displays) == 0 {
+		return
+	}
 	store := providerStoreInstance()
 	if store == nil {
 		// providerStoreInstance has already reported and counted the failure.
 		return
 	}
-	event := providerIdentityEvent{At: time.Now().UTC(), Slot: display, Outcome: string(outcome), Reason: reason}
-	if err := store.appendBounded(providerStoreBucketIdentityEvents, event, identityEventKeep); err != nil {
+	at := time.Now().UTC()
+	events := make([]any, 0, len(displays))
+	for _, display := range displays {
+		events = append(events, providerIdentityEvent{At: at, Slot: display, Outcome: string(outcome), Reason: reason})
+	}
+	if err := store.appendBoundedMany(providerStoreBucketIdentityEvents, events, identityEventKeep); err != nil {
 		identityEventStoreOnce.Do(func() {
 			tlog("⚠️ [identity] outcomes not recorded: %v\n", err)
 		})

@@ -249,6 +249,60 @@ func TestProviderIdentityWaveCountsRefusedIdentities(t *testing.T) {
 	}
 }
 
+// Adoption hands over a whole pool before any worker runs, so its records go in
+// one transaction and keep the same bound as every other append.
+func TestProviderAdoptionRecordsThePoolInOneBatch(t *testing.T) {
+	testProviderIdentityStore(t)
+	buffer := captureProviderBringUpLog(t)
+	previousKeep := identityEventKeep
+	identityEventKeep = 6
+	t.Cleanup(func() { identityEventKeep = previousKeep })
+
+	const slots = 20
+	displays := make([]string, 0, slots)
+	for slot := 0; slot < slots; slot++ {
+		displays = append(displays, fmt.Sprintf("proxy:10.0.0.%d:1080", slot))
+	}
+	tracker := newProviderBringUpTracker(slots)
+	// All or nothing: one record that cannot be encoded takes the whole batch
+	// with it, so a failed adoption write never leaves a partial set behind.
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("store unavailable")
+	}
+	unencodable := make(chan int)
+	if err := store.appendBoundedMany(providerStoreBucketIdentityEvents, []any{
+		providerIdentityEvent{Slot: "proxy:10.0.0.1:1080", Outcome: string(identityOutcomeAdopted)},
+		unencodable,
+		providerIdentityEvent{Slot: "proxy:10.0.0.2:1080", Outcome: string(identityOutcomeAdopted)},
+	}, identityEventKeep); err == nil {
+		t.Fatal("a batch with an unencodable record reported success")
+	}
+	if events, err := providerIdentityEvents(-1); err != nil || len(events) != 0 {
+		t.Fatalf("a rejected batch left %d records (err %v), want none", len(events), err)
+	}
+	tracker.adoptIdentities(displays)
+
+	events, err := providerIdentityEvents(-1)
+	if err != nil {
+		t.Fatalf("read events: %v", err)
+	}
+	if len(events) != identityEventKeep {
+		t.Fatalf("kept %d adopted records, want the newest %d: %+v", len(events), identityEventKeep, events)
+	}
+	// Oldest first, so the survivors are the tail of the pool in order.
+	for i, event := range events {
+		want := displays[slots-identityEventKeep+i]
+		if event.Slot != want || event.Outcome != string(identityOutcomeAdopted) {
+			t.Fatalf("record %d = %s/%s, want %s/adopted", i, event.Slot, event.Outcome, want)
+		}
+	}
+	tracker.emitStartupSummary()
+	if !strings.Contains(buffer.String(), fmt.Sprintf("identity: 0 minted new, 0 minted replacement, %d adopted, 0 revoked", slots)) {
+		t.Fatalf("summary does not count the adopted pool:\n%s", buffer.String())
+	}
+}
+
 // The events survive a reopen, carry the slot, outcome, reason and a UTC
 // instant, and the bucket keeps only the newest records.
 func TestProviderIdentityEventsRoundTripAndStayBounded(t *testing.T) {

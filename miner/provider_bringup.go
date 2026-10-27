@@ -469,7 +469,9 @@ func (self *providerBringUpTracker) identityOutcome(index uint64, display string
 // adoptIdentities records the slots the automatic legacy import took over
 // before any worker ran. Adoption is its own outcome, not a mint, and a slot
 // that authenticates with the imported identity records nothing more: that
-// identity is the one the import proved.
+// identity is the one the import proved. The records go in one transaction,
+// because this runs before the first proxy does and a disk sync per adopted
+// identity would be paid by every start on a migrated host.
 func (self *providerBringUpTracker) adoptIdentities(displays []string) {
 	if self == nil || len(displays) == 0 {
 		return
@@ -477,9 +479,7 @@ func (self *providerBringUpTracker) adoptIdentities(displays []string) {
 	self.mu.Lock()
 	self.adoptedIdentities += len(displays)
 	self.mu.Unlock()
-	for _, display := range displays {
-		recordProviderIdentityEvent(display, identityOutcomeAdopted, "")
-	}
+	recordProviderIdentityEvents(displays, identityOutcomeAdopted, "")
 }
 
 // authReused narrates one slot's reused authentication and moves it to
