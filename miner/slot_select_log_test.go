@@ -93,7 +93,9 @@ func TestSlotSelectReportsOnlyTheFirstOwnSuccess(t *testing.T) {
 	}
 }
 
-func TestSlotSelectLabelEscapesPercent(t *testing.T) {
+// A label with a percent in it is a proxy address or account, not a format:
+// the label joins the rendered line, so it must come out exactly as given.
+func TestSlotSelectLabelKeepsPercentLiteral(t *testing.T) {
 	base := &captureLogger{}
 	var buf bytes.Buffer
 	prev := proxyManagerLogWriter
@@ -226,22 +228,28 @@ func TestSlotSelectPrintsFamilyDialOnlyOnChange(t *testing.T) {
 	defer func() { proxyManagerLogWriter = prev }()
 	log := withSlotSelectLabel(base, slotSelectLabel(1, "10.0.0.1:1080"), nil)
 
-	const auto4 = "[family]dial tag=api net=tcp family=4 policy=auto demoted=none\n"
-	log.Infof(auto4)
-	log.Infof(auto4)
-	log.Infof(auto4)
+	// connect hands the family decision to the logger already formatted
+	// (connect/egress_dial.go: Infof("%s\n", controlDialFamilyLine(...))), so
+	// the test calls it the way the dialer does: a "%s" format with the whole
+	// line as its argument. Calling Infof(line) here would pass whatever the
+	// wrapper checks against the format and hide a wrapper that only works on
+	// that shape.
+	const auto4 = "[family]dial tag=api net=tcp family=4 policy=auto demoted=none"
+	log.Infof("%s\n", auto4)
+	log.Infof("%s\n", auto4)
+	log.Infof("%s\n", auto4)
 	if n := strings.Count(buf.String(), "tag=api"); n != 1 {
 		t.Fatalf("unchanged decision printed %d times, want 1:\n%s", n, buf.String())
 	}
 
-	log.Infof("[family]dial tag=api net=tcp family=6 policy=auto demoted=none\n")
+	log.Infof("%s\n", "[family]dial tag=api net=tcp family=6 policy=auto demoted=none")
 	if n := strings.Count(buf.String(), "tag=api"); n != 2 {
 		t.Fatalf("changed decision printed %d times total, want 2:\n%s", n, buf.String())
 	}
 
-	const failed = "[family]dial tag=api net=tcp family=? policy=auto demoted=none err=socks connect tcp: connection refused\n"
-	log.Infof(failed)
-	log.Infof(failed)
+	const failed = "[family]dial tag=api net=tcp family=? policy=auto demoted=none err=socks connect tcp: connection refused"
+	log.Infof("%s\n", failed)
+	log.Infof("%s\n", failed)
 	if n := strings.Count(buf.String(), "connection refused"); n != 2 {
 		t.Fatalf("repeated failure printed %d times, want 2:\n%s", n, buf.String())
 	}

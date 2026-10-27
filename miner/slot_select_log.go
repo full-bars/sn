@@ -17,7 +17,7 @@ import (
 // the transport and its counts but not the slot, so with 500 slots sharing one
 // log an operator cannot tell which proxy is talking to the control plane. The
 // v3.23 provider names the slot in that line ("proxy[N] (addr) [strategy]");
-// this wrapper adds the same label by rewriting the format, and reports the
+// this wrapper adds the same label to the rendered line, and reports the
 // slot's first successful dial to the bring-up tracker.
 
 const (
@@ -60,11 +60,19 @@ func withSlotSelectLabel(log connect.Logger, label string, reached func(dur time
 	if log == nil {
 		log = connect.DefaultLogger()
 	}
-	return &slotSelectLogger{Logger: log, label: strings.ReplaceAll(label, "%", "%%"), reached: reached}
+	return &slotSelectLogger{Logger: log, label: label, reached: reached}
 }
 
 func (self *slotSelectLogger) Infof(format string, args ...any) {
-	if strings.HasPrefix(format, slotSelectPrefix) {
+	// Render first, then judge the line. connect does not hand its lines to the
+	// logger as formats: the family decision arrives as
+	// Infof("%s\n", controlDialFamilyLine(...)) (connect/egress_dial.go), so a
+	// prefix test on `format` never matched it and every dial printed. The
+	// select line is the one line connect passes as a format with its own
+	// arguments, and its shape is the only thing the arguments are read for.
+	message := fmt.Sprintf(format, args...)
+	switch {
+	case strings.HasPrefix(message, slotSelectPrefix):
 		if format == slotSelectSuccessFormat && self.reached != nil && len(args) == 2 {
 			via, _ := args[0].(string)
 			ms, _ := args[1].(int64)
@@ -74,14 +82,10 @@ func (self *slotSelectLogger) Infof(format string, args ...any) {
 				self.once.Do(func() { self.reached(time.Duration(ms)*time.Millisecond, via) })
 			}
 		}
-		format = slotSelectPrefix + self.label + " " + format[len(slotSelectPrefix):]
-	}
-	// The wrapper is not the call site. glog would stamp this file and line on
-	// every line the slot's strategy logs through it, which is long and untrue,
-	// so they all go out in the provider's own tab format instead. Select lines
-	// carry the slot label; everything else keeps its own text.
-	if strings.HasPrefix(format, slotFamilyDialPrefix) {
-		message := fmt.Sprintf(format, args...)
+		// The label joins the rendered line, so a % in a proxy address or
+		// account stays a character instead of becoming a format verb.
+		message = slotSelectPrefix + self.label + " " + message[len(slotSelectPrefix):]
+	case strings.HasPrefix(message, slotFamilyDialPrefix):
 		// A family decision repeats for the life of the slot: the same tag
 		// picks the same family on every dial. Print it when it changes, and
 		// always when the dial failed, since that is when the decision matters.
@@ -94,8 +98,10 @@ func (self *slotSelectLogger) Infof(format string, args ...any) {
 		if repeat {
 			return
 		}
-		tlog("%s", message)
-		return
 	}
-	tlog(format, args...)
+	// The wrapper is not the call site. glog would stamp this file and line on
+	// every line the slot's strategy logs through it, which is long and untrue,
+	// so they all go out in the provider's own tab format instead. Select lines
+	// carry the slot label; everything else keeps its own text.
+	tlog("%s", message)
 }
