@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -509,6 +510,13 @@ func TestProviderSlotAdoptedIdentityRejectionMints(t *testing.T) {
 // later attempt replays that same request, so a read-only state directory can
 // never turn one server binding into a series of new clients.
 func TestProviderSlotFailedCredentialWriteDoesNotMintAgain(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		// The failure this test needs is a directory that refuses new files.
+		// chmod does not deny writes on Windows and the POSIX permission model
+		// has no portable equivalent there, so the case is covered on the other
+		// two platforms rather than asserted with a permission that does nothing.
+		t.Skip("a read-only directory does not deny writes on windows")
+	}
 	fixture, owner, clientPath, keyPath := newProviderSlotRecoveryFixture(t)
 	stop := errors.New("synthetic credential handoff failure")
 	// The binding hook runs where the credential is installed: the operation
