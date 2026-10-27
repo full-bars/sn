@@ -20,8 +20,12 @@ working identity serves nothing and earns nothing, however healthy its proxy is.
 Be precise about what this identity is not. It is not a Bittensor hotkey, it
 does not prove miner admission to a subnet, and it does not establish seat,
 stake, contract authority or account funding. Those belong to the subnet layer.
-The provider client is the platform-side identity that the subnet's work travels
-under, and `docs/Bittensor-Fleet.md` covers the other layer.
+What connects the two is the binding: a fleet operator links a UR client to a
+hotkey for an epoch window with a dual-signed binding, and that is what ties the
+traffic this client carries to a miner's standing. `docs/Bittensor-Fleet.md`
+documents that lifecycle — `register`, `publish`, `bind`, `sign`, `status`,
+`revoke`. So the client is the platform-side identity that the subnet's work
+travels under, and the binding is where the two meet.
 
 ## What registration is, and why upstream gated it
 
