@@ -80,6 +80,19 @@ func providerSlotDisplay(settings *connect.ProxySettings) string {
 	return "proxy:" + settings.Address
 }
 
+// pendingLocked is the slots that have neither authenticated nor failed. It
+// clamps at zero: a reload can raise the total after slots have already failed,
+// so the subtraction can go negative, and an operator line reading
+// "489 running, -191 pending" costs more trust than a zero ever would.
+// Callers must hold mu.
+func (self *providerBringUpTracker) pendingLocked() int {
+	pending := self.total - self.running - self.failed
+	if pending < 0 {
+		return 0
+	}
+	return pending
+}
+
 // providerBringUpLine is the heartbeat's line: the live tally of the run's
 // provider slots, and how many of the authenticated ones kept their client id
 // across the restart (reused) versus were minted (new), and how many have
@@ -180,7 +193,7 @@ func (self *providerBringUpTracker) start() {
 	}
 	self.started = true
 	self.startedAt = time.Now()
-	pending := self.total - self.running - self.failed
+	pending := self.pendingLocked()
 	self.mu.Unlock()
 	// Read the interval here, not inside the goroutine: the variable is a test
 	// seam, and a goroutine that starts late would read it while the test that
@@ -228,7 +241,7 @@ func (self *providerBringUpTracker) start() {
 				return
 			case <-ticker.C:
 				self.mu.Lock()
-				pending := self.total - self.running - self.failed
+				pending := self.pendingLocked()
 				resolved := pending <= 0
 				self.mu.Unlock()
 				if resolved {
@@ -266,7 +279,7 @@ func (self *providerBringUpTracker) emit() {
 		self.mu.Unlock()
 		return
 	}
-	pending := self.total - self.running - self.failed
+	pending := self.pendingLocked()
 	reused, minted := self.identityCounts()
 	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reachedIdentities))
 	self.mu.Unlock()
@@ -286,8 +299,13 @@ func (self *providerBringUpTracker) emitStartupSummary() {
 	}
 	total := self.total
 	running := self.running
-	pending := total - self.running - self.failed
 	failed := self.failed
+	pending := total - running - failed
+	if pending < 0 {
+		// A reload can raise the total after slots already failed, so the
+		// subtraction can go negative. Zero is the honest floor.
+		pending = 0
+	}
 	reused, minted := self.identityCounts()
 	reached := len(self.reachedIdentities)
 	self.mu.Unlock()
@@ -521,7 +539,7 @@ func (self *providerBringUpTracker) apply(index uint64, state string, print func
 	if print != nil {
 		print()
 	}
-	pending := self.total - self.running - self.failed
+	pending := self.pendingLocked()
 	final := pending <= 0 && !self.finished
 	if final {
 		self.finished = true
