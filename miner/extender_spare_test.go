@@ -9,6 +9,8 @@ package miner
 import (
 	"testing"
 	"time"
+
+	"github.com/urnetwork/sdk"
 )
 
 // The per-family outcomes the tests feed in.
@@ -215,5 +217,51 @@ func TestExtenderActivationPassFollowsTheHostCapability(t *testing.T) {
 	}
 	if !pass.V6.Tried || pass.V6.Activated {
 		t.Fatalf("v6 result = %+v, want tried and not activated", pass.V6)
+	}
+}
+
+// A pass can activate one family and fail the other, and the status carries
+// both facts at once. That is a failure: reading it as a success records no
+// refusal, so the next start posts into the same wall, and it strands the
+// leftover post that is meant to fund the retry.
+func TestProviderExtenderStatusRecordsARefusalForAPartlyActivatedPass(t *testing.T) {
+	testExtenderState(t)
+	now := time.Now()
+	// Two dual-stack passes spend four of the five posts, which is the state
+	// the spare exists in.
+	spendTwoPasses(t, now, extenderTestAccountA)
+	// This host's own measurement says v6 is usable, so the pass posted v6 and
+	// the failure is v6's.
+	writeHostCapability(hostCapability{IPv6Usable: true, CheckedAtUnix: now.Unix()})
+
+	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{
+		Enabled:             true,
+		ActivatedV4:         true,
+		LastActivationTime:  now.Unix(),
+		LastActivationError: "the operator refused the v6 post",
+	})
+	if !listener.last.ActivatedV4 || listener.last.ActivatedV6 || !listener.last.ActivationFailed {
+		t.Fatalf("observation = %+v, want the mixed pass the status described", listener.last)
+	}
+
+	record, found := readExtenderActivationRecord(listener.account)
+	if !found {
+		t.Fatal("the mixed pass wrote no record")
+	}
+	state := record.Accounts[listener.account]
+	if state.Refusals != 1 {
+		t.Fatalf("refusals = %d, want 1: the failed family was recorded as a success", state.Refusals)
+	}
+	// The wait is stamped from the wall clock, so the assertion is the wait it
+	// implies rather than the second it landed on.
+	if state.BackoffUntilUnix < now.Add(extenderRefusalBackoff).Unix() {
+		t.Fatalf("backoff until %d, want at least %d", state.BackoffUntilUnix, now.Add(extenderRefusalBackoff).Unix())
+	}
+	if state.SpareFamily != string(extenderActivationFamilyV6) || state.SpareAtUnix == 0 {
+		t.Fatalf("spare family = %q at %d, want the v6 retry funded", state.SpareFamily, state.SpareAtUnix)
+	}
+	if got := extenderWindowPosts(t, listener.account, time.Now()); got != extenderActivationBudget {
+		t.Fatalf("window holds %d posts, want the budget %d", got, extenderActivationBudget)
 	}
 }
