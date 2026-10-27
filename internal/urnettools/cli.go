@@ -518,8 +518,24 @@ func cmdStatus(args []string) error {
 	if err := renderStatusBase(p); err != nil {
 		return err
 	}
+	printHostCapability(p)
 	printLiveBlock(p)
 	return nil
+}
+
+// printHostCapability asks the provider what it measured about this host and
+// prints one line. A provider that predates the field, or one that is not
+// running, prints nothing.
+func printHostCapability(p Provider) {
+	if !p.Running {
+		return
+	}
+	sockPath := filepath.Join(p.StateDir, "provider.sock")
+	resp, err := sendSocketRequest(sockPath, controlRequest{Cmd: "status"})
+	if err != nil || !resp.OK || resp.HostCapability == nil {
+		return
+	}
+	fmt.Println("  " + formatHostCapability(resp.HostCapability, time.Now()))
 }
 
 // renderStatusBase is the pre-existing status output, unchanged: the styled
