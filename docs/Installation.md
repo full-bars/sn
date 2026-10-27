@@ -1,6 +1,6 @@
 # 📦 Installation Guide
 
-This guide covers the Linux installer, user-level systemd service, post-install commands, and host optimization tools.
+This guide covers the Linux installer, user-level systemd service, post-install commands, and host optimization tools. Alpine with OpenRC and FreeBSD use a different service manager; both are covered under Other Platforms below.
 
 ## 🚀 Quick Start
 
@@ -41,7 +41,7 @@ urnet-tools proxy refresh
 ## 🧭 Other Platforms (Quick install)
 
 - **Alpine Linux (OpenRC):** the same install command, run from a root shell, installs a system service under `supervise-daemon`. See the [Alpine Linux (OpenRC) guide](https://github.com/full-bars/sn/wiki/OpenRC).
-- **FreeBSD:** installs an `rc.d` service from the FreeBSD installer script. See the [FreeBSD guide](https://github.com/full-bars/sn/wiki/FreeBSD).
+- **FreeBSD:** installs an `rc.d` service from the FreeBSD installer script. `curl` is not in the base system, so on a bare host run `pkg install -y curl` first, or fetch the script with `fetch` and run it locally. See the [FreeBSD guide](https://github.com/full-bars/sn/wiki/FreeBSD).
 
 ## 🍎 macOS Installation
 
