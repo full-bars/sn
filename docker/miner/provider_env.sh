@@ -22,10 +22,10 @@
 #       --auto-register. Must not contain whitespace. Without
 #       ALL_OPERATORS it is left to the auth path and not passed to provide.
 #   ALLOW_CLIENT_REGISTRATION=auto|Y|N
-#       Y adds --allow-client-registration (explicit creation, what deliberate
-#       key rotation uses), N adds --no-client-registration to withhold
-#       creation, and auto adds neither: creation is permitted by default now
-#       that a slot heals its own identity instead of parking.
+#       Accepted for compatibility. A slot always mints the client it needs, so
+#       the flag is never required; Y still emits --allow-client-registration,
+#       which the provider accepts and ignores, and N emits nothing. Use
+#       `systemctl stop` to keep a host from minting.
 #   MAX_MEMORY=<mem>
 #       --max-memory=<mem>, for example 2gib. Must not contain whitespace.
 #   PROVIDER_ARGS="<args>"
@@ -136,9 +136,6 @@ provider_env_flags() {
     return 1
   fi
   [ "$_pe_allow" = "y" ] && printf '%s\n' --allow-client-registration
-  # Creation is permitted by default since a slot heals its own identity, so N
-  # has to withhold it explicitly; omitting the flag no longer means "no".
-  [ "$_pe_allow" = "n" ] && printf '%s\n' --no-client-registration
 
   if [ -n "${PROVIDER_ARGS:-}" ]; then
     case $- in *f*) _pe_glob_off=1 ;; *) _pe_glob_off=0 ;; esac

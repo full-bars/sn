@@ -14,16 +14,13 @@ comes from the configured server and its network principal.
 ## Operator decisions
 
 - A known new installation or new proxy member registers without a flag:
-  creation is permitted by default, so a slot that has no usable identity
-  mints one and saves it instead of stopping. `--no-client-registration`
-  withholds that permission, and a slot that needs an identity then reports
-  `client_registration_disabled` in one line rather than a recovery hint.
-  `--allow-client-registration` is still accepted and remains the explicit
-  form deliberate key rotation uses (see the zero-seed case below). Creation
-  never clears an operation, first-send anchor, existing-client marker,
-  rejection or key-identity mismatch: an identity the server has revoked
-  stays refused, because minting there would replace a client the server
-  bound to this provider key.
+  creation is always permitted, so a slot that has no usable identity mints one
+  and saves it instead of stopping. There is no off switch, because a provider
+  that cannot mint cannot serve; `--allow-client-registration` is still
+  accepted and is ignored. Creation never clears an operation, first-send
+  anchor, existing-client marker, rejection or key-identity mismatch: an
+  identity the server has revoked stays refused, because minting there would
+  replace a client the server bound to this provider key.
 - An ordinary restart with retained key/marker and operation or credential
   needs no creation flag. A persisted request can resume without the flag even
   if it has not received its first reply.

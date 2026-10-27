@@ -96,10 +96,10 @@ func_check_config() {
       log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: passing --allow-client-registration"
       ;;
     n)
-      log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: passing --no-client-registration to withhold creation"
+      log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: accepted for compatibility; a slot always mints the client it needs"
       ;;
     auto)
-      log "[INFO] ALLOW_CLIENT_REGISTRATION=auto: creation permitted by default, passing neither flag"
+      log "[INFO] ALLOW_CLIENT_REGISTRATION=auto: nothing to set, a slot mints the client it needs"
       ;;
   esac
 

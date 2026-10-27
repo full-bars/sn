@@ -482,7 +482,7 @@ func (self *providerBringUpTracker) authFailed(index uint64, display string, rea
 		// it is the only refusal this path keeps: one plain line, no retry
 		// hint, no recovery advice.
 		if strings.Contains(reason.Error(), "client_registration_disabled") {
-			tlog("[auth] provider %d skipped: provider client creation is disabled (--no-client-registration) (slot %s)\n", index, display)
+			tlog("[auth] provider %d skipped: provider client creation is disabled for this run (slot %s)\n", index, display)
 			return
 		}
 		tlog("[auth] provider %d failed: %v (slot %s, retry %s)\n", index, reason, display, retry)

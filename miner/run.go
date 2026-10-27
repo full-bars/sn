@@ -154,7 +154,7 @@ Usage:
         [-v...]
     provider provide --all-operators [--operators-url=<url>] [--operators-refresh=<duration>]
         [--auto-register --hotkey_seed_file=<path> | --hotkey_seed_file=<path>]
-        [--port=<port>] [--max-memory=<mem>] [--allow-client-registration] [--no-client-registration]
+        [--port=<port>] [--max-memory=<mem>] [--allow-client-registration]
         [-v...]
     provider operators [--operators-url=<url>] [-v...]
     provider provide [--port=<port>]
@@ -164,7 +164,6 @@ Usage:
 		[--original-contract-capture=<path> --original-contract-capture-sha256=<hash>]
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
-		[--no-client-registration]
 		[--no-legacy-import]
 		[--legacy-import-budget=<dur>]
 		[--quarantine-rejected-sign-in]
@@ -185,7 +184,6 @@ Usage:
 		[--original-contract-capture=<path> --original-contract-capture-sha256=<hash>]
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
-		[--no-client-registration]
 		[--no-legacy-import]
 		[--legacy-import-budget=<dur>]
     	[--port=<port>]
@@ -314,9 +312,7 @@ Options:
     -f                               Force overwrite the JWT token store file or proxy value, if exists.
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
-	--allow-client-registration       Explicitly permit a new durable provider client operation; never replaces retained identity.
-	--no-client-registration          Refuse to create a provider client at all. A slot with no usable saved identity fails
-	                                 with one line instead of registering; the default permits creation.
+	--allow-client-registration       Accepted for compatibility and ignored: a slot always mints a client it can use.
 	--adopt-legacy-provider-key       Assert the retained legacy provider key is original; refresh only, no new client allocation.
 	--no-legacy-import               Disable the automatic import of 3.23-fix saved provider identities from
 	                                 .client_jwts.json; no legacy file is read for import and no sn state file is
@@ -988,11 +984,10 @@ func provideWith(opts docopt.Opts, start bool) {
 
 	// Fork: a provider slot must be able to start on a host migrated from the
 	// 3.23-fix provider without a flag on the unit. Creating a client is
-	// permitted unless the operator explicitly disables it; the old
-	// --allow-client-registration spelling still parses and means the same
-	// thing it always did.
-	noClientRegistration, _ := opts.Bool("--no-client-registration")
-	allowClientRegistration := !noClientRegistration
+	// always permitted: a slot that cannot use its saved identity mints one,
+	// so there is no off switch and nothing to set. The old
+	// --allow-client-registration spelling still parses and is ignored.
+	allowClientRegistration := true
 	explicitClientRegistration, _ := opts.Bool("--allow-client-registration")
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
 	noLegacyImport, _ := opts.Bool("--no-legacy-import")

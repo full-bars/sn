@@ -84,7 +84,7 @@ run the baked `provider-relay` in direct mode, give it the relay image's flags
 | `HOTKEY_SEED_FILE` | sr25519 hotkey seed for operator sign-in and `--auto-register`. |
 | `ALL_OPERATORS` | `Y` passes `provide --all-operators` (mines every listed operator). |
 | `AUTO_REGISTER` | `Y` passes `--auto-register` (requires `ALL_OPERATORS=Y` and a seed). |
-| `ALLOW_CLIENT_REGISTRATION` | `auto` (default) passes neither flag, because creation is permitted by default; `Y` passes `--allow-client-registration` (explicit creation, used for key rotation); `N` passes `--no-client-registration` to withhold creation. |
+| `ALLOW_CLIENT_REGISTRATION` | Accepted for compatibility and has no effect: a slot always mints the client it needs. `Y` still emits `--allow-client-registration`, which the provider ignores. |
 | `OPERATORS_URL` | Operator list URL for `provide --all-operators` and `auth --operator`. |
 | `MAX_MEMORY` | Passed through as `--max-memory` (for example `1500mib`). |
 | `PROVIDER_ARGS` | Extra flags appended to `provide` verbatim. |
