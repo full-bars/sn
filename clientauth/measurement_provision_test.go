@@ -517,6 +517,12 @@ func TestProviderSlotFailedCredentialWriteDoesNotMintAgain(t *testing.T) {
 		// two platforms rather than asserted with a permission that does nothing.
 		t.Skip("a read-only directory does not deny writes on windows")
 	}
+	if os.Geteuid() == 0 {
+		// Root ignores the directory permission bits this test relies on, so
+		// the write it wants refused would succeed and the failure would land
+		// on the assertion instead of the permission check.
+		t.Skip("a read-only directory does not deny writes to root")
+	}
 	fixture, owner, clientPath, keyPath := newProviderSlotRecoveryFixture(t)
 	stop := errors.New("synthetic credential handoff failure")
 	// The binding hook runs where the credential is installed: the operation
@@ -537,6 +543,10 @@ func TestProviderSlotFailedCredentialWriteDoesNotMintAgain(t *testing.T) {
 	if err := os.Chmod(filepath.Dir(clientPath), 0500); err != nil {
 		t.Fatal(err)
 	}
+	// Restore the mode even when a later assertion fails: t.TempDir's cleanup
+	// cannot remove a 0500 directory, so a fatal would turn into a second
+	// failure and hide the first.
+	t.Cleanup(func() { _ = os.Chmod(filepath.Dir(clientPath), 0700) })
 	readOnly, err := OpenProviderClientKey(t.Context(), keyPath, ProviderClientKeyOptions{})
 	if err != nil {
 		t.Fatalf("the read-only directory did not open its retained key: %v", err)

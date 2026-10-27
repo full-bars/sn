@@ -33,8 +33,10 @@ comes from the configured server and its network principal.
   JWTs requires the separate `--adopt-legacy-provider-key` first-upgrade
   assertion. The operator must have recovered and identified the original seed.
   JWT claims cannot establish its historical link to that key. This option is
-  mutually exclusive with new-client permission, grants no new allocation, and
-  first-upgrade adoption permits only existing-client refresh. Publishing a
+  mutually exclusive with new-client permission, allocates no client itself,
+  and does not prevent one being minted: first-upgrade adoption permits only
+  existing-client refresh, while a slot whose saved credential cannot be used
+  mints a replacement exactly as it would without the flag. Publishing a
   missing marker accepts only legacy JWT names and legacy certificate/extender
   side files. In that missing-marker case, any retained versioned operation,
   lock, first-send/existing marker, rejection or unknown provider history makes

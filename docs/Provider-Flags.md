@@ -97,7 +97,7 @@ Do not read that as "minting always means a platform problem". A host restored
 from a backup taken before these identities were written, or pointed at the
 wrong state directory, has no saved identity for its slots and will mint one for
 every one of them within seconds. That host is healthy by every other measure
-and its log is full of `minted new identity (first start)`. So the first thing
+and its log is full of `✨ client_id: ... (new)` lines, one per slot. So the first thing
 to check when you see mints is not the platform, it is whether the state
 directory being read is the state directory you think it is: a wrong mount, a
 fresh volume, a restore that predates the identities, or a permissions change
@@ -187,7 +187,9 @@ looking:
 
 `--adopt-legacy-provider-key` adopts a legacy key and JWT as this provider's
 custody. Use it only when automatic import cannot prove the identity and you
-have recovered the original seed. It grants no new allocation.
+have recovered the original seed. Adoption itself allocates no client, and it
+allocates no permission either: a slot whose saved credential cannot be used
+mints a replacement exactly as it would without the flag.
 
 `--no-legacy-import` turns off automatic import of 3.23-fix identities entirely.
 The old files are left untouched. `--legacy-import-budget` sets the time budget
