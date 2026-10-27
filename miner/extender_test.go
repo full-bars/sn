@@ -188,7 +188,7 @@ func TestProviderExtenderStatusLine(t *testing.T) {
 	// test needs its own state directory rather than the operator's.
 	testExtenderState(t)
 	for _, c := range cases {
-		listener := newProviderExtenderStatusListener(nil, 0, connect.Id{})
+		listener := newProviderExtenderStatusListener(nil, 0, "")
 		listener.ExtenderProvideStatusChanged(c.status)
 		if listener.last != c.expect {
 			t.Errorf("scalar observation = %+v, expected %+v", listener.last, c.expect)

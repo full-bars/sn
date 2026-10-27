@@ -12,6 +12,7 @@ import (
 
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/urfoundation/sn/clientauth"
+	"github.com/urnetwork/sdk"
 )
 
 // postsPerDualStackPass is the charge for a host that can post on both
@@ -499,5 +500,26 @@ func TestExtenderActivationGateRechecksOnRelaunch(t *testing.T) {
 	recordExtenderActivationRefused(time.Now(), accountId)
 	if gate.allowLaunch() {
 		t.Fatal("a relaunch inside the recorded hold must not run the role")
+	}
+}
+
+// A refusal the activation callback records must hold the account's next
+// start, and the activation the operator signs must clear it: the listener and
+// the gate have to key the record the same way.
+func TestExtenderActivationListenerRefusalHoldsTheAccount(t *testing.T) {
+	testExtenderState(t)
+	writeAccountToken(t, extenderTestAccountA)
+	account := extenderActivationUserId()
+
+	listener := newProviderExtenderStatusListener(nil, 0, account)
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true, LastActivationError: "refused"})
+	now := time.Now()
+	if allow, wait, _ := extenderActivationAllow(now, postsPerDualStackPass, account); allow {
+		t.Fatalf("a start inside the refusal the listener recorded was allowed (wait=%s): the listener did not key the account", wait)
+	}
+
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true, ActivatedV4: true})
+	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, account); !allow || used != 0 {
+		t.Fatalf("after a signed activation: allow=%v used=%d, want allow=true used=0", allow, used)
 	}
 }

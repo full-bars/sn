@@ -107,7 +107,7 @@ func TestProviderDiagnosticsClosedFactsAndIndependentOwners(t *testing.T) {
 	// The listener records an activation refusal in the provider store, so the
 	// test needs its own state directory rather than the operator's.
 	testExtenderState(t)
-	listener := newProviderExtenderStatusListener(first, 3, connect.Id{})
+	listener := newProviderExtenderStatusListener(first, 3, "")
 	status := &sdk.ExtenderProvideStatus{Enabled: true, Listening: true, ListenError: strings.Repeat("synthetic-private", 128*1024), LastActivationError: strings.Repeat("synthetic-failure", 128*1024), Ipv4: "192.0.2.11"}
 	listener.ExtenderProvideStatusChanged(status)
 	raw = firstSink.next(t)

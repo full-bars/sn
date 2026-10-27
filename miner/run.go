@@ -1875,7 +1875,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// one line per change, so the activation prints once it settles and
 		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
 		extenderStatusSub := device.AddExtenderProvideStatusChangeListener(
-			newProviderExtenderStatusListener(output, index, clientId))
+			newProviderExtenderStatusListener(output, index, extenderActivationUserId()))
 		defer extenderStatusSub.Close()
 
 		select {

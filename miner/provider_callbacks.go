@@ -139,14 +139,17 @@ type providerExtenderStatusListener struct {
 	last        providerExtenderObservation
 	diagnostics *providerDiagnostics
 	provider    uint64
-	// clientId is the identity this slot provides under, which is the client
-	// whose activation budget a refusal or an activation is recorded against.
-	clientId string
+	// account is the sign-in account this slot provides under
+	// (extenderActivationUserId), which is the identity the operator's
+	// ExtenderActivateRateLimit counts and the key the budget records a
+	// refusal or an activation against. The client id would be the wrong key:
+	// a heal mints a new client for the same account.
+	account string
 }
 
 // The provider borrows its enclosing run's explicitly supplied output budget.
-func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, clientId connect.Id) *providerExtenderStatusListener {
-	return &providerExtenderStatusListener{diagnostics: output, provider: provider, clientId: clientId.String()}
+func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, account string) *providerExtenderStatusListener {
+	return &providerExtenderStatusListener{diagnostics: output, provider: provider, account: account}
 }
 
 // A nil observation is unknown, separate from a known disabled extender.
@@ -165,16 +168,16 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		return true
 	}()
 	if changed {
-		// The operator budgets activation posts per client per hour and its
+		// The operator budgets activation posts per account per hour and its
 		// refusal already names the wait, so the wait is persisted here: the
 		// activation loop's own backoff lives in memory and a restart would
 		// otherwise post into the same refusal.
 		if observation.Known && observation.Enabled {
 			switch {
 			case observation.ActivatedV4 || observation.ActivatedV6:
-				recordExtenderActivationSucceeded(self.clientId)
+				recordExtenderActivationSucceeded(self.account)
 			case observation.ActivationFailed:
-				if wait := recordExtenderActivationRefused(time.Now(), self.clientId); 0 < wait {
+				if wait := recordExtenderActivationRefused(time.Now(), self.account); 0 < wait {
 					tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
 				}
 			}
