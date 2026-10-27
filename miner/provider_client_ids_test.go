@@ -3,6 +3,7 @@ package miner
 import (
 	"encoding/json"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 
@@ -139,5 +140,79 @@ func TestProviderClientIDCountsSkipUnresolvedSlots(t *testing.T) {
 	tracker.mu.Unlock()
 	if reused != 1 || minted != 1 {
 		t.Fatalf("identityCounts = (%d reused, %d minted), want (1, 1)", reused, minted)
+	}
+}
+
+// The tally and the gauges follow the slots the run still serves. A slot the
+// reloader removes is cancelled rather than failed, so its worker returns
+// context.Canceled and nothing on the failure path would mark it.
+func TestProviderBringUpSlotStoppedLeavesTheRunningTally(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	resetControlRuntimeForTest()
+	t.Cleanup(resetControlRuntimeForTest)
+	tracker := newProviderBringUpTracker(2)
+	setTestProviderClientIDs(t, tracker)
+
+	tracker.authReused(0, connect.NewId(), "direct")
+	tracker.authNew(1, connect.NewId(), "proxy:10.0.0.1:1080")
+	requireProviderClientIDGauges(t, "1", "1")
+
+	tracker.slotStopped(1)
+	// The removed slot is gone from the gauges, and the slot still serving is
+	// untouched.
+	requireProviderClientIDGauges(t, "1", "0")
+	tracker.mu.Lock()
+	running, stopped, pending := tracker.running, tracker.stopped, tracker.pendingLocked()
+	tracker.mu.Unlock()
+	if running != 1 || stopped != 1 || pending != 0 {
+		t.Fatalf("running=%d stopped=%d pending=%d, want 1/1/0", running, stopped, pending)
+	}
+
+	// A second stop for the same slot is not a second removal.
+	tracker.slotStopped(1)
+	if reused, minted, _ := providerClientIDCounts(); reused != 1 || minted != 0 {
+		t.Fatalf("after a repeated stop: reused=%d minted=%d, want 1/0", reused, minted)
+	}
+
+	// A slot that already failed is counted as a failure, not moved to stopped.
+	tracker.workerFailed(0)
+	tracker.slotStopped(0)
+	tracker.mu.Lock()
+	failed, running, stoppedAfter := tracker.failed, tracker.running, tracker.stopped
+	tracker.mu.Unlock()
+	if failed != 1 || running != 0 || stoppedAfter != 1 {
+		t.Fatalf("a stop moved a failed slot: failed=%d running=%d stopped=%d, want 1/0/1", failed, running, stoppedAfter)
+	}
+}
+
+// The tracker method is only half the fix: run.go has to call it on every way
+// out of a slot goroutine, or a removed slot keeps its place in the tally. The
+// run is too large to execute in a test, so assert the call sits on the
+// deferred exit's own level, beside the result send, rather than inside the
+// failure branch above it.
+func TestRunMarksEverySlotExitAsStopped(t *testing.T) {
+	src, err := os.ReadFile("run.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(src)
+	const call = "bringUp.slotStopped(uint64(index))"
+	if n := strings.Count(text, call); n != 1 {
+		t.Fatalf("run.go calls %s %d times, want exactly 1", call, n)
+	}
+	callIndent := ""
+	sendIndent := ""
+	for _, line := range strings.Split(text, "\n") {
+		body := strings.TrimLeft(line, "\t")
+		switch {
+		case strings.Contains(line, call):
+			callIndent = line[:len(line)-len(body)]
+		case strings.Contains(line, "results <- result"):
+			sendIndent = line[:len(line)-len(body)]
+		}
+	}
+	if callIndent == "" || callIndent != sendIndent {
+		t.Fatalf("slotStopped is indented %q, the result send %q: the stop must run on every exit, not inside the failure branch",
+			callIndent, sendIndent)
 	}
 }

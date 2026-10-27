@@ -2081,6 +2081,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 						bringUp.workerFailed(uint64(index))
 					}
 				}
+				// Every exit leaves the running tally, clean cancellation
+				// included: the reloader removes a slot by cancelling its
+				// context, so its worker returns context.Canceled and nothing
+				// above would mark it stopped.
+				bringUp.slotStopped(uint64(index))
 				results <- result
 			}()
 			// The warmth-derived base delay plus a jittered

@@ -82,11 +82,13 @@ func providerSlotDisplay(settings *connect.ProxySettings) string {
 }
 
 // providerBringUpLine is the heartbeat's line: the live tally of the run's
-// provider slots, and how many of the authenticated ones kept their client id
-// across the restart (reused) versus were minted (new), and how many have
-// completed a dial to the control plane. A reused id alone proves only that a
-// stored login was found; the reached count is the evidence that the slot is
-// talking to the platform. The counts trail the
+// provider slots, and how many of the slots running right now kept their client
+// id across the restart (reused) versus were minted (new), and how many have
+// completed a dial to the control plane. The client-id pair describes the same
+// population as the running count, which is also the population the metrics and
+// the status payload report: a slot that failed or was removed is in neither. A
+// reused id alone proves only that a stored login was found; the reached count
+// is the evidence that the slot is talking to the platform. The counts trail the
 // stable "N running, N pending, N failed" prefix so existing readers of it
 // still match.
 func providerBringUpLine(running, pending, failed, reused, minted, reached int) string {
@@ -102,9 +104,17 @@ type providerBringUpTracker struct {
 	total   int
 	running int
 	failed  int
+	// stopped counts the slots whose worker exited without failing: a reloader
+	// removal or a shutdown cancels the slot's context, which is not a failure
+	// to report but is a slot the run no longer serves. Pending is what is left
+	// after running, failed and stopped, so a stopped slot does not reappear as
+	// work still to come.
+	stopped int
 	states  map[uint64]string
 	// identities is each authenticated slot's latest outcome: true when the
-	// slot kept its client id, false when it was minted.
+	// slot kept its client id, false when it was minted. It is the run's
+	// history, not a liveness signal: the readers count only the slots whose
+	// state is still "running".
 	identities map[uint64]bool
 	// reached is the slots whose first dial through their proxy succeeded.
 	reached map[uint64]bool
@@ -184,6 +194,12 @@ func (self *providerBringUpTracker) countIdentities(runningOnly bool) (reused, m
 	return reused, minted
 }
 
+// pendingLocked is the slots still waiting on an outcome: launched, and neither
+// running, failed nor stopped. The caller must hold mu.
+func (self *providerBringUpTracker) pendingLocked() int {
+	return self.total - self.running - self.failed - self.stopped
+}
+
 // providerBringUpCurrent is the run's bring-up tracker. The /metrics scrape and
 // the status payload read their client-id counts from it, so all three
 // surfaces report the same numbers instead of each keeping its own tally. Nil
@@ -238,7 +254,7 @@ func (self *providerBringUpTracker) start() {
 	}
 	self.started = true
 	self.startedAt = time.Now()
-	pending := self.total - self.running - self.failed
+	pending := self.pendingLocked()
 	self.mu.Unlock()
 	// Read the interval here, not inside the goroutine: the variable is a test
 	// seam, and a goroutine that starts late would read it while the test that
@@ -286,7 +302,7 @@ func (self *providerBringUpTracker) start() {
 				return
 			case <-ticker.C:
 				self.mu.Lock()
-				pending := self.total - self.running - self.failed
+				pending := self.pendingLocked()
 				resolved := pending <= 0
 				self.mu.Unlock()
 				if resolved {
@@ -324,7 +340,7 @@ func (self *providerBringUpTracker) emit() {
 		self.mu.Unlock()
 		return
 	}
-	pending := self.total - self.running - self.failed
+	pending := self.pendingLocked()
 	reused, minted := self.identityCounts()
 	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reachedIdentities))
 	self.mu.Unlock()
@@ -344,7 +360,7 @@ func (self *providerBringUpTracker) emitStartupSummary() {
 	}
 	total := self.total
 	running := self.running
-	pending := total - self.running - self.failed
+	pending := self.pendingLocked()
 	failed := self.failed
 	reused, minted := self.identityCounts()
 	reached := len(self.reachedIdentities)
@@ -553,6 +569,46 @@ func (self *providerBringUpTracker) workerFailed(index uint64) {
 	self.apply(index, "failed", nil)
 }
 
+// slotStopped records a slot whose worker has exited without failing it. This
+// is the reloader's removal and the run's own shutdown: the slot's context is
+// cancelled, so provideWithProxy returns context.Canceled, and the tally used
+// to keep the slot "running" until the run ended. A slot nobody serves must not
+// be counted as running, nor reported by the client-id gauges that read the
+// same states, so every exit path calls this, clean cancellation included.
+func (self *providerBringUpTracker) slotStopped(index uint64) {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	current := self.states[index]
+	switch current {
+	case "failed", "stopped":
+		// Already out of the running tally: a failed slot is counted as a
+		// failure and a stopped one as gone, and either would be counted twice
+		// by moving it again.
+		self.mu.Unlock()
+		return
+	case "running":
+		self.running--
+	}
+	self.stopped++
+	self.states[index] = "stopped"
+	// A stop can be the last thing the run was waiting for, and no tally would
+	// print it: apply moves the count, a stop only removes work, so the final
+	// line is emitted from here too.
+	final := self.pendingLocked() <= 0 && !self.finished
+	if final {
+		self.finished = true
+	}
+	reused, minted := self.runningIdentityCounts()
+	line := providerBringUpLine(self.running, self.pendingLocked(), self.failed, reused, minted, len(self.reached))
+	self.mu.Unlock()
+	if final {
+		tlog("%s\n", line)
+		self.stop()
+	}
+}
+
 // apply updates one slot under the lock, prints its line (when any), and emits
 // the final tally exactly once when the last pending slot resolves.
 func (self *providerBringUpTracker) apply(index uint64, state string, print func()) {
@@ -582,7 +638,7 @@ func (self *providerBringUpTracker) apply(index uint64, state string, print func
 	if print != nil {
 		print()
 	}
-	pending := self.total - self.running - self.failed
+	pending := self.pendingLocked()
 	final := pending <= 0 && !self.finished
 	if final {
 		self.finished = true
