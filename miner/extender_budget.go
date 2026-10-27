@@ -366,14 +366,18 @@ func recordExtenderActivationRefused(now time.Time, userId string) time.Duration
 
 // recordExtenderActivationSucceeded clears what a refusal left behind for one
 // account: the activation the operator signed resets that account's budget, so
-// the next start may activate again. Other accounts in the record are
-// untouched.
+// the next start may activate again. The unidentified entry goes with it,
+// because the success accepts the posts this host made before the token named
+// an account, and leaving them would let the next gate check adopt them back
+// and hold the launch the success was meant to clear. Other accounts in the
+// record are untouched.
 func recordExtenderActivationSucceeded(userId string) {
 	account := extenderActivationAccountKey(userId)
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
 	record := extenderActivationRecordForAccount(account)
 	delete(record.Accounts, account)
+	delete(record.Accounts, extenderActivationUnidentifiedAccount)
 	writeExtenderActivationRecord(record, account)
 }
 

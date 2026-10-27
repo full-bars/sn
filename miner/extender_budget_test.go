@@ -383,6 +383,38 @@ func TestExtenderActivationSuccessClearsOnlyThatAccount(t *testing.T) {
 	}
 }
 
+// A start that charged attempts before the sign-in token was readable leaves
+// them on the unidentified key, and the activation the operator signs after the
+// token resolves accepts those posts. The success must drop them with the
+// account's own state, or the next gate check adopts them back and holds a
+// launch the success was meant to clear.
+func TestExtenderActivationSuccessDropsTheUnidentifiedPosts(t *testing.T) {
+	testExtenderState(t)
+	now := time.Unix(1_800_000_000, 0)
+
+	// Two starts post while the token is unreadable, which spends four of the
+	// five posts with no account to charge.
+	for start := 0; start < 2; start++ {
+		if allow, wait, _ := extenderActivationAllow(now, postsPerDualStackPass, ""); !allow {
+			t.Fatalf("start %d before the token resolved was refused (wait=%s)", start+1, wait)
+		}
+	}
+
+	// The token resolves and the operator signs the activation before the next
+	// gate check.
+	recordExtenderActivationSucceeded(extenderTestAccountA)
+
+	allow, wait, used := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
+	if !allow || used != 0 {
+		t.Fatalf("after a signed activation: allow=%v used=%d wait=%s, want allow=true used=0: the accepted posts were adopted back",
+			allow, used, wait)
+	}
+	record, _ := readExtenderActivationRecord(extenderTestAccountA)
+	if _, ok := record.Accounts[extenderActivationUnidentifiedAccount]; ok {
+		t.Fatalf("the unidentified entry survived the signed activation: %+v", record.Accounts)
+	}
+}
+
 // The store keeps a record across a close and reopen, and a missing record
 // reads as absent rather than as an error.
 func TestProviderStoreRoundTripsARecord(t *testing.T) {
