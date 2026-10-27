@@ -2076,10 +2076,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 						// running after one actual owner failed admission.
 						cancel()
 					}
-					output.observe(providerWorkerFailed, uint64(index), true, result, 0, nil)
-					if ctx.Err() == nil && !errors.Is(result, context.Canceled) && !errors.Is(result, context.DeadlineExceeded) {
-						bringUp.workerFailed(uint64(index))
-					}
+					reportProviderSlotFailure(ctx, output, bringUp, uint64(index), result)
 				}
 				// Every exit leaves the running tally, clean cancellation
 				// included: the reloader removes a slot by cancelling its
@@ -2220,6 +2217,20 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		returnErr = errors.Join(returnErr, errProviderNetworkSignInQuarantined)
 	}
 	return returnErr
+}
+
+// reportProviderSlotFailure records a slot exit that is a genuine failure: the
+// diagnostics event behind provider_worker_failed, and the bring-up strike. A
+// cancellation is the routine way out — the run stops a slot by cancelling its
+// context, and the reloader removes one the same way, so provideWithProxy
+// returns context.Canceled and the tally records the slot as stopped — so it
+// is not a worker failure and must not be reported as one.
+func reportProviderSlotFailure(ctx context.Context, output *providerDiagnostics, bringUp *providerBringUpTracker, index uint64, result error) {
+	if result == nil || ctx.Err() != nil || errors.Is(result, context.Canceled) || errors.Is(result, context.DeadlineExceeded) {
+		return
+	}
+	output.observe(providerWorkerFailed, index, true, result, 0, nil)
+	bringUp.workerFailed(index)
 }
 
 // slotClientStrategySettings is the one place a slot's client strategy
