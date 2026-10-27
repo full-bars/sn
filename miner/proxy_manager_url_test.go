@@ -71,9 +71,9 @@ func captureTlog(t *testing.T, fn func()) string {
 	return stripTlogStamp(buf.String())
 }
 
-// stripTlogStamp removes the leading "0102 15:04:05.000 " timestamp tlog
-// prepends, leaving the message the callers assert on.
-var tlogStampPrefix = regexp.MustCompile(`^\d{4} \d\d:\d\d:\d\d\.\d{3} `)
+// stripTlogStamp removes the stamp tlog prepends to every line, leaving the
+// message the callers assert on.
+var tlogStampPrefix = regexp.MustCompile(`(?m)^I\d{4} \d\d:\d\d:\d\d\.\d{6} `)
 
 func stripTlogStamp(line string) string {
 	return tlogStampPrefix.ReplaceAllString(line, "")
