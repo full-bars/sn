@@ -24,10 +24,12 @@ curl -fsSL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 sudo sh urnet-install.sh install
 ```
 
+> **Upgrading from an install made before the tree moved to `/usr/local/libexec`?** Stop the service first (`sudo service urnetwork onestop`). The installer rewrites the `rc.d` script, and a provider still running from the old per-user tree does not match the new script's pid, argv and pidfile checks, so the install can leave a second provider running. The state directory `~/.urnetwork` is untouched.
+
 To install a specific release instead of the latest:
 
 ```sh
-sudo sh urnet-install.sh install v2026.10.21-1077735390-meso
+sudo sh urnet-install.sh install v2026.10.26-1793016775
 ```
 
 The installer takes `latest` by default and resolves the tag through the GitHub API. There is no mirror fallback on purpose: the branded mirror publishes a different repository's tags, so resolving through it would install the wrong provider. If the API is rate limited, pass the tag explicitly. It supports `amd64` and `arm64`; any other architecture stops the install.
