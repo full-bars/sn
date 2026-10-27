@@ -2,14 +2,14 @@
 
 This page is the complete guide to running the URnetwork provider on FreeBSD (amd64 and arm64): install, the `rc.d` service, updates, the required sysctl tuning, and the platform differences you will run into. For the other platforms and the general installer, see the [Installation Guide](/full-bars/sn/wiki/Installation).
 
-The provider runs as an `rc.d` service named `urnetwork` under an unprivileged user. There is no hosted one-line installer for FreeBSD: you fetch the installer script and run it, and it downloads the release for your architecture.
+The provider runs as an `rc.d` service named `urnetwork` under an unprivileged user. There is no hosted one-liner for this fork: `https://install.fullbars.xyz` serves the 3.23 fork's FreeBSD script, which resolves that repository's releases, so on sn you fetch this repository's script and run it, and it downloads the release for your architecture.
 
 > [!NOTE]
 > **Release artifacts on sn:** the FreeBSD provider binary and the `urnet-tools-freebsd-*` assets are published from `v2026.10.21-1077735390-meso` onward. Release `v2026.10.6-1064742750-meso` and older do not ship them, so `install` cannot fetch FreeBSD binaries from those; install the newest release.
 
 ## Before you start
 
-The base system has no `jq` and no `python3`. The installer works without them, but they change one thing: they are what lets it verify and install the Go `urnet-tools` binary (see [What the installer does](#what-the-installer-does)). Install `curl`, `sudo` and, recommended, `jq`:
+The base system has no `jq`, no `python3` and no `curl`. The first two are optional: the release tag is read with `jq`, then `python3`, then a `sed` extraction that needs only the base system, and `jq` is what lets the installer verify the Go `urnet-tools` asset (see [What the installer does](#what-the-installer-does)). `curl` is not optional, because the installer downloads the release with `curl`: `fetch` can retrieve the script itself, but it cannot replace `curl` inside it. Install all three, plus `sudo` for the `rc.d` steps:
 
 ```sh
 pkg install -y curl sudo jq
@@ -17,12 +17,12 @@ pkg install -y curl sudo jq
 
 Run the installer as the account the provider should run as, with `sudo`, or as root with an explicit account (see [Service user](#service-user)).
 
-> **Upgrading from an install made before the tree moved to `/usr/local/libexec`?** Stop the service first (`sudo service urnetwork onestop`). The installer rewrites the `rc.d` script, and a provider still running from the old per-user tree does not match the new script's pid, argv and pidfile checks, so the install can leave a second provider running. The state directory `~/.urnetwork` is untouched.
+> **Upgrading from an install made before the tree moved to `/usr/local/libexec`?** Stop the service first (`sudo service urnetwork onestop`). The installer rewrites the `rc.d` script, and a provider still running from the old per-user tree does not match the new script's pid, argv and pidfile checks, so the install can leave a second provider running. Re-run the installer to place the provider at `/usr/local/libexec/urnetwork-provider`, then remove the old tree by hand (`rm -rf ~/.local/share/urnetwork-provider`). The state directory `~/.urnetwork` is untouched.
 
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh -o urnet-install.sh
+fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh
 sudo sh urnet-install.sh install
 ```
 
@@ -39,32 +39,34 @@ The installer takes `latest` by default and resolves the tag through the GitHub 
 The provider must not run as root, and the installer refuses to set that up. It picks the account in this order:
 
 1. `SERVICE_USER_OVERRIDE`, if set.
-2. `SUDO_USER`, the account that ran `sudo`.
-3. `logname`, the owner of the login session, unless it is `root`.
-4. `id -un`, the current user.
+2. `URNETWORK_USER`, if set.
+3. An existing `urnetwork` account, if the host already has one.
+4. `SUDO_USER`, the account that ran `sudo`.
+5. `logname`, the owner of the login session, unless it is `root`.
+6. `id -un`, the current user.
 
-If the result is `root` (a genuine root login with none of the above), the install stops before downloading anything:
+A plain root login — no override, no `URNETWORK_USER`, no `urnetwork` account and no `sudo` parent — therefore resolves to `root`, and the install stops with exit status 1 before it downloads anything:
 
 ```text
 refusing to install a service that runs as root
 ```
 
-From a root shell, name the account:
+From a root shell, name a non-root account that already exists:
 
 ```sh
 SERVICE_USER_OVERRIDE=urnet sh urnet-install.sh install
 ```
 
-The account must already exist. Create one with `pw useradd urnet -m -s /bin/sh` if you want a dedicated user. All paths below come from that user's home directory, read from the passwd database (`getent passwd`, then `pw usershow`), not from `$HOME`, which under `sudo` can still be root's.
+The installer does not create the account. Create it first, once, with `pw useradd urnet -m -s /bin/sh`, or name any other existing non-root account. Nothing validates the name: the home lookup reads the passwd database (`getent passwd`, then `pw usershow`) and falls back to `$HOME` when the account is missing, which under a root shell is root's, so the state directory would land in the wrong home. All paths below come from the service user's home.
 
 ### What the installer does
 
 | What | Where |
 |---|---|
-| Provider binary | `~/.local/share/urnetwork-provider/bin/urnetwork` (service user's home) |
-| Installed version tag | `~/.local/share/urnetwork-provider/version` |
-| `urnet-tools` | `~/.local/share/urnetwork-provider/bin/urnet-tools` |
-| State, including the login token | `~/.urnetwork` (service user's home) |
+| Provider binary | `/usr/local/libexec/urnetwork-provider/bin/urnetwork` (root-owned) |
+| Installed version tag | `/usr/local/libexec/urnetwork-provider/version` |
+| `urnet-tools` | `/usr/local/libexec/urnetwork-provider/bin/urnet-tools` |
+| State, including the login token | `~/.urnetwork` (service user's home, owned by that user) |
 | `rc.d` script | `/usr/local/etc/rc.d/urnetwork` |
 | Service output | `/var/log/urnetwork/stdout.log` |
 | PID file | `/var/run/urnetwork.pid` |
@@ -85,7 +87,7 @@ When the installer is run as an ordinary user, the `rc.d` and `sysrc` steps go t
 The login token has to land in the service user's `~/.urnetwork`. Get an auth code from <https://ur.io> and run the authentication as the service user:
 
 ```sh
-su -l urnet -c '$HOME/.local/share/urnetwork-provider/bin/urnetwork auth <code>'
+su -l urnet -c '/usr/local/libexec/urnetwork-provider/bin/urnetwork auth <code>'
 ```
 
 If you installed as your own account with `sudo`, that account is the service user and you can run `urnet-tools auth <code>` directly. Restart the service so the provider picks up the token:
@@ -113,7 +115,7 @@ The script does not use `rc.subr`'s own process tracking, which keys off `procna
 - **stop** sends `SIGTERM` to the pid and polls `kill -0` once a second for up to 30 seconds. If the provider is still alive after that it sends `SIGKILL`, then removes the pidfile. The 30 seconds covers the provider's connection drain.
 - **status** (`status_cmd`) prints `urnetwork is running as pid <pid>.` and exits 0, or `urnetwork is not running.` and exits 1.
 
-`kill -0` on a process owned by another user fails with `EPERM`, so the installer's own status check runs through `sudo`. Run `service urnetwork status` as root, or through `sudo`, when you are not the service user.
+The running check uses `ps`, not `kill -0`, because `kill -0` returns `EPERM` — indistinguishable from "no such process" — for a process owned by another user. `service urnetwork status` therefore works for any user, while `start` and `stop` still need root, which is why `urnet-tools` runs those through `sudo`.
 
 Boot start is controlled by `rc.conf`:
 
@@ -257,7 +259,7 @@ sudo service urnetwork stop
 sudo sysrc -x urnetwork_enable urnetwork_user
 sudo rm -f /usr/local/etc/rc.d/urnetwork
 urnet-tools auto-update off
-rm -rf ~/.local/share/urnetwork-provider
+sudo rm -rf /usr/local/libexec/urnetwork-provider
 sudo rm -rf /var/log/urnetwork
 ```
 
