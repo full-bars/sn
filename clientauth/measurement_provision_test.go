@@ -527,7 +527,7 @@ func TestProviderSlotFailedCredentialWriteDoesNotMintAgain(t *testing.T) {
 	stop := errors.New("synthetic credential handoff failure")
 	// The binding hook runs where the credential is installed: the operation
 	// and the server's answer are durable, the credential is not.
-	if _, _, err := loadOrRegisterClientJwtInDirectory(t.Context(), fixture.api, fixture.networkPath, clientPath, "provider", providerSlotRecoveryScope(t, fixture, owner), true, registrationHooks{afterBinding: func() error { return stop }}, owner.store); !errors.Is(err, stop) {
+	if _, _, err := loadOrRegisterClientJwtInDirectory(t.Context(), fixture.api, fixture.networkPath, clientPath, "provider", providerSlotRecoveryScope(t, fixture, owner), true, nil, registrationHooks{afterBinding: func() error { return stop }}, owner.store); !errors.Is(err, stop) {
 		t.Fatalf("the slot did not stop at the credential handoff: %v", err)
 	}
 	request, err := os.ReadFile(clientPath + ".registration")

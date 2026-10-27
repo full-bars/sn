@@ -44,10 +44,29 @@ type RegistrationScope struct {
 
 // Application refusals require operator/configuration recovery. Keeping their
 // closed code observable never grants replacement registration authority.
-type RegistrationRefusedError struct{ Code string }
+// ExpectedClientId names the client a caller required when the refusal is about
+// an identity this custody could not present; it is empty otherwise.
+type RegistrationRefusedError struct {
+	Code             string
+	ExpectedClientId string
+}
 
 func (self *RegistrationRefusedError) Error() string {
+	if self.ExpectedClientId != "" {
+		return "client registration requires recovery: " + self.Code + " (expected client " + self.ExpectedClientId + ")"
+	}
 	return "client registration requires recovery: " + self.Code
+}
+
+// RetainedClientIdentity is a caller's demand that this attempt present one
+// client it recorded elsewhere, such as a capture launch's profile. Such a
+// caller has no creation authority, and a durable operation that has not bound
+// a client yet would submit as a new allocation, replacing the custody the
+// caller must present. The attempt refuses that operation before its request
+// and names the required client. A zero ClientId refuses the same operations
+// for a caller that recorded no identity for the slot.
+type RetainedClientIdentity struct {
+	ClientId connect.Id
 }
 
 // A retained token is custody, not evidence that a currently unreachable API
@@ -140,19 +159,19 @@ func LoadOrRegisterClientJwt(ctx context.Context, api *sdk.Api, networkPath, cli
 }
 
 func loadOrRegisterClientJwt(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, hooks registrationHooks) (_ string, _ connect.Id, returnErr error) {
-	return loadOrRegisterClientJwtInDirectory(ctx, api, networkPath, clientPath, description, scope, allowCreate, hooks, nil)
+	return loadOrRegisterClientJwtInDirectory(ctx, api, networkPath, clientPath, description, scope, allowCreate, nil, hooks, nil)
 }
 
 // A provider supplies its key owner's physical directory. Historical callers
 // retain their existing independent custody through the nil-directory wrapper.
-func loadOrRegisterClientJwtInDirectory(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, hooks registrationHooks, directory *registrationStore) (_ string, _ connect.Id, returnErr error) {
-	return loadOrRegisterClientJwtWithCustody(ctx, api, networkPath, clientPath, description, scope, allowCreate, hooks, directory, nil)
+func loadOrRegisterClientJwtInDirectory(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, retained *RetainedClientIdentity, hooks registrationHooks, directory *registrationStore) (_ string, _ connect.Id, returnErr error) {
+	return loadOrRegisterClientJwtWithCustody(ctx, api, networkPath, clientPath, description, scope, allowCreate, retained, hooks, directory, nil)
 }
 
 // Measurement custody may borrow its separately owned, read-only bootstrap
 // directory. The reader is opened only for an already retained operation;
 // provider and production-validator wrappers keep their original boundaries.
-func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, hooks registrationHooks, directory *registrationStore, bootstrapOwner func() (*registrationStore, error)) (_ string, _ connect.Id, returnErr error) {
+func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, retained *RetainedClientIdentity, hooks registrationHooks, directory *registrationStore, bootstrapOwner func() (*registrationStore, error)) (_ string, _ connect.Id, returnErr error) {
 	if ctx == nil || api == nil {
 		return "", connect.Id{}, errors.New("registration has no operation owner")
 	}
@@ -332,6 +351,18 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 		return token, id, err
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return "", connect.Id{}, err
+	}
+	// A caller that must present one recorded client has no creation authority
+	// at all, and a durable operation with no bound client is a creation
+	// waiting to be submitted: the server would allocate for it and this
+	// custody would hold an identity the caller never asked for. Refuse it
+	// before the request and name the client that was required.
+	if retained != nil && record != nil && record.ClientId == "" {
+		refused := &RegistrationRefusedError{Code: "retained_client_unbound"}
+		if retained.ClientId != (connect.Id{}) {
+			refused.ExpectedClientId = retained.ClientId.String()
+		}
+		return "", connect.Id{}, refused
 	}
 	// No credential is left to present, so whatever custody remains (an
 	// existing-client marker, a rejection tombstone) names an identity this

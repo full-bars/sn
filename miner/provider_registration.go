@@ -78,6 +78,21 @@ func captureLaunchClientId(work *ProviderWorkCaptureProfile, contract *ProviderC
 	return connect.Id{}, false
 }
 
+// The identity this attempt must present, or nil for an ordinary launch whose
+// creation decision is the only gate. A capture launch with no recorded
+// identity for the slot still supplies the requirement: it may not create a
+// client, but there is no identity to name in a refusal.
+func captureLaunchRetainedIdentity(work *ProviderWorkCaptureProfile, contract *ProviderContractCaptureProfile, slot string) *clientauth.RetainedClientIdentity {
+	if work == nil && contract == nil {
+		return nil
+	}
+	retained := &clientauth.RetainedClientIdentity{}
+	if clientId, ok := captureLaunchClientId(work, contract, slot); ok {
+		retained.ClientId = clientId
+	}
+	return retained
+}
+
 // Creation authority for one provider slot. A capture launch withholds it
 // whatever the operator flag and the automatic import decided: the identity it
 // must present is the one the profile recorded, so a mint here would be a
@@ -155,9 +170,11 @@ func providerAuthenticationRecoveryEvent(err error) providerDiagnosticEvent {
 }
 
 // Each attempt is finite. Later attempts replay the same durably retained
-// operation and never fall back to the legacy allocating endpoint.
-func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, output *providerDiagnostics, index uint64, observe clientauth.IdentityObserver) (string, connect.Id, error) {
-	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, false, output, index, observe)
+// operation and never fall back to the legacy allocating endpoint. A non-nil
+// retained identity is the capture launch's required client: an operation that
+// has not bound one is refused rather than submitted as an allocation.
+func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, retained *clientauth.RetainedClientIdentity, output *providerDiagnostics, index uint64, observe clientauth.IdentityObserver) (string, connect.Id, error) {
+	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, retained, false, output, index, observe)
 }
 
 // authenticateProviderFresh registers a new client for one slot. It is the
@@ -167,14 +184,14 @@ func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, client
 // classification and diagnostics are shared with the retained-custody path;
 // only the registration entry differs.
 func authenticateProviderFresh(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, output *providerDiagnostics, index uint64) (string, connect.Id, error) {
-	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, true, output, index, nil)
+	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, nil, true, output, index, nil)
 }
 
 // One attempt loop serves both mints. The retained-custody path owns its
 // durable replay on a typed availability failure; the fresh path does not
 // yield those, so a lost fresh reply is left to the caller's backoff instead
 // of being replayed into a second client.
-func authenticateProviderWith(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, freshIdentity bool, output *providerDiagnostics, index uint64, observe clientauth.IdentityObserver) (string, connect.Id, error) {
+func authenticateProviderWith(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, retained *clientauth.RetainedClientIdentity, freshIdentity bool, output *providerDiagnostics, index uint64, observe clientauth.IdentityObserver) (string, connect.Id, error) {
 	hooks, _ := ctx.Value(providerRegistrationHooksKey{}).(providerRegistrationHooks)
 	register := func(registerCtx context.Context) (string, connect.Id, error) {
 		if freshIdentity {
@@ -183,7 +200,7 @@ func authenticateProviderWith(ctx context.Context, api *sdk.Api, networkPath, cl
 			// tally already says every slot was new.
 			return keyOwner.RegisterFreshClientJwt(registerCtx, api, networkPath, clientPath, slot, allowCreate)
 		}
-		return keyOwner.LoadOrRegisterClientJwtObserved(registerCtx, api, networkPath, clientPath, slot, allowCreate, observe)
+		return keyOwner.LoadOrRegisterClientJwtObserved(registerCtx, api, networkPath, clientPath, slot, allowCreate, retained, observe)
 	}
 	for {
 		attempt, cancel := context.WithTimeout(ctx, 300*time.Second)

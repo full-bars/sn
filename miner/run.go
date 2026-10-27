@@ -1639,8 +1639,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// when the device is built (provider_work_capture.go apply) — after a
 		// mint would have registered a replacement and written it over the
 		// slot's credential. Creation authority is withheld here instead, so
-		// the slot either presents the retained client or refuses.
+		// the slot either presents the retained client or refuses, and the
+		// recorded client is carried into the registration attempt so a
+		// durable operation that never bound a client is refused before it is
+		// submitted as a new allocation.
 		slot := providerRegistrationSlot(slotIdentities, proxySettings)
+		retained := captureLaunchRetainedIdentity(workProfile, contractProfile, slot)
 		captureRefusal := captureLaunchIdentityRefusal(workProfile, contractProfile, slot)
 		// The explicit flag always allocates; the automatic import enables a
 		// new registration only for this slot's recorded fallback.
@@ -1664,7 +1668,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			ClientStrategySettings: clientStrategySettings,
 			ClientStrategy:         clientStrategy,
 			Mint: func(mintCtx context.Context) (string, connect.Id, error) {
-				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
+				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, retained, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
 					// The registration path is the only observer of what happened
 					// to this slot's identity; hand it to the start's aggregate
 					// rather than re-deriving it from the credential or a line.
