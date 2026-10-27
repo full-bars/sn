@@ -1392,7 +1392,6 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		networkJwtPath: filepath.Join(stateDir, "jwt"),
 		providers:      self.proxySettings,
 		disabled:       self.noLegacyImport,
-		explicitCreate: self.explicitClientRegistration,
 		explicitAdopt:  self.adoptLegacyProviderKey,
 		recorder:       output,
 		budget:         self.legacyImportBudget,

@@ -761,9 +761,8 @@ func TestLegacyImportJournalFreezesDecisions(t *testing.T) {
 
 func TestLegacyImportDisabledAndExplicitFlagsDoNothing(t *testing.T) {
 	for name, mutate := range map[string]func(*legacyImportOptions){
-		"disabled":       func(opts *legacyImportOptions) { opts.disabled = true },
-		"explicitCreate": func(opts *legacyImportOptions) { opts.explicitCreate = true },
-		"explicitAdopt":  func(opts *legacyImportOptions) { opts.explicitAdopt = true },
+		"disabled":      func(opts *legacyImportOptions) { opts.disabled = true },
+		"explicitAdopt": func(opts *legacyImportOptions) { opts.explicitAdopt = true },
 	} {
 		t.Run(name, func(t *testing.T) {
 			fixture := newLegacyImportFixture(t, true, 2)
