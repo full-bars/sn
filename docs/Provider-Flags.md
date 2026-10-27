@@ -146,26 +146,33 @@ holds stale credentials, or a permissions change all produce identities the
 platform will not accept, and none of them is the platform's fault. Only after
 the state directory is confirmed should you suspect the platform.
 
-A start that finds no saved identity at all is not this warning. It mints one
-per slot, which is what a first start does, and it prints `0 reused, N new` in
-the startup summary plus one `minted_new` record per slot in the store. A wrong
-mount of an empty directory looks the same from inside the process, so that is
-where to look for it.
+Work through it in this order. First, confirm the state directory is the one you
+think it is: a restore from before the identities existed, or a partial mount
+that holds stale credentials, produces a full wave of replacements and looks
+like nothing else is wrong. Second, if the state is intact and the mints are
+replacements, ask the platform whether it revoked or refused those clients; a
+platform-side refusal wave is not something a host can fix by restarting. Third,
+if only some slots are affected, look at what those slots share — one proxy
+address, one upstream source, one operator — because that points at the proxy
+rather than at identity at all.
+
+A start that finds no saved identity at all is not this warning. It mints one per
+slot, which is what a first start does, and it prints `0 reused, N new` in the
+startup summary instead. A wrong mount of an empty directory looks the same from
+inside the process, so that summary line is where to look for it.
 
 For the per-slot detail — which slot, which outcome, what reason, when — every
-outcome is appended to the `identity_events` record in `provider_state.db`. That
-is where you look up the individual slot, and the record is bounded so it cannot
-grow without limit.
+outcome is appended to the `identity_events` bucket in `provider_state.db`,
+bounded so it cannot grow without limit. Two limits worth knowing before you go
+looking:
 
-Work through it in this order. First, confirm the state directory is the one you
-think it is, because a wrong mount or a restore from before the identities
-existed produces a full wave of first-start mints and looks like nothing else is
-wrong. Second, if the state is intact and the mints are replacements, ask the
-platform whether it revoked or refused those clients; a platform-side refusal
-wave is not something a host can fix by restarting. Third, if only some slots
-are affected, look at what those slots share — one proxy address, one upstream
-source, one operator — because that points at the proxy rather than at identity
-at all.
+- Nothing in `urnet-tools` reads that bucket yet. The records are durable and a
+  reader is a small follow-up, but today you open the file to see them.
+- A host running with hot restart off mints every identity every start by
+  contract, and those mints record no per-slot event. The tally's `0 reused,
+  N new` is the count for that host, and recording one event per slot per start
+  would rotate the bucket's genuine replacement records out within a few
+  restarts.
 
 ## The other identity flags
 
