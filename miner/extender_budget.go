@@ -20,10 +20,10 @@ package miner
 // still held the account's posts. Keying by the account is the operator's own
 // key: a healed or re-minted client spends what the account has left.
 //
-// A start that cannot read the token yet charges the unidentified key. There is
-// no client to hand those posts to later (adoptUnidentified is gone), so an
-// account that appears afterwards opens with its own budget: the one
-// under-count left, and it is bounded to a start before sign-in.
+// A start that cannot read the token yet charges the unidentified key. The
+// first start that resolves the account adopts those posts and any refusal
+// hold still standing, so the account inherits what the host already spent
+// rather than opening a fresh window.
 //
 // The record is a section of provider_state.db (state_store.go), not a file of
 // its own. A store that will not open is logged once and read as empty rather
@@ -59,9 +59,9 @@ const (
 	// readable sign-in token: the start is about to sign in, so there is no
 	// account to charge yet. The posts still count against something, so a
 	// host that restarts in a loop without ever signing in is not handed a
-	// fresh budget by every start. Those posts are not handed to the account
-	// that signs in later: the record cannot name it yet, and adoption would
-	// need a client the token has not named.
+	// fresh budget by every start. The first start that resolves the token
+	// adopts the entry (adoptUnidentified), so the account inherits what was
+	// spent before it could be named.
 	extenderActivationUnidentifiedAccount = "unidentified"
 )
 
@@ -187,6 +187,34 @@ func (record *extenderActivationRecord) adoptLegacy(account string) {
 	record.extenderActivationLegacy = extenderActivationLegacy{}
 }
 
+// adoptUnidentified moves what a start spent before the sign-in token was
+// readable onto the account the token now names. The operator counted those
+// posts when they were made, so the account inherits them instead of opening a
+// fresh window; the entry is cleared so no start charges them twice. An
+// attempt that has left the window is already outside the operator's own
+// limit, and a hold that has expired no longer holds anything.
+func (record *extenderActivationRecord) adoptUnidentified(account string, now time.Time) {
+	if account == extenderActivationUnidentifiedAccount {
+		return
+	}
+	pending, ok := record.Accounts[extenderActivationUnidentifiedAccount]
+	if !ok {
+		return
+	}
+	delete(record.Accounts, extenderActivationUnidentifiedAccount)
+	state := record.Accounts[account]
+	cutoff := now.Add(-extenderActivationWindow).Unix()
+	for _, at := range pending.Attempts {
+		if cutoff < at {
+			state.Attempts = append(state.Attempts, at)
+		}
+	}
+	if now.Unix() < pending.BackoffUntilUnix && state.BackoffUntilUnix < pending.BackoffUntilUnix {
+		state.BackoffUntilUnix = pending.BackoffUntilUnix
+	}
+	record.Accounts[account] = state
+}
+
 // extenderActivationAccountKey is the record key for one account. A start that
 // cannot read the sign-in token yet is charged to the unidentified key rather
 // than to a guessed account.
@@ -250,6 +278,9 @@ func extenderActivationAllow(now time.Time, posts int, userId string) (allow boo
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
 	record := extenderActivationRecordForAccount(account)
+	// The token resolves on this path, so this is where posts charged while it
+	// was unreadable first learn the account that spent them.
+	record.adoptUnidentified(account, now)
 	state := record.Accounts[account]
 	used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
 	if now.Unix() < state.BackoffUntilUnix {

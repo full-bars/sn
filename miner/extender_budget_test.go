@@ -409,41 +409,73 @@ func TestProviderStoreRoundTripsARecord(t *testing.T) {
 	}
 }
 
-// A start that cannot read the sign-in token charges the unidentified key. It
-// is not handed to the account that signs in later: the record cannot name that
-// account yet, so this is the one under-count left, bounded to a start before
-// sign-in.
-func TestExtenderActivationBudgetDoesNotHandTheUnidentifiedKeyToTheAccount(t *testing.T) {
+// A start before the sign-in token is readable charges the unidentified key.
+// The first start that resolves the account inherits those posts: the operator
+// counted them when they were made, so the account must not open a fresh
+// window, and the unidentified entry is cleared so nothing is charged twice.
+func TestExtenderActivationBudgetAdoptsTheUnidentifiedPosts(t *testing.T) {
 	testExtenderState(t)
-	now := time.Unix(1_800_000_000, 0)
+	gate := newExtenderActivationGate()
 
-	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, ""); !allow || used != 0 {
-		t.Fatalf("unsigned start: allow=%v used=%d, want allow=true used=0", allow, used)
+	if !gate.decideAtStart() {
+		t.Fatal("the start before the token is readable must be allowed")
 	}
-	// The host signs in and starts again a minute later.
-	allow, _, used := extenderActivationAllow(now.Add(time.Minute), postsPerDualStackPass, extenderTestAccountA)
-	if !allow {
-		t.Fatal("the first signed-in start must be allowed")
+	// The host signs in; the first launch spends the startup verdict, so the
+	// next launch is the first Allow to resolve the account and see what the
+	// earlier start already spent.
+	writeAccountToken(t, extenderTestAccountA)
+	if !gate.allowLaunch() {
+		t.Fatal("the launch that spends the startup verdict must be allowed")
 	}
-	if used != 0 {
-		t.Fatalf("signed-in start used=%d, want 0: the unnamed posts are not adopted", used)
+	if !gate.allowLaunch() {
+		t.Fatal("the first launch after sign-in must be allowed")
 	}
-	record, _ := readExtenderActivationRecord(extenderTestAccountA)
-	if _, ok := record.Accounts[extenderActivationUnidentifiedAccount]; !ok {
-		t.Fatalf("the unidentified entry was dropped: %+v", record.Accounts)
+	posts := hostActivationPosts()
+	account := extenderActivationUserId()
+	record, _ := readExtenderActivationRecord(account)
+	state := record.Accounts[account]
+	if len(state.Attempts) != 2*posts {
+		t.Fatalf("account attempts=%d, want %d: the posts made before the token resolved were not adopted",
+			len(state.Attempts), 2*posts)
+	}
+	if _, ok := record.Accounts[extenderActivationUnidentifiedAccount]; ok {
+		t.Fatalf("the unidentified entry survived adoption: %+v", record.Accounts)
 	}
 }
 
-// A refusal recorded while the account was still unnamed stays on the
-// unidentified key: it is not the operator refusing this account, and the
-// account that signs in afterwards opens with its own budget.
-func TestExtenderActivationRefusalBeforeSignInStaysUnidentified(t *testing.T) {
+// An attempt older than the window has already left the operator's own limit,
+// so adoption keeps only the posts still counted.
+func TestExtenderActivationAdoptionDropsAttemptsOutsideTheWindow(t *testing.T) {
+	testExtenderState(t)
+	now := time.Unix(1_800_000_000, 0)
+	if err := providerStoreInstance().save(providerStoreBucketState, providerStoreKeyExtenderActivation, extenderActivationRecord{
+		Accounts: map[string]extenderActivationState{
+			extenderActivationUnidentifiedAccount: {
+				Attempts: []int64{
+					now.Add(-extenderActivationWindow - time.Minute).Unix(),
+					now.Add(-time.Minute).Unix(),
+				},
+			},
+		},
+	}); err != nil {
+		t.Fatalf("seed the unidentified record: %s", err)
+	}
+	allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
+	if !allow || used != 1 {
+		t.Fatalf("adopted start: allow=%v used=%d, want allow=true used=1", allow, used)
+	}
+}
+
+// A refusal recorded while the account was still unnamed holds that account
+// once the token resolves: the hold was the operator answering this host, and
+// it is still standing, so a fresh window cannot post into it.
+func TestExtenderActivationRefusalBeforeSignInHoldsTheAccount(t *testing.T) {
 	testExtenderState(t)
 	now := time.Unix(1_800_000_000, 0)
 
 	recordExtenderActivationRefused(now, "")
-	if allow, _, used := extenderActivationAllow(now.Add(time.Minute), postsPerDualStackPass, extenderTestAccountA); !allow || used != 0 {
-		t.Fatalf("the account after an unnamed refusal: allow=%v used=%d, want allow=true used=0", allow, used)
+	if allow, wait, _ := extenderActivationAllow(now.Add(time.Minute), postsPerDualStackPass, extenderTestAccountA); allow {
+		t.Fatalf("the account was allowed inside the refusal hold recorded before sign-in (wait=%s)", wait)
 	}
 }
 
