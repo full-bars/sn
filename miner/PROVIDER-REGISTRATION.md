@@ -16,11 +16,16 @@ comes from the configured server and its network principal.
 - A known new installation or new proxy member registers without a flag:
   creation is always permitted, so a slot that has no usable identity mints one
   and saves it instead of stopping. There is no off switch, because a provider
-  that cannot mint cannot serve; `--allow-client-registration` is still
-  accepted and is ignored. Creation never clears an operation, first-send
-  anchor, existing-client marker, rejection or key-identity mismatch: an
-  identity the server has revoked stays refused, because minting there would
-  replace a client the server bound to this provider key.
+  that cannot mint cannot serve. `--allow-client-registration` is still
+  accepted, and for client identities it does nothing. It keeps one job the
+  name does not describe: replacing a `.provider.key` that exists but cannot be
+  used (the all-zero seed older installs carry, or a wrong-length key) with a
+  fresh seed, keeping the old file as a timestamped backup. A missing key over
+  retained provider history is refused with or without the flag. Creation never
+  clears an operation, first-send anchor, existing-client marker, rejection or
+  key-identity mismatch: an identity the server has revoked stays refused,
+  because minting there would replace a client the server bound to this
+  provider key.
 - An ordinary restart with retained key/marker and operation or credential
   needs no creation flag. A persisted request can resume without the flag even
   if it has not received its first reply.

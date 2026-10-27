@@ -70,8 +70,17 @@ needs a human:
   use its saved identity mints one, saves it, and serves.
 
 `--allow-client-registration` is still accepted so existing units, scripts and
-images keep working, and it is ignored. A provider that cannot mint cannot
-serve, and a host you want stopped is a host you stop.
+images keep working. It does nothing for client identities: a slot that cannot
+use its saved identity mints one and serves, whether the flag is there or not.
+One thing it still does, and the name does not say it: when the state directory
+holds a `.provider.key` that exists but cannot be used — the all-zero seed a
+v33-era install can carry, or a key of the wrong length — passing the flag
+replaces it with a fresh seed and keeps the old file as a timestamped backup.
+Without the flag that key is left alone (zero seed, with a loud warning) or
+refused (wrong length). A missing key over retained provider history is refused
+either way: no flag can mint a new provider identity in place of one that was
+lost. A provider that cannot mint cannot serve, and a host you want stopped is a
+host you stop.
 
 ## What a mint costs
 
