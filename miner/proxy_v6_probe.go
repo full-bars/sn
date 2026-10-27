@@ -252,6 +252,20 @@ func (l *v6Ledger) Verdict(addr string) v6Verdict {
 	return e.Verdict
 }
 
+// Last is the verdict most recently recorded for addr, whether or not it is
+// still inside its window. Verdict answers "may I trust this answer now"; Last
+// answers "did the answer change", and only the second is safe to use as a log
+// guard: the next probe is scheduled at exactly the window's end, so a probe
+// that compared against Verdict would always see unknown and log every round.
+func (l *v6Ledger) Last(addr string) v6Verdict {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if e, ok := l.entries[addr]; ok {
+		return e.Verdict
+	}
+	return v6Unknown
+}
+
 // Record stores a probe result. An unknown result is no new information, so
 // it never replaces a live yes or no; it only stamps a missing or expired
 // entry. A yes or no always replaces and restarts the window and the failure

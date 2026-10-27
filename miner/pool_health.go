@@ -2,6 +2,7 @@ package miner
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -147,11 +148,16 @@ func countProxyPoolMembers(members map[string]string) proxyPoolMemberCounts {
 	return counts
 }
 
-// proxyPoolMembers returns each member's bucket keyed by identity. This is the
-// same composition snapshotProxyCounts counts: proxy.state is the member list and
-// the live registry overrides its health, because a signal observed in this
-// process is fresher than the file (the precedence seedLiveProxyHealthFromState
-// uses).
+// proxyPoolURLSource is the ProxyEntry.Source tag admission gives a member the
+// URL sources contributed (proxy_manager_state.go). Members tagged "file" or
+// "internal" are the operator's curated half.
+const proxyPoolURLSource = "url"
+
+// proxyPoolMembers returns each member's bucket keyed by identity, and how many
+// of those identities came from the URL sources. This is the same composition
+// snapshotProxyCounts counts: proxy.state is the member list and the live
+// registry overrides its health, because a signal observed in this process is
+// fresher than the file (the precedence seedLiveProxyHealthFromState uses).
 //
 // It deliberately takes no extra identities from the registry. The registry can
 // still hold an entry for an identity the state no longer lists, and admitting
@@ -162,9 +168,11 @@ func countProxyPoolMembers(members map[string]string) proxyPoolMemberCounts {
 // error the live registry is used alone, because a process that cannot read its
 // own state file is better off reporting what it has observed than reporting an
 // empty pool; the reading carries the error so the line can say the composition
-// may be missing members.
-func proxyPoolMembers() (map[string]string, string) {
+// may be missing members. The URL count is 0 then: the registry does not carry
+// provenance, and a guess would be a share of the pool the target cannot use.
+func proxyPoolMembers() (map[string]string, int, string) {
 	members := map[string]string{}
+	urlMembers := 0
 	live := liveProxyHealthByKey()
 	state, err := readProxyState()
 	if err != nil {
@@ -174,7 +182,7 @@ func proxyPoolMembers() (map[string]string, string) {
 			}
 			members[key] = proxyPoolMemberBucket(status.Health)
 		}
-		return members, err.Error()
+		return members, 0, err.Error()
 	}
 	for key, entry := range state.Proxies {
 		health := entry.Health
@@ -182,8 +190,11 @@ func proxyPoolMembers() (map[string]string, string) {
 			health = status.Health
 		}
 		members[key] = proxyPoolMemberBucket(health)
+		if entry.Source == proxyPoolURLSource {
+			urlMembers++
+		}
 	}
-	return members, ""
+	return members, urlMembers, ""
 }
 
 // proxyPoolComposition is one read of the pool's member list: proxy.state with
@@ -195,16 +206,59 @@ func proxyPoolMembers() (map[string]string, string) {
 type proxyPoolComposition struct {
 	Counts   proxyPoolMemberCounts
 	StateErr string
+	// Target is the pool size the pool runs to: the curated members plus the
+	// URL-source admission cap, then the trim cap over the total. Members
+	// above it are surplus the trim never intends to serve, so the verdict
+	// judges the pool against Target rather than against every member it can
+	// see. Zero means unknown, and the verdict falls back to Members.
+	Target int
 }
 
 // readProxyPoolComposition performs the single proxy.state read a caller needs
 // for both the composition and the aggregate.
 func readProxyPoolComposition() proxyPoolComposition {
-	members, stateErr := proxyPoolMembers()
-	return proxyPoolComposition{
+	members, urlMembers, stateErr := proxyPoolMembers()
+	comp := proxyPoolComposition{
 		Counts:   countProxyPoolMembers(members),
 		StateErr: stateErr,
 	}
+	// A pool whose composition could not be read cannot say how many members
+	// are curated, so it has no target to judge against; the reading says so
+	// through StateError instead of inventing one.
+	if stateErr == "" {
+		comp.Target = proxyPoolTarget(len(members)-urlMembers, urlMembers)
+	}
+	return comp
+}
+
+// proxyPoolTarget is the number of proxies the pool actually intends to serve:
+// the operator-curated half plus the URL-source admission cap, then the trim
+// cap over the total. It is not proxy_url_max, which is only the URL half's
+// ceiling: judging every up member against it credits curated members to the
+// URL budget, so a host with 60 curated proxies and 50 dead URL members read
+// healthy. Nor is it proxy_url.json's TargetPoolSize read raw: the pool only
+// runs to that while self-heal is on, and admission restores the configured
+// ceiling the moment it is off, so a target an earlier run left behind is state
+// nothing runs to. Ask the same resolvers admission uses.
+//
+// Zero means unknown, and the verdict falls back to the members it can see.
+// That covers a curated-only pool (no URL half to cap) and a URL pool with no
+// cap set: adding a cap there would invent a shortfall nothing asked to fill.
+func proxyPoolTarget(curated, urlMembers int) int {
+	if urlMembers == 0 {
+		return 0
+	}
+	urlMax := resolveEffectiveProxyURLMax(0, os.Getenv("URNETWORK_SELF_HEAL") == "1")
+	if urlMax <= 0 {
+		return 0
+	}
+	target := curated + urlMax
+	if trimCap, _, err := effectiveTrimCapSource(); err == nil && trimCap > 0 && target > trimCap {
+		// Admission launches the trim cap's worth and holds the rest, so the
+		// held members are a decision already taken rather than a shortfall.
+		target = trimCap
+	}
+	return target
 }
 
 // proxyPoolSample is one tick's cross-section. The ring holds these rather than
@@ -253,6 +307,8 @@ type proxyPoolHealthReading struct {
 	Degraded   int
 	Dead       int
 	Connecting int
+	// Target is the pool size the operator asked for; 0 means unknown.
+	Target int
 
 	// Floor is the lowest up-count over the window: the worst the pool got,
 	// not the worst it is.
@@ -273,8 +329,14 @@ type proxyPoolHealthReading struct {
 	StateError string
 }
 
-// observe records one tick and returns the resulting reading.
+// observe records one tick with no known target, for callers that judge by
+// every member observed.
 func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval time.Duration) proxyPoolHealthReading {
+	return w.observeFor(counts, 0, interval)
+}
+
+// observeFor records one tick against the pool size the operator asked for.
+func (w *proxyPoolHealthWindow) observeFor(counts proxyPoolMemberCounts, target int, interval time.Duration) proxyPoolHealthReading {
 	if interval <= 0 {
 		interval = proxyPoolHealthInterval
 	}
@@ -291,6 +353,7 @@ func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval t
 		Degraded:   counts.Degraded,
 		Dead:       counts.Dead,
 		Connecting: counts.Connecting,
+		Target:     target,
 		Floor:      counts.Up,
 	}
 	// The floor is only comparable across ticks with the same member count. A
@@ -326,6 +389,19 @@ func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval t
 		}
 	}
 
+	denom := r.Members
+	shortfall := r.Down
+	if r.Target > 0 {
+		// Judge the pool the operator asked for. Members above the target are
+		// surplus the trim never serves; counting them as down makes every
+		// trimmed host look half dead and buries the real number.
+		denom = r.Target
+		shortfall = r.Target - r.Up
+		if shortfall < 0 {
+			shortfall = 0
+		}
+	}
+
 	switch {
 	case r.Members == 0:
 		// Nothing to judge. The same rung the provider's heartbeat uses before
@@ -338,32 +414,47 @@ func (w *proxyPoolHealthWindow) observe(counts proxyPoolMemberCounts, interval t
 		r.Verdict = poolVerdictStartingUp
 	case r.Up == 0:
 		r.Verdict = poolVerdictDown
-	case r.Up == r.Members:
-		// Every member is up and serving. Up == Members excludes anything
-		// still connecting or degraded, so the healthy sentence's "all N
-		// proxies up" is true here and only here.
+	case r.Up >= denom:
+		// Every slot the pool is asked to serve is up and serving. Surplus
+		// members still connecting or degraded do not make it unhealthy.
 		r.Verdict = poolVerdictHealthy
 	case r.Connecting > 0 && r.Down == 0:
 		// Part of the pool is serving and the rest is still coming up, with
 		// nothing failed: that is the starting-up rung, not healthy. The
 		// sentence reports how far the pool has got.
 		r.Verdict = poolVerdictStartingUp
-	case r.Down*100 >= r.Members*poolAttentionDownPct:
+	case shortfall*100 >= denom*poolAttentionDownPct:
 		r.Verdict = poolVerdictNeedsAttention
 	default:
 		r.Verdict = poolVerdictMostlyHealthy
 	}
 
+	// Scope answers one question: did the pool fail as a unit? Only members
+	// that FAILED are evidence for it. A pool where half the target has not
+	// come up yet is starting, not failing as a unit, and the old "less than
+	// half up" test against the target read a healthy ramp that way.
+	//
+	// The failures that can be blamed on the target are the ones inside its
+	// shortfall: a failure beyond the slots the target still needs cannot be
+	// occupying one of them (it may be a surplus member the trim never
+	// serves), so the count is capped by the shortfall before the half test.
+	failed := r.Down
+	if r.Target > 0 && shortfall < failed {
+		failed = shortfall
+	}
 	switch {
-	case r.Down == 0:
+	case failed == 0:
+		// Nothing failed, or every failure is a member the target does not
+		// need: the rest are still connecting, or the pool already serves its
+		// target.
 		r.Scope = poolScopeNone
-	case 2*r.Down >= r.Members:
-		// Half or more of the pool is down at the same time. One bad proxy
-		// cannot do that, so the pool itself is the thing to look at. The
-		// comparison is against Members, not Up, so a member that is still
-		// connecting neither pads the denominator nor counts as a failure: on
-		// its own a proxy that has not been observed cannot make the pool look
-		// down.
+	case 2*failed >= denom:
+		// Half or more of the slots the pool can still use have failed. One
+		// bad proxy cannot do that, so the pool itself is the thing to look
+		// at. The comparison is against the target when one is known, and
+		// against Members otherwise, so a member that is still connecting
+		// neither pads the denominator nor counts as a failure: on its own a
+		// proxy that has not been observed cannot make the pool look down.
 		r.Scope = poolScopePool
 	default:
 		r.Scope = poolScopeIsolated
@@ -402,7 +493,7 @@ func proxyPoolHealthAt(now time.Time, comp proxyPoolComposition, force bool) pro
 	if !force && proxyPoolHealthState.seen && now.Sub(proxyPoolHealthState.lastAt) < proxyPoolHealthInterval {
 		return proxyPoolHealthState.last
 	}
-	reading := proxyPoolHealthState.window.observe(comp.Counts, proxyPoolHealthInterval)
+	reading := proxyPoolHealthState.window.observeFor(comp.Counts, comp.Target, proxyPoolHealthInterval)
 	reading.StateError = comp.StateErr
 	proxyPoolHealthState.last = reading
 	proxyPoolHealthState.lastAt = now
@@ -429,14 +520,23 @@ func resetProxyPoolHealthForTest() {
 	proxyPoolHealthState.seen = false
 }
 
+// judged is the denominator the verdict is expressed against: the pool size the
+// operator asked for when it is known, otherwise every member observed.
+func (r proxyPoolHealthReading) judged() int {
+	if r.Target > 0 {
+		return r.Target
+	}
+	return r.Members
+}
+
 // proxyPoolHealthLine renders the machine-readable aggregate. It uses the same
 // prefix and the same field names as provider/health_heartbeat.go's
 // [health][proxies] line, then the two facts that line has no field for: the
 // hour's floor and the scope.
 func proxyPoolHealthLine(r proxyPoolHealthReading) string {
 	line := fmt.Sprintf(
-		"❤️ [health][proxies] up=%d down=%d dead=%d degraded=%d connecting=%d members=%d floor=%d dips=%d verdict=%q scope=%s",
-		r.Up, r.Down, r.Dead, r.Degraded, r.Connecting, r.Members, r.Floor, r.Dips, r.Verdict, r.Scope,
+		"❤️ [health][proxies] up=%d down=%d dead=%d degraded=%d connecting=%d members=%d target=%d floor=%d dips=%d verdict=%q scope=%s",
+		r.Up, r.Down, r.Dead, r.Degraded, r.Connecting, r.Members, r.Target, r.Floor, r.Dips, r.Verdict, r.Scope,
 	)
 	if r.StateError != "" {
 		line += fmt.Sprintf(" state_error=%q", r.StateError)
@@ -473,7 +573,7 @@ func proxyPoolVerdictSentence(r proxyPoolHealthReading) string {
 			r.Members, r.scopeSentence(),
 		)
 	case poolVerdictHealthy:
-		line := fmt.Sprintf("❤️ [health] Verdict: healthy — all %d proxies up, nothing needs attention.", r.Members)
+		line := fmt.Sprintf("❤️ [health] Verdict: healthy — all %d wanted proxies up, nothing needs attention.", r.judged())
 		if r.Floor < r.Up {
 			line += fmt.Sprintf(
 				" The pool was down to %d in the last hour, so this is a recovery rather than a steady state.",
@@ -483,13 +583,13 @@ func proxyPoolVerdictSentence(r proxyPoolHealthReading) string {
 		return line
 	case poolVerdictNeedsAttention:
 		return fmt.Sprintf(
-			"❤️ [health] Verdict: needs attention — only %d of %d proxies up, %d down (%d dead, %d failing). %s",
-			r.Up, r.Members, r.Down, r.Dead, r.Degraded, r.scopeSentence(),
+			"❤️ [health] Verdict: needs attention — only %d of %d wanted proxies up, %d down of %d members (%d dead, %d failing). %s",
+			r.Up, r.judged(), r.Down, r.Members, r.Dead, r.Degraded, r.scopeSentence(),
 		)
 	default:
 		return fmt.Sprintf(
-			"❤️ [health] Verdict: mostly healthy — %d of %d proxies up, %d down (%d dead, %d failing). %s",
-			r.Up, r.Members, r.Down, r.Dead, r.Degraded, r.scopeSentence(),
+			"❤️ [health] Verdict: mostly healthy — %d of %d wanted proxies up, %d down of %d members (%d dead, %d failing). %s",
+			r.Up, r.judged(), r.Down, r.Members, r.Dead, r.Degraded, r.scopeSentence(),
 		)
 	}
 }
