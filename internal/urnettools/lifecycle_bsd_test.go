@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -429,3 +430,261 @@ func dumpLines(a, b []string) []string {
 	}
 	return out
 }
+
+// freeBSDInstallerScript returns the shipped FreeBSD installer with CRLF
+// normalised, so assertions run against the file that ships rather than a
+// hand-typed copy of it.
+func freeBSDInstallerScript(t *testing.T) string {
+	t.Helper()
+	b, err := os.ReadFile("../../scripts/Provider_Install_FreeBSD.sh")
+	if err != nil {
+		t.Fatalf("read the FreeBSD installer: %v", err)
+	}
+	return strings.ReplaceAll(string(b), "\r\n", "\n")
+}
+
+// http_fetch is the only downloader in the FreeBSD installer. FreeBSD ships
+// fetch(1) in the base system and curl only as a package, so one bare curl
+// call is an install that works on the developer's host and dies on a clean
+// one. The helper must exist with all three fallbacks, every download must go
+// through it, and no executable line may call curl directly.
+func TestBSDInstallerHTTPFetchShape(t *testing.T) {
+	script := freeBSDInstallerScript(t)
+
+	helper := extractShellFunc(t, script, "http_fetch")
+	if helper == "" {
+		t.Fatal("http_fetch is missing from the FreeBSD installer: a clean FreeBSD host has no curl")
+	}
+	curlAt := strings.Index(helper, "command -v curl")
+	fetchAt := strings.Index(helper, "command -v fetch")
+	wgetAt := strings.Index(helper, "command -v wget")
+	if curlAt < 0 || fetchAt < 0 || wgetAt < 0 {
+		t.Fatalf("http_fetch lost a fallback (curl at %d, fetch at %d, wget at %d):\n%s", curlAt, fetchAt, wgetAt, helper)
+	}
+	if !(curlAt < fetchAt && fetchAt < wgetAt) {
+		t.Errorf("http_fetch tries the downloaders in the wrong order (offsets curl=%d fetch=%d wget=%d); want curl, fetch, wget", curlAt, fetchAt, wgetAt)
+	}
+	// Running out of downloaders has to say what the host is missing rather
+	// than fail mute: the operator only sees this when nothing else worked.
+	noTool := helper[wgetAt:]
+	for _, tool := range []string{"curl", "fetch", "wget"} {
+		if !strings.Contains(noTool, tool) {
+			t.Errorf("the no-downloader message does not name %s:\n%s", tool, noTool)
+		}
+	}
+
+	// Each download in the install path goes through the helper and keeps the
+	// output shape that call needs: a file for the tarball and the wrapper, a
+	// captured stdout value for the two JSON reads.
+	for _, want := range []string{
+		`http_fetch "$github_raw/scripts/Provider_Install_FreeBSD.sh" "$_td/urnet-tools.wrapper"`,
+		`release_json="$(http_fetch "$release_url" 2>/dev/null)"`,
+		`http_fetch "$tarball_url" "$tmpdir/provider.tar.gz"`,
+		`release_json="$(http_fetch "$github_api/releases/tags/$tag" 2>/dev/null)"`,
+		`http_fetch "https://github.com/full-bars/sn/releases/download/$tag/$tool_asset" "$tmpdir/$tool_asset"`,
+	} {
+		if !strings.Contains(script, want) {
+			t.Errorf("download call site is not routed through http_fetch: %s", want)
+		}
+	}
+
+	// Comments may explain curl; executable lines may not run it. The helper
+	// itself is the one place allowed to call it directly.
+	withoutHelper := strings.Replace(script, helper, "", 1)
+	for i, line := range strings.Split(withoutHelper, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if strings.Contains(trimmed, "curl ") || strings.HasSuffix(trimmed, "curl") {
+			t.Errorf("line %d calls curl directly instead of http_fetch: %q", i+1, trimmed)
+		}
+	}
+}
+
+// TestBSDInstallerHTTPFetchInstallsWithoutCurl executes the shipped http_fetch
+// and install_wrapper_tool - the first download of do_install - with curl
+// absent from PATH and fetch present. The wrapper must arrive, which is the
+// step that used to die before the helper existed.
+func TestBSDInstallerHTTPFetchInstallsWithoutCurl(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	script := freeBSDInstallerScript(t)
+
+	httpFetch := extractShellFunc(t, script, "http_fetch")
+	prErr := extractShellFunc(t, script, "pr_err")
+	prWarn := extractShellFunc(t, script, "pr_warn")
+	wrapperTool := extractShellFunc(t, script, "install_wrapper_tool")
+	if httpFetch == "" || prErr == "" || prWarn == "" || wrapperTool == "" {
+		t.Fatalf("could not extract the shipped functions (http_fetch=%d, pr_err=%d, pr_warn=%d, install_wrapper_tool=%d bytes)",
+			len(httpFetch), len(prErr), len(prWarn), len(wrapperTool))
+	}
+
+	root := t.TempDir()
+	stubDir := filepath.Join(root, "stub")
+	installPath := filepath.Join(root, "install")
+	calls := filepath.Join(root, "calls.log")
+	for _, dir := range []string{stubDir, filepath.Join(installPath, "bin")} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatalf("create %s: %v", dir, err)
+		}
+	}
+	// No curl stub: command -v curl has to fail, as it does on a host that
+	// never installed the package. fetch must be the one that answers.
+	writeHTTPStub(t, stubDir, "fetch", httpFetchStub)
+	for _, name := range []string{"chmod", "mv", "chown"} {
+		real, err := exec.LookPath(name)
+		if err != nil {
+			t.Skipf("%s is not available to stub: %v", name, err)
+		}
+		writeHTTPStub(t, stubDir, name, "#!/bin/sh\nexec "+real+" \"$@\"\n")
+	}
+
+	harness := filepath.Join(root, "harness.sh")
+	body := fmt.Sprintf(`#!/bin/sh
+me=urnet-install.sh
+github_raw="https://raw.test/full-bars/sn/main"
+install_path="%s"
+%s
+%s
+%s
+priv() { "$@"; }
+%s
+install_wrapper_tool "%s"
+rc=$?
+echo "install-rc=$rc"
+exit $rc
+`, installPath, prErr, prWarn, httpFetch, wrapperTool, root)
+	if err := os.WriteFile(harness, []byte(body), 0o755); err != nil {
+		t.Fatalf("write the harness: %v", err)
+	}
+
+	cmd := exec.Command("/bin/sh", harness)
+	cmd.Env = []string{"PATH=" + stubDir, "STUB_CALLS=" + calls}
+	out, runErr := cmd.CombinedOutput()
+	if !strings.Contains(string(out), "install-rc=0") {
+		t.Fatalf("install_wrapper_tool did not finish with curl absent (err %v):\n%s", runErr, out)
+	}
+
+	wantURL := "https://raw.test/full-bars/sn/main/scripts/Provider_Install_FreeBSD.sh"
+	got, err := os.ReadFile(filepath.Join(installPath, "bin", "urnet-tools"))
+	if err != nil {
+		t.Fatalf("the wrapper was not installed: %v\n%s", err, out)
+	}
+	if want := "FETCHED " + wantURL + "\n"; string(got) != want {
+		t.Errorf("installed wrapper is %q, want the bytes fetch returned %q", got, want)
+	}
+	recorded, err := os.ReadFile(calls)
+	if err != nil {
+		t.Fatalf("fetch was never called: %v\n%s", err, out)
+	}
+	if want := "-q -o " + filepath.Join(root, "urnet-tools.wrapper") + " " + wantURL; !strings.Contains(string(recorded), want) {
+		t.Errorf("fetch was not asked for the wrapper the way the helper documents (-q -o OUT URL):\n%s", recorded)
+	}
+}
+
+// TestBSDInstallerHTTPFetchFallbacks covers the helper's other shapes: stdout
+// when no output file is given, wget when fetch is absent, and a named error
+// when no downloader exists at all.
+func TestBSDInstallerHTTPFetchFallbacks(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	script := freeBSDInstallerScript(t)
+
+	httpFetch := extractShellFunc(t, script, "http_fetch")
+	prErr := extractShellFunc(t, script, "pr_err")
+	if httpFetch == "" || prErr == "" {
+		t.Fatal("could not extract http_fetch and pr_err from the FreeBSD installer")
+	}
+	harness := func(t *testing.T, path string, args string) (string, error) {
+		t.Helper()
+		file := filepath.Join(t.TempDir(), "harness.sh")
+		body := "#!/bin/sh\nme=urnet-install.sh\n" + prErr + "\n" + httpFetch + "\n" + args + "\n"
+		if err := os.WriteFile(file, []byte(body), 0o755); err != nil {
+			t.Fatalf("write the harness: %v", err)
+		}
+		cmd := exec.Command("/bin/sh", file)
+		cmd.Env = []string{"PATH=" + path}
+		out, err := cmd.CombinedOutput()
+		return string(out), err
+	}
+
+	t.Run("fetch to stdout", func(t *testing.T) {
+		stubDir := t.TempDir()
+		writeHTTPStub(t, stubDir, "fetch", httpFetchStub)
+		out, err := harness(t, stubDir, `http_fetch "https://raw.test/stdout"`)
+		if err != nil {
+			t.Fatalf("http_fetch to stdout failed: %v (%s)", err, out)
+		}
+		if want := "FETCHED https://raw.test/stdout\n"; out != want {
+			t.Errorf("http_fetch wrote %q to stdout, want %q", out, want)
+		}
+	})
+
+	t.Run("wget", func(t *testing.T) {
+		stubDir := t.TempDir()
+		writeHTTPStub(t, stubDir, "wget", httpWgetStub)
+		outPath := filepath.Join(t.TempDir(), "asset")
+		out, err := harness(t, stubDir, `http_fetch "https://raw.test/wget" "`+outPath+`"`)
+		if err != nil {
+			t.Fatalf("http_fetch through wget failed: %v (%s)", err, out)
+		}
+		got, err := os.ReadFile(outPath)
+		if err != nil {
+			t.Fatalf("wget wrote no file: %v", err)
+		}
+		if want := "WGET https://raw.test/wget\n"; string(got) != want {
+			t.Errorf("wget output is %q, want %q", got, want)
+		}
+	})
+
+	t.Run("none", func(t *testing.T) {
+		out, err := harness(t, t.TempDir(), `http_fetch "https://raw.test/none"`)
+		if err == nil {
+			t.Fatalf("http_fetch succeeded with no downloader on PATH (%s)", out)
+		}
+		for _, tool := range []string{"curl", "fetch", "wget"} {
+			if !strings.Contains(out, tool) {
+				t.Errorf("the no-downloader message does not name %s: %q", tool, out)
+			}
+		}
+	})
+}
+
+// writeHTTPStub writes an executable stub for the sandbox PATH.
+func writeHTTPStub(t *testing.T, dir, name, body string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o755); err != nil {
+		t.Fatalf("write the %s stub: %v", name, err)
+	}
+}
+
+// httpFetchStub implements the one fetch(1) shape http_fetch uses and records
+// the call, so a wrong flag shows up as a failed test rather than a silent
+// download from the network.
+const httpFetchStub = `#!/bin/sh
+printf '%s\n' "$*" >> "${STUB_CALLS:-/dev/null}"
+if [ "$1" != "-q" ] || [ "$2" != "-o" ] || [ $# -ne 4 ]; then
+    echo "fetch stub: unsupported arguments: $*" >&2
+    exit 2
+fi
+url=$4
+if [ "$3" = "-" ]; then
+    printf 'FETCHED %s\n' "$url"
+else
+    printf 'FETCHED %s\n' "$url" > "$3"
+fi
+`
+
+// httpWgetStub is the wget equivalent of httpFetchStub.
+const httpWgetStub = `#!/bin/sh
+printf '%s\n' "$*" >> "${STUB_CALLS:-/dev/null}"
+if [ "$1" != "-q" ] || [ "$2" != "-O" ] || [ $# -ne 4 ]; then
+    echo "wget stub: unsupported arguments: $*" >&2
+    exit 2
+fi
+url=$4
+if [ "$3" = "-" ]; then
+    printf 'WGET %s\n' "$url"
+else
+    printf 'WGET %s\n' "$url" > "$3"
+fi
+`
