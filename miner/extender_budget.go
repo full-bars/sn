@@ -25,6 +25,12 @@ package miner
 // hold still standing, so the account inherits what the host already spent
 // rather than opening a fresh window.
 //
+// The budget is five against the operator's six, and a pass posts once per
+// family, so a dual-stack host spends two a pass and strands the fifth: a
+// third pass cannot afford the two it would post. A family whose activation
+// failed can spend that post on one retry instead, which is what
+// extenderActivationSpendSpare does.
+//
 // The record is a section of provider_state.db (state_store.go), not a file of
 // its own. A store that will not open is logged once and read as empty rather
 // than as a refusal: the operator's own rate limit still answers the posts, and
@@ -38,9 +44,10 @@ import (
 )
 
 const (
-	// extenderActivationBudget is the operator's six per hour minus one. The
-	// spare attempt covers what one start can spend beyond its family posts:
-	// a hello check or a resumed pass.
+	// extenderActivationBudget is the operator's six per hour minus one, a
+	// margin for what a start can spend beyond its family posts: a hello
+	// check or a resumed pass. A pass that failed can spend the post left
+	// over on one retry of the family that failed.
 	extenderActivationBudget = 5
 	// extenderActivationWindow is the operator's window.
 	extenderActivationWindow = time.Hour
@@ -77,6 +84,55 @@ type extenderActivationState struct {
 	// LastRefusalUnix bounds the streak in time, so a refusal from weeks ago
 	// does not escalate today's.
 	LastRefusalUnix int64 `json:"last_refusal_unix,omitempty"`
+	// SpareFamily is the family the window's leftover post funded a retry
+	// for, and SpareAtUnix when, so one window funds one retry rather than a
+	// loop of them.
+	SpareFamily string `json:"spare_family,omitempty"`
+	SpareAtUnix int64  `json:"spare_at_unix,omitempty"`
+}
+
+// extenderActivationFamily names one address family an activation pass posts on.
+type extenderActivationFamily string
+
+const (
+	// extenderActivationFamilyV4 is the path that still carries traffic when
+	// v6 does not work, so a retry prefers it.
+	extenderActivationFamilyV4 extenderActivationFamily = "ipv4"
+	extenderActivationFamilyV6 extenderActivationFamily = "ipv6"
+)
+
+// extenderActivationFamilyResult is what one pass got for one family.
+type extenderActivationFamilyResult struct {
+	// Tried records that the pass posted for this family.
+	Tried bool
+	// Activated records that the operator answered with an activation.
+	Activated bool
+}
+
+// extenderActivationPass is what one activation pass did, one result per
+// family. A pass posts once for each family it tries and never twice.
+type extenderActivationPass struct {
+	V4 extenderActivationFamilyResult
+	V6 extenderActivationFamilyResult
+}
+
+// failedFamily names the family a retry would target, or false when none
+// failed. A family that activated is never a target: the operator records
+// every post, and a second one for a family it already activated buys nothing.
+func (pass extenderActivationPass) failedFamily() (extenderActivationFamily, bool) {
+	candidates := []struct {
+		family extenderActivationFamily
+		result extenderActivationFamilyResult
+	}{
+		{extenderActivationFamilyV4, pass.V4},
+		{extenderActivationFamilyV6, pass.V6},
+	}
+	for _, candidate := range candidates {
+		if candidate.result.Tried && !candidate.result.Activated {
+			return candidate.family, true
+		}
+	}
+	return "", false
 }
 
 // extenderActivationLegacy is the record before it was keyed by any identity:
@@ -333,6 +389,44 @@ func extenderActivationAllow(now time.Time, posts int, userId string) (allow boo
 	}
 	storeExtenderActivation(record, account, state, now)
 	return true, 0, used
+}
+
+// extenderActivationSpendSpare funds one retry of the family a pass failed on
+// out of the post the window has left over, and reports which family it went
+// to. A pass spends one post per family, so a dual-stack host can afford two
+// passes and strands the fifth; a family that failed can use it once per
+// window, and only when no refusal wait is still running. Nothing is spent when
+// every family activated, because the operator records every post.
+func extenderActivationSpendSpare(now time.Time, userId string, pass extenderActivationPass) (extenderActivationFamily, bool) {
+	family, failed := pass.failedFamily()
+	if !failed {
+		return "", false
+	}
+	account := extenderActivationAccountKey(userId)
+	extenderActivationRecordMu.Lock()
+	defer extenderActivationRecordMu.Unlock()
+	record := extenderActivationRecordForAccount(account)
+	state := record.Accounts[account]
+	used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
+	spent := false
+	switch {
+	case 0 < state.SpareAtUnix && now.Sub(time.Unix(state.SpareAtUnix, 0)) < extenderActivationWindow:
+		// this window already funded a retry
+	case now.Unix() < state.BackoffUntilUnix:
+		// the refusal wait has not passed, so the retry cannot run
+	case extenderActivationBudget <= used:
+		// the window is full
+	default:
+		state.Attempts = append(state.Attempts, now.Unix())
+		state.SpareFamily = string(family)
+		state.SpareAtUnix = now.Unix()
+		spent = true
+	}
+	storeExtenderActivation(record, account, state, now)
+	if !spent {
+		return "", false
+	}
+	return family, true
 }
 
 // recordExtenderActivationRefused persists the wait a refusal implies for one
