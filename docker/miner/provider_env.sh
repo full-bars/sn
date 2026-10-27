@@ -22,8 +22,10 @@
 #       --auto-register. Must not contain whitespace. Without
 #       ALL_OPERATORS it is left to the auth path and not passed to provide.
 #   ALLOW_CLIENT_REGISTRATION=auto|Y|N
-#       Y adds --allow-client-registration, N never does, and auto never does
-#       either (set Y to enable client registration).
+#       Y adds --allow-client-registration (explicit creation, what deliberate
+#       key rotation uses), N adds --no-client-registration to withhold
+#       creation, and auto adds neither: creation is permitted by default now
+#       that a slot heals its own identity instead of parking.
 #   MAX_MEMORY=<mem>
 #       --max-memory=<mem>, for example 2gib. Must not contain whitespace.
 #   PROVIDER_ARGS="<args>"
@@ -60,9 +62,11 @@ provider_env_all_operators() {
 # unknown value so the caller can fail closed.
 provider_env_allow_client_registration_mode() {
   case "$(printf '%s' "${ALLOW_CLIENT_REGISTRATION:-}" | tr '[:upper:]' '[:lower:]')" in
-    ""|n|no|false|0) printf '%s\n' n ;;
+    # Unset is the miner's default, and creation is permitted by default now
+    # that a slot heals its own identity; withholding it takes an explicit N.
+    ""|auto)         printf '%s\n' auto ;;
+    n|no|false|0)    printf '%s\n' n ;;
     y|yes|true|1)    printf '%s\n' y ;;
-    auto)            printf '%s\n' auto ;;
     *) return 2 ;;
   esac
 }
@@ -132,6 +136,9 @@ provider_env_flags() {
     return 1
   fi
   [ "$_pe_allow" = "y" ] && printf '%s\n' --allow-client-registration
+  # Creation is permitted by default since a slot heals its own identity, so N
+  # has to withhold it explicitly; omitting the flag no longer means "no".
+  [ "$_pe_allow" = "n" ] && printf '%s\n' --no-client-registration
 
   if [ -n "${PROVIDER_ARGS:-}" ]; then
     case $- in *f*) _pe_glob_off=1 ;; *) _pe_glob_off=0 ;; esac

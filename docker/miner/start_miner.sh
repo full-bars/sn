@@ -96,10 +96,10 @@ func_check_config() {
       log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: passing --allow-client-registration"
       ;;
     n)
-      log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: not passing --allow-client-registration"
+      log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: passing --no-client-registration to withhold creation"
       ;;
     auto)
-      log "[INFO] ALLOW_CLIENT_REGISTRATION=auto: not passing --allow-client-registration (set it to Y to enable client registration)"
+      log "[INFO] ALLOW_CLIENT_REGISTRATION=auto: creation permitted by default, passing neither flag"
       ;;
   esac
 
