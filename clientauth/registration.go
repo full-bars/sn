@@ -74,6 +74,14 @@ func NewRegistrationRefreshUnavailableError(cause error) error {
 	return &RegistrationRefreshUnavailableError{cause: cause}
 }
 
+// IsRegistrationDisabled reports whether err is the refusal a caller with
+// creation switched off receives. It is an operator decision, so it carries its
+// own single line and no custody event.
+func IsRegistrationDisabled(err error) bool {
+	var refused *RegistrationRefusedError
+	return errors.As(err, &refused) && refused.Code == "client_registration_disabled"
+}
+
 // Only a completed remote reply can produce this cause. Local registration or
 // credential custody failures retain their original hard errors separately.
 type RegistrationResponseIdentityError struct{}
@@ -259,6 +267,11 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	} else if !errors.Is(anchorErr, os.ErrNotExist) {
 		return "", connect.Id{}, anchorErr
 	}
+	// The existing-client marker is read before the slot's credential, through
+	// the store's held lock. A writer publishes the credential and then its
+	// marker, so this order can only ever observe a marker whose credential is
+	// already visible; the reverse order can pair a newer marker with the older
+	// credential read before it.
 	legacy, legacyErr := owner.read(legacyName)
 	if legacyErr != nil && !errors.Is(legacyErr, os.ErrNotExist) {
 		return "", connect.Id{}, legacyErr
@@ -296,11 +309,16 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return "", connect.Id{}, err
 	}
-	if legacyErr == nil {
-		return "", connect.Id{}, &RegistrationRefusedError{Code: "legacy_identity_requires_explicit_recovery"}
-	}
+	// No credential is left to present, so whatever custody remains (an
+	// existing-client marker, a rejection tombstone) names an identity this
+	// slot cannot reach: the server is the only authority on whether that
+	// identity is still valid, and there is nothing here to ask it with. The
+	// slot therefore creates a new client below. An existing-client marker
+	// never blocks that: it is evidence of a client this directory once owned,
+	// not a refusal, and the old build's requirement to recover it by hand is
+	// what left slots parked. Creation is the caller's standing decision.
 	if record == nil && !allowCreate {
-		return "", connect.Id{}, &RegistrationRefusedError{Code: "legacy_identity_requires_explicit_recovery"}
+		return "", connect.Id{}, &RegistrationRefusedError{Code: "client_registration_disabled"}
 	}
 	// Path custody reads the token and its fingerprint from one file, so a
 	// renewal renamed in between cannot mix two files (network_token.go).
@@ -329,12 +347,31 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 			}
 		}
 		if blocks {
-			return "", connect.Id{}, &RegistrationRefusedError{Code: "client_revoked"}
+			// A tombstone records a definite server rejection of this slot's
+			// client. A retained versioned operation is still the record of an
+			// identity the server bound to this key: replaying it can only
+			// reproduce the rejection, and minting over it would replace a
+			// bound identity behind the operator's back, so it stays explicit.
+			// An adopted identity has no such record; the slot mints a new
+			// client below and clears the tombstone with its credential.
+			if record != nil {
+				return "", connect.Id{}, &RegistrationRefusedError{Code: "client_revoked"}
+			}
 		}
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return "", connect.Id{}, err
 	}
 	if record == nil {
+		// A new operation replaces custody that cannot produce a running slot.
+		// The existing-client marker goes first: an interrupted mint then
+		// leaves either the old marker intact or a complete new operation,
+		// never a record beside a marker naming a different identity, which
+		// every later start must refuse.
+		if legacyErr == nil {
+			if err := owner.remove(legacyName); err != nil {
+				return "", connect.Id{}, err
+			}
+		}
 		var requestId [32]byte
 		if _, err := rand.Read(requestId[:]); err != nil {
 			return "", connect.Id{}, err

@@ -154,7 +154,7 @@ Usage:
         [-v...]
     provider provide --all-operators [--operators-url=<url>] [--operators-refresh=<duration>]
         [--auto-register --hotkey_seed_file=<path> | --hotkey_seed_file=<path>]
-        [--port=<port>] [--max-memory=<mem>] [--allow-client-registration]
+        [--port=<port>] [--max-memory=<mem>] [--allow-client-registration] [--no-client-registration]
         [-v...]
     provider operators [--operators-url=<url>] [-v...]
     provider provide [--port=<port>]
@@ -164,6 +164,7 @@ Usage:
 		[--original-contract-capture=<path> --original-contract-capture-sha256=<hash>]
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
+		[--no-client-registration]
 		[--no-legacy-import]
 		[--legacy-import-budget=<dur>]
 		[--quarantine-rejected-sign-in]
@@ -184,6 +185,7 @@ Usage:
 		[--original-contract-capture=<path> --original-contract-capture-sha256=<hash>]
 		[--require-original-contract-capture]
 		[--allow-client-registration | --adopt-legacy-provider-key]
+		[--no-client-registration]
 		[--no-legacy-import]
 		[--legacy-import-budget=<dur>]
     	[--port=<port>]
@@ -313,6 +315,8 @@ Options:
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
 	--allow-client-registration       Explicitly permit a new durable provider client operation; never replaces retained identity.
+	--no-client-registration          Refuse to create a provider client at all. A slot with no usable saved identity fails
+	                                 with one line instead of registering; the default permits creation.
 	--adopt-legacy-provider-key       Assert the retained legacy provider key is original; refresh only, no new client allocation.
 	--no-legacy-import               Disable the automatic import of 3.23-fix saved provider identities from
 	                                 .client_jwts.json; no legacy file is read for import and no sn state file is
@@ -982,7 +986,14 @@ func provideWith(opts docopt.Opts, start bool) {
 	// applyPoolAutoSize for the pinned-connect adaptation.
 	applyPoolAutoSize(maxMemory)
 
-	allowClientRegistration, _ := opts.Bool("--allow-client-registration")
+	// Fork: a provider slot must be able to start on a host migrated from the
+	// 3.23-fix provider without a flag on the unit. Creating a client is
+	// permitted unless the operator explicitly disables it; the old
+	// --allow-client-registration spelling still parses and means the same
+	// thing it always did.
+	noClientRegistration, _ := opts.Bool("--no-client-registration")
+	allowClientRegistration := !noClientRegistration
+	explicitClientRegistration, _ := opts.Bool("--allow-client-registration")
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
 	noLegacyImport, _ := opts.Bool("--no-legacy-import")
 	legacyImportBudget := parseLegacyImportBudget(opts)
@@ -993,7 +1004,7 @@ func provideWith(opts docopt.Opts, start bool) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, proxySourceOf: proxyManager.proxySourceOf(), memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, legacyImportBudget: legacyImportBudget, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, proxySourceOf: proxyManager.proxySourceOf(), memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, explicitClientRegistration: explicitClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, legacyImportBudget: legacyImportBudget, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -1058,6 +1069,30 @@ func provideWith(opts docopt.Opts, start bool) {
 		stopSignals()
 		os.Exit(1)
 	}
+}
+
+// A first provider key needs no flag on a new install, but a directory that
+// already holds provider history keeps its identity decision explicit: a lost
+// or unreadable key is never silently replaced, and an operator who deletes a
+// key does not get a different provider identity without asking.
+func providerKeyCreatePermitted(explicit bool, keyPath string) bool {
+	if explicit {
+		return true
+	}
+	entries, err := os.ReadDir(filepath.Dir(keyPath))
+	if err != nil {
+		return false
+	}
+	for _, entry := range entries {
+		name := entry.Name()
+		if name == ".provider.key.registration.lock" || name == ".provider_version" {
+			continue
+		}
+		if strings.HasPrefix(name, ".provider") {
+			return false
+		}
+	}
+	return true
 }
 
 // Each invocation owns its output, status server and provider children. The
@@ -1160,7 +1195,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			output.observe(providerContractCaptureRequired, 0, false, err, 0, nil)
 			return err
 		}
-		if self.allowClientRegistration {
+		if self.explicitClientRegistration {
 			err := errors.New("original capture launch requires retained provider identity and cannot allocate registration")
 			output.observe(captureEvent, 0, false, err, 0, nil)
 			return err
@@ -1362,7 +1397,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		networkJwtPath: filepath.Join(stateDir, "jwt"),
 		providers:      self.proxySettings,
 		disabled:       self.noLegacyImport,
-		explicitCreate: self.allowClientRegistration,
+		explicitCreate: self.explicitClientRegistration,
 		explicitAdopt:  self.adoptLegacyProviderKey,
 		recorder:       output,
 		budget:         self.legacyImportBudget,
@@ -1370,7 +1405,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			return newSdkLegacyImportProver(ctx, self.apiUrl, wait)
 		},
 	})
-	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: self.allowClientRegistration, AdoptLegacyKey: self.adoptLegacyProviderKey})
+	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: providerKeyCreatePermitted(self.explicitClientRegistration, keyPath), AdoptLegacyKey: self.adoptLegacyProviderKey})
 	if err != nil {
 		if ctx.Err() == nil {
 			output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
@@ -1646,7 +1681,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// a first-ever success is already "proven" when it lands).
 			reportProviderAuthResult(proxySettings, err)
 			if proxyCtx.Err() == nil {
-				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
+				// Creation switched off is an operator decision with its own
+				// single line (authFailed), not a custody event: it must not
+				// also raise startup_recovery_required.
+				if !clientauth.IsRegistrationDisabled(err) {
+					output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
+				}
 				bringUp.authFailed(index, display, err, providerAuthRetryToken(giveUp))
 			}
 			return err

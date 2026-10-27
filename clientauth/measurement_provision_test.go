@@ -6,10 +6,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -151,7 +153,7 @@ func TestMeasurementProvisionedIdentityLossCreatesNoSecondClient(t *testing.T) {
 		t.Fatal("a provisioned identity resumed provisioning after losing its registration", err)
 	}
 	plain := openMeasurementFixtureOwner(t, keyPath, false)
-	if _, _, err := plain.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath); !errors.As(err, &refused) || refused.Code != "legacy_identity_requires_explicit_recovery" {
+	if _, _, err := plain.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath); !errors.As(err, &refused) || refused.Code != "client_registration_disabled" {
 		t.Fatal("a provisioned identity's lost registration became an allocation", err)
 	}
 	if _, _, err := plain.loadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, true); err == nil {
@@ -224,7 +226,7 @@ func TestMeasurementProvisioningResumesAfterKeyCrash(t *testing.T) {
 	}
 	_, _, err = plain.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath)
 	var refused *RegistrationRefusedError
-	if !errors.As(err, &refused) || refused.Code != "legacy_identity_requires_explicit_recovery" || fixture.postCount() != 0 {
+	if !errors.As(err, &refused) || refused.Code != "client_registration_disabled" || fixture.postCount() != 0 {
 		t.Fatal("plain measurement run created a client", err)
 	}
 	if _, _, err := plain.ProvisionClientJwt(t.Context(), fixture.api, fixture.networkPath); err == nil || fixture.postCount() != 0 {
@@ -415,5 +417,159 @@ func TestMeasurementCreationRequiresProvisioningMarker(t *testing.T) {
 	}
 	if _, err := os.Stat(fixture.clientPath + ".registration"); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("refused measurement creation retained a request", err)
+	}
+}
+
+// A provider slot with its own key directory, the custody shape a miner
+// migrated from the 3.23-fix provider brings up. The caller closes the owner
+// to model a process restart.
+func newProviderSlotRecoveryFixture(t *testing.T) (*registrationTestFixture, *ProviderClientKeyOwner, string, string) {
+	t.Helper()
+	fixture := newRegistrationTestFixture(t)
+	dir := filepath.Dir(fixture.clientPath)
+	// The fixture verifies the durable record and anchor through this path, so
+	// it must name the slot credential the provider owner writes.
+	fixture.clientPath = filepath.Join(dir, ".provider.jwt")
+	keyPath := filepath.Join(dir, ".provider.key")
+	owner, err := OpenProviderClientKey(t.Context(), keyPath, ProviderClientKeyOptions{AllowCreate: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = owner.Close() })
+	return fixture, owner, fixture.clientPath, keyPath
+}
+
+// The provider wrapper's own scope, so these tests exercise the directory
+// custody a slot actually uses rather than a synthetic validator path.
+func providerSlotRecoveryScope(t *testing.T, fixture *registrationTestFixture, owner *ProviderClientKeyOwner) RegistrationScope {
+	t.Helper()
+	endpoint, err := fixture.api.NetworkClientRegistrationEndpoint()
+	if err != nil {
+		t.Fatal(err)
+	}
+	public := ed25519.NewKeyFromSeed(owner.Seed()).Public().(ed25519.PublicKey)
+	return RegistrationScope{Endpoint: endpoint, ClientKey: "0x" + hex.EncodeToString(public), ClientRole: "provider-v1", ClientSlot: "direct"}
+}
+
+// A slot that minted once presents the persisted identity on its next start:
+// the same client, no second registration request.
+func TestProviderSlotRecoveryReusesMintedIdentityOnRestart(t *testing.T) {
+	fixture, owner, clientPath, keyPath := newProviderSlotRecoveryFixture(t)
+	first, firstId, err := owner.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, clientPath, "direct", true)
+	if err != nil || first == "" || fixture.postCount() != 1 {
+		t.Fatalf("provider slot did not mint: %v", err)
+	}
+	if err := owner.Close(); err != nil {
+		t.Fatal(err)
+	}
+	restarted, err := OpenProviderClientKey(t.Context(), keyPath, ProviderClientKeyOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer restarted.Close()
+	if _, id, err := restarted.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, clientPath, "direct", false); err != nil || id != firstId || fixture.postCount() != 1 {
+		t.Fatalf("restart registered again instead of reusing the saved identity: %v", err)
+	}
+}
+
+// An adopted identity the server later rejects is replaced: the slot mints a
+// new client, clears the tombstone and persists it, instead of parking on
+// custody the server has already refused.
+func TestProviderSlotAdoptedIdentityRejectionMints(t *testing.T) {
+	fixture, owner, clientPath, _ := newProviderSlotRecoveryFixture(t)
+	if err := WriteToken(clientPath, registrationTestToken(t, testClientId, "adopted")); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := owner.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, clientPath, "direct", false); err != nil {
+		t.Fatal("adopting a saved credential failed", err)
+	}
+	if _, err := os.Stat(clientPath + ".registration.existing"); err != nil {
+		t.Fatal("adoption published no custody marker", err)
+	}
+	fixture.stateLock.Lock()
+	fixture.refreshStatus = http.StatusUnauthorized
+	fixture.stateLock.Unlock()
+	var refused *RegistrationRefusedError
+	if _, _, err := owner.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, clientPath, "direct", true); !errors.As(err, &refused) || refused.Code != "client_revoked" {
+		t.Fatalf("a rejected saved credential did not record its tombstone: %v", err)
+	}
+	if _, err := os.Stat(clientPath); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("the rejected credential was kept", err)
+	}
+	token, id, err := owner.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, clientPath, "direct", true)
+	if err != nil || token == "" || id.String() != testClientId || fixture.postCount() != 1 {
+		t.Fatalf("a rejected adopted identity did not mint: %v", err)
+	}
+	if _, err := os.Stat(clientPath + ".rejected"); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("the tombstone survived the new identity", err)
+	}
+}
+
+// A credential that cannot be installed leaves the retained operation: every
+// later attempt replays that same request, so a read-only state directory can
+// never turn one server binding into a series of new clients.
+func TestProviderSlotFailedCredentialWriteDoesNotMintAgain(t *testing.T) {
+	fixture, owner, clientPath, keyPath := newProviderSlotRecoveryFixture(t)
+	stop := errors.New("synthetic credential handoff failure")
+	// The binding hook runs where the credential is installed: the operation
+	// and the server's answer are durable, the credential is not.
+	if _, _, err := loadOrRegisterClientJwtInDirectory(t.Context(), fixture.api, fixture.networkPath, clientPath, "provider", providerSlotRecoveryScope(t, fixture, owner), true, registrationHooks{afterBinding: func() error { return stop }}, owner.store); !errors.Is(err, stop) {
+		t.Fatalf("the slot did not stop at the credential handoff: %v", err)
+	}
+	request, err := os.ReadFile(clientPath + ".registration")
+	if err != nil {
+		t.Fatal(err)
+	}
+	posts := fixture.postCount()
+	if err := owner.Close(); err != nil {
+		t.Fatal(err)
+	}
+	// A state directory that refuses new files: the write the credential needs
+	// fails, while the retained operation stays readable.
+	if err := os.Chmod(filepath.Dir(clientPath), 0500); err != nil {
+		t.Fatal(err)
+	}
+	readOnly, err := OpenProviderClientKey(t.Context(), keyPath, ProviderClientKeyOptions{})
+	if err != nil {
+		t.Fatalf("the read-only directory did not open its retained key: %v", err)
+	}
+	for i := 0; i < 2; i++ {
+		if _, _, err := readOnly.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, clientPath, "direct", true); err == nil {
+			t.Fatalf("attempt %d reported a credential it could not write", i)
+		}
+	}
+	if err := readOnly.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(clientPath); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("a failed write left a credential behind")
+	}
+	if after, readErr := os.ReadFile(clientPath + ".registration"); readErr != nil || !bytes.Equal(request, after) {
+		t.Fatal("a failed credential write replaced the retained operation", readErr)
+	}
+	if err := os.Chmod(filepath.Dir(clientPath), 0700); err != nil {
+		t.Fatal(err)
+	}
+	// The recovered start completes the retained operation: the identity stays
+	// the one the server already bound instead of a new allocation.
+	recovered, err := OpenProviderClientKey(t.Context(), keyPath, ProviderClientKeyOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer recovered.Close()
+	token, id, err := recovered.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, clientPath, "direct", true)
+	if err != nil || token == "" || id.String() != testClientId {
+		t.Fatalf("the retained operation did not complete after the write recovered: %v", err)
+	}
+	if after, readErr := os.ReadFile(clientPath + ".registration"); readErr != nil || !bytes.Equal(request, after) {
+		t.Fatal("recovery replaced the retained operation", readErr)
+	}
+	// One request per attempt, all of them the same operation: never a second
+	// registration because a write failed.
+	if fixture.postCount() != posts+3 {
+		t.Fatalf("registration requests = %d, want %d replays of one operation", fixture.postCount(), posts+3)
+	}
+	if _, _, err := recovered.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath, clientPath, "direct", true); err != nil || fixture.postCount() != posts+3 {
+		t.Fatalf("a stored credential still registered: %v", err)
 	}
 }

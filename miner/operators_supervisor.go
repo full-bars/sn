@@ -75,7 +75,10 @@ type operatorSupervisorSettings struct {
 	maxMemory               connect.ByteCount
 	verbosity               int
 	allowClientRegistration bool
-	port                    int
+	// fork-only: forwarded to every child, because the default permits
+	// creating a provider client and this is the only way to turn it off
+	noClientRegistration bool
+	port                 int
 	// forwarded to every child so the kill switch also reaches the fleet path
 	noLegacyImport bool
 }
@@ -560,6 +563,9 @@ func (self *operatorSupervisor) childArgs(spec operatorChildSpec) []string {
 	}
 	if self.settings.allowClientRegistration || self.settings.autoRegister {
 		args = append(args, "--allow-client-registration")
+	}
+	if self.settings.noClientRegistration {
+		args = append(args, "--no-client-registration")
 	}
 	if self.settings.noLegacyImport {
 		args = append(args, "--no-legacy-import")

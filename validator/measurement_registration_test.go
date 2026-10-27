@@ -303,7 +303,7 @@ func TestMeasurementRunAdoptsLegacyAndPreservesUnknownLoss(t *testing.T) {
 	err = fixture.run(t.Context(), false, hooks)
 	posts, legacy, refreshes, _ := fixture.counts()
 	var refused *clientauth.RegistrationRefusedError
-	if !errors.As(err, &refused) || refused.Code != "legacy_identity_requires_explicit_recovery" || handoffs != 2 || posts != beforePosts || legacy != beforeLegacy || refreshes != beforeRefresh || posts != 0 || beforeRefresh < 2 {
+	if !errors.As(err, &refused) || refused.Code != "client_registration_disabled" || handoffs != 2 || posts != beforePosts || legacy != beforeLegacy || refreshes != beforeRefresh || posts != 0 || beforeRefresh < 2 {
 		t.Fatal("measurement lost legacy credential allocated or refreshed replacement work", err)
 	}
 }

@@ -85,7 +85,7 @@ func productionRegistrationWait(err error) (bool, bool) {
 			return true
 		case *clientauth.RegistrationRefusedError:
 			blocked = true
-			return value.Code == "network_authentication_missing" || value.Code == "legacy_identity_requires_explicit_recovery"
+			return value.Code == "network_authentication_missing" || value.Code == "legacy_identity_requires_explicit_recovery" || value.Code == "client_registration_disabled"
 		case *sdk.NetworkClientRegistrationUnavailableError, *clientauth.RegistrationRefreshUnavailableError:
 			return true
 		}

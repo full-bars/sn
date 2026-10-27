@@ -52,6 +52,9 @@ func TestProviderStartupWalletRefusesProxyWhenRetainedKeyIsMissing(t *testing.T)
 		t.Fatal(err)
 	}
 	settings := fixture.settings(true, proxy)
+	// The operator explicitly asked for creation; a retained history without
+	// its key still refuses, which is what this path must not bypass.
+	settings.explicitClientRegistration = true
 	settings.wallet, settings.walletProof = testAliceAddress, &snWalletProof{SeedFile: writeTestSeedFile(t, testAliceSeedHex)}
 	stop := errors.New("synthetic unexpected provider authentication")
 	var authenticated atomic.Bool

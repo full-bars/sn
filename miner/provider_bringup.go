@@ -478,11 +478,14 @@ func (self *providerBringUpTracker) controlReached(index uint64, display string,
 // what happens next (retry), and moves it to failed.
 func (self *providerBringUpTracker) authFailed(index uint64, display string, reason error, retry string) {
 	self.apply(index, "failed", func() {
-		line := fmt.Sprintf("[auth] provider %d failed: %v (slot %s, retry %s)", index, reason, display, retry)
-		if strings.Contains(reason.Error(), "legacy_identity_requires_explicit_recovery") {
-			line += "; action: run with --adopt-legacy-provider-key or clear this slot's identity"
+		// Disabled creation is an operator decision, not a custody fault, and
+		// it is the only refusal this path keeps: one plain line, no retry
+		// hint, no recovery advice.
+		if strings.Contains(reason.Error(), "client_registration_disabled") {
+			tlog("[auth] provider %d skipped: provider client creation is disabled (--no-client-registration) (slot %s)\n", index, display)
+			return
 		}
-		tlog("%s\n", line)
+		tlog("[auth] provider %d failed: %v (slot %s, retry %s)\n", index, reason, display, retry)
 	})
 }
 
