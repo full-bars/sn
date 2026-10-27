@@ -1512,6 +1512,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 	}
 	bringUp := newProviderBringUpTracker(bringUpSlots)
+	// The automatic legacy import already ran, before the key gate: a slot it
+	// took a saved identity over for reached its identity outcome then, so the
+	// summary reports that count beside the mints this start produces.
+	bringUp.adoptIdentities(legacyImport.adopted)
 	// Slots that completed authentication at least once during this run, kept
 	// apart from the tracker because a slot that later fails leaves "running".
 	var authenticatedSlots atomic.Int64
@@ -1658,7 +1662,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			ClientStrategySettings: clientStrategySettings,
 			ClientStrategy:         clientStrategy,
 			Mint: func(mintCtx context.Context) (string, connect.Id, error) {
-				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
+				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
+					// The registration path is the only observer of what happened
+					// to this slot's identity; hand it to the start's aggregate
+					// rather than re-deriving it from the credential or a line.
+					bringUp.identityOutcome(index, slotDisplay, outcome, reason)
+				})
 			},
 			FreshMint: func(mintCtx context.Context) (string, connect.Id, error) {
 				return authenticateProviderFresh(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)

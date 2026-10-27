@@ -111,8 +111,8 @@ func providerAuthenticationRecoveryEvent(err error) providerDiagnosticEvent {
 
 // Each attempt is finite. Later attempts replay the same durably retained
 // operation and never fall back to the legacy allocating endpoint.
-func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, output *providerDiagnostics, index uint64) (string, connect.Id, error) {
-	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, false, output, index)
+func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, output *providerDiagnostics, index uint64, observe clientauth.IdentityObserver) (string, connect.Id, error) {
+	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, false, output, index, observe)
 }
 
 // authenticateProviderFresh registers a new client for one slot. It is the
@@ -122,22 +122,27 @@ func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, client
 // classification and diagnostics are shared with the retained-custody path;
 // only the registration entry differs.
 func authenticateProviderFresh(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, output *providerDiagnostics, index uint64) (string, connect.Id, error) {
-	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, true, output, index)
+	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, true, output, index, nil)
 }
 
 // One attempt loop serves both mints. The retained-custody path owns its
 // durable replay on a typed availability failure; the fresh path does not
 // yield those, so a lost fresh reply is left to the caller's backoff instead
 // of being replayed into a second client.
-func authenticateProviderWith(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, freshIdentity bool, output *providerDiagnostics, index uint64) (string, connect.Id, error) {
+func authenticateProviderWith(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, allowCreate bool, freshIdentity bool, output *providerDiagnostics, index uint64, observe clientauth.IdentityObserver) (string, connect.Id, error) {
 	hooks, _ := ctx.Value(providerRegistrationHooksKey{}).(providerRegistrationHooks)
-	register := keyOwner.LoadOrRegisterClientJwt
-	if freshIdentity {
-		register = keyOwner.RegisterFreshClientJwt
+	register := func(registerCtx context.Context) (string, connect.Id, error) {
+		if freshIdentity {
+			// A fresh start mints by contract and keeps no retained identity to
+			// decide about, so it reports no outcome: the reused/new pair on the
+			// tally already says every slot was new.
+			return keyOwner.RegisterFreshClientJwt(registerCtx, api, networkPath, clientPath, slot, allowCreate)
+		}
+		return keyOwner.LoadOrRegisterClientJwtObserved(registerCtx, api, networkPath, clientPath, slot, allowCreate, observe)
 	}
 	for {
 		attempt, cancel := context.WithTimeout(ctx, 300*time.Second)
-		token, id, err := register(attempt, api, networkPath, clientPath, slot, allowCreate)
+		token, id, err := register(attempt)
 		cancel()
 		if hooks.afterAttempt != nil {
 			if hookErr := hooks.afterAttempt(err); hookErr != nil {

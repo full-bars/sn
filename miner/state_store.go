@@ -22,6 +22,7 @@ package miner
 // bbolt's own single-writer transaction is all the serialization needed.
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -143,6 +144,83 @@ func (s *providerStore) delete(bucket, key string) error {
 		}
 		return b.Delete([]byte(key))
 	})
+}
+
+// appendBounded adds one record under a sequence key and drops the record keep
+// places behind it, so the bucket holds at most keep values however long the
+// process runs. Order is the bucket's own sequence, never the wall clock: two
+// records in the same second must not collide on a key. The append and the
+// drop share one transaction, so a reader never meets a key without its value
+// and a crash cannot leave the bucket a record too long.
+func (s *providerStore) appendBounded(bucket string, value any, keep int) error {
+	if s == nil {
+		return nil
+	}
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.db == nil {
+		return nil
+	}
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
+		if err != nil {
+			return err
+		}
+		seq, err := b.NextSequence()
+		if err != nil {
+			return err
+		}
+		key := make([]byte, 8)
+		binary.BigEndian.PutUint64(key, seq)
+		if err := b.Put(key, raw); err != nil {
+			return err
+		}
+		if keep <= 0 || seq <= uint64(keep) {
+			return nil
+		}
+		// This append created the oldest record worth keeping, so the one
+		// before it is the only record that has to go.
+		oldest := make([]byte, 8)
+		binary.BigEndian.PutUint64(oldest, seq-uint64(keep))
+		return b.Delete(oldest)
+	})
+}
+
+// tail returns up to n records in insertion order, oldest first. A negative n
+// is every record; a bucket that was never written is no records, not an
+// error.
+func (s *providerStore) tail(bucket string, n int) ([][]byte, error) {
+	if s == nil {
+		return nil, nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.db == nil {
+		return nil, nil
+	}
+	var values [][]byte
+	err := s.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			return nil
+		}
+		cursor := b.Cursor()
+		for key, value := cursor.First(); key != nil; key, value = cursor.Next() {
+			values = append(values, append([]byte(nil), value...))
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if n >= 0 && len(values) > n {
+		values = values[len(values)-n:]
+	}
+	return values, nil
 }
 
 var (

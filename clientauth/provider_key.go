@@ -253,6 +253,15 @@ func providerClientCredentialName(name string) bool {
 // Every attempt borrows the same physical key directory. The immutable cached
 // key is useful only with that original custody, never a replacement pathname.
 func (self *ProviderClientKeyOwner) LoadOrRegisterClientJwt(ctx context.Context, api *sdk.Api, networkPath, clientPath, slot string, allowCreate bool) (string, connect.Id, error) {
+	return self.LoadOrRegisterClientJwtObserved(ctx, api, networkPath, clientPath, slot, allowCreate, nil)
+}
+
+// LoadOrRegisterClientJwtObserved is LoadOrRegisterClientJwt that also tells
+// observe how the attempt obtained the slot's identity, so a caller can report
+// a start's mints without reading log lines or guessing from the credential.
+// The observer is told nothing when the attempt decided nothing: creation
+// switched off, a missing network sign-in, or a local custody fault.
+func (self *ProviderClientKeyOwner) LoadOrRegisterClientJwtObserved(ctx context.Context, api *sdk.Api, networkPath, clientPath, slot string, allowCreate bool, observe IdentityObserver) (string, connect.Id, error) {
 	if self == nil || self.store == nil || len(self.seed) != ed25519.SeedSize || !providerClientCredentialName(filepath.Base(clientPath)) || api == nil {
 		return "", connect.Id{}, errors.New("provider registration lacks its retained custody owner")
 	}
@@ -262,7 +271,7 @@ func (self *ProviderClientKeyOwner) LoadOrRegisterClientJwt(ctx context.Context,
 	}
 	public := ed25519.NewKeyFromSeed(self.seed).Public().(ed25519.PublicKey)
 	scope := RegistrationScope{Endpoint: endpoint, ClientKey: "0x" + hex.EncodeToString(public), ClientRole: "provider-v1", ClientSlot: slot}
-	return loadOrRegisterClientJwtInDirectory(ctx, api, networkPath, clientPath, "provider", scope, allowCreate, registrationHooks{}, self.store)
+	return loadOrRegisterClientJwtInDirectory(ctx, api, networkPath, clientPath, "provider", scope, allowCreate, registrationHooks{identity: observe}, self.store)
 }
 
 // RegisterFreshClientJwt registers a brand-new client for one provider slot

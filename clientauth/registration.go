@@ -117,6 +117,19 @@ func existingClientCustodyMarker(scope RegistrationScope, identity registrationT
 type registrationHooks struct {
 	afterRequest func() error
 	afterBinding func() error
+	// identity receives this attempt's decision about the slot's client
+	// identity. Nil is silent, which is what every caller that does not report
+	// identity health wants.
+	identity IdentityObserver
+}
+
+// reportIdentity tells the caller's observer how this attempt obtained the
+// identity. Exactly one outcome is reported per attempt, from the branch that
+// decided it.
+func (self registrationHooks) reportIdentity(outcome IdentityOutcome, reason string) {
+	if self.identity != nil {
+		self.identity(outcome, reason)
+	}
 }
 
 // Callers authorize creation only for independently known new work. Retained
@@ -305,7 +318,18 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 				}
 			}
 		}
-		return refreshStoredClientJwtWithCustody(ctx, api, token, func(token string) error { return owner.write(clientName, []byte(token)) }, clearRejected, markRejected, false)
+		// The credential is present, so the identity is settled: either the
+		// platform accepts it and nothing changed, or it refuses it and the
+		// refusal is what the caller has to report.
+		token, id, err := refreshStoredClientJwtWithCustody(ctx, api, token, func(token string) error { return owner.write(clientName, []byte(token)) }, clearRejected, markRejected, false)
+		if err != nil {
+			if IsClientRevoked(err) {
+				hooks.reportIdentity(IdentityOutcomeRevoked, "saved identity rejected")
+			}
+		} else {
+			hooks.reportIdentity(IdentityOutcomeReused, "")
+		}
+		return token, id, err
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return "", connect.Id{}, err
 	}
@@ -339,6 +363,7 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	if err != nil || !validRegistrationIdentityId(identity.NetworkId) || !validRegistrationIdentityId(identity.UserId) || identity.clientId != "" || identity.deviceId != "" {
 		return "", connect.Id{}, errors.New("registration bootstrap does not name a network principal")
 	}
+	rejected := false
 	if marker, err := readToken(rejectionPath(clientPath)); err == nil {
 		blocks := directory != nil
 		if !blocks {
@@ -346,6 +371,10 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 				return "", connect.Id{}, err
 			}
 		}
+		// Only a tombstone that blocks this attempt is a refusal it can name;
+		// one a new network sign-in has already outlived says nothing about
+		// the identity being replaced.
+		rejected = blocks
 		if blocks {
 			// A tombstone records a definite server rejection of this slot's
 			// client. A retained versioned operation is still the record of an
@@ -355,13 +384,29 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 			// An adopted identity has no such record; the slot mints a new
 			// client below and clears the tombstone with its credential.
 			if record != nil {
+				hooks.reportIdentity(IdentityOutcomeRevoked, "revoked identity retained")
 				return "", connect.Id{}, &RegistrationRefusedError{Code: "client_revoked"}
 			}
 		}
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return "", connect.Id{}, err
 	}
+	// What this attempt does to the slot's identity, reported once a
+	// credential is installed below. A retained operation is completed as the
+	// identity the server already bound, so completing it creates nothing; a
+	// new operation is a first start when this directory held no identity at
+	// all, and a replacement when it held one this slot could not present.
+	outcome := IdentityOutcomeRecovered
+	outcomeReason := ""
 	if record == nil {
+		if legacyErr == nil {
+			outcome, outcomeReason = IdentityOutcomeMintedReplacement, "saved identity missing"
+			if rejected {
+				outcomeReason = "saved identity rejected"
+			}
+		} else {
+			outcome = IdentityOutcomeMintedNew
+		}
 		// A new operation replaces custody that cannot produce a running slot.
 		// The existing-client marker goes first: an interrupted mint then
 		// leaves either the old marker intact or a complete new operation,
@@ -455,6 +500,7 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	}
 	api.SetByJwt(result.ByClientJwt)
 	id, _ := connect.ParseId(clientId)
+	hooks.reportIdentity(outcome, outcomeReason)
 	return result.ByClientJwt, id, nil
 }
 

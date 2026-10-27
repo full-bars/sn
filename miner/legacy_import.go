@@ -206,9 +206,13 @@ func (self legacyImportOptions) proveOptions() legacyImportProveOptions {
 	}
 }
 
-// legacyImportResult tells the run which slots may register a new client.
+// legacyImportResult tells the run which slots may register a new client, and
+// which slots it took a saved identity over for in this start. Adoption is a
+// start's identity outcome like a mint is, and the startup summary reports it
+// beside them.
 type legacyImportResult struct {
 	mintSlots map[string]bool
+	adopted   []string
 }
 
 func (self legacyImportResult) mintAllowed(storeKey string) bool {
@@ -648,6 +652,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			continue
 		}
 		imported++
+		result.adopted = append(result.adopted, slot.display)
 		journal.Slots[slot.storeKey] = legacyImportJournalSlot{
 			State:    "imported",
 			ClientID: slot.entry.ClientID,
