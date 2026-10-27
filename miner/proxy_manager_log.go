@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/urnetwork/connect"
 )
@@ -28,9 +29,18 @@ import (
 // tests can capture them; P2 can point it at the diagnostics output.
 var proxyManagerLogWriter io.Writer = os.Stderr
 
-// tlog writes a detail line of the proxy pipeline.
+// tabLogClock is the timestamp source for tab-style lines, in the same
+// month-day and millisecond shape glog prints, so the two streams can be
+// ordered against each other by eye or by sort. A variable so tests can pin it.
+var tabLogClock = time.Now
+
+// tlog writes a detail line of the proxy pipeline. The timestamp is part of
+// the line, not of a wrapper: these lines used to be the only ones in the
+// stream without one, which made a failure impossible to place relative to the
+// glog lines around it.
 func tlog(format string, args ...any) {
-	fmt.Fprintf(proxyManagerLogWriter, format, args...)
+	stamp := tabLogClock().Format("0102 15:04:05.000")
+	fmt.Fprintf(proxyManagerLogWriter, "%s %s", stamp, fmt.Sprintf(format, args...))
 }
 
 // urlCycleStats is what one URL fetch cycle did to the pool.
