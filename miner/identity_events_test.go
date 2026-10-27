@@ -70,39 +70,45 @@ func TestProviderStartupSummaryCountsIdentityOutcomesOnce(t *testing.T) {
 	}
 }
 
-// A wave of replacements is one warning line, at the threshold and not below
-// it, and it names both causes in the order an operator should check them.
+// A wave of rejected saved identities is one warning line, at the threshold and
+// not below it, and it names both causes in the order an operator should check
+// them. The rate is rejected over presented: the identities the pool carried
+// into this start are the denominator, so a healthy pool of reused identities
+// is what a handful of healings is measured against.
 func TestProviderIdentityWaveWarningFiresOnlyAboveTheThreshold(t *testing.T) {
 	cases := []struct {
-		name         string
-		outcomes     int
-		replacements int
-		threshold    int
-		warn         bool
+		name      string
+		presented int
+		rejected  int
+		threshold int
+		warn      bool
 	}{
-		// 5% of 100 slots is 5, and the floor of 3 never binds there.
+		// 5% of 100 presented is 5, and the floor of 3 never binds there.
 		{"a few replacements", 100, 3, 5, false},
 		{"at the threshold", 100, 5, 5, false},
 		{"above the threshold", 100, 6, 5, true},
 		// 5% of 10 is 0, so the floor of 3 decides.
 		{"the floor holds a small pool", 10, 3, 3, false},
 		{"just above the floor", 10, 4, 3, true},
-		// Fewer outcomes than the floor can never be a wave.
-		{"fewer outcomes than the floor", 2, 2, 3, false},
+		// Fewer presented than the floor can never be a wave.
+		{"fewer presented than the floor", 2, 2, 3, false},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			testProviderIdentityStore(t)
 			buffer := captureProviderBringUpLog(t)
-			tracker := newProviderBringUpTracker(testCase.outcomes)
-			for slot := 0; slot < testCase.outcomes; slot++ {
-				outcome := clientauth.IdentityOutcomeMintedNew
-				if slot < testCase.replacements {
-					outcome = clientauth.IdentityOutcomeMintedReplacement
+			tracker := newProviderBringUpTracker(testCase.presented)
+			// A slot that reused its credential and a slot that came back with a
+			// replacement both presented one to the platform.
+			for slot := 0; slot < testCase.presented; slot++ {
+				display := fmt.Sprintf("proxy:10.0.%d.%d:1080", slot/250, slot%250)
+				if slot < testCase.rejected {
+					tracker.identityOutcome(uint64(slot), display, clientauth.IdentityOutcomeMintedReplacement, "saved identity rejected")
+					tracker.authNew(uint64(slot), connect.NewId(), display)
+					continue
 				}
-				tracker.identityOutcome(uint64(slot), fmt.Sprintf("proxy:10.0.%d.%d:1080", slot/250, slot%250), outcome, "saved identity rejected")
+				tracker.authReused(uint64(slot), connect.NewId(), display)
 			}
-			tracker.emitStartupSummary()
 
 			text := buffer.String()
 			if warned := strings.Contains(text, "⚠️ [identity]"); warned != testCase.warn {
@@ -111,22 +117,135 @@ func TestProviderIdentityWaveWarningFiresOnlyAboveTheThreshold(t *testing.T) {
 			if !testCase.warn {
 				return
 			}
-			line := fmt.Sprintf("⚠️ [identity] %d of %d slots minted a replacement identity this start (threshold %d)",
-				testCase.replacements, testCase.outcomes, testCase.threshold)
+			line := fmt.Sprintf("⚠️ [identity] %d of %d saved identities were replaced or refused this start (threshold %d)",
+				testCase.rejected, testCase.presented, testCase.threshold)
 			if !strings.Contains(text, line) {
 				t.Fatalf("warning misses %q:\n%s", line, text)
 			}
-			for _, cause := range []string{"state directory is intact", "platform is refusing identities that used to work"} {
+			for _, cause := range []string{"state directory is the one holding the identities", "platform is refusing identities that used to work"} {
 				if !strings.Contains(text, cause) {
 					t.Fatalf("warning does not name %q:\n%s", cause, text)
 				}
 			}
-			// One line for the wave, however many times the summary runs.
-			tracker.emitStartupSummary()
+			// One line for the wave, however often the start re-evaluates.
+			tracker.emitReplacementWave()
 			if count := strings.Count(buffer.String(), "⚠️ [identity]"); count != 1 {
 				t.Fatalf("wave warning printed %d times:\n%s", count, buffer.String())
 			}
 		})
+	}
+}
+
+// The case the warning exists for: a big pool where almost every slot kept its
+// identity and a handful healed. The handful is a rate over the whole pool, not
+// over itself, so it stays a line and never becomes a wave.
+func TestProviderIdentityWaveIgnoresHealthyReusedFleet(t *testing.T) {
+	testProviderIdentityStore(t)
+	buffer := captureProviderBringUpLog(t)
+	const slots, replacements = 500, 4
+	tracker := newProviderBringUpTracker(slots)
+	for slot := 0; slot < slots; slot++ {
+		display := fmt.Sprintf("proxy:10.0.%d.%d:1080", slot/250, slot%250)
+		if slot < replacements {
+			tracker.identityOutcome(uint64(slot), display, clientauth.IdentityOutcomeMintedReplacement, "saved identity rejected")
+			tracker.authNew(uint64(slot), connect.NewId(), display)
+			continue
+		}
+		tracker.authReused(uint64(slot), connect.NewId(), display)
+	}
+	// The heartbeat summary is where the counts are read, so print it before
+	// asserting on them.
+	tracker.emitStartupSummary()
+
+	text := buffer.String()
+	if strings.Contains(text, "⚠️ [identity]") {
+		t.Fatalf("a %d-of-%d wave fired on a healthy fleet:\n%s", replacements, slots, text)
+	}
+	// The healings are still visible; they are just not an alarm.
+	want := fmt.Sprintf("identity: 0 minted new, %d minted replacement, 0 adopted, 0 revoked", replacements)
+	if !strings.Contains(text, want) {
+		t.Fatalf("summary misses %q:\n%s", want, text)
+	}
+}
+
+// A start is not judged until every slot has resolved. The first slots to come
+// up on a slow host are the ones that minted a replacement, and a rate taken
+// then divides by that handful; by the time the pool is up the same four are a
+// fraction of a percent.
+func TestProviderIdentityWaveWaitsForTheStartToSettle(t *testing.T) {
+	testProviderIdentityStore(t)
+	buffer := captureProviderBringUpLog(t)
+	const slots, earlyReplacements = 500, 6
+	tracker := newProviderBringUpTracker(slots)
+	for slot := 0; slot < earlyReplacements; slot++ {
+		display := fmt.Sprintf("proxy:10.0.%d.%d:1080", slot/250, slot%250)
+		tracker.identityOutcome(uint64(slot), display, clientauth.IdentityOutcomeMintedReplacement, "saved identity rejected")
+		tracker.authNew(uint64(slot), connect.NewId(), display)
+	}
+	// The first heartbeat fires here, while 494 slots are still authenticating.
+	// Six of six presented has cleared the floor of three, which is exactly the
+	// premature warning this test pins: a rate over the slots that happened to
+	// come up first is not a rate over the pool.
+	tracker.emitStartupSummary()
+	if strings.Contains(buffer.String(), "⚠️ [identity]") {
+		t.Fatalf("warned before the start settled:\n%s", buffer.String())
+	}
+
+	for slot := earlyReplacements; slot < slots; slot++ {
+		tracker.authReused(uint64(slot), connect.NewId(), fmt.Sprintf("proxy:10.0.%d.%d:1080", slot/250, slot%250))
+	}
+	if text := buffer.String(); strings.Contains(text, "⚠️ [identity]") {
+		t.Fatalf("a %d-of-%d wave fired once the pool was up:\n%s", earlyReplacements, slots, text)
+	}
+}
+
+// A start that had no saved identity to present is not a wave, however many
+// identities it minted: that is a first start doing exactly what it should, and
+// a warning there would train an operator to ignore this line. A wrong mount
+// that reads an empty directory is indistinguishable from it from inside the
+// process, so it shows up as "0 reused, N new" in the summary and as the
+// durable events, not here.
+func TestProviderIdentityWaveDoesNotCountIdentitiesThatWereNeverSaved(t *testing.T) {
+	testProviderIdentityStore(t)
+	buffer := captureProviderBringUpLog(t)
+	const slots = 500
+	tracker := newProviderBringUpTracker(slots)
+	for slot := 0; slot < slots; slot++ {
+		display := fmt.Sprintf("proxy:10.0.%d.%d:1080", slot/250, slot%250)
+		tracker.identityOutcome(uint64(slot), display, clientauth.IdentityOutcomeMintedNew, "")
+		tracker.authNew(uint64(slot), connect.NewId(), display)
+	}
+
+	text := buffer.String()
+	if strings.Contains(text, "⚠️ [identity]") {
+		t.Fatalf("a first start raised a replacement wave:\n%s", text)
+	}
+	if !strings.Contains(text, "client ids: 0 reused, 500 new") {
+		t.Fatalf("the tally does not show the pool came up entirely new:\n%s", text)
+	}
+}
+
+// A refused identity presented one just like a replaced identity did, so
+// refusals count toward the wave even when nothing was minted in its place.
+func TestProviderIdentityWaveCountsRefusedIdentities(t *testing.T) {
+	testProviderIdentityStore(t)
+	buffer := captureProviderBringUpLog(t)
+	const slots, revoked = 100, 6
+	tracker := newProviderBringUpTracker(slots)
+	for slot := 0; slot < slots; slot++ {
+		display := fmt.Sprintf("proxy:10.0.%d.%d:1080", slot/250, slot%250)
+		if slot < revoked {
+			tracker.identityOutcome(uint64(slot), display, clientauth.IdentityOutcomeRevoked, "revoked identity retained")
+			tracker.authFailed(uint64(slot), display, errors.New("client_revoked"), "")
+			continue
+		}
+		tracker.authReused(uint64(slot), connect.NewId(), display)
+	}
+
+	text := buffer.String()
+	line := fmt.Sprintf("⚠️ [identity] %d of %d saved identities were replaced or refused this start", revoked, slots)
+	if !strings.Contains(text, line) {
+		t.Fatalf("warning misses %q:\n%s", line, text)
 	}
 }
 

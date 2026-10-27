@@ -315,12 +315,13 @@ func (self *providerBringUpTracker) emitStartupSummary() {
 	if segment := self.identitySegment(); segment != "" {
 		summary += "; " + segment
 	}
-	replacements, outcomes, threshold, wave := self.replacementWave()
 	self.mu.Unlock()
 	tlog("%s\n", summary)
-	if wave {
-		tlog("%s\n", identityWaveLine(replacements, outcomes, threshold))
-	}
+	// The replacement wave is not decided here. A slot still authenticating has
+	// not presented its credential yet, so a rate taken now divides by a pool
+	// that does not exist: four replacements among four decided slots reads as
+	// 100% while 496 healthy slots are still coming up. apply() decides it when
+	// the last slot resolves.
 }
 
 // identitySegment renders the identity outcomes this start produced, or "" when
@@ -364,37 +365,83 @@ const (
 	identityWaveFloor   = 3
 )
 
-// identityWaveThreshold is how many replacements in one start stop being a few
-// slots healing: more than max(3, 5% of the slots that produced an outcome).
-func identityWaveThreshold(outcomes int) int {
-	threshold := outcomes * identityWavePercent / 100
+// identityWaveThreshold is how many rejected identities in one start stop
+// being a few slots healing: more than max(3, 5% of the identities the pool
+// presented to the platform).
+func identityWaveThreshold(presented int) int {
+	threshold := presented * identityWavePercent / 100
 	if threshold < identityWaveFloor {
 		threshold = identityWaveFloor
 	}
 	return threshold
 }
 
-// replacementWave decides whether this start's replacements are a wave, claims
-// the one warning, and returns the counts for it. The caller must hold mu.
-func (self *providerBringUpTracker) replacementWave() (replacements, outcomes, threshold int, wave bool) {
-	mintedNew, replacementCount, adopted, revoked := self.identityOutcomeCounts()
-	replacements = replacementCount
-	outcomes = mintedNew + replacements + adopted + revoked
-	threshold = identityWaveThreshold(outcomes)
-	if self.identityWarned || threshold >= replacements {
-		return replacements, outcomes, threshold, false
+// identityWaveCounts returns how many slots presented a saved identity to the
+// platform and how many of those it did not accept. A slot that reused its
+// credential and a slot that was refused both presented one; so did a slot
+// that came back with a replacement. A slot that had nothing to present is not
+// part of the rate: a first start mints every identity, and counting those
+// would warn on a host doing exactly what it should. The caller must hold mu.
+func (self *providerBringUpTracker) identityWaveCounts() (rejected, presented int) {
+	reused := 0
+	for _, wasReused := range self.identities {
+		if wasReused {
+			reused++
+		}
 	}
-	self.identityWarned = true
-	return replacements, outcomes, threshold, true
+	var replacements, revoked int
+	for _, outcome := range self.identityOutcomes {
+		switch outcome {
+		case identityOutcomeMintedReplacement:
+			replacements++
+		case identityOutcomeRevoked:
+			revoked++
+		}
+	}
+	return replacements + revoked, reused + replacements + revoked
 }
 
-// identityWaveLine is the one warning a start prints when it minted
-// replacements in bulk. It names both causes and the order to check them: the
-// state directory is cheaper to inspect and is the one that produces a full
+// settledLocked reports that every slot reached a terminal state, so the
+// identity counts are final. The caller must hold mu.
+func (self *providerBringUpTracker) settledLocked() bool {
+	return self.total <= 0 || self.running+self.failed >= self.total
+}
+
+// replacementWave decides whether this start's rejected identities are a wave
+// and claims the one warning. It refuses to decide before the start has
+// settled: the rate is rejected over presented, and neither half is known
+// until the last slot resolves. The caller must hold mu.
+func (self *providerBringUpTracker) replacementWave() (rejected, presented, threshold int, wave bool) {
+	rejected, presented = self.identityWaveCounts()
+	threshold = identityWaveThreshold(presented)
+	if self.identityWarned || !self.settledLocked() || threshold >= rejected {
+		return rejected, presented, threshold, false
+	}
+	self.identityWarned = true
+	return rejected, presented, threshold, true
+}
+
+// emitReplacementWave prints the one warning a start gets when its rejected
+// identities were a wave. Called when the last slot resolves.
+func (self *providerBringUpTracker) emitReplacementWave() {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	rejected, presented, threshold, wave := self.replacementWave()
+	self.mu.Unlock()
+	if wave {
+		tlog("%s\n", identityWaveLine(rejected, presented, threshold))
+	}
+}
+
+// identityWaveLine is the one warning a start prints when the platform did not
+// accept identities in bulk. It names both causes and the order to check them:
+// the state directory is cheaper to inspect and is the one that produces a full
 // wave while every other measure looks healthy.
-func identityWaveLine(replacements, outcomes, threshold int) string {
-	return fmt.Sprintf("⚠️ [identity] %d of %d slots minted a replacement identity this start (threshold %d); check first that the state directory is intact (wrong mount, a restore older than the identities, permissions), then whether the platform is refusing identities that used to work",
-		replacements, outcomes, threshold)
+func identityWaveLine(rejected, presented, threshold int) string {
+	return fmt.Sprintf("⚠️ [identity] %d of %d saved identities were replaced or refused this start (threshold %d); check first that the state directory is the one holding the identities (wrong mount, a restore older than the identities, permissions), then whether the platform is refusing identities that used to work",
+		rejected, presented, threshold)
 }
 
 // identityOutcome records one slot's identity decision: it becomes the slot's
@@ -684,6 +731,9 @@ func (self *providerBringUpTracker) apply(index uint64, state string, print func
 	self.mu.Unlock()
 	if final {
 		tlog("%s\n", line)
+		// Every slot has resolved, so the identity counts are final and the one
+		// replacement-wave decision this start gets can be made.
+		self.emitReplacementWave()
 		self.stop()
 	}
 }

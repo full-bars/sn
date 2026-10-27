@@ -124,19 +124,33 @@ decisions went — minted new, minted replacement, adopted, revoked — and says
 nothing extra when every slot reused its identity, so a healthy host's line is
 the one it always printed.
 
-When replacements pass a small share of the slots that decided, one warning
-follows, naming both likely causes rather than guessing between them:
+When the platform rejects the identities the pool presented past `max(3, 5% of
+them)`, one warning follows, naming both likely causes rather than guessing
+between them:
 
 ```
-⚠️ [identity] 37 of 500 slots minted a replacement identity this start; check first
-that the state directory is intact, then whether the platform is refusing identities
-that used to work
+⚠️ [identity] 37 of 500 saved identities were replaced or refused this start
+(threshold 25); check first that the state directory is the one holding the
+identities, then whether the platform is refusing identities that used to work
 ```
 
-That order matters. A wrong mount, a restore older than the identities, or a
-permissions change all look like a wave of first-start mints, and none of them is
-the platform's fault. Only after the state directory is confirmed should you
-suspect the platform.
+The count is over saved identities, not over slots: the slots that came up
+reused are the denominator, so four healings on a 500-slot host read as four of
+five hundred and stay a line. The decision waits for the last slot to resolve,
+because a rate over the slots that happened to come up first is not a rate over
+the pool: six replacements among the first six slots is not a wave if the other
+494 then reuse.
+
+That order matters. A restore older than the identities, a partial mount that
+holds stale credentials, or a permissions change all produce identities the
+platform will not accept, and none of them is the platform's fault. Only after
+the state directory is confirmed should you suspect the platform.
+
+A start that finds no saved identity at all is not this warning. It mints one
+per slot, which is what a first start does, and it prints `0 reused, N new` in
+the startup summary plus one `minted_new` record per slot in the store. A wrong
+mount of an empty directory looks the same from inside the process, so that is
+where to look for it.
 
 For the per-slot detail — which slot, which outcome, what reason, when — every
 outcome is appended to the `identity_events` record in `provider_state.db`. That
