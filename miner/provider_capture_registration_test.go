@@ -347,3 +347,165 @@ func TestCaptureSlotWithoutRecordedClientPresentsItsBoundRecord(t *testing.T) {
 		t.Fatalf("capture slot with no recorded client installed no credential: %v", err)
 	}
 }
+
+// providerCaptureRecordedCustody runs an ordinary launch through its
+// authenticated handoff, leaving the slot with both the durable operation and
+// the credential it installed for that client.
+func providerCaptureRecordedCustody(t *testing.T, fixture *providerRegistrationFixture) connect.Id {
+	t.Helper()
+	stop := errors.New("synthetic recorded-custody handoff")
+	var bound connect.Id
+	if err := fixture.run(t.Context(), true, providerRegistrationHooks{afterAuthenticated: func(_ string, id connect.Id, _ []byte) error {
+		bound = id
+		return stop
+	}}); !errors.Is(err, stop) {
+		t.Fatalf("fixture did not complete a recorded registration: %v", err)
+	}
+	if bound == (connect.Id{}) {
+		t.Fatal("fixture completed without binding a client")
+	}
+	recordPath := filepath.Join(fixture.dir, ".provider.jwt.registration")
+	var record providerRegistrationTestRecord
+	raw, err := os.ReadFile(recordPath)
+	if err != nil || json.Unmarshal(raw, &record) != nil || record.ClientId != bound.String() || record.DeviceId == "" {
+		t.Fatalf("fixture record = %s, want a binding to %v (%v)", raw, bound, err)
+	}
+	if _, err := os.Stat(filepath.Join(fixture.dir, ".provider.jwt")); err != nil {
+		t.Fatalf("fixture left no credential: %v", err)
+	}
+	return bound
+}
+
+// providerCaptureCredentialOnlyCustody leaves a slot with its provider key and
+// one credential, without the durable operation a completed registration keeps.
+func providerCaptureCredentialOnlyCustody(t *testing.T, fixture *providerRegistrationFixture, client connect.Id) {
+	t.Helper()
+	keyOwner, err := clientauth.OpenProviderClientKey(t.Context(), filepath.Join(fixture.dir, ".provider.key"), clientauth.ProviderClientKeyOptions{AllowCreate: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := keyOwner.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := clientauth.WriteToken(filepath.Join(fixture.dir, ".provider.jwt"), providerRegistrationTestToken(t, client.String(), "existing")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// A capture slot that already holds custody for another client refuses at the
+// credential, before the marker or the refresh writes it and before the launch
+// can present it. The refusal names the client the profile recorded, never the
+// one this slot could have presented.
+func TestCaptureSlotHoldingAnotherClientCredentialRefusesBeforeWriting(t *testing.T) {
+	recorded := connect.Id{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xf0, 0x01}
+	profile := &ProviderWorkCaptureProfile{Providers: []ProviderWorkCaptureOwner{{Slot: "direct", ClientId: [16]byte(recorded)}}}
+	heldWithoutRecord := connect.Id{0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60}
+
+	for _, test := range []struct {
+		name    string
+		prepare func(t *testing.T, fixture *providerRegistrationFixture) connect.Id
+	}{
+		{
+			name: "credential and durable record",
+			prepare: func(t *testing.T, fixture *providerRegistrationFixture) connect.Id {
+				return providerCaptureRecordedCustody(t, fixture)
+			},
+		},
+		{
+			name: "credential without durable record",
+			prepare: func(t *testing.T, fixture *providerRegistrationFixture) connect.Id {
+				providerCaptureCredentialOnlyCustody(t, fixture, heldWithoutRecord)
+				return heldWithoutRecord
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fixture := newProviderRegistrationFixture(t)
+			held := test.prepare(t, fixture)
+			if held == recorded {
+				t.Fatalf("fixture held the recorded client %v", held)
+			}
+			credentialPath := filepath.Join(fixture.dir, ".provider.jwt")
+			markerPath := filepath.Join(fixture.dir, ".provider.jwt.registration.existing")
+			credential, err := os.ReadFile(credentialPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			marker, markerErr := os.ReadFile(markerPath)
+			posts, legacy, allocations, refreshes := fixture.counts()
+			_, err = providerCaptureLaunchRegister(t, fixture, providerSlotCreatePermitted(true, false, captureLaunchIdentityRefusal(profile, nil, "direct")), captureLaunchRetainedIdentity(profile, nil, "direct"))
+			var refused *clientauth.RegistrationRefusedError
+			if err == nil || !errors.As(err, &refused) || refused.Code != "retained_client_mismatch" {
+				after, _ := os.ReadFile(credentialPath)
+				afterMarker, _ := os.ReadFile(markerPath)
+				afterPosts, afterLegacy, afterAllocations, afterRefreshes := fixture.counts()
+				t.Fatalf("capture slot holding %v: err = %v, want retained_client_mismatch (credential changed %v, marker changed %v, posts %d->%d, legacy %d->%d, allocations %d->%d, refreshes %d->%d)", held, err, !bytes.Equal(credential, after), !bytes.Equal(marker, afterMarker), posts, afterPosts, legacy, afterLegacy, allocations, afterAllocations, refreshes, afterRefreshes)
+			}
+			if refused.ExpectedClientId != recorded.String() || !strings.Contains(err.Error(), recorded.String()) {
+				t.Fatalf("refusal %q names %q, want the recorded client %s", err, refused.ExpectedClientId, recorded)
+			}
+			if strings.Contains(err.Error(), held.String()) {
+				t.Fatalf("refusal = %q, want the client this slot could not present left out of the requirement", err)
+			}
+			afterPosts, afterLegacy, afterAllocations, afterRefreshes := fixture.counts()
+			if afterPosts != posts || afterLegacy != legacy || afterAllocations != allocations || afterRefreshes != refreshes {
+				t.Fatalf("capture slot reached the registration endpoint (%d->%d posts, %d->%d legacy, %d->%d allocations, %d->%d refreshes)", posts, afterPosts, legacy, afterLegacy, allocations, afterAllocations, refreshes, afterRefreshes)
+			}
+			after, err := os.ReadFile(credentialPath)
+			if err != nil || !bytes.Equal(after, credential) {
+				t.Fatalf("capture slot changed the credential it must not present: %v", err)
+			}
+			afterMarker, afterMarkerErr := os.ReadFile(markerPath)
+			if (markerErr == nil) != (afterMarkerErr == nil) || !bytes.Equal(afterMarker, marker) {
+				t.Fatalf("capture slot created or modified the existing-client marker: %v -> %v", markerErr, afterMarkerErr)
+			}
+		})
+	}
+}
+
+// The same custody is a legitimate capture reuse when the profile recorded the
+// client it belongs to: the refresh path returns that client.
+func TestCaptureSlotHoldingTheRecordedClientCredentialReuses(t *testing.T) {
+	fixture := newProviderRegistrationFixture(t)
+	held := providerCaptureRecordedCustody(t, fixture)
+	profile := &ProviderWorkCaptureProfile{Providers: []ProviderWorkCaptureOwner{{Slot: "direct", ClientId: [16]byte(held)}}}
+	_, _, _, refreshes := fixture.counts()
+	clientId, err := providerCaptureLaunchRegister(t, fixture, providerSlotCreatePermitted(true, false, captureLaunchIdentityRefusal(profile, nil, "direct")), captureLaunchRetainedIdentity(profile, nil, "direct"))
+	if err != nil {
+		t.Fatalf("capture slot holding its recorded client: %v", err)
+	}
+	if clientId != held {
+		t.Fatalf("capture launch presented %v, want the recorded %v", clientId, held)
+	}
+	_, _, _, afterRefreshes := fixture.counts()
+	if afterRefreshes <= refreshes || fixture.refreshedClients()[held.String()] < 1 {
+		t.Fatalf("capture launch did not reuse the credential through its refresh path: refreshes %d -> %d, clients %v", refreshes, afterRefreshes, fixture.refreshedClients())
+	}
+	for client := range fixture.refreshedClients() {
+		if client != held.String() {
+			t.Fatalf("capture launch refreshed %s, want only the recorded %s", client, held)
+		}
+	}
+}
+
+// A caller that recorded no client asserts no expectation: the marker write and
+// the refresh proceed and the credential's own client comes back.
+func TestCaptureSlotWithoutRecordedClientReusesTheCredential(t *testing.T) {
+	held := connect.Id{0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60}
+	fixture := newProviderRegistrationFixture(t)
+	providerCaptureCredentialOnlyCustody(t, fixture, held)
+	markerPath := filepath.Join(fixture.dir, ".provider.jwt.registration.existing")
+	if _, err := os.Stat(markerPath); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("fixture started with an existing-client marker: %v", err)
+	}
+	clientId, err := providerCaptureLaunchRegister(t, fixture, false, &clientauth.RetainedClientIdentity{})
+	if err != nil {
+		t.Fatalf("capture slot with no recorded client: %v", err)
+	}
+	if clientId != held {
+		t.Fatalf("capture slot with no recorded client presented %v, want %v", clientId, held)
+	}
+	if _, err := os.Stat(markerPath); err != nil {
+		t.Fatalf("capture slot with no recorded client did not observe existing custody: %v", err)
+	}
+}

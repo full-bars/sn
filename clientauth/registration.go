@@ -71,6 +71,16 @@ type RetainedClientIdentity struct {
 	ClientId connect.Id
 }
 
+// retainedClientRefusal refuses custody that names a client other than the one
+// this caller recorded, before a marker write or refresh can present it. A zero
+// recorded client asserts no expectation, so the slot's own identity is used.
+func retainedClientRefusal(retained *RetainedClientIdentity, clientId string) *RegistrationRefusedError {
+	if retained == nil || retained.ClientId == (connect.Id{}) || clientId == retained.ClientId.String() {
+		return nil
+	}
+	return &RegistrationRefusedError{Code: "retained_client_mismatch", ExpectedClientId: retained.ClientId.String()}
+}
+
 // A retained token is custody, not evidence that a currently unreachable API
 // still authorizes it. Native recovery remains independent of this readiness.
 type RegistrationRefreshUnavailableError struct{ cause error }
@@ -319,10 +329,21 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 			if err := validateRegistrationCredential(record, token, record.ClientId, record.DeviceId); err != nil {
 				return "", connect.Id{}, err
 			}
+			// The credential and its record agree with each other, but a caller
+			// that recorded another client must not refresh or present them.
+			if refused := retainedClientRefusal(retained, record.ClientId); refused != nil {
+				return "", connect.Id{}, refused
+			}
 		} else {
 			identity, err := registrationIdentity(token)
 			if err != nil || !validRegistrationIdentityId(identity.clientId) || !validRegistrationIdentityId(identity.deviceId) {
 				return "", connect.Id{}, errors.New("existing client custody has invalid identity")
+			}
+			// Refuse before the marker write and the refresh: either would
+			// otherwise adopt and present an identity this caller never
+			// recorded.
+			if refused := retainedClientRefusal(retained, identity.clientId); refused != nil {
+				return "", connect.Id{}, refused
 			}
 			// Observing existing custody consumes no creation authority. Its
 			// stable marker survives token loss and excludes bearer timestamps.
