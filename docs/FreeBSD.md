@@ -9,10 +9,10 @@ The provider runs as an `rc.d` service named `urnetwork` under an unprivileged u
 
 ## Before you start
 
-The base system has no `jq`, no `python3` and no `curl`. The first two are optional: the release tag is read with `jq`, then `python3`, then a `sed` extraction that needs only the base system, and `jq` is what lets the installer verify the Go `urnet-tools` asset (see [What the installer does](#what-the-installer-does)). `curl` is not optional, because the installer downloads the release with `curl`: `fetch` can retrieve the script itself, but it cannot replace `curl` inside it. Install `curl`, `sudo` and, recommended, `jq`:
+The base system has no `jq`, no `python3` and no `curl`, and the installer needs none of them. Downloads use `curl` when it is installed, then `fetch` from the base system, then `wget`, so a clean FreeBSD host installs with nothing extra. `jq` and `python3` only change how the release tag is read and whether the Go `urnet-tools` asset can be checksum-verified (see [What the installer does](#what-the-installer-does)). Install `sudo` and, recommended, `jq`:
 
 ```sh
-pkg install -y curl sudo jq
+pkg install -y sudo jq
 ```
 
 Run the installer as the account the provider should run as, with `sudo`, or as root with an explicit account (see [Service user](#service-user)).

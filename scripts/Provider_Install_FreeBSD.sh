@@ -56,6 +56,54 @@ pr_warn() {
     printf "%s: $fmt\n" "$me" "$@" >&2
 }
 
+# http_fetch <url> [output-file]
+#
+# One downloader for every fetch the installer makes. FreeBSD ships fetch(1) in
+# the base system and curl only as a package, so requiring curl meant a clean
+# host could not install at all - and the fix is not to document a package, it
+# is to use what the base system has. curl first when it is installed, then
+# fetch, then wget.
+#
+# Failure semantics are preserved rather than approximated: curl -f and fetch
+# both exit nonzero on an HTTP error status, so a caller that treats a nonzero
+# status as "no such asset" keeps working. libfetch sends every status other
+# than 200/206/304, a redirect or an auth challenge to its error path
+# (libfetch/http.c, the default case around the response switch), which is what
+# makes fetch a faithful stand-in for curl -f and not just for curl.
+#
+# Writes to stdout when no output file is given, which is what the JSON and tag
+# reads need.
+http_fetch() {
+    _url="$1"
+    _out="${2:-}"
+    if command -v curl >/dev/null 2>&1; then
+        if [ -n "$_out" ]; then
+            curl -fsSL "$_url" -o "$_out"
+        else
+            curl -fsSL "$_url"
+        fi
+        return $?
+    fi
+    if command -v fetch >/dev/null 2>&1; then
+        if [ -n "$_out" ]; then
+            fetch -q -o "$_out" "$_url"
+        else
+            fetch -q -o - "$_url"
+        fi
+        return $?
+    fi
+    if command -v wget >/dev/null 2>&1; then
+        if [ -n "$_out" ]; then
+            wget -q -O "$_out" "$_url"
+        else
+            wget -q -O - "$_url"
+        fi
+        return $?
+    fi
+    pr_err "no downloader found: need curl, fetch or wget on PATH"
+    return 1
+}
+
 # --- service account resolution ---
 #
 # resolve_service_user prints the account the provider must run as. Order:
@@ -189,7 +237,7 @@ set_rc_conf_default() {
 # place (ETXTBSY would otherwise break `update` while the tool is executing).
 install_wrapper_tool() {
     _td="$1"
-    curl -fsSL "$github_raw/scripts/Provider_Install_FreeBSD.sh" -o "$_td/urnet-tools.wrapper" 2>/dev/null || return 1
+    http_fetch "$github_raw/scripts/Provider_Install_FreeBSD.sh" "$_td/urnet-tools.wrapper" 2>/dev/null || return 1
     chmod 755 "$_td/urnet-tools.wrapper"
     priv mv -f "$_td/urnet-tools.wrapper" "$install_path/bin/urnet-tools"
     # mv keeps the invoker's ownership when the temp dir is on the same
@@ -416,7 +464,7 @@ do_install() {
     fi
 
     pr_info "Fetching release info..."
-    release_json="$(curl -fsSL "$release_url" 2>/dev/null)"
+    release_json="$(http_fetch "$release_url" 2>/dev/null)"
     # python3 is not part of the FreeBSD base system, so parsing with it alone
     # made a default `latest` install fail on a clean host. jq first, then
     # python3, then a sed extraction that needs nothing beyond base.
@@ -460,7 +508,7 @@ do_install() {
     pr_info "Downloading %s..." "$tarball_url"
 
     tmpdir="$(mktemp -d)"
-    if ! curl -fsSL "$tarball_url" -o "$tmpdir/provider.tar.gz"; then
+    if ! http_fetch "$tarball_url" "$tmpdir/provider.tar.gz"; then
         pr_err "Failed to download %s" "$tarball_url"
         rm -rf "$tmpdir"
         exit 1
@@ -521,7 +569,7 @@ do_install() {
     # Select the asset first and require a real hex digest, so an unknown
     # digest means "cannot verify" and takes the same deliberate path.
     tool_digest=""
-    release_json="$(curl -fsSL "$github_api/releases/tags/$tag" 2>/dev/null)"
+    release_json="$(http_fetch "$github_api/releases/tags/$tag" 2>/dev/null)"
     if command -v jq > /dev/null 2>&1; then
         tool_digest="$(printf '%s' "$release_json" | jq -r --arg a "$tool_asset" '
             (.assets[]? | select(.name == $a) | .digest)
@@ -547,7 +595,7 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
     fi
 
     if [ -n "$tool_digest" ]; then
-        if curl -fsSL "https://github.com/full-bars/sn/releases/download/$tag/$tool_asset" -o "$tmpdir/$tool_asset" 2>/dev/null; then
+        if http_fetch "https://github.com/full-bars/sn/releases/download/$tag/$tool_asset" "$tmpdir/$tool_asset" 2>/dev/null; then
             # FreeBSD ships sha256(1); fall back to openssl where it is absent.
             if command -v sha256 > /dev/null 2>&1; then
                 actual="$(sha256 -q "$tmpdir/$tool_asset")"
@@ -558,7 +606,7 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
             fi
             if [ -n "$actual" ] && [ "$actual" = "$tool_digest" ]; then
                 priv mv -f "$tmpdir/$tool_asset" "$install_path/bin/urnet-tools"
-                # curl downloaded the asset as the INVOKING user, and mv is a
+                # the download ran as the INVOKING user, and mv is a
                 # rename (owner preserved) whenever $tmpdir shares the
                 # filesystem, so the owner has to be set here rather than
                 # inherited. The tool is run by root — `sudo urnet-tools
