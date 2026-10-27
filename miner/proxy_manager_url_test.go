@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -65,7 +66,17 @@ func captureTlog(t *testing.T, fn func()) string {
 	proxyManagerLogWriter = &buf
 	defer func() { proxyManagerLogWriter = prev }()
 	fn()
-	return buf.String()
+	// tlog stamps every line; a caller asserting the message should not have to
+	// carry the clock in its expectation.
+	return stripTlogStamp(buf.String())
+}
+
+// stripTlogStamp removes the stamp tlog prepends to every line, leaving the
+// message the callers assert on.
+var tlogStampPrefix = regexp.MustCompile(`(?m)^I\d{4} \d\d:\d\d:\d\d\.\d{6} `)
+
+func stripTlogStamp(line string) string {
+	return tlogStampPrefix.ReplaceAllString(line, "")
 }
 
 // allowLoopbackForTest lets the SSRF guard reach httptest servers, restoring

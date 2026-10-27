@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/urnetwork/connect"
 )
@@ -28,9 +29,44 @@ import (
 // tests can capture them; P2 can point it at the diagnostics output.
 var proxyManagerLogWriter io.Writer = os.Stderr
 
-// tlog writes a detail line of the proxy pipeline.
+// tabLogClock is the timestamp source for tab-style lines, in the same
+// month-day and millisecond shape glog prints, so the two streams can be
+// ordered against each other by eye or by sort. A variable so tests can pin it.
+var tabLogClock = time.Now
+
+// tlog writes a detail line of the proxy pipeline. The timestamp is part of
+// the line, not of a wrapper: these lines used to be the only ones in the
+// stream without one, which made a failure impossible to place relative to the
+// glog lines around it.
 func tlog(format string, args ...any) {
-	fmt.Fprintf(proxyManagerLogWriter, format, args...)
+	stamp := "I" + tabLogClock().Format("0102 15:04:05.000000")
+	message := fmt.Sprintf(format, args...)
+	// Every line gets the stamp, not just the first: a multi-line message would
+	// otherwise leave its continuation lines unattributable. The I prefix and
+	// the six fractional digits match glog's own lines, so a plain sort of the
+	// mixed stream keeps them in order instead of grouping all tab lines apart.
+	var b strings.Builder
+	if message != "" {
+		// A trailing newline is a terminator, not an extra empty line: stamping
+		// that segment would emit a bare stamp with no message after it.
+		lines := strings.Split(message, "\n")
+		terminated := strings.HasSuffix(message, "\n")
+		if terminated {
+			lines = lines[:len(lines)-1]
+		}
+		for index, line := range lines {
+			if index > 0 {
+				b.WriteString("\n")
+			}
+			b.WriteString(stamp)
+			b.WriteString(" ")
+			b.WriteString(line)
+		}
+		if terminated {
+			b.WriteString("\n")
+		}
+	}
+	fmt.Fprint(proxyManagerLogWriter, b.String())
 }
 
 // urlCycleStats is what one URL fetch cycle did to the pool.
