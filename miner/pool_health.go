@@ -209,8 +209,20 @@ func readProxyPoolComposition() proxyPoolComposition {
 	return proxyPoolComposition{
 		Counts:   countProxyPoolMembers(members),
 		StateErr: stateErr,
-		Target:   resolveProxyURLMax(0),
+		Target:   proxyPoolTarget(),
 	}
+}
+
+// proxyPoolTarget is the number of proxies the pool actually intends to serve.
+// proxy_url_max alone is only the ceiling: the AIMD operating point the URL
+// source settles on, and any memory ceiling, usually sit well below it, so a
+// host running 50 against a cap of 500 would be judged against 500 and look
+// broken. Prefer the operating point, then the ceiling, then unknown.
+func proxyPoolTarget() int {
+	if state, err := readProxyURLState(); err == nil && state != nil && state.TargetPoolSize > 0 {
+		return state.TargetPoolSize
+	}
+	return resolveProxyURLMax(0)
 }
 
 // proxyPoolSample is one tick's cross-section. The ring holds these rather than
