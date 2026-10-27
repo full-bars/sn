@@ -184,8 +184,11 @@ func TestProviderExtenderStatusLine(t *testing.T) {
 			expect: providerExtenderObservation{Known: true, Enabled: true, Listening: true, ListenFailed: true, ActivatedV4: true, ActivatedV6: true, ActivationFailed: true},
 		},
 	}
+	// Each listener records an activation refusal in the provider store, so the
+	// test needs its own state directory rather than the operator's.
+	testExtenderState(t)
 	for _, c := range cases {
-		listener := newProviderExtenderStatusListener(nil, 0)
+		listener := newProviderExtenderStatusListener(nil, 0, connect.Id{})
 		listener.ExtenderProvideStatusChanged(c.status)
 		if listener.last != c.expect {
 			t.Errorf("scalar observation = %+v, expected %+v", listener.last, c.expect)

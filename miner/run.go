@@ -1458,13 +1458,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 
 	// The operator budgets activation posts per client per hour, and one pass
 	// posts once per family, so a start asks the persisted budget before it runs
-	// the extender role. A held start still provides; it just does not listen or
-	// activate, and the line says when the role comes back.
+	// the extender role. The client is the identity the direct slot provides
+	// under, because that is the unit the server enforces. A held start still
+	// provides; it just does not listen or activate, and the line says when the
+	// role comes back.
 	extenderAllowed := true
 	if _, directPresent := directSlotIndex(providers); directPresent && isDirectEnabled() {
 		var extenderWait time.Duration
 		var extenderUsed int
-		extenderAllowed, extenderWait, extenderUsed = extenderActivationAllow(time.Now(), hostActivationPosts())
+		extenderAllowed, extenderWait, extenderUsed = extenderActivationAllow(time.Now(), hostActivationPosts(), extenderActivationClientId())
 		if !extenderAllowed {
 			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
 				extenderUsed, extenderActivationBudget, formatDuration(extenderWait))
@@ -1874,7 +1876,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// one line per change, so the activation prints once it settles and
 		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
 		extenderStatusSub := device.AddExtenderProvideStatusChangeListener(
-			newProviderExtenderStatusListener(output, index))
+			newProviderExtenderStatusListener(output, index, clientId))
 		defer extenderStatusSub.Close()
 
 		select {

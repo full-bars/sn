@@ -139,11 +139,14 @@ type providerExtenderStatusListener struct {
 	last        providerExtenderObservation
 	diagnostics *providerDiagnostics
 	provider    uint64
+	// clientId is the identity this slot provides under, which is the client
+	// whose activation budget a refusal or an activation is recorded against.
+	clientId string
 }
 
 // The provider borrows its enclosing run's explicitly supplied output budget.
-func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64) *providerExtenderStatusListener {
-	return &providerExtenderStatusListener{diagnostics: output, provider: provider}
+func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, clientId connect.Id) *providerExtenderStatusListener {
+	return &providerExtenderStatusListener{diagnostics: output, provider: provider, clientId: clientId.String()}
 }
 
 // A nil observation is unknown, separate from a known disabled extender.
@@ -169,9 +172,9 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		if observation.Known && observation.Enabled {
 			switch {
 			case observation.ActivatedV4 || observation.ActivatedV6:
-				recordExtenderActivationSucceeded()
+				recordExtenderActivationSucceeded(self.clientId)
 			case observation.ActivationFailed:
-				if wait := recordExtenderActivationRefused(time.Now()); 0 < wait {
+				if wait := recordExtenderActivationRefused(time.Now(), self.clientId); 0 < wait {
 					tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
 				}
 			}
