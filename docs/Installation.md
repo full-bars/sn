@@ -41,7 +41,7 @@ urnet-tools proxy refresh
 ## 🧭 Other Platforms (Quick install)
 
 - **Alpine Linux (OpenRC):** the same install command, run from a root shell, installs a system service under `supervise-daemon`. See the [Alpine Linux (OpenRC) guide](https://github.com/full-bars/sn/wiki/OpenRC).
-- **FreeBSD:** installs an `rc.d` service from the FreeBSD installer script. `fetch` is in the base system on standard 13/14 installs, `sudo` is not, so either `pkg install -y sudo` or run the commands from a root shell (`su -`): `fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh && sudo sh urnet-install.sh install`. See the [FreeBSD guide](https://github.com/full-bars/sn/wiki/FreeBSD).
+- **FreeBSD:** installs an `rc.d` service from the FreeBSD installer script. On standard 13/14 installs `fetch` is in the base system and `sudo` is not, so run both commands from a root shell (`su -`), where no `sudo` is needed: `fetch -qo urnet-install.sh https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_FreeBSD.sh && sh urnet-install.sh install`. As a normal user, install `sudo` first (`pkg install -y sudo`) and prefix the second command with it. See the [FreeBSD guide](https://github.com/full-bars/sn/wiki/FreeBSD).
 
 ## 🍎 macOS Installation
 
