@@ -638,14 +638,14 @@ func TestProxyPoolTargetFollowsAdmission(t *testing.T) {
 	// Self-heal on: admission caps at the learned operating point, so that is
 	// the number the pool intends to serve.
 	writeMarker("on")
-	if got := proxyPoolTarget(); got != 50 {
+	if got := proxyPoolTarget(0, 10); got != 50 {
 		t.Fatalf("self-heal on: target = %d, want the learned 50", got)
 	}
 
 	// Self-heal off: admission is back at the configured ceiling, and the
 	// persisted 50 is state nothing runs to.
 	writeMarker("off")
-	if got := proxyPoolTarget(); got != 500 {
+	if got := proxyPoolTarget(0, 10); got != 500 {
 		t.Fatalf("self-heal off: target = %d, want the ceiling 500", got)
 	}
 
@@ -654,7 +654,84 @@ func TestProxyPoolTargetFollowsAdmission(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeMarker("on")
-	if got := proxyPoolTarget(); got != 500 {
+	if got := proxyPoolTarget(0, 10); got != 500 {
 		t.Fatalf("no learned target: target = %d, want the ceiling 500", got)
+	}
+}
+
+// The target is what admission runs to, and admission runs the curated list
+// plus the URL cap. Judged against the URL cap alone, sixty curated members
+// paid for fifty dead URL members and the pool read healthy.
+func TestProxyPoolTargetCountsCuratedMembers(t *testing.T) {
+	home := withTempHome(t)
+	resetGlobalControlStateForTest()
+	t.Cleanup(resetGlobalControlStateForTest)
+
+	// The URL half is capped at 50 and self-heal is off, so the configured
+	// ceiling is what admission runs to.
+	override, err := proxyURLMaxOverridePath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(override, []byte("50"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(home, "proxy_self_heal"), []byte("off"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	state, err := readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	state.Proxies = map[string]ProxyEntry{}
+	for i := 0; i < 60; i++ {
+		state.Proxies[fmt.Sprintf("10.1.0.%d:1080", i)] = ProxyEntry{ID: i, Health: "up", Source: "file"}
+	}
+	for i := 0; i < 50; i++ {
+		state.Proxies[fmt.Sprintf("10.2.0.%d:1080", i)] = ProxyEntry{ID: 100 + i, Health: "dead", Source: proxyPoolURLSource}
+	}
+	if err := writeProxyState(state); err != nil {
+		t.Fatal(err)
+	}
+
+	comp := readProxyPoolComposition()
+	if comp.Target != 110 {
+		t.Fatalf("target = %d for 60 curated members and a 50 URL cap, want 110", comp.Target)
+	}
+	r := proxyPoolHealth(time.Now(), comp)
+	if r.Verdict != poolVerdictNeedsAttention {
+		t.Fatalf("verdict = %q with 60 of 110 wanted up and 50 dead, want %q", r.Verdict, poolVerdictNeedsAttention)
+	}
+	if line := proxyPoolHealthLine(r); !strings.Contains(line, "target=110") {
+		t.Fatalf("line does not carry the combined target: %s", line)
+	}
+
+	// The trim cap is the last word on how many proxies the run launches, so a
+	// trimmed pool is judged against the cap, not against the count it
+	// deliberately holds back.
+	trim, err := proxyTrimPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(trim, []byte("40"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if got := readProxyPoolComposition().Target; got != 40 {
+		t.Fatalf("trimmed target = %d, want the 40 the trim launches", got)
+	}
+
+	// A curated-only pool has no URL half, so the URL cap is not a target it
+	// can miss.
+	for key, entry := range state.Proxies {
+		if entry.Source == proxyPoolURLSource {
+			delete(state.Proxies, key)
+		}
+	}
+	if err := writeProxyState(state); err != nil {
+		t.Fatal(err)
+	}
+	if got := readProxyPoolComposition().Target; got != 0 {
+		t.Fatalf("curated-only target = %d, want unknown (0): the URL cap describes a half this host does not run", got)
 	}
 }

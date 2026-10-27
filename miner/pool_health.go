@@ -148,11 +148,16 @@ func countProxyPoolMembers(members map[string]string) proxyPoolMemberCounts {
 	return counts
 }
 
-// proxyPoolMembers returns each member's bucket keyed by identity. This is the
-// same composition snapshotProxyCounts counts: proxy.state is the member list and
-// the live registry overrides its health, because a signal observed in this
-// process is fresher than the file (the precedence seedLiveProxyHealthFromState
-// uses).
+// proxyPoolURLSource is the ProxyEntry.Source tag admission gives a member the
+// URL sources contributed (proxy_manager_state.go). Members tagged "file" or
+// "internal" are the operator's curated half.
+const proxyPoolURLSource = "url"
+
+// proxyPoolMembers returns each member's bucket keyed by identity, and how many
+// of those identities came from the URL sources. This is the same composition
+// snapshotProxyCounts counts: proxy.state is the member list and the live
+// registry overrides its health, because a signal observed in this process is
+// fresher than the file (the precedence seedLiveProxyHealthFromState uses).
 //
 // It deliberately takes no extra identities from the registry. The registry can
 // still hold an entry for an identity the state no longer lists, and admitting
@@ -163,9 +168,11 @@ func countProxyPoolMembers(members map[string]string) proxyPoolMemberCounts {
 // error the live registry is used alone, because a process that cannot read its
 // own state file is better off reporting what it has observed than reporting an
 // empty pool; the reading carries the error so the line can say the composition
-// may be missing members.
-func proxyPoolMembers() (map[string]string, string) {
+// may be missing members. The URL count is 0 then: the registry does not carry
+// provenance, and a guess would be a share of the pool the target cannot use.
+func proxyPoolMembers() (map[string]string, int, string) {
 	members := map[string]string{}
+	urlMembers := 0
 	live := liveProxyHealthByKey()
 	state, err := readProxyState()
 	if err != nil {
@@ -175,7 +182,7 @@ func proxyPoolMembers() (map[string]string, string) {
 			}
 			members[key] = proxyPoolMemberBucket(status.Health)
 		}
-		return members, err.Error()
+		return members, 0, err.Error()
 	}
 	for key, entry := range state.Proxies {
 		health := entry.Health
@@ -183,8 +190,11 @@ func proxyPoolMembers() (map[string]string, string) {
 			health = status.Health
 		}
 		members[key] = proxyPoolMemberBucket(health)
+		if entry.Source == proxyPoolURLSource {
+			urlMembers++
+		}
 	}
-	return members, ""
+	return members, urlMembers, ""
 }
 
 // proxyPoolComposition is one read of the pool's member list: proxy.state with
@@ -196,7 +206,8 @@ func proxyPoolMembers() (map[string]string, string) {
 type proxyPoolComposition struct {
 	Counts   proxyPoolMemberCounts
 	StateErr string
-	// Target is the pool size the operator asked for (proxy_url_max). Members
+	// Target is the pool size the pool runs to: the curated members plus the
+	// URL-source admission cap, then the trim cap over the total. Members
 	// above it are surplus the trim never intends to serve, so the verdict
 	// judges the pool against Target rather than against every member it can
 	// see. Zero means unknown, and the verdict falls back to Members.
@@ -206,25 +217,48 @@ type proxyPoolComposition struct {
 // readProxyPoolComposition performs the single proxy.state read a caller needs
 // for both the composition and the aggregate.
 func readProxyPoolComposition() proxyPoolComposition {
-	members, stateErr := proxyPoolMembers()
-	return proxyPoolComposition{
+	members, urlMembers, stateErr := proxyPoolMembers()
+	comp := proxyPoolComposition{
 		Counts:   countProxyPoolMembers(members),
 		StateErr: stateErr,
-		Target:   proxyPoolTarget(),
 	}
+	// A pool whose composition could not be read cannot say how many members
+	// are curated, so it has no target to judge against; the reading says so
+	// through StateError instead of inventing one.
+	if stateErr == "" {
+		comp.Target = proxyPoolTarget(len(members)-urlMembers, urlMembers)
+	}
+	return comp
 }
 
-// proxyPoolTarget is the number of proxies the pool actually intends to serve.
-// It is not proxy_url_max: the AIMD operating point the URL source settles on,
-// and any memory ceiling, usually sit well below it, so a host running 50
-// against a cap of 500 would be judged against 500 and look broken. It is not
-// proxy_url.json's TargetPoolSize read raw either: the pool only runs to that
-// while self-heal is on, and admission restores the configured ceiling the
-// moment it is off, so a target an earlier run left behind is state nothing
-// runs to. Ask the same resolver admission uses, then fall back to the ceiling
-// and to unknown.
-func proxyPoolTarget() int {
-	return resolveEffectiveProxyURLMax(0, os.Getenv("URNETWORK_SELF_HEAL") == "1")
+// proxyPoolTarget is the number of proxies the pool actually intends to serve:
+// the operator-curated half plus the URL-source admission cap, then the trim
+// cap over the total. It is not proxy_url_max, which is only the URL half's
+// ceiling: judging every up member against it credits curated members to the
+// URL budget, so a host with 60 curated proxies and 50 dead URL members read
+// healthy. Nor is it proxy_url.json's TargetPoolSize read raw: the pool only
+// runs to that while self-heal is on, and admission restores the configured
+// ceiling the moment it is off, so a target an earlier run left behind is state
+// nothing runs to. Ask the same resolvers admission uses.
+//
+// Zero means unknown, and the verdict falls back to the members it can see.
+// That covers a curated-only pool (no URL half to cap) and a URL pool with no
+// cap set: adding a cap there would invent a shortfall nothing asked to fill.
+func proxyPoolTarget(curated, urlMembers int) int {
+	if urlMembers == 0 {
+		return 0
+	}
+	urlMax := resolveEffectiveProxyURLMax(0, os.Getenv("URNETWORK_SELF_HEAL") == "1")
+	if urlMax <= 0 {
+		return 0
+	}
+	target := curated + urlMax
+	if trimCap, _, err := effectiveTrimCapSource(); err == nil && trimCap > 0 && target > trimCap {
+		// Admission launches the trim cap's worth and holds the rest, so the
+		// held members are a decision already taken rather than a shortfall.
+		target = trimCap
+	}
+	return target
 }
 
 // proxyPoolSample is one tick's cross-section. The ring holds these rather than
