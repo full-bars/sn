@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -219,5 +220,130 @@ func TestCaptureSlotWithUnboundRegistrationRecordSubmitsNothing(t *testing.T) {
 	raw, err = os.ReadFile(recordPath)
 	if err != nil || json.Unmarshal(raw, &record) != nil || record.ClientId != "" || record.DeviceId != "" {
 		t.Fatalf("capture slot changed the retained operation: %s (%v)", raw, err)
+	}
+}
+
+// providerCaptureBoundCustody runs a launch that is not a capture and stops it
+// after its authenticated handoff, then removes the credential. What remains is
+// a durable operation the server bound to a client, with nothing on disk that
+// can present that client: the custody a capture launch has to resume rather
+// than replace.
+func providerCaptureBoundCustody(t *testing.T, fixture *providerRegistrationFixture) connect.Id {
+	t.Helper()
+	stop := errors.New("synthetic bound-custody handoff")
+	var bound connect.Id
+	if err := fixture.run(t.Context(), true, providerRegistrationHooks{afterAuthenticated: func(_ string, id connect.Id, _ []byte) error {
+		bound = id
+		return stop
+	}}); !errors.Is(err, stop) {
+		t.Fatalf("fixture did not complete a bound registration: %v", err)
+	}
+	if bound == (connect.Id{}) {
+		t.Fatal("fixture completed without binding a client")
+	}
+	recordPath := filepath.Join(fixture.dir, ".provider.jwt.registration")
+	var record providerRegistrationTestRecord
+	raw, err := os.ReadFile(recordPath)
+	if err != nil || json.Unmarshal(raw, &record) != nil || record.ClientId != bound.String() || record.DeviceId == "" {
+		t.Fatalf("fixture record = %s, want a binding to %v (%v)", raw, bound, err)
+	}
+	if err := os.Remove(filepath.Join(fixture.dir, ".provider.jwt")); err != nil {
+		t.Fatal(err)
+	}
+	return bound
+}
+
+// A durable operation bound to one client is custody for that client. A capture
+// launch whose profile recorded a different one must not submit it: the server
+// would complete the operation and the launch would write the other client's
+// credential, which the device layer only notices after the write. The refusal
+// happens before the request and names the client the profile recorded.
+func TestCaptureSlotWithRegistrationRecordBoundToAnotherClientSubmitsNothing(t *testing.T) {
+	recorded := connect.Id{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xf0, 0x01}
+	profile := &ProviderWorkCaptureProfile{Providers: []ProviderWorkCaptureOwner{{Slot: "direct", ClientId: [16]byte(recorded)}}}
+
+	fixture := newProviderRegistrationFixture(t)
+	bound := providerCaptureBoundCustody(t, fixture)
+	if bound == recorded {
+		t.Fatalf("fixture bound the client the profile records (%v)", bound)
+	}
+	recordPath := filepath.Join(fixture.dir, ".provider.jwt.registration")
+	before, err := os.ReadFile(recordPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	posts, legacy, allocations, _ := fixture.counts()
+	_, err = providerCaptureLaunchRegister(t, fixture, providerSlotCreatePermitted(true, false, captureLaunchIdentityRefusal(profile, nil, "direct")), captureLaunchRetainedIdentity(profile, nil, "direct"))
+	var refused *clientauth.RegistrationRefusedError
+	if err == nil || !errors.As(err, &refused) || refused.Code != "retained_client_mismatch" {
+		t.Fatalf("capture slot bound to %v: err = %v, want the retained-client mismatch refusal", bound, err)
+	}
+	if refused.ExpectedClientId != recorded.String() || !strings.Contains(err.Error(), recorded.String()) {
+		t.Fatalf("refusal %q names %q, want the recorded client %s", err, refused.ExpectedClientId, recorded)
+	}
+	if strings.Contains(err.Error(), bound.String()) {
+		t.Fatalf("refusal = %q, want the client this slot could not present left out of the requirement", err)
+	}
+	afterPosts, afterLegacy, afterAllocations, _ := fixture.counts()
+	if afterPosts != posts || afterLegacy != legacy || afterAllocations != allocations {
+		t.Fatalf("capture slot reached the registration endpoint (%d -> %d posts, %d -> %d allocations)", posts, afterPosts, allocations, afterAllocations)
+	}
+	if _, err := os.Stat(filepath.Join(fixture.dir, ".provider.jwt")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("capture slot wrote a credential: %v", err)
+	}
+	after, err := os.ReadFile(recordPath)
+	if err != nil || !bytes.Equal(after, before) {
+		t.Fatalf("capture slot changed the retained operation: %s (%v)", after, err)
+	}
+}
+
+// The same bound custody is a legitimate capture resume when the profile
+// recorded the client the operation is bound to: the launch replays that
+// operation and installs the credential the server already bound to it.
+func TestCaptureSlotWithRegistrationRecordBoundToTheRecordedClientResumes(t *testing.T) {
+	fixture := newProviderRegistrationFixture(t)
+	bound := providerCaptureBoundCustody(t, fixture)
+	profile := &ProviderWorkCaptureProfile{Providers: []ProviderWorkCaptureOwner{{Slot: "direct", ClientId: [16]byte(bound)}}}
+	recordPath := filepath.Join(fixture.dir, ".provider.jwt.registration")
+	before, err := os.ReadFile(recordPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	posts, legacy, allocations, _ := fixture.counts()
+	clientId, err := providerCaptureLaunchRegister(t, fixture, providerSlotCreatePermitted(true, false, captureLaunchIdentityRefusal(profile, nil, "direct")), captureLaunchRetainedIdentity(profile, nil, "direct"))
+	if err != nil {
+		t.Fatalf("capture slot matching its bound record: %v", err)
+	}
+	if clientId != bound {
+		t.Fatalf("capture resume presented %v, want the bound %v", clientId, bound)
+	}
+	afterPosts, afterLegacy, afterAllocations, _ := fixture.counts()
+	if afterPosts <= posts || afterLegacy != legacy || afterAllocations != allocations {
+		t.Fatalf("capture resume did not replay its retained operation (%d -> %d posts, %d -> %d allocations)", posts, afterPosts, allocations, afterAllocations)
+	}
+	if _, err := os.Stat(filepath.Join(fixture.dir, ".provider.jwt")); err != nil {
+		t.Fatalf("capture resume did not install the bound credential: %v", err)
+	}
+	after, err := os.ReadFile(recordPath)
+	if err != nil || !bytes.Equal(after, before) {
+		t.Fatalf("capture resume changed the retained operation: %s (%v)", after, err)
+	}
+}
+
+// A caller that recorded no client for the slot asserts no expectation, so a
+// bound operation is presented as this slot's own identity rather than refused
+// for differing from nothing.
+func TestCaptureSlotWithoutRecordedClientPresentsItsBoundRecord(t *testing.T) {
+	fixture := newProviderRegistrationFixture(t)
+	bound := providerCaptureBoundCustody(t, fixture)
+	clientId, err := providerCaptureLaunchRegister(t, fixture, false, &clientauth.RetainedClientIdentity{})
+	if err != nil {
+		t.Fatalf("capture slot with no recorded client: %v", err)
+	}
+	if clientId != bound {
+		t.Fatalf("capture slot with no recorded client presented %v, want the bound %v", clientId, bound)
+	}
+	if _, err := os.Stat(filepath.Join(fixture.dir, ".provider.jwt")); err != nil {
+		t.Fatalf("capture slot with no recorded client installed no credential: %v", err)
 	}
 }

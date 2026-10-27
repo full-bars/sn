@@ -60,11 +60,13 @@ func (self *RegistrationRefusedError) Error() string {
 
 // RetainedClientIdentity is a caller's demand that this attempt present one
 // client it recorded elsewhere, such as a capture launch's profile. Such a
-// caller has no creation authority, and a durable operation that has not bound
-// a client yet would submit as a new allocation, replacing the custody the
-// caller must present. The attempt refuses that operation before its request
-// and names the required client. A zero ClientId refuses the same operations
-// for a caller that recorded no identity for the slot.
+// caller has no creation authority, and a durable operation it did not record
+// would end in custody the caller must not receive: one with no bound client
+// would submit as a new allocation, and one bound to another client would
+// complete as that other client. The attempt refuses both before its request
+// and names the required client. A zero ClientId is no expectation: it refuses
+// only an operation that has bound nothing, and otherwise presents the client
+// this slot already owns.
 type RetainedClientIdentity struct {
 	ClientId connect.Id
 }
@@ -353,16 +355,25 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 		return "", connect.Id{}, err
 	}
 	// A caller that must present one recorded client has no creation authority
-	// at all, and a durable operation with no bound client is a creation
-	// waiting to be submitted: the server would allocate for it and this
-	// custody would hold an identity the caller never asked for. Refuse it
-	// before the request and name the client that was required.
-	if retained != nil && record != nil && record.ClientId == "" {
-		refused := &RegistrationRefusedError{Code: "retained_client_unbound"}
-		if retained.ClientId != (connect.Id{}) {
-			refused.ExpectedClientId = retained.ClientId.String()
+	// at all, and a durable operation it did not record is a creation waiting
+	// to be submitted: an operation with no bound client would allocate a new
+	// one, and an operation bound to another client would complete as custody
+	// this caller must never receive. Refuse both before the request and name
+	// the client that was required. A caller with no recorded client asserts no
+	// expectation, so it presents whatever identity this slot already owns.
+	if retained != nil && record != nil {
+		var refused *RegistrationRefusedError
+		if record.ClientId == "" {
+			refused = &RegistrationRefusedError{Code: "retained_client_unbound"}
+		} else if retained.ClientId != (connect.Id{}) && record.ClientId != retained.ClientId.String() {
+			refused = &RegistrationRefusedError{Code: "retained_client_mismatch"}
 		}
-		return "", connect.Id{}, refused
+		if refused != nil {
+			if retained.ClientId != (connect.Id{}) {
+				refused.ExpectedClientId = retained.ClientId.String()
+			}
+			return "", connect.Id{}, refused
+		}
 	}
 	// No credential is left to present, so whatever custody remains (an
 	// existing-client marker, a rejection tombstone) names an identity this
