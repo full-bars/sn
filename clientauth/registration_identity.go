@@ -86,6 +86,18 @@ func JwtNetworkId(token string) (string, error) {
 	return identity.NetworkId, nil
 }
 
+// JwtUserId returns the user_id claim of a token, or an error when the token is
+// malformed. A token without the claim returns the empty string. This is the
+// account the API's per-user rate limits count, so callers that keep their own
+// per-account budget key on it.
+func JwtUserId(token string) (string, error) {
+	identity, err := registrationIdentity(token)
+	if err != nil {
+		return "", err
+	}
+	return identity.UserId, nil
+}
+
 // Used both during restart and before a live refresh listener persists a token.
 func ValidateRefreshedClientJwt(original, refreshed string) error {
 	before, beforeErr := registrationIdentity(original)

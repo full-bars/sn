@@ -71,7 +71,7 @@ func TestRefusalBackoffCapsAtTheWindow(t *testing.T) {
 	now := time.Unix(1_800_000_000, 0)
 	var last time.Duration
 	for i := 0; i < 12; i++ {
-		last = recordExtenderActivationRefused(now.Add(time.Duration(i) * time.Minute))
+		last = recordExtenderActivationRefused(now.Add(time.Duration(i)*time.Minute), extenderTestClientA)
 		if last > extenderActivationWindow {
 			t.Fatalf("refusal %d waited %s, longer than the %s window", i+1, last, extenderActivationWindow)
 		}
@@ -87,11 +87,11 @@ func TestRefusalStreakDecaysAfterADay(t *testing.T) {
 	testExtenderState(t)
 	now := time.Unix(1_800_000_000, 0)
 	for i := 0; i < 5; i++ {
-		recordExtenderActivationRefused(now)
+		recordExtenderActivationRefused(now, extenderTestClientA)
 	}
 	// A day and a half later, the streak must start from the first step.
 	later := now.Add(36 * time.Hour)
-	if wait := recordExtenderActivationRefused(later); wait != extenderRefusalBackoff {
+	if wait := recordExtenderActivationRefused(later, extenderTestClientA); wait != extenderRefusalBackoff {
 		t.Fatalf("after a quiet day the wait is %s, want the first step %s", wait, extenderRefusalBackoff)
 	}
 }
