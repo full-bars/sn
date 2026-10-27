@@ -417,15 +417,25 @@ func (self *providerBringUpTracker) reportOverdue() {
 	}
 	now := time.Now()
 	notConnected := 0
+	distinct := 0
 	oldestAge := time.Duration(0)
 	sample := make([]string, 0, providerControlNameLimit)
+	// Several slots can sit behind one proxy address, so a per-identity sample
+	// repeats the same address and hides how broad the problem is. Count and
+	// name each address once.
+	seen := make(map[string]bool, len(self.identities))
 	for index := range self.identities {
 		if self.reached[index] || self.states[index] != "running" {
 			continue
 		}
 		notConnected++
-		if len(sample) < providerControlNameLimit {
-			sample = append(sample, strings.TrimPrefix(self.displays[index], "proxy:"))
+		name := strings.TrimPrefix(self.displays[index], "proxy:")
+		if !seen[name] {
+			seen[name] = true
+			distinct++
+			if len(sample) < providerControlNameLimit {
+				sample = append(sample, name)
+			}
 		}
 		if authAt, ok := self.authAt[index]; ok {
 			if age := now.Sub(authAt); oldestAge < age {
