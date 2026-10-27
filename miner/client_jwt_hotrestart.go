@@ -308,6 +308,13 @@ type clientJWTProvideConfig struct {
 	ClientStrategy *connect.ClientStrategy
 	// Mint mints a fresh client identity. Required.
 	Mint func(context.Context) (string, connect.Id, error)
+	// Retained, when non-nil, is the client identity this attempt must
+	// present (a capture launch's recorded client). The store is only a
+	// cache of what custody settled, so an entry for another client may not
+	// be reused, renewed or written back; that attempt falls through to Mint,
+	// which compares the same identity against what the slot actually owns.
+	// A nil or zero retained client asserts no expectation.
+	Retained *clientauth.RetainedClientIdentity
 	// FreshMint registers a brand-new client identity with a new client_id.
 	// With hot restart off it replaces Mint: the durable-registration mint
 	// reads and refreshes the retained slot credential (reuse under another
@@ -333,6 +340,11 @@ func minerProviderDescription() string {
 // (no network_id on either side, a mismatch, an unparseable client_id, a
 // refused renewal) falls through to a fresh mint. Every mint and renewal is
 // persisted, so the next restart can reuse it.
+//
+// An attempt that must present one recorded client (cfg.Retained, a capture
+// launch's profile) only reuses an entry naming that client: another entry is
+// left as it is and the attempt falls through to the mint, which owns the
+// comparison against the slot's custody and the refusal that follows.
 //
 // With hot restart off, the fresh-registration mint (FreshMint) always runs:
 // URNETWORK_HOT_RESTART=0 asks for a new client_id on every start, exactly the
@@ -381,6 +393,18 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 			}
 
 			switch {
+			case !storeEntryPresentsRetainedClient(entry, cfg.Retained):
+				// A capture launch must present the client its profile
+				// recorded, and the store is only a cache of what custody
+				// settled, never a second authority. Every write on the
+				// reuse path — the renewal Put, the network_id self-heal
+				// below, and the credential rewrite in bindReusedClientJWT
+				// — would make the slot present an identity this launch
+				// never recorded. Fall through to the custody mint, which
+				// compares the same retained client against what the slot
+				// actually owns and refuses when it cannot present it.
+				tlog("🔥 [hot-restart] %s: stored client %s is not the client this launch must present (%s), minting through custody\n", identityKey, entry.ClientID, cfg.Retained.ClientId.String())
+
 			case !haveCurrentNetworkId || (entry.NetworkID != "" && entry.NetworkID != currentNetworkId):
 				tlog("🔥 [hot-restart] %s: network_id mismatch (stored=%q current=%q have_current=%v), minting fresh\n", identityKey, entry.NetworkID, currentNetworkId, haveCurrentNetworkId)
 
@@ -471,6 +495,18 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 		tlog("⚠️ [jwt-store] failed to persist client JWT for %s: %v\n", identityKey, putErr)
 	}
 	return byClientJwt, clientId, false, nil
+}
+
+// storeEntryPresentsRetainedClient reports whether a stored entry is the
+// client this attempt must present. A nil or zero retained client asserts no
+// expectation, so every entry is eligible and the reuse decision is exactly
+// what it was before capture launches carried one. An entry naming no client
+// at all cannot present the required one either, so it is not eligible.
+func storeEntryPresentsRetainedClient(entry clientJWTEntry, retained *clientauth.RetainedClientIdentity) bool {
+	if retained == nil || retained.ClientId == (connect.Id{}) {
+		return true
+	}
+	return entry.ClientID == retained.ClientId.String()
 }
 
 // renewStoredClientJWT renews entry's identity with the same client_id.
