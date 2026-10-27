@@ -2,6 +2,7 @@ package miner
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -214,15 +215,16 @@ func readProxyPoolComposition() proxyPoolComposition {
 }
 
 // proxyPoolTarget is the number of proxies the pool actually intends to serve.
-// proxy_url_max alone is only the ceiling: the AIMD operating point the URL
-// source settles on, and any memory ceiling, usually sit well below it, so a
-// host running 50 against a cap of 500 would be judged against 500 and look
-// broken. Prefer the operating point, then the ceiling, then unknown.
+// It is not proxy_url_max: the AIMD operating point the URL source settles on,
+// and any memory ceiling, usually sit well below it, so a host running 50
+// against a cap of 500 would be judged against 500 and look broken. It is not
+// proxy_url.json's TargetPoolSize read raw either: the pool only runs to that
+// while self-heal is on, and admission restores the configured ceiling the
+// moment it is off, so a target an earlier run left behind is state nothing
+// runs to. Ask the same resolver admission uses, then fall back to the ceiling
+// and to unknown.
 func proxyPoolTarget() int {
-	if state, err := readProxyURLState(); err == nil && state != nil && state.TargetPoolSize > 0 {
-		return state.TargetPoolSize
-	}
-	return resolveProxyURLMax(0)
+	return resolveEffectiveProxyURLMax(0, os.Getenv("URNETWORK_SELF_HEAL") == "1")
 }
 
 // proxyPoolSample is one tick's cross-section. The ring holds these rather than

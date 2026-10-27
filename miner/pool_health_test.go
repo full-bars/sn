@@ -2,6 +2,8 @@ package miner
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -567,5 +569,59 @@ func TestPoolHealthJudgesAgainstTheTargetNotSurplusMembers(t *testing.T) {
 	blind := w.observe(proxyPoolMemberCounts{Up: 482, Degraded: 424, Dead: 127, Connecting: 44}, time.Minute)
 	if blind.Verdict != poolVerdictNeedsAttention {
 		t.Fatalf("targetless verdict = %q, want needs attention", blind.Verdict)
+	}
+}
+
+// TestProxyPoolTargetFollowsAdmission pins the target the health verdict judges
+// against to the one admission actually uses. A target persisted by an earlier
+// self-heal run is not a target the pool runs to once self-heal is off: judging
+// against it either hides a sick pool behind a stale small number or reports a
+// shortfall against a number admission will never reach.
+func TestProxyPoolTargetFollowsAdmission(t *testing.T) {
+	home := withTempHome(t)
+	resetGlobalControlStateForTest()
+	t.Cleanup(resetGlobalControlStateForTest)
+	marker := filepath.Join(home, "proxy_self_heal")
+	writeMarker := func(v string) {
+		if err := os.WriteFile(marker, []byte(v), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	override, err := proxyURLMaxOverridePath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(override, []byte("500"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeProxyURLState(&ProxyURLState{
+		Cache:          map[string]ProxyURLEntry{},
+		TargetPoolSize: 50,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Self-heal on: admission caps at the learned operating point, so that is
+	// the number the pool intends to serve.
+	writeMarker("on")
+	if got := proxyPoolTarget(); got != 50 {
+		t.Fatalf("self-heal on: target = %d, want the learned 50", got)
+	}
+
+	// Self-heal off: admission is back at the configured ceiling, and the
+	// persisted 50 is state nothing runs to.
+	writeMarker("off")
+	if got := proxyPoolTarget(); got != 500 {
+		t.Fatalf("self-heal off: target = %d, want the ceiling 500", got)
+	}
+
+	// No learned target: the ceiling either way.
+	if err := writeProxyURLState(&ProxyURLState{Cache: map[string]ProxyURLEntry{}}); err != nil {
+		t.Fatal(err)
+	}
+	writeMarker("on")
+	if got := proxyPoolTarget(); got != 500 {
+		t.Fatalf("no learned target: target = %d, want the ceiling 500", got)
 	}
 }
