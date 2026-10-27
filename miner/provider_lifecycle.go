@@ -33,11 +33,20 @@ type providerRunSettings struct {
 	proxySourceOf map[string]string
 	// the explicit --max-memory, or 0 when absent; the profile tiers use it
 	// to decide whether an operator value already wins
-	maxMemory               connect.ByteCount
-	memoryPlan              providerMemoryPlan
-	testEgressDialer        *connect.DialContextSettings
+	maxMemory        connect.ByteCount
+	memoryPlan       providerMemoryPlan
+	testEgressDialer *connect.DialContextSettings
+	// fork-only: creating a provider client is always permitted, so a unit needs
+	// no flag and a slot that cannot use its saved identity mints one. The old
+	// --allow-client-registration is accepted and ignored (run.go,
+	// operators_cmd.go).
 	allowClientRegistration bool
-	adoptLegacyProviderKey  bool
+	// the operator's own --allow-client-registration. Device-level identity
+	// decisions (a first key, the automatic legacy import, a capture launch)
+	// still read only this, so permitting a slot to create a client can never
+	// silently replace a key or skip the import.
+	explicitClientRegistration bool
+	adoptLegacyProviderKey     bool
 	// fork-only: automatic import of 3.23-fix saved identities is on by
 	// default; --no-legacy-import disables it entirely
 	noLegacyImport bool

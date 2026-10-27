@@ -271,7 +271,7 @@ func (self *operatorSupervisor) provisionHint(err error) string {
 		return ""
 	}
 	switch refused.Code {
-	case "measurement_key_requires_explicit_recovery", "legacy_identity_requires_explicit_recovery":
+	case "measurement_key_requires_explicit_recovery", "legacy_identity_requires_explicit_recovery", "client_registration_disabled":
 		return "; restart with " + self.settings.provisionFlags + " to provision a pristine directory"
 	}
 	return ""

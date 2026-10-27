@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/urnetwork/connect"
+
+	"github.com/urfoundation/sn/clientauth"
 )
 
 // controlReachedIdentities is the set of proxies that have reached the control
@@ -105,6 +107,16 @@ type providerBringUpTracker struct {
 	// identities is each authenticated slot's latest outcome: true when the
 	// slot kept its client id, false when it was minted.
 	identities map[uint64]bool
+	// identityOutcomes is each slot's latest identity decision, keyed like
+	// identities. A slot can decide twice in one start (a refused credential,
+	// then a replacement), and the start's count follows the latest, so the
+	// summary reports what the pool holds now rather than a history.
+	identityOutcomes map[uint64]minerIdentityOutcome
+	// adoptedIdentities is how many slots the automatic legacy import took
+	// over in this start. Adoption happens before any slot has an index.
+	adoptedIdentities int
+	// identityWarned makes the replacement wave one warning line per start.
+	identityWarned bool
 	// reached is the slots whose first dial through their proxy succeeded.
 	reached map[uint64]bool
 	// reachedIdentities dedupes reached by proxy identity: a reload gives the
@@ -144,6 +156,7 @@ func newProviderBringUpTracker(total int) *providerBringUpTracker {
 		total:             total,
 		states:            map[uint64]string{},
 		identities:        map[uint64]bool{},
+		identityOutcomes:  map[uint64]minerIdentityOutcome{},
 		reached:           map[uint64]bool{},
 		reachedIdentities: map[string]bool{},
 		watches:           map[uint64]*time.Timer{},
@@ -275,6 +288,9 @@ func (self *providerBringUpTracker) emit() {
 
 // emitStartupSummary emits a one-line summary of the bring-up after the
 // first heartbeat interval so the operator sees the pool split at a glance.
+// The identity half is the start's mints in one place: the per-slot lines name
+// each one, but a count is what tells an operator whether the pool healed or
+// the state directory it read was not the one holding the identities.
 func (self *providerBringUpTracker) emitStartupSummary() {
 	if self == nil {
 		return
@@ -290,20 +306,201 @@ func (self *providerBringUpTracker) emitStartupSummary() {
 	failed := self.failed
 	reused, minted := self.identityCounts()
 	reached := len(self.reachedIdentities)
-	self.mu.Unlock()
-	tlog("[startup] %d slots: %d auth ok, %d pending, %d failed (%d reused, %d new); control-connected %d\n",
+	summary := fmt.Sprintf("[startup] %d slots: %d auth ok, %d pending, %d failed (%d reused, %d new); control-connected %d",
 		total, running, pending, failed, reused, minted, reached)
+	// The reused/new pair above is what the credential path did; this is what
+	// the registration path decided. They agree except in the retained
+	// operation's crash window, where a credential is recovered for an identity
+	// that was never minted here.
+	if segment := self.identitySegment(); segment != "" {
+		summary += "; " + segment
+	}
+	self.mu.Unlock()
+	tlog("%s\n", summary)
+	// The replacement wave is not decided here. A slot still authenticating has
+	// not presented its credential yet, so a rate taken now divides by a pool
+	// that does not exist: four replacements among four decided slots reads as
+	// 100% while 496 healthy slots are still coming up. apply() decides it when
+	// the last slot resolves.
+}
+
+// identitySegment renders the identity outcomes this start produced, or "" when
+// every slot either kept its identity or has not decided yet. Leaving the
+// segment out of a healthy start keeps that line byte-identical to the one
+// existing readers and release notes quote.
+func (self *providerBringUpTracker) identitySegment() string {
+	mintedNew, replacements, adopted, revoked := self.identityOutcomeCounts()
+	if mintedNew+replacements+adopted+revoked == 0 {
+		return ""
+	}
+	return fmt.Sprintf("identity: %d minted new, %d minted replacement, %d adopted, %d revoked",
+		mintedNew, replacements, adopted, revoked)
+}
+
+// identityOutcomeCounts returns this start's identity outcomes. Each slot
+// counts once, as its latest outcome, and adoption is counted where the
+// automatic legacy import took a slot over. The caller must hold mu.
+func (self *providerBringUpTracker) identityOutcomeCounts() (mintedNew, replacements, adopted, revoked int) {
+	adopted = self.adoptedIdentities
+	for _, outcome := range self.identityOutcomes {
+		switch outcome {
+		case identityOutcomeMintedNew:
+			mintedNew++
+		case identityOutcomeMintedReplacement:
+			replacements++
+		case identityOutcomeRevoked:
+			revoked++
+		}
+	}
+	return
+}
+
+// Replacement waves. A handful of replacements is a handful of slots healing;
+// a wave is a host that read a state directory without its identities, or a
+// platform refusing identities that used to work. The two look identical from
+// inside the process, so the threshold is what separates the case worth a
+// warning from the case worth a line.
+const (
+	identityWavePercent = 5
+	identityWaveFloor   = 3
+)
+
+// identityWaveThreshold is how many rejected identities in one start stop
+// being a few slots healing: more than max(3, 5% of the identities the pool
+// presented to the platform).
+func identityWaveThreshold(presented int) int {
+	threshold := presented * identityWavePercent / 100
+	if threshold < identityWaveFloor {
+		threshold = identityWaveFloor
+	}
+	return threshold
+}
+
+// identityWaveCounts returns how many slots presented a saved identity to the
+// platform and how many of those it did not accept. A slot that reused its
+// credential and a slot that was refused both presented one; so did a slot
+// that came back with a replacement. A slot that had nothing to present is not
+// part of the rate: a first start mints every identity, and counting those
+// would warn on a host doing exactly what it should. The caller must hold mu.
+func (self *providerBringUpTracker) identityWaveCounts() (rejected, presented int) {
+	reused := 0
+	for _, wasReused := range self.identities {
+		if wasReused {
+			reused++
+		}
+	}
+	var replacements, revoked int
+	for _, outcome := range self.identityOutcomes {
+		switch outcome {
+		case identityOutcomeMintedReplacement:
+			replacements++
+		case identityOutcomeRevoked:
+			revoked++
+		}
+	}
+	return replacements + revoked, reused + replacements + revoked
+}
+
+// settledLocked reports that every slot reached a terminal state, so the
+// identity counts are final. The caller must hold mu.
+func (self *providerBringUpTracker) settledLocked() bool {
+	return self.total <= 0 || self.running+self.failed >= self.total
+}
+
+// replacementWave decides whether this start's rejected identities are a wave
+// and claims the one warning. It refuses to decide before the start has
+// settled: the rate is rejected over presented, and neither half is known
+// until the last slot resolves. The caller must hold mu.
+func (self *providerBringUpTracker) replacementWave() (rejected, presented, threshold int, wave bool) {
+	rejected, presented = self.identityWaveCounts()
+	threshold = identityWaveThreshold(presented)
+	if self.identityWarned || !self.settledLocked() || threshold >= rejected {
+		return rejected, presented, threshold, false
+	}
+	self.identityWarned = true
+	return rejected, presented, threshold, true
+}
+
+// emitReplacementWave prints the one warning a start gets when its rejected
+// identities were a wave. Called when the last slot resolves.
+func (self *providerBringUpTracker) emitReplacementWave() {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	rejected, presented, threshold, wave := self.replacementWave()
+	self.mu.Unlock()
+	if wave {
+		tlog("%s\n", identityWaveLine(rejected, presented, threshold))
+	}
+}
+
+// identityWaveLine is the one warning a start prints when the platform did not
+// accept identities in bulk. It names both causes and the order to check them:
+// the state directory is cheaper to inspect and is the one that produces a full
+// wave while every other measure looks healthy.
+func identityWaveLine(rejected, presented, threshold int) string {
+	return fmt.Sprintf("⚠️ [identity] %d of %d saved identities were replaced or refused this start (threshold %d); check first that the state directory is the one holding the identities (wrong mount, a restore older than the identities, permissions), then whether the platform is refusing identities that used to work",
+		rejected, presented, threshold)
+}
+
+// identityOutcome records one slot's identity decision: it becomes the slot's
+// counted outcome and, when it is one of the four that change a slot's
+// identity, one durable event. The same decision reported twice for one slot is
+// recorded once, so a retry that lands on the same outcome does not turn into a
+// second mint.
+func (self *providerBringUpTracker) identityOutcome(index uint64, display string, outcome clientauth.IdentityOutcome, reason string) {
+	recorded, ok := minerIdentityOutcomeOf(outcome)
+	if self == nil || !ok {
+		return
+	}
+	self.mu.Lock()
+	previous, seen := self.identityOutcomes[index]
+	self.identityOutcomes[index] = recorded
+	self.mu.Unlock()
+	if seen && previous == recorded {
+		return
+	}
+	// Outside the lock: the store writes to disk, and a slow disk must not
+	// hold up the slots reporting behind this one.
+	recordProviderIdentityEvent(display, recorded, reason)
+}
+
+// adoptIdentities records the slots the automatic legacy import took over
+// before any worker ran. Adoption is its own outcome, not a mint, and a slot
+// that authenticates with the imported identity records nothing more: that
+// identity is the one the import proved. The records go in one transaction,
+// because this runs before the first proxy does and a disk sync per adopted
+// identity would be paid by every start on a migrated host.
+func (self *providerBringUpTracker) adoptIdentities(displays []string) {
+	if self == nil || len(displays) == 0 {
+		return
+	}
+	self.mu.Lock()
+	self.adoptedIdentities += len(displays)
+	self.mu.Unlock()
+	recordProviderIdentityEvents(displays, identityOutcomeAdopted, "")
 }
 
 // authReused narrates one slot's reused authentication and moves it to
 // running. The leading text matches the line the v3.23 provider and
 // docs/Hot-Restart.md document, so a grep for "(reused)" finds every slot that
 // kept its identity; the slot follows it.
+// The per-slot identity lines are the ones an operator greps on every start to
+// see whether the proxies came up with the identity they should have, and
+// docs/Hot-Restart.md documents them by shape. They are constants so that a
+// change to one is a visible diff and the test beside them fails if the shape
+// moves.
+const (
+	providerClientIdReusedFormat = "♻️ client_id: %s (reused) provider=%d slot=%s\n"
+	providerClientIdNewFormat    = "✨ client_id: %s (new) provider=%d slot=%s\n"
+)
+
 func (self *providerBringUpTracker) authReused(index uint64, clientID connect.Id, display string) {
 	self.apply(index, "running", func() {
 		self.identities[index] = true
 		self.watchControl(index, display)
-		tlog("♻️ client_id: %s (reused) provider=%d slot=%s\n", clientID, index, display)
+		tlog(providerClientIdReusedFormat, clientID, index, display)
 	})
 }
 
@@ -312,7 +509,7 @@ func (self *providerBringUpTracker) authNew(index uint64, clientID connect.Id, d
 	self.apply(index, "running", func() {
 		self.identities[index] = false
 		self.watchControl(index, display)
-		tlog("✨ client_id: %s (new) provider=%d slot=%s\n", clientID, index, display)
+		tlog(providerClientIdNewFormat, clientID, index, display)
 	})
 }
 
@@ -478,11 +675,14 @@ func (self *providerBringUpTracker) controlReached(index uint64, display string,
 // what happens next (retry), and moves it to failed.
 func (self *providerBringUpTracker) authFailed(index uint64, display string, reason error, retry string) {
 	self.apply(index, "failed", func() {
-		line := fmt.Sprintf("[auth] provider %d failed: %v (slot %s, retry %s)", index, reason, display, retry)
-		if strings.Contains(reason.Error(), "legacy_identity_requires_explicit_recovery") {
-			line += "; action: run with --adopt-legacy-provider-key or clear this slot's identity"
+		// Disabled creation is an operator decision, not a custody fault, and
+		// it is the only refusal this path keeps: one plain line, no retry
+		// hint, no recovery advice.
+		if strings.Contains(reason.Error(), "client_registration_disabled") {
+			tlog("[auth] provider %d skipped: provider client creation is disabled for this run (slot %s)\n", index, display)
+			return
 		}
-		tlog("%s\n", line)
+		tlog("[auth] provider %d failed: %v (slot %s, retry %s)\n", index, reason, display, retry)
 	})
 }
 
@@ -531,6 +731,9 @@ func (self *providerBringUpTracker) apply(index uint64, state string, print func
 	self.mu.Unlock()
 	if final {
 		tlog("%s\n", line)
+		// Every slot has resolved, so the identity counts are final and the one
+		// replacement-wave decision this start gets can be made.
+		self.emitReplacementWave()
 		self.stop()
 	}
 }

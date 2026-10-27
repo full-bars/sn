@@ -191,7 +191,7 @@ func TestMeasurementRegistrationAdoptsLegacyWithoutBootstrapAndRetainsLoss(t *te
 	_, _, err = owner.LoadOrRegisterClientJwt(t.Context(), fixture.api, fixture.networkPath)
 	var refused *RegistrationRefusedError
 	after, readErr := os.ReadFile(fixture.clientPath + ".registration.existing")
-	if !errors.As(err, &refused) || refused.Code != "legacy_identity_requires_explicit_recovery" || fixture.postCount() != 0 || readErr != nil || !bytes.Equal(marker, after) {
+	if !errors.As(err, &refused) || refused.Code != "client_registration_disabled" || fixture.postCount() != 0 || readErr != nil || !bytes.Equal(marker, after) {
 		t.Fatal("measurement lost legacy client became an allocation", err)
 	}
 }

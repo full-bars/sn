@@ -7,7 +7,7 @@ package miner
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"crypto/ed25519"
 	"errors"
 	"os"
 	"os/exec"
@@ -25,7 +25,10 @@ func TestProviderRegistrationCliRefusalHasClosedGuidance(t *testing.T) {
 		Run([]string{"provide", "--api_url=" + os.Getenv("SN_TEST_PROVIDER_API"), "--connect_url=" + os.Getenv("SN_TEST_PROVIDER_CONNECT")})
 		return
 	}
-	for _, phase := range []string{"fresh", "legacy", "duplicate"} {
+	// A pristine directory is no longer a refusal: creation is permitted by
+	// default, so that phase now starts a provider. The loud-refusal contract
+	// covers the custody states that still refuse.
+	for _, phase := range []string{"legacy", "malformed-key"} {
 		fixture := newProviderRegistrationFixture(t)
 		privateHome := providerRegistrationPrivateDir(t)
 		if phase == "legacy" {
@@ -36,10 +39,11 @@ func TestProviderRegistrationCliRefusalHasClosedGuidance(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		if phase == "duplicate" {
-			raw, err := json.Marshal(ProxyConfig{Servers: map[string]string{"192.0.2.40:1080:synthetic-one:synthetic-password": "", "192.0.2.40:1080:synthetic-two:synthetic-password": ""}})
-			if err != nil || os.WriteFile(filepath.Join(fixture.dir, "proxy"), raw, 0600) != nil {
-				t.Fatal("could not retain synthetic duplicate proxy configuration")
+		if phase == "malformed-key" {
+			// A retained key that is not an Ed25519 seed: retained history, so
+			// no default permission may replace it.
+			if err := os.WriteFile(filepath.Join(fixture.dir, ".provider.key"), bytes.Repeat([]byte{31}, ed25519.SeedSize-1), 0600); err != nil {
+				t.Fatal(err)
 			}
 		}
 		ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)

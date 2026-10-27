@@ -112,6 +112,12 @@ h="$tmp/h7"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l7" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" ALL_OPERATORS=Y
 t "auto omits --allow-client-registration" sh -c "grep -q 'argv: provide --all-operators$' '$tmp/l7'"
 
+# Creation is never gated, so N is a no-op: the flag it used to withhold no
+# longer exists. The test pins that N adds nothing and does not resurrect it.
+h="$tmp/h7n"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/l7n" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" ALL_OPERATORS=Y ALLOW_CLIENT_REGISTRATION=N
+t "N adds no registration flag" sh -c "grep -q 'argv: provide --all-operators$' '$tmp/l7n'"
+
 h="$tmp/h8"; mkdir -p "$h/.urnetwork"
 run_entry "$h" "-" "" "$tmp/l8" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" AUTO_REGISTER=Y; rc=$?
 t "AUTO_REGISTER without HOTKEY_SEED_FILE fails closed" sh -c "grep -q 'AUTO_REGISTER=Y requires HOTKEY_SEED_FILE' '$tmp/l8.out' && [ $rc -eq 1 ]"

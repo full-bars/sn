@@ -120,7 +120,7 @@ The pages in [`docs/`](docs/) are also published as the [project wiki](https://g
 - Platforms: [OpenRC (Alpine)](docs/OpenRC.md), [FreeBSD](docs/FreeBSD.md).
 - Proxies: [Adding Proxies](docs/Adding-Proxies.md), [Proxy Management](docs/Proxy-Management.md), [Proxy URL Sources](docs/Proxy-URL-Sources.md).
 - Tools: [urnet-tools](docs/urnet-tools-go.md), [urnet-docker](docs/urnet-docker.md).
-- Operating: [Monitoring](docs/Monitoring.md), [Troubleshooting](docs/Troubleshooting.md), [Log Message Reference](docs/Log-Message-Reference.md).
+- Operating: [Monitoring](docs/Monitoring.md), [Troubleshooting](docs/Troubleshooting.md), [Log Message Reference](docs/Log-Message-Reference.md), [Provider identity and flags](docs/Provider-Flags.md).
 - Bittensor: [Quick Start](docs/Bittensor-Quick-Start.md), [Operations](docs/Bittensor-Operations.md), [Hotkey Delegation](docs/Bittensor-Hotkey-Delegation.md), [Claim Daemons](docs/Bittensor-Claim-Daemons.md), [Fleet](docs/Bittensor-Fleet.md), [Head Tier](docs/Bittensor-Head-Tier.md), [Glossary](docs/Bittensor-Glossary.md).
 - Project: [Project Structure](docs/Project-Structure.md), [CI and Release Process](docs/CI-and-Release-Process.md), [Fork Changes](FORK_CHANGES.md), [Changelog](CHANGELOG.md).
 
