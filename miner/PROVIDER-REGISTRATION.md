@@ -13,12 +13,19 @@ comes from the configured server and its network principal.
 
 ## Operator decisions
 
-- A known new installation or new proxy member requires
-  `--allow-client-registration`. New key creation also requires no retained
-  provider history. This flag never clears an operation, first-send anchor,
-  existing-client marker, rejection or key-identity mismatch. The one retained
-  key it may replace is a zero or wrong-length `.provider.key` (the deliberate
-  rotation below), which is preserved as a timestamped backup first.
+- A known new installation or new proxy member registers without a flag:
+  creation is always permitted, so a slot that has no usable identity mints one
+  and saves it instead of stopping. There is no off switch, because a provider
+  that cannot mint cannot serve. `--allow-client-registration` is still
+  accepted, and for client identities it does nothing. It keeps one job the
+  name does not describe: replacing a `.provider.key` that exists but cannot be
+  used (the all-zero seed older installs carry, or a wrong-length key) with a
+  fresh seed, keeping the old file as a timestamped backup. A missing key over
+  retained provider history is refused with or without the flag. Creation never
+  clears an operation, first-send anchor, existing-client marker, rejection or
+  key-identity mismatch: an identity the server has revoked stays refused,
+  because minting there would replace a client the server bound to this
+  provider key.
 - An ordinary restart with retained key/marker and operation or credential
   needs no creation flag. A persisted request can resume without the flag even
   if it has not received its first reply.
@@ -26,8 +33,10 @@ comes from the configured server and its network principal.
   JWTs requires the separate `--adopt-legacy-provider-key` first-upgrade
   assertion. The operator must have recovered and identified the original seed.
   JWT claims cannot establish its historical link to that key. This option is
-  mutually exclusive with new-client permission, grants no new allocation, and
-  first-upgrade adoption permits only existing-client refresh. Publishing a
+  mutually exclusive with new-client permission, allocates no client itself,
+  and does not prevent one being minted: first-upgrade adoption permits only
+  existing-client refresh, while a slot whose saved credential cannot be used
+  mints a replacement exactly as it would without the flag. Publishing a
   missing marker accepts only legacy JWT names and legacy certificate/extender
   side files. In that missing-marker case, any retained versioned operation,
   lock, first-send/existing marker, rejection or unknown provider history makes

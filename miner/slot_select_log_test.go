@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"sync"
@@ -31,22 +32,37 @@ func (self *captureLogger) text() string {
 }
 
 func TestSlotSelectLabelNamesTheProxyOnSuccessAndFailure(t *testing.T) {
-	base := &captureLogger{}
-	log := withSlotSelectLabel(base, slotSelectLabel(17, "65.111.15.115:1081"), nil)
+	var buf bytes.Buffer
+	prev := proxyManagerLogWriter
+	proxyManagerLogWriter = &buf
+	defer func() { proxyManagerLogWriter = prev }()
+	// The default logger is the glog one this wrapper replaces with the tab
+	// stream; a supplied sink would take the line instead (see
+	// TestSlotSelectDeliversToSuppliedSink).
+	log := withSlotSelectLabel(nil, slotSelectLabel(17, "65.111.15.115:1081"), nil)
 
 	log.Infof("🌐 [net][s]select: %s dur=%dms\n", "normal success=2 error=0", int64(153))
 	log.Infof("🌐 [net][s]select: %s = %s dur=%dms\n", "fragment success=0 error=3", "i/o timeout", int64(15000))
 	log.Infof("unrelated %d\n", 7)
 
-	text := base.text()
+	// Select lines carry the slot label and no wrapper location; anything else
+	// on the logger still passes through untouched.
+	text := buf.String()
 	for _, want := range []string{
 		"🌐 [net][s]select: proxy[17] (65.111.15.115:1081) normal success=2 error=0 dur=153ms",
 		"🌐 [net][s]select: proxy[17] (65.111.15.115:1081) fragment success=0 error=3 = i/o timeout dur=15000ms",
-		"unrelated 7",
 	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q in:\n%s", want, text)
 		}
+	}
+	if strings.Contains(text, "slot_select_log.go") {
+		t.Fatalf("select line kept a wrapper location:\n%s", text)
+	}
+	// Every info line through this wrapper is emitted in the tab format, so the
+	// slot's own strategy lines stop claiming the wrapper's file:line too.
+	if !strings.Contains(text, "unrelated 7") {
+		t.Fatalf("non-select line did not reach the tab stream: %s", text)
 	}
 }
 
@@ -79,12 +95,70 @@ func TestSlotSelectReportsOnlyTheFirstOwnSuccess(t *testing.T) {
 	}
 }
 
-func TestSlotSelectLabelEscapesPercent(t *testing.T) {
-	base := &captureLogger{}
-	log := withSlotSelectLabel(base, "proxy[1] (a%sb)", nil)
+// A label with a percent in it is a proxy address or account, not a format:
+// the label joins the rendered line, so it must come out exactly as given.
+func TestSlotSelectLabelKeepsPercentLiteral(t *testing.T) {
+	var buf bytes.Buffer
+	prev := proxyManagerLogWriter
+	proxyManagerLogWriter = &buf
+	defer func() { proxyManagerLogWriter = prev }()
+	log := withSlotSelectLabel(nil, "proxy[1] (a%sb)", nil)
 	log.Infof("🌐 [net][s]select: %s dur=%dms\n", "x", int64(1))
-	if !strings.Contains(base.text(), "proxy[1] (a%sb) x dur=1ms") {
-		t.Fatalf("label was formatted: %s", base.text())
+	line := buf.String()
+	if !strings.Contains(line, "proxy[1] (a%sb) x dur=1ms") {
+		t.Fatalf("label was formatted: %s", line)
+	}
+	// The wrapper is not the call site: stamping this file would be long and
+	// untrue, and the label already names the slot.
+	if strings.Contains(line, "slot_select_log.go") {
+		t.Fatalf("select line kept a wrapper location: %s", line)
+	}
+}
+
+// A caller that supplied its own sink must still receive the slot's lines
+// there: the wrapper adds the label, it does not redirect the stream. The
+// family suppression still holds on that sink, so only a changed decision and
+// the failures arrive.
+func TestSlotSelectDeliversToSuppliedSink(t *testing.T) {
+	base := &captureLogger{}
+	var buf bytes.Buffer
+	prev := proxyManagerLogWriter
+	proxyManagerLogWriter = &buf
+	defer func() { proxyManagerLogWriter = prev }()
+	log := withSlotSelectLabel(base, slotSelectLabel(4, "10.0.0.4:1080"), nil)
+
+	log.Infof("🌐 [net][s]select: %s dur=%dms\n", "normal success=1 error=0", int64(42))
+	log.Infof("unrelated %d\n", 7)
+	got := base.text()
+	for _, want := range []string{
+		"🌐 [net][s]select: proxy[4] (10.0.0.4:1080) normal success=1 error=0 dur=42ms",
+		"unrelated 7",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("supplied sink missing %q, got:\n%s", want, got)
+		}
+	}
+	// One destination, not two: a line the caller's sink took is not also
+	// printed to the provider's tab stream.
+	if buf.Len() != 0 {
+		t.Fatalf("a line delivered to the caller's sink was also printed to the tab stream:\n%s", buf.String())
+	}
+
+	const auto4 = "[family]dial tag=api net=tcp family=4 policy=auto demoted=none"
+	log.Infof("%s\n", auto4)
+	log.Infof("%s\n", auto4)
+	if n := strings.Count(base.text(), "tag=api"); n != 1 {
+		t.Fatalf("supplied sink saw the unchanged decision %d times, want 1:\n%s", n, base.text())
+	}
+	log.Infof("%s\n", "[family]dial tag=api net=tcp family=6 policy=auto demoted=none")
+	if n := strings.Count(base.text(), "tag=api"); n != 2 {
+		t.Fatalf("supplied sink saw %d decisions after a change, want 2:\n%s", n, base.text())
+	}
+	const failed = "[family]dial tag=api net=tcp family=? policy=auto demoted=none err=socks connect tcp: connection refused"
+	log.Infof("%s\n", failed)
+	log.Infof("%s\n", failed)
+	if n := strings.Count(base.text(), "connection refused"); n != 2 {
+		t.Fatalf("supplied sink saw the repeated failure %d times, want 2:\n%s", n, base.text())
 	}
 }
 
@@ -188,5 +262,42 @@ func TestProviderBringUpCapsPerSlotControlWarnings(t *testing.T) {
 	}
 	if strings.Contains(text, "oldest") == false {
 		t.Fatalf("summary missing oldest age:\\n%s", text)
+	}
+}
+
+// A family decision repeats on every dial for the life of the slot, so an
+// unchanged decision prints once. A failure prints every time: that is the
+// case where the decision is the thing to look at.
+func TestSlotSelectPrintsFamilyDialOnlyOnChange(t *testing.T) {
+	var buf bytes.Buffer
+	prev := proxyManagerLogWriter
+	proxyManagerLogWriter = &buf
+	defer func() { proxyManagerLogWriter = prev }()
+	log := withSlotSelectLabel(nil, slotSelectLabel(1, "10.0.0.1:1080"), nil)
+
+	// connect hands the family decision to the logger already formatted
+	// (connect/egress_dial.go: Infof("%s\n", controlDialFamilyLine(...))), so
+	// the test calls it the way the dialer does: a "%s" format with the whole
+	// line as its argument. Calling Infof(line) here would pass whatever the
+	// wrapper checks against the format and hide a wrapper that only works on
+	// that shape.
+	const auto4 = "[family]dial tag=api net=tcp family=4 policy=auto demoted=none"
+	log.Infof("%s\n", auto4)
+	log.Infof("%s\n", auto4)
+	log.Infof("%s\n", auto4)
+	if n := strings.Count(buf.String(), "tag=api"); n != 1 {
+		t.Fatalf("unchanged decision printed %d times, want 1:\n%s", n, buf.String())
+	}
+
+	log.Infof("%s\n", "[family]dial tag=api net=tcp family=6 policy=auto demoted=none")
+	if n := strings.Count(buf.String(), "tag=api"); n != 2 {
+		t.Fatalf("changed decision printed %d times total, want 2:\n%s", n, buf.String())
+	}
+
+	const failed = "[family]dial tag=api net=tcp family=? policy=auto demoted=none err=socks connect tcp: connection refused"
+	log.Infof("%s\n", failed)
+	log.Infof("%s\n", failed)
+	if n := strings.Count(buf.String(), "connection refused"); n != 2 {
+		t.Fatalf("repeated failure printed %d times, want 2:\n%s", n, buf.String())
 	}
 }

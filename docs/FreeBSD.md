@@ -17,6 +17,8 @@ pkg install -y curl sudo jq
 
 Run the installer as the account the provider should run as, with `sudo`, or as root with an explicit account (see [Service user](#service-user)).
 
+> **Upgrading from an install made before the tree moved to `/usr/local/libexec`?** Stop the service first (`sudo service urnetwork onestop`). The installer rewrites the `rc.d` script, and a provider still running from the old per-user tree does not match the new script's pid, argv and pidfile checks, so the install can leave a second provider running. The state directory `~/.urnetwork` is untouched.
+
 ## Install
 
 ```sh
@@ -27,7 +29,7 @@ sudo sh urnet-install.sh install
 To install a specific release instead of the latest:
 
 ```sh
-sudo sh urnet-install.sh install v2026.10.21-1077735390-meso
+sudo sh urnet-install.sh install v2026.10.26-1793016775
 ```
 
 The installer takes `latest` by default and resolves the tag through the GitHub API. There is no mirror fallback on purpose: the branded mirror publishes a different repository's tags, so resolving through it would install the wrong provider. If the API is rate limited, pass the tag explicitly. It supports `amd64` and `arm64`; any other architecture stops the install.
@@ -136,7 +138,11 @@ tail -f /var/log/urnetwork/stdout.log
 - **`-p`** writes the pid of the provider (the child), not of the `daemon` process, so `stop` and `status` act on the provider itself.
 - **`-u`** runs the child as the service user and sets its `HOME`, `USER` and `SHELL`, which is why the state directory lands in that user's home.
 
-The log directory is created and handed to the service user on every start.
+The log directory is set back to `root:wheel` mode `0755` on every start, so the
+service user cannot rename it aside. `stdout.log` is created on the first start
+as a regular file owned by the service user and kept across restarts; a symlink
+is refused outright, and a fifo, a hard link or a file owned by anyone else is
+replaced with a fresh one before `daemon(8)` opens it.
 
 ## Updates and auto-update
 

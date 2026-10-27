@@ -343,9 +343,11 @@ func TestProviderRegistrationCreationFlagIsExplicit(t *testing.T) {
 		t.Fatal("provider startup created identity without explicit permission")
 	}
 	posts, legacy, allocated, _ := fixture.counts()
-	_, keyErr := os.Stat(filepath.Join(fixture.dir, ".provider.key"))
-	if posts != 0 || legacy != 0 || allocated != 0 || !errors.Is(keyErr, os.ErrNotExist) {
-		t.Fatal("unapproved provider startup allocated a key or client")
+	// A pristine directory may publish its first key: that is the device
+	// identity, not a provider client. The client itself stays refused.
+	_, clientErr := os.Stat(filepath.Join(fixture.dir, ".provider.jwt"))
+	if posts != 0 || legacy != 0 || allocated != 0 || !errors.Is(clientErr, os.ErrNotExist) {
+		t.Fatal("unapproved provider startup allocated a client")
 	}
 }
 
@@ -596,9 +598,10 @@ func TestProviderRegistrationDistinctUsersShareOneAddress(t *testing.T) {
 	}
 }
 
-// Legacy custody is refreshed without new allocation. Its durable marker makes
-// later token loss explicit, even when new-operation permission is supplied.
-func TestProviderRegistrationAdoptsLegacyAndRefusesLostCredential(t *testing.T) {
+// Legacy custody is refreshed without new allocation. When its credential is
+// lost, the slot registers and keeps a new client instead of parking on custody
+// it can no longer present.
+func TestProviderRegistrationAdoptsLegacyAndMintsAfterCredentialLoss(t *testing.T) {
 	fixture := newProviderRegistrationFixture(t)
 	keyPath := filepath.Join(fixture.dir, ".provider.key")
 	clientPath := filepath.Join(fixture.dir, ".provider.jwt")
@@ -648,16 +651,17 @@ func TestProviderRegistrationAdoptsLegacyAndRefusesLostCredential(t *testing.T) 
 	err = fixture.run(t.Context(), true, hooks)
 	posts, legacy, allocated, refreshed = fixture.counts()
 	t.Logf("provider lost legacy credential: posts=%d legacy=%d allocated=%d physical_refreshes=%d baseline_refreshes=%d handoffs=%d", posts, legacy, allocated, refreshed, refreshBaseline, handoffs.Load())
-	var refused *clientauth.RegistrationRefusedError
-	if !errors.As(err, &refused) || refused.Code != "legacy_identity_requires_explicit_recovery" || errors.Is(err, stop) || posts != 0 || legacy != 0 || allocated != 0 || refreshed != refreshBaseline || handoffs.Load() != 1 {
-		t.Fatal("provider lost legacy credential became a replacement allocation", err)
+	if !errors.Is(err, stop) || posts != 1 || legacy != 0 || allocated != 1 || refreshed != refreshBaseline || handoffs.Load() != 2 {
+		t.Fatal("provider lost legacy credential did not mint a replacement client", err)
 	}
-	retained, markerErr := os.ReadFile(clientPath + ".registration.existing")
 	retainedSeed, seedErr := os.ReadFile(keyPath)
-	_, clientErr := os.Stat(clientPath)
+	stored, clientErr := clientauth.ReadToken(clientPath)
 	_, recordErr := os.Stat(clientPath + ".registration")
-	if markerErr != nil || !bytes.Equal(marker, retained) || seedErr != nil || !bytes.Equal(seed, retainedSeed) || !errors.Is(clientErr, os.ErrNotExist) || !errors.Is(recordErr, os.ErrNotExist) {
-		t.Fatal("provider lost legacy credential rewrote its original custody")
+	if _, markerErr := os.Stat(clientPath + ".registration.existing"); !errors.Is(markerErr, os.ErrNotExist) {
+		t.Fatal("provider lost legacy credential kept the replaced identity's marker", markerErr)
+	}
+	if seedErr != nil || !bytes.Equal(seed, retainedSeed) || clientErr != nil || stored == "" || recordErr != nil {
+		t.Fatal("provider lost legacy credential did not persist its replacement", seedErr, clientErr, recordErr)
 	}
 }
 

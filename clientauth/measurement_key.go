@@ -143,7 +143,7 @@ func (self *ValidatorMeasurementClientKeyOwner) loadOrRegisterClientJwt(ctx cont
 		}
 		return self.bootstrap, self.bootstrap.check()
 	}
-	token, id, err := loadOrRegisterClientJwtWithCustody(ctx, api, networkPath, self.clientPath, "validator measurement", scope, allowCreate, registrationHooks{}, self.store, bootstrapOwner)
+	token, id, err := loadOrRegisterClientJwtWithCustody(ctx, api, networkPath, self.clientPath, "validator measurement", scope, allowCreate, nil, registrationHooks{}, self.store, bootstrapOwner)
 	if err != nil {
 		return "", connect.Id{}, err
 	}

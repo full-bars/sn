@@ -104,7 +104,10 @@ func TestProviderDiagnosticsClosedFactsAndIndependentOwners(t *testing.T) {
 	if cause.calls.Load() != 0 || len(raw) > 1024 || bytes.Contains(raw, []byte("synthetic-private")) || !bytes.Contains(raw, []byte(`"cause":"unknown"`)) || !bytes.Contains(raw, []byte(`"provider":18446744073709551615`)) {
 		t.Fatal("provider diagnostics formatted or misclassified arbitrary cause")
 	}
-	listener := newProviderExtenderStatusListener(first, 3)
+	// The listener records an activation refusal in the provider store, so the
+	// test needs its own state directory rather than the operator's.
+	testExtenderState(t)
+	listener := newProviderExtenderStatusListener(first, 3, "")
 	status := &sdk.ExtenderProvideStatus{Enabled: true, Listening: true, ListenError: strings.Repeat("synthetic-private", 128*1024), LastActivationError: strings.Repeat("synthetic-failure", 128*1024), Ipv4: "192.0.2.11"}
 	listener.ExtenderProvideStatusChanged(status)
 	raw = firstSink.next(t)

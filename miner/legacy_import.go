@@ -173,11 +173,14 @@ type legacyImportOptions struct {
 	networkJwtPath string
 	// providers mirrors the run's configured slots: empty means the single
 	// direct slot, exactly like providerRunSettings.run.
-	providers      []*connect.ProxySettings
-	disabled       bool
-	explicitCreate bool
-	explicitAdopt  bool
-	recorder       legacyImportRecorder
+	providers     []*connect.ProxySettings
+	disabled      bool
+	explicitAdopt bool
+	// captureLaunch means a profile declares this run, so the identity each
+	// slot presents must already exist: importing a saved identity here would
+	// write custody the capture profile never recorded.
+	captureLaunch bool
+	recorder      legacyImportRecorder
 	// narrator receives the human-readable import story. nil falls back to
 	// the package writer (stderr), so a run always narrates itself.
 	narrator *legacyImportNarrator
@@ -206,9 +209,13 @@ func (self legacyImportOptions) proveOptions() legacyImportProveOptions {
 	}
 }
 
-// legacyImportResult tells the run which slots may register a new client.
+// legacyImportResult tells the run which slots may register a new client, and
+// which slots it took a saved identity over for in this start. Adoption is a
+// start's identity outcome like a mint is, and the startup summary reports it
+// beside them.
 type legacyImportResult struct {
 	mintSlots map[string]bool
+	adopted   []string
 }
 
 func (self legacyImportResult) mintAllowed(storeKey string) bool {
@@ -307,7 +314,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	if opts.recorder == nil {
 		opts.recorder = nopLegacyImportRecorder{}
 	}
-	if opts.disabled || opts.explicitCreate || opts.explicitAdopt || opts.stateDir == "" {
+	if opts.disabled || opts.explicitAdopt || opts.captureLaunch || opts.stateDir == "" {
 		return result
 	}
 	if opts.narrator == nil {
@@ -648,6 +655,7 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			continue
 		}
 		imported++
+		result.adopted = append(result.adopted, slot.display)
 		journal.Slots[slot.storeKey] = legacyImportJournalSlot{
 			State:    "imported",
 			ClientID: slot.entry.ClientID,

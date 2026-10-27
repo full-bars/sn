@@ -457,9 +457,11 @@ func TestClientRegistrationMissingSentCustodyRefusesNewAllocation(t *testing.T) 
 	}
 }
 
-// A creation-enabled configuration must not turn loss of an already observed
-// legacy client token into another allocation. No server identity is guessed.
-func TestClientRegistrationExistingIdentityLossRefusesCreation(t *testing.T) {
+// A creation-permitted configuration replaces an existing-client identity it
+// can no longer present instead of parking the slot. The saved client is
+// unreachable from this directory, so the slot registers a new one, keeps it
+// as its own custody, and reuses it from then on.
+func TestClientRegistrationExistingIdentityLossMintsAndPersists(t *testing.T) {
 	fixture := newRegistrationTestFixture(t)
 	if err := WriteToken(fixture.clientPath, registrationTestToken(t, testClientId, "existing-client")); err != nil {
 		t.Fatal(err)
@@ -468,15 +470,25 @@ func TestClientRegistrationExistingIdentityLossRefusesCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(fixture.clientPath + ".registration.existing"); err != nil {
-		t.Fatal("existing identity was not durably retained before refresh")
+		t.Fatal("existing identity was not durably retained before refresh", err)
 	}
 	if err := os.Remove(fixture.clientPath); err != nil {
 		t.Fatal(err)
 	}
-	_, err := fixture.register(t.Context(), true, registrationHooks{})
-	var refused *RegistrationRefusedError
-	if !errors.As(err, &refused) || refused.Code != "legacy_identity_requires_explicit_recovery" || fixture.postCount() != 0 {
-		t.Fatalf("legacy token loss manufactured a new allocation: %v", err)
+	token, err := fixture.register(t.Context(), true, registrationHooks{})
+	if err != nil || token == "" || fixture.postCount() != 1 {
+		t.Fatalf("lost existing identity did not mint: %v", err)
+	}
+	if stored, readErr := ReadToken(fixture.clientPath); readErr != nil || stored == "" {
+		t.Fatal("minted identity was not persisted", readErr)
+	}
+	// The marker of the identity it replaced cannot survive: a later adoption
+	// would compare it against the new credential and refuse.
+	if _, statErr := os.Stat(fixture.clientPath + ".registration.existing"); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatal("a minted identity kept the marker of the identity it replaced")
+	}
+	if _, err := fixture.register(t.Context(), false, registrationHooks{}); err != nil || fixture.postCount() != 1 {
+		t.Fatalf("restart did not reuse the minted identity: %v", err)
 	}
 }
 

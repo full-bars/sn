@@ -21,9 +21,10 @@ An absent optional profile retains legacy providing and unknown whole-work
 evidence. An explicitly required, missing or invalid profile refuses startup
 before authentication or wallet setup in the CLI. Complete-profile startup
 failure exits nonzero after owned workers have joined. An explicit profile also
-requires `--allow-client-registration` to be absent. Existing custody may use the
-separate original-key adoption procedure documented in
-[PROVIDER-REGISTRATION.md](PROVIDER-REGISTRATION.md).
+requires every declared slot to present the client identity it recorded; a slot
+that cannot is refused, and `--allow-client-registration` does not permit a
+replacement. Existing custody may use the separate original-key adoption
+procedure documented in [PROVIDER-REGISTRATION.md](PROVIDER-REGISTRATION.md).
 
 The JSON schema is `urnetwork-provider-whole-work-capture-v1`. Its fields are:
 

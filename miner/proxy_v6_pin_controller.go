@@ -334,7 +334,7 @@ func (self *v6PinController) probeOne(slot *v6PinSlot) {
 	slot.probing = false
 	changed := false
 	if !slot.removed && slot.ctx.Err() == nil {
-		previous := self.ledger.Verdict(slot.key)
+		previous := self.ledger.Last(slot.key)
 		self.recordWithLock(slot, round)
 		changed = round.verdict != v6Unknown && round.verdict != previous
 	}

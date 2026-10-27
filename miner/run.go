@@ -312,7 +312,7 @@ Options:
     -f                               Force overwrite the JWT token store file or proxy value, if exists.
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
-	--allow-client-registration       Explicitly permit a new durable provider client operation; never replaces retained identity.
+	--allow-client-registration       Accepted for compatibility and ignored: a slot always mints a client it can use.
 	--adopt-legacy-provider-key       Assert the retained legacy provider key is original; refresh only, no new client allocation.
 	--no-legacy-import               Disable the automatic import of 3.23-fix saved provider identities from
 	                                 .client_jwts.json; no legacy file is read for import and no sn state file is
@@ -982,7 +982,13 @@ func provideWith(opts docopt.Opts, start bool) {
 	// applyPoolAutoSize for the pinned-connect adaptation.
 	applyPoolAutoSize(maxMemory)
 
-	allowClientRegistration, _ := opts.Bool("--allow-client-registration")
+	// Fork: a provider slot must be able to start on a host migrated from the
+	// 3.23-fix provider without a flag on the unit. Creating a client is
+	// always permitted: a slot that cannot use its saved identity mints one,
+	// so there is no off switch and nothing to set. The old
+	// --allow-client-registration spelling still parses and is ignored.
+	allowClientRegistration := true
+	explicitClientRegistration, _ := opts.Bool("--allow-client-registration")
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
 	noLegacyImport, _ := opts.Bool("--no-legacy-import")
 	legacyImportBudget := parseLegacyImportBudget(opts)
@@ -993,7 +999,7 @@ func provideWith(opts docopt.Opts, start bool) {
 	if domainErr != nil {
 		fmt.Fprintf(os.Stderr, "signed close evidence unavailable: %v\n", domainErr)
 	}
-	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, proxySourceOf: proxyManager.proxySourceOf(), memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, legacyImportBudget: legacyImportBudget, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, proxySourceOf: proxyManager.proxySourceOf(), memoryPlan: memoryPlan, maxMemory: maxMemory, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, explicitClientRegistration: explicitClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey, noLegacyImport: noLegacyImport, legacyImportBudget: legacyImportBudget, quarantineRejectedSignIn: quarantineRejectedSignIn, hotSwapIPC: hotSwapIPC, hotSwapCandidate: isHotSwapCandidate, opts: opts}
 	settings.wallet, _ = opts.String("--wallet")
 	if settings.wallet != "" {
 		settings.walletProof, err = snWalletProofFromOpts(opts)
@@ -1058,6 +1064,30 @@ func provideWith(opts docopt.Opts, start bool) {
 		stopSignals()
 		os.Exit(1)
 	}
+}
+
+// A first provider key needs no flag on a new install, but a directory that
+// already holds provider history keeps its identity decision explicit: a lost
+// or unreadable key is never silently replaced, and an operator who deletes a
+// key does not get a different provider identity without asking.
+func providerKeyCreatePermitted(explicit bool, keyPath string) bool {
+	if explicit {
+		return true
+	}
+	entries, err := os.ReadDir(filepath.Dir(keyPath))
+	if err != nil {
+		return false
+	}
+	for _, entry := range entries {
+		name := entry.Name()
+		if name == ".provider.key.registration.lock" || name == ".provider_version" {
+			continue
+		}
+		if strings.HasPrefix(name, ".provider") {
+			return false
+		}
+	}
+	return true
 }
 
 // Each invocation owns its output, status server and provider children. The
@@ -1147,7 +1177,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	if contractProfile != nil {
 		captureEvent = providerContractCaptureRequired
 	}
-	if workProfile != nil || contractProfile != nil {
+	captureLaunch := workProfile != nil || contractProfile != nil
+	if captureLaunch {
 		slots := make([]string, 0, len(providers))
 		for _, proxy := range providers {
 			slots = append(slots, providerRegistrationSlot(slotIdentities, proxy))
@@ -1158,11 +1189,6 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 		if err := contractProfile.validateRole(self.apiUrl, slots, self.closeReportDomainHash, workProfile); err != nil {
 			output.observe(providerContractCaptureRequired, 0, false, err, 0, nil)
-			return err
-		}
-		if self.allowClientRegistration {
-			err := errors.New("original capture launch requires retained provider identity and cannot allocate registration")
-			output.observe(captureEvent, 0, false, err, 0, nil)
 			return err
 		}
 	}
@@ -1362,15 +1388,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		networkJwtPath: filepath.Join(stateDir, "jwt"),
 		providers:      self.proxySettings,
 		disabled:       self.noLegacyImport,
-		explicitCreate: self.allowClientRegistration,
 		explicitAdopt:  self.adoptLegacyProviderKey,
+		captureLaunch:  captureLaunch,
 		recorder:       output,
 		budget:         self.legacyImportBudget,
 		newProver: func(wait legacyImportProofDialWait) (legacyImportProver, func(), error) {
 			return newSdkLegacyImportProver(ctx, self.apiUrl, wait)
 		},
 	})
-	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: self.allowClientRegistration, AdoptLegacyKey: self.adoptLegacyProviderKey})
+	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: providerKeyCreatePermitted(self.explicitClientRegistration, keyPath) && !captureLaunch, AdoptLegacyKey: self.adoptLegacyProviderKey})
 	if err != nil {
 		if ctx.Err() == nil {
 			output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
@@ -1457,17 +1483,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}()
 
 	// The operator budgets activation posts per client per hour, and one pass
-	// posts once per family, so a start asks the persisted budget before it runs
-	// the extender role. A held start still provides; it just does not listen or
-	// activate, and the line says when the role comes back.
-	extenderAllowed := true
-	if _, directPresent := directSlotIndex(providers); directPresent && isDirectEnabled() {
-		var extenderWait time.Duration
-		var extenderUsed int
-		extenderAllowed, extenderWait, extenderUsed = extenderActivationAllow(time.Now(), hostActivationPosts())
-		if !extenderAllowed {
-			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
-				extenderUsed, extenderActivationBudget, formatDuration(extenderWait))
+	// posts once per family, so the direct slot asks the persisted budget
+	// before each launch. The client is the identity the direct slot provides
+	// under. A held launch still provides; it just does not listen or activate,
+	// and the gate's line says when the role comes back. The gate keeps the
+	// startup verdict for the first launch and re-decides every relaunch, so a
+	// `provider direct on` after a hold honours it, and one after the hold
+	// expired is let back in without a restart.
+	var extenderGate *extenderActivationGate
+	if _, directPresent := directSlotIndex(providers); directPresent {
+		extenderGate = newExtenderActivationGate()
+		if isDirectEnabled() {
+			extenderGate.decideAtStart()
 		}
 	}
 	// The bring-up narration: per-slot auth outcomes and, while slots are
@@ -1483,8 +1510,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	bringUp := newProviderBringUpTracker(bringUpSlots)
 	// Publish the tracker so the /metrics scrape and the status payload report
-	// the same client-id provenance the heartbeat prints.
+	// the same client-id provenance the heartbeat prints, and fold in the
+	// identities the automatic legacy import already adopted: a slot it took a
+	// saved identity over for reached its outcome before the key gate, so the
+	// summary reports that count beside the mints this start produces.
 	setProviderBringUpTracker(bringUp)
+	bringUp.adoptIdentities(legacyImport.adopted)
 	// Slots that completed authentication at least once during this run, kept
 	// apart from the tracker because a slot that later fails leaves "running".
 	var authenticatedSlots atomic.Int64
@@ -1609,9 +1640,21 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 			return admitErr
 		}
+		// A capture launch must present the client identity its profile
+		// recorded for this slot, and that profile only compares the identity
+		// when the device is built (provider_work_capture.go apply) — after a
+		// mint would have registered a replacement and written it over the
+		// slot's credential. Creation authority is withheld here instead, so
+		// the slot either presents the retained client or refuses, and the
+		// recorded client is carried into the registration attempt so a
+		// durable operation that never bound a client is refused before it is
+		// submitted as a new allocation.
+		slot := providerRegistrationSlot(slotIdentities, proxySettings)
+		retained := captureLaunchRetainedIdentity(workProfile, contractProfile, slot)
+		captureRefusal := captureLaunchIdentityRefusal(workProfile, contractProfile, slot)
 		// The explicit flag always allocates; the automatic import enables a
 		// new registration only for this slot's recorded fallback.
-		allowCreate := self.allowClientRegistration || legacyImport.mintAllowed(legacyImportStoreKey(proxySettings))
+		allowCreate := providerSlotCreatePermitted(self.allowClientRegistration, legacyImport.mintAllowed(legacyImportStoreKey(proxySettings)), captureRefusal)
 		// Fork hook: the ported v33 hot-restart reuse (client_jwt_hotrestart.go)
 		// sits in front of the durable-registration mint. With hot restart on
 		// (the v33 default), a stored client JWT for this proxy identity is
@@ -1631,14 +1674,29 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			ClientStrategySettings: clientStrategySettings,
 			ClientStrategy:         clientStrategy,
 			Mint: func(mintCtx context.Context) (string, connect.Id, error) {
-				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
+				return authenticateProvider(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, retained, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
+					// The registration path is the only observer of what happened
+					// to this slot's identity; hand it to the start's aggregate
+					// rather than re-deriving it from the credential or a line.
+					bringUp.identityOutcome(index, slotDisplay, outcome, reason)
+				})
 			},
 			FreshMint: func(mintCtx context.Context) (string, connect.Id, error) {
-				return authenticateProviderFresh(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(slotIdentities, proxySettings), allowCreate, output, index)
+				return authenticateProviderFresh(mintCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, output, index)
 			},
 		})
 		release()
 		if err != nil {
+			// Creation withheld for a capture launch surfaces as the
+			// registration path's refusal: name the identity the profile
+			// expects so the operator reads the cause rather than an off
+			// switch that no longer exists, and record it where the capture
+			// launch's own admission failures go.
+			var refused *clientauth.RegistrationRefusedError
+			captureDenied := captureRefusal != nil && errors.As(err, &refused)
+			if captureDenied {
+				err = fmt.Errorf("%w: %w", captureRefusal, err)
+			}
 			// Fork hook: the ported v33 give-up/backoff accounting
 			// (proxy_manager_auth.go) records this identity's failed
 			// authentication, and gives up on it once it reaches the ceiling.
@@ -1649,7 +1707,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// a first-ever success is already "proven" when it lands).
 			reportProviderAuthResult(proxySettings, err)
 			if proxyCtx.Err() == nil {
-				output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
+				// Creation switched off is an operator decision with its own
+				// single line (authFailed), not a custody event: it must not
+				// also raise startup_recovery_required. A capture launch's
+				// withheld creation is the opposite: it is exactly the custody
+				// decision that launch refused.
+				if captureDenied {
+					output.observe(captureEvent, index, true, err, 0, nil)
+				} else if !clientauth.IsRegistrationDisabled(err) {
+					output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
+				}
 				bringUp.authFailed(index, display, err, providerAuthRetryToken(giveUp))
 			}
 			return err
@@ -1751,7 +1818,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// competes for one role, and only the direct slot can honestly hold it
 		// -- the same rule the swarm members and hosted devices follow. The
 		// remaining slots still provide; they just do not listen.
-		settings.ProvideExtenderEnabled = proxySettings == nil && extenderAllowed
+		settings.ProvideExtenderEnabled = proxySettings == nil && extenderGate != nil && extenderGate.allowLaunch()
 		// A proxied identity runs one family-agnostic transport, not the
 		// v4-pinned/v6-pinned/standby group: a pinned transport dials from
 		// this host, and behind a SOCKS proxy that dial cannot leave the
@@ -1877,7 +1944,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// one line per change, so the activation prints once it settles and
 		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
 		extenderStatusSub := device.AddExtenderProvideStatusChangeListener(
-			newProviderExtenderStatusListener(output, index))
+			newProviderExtenderStatusListener(output, index, extenderActivationUserId()))
 		defer extenderStatusSub.Close()
 
 		select {

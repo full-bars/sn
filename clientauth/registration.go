@@ -44,10 +44,41 @@ type RegistrationScope struct {
 
 // Application refusals require operator/configuration recovery. Keeping their
 // closed code observable never grants replacement registration authority.
-type RegistrationRefusedError struct{ Code string }
+// ExpectedClientId names the client a caller required when the refusal is about
+// an identity this custody could not present; it is empty otherwise.
+type RegistrationRefusedError struct {
+	Code             string
+	ExpectedClientId string
+}
 
 func (self *RegistrationRefusedError) Error() string {
+	if self.ExpectedClientId != "" {
+		return "client registration requires recovery: " + self.Code + " (expected client " + self.ExpectedClientId + ")"
+	}
 	return "client registration requires recovery: " + self.Code
+}
+
+// RetainedClientIdentity is a caller's demand that this attempt present one
+// client it recorded elsewhere, such as a capture launch's profile. Such a
+// caller has no creation authority, and a durable operation it did not record
+// would end in custody the caller must not receive: one with no bound client
+// would submit as a new allocation, and one bound to another client would
+// complete as that other client. The attempt refuses both before its request
+// and names the required client. A zero ClientId is no expectation: it refuses
+// only an operation that has bound nothing, and otherwise presents the client
+// this slot already owns.
+type RetainedClientIdentity struct {
+	ClientId connect.Id
+}
+
+// retainedClientRefusal refuses custody that names a client other than the one
+// this caller recorded, before a marker write or refresh can present it. A zero
+// recorded client asserts no expectation, so the slot's own identity is used.
+func retainedClientRefusal(retained *RetainedClientIdentity, clientId string) *RegistrationRefusedError {
+	if retained == nil || retained.ClientId == (connect.Id{}) || clientId == retained.ClientId.String() {
+		return nil
+	}
+	return &RegistrationRefusedError{Code: "retained_client_mismatch", ExpectedClientId: retained.ClientId.String()}
 }
 
 // A retained token is custody, not evidence that a currently unreachable API
@@ -72,6 +103,14 @@ func IsRegistrationRefreshUnavailable(err error) bool {
 // a network error means it was never reached.
 func NewRegistrationRefreshUnavailableError(cause error) error {
 	return &RegistrationRefreshUnavailableError{cause: cause}
+}
+
+// IsRegistrationDisabled reports whether err is the refusal a caller with
+// creation switched off receives. It is an operator decision, so it carries its
+// own single line and no custody event.
+func IsRegistrationDisabled(err error) bool {
+	var refused *RegistrationRefusedError
+	return errors.As(err, &refused) && refused.Code == "client_registration_disabled"
 }
 
 // Only a completed remote reply can produce this cause. Local registration or
@@ -109,6 +148,19 @@ func existingClientCustodyMarker(scope RegistrationScope, identity registrationT
 type registrationHooks struct {
 	afterRequest func() error
 	afterBinding func() error
+	// identity receives this attempt's decision about the slot's client
+	// identity. Nil is silent, which is what every caller that does not report
+	// identity health wants.
+	identity IdentityObserver
+}
+
+// reportIdentity tells the caller's observer how this attempt obtained the
+// identity. Exactly one outcome is reported per attempt, from the branch that
+// decided it.
+func (self registrationHooks) reportIdentity(outcome IdentityOutcome, reason string) {
+	if self.identity != nil {
+		self.identity(outcome, reason)
+	}
 }
 
 // Callers authorize creation only for independently known new work. Retained
@@ -119,19 +171,19 @@ func LoadOrRegisterClientJwt(ctx context.Context, api *sdk.Api, networkPath, cli
 }
 
 func loadOrRegisterClientJwt(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, hooks registrationHooks) (_ string, _ connect.Id, returnErr error) {
-	return loadOrRegisterClientJwtInDirectory(ctx, api, networkPath, clientPath, description, scope, allowCreate, hooks, nil)
+	return loadOrRegisterClientJwtInDirectory(ctx, api, networkPath, clientPath, description, scope, allowCreate, nil, hooks, nil)
 }
 
 // A provider supplies its key owner's physical directory. Historical callers
 // retain their existing independent custody through the nil-directory wrapper.
-func loadOrRegisterClientJwtInDirectory(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, hooks registrationHooks, directory *registrationStore) (_ string, _ connect.Id, returnErr error) {
-	return loadOrRegisterClientJwtWithCustody(ctx, api, networkPath, clientPath, description, scope, allowCreate, hooks, directory, nil)
+func loadOrRegisterClientJwtInDirectory(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, retained *RetainedClientIdentity, hooks registrationHooks, directory *registrationStore) (_ string, _ connect.Id, returnErr error) {
+	return loadOrRegisterClientJwtWithCustody(ctx, api, networkPath, clientPath, description, scope, allowCreate, retained, hooks, directory, nil)
 }
 
 // Measurement custody may borrow its separately owned, read-only bootstrap
 // directory. The reader is opened only for an already retained operation;
 // provider and production-validator wrappers keep their original boundaries.
-func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, hooks registrationHooks, directory *registrationStore, bootstrapOwner func() (*registrationStore, error)) (_ string, _ connect.Id, returnErr error) {
+func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, networkPath, clientPath, description string, scope RegistrationScope, allowCreate bool, retained *RetainedClientIdentity, hooks registrationHooks, directory *registrationStore, bootstrapOwner func() (*registrationStore, error)) (_ string, _ connect.Id, returnErr error) {
 	if ctx == nil || api == nil {
 		return "", connect.Id{}, errors.New("registration has no operation owner")
 	}
@@ -259,6 +311,11 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	} else if !errors.Is(anchorErr, os.ErrNotExist) {
 		return "", connect.Id{}, anchorErr
 	}
+	// The existing-client marker is read before the slot's credential, through
+	// the store's held lock. A writer publishes the credential and then its
+	// marker, so this order can only ever observe a marker whose credential is
+	// already visible; the reverse order can pair a newer marker with the older
+	// credential read before it.
 	legacy, legacyErr := owner.read(legacyName)
 	if legacyErr != nil && !errors.Is(legacyErr, os.ErrNotExist) {
 		return "", connect.Id{}, legacyErr
@@ -272,10 +329,21 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 			if err := validateRegistrationCredential(record, token, record.ClientId, record.DeviceId); err != nil {
 				return "", connect.Id{}, err
 			}
+			// The credential and its record agree with each other, but a caller
+			// that recorded another client must not refresh or present them.
+			if refused := retainedClientRefusal(retained, record.ClientId); refused != nil {
+				return "", connect.Id{}, refused
+			}
 		} else {
 			identity, err := registrationIdentity(token)
 			if err != nil || !validRegistrationIdentityId(identity.clientId) || !validRegistrationIdentityId(identity.deviceId) {
 				return "", connect.Id{}, errors.New("existing client custody has invalid identity")
+			}
+			// Refuse before the marker write and the refresh: either would
+			// otherwise adopt and present an identity this caller never
+			// recorded.
+			if refused := retainedClientRefusal(retained, identity.clientId); refused != nil {
+				return "", connect.Id{}, refused
 			}
 			// Observing existing custody consumes no creation authority. Its
 			// stable marker survives token loss and excludes bearer timestamps.
@@ -292,15 +360,52 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 				}
 			}
 		}
-		return refreshStoredClientJwtWithCustody(ctx, api, token, func(token string) error { return owner.write(clientName, []byte(token)) }, clearRejected, markRejected, false)
+		// The credential is present, so the identity is settled: either the
+		// platform accepts it and nothing changed, or it refuses it and the
+		// refusal is what the caller has to report.
+		token, id, err := refreshStoredClientJwtWithCustody(ctx, api, token, func(token string) error { return owner.write(clientName, []byte(token)) }, clearRejected, markRejected, false)
+		if err != nil {
+			if IsClientRevoked(err) {
+				hooks.reportIdentity(IdentityOutcomeRevoked, "saved identity rejected")
+			}
+		} else {
+			hooks.reportIdentity(IdentityOutcomeReused, "")
+		}
+		return token, id, err
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return "", connect.Id{}, err
 	}
-	if legacyErr == nil {
-		return "", connect.Id{}, &RegistrationRefusedError{Code: "legacy_identity_requires_explicit_recovery"}
+	// A caller that must present one recorded client has no creation authority
+	// at all, and a durable operation it did not record is a creation waiting
+	// to be submitted: an operation with no bound client would allocate a new
+	// one, and an operation bound to another client would complete as custody
+	// this caller must never receive. Refuse both before the request and name
+	// the client that was required. A caller with no recorded client asserts no
+	// expectation, so it presents whatever identity this slot already owns.
+	if retained != nil && record != nil {
+		var refused *RegistrationRefusedError
+		if record.ClientId == "" {
+			refused = &RegistrationRefusedError{Code: "retained_client_unbound"}
+		} else if retained.ClientId != (connect.Id{}) && record.ClientId != retained.ClientId.String() {
+			refused = &RegistrationRefusedError{Code: "retained_client_mismatch"}
+		}
+		if refused != nil {
+			if retained.ClientId != (connect.Id{}) {
+				refused.ExpectedClientId = retained.ClientId.String()
+			}
+			return "", connect.Id{}, refused
+		}
 	}
+	// No credential is left to present, so whatever custody remains (an
+	// existing-client marker, a rejection tombstone) names an identity this
+	// slot cannot reach: the server is the only authority on whether that
+	// identity is still valid, and there is nothing here to ask it with. The
+	// slot therefore creates a new client below. An existing-client marker
+	// never blocks that: it is evidence of a client this directory once owned,
+	// not a refusal, and the old build's requirement to recover it by hand is
+	// what left slots parked. Creation is the caller's standing decision.
 	if record == nil && !allowCreate {
-		return "", connect.Id{}, &RegistrationRefusedError{Code: "legacy_identity_requires_explicit_recovery"}
+		return "", connect.Id{}, &RegistrationRefusedError{Code: "client_registration_disabled"}
 	}
 	// Path custody reads the token and its fingerprint from one file, so a
 	// renewal renamed in between cannot mix two files (network_token.go).
@@ -321,6 +426,7 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	if err != nil || !validRegistrationIdentityId(identity.NetworkId) || !validRegistrationIdentityId(identity.UserId) || identity.clientId != "" || identity.deviceId != "" {
 		return "", connect.Id{}, errors.New("registration bootstrap does not name a network principal")
 	}
+	rejected := false
 	if marker, err := readToken(rejectionPath(clientPath)); err == nil {
 		blocks := directory != nil
 		if !blocks {
@@ -328,13 +434,52 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 				return "", connect.Id{}, err
 			}
 		}
+		// Only a tombstone that blocks this attempt is a refusal it can name;
+		// one a new network sign-in has already outlived says nothing about
+		// the identity being replaced.
+		rejected = blocks
 		if blocks {
-			return "", connect.Id{}, &RegistrationRefusedError{Code: "client_revoked"}
+			// A tombstone records a definite server rejection of this slot's
+			// client. A retained versioned operation is still the record of an
+			// identity the server bound to this key: replaying it can only
+			// reproduce the rejection, and minting over it would replace a
+			// bound identity behind the operator's back, so it stays explicit.
+			// An adopted identity has no such record; the slot mints a new
+			// client below and clears the tombstone with its credential.
+			if record != nil {
+				hooks.reportIdentity(IdentityOutcomeRevoked, "revoked identity retained")
+				return "", connect.Id{}, &RegistrationRefusedError{Code: "client_revoked"}
+			}
 		}
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return "", connect.Id{}, err
 	}
+	// What this attempt does to the slot's identity, reported once a
+	// credential is installed below. A retained operation is completed as the
+	// identity the server already bound, so completing it creates nothing; a
+	// new operation is a first start when this directory held no identity at
+	// all, and a replacement when it held one this slot could not present.
+	outcome := IdentityOutcomeRecovered
+	outcomeReason := ""
 	if record == nil {
+		if legacyErr == nil {
+			outcome, outcomeReason = IdentityOutcomeMintedReplacement, "saved identity missing"
+			if rejected {
+				outcomeReason = "saved identity rejected"
+			}
+		} else {
+			outcome = IdentityOutcomeMintedNew
+		}
+		// A new operation replaces custody that cannot produce a running slot.
+		// The existing-client marker goes first: an interrupted mint then
+		// leaves either the old marker intact or a complete new operation,
+		// never a record beside a marker naming a different identity, which
+		// every later start must refuse.
+		if legacyErr == nil {
+			if err := owner.remove(legacyName); err != nil {
+				return "", connect.Id{}, err
+			}
+		}
 		var requestId [32]byte
 		if _, err := rand.Read(requestId[:]); err != nil {
 			return "", connect.Id{}, err
@@ -418,6 +563,7 @@ func loadOrRegisterClientJwtWithCustody(ctx context.Context, api *sdk.Api, netwo
 	}
 	api.SetByJwt(result.ByClientJwt)
 	id, _ := connect.ParseId(clientId)
+	hooks.reportIdentity(outcome, outcomeReason)
 	return result.ByClientJwt, id, nil
 }
 
