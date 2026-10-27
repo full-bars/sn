@@ -145,7 +145,7 @@ Everything merged after `v2026.10.26-1793016775`. The miner is the program this 
 
 - **Two Bittensor claims are corrected** ([#134](https://github.com/full-bars/sn/pull/134)): the signed challenge quotes the message, and the stopped-daemon answer says unsigned v1 claims still expire.
 
-## [v2026.10.21-1077735390-meso] — 2026-10-21
+## [v2026.10.21-1077735390-meso] — 2026-10-21 (tag absent from full-bars/sn origin)
 
 ### Added
 
@@ -276,7 +276,7 @@ Everything merged after `v2026.10.26-1793016775`. The miner is the program this 
 
 ---
 
-## [v2026.09.21-1790052822-meso] — 2026-09-22
+## [v2026.09.21-1790052822-meso] — 2026-09-22 (tag absent from full-bars/sn origin)
 
 ### Added
 
@@ -380,6 +380,6 @@ Everything merged after `v2026.10.26-1793016775`. The miner is the program this 
 - 3 stale review docs with confirmed false positives
 - `mainnnet/` typo directory
 
-## [v2026.9.16-1789602650-meso] — 2026-09-16 (superseded)
+## [v2026.9.16-1789602650-meso] — 2026-09-16 (superseded; tag absent from full-bars/sn origin)
 
 Initial release, replaced by v2026.9.17 with additional fixes.
