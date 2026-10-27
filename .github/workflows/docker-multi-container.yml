@@ -77,7 +77,7 @@ jobs:
                 - URNETWORK_NODE_NAME=urfix-turbo
                 - URNETWORK_PROFILE=turbo-v8
               volumes:
-                - ur_config:/root/.urnetwork
+                - ur_config_turbo:/root/.urnetwork
                 - /tmp/multi/turbo.txt:/app/proxy.txt
             urfix-auto:
               image: ghcr.io/full-bars/sn:main
@@ -93,7 +93,7 @@ jobs:
                 - URNETWORK_NODE_NAME=urfix-auto
                 - URNETWORK_PROFILE=auto
               volumes:
-                - ur_config:/root/.urnetwork
+                - ur_config_auto:/root/.urnetwork
                 - /tmp/multi/auto.txt:/app/proxy.txt
             urfix-lowmem:
               image: ghcr.io/full-bars/sn:main
@@ -109,10 +109,12 @@ jobs:
                 - URNETWORK_NODE_NAME=urfix-lowmem
                 - URNETWORK_PROFILE=lowmem
               volumes:
-                - ur_config:/root/.urnetwork
+                - ur_config_lowmem:/root/.urnetwork
                 - /tmp/multi/lowmem.txt:/app/proxy.txt
           volumes:
-            ur_config:
+            ur_config_turbo:
+            ur_config_auto:
+            ur_config_lowmem:
           EOF
           cd /tmp && docker compose -f docker-compose.yml up -d
           echo "containers started; waiting for auth..."
@@ -173,11 +175,11 @@ jobs:
       - name: Teardown — full teardown of containers + shared config volume
         run: |
           # Full teardown: stop (SIGTERM -> provider deregisters), remove
-          # containers, and drop the shared ur_config volume so the client
+          # containers, and drop each per-container state volume so the client
           # JWT/state cannot persist across runs. Runs even when the job
           # fails (if: always()).
           cd /tmp && docker compose -f docker-compose.yml stop 2>/dev/null || true
           docker rm -f urfix-turbo urfix-auto urfix-lowmem 2>/dev/null || true
-          docker volume rm ur_config 2>/dev/null || true
-          echo "containers stopped, shared volume wiped"
+          docker volume rm ur_config_turbo ur_config_auto ur_config_lowmem 2>/dev/null || true
+          echo "containers stopped, state volumes wiped"
         if: always()
