@@ -146,20 +146,25 @@ proxies in that state at the moment of the tick:
 `up` is serving and reachable now. `down` is `degraded` plus `dead`, where
 `dead` failed outright and `degraded` is reachable but failing some checks.
 `connecting` is registered and not yet observed either way. `members` is every
-proxy the registry knows, and `target` is the pool size the operator asked for
-in `proxy_url_max`, or `0` when that could not be read. `floor` is the lowest
-`up` count over the history window rather than the current value, and `dips`
-counts how often the pool went below it. `verdict` is one of starting up, down,
-needs attention, mostly healthy or healthy. `scope` says whether the failure is
-none, isolated to specific proxies, or the pool failing as a unit.
+proxy the registry knows. `target` is the size the pool is asked to run: the
+curated proxies from the operator file or the internal config, plus the URL
+source's admission cap (the tighter of `proxy_url_max` and the self-heal
+operating point), then the operator's trim cap over that total. It is `0` when
+there is no combined size to judge, which is a curated-only pool or a URL pool
+with no cap set. `floor` is the lowest `up` count over the history window rather
+than the current value, and `dips` counts how often the pool went below it.
+`verdict` is one of starting up, down, needs attention, mostly healthy or
+healthy. `scope` says whether the failure is none, isolated to specific proxies,
+or the pool failing as a unit; a member that has not been observed is never a
+failure, so a pool still filling its target is starting up rather than down.
 
 Judge the pool against `target`, not `members`. A trimmed pool keeps the members
 it has already seen, so `members` can be far larger than the number of proxies
 the provider is actually serving from. When `target` is known the verdict
 measures the shortfall against it: 482 up against a target of 500 is 96% and
 mostly healthy, while the same 482 against 1077 members would read as half the
-pool being down. `target=0` means the limit could not be read, and the verdict
-then falls back to judging every member.
+pool being down. `target=0` means there is no combined size to judge, and the
+verdict then falls back to every member.
 
 ## Metrics for proxies that cannot carry traffic
 
