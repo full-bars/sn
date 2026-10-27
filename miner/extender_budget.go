@@ -11,23 +11,24 @@ package miner
 // means a restart forgets it; the record here is what makes the budget survive a
 // restart or a reboot.
 //
-// The record is keyed by the client the direct slot provides under: the
-// identity the status listener records against, and the one a heal replaces. A
-// host that heals must not be throttled by the identity it replaced. A start
-// that cannot name its client yet charges the unidentified key, which the
-// first client it names inherits (adoptUnidentified), so registering does not
-// hand that client a budget the start already spent.
-//
-// That is not quite the operator's key.
-// ExtenderActivateRateLimit is enforced per user
+// The record is keyed by the account the direct slot signs in as: the user_id
+// claim of the sign-in token at <state>/jwt, which is the key the operator
+// counts. ExtenderActivateRateLimit is enforced per user
 // (model.CheckAndRecordAccountActionRateLimit is passed
-// clientSession.ByJwt.UserId), and every client of one sign-in shares its
-// user, so a healed client starts fresh here while the operator's window still
-// holds the account's posts. Keying this record by the account is a separate
-// change; until then a heal can under-count against the operator.
+// clientSession.ByJwt.UserId), and every client of one sign-in shares that
+// user, so keying by client let a heal start fresh while the operator's window
+// still held the account's posts. Keying by the account is the operator's own
+// key: a healed or re-minted client spends what the account has left.
+//
+// A start that cannot read the token yet charges the unidentified key. There is
+// no client to hand those posts to later (adoptUnidentified is gone), so an
+// account that appears afterwards opens with its own budget: the one
+// under-count left, and it is bounded to a start before sign-in.
 //
 // The record is a section of provider_state.db (state_store.go), not a file of
-// its own.
+// its own. A store that will not open is logged once and read as empty rather
+// than as a refusal: the operator's own rate limit still answers the posts, and
+// a host must keep providing when its own state file is unreadable.
 
 import (
 	"sync"
@@ -54,25 +55,17 @@ const (
 	// refusals spread over weeks cannot pin a host at the maximum wait.
 	extenderRefusalDecay = 24 * time.Hour
 
-	// extenderActivationClientBound bounds how many client identities the
-	// record keeps. A host that heals its identity spends under a new client,
-	// and a host that mints fresh on every start leaves one behind each time,
-	// so the map needs a ceiling: the least recently used client goes first.
-	// A record matters for an hour at most, and 32 is far more clients than
-	// one host spends from in an hour.
-	extenderActivationClientBound = 32
-
-	// extenderActivationUnidentifiedClient keys the record while the direct
-	// slot has no readable client credential: the start is about to mint a
-	// client, so there is no identity to charge yet. The posts still count,
-	// so a host that restarts in a loop without ever registering is not handed
-	// a fresh budget by every start. The first client this host names inherits
-	// the entry (adoptUnidentified), so those posts are charged to the identity
-	// that spent them.
-	extenderActivationUnidentifiedClient = "unidentified"
+	// extenderActivationUnidentifiedAccount keys the record while there is no
+	// readable sign-in token: the start is about to sign in, so there is no
+	// account to charge yet. The posts still count against something, so a
+	// host that restarts in a loop without ever signing in is not handed a
+	// fresh budget by every start. Those posts are not handed to the account
+	// that signs in later: the record cannot name it yet, and adoption would
+	// need a client the token has not named.
+	extenderActivationUnidentifiedAccount = "unidentified"
 )
 
-// extenderActivationState is one client's spending.
+// extenderActivationState is one account's spending.
 type extenderActivationState struct {
 	// Attempts are the unix times of the posts counted in the window.
 	Attempts []int64 `json:"attempts,omitempty"`
@@ -84,14 +77,12 @@ type extenderActivationState struct {
 	// LastRefusalUnix bounds the streak in time, so a refusal from weeks ago
 	// does not escalate today's.
 	LastRefusalUnix int64 `json:"last_refusal_unix,omitempty"`
-	// LastUsedUnix orders the clients in the record for eviction.
-	LastUsedUnix int64 `json:"last_used_unix,omitempty"`
 }
 
-// extenderActivationLegacy is the record before it was keyed by client: one
-// flat state for the whole host. It is embedded in the record, so a store
+// extenderActivationLegacy is the record before it was keyed by any identity:
+// one flat state for the whole host. It is embedded in the record, so a store
 // written by an older build still decodes, and it is read only to charge those
-// attempts to the client providing now (adoptLegacy) rather than discard them.
+// attempts to the account signed in now (adoptLegacy) rather than discard them.
 type extenderActivationLegacy struct {
 	Attempts         []int64 `json:"attempts,omitempty"`
 	BackoffUntilUnix int64   `json:"backoff_until_unix,omitempty"`
@@ -99,10 +90,11 @@ type extenderActivationLegacy struct {
 	LastRefusalUnix  int64   `json:"last_refusal_unix,omitempty"`
 }
 
-// extenderActivationRecord is the stored shape: one state per client identity.
-// The map is bounded (extenderActivationClientBound).
+// extenderActivationRecord is the stored shape: one state per account. The map
+// is not bounded because an entry needs a distinct sign-in account on this
+// host, which the operator controls and a heal does not add to.
 type extenderActivationRecord struct {
-	Clients map[string]extenderActivationState `json:"clients,omitempty"`
+	Accounts map[string]extenderActivationState `json:"accounts,omitempty"`
 	extenderActivationLegacy
 }
 
@@ -127,67 +119,66 @@ var extenderActivationRecordMu sync.Mutex
 
 // warnExtenderBudgetUnenforced says the record could not be read or written.
 // The budget is best effort by design (a host must never stop providing
-// because its own state file is read-only), so this line is the only evidence
-// the operator gets that the budget went unenforced.
-func warnExtenderBudgetUnenforced(client string) {
+// because its own state file is read-only, and the operator's own rate limit
+// still answers the posts with a 429), so this line is the only evidence the
+// operator gets that the budget went unenforced.
+func warnExtenderBudgetUnenforced(account string) {
 	extenderBudgetWarnOnce.Do(func() {
-		tlog("⚠️ [extender] activation budget unenforced for client %s: provider state store unavailable this run\n", client)
+		tlog("⚠️ [extender] activation budget unenforced for account %s: provider state store unavailable this run\n", account)
 	})
 }
 
-func readExtenderActivationRecord(client string) (extenderActivationRecord, bool) {
+func readExtenderActivationRecord(account string) (extenderActivationRecord, bool) {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnenforced(client)
+		warnExtenderBudgetUnenforced(account)
 		return extenderActivationRecord{}, false
 	}
 	var record extenderActivationRecord
 	if !store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record) {
 		return extenderActivationRecord{}, false
 	}
-	if record.Clients == nil {
-		record.Clients = map[string]extenderActivationState{}
+	if record.Accounts == nil {
+		record.Accounts = map[string]extenderActivationState{}
 	}
 	return record, true
 }
 
-func writeExtenderActivationRecord(record extenderActivationRecord, client string) {
+func writeExtenderActivationRecord(record extenderActivationRecord, account string) {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnenforced(client)
+		warnExtenderBudgetUnenforced(account)
 		return
 	}
 	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
-		warnExtenderBudgetUnenforced(client)
+		warnExtenderBudgetUnenforced(account)
 	}
 }
 
-// extenderActivationRecordForClient loads the record and adopts a pre-client
-// flat record onto client, so every write path persists the new shape and the
-// first start after an upgrade charges the history it inherited. It also moves
-// what a start spent before it could name its client onto that client.
-func extenderActivationRecordForClient(client string) extenderActivationRecord {
-	record, _ := readExtenderActivationRecord(client)
-	if record.Clients == nil {
-		record.Clients = map[string]extenderActivationState{}
+// extenderActivationRecordForAccount loads the record and adopts a pre-account
+// flat record onto the account, so every write path persists the new shape and
+// the first start after an upgrade charges the history it inherited.
+func extenderActivationRecordForAccount(account string) extenderActivationRecord {
+	record, _ := readExtenderActivationRecord(account)
+	if record.Accounts == nil {
+		record.Accounts = map[string]extenderActivationState{}
 	}
-	record.adoptLegacy(client)
-	record.adoptUnidentified(client)
+	record.adoptLegacy(account)
 	return record
 }
 
-// adoptLegacy moves a pre-client record onto client. The old record described
-// this host's own spending, and the identity an upgrade keeps is the client
-// providing now, so its attempts and its refusal streak belong to that client.
-func (record *extenderActivationRecord) adoptLegacy(client string) {
+// adoptLegacy moves a pre-account record onto the account. The old record
+// described this host's own spending, and the identity an upgrade keeps is the
+// account signed in now, so its attempts and its refusal streak belong to it.
+func (record *extenderActivationRecord) adoptLegacy(account string) {
 	legacy := record.extenderActivationLegacy
-	if 0 < len(record.Clients) || !legacy.present() {
+	if 0 < len(record.Accounts) || !legacy.present() {
 		return
 	}
-	if record.Clients == nil {
-		record.Clients = map[string]extenderActivationState{}
+	if record.Accounts == nil {
+		record.Accounts = map[string]extenderActivationState{}
 	}
-	record.Clients[client] = extenderActivationState{
+	record.Accounts[account] = extenderActivationState{
 		Attempts:         legacy.Attempts,
 		BackoffUntilUnix: legacy.BackoffUntilUnix,
 		Refusals:         legacy.Refusals,
@@ -196,58 +187,25 @@ func (record *extenderActivationRecord) adoptLegacy(client string) {
 	record.extenderActivationLegacy = extenderActivationLegacy{}
 }
 
-// adoptUnidentified charges what a start spent before it could name its client
-// to the first client it can name. Those posts were this host's, made moments
-// before it registered under that client, and the operator counted them at the
-// time, so leaving them on the shared key would hand the new client a fresh
-// budget for posts it has already sent. A refusal recorded before the identity
-// was known carries too: it is the operator holding this host, not the name it
-// had not written yet.
-func (record *extenderActivationRecord) adoptUnidentified(client string) {
-	if client == extenderActivationUnidentifiedClient {
-		return
+// extenderActivationAccountKey is the record key for one account. A start that
+// cannot read the sign-in token yet is charged to the unidentified key rather
+// than to a guessed account.
+func extenderActivationAccountKey(userId string) string {
+	if userId == "" {
+		return extenderActivationUnidentifiedAccount
 	}
-	pending, ok := record.Clients[extenderActivationUnidentifiedClient]
-	if !ok {
-		return
-	}
-	delete(record.Clients, extenderActivationUnidentifiedClient)
-	state := record.Clients[client]
-	state.Attempts = append(state.Attempts, pending.Attempts...)
-	if state.BackoffUntilUnix < pending.BackoffUntilUnix {
-		state.BackoffUntilUnix = pending.BackoffUntilUnix
-	}
-	if state.Refusals < pending.Refusals {
-		state.Refusals = pending.Refusals
-	}
-	if state.LastRefusalUnix < pending.LastRefusalUnix {
-		state.LastRefusalUnix = pending.LastRefusalUnix
-	}
-	if state.LastUsedUnix < pending.LastUsedUnix {
-		state.LastUsedUnix = pending.LastUsedUnix
-	}
-	record.Clients[client] = state
+	return userId
 }
 
-// extenderActivationClientKey is the record key for one client id. A start
-// that cannot read a client credential yet is charged to the unidentified key
-// rather than to a guessed identity.
-func extenderActivationClientKey(clientId string) string {
-	if clientId == "" {
-		return extenderActivationUnidentifiedClient
-	}
-	return clientId
-}
-
-// extenderActivationClientId is the client the direct slot provides under: the
-// client_id of its durable client credential, which is the credential
-// provideClientJWT reuses for that slot and rewrites whenever the identity is
-// renewed or replaced. Empty before the host has registered, when the start is
-// about to mint a fresh client and there is no identity to charge yet.
-func extenderActivationClientId() string {
-	// The direct slot's credential path does not depend on the proxy set; only
-	// a proxied slot is hashed by it.
-	path, err := providerClientJwtPath(providerSlotIdentities{}, nil)
+// extenderActivationUserId is the account the direct slot's posts are charged
+// to: the user_id claim of the sign-in token at <state>/jwt. That is the key
+// the operator's ExtenderActivateRateLimit counts, because
+// model.CheckAndRecordAccountActionRateLimit is passed
+// clientSession.ByJwt.UserId, so two clients of one sign-in are one budget and
+// a heal spends what the account has left. Empty before the host has signed
+// in, when there is no account to charge yet.
+func extenderActivationUserId() string {
+	path, err := providerStatePath("jwt")
 	if err != nil {
 		return ""
 	}
@@ -255,41 +213,17 @@ func extenderActivationClientId() string {
 	if err != nil {
 		return ""
 	}
-	clientId, err := clientauth.ClientIdFromJwt(token)
+	userId, err := clientauth.JwtUserId(token)
 	if err != nil {
 		return ""
 	}
-	return clientId.String()
+	return userId
 }
 
-// trimExtenderActivationClients bounds the record by dropping the least
-// recently used client. keep is the client this call just decided for, so it is
-// never the one dropped.
-func trimExtenderActivationClients(record *extenderActivationRecord, keep string) {
-	for extenderActivationClientBound < len(record.Clients) {
-		oldest := ""
-		for client, state := range record.Clients {
-			if client == keep {
-				continue
-			}
-			if oldest == "" || state.LastUsedUnix < record.Clients[oldest].LastUsedUnix ||
-				(state.LastUsedUnix == record.Clients[oldest].LastUsedUnix && client < oldest) {
-				oldest = client
-			}
-		}
-		if oldest == "" {
-			return
-		}
-		delete(record.Clients, oldest)
-	}
-}
-
-// storeExtenderActivation records one client's state at now and persists it.
-func storeExtenderActivation(record extenderActivationRecord, client string, state extenderActivationState, now time.Time) {
-	state.LastUsedUnix = now.Unix()
-	record.Clients[client] = state
-	trimExtenderActivationClients(&record, client)
-	writeExtenderActivationRecord(record, client)
+// storeExtenderActivation records one account's state at now and persists it.
+func storeExtenderActivation(record extenderActivationRecord, account string, state extenderActivationState, now time.Time) {
+	record.Accounts[account] = state
+	writeExtenderActivationRecord(record, account)
 }
 
 // pruneExtenderAttempts drops the attempts that have aged out of the window and
@@ -307,20 +241,20 @@ func pruneExtenderAttempts(state *extenderActivationState, now time.Time, window
 }
 
 // extenderActivationAllow reports whether this start may run the extender role,
-// how long to wait when it may not, and how many posts the client's window
+// how long to wait when it may not, and how many posts the account's window
 // already holds. It records this start's posts when it allows the role, so the
-// caller calls it once, before the slots are built. clientId is the identity
-// the direct slot provides under (extenderActivationClientId).
-func extenderActivationAllow(now time.Time, posts int, clientId string) (allow bool, wait time.Duration, used int) {
-	client := extenderActivationClientKey(clientId)
+// caller calls it once, before the slots are built. userId is the account the
+// direct slot signs in as (extenderActivationUserId).
+func extenderActivationAllow(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int) {
+	account := extenderActivationAccountKey(userId)
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
-	record := extenderActivationRecordForClient(client)
-	state := record.Clients[client]
+	record := extenderActivationRecordForAccount(account)
+	state := record.Accounts[account]
 	used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
 	if now.Unix() < state.BackoffUntilUnix {
 		wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
-		storeExtenderActivation(record, client, state, now)
+		storeExtenderActivation(record, account, state, now)
 		return false, wait, used
 	}
 	if extenderActivationBudget < used+posts {
@@ -334,25 +268,25 @@ func extenderActivationAllow(now time.Time, posts int, clientId string) (allow b
 		if wait = time.Unix(oldest, 0).Add(extenderActivationWindow).Sub(now); wait < 0 {
 			wait = 0
 		}
-		storeExtenderActivation(record, client, state, now)
+		storeExtenderActivation(record, account, state, now)
 		return false, wait, used
 	}
 	for i := 0; i < posts; i++ {
 		state.Attempts = append(state.Attempts, now.Unix())
 	}
-	storeExtenderActivation(record, client, state, now)
+	storeExtenderActivation(record, account, state, now)
 	return true, 0, used
 }
 
 // recordExtenderActivationRefused persists the wait a refusal implies for one
-// client, so the next start honours it instead of posting again into the same
+// account, so the next start honours it instead of posting again into the same
 // refusal.
-func recordExtenderActivationRefused(now time.Time, clientId string) time.Duration {
-	client := extenderActivationClientKey(clientId)
+func recordExtenderActivationRefused(now time.Time, userId string) time.Duration {
+	account := extenderActivationAccountKey(userId)
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
-	record := extenderActivationRecordForClient(client)
-	state := record.Clients[client]
+	record := extenderActivationRecordForAccount(account)
+	state := record.Accounts[account]
 	// A streak that has gone quiet starts over: refusals spread across weeks
 	// are not one escalating incident.
 	if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
@@ -369,20 +303,21 @@ func recordExtenderActivationRefused(now time.Time, clientId string) time.Durati
 		}
 	}
 	state.BackoffUntilUnix = now.Add(wait).Unix()
-	storeExtenderActivation(record, client, state, now)
+	storeExtenderActivation(record, account, state, now)
 	return wait
 }
 
 // recordExtenderActivationSucceeded clears what a refusal left behind for one
-// client: the activation the operator signed resets that client's budget, so
-// the next start may activate again. Other clients in the record are untouched.
-func recordExtenderActivationSucceeded(clientId string) {
-	client := extenderActivationClientKey(clientId)
+// account: the activation the operator signed resets that account's budget, so
+// the next start may activate again. Other accounts in the record are
+// untouched.
+func recordExtenderActivationSucceeded(userId string) {
+	account := extenderActivationAccountKey(userId)
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
-	record := extenderActivationRecordForClient(client)
-	delete(record.Clients, client)
-	writeExtenderActivationRecord(record, client)
+	record := extenderActivationRecordForAccount(account)
+	delete(record.Accounts, account)
+	writeExtenderActivationRecord(record, account)
 }
 
 // extenderActivationGate decides the direct slot's extender role once per
@@ -420,8 +355,8 @@ func (gate *extenderActivationGate) decideAtStart() bool {
 
 // allowLaunch reports whether this launch may run the extender role. It spends
 // the startup verdict once and asks the record on every later launch, resolving
-// the client afresh because the slot may have written its credential since the
-// process started.
+// the account afresh because the sign-in token can be rewritten between
+// launches.
 func (gate *extenderActivationGate) allowLaunch() bool {
 	gate.mu.Lock()
 	pending, allow := gate.pending, gate.allow
@@ -430,7 +365,7 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	if pending {
 		return allow
 	}
-	allow, wait, used := extenderActivationAllow(time.Now(), hostActivationPosts(), extenderActivationClientId())
+	allow, wait, used := extenderActivationAllow(time.Now(), hostActivationPosts(), extenderActivationUserId())
 	if !allow {
 		tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
 			used, extenderActivationBudget, formatDuration(wait))
