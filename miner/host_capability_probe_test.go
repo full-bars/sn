@@ -123,6 +123,105 @@ func TestIPv6ProbeOnAClosedPathIsNotUsable(t *testing.T) {
 	}
 }
 
+// An echo of our own query carries this id but is not a response, so it proves
+// the send direction and nothing about the return path.
+func TestIPv6ProbeWithAnEchoedQueryIsNotUsable(t *testing.T) {
+	usable, reason, _ := ipv6ProbePipe(t, func(query []byte) []byte {
+		return append([]byte(nil), query...)
+	})
+	if usable {
+		t.Fatal("a query echoed back measured usable")
+	}
+	if !strings.Contains(reason, "response bit") {
+		t.Fatalf("reason = %q, want it to say the reply is not a response", reason)
+	}
+}
+
+// NXDOMAIN is an answer that crossed the path, so it is reachability evidence:
+// the probe asks whether the resolver replies, not whether the name exists.
+// Pinned here because the choice decides whether a host keeps its v6 post.
+func TestIPv6ProbeWithAnNXDOMAINReplyIsUsable(t *testing.T) {
+	usable, reason, _ := ipv6ProbePipe(t, func(query []byte) []byte {
+		answer := make([]byte, 12)
+		copy(answer[0:2], query[0:2])
+		answer[2] = 0x81
+		answer[3] = 0x03
+		binary.BigEndian.PutUint16(answer[4:6], 1)
+		return answer
+	})
+	if !usable {
+		t.Fatalf("an nxdomain reply measured unusable: %q", reason)
+	}
+}
+
+// One lost udp packet must not downgrade a host for a whole recheck interval,
+// so a measurement asks again before it believes the silence.
+func TestIPv6ProbeRetriesOnceBeforeCallingV6Unusable(t *testing.T) {
+	attempts := 0
+	reasons := []string{"first silent", "second silent"}
+	usable, reason := probeIPv6With(func() (bool, string) {
+		attempts++
+		if attempts == 1 {
+			return false, reasons[0]
+		}
+		return true, ""
+	})
+	if !usable {
+		t.Fatalf("one lost packet measured unusable: %q", reason)
+	}
+	if attempts != ipv6ProbeAttempts {
+		t.Fatalf("attempts = %d, want %d: one retry, not a loop", attempts, ipv6ProbeAttempts)
+	}
+}
+
+// Two silent answers are evidence, and the reason the host keeps is the last
+// one, which describes the failure that decided.
+func TestIPv6ProbeGivesUpAfterTwoSilentAnswers(t *testing.T) {
+	attempts := 0
+	reasons := []string{"first silent", "second silent"}
+	usable, reason := probeIPv6With(func() (bool, string) {
+		attempts++
+		return false, reasons[attempts-1]
+	})
+	if usable {
+		t.Fatal("two silent answers measured usable")
+	}
+	if attempts != ipv6ProbeAttempts {
+		t.Fatalf("attempts = %d, want %d", attempts, ipv6ProbeAttempts)
+	}
+	if reason != reasons[1] {
+		t.Fatalf("reason = %q, want the last attempt's %q", reason, reasons[1])
+	}
+}
+
+// probeTestConn is a socket that records whether the probe closed it.
+type probeTestConn struct {
+	closed bool
+}
+
+func (self *probeTestConn) SetWriteDeadline(time.Time) error { return nil }
+func (self *probeTestConn) SetReadDeadline(time.Time) error  { return nil }
+func (self *probeTestConn) Write(p []byte) (int, error)      { return len(p), nil }
+func (self *probeTestConn) Read(p []byte) (int, error)       { return 0, io.EOF }
+func (self *probeTestConn) Close() error                     { self.closed = true; return nil }
+
+// The probe owns the socket, so the one path that fails before any i/o still
+// closes it: a recheck that cannot build its query must not leak a descriptor.
+func TestIPv6ProbeClosesTheSocketWhenTheQueryCannotBeBuilt(t *testing.T) {
+	previous := newIPv6ProbeQueryFn
+	newIPv6ProbeQueryFn = func() (uint16, []byte, error) { return 0, nil, io.EOF }
+	t.Cleanup(func() { newIPv6ProbeQueryFn = previous })
+
+	conn := &probeTestConn{}
+	usable, reason := probeIPv6Reply(conn, probeTestTimeout)
+	if usable || reason == "" {
+		t.Fatalf("unbuildable query: usable=%v reason=%q, want unusable with a reason", usable, reason)
+	}
+	if !conn.closed {
+		t.Fatal("the probe left the socket it opened open")
+	}
+}
+
 // The precheck decides before any syscall: a host with no global v6 address
 // never spends a probe.
 func TestIPv6ProbeWithoutAGlobalAddressShortCircuits(t *testing.T) {

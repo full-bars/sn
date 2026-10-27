@@ -36,6 +36,12 @@ const (
 	// which any answer to this query fits in.
 	ipv6ProbeReplyMax = 512
 
+	// ipv6ProbeAttempts is how many times one measurement asks before it
+	// calls v6 unusable. A probe is a single udp exchange, so one lost packet
+	// would otherwise downgrade a host for a whole recheck interval; a second
+	// question costs one round trip and keeps a working path measured working.
+	ipv6ProbeAttempts = 2
+
 	// Cadence. A host that has had IPv6 recently is probably flapping or
 	// waiting for a tunnel, and restoring it doubles what a pass earns, so it
 	// is re-checked often. A host that has never had it is re-checked rarely;
@@ -102,17 +108,49 @@ func probeIPv6Usable() (bool, string) {
 	if !ipv6GlobalAddressPresent() {
 		return false, "no global ipv6 address"
 	}
-	conn, err := net.DialTimeout("udp6", ipv6ProbeTarget, ipv6ProbeTimeout)
+	return probeIPv6With(func() (bool, string) {
+		return probeIPv6ReplyOver(dialIPv6Probe, ipv6ProbeTimeout)
+	})
+}
+
+// probeIPv6With runs one measurement up to ipv6ProbeAttempts times and reports
+// the last reason it did not answer. One lost udp packet is not evidence that a
+// host has no v6: the alternation lives here so a test can show the retry
+// without waiting out a real deadline twice.
+func probeIPv6With(measure func() (bool, string)) (bool, string) {
+	reason := ""
+	for attempt := 0; attempt < ipv6ProbeAttempts; attempt++ {
+		usable, attemptReason := measure()
+		if usable {
+			return true, ""
+		}
+		reason = attemptReason
+	}
+	return false, reason
+}
+
+// dialIPv6Probe opens the one socket a measurement uses.
+func dialIPv6Probe() (ipv6ProbeConn, error) {
+	return net.DialTimeout("udp6", ipv6ProbeTarget, ipv6ProbeTimeout)
+}
+
+// probeIPv6ReplyOver dials, asks, and leaves closing to probeIPv6Reply, which
+// owns the socket for every path that can fail after the dial.
+func probeIPv6ReplyOver(dial func() (ipv6ProbeConn, error), timeout time.Duration) (bool, string) {
+	conn, err := dial()
 	if err != nil {
 		return false, err.Error()
 	}
-	return probeIPv6Reply(conn, ipv6ProbeTimeout)
+	return probeIPv6Reply(conn, timeout)
 }
 
 // probeIPv6Reply runs one query over conn and reports whether a reply answered
-// it, with the reason it did not in the second value.
+// it, with the reason it did not in the second value. It takes ownership of
+// conn and closes it: a measurement that cannot build its query would
+// otherwise leak the socket it just opened.
 func probeIPv6Reply(conn ipv6ProbeConn, timeout time.Duration) (bool, string) {
-	id, query, err := newIPv6ProbeQuery()
+	defer conn.Close()
+	id, query, err := newIPv6ProbeQueryFn()
 	if err != nil {
 		return false, err.Error()
 	}
@@ -128,9 +166,9 @@ func probeIPv6Reply(conn ipv6ProbeConn, timeout time.Duration) (bool, string) {
 
 // ipv6ProbeExchange writes the query and waits for one reply. The wait is what
 // the probe measures: a path that accepts the send and returns nothing is not
-// usable, and only the read can tell that apart from a path that works.
+// usable, and only the read can tell that apart from a path that works. The
+// caller owns the socket and closes it.
 func ipv6ProbeExchange(conn ipv6ProbeConn, query []byte, timeout time.Duration) ([]byte, error) {
-	defer conn.Close()
 	if err := conn.SetWriteDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
@@ -152,16 +190,31 @@ func ipv6ProbeExchange(conn ipv6ProbeConn, query []byte, timeout time.Duration) 
 	return reply[:n], nil
 }
 
-// checkIPv6ProbeReply reports why a reply does not answer the query.
+// checkIPv6ProbeReply reports why a reply does not answer the query. A response
+// is the least a reply has to be: an echo of our own query carries this id and
+// proves the send direction only, so the QR bit is required before the id is
+// even worth comparing.
+//
+// An NXDOMAIN (rcode 3) counts as reachability evidence. The measurement asks
+// whether the resolver answered at all, and "no such name" is an answer that
+// crossed the v6 path and came back; treating it as a probe failure would
+// downgrade a working host. Every other rcode is likewise an answer.
 func checkIPv6ProbeReply(reply []byte, id uint16) error {
 	if len(reply) < 12 {
 		return fmt.Errorf("reply is %d bytes, too short for a dns header", len(reply))
+	}
+	if reply[2]&0x80 == 0 {
+		return fmt.Errorf("reply does not have the response bit set")
 	}
 	if got := binary.BigEndian.Uint16(reply[0:2]); got != id {
 		return fmt.Errorf("reply id %d does not answer query id %d", got, id)
 	}
 	return nil
 }
+
+// newIPv6ProbeQueryFn builds the query. A variable so a test can show the
+// socket is closed even on the path where the query cannot be built.
+var newIPv6ProbeQueryFn = newIPv6ProbeQuery
 
 // newIPv6ProbeQuery builds a minimal A query with a random id: a 12-byte
 // header with recursion desired and one question, so any conforming resolver
