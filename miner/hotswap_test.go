@@ -111,6 +111,11 @@ func TestHotSwapExecutablePathPrefersTheCapturedInstallPath(t *testing.T) {
 }
 
 func TestHandoffBatonSendTakeoverRejectsANonAckMessage(t *testing.T) {
+	// The baton releases the process-wide store before it sends TAKEOVER, so
+	// the test must reset it even though the handoff aborts.
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+
 	session := &HotswapParentSession{
 		Reader: bufio.NewReader(strings.NewReader(`{"type":"ERROR","error":"nope"}` + "\n")),
 		Writer: io.Discard,

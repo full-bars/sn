@@ -292,9 +292,10 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 	// handshake before the provider run starts), so its first store open lands
 	// right after the ACK; without this release that open meets this process's
 	// bbolt lock, waits out providerStoreOpenTimeout and records the store
-	// unavailable for the next 30s. A parent that still needs the store while it
-	// drains reopens it lazily.
-	closeProviderStore()
+	// unavailable for the next 30s. The release is terminal: the parent keeps
+	// draining without the file rather than reopening what the candidate now
+	// owns, and a save that still arrives reports the lost write.
+	releaseProviderStore()
 	hotswapLog("⚡ [hotswap] Released %s for the candidate\n", providerStoreFileName)
 
 	// Send TAKEOVER to candidate FIRST before yielding

@@ -2,6 +2,7 @@ package miner
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -521,5 +522,33 @@ func TestExtenderActivationListenerRefusalHoldsTheAccount(t *testing.T) {
 	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true, ActivatedV4: true})
 	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, account); !allow || used != 0 {
 		t.Fatalf("after a signed activation: allow=%v used=%d, want allow=true used=0", allow, used)
+	}
+}
+
+// After the parent hands provider_state.db to a hotswap candidate it must not
+// take the file back, and a write it still had queued must report the loss
+// instead of returning nil.
+func TestProviderStoreReleaseRefusesAReopenAndReportsLostWrites(t *testing.T) {
+	testExtenderState(t)
+	parent := providerStoreInstance()
+	if parent == nil {
+		t.Fatal("the parent's store did not open")
+	}
+	if err := parent.save(providerStoreBucketState, "probe", map[string]int{"count": 1}); err != nil {
+		t.Fatalf("seed: %s", err)
+	}
+
+	releaseProviderStore()
+
+	if err := parent.save(providerStoreBucketState, "probe", map[string]int{"count": 2}); !errors.Is(err, errProviderStoreReleased) {
+		t.Fatalf("save after the release = %v, want %v: the lost write is silent", err, errProviderStoreReleased)
+	}
+	// The candidate owns the file now, so the parent's next lookup refuses
+	// rather than reopening it and retaking the bbolt lock.
+	if store, err := openProviderStoreForProcess(); store != nil || !errors.Is(err, errProviderStoreReleased) {
+		t.Fatalf("open after the release = (%v, %v), want (nil, %v)", store, err, errProviderStoreReleased)
+	}
+	if store := providerStoreInstance(); store != nil {
+		t.Fatal("the parent reopened the store the candidate now owns")
 	}
 }
