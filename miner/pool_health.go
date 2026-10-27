@@ -519,7 +519,7 @@ func proxyPoolVerdictSentence(r proxyPoolHealthReading) string {
 			r.Members, r.scopeSentence(),
 		)
 	case poolVerdictHealthy:
-		line := fmt.Sprintf("❤️ [health] Verdict: healthy — all %d proxies up, nothing needs attention.", r.Members)
+		line := fmt.Sprintf("❤️ [health] Verdict: healthy — all %d wanted proxies up, nothing needs attention.", r.judged())
 		if r.Floor < r.Up {
 			line += fmt.Sprintf(
 				" The pool was down to %d in the last hour, so this is a recovery rather than a steady state.",
