@@ -5,7 +5,7 @@ This page is the complete guide to running the URnetwork provider on FreeBSD (am
 The provider runs as an `rc.d` service named `urnetwork` under an unprivileged user. There is no hosted one-liner for this fork: `https://install.fullbars.xyz` serves the 3.23 fork's FreeBSD script, which resolves that repository's releases, so on sn you fetch this repository's script and run it, and it downloads the release for your architecture.
 
 > [!NOTE]
-> **Release artifacts on sn:** the FreeBSD provider binary and the `urnet-tools-freebsd-*` assets are published from `v2026.10.21-1077735390-meso` onward. Release `v2026.10.6-1064742750-meso` and older do not ship them, so `install` cannot fetch FreeBSD binaries from those; install the newest release.
+> **Release artifacts on sn:** the FreeBSD provider binary and the `urnet-tools-freebsd-*` assets are published from `v2026.10.22-1078667780` onward. Release `v2026.10.6-1064742750-meso` and older do not ship them, so `install` cannot fetch FreeBSD binaries from those; install the newest release.
 
 ## Before you start
 
