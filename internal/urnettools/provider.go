@@ -17,6 +17,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	rdebug "runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -272,6 +273,42 @@ func providerVersionFromBuildinfo(binary string) string {
 		return v
 	}
 	return ""
+}
+
+// providerLineage is the module path a provider binary was built from, for
+// example "github.com/full-bars/sn". It is the only statement about which
+// engine a binary is that a version string cannot fake: more than one lineage
+// stamps its builds with a date-epoch version, so the version alone does not
+// tell sn from the 3.23-fix lineage.
+func providerLineage(binary string) string {
+	if binary == "" {
+		return ""
+	}
+	info, err := buildinfo.ReadFile(binary)
+	if err != nil {
+		return ""
+	}
+	return info.Main.Path
+}
+
+// toolLineage is the module path this tool was built from.
+func toolLineage() string {
+	info, ok := rdebug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	return info.Main.Path
+}
+
+// lineageMismatch reports whether a tool built for toolPath and a provider
+// built from providerPath come from different lineages. An unknown path on
+// either side is not a mismatch: an unreadable or stripped binary must stay
+// quiet rather than warn on every host.
+func lineageMismatch(toolPath, providerPath string) bool {
+	if toolPath == "" || providerPath == "" {
+		return false
+	}
+	return toolPath != providerPath
 }
 
 // goPseudoVersionSuffix matches the trailing "<yyyymmddhhmmss>-<12 hex>" of a
