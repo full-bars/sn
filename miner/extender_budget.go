@@ -192,7 +192,11 @@ func (record *extenderActivationRecord) adoptLegacy(account string) {
 // posts when they were made, so the account inherits them instead of opening a
 // fresh window; the entry is cleared so no start charges them twice. An
 // attempt that has left the window is already outside the operator's own
-// limit, and a hold that has expired no longer holds anything.
+// limit, and a hold that has expired no longer holds anything. The refusal
+// streak travels with the hold: a refusal taken before the account could be
+// named is the same incident, so the next one keeps doubling the wait instead
+// of restarting at the first. A streak the decay would have dropped anyway is
+// left behind, because the next refusal resets it either way.
 func (record *extenderActivationRecord) adoptUnidentified(account string, now time.Time) {
 	if account == extenderActivationUnidentifiedAccount {
 		return
@@ -211,6 +215,16 @@ func (record *extenderActivationRecord) adoptUnidentified(account string, now ti
 	}
 	if now.Unix() < pending.BackoffUntilUnix && state.BackoffUntilUnix < pending.BackoffUntilUnix {
 		state.BackoffUntilUnix = pending.BackoffUntilUnix
+	}
+	if 0 < pending.Refusals && now.Sub(time.Unix(pending.LastRefusalUnix, 0)) <= extenderRefusalDecay {
+		// Merge rather than overwrite: an account that already carries a
+		// longer streak keeps it.
+		if state.Refusals < pending.Refusals {
+			state.Refusals = pending.Refusals
+		}
+		if state.LastRefusalUnix < pending.LastRefusalUnix {
+			state.LastRefusalUnix = pending.LastRefusalUnix
+		}
 	}
 	record.Accounts[account] = state
 }

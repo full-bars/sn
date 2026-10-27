@@ -443,6 +443,44 @@ func TestExtenderActivationBudgetAdoptsTheUnidentifiedPosts(t *testing.T) {
 	}
 }
 
+// A refusal the host took while it was still unnamed is the same incident
+// after it signs in: the account inherits the streak, so once that hold
+// expires its next refusal keeps doubling instead of starting over at the
+// first wait.
+func TestExtenderActivationAdoptionKeepsTheRefusalStreak(t *testing.T) {
+	testExtenderState(t)
+	refusedAt := time.Unix(1_800_000_000, 0)
+	if err := providerStoreInstance().save(providerStoreBucketState, providerStoreKeyExtenderActivation, extenderActivationRecord{
+		Accounts: map[string]extenderActivationState{
+			extenderActivationUnidentifiedAccount: {
+				Refusals:         2,
+				LastRefusalUnix:  refusedAt.Unix(),
+				BackoffUntilUnix: refusedAt.Add(2 * extenderRefusalBackoff).Unix(),
+			},
+		},
+	}); err != nil {
+		t.Fatalf("seed the unidentified refusal: %s", err)
+	}
+
+	// The hold the second refusal set has expired, so the start is allowed
+	// and this is where the account inherits the record.
+	afterHold := refusedAt.Add(2*extenderRefusalBackoff + time.Minute)
+	if allow, wait, _ := extenderActivationAllow(afterHold, postsPerDualStackPass, extenderTestAccountA); !allow {
+		t.Fatalf("the start after the adopted hold expired was refused (wait=%s)", wait)
+	}
+	record, _ := readExtenderActivationRecord(extenderTestAccountA)
+	if state := record.Accounts[extenderTestAccountA]; state.Refusals != 2 || state.LastRefusalUnix != refusedAt.Unix() {
+		t.Fatalf("adopted state = %+v, want the streak of 2 from %d: the refusal count was dropped",
+			state, refusedAt.Unix())
+	}
+
+	// The third refusal of the streak waits longer than the first would.
+	if wait := recordExtenderActivationRefused(afterHold, extenderTestAccountA); wait <= 2*extenderRefusalBackoff {
+		t.Fatalf("wait after adopting a streak of 2 = %s, want more than %s: the streak restarted",
+			wait, 2*extenderRefusalBackoff)
+	}
+}
+
 // An attempt older than the window has already left the operator's own limit,
 // so adoption keeps only the posts still counted.
 func TestExtenderActivationAdoptionDropsAttemptsOutsideTheWindow(t *testing.T) {
