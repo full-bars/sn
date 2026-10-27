@@ -76,8 +76,20 @@ attribution history starts over, and the old history cannot be attached to the
 new identity afterwards.
 
 That is the accepted trade: serving under a new identity beats waiting forever
-under the old one. The saving grace is that a mint only happens when the
-platform refuses the saved identity, so a healthy host mints nothing, ever.
+under the old one. In the ordinary case a mint only happens when the platform
+refuses the saved identity, so a host with intact state and a cooperative
+platform mints nothing.
+
+Do not read that as "minting always means a platform problem". A host restored
+from a backup taken before these identities were written, or pointed at the
+wrong state directory, has no saved identity for its slots and will mint one for
+every one of them within seconds. That host is healthy by every other measure
+and its log is full of `minted new identity (first start)`. So the first thing
+to check when you see mints is not the platform, it is whether the state
+directory being read is the state directory you think it is: a wrong mount, a
+fresh volume, a restore that predates the identities, or a permissions change
+that makes the existing files unreadable all look identical from inside the
+process.
 
 ## What healing means in practice
 
@@ -104,6 +116,16 @@ fresh host is normal. A wave of `minted replacement` means the platform is
 refusing identities that used to work, which is a different problem from a bad
 proxy — and the two are otherwise easy to confuse, because both show up as slots
 that are not serving.
+
+Work through it in this order. First, confirm the state directory is the one you
+think it is, because a wrong mount or a restore from before the identities
+existed produces a full wave of first-start mints and looks like nothing else is
+wrong. Second, if the state is intact and the mints are replacements, ask the
+platform whether it revoked or refused those clients; a platform-side refusal
+wave is not something a host can fix by restarting. Third, if only some slots
+are affected, look at what those slots share — one proxy address, one upstream
+source, one operator — because that points at the proxy rather than at identity
+at all.
 
 ## The other identity flags
 
