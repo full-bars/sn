@@ -165,24 +165,15 @@ func newProviderBringUpTracker(total int) *providerBringUpTracker {
 	}
 }
 
-// identityCounts returns how many authenticated slots reused their client id
-// and how many were minted. The caller must hold mu.
-func (self *providerBringUpTracker) identityCounts() (reused, minted int) {
-	return self.countIdentities(false)
-}
-
-// runningIdentityCounts is identityCounts restricted to the slots running
-// right now. A slot that authenticated and then failed keeps its entry in
-// identities, so the unrestricted tally describes the whole run while this one
-// describes the live pool.
+// runningIdentityCounts returns how many of the slots running right now reused
+// their client id and how many minted one. A slot that authenticated and then
+// failed or was removed keeps its entry in identities (that is the run's
+// history) but is in neither count, which is what makes these the same numbers
+// the heartbeat, the metrics and the status payload report. The caller must
+// hold mu.
 func (self *providerBringUpTracker) runningIdentityCounts() (reused, minted int) {
-	return self.countIdentities(true)
-}
-
-// countIdentities is the one tally both readers share. The caller must hold mu.
-func (self *providerBringUpTracker) countIdentities(runningOnly bool) (reused, minted int) {
 	for index, wasReused := range self.identities {
-		if runningOnly && self.states[index] != "running" {
+		if self.states[index] != "running" {
 			continue
 		}
 		if wasReused {
@@ -341,7 +332,7 @@ func (self *providerBringUpTracker) emit() {
 		return
 	}
 	pending := self.pendingLocked()
-	reused, minted := self.identityCounts()
+	reused, minted := self.runningIdentityCounts()
 	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reachedIdentities))
 	self.mu.Unlock()
 	tlog("%s\n", line)
@@ -362,7 +353,7 @@ func (self *providerBringUpTracker) emitStartupSummary() {
 	running := self.running
 	pending := self.pendingLocked()
 	failed := self.failed
-	reused, minted := self.identityCounts()
+	reused, minted := self.runningIdentityCounts()
 	reached := len(self.reachedIdentities)
 	self.mu.Unlock()
 	tlog("[startup] %d slots: %d auth ok, %d pending, %d failed (%d reused, %d new); control-connected %d\n",
@@ -643,7 +634,7 @@ func (self *providerBringUpTracker) apply(index uint64, state string, print func
 	if final {
 		self.finished = true
 	}
-	reused, minted := self.identityCounts()
+	reused, minted := self.runningIdentityCounts()
 	line := providerBringUpLine(self.running, pending, self.failed, reused, minted, len(self.reached))
 	self.mu.Unlock()
 	if final {

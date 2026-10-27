@@ -133,14 +133,36 @@ func TestProviderClientIDCountsSkipUnresolvedSlots(t *testing.T) {
 	// Slot 3 never reported an outcome at all.
 
 	requireProviderClientIDGauges(t, "1", "1")
-	// The run-wide tally the heartbeat prints agrees here, and either way the
-	// two unresolved slots are in neither reading.
+	// The heartbeat reads the same tally, and either way the two unresolved
+	// slots are in neither reading.
 	tracker.mu.Lock()
-	reused, minted := tracker.identityCounts()
+	reused, minted := tracker.runningIdentityCounts()
 	tracker.mu.Unlock()
 	if reused != 1 || minted != 1 {
-		t.Fatalf("identityCounts = (%d reused, %d minted), want (1, 1)", reused, minted)
+		t.Fatalf("runningIdentityCounts = (%d reused, %d minted), want (1, 1)", reused, minted)
 	}
+}
+
+// The heartbeat's client-id pair and the gauges describe the same slots: a slot
+// that authenticated and then failed is in neither, not in the heartbeat alone.
+func TestProviderBringUpHeartbeatReportsRunningIDsOnly(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	resetControlRuntimeForTest()
+	t.Cleanup(resetControlRuntimeForTest)
+	buffer := captureProviderBringUpLog(t)
+	tracker := newProviderBringUpTracker(2)
+	setTestProviderClientIDs(t, tracker)
+
+	tracker.authReused(0, connect.NewId(), "direct")
+	tracker.authNew(1, connect.NewId(), "proxy:10.0.0.1:1080")
+	tracker.workerFailed(1)
+
+	tracker.emit()
+	want := providerBringUpLine(1, 0, 1, 1, 0, 0)
+	if !strings.Contains(buffer.String(), want) {
+		t.Fatalf("heartbeat misses %q:\n%s", want, buffer.String())
+	}
+	requireProviderClientIDGauges(t, "1", "0")
 }
 
 // The tally and the gauges follow the slots the run still serves. A slot the
