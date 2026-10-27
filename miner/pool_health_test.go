@@ -545,6 +545,39 @@ func TestProxyPoolHealthScopeExcludesConnectingMembers(t *testing.T) {
 	}
 }
 
+// Scope needs confirmed failures. A pool that has not finished filling its
+// target has not failed: half the target still connecting used to read as a
+// pool-wide outage, which is exactly what a starting host looks like.
+func TestProxyPoolHealthScopeNeedsConfirmedFailures(t *testing.T) {
+	cases := []struct {
+		name   string
+		counts proxyPoolMemberCounts
+		target int
+		want   string
+	}{
+		// Four of the ten wanted slots are serving and the other six have not
+		// been observed yet: no member has failed, so nothing points at the pool.
+		{"half the target still connecting", proxyPoolMemberCounts{Up: 4, Connecting: 6}, 10, poolScopeNone},
+		{"nothing observed yet", proxyPoolMemberCounts{Connecting: 10}, 10, poolScopeNone},
+		// The failures are inside the target, and they are half of it.
+		{"half the target failed", proxyPoolMemberCounts{Up: 4, Dead: 6}, 10, poolScopePool},
+		{"one of ten failed", proxyPoolMemberCounts{Up: 9, Degraded: 1}, 10, poolScopeIsolated},
+		// The target is met, so the failed members are surplus the trim never
+		// serves: still not a pool event.
+		{"target met, surplus members failed", proxyPoolMemberCounts{Up: 10, Dead: 40}, 10, poolScopeNone},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			w := newProxyPoolHealthWindow(time.Minute)
+			r := w.observeFor(c.counts, c.target, time.Minute)
+			if r.Scope != c.want {
+				t.Errorf("scope = %q for up=%d down=%d connecting=%d target=%d, want %q",
+					r.Scope, c.counts.Up, c.counts.down(), c.counts.Connecting, c.target, c.want)
+			}
+		})
+	}
+}
+
 // A trimmed pool carries members the trim never serves. Judged against every
 // member, 482 serving out of a 500 target reads as "needs attention" with the
 // pool scoped to the network; judged against the target it is 96% healthy.

@@ -395,26 +395,32 @@ func (w *proxyPoolHealthWindow) observeFor(counts proxyPoolMemberCounts, target 
 		r.Verdict = poolVerdictMostlyHealthy
 	}
 
+	// Scope answers one question: did the pool fail as a unit? Only members
+	// that FAILED are evidence for it. A pool where half the target has not
+	// come up yet is starting, not failing as a unit, and the old "less than
+	// half up" test against the target read a healthy ramp that way.
+	//
+	// The failures that can be blamed on the target are the ones inside its
+	// shortfall: a failure beyond the slots the target still needs cannot be
+	// occupying one of them (it may be a surplus member the trim never
+	// serves), so the count is capped by the shortfall before the half test.
+	failed := r.Down
+	if r.Target > 0 && shortfall < failed {
+		failed = shortfall
+	}
 	switch {
-	case r.Target > 0 && r.Up*2 < r.Target:
-		// Fewer than half of the pool the operator asked for is serving. One
-		// bad proxy cannot do that.
-		r.Scope = poolScopePool
-	case r.Target > 0 && r.Up >= r.Target:
-		// The pool serves its target; failing surplus members are not a pool
-		// event and not this host's problem either.
+	case failed == 0:
+		// Nothing failed, or every failure is a member the target does not
+		// need: the rest are still connecting, or the pool already serves its
+		// target.
 		r.Scope = poolScopeNone
-	case r.Target > 0:
-		r.Scope = poolScopeIsolated
-	case r.Down == 0:
-		r.Scope = poolScopeNone
-	case 2*r.Down >= r.Members:
-		// Half or more of the pool is down at the same time. One bad proxy
-		// cannot do that, so the pool itself is the thing to look at. The
-		// comparison is against Members, not Up, so a member that is still
-		// connecting neither pads the denominator nor counts as a failure: on
-		// its own a proxy that has not been observed cannot make the pool look
-		// down.
+	case 2*failed >= denom:
+		// Half or more of the slots the pool can still use have failed. One
+		// bad proxy cannot do that, so the pool itself is the thing to look
+		// at. The comparison is against the target when one is known, and
+		// against Members otherwise, so a member that is still connecting
+		// neither pads the denominator nor counts as a failure: on its own a
+		// proxy that has not been observed cannot make the pool look down.
 		r.Scope = poolScopePool
 	default:
 		r.Scope = poolScopeIsolated
