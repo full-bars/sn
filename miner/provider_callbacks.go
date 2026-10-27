@@ -134,11 +134,16 @@ func observeProviderExtenderIdentity(output *providerDiagnostics, provider uint6
 // Only changed scalar facts are offered. SDK error/address strings are never
 // formatted or retained, and exporter calls occur after the state lock releases.
 type providerExtenderStatusListener struct {
-	stateLock   sync.Mutex
-	observed    bool
-	last        providerExtenderObservation
-	diagnostics *providerDiagnostics
-	provider    uint64
+	stateLock sync.Mutex
+	observed  bool
+	last      providerExtenderObservation
+	// chargedAttempt is the LastActivationTime this listener already charged
+	// as a refusal. The error stays set while the attempt stands, so without
+	// it a changed fact beside that error would be charged as a fresh refusal.
+	chargedAttempt int64
+	refusalCharged bool
+	diagnostics    *providerDiagnostics
+	provider       uint64
 	// account is the sign-in account this slot provides under
 	// (extenderActivationUserId), which is the identity the operator's
 	// ExtenderActivateRateLimit counts and the key the budget records a
@@ -156,16 +161,37 @@ func newProviderExtenderStatusListener(output *providerDiagnostics, provider uin
 func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status *sdk.ExtenderProvideStatus) {
 	observation := providerExtenderObservation{}
 	if status != nil {
-		observation = providerExtenderObservation{Known: true, Enabled: status.Enabled, Listening: status.Listening, ListenFailed: status.ListenError != "", ActivatedV4: status.ActivatedV4, ActivatedV6: status.ActivatedV6, ActivationFailed: status.LastActivationError != "", Revoked: status.RevokedTime != 0}
+		observation = providerExtenderObservation{
+			Known:             true,
+			Enabled:           status.Enabled,
+			Listening:         status.Listening,
+			ListenFailed:      status.ListenError != "",
+			ActivatedV4:       status.ActivatedV4,
+			ActivatedV6:       status.ActivatedV6,
+			ActivationFailed:  status.LastActivationError != "",
+			ActivationTime:    status.LastActivationTime,
+			ActivationRefused: status.LastActivationRefused,
+			Revoked:           status.RevokedTime != 0,
+		}
 	}
-	changed := func() bool {
+	changed, refused := func() (bool, bool) {
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
 		if self.observed && self.last == observation {
-			return false
+			return false, false
 		}
 		self.observed, self.last = true, observation
-		return true
+		// A refusal is the attempt's, not the observation's. The error stays
+		// set while the attempt stands, so only an attempt this listener has
+		// not charged yet is a fresh refusal. An active family wins, as it
+		// did before: the operator signed that activation.
+		refused := observation.Known && observation.Enabled && observation.ActivationFailed &&
+			!observation.ActivatedV4 && !observation.ActivatedV6 &&
+			(!self.refusalCharged || self.chargedAttempt != observation.ActivationTime)
+		if refused {
+			self.refusalCharged, self.chargedAttempt = true, observation.ActivationTime
+		}
+		return true, refused
 	}()
 	if changed {
 		// The operator budgets activation posts per account per hour and its
@@ -176,7 +202,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 			switch {
 			case observation.ActivatedV4 || observation.ActivatedV6:
 				recordExtenderActivationSucceeded(self.account)
-			case observation.ActivationFailed:
+			case refused:
 				if wait := recordExtenderActivationRefused(time.Now(), self.account); 0 < wait {
 					tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
 				}

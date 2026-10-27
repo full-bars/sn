@@ -63,15 +63,20 @@ type providerLegacyImportStatus struct {
 const providerNetworkSignInGuidance = "Run `provider auth` to sign in again (for an operator of provide --all-operators: `provider auth --operator=<domain>`)."
 
 // Immutable scalar status can be compared without formatting SDK error strings.
+// The last activation time identifies the attempt, so a refusal that repeats
+// the same booleans after a new attempt is still a new refusal, while a
+// standing error re-read beside another changed fact is the same attempt.
 type providerExtenderObservation struct {
-	Known            bool `json:"known"`
-	Enabled          bool `json:"enabled"`
-	Listening        bool `json:"listening"`
-	ListenFailed     bool `json:"listen_failed"`
-	ActivatedV4      bool `json:"activated_v4"`
-	ActivatedV6      bool `json:"activated_v6"`
-	ActivationFailed bool `json:"activation_failed"`
-	Revoked          bool `json:"revoked"`
+	Known             bool  `json:"known"`
+	Enabled           bool  `json:"enabled"`
+	Listening         bool  `json:"listening"`
+	ListenFailed      bool  `json:"listen_failed"`
+	ActivatedV4       bool  `json:"activated_v4"`
+	ActivatedV6       bool  `json:"activated_v6"`
+	ActivationFailed  bool  `json:"activation_failed"`
+	ActivationTime    int64 `json:"activation_time"`
+	ActivationRefused bool  `json:"activation_refused"`
+	Revoked           bool  `json:"revoked"`
 }
 
 // Optional operational delivery evidence is independent of status=ok, which

@@ -525,6 +525,78 @@ func TestExtenderActivationListenerRefusalHoldsTheAccount(t *testing.T) {
 	}
 }
 
+// A refusal belongs to the activation attempt that produced it. The status
+// carries the SDK's last activation time, so two attempts with the same
+// booleans are still two refusals and the wait must escalate; a standing
+// error beside another changed fact is the same attempt and is charged once.
+func TestExtenderActivationRefusalsEscalateAcrossAttempts(t *testing.T) {
+	testExtenderState(t)
+	const account = extenderTestAccountA
+	listener := newProviderExtenderStatusListener(nil, 0, account)
+	first := &sdk.ExtenderProvideStatus{
+		Enabled:               true,
+		Listening:             true,
+		LastActivationTime:    1_800_000_000_000,
+		LastActivationError:   "refused",
+		LastActivationRefused: true,
+	}
+
+	listener.ExtenderProvideStatusChanged(first)
+	record, _ := readExtenderActivationRecord(account)
+	state := record.Accounts[account]
+	if state.Refusals != 1 {
+		t.Fatalf("refusals after the first attempt = %d, want 1", state.Refusals)
+	}
+	firstHold := time.Duration(state.BackoffUntilUnix-time.Now().Unix()) * time.Second
+
+	// The operator refuses the next attempt: every captured boolean is the
+	// same, and only the attempt time moved.
+	second := *first
+	second.LastActivationTime += 1
+	listener.ExtenderProvideStatusChanged(&second)
+	record, _ = readExtenderActivationRecord(account)
+	state = record.Accounts[account]
+	if state.Refusals != 2 {
+		t.Fatalf("refusals after a second attempt = %d, want 2: the attempt was deduplicated by its booleans", state.Refusals)
+	}
+	secondHold := time.Duration(state.BackoffUntilUnix-time.Now().Unix()) * time.Second
+	if secondHold <= firstHold {
+		t.Fatalf("hold after the second refusal = %s, want more than the first %s", secondHold, firstHold)
+	}
+}
+
+// Re-delivering one attempt, even with a changed fact beside the standing
+// error, must not charge the account a second refusal: the refusal is the
+// attempt's, and this attempt is already recorded.
+func TestExtenderActivationStandingRefusalIsChargedOnce(t *testing.T) {
+	testExtenderState(t)
+	const account = extenderTestAccountA
+	listener := newProviderExtenderStatusListener(nil, 0, account)
+	status := &sdk.ExtenderProvideStatus{
+		Enabled:               true,
+		Listening:             true,
+		LastActivationTime:    1_800_000_000_000,
+		LastActivationError:   "refused",
+		LastActivationRefused: true,
+	}
+
+	listener.ExtenderProvideStatusChanged(status)
+	listener.ExtenderProvideStatusChanged(status)
+	redelivered := *status
+	redelivered.Listening = false
+	listener.ExtenderProvideStatusChanged(&redelivered)
+
+	record, _ := readExtenderActivationRecord(account)
+	state := record.Accounts[account]
+	if state.Refusals != 1 {
+		t.Fatalf("refusals = %d after re-delivering one attempt, want 1: a standing error was charged again", state.Refusals)
+	}
+	hold := time.Duration(state.BackoffUntilUnix-time.Now().Unix()) * time.Second
+	if extenderRefusalBackoff < hold {
+		t.Fatalf("hold = %s, want the first refusal's %s: the streak escalated without a new attempt", hold, extenderRefusalBackoff)
+	}
+}
+
 // After the parent hands provider_state.db to a hotswap candidate it must not
 // take the file back, and a write it still had queued must report the loss
 // instead of returning nil.
