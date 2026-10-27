@@ -481,6 +481,47 @@ func TestExtenderActivationAdoptionKeepsTheRefusalStreak(t *testing.T) {
 	}
 }
 
+// A streak whose last refusal is older than the decay is over, so adoption must
+// not revive it with a fresher timestamp taken from the other entry: the count
+// and the time it was charged belong together. An account carrying five stale
+// refusals that adopts a live streak of one refuses next at the second wait,
+// not the sixth.
+func TestExtenderActivationAdoptionDropsADecayedStreak(t *testing.T) {
+	testExtenderState(t)
+	now := time.Unix(1_800_000_000, 0)
+	freshRefusal := now.Add(-time.Minute)
+	if err := providerStoreInstance().save(providerStoreBucketState, providerStoreKeyExtenderActivation, extenderActivationRecord{
+		Accounts: map[string]extenderActivationState{
+			extenderTestAccountA: {
+				Refusals:        5,
+				LastRefusalUnix: now.Add(-extenderRefusalDecay - time.Minute).Unix(),
+			},
+			extenderActivationUnidentifiedAccount: {
+				Refusals:        1,
+				LastRefusalUnix: freshRefusal.Unix(),
+			},
+		},
+	}); err != nil {
+		t.Fatalf("seed the stale and the live streak: %s", err)
+	}
+
+	if allow, wait, _ := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA); !allow {
+		t.Fatalf("the start after both holds expired was refused (wait=%s)", wait)
+	}
+	record, _ := readExtenderActivationRecord(extenderTestAccountA)
+	state := record.Accounts[extenderTestAccountA]
+	if state.Refusals != 1 || state.LastRefusalUnix != freshRefusal.Unix() {
+		t.Fatalf("adopted state = %+v, want the live streak of 1 from %s: a stale count rode a fresh timestamp",
+			state, freshRefusal)
+	}
+
+	wait := recordExtenderActivationRefused(now, extenderTestAccountA)
+	if wait != 2*extenderRefusalBackoff {
+		t.Fatalf("wait after adopting the streak = %s, want %s: the next refusal took the sixth wait",
+			wait, 2*extenderRefusalBackoff)
+	}
+}
+
 // An attempt older than the window has already left the operator's own limit,
 // so adoption keeps only the posts still counted.
 func TestExtenderActivationAdoptionDropsAttemptsOutsideTheWindow(t *testing.T) {

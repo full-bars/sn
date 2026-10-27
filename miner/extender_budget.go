@@ -187,6 +187,16 @@ func (record *extenderActivationRecord) adoptLegacy(account string) {
 	record.extenderActivationLegacy = extenderActivationLegacy{}
 }
 
+// extenderRefusalStreakLive reports whether a refusal streak still counts at
+// now. The count and the time it was last charged are one value: a count whose
+// own last refusal is outside the decay has nothing left to escalate, so
+// carrying its number onto a fresher timestamp would invent a longer streak
+// than the refusals justify.
+func extenderRefusalStreakLive(state extenderActivationState, now time.Time) bool {
+	return 0 < state.Refusals && 0 < state.LastRefusalUnix &&
+		now.Sub(time.Unix(state.LastRefusalUnix, 0)) <= extenderRefusalDecay
+}
+
 // adoptUnidentified moves what a start spent before the sign-in token was
 // readable onto the account the token now names. The operator counted those
 // posts when they were made, so the account inherits them instead of opening a
@@ -195,8 +205,9 @@ func (record *extenderActivationRecord) adoptLegacy(account string) {
 // limit, and a hold that has expired no longer holds anything. The refusal
 // streak travels with the hold: a refusal taken before the account could be
 // named is the same incident, so the next one keeps doubling the wait instead
-// of restarting at the first. A streak the decay would have dropped anyway is
-// left behind, because the next refusal resets it either way.
+// of restarting at the first. The longer live streak is taken whole and a
+// streak whose own last refusal is outside the decay is dropped, so no count
+// is carried on a timestamp it was never charged at.
 func (record *extenderActivationRecord) adoptUnidentified(account string, now time.Time) {
 	if account == extenderActivationUnidentifiedAccount {
 		return
@@ -216,15 +227,16 @@ func (record *extenderActivationRecord) adoptUnidentified(account string, now ti
 	if now.Unix() < pending.BackoffUntilUnix && state.BackoffUntilUnix < pending.BackoffUntilUnix {
 		state.BackoffUntilUnix = pending.BackoffUntilUnix
 	}
-	if 0 < pending.Refusals && now.Sub(time.Unix(pending.LastRefusalUnix, 0)) <= extenderRefusalDecay {
+	stateLive := extenderRefusalStreakLive(state, now)
+	pendingLive := extenderRefusalStreakLive(pending, now)
+	switch {
+	case !stateLive && !pendingLive:
+		// Neither streak is still running, so the account starts over.
+		state.Refusals, state.LastRefusalUnix = 0, 0
+	case pendingLive && (!stateLive || state.Refusals < pending.Refusals):
 		// Merge rather than overwrite: an account that already carries a
-		// longer streak keeps it.
-		if state.Refusals < pending.Refusals {
-			state.Refusals = pending.Refusals
-		}
-		if state.LastRefusalUnix < pending.LastRefusalUnix {
-			state.LastRefusalUnix = pending.LastRefusalUnix
-		}
+		// longer live streak keeps its own count and its own timestamp.
+		state.Refusals, state.LastRefusalUnix = pending.Refusals, pending.LastRefusalUnix
 	}
 	record.Accounts[account] = state
 }
