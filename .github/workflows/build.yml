@@ -358,6 +358,13 @@ jobs:
           done
           exit $status
 
+      - name: ClamAV verdict handling tests
+        run: |
+          # The release scan's own logic must be exercised on every PR, not only
+          # on a tag push, or a regression in the verdict handling ships with a
+          # release that claims its artifacts were scanned cleanly.
+          bash .github/scripts/test-clamav-scan.sh
+
       - name: Run vulnerability check
         continue-on-error: true
         run: |
