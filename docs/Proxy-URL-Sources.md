@@ -120,7 +120,9 @@ urnet-tools proxy remove-source https://example.com/your-proxy-list.txt
 ```
 
 `add-source` triggers an immediate fetch and persists the URL so it survives
-restarts. You don't need to keep passing `--proxy_url` by hand.
+restarts. You don't need to keep passing `--proxy_url` by hand. For safety,
+source URLs are displayed as scheme and host only, hiding userinfo and tokens
+in the query or path; non-URL sources are displayed as `host:port`.
 
 ### Docker
 

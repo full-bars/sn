@@ -77,6 +77,8 @@ On a host where OpenRC is the running init system, the lifecycle commands (`star
 | `proxy remove-dead [target]` | Interactively prune never-up and dropped proxies. Honors `--dry-run`. |
 | `summary [target]` | Fleet-style summary of proxy counts by source (url, file, internal). Top-level command, not a `proxy` subcommand. |
 
+For safety, `urnet-tools status` and `proxy add-source`/`proxy remove-source` dry-run plans show URL sources as scheme and host only (for example, `https://api.example.com`), hiding userinfo and tokens in the query or path; non-URL sources show only `host:port`.
+
 Exclusion uses `proxy remove --match=<pattern>`. Matching removes proxies and persists the pattern so future URL refreshes skip them. There is no `proxy exclude` subcommand.
 
 ### System and Performance Tuning
