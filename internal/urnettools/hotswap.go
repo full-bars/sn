@@ -78,6 +78,9 @@ var ErrHotSwapNotSupported = errors.New("zero-downtime hotswap unavailable: the 
 // update that performs the migration, or when the migration could not run.
 var ErrHotSwapUnitNotNotify = errors.New("zero-downtime hotswap unavailable: the provider's systemd unit is Type=simple (as Provider_Install_Linux.sh writes it); `urnet-tools update` migrates it to Type=notify, after which updates can hot swap. This update uses a service restart")
 
+// ErrHotSwapWindows is returned while Windows supervisor adoption is unavailable.
+var ErrHotSwapWindows = errors.New("zero-downtime hotswap unavailable: supervisor adoption is not implemented on Windows in this release, so the running provider stays as it is")
+
 // hotSwapPreflight reports WHY the handoff cannot run, or nil when it can.
 // It is the single source of that decision: triggerHotSwap calls it before
 // signalling, and updateProvider calls it to decide whether to try at all,
@@ -91,7 +94,7 @@ func hotSwapPreflightForOS(p Provider, goos string) error {
 	if goos == "windows" {
 		// Deliberately temporary: re-enable only after supervisor adoption of
 		// the successor provider is implemented on Windows.
-		return fmt.Errorf("%w: supervisor adoption is not implemented on Windows in this release, so the running provider stays as it is", ErrHotSwapNotSupported)
+		return ErrHotSwapWindows
 	}
 	// OpenRC supervision is checked FIRST: it is the dominant, upgrade-proof
 	// blocker (no sd_notify handoff), so a supervised provider always records

@@ -124,7 +124,7 @@ func TestH3OutageSignal_ManySecondsOfTrafficStayWithinTheRing(t *testing.T) {
 // Restoring H3 relaunches every identity as the platform returns, so it is paced
 // by the caller, not by the fixed fast interval.
 func TestRelaunchPassUsesTheIntervalItIsGiven(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	oldState := globalControlState
 	t.Cleanup(func() {
 		globalControlState = oldState

@@ -53,6 +53,14 @@ var (
 	warmupCuratedLaunched atomic.Int64
 )
 
+// resetProxyWarmupForStart makes warmup belong to this process start rather
+// than to persisted state or an earlier manager lifetime in the same process.
+func resetProxyWarmupForStart() {
+	proxyWarmupDone.Store(false)
+	warmupCuratedTotal.Store(0)
+	warmupCuratedLaunched.Store(0)
+}
+
 // warmupIsCurated reports whether a launch slot belongs to the operator-
 // curated ramp: file and internal identities must finish starting before the
 // URL pool may join them, while URL identities and the direct slot (which

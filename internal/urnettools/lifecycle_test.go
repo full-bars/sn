@@ -1,6 +1,7 @@
 package urnettools
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,6 +9,69 @@ import (
 	"strings"
 	"testing"
 )
+
+func TestDeleteTaskIfExistsWithRunner(t *testing.T) {
+	t.Run("query failure is returned", func(t *testing.T) {
+		queryErr := errors.New("access denied")
+		var calls [][]string
+		err := deleteTaskIfExists("urnetwork-autostart", func(subcommand string, args ...string) error {
+			calls = append(calls, append([]string{subcommand}, args...))
+			return queryErr
+		})
+		if !errors.Is(err, queryErr) {
+			t.Fatalf("deleteTaskIfExists error = %v, want query error %v", err, queryErr)
+		}
+		if len(calls) != 1 || strings.Join(calls[0], " ") != "/query /tn urnetwork-autostart" {
+			t.Fatalf("runner calls = %v, want only the task query", calls)
+		}
+	})
+
+	t.Run("delete failure is returned", func(t *testing.T) {
+		deleteErr := errors.New("scheduler unavailable")
+		calls := 0
+		err := deleteTaskIfExists("urnetwork-autostart", func(subcommand string, args ...string) error {
+			calls++
+			if subcommand == "/delete" {
+				return deleteErr
+			}
+			return nil
+		})
+		if !errors.Is(err, deleteErr) {
+			t.Fatalf("deleteTaskIfExists error = %v, want delete error %v", err, deleteErr)
+		}
+		if calls != 2 {
+			t.Fatalf("runner called %d times, want query and delete", calls)
+		}
+	})
+
+	t.Run("missing task is a clean no-op", func(t *testing.T) {
+		calls := 0
+		err := deleteTaskIfExists("urnetwork-autostart", func(subcommand string, args ...string) error {
+			calls++
+			return errScheduledTaskNotFound
+		})
+		if err != nil {
+			t.Fatalf("deleteTaskIfExists missing task error = %v, want nil", err)
+		}
+		if calls != 1 {
+			t.Fatalf("runner called %d times, want only the task query", calls)
+		}
+	})
+}
+
+func TestSchtasksTaskNotFoundOutput(t *testing.T) {
+	for _, output := range []string{
+		"ERROR: The system cannot find the file specified. (0x80070002)",
+		`ERROR: The specified task name "\urnetwork-autostart" does not exist in the system.`,
+	} {
+		if !schtasksTaskNotFoundOutput(output) {
+			t.Errorf("schtasksTaskNotFoundOutput(%q) = false, want true", output)
+		}
+	}
+	if schtasksTaskNotFoundOutput("ERROR: Access is denied.") {
+		t.Error("access denied must not be classified as a missing task")
+	}
+}
 
 // TestOptimizeLinuxRootCheck: optimizeLinux must refuse non-root with an
 // actionable error when sudo is unavailable before touching sysctl.

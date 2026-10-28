@@ -130,7 +130,7 @@ func TestStartupDiskBenchmarkSeamReportsTheRecordedResult(t *testing.T) {
 }
 
 func TestStartupDiskBenchmarkSeamIsSilentWithoutAResult(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	if metricsSeamDiskBench == nil {
 		t.Fatal("metricsSeamDiskBench is nil: the startup disk audit is not installed in the miner")
 	}

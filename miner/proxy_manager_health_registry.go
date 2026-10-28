@@ -485,6 +485,9 @@ var (
 	// counters the state file renders.
 	proxyHealthLifetimeRecovered int
 	proxyHealthLifetimeLost      int
+	// proxyHealthBeforeStatePersist is a deterministic interleaving seam for
+	// the state-writer regression test; production leaves it nil.
+	proxyHealthBeforeStatePersist func()
 )
 
 // writeProxyHealthSnapshot renders the report and writes the v33 health files
@@ -496,6 +499,17 @@ func writeProxyHealthSnapshot(now time.Time) bool {
 	if !ok {
 		return false
 	}
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		tlog("[proxy][health] warn: could not acquire proxy state lock: %v\n", err)
+		return false
+	}
+	defer release()
+	// This is a read-modify-write transaction on proxy.state. Share the same
+	// lock as manager, grading, audit, and command writers so a concurrent
+	// health overlay cannot overwrite their state (or vice versa).
+	proxyStateMu.Lock()
+	defer proxyStateMu.Unlock()
 	state, err := readProxyState()
 	if err != nil {
 		tlog("[proxy][health] warn: could not read proxy.state for the health snapshot: %v\n", err)
@@ -512,6 +526,9 @@ func writeProxyHealthSnapshot(now time.Time) bool {
 	writeProxyTrafficState(dir, report, now)
 	writeUsageHistory(dir, report, now)
 	if overlayed > 0 {
+		if proxyHealthBeforeStatePersist != nil {
+			proxyHealthBeforeStatePersist()
+		}
 		if err := writeProxyState(state); err != nil {
 			tlog("[proxy] warn: state write failed: %v\n", err)
 		}

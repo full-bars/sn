@@ -22,7 +22,7 @@ import (
 // stall budget: a miner that is alive but making no progress.
 func livenessSelfExitRig(t *testing.T, env map[string]string) chan int {
 	t.Helper()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	prevEnv, prevFiles, prevExit, prevTick := thrashEnvFn, thrashFileExistsFn, swapThrashExitFn, livenessSelfExitTick
 	prevWritable := thrashCheckCapDirWritableFn
 	prevTicked, prevNano := processLiveness.ticked.Load(), processLiveness.nano.Load()
@@ -258,7 +258,7 @@ func TestLivenessSelfExitRefusedWhenTheRestartCannotBeRecorded(t *testing.T) {
 // The gate itself: self-heal must be on, and at the start of an episode the
 // daily ring must allow another restart.
 func TestLivenessGate(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	t.Setenv("URNETWORK_SELF_HEAL", "1")
 	if ok, _ := livenessGate(true); !ok {
 		t.Fatal("self-heal on and a fresh budget: the gate is open")
@@ -288,7 +288,7 @@ func TestLivenessGate(t *testing.T) {
 // A stall under an already-standing cap keeps it instead of compounding down
 // from the capped count, and the undo removes only the entry it added.
 func TestLivenessRecordStallKeepsAnExistingCap(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	prevRunning := oomCapRunningProxies.Load()
 	t.Cleanup(func() { oomCapRunningProxies.Store(prevRunning) })
 	oomCapRunningProxies.Store(500)

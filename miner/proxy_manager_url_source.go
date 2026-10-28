@@ -541,7 +541,11 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 	// refresh of cached entries is the reaper's job. The cache snapshot is
 	// read once up front; the merge re-reads it under the lock later, so any
 	// race just means a proxy gets probed once more.
-	cached := cachedProxyAddresses(mustReadProxyURLState())
+	cachedState := mustReadProxyURLState()
+	var cached map[string]ProxyURLEntry
+	if cachedState != nil {
+		cached = cachedState.Cache
+	}
 	// probed is LIVE across sources: an address listed in source A AND
 	// source B must be table-probed ONCE per cycle, not once per source.
 	probed := map[string]bool{}
@@ -572,12 +576,13 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		var probeLines []string
 		skippedThisSource := 0
 		for _, line := range lines {
-			addr, _, _, ok := parseProxyURLLine(line)
+			addr, user, password, ok := parseProxyURLLine(line)
 			if !ok {
 				continue
 			}
 			perSource[i].Lines++
-			if cached[addr] || probed[addr] {
+			cachedEntry, isCached := cached[addr]
+			if (isCached && cachedEntry.User == user && cachedEntry.Password == password) || probed[addr] {
 				skippedCached++
 				skippedThisSource++
 				continue
@@ -1425,6 +1430,23 @@ func readURLCacheSize() int {
 	return len(state.Cache)
 }
 
+var (
+	cleanupProcessStartMu sync.RWMutex
+	cleanupProcessStart   time.Time
+)
+
+func setCleanupProcessStart(start time.Time) {
+	cleanupProcessStartMu.Lock()
+	cleanupProcessStart = start
+	cleanupProcessStartMu.Unlock()
+}
+
+func getCleanupProcessStart() time.Time {
+	cleanupProcessStartMu.RLock()
+	defer cleanupProcessStartMu.RUnlock()
+	return cleanupProcessStart
+}
+
 // runProxyURLCleanupOnce removes dead/inactive/degraded proxies whose source
 // matches scope ("url" removes only url-sourced proxies; "all" removes any
 // source; any other value, including "none", removes nothing and returns 0).
@@ -1451,10 +1473,13 @@ func runProxyURLCleanupOnce(scope string) (removed int) {
 		return 0
 	}
 
-	// For degraded cleanup, require the provider to have been running
-	// long enough to avoid killing proxies that just haven't authed yet
-	// during this startup cycle.
-	uptime := time.Since(state.StartedAt)
+	// Cleanup warmup belongs to this process start, not the persisted start
+	// timestamp from a previous process. Outside a manager lifetime preserve
+	// the settled behavior used by explicit cleanup calls.
+	uptime := 65*time.Minute + time.Second
+	if start := getCleanupProcessStart(); !start.IsZero() {
+		uptime = time.Since(start)
+	}
 	const minUptime = 65 * time.Minute
 
 	// Read degraded threshold from proxy_url.json (may be empty = disabled).

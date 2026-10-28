@@ -6,7 +6,7 @@ ARG VERSION=v.unknown
 WORKDIR /app
 
 # Install build dependencies
-RUN apk add --no-cache git gcc musl-dev
+RUN apk add --no-cache git gcc musl-dev file
 
 # Copy module manifests first so dependency download is a separate
 # cacheable layer (only invalidated when go.mod/go.sum change)
@@ -22,8 +22,8 @@ RUN go mod download
 COPY . .
 
 # Build all three binaries for the target architecture with version injection
-RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
-    go build -trimpath \
+RUN export GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    && go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
     -o provider_bin ./cli/miner/ \
     && go build -trimpath \
@@ -31,7 +31,9 @@ RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
     -o urnet_tools_bin ./cmd/urnet-tools/ \
     && go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
-    -o urnet_docker_bin ./cmd/urnet-docker/
+    -o urnet_docker_bin ./cmd/urnet-docker/ \
+    && sh docker/check-elf-arch.sh "$TARGETARCH" \
+       provider_bin urnet_tools_bin urnet_docker_bin
 
 # --- Final Stage ---
 FROM alpine:latest
