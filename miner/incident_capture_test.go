@@ -37,6 +37,7 @@ func incidentTestRestore(t *testing.T) {
 	budget, grace, hook := incidentBudget, incidentBudgetGrace, incidentHookAfterFile
 	noteTimeout := incidentNoteTimeout
 	cooldown, perProcess := incidentReasonCooldown, incidentMaxPerProcess
+	thrash := incidentThrashWait
 	incidentResetGate()
 	t.Cleanup(func() {
 		incidentBundleMaxBytes, incidentFileMaxBytes, incidentStateFileMaxBytes = bundle, file, state
@@ -44,8 +45,21 @@ func incidentTestRestore(t *testing.T) {
 		incidentBudget, incidentBudgetGrace, incidentHookAfterFile = budget, grace, hook
 		incidentNoteTimeout = noteTimeout
 		incidentReasonCooldown, incidentMaxPerProcess = cooldown, perProcess
+		incidentThrashWait = thrash
 		incidentResetGate()
 	})
+}
+
+// incidentTestWideCeiling gives a capture test a ceiling far past the package
+// defaults. The defaults are seconds because a real restart must not be held
+// for evidence on a disk that is the thing that failed; a test asserting that a
+// bundle is produced needs the work to finish, and on a loaded runner the same
+// capture can take several seconds without anything being wrong.
+func incidentTestWideCeiling(t *testing.T) {
+	t.Helper()
+	incidentBudget = 30 * time.Second
+	incidentBudgetGrace = 5 * time.Second
+	incidentThrashWait = 10 * time.Second
 }
 
 // readBundle returns every file in the bundle keyed by its slash-relative path.
@@ -516,6 +530,7 @@ func TestIncidentLimitWriterStopsAtTheLimit(t *testing.T) {
 func TestIncidentPacingSuppressesRepeatBundles(t *testing.T) {
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 	incidentReasonCooldown = time.Hour
 
 	first, err := captureIncidentBundle(incidentTriggerPanic, "slot 0", nil)
@@ -632,6 +647,7 @@ func incidentWriteState(t *testing.T, dir, name, body string) {
 func TestIncidentOOMCapDecisionProducesABundle(t *testing.T) {
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 	t.Setenv("URNETWORK_OOM_CAP", "on")
 
 	now := time.Unix(1_800_000_000, 0)
@@ -705,6 +721,7 @@ func TestIncidentOOMCapDecisionProducesABundle(t *testing.T) {
 func TestIncidentThrashRestartProducesABundle(t *testing.T) {
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 
 	incidentWriteState(t, stateDir, "thrash_cap.json",
 		`{"cap":2400,"set_unix":1800000000,"expires_unix":1800086400,"restarts":[1800000000]}`)
@@ -876,6 +893,7 @@ func TestIncidentThrashAlertIsCapturedOncePerReason(t *testing.T) {
 func TestIncidentNewTriggersArePacedPerTrigger(t *testing.T) {
 	incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 
 	if dir, err := captureIncidentBundle(incidentTriggerOOMCap, "reduce", nil); err != nil || dir == "" {
 		t.Fatalf("the first oomcap capture returned (%q, %v)", dir, err)
@@ -897,6 +915,7 @@ func TestIncidentNewTriggersArePacedPerTrigger(t *testing.T) {
 func TestIncidentGlobalCapHoldsAcrossEveryTrigger(t *testing.T) {
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 	// Neutralise the per-trigger throttle: the global ceiling is the thing
 	// under test, and with a cooldown the loop could not reach it.
 	incidentReasonCooldown = 0
