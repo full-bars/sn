@@ -194,7 +194,7 @@ func runPaidProxyGradeOnce(ctx context.Context, apiHost string, apiPort uint16) 
 				desired = append(desired, paidCandidate{key: key, ps: ps})
 			}
 		} else if state.Source != "" {
-			fromFile, ferr := readProxySettingsFromFile(state.Source)
+			fromFile, _, ferr := readProxySettingsFromFile(state.Source)
 			if ferr != nil {
 				tlog("[proxy][grade] warning: %v\n", ferr)
 				return
@@ -511,7 +511,7 @@ func paidDesiredSet(state *ProxyState) (map[string]*connect.ProxySettings, bool)
 	out := map[string]*connect.ProxySettings{}
 	fileOK := true
 	if state.Source != "" {
-		cf, err := readProxySettingsFromFile(state.Source)
+		cf, _, err := readProxySettingsFromFile(state.Source)
 		switch {
 		case err != nil:
 			// Unreadable: membership cannot prove non-ownership.

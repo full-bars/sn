@@ -156,11 +156,12 @@ func TestReloadDoesNotDetachASlotItDidNotCancel(t *testing.T) {
 	var mu sync.Mutex
 	spawned := 0
 	reloader := newMinerProxyReloader(
-		func() ([]*connect.ProxySettings, error) {
+		func() ([]*connect.ProxySettings, int, error) {
 			// The provide run's own desired closure: the manager-backed set,
 			// read fresh, exactly as run.go builds it.
-			launch, _, _, err := newProxyManager(defaultProxyManagerConfig()).desired(false)
-			return launch, err
+			pm := newProxyManager(defaultProxyManagerConfig())
+			launch, _, _, err := pm.desired(false)
+			return launch, pm.Skipped(), err
 		},
 		func(settings *connect.ProxySettings) (context.CancelFunc, error) {
 			mu.Lock()
@@ -219,7 +220,7 @@ func TestApplyH3CandidateSetRelaunchesOnlyChangedIdentities(t *testing.T) {
 	cancels := map[string]int{}
 	spawns := map[string]int{}
 	reloader := newMinerProxyReloader(
-		func() ([]*connect.ProxySettings, error) { return candidates, nil },
+		func() ([]*connect.ProxySettings, int, error) { return candidates, 0, nil },
 		func(settings *connect.ProxySettings) (context.CancelFunc, error) {
 			key := settings.Key()
 			mu.Lock()
@@ -372,7 +373,7 @@ func TestInstallProvideH3RelauncherPublishesAndClearsTheSeam(t *testing.T) {
 	}
 
 	reloader := newMinerProxyReloader(
-		func() ([]*connect.ProxySettings, error) { return nil, nil },
+		func() ([]*connect.ProxySettings, int, error) { return nil, 0, nil },
 		func(*connect.ProxySettings) (context.CancelFunc, error) { return func() {}, nil },
 	)
 	clear = installProvideH3Relauncher(ctx, reloader)

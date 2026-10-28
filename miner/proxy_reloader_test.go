@@ -34,6 +34,7 @@ type reloadTestHarness struct {
 
 	desired      []*connect.ProxySettings
 	derr         error
+	skipped      int
 	desiredCalls int
 
 	spawned   []string
@@ -70,14 +71,14 @@ func (h *reloadTestHarness) setDesired(settings ...*connect.ProxySettings) {
 
 func (h *reloadTestHarness) reloader() *minerProxyReloader {
 	return newMinerProxyReloader(
-		func() ([]*connect.ProxySettings, error) {
+		func() ([]*connect.ProxySettings, int, error) {
 			h.mu.Lock()
 			defer h.mu.Unlock()
 			h.desiredCalls++
 			if h.derr != nil {
-				return nil, h.derr
+				return nil, 0, h.derr
 			}
-			return h.desired, nil
+			return h.desired, h.skipped, nil
 		},
 		func(settings *connect.ProxySettings) (context.CancelFunc, error) {
 			if h.spawnErr != nil {
@@ -259,7 +260,7 @@ func TestMinerProxyReloadWatchRetriesTheTriggerAfterAPanic(t *testing.T) {
 	// retried rather than adopted as the new baseline.
 	baseDesired := r.desired
 	var reconcileAttempts atomic.Int32
-	r.desired = func() ([]*connect.ProxySettings, error) {
+	r.desired = func() ([]*connect.ProxySettings, int, error) {
 		if reconcileAttempts.Add(1) == 1 {
 			panic("boom in the reload")
 		}

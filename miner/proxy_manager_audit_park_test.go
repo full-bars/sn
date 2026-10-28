@@ -37,10 +37,10 @@ func newAuditParkPool(t *testing.T, addresses ...string) *auditParkPool {
 	t.Helper()
 	pool := &auditParkPool{}
 	pool.reloader = newMinerProxyReloader(
-		func() ([]*connect.ProxySettings, error) {
+		func() ([]*connect.ProxySettings, int, error) {
 			pool.mu.Lock()
 			defer pool.mu.Unlock()
-			return append([]*connect.ProxySettings(nil), pool.wanted...), nil
+			return append([]*connect.ProxySettings(nil), pool.wanted...), 0, nil
 		},
 		func(settings *connect.ProxySettings) (context.CancelFunc, error) {
 			key := settings.Key()

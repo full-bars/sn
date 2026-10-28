@@ -3,6 +3,7 @@ package miner
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/urnetwork/connect"
@@ -31,12 +32,12 @@ func TestProxyReloadUnreadableURLCacheLeavesLiveSetUnchanged(t *testing.T) {
 
 	spawned := make(map[string]bool)
 	reloader := newMinerProxyReloader(
-		func() ([]*connect.ProxySettings, error) {
+		func() ([]*connect.ProxySettings, int, error) {
 			launch, _, _, err := pm.desiredForReload()
 			if err != nil {
-				return nil, err
+				return nil, 0, err
 			}
-			return launch, nil
+			return launch, pm.Skipped(), nil
 		},
 		func(settings *connect.ProxySettings) (context.CancelFunc, error) {
 			key := settings.Key()
@@ -104,5 +105,104 @@ func TestProxyReloadUnreadableURLCacheLeavesLiveSetUnchanged(t *testing.T) {
 	}
 	if keys := reloader.runningKeys(); len(keys) != 0 {
 		t.Fatalf("reloader running keys = %v, want empty", keys)
+	}
+}
+
+// F3: a file with only malformed lines, and an empty file, both leave the
+// live set unchanged on reload; a file with one bad line and two good ones
+// loads the two and reports one skipped.
+func TestProxyReloadFileMalformedOrEmptyLeavesLiveSetUnchanged(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+
+	proxyFile := filepath.Join(stateDir, "curated_proxies.txt")
+	initialContent := "198.51.100.10:1080:alice:pass1\n198.51.100.11:1080:bob:pass2\n"
+	if err := os.WriteFile(proxyFile, []byte(initialContent), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	state := &ProxyState{
+		Source: proxyFile,
+	}
+	if err := writeProxyState(state); err != nil {
+		t.Fatal(err)
+	}
+
+	pm := newProxyManager(defaultProxyManagerConfig())
+
+	spawned := make(map[string]bool)
+	reloader := newMinerProxyReloader(
+		func() ([]*connect.ProxySettings, int, error) {
+			launch, _, _, err := pm.desiredForReload()
+			if err != nil {
+				return nil, 0, err
+			}
+			return launch, pm.Skipped(), nil
+		},
+		func(settings *connect.ProxySettings) (context.CancelFunc, error) {
+			key := settings.Key()
+			spawned[key] = true
+			return func() {
+				delete(spawned, key)
+			}, nil
+		},
+	)
+
+	summary, err := reloader.reload()
+	if err != nil {
+		t.Fatalf("initial reload failed: %v", err)
+	}
+	if summary.Added != 2 {
+		t.Fatalf("initial reload summary = %s, want added 2", summary)
+	}
+	if len(spawned) != 2 {
+		t.Fatalf("spawned count = %d, want 2", len(spawned))
+	}
+
+	// Case 1: Empty file on reload must leave live set unchanged and report error.
+	if err := os.WriteFile(proxyFile, []byte(""), 0600); err != nil {
+		t.Fatal(err)
+	}
+	summary, err = reloader.reload()
+	if err == nil {
+		t.Fatal("reload succeeded on empty proxy file, want error")
+	}
+	if len(spawned) != 2 {
+		t.Fatalf("live set was mutated on empty file reload: spawned count = %d, want 2", len(spawned))
+	}
+	if keys := reloader.runningKeys(); len(keys) != 2 {
+		t.Fatalf("running keys count = %d, want 2", len(keys))
+	}
+
+	// Case 2: Only malformed lines on reload must leave live set unchanged and report error.
+	malformedContent := "# comment line\n\nnot-valid-proxy\n198.51.100.99:1080::\n"
+	if err := os.WriteFile(proxyFile, []byte(malformedContent), 0600); err != nil {
+		t.Fatal(err)
+	}
+	summary, err = reloader.reload()
+	if err == nil {
+		t.Fatal("reload succeeded on malformed proxy file, want error")
+	}
+	if len(spawned) != 2 {
+		t.Fatalf("live set was mutated on malformed file reload: spawned count = %d, want 2", len(spawned))
+	}
+	if keys := reloader.runningKeys(); len(keys) != 2 {
+		t.Fatalf("running keys count = %d, want 2", len(keys))
+	}
+
+	// Case 3: A file with one bad line and two good ones loads the two and reports one skipped.
+	partialContent := "198.51.100.20:1080:carol:pass3\nbad-proxy-line\n198.51.100.21:1080:dave:pass4\n"
+	if err := os.WriteFile(proxyFile, []byte(partialContent), 0600); err != nil {
+		t.Fatal(err)
+	}
+	summary, err = reloader.reload()
+	if err != nil {
+		t.Fatalf("reload failed with partial content: %v", err)
+	}
+	if summary.Added != 2 || summary.Removed != 2 || summary.Skipped != 1 {
+		t.Fatalf("summary = %s, want added 2, removed 2, skipped 1", summary)
+	}
+	if len(spawned) != 2 {
+		t.Fatalf("spawned count = %d, want 2", len(spawned))
 	}
 }

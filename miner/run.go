@@ -1991,7 +1991,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		var reloadSlotIndex atomic.Uint64
 		reloadSlotIndex.Store(uint64(len(providers)))
 		reloader = newMinerProxyReloader(
-			func() ([]*connect.ProxySettings, error) {
+			func() ([]*connect.ProxySettings, int, error) {
 				// The manager-backed desired set, read fresh (proxy.state +
 				// URL cache + operator trim cap). Its error is the reload's
 				// abort signal: a transient read failure must not be read as
@@ -2001,9 +2001,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// below, so a binding trim cap here is a live capacity
 				// decision and belongs in the action ledger. The command
 				// readers keep the silent read.
-				launch, _, _, err := newProxyManager(defaultProxyManagerConfig()).desiredForReload()
+				pm := newProxyManager(defaultProxyManagerConfig())
+				launch, _, _, err := pm.desiredForReload()
 				if err != nil {
-					return nil, err
+					return nil, 0, err
 				}
 				desired := make([]*connect.ProxySettings, 0, len(launch))
 				for _, settings := range launch {
@@ -2018,7 +2019,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// reaper just judged: the desired set still contains it,
 				// because the reaper does not rewrite proxy.state or the URL
 				// cache.
-				return filterReapHeldProxySettings(desired, time.Now()), nil
+				return filterReapHeldProxySettings(desired, time.Now()), pm.Skipped(), nil
 			},
 			func(settings *connect.ProxySettings) (context.CancelFunc, error) {
 				// One identity per live address. provider_slot_identity.go

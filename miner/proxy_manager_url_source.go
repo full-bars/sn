@@ -378,7 +378,7 @@ func currentDesiredProxyAddresses() (map[string]bool, error) {
 
 	var desired []*connect.ProxySettings
 	if state.Source != "" {
-		desired, err = readProxySettingsFromFile(state.Source)
+		desired, _, err = readProxySettingsFromFile(state.Source)
 		if err != nil {
 			return nil, fmt.Errorf("could not read proxy file %s: %w", state.Source, err)
 		}
@@ -415,7 +415,7 @@ func currentDesiredProxyIdentities() (map[string]bool, error) {
 
 	var desired []*connect.ProxySettings
 	if state.Source != "" {
-		desired, err = readProxySettingsFromFile(state.Source)
+		desired, _, err = readProxySettingsFromFile(state.Source)
 		if err != nil {
 			return nil, fmt.Errorf("could not read proxy file %s: %w", state.Source, err)
 		}

@@ -33,7 +33,7 @@ func newReapTestPool(t *testing.T, addresses ...string) *reapTestPool {
 	t.Helper()
 	pool := &reapTestPool{}
 	pool.reloader = newMinerProxyReloader(
-		func() ([]*connect.ProxySettings, error) { return nil, nil },
+		func() ([]*connect.ProxySettings, int, error) { return nil, 0, nil },
 		func(settings *connect.ProxySettings) (context.CancelFunc, error) {
 			key := settings.Key()
 			return func() {
