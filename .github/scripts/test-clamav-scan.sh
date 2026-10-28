@@ -34,7 +34,7 @@ for case_name in clean detection scanner-error self-clean self-error self-wrong 
     rc=$?
   fi
   if [[ $case_name == clean ]]; then
-    [[ $rc -eq 0 && $output == *'ClamAV: clean'* ]] || { echo "FAIL $case_name: $output"; exit 1; }
+    [[ $rc -eq 0 && $output == *'ClamAV: clean'* && $output == *'EICAR self-test passed'* && $(<"$report") == *'Clean: no malware detected and EICAR self-test passed.'* ]] || { echo "FAIL $case_name: $output"; exit 1; }
   else
     [[ $rc -ne 0 && $output != *'ClamAV: clean'* ]] || { echo "FAIL $case_name: rc=$rc $output"; exit 1; }
   fi
@@ -43,7 +43,8 @@ for case_name in clean detection scanner-error self-clean self-error self-wrong 
     scanner-error) [[ $output == *'database unavailable'* && $output == *'scanner failure'* ]] ;;
     self-*) [[ $output == *'EICAR self-test failed'* && $(<"$report") == *'EICAR self-test failed'* ]] ;;
     error-with-detection) [[ $output == *'Test.Malware FOUND'* && $output == *'scanner failure'* ]] ;;
-  esac
+    inconsistent|missing-detection) [[ $output == *'inconsistent result'* && $(<"$report") == *'Scanner failure or inconsistent result'* ]] ;;
+  esac || { echo "FAIL $case_name: assertion failed (rc=$rc) $output"; exit 1; }
   printf 'PASS %s (exit %s)\n' "$case_name" "$rc"
 done
 if output=$(PATH="$tmp/bin:$PATH" CASE=clean CLAMAV_REPORT_FILE="$tmp/empty.report" bash "$root/.github/scripts/clamav-scan.sh" "$tmp/empty" 2>&1); then
