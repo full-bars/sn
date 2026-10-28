@@ -4,7 +4,127 @@ import (
 	"errors"
 	"path/filepath"
 	"testing"
+	"time"
+
+	"go.etcd.io/bbolt"
 )
+
+// A record that could not be read is not a record that was never written: the
+// callers save on absence, so reporting both as false is how a damaged or
+// unavailable store ends up replaced with an empty record.
+func TestProviderStoreLoadDistinguishesAbsentFromUnreadable(t *testing.T) {
+	testExtenderState(t)
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("no store")
+	}
+
+	var absent map[string]int
+	found, err := store.load(providerStoreBucketState, "never-written", &absent)
+	if found || err != nil {
+		t.Fatalf("load of an absent record = (found=%t, err=%v), want (false, nil)", found, err)
+	}
+
+	seedRawValue(t, store, "torn", "{not json")
+	var torn map[string]int
+	found, err = store.load(providerStoreBucketState, "torn", &torn)
+	if found || err == nil {
+		t.Fatalf("load of a value that will not decode = (found=%t, err=%v), want (false, error)", found, err)
+	}
+
+	// A handle that cannot read at all reports that too, rather than an
+	// empty record the caller would save back.
+	released := providerStoreInstance()
+	if err := released.release(); err != nil {
+		t.Fatalf("release: %s", err)
+	}
+	found, err = released.load(providerStoreBucketState, "torn", &torn)
+	if found || !errors.Is(err, errProviderStoreReleased) {
+		t.Fatalf("load on a released handle = (found=%t, err=%v), want (false, %v)", found, err, errProviderStoreReleased)
+	}
+}
+
+// The activation gate decides from the record, so a record it cannot read must
+// not be replaced by the one it would have written: the accounts the stored
+// value still holds are the operator's own budget history.
+func TestExtenderActivationRefusesWhenTheRecordCannotBeDecoded(t *testing.T) {
+	testExtenderState(t)
+	store := providerStoreInstance()
+	seedRawValue(t, store, providerStoreKeyExtenderActivation, "{not json")
+
+	now := time.Unix(1_800_000_000, 0)
+	allow, wait, used := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
+	if allow {
+		t.Fatal("a start was allowed on a record that could not be read")
+	}
+	if wait != providerStoreRetryInterval {
+		t.Fatalf("wait = %s, want %s", wait, providerStoreRetryInterval)
+	}
+	if used != 0 {
+		t.Fatalf("used = %d, want 0", used)
+	}
+	if got := rawValue(t, store, providerStoreKeyExtenderActivation); got != "{not json" {
+		t.Fatalf("stored record = %q, want the value that was there: the refused start overwrote it", got)
+	}
+}
+
+// The measurement is the only writer of the capability record, so it is the one
+// place a failed read could replace the stored history with a record built from
+// nothing. It must leave the record alone and report the measurement locally.
+func TestMeasureHostCapabilityLeavesAnUnreadableRecordAlone(t *testing.T) {
+	testExtenderState(t)
+	store := providerStoreInstance()
+	seedRawValue(t, store, providerStoreKeyHostCapability, "{not json")
+
+	// The probe is not what this test measures, and the address precheck
+	// answers without a socket.
+	original := ipv6GlobalAddressPresent
+	t.Cleanup(func() { ipv6GlobalAddressPresent = original })
+	ipv6GlobalAddressPresent = func() bool { return false }
+
+	now := time.Unix(1_800_000_000, 0)
+	measured := measureHostCapability(now)
+	if measured.CheckedAtUnix != now.Unix() {
+		t.Fatalf("measured record = %+v, want this measurement reported locally", measured)
+	}
+	if got := rawValue(t, store, providerStoreKeyHostCapability); got != "{not json" {
+		t.Fatalf("stored capability = %q, want the value that was there: the measurement overwrote a record it could not read", got)
+	}
+}
+
+// seedRawValue writes raw bytes under a state record key, standing in for a
+// value a later build wrote, a torn page or a decode this build does not
+// understand. save cannot produce one: it marshals its argument.
+func seedRawValue(t *testing.T, store *providerStore, key, raw string) {
+	t.Helper()
+	if err := store.db.Update(func(tx *bbolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(providerStoreBucketState))
+		if err != nil {
+			return err
+		}
+		return bucket.Put([]byte(key), []byte(raw))
+	}); err != nil {
+		t.Fatalf("seed %s: %s", key, err)
+	}
+}
+
+// rawValue is the stored bytes for one key, so a test can tell a rewritten
+// record from the one that was there.
+func rawValue(t *testing.T, store *providerStore, key string) string {
+	t.Helper()
+	var raw []byte
+	if err := store.db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(providerStoreBucketState))
+		if bucket == nil {
+			return nil
+		}
+		raw = append([]byte(nil), bucket.Get([]byte(key))...)
+		return nil
+	}); err != nil {
+		t.Fatalf("read %s: %s", key, err)
+	}
+	return string(raw)
+}
 
 // A database file created by this open is a new directory entry, and bbolt
 // syncs only the pages it writes. Without the directory sync a crash just

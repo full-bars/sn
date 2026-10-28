@@ -231,9 +231,9 @@ func TestExtenderActivationBudgetMigratesTheFlatRecord(t *testing.T) {
 	if !allow || used != 1 {
 		t.Fatalf("first start after the upgrade: allow=%v used=%d, want allow=true used=1", allow, used)
 	}
-	record, found := readExtenderActivationRecord(extenderTestAccountA)
-	if !found {
-		t.Fatal("record missing after the start")
+	record, err := readExtenderActivationRecord(extenderTestAccountA)
+	if err != nil {
+		t.Fatalf("record unreadable after the start: %s", err)
 	}
 	state, ok := record.Accounts[extenderTestAccountA]
 	if !ok {
@@ -284,10 +284,11 @@ func TestExtenderActivationUserIdReadsTheAccountToken(t *testing.T) {
 	}
 }
 
-// A store that cannot be opened must not stop the role: the start is allowed,
-// and the operator gets one line saying the budget went unenforced, not one per
-// attempt and not silence.
-func TestExtenderActivationBudgetUnenforcedIsLoggedOnce(t *testing.T) {
+// A store that cannot be opened must not hand out the role: an activation whose
+// posts nothing records is the burst a supervisor restart loop repeats, so the
+// start is held and the operator gets one line saying why, not one per attempt
+// and not silence.
+func TestExtenderActivationDeniesAndWarnsOnceWithoutAStore(t *testing.T) {
 	// The state directory cannot be created when its parent is a regular file,
 	// so the store stays unavailable for the whole test.
 	parent := filepath.Join(t.TempDir(), "state-parent")
@@ -310,9 +311,12 @@ func TestExtenderActivationBudgetUnenforcedIsLoggedOnce(t *testing.T) {
 
 	now := time.Unix(1_800_000_000, 0)
 	for i := 0; i < 3; i++ {
-		allow, _, used := extenderActivationAllow(now.Add(time.Duration(i)*time.Minute), postsPerDualStackPass, extenderTestAccountA)
-		if !allow || used != 0 {
-			t.Fatalf("start %d with no store: allow=%v used=%d, want allow=true used=0", i, allow, used)
+		allow, wait, used := extenderActivationAllow(now.Add(time.Duration(i)*time.Minute), postsPerDualStackPass, extenderTestAccountA)
+		if allow || used != 0 {
+			t.Fatalf("start %d with no store: allow=%v used=%d, want allow=false used=0", i, allow, used)
+		}
+		if wait != providerStoreRetryInterval {
+			t.Fatalf("start %d with no store: wait=%s, want %s", i, wait, providerStoreRetryInterval)
 		}
 	}
 	want := "activation budget unenforced for account " + extenderTestAccountA
@@ -361,9 +365,11 @@ func TestExtenderActivationRefusalPersistsAndDoubles(t *testing.T) {
 	}
 }
 
-// A signed activation resets the budget of the account that activated: the
-// operator's answer is what resets its own limit, not a clock. Another
-// account's spending is not the operator's answer about this one.
+// A signed activation clears the refusal that held the account, and the
+// account's spending in the operator's window stays: the operator records every
+// allowed attempt and only ages them out, so refunding them here would tell the
+// next gate it has a budget the operator does not agree with. Another account's
+// record is not touched at all.
 func TestExtenderActivationSuccessClearsOnlyThatAccount(t *testing.T) {
 	testExtenderState(t)
 	now := time.Unix(1_800_000_000, 0)
@@ -374,12 +380,20 @@ func TestExtenderActivationSuccessClearsOnlyThatAccount(t *testing.T) {
 	recordExtenderActivationSucceeded(extenderTestAccountA)
 
 	record, _ := readExtenderActivationRecord(extenderTestAccountA)
-	if state, ok := record.Accounts[extenderTestAccountA]; ok {
-		t.Fatalf("account A kept %+v after a signed activation, want cleared", state)
+	state, ok := record.Accounts[extenderTestAccountA]
+	if !ok {
+		t.Fatalf("a signed activation dropped account A's record, want its attempts kept")
 	}
-	state, ok := record.Accounts[extenderTestAccountB]
-	if !ok || len(state.Attempts) != postsPerDualStackPass {
-		t.Fatalf("account B's record = %+v, want its own posts kept", state)
+	if state.Refusals != 0 || state.BackoffUntilUnix != 0 || state.LastRefusalUnix != 0 {
+		t.Fatalf("account A kept refusals=%d backoff=%d last=%d after a signed activation, want them cleared",
+			state.Refusals, state.BackoffUntilUnix, state.LastRefusalUnix)
+	}
+	if len(state.Attempts) == 0 {
+		t.Fatalf("account A lost the attempts it spent; the window is the operator's, not ours to refund")
+	}
+	stateB, ok := record.Accounts[extenderTestAccountB]
+	if !ok || len(stateB.Attempts) != postsPerDualStackPass {
+		t.Fatalf("account B's record = %+v, want its own posts kept", stateB)
 	}
 }
 
@@ -429,15 +443,23 @@ func TestProviderStoreRoundTripsARecord(t *testing.T) {
 	closeProviderStore()
 
 	var got record
-	if !providerStoreInstance().load(providerStoreBucketState, "probe", &got) {
+	found, err := providerStoreInstance().load(providerStoreBucketState, "probe", &got)
+	if err != nil {
+		t.Fatalf("load after a reopen: %s", err)
+	}
+	if !found {
 		t.Fatal("record missing after a reopen")
 	}
 	if got.Count != 7 || got.Note != "kept" {
 		t.Fatalf("record = %+v, want {7 kept}", got)
 	}
 	var missing record
-	if providerStoreInstance().load(providerStoreBucketState, "absent", &missing) {
-		t.Fatal("an absent record must report false")
+	found, err = providerStoreInstance().load(providerStoreBucketState, "absent", &missing)
+	if err != nil {
+		t.Fatalf("load of an absent record: %s", err)
+	}
+	if found {
+		t.Fatal("an absent record must report found=false")
 	}
 }
 
@@ -671,8 +693,10 @@ func TestExtenderActivationListenerRefusalHoldsTheAccount(t *testing.T) {
 	}
 
 	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true, ActivatedV4: true})
-	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, account); !allow || used != 0 {
-		t.Fatalf("after a signed activation: allow=%v used=%d, want allow=true used=0", allow, used)
+	// The refused post was already posted, so the operator counted it. A signed
+	// activation clears the hold; it does not refund the attempt.
+	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, account); !allow || used != 1 {
+		t.Fatalf("after a signed activation: allow=%v used=%d, want allow=true used=1 (the refused post is not refunded)", allow, used)
 	}
 }
 

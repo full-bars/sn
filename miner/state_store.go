@@ -144,29 +144,54 @@ func (s *providerStore) release() error {
 	return err
 }
 
-// load decodes one record. false means it has never been written.
-func (s *providerStore) load(bucket, key string, out any) bool {
-	if s == nil || out == nil {
-		return false
+// load decodes one record.
+//
+// The two results separate "never written" from "could not be read", because
+// the callers act on them differently: an absent record starts empty and is
+// saved, while a record that could not be read must not be replaced. A single
+// false for both made a damaged or unavailable store look like an empty one,
+// and the caller then wrote its empty record over state the store still held.
+//
+//	(true, nil)  the record exists and decoded
+//	(false, nil) the bucket or key was never written
+//	(false, err) the store is unavailable, the read failed, or the value
+//	             did not decode
+func (s *providerStore) load(bucket, key string, out any) (bool, error) {
+	if s == nil {
+		return false, errProviderStoreClosed
+	}
+	if out == nil {
+		return false, errors.New("provider store: load into a nil destination")
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.db == nil {
-		return false
+		if s.released {
+			return false, errProviderStoreReleased
+		}
+		return false, errProviderStoreClosed
 	}
 	var raw []byte
-	_ = s.db.View(func(tx *bbolt.Tx) error {
+	err := s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil
 		}
-		raw = append(raw, b.Get([]byte(key))...)
+		if val := b.Get([]byte(key)); val != nil {
+			raw = append([]byte(nil), val...)
+		}
 		return nil
 	})
-	if len(raw) == 0 {
-		return false
+	if err != nil {
+		return false, err
 	}
-	return json.Unmarshal(raw, out) == nil
+	if len(raw) == 0 {
+		return false, nil
+	}
+	if err := json.Unmarshal(raw, out); err != nil {
+		return false, fmt.Errorf("decode record %s/%s: %w", bucket, key, err)
+	}
+	return true, nil
 }
 
 // save writes one record in a transaction. A crash either leaves the previous
@@ -190,6 +215,49 @@ func (s *providerStore) save(bucket, key string, value any) error {
 	}
 	return s.db.Update(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte(key), raw)
+	})
+}
+
+// updateJSON reads one record into out, calls mutate with whether it existed,
+// then writes out back, all inside a single transaction. The value a decision
+// was made from and the value it rewrites therefore cannot be separated by
+// another writer, a handle swap or a release. mutate changes out in place; an
+// error aborts the transaction and leaves the stored record untouched.
+func (s *providerStore) updateJSON(bucket, key string, out any, mutate func(found bool) error) error {
+	if s == nil {
+		return errProviderStoreClosed
+	}
+	if out == nil || mutate == nil {
+		return errors.New("provider store: update with a nil destination or mutate")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.db == nil {
+		if s.released {
+			return errProviderStoreReleased
+		}
+		return errProviderStoreClosed
+	}
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
+		if err != nil {
+			return err
+		}
+		var found bool
+		if val := b.Get([]byte(key)); val != nil {
+			if err := json.Unmarshal(val, out); err != nil {
+				return fmt.Errorf("decode record %s/%s: %w", bucket, key, err)
+			}
+			found = true
+		}
+		if err := mutate(found); err != nil {
+			return err
+		}
+		raw, err := json.Marshal(out)
 		if err != nil {
 			return err
 		}
@@ -389,6 +457,15 @@ func openProviderStoreForProcess() (*providerStore, error) {
 	}
 	store, err := openProviderStore(path)
 	if err != nil {
+		// A database bbolt can never load is moved aside once, and the run
+		// starts from an empty store, rather than warning about the same file
+		// every thirty seconds for the life of the process.
+		if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
+			tlog("[state] %s would not open (%v); moved it to %s and started a fresh store\n", path, err, moved)
+			store, err = openProviderStore(path)
+		}
+	}
+	if err != nil {
 		tlog("[state] store unavailable: %s\n", err)
 		IncrPersistentError(providerStoreUnavailableCategory)
 		globalProviderStoreFailedPath = path
@@ -400,6 +477,25 @@ func openProviderStoreForProcess() (*providerStore, error) {
 	globalProviderStoreFailedErr = nil
 	globalProviderStore, globalProviderStorePath = store, path
 	return store, nil
+}
+
+// quarantineCorruptStore moves a database bbolt refuses to open out of the way,
+// once, so the next open starts from an empty file instead of retrying forever
+// against bytes that can never load. Only the corrupt-file errors qualify: a
+// lock timeout means another process holds a healthy file, and a permission
+// error is not the file's fault, so neither is moved.
+func quarantineCorruptStore(path string, err error) (string, bool) {
+	if !errors.Is(err, bbolt.ErrInvalid) &&
+		!errors.Is(err, bbolt.ErrChecksum) &&
+		!errors.Is(err, bbolt.ErrVersionMismatch) {
+		return "", false
+	}
+	dst := fmt.Sprintf("%s.corrupt.%d", path, time.Now().Unix())
+	if renameErr := os.Rename(path, dst); renameErr != nil {
+		tlog("[state] store %s is corrupt (%v) but could not be moved aside: %v\n", path, err, renameErr)
+		return "", false
+	}
+	return dst, true
 }
 
 // releaseProviderStore gives provider_state.db to the hotswap candidate for the

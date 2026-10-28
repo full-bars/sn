@@ -838,7 +838,9 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			settings[k] = si
 		}
 		snap, _ := minerControlAuditStatus()
-		hostCap := readHostCapability()
+		// Status only: an unreadable measurement is reported as the zero
+		// value here and nowhere written back.
+		hostCap, _ := readHostCapability()
 		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, HostCapability: &hostCap}
 
 	case "audit":
