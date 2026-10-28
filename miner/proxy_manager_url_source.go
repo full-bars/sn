@@ -574,6 +574,10 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		// ported, so admission is the documented kill-switch behavior: only
 		// stage-0-qualified proxies are admitted.
 		var probeLines []string
+		// probedLine records the exact lines sent to the probe. Grades are
+		// keyed by address, so a second line for the same address with other
+		// credentials would otherwise inherit a verdict nobody earned for it.
+		probedLine := map[string]bool{}
 		skippedThisSource := 0
 		for _, line := range lines {
 			addr, user, password, ok := parseProxyURLLine(line)
@@ -588,6 +592,7 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 				continue
 			}
 			probed[addr] = true
+			probedLine[line] = true
 			probeLines = append(probeLines, line)
 		}
 		perSource[i].Known = skippedThisSource
@@ -606,7 +611,7 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		var qualified, belowBar, socks5Only []string
 		for _, line := range lines {
 			addr, _, _, ok := parseProxyURLLine(line)
-			if !ok {
+			if !ok || !probedLine[line] {
 				continue
 			}
 			g, ok := lineGrades[addr]
