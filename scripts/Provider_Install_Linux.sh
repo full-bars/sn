@@ -1585,10 +1585,13 @@ openrc_resolve_parent ()
 # failure between the move and the rename-back leaves the tree with NO binary
 # while the service has already been stopped by stop_openrc_units.
 #
-# Restores three things, in order: the previous binary, the paused auto-update
-# entry, and the running service. Leaving the periodic entry paused is the
-# quieter half of the bug - the install fails loudly, but auto-update then never
-# runs again and nothing says so.
+# Shared by both backends: the swap code is common, so a failed move on a
+# systemd host lands here too. Restores three things, in order: the previous
+# binary, the paused auto-update entry, and the running service (restarted on
+# whichever of systemd_units_stopped / openrc_units_stopped the stop path set).
+# Leaving the periodic entry paused is the quieter half of the bug - the
+# install fails loudly, but auto-update then never runs again and nothing says
+# so.
 openrc_rollback_binary_swap ()
 {
     if [ "${openrc_swap_pending:-0}" != "1" ]; then
@@ -1619,6 +1622,16 @@ openrc_rollback_binary_swap ()
         # the new one and "running on the previous binary" would be false.
         if [ "${openrc_units_stopped:-0}" = "1" ]; then
             pr_err "The service is left stopped. Put %s back as bin/urnetwork, then run: rc-service urnetwork start" "$install_path/bin/urnetwork.old"
+        elif [ "${systemd_units_stopped:-0}" = "1" ]; then
+            pr_err "The service is left stopped. Put %s back as bin/urnetwork, then run: systemctl --user start urnetwork.service" "$install_path/bin/urnetwork.old"
+        fi
+    elif [ "${systemd_units_stopped:-0}" = "1" ]; then
+        # systemd is a per-user service here: no ${SUDO:-}, and the flag is
+        # systemd_units_stopped, not the OpenRC one.
+        if systemctl --user start urnetwork.service > /dev/null 2>&1; then
+            pr_warn "Restarted the service on the previous binary."
+        else
+            pr_warn "Could not restart the service; run: systemctl --user start urnetwork.service"
         fi
     elif [ "${openrc_units_stopped:-0}" = "1" ]; then
         # Do NOT gate this on `command -v rc-service`. A passwordless sudo is

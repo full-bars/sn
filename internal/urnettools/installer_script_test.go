@@ -1523,6 +1523,7 @@ func runLinuxInstaller(t *testing.T, opts installerHarnessOpts) installerHarness
 	firstStartFlag := filepath.Join(tempDir, "first-start-done")
 	fnSanitize := extractShellFunc(t, script, "sanitize_restart_dropins")
 	fnInstallSystemd := extractShellFunc(t, script, "install_systemd_units")
+	fnRollback := extractShellFunc(t, script, "openrc_rollback_binary_swap")
 	fnDoInstall := extractShellFunc(t, script, "do_install")
 	if fnDoInstall == "" {
 		t.Fatal("could not extract do_install from Linux script")
@@ -1634,7 +1635,7 @@ cp() {
 mv() {
     if [ "${FAIL_MV:-0}" = "1" ]; then
         case "$*" in
-            *"-f "*"$install_path/bin/urnetwork")
+            *"-f "*"/bin/.urnetwork.new."*"$install_path/bin/urnetwork")
                 echo "simulated mv failure" >&2
                 return 1
                 ;;
@@ -1697,7 +1698,7 @@ STOP_LOG=%q
 do_install
 `, tag, op, installPath, tempDir, failRestartVal, failFirstStartVal, failRestoreVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, svcLog, filepath.Join(tempDir, "stop.log"), firstStartFlag, tempDir, tempDir, tempDir, tempDir)
 
-	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnDoInstall + "\n" + driver
+	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnRollback + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
 	cmd.Env = []string{"PATH=/usr/bin:/bin"}
 	if opts.failBackup {
@@ -2002,6 +2003,42 @@ func TestInstallerInterruptedReplacementLeavesBinaryIntact(t *testing.T) {
 				t.Errorf("interrupted replacement changed binary, want %q, got %q", existingPayload, res.finalBin)
 			}
 		})
+	}
+}
+
+// A failed move of the new binary on a systemd host must restore the previous
+// binary AND restart the service on it: the stop path set systemd_units_stopped,
+// which the rollback used to ignore (it only restarted on the OpenRC flag).
+func TestInstallerFailedMoveRestartsSystemdServiceOnPreviousBinary(t *testing.T) {
+	existingPayload := "pre-existing-working-binary"
+	tarballContent := []byte("new-tarball-payload")
+	tag := "v2026.10.27"
+	assetName := "urnetwork-provider-" + tag + ".tar.gz"
+	sum := sha256.Sum256(tarballContent)
+	releaseJSON := fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [
+			{"name": %q, "digest": "sha256:%s"}
+		]
+	}`, tag, assetName, hex.EncodeToString(sum[:]))
+
+	res := runLinuxInstaller(t, installerHarnessOpts{
+		tag:         tag,
+		operation:   "update",
+		releaseJSON: releaseJSON,
+		tarballData: tarballContent,
+		existingBin: existingPayload,
+		failMv:      true,
+	})
+	if res.exitCode == 0 {
+		t.Fatalf("a failed binary move returned success (out:\n%s)", res.stdout)
+	}
+	if res.finalBin != existingPayload {
+		t.Errorf("previous binary not in place: got %q, want %q (out:\n%s)", res.finalBin, existingPayload, res.stdout)
+	}
+	if want := "start live=" + existingPayload; len(res.svcCalls) != 1 || res.svcCalls[0] != want {
+		t.Errorf("service calls = %q, want [%q]: the stopped service must be restarted on the previous binary (out:\n%s)", res.svcCalls, want, res.stdout)
 	}
 }
 
