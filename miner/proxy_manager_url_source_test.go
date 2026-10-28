@@ -496,6 +496,13 @@ func TestCleanupWarmupUsesEachManagerProcessStart(t *testing.T) {
 	if _, _, err := manager1.start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
+	firstStart := getCleanupProcessStart()
+	manager1.stop() // Join startup cleanup and health writes before the manual passes.
+	t.Cleanup(func() { setCleanupProcessStart(time.Time{}) })
+	if firstStart.IsZero() {
+		t.Fatal("first manager did not record its process start")
+	}
+	setCleanupProcessStart(firstStart)
 	if removed := runProxyURLCleanupOnce("url"); removed != 0 {
 		t.Fatalf("first-start warmup removed %d proxies, want 0", removed)
 	}
@@ -503,7 +510,6 @@ func TestCleanupWarmupUsesEachManagerProcessStart(t *testing.T) {
 	if removed := runProxyURLCleanupOnce("url"); removed != 1 {
 		t.Fatalf("settled cleanup removed %d proxies, want 1", removed)
 	}
-	manager1.stop()
 
 	state, err := readProxyState()
 	if err != nil {
@@ -526,7 +532,12 @@ func TestCleanupWarmupUsesEachManagerProcessStart(t *testing.T) {
 	if _, _, err := manager2.start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	defer manager2.stop()
+	secondStart := getCleanupProcessStart()
+	manager2.stop()
+	if secondStart.IsZero() || !secondStart.After(firstStart) {
+		t.Fatalf("second manager start = %v, want a new start after %v", secondStart, firstStart)
+	}
+	setCleanupProcessStart(secondStart)
 	if removed := runProxyURLCleanupOnce("url"); removed != 0 {
 		t.Fatalf("second-start warmup removed %d proxies, want 0", removed)
 	}
