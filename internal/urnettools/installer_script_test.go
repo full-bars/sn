@@ -353,6 +353,14 @@ openrc_install_root=/usr/local/lib/urnetwork-provider
 // first start fail.
 func runOpenRCSudoStart(t *testing.T, startFails bool) (out string, err error, live, calls string) {
 	t.Helper()
+	return runOpenRCSudoStartState(t, startFails, true, false)
+}
+
+// runOpenRCSudoStartState is runOpenRCSudoStart with the service state chosen:
+// unitsStopped is whether the installer stopped the service for the swap, and
+// serviceRunning is what openrc_service_running reports at setup time.
+func runOpenRCSudoStartState(t *testing.T, startFails, unitsStopped, serviceRunning bool) (out string, err error, live, calls string) {
+	t.Helper()
 	skipWithoutPOSIXShell(t)
 	source := readInstaller(t)
 	fnInstall := extractShellFunc(t, source, "install_openrc_units")
@@ -403,14 +411,14 @@ openrc_install_root="`+installRoot+`"
 openrc_user="urnet"
 openrc_initd_file="`+initd+`"
 openrc_swap_pending=1
-openrc_units_stopped=1
+openrc_units_stopped=`+boolTo01(unitsStopped)+`
 id() { if [ "$1" = -u ]; then echo 1000; fi; return 0; }
 sudo() { if [ "$1" = -n ]; then shift; fi; "$@"; }
 openrc_user_home() { echo "`+home+`"; }
 openrc_resolve_parent() { if [ "$1" = --full ]; then shift; fi; echo "$1"; }
 openrc_finalize_root_paths() { return 0; }
 openrc_restore_update_entry() { :; }
-openrc_service_running() { return 1; }
+openrc_service_running() { return `+boolTo01(!serviceRunning)+`; }
 pr_info() { printf 'INFO: %s\n' "$*"; }
 pr_warn() { printf 'WARN: %s\n' "$*"; }
 pr_err() { printf 'ERROR: %s\n' "$*"; }
@@ -418,6 +426,7 @@ pr_err() { printf 'ERROR: %s\n' "$*"; }
 `+fnInstall+`
 install_openrc_units
 echo "pending=$openrc_swap_pending"
+echo "old-present=$([ -f '`+live+`.old' ] && echo 1 || echo 0)"
 openrc_rollback_binary_swap
 echo "after-rollback live=$(cat '`+live+`')"
 `)
@@ -517,6 +526,37 @@ func TestOpenRCRootSetupFailureRollsBackAndRestarts(t *testing.T) {
 				t.Errorf("service was not restarted on the previous binary; calls:\n%s\nout:\n%s", calls, out)
 			}
 		})
+	}
+}
+
+func boolTo01(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
+}
+
+// A normal (non-forced) update leaves the service running and stops nothing.
+// `rc-service start` would report success for it while the old process keeps
+// running, so the sudo path must not start it, must keep the rollback copy, and
+// must say a restart is needed. It used to start, delete urnetwork.old and clear
+// the rollback state with the new binary never having run.
+func TestOpenRCSudoPathKeepsBackupWhenServiceWasNotStopped(t *testing.T) {
+	out, err, _, calls := runOpenRCSudoStartState(t, false, false, true)
+	if err != nil {
+		t.Fatalf("setup failed: %v (output:\n%s)", err, out)
+	}
+	if strings.Contains(calls, "urnetwork start") {
+		t.Errorf("started a service that was left running; calls:\n%s\nout:\n%s", calls, out)
+	}
+	if !strings.Contains(out, "old-present=1") || !strings.Contains(out, "pending=1") {
+		t.Errorf("rollback copy/state discarded although the new binary never ran (out:\n%s)", out)
+	}
+	if !strings.Contains(out, "rc-service urnetwork restart") {
+		t.Errorf("no restart instruction given (out:\n%s)", out)
+	}
+	if strings.Contains(out, "installed, enabled and started") {
+		t.Errorf("claimed the service was started (out:\n%s)", out)
 	}
 }
 

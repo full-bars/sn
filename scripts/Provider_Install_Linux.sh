@@ -1957,14 +1957,27 @@ EOF
     if [ "$(id -u)" -ne 0 ]; then
         if command -v sudo > /dev/null 2>&1 && sudo -n true > /dev/null 2>&1; then
             pr_info "Completing the service setup with sudo."
+            # A service left running was not stopped for this install (a normal
+            # update): `rc-service start` would report success for it while the
+            # OLD process keeps running, so do not start it, as in the root path.
+            sudo_start=1
+            if [ "$openrc_units_stopped" -ne 1 ] && openrc_service_running; then
+                sudo_start=0
+            fi
             if sudo cp "$openrc_staged" "$openrc_initd_file" \
                && sudo chmod 755 "$openrc_initd_file" \
                && sudo rc-update add urnetwork default \
                && SUDO=sudo openrc_finalize_root_paths \
-               && sudo rc-service urnetwork start; then
+               && { [ "$sudo_start" -eq 0 ] || sudo rc-service urnetwork start; }; then
+                rm -rf "$openrc_stage_dir"
+                if [ "$sudo_start" -eq 0 ]; then
+                    # Keep urnetwork.old and the pending state: the new binary
+                    # has not run yet.
+                    pr_info "Service urnetwork installed and enabled; it is still running the previous binary. Restart it to apply: rc-service urnetwork restart"
+                    return 0
+                fi
                 sudo rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
                 openrc_swap_pending=0
-                rm -rf "$openrc_stage_dir"
                 pr_info "Service urnetwork installed, enabled and started."
                 return 0
             fi
