@@ -231,9 +231,9 @@ func TestExtenderActivationBudgetMigratesTheFlatRecord(t *testing.T) {
 	if !allow || used != 1 {
 		t.Fatalf("first start after the upgrade: allow=%v used=%d, want allow=true used=1", allow, used)
 	}
-	record, found := readExtenderActivationRecord(extenderTestAccountA)
-	if !found {
-		t.Fatal("record missing after the start")
+	record, err := readExtenderActivationRecord(extenderTestAccountA)
+	if err != nil {
+		t.Fatalf("record unreadable after the start: %s", err)
 	}
 	state, ok := record.Accounts[extenderTestAccountA]
 	if !ok {
@@ -284,10 +284,11 @@ func TestExtenderActivationUserIdReadsTheAccountToken(t *testing.T) {
 	}
 }
 
-// A store that cannot be opened must not stop the role: the start is allowed,
-// and the operator gets one line saying the budget went unenforced, not one per
-// attempt and not silence.
-func TestExtenderActivationBudgetUnenforcedIsLoggedOnce(t *testing.T) {
+// A store that cannot be opened must not hand out the role: an activation whose
+// posts nothing records is the burst a supervisor restart loop repeats, so the
+// start is held and the operator gets one line saying why, not one per attempt
+// and not silence.
+func TestExtenderActivationDeniesAndWarnsOnceWithoutAStore(t *testing.T) {
 	// The state directory cannot be created when its parent is a regular file,
 	// so the store stays unavailable for the whole test.
 	parent := filepath.Join(t.TempDir(), "state-parent")
@@ -297,27 +298,27 @@ func TestExtenderActivationBudgetUnenforcedIsLoggedOnce(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(parent, "state"))
 	closeProviderStore()
 
-	previousOnce := extenderBudgetWarnOnce
-	extenderBudgetWarnOnce = new(sync.Once)
 	previousWriter := proxyManagerLogWriter
 	writer := &bytes.Buffer{}
 	proxyManagerLogWriter = writer
 	t.Cleanup(func() {
-		extenderBudgetWarnOnce = previousOnce
 		proxyManagerLogWriter = previousWriter
 		closeProviderStore()
 	})
 
 	now := time.Unix(1_800_000_000, 0)
 	for i := 0; i < 3; i++ {
-		allow, _, used := extenderActivationAllow(now.Add(time.Duration(i)*time.Minute), postsPerDualStackPass, extenderTestAccountA)
-		if !allow || used != 0 {
-			t.Fatalf("start %d with no store: allow=%v used=%d, want allow=true used=0", i, allow, used)
+		allow, wait, used := extenderActivationAllow(now.Add(time.Duration(i)*time.Minute), postsPerDualStackPass, extenderTestAccountA)
+		if allow || used != 0 {
+			t.Fatalf("start %d with no store: allow=%v used=%d, want allow=false used=0", i, allow, used)
+		}
+		if wait != providerStoreRetryInterval {
+			t.Fatalf("start %d with no store: wait=%s, want %s", i, wait, providerStoreRetryInterval)
 		}
 	}
-	want := "activation budget unenforced for account " + extenderTestAccountA
-	if lines := strings.Count(writer.String(), want); lines != 1 {
-		t.Fatalf("unenforced-budget lines=%d, want exactly 1 (log: %q)", lines, writer.String())
+	want := "activation budget unavailable for account " + extenderTestAccountA
+	if lines := strings.Count(writer.String(), want); lines != 3 {
+		t.Fatalf("unavailable-budget lines=%d, want 3 (log: %q)", lines, writer.String())
 	}
 }
 
@@ -361,9 +362,11 @@ func TestExtenderActivationRefusalPersistsAndDoubles(t *testing.T) {
 	}
 }
 
-// A signed activation resets the budget of the account that activated: the
-// operator's answer is what resets its own limit, not a clock. Another
-// account's spending is not the operator's answer about this one.
+// A signed activation clears the refusal that held the account, and the
+// account's spending in the operator's window stays: the operator records every
+// allowed attempt and only ages them out, so refunding them here would tell the
+// next gate it has a budget the operator does not agree with. Another account's
+// record is not touched at all.
 func TestExtenderActivationSuccessClearsOnlyThatAccount(t *testing.T) {
 	testExtenderState(t)
 	now := time.Unix(1_800_000_000, 0)
@@ -374,12 +377,20 @@ func TestExtenderActivationSuccessClearsOnlyThatAccount(t *testing.T) {
 	recordExtenderActivationSucceeded(extenderTestAccountA)
 
 	record, _ := readExtenderActivationRecord(extenderTestAccountA)
-	if state, ok := record.Accounts[extenderTestAccountA]; ok {
-		t.Fatalf("account A kept %+v after a signed activation, want cleared", state)
+	state, ok := record.Accounts[extenderTestAccountA]
+	if !ok {
+		t.Fatalf("a signed activation dropped account A's record, want its attempts kept")
 	}
-	state, ok := record.Accounts[extenderTestAccountB]
-	if !ok || len(state.Attempts) != postsPerDualStackPass {
-		t.Fatalf("account B's record = %+v, want its own posts kept", state)
+	if state.Refusals != 0 || state.BackoffUntilUnix != 0 || state.LastRefusalUnix != 0 {
+		t.Fatalf("account A kept refusals=%d backoff=%d last=%d after a signed activation, want them cleared",
+			state.Refusals, state.BackoffUntilUnix, state.LastRefusalUnix)
+	}
+	if len(state.Attempts) == 0 {
+		t.Fatalf("account A lost the attempts it spent; the window is the operator's, not ours to refund")
+	}
+	stateB, ok := record.Accounts[extenderTestAccountB]
+	if !ok || len(stateB.Attempts) != postsPerDualStackPass {
+		t.Fatalf("account B's record = %+v, want its own posts kept", stateB)
 	}
 }
 
@@ -388,7 +399,7 @@ func TestExtenderActivationSuccessClearsOnlyThatAccount(t *testing.T) {
 // token resolves accepts those posts. The success must drop them with the
 // account's own state, or the next gate check adopts them back and holds a
 // launch the success was meant to clear.
-func TestExtenderActivationSuccessDropsTheUnidentifiedPosts(t *testing.T) {
+func TestExtenderActivationSuccessKeepsTheUnidentifiedPosts(t *testing.T) {
 	testExtenderState(t)
 	now := time.Unix(1_800_000_000, 0)
 
@@ -405,13 +416,56 @@ func TestExtenderActivationSuccessDropsTheUnidentifiedPosts(t *testing.T) {
 	recordExtenderActivationSucceeded(extenderTestAccountA)
 
 	allow, wait, used := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
-	if !allow || used != 0 {
-		t.Fatalf("after a signed activation: allow=%v used=%d wait=%s, want allow=true used=0: the accepted posts were adopted back",
+	if allow || used != 4 {
+		t.Fatalf("after a signed activation: allow=%v used=%d wait=%s, want allow=false used=4",
 			allow, used, wait)
 	}
 	record, _ := readExtenderActivationRecord(extenderTestAccountA)
 	if _, ok := record.Accounts[extenderActivationUnidentifiedAccount]; ok {
-		t.Fatalf("the unidentified entry survived the signed activation: %+v", record.Accounts)
+		t.Fatalf("unidentified entry was not adopted: %+v", record.Accounts)
+	}
+	if state := record.Accounts[extenderTestAccountA]; len(state.Attempts) != 4 {
+		t.Fatalf("account attempts = %d, want 4 adopted posts", len(state.Attempts))
+	}
+}
+
+// A refusal taken before the token resolved is adopted by the account the
+// signed activation names. The success must clear that adopted hold too: it
+// clears the account's refusal and backoff, and adopting after the clear would
+// put the hold back, so the next gate check refuses a launch the activation
+// just succeeded.
+func TestExtenderActivationSuccessClearsAdoptedBackoff(t *testing.T) {
+	testExtenderState(t)
+	now := time.Unix(1_800_000_000, 0)
+	recordExtenderActivationRefused(now, "")
+
+	recordExtenderActivationSucceeded(extenderTestAccountA)
+
+	record, _ := readExtenderActivationRecord(extenderTestAccountA)
+	state := record.Accounts[extenderTestAccountA]
+	if state.BackoffUntilUnix != 0 || state.Refusals != 0 {
+		t.Fatalf("after a signed activation the adopted hold is still live: backoff=%d refusals=%d, want both cleared",
+			state.BackoffUntilUnix, state.Refusals)
+	}
+}
+
+// A record this build cannot decode is reported with the decode error itself.
+// The warning is the only evidence the operator gets while the budget is held,
+// so a line that says the store is unavailable would send them looking at the
+// wrong thing.
+func TestExtenderActivationWarningNamesTheStoreError(t *testing.T) {
+	testExtenderState(t)
+	logs := captureGateLogs(t)
+	if err := providerStoreInstance().save(providerStoreBucketState, providerStoreKeyExtenderActivation, "not a record"); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := readExtenderActivationRecord(extenderTestAccountA)
+	if err == nil {
+		t.Fatal("an undecodable record read without error")
+	}
+	if !strings.Contains(logs.String(), err.Error()) {
+		t.Fatalf("warning does not name the store error %q:\n%s", err, logs.String())
 	}
 }
 
@@ -429,15 +483,23 @@ func TestProviderStoreRoundTripsARecord(t *testing.T) {
 	closeProviderStore()
 
 	var got record
-	if !providerStoreInstance().load(providerStoreBucketState, "probe", &got) {
+	found, err := providerStoreInstance().load(providerStoreBucketState, "probe", &got)
+	if err != nil {
+		t.Fatalf("load after a reopen: %s", err)
+	}
+	if !found {
 		t.Fatal("record missing after a reopen")
 	}
 	if got.Count != 7 || got.Note != "kept" {
 		t.Fatalf("record = %+v, want {7 kept}", got)
 	}
 	var missing record
-	if providerStoreInstance().load(providerStoreBucketState, "absent", &missing) {
-		t.Fatal("an absent record must report false")
+	found, err = providerStoreInstance().load(providerStoreBucketState, "absent", &missing)
+	if err != nil {
+		t.Fatalf("load of an absent record: %s", err)
+	}
+	if found {
+		t.Fatal("an absent record must report found=false")
 	}
 }
 
@@ -671,8 +733,29 @@ func TestExtenderActivationListenerRefusalHoldsTheAccount(t *testing.T) {
 	}
 
 	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true, ActivatedV4: true})
-	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, account); !allow || used != 0 {
-		t.Fatalf("after a signed activation: allow=%v used=%d, want allow=true used=0", allow, used)
+	// The refused post was already posted, so the operator counted it. A signed
+	// activation clears the hold; it does not refund the attempt.
+	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, account); !allow || used != 1 {
+		t.Fatalf("after a signed activation: allow=%v used=%d, want allow=true used=1 (the refused post is not refunded)", allow, used)
+	}
+}
+
+func TestExtenderActivationListenerPinsResolvedAccount(t *testing.T) {
+	testExtenderState(t)
+	writeAccountToken(t, extenderTestAccountA)
+	listener := newProviderExtenderStatusListener(nil, 0, "")
+	status := &sdk.ExtenderProvideStatus{Enabled: true, LastActivationError: "refused", LastActivationRefused: true}
+	listener.ExtenderProvideStatusChanged(status)
+	writeAccountToken(t, extenderTestAccountB)
+	status.LastActivationTime++
+	listener.ExtenderProvideStatusChanged(status)
+	record, err := readExtenderActivationRecord(extenderTestAccountA)
+	if err != nil || record.Accounts[extenderTestAccountA].Refusals != 2 {
+		t.Fatalf("pinned account A record=%+v err=%v", record.Accounts, err)
+	}
+	record, err = readExtenderActivationRecord(extenderTestAccountB)
+	if err != nil || record.Accounts[extenderTestAccountB].Refusals != 0 {
+		t.Fatalf("changed token account B record=%+v err=%v", record.Accounts, err)
 	}
 }
 

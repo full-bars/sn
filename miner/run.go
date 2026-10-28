@@ -1112,7 +1112,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// Measure what this host can reach, off the critical path. The activation
 	// budget charges a pass for the posts it will really spend, so a host
 	// without IPv6 must not be charged for a second family it cannot use.
-	go watchHostCapability(ctx)
+	go superviseLoop(ctx, newLoopRef("host_capability"), func() { watchHostCapability(ctx) }, nil)
 	// Record what first cancelled the run for the SIGNAL line in events.log:
 	// whichever caller cancels first (signal handler goroutine, control-socket
 	// shutdown, quarantine, or a failed worker) leaves its stack, the same

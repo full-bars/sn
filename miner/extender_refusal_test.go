@@ -29,11 +29,15 @@ func extenderListenerAttempt(now time.Time, attempt int, refused bool) *sdk.Exte
 // extenderListenerState is the account's budget record as the status left it.
 func extenderListenerState(t *testing.T, account string) extenderActivationState {
 	t.Helper()
-	record, found := readExtenderActivationRecord(account)
-	if !found {
+	record, err := readExtenderActivationRecord(account)
+	if err != nil {
+		t.Fatalf("the status wrote no readable record for %q: %s", account, err)
+	}
+	state, ok := record.Accounts[account]
+	if !ok {
 		t.Fatalf("the status wrote no record for %q", account)
 	}
-	return record.Accounts[account]
+	return state
 }
 
 // An answer of activated: false is a refusal, and the wait it earns grows with
