@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -83,6 +84,15 @@ var ErrHotSwapUnitNotNotify = errors.New("zero-downtime hotswap unavailable: the
 // so the operator-facing decline text is identical on both paths and no
 // caller can gate on a bool and lose the reason.
 func hotSwapPreflight(p Provider) error {
+	return hotSwapPreflightForOS(p, runtime.GOOS)
+}
+
+func hotSwapPreflightForOS(p Provider, goos string) error {
+	if goos == "windows" {
+		// Deliberately temporary: re-enable only after supervisor adoption of
+		// the successor provider is implemented on Windows.
+		return fmt.Errorf("%w: supervisor adoption is not implemented on Windows in this release, so the running provider stays as it is", ErrHotSwapNotSupported)
+	}
 	// OpenRC supervision is checked FIRST: it is the dominant, upgrade-proof
 	// blocker (no sd_notify handoff), so a supervised provider always records
 	// reason="openrc" rather than a version or unit-type reason that an
