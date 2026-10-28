@@ -1166,10 +1166,20 @@ EOF
         if ! systemctl --user start urnetwork.service; then
             pr_err "Failed to restart urnetwork.service after update"
             if [ -f "$install_path/bin/urnetwork.old" ]; then
-                ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork" 2>/dev/null || true
-                systemctl --user daemon-reload 2>/dev/null || true
-                systemctl --user start urnetwork.service 2>/dev/null || true
-                pr_err "Restored previous binary after service restart failure"
+                # Check the restore before restarting: starting the service with
+                # the new binary still in place would only repeat the failure.
+                if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"; then
+                    pr_warn "Restored the previous provider binary; the update did not apply."
+                    systemctl --user daemon-reload 2>/dev/null || true
+                    if systemctl --user start urnetwork.service 2>/dev/null; then
+                        pr_warn "Restarted the service on the previous binary."
+                    else
+                        pr_err "The service did NOT restart on the previous binary and is stopped. Start it with: systemctl --user start urnetwork.service"
+                    fi
+                else
+                    pr_err "Could not restore the previous provider binary from $install_path/bin/urnetwork.old"
+                    pr_err "The new binary that did not start is still installed. Put the previous one back at $install_path/bin/urnetwork, then start the service with: systemctl --user start urnetwork.service"
+                fi
             fi
             exit 1
         fi

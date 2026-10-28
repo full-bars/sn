@@ -675,12 +675,18 @@ type installerHarnessOpts struct {
 	// rate-limited GitHub API does.
 	metadataFails bool
 	// restartFailFirst fails only the first service (re)start, so a rollback
-	// that restarts the restored binary can succeed.
+	// that restarts the restored binary can succeed. Both installers honour it.
 	restartFailFirst bool
+	// failRestore makes the Linux rollback's move of the previous binary back
+	// into place fail, as a read-only or vanished install tree does.
+	failRestore bool
 	// serviceStopped starts the FreeBSD service stopped.
 	serviceStopped bool
 	// existingVersion seeds the version file the installer rewrites.
 	existingVersion string
+	// existingDate seeds the Linux .date file (epoch seconds) the installer
+	// rewrites. FreeBSD keeps no date file.
+	existingDate string
 }
 
 type installerHarnessResult struct {
@@ -973,6 +979,10 @@ func runLinuxInstaller(t *testing.T, opts installerHarnessOpts) installerHarness
 		_ = os.MkdirAll(installPath, 0o755)
 		_ = os.WriteFile(filepath.Join(installPath, ".version"), []byte(opts.existingVersion+"\n"), 0o644)
 	}
+	if opts.existingDate != "" {
+		_ = os.MkdirAll(installPath, 0o755)
+		_ = os.WriteFile(filepath.Join(installPath, ".date"), []byte(opts.existingDate+"\n"), 0o644)
+	}
 
 	fnGetVersion := extractShellFunc(t, script, "get_version_from_api_response")
 	fnGetDate := extractShellFunc(t, script, "get_release_date_from_api_response")
@@ -981,6 +991,8 @@ func runLinuxInstaller(t *testing.T, opts installerHarnessOpts) installerHarness
 	verifyHarness, fnVerify := verifyLoggingHarness(extractShellFunc(t, script, "verify_sha256_file"))
 	fnLists := extractShellFunc(t, script, "release_lists_asset")
 	verifyLog := filepath.Join(tempDir, "verify.log")
+	svcLog := filepath.Join(tempDir, "svc.log")
+	firstStartFlag := filepath.Join(tempDir, "first-start-done")
 	fnSanitize := extractShellFunc(t, script, "sanitize_restart_dropins")
 	fnInstallSystemd := extractShellFunc(t, script, "install_systemd_units")
 	fnDoInstall := extractShellFunc(t, script, "do_install")
@@ -1007,6 +1019,14 @@ func runLinuxInstaller(t *testing.T, opts installerHarnessOpts) installerHarness
 	failMvVal := "0"
 	if opts.failMv {
 		failMvVal = "1"
+	}
+	failFirstStartVal := "0"
+	if opts.restartFailFirst {
+		failFirstStartVal = "1"
+	}
+	failRestoreVal := "0"
+	if opts.failRestore {
+		failRestoreVal = "1"
 	}
 
 	harness := fmt.Sprintf(`
@@ -1084,11 +1104,24 @@ mv() {
                 ;;
         esac
     fi
+    if [ "${FAIL_RESTORE:-0}" = "1" ]; then
+        case "$*" in
+            *"urnetwork.old"*)
+                echo "simulated restore failure" >&2
+                return 1
+                ;;
+        esac
+    fi
     command mv "$@"
 }
 systemctl() {
     if [ "$1" = "--user" ] && [ "$2" = "start" ]; then
+        printf 'start live=%%s\n' "$(cat "$install_path/bin/urnetwork" 2>/dev/null)" >> "$SVC_LOG"
         if [ "${FAIL_RESTART:-0}" = "1" ]; then
+            return 1
+        fi
+        if [ "${FAIL_RESTART_FIRST:-0}" = "1" ] && [ ! -e "$FIRST_START_FLAG" ]; then
+            : > "$FIRST_START_FLAG"
             return 1
         fi
     fi
@@ -1109,17 +1142,21 @@ arch="amd64"
 has_systemd=1
 has_openrc=0
 FAIL_RESTART=%q
+FAIL_RESTART_FIRST=%q
+FAIL_RESTORE=%q
 FAIL_CP=%q
 FAIL_MV=%q
 METADATA_FAILS=%q
 VERIFY_LOG=%q
+SVC_LOG=%q
+FIRST_START_FLAG=%q
 systemd_service="%s/urnetwork.service"
 systemd_update_service="%s/urnetwork-update.service"
 systemd_update_timer="%s/urnetwork-update.timer"
 systemd_userdir="%s"
 systemd_units_stopped=1
 do_install
-`, tag, op, installPath, tempDir, failRestartVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, tempDir, tempDir, tempDir, tempDir)
+`, tag, op, installPath, tempDir, failRestartVal, failFirstStartVal, failRestoreVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, svcLog, firstStartFlag, tempDir, tempDir, tempDir, tempDir)
 
 	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
@@ -1154,6 +1191,7 @@ do_install
 		finalBin:    string(finalBinBytes),
 		installDir:  installPath,
 		verifyCalls: readInstallerLines(verifyLog),
+		svcCalls:    readInstallerLines(svcLog),
 	}
 }
 
@@ -1597,6 +1635,9 @@ func TestInstallerVersionFileTracksRunningBinary(t *testing.T) {
 	existingPayload := "pre-existing-working-binary"
 	tarballContent := []byte("new-tarball-payload")
 	oldVersion := "v2026.10.20"
+	// Epoch seconds, the form get_release_date_from_api_response writes.
+	oldDate := "1792454400" // 2026-10-20T00:00:00Z
+	newDate := "1793059200" // 2026-10-27T00:00:00Z
 	tag := "v2026.10.27"
 	assetName := "urnetwork-provider-" + tag + ".tar.gz"
 	sum := sha256.Sum256(tarballContent)
@@ -1612,9 +1653,11 @@ func TestInstallerVersionFileTracksRunningBinary(t *testing.T) {
 		name        string
 		run         func(*testing.T, installerHarnessOpts) installerHarnessResult
 		versionFile string
+		// dateFile is empty for an installer that keeps no date file.
+		dateFile string
 	}{
-		{"FreeBSD", runFreeBSDInstaller, "version"},
-		{"Linux", runLinuxInstaller, ".version"},
+		{"FreeBSD", runFreeBSDInstaller, "version", ""},
+		{"Linux", runLinuxInstaller, ".version", ".date"},
 	} {
 		t.Run(tc.name+"/restart fails", func(t *testing.T) {
 			res := tc.run(t, installerHarnessOpts{
@@ -1624,6 +1667,7 @@ func TestInstallerVersionFileTracksRunningBinary(t *testing.T) {
 				tarballData:     tarballContent,
 				existingBin:     existingPayload,
 				existingVersion: oldVersion,
+				existingDate:    oldDate,
 				failRestart:     true,
 			})
 			if res.exitCode == 0 {
@@ -1637,6 +1681,20 @@ func TestInstallerVersionFileTracksRunningBinary(t *testing.T) {
 				t.Errorf("after rollback the version file says %q, want %q: it describes the failed release, not the binary that runs",
 					strings.TrimSpace(string(got)), oldVersion)
 			}
+			if tc.dateFile == "" {
+				return
+			}
+			// .date is written after .version, so a write placed before the
+			// service start would pass the version check above and leave the
+			// failed release's date behind.
+			gotDate, err := os.ReadFile(filepath.Join(res.installDir, tc.dateFile))
+			if err != nil {
+				t.Fatalf("date file missing: %v", err)
+			}
+			if strings.TrimSpace(string(gotDate)) != oldDate {
+				t.Errorf("after rollback the date file says %q, want %q: it describes the failed release, not the binary that runs",
+					strings.TrimSpace(string(gotDate)), oldDate)
+			}
 		})
 		t.Run(tc.name+"/restart succeeds", func(t *testing.T) {
 			res := tc.run(t, installerHarnessOpts{
@@ -1646,6 +1704,7 @@ func TestInstallerVersionFileTracksRunningBinary(t *testing.T) {
 				tarballData:     tarballContent,
 				existingBin:     existingPayload,
 				existingVersion: oldVersion,
+				existingDate:    oldDate,
 			})
 			if res.exitCode != 0 {
 				t.Fatalf("expected a clean update, got exit %d (out:\n%s)", res.exitCode, res.stdout)
@@ -1657,6 +1716,121 @@ func TestInstallerVersionFileTracksRunningBinary(t *testing.T) {
 			if strings.TrimSpace(string(got)) != tag {
 				t.Errorf("after a successful update the version file says %q, want %q", strings.TrimSpace(string(got)), tag)
 			}
+			if tc.dateFile == "" {
+				return
+			}
+			gotDate, err := os.ReadFile(filepath.Join(res.installDir, tc.dateFile))
+			if err != nil {
+				t.Fatalf("date file missing: %v", err)
+			}
+			if strings.TrimSpace(string(gotDate)) != newDate {
+				t.Errorf("after a successful update the date file says %q, want %q", strings.TrimSpace(string(gotDate)), newDate)
+			}
 		})
+	}
+}
+
+// installerRollbackRelease is a release whose provider digest matches tarball,
+// for the Linux rollback tests below.
+func installerRollbackRelease(tag string, tarball []byte) string {
+	sum := sha256.Sum256(tarball)
+	return fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [
+			{"name": %q, "digest": "sha256:%s"}
+		]
+	}`, tag, "urnetwork-provider-"+tag+".tar.gz", hex.EncodeToString(sum[:]))
+}
+
+// The systemd rollback restores the previous binary and starts it. The
+// operator must be told which outcome happened, as the FreeBSD and OpenRC paths
+// tell them.
+func TestLinuxRollbackReportsRestartedRestoredBinary(t *testing.T) {
+	existingPayload := "pre-existing-working-binary"
+	tarball := []byte("new-tarball-payload")
+	tag := "v2026.10.27"
+	res := runLinuxInstaller(t, installerHarnessOpts{
+		tag:              tag,
+		operation:        "update",
+		releaseJSON:      installerRollbackRelease(tag, tarball),
+		tarballData:      tarball,
+		existingBin:      existingPayload,
+		restartFailFirst: true,
+	})
+	if res.exitCode == 0 {
+		t.Fatalf("a failed start of the new binary must fail the install (out:\n%s)", res.stdout)
+	}
+	if res.finalBin != existingPayload {
+		t.Errorf("rollback did not restore the previous binary: got %q (out:\n%s)", res.finalBin, res.stdout)
+	}
+	if len(res.svcCalls) != 2 || !strings.HasSuffix(res.svcCalls[1], "live="+existingPayload) {
+		t.Errorf("service calls %q: want a start on the new binary, then one on the restored binary %q", res.svcCalls, existingPayload)
+	}
+	if !strings.Contains(res.stdout, "Restored the previous provider binary") {
+		t.Errorf("expected the restore to be reported (out:\n%s)", res.stdout)
+	}
+	if !strings.Contains(res.stdout, "Restarted the service on the previous binary") {
+		t.Errorf("expected the restarted restored binary to be reported (out:\n%s)", res.stdout)
+	}
+	if strings.Contains(res.stdout, "did NOT restart") {
+		t.Errorf("a restored binary that started must not be reported as a failed restart (out:\n%s)", res.stdout)
+	}
+}
+
+// When the restored binary does not start either, the operator must be told
+// plainly that the service is down. Reporting a rollback as a success hides it.
+func TestLinuxRollbackReportsFailedRestoredRestart(t *testing.T) {
+	existingPayload := "pre-existing-working-binary"
+	tarball := []byte("new-tarball-payload")
+	tag := "v2026.10.27"
+	res := runLinuxInstaller(t, installerHarnessOpts{
+		tag:         tag,
+		operation:   "update",
+		releaseJSON: installerRollbackRelease(tag, tarball),
+		tarballData: tarball,
+		existingBin: existingPayload,
+		failRestart: true,
+	})
+	if res.exitCode == 0 {
+		t.Fatalf("a failed restart must fail the install (out:\n%s)", res.stdout)
+	}
+	if len(res.svcCalls) != 2 {
+		t.Errorf("service calls %q: want the restored binary started after the failed start", res.svcCalls)
+	}
+	if !strings.Contains(res.stdout, "did NOT restart on the previous binary") {
+		t.Errorf("a restored binary that did not start must be reported as a failed restart (out:\n%s)", res.stdout)
+	}
+	if strings.Contains(res.stdout, "Restarted the service on the previous binary") {
+		t.Errorf("reported a successful restart of the previous binary that did not start (out:\n%s)", res.stdout)
+	}
+}
+
+// If the previous binary cannot be moved back, there is nothing to restart.
+// The installer must say so and must not try to start the new binary again.
+func TestLinuxRollbackRestoreFailureSkipsRestart(t *testing.T) {
+	existingPayload := "pre-existing-working-binary"
+	tarball := []byte("new-tarball-payload")
+	tag := "v2026.10.27"
+	res := runLinuxInstaller(t, installerHarnessOpts{
+		tag:              tag,
+		operation:        "update",
+		releaseJSON:      installerRollbackRelease(tag, tarball),
+		tarballData:      tarball,
+		existingBin:      existingPayload,
+		restartFailFirst: true,
+		failRestore:      true,
+	})
+	if res.exitCode == 0 {
+		t.Fatalf("a failed restore must fail the install (out:\n%s)", res.stdout)
+	}
+	if len(res.svcCalls) != 1 {
+		t.Errorf("service calls %q: the service must not be restarted when the previous binary was not restored", res.svcCalls)
+	}
+	if !strings.Contains(res.stdout, "Could not restore the previous provider binary") {
+		t.Errorf("a failed restore must be reported (out:\n%s)", res.stdout)
+	}
+	if strings.Contains(res.stdout, "Restored the previous provider binary") || strings.Contains(res.stdout, "Restarted the service") {
+		t.Errorf("reported a restore or restart that did not happen (out:\n%s)", res.stdout)
 	}
 }
