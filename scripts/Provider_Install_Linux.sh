@@ -356,6 +356,28 @@ except (json.JSONDecodeError, KeyError):
     echo "$digest" | sed 's/^sha256://'
 }
 
+# release_lists_asset returns 0 when the release JSON in $1 lists an asset named
+# $2. An error body (rate limit, outage) or unparseable JSON lists nothing, so
+# the caller treats it as unavailable metadata.
+release_lists_asset ()
+{
+    [ -n "$1" ] || return 1
+    if command -v jq > /dev/null; then
+        printf "%s" "$1" | tr -d '\000-\037' | jq -e --arg a "$2" 'any(.assets[]?; .name == $a)' > /dev/null 2>&1
+    elif command -v python3 > /dev/null; then
+        printf "%s" "$1" | tr -d '\000-\037' | python3 -c 'import sys, json
+try:
+    doc = json.load(sys.stdin)
+    sys.exit(0 if any(a.get("name") == sys.argv[1] for a in doc.get("assets", [])) else 1)
+except Exception:
+    sys.exit(1)
+' "$2" > /dev/null 2>&1
+    else
+        pr_err "Neither python3 nor jq is available"
+        exit 1
+    fi
+}
+
 # compute_sha256_file computes the hex sha256 digest of a file.
 # Outputs the 64-char lowercase hex string, or returns 1 on error.
 compute_sha256_file ()
@@ -2613,23 +2635,27 @@ do_install ()
     mirror_url="$dl_url"
     provider_asset="urnetwork-provider-$tag.tar.gz"
     
-    # Resolve the digest from the release JSON
-    provider_digest=""
-    if [ -n "${release_json:-}" ]; then
-        provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
-    fi
-    if [ -z "$provider_digest" ] && [ -n "${release:-}" ]; then
-        release_json="$release"
-        provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
-    fi
-    if [ -z "$provider_digest" ]; then
-        if release_json_tag="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null)"; then
-            if [ -n "$release_json_tag" ]; then
-                release_json="$release_json_tag"
-                provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
-            fi
+    # Fail closed. The digest comes from the release metadata, so the tarball is
+    # installed only when that metadata lists it. An unreachable or rate-limited
+    # API used to leave the digest empty and install the tarball unverified.
+    release_json="${release:-}"
+    release_json_tag=""
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        release_json_tag="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null || true)"
+        if release_lists_asset "$release_json_tag" "$provider_asset"; then
+            release_json="$release_json_tag"
         fi
     fi
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        if [ -z "$release_json" ] && [ -z "$release_json_tag" ]; then
+            pr_err "Could not fetch release metadata for %s from the GitHub API (unreachable or rate-limited)." "$tag"
+        else
+            pr_err "Release %s metadata does not list the provider asset '%s' (an API error or rate limit returns no assets)." "$tag" "$provider_asset"
+        fi
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
 
     pr_info "Downloading: %s" "$dl_url"
     
@@ -2841,9 +2867,6 @@ do_install ()
         # bundled content that may lack the latest fix.
     fi
 
-    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
-    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
-
     if [ "$has_systemd" -eq 1 ]; then
         install_systemd_units
     fi
@@ -2851,6 +2874,12 @@ do_install ()
     if [ "$has_systemd" -eq 0 ] && [ "$has_openrc" -eq 1 ]; then
         install_openrc_units
     fi
+
+    # Written only after the unit install, which restarts the service and exits
+    # on failure. Writing these earlier left the version files naming the failed
+    # release after a rollback restored the old binary.
+    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
+    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
 
     # The symlinks are not a shell-startup edit, so they are made regardless of
     # -B; the rc-file blocks honour it.
@@ -3094,23 +3123,27 @@ do_install ()
     mirror_url="$urnet_github_dl_base/$tag/urnetwork-provider-$tag.tar.gz"
     provider_asset="urnetwork-provider-$tag.tar.gz"
     
-    # Resolve the digest from the release JSON
-    provider_digest=""
-    if [ -n "${release_json:-}" ]; then
-        provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
-    fi
-    if [ -z "$provider_digest" ] && [ -n "${release:-}" ]; then
-        release_json="$release"
-        provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
-    fi
-    if [ -z "$provider_digest" ]; then
-        if release_json_tag="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null)"; then
-            if [ -n "$release_json_tag" ]; then
-                release_json="$release_json_tag"
-                provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
-            fi
+    # Fail closed. The digest comes from the release metadata, so the tarball is
+    # installed only when that metadata lists it. An unreachable or rate-limited
+    # API used to leave the digest empty and install the tarball unverified.
+    release_json="${release:-}"
+    release_json_tag=""
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        release_json_tag="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null || true)"
+        if release_lists_asset "$release_json_tag" "$provider_asset"; then
+            release_json="$release_json_tag"
         fi
     fi
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        if [ -z "$release_json" ] && [ -z "$release_json_tag" ]; then
+            pr_err "Could not fetch release metadata for %s from the GitHub API (unreachable or rate-limited)." "$tag"
+        else
+            pr_err "Release %s metadata does not list the provider asset '%s' (an API error or rate limit returns no assets)." "$tag" "$provider_asset"
+        fi
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
 
     pr_info "Downloading: %s" "$dl_url"
     
@@ -3322,9 +3355,6 @@ do_install ()
         # bundled content that may lack the latest fix.
     fi
 
-    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
-    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
-
     if [ "$has_systemd" -eq 1 ]; then
         install_systemd_units
     fi
@@ -3332,6 +3362,12 @@ do_install ()
     if [ "$has_systemd" -eq 0 ] && [ "$has_openrc" -eq 1 ]; then
         install_openrc_units
     fi
+
+    # Written only after the unit install, which restarts the service and exits
+    # on failure. Writing these earlier left the version files naming the failed
+    # release after a rollback restored the old binary.
+    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
+    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
 
     if [ "$no_modify_bashrc" -eq 0 ]; then
 	if awk '/^[[:space:]]*# == urnetwork-provider start[[:space:]]*$/ { code=1; } END { exit code; }' "$HOME/.bashrc"; then

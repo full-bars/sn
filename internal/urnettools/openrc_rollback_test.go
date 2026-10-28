@@ -200,23 +200,28 @@ openrc_rollback_binary_swap
 func TestOpenRCBinarySwapRollsBackOnFailure(t *testing.T) {
 	source := readInstaller(t)
 
+	// Exactly two swaps: one per install flow. A third copy is a change this
+	// test must see, so "at least" is not enough.
+	const wantSwaps = 2
 	swaps := strings.Count(source, `mv -f "$staged_bin" "$install_path/bin/urnetwork"`)
-	if swaps < 2 {
-		t.Fatalf("expected the atomic binary swap in both install flows, found %d", swaps)
+	if swaps != wantSwaps {
+		t.Fatalf("expected exactly %d atomic binary swaps (one per install flow), found %d", wantSwaps, swaps)
 	}
 
-	// Every swap and restart failure must invoke rollback.
+	// Every swap failure invokes rollback, and so does the restart failure in
+	// install_openrc_units (one more site). Exactly swaps+1, no more, no less.
+	const wantRestartRollbacks = 1
+	wantRollbacks := wantSwaps + wantRestartRollbacks
 	guardRollbacks := strings.Count(source, "openrc_rollback_binary_swap\n            exit 1")
-	if guardRollbacks < swaps {
-		t.Errorf("found %d rollback-on-failure call sites, want at least %d "+
-			"(one per atomic swap in each of %d install flows)",
-			guardRollbacks, swaps, swaps)
+	if guardRollbacks != wantRollbacks {
+		t.Errorf("found %d rollback-on-failure call sites, want exactly %d "+
+			"(one per atomic swap in each of %d install flows, plus the OpenRC restart failure)",
+			guardRollbacks, wantRollbacks, wantSwaps)
 	}
-	// The flag must be set when the swap starts and cleared only after it
-	// completes, so the rollback knows there is something to restore.
-	if strings.Count(source, "openrc_swap_pending=1") < swaps {
-		t.Errorf("every swap must set openrc_swap_pending=1 (%d swaps, %d sets)",
-			swaps, strings.Count(source, "openrc_swap_pending=1"))
+	// The flag must be set when each swap starts, so the rollback knows there
+	// is something to restore.
+	if sets := strings.Count(source, "openrc_swap_pending=1"); sets != wantSwaps {
+		t.Errorf("every swap must set openrc_swap_pending=1 (%d swaps, %d sets)", wantSwaps, sets)
 	}
 	if !strings.Contains(source, "openrc_swap_pending=0") {
 		t.Error("openrc_swap_pending must be cleared once the swap completes")

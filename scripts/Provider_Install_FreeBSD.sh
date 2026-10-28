@@ -87,6 +87,27 @@ print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
     printf '%s' "$_dig"
 }
 
+# release_lists_asset returns 0 when the release JSON in $1 lists an asset named
+# $2. An error body (rate limit, outage) or unparseable JSON lists nothing, so
+# the caller treats it as unavailable metadata.
+release_lists_asset() {
+    [ -n "$1" ] || return 1
+    if command -v jq > /dev/null 2>&1; then
+        printf '%s' "$1" | jq -e --arg a "$2" 'any(.assets[]?; .name == $a)' > /dev/null 2>&1
+    elif command -v python3 > /dev/null 2>&1; then
+        printf '%s' "$1" | python3 -c '
+import sys, json
+try:
+    doc = json.load(sys.stdin)
+    sys.exit(0 if any(a.get("name") == sys.argv[1] for a in doc.get("assets", [])) else 1)
+except Exception:
+    sys.exit(1)
+' "$2" > /dev/null 2>&1
+    else
+        return 1
+    fi
+}
+
 compute_sha256_file() {
     _f="$1"
     [ -f "$_f" ] || return 1
@@ -558,6 +579,33 @@ do_install() {
     esac
 
     provider_asset="urnetwork-provider-$tag.tar.gz"
+
+    # Fail closed. The digest comes from the release metadata, so the tarball is
+    # installed only when that metadata lists it. An unreachable or rate-limited
+    # API used to leave the digest empty and install the tarball unverified.
+    if ! command -v jq > /dev/null 2>&1 && ! command -v python3 > /dev/null 2>&1; then
+        pr_err "Neither jq nor python3 is installed, so the release digest cannot be read."
+        pr_err "Install one (for example: pkg install jq) and re-run. Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    _rel_extra=""
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        _rel_extra="$(http_fetch "$github_api/releases/tags/$tag" 2>/dev/null || true)"
+        if release_lists_asset "$_rel_extra" "$provider_asset"; then
+            release_json="$_rel_extra"
+        fi
+    fi
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        if [ -z "$release_json" ] && [ -z "$_rel_extra" ]; then
+            pr_err "Could not fetch release metadata for %s from the GitHub API (unreachable or rate-limited)." "$tag"
+        else
+            pr_err "Release %s metadata does not list the provider asset '%s' (an API error or rate limit returns no assets)." "$tag" "$provider_asset"
+        fi
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
+
     tarball_url="https://github.com/full-bars/sn/releases/download/$tag/$provider_asset"
     pr_info "Downloading %s..." "$tarball_url"
 
@@ -566,17 +614,6 @@ do_install() {
         pr_err "Failed to download %s" "$tarball_url"
         rm -rf "$tmpdir"
         exit 1
-    fi
-
-    # Resolve provider tarball digest
-    provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
-    if [ -z "$provider_digest" ]; then
-        if _rel_extra="$(http_fetch "$github_api/releases/tags/$tag" 2>/dev/null)"; then
-            if [ -n "$_rel_extra" ]; then
-                release_json="$_rel_extra"
-                provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
-            fi
-        fi
     fi
 
     if [ -n "$provider_digest" ]; then
@@ -646,14 +683,6 @@ do_install() {
         rm -rf "$tmpdir"
         exit 1
     }
-
-    # Same rename-not-follow rule as the binary above. The version file lives
-    # in a directory the service user can write to, so a symlink planted at
-    # that name would redirect root's write. Write beside it and rename over
-    # it: rename replaces the entry instead of following it.
-    ver_tmp="$install_path/.version.new.$$"
-    printf '%s\n' "$tag" | priv tee "$ver_tmp" > /dev/null && \
-        priv mv -f "$ver_tmp" "$install_path/version"
 
     # Install the tool: the Go urnet-tools binary shipped as a release asset,
     # digest-verified; fall back to this shell script for releases that
@@ -787,8 +816,12 @@ RCSCRIPT
     # only if it was already running, so a deliberately stopped provider is not
     # resurrected by an unattended `update` from cron. Failures are fatal —
     # reporting "installed" for a service that did not start is a false green.
+    # service_was_running is recorded BEFORE the restart: a failed restart leaves
+    # the service stopped, so checking afterwards would skip the rollback restart.
     service_ok=1
+    service_was_running=0
     if service_running; then
+        service_was_running=1
         restart_service || { service_ok=0; pr_err "Failed to restart the service after install"; }
     elif [ "${UPDATING:-0}" != "1" ]; then
         load_service || { service_ok=0; pr_err "Failed to start the service"; }
@@ -798,14 +831,34 @@ RCSCRIPT
 
     if [ "$service_ok" -ne 1 ]; then
         if [ "$had_old_binary" -eq 1 ] && [ -f "$provider_backup" ]; then
-            priv mv -f "$provider_backup" "$provider_bin" 2>/dev/null || true
-            service_running && restart_service 2>/dev/null || true
-            pr_err "Restored previous binary after service restart failure"
+            if ! priv mv -f "$provider_backup" "$provider_bin"; then
+                pr_err "Could not restore the previous binary from %s; the service is NOT running. Put that file back at %s and start the service with: %s start" "$provider_backup" "$provider_bin" "$me"
+            else
+                pr_err "Restored previous binary after service restart failure"
+                if [ "$service_was_running" -eq 1 ]; then
+                    if restart_service; then
+                        pr_warn "Service restarted on the previous binary; the update did not apply."
+                    else
+                        pr_err "The service did NOT restart on the previous binary and is stopped. Start it with: %s start" "$me"
+                    fi
+                else
+                    pr_warn "The service was not running before the install, so it was left stopped."
+                fi
+            fi
         fi
         rm -rf "$tmpdir"
         exit 1
     fi
     [ "$had_old_binary" -eq 1 ] && priv rm -f "$provider_backup" 2>/dev/null || true
+
+    # Written only now that the service answers. Writing it before the start
+    # left the version file naming the failed release after a rollback. The
+    # version file lives in a directory the service user can write to, so a
+    # symlink planted at that name would redirect root's write. Write beside it
+    # and rename over it: rename replaces the entry instead of following it.
+    ver_tmp="$install_path/.version.new.$$"
+    printf '%s\n' "$tag" | priv tee "$ver_tmp" > /dev/null && \
+        priv mv -f "$ver_tmp" "$install_path/version"
 
     # PATH hint goes into the SERVICE user's shell rc, once. Under sudo $HOME
     # is root's, and root's PATH never contains the service user's bin dir, so

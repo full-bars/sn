@@ -671,6 +671,16 @@ type installerHarnessOpts struct {
 	failCpToDst bool
 	failMv      bool
 	operation   string
+	// metadataFails makes every release API fetch fail, as an unreachable or
+	// rate-limited GitHub API does.
+	metadataFails bool
+	// restartFailFirst fails only the first service (re)start, so a rollback
+	// that restarts the restored binary can succeed.
+	restartFailFirst bool
+	// serviceStopped starts the FreeBSD service stopped.
+	serviceStopped bool
+	// existingVersion seeds the version file the installer rewrites.
+	existingVersion string
 }
 
 type installerHarnessResult struct {
@@ -679,6 +689,52 @@ type installerHarnessResult struct {
 	stderr   string
 	tarCalls []string
 	finalBin string
+	// svcCalls is the FreeBSD service log: one line per start or restart,
+	// with the binary that was live at that moment.
+	svcCalls []string
+	// installDir is the install tree, so tests can read the version file.
+	installDir string
+	// verifyCalls logs each sha256 comparison the installer made, as
+	// "verify <expected digest>". Proceeding is not proof that verification ran;
+	// a call with the release digest is.
+	verifyCalls []string
+}
+
+// verifyLoggingHarness wraps the installer's real verify_sha256_file. The
+// extracted implementation is renamed, so every call goes through the wrapper,
+// which records the expected digest and then delegates to the real check.
+func verifyLoggingHarness(fnVerify string) (harness, renamed string) {
+	renamed = strings.Replace(fnVerify, "verify_sha256_file", "verify_sha256_file_impl", 1)
+	harness = `
+verify_sha256_file() {
+    echo "verify $2" >> "$VERIFY_LOG"
+    verify_sha256_file_impl "$@"
+}
+`
+	return harness, renamed
+}
+
+// installerFlag renders a Go bool as the 0/1 the shell harness compares with.
+func installerFlag(on bool) string {
+	if on {
+		return "1"
+	}
+	return "0"
+}
+
+// readInstallerLines returns the non-empty lines of a harness log file.
+func readInstallerLines(path string) []string {
+	var lines []string
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	for _, line := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		if strings.TrimSpace(line) != "" {
+			lines = append(lines, line)
+		}
+	}
+	return lines
 }
 
 func runFreeBSDInstaller(t *testing.T, opts installerHarnessOpts) installerHarnessResult {
@@ -699,6 +755,9 @@ func runFreeBSDInstaller(t *testing.T, opts installerHarnessOpts) installerHarne
 	logDir := filepath.Join(tempDir, "logs")
 	_ = os.MkdirAll(logDir, 0o755)
 
+	svcState := filepath.Join(tempDir, "svc.state")
+	svcLog := filepath.Join(tempDir, "svc.log")
+
 	if err := os.WriteFile(tarballPath, opts.tarballData, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -709,14 +768,24 @@ func runFreeBSDInstaller(t *testing.T, opts installerHarnessOpts) installerHarne
 		_ = os.MkdirAll(filepath.Join(installPath, "bin"), 0o755)
 		_ = os.WriteFile(filepath.Join(installPath, "bin", "urnetwork"), []byte(opts.existingBin), 0o755)
 	}
+	if opts.existingVersion != "" {
+		_ = os.MkdirAll(installPath, 0o755)
+		_ = os.WriteFile(filepath.Join(installPath, "version"), []byte(opts.existingVersion+"\n"), 0o644)
+	}
+	svcStart := "running"
+	if opts.serviceStopped {
+		svcStart = "stopped"
+	}
 
 	fnDigest := extractShellFunc(t, script, "get_asset_digest_from_api_response")
 	fnCompute := extractShellFunc(t, script, "compute_sha256_file")
-	fnVerify := extractShellFunc(t, script, "verify_sha256_file")
+	verifyHarness, fnVerify := verifyLoggingHarness(extractShellFunc(t, script, "verify_sha256_file"))
+	fnLists := extractShellFunc(t, script, "release_lists_asset")
 	fnDoInstall := extractShellFunc(t, script, "do_install")
 	if fnDoInstall == "" {
 		t.Fatal("could not extract do_install from FreeBSD script")
 	}
+	verifyLog := filepath.Join(tempDir, "verify.log")
 
 	tag := opts.tag
 	if tag == "" {
@@ -741,28 +810,40 @@ pr_warn() { printf "[WARN] %%s\n" "$*" >&2; }
 pr_info() { printf "[INFO] %%s\n" "$*"; }
 priv() { "$@"; }
 sudo() { "$@"; }
-user_shell() { echo "/bin/sh"; }
+user_shell() { echo "/bin/sh"; }`+verifyHarness+`
 assert_state_path_safe() { return 0; }
 set_rc_conf_default() { return 0; }
 write_rc_script_body() { echo "# rc"; }
 install_wrapper_tool() { return 0; }
 resolve_service_user() { echo "testuser"; }
-service_running() { return 0; }
-restart_service() {
-    if [ "${FAIL_RESTART:-0}" = "1" ]; then
+# The service is stateful: SVC_STATE holds running|stopped, and every start
+# or restart is logged with the binary that was live at that moment. A test
+# can then tell "restart attempted on the restored binary" from "never called".
+service_running() { [ "$(cat "$SVC_STATE" 2>/dev/null)" = running ]; }
+svc_call() {
+    _n="$(cat "$SVC_LOG.n" 2>/dev/null || echo 0)"
+    _n=$((_n + 1))
+    echo "$_n" > "$SVC_LOG.n"
+    echo "$1 #$_n live=$(cat "$provider_bin" 2>/dev/null)" >> "$SVC_LOG"
+    if [ "${FAIL_RESTART:-0}" = "1" ] || { [ "${FAIL_RESTART_FIRST:-0}" = "1" ] && [ "$_n" -eq 1 ]; }; then
+        echo stopped > "$SVC_STATE"
         return 1
     fi
+    echo running > "$SVC_STATE"
     return 0
 }
-load_service() {
-    if [ "${FAIL_RESTART:-0}" = "1" ]; then
-        return 1
-    fi
-    return 0
-}
+restart_service() { svc_call restart; }
+load_service() { svc_call load; }
 http_fetch() {
     _url="$1"
     _out="${2:-}"
+    case "$_url" in
+        http://mock/*)
+            if [ "${METADATA_FAILS:-0}" = "1" ]; then
+                return 1
+            fi
+            ;;
+    esac
     if [ -n "$_out" ]; then
         cp %q "$_out"
         return 0
@@ -814,12 +895,18 @@ rc_script=%q
 me="urnet-tools"
 github_api="http://mock"
 FAIL_RESTART=%q
+FAIL_RESTART_FIRST=%q
 FAIL_CP=%q
 FAIL_MV=%q
-do_install
-`, tag, installPath, stateDir, rcScript, failRestartVal, failCpVal, failMvVal)
+METADATA_FAILS=%q
+SVC_STATE=%q
+SVC_LOG=%q
+VERIFY_LOG=%q
+echo %s > "$SVC_STATE"
+do_install %q
+`, tag, installPath, stateDir, rcScript, failRestartVal, installerFlag(opts.restartFailFirst), failCpVal, failMvVal, installerFlag(opts.metadataFails), svcState, svcLog, verifyLog, svcStart, tag)
 
-	fullScript := harness + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnDoInstall + "\n" + driver
+	fullScript := harness + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
 	cmd.Env = []string{"PATH=/usr/bin:/bin"}
 	out, err := cmd.CombinedOutput()
@@ -845,11 +932,14 @@ do_install
 	finalBinBytes, _ := os.ReadFile(filepath.Join(installPath, "bin", "urnetwork"))
 
 	return installerHarnessResult{
-		exitCode: exitCode,
-		stdout:   string(out),
-		stderr:   string(out),
-		tarCalls: tarCalls,
-		finalBin: string(finalBinBytes),
+		exitCode:    exitCode,
+		stdout:      string(out),
+		stderr:      string(out),
+		tarCalls:    tarCalls,
+		finalBin:    string(finalBinBytes),
+		svcCalls:    readInstallerLines(svcLog),
+		installDir:  installPath,
+		verifyCalls: readInstallerLines(verifyLog),
 	}
 }
 
@@ -879,12 +969,18 @@ func runLinuxInstaller(t *testing.T, opts installerHarnessOpts) installerHarness
 		_ = os.MkdirAll(filepath.Join(installPath, "bin"), 0o755)
 		_ = os.WriteFile(filepath.Join(installPath, "bin", "urnetwork"), []byte(opts.existingBin), 0o755)
 	}
+	if opts.existingVersion != "" {
+		_ = os.MkdirAll(installPath, 0o755)
+		_ = os.WriteFile(filepath.Join(installPath, ".version"), []byte(opts.existingVersion+"\n"), 0o644)
+	}
 
 	fnGetVersion := extractShellFunc(t, script, "get_version_from_api_response")
 	fnGetDate := extractShellFunc(t, script, "get_release_date_from_api_response")
 	fnDigest := extractShellFunc(t, script, "get_asset_digest_from_api_response")
 	fnCompute := extractShellFunc(t, script, "compute_sha256_file")
-	fnVerify := extractShellFunc(t, script, "verify_sha256_file")
+	verifyHarness, fnVerify := verifyLoggingHarness(extractShellFunc(t, script, "verify_sha256_file"))
+	fnLists := extractShellFunc(t, script, "release_lists_asset")
+	verifyLog := filepath.Join(tempDir, "verify.log")
 	fnSanitize := extractShellFunc(t, script, "sanitize_restart_dropins")
 	fnInstallSystemd := extractShellFunc(t, script, "install_systemd_units")
 	fnDoInstall := extractShellFunc(t, script, "do_install")
@@ -917,7 +1013,7 @@ func runLinuxInstaller(t *testing.T, opts installerHarnessOpts) installerHarness
 pr_err() { printf "[ERROR] %%s\n" "$*" >&2; }
 pr_warn() { printf "[WARN] %%s\n" "$*" >&2; }
 pr_info() { printf "[INFO] %%s\n" "$*"; }
-sudo() { "$@"; }
+sudo() { "$@"; }`+verifyHarness+`
 install_downloader() { return 0; }
 install_json_parser() { return 0; }
 openrc_maybe_redirect_install_path() { return 0; }
@@ -927,6 +1023,9 @@ ensure_tools_on_path() { return 0; }
 add_path_blocks() { return 0; }
 func_root_guard() { return 0; }
 network_fetch() {
+    if [ "${METADATA_FAILS:-0}" = "1" ]; then
+        return 1
+    fi
     cat %q
 }
 download_asset() {
@@ -1012,15 +1111,17 @@ has_openrc=0
 FAIL_RESTART=%q
 FAIL_CP=%q
 FAIL_MV=%q
+METADATA_FAILS=%q
+VERIFY_LOG=%q
 systemd_service="%s/urnetwork.service"
 systemd_update_service="%s/urnetwork-update.service"
 systemd_update_timer="%s/urnetwork-update.timer"
 systemd_userdir="%s"
 systemd_units_stopped=1
 do_install
-`, tag, op, installPath, tempDir, failRestartVal, failCpVal, failMvVal, tempDir, tempDir, tempDir, tempDir)
+`, tag, op, installPath, tempDir, failRestartVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, tempDir, tempDir, tempDir, tempDir)
 
-	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnDoInstall + "\n" + driver
+	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
 	cmd.Env = []string{"PATH=/usr/bin:/bin"}
 	out, err := cmd.CombinedOutput()
@@ -1046,11 +1147,13 @@ do_install
 	finalBinBytes, _ := os.ReadFile(filepath.Join(installPath, "bin", "urnetwork"))
 
 	return installerHarnessResult{
-		exitCode: exitCode,
-		stdout:   string(out),
-		stderr:   string(out),
-		tarCalls: tarCalls,
-		finalBin: string(finalBinBytes),
+		exitCode:    exitCode,
+		stdout:      string(out),
+		stderr:      string(out),
+		tarCalls:    tarCalls,
+		finalBin:    string(finalBinBytes),
+		installDir:  installPath,
+		verifyCalls: readInstallerLines(verifyLog),
 	}
 }
 
@@ -1142,6 +1245,22 @@ func TestInstallerProviderTarballDigestMatchProceeds(t *testing.T) {
 			}
 			if strings.Contains(res.stdout+res.stderr, "mismatch") {
 				t.Errorf("unexpected mismatch message in output:\n%s", res.stdout)
+			}
+			// Proceeding is not proof of verification: a skipped digest check
+			// also proceeds, and a printed "verified" line can outlive a skipped
+			// check. So the comparison itself must have run, and every comparison
+			// must have used the release digest. The count is not pinned to one:
+			// the Linux do_install body currently runs its download block twice,
+			// so a Linux install compares the tarball more than once.
+			want := "verify " + actualDigest
+			if len(res.verifyCalls) == 0 {
+				t.Errorf("no digest comparison ran, so the install proceeded unverified (out:\n%s)", res.stdout)
+			}
+			for _, call := range res.verifyCalls {
+				if call != want {
+					t.Errorf("digest comparison %q, want %q: verification ran against the wrong digest\n(out:\n%s)",
+						call, want, res.stdout)
+				}
 			}
 		})
 	}
@@ -1297,6 +1416,246 @@ func TestInstallerFailedRestartRestoresBackup(t *testing.T) {
 			combined := res.stdout + "\n" + res.stderr
 			if !strings.Contains(combined, "Restored") && !strings.Contains(combined, "restored") {
 				t.Errorf("expected message indicating rollback/restoration of previous binary:\n%s", combined)
+			}
+		})
+	}
+}
+
+// D1. The provider digest comes from the release metadata. When that metadata
+// cannot be fetched, nothing can be verified, so the install must abort before
+// the tarball is extracted. The old behaviour warned and installed anyway, so
+// anyone who could block the API call could defeat verification.
+func TestInstallerReleaseMetadataUnavailableAborts(t *testing.T) {
+	tarballContent := []byte("unverifiable-tarball-bytes")
+	tag := "v2026.10.27"
+
+	for _, tc := range []struct {
+		name string
+		run  func(*testing.T, installerHarnessOpts) installerHarnessResult
+	}{
+		{"FreeBSD", runFreeBSDInstaller},
+		{"Linux", runLinuxInstaller},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := tc.run(t, installerHarnessOpts{
+				tag:           tag,
+				releaseJSON:   "",
+				tarballData:   tarballContent,
+				metadataFails: true,
+			})
+			combinedOut := res.stdout + "\n" + res.stderr
+			if res.exitCode == 0 {
+				t.Fatalf("metadata fetch failed but install succeeded; it must fail closed (out:\n%s)", combinedOut)
+			}
+			if len(res.tarCalls) != 0 {
+				t.Fatalf("tar was invoked (%v) with no release metadata; must abort before extraction", res.tarCalls)
+			}
+			if !strings.Contains(combinedOut, "Refusing to install an unverified") {
+				t.Errorf("expected a message saying the unverified install was refused:\n%s", combinedOut)
+			}
+			if strings.Contains(combinedOut, "continuing without verification") {
+				t.Errorf("installer warned and continued unverified:\n%s", combinedOut)
+			}
+		})
+	}
+}
+
+// D1. Metadata that loads but does not list the provider asset cannot verify
+// the tarball either, so the install aborts. This is the case where the
+// release is present and the asset is genuinely missing.
+func TestInstallerProviderAssetMissingFromReleaseAborts(t *testing.T) {
+	tarballContent := []byte("tarball-with-no-listed-asset")
+	tag := "v2026.10.27"
+	releaseJSON := fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [
+			{"name": "urnetwork-provider-other.tar.gz", "digest": "sha256:%s"}
+		]
+	}`, tag, strings.Repeat("e", 64))
+
+	for _, tc := range []struct {
+		name string
+		run  func(*testing.T, installerHarnessOpts) installerHarnessResult
+	}{
+		{"FreeBSD", runFreeBSDInstaller},
+		{"Linux", runLinuxInstaller},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := tc.run(t, installerHarnessOpts{
+				tag:         tag,
+				releaseJSON: releaseJSON,
+				tarballData: tarballContent,
+			})
+			combinedOut := res.stdout + "\n" + res.stderr
+			if res.exitCode == 0 {
+				t.Fatalf("provider asset is not listed but install succeeded (out:\n%s)", combinedOut)
+			}
+			if len(res.tarCalls) != 0 {
+				t.Fatalf("tar was invoked (%v) for an unlisted asset; must abort before extraction", res.tarCalls)
+			}
+			if !strings.Contains(combinedOut, "does not list") {
+				t.Errorf("expected a message saying the release does not list the asset:\n%s", combinedOut)
+			}
+		})
+	}
+}
+
+// D2. A failed restart must roll back AND restart the service on the restored
+// binary. The old rollback only restarted when the service was still running
+// after the failure, which a failed restart never is, so the box was left
+// running the old binary with the service stopped.
+func TestFreeBSDRollbackRestartsRestoredBinary(t *testing.T) {
+	existingPayload := "pre-existing-working-binary"
+	tarballContent := []byte("new-tarball-payload")
+	tag := "v2026.10.27"
+	assetName := "urnetwork-provider-" + tag + ".tar.gz"
+	sum := sha256.Sum256(tarballContent)
+	releaseJSON := fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [
+			{"name": %q, "digest": "sha256:%s"}
+		]
+	}`, tag, assetName, hex.EncodeToString(sum[:]))
+
+	t.Run("restored binary restarts", func(t *testing.T) {
+		res := runFreeBSDInstaller(t, installerHarnessOpts{
+			tag:              tag,
+			operation:        "update",
+			releaseJSON:      releaseJSON,
+			tarballData:      tarballContent,
+			existingBin:      existingPayload,
+			restartFailFirst: true,
+		})
+		combined := res.stdout + "\n" + res.stderr
+		if res.exitCode == 0 {
+			t.Fatalf("the new binary failed to start, so the install must exit non-zero (out:\n%s)", combined)
+		}
+		if res.finalBin != existingPayload {
+			t.Errorf("rollback did not restore the previous binary: got %q (out:\n%s)", res.finalBin, combined)
+		}
+		want := []string{
+			"restart #1 live=extracted-new-binary",
+			"restart #2 live=" + existingPayload,
+		}
+		if strings.Join(res.svcCalls, "\n") != strings.Join(want, "\n") {
+			t.Errorf("service calls = %q, want the restart to run again on the restored binary %q\n(out:\n%s)", res.svcCalls, want, combined)
+		}
+		if !strings.Contains(combined, "restarted") {
+			t.Errorf("expected the operator to be told the service was restarted on the previous binary:\n%s", combined)
+		}
+	})
+
+	t.Run("restored binary restart also fails", func(t *testing.T) {
+		res := runFreeBSDInstaller(t, installerHarnessOpts{
+			tag:         tag,
+			operation:   "update",
+			releaseJSON: releaseJSON,
+			tarballData: tarballContent,
+			existingBin: existingPayload,
+			failRestart: true,
+		})
+		combined := res.stdout + "\n" + res.stderr
+		if res.exitCode == 0 {
+			t.Fatalf("expected a non-zero exit when the service cannot start (out:\n%s)", combined)
+		}
+		if len(res.svcCalls) != 2 {
+			t.Errorf("expected a restart on the new and on the restored binary, got %q", res.svcCalls)
+		}
+		if !strings.Contains(combined, "did NOT restart") {
+			t.Errorf("a failed restart of the restored binary must be reported explicitly:\n%s", combined)
+		}
+	})
+
+	t.Run("stopped service is not started by rollback", func(t *testing.T) {
+		// A service that was stopped before the install has no restart to
+		// undo: the failed load must roll back without starting it.
+		res := runFreeBSDInstaller(t, installerHarnessOpts{
+			tag:            tag,
+			operation:      "update",
+			releaseJSON:    releaseJSON,
+			tarballData:    tarballContent,
+			existingBin:    existingPayload,
+			failRestart:    true,
+			serviceStopped: true,
+		})
+		if len(res.svcCalls) != 1 {
+			t.Errorf("a service that was stopped must not be started during rollback; calls = %q", res.svcCalls)
+		}
+		if res.finalBin != existingPayload {
+			t.Errorf("rollback did not restore the previous binary: got %q", res.finalBin)
+		}
+	})
+}
+
+// D3. The version file must describe the binary that is running. Writing it
+// before the service answers left it naming the failed release after the
+// rollback restored the old binary. Both installers must keep it on the old
+// version when the new one does not start.
+func TestInstallerVersionFileTracksRunningBinary(t *testing.T) {
+	existingPayload := "pre-existing-working-binary"
+	tarballContent := []byte("new-tarball-payload")
+	oldVersion := "v2026.10.20"
+	tag := "v2026.10.27"
+	assetName := "urnetwork-provider-" + tag + ".tar.gz"
+	sum := sha256.Sum256(tarballContent)
+	releaseJSON := fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [
+			{"name": %q, "digest": "sha256:%s"}
+		]
+	}`, tag, assetName, hex.EncodeToString(sum[:]))
+
+	for _, tc := range []struct {
+		name        string
+		run         func(*testing.T, installerHarnessOpts) installerHarnessResult
+		versionFile string
+	}{
+		{"FreeBSD", runFreeBSDInstaller, "version"},
+		{"Linux", runLinuxInstaller, ".version"},
+	} {
+		t.Run(tc.name+"/restart fails", func(t *testing.T) {
+			res := tc.run(t, installerHarnessOpts{
+				tag:             tag,
+				operation:       "update",
+				releaseJSON:     releaseJSON,
+				tarballData:     tarballContent,
+				existingBin:     existingPayload,
+				existingVersion: oldVersion,
+				failRestart:     true,
+			})
+			if res.exitCode == 0 {
+				t.Fatalf("expected the failed restart to fail the install (out:\n%s)", res.stdout)
+			}
+			got, err := os.ReadFile(filepath.Join(res.installDir, tc.versionFile))
+			if err != nil {
+				t.Fatalf("version file missing: %v", err)
+			}
+			if strings.TrimSpace(string(got)) != oldVersion {
+				t.Errorf("after rollback the version file says %q, want %q: it describes the failed release, not the binary that runs",
+					strings.TrimSpace(string(got)), oldVersion)
+			}
+		})
+		t.Run(tc.name+"/restart succeeds", func(t *testing.T) {
+			res := tc.run(t, installerHarnessOpts{
+				tag:             tag,
+				operation:       "update",
+				releaseJSON:     releaseJSON,
+				tarballData:     tarballContent,
+				existingBin:     existingPayload,
+				existingVersion: oldVersion,
+			})
+			if res.exitCode != 0 {
+				t.Fatalf("expected a clean update, got exit %d (out:\n%s)", res.exitCode, res.stdout)
+			}
+			got, err := os.ReadFile(filepath.Join(res.installDir, tc.versionFile))
+			if err != nil {
+				t.Fatalf("version file missing: %v", err)
+			}
+			if strings.TrimSpace(string(got)) != tag {
+				t.Errorf("after a successful update the version file says %q, want %q", strings.TrimSpace(string(got)), tag)
 			}
 		})
 	}
