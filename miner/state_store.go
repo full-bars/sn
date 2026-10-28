@@ -266,12 +266,14 @@ func (s *providerStore) load(bucket, key string, out any) (bool, error) {
 		return false, errProviderStoreClosed
 	}
 	var raw []byte
+	var present bool
 	err := runProviderStoreView(s.db, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil
 		}
 		if val := b.Get([]byte(key)); val != nil {
+			present = true
 			raw = append([]byte(nil), val...)
 		}
 		return nil
@@ -279,7 +281,7 @@ func (s *providerStore) load(bucket, key string, out any) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if len(raw) == 0 {
+	if !present {
 		return false, nil
 	}
 	if err := json.Unmarshal(raw, out); err != nil {

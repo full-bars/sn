@@ -401,3 +401,34 @@ func TestProviderStoreUndecodableUpdateIsNotAFailedWrite(t *testing.T) {
 		t.Fatalf("write failure count = %d, want 0: no write was attempted", got)
 	}
 }
+
+// A key that holds a zero-length value is a record that exists and says
+// nothing, not a record that was never written. Reading it as absent would let
+// the caller save over it without the failure being counted.
+func TestProviderStoreLoadCountsAnEmptyValue(t *testing.T) {
+	counts := withPersistentErrorStore(t)
+	store, err := openProviderStore(filepath.Join(t.TempDir(), providerStoreFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.db.Update(func(tx *bbolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(providerStoreBucketState))
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte("empty"), []byte{})
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var out extenderActivationRecord
+	found, err := store.load(providerStoreBucketState, "empty", &out)
+	if err == nil {
+		t.Fatalf("an empty stored value loaded as (found=%t, nil), want a decode error", found)
+	}
+	if got := counts.Snapshot()[providerStoreDecodeFailedCategory]; got != 1 {
+		t.Fatalf("decode failure count = %d, want 1", got)
+	}
+	if found, err := store.load(providerStoreBucketState, "never-written", &out); found || err != nil {
+		t.Fatalf("a key that was never written loaded as (found=%t, %v), want (false, nil)", found, err)
+	}
+}
