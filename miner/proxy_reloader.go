@@ -31,8 +31,9 @@ import (
 
 // minerReloadSlot is one running proxy slot owned by the reloader.
 type minerReloadSlot struct {
-	settings *connect.ProxySettings
-	cancel   context.CancelFunc
+	settings   *connect.ProxySettings
+	cancel     context.CancelFunc
+	generation uint64
 }
 
 // minerReloadSummary reports what one reload changed, for the operator log.
@@ -70,6 +71,9 @@ type minerProxyReloader struct {
 	// cancel must be safe to call more than once: removal, stop and the run's
 	// own shutdown can all race to stop the same slot.
 	spawn func(*connect.ProxySettings) (context.CancelFunc, error)
+	// spawnGeneration is the lifecycle-aware form used by provide: the worker
+	// receives the exact slot generation it must withdraw on exit.
+	spawnGeneration func(*connect.ProxySettings, uint64) (context.CancelFunc, error)
 
 	// running is keyed by proxy identity (ProxySettings.Key), the same key the
 	// bandwidth registry and the earnings store use, so two accounts behind
@@ -110,7 +114,8 @@ type minerProxyReloader struct {
 
 	// stopped makes stop() terminal: a reload that was already computing its
 	// desired set when the yield landed must not re-spawn the pool.
-	stopped bool
+	stopped        bool
+	nextGeneration uint64
 	// watchCancel ends the watcher, so stop() does not leave it polling a
 	// trigger for a process that has yielded.
 	watchCancel context.CancelFunc
@@ -228,7 +233,8 @@ func (r *minerProxyReloader) seed(settings *connect.ProxySettings, cancel contex
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.running[settings.Key()] = &minerReloadSlot{settings: settings, cancel: cancel}
+	r.nextGeneration++
+	r.running[settings.Key()] = &minerReloadSlot{settings: settings, cancel: cancel, generation: r.nextGeneration}
 	if settings.Address != "" {
 		// Claim, but never refuse: the configured set may legitimately put two
 		// identities behind one address (providerSlotIdentities keys those
@@ -236,6 +242,35 @@ func (r *minerProxyReloader) seed(settings *connect.ProxySettings, cancel contex
 		// governs identities added while this run is live.
 		r.addressOwners.LoadOrStore(settings.Address, settings.Key())
 	}
+}
+
+// seedGeneration returns the generation assigned to a slot seeded by the
+// initial provide launch.
+func (r *minerProxyReloader) seedGeneration(settings *connect.ProxySettings, cancel context.CancelFunc) uint64 {
+	r.seed(settings, cancel)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if settings == nil || r.running[settings.Key()] == nil {
+		return 0
+	}
+	return r.running[settings.Key()].generation
+}
+
+// workerExited withdraws only the slot generation whose worker completed.
+// A stale worker can never remove a replacement that has since rotated in.
+func (r *minerProxyReloader) workerExited(key string, generation uint64) bool {
+	r.mu.Lock()
+	slot := r.running[key]
+	if slot == nil || slot.generation != generation {
+		r.mu.Unlock()
+		return false
+	}
+	delete(r.running, key)
+	r.releaseAddress(slot.settings)
+	keys := r.sortedRunningKeysLocked()
+	r.mu.Unlock()
+	r.notify(keys)
+	return true
 }
 
 // reserveAddress claims a host:port for one identity, refusing an address that
@@ -332,7 +367,15 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 			delete(r.running, key)
 			r.releaseAddress(slot.settings)
 		}
-		cancel, spawnErr := r.spawn(settings)
+		r.nextGeneration++
+		generation := r.nextGeneration
+		var cancel context.CancelFunc
+		var spawnErr error
+		if r.spawnGeneration != nil {
+			cancel, spawnErr = r.spawnGeneration(settings, generation)
+		} else {
+			cancel, spawnErr = r.spawn(settings)
+		}
 		if spawnErr != nil {
 			// A cancel returned alongside an error would otherwise leak.
 			if cancel != nil {
@@ -349,7 +392,7 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 			// stops even when an addition failed.
 			continue
 		}
-		r.running[key] = &minerReloadSlot{settings: settings, cancel: cancel}
+		r.running[key] = &minerReloadSlot{settings: settings, cancel: cancel, generation: generation}
 		if ok {
 			summary.Rotated++
 		} else {

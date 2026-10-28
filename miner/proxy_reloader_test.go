@@ -465,3 +465,82 @@ func TestProxyReloadAfterStopDoesNotResurrect(t *testing.T) {
 		t.Fatalf("reload after stop spawned %d slots, want none", got-before)
 	}
 }
+
+func TestProxyReloadWorkerExitIsBoundToItsGeneration(t *testing.T) {
+	h := &reloadTestHarness{desired: []*connect.ProxySettings{
+		reloadTestSettings("198.51.100.40:443", "alice", "old-secret"),
+	}}
+	r := h.reloader()
+	settings := h.desired[0]
+	generation := r.seedGeneration(settings, func() {})
+	if generation == 0 {
+		t.Fatal("seed did not assign a generation")
+	}
+
+	h.setDesired(reloadTestSettings("198.51.100.40:443", "alice", "new-secret"))
+	if _, err := r.reload(); err != nil {
+		t.Fatal(err)
+	}
+	if r.workerExited(settings.Key(), generation) {
+		t.Fatal("old-generation completion withdrew the replacement")
+	}
+	if keys := r.runningKeys(); len(keys) != 1 || keys[0] != settings.Key() {
+		t.Fatalf("replacement slot was disturbed by old completion: %v", keys)
+	}
+
+	r.mu.Lock()
+	replacementGeneration := r.running[settings.Key()].generation
+	r.mu.Unlock()
+	if replacementGeneration == generation {
+		t.Fatal("rotation reused the old slot generation")
+	}
+	if !r.workerExited(settings.Key(), replacementGeneration) {
+		t.Fatal("current-generation completion did not withdraw the failed worker")
+	}
+	if got := r.runningKeys(); len(got) != 0 {
+		t.Fatalf("worker exit left stale running state: %v", got)
+	}
+}
+
+func TestProxyReloadWorkerFailureCanRetryThenEvictOrCancel(t *testing.T) {
+	h := &reloadTestHarness{desired: []*connect.ProxySettings{
+		reloadTestSettings("198.51.100.41:443", "", ""),
+	}}
+	r := h.reloader()
+	var generation uint64
+	cancelled := false
+	r.spawnGeneration = func(settings *connect.ProxySettings, gen uint64) (context.CancelFunc, error) {
+		generation = gen
+		return func() { cancelled = true }, nil
+	}
+
+	if _, err := r.reload(); err != nil {
+		t.Fatal(err)
+	}
+	key := h.desired[0].Key()
+	failedGeneration := generation
+	if !r.workerExited(key, failedGeneration) {
+		t.Fatal("failed current worker was not withdrawn")
+	}
+	if _, err := r.reload(); err != nil {
+		t.Fatalf("retry reload failed: %v", err)
+	}
+	if generation == failedGeneration || len(r.runningKeys()) != 1 {
+		t.Fatalf("retry did not start a replacement generation: generation=%d running=%v", generation, r.runningKeys())
+	}
+
+	replacement := generation
+	h.setDesired()
+	if _, err := r.reload(); err != nil {
+		t.Fatalf("eviction reload failed: %v", err)
+	}
+	if !cancelled {
+		t.Fatal("evicting the replacement did not cancel its worker")
+	}
+	if r.workerExited(key, replacement) {
+		t.Fatal("completion after eviction should be ignored")
+	}
+	if got := r.runningKeys(); len(got) != 0 {
+		t.Fatalf("evicted worker remained running: %v", got)
+	}
+}
