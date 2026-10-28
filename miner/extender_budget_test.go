@@ -298,13 +298,10 @@ func TestExtenderActivationDeniesAndWarnsOnceWithoutAStore(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(parent, "state"))
 	closeProviderStore()
 
-	previousOnce := extenderBudgetWarnOnce
-	extenderBudgetWarnOnce = new(sync.Once)
 	previousWriter := proxyManagerLogWriter
 	writer := &bytes.Buffer{}
 	proxyManagerLogWriter = writer
 	t.Cleanup(func() {
-		extenderBudgetWarnOnce = previousOnce
 		proxyManagerLogWriter = previousWriter
 		closeProviderStore()
 	})
@@ -319,9 +316,9 @@ func TestExtenderActivationDeniesAndWarnsOnceWithoutAStore(t *testing.T) {
 			t.Fatalf("start %d with no store: wait=%s, want %s", i, wait, providerStoreRetryInterval)
 		}
 	}
-	want := "activation budget unenforced for account " + extenderTestAccountA
-	if lines := strings.Count(writer.String(), want); lines != 1 {
-		t.Fatalf("unenforced-budget lines=%d, want exactly 1 (log: %q)", lines, writer.String())
+	want := "activation budget unavailable for account " + extenderTestAccountA
+	if lines := strings.Count(writer.String(), want); lines != 3 {
+		t.Fatalf("unavailable-budget lines=%d, want 3 (log: %q)", lines, writer.String())
 	}
 }
 
@@ -402,7 +399,7 @@ func TestExtenderActivationSuccessClearsOnlyThatAccount(t *testing.T) {
 // token resolves accepts those posts. The success must drop them with the
 // account's own state, or the next gate check adopts them back and holds a
 // launch the success was meant to clear.
-func TestExtenderActivationSuccessDropsTheUnidentifiedPosts(t *testing.T) {
+func TestExtenderActivationSuccessKeepsTheUnidentifiedPosts(t *testing.T) {
 	testExtenderState(t)
 	now := time.Unix(1_800_000_000, 0)
 
@@ -419,13 +416,16 @@ func TestExtenderActivationSuccessDropsTheUnidentifiedPosts(t *testing.T) {
 	recordExtenderActivationSucceeded(extenderTestAccountA)
 
 	allow, wait, used := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
-	if !allow || used != 0 {
-		t.Fatalf("after a signed activation: allow=%v used=%d wait=%s, want allow=true used=0: the accepted posts were adopted back",
+	if allow || used != 4 {
+		t.Fatalf("after a signed activation: allow=%v used=%d wait=%s, want allow=false used=4",
 			allow, used, wait)
 	}
 	record, _ := readExtenderActivationRecord(extenderTestAccountA)
 	if _, ok := record.Accounts[extenderActivationUnidentifiedAccount]; ok {
-		t.Fatalf("the unidentified entry survived the signed activation: %+v", record.Accounts)
+		t.Fatalf("unidentified entry was not adopted: %+v", record.Accounts)
+	}
+	if state := record.Accounts[extenderTestAccountA]; len(state.Attempts) != 4 {
+		t.Fatalf("account attempts = %d, want 4 adopted posts", len(state.Attempts))
 	}
 }
 
@@ -697,6 +697,25 @@ func TestExtenderActivationListenerRefusalHoldsTheAccount(t *testing.T) {
 	// activation clears the hold; it does not refund the attempt.
 	if allow, _, used := extenderActivationAllow(now, postsPerDualStackPass, account); !allow || used != 1 {
 		t.Fatalf("after a signed activation: allow=%v used=%d, want allow=true used=1 (the refused post is not refunded)", allow, used)
+	}
+}
+
+func TestExtenderActivationListenerPinsResolvedAccount(t *testing.T) {
+	testExtenderState(t)
+	writeAccountToken(t, extenderTestAccountA)
+	listener := newProviderExtenderStatusListener(nil, 0, "")
+	status := &sdk.ExtenderProvideStatus{Enabled: true, LastActivationError: "refused", LastActivationRefused: true}
+	listener.ExtenderProvideStatusChanged(status)
+	writeAccountToken(t, extenderTestAccountB)
+	status.LastActivationTime++
+	listener.ExtenderProvideStatusChanged(status)
+	record, err := readExtenderActivationRecord(extenderTestAccountA)
+	if err != nil || record.Accounts[extenderTestAccountA].Refusals != 2 {
+		t.Fatalf("pinned account A record=%+v err=%v", record.Accounts, err)
+	}
+	record, err = readExtenderActivationRecord(extenderTestAccountB)
+	if err != nil || record.Accounts[extenderTestAccountB].Refusals != 0 {
+		t.Fatalf("changed token account B record=%+v err=%v", record.Accounts, err)
 	}
 }
 
