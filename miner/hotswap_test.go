@@ -228,7 +228,7 @@ func TestHandoffBatonRestoresControlSocketOnAbort(t *testing.T) {
 	}
 }
 
-func TestHandoffBatonDoesNotRebindControlSocketOnSuccess(t *testing.T) {
+func TestHandoffKeepsSocketOnSuccess(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
 	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
 	if err := owner.start(); err != nil {
@@ -260,7 +260,7 @@ func TestHandoffBatonDoesNotRebindControlSocketOnSuccess(t *testing.T) {
 	}
 }
 
-func TestHotswapRetiredControlSocketOwnerCannotRestart(t *testing.T) {
+func TestRetiredSocketOwnerCannotRestart(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
 	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
 	if err := owner.start(); err != nil {
