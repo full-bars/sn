@@ -370,9 +370,9 @@ func fetchProxyURLLines(ctx context.Context, url string) ([]string, error) {
 	return result, nil
 }
 
-// mergeProxyURLEntries adds genuinely new addresses from lines into
-// state.Cache (mutating it in place). Already-cached addresses are left
-// untouched, blacklisted and excluded addresses are skipped, and when the
+// mergeProxyURLEntries adds new addresses and verified credential rotations
+// into state.Cache (mutating it in place). An unverified rotation leaves the
+// old entry untouched. Blacklisted and excluded addresses are skipped, and when the
 // cache is at maxTotal the lowest-ranked cached entry is evicted to make room
 // for a higher-ranked candidate. maxTotal caps the total cache size; 0 means
 // unlimited.
@@ -396,7 +396,8 @@ func mergeProxyURLEntries(state *ProxyURLState, lines []string, apiOKCount int, 
 		if !ok {
 			continue
 		}
-		if _, exists := state.Cache[address]; exists {
+		existing, exists := state.Cache[address]
+		if exists && existing.User == user && existing.Password == password {
 			continue
 		}
 		if _, blacklisted := state.Blacklist[address]; blacklisted {
@@ -405,7 +406,7 @@ func mergeProxyURLEntries(state *ProxyURLState, lines []string, apiOKCount int, 
 		if hostMatchesAny(state.ExcludePatterns, address) {
 			continue
 		}
-		if maxTotal > 0 && len(state.Cache) >= maxTotal {
+		if !exists && maxTotal > 0 && len(state.Cache) >= maxTotal {
 			// Cache full. With a rank function, evict the lowest-ranked
 			// cached entry if this candidate is better - best-overall
 			// selection across all sources, not first-come-first-served.
@@ -437,6 +438,11 @@ func mergeProxyURLEntries(state *ProxyURLState, lines []string, apiOKCount int, 
 				entry.ProbeOK = g.Qualified
 				applyProxyGradeToEntry(&entry, g, time.Now())
 			}
+		}
+		if exists && !entry.ProbeOK {
+			// Verification and swap are one step: a failed candidate must not
+			// replace or partially mutate the credential currently in service.
+			continue
 		}
 		state.Cache[address] = entry
 		added++

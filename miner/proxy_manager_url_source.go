@@ -541,7 +541,11 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 	// refresh of cached entries is the reaper's job. The cache snapshot is
 	// read once up front; the merge re-reads it under the lock later, so any
 	// race just means a proxy gets probed once more.
-	cached := cachedProxyAddresses(mustReadProxyURLState())
+	cachedState := mustReadProxyURLState()
+	var cached map[string]ProxyURLEntry
+	if cachedState != nil {
+		cached = cachedState.Cache
+	}
 	// probed is LIVE across sources: an address listed in source A AND
 	// source B must be table-probed ONCE per cycle, not once per source.
 	probed := map[string]bool{}
@@ -572,12 +576,13 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		var probeLines []string
 		skippedThisSource := 0
 		for _, line := range lines {
-			addr, _, _, ok := parseProxyURLLine(line)
+			addr, user, password, ok := parseProxyURLLine(line)
 			if !ok {
 				continue
 			}
 			perSource[i].Lines++
-			if cached[addr] || probed[addr] {
+			cachedEntry, isCached := cached[addr]
+			if (isCached && cachedEntry.User == user && cachedEntry.Password == password) || probed[addr] {
 				skippedCached++
 				skippedThisSource++
 				continue
