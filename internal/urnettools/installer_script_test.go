@@ -346,59 +346,119 @@ openrc_install_root=/usr/local/lib/urnetwork-provider
 	}
 }
 
-func TestOpenRCFailedSudoStartRollsBackAndFails(t *testing.T) {
+// runOpenRCSudoStart runs the real install_openrc_units and
+// openrc_rollback_binary_swap for the non-root (sudo) branch, with a live/.old
+// pair left by a swap. sudo is a passthrough and rc-service on PATH records
+// each call and the binary live at that moment; startFails makes only the
+// first start fail.
+func runOpenRCSudoStart(t *testing.T, startFails bool) (out string, err error, live, calls string) {
+	t.Helper()
 	skipWithoutPOSIXShell(t)
-	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
-	if err != nil {
+	source := readInstaller(t)
+	fnInstall := extractShellFunc(t, source, "install_openrc_units")
+	fnRollback := extractShellFunc(t, source, "openrc_rollback_binary_swap")
+	if fnInstall == "" || fnRollback == "" {
+		t.Fatal("could not extract install_openrc_units or openrc_rollback_binary_swap from the Linux installer")
+	}
+	root := t.TempDir()
+	installRoot := filepath.Join(root, "lib")
+	installPath := filepath.Join(installRoot, "urnetwork-provider")
+	binDir := filepath.Join(installPath, "bin")
+	home := filepath.Join(root, "home")
+	initd := filepath.Join(root, "initd", "urnetwork")
+	live = filepath.Join(binDir, "urnetwork")
+	for _, dir := range []string{binDir, home, filepath.Dir(initd)} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(live, []byte("NEW"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	fn := extractShellFunc(t, strings.ReplaceAll(string(b), "\r\n", "\n"), "install_openrc_units")
-	if fn == "" {
-		t.Fatal("could not extract install_openrc_units from the Linux installer")
-	}
-	tempDir := t.TempDir()
-	serviceHome := filepath.Join(tempDir, "home")
-	if err := os.MkdirAll(serviceHome, 0o700); err != nil {
+	if err := os.WriteFile(live+".old", []byte("PREVIOUS"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	actions := filepath.Join(tempDir, "actions.log")
-	installRoot := "/usr/local/lib/urnetwork-provider"
-	harness := fmt.Sprintf(`
-pr_info() { :; }
-pr_warn() { :; }
-pr_err() { echo "[ERROR] $*"; }
-openrc_user_home() { echo %q; }
-openrc_restore_update_entry() { :; }
-openrc_resolve_parent() { echo %q; }
-openrc_finalize_root_paths() { return 0; }
-openrc_rollback_binary_swap() { echo "rollback:${SUDO:-}" >> %q; }
-id() { if [ "$1" = "-u" ]; then echo 1000; fi; return 0; }
-sudo() {
-    if [ "$1" = "-n" ] && [ "$2" = "true" ]; then return 0; fi
-    if [ "$1" = "rc-service" ]; then echo start >> %q; return 1; fi
-    return 0
-}
-`, serviceHome, installRoot, actions, actions)
-	cmd := exec.Command("/bin/sh", "-c", harness+fn+fmt.Sprintf(`
-openrc_user=urnet
-openrc_install_root=%q
-openrc_initd_file=%q
-install_path=%q
+	stubDir := t.TempDir()
+	record := filepath.Join(stubDir, "rc-service.calls")
+	flag := filepath.Join(stubDir, "first-start-done")
+	failFirst := ""
+	if startFails {
+		failFirst = "if [ \"$1\" = urnetwork ] && [ \"$2\" = start ] && [ ! -e '" + flag + "' ]; then\n" +
+			"    : > '" + flag + "'\n" +
+			"    exit 1\n" +
+			"fi\n"
+	}
+	rcService := "#!/bin/sh\n" +
+		"printf '%s live=%s\\n' \"$*\" \"$(cat '" + live + "' 2>/dev/null)\" >> '" + record + "'\n" +
+		failFirst + "exit 0\n"
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-service"), []byte(rcService), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-update"), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	out, err = runShellScriptWithPath(t, stubDir, `
+install_path="`+installPath+`"
+openrc_install_root="`+installRoot+`"
+openrc_user="urnet"
+openrc_initd_file="`+initd+`"
 openrc_swap_pending=1
 openrc_units_stopped=1
+id() { if [ "$1" = -u ]; then echo 1000; fi; return 0; }
+sudo() { if [ "$1" = -n ]; then shift; fi; "$@"; }
+openrc_user_home() { echo "`+home+`"; }
+openrc_resolve_parent() { if [ "$1" = --full ]; then shift; fi; echo "$1"; }
+openrc_finalize_root_paths() { return 0; }
+openrc_restore_update_entry() { :; }
+openrc_service_running() { return 1; }
+pr_info() { printf 'INFO: %s\n' "$*"; }
+pr_warn() { printf 'WARN: %s\n' "$*"; }
+pr_err() { printf 'ERROR: %s\n' "$*"; }
+`+fnRollback+`
+`+fnInstall+`
 install_openrc_units
-`, installRoot, filepath.Join(tempDir, "init.d", "urnetwork"), installRoot))
-	cmd.Env = []string{"PATH=/usr/bin:/bin"}
-	out, err := cmd.CombinedOutput()
+echo "pending=$openrc_swap_pending"
+openrc_rollback_binary_swap
+echo "after-rollback live=$(cat '`+live+`')"
+`)
+	raw, _ := os.ReadFile(record)
+	return out, err, live, string(raw)
+}
+
+func TestOpenRCFailedSudoStartRollsBackAndFails(t *testing.T) {
+	out, err, live, calls := runOpenRCSudoStart(t, true)
 	if err == nil {
 		t.Fatalf("sudo start failure returned success; want rollback + non-zero exit (output:\n%s)", out)
 	}
-	got, readErr := os.ReadFile(actions)
-	if readErr != nil {
-		t.Fatalf("read action log: %v (output:\n%s)", readErr, out)
+	if got, rerr := os.ReadFile(live); rerr != nil || string(got) != "PREVIOUS" {
+		t.Errorf("rollback did not restore the previous binary: got %q (%v); out:\n%s", got, rerr, out)
 	}
-	if strings.TrimSpace(string(got)) != "start\nrollback:sudo" {
-		t.Fatalf("actions = %q, want start then rollback (output:\n%s)", got, out)
+	if _, serr := os.Stat(live + ".old"); serr == nil {
+		t.Error("the .old file must be consumed by the rollback")
+	}
+	if want := "urnetwork start live=NEW\nurnetwork start live=PREVIOUS\n"; calls != want {
+		t.Errorf("rc-service calls:\n%s\nwant a failed start on NEW, then a restart on PREVIOUS (out:\n%s)", calls, out)
+	}
+}
+
+// The success twin: a clean sudo start must consume urnetwork.old and clear
+// openrc_swap_pending, so a later rollback call cannot undo a good update.
+func TestOpenRCSuccessfulSudoStartCleansUpAndDisarmsRollback(t *testing.T) {
+	out, err, live, calls := runOpenRCSudoStart(t, false)
+	if err != nil {
+		t.Fatalf("successful sudo start failed: %v (output:\n%s)", err, out)
+	}
+	if _, serr := os.Stat(live + ".old"); serr == nil {
+		t.Errorf("urnetwork.old must be removed after a successful start (out:\n%s)", out)
+	}
+	if !strings.Contains(out, "pending=0") {
+		t.Errorf("openrc_swap_pending must be 0 after success (out:\n%s)", out)
+	}
+	if !strings.Contains(out, "after-rollback live=NEW") {
+		t.Errorf("a rollback after success must be a no-op and keep the new binary (out:\n%s)", out)
+	}
+	if want := "urnetwork start live=NEW\n"; calls != want {
+		t.Errorf("rc-service calls = %q, want exactly one start (out:\n%s)", calls, out)
 	}
 }
 
