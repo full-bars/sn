@@ -52,6 +52,11 @@ jobs:
             bash -n "$f" || { echo "::error file=$f::shell syntax error"; exit 1; }
           done
 
+      - name: Check cross-compiled arm64 binaries
+        # The builder runs on amd64 and verifies all three binaries before any
+        # image is published, without needing arm64 emulation on the runner.
+        run: docker build --platform linux/arm64 --target builder --build-arg VERSION="$WANT_VERSION" .
+
       - name: Build image from checkout
         run: docker build --build-arg VERSION="$WANT_VERSION" -t "$IMG" .
 
