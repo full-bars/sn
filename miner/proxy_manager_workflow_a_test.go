@@ -130,6 +130,63 @@ func TestWorkflowASelectedThroughStateSource(t *testing.T) {
 	}
 }
 
+func TestProxyRuntimeApplyPersistsFetchedIdentityAndProvenance(t *testing.T) {
+	withTempHome(t)
+	const address = "198.51.100.28:1080"
+	if err := writeProxyState(&ProxyState{Proxies: map[string]ProxyEntry{}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeProxyURLState(&ProxyURLState{Cache: map[string]ProxyURLEntry{
+		address: {ProbeOK: true, User: "fetch-user", Password: "fetch-pass"},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+
+	m := newProxyManager(defaultProxyManagerConfig())
+	launch, _, _, err := m.desiredForReload()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(launch) != 1 {
+		t.Fatalf("runtime APPLY returned %d proxies, want one", len(launch))
+	}
+	key := launch[0].Key()
+	state, err := readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	entry, ok := state.Proxies[key]
+	if !ok || entry.ID <= 0 || entry.Source != "url" {
+		t.Fatalf("runtime identity row = %+v, present=%v; want assigned ID and URL provenance", entry, ok)
+	}
+	if !isURLSourcedProxyKey(key) {
+		t.Fatal("runtime URL identity must use the URL-sourced eviction path")
+	}
+	if err := writeProxyURLState(&ProxyURLState{Cache: map[string]ProxyURLEntry{
+		address: {ProbeOK: true, User: "rotated-user", Password: "rotated-pass"},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	rotated, _, _, err := m.desiredForReload()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rotated) != 1 || rotated[0].Key() == key || rotated[0].Auth == nil || rotated[0].Auth.User != "rotated-user" {
+		t.Fatalf("verified credential rotation was not applied: %#v", rotated)
+	}
+	state, err = readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := state.Proxies[key]; ok {
+		t.Fatalf("old URL identity %q remained in proxy.state after rotation", key)
+	}
+	newEntry, ok := state.Proxies[rotated[0].Key()]
+	if !ok || newEntry.ID <= 0 || newEntry.Source != "url" {
+		t.Fatalf("rotated URL identity row = %+v, present=%v", newEntry, ok)
+	}
+}
+
 // TestWorkflowBClearsStaleSource pins the other half of v33's write: starting
 // without a file clears a stale proxy.state.Source and selects the internal
 // config, whose entries are tagged "internal".
