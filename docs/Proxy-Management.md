@@ -23,9 +23,9 @@ Changes to your proxy list are applied live:
 - **New proxies** are started with a staggered delay to prevent a burst of
   simultaneous authentication attempts at the API.
 
-When a reload completes, the log prints a summary line in the form
-`[proxy] reloaded: +N added, -M removed`, so you can confirm a `proxy
-refresh` or `--proxy_url` pickup actually applied what you expected.
+When a reload completes, the log prints a summary line in the form `✅ [proxy] reload complete: added 2, removed 0, rotated 0, unchanged 480, lost 0, skipped 3`, so you can confirm a `proxy refresh` or `--proxy_url` pickup actually applied what you expected. `rotated` counts proxies whose credentials changed, `lost` counts rotated proxies whose replacement failed to start (so that address is not being served), and `skipped` counts malformed lines the file ingest dropped.
+
+A reload never replaces the running set with less than it read. If the proxy file cannot be read, produces no valid entries (an empty file, a truncated download, an editor mid-write, a list in the wrong format), or the URL cache `proxy_url.json` cannot be read, the reload aborts with `[proxy] reload failed: reload aborted, running set left as-is: ... (will retry)` and every running proxy keeps serving. A file where only some lines are bad loads the good entries and logs how many lines it skipped.
 
 > [!NOTE]
 > **Stable proxy identities**
@@ -39,6 +39,10 @@ refresh` or `--proxy_url` pickup actually applied what you expected.
 See [Proxy Hot-Reload](/full-bars/sn/wiki/Proxy-Hot-Reload) for the full mechanics, the
 trigger file, and the edge-case behavior, including the safety guard that
 skips a reload when the source yields no usable proxies.
+
+## Where a proxied slot's traffic leaves
+
+A slot that has a proxy sends everything it relays through that SOCKS5 proxy: the UDP packets through the proxy's UDP relay and the TCP streams through a SOCKS5 CONNECT built from the same proxy address and credentials. If the proxy dial fails, the connection fails; the provider never retries it directly, because that would send the traffic out from the host's own address while the configuration says the slot is proxied. The direct slot (the native provider, with no proxy) is the only one that dials from the host.
 
 ## Modifying the proxy list
 

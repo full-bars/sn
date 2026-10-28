@@ -38,6 +38,12 @@ urnet-tools proxy refresh
 
 > Full proxy-loading walkthrough (including Windows): [Adding Proxies](/full-bars/sn/wiki/Adding-Proxies).
 
+### 🔒 What the installer verifies and how it replaces the binary
+
+Before it extracts anything, the Linux and FreeBSD installers look up the release in the GitHub API and compare the SHA-256 of the downloaded provider tarball with the digest the release lists for it. A mismatch stops the install and prints the asset name, the expected digest and the digest it got. The check fails closed: if the release metadata cannot be fetched, or does not list the provider tarball (which is what a rate-limited API returns), the installer stops with `Refusing to install an unverified provider binary.` instead of installing without a check. Passing an explicit tag does not skip the lookup. The only case that continues is a release that lists the tarball without a digest because it predates digests; that prints a warning once and installs unverified. Reading the metadata needs `jq` or `python3`; the Linux installer installs one when it can, and the FreeBSD installer stops and asks you to.
+
+The new binary is staged beside the installed one and renamed into place, so the configured executable path is never missing. The previous binary is copied to `bin/urnetwork.old` first (a hard link to `bin/.urnetwork.bak.<pid>` on FreeBSD), and the installer refuses to replace the binary when that copy cannot be made. If the service then fails to start, the installer puts the previous binary back, restarts the service on it and exits with an error; the backup is deleted once the service has started. The `.version` and `.date` files (`version` on FreeBSD) are written only after that start, so they never name a release that failed to start.
+
 ## 🧭 Other Platforms (Quick install)
 
 - **Alpine Linux (OpenRC):** the same install command, run from a root shell, installs a system service under `supervise-daemon`. See the [Alpine Linux (OpenRC) guide](https://github.com/full-bars/sn/wiki/OpenRC).
@@ -195,9 +201,6 @@ urnet-tools summary
 # View logs
 urnet-tools logs
 
-# Zero-downtime binary reload
-urnet-tools hotswap
-
 # Session save/load
 urnet-tools session save C:\Users\You\backup.urnsession
 urnet-tools session load C:\Users\You\backup.urnsession
@@ -205,6 +208,8 @@ urnet-tools session load C:\Users\You\backup.urnsession
 # Update
 urnet-tools update
 ```
+
+Zero-downtime `urnet-tools hotswap` is not available on Windows in this release. Both the CLI and the running provider decline it before anything is started, with an error that says supervisor adoption is not implemented on Windows, and the running provider stays as it is. A Windows update is a normal stop and start. The reason is that the bundled supervisor waits on the original miner command and returns when it exits cleanly, so a successor provider started by a handoff would not be supervised.
 
 > See [Adding Proxies](/full-bars/sn/wiki/Adding-Proxies) for per-OS proxy-loading instructions and the Windows `.txt.txt` extension trap.
 

@@ -177,7 +177,9 @@ socks5://myuser:mypass@1.2.3.4:1080
 
 Blank lines and `#` comments are ignored. Lines with a non-`socks5://` protocol
 prefix are skipped with a warning (this fork is SOCKS5-only), and one bad line
-does not fail the whole fetch. CSV and JSON list formats are not supported.
+does not fail the whole fetch. The warning names the scheme and the address but
+never the credentials: a line with `user:password` is shown as the address plus
+`(user=present, password=present)`. CSV and JSON list formats are not supported.
 
 ## How cleanup scope works
 
