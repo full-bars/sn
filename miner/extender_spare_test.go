@@ -24,8 +24,8 @@ var (
 // extenderWindowPosts is how many posts the account's window holds at now.
 func extenderWindowPosts(t *testing.T, account string, now time.Time) int {
 	t.Helper()
-	record, found := readExtenderActivationRecord(account)
-	if !found {
+	record, err := readExtenderActivationRecord(account)
+	if err != nil {
 		return 0
 	}
 	state := record.Accounts[extenderActivationAccountKey(account)]
@@ -178,7 +178,10 @@ func TestExtenderActivationSpareNeverExceedsTheBudget(t *testing.T) {
 	for i := 0; i < extenderActivationBudget; i++ {
 		attempts = append(attempts, now.Add(-time.Duration(i)*time.Minute).Unix())
 	}
-	record := extenderActivationRecordForAccount(extenderTestAccountA)
+	record, err := extenderActivationRecordForAccount(extenderTestAccountA)
+	if err != nil {
+		t.Fatalf("load the record: %s", err)
+	}
 	record.Accounts[extenderTestAccountA] = extenderActivationState{Attempts: attempts}
 	writeExtenderActivationRecord(record, extenderTestAccountA)
 
@@ -246,9 +249,9 @@ func TestProviderExtenderStatusRecordsARefusalForAPartlyActivatedPass(t *testing
 		t.Fatalf("observation = %+v, want the mixed pass the status described", listener.last)
 	}
 
-	record, found := readExtenderActivationRecord(listener.account)
-	if !found {
-		t.Fatal("the mixed pass wrote no record")
+	record, err := readExtenderActivationRecord(listener.account)
+	if err != nil {
+		t.Fatalf("the mixed pass wrote no readable record: %s", err)
 	}
 	state := record.Accounts[listener.account]
 	if state.Refusals != 1 {

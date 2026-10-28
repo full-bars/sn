@@ -197,8 +197,9 @@ func TestHandoffBatonRestoresTheStateStoreWhenTakeoverFails(t *testing.T) {
 		t.Fatalf("save after the aborted handoff = %v, want nil: the parent's state writes stayed dead", err)
 	}
 	var got map[string]int
-	if !providerStoreInstance().load(providerStoreBucketState, "probe", &got) || got["count"] != 2 {
-		t.Fatalf("record after the aborted handoff = %+v, want count 2: the write did not land", got)
+	found, err := providerStoreInstance().load(providerStoreBucketState, "probe", &got)
+	if err != nil || !found || got["count"] != 2 {
+		t.Fatalf("record after the aborted handoff = %+v (found=%t err=%v), want count 2: the write did not land", got, found, err)
 	}
 }
 
