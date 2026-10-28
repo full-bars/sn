@@ -172,14 +172,16 @@ jobs:
         run: |
           timeout 10 /tmp/urnet-docker logs urfix-auto 3 || test $? -eq 124
 
-      - name: Teardown — full teardown of containers + shared config volume
+      - name: Teardown — full teardown of containers + per-container state volumes
         run: |
-          # Full teardown: stop (SIGTERM -> provider deregisters), remove
-          # containers, and drop each per-container state volume so the client
-          # JWT/state cannot persist across runs. Runs even when the job
-          # fails (if: always()).
+          # Full teardown: SIGTERM first so the providers deregister, then
+          # `down -v` so Compose removes the volumes it created. The volume
+          # names in the file are logical: Compose prefixes them with the
+          # project name (the directory holding the generated file), so naming
+          # them directly here removes nothing and leaves the JWT and state
+          # behind for the next run. Runs even when the job fails (if: always()).
           cd /tmp && docker compose -f docker-compose.yml stop 2>/dev/null || true
           docker rm -f urfix-turbo urfix-auto urfix-lowmem 2>/dev/null || true
-          docker volume rm ur_config_turbo ur_config_auto ur_config_lowmem 2>/dev/null || true
+          docker compose -f docker-compose.yml down -v --remove-orphans 2>/dev/null || true
           echo "containers stopped, state volumes wiped"
         if: always()
