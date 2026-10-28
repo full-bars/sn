@@ -294,7 +294,12 @@ func setupRegister(run *setupRun) bool {
 			return false
 		case <-deadline:
 			_ = stopSetupChild(command.Process)
-			<-exited
+			select {
+			case <-exited:
+			case <-time.After(20 * time.Second):
+				writeCliError(run.errOut, "Registration didn't finish within 90 seconds, and the miner is still running after a stop request. Stop it with: provider service stop")
+				return false
+			}
 			writeCliError(run.errOut, "Registration didn't finish within 90 seconds. Check the network with: provider doctor")
 			return false
 		case <-ticker.C:
