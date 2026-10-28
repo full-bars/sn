@@ -1604,10 +1604,16 @@ openrc_rollback_binary_swap ()
     # Put the service back the way it was found. openrc_units_stopped is set by
     # stop_openrc_units only when it actually stopped something.
     if [ "${openrc_units_stopped:-0}" = "1" ]; then
-        if command -v rc-service > /dev/null 2>&1; then
-            ${SUDO:-} rc-service urnetwork start > /dev/null 2>&1 && \
-                pr_warn "Restarted the service on the previous binary." || \
-                pr_warn "Could not restart the service; run: rc-service urnetwork start"
+        # Do NOT gate this on `command -v rc-service`. A passwordless sudo is
+        # commonly configured with its own secure_path, so rc-service can be
+        # resolvable through sudo while absent from this shell's PATH. The old
+        # guard then skipped the restart entirely and printed nothing, leaving a
+        # service this function had stopped down with no warning. Attempt the
+        # elevated restart and report either outcome.
+        if ${SUDO:-} rc-service urnetwork start > /dev/null 2>&1; then
+            pr_warn "Restarted the service on the previous binary."
+        else
+            pr_warn "Could not restart the service; run: rc-service urnetwork start"
         fi
     fi
 }
@@ -1926,11 +1932,23 @@ EOF
                && sudo rc-update add urnetwork default \
                && SUDO=sudo openrc_finalize_root_paths \
                && sudo rc-service urnetwork start; then
+                sudo rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
+                openrc_swap_pending=0
                 rm -rf "$openrc_stage_dir"
                 pr_info "Service urnetwork installed, enabled and started."
                 return 0
             fi
-            pr_err "The sudo service setup failed; finishing by hand."
+            # Only claim a rollback when one can actually happen. On a fresh
+            # install openrc_swap_pending is 0 and the rollback is a no-op, so
+            # saying "rolled back the provider update" would be a false report.
+            if [ "${openrc_swap_pending:-0}" = "1" ]; then
+                pr_err "The sudo service setup failed; rolling back the provider update."
+                SUDO=sudo openrc_rollback_binary_swap
+            else
+                pr_err "The sudo service setup failed; the service did not start."
+            fi
+            rm -rf "$openrc_stage_dir"
+            exit 1
         fi
         pr_warn "Installing a system service needs root, and sudo could not run non-interactively."
         pr_info "To finish, run these commands:"
