@@ -346,6 +346,73 @@ openrc_install_root=/usr/local/lib/urnetwork-provider
 	}
 }
 
+// The version files must be written only after the service step has succeeded.
+// They used to be written before it, so a failed start left .version and .date
+// naming a release that never ran, and a rollback put the old binary back under
+// files that claimed the new one. The code order is right now, but nothing
+// pinned it: moving either write earlier kept the suite green.
+func TestLinuxVersionFilesWrittenOnlyAfterSuccessfulStart(t *testing.T) {
+	tag := "v2026.10.27"
+	assetName := "urnetwork-provider-" + tag + ".tar.gz"
+	tarballContent := []byte("provider-tarball-bytes")
+	sum := sha256.Sum256(tarballContent)
+	digest := hex.EncodeToString(sum[:])
+	releaseJSON := fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [{"name": %q, "digest": "sha256:%s"}]
+	}`, tag, assetName, digest)
+
+	read := func(dir, name string) string {
+		b, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			return ""
+		}
+		return strings.TrimSpace(string(b))
+	}
+
+	t.Run("failed start leaves the previous version files", func(t *testing.T) {
+		res := runLinuxInstaller(t, installerHarnessOpts{
+			tag:             tag,
+			releaseJSON:     releaseJSON,
+			tarballData:     tarballContent,
+			existingBin:     "previous-provider-binary",
+			existingVersion: "v-previous",
+			existingDate:    "1700000000",
+			failRestart:     true,
+		})
+		if res.exitCode == 0 {
+			t.Fatalf("a failed service start reported success (out:\n%s)", res.stdout)
+		}
+		if got := read(res.installDir, ".version"); got != "v-previous" {
+			t.Errorf(".version = %q after a failed start, want the previous value v-previous: the write ran before the service proved up", got)
+		}
+		if got := read(res.installDir, ".date"); got != "1700000000" {
+			t.Errorf(".date = %q after a failed start, want the previous value 1700000000: the write ran before the service proved up", got)
+		}
+	})
+
+	t.Run("successful start records the new release", func(t *testing.T) {
+		res := runLinuxInstaller(t, installerHarnessOpts{
+			tag:             tag,
+			releaseJSON:     releaseJSON,
+			tarballData:     tarballContent,
+			existingBin:     "previous-provider-binary",
+			existingVersion: "v-previous",
+			existingDate:    "1700000000",
+		})
+		if res.exitCode != 0 {
+			t.Fatalf("a successful start did not install, exit %d (out:\n%s)", res.exitCode, res.stdout)
+		}
+		if got := read(res.installDir, ".version"); got == "" || got == "v-previous" {
+			t.Errorf(".version = %q after a successful start, want the installed release", got)
+		}
+		if got := read(res.installDir, ".date"); got == "" || got == "1700000000" {
+			t.Errorf(".date = %q after a successful start, want the release date", got)
+		}
+	})
+}
+
 // extractShellFunc returns the body of a top-level shell function, from its
 // definition line to the closing brace at column 0. Used so assertions can
 // target ONE function instead of the whole file, which is how a string present
