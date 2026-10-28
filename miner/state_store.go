@@ -82,10 +82,25 @@ func openProviderStore(path string) (*providerStore, error) {
 	// creation can leave the file unlinked or zero length.
 	_, statErr := os.Stat(path)
 	created := errors.Is(statErr, os.ErrNotExist)
+	// callProviderStore returns no value when fn panics, so the handle is kept
+	// in opened as soon as bbolt returns it. Otherwise a panic after the open
+	// would leave the file lock held by a handle nobody can close.
+	var opened *bbolt.DB
 	db, err := callProviderStore(func() (*bbolt.DB, error) {
-		return bbolt.Open(path, 0o600, &bbolt.Options{Timeout: providerStoreOpenTimeout})
+		d, err := bbolt.Open(path, 0o600, &bbolt.Options{Timeout: providerStoreOpenTimeout})
+		if err != nil {
+			return nil, err
+		}
+		opened = d
+		if providerStoreOpenedHook != nil {
+			providerStoreOpenedHook(d)
+		}
+		return d, nil
 	})
 	if err != nil {
+		if opened != nil {
+			_ = opened.Close()
+		}
 		return nil, fmt.Errorf("open %s: %w", path, err)
 	}
 	// Deliberately no tx.Check() here. bbolt's Check runs the page walk in its
@@ -108,6 +123,10 @@ func openProviderStore(path string) (*providerStore, error) {
 }
 
 var errProviderStoreCorrupt = errors.New("provider state store is corrupt")
+
+// providerStoreOpenedHook runs inside the open closure once bbolt.Open has
+// returned a handle. Tests use it to force a panic after the file lock is held.
+var providerStoreOpenedHook func(*bbolt.DB)
 
 func callProviderStore[T any](fn func() (T, error)) (value T, err error) {
 	defer func() {
@@ -486,6 +505,15 @@ func providerStoreInstance() *providerStore {
 // between a HotSwap parent and its candidate, and because tests point it
 // somewhere new. A moved directory closes the old handle first.
 func openProviderStoreForProcess() (*providerStore, error) {
+	return openProviderStoreForProcessWith(true)
+}
+
+// openProviderStoreForProcessWith is openProviderStoreForProcess with the
+// quarantine decision made by the caller. The restore path passes false: a
+// file it finds damaged was last written by a candidate, and moving it aside
+// would start an empty store, which resets the extender activation budget. The
+// damaged file stays where it is for the next normal open to quarantine.
+func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, error) {
 	globalProviderStoreMu.Lock()
 	defer globalProviderStoreMu.Unlock()
 	if globalProviderStoreReleased {
@@ -516,7 +544,9 @@ func openProviderStoreForProcess() (*providerStore, error) {
 		// A database bbolt can never load is moved aside once, and the run
 		// starts from an empty store, rather than warning about the same file
 		// every thirty seconds for the life of the process.
-		if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
+		if !allowQuarantine {
+			tlog("[state] %s would not open (%v); left in place, the next normal open quarantines it\n", path, err)
+		} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
 			tlog("[state] %s would not open (%v); moved it to %s and started a fresh store\n", path, err, moved)
 			store, err = openProviderStore(path)
 		}
@@ -612,7 +642,7 @@ func restoreProviderStoreAfterAbortedHandoff() error {
 }
 
 var reopenProviderStoreAfterAbort = func() (*providerStore, error) {
-	return openProviderStoreForProcess()
+	return openProviderStoreForProcessWith(false)
 }
 
 // closeProviderStore releases the file. Safe to call when it was never opened.
