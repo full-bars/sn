@@ -895,3 +895,31 @@ func TestExtenderActivationRefusalSurvivesATransientStoreFailure(t *testing.T) {
 		t.Fatalf("refusals = %d after the store recovered, want 1: the refusal was lost with the failed write", got)
 	}
 }
+
+// A database that had to be moved aside may have held posts or a refusal that
+// nobody can read any more. The fresh store must not open a full window for the
+// next start: the operator still counts what the unreadable file recorded.
+func TestExtenderActivationHoldsAfterTheStoreIsQuarantined(t *testing.T) {
+	testExtenderState(t)
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	path, err := providerStatePath(providerStoreFileName)
+	if err != nil {
+		t.Fatalf("store path: %s", err)
+	}
+	if err := os.WriteFile(path, []byte("this is not a bbolt database"), 0o600); err != nil {
+		t.Fatalf("write the damaged file: %s", err)
+	}
+
+	now := time.Now()
+	allow, wait, _ := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
+	if allow {
+		t.Fatal("the first start after a quarantine was allowed: the budget reset with the file")
+	}
+	if wait < extenderActivationWindow-time.Minute {
+		t.Fatalf("hold = %s, want about one window (%s)", wait, extenderActivationWindow)
+	}
+	if allow, _, _ := extenderActivationAllow(now.Add(extenderActivationWindow+time.Minute), postsPerDualStackPass, extenderTestAccountA); !allow {
+		t.Fatal("a start after the window was still held")
+	}
+}
