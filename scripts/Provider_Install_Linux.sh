@@ -100,6 +100,7 @@ has_systemd=0
 has_openrc=0
 no_modify_bashrc=0
 update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
+update_timer_randomized_delay="6h"
 
 api_base="https://api.github.com/repos/full-bars/sn"
 urnet_dl_base="https://github.com/full-bars/sn"
@@ -1138,6 +1139,7 @@ Description=Run URnetwork Update
 
 [Timer]
 OnCalendar=$update_timer_oncalendar
+RandomizedDelaySec=$update_timer_randomized_delay
 Persistent=true
 
 [Install]
@@ -3642,7 +3644,12 @@ change_auto_update_prefs ()
                 monthly) new_calendar="monthly" ;;
             esac
 
-            if ! sed -e "s|^OnCalendar=.*|OnCalendar=$new_calendar|" -i "$HOME/.config/systemd/user/urnetwork-update.timer"; then
+            if ! sed \
+                -e "s|^OnCalendar=.*|OnCalendar=$new_calendar|" \
+                -e '/^RandomizedDelaySec=/d' \
+                -e "/^OnCalendar=/a\\
+RandomizedDelaySec=$update_timer_randomized_delay" \
+                -i "$HOME/.config/systemd/user/urnetwork-update.timer"; then
                 pr_err "Failed to update auto update interval: sed substitution failed"
                 exit 1
             fi

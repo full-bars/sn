@@ -31,20 +31,20 @@ import (
 // runs, and appends to a log so an unattended update that fails leaves a trail
 // instead of vanishing. An unknown interval is rejected rather than defaulted:
 // silently installing a daily schedule for someone who asked for weekly is worse
-// than an error.
+// than an error. Weekly's randomized minute is persisted in the crontab, so each
+// host keeps the same schedule until it is explicitly changed.
 func bsdUpdateCronLine(tool, logDir, interval string) (string, error) {
-	var spec string
-	switch interval {
-	case "daily":
-		spec = "17 3 * * *"
-	case "weekly":
-		// Sunday 03:17.
-		spec = "17 3 * * 0"
-	case "monthly":
-		// The 1st of the month at 03:17.
-		spec = "17 3 1 * *"
-	default:
-		return "", fmt.Errorf("invalid interval %q", interval)
+	minute := 17
+	if interval == "weekly" {
+		var err error
+		minute, err = randomBSDCronMinute()
+		if err != nil {
+			return "", err
+		}
+	}
+	spec, err := bsdCronSchedule(interval, minute)
+	if err != nil {
+		return "", err
 	}
 	return fmt.Sprintf("%s %s update -f >> %s 2>&1",
 		spec, shellQuote(tool), shellQuote(filepath.Join(logDir, "auto-update.log"))), nil

@@ -1548,6 +1548,8 @@ systemd_update_service="%s/urnetwork-update.service"
 systemd_update_timer="%s/urnetwork-update.timer"
 systemd_userdir="%s"
 systemd_units_stopped=1
+update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
+update_timer_randomized_delay="6h"
 do_install
 `, tag, op, installPath, tempDir, failRestartVal, failFirstStartVal, failRestoreVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, svcLog, firstStartFlag, tempDir, tempDir, tempDir, tempDir)
 
@@ -2443,5 +2445,73 @@ func TestWin32InstallerFailsClosedOnBinarySwap(t *testing.T) {
 		if !strings.Contains(block, "-not (Test-Path $InstalledToolsBinaryPath)") || !strings.Contains(block, "throw ") {
 			t.Errorf("tool success flag is not guarded by an installed-binary check after %q", move)
 		}
+	}
+}
+func TestLinuxInstallerTimerHasRandomizedDelay(t *testing.T) {
+	tarball := []byte("timer-test-provider-payload")
+	tag := "v2026.10.28"
+	res := runLinuxInstaller(t, installerHarnessOpts{
+		tag:         tag,
+		releaseJSON: installerRollbackRelease(tag, tarball),
+		tarballData: tarball,
+	})
+	if res.exitCode != 0 {
+		t.Fatalf("Linux install failed: %s", res.stdout)
+	}
+	timerPath := filepath.Join(filepath.Dir(res.installDir), "urnetwork-update.timer")
+	b, err := os.ReadFile(timerPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), "RandomizedDelaySec=6h") {
+		t.Fatalf("weekly update timer lacks fleet jitter: %s", b)
+	}
+}
+
+func TestLinuxAutoUpdateOnAddsRandomizedDelay(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("the Linux installer's sed -i syntax is GNU/BusyBox-specific")
+	}
+	skipWithoutPOSIXShell(t)
+	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := extractShellFunc(t, strings.ReplaceAll(string(b), "\r\n", "\n"), "change_auto_update_prefs")
+	if fn == "" {
+		t.Fatal("could not extract change_auto_update_prefs")
+	}
+	home := t.TempDir()
+	timerPath := filepath.Join(home, ".config", "systemd", "user", "urnetwork-update.timer")
+	if err := os.MkdirAll(filepath.Dir(timerPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(timerPath, []byte("[Timer]\nOnCalendar=daily\nRandomizedDelaySec=30s\nPersistent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	harness := fmt.Sprintf(`
+pr_info() { :; }
+pr_err() { printf 'error: %%s\n' "$*" >&2; }
+opt_requires_arg() { :; }
+systemctl() {
+    if [ "$1" = "--user" ] && [ "$2" = "is-enabled" ]; then printf enabled; fi
+    return 0
+}
+has_systemd=1
+update_timer_randomized_delay="6h"
+HOME=%q
+`, home)
+	cmd := exec.Command("/bin/sh", "-c", harness+"\n"+fn+"\nchange_auto_update_prefs on --interval weekly")
+	cmd.Env = []string{"PATH=/usr/bin:/bin"}
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("change_auto_update_prefs: %v (%s)", err, out)
+	}
+	updated, err := os.ReadFile(timerPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(string(updated), "RandomizedDelaySec=6h") != 1 || strings.Contains(string(updated), "RandomizedDelaySec=30s") {
+		t.Fatalf("weekly schedule did not normalize its randomized delay: %s (command output: %s)", updated, out)
 	}
 }
