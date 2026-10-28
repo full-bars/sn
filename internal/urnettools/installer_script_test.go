@@ -528,6 +528,34 @@ install_openrc_units
 	}
 }
 
+// freebsdDigestParserVerdict calls the FreeBSD installer's real
+// get_asset_digest_from_api_response on release for asset and returns what it
+// prints.
+func freebsdDigestParserVerdict(t *testing.T, release, asset string) string {
+	t.Helper()
+	skipWithoutPOSIXShell(t)
+	_, jqErr := exec.LookPath("jq")
+	_, pyErr := exec.LookPath("python3")
+	if jqErr != nil && pyErr != nil {
+		t.Skip("neither jq nor python3 on this host; cannot execute the digest parser")
+	}
+	b, err := os.ReadFile("../../scripts/Provider_Install_FreeBSD.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := extractShellFunc(t, strings.ReplaceAll(string(b), "\r\n", "\n"), "get_asset_digest_from_api_response")
+	if fn == "" {
+		t.Fatal("could not extract get_asset_digest_from_api_response from the FreeBSD installer")
+	}
+	cmd := exec.Command("/bin/sh", "-c", fn+"\nget_asset_digest_from_api_response \"$1\" \"$2\"", "sh", release, asset)
+	cmd.Env = os.Environ()
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("digest parser run failed: %v", err)
+	}
+	return strings.TrimSpace(string(out))
+}
+
 // A malformed tool digest must stop the install BEFORE the provider is touched.
 // The check used to sit at the tool step, which runs after the provider has been
 // backed up and replaced, so refusing there produced a partial install: new
@@ -562,9 +590,14 @@ func TestFreeBSDToolDigestRefusedBeforeProviderMutation(t *testing.T) {
 	for _, tc := range []struct{ name, digest string }{
 		{"short sha256", "sha256:deadbeef"},
 		{"unsupported algorithm", "sha512:" + hex64},
-		{"non-string", "12"},
+		{"short bare string without algorithm prefix", "12"},
 	} {
 		t.Run("malformed/"+tc.name, func(t *testing.T) {
+			// Precondition: the digest parser rejects this value on its own, so
+			// the refusal below cannot come from some unrelated failure.
+			if got := freebsdDigestParserVerdict(t, releaseWith(tc.digest), toolAsset); got != "__INVALID_SHA256__" {
+				t.Fatalf("digest parser returned %q for %q, want __INVALID_SHA256__", got, tc.digest)
+			}
 			res := runFreeBSDInstaller(t, installerHarnessOpts{
 				tag:         tag,
 				releaseJSON: releaseWith(tc.digest),
