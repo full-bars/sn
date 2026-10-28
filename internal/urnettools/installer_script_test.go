@@ -47,6 +47,74 @@ func TestInstallerScriptDoInstallBodyNotDuplicated(t *testing.T) {
 	}
 }
 
+func TestWin32InstallerFailsClosedOnBinarySwap(t *testing.T) {
+	b, err := os.ReadFile("../../scripts/Provider_Install_Win32.ps1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := strings.ReplaceAll(string(b), "\r\n", "\n")
+
+	providerStart := strings.Index(script, "if (Test-Path $InstalledBinaryPath) {")
+	if providerStart < 0 {
+		t.Fatal("provider binary swap block is missing")
+	}
+	providerEnd := strings.Index(script[providerStart:], "$InstalledToolsBinaryPath =")
+	if providerEnd < 0 {
+		t.Fatal("could not find the end of the provider binary swap block")
+	}
+	providerSwap := script[providerStart : providerStart+providerEnd]
+	for _, marker := range []string{
+		"Remove-Item -Path $InstalledBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $BinaryPath -Destination $InstalledBinaryPath -ErrorAction Stop",
+		"if (Test-Path $BinaryPath) {\n    throw \"Provider binary remains in staging after install.",
+		"if (-not (Test-Path $InstalledBinaryPath)) {\n    throw \"Provider binary was not installed at",
+	} {
+		if !strings.Contains(providerSwap, marker) {
+			t.Errorf("provider binary swap does not fail closed at %q", marker)
+		}
+	}
+	if strings.Contains(providerSwap, "catch") {
+		t.Error("provider binary swap catches and may swallow a terminating error")
+	}
+	versionWrite := strings.Index(script, "Set-Content $VersionFile $ReleaseVersion")
+	successLine := strings.Index(script, `Write-Host "Installation complete!`)
+	if versionWrite < providerStart+providerEnd || successLine < versionWrite {
+		t.Fatal("version and success messages must follow the verified provider binary swap")
+	}
+
+	for _, marker := range []string{
+		"Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop",
+		"Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop",
+	} {
+		if !strings.Contains(script, marker) {
+			t.Errorf("tool binary swap does not fail closed at %q", marker)
+		}
+	}
+	if got := strings.Count(script, "Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop"); got != 2 {
+		t.Errorf("found %d terminating tool backups, want 2", got)
+	}
+
+	for _, move := range []string{
+		"Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop",
+	} {
+		moveAt := strings.Index(script, move)
+		if moveAt < 0 {
+			t.Errorf("missing terminating tool install %q", move)
+			continue
+		}
+		installedAt := strings.Index(script[moveAt:], "$ToolGoInstalled = $true")
+		if installedAt < 0 {
+			t.Fatalf("could not find success flag after %q", move)
+		}
+		block := script[moveAt : moveAt+installedAt]
+		if !strings.Contains(block, "-not (Test-Path $InstalledToolsBinaryPath)") || !strings.Contains(block, "throw ") {
+			t.Errorf("tool success flag is not guarded by an installed-binary check after %q", move)
+		}
+	}
+}
+
 // resolve_service_user is the only thing deciding which account the FreeBSD
 // provider runs as, and getting it wrong means the internet-facing relay runs
 // as root. These cases EXECUTE the real function from the script (extracted
@@ -344,6 +412,73 @@ openrc_install_root=/usr/local/lib/urnetwork-provider
 	if code := runPath("/tmp/arbitrary"); code != 1 {
 		t.Errorf("install in arbitrary path returned exit code %d, want 1", code)
 	}
+}
+
+// The version files must be written only after the service step has succeeded.
+// They used to be written before it, so a failed start left .version and .date
+// naming a release that never ran, and a rollback put the old binary back under
+// files that claimed the new one. The code order is right now, but nothing
+// pinned it: moving either write earlier kept the suite green.
+func TestLinuxVersionFilesWrittenOnlyAfterSuccessfulStart(t *testing.T) {
+	tag := "v2026.10.27"
+	assetName := "urnetwork-provider-" + tag + ".tar.gz"
+	tarballContent := []byte("provider-tarball-bytes")
+	sum := sha256.Sum256(tarballContent)
+	digest := hex.EncodeToString(sum[:])
+	releaseJSON := fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [{"name": %q, "digest": "sha256:%s"}]
+	}`, tag, assetName, digest)
+
+	read := func(dir, name string) string {
+		b, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			return ""
+		}
+		return strings.TrimSpace(string(b))
+	}
+
+	t.Run("failed start leaves the previous version files", func(t *testing.T) {
+		res := runLinuxInstaller(t, installerHarnessOpts{
+			tag:             tag,
+			releaseJSON:     releaseJSON,
+			tarballData:     tarballContent,
+			existingBin:     "previous-provider-binary",
+			existingVersion: "v-previous",
+			existingDate:    "1700000000",
+			failRestart:     true,
+		})
+		if res.exitCode == 0 {
+			t.Fatalf("a failed service start reported success (out:\n%s)", res.stdout)
+		}
+		if got := read(res.installDir, ".version"); got != "v-previous" {
+			t.Errorf(".version = %q after a failed start, want the previous value v-previous: the write ran before the service proved up", got)
+		}
+		if got := read(res.installDir, ".date"); got != "1700000000" {
+			t.Errorf(".date = %q after a failed start, want the previous value 1700000000: the write ran before the service proved up", got)
+		}
+	})
+
+	t.Run("successful start records the new release", func(t *testing.T) {
+		res := runLinuxInstaller(t, installerHarnessOpts{
+			tag:             tag,
+			releaseJSON:     releaseJSON,
+			tarballData:     tarballContent,
+			existingBin:     "previous-provider-binary",
+			existingVersion: "v-previous",
+			existingDate:    "1700000000",
+		})
+		if res.exitCode != 0 {
+			t.Fatalf("a successful start did not install, exit %d (out:\n%s)", res.exitCode, res.stdout)
+		}
+		if got := read(res.installDir, ".version"); got == "" || got == "v-previous" {
+			t.Errorf(".version = %q after a successful start, want the installed release", got)
+		}
+		if got := read(res.installDir, ".date"); got == "" || got == "1700000000" {
+			t.Errorf(".date = %q after a successful start, want the release date", got)
+		}
+	})
 }
 
 // extractShellFunc returns the body of a top-level shell function, from its

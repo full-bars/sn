@@ -149,12 +149,36 @@ type providerExtenderStatusListener struct {
 	// ExtenderActivateRateLimit counts and the key the budget records a
 	// refusal or an activation against. The client id would be the wrong key:
 	// a heal mints a new client for the same account.
-	account string
+	account       string
+	accountPinned bool
 }
 
 // The provider borrows its enclosing run's explicitly supplied output budget.
 func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, account string) *providerExtenderStatusListener {
 	return &providerExtenderStatusListener{diagnostics: output, provider: provider, account: account}
+}
+
+// currentAccount is the account this observation is charged to. It resolves the
+// sign-in token at observation time rather than trusting the key the listener
+// was built with: the listener can be constructed before the token is readable,
+// and then a refusal and the success that clears it would land on the
+// placeholder instead of the account the operator is counting. The captured
+// account stays as the fallback for a caller that has no token (tests, and a
+// run whose token is still being written).
+func (self *providerExtenderStatusListener) currentAccount() string {
+	if self.accountPinned {
+		return self.account
+	}
+	if account := extenderActivationUserId(); account != "" {
+		self.stateLock.Lock()
+		if !self.accountPinned {
+			self.account, self.accountPinned = account, true
+		}
+		account = self.account
+		self.stateLock.Unlock()
+		return account
+	}
+	return self.account
 }
 
 // A nil observation is unknown, separate from a known disabled extender.
@@ -210,7 +234,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 					// The retry is funded before this failure's wait is
 					// recorded, so the wait that decides is the one already
 					// standing: a retry is not charged until it can run.
-					if family, spent := extenderActivationSpendSpare(time.Now(), self.account, observation.activationPass()); spent {
+					if family, spent := extenderActivationSpendSpare(time.Now(), self.currentAccount(), observation.activationPass()); spent {
 						tlog("[extender] activation failed on %s; the leftover post funds one retry\n", family)
 					}
 					self.chargeActivationFailure(observation)
@@ -218,7 +242,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 			case observation.ActivatedV4 || observation.ActivatedV6:
 				// Reached only by a pass with no failed family, which is what
 				// makes a success safe to record.
-				recordExtenderActivationSucceeded(self.account)
+				recordExtenderActivationSucceeded(self.currentAccount())
 			}
 		}
 		self.diagnostics.observe(providerExtenderObserved, self.provider, true, nil, 0, &observation)
@@ -237,7 +261,7 @@ func (self *providerExtenderStatusListener) chargeActivationFailure(observation 
 		tlog("[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held\n", observation.ActivatedV4, observation.ActivatedV6)
 		return
 	}
-	if wait := recordExtenderActivationRefused(time.Now(), self.account); 0 < wait {
+	if wait := recordExtenderActivationRefused(time.Now(), self.currentAccount()); 0 < wait {
 		tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
 	}
 }
@@ -246,10 +270,13 @@ func (self *providerExtenderStatusListener) chargeActivationFailure(observation 
 // posts v4, and posts v6 only where this host's own measurement says v6 is
 // usable, which is the same count the budget charged the start.
 func (observation providerExtenderObservation) activationPass() extenderActivationPass {
+	// Status only: an unreadable measurement counts as no v6, which is the
+	// same conservative answer hostActivationPosts gives.
+	capability, _ := readHostCapability()
 	return extenderActivationPass{
 		V4: extenderActivationFamilyResult{Tried: true, Activated: observation.ActivatedV4},
 		V6: extenderActivationFamilyResult{
-			Tried:     readHostCapability().IPv6Usable,
+			Tried:     capability.IPv6Usable,
 			Activated: observation.ActivatedV6,
 		},
 	}

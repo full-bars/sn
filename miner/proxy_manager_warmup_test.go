@@ -111,6 +111,28 @@ func TestCuratedWarmupSignal(t *testing.T) {
 	}
 }
 
+func TestProxyWarmupIsResetForEachManagerStart(t *testing.T) {
+	resetProxyWarmupForStart()
+	noteCuratedWarmupTotal(1)
+	noteCuratedWarmupLaunch()
+	if !proxyWarmupDone.Load() {
+		t.Fatal("first manager start should complete its one-slot warmup")
+	}
+
+	// A second start in this same process must not inherit the first start's
+	// completed warmup signal or launch count.
+	resetProxyWarmupForStart()
+	if proxyWarmupDone.Load() || warmupCuratedTotal.Load() != 0 || warmupCuratedLaunched.Load() != 0 {
+		t.Fatalf("second manager start inherited warmup state: done=%v total=%d launched=%d",
+			proxyWarmupDone.Load(), warmupCuratedTotal.Load(), warmupCuratedLaunched.Load())
+	}
+	noteCuratedWarmupTotal(2)
+	noteCuratedWarmupLaunch()
+	if proxyWarmupDone.Load() {
+		t.Fatal("second start completed warmup before both curated slots launched")
+	}
+}
+
 // shouldDeferURLWarmupLaunch holds only unproven URL-sourced identities
 // while the hold stands: curated identities and promoted earners launch now,
 // and a hold past grace defers nothing.

@@ -28,7 +28,7 @@ func swapThrashStormSensor() *scriptedSwapThrashSensor {
 // proxies, no hot-swap in flight, and an exit that records instead of exiting.
 func swapThrashEscalationWatch(t *testing.T, sensor *scriptedSwapThrashSensor, clock *time.Time, logs *[]string, exits *[]int) (*swapThrashWatch, string) {
 	t.Helper()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	watch, path := swapThrashTestWatch(t, sensor, clock, logs)
 	watch.selfHealFn = func() bool { return true }
 	watch.supervisorKindFn = func() (string, bool) { return "systemd", true }
@@ -284,7 +284,7 @@ func TestThrashEscalationRefusals(t *testing.T) {
 // The cap binding: the escape's cap feeds effectiveTrimCapSource as the
 // automatic cap, under its own source name, and never loosens the OOM cap.
 func TestThrashCapBindsAsTheAutomaticTrimCap(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	now := time.Now()
 	if err := recordThrashEscalation(300, now); err != nil {
 		t.Fatal(err)
@@ -334,7 +334,7 @@ func TestThrashCapSizesAndExpires(t *testing.T) {
 		t.Fatalf("nothing running means no cap, got %d", got)
 	}
 
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	now := time.Now()
 	if err := recordThrashEscalation(300, now); err != nil {
 		t.Fatal(err)

@@ -72,12 +72,21 @@ type hostCapability struct {
 	LastError string `json:"last_error,omitempty"`
 }
 
-func readHostCapability() hostCapability {
+// readHostCapability loads the stored measurement. A host that has never been
+// measured and a record that could not be read both give the zero value, so a
+// caller that only reports or schedules with it can ignore the error; the one
+// that writes the next measurement must not, or it replaces the history it
+// failed to read with a record built from nothing.
+func readHostCapability() (hostCapability, error) {
 	var cap hostCapability
-	if store := providerStoreInstance(); store != nil {
-		store.load(providerStoreBucketState, providerStoreKeyHostCapability, &cap)
+	store := providerStoreInstance()
+	if store == nil {
+		return cap, errProviderStoreClosed
 	}
-	return cap
+	if _, err := store.load(providerStoreBucketState, providerStoreKeyHostCapability, &cap); err != nil {
+		return hostCapability{}, err
+	}
+	return cap, nil
 }
 
 func writeHostCapability(cap hostCapability) {
@@ -285,10 +294,22 @@ func capabilityRecheckInterval(cap hostCapability, now time.Time) time.Duration 
 	return capabilityRecheckHadIPv6LongAgo
 }
 
-// measureHostCapability probes once and stores the result.
+// measureHostCapability probes once and stores the result. A record that could
+// not be read is not an empty record: writing the measurement back over it
+// would drop the history that decides the recheck cadence and the post count,
+// so the measurement is reported to this process only.
 func measureHostCapability(now time.Time) hostCapability {
 	usable, probeErr := probeIPv6Usable()
-	cap := readHostCapability()
+	cap, err := readHostCapability()
+	if err != nil {
+		tlog("⚠️ [capability] measured ipv6 usable=%t but the record could not be read (%v): not stored\n", usable, err)
+		measured := hostCapability{IPv6Usable: usable, CheckedAtUnix: now.Unix(), LastError: probeErr}
+		if usable {
+			measured.EverUsable = true
+			measured.LastIPv6UsableAtUnix = now.Unix()
+		}
+		return measured
+	}
 	cap.IPv6Usable = usable
 	cap.CheckedAtUnix = now.Unix()
 	cap.LastError = probeErr
@@ -305,10 +326,9 @@ func measureHostCapability(now time.Time) hostCapability {
 // It never blocks startup and stops when the context ends.
 func watchHostCapability(ctx context.Context) {
 	now := time.Now()
-	cap := readHostCapability()
 	// Startup always measures: the previous value may be days old, and the
 	// first pass should charge the right number of posts.
-	cap = measureHostCapability(now)
+	cap := measureHostCapability(now)
 	fingerprint := interfaceFingerprint()
 
 	next := now.Add(capabilityRecheckInterval(cap, now))
@@ -352,7 +372,7 @@ func interfaceFingerprint() string {
 // per address family the host can actually reach. An unmeasured host is
 // charged two, the conservative side, so a missing record never overspends.
 func hostActivationPosts() int {
-	cap := readHostCapability()
+	cap, _ := readHostCapability()
 	if cap.IPv6Usable {
 		return 2
 	}

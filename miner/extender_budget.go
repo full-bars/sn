@@ -32,9 +32,10 @@ package miner
 // extenderActivationSpendSpare does.
 //
 // The record is a section of provider_state.db (state_store.go), not a file of
-// its own. A store that will not open is logged once and read as empty rather
-// than as a refusal: the operator's own rate limit still answers the posts, and
-// a host must keep providing when its own state file is unreadable.
+// its own. A store that will not open, or a record that will not decode, is
+// logged on every failed attempt and holds the extender role rather than running unaccounted: the
+// provider keeps serving either way, and the role comes back on the first start
+// that can read and record the budget again.
 
 import (
 	"sync"
@@ -159,12 +160,6 @@ func (legacy extenderActivationLegacy) present() bool {
 	return 0 < len(legacy.Attempts) || legacy.BackoffUntilUnix != 0 || legacy.Refusals != 0 || legacy.LastRefusalUnix != 0
 }
 
-// extenderBudgetWarnOnce keeps the unenforced-budget line to one per process:
-// a store that cannot be opened fails every later call, and the same warning
-// on each start attempt buries the first one. A pointer so a test can swap in
-// a fresh one without copying a lock.
-var extenderBudgetWarnOnce = new(sync.Once)
-
 // extenderActivationRecordMu serialises the record's read-modify-write. The
 // store makes a load and a save each atomic, but the record is one value: two
 // slots' status listeners can report a refusal and an activation at once, and
@@ -173,54 +168,97 @@ var extenderBudgetWarnOnce = new(sync.Once)
 // small json decode, a map update and one bbolt transaction.
 var extenderActivationRecordMu sync.Mutex
 
-// warnExtenderBudgetUnenforced says the record could not be read or written.
-// The budget is best effort by design (a host must never stop providing
-// because its own state file is read-only, and the operator's own rate limit
-// still answers the posts with a 429), so this line is the only evidence the
-// operator gets that the budget went unenforced.
-func warnExtenderBudgetUnenforced(account string) {
-	extenderBudgetWarnOnce.Do(func() {
-		tlog("⚠️ [extender] activation budget unenforced for account %s: provider state store unavailable this run\n", account)
-	})
+// warnExtenderBudgetUnavailable says the record could not be read or written,
+// and why. The role is held rather than run unrecorded, because the operator
+// counts every post it answers and a post this process did not count is one
+// the next start cannot see. This line is the only evidence the operator gets
+// while the store stays unusable, so it carries the store error: a record this
+// build cannot decode and a closed store need different recovery.
+func warnExtenderBudgetUnavailable(account string, err error) {
+	tlog("⚠️ [extender] activation budget unavailable for account %s: %v\n", account, err)
 }
 
-func readExtenderActivationRecord(account string) (extenderActivationRecord, bool) {
+// readExtenderActivationRecord loads the record. An empty record and no record
+// read the same to the budget, but a store that is unavailable or a value this
+// build cannot decode is an error: a caller that treated it as empty would
+// save its own few accounts over every account the record still holds.
+func readExtenderActivationRecord(account string) (extenderActivationRecord, error) {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnenforced(account)
-		return extenderActivationRecord{}, false
+		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
+		return extenderActivationRecord{}, errProviderStoreClosed
 	}
 	var record extenderActivationRecord
-	if !store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record) {
-		return extenderActivationRecord{}, false
+	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record)
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+		return extenderActivationRecord{}, err
+	}
+	if !found {
+		return extenderActivationRecord{}, nil
 	}
 	if record.Accounts == nil {
 		record.Accounts = map[string]extenderActivationState{}
 	}
-	return record, true
+	return record, nil
 }
 
 func writeExtenderActivationRecord(record extenderActivationRecord, account string) {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnenforced(account)
+		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
 		return
 	}
 	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
-		warnExtenderBudgetUnenforced(account)
+		warnExtenderBudgetUnavailable(account, err)
 	}
 }
 
 // extenderActivationRecordForAccount loads the record and adopts a pre-account
 // flat record onto the account, so every write path persists the new shape and
-// the first start after an upgrade charges the history it inherited.
-func extenderActivationRecordForAccount(account string) extenderActivationRecord {
-	record, _ := readExtenderActivationRecord(account)
+// the first start after an upgrade charges the history it inherited. A record
+// that could not be read is reported, never replaced with an empty one.
+func extenderActivationRecordForAccount(account string) (extenderActivationRecord, error) {
+	record, err := readExtenderActivationRecord(account)
+	if err != nil {
+		return extenderActivationRecord{}, err
+	}
 	if record.Accounts == nil {
 		record.Accounts = map[string]extenderActivationState{}
 	}
 	record.adoptLegacy(account)
-	return record
+	return record, nil
+}
+
+// mutateExtenderActivationRecord is the budget's write path: it holds the
+// package lock for the whole decision and hands the record to mutate inside one
+// store transaction, so nothing can change the accounts between the read that
+// decided and the write that records it. A store that cannot be used leaves the
+// budget closed and says so, rather than
+// spending posts no one will remember.
+func mutateExtenderActivationRecord(account string, mutate func(*extenderActivationRecord) error) error {
+	store := providerStoreInstance()
+	if store == nil {
+		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
+		return errProviderStoreClosed
+	}
+	extenderActivationRecordMu.Lock()
+	defer extenderActivationRecordMu.Unlock()
+	var record extenderActivationRecord
+	err := store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
+		if !found {
+			record = extenderActivationRecord{}
+		}
+		if record.Accounts == nil {
+			record.Accounts = map[string]extenderActivationState{}
+		}
+		record.adoptLegacy(account)
+		return mutate(&record)
+	})
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+	}
+	return err
 }
 
 // adoptLegacy moves a pre-account record onto the account. The old record
@@ -330,12 +368,6 @@ func extenderActivationUserId() string {
 	return userId
 }
 
-// storeExtenderActivation records one account's state at now and persists it.
-func storeExtenderActivation(record extenderActivationRecord, account string, state extenderActivationState, now time.Time) {
-	record.Accounts[account] = state
-	writeExtenderActivationRecord(record, account)
-}
-
 // pruneExtenderAttempts drops the attempts that have aged out of the window and
 // returns the number still counted.
 func pruneExtenderAttempts(state *extenderActivationState, now time.Time, window time.Duration) int {
@@ -357,38 +389,42 @@ func pruneExtenderAttempts(state *extenderActivationState, now time.Time, window
 // direct slot signs in as (extenderActivationUserId).
 func extenderActivationAllow(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int) {
 	account := extenderActivationAccountKey(userId)
-	extenderActivationRecordMu.Lock()
-	defer extenderActivationRecordMu.Unlock()
-	record := extenderActivationRecordForAccount(account)
-	// The token resolves on this path, so this is where posts charged while it
-	// was unreadable first learn the account that spent them.
-	record.adoptUnidentified(account, now)
-	state := record.Accounts[account]
-	used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
-	if now.Unix() < state.BackoffUntilUnix {
-		wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
-		storeExtenderActivation(record, account, state, now)
-		return false, wait, used
-	}
-	if extenderActivationBudget < used+posts {
-		// Wait for the oldest counted post to age out of the window.
-		oldest := state.Attempts[0]
-		for _, at := range state.Attempts[1:] {
-			if at < oldest {
-				oldest = at
+	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+		// The token resolves on this path, so this is where posts charged while
+		// it was unreadable first learn the account that spent them.
+		record.adoptUnidentified(account, now)
+		state := record.Accounts[account]
+		used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
+		switch {
+		case now.Unix() < state.BackoffUntilUnix:
+			wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
+		case extenderActivationBudget < used+posts:
+			// Wait for the oldest counted post to age out of the window.
+			oldest := state.Attempts[0]
+			for _, at := range state.Attempts[1:] {
+				if at < oldest {
+					oldest = at
+				}
 			}
+			if wait = time.Unix(oldest, 0).Add(extenderActivationWindow).Sub(now); wait < 0 {
+				wait = 0
+			}
+		default:
+			for i := 0; i < posts; i++ {
+				state.Attempts = append(state.Attempts, now.Unix())
+			}
+			allow = true
 		}
-		if wait = time.Unix(oldest, 0).Add(extenderActivationWindow).Sub(now); wait < 0 {
-			wait = 0
-		}
-		storeExtenderActivation(record, account, state, now)
-		return false, wait, used
+		record.Accounts[account] = state
+		return nil
+	})
+	if err != nil {
+		// The posts this start would charge cannot be recorded, and an
+		// unrecorded post is what a restart loop replays as a burst. Hold
+		// the role and retry instead of spending what nothing remembers.
+		return false, providerStoreRetryInterval, 0
 	}
-	for i := 0; i < posts; i++ {
-		state.Attempts = append(state.Attempts, now.Unix())
-	}
-	storeExtenderActivation(record, account, state, now)
-	return true, 0, used
+	return allow, wait, used
 }
 
 // extenderActivationSpendSpare funds one retry of the family a pass failed on
@@ -403,27 +439,25 @@ func extenderActivationSpendSpare(now time.Time, userId string, pass extenderAct
 		return "", false
 	}
 	account := extenderActivationAccountKey(userId)
-	extenderActivationRecordMu.Lock()
-	defer extenderActivationRecordMu.Unlock()
-	record := extenderActivationRecordForAccount(account)
-	state := record.Accounts[account]
-	used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
-	spent := false
-	switch {
-	case 0 < state.SpareAtUnix && now.Sub(time.Unix(state.SpareAtUnix, 0)) < extenderActivationWindow:
-		// this window already funded a retry
-	case now.Unix() < state.BackoffUntilUnix:
-		// the refusal wait has not passed, so the retry cannot run
-	case extenderActivationBudget <= used:
-		// the window is full
-	default:
-		state.Attempts = append(state.Attempts, now.Unix())
-		state.SpareFamily = string(family)
-		state.SpareAtUnix = now.Unix()
-		spent = true
-	}
-	storeExtenderActivation(record, account, state, now)
-	if !spent {
+	var spent bool
+	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+		record.adoptUnidentified(account, now)
+		state := record.Accounts[account]
+		used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
+		switch {
+		case 0 < state.SpareAtUnix && now.Sub(time.Unix(state.SpareAtUnix, 0)) < extenderActivationWindow:
+		case now.Unix() < state.BackoffUntilUnix:
+		case extenderActivationBudget <= used:
+		default:
+			state.Attempts = append(state.Attempts, now.Unix())
+			state.SpareFamily = string(family)
+			state.SpareAtUnix = now.Unix()
+			spent = true
+		}
+		record.Accounts[account] = state
+		return nil
+	})
+	if err != nil || !spent {
 		return "", false
 	}
 	return family, true
@@ -434,45 +468,61 @@ func extenderActivationSpendSpare(now time.Time, userId string, pass extenderAct
 // refusal.
 func recordExtenderActivationRefused(now time.Time, userId string) time.Duration {
 	account := extenderActivationAccountKey(userId)
-	extenderActivationRecordMu.Lock()
-	defer extenderActivationRecordMu.Unlock()
-	record := extenderActivationRecordForAccount(account)
-	state := record.Accounts[account]
-	// A streak that has gone quiet starts over: refusals spread across weeks
-	// are not one escalating incident.
-	if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
-		state.Refusals = 0
-	}
-	state.Refusals++
-	state.LastRefusalUnix = now.Unix()
 	wait := extenderRefusalBackoff
-	for i := 1; i < state.Refusals; i++ {
-		wait *= 2
-		if extenderRefusalBackoffMax <= wait {
-			wait = extenderRefusalBackoffMax
-			break
+	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+		state := record.Accounts[account]
+		// A streak that has gone quiet starts over: refusals spread across weeks
+		// are not one escalating incident.
+		if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
+			state.Refusals = 0
 		}
+		state.Refusals++
+		state.LastRefusalUnix = now.Unix()
+		wait = extenderRefusalBackoff
+		for i := 1; i < state.Refusals; i++ {
+			wait *= 2
+			if extenderRefusalBackoffMax <= wait {
+				wait = extenderRefusalBackoffMax
+				break
+			}
+		}
+		state.BackoffUntilUnix = now.Add(wait).Unix()
+		record.Accounts[account] = state
+		return nil
+	})
+	if err != nil {
+		// The streak cannot be recorded, and a caller told to retry now
+		// would post again into the refusal. Hold for the first-level wait
+		// even though the store did not keep it.
+		return extenderRefusalBackoff
 	}
-	state.BackoffUntilUnix = now.Add(wait).Unix()
-	storeExtenderActivation(record, account, state, now)
 	return wait
 }
 
-// recordExtenderActivationSucceeded clears what a refusal left behind for one
-// account: the activation the operator signed resets that account's budget, so
-// the next start may activate again. The unidentified entry goes with it,
-// because the success accepts the posts this host made before the token named
-// an account, and leaving them would let the next gate check adopt them back
-// and hold the launch the success was meant to clear. Other accounts in the
-// record are untouched.
+// recordExtenderActivationSucceeded clears refusal and spare state, adopts
+// unidentified attempts and preserves every counted post.
 func recordExtenderActivationSucceeded(userId string) {
 	account := extenderActivationAccountKey(userId)
-	extenderActivationRecordMu.Lock()
-	defer extenderActivationRecordMu.Unlock()
-	record := extenderActivationRecordForAccount(account)
-	delete(record.Accounts, account)
-	delete(record.Accounts, extenderActivationUnidentifiedAccount)
-	writeExtenderActivationRecord(record, account)
+	_ = mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+		// A success clears the refusal and the spare, not the window. The
+		// operator records every allowed attempt and only ages them out, so
+		// wiping Attempts here would tell the next gate it has a full budget
+		// while the operator still counts this hour's posts.
+		//
+		// Adopting comes first: it can restore a live hold from the
+		// unidentified entry, and the clear below has to be the last word on
+		// the refusal and backoff fields.
+		record.adoptUnidentified(account, time.Now())
+		if state, ok := record.Accounts[account]; ok {
+			state.Refusals = 0
+			state.LastRefusalUnix = 0
+			state.BackoffUntilUnix = 0
+			state.SpareFamily = ""
+			state.SpareAtUnix = 0
+			record.Accounts[account] = state
+		}
+		return nil
+	})
 }
 
 // extenderActivationGate decides the direct slot's extender role once per

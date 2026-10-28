@@ -33,7 +33,9 @@ func setAutoStart(p Provider, on bool) error {
 		}
 		return removeLegacyStartupLnk()
 	}
-	_ = deleteTaskIfExists(taskName)
+	if err := deleteTaskIfExists(taskName, runSchtasks); err != nil {
+		return err
+	}
 	return removeLegacyStartupLnk()
 }
 
@@ -61,17 +63,6 @@ func removeLegacyStartupLnk() error {
 	return nil
 }
 
-// deleteTaskIfExists removes a scheduled task if it exists. schtasks
-// /delete /f on a MISSING task errors (0x80070002), so check first; a
-// missing task is a clean no-op.
-func deleteTaskIfExists(taskName string) error {
-	if err := runSchtasks("/query", "/tn", taskName); err != nil {
-		// Not found = fine (no-op).
-		return nil
-	}
-	return runSchtasks("/delete", "/f", "/tn", taskName)
-}
-
 // setAutoUpdateSchedule manages the auto-update scheduled task. label is the
 // platform-neutral identifier; the concrete task name is fixed on Windows.
 // Weekly is the default posture and maps to midnight Sunday.
@@ -85,7 +76,7 @@ func setAutoUpdateSchedule(p Provider, label, interval string) error {
 	}
 	switch interval {
 	case "off":
-		return deleteTaskIfExists(taskName)
+		return deleteTaskIfExists(taskName, runSchtasks)
 	case "daily":
 		// -f: the task runs outside a shell with no TTY, so the update
 		// confirm prompt would fail on EOF; force skips it.
@@ -121,13 +112,22 @@ func runSchtasks(subcommand string, args ...string) error {
 	full := append([]string{subcommand}, args...)
 	out, err := exec.Command("schtasks", full...).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("schtasks %s: %w (%s)", subcommand, err, strings.TrimSpace(string(out)))
+		message := strings.TrimSpace(string(out))
+		if subcommand == "/query" && schtasksTaskNotFoundOutput(message) {
+			return fmt.Errorf("%w: schtasks %s: %v (%s)", errScheduledTaskNotFound, subcommand, err, message)
+		}
+		return fmt.Errorf("schtasks %s: %w (%s)", subcommand, err, message)
 	}
 	return nil
 }
 
-// cleanupLifecycle removes the Windows scheduled tasks on uninstall.
+// cleanupLifecycle removes the Windows scheduled tasks on uninstall. A task
+// that survives uninstall keeps launching a binary that is being removed, so
+// a failed delete is reported on stderr rather than dropped.
 func cleanupLifecycle(p Provider) {
-	_ = deleteTaskIfExists("urnetwork-update")
-	_ = deleteTaskIfExists("urnetwork-autostart")
+	for _, taskName := range []string{"urnetwork-update", "urnetwork-autostart"} {
+		if err := deleteTaskIfExists(taskName, runSchtasks); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not remove scheduled task %q: %v\n", taskName, err)
+		}
+	}
 }

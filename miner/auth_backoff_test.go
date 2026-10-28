@@ -73,7 +73,7 @@ func TestAuthBackoffCountsRejectionsAndRateLimits(t *testing.T) {
 }
 
 func TestAuthBackoffStateRoundTrip(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	now := authBackoffTestNow()
 
 	st := recordAuthFailure(now, "401")
@@ -135,7 +135,7 @@ func TestAuthBackoffHotSwapCandidateDoesNotWaitOrCount(t *testing.T) {
 }
 
 func TestAuthBackoffMetricsRender(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	now := time.Now()
 	st := authBackoffState{
 		ConsecutiveFailures: 12,
@@ -172,7 +172,7 @@ func TestAuthBackoffMetricsRender(t *testing.T) {
 // The state file is the persistent counter store: a restart reads back the
 // lifetime totals, and a recovery clears only the streak.
 func TestAuthBackoffCountersSurviveRestart(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	now := time.Now()
 	recordAuthFailure(now, "401")
 	recordAuthFailure(now.Add(time.Minute), "429")

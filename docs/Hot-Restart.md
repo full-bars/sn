@@ -136,6 +136,8 @@ Because the seed is shared per process, two slots from one process cannot both b
 | New proxy address | New slot, new `client_id` |
 | New proxy auth user at the same address | New slot on this fork's provider; same miner slot, because the miner derives its slot from the network and proxy address only; same slot on 3.23-fix and meso-miner |
 | Different account or network (`~/.urnetwork/jwt` replaced) | Fresh mint, logged as `network_id mismatch` |
+| The slot's custody credential names a different client than the store entry, or exists but cannot be read or names no client | Fresh mint through custody, logged as `stored client <id> disagrees with custody client <id>`. A custody file that is simply absent does not count as a disagreement |
+| The stored JWT's own `client_id` claim differs from the entry's `client_id` | Fresh mint, logged as `stored JWT client_id "<id>" disagrees with store client_id "<id>"` |
 | State dir wiped, new `HOME`, container recreated without its volume | Fresh mint |
 | `minted_at` older than 30 days | Entry pruned, fresh mint on return |
 | Reuse turned off | Fresh mint on every start |
@@ -185,6 +187,8 @@ These routes replace the identity for every slot that connects. Turning reuse ba
 **`client limit exceeded`.** The platform refused a new client because the account is at its concurrent client limit. Churn makes this more likely, since every fresh mint adds a row.
 
 **A slot comes back with a new id even though reuse is on.** Either the entry aged past the 30 day prune, the token could not be renewed, the identity was tombstoned after a refusal, or the state dir changed. The log line for the slot says which path was taken.
+
+**A slot fails with `failed to persist minted client JWT`.** The new identity was minted but the store write failed, so the slot is left not running rather than serving a client no later restart could find. The entry is also removed from the store's memory, so a retry cannot reuse a token that was never written. Check free space and permissions on the state directory.
 
 **Store reported as corrupt.** The provider logs `⚠️ [jwt-store] corrupt ... starting fresh` and mints new identities. The previous bytes are kept in a snapshot beside the store for inspection.
 

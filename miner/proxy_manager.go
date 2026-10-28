@@ -14,6 +14,7 @@ import (
 
 	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 // proxy_manager.go is the P1(a) manager that owns the desired proxy set and
@@ -327,6 +328,12 @@ func (m *proxyManager) desiredForReload() (launch []*connect.ProxySettings, held
 // the caller is the reload path and will apply `launch` to a running pool, so a
 // binding trim cap is a capacity decision taken now.
 func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
+	if liveApply {
+		// APPLY may create persistent identity/provenance rows. Serialize that
+		// read-modify-write with health, grading, audit, and command writers.
+		proxyStateMu.Lock()
+		defer proxyStateMu.Unlock()
+	}
 	state, err := readProxyState()
 	if err != nil {
 		return nil, nil, false, err
@@ -391,6 +398,56 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 		tlog("[proxy][url] warning: could not read proxy_url.json, launching without the URL-sourced proxies: %v\n", urlErr)
 	} else {
 		mergeProxyURLCache(desiredSet, sourceOf, urlState)
+	}
+	// Runtime APPLY is the first point at which a fetched URL proxy is accepted
+	// into the serving set. Persist its ID and original provenance here, in the
+	// same state transaction, without replaying startup-only migrations,
+	// earnings adoption, or OOM-cap decisions.
+	if liveApply && urlErr == nil {
+		// A verified URL rotation can change the identity key (username is part
+		// of ProxySettings.Key). Remove the superseded URL row in the same
+		// transaction so dead credentials do not linger in persistent health.
+		for oldKey, entry := range state.Proxies {
+			if entry.Source != "url" {
+				continue
+			}
+			address, _ := connect.SplitProxyKey(oldKey)
+			if active, ok := urlState.Cache[address]; ok {
+				activeSettings := &connect.ProxySettings{Network: "tcp", Address: address}
+				if active.User != "" || active.Password != "" {
+					activeSettings.Auth = &proxy.Auth{User: active.User, Password: active.Password}
+				}
+				if activeSettings.Key() != oldKey {
+					delete(state.Proxies, oldKey)
+					writeState = true
+				}
+			}
+		}
+		highestID := 0 // ID 0 is reserved for the direct slot.
+		for _, entry := range state.Proxies {
+			if entry.ID > highestID {
+				highestID = entry.ID
+			}
+		}
+		initProxyIDCounter(highestID)
+		changed := writeState
+		for key, source := range sourceOf {
+			if _, ok := state.Proxies[key]; !ok {
+				resolveProxyID(state, key)
+				changed = true
+			}
+			entry := state.Proxies[key]
+			if entry.Source == "" {
+				tagProxySourceIfUnset(state, key, source)
+				changed = true
+			}
+		}
+		state.NextID = currentProxyIDCounter()
+		if changed {
+			if err := writeProxyState(state); err != nil {
+				return nil, nil, false, fmt.Errorf("persist runtime proxy identities: %w", err)
+			}
+		}
 	}
 
 	// Order the desired set deterministically (identity key) so launch order
@@ -609,6 +666,12 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	if m.started {
 		return nil, nil, fmt.Errorf("proxy manager already started")
 	}
+	resetProxyWarmupForStart()
+	// Startup imports identity/provenance into proxy.state and may persist it.
+	// Keep the whole read/modify/write under the shared state transaction so a
+	// concurrent health snapshot cannot persist a stale copy over the import.
+	proxyStateMu.Lock()
+	defer proxyStateMu.Unlock()
 	launch, held, writeState, err := m.desired(true)
 	if err != nil {
 		return nil, nil, err
@@ -656,6 +719,7 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	ctx, cancel := context.WithCancel(parent)
 	m.cancel = cancel
 	m.started = true
+	setCleanupProcessStart(time.Now())
 	// The startup grading gate: the active probe loops below (the paid/file
 	// grader, the URL fetch + stage-1 probe cycles, the stale-reaper pass)
 	// wait on it until the provide run's workers are up. It decides from the
@@ -828,6 +892,7 @@ func (m *proxyManager) stop() {
 	if gate != nil {
 		processGradingGate.CompareAndSwap(gate, nil)
 	}
+	setCleanupProcessStart(time.Time{})
 	// Flush the command audit ring (v33 main()'s shutdown persist).
 	forceAuditPersist()
 }

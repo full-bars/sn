@@ -55,7 +55,7 @@ func TestDefaultH3Setting(t *testing.T) {
 // applies the startup default again, and an explicit operator key is never
 // overridden in either direction.
 func TestH3DefaultsFollowResolutionTransitions(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	oldState, oldStatus := globalControlState, currentProxyResolution()
 	oldApplied := h3AppliedSetting.Load()
 	t.Cleanup(func() {

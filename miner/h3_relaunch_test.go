@@ -101,7 +101,7 @@ func h3TestManagerProxies(t *testing.T, candidates []*connect.ProxySettings) {
 // identity recorded as launched without the fallbacks and a count setting that
 // would move them.
 func TestDesiredReadPerformsNoRelaunch(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	h3ResetTestState(t)
 	candidates := testH3Proxies(3)
 	h3TestUDPAdmitsAll(t, candidates)
@@ -141,7 +141,7 @@ func TestDesiredReadPerformsNoRelaunch(t *testing.T) {
 // the only thing that stops a slot, so the identity it left "unchanged" is
 // still running and still in its bookkeeping afterwards.
 func TestReloadDoesNotDetachASlotItDidNotCancel(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	h3ResetTestState(t)
 	candidates := testH3Proxies(3)
 	h3TestUDPAdmitsAll(t, candidates)
@@ -207,7 +207,7 @@ func TestReloadDoesNotDetachASlotItDidNotCancel(t *testing.T) {
 // spawned again from the reloader's bookkeeping, and its unchanged peers are
 // never touched.
 func TestApplyH3CandidateSetRelaunchesOnlyChangedIdentities(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	h3ResetTestState(t)
 	candidates := testH3Proxies(3)
 	h3TestUDPAdmitsAll(t, candidates)
@@ -304,7 +304,7 @@ func TestApplyH3CandidateSetRelaunchesOnlyChangedIdentities(t *testing.T) {
 // reports no restart. Without a published relauncher this was the F-04 defect:
 // the command returned OK and nothing happened.
 func TestH3ControlKeyRelaunchesTheMovedIdentitiesLive(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	h3ResetTestState(t)
 	candidates := testH3Proxies(3)
 	h3TestUDPAdmitsAll(t, candidates)

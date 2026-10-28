@@ -352,14 +352,17 @@ func clearProxyStores() error {
 	writeProxyConfig(proxyConfig)
 
 	if release, err := acquireProxyLockWithRetry(); err == nil {
+		proxyStateMu.Lock()
 		if state, err := readProxyState(); err == nil {
 			state.Proxies = map[string]ProxyEntry{}
 			state.NextID = 0
 			if err := writeProxyState(state); err != nil {
+				proxyStateMu.Unlock()
 				release()
 				return err
 			}
 		}
+		proxyStateMu.Unlock()
 		release()
 	} else {
 		fmt.Fprintf(os.Stderr, "note: could not acquire the proxy lock for the state reset (%v); the running provider will re-sync on its next snapshot\n", err)

@@ -347,7 +347,7 @@ func TestProxyPoolHealthReadsRegistryState(t *testing.T) {
 	// The pool reads proxy.state for its member list, so the test must own the
 	// state directory. Without this the suite writes the operator's real
 	// ~/.urnetwork/proxy.state, which a live provider then has to prune.
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	resetProxyLiveHealthRegistryForTest()
 	resetProxyPoolHealthForTest()
 	t.Cleanup(func() {
@@ -411,7 +411,7 @@ func TestProxyPoolHealthReadsRegistryState(t *testing.T) {
 // samples: the window has to reason over an hour of ticks, not over an hour of
 // HTTP requests.
 func TestProxyPoolHealthCachesWithinATick(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	resetProxyLiveHealthRegistryForTest()
 	resetProxyPoolHealthForTest()
 	t.Cleanup(func() {

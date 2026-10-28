@@ -336,6 +336,25 @@ func TestMergeProxyURLEntries_SetsProbeOKForApiVerifiedEntries(t *testing.T) {
 	}
 }
 
+func TestMergeProxyURLEntries_VerifiesCredentialRotationBeforeSwap(t *testing.T) {
+	state := &ProxyURLState{Cache: map[string]ProxyURLEntry{
+		"198.51.100.29:1080": {User: "operator", Password: "old-value", ProbeOK: true},
+	}}
+	line := "198.51.100.29:1080:operator:new-value"
+	if got := mergeProxyURLEntries(state, []string{line}, 0, 0, nil, nil); got != 0 {
+		t.Fatalf("unverified candidate count = %d, want 0", got)
+	}
+	if got := state.Cache["198.51.100.29:1080"]; got.User != "operator" || got.Password != "old-value" || !got.ProbeOK {
+		t.Fatalf("unverified rotation mutated existing entry: %+v", got)
+	}
+	if got := mergeProxyURLEntries(state, []string{line}, 1, 0, nil, nil); got != 1 {
+		t.Fatalf("verified candidate count = %d, want 1", got)
+	}
+	if got := state.Cache["198.51.100.29:1080"]; got.User != "operator" || got.Password != "new-value" || !got.ProbeOK {
+		t.Fatalf("verified rotation was not swapped into cache: %+v", got)
+	}
+}
+
 func TestMergeProxyURLCache_PrimarySourceWins(t *testing.T) {
 	desiredSet := map[string]*connect.ProxySettings{
 		"1.2.3.4:1080": {Network: "tcp", Address: "1.2.3.4:1080"},

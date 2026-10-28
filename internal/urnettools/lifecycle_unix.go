@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -109,17 +112,25 @@ func removeTimerFile(p Provider, timer string, userScope bool) error {
 // firing at six hours, keeping the weekly cadence predictable for operators.
 func timerUnitContents(timer, calendar string, existing []byte) ([]byte, error) {
 	if existing == nil {
-		content := fmt.Sprintf("[Unit]\nDescription=Run URnetwork Update\n\n[Timer]\nOnCalendar=%s\nRandomizedDelaySec=6h\nPersistent=true\nUnit=%s.service\n\n[Install]\nWantedBy=default.target\n", calendar, strings.TrimSuffix(timer, "-update.timer"))
+		content := fmt.Sprintf("[Unit]\nDescription=Run URnetwork Update\n\n[Timer]\nOnCalendar=%s\nRandomizedDelaySec=6h\nPersistent=true\nUnit=%s.service\n\n[Install]\nWantedBy=default.target\n", calendar, strings.TrimSuffix(timer, ".timer"))
 		return []byte(content), nil
 	}
+	updateUnit := strings.TrimSuffix(timer, ".timer") + ".service"
 	lines := strings.Split(string(existing), "\n")
 	var out []string
 	replaced := false
 	for _, line := range lines {
-		if strings.HasPrefix(line, "OnCalendar=") {
+		switch {
+		case strings.HasPrefix(line, "OnCalendar="):
 			out = append(out, "OnCalendar="+calendar, "RandomizedDelaySec=6h")
 			replaced = true
-		} else if !strings.HasPrefix(line, "RandomizedDelaySec=") {
+		case strings.HasPrefix(line, "RandomizedDelaySec="):
+			// replaced beside OnCalendar above
+		case strings.HasPrefix(line, "Unit=") && strings.TrimSpace(line) != "Unit="+updateUnit:
+			// A timer this tool wrote earlier, or one the shell installer
+			// wrote, restarts the provider instead of running the updater.
+			out = append(out, "Unit="+updateUnit)
+		default:
 			out = append(out, line)
 		}
 	}
@@ -146,6 +157,16 @@ func writeTimerCalendar(timer string, p Provider, calendar string, userScope boo
 	} else {
 		path = "/etc/systemd/system/" + timer
 	}
+	return writeTimerCalendarAt(path, timer, p, calendar)
+}
+
+func writeTimerCalendarAt(path, timer string, p Provider, calendar string) error {
+	updateUnit := strings.TrimSuffix(timer, ".timer") + ".service"
+	// The updater service is made (or repaired) whether or not the timer
+	// exists: a timer this tool wrote earlier points at the provider unit.
+	if err := ensureUpdaterService(filepath.Join(filepath.Dir(path), updateUnit), updateUnit, p); err != nil {
+		return err
+	}
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
 		content, err := timerUnitContents(timer, calendar, nil)
@@ -167,6 +188,135 @@ func writeTimerCalendar(timer string, p Provider, calendar string, userScope boo
 		return err
 	}
 	return enableTimer(p, timer)
+}
+
+// ensureUpdaterService writes <name>-update.service when it is missing, and
+// rewrites it when its ExecStart is not an update invocation (the shell
+// installer's `urnet-tools update -y` counts as one).
+func ensureUpdaterService(path, updateUnit string, p Provider) error {
+	existing, err := os.ReadFile(path)
+	if err == nil && updaterServiceUpdates(string(existing)) {
+		return nil
+	} else if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("check updater service %s: %w", updateUnit, err)
+	}
+	executable, err := updaterExecutable(p)
+	if err != nil {
+		return err
+	}
+	service := fmt.Sprintf(`[Unit]
+Description=URnetwork Update
+
+[Service]
+Type=oneshot
+ExecStart=%s update -y --unit %s
+`, systemdExecArg(executable), systemdExecArg(p.Unit))
+	// writeFileAtomic does not create the directory, and on a fresh
+	// ~/.config/systemd/user it is not there yet.
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create updater service %s: %w", updateUnit, err)
+	}
+	if err := writeFileAtomic(path, []byte(service), 0o644); err != nil {
+		return fmt.Errorf("create updater service %s: %w", updateUnit, err)
+	}
+	return nil
+}
+
+// updaterExecutable picks the urnet-tools the updater service runs. For a
+// provider in a user's systemd manager the service runs as that user, so a
+// copy only the operator can reach (a 0700 home, run by root with --unit)
+// would fail 203/EXEC on every tick with nothing to show for it: prefer the
+// tool installed beside the provider binary, then this binary if the user
+// can run it, and otherwise say so. The system scope keeps this binary.
+func updaterExecutable(p Provider) (string, error) {
+	self, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("resolve updater executable: %w", err)
+	}
+	if !isUserUnit(p.Unit) || p.User == "" {
+		return self, nil
+	}
+	account, err := user.Lookup(p.User)
+	if err != nil {
+		return "", fmt.Errorf("resolve updater executable: look up %s: %w", p.User, err)
+	}
+	var candidates []string
+	if p.Binary != "" {
+		candidates = append(candidates, filepath.Join(filepath.Dir(p.Binary), "urnet-tools"))
+	}
+	if home := homeForUser(p.User); home != "" {
+		candidates = append(candidates, filepath.Join(home, ".local/share/urnetwork-provider/bin/urnet-tools"))
+	}
+	candidates = append(candidates, self)
+	for _, candidate := range candidates {
+		if executableBy(account, candidate) {
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf("the updater service runs as %s, who cannot execute %s or an installed urnet-tools; install urnet-tools for that user (or run auto-update as them) and retry", p.User, self)
+}
+
+// executableBy reports whether account can run path: a regular file with the
+// matching execute bit, under directories it can search.
+func executableBy(account *user.User, path string) bool {
+	uid, err := strconv.Atoi(account.Uid)
+	if err != nil {
+		return false
+	}
+	gids := map[int]bool{}
+	if gid, err := strconv.Atoi(account.Gid); err == nil {
+		gids[gid] = true
+	}
+	if groups, err := account.GroupIds(); err == nil {
+		for _, group := range groups {
+			if gid, err := strconv.Atoi(group); err == nil {
+				gids[gid] = true
+			}
+		}
+	}
+	allowed := func(info os.FileInfo, bit os.FileMode) bool {
+		stat, ok := info.Sys().(*syscall.Stat_t)
+		if !ok {
+			return false
+		}
+		mode := info.Mode().Perm()
+		switch {
+		case int(stat.Uid) == uid:
+			return mode&(bit<<6) != 0
+		case gids[int(stat.Gid)]:
+			return mode&(bit<<3) != 0
+		default:
+			return mode&bit != 0
+		}
+	}
+	info, err := os.Stat(path)
+	if err != nil || !info.Mode().IsRegular() || !allowed(info, 1) {
+		return false
+	}
+	for dir := filepath.Dir(path); ; dir = filepath.Dir(dir) {
+		info, err := os.Stat(dir)
+		if err != nil || !allowed(info, 1) {
+			return false
+		}
+		if dir == filepath.Dir(dir) {
+			return true
+		}
+	}
+}
+
+func updaterServiceUpdates(service string) bool {
+	for _, line := range strings.Split(service, "\n") {
+		if strings.HasPrefix(line, "ExecStart=") && strings.Contains(line, " update -y") {
+			return true
+		}
+	}
+	return false
+}
+
+func systemdExecArg(value string) string {
+	value = strings.ReplaceAll(value, "%", "%%")
+	value = strings.ReplaceAll(value, "$", "$$")
+	return strconv.Quote(value)
 }
 
 // enableTimer runs daemon-reload + enable --now for a timer unit, choosing

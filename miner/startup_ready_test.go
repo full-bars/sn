@@ -9,7 +9,7 @@ import (
 )
 
 func TestAnnounceStartupCompleteSendsReady(t *testing.T) {
-	sockPath := filepath.Join(t.TempDir(), "n.sock")
+	sockPath := filepath.Join(shortStateDir(t), "n.sock")
 	listener, err := net.ListenUnixgram("unixgram", &net.UnixAddr{Name: sockPath, Net: "unixgram"})
 	if err != nil {
 		t.Skipf("unixgram sockets unavailable: %v", err)

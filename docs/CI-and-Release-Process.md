@@ -15,7 +15,7 @@ The repository ships sixteen workflows in `.github/workflows/`.
 | Unix lifecycle verification (`unix-lifecycle.yml`) | main push, pull requests | start/stop/restart/status against a fake provider on systemd |
 | Windows lifecycle verification (`windows-lifecycle.yml`) | main push, pull requests | Same lifecycle set against a fake provider under schtasks |
 | Tool functional smoke (`tool-functional-smoke.yml`) | main push, pull requests | Builds the real binaries and mints a JWT with the gauntlet account |
-| docker-multi-container (`docker-multi-container.yml`) | main push | Targets and modes across three containers on one host |
+| docker-multi-container (`docker-multi-container.yml`) | main push | Targets and modes across three containers on one host, each with its own state volume |
 
 Docs-only changes skip CI through `paths-ignore`.
 
