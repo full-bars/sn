@@ -30,12 +30,14 @@ on:
 # cancel-in-progress stays false for main: a main-branch validation run should
 # finish, not be cancelled by the next merge.
 concurrency:
-  # Every workflow that mints a JWT shares one account, so they have to
-  # queue behind each other. A per-workflow group let two workflows on the
-  # same PR mint at once, and each waited out the other's five-minute
-  # sign-in window only to fail again.
-  group: gauntlet-auth
-  cancel-in-progress: false
+  # Superseded runs of the SAME pull request cancel each other; a tag or main
+  # run is never cancelled by a PR. The shared gauntlet group is gone: it
+  # applied to whole workflows, so one PR's pending run replaced another PR's
+  # pending run and the later one showed up as a red "cancelled with no jobs"
+  # check. The mint that needed the lock already retries, which is why
+  # tool-functional-smoke took its job-level group out.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   native-functional-smoke:
