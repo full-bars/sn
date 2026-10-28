@@ -514,3 +514,50 @@ func TestControlSetQueuedReportsNoEffectKeyTruthfully(t *testing.T) {
 		t.Fatalf("live key queued output = %q, want the next-start wording", out)
 	}
 }
+
+// A provider that refuses the connection (the peer credential check answers
+// with ok:false) has not said the key is unset. get must surface the refusal
+// instead of falling through to the startup default.
+func TestQueryControlOverrideSurfacesRefusedSocket(t *testing.T) {
+	dir := shortSocketDir(t)
+	l, err := net.Listen("unix", filepath.Join(dir, "provider.sock"))
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	defer l.Close()
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go func() {
+				defer conn.Close()
+				bufio.NewReader(conn).ReadBytes('\n')
+				_ = json.NewEncoder(conn).Encode(controlResponse{OK: false, Error: "peer cred: UID 1001 is neither the provider UID 1000 nor root"})
+			}()
+		}
+	}()
+
+	_, _, found, err := queryControlOverride(Provider{StateDir: dir}, "gogc")
+	if err == nil || !strings.Contains(err.Error(), "peer cred") {
+		t.Fatalf("refusal swallowed: found=%v err=%v", found, err)
+	}
+}
+
+// A queue file beside a running provider is not in effect, so get must not
+// report it as the value.
+func TestQueryControlOverrideIgnoresStaleQueueBesideRunningProvider(t *testing.T) {
+	dir := shortSocketDir(t)
+	srv := startMockControlServer(t, filepath.Join(dir, "provider.sock"))
+	defer srv.Close()
+	if err := os.WriteFile(filepath.Join(dir, "pending_overrides.json"),
+		[]byte(`[{"op":"set","key":"gogc","value":"20"}]`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	val, source, found, err := queryControlOverride(Provider{StateDir: dir}, "gogc")
+	if err != nil || found {
+		t.Fatalf("got %q from %s (found=%v, err=%v); the running provider has no gogc override", val, source, found, err)
+	}
+}

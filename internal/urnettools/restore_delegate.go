@@ -600,7 +600,12 @@ func formatSets(p Provider, want string) error {
 
 	for _, item := range orderedKeys {
 		val, _, isFound, err := queryControlOverride(p, item.canonicalKey)
-		if err != nil || !isFound {
+		if err != nil {
+			// Not "no overrides": a socket that refused or timed out has told
+			// us nothing about the list.
+			return err
+		}
+		if !isFound {
 			continue
 		}
 		found++
