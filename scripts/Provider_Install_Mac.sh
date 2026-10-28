@@ -644,8 +644,8 @@ case "$operation" in
     auth)          "$provider_bin" auth "$@" ;;
     logs)          "$provider_bin" logs "$@" ;;
     "")
-        show_help
-        exit 0
+        pr_err "Missing command. Run '%s install' to install, or '%s --help' for usage." "$me" "$me"
+        exit 1
         ;;
     *)
         pr_err "Unknown command: %s" "$operation"
