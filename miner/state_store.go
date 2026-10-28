@@ -82,9 +82,21 @@ func openProviderStore(path string) (*providerStore, error) {
 	// creation can leave the file unlinked or zero length.
 	_, statErr := os.Stat(path)
 	created := errors.Is(statErr, os.ErrNotExist)
-	db, err := bbolt.Open(path, 0o600, &bbolt.Options{Timeout: providerStoreOpenTimeout})
+	db, err := callProviderStore(func() (*bbolt.DB, error) {
+		return bbolt.Open(path, 0o600, &bbolt.Options{Timeout: providerStoreOpenTimeout})
+	})
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", path, err)
+	}
+	var checkErr error
+	if err := runProviderStoreView(db, func(tx *bbolt.Tx) error {
+		for err := range tx.Check() {
+			checkErr = errors.Join(checkErr, err)
+		}
+		return checkErr
+	}); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("check %s: %w", path, errors.Join(err, errProviderStoreCorrupt))
 	}
 	if created {
 		if syncErr := providerStoreSyncDir(dir); syncErr != nil {
@@ -97,6 +109,41 @@ func openProviderStore(path string) (*providerStore, error) {
 	}
 	store := &providerStore{db: db, path: path}
 	return store, nil
+}
+
+var errProviderStoreCorrupt = errors.New("provider state store is corrupt")
+
+func callProviderStore[T any](fn func() (T, error)) (value T, err error) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			err = fmt.Errorf("provider state store panic: %v", recovered)
+		}
+	}()
+	return fn()
+}
+
+func runProviderStoreView(db *bbolt.DB, fn func(*bbolt.Tx) error) error {
+	_, err := callProviderStore(func() (struct{}, error) { return struct{}{}, db.View(fn) })
+	return err
+}
+
+func runProviderStoreUpdate(db *bbolt.DB, fn func(*bbolt.Tx) error) error {
+	_, err := callProviderStore(func() (struct{}, error) { return struct{}{}, db.Update(fn) })
+	return err
+}
+
+func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
+	if s.db == nil {
+		if s.released {
+			return errProviderStoreReleased
+		}
+		return errProviderStoreClosed
+	}
+	err := runProviderStoreUpdate(s.db, fn)
+	if err != nil && !errors.Is(err, errProviderStoreReleased) {
+		IncrPersistentError(providerStoreWriteFailedCategory)
+	}
+	return err
 }
 
 // providerStoreSyncDir flushes one directory entry, which is what makes a
@@ -172,7 +219,7 @@ func (s *providerStore) load(bucket, key string, out any) (bool, error) {
 		return false, errProviderStoreClosed
 	}
 	var raw []byte
-	err := s.db.View(func(tx *bbolt.Tx) error {
+	err := runProviderStoreView(s.db, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil
@@ -213,7 +260,7 @@ func (s *providerStore) save(bucket, key string, value any) error {
 		}
 		return errProviderStoreClosed
 	}
-	return s.db.Update(func(tx *bbolt.Tx) error {
+	return s.write(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
 			return err
@@ -242,7 +289,7 @@ func (s *providerStore) updateJSON(bucket, key string, out any, mutate func(foun
 		}
 		return errProviderStoreClosed
 	}
-	return s.db.Update(func(tx *bbolt.Tx) error {
+	return s.write(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
 			return err
@@ -277,7 +324,7 @@ func (s *providerStore) delete(bucket, key string) error {
 		}
 		return errProviderStoreClosed
 	}
-	return s.db.Update(func(tx *bbolt.Tx) error {
+	return s.write(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil
@@ -326,7 +373,7 @@ func (s *providerStore) appendBoundedMany(bucket string, values []any, keep int)
 		}
 		return errProviderStoreClosed
 	}
-	return s.db.Update(func(tx *bbolt.Tx) error {
+	return s.write(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
 			return err
@@ -369,7 +416,7 @@ func (s *providerStore) tail(bucket string, n int) ([][]byte, error) {
 		return nil, nil
 	}
 	var values [][]byte
-	err := s.db.View(func(tx *bbolt.Tx) error {
+	err := runProviderStoreView(s.db, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil
@@ -416,6 +463,8 @@ const providerStoreRetryInterval = 30 * time.Second
 // exposes for a store that would not open, so a host running without its store
 // is visible instead of only logged.
 const providerStoreUnavailableCategory = "state_store_unavailable"
+const providerStoreCorruptCategory = "state_store_corrupt"
+const providerStoreWriteFailedCategory = "state_store_write_failed"
 
 // providerStoreInstance returns the process-wide store, opening it on first
 // use. A nil store is not fatal: callers fall back to their previous storage
@@ -456,6 +505,9 @@ func openProviderStoreForProcess() (*providerStore, error) {
 		globalProviderStore = nil
 	}
 	store, err := openProviderStore(path)
+	if isProviderStoreCorrupt(err) {
+		IncrPersistentError(providerStoreCorruptCategory)
+	}
 	if err != nil {
 		// A database bbolt can never load is moved aside once, and the run
 		// starts from an empty store, rather than warning about the same file
@@ -485,7 +537,7 @@ func openProviderStoreForProcess() (*providerStore, error) {
 // lock timeout means another process holds a healthy file, and a permission
 // error is not the file's fault, so neither is moved.
 func quarantineCorruptStore(path string, err error) (string, bool) {
-	if !errors.Is(err, bbolt.ErrInvalid) &&
+	if !isProviderStoreCorrupt(err) &&
 		!errors.Is(err, bbolt.ErrChecksum) &&
 		!errors.Is(err, bbolt.ErrVersionMismatch) {
 		return "", false
@@ -496,6 +548,11 @@ func quarantineCorruptStore(path string, err error) (string, bool) {
 		return "", false
 	}
 	return dst, true
+}
+
+func isProviderStoreCorrupt(err error) bool {
+	return errors.Is(err, errProviderStoreCorrupt) || errors.Is(err, bbolt.ErrInvalid) ||
+		errors.Is(err, bbolt.ErrChecksum) || errors.Is(err, bbolt.ErrVersionMismatch)
 }
 
 // releaseProviderStore gives provider_state.db to the hotswap candidate for the

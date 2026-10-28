@@ -2,6 +2,7 @@ package miner
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -41,6 +42,78 @@ func TestProviderStoreLoadDistinguishesAbsentFromUnreadable(t *testing.T) {
 	found, err = released.load(providerStoreBucketState, "torn", &torn)
 	if found || !errors.Is(err, errProviderStoreReleased) {
 		t.Fatalf("load on a released handle = (found=%t, err=%v), want (false, %v)", found, err, errProviderStoreReleased)
+	}
+}
+
+func TestProviderStoreContainsTransactionPanic(t *testing.T) {
+	store, err := openProviderStore(filepath.Join(t.TempDir(), providerStoreFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	err = runProviderStoreUpdate(store.db, func(*bbolt.Tx) error { panic("damaged page") })
+	if err == nil {
+		t.Fatal("transaction panic returned nil")
+	}
+	if err := store.save(providerStoreBucketState, "after-panic", map[string]int{"ok": 1}); err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]int
+	found, err := store.load(providerStoreBucketState, "after-panic", &got)
+	if err != nil || !found || got["ok"] != 1 {
+		t.Fatalf("load after panic = %t, %#v, %v", found, got, err)
+	}
+}
+
+func TestProviderStoreCountsCorruptionAndReplacesFile(t *testing.T) {
+	testExtenderState(t)
+	counts := withPersistentErrorStore(t)
+	path, err := providerStatePath(providerStoreFileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("garbage bytes"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	store, err := openProviderStoreForProcess()
+	if err != nil || store == nil {
+		t.Fatalf("open recovered store = %v, %v", store, err)
+	}
+	if got := counts.Snapshot()[providerStoreCorruptCategory]; got != 1 {
+		t.Fatalf("corrupt count = %d, want 1", got)
+	}
+	if err := store.save(providerStoreBucketState, "usable", true); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestProviderStoreCountsFailedWritesButNotReleasedWrites(t *testing.T) {
+	counts := withPersistentErrorStore(t)
+	store, err := openProviderStore(filepath.Join(t.TempDir(), providerStoreFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.save(providerStoreBucketState, "failed", true); err == nil {
+		t.Fatal("write on closed database succeeded")
+	}
+	if got := counts.Snapshot()[providerStoreWriteFailedCategory]; got != 1 {
+		t.Fatalf("write failure count = %d, want 1", got)
+	}
+	released, err := openProviderStore(filepath.Join(t.TempDir(), providerStoreFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := released.release(); err != nil {
+		t.Fatal(err)
+	}
+	if err := released.save(providerStoreBucketState, "released", true); !errors.Is(err, errProviderStoreReleased) {
+		t.Fatalf("released write = %v", err)
+	}
+	if got := counts.Snapshot()[providerStoreWriteFailedCategory]; got != 1 {
+		t.Fatalf("released write changed failure count to %d", got)
 	}
 }
 
