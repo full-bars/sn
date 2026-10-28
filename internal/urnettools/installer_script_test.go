@@ -680,6 +680,10 @@ type installerHarnessOpts struct {
 	// failRestore makes the Linux rollback's move of the previous binary back
 	// into place fail, as a read-only or vanished install tree does.
 	failRestore bool
+	// failBackup makes every attempt to create the rollback copy fail (the
+	// Linux .old file, the FreeBSD .urnetwork.bak file), including the fallback
+	// copies, while the staged binary is still written. The swap must abort.
+	failBackup bool
 	// serviceStopped starts the FreeBSD service stopped.
 	serviceStopped bool
 	// existingVersion seeds the version file the installer rewrites.
@@ -867,7 +871,26 @@ cp() {
                 ;;
         esac
     fi
+    if [ "${FAIL_BACKUP:-0}" = "1" ]; then
+        case "$*" in
+            *".urnetwork.bak."*)
+                echo "simulated backup failure" >&2
+                return 1
+                ;;
+        esac
+    fi
     command cp "$@"
+}
+ln() {
+    if [ "${FAIL_BACKUP:-0}" = "1" ]; then
+        case "$*" in
+            *".urnetwork.bak."*)
+                echo "simulated backup failure" >&2
+                return 1
+                ;;
+        esac
+    fi
+    command ln "$@"
 }
 mv() {
     if [ "${FAIL_MV:-0}" = "1" ]; then
@@ -915,6 +938,9 @@ do_install %q
 	fullScript := harness + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
 	cmd.Env = []string{"PATH=/usr/bin:/bin"}
+	if opts.failBackup {
+		cmd.Env = append(cmd.Env, "FAIL_BACKUP=1")
+	}
 	out, err := cmd.CombinedOutput()
 
 	var exitCode int
@@ -1093,6 +1119,14 @@ cp() {
                 ;;
         esac
     fi
+    if [ "${FAIL_BACKUP:-0}" = "1" ]; then
+        case "$*" in
+            *"/bin/urnetwork.old"*)
+                echo "simulated backup failure" >&2
+                return 1
+                ;;
+        esac
+    fi
     command cp "$@"
 }
 mv() {
@@ -1161,6 +1195,9 @@ do_install
 	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
 	cmd.Env = []string{"PATH=/usr/bin:/bin"}
+	if opts.failBackup {
+		cmd.Env = append(cmd.Env, "FAIL_BACKUP=1")
+	}
 	out, err := cmd.CombinedOutput()
 
 	var exitCode int
@@ -1832,5 +1869,43 @@ func TestLinuxRollbackRestoreFailureSkipsRestart(t *testing.T) {
 	}
 	if strings.Contains(res.stdout, "Restored the previous provider binary") || strings.Contains(res.stdout, "Restarted the service") {
 		t.Errorf("reported a restore or restart that did not happen (out:\n%s)", res.stdout)
+	}
+}
+
+// The rollback copy is the only way back to the previous binary. When it cannot
+// be created, even through the fallback copies, the swap must not run: a
+// replacement with no backup leaves nothing to restore if the new binary fails.
+func TestInstallerBackupFailureAbortsSwap(t *testing.T) {
+	existingPayload := "pre-existing-working-binary"
+	tarball := []byte("new-tarball-payload")
+	tag := "v2026.10.27"
+	for _, tc := range []struct {
+		name string
+		run  func(*testing.T, installerHarnessOpts) installerHarnessResult
+	}{
+		{"FreeBSD", runFreeBSDInstaller},
+		{"Linux", runLinuxInstaller},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := tc.run(t, installerHarnessOpts{
+				tag:         tag,
+				operation:   "update",
+				releaseJSON: installerRollbackRelease(tag, tarball),
+				tarballData: tarball,
+				existingBin: existingPayload,
+				failBackup:  true,
+			})
+			// The binary is checked first: the Linux harness can reach a second
+			// flow that exits 0 on an up-to-date version, which hides the swap.
+			if res.finalBin != existingPayload {
+				t.Errorf("swap proceeded without a rollback copy: live binary is %q, want %q (out:\n%s)", res.finalBin, existingPayload, res.stdout)
+			}
+			if res.exitCode == 0 {
+				t.Errorf("a failed backup must abort the install (out:\n%s)", res.stdout)
+			}
+			if !strings.Contains(res.stdout, "Could not back up") {
+				t.Errorf("a failed backup must be reported (out:\n%s)", res.stdout)
+			}
+		})
 	}
 }

@@ -2762,6 +2762,15 @@ do_install ()
                ${SUDO:-} cp "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null; then
                 provider_swap_pending=1
                 openrc_swap_pending=1
+            else
+                # No rollback copy means no way back, so the live binary stays.
+                # The stop before this point may have left the service down.
+                pr_err "Could not back up %s; refusing to replace it without a rollback copy" "$install_path/bin/urnetwork"
+                ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" "$staged_bin" 2>/dev/null || true
+                if [ "${systemd_units_stopped:-0}" = "1" ] || [ "${openrc_units_stopped:-0}" = "1" ]; then
+                    pr_err "The previous binary is still installed and the service was stopped for this update. Start it with: %s" "$(urnetwork_service_restart_hint)"
+                fi
+                exit 1
             fi
         fi
 
@@ -3250,6 +3259,15 @@ do_install ()
                ${SUDO:-} cp "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null; then
                 provider_swap_pending=1
                 openrc_swap_pending=1
+            else
+                # No rollback copy means no way back, so the live binary stays.
+                # The stop before this point may have left the service down.
+                pr_err "Could not back up %s; refusing to replace it without a rollback copy" "$install_path/bin/urnetwork"
+                ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" "$staged_bin" 2>/dev/null || true
+                if [ "${systemd_units_stopped:-0}" = "1" ] || [ "${openrc_units_stopped:-0}" = "1" ]; then
+                    pr_err "The previous binary is still installed and the service was stopped for this update. Start it with: %s" "$(urnetwork_service_restart_hint)"
+                fi
+                exit 1
             fi
         fi
 

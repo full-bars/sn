@@ -670,7 +670,12 @@ do_install() {
         _live_bin="$provider_bin"
         if ! priv ln -f "$_live_bin" "$provider_backup" 2>/dev/null; then
             priv cp -p "$_live_bin" "$provider_backup" 2>/dev/null || \
-            priv cp "$_live_bin" "$provider_backup" 2>/dev/null || true
+            priv cp "$_live_bin" "$provider_backup" 2>/dev/null || {
+                # No rollback copy means no way back, so the live binary stays.
+                pr_err "Could not back up %s; refusing to replace it without a rollback copy" "$provider_bin"
+                priv rm -f "$staged" "$provider_backup" 2>/dev/null || true
+                rm -rf "$tmpdir"; exit 1
+            }
         fi
     fi
 
