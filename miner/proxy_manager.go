@@ -434,7 +434,14 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 		state.NextID = currentProxyIDCounter()
 		if changed {
 			if err := writeProxyState(state); err != nil {
-				return nil, nil, false, fmt.Errorf("persist runtime proxy identities: %w", err)
+				// Best effort. This used to abort the whole desired-set read,
+				// and the reloader treats that error as "abort the diff", so a
+				// disk-full or read-only state directory froze every operator
+				// change: additions, rotations and removals all stayed
+				// unapplied and the watcher reported reload failure forever.
+				// The ids and provenance written here are durable only once a
+				// write succeeds, so say that instead of implying it landed.
+				tlog("[proxy][state] could not persist runtime proxy identities: %v (continuing with the change applied; ids and provenance stay volatile until a write succeeds, and a restart before then re-derives them)\n", err)
 			}
 		}
 	}

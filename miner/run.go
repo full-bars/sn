@@ -1985,15 +1985,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// unprofiled run: a profile run validates and registers a fixed slot set at
 	// start, and a slot appearing at runtime would bypass that gate.
 	var reloader *minerProxyReloader
-	var retryMu sync.Mutex
-	retryAttempts := map[string]int{}
-	retryFailedProxy := func(key string) {
-		retryMu.Lock()
-		retryAttempts[key]++
-		attempt := retryAttempts[key]
-		retryMu.Unlock()
-		if attempt > 3 {
-			tlog("[proxy][retry] stopped retrying %s after three attempts\n", proxyKeyDisplay(key))
+	proxyRetries := newProxyRetryBudget()
+	retryFailedProxy := func(key string, uptime time.Duration) {
+		attempt, retry := proxyRetries.next(key, uptime)
+		if !retry {
+			tlog("[proxy][retry] stopped retrying %s after %d attempts without a stable run\n", proxyKeyDisplay(key), maxProxyWorkerRetries)
 			return
 		}
 		// Recompute desired state and eligibility before restarting anything.
@@ -2070,13 +2066,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			index := reloadSlotIndex.Add(1) - 1
 			progress.admitLateSlot(providerRegistrationSlot(slotIdentities, settings))
 			slotCtx, slotCancel := context.WithCancel(ctx)
+			startedAt := time.Now()
 			go func() {
 				err := provideWithProxy(slotCtx, index, settings)
 				if err != nil {
 					tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", settings.Key(), index, err)
 				}
 				if reloader.workerExited(settings.Key(), generation) && err != nil && slotCtx.Err() == nil {
-					retryFailedProxy(settings.Key())
+					retryFailedProxy(settings.Key(), time.Since(startedAt))
 				}
 			}()
 			return slotCancel, nil
@@ -2168,6 +2165,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			workerStartedAt := time.Now()
 			var result error
 			defer func() {
 				if cause := recover(); cause != nil {
@@ -2196,7 +2194,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				bringUp.slotStopped(uint64(index))
 				if proxySettings != nil && reloader != nil && generation != 0 {
 					if reloader.workerExited(proxySettings.Key(), generation) && result != nil && slotCtx.Err() == nil {
-						retryFailedProxy(proxySettings.Key())
+						retryFailedProxy(proxySettings.Key(), time.Since(workerStartedAt))
 					}
 				}
 				results <- result
