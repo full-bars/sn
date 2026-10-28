@@ -2789,7 +2789,7 @@ do_install ()
             pr_warn "Release %s has no sha256 digest for '%s'; continuing without verification" "$tag" "$provider_asset"
         fi
 
-        if ! tar -xf "$tarball" 2>/dev/null; then
+        if ! tar -xf "$tarball"; then
             pr_err "Failed to extract tarball: %s" "$tarball"
             exit 1
         fi
@@ -2988,6 +2988,15 @@ do_install ()
     if [ "$no_modify_bashrc" -eq 0 ]; then
         add_path_blocks "$install_path"
     fi
+
+    # The second install pass creates another workdir and replaces its trap.
+    # Remove this one first so it cannot exhaust /tmp on later installs.
+    cd "$script_rundir" || exit 1
+    if ! rm -r "$workdir"; then
+        pr_err "Failed to remove working directory: %s" "$workdir"
+        exit 1
+    fi
+    trap - EXIT
 
     case "$operation" in
         install)
@@ -3301,7 +3310,7 @@ do_install ()
             pr_warn "Release %s has no sha256 digest for '%s'; continuing without verification" "$tag" "$provider_asset"
         fi
 
-        if ! tar -xf "$tarball" 2>/dev/null; then
+        if ! tar -xf "$tarball"; then
             pr_err "Failed to extract tarball: %s" "$tarball"
             exit 1
         fi
