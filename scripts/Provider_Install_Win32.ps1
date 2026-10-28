@@ -240,11 +240,17 @@ if (-not (Test-Path $Destination)) {
 }
 
 if (Test-Path $InstalledBinaryPath) {
-    Remove-Item -Path $InstalledBinaryPath -Force
+    Remove-Item -Path $InstalledBinaryPath -Force -ErrorAction Stop
 }
 
 Write-Host "Installing $BinaryPath => $InstalledBinaryPath"
-Move-Item -Path $BinaryPath $InstalledBinaryPath
+Move-Item -Path $BinaryPath -Destination $InstalledBinaryPath -ErrorAction Stop
+if (Test-Path $BinaryPath) {
+    throw "Provider binary remains in staging after install. Stop the running provider and retry the install."
+}
+if (-not (Test-Path $InstalledBinaryPath)) {
+    throw "Provider binary was not installed at $InstalledBinaryPath."
+}
 
 $InstalledToolsBinaryPath = Join-Path $Destination -ChildPath "urnet-tools.exe"
 
@@ -316,9 +322,15 @@ if (Test-Path $ExtractedTool) {
         if (Test-Path $OldBinary) {
             Remove-Item -Path $OldBinary -Force -ErrorAction SilentlyContinue
         }
-        Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force
+        Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop
     }
-    Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force
+    Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop
+    if (Test-Path $ExtractedTool) {
+        throw "urnet-tools.exe remains in staging after install."
+    }
+    if (-not (Test-Path $InstalledToolsBinaryPath)) {
+        throw "urnet-tools.exe was not installed at $InstalledToolsBinaryPath."
+    }
     $ToolGoInstalled = $true
     & $CleanupStaleUpdater
 }
@@ -348,9 +360,15 @@ if (-not $ToolGoInstalled -and $ToolAsset -and $ToolDigest) {
                 if (Test-Path $OldBinary) {
                     Remove-Item -Path $OldBinary -Force -ErrorAction SilentlyContinue
                 }
-                Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force
+                Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop
             }
-            Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath
+            Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop
+            if (Test-Path $ToolTemp) {
+                throw "urnet-tools.exe remains in staging after download install."
+            }
+            if (-not (Test-Path $InstalledToolsBinaryPath)) {
+                throw "urnet-tools.exe was not installed at $InstalledToolsBinaryPath."
+            }
             $ToolGoInstalled = $true
             & $CleanupStaleUpdater
         }
