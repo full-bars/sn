@@ -1391,6 +1391,29 @@ func toolAssetURL(tag, asset string) string {
 	return releaseDownloadBase + "/" + url.PathEscape(tag) + "/" + asset
 }
 
+func selfUpdateWindowsSwap(exePath, backup, staged string, rename func(string, string) error, install func(string, string) error, restore func(string, string) error) error {
+	if err := rename(exePath, backup); err != nil {
+		return fmt.Errorf("move current tool aside: %w", err)
+	}
+	fmt.Printf("moved %s -> %s\n", exePath, backup)
+
+	if err := install(staged, exePath); err != nil {
+		if rerr := rename(backup, exePath); rerr != nil {
+			if cerr := restore(backup, exePath); cerr != nil {
+				// No shell-quoted command here on purpose: Go %q emits Go
+				// literal syntax, and cmd.exe expands something like %USERNAME%
+				// even inside double quotes, so a command built here can name a
+				// different file than intended. Name the two paths plainly and
+				// let the operator copy the backup over the tool themselves.
+				return fmt.Errorf("swap tool binary: %w (restore rename from %s failed: %v; copy fallback failed: %v; manual recovery: copy the retained backup over the tool binary, backup=%s tool=%s)", err, backup, rerr, cerr, backup, exePath)
+			}
+			fmt.Printf("restored previous tool by copying backup %s -> %s\n", backup, exePath)
+		}
+		return fmt.Errorf("swap tool binary: %w", err)
+	}
+	return nil
+}
+
 // selfUpdateTool updates the running tool binary (urnet-tools or
 // urnet-docker) in place from the release's tool asset. This is what makes
 // the Go tool self-sustaining: `update` refreshes BOTH the providers AND the
@@ -1479,21 +1502,12 @@ func selfUpdateToolTo(exePath string, cfg updateConfig) error {
 	// backup first via hard link or copy ensures the executable is never absent
 	// from disk if interrupted mid-update.
 	if runtime.GOOS == "windows" {
-		if err := os.Rename(exePath, backup); err != nil {
-			return fmt.Errorf("move current tool aside: %w", err)
-		}
-		fmt.Printf("moved %s -> %s\n", exePath, backup)
-
-		// Swap in place. The tool runs as the invoking user (root or the
-		// operator), so no chown is needed — installBinary with user="" keeps
-		// current ownership.
-		if err := installBinary(staged, exePath, ""); err != nil {
-			// Restore the original before giving up — an update that fails
-			// mid-swap must not leave the tool missing.
-			if rerr := os.Rename(backup, exePath); rerr != nil {
-				return fmt.Errorf("swap tool binary: %w (restore from %s failed: %v)", err, backup, rerr)
-			}
-			return fmt.Errorf("swap tool binary: %w", err)
+		install := func(src, dst string) error { return installBinary(src, dst, "") }
+		// restore MUST be copyFile, not installBinary: installBinary finishes
+		// with os.Rename, so using it here would repeat the very rename that
+		// just failed and leave the executable missing anyway.
+		if err := selfUpdateWindowsSwap(exePath, backup, staged, os.Rename, install, copyFile); err != nil {
+			return err
 		}
 	} else {
 		if err := os.Link(exePath, backup); err != nil {

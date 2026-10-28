@@ -480,12 +480,19 @@ func TestBSDInstallerHTTPFetchShape(t *testing.T) {
 		`http_fetch "$github_raw/scripts/Provider_Install_FreeBSD.sh" "$_td/urnet-tools.wrapper"`,
 		`release_json="$(http_fetch "$release_url" 2>/dev/null)"`,
 		`http_fetch "$tarball_url" "$tmpdir/provider.tar.gz"`,
-		`release_json="$(http_fetch "$github_api/releases/tags/$tag" 2>/dev/null)"`,
 		`http_fetch "https://github.com/full-bars/sn/releases/download/$tag/$tool_asset" "$tmpdir/$tool_asset"`,
 	} {
 		if !strings.Contains(script, want) {
 			t.Errorf("download call site is not routed through http_fetch: %s", want)
 		}
+	}
+
+	// The release metadata is read ONCE into release_json and both asset digests
+	// are resolved from that snapshot. The tool step used to re-fetch it, which
+	// meant the two digests could come from different responses and cost a
+	// second API call against the same rate limit. One read, one snapshot.
+	if got := strings.Count(script, `release_json="$(http_fetch`); got != 1 {
+		t.Errorf("release metadata is fetched into release_json %d times, want exactly 1: both digests must come from one snapshot", got)
 	}
 
 	// Comments may explain curl; executable lines may not run it. The helper
