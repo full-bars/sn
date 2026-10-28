@@ -706,7 +706,11 @@ case "$operation" in
     auth)          "$provider_bin" auth "$@" ;;
     logs)          "$provider_bin" logs "$@" ;;
     "")
-        pr_err "Missing command. Run '%s install' to install, or '%s --help' for usage." "$me" "$me"
+        if [ "$me" = "sh" ]; then
+            pr_err "No operation given. When the installer is piped, name the operation after it: | sh -s -- install"
+        else
+            pr_err "Missing command. Run '%s install' to install, or '%s --help' for usage." "$me" "$me"
+        fi
         exit 1
         ;;
     *)
