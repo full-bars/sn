@@ -467,6 +467,14 @@ func extenderActivationSpendSpare(now time.Time, userId string, pass extenderAct
 // account, so the next start honours it instead of posting again into the same
 // refusal.
 func recordExtenderActivationRefused(now time.Time, userId string) time.Duration {
+	wait, _ := recordExtenderActivationRefusedPersisted(now, userId)
+	return wait
+}
+
+// recordExtenderActivationRefusedPersisted is recordExtenderActivationRefused
+// that also says whether the refusal reached the store. A caller that holds the
+// refusal in memory only can then try again when the store comes back.
+func recordExtenderActivationRefusedPersisted(now time.Time, userId string) (time.Duration, bool) {
 	account := extenderActivationAccountKey(userId)
 	wait := extenderRefusalBackoff
 	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
@@ -494,9 +502,9 @@ func recordExtenderActivationRefused(now time.Time, userId string) time.Duration
 		// The streak cannot be recorded, and a caller told to retry now
 		// would post again into the refusal. Hold for the first-level wait
 		// even though the store did not keep it.
-		return extenderRefusalBackoff
+		return extenderRefusalBackoff, false
 	}
-	return wait
+	return wait, true
 }
 
 // recordExtenderActivationSucceeded clears refusal and spare state, adopts

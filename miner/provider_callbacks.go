@@ -261,7 +261,17 @@ func (self *providerExtenderStatusListener) chargeActivationFailure(observation 
 		tlog("[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held\n", observation.ActivatedV4, observation.ActivatedV6)
 		return
 	}
-	if wait := recordExtenderActivationRefused(time.Now(), self.currentAccount()); 0 < wait {
+	wait, persisted := recordExtenderActivationRefusedPersisted(time.Now(), self.currentAccount())
+	if !persisted {
+		// The attempt was marked handled before the write, so a store that
+		// recovers would never be told. Unmark it: the next observation of
+		// this attempt charges it, and the spare it funded cannot be funded
+		// twice.
+		self.stateLock.Lock()
+		self.failureCharged = false
+		self.stateLock.Unlock()
+	}
+	if 0 < wait {
 		tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
 	}
 }

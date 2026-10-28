@@ -858,3 +858,68 @@ func TestProviderStoreReleaseRefusesAReopenAndReportsLostWrites(t *testing.T) {
 		t.Fatal("the parent reopened the store the candidate now owns")
 	}
 }
+
+// A refusal the store could not take must not be forgotten. The attempt is
+// marked handled before the write, so when the write fails and the store comes
+// back, the next observation of the same attempt has to charge it.
+func TestExtenderActivationRefusalSurvivesATransientStoreFailure(t *testing.T) {
+	testExtenderState(t)
+	const account = extenderTestAccountA
+	if providerStoreInstance() == nil {
+		t.Fatal("the store did not open")
+	}
+	listener := newProviderExtenderStatusListener(nil, 0, account)
+	status := &sdk.ExtenderProvideStatus{
+		Enabled:               true,
+		Listening:             true,
+		LastActivationTime:    1_800_000_000_000,
+		LastActivationError:   "refused",
+		LastActivationRefused: true,
+	}
+
+	releaseProviderStore()
+	listener.ExtenderProvideStatusChanged(status)
+	if err := restoreProviderStoreAfterAbortedHandoff(); err != nil {
+		t.Fatalf("the store did not come back: %s", err)
+	}
+
+	redelivered := *status
+	redelivered.Listening = false
+	listener.ExtenderProvideStatusChanged(&redelivered)
+
+	record, err := readExtenderActivationRecord(account)
+	if err != nil {
+		t.Fatalf("read the record: %s", err)
+	}
+	if got := record.Accounts[account].Refusals; got != 1 {
+		t.Fatalf("refusals = %d after the store recovered, want 1: the refusal was lost with the failed write", got)
+	}
+}
+
+// A database that had to be moved aside may have held posts or a refusal that
+// nobody can read any more. The fresh store must not open a full window for the
+// next start: the operator still counts what the unreadable file recorded.
+func TestExtenderActivationHoldsAfterTheStoreIsQuarantined(t *testing.T) {
+	testExtenderState(t)
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	path, err := providerStatePath(providerStoreFileName)
+	if err != nil {
+		t.Fatalf("store path: %s", err)
+	}
+	if err := os.WriteFile(path, []byte("this is not a bbolt database"), 0o600); err != nil {
+		t.Fatalf("write the damaged file: %s", err)
+	}
+
+	now := time.Now()
+	allow, wait, _ := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
+	if allow {
+		t.Fatal("the first start after a quarantine was allowed: the budget reset with the file")
+	}
+	if wait < extenderActivationWindow-time.Minute {
+		t.Fatalf("hold = %s, want about one window (%s)", wait, extenderActivationWindow)
+	}
+	if allow, _, _ := extenderActivationAllow(now.Add(extenderActivationWindow+time.Minute), postsPerDualStackPass, extenderTestAccountA); !allow {
+		t.Fatal("a start after the window was still held")
+	}
+}

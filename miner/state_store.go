@@ -86,8 +86,20 @@ func openProviderStore(path string) (*providerStore, error) {
 	// in opened as soon as bbolt returns it. Otherwise a panic after the open
 	// would leave the file lock held by a handle nobody can close.
 	var opened *bbolt.DB
+	// bbolt can also panic inside Open, after it has locked the file and
+	// before it returns a handle (a damaged page met while it loads the
+	// freelist). The file is kept as soon as bbolt opens it, so that case can
+	// still release the lock.
+	var openedFile *os.File
 	db, err := callProviderStore(func() (*bbolt.DB, error) {
-		d, err := bbolt.Open(path, 0o600, &bbolt.Options{Timeout: providerStoreOpenTimeout})
+		d, err := bbolt.Open(path, 0o600, &bbolt.Options{
+			Timeout: providerStoreOpenTimeout,
+			OpenFile: func(name string, flag int, mode os.FileMode) (*os.File, error) {
+				file, err := os.OpenFile(name, flag, mode)
+				openedFile = file
+				return file, err
+			},
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -100,6 +112,11 @@ func openProviderStore(path string) (*providerStore, error) {
 	if err != nil {
 		if opened != nil {
 			_ = opened.Close()
+		} else if openedFile != nil {
+			// A failed open closes its own file; closing it again is a no-op.
+			// A panic does not, and bbolt's mapping keeps the open file
+			// description, and so the lock, alive past a close.
+			releaseProviderStoreFile(openedFile)
 		}
 		return nil, fmt.Errorf("open %s: %w", path, err)
 	}
@@ -155,11 +172,26 @@ func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
 		return errProviderStoreClosed
 	}
 	err := runProviderStoreUpdate(s.db, fn)
-	if err != nil && !errors.Is(err, errProviderStoreReleased) {
+	// A record that would not decode is counted where it was read; no write
+	// was attempted, so it is not also a failed write.
+	var undecodable *providerStoreDecodeError
+	if err != nil && !errors.Is(err, errProviderStoreReleased) && !errors.As(err, &undecodable) {
 		IncrPersistentError(providerStoreWriteFailedCategory)
 	}
 	return err
 }
+
+// providerStoreDecodeError is a stored value this build cannot decode.
+type providerStoreDecodeError struct {
+	bucket, key string
+	err         error
+}
+
+func (e *providerStoreDecodeError) Error() string {
+	return fmt.Sprintf("decode record %s/%s: %v", e.bucket, e.key, e.err)
+}
+
+func (e *providerStoreDecodeError) Unwrap() error { return e.err }
 
 // providerStoreSyncDir flushes one directory entry, which is what makes a
 // freshly created database file durable before its first write. A variable so
@@ -234,12 +266,14 @@ func (s *providerStore) load(bucket, key string, out any) (bool, error) {
 		return false, errProviderStoreClosed
 	}
 	var raw []byte
+	var present bool
 	err := runProviderStoreView(s.db, func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil
 		}
 		if val := b.Get([]byte(key)); val != nil {
+			present = true
 			raw = append([]byte(nil), val...)
 		}
 		return nil
@@ -247,14 +281,14 @@ func (s *providerStore) load(bucket, key string, out any) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if len(raw) == 0 {
+	if !present {
 		return false, nil
 	}
 	if err := json.Unmarshal(raw, out); err != nil {
 		// Same reason as the mutation path: an unreadable value must be visible
 		// as a counted failure, not just as a retry loop in a local log.
 		IncrPersistentError(providerStoreDecodeFailedCategory)
-		return false, fmt.Errorf("decode record %s/%s: %w", bucket, key, err)
+		return false, &providerStoreDecodeError{bucket: bucket, key: key, err: err}
 	}
 	return true, nil
 }
@@ -319,7 +353,7 @@ func (s *providerStore) updateJSON(bucket, key string, out any, mutate func(foun
 				// retry loop would otherwise be the only trace. Count it so the
 				// fleet sees a record no build here can read.
 				IncrPersistentError(providerStoreDecodeFailedCategory)
-				return fmt.Errorf("decode record %s/%s: %w", bucket, key, err)
+				return &providerStoreDecodeError{bucket: bucket, key: key, err: err}
 			}
 			found = true
 		}
@@ -549,6 +583,9 @@ func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, erro
 		} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
 			tlog("[state] %s would not open (%v); moved it to %s and started a fresh store\n", path, err, moved)
 			store, err = openProviderStore(path)
+			if err == nil {
+				holdBudgetAfterQuarantine(store, time.Now())
+			}
 		}
 	}
 	if err != nil {
@@ -563,6 +600,20 @@ func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, erro
 	globalProviderStoreFailedErr = nil
 	globalProviderStore, globalProviderStorePath = store, path
 	return store, nil
+}
+
+// holdBudgetAfterQuarantine seeds the fresh store with a hold of one activation
+// window. The file it replaced may have held posts or a refusal that can no
+// longer be read, and an empty store would let the next start spend as though
+// none had happened. The hold sits on the unidentified account, which the first
+// start that resolves its account adopts.
+func holdBudgetAfterQuarantine(store *providerStore, now time.Time) {
+	record := extenderActivationRecord{Accounts: map[string]extenderActivationState{
+		extenderActivationUnidentifiedAccount: {BackoffUntilUnix: now.Add(extenderActivationWindow).Unix()},
+	}}
+	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
+		tlog("⚠️ [state] could not hold the activation budget after moving the store aside: %v\n", err)
+	}
 }
 
 // quarantineCorruptStore moves a database bbolt refuses to open out of the way,
