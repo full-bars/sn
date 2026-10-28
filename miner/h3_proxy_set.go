@@ -117,6 +117,11 @@ func rankH3Proxies(n int, previous map[string]bool, candidates []*connect.ProxyS
 	now := time.Now()
 	ranked := make([]candidate, 0, len(candidates))
 	for _, settings := range candidates {
+		// The direct identity is represented by nil and does not consume a
+		// place in the capped proxy set.
+		if settings == nil {
+			continue
+		}
 		key := settings.Key()
 		c := candidate{key: key, earnings: proxyEarningsScoreFor(key, now), kept: previous[key]}
 		if state != nil {
