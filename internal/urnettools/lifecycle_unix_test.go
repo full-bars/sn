@@ -4,6 +4,7 @@ package urnettools
 
 import (
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -128,5 +129,36 @@ func TestEnsureUpdaterServiceRepairsWrongExecStart(t *testing.T) {
 	got, _ = os.ReadFile(path)
 	if string(got) != shell {
 		t.Errorf("a working updater was rewritten: %q", got)
+	}
+}
+
+func TestExecutableByChecksFileAndDirectories(t *testing.T) {
+	account, err := user.Current()
+	if err != nil {
+		t.Skip(err)
+	}
+	dir := t.TempDir()
+	tool := filepath.Join(dir, "urnet-tools")
+	if err := os.WriteFile(tool, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if !executableBy(account, tool) {
+		t.Error("owner's executable file reported not runnable")
+	}
+	if err := os.Chmod(tool, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if executableBy(account, tool) {
+		t.Error("a file without an execute bit reported runnable")
+	}
+	if err := os.Chmod(tool, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod(dir, 0o700)
+	if executableBy(account, tool) {
+		t.Error("a file in a directory the user cannot search reported runnable")
 	}
 }

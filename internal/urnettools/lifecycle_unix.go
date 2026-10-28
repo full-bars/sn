@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -177,9 +179,9 @@ func ensureUpdaterService(path, updateUnit string, p Provider) error {
 	} else if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("check updater service %s: %w", updateUnit, err)
 	}
-	executable, err := os.Executable()
+	executable, err := updaterExecutable(p)
 	if err != nil {
-		return fmt.Errorf("resolve updater executable: %w", err)
+		return err
 	}
 	service := fmt.Sprintf(`[Unit]
 Description=URnetwork Update
@@ -197,6 +199,88 @@ ExecStart=%s update -y --unit %s
 		return fmt.Errorf("create updater service %s: %w", updateUnit, err)
 	}
 	return nil
+}
+
+// updaterExecutable picks the urnet-tools the updater service runs. For a
+// provider in a user's systemd manager the service runs as that user, so a
+// copy only the operator can reach (a 0700 home, run by root with --unit)
+// would fail 203/EXEC on every tick with nothing to show for it: prefer the
+// tool installed beside the provider binary, then this binary if the user
+// can run it, and otherwise say so. The system scope keeps this binary.
+func updaterExecutable(p Provider) (string, error) {
+	self, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("resolve updater executable: %w", err)
+	}
+	if !isUserUnit(p.Unit) || p.User == "" {
+		return self, nil
+	}
+	account, err := user.Lookup(p.User)
+	if err != nil {
+		return "", fmt.Errorf("resolve updater executable: look up %s: %w", p.User, err)
+	}
+	var candidates []string
+	if p.Binary != "" {
+		candidates = append(candidates, filepath.Join(filepath.Dir(p.Binary), "urnet-tools"))
+	}
+	if home := homeForUser(p.User); home != "" {
+		candidates = append(candidates, filepath.Join(home, ".local/share/urnetwork-provider/bin/urnet-tools"))
+	}
+	candidates = append(candidates, self)
+	for _, candidate := range candidates {
+		if executableBy(account, candidate) {
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf("the updater service runs as %s, who cannot execute %s or an installed urnet-tools; install urnet-tools for that user (or run auto-update as them) and retry", p.User, self)
+}
+
+// executableBy reports whether account can run path: a regular file with the
+// matching execute bit, under directories it can search.
+func executableBy(account *user.User, path string) bool {
+	uid, err := strconv.Atoi(account.Uid)
+	if err != nil {
+		return false
+	}
+	gids := map[int]bool{}
+	if gid, err := strconv.Atoi(account.Gid); err == nil {
+		gids[gid] = true
+	}
+	if groups, err := account.GroupIds(); err == nil {
+		for _, group := range groups {
+			if gid, err := strconv.Atoi(group); err == nil {
+				gids[gid] = true
+			}
+		}
+	}
+	allowed := func(info os.FileInfo, bit os.FileMode) bool {
+		stat, ok := info.Sys().(*syscall.Stat_t)
+		if !ok {
+			return false
+		}
+		mode := info.Mode().Perm()
+		switch {
+		case int(stat.Uid) == uid:
+			return mode&(bit<<6) != 0
+		case gids[int(stat.Gid)]:
+			return mode&(bit<<3) != 0
+		default:
+			return mode&bit != 0
+		}
+	}
+	info, err := os.Stat(path)
+	if err != nil || !info.Mode().IsRegular() || !allowed(info, 1) {
+		return false
+	}
+	for dir := filepath.Dir(path); ; dir = filepath.Dir(dir) {
+		info, err := os.Stat(dir)
+		if err != nil || !allowed(info, 1) {
+			return false
+		}
+		if dir == filepath.Dir(dir) {
+			return true
+		}
+	}
 }
 
 func updaterServiceUpdates(service string) bool {
