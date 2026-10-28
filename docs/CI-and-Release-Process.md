@@ -10,7 +10,7 @@ The repository ships sixteen workflows in `.github/workflows/`.
 
 | Workflow | When it runs | What it does |
 |----------|--------------|--------------|
-| Build and Push Docker Image (`build.yml`) | main push, pull requests, version tags | Go unit tests with the race detector, go vet, gofmt check, pelican egg validation, shellcheck, then a multi-arch Docker build for amd64 and arm64. Images push to `ghcr.io/full-bars/sn` and `3cape/sn` on GitHub Container Registry and Docker Hub |
+| Build and Push Docker Image (`build.yml`) | main push, pull requests, version tags | Go unit tests with the race detector, go vet, gofmt check, pelican egg validation, shellcheck, the ClamAV verdict harness (`.github/scripts/test-clamav-scan.sh`, ten cases against a mock `clamscan`), then a multi-arch Docker build for amd64 and arm64. The builder stage asserts the machine type of `provider`, `urnet-tools` and `urnet-docker` for the target architecture (`docker/check-elf-arch.sh`) and fails the build on a mismatch. Images push to `ghcr.io/full-bars/sn` and `3cape/sn` on GitHub Container Registry and Docker Hub |
 | Dash/POSIX Compatibility (`dash-compat.yml`) | main push, pull requests | Validates the installers run under `dash`, not just bash |
 | Unix lifecycle verification (`unix-lifecycle.yml`) | main push, pull requests | start/stop/restart/status against a fake provider on systemd |
 | Windows lifecycle verification (`windows-lifecycle.yml`) | main push, pull requests | Same lifecycle set against a fake provider under schtasks |
@@ -28,7 +28,7 @@ Docs-only changes skip CI through `paths-ignore`.
 | Wiki sync (`wiki-sync.yml`) | docs push | Copies `docs/*.md` into the wiki |
 | Shakedown (`shakedown.yml`) | `v2026.*` tags, manual | Full pre-release shakedown on a clean runner |
 | Docker shakedown (`docker-shakedown.yml`) | `v2026.*` tags, manual | Deep Docker test matrix |
-| Docker PR build (`docker-pr-build.yml`) | pull requests touching `docker/` or the Dockerfile | Builds the image from the checkout and runs the credential-free checks |
+| Docker PR build (`docker-pr-build.yml`) | pull requests touching `docker/` or the Dockerfile | Builds the image from the checkout and runs the credential-free checks, including a `linux/arm64` build of the builder stage so the architecture assertion runs on every image change |
 | Functional soak (`functional-soak.yml`) | manual | Three-hour soak |
 | Test gauntlet (`test-gauntlet.yml`) | manual | Full gauntlet, manually dispatched |
 
@@ -46,7 +46,9 @@ Releases follow the `v2026.<date>-<unixtime>-meso` tag scheme, for example `v202
 
 ### Scanning
 
-VirusTotal and ClamAV scan every binary in a parallel job. The scan job never gates publication. It appends the verdict to the release body and stages flagged files for submission to Microsoft Defender.
+VirusTotal and ClamAV scan every binary in a parallel job: `provider`, `urnet-tools` and `urnet-docker`, and the `miner` binary from each `miner-*` artifact. The scan job never gates publication. It appends both verdicts to the release body, with the ClamAV report beside the VirusTotal one, and stages flagged files for submission to Microsoft Defender.
+
+The ClamAV verdict is computed by `.github/scripts/clamav-scan.sh`, which reports `clean` only when the EICAR self-test detected the sample first and the scan exited 0 with nothing found. A detection, a scanner error, an inconsistent exit code and an empty target each fail the step with their own line in the report. The same ten-case harness that `build.yml` runs on pull requests runs again in the scan job.
 
 ### Docker images
 

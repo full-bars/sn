@@ -160,19 +160,19 @@ Turn on a schedule:
 urnet-tools auto-update weekly
 ```
 
-The interval is `daily`, `weekly` or `monthly`, and `off` removes it. On FreeBSD it is a line in the **invoking user's crontab**, not a systemd timer, and the times are fixed:
+The interval is `daily`, `weekly` or `monthly`, and `off` removes it. On FreeBSD it is a line in the **invoking user's crontab**, not a systemd timer. The daily and monthly times are fixed; the weekly minute is chosen at random when the line is written, so hosts do not all update together:
 
 | Interval | Cron spec |
 |---|---|
 | `daily` | `17 3 * * *` (every day, 03:17) |
-| `weekly` | `17 3 * * 0` (Sundays, 03:17) |
+| `weekly` | `<m> 3 * * 0` (Sundays, 03:00 plus a random minute `<m>` from 0 to 59, fixed once written) |
 | `monthly` | `17 3 1 * *` (the 1st, 03:17) |
 
 The line runs `urnet-tools update -f` and appends its output to `~/.urnetwork/auto-update.log` in that user's home. It ends in the marker comment `# urnet-tools auto-update urnetwork`, which is how a later change replaces or removes only its own line and leaves the rest of the crontab alone. Changing the interval never leaves two schedules.
 
 Two things differ from a systemd timer:
 
-- **No catch-up.** `cron` does not run a missed job. A box that was off at 03:17 waits for the next scheduled time.
+- **No catch-up.** `cron` does not run a missed job. A box that was off at its scheduled time waits for the next run.
 - **Restarting needs privilege.** The update restarts the service through `sudo service` unless the crontab belongs to root. For unattended updates, schedule it from root's crontab (`sudo urnet-tools auto-update weekly`), or allow the user passwordless `sudo` for `service`, since cron has no terminal to ask for a password.
 
 ## Sysctl tuning (required for high connection counts)
