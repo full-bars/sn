@@ -9,7 +9,7 @@ The provider runs as an `rc.d` service named `urnetwork` under an unprivileged u
 
 ## Before you start
 
-The base system has no `jq`, no `python3` and no `curl`, and the installer needs none of them. Downloads use `curl` when it is installed, then `fetch` from the base system, then `wget`, so a clean FreeBSD host installs with nothing extra. `jq` and `python3` only change how the release tag is read and whether the Go `urnet-tools` asset can be checksum-verified (see [What the installer does](#what-the-installer-does)). Install `sudo` and, recommended, `jq`:
+The base system has no `jq`, no `python3` and no `curl`. Downloads need none of them: the installer uses `curl` when it is installed, then `fetch` from the base system, then `wget`. The installer does need one JSON parser, though: the provider tarball is installed only after its SHA-256 is checked against the digest in the release metadata, and reading that metadata takes `jq` or `python3`. With neither, the install stops before downloading anything. Install `sudo` and `jq`:
 
 ```sh
 pkg install -y sudo jq
@@ -32,7 +32,7 @@ To install a specific release instead of the latest:
 sudo sh urnet-install.sh install v2026.10.26-1793016775
 ```
 
-The installer takes `latest` by default and resolves the tag through the GitHub API. There is no mirror fallback on purpose: the branded mirror publishes a different repository's tags, so resolving through it would install the wrong provider. If the API is rate limited, pass the tag explicitly. It supports `amd64` and `arm64`; any other architecture stops the install.
+The installer takes `latest` by default and resolves the tag through the GitHub API. There is no mirror fallback on purpose: the branded mirror publishes a different repository's tags, so resolving through it would install the wrong provider. The release metadata is needed for the digest check even when you pass a tag, so a rate-limited or unreachable API stops the install; wait for the limit to reset and run it again. It supports `amd64` and `arm64`; any other architecture stops the install.
 
 ### Service user
 
@@ -73,11 +73,11 @@ The installer does not create the account. Create it first, once, with `pw usera
 
 The steps, in order:
 
-1. Downloads `urnetwork-provider-<tag>.tar.gz` from this repository's GitHub release and extracts `freebsd/<arch>/provider` from it.
-2. Installs the binary by staging it beside the target and renaming it, so an update over a running provider never fails with "Text file busy".
-3. Installs `urnet-tools`. It downloads the `urnet-tools-freebsd-<arch>` release asset and installs it only if its SHA-256 matches the digest GitHub publishes for the asset (read with `jq`, or with `python3` when `jq` is absent). `sha256(1)` from the base system does the check, with `openssl` as a fallback. If there is no digest to compare (neither `jq` nor `python3`), the download fails, or the sum does not match, it installs the installer script itself as a shell `urnet-tools` instead. The shell version covers `start`, `stop`, `restart`, `status`, `update`, `version`, `hot-restart`, `self-heal`, `session`, `proxy refresh|remove-dead|summary`, `auth` and `logs`. Install `jq` and re-run `update` to get the full Go tool.
+1. Reads the release metadata from the GitHub API and refuses to go on unless it lists `urnetwork-provider-<tag>.tar.gz`; an error body from a rate limit lists no assets, so it stops here. Then it downloads the tarball and checks its SHA-256 against the digest in the metadata before extracting `freebsd/<arch>/provider` from it. A mismatch stops the install and names the asset, the expected digest and the digest it got. A release that lists the tarball without a digest, because it predates digests, prints a warning and continues unverified.
+2. Installs the binary by staging it beside the target (`.urnetwork.new.<pid>`) and renaming it into place, so the configured path is never missing and an update over a running provider never fails with "Text file busy". An existing binary is first hard-linked (or copied, when a link is not possible) to `.urnetwork.bak.<pid>` in the same directory; if that backup cannot be made the installer leaves the running binary alone and stops.
+3. Installs `urnet-tools`. It downloads the `urnet-tools-freebsd-<arch>` release asset and installs it only if its SHA-256 matches the digest GitHub publishes for the asset (read with `jq`, or with `python3` when `jq` is absent). `sha256(1)` from the base system does the check, with `openssl` as a fallback. If the release lists no digest for the asset, the download fails, or the sum does not match, it installs the installer script itself as a shell `urnet-tools` instead. The shell version covers `start`, `stop`, `restart`, `status`, `update`, `version`, `hot-restart`, `self-heal`, `session`, `proxy refresh|remove-dead|summary`, `auth` and `logs`. Re-run `update` against a release that ships the asset to get the full Go tool.
 4. Writes the `rc.d` script and, with `sysrc`, sets `urnetwork_enable=YES` and `urnetwork_user=<service user>` only if they are not already set, so an operator's choice survives every update.
-5. Starts the service. On a fresh install it always starts; on `update` it restarts only a service that was already running, so a provider you stopped on purpose is not resurrected by an unattended update.
+5. Starts the service. On a fresh install it always starts; on `update` it restarts only a service that was already running, so a provider you stopped on purpose is not resurrected by an unattended update. If the start or restart fails, the installer moves the backup back into place, restarts the service on the previous binary when it was running before, and exits with an error. After a successful start it deletes the backup and writes the `version` file, so that file never names a release that failed to start.
 6. Adds the install `bin` directory to the service user's shell profile once (`.profile`, `.zshrc`, `.bash_profile` or `.cshrc`, by the user's login shell).
 
 When the installer is run as an ordinary user, the `rc.d` and `sysrc` steps go through `sudo`; without `sudo` it prints the commands to finish by hand.
@@ -231,7 +231,7 @@ EOF
 
 ## Platform notes
 
-- **No `jq` or `python3` in the base system.** Install `jq` for the installer's digest check (see step 3 above).
+- **No `jq` or `python3` in the base system.** Install `jq`; the installer needs one of the two to check the provider digest (steps 1 and 3 above), and `update` and the cron job run the same installer.
 - **User database fields differ.** The installer reads home and shell with `getent passwd` and falls back to `pw usershow`, whose fields are numbered differently (home is field 9 and shell field 10, against 6 and 7 for `getent`). Use whichever your tooling expects.
 - **Swap comes from `swapinfo -k`.** The provider's memory-pressure checks read swap usage by running `swapinfo -k`, because FreeBSD does not expose a swap-used sysctl.
 - **ZFS ARC understates available memory.** The host's available memory is estimated from the free, inactive, cache and laundry page counters (`vm.stats.vm.v_*_count`). Memory held by the ZFS ARC is wired and is not counted, so on a ZFS host `top` can show plenty of reclaimable memory while the provider sees less. Cap the ARC with `vfs.zfs.arc_max` in `/boot/loader.conf` if memory headroom matters on a small box.

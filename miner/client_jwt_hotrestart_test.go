@@ -1179,7 +1179,7 @@ func TestProvideClientJWTRejectsCustodyThatDisagreesWithStore(t *testing.T) {
 	mint := &fakeMint{jwt: "fresh-custody-jwt", id: connect.Id{4}}
 	cfg.Mint = mint.mint
 
-	byJwt, _, reused, err := provideClientJWT(context.Background(), cfg)
+	byJwt, id, reused, err := provideClientJWT(context.Background(), cfg)
 	if err != nil {
 		t.Fatalf("provideClientJWT err = %v", err)
 	}
@@ -1189,8 +1189,8 @@ func TestProvideClientJWTRejectsCustodyThatDisagreesWithStore(t *testing.T) {
 	if mint.calls != 1 {
 		t.Fatalf("mint calls = %d, want 1", mint.calls)
 	}
-	if byJwt == storedJwt {
-		t.Fatal("returned the stored jwt")
+	if byJwt != mint.jwt || id != mint.id {
+		t.Fatalf("provideClientJWT returned jwt %q, id %v; want fresh mint jwt %q, id %v", byJwt, id, mint.jwt, mint.id)
 	}
 }
 
