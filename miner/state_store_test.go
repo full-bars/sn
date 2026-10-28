@@ -300,3 +300,30 @@ func TestProviderStoreAppendBoundedManyStillRecords(t *testing.T) {
 		t.Fatalf("append of one record = %v, want nil", err)
 	}
 }
+
+// A value this build cannot decode is not a mystery the retry loop should
+// swallow: it holds whatever role depends on it, so it must be counted the way
+// a corrupt file is.
+func TestProviderStoreCountsAnUndecodableRecord(t *testing.T) {
+	counts := withPersistentErrorStore(t)
+	store, err := openProviderStore(filepath.Join(t.TempDir(), providerStoreFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.db.Update(func(tx *bbolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(providerStoreBucketState))
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte("bad"), []byte("{not json"))
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var out extenderActivationRecord
+	if _, err := store.load(providerStoreBucketState, "bad", &out); err == nil {
+		t.Fatal("an undecodable record loaded without error")
+	}
+	if got := counts.Snapshot()[providerStoreDecodeFailedCategory]; got != 1 {
+		t.Fatalf("decode failure count = %d, want 1", got)
+	}
+}
