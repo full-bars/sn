@@ -7,7 +7,7 @@ import (
 )
 
 func TestHandoffAbortReportsStoreReopenFailure(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	want := errors.New("injected reopen failure")
 	previous := reopenProviderStoreAfterAbort
 	reopenProviderStoreAfterAbort = func() (*providerStore, error) { return nil, want }

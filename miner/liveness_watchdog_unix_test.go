@@ -12,7 +12,7 @@ import (
 // The datagram systemd expects, over a real unixgram socket: the watchdog ping
 // is observable at the socket, not only at a counter.
 func TestWatchdogNotifySendsWatchdogOne(t *testing.T) {
-	sock := filepath.Join(t.TempDir(), "notify.sock")
+	sock := filepath.Join(shortStateDir(t), "notify.sock")
 	listener, err := net.ListenUnixgram("unixgram", &net.UnixAddr{Name: sock, Net: "unixgram"})
 	if err != nil {
 		t.Fatal(err)

@@ -131,7 +131,7 @@ func TestRelaunchListFollowsEligibility(t *testing.T) {
 // Candidates are noted under every setting, so switching to a count later ranks
 // over the real set instead of an empty one.
 func TestCandidatesNotedBeforeACountSetting(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	h3RankingValue.Store(nil)
 	t.Cleanup(func() {
 		h3RankingValue.Store(nil)
@@ -192,7 +192,7 @@ func (f *fakeH3Relauncher) runContext() context.Context { return f.ctx }
 // h3RelaunchInterval, and leaves an identity that is serving clients alone for
 // the later retry.
 func TestRelaunchPassDetachesChangedIdentitiesOneAtATime(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	oldState := globalControlState
 	t.Cleanup(func() {
 		globalControlState = oldState
@@ -261,7 +261,7 @@ func TestRelaunchPassDetachesChangedIdentitiesOneAtATime(t *testing.T) {
 
 // A pass with nothing to move returns without touching anything.
 func TestRelaunchPassIsANoOpWithNothingToMove(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	oldState := globalControlState
 	t.Cleanup(func() {
 		globalControlState = oldState
@@ -293,7 +293,7 @@ func TestRelaunchPassIsANoOpWithNothingToMove(t *testing.T) {
 // provide run there is no relauncher published at all: the live-change entry
 // point must be a quiet no-op rather than a panic (offline tools, unit tests).
 func TestRelaunchNowIsANoOpWithoutARunningProvideRun(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	if currentH3IdentityRelauncher() != nil {
 		t.Fatal("no test may publish a relauncher globally; the seam must start nil")
 	}

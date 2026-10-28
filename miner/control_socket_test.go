@@ -16,7 +16,7 @@ import (
 // returns the path plus a cleanup.
 func testControlSocket(t *testing.T, state *controlState) (string, func()) {
 	t.Helper()
-	dir := t.TempDir()
+	dir := shortStateDir(t)
 	t.Setenv("URNETWORK_STATE_DIR", dir)
 	ctx, cancel := context.WithCancel(context.Background())
 	cleanup, err := startControlSocket(ctx, state)

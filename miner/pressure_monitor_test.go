@@ -17,7 +17,7 @@ import (
 // from this host's real control state and marker file.
 func resetPressureForTest(t *testing.T) {
 	t.Helper()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	resetGlobalControlStateForTest()
 	setPressure(0)
 	setPressureNoCPU(0)
