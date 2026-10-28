@@ -7,6 +7,8 @@ package miner
 // ceiling.
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -194,6 +196,19 @@ func TestExtenderActivationSpareNeverExceedsTheBudget(t *testing.T) {
 	}
 	if got := extenderWindowPosts(t, extenderTestAccountA, now); got != extenderActivationBudget {
 		t.Fatalf("window holds %d posts, want the budget %d", got, extenderActivationBudget)
+	}
+}
+
+func TestExtenderActivationSpareNotSpentWhenRecordFails(t *testing.T) {
+	parent := filepath.Join(t.TempDir(), "state-parent")
+	if err := os.WriteFile(parent, []byte("not a directory"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(parent, "state"))
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	if family, spent := extenderActivationSpendSpare(time.Now(), extenderTestAccountA, extenderActivationPass{V4: extenderTestFamilyFailed}); spent || family != "" {
+		t.Fatalf("family=%q spent=%v, want not spent when persistence fails", family, spent)
 	}
 }
 

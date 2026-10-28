@@ -149,7 +149,8 @@ type providerExtenderStatusListener struct {
 	// ExtenderActivateRateLimit counts and the key the budget records a
 	// refusal or an activation against. The client id would be the wrong key:
 	// a heal mints a new client for the same account.
-	account string
+	account       string
+	accountPinned bool
 }
 
 // The provider borrows its enclosing run's explicitly supplied output budget.
@@ -165,7 +166,16 @@ func newProviderExtenderStatusListener(output *providerDiagnostics, provider uin
 // account stays as the fallback for a caller that has no token (tests, and a
 // run whose token is still being written).
 func (self *providerExtenderStatusListener) currentAccount() string {
+	if self.accountPinned {
+		return self.account
+	}
 	if account := extenderActivationUserId(); account != "" {
+		self.stateLock.Lock()
+		if !self.accountPinned {
+			self.account, self.accountPinned = account, true
+		}
+		account = self.account
+		self.stateLock.Unlock()
 		return account
 	}
 	return self.account
