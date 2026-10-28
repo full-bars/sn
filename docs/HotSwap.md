@@ -70,6 +70,16 @@ If the unit is not eligible you get `hotswap trigger unavailable (...); falling 
 [hotswap] Parent PID <old> entering graceful stream drain (max 30s)...
 ```
 
+## When a handoff aborts
+
+The old process closes its control socket and releases its state store before it sends TAKEOVER, so the candidate can take them over. If the candidate never confirms (the TAKEOVER cannot be sent, the ACK is an error, or no ACK arrives within the timeout), the old process kills the candidate, logs `Aborting handoff; live provider retained.` and undoes what it released. It reopens `provider_state.db`, then rebinds `provider.sock`, in that order, so the first control request after the socket answers again sees the restored state. Before this restore the aborted parent kept serving traffic with no control socket, which on Windows was the handoff's only way to talk to the provider.
+
+If the socket cannot be rebound, the failure is logged as `Failed to restore control socket after aborted handoff` and joined to the handoff error, so `urnet-tools update` reports it instead of showing a handoff that merely did not happen. A provider that is already shutting down does not rebind. If the candidate still holds `provider_state.db` when the parent tries to reopen it, the parent keeps serving and its state writes fail until the candidate exits, and the log says so.
+
+## Windows
+
+HotSwap is declined on Windows in this release, before any candidate is started. The bundled Windows supervisor waits on the original miner command and returns when it exits cleanly, so after a takeover the new provider would not be supervised: the service could stop while a provider is still running, or leave no provider at all. The CLI preflight reports the decline before it contacts the provider, and the provider refuses the handoff itself with `hot-swap not supported: supervisor adoption is not implemented on Windows in this release, so the running provider stays as it is`. Unix behaviour is unchanged.
+
 ## What it costs
 
 Measured on a node with about 1,300 established proxy connections, hotswapping in both directions between two releases:

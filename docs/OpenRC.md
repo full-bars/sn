@@ -111,6 +111,8 @@ Updating is a root action on OpenRC, the same way `systemctl restart` is for a s
 urnet-tools update
 ```
 
+The installer checks the provider tarball against the digest in the release metadata before extracting it, and refuses to install when the metadata cannot be fetched, which includes a rate-limited GitHub API. If the restart fails after the binary was replaced, it restores the previous binary, brings the service back up on it and re-enables the paused auto-update entry. The full contract is in the [Installation guide](/full-bars/sn/wiki/Installation#what-the-installer-verifies-and-how-it-replaces-the-binary).
+
 To have it run on a schedule, turn on auto-update as root. On OpenRC it is a busybox `crond` entry, not a systemd timer:
 
 ```sh
