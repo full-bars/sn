@@ -59,14 +59,14 @@ jobs:
 
   test:
     name: test
-    # Split across both pools on purpose. test and lint stay on the self-hosted
-    # runner because its go module and build caches live on disk between jobs,
-    # which is what makes the race suite cheap. cross-build and freebsd-vet go
-    # back to hosted: the 6-entry compile matrix runs in parallel there instead
-    # of serialising one runner, and neither gains anything from a warm cache.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
-    # no runner fallback exists: a job pinned to self-hosted queues until
-    # it times out, so bound that wait instead of inheriting the 6h default
+    # Hosted, not self-hosted. The self-hosted box runs the suite in 4 to 5
+    # minutes but the job waits a median of 15 to 20 minutes for it, and once
+    # 46, so the queue is the cost and not the run. The repo is public, which
+    # makes hosted minutes free, so this moves off the contended runner and
+    # leaves the self-hosted pool out of the path a merge waits on.
+    runs-on: ubuntu-latest
+    # no runner fallback exists on the self-hosted pool, and this bounds a hung
+    # suite instead of inheriting the 6h default
     timeout-minutes: 30
     permissions:
       contents: read
@@ -83,11 +83,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
-          # the self-hosted runner keeps $HOME between jobs, so its module and
-          # build caches are already on disk and the cache service would only
-          # upload and re-download them over a slow link. hosted runners (fork
-          # PRs) have no persistent disk, so they still use it.
-          cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+          # hosted runners have no persistent disk, so the module and build
+          # caches come from the cache service on every job
+          cache: true
           cache-dependency-path: go.sum
 
       - name: Make the module cache writable
@@ -165,9 +163,9 @@ jobs:
         run: go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...
 
   lint:
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'self-hosted' || 'ubuntu-latest' }}
-    # no runner fallback exists: a job pinned to self-hosted queues until
-    # it times out, so bound that wait instead of inheriting the 6h default
+    runs-on: ubuntu-latest
+    # hosted, so the pool that a merge waits on stays out of this path; a job
+    # pinned to a busy self-hosted runner queues until it times out
     timeout-minutes: 15
     permissions:
       contents: read
@@ -184,11 +182,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
-          # the self-hosted runner keeps $HOME between jobs, so its module and
-          # build caches are already on disk and the cache service would only
-          # upload and re-download them over a slow link. hosted runners (fork
-          # PRs) have no persistent disk, so they still use it.
-          cache: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+          # hosted runners have no persistent disk, so the module and build
+          # caches come from the cache service on every job
+          cache: true
           cache-dependency-path: go.sum
 
       - name: Make the module cache writable
@@ -391,12 +387,31 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
-          # the self-hosted runner keeps $HOME between jobs, so its module and
-          # build caches are already on disk and the cache service would only
-          # upload and re-download them over a slow link. hosted runners (fork
-          # PRs) have no persistent disk, so they still use it.
+          # hosted runners have no persistent disk, so the module and build
+          # caches come from the cache service on every job
           cache: true
           cache-dependency-path: go.sum
+
+      - name: Download Go modules (retried on module-proxy transients)
+        # Do not delete as noise. The module proxy sometimes drops a zip mid-
+        # stream (`stream error: INTERNAL_ERROR`), failing this job on a run that
+        # passes when re-run. The retry lives in its own step so the vet below
+        # stays a plain command, and only proxy transport errors are retried.
+        run: |
+          for attempt in 1 2 3; do
+            if out=$(go mod download 2>&1); then
+              echo "go mod download OK (attempt $attempt/3)"
+              break
+            fi
+            if ! grep -qE 'stream error|INTERNAL_ERROR|connection reset|i/o timeout|unexpected EOF|TLS handshake timeout' <<<"$out" || [ "$attempt" -eq 3 ]; then
+              echo "$out" >&2
+              echo "go mod download failed on attempt $attempt/3 (not retried, or out of attempts)" >&2
+              exit 1
+            fi
+            echo "transient module-proxy error on attempt $attempt/3, retrying:"
+            echo "$out"
+            if [ "$attempt" -eq 1 ]; then sleep 5; else sleep 15; fi
+          done
 
       - name: Vet urnettools for freebsd
         run: |
@@ -431,12 +446,31 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.27.3'
-          # the self-hosted runner keeps $HOME between jobs, so its module and
-          # build caches are already on disk and the cache service would only
-          # upload and re-download them over a slow link. hosted runners (fork
-          # PRs) have no persistent disk, so they still use it.
+          # hosted runners have no persistent disk, so the module and build
+          # caches come from the cache service on every job
           cache: true
           cache-dependency-path: go.sum
+
+      - name: Download Go modules (retried on module-proxy transients)
+        # Do not delete as noise. The module proxy sometimes drops a zip mid-
+        # stream (`stream error: INTERNAL_ERROR`), failing this job on a run that
+        # passes when re-run. The retry lives in its own step so the compile
+        # below stays a plain command, and only proxy transport errors are retried.
+        run: |
+          for attempt in 1 2 3; do
+            if out=$(go mod download 2>&1); then
+              echo "go mod download OK (attempt $attempt/3)"
+              break
+            fi
+            if ! grep -qE 'stream error|INTERNAL_ERROR|connection reset|i/o timeout|unexpected EOF|TLS handshake timeout' <<<"$out" || [ "$attempt" -eq 3 ]; then
+              echo "$out" >&2
+              echo "go mod download failed on attempt $attempt/3 (not retried, or out of attempts)" >&2
+              exit 1
+            fi
+            echo "transient module-proxy error on attempt $attempt/3, retrying:"
+            echo "$out"
+            if [ "$attempt" -eq 1 ]; then sleep 5; else sleep 15; fi
+          done
 
       - name: Compile shippable binaries for ${{ matrix.goos }}/${{ matrix.goarch }}
         env:

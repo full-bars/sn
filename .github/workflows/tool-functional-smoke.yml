@@ -237,8 +237,25 @@ jobs:
         # ghcr.io image. Pulling :main meant a PR could only ever test main's
         # code, so a workflow assertion added on a branch could never see the
         # branch's behavior. Build locally and tag it for the run step.
+        # Do not delete as noise. The Dockerfile's `RUN go mod download` runs
+        # inside the image build, so a dropped module zip (`stream error:
+        # INTERNAL_ERROR`) fails the job on a run that passes when re-run. Docker
+        # keeps the layers that already built, so a retry only redoes the failed
+        # layer. Only proxy transport errors are retried; a compile error fails at once.
         run: |
-          docker build -t sn-smoke:local .
+          set -o pipefail
+          for attempt in 1 2 3; do
+            if docker build -t sn-smoke:local . 2>&1 | tee /tmp/docker-build.log; then
+              echo "docker build OK (attempt $attempt/3)"
+              break
+            fi
+            if ! grep -qE 'stream error|INTERNAL_ERROR|connection reset|i/o timeout|unexpected EOF|TLS handshake timeout' /tmp/docker-build.log || [ "$attempt" -eq 3 ]; then
+              echo "docker build failed on attempt $attempt/3 (not retried, or out of attempts)" >&2
+              exit 1
+            fi
+            echo "transient module-proxy error on attempt $attempt/3, retrying"
+            if [ "$attempt" -eq 1 ]; then sleep 5; else sleep 15; fi
+          done
 
       - name: Prepare proxy file
         run: |-
