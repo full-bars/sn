@@ -377,6 +377,9 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 		urlState, urlErr = readProxyURLState()
 	}
 	if urlErr != nil {
+		if liveApply {
+			return nil, nil, false, fmt.Errorf("read proxy_url.json: %w", urlErr)
+		}
 		tlog("[proxy][url] warning: could not read proxy_url.json, launching without the URL-sourced proxies: %v\n", urlErr)
 	} else {
 		mergeProxyURLCache(desiredSet, sourceOf, urlState)
