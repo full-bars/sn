@@ -16,6 +16,13 @@ func TestTimerUnitContentsAlwaysRandomize(t *testing.T) {
 		{name: "new timer"},
 		{name: "legacy timer", existing: []byte("[Timer]\nOnCalendar=daily\nPersistent=true\n")},
 		{name: "replace old delay", existing: []byte("[Timer]\nOnCalendar=daily\nRandomizedDelaySec=30s\nPersistent=true\n")},
+		{
+			// systemd allows several schedules in one timer; the rewrite must
+			// leave exactly one calendar and one delay, not one pair per
+			// schedule.
+			name:     "two calendars collapse to one",
+			existing: []byte("[Timer]\nOnCalendar=Mon *-*-* 03:00:00\nOnCalendar=Thu *-*-* 03:00:00\nPersistent=true\n"),
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := timerUnitContents("urnetwork-update.timer", weekly, tc.existing)

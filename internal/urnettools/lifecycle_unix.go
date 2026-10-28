@@ -122,10 +122,16 @@ func timerUnitContents(timer, calendar string, existing []byte) ([]byte, error) 
 	for _, line := range lines {
 		switch {
 		case strings.HasPrefix(line, "OnCalendar="):
+			// systemd allows several OnCalendar lines, and this rewrite has to
+			// leave exactly one of each: emitting the pair per entry made a
+			// two-schedule timer grow a delay line per schedule on every write.
+			if replaced {
+				continue
+			}
 			out = append(out, "OnCalendar="+calendar, "RandomizedDelaySec=6h")
 			replaced = true
 		case strings.HasPrefix(line, "RandomizedDelaySec="):
-			// replaced beside OnCalendar above
+			// Re-emitted beside OnCalendar above, wherever it sat.
 		case strings.HasPrefix(line, "Unit=") && strings.TrimSpace(line) != "Unit="+updateUnit:
 			// A timer this tool wrote earlier, or one the shell installer
 			// wrote, restarts the provider instead of running the updater.
