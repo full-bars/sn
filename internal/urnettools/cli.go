@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -749,6 +750,36 @@ var statusUpRe = regexp.MustCompile(`\b(?:up|ok|healthy)\b`)
 // "upstream" or "oklahoma" are not treated as up/ok).
 func statusLineUp(low string) bool {
 	return statusUpRe.MatchString(low)
+}
+
+// sanitizeSourceForDisplay strips credential material and the query string from
+// a configured proxy source before the status page prints it. A source URL can
+// carry userinfo or an API token as a query parameter, and the status page is
+// read over a shoulder as often as it is logged.
+func sanitizeSourceForDisplay(raw string) string {
+	out := raw
+	// A real URL keeps its scheme and host and loses the rest. An opaque form
+	// like "user:pass@proxy:1080" parses with Scheme "user" and the userinfo
+	// buried in Opaque, so it is left to the fallback below rather than being
+	// echoed back as if it were a URL.
+	if u, err := url.Parse(raw); err == nil && u.Scheme != "" && !strings.Contains(u.Opaque, "@") {
+		u.User = nil
+		u.RawQuery = ""
+		u.ForceQuery = false
+		u.Fragment = ""
+		u.RawFragment = ""
+		return u.String()
+	}
+	if at := strings.LastIndex(out, "@"); at >= 0 {
+		out = out[at+1:]
+	}
+	if q := strings.IndexAny(out, "?#"); q >= 0 {
+		out = out[:q]
+	}
+	if strings.TrimSpace(out) == "" {
+		return "<unparsed source>"
+	}
+	return out
 }
 
 func readProxyURLSources(stateDir string) []string {
