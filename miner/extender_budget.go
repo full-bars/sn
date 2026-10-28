@@ -594,12 +594,15 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	return gate.allowLaunchFor(hostActivationPosts(), extenderActivationUserId()) == extenderLaunchAllowed
 }
 
-// A failed transaction cannot authorize posts; retry briefly before leaving
-// the role off for this launch. A real budget or refusal verdict is final.
+// Retry the process-wide open after a withheld decision, then retry the
+// transaction. A real budget or refusal verdict is final.
 func (gate *extenderActivationGate) allowLaunchFor(posts int, userId string) extenderLaunchDecision {
 	const attempts = 3
-	const retryDelay = 100 * time.Millisecond
+	const retryDelay = 1100 * time.Millisecond
 	for attempt := 0; attempt < attempts; attempt++ {
+		if attempt > 0 {
+			_, _ = openProviderStoreForProcessRetry(true, true)
+		}
 		allow, wait, used, err := extenderActivationDecision(time.Now(), posts, userId)
 		if err != nil {
 			if attempt+1 < attempts {

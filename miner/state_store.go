@@ -548,6 +548,12 @@ func openProviderStoreForProcess() (*providerStore, error) {
 // would start an empty store, which resets the extender activation budget. The
 // damaged file stays where it is for the next normal open to quarantine.
 func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, error) {
+	return openProviderStoreForProcessRetry(allowQuarantine, false)
+}
+
+// A launch retry may bypass a cached open failure, but still uses the same
+// process-wide mutex, handle and hotswap release guard as ordinary opens.
+func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool) (*providerStore, error) {
 	globalProviderStoreMu.Lock()
 	defer globalProviderStoreMu.Unlock()
 	if globalProviderStoreReleased {
@@ -561,7 +567,7 @@ func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, erro
 		return globalProviderStore, nil
 	}
 	now := time.Now()
-	if globalProviderStore == nil && globalProviderStoreFailedPath == path && now.Before(globalProviderStoreRetryAt) {
+	if !retryFailed && globalProviderStore == nil && globalProviderStoreFailedPath == path && now.Before(globalProviderStoreRetryAt) {
 		// Inside the retry interval: report the open that produced the
 		// throttle rather than waiting on the lock again.
 		return nil, globalProviderStoreFailedErr

@@ -1125,3 +1125,103 @@ func TestExtenderGateRetryRefusalBackoff(t *testing.T) {
 		t.Errorf("expired backoff recorded %d posts, want %d", len(state.Attempts), postsPerDualStackPass)
 	}
 }
+
+// The first real open fails and is cached. Recovery occurs inside that throttle.
+func TestExtenderGateRealStoreOpenRecoversInsideThrottle(t *testing.T) {
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	dir := t.TempDir()
+	blocker := filepath.Join(dir, "blocker")
+	if err := os.WriteFile(blocker, []byte("blocked"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(blocker, "state"))
+	if providerStoreInstance() != nil {
+		t.Fatal("first open unexpectedly succeeded")
+	}
+	recovered := make(chan error, 1)
+	go func() { time.Sleep(time.Second); recovered <- os.Remove(blocker) }()
+	decision := newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA)
+	if err := <-recovered; err != nil {
+		t.Fatal(err)
+	}
+	if decision != extenderLaunchAllowed {
+		t.Fatalf("recovered store did not allow launch: %v", decision)
+	}
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("store unavailable after allowed launch")
+	}
+	var record extenderActivationRecord
+	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record)
+	if err != nil || !found {
+		t.Fatalf("record found=%v err=%v", found, err)
+	}
+	if got := len(record.Accounts[extenderActivationAccountKey(extenderTestAccountA)].Attempts); got != postsPerDualStackPass {
+		t.Fatalf("posts=%d want %d", got, postsPerDualStackPass)
+	}
+}
+
+func TestExtenderGateRealStoreNeverOpens(t *testing.T) {
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	blocker := filepath.Join(t.TempDir(), "blocker")
+	if err := os.WriteFile(blocker, []byte("blocked"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(blocker, "state"))
+	previous := proxyManagerLogWriter
+	writer := &bytes.Buffer{}
+	proxyManagerLogWriter = writer
+	t.Cleanup(func() { proxyManagerLogWriter = previous })
+	if got := newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA); got != extenderLaunchWithheld {
+		t.Fatalf("decision=%v want withheld", got)
+	}
+	log := writer.String()
+	if n := strings.Count(log, "[state] store unavailable:"); n != 3 {
+		t.Errorf("real open failures=%d want 3; log: %s", n, log)
+	}
+	if !strings.Contains(log, "activation budget record could not be read or written") || strings.Contains(log, "activation held:") {
+		t.Errorf("wrong refusal message: %s", log)
+	}
+	if err := os.Remove(blocker); err != nil {
+		t.Fatal(err)
+	}
+	closeProviderStore()
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("store did not open after removing blocker")
+	}
+	var record extenderActivationRecord
+	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record)
+	if err != nil || found {
+		t.Fatalf("unexpected record found=%v err=%v", found, err)
+	}
+}
+
+func TestExtenderGateRealStoreExhaustedFirstRead(t *testing.T) {
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("open store")
+	}
+	now := time.Now().Unix()
+	record := extenderActivationRecord{Accounts: map[string]extenderActivationState{extenderActivationAccountKey(extenderTestAccountA): {Attempts: []int64{now, now, now, now, now}}}}
+	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	if got := newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA); got != extenderLaunchRefused {
+		t.Fatalf("decision=%v want refused", got)
+	}
+	if elapsed := time.Since(start); elapsed >= time.Second {
+		t.Fatalf("refusal retried: %s", elapsed)
+	}
+	var after extenderActivationRecord
+	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &after)
+	if err != nil || !found || len(after.Accounts[extenderActivationAccountKey(extenderTestAccountA)].Attempts) != 5 {
+		t.Fatalf("record found=%v err=%v record=%+v", found, err, after)
+	}
+}
