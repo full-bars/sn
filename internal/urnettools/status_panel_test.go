@@ -348,8 +348,13 @@ func TestPrintProxyStatus(t *testing.T) {
 		writeFile(t, dir, "proxy_url.json", `{"sources":["https://example.com/list.txt"]}`)
 		p := Provider{StateDir: dir}
 		out := captureStdout(t, func() { printProxyStatus(p) })
-		if !strings.Contains(out, "https://example.com/list.txt") {
+		// The panel names the source by scheme and host: the path can carry a
+		// token, so it is not printed even when the source is harmless.
+		if !strings.Contains(out, "https://example.com") {
 			t.Errorf("missing URL source in output:\n%s", out)
+		}
+		if strings.Contains(out, "/list.txt") {
+			t.Errorf("the source path reached the panel:\n%s", out)
 		}
 		// File source should still degrade to "none".
 		lines := strings.Split(out, "\n")
