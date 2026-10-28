@@ -405,7 +405,7 @@ func restoreProviderStoreAfterAbortedHandoff() error {
 	globalProviderStoreReleased = false
 	globalProviderStoreMu.Unlock()
 
-	if _, err := openProviderStoreForProcess(); err != nil {
+	if _, err := reopenProviderStoreAfterAbort(); err != nil {
 		if errors.Is(err, bbolt.ErrTimeout) {
 			hotswapLog("⚠️ [hotswap] Handoff aborted, but the candidate still holds %s: the parent keeps serving and its state writes fail until the candidate exits\n", providerStoreFileName)
 		} else {
@@ -415,6 +415,10 @@ func restoreProviderStoreAfterAbortedHandoff() error {
 	}
 	hotswapLog("⚡ [hotswap] Handoff aborted: reopened %s for the parent\n", providerStoreFileName)
 	return nil
+}
+
+var reopenProviderStoreAfterAbort = func() (*providerStore, error) {
+	return openProviderStoreForProcess()
 }
 
 // closeProviderStore releases the file. Safe to call when it was never opened.

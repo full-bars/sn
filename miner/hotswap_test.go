@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -211,9 +212,9 @@ func TestHandoffBatonRestoresControlSocketOnAbort(t *testing.T) {
 	}
 	owner.quiesce()
 	t.Cleanup(owner.finish)
-	previous := activeHotSwapControlSocket
-	activeHotSwapControlSocket = owner
-	t.Cleanup(func() { activeHotSwapControlSocket = previous })
+	previous := getActiveHotSwapControlSocket()
+	setActiveHotSwapControlSocket(owner)
+	t.Cleanup(func() { setActiveHotSwapControlSocket(previous) })
 
 	closeProviderStore()
 	t.Cleanup(closeProviderStore)
@@ -235,9 +236,9 @@ func TestHandoffBatonDoesNotRebindControlSocketOnSuccess(t *testing.T) {
 	}
 	owner.quiesce()
 	t.Cleanup(owner.finish)
-	previous := activeHotSwapControlSocket
-	activeHotSwapControlSocket = owner
-	t.Cleanup(func() { activeHotSwapControlSocket = previous })
+	previous := getActiveHotSwapControlSocket()
+	setActiveHotSwapControlSocket(owner)
+	t.Cleanup(func() { setActiveHotSwapControlSocket(previous) })
 
 	parentConn, candidateConn := net.Pipe()
 	t.Cleanup(func() { _ = candidateConn.Close() })
@@ -257,6 +258,89 @@ func TestHandoffBatonDoesNotRebindControlSocketOnSuccess(t *testing.T) {
 		conn.Close()
 		t.Fatal("parent rebound control socket after successful takeover")
 	}
+}
+
+func TestHotswapRetiredControlSocketOwnerCannotRestart(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
+	if err := owner.start(); err != nil {
+		t.Fatal(err)
+	}
+	owner.finish()
+	previous := getActiveHotSwapControlSocket()
+	setActiveHotSwapControlSocket(owner)
+	t.Cleanup(func() { setActiveHotSwapControlSocket(previous) })
+	previousReopen := reopenProviderStoreAfterAbort
+	reopenProviderStoreAfterAbort = func() (*providerStore, error) { return nil, nil }
+	t.Cleanup(func() { reopenProviderStoreAfterAbort = previousReopen })
+	if err := abortBatonHandoff(&HotswapParentSession{}); err == nil {
+		t.Fatal("abort did not report the retired control socket owner")
+	}
+	if err := owner.start(); err == nil {
+		t.Fatal("retired control socket owner restarted")
+	}
+}
+
+func TestHotswapRestartWaitsForQuiesceCleanup(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	entered, release := make(chan struct{}), make(chan struct{})
+	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
+	owner.closer = func() { close(entered); <-release }
+	quiesced := make(chan struct{})
+	go func() { owner.quiesce(); close(quiesced) }()
+	<-entered
+	started := make(chan error, 1)
+	go func() { started <- owner.start() }()
+	select {
+	case err := <-started:
+		t.Fatalf("restart interleaved with quiesce cleanup: %v", err)
+	case <-time.After(20 * time.Millisecond):
+	}
+	close(release)
+	<-quiesced
+	if err := <-started; err != nil {
+		t.Fatal(err)
+	}
+	owner.finish()
+}
+
+func TestHotswapQuiesceUnregistersBeforeRestart(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
+	coordinatorClosersMu.Lock()
+	before := len(coordinatorClosersMap)
+	coordinatorClosersMu.Unlock()
+	if err := owner.start(); err != nil {
+		t.Fatal(err)
+	}
+	owner.quiesce()
+	coordinatorClosersMu.Lock()
+	afterQuiesce := len(coordinatorClosersMap)
+	coordinatorClosersMu.Unlock()
+	if afterQuiesce != before {
+		t.Fatalf("closer registrations after quiesce = %d, want %d", afterQuiesce, before)
+	}
+	if err := owner.start(); err != nil {
+		t.Fatal(err)
+	}
+	owner.finish()
+}
+
+func TestActiveHotSwapControlSocketAccessIsRaceFree(t *testing.T) {
+	owner := &hotSwapControlSocketOwner{}
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for n := 0; n < 1000; n++ {
+				setActiveHotSwapControlSocket(owner)
+				_ = getActiveHotSwapControlSocket()
+				setActiveHotSwapControlSocket(nil)
+			}
+		}()
+	}
+	wg.Wait()
 }
 
 // The candidate may already hold provider_state.db when the handoff aborts. The
