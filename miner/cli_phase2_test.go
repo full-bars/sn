@@ -211,6 +211,10 @@ func TestReleaseVersions(t *testing.T) {
 	}
 	b, _ := parseMinerReleaseVersion("2026.10.21-1")
 	c, _ := parseMinerReleaseVersion("2026.10.21-12")
+	sn, ok := parseMinerReleaseVersion("v2026.10.27-1083160450-sn")
+	if !ok || sn.date != "2026.10.27" || sn.build != 1083160450 {
+		t.Fatal("the shipped -sn release tag is not parsed")
+	}
 	if !b.newerThan(a) || !c.newerThan(b) || a.newerThan(b) || b.newerThan(b) {
 		t.Fatal("version order")
 	}
@@ -254,7 +258,7 @@ func fakeRelease(t *testing.T, version string, corrupt bool, digest bool) string
 	gz := gzip.NewWriter(&archive)
 	tw := tar.NewWriter(gz)
 	for _, platform := range []string{"linux/arm", runtime.GOOS + "/" + runtime.GOARCH, "windows/amd64"} {
-		script := []byte("#!/bin/sh\necho " + version + "\n")
+		script := []byte("#!/bin/sh\necho v" + version + "\n")
 		if platform != runtime.GOOS+"/"+runtime.GOARCH {
 			script = []byte("not this one")
 		}
@@ -306,7 +310,7 @@ func TestInstallMinerRelease(t *testing.T) {
 	}
 	phase2State(t)
 	executable := fakeExecutable(t)
-	t.Setenv("URNETWORK_UPDATE_URL", fakeRelease(t, "2026.10.22-3", false, true))
+	t.Setenv("URNETWORK_UPDATE_URL", fakeRelease(t, "2026.10.22-3-sn", false, true))
 	release, err := fetchMinerRelease(t.Context())
 	if err != nil {
 		t.Fatal(err)

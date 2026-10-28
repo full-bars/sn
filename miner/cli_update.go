@@ -120,7 +120,7 @@ type minerReleaseVersion struct {
 	build uint64
 }
 
-var minerReleaseVersionPattern = regexp.MustCompile(`^v?(\d{4}\.\d{2}\.\d{2})-(\d+)$`)
+var minerReleaseVersionPattern = regexp.MustCompile(`^v?(\d{4}\.\d{2}\.\d{2})-(\d+)(?:-sn)?$`)
 
 func parseMinerReleaseVersion(version string) (minerReleaseVersion, bool) {
 	match := minerReleaseVersionPattern.FindStringSubmatch(strings.TrimSpace(version))
@@ -394,7 +394,8 @@ func installMinerRelease(ctx context.Context, release *minerRelease, executable 
 	if err != nil {
 		return fmt.Errorf("the new binary doesn't run on this device: %w", err)
 	}
-	if got := strings.TrimSpace(string(versionOut)); got != release.version() {
+	got := strings.TrimSpace(string(versionOut))
+	if strings.TrimPrefix(got, "v") != strings.TrimPrefix(release.version(), "v") {
 		return fmt.Errorf("the new binary says it is %q, not %s; nothing was changed", got, release.version())
 	}
 	return replaceMinerBinary(newPath, executable)
