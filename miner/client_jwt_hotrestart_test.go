@@ -1139,3 +1139,57 @@ func TestJwtClientIdHelpers(t *testing.T) {
 		t.Fatal("an empty token must yield an empty client id")
 	}
 }
+
+// A custody credential naming a different client than the stored entry means the
+// store remembers an identity this install no longer holds. Reusing it would
+// serve the replaced client, so the launch must mint through custody instead.
+func TestProvideClientJWTRejectsCustodyThatDisagreesWithStore(t *testing.T) {
+	setHotRestart(t, true)
+	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
+	defer restoreStore()
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+
+	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id":  testClientId,
+		"network_id": "net-1",
+	})
+	cfg := clientJWTTestConfig(t, networkJwt, nil)
+
+	custodyJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": "00000000-0000-0000-0000-0000000000ff",
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := os.WriteFile(cfg.ClientJwtPath, []byte(custodyJwt), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	storedJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": testClientId,
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := loadGlobalClientJWTStore().Put("direct", clientJWTEntry{
+		ByClientJWT: storedJwt,
+		ClientID:    testClientId,
+		NetworkID:   "net-1",
+		MintedAt:    time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	mint := &fakeMint{jwt: "fresh-custody-jwt", id: connect.Id{4}}
+	cfg.Mint = mint.mint
+
+	byJwt, _, reused, err := provideClientJWT(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("provideClientJWT err = %v", err)
+	}
+	if reused {
+		t.Fatal("reused the stored identity although custody names a different client")
+	}
+	if mint.calls != 1 {
+		t.Fatalf("mint calls = %d, want 1", mint.calls)
+	}
+	if byJwt == storedJwt {
+		t.Fatal("returned the stored jwt")
+	}
+}
