@@ -87,9 +87,16 @@ Every cell is independent by construction. The workflow deliberately has:
   the fan-in edges `build-binaries -> distro-smoke`, `build-binaries ->
   systemd`, and `{cells} -> summary`; the Windows, macOS and FreeBSD cells have
   no dependency at all and start immediately;
-- **no run-level serialisation group** — no workflow-level `concurrency:` key,
-  so a manual dispatch and a tag run can proceed at the same time and no run
-  cancels another.
+- **no shared run-level serialisation across refs** — each workflow carries a
+  workflow-level `concurrency:` group keyed on workflow and ref,
+  `${{ github.workflow }}-${{ github.ref }}`, with `cancel-in-progress` true
+  only for pull requests. A superseded commit on the same pull request cancels
+  its own older run; a tag run, a `main` run and another pull request's run are
+  never cancelled by it. There is deliberately no repository-wide group: one
+  used to span whole workflows, and because GitHub keeps a single pending run
+  per group, a newly queued pull request cancelled another pull request's
+  pending run, which is what surfaced as a red `cancelled` check with no jobs.
+  The JWT mint that motivated the old group retries, so it needs no lock.
 
 Verify the invariant with:
 
@@ -99,10 +106,11 @@ rg -n 'max-parallel|needs:|concurrency' \
   .github/workflows/openrc-smoke.yml .github/workflows/portable-core.yml
 ```
 
-The only expected hits are the three intended fan-in edges in
+The expected hits are the three intended fan-in edges in
 `distro-matrix.yml` — two `needs: build-binaries` (the container and systemd
-cells) and one `needs: [build-binaries, ...cells]` on the summary — with no
-`max-parallel:` or `concurrency:` line in any of the four workflows. Each of
+cells) and one `needs: [build-binaries, ...cells]` on the summary — plus one
+`concurrency:` block per workflow, keyed on `${{ github.workflow }}-${{
+github.ref }}` as described above. No `max-parallel:` line is set anywhere. Each of
 the four declares exactly the same triggers:
 
 ```yaml
