@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -121,13 +122,36 @@ func writeTimerCalendar(timer string, p Provider, calendar string, userScope boo
 	} else {
 		path = "/etc/systemd/system/" + timer
 	}
+	return writeTimerCalendarAt(path, timer, p, calendar)
+}
+
+func writeTimerCalendarAt(path, timer string, p Provider, calendar string) error {
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		// Create the timer from scratch, mirroring the installer's
-		// template. Write to a temp file and rename so a crash mid-write
-		// never leaves a half-written unit (the shared progress.md
-		// atomicity rule applied to unit files too).
-		tmpl := fmt.Sprintf("[Unit]\nDescription=Run URnetwork Update\n\n[Timer]\nOnCalendar=%s\nPersistent=true\nUnit=%s.service\n\n[Install]\nWantedBy=default.target\n", calendar, strings.TrimSuffix(timer, "-update.timer"))
+		// Create the timer and updater service together on a fresh install.
+		// Write them atomically so a crash mid-write never leaves a
+		// half-written unit.
+		updateUnit := strings.TrimSuffix(timer, ".timer") + ".service"
+		updatePath := filepath.Join(filepath.Dir(path), updateUnit)
+		if _, statErr := os.Stat(updatePath); os.IsNotExist(statErr) {
+			executable, err := os.Executable()
+			if err != nil {
+				return fmt.Errorf("resolve updater executable: %w", err)
+			}
+			service := fmt.Sprintf(`[Unit]
+Description=URnetwork Update
+
+[Service]
+Type=oneshot
+ExecStart=%s update -y --unit %s
+`, systemdExecArg(executable), systemdExecArg(p.Unit))
+			if err := writeFileAtomic(updatePath, []byte(service), 0o644); err != nil {
+				return fmt.Errorf("create updater service %s: %w", updateUnit, err)
+			}
+		} else if statErr != nil {
+			return fmt.Errorf("check updater service %s: %w", updateUnit, statErr)
+		}
+		tmpl := fmt.Sprintf("[Unit]\nDescription=Run URnetwork Update\n\n[Timer]\nOnCalendar=%s\nPersistent=true\nUnit=%s\n\n[Install]\nWantedBy=default.target\n", calendar, updateUnit)
 		if err := writeTimerUnitAtomic(path, tmpl); err != nil {
 			return fmt.Errorf("create timer %s: %w", timer, err)
 		}
@@ -153,6 +177,12 @@ func writeTimerCalendar(timer string, p Provider, calendar string, userScope boo
 		return err
 	}
 	return enableTimer(p, timer)
+}
+
+func systemdExecArg(value string) string {
+	value = strings.ReplaceAll(value, "%", "%%")
+	value = strings.ReplaceAll(value, "$", "$$")
+	return strconv.Quote(value)
 }
 
 // enableTimer runs daemon-reload + enable --now for a timer unit, choosing
