@@ -211,8 +211,29 @@ func TestReleaseVersions(t *testing.T) {
 	}
 	b, _ := parseMinerReleaseVersion("2026.10.21-1")
 	c, _ := parseMinerReleaseVersion("2026.10.21-12")
+	sn, ok := parseMinerReleaseVersion("v2026.10.27-1083160450-sn")
+	if !ok || sn.year != 2026 || sn.month != 10 || sn.day != 27 || sn.build != 1083160450 {
+		t.Fatal("the shipped -sn release tag is not parsed")
+	}
 	if !b.newerThan(a) || !c.newerThan(b) || a.newerThan(b) || b.newerThan(b) {
 		t.Fatal("version order")
+	}
+	// scripts/compute-sn-tag.sh leaves month and day unpadded.
+	unpadded, ok := parseMinerReleaseVersion("v2026.11.5-1793188446-sn")
+	if !ok || unpadded.month != 11 || unpadded.day != 5 {
+		t.Fatal("an unpadded release tag is not parsed")
+	}
+	for _, pair := range [][2]string{
+		{"2026.10.9-1", "2026.10.10-1"},
+		{"2026.9.9-1", "2026.10.1-1"},
+		{"2026.9.30-1", "2026.10.1-1"},
+		{"2025.12.31-1", "2026.1.1-1"},
+	} {
+		older, _ := parseMinerReleaseVersion(pair[0])
+		newer, _ := parseMinerReleaseVersion(pair[1])
+		if !newer.newerThan(older) || older.newerThan(newer) {
+			t.Fatalf("%s should be older than %s", pair[0], pair[1])
+		}
 	}
 	for _, dev := range []string{"", "(development build)", "2026.10.21-friendly-cli-d4d7e06"} {
 		if _, ok := parseMinerReleaseVersion(dev); ok {
@@ -254,7 +275,7 @@ func fakeRelease(t *testing.T, version string, corrupt bool, digest bool) string
 	gz := gzip.NewWriter(&archive)
 	tw := tar.NewWriter(gz)
 	for _, platform := range []string{"linux/arm", runtime.GOOS + "/" + runtime.GOARCH, "windows/amd64"} {
-		script := []byte("#!/bin/sh\necho " + version + "\n")
+		script := []byte("#!/bin/sh\necho v" + version + "\n")
 		if platform != runtime.GOOS+"/"+runtime.GOARCH {
 			script = []byte("not this one")
 		}
@@ -306,7 +327,7 @@ func TestInstallMinerRelease(t *testing.T) {
 	}
 	phase2State(t)
 	executable := fakeExecutable(t)
-	t.Setenv("URNETWORK_UPDATE_URL", fakeRelease(t, "2026.10.22-3", false, true))
+	t.Setenv("URNETWORK_UPDATE_URL", fakeRelease(t, "2026.10.22-3-sn", false, true))
 	release, err := fetchMinerRelease(t.Context())
 	if err != nil {
 		t.Fatal(err)
