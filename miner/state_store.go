@@ -86,8 +86,20 @@ func openProviderStore(path string) (*providerStore, error) {
 	// in opened as soon as bbolt returns it. Otherwise a panic after the open
 	// would leave the file lock held by a handle nobody can close.
 	var opened *bbolt.DB
+	// bbolt can also panic inside Open, after it has locked the file and
+	// before it returns a handle (a damaged page met while it loads the
+	// freelist). The file is kept as soon as bbolt opens it, so that case can
+	// still release the lock.
+	var openedFile *os.File
 	db, err := callProviderStore(func() (*bbolt.DB, error) {
-		d, err := bbolt.Open(path, 0o600, &bbolt.Options{Timeout: providerStoreOpenTimeout})
+		d, err := bbolt.Open(path, 0o600, &bbolt.Options{
+			Timeout: providerStoreOpenTimeout,
+			OpenFile: func(name string, flag int, mode os.FileMode) (*os.File, error) {
+				file, err := os.OpenFile(name, flag, mode)
+				openedFile = file
+				return file, err
+			},
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -100,6 +112,11 @@ func openProviderStore(path string) (*providerStore, error) {
 	if err != nil {
 		if opened != nil {
 			_ = opened.Close()
+		} else if openedFile != nil {
+			// A failed open closes its own file; closing it again is a no-op.
+			// A panic does not, and bbolt's mapping keeps the open file
+			// description, and so the lock, alive past a close.
+			releaseProviderStoreFile(openedFile)
 		}
 		return nil, fmt.Errorf("open %s: %w", path, err)
 	}

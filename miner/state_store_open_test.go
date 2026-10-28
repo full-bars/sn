@@ -80,3 +80,56 @@ func TestRestoreAfterAbortedHandoffDoesNotQuarantineACorruptStore(t *testing.T) 
 		t.Fatalf("normal open after the refused restore = (%v, %v), want the quarantine to succeed", store, err)
 	}
 }
+
+// bbolt can panic inside Open, before it returns a handle, when a page it
+// reads is damaged. The panic leaves the file it locked open, so every later
+// open of the path would wait out the lock timeout instead of failing at once.
+// A file written without a synced freelist makes Open rebuild the freelist and
+// walk the pages, which is where the damage is met.
+func TestProviderStoreOpenPanicInsideBboltReleasesTheLock(t *testing.T) {
+	path := filepath.Join(t.TempDir(), providerStoreFileName)
+	db, err := bbolt.Open(path, 0o600, &bbolt.Options{NoFreelistSync: true})
+	if err != nil {
+		t.Fatalf("create the file: %s", err)
+	}
+	for i := 0; i < 30; i++ {
+		if err := db.Update(func(tx *bbolt.Tx) error {
+			bucket, err := tx.CreateBucketIfNotExists([]byte("a"))
+			if err != nil {
+				return err
+			}
+			for j := 0; j < 200; j++ {
+				if err := bucket.Put([]byte{byte(i), byte(j)}, make([]byte, 100)); err != nil {
+					return err
+				}
+			}
+			return nil
+		}); err != nil {
+			t.Fatalf("fill the file: %s", err)
+		}
+	}
+	if err := db.Close(); err != nil {
+		t.Fatalf("close the file: %s", err)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read the file: %s", err)
+	}
+	for off := 2 * 4096; off+24 < len(raw); off += 4096 {
+		for k := 8; k < 24; k++ {
+			raw[off+k] = 0xff
+		}
+	}
+	if err := os.WriteFile(path, raw, 0o600); err != nil {
+		t.Fatalf("damage the file: %s", err)
+	}
+
+	_, err = openProviderStore(path)
+	if err == nil || !strings.Contains(err.Error(), "panic") {
+		t.Fatalf("open of a damaged file = %v, want the panic reported", err)
+	}
+	_, err = openProviderStore(path)
+	if err == nil || strings.Contains(err.Error(), "timeout") {
+		t.Fatalf("second open = %v, want the damage again, not a lock timeout: the first open's file is still locked", err)
+	}
+}
