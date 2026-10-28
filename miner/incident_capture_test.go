@@ -528,9 +528,9 @@ func TestIncidentLimitWriterStopsAtTheLimit(t *testing.T) {
 // A panic in every slot is one incident: the pacing admits the first capture
 // per trigger, then spends the process ceiling, and says so in the log.
 func TestIncidentPacingSuppressesRepeatBundles(t *testing.T) {
-	incidentTestWideCeiling(t)
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 	incidentReasonCooldown = time.Hour
 
 	first, err := captureIncidentBundle(incidentTriggerPanic, "slot 0", nil)
@@ -645,9 +645,9 @@ func incidentWriteState(t *testing.T, dir, name, body string) {
 // tagged oomcap, carrying the cap state the next start will read. A no-OOM start
 // must write nothing, or every ordinary start buries the real ones.
 func TestIncidentOOMCapDecisionProducesABundle(t *testing.T) {
-	incidentTestWideCeiling(t)
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 	t.Setenv("URNETWORK_OOM_CAP", "on")
 
 	now := time.Unix(1_800_000_000, 0)
@@ -719,9 +719,9 @@ func TestIncidentOOMCapDecisionProducesABundle(t *testing.T) {
 // bundle tagged thrash with the watchdog's own state, and it must carry the
 // sensor numbers that justified the restart — those die with the process.
 func TestIncidentThrashRestartProducesABundle(t *testing.T) {
-	incidentTestWideCeiling(t)
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 
 	incidentWriteState(t, stateDir, "thrash_cap.json",
 		`{"cap":2400,"set_unix":1800000000,"expires_unix":1800086400,"restarts":[1800000000]}`)
@@ -891,9 +891,9 @@ func TestIncidentThrashAlertIsCapturedOncePerReason(t *testing.T) {
 // The per-trigger cooldown applies to the new triggers exactly as it does to the
 // old ones, and one trigger does not silence another.
 func TestIncidentNewTriggersArePacedPerTrigger(t *testing.T) {
-	incidentTestWideCeiling(t)
 	incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 
 	if dir, err := captureIncidentBundle(incidentTriggerOOMCap, "reduce", nil); err != nil || dir == "" {
 		t.Fatalf("the first oomcap capture returned (%q, %v)", dir, err)
@@ -913,9 +913,9 @@ func TestIncidentNewTriggersArePacedPerTrigger(t *testing.T) {
 // trigger still writes at most incidentMaxPerProcess bundles, so the two new
 // triggers cannot each spend their own budget on top of the old ones.
 func TestIncidentGlobalCapHoldsAcrossEveryTrigger(t *testing.T) {
-	incidentTestWideCeiling(t)
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
+	incidentTestWideCeiling(t)
 	// Neutralise the per-trigger throttle: the global ceiling is the thing
 	// under test, and with a cooldown the loop could not reach it.
 	incidentReasonCooldown = 0
