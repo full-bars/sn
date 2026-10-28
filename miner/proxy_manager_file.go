@@ -57,6 +57,13 @@ func expandPath(p string) string {
 
 // redactProxySource returns the redacted representation of a proxy source line:
 // scheme (if present), host:port, and whether user and password were present.
+//
+// Nothing on this path echoes the input. parseProxyAddress hands back the whole
+// line as the address when it cannot split one — a non-numeric port is enough —
+// so an unparsed line carries its userinfo inside "address", and printing that
+// put the password in the log beside "password=absent". The address goes
+// through redactProxyLine, which keeps only what follows the last '@', and an
+// unparsed line says so instead of implying the credentials were absent.
 func redactProxySource(line string) string {
 	line = strings.TrimSpace(line)
 	scheme := ""
@@ -66,6 +73,11 @@ func redactProxySource(line string) string {
 		rest = line[idx+3:]
 	}
 	address, user, password := parseProxyAddress(rest)
+	unparsed := strings.Contains(rest, "@") && user == "" && password == ""
+	address = redactProxyLine(address)
+	if strings.ContainsAny(scheme, "@:") {
+		scheme = ""
+	}
 	hasUser := user != ""
 	hasPass := password != ""
 	uStr := "absent"
@@ -75,6 +87,13 @@ func redactProxySource(line string) string {
 	pStr := "absent"
 	if hasPass {
 		pStr = "present"
+	}
+	if unparsed {
+		// The line carries userinfo the parser could not split, so the labels
+		// describe the parser's result and not the line: say which is which
+		// rather than reporting a credential-bearing line as credential-free.
+		uStr = "unparsed"
+		pStr = "unparsed"
 	}
 	if scheme != "" {
 		if address != "" {

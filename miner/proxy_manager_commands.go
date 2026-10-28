@@ -134,7 +134,7 @@ func proxyAddSource(opts docopt.Opts) {
 	for _, existing := range state.Sources {
 		if existing == url {
 			release()
-			fmt.Printf("source already added: %s\n", url)
+			fmt.Printf("source already added: %s\n", sanitizeURLForDisplay(url))
 			return
 		}
 	}
@@ -145,7 +145,7 @@ func proxyAddSource(opts docopt.Opts) {
 	}
 	release()
 
-	fmt.Printf("added source: %s\nfetching now...\n", url)
+	fmt.Printf("added source: %s\nfetching now...\n", sanitizeURLForDisplay(url))
 	// Probe the chosen network's API, not a hardcoded host (v33 M6).
 	probeHost, probePort := defaultAPIHost, uint16(defaultAPIPort)
 	if apiUrl, err := resolveApiUrl(opts); err == nil {
@@ -182,7 +182,7 @@ func proxyRemoveSource(opts docopt.Opts) {
 		kept = append(kept, existing)
 	}
 	if !found {
-		fmt.Printf("source not found: %s\n", url)
+		fmt.Printf("source not found: %s\n", sanitizeURLForDisplay(url))
 		return
 	}
 
@@ -190,7 +190,7 @@ func proxyRemoveSource(opts docopt.Opts) {
 	if err := writeProxyURLState(state); err != nil {
 		proxyCommandFatal(74, "could not write proxy_url.json: %v", err)
 	}
-	fmt.Printf("removed source: %s\n", url)
+	fmt.Printf("removed source: %s\n", sanitizeURLForDisplay(url))
 	fmt.Println("note: previously fetched proxies from this source remain running; use 'proxy remove-dead' to prune any that go dead.")
 }
 
