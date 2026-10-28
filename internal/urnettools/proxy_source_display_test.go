@@ -28,6 +28,24 @@ func TestStatusProxySourcesAreSanitized(t *testing.T) {
 	if strings.Contains(string(panel), `strings.Join(urlSrc, ", ")`) {
 		t.Error("the URL sources line still joins the raw sources")
 	}
+
+	// The dry-run plans name the source they would add or remove, so they are
+	// a third surface with the same problem.
+	cmds, err := os.ReadFile("proxy.go")
+	if err != nil {
+		t.Fatalf("cannot read proxy.go (%v)", err)
+	}
+	if n := strings.Count(string(cmds), "sanitizeSourceForDisplay("); n < 2 {
+		t.Errorf("dry-run source lines go through the sanitizer %d times, want 2 (add-source, remove-source)", n)
+	}
+	for _, raw := range []string{
+		`would add-source %s on %s\n", target`,
+		`would %s %s on %s\n", sub, positionals[0]`,
+	} {
+		if strings.Contains(string(cmds), raw) {
+			t.Errorf("dry-run prints the raw source: %s", raw)
+		}
+	}
 }
 
 func TestSanitizeSourceForDisplay(t *testing.T) {
