@@ -1969,24 +1969,28 @@ EOF
     fi
 
     if ! openrc_finalize_root_paths; then
+        openrc_rollback_binary_swap
         rm -rf "$openrc_stage_dir"
         exit 1
     fi
 
     if ! cp "$openrc_staged" "$openrc_initd_file"; then
         pr_err "Failed to install %s" "$openrc_initd_file"
+        openrc_rollback_binary_swap
         rm -rf "$openrc_stage_dir"
         exit 1
     fi
     rm -rf "$openrc_stage_dir"
     if ! chmod 755 "$openrc_initd_file"; then
         pr_err "Failed to make %s executable" "$openrc_initd_file"
+        openrc_rollback_binary_swap
         exit 1
     fi
 
     pr_info "Enabling urnetwork in the default runlevel"
     if ! rc-update add urnetwork default; then
         pr_err "Failed to enable the urnetwork service (rc-update add urnetwork default)"
+        openrc_rollback_binary_swap
         exit 1
     fi
 

@@ -425,6 +425,101 @@ echo "after-rollback live=$(cat '`+live+`')"
 	return out, err, live, string(raw)
 }
 
+// runOpenRCRootSetup runs the real install_openrc_units and
+// openrc_rollback_binary_swap as root, after a swap that left a live/.old pair
+// and a stopped service. failStep makes one step fail: "cp" (the init script
+// copy), "rc-update" (enabling the service) or "" for none.
+func runOpenRCRootSetup(t *testing.T, failStep string) (out string, err error, live, calls string) {
+	t.Helper()
+	skipWithoutPOSIXShell(t)
+	source := readInstaller(t)
+	fnInstall := extractShellFunc(t, source, "install_openrc_units")
+	fnRollback := extractShellFunc(t, source, "openrc_rollback_binary_swap")
+	if fnInstall == "" || fnRollback == "" {
+		t.Fatal("could not extract install_openrc_units or openrc_rollback_binary_swap from the Linux installer")
+	}
+	root := t.TempDir()
+	installRoot := filepath.Join(root, "lib")
+	installPath := filepath.Join(installRoot, "urnetwork-provider")
+	binDir := filepath.Join(installPath, "bin")
+	home := filepath.Join(root, "home")
+	initd := filepath.Join(root, "initd", "urnetwork")
+	live = filepath.Join(binDir, "urnetwork")
+	for _, dir := range []string{binDir, home, filepath.Dir(initd)} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(live, []byte("NEW"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(live+".old", []byte("PREVIOUS"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	stubDir := t.TempDir()
+	record := filepath.Join(stubDir, "calls")
+	rcService := "#!/bin/sh\nprintf 'rc-service %s live=%s\\n' \"$*\" \"$(cat '" + live + "' 2>/dev/null)\" >> '" + record + "'\nexit 0\n"
+	rcUpdate := "#!/bin/sh\nprintf 'rc-update %s\\n' \"$*\" >> '" + record + "'\n"
+	if failStep == "rc-update" {
+		rcUpdate += "exit 1\n"
+	} else {
+		rcUpdate += "exit 0\n"
+	}
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-service"), []byte(rcService), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-update"), []byte(rcUpdate), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	failCp := ""
+	if failStep == "cp" {
+		failCp = `cp() { return 1; }`
+	}
+	out, err = runShellScriptWithPath(t, stubDir, `
+install_path="`+installPath+`"
+openrc_install_root="`+installRoot+`"
+openrc_user="urnet"
+openrc_initd_file="`+initd+`"
+openrc_swap_pending=1
+openrc_units_stopped=1
+id() { if [ "$1" = -u ]; then echo 0; fi; return 0; }
+openrc_user_home() { echo "`+home+`"; }
+openrc_resolve_parent() { if [ "$1" = --full ]; then shift; fi; echo "$1"; }
+openrc_finalize_root_paths() { return 0; }
+openrc_restore_update_entry() { :; }
+openrc_service_running() { return 1; }
+pr_info() { printf 'INFO: %s\n' "$*"; }
+pr_warn() { printf 'WARN: %s\n' "$*"; }
+pr_err() { printf 'ERROR: %s\n' "$*"; }
+`+failCp+`
+`+fnRollback+`
+`+fnInstall+`
+install_openrc_units
+`)
+	raw, _ := os.ReadFile(record)
+	return out, err, live, string(raw)
+}
+
+// A root OpenRC setup that fails after the binary swap and the service stop
+// must put the previous binary back and restart the service on it, as the sudo
+// branch does. It used to exit with the new binary live and the service down.
+func TestOpenRCRootSetupFailureRollsBackAndRestarts(t *testing.T) {
+	for _, step := range []string{"cp", "rc-update"} {
+		t.Run(step, func(t *testing.T) {
+			out, err, live, calls := runOpenRCRootSetup(t, step)
+			if err == nil {
+				t.Fatalf("%s failure returned success; want non-zero exit (output:\n%s)", step, out)
+			}
+			if got, rerr := os.ReadFile(live); rerr != nil || string(got) != "PREVIOUS" {
+				t.Errorf("previous binary not restored: got %q (%v); out:\n%s", got, rerr, out)
+			}
+			if !strings.Contains(calls, "rc-service urnetwork start live=PREVIOUS") {
+				t.Errorf("service was not restarted on the previous binary; calls:\n%s\nout:\n%s", calls, out)
+			}
+		})
+	}
+}
+
 func TestOpenRCFailedSudoStartRollsBackAndFails(t *testing.T) {
 	out, err, live, calls := runOpenRCSudoStart(t, true)
 	if err == nil {
