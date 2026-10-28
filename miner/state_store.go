@@ -605,12 +605,10 @@ func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, erro
 // holdBudgetAfterQuarantine seeds the fresh store with a hold of one activation
 // window. The file it replaced may have held posts or a refusal that can no
 // longer be read, and an empty store would let the next start spend as though
-// none had happened. The hold sits on the unidentified account, which the first
-// start that resolves its account adopts.
+// none had happened. The deadline is store-wide and cannot be adopted by an
+// account or cleared by an activation callback.
 func holdBudgetAfterQuarantine(store *providerStore, now time.Time) {
-	record := extenderActivationRecord{Accounts: map[string]extenderActivationState{
-		extenderActivationUnidentifiedAccount: {BackoffUntilUnix: now.Add(extenderActivationWindow).Unix()},
-	}}
+	record := extenderActivationRecord{QuarantineUntilUnixNano: now.Add(extenderActivationWindow).UnixNano()}
 	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
 		tlog("⚠️ [state] could not hold the activation budget after moving the store aside: %v\n", err)
 	}

@@ -152,7 +152,20 @@ type extenderActivationLegacy struct {
 // host, which the operator controls and a heal does not add to.
 type extenderActivationRecord struct {
 	Accounts map[string]extenderActivationState `json:"accounts,omitempty"`
+	// QuarantineUntilUnixNano holds every account after loss of the store.
+	QuarantineUntilUnixNano int64 `json:"quarantine_until_unix_nano,omitempty"`
 	extenderActivationLegacy
+}
+
+func (record *extenderActivationRecord) quarantineWait(now time.Time) time.Duration {
+	if record.QuarantineUntilUnixNano == 0 {
+		return 0
+	}
+	wait := time.Unix(0, record.QuarantineUntilUnixNano).Sub(now)
+	if wait < 0 {
+		return 0
+	}
+	return wait
 }
 
 // present reports whether the flat record holds anything worth adopting.
@@ -390,6 +403,9 @@ func pruneExtenderAttempts(state *extenderActivationState, now time.Time, window
 func extenderActivationAllow(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int) {
 	account := extenderActivationAccountKey(userId)
 	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+		if wait = record.quarantineWait(now); wait > 0 {
+			return nil
+		}
 		// The token resolves on this path, so this is where posts charged while
 		// it was unreadable first learn the account that spent them.
 		record.adoptUnidentified(account, now)
@@ -441,6 +457,9 @@ func extenderActivationSpendSpare(now time.Time, userId string, pass extenderAct
 	account := extenderActivationAccountKey(userId)
 	var spent bool
 	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+		if record.quarantineWait(now) > 0 {
+			return nil
+		}
 		record.adoptUnidentified(account, now)
 		state := record.Accounts[account]
 		used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
