@@ -356,6 +356,47 @@ except (json.JSONDecodeError, KeyError):
     echo "$digest" | sed 's/^sha256://'
 }
 
+# release_lists_asset returns 0 when the release JSON in $1 lists an asset named
+# $2. An error body (rate limit, outage) or unparseable JSON lists nothing, so
+# the caller treats it as unavailable metadata.
+release_lists_asset ()
+{
+    [ -n "$1" ] || return 1
+    if command -v jq > /dev/null; then
+        printf "%s" "$1" | tr -d '\000-\037' | jq -e --arg a "$2" 'any(.assets[]?; .name == $a)' > /dev/null 2>&1
+    elif command -v python3 > /dev/null; then
+        printf "%s" "$1" | tr -d '\000-\037' | python3 -c 'import sys, json
+try:
+    doc = json.load(sys.stdin)
+    sys.exit(0 if any(a.get("name") == sys.argv[1] for a in doc.get("assets", [])) else 1)
+except Exception:
+    sys.exit(1)
+' "$2" > /dev/null 2>&1
+    else
+        pr_err "Neither python3 nor jq is available"
+        exit 1
+    fi
+}
+
+# compute_sha256_file computes the hex sha256 digest of a file.
+# Outputs the 64-char lowercase hex string, or returns 1 on error.
+compute_sha256_file ()
+{
+    file="$1"
+    if [ ! -f "$file" ]; then
+        return 1
+    fi
+    if command -v sha256sum > /dev/null 2>&1; then
+        sha256sum "$file" | awk '{print $1}'
+    elif command -v sha256 > /dev/null 2>&1; then
+        sha256 -q "$file"
+    elif command -v openssl > /dev/null 2>&1; then
+        openssl dgst -sha256 "$file" | awk '{print $NF}'
+    else
+        return 1
+    fi
+}
+
 # verify_sha256_file checks a file's sha256 against the expected hex digest.
 # Returns 0 on match, 1 on mismatch/missing tools.
 verify_sha256_file ()
@@ -365,12 +406,9 @@ verify_sha256_file ()
     if [ -z "$expected" ] || [ ! -f "$file" ]; then
         return 1
     fi
-    if command -v sha256sum > /dev/null; then
-        actual="$(sha256sum "$file" | awk '{print $1}')"
-    elif command -v openssl > /dev/null; then
-        actual="$(openssl dgst -sha256 "$file" | awk '{print $2}')"
-    else
-        pr_err "Neither sha256sum nor openssl is available; cannot verify downloaded tool"
+    actual="$(compute_sha256_file "$file")"
+    if [ -z "$actual" ]; then
+        pr_err "Neither sha256sum nor openssl is available; cannot verify file"
         return 1
     fi
     [ "$actual" = "$expected" ]
@@ -1126,8 +1164,26 @@ EOF
         systemctl --user daemon-reload
         
         if ! systemctl --user start urnetwork.service; then
-            pr_err "warning: Unable to restart urnetwork.service after update; please manually start it"
+            pr_err "Failed to restart urnetwork.service after update"
+            if [ -f "$install_path/bin/urnetwork.old" ]; then
+                # Check the restore before restarting: starting the service with
+                # the new binary still in place would only repeat the failure.
+                if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"; then
+                    pr_warn "Restored the previous provider binary; the update did not apply."
+                    systemctl --user daemon-reload 2>/dev/null || true
+                    if systemctl --user start urnetwork.service 2>/dev/null; then
+                        pr_warn "Restarted the service on the previous binary."
+                    else
+                        pr_err "The service did NOT restart on the previous binary and is stopped. Start it with: systemctl --user start urnetwork.service"
+                    fi
+                else
+                    pr_err "Could not restore the previous provider binary from $install_path/bin/urnetwork.old"
+                    pr_err "The new binary that did not start is still installed. Put the previous one back at $install_path/bin/urnetwork, then start the service with: systemctl --user start urnetwork.service"
+                fi
+            fi
+            exit 1
         fi
+        ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
     fi
 }
 
@@ -1907,8 +1963,12 @@ EOF
 
     if [ "$openrc_units_stopped" -eq 1 ]; then
         if ! rc-service urnetwork start; then
-            pr_err "warning: unable to restart urnetwork after update; start it with: rc-service urnetwork start"
+            pr_err "Failed to restart urnetwork after update"
+            openrc_rollback_binary_swap
+            exit 1
         fi
+        ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        openrc_swap_pending=0
     elif openrc_service_running; then
         # The service was left running (the non-forced update path): starting
         # it would print "already started" while the OLD binary is still live.
@@ -2583,7 +2643,30 @@ do_install ()
     fi
     dl_url="$urnet_github_dl_base/$tag/urnetwork-provider-$tag.tar.gz"
     mirror_url="$dl_url"
+    provider_asset="urnetwork-provider-$tag.tar.gz"
     
+    # Fail closed. The digest comes from the release metadata, so the tarball is
+    # installed only when that metadata lists it. An unreachable or rate-limited
+    # API used to leave the digest empty and install the tarball unverified.
+    release_json="${release:-}"
+    release_json_tag=""
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        release_json_tag="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null || true)"
+        if release_lists_asset "$release_json_tag" "$provider_asset"; then
+            release_json="$release_json_tag"
+        fi
+    fi
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        if [ -z "$release_json" ] && [ -z "$release_json_tag" ]; then
+            pr_err "Could not fetch release metadata for %s from the GitHub API (unreachable or rate-limited)." "$tag"
+        else
+            pr_err "Release %s metadata does not list the provider asset '%s' (an API error or rate limit returns no assets)." "$tag" "$provider_asset"
+        fi
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
+
     pr_info "Downloading: %s" "$dl_url"
     
     if ! workdir="$(mktemp -d)"; then
@@ -2607,6 +2690,17 @@ do_install ()
                 pr_err "Failed to download from both primary and mirror"
                 exit 1
             fi
+        fi
+
+        if [ -n "$provider_digest" ]; then
+            if ! verify_sha256_file "$tarball" "$provider_digest"; then
+                actual="$(compute_sha256_file "$tarball")"
+                pr_err "SHA-256 digest mismatch for provider asset '%s': expected %s, got %s" "$provider_asset" "$provider_digest" "${actual:-<unknown>}"
+                exit 1
+            fi
+            pr_info "Provider asset sha256 verified (%s)" "$provider_asset"
+        else
+            pr_warn "Release %s has no sha256 digest for '%s'; continuing without verification" "$tag" "$provider_asset"
         fi
 
         if ! tar -xf "$tarball" 2>/dev/null; then
@@ -2650,26 +2744,42 @@ do_install ()
     fi
 
     if [ -z "$URNETWORK_NO_DOWNLOAD_TARBALL" ]; then
-        # Bypass 'Text file busy' locks on running binaries by moving the active inode out of the way first
-        if ${SUDO:-} mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null; then
-            openrc_swap_pending=1
+        staged_bin="$install_path/bin/.urnetwork.new.$$"
+        if ! ${SUDO:-} cp "$bin_program" "$staged_bin"; then
+            pr_err "Failed to stage provider binary"
+            ${SUDO:-} rm -f "$staged_bin" 2>/dev/null || true
+            exit 1
         fi
-        # A failure past this point leaves the service stopped with NO binary:
-        # the original is in .old and the exit fires before the rename back, so
-        # a failed copy degraded to "no provider at all". Roll the swap back
-        # before giving up, which leaves the previous version running instead.
-        if ! ${SUDO:-} cp "$bin_program" "$install_path/bin/urnetwork"; then
+        if ! ${SUDO:-} chmod 755 "$staged_bin"; then
+            pr_err "Failed to chmod staged provider binary"
+            ${SUDO:-} rm -f "$staged_bin" 2>/dev/null || true
+            exit 1
+        fi
+
+        provider_swap_pending=0
+        if [ -f "$install_path/bin/urnetwork" ]; then
+            if ${SUDO:-} cp -p "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || \
+               ${SUDO:-} cp "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null; then
+                provider_swap_pending=1
+                openrc_swap_pending=1
+            else
+                # No rollback copy means no way back, so the live binary stays.
+                # The stop before this point may have left the service down.
+                pr_err "Could not back up %s; refusing to replace it without a rollback copy" "$install_path/bin/urnetwork"
+                ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" "$staged_bin" 2>/dev/null || true
+                if [ "${systemd_units_stopped:-0}" = "1" ] || [ "${openrc_units_stopped:-0}" = "1" ]; then
+                    pr_err "The previous binary is still installed and the service was stopped for this update. Start it with: %s" "$(urnetwork_service_restart_hint)"
+                fi
+                exit 1
+            fi
+        fi
+
+        if ! ${SUDO:-} mv -f "$staged_bin" "$install_path/bin/urnetwork"; then
             pr_err "Failed to install provider binary"
+            ${SUDO:-} rm -f "$staged_bin" 2>/dev/null || true
             openrc_rollback_binary_swap
             exit 1
         fi
-        if ! ${SUDO:-} chmod 755 "$install_path/bin/urnetwork"; then
-            pr_err "Failed to install provider binary"
-            openrc_rollback_binary_swap
-            exit 1
-        fi
-        ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
-        openrc_swap_pending=0
     fi
 
     cd "$script_rundir" || exit 1
@@ -2776,9 +2886,6 @@ do_install ()
         # bundled content that may lack the latest fix.
     fi
 
-    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
-    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
-
     if [ "$has_systemd" -eq 1 ]; then
         install_systemd_units
     fi
@@ -2786,6 +2893,12 @@ do_install ()
     if [ "$has_systemd" -eq 0 ] && [ "$has_openrc" -eq 1 ]; then
         install_openrc_units
     fi
+
+    # Written only after the unit install, which restarts the service and exits
+    # on failure. Writing these earlier left the version files naming the failed
+    # release after a rollback restored the old binary.
+    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
+    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
 
     # The symlinks are not a shell-startup edit, so they are made regardless of
     # -B; the rc-file blocks honour it.
@@ -3027,7 +3140,30 @@ do_install ()
     fi
     dl_url="$urnet_dl_base/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
     mirror_url="$urnet_github_dl_base/$tag/urnetwork-provider-$tag.tar.gz"
+    provider_asset="urnetwork-provider-$tag.tar.gz"
     
+    # Fail closed. The digest comes from the release metadata, so the tarball is
+    # installed only when that metadata lists it. An unreachable or rate-limited
+    # API used to leave the digest empty and install the tarball unverified.
+    release_json="${release:-}"
+    release_json_tag=""
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        release_json_tag="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null || true)"
+        if release_lists_asset "$release_json_tag" "$provider_asset"; then
+            release_json="$release_json_tag"
+        fi
+    fi
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        if [ -z "$release_json" ] && [ -z "$release_json_tag" ]; then
+            pr_err "Could not fetch release metadata for %s from the GitHub API (unreachable or rate-limited)." "$tag"
+        else
+            pr_err "Release %s metadata does not list the provider asset '%s' (an API error or rate limit returns no assets)." "$tag" "$provider_asset"
+        fi
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
+
     pr_info "Downloading: %s" "$dl_url"
     
     if ! workdir="$(mktemp -d)"; then
@@ -3051,6 +3187,17 @@ do_install ()
                 pr_err "Failed to download from both primary and mirror"
                 exit 1
             fi
+        fi
+
+        if [ -n "$provider_digest" ]; then
+            if ! verify_sha256_file "$tarball" "$provider_digest"; then
+                actual="$(compute_sha256_file "$tarball")"
+                pr_err "SHA-256 digest mismatch for provider asset '%s': expected %s, got %s" "$provider_asset" "$provider_digest" "${actual:-<unknown>}"
+                exit 1
+            fi
+            pr_info "Provider asset sha256 verified (%s)" "$provider_asset"
+        else
+            pr_warn "Release %s has no sha256 digest for '%s'; continuing without verification" "$tag" "$provider_asset"
         fi
 
         if ! tar -xf "$tarball" 2>/dev/null; then
@@ -3094,26 +3241,42 @@ do_install ()
     fi
 
     if [ -z "$URNETWORK_NO_DOWNLOAD_TARBALL" ]; then
-        # Bypass 'Text file busy' locks on running binaries by moving the active inode out of the way first
-        if ${SUDO:-} mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null; then
-            openrc_swap_pending=1
+        staged_bin="$install_path/bin/.urnetwork.new.$$"
+        if ! ${SUDO:-} cp "$bin_program" "$staged_bin"; then
+            pr_err "Failed to stage provider binary"
+            ${SUDO:-} rm -f "$staged_bin" 2>/dev/null || true
+            exit 1
         fi
-        # A failure past this point leaves the service stopped with NO binary:
-        # the original is in .old and the exit fires before the rename back, so
-        # a failed copy degraded to "no provider at all". Roll the swap back
-        # before giving up, which leaves the previous version running instead.
-        if ! ${SUDO:-} cp "$bin_program" "$install_path/bin/urnetwork"; then
+        if ! ${SUDO:-} chmod 755 "$staged_bin"; then
+            pr_err "Failed to chmod staged provider binary"
+            ${SUDO:-} rm -f "$staged_bin" 2>/dev/null || true
+            exit 1
+        fi
+
+        provider_swap_pending=0
+        if [ -f "$install_path/bin/urnetwork" ]; then
+            if ${SUDO:-} cp -p "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || \
+               ${SUDO:-} cp "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null; then
+                provider_swap_pending=1
+                openrc_swap_pending=1
+            else
+                # No rollback copy means no way back, so the live binary stays.
+                # The stop before this point may have left the service down.
+                pr_err "Could not back up %s; refusing to replace it without a rollback copy" "$install_path/bin/urnetwork"
+                ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" "$staged_bin" 2>/dev/null || true
+                if [ "${systemd_units_stopped:-0}" = "1" ] || [ "${openrc_units_stopped:-0}" = "1" ]; then
+                    pr_err "The previous binary is still installed and the service was stopped for this update. Start it with: %s" "$(urnetwork_service_restart_hint)"
+                fi
+                exit 1
+            fi
+        fi
+
+        if ! ${SUDO:-} mv -f "$staged_bin" "$install_path/bin/urnetwork"; then
             pr_err "Failed to install provider binary"
+            ${SUDO:-} rm -f "$staged_bin" 2>/dev/null || true
             openrc_rollback_binary_swap
             exit 1
         fi
-        if ! ${SUDO:-} chmod 755 "$install_path/bin/urnetwork"; then
-            pr_err "Failed to install provider binary"
-            openrc_rollback_binary_swap
-            exit 1
-        fi
-        ${SUDO:-} rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
-        openrc_swap_pending=0
     fi
 
     cd "$script_rundir" || exit 1
@@ -3220,9 +3383,6 @@ do_install ()
         # bundled content that may lack the latest fix.
     fi
 
-    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
-    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
-
     if [ "$has_systemd" -eq 1 ]; then
         install_systemd_units
     fi
@@ -3230,6 +3390,12 @@ do_install ()
     if [ "$has_systemd" -eq 0 ] && [ "$has_openrc" -eq 1 ]; then
         install_openrc_units
     fi
+
+    # Written only after the unit install, which restarts the service and exits
+    # on failure. Writing these earlier left the version files naming the failed
+    # release after a rollback restored the old binary.
+    echo "$version_to_install" | ${SUDO:-} tee "$install_path/.version" > /dev/null
+    echo "$release_date" | ${SUDO:-} tee "$install_path/.date" > /dev/null
 
     if [ "$no_modify_bashrc" -eq 0 ]; then
 	if awk '/^[[:space:]]*# == urnetwork-provider start[[:space:]]*$/ { code=1; } END { exit code; }' "$HOME/.bashrc"; then
