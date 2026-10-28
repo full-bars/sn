@@ -258,10 +258,11 @@ type setupChildProcess interface {
 	Kill() error
 }
 
-// stopSetupChild stops a setup child, keeping process control injectable so
-// platform-specific process behavior can be covered on every test host.
-func stopSetupChild(process setupChildProcess, windows bool) error {
-	if windows {
+// stopSetupChild is the only way setup stops a child. Windows has no
+// SIGINT delivery to a child process, so it kills; every call site goes
+// through here so the platform choice cannot be bypassed.
+func stopSetupChild(process setupChildProcess) error {
+	if runtime.GOOS == "windows" {
 		return process.Kill()
 	}
 	return process.Signal(syscall.SIGINT)
@@ -292,13 +293,13 @@ func setupRegister(run *setupRun) bool {
 			writeCliError(run.errOut, fmt.Sprintf("Registration didn't finish (%v). What the miner said:\n%s", err, indent(lastLines(log.String(), 8))))
 			return false
 		case <-deadline:
-			_ = stopSetupChild(command.Process, runtime.GOOS == "windows")
+			_ = stopSetupChild(command.Process)
 			<-exited
 			writeCliError(run.errOut, "Registration didn't finish within 90 seconds. Check the network with: provider doctor")
 			return false
 		case <-ticker.C:
 			if device := readMinerDevice(); device.clientId != "" {
-				_ = stopSetupChild(command.Process, runtime.GOOS == "windows")
+				_ = stopSetupChild(command.Process)
 				select {
 				case <-exited:
 				case <-time.After(20 * time.Second):
