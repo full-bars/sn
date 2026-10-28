@@ -56,17 +56,21 @@ pr_warn() {
     printf "%s: $fmt\n" "$me" "$@" >&2
 }
 
-# get_asset_digest_from_api_response extracts the sha256 hex digest for an asset.
+# get_asset_digest_from_api_response returns the sha256 hex for a named asset.
+# Empty means the release has no digest; a present but malformed digest returns
+# __INVALID_SHA256__ so callers refuse it rather than downgrading to no digest.
 get_asset_digest_from_api_response() {
     _rel="$1"
     _ast="$2"
     _dig=""
     if command -v jq > /dev/null 2>&1; then
         _dig="$(printf '%s' "$_rel" | jq -r --arg a "$_ast" '
-            (.assets[]? | select(.name == $a) | .digest)
-            | select(type == "string")
-            | sub("^sha256:"; "")
-            | select(test("^[0-9a-fA-F]{64}$"))
+            (.assets[]? | select(.name == $a) | .digest) as $d
+            | if $d == null or $d == "" then ""
+              elif ($d | type) != "string" then "__INVALID_SHA256__"
+              else ($d | sub("^sha256:"; "")) as $h
+                | if ($h | test("^[0-9a-fA-F]{64}$")) then $h else "__INVALID_SHA256__" end
+              end
         ' 2>/dev/null || true)"
     elif command -v python3 > /dev/null 2>&1; then
         _dig="$(printf '%s' "$_rel" | python3 -c '
@@ -75,13 +79,20 @@ try:
     doc = json.load(sys.stdin)
 except Exception:
     sys.exit(0)
-val = ""
 for asset in doc.get("assets", []):
     if asset.get("name") == sys.argv[1]:
-        val = asset.get("digest") or ""
+        val = asset.get("digest")
+        if val is None or val == "":
+            print("")
+        elif not isinstance(val, str):
+            print("__INVALID_SHA256__")
+        else:
+            if val.startswith("sha256:"):
+                val = val[len("sha256:"):]
+            print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "__INVALID_SHA256__")
         break
-val = val.replace("sha256:", "")
-print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
+else:
+    print("")
 ' "$_ast" 2>/dev/null || true)"
     fi
     printf '%s' "$_dig"
@@ -579,6 +590,7 @@ do_install() {
     esac
 
     provider_asset="urnetwork-provider-$tag.tar.gz"
+    tool_asset="urnet-tools-freebsd-$goarch"
 
     # Fail closed. The digest comes from the release metadata, so the tarball is
     # installed only when that metadata lists it. An unreachable or rate-limited
@@ -605,6 +617,25 @@ do_install() {
         exit 1
     fi
     provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
+    if [ "$provider_digest" = "__INVALID_SHA256__" ]; then
+        pr_err "Release %s has an invalid sha256 digest for provider asset '%s'." "$tag" "$provider_asset"
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    # Validate the tool asset's digest from this SAME metadata snapshot, before
+    # anything on disk is touched. Checking it at the tool step instead put the
+    # refusal after the provider had already been backed up and replaced, so a
+    # malformed tool digest produced a partial install: a new provider on disk,
+    # stale version metadata, no service restart and a leaked backup. A release
+    # asset with no digest must read as ABSENT, not as the four characters
+    # "null", so an unknown digest means "cannot verify" and takes the same
+    # deliberate path.
+    tool_digest="$(get_asset_digest_from_api_response "$release_json" "$tool_asset")"
+    if [ "$tool_digest" = "__INVALID_SHA256__" ]; then
+        pr_err "Release %s has an invalid sha256 digest for tool asset '%s'." "$tag" "$tool_asset"
+        pr_err "Refusing to install an unverified urnet-tools."
+        exit 1
+    fi
 
     tarball_url="https://github.com/full-bars/sn/releases/download/$tag/$provider_asset"
     pr_info "Downloading %s..." "$tarball_url"
@@ -692,38 +723,10 @@ do_install() {
     # Install the tool: the Go urnet-tools binary shipped as a release asset,
     # digest-verified; fall back to this shell script for releases that
     # predate the Go asset.
-    tool_asset="urnet-tools-freebsd-$goarch"
-    # A release asset with no digest must read as ABSENT, not as the four
-    # characters "null". jq prints the string null for a missing or null field,
-    # which passed the -n test below and then failed the comparison, so every
-    # install silently fell back to the shell wrapper while reporting success.
-    # Select the asset first and require a real hex digest, so an unknown
-    # digest means "cannot verify" and takes the same deliberate path.
-    tool_digest=""
-    release_json="$(http_fetch "$github_api/releases/tags/$tag" 2>/dev/null)"
-    if command -v jq > /dev/null 2>&1; then
-        tool_digest="$(printf '%s' "$release_json" | jq -r --arg a "$tool_asset" '
-            (.assets[]? | select(.name == $a) | .digest)
-            | select(type == "string")
-            | sub("^sha256:"; "")
-            | select(test("^[0-9a-fA-F]{64}$"))
-        ' 2>/dev/null || true)"
-    elif command -v python3 > /dev/null 2>&1; then
-        tool_digest="$(printf '%s' "$release_json" | python3 -c '
-import sys, json, re
-try:
-    doc = json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-val = ""
-for asset in doc.get("assets", []):
-    if asset.get("name") == sys.argv[1]:
-        val = asset.get("digest") or ""
-        break
-val = val.replace("sha256:", "")
-print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
-' "$tool_asset" 2>/dev/null || true)"
-    fi
+    # tool_asset and its validated tool_digest were resolved from the release
+    # metadata before any file on disk was touched, so reaching here means the
+    # digest is either absent (a release that predates the Go asset) or a real
+    # sha256. Nothing to refuse now, and refusing here would be too late.
 
     if [ -n "$tool_digest" ]; then
         if http_fetch "https://github.com/full-bars/sn/releases/download/$tag/$tool_asset" "$tmpdir/$tool_asset" 2>/dev/null; then

@@ -47,74 +47,6 @@ func TestInstallerScriptDoInstallBodyNotDuplicated(t *testing.T) {
 	}
 }
 
-func TestWin32InstallerFailsClosedOnBinarySwap(t *testing.T) {
-	b, err := os.ReadFile("../../scripts/Provider_Install_Win32.ps1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	script := strings.ReplaceAll(string(b), "\r\n", "\n")
-
-	providerStart := strings.Index(script, "if (Test-Path $InstalledBinaryPath) {")
-	if providerStart < 0 {
-		t.Fatal("provider binary swap block is missing")
-	}
-	providerEnd := strings.Index(script[providerStart:], "$InstalledToolsBinaryPath =")
-	if providerEnd < 0 {
-		t.Fatal("could not find the end of the provider binary swap block")
-	}
-	providerSwap := script[providerStart : providerStart+providerEnd]
-	for _, marker := range []string{
-		"Remove-Item -Path $InstalledBinaryPath -Force -ErrorAction Stop",
-		"Move-Item -Path $BinaryPath -Destination $InstalledBinaryPath -ErrorAction Stop",
-		"if (Test-Path $BinaryPath) {\n    throw \"Provider binary remains in staging after install.",
-		"if (-not (Test-Path $InstalledBinaryPath)) {\n    throw \"Provider binary was not installed at",
-	} {
-		if !strings.Contains(providerSwap, marker) {
-			t.Errorf("provider binary swap does not fail closed at %q", marker)
-		}
-	}
-	if strings.Contains(providerSwap, "catch") {
-		t.Error("provider binary swap catches and may swallow a terminating error")
-	}
-	versionWrite := strings.Index(script, "Set-Content $VersionFile $ReleaseVersion")
-	successLine := strings.Index(script, `Write-Host "Installation complete!`)
-	if versionWrite < providerStart+providerEnd || successLine < versionWrite {
-		t.Fatal("version and success messages must follow the verified provider binary swap")
-	}
-
-	for _, marker := range []string{
-		"Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop",
-		"Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop",
-		"Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop",
-	} {
-		if !strings.Contains(script, marker) {
-			t.Errorf("tool binary swap does not fail closed at %q", marker)
-		}
-	}
-	if got := strings.Count(script, "Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop"); got != 2 {
-		t.Errorf("found %d terminating tool backups, want 2", got)
-	}
-
-	for _, move := range []string{
-		"Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop",
-		"Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop",
-	} {
-		moveAt := strings.Index(script, move)
-		if moveAt < 0 {
-			t.Errorf("missing terminating tool install %q", move)
-			continue
-		}
-		installedAt := strings.Index(script[moveAt:], "$ToolGoInstalled = $true")
-		if installedAt < 0 {
-			t.Fatalf("could not find success flag after %q", move)
-		}
-		block := script[moveAt : moveAt+installedAt]
-		if !strings.Contains(block, "-not (Test-Path $InstalledToolsBinaryPath)") || !strings.Contains(block, "throw ") {
-			t.Errorf("tool success flag is not guarded by an installed-binary check after %q", move)
-		}
-	}
-}
-
 // resolve_service_user is the only thing deciding which account the FreeBSD
 // provider runs as, and getting it wrong means the internet-facing relay runs
 // as root. These cases EXECUTE the real function from the script (extracted
@@ -414,69 +346,354 @@ openrc_install_root=/usr/local/lib/urnetwork-provider
 	}
 }
 
-// The version files must be written only after the service step has succeeded.
-// They used to be written before it, so a failed start left .version and .date
-// naming a release that never ran, and a rollback put the old binary back under
-// files that claimed the new one. The code order is right now, but nothing
-// pinned it: moving either write earlier kept the suite green.
-func TestLinuxVersionFilesWrittenOnlyAfterSuccessfulStart(t *testing.T) {
-	tag := "v2026.10.27"
-	assetName := "urnetwork-provider-" + tag + ".tar.gz"
-	tarballContent := []byte("provider-tarball-bytes")
-	sum := sha256.Sum256(tarballContent)
-	digest := hex.EncodeToString(sum[:])
-	releaseJSON := fmt.Sprintf(`{
-		"tag_name": %q,
-		"published_at": "2026-10-27T00:00:00Z",
-		"assets": [{"name": %q, "digest": "sha256:%s"}]
-	}`, tag, assetName, digest)
-
-	read := func(dir, name string) string {
-		b, err := os.ReadFile(filepath.Join(dir, name))
-		if err != nil {
-			return ""
+// runOpenRCSudoStart runs the real install_openrc_units and
+// openrc_rollback_binary_swap for the non-root (sudo) branch, with a live/.old
+// pair left by a swap. sudo is a passthrough and rc-service on PATH records
+// each call and the binary live at that moment; startFails makes only the
+// first start fail.
+func runOpenRCSudoStart(t *testing.T, startFails bool) (out string, err error, live, calls string) {
+	t.Helper()
+	skipWithoutPOSIXShell(t)
+	source := readInstaller(t)
+	fnInstall := extractShellFunc(t, source, "install_openrc_units")
+	fnRollback := extractShellFunc(t, source, "openrc_rollback_binary_swap")
+	if fnInstall == "" || fnRollback == "" {
+		t.Fatal("could not extract install_openrc_units or openrc_rollback_binary_swap from the Linux installer")
+	}
+	root := t.TempDir()
+	installRoot := filepath.Join(root, "lib")
+	installPath := filepath.Join(installRoot, "urnetwork-provider")
+	binDir := filepath.Join(installPath, "bin")
+	home := filepath.Join(root, "home")
+	initd := filepath.Join(root, "initd", "urnetwork")
+	live = filepath.Join(binDir, "urnetwork")
+	for _, dir := range []string{binDir, home, filepath.Dir(initd)} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
 		}
-		return strings.TrimSpace(string(b))
+	}
+	if err := os.WriteFile(live, []byte("NEW"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(live+".old", []byte("PREVIOUS"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	stubDir := t.TempDir()
+	record := filepath.Join(stubDir, "rc-service.calls")
+	flag := filepath.Join(stubDir, "first-start-done")
+	failFirst := ""
+	if startFails {
+		failFirst = "if [ \"$1\" = urnetwork ] && [ \"$2\" = start ] && [ ! -e '" + flag + "' ]; then\n" +
+			"    : > '" + flag + "'\n" +
+			"    exit 1\n" +
+			"fi\n"
+	}
+	rcService := "#!/bin/sh\n" +
+		"printf '%s live=%s\\n' \"$*\" \"$(cat '" + live + "' 2>/dev/null)\" >> '" + record + "'\n" +
+		failFirst + "exit 0\n"
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-service"), []byte(rcService), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-update"), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	out, err = runShellScriptWithPath(t, stubDir, `
+install_path="`+installPath+`"
+openrc_install_root="`+installRoot+`"
+openrc_user="urnet"
+openrc_initd_file="`+initd+`"
+openrc_swap_pending=1
+openrc_units_stopped=1
+id() { if [ "$1" = -u ]; then echo 1000; fi; return 0; }
+sudo() { if [ "$1" = -n ]; then shift; fi; "$@"; }
+openrc_user_home() { echo "`+home+`"; }
+openrc_resolve_parent() { if [ "$1" = --full ]; then shift; fi; echo "$1"; }
+openrc_finalize_root_paths() { return 0; }
+openrc_restore_update_entry() { :; }
+openrc_service_running() { return 1; }
+pr_info() { printf 'INFO: %s\n' "$*"; }
+pr_warn() { printf 'WARN: %s\n' "$*"; }
+pr_err() { printf 'ERROR: %s\n' "$*"; }
+`+fnRollback+`
+`+fnInstall+`
+install_openrc_units
+echo "pending=$openrc_swap_pending"
+openrc_rollback_binary_swap
+echo "after-rollback live=$(cat '`+live+`')"
+`)
+	raw, _ := os.ReadFile(record)
+	return out, err, live, string(raw)
+}
+
+func TestOpenRCFailedSudoStartRollsBackAndFails(t *testing.T) {
+	out, err, live, calls := runOpenRCSudoStart(t, true)
+	if err == nil {
+		t.Fatalf("sudo start failure returned success; want rollback + non-zero exit (output:\n%s)", out)
+	}
+	if got, rerr := os.ReadFile(live); rerr != nil || string(got) != "PREVIOUS" {
+		t.Errorf("rollback did not restore the previous binary: got %q (%v); out:\n%s", got, rerr, out)
+	}
+	if _, serr := os.Stat(live + ".old"); serr == nil {
+		t.Error("the .old file must be consumed by the rollback")
+	}
+	if want := "urnetwork start live=NEW\nurnetwork start live=PREVIOUS\n"; calls != want {
+		t.Errorf("rc-service calls:\n%s\nwant a failed start on NEW, then a restart on PREVIOUS (out:\n%s)", calls, out)
+	}
+}
+
+// The success twin: a clean sudo start must consume urnetwork.old and clear
+// openrc_swap_pending, so a later rollback call cannot undo a good update.
+func TestOpenRCSuccessfulSudoStartCleansUpAndDisarmsRollback(t *testing.T) {
+	out, err, live, calls := runOpenRCSudoStart(t, false)
+	if err != nil {
+		t.Fatalf("successful sudo start failed: %v (output:\n%s)", err, out)
+	}
+	if _, serr := os.Stat(live + ".old"); serr == nil {
+		t.Errorf("urnetwork.old must be removed after a successful start (out:\n%s)", out)
+	}
+	if !strings.Contains(out, "pending=0") {
+		t.Errorf("openrc_swap_pending must be 0 after success (out:\n%s)", out)
+	}
+	if !strings.Contains(out, "after-rollback live=NEW") {
+		t.Errorf("a rollback after success must be a no-op and keep the new binary (out:\n%s)", out)
+	}
+	if want := "urnetwork start live=NEW\n"; calls != want {
+		t.Errorf("rc-service calls = %q, want exactly one start (out:\n%s)", calls, out)
+	}
+}
+
+// A fresh install has no previous binary to roll back, so the sudo-start
+// failure path must fail WITHOUT claiming (or attempting) a rollback. The
+// wording matters as much as the exit code: telling an operator "rolling back
+// the provider update" when openrc_swap_pending is 0 is a false report.
+func TestOpenRCFreshInstallSudoStartFailureDoesNotRollBack(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := extractShellFunc(t, strings.ReplaceAll(string(b), "\r\n", "\n"), "install_openrc_units")
+	if fn == "" {
+		t.Fatal("could not extract install_openrc_units from the Linux installer")
+	}
+	tempDir := t.TempDir()
+	serviceHome := filepath.Join(tempDir, "home")
+	if err := os.MkdirAll(serviceHome, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	actions := filepath.Join(tempDir, "actions.log")
+	installRoot := "/usr/local/lib/urnetwork-provider"
+	harness := fmt.Sprintf(`
+pr_info() { :; }
+pr_warn() { :; }
+pr_err() { echo "[ERROR] $*"; }
+openrc_user_home() { echo %q; }
+openrc_restore_update_entry() { :; }
+openrc_resolve_parent() { echo %q; }
+openrc_finalize_root_paths() { return 0; }
+openrc_rollback_binary_swap() { echo rollback >> %q; }
+id() { if [ "$1" = "-u" ]; then echo 1000; fi; return 0; }
+sudo() {
+    if [ "$1" = "-n" ] && [ "$2" = "true" ]; then return 0; fi
+    if [ "$1" = "rc-service" ]; then echo start >> %q; return 1; fi
+    return 0
+}
+`, serviceHome, installRoot, actions, actions)
+	cmd := exec.Command("/bin/sh", "-c", harness+fn+fmt.Sprintf(`
+openrc_user=urnet
+openrc_install_root=%q
+openrc_initd_file=%q
+install_path=%q
+openrc_swap_pending=0
+openrc_units_stopped=0
+install_openrc_units
+`, installRoot, filepath.Join(tempDir, "init.d", "urnetwork"), installRoot))
+	cmd.Env = []string{"PATH=/usr/bin:/bin"}
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("fresh-install sudo start failure returned success; want non-zero exit (output:\n%s)", out)
+	}
+	got, readErr := os.ReadFile(actions)
+	if readErr != nil {
+		t.Fatalf("read action log: %v (output:\n%s)", readErr, out)
+	}
+	if strings.Contains(string(got), "rollback") {
+		t.Fatalf("fresh install attempted a rollback with nothing to restore (actions %q, output:\n%s)", got, out)
+	}
+	if strings.Contains(string(out), "rolling back") {
+		t.Fatalf("fresh install claimed it rolled back an update that never happened (output:\n%s)", out)
+	}
+	if !strings.Contains(string(out), "did not start") {
+		t.Fatalf("expected the operator to be told the service did not start (output:\n%s)", out)
+	}
+}
+
+// freebsdDigestParserVerdict calls the FreeBSD installer's real
+// get_asset_digest_from_api_response on release for asset and returns what it
+// prints.
+func freebsdDigestParserVerdict(t *testing.T, release, asset string) string {
+	t.Helper()
+	skipWithoutPOSIXShell(t)
+	_, jqErr := exec.LookPath("jq")
+	_, pyErr := exec.LookPath("python3")
+	if jqErr != nil && pyErr != nil {
+		t.Skip("neither jq nor python3 on this host; cannot execute the digest parser")
+	}
+	b, err := os.ReadFile("../../scripts/Provider_Install_FreeBSD.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := extractShellFunc(t, strings.ReplaceAll(string(b), "\r\n", "\n"), "get_asset_digest_from_api_response")
+	if fn == "" {
+		t.Fatal("could not extract get_asset_digest_from_api_response from the FreeBSD installer")
+	}
+	cmd := exec.Command("/bin/sh", "-c", fn+"\nget_asset_digest_from_api_response \"$1\" \"$2\"", "sh", release, asset)
+	cmd.Env = os.Environ()
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("digest parser run failed: %v", err)
+	}
+	return strings.TrimSpace(string(out))
+}
+
+// A malformed tool digest must stop the install BEFORE the provider is touched.
+// The check used to sit at the tool step, which runs after the provider has been
+// backed up and replaced, so refusing there produced a partial install: new
+// provider on disk, stale version metadata, no service restart, leaked backup.
+// Asserting on source text could not catch that, and an inverted comparison
+// (`!=` for `=`) satisfied the old string checks, so this drives do_install.
+func TestFreeBSDToolDigestRefusedBeforeProviderMutation(t *testing.T) {
+	const hex64 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	tag := "v2026.10.27"
+	providerAsset := "urnetwork-provider-" + tag + ".tar.gz"
+	toolAsset := "urnet-tools-freebsd-amd64"
+	tarballContent := []byte("provider-tarball-bytes")
+	// The provider digest must be REAL. A fake one makes the install abort at
+	// the tarball comparison instead, which yields the same shape as a tool
+	// refusal (non-zero exit, no tar) and would let this test pass for the
+	// wrong reason.
+	providerSum := sha256.Sum256(tarballContent)
+	providerDigest := hex.EncodeToString(providerSum[:])
+
+	releaseWith := func(toolDigest string) string {
+		return fmt.Sprintf(`{
+			"tag_name": %q,
+			"published_at": "2026-10-27T00:00:00Z",
+			"assets": [
+				{"name": %q, "digest": "sha256:%s"},
+				{"name": %q, "digest": %q}
+			]
+		}`, tag, providerAsset, providerDigest, toolAsset, toolDigest)
 	}
 
-	t.Run("failed start leaves the previous version files", func(t *testing.T) {
-		res := runLinuxInstaller(t, installerHarnessOpts{
-			tag:             tag,
-			releaseJSON:     releaseJSON,
-			tarballData:     tarballContent,
-			existingBin:     "previous-provider-binary",
-			existingVersion: "v-previous",
-			existingDate:    "1700000000",
-			failRestart:     true,
+	// Malformed tool digest: refuse, and do it before any provider work.
+	for _, tc := range []struct{ name, digest string }{
+		{"short sha256", "sha256:deadbeef"},
+		{"unsupported algorithm", "sha512:" + hex64},
+		{"short bare string without algorithm prefix", "12"},
+	} {
+		t.Run("malformed/"+tc.name, func(t *testing.T) {
+			// Precondition: the digest parser rejects this value on its own, so
+			// the refusal below cannot come from some unrelated failure.
+			if got := freebsdDigestParserVerdict(t, releaseWith(tc.digest), toolAsset); got != "__INVALID_SHA256__" {
+				t.Fatalf("digest parser returned %q for %q, want __INVALID_SHA256__", got, tc.digest)
+			}
+			res := runFreeBSDInstaller(t, installerHarnessOpts{
+				tag:         tag,
+				releaseJSON: releaseWith(tc.digest),
+				tarballData: tarballContent,
+			})
+			if res.exitCode == 0 {
+				t.Fatalf("malformed tool digest was accepted; expected refusal (out:\n%s)", res.stdout)
+			}
+			if len(res.tarCalls) != 0 {
+				t.Fatalf("provider tarball was extracted before the tool digest was refused: tar calls %v (out:\n%s)",
+					res.tarCalls, res.stdout)
+			}
+			if !strings.Contains(res.stdout+res.stderr, "tool asset") {
+				t.Errorf("refusal does not name the tool asset (out:\n%s)", res.stdout)
+			}
 		})
-		if res.exitCode == 0 {
-			t.Fatalf("a failed service start reported success (out:\n%s)", res.stdout)
+	}
+
+	// Absent tool digest is the pre-Go-asset release case: the install still
+	// proceeds, so the refusal must not swallow the documented skip path.
+	t.Run("absent digest still proceeds", func(t *testing.T) {
+		res := runFreeBSDInstaller(t, installerHarnessOpts{
+			tag: tag,
+			releaseJSON: fmt.Sprintf(`{
+				"tag_name": %q,
+				"published_at": "2026-10-27T00:00:00Z",
+				"assets": [{"name": %q, "digest": "sha256:%s"}]
+			}`, tag, providerAsset, providerDigest),
+			tarballData: tarballContent,
+		})
+		if res.exitCode != 0 {
+			t.Fatalf("an absent tool digest must still install, got exit %d (out:\n%s)", res.exitCode, res.stdout)
 		}
-		if got := read(res.installDir, ".version"); got != "v-previous" {
-			t.Errorf(".version = %q after a failed start, want the previous value v-previous: the write ran before the service proved up", got)
+		if len(res.tarCalls) == 0 {
+			t.Fatal("expected the provider tarball to be extracted when the tool digest is absent")
 		}
-		if got := read(res.installDir, ".date"); got != "1700000000" {
-			t.Errorf(".date = %q after a failed start, want the previous value 1700000000: the write ran before the service proved up", got)
+	})
+}
+
+// The rollback must attempt the restart even when rc-service is not on the
+// caller's PATH. A passwordless sudo commonly carries its own secure_path, so
+// rc-service can resolve through sudo while `command -v rc-service` fails in the
+// unprivileged shell. The old guard then skipped the restart silently and left a
+// service this function had stopped down, with no warning.
+func TestOpenRCRollbackRestartsWhenRcServiceIsOutsideTheCallerPath(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := extractShellFunc(t, strings.ReplaceAll(string(b), "\r\n", "\n"), "openrc_rollback_binary_swap")
+	if fn == "" {
+		t.Fatal("could not extract openrc_rollback_binary_swap from the Linux installer")
+	}
+
+	run := func(t *testing.T, unitsStopped string) (string, string) {
+		t.Helper()
+		tempDir := t.TempDir()
+		actions := filepath.Join(tempDir, "actions.log")
+		installRoot := filepath.Join(tempDir, "root")
+		if err := os.MkdirAll(filepath.Join(installRoot, "bin"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		harness := fmt.Sprintf(`
+pr_warn() { echo "[WARN] $*"; }
+pr_err()  { echo "[ERROR] $*"; }
+sudo() { echo "sudo $*" >> %q; return 0; }
+`, actions)
+		cmd := exec.Command("/bin/sh", "-c", harness+fn+fmt.Sprintf(`
+install_path=%q
+openrc_swap_pending=1
+openrc_units_stopped=%s
+SUDO=sudo
+openrc_rollback_binary_swap
+`, installRoot, unitsStopped))
+		// A PATH with no rc-service in it: the whole point of the case.
+		cmd.Env = []string{"PATH=/nonexistent"}
+		out, _ := cmd.CombinedOutput()
+		got, _ := os.ReadFile(actions)
+		return string(got), string(out)
+	}
+
+	t.Run("stopped service is restarted", func(t *testing.T) {
+		log, out := run(t, "1")
+		if !strings.Contains(log, "rc-service urnetwork start") {
+			t.Fatalf("rollback did not attempt the restart when rc-service was outside PATH (actions %q, out:\n%s)", log, out)
+		}
+		if !strings.Contains(out, "Restarted the service") {
+			t.Errorf("rollback did not report the successful restart (out:\n%s)", out)
 		}
 	})
 
-	t.Run("successful start records the new release", func(t *testing.T) {
-		res := runLinuxInstaller(t, installerHarnessOpts{
-			tag:             tag,
-			releaseJSON:     releaseJSON,
-			tarballData:     tarballContent,
-			existingBin:     "previous-provider-binary",
-			existingVersion: "v-previous",
-			existingDate:    "1700000000",
-		})
-		if res.exitCode != 0 {
-			t.Fatalf("a successful start did not install, exit %d (out:\n%s)", res.exitCode, res.stdout)
-		}
-		if got := read(res.installDir, ".version"); got == "" || got == "v-previous" {
-			t.Errorf(".version = %q after a successful start, want the installed release", got)
-		}
-		if got := read(res.installDir, ".date"); got == "" || got == "1700000000" {
-			t.Errorf(".date = %q after a successful start, want the release date", got)
+	t.Run("service that was never stopped is not restarted", func(t *testing.T) {
+		log, out := run(t, "0")
+		if strings.Contains(log, "rc-service") {
+			t.Fatalf("rollback restarted a service it never stopped (actions %q, out:\n%s)", log, out)
 		}
 	})
 }
@@ -563,12 +780,14 @@ func TestFreeBSDToolDigestLookup(t *testing.T) {
 		t.Fatal(err)
 	}
 	script := strings.ReplaceAll(string(b), "\r\n", "\n")
-	i := strings.Index(script, `tool_digest="$(printf`)
-	j := strings.Index(script, `if [ -n "$tool_digest" ]`)
-	if i < 0 || j < 0 || j <= i {
-		t.Fatal("could not locate the tool digest lookup in the FreeBSD installer")
+	// The tool digest now goes through the shared helper, so this exercises the
+	// same parser the provider path uses. The inline duplicate it replaced had
+	// drifted: it kept the old hex filter and silently lost the malformed-digest
+	// sentinel, so a bad tool digest fell back to the unverified shell wrapper.
+	block := extractShellFunc(t, script, "get_asset_digest_from_api_response")
+	if block == "" {
+		t.Fatal("could not extract get_asset_digest_from_api_response from the FreeBSD installer")
 	}
-	block := script[i:j]
 
 	const hex64 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 	cases := []struct {
@@ -579,8 +798,9 @@ func TestFreeBSDToolDigestLookup(t *testing.T) {
 		{"digest field absent", `{"assets":[{"name":"urnet-tools-freebsd-amd64"}]}`, ""},
 		{"digest explicitly null", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":null}]}`, ""},
 		{"digest empty string", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":""}]}`, ""},
-		{"not a hex digest", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":"deadbeef"}]}`, ""},
-		{"different algorithm", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":"sha512:` + hex64 + `"}]}`, ""},
+		{"not a hex digest", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":"deadbeef"}]}`, "__INVALID_SHA256__"},
+		{"different algorithm", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":"sha512:` + hex64 + `"}]}`, "__INVALID_SHA256__"},
+		{"non-string digest", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":123}]}`, "__INVALID_SHA256__"},
 		{"other asset matched", `{"assets":[{"name":"urnet-tools-linux-amd64","digest":"sha256:` + hex64 + `"}]}`, ""},
 		{"real sha256", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":"sha256:` + hex64 + `"}]}`, hex64},
 		{"bare hex", `{"assets":[{"name":"urnet-tools-freebsd-amd64","digest":"` + hex64 + `"}]}`, hex64},
@@ -607,13 +827,13 @@ func TestFreeBSDToolDigestLookup(t *testing.T) {
 	// A missing marker is a FAILURE, not a skip: the previous version wrapped
 	// this in `if found {`, so adding one space to the expression made every
 	// jq subtest vanish while the test reported success (mutation-proved).
-	jqStart := strings.Index(block, "jq -r --arg a \"$tool_asset\" '")
+	jqStart := strings.Index(block, "jq -r --arg a \"$_ast\" '")
 	if !haveJq {
 		t.Log("jq not installed here; exercising only the python path")
 	} else if jqStart < 0 {
 		t.Error("could not find the jq digest expression in the installer; the marker moved and this test would otherwise pass vacuously")
 	} else {
-		expr := block[jqStart+len("jq -r --arg a \"$tool_asset\" '"):]
+		expr := block[jqStart+len("jq -r --arg a \"$_ast\" '"):]
 		end := strings.Index(expr, "' 2>/dev/null")
 		if end < 0 {
 			t.Error("could not find the end of the jq digest expression; the marker moved and this test would otherwise pass vacuously")
@@ -646,7 +866,7 @@ func TestFreeBSDToolDigestLookup(t *testing.T) {
 		t.Error("could not find the python digest expression in the installer; the marker moved and this test would otherwise pass vacuously")
 	} else {
 		py := block[pyStart+len("python3 -c '"):]
-		pyEnd := strings.Index(py, "' \"$tool_asset\"")
+		pyEnd := strings.Index(py, "' \"$_ast\"")
 		if pyEnd < 0 {
 			t.Error("could not find the end of the python digest expression; the marker moved")
 		} else {
@@ -955,7 +1175,11 @@ pr_warn() { printf "[WARN] %%s\n" "$*" >&2; }
 pr_info() { printf "[INFO] %%s\n" "$*"; }
 priv() { "$@"; }
 sudo() { "$@"; }
-user_shell() { echo "/bin/sh"; }`+verifyHarness+`
+user_shell() { echo "/bin/sh"; }
+# Pin the host architecture. The harness ships amd64 tarball members, so on an
+# arm64 host (an Apple Silicon macOS runner) the script looked for arm64 members
+# and every FreeBSD case failed for a reason the test is not about.
+uname() { case "${1:-}" in -m) echo x86_64 ;; *) echo FreeBSD ;; esac; }`+verifyHarness+`
 assert_state_path_safe() { return 0; }
 set_rc_conf_default() { return 0; }
 write_rc_script_body() { echo "# rc"; }
@@ -1072,7 +1296,7 @@ do_install %q
 
 	fullScript := harness + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
-	cmd.Env = []string{"PATH=/usr/bin:/bin"}
+	cmd.Env = []string{"PATH=/usr/sbin:/usr/bin:/bin"}
 	if opts.failBackup {
 		cmd.Env = append(cmd.Env, "FAIL_BACKUP=1")
 	}
@@ -1523,6 +1747,55 @@ func TestInstallerProviderTarballNoDigestWarnsAndProceeds(t *testing.T) {
 				t.Errorf("expected warning specifically naming unverified asset %q:\n%s", assetName, combinedOut)
 			}
 		})
+	}
+}
+
+// A digest field that exists but is malformed is not the same as a release
+// that predates digests: malformed metadata must not silently disable hashing.
+func TestInstallerProviderTarballInvalidDigestAborts(t *testing.T) {
+	tag := "v2026.10.27"
+	assetName := "urnetwork-provider-" + tag + ".tar.gz"
+	for _, digest := range []struct {
+		name string
+		json string
+	}{
+		{"short_sha256", `"sha256:deadbeef"`},
+		{"unsupported_algorithm", `"sha512:` + strings.Repeat("a", 64) + `"`},
+		{"non_string", `123`},
+	} {
+		releaseJSON := fmt.Sprintf(`{
+			"tag_name": %q,
+			"published_at": "2026-10-27T00:00:00Z",
+			"assets": [{"name": %q, "digest": %s}]
+		}`, tag, assetName, digest.json)
+		for _, tc := range []struct {
+			name string
+			run  func(*testing.T, installerHarnessOpts) installerHarnessResult
+		}{
+			{"FreeBSD", runFreeBSDInstaller},
+			{"Linux", runLinuxInstaller},
+		} {
+			t.Run(tc.name+"/"+digest.name, func(t *testing.T) {
+				res := tc.run(t, installerHarnessOpts{
+					tag:         tag,
+					releaseJSON: releaseJSON,
+					tarballData: []byte("unverified-provider-tarball"),
+				})
+				combined := res.stdout + "\\n" + res.stderr
+				if res.exitCode == 0 {
+					t.Fatalf("malformed digest %s was accepted; expected refusal (output:\\n%s)", digest.name, combined)
+				}
+				if len(res.tarCalls) != 0 {
+					t.Errorf("tar extracted unverified asset: %v", res.tarCalls)
+				}
+				if tc.name == "FreeBSD" && !strings.Contains(combined, "invalid sha256 digest") {
+					t.Errorf("missing invalid-digest refusal for %s (output:\\n%s)", digest.name, combined)
+				}
+				if tc.name == "Linux" && !strings.Contains(combined, "digest mismatch") && !strings.Contains(combined, "invalid sha256 digest") {
+					t.Errorf("Linux did not reject malformed digest %s (output:\\n%s)", digest.name, combined)
+				}
+			})
+		}
 	}
 }
 
@@ -2042,5 +2315,133 @@ func TestInstallerBackupFailureAbortsSwap(t *testing.T) {
 				t.Errorf("a failed backup must be reported (out:\n%s)", res.stdout)
 			}
 		})
+	}
+}
+func TestLinuxVersionFilesWrittenOnlyAfterSuccessfulStart(t *testing.T) {
+	tag := "v2026.10.27"
+	assetName := "urnetwork-provider-" + tag + ".tar.gz"
+	tarballContent := []byte("provider-tarball-bytes")
+	sum := sha256.Sum256(tarballContent)
+	digest := hex.EncodeToString(sum[:])
+	releaseJSON := fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [{"name": %q, "digest": "sha256:%s"}]
+	}`, tag, assetName, digest)
+
+	read := func(dir, name string) string {
+		b, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			return ""
+		}
+		return strings.TrimSpace(string(b))
+	}
+
+	t.Run("failed start leaves the previous version files", func(t *testing.T) {
+		res := runLinuxInstaller(t, installerHarnessOpts{
+			tag:             tag,
+			releaseJSON:     releaseJSON,
+			tarballData:     tarballContent,
+			existingBin:     "previous-provider-binary",
+			existingVersion: "v-previous",
+			existingDate:    "1700000000",
+			failRestart:     true,
+		})
+		if res.exitCode == 0 {
+			t.Fatalf("a failed service start reported success (out:\n%s)", res.stdout)
+		}
+		if got := read(res.installDir, ".version"); got != "v-previous" {
+			t.Errorf(".version = %q after a failed start, want the previous value v-previous: the write ran before the service proved up", got)
+		}
+		if got := read(res.installDir, ".date"); got != "1700000000" {
+			t.Errorf(".date = %q after a failed start, want the previous value 1700000000: the write ran before the service proved up", got)
+		}
+	})
+
+	t.Run("successful start records the new release", func(t *testing.T) {
+		res := runLinuxInstaller(t, installerHarnessOpts{
+			tag:             tag,
+			releaseJSON:     releaseJSON,
+			tarballData:     tarballContent,
+			existingBin:     "previous-provider-binary",
+			existingVersion: "v-previous",
+			existingDate:    "1700000000",
+		})
+		if res.exitCode != 0 {
+			t.Fatalf("a successful start did not install, exit %d (out:\n%s)", res.exitCode, res.stdout)
+		}
+		if got := read(res.installDir, ".version"); got == "" || got == "v-previous" {
+			t.Errorf(".version = %q after a successful start, want the installed release", got)
+		}
+		if got := read(res.installDir, ".date"); got == "" || got == "1700000000" {
+			t.Errorf(".date = %q after a successful start, want the release date", got)
+		}
+	})
+}
+func TestWin32InstallerFailsClosedOnBinarySwap(t *testing.T) {
+	b, err := os.ReadFile("../../scripts/Provider_Install_Win32.ps1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := strings.ReplaceAll(string(b), "\r\n", "\n")
+
+	providerStart := strings.Index(script, "if (Test-Path $InstalledBinaryPath) {")
+	if providerStart < 0 {
+		t.Fatal("provider binary swap block is missing")
+	}
+	providerEnd := strings.Index(script[providerStart:], "$InstalledToolsBinaryPath =")
+	if providerEnd < 0 {
+		t.Fatal("could not find the end of the provider binary swap block")
+	}
+	providerSwap := script[providerStart : providerStart+providerEnd]
+	for _, marker := range []string{
+		"Remove-Item -Path $InstalledBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $BinaryPath -Destination $InstalledBinaryPath -ErrorAction Stop",
+		"if (Test-Path $BinaryPath) {\n    throw \"Provider binary remains in staging after install.",
+		"if (-not (Test-Path $InstalledBinaryPath)) {\n    throw \"Provider binary was not installed at",
+	} {
+		if !strings.Contains(providerSwap, marker) {
+			t.Errorf("provider binary swap does not fail closed at %q", marker)
+		}
+	}
+	if strings.Contains(providerSwap, "catch") {
+		t.Error("provider binary swap catches and may swallow a terminating error")
+	}
+	versionWrite := strings.Index(script, "Set-Content $VersionFile $ReleaseVersion")
+	successLine := strings.Index(script, `Write-Host "Installation complete!`)
+	if versionWrite < providerStart+providerEnd || successLine < versionWrite {
+		t.Fatal("version and success messages must follow the verified provider binary swap")
+	}
+
+	for _, marker := range []string{
+		"Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop",
+		"Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop",
+	} {
+		if !strings.Contains(script, marker) {
+			t.Errorf("tool binary swap does not fail closed at %q", marker)
+		}
+	}
+	if got := strings.Count(script, "Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop"); got != 2 {
+		t.Errorf("found %d terminating tool backups, want 2", got)
+	}
+
+	for _, move := range []string{
+		"Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop",
+	} {
+		moveAt := strings.Index(script, move)
+		if moveAt < 0 {
+			t.Errorf("missing terminating tool install %q", move)
+			continue
+		}
+		installedAt := strings.Index(script[moveAt:], "$ToolGoInstalled = $true")
+		if installedAt < 0 {
+			t.Fatalf("could not find success flag after %q", move)
+		}
+		block := script[moveAt : moveAt+installedAt]
+		if !strings.Contains(block, "-not (Test-Path $InstalledToolsBinaryPath)") || !strings.Contains(block, "throw ") {
+			t.Errorf("tool success flag is not guarded by an installed-binary check after %q", move)
+		}
 	}
 }

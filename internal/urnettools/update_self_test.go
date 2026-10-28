@@ -181,6 +181,168 @@ func TestSelfUpdateToolSwapsBinary(t *testing.T) {
 	}
 }
 
+func TestSelfUpdateWindowsSwapFallsBackToCopyWhenRestoreRenameFails(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "urnet-tools.exe")
+	backup := filepath.Join(dir, "urnet-tools.exe.bak")
+	staged := filepath.Join(dir, "urnet-tools.exe.new")
+	original := fakeELF("current")
+	if err := os.WriteFile(exe, original, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(staged, fakeELF("new"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	renameCalls := 0
+	rename := func(old, new string) error {
+		renameCalls++
+		if renameCalls == 1 {
+			return os.Rename(old, new)
+		}
+		return os.ErrPermission
+	}
+	err := selfUpdateWindowsSwap(exe, backup, staged, rename,
+		func(string, string) error { return os.ErrInvalid },
+		copyFile)
+	if err == nil {
+		t.Fatal("failed install must remain an error after restoring the old binary")
+	}
+	if renameCalls != 2 {
+		t.Fatalf("rename calls = %d, want initial move and failed restore", renameCalls)
+	}
+	got, readErr := os.ReadFile(exe)
+	if readErr != nil || !bytes.Equal(got, original) {
+		t.Fatalf("fallback did not restore the executable: bytes=%q err=%v", got, readErr)
+	}
+	got, readErr = os.ReadFile(backup)
+	if readErr != nil || !bytes.Equal(got, original) {
+		t.Fatalf("fallback consumed or changed the recovery backup: bytes=%q err=%v", got, readErr)
+	}
+}
+
+func TestSelfUpdateWindowsSwapReportsRetainedBackupWhenRestoreFails(t *testing.T) {
+	// A directory with a space in it, so the recovery command has to be quoted
+	// to be runnable: Windows install paths routinely contain one.
+	dir := filepath.Join(t.TempDir(), "Program Files")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	exe := filepath.Join(dir, "urnet-tools.exe")
+	backup := filepath.Join(dir, "urnet-tools.exe.bak")
+	staged := filepath.Join(dir, "urnet-tools.exe.new")
+	original := fakeELF("current")
+	if err := os.WriteFile(exe, original, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(staged, fakeELF("new"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	renameCalls := 0
+	rename := func(old, new string) error {
+		renameCalls++
+		if renameCalls == 1 {
+			return os.Rename(old, new)
+		}
+		return os.ErrPermission
+	}
+	err := selfUpdateWindowsSwap(exe, backup, staged, rename,
+		func(string, string) error { return os.ErrInvalid },
+		func(string, string) error { return os.ErrPermission })
+	if err == nil || !strings.Contains(err.Error(), backup) || !strings.Contains(err.Error(), "manual recovery") {
+		t.Fatalf("error = %v, want the retained backup path and manual recovery instructions", err)
+	}
+	// The message must name both paths literally so an operator can act on it,
+	// and must NOT print a shell command: Go %q is Go literal syntax, not
+	// cmd.exe escaping, and cmd.exe expands %NAME% even inside quotes. Asserting
+	// the output of %q against %q was tautological about Windows safety.
+	if !strings.Contains(err.Error(), "backup="+backup) || !strings.Contains(err.Error(), "tool="+exe) {
+		t.Fatalf("recovery text does not name both paths plainly:\n%v", err)
+	}
+	if strings.Contains(err.Error(), `copy "`) {
+		t.Fatalf("recovery text still prints a shell command that is not cmd.exe-safe:\n%v", err)
+	}
+	if _, statErr := os.Stat(exe); !os.IsNotExist(statErr) {
+		t.Fatalf("executable path stat = %v, want absent after both restore attempts fail", statErr)
+	}
+	got, readErr := os.ReadFile(backup)
+	if readErr != nil || !bytes.Equal(got, original) {
+		t.Fatalf("recovery backup missing or changed: bytes=%q err=%v", got, readErr)
+	}
+}
+
+// TestDefaultWindowsSwapInstallsStagedAndKeepsBackup drives the real wiring
+// (os.Rename, installBinary, copyFile) on any OS: a no-op install argument
+// would leave the old binary moved aside and nothing at exe.
+func TestDefaultWindowsSwapInstallsStagedAndKeepsBackup(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "urnet-tools.exe")
+	backup := filepath.Join(dir, "urnet-tools.exe.bak")
+	staged := filepath.Join(dir, "urnet-tools.exe.new")
+	original, updated := fakeELF("current"), fakeELF("new")
+	if err := os.WriteFile(exe, original, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(staged, updated, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := defaultWindowsSwap(exe, backup, staged); err != nil {
+		t.Fatalf("defaultWindowsSwap: %v", err)
+	}
+	if got, err := os.ReadFile(exe); err != nil || !bytes.Equal(got, updated) {
+		t.Fatalf("installed tool is not the staged bytes: bytes=%q err=%v", got, err)
+	}
+	if got, err := os.ReadFile(backup); err != nil || !bytes.Equal(got, original) {
+		t.Fatalf("backup of the previous tool not retained: bytes=%q err=%v", got, err)
+	}
+}
+
+// TestDefaultWindowsSwapRestoresPreviousWhenInstallFails: a missing staged file
+// makes the real installBinary fail, and the previous binary must be back in
+// place afterwards.
+func TestDefaultWindowsSwapRestoresPreviousWhenInstallFails(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "urnet-tools.exe")
+	backup := filepath.Join(dir, "urnet-tools.exe.bak")
+	missing := filepath.Join(dir, "urnet-tools.exe.new")
+	original := fakeELF("current")
+	if err := os.WriteFile(exe, original, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := defaultWindowsSwap(exe, backup, missing); err == nil {
+		t.Fatal("a failed install must remain an error")
+	}
+	if got, err := os.ReadFile(exe); err != nil || !bytes.Equal(got, original) {
+		t.Fatalf("previous tool not restored: bytes=%q err=%v", got, err)
+	}
+}
+
+// TestSelfUpdateWindowsBranchCallsDefaultSwap pins that the Windows branch
+// goes through defaultWindowsSwap, which the behaviour tests above cover.
+func TestSelfUpdateWindowsBranchCallsDefaultSwap(t *testing.T) {
+	src, err := os.ReadFile("update.go")
+	if err != nil {
+		cwd, _ := os.Getwd()
+		t.Fatalf("cannot read update.go from %s (%v); this assertion needs the package dir as CWD", cwd, err)
+	}
+	text := string(src)
+	anchor := strings.Index(text, "// Windows-safe swap vs Unix atomic replace:")
+	if anchor < 0 {
+		t.Fatal("could not find the Windows swap comment in update.go")
+	}
+	start := strings.Index(text[anchor:], `if runtime.GOOS == "windows" {`)
+	if start < 0 {
+		t.Fatal("could not find the Windows swap branch in update.go")
+	}
+	start += anchor
+	end := strings.Index(text[start:], "\n	} else {")
+	if end < 0 {
+		t.Fatal("could not find the end of the Windows swap branch; the marker moved")
+	}
+	if branch := text[start : start+end]; !strings.Contains(branch, "defaultWindowsSwap(") {
+		t.Fatalf("the Windows self-update branch does not call defaultWindowsSwap:\n%s", branch)
+	}
+}
+
 // TestSelfUpdateToolSkipsWhenAlreadyCurrent: if the installed binary already
 // matches the release digest, the download is skipped entirely — the tool
 // must be idempotent across repeated update calls.
