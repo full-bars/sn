@@ -121,8 +121,13 @@ func runSchtasks(subcommand string, args ...string) error {
 	return nil
 }
 
-// cleanupLifecycle removes the Windows scheduled tasks on uninstall.
+// cleanupLifecycle removes the Windows scheduled tasks on uninstall. A task
+// that survives uninstall keeps launching a binary that is being removed, so
+// a failed delete is reported on stderr rather than dropped.
 func cleanupLifecycle(p Provider) {
-	_ = deleteTaskIfExists("urnetwork-update", runSchtasks)
-	_ = deleteTaskIfExists("urnetwork-autostart", runSchtasks)
+	for _, taskName := range []string{"urnetwork-update", "urnetwork-autostart"} {
+		if err := deleteTaskIfExists(taskName, runSchtasks); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not remove scheduled task %q: %v\n", taskName, err)
+		}
+	}
 }
