@@ -1063,6 +1063,9 @@ type installerHarnessResult struct {
 	// "verify <expected digest>". Proceeding is not proof that verification ran;
 	// a call with the release digest is.
 	verifyCalls []string
+	// stopCalls logs each service stop the Linux installer made, as
+	// "stop-systemd" or "stop-openrc". Empty means the service was never stopped.
+	stopCalls []string
 }
 
 // verifyLoggingHarness wraps the installer's real verify_sha256_file. The
@@ -1422,8 +1425,8 @@ sudo() { "$@"; }`+verifyHarness+`
 install_downloader() { return 0; }
 install_json_parser() { return 0; }
 openrc_maybe_redirect_install_path() { return 0; }
-stop_systemd_units() { return 0; }
-stop_openrc_units() { return 0; }
+stop_systemd_units() { echo stop-systemd >> "$STOP_LOG"; return 0; }
+stop_openrc_units() { echo stop-openrc >> "$STOP_LOG"; return 0; }
 ensure_tools_on_path() { return 0; }
 add_path_blocks() { return 0; }
 func_root_guard() { return 0; }
@@ -1550,8 +1553,9 @@ systemd_userdir="%s"
 systemd_units_stopped=1
 update_timer_oncalendar="Sun *-*-* 00:00:00 UTC"
 update_timer_randomized_delay="6h"
+STOP_LOG=%q
 do_install
-`, tag, op, installPath, tempDir, failRestartVal, failFirstStartVal, failRestoreVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, svcLog, firstStartFlag, tempDir, tempDir, tempDir, tempDir)
+`, tag, op, installPath, tempDir, failRestartVal, failFirstStartVal, failRestoreVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, svcLog, filepath.Join(tempDir, "stop.log"), firstStartFlag, tempDir, tempDir, tempDir, tempDir)
 
 	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
@@ -1590,6 +1594,7 @@ do_install
 		installDir:  installPath,
 		verifyCalls: readInstallerLines(verifyLog),
 		svcCalls:    readInstallerLines(svcLog),
+		stopCalls:   readInstallerLines(filepath.Join(tempDir, "stop.log")),
 	}
 }
 
@@ -2514,4 +2519,193 @@ HOME=%q
 	if strings.Count(string(updated), "RandomizedDelaySec=6h") != 1 || strings.Contains(string(updated), "RandomizedDelaySec=30s") {
 		t.Fatalf("weekly schedule did not normalize its randomized delay: %s (command output: %s)", updated, out)
 	}
+}
+func TestLinuxDigestParserRejectsMalformed(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	block := extractShellFunc(t, strings.ReplaceAll(string(b), "\r\n", "\n"), "get_asset_digest_from_api_response")
+	if block == "" {
+		t.Fatal("could not extract get_asset_digest_from_api_response from the Linux installer")
+	}
+
+	const hex64 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	const asset = "urnet-tools-linux-amd64"
+	withDigest := func(d string) string {
+		return `{"assets":[{"name":"` + asset + `","digest":` + d + `}]}`
+	}
+	cases := []struct {
+		name string
+		json string
+		want string
+	}{
+		{"digest field absent", `{"assets":[{"name":"` + asset + `"}]}`, ""},
+		{"digest explicitly null", withDigest(`null`), ""},
+		{"digest empty string", withDigest(`""`), ""},
+		{"asset not listed", `{"assets":[{"name":"other","digest":"sha256:` + hex64 + `"}]}`, ""},
+		{"short hex", withDigest(`"deadbeef"`), "__INVALID_SHA256__"},
+		{"different algorithm", withDigest(`"sha512:` + hex64 + `"`), "__INVALID_SHA256__"},
+		{"json false", withDigest(`false`), "__INVALID_SHA256__"},
+		{"non-string number", withDigest(`123`), "__INVALID_SHA256__"},
+		{"real sha256", withDigest(`"sha256:` + hex64 + `"`), hex64},
+		{"bare hex", withDigest(`"` + hex64 + `"`), hex64},
+	}
+
+	_, jqErr := exec.LookPath("jq")
+	_, pyErr := exec.LookPath("python3")
+	if jqErr != nil && pyErr != nil {
+		t.Skip("neither jq nor python3 on this host; cannot execute the digest expressions")
+	}
+
+	// A missing marker FAILS rather than skips, so a reformatted expression
+	// cannot make every subtest vanish while the test reports success.
+	cut := func(open, close string) (string, bool) {
+		i := strings.Index(block, open)
+		if i < 0 {
+			return "", false
+		}
+		rest := block[i+len(open):]
+		j := strings.Index(rest, close)
+		if j < 0 {
+			return "", false
+		}
+		return rest[:j], true
+	}
+
+	if jqErr == nil {
+		expr, ok := cut("jq -r --arg a \"$asset\" '", "' 2>/dev/null")
+		if !ok {
+			t.Error("could not find the jq digest expression in the Linux installer; the marker moved")
+		}
+		for _, c := range cases {
+			if !ok {
+				break
+			}
+			t.Run("jq/"+c.name, func(t *testing.T) {
+				cmd := exec.Command("jq", "-r", "--arg", "a", asset, expr)
+				cmd.Stdin = strings.NewReader(c.json)
+				out, err := cmd.Output()
+				if err != nil {
+					t.Fatalf("jq failed: %v", err)
+				}
+				if got := strings.TrimSpace(string(out)); got != c.want {
+					t.Errorf("got %q, want %q", got, c.want)
+				}
+			})
+		}
+	}
+	if pyErr == nil {
+		py, ok := cut("python3 -c '", "' \"$asset\"")
+		if !ok {
+			t.Error("could not find the python digest expression in the Linux installer; the marker moved")
+		}
+		for _, c := range cases {
+			if !ok {
+				break
+			}
+			t.Run("py/"+c.name, func(t *testing.T) {
+				cmd := exec.Command("python3", "-I", "-c", py, asset)
+				cmd.Stdin = strings.NewReader(c.json)
+				out, err := cmd.Output()
+				if err != nil {
+					t.Fatalf("python failed: %v", err)
+				}
+				if got := strings.TrimSpace(string(out)); got != c.want {
+					t.Errorf("got %q, want %q", got, c.want)
+				}
+			})
+		}
+	}
+}
+
+// A malformed tool digest must stop the Linux install BEFORE anything is
+// changed. The digest used to be resolved at the tool step, after the service
+// had been stopped and the provider binary replaced, so a refusal there left a
+// new provider on disk and a stopped service. This drives do_install and checks
+// the box is exactly as it was: provider binary byte-identical, service never
+// stopped, nothing extracted.
+func TestLinuxToolDigestRefusedBeforeProviderMutation(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	_, jqErr := exec.LookPath("jq")
+	_, pyErr := exec.LookPath("python3")
+	if jqErr != nil && pyErr != nil {
+		t.Skip("neither jq nor python3 on this host; cannot execute the digest parser")
+	}
+	const hex64 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	tag := "v2026.10.27"
+	providerAsset := "urnetwork-provider-" + tag + ".tar.gz"
+	toolAsset := "urnet-tools-linux-amd64"
+	tarballContent := []byte("provider-tarball-bytes")
+	// The provider digest is REAL so a refusal cannot come from the tarball
+	// comparison instead of the tool check.
+	providerSum := sha256.Sum256(tarballContent)
+	providerDigest := hex.EncodeToString(providerSum[:])
+	const previousBin = "previous-provider-binary"
+
+	releaseWith := func(toolDigestJSON string) string {
+		return fmt.Sprintf(`{
+			"tag_name": %q,
+			"published_at": "2026-10-27T00:00:00Z",
+			"assets": [
+				{"name": %q, "digest": "sha256:%s"},
+				{"name": %q, "digest": %s}
+			]
+		}`, tag, providerAsset, providerDigest, toolAsset, toolDigestJSON)
+	}
+
+	for _, tc := range []struct{ name, digest string }{
+		{"short sha256", `"sha256:deadbeef"`},
+		{"unsupported algorithm", `"sha512:` + hex64 + `"`},
+		{"json false", `false`},
+	} {
+		t.Run("malformed/"+tc.name, func(t *testing.T) {
+			res := runLinuxInstaller(t, installerHarnessOpts{
+				tag:         tag,
+				releaseJSON: releaseWith(tc.digest),
+				tarballData: tarballContent,
+				existingBin: previousBin,
+			})
+			if res.exitCode == 0 {
+				t.Fatalf("malformed tool digest was accepted; expected refusal (out:\n%s)", res.stdout)
+			}
+			if res.finalBin != previousBin {
+				t.Fatalf("provider binary was replaced before the tool digest was refused: %q (out:\n%s)", res.finalBin, res.stdout)
+			}
+			if len(res.stopCalls) != 0 {
+				t.Fatalf("service was stopped before the tool digest was refused: %v (out:\n%s)", res.stopCalls, res.stdout)
+			}
+			if len(res.tarCalls) != 0 {
+				t.Fatalf("provider tarball was extracted before the tool digest was refused: %v", res.tarCalls)
+			}
+			if !strings.Contains(res.stdout, "tool asset") {
+				t.Errorf("refusal does not name the tool asset (out:\n%s)", res.stdout)
+			}
+		})
+	}
+
+	// An absent tool digest is the pre-Go-asset release: the install proceeds.
+	t.Run("absent digest still proceeds", func(t *testing.T) {
+		res := runLinuxInstaller(t, installerHarnessOpts{
+			tag: tag,
+			releaseJSON: fmt.Sprintf(`{
+				"tag_name": %q,
+				"published_at": "2026-10-27T00:00:00Z",
+				"assets": [{"name": %q, "digest": "sha256:%s"}]
+			}`, tag, providerAsset, providerDigest),
+			tarballData: tarballContent,
+			existingBin: previousBin,
+		})
+		if res.exitCode != 0 {
+			t.Fatalf("an absent tool digest must still install, got exit %d (out:\n%s)", res.exitCode, res.stdout)
+		}
+		if len(res.tarCalls) == 0 {
+			// The point of this case is that an absent digest still installs.
+			// Whether the install stops the service first depends on the
+			// update mode, which another test covers; this one asserts the
+			// refusal path is not taken.
+			t.Fatalf("an absent tool digest must still extract the tarball (tar %v)", res.tarCalls)
+		}
+	})
 }
