@@ -398,6 +398,27 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
+      - name: Download Go modules (retried on module-proxy transients)
+        # Do not delete as noise. The module proxy sometimes drops a zip mid-
+        # stream (`stream error: INTERNAL_ERROR`), failing this job on a run that
+        # passes when re-run. The retry lives in its own step so the vet below
+        # stays a plain command, and only proxy transport errors are retried.
+        run: |
+          for attempt in 1 2 3; do
+            if out=$(go mod download 2>&1); then
+              echo "go mod download OK (attempt $attempt/3)"
+              break
+            fi
+            if ! grep -qE 'stream error|INTERNAL_ERROR|connection reset|i/o timeout|unexpected EOF|TLS handshake timeout' <<<"$out" || [ "$attempt" -eq 3 ]; then
+              echo "$out" >&2
+              echo "go mod download failed on attempt $attempt/3 (not retried, or out of attempts)" >&2
+              exit 1
+            fi
+            echo "transient module-proxy error on attempt $attempt/3, retrying:"
+            echo "$out"
+            if [ "$attempt" -eq 1 ]; then sleep 5; else sleep 15; fi
+          done
+
       - name: Vet urnettools for freebsd
         run: |
           set -e
@@ -437,6 +458,27 @@ jobs:
           # PRs) have no persistent disk, so they still use it.
           cache: true
           cache-dependency-path: go.sum
+
+      - name: Download Go modules (retried on module-proxy transients)
+        # Do not delete as noise. The module proxy sometimes drops a zip mid-
+        # stream (`stream error: INTERNAL_ERROR`), failing this job on a run that
+        # passes when re-run. The retry lives in its own step so the compile
+        # below stays a plain command, and only proxy transport errors are retried.
+        run: |
+          for attempt in 1 2 3; do
+            if out=$(go mod download 2>&1); then
+              echo "go mod download OK (attempt $attempt/3)"
+              break
+            fi
+            if ! grep -qE 'stream error|INTERNAL_ERROR|connection reset|i/o timeout|unexpected EOF|TLS handshake timeout' <<<"$out" || [ "$attempt" -eq 3 ]; then
+              echo "$out" >&2
+              echo "go mod download failed on attempt $attempt/3 (not retried, or out of attempts)" >&2
+              exit 1
+            fi
+            echo "transient module-proxy error on attempt $attempt/3, retrying:"
+            echo "$out"
+            if [ "$attempt" -eq 1 ]; then sleep 5; else sleep 15; fi
+          done
 
       - name: Compile shippable binaries for ${{ matrix.goos }}/${{ matrix.goarch }}
         env:
