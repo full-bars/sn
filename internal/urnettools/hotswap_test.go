@@ -18,6 +18,13 @@ func TestTriggerHotSwapInvalidPID(t *testing.T) {
 	}
 }
 
+func TestHotSwapPreflightWindowsDeclines(t *testing.T) {
+	err := hotSwapPreflightForOS(Provider{Version: "v3.23.0-fix.31.0"}, "windows")
+	if !errors.Is(err, ErrHotSwapNotSupported) || !strings.Contains(err.Error(), "supervisor adoption") {
+		t.Fatalf("hotSwapPreflightForOS(windows) = %v, want unsupported with supervisor adoption reason", err)
+	}
+}
+
 func TestCmdHotswapNotRunning(t *testing.T) {
 	// Targeting non-running provider must error
 	err := cmdHotswap([]string{"--unit", "nonexistent.service"}, true, false)

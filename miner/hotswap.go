@@ -769,6 +769,11 @@ func runHotSwapChildAck(ipcConn io.Writer) error {
 // runHotSwapParentHandoff coordinates spawning the candidate, validating its readiness,
 // yielding the coordinator session, and entering graceful stream drain (or in-place execve for PID 1).
 func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opts docopt.Opts) error {
+	if runtime.GOOS == "windows" {
+		// Deliberately temporary: re-enable only after the supervisor adopts the
+		// successor provider rather than waiting on the original miner command.
+		return errors.New("hot-swap not supported: supervisor adoption is not implemented on Windows in this release, so the running provider stays as it is")
+	}
 	if !hotSwapLock.TryLock() {
 		hotswapLog("⚠️ [hotswap] Hot-swap already in progress; ignoring duplicate trigger\n")
 		return nil
