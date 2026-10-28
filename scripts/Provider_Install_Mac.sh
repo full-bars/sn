@@ -69,22 +69,56 @@ github_raw="https://raw.githubusercontent.com/full-bars/sn/refs/heads/main"
 
 # --- launchd ---
 
+launchd_domain="gui/$(id -u)"
+
 load_service() {
-    launchctl bootstrap "gui/$UID" "$plist_path" 2>/dev/null
+    if launchctl bootstrap "$launchd_domain" "$plist_path" 2>/dev/null; then
+        return 0
+    fi
+    pr_err "launchctl bootstrap %s %s failed" "$launchd_domain" "$plist_path"
+    pr_err "Next: log in to this user's macOS GUI session, then run 'launchctl bootstrap %s \"%s\"' or 'urnet-tools start'." "$launchd_domain" "$plist_path"
+    return 1
 }
 
 unload_service() {
-    launchctl bootout "gui/$UID/$label" 2>/dev/null
+    if launchctl bootout "$launchd_domain/$label" 2>/dev/null; then
+        return 0
+    fi
+    pr_err "launchctl bootout %s/%s failed" "$launchd_domain" "$label"
+    pr_err "Next: inspect 'launchctl print %s/%s', then retry 'urnet-tools stop'." "$launchd_domain" "$label"
+    return 1
+}
+
+launchd_domain_error() {
+    action="$1"
+    pr_err "Could not access launchd domain %s; a logged-in graphical session is required." "$launchd_domain"
+    pr_err "Next: log in to macOS as this user, then retry 'urnet-tools %s'." "$action"
 }
 
 restart_service() {
-    unload_service
+    if service_running; then
+        unload_service || return 1
+    else
+        service_status=$?
+        if [ "$service_status" -eq 2 ]; then
+            launchd_domain_error restart
+            return 1
+        fi
+    fi
     sleep 1
     load_service
 }
 
+install_service() {
+    if service_running; then
+        unload_service || return 1
+    fi
+    load_service
+}
+
 service_running() {
-    launchctl print "gui/$UID/$label" >/dev/null 2>&1
+    launchctl print "$launchd_domain" >/dev/null 2>&1 || return 2
+    launchctl print "$launchd_domain/$label" >/dev/null 2>&1
 }
 
 # --- plist ---
@@ -258,9 +292,11 @@ do_install() {
     mkdir -p "$log_dir"
     write_plist
 
-    # Load the service
-    unload_service
-    load_service
+    # Load the service. Do not report an install when launchd rejects it.
+    if ! install_service; then
+        rm -rf "$tmpdir"
+        exit 1
+    fi
 
     # Add to PATH if not already present
     if ! echo "$PATH" | tr ':' '\n' | grep -qxF "$install_path/bin"; then
@@ -293,14 +329,33 @@ do_start() {
     if service_running; then
         pr_info "Provider is already running"
         return
+    else
+        service_status=$?
+        if [ "$service_status" -eq 2 ]; then
+            launchd_domain_error start
+            exit 1
+        fi
     fi
-    load_service
+    if ! load_service; then
+        exit 1
+    fi
     pr_info "Provider started"
 }
 
 do_stop() {
-    unload_service
-    pr_info "Provider stopped"
+    if service_running; then
+        if ! unload_service; then
+            exit 1
+        fi
+        pr_info "Provider stopped"
+    else
+        service_status=$?
+        if [ "$service_status" -eq 2 ]; then
+            launchd_domain_error stop
+            exit 1
+        fi
+        pr_info "Provider is already stopped"
+    fi
 }
 
 do_restart() {
@@ -312,7 +367,9 @@ do_restart() {
             *) pr_info "Aborted."; exit 0 ;;
         esac
     fi
-    restart_service
+    if ! restart_service; then
+        exit 1
+    fi
     pr_info "Provider restarted"
 }
 
@@ -348,11 +405,11 @@ do_hot_restart() {
                 printf "Restart provider to apply? [y/N]: "
                 read -r yn < /dev/tty
                 case "$yn" in
-                    [Yy]*) restart_service; pr_info "Provider restarted with hot-restart enabled" ;;
+                    [Yy]*) restart_service || exit 1; pr_info "Provider restarted with hot-restart enabled" ;;
                     *) pr_info "Change applied. Run 'urnet-tools restart' when ready." ;;
                 esac
             else
-                restart_service
+                restart_service || exit 1
                 pr_info "Provider restarted with hot-restart enabled"
             fi
             ;;
@@ -363,11 +420,11 @@ do_hot_restart() {
                 printf "Restart provider to apply? [y/N]: "
                 read -r yn < /dev/tty
                 case "$yn" in
-                    [Yy]*) restart_service; pr_info "Provider restarted with hot-restart disabled" ;;
+                    [Yy]*) restart_service || exit 1; pr_info "Provider restarted with hot-restart disabled" ;;
                     *) pr_info "Change applied. Run 'urnet-tools restart' when ready." ;;
                 esac
             else
-                restart_service
+                restart_service || exit 1
                 pr_info "Provider restarted with hot-restart disabled"
             fi
             ;;
@@ -555,7 +612,7 @@ do_session() {
                         ;;
                     [Yy]* | "")
                         pr_info "Restarting provider..."
-                        restart_service
+                        restart_service || exit 1
                         pr_info "Service restarted with new session."
                         break
                         ;;
