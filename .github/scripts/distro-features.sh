@@ -150,6 +150,10 @@ record() { # $1=verdict $2=name $3..=detail
 have() { command -v "$1" >/dev/null 2>&1; }
 fsum() { if [ -f "$1" ]; then cksum <"$1" 2>/dev/null | awk '{print $1"-"$2}'; else printf 'missing'; fi; }
 firstline() { head -1 2>/dev/null | cut -c1-200; }
+# alllines collapses a multi-line command output into one line, so a FAIL record
+# keeps the diagnostic the command actually printed. firstline threw away every
+# line after the header, which is how "set h3 3 rc=1" arrived with no reason.
+alllines() { tr '\n' ' ' 2>/dev/null | sed 's/  */ /g; s/ $//' | cut -c1-400; }
 json_has() { printf '%s' "$1" | grep -q "$2" 2>/dev/null; }
 grep_c() { grep -c -- "$1" 2>/dev/null || true; } # always prints a number
 as_num() { case "${1:-}" in ''|*[!0-9]*) printf '0' ;; *) printf '%s' "$1" ;; esac; }
@@ -1242,10 +1246,10 @@ b1_control_keys() {
         if printf '%s' "$rb" | grep -q 'h3: 3' && [ "$(as_num "$logged")" -ge 1 ] && [ "$(as_num "$persisted")" -ge 1 ] && [ "$st_before" != "$st_after" ]; then
             record PASS key-h3-limit "h3=3 applied live and reflected (get '$(printf '%s' "$rb" | firstline)'; $logged log line(s); provider_state.json updated)"
         else
-            record FAIL key-h3-limit "set rc=0 but reflection incomplete: readback='$(printf '%s' "$rb" | firstline)' loglines=$logged persisted=$persisted state=$st_before->$st_after"
+            record FAIL key-h3-limit "set rc=0 but reflection incomplete: readback='$(printf '%s' "$rb" | alllines)' loglines=$logged persisted=$persisted state=$st_before->$st_after"
         fi
     else
-        record FAIL key-h3-limit "set h3 3 rc=$rc: $(printf '%s' "$out" | firstline)"
+        record FAIL key-h3-limit "set h3 3 rc=$rc: $(printf '%s' "$out" | alllines)"
     fi
     TS set h3 off -f >/dev/null 2>&1 || true
 }
@@ -1263,7 +1267,7 @@ b1_control_key_semantics() {
         return 0
     fi
     bad=""; checked=""
-    for kv in "proxy_url_refresh=90s" "proxy_url_max=450" "proxy_dead_cleanup_scope=url"; do
+    for kv in "proxy_url_refresh=90s" "proxy_url_max=450" "proxy_dead_cleanup_scope=url" "smart_dialer=on"; do
         k="${kv%%=*}"; v="${kv#*=}"
         out="$(TS set "$k" "$v" -f 2>&1)"; rc=$?
         rb="$(TS get "$k" 2>&1)"
@@ -1307,11 +1311,14 @@ b1_control_key_semantics() {
     fi
 
     bad=""; checked=""
-    # profile and smart_dialer are read at startup (the probe loop is created
-    # per identity when it starts), so a set on a running provider reports the
-    # needs-restart semantics; smart_dialer also must NOT claim a live apply,
-    # which is what it used to do.
-    for kv in "profile=eco" "smart_dialer=on"; do
+    # profile is read at startup (initGlog reads URNETWORK_PROFILE), so a set on
+    # a running provider reports the needs-restart semantics. smart_dialer is
+    # NOT in that class any more: miner/control_socket.go lists it in
+    # controlLiveEffectKeys, because the probe loops stopped being per identity,
+    # so it applies live and must not promise a restart. The old expectation
+    # here demanded the restart promise and failed the live behaviour as a
+    # regression.
+    for kv in "profile=eco"; do
         k="${kv%%=*}"; v="${kv#*=}"
         out="$(TS set "$k" "$v" -f 2>&1)"; rc=$?
         if [ "$rc" != "0" ] || ! printf '%s' "$out" | grep -q 'requires a restart to take effect'; then
