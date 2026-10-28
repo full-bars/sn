@@ -10,13 +10,17 @@ import (
 )
 
 func TestMacInstallerREADMECommandInstalls(t *testing.T) {
-	b, err := os.ReadFile("../../README.md")
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Every page that publishes the piped one-liner must pass the operation,
+	// because `curl | sh` alone now exits non-zero without installing.
 	const command = "Provider_Install_Mac.sh | sh -s -- install"
-	if !strings.Contains(string(b), command) {
-		t.Fatalf("macOS install command must pass the install operation to sh")
+	for _, page := range []string{"../../README.md", "../../docs/Installation.md"} {
+		b, err := os.ReadFile(page)
+		if err != nil {
+			t.Fatalf("read %s: %v", page, err)
+		}
+		if !strings.Contains(string(b), command) {
+			t.Errorf("%s: macOS install command must pass the install operation to sh, want %q", page, command)
+		}
 	}
 }
 
