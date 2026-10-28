@@ -270,22 +270,61 @@ func TestSelfUpdateWindowsSwapReportsRetainedBackupWhenRestoreFails(t *testing.T
 	}
 }
 
-// TestSelfUpdateWindowsBranchDelegatesToSwapHelper pins the wiring the two
-// helper tests above cannot see: they call selfUpdateWindowsSwap directly, so
-// they stay green if the Windows branch goes back to a bare os.Rename restore.
-func TestSelfUpdateWindowsBranchDelegatesToSwapHelper(t *testing.T) {
+// TestDefaultWindowsSwapInstallsStagedAndKeepsBackup drives the real wiring
+// (os.Rename, installBinary, copyFile) on any OS: a no-op install argument
+// would leave the old binary moved aside and nothing at exe.
+func TestDefaultWindowsSwapInstallsStagedAndKeepsBackup(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "urnet-tools.exe")
+	backup := filepath.Join(dir, "urnet-tools.exe.bak")
+	staged := filepath.Join(dir, "urnet-tools.exe.new")
+	original, updated := fakeELF("current"), fakeELF("new")
+	if err := os.WriteFile(exe, original, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(staged, updated, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := defaultWindowsSwap(exe, backup, staged); err != nil {
+		t.Fatalf("defaultWindowsSwap: %v", err)
+	}
+	if got, err := os.ReadFile(exe); err != nil || !bytes.Equal(got, updated) {
+		t.Fatalf("installed tool is not the staged bytes: bytes=%q err=%v", got, err)
+	}
+	if got, err := os.ReadFile(backup); err != nil || !bytes.Equal(got, original) {
+		t.Fatalf("backup of the previous tool not retained: bytes=%q err=%v", got, err)
+	}
+}
+
+// TestDefaultWindowsSwapRestoresPreviousWhenInstallFails: a missing staged file
+// makes the real installBinary fail, and the previous binary must be back in
+// place afterwards.
+func TestDefaultWindowsSwapRestoresPreviousWhenInstallFails(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "urnet-tools.exe")
+	backup := filepath.Join(dir, "urnet-tools.exe.bak")
+	missing := filepath.Join(dir, "urnet-tools.exe.new")
+	original := fakeELF("current")
+	if err := os.WriteFile(exe, original, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := defaultWindowsSwap(exe, backup, missing); err == nil {
+		t.Fatal("a failed install must remain an error")
+	}
+	if got, err := os.ReadFile(exe); err != nil || !bytes.Equal(got, original) {
+		t.Fatalf("previous tool not restored: bytes=%q err=%v", got, err)
+	}
+}
+
+// TestSelfUpdateWindowsBranchCallsDefaultSwap pins that the Windows branch
+// goes through defaultWindowsSwap, which the behaviour tests above cover.
+func TestSelfUpdateWindowsBranchCallsDefaultSwap(t *testing.T) {
 	src, err := os.ReadFile("update.go")
 	if err != nil {
-		// go test runs with the package dir as CWD, which is where CI asserts
-		// this. An out-of-tree invocation (a hand-copied exe run from another
-		// directory) cannot see the source; skip rather than report a false red,
-		// but say so loudly.
 		cwd, _ := os.Getwd()
-		t.Skipf("cannot read update.go from %s (%v); this assertion needs the package dir as CWD", cwd, err)
+		t.Fatalf("cannot read update.go from %s (%v); this assertion needs the package dir as CWD", cwd, err)
 	}
 	text := string(src)
-	// newStageDir carries its own `runtime.GOOS == "windows"` check, so the
-	// anchor has to be the swap-specific comment, not the GOOS test.
 	anchor := strings.Index(text, "// Windows-safe swap vs Unix atomic replace:")
 	if anchor < 0 {
 		t.Fatal("could not find the Windows swap comment in update.go")
@@ -299,15 +338,8 @@ func TestSelfUpdateWindowsBranchDelegatesToSwapHelper(t *testing.T) {
 	if end < 0 {
 		t.Fatal("could not find the end of the Windows swap branch; the marker moved")
 	}
-	branch := text[start : start+end]
-	if !strings.Contains(branch, "selfUpdateWindowsSwap(") {
-		t.Fatalf("the Windows self-update branch does not call selfUpdateWindowsSwap; the restore fallback is unreachable:\n%s", branch)
-	}
-	// The helper tests cannot see which function is passed as the restore, and
-	// installBinary ends in os.Rename, so passing it there repeats the rename that
-	// just failed. Pin the copy fallback by name.
-	if !strings.Contains(branch, ", copyFile)") {
-		t.Fatalf("the Windows branch does not pass copyFile as the restore fallback; a rename-based restore cannot recover from a failed rename:\n%s", branch)
+	if branch := text[start : start+end]; !strings.Contains(branch, "defaultWindowsSwap(") {
+		t.Fatalf("the Windows self-update branch does not call defaultWindowsSwap:\n%s", branch)
 	}
 }
 

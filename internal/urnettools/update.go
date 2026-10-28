@@ -1414,6 +1414,16 @@ func selfUpdateWindowsSwap(exePath, backup, staged string, rename func(string, s
 	return nil
 }
 
+// defaultWindowsSwap is the Windows self-update swap with its real
+// collaborators wired in. It is a named seam so the wiring is testable on any
+// OS. restore MUST be copyFile, not installBinary: installBinary finishes with
+// os.Rename, so using it there would repeat the very rename that just failed
+// and leave the executable missing anyway.
+func defaultWindowsSwap(exePath, backup, staged string) error {
+	install := func(src, dst string) error { return installBinary(src, dst, "") }
+	return selfUpdateWindowsSwap(exePath, backup, staged, os.Rename, install, copyFile)
+}
+
 // selfUpdateTool updates the running tool binary (urnet-tools or
 // urnet-docker) in place from the release's tool asset. This is what makes
 // the Go tool self-sustaining: `update` refreshes BOTH the providers AND the
@@ -1502,11 +1512,7 @@ func selfUpdateToolTo(exePath string, cfg updateConfig) error {
 	// backup first via hard link or copy ensures the executable is never absent
 	// from disk if interrupted mid-update.
 	if runtime.GOOS == "windows" {
-		install := func(src, dst string) error { return installBinary(src, dst, "") }
-		// restore MUST be copyFile, not installBinary: installBinary finishes
-		// with os.Rename, so using it here would repeat the very rename that
-		// just failed and leave the executable missing anyway.
-		if err := selfUpdateWindowsSwap(exePath, backup, staged, os.Rename, install, copyFile); err != nil {
+		if err := defaultWindowsSwap(exePath, backup, staged); err != nil {
 			return err
 		}
 	} else {
