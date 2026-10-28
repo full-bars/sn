@@ -126,36 +126,14 @@ func writeTimerCalendar(timer string, p Provider, calendar string, userScope boo
 }
 
 func writeTimerCalendarAt(path, timer string, p Provider, calendar string) error {
+	updateUnit := strings.TrimSuffix(timer, ".timer") + ".service"
+	// The updater service is made (or repaired) whether or not the timer
+	// exists: a timer this tool wrote earlier points at the provider unit.
+	if err := ensureUpdaterService(filepath.Join(filepath.Dir(path), updateUnit), updateUnit, p); err != nil {
+		return err
+	}
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		// Create the timer and updater service together on a fresh install.
-		// Write them atomically so a crash mid-write never leaves a
-		// half-written unit.
-		updateUnit := strings.TrimSuffix(timer, ".timer") + ".service"
-		updatePath := filepath.Join(filepath.Dir(path), updateUnit)
-		if _, statErr := os.Stat(updatePath); os.IsNotExist(statErr) {
-			executable, err := os.Executable()
-			if err != nil {
-				return fmt.Errorf("resolve updater executable: %w", err)
-			}
-			service := fmt.Sprintf(`[Unit]
-Description=URnetwork Update
-
-[Service]
-Type=oneshot
-ExecStart=%s update -y --unit %s
-`, systemdExecArg(executable), systemdExecArg(p.Unit))
-			// writeFileAtomic does not create the directory, and on a fresh
-			// ~/.config/systemd/user it is not there yet.
-			if err := os.MkdirAll(filepath.Dir(updatePath), 0o755); err != nil {
-				return fmt.Errorf("create updater service %s: %w", updateUnit, err)
-			}
-			if err := writeFileAtomic(updatePath, []byte(service), 0o644); err != nil {
-				return fmt.Errorf("create updater service %s: %w", updateUnit, err)
-			}
-		} else if statErr != nil {
-			return fmt.Errorf("check updater service %s: %w", updateUnit, statErr)
-		}
 		tmpl := fmt.Sprintf("[Unit]\nDescription=Run URnetwork Update\n\n[Timer]\nOnCalendar=%s\nPersistent=true\nUnit=%s\n\n[Install]\nWantedBy=default.target\n", calendar, updateUnit)
 		if err := writeTimerUnitAtomic(path, tmpl); err != nil {
 			return fmt.Errorf("create timer %s: %w", timer, err)
@@ -168,10 +146,15 @@ ExecStart=%s update -y --unit %s
 	var out []string
 	replaced := false
 	for _, line := range lines {
-		if strings.HasPrefix(line, "OnCalendar=") {
+		switch {
+		case strings.HasPrefix(line, "OnCalendar="):
 			out = append(out, "OnCalendar="+calendar)
 			replaced = true
-		} else {
+		case p.Unit != "" && strings.TrimSpace(line) == "Unit="+p.Unit:
+			// Migrate a timer that restarts the provider into one that
+			// updates it.
+			out = append(out, "Unit="+updateUnit)
+		default:
 			out = append(out, line)
 		}
 	}
@@ -182,6 +165,47 @@ ExecStart=%s update -y --unit %s
 		return err
 	}
 	return enableTimer(p, timer)
+}
+
+// ensureUpdaterService writes <name>-update.service when it is missing, and
+// rewrites it when its ExecStart is not an update invocation (the shell
+// installer's `urnet-tools update -y` counts as one).
+func ensureUpdaterService(path, updateUnit string, p Provider) error {
+	existing, err := os.ReadFile(path)
+	if err == nil && updaterServiceUpdates(string(existing)) {
+		return nil
+	} else if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("check updater service %s: %w", updateUnit, err)
+	}
+	executable, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("resolve updater executable: %w", err)
+	}
+	service := fmt.Sprintf(`[Unit]
+Description=URnetwork Update
+
+[Service]
+Type=oneshot
+ExecStart=%s update -y --unit %s
+`, systemdExecArg(executable), systemdExecArg(p.Unit))
+	// writeFileAtomic does not create the directory, and on a fresh
+	// ~/.config/systemd/user it is not there yet.
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create updater service %s: %w", updateUnit, err)
+	}
+	if err := writeFileAtomic(path, []byte(service), 0o644); err != nil {
+		return fmt.Errorf("create updater service %s: %w", updateUnit, err)
+	}
+	return nil
+}
+
+func updaterServiceUpdates(service string) bool {
+	for _, line := range strings.Split(service, "\n") {
+		if strings.HasPrefix(line, "ExecStart=") && strings.Contains(line, " update -y") {
+			return true
+		}
+	}
+	return false
 }
 
 func systemdExecArg(value string) string {
