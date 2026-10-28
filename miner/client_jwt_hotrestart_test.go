@@ -1295,3 +1295,58 @@ func TestProvideClientJWTWillNotReuseWhenCustodyIsUnreadable(t *testing.T) {
 		t.Fatalf("mint calls = %d, want 1", mint.calls)
 	}
 }
+
+// A mint whose durable write fails must not leave its entry in the in-memory
+// store. The caller gets the error and may retry; the retry must mint again
+// instead of reusing the JWT that never reached disk.
+func TestProvideClientJWTDoesNotReuseFailedPersistence(t *testing.T) {
+	setHotRestart(t, true)
+	// A regular file where the store's directory should be makes every flush
+	// fail at MkdirAll, deterministically and without relying on permissions.
+	blocker := filepath.Join(t.TempDir(), "blocker")
+	if err := os.WriteFile(blocker, []byte("x"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	restoreStore := withGlobalStore(t, filepath.Join(blocker, "store.json"))
+	defer restoreStore()
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+
+	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id":  testClientId,
+		"network_id": "net-1",
+	})
+	cfg := clientJWTTestConfig(t, networkJwt, nil)
+
+	failedJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": testClientId,
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	clientId, err := connect.ParseId(testClientId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mint := &fakeMint{jwt: failedJwt, id: clientId}
+	cfg.Mint = mint.mint
+
+	if _, _, _, err := provideClientJWT(context.Background(), cfg); err == nil {
+		t.Fatal("provideClientJWT err = nil, want the persist failure")
+	}
+
+	retryJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": testClientId,
+		"exp":       float64(time.Now().Add(2 * time.Hour).Unix()),
+	})
+	mint.jwt = retryJwt
+	// The retry also fails to persist while the store is blocked; only the
+	// reuse decision is under test here.
+	byJwt, _, reused, _ := provideClientJWT(context.Background(), cfg)
+	if reused {
+		t.Fatal("retry reused the entry whose write failed")
+	}
+	if mint.calls != 2 {
+		t.Fatalf("mint calls = %d, want 2", mint.calls)
+	}
+	if byJwt == failedJwt {
+		t.Fatal("retry returned the jwt that never persisted")
+	}
+}
