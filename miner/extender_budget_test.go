@@ -952,6 +952,50 @@ func stubExtenderMutation(t *testing.T, initial extenderActivationState, failBef
 	return &state, &calls
 }
 
+func TestExtenderGateStartupOutageRecovery(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		before, after int
+	}{{"read", 3, 0}, {"write_rollback", 0, 3}} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("URNETWORK_STATE_DIR", filepath.Join(os.DevNull, "state"))
+			state, calls := stubExtenderMutation(t, extenderActivationState{}, tc.before, tc.after)
+			gate := newExtenderActivationGate()
+			if gate.decideAtStart() {
+				t.Error("startup must withhold while the record is unavailable")
+			}
+			if *calls != 3 {
+				t.Errorf("startup calls=%d, want 3", *calls)
+			}
+			if !gate.allowLaunch() {
+				t.Error("first launch must be allowed after the record recovers")
+			}
+			if *calls != 4 {
+				t.Errorf("startup and first launch calls=%d, want 4: launch must read again", *calls)
+			}
+			if got, want := len(state.Attempts), hostActivationPosts(); got != want {
+				t.Errorf("recorded posts=%d, want %d", got, want)
+			}
+		})
+	}
+}
+
+func TestExtenderGateStartupRefusalCached(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(os.DevNull, "state"))
+	now := time.Now().Unix()
+	state, calls := stubExtenderMutation(t, extenderActivationState{Attempts: []int64{now, now, now, now, now}}, 0, 0)
+	gate := newExtenderActivationGate()
+	if gate.decideAtStart() || gate.allowLaunch() {
+		t.Error("exhausted window must refuse startup and first launch")
+	}
+	if *calls != 1 {
+		t.Errorf("startup and launch calls=%d, want 1: refusal must be cached", *calls)
+	}
+	if len(state.Attempts) != extenderActivationBudget {
+		t.Errorf("exhausted window changed posts: %v", state.Attempts)
+	}
+}
+
 func TestExtenderGateRetryAfterStoreFailure(t *testing.T) {
 	for _, tc := range []struct {
 		name          string
@@ -960,7 +1004,7 @@ func TestExtenderGateRetryAfterStoreFailure(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state, calls := stubExtenderMutation(t, extenderActivationState{}, tc.before, tc.after)
 			gate := newExtenderActivationGate()
-			if !gate.allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+			if gate.allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchAllowed {
 				t.Error("recovered store must allow launch")
 			}
 			if *calls != 2 {
@@ -996,7 +1040,7 @@ func TestExtenderGateRetryUnavailable(t *testing.T) {
 	proxyManagerLogWriter = writer
 	t.Cleanup(func() { proxyManagerLogWriter = previous })
 	start := time.Now()
-	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchWithheld {
 		t.Error("unavailable record must refuse launch")
 	}
 	if elapsed := time.Since(start); elapsed > 3*time.Second {
@@ -1017,7 +1061,7 @@ func TestExtenderGateRetryExhaustedWindow(t *testing.T) {
 	now := time.Now().Unix()
 	initial := extenderActivationState{Attempts: []int64{now, now, now, now, now}}
 	state, calls := stubExtenderMutation(t, initial, 0, 0)
-	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchRefused {
 		t.Error("exhausted window must refuse launch")
 	}
 	if *calls != 1 {
@@ -1037,7 +1081,7 @@ func TestExtenderGateRetryExhaustedWindow(t *testing.T) {
 		}
 		return previous(account, mutate)
 	}
-	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchRefused {
 		t.Error("recovered exhausted window must refuse launch")
 	}
 	if *calls != 2 {
@@ -1065,7 +1109,7 @@ func TestExtenderGateRetryRefusalBackoff(t *testing.T) {
 		}
 		return previous(account, mutate)
 	}
-	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchRefused {
 		t.Error("recovered refusal backoff must refuse launch")
 	}
 	if *calls != 2 {

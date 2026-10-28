@@ -561,15 +561,22 @@ func newExtenderActivationGate() *extenderActivationGate {
 	return &extenderActivationGate{}
 }
 
-// decideAtStart charges this start's posts and keeps the verdict for the first
-// launch, so a hold is logged once, before the slots come up, and the launch
-// that follows does not charge the same posts again.
+type extenderLaunchDecision uint8
+
+const (
+	extenderLaunchWithheld extenderLaunchDecision = iota
+	extenderLaunchRefused
+	extenderLaunchAllowed
+)
+
+// decideAtStart caches only a real verdict; a withheld decision must be
+// retried by the first launch, while an allowed verdict must not charge twice.
 func (gate *extenderActivationGate) decideAtStart() bool {
-	allow := gate.allowLaunch()
+	decision := gate.allowLaunchFor(hostActivationPosts(), extenderActivationUserId())
 	gate.mu.Lock()
-	gate.pending, gate.allow = true, allow
+	gate.pending, gate.allow = decision != extenderLaunchWithheld, decision == extenderLaunchAllowed
 	gate.mu.Unlock()
-	return allow
+	return decision == extenderLaunchAllowed
 }
 
 // allowLaunch reports whether this launch may run the extender role. It spends
@@ -584,12 +591,12 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	if pending {
 		return allow
 	}
-	return gate.allowLaunchFor(hostActivationPosts(), extenderActivationUserId())
+	return gate.allowLaunchFor(hostActivationPosts(), extenderActivationUserId()) == extenderLaunchAllowed
 }
 
 // A failed transaction cannot authorize posts; retry briefly before leaving
 // the role off for this launch. A real budget or refusal verdict is final.
-func (gate *extenderActivationGate) allowLaunchFor(posts int, userId string) bool {
+func (gate *extenderActivationGate) allowLaunchFor(posts int, userId string) extenderLaunchDecision {
 	const attempts = 3
 	const retryDelay = 100 * time.Millisecond
 	for attempt := 0; attempt < attempts; attempt++ {
@@ -600,13 +607,14 @@ func (gate *extenderActivationGate) allowLaunchFor(posts int, userId string) boo
 				continue
 			}
 			tlog("[extender] extender role off for this launch: activation budget record could not be read or written: %v\n", err)
-			return false
+			return extenderLaunchWithheld
 		}
 		if !allow {
 			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
 				used, extenderActivationBudget, formatDuration(wait))
+			return extenderLaunchRefused
 		}
-		return allow
+		return extenderLaunchAllowed
 	}
-	return false
+	return extenderLaunchWithheld
 }
