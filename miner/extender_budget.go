@@ -168,12 +168,12 @@ func (legacy extenderActivationLegacy) present() bool {
 // small json decode, a map update and one bbolt transaction.
 var extenderActivationRecordMu sync.Mutex
 
-// warnExtenderBudgetUnenforced says the record could not be read or written.
+// warnExtenderBudgetUnavailable says the record could not be read or written.
 // The role is held rather than run unrecorded, because the operator counts
 // every post it answers and a post this process did not count is one the next
 // start cannot see. This line is the only evidence the operator gets while the
 // store stays unusable.
-func warnExtenderBudgetUnenforced(account string) {
+func warnExtenderBudgetUnavailable(account string) {
 	tlog("⚠️ [extender] activation budget unavailable for account %s: provider state store unavailable this run\n", account)
 }
 
@@ -184,13 +184,13 @@ func warnExtenderBudgetUnenforced(account string) {
 func readExtenderActivationRecord(account string) (extenderActivationRecord, error) {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnenforced(account)
+		warnExtenderBudgetUnavailable(account)
 		return extenderActivationRecord{}, errProviderStoreClosed
 	}
 	var record extenderActivationRecord
 	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record)
 	if err != nil {
-		warnExtenderBudgetUnenforced(account)
+		warnExtenderBudgetUnavailable(account)
 		return extenderActivationRecord{}, err
 	}
 	if !found {
@@ -205,11 +205,11 @@ func readExtenderActivationRecord(account string) (extenderActivationRecord, err
 func writeExtenderActivationRecord(record extenderActivationRecord, account string) {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnenforced(account)
+		warnExtenderBudgetUnavailable(account)
 		return
 	}
 	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
-		warnExtenderBudgetUnenforced(account)
+		warnExtenderBudgetUnavailable(account)
 	}
 }
 
@@ -238,7 +238,7 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 func mutateExtenderActivationRecord(account string, mutate func(*extenderActivationRecord) error) error {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnenforced(account)
+		warnExtenderBudgetUnavailable(account)
 		return errProviderStoreClosed
 	}
 	extenderActivationRecordMu.Lock()
@@ -255,7 +255,7 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 		return mutate(&record)
 	})
 	if err != nil {
-		warnExtenderBudgetUnenforced(account)
+		warnExtenderBudgetUnavailable(account)
 	}
 	return err
 }
@@ -367,12 +367,6 @@ func extenderActivationUserId() string {
 	return userId
 }
 
-// storeExtenderActivation records one account's state at now and persists it.
-func storeExtenderActivation(record extenderActivationRecord, account string, state extenderActivationState, now time.Time) {
-	record.Accounts[account] = state
-	writeExtenderActivationRecord(record, account)
-}
-
 // pruneExtenderAttempts drops the attempts that have aged out of the window and
 // returns the number still counted.
 func pruneExtenderAttempts(state *extenderActivationState, now time.Time, window time.Duration) int {
@@ -473,33 +467,34 @@ func extenderActivationSpendSpare(now time.Time, userId string, pass extenderAct
 // refusal.
 func recordExtenderActivationRefused(now time.Time, userId string) time.Duration {
 	account := extenderActivationAccountKey(userId)
-	extenderActivationRecordMu.Lock()
-	defer extenderActivationRecordMu.Unlock()
-	record, err := extenderActivationRecordForAccount(account)
+	wait := extenderRefusalBackoff
+	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+		state := record.Accounts[account]
+		// A streak that has gone quiet starts over: refusals spread across weeks
+		// are not one escalating incident.
+		if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
+			state.Refusals = 0
+		}
+		state.Refusals++
+		state.LastRefusalUnix = now.Unix()
+		wait = extenderRefusalBackoff
+		for i := 1; i < state.Refusals; i++ {
+			wait *= 2
+			if extenderRefusalBackoffMax <= wait {
+				wait = extenderRefusalBackoffMax
+				break
+			}
+		}
+		state.BackoffUntilUnix = now.Add(wait).Unix()
+		record.Accounts[account] = state
+		return nil
+	})
 	if err != nil {
 		// The streak cannot be recorded, and a caller told to retry now
 		// would post again into the refusal. Hold for the first-level wait
 		// even though the store did not keep it.
 		return extenderRefusalBackoff
 	}
-	state := record.Accounts[account]
-	// A streak that has gone quiet starts over: refusals spread across weeks
-	// are not one escalating incident.
-	if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
-		state.Refusals = 0
-	}
-	state.Refusals++
-	state.LastRefusalUnix = now.Unix()
-	wait := extenderRefusalBackoff
-	for i := 1; i < state.Refusals; i++ {
-		wait *= 2
-		if extenderRefusalBackoffMax <= wait {
-			wait = extenderRefusalBackoffMax
-			break
-		}
-	}
-	state.BackoffUntilUnix = now.Add(wait).Unix()
-	storeExtenderActivation(record, account, state, now)
 	return wait
 }
 
