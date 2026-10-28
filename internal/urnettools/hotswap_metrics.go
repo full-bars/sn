@@ -18,6 +18,8 @@ func hotswapDeclineReason(err error) string {
 		return ""
 	}
 	switch {
+	case errors.Is(err, ErrHotSwapWindows):
+		return "windows"
 	case errors.Is(err, ErrHotSwapNotSupported):
 		return "version_old"
 	case errors.Is(err, ErrHotSwapUnitNotNotify):
