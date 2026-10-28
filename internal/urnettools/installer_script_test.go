@@ -566,7 +566,7 @@ func TestFreeBSDToolDigestRefusedBeforeProviderMutation(t *testing.T) {
 	const hex64 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 	tag := "v2026.10.27"
 	providerAsset := "urnetwork-provider-" + tag + ".tar.gz"
-	toolAsset := "urnet-tools-freebsd-" + runtime.GOARCH
+	toolAsset := "urnet-tools-freebsd-amd64"
 	tarballContent := []byte("provider-tarball-bytes")
 	// The provider digest must be REAL. A fake one makes the install abort at
 	// the tarball comparison instead, which yields the same shape as a tool
@@ -1175,7 +1175,11 @@ pr_warn() { printf "[WARN] %%s\n" "$*" >&2; }
 pr_info() { printf "[INFO] %%s\n" "$*"; }
 priv() { "$@"; }
 sudo() { "$@"; }
-user_shell() { echo "/bin/sh"; }`+verifyHarness+`
+user_shell() { echo "/bin/sh"; }
+# Pin the host architecture. The harness ships amd64 tarball members, so on an
+# arm64 host (an Apple Silicon macOS runner) the script looked for arm64 members
+# and every FreeBSD case failed for a reason the test is not about.
+uname() { case "${1:-}" in -m) echo x86_64 ;; *) echo FreeBSD ;; esac; }`+verifyHarness+`
 assert_state_path_safe() { return 0; }
 set_rc_conf_default() { return 0; }
 write_rc_script_body() { echo "# rc"; }
@@ -2373,4 +2377,71 @@ func TestLinuxVersionFilesWrittenOnlyAfterSuccessfulStart(t *testing.T) {
 			t.Errorf(".date = %q after a successful start, want the release date", got)
 		}
 	})
+}
+func TestWin32InstallerFailsClosedOnBinarySwap(t *testing.T) {
+	b, err := os.ReadFile("../../scripts/Provider_Install_Win32.ps1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := strings.ReplaceAll(string(b), "\r\n", "\n")
+
+	providerStart := strings.Index(script, "if (Test-Path $InstalledBinaryPath) {")
+	if providerStart < 0 {
+		t.Fatal("provider binary swap block is missing")
+	}
+	providerEnd := strings.Index(script[providerStart:], "$InstalledToolsBinaryPath =")
+	if providerEnd < 0 {
+		t.Fatal("could not find the end of the provider binary swap block")
+	}
+	providerSwap := script[providerStart : providerStart+providerEnd]
+	for _, marker := range []string{
+		"Remove-Item -Path $InstalledBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $BinaryPath -Destination $InstalledBinaryPath -ErrorAction Stop",
+		"if (Test-Path $BinaryPath) {\n    throw \"Provider binary remains in staging after install.",
+		"if (-not (Test-Path $InstalledBinaryPath)) {\n    throw \"Provider binary was not installed at",
+	} {
+		if !strings.Contains(providerSwap, marker) {
+			t.Errorf("provider binary swap does not fail closed at %q", marker)
+		}
+	}
+	if strings.Contains(providerSwap, "catch") {
+		t.Error("provider binary swap catches and may swallow a terminating error")
+	}
+	versionWrite := strings.Index(script, "Set-Content $VersionFile $ReleaseVersion")
+	successLine := strings.Index(script, `Write-Host "Installation complete!`)
+	if versionWrite < providerStart+providerEnd || successLine < versionWrite {
+		t.Fatal("version and success messages must follow the verified provider binary swap")
+	}
+
+	for _, marker := range []string{
+		"Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop",
+		"Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop",
+	} {
+		if !strings.Contains(script, marker) {
+			t.Errorf("tool binary swap does not fail closed at %q", marker)
+		}
+	}
+	if got := strings.Count(script, "Move-Item -Path $InstalledToolsBinaryPath -Destination $OldBinary -Force -ErrorAction Stop"); got != 2 {
+		t.Errorf("found %d terminating tool backups, want 2", got)
+	}
+
+	for _, move := range []string{
+		"Move-Item -Path $ExtractedTool -Destination $InstalledToolsBinaryPath -Force -ErrorAction Stop",
+		"Move-Item -Path $ToolTemp -Destination $InstalledToolsBinaryPath -ErrorAction Stop",
+	} {
+		moveAt := strings.Index(script, move)
+		if moveAt < 0 {
+			t.Errorf("missing terminating tool install %q", move)
+			continue
+		}
+		installedAt := strings.Index(script[moveAt:], "$ToolGoInstalled = $true")
+		if installedAt < 0 {
+			t.Fatalf("could not find success flag after %q", move)
+		}
+		block := script[moveAt : moveAt+installedAt]
+		if !strings.Contains(block, "-not (Test-Path $InstalledToolsBinaryPath)") || !strings.Contains(block, "throw ") {
+			t.Errorf("tool success flag is not guarded by an installed-binary check after %q", move)
+		}
+	}
 }
