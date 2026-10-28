@@ -117,9 +117,11 @@ func newH3PacketConnFactory(proxySettings *connect.ProxySettings, bw *bandwidth.
 func providerSlotDialSettings(base *connect.DialContextSettings, proxySettings *connect.ProxySettings, bw *bandwidth.ProxyBandwidth, proxyAddr string) *connect.DialContextSettings {
 	if factory := newH3PacketConnFactory(proxySettings, bw, proxyAddr); factory != nil {
 		next := &connect.DialContextSettings{PacketConnFactory: factory}
-		if base != nil {
-			next.DialContext = base.DialContext
-		}
+		// SOCKS5 is the sole stream route for a proxied slot. A failed proxy
+		// dial must fail closed; falling back to the base/direct dial is the
+		// egress leak this wiring prevents.
+		forward := &net.Dialer{Timeout: socks5HandshakeTimeout}
+		next.DialContext = proxySettings.NewDialContext(context.Background(), forward)
 		base = next
 	}
 	return bandwidth.WrapDialContextSettings(base, bw, proxyAddr)

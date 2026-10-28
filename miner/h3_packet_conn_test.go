@@ -212,8 +212,8 @@ func TestProviderSlotDialSettingsCarriesTheH3FactoryThroughTheWrap(t *testing.T)
 		pc.Close()
 	}
 
-	// Both settings keep the caller's own dial (the test-egress seam) as the
-	// base the wrap wraps.
+	// A proxied slot must ignore the caller's base dial so it cannot bypass
+	// the configured proxy.
 	called := false
 	base := &connect.DialContextSettings{
 		DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -221,11 +221,53 @@ func TestProviderSlotDialSettingsCarriesTheH3FactoryThroughTheWrap(t *testing.T)
 			return nil, nil
 		},
 	}
-	if _, err := providerSlotDialSettings(base, setVerdict, nil, proxy.address()).DialContext(context.Background(), "tcp", "203.0.113.9:443"); err != nil {
+	conn, err := providerSlotDialSettings(base, setVerdict, nil, proxy.address()).DialContext(context.Background(), "tcp", "destination.invalid:443")
+	if err != nil {
+		t.Fatalf("proxied dial failed: %v", err)
+	}
+	conn.Close()
+	if called {
+		t.Fatal("the proxied slot used the base dial, bypassing its proxy")
+	}
+}
+
+func TestProviderSlotDialSettingsRoutesStreamsThroughProxy(t *testing.T) {
+	proxy := newFakeSocks5Proxy(t, fakeUDPRelayWorking, "203.0.113.7", "203.0.113.7")
+	settings := proxy.settings()
+	stubH3UDPVerdict(t, settings, proxyUDPOK)
+	proxied := providerSlotDialSettings(nil, settings, nil, proxy.address())
+	if proxied.DialContext == nil {
+		t.Fatal("proxied slot has no stream dial")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	conn, err := proxied.DialContext(ctx, "tcp", "destination.invalid:443")
+	if err != nil {
+		t.Fatalf("SOCKS CONNECT through proxy failed: %v", err)
+	}
+	conn.Close()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
 		t.Fatal(err)
 	}
-	if !called {
-		t.Fatal("the proxied slot's dial settings lost the base dial in the wrap")
+	defer listener.Close()
+	accepted := make(chan net.Conn, 1)
+	go func() { c, _ := listener.Accept(); accepted <- c }()
+	direct := providerSlotDialSettings(nil, nil, nil, "")
+	conn, err = direct.DialContext(ctx, "tcp", listener.Addr().String())
+	if err != nil {
+		t.Fatalf("direct slot did not dial directly: %v", err)
+	}
+	conn.Close()
+	select {
+	case c := <-accepted:
+		if c == nil {
+			t.Fatal("direct listener accepted no connection")
+		}
+		c.Close()
+	case <-ctx.Done():
+		t.Fatal("direct connection was not accepted")
 	}
 }
 
