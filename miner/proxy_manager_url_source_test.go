@@ -478,6 +478,67 @@ func TestRunProxyURLFetcher_WarmupCancelSetsInactiveState(t *testing.T) {
 	}
 }
 
+func TestCleanupWarmupUsesEachManagerProcessStart(t *testing.T) {
+	withTempHome(t)
+	const first = "198.51.100.31:1080"
+	const second = "198.51.100.32:1080"
+	oldStart := time.Now().Add(-48 * time.Hour)
+	if err := writeProxyState(&ProxyState{StartedAt: oldStart, Proxies: map[string]ProxyEntry{
+		first: {ID: 1, Health: "dead", Source: "url"},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeProxyURLState(&ProxyURLState{Cache: map[string]ProxyURLEntry{first: {}}}); err != nil {
+		t.Fatal(err)
+	}
+
+	manager1 := newProxyManager(defaultProxyManagerConfig())
+	if _, _, err := manager1.start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if removed := runProxyURLCleanupOnce("url"); removed != 0 {
+		t.Fatalf("first-start warmup removed %d proxies, want 0", removed)
+	}
+	setCleanupProcessStart(time.Now().Add(-70 * time.Minute))
+	if removed := runProxyURLCleanupOnce("url"); removed != 1 {
+		t.Fatalf("settled cleanup removed %d proxies, want 1", removed)
+	}
+	manager1.stop()
+
+	state, err := readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	state.Proxies[second] = ProxyEntry{ID: 2, Health: "dead", Source: "url"}
+	if err := writeProxyState(state); err != nil {
+		t.Fatal(err)
+	}
+	urlState, err := readProxyURLState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	urlState.Cache[second] = ProxyURLEntry{}
+	if err := writeProxyURLState(urlState); err != nil {
+		t.Fatal(err)
+	}
+
+	manager2 := newProxyManager(defaultProxyManagerConfig())
+	if _, _, err := manager2.start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	defer manager2.stop()
+	if removed := runProxyURLCleanupOnce("url"); removed != 0 {
+		t.Fatalf("second-start warmup removed %d proxies, want 0", removed)
+	}
+	urlState, err = readProxyURLState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := urlState.Cache[second]; !ok {
+		t.Fatal("second manager start inherited the prior process warmup and evicted its dead URL proxy")
+	}
+}
+
 // TestResolveSelfHealEnabled_Override covers the runtime toggle marker file:
 // absent/empty means the startup value (default off unless URNETWORK_SELF_HEAL=1)
 // passes through, "on" (case-insensitive) means enabled, and any other non-empty

@@ -1425,6 +1425,23 @@ func readURLCacheSize() int {
 	return len(state.Cache)
 }
 
+var (
+	cleanupProcessStartMu sync.RWMutex
+	cleanupProcessStart   time.Time
+)
+
+func setCleanupProcessStart(start time.Time) {
+	cleanupProcessStartMu.Lock()
+	cleanupProcessStart = start
+	cleanupProcessStartMu.Unlock()
+}
+
+func getCleanupProcessStart() time.Time {
+	cleanupProcessStartMu.RLock()
+	defer cleanupProcessStartMu.RUnlock()
+	return cleanupProcessStart
+}
+
 // runProxyURLCleanupOnce removes dead/inactive/degraded proxies whose source
 // matches scope ("url" removes only url-sourced proxies; "all" removes any
 // source; any other value, including "none", removes nothing and returns 0).
@@ -1451,10 +1468,13 @@ func runProxyURLCleanupOnce(scope string) (removed int) {
 		return 0
 	}
 
-	// For degraded cleanup, require the provider to have been running
-	// long enough to avoid killing proxies that just haven't authed yet
-	// during this startup cycle.
-	uptime := time.Since(state.StartedAt)
+	// Cleanup warmup belongs to this process start, not the persisted start
+	// timestamp from a previous process. Outside a manager lifetime preserve
+	// the settled behavior used by explicit cleanup calls.
+	uptime := 65*time.Minute + time.Second
+	if start := getCleanupProcessStart(); !start.IsZero() {
+		uptime = time.Since(start)
+	}
 	const minUptime = 65 * time.Minute
 
 	// Read degraded threshold from proxy_url.json (may be empty = disabled).

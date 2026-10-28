@@ -646,6 +646,7 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	if m.started {
 		return nil, nil, fmt.Errorf("proxy manager already started")
 	}
+	resetProxyWarmupForStart()
 	// Startup imports identity/provenance into proxy.state and may persist it.
 	// Keep the whole read/modify/write under the shared state transaction so a
 	// concurrent health snapshot cannot persist a stale copy over the import.
@@ -698,6 +699,7 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	ctx, cancel := context.WithCancel(parent)
 	m.cancel = cancel
 	m.started = true
+	setCleanupProcessStart(time.Now())
 	// The startup grading gate: the active probe loops below (the paid/file
 	// grader, the URL fetch + stage-1 probe cycles, the stale-reaper pass)
 	// wait on it until the provide run's workers are up. It decides from the
@@ -870,6 +872,7 @@ func (m *proxyManager) stop() {
 	if gate != nil {
 		processGradingGate.CompareAndSwap(gate, nil)
 	}
+	setCleanupProcessStart(time.Time{})
 	// Flush the command audit ring (v33 main()'s shutdown persist).
 	forceAuditPersist()
 }
