@@ -145,6 +145,11 @@ Description=URnetwork Update
 Type=oneshot
 ExecStart=%s update -y --unit %s
 `, systemdExecArg(executable), systemdExecArg(p.Unit))
+			// writeFileAtomic does not create the directory, and on a fresh
+			// ~/.config/systemd/user it is not there yet.
+			if err := os.MkdirAll(filepath.Dir(updatePath), 0o755); err != nil {
+				return fmt.Errorf("create updater service %s: %w", updateUnit, err)
+			}
 			if err := writeFileAtomic(updatePath, []byte(service), 0o644); err != nil {
 				return fmt.Errorf("create updater service %s: %w", updateUnit, err)
 			}
