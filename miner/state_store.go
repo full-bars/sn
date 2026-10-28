@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync"
 	"time"
 
@@ -92,7 +93,7 @@ func openProviderStore(path string) (*providerStore, error) {
 	// still release the lock.
 	var openedFile *os.File
 	db, err := callProviderStore(func() (*bbolt.DB, error) {
-		d, err := bbolt.Open(path, 0o600, &bbolt.Options{
+		d, err := openProviderBolt(path, &bbolt.Options{
 			Timeout: providerStoreOpenTimeout,
 			OpenFile: func(name string, flag int, mode os.FileMode) (*os.File, error) {
 				file, err := os.OpenFile(name, flag, mode)
@@ -140,6 +141,25 @@ func openProviderStore(path string) (*providerStore, error) {
 }
 
 var errProviderStoreCorrupt = errors.New("provider state store is corrupt")
+
+// bbolt v1.4.3's internal/common.Page.FastCheck asserts these exact messages
+// when a loaded page's ID or page-type flags disagree with the expected file
+// structure. Restrict classification to string panics during bbolt.Open; other
+// panics, including runtime errors and failures after Open, remain ordinary errors.
+var providerStorePagePanic = regexp.MustCompile(`^assertion failed: (page [0-9]+: has unexpected type/flags: [0-9a-f]+|Page expected to be: [0-9]+, but self identifies as [0-9]+)$`)
+
+func openProviderBolt(path string, options *bbolt.Options) (db *bbolt.DB, err error) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			if message, ok := recovered.(string); ok && providerStorePagePanic.MatchString(message) {
+				err = fmt.Errorf("%w: provider state store panic: %s", errProviderStoreCorrupt, message)
+				return
+			}
+			panic(recovered)
+		}
+	}()
+	return bbolt.Open(path, 0o600, options)
+}
 
 // providerStoreOpenedHook runs inside the open closure once bbolt.Open has
 // returned a handle. Tests use it to force a panic after the file lock is held.

@@ -1,6 +1,8 @@
 package miner
 
 import (
+	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -86,8 +88,8 @@ func TestRestoreAfterAbortedHandoffDoesNotQuarantineACorruptStore(t *testing.T) 
 // open of the path would wait out the lock timeout instead of failing at once.
 // A file written without a synced freelist makes Open rebuild the freelist and
 // walk the pages, which is where the damage is met.
-func TestProviderStoreOpenPanicInsideBboltReleasesTheLock(t *testing.T) {
-	path := filepath.Join(t.TempDir(), providerStoreFileName)
+func makeProviderStorePanicOnOpen(t *testing.T, path string) []byte {
+	t.Helper()
 	db, err := bbolt.Open(path, 0o600, &bbolt.Options{NoFreelistSync: true})
 	if err != nil {
 		t.Fatalf("create the file: %s", err)
@@ -123,13 +125,92 @@ func TestProviderStoreOpenPanicInsideBboltReleasesTheLock(t *testing.T) {
 	if err := os.WriteFile(path, raw, 0o600); err != nil {
 		t.Fatalf("damage the file: %s", err)
 	}
+	return raw
+}
 
-	_, err = openProviderStore(path)
+func TestProviderStoreOpenPanicInsideBboltReleasesTheLock(t *testing.T) {
+	path := filepath.Join(t.TempDir(), providerStoreFileName)
+	makeProviderStorePanicOnOpen(t, path)
+	_, err := openProviderStore(path)
 	if err == nil || !strings.Contains(err.Error(), "panic") {
 		t.Fatalf("open of a damaged file = %v, want the panic reported", err)
 	}
 	_, err = openProviderStore(path)
 	if err == nil || strings.Contains(err.Error(), "timeout") {
 		t.Fatalf("second open = %v, want the damage again, not a lock timeout: the first open's file is still locked", err)
+	}
+}
+
+func TestProviderStorePanicClassificationIsNarrow(t *testing.T) {
+	for _, tc := range []struct {
+		message string
+		matches bool
+	}{
+		{"assertion failed: page 362: has unexpected type/flags: ffff", true},
+		{"assertion failed: Page expected to be: 2, but self identifies as 3", true},
+		{"assertion failed: page x: has unexpected type/flags: ffff", false},
+		{"assertion failed: page 2: has unexpected type/flags: ffff extra", false},
+		{"runtime error: index out of range", false},
+		{"injected after open", false},
+	} {
+		if got := providerStorePagePanic.MatchString(tc.message); got != tc.matches {
+			t.Errorf("match %q = %v, want %v", tc.message, got, tc.matches)
+		}
+	}
+
+	testExtenderState(t)
+	counts := withPersistentErrorStore(t)
+	path, err := providerStatePath(providerStoreFileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Even a matching string outside bbolt.Open must not quarantine the file.
+	providerStoreOpenedHook = func(*bbolt.DB) { panic("assertion failed: page 2: has unexpected type/flags: ffff") }
+	t.Cleanup(func() { providerStoreOpenedHook = nil })
+	store, err := openProviderStoreForProcess()
+	if store != nil || err == nil || errors.Is(err, errProviderStoreCorrupt) || !strings.Contains(err.Error(), "panic") {
+		t.Fatalf("programming panic = (%v, %v), want ordinary panic error", store, err)
+	}
+	matches, err := filepath.Glob(path + ".corrupt.*")
+	if err != nil || len(matches) != 0 || counts.Snapshot()[providerStoreCorruptCategory] != 0 {
+		t.Fatalf("programming panic quarantined or counted corrupt: %v, %v, %v", matches, counts.Snapshot(), err)
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("original file missing: %v", err)
+	}
+}
+
+func TestProviderStoreQuarantinePanicOnDamagedPage(t *testing.T) {
+	testExtenderState(t)
+	counts := withPersistentErrorStore(t)
+	path, err := providerStatePath(providerStoreFileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	damaged := makeProviderStorePanicOnOpen(t, path)
+	store, err := openProviderStoreForProcess()
+	if err != nil || store == nil {
+		t.Fatalf("open damaged store = %v, want successful quarantine", err)
+	}
+	matches, err := filepath.Glob(path + ".corrupt.*")
+	if err != nil || len(matches) != 1 {
+		t.Fatalf("quarantined files = %v, err %v; want one", matches, err)
+	}
+	got, err := os.ReadFile(matches[0])
+	if err != nil || !bytes.Equal(got, damaged) {
+		t.Fatalf("quarantined bytes differ, err %v", err)
+	}
+	if got := counts.Snapshot()[providerStoreCorruptCategory]; got != 1 {
+		t.Fatalf("corrupt count = %d, want 1", got)
+	}
+	if err := store.save(providerStoreBucketState, "usable", true); err != nil {
+		t.Fatal(err)
+	}
+	if again, err := openProviderStoreForProcess(); err != nil || again != store {
+		t.Fatalf("second open = %v, %v", again, err)
+	}
+	matches, _ = filepath.Glob(path + ".corrupt.*")
+	if len(matches) != 1 || counts.Snapshot()[providerStoreCorruptCategory] != 1 {
+		t.Fatalf("repeated quarantine or corruption count: %v, %v", matches, counts.Snapshot())
 	}
 }
