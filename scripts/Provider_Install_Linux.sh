@@ -1596,12 +1596,14 @@ openrc_rollback_binary_swap ()
     fi
     openrc_swap_pending=0
 
+    restore_failed=0
     if [ -f "$install_path/bin/urnetwork.old" ]; then
         if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork" 2>/dev/null; then
             pr_warn "Restored the previous provider binary; the update did not apply."
         else
+            restore_failed=1
             pr_err "Could not restore the previous provider binary from %s" "$install_path/bin/urnetwork.old"
-            pr_err "The provider is NOT installed. Re-run the installer, or put that file back as bin/urnetwork."
+            pr_err "The new binary may still be at %s; the previous one is kept at %s." "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old"
         fi
     fi
 
@@ -1612,7 +1614,13 @@ openrc_rollback_binary_swap ()
 
     # Put the service back the way it was found. openrc_units_stopped is set by
     # stop_openrc_units only when it actually stopped something.
-    if [ "${openrc_units_stopped:-0}" = "1" ]; then
+    if [ "$restore_failed" = "1" ]; then
+        # The previous binary is not in place, so starting the service would run
+        # the new one and "running on the previous binary" would be false.
+        if [ "${openrc_units_stopped:-0}" = "1" ]; then
+            pr_err "The service is left stopped. Put %s back as bin/urnetwork, then run: rc-service urnetwork start" "$install_path/bin/urnetwork.old"
+        fi
+    elif [ "${openrc_units_stopped:-0}" = "1" ]; then
         # Do NOT gate this on `command -v rc-service`. A passwordless sudo is
         # commonly configured with its own secure_path, so rc-service can be
         # resolvable through sudo while absent from this shell's PATH. The old

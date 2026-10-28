@@ -793,6 +793,51 @@ openrc_rollback_binary_swap
 	})
 }
 
+// When copying the previous binary back fails, the new binary may still be at
+// the live path. The rollback must then leave the service stopped and name the
+// retained backup, not start it and claim the previous binary is running.
+func TestOpenRCRollbackRestoreFailureLeavesServiceStopped(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	fn := extractShellFunc(t, readInstaller(t), "openrc_rollback_binary_swap")
+	if fn == "" {
+		t.Fatal("could not extract openrc_rollback_binary_swap from the Linux installer")
+	}
+	tempDir := t.TempDir()
+	actions := filepath.Join(tempDir, "actions.log")
+	installRoot := filepath.Join(tempDir, "root")
+	if err := os.MkdirAll(filepath.Join(installRoot, "bin"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	old := filepath.Join(installRoot, "bin", "urnetwork.old")
+	if err := os.WriteFile(old, []byte("PREVIOUS"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	harness := fmt.Sprintf(`
+pr_warn() { echo "[WARN] $*"; }
+pr_err()  { echo "[ERROR] $*"; }
+sudo() { echo "sudo $*" >> %q; [ "$1" = mv ] && return 1; return 0; }
+`, actions)
+	cmd := exec.Command("/bin/sh", "-c", harness+fn+fmt.Sprintf(`
+install_path=%q
+openrc_swap_pending=1
+openrc_units_stopped=1
+SUDO=sudo
+openrc_rollback_binary_swap
+`, installRoot))
+	cmd.Env = []string{"PATH=/nonexistent"}
+	out, _ := cmd.CombinedOutput()
+	log, _ := os.ReadFile(actions)
+	if strings.Contains(string(log), "rc-service") {
+		t.Errorf("rollback started the service although the restore failed (actions %q, out:\n%s)", log, out)
+	}
+	if strings.Contains(string(out), "Restarted the service") || strings.Contains(string(out), "running on the previous") {
+		t.Errorf("rollback claimed the previous binary is running after a failed restore (out:\n%s)", out)
+	}
+	if !strings.Contains(string(out), old) {
+		t.Errorf("rollback did not name the retained backup %s (out:\n%s)", old, out)
+	}
+}
+
 // extractShellFunc returns the body of a top-level shell function, from its
 // definition line to the closing brace at column 0. Used so assertions can
 // target ONE function instead of the whole file, which is how a string present
