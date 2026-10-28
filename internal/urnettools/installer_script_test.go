@@ -348,9 +348,12 @@ openrc_install_root=/usr/local/lib/urnetwork-provider
 
 // runOpenRCSudoStart runs the real install_openrc_units and
 // openrc_rollback_binary_swap for the non-root (sudo) branch, with a live/.old
-// pair left by a swap. sudo is a passthrough and rc-service on PATH records
-// each call and the binary live at that moment; startFails makes only the
-// first start fail.
+// pair left by a swap. rc-service is deliberately NOT on the shell's PATH: it
+// lives in a secure_path directory that only the sudo stub resolves, by
+// absolute path, as a real sudo with its own secure_path would. A
+// `command -v rc-service` guard in the script therefore skips the restart.
+// The stub records each call and the binary live at that moment; startFails
+// makes only the first start fail.
 func runOpenRCSudoStart(t *testing.T, startFails bool) (out string, err error, live, calls string) {
 	t.Helper()
 	return runOpenRCSudoStartState(t, startFails, true, false)
@@ -387,8 +390,9 @@ func runOpenRCSudoStartState(t *testing.T, startFails, unitsStopped, serviceRunn
 		t.Fatal(err)
 	}
 	stubDir := t.TempDir()
-	record := filepath.Join(stubDir, "rc-service.calls")
-	flag := filepath.Join(stubDir, "first-start-done")
+	secureDir := t.TempDir()
+	record := filepath.Join(secureDir, "rc-service.calls")
+	flag := filepath.Join(secureDir, "first-start-done")
 	failFirst := ""
 	if startFails {
 		failFirst = "if [ \"$1\" = urnetwork ] && [ \"$2\" = start ] && [ ! -e '" + flag + "' ]; then\n" +
@@ -399,7 +403,7 @@ func runOpenRCSudoStartState(t *testing.T, startFails, unitsStopped, serviceRunn
 	rcService := "#!/bin/sh\n" +
 		"printf '%s live=%s\\n' \"$*\" \"$(cat '" + live + "' 2>/dev/null)\" >> '" + record + "'\n" +
 		failFirst + "exit 0\n"
-	if err := os.WriteFile(filepath.Join(stubDir, "rc-service"), []byte(rcService), 0o755); err != nil {
+	if err := os.WriteFile(filepath.Join(secureDir, "rc-service"), []byte(rcService), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(stubDir, "rc-update"), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
@@ -413,7 +417,11 @@ openrc_initd_file="`+initd+`"
 openrc_swap_pending=1
 openrc_units_stopped=`+boolTo01(unitsStopped)+`
 id() { if [ "$1" = -u ]; then echo 1000; fi; return 0; }
-sudo() { if [ "$1" = -n ]; then shift; fi; "$@"; }
+sudo() {
+    if [ "$1" = -n ]; then shift; fi
+    if [ "$1" = rc-service ]; then shift; '`+secureDir+`/rc-service' "$@"; return; fi
+    "$@"
+}
 openrc_user_home() { echo "`+home+`"; }
 openrc_resolve_parent() { if [ "$1" = --full ]; then shift; fi; echo "$1"; }
 openrc_finalize_root_paths() { return 0; }

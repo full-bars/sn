@@ -316,6 +316,46 @@ func TestDefaultWindowsSwapRestoresPreviousWhenInstallFails(t *testing.T) {
 	}
 }
 
+// TestDefaultWindowsSwapWiringRestoresByCopyWhenRestoreRenameFails is
+// seam-level: defaultWindowsSwap hardcodes os.Rename, and on Linux nothing can
+// make only the second rename fail deterministically (the executable path is
+// vacated by the first). So this drives selfUpdateWindowsSwap with the same
+// collaborators defaultWindowsSwap wires (real installBinary and copyFile) and
+// fails just the restore rename. A missing staged file fails the real install.
+func TestDefaultWindowsSwapWiringRestoresByCopyWhenRestoreRenameFails(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "urnet-tools.exe")
+	backup := filepath.Join(dir, "urnet-tools.exe.bak")
+	missing := filepath.Join(dir, "urnet-tools.exe.new")
+	original := fakeELF("current")
+	if err := os.WriteFile(exe, original, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	renameCalls := 0
+	rename := func(old, new string) error {
+		renameCalls++
+		if renameCalls == 1 {
+			return os.Rename(old, new)
+		}
+		return os.ErrPermission
+	}
+	install := func(src, dst string) error { return installBinary(src, dst, "") }
+	restoreCalls := 0
+	restore := func(src, dst string) error {
+		restoreCalls++
+		return copyFile(src, dst)
+	}
+	if err := selfUpdateWindowsSwap(exe, backup, missing, rename, install, restore); err == nil {
+		t.Fatal("a failed install must remain an error")
+	}
+	if renameCalls != 2 || restoreCalls != 1 {
+		t.Fatalf("rename calls = %d, copy fallback calls = %d; want 2 and 1", renameCalls, restoreCalls)
+	}
+	if got, err := os.ReadFile(exe); err != nil || !bytes.Equal(got, original) {
+		t.Fatalf("copy fallback did not put the previous tool back: bytes=%q err=%v", got, err)
+	}
+}
+
 // TestSelfUpdateWindowsBranchCallsDefaultSwap pins that the Windows branch
 // goes through defaultWindowsSwap, which the behaviour tests above cover.
 func TestSelfUpdateWindowsBranchCallsDefaultSwap(t *testing.T) {
