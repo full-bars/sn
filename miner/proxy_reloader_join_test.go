@@ -115,3 +115,35 @@ func TestReloadRotationDoesNotStartReplacementOverStuckWorker(t *testing.T) {
 		t.Fatalf("identity was not restored after the worker returned: %v", got)
 	}
 }
+
+// Changing the username at a live address removes one identity and adds
+// another at the same host:port. The addition is refused while the old identity
+// owns the address, so the removal has to come first or the pool is left empty
+// until the next reload.
+func TestReloadUsernameChangeAtLiveAddressSwapsInOneReload(t *testing.T) {
+	p := &joinTestPool{desired: []*connect.ProxySettings{reloadTestSettings("198.51.100.52:443", "alice", "pw")}}
+	r := p.reloader()
+	reserving := r.spawnGeneration
+	r.spawnGeneration = func(settings *connect.ProxySettings, gen uint64) (context.CancelFunc, <-chan struct{}, error) {
+		if err := r.reserveAddress(settings); err != nil {
+			return nil, nil, err
+		}
+		return reserving(settings, gen)
+	}
+	if _, err := r.reload(); err != nil {
+		t.Fatal(err)
+	}
+
+	p.mu.Lock()
+	p.desired = []*connect.ProxySettings{reloadTestSettings("198.51.100.52:443", "bob", "pw")}
+	p.mu.Unlock()
+
+	summary, err := r.reload()
+	if err != nil {
+		t.Fatalf("username change at a live address failed: %v", err)
+	}
+	want := []string{reloadTestSettings("198.51.100.52:443", "bob", "pw").Key()}
+	if got := r.runningKeys(); len(got) != 1 || got[0] != want[0] {
+		t.Fatalf("running = %v, want %v (summary %s)", got, want, summary)
+	}
+}

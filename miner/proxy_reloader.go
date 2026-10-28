@@ -417,6 +417,19 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 		wanted[settings.Key()] = settings
 	}
 
+	// Stop what is gone first. A changed username at a live address is a removal
+	// of the old identity plus an addition of the new one, and the addition is
+	// refused while the old identity still owns the address. Retiring before
+	// adding also means a failed addition can no longer be the reason a removal
+	// was skipped or came late.
+	for key, slot := range r.running {
+		if _, ok := wanted[key]; ok {
+			continue
+		}
+		r.retireLocked(key, slot)
+		summary.Removed++
+	}
+
 	var errs []error
 	for key, settings := range wanted {
 		slot, ok := r.running[key]
@@ -452,8 +465,7 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 				errs = append(errs, fmt.Errorf("identity %s is no longer served after a failed rotation", key))
 			}
 			// Keep reconciling: one bad identity must not freeze every other
-			// operator change, and the removals below still run so a dead proxy
-			// stops even when an addition failed.
+			// operator change.
 			continue
 		}
 		r.running[key] = &minerReloadSlot{settings: settings, cancel: cancel, generation: generation, done: done}
@@ -462,15 +474,6 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 		} else {
 			summary.Added++
 		}
-	}
-
-	// Stop what is gone. This runs regardless of spawn failures above.
-	for key, slot := range r.running {
-		if _, ok := wanted[key]; ok {
-			continue
-		}
-		r.retireLocked(key, slot)
-		summary.Removed++
 	}
 
 	keys := r.sortedRunningKeysLocked()
