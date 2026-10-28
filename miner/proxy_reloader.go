@@ -164,6 +164,14 @@ func newMinerProxyReloader(
 	}
 }
 
+// quiesce returns once any reload that was already running has finished. The
+// run uses it before it believes its worker count has reached zero, because
+// that reload may be the one starting the replacement.
+func (r *minerProxyReloader) quiesce() {
+	r.mu.Lock()
+	r.mu.Unlock() //nolint:staticcheck // the empty section is the wait
+}
+
 // retireLocked cancels a slot and drops it from the bookkeeping, remembering
 // its worker so the identity is not started again before that worker is gone.
 // The caller must hold mu.

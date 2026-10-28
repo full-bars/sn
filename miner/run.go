@@ -1989,7 +1989,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	var reloader *minerProxyReloader
 	var retryMu sync.Mutex
 	retryAttempts := map[string]int{}
-	retryFailedProxy := func(key string) {
+	// join is what the run waits on before it ends: the launched slots, the
+	// slots a reload starts later and the retries scheduled for failed ones.
+	join := newSlotJoin()
+	var retryFailedProxy func(key string)
+	retryFailedProxy = func(key string) {
 		retryMu.Lock()
 		retryAttempts[key]++
 		attempt := retryAttempts[key]
@@ -1998,15 +2002,30 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			tlog("[proxy][retry] stopped retrying %s after three attempts\n", proxyKeyDisplay(key))
 			return
 		}
+		// The retry counts as a running worker, so the run cannot end between
+		// the failure and the retry. The failing worker is still registered
+		// when this runs, so the count never touches zero in between.
+		if !join.add() {
+			return
+		}
 		// Recompute desired state and eligibility before restarting anything.
-		time.AfterFunc(time.Duration(attempt)*time.Second, func() {
-			if ctx.Err() != nil || reloader == nil {
+		go func() {
+			defer join.done()
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Duration(attempt) * time.Second):
+			}
+			if reloader == nil {
 				return
 			}
 			if _, err := reloader.reload(); err != nil {
 				tlog("[proxy][retry] reload for %s failed: %v\n", proxyKeyDisplay(key), err)
+				// A failed reload applied nothing, so nothing else will bring
+				// the slot back: try again until the attempts run out.
+				retryFailedProxy(key)
 			}
-		})
+		}()
 	}
 	if workProfile == nil && contractProfile == nil {
 		// Reloaded slots continue past the configured index range, so a slot
@@ -2057,8 +2076,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// monitors), so admit the slot outside it: it serves, its
 				// progress just is not part of that census.
 				progress.admitLateSlot(providerRegistrationSlot(slotIdentities, settings))
+				if !join.add() {
+					return nil, errors.New("the run is ending")
+				}
 				slotCtx, slotCancel := context.WithCancel(ctx)
 				go func() {
+					defer join.done()
 					if err := provideWithProxy(slotCtx, index, settings); err != nil {
 						tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", settings.Key(), index, err)
 					}
@@ -2072,9 +2095,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 			index := reloadSlotIndex.Add(1) - 1
 			progress.admitLateSlot(providerRegistrationSlot(slotIdentities, settings))
+			if !join.add() {
+				return nil, nil, errors.New("the run is ending")
+			}
 			slotCtx, slotCancel := context.WithCancel(ctx)
 			slotDone := make(chan struct{})
 			go func() {
+				defer join.done()
 				err := provideWithProxy(slotCtx, index, settings)
 				// Closed before the bookkeeping below asks the reloader for its
 				// lock: a reload may be holding that lock while it waits for
@@ -2154,7 +2181,6 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// no slots closes it immediately.
 	bringUp.start()
 	defer bringUp.shutdown()
-	var wg sync.WaitGroup
 	results := make(chan error, len(providers))
 	for _, slot := range launchSlots {
 		index := slot.Index
@@ -2174,9 +2200,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			slotCtx, slotCancel = context.WithCancel(ctx)
 			generation = reloader.seedGeneration(proxySettings, slotCancel, slotDone)
 		}
-		wg.Add(1)
+		join.add()
 		go func() {
-			defer wg.Done()
+			defer join.done()
 			var result error
 			defer func() {
 				if cause := recover(); cause != nil {
@@ -2308,7 +2334,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			<-reloadWatchDone
 		}()
 	}
-	wg.Wait()
+	join.wait(func() {
+		if reloader != nil {
+			reloader.quiesce()
+		}
+	})
 	cancel()
 	close(results)
 	var slotResults []error
