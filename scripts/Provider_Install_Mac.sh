@@ -377,6 +377,11 @@ do_status() {
     if service_running; then
         pr_info "Provider is running"
     else
+        rc=$?
+        if [ "$rc" -eq 2 ]; then
+            pr_err "Cannot tell whether the provider is running: no launchd session for $(id -u). Log in graphically on this host, or run this from that user's session."
+            return 2
+        fi
         pr_info "Provider is stopped"
     fi
 }
