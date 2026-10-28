@@ -1,6 +1,7 @@
 package urnettools
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -8,6 +9,29 @@ import (
 	"runtime"
 	"strings"
 )
+
+var errScheduledTaskNotFound = errors.New("scheduled task not found")
+
+// deleteTaskIfExists treats only a confirmed missing task as a clean no-op.
+func deleteTaskIfExists(taskName string, run func(string, ...string) error) error {
+	if err := run("/query", "/tn", taskName); err != nil {
+		if errors.Is(err, errScheduledTaskNotFound) {
+			return nil
+		}
+		return fmt.Errorf("query scheduled task %q: %w", taskName, err)
+	}
+	if err := run("/delete", "/f", "/tn", taskName); err != nil {
+		return fmt.Errorf("delete scheduled task %q: %w", taskName, err)
+	}
+	return nil
+}
+
+func schtasksTaskNotFoundOutput(output string) bool {
+	output = strings.ToLower(output)
+	return strings.Contains(output, "0x80070002") ||
+		strings.Contains(output, "cannot find the file specified") ||
+		strings.Contains(output, "does not exist in the system")
+}
 
 // This file ports the lifecycle commands: auto-start, auto-update,
 // uninstall, reinstall. Like every command, they operate on the RESOLVED
