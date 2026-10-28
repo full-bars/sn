@@ -172,11 +172,26 @@ func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
 		return errProviderStoreClosed
 	}
 	err := runProviderStoreUpdate(s.db, fn)
-	if err != nil && !errors.Is(err, errProviderStoreReleased) {
+	// A record that would not decode is counted where it was read; no write
+	// was attempted, so it is not also a failed write.
+	var undecodable *providerStoreDecodeError
+	if err != nil && !errors.Is(err, errProviderStoreReleased) && !errors.As(err, &undecodable) {
 		IncrPersistentError(providerStoreWriteFailedCategory)
 	}
 	return err
 }
+
+// providerStoreDecodeError is a stored value this build cannot decode.
+type providerStoreDecodeError struct {
+	bucket, key string
+	err         error
+}
+
+func (e *providerStoreDecodeError) Error() string {
+	return fmt.Sprintf("decode record %s/%s: %v", e.bucket, e.key, e.err)
+}
+
+func (e *providerStoreDecodeError) Unwrap() error { return e.err }
 
 // providerStoreSyncDir flushes one directory entry, which is what makes a
 // freshly created database file durable before its first write. A variable so
@@ -271,7 +286,7 @@ func (s *providerStore) load(bucket, key string, out any) (bool, error) {
 		// Same reason as the mutation path: an unreadable value must be visible
 		// as a counted failure, not just as a retry loop in a local log.
 		IncrPersistentError(providerStoreDecodeFailedCategory)
-		return false, fmt.Errorf("decode record %s/%s: %w", bucket, key, err)
+		return false, &providerStoreDecodeError{bucket: bucket, key: key, err: err}
 	}
 	return true, nil
 }
@@ -336,7 +351,7 @@ func (s *providerStore) updateJSON(bucket, key string, out any, mutate func(foun
 				// retry loop would otherwise be the only trace. Count it so the
 				// fleet sees a record no build here can read.
 				IncrPersistentError(providerStoreDecodeFailedCategory)
-				return fmt.Errorf("decode record %s/%s: %w", bucket, key, err)
+				return &providerStoreDecodeError{bucket: bucket, key: key, err: err}
 			}
 			found = true
 		}

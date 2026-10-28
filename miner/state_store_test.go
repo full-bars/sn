@@ -369,3 +369,35 @@ func TestProviderStoreOpenSurvivesDamagedPage(t *testing.T) {
 		_ = reopened.release()
 	}
 }
+
+// A record that will not decode inside an update is one failure, counted as a
+// decode failure. No write was attempted, so it must not also count as a failed
+// write: the two categories are what an operator reads to tell a damaged value
+// from a disk that will not take writes.
+func TestProviderStoreUndecodableUpdateIsNotAFailedWrite(t *testing.T) {
+	counts := withPersistentErrorStore(t)
+	store, err := openProviderStore(filepath.Join(t.TempDir(), providerStoreFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.db.Update(func(tx *bbolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(providerStoreBucketState))
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte("bad"), []byte("{not json"))
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var out extenderActivationRecord
+	if err := store.updateJSON(providerStoreBucketState, "bad", &out, func(bool) error { return nil }); err == nil {
+		t.Fatal("an undecodable record updated without error")
+	}
+	snapshot := counts.Snapshot()
+	if got := snapshot[providerStoreDecodeFailedCategory]; got != 1 {
+		t.Fatalf("decode failure count = %d, want 1", got)
+	}
+	if got := snapshot[providerStoreWriteFailedCategory]; got != 0 {
+		t.Fatalf("write failure count = %d, want 0: no write was attempted", got)
+	}
+}
