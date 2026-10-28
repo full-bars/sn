@@ -646,6 +646,11 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	if m.started {
 		return nil, nil, fmt.Errorf("proxy manager already started")
 	}
+	// Startup imports identity/provenance into proxy.state and may persist it.
+	// Keep the whole read/modify/write under the shared state transaction so a
+	// concurrent health snapshot cannot persist a stale copy over the import.
+	proxyStateMu.Lock()
+	defer proxyStateMu.Unlock()
 	launch, held, writeState, err := m.desired(true)
 	if err != nil {
 		return nil, nil, err
