@@ -714,27 +714,24 @@ jobs:
           # non-zero so the job is red, and the comment step below still runs
           # (if: always()) to surface the verdict on the release.
 
-      - name: ClamAV scan of release binaries
-        # The VirusTotal step runs set -euo pipefail; a VT FAIL (deliberately
-        # non-blocking) would skip ClamAV entirely without this.
+      - name: Test ClamAV verdict handling
         if: always()
+        run: bash .github/scripts/test-clamav-scan.sh
+
+      - name: ClamAV scan of release binaries
+        # A failure is reported in this parallel job, but never gates release.
+        if: always()
+        env:
+          CLAMAV_REPORT_FILE: ${{ github.workspace }}/clamav-scan-report.md
         run: |
           set -euo pipefail
-          VERSION=${GITHUB_REF_NAME:-latest}
           if command -v clamscan >/dev/null 2>&1; then
             echo "ClamAV already installed"
           else
             sudo apt-get update -qq
             sudo apt-get install -y -qq clamav >/dev/null
           fi
-          # EICAR self-test: the scanner must actually detect.
-          printf 'X5O!P%%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > /tmp/eicar.txt
-          if clamscan /tmp/eicar.txt 2>/dev/null | grep -q "FOUND"; then
-            echo "EICAR self-test passed (scanner active)"
-          else
-            echo "::warning::EICAR self-test did not FOUND — ClamAV may be broken"
-          fi
-          clamscan --no-summary -r release_tmp/ 2>/dev/null | grep "FOUND" && echo "::error::ClamAV found malware in release artifacts" || echo "ClamAV: clean"
+          bash .github/scripts/clamav-scan.sh release_tmp/
 
       - name: Post scan verdict to release
         if: always() && startsWith(github.ref, 'refs/tags/')
@@ -748,6 +745,11 @@ jobs:
             BODY="${BODY}"$'\n'"$(cat "${GITHUB_WORKSPACE}/vt-scan-report.md")"
           else
             BODY="${BODY}"$'\n'"VirusTotal scan did not produce a report (see the scan job log)."
+          fi
+          if [ -f "${GITHUB_WORKSPACE}/clamav-scan-report.md" ]; then
+            BODY="${BODY}"$'\n'"$(cat "${GITHUB_WORKSPACE}/clamav-scan-report.md")"
+          else
+            BODY="${BODY}"$'\n'"ClamAV scan did not produce a report (see the scan job log)."
           fi
           python3 - "$VER" "$BODY" << 'PY'
           import json, os, sys, urllib.request
