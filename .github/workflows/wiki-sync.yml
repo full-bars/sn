@@ -12,7 +12,27 @@ permissions:
   contents: write
 
 jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # A relative "page.md" link inside the wiki resolves to a raw file and
+      # shows the operator unformatted markdown, which is how a rendered guide
+      # turns into a wall of text. Wiki pages are linked by page name.
+      - name: No relative markdown links
+        run: |
+          status=0
+          while IFS= read -r hit; do
+            echo "::error file=${hit%%:*}::relative markdown link; link the wiki page name instead: ${hit#*:}"
+            status=1
+          # Only the pages the wiki publishes: top-level docs/*.md. The
+          # archive, spec and design trees stay in the repository.
+          done < <(grep -noE '\]\([A-Za-z0-9_./-]+\.md[)#]?' docs/*.md \
+                     | grep -vE '\]\((\/|[a-z]+:\/\/)' || true)
+          exit $status
+
   sync-wiki:
+    needs: check-links
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main repository
@@ -34,8 +54,17 @@ jobs:
           if [ -d "wiki-repo" ]; then
             echo "Copying documentation pages to wiki repository..."
             cp -v main-repo/docs/*.md wiki-repo/
+            # The wiki predates the docs/ tree and its index links this page by
+            # its capitalised name, so keep that name working.
             if [ -f "main-repo/docs/urnet-tools-go.md" ]; then
               cp -v main-repo/docs/urnet-tools-go.md wiki-repo/urnet-tools-Go.md
+            fi
+            # Images and diagrams are documentation too: a page that
+            # references assets/ renders broken without them. The archive, spec
+            # and design trees are not published, so they are not copied.
+            if [ -d "main-repo/docs/assets" ]; then
+              rm -rf wiki-repo/assets
+              cp -rv main-repo/docs/assets wiki-repo/assets
             fi
             cd wiki-repo
             git config user.name "github-actions[bot]"
