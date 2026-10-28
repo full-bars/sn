@@ -1193,3 +1193,105 @@ func TestProvideClientJWTRejectsCustodyThatDisagreesWithStore(t *testing.T) {
 		t.Fatal("returned the stored jwt")
 	}
 }
+
+// The positive twin of the custody test: when custody names the same client as
+// the stored entry, the entry must still be reused. Without this the guard could
+// be "never reuse" and the negative test would still pass.
+func TestProvideClientJWTReusesWhenCustodyAgrees(t *testing.T) {
+	setHotRestart(t, true)
+	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
+	defer restoreStore()
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+
+	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id":  testClientId,
+		"network_id": "net-1",
+	})
+	cfg := clientJWTTestConfig(t, networkJwt, nil)
+
+	custodyJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": testClientId,
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := os.WriteFile(cfg.ClientJwtPath, []byte(custodyJwt), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	storedJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": testClientId,
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := loadGlobalClientJWTStore().Put("direct", clientJWTEntry{
+		ByClientJWT: storedJwt,
+		ClientID:    testClientId,
+		NetworkID:   "net-1",
+		MintedAt:    time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	mint := &fakeMint{jwt: "fresh-should-not-be-used", id: connect.Id{5}}
+	cfg.Mint = mint.mint
+
+	byJwt, _, reused, err := provideClientJWT(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("provideClientJWT err = %v", err)
+	}
+	if !reused {
+		t.Fatal("did not reuse the stored identity although custody agrees")
+	}
+	if mint.calls != 0 {
+		t.Fatalf("mint calls = %d, want 0", mint.calls)
+	}
+	if byJwt != storedJwt {
+		t.Fatal("returned a different jwt than the stored one")
+	}
+}
+
+// A custody file that exists but cannot be read is not permission to reuse: we
+// cannot show the stored identity is still ours, so it must mint instead.
+func TestProvideClientJWTWillNotReuseWhenCustodyIsUnreadable(t *testing.T) {
+	setHotRestart(t, true)
+	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
+	defer restoreStore()
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+
+	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id":  testClientId,
+		"network_id": "net-1",
+	})
+	cfg := clientJWTTestConfig(t, networkJwt, nil)
+	noIdJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"exp": float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := os.WriteFile(cfg.ClientJwtPath, []byte(noIdJwt), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	storedJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": testClientId,
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := loadGlobalClientJWTStore().Put("direct", clientJWTEntry{
+		ByClientJWT: storedJwt,
+		ClientID:    testClientId,
+		NetworkID:   "net-1",
+		MintedAt:    time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	mint := &fakeMint{jwt: "fresh-unreadable-custody", id: connect.Id{6}}
+	cfg.Mint = mint.mint
+
+	_, _, reused, err := provideClientJWT(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("provideClientJWT err = %v", err)
+	}
+	if reused {
+		t.Fatal("reused the stored identity although custody could not be read")
+	}
+	if mint.calls != 1 {
+		t.Fatalf("mint calls = %d, want 1", mint.calls)
+	}
+}

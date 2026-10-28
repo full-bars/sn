@@ -374,10 +374,19 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 
 	if hotRestartEnabled() {
 		if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok && !clientJWTRejected(cfg.ClientJwtPath) {
+			// A custody credential that exists but cannot be read, or that carries
+			// no client id, is not evidence the stored identity is still ours.
+			// Only an absent file is pass-through; anything else has to agree.
 			custodyClientID := ""
+			custodyDisagrees := false
 			if cfg.ClientJwtPath != "" {
-				if custodyJWT, readErr := clientauth.ReadToken(cfg.ClientJwtPath); readErr == nil {
+				custodyJWT, readErr := clientauth.ReadToken(cfg.ClientJwtPath)
+				switch {
+				case readErr == nil:
 					custodyClientID = jwtClientId(custodyJWT)
+					custodyDisagrees = custodyClientID == ""
+				case !os.IsNotExist(readErr):
+					custodyDisagrees = true
 				}
 			}
 			if !haveCurrentNetworkId && entry.NetworkID != "" {
@@ -399,7 +408,7 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 			}
 
 			switch {
-			case custodyClientID != "" && custodyClientID != entry.ClientID:
+			case custodyDisagrees || (custodyClientID != "" && custodyClientID != entry.ClientID):
 				tlog("🔥 [hot-restart] %s: stored client %s disagrees with custody client %s, minting through custody\n", identityKey, entry.ClientID, custodyClientID)
 
 			case !storeEntryPresentsRetainedClient(entry, cfg.Retained):
