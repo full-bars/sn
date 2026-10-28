@@ -192,28 +192,25 @@ openrc_rollback_binary_swap
 	}
 }
 
-// TestOpenRCBinarySwapRollsBackOnFailure pins the WIRING: every guarded copy
-// and chmod in both install flows must invoke the rollback. Without this the
-// rollback function exists but nothing calls it. Count the call sites rather
-// than matching one exact string, so dropping the rollback from ONE flow is
-// caught even when the other still has it.
+// TestOpenRCBinarySwapRollsBackOnFailure pins the WIRING: atomic replacement
+// stages the binary beside its destination and renames it over in both flows.
+// On swap or restart failure, the rollback must be invoked. Count the call
+// sites rather than matching one exact string, so dropping the rollback from
+// ONE flow is caught even when the other still has it.
 func TestOpenRCBinarySwapRollsBackOnFailure(t *testing.T) {
 	source := readInstaller(t)
 
-	swaps := strings.Count(source, `mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old"`)
+	swaps := strings.Count(source, `mv -f "$staged_bin" "$install_path/bin/urnetwork"`)
 	if swaps < 2 {
-		t.Fatalf("expected the binary swap in both install flows, found %d", swaps)
+		t.Fatalf("expected the atomic binary swap in both install flows, found %d", swaps)
 	}
 
-	// Every swap must be preceded (in the same guarded block) by a rollback on
-	// the failure path: one rollback per copy AND per chmod.
+	// Every swap and restart failure must invoke rollback.
 	guardRollbacks := strings.Count(source, "openrc_rollback_binary_swap\n            exit 1")
-	wantRollbacks := 2 * swaps // one cp failure + one chmod failure per flow
-	if guardRollbacks < wantRollbacks {
+	if guardRollbacks < swaps {
 		t.Errorf("found %d rollback-on-failure call sites, want at least %d "+
-			"(one per copy and one per chmod in each of %d install flows); a failed "+
-			"replacement otherwise leaves the tree with no binary at all",
-			guardRollbacks, wantRollbacks, swaps)
+			"(one per atomic swap in each of %d install flows)",
+			guardRollbacks, swaps, swaps)
 	}
 	// The flag must be set when the swap starts and cleared only after it
 	// completes, so the rollback knows there is something to restore.
