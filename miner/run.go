@@ -2066,15 +2066,20 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				return slotCancel, nil
 			},
 		)
-		reloader.spawnGeneration = func(settings *connect.ProxySettings, generation uint64) (context.CancelFunc, error) {
+		reloader.spawnGeneration = func(settings *connect.ProxySettings, generation uint64) (context.CancelFunc, <-chan struct{}, error) {
 			if err := reloader.reserveAddress(settings); err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			index := reloadSlotIndex.Add(1) - 1
 			progress.admitLateSlot(providerRegistrationSlot(slotIdentities, settings))
 			slotCtx, slotCancel := context.WithCancel(ctx)
+			slotDone := make(chan struct{})
 			go func() {
 				err := provideWithProxy(slotCtx, index, settings)
+				// Closed before the bookkeeping below asks the reloader for its
+				// lock: a reload may be holding that lock while it waits for
+				// this very worker.
+				close(slotDone)
 				if err != nil {
 					tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", settings.Key(), index, err)
 				}
@@ -2082,7 +2087,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 					retryFailedProxy(settings.Key())
 				}
 			}()
-			return slotCancel, nil
+			return slotCancel, slotDone, nil
 		}
 		if direct != nil {
 			// The control path for the native direct slot: every reload
@@ -2163,10 +2168,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// identity and keeps the run context.
 		slotCtx := ctx
 		generation := uint64(0)
+		slotDone := make(chan struct{})
 		if proxySettings != nil && reloader != nil {
 			var slotCancel context.CancelFunc
 			slotCtx, slotCancel = context.WithCancel(ctx)
-			generation = reloader.seedGeneration(proxySettings, slotCancel)
+			generation = reloader.seedGeneration(proxySettings, slotCancel, slotDone)
 		}
 		wg.Add(1)
 		go func() {
@@ -2204,6 +2210,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				}
 				results <- result
 			}()
+			// Registered after the cleanup above, so it runs first: a reload
+			// replacing this identity waits on it while holding the reloader's
+			// lock, and the cleanup asks for that lock.
+			defer close(slotDone)
 			// The warmth-derived base delay plus a jittered
 			// per-slot stagger; a zero delay starts immediately.
 			if !backoffPacerWithDelay(baseDelay, staggerDuration, ctx) {

@@ -473,7 +473,7 @@ func TestProxyReloadWorkerExitIsBoundToItsGeneration(t *testing.T) {
 	}}
 	r := h.reloader()
 	settings := h.desired[0]
-	generation := r.seedGeneration(settings, func() {})
+	generation := r.seedGeneration(settings, func() {}, nil)
 	if generation == 0 {
 		t.Fatal("seed did not assign a generation")
 	}
@@ -510,9 +510,9 @@ func TestProxyReloadWorkerFailureCanRetryThenEvictOrCancel(t *testing.T) {
 	r := h.reloader()
 	var generation uint64
 	cancelled := false
-	r.spawnGeneration = func(settings *connect.ProxySettings, gen uint64) (context.CancelFunc, error) {
+	r.spawnGeneration = func(settings *connect.ProxySettings, gen uint64) (context.CancelFunc, <-chan struct{}, error) {
 		generation = gen
-		return func() { cancelled = true }, nil
+		return func() { cancelled = true }, nil, nil
 	}
 
 	if _, err := r.reload(); err != nil {
