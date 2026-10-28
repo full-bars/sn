@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"testing"
 	"time"
@@ -448,5 +449,40 @@ func TestDialControlSocketRoundTrip(t *testing.T) {
 	}
 	if !resp.OK || resp.BuildVersion == "" {
 		t.Fatalf("dial version = %+v", resp)
+	}
+}
+
+// Clearing gomemlimit or gogc is documented as back to the startup default.
+// The default is the limit the plan or tier installed, so the clear must
+// restore it rather than hand the runtime "unlimited" and GOGC 100.
+func TestClearGoRuntimeKeysRestoresStartupValues(t *testing.T) {
+	liveTuningBaseline = liveTuningBaselineState{}
+	startLimit := debug.SetMemoryLimit(512 << 20)
+	startGC := debug.SetGCPercent(40)
+	defer func() {
+		debug.SetMemoryLimit(startLimit)
+		debug.SetGCPercent(startGC)
+		liveTuningBaseline = liveTuningBaselineState{}
+	}()
+
+	for _, kv := range [][2]string{{"gomemlimit", "1GiB"}, {"gogc", "250"}} {
+		if err := applyControlLiveSideEffect(kv[0], kv[1]); err != nil {
+			t.Fatalf("set %s: %v", kv[0], err)
+		}
+	}
+	if got := debug.SetMemoryLimit(-1); got != 1<<30 {
+		t.Fatalf("memory limit after set = %d", got)
+	}
+
+	for _, key := range []string{"gomemlimit", "gogc"} {
+		if err := applyControlLiveDefault(key); err != nil {
+			t.Fatalf("clear %s: %v", key, err)
+		}
+	}
+	if got := debug.SetMemoryLimit(-1); got != 512<<20 {
+		t.Fatalf("clear gomemlimit left limit %d, want the startup 512 MiB", got)
+	}
+	if got := debug.SetGCPercent(40); got != 40 {
+		t.Fatalf("clear gogc left GOGC %d, want the startup 40", got)
 	}
 }

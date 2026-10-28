@@ -72,7 +72,7 @@ func replayPersistedGoMemLimit() bool {
 		// math.MaxInt64 is the value that means no soft limit.
 		limit = math.MaxInt64
 	}
-	debug.SetMemoryLimit(limit)
+	liveTuningBaseline.rememberMemLimit(debug.SetMemoryLimit(limit))
 	return true
 }
 
