@@ -841,6 +841,40 @@ func TestProvideClientJWTMintsAndPuts(t *testing.T) {
 	}
 }
 
+func TestProvideClientJWTRejectsJWTClaimThatDisagreesWithStore(t *testing.T) {
+	setHotRestart(t, true)
+	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
+	defer restoreStore()
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	cfg := clientJWTTestConfig(t, createFakeJWTWithClaims(map[string]interface{}{"network_id": "net-1"}), nil)
+	entryJWT := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": "00000000-0000-0000-0000-000000000002",
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	_ = loadGlobalClientJWTStore().Put("direct", clientJWTEntry{ByClientJWT: entryJWT, ClientID: testClientId, NetworkID: "net-1", MintedAt: time.Now()})
+	mint := newFakeMint()
+	cfg.Mint = mint.mint
+	_, id, reused, err := provideClientJWT(context.Background(), cfg)
+	if err != nil || reused || id != mint.id || mint.calls != 1 {
+		t.Fatalf("provideClientJWT = id %v reused %v err %v mint calls %d; want fresh mint", id, reused, err, mint.calls)
+	}
+}
+
+func TestProvideClientJWTFailsClosedWhenMintStorePutFails(t *testing.T) {
+	setHotRestart(t, true)
+	storePath := filepath.Join(t.TempDir(), "store.json")
+	if err := os.Mkdir(storePath, 0700); err != nil {
+		t.Fatal(err)
+	}
+	restoreStore := withGlobalStore(t, storePath)
+	defer restoreStore()
+	cfg := clientJWTTestConfig(t, createFakeJWTWithClaims(map[string]interface{}{"network_id": "net-1"}), nil)
+	cfg.Mint = (&fakeMint{jwt: "minted", id: connect.Id{9}}).mint
+	if jwt, id, reused, err := provideClientJWT(context.Background(), cfg); err == nil || jwt != "" || id != (connect.Id{}) || reused {
+		t.Fatalf("provideClientJWT = %q %v reused %v err %v; want closed failure", jwt, id, reused, err)
+	}
+}
+
 func TestProvideClientJWTHotRestartDisabled(t *testing.T) {
 	// URNETWORK_HOT_RESTART=0 turns the reuse path off entirely: the stored
 	// entry is not read, not renewed, and not returned. The off path must also

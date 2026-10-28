@@ -374,6 +374,12 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 
 	if hotRestartEnabled() {
 		if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok && !clientJWTRejected(cfg.ClientJwtPath) {
+			custodyClientID := ""
+			if cfg.ClientJwtPath != "" {
+				if custodyJWT, readErr := clientauth.ReadToken(cfg.ClientJwtPath); readErr == nil {
+					custodyClientID = jwtClientId(custodyJWT)
+				}
+			}
 			if !haveCurrentNetworkId && entry.NetworkID != "" {
 				currentNetworkId = entry.NetworkID
 				haveCurrentNetworkId = true
@@ -393,6 +399,9 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 			}
 
 			switch {
+			case custodyClientID != "" && custodyClientID != entry.ClientID:
+				tlog("🔥 [hot-restart] %s: stored client %s disagrees with custody client %s, minting through custody\n", identityKey, entry.ClientID, custodyClientID)
+
 			case !storeEntryPresentsRetainedClient(entry, cfg.Retained):
 				// A capture launch must present the client its profile
 				// recorded, and the store is only a cache of what custody
@@ -407,6 +416,9 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 
 			case !haveCurrentNetworkId || (entry.NetworkID != "" && entry.NetworkID != currentNetworkId):
 				tlog("🔥 [hot-restart] %s: network_id mismatch (stored=%q current=%q have_current=%v), minting fresh\n", identityKey, entry.NetworkID, currentNetworkId, haveCurrentNetworkId)
+
+			case jwtContainsClientId(entry.ByClientJWT) && jwtClientId(entry.ByClientJWT) != entry.ClientID:
+				tlog("🔥 [hot-restart] %s: stored JWT client_id %q disagrees with store client_id %q, minting fresh\n", identityKey, jwtClientId(entry.ByClientJWT), entry.ClientID)
 
 			case validateJWTExpiry(entry.ByClientJWT) != nil:
 				// Stored client JWT expired: renew-with-same-client_id before
@@ -493,6 +505,7 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 		MintedAt:    time.Now(),
 	}); putErr != nil {
 		tlog("⚠️ [jwt-store] failed to persist client JWT for %s: %v\n", identityKey, putErr)
+		return "", connect.Id{}, false, fmt.Errorf("failed to persist minted client JWT for %s: %w", identityKey, putErr)
 	}
 	return byClientJwt, clientId, false, nil
 }
