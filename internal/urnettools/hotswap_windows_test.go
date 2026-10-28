@@ -3,9 +3,23 @@
 package urnettools
 
 import (
+	"errors"
 	"os"
 	"testing"
 )
+
+func TestWindowsHotSwapPreflightAndTriggerDecline(t *testing.T) {
+	p := Provider{Version: "v3.23.0-fix.31.0"}
+	if err := hotSwapPreflight(p); !errors.Is(err, ErrHotSwapWindows) {
+		t.Fatalf("native preflight = %v, want ErrHotSwapWindows", err)
+	}
+	if supportsHotSwap(p) {
+		t.Fatal("Windows supportsHotSwap must decline")
+	}
+	if err := triggerHotSwap(p); !errors.Is(err, ErrHotSwapWindows) {
+		t.Fatalf("triggerHotSwap = %v, want ErrHotSwapWindows", err)
+	}
+}
 
 // TestWindowsPidLiveness verifies that pidIsAlive correctly reports
 // process liveness for the current process and a dead PID.

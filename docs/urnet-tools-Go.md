@@ -225,7 +225,7 @@ Reads are deliberately not logged: `urnet-tools status` polls the socket on ever
 
 - **Mandatory digest verification:** `update` verifies downloads against release API SHA-256 checksums.
 - **Isolated staging:** temporary files created in private `0700` directories.
-- **Atomic binary replacement:** new executables staged as temporary files and renamed into place, preventing truncation of running binaries.
+- **Atomic binary replacement:** new executables are written to a temporary file beside the destination and renamed into place, so the configured path is never missing or half-written. On Unix the tool's own self-update first takes a backup of the running binary (a hard link, or a copy when linking is not possible) and stops with an error if it cannot; Windows still renames the running executable aside first, because it cannot rename over a running image.
 - **Privilege separation:** delegated commands automatically drop root privileges to the provider's UID/GID.
 
 ---
