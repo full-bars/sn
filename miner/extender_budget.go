@@ -168,13 +168,14 @@ func (legacy extenderActivationLegacy) present() bool {
 // small json decode, a map update and one bbolt transaction.
 var extenderActivationRecordMu sync.Mutex
 
-// warnExtenderBudgetUnavailable says the record could not be read or written.
-// The role is held rather than run unrecorded, because the operator counts
-// every post it answers and a post this process did not count is one the next
-// start cannot see. This line is the only evidence the operator gets while the
-// store stays unusable.
-func warnExtenderBudgetUnavailable(account string) {
-	tlog("⚠️ [extender] activation budget unavailable for account %s: provider state store unavailable this run\n", account)
+// warnExtenderBudgetUnavailable says the record could not be read or written,
+// and why. The role is held rather than run unrecorded, because the operator
+// counts every post it answers and a post this process did not count is one
+// the next start cannot see. This line is the only evidence the operator gets
+// while the store stays unusable, so it carries the store error: a record this
+// build cannot decode and a closed store need different recovery.
+func warnExtenderBudgetUnavailable(account string, err error) {
+	tlog("⚠️ [extender] activation budget unavailable for account %s: %v\n", account, err)
 }
 
 // readExtenderActivationRecord loads the record. An empty record and no record
@@ -184,13 +185,13 @@ func warnExtenderBudgetUnavailable(account string) {
 func readExtenderActivationRecord(account string) (extenderActivationRecord, error) {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnavailable(account)
+		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
 		return extenderActivationRecord{}, errProviderStoreClosed
 	}
 	var record extenderActivationRecord
 	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record)
 	if err != nil {
-		warnExtenderBudgetUnavailable(account)
+		warnExtenderBudgetUnavailable(account, err)
 		return extenderActivationRecord{}, err
 	}
 	if !found {
@@ -205,11 +206,11 @@ func readExtenderActivationRecord(account string) (extenderActivationRecord, err
 func writeExtenderActivationRecord(record extenderActivationRecord, account string) {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnavailable(account)
+		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
 		return
 	}
 	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
-		warnExtenderBudgetUnavailable(account)
+		warnExtenderBudgetUnavailable(account, err)
 	}
 }
 
@@ -238,7 +239,7 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 func mutateExtenderActivationRecord(account string, mutate func(*extenderActivationRecord) error) error {
 	store := providerStoreInstance()
 	if store == nil {
-		warnExtenderBudgetUnavailable(account)
+		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
 		return errProviderStoreClosed
 	}
 	extenderActivationRecordMu.Lock()
@@ -255,7 +256,7 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 		return mutate(&record)
 	})
 	if err != nil {
-		warnExtenderBudgetUnavailable(account)
+		warnExtenderBudgetUnavailable(account, err)
 	}
 	return err
 }
@@ -507,6 +508,11 @@ func recordExtenderActivationSucceeded(userId string) {
 		// operator records every allowed attempt and only ages them out, so
 		// wiping Attempts here would tell the next gate it has a full budget
 		// while the operator still counts this hour's posts.
+		//
+		// Adopting comes first: it can restore a live hold from the
+		// unidentified entry, and the clear below has to be the last word on
+		// the refusal and backoff fields.
+		record.adoptUnidentified(account, time.Now())
 		if state, ok := record.Accounts[account]; ok {
 			state.Refusals = 0
 			state.LastRefusalUnix = 0
@@ -515,7 +521,6 @@ func recordExtenderActivationSucceeded(userId string) {
 			state.SpareAtUnix = 0
 			record.Accounts[account] = state
 		}
-		record.adoptUnidentified(account, time.Now())
 		return nil
 	})
 }

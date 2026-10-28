@@ -429,6 +429,46 @@ func TestExtenderActivationSuccessKeepsTheUnidentifiedPosts(t *testing.T) {
 	}
 }
 
+// A refusal taken before the token resolved is adopted by the account the
+// signed activation names. The success must clear that adopted hold too: it
+// clears the account's refusal and backoff, and adopting after the clear would
+// put the hold back, so the next gate check refuses a launch the activation
+// just succeeded.
+func TestExtenderActivationSuccessClearsAdoptedBackoff(t *testing.T) {
+	testExtenderState(t)
+	now := time.Unix(1_800_000_000, 0)
+	recordExtenderActivationRefused(now, "")
+
+	recordExtenderActivationSucceeded(extenderTestAccountA)
+
+	record, _ := readExtenderActivationRecord(extenderTestAccountA)
+	state := record.Accounts[extenderTestAccountA]
+	if state.BackoffUntilUnix != 0 || state.Refusals != 0 {
+		t.Fatalf("after a signed activation the adopted hold is still live: backoff=%d refusals=%d, want both cleared",
+			state.BackoffUntilUnix, state.Refusals)
+	}
+}
+
+// A record this build cannot decode is reported with the decode error itself.
+// The warning is the only evidence the operator gets while the budget is held,
+// so a line that says the store is unavailable would send them looking at the
+// wrong thing.
+func TestExtenderActivationWarningNamesTheStoreError(t *testing.T) {
+	testExtenderState(t)
+	logs := captureGateLogs(t)
+	if err := providerStoreInstance().save(providerStoreBucketState, providerStoreKeyExtenderActivation, "not a record"); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := readExtenderActivationRecord(extenderTestAccountA)
+	if err == nil {
+		t.Fatal("an undecodable record read without error")
+	}
+	if !strings.Contains(logs.String(), err.Error()) {
+		t.Fatalf("warning does not name the store error %q:\n%s", err, logs.String())
+	}
+}
+
 // The store keeps a record across a close and reopen, and a missing record
 // reads as absent rather than as an error.
 func TestProviderStoreRoundTripsARecord(t *testing.T) {

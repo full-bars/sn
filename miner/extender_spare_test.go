@@ -23,12 +23,14 @@ var (
 	extenderTestFamilyUntried = extenderActivationFamilyResult{}
 )
 
-// extenderWindowPosts is how many posts the account's window holds at now.
+// extenderWindowPosts is how many posts the account's window holds at now. An
+// unreadable record fails the test: a zero here would satisfy every "no post
+// was spent" assertion without reading the stored state.
 func extenderWindowPosts(t *testing.T, account string, now time.Time) int {
 	t.Helper()
 	record, err := readExtenderActivationRecord(account)
 	if err != nil {
-		return 0
+		t.Fatalf("read the activation record for %q: %s", account, err)
 	}
 	state := record.Accounts[extenderActivationAccountKey(account)]
 	return pruneExtenderAttempts(&state, now, extenderActivationWindow)
