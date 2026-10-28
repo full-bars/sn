@@ -923,3 +923,161 @@ func TestExtenderActivationHoldsAfterTheStoreIsQuarantined(t *testing.T) {
 		t.Fatal("a start after the window was still held")
 	}
 }
+
+// stubExtenderMutation models an atomic transaction, including rollback if a
+// write fails after its callback has already calculated and appended posts.
+func stubExtenderMutation(t *testing.T, initial extenderActivationState, failBefore, failAfter int) (*extenderActivationState, *int) {
+	t.Helper()
+	previous := mutateExtenderActivationRecord
+	state := initial
+	calls := 0
+	mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
+		calls++
+		if calls <= failBefore {
+			return errors.New("record unavailable")
+		}
+		copyState := state
+		copyState.Attempts = append([]int64(nil), state.Attempts...)
+		record := extenderActivationRecord{Accounts: map[string]extenderActivationState{account: copyState}}
+		if err := mutate(&record); err != nil {
+			return err
+		}
+		if calls <= failBefore+failAfter {
+			return errors.New("write failed")
+		}
+		state = record.Accounts[account]
+		return nil
+	}
+	t.Cleanup(func() { mutateExtenderActivationRecord = previous })
+	return &state, &calls
+}
+
+func TestExtenderGateRetryAfterStoreFailure(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		before, after int
+	}{{"read", 1, 0}, {"write_rollback", 0, 1}} {
+		t.Run(tc.name, func(t *testing.T) {
+			state, calls := stubExtenderMutation(t, extenderActivationState{}, tc.before, tc.after)
+			gate := newExtenderActivationGate()
+			if !gate.allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+				t.Error("recovered store must allow launch")
+			}
+			if *calls != 2 {
+				t.Errorf("mutation calls=%d, want 2", *calls)
+			}
+			if got := len(state.Attempts); got != postsPerDualStackPass {
+				t.Errorf("recorded posts=%d, want %d", got, postsPerDualStackPass)
+			}
+		})
+	}
+	t.Run("startup_verdict", func(t *testing.T) {
+		t.Setenv("URNETWORK_STATE_DIR", filepath.Join(os.DevNull, "state"))
+		closeProviderStore()
+		t.Cleanup(closeProviderStore)
+		state, calls := stubExtenderMutation(t, extenderActivationState{}, 1, 0)
+		gate := newExtenderActivationGate()
+		if !gate.decideAtStart() || !gate.allowLaunch() {
+			t.Error("startup and its first launch must both allow")
+		}
+		if *calls != 2 {
+			t.Errorf("startup and launch mutation calls=%d, want 2", *calls)
+		}
+		if len(state.Attempts) != postsPerDualStackPass {
+			t.Errorf("startup and launch recorded posts=%d, want %d", len(state.Attempts), postsPerDualStackPass)
+		}
+	})
+}
+
+func TestExtenderGateRetryUnavailable(t *testing.T) {
+	state, calls := stubExtenderMutation(t, extenderActivationState{}, 100, 0)
+	previous := proxyManagerLogWriter
+	writer := &bytes.Buffer{}
+	proxyManagerLogWriter = writer
+	t.Cleanup(func() { proxyManagerLogWriter = previous })
+	start := time.Now()
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+		t.Error("unavailable record must refuse launch")
+	}
+	if elapsed := time.Since(start); elapsed > 3*time.Second {
+		t.Errorf("retry took %s, want at most 3s", elapsed)
+	}
+	if *calls != 3 {
+		t.Errorf("mutation calls=%d, want 3 bounded attempts", *calls)
+	}
+	if len(state.Attempts) != 0 {
+		t.Errorf("unavailable store recorded posts: %v", state.Attempts)
+	}
+	if !strings.Contains(writer.String(), "extender role off for this launch: activation budget record could not be read or written") {
+		t.Errorf("missing launch-specific store failure reason: %q", writer.String())
+	}
+}
+
+func TestExtenderGateRetryExhaustedWindow(t *testing.T) {
+	now := time.Now().Unix()
+	initial := extenderActivationState{Attempts: []int64{now, now, now, now, now}}
+	state, calls := stubExtenderMutation(t, initial, 0, 0)
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+		t.Error("exhausted window must refuse launch")
+	}
+	if *calls != 1 {
+		t.Errorf("exhausted window mutation calls=%d, want 1", *calls)
+	}
+	if len(state.Attempts) != extenderActivationBudget {
+		t.Errorf("exhausted window changed posts: %v", state.Attempts)
+	}
+	// A transient failure followed by the same exhausted record must also refuse,
+	// and stop immediately when that real verdict is obtained.
+	*calls = 0
+	previous := mutateExtenderActivationRecord
+	mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
+		if *calls == 0 {
+			*calls++
+			return errors.New("record unavailable")
+		}
+		return previous(account, mutate)
+	}
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+		t.Error("recovered exhausted window must refuse launch")
+	}
+	if *calls != 2 {
+		t.Errorf("recovered exhausted window mutation calls=%d, want 2", *calls)
+	}
+}
+
+func TestExtenderGateRetryRefusalBackoff(t *testing.T) {
+	now := time.Now()
+	until := now.Add(10 * time.Minute).Unix()
+	state, calls := stubExtenderMutation(t, extenderActivationState{BackoffUntilUnix: until}, 0, 0)
+	allow, wait, used := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
+	if allow || wait != time.Duration(until-now.Unix())*time.Second || used != 0 {
+		t.Errorf("backoff verdict=(%v, %s, %d), want false and exact persisted wait", allow, wait, used)
+	}
+	if *calls != 1 {
+		t.Errorf("backoff mutation calls=%d, want 1", *calls)
+	}
+	*calls = 0
+	previous := mutateExtenderActivationRecord
+	mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
+		if *calls == 0 {
+			*calls++
+			return errors.New("record unavailable")
+		}
+		return previous(account, mutate)
+	}
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) {
+		t.Error("recovered refusal backoff must refuse launch")
+	}
+	if *calls != 2 {
+		t.Errorf("recovered backoff mutation calls=%d, want 2", *calls)
+	}
+	if state.BackoffUntilUnix != until || len(state.Attempts) != 0 {
+		t.Errorf("backoff state changed: %+v", *state)
+	}
+	if allow, wait, used := extenderActivationAllow(time.Unix(until, 0), postsPerDualStackPass, extenderTestAccountA); !allow || wait != 0 || used != 0 {
+		t.Errorf("expired backoff verdict=(%v, %s, %d), want allowed with no wait or used posts", allow, wait, used)
+	}
+	if len(state.Attempts) != postsPerDualStackPass {
+		t.Errorf("expired backoff recorded %d posts, want %d", len(state.Attempts), postsPerDualStackPass)
+	}
+}

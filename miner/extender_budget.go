@@ -236,7 +236,7 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 // decided and the write that records it. A store that cannot be used leaves the
 // budget closed and says so, rather than
 // spending posts no one will remember.
-func mutateExtenderActivationRecord(account string, mutate func(*extenderActivationRecord) error) error {
+var mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
 	store := providerStoreInstance()
 	if store == nil {
 		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
@@ -387,9 +387,15 @@ func pruneExtenderAttempts(state *extenderActivationState, now time.Time, window
 // already holds. It records this start's posts when it allows the role, so the
 // caller calls it once, before the slots are built. userId is the account the
 // direct slot signs in as (extenderActivationUserId).
-func extenderActivationAllow(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int) {
+func extenderActivationAllow(now time.Time, posts int, userId string) (bool, time.Duration, int) {
+	allow, wait, used, _ := extenderActivationDecision(now, posts, userId)
+	return allow, wait, used
+}
+
+// extenderActivationDecision distinguishes a withheld decision from a refusal.
+func extenderActivationDecision(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int, err error) {
 	account := extenderActivationAccountKey(userId)
-	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+	err = mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
 		// The token resolves on this path, so this is where posts charged while
 		// it was unreadable first learn the account that spent them.
 		record.adoptUnidentified(account, now)
@@ -422,9 +428,9 @@ func extenderActivationAllow(now time.Time, posts int, userId string) (allow boo
 		// The posts this start would charge cannot be recorded, and an
 		// unrecorded post is what a restart loop replays as a burst. Hold
 		// the role and retry instead of spending what nothing remembers.
-		return false, providerStoreRetryInterval, 0
+		return false, providerStoreRetryInterval, 0, err
 	}
-	return allow, wait, used
+	return allow, wait, used, nil
 }
 
 // extenderActivationSpendSpare funds one retry of the family a pass failed on
@@ -578,10 +584,29 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	if pending {
 		return allow
 	}
-	allow, wait, used := extenderActivationAllow(time.Now(), hostActivationPosts(), extenderActivationUserId())
-	if !allow {
-		tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
-			used, extenderActivationBudget, formatDuration(wait))
+	return gate.allowLaunchFor(hostActivationPosts(), extenderActivationUserId())
+}
+
+// A failed transaction cannot authorize posts; retry briefly before leaving
+// the role off for this launch. A real budget or refusal verdict is final.
+func (gate *extenderActivationGate) allowLaunchFor(posts int, userId string) bool {
+	const attempts = 3
+	const retryDelay = 100 * time.Millisecond
+	for attempt := 0; attempt < attempts; attempt++ {
+		allow, wait, used, err := extenderActivationDecision(time.Now(), posts, userId)
+		if err != nil {
+			if attempt+1 < attempts {
+				time.Sleep(retryDelay)
+				continue
+			}
+			tlog("[extender] extender role off for this launch: activation budget record could not be read or written: %v\n", err)
+			return false
+		}
+		if !allow {
+			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
+				used, extenderActivationBudget, formatDuration(wait))
+		}
+		return allow
 	}
-	return allow
+	return false
 }
