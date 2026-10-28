@@ -51,10 +51,14 @@ env:
   INSTALLER_TAG2: v0.0.0-ci-${{ github.run_id }}-2
 
 concurrency:
-  # Every workflow that mints a JWT shares one account, so they have to queue
-  # behind each other; a per-workflow group let two mint at once and starve it.
-  group: gauntlet-auth
-  cancel-in-progress: false
+  # Superseded runs of the SAME pull request cancel each other; a tag or main
+  # run is never cancelled by a PR. The shared gauntlet group is gone: it
+  # applied to whole workflows, so one PR's pending run replaced another PR's
+  # pending run and the later one showed up as a red "cancelled with no jobs"
+  # check. The mint that needed the lock already retries, which is why
+  # tool-functional-smoke took its job-level group out.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # --------------------------------------------------------------------------
