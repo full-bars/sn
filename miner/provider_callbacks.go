@@ -201,9 +201,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 	changed, failed := func() (bool, bool) {
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
-		if self.observed && self.last == observation {
-			return false, false
-		}
+		changed := !self.observed || self.last != observation
 		self.observed, self.last = true, observation
 		// A failure is the attempt's, not the observation's. The error stays
 		// set while the attempt stands, so only an attempt this listener has
@@ -215,9 +213,9 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		if failed {
 			self.failureCharged, self.chargedAttempt = true, observation.ActivationTime
 		}
-		return true, failed
+		return changed, failed
 	}()
-	if changed {
+	if changed || failed {
 		// The operator budgets activation posts per account per hour and its
 		// refusal already names the wait, so the wait is persisted here: the
 		// activation loop's own backoff lives in memory and a restart would
@@ -245,6 +243,8 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 				recordExtenderActivationSucceeded(self.currentAccount())
 			}
 		}
+	}
+	if changed {
 		self.diagnostics.observe(providerExtenderObserved, self.provider, true, nil, 0, &observation)
 	}
 }
@@ -268,7 +268,9 @@ func (self *providerExtenderStatusListener) chargeActivationFailure(observation 
 		// this attempt charges it, and the spare it funded cannot be funded
 		// twice.
 		self.stateLock.Lock()
-		self.failureCharged = false
+		if self.chargedAttempt == observation.ActivationTime {
+			self.failureCharged = false
+		}
 		self.stateLock.Unlock()
 	}
 	if 0 < wait {
