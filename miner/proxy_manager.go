@@ -678,8 +678,13 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	}
 	resetProxyWarmupForStart()
 	// Startup imports identity/provenance into proxy.state and may persist it.
-	// Keep the whole read/modify/write under the shared state transaction so a
-	// concurrent health snapshot cannot persist a stale copy over the import.
+	// Take the cross-process lock before the in-process mutex, matching reload
+	// and clear, so neither can replace this transaction with a stale snapshot.
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return nil, nil, fmt.Errorf("proxy state lock: %w", err)
+	}
+	defer release()
 	proxyStateMu.Lock()
 	defer proxyStateMu.Unlock()
 	launch, held, writeState, err := m.desired(true)
