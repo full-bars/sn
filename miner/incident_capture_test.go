@@ -37,6 +37,7 @@ func incidentTestRestore(t *testing.T) {
 	budget, grace, hook := incidentBudget, incidentBudgetGrace, incidentHookAfterFile
 	noteTimeout := incidentNoteTimeout
 	cooldown, perProcess := incidentReasonCooldown, incidentMaxPerProcess
+	thrash := incidentThrashWait
 	incidentResetGate()
 	t.Cleanup(func() {
 		incidentBundleMaxBytes, incidentFileMaxBytes, incidentStateFileMaxBytes = bundle, file, state
@@ -44,8 +45,21 @@ func incidentTestRestore(t *testing.T) {
 		incidentBudget, incidentBudgetGrace, incidentHookAfterFile = budget, grace, hook
 		incidentNoteTimeout = noteTimeout
 		incidentReasonCooldown, incidentMaxPerProcess = cooldown, perProcess
+		incidentThrashWait = thrash
 		incidentResetGate()
 	})
+}
+
+// incidentTestWideCeiling gives a capture test a ceiling far past the package
+// defaults. The defaults are seconds because a real restart must not be held
+// for evidence on a disk that is the thing that failed; a test asserting that a
+// bundle is produced needs the work to finish, and on a loaded runner the same
+// capture can take several seconds without anything being wrong.
+func incidentTestWideCeiling(t *testing.T) {
+	t.Helper()
+	incidentBudget = 30 * time.Second
+	incidentBudgetGrace = 5 * time.Second
+	incidentThrashWait = 10 * time.Second
 }
 
 // readBundle returns every file in the bundle keyed by its slash-relative path.
@@ -514,6 +528,7 @@ func TestIncidentLimitWriterStopsAtTheLimit(t *testing.T) {
 // A panic in every slot is one incident: the pacing admits the first capture
 // per trigger, then spends the process ceiling, and says so in the log.
 func TestIncidentPacingSuppressesRepeatBundles(t *testing.T) {
+	incidentTestWideCeiling(t)
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
 	incidentReasonCooldown = time.Hour
@@ -630,6 +645,7 @@ func incidentWriteState(t *testing.T, dir, name, body string) {
 // tagged oomcap, carrying the cap state the next start will read. A no-OOM start
 // must write nothing, or every ordinary start buries the real ones.
 func TestIncidentOOMCapDecisionProducesABundle(t *testing.T) {
+	incidentTestWideCeiling(t)
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
 	t.Setenv("URNETWORK_OOM_CAP", "on")
@@ -703,6 +719,7 @@ func TestIncidentOOMCapDecisionProducesABundle(t *testing.T) {
 // bundle tagged thrash with the watchdog's own state, and it must carry the
 // sensor numbers that justified the restart — those die with the process.
 func TestIncidentThrashRestartProducesABundle(t *testing.T) {
+	incidentTestWideCeiling(t)
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
 
@@ -874,6 +891,7 @@ func TestIncidentThrashAlertIsCapturedOncePerReason(t *testing.T) {
 // The per-trigger cooldown applies to the new triggers exactly as it does to the
 // old ones, and one trigger does not silence another.
 func TestIncidentNewTriggersArePacedPerTrigger(t *testing.T) {
+	incidentTestWideCeiling(t)
 	incidentTestStateDir(t)
 	incidentTestRestore(t)
 
@@ -895,6 +913,7 @@ func TestIncidentNewTriggersArePacedPerTrigger(t *testing.T) {
 // trigger still writes at most incidentMaxPerProcess bundles, so the two new
 // triggers cannot each spend their own budget on top of the old ones.
 func TestIncidentGlobalCapHoldsAcrossEveryTrigger(t *testing.T) {
+	incidentTestWideCeiling(t)
 	stateDir := incidentTestStateDir(t)
 	incidentTestRestore(t)
 	// Neutralise the per-trigger throttle: the global ceiling is the thing
