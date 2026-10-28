@@ -88,16 +88,12 @@ func openProviderStore(path string) (*providerStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", path, err)
 	}
-	var checkErr error
-	if err := runProviderStoreView(db, func(tx *bbolt.Tx) error {
-		for err := range tx.Check() {
-			checkErr = errors.Join(checkErr, err)
-		}
-		return checkErr
-	}); err != nil {
-		_ = db.Close()
-		return nil, fmt.Errorf("check %s: %w", path, errors.Join(err, errProviderStoreCorrupt))
-	}
+	// Deliberately no tx.Check() here. bbolt's Check runs the page walk in its
+	// own goroutine, so a page-level panic inside it never passes through the
+	// caller's recover and takes the process down; on a damaged-but-openable
+	// file that turns a quarantine into a crash. The store relies on open-time
+	// validation, on read errors, and on the same-goroutine panic containment
+	// in callProviderStore instead.
 	if created {
 		if syncErr := providerStoreSyncDir(dir); syncErr != nil {
 			// The database is open and its own pages are synced, so the
