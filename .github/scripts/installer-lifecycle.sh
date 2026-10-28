@@ -338,9 +338,15 @@ LAST_TAG=""
 pass_idempotent() {
     say "reinstall (same tag $TAG, idempotent)"
     # shellcheck disable=SC2086
-    run_with_timeout "$TIMEOUT_S" env $_install_env sh "$INSTALLER" -f install >>"$LOG" 2>&1
+    run_with_timeout "$TIMEOUT_S" env $_install_env sh "$INSTALLER" -f install >"$OUT_DIR/reinstall.log" 2>&1
     _rc=$?
-    if [ "$_rc" = "0" ]; then pass "reinstall exited 0"; else fail "reinstall exited $_rc"; fi
+    cat "$OUT_DIR/reinstall.log" >>"$LOG"
+    if [ "$_rc" = "0" ]; then
+        pass "reinstall exited 0"
+    else
+        fail "reinstall exited $_rc"
+        sed 's/^/    | /' "$OUT_DIR/reinstall.log"
+    fi
     if [ -n "$INSTALL_ROOT" ]; then
         _ver=$(cat "$INSTALL_ROOT/.version" 2>/dev/null || echo "")
         [ "$_ver" = "$TAG" ] && pass "version is $TAG after the reinstall" || fail "version is '$_ver' after the reinstall, want $TAG"
@@ -356,9 +362,15 @@ pass_tag_switch() {
     [ -n "$INSTALL_ROOT" ] && _ver_digest=$(sha256sum "$INSTALL_ROOT/bin/urnetwork" 2>/dev/null | cut -d' ' -f1 || echo "")
     _upg_env="URNET_ALLOW_BASE_OVERRIDE=1 URNET_API_BASE=http://127.0.0.1:$PORT2/repos/$OWNER/$REPO_SLUG URNET_MIRROR_BASE=http://127.0.0.1:$PORT2/releases/download URNET_DL_BASE=http://127.0.0.1:$PORT2"
     # shellcheck disable=SC2086
-    run_with_timeout "$TIMEOUT_S" env $_upg_env sh "$INSTALLER" -f install >>"$LOG" 2>&1
+    run_with_timeout "$TIMEOUT_S" env $_upg_env sh "$INSTALLER" -f install >"$OUT_DIR/tag-switch.log" 2>&1
     _rc=$?
-    if [ "$_rc" = "0" ]; then pass "tag-switch install exited 0"; else fail "tag-switch install exited $_rc"; fi
+    cat "$OUT_DIR/tag-switch.log" >>"$LOG"
+    if [ "$_rc" = "0" ]; then
+        pass "tag-switch install exited 0"
+    else
+        fail "tag-switch install exited $_rc"
+        sed 's/^/    | /' "$OUT_DIR/tag-switch.log"
+    fi
     if [ -n "$INSTALL_ROOT" ]; then
         _ver=$(cat "$INSTALL_ROOT/.version" 2>/dev/null || echo "")
         [ "$_ver" = "$TAG2" ] && pass ".version advanced to $TAG2" || fail ".version is '$_ver', want '$TAG2'"

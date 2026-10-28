@@ -1234,6 +1234,8 @@ type installerHarnessOpts struct {
 	// existingDate seeds the Linux .date file (epoch seconds) the installer
 	// rewrites. FreeBSD keeps no date file.
 	existingDate string
+	// checkStagingCleanup fails extraction if a prior staging directory survives.
+	checkStagingCleanup bool
 }
 
 type installerHarnessResult struct {
@@ -1253,7 +1255,8 @@ type installerHarnessResult struct {
 	verifyCalls []string
 	// stopCalls logs each service stop the Linux installer made, as
 	// "stop-systemd" or "stop-openrc". Empty means the service was never stopped.
-	stopCalls []string
+	stopCalls   []string
+	stagingDirs []string
 }
 
 // verifyLoggingHarness wraps the installer's real verify_sha256_file. The
@@ -1654,6 +1657,16 @@ mv() {
 }
 tar() {
     echo "tar $*" >> %q
+    if [ "${CHECK_WORKDIR_CLEANUP:-0}" = 1 ]; then
+        if [ -f "$STAGING_LOG" ]; then
+            previous=$(cat "$STAGING_LOG")
+            if [ -d "$previous" ]; then
+                echo "previous staging directory still exists: $previous" >&2
+                return 1
+            fi
+        fi
+        echo "$workdir" >> "$STAGING_LOG"
+    fi
     if [ -d "$workdir" ]; then
         mkdir -p "$workdir/linux/amd64"
         echo "extracted-new-binary" > "$workdir/linux/amd64/provider"
@@ -1749,6 +1762,9 @@ do_install
 	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnRollback + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
 	cmd.Env = []string{"PATH=/usr/bin:/bin"}
+	if opts.checkStagingCleanup {
+		cmd.Env = append(cmd.Env, "CHECK_WORKDIR_CLEANUP=1", "TMPDIR="+tempDir, "STAGING_LOG="+filepath.Join(tempDir, "staging.log"))
+	}
 	if opts.failBackup {
 		cmd.Env = append(cmd.Env, "FAIL_BACKUP=1")
 	}
@@ -1784,6 +1800,35 @@ do_install
 		verifyCalls: readInstallerLines(verifyLog),
 		svcCalls:    readInstallerLines(svcLog),
 		stopCalls:   readInstallerLines(filepath.Join(tempDir, "stop.log")),
+		stagingDirs: readInstallerLines(filepath.Join(tempDir, "staging.log")),
+	}
+}
+
+func TestLinuxInstallerCleansEachStagingDirectory(t *testing.T) {
+	const tag = "v2026.10.27"
+	tarball := []byte("provider-tarball")
+	for _, existing := range []string{"", "previous-provider"} {
+		name := "fresh"
+		if existing != "" {
+			name = "existing"
+		}
+		t.Run(name, func(t *testing.T) {
+			res := runLinuxInstaller(t, installerHarnessOpts{
+				tag: tag, releaseJSON: installerRollbackRelease(tag, tarball),
+				tarballData: tarball, existingBin: existing, checkStagingCleanup: true,
+			})
+			if res.exitCode != 0 {
+				t.Fatalf("install failed with an unclean staging directory: %s", res.stdout)
+			}
+			if len(res.stagingDirs) == 0 {
+				t.Fatal("installer never extracted the provider")
+			}
+			for _, dir := range res.stagingDirs {
+				if _, err := os.Stat(dir); !os.IsNotExist(err) {
+					t.Errorf("staging directory %s survived: %v", dir, err)
+				}
+			}
+		})
 	}
 }
 
