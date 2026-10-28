@@ -53,7 +53,7 @@ Performance & Tuning:
   config [--json]         Show all provider settings with source and age
   profile [<name>]        Show or set the memory/GC tuning profile
   metrics [on|off|listen] Prometheus /metrics: status, toggle, listen address
-  smart-dialer [on|off]   Adapt transport choice to the network: skip DPI-circumvention cost when it is not needed (needs a restart)
+  smart-dialer [on|off]   Adapt transport choice to the network: skip DPI-circumvention cost when it is not needed
 
 Session & Identity:
   session save <file>     Export identity + proxy state (encrypted)
@@ -522,7 +522,7 @@ func newSetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "set",
 		Short:              "runtime tuning override",
-		Long:               "Read or write a runtime tuning override in the provider's state directory, applied live on the provider's next tick with no restart; profile, ramlogs and smart-dialer only take effect on the next restart. Run with no key to list every active override, with just a key to show its current value, with a key and value to set it, or with a key and \"off\" to clear it back to the startup default. Run 'set help' to list the available keys (node-name, proxy-url-max, proxy-url-refresh, cleanup-scope, cleanup-interval, fast-auth).",
+		Long:               "Read or write a runtime tuning override in the provider's state directory, applied live on the provider's next tick with no restart; profile and ramlogs only take effect on the next restart. Run with no key to list every active override, with just a key to show its current value, with a key and value to set it, or with a key and \"off\" to clear it back to the startup default. Run 'set help' to list the available keys (node-name, proxy-url-max, proxy-url-refresh, cleanup-scope, cleanup-interval, fast-auth).",
 		Example:            "  urnet-tools set help\n  urnet-tools set proxy-url-refresh 5m --unit urnetwork-native.service\n  urnet-tools set cleanup-scope off",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

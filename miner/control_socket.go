@@ -501,6 +501,21 @@ func applyControlLiveDefault(key string) error {
 		// direct-only default (h3DefaultModeName), which is what a restart
 		// would use, so the live state matches the persisted one.
 		return applyControlLiveSideEffect(key, h3DefaultModeName())
+	case "gomemlimit":
+		// The startup default is whatever limit the memory plan or profile tier
+		// installed, not "unlimited": handing the runtime MaxInt64 here lifts the
+		// guard the operator never touched until a restart puts it back.
+		if limit, ok := liveTuningBaseline.memLimit(); ok {
+			debug.SetMemoryLimit(limit)
+			tlog("⚙️ [control] gomemlimit cleared: restored the startup limit\n")
+			return nil
+		}
+	case "gogc":
+		if percent, ok := liveTuningBaseline.gcPercent(); ok {
+			debug.SetGCPercent(percent)
+			tlog("⚙️ [control] gogc cleared: restored the startup value %d\n", percent)
+			return nil
+		}
 	case "oom_cap":
 		// oomCapMode falls back to the mode this process read at startup
 		// whenever the live state has no value, so clearing only the live key
@@ -1074,7 +1089,7 @@ func applyControlLiveSideEffect(key, value string) error {
 		if limit <= 0 {
 			limit = math.MaxInt64
 		}
-		debug.SetMemoryLimit(limit)
+		liveTuningBaseline.rememberMemLimit(debug.SetMemoryLimit(limit))
 		// The v33 controlApplyLog applied-lines (provider/control_socket.go),
 		// so the journal records what the runtime now holds.
 		if limit == math.MaxInt64 {
@@ -1091,12 +1106,16 @@ func applyControlLiveSideEffect(key, value string) error {
 		if err != nil {
 			return fmt.Errorf("gogc: %w", err)
 		}
-		debug.SetGCPercent(target.Percent)
+		percent := target.Percent
+		if target.Clear {
+			percent = liveTuningBaseline.gcPercentOr(percent)
+		}
+		liveTuningBaseline.rememberGCPercent(debug.SetGCPercent(percent))
 		switch {
 		case target.Percent < 0:
 			tlog("⚙️ [control] applied gogc=disabled (garbage collection off; heap grows unbounded)\n")
 		case target.Clear:
-			tlog("⚙️ [control] applied gogc=100 (off restores the default)\n")
+			tlog("⚙️ [control] applied gogc=%d (off restores the startup value)\n", percent)
 		}
 	case "baseline":
 		// Sampling is a goroutine that checks the flag each tick, so turning it

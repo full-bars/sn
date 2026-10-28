@@ -57,3 +57,27 @@ func TestSmartDialerHelpDoesNotClaimARestartIsNeeded(t *testing.T) {
 		t.Fatalf("smart-dialer help does not say the change applies immediately: %s", long)
 	}
 }
+
+// The set surface carries the same contract as the smart-dialer command: the
+// key is live, so none of the places that list what needs a restart may name it.
+func TestSetHelpDoesNotListSmartDialerAsRestartRequired(t *testing.T) {
+	surfaces := map[string]string{
+		"set long":  newSetCmd().Long,
+		"root menu": rootHelpMenu,
+	}
+	for _, l := range setKeyHelps {
+		if strings.HasPrefix(strings.TrimSpace(l), "smart-dialer") {
+			surfaces["set key help"] = l
+		}
+	}
+	for name, text := range surfaces {
+		for _, line := range strings.Split(strings.ToLower(text), "\n") {
+			if strings.Contains(line, "smart-dialer") && strings.Contains(line, "restart") {
+				t.Errorf("%s still ties smart-dialer to a restart: %s", name, strings.TrimSpace(line))
+			}
+		}
+	}
+	if len(surfaces) != 3 {
+		t.Fatalf("expected three surfaces, found %d", len(surfaces))
+	}
+}

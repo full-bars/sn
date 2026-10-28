@@ -103,7 +103,7 @@ func replayPersistedGoGC() bool {
 		// "off" is the clear value, not a pin: the tiers decide.
 		return false
 	}
-	debug.SetGCPercent(target.Percent)
+	liveTuningBaseline.rememberGCPercent(debug.SetGCPercent(target.Percent))
 	return true
 }
 

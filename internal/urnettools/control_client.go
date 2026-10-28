@@ -616,13 +616,28 @@ func queryControlOverride(p Provider, canonicalKey string) (value string, source
 		Cmd: "get",
 		Key: canonicalKey,
 	})
-	if dialErr == nil && resp.OK && resp.Found {
+	switch {
+	case dialErr == nil && resp.OK && resp.Found:
 		return resp.Value, "socket", true, nil
+	case dialErr == nil && resp.OK:
+		// The running provider has no opinion on this key.
+	case dialErr == nil && strings.HasPrefix(resp.Error, "unknown control key"):
+		// A provider older than this tool does not have the key at all.
+	case dialErr == nil:
+		// A provider that answered and refused (for example the peer
+		// credential check) did not say "not set". Reading on would report
+		// the startup default as the answer.
+		return "", "", false, fmt.Errorf("control socket %s refused get %s: %s", sockPath, canonicalKey, resp.Error)
+	case !isSocketUnavailable(dialErr):
+		// Timeouts and permission errors are not "provider stopped".
+		return "", "", false, fmt.Errorf("control socket %s: %w", sockPath, dialErr)
 	}
+	socketAnswered := dialErr == nil && resp.OK
 
-	// Check pending_overrides.json
+	// Check pending_overrides.json. A running provider consumed the queue at
+	// start, so a file left beside one is not in effect and is not its answer.
 	pendingPath := filepath.Join(p.StateDir, "pending_overrides.json")
-	if data, err := os.ReadFile(pendingPath); err == nil {
+	if data, err := os.ReadFile(pendingPath); err == nil && !socketAnswered {
 		var ops []pendingOp
 		if json.Unmarshal(data, &ops) == nil {
 			for i := len(ops) - 1; i >= 0; i-- {
