@@ -33,7 +33,11 @@ func extenderListenerState(t *testing.T, account string) extenderActivationState
 	if err != nil {
 		t.Fatalf("the status wrote no readable record for %q: %s", account, err)
 	}
-	return record.Accounts[account]
+	state, ok := record.Accounts[account]
+	if !ok {
+		t.Fatalf("the status wrote no record for %q", account)
+	}
+	return state
 }
 
 // An answer of activated: false is a refusal, and the wait it earns grows with

@@ -268,7 +268,10 @@ func TestProviderExtenderStatusRecordsARefusalForAPartlyActivatedPass(t *testing
 	if err != nil {
 		t.Fatalf("the mixed pass wrote no readable record: %s", err)
 	}
-	state := record.Accounts[listener.account]
+	state, ok := record.Accounts[listener.account]
+	if !ok {
+		t.Fatalf("the mixed pass wrote no record for %q", listener.account)
+	}
 	if state.Refusals != 1 {
 		t.Fatalf("refusals = %d, want 1: the failed family was recorded as a success", state.Refusals)
 	}
