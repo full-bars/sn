@@ -1585,10 +1585,13 @@ openrc_resolve_parent ()
 # failure between the move and the rename-back leaves the tree with NO binary
 # while the service has already been stopped by stop_openrc_units.
 #
-# Restores three things, in order: the previous binary, the paused auto-update
-# entry, and the running service. Leaving the periodic entry paused is the
-# quieter half of the bug - the install fails loudly, but auto-update then never
-# runs again and nothing says so.
+# Shared by both backends: the swap code is common, so a failed move on a
+# systemd host lands here too. Restores three things, in order: the previous
+# binary, the paused auto-update entry, and the running service (restarted on
+# whichever of systemd_units_stopped / openrc_units_stopped the stop path set).
+# Leaving the periodic entry paused is the quieter half of the bug - the
+# install fails loudly, but auto-update then never runs again and nothing says
+# so.
 openrc_rollback_binary_swap ()
 {
     if [ "${openrc_swap_pending:-0}" != "1" ]; then
@@ -1596,12 +1599,14 @@ openrc_rollback_binary_swap ()
     fi
     openrc_swap_pending=0
 
+    restore_failed=0
     if [ -f "$install_path/bin/urnetwork.old" ]; then
         if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork" 2>/dev/null; then
             pr_warn "Restored the previous provider binary; the update did not apply."
         else
+            restore_failed=1
             pr_err "Could not restore the previous provider binary from %s" "$install_path/bin/urnetwork.old"
-            pr_err "The provider is NOT installed. Re-run the installer, or put that file back as bin/urnetwork."
+            pr_err "The new binary may still be at %s; the previous one is kept at %s." "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old"
         fi
     fi
 
@@ -1612,7 +1617,23 @@ openrc_rollback_binary_swap ()
 
     # Put the service back the way it was found. openrc_units_stopped is set by
     # stop_openrc_units only when it actually stopped something.
-    if [ "${openrc_units_stopped:-0}" = "1" ]; then
+    if [ "$restore_failed" = "1" ]; then
+        # The previous binary is not in place, so starting the service would run
+        # the new one and "running on the previous binary" would be false.
+        if [ "${openrc_units_stopped:-0}" = "1" ]; then
+            pr_err "The service is left stopped. Put %s back as bin/urnetwork, then run: rc-service urnetwork start" "$install_path/bin/urnetwork.old"
+        elif [ "${systemd_units_stopped:-0}" = "1" ]; then
+            pr_err "The service is left stopped. Put %s back as bin/urnetwork, then run: systemctl --user start urnetwork.service" "$install_path/bin/urnetwork.old"
+        fi
+    elif [ "${systemd_units_stopped:-0}" = "1" ]; then
+        # systemd is a per-user service here: no ${SUDO:-}, and the flag is
+        # systemd_units_stopped, not the OpenRC one.
+        if systemctl --user start urnetwork.service > /dev/null 2>&1; then
+            pr_warn "Restarted the service on the previous binary."
+        else
+            pr_warn "Could not restart the service; run: systemctl --user start urnetwork.service"
+        fi
+    elif [ "${openrc_units_stopped:-0}" = "1" ]; then
         # Do NOT gate this on `command -v rc-service`. A passwordless sudo is
         # commonly configured with its own secure_path, so rc-service can be
         # resolvable through sudo while absent from this shell's PATH. The old
@@ -1936,14 +1957,27 @@ EOF
     if [ "$(id -u)" -ne 0 ]; then
         if command -v sudo > /dev/null 2>&1 && sudo -n true > /dev/null 2>&1; then
             pr_info "Completing the service setup with sudo."
+            # A service left running was not stopped for this install (a normal
+            # update): `rc-service start` would report success for it while the
+            # OLD process keeps running, so do not start it, as in the root path.
+            sudo_start=1
+            if [ "$openrc_units_stopped" -ne 1 ] && openrc_service_running; then
+                sudo_start=0
+            fi
             if sudo cp "$openrc_staged" "$openrc_initd_file" \
                && sudo chmod 755 "$openrc_initd_file" \
                && sudo rc-update add urnetwork default \
                && SUDO=sudo openrc_finalize_root_paths \
-               && sudo rc-service urnetwork start; then
+               && { [ "$sudo_start" -eq 0 ] || sudo rc-service urnetwork start; }; then
+                rm -rf "$openrc_stage_dir"
+                if [ "$sudo_start" -eq 0 ]; then
+                    # Keep urnetwork.old and the pending state: the new binary
+                    # has not run yet.
+                    pr_info "Service urnetwork installed and enabled; it is still running the previous binary. Restart it to apply: rc-service urnetwork restart"
+                    return 0
+                fi
                 sudo rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
                 openrc_swap_pending=0
-                rm -rf "$openrc_stage_dir"
                 pr_info "Service urnetwork installed, enabled and started."
                 return 0
             fi
@@ -1969,24 +2003,28 @@ EOF
     fi
 
     if ! openrc_finalize_root_paths; then
+        openrc_rollback_binary_swap
         rm -rf "$openrc_stage_dir"
         exit 1
     fi
 
     if ! cp "$openrc_staged" "$openrc_initd_file"; then
         pr_err "Failed to install %s" "$openrc_initd_file"
+        openrc_rollback_binary_swap
         rm -rf "$openrc_stage_dir"
         exit 1
     fi
     rm -rf "$openrc_stage_dir"
     if ! chmod 755 "$openrc_initd_file"; then
         pr_err "Failed to make %s executable" "$openrc_initd_file"
+        openrc_rollback_binary_swap
         exit 1
     fi
 
     pr_info "Enabling urnetwork in the default runlevel"
     if ! rc-update add urnetwork default; then
         pr_err "Failed to enable the urnetwork service (rc-update add urnetwork default)"
+        openrc_rollback_binary_swap
         exit 1
     fi
 

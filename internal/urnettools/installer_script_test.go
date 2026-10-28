@@ -353,6 +353,14 @@ openrc_install_root=/usr/local/lib/urnetwork-provider
 // first start fail.
 func runOpenRCSudoStart(t *testing.T, startFails bool) (out string, err error, live, calls string) {
 	t.Helper()
+	return runOpenRCSudoStartState(t, startFails, true, false)
+}
+
+// runOpenRCSudoStartState is runOpenRCSudoStart with the service state chosen:
+// unitsStopped is whether the installer stopped the service for the swap, and
+// serviceRunning is what openrc_service_running reports at setup time.
+func runOpenRCSudoStartState(t *testing.T, startFails, unitsStopped, serviceRunning bool) (out string, err error, live, calls string) {
+	t.Helper()
 	skipWithoutPOSIXShell(t)
 	source := readInstaller(t)
 	fnInstall := extractShellFunc(t, source, "install_openrc_units")
@@ -403,9 +411,87 @@ openrc_install_root="`+installRoot+`"
 openrc_user="urnet"
 openrc_initd_file="`+initd+`"
 openrc_swap_pending=1
-openrc_units_stopped=1
+openrc_units_stopped=`+boolTo01(unitsStopped)+`
 id() { if [ "$1" = -u ]; then echo 1000; fi; return 0; }
 sudo() { if [ "$1" = -n ]; then shift; fi; "$@"; }
+openrc_user_home() { echo "`+home+`"; }
+openrc_resolve_parent() { if [ "$1" = --full ]; then shift; fi; echo "$1"; }
+openrc_finalize_root_paths() { return 0; }
+openrc_restore_update_entry() { :; }
+openrc_service_running() { return `+boolTo01(!serviceRunning)+`; }
+pr_info() { printf 'INFO: %s\n' "$*"; }
+pr_warn() { printf 'WARN: %s\n' "$*"; }
+pr_err() { printf 'ERROR: %s\n' "$*"; }
+`+fnRollback+`
+`+fnInstall+`
+install_openrc_units
+echo "pending=$openrc_swap_pending"
+echo "old-present=$([ -f '`+live+`.old' ] && echo 1 || echo 0)"
+openrc_rollback_binary_swap
+echo "after-rollback live=$(cat '`+live+`')"
+`)
+	raw, _ := os.ReadFile(record)
+	return out, err, live, string(raw)
+}
+
+// runOpenRCRootSetup runs the real install_openrc_units and
+// openrc_rollback_binary_swap as root, after a swap that left a live/.old pair
+// and a stopped service. failStep makes one step fail: "cp" (the init script
+// copy), "rc-update" (enabling the service) or "" for none.
+func runOpenRCRootSetup(t *testing.T, failStep string) (out string, err error, live, calls string) {
+	t.Helper()
+	skipWithoutPOSIXShell(t)
+	source := readInstaller(t)
+	fnInstall := extractShellFunc(t, source, "install_openrc_units")
+	fnRollback := extractShellFunc(t, source, "openrc_rollback_binary_swap")
+	if fnInstall == "" || fnRollback == "" {
+		t.Fatal("could not extract install_openrc_units or openrc_rollback_binary_swap from the Linux installer")
+	}
+	root := t.TempDir()
+	installRoot := filepath.Join(root, "lib")
+	installPath := filepath.Join(installRoot, "urnetwork-provider")
+	binDir := filepath.Join(installPath, "bin")
+	home := filepath.Join(root, "home")
+	initd := filepath.Join(root, "initd", "urnetwork")
+	live = filepath.Join(binDir, "urnetwork")
+	for _, dir := range []string{binDir, home, filepath.Dir(initd)} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(live, []byte("NEW"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(live+".old", []byte("PREVIOUS"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	stubDir := t.TempDir()
+	record := filepath.Join(stubDir, "calls")
+	rcService := "#!/bin/sh\nprintf 'rc-service %s live=%s\\n' \"$*\" \"$(cat '" + live + "' 2>/dev/null)\" >> '" + record + "'\nexit 0\n"
+	rcUpdate := "#!/bin/sh\nprintf 'rc-update %s\\n' \"$*\" >> '" + record + "'\n"
+	if failStep == "rc-update" {
+		rcUpdate += "exit 1\n"
+	} else {
+		rcUpdate += "exit 0\n"
+	}
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-service"), []byte(rcService), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(stubDir, "rc-update"), []byte(rcUpdate), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	failCp := ""
+	if failStep == "cp" {
+		failCp = `cp() { return 1; }`
+	}
+	out, err = runShellScriptWithPath(t, stubDir, `
+install_path="`+installPath+`"
+openrc_install_root="`+installRoot+`"
+openrc_user="urnet"
+openrc_initd_file="`+initd+`"
+openrc_swap_pending=1
+openrc_units_stopped=1
+id() { if [ "$1" = -u ]; then echo 0; fi; return 0; }
 openrc_user_home() { echo "`+home+`"; }
 openrc_resolve_parent() { if [ "$1" = --full ]; then shift; fi; echo "$1"; }
 openrc_finalize_root_paths() { return 0; }
@@ -414,15 +500,64 @@ openrc_service_running() { return 1; }
 pr_info() { printf 'INFO: %s\n' "$*"; }
 pr_warn() { printf 'WARN: %s\n' "$*"; }
 pr_err() { printf 'ERROR: %s\n' "$*"; }
+`+failCp+`
 `+fnRollback+`
 `+fnInstall+`
 install_openrc_units
-echo "pending=$openrc_swap_pending"
-openrc_rollback_binary_swap
-echo "after-rollback live=$(cat '`+live+`')"
 `)
 	raw, _ := os.ReadFile(record)
 	return out, err, live, string(raw)
+}
+
+// A root OpenRC setup that fails after the binary swap and the service stop
+// must put the previous binary back and restart the service on it, as the sudo
+// branch does. It used to exit with the new binary live and the service down.
+func TestOpenRCRootSetupFailureRollsBackAndRestarts(t *testing.T) {
+	for _, step := range []string{"cp", "rc-update"} {
+		t.Run(step, func(t *testing.T) {
+			out, err, live, calls := runOpenRCRootSetup(t, step)
+			if err == nil {
+				t.Fatalf("%s failure returned success; want non-zero exit (output:\n%s)", step, out)
+			}
+			if got, rerr := os.ReadFile(live); rerr != nil || string(got) != "PREVIOUS" {
+				t.Errorf("previous binary not restored: got %q (%v); out:\n%s", got, rerr, out)
+			}
+			if !strings.Contains(calls, "rc-service urnetwork start live=PREVIOUS") {
+				t.Errorf("service was not restarted on the previous binary; calls:\n%s\nout:\n%s", calls, out)
+			}
+		})
+	}
+}
+
+func boolTo01(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
+}
+
+// A normal (non-forced) update leaves the service running and stops nothing.
+// `rc-service start` would report success for it while the old process keeps
+// running, so the sudo path must not start it, must keep the rollback copy, and
+// must say a restart is needed. It used to start, delete urnetwork.old and clear
+// the rollback state with the new binary never having run.
+func TestOpenRCSudoPathKeepsBackupWhenServiceWasNotStopped(t *testing.T) {
+	out, err, _, calls := runOpenRCSudoStartState(t, false, false, true)
+	if err != nil {
+		t.Fatalf("setup failed: %v (output:\n%s)", err, out)
+	}
+	if strings.Contains(calls, "urnetwork start") {
+		t.Errorf("started a service that was left running; calls:\n%s\nout:\n%s", calls, out)
+	}
+	if !strings.Contains(out, "old-present=1") || !strings.Contains(out, "pending=1") {
+		t.Errorf("rollback copy/state discarded although the new binary never ran (out:\n%s)", out)
+	}
+	if !strings.Contains(out, "rc-service urnetwork restart") {
+		t.Errorf("no restart instruction given (out:\n%s)", out)
+	}
+	if strings.Contains(out, "installed, enabled and started") {
+		t.Errorf("claimed the service was started (out:\n%s)", out)
+	}
 }
 
 func TestOpenRCFailedSudoStartRollsBackAndFails(t *testing.T) {
@@ -696,6 +831,51 @@ openrc_rollback_binary_swap
 			t.Fatalf("rollback restarted a service it never stopped (actions %q, out:\n%s)", log, out)
 		}
 	})
+}
+
+// When copying the previous binary back fails, the new binary may still be at
+// the live path. The rollback must then leave the service stopped and name the
+// retained backup, not start it and claim the previous binary is running.
+func TestOpenRCRollbackRestoreFailureLeavesServiceStopped(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	fn := extractShellFunc(t, readInstaller(t), "openrc_rollback_binary_swap")
+	if fn == "" {
+		t.Fatal("could not extract openrc_rollback_binary_swap from the Linux installer")
+	}
+	tempDir := t.TempDir()
+	actions := filepath.Join(tempDir, "actions.log")
+	installRoot := filepath.Join(tempDir, "root")
+	if err := os.MkdirAll(filepath.Join(installRoot, "bin"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	old := filepath.Join(installRoot, "bin", "urnetwork.old")
+	if err := os.WriteFile(old, []byte("PREVIOUS"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	harness := fmt.Sprintf(`
+pr_warn() { echo "[WARN] $*"; }
+pr_err()  { echo "[ERROR] $*"; }
+sudo() { echo "sudo $*" >> %q; [ "$1" = mv ] && return 1; return 0; }
+`, actions)
+	cmd := exec.Command("/bin/sh", "-c", harness+fn+fmt.Sprintf(`
+install_path=%q
+openrc_swap_pending=1
+openrc_units_stopped=1
+SUDO=sudo
+openrc_rollback_binary_swap
+`, installRoot))
+	cmd.Env = []string{"PATH=/nonexistent"}
+	out, _ := cmd.CombinedOutput()
+	log, _ := os.ReadFile(actions)
+	if strings.Contains(string(log), "rc-service") {
+		t.Errorf("rollback started the service although the restore failed (actions %q, out:\n%s)", log, out)
+	}
+	if strings.Contains(string(out), "Restarted the service") || strings.Contains(string(out), "running on the previous") {
+		t.Errorf("rollback claimed the previous binary is running after a failed restore (out:\n%s)", out)
+	}
+	if !strings.Contains(string(out), old) {
+		t.Errorf("rollback did not name the retained backup %s (out:\n%s)", old, out)
+	}
 }
 
 // extractShellFunc returns the body of a top-level shell function, from its
@@ -1383,6 +1563,7 @@ func runLinuxInstaller(t *testing.T, opts installerHarnessOpts) installerHarness
 	firstStartFlag := filepath.Join(tempDir, "first-start-done")
 	fnSanitize := extractShellFunc(t, script, "sanitize_restart_dropins")
 	fnInstallSystemd := extractShellFunc(t, script, "install_systemd_units")
+	fnRollback := extractShellFunc(t, script, "openrc_rollback_binary_swap")
 	fnDoInstall := extractShellFunc(t, script, "do_install")
 	if fnDoInstall == "" {
 		t.Fatal("could not extract do_install from Linux script")
@@ -1494,7 +1675,7 @@ cp() {
 mv() {
     if [ "${FAIL_MV:-0}" = "1" ]; then
         case "$*" in
-            *"-f "*"$install_path/bin/urnetwork")
+            *"-f "*"/bin/.urnetwork.new."*"$install_path/bin/urnetwork")
                 echo "simulated mv failure" >&2
                 return 1
                 ;;
@@ -1557,7 +1738,7 @@ STOP_LOG=%q
 do_install
 `, tag, op, installPath, tempDir, failRestartVal, failFirstStartVal, failRestoreVal, failCpVal, failMvVal, installerFlag(opts.metadataFails), verifyLog, svcLog, filepath.Join(tempDir, "stop.log"), firstStartFlag, tempDir, tempDir, tempDir, tempDir)
 
-	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnDoInstall + "\n" + driver
+	fullScript := harness + "\n" + fnGetVersion + "\n" + fnGetDate + "\n" + fnDigest + "\n" + fnCompute + "\n" + fnVerify + "\n" + fnLists + "\n" + fnSanitize + "\n" + fnInstallSystemd + "\n" + fnRollback + "\n" + fnDoInstall + "\n" + driver
 	cmd := exec.Command("/bin/sh", "-c", fullScript)
 	cmd.Env = []string{"PATH=/usr/bin:/bin"}
 	if opts.failBackup {
@@ -1862,6 +2043,42 @@ func TestInstallerInterruptedReplacementLeavesBinaryIntact(t *testing.T) {
 				t.Errorf("interrupted replacement changed binary, want %q, got %q", existingPayload, res.finalBin)
 			}
 		})
+	}
+}
+
+// A failed move of the new binary on a systemd host must restore the previous
+// binary AND restart the service on it: the stop path set systemd_units_stopped,
+// which the rollback used to ignore (it only restarted on the OpenRC flag).
+func TestInstallerFailedMoveRestartsSystemdServiceOnPreviousBinary(t *testing.T) {
+	existingPayload := "pre-existing-working-binary"
+	tarballContent := []byte("new-tarball-payload")
+	tag := "v2026.10.27"
+	assetName := "urnetwork-provider-" + tag + ".tar.gz"
+	sum := sha256.Sum256(tarballContent)
+	releaseJSON := fmt.Sprintf(`{
+		"tag_name": %q,
+		"published_at": "2026-10-27T00:00:00Z",
+		"assets": [
+			{"name": %q, "digest": "sha256:%s"}
+		]
+	}`, tag, assetName, hex.EncodeToString(sum[:]))
+
+	res := runLinuxInstaller(t, installerHarnessOpts{
+		tag:         tag,
+		operation:   "update",
+		releaseJSON: releaseJSON,
+		tarballData: tarballContent,
+		existingBin: existingPayload,
+		failMv:      true,
+	})
+	if res.exitCode == 0 {
+		t.Fatalf("a failed binary move returned success (out:\n%s)", res.stdout)
+	}
+	if res.finalBin != existingPayload {
+		t.Errorf("previous binary not in place: got %q, want %q (out:\n%s)", res.finalBin, existingPayload, res.stdout)
+	}
+	if want := "start live=" + existingPayload; len(res.svcCalls) != 1 || res.svcCalls[0] != want {
+		t.Errorf("service calls = %q, want [%q]: the stopped service must be restarted on the previous binary (out:\n%s)", res.svcCalls, want, res.stdout)
 	}
 }
 
