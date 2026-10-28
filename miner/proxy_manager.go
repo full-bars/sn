@@ -331,6 +331,16 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 	if liveApply {
 		// APPLY may create persistent identity/provenance rows. Serialize that
 		// read-modify-write with health, grading, audit, and command writers.
+		//
+		// The cross-process proxy lock comes first, in the order the other
+		// writers take it: `proxy clear` runs in another process and only that
+		// lock keeps it from emptying proxy.state between this read and the
+		// write below, which would put the removed rows back.
+		release, lockErr := acquireProxyLockWithRetry()
+		if lockErr != nil {
+			return nil, nil, false, fmt.Errorf("proxy state lock: %w", lockErr)
+		}
+		defer release()
 		proxyStateMu.Lock()
 		defer proxyStateMu.Unlock()
 	}

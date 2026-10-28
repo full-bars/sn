@@ -34,7 +34,15 @@ type minerReloadSlot struct {
 	settings   *connect.ProxySettings
 	cancel     context.CancelFunc
 	generation uint64
+	// done closes when the slot's worker has returned from its provide run,
+	// device and API teardown included. Nil when the spawner cannot say (the
+	// plain spawn seam), in which case nothing waits on the slot.
+	done <-chan struct{}
 }
+
+// minerRetireTimeout bounds how long a replacement waits for the worker it
+// replaces to finish tearing down.
+const minerRetireTimeout = 30 * time.Second
 
 // minerReloadSummary reports what one reload changed, for the operator log.
 type minerReloadSummary struct {
@@ -75,7 +83,16 @@ type minerProxyReloader struct {
 	spawn func(*connect.ProxySettings) (context.CancelFunc, error)
 	// spawnGeneration is the lifecycle-aware form used by provide: the worker
 	// receives the exact slot generation it must withdraw on exit.
-	spawnGeneration func(*connect.ProxySettings, uint64) (context.CancelFunc, error)
+	// It also returns a channel that closes when that worker has fully
+	// returned, so a replacement for the same identity can wait for it.
+	spawnGeneration func(*connect.ProxySettings, uint64) (context.CancelFunc, <-chan struct{}, error)
+
+	// retiring holds the done channel of every cancelled slot whose worker may
+	// still be tearing down, by identity. A new worker for the same identity
+	// waits for it first: one identity must never hold two platform sessions.
+	retiring map[string]<-chan struct{}
+	// retireTimeout bounds that wait; zero means minerRetireTimeout.
+	retireTimeout time.Duration
 
 	// running is keyed by proxy identity (ProxySettings.Key), the same key the
 	// bandwidth registry and the earnings store use, so two accounts behind
@@ -140,9 +157,55 @@ func newMinerProxyReloader(
 	spawn func(*connect.ProxySettings) (context.CancelFunc, error),
 ) *minerProxyReloader {
 	return &minerProxyReloader{
-		desired: desired,
-		spawn:   spawn,
-		running: map[string]*minerReloadSlot{},
+		desired:  desired,
+		spawn:    spawn,
+		running:  map[string]*minerReloadSlot{},
+		retiring: map[string]<-chan struct{}{},
+	}
+}
+
+// quiesce returns once any reload that was already running has finished. The
+// run uses it before it believes its worker count has reached zero, because
+// that reload may be the one starting the replacement.
+func (r *minerProxyReloader) quiesce() {
+	r.mu.Lock()
+	r.mu.Unlock() //nolint:staticcheck // the empty section is the wait
+}
+
+// retireLocked cancels a slot and drops it from the bookkeeping, remembering
+// its worker so the identity is not started again before that worker is gone.
+// The caller must hold mu.
+func (r *minerProxyReloader) retireLocked(key string, slot *minerReloadSlot) {
+	slot.cancel()
+	delete(r.running, key)
+	r.releaseAddress(slot.settings)
+	if slot.done != nil {
+		r.retiring[key] = slot.done
+	}
+}
+
+// awaitRetiredLocked waits for the previous worker of key, if one is still
+// tearing down. It returns an error when the worker does not finish in time, so
+// the caller leaves the identity down instead of running it twice; the next
+// reload tries again. The caller must hold mu; the worker's exit path closes
+// done before it asks for mu, so the wait cannot deadlock.
+func (r *minerProxyReloader) awaitRetiredLocked(key string) error {
+	done, ok := r.retiring[key]
+	if !ok {
+		return nil
+	}
+	timeout := r.retireTimeout
+	if timeout <= 0 {
+		timeout = minerRetireTimeout
+	}
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-done:
+		delete(r.retiring, key)
+		return nil
+	case <-timer.C:
+		return fmt.Errorf("previous worker for %s is still shutting down after %s", proxyKeyDisplay(key), timeout)
 	}
 }
 
@@ -230,13 +293,18 @@ func (r *minerProxyReloader) advanceReloadSeq(seq int64) {
 // identity - and re-identifying a live slot is exactly what the platform
 // session must not do.
 func (r *minerProxyReloader) seed(settings *connect.ProxySettings, cancel context.CancelFunc) {
+	r.seedWorker(settings, cancel, nil)
+}
+
+// seedWorker is seed for a slot whose worker can say when it has returned.
+func (r *minerProxyReloader) seedWorker(settings *connect.ProxySettings, cancel context.CancelFunc, done <-chan struct{}) {
 	if settings == nil {
 		return
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.nextGeneration++
-	r.running[settings.Key()] = &minerReloadSlot{settings: settings, cancel: cancel, generation: r.nextGeneration}
+	r.running[settings.Key()] = &minerReloadSlot{settings: settings, cancel: cancel, generation: r.nextGeneration, done: done}
 	if settings.Address != "" {
 		// Claim, but never refuse: the configured set may legitimately put two
 		// identities behind one address (providerSlotIdentities keys those
@@ -248,8 +316,8 @@ func (r *minerProxyReloader) seed(settings *connect.ProxySettings, cancel contex
 
 // seedGeneration returns the generation assigned to a slot seeded by the
 // initial provide launch.
-func (r *minerProxyReloader) seedGeneration(settings *connect.ProxySettings, cancel context.CancelFunc) uint64 {
-	r.seed(settings, cancel)
+func (r *minerProxyReloader) seedGeneration(settings *connect.ProxySettings, cancel context.CancelFunc, done <-chan struct{}) uint64 {
+	r.seedWorker(settings, cancel, done)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if settings == nil || r.running[settings.Key()] == nil {
@@ -357,6 +425,19 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 		wanted[settings.Key()] = settings
 	}
 
+	// Stop what is gone first. A changed username at a live address is a removal
+	// of the old identity plus an addition of the new one, and the addition is
+	// refused while the old identity still owns the address. Retiring before
+	// adding also means a failed addition can no longer be the reason a removal
+	// was skipped or came late.
+	for key, slot := range r.running {
+		if _, ok := wanted[key]; ok {
+			continue
+		}
+		r.retireLocked(key, slot)
+		summary.Removed++
+	}
+
 	var errs []error
 	for key, settings := range wanted {
 		slot, ok := r.running[key]
@@ -366,17 +447,18 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 		}
 		if ok {
 			// Rotate: cancel first so the identity cannot hold two sessions.
-			slot.cancel()
-			delete(r.running, key)
-			r.releaseAddress(slot.settings)
+			r.retireLocked(key, slot)
 		}
 		r.nextGeneration++
 		generation := r.nextGeneration
 		var cancel context.CancelFunc
-		var spawnErr error
-		if r.spawnGeneration != nil {
-			cancel, spawnErr = r.spawnGeneration(settings, generation)
-		} else {
+		var done <-chan struct{}
+		spawnErr := r.awaitRetiredLocked(key)
+		switch {
+		case spawnErr != nil:
+		case r.spawnGeneration != nil:
+			cancel, done, spawnErr = r.spawnGeneration(settings, generation)
+		default:
 			cancel, spawnErr = r.spawn(settings)
 		}
 		if spawnErr != nil {
@@ -391,27 +473,15 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 				errs = append(errs, fmt.Errorf("identity %s is no longer served after a failed rotation", key))
 			}
 			// Keep reconciling: one bad identity must not freeze every other
-			// operator change, and the removals below still run so a dead proxy
-			// stops even when an addition failed.
+			// operator change.
 			continue
 		}
-		r.running[key] = &minerReloadSlot{settings: settings, cancel: cancel, generation: generation}
+		r.running[key] = &minerReloadSlot{settings: settings, cancel: cancel, generation: generation, done: done}
 		if ok {
 			summary.Rotated++
 		} else {
 			summary.Added++
 		}
-	}
-
-	// Stop what is gone. This runs regardless of spawn failures above.
-	for key, slot := range r.running {
-		if _, ok := wanted[key]; ok {
-			continue
-		}
-		slot.cancel()
-		delete(r.running, key)
-		r.releaseAddress(slot.settings)
-		summary.Removed++
 	}
 
 	keys := r.sortedRunningKeysLocked()
@@ -483,9 +553,7 @@ func (r *minerProxyReloader) relaunchIdentity(key string) bool {
 		r.mu.Unlock()
 		return false
 	}
-	slot.cancel()
-	delete(r.running, key)
-	r.releaseAddress(slot.settings)
+	r.retireLocked(key, slot)
 	r.mu.Unlock()
 
 	if _, err := r.reload(); err != nil {
@@ -576,9 +644,7 @@ func (r *minerProxyReloader) cancelSlots(keys []string, stillEligible func(key s
 			if onCancelled != nil {
 				onCancelled(key)
 			}
-			slot.cancel()
-			delete(r.running, key)
-			r.releaseAddress(slot.settings)
+			r.retireLocked(key, slot)
 			cancelled = append(cancelled, key)
 		}()
 	}
