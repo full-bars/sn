@@ -386,6 +386,33 @@ func TestMergePendingControlOverrides(t *testing.T) {
 	}
 }
 
+// A value the socket would refuse must not enter the state through the queue:
+// urnet-tools accepts h3 "auto" while the provider is stopped, and get would
+// then report a setting that resolveH3Mode silently ignores.
+func TestMergePendingControlOverridesSkipsInvalidValues(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+
+	state := newControlState()
+	queue := `[{"op":"set","key":"h3","value":"auto"},` +
+		`{"op":"set","key":"node_name","value":""},` +
+		`{"op":"set","key":"gogc","value":"-5"},` +
+		`{"op":"set","key":"proxy_url_max","value":"7"}]`
+	if err := os.WriteFile(filepath.Join(dir, "pending_overrides.json"), []byte(queue), 0o600); err != nil {
+		t.Fatalf("write queue: %v", err)
+	}
+	mergePendingControlOverrides(state)
+
+	for _, key := range []string{"h3", "node_name", "gogc"} {
+		if v, ok := state.get(key); ok {
+			t.Fatalf("invalid pending %s=%q was applied", key, v)
+		}
+	}
+	if v, ok := state.get("proxy_url_max"); !ok || v != "7" {
+		t.Fatalf("valid pending set lost: %q %v", v, ok)
+	}
+}
+
 func TestHotRestartEnabledResolution(t *testing.T) {
 	state := newControlState()
 	saved := globalControlState

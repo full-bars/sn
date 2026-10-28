@@ -378,7 +378,16 @@ func mergePendingControlOverrides(state *controlState) {
 		var applyErr error
 		switch op.Op {
 		case "set":
-			applyErr = state.setWithValue(op.Key, op.Value, SourcePending)
+			// The socket path validates before it persists; the queue has to
+			// hold to the same grammar. The client's check is looser for h3
+			// ("auto", empty) and absent for keys like node_name, and a value
+			// that only the queue accepted would be reported by get as set
+			// while its reader quietly fell back to the default.
+			if len(op.Value) > maxControlSetValue {
+				applyErr = fmt.Errorf("value too large (max %d bytes)", maxControlSetValue)
+			} else if applyErr = validateControlValue(op.Key, op.Value); applyErr == nil {
+				applyErr = state.setWithValue(op.Key, op.Value, SourcePending)
+			}
 		case "clear":
 			applyErr = state.clear(op.Key)
 		default:
