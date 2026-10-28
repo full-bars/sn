@@ -253,6 +253,20 @@ func setupSignIn(run *setupRun, codeFile string) bool {
 	return true
 }
 
+type setupChildProcess interface {
+	Signal(os.Signal) error
+	Kill() error
+}
+
+// stopSetupChild stops a setup child, keeping process control injectable so
+// platform-specific process behavior can be covered on every test host.
+func stopSetupChild(process setupChildProcess, windows bool) error {
+	if windows {
+		return process.Kill()
+	}
+	return process.Signal(syscall.SIGINT)
+}
+
 // setupRegister makes the first start that registers this device, and
 // stops the miner again once the network has given it its identity.
 func setupRegister(run *setupRun) bool {
@@ -278,13 +292,13 @@ func setupRegister(run *setupRun) bool {
 			writeCliError(run.errOut, fmt.Sprintf("Registration didn't finish (%v). What the miner said:\n%s", err, indent(lastLines(log.String(), 8))))
 			return false
 		case <-deadline:
-			_ = command.Process.Signal(syscall.SIGINT)
+			_ = stopSetupChild(command.Process, runtime.GOOS == "windows")
 			<-exited
 			writeCliError(run.errOut, "Registration didn't finish within 90 seconds. Check the network with: provider doctor")
 			return false
 		case <-ticker.C:
 			if device := readMinerDevice(); device.clientId != "" {
-				_ = command.Process.Signal(syscall.SIGINT)
+				_ = stopSetupChild(command.Process, runtime.GOOS == "windows")
 				select {
 				case <-exited:
 				case <-time.After(20 * time.Second):
