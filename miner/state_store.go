@@ -236,6 +236,9 @@ func (s *providerStore) load(bucket, key string, out any) (bool, error) {
 		return false, nil
 	}
 	if err := json.Unmarshal(raw, out); err != nil {
+		// Same reason as the mutation path: an unreadable value must be visible
+		// as a counted failure, not just as a retry loop in a local log.
+		IncrPersistentError(providerStoreDecodeFailedCategory)
 		return false, fmt.Errorf("decode record %s/%s: %w", bucket, key, err)
 	}
 	return true, nil
@@ -297,6 +300,10 @@ func (s *providerStore) updateJSON(bucket, key string, out any, mutate func(foun
 		var found bool
 		if val := b.Get([]byte(key)); val != nil {
 			if err := json.Unmarshal(val, out); err != nil {
+				// A value this build cannot decode holds the role forever, so the
+				// retry loop would otherwise be the only trace. Count it so the
+				// fleet sees a record no build here can read.
+				IncrPersistentError(providerStoreDecodeFailedCategory)
 				return fmt.Errorf("decode record %s/%s: %w", bucket, key, err)
 			}
 			found = true
@@ -465,6 +472,7 @@ const providerStoreRetryInterval = 30 * time.Second
 const providerStoreUnavailableCategory = "state_store_unavailable"
 const providerStoreCorruptCategory = "state_store_corrupt"
 const providerStoreWriteFailedCategory = "state_store_write_failed"
+const providerStoreDecodeFailedCategory = "state_store_decode_failed"
 
 // providerStoreInstance returns the process-wide store, opening it on first
 // use. A nil store is not fatal: callers fall back to their previous storage
