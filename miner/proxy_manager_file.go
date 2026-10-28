@@ -55,16 +55,51 @@ func expandPath(p string) string {
 	return p
 }
 
+// redactProxySource returns the redacted representation of a proxy source line:
+// scheme (if present), host:port, and whether user and password were present.
+func redactProxySource(line string) string {
+	line = strings.TrimSpace(line)
+	scheme := ""
+	rest := line
+	if idx := strings.Index(line, "://"); idx != -1 {
+		scheme = line[:idx]
+		rest = line[idx+3:]
+	}
+	address, user, password := parseProxyAddress(rest)
+	hasUser := user != ""
+	hasPass := password != ""
+	uStr := "absent"
+	if hasUser {
+		uStr = "present"
+	}
+	pStr := "absent"
+	if hasPass {
+		pStr = "present"
+	}
+	if scheme != "" {
+		if address != "" {
+			return fmt.Sprintf("%s://%s (user=%s, password=%s)", scheme, address, uStr, pStr)
+		}
+		return fmt.Sprintf("%s://<no address> (user=%s, password=%s)", scheme, uStr, pStr)
+	}
+	if address != "" {
+		return fmt.Sprintf("%s (user=%s, password=%s)", address, uStr, pStr)
+	}
+	return fmt.Sprintf("<no address> (user=%s, password=%s)", uStr, pStr)
+}
+
 // readProxySettingsFromFile reads proxy settings directly from an external file
 // where each non-blank, non-comment line is ip:port:user:pass. Entries missing
-// credentials are rejected. Returns an error only if the file itself cannot be
-// read; malformed individual lines are skipped with a warning.
-func readProxySettingsFromFile(path string) ([]*connect.ProxySettings, error) {
+// credentials are rejected.
+// Returns an error if the file itself cannot be read or if the file produced no
+// valid entries. Skipped malformed lines are counted and returned alongside the settings.
+func readProxySettingsFromFile(path string) ([]*connect.ProxySettings, int, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("could not read proxy file %s: %w", path, err)
+		return nil, 0, fmt.Errorf("could not read proxy file %s: %w", path, err)
 	}
 	var all []*connect.ProxySettings
+	var skipped int
 	for _, line := range strings.Split(string(b), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || line[0] == '#' {
@@ -72,7 +107,8 @@ func readProxySettingsFromFile(path string) ([]*connect.ProxySettings, error) {
 		}
 		address, user, password := parseProxyAddress(line)
 		if user == "" || password == "" {
-			tlog("[proxy] error: proxy %q missing credentials — required format ip:port:user:pass; skipping\n", line)
+			skipped++
+			tlog("[proxy] error: proxy %s missing credentials — required format ip:port:user:pass; skipping\n", redactProxySource(line))
 			continue
 		}
 		all = append(all, &connect.ProxySettings{
@@ -81,7 +117,13 @@ func readProxySettingsFromFile(path string) ([]*connect.ProxySettings, error) {
 			Auth:    &proxy.Auth{User: user, Password: password},
 		})
 	}
-	return all, nil
+	if len(all) == 0 {
+		return nil, skipped, fmt.Errorf("proxy file %s contained no valid proxies (expected one host:port:user:pass per line)", path)
+	}
+	if skipped > 0 {
+		tlog("[proxy] warning: %s: loaded %d proxies, skipped %s\n", path, len(all), plural(skipped, "malformed line", "malformed lines"))
+	}
+	return all, skipped, nil
 }
 
 // removeKeysFromFile removes the lines whose identity key (address+user) is in

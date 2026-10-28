@@ -988,6 +988,8 @@ var (
 	incidentBearerRe = regexp.MustCompile(`(?i)\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}`)
 	// scheme://user:pass@host -> scheme://<redacted>@host.
 	incidentUserinfoRe = regexp.MustCompile(`([A-Za-z][A-Za-z0-9+.-]*://)[^/@\s]+@`)
+	// Bare user:pass@host without a scheme -> <redacted>@host.
+	incidentBareUserinfoRe = regexp.MustCompile(`([^\s/@:,;"']+:[^\s/@:,;"']+@)(\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9_.-]+)`)
 	// A PEM private key block, header to footer.
 	incidentPEMRe = regexp.MustCompile(`(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----`)
 	// host:port:user:pass, the proxy list format, keeps the address only.
@@ -1022,6 +1024,7 @@ func incidentRedact(text string) string {
 	text = incidentJWTRe.ReplaceAllString(text, "<redacted-jwt>")
 	text = incidentBearerRe.ReplaceAllString(text, "$1 <redacted>")
 	text = incidentUserinfoRe.ReplaceAllString(text, "$1<redacted>@")
+	text = incidentBareUserinfoRe.ReplaceAllString(text, "<redacted>@$2")
 	text = incidentProxyLineRe.ReplaceAllString(text, "$1:[redacted]")
 	text = incidentAssignQuotedRe.ReplaceAllString(text, `$1"<redacted>"`)
 	text = incidentAssignRe.ReplaceAllString(text, "$1<redacted>")

@@ -249,6 +249,9 @@ type proxyManager struct {
 	// "url"), for the reload attribution line.
 	sourceOf map[string]string
 
+	// skipped counts malformed lines skipped during the last desired-set build.
+	skipped int
+
 	// gate is the startup grading gate (proxy_manager_gate.go) the active
 	// probe loops wait on. It is armed by start and never closed.
 	gate *gradingGate
@@ -283,15 +286,15 @@ func legacyProxySettings() []*connect.ProxySettings {
 // primarySource returns the source label and settings of the operator-curated
 // half of the desired set: the external file named by proxy.state.Source when
 // one is configured (v33 workflow A), else the internal config (workflow B).
-func (m *proxyManager) primarySource(state *ProxyState) (tag string, settings []*connect.ProxySettings, err error) {
+func (m *proxyManager) primarySource(state *ProxyState) (tag string, settings []*connect.ProxySettings, skipped int, err error) {
 	if state.Source != "" {
-		settings, err = readProxySettingsFromFile(state.Source)
+		settings, skipped, err = readProxySettingsFromFile(state.Source)
 		if err != nil {
-			return "", nil, err
+			return "", nil, skipped, err
 		}
-		return "file", settings, nil
+		return "file", settings, skipped, nil
 	}
-	return "internal", legacyProxySettings(), nil
+	return "internal", legacyProxySettings(), 0, nil
 }
 
 // desired builds the desired set: primary source first (operator-curated
@@ -349,16 +352,21 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 		tlog("[proxy][health] overlaid live health onto %s before the desired-set build\n", plural(overlaid, "proxy", "proxies"))
 	}
 
-	tag, primary, err := m.primarySource(state)
+	tag, primary, skipped, err := m.primarySource(state)
 	if err != nil {
 		return nil, nil, false, err
 	}
-	// v33 refuses a file-backed start whose source file read as empty or
-	// yielded no valid entries (shmLogFatal 20/21): silently falling back to
-	// the URL cache would provide with a curated pool of zero. Only the start
-	// path refuses; command readers surface the empty list as a normal diff.
-	if importLegacy && m.cfg.ProxyFile != "" && len(primary) == 0 {
-		return nil, nil, false, fmt.Errorf("proxy file %s contained no valid proxies (expected one host:port:user:pass per line)", m.cfg.ProxyFile)
+	// Every ingest, not just startup, refuses a file-backed configuration
+	// whose source file read as empty or yielded no valid entries: silently
+	// falling back to the URL cache would wipe the curated pool.
+	if (importLegacy && m.cfg.ProxyFile != "") || state.Source != "" {
+		if len(primary) == 0 {
+			src := state.Source
+			if src == "" {
+				src = m.cfg.ProxyFile
+			}
+			return nil, nil, false, fmt.Errorf("proxy file %s contained no valid proxies (expected one host:port:user:pass per line)", src)
+		}
 	}
 
 	desiredSet := make(map[string]*connect.ProxySettings, len(primary))
@@ -377,6 +385,9 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 		urlState, urlErr = readProxyURLState()
 	}
 	if urlErr != nil {
+		if liveApply {
+			return nil, nil, false, fmt.Errorf("read proxy_url.json: %w", urlErr)
+		}
 		tlog("[proxy][url] warning: could not read proxy_url.json, launching without the URL-sourced proxies: %v\n", urlErr)
 	} else {
 		mergeProxyURLCache(desiredSet, sourceOf, urlState)
@@ -568,7 +579,16 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 	// backed-off identities are recorded too; the ordering only looks up the
 	// launch keys.
 	m.sourceOf = sourceOf
+	m.skipped = skipped
 	return launch, held, writeState, nil
+}
+
+// Skipped returns the count of malformed lines skipped during the last
+// desired-set build.
+func (m *proxyManager) Skipped() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.skipped
 }
 
 // sortProxySettingsByKey orders settings by identity key.

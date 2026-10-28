@@ -492,14 +492,13 @@ func (self *proxyUDPCheckStore) Check(ctx context.Context, settings *connect.Pro
 			self.mu.Unlock()
 			return proxyUDPResult{Status: proxyUDPUnknown, Err: ctx.Err()}
 		}
+		logProxyUDPResult(settings, previous, result)
+		noteProxyUDPVerdict(settings, previous, result)
 		running.result = result
 		running.at = now
 		close(running.done)
 		running.done = nil
 		self.mu.Unlock()
-
-		logProxyUDPResult(settings, previous, result)
-		noteProxyUDPVerdict(settings, previous, result)
 		return result
 	}
 }

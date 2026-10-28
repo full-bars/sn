@@ -35,7 +35,7 @@ func installShedPoolSettings(t *testing.T, settings ...*connect.ProxySettings) *
 	t.Helper()
 	pool := &pressureShedTestPool{}
 	pool.reloader = newMinerProxyReloader(
-		func() ([]*connect.ProxySettings, error) { return nil, nil },
+		func() ([]*connect.ProxySettings, int, error) { return nil, 0, nil },
 		func(settings *connect.ProxySettings) (context.CancelFunc, error) { return func() {}, nil },
 	)
 	for _, settingsAt := range settings {

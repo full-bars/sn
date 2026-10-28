@@ -448,7 +448,8 @@ func classifyHealth(e ProxyEntry) string {
 // curated-only list still reports URL-cached proxies as removals.
 func proxyRefreshDesired(state *ProxyState) ([]*connect.ProxySettings, error) {
 	if state.Source != "" {
-		return readProxySettingsFromFile(state.Source)
+		settings, _, err := readProxySettingsFromFile(state.Source)
+		return settings, err
 	}
 	return readProxySettingsLegacy(), nil
 }

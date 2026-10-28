@@ -45,11 +45,12 @@ type minerReloadSummary struct {
 	Lost      int
 	Rotated   int
 	Unchanged int
+	Skipped   int
 }
 
 // String renders the summary as the single line operators see after a reload.
 func (s minerReloadSummary) String() string {
-	return fmt.Sprintf("added %d, removed %d, rotated %d, unchanged %d, lost %d", s.Added, s.Removed, s.Rotated, s.Unchanged, s.Lost)
+	return fmt.Sprintf("added %d, removed %d, rotated %d, unchanged %d, lost %d, skipped %d", s.Added, s.Removed, s.Rotated, s.Unchanged, s.Lost, s.Skipped)
 }
 
 // minerProxyReloader applies desired-set changes to a running miner.
@@ -63,8 +64,9 @@ type minerProxyReloader struct {
 	// desired recomputes the proxy set the run should be serving. It must not
 	// mutate the running pool; a non-nil error aborts the reload with the pool
 	// untouched, which matters in Workflow A: a transient read error must not
-	// be read as "no proxies" and cancel the whole fleet.
-	desired func() ([]*connect.ProxySettings, error)
+	// be read as "no proxies" and cancel the whole fleet. It returns the desired
+	// settings, the count of malformed lines skipped during ingest, and any error.
+	desired func() ([]*connect.ProxySettings, int, error)
 
 	// spawn starts one slot and returns the function that stops it. The
 	// cancel must be safe to call more than once: removal, stop and the run's
@@ -129,7 +131,7 @@ type minerProxyReloader struct {
 }
 
 func newMinerProxyReloader(
-	desired func() ([]*connect.ProxySettings, error),
+	desired func() ([]*connect.ProxySettings, int, error),
 	spawn func(*connect.ProxySettings) (context.CancelFunc, error),
 ) *minerProxyReloader {
 	return &minerProxyReloader{
@@ -304,12 +306,13 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 		r.onReload()
 	}
 
-	desired, err := r.desired()
+	desired, skipped, err := r.desired()
 	if err != nil {
 		// Leave the pool exactly as it is. A failed read is not permission to
 		// stop serving.
 		return summary, fmt.Errorf("reload aborted, running set left as-is: %w", err)
 	}
+	summary.Skipped = skipped
 
 	wanted := make(map[string]*connect.ProxySettings, len(desired))
 	for _, settings := range desired {
