@@ -352,8 +352,19 @@ func (s *clientJWTStore) Put(key string, entry clientJWTEntry) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.loadLocked()
+	previous, existed := s.entries[key]
 	s.entries[key] = entry
-	return s.flushLocked(key, entry, false)
+	if err := s.flushLocked(key, entry, false); err != nil {
+		// The entry never reached disk, so it must not be served from memory:
+		// a retry would reuse a JWT the next restart cannot find.
+		if existed {
+			s.entries[key] = previous
+		} else {
+			delete(s.entries, key)
+		}
+		return err
+	}
+	return nil
 }
 
 // AnyNetworkID scans loaded store entries and returns the unambiguous non-empty

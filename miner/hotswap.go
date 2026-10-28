@@ -125,8 +125,22 @@ var (
 	// runHotSwapParentHandoffFunc is the handoff body runHotSwapHandoff
 	// invokes, the same way spawnCandidateFunc and execInPlaceFunc seam the
 	// steps it drives. A test replaces it with a panic to check the guard.
-	runHotSwapParentHandoffFunc = runHotSwapParentHandoff
+	runHotSwapParentHandoffFunc  = runHotSwapParentHandoff
+	activeHotSwapControlSocketMu sync.RWMutex
+	activeHotSwapControlSocket   *hotSwapControlSocketOwner
 )
+
+func setActiveHotSwapControlSocket(owner *hotSwapControlSocketOwner) {
+	activeHotSwapControlSocketMu.Lock()
+	activeHotSwapControlSocket = owner
+	activeHotSwapControlSocketMu.Unlock()
+}
+
+func getActiveHotSwapControlSocket() *hotSwapControlSocketOwner {
+	activeHotSwapControlSocketMu.RLock()
+	defer activeHotSwapControlSocketMu.RUnlock()
+	return activeHotSwapControlSocket
+}
 
 // errCandidateWaitPanicked marks a candidate wait that panicked rather than
 // reporting the process's exit. A caller that only wants "did it exit" reads it
@@ -306,8 +320,7 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 		Version: RequireVersion(),
 	}); err != nil {
 		hotswapLog("❌ [hotswap] Failed to send TAKEOVER: %v. Aborting handoff; live provider retained.\n", err)
-		abortBatonHandoff(session)
-		return err
+		return errors.Join(err, abortBatonHandoff(session))
 	}
 
 	// Wait for mandatory ACK from candidate before yielding our own
@@ -324,14 +337,12 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 	case res := <-ackCh:
 		if res.err != nil || res.msg.Type != HotswapMsgAck {
 			hotswapLog("❌ [hotswap] Candidate failed active takeover (%v). Aborting handoff; live provider retained.\n", res.err)
-			abortBatonHandoff(session)
-			return fmt.Errorf("candidate takeover unconfirmed: %v", res.err)
+			return errors.Join(fmt.Errorf("candidate takeover unconfirmed: %v", res.err), abortBatonHandoff(session))
 		}
 		hotswapLog("♻️⚡ [hotswap] Candidate PID %d confirmed active takeover (ACK received)!\n", childPID)
 	case <-time.After(HotSwapAckTimeout):
 		hotswapLog("❌ [hotswap] Candidate takeover ACK timed out (>%s). Aborting handoff; live provider retained.\n", HotSwapAckTimeout)
-		abortBatonHandoff(session)
-		return fmt.Errorf("candidate takeover ACK timed out (>%s)", HotSwapAckTimeout)
+		return errors.Join(fmt.Errorf("candidate takeover ACK timed out (>%s)", HotSwapAckTimeout), abortBatonHandoff(session))
 	}
 
 	return nil
@@ -341,11 +352,20 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 // store it released for a successor that never confirmed. The parent keeps
 // serving, so leaving the store released would fail every state write for the
 // rest of its life.
-func abortBatonHandoff(session *HotswapParentSession) {
+func abortBatonHandoff(session *HotswapParentSession) error {
 	// Kill the candidate first: if it already opened the file, its exit
 	// releases the bbolt lock the reopen waits on.
 	session.Kill()
-	restoreProviderStoreAfterAbortedHandoff()
+	storeErr := restoreProviderStoreAfterAbortedHandoff()
+	if owner := getActiveHotSwapControlSocket(); owner != nil {
+		// Restore the store before reopening the listener: once it answers again,
+		// every control request must observe the parent's restored state.
+		if err := owner.start(); err != nil {
+			hotswapLog("❌ [hotswap] Failed to restore control socket after aborted handoff: %v\n", err)
+			return errors.Join(storeErr, fmt.Errorf("restore control socket after aborted handoff: %w", err))
+		}
+	}
+	return storeErr
 }
 
 // hotSwapDrainDone is closed when the parent's drain finishes, immediately
@@ -749,6 +769,11 @@ func runHotSwapChildAck(ipcConn io.Writer) error {
 // runHotSwapParentHandoff coordinates spawning the candidate, validating its readiness,
 // yielding the coordinator session, and entering graceful stream drain (or in-place execve for PID 1).
 func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opts docopt.Opts) error {
+	if runtime.GOOS == "windows" {
+		// Deliberately temporary: re-enable only after the supervisor adopts the
+		// successor provider rather than waiting on the original miner command.
+		return errors.New("hot-swap not supported: supervisor adoption is not implemented on Windows in this release, so the running provider stays as it is")
+	}
 	if !hotSwapLock.TryLock() {
 		hotswapLog("⚠️ [hotswap] Hot-swap already in progress; ignoring duplicate trigger\n")
 		return nil
@@ -1029,11 +1054,12 @@ func waitForControlSocketRelease(timeout time.Duration) {
 // takeover continuation. finish stops whatever this process still owns, in
 // whichever role it ended up in.
 type hotSwapControlSocketOwner struct {
-	mu     sync.Mutex
-	ctx    context.Context
-	state  *controlState
-	closer func()
-	unreg  func()
+	mu       sync.Mutex
+	ctx      context.Context
+	state    *controlState
+	closer   func()
+	unreg    func()
+	finished bool
 }
 
 // start binds the control socket if this process does not own one yet and
@@ -1043,6 +1069,9 @@ func (o *hotSwapControlSocketOwner) start() error {
 	defer o.mu.Unlock()
 	if o.closer != nil {
 		return nil
+	}
+	if o.finished || o.ctx.Err() != nil {
+		return errors.New("control socket owner is finished")
 	}
 	cleanup, err := startControlSocket(o.ctx, o.state)
 	if err != nil {
@@ -1061,11 +1090,16 @@ func (o *hotSwapControlSocketOwner) start() error {
 // quiesce closes this process's control socket once, if it still owns one.
 func (o *hotSwapControlSocketOwner) quiesce() {
 	o.mu.Lock()
+	defer o.mu.Unlock()
 	closer := o.closer
 	o.closer = nil
-	o.mu.Unlock()
+	unreg := o.unreg
+	o.unreg = nil
 	if closer != nil {
 		closer()
+	}
+	if unreg != nil {
+		unreg()
 	}
 }
 
@@ -1074,6 +1108,7 @@ func (o *hotSwapControlSocketOwner) quiesce() {
 // nothing left to close.
 func (o *hotSwapControlSocketOwner) finish() {
 	o.mu.Lock()
+	o.finished = true
 	unreg := o.unreg
 	o.unreg = nil
 	o.mu.Unlock()

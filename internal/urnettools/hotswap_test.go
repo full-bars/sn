@@ -18,6 +18,32 @@ func TestTriggerHotSwapInvalidPID(t *testing.T) {
 	}
 }
 
+func TestHotSwapPreflightWindowsDeclines(t *testing.T) {
+	origUnit := unitTypeFunc
+	t.Cleanup(func() { unitTypeFunc = origUnit })
+	unitTypeFunc = func(Provider) (string, error) {
+		t.Fatal("Windows must decline before querying a systemd unit")
+		return "", nil
+	}
+	for _, version := range []string{"v3.23.0-fix.30.9", "v3.23.0-fix.31.0"} {
+		t.Run(version, func(t *testing.T) {
+			err := hotSwapPreflightForOS(Provider{Version: version, Unit: "urnetwork.service"}, "windows")
+			if err == nil || !strings.Contains(err.Error(), "supervisor adoption") || !strings.Contains(err.Error(), "Windows") {
+				t.Fatalf("Windows decline = %v, want supervisor adoption reason", err)
+			}
+			if !errors.Is(err, ErrHotSwapWindows) {
+				t.Errorf("Windows decline = %v, want ErrHotSwapWindows", err)
+			}
+			if errors.Is(err, ErrHotSwapNotSupported) || strings.Contains(err.Error(), "Upgrade") || strings.Contains(err.Error(), "below v3.23.0-fix.31.0") {
+				t.Errorf("Windows decline misreports version as the cause: %v", err)
+			}
+			if got := hotswapDeclineReason(err); got != "windows" {
+				t.Errorf("Windows decline metric = %q, want windows", got)
+			}
+		})
+	}
+}
+
 func TestCmdHotswapNotRunning(t *testing.T) {
 	// Targeting non-running provider must error
 	err := cmdHotswap([]string{"--unit", "nonexistent.service"}, true, false)
@@ -167,8 +193,8 @@ func TestSupportsHotSwapUnitType(t *testing.T) {
 			if c.hasUnit {
 				p.Unit = "urnetwork.service"
 			}
-			if got := supportsHotSwap(p); got != c.want {
-				t.Errorf("supportsHotSwap(%+v) = %v, want %v", p, got, c.want)
+			if got := (hotSwapPreflightForOS(p, "linux") == nil); got != c.want {
+				t.Errorf("linux hotSwapPreflightForOS(%+v) == nil = %v, want %v", p, got, c.want)
 			}
 		})
 	}
@@ -185,13 +211,15 @@ func TestSupportsHotSwapUnitType(t *testing.T) {
 // gates, and HotSwap dormancy became invisible to operators. Changing this
 // wording means updating .github/scripts/shakedown.sh section V to match.
 func TestHotSwapPreflightReturnsTheGateSpecificReason(t *testing.T) {
+	origUnit := unitTypeFunc
+	t.Cleanup(func() { unitTypeFunc = origUnit })
 	const supported = "v3.23.0-fix.31.0"
 
 	t.Run("version gate wins over the unit gate", func(t *testing.T) {
 		unitTypeFunc = func(Provider) (string, error) { return "simple", nil }
 		// Old provider on a non-notify unit: BOTH gates would reject, but the
 		// version reason must surface, because upgrading is the actual remedy.
-		err := hotSwapPreflight(Provider{Version: "v3.23.0-fix.30.9", Unit: "urnetwork.service"})
+		err := hotSwapPreflightForOS(Provider{Version: "v3.23.0-fix.30.9", Unit: "urnetwork.service"}, "linux")
 		if !errors.Is(err, ErrHotSwapNotSupported) {
 			t.Fatalf("hotSwapPreflight = %v, want ErrHotSwapNotSupported", err)
 		}
@@ -202,7 +230,7 @@ func TestHotSwapPreflightReturnsTheGateSpecificReason(t *testing.T) {
 
 	t.Run("unit gate reason names the installer script", func(t *testing.T) {
 		unitTypeFunc = func(Provider) (string, error) { return "simple", nil }
-		err := hotSwapPreflight(Provider{Version: supported, Unit: "urnetwork.service"})
+		err := hotSwapPreflightForOS(Provider{Version: supported, Unit: "urnetwork.service"}, "linux")
 		if !errors.Is(err, ErrHotSwapUnitNotNotify) {
 			t.Fatalf("hotSwapPreflight = %v, want ErrHotSwapUnitNotNotify", err)
 		}
@@ -215,7 +243,7 @@ func TestHotSwapPreflightReturnsTheGateSpecificReason(t *testing.T) {
 
 	t.Run("both gates pass", func(t *testing.T) {
 		unitTypeFunc = func(Provider) (string, error) { return "notify", nil }
-		if err := hotSwapPreflight(Provider{Version: supported, Unit: "urnetwork.service"}); err != nil {
+		if err := hotSwapPreflightForOS(Provider{Version: supported, Unit: "urnetwork.service"}, "linux"); err != nil {
 			t.Fatalf("hotSwapPreflight = %v, want nil", err)
 		}
 	})
@@ -227,10 +255,12 @@ func TestHotSwapPreflightReturnsTheGateSpecificReason(t *testing.T) {
 // re-run the installer to rewrite a unit whose Type= was never actually read,
 // which is a false diagnosis and the wrong remedy.
 func TestHotSwapPreflightDistinguishesAnUnreadableUnitType(t *testing.T) {
+	origUnit := unitTypeFunc
+	t.Cleanup(func() { unitTypeFunc = origUnit })
 	queryErr := errors.New("Failed to connect to bus: Permission denied")
 	unitTypeFunc = func(Provider) (string, error) { return "", queryErr }
 
-	err := hotSwapPreflight(Provider{Version: "v3.23.0-fix.31.0", Unit: "urnetwork.service"})
+	err := hotSwapPreflightForOS(Provider{Version: "v3.23.0-fix.31.0", Unit: "urnetwork.service"}, "linux")
 	if err == nil {
 		t.Fatal("hotSwapPreflight = nil, want the systemd query failure")
 	}
@@ -241,8 +271,8 @@ func TestHotSwapPreflightDistinguishesAnUnreadableUnitType(t *testing.T) {
 		t.Errorf("hotSwapPreflight = %v, want it to wrap the underlying query error", err)
 	}
 	// The handoff must still be refused, not attempted, when the gate is unknown.
-	if supportsHotSwap(Provider{Version: "v3.23.0-fix.31.0", Unit: "urnetwork.service"}) {
-		t.Error("supportsHotSwap = true on an unreadable unit type; must fail closed")
+	if hotSwapPreflightForOS(Provider{Version: "v3.23.0-fix.31.0", Unit: "urnetwork.service"}, "linux") == nil {
+		t.Error("linux preflight allowed an unreadable unit type; must fail closed")
 	}
 }
 

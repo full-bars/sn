@@ -103,8 +103,10 @@ named volume mount point.
 Reload output:
 
 ```
-[proxy] reloaded: +12 added, -3 removed
+✅ [proxy] reload complete: added 12, removed 3, rotated 0, unchanged 480, lost 0, skipped 0
 ```
+
+`rotated` counts proxies whose credentials changed (the old session is cancelled and the address restarted), `lost` counts rotated proxies whose replacement failed to start, and `skipped` counts malformed lines the file ingest dropped. A file that loads only part of its lines also logs `[proxy] warning: <path>: loaded N proxies, skipped M malformed lines`.
 
 ## What counts as a change
 
@@ -116,9 +118,11 @@ proxy is treated as unchanged. Only additions and removals are applied.
 
 | Situation | Behavior |
 |---|---|
-| Proxy file missing or unreadable at reload time | Reload is skipped with a warning log; running proxies are unaffected |
+| Proxy file missing or unreadable at reload time | Reload aborts with `[proxy] reload failed: reload aborted, running set left as-is: ... (will retry)`; running proxies are unaffected |
 | Reload already in progress | Second reload is skipped; logged as `reload already in progress` |
-| No usable proxies found in source | Reload is skipped as a safety guard. Removing every proxy is treated as an accidental wipe, not an intent to stop all proxies |
+| No usable proxies found in a file source | The file is empty or has no valid `ip:port:user:pass` entry (a truncated download, an editor mid-write, a fully malformed list). The ingest fails with `proxy file <path> contained no valid proxies` and the reload aborts as a safety guard. Removing every proxy is treated as an accidental wipe, not an intent to stop all proxies |
+| Some lines in the file are malformed | The valid entries load, the bad lines are skipped, and the log and the reload summary report how many. Credentials are not printed: the line is shown as the address plus `(user=present, password=absent)` and so on |
+| URL cache `proxy_url.json` unreadable at reload time | Reload aborts with the running set untouched. A read failure is not treated as an empty cache, so URL-sourced proxies are not dropped. At startup the provider still launches without the URL-sourced proxies and logs a warning |
 | Provider restarted | Reads the proxy source fresh on startup; `proxy.state` is used as a secondary consistency check |
 
 ## Environment variables

@@ -56,6 +56,80 @@ pr_warn() {
     printf "%s: $fmt\n" "$me" "$@" >&2
 }
 
+# get_asset_digest_from_api_response extracts the sha256 hex digest for an asset.
+get_asset_digest_from_api_response() {
+    _rel="$1"
+    _ast="$2"
+    _dig=""
+    if command -v jq > /dev/null 2>&1; then
+        _dig="$(printf '%s' "$_rel" | jq -r --arg a "$_ast" '
+            (.assets[]? | select(.name == $a) | .digest)
+            | select(type == "string")
+            | sub("^sha256:"; "")
+            | select(test("^[0-9a-fA-F]{64}$"))
+        ' 2>/dev/null || true)"
+    elif command -v python3 > /dev/null 2>&1; then
+        _dig="$(printf '%s' "$_rel" | python3 -c '
+import sys, json, re
+try:
+    doc = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+val = ""
+for asset in doc.get("assets", []):
+    if asset.get("name") == sys.argv[1]:
+        val = asset.get("digest") or ""
+        break
+val = val.replace("sha256:", "")
+print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "")
+' "$_ast" 2>/dev/null || true)"
+    fi
+    printf '%s' "$_dig"
+}
+
+# release_lists_asset returns 0 when the release JSON in $1 lists an asset named
+# $2. An error body (rate limit, outage) or unparseable JSON lists nothing, so
+# the caller treats it as unavailable metadata.
+release_lists_asset() {
+    [ -n "$1" ] || return 1
+    if command -v jq > /dev/null 2>&1; then
+        printf '%s' "$1" | jq -e --arg a "$2" 'any(.assets[]?; .name == $a)' > /dev/null 2>&1
+    elif command -v python3 > /dev/null 2>&1; then
+        printf '%s' "$1" | python3 -c '
+import sys, json
+try:
+    doc = json.load(sys.stdin)
+    sys.exit(0 if any(a.get("name") == sys.argv[1] for a in doc.get("assets", [])) else 1)
+except Exception:
+    sys.exit(1)
+' "$2" > /dev/null 2>&1
+    else
+        return 1
+    fi
+}
+
+compute_sha256_file() {
+    _f="$1"
+    [ -f "$_f" ] || return 1
+    if command -v sha256 > /dev/null 2>&1; then
+        sha256 -q "$_f"
+    elif command -v openssl > /dev/null 2>&1; then
+        openssl dgst -sha256 "$_f" | awk '{print $NF}'
+    elif command -v sha256sum > /dev/null 2>&1; then
+        sha256sum "$_f" | awk '{print $1}'
+    else
+        return 1
+    fi
+}
+
+verify_sha256_file() {
+    _f="$1"
+    _exp="$2"
+    [ -n "$_exp" ] && [ -f "$_f" ] || return 1
+    _act="$(compute_sha256_file "$_f")"
+    [ -n "$_act" ] && [ "$_act" = "$_exp" ]
+}
+
 # http_fetch <url> [output-file]
 #
 # One downloader for every fetch the installer makes. FreeBSD ships fetch(1) in
@@ -504,7 +578,35 @@ do_install() {
         *)             pr_err "Unsupported architecture: %s" "$arch"; exit 1 ;;
     esac
 
-    tarball_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    provider_asset="urnetwork-provider-$tag.tar.gz"
+
+    # Fail closed. The digest comes from the release metadata, so the tarball is
+    # installed only when that metadata lists it. An unreachable or rate-limited
+    # API used to leave the digest empty and install the tarball unverified.
+    if ! command -v jq > /dev/null 2>&1 && ! command -v python3 > /dev/null 2>&1; then
+        pr_err "Neither jq nor python3 is installed, so the release digest cannot be read."
+        pr_err "Install one (for example: pkg install jq) and re-run. Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    _rel_extra=""
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        _rel_extra="$(http_fetch "$github_api/releases/tags/$tag" 2>/dev/null || true)"
+        if release_lists_asset "$_rel_extra" "$provider_asset"; then
+            release_json="$_rel_extra"
+        fi
+    fi
+    if ! release_lists_asset "$release_json" "$provider_asset"; then
+        if [ -z "$release_json" ] && [ -z "$_rel_extra" ]; then
+            pr_err "Could not fetch release metadata for %s from the GitHub API (unreachable or rate-limited)." "$tag"
+        else
+            pr_err "Release %s metadata does not list the provider asset '%s' (an API error or rate limit returns no assets)." "$tag" "$provider_asset"
+        fi
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
+    provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
+
+    tarball_url="https://github.com/full-bars/sn/releases/download/$tag/$provider_asset"
     pr_info "Downloading %s..." "$tarball_url"
 
     tmpdir="$(mktemp -d)"
@@ -512,6 +614,18 @@ do_install() {
         pr_err "Failed to download %s" "$tarball_url"
         rm -rf "$tmpdir"
         exit 1
+    fi
+
+    if [ -n "$provider_digest" ]; then
+        if ! verify_sha256_file "$tmpdir/provider.tar.gz" "$provider_digest"; then
+            actual="$(compute_sha256_file "$tmpdir/provider.tar.gz")"
+            pr_err "SHA-256 digest mismatch for provider asset '%s': expected %s, got %s" "$provider_asset" "$provider_digest" "${actual:-<unknown>}"
+            rm -rf "$tmpdir"
+            exit 1
+        fi
+        pr_info "Provider asset sha256 verified (%s)" "$provider_asset"
+    else
+        pr_warn "Release %s has no sha256 digest for '%s'; continuing without verification" "$tag" "$provider_asset"
     fi
 
     tar -xzf "$tmpdir/provider.tar.gz" -C "$tmpdir" || {
@@ -548,15 +662,32 @@ do_install() {
     staged="$install_path/bin/.urnetwork.new.$$"
     priv cp "$provider_src" "$staged" || { pr_err "Failed to stage binary"; rm -f "$staged"; rm -rf "$tmpdir"; exit 1; }
     priv chmod 755 "$staged"
-    priv mv -f "$staged" "$provider_bin" || { pr_err "Failed to install binary"; rm -f "$staged"; rm -rf "$tmpdir"; exit 1; }
 
-    # Same rename-not-follow rule as the binary above. The version file lives
-    # in a directory the service user can write to, so a symlink planted at
-    # that name would redirect root's write. Write beside it and rename over
-    # it: rename replaces the entry instead of following it.
-    ver_tmp="$install_path/.version.new.$$"
-    printf '%s\n' "$tag" | priv tee "$ver_tmp" > /dev/null && \
-        priv mv -f "$ver_tmp" "$install_path/version"
+    provider_backup="$install_path/bin/.urnetwork.bak.$$"
+    had_old_binary=0
+    if [ -f "$provider_bin" ]; then
+        had_old_binary=1
+        _live_bin="$provider_bin"
+        if ! priv ln -f "$_live_bin" "$provider_backup" 2>/dev/null; then
+            priv cp -p "$_live_bin" "$provider_backup" 2>/dev/null || \
+            priv cp "$_live_bin" "$provider_backup" 2>/dev/null || {
+                # No rollback copy means no way back, so the live binary stays.
+                pr_err "Could not back up %s; refusing to replace it without a rollback copy" "$provider_bin"
+                priv rm -f "$staged" "$provider_backup" 2>/dev/null || true
+                rm -rf "$tmpdir"; exit 1
+            }
+        fi
+    fi
+
+    priv mv -f "$staged" "$provider_bin" || {
+        pr_err "Failed to install binary"
+        rm -f "$staged"
+        if [ "$had_old_binary" -eq 1 ] && [ ! -f "$provider_bin" ] && [ -f "$provider_backup" ]; then
+            priv mv -f "$provider_backup" "$provider_bin" 2>/dev/null || true
+        fi
+        rm -rf "$tmpdir"
+        exit 1
+    }
 
     # Install the tool: the Go urnet-tools binary shipped as a release asset,
     # digest-verified; fall back to this shell script for releases that
@@ -690,13 +821,49 @@ RCSCRIPT
     # only if it was already running, so a deliberately stopped provider is not
     # resurrected by an unattended `update` from cron. Failures are fatal —
     # reporting "installed" for a service that did not start is a false green.
+    # service_was_running is recorded BEFORE the restart: a failed restart leaves
+    # the service stopped, so checking afterwards would skip the rollback restart.
+    service_ok=1
+    service_was_running=0
     if service_running; then
-        restart_service || { pr_err "Failed to restart the service after install"; exit 1; }
+        service_was_running=1
+        restart_service || { service_ok=0; pr_err "Failed to restart the service after install"; }
     elif [ "${UPDATING:-0}" != "1" ]; then
-        load_service || { pr_err "Failed to start the service"; exit 1; }
+        load_service || { service_ok=0; pr_err "Failed to start the service"; }
     else
         pr_info "Service is not running; leaving it stopped (run '%s start' when ready)" "$me"
     fi
+
+    if [ "$service_ok" -ne 1 ]; then
+        if [ "$had_old_binary" -eq 1 ] && [ -f "$provider_backup" ]; then
+            if ! priv mv -f "$provider_backup" "$provider_bin"; then
+                pr_err "Could not restore the previous binary from %s; the service is NOT running. Put that file back at %s and start the service with: %s start" "$provider_backup" "$provider_bin" "$me"
+            else
+                pr_err "Restored previous binary after service restart failure"
+                if [ "$service_was_running" -eq 1 ]; then
+                    if restart_service; then
+                        pr_warn "Service restarted on the previous binary; the update did not apply."
+                    else
+                        pr_err "The service did NOT restart on the previous binary and is stopped. Start it with: %s start" "$me"
+                    fi
+                else
+                    pr_warn "The service was not running before the install, so it was left stopped."
+                fi
+            fi
+        fi
+        rm -rf "$tmpdir"
+        exit 1
+    fi
+    [ "$had_old_binary" -eq 1 ] && priv rm -f "$provider_backup" 2>/dev/null || true
+
+    # Written only now that the service answers. Writing it before the start
+    # left the version file naming the failed release after a rollback. The
+    # version file lives in a directory the service user can write to, so a
+    # symlink planted at that name would redirect root's write. Write beside it
+    # and rename over it: rename replaces the entry instead of following it.
+    ver_tmp="$install_path/.version.new.$$"
+    printf '%s\n' "$tag" | priv tee "$ver_tmp" > /dev/null && \
+        priv mv -f "$ver_tmp" "$install_path/version"
 
     # PATH hint goes into the SERVICE user's shell rc, once. Under sudo $HOME
     # is root's, and root's PATH never contains the service user's bin dir, so

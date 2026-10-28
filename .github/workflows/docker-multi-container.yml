@@ -77,7 +77,7 @@ jobs:
                 - URNETWORK_NODE_NAME=urfix-turbo
                 - URNETWORK_PROFILE=turbo-v8
               volumes:
-                - ur_config:/root/.urnetwork
+                - ur_config_turbo:/root/.urnetwork
                 - /tmp/multi/turbo.txt:/app/proxy.txt
             urfix-auto:
               image: ghcr.io/full-bars/sn:main
@@ -93,7 +93,7 @@ jobs:
                 - URNETWORK_NODE_NAME=urfix-auto
                 - URNETWORK_PROFILE=auto
               volumes:
-                - ur_config:/root/.urnetwork
+                - ur_config_auto:/root/.urnetwork
                 - /tmp/multi/auto.txt:/app/proxy.txt
             urfix-lowmem:
               image: ghcr.io/full-bars/sn:main
@@ -109,10 +109,12 @@ jobs:
                 - URNETWORK_NODE_NAME=urfix-lowmem
                 - URNETWORK_PROFILE=lowmem
               volumes:
-                - ur_config:/root/.urnetwork
+                - ur_config_lowmem:/root/.urnetwork
                 - /tmp/multi/lowmem.txt:/app/proxy.txt
           volumes:
-            ur_config:
+            ur_config_turbo:
+            ur_config_auto:
+            ur_config_lowmem:
           EOF
           cd /tmp && docker compose -f docker-compose.yml up -d
           echo "containers started; waiting for auth..."
@@ -170,14 +172,16 @@ jobs:
         run: |
           timeout 10 /tmp/urnet-docker logs urfix-auto 3 || test $? -eq 124
 
-      - name: Teardown — full teardown of containers + shared config volume
+      - name: Teardown — full teardown of containers + per-container state volumes
         run: |
-          # Full teardown: stop (SIGTERM -> provider deregisters), remove
-          # containers, and drop the shared ur_config volume so the client
-          # JWT/state cannot persist across runs. Runs even when the job
-          # fails (if: always()).
+          # Full teardown: SIGTERM first so the providers deregister, then
+          # `down -v` so Compose removes the volumes it created. The volume
+          # names in the file are logical: Compose prefixes them with the
+          # project name (the directory holding the generated file), so naming
+          # them directly here removes nothing and leaves the JWT and state
+          # behind for the next run. Runs even when the job fails (if: always()).
           cd /tmp && docker compose -f docker-compose.yml stop 2>/dev/null || true
           docker rm -f urfix-turbo urfix-auto urfix-lowmem 2>/dev/null || true
-          docker volume rm ur_config 2>/dev/null || true
-          echo "containers stopped, shared volume wiped"
+          docker compose -f docker-compose.yml down -v --remove-orphans 2>/dev/null || true
+          echo "containers stopped, state volumes wiped"
         if: always()
