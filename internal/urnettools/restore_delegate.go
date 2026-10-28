@@ -254,7 +254,7 @@ var setKeyHelps = []string{
 	"  cleanup-interval    <duration>    dead proxy cleanup interval (default: 6h, min: 1m)",
 	"  hot-restart         on|off        preserve client JWTs across restarts",
 	"  oom-cap             on|off|shadow OOM-aware start cap: shadow logs what it would do (default), on enforces, off is the kill switch and forgets the standing cap",
-	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed). Needs a restart: the probe loop is created per identity at start",
+	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed). Applies live: one background scheduler runs the probes",
 	"  h3-datagram         on|off        offer QUIC DATAGRAM on the H3 connection and receive small frames as datagrams (default: off; re-dials H3 to apply). The miner has no toggle: DATAGRAM stays on at the pinned connect default and neither a set nor a restart changes it",
 	"  h3-datagram-send    on|off        also SEND small frames as datagrams where the server accepted the offer (default: off; applies per message). The miner has no toggle: the send lane stays on at the pinned connect default",
 	"  h3                  off|direct|N|all  which identities run H3: none, the direct identity only, the N best proxies, or all. N must be a positive integer (on == direct, 0 == off, auto == all). N caps the PROXY set only; the direct identity is always additionally eligible and does not consume one of the N, so h3=N runs N proxies plus the direct identity (default: all)",
@@ -294,7 +294,7 @@ func printSetHelp() {
 Usage: urnet-tools set <key> [<value>|off] [target]
 
 Runtime overrides are managed via the provider's control socket (~/.urnetwork/provider.sock).
-When the provider is running, changes take effect immediately without a restart; profile, ramlogs and smart-dialer need a restart.
+When the provider is running, changes take effect immediately without a restart; profile and ramlogs need a restart.
 When the provider is not running, changes are queued in pending_overrides.json and apply on next startup.
 
 Set a value:  urnet-tools set <key> <value>
