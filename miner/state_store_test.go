@@ -1,9 +1,12 @@
 package miner
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -325,5 +328,44 @@ func TestProviderStoreCountsAnUndecodableRecord(t *testing.T) {
 	}
 	if got := counts.Snapshot()[providerStoreDecodeFailedCategory]; got != 1 {
 		t.Fatalf("decode failure count = %d, want 1", got)
+	}
+}
+
+// bbolt's Check walks pages in its own goroutine, so a damaged page panics
+// outside any recover the store owns and kills the process. Opening a store with
+// one clobbered page must return an error or succeed — never crash.
+func TestProviderStoreOpenSurvivesDamagedPage(t *testing.T) {
+	path := filepath.Join(t.TempDir(), providerStoreFileName)
+	store, err := openProviderStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 40; i++ {
+		if err := store.save(providerStoreBucketState, fmt.Sprintf("k%d", i), strings.Repeat("x", 256)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := store.release(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Clobber the page id of a page past the two meta pages and the freelist.
+	f, err := os.OpenFile(path, os.O_RDWR, 0o600)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pageSize := int64(os.Getpagesize())
+	if _, err := f.WriteAt(bytes.Repeat([]byte{0xff}, 8), pageSize*3); err != nil {
+		f.Close()
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	// The assertion is simply that this call returns rather than taking the
+	// process down; either outcome is acceptable.
+	if reopened, err := openProviderStore(path); err == nil {
+		_ = reopened.release()
 	}
 }
