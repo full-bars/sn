@@ -70,7 +70,7 @@ func TestHotSwapPreflightDeclinesWhenBothProvidersWouldNotFit(t *testing.T) {
 		}
 		return 600 * mib, 850 * mib, true
 	}
-	err := hotSwapPreflight(p)
+	err := hotSwapPreflightForOS(p, "linux")
 	if !errors.Is(err, ErrHotSwapLowMemory) {
 		t.Fatalf("hotSwapPreflight = %v, want ErrHotSwapLowMemory", err)
 	}
@@ -79,14 +79,14 @@ func TestHotSwapPreflightDeclinesWhenBothProvidersWouldNotFit(t *testing.T) {
 	}
 
 	hotSwapMemoryFunc = func(int) (int64, int64, bool) { return 2000 * mib, 850 * mib, true }
-	if err := hotSwapPreflight(p); err != nil {
+	if err := hotSwapPreflightForOS(p, "linux"); err != nil {
 		t.Fatalf("with room to spare hotSwapPreflight = %v, want nil", err)
 	}
 
 	// Memory could not be read (non-Linux, /proc hidden): keep the old behavior
 	// rather than losing zero-downtime on a guess.
 	hotSwapMemoryFunc = func(int) (int64, int64, bool) { return 0, 0, false }
-	if err := hotSwapPreflight(p); err != nil {
+	if err := hotSwapPreflightForOS(p, "linux"); err != nil {
 		t.Fatalf("unreadable memory must not block a hotswap, got %v", err)
 	}
 
@@ -95,7 +95,7 @@ func TestHotSwapPreflightDeclinesWhenBothProvidersWouldNotFit(t *testing.T) {
 		t.Fatalf("memory must not be read without a PID")
 		return 0, 0, false
 	}
-	if err := hotSwapPreflight(Provider{Version: "v3.23.0-fix.32.7", Unit: "urnetwork.service"}); err != nil {
+	if err := hotSwapPreflightForOS(Provider{Version: "v3.23.0-fix.32.7", Unit: "urnetwork.service"}, "linux"); err != nil {
 		t.Fatalf("no PID: hotSwapPreflight = %v, want nil", err)
 	}
 }

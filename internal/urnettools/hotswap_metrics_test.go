@@ -3,6 +3,7 @@ package urnettools
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,6 +19,8 @@ func TestHotswapDeclineReasonMapping(t *testing.T) {
 		{"version_old", ErrHotSwapNotSupported, "version_old"},
 		{"unit_not_notify", ErrHotSwapUnitNotNotify, "unit_not_notify"},
 		{"unit_query_error", errors.New("query systemd unit type for foo.service: exit status 1"), "unit_query_error"},
+		{"windows", ErrHotSwapWindows, "windows"},
+		{"wrapped windows", fmt.Errorf("update: %w", ErrHotSwapWindows), "windows"},
 		{"windows_stub", errors.New("hotswap not yet supported on Windows"), "windows"},
 		{"trigger_pid", errors.New("provider has no valid PID"), "trigger_pid"},
 		{"trigger_find", errors.New("find process 1234: no such process"), "trigger_find"},
