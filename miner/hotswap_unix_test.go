@@ -203,7 +203,7 @@ func TestCheckExecutableRejectsADirectory(t *testing.T) {
 }
 
 func TestWaitForControlSocketReleaseReturnsWithoutAListener(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	done := make(chan struct{})
 	go func() {
@@ -232,7 +232,7 @@ func TestExecInPlaceUsesTheSuppliedImage(t *testing.T) {
 // once the parent's is gone, and the handoff trigger must move to the new
 // process.
 func TestHotSwapTakeoverCandidateAcksAndTakesOver(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	// The continuation rebinds /metrics now, so keep this test off the box's
 	// real ports: auto stubs to an ephemeral loopback listener that the
 	// cleanup below stops.
@@ -302,7 +302,7 @@ func TestHotSwapTakeoverCandidateAcksAndTakesOver(t *testing.T) {
 // the address), so the takeover continuation must rebind it. Without the
 // call this finds no listener.
 func TestHotSwapTakeoverCandidateRebindsMetrics(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	stubMetricsAuto(t)
 	// Start from no listener, so the assertion is about this takeover and a
 	// leaked listener cannot make it pass vacuously.
@@ -350,7 +350,7 @@ func TestHotSwapTakeoverCandidateRebindsMetrics(t *testing.T) {
 // unconditional. A node whose operator turned /metrics off stays dark across
 // the handoff instead of resurrecting the listener.
 func TestHotSwapTakeoverCandidateHonorsMetricsOff(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	stubMetricsAuto(t)
 	_ = stopMetrics()
 	ResetHotSwapStateForTest()

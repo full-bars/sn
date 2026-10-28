@@ -1112,7 +1112,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// Measure what this host can reach, off the critical path. The activation
 	// budget charges a pass for the posts it will really spend, so a host
 	// without IPv6 must not be charged for a second family it cannot use.
-	go watchHostCapability(ctx)
+	go superviseLoop(ctx, newLoopRef("host_capability"), func() { watchHostCapability(ctx) }, nil)
 	// Record what first cancelled the run for the SIGNAL line in events.log:
 	// whichever caller cancels first (signal handler goroutine, control-socket
 	// shutdown, quarantine, or a failed worker) leaves its stack, the same
@@ -1987,6 +1987,27 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// unprofiled run: a profile run validates and registers a fixed slot set at
 	// start, and a slot appearing at runtime would bypass that gate.
 	var reloader *minerProxyReloader
+	var retryMu sync.Mutex
+	retryAttempts := map[string]int{}
+	retryFailedProxy := func(key string) {
+		retryMu.Lock()
+		retryAttempts[key]++
+		attempt := retryAttempts[key]
+		retryMu.Unlock()
+		if attempt > 3 {
+			tlog("[proxy][retry] stopped retrying %s after three attempts\n", proxyKeyDisplay(key))
+			return
+		}
+		// Recompute desired state and eligibility before restarting anything.
+		time.AfterFunc(time.Duration(attempt)*time.Second, func() {
+			if ctx.Err() != nil || reloader == nil {
+				return
+			}
+			if _, err := reloader.reload(); err != nil {
+				tlog("[proxy][retry] reload for %s failed: %v\n", proxyKeyDisplay(key), err)
+			}
+		})
+	}
 	if workProfile == nil && contractProfile == nil {
 		// Reloaded slots continue past the configured index range, so a slot
 		// added at runtime never collides with a configured slot's label.
@@ -2045,6 +2066,24 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				return slotCancel, nil
 			},
 		)
+		reloader.spawnGeneration = func(settings *connect.ProxySettings, generation uint64) (context.CancelFunc, error) {
+			if err := reloader.reserveAddress(settings); err != nil {
+				return nil, err
+			}
+			index := reloadSlotIndex.Add(1) - 1
+			progress.admitLateSlot(providerRegistrationSlot(slotIdentities, settings))
+			slotCtx, slotCancel := context.WithCancel(ctx)
+			go func() {
+				err := provideWithProxy(slotCtx, index, settings)
+				if err != nil {
+					tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", settings.Key(), index, err)
+				}
+				if reloader.workerExited(settings.Key(), generation) && err != nil && slotCtx.Err() == nil {
+					retryFailedProxy(settings.Key())
+				}
+			}()
+			return slotCancel, nil
+		}
 		if direct != nil {
 			// The control path for the native direct slot: every reload
 			// re-reads the persisted operator toggle and starts or stops the
@@ -2123,10 +2162,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// provider for the identity running. The direct slot carries no
 		// identity and keeps the run context.
 		slotCtx := ctx
+		generation := uint64(0)
 		if proxySettings != nil && reloader != nil {
 			var slotCancel context.CancelFunc
 			slotCtx, slotCancel = context.WithCancel(ctx)
-			reloader.seed(proxySettings, slotCancel)
+			generation = reloader.seedGeneration(proxySettings, slotCancel)
 		}
 		wg.Add(1)
 		go func() {
@@ -2157,6 +2197,11 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// context, so its worker returns context.Canceled and nothing
 				// above would mark it stopped.
 				bringUp.slotStopped(uint64(index))
+				if proxySettings != nil && reloader != nil && generation != 0 {
+					if reloader.workerExited(proxySettings.Key(), generation) && result != nil && slotCtx.Err() == nil {
+						retryFailedProxy(proxySettings.Key())
+					}
+				}
 				results <- result
 			}()
 			// The warmth-derived base delay plus a jittered

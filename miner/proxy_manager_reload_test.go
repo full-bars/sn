@@ -13,7 +13,7 @@ import (
 // pid with a timestamp at or before this process's start: other-pid and
 // future self locks are left alone.
 func TestCleanStaleSelfProxyLock(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	path, err := proxyLockPath()
 	if err != nil {
 		t.Fatal(err)

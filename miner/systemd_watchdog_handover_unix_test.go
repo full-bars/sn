@@ -14,7 +14,7 @@ import (
 // observed at the wire rather than at a counter.
 func listenNotify(t *testing.T) *net.UnixConn {
 	t.Helper()
-	sock := filepath.Join(t.TempDir(), "notify.sock")
+	sock := filepath.Join(shortStateDir(t), "notify.sock")
 	listener, err := net.ListenUnixgram("unixgram", &net.UnixAddr{Name: sock, Net: "unixgram"})
 	if err != nil {
 		t.Fatal(err)

@@ -304,7 +304,7 @@ func waitFor(t *testing.T, timeout time.Duration, what string, condition func() 
 // Nothing in the miner performs that check today: the proxy is eligible for H3
 // the moment the mode admits it, whatever its UDP path does.
 func TestH3EligibilityExcludesDeadUDPRelay(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	oldState := globalControlState
 	previousStore := globalProxyUDPCheck
 	t.Cleanup(func() {
@@ -458,7 +458,7 @@ func TestCheckProxyUDPAllowsH3WhenTCPExitIsUnknown(t *testing.T) {
 // The verdict is remembered per identity, so a second ask does not dial the
 // proxy again, and the h3 gate reads it.
 func TestProxyUDPCheckStoreRemembersTheVerdict(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	previous := globalProxyUDPCheck
 	t.Cleanup(func() { globalProxyUDPCheck = previous })
 
@@ -498,7 +498,7 @@ func TestProxyUDPCheckStoreRemembersTheVerdict(t *testing.T) {
 // so its identity comes back on H1, instead of failing QUIC until some
 // unrelated setting change.
 func TestDeadUDPRelayRelaunchesAnH3IdentityOntoH1(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	oldState := globalControlState
 	previous := globalProxyUDPCheck
 	t.Cleanup(func() {
@@ -562,7 +562,7 @@ func TestDeadUDPRelayRelaunchesAnH3IdentityOntoH1(t *testing.T) {
 // A sweep only starts checks for identities the setting admits that have no
 // fresh verdict, so a reload of an unchanged pool does not probe again.
 func TestRefreshProxyUDPChecksSkipsFreshAndUnadmitted(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	previous := globalProxyUDPCheck
 	t.Cleanup(func() { globalProxyUDPCheck = previous })
 

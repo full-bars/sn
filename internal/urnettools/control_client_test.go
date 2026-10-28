@@ -100,7 +100,7 @@ func (s *mockControlServer) Close() {
 }
 
 func TestControlClient_SocketReachableRoundTrip(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	sockPath := filepath.Join(dir, "provider.sock")
 	server := startMockControlServer(t, sockPath)
 	defer server.Close()
@@ -154,7 +154,7 @@ func TestControlClient_SocketReachableRoundTrip(t *testing.T) {
 // reachable socket reports true, a missing/nonexistent one false, and an empty
 // StateDir (no resolvable home) never panics — false.
 func TestControlSocketReachable(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	sockPath := filepath.Join(dir, "provider.sock")
 	server := startMockControlServer(t, sockPath)
 	defer server.Close()
@@ -175,7 +175,7 @@ func TestControlSocketReachable(t *testing.T) {
 }
 
 func TestControlClient_SocketUnavailableQueueFallback(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	p := Provider{StateDir: dir}
 
 	queueFile := filepath.Join(dir, "pending_overrides.json")
@@ -249,7 +249,7 @@ func TestControlClient_SocketUnavailableQueueFallback(t *testing.T) {
 // previously queued override) and reporting success, it must surface the parse
 // error and leave the file untouched.
 func TestControlClient_MalformedQueueSurfacesErrorNotOverwritten(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	p := Provider{StateDir: dir}
 	queueFile := filepath.Join(dir, "pending_overrides.json")
 
@@ -273,7 +273,7 @@ func TestControlClient_MalformedQueueSurfacesErrorNotOverwritten(t *testing.T) {
 }
 
 func TestControlClient_All14KeysCanonicalizationAndValidation(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	p := Provider{StateDir: dir}
 
 	testCases := []struct {
@@ -328,7 +328,7 @@ func TestControlClient_All14KeysCanonicalizationAndValidation(t *testing.T) {
 }
 
 func TestControlClient_InvalidValuesRejected(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	p := Provider{StateDir: dir}
 
 	badCases := []struct {
@@ -414,7 +414,7 @@ func startVersionMockServer(t *testing.T, sockPath string, resp controlResponse)
 // socket exists but returns ok=false (e.g. a provider older than the version
 // command), the function returns ok=false so the caller falls back.
 func TestProviderVersionFromSocket_NonOKResponse(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	sockPath := filepath.Join(dir, "provider.sock")
 	startVersionMockServer(t, sockPath, controlResponse{OK: false, Error: "unknown cmd"})
 
@@ -429,7 +429,7 @@ func TestProviderVersionFromSocket_NonOKResponse(t *testing.T) {
 // socket responds OK but build_version is empty (a newer protocol version
 // that omits the field for some reason), the function returns ok=false.
 func TestProviderVersionFromSocket_EmptyBuildVersion(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	sockPath := filepath.Join(dir, "provider.sock")
 	startVersionMockServer(t, sockPath, controlResponse{OK: true, BuildVersion: ""})
 
@@ -444,7 +444,7 @@ func TestProviderVersionFromSocket_EmptyBuildVersion(t *testing.T) {
 // socket returns OK with a non-empty build_version, and the function
 // extracts it correctly.
 func TestProviderVersionFromSocket_ValidResponse(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	sockPath := filepath.Join(dir, "provider.sock")
 	startVersionMockServer(t, sockPath, controlResponse{OK: true, BuildVersion: "3.23.1"})
 
@@ -464,7 +464,7 @@ func TestProviderVersionFromSocket_ValidResponse(t *testing.T) {
 // start applies them (the socket path already reports effect=none). A live key
 // keeps the historical next-start wording, because a start does apply it.
 func TestControlSetQueuedReportsNoEffectKeyTruthfully(t *testing.T) {
-	dir := t.TempDir()
+	dir := shortSocketDir(t)
 	p := Provider{StateDir: dir} // no socket: the provider is stopped
 
 	for _, tc := range []struct{ cliKey, value string }{

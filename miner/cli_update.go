@@ -114,29 +114,41 @@ func minerAutoUpdate(state minerUpdateState) (bool, string) {
 	return true, ""
 }
 
-// minerReleaseVersion is a release version, YYYY.MM.DD-N.
+// minerReleaseVersion is a release version, YYYY.M.D-N. The month and day
+// are unpadded in tags (scripts/compute-sn-tag.sh uses date +%Y.%-m.%-d), so
+// the date is held as integers: as text, 2026.10.9 would sort after 2026.10.10.
 type minerReleaseVersion struct {
-	date  string
-	build uint64
+	year, month, day int
+	build            uint64
 }
 
-var minerReleaseVersionPattern = regexp.MustCompile(`^v?(\d{4}\.\d{2}\.\d{2})-(\d+)$`)
+var minerReleaseVersionPattern = regexp.MustCompile(`^v?(\d{4})\.(\d{1,2})\.(\d{1,2})-(\d+)(?:-sn)?$`)
 
 func parseMinerReleaseVersion(version string) (minerReleaseVersion, bool) {
 	match := minerReleaseVersionPattern.FindStringSubmatch(strings.TrimSpace(version))
 	if match == nil {
 		return minerReleaseVersion{}, false
 	}
-	build, err := strconv.ParseUint(match[2], 10, 64)
+	// The pattern admits only digits, and at most four of them for the date.
+	year, _ := strconv.Atoi(match[1])
+	month, _ := strconv.Atoi(match[2])
+	day, _ := strconv.Atoi(match[3])
+	build, err := strconv.ParseUint(match[4], 10, 64)
 	if err != nil {
 		return minerReleaseVersion{}, false
 	}
-	return minerReleaseVersion{date: match[1], build: build}, true
+	return minerReleaseVersion{year: year, month: month, day: day, build: build}, true
 }
 
 func (self minerReleaseVersion) newerThan(other minerReleaseVersion) bool {
-	if self.date != other.date {
-		return other.date < self.date
+	if self.year != other.year {
+		return other.year < self.year
+	}
+	if self.month != other.month {
+		return other.month < self.month
+	}
+	if self.day != other.day {
+		return other.day < self.day
 	}
 	return other.build < self.build
 }
@@ -394,7 +406,8 @@ func installMinerRelease(ctx context.Context, release *minerRelease, executable 
 	if err != nil {
 		return fmt.Errorf("the new binary doesn't run on this device: %w", err)
 	}
-	if got := strings.TrimSpace(string(versionOut)); got != release.version() {
+	got := strings.TrimSpace(string(versionOut))
+	if strings.TrimPrefix(got, "v") != strings.TrimPrefix(release.version(), "v") {
 		return fmt.Errorf("the new binary says it is %q, not %s; nothing was changed", got, release.version())
 	}
 	return replaceMinerBinary(newPath, executable)

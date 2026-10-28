@@ -298,7 +298,7 @@ func TestProvideClientJWTReusesValidUnexpiredEntry(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -350,7 +350,7 @@ func TestProvideClientJWTRenewsOnExpiredEntry(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -429,7 +429,7 @@ func TestProvideClientJWTFallsThroughOnRenewalVerdict(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -485,7 +485,7 @@ func TestProvideClientJWTMismatchMintsFresh(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -537,7 +537,7 @@ func TestProvideClientJWTRejectsCurrentJWTWithoutNetworkID(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id": testClientId,
@@ -576,7 +576,7 @@ func TestProvideClientJWTFillsMissingNetworkIDFromStore(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id": testClientId,
@@ -613,7 +613,7 @@ func TestProvideClientJWTFallsBackToStoreAnyNetworkID(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id": testClientId,
@@ -655,7 +655,7 @@ func TestProvideClientJWTSelfHealStampsNetworkID(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -707,7 +707,7 @@ func TestProvideClientJWTReusesCredentialedProxyIdentity(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -762,7 +762,7 @@ func TestProvideClientJWTKeepsIdentityOnTransientRenewalFailure(t *testing.T) {
 			setHotRestart(t, true)
 			restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 			defer restoreStore()
-			t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+			t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 			networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 				"client_id":  testClientId,
@@ -812,7 +812,7 @@ func TestProvideClientJWTMintsAndPuts(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -845,7 +845,7 @@ func TestProvideClientJWTRejectsJWTClaimThatDisagreesWithStore(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	cfg := clientJWTTestConfig(t, createFakeJWTWithClaims(map[string]interface{}{"network_id": "net-1"}), nil)
 	entryJWT := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id": "00000000-0000-0000-0000-000000000002",
@@ -884,7 +884,7 @@ func TestProvideClientJWTHotRestartDisabled(t *testing.T) {
 	setHotRestart(t, false)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -952,7 +952,7 @@ func TestProvideClientJWTHotRestartOffRequiresFreshMint(t *testing.T) {
 	setHotRestart(t, false)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -974,7 +974,7 @@ func TestProvideClientJWTRejectedMarkerBypassesReuse(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -1147,7 +1147,7 @@ func TestProvideClientJWTRejectsCustodyThatDisagreesWithStore(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -1201,7 +1201,7 @@ func TestProvideClientJWTReusesWhenCustodyAgrees(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -1254,7 +1254,7 @@ func TestProvideClientJWTWillNotReuseWhenCustodyIsUnreadable(t *testing.T) {
 	setHotRestart(t, true)
 	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,
@@ -1309,7 +1309,7 @@ func TestProvideClientJWTDoesNotReuseFailedPersistence(t *testing.T) {
 	}
 	restoreStore := withGlobalStore(t, filepath.Join(blocker, "store.json"))
 	defer restoreStore()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
 		"client_id":  testClientId,

@@ -179,6 +179,59 @@ func TestWriteProxyHealthSnapshot_WritesFilesAndState(t *testing.T) {
 	}
 }
 
+func TestProxyHealthAndManagerStateWritersShareTransaction(t *testing.T) {
+	withTempHome(t)
+	const key = "198.51.100.37:1080"
+	if err := writeProxyState(&ProxyState{Proxies: map[string]ProxyEntry{key: {ID: 7}}}); err != nil {
+		t.Fatal(err)
+	}
+	noteLiveProxyHealthUp(key)
+	healthRead := make(chan struct{})
+	allowHealthWrite := make(chan struct{})
+	proxyHealthBeforeStatePersist = func() {
+		close(healthRead)
+		<-allowHealthWrite
+	}
+	t.Cleanup(func() { proxyHealthBeforeStatePersist = nil })
+
+	healthDone := make(chan struct{})
+	go func() {
+		writeProxyHealthSnapshot(time.Now())
+		close(healthDone)
+	}()
+	<-healthRead
+
+	writerAttempted := make(chan struct{})
+	writerDone := make(chan error, 1)
+	go func() {
+		close(writerAttempted)
+		proxyStateMu.Lock()
+		defer proxyStateMu.Unlock()
+		state, err := readProxyState()
+		if err != nil {
+			writerDone <- err
+			return
+		}
+		state.Source = "/tmp/operator-proxies.txt"
+		writerDone <- writeProxyState(state)
+	}()
+	<-writerAttempted
+	close(allowHealthWrite)
+	<-healthDone
+	if err := <-writerDone; err != nil {
+		t.Fatal(err)
+	}
+
+	state, err := readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	entry := state.Proxies[key]
+	if state.Source != "/tmp/operator-proxies.txt" || entry.Health != "up" {
+		t.Fatalf("concurrent state writers lost an update: source=%q health=%q", state.Source, entry.Health)
+	}
+}
+
 // TestBuildProxyHealthReport_FillsTrafficFromLiveBandwidth pins the traffic
 // table's source: the report carries the counters the provide loop published
 // under the slot's identity key, so proxy_traffic.state names real bytes

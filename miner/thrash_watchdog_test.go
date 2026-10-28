@@ -52,7 +52,7 @@ func swapThrashTestWatch(t *testing.T, sensor *scriptedSwapThrashSensor, clock *
 	// dir>/autopilot.jsonl), so every rig gets its own state directory: a test
 	// that reaches an escalation must not append to the developer's real
 	// ~/.urnetwork.
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	path := filepath.Join(t.TempDir(), "thrash_status")
 	watch := newSwapThrashWatch(swapThrashOptions{
 		readFn:   sensor.read,
