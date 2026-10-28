@@ -2699,6 +2699,20 @@ do_install ()
         exit 1
     fi
 
+    # Resolve the tool asset's digest from this SAME metadata snapshot, before
+    # anything on disk is touched or the service is stopped. Checking it at the
+    # tool step instead put the refusal after the provider had been replaced, so
+    # a malformed tool digest left a new provider, a stopped service and the
+    # shell wrapper as the tool. An absent digest stays empty and takes the
+    # documented shell fallback; a malformed one is refused here.
+    tool_asset="urnet-tools-linux-$arch"
+    tool_digest="$(get_asset_digest_from_api_response "$release_json" "$tool_asset")"
+    if [ "$tool_digest" = "__INVALID_SHA256__" ]; then
+        pr_err "Release %s has an invalid sha256 digest for tool asset '%s'." "$tag" "$tool_asset"
+        pr_err "Refusing to install an unverified urnet-tools."
+        exit 1
+    fi
+
     pr_info "Downloading: %s" "$dl_url"
     
     if ! workdir="$(mktemp -d)"; then
@@ -2829,13 +2843,9 @@ do_install ()
         tool_dl_url="$urnet_github_dl_base/$tag/$tool_asset"
         tool_mirror_url="$tool_dl_url"
 
-        # Resolve the digest from the release API. Empty digest = the release
-        # predates tool assets (or the asset is missing) → fall back to shell.
-        tool_digest=""
-        if release_json="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null)"; then
-            tool_digest="$(get_asset_digest_from_api_response "$release_json" "$tool_asset")"
-        fi
-
+        # tool_digest was resolved and validated before any change was made.
+        # Empty digest = the release predates tool assets (or the asset is
+        # missing) → fall back to shell.
         if [ -n "$tool_digest" ]; then
             pr_info "Installing Go urnet-tools binary (%s)..." "$tool_asset"
             if download_asset "$tool_dl_url" "$workdir/$tool_asset"; then
@@ -3201,6 +3211,20 @@ do_install ()
         exit 1
     fi
 
+    # Resolve the tool asset's digest from this SAME metadata snapshot, before
+    # anything on disk is touched or the service is stopped. Checking it at the
+    # tool step instead put the refusal after the provider had been replaced, so
+    # a malformed tool digest left a new provider, a stopped service and the
+    # shell wrapper as the tool. An absent digest stays empty and takes the
+    # documented shell fallback; a malformed one is refused here.
+    tool_asset="urnet-tools-linux-$arch"
+    tool_digest="$(get_asset_digest_from_api_response "$release_json" "$tool_asset")"
+    if [ "$tool_digest" = "__INVALID_SHA256__" ]; then
+        pr_err "Release %s has an invalid sha256 digest for tool asset '%s'." "$tag" "$tool_asset"
+        pr_err "Refusing to install an unverified urnet-tools."
+        exit 1
+    fi
+
     pr_info "Downloading: %s" "$dl_url"
     
     if ! workdir="$(mktemp -d)"; then
@@ -3331,13 +3355,9 @@ do_install ()
         tool_dl_url="$urnet_dl_base/releases/download/$tag/$tool_asset"
         tool_mirror_url="$urnet_github_dl_base/$tag/$tool_asset"
 
-        # Resolve the digest from the release API. Empty digest = the release
-        # predates tool assets (or the asset is missing) → fall back to shell.
-        tool_digest=""
-        if release_json="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null)"; then
-            tool_digest="$(get_asset_digest_from_api_response "$release_json" "$tool_asset")"
-        fi
-
+        # tool_digest was resolved and validated before any change was made.
+        # Empty digest = the release predates tool assets (or the asset is
+        # missing) → fall back to shell.
         if [ -n "$tool_digest" ]; then
             pr_info "Installing Go urnet-tools binary (%s)..." "$tool_asset"
             if download_asset "$tool_dl_url" "$workdir/$tool_asset"; then
