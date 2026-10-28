@@ -666,7 +666,7 @@ func TestTheOfficialInstallerKeepsItsUpdates(t *testing.T) {
 		t.Fatal("installed a second service beside the installer's")
 	}
 	// a test install with its own state folder is a separate miner
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	if installerService(newSystemdService(false)) != nil {
 		t.Fatal("the installer's unit claimed a separate state folder")
 	}

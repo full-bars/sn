@@ -116,7 +116,7 @@ func TestHandoffBatonSendTakeoverRejectsANonAckMessage(t *testing.T) {
 	// The baton releases the process-wide store before it sends TAKEOVER and
 	// an aborted handoff reopens it, so the test keeps its own state
 	// directory instead of the host's.
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	closeProviderStore()
 	t.Cleanup(closeProviderStore)
 
@@ -204,7 +204,7 @@ func TestHandoffBatonRestoresTheStateStoreWhenTakeoverFails(t *testing.T) {
 }
 
 func TestHandoffBatonRestoresControlSocketOnAbort(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	state := newControlState()
 	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: state}
 	if err := owner.start(); err != nil {
@@ -229,7 +229,7 @@ func TestHandoffBatonRestoresControlSocketOnAbort(t *testing.T) {
 }
 
 func TestHandoffKeepsSocketOnSuccess(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
 	if err := owner.start(); err != nil {
 		t.Fatal(err)
@@ -261,7 +261,7 @@ func TestHandoffKeepsSocketOnSuccess(t *testing.T) {
 }
 
 func TestRetiredSocketOwnerCannotRestart(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
 	if err := owner.start(); err != nil {
 		t.Fatal(err)
@@ -282,7 +282,7 @@ func TestRetiredSocketOwnerCannotRestart(t *testing.T) {
 }
 
 func TestHotswapRestartWaitsForQuiesceCleanup(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	entered, release := make(chan struct{}), make(chan struct{})
 	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
 	owner.closer = func() { close(entered); <-release }
@@ -305,7 +305,7 @@ func TestHotswapRestartWaitsForQuiesceCleanup(t *testing.T) {
 }
 
 func TestHotswapQuiesceUnregistersBeforeRestart(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
 	coordinatorClosersMu.Lock()
 	before := len(coordinatorClosersMap)
@@ -519,7 +519,7 @@ func TestHotSwapControlSocketOwnerFinishIsIdempotentWithoutASocket(t *testing.T)
 // was already yielded, the socket quiesced and metrics persistence stopped, so
 // the parent looked alive and served nothing, and nothing ended it.
 func TestHotSwapHandoffPanicEndsTheProcess(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 	origExit := exitFunc
 	origHandoff := runHotSwapParentHandoffFunc

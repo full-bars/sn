@@ -343,7 +343,7 @@ func TestQueuedBaselineOverridesApplyBeforeTheManagerStarts(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+			t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 
 			if tc.persisted != "" {
 				state := newControlState()

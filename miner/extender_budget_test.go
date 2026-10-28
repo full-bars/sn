@@ -38,7 +38,7 @@ const (
 // handle, and closes the handle afterwards so the next test starts clean.
 func testExtenderState(t *testing.T) {
 	t.Helper()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	closeProviderStore()
 	t.Cleanup(closeProviderStore)
 }

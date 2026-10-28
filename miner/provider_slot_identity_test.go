@@ -50,7 +50,7 @@ func mixedProviderSettings() (all, unique []*connect.ProxySettings) {
 // address-only name byte-identical, and startup validation accepts the list
 // the address-only rule used to refuse.
 func TestProviderSlotIdentitySharedAddressesStayDistinct(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	providers, unique := mixedProviderSettings()
 	if len(providers) != 500 {
 		t.Fatalf("built %d proxies, want 500", len(providers))
@@ -98,7 +98,7 @@ func TestProviderSlotIdentitySharedAddressesStayDistinct(t *testing.T) {
 }
 
 func TestProviderSlotIdentitySharedAddressMixedForms(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	withoutUser := slotIdentitySettings("10.5.0.1:1080", "")
 	withUser := slotIdentitySettings("10.5.0.1:1080", "acct-a")
 	otherAddress := slotIdentitySettings("10.5.0.2:1080", "")

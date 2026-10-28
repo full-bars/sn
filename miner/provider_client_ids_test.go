@@ -51,7 +51,7 @@ func setTestProviderClientIDs(t *testing.T, tracker *providerBringUpTracker) {
 // A scrape before the run starts must publish the series at zero: a panel that
 // has never seen the family cannot tell "no run yet" from a missing scrape.
 func TestProviderClientIDGaugesZeroBeforeRun(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	resetControlRuntimeForTest()
 	t.Cleanup(resetControlRuntimeForTest)
 	setTestProviderClientIDs(t, nil)
@@ -72,7 +72,7 @@ func TestProviderClientIDGaugesZeroBeforeRun(t *testing.T) {
 // The gauges follow the running set: a slot that authenticates joins one of
 // them, and a slot that leaves running drops out of both.
 func TestProviderClientIDGaugesFollowRunningSlots(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	tracker := newProviderBringUpTracker(3)
 	setTestProviderClientIDs(t, tracker)
 
@@ -91,7 +91,7 @@ func TestProviderClientIDGaugesFollowRunningSlots(t *testing.T) {
 // The status payload carries both numbers beside the pool counts, and the JSON
 // `urnet-tools status` reads is what carries them.
 func TestProviderClientIDStatusFieldsCarryCounts(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	resetControlRuntimeForTest()
 	t.Cleanup(resetControlRuntimeForTest)
 	tracker := newProviderBringUpTracker(2)
@@ -123,7 +123,7 @@ func TestProviderClientIDStatusFieldsCarryCounts(t *testing.T) {
 // A slot that never resolved its identity is in neither count, whether it
 // failed its sign-in or was still pending when the scrape ran.
 func TestProviderClientIDCountsSkipUnresolvedSlots(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	tracker := newProviderBringUpTracker(4)
 	setTestProviderClientIDs(t, tracker)
 
@@ -146,7 +146,7 @@ func TestProviderClientIDCountsSkipUnresolvedSlots(t *testing.T) {
 // The heartbeat's client-id pair and the gauges describe the same slots: a slot
 // that authenticated and then failed is in neither, not in the heartbeat alone.
 func TestProviderBringUpHeartbeatReportsRunningIDsOnly(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	resetControlRuntimeForTest()
 	t.Cleanup(resetControlRuntimeForTest)
 	buffer := captureProviderBringUpLog(t)
@@ -169,7 +169,7 @@ func TestProviderBringUpHeartbeatReportsRunningIDsOnly(t *testing.T) {
 // reloader removes is cancelled rather than failed, so its worker returns
 // context.Canceled and nothing on the failure path would mark it.
 func TestProviderBringUpSlotStoppedLeavesTheRunningTally(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	resetControlRuntimeForTest()
 	t.Cleanup(resetControlRuntimeForTest)
 	tracker := newProviderBringUpTracker(2)

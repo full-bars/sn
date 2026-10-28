@@ -28,7 +28,7 @@ func TestOperatorChildArgsForwardNoLegacyImport(t *testing.T) {
 }
 
 func TestOperatorSupervisorSettingsReadNoLegacyImport(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	for _, enabled := range []bool{false, true} {
 		opts := docopt.Opts{"--port": "0", "--no-legacy-import": enabled}
 		settings, _, err := newOperatorSupervisorSettings(opts)

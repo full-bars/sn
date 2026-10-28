@@ -85,7 +85,7 @@ func TestConfigCmd_TableOutput(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Unix domain sockets not supported on Windows CI")
 	}
-	home := t.TempDir()
+	home := shortSocketDir(t)
 	t.Setenv("HOME", home)
 	// config resolves its target through discovery, like status; point
 	// discovery at this test's state dir instead of real providers.
@@ -167,7 +167,7 @@ func TestConfigCmd_JSONOutput(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Unix domain sockets not supported on Windows CI")
 	}
-	home := t.TempDir()
+	home := shortSocketDir(t)
 	t.Setenv("HOME", home)
 	// config resolves its target through discovery, like status; point
 	// discovery at this test's state dir instead of real providers.
@@ -222,7 +222,7 @@ func TestConfigCmd_SocketUnavailable(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Unix domain sockets not supported on Windows CI")
 	}
-	home := t.TempDir()
+	home := shortSocketDir(t)
 	t.Setenv("HOME", home)
 	// config resolves its target through discovery, like status; point
 	// discovery at this test's state dir instead of real providers.
@@ -239,7 +239,7 @@ func TestConfigCmd_ProviderReturnedError(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Unix domain sockets not supported on Windows CI")
 	}
-	home := t.TempDir()
+	home := shortSocketDir(t)
 	t.Setenv("HOME", home)
 	// config resolves its target through discovery, like status; point
 	// discovery at this test's state dir instead of real providers.
@@ -266,7 +266,7 @@ func TestDialControlSocket(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Unix domain sockets not supported on Windows CI")
 	}
-	home := t.TempDir()
+	home := shortSocketDir(t)
 	t.Setenv("HOME", home)
 	// config resolves its target through discovery, like status; point
 	// discovery at this test's state dir instead of real providers.

@@ -148,7 +148,7 @@ func TestResolveH3Mode(t *testing.T) {
 // A change of setting reports a relaunch of the direct identity when its own
 // policy changed; the startup replay does not.
 func TestApplyH3ModeRelaunchesOnlyOnAChange(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	t.Setenv("URNETWORK_H3", "")
 	h3AppliedSetting.Store(nil)
 	t.Cleanup(func() {
@@ -184,7 +184,7 @@ func TestApplyH3ModeRelaunchesOnlyOnAChange(t *testing.T) {
 // the reference one, a set applies at once, and a clear hands the decision
 // back to the startup default.
 func TestH3ControlKeyDrivesTheLiveMode(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	t.Setenv("URNETWORK_H3", "")
 	h3AppliedSetting.Store(nil)
 	t.Cleanup(func() { h3AppliedSetting.Store(nil) })
@@ -238,7 +238,7 @@ func TestH3ControlKeyDrivesTheLiveMode(t *testing.T) {
 // default instead of pretending to toggle it. Neither a set nor a restart
 // changes a lane, so the keys are classified as no-effect.
 func TestDatagramKeysReportTheUpstreamDefault(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	for _, key := range []string{"h3_datagram", "h3_datagram_send"} {
 		if got := controlKeyEffect(key); got != controlEffectNone {
 			t.Fatalf("%s effect = %q, want %q: the pinned connect has no datagram toggle", key, got, controlEffectNone)

@@ -69,7 +69,10 @@ type providerRegistrationFixture struct {
 // independent of the runner's umask.
 func providerRegistrationPrivateDir(t *testing.T) string {
 	t.Helper()
-	dir := t.TempDir()
+	// shortStateDir, not t.TempDir: these fixtures bind a control socket under
+	// the state dir, and t.TempDir embeds the full test name in the path, which
+	// overruns the 108-byte sockaddr_un limit under a long TMPDIR.
+	dir := shortStateDir(t)
 	if err := os.Chmod(dir, 0700); err != nil {
 		t.Fatal(err)
 	}

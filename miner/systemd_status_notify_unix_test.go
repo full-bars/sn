@@ -15,7 +15,7 @@ import (
 
 func notifyListener(t *testing.T) *net.UnixConn {
 	t.Helper()
-	sockPath := filepath.Join(t.TempDir(), "notify.sock")
+	sockPath := filepath.Join(shortStateDir(t), "notify.sock")
 	listener, err := net.ListenUnixgram("unixgram", &net.UnixAddr{Name: sockPath, Net: "unixgram"})
 	if err != nil {
 		t.Fatalf("listen unixgram: %v", err)

@@ -301,7 +301,7 @@ func TestDirectToggleAppliesWhenTheProxyReadFails(t *testing.T) {
 // and the reload path reads that same file. applyDirectToggle is the join, so a
 // persisted off must stop the live slot and a persisted on must start it again.
 func TestDirectToggleFollowsThePersistedFile(t *testing.T) {
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	t.Setenv("DISABLE_DIRECT_IP", "")
 
 	fake := newDirectSlotFake()

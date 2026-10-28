@@ -126,14 +126,34 @@ func startAuditSocket(t *testing.T, sockPath string, replyHandler func(req contr
 	}()
 }
 
+// shortSocketDir returns a temp dir short enough to bind a socket under.
+//
+// The base is shortened as well as the name: os.MkdirTemp("", ...) roots the
+// directory at os.TempDir(), so a short name alone still overflows the
+// sockaddr_un limit when TMPDIR is long, which shows up as a bare
+// "bind: invalid argument" that reads like a logic bug.
 func shortSocketDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "ug")
+	dir, err := os.MkdirTemp(shortTempBase(), "ug")
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { os.RemoveAll(dir) })
 	return dir
+}
+
+// The socket limit counts the whole path, so the base has to be short even
+// with a two-character directory name.
+const (
+	maxShortTempBase      = 40
+	fallbackShortTempBase = "/tmp"
+)
+
+func shortTempBase() string {
+	if base := os.TempDir(); len(base) <= maxShortTempBase {
+		return base
+	}
+	return fallbackShortTempBase
 }
 
 func TestCmdProxyAuditStatus_PrintsAuditLines(t *testing.T) {

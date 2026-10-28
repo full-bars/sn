@@ -93,7 +93,7 @@ func providerDiagnosticStdoutChild(t *testing.T) {
 		}
 		_, _ = finished.Write([]byte{value})
 	}()
-	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	t.Setenv("WARP_VERSION", "1.2.3")
 	t.Setenv("WARP_HOST", "synthetic-provider.example")
 	flags := providerDiagnosticFileFlags(t, os.Stdout)
