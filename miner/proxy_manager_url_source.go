@@ -760,6 +760,13 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		seen[c.address] = true
 		addr := c.address
 		if entry, exists := state.Cache[addr]; exists {
+			// The verdict belongs to the credentials that were probed. A
+			// rotation that failed (or was never merged) leaves the old
+			// credentials in service, and a grade earned by the candidate
+			// must not be written onto them.
+			if _, user, password, _ := parseProxyURLLine(c.line); entry.User != user || entry.Password != password {
+				continue
+			}
 			entry.LastProbe = time.Now()
 			// Persist the stage-1 grade alongside ProbeOK so the
 			// auth-time gate and fleet grading can consume it.
