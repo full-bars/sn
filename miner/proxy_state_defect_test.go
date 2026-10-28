@@ -1,11 +1,14 @@
 package miner
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
 	"golang.org/x/net/proxy"
 )
@@ -204,5 +207,69 @@ func TestProxyReloadFileMalformedOrEmptyLeavesLiveSetUnchanged(t *testing.T) {
 	}
 	if len(spawned) != 2 {
 		t.Fatalf("spawned count = %d, want 2", len(spawned))
+	}
+}
+
+// F4: a source line containing user:pass@host:port must appear in no error,
+// log line or captured bundle in unredacted form.
+func TestProxyCredentialsRedactedInLogsAndCapture(t *testing.T) {
+	const user = "leakeduser42"
+	const pass = "leakedpass99"
+	rawLine := "http://" + user + ":" + pass + "@198.51.100.77:8080"
+
+	// 1. URL line parser log: unsupported scheme must redact user and password.
+	var logBuf bytes.Buffer
+	prevLogWriter := proxyManagerLogWriter
+	proxyManagerLogWriter = &logBuf
+	t.Cleanup(func() { proxyManagerLogWriter = prevLogWriter })
+
+	parseProxyURLLine(rawLine)
+	logged := logBuf.String()
+	if strings.Contains(logged, user) || strings.Contains(logged, pass) {
+		t.Fatalf("parseProxyURLLine logged raw credentials: %q", logged)
+	}
+	if !strings.Contains(logged, "http://198.51.100.77:8080") || !strings.Contains(logged, "user=present") || !strings.Contains(logged, "password=present") {
+		t.Fatalf("parseProxyURLLine log %q missing redacted scheme/host/port/presence info", logged)
+	}
+
+	// 2. Incident capture redaction: user:pass@host:port without scheme must be redacted.
+	bareForm := "connection to " + user + ":" + pass + "@198.51.100.77:8080 refused"
+	redacted := incidentRedact(bareForm)
+	if strings.Contains(redacted, user) || strings.Contains(redacted, pass) {
+		t.Fatalf("incidentRedact left raw credentials in: %q", redacted)
+	}
+	if !strings.Contains(redacted, "<redacted>@198.51.100.77:8080") {
+		t.Fatalf("incidentRedact expected <redacted>@host:port, got %q", redacted)
+	}
+
+	// 3. File add: duplicate entry message must not print raw credentials.
+	stateDir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+	srcFile := filepath.Join(stateDir, "proxies.txt")
+	existingLine := "198.51.100.77:8080:" + user + ":" + pass
+	if err := os.WriteFile(srcFile, []byte(existingLine+"\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Capture stdout
+	oldStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stdout = w
+
+	proxyAddFileBacked(srcFile, docopt.Opts{
+		"<key_address>": []string{existingLine},
+	})
+
+	w.Close()
+	os.Stdout = oldStdout
+
+	var outBuf bytes.Buffer
+	outBuf.ReadFrom(r)
+	outStr := outBuf.String()
+	if strings.Contains(outStr, user) || strings.Contains(outStr, pass) {
+		t.Fatalf("proxyAddFileBacked output leaked credentials: %q", outStr)
 	}
 }

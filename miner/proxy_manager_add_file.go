@@ -68,7 +68,7 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 			continue
 		}
 		if existing[trimmed] {
-			fmt.Printf("server %s already present in %s\n", trimmed, sourcePath)
+			fmt.Printf("server %s already present in %s\n", redactProxySource(trimmed), sourcePath)
 			continue
 		}
 		existing[trimmed] = true

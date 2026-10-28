@@ -419,6 +419,9 @@ func TestIncidentRedact(t *testing.T) {
 		{"jwt in text", "auth ok token=" + jwt + " for slot 0", []string{jwt}, "slot 0"},
 		{"bearer header", "Authorization: " + "Bea" + "rer" + " " + jwt, []string{jwt}, "Authorization:"},
 		{"url userinfo", "dial http://bob:s3cret@proxy.example:8080 failed", []string{"bob:s3cret@"}, "proxy.example:8080"},
+		{"bare userinfo with port", "dial bob:s3cret@proxy.example:8080 failed", []string{"bob:s3cret@"}, "<redacted>@proxy.example:8080"},
+		{"bare userinfo host only", "connecting to alice:password@proxy.internal refused", []string{"alice:password@"}, "<redacted>@proxy.internal"},
+		{"bare userinfo bracketed ipv6", "probe bob:secret@[2001:db8::1]:1080 ok", []string{"bob:secret@"}, "<redacted>@[2001:db8::1]:1080"},
 		{"proxy list line", "10.0.0.1:8080:alice:wonderland", []string{"wonderland"}, "10.0.0.1:8080"},
 		// The same credentials after a suffix, in a JSON value, and in a
 		// comma-separated env list: the old end-of-line anchor missed all
