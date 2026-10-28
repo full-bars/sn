@@ -104,6 +104,31 @@ func removeTimerFile(p Provider, timer string, userScope bool) error {
 	return nil
 }
 
+// timerUnitContents renders a new timer or updates the calendar and fleet jitter
+// of an existing timer. RandomizedDelaySec caps the added delay after a scheduled
+// firing at six hours, keeping the weekly cadence predictable for operators.
+func timerUnitContents(timer, calendar string, existing []byte) ([]byte, error) {
+	if existing == nil {
+		content := fmt.Sprintf("[Unit]\nDescription=Run URnetwork Update\n\n[Timer]\nOnCalendar=%s\nRandomizedDelaySec=6h\nPersistent=true\nUnit=%s.service\n\n[Install]\nWantedBy=default.target\n", calendar, strings.TrimSuffix(timer, "-update.timer"))
+		return []byte(content), nil
+	}
+	lines := strings.Split(string(existing), "\n")
+	var out []string
+	replaced := false
+	for _, line := range lines {
+		if strings.HasPrefix(line, "OnCalendar=") {
+			out = append(out, "OnCalendar="+calendar, "RandomizedDelaySec=6h")
+			replaced = true
+		} else if !strings.HasPrefix(line, "RandomizedDelaySec=") {
+			out = append(out, line)
+		}
+	}
+	if !replaced {
+		return nil, fmt.Errorf("no OnCalendar line found in %s", timer)
+	}
+	return []byte(strings.Join(out, "\n")), nil
+}
+
 // writeTimerCalendar rewrites a timer unit's OnCalendar line and reloads. If
 // the timer file does not exist yet (fresh install — the Go tool, unlike the
 // shell installer, may be the first thing to set auto-update), it is CREATED
@@ -123,33 +148,22 @@ func writeTimerCalendar(timer string, p Provider, calendar string, userScope boo
 	}
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		// Create the timer from scratch, mirroring the installer's
-		// template. Write to a temp file and rename so a crash mid-write
-		// never leaves a half-written unit (the shared progress.md
-		// atomicity rule applied to unit files too).
-		tmpl := fmt.Sprintf("[Unit]\nDescription=Run URnetwork Update\n\n[Timer]\nOnCalendar=%s\nPersistent=true\nUnit=%s.service\n\n[Install]\nWantedBy=default.target\n", calendar, strings.TrimSuffix(timer, "-update.timer"))
-		if err := writeTimerUnitAtomic(path, tmpl); err != nil {
+		content, err := timerUnitContents(timer, calendar, nil)
+		if err != nil {
+			return err
+		}
+		if err := writeTimerUnitAtomic(path, string(content)); err != nil {
 			return fmt.Errorf("create timer %s: %w", timer, err)
 		}
 		return enableTimer(p, timer)
 	} else if err != nil {
 		return fmt.Errorf("read timer %s: %w", timer, err)
 	}
-	lines := strings.Split(string(data), "\n")
-	var out []string
-	replaced := false
-	for _, line := range lines {
-		if strings.HasPrefix(line, "OnCalendar=") {
-			out = append(out, "OnCalendar="+calendar)
-			replaced = true
-		} else {
-			out = append(out, line)
-		}
+	content, err := timerUnitContents(timer, calendar, data)
+	if err != nil {
+		return err
 	}
-	if !replaced {
-		return fmt.Errorf("no OnCalendar line found in %s", path)
-	}
-	if err := writeTimerUnitAtomic(path, strings.Join(out, "\n")); err != nil {
+	if err := writeTimerUnitAtomic(path, string(content)); err != nil {
 		return err
 	}
 	return enableTimer(p, timer)
