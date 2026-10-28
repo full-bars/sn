@@ -43,7 +43,7 @@ curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 macOS:
 
 ```sh
-curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Mac.sh | sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Mac.sh | sh -s -- install
 ```
 
 Windows (PowerShell):

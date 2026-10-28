@@ -1,7 +1,9 @@
 package urnettools
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"strings"
 )
 
@@ -12,6 +14,32 @@ import (
 // bsdCronMarker tags every line this tool writes so a schedule change can
 // remove its own lines without touching anything else in the crontab.
 const bsdCronMarker = "# urnet-tools auto-update"
+
+// randomBSDCronMinute chooses the minute stored in the weekly crontab entry.
+// Once written, that minute stays fixed across weekly runs.
+func randomBSDCronMinute() (int, error) {
+	minute, err := rand.Int(rand.Reader, big.NewInt(60))
+	if err != nil {
+		return 0, fmt.Errorf("choose randomized cron minute: %w", err)
+	}
+	return int(minute.Int64()), nil
+}
+
+func bsdCronSchedule(interval string, weeklyMinute int) (string, error) {
+	switch interval {
+	case "daily":
+		return "17 3 * * *", nil
+	case "weekly":
+		if weeklyMinute < 0 || weeklyMinute > 59 {
+			return "", fmt.Errorf("invalid weekly cron minute %d", weeklyMinute)
+		}
+		return fmt.Sprintf("%d 3 * * 0", weeklyMinute), nil
+	case "monthly":
+		return "17 3 1 * *", nil
+	default:
+		return "", fmt.Errorf("invalid interval %q", interval)
+	}
+}
 
 // matchBSDCronLine reports whether a crontab line is the auto-update entry for
 // this specific service.
