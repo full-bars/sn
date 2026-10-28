@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -683,7 +684,11 @@ func printProxyStatus(p Provider) {
 	// URL sources from proxy_url.json (sources list).
 	urlSrc := readProxyURLSources(p.StateDir)
 	if len(urlSrc) > 0 {
-		fmt.Printf("  %-*s %s\n", keyW+1, "URL sources:", strings.Join(urlSrc, ", "))
+		safe := make([]string, len(urlSrc))
+		for i, src := range urlSrc {
+			safe[i] = sanitizeSourceForDisplay(src)
+		}
+		fmt.Printf("  %-*s %s\n", keyW+1, "URL sources:", strings.Join(safe, ", "))
 	} else {
 		fmt.Printf("  %-*s none\n", keyW+1, "URL sources:")
 	}
@@ -749,6 +754,38 @@ var statusUpRe = regexp.MustCompile(`\b(?:up|ok|healthy)\b`)
 // "upstream" or "oklahoma" are not treated as up/ok).
 func statusLineUp(low string) bool {
 	return statusUpRe.MatchString(low)
+}
+
+// sanitizeSourceForDisplay strips credential material and the query string from
+// a configured proxy source before the status page prints it. A source URL can
+// carry userinfo or an API token as a query parameter, and the status page is
+// read over a shoulder as often as it is logged.
+func sanitizeSourceForDisplay(raw string) string {
+	// A real URL keeps its scheme and host and loses everything else. The path
+	// counts: a proxy-list source such as https://api.example.com/lists/TOKEN
+	// carries its token there, so keeping the path leaks exactly what this
+	// function exists to hide.
+	if u, err := url.Parse(raw); err == nil && u.Scheme != "" && u.Host != "" && !strings.Contains(u.Opaque, "@") {
+		return u.Scheme + "://" + u.Host
+	}
+	// Not a URL, or an opaque form like "user:pass@proxy:1080" that url.Parse
+	// reads as scheme "user" with the userinfo buried in Opaque. Strip the
+	// query and fragment FIRST: in "user:pass@proxy:1080?key=a@TOKEN" the last
+	// '@' is inside the query, so finding it first would hand back the token.
+	out := raw
+	if q := strings.IndexAny(out, "?#"); q >= 0 {
+		out = out[:q]
+	}
+	if at := strings.LastIndex(out, "@"); at >= 0 {
+		out = out[at+1:]
+	}
+	out = strings.TrimSpace(out)
+	// What is left must look like host[:port]; anything else is ambiguous and
+	// is withheld rather than guessed at.
+	if out == "" || strings.ContainsAny(out, "@ /") {
+		return "<unparsed source>"
+	}
+	return out
 }
 
 func readProxyURLSources(stateDir string) []string {

@@ -421,7 +421,7 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 					return err
 				}
 				if dryRun {
-					fmt.Printf("[dry-run] would add-source %s on %s\n", target, providerLabel(p))
+					fmt.Printf("[dry-run] would add-source %s on %s\n", sanitizeSourceForDisplay(target), providerLabel(p))
 					continue
 				}
 				if err := providerSubcommand(p, "proxy", "add-source", target); err != nil {
@@ -525,7 +525,7 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 			// remove-source is destructive; honor --dry-run here (it returns
 			// before the shared gate below). add-source is additive but print
 			// the plan uniformly.
-			fmt.Printf("[dry-run] would %s %s on %s\n", sub, positionals[0], providerLabel(p))
+			fmt.Printf("[dry-run] would %s %s on %s\n", sub, sanitizeSourceForDisplay(positionals[0]), providerLabel(p))
 			return nil
 		}
 		return providerSubcommand(p, append([]string{"proxy", sub}, positionals...)...)
