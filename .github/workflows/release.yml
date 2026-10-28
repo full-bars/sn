@@ -664,6 +664,37 @@ jobs:
           name: urnet-docker-windows-arm64
           path: release_tmp/windows/arm64/
 
+      - name: Download miner artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: miner-*
+          path: miner_tmp/
+      - name: Stage miner binaries for scanning
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          # The miner tarballs ship these binaries, so they must be scanned like
+          # every other published artifact; stage them beside the provider so the
+          # verdict covers what operators actually install.
+          staged=0
+          for d in miner_tmp/miner-*/; do
+            d=${d%/}
+            plat=${d#miner_tmp/miner-}
+            os=${plat%%-*}
+            arch=${plat#*-}
+            src="$d/miner"
+            [ -f "$src" ] || src="$d/miner.exe"
+            [ -f "$src" ] || continue
+            mkdir -p "release_tmp/${os}/${arch}"
+            cp "$src" "release_tmp/${os}/${arch}/miner"
+            staged=$((staged + 1))
+          done
+          if [ "$staged" -eq 0 ]; then
+            echo "::error::no miner binaries staged for scanning"
+            exit 1
+          fi
+          echo "staged $staged miner binaries"
+
       - name: VirusTotal scan of release binaries
         env:
           VT_API_KEY: ${{ secrets.VIRUS_TOTAL }}
@@ -709,7 +740,15 @@ jobs:
             release_tmp/freebsd/amd64/provider \
             release_tmp/freebsd/arm64/provider \
             release_tmp/freebsd/amd64/urnet-tools \
-            release_tmp/freebsd/arm64/urnet-tools
+            release_tmp/freebsd/arm64/urnet-tools \
+            release_tmp/linux/amd64/miner \
+            release_tmp/linux/arm64/miner \
+            release_tmp/darwin/amd64/miner \
+            release_tmp/darwin/arm64/miner \
+            release_tmp/windows/amd64/miner \
+            release_tmp/windows/arm64/miner \
+            release_tmp/freebsd/amd64/miner \
+            release_tmp/freebsd/arm64/miner
           # Non-blocking: a FAIL here does NOT cancel the release. It exits
           # non-zero so the job is red, and the comment step below still runs
           # (if: always()) to surface the verdict on the release.
