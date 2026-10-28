@@ -2445,3 +2445,109 @@ func TestWin32InstallerFailsClosedOnBinarySwap(t *testing.T) {
 		}
 	}
 }
+
+// The Linux digest parser must tell an ABSENT digest from a MALFORMED one. It
+// used to strip "sha256:" and echo whatever was left, so a short or foreign
+// digest surfaced as a sha256 mismatch deep in the install, and a JSON `false`
+// collapsed to "" under both jq and python and read as "no digest", which
+// installs unverified. These cases run the real expressions out of the shipped
+// installer, as the FreeBSD table does.
+func TestLinuxDigestParserRejectsMalformed(t *testing.T) {
+	skipWithoutPOSIXShell(t)
+	b, err := os.ReadFile("../../scripts/Provider_Install_Linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	block := extractShellFunc(t, strings.ReplaceAll(string(b), "\r\n", "\n"), "get_asset_digest_from_api_response")
+	if block == "" {
+		t.Fatal("could not extract get_asset_digest_from_api_response from the Linux installer")
+	}
+
+	const hex64 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	const asset = "urnet-tools-linux-amd64"
+	withDigest := func(d string) string {
+		return `{"assets":[{"name":"` + asset + `","digest":` + d + `}]}`
+	}
+	cases := []struct {
+		name string
+		json string
+		want string
+	}{
+		{"digest field absent", `{"assets":[{"name":"` + asset + `"}]}`, ""},
+		{"digest explicitly null", withDigest(`null`), ""},
+		{"digest empty string", withDigest(`""`), ""},
+		{"asset not listed", `{"assets":[{"name":"other","digest":"sha256:` + hex64 + `"}]}`, ""},
+		{"short hex", withDigest(`"deadbeef"`), "__INVALID_SHA256__"},
+		{"different algorithm", withDigest(`"sha512:` + hex64 + `"`), "__INVALID_SHA256__"},
+		{"json false", withDigest(`false`), "__INVALID_SHA256__"},
+		{"non-string number", withDigest(`123`), "__INVALID_SHA256__"},
+		{"real sha256", withDigest(`"sha256:` + hex64 + `"`), hex64},
+		{"bare hex", withDigest(`"` + hex64 + `"`), hex64},
+	}
+
+	_, jqErr := exec.LookPath("jq")
+	_, pyErr := exec.LookPath("python3")
+	if jqErr != nil && pyErr != nil {
+		t.Skip("neither jq nor python3 on this host; cannot execute the digest expressions")
+	}
+
+	// A missing marker FAILS rather than skips, so a reformatted expression
+	// cannot make every subtest vanish while the test reports success.
+	cut := func(open, close string) (string, bool) {
+		i := strings.Index(block, open)
+		if i < 0 {
+			return "", false
+		}
+		rest := block[i+len(open):]
+		j := strings.Index(rest, close)
+		if j < 0 {
+			return "", false
+		}
+		return rest[:j], true
+	}
+
+	if jqErr == nil {
+		expr, ok := cut("jq -r --arg a \"$asset\" '", "' 2>/dev/null")
+		if !ok {
+			t.Error("could not find the jq digest expression in the Linux installer; the marker moved")
+		}
+		for _, c := range cases {
+			if !ok {
+				break
+			}
+			t.Run("jq/"+c.name, func(t *testing.T) {
+				cmd := exec.Command("jq", "-r", "--arg", "a", asset, expr)
+				cmd.Stdin = strings.NewReader(c.json)
+				out, err := cmd.Output()
+				if err != nil {
+					t.Fatalf("jq failed: %v", err)
+				}
+				if got := strings.TrimSpace(string(out)); got != c.want {
+					t.Errorf("got %q, want %q", got, c.want)
+				}
+			})
+		}
+	}
+	if pyErr == nil {
+		py, ok := cut("python3 -c '", "' \"$asset\"")
+		if !ok {
+			t.Error("could not find the python digest expression in the Linux installer; the marker moved")
+		}
+		for _, c := range cases {
+			if !ok {
+				break
+			}
+			t.Run("py/"+c.name, func(t *testing.T) {
+				cmd := exec.Command("python3", "-I", "-c", py, asset)
+				cmd.Stdin = strings.NewReader(c.json)
+				out, err := cmd.Output()
+				if err != nil {
+					t.Fatalf("python failed: %v", err)
+				}
+				if got := strings.TrimSpace(string(out)); got != c.want {
+					t.Errorf("got %q, want %q", got, c.want)
+				}
+			})
+		}
+	}
+}

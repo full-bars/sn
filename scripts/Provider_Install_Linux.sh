@@ -319,41 +319,50 @@ except (json.JSONDecodeError, KeyError):
     echo "$latest_version"
 }
 
-# get_asset_digest_from_api_response extracts the sha256 digest (hex,
+# get_asset_digest_from_api_response extracts the sha256 digest (64 hex,
 # "sha256:" prefix stripped) for a named release asset from the release
-# JSON. Empty when the asset is absent — callers treat that as "release
-# predates this asset" and fall back.
+# JSON. Empty when the asset or its digest is absent (null or ""): callers
+# treat that as "release predates digests" and fall back. A digest that is
+# present but malformed (wrong algorithm, wrong length, not a string, a JSON
+# boolean) returns __INVALID_SHA256__ so callers refuse it instead of
+# downgrading it to "no digest".
 get_asset_digest_from_api_response ()
 {
     asset="$2"
     if command -v jq > /dev/null; then
-        digest="$(printf "%s" "$1" | tr -d '\000-\037' | jq -r --arg a "$asset" '.assets[] | select(.name == $a) | .digest // ""' 2>/dev/null)"
+        digest="$(printf "%s" "$1" | tr -d '\000-\037' | jq -r --arg a "$asset" '
+            (.assets[]? | select(.name == $a) | .digest) as $d
+            | if $d == null or $d == "" then ""
+              elif ($d | type) != "string" then "__INVALID_SHA256__"
+              else ($d | sub("^sha256:"; "")) as $h
+                | if ($h | test("^[0-9a-fA-F]{64}$")) then $h else "__INVALID_SHA256__" end
+              end
+        ' 2>/dev/null)"
     elif command -v python3 > /dev/null; then
-        digest="$(printf "%s" "$1" | tr -d '\000-\037' | python3 -c 'import sys, json;
+        digest="$(printf "%s" "$1" | tr -d '\000-\037' | python3 -c 'import sys, json, re
 try:
     data = json.load(sys.stdin)
-    asset = sys.argv[1]
-    for a in data.get("assets", []):
-        if a.get("name") == asset:
-            print(a.get("digest") or "")
-            break
-except (json.JSONDecodeError, KeyError):
-    print("")
+except Exception:
+    sys.exit(0)
+for a in data.get("assets", []):
+    if a.get("name") == sys.argv[1]:
+        val = a.get("digest")
+        if val is None or val == "":
+            print("")
+        elif not isinstance(val, str):
+            print("__INVALID_SHA256__")
+        else:
+            if val.startswith("sha256:"):
+                val = val[len("sha256:"):]
+            print(val if re.fullmatch(r"[0-9a-fA-F]{64}", val) else "__INVALID_SHA256__")
+        break
 ' "$asset" 2>/dev/null)"
     else
         pr_err "Neither python3 nor jq is available"
         exit 1
     fi
 
-    # The release API digest field is "sha256:<hex>"; strip the prefix so
-    # sha256sum comparison works. A JSON null digest (assets uploaded before
-    # digest support) yields the literal "null"/"None" — normalize those to
-    # empty so callers take the documented pre-digest fallback instead of
-    # downloading and hitting a sha256 mismatch (verified 2026-08-12 review).
-    case "$digest" in
-        null|None) digest="" ;;
-    esac
-    echo "$digest" | sed 's/^sha256://'
+    echo "$digest"
 }
 
 # release_lists_asset returns 0 when the release JSON in $1 lists an asset named
@@ -2684,6 +2693,11 @@ do_install ()
         exit 1
     fi
     provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
+    if [ "$provider_digest" = "__INVALID_SHA256__" ]; then
+        pr_err "Release %s has an invalid sha256 digest for provider asset '%s'." "$tag" "$provider_asset"
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
 
     pr_info "Downloading: %s" "$dl_url"
     
@@ -3181,6 +3195,11 @@ do_install ()
         exit 1
     fi
     provider_digest="$(get_asset_digest_from_api_response "$release_json" "$provider_asset")"
+    if [ "$provider_digest" = "__INVALID_SHA256__" ]; then
+        pr_err "Release %s has an invalid sha256 digest for provider asset '%s'." "$tag" "$provider_asset"
+        pr_err "Refusing to install an unverified provider binary."
+        exit 1
+    fi
 
     pr_info "Downloading: %s" "$dl_url"
     
