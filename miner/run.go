@@ -1265,6 +1265,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// not bind here — the parent still holds the socket — and binds from its
 	// takeover continuation instead.
 	controlSocket := &hotSwapControlSocketOwner{ctx: ctx, state: controlState}
+	activeHotSwapControlSocket = controlSocket
+	defer func() { activeHotSwapControlSocket = nil }()
 	if !self.hotSwapCandidate {
 		if err := controlSocket.start(); err != nil {
 			output.observe(providerStatusFailed, 0, false, err, 0, nil)

@@ -202,6 +202,63 @@ func TestHandoffBatonRestoresTheStateStoreWhenTakeoverFails(t *testing.T) {
 	}
 }
 
+func TestHandoffBatonRestoresControlSocketOnAbort(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	state := newControlState()
+	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: state}
+	if err := owner.start(); err != nil {
+		t.Fatal(err)
+	}
+	owner.quiesce()
+	t.Cleanup(owner.finish)
+	previous := activeHotSwapControlSocket
+	activeHotSwapControlSocket = owner
+	t.Cleanup(func() { activeHotSwapControlSocket = previous })
+
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	session := &HotswapParentSession{Writer: brokenIPCEWriter{errors.New("broken pipe")}}
+	if err := handoffBatonSendTakeover(session, os.Getpid(), 4246); err == nil {
+		t.Fatal("expected aborted takeover")
+	}
+	resp, err := dialControlSocket(controlRequest{Cmd: "version"})
+	if err != nil || !resp.OK {
+		t.Fatalf("control socket after abort = (%+v, %v), want a successful response", resp, err)
+	}
+}
+
+func TestHandoffBatonDoesNotRebindControlSocketOnSuccess(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	owner := &hotSwapControlSocketOwner{ctx: context.Background(), state: newControlState()}
+	if err := owner.start(); err != nil {
+		t.Fatal(err)
+	}
+	owner.quiesce()
+	t.Cleanup(owner.finish)
+	previous := activeHotSwapControlSocket
+	activeHotSwapControlSocket = owner
+	t.Cleanup(func() { activeHotSwapControlSocket = previous })
+
+	parentConn, candidateConn := net.Pipe()
+	t.Cleanup(func() { _ = candidateConn.Close() })
+	session := &HotswapParentSession{Reader: bufio.NewReader(parentConn), Writer: parentConn}
+	go func() {
+		_, _ = readHotswapMessage(bufio.NewReader(candidateConn))
+		_, _ = io.WriteString(candidateConn, `{"type":"ACK"}`+"\n")
+	}()
+	if err := handoffBatonSendTakeover(session, os.Getpid(), 4247); err != nil {
+		t.Fatalf("handoff: %v", err)
+	}
+	path, err := controlSocketPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if conn, err := net.Dial("unix", path); err == nil {
+		conn.Close()
+		t.Fatal("parent rebound control socket after successful takeover")
+	}
+}
+
 // The candidate may already hold provider_state.db when the handoff aborts. The
 // parent then keeps serving with its state writes failing, and the abort has to
 // say who holds the file instead of pretending the store came back.

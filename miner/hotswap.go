@@ -126,6 +126,7 @@ var (
 	// invokes, the same way spawnCandidateFunc and execInPlaceFunc seam the
 	// steps it drives. A test replaces it with a panic to check the guard.
 	runHotSwapParentHandoffFunc = runHotSwapParentHandoff
+	activeHotSwapControlSocket  *hotSwapControlSocketOwner
 )
 
 // errCandidateWaitPanicked marks a candidate wait that panicked rather than
@@ -346,6 +347,13 @@ func abortBatonHandoff(session *HotswapParentSession) {
 	// releases the bbolt lock the reopen waits on.
 	session.Kill()
 	restoreProviderStoreAfterAbortedHandoff()
+	if activeHotSwapControlSocket != nil {
+		// Restore the store before reopening the listener: once it answers again,
+		// every control request must observe the parent's restored state.
+		if err := activeHotSwapControlSocket.start(); err != nil {
+			hotswapLog("❌ [hotswap] Failed to restore control socket after aborted handoff: %v\n", err)
+		}
+	}
 }
 
 // hotSwapDrainDone is closed when the parent's drain finishes, immediately
