@@ -600,12 +600,31 @@ func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, erro
 		// every thirty seconds for the life of the process.
 		if !allowQuarantine {
 			tlog("[state] %s would not open (%v); left in place, the next normal open quarantines it\n", path, err)
-		} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
-			tlog("[state] %s would not open (%v); moved it to %s and started a fresh store\n", path, err, moved)
-			store, err = openProviderStore(path)
-			if err == nil {
-				holdBudgetAfterQuarantine(store, time.Now())
+		} else if isProviderStoreCorrupt(err) {
+			if markerErr := markProviderStoreRecovery(path); markerErr != nil {
+				err = markerErr
+			} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
+				tlog("[state] %s would not open (%v); moved it to %s\n", path, err, moved)
+				store, err = openProviderStore(path)
 			}
+		}
+	}
+	if err == nil {
+		marker := path + ".recovery"
+		if _, markerErr := os.Stat(marker); markerErr == nil {
+			err = holdBudgetAfterQuarantine(store, time.Now())
+			if err == nil {
+				err = os.Remove(marker)
+				if err == nil {
+					err = providerStoreSyncDir(filepath.Dir(path))
+				}
+			}
+		} else if !errors.Is(markerErr, os.ErrNotExist) {
+			err = markerErr
+		}
+		if err != nil {
+			_ = store.Close()
+			store = nil
 		}
 	}
 	if err != nil {
@@ -626,11 +645,25 @@ func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, erro
 // window. The file it replaced may have held posts or a refusal that can no
 // longer be read, and an empty store would let the next start spend as though
 // none had happened. The hold applies to every account on this store.
-func holdBudgetAfterQuarantine(store *providerStore, now time.Time) {
+func holdBudgetAfterQuarantine(store *providerStore, now time.Time) error {
 	record := extenderActivationRecord{QuarantineUntilUnix: now.Add(extenderActivationWindow).Unix()}
-	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
-		tlog("⚠️ [state] could not hold the activation budget after moving the store aside: %v\n", err)
+	return store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record)
+}
+
+// The marker must survive a crash before the damaged database is renamed.
+func markProviderStoreRecovery(path string) error {
+	file, err := os.OpenFile(path+".recovery", os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
 	}
+	if err = file.Sync(); err != nil {
+		_ = file.Close()
+		return err
+	}
+	if err = file.Close(); err != nil {
+		return err
+	}
+	return providerStoreSyncDir(filepath.Dir(path))
 }
 
 // quarantineCorruptStore moves a database bbolt refuses to open out of the way,
