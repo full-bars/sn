@@ -65,7 +65,7 @@ func (self *providerAuthenticationCallbacks) AuthLogout() {
 	// from handing the same poisoned identity straight back.
 	if self.identityKey != "" {
 		if delErr := loadGlobalClientJWTStore().Delete(self.identityKey); delErr != nil {
-			tlog("⚠️ [jwt-store] failed to evict rejected identity for %s: %v\n", self.identityKey, delErr)
+			tlog("⚠️ [jwt-store] failed to evict rejected identity for %s: %v\n", proxyKeyDisplay(self.identityKey), delErr)
 		}
 	}
 	self.cancel()

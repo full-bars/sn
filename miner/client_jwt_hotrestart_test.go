@@ -1434,3 +1434,54 @@ func TestProvideClientJWTStorePutErrorOmitsProxyKey(t *testing.T) {
 		t.Fatalf("error does not name the redacted proxy: %v", err)
 	}
 }
+
+// A failed eviction of a rejected identity is logged for the operator and
+// must name an authenticated proxy only through the redacted display.
+func TestAuthLogoutEvictionFailureLogOmitsProxyKey(t *testing.T) {
+	storePath := filepath.Join(t.TempDir(), "store.json")
+	restoreStore := withGlobalStore(t, storePath)
+	defer restoreStore()
+	logs := captureHeartbeatLog(t)
+
+	const user = "sppmr4vcnj"
+	settings := jwtRegressionSettings("dc.decodo.com:10072", user)
+	if err := loadGlobalClientJWTStore().Put(settings.Key(), clientJWTEntry{
+		ByClientJWT: "client-jwt",
+		ClientID:    testClientId,
+		MintedAt:    time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	// Turn the store file into a directory so the eviction write fails.
+	if err := os.RemoveAll(storePath); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(storePath, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	dir := t.TempDir()
+	clientJwtPath := filepath.Join(dir, ".provider.jwt")
+	networkJwtPath := filepath.Join(dir, "jwt")
+	output, err := newProviderDiagnostics(context.Background(), io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer output.close()
+	callbacks := &providerAuthenticationCallbacks{
+		diagnostics:    output,
+		clientJwtPath:  clientJwtPath,
+		networkJwtPath: networkJwtPath,
+		identityKey:    settings.Key(),
+		cancel:         func() {},
+	}
+	callbacks.AuthLogout()
+
+	out := logs.String()
+	if !strings.Contains(out, "failed to evict rejected identity") {
+		t.Fatalf("eviction failure line missing: %q", out)
+	}
+	if strings.ContainsRune(out, '\x1f') || strings.Contains(out, user) {
+		t.Fatalf("eviction log leaks the proxy key: %q", out)
+	}
+}
