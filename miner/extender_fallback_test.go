@@ -45,6 +45,15 @@ func fallbackAttempts(t *testing.T, path, account string) int {
 	return len(readFallbackTest(t, path).effective().Accounts[account].Attempts)
 }
 
+// fallbackEntries counts the launches and holds the file still has to merge.
+func fallbackEntries(t *testing.T, path string) int {
+	t.Helper()
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return 0
+	}
+	return len(readFallbackTest(t, path).Entries)
+}
+
 func realAttempts(t *testing.T, account string) (int, extenderActivationState) {
 	t.Helper()
 	store := providerStoreInstance()
@@ -112,8 +121,8 @@ func TestExtenderFallbackStartupLocked(t *testing.T) {
 	if got, _ := realAttempts(t, extenderActivationUnidentifiedAccount); got != 2*hostActivationPosts() {
 		t.Fatalf("real record holds %d posts, want the fallback launch and this one (%d)", got, 2*hostActivationPosts())
 	}
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		t.Fatalf("merged fallback still present: %v", err)
+	if got := fallbackEntries(t, path); got != 0 {
+		t.Fatalf("merged fallback still holds %d entries", got)
 	}
 }
 
@@ -149,21 +158,24 @@ func TestExtenderLedgerRealToFallback(t *testing.T) {
 	}
 	closeProviderStore()
 	locked := lockedStore(t)
-	for i := 0; i < 2; i++ {
-		if !gate.allowLaunch() {
-			t.Fatalf("outage launch %d refused", i+1)
-		}
+	// The fallback starts from the launch the store already holds, so room
+	// for one more launch is all the outage has.
+	if !gate.allowLaunch() {
+		t.Fatal("outage launch refused")
+	}
+	if gate.allowLaunch() {
+		t.Fatal("outage let a second launch through: the fallback began from a blank allowance")
 	}
 	if got := fallbackAttempts(t, path, extenderActivationUnidentifiedAccount); got != 2*hostActivationPosts() {
-		t.Fatalf("fallback posts=%d", got)
+		t.Fatalf("fallback posts=%d, want the store's launch and the outage's", got)
 	}
 	_ = locked.Close()
 	closeProviderStore()
 	if gate.allowLaunch() {
-		t.Fatal("recovered record forgot the launch made before the outage")
+		t.Fatal("recovered record forgot the launches made before and during the outage")
 	}
-	if got, _ := realAttempts(t, extenderActivationUnidentifiedAccount); got != 3*hostActivationPosts() {
-		t.Fatalf("real posts=%d want %d", got, 3*hostActivationPosts())
+	if got, _ := realAttempts(t, extenderActivationUnidentifiedAccount); got != 2*hostActivationPosts() {
+		t.Fatalf("real posts=%d want %d", got, 2*hostActivationPosts())
 	}
 }
 
@@ -342,8 +354,8 @@ func TestExtenderFallbackRealExhaustedUntouched(t *testing.T) {
 	if newExtenderActivationGate().allowLaunch() {
 		t.Fatal("readable exhausted store must refuse")
 	}
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		t.Fatalf("fallback touched: %v", err)
+	if got := fallbackEntries(t, path); got != 0 {
+		t.Fatalf("fallback touched: %d entries", got)
 	}
 	if !strings.Contains(log.String(), "activation held:") {
 		t.Fatalf("log: %s", log)
@@ -357,8 +369,8 @@ func TestExtenderFallbackReadableCapWriteFailure(t *testing.T) {
 	if newExtenderActivationGate().allowLaunch() {
 		t.Fatal("readable exhausted cap must refuse even if write fails")
 	}
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		t.Fatalf("fallback touched: %v", err)
+	if got := fallbackEntries(t, path); got != 0 {
+		t.Fatalf("fallback touched: %d entries", got)
 	}
 }
 
@@ -480,9 +492,9 @@ func TestExtenderFallbackUnknownShapeCountedAsSpent(t *testing.T) {
 			if allow, _, _, err := extenderActivationDecision(now, 1, ""); err != nil || allow {
 				t.Fatalf("recovery treated an unknown record as zero: allow=%v err=%v", allow, err)
 			}
-			matches, _ := filepath.Glob(path + ".unknown.*")
-			if len(matches) != 0 {
-				t.Fatalf("unknown record kept without a write to replace it: %v", matches)
+			// Replacing the file keeps what it held.
+			if matches, _ := filepath.Glob(path + ".unknown.*"); len(matches) != 1 {
+				t.Fatalf("replaced unknown record not kept: %v", matches)
 			}
 		})
 	}
@@ -536,4 +548,39 @@ func TestExtenderLedgerKillChild(t *testing.T) {
 	extenderFallbackMergedHook = func() { os.Exit(7) }
 	_, _, _, _ = extenderActivationDecision(time.Now(), 1, "")
 	t.Fatal("the hook did not end the process")
+}
+
+// Spending in the real store carries into the fallback: a second process that
+// finds the store locked does not start from a blank allowance, so it refuses
+// the launch the five recorded posts leave no room for.
+func TestExtenderLedgerStoreSpendingReachesFallbackInSecondProcess(t *testing.T) {
+	fallbackTestSetup(t)
+	now := time.Now()
+	for i := 0; i < 5; i++ {
+		if allow, _, _, err := extenderActivationDecision(now, 1, ""); err != nil || !allow {
+			t.Fatalf("post %d: allow=%v err=%v", i+1, allow, err)
+		}
+	}
+	closeProviderStore()
+	lockedStore(t)
+
+	child := exec.Command(os.Args[0], "-test.run=^TestExtenderLedgerSeamChild$", "-test.count=1", "-test.v")
+	child.Env = append(os.Environ(), "URNETWORK_TEST_EXTENDER_SEAM_CHILD=1")
+	output, err := child.CombinedOutput()
+	if err != nil {
+		t.Fatalf("second process: %v\n%s", err, output)
+	}
+	if !strings.Contains(string(output), "seam launch allowed=false") {
+		t.Fatalf("second process let a launch through the locked store:\n%s", output)
+	}
+}
+
+// The second process asks for one launch against the locked store.
+func TestExtenderLedgerSeamChild(t *testing.T) {
+	if os.Getenv("URNETWORK_TEST_EXTENDER_SEAM_CHILD") == "" {
+		return
+	}
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	fmt.Printf("seam launch allowed=%v\n", newExtenderActivationGate().allowLaunch())
 }

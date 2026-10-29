@@ -238,8 +238,9 @@ var extenderFallbackMergedHook func()
 // mutateExtenderActivationRecord is the budget's write path: it holds the
 // package lock and the cross-process ledger lock for the whole decision and
 // mutates inside one store transaction. A fallback ledger found under the lock
-// is merged into the record in the same transaction and removed once it
-// commits. A store that cannot be used is reported with its own error.
+// is merged into the record in the same transaction, and once that commits the
+// file is rewritten as a copy of the record. A store that cannot be used is
+// reported with its own error.
 var mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
 	store, err := openProviderStoreForProcess()
 	if store == nil {
@@ -288,9 +289,17 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 	if extenderFallbackMergedHook != nil {
 		extenderFallbackMergedHook()
 	}
-	if fallbackFound {
-		if rmErr := os.Remove(fallbackPath); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {
-			tlog("⚠️ [extender] merged activation fallback record not removed: %v\n", rmErr)
+	if fallbackPath != "" {
+		// The file now mirrors the record it was merged into. Failing that, an
+		// already merged file is removed rather than left to be read as spending
+		// the store does not hold; the merge marks it as done either way.
+		if mirrorErr := mirrorExtenderFallback(fallbackPath, fallback, record, time.Now()); mirrorErr != nil {
+			tlog("⚠️ [extender] activation fallback mirror not written: %v\n", mirrorErr)
+			if fallbackFound {
+				if rmErr := os.Remove(fallbackPath); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {
+					tlog("⚠️ [extender] merged activation fallback record not removed: %v\n", rmErr)
+				}
+			}
 		}
 	}
 	return nil

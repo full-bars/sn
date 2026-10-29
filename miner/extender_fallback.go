@@ -9,6 +9,10 @@ package miner
 // refusal holds together. The real record stays the authority; the fallback is
 // its overflow while the store is out.
 //
+// The file also carries a copy of the real record as of its last write (Base).
+// An outage therefore starts from what the store already spent, and a restart
+// during the outage does not repair that by forgetting it.
+//
 // Every entry has a sequence number within the file's epoch, and the real record
 // remembers the last epoch and sequence it merged, so a merge applies each entry
 // once whether the process died before or after the file was dealt with.
@@ -65,10 +69,14 @@ type extenderFallbackEntry struct {
 // extenderFallbackRecord is the fallback file. Epoch names this log and Seq
 // orders its entries within it.
 type extenderFallbackRecord struct {
-	Version int                     `json:"version"`
-	Epoch   string                  `json:"epoch"`
-	NextSeq int64                   `json:"next_seq"`
-	Entries []extenderFallbackEntry `json:"entries"`
+	Version int    `json:"version"`
+	Epoch   string `json:"epoch"`
+	NextSeq int64  `json:"next_seq"`
+	// Base is the real record's spending as of the last time it was written,
+	// so a fallback decision starts from what the store already holds instead
+	// of a blank allowance. Entries are what was spent after it.
+	Base    map[string]extenderActivationState `json:"base,omitempty"`
+	Entries []extenderFallbackEntry            `json:"entries"`
 
 	// source is how an older or unknown file was read. It is not stored: the
 	// next write replaces the file, and keeps the old bytes beside it.
@@ -246,11 +254,31 @@ func (record *extenderFallbackRecord) compact(now time.Time) {
 		}
 	}
 	record.Entries = kept
+	for account, state := range record.Base {
+		pruneExtenderAttempts(&state, now, extenderActivationWindow)
+		record.Base[account] = state
+	}
+}
+
+// mirrorExtenderFallback makes the fallback file a copy of the real record just
+// committed, with no entries: everything it held has been merged. The next
+// outage then starts from what the store spent, and a restart does not lose it.
+func mirrorExtenderFallback(path string, previous extenderFallbackRecord, record extenderActivationRecord, now time.Time) error {
+	base := make(map[string]extenderActivationState, len(record.Accounts))
+	for account, state := range record.Accounts {
+		state.Attempts = append([]int64(nil), state.Attempts...)
+		base[account] = state
+	}
+	return writeExtenderFallback(path, extenderFallbackRecord{Base: base, source: previous.source}, now)
 }
 
 // effective is the spending the log describes, as a record a decision can run on.
 func (record extenderFallbackRecord) effective() extenderActivationRecord {
 	out := extenderActivationRecord{Accounts: map[string]extenderActivationState{}}
+	for account, state := range record.Base {
+		state.Attempts = append([]int64(nil), state.Attempts...)
+		out.Accounts[account] = state
+	}
 	for _, entry := range record.Entries {
 		state := out.Accounts[entry.Account]
 		state.Attempts = append(state.Attempts, entry.Attempts...)
