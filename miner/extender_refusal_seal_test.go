@@ -59,3 +59,54 @@ func TestAbandonedHandoffUnseals(t *testing.T) {
 		t.Fatal("queue still sealed after the handoff was abandoned")
 	}
 }
+
+// Once sealed, a refusal the journal will not take keeps the barrier, so the
+// candidate cannot take it, read no file and admit. When the journal recovers
+// the refusal is written and the barrier is free again.
+func TestSealedRefusalTheJournalRefusedKeepsTheBarrier(t *testing.T) {
+	testExtenderState(t)
+	shortenRefusalGate(t)
+	if providerStoreInstance() == nil {
+		t.Fatal("store did not open")
+	}
+	if err := sealExtenderRefusals(); err != nil {
+		t.Fatal(err)
+	}
+	releaseProviderStore()
+	heal := failJournalRename(t)
+	holdExtenderRefusal(extenderTestAccountA, "scope.2101")
+
+	release, err := lockExtenderRefusalBarrierBy(time.Now().Add(100 * time.Millisecond))
+	release()
+	if err == nil {
+		t.Fatal("the barrier was free with a sealed refusal on no disk: the candidate could admit past it")
+	}
+	heal()
+	release, err = lockExtenderRefusalBarrierBy(time.Now().Add(5 * time.Second))
+	release()
+	if err != nil {
+		t.Fatalf("the barrier stayed held after the journal recovered: %v", err)
+	}
+	onDisk, _, err := readExtenderRefusalJournal(time.Now())
+	if err != nil || len(onDisk) != 1 || onDisk[0].attempt != "scope.2101" {
+		t.Fatalf("journal = %v (%v), want the sealed refusal", onDisk, err)
+	}
+}
+
+// An abandoned handoff frees the barrier a sealed refusal held, because the
+// process keeps serving and its own admissions read its memory.
+func TestUnsealFreesTheBarrierASealedRefusalHeld(t *testing.T) {
+	testExtenderState(t)
+	shortenRefusalGate(t)
+	if err := sealExtenderRefusals(); err != nil {
+		t.Fatal(err)
+	}
+	failJournalRename(t)
+	holdExtenderRefusal(extenderTestAccountA, "scope.2201")
+	unsealExtenderRefusals()
+	release, err := lockExtenderRefusalBarrierBy(time.Now().Add(5 * time.Second))
+	release()
+	if err != nil {
+		t.Fatalf("the barrier stayed held after the handoff was abandoned: %v", err)
+	}
+}

@@ -224,14 +224,23 @@ func queueExtenderOpLocked(op extenderPendingOp) {
 }
 
 // holdExtenderRefusal queues a decided refusal until a transaction charges it,
-// and journals it unless a file was written within the pace.
+// and journals it unless a file was written within the pace. Once sealed, a
+// refusal the journal cannot take keeps the barrier (keepSealedRefusal), so the
+// successor cannot admit while this process alone holds it.
 func holdExtenderRefusal(account, attempt string) {
-	release, barrierErr := lockExtenderRefusalBarrier()
-	defer release()
+	extenderRefusalBarrierMu.Lock()
+	releaseFile, barrierErr := lockExtenderRefusalBarrierFile()
+	release := func() {
+		if releaseFile != nil {
+			releaseFile()
+		}
+		extenderRefusalBarrierMu.Unlock()
+	}
 	extenderRefusalsHeld.mu.Lock()
-	defer extenderRefusalsHeld.mu.Unlock()
 	for _, op := range extenderRefusalsHeld.ops {
 		if op.kind == extenderOpRefusal && op.attempt == attempt {
+			extenderRefusalsHeld.mu.Unlock()
+			release()
 			return
 		}
 	}
@@ -239,11 +248,49 @@ func holdExtenderRefusal(account, attempt string) {
 	// Without the interprocess half of the barrier the file could appear
 	// after an admission read, so the refusal stays in memory, where this
 	// process's own admissions still charge it.
-	if barrierErr == nil && (extenderRefusalsHeld.sealed || !time.Now().Before(extenderRefusalsHeld.journalAt)) {
+	keep := false
+	if extenderRefusalsHeld.sealed {
+		keep = barrierErr != nil || journalQueuedRefusalsLocked() != nil
+	} else if barrierErr == nil && !time.Now().Before(extenderRefusalsHeld.journalAt) {
 		journalQueuedRefusalsLocked()
 	}
 	if hasUnjournaledRefusalLocked() {
 		startExtenderWorkerLocked()
+	}
+	extenderRefusalsHeld.mu.Unlock()
+	if keep {
+		go keepSealedRefusal(releaseFile)
+		return
+	}
+	release()
+}
+
+// keepSealedRefusal holds the barrier for a sealed process whose refusal the
+// journal did not take, and retries the journal until it does, or until the
+// handoff is abandoned. The candidate's admission needs the same barrier, so it
+// waits rather than deciding without a refusal only this process knows. The
+// process's own bounded wait still ends it: this goroutine holds the barrier
+// to the last, and the lock file is released with the process. The caller
+// hands over extenderRefusalBarrierMu and, when it was taken, the lock file.
+func keepSealedRefusal(releaseFile func()) {
+	defer func() {
+		if releaseFile != nil {
+			releaseFile()
+		}
+		extenderRefusalBarrierMu.Unlock()
+	}()
+	for {
+		time.Sleep(extenderRefusalGateRetry)
+		if releaseFile == nil {
+			releaseFile, _ = lockExtenderRefusalBarrierFile()
+		}
+		extenderRefusalsHeld.mu.Lock()
+		done := !extenderRefusalsHeld.sealed ||
+			(releaseFile != nil && journalQueuedRefusalsLocked() == nil)
+		extenderRefusalsHeld.mu.Unlock()
+		if done {
+			return
+		}
 	}
 }
 
@@ -643,8 +690,13 @@ func sealExtenderRefusals() error {
 	if err := ensureExtenderRefusalsDurable(); err != nil {
 		return err
 	}
-	release, _ := lockExtenderRefusalBarrier()
+	release, err := lockExtenderRefusalBarrier()
 	defer release()
+	if err != nil {
+		// Without the lock file a journal written from here could appear
+		// after the candidate's read, so the seal promises nothing.
+		return fmt.Errorf("refusal barrier: %w", err)
+	}
 	extenderRefusalsHeld.mu.Lock()
 	defer extenderRefusalsHeld.mu.Unlock()
 	extenderRefusalsHeld.sealed = true
