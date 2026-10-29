@@ -14,6 +14,7 @@ import (
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/urfoundation/sn/clientauth"
 	"github.com/urnetwork/sdk"
+	bbolt "go.etcd.io/bbolt"
 )
 
 // postsPerDualStackPass is the charge for a host that can post on both
@@ -934,4 +935,375 @@ func TestExtenderActivationHoldsAfterTheStoreIsQuarantined(t *testing.T) {
 	if allow, _, _ := extenderActivationAllow(now.Add(extenderActivationWindow+time.Minute), postsPerDualStackPass, extenderTestAccountA); !allow {
 		t.Fatal("a start after the window was still held")
 	}
+}
+
+// stubExtenderMutation models an atomic transaction, including rollback if a
+// write fails after its callback has already calculated and appended posts.
+func stubExtenderMutation(t *testing.T, initial extenderActivationState, failBefore, failAfter int) (*extenderActivationState, *int) {
+	t.Helper()
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(t.TempDir(), "state"))
+	previous := mutateExtenderActivationRecord
+	state := initial
+	calls := 0
+	mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
+		calls++
+		if calls <= failBefore {
+			return errors.New("record unavailable")
+		}
+		copyState := state
+		copyState.Attempts = append([]int64(nil), state.Attempts...)
+		record := extenderActivationRecord{Accounts: map[string]extenderActivationState{account: copyState}}
+		if err := mutate(&record); err != nil {
+			return err
+		}
+		if calls <= failBefore+failAfter {
+			return errors.New("write failed")
+		}
+		state = record.Accounts[account]
+		return nil
+	}
+	t.Cleanup(func() { mutateExtenderActivationRecord = previous })
+	return &state, &calls
+}
+
+func TestExtenderGateStartupOutageRecovery(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		before, after int
+	}{{"read", 3, 0}, {"write_rollback", 0, 3}} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("URNETWORK_STATE_DIR", filepath.Join(os.DevNull, "state"))
+			state, calls := stubExtenderMutation(t, extenderActivationState{}, tc.before, tc.after)
+			gate := newExtenderActivationGate()
+			if gate.decideAtStart() {
+				t.Error("startup must withhold while the record is unavailable")
+			}
+			if *calls != 3 {
+				t.Errorf("startup calls=%d, want 3", *calls)
+			}
+			if !gate.allowLaunch() {
+				t.Error("first launch must be allowed after the record recovers")
+			}
+			if *calls != 4 {
+				t.Errorf("startup and first launch calls=%d, want 4: launch must read again", *calls)
+			}
+			if got, want := len(state.Attempts), hostActivationPosts(); got != want {
+				t.Errorf("recorded posts=%d, want %d", got, want)
+			}
+		})
+	}
+}
+
+func TestExtenderGateStartupRefusalCached(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(os.DevNull, "state"))
+	now := time.Now().Unix()
+	state, calls := stubExtenderMutation(t, extenderActivationState{Attempts: []int64{now, now, now, now, now}}, 0, 0)
+	gate := newExtenderActivationGate()
+	if gate.decideAtStart() || gate.allowLaunch() {
+		t.Error("exhausted window must refuse startup and first launch")
+	}
+	if *calls != 1 {
+		t.Errorf("startup and launch calls=%d, want 1: refusal must be cached", *calls)
+	}
+	if len(state.Attempts) != extenderActivationBudget {
+		t.Errorf("exhausted window changed posts: %v", state.Attempts)
+	}
+}
+
+func TestExtenderGateRetryAfterStoreFailure(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		before, after int
+	}{{"read", 1, 0}, {"write_rollback", 0, 1}} {
+		t.Run(tc.name, func(t *testing.T) {
+			state, calls := stubExtenderMutation(t, extenderActivationState{}, tc.before, tc.after)
+			gate := newExtenderActivationGate()
+			if gate.allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchAllowed {
+				t.Error("recovered store must allow launch")
+			}
+			if *calls != 2 {
+				t.Errorf("mutation calls=%d, want 2", *calls)
+			}
+			if got := len(state.Attempts); got != postsPerDualStackPass {
+				t.Errorf("recorded posts=%d, want %d", got, postsPerDualStackPass)
+			}
+		})
+	}
+	t.Run("startup_verdict", func(t *testing.T) {
+		t.Setenv("URNETWORK_STATE_DIR", filepath.Join(os.DevNull, "state"))
+		closeProviderStore()
+		t.Cleanup(closeProviderStore)
+		state, calls := stubExtenderMutation(t, extenderActivationState{}, 1, 0)
+		gate := newExtenderActivationGate()
+		if !gate.decideAtStart() || !gate.allowLaunch() {
+			t.Error("startup and its first launch must both allow")
+		}
+		if *calls != 2 {
+			t.Errorf("startup and launch mutation calls=%d, want 2", *calls)
+		}
+		if len(state.Attempts) != postsPerDualStackPass {
+			t.Errorf("startup and launch recorded posts=%d, want %d", len(state.Attempts), postsPerDualStackPass)
+		}
+	})
+}
+
+func TestExtenderGateRetryUnavailable(t *testing.T) {
+	state, calls := stubExtenderMutation(t, extenderActivationState{}, 100, 0)
+	previous := proxyManagerLogWriter
+	writer := &bytes.Buffer{}
+	proxyManagerLogWriter = writer
+	t.Cleanup(func() { proxyManagerLogWriter = previous })
+	start := time.Now()
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchWithheld {
+		t.Error("unavailable record must refuse launch")
+	}
+	if elapsed := time.Since(start); elapsed > 3*time.Second {
+		t.Errorf("retry took %s, want at most 3s", elapsed)
+	}
+	if *calls != 3 {
+		t.Errorf("mutation calls=%d, want 3 bounded attempts", *calls)
+	}
+	if len(state.Attempts) != 0 {
+		t.Errorf("unavailable store recorded posts: %v", state.Attempts)
+	}
+	if !strings.Contains(writer.String(), "activation budget record could not be read or written; decision deferred") {
+		t.Errorf("missing launch-specific store failure reason: %q", writer.String())
+	}
+}
+
+func TestExtenderGateRetryExhaustedWindow(t *testing.T) {
+	now := time.Now().Unix()
+	initial := extenderActivationState{Attempts: []int64{now, now, now, now, now}}
+	state, calls := stubExtenderMutation(t, initial, 0, 0)
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchRefused {
+		t.Error("exhausted window must refuse launch")
+	}
+	if *calls != 1 {
+		t.Errorf("exhausted window mutation calls=%d, want 1", *calls)
+	}
+	if len(state.Attempts) != extenderActivationBudget {
+		t.Errorf("exhausted window changed posts: %v", state.Attempts)
+	}
+	// A transient failure followed by the same exhausted record must also refuse,
+	// and stop immediately when that real verdict is obtained.
+	*calls = 0
+	previous := mutateExtenderActivationRecord
+	mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
+		if *calls == 0 {
+			*calls++
+			return errors.New("record unavailable")
+		}
+		return previous(account, mutate)
+	}
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchRefused {
+		t.Error("recovered exhausted window must refuse launch")
+	}
+	if *calls != 2 {
+		t.Errorf("recovered exhausted window mutation calls=%d, want 2", *calls)
+	}
+}
+
+func TestExtenderGateRetryRefusalBackoff(t *testing.T) {
+	now := time.Now()
+	until := now.Add(10 * time.Minute).Unix()
+	state, calls := stubExtenderMutation(t, extenderActivationState{BackoffUntilUnix: until}, 0, 0)
+	allow, wait, used := extenderActivationAllow(now, postsPerDualStackPass, extenderTestAccountA)
+	if allow || wait != time.Duration(until-now.Unix())*time.Second || used != 0 {
+		t.Errorf("backoff verdict=(%v, %s, %d), want false and exact persisted wait", allow, wait, used)
+	}
+	if *calls != 1 {
+		t.Errorf("backoff mutation calls=%d, want 1", *calls)
+	}
+	*calls = 0
+	previous := mutateExtenderActivationRecord
+	mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
+		if *calls == 0 {
+			*calls++
+			return errors.New("record unavailable")
+		}
+		return previous(account, mutate)
+	}
+	if newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA) != extenderLaunchRefused {
+		t.Error("recovered refusal backoff must refuse launch")
+	}
+	if *calls != 2 {
+		t.Errorf("recovered backoff mutation calls=%d, want 2", *calls)
+	}
+	if state.BackoffUntilUnix != until || len(state.Attempts) != 0 {
+		t.Errorf("backoff state changed: %+v", *state)
+	}
+	if allow, wait, used := extenderActivationAllow(time.Unix(until, 0), postsPerDualStackPass, extenderTestAccountA); !allow || wait != 0 || used != 0 {
+		t.Errorf("expired backoff verdict=(%v, %s, %d), want allowed with no wait or used posts", allow, wait, used)
+	}
+	if len(state.Attempts) != postsPerDualStackPass {
+		t.Errorf("expired backoff recorded %d posts, want %d", len(state.Attempts), postsPerDualStackPass)
+	}
+}
+
+// The first real open fails and is cached. Recovery occurs inside that throttle.
+func TestExtenderGateRealStoreOpenRecoversInsideThrottle(t *testing.T) {
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	dir := t.TempDir()
+	blocker := filepath.Join(dir, "blocker")
+	if err := os.WriteFile(blocker, []byte("blocked"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(blocker, "state"))
+	if providerStoreInstance() != nil {
+		t.Fatal("first open unexpectedly succeeded")
+	}
+	recovered := make(chan error, 1)
+	go func() { time.Sleep(time.Second); recovered <- os.Remove(blocker) }()
+	decision := newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA)
+	if err := <-recovered; err != nil {
+		t.Fatal(err)
+	}
+	if decision != extenderLaunchAllowed {
+		t.Fatalf("recovered store did not allow launch: %v", decision)
+	}
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("store unavailable after allowed launch")
+	}
+	var record extenderActivationRecord
+	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record)
+	if err != nil || !found {
+		t.Fatalf("record found=%v err=%v", found, err)
+	}
+	if got := len(record.Accounts[extenderActivationAccountKey(extenderTestAccountA)].Attempts); got != postsPerDualStackPass {
+		t.Fatalf("posts=%d want %d", got, postsPerDualStackPass)
+	}
+}
+
+func TestExtenderGateRealStoreNeverOpens(t *testing.T) {
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	blocker := filepath.Join(t.TempDir(), "blocker")
+	if err := os.WriteFile(blocker, []byte("blocked"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(blocker, "state"))
+	previous := proxyManagerLogWriter
+	writer := &bytes.Buffer{}
+	proxyManagerLogWriter = writer
+	t.Cleanup(func() { proxyManagerLogWriter = previous })
+	if got := newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA); got != extenderLaunchWithheld {
+		t.Fatalf("decision=%v want withheld", got)
+	}
+	log := writer.String()
+	if n := strings.Count(log, "[state] store unavailable:"); n != 3 {
+		t.Errorf("real open failures=%d want 3; log: %s", n, log)
+	}
+	if !strings.Contains(log, "activation budget record could not be read or written") || strings.Contains(log, "activation held:") {
+		t.Errorf("wrong refusal message: %s", log)
+	}
+	if err := os.Remove(blocker); err != nil {
+		t.Fatal(err)
+	}
+	closeProviderStore()
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("store did not open after removing blocker")
+	}
+	var record extenderActivationRecord
+	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record)
+	if err != nil || found {
+		t.Fatalf("unexpected record found=%v err=%v", found, err)
+	}
+}
+
+func TestExtenderGateRealStoreExhaustedFirstRead(t *testing.T) {
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("open store")
+	}
+	now := time.Now().Unix()
+	record := extenderActivationRecord{Accounts: map[string]extenderActivationState{extenderActivationAccountKey(extenderTestAccountA): {Attempts: []int64{now, now, now, now, now}}}}
+	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	if got := newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA); got != extenderLaunchRefused {
+		t.Fatalf("decision=%v want refused", got)
+	}
+	if elapsed := time.Since(start); elapsed >= time.Second {
+		t.Fatalf("refusal retried: %s", elapsed)
+	}
+	var after extenderActivationRecord
+	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &after)
+	if err != nil || !found || len(after.Accounts[extenderActivationAccountKey(extenderTestAccountA)].Attempts) != 5 {
+		t.Fatalf("record found=%v err=%v record=%+v", found, err, after)
+	}
+}
+
+// A real bbolt lock exercises the lock timeout, not just failed mutations.
+func TestExtenderGateRealLockedStoreTiming(t *testing.T) {
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	locked, err := bbolt.Open(filepath.Join(dir, providerStoreFileName), 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = locked.Close() })
+	gate := newExtenderActivationGate()
+	totalStart := time.Now()
+	for i := 0; i < 2; i++ {
+		start := time.Now()
+		got := gate.allowLaunchFor(postsPerDualStackPass, extenderTestAccountA)
+		elapsed := time.Since(start)
+		t.Logf("locked retry window %d: %s", i+1, elapsed)
+		if got != extenderLaunchWithheld {
+			t.Errorf("decision=%v want withheld", got)
+		}
+		if elapsed >= 3*time.Second {
+			t.Errorf("locked retry window took %s, want under 3s", elapsed)
+		}
+	}
+	t.Logf("two retry windows combined: %s", time.Since(totalStart))
+}
+
+func TestExtenderGateRealLockedStoreRecoversOnSecondAttempt(t *testing.T) {
+	closeProviderStore()
+	t.Cleanup(closeProviderStore)
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	locked, err := bbolt.Open(filepath.Join(dir, providerStoreFileName), 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	previous := proxyManagerLogWriter
+	writer := &bytes.Buffer{}
+	proxyManagerLogWriter = writer
+	t.Cleanup(func() { proxyManagerLogWriter = previous })
+	released := make(chan error, 1)
+	go func() { time.Sleep(700 * time.Millisecond); released <- locked.Close() }()
+	decision := newExtenderActivationGate().allowLaunchFor(postsPerDualStackPass, extenderTestAccountA)
+	if err := <-released; err != nil {
+		t.Fatal(err)
+	}
+	if decision != extenderLaunchAllowed {
+		t.Fatalf("decision=%v want allowed", decision)
+	}
+	if n := strings.Count(writer.String(), "[state] store unavailable:"); n != 1 {
+		t.Fatalf("failed opens=%d want 1; log: %s", n, writer.String())
+	}
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("store unavailable after recovery")
+	}
+	var record extenderActivationRecord
+	found, err := store.load(providerStoreBucketState, providerStoreKeyExtenderActivation, &record)
+	if err != nil || !found {
+		t.Fatalf("record found=%v err=%v", found, err)
+	}
+	if got := len(record.Accounts[extenderActivationAccountKey(extenderTestAccountA)].Attempts); got != postsPerDualStackPass {
+		t.Fatalf("posts=%d want %d", got, postsPerDualStackPass)
+	}
+	t.Logf("recovered on second attempt; recorded %d posts", postsPerDualStackPass)
 }
