@@ -619,13 +619,20 @@ func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, erro
 
 // The recovery marker says a quarantine happened and until when its hold runs.
 //
-// Only the marker's publication is assured on every platform, because it goes
-// through durablesync.Rename. The fresh database's own name and the marker's
-// removal are durable on Unix only: Windows has no directory flush. So the
-// marker is not removed once the hold is written; it stays until the hold has
-// run out, and every open while it stands re-asserts the hold. A crash that
-// loses the fresh database then reopens an empty one with the hold still
-// applied, on Windows as on Unix.
+// The marker is published by durablesync.Rename, which fails where the
+// platform cannot make a rename crash-durable (Windows, for a rename inside one
+// volume). That failure stops the quarantine: the damaged database stays where
+// it is and the store stays unavailable, so the extender role is held rather
+// than started on a store whose hold could be lost. On such a platform a
+// corrupt database needs the operator to move it aside.
+//
+// The fresh database's own name and the marker's removal are durable on Unix
+// only. So the marker is not removed once the hold is written; it stays until
+// the hold has run out, and every open while it stands re-asserts the hold. A
+// crash that loses the fresh database then reopens an empty one with the hold
+// still applied. After the hold has run out nothing is lost by forgetting: it
+// is as long as the window the budget counts posts in, and as long as the
+// longest refusal wait.
 
 // providerStoreDurableRename publishes the marker. A variable so a test can
 // make it fail.

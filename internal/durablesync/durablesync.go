@@ -9,14 +9,18 @@
 //   - Sync, SyncDir and SyncParent make a completed rename or creation in the
 //     directory durable on Unix. On Windows they assure nothing: a nil return
 //     there only means no real failure was seen.
-//   - Rename publishes a file under its new name durably on both: on Unix by
-//     renaming and then flushing the directories involved, on Windows by
-//     MoveFileEx with MOVEFILE_WRITE_THROUGH, which does not return until the
-//     move is on disk.
+//   - Rename publishes a file under its new name durably on Unix, by renaming
+//     and then flushing the directories involved. On Windows it refuses with
+//     ErrNotCrashDurable and moves nothing. MoveFileEx with
+//     MOVEFILE_WRITE_THROUGH is documented to flush a move done as a copy and
+//     delete, which is a move across volumes; for a rename inside one volume
+//     it promises nothing about the directory entry, so no call here may
+//     certify one.
 //
-// A caller whose correctness depends on a name surviving a crash on every
-// platform publishes it with Rename. Creating or removing a name and then
-// calling SyncDir is durable on Unix only.
+// A caller whose correctness depends on a name surviving a crash publishes it
+// with Rename and treats ErrNotCrashDurable as a failure: it fails closed
+// where the platform cannot give the guarantee. Creating or removing a name
+// and then calling SyncDir is durable on Unix only.
 //
 // The directory requirement and the verdict are shared. The platform files
 // differ only in the flush itself, which is where the platforms actually
@@ -73,8 +77,23 @@ func SyncParent(path string) error {
 	return SyncDir(filepath.Dir(path))
 }
 
+// ErrNotCrashDurable reports that this platform has no operation that makes a
+// rename survive a crash. Nothing was renamed.
+var ErrNotCrashDurable = errors.New("durablesync: this platform cannot make a rename crash-durable")
+
 // Rename moves oldpath to newpath, replacing newpath, and returns once the move
-// is durable. See the package comment for what that means per platform.
+// is durable. On a platform that cannot assure that it returns
+// ErrNotCrashDurable and leaves both names as they were. See the package
+// comment.
 func Rename(oldpath, newpath string) error {
-	return renameDurably(oldpath, newpath)
+	return rename(oldpath, newpath, crashDurableRename, renameDurably)
+}
+
+// rename takes the platform's capability as arguments so the refusal can be
+// tested on a platform that does have the capability.
+func rename(oldpath, newpath string, crashDurable bool, move func(oldpath, newpath string) error) error {
+	if !crashDurable {
+		return fmt.Errorf("%w: %s", ErrNotCrashDurable, newpath)
+	}
+	return move(oldpath, newpath)
 }

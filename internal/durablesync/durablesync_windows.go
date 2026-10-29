@@ -55,19 +55,14 @@ func absorbable(err error) bool {
 	return false
 }
 
-// MOVEFILE_WRITE_THROUGH is the documented guarantee: MoveFileEx does not
-// return until the move has been flushed to disk.
+// crashDurableRename is false: no Windows call is documented to make a rename
+// inside one volume survive a power loss. MoveFileEx with
+// MOVEFILE_WRITE_THROUGH flushes a move done as copy and delete, and
+// FlushFileBuffers on a directory is refused, so a rename here could be
+// absent after a crash although it returned. Rename reports that instead of
+// certifying it.
+const crashDurableRename = false
+
 func renameDurably(oldpath, newpath string) error {
-	from, err := windows.UTF16PtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	to, err := windows.UTF16PtrFromString(newpath)
-	if err != nil {
-		return err
-	}
-	if err := windows.MoveFileEx(from, to, windows.MOVEFILE_REPLACE_EXISTING|windows.MOVEFILE_WRITE_THROUGH); err != nil {
-		return &os.LinkError{Op: "rename", Old: oldpath, New: newpath, Err: err}
-	}
-	return nil
+	return ErrNotCrashDurable
 }

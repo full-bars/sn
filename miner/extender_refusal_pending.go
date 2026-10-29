@@ -101,8 +101,9 @@ func journalExtenderRefusal(refusal extenderPendingRefusal) error {
 		err = closeErr
 	}
 	if err == nil {
-		// Durable on every platform, unlike a rename and a directory sync,
-		// which Windows cannot flush.
+		// Fails where the platform cannot make the name crash-durable, so a
+		// refusal is never reported journaled on the strength of a rename
+		// that a power loss could undo.
 		err = providerStoreDurableRename(temp.Name(), filepath.Join(dir, extenderRefusalJournalName(refusal.attempt)))
 	}
 	if err != nil {

@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 )
 
+// crashDurableRename: renaming and then flushing both directories is the
+// documented way to order a rename on Unix.
+const crashDurableRename = true
+
 // Nothing is absorbed on Unix. fsync(2) on a directory descriptor is the only
 // thing that makes a rename durable there, so every refusal carries a real
 // durability verdict and must reach the caller.
