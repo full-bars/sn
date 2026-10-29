@@ -32,15 +32,13 @@ package miner
 // extenderActivationSpendSpare does.
 //
 // The record is a section of provider_state.db (state_store.go), not a file of
-// its own. When it cannot be used after bounded retries, a fallback ledger of
-// the same shape counts launches, and the first read of the real record merges
-// it in (extender_fallback.go).
+// its own. If the store is unavailable, one launch per process may proceed
+// without a recorded budget. That launch is forgotten on restart.
 
 import (
 	"errors"
-	"fmt"
-	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/urfoundation/sn/clientauth"
@@ -154,11 +152,6 @@ type extenderActivationLegacy struct {
 // host, which the operator controls and a heal does not add to.
 type extenderActivationRecord struct {
 	Accounts map[string]extenderActivationState `json:"accounts,omitempty"`
-	// FallbackEpoch and FallbackSeq are the last entry of the fallback log
-	// already merged into Accounts (extender_fallback.go), so an entry is
-	// applied once however the process that merged it ended.
-	FallbackEpoch string `json:"fallback_epoch,omitempty"`
-	FallbackSeq   int64  `json:"fallback_seq,omitempty"`
 	extenderActivationLegacy
 }
 
@@ -232,16 +225,7 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 	return record, nil
 }
 
-// extenderFallbackMergedHook runs after a merge has committed and before the
-// fallback file is dealt with, the point a crash must survive. Tests only.
-var extenderFallbackMergedHook func()
-
-// mutateExtenderActivationRecord is the budget's write path: it holds the
-// package lock and the cross-process ledger lock for the whole decision and
-// mutates inside one store transaction. A fallback ledger found under the lock
-// is merged into the record in the same transaction, and once that commits the
-// file is rewritten as a copy of the record. A store that cannot be used is
-// reported with its own error.
+// mutateExtenderActivationRecord makes each decision and update in one store transaction.
 var mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
 	store, err := openProviderStoreForProcess()
 	if store == nil {
@@ -253,25 +237,6 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 	}
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
-	unlock, err := lockExtenderLedger()
-	if err != nil {
-		warnExtenderBudgetUnavailable(account, err)
-		return err
-	}
-	defer unlock()
-	// A fallback file that cannot be read may hold spending and a refusal hold
-	// the record does not, so the write waits for it rather than bypass it.
-	fallbackPath, pathErr := extenderFallbackPath()
-	if pathErr != nil {
-		warnExtenderBudgetUnavailable(account, pathErr)
-		return fmt.Errorf("%w: %v", errExtenderFallbackUnreadable, pathErr)
-	}
-	fallback, fallbackFound, loadErr := loadExtenderFallback(fallbackPath)
-	if loadErr != nil {
-		warnExtenderBudgetUnavailable(account, loadErr)
-		return fmt.Errorf("%w: %v", errExtenderFallbackUnreadable, loadErr)
-	}
-	held := extenderHeldSnapshot()
 	var record extenderActivationRecord
 	err = store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
 		if !found {
@@ -281,32 +246,12 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 			record.Accounts = map[string]extenderActivationState{}
 		}
 		record.adoptLegacy(account)
-		if fallbackFound {
-			record.mergeFallback(fallback, time.Now())
-		}
-		applyExtenderHeld(&record, held)
 		return mutate(&record)
 	})
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
-		return err
 	}
-	releaseExtenderHeld(held)
-	if extenderFallbackMergedHook != nil {
-		extenderFallbackMergedHook()
-	}
-	// The file now mirrors the record it was merged into. Failing that, an
-	// already merged file is removed rather than left to be read as spending the
-	// store does not hold; the merge marks it as done either way.
-	if mirrorErr := mirrorExtenderFallback(fallbackPath, fallback, record, time.Now()); mirrorErr != nil {
-		tlog("⚠️ [extender] activation fallback mirror not written: %v\n", mirrorErr)
-		if fallbackFound {
-			if rmErr := os.Remove(fallbackPath); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {
-				tlog("⚠️ [extender] merged activation fallback record not removed: %v\n", rmErr)
-			}
-		}
-	}
-	return nil
+	return err
 }
 
 // adoptLegacy moves a pre-account record onto the account. The old record
@@ -569,11 +514,6 @@ func recordExtenderActivationRefusedPersisted(now time.Time, userId string) (tim
 		return nil
 	})
 	if err != nil {
-		// The streak cannot be recorded, and a caller told to retry now
-		// would post again into the refusal. Hold for the first-level wait
-		// even though the store did not keep it, and leave the hold where the
-		// launches that follow, and the store once it returns, will find it.
-		holdExtenderFallback(now, userId, extenderRefusalBackoff)
 		return extenderRefusalBackoff, false
 	}
 	return wait, true
@@ -633,10 +573,6 @@ const (
 	extenderLaunchWithheld extenderLaunchDecision = iota
 	extenderLaunchRefused
 	extenderLaunchAllowed
-	// extenderLaunchHeld is a launch refused because the fallback ledger could
-	// not be read. Like a withheld one it is decided again at the next launch,
-	// but the fallback cannot stand in for it.
-	extenderLaunchHeld
 )
 
 // decideAtStart caches only a real verdict; a withheld decision must be
@@ -674,7 +610,19 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 		tlog("[extender] extender role off: provider state was handed to the hotswap candidate, which counts activation posts now\n")
 		return false
 	}
-	return allowExtenderFallback(time.Now(), posts, userId, cause)
+	return allowUncountedExtenderLaunch(cause)
+}
+
+// The allowance is shared by every gate in this process and is never persisted.
+var extenderUncountedLaunchUsed atomic.Bool
+
+func allowUncountedExtenderLaunch(cause error) bool {
+	if !extenderUncountedLaunchUsed.CompareAndSwap(false, true) {
+		tlog("[extender] extender role off: activation budget unavailable (%v); uncounted launch already used in this process\n", cause)
+		return false
+	}
+	tlog("[extender] extender role on: activation budget unavailable (%v); allowing one uncounted launch in this process\n", cause)
+	return true
 }
 
 // hostActivationPostsProbe is hostActivationPosts with the store opened once
@@ -721,10 +669,6 @@ func (gate *extenderActivationGate) probeLaunch(posts int, userId string, attemp
 	for attempt := 0; attempt < attempts; attempt++ {
 		_, openErr := openProviderStoreForProcessRetry(true, true, probeOpenTimeout)
 		allow, wait, used, err := extenderActivationDecision(time.Now(), posts, userId)
-		if errors.Is(err, errExtenderFallbackUnreadable) {
-			tlog("[extender] extender role off: %v; held until it can be read\n", err)
-			return extenderLaunchHeld, err
-		}
 		if err != nil {
 			cause = err
 			if openErr != nil && !errors.Is(err, errProviderStoreReleased) {
