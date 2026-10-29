@@ -944,6 +944,14 @@ func extenderRefusalBlocksUncountedLaunch(now time.Time) error {
 	if err != nil {
 		return err
 	}
+	// An existing unreadable store may already contain a refusal. Its
+	// absence is the only state in which an uncounted launch cannot bypass
+	// such a committed wait.
+	if _, err := os.Stat(path); err == nil {
+		return errors.New("the unavailable state store may contain an activation refusal")
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("the unavailable state store cannot be inspected: %w", err)
+	}
 	until, err := providerStoreRecoveryUntil(path, now)
 	if err != nil {
 		return fmt.Errorf("the recovery hold cannot be read: %w", err)
