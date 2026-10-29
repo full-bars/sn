@@ -148,8 +148,17 @@ func critLogDurable(path, line string) error {
 	if err != nil {
 		return err
 	}
-	if err := durablesync.SyncParent(path); err != nil {
-		return err
+	// Sync each ancestor as well: MkdirAll may have created more than the
+	// immediate parent, and each new directory entry needs its own sync.
+	for name := path; ; {
+		if err := durablesync.SyncParent(name); err != nil {
+			return err
+		}
+		parent := filepath.Dir(name)
+		if parent == name {
+			break
+		}
+		name = parent
 	}
 	if runtime.GOOS == "windows" {
 		return durablesync.ErrNotCrashDurable

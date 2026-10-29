@@ -53,15 +53,37 @@ func TestLossHoldAppliesToAStoreAlreadyOpen(t *testing.T) {
 	}
 }
 
-// The loss record says why the wait ended, and lands where a line can be made
-// durable: with events.log unusable it goes to the first fallback that takes it.
-func TestLossRecordFallsBackAndNamesTheCause(t *testing.T) {
+// A loss record does not share the event log that another process can rotate.
+func TestLossRecordSurvivesOrdinaryLogRotation(t *testing.T) {
 	testExtenderState(t)
-	path, err := critLogPath()
+	path, err := writeExtenderLossRecord("refusal evidence")
 	if err != nil {
 		t.Fatal(err)
 	}
-	// events.log cannot be opened for append: its name is a directory.
+	ordinary, err := critLogPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if path == ordinary {
+		t.Fatal("loss record shares the rotating event log")
+	}
+	if err := os.WriteFile(ordinary, []byte(strings.Repeat("x", critLogMaxSize+1)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	critLog("rotate")
+	data, err := os.ReadFile(path)
+	if err != nil || !strings.Contains(string(data), "refusal evidence") {
+		t.Fatalf("loss record after ordinary log rotation: %q, %v", data, err)
+	}
+}
+
+func TestLossRecordFallsBackAndNamesTheCause(t *testing.T) {
+	testExtenderState(t)
+	path, err := providerStatePath("refusal-loss.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The dedicated log cannot be opened for append: its name is a directory.
 	if err := os.MkdirAll(path, 0o700); err != nil {
 		t.Fatal(err)
 	}

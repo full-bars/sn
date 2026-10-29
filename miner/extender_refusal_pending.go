@@ -851,7 +851,7 @@ func waitExtenderRefusalsDurable(what string) bool {
 // refusal wait at the next decision of any process (providerStoreRecoveryUntil):
 // the lost refusal's wait is kept, over-long, rather than forgotten. Then it
 // records the loss on disk wherever a line can be made durable, the state
-// directory's events.log first. Where nothing can be written, stdout is all
+// directory's separate refusal-loss.log first. Where nothing can be written, stdout is all
 // that is left, and the next start may post into the operator's wait.
 func recordExtenderRefusalsLost(what string, cause error) {
 	at := extenderRefusalsAtRisk()
@@ -882,9 +882,9 @@ func holdExtenderRoleAfterLostRefusal(now time.Time) error {
 // extenderLossRecordFallbacks are where the loss is recorded when the state
 // directory takes nothing. A variable so a test can point it elsewhere.
 var extenderLossRecordFallbacks = func() []string {
-	paths := []string{filepath.Join(os.TempDir(), "urnetwork-miner-events.log")}
+	paths := []string{filepath.Join(os.TempDir(), "urnetwork-miner-refusal-loss.log")}
 	if cache, err := os.UserCacheDir(); err == nil {
-		paths = append(paths, filepath.Join(cache, "urnetwork-miner", "events.log"))
+		paths = append(paths, filepath.Join(cache, "urnetwork-miner", "refusal-loss.log"))
 	}
 	return paths
 }
@@ -893,7 +893,7 @@ var extenderLossRecordFallbacks = func() []string {
 // and says which.
 func writeExtenderLossRecord(line string) (string, error) {
 	var paths []string
-	if path, err := critLogPath(); err == nil {
+	if path, err := providerStatePath("refusal-loss.log"); err == nil {
 		paths = append(paths, path)
 	}
 	paths = append(paths, extenderLossRecordFallbacks()...)
