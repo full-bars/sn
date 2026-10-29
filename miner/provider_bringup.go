@@ -80,7 +80,7 @@ func providerSlotDisplay(settings *connect.ProxySettings) string {
 	if settings == nil {
 		return "direct"
 	}
-	return "proxy:" + settings.Address
+	return "proxy:" + redactedProxyAddress(settings.Address)
 }
 
 // providerBringUpLine is the heartbeat's line: the live tally of the run's

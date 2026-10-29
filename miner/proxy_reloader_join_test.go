@@ -2,6 +2,7 @@ package miner
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -202,5 +203,25 @@ func TestReloadUsernameChangeAtLiveAddressSwapsInOneReload(t *testing.T) {
 	want := []string{reloadTestSettings("198.51.100.52:443", "bob", "pw").Key()}
 	if got := r.runningKeys(); len(got) != 1 || got[0] != want[0] {
 		t.Fatalf("running = %v, want %v (summary %s)", got, want, summary)
+	}
+}
+
+// The refusal reaches the operator through the reload log, so the identity
+// that owns the address must be named by its redacted display, not the raw key.
+func TestReserveAddressRefusalOmitsOwnerKey(t *testing.T) {
+	p := &joinTestPool{}
+	r := p.reloader()
+	if err := r.reserveAddress(reloadTestSettings("198.51.100.52:443", "sppmr4vcnj", "pw")); err != nil {
+		t.Fatal(err)
+	}
+	err := r.reserveAddress(reloadTestSettings("198.51.100.52:443", "bob", "pw"))
+	if err == nil {
+		t.Fatal("want the second identity at one address refused")
+	}
+	if strings.ContainsRune(err.Error(), '\x1f') || strings.Contains(err.Error(), "sppmr4vcnj") {
+		t.Fatalf("refusal leaks the owner key: %q", err.Error())
+	}
+	if !strings.Contains(err.Error(), "198.51.100.52:443 (user sp***nj)") {
+		t.Fatalf("refusal does not name the redacted owner: %q", err.Error())
 	}
 }

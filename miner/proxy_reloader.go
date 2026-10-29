@@ -464,7 +464,7 @@ func (r *minerProxyReloader) reserveAddress(settings *connect.ProxySettings) err
 	key := settings.Key()
 	if existing, loaded := r.addressOwners.LoadOrStore(settings.Address, key); loaded {
 		if owner, _ := existing.(string); owner != key {
-			return fmt.Errorf("address %s is already served by identity %s in this run; a second identity at one address would share its slot identity (restart to re-key)", settings.Address, owner)
+			return fmt.Errorf("address %s is already served by identity %s in this run; a second identity at one address would share its slot identity (restart to re-key)", redactedProxyAddress(settings.Address), proxyKeyDisplay(owner))
 		}
 	}
 	return nil
@@ -608,11 +608,11 @@ func (r *minerProxyReloader) reloadContext(ctx context.Context) (minerReloadSumm
 			if cancel != nil {
 				cancel()
 			}
-			errs = append(errs, fmt.Errorf("start %s: %w", key, spawnErr))
+			errs = append(errs, fmt.Errorf("start %s: %w", proxyKeyDisplay(key), spawnErr))
 			if ok {
 				// The old slot is gone and the replacement is not running.
 				summary.Lost++
-				errs = append(errs, fmt.Errorf("identity %s is no longer served after a failed rotation", key))
+				errs = append(errs, fmt.Errorf("identity %s is no longer served after a failed rotation", proxyKeyDisplay(key)))
 			}
 			// Keep reconciling: one bad identity must not freeze every other
 			// operator change.
@@ -714,7 +714,7 @@ func (r *minerProxyReloader) relaunchIdentityContext(ctx context.Context, key st
 	r.mu.Unlock()
 
 	if _, err := r.reloadContext(ctx); err != nil {
-		tlog("[h3] reload after detaching %s failed: %v\n", key, err)
+		tlog("[h3] reload after detaching %s failed: %v\n", proxyKeyDisplay(key), err)
 	}
 	return true
 }

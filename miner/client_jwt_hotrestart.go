@@ -354,6 +354,9 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 	if identityKey == "" {
 		identityKey = jwtStoreKey(cfg.ProxySettings)
 	}
+	// identityKey is the raw store key and only for lookups; every log line
+	// and error text uses the redacted form.
+	identityDisplay := proxyKeyDisplay(identityKey)
 
 	networkJwt := ""
 	if cfg.NetworkJwtPath != "" {
@@ -409,7 +412,7 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 
 			switch {
 			case custodyDisagrees || (custodyClientID != "" && custodyClientID != entry.ClientID):
-				tlog("🔥 [hot-restart] %s: stored client %s disagrees with custody client %s, minting through custody\n", identityKey, entry.ClientID, custodyClientID)
+				tlog("🔥 [hot-restart] %s: stored client %s disagrees with custody client %s, minting through custody\n", identityDisplay, entry.ClientID, custodyClientID)
 
 			case !storeEntryPresentsRetainedClient(entry, cfg.Retained):
 				// A capture launch must present the client its profile
@@ -421,13 +424,13 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 				// never recorded. Fall through to the custody mint, which
 				// compares the same retained client against what the slot
 				// actually owns and refuses when it cannot present it.
-				tlog("🔥 [hot-restart] %s: stored client %s is not the client this launch must present (%s), minting through custody\n", identityKey, entry.ClientID, cfg.Retained.ClientId.String())
+				tlog("🔥 [hot-restart] %s: stored client %s is not the client this launch must present (%s), minting through custody\n", identityDisplay, entry.ClientID, cfg.Retained.ClientId.String())
 
 			case !haveCurrentNetworkId || (entry.NetworkID != "" && entry.NetworkID != currentNetworkId):
-				tlog("🔥 [hot-restart] %s: network_id mismatch (stored=%q current=%q have_current=%v), minting fresh\n", identityKey, entry.NetworkID, currentNetworkId, haveCurrentNetworkId)
+				tlog("🔥 [hot-restart] %s: network_id mismatch (stored=%q current=%q have_current=%v), minting fresh\n", identityDisplay, entry.NetworkID, currentNetworkId, haveCurrentNetworkId)
 
 			case jwtContainsClientId(entry.ByClientJWT) && jwtClientId(entry.ByClientJWT) != entry.ClientID:
-				tlog("🔥 [hot-restart] %s: stored JWT client_id %q disagrees with store client_id %q, minting fresh\n", identityKey, jwtClientId(entry.ByClientJWT), entry.ClientID)
+				tlog("🔥 [hot-restart] %s: stored JWT client_id %q disagrees with store client_id %q, minting fresh\n", identityDisplay, jwtClientId(entry.ByClientJWT), entry.ClientID)
 
 			case validateJWTExpiry(entry.ByClientJWT) != nil:
 				// Stored client JWT expired: renew-with-same-client_id before
@@ -462,7 +465,7 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 			default:
 				parsedId, parseErr := connect.ParseId(entry.ClientID)
 				if parseErr != nil {
-					tlog("🔥 [hot-restart] %s: stored client_id %q failed to parse (%v), minting fresh\n", identityKey, entry.ClientID, parseErr)
+					tlog("🔥 [hot-restart] %s: stored client_id %q failed to parse (%v), minting fresh\n", identityDisplay, entry.ClientID, parseErr)
 					break
 				}
 				// Self-heal: stamp the current network_id onto legacy entries
@@ -479,7 +482,7 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 						NetworkID:   currentNetworkId,
 						MintedAt:    entry.MintedAt,
 					}); putErr != nil {
-						tlog("⚠️ [jwt-store] failed to self-heal network_id for %s: %v\n", identityKey, putErr)
+						tlog("⚠️ [jwt-store] failed to self-heal network_id for %s: %v\n", identityDisplay, putErr)
 					}
 				}
 				bindReusedClientJWT(cfg, entry.ByClientJWT)
@@ -513,8 +516,8 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 		NetworkID:   currentNetworkId,
 		MintedAt:    time.Now(),
 	}); putErr != nil {
-		tlog("⚠️ [jwt-store] failed to persist client JWT for %s: %v\n", identityKey, putErr)
-		return "", connect.Id{}, false, fmt.Errorf("failed to persist minted client JWT for %s: %w", identityKey, putErr)
+		tlog("⚠️ [jwt-store] failed to persist client JWT for %s: %v\n", identityDisplay, putErr)
+		return "", connect.Id{}, false, fmt.Errorf("failed to persist minted client JWT for %s: %w", identityDisplay, putErr)
 	}
 	return byClientJwt, clientId, false, nil
 }
@@ -548,18 +551,19 @@ func renewStoredClientJWT(
 	description string,
 	currentNetworkId string,
 ) (renewedJwt string, renewedId connect.Id, ok bool, returnErr error) {
+	identityDisplay := proxyKeyDisplay(identityKey)
 	parsedId, parseErr := connect.ParseId(entry.ClientID)
 	if parseErr != nil {
 		// An entry whose client_id cannot be parsed is not evidence about a
 		// real identity; a renewal would have to guess. Mint fresh.
-		tlog("🔥 [hot-restart] %s: stored client_id %q failed to parse (%v), minting fresh\n", identityKey, entry.ClientID, parseErr)
+		tlog("🔥 [hot-restart] %s: stored client_id %q failed to parse (%v), minting fresh\n", identityDisplay, entry.ClientID, parseErr)
 		return "", connect.Id{}, false, nil
 	}
 	if networkJwt == "" {
 		// Without the account bearer a renewal cannot be attempted at all;
 		// leave the entry in place and mint through the custody path, which
 		// reports the real missing-sign-in cause.
-		tlog("🔥 [hot-restart] %s: no network sign-in token available to renew identity %s; minting through custody\n", identityKey, parsedId)
+		tlog("🔥 [hot-restart] %s: no network sign-in token available to renew identity %s; minting through custody\n", identityDisplay, parsedId)
 		return "", connect.Id{}, false, nil
 	}
 
@@ -575,20 +579,20 @@ func renewStoredClientJWT(
 				NetworkID:   currentNetworkId,
 				MintedAt:    time.Now(),
 			}); putErr != nil {
-				tlog("⚠️ [jwt-store] failed to persist renewed client JWT for %s: %v\n", identityKey, putErr)
+				tlog("⚠️ [jwt-store] failed to persist renewed client JWT for %s: %v\n", identityDisplay, putErr)
 			}
-			tlog("🔥 [hot-restart] %s: renewed identity %s\n", identityKey, parsedId)
+			tlog("🔥 [hot-restart] %s: renewed identity %s\n", identityDisplay, parsedId)
 			return renewedJwt, parsedId, true, nil
 		}
 		lastErr = renewErr
 		if !isRenewalTransient(renewErr) {
 			// A verdict from the platform: the stored identity cannot be
 			// renewed. Mint fresh (the custody path owns any tombstone).
-			tlog("🔥 [hot-restart] %s: renewal of identity %s failed (%v), minting fresh\n", identityKey, parsedId, renewErr)
+			tlog("🔥 [hot-restart] %s: renewal of identity %s failed (%v), minting fresh\n", identityDisplay, parsedId, renewErr)
 			return "", connect.Id{}, false, nil
 		}
 		if attempt < clientJWTRenewAttempts {
-			tlog("🔥 [hot-restart] %s: renewal of identity %s failed without a verdict (%v); retrying in %s\n", identityKey, parsedId, renewErr, clientJWTRenewRetryDelay)
+			tlog("🔥 [hot-restart] %s: renewal of identity %s failed without a verdict (%v); retrying in %s\n", identityDisplay, parsedId, renewErr, clientJWTRenewRetryDelay)
 			select {
 			case <-ctx.Done():
 				return "", connect.Id{}, false, errors.Join(renewErr, ctx.Err())
@@ -596,7 +600,7 @@ func renewStoredClientJWT(
 			}
 		}
 	}
-	tlog("🔥 [hot-restart] %s: stored client JWT expired, renewal of identity %s failed without a verdict (%v); keeping the identity and retrying instead of minting a new one\n", identityKey, parsedId, lastErr)
+	tlog("🔥 [hot-restart] %s: stored client JWT expired, renewal of identity %s failed without a verdict (%v); keeping the identity and retrying instead of minting a new one\n", identityDisplay, parsedId, lastErr)
 	return "", connect.Id{}, false, fmt.Errorf("renewal of %s deferred: %w", parsedId, lastErr)
 }
 

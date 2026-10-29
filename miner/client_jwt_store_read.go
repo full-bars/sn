@@ -144,12 +144,12 @@ func snClaimCredentialFromOpts(opts docopt.Opts) (snCredentialSelection, error) 
 	store := readClientJWTStore(path)
 	resolved, entry, candidates := store.Find(key)
 	if 1 < len(candidates) {
-		return snCredentialSelection{}, fmt.Errorf("%d identities in %s share the address %q, one per proxy account. Pass the full key, the address then \\x1f then the user, e.g. --store-client=$'%s\\x1f<user>'", len(candidates), path, key, key)
+		return snCredentialSelection{}, fmt.Errorf("%d identities in %s share the address %s, one per proxy account. Pass the full key, the address then \\x1f then the user, e.g. --store-client=$'%s\\x1f<user>'", len(candidates), path, proxyKeyDisplay(key), redactedProxyAddress(key))
 	}
 	if resolved == "" && len(candidates) == 0 {
-		return snCredentialSelection{}, fmt.Errorf("no client %q in %s (%d identities). The key is the proxy address the identity was minted for, or \"direct\"", key, path, store.Count())
+		return snCredentialSelection{}, fmt.Errorf("no client %s in %s (%d identities). The key is the proxy address the identity was minted for, or \"direct\"", proxyKeyDisplay(key), path, store.Count())
 	}
-	token, err := claimClientToken(entry.ByClientJWT, fmt.Sprintf("the client token stored for %q in %s", key, path))
+	token, err := claimClientToken(entry.ByClientJWT, fmt.Sprintf("the client token stored for %s in %s", proxyKeyDisplay(key), path))
 	if err != nil {
 		return snCredentialSelection{}, err
 	}
