@@ -27,6 +27,52 @@ import (
 // same transactions and removes each one only after the store has kept it. A
 // file read twice is charged once, because the record remembers each attempt.
 
+// The barrier orders publication against admission. An admission reads what is
+// held, then decides and commits; a refusal published between its read and its
+// commit would be missed, and the admission would record a post into a wait the
+// refusal already set. So both run under one barrier: a process-local mutex and
+// a lock file in the state directory, which a hotswap parent and its candidate
+// both take. A publication either finishes before an admission reads, and is
+// charged by it, or starts after the admission commits, and is charged by the
+// next transaction.
+//
+// Lock order is the barrier first, then the held mutex. Nothing takes the
+// barrier while it holds the held mutex.
+var extenderRefusalBarrierMu sync.Mutex
+
+// extenderRefusalBarrierName is the lock file's base name; acquireFileLock
+// adds its own suffix, which keeps it clear of the journal's .json files.
+const extenderRefusalBarrierName = "extender-refusal-barrier"
+
+// lockExtenderRefusalBarrier takes the barrier. The release is always valid.
+// The error says the lock file could not be taken, so the interprocess half is
+// not held: an admission must then fail, and a publication holds the refusal
+// in memory without a file.
+func lockExtenderRefusalBarrier() (func(), error) {
+	extenderRefusalBarrierMu.Lock()
+	dir, err := providerStateDir()
+	if err == nil {
+		if mkdirErr := os.MkdirAll(dir, 0o700); mkdirErr != nil {
+			err = mkdirErr
+		}
+	}
+	var release func()
+	if err == nil {
+		release, err = acquireFileLock(filepath.Join(dir, extenderRefusalBarrierName))
+	}
+	return func() {
+		if release != nil {
+			release()
+		}
+		extenderRefusalBarrierMu.Unlock()
+	}, err
+}
+
+// extenderAdmissionSnapshotHook runs between an admission's read of the held
+// refusals and its transaction. A test uses it to publish a refusal at the one
+// moment that used to be missed.
+var extenderAdmissionSnapshotHook func()
+
 // extenderPendingRefusal is one refusal waiting to be kept.
 type extenderPendingRefusal struct {
 	account string
@@ -68,13 +114,18 @@ var extenderRefusalsHeld struct {
 
 // holdExtenderRefusal keeps a decided refusal until a transaction charges it.
 func holdExtenderRefusal(account, attempt string) {
+	release, barrierErr := lockExtenderRefusalBarrier()
+	defer release()
 	extenderRefusalsHeld.mu.Lock()
 	defer extenderRefusalsHeld.mu.Unlock()
 	if extenderRefusalsHeld.items == nil {
 		extenderRefusalsHeld.items = make(map[string]extenderPendingRefusal)
 	}
 	refusal := extenderPendingRefusal{account: account, attempt: attempt}
-	refusal.journaled = journalExtenderRefusal(refusal) == nil
+	// Without the interprocess half of the barrier the file could appear
+	// after an admission read, so the refusal stays in memory, where this
+	// process's own admissions still charge it.
+	refusal.journaled = barrierErr == nil && journalExtenderRefusal(refusal) == nil
 	extenderRefusalsHeld.items[attempt] = refusal
 }
 
@@ -202,6 +253,11 @@ func settleExtenderRefusals(kept []extenderPendingRefusal) {
 // journalHeldExtenderRefusals writes the files that failed when the refusal was
 // held, so a process that ends before the store returns still leaves them.
 func journalHeldExtenderRefusals() {
+	release, barrierErr := lockExtenderRefusalBarrier()
+	defer release()
+	if barrierErr != nil {
+		return
+	}
 	extenderRefusalsHeld.mu.Lock()
 	defer extenderRefusalsHeld.mu.Unlock()
 	for attempt, refusal := range extenderRefusalsHeld.items {

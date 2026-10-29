@@ -246,11 +246,22 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 	}
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
+	// Held from the read of the refusals to the commit that charges them, so
+	// no refusal is published in between (lockExtenderRefusalBarrier).
+	release, err := lockExtenderRefusalBarrier()
+	defer release()
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+		return err
+	}
 	now := time.Now()
 	pending, err := snapshotExtenderRefusals(now)
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
 		return err
+	}
+	if extenderAdmissionSnapshotHook != nil {
+		extenderAdmissionSnapshotHook()
 	}
 	var waits []time.Duration
 	var record extenderActivationRecord
