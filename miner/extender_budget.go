@@ -151,7 +151,8 @@ type extenderActivationLegacy struct {
 // is not bounded because an entry needs a distinct sign-in account on this
 // host, which the operator controls and a heal does not add to.
 type extenderActivationRecord struct {
-	Accounts map[string]extenderActivationState `json:"accounts,omitempty"`
+	Accounts            map[string]extenderActivationState `json:"accounts,omitempty"`
+	QuarantineUntilUnix int64                              `json:"quarantine_until_unix,omitempty"`
 	extenderActivationLegacy
 }
 
@@ -396,6 +397,8 @@ func extenderActivationAllow(now time.Time, posts int, userId string) (allow boo
 		state := record.Accounts[account]
 		used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
 		switch {
+		case now.Unix() < record.QuarantineUntilUnix:
+			wait = time.Duration(record.QuarantineUntilUnix-now.Unix()) * time.Second
 		case now.Unix() < state.BackoffUntilUnix:
 			wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
 		case extenderActivationBudget < used+posts:
@@ -446,6 +449,7 @@ func extenderActivationSpendSpare(now time.Time, userId string, pass extenderAct
 		used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
 		switch {
 		case 0 < state.SpareAtUnix && now.Sub(time.Unix(state.SpareAtUnix, 0)) < extenderActivationWindow:
+		case now.Unix() < record.QuarantineUntilUnix:
 		case now.Unix() < state.BackoffUntilUnix:
 		case extenderActivationBudget <= used:
 		default:
