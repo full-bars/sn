@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -111,6 +112,33 @@ func acquireProxyLockWithRetry() (func(), error) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	return nil, err
+}
+
+// proxyStartLockWait bounds how long provider startup waits for a live lock
+// holder (a slow reload, clear or health write in another process). A holder
+// that is gone is stolen by acquireProxyLockAt, so this only expires when a
+// live process genuinely never lets go, and startup then fails with that error.
+var proxyStartLockWait = 2 * time.Minute
+
+// acquireProxyLockWait polls for the proxy lock every 100 ms until it is held,
+// the context ends, or maxWait passes. The returned error is the last
+// acquisition error, or the context's.
+func acquireProxyLockWait(ctx context.Context, maxWait time.Duration) (func(), error) {
+	deadline := time.NewTimer(maxWait)
+	defer deadline.Stop()
+	for {
+		release, err := acquireProxyLock()
+		if err == nil {
+			return release, nil
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-deadline.C:
+			return nil, fmt.Errorf("proxy lock still held after %s: %w", maxWait, err)
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
 }
 
 // acquireProxyLockAt is the path-explicit form, for testing.

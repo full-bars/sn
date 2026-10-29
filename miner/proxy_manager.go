@@ -680,7 +680,9 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	// Startup imports identity/provenance into proxy.state and may persist it.
 	// Take the cross-process lock before the in-process mutex, matching reload
 	// and clear, so neither can replace this transaction with a stale snapshot.
-	release, err := acquireProxyLockWithRetry()
+	// A holder that outlives a short retry window must not abort the provider:
+	// wait for it, bounded by proxyStartLockWait and the run context.
+	release, err := acquireProxyLockWait(parent, proxyStartLockWait)
 	if err != nil {
 		return nil, nil, fmt.Errorf("proxy state lock: %w", err)
 	}
