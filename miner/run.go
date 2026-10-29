@@ -1987,46 +1987,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// unprofiled run: a profile run validates and registers a fixed slot set at
 	// start, and a slot appearing at runtime would bypass that gate.
 	var reloader *minerProxyReloader
-	var retryMu sync.Mutex
-	retryAttempts := map[string]int{}
 	// join is what the run waits on before it ends: the launched slots, the
 	// slots a reload starts later and the retries scheduled for failed ones.
 	join := newSlotJoin()
-	var retryFailedProxy func(key string)
-	retryFailedProxy = func(key string) {
-		retryMu.Lock()
-		retryAttempts[key]++
-		attempt := retryAttempts[key]
-		retryMu.Unlock()
-		if attempt > 3 {
-			tlog("[proxy][retry] stopped retrying %s after three attempts\n", proxyKeyDisplay(key))
-			return
+	retrier := newProxyRetrier(ctx, join, func(retryCtx context.Context) error {
+		if reloader == nil {
+			return nil
 		}
-		// The retry counts as a running worker, so the run cannot end between
-		// the failure and the retry. The failing worker is still registered
-		// when this runs, so the count never touches zero in between.
-		if !join.add() {
-			return
-		}
-		// Recompute desired state and eligibility before restarting anything.
-		go func() {
-			defer join.done()
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(time.Duration(attempt) * time.Second):
-			}
-			if reloader == nil {
-				return
-			}
-			if _, err := reloader.reload(); err != nil {
-				tlog("[proxy][retry] reload for %s failed: %v\n", proxyKeyDisplay(key), err)
-				// A failed reload applied nothing, so nothing else will bring
-				// the slot back: try again until the attempts run out.
-				retryFailedProxy(key)
-			}
-		}()
-	}
+		_, err := reloader.reloadContext(retryCtx)
+		return err
+	})
+	retryFailedProxy := retrier.retry
 	if workProfile == nil && contractProfile == nil {
 		// Reloaded slots continue past the configured index range, so a slot
 		// added at runtime never collides with a configured slot's label.
