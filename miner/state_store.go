@@ -32,6 +32,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/urfoundation/sn/internal/durablesync"
 	"go.etcd.io/bbolt"
 )
 
@@ -216,14 +217,7 @@ func (e *providerStoreDecodeError) Unwrap() error { return e.err }
 // providerStoreSyncDir flushes one directory entry, which is what makes a
 // freshly created database file durable before its first write. A variable so
 // a test can observe the sync and its failure without a crash.
-var providerStoreSyncDir = func(dir string) error {
-	handle, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer handle.Close()
-	return handle.Sync()
-}
+var providerStoreSyncDir = durablesync.SyncDir
 
 func (s *providerStore) Close() error {
 	if s == nil || s.db == nil {
