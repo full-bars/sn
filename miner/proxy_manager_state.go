@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -214,12 +216,29 @@ func adoptLegacyProxyState(state *ProxyState, desired []*connect.ProxySettings) 
 // identity), never the raw key - Key()'s \x1f separator must never reach a
 // log line or terminal verbatim, and the password is never in the key to
 // begin with (see ProxySettings.Key()).
+//
+// The address is shown only when it is a plain host:port. The legacy config
+// parser can keep a malformed entry (a URI with userinfo or a token path) as
+// the address, so anything else renders as a placeholder instead of leaking.
 func proxyKeyDisplay(key string) string {
 	address, user := connect.SplitProxyKey(key)
+	if address != "direct" && !plainHostPort(address) {
+		address = "<unparsable proxy address>"
+	}
 	if user == "" {
 		return address
 	}
 	return fmt.Sprintf("%s (user %s)", address, obfuscateUser(user))
+}
+
+// plainHostPort reports whether s is a bare host:port with nothing that could
+// carry credentials (userinfo, scheme, path, query, whitespace).
+func plainHostPort(s string) bool {
+	if strings.ContainsAny(s, "@/?#\\ \t\r\n") {
+		return false
+	}
+	host, port, err := net.SplitHostPort(s)
+	return err == nil && host != "" && port != ""
 }
 
 // resolveProxyID returns the stable ID for an address.

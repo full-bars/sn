@@ -55,3 +55,33 @@ func TestObfuscateUserShortName(t *testing.T) {
 		t.Fatalf("six char user = %q, want %q", got, "ab***ef")
 	}
 }
+
+// The legacy config parser can keep a malformed URI as the address. Its
+// userinfo and path must not reach the operator log, with or without a
+// separate auth user.
+func TestProxyKeyDisplayRejectsEmbeddedUserinfo(t *testing.T) {
+	bad := []string{
+		"socks5://alice:secret@host:1080/token",
+		"alice:secret@host:1080",
+		"host:1080/token",
+		"not an address",
+		"",
+	}
+	for _, address := range bad {
+		for _, auth := range []*proxy.Auth{nil, {User: "sppmr4vcnj", Password: "pw"}} {
+			key := (&connect.ProxySettings{Address: address, Auth: auth}).Key()
+			got := proxyKeyDisplay(key)
+			for _, leak := range []string{"alice", "secret", "token", "sppmr4vcnj", "\x1f"} {
+				if strings.Contains(got, leak) {
+					t.Fatalf("display of %q leaks %q: %q", address, leak, got)
+				}
+			}
+		}
+	}
+	if got := proxyKeyDisplay("[2001:db8::1]:1080"); got != "[2001:db8::1]:1080" {
+		t.Fatalf("ipv6 host:port = %q", got)
+	}
+	if got := proxyKeyDisplay("direct"); got != "direct" {
+		t.Fatalf("direct sentinel = %q", got)
+	}
+}
