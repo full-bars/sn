@@ -110,3 +110,32 @@ func TestUnsealFreesTheBarrierASealedRefusalHeld(t *testing.T) {
 		t.Fatalf("the barrier stayed held after the handoff was abandoned: %v", err)
 	}
 }
+
+// A stalled journal write must not pin the mutex needed to abort a handoff.
+func TestUnsealReturnsWhileJournalWriteIsStalled(t *testing.T) {
+	testExtenderState(t)
+	if err := sealExtenderRefusals(); err != nil {
+		t.Fatal(err)
+	}
+	entered, unblock, finished := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	original := providerStoreDurableRename
+	providerStoreDurableRename = func(from, to string) error {
+		close(entered)
+		<-unblock
+		return original(from, to)
+	}
+	t.Cleanup(func() { close(unblock); <-finished; providerStoreDurableRename = original })
+	go func() { holdExtenderRefusal(extenderTestAccountA, "scope.2601"); close(finished) }()
+	select {
+	case <-entered:
+	case <-time.After(3 * time.Second):
+		t.Fatal("journal write did not start")
+	}
+	done := make(chan struct{})
+	go func() { unsealExtenderRefusals(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(300 * time.Millisecond):
+		t.Fatal("unseal waited for the stalled journal write")
+	}
+}

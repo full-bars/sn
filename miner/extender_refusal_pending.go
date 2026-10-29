@@ -47,7 +47,11 @@ import (
 // next transaction.
 //
 // Lock order is the barrier first, then the held mutex. Nothing takes the
-// barrier while it holds the held mutex.
+// barrier while it holds the held mutex, and nothing holds the held mutex
+// across the disk or the store: it guards memory only, so what only reads or
+// changes memory (unseal, the at-risk count) is never stuck behind a write
+// that stalls. The barrier is what a stalled write keeps, and with it every
+// publication and admission waits, which is the failure closed.
 var extenderRefusalBarrierMu sync.Mutex
 
 // extenderRefusalBarrierName is the lock file's base name; acquireFileLock
@@ -245,15 +249,19 @@ func holdExtenderRefusal(account, attempt string) {
 		}
 	}
 	queueExtenderOpLocked(extenderPendingOp{kind: extenderOpRefusal, account: account, attempt: attempt, at: time.Now()})
+	sealed := extenderRefusalsHeld.sealed
+	journalDue := !time.Now().Before(extenderRefusalsHeld.journalAt)
+	extenderRefusalsHeld.mu.Unlock()
 	// Without the interprocess half of the barrier the file could appear
 	// after an admission read, so the refusal stays in memory, where this
 	// process's own admissions still charge it.
 	keep := false
-	if extenderRefusalsHeld.sealed {
-		keep = barrierErr != nil || journalQueuedRefusalsLocked() != nil
-	} else if barrierErr == nil && !time.Now().Before(extenderRefusalsHeld.journalAt) {
-		journalQueuedRefusalsLocked()
+	if sealed {
+		keep = barrierErr != nil || journalQueuedRefusals() != nil
+	} else if barrierErr == nil && journalDue {
+		_ = journalQueuedRefusals()
 	}
+	extenderRefusalsHeld.mu.Lock()
 	if hasUnjournaledRefusalLocked() {
 		startExtenderWorkerLocked()
 	}
@@ -285,10 +293,9 @@ func keepSealedRefusal(releaseFile func()) {
 			releaseFile, _ = lockExtenderRefusalBarrierFile()
 		}
 		extenderRefusalsHeld.mu.Lock()
-		done := !extenderRefusalsHeld.sealed ||
-			(releaseFile != nil && journalQueuedRefusalsLocked() == nil)
+		sealed := extenderRefusalsHeld.sealed
 		extenderRefusalsHeld.mu.Unlock()
-		if done {
+		if !sealed || (releaseFile != nil && journalQueuedRefusals() == nil) {
 			return
 		}
 	}
@@ -321,25 +328,35 @@ func hasUnjournaledRefusalLocked() bool {
 	return false
 }
 
-// journalQueuedRefusalsLocked writes one file holding every refusal not yet
-// journaled, and marks them. The caller holds the barrier and the held mutex.
-func journalQueuedRefusalsLocked() error {
+// journalQueuedRefusals writes one file holding every refusal not yet
+// journaled, and marks them. The caller holds the barrier, which keeps every
+// other journal write and every settle out, and not the held mutex: the file is
+// written with that mutex free and the refusals marked by sequence after.
+func journalQueuedRefusals() error {
+	extenderRefusalsHeld.mu.Lock()
 	var entries []extenderRefusalJournalEntry
+	written := make(map[uint64]bool)
 	for _, op := range extenderRefusalsHeld.ops {
 		if op.kind == extenderOpRefusal && !op.journaled {
 			entries = append(entries, extenderRefusalJournalEntry{Account: op.account, Attempt: op.attempt, AtUnix: op.at.Unix()})
+			written[op.seq] = true
 		}
 	}
+	if len(entries) > 0 {
+		extenderRefusalsHeld.journalAt = time.Now().Add(persistPace())
+	}
+	extenderRefusalsHeld.mu.Unlock()
 	if len(entries) == 0 {
 		return nil
 	}
-	extenderRefusalsHeld.journalAt = time.Now().Add(persistPace())
 	name, err := journalExtenderRefusals(entries)
 	if err != nil {
 		return err
 	}
+	extenderRefusalsHeld.mu.Lock()
+	defer extenderRefusalsHeld.mu.Unlock()
 	for i := range extenderRefusalsHeld.ops {
-		if op := &extenderRefusalsHeld.ops[i]; op.kind == extenderOpRefusal && !op.journaled {
+		if op := &extenderRefusalsHeld.ops[i]; written[op.seq] {
 			op.journaled, op.journalFile = true, name
 		}
 	}
@@ -504,9 +521,11 @@ func settleExtenderRefusals(kept extenderRefusalSnapshot) {
 		remaining = append(remaining, op)
 	}
 	extenderRefusalsHeld.ops = remaining
+	extenderRefusalsHeld.mu.Unlock()
 	for _, path := range files {
 		_ = os.Remove(path)
 	}
+	extenderRefusalsHeld.mu.Lock()
 }
 
 // journalHeldExtenderRefusals writes the file for what was not journaled when
@@ -517,9 +536,7 @@ func journalHeldExtenderRefusals() error {
 	if barrierErr != nil {
 		return barrierErr
 	}
-	extenderRefusalsHeld.mu.Lock()
-	defer extenderRefusalsHeld.mu.Unlock()
-	return journalQueuedRefusalsLocked()
+	return journalQueuedRefusals()
 }
 
 // extenderRefusalsHeldCount is the number of refusals not yet kept.
@@ -698,34 +715,25 @@ func sealExtenderRefusals() error {
 		return fmt.Errorf("refusal barrier: %w", err)
 	}
 	extenderRefusalsHeld.mu.Lock()
-	defer extenderRefusalsHeld.mu.Unlock()
 	extenderRefusalsHeld.sealed = true
+	extenderRefusalsHeld.mu.Unlock()
 	// A refusal queued between the gate and the seal.
-	if extenderRefusalsHeldAtRiskLocked() > 0 {
-		if err := journalQueuedRefusalsLocked(); err != nil {
-			extenderRefusalsHeld.sealed = false
-			return fmt.Errorf("%d decided activation refusals are neither in the state store nor in a durable file", extenderRefusalsHeldAtRiskLocked())
-		}
+	if err := journalQueuedRefusals(); err != nil {
+		unsealExtenderRefusals()
+		return fmt.Errorf("%d decided activation refusals are neither in the state store nor in a durable file", extenderRefusalsAtRisk())
 	}
 	return nil
 }
 
 // unsealExtenderRefusals returns to paced journaling after a handoff is
-// abandoned and the process keeps serving.
+// abandoned and the process keeps serving. It takes only the held mutex, which
+// no disk write holds, so it returns while a journal write is stalled; the
+// write keeps the barrier until it returns, and keepSealedRefusal sees the
+// seal gone at its next turn.
 func unsealExtenderRefusals() {
 	extenderRefusalsHeld.mu.Lock()
 	defer extenderRefusalsHeld.mu.Unlock()
 	extenderRefusalsHeld.sealed = false
-}
-
-func extenderRefusalsHeldAtRiskLocked() int {
-	count := 0
-	for _, op := range extenderRefusalsHeld.ops {
-		if op.kind == extenderOpRefusal && !op.journaled {
-			count++
-		}
-	}
-	return count
 }
 
 // extenderDurableAttempts counts the durability attempts still running, so a

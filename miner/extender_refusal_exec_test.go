@@ -89,11 +89,11 @@ func TestContainerExecStopsBeforeTeardownWhenALateRefusalIsUnjournaled(t *testin
 	}
 	failJournalRename(t)
 	var yielded, execed atomic.Bool
-	t.Cleanup(RegisterCoordinatorCloser(func() { yielded.Store(true) }))
 	containerHandoffForTest(t, func() {
 		releaseProviderStore()
 		holdExtenderRefusal(extenderTestAccountA, "scope.2301")
 	}, func() error { execed.Store(true); return nil })
+	t.Cleanup(RegisterCoordinatorCloser(func() { yielded.Store(true) }))
 
 	err := runHotSwapParentHandoff(context.Background(), func() {}, docopt.Opts{})
 	if err == nil || execed.Load() {
@@ -129,5 +129,29 @@ func TestContainerExecHoldsCallbacksFromTheLastCheckToExec(t *testing.T) {
 	<-late
 	if got := queuedBeforeExec.Load(); got != 0 {
 		t.Fatalf("a callback queued %d refusals between the last check and exec", got)
+	}
+}
+
+// A refusal decided by coordinator teardown must prevent exec if it cannot be saved.
+func TestContainerExecAbortsWhenTeardownRefusalCannotBeJournaled(t *testing.T) {
+	testExtenderState(t)
+	shortenRefusalGate(t)
+	if providerStoreInstance() == nil {
+		t.Fatal("store did not open")
+	}
+	failJournalRename(t)
+	var yielded, execed atomic.Bool
+	containerHandoffForTest(t, func() {}, func() error { execed.Store(true); return nil })
+	t.Cleanup(RegisterCoordinatorCloser(func() {
+		yielded.Store(true)
+		releaseProviderStore()
+		holdExtenderRefusal(extenderTestAccountA, "scope.2501")
+	}))
+	err := runHotSwapParentHandoff(context.Background(), func() {}, docopt.Opts{})
+	if !yielded.Load() {
+		t.Fatal("coordinator closer was not called")
+	}
+	if err == nil || execed.Load() {
+		t.Fatalf("exec proceeded with unsaved teardown refusal: exec=%t err=%v", execed.Load(), err)
 	}
 }

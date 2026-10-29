@@ -969,13 +969,13 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		// image would die of SIGPIPE on its first write.
 		restoreStdioBeforeExecFunc()
 
-		// The barrier is held from the last check to execve, so no callback
-		// queues a refusal in between. The provider is torn down by now and
-		// cannot be retained, so a refusal decided during the teardown that
-		// no file took is recorded as lost, with the hold that replaces it.
+		// Hold the barrier through exec. If teardown produced a refusal that
+		// cannot be kept, do not replace the image and discard it.
 		releaseRefusals, refusalsErr := quiesceExtenderRefusalsForExec(time.Now().Add(extenderRefusalGateDeadline))
 		if refusalsErr != nil {
-			recordExtenderRefusalsLost("in-place hotswap", refusalsErr)
+			releaseRefusals()
+			unsealExtenderRefusals()
+			return fmt.Errorf("in-place hotswap aborted after teardown: %w", refusalsErr)
 		}
 		err := execInPlaceFunc(exe, args, cleanEnv)
 		releaseRefusals()
