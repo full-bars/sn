@@ -51,6 +51,7 @@ jobs:
           for f in docker/scripts/*.sh docker/miner/*.sh; do
             bash -n "$f" || { echo "::error file=$f::shell syntax error"; exit 1; }
           done
+          sh docker/scripts/test_jwt_auth_env.sh
 
       - name: Check cross-compiled arm64 binaries
         # The builder runs on amd64 and verifies all three binaries before any
@@ -93,6 +94,13 @@ jobs:
           [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 for BUILD=bogus, got $rc"; exit 1; }
           echo "$out" | grep -qF "Invalid build: bogus" \
             || { echo "::error::entrypoint did not report the invalid build"; exit 1; }
+
+      - name: Auth code reaches the provider binary
+        # A real auth code cannot be used here, so the provider binary is
+        # replaced by a recorder and the assertion is on the argv it received.
+        # This is the credential-free stand-in for the shakedown's skipped
+        # URNETWORK_AUTH_CODE case.
+        run: sh docker/scripts/test_auth_argv_in_container.sh "$IMG"
 
       - name: urnet-docker status on an empty box
         # No provider container exists in the throwaway container, so status
