@@ -929,6 +929,9 @@ func TestExtenderActivationHoldsAfterTheStoreIsQuarantined(t *testing.T) {
 // write fails after its callback has already calculated and appended posts.
 func stubExtenderMutation(t *testing.T, initial extenderActivationState, failBefore, failAfter int) (*extenderActivationState, *int) {
 	t.Helper()
+	// A refusal the stub cannot take leaves its hold beside the state
+	// directory, which must not be the machine's real one.
+	t.Setenv("URNETWORK_STATE_DIR", filepath.Join(t.TempDir(), "state"))
 	previous := mutateExtenderActivationRecord
 	state := initial
 	calls := 0

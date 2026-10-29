@@ -32,10 +32,13 @@ package miner
 // extenderActivationSpendSpare does.
 //
 // The record is a section of provider_state.db (state_store.go), not a file of
-// its own. When it cannot be used after bounded retries, a separate fallback
-// record counts launches until the real store can be read again.
+// its own. When it cannot be used after bounded retries, a fallback ledger of
+// the same shape counts launches, and the first read of the real record merges
+// it in (extender_fallback.go).
 
 import (
+	"errors"
+	"os"
 	"sync"
 	"time"
 
@@ -150,6 +153,9 @@ type extenderActivationLegacy struct {
 // host, which the operator controls and a heal does not add to.
 type extenderActivationRecord struct {
 	Accounts map[string]extenderActivationState `json:"accounts,omitempty"`
+	// FallbackStamp is the newest fallback ledger already merged into Accounts
+	// (extender_fallback.go), so a merge is applied once.
+	FallbackStamp int64 `json:"fallback_stamp,omitempty"`
 	extenderActivationLegacy
 }
 
@@ -224,8 +230,10 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 }
 
 // mutateExtenderActivationRecord is the budget's write path: it holds the
-// package lock for the whole decision and mutates inside one store transaction.
-// A store that cannot be used is reported to the caller.
+// package lock and the cross-process ledger lock for the whole decision and
+// mutates inside one store transaction. A fallback ledger found under the lock
+// is merged into the record in the same transaction and removed once it
+// commits. A store that cannot be used is reported to the caller.
 var mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
 	store := providerStoreInstance()
 	if store == nil {
@@ -234,8 +242,25 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 	}
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
+	unlock, err := lockExtenderLedger()
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+		return err
+	}
+	defer unlock()
+	// The real ledger decides even when the fallback file cannot be read.
+	var fallback extenderFallbackRecord
+	var fallbackPath string
+	var fallbackFound bool
+	if path, pathErr := extenderFallbackPath(); pathErr == nil {
+		if loaded, found, loadErr := loadExtenderFallback(path); loadErr != nil {
+			tlog("⚠️ [extender] activation fallback record not merged: %v\n", loadErr)
+		} else {
+			fallback, fallbackFound, fallbackPath = loaded, found, path
+		}
+	}
 	var record extenderActivationRecord
-	err := store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
+	err = store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
 		if !found {
 			record = extenderActivationRecord{}
 		}
@@ -243,12 +268,21 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 			record.Accounts = map[string]extenderActivationState{}
 		}
 		record.adoptLegacy(account)
+		if fallbackFound {
+			record.mergeFallback(fallback, time.Now())
+		}
 		return mutate(&record)
 	})
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
+		return err
 	}
-	return err
+	if fallbackFound {
+		if rmErr := os.Remove(fallbackPath); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {
+			tlog("⚠️ [extender] merged activation fallback record not removed: %v\n", rmErr)
+		}
+	}
+	return nil
 }
 
 // adoptLegacy moves a pre-account record onto the account. The old record
@@ -301,7 +335,12 @@ func (record *extenderActivationRecord) adoptUnidentified(account string, now ti
 		return
 	}
 	delete(record.Accounts, extenderActivationUnidentifiedAccount)
-	state := record.Accounts[account]
+	record.Accounts[account] = mergeExtenderActivationState(record.Accounts[account], pending, now)
+}
+
+// mergeExtenderActivationState folds one account's pending spending into
+// another state of the same account.
+func mergeExtenderActivationState(state, pending extenderActivationState, now time.Time) extenderActivationState {
 	cutoff := now.Add(-extenderActivationWindow).Unix()
 	for _, at := range pending.Attempts {
 		if cutoff < at {
@@ -322,7 +361,7 @@ func (record *extenderActivationRecord) adoptUnidentified(account string, now ti
 		// longer live streak keeps its own count and its own timestamp.
 		state.Refusals, state.LastRefusalUnix = pending.Refusals, pending.LastRefusalUnix
 	}
-	record.Accounts[account] = state
+	return state
 }
 
 // extenderActivationAccountKey is the record key for one account. A start that
@@ -382,37 +421,44 @@ func extenderActivationAllow(now time.Time, posts int, userId string) (bool, tim
 	return allow, wait, used
 }
 
+// decideExtenderActivationOn is the one decision rule, applied to whichever
+// ledger the caller holds. It records the launch's posts when it allows it.
+func decideExtenderActivationOn(record *extenderActivationRecord, account string, now time.Time, posts int) (allow bool, wait time.Duration, used int) {
+	// The token resolves on this path, so this is where posts charged while
+	// it was unreadable first learn the account that spent them.
+	record.adoptUnidentified(account, now)
+	state := record.Accounts[account]
+	used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
+	switch {
+	case now.Unix() < state.BackoffUntilUnix:
+		wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
+	case extenderActivationBudget < used+posts:
+		// Wait for the oldest counted post to age out of the window.
+		oldest := state.Attempts[0]
+		for _, at := range state.Attempts[1:] {
+			if at < oldest {
+				oldest = at
+			}
+		}
+		if wait = time.Unix(oldest, 0).Add(extenderActivationWindow).Sub(now); wait < 0 {
+			wait = 0
+		}
+	default:
+		for i := 0; i < posts; i++ {
+			state.Attempts = append(state.Attempts, now.Unix())
+		}
+		allow = true
+	}
+	record.Accounts[account] = state
+	return allow, wait, used
+}
+
 // extenderActivationDecision distinguishes a withheld decision from a refusal.
 func extenderActivationDecision(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int, err error) {
 	account := extenderActivationAccountKey(userId)
 	decided := false
 	err = mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
-		// The token resolves on this path, so this is where posts charged while
-		// it was unreadable first learn the account that spent them.
-		record.adoptUnidentified(account, now)
-		state := record.Accounts[account]
-		used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
-		switch {
-		case now.Unix() < state.BackoffUntilUnix:
-			wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
-		case extenderActivationBudget < used+posts:
-			// Wait for the oldest counted post to age out of the window.
-			oldest := state.Attempts[0]
-			for _, at := range state.Attempts[1:] {
-				if at < oldest {
-					oldest = at
-				}
-			}
-			if wait = time.Unix(oldest, 0).Add(extenderActivationWindow).Sub(now); wait < 0 {
-				wait = 0
-			}
-		default:
-			for i := 0; i < posts; i++ {
-				state.Attempts = append(state.Attempts, now.Unix())
-			}
-			allow = true
-		}
-		record.Accounts[account] = state
+		allow, wait, used = decideExtenderActivationOn(record, account, now, posts)
 		decided = true
 		return nil
 	})
@@ -501,7 +547,9 @@ func recordExtenderActivationRefusedPersisted(now time.Time, userId string) (tim
 	if err != nil {
 		// The streak cannot be recorded, and a caller told to retry now
 		// would post again into the refusal. Hold for the first-level wait
-		// even though the store did not keep it.
+		// even though the store did not keep it, and leave the hold where the
+		// launches that follow, and the store once it returns, will find it.
+		holdExtenderFallback(now, userId, extenderRefusalBackoff)
 		return extenderRefusalBackoff, false
 	}
 	return wait, true
@@ -586,9 +634,10 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 		return allow
 	}
 	posts := hostActivationPosts()
-	decision := gate.allowLaunchForWith(posts, extenderActivationUserId(), launchProbeAttempts, launchProbeDelay)
+	userId := extenderActivationUserId()
+	decision := gate.allowLaunchForWith(posts, userId, launchProbeAttempts, launchProbeDelay)
 	if decision == extenderLaunchWithheld {
-		return allowExtenderFallback(time.Now(), posts)
+		return allowExtenderFallback(time.Now(), posts, userId, errProviderStoreClosed)
 	}
 	return decision == extenderLaunchAllowed
 }
