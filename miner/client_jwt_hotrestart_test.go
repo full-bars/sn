@@ -1350,3 +1350,87 @@ func TestProvideClientJWTDoesNotReuseFailedPersistence(t *testing.T) {
 		t.Fatal("retry returned the jwt that never persisted")
 	}
 }
+
+// The identity key of an authenticated proxy carries the full username and a
+// control separator. A custody mismatch is logged for the operator, so the
+// line must name the proxy through the redacted display only.
+func TestProvideClientJWTCustodyMismatchLogOmitsProxyKey(t *testing.T) {
+	setHotRestart(t, true)
+	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
+	defer restoreStore()
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
+	logs := captureHeartbeatLog(t)
+
+	const user = "sppmr4vcnj"
+	settings := jwtRegressionSettings("dc.decodo.com:10072", user)
+	networkJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id":  testClientId,
+		"network_id": "net-1",
+	})
+	cfg := clientJWTTestConfig(t, networkJwt, settings)
+
+	custodyJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": "00000000-0000-0000-0000-0000000000ff",
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := os.WriteFile(cfg.ClientJwtPath, []byte(custodyJwt), 0600); err != nil {
+		t.Fatal(err)
+	}
+	storedJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": testClientId,
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := loadGlobalClientJWTStore().Put(settings.Key(), clientJWTEntry{
+		ByClientJWT: storedJwt,
+		ClientID:    testClientId,
+		NetworkID:   "net-1",
+		MintedAt:    time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	cfg.Mint = (&fakeMint{jwt: "fresh-custody-jwt", id: connect.Id{4}}).mint
+
+	if _, _, _, err := provideClientJWT(context.Background(), cfg); err != nil {
+		t.Fatalf("provideClientJWT err = %v", err)
+	}
+	out := logs.String()
+	if !strings.Contains(out, "disagrees with custody client") {
+		t.Fatalf("custody mismatch line missing: %q", out)
+	}
+	if strings.ContainsRune(out, '\x1f') || strings.Contains(out, user) {
+		t.Fatalf("hot-restart log leaks the proxy key: %q", out)
+	}
+	if !strings.Contains(out, "dc.decodo.com:10072 (user sp***nj)") {
+		t.Fatalf("hot-restart log does not name the redacted proxy: %q", out)
+	}
+}
+
+// A failed store write returns an error that run.go prints on the slot-stop
+// line, so the error text is operator output and must not carry the raw key.
+func TestProvideClientJWTStorePutErrorOmitsProxyKey(t *testing.T) {
+	setHotRestart(t, true)
+	storePath := filepath.Join(t.TempDir(), "store.json")
+	if err := os.Mkdir(storePath, 0700); err != nil {
+		t.Fatal(err)
+	}
+	restoreStore := withGlobalStore(t, storePath)
+	defer restoreStore()
+	logs := captureHeartbeatLog(t)
+
+	const user = "sppmr4vcnj"
+	cfg := clientJWTTestConfig(t, createFakeJWTWithClaims(map[string]interface{}{"network_id": "net-1"}), jwtRegressionSettings("dc.decodo.com:10072", user))
+	cfg.Mint = (&fakeMint{jwt: "minted", id: connect.Id{9}}).mint
+
+	_, _, _, err := provideClientJWT(context.Background(), cfg)
+	if err == nil {
+		t.Fatal("want the store write failure")
+	}
+	for name, text := range map[string]string{"error": err.Error(), "log": logs.String()} {
+		if strings.ContainsRune(text, '\x1f') || strings.Contains(text, user) {
+			t.Fatalf("%s leaks the proxy key: %q", name, text)
+		}
+	}
+	if !strings.Contains(err.Error(), "dc.decodo.com:10072 (user sp***nj)") {
+		t.Fatalf("error does not name the redacted proxy: %v", err)
+	}
+}
