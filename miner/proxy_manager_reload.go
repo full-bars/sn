@@ -47,6 +47,48 @@ func readReloadSeq(path string) (int, error) {
 	return n, nil
 }
 
+// startupReloadBaseline is the trigger sequence startup read before it took its
+// launch snapshot. The watcher starts later, after the workers are seeded, and
+// a clear that wrote its trigger in between would otherwise be adopted as the
+// watcher's baseline and never applied. path pins the value to the trigger
+// file it was read from.
+var startupReloadBaseline struct {
+	sync.Mutex
+	path string
+	seq  int
+	ok   bool
+}
+
+// recordStartupReloadBaseline reads the trigger sequence. Startup calls it
+// under the proxy lock, before the snapshot: every writer of the stores takes
+// that lock and triggers after releasing it, so a change the snapshot missed
+// always lands on a sequence above this one.
+func recordStartupReloadBaseline() {
+	path, err := proxyReloadPath()
+	if err != nil {
+		return
+	}
+	seq, err := readReloadSeq(path)
+	if err != nil {
+		return
+	}
+	startupReloadBaseline.Lock()
+	defer startupReloadBaseline.Unlock()
+	startupReloadBaseline.path, startupReloadBaseline.seq, startupReloadBaseline.ok = path, seq, true
+}
+
+// takeStartupReloadBaseline hands the recorded sequence to the watcher for
+// path, once.
+func takeStartupReloadBaseline(path string) (int, bool) {
+	startupReloadBaseline.Lock()
+	defer startupReloadBaseline.Unlock()
+	if !startupReloadBaseline.ok || startupReloadBaseline.path != path {
+		return 0, false
+	}
+	startupReloadBaseline.ok = false
+	return startupReloadBaseline.seq, true
+}
+
 // acquireProxyLock creates the lock file at the default path. Returns an error
 // if a reload is already in progress (lock already held).
 func acquireProxyLock() (func(), error) {

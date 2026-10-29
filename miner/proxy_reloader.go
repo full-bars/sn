@@ -860,8 +860,14 @@ func (r *minerProxyReloader) watch(ctx context.Context, path string, interval ti
 	// sequence that was being applied when it died must stay pending: a fresh
 	// read here would adopt it as the new baseline and the change would never
 	// be retried (see lastSeq on minerProxyReloader).
+	//
+	// The baseline startup read before its snapshot wins over a fresh read: a
+	// trigger written since then is a change the launch set does not include.
 	if _, seeded := r.reloadSeq(); !seeded {
-		seq, _ := readReloadSeq(path)
+		seq, ok := takeStartupReloadBaseline(path)
+		if !ok {
+			seq, _ = readReloadSeq(path)
+		}
 		r.seedReloadSeq(int64(seq))
 	}
 	// Publish only now: a reader that sees "active" must be able to rely on

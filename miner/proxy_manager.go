@@ -687,6 +687,7 @@ func (m *proxyManager) start(parent context.Context) ([]*connect.ProxySettings, 
 	defer release()
 	proxyStateMu.Lock()
 	defer proxyStateMu.Unlock()
+	recordStartupReloadBaseline()
 	launch, held, writeState, err := m.desired(true)
 	if err != nil {
 		return nil, nil, err
