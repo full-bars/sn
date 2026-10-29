@@ -45,6 +45,7 @@ echo "argv: $*" >> "$STUB_LOG"
 case "$1" in
   --version) echo "v0.0.0-stub"; exit 0 ;;
   auth)
+    case "$STUB_JWT" in "$URNETWORK_STATE_DIR"/*) ;; *) echo "wrong exported state directory" >&2; exit 90 ;; esac
     mkdir -p "$(dirname "$STUB_JWT")"
     printf '%s\n' "$STUB_JWT_VALUE" > "$STUB_JWT"
     echo "Jwt written to $STUB_JWT"
@@ -201,6 +202,23 @@ t "AUTH is matched case-insensitively" sh -c "grep -q 'argv: auth --user_auth=fa
 h="$tmp/h27"; mkdir -p "$h/.urnetwork"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l27" 0 AUTH=authcode URNETWORK_AUTH_CODE="$FAKE_CODE"
 t "URNETWORK_AUTH_CODE works without AUTHCODE" sh -c "grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l27'"
+
+
+echo "--- state directory override ---"
+h="$tmp/state-home"
+run_entry "$h" "custom state/jwt" "$VALID_JWT" "$tmp/state-auth" 0 \
+  AUTH=authcode AUTHCODE="$FAKE_CODE" URNETWORK_STATE_DIR="$h/custom state"; rc=$?
+t "missing override is created and exported to the stub binary" sh -c '[ "$1" -eq 0 ] && [ -s "$2/jwt" ] && rg -Fq "State directory: $2" "$3" && ! rg -q "JWT file not written" "$3"' _ "$rc" "$h/custom state" "$tmp/state-auth.out"
+run_entry "$h" "custom state/jwt" "$VALID_JWT" "$tmp/state-reuse" 0 \
+  AUTH=authcode URNETWORK_STATE_DIR="$h/custom state"; rc=$?
+t "stored override session is reused without auth" sh -c '[ "$1" -eq 0 ] && ! rg -q "argv: auth" "$2" && rg -q "Existing session found" "$3"' _ "$rc" "$tmp/state-reuse" "$tmp/state-reuse.out"
+h="$tmp/default-state-home"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/state-default" 0 AUTH=authcode AUTHCODE="$FAKE_CODE"; rc=$?
+t "unset override exports the default state dir" sh -c '[ "$1" -eq 0 ] && [ -s "$2/.urnetwork/jwt" ] && rg -Fq "State directory: $2/.urnetwork" "$3"' _ "$rc" "$h" "$tmp/state-default.out"
+printf 'not a directory\n' > "$tmp/state-blocker"
+run_entry "$tmp/state-fail-home" "-" "$VALID_JWT" "$tmp/state-fail" 0 \
+  AUTH=authcode AUTHCODE="$FAKE_CODE" URNETWORK_STATE_DIR="$tmp/state-blocker/child"; rc=$?
+t "creation failure names the override and mkdir reason" sh -c '[ "$1" -ne 0 ] && rg -Fq "$2" "$3" && rg -q "mkdir:|Not a directory" "$3" && ! [ -e "$4" ]' _ "$rc" "$tmp/state-blocker/child" "$tmp/state-fail.out" "$tmp/state-fail"
 
 echo "--- volume warning ---"
 h="$tmp/h18"

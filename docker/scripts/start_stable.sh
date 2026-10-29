@@ -17,7 +17,7 @@ set -e
 # === Configuration Variables ===
 export TZ="America/Tijuana"
 APP_DIR="/app"
-JWT_FILE="$HOME/.urnetwork/jwt"
+
 ENABLE_VNSTAT="${ENABLE_VNSTAT:-true}"
 ENABLE_IP_CHECKER="${ENABLE_IP_CHECKER:-false}"
 IP_CHECKER_URL="https://raw.githubusercontent.com/techroy23/IP-Checker/refs/heads/main/app.sh"
@@ -26,6 +26,30 @@ IP_CHECKER_URL="https://raw.githubusercontent.com/techroy23/IP-Checker/refs/head
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
+
+# Resolve once before any state paths are used, including by child binaries.
+resolve_state_dir() {
+    STATE_DIR=$(printf '%s' "${URNETWORK_STATE_DIR:-}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    STATE_DIR=${STATE_DIR:-${HOME:-/root}/.urnetwork}
+    case "$STATE_DIR" in /*) ;; *) STATE_DIR="$PWD/$STATE_DIR" ;; esac
+    if ! mkdir -p "$STATE_DIR"; then
+        log "ERROR: Cannot create state directory '$STATE_DIR' (see mkdir error above)" >&2
+        exit 1
+    fi
+    if ! resolved_state_dir=$(cd "$STATE_DIR" && pwd -P); then
+        log "ERROR: Cannot access state directory '$STATE_DIR'" >&2
+        exit 1
+    fi
+    STATE_DIR=$resolved_state_dir
+    export URNETWORK_STATE_DIR="$STATE_DIR"
+    if [ "${URNETWORK_STATE_DIR_LOGGED:-}" != 1 ]; then
+        log "State directory: $STATE_DIR"
+        export URNETWORK_STATE_DIR_LOGGED=1
+    fi
+}
+
+resolve_state_dir
+JWT_FILE="$STATE_DIR/jwt"
 
 # === Stop Forwarding ===
 # Same helpers as full-bars/urnetwork-3.23-fix docker/scripts/provider_common.sh,
@@ -140,8 +164,7 @@ func_check_credentials() {
 # === Proxy Setup ===
 func_check_proxy() {
     log "[INFO] Checking proxy configuration"
-    # ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
-    rm -f ~/.urnetwork/proxy || true
+    rm -f "$STATE_DIR/proxy" || true
     if [ -f "/app/proxy.txt" ]; then
         log "[INFO] proxy.txt found; adding proxy"
 		PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
@@ -168,7 +191,7 @@ func_get_architecture() {
 # custom API + connect backend without a custom-built binary, using
 # the `provider choose_network` command. Both must be set together
 # (the binary's choose_network requires both positional args). Saved
-# to ~/.urnetwork/network.json, so — like the JWT — it survives
+# to the state directory as network.json, so — like the JWT — it survives
 # restarts if that directory is on a mounted volume.
 func_choose_network() {
     if [ -n "$UR_API_URL" ] && [ -n "$UR_CONNECT_URL" ]; then
@@ -318,14 +341,14 @@ func_start_provider(){
         # freebsd-smoke.sh, lsm-smoke.sh).
         func_run_provider "$PROVIDER_BIN" provide --allow-client-registration
         if [ "$code" -eq 0 ]; then
-            if [ -f "$HOME/.urnetwork/update-pending" ]; then
-                rm -f "$HOME/.urnetwork/update-pending"
+            if [ -f "${JWT_FILE%/jwt}/update-pending" ]; then
+                rm -f "${JWT_FILE%/jwt}/update-pending"
                 log "[INFO] Binary updated — restarting provider."
                 failures=0
                 continue
             fi
-            if [ -f "$HOME/.urnetwork/hotswap-pending" ] || pgrep -f "urnetwork.*provide" >/dev/null 2>&1; then
-                rm -f "$HOME/.urnetwork/hotswap-pending"
+            if [ -f "${JWT_FILE%/jwt}/hotswap-pending" ] || pgrep -f "urnetwork.*provide" >/dev/null 2>&1; then
+                rm -f "${JWT_FILE%/jwt}/hotswap-pending"
                 log "[INFO] UrNetwork hotswap successor active; continuing supervision."
                 failures=0
                 while pgrep -f "urnetwork.*provide" >/dev/null 2>&1; do
