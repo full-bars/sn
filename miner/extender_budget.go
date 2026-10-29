@@ -727,6 +727,12 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 var extenderUncountedLaunchUsed atomic.Bool
 
 func allowUncountedExtenderLaunch(cause error) bool {
+	release, err := lockExtenderRefusalBarrier()
+	defer release()
+	if err != nil {
+		tlog("[extender] extender role off: refusal barrier unavailable (%v)\n", err)
+		return false
+	}
 	// The allowance covers a budget nobody can read, not a refusal somebody
 	// decided: one that is held, journaled or replaced by a hold still sets
 	// the operator's wait.

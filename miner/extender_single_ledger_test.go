@@ -177,9 +177,30 @@ func TestExtenderIgnoresObsoleteFallbackFile(t *testing.T) {
 	}
 }
 
-// The uncounted launch stands in for a budget nobody can read. A refusal this
-// process decided and could not keep still sets the operator's wait, so it
-// closes that launch too.
+// The barrier keeps a newly published refusal ahead of an uncounted decision.
+func TestUncountedLaunchWaitsForRefusalBarrier(t *testing.T) {
+	testExtenderState(t)
+	resetUncountedExtenderForTest(t)
+	release, err := lockExtenderRefusalBarrier()
+	if err != nil {
+		t.Fatal(err)
+	}
+	started := make(chan struct{})
+	done := make(chan bool, 1)
+	go func() {
+		close(started)
+		done <- allowUncountedExtenderLaunch(errors.New("unavailable"))
+	}()
+	<-started
+	extenderRefusalsHeld.mu.Lock()
+	queueExtenderOpLocked(extenderPendingOp{kind: extenderOpRefusal, account: extenderTestAccountA, attempt: "scope.barrier", at: time.Now()})
+	extenderRefusalsHeld.mu.Unlock()
+	release()
+	if <-done {
+		t.Fatal("uncounted launch passed a refusal published under the barrier")
+	}
+}
+
 func TestUncountedLaunchIsClosedByAHeldRefusal(t *testing.T) {
 	testExtenderState(t)
 	resetUncountedExtenderForTest(t)
