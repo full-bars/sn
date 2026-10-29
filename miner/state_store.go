@@ -80,12 +80,6 @@ func openProviderStore(path string) (*providerStore, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
-	// A file that did not exist before this open is a new entry in its
-	// parent directory. bbolt syncs the database pages it writes, but not
-	// the directory block that names the file, so a power cut just after
-	// creation can leave the file unlinked or zero length.
-	_, statErr := os.Stat(path)
-	created := errors.Is(statErr, os.ErrNotExist)
 	// callProviderStore returns no value when fn panics, so the handle is kept
 	// in opened as soon as bbolt returns it. Otherwise a panic after the open
 	// would leave the file lock held by a handle nobody can close.
@@ -130,14 +124,11 @@ func openProviderStore(path string) (*providerStore, error) {
 	// file that turns a quarantine into a crash. The store relies on open-time
 	// validation, on read errors, and on the same-goroutine panic containment
 	// in callProviderStore instead.
-	if created {
-		if syncErr := providerStoreSyncDir(dir); syncErr != nil {
-			// The database is open and its own pages are synced, so the
-			// process can use the store; what is missing is the guarantee
-			// that the directory entry survives a crash. That is worth a
-			// line, not refusing a store that works.
-			tlog("[state] created %s but could not sync %s: %s\n", path, dir, syncErr)
-		}
+	// Retry even on an existing file: a previous open may have created the
+	// name but failed its directory sync. Never publish that handle on error.
+	// Windows cannot guarantee directory-entry durability (see durablesync).
+	if syncErr := providerStoreSyncDir(dir); syncErr != nil {
+		return nil, errors.Join(fmt.Errorf("sync store directory %s: %w", dir, syncErr), db.Close())
 	}
 	store := &providerStore{db: db, path: path}
 	return store, nil
