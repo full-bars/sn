@@ -164,8 +164,11 @@ func TestWalletFleetDetectionViaProviderEnv(t *testing.T) {
 	if err := cmdWalletSet([]string{"-f", "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"}); err == nil {
 		t.Fatal("the provider environment marker must count as a fleet node")
 	}
-	if err := cmdWalletSign([]string{"5CvF...ss58"}); err == nil {
-		t.Fatal("wallet sign must refuse on a fleet node")
+	// The browser form signs in the extension and never reads a seed, so the
+	// workstation assertion must not be demanded here. It may still fail for
+	// want of a target provider, which is a different error.
+	if err := cmdWalletSign([]string{"5CvF...ss58"}); err != nil && strings.Contains(err.Error(), "OWN workstation") {
+		t.Fatalf("wallet sign must not demand the workstation assertion: %v", err)
 	}
 }
 

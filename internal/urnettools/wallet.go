@@ -143,7 +143,7 @@ func newWalletCmd() *cobra.Command {
 		newWalletSubCmd(
 			"sign [coldkey_ss58]",
 			"sign the consent in the browser",
-			"Serve one local page (127.0.0.1 only, 15 minutes, visible countdowns) where a wallet extension (Talisman, SubWallet, Polkadot{.js}, Nova, or any Polkadot signRaw extension) signs the consent statement, then submit the signature and verify the platform's receipt. Without an address you choose the account on the page. The seed phrase never leaves the extension. Run it on your own computer, never on a fleet node; the tool refuses on a fleet member unless you pass --i-am-on-my-own-workstation. Needs a browser with the extension on this machine; no extra tools.",
+			"Serve one local page (127.0.0.1 only, 15 minutes, visible countdowns) where a wallet extension (Talisman, SubWallet, Polkadot{.js}, Nova, or any Polkadot signRaw extension) signs the consent statement, then submit the signature and verify the platform's receipt. Without an address you choose the account on the page. The seed phrase never leaves the extension, so this form needs no workstation assertion: run it anywhere a browser with the extension can reach 127.0.0.1. Needs a browser with the extension on this machine; no extra tools.",
 			"  urnet-tools wallet sign 5CvF...ss58\n  urnet-tools wallet sign                       # choose the account on the page\n  urnet-tools wallet sign 5CvF...ss58 --no-open",
 			cmdWalletSign,
 		),
@@ -282,17 +282,17 @@ visible countdowns, extendable from the page) where a wallet extension
 (Talisman, SubWallet, Polkadot{.js}, Nova, or any Polkadot signRaw extension)
 signs the consent statement. Without an address you choose the account on
 the page. The platform's receipt is verified and the result shown on the page
-and in the terminal. The seed phrase never leaves the extension. Run it on
-your own computer, never on a fleet node; on a fleet member the tool refuses
-unless you pass --i-am-on-my-own-workstation.
+and in the terminal. The seed phrase never leaves the extension. Run it anywhere a browser with the extension can reach
+127.0.0.1; the seed stays in the extension.
 `)
 		return nil
 	}
 	dryRun, args := stripDryRunFlag(args)
 	workstation, force, args := extractWalletToolFlags(args)
-	if err := refuseSeedSigningOnFleetNode(workstation, "urnet-tools wallet sign"); err != nil {
-		return err
-	}
+	// The browser form never touches the seed: the extension signs and the
+	// seed stays where it lives. Nothing here needs protecting, so the
+	// workstation assertion is not demanded.
+	_ = workstation
 	p, rest, err := walletTarget(args)
 	if err != nil {
 		return err
