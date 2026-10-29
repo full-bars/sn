@@ -60,22 +60,70 @@ const extenderRefusalBarrierName = "extender-refusal-barrier"
 // in memory without a file.
 func lockExtenderRefusalBarrier() (func(), error) {
 	extenderRefusalBarrierMu.Lock()
-	dir, err := providerStateDir()
-	if err == nil {
-		if mkdirErr := os.MkdirAll(dir, 0o700); mkdirErr != nil {
-			err = mkdirErr
-		}
-	}
-	var release func()
-	if err == nil {
-		release, err = acquireFileLock(filepath.Join(dir, extenderRefusalBarrierName))
-	}
+	releaseFile, err := lockExtenderRefusalBarrierFile()
 	return func() {
-		if release != nil {
-			release()
+		if releaseFile != nil {
+			releaseFile()
 		}
 		extenderRefusalBarrierMu.Unlock()
 	}, err
+}
+
+// lockExtenderRefusalBarrierFile takes the interprocess half of the barrier.
+// The caller holds extenderRefusalBarrierMu.
+func lockExtenderRefusalBarrierFile() (func(), error) {
+	dir, err := providerStateDir()
+	if err != nil {
+		return nil, err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return nil, err
+	}
+	return acquireFileLock(filepath.Join(dir, extenderRefusalBarrierName))
+}
+
+// errExtenderRefusalBarrierBusy says a bounded wait ended with the barrier, or
+// a store or disk call made under it, still busy.
+var errExtenderRefusalBarrierBusy = errors.New("still blocked on the refusal barrier, the state store or the disk")
+
+// lockExtenderRefusalBarrierBy takes the barrier unless the deadline passes
+// first. Taking it blocks on a mutex and a lock file, neither of which a clock
+// can interrupt, so the wait runs aside; one that wins after the deadline
+// releases at once.
+func lockExtenderRefusalBarrierBy(deadline time.Time) (func(), error) {
+	type taken struct {
+		release func()
+		err     error
+	}
+	result := make(chan taken, 1)
+	var mu sync.Mutex
+	gaveUp := false
+	go func() {
+		release, err := lockExtenderRefusalBarrier()
+		mu.Lock()
+		defer mu.Unlock()
+		if gaveUp {
+			release()
+			return
+		}
+		result <- taken{release, err}
+	}()
+	timer := time.NewTimer(time.Until(deadline))
+	defer timer.Stop()
+	select {
+	case got := <-result:
+		return got.release, got.err
+	case <-timer.C:
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	select {
+	case got := <-result:
+		return got.release, got.err
+	default:
+		gaveUp = true
+		return func() {}, errExtenderRefusalBarrierBusy
+	}
 }
 
 // extenderAdmissionSnapshotHook runs between an admission's read of the held
@@ -628,27 +676,60 @@ func extenderRefusalsHeldAtRiskLocked() int {
 	return count
 }
 
+// extenderDurableAttempts counts the durability attempts still running, so a
+// test can let one that outlived its deadline finish.
+var extenderDurableAttempts sync.WaitGroup
+
+// awaitExtenderRefusalsDurable retries ensureExtenderRefusalsDurable until it
+// succeeds or the deadline passes. Each attempt runs aside, because it takes the
+// barrier and does store and disk I/O, none of which a clock can interrupt; at
+// the deadline an attempt still running is left behind. The error says which
+// way it ended: an attempt still blocked, or attempts that kept failing.
+func awaitExtenderRefusalsDurable(deadline time.Time) error {
+	started := time.Now()
+	var lastErr error
+	for {
+		done := make(chan error, 1)
+		extenderDurableAttempts.Add(1)
+		go func() {
+			defer extenderDurableAttempts.Done()
+			done <- ensureExtenderRefusalsDurable()
+		}()
+		timer := time.NewTimer(time.Until(deadline))
+		select {
+		case err := <-done:
+			timer.Stop()
+			if err == nil {
+				return nil
+			}
+			lastErr = err
+		case <-timer.C:
+			if lastErr == nil {
+				return fmt.Errorf("gave up after %s, %w", time.Since(started).Round(time.Millisecond), errExtenderRefusalBarrierBusy)
+			}
+			return fmt.Errorf("gave up after %s, %w (the attempt before failed: %v)", time.Since(started).Round(time.Millisecond), errExtenderRefusalBarrierBusy, lastErr)
+		}
+		if !time.Now().Add(extenderRefusalGateRetry).Before(deadline) {
+			return fmt.Errorf("the state store and the journal stayed unwritable for %s: %w", time.Since(started).Round(time.Millisecond), lastErr)
+		}
+		time.Sleep(extenderRefusalGateRetry)
+	}
+}
+
 // waitExtenderRefusalsDurable waits for a decided refusal that only memory
 // holds to reach the store or a file, because a process that ends first lets
 // its successor, or its own next start, post into a wait the operator already
 // set. The wait is bounded: a store and a journal that stay unwritable (a full
 // or read-only disk, or a platform that cannot make the journal durable once
-// the store is released) must not keep the process from ending. At the
-// deadline it says how many refusals are lost and for which step, to the log
-// and to events.log, and returns false.
+// the store is released), or a call that hangs under the barrier, must not keep
+// the process from ending. At the deadline it says how many refusals are lost
+// and for which step, to the log and to events.log, and returns false.
 func waitExtenderRefusalsDurable(what string) bool {
-	deadline := time.Now().Add(extenderRefusalGateDeadline)
-	for {
-		err := ensureExtenderRefusalsDurable()
-		if err == nil {
-			return true
-		}
-		if !time.Now().Add(extenderRefusalGateRetry).Before(deadline) {
-			tlog("❌ [extender] %s is not waiting any longer: %v; the process ends and the next start may post into the operator's wait\n", what, err)
-			critLog("EXTENDER REFUSALS LOST at %s: %v", what, err)
-			return false
-		}
-		tlog("⚠️ [extender] %s is waiting: %v\n", what, err)
-		time.Sleep(extenderRefusalGateRetry)
+	err := awaitExtenderRefusalsDurable(time.Now().Add(extenderRefusalGateDeadline))
+	if err == nil {
+		return true
 	}
+	tlog("❌ [extender] %s is not waiting any longer: %v; the process ends and the next start may post into the operator's wait\n", what, err)
+	critLog("EXTENDER REFUSALS LOST at %s: %v", what, err)
+	return false
 }

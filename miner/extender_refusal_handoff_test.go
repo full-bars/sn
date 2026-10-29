@@ -194,3 +194,37 @@ func TestRefusalIsNotJournaledWhereTheRenameIsNotCrashDurable(t *testing.T) {
 		t.Fatalf("refusals = %d, want the refusal committed", got)
 	}
 }
+
+// queueAtRiskRefusal holds a refusal in memory only, without the barrier, the
+// state a callback leaves when neither the store nor the journal took it.
+func queueAtRiskRefusal(attempt string) {
+	extenderRefusalsHeld.mu.Lock()
+	defer extenderRefusalsHeld.mu.Unlock()
+	queueExtenderOpLocked(extenderPendingOp{kind: extenderOpRefusal, account: extenderTestAccountA, attempt: attempt, at: time.Now()})
+}
+
+// A callback that holds the barrier through slow I/O must not hold shutdown
+// past its deadline: the wait ends at the deadline, not when the barrier is
+// released.
+func TestShutdownDeadlineHoldsWhileTheBarrierIsHeld(t *testing.T) {
+	testExtenderState(t)
+	shortenRefusalGate(t)
+	queueAtRiskRefusal("scope.1701")
+	release, err := lockExtenderRefusalBarrier()
+	if err != nil {
+		t.Fatal(err)
+	}
+	released := make(chan struct{})
+	time.AfterFunc(500*time.Millisecond, func() { release(); close(released) })
+	t.Cleanup(func() { <-released; extenderDurableAttempts.Wait() })
+
+	started := time.Now()
+	durable := waitExtenderRefusalsDurable("shutdown")
+	elapsed := time.Since(started)
+	if durable {
+		t.Fatal("reported durable while a refusal was only in memory")
+	}
+	if elapsed >= 400*time.Millisecond {
+		t.Fatalf("wait took %s with a 150ms deadline: it waited for the barrier, not the clock", elapsed)
+	}
+}
