@@ -4,6 +4,7 @@ package miner
 
 import (
 	"context"
+	"crypto/rand"
 	"strconv"
 	"sync"
 	"time"
@@ -140,9 +141,13 @@ type providerExtenderStatusListener struct {
 	last      providerExtenderObservation
 	// Remember every observed attempt so later redelivery cannot charge it twice.
 	failureSeen map[int64]bool
-	failureMu   sync.Mutex
-	diagnostics *providerDiagnostics
-	provider    uint64
+	// attemptScope makes an attempt's identity this listener's own. The status
+	// names an attempt only by its millisecond, which two devices of one
+	// account can share.
+	attemptScope string
+	failureMu    sync.Mutex
+	diagnostics  *providerDiagnostics
+	provider     uint64
 	// account is the sign-in account this slot provides under
 	// (extenderActivationUserId), which is the identity the operator's
 	// ExtenderActivateRateLimit counts and the key the budget records a
@@ -154,7 +159,7 @@ type providerExtenderStatusListener struct {
 
 // The provider borrows its enclosing run's explicitly supplied output budget.
 func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, account string) *providerExtenderStatusListener {
-	return &providerExtenderStatusListener{diagnostics: output, provider: provider, account: account}
+	return &providerExtenderStatusListener{diagnostics: output, provider: provider, account: account, attemptScope: rand.Text()}
 }
 
 // currentAccount is the account this observation is charged to. It resolves the
@@ -267,7 +272,7 @@ func (self *providerExtenderStatusListener) chargeActivationFailure(observation 
 	}
 	// Held for the process, not this listener, so admission sees it before
 	// the store has kept it and the listener's end does not drop it.
-	holdExtenderRefusal(self.currentAccount(), strconv.FormatInt(observation.ActivationTime, 10))
+	holdExtenderRefusal(self.currentAccount(), self.attemptScope+"."+strconv.FormatInt(observation.ActivationTime, 10))
 }
 
 // activationPass is what the status says this pass did, per family. A pass

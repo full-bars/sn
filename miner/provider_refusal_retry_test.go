@@ -130,3 +130,17 @@ func readRefusals(t *testing.T, account string) int {
 	}
 	return record.Accounts[account].Refusals
 }
+
+// Two devices of one account can be refused in the same millisecond. They are
+// two refusals, and the record must charge both.
+func TestRefusalsInOneMillisecondAreDistinct(t *testing.T) {
+	testExtenderState(t)
+	first := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
+	second := newProviderExtenderStatusListener(nil, 1, extenderTestAccountA)
+	status := &sdk.ExtenderProvideStatus{Enabled: true, LastActivationTime: 501, LastActivationError: "refused", LastActivationRefused: true}
+	first.ExtenderProvideStatusChanged(status)
+	second.ExtenderProvideStatusChanged(status)
+	if refusals := readRefusals(t, extenderTestAccountA); refusals != 2 {
+		t.Fatalf("refusals = %d, want 2: one attempt from each listener", refusals)
+	}
+}
