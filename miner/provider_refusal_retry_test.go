@@ -153,7 +153,7 @@ func TestStatusCallbacksDoNotDriveRefusalWrites(t *testing.T) {
 	if providerStoreInstance() == nil {
 		t.Fatal("store did not open")
 	}
-	extenderPersistPace = time.Hour
+	extenderPersistPace.Store(int64(time.Hour))
 	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
 	releaseProviderStore()
 	before := extenderRefusalWriteAttempts.Load()

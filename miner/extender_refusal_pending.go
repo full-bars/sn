@@ -126,15 +126,19 @@ type extenderRefusalJournalFile struct {
 // which Windows cannot assure.
 const extenderRefusalJournalPrefix = "extender-refusal-"
 
-// extenderRefusalRetryInterval paces the worker after the store failed. A
-// variable so a test can shorten it.
-var extenderRefusalRetryInterval = providerStoreRetryInterval
+// extenderRefusalRetryInterval paces the worker after the store failed.
+const extenderRefusalRetryInterval = providerStoreRetryInterval
 
 // extenderPersistPace bounds what status callbacks drive: at most one store
 // transaction and one journal file per interval, however many callbacks
 // arrive. The rest of the queue waits for the worker, or for any admission,
-// which applies it all. A variable so a test can set it.
-var extenderPersistPace = time.Second
+// which applies it all. Nanoseconds in an atomic so a test can set it while a
+// worker runs.
+var extenderPersistPace atomic.Int64
+
+func init() { extenderPersistPace.Store(int64(time.Second)) }
+
+func persistPace() time.Duration { return time.Duration(extenderPersistPace.Load()) }
 
 // extenderRefusalWriteAttempts counts the transactions run only to keep what
 // is held, and extenderRefusalJournalWrites the journal files written.
@@ -229,7 +233,7 @@ func journalQueuedRefusalsLocked() error {
 	if len(entries) == 0 {
 		return nil
 	}
-	extenderRefusalsHeld.journalAt = time.Now().Add(extenderPersistPace)
+	extenderRefusalsHeld.journalAt = time.Now().Add(persistPace())
 	name, err := journalExtenderRefusals(entries)
 	if err != nil {
 		return err
@@ -452,7 +456,7 @@ func flushExtenderRefusals() {
 	if err != nil {
 		extenderRefusalsHeld.retryAt = time.Now().Add(extenderRefusalRetryInterval)
 	} else {
-		extenderRefusalsHeld.retryAt = time.Now().Add(extenderPersistPace)
+		extenderRefusalsHeld.retryAt = time.Now().Add(persistPace())
 	}
 	if len(extenderRefusalsHeld.ops) > 0 {
 		startExtenderWorkerLocked()
@@ -494,8 +498,8 @@ func retryExtenderRefusals(generation uint64) {
 		extenderRefusalsHeld.mu.Lock()
 		wait := time.Until(extenderRefusalsHeld.retryAt)
 		extenderRefusalsHeld.mu.Unlock()
-		if wait < extenderPersistPace {
-			wait = extenderPersistPace
+		if wait < persistPace() {
+			wait = persistPace()
 		}
 		time.Sleep(wait)
 		extenderRefusalsHeld.mu.Lock()
@@ -514,7 +518,7 @@ func retryExtenderRefusals(generation uint64) {
 		if err != nil {
 			extenderRefusalsHeld.retryAt = time.Now().Add(extenderRefusalRetryInterval)
 		} else {
-			extenderRefusalsHeld.retryAt = time.Now().Add(extenderPersistPace)
+			extenderRefusalsHeld.retryAt = time.Now().Add(persistPace())
 		}
 		if len(extenderRefusalsHeld.ops) == 0 {
 			extenderRefusalsHeld.worker = false

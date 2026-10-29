@@ -43,10 +43,10 @@ func testExtenderState(t *testing.T) {
 	resetExtenderRefusals()
 	// A test that reads the record straight after a callback expects the
 	// callback to have written it; the tests of the pace set their own.
-	paced := extenderPersistPace
-	extenderPersistPace = 0
+	paced := extenderPersistPace.Load()
+	extenderPersistPace.Store(0)
 	t.Cleanup(func() {
-		extenderPersistPace = paced
+		extenderPersistPace.Store(paced)
 		resetExtenderRefusals()
 		closeProviderStore()
 	})

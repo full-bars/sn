@@ -17,7 +17,7 @@ func TestCallbackBurstIsCoalescedAndAdmissionStaysClosed(t *testing.T) {
 	if providerStoreInstance() == nil {
 		t.Fatal("store did not open")
 	}
-	extenderPersistPace = time.Hour
+	extenderPersistPace.Store(int64(time.Hour))
 	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
 	writes, journals := providerStoreWrites.Load(), extenderRefusalJournalWrites.Load()
 
@@ -57,7 +57,7 @@ func TestCallbackBurstAgainstFailingJournalWritesOnce(t *testing.T) {
 	if providerStoreInstance() == nil {
 		t.Fatal("store did not open")
 	}
-	extenderPersistPace = time.Hour
+	extenderPersistPace.Store(int64(time.Hour))
 	original := providerStoreDurableRename
 	t.Cleanup(func() { providerStoreDurableRename = original })
 	providerStoreDurableRename = func(string, string) error { return errors.New("rename failed") }
