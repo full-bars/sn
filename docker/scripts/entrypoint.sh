@@ -1,5 +1,9 @@
 #!/bin/sh
 set -e
+
+# APP_DIR is overridable so the startup handoff can be tested without the
+# image layout; the image always uses /app.
+APP_DIR="${APP_DIR:-/app}"
 # Entrypoint script for selecting and starting the build of UrNetwork.
 #
 # Usage:
@@ -18,6 +22,29 @@ set -e
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
+
+# Resolve once before any state paths are used, including by child binaries.
+resolve_state_dir() {
+    STATE_DIR=$(printf '%s' "${URNETWORK_STATE_DIR:-}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    STATE_DIR=${STATE_DIR:-${HOME:-/root}/.urnetwork}
+    case "$STATE_DIR" in /*) ;; *) STATE_DIR="$PWD/$STATE_DIR" ;; esac
+    if ! mkdir -p "$STATE_DIR"; then
+        log "ERROR: Cannot create state directory '$STATE_DIR' (see mkdir error above)" >&2
+        exit 1
+    fi
+    if ! resolved_state_dir=$(cd "$STATE_DIR" && pwd -P); then
+        log "ERROR: Cannot access state directory '$STATE_DIR'" >&2
+        exit 1
+    fi
+    STATE_DIR=$resolved_state_dir
+    export URNETWORK_STATE_DIR="$STATE_DIR"
+    if [ "${URNETWORK_STATE_DIR_LOGGED:-}" != 1 ]; then
+        log "State directory: $STATE_DIR"
+        export URNETWORK_STATE_DIR_LOGGED=1
+    fi
+}
+
+resolve_state_dir
 
 ORIG_BUILD="${BUILD:-}"
 AUTH_RAW="${AUTH:-}"
@@ -64,8 +91,8 @@ if [ -n "$AUTH_LC" ] && [ "$BUILD" = "$AUTH_DERIVED_BUILD" ]; then
     if [ -z "${URNETWORK_AUTH_CODE:-}" ] && [ -n "${AUTHCODE:-}" ]; then
       export URNETWORK_AUTH_CODE="$AUTHCODE"
     fi
-    if [ -z "${URNETWORK_AUTH_CODE:-}" ] && [ "$#" -eq 0 ] && [ ! -s "$HOME/.urnetwork/jwt" ]; then
-      log "ERROR: AUTH=authcode requires AUTHCODE or URNETWORK_AUTH_CODE, a positional auth code or a stored session at $HOME/.urnetwork/jwt"
+    if [ -z "${URNETWORK_AUTH_CODE:-}" ] && [ "$#" -eq 0 ] && [ ! -s "$STATE_DIR/jwt" ]; then
+      log "ERROR: AUTH=authcode requires AUTHCODE or URNETWORK_AUTH_CODE, a positional auth code or a stored session at $STATE_DIR/jwt"
       exit 1
     fi
   fi
@@ -99,33 +126,33 @@ log "Script version: v2026"
 # === Helper to run as pelican if requested ===
 run_as_pelican() {
   log "Running Pelican Panel mode..."
-  exec /app/pelican_panel.sh
+  exec "$APP_DIR/pelican_panel.sh"
 }
 
 run_normal() {
   case "$BUILD" in
     stable)
-      exec /app/start_stable.sh
+      exec "$APP_DIR/start_stable.sh"
       ;;
     nightly)
-      exec /app/start_nightly.sh
+      exec "$APP_DIR/start_nightly.sh"
       ;;
     jwt)
-      if [ "$#" -eq 0 ] && [ -s "$HOME/.urnetwork/jwt" ]; then
+      if [ "$#" -eq 0 ] && [ -s "$STATE_DIR/jwt" ]; then
         log "Existing session found — skipping auth"
-        exec /app/start_jwt.sh
+        exec "$APP_DIR/start_jwt.sh"
       elif [ "$#" -eq 0 ] && [ -n "$URNETWORK_AUTH_CODE" ]; then
         log "Authentication requested via environment variable"
-        exec /app/start_jwt.sh
+        exec "$APP_DIR/start_jwt.sh"
       elif [ "$#" -ne 1 ]; then
         log "ERROR: jwt mode requires a JWT token on first run"
         log "ERROR: Usage: docker run ... IMAGE <JWT_TOKEN>"
-        log "ERROR: On subsequent starts the session is read from the $HOME/.urnetwork volume automatically."
+        log "ERROR: On subsequent starts the session is read from the $STATE_DIR volume automatically."
         exit 1
       fi
       log "Entrypoint received $# arguments"
       JWT_TOKEN="$1"
-      exec /app/start_jwt.sh "$JWT_TOKEN"
+      exec "$APP_DIR/start_jwt.sh" "$JWT_TOKEN"
       ;;
     *)
       log "Invalid build: $BUILD"

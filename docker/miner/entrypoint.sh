@@ -16,6 +16,29 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> sn-miner >>> $*"
 }
 
+# Resolve once before any state paths are used, including by child binaries.
+resolve_state_dir() {
+    STATE_DIR=$(printf '%s' "${URNETWORK_STATE_DIR:-}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    STATE_DIR=${STATE_DIR:-${HOME:-/root}/.urnetwork}
+    case "$STATE_DIR" in /*) ;; *) STATE_DIR="$PWD/$STATE_DIR" ;; esac
+    if ! mkdir -p "$STATE_DIR"; then
+        log "ERROR: Cannot create state directory '$STATE_DIR' (see mkdir error above)" >&2
+        exit 1
+    fi
+    if ! resolved_state_dir=$(cd "$STATE_DIR" && pwd -P); then
+        log "ERROR: Cannot access state directory '$STATE_DIR'" >&2
+        exit 1
+    fi
+    STATE_DIR=$resolved_state_dir
+    export URNETWORK_STATE_DIR="$STATE_DIR"
+    if [ "${URNETWORK_STATE_DIR_LOGGED:-}" != 1 ]; then
+        log "State directory: $STATE_DIR"
+        export URNETWORK_STATE_DIR_LOGGED=1
+    fi
+}
+
+resolve_state_dir
+
 is_true() {
   case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
     y|yes|true|1) return 0 ;;
@@ -28,8 +51,6 @@ if [ -f "$SCRIPT_DIR/jwt_verify.sh" ]; then
   . "$SCRIPT_DIR/jwt_verify.sh"
 fi
 
-STATE_DIR="${URNETWORK_STATE_DIR:-${HOME:-/root}/.urnetwork}"
-[ -d "$STATE_DIR" ] || STATE_DIR="${HOME:-/root}/.urnetwork"
 OPERATOR_STATE_DIR="$STATE_DIR/operators/${OPERATOR:-}"
 
 # AUTHCODE is the image-facing alias for the miner's network auth code.
