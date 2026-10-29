@@ -848,3 +848,20 @@ func writeExtenderLossRecord(line string) (string, error) {
 	}
 	return "", errors.Join(errs...)
 }
+
+// quiesceExtenderRefusalsForExec is the last check before execve replaces the
+// image. It takes the barrier, by the deadline, and checks under it that no
+// refusal is held only in memory. The caller keeps the barrier until execve, so
+// no callback can queue a refusal between the check and the exec: one that
+// arrives waits at the barrier and ends with the image, as a refusal the SDK
+// has not yet delivered ends with any process. The release is always valid.
+func quiesceExtenderRefusalsForExec(deadline time.Time) (func(), error) {
+	release, err := lockExtenderRefusalBarrierBy(deadline)
+	if err != nil {
+		return release, err
+	}
+	if at := extenderRefusalsAtRisk(); at > 0 {
+		return release, fmt.Errorf("%d decided activation refusals are neither in the state store nor in a durable file", at)
+	}
+	return release, nil
+}

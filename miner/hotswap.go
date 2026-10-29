@@ -912,6 +912,16 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		}
 		session.Close()
 
+		// A refusal decided while the canary stopped was journaled as it
+		// arrived, or holds the barrier until it is (keepSealedRefusal).
+		// Nothing has been torn down yet, so one that is still only in memory
+		// stops the exec here and the live provider keeps serving.
+		if err := awaitExtenderRefusalsDurable(time.Now().Add(extenderRefusalGateDeadline)); err != nil {
+			hotswapLog("❌ [hotswap] Not executing: %v. Aborting handoff; live provider retained.\n", err)
+			unsealExtenderRefusals()
+			return err
+		}
+
 		// 2. Commit the handoff: record+flush before execve — execve
 		// replaces the process image, so the in-memory audit ring vanishes
 		// with it, and the new image's start label reads
@@ -959,10 +969,17 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		// image would die of SIGPIPE on its first write.
 		restoreStdioBeforeExecFunc()
 
-		// A refusal decided after the gate was journaled as it arrived; this
-		// bounded wait catches one that could not be, and says so.
-		waitExtenderRefusalsDurable("in-place hotswap")
-		if err := execInPlaceFunc(exe, args, cleanEnv); err != nil {
+		// The barrier is held from the last check to execve, so no callback
+		// queues a refusal in between. The provider is torn down by now and
+		// cannot be retained, so a refusal decided during the teardown that
+		// no file took is recorded as lost, with the hold that replaces it.
+		releaseRefusals, refusalsErr := quiesceExtenderRefusalsForExec(time.Now().Add(extenderRefusalGateDeadline))
+		if refusalsErr != nil {
+			recordExtenderRefusalsLost("in-place hotswap", refusalsErr)
+		}
+		err := execInPlaceFunc(exe, args, cleanEnv)
+		releaseRefusals()
+		if err != nil {
 			hotswapLog("CRITICAL [hotswap] syscall.Exec failed: %v\n", err)
 			critLog("FATAL: syscall.Exec failed during hotswap: %v", err)
 			captureIncidentBundle(incidentTriggerRestart, "syscall.Exec failed during hotswap: "+err.Error(), nil)
