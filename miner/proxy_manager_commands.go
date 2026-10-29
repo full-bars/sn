@@ -298,7 +298,7 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 		urlState = &ProxyURLState{}
 	}
 
-	addrsBySource, display := collectMatchingProxies(
+	_, display := collectMatchingProxies(
 		pattern, proxyConfig, stateProxies, stateSource, urlState.Cache)
 
 	if len(display) == 0 {
@@ -326,22 +326,68 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 		return
 	}
 
-	if err := removeDeadProxies(state, addrsBySource); err != nil {
+	removed, err := removeMatchingProxies(pattern)
+	if err != nil {
 		fmt.Printf("removal failed: %v\n", err)
 		return
 	}
 
-	// Persist the exclude pattern so URL source refreshes cannot re-add
-	// matching proxies. The state is re-read under the lock, so the cache
-	// changes removeDeadProxies just wrote are kept.
-	if err := updateProxyURLState(func(st *ProxyURLState) bool {
-		return addExcludePattern(st, pattern)
-	}); err != nil {
-		fmt.Printf("warning: could not persist exclude pattern: %v\n", err)
+	fmt.Printf("Removed %d proxies matching %q. Pattern excluded from future URL fetches.\n", removed, pattern)
+	fmt.Println("The running provider will apply the change via hot reload (no restart).")
+}
+
+// removeMatchingProxies is the transaction behind `proxy remove --match`. The
+// proxy lock is held from the exclusion write through every removal, so a URL
+// fetch cannot merge a matching address back between the two. The exclusion is
+// written first: if the removal is interrupted, the pattern is already
+// excluded and a rerun finishes the job. The matches are collected under the
+// lock, so they reflect the stores as they are now rather than as the
+// operator's preview saw them. The reload trigger is written after unlocking
+// so the running provider can take the lock.
+func removeMatchingProxies(pattern string) (int, error) {
+	removed, err := removeMatchingProxiesLocked(pattern)
+	if err != nil {
+		return 0, err
+	}
+	if removed > 0 {
+		triggerProxyReload()
+	}
+	return removed, nil
+}
+
+// afterMatchRemovalHook runs inside the transaction once the matches are
+// gone. Tests use it to run a competing writer at that exact point.
+var afterMatchRemovalHook func()
+
+func removeMatchingProxiesLocked(pattern string) (int, error) {
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return 0, fmt.Errorf("could not acquire proxy lock: %w", err)
+	}
+	defer release()
+
+	urlState, err := readProxyURLState()
+	if err != nil {
+		urlState = &ProxyURLState{}
+	} else if addExcludePattern(urlState, pattern) {
+		if err := writeProxyURLState(urlState); err != nil {
+			return 0, fmt.Errorf("could not persist exclude pattern: %w", err)
+		}
 	}
 
-	fmt.Printf("Removed %d proxies matching %q. Pattern excluded from future URL fetches.\n", len(display), pattern)
-	fmt.Println("The running provider will apply the change via hot reload (no restart).")
+	state, stateErr := readProxyState()
+	if stateErr != nil {
+		state = &ProxyState{}
+	}
+	addrsBySource, display := collectMatchingProxies(
+		pattern, readProxyConfig(), state.Proxies, state.Source, urlState.Cache)
+	if err := removeProxiesLocked(state, addrsBySource); err != nil {
+		return 0, err
+	}
+	if afterMatchRemovalHook != nil {
+		afterMatchRemovalHook()
+	}
+	return len(display), nil
 }
 
 // ---- proxy clear / remove --all ----

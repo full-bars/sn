@@ -265,23 +265,9 @@ func resolveSelfHealEnabled(startupEnabled bool) bool {
 const defaultAPIHost = "api.bringyour.com"
 const defaultAPIPort = 443
 
-// removeDeadProxies removes the given proxies from whichever source they
-// came from - an external file source, the internal config, or the URL
-// cache - and triggers a hot-reload. addrsBySource groups proxy.state
-// identity KEYS (address, or address+user for a credentialed proxy; see
-// ProxySettings.Key()) by their Source tag ("file", "internal", or "url");
-// unrecognized tags are ignored. File and internal removal match on the full
-// identity so one account at a shared gateway is removed without the others;
-// the URL cache is keyed by bare address, so it is cleared by the key's
-// address part. Used by both the interactive `proxy remove-dead` command and
-// the automatic scoped cleanup job, so removal logic only lives in one place.
-func removeDeadProxies(state *ProxyState, addrsBySource map[string][]string) error {
-	release, err := acquireProxyLock()
-	if err != nil {
-		return fmt.Errorf("could not acquire proxy lock: %w", err)
-	}
-	defer release()
-
+// removeProxiesLocked is the store edit behind removeDeadProxies. The caller
+// holds the cross-process proxy lock and triggers the reload afterwards.
+func removeProxiesLocked(state *ProxyState, addrsBySource map[string][]string) error {
 	if fileAddrs := addrsBySource["file"]; len(fileAddrs) > 0 {
 		if state.Source == "" {
 			tlog("[proxy] warning: %d proxies tagged source=file but no file source is configured; skipping\n", len(fileAddrs))
@@ -317,6 +303,29 @@ func removeDeadProxies(state *ProxyState, addrsBySource map[string][]string) err
 		if err := writeProxyURLState(urlState); err != nil {
 			return fmt.Errorf("could not write proxy_url.json: %w", err)
 		}
+	}
+	return nil
+}
+
+// removeDeadProxies removes the given proxies from whichever source they
+// came from - an external file source, the internal config, or the URL
+// cache - and triggers a hot-reload. addrsBySource groups proxy.state
+// identity KEYS (address, or address+user for a credentialed proxy; see
+// ProxySettings.Key()) by their Source tag ("file", "internal", or "url");
+// unrecognized tags are ignored. File and internal removal match on the full
+// identity so one account at a shared gateway is removed without the others;
+// the URL cache is keyed by bare address, so it is cleared by the key's
+// address part. Used by both the interactive `proxy remove-dead` command and
+// the automatic scoped cleanup job, so removal logic only lives in one place.
+func removeDeadProxies(state *ProxyState, addrsBySource map[string][]string) error {
+	release, err := acquireProxyLock()
+	if err != nil {
+		return fmt.Errorf("could not acquire proxy lock: %w", err)
+	}
+	defer release()
+
+	if err := removeProxiesLocked(state, addrsBySource); err != nil {
+		return err
 	}
 
 	// Release the lock before writing the reload trigger so the running
