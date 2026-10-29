@@ -4,28 +4,118 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
 
-// TestIsDockerCandidate covers the container image/name recognition rules.
+// TestIsDockerCandidate covers exact image repository matching, independent of name.
+func TestIsDockerCandidateEnvOverride(t *testing.T) {
+	// Locally built images are not in the shipped allowlist; an operator can
+	// extend the set instead of the rule being loosened for everyone.
+	t.Setenv("URNET_DOCKER_IMAGE_REPOS", "sn-smoke, example/local")
+	for _, image := range []string{"sn-smoke:local", "example/local:ci"} {
+		if !isDockerCandidate(image, "urnet-test") {
+			t.Errorf("isDockerCandidate(%q) = false, want true via URNET_DOCKER_IMAGE_REPOS", image)
+		}
+	}
+	if isDockerCandidate("other/local:ci", "urnet-test") {
+		t.Error("an unlisted repository matched without being in the environment")
+	}
+}
+
 func TestIsDockerCandidate(t *testing.T) {
 	cases := []struct {
 		image string
 		name  string
 		want  bool
 	}{
-		{"ghcr.io/full-bars/sn:latest", "urnet", true},
-		{"urnetwork:stable", "provider1", true},
-		{"nginx:latest", "web", false},
-		{"redis:7", "cache", false},
 		{"ghcr.io/full-bars/sn:latest", "anything", true},
-		{"ubuntu:24.04", "urnet-test", true}, // name match is enough
+		{"GHCR.IO/FULL-BARS/SN:latest", "web", true},
+		{"ghcr.io/full-bars/sn@sha256:abcdef", "web", true},
+		{"ghcr.io/full-bars/sn:v1@sha256:abcdef", "web", true},
+		{"ghcr.io/full-bars/meso-miner:latest", "web", true},
+		{"ghcr.io/full-bars/urnetwork-3.23-fix:latest", "web", true},
+		{"ghcr.io/urfoundation/meso-miner:latest", "web", true},
+		{"3cape/sn:latest", "web", true},
+		{"docker.io/3cape/sn:latest", "web", true},
+		{"3cape/urnetwork-3.23-fix:latest", "web", true},
+		{"docker.io/3cape/urnetwork-3.23-fix:latest", "web", true},
+		{"nginx:latest", "my-urnetwork-test", false},
+		{"evil.example/ghcr.io/full-bars/sn:latest", "urnet", false},
+		{"ghcr.io/full-bars/sn-experimental:latest", "urnet", false},
+		{"ghcr.io/full-bars/urnetwork-3.23-fix-hub:latest", "urnet", false},
+		{"urnetwork:stable", "provider1", false},
+		{"ubuntu:24.04", "urnet-test", false},
 	}
 	for _, c := range cases {
 		if got := isDockerCandidate(c.image, c.name); got != c.want {
 			t.Errorf("isDockerCandidate(%q, %q) = %v, want %v", c.image, c.name, got, c.want)
 		}
+	}
+}
+
+func TestParseDockerRepository(t *testing.T) {
+	cases := []struct{ image, want string }{
+		{"ghcr.io/full-bars/sn:latest", "ghcr.io/full-bars/sn"},
+		{"ghcr.io/full-bars/sn@sha256:abcdef", "ghcr.io/full-bars/sn"},
+		{"ghcr.io/full-bars/sn:v1@sha256:abcdef", "ghcr.io/full-bars/sn"},
+		{"GHCR.IO/FULL-BARS/SN:V1", "ghcr.io/full-bars/sn"},
+		{"ghcr.io/full-bars/sn", "ghcr.io/full-bars/sn"},
+		{"3CAPE/SN:latest", "docker.io/3cape/sn"},
+		{"docker.io/3cape/sn@sha256:abcdef", "docker.io/3cape/sn"},
+		{"registry.example:5000/team/image:tag", "registry.example:5000/team/image"},
+		{"registry.example:5000/team/image", "registry.example:5000/team/image"},
+	}
+	for _, c := range cases {
+		if got := parseDockerRepository(c.image); got != c.want {
+			t.Errorf("parseDockerRepository(%q) = %q, want %q", c.image, got, c.want)
+		}
+	}
+}
+
+func TestUnitDockerResolution(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Docker test shim requires a POSIX shell")
+	}
+	shim := filepath.Join(t.TempDir(), "docker")
+	script := `#!/bin/sh
+if [ "$1" = ps ]; then
+  printf '%s\n' 'a123456789abcdef|local-miner|urnetwork-miner:local|running' 'a987654321abcdef|other|nginx:latest|exited' 'b123456789abcdef|official|ghcr.io/full-bars/sn:latest|exited'
+  exit 0
+fi
+exit 1
+`
+	if err := os.WriteFile(shim, []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	old := testDockerBin
+	testDockerBin = shim
+	t.Cleanup(func() { testDockerBin = old })
+
+	if got := discoverDockerContainers(); len(got) != 1 || got[0].Name != "official" {
+		t.Fatalf("default discovery = %+v, want only official", got)
+	}
+	for _, unit := range []string{"local-miner", "a123456789abcdef", "a123"} {
+		for _, selectFn := range []func([]Provider, Target) (Provider, error){selectDockerTarget, selectDockerTargetInteractive} {
+			p, err := selectFn(nil, Target{Unit: unit})
+			if err != nil || p.Unit != "local-miner" || !p.Running || p.Binary != "docker:urnetwork-miner:local" {
+				t.Fatalf("unit %q: provider = %+v, error = %v", unit, p, err)
+			}
+		}
+	}
+	if err := cmdDockerStatus([]string{"--unit", "local-miner"}); err != nil {
+		t.Fatalf("status --unit local-miner: %v", err)
+	}
+	if err := cmdDockerStatus([]string{"--unit", "missing"}); err == nil || !strings.Contains(err.Error(), `container "missing" not found`) {
+		t.Fatalf("unknown unit error = %v", err)
+	}
+	if _, err := selectDockerTarget(nil, Target{Unit: "a"}); err == nil || !strings.Contains(err.Error(), "ambiguous") {
+		t.Fatalf("ambiguous ID error = %v", err)
+	}
+	if _, err := selectDockerTarget(nil, Target{}); err == nil || !strings.Contains(err.Error(), "no providers found") {
+		t.Fatalf("default selection included non-candidates: %v", err)
 	}
 }
 

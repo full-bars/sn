@@ -159,6 +159,57 @@ func dockerTargetFromArgs(args []string, providers []Provider) (Target, []string
 	return t, rest, nil
 }
 
+// resolveDockerUnit looks up an explicit name or unique ID prefix independently
+// of discovery, so locally built images can be targeted by the operator.
+func resolveDockerUnit(providers []Provider, unit string) (Provider, error) {
+	containers, err := listDockerContainers()
+	if err != nil {
+		return Provider{}, fmt.Errorf("cannot resolve container %q: %w", unit, err)
+	}
+	var matches []dockerContainer
+	for _, c := range containers {
+		if c.Name == unit || c.ID == unit {
+			matches = []dockerContainer{c}
+			break
+		}
+		if strings.HasPrefix(c.ID, unit) {
+			matches = append(matches, c)
+		}
+	}
+	if len(matches) == 0 {
+		return Provider{}, fmt.Errorf("container %q not found in docker ps -a", unit)
+	}
+	if len(matches) > 1 {
+		return Provider{}, fmt.Errorf("container ID %q is ambiguous (%d matches)", unit, len(matches))
+	}
+	c := matches[0]
+	for _, p := range providers {
+		if p.Unit == c.Name {
+			return p, nil
+		}
+	}
+	if p, err := dockerProvider(c); err == nil {
+		return p, nil
+	}
+	// The operator can target a container even before it has a readable JWT.
+	return Provider{Unit: c.Name, User: "docker:" + c.Name, Binary: "docker:" + c.Image,
+		Running: c.State == "running", Version: dockerImageVersion(c.Image)}, nil
+}
+
+func selectDockerTarget(providers []Provider, t Target) (Provider, error) {
+	if t.Unit != "" {
+		return resolveDockerUnit(providers, t.Unit)
+	}
+	return selectTarget(providers, t)
+}
+
+func selectDockerTargetInteractive(providers []Provider, t Target) (Provider, error) {
+	if t.Unit != "" {
+		return resolveDockerUnit(providers, t.Unit)
+	}
+	return selectTargetInteractive(providers, t)
+}
+
 // consumeDockerBareTarget promotes a bare positional that matches a
 // discovered container name to the target when no explicit target flag was
 // given. Flags are skipped, so `proxy clear --force urnet-test` still
@@ -241,7 +292,7 @@ func cmdDockerStatus(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -267,7 +318,7 @@ func cmdDockerTop(args []string) error {
 	}
 	t, rest = consumeDockerBareTarget(providers, t, rest)
 	t, rest = consumeDockerTrailingTarget(providers, t, rest, 1)
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -305,7 +356,7 @@ func cmdDockerExec(args []string) error {
 		return fmt.Errorf("exec requires a command, e.g. 'urnet-docker exec -- urnet-tools proxy add --proxy_file=/tmp/p.txt'")
 	}
 	providers := DiscoverDocker()
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -412,7 +463,7 @@ func cmdDockerUpdate(args []string, force, dryRun bool) error {
 	if len(rest) > 0 {
 		return fmt.Errorf("unexpected argument(s) after update target: %v", rest)
 	}
-	p, err := selectTarget(providers, t)
+	p, err := selectDockerTarget(providers, t)
 	if err != nil {
 		return err
 	}
@@ -696,7 +747,7 @@ func cmdDockerStart(args []string, force, dryRun bool) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTarget(providers, t)
+	p, err := selectDockerTarget(providers, t)
 	if err != nil {
 		return err
 	}
@@ -721,7 +772,7 @@ func cmdDockerStop(args []string, force, dryRun bool) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTarget(providers, t)
+	p, err := selectDockerTarget(providers, t)
 	if err != nil {
 		return err
 	}
@@ -746,7 +797,7 @@ func cmdDockerRestart(args []string, force, dryRun bool) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTarget(providers, t)
+	p, err := selectDockerTarget(providers, t)
 	if err != nil {
 		return err
 	}
@@ -775,7 +826,7 @@ func cmdDockerLogs(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -797,7 +848,7 @@ func cmdDockerAuth(args []string) error {
 		return err
 	}
 	t, rest = consumeDockerTrailingTarget(providers, t, rest, 1)
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -815,7 +866,7 @@ func cmdDockerChooseNetwork(args []string) error {
 		return err
 	}
 	t, rest = consumeDockerBareTarget(providers, t, rest)
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -830,7 +881,7 @@ func cmdDockerSummary(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -844,7 +895,7 @@ func cmdDockerDirect(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -859,7 +910,7 @@ func cmdDockerUsage(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -874,7 +925,7 @@ func cmdDockerSelfHeal(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -889,7 +940,7 @@ func cmdDockerSet(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -905,7 +956,7 @@ func cmdDockerRename(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -920,7 +971,7 @@ func cmdDockerFastAuth(args []string) error {
 	if err != nil {
 		return err
 	}
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -939,7 +990,7 @@ func cmdDockerSession(args []string) error {
 		return err
 	}
 	t, rest = consumeDockerTrailingTarget(providers, t, rest, 3)
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -999,7 +1050,7 @@ func cmdDockerProxy(args []string) error {
 	// name must match a discovered container; a proxy file path or URL is
 	// left untouched.
 	t, rest2 = consumeDockerBareTarget(providers, t, rest2)
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
@@ -1172,7 +1223,7 @@ func cmdDockerSnStatus(args []string) error {
 		return err
 	}
 	t, rest = consumeDockerBareTarget(providers, t, rest)
-	p, err := selectTargetInteractive(providers, t)
+	p, err := selectDockerTargetInteractive(providers, t)
 	if err != nil {
 		return err
 	}
