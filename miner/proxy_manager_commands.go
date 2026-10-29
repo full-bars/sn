@@ -406,21 +406,9 @@ func removeMatchingProxiesLocked(pattern string) (int, error) {
 // either of which would otherwise write an old snapshot back and silently
 // revive the removed proxies (v33 finding #11).
 func clearProxyStores() error {
-	_, err := clearProxyStoresReport()
-	return err
-}
-
-// clearProxyStoresReport is clearProxyStores that also reports whether a
-// provider had started when the reset ran. The lock is taken before any store
-// is read and held through all three writes, so a startup in another process
-// sees either every store as it was or every store empty, and the "started"
-// answer cannot go stale between the read and the trigger decision. A lock
-// failure fails the command: a reset that cannot exclude startup is not a
-// reset.
-func clearProxyStoresReport() (started bool, err error) {
 	release, err := acquireProxyLockWithRetry()
 	if err != nil {
-		return false, fmt.Errorf("proxy state lock: %w", err)
+		return fmt.Errorf("proxy state lock: %w", err)
 	}
 	defer release()
 	proxyStateMu.Lock()
@@ -430,12 +418,16 @@ func clearProxyStoresReport() (started bool, err error) {
 	clear(proxyConfig.Servers)
 	writeProxyConfig(proxyConfig)
 
-	if state, err := readProxyState(); err == nil {
-		started = !state.StartedAt.IsZero()
+	// An unreadable proxy.state does not stop the URL cache reset, and it is
+	// returned: the caller must tell the operator the state was not cleared.
+	var stateErr error
+	if state, err := readProxyState(); err != nil {
+		stateErr = fmt.Errorf("proxy.state not cleared: %w", err)
+	} else {
 		state.Proxies = map[string]ProxyEntry{}
 		state.NextID = 0
 		if err := writeProxyState(state); err != nil {
-			return started, err
+			return err
 		}
 	}
 
@@ -443,10 +435,10 @@ func clearProxyStoresReport() (started bool, err error) {
 		urlState.Cache = map[string]ProxyURLEntry{}
 		urlState.Sources = nil
 		if err := writeProxyURLState(urlState); err != nil {
-			return started, err
+			return err
 		}
 	}
-	return started, nil
+	return stateErr
 }
 
 // proxyClear implements `provider proxy clear` - the v33 surface the shipped
@@ -457,14 +449,15 @@ func clearProxyStoresReport() (started bool, err error) {
 func proxyClear(opts docopt.Opts) {
 	previousServers := len(readProxyConfig().Servers)
 
-	running, err := clearProxyStoresReport()
+	err := clearProxyStores()
+	// A failed or partial clear still changed the stores a running provider
+	// reads, so the reload is triggered on every attempt, before any failure
+	// ends the command.
+	triggerProxyReload()
 	if err != nil {
 		proxyCommandFatal(77, "could not clear the proxy stores: %v", err)
 	}
 	fmt.Printf("proxy clear: removed %d internal server(s), the proxy state and the URL cache\n", previousServers)
-	if running {
-		triggerProxyReload()
-	}
 }
 
 // ---- proxy refresh ----
