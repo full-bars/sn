@@ -62,6 +62,20 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 - **Gossip startup.** `[gossip] peer=<peer id> network=<network host> role=<member|extender> listen_addrs=N operator_addrs=N started`.
 - **Attributable token lines.** Every `[api-token]` line carries `client=<id>` parsed from the bearer, for example `[api-token] client=019f7191… jwt refresh failed. Will retry in 96.17s. err = http request attempts exhausted`. A legacy bearer without the claim prints no tag rather than a fabricated one.
 
+## Extender lines
+
+The extender role has its own small vocabulary, and the difference between "bound a port" and "accepted by the network" is the whole of it.
+
+- `[extender] listen tcp 443` and `[extender] listen udp 443 (quic)` and `[extender] listen udp 4053 (dns)` are printed by the carrier layer as each one binds. They report a socket inside this process. They do not report that the port is reachable from outside, and they do not report that the network accepted the host.
+- `[extender] listen error (<carrier>): <reason>` means that one carrier did not bind. A failed UDP carrier costs only that carrier; a failed TCP carrier leaves the role off for this process while the provider keeps providing.
+- `[extender]activate v4 refused = <reason>` is the network's answer. The text after the equals sign is the network's own wording for the test that failed, so read it as the diagnosis rather than as a local error. The usual cause is that the network could not reach TCP 443 on the public address.
+- `[extender] activation refused; next attempt in <duration>` is the hold that a refusal earns: ten minutes, doubling on each further refusal up to one hour. During the hold the provider still provides; it does not listen or try to activate.
+- `[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held` is a failure that never reached the network, such as a dns failure, a dial timeout or a reset. It is deliberately not treated as a refusal and earns no hold, so a flaky path does not spend the account's activation budget.
+- `[extender] activation held: <n> of <m> posts in the last hour, next in <duration>` is the rate limit rather than a refusal: the account may post a bounded number of activations per hour, and this attempt was held before it was sent.
+- `[extender] activation failed on <family>; the leftover post funds one retry` says the previous attempt left one post unused, so one more try follows without waiting for the hourly window.
+- `[extender] extender role off: <reason>` means the role did not start in this process at all. The reason names which precondition failed: an unavailable activation budget, an unavailable refusal barrier, or a hotswap candidate that took the provider state. A role that never started prints no `listen` line either, so look for this line first when the carrier lines are missing entirely.
+- The machine-readable form is the diagnostics event: `{"schema":"urnetwork-provider-diagnostics-v1","domain":"extender","event":"observed",...}` carrying `activated_v4`, `activated_v6`, `activation_refused` and `revoked`. It is the only place that records an acceptance as a value rather than as the absence of a refusal.
+
 ## Exit codes
 
 All nonzero exit codes write `FATAL [exit N]: ...` to stderr and the shm log.

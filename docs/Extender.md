@@ -42,7 +42,7 @@ docker run -d \
   ghcr.io/full-bars/sn:latest
 ```
 
-The auth code is single-use and is only consumed on first run, when the volume is empty. Keep the volume: it holds the provider identity as well as the sign-in, and a container started on an empty volume registers a new provider (see [Docker Deployment](Docker-Deployment)).
+The auth code is single-use and is only consumed on first run, when the volume is empty. Keep the volume: it holds the provider identity as well as the sign-in, and a container started on an empty volume registers a new provider (see [Docker Deployment](https://github.com/full-bars/sn/wiki/Docker-Deployment)).
 
 Expected result: `docker ps` shows the container running with `443/tcp` and `4053/udp` published.
 
@@ -79,7 +79,7 @@ Run the same grep a few minutes later. The network dials your public address on 
 [extender] activation refused; next attempt in 10m
 ```
 
-Expected result: no `refused` line. If you see one, the reason names the test that failed; the usual cause is that the network could not reach TCP 443 on your public address, so recheck step 2 from outside your network.
+Expected result: no `refused` line. If you see one, the reason names the test that failed; the usual cause is that the network could not reach TCP 443 on your public address, so recheck step 2 from outside your network. A failure that never reached the network reads differently: `[extender] activation failed without a refusal ...` costs no hold and usually means the path to the network is flaky, not that the port is closed. Every extender line and what it means is listed in the [log message reference](https://github.com/full-bars/sn/wiki/Log-Message-Reference).
 
 **6. If the log says the launch was held, wait it out.**
 
