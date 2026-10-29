@@ -878,6 +878,16 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 	if getpidFunc() == 1 || isDocker {
 		hotswapLog("⚡ [hotswap] Docker container detected: candidate pre-flight verified -> preparing in-place execve\n")
 
+		// execve ends this image and its memory with it, so a decided refusal
+		// must be in the store or a file first, the same gate as the baton
+		// handoff. Nothing has been given up yet, so the canary is simply
+		// stopped and the live provider retained.
+		if err := sealExtenderRefusals(); err != nil {
+			hotswapLog("❌ [hotswap] Not handing off: %v. Aborting handoff; live provider retained.\n", err)
+			session.Kill()
+			return err
+		}
+
 		// 1. Tell canary child it's done so it exits cleanly (with bounded timeout)
 		if err := writeHotswapMessage(session.Writer, HotswapMessage{
 			Type:    HotswapMsgCanaryDone,
@@ -949,6 +959,9 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		// image would die of SIGPIPE on its first write.
 		restoreStdioBeforeExecFunc()
 
+		// A refusal decided after the gate was journaled as it arrived; this
+		// bounded wait catches one that could not be, and says so.
+		waitExtenderRefusalsDurable("in-place hotswap")
 		if err := execInPlaceFunc(exe, args, cleanEnv); err != nil {
 			hotswapLog("CRITICAL [hotswap] syscall.Exec failed: %v\n", err)
 			critLog("FATAL: syscall.Exec failed during hotswap: %v", err)
