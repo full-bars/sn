@@ -109,6 +109,14 @@ type minerProxyReloader struct {
 	// reload that is holding mu inside a retirement wait ends the wait.
 	stopCh   chan struct{}
 	stopOnce sync.Once
+	// entry queues reloads. A reload holds mu through its retirement waits, and
+	// a plain mutex cannot be abandoned, so a reload that is only waiting its
+	// turn waits here instead, where its context and a stop can end the wait.
+	entry chan struct{}
+	// owner is the run's context. The callers that have none of their own (the
+	// audit unpark and the degraded reaper) reload under it, so the end of the
+	// run ends their waits too.
+	owner atomic.Pointer[context.Context]
 
 	// running is keyed by proxy identity (ProxySettings.Key), the same key the
 	// bandwidth registry and the earnings store use, so two accounts behind
@@ -179,7 +187,21 @@ func newMinerProxyReloader(
 		retiring:       map[string]minerRetiringSlot{},
 		retiringBySlot: map[string]map[string]struct{}{},
 		stopCh:         make(chan struct{}),
+		entry:          make(chan struct{}, 1),
 	}
+}
+
+// bindRunContext records the run that owns this reloader. reload() runs under
+// it from then on.
+func (r *minerProxyReloader) bindRunContext(ctx context.Context) {
+	r.owner.Store(&ctx)
+}
+
+func (r *minerProxyReloader) owningContext() context.Context {
+	if ctx := r.owner.Load(); ctx != nil {
+		return *ctx
+	}
+	return context.Background()
 }
 
 // quiesce returns once any reload that was already running has finished. The
@@ -188,6 +210,21 @@ func newMinerProxyReloader(
 func (r *minerProxyReloader) quiesce() {
 	r.mu.Lock()
 	r.mu.Unlock() //nolint:staticcheck // the empty section is the wait
+}
+
+// quiesceForRun is the run's wait for any reload in flight. When the run is
+// ending, the reloader is told to stop first: a reload holding mu inside a
+// retirement wait hears the stop and lets go, where quiescing alone would
+// wait out its timeout. While the run is live, a worker returning is not the
+// end, and the reload that may start its replacement must be left to finish.
+func quiesceForRun(ctx context.Context, r *minerProxyReloader) {
+	if r == nil {
+		return
+	}
+	if ctx.Err() != nil {
+		r.stop()
+	}
+	r.quiesce()
 }
 
 // retireLocked cancels a slot and drops it from the bookkeeping, remembering
@@ -460,7 +497,7 @@ func (r *minerProxyReloader) releaseAddress(settings *connect.ProxySettings) {
 // left held would deadlock the retry of the very sequence the panic
 // interrupted, which looks exactly like the trigger being lost.
 func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
-	return r.reloadContext(context.Background())
+	return r.reloadContext(r.owningContext())
 }
 
 // reloadContext is reload bound to ctx: the retirement waits end when ctx is
@@ -468,6 +505,17 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 // of starting more workers.
 func (r *minerProxyReloader) reloadContext(ctx context.Context) (minerReloadSummary, error) {
 	var summary minerReloadSummary
+
+	// Wait for the turn where the wait can be abandoned: another reload may be
+	// holding mu inside a retirement wait for a full timeout.
+	select {
+	case r.entry <- struct{}{}:
+		defer func() { <-r.entry }()
+	case <-ctx.Done():
+		return summary, ctx.Err()
+	case <-r.stopCh:
+		return summary, errProxyReloaderStopped
+	}
 
 	r.mu.Lock()
 	locked := true

@@ -2060,6 +2060,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				return slotCancel, nil
 			},
 		)
+		reloader.bindRunContext(ctx)
 		reloader.slotIdentity = func(settings *connect.ProxySettings) string {
 			return providerRegistrationSlot(slotIdentities, settings)
 		}
@@ -2293,9 +2294,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}()
 	}
 	join.wait(func() {
-		if reloader != nil {
-			reloader.quiesce()
-		}
+		quiesceForRun(ctx, reloader)
 	})
 	cancel()
 	close(results)
