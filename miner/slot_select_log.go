@@ -37,7 +37,7 @@ func slotSelectLabel(index uint64, proxyAddr string) string {
 	if proxyAddr == "" {
 		return fmt.Sprintf("[direct] provider=%d", index)
 	}
-	return fmt.Sprintf("proxy[%d] (%s)", index, proxyAddr)
+	return fmt.Sprintf("proxy[%d] (%s)", index, redactedProxyAddress(proxyAddr))
 }
 
 type slotSelectLogger struct {

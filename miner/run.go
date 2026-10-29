@@ -740,7 +740,7 @@ func contractProxyDescription(slot uint64, proxyAddr string) string {
 	if proxyAddr == "" {
 		return "proxy[0] (direct)"
 	}
-	return fmt.Sprintf("proxy[%d] (%s)", slot, proxyAddr)
+	return fmt.Sprintf("proxy[%d] (%s)", slot, redactedProxyAddress(proxyAddr))
 }
 
 func terminalLoginPrompts() loginPrompts {
