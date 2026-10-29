@@ -3053,6 +3053,9 @@ func proxyAdd(opts docopt.Opts) {
 			obfuscatePassword(password),
 		)
 
+		if entry.key == "" {
+			replaceInlineProxyCredentials(proxyConfig, proxyKey, entry)
+		}
 		proxyConfig.Servers[proxyKey] = entry.key
 	}
 
@@ -3060,6 +3063,25 @@ func proxyAdd(opts docopt.Opts) {
 	// Tell a running provider: its reloader applies the stored list on the
 	// trigger, and without it the change waits for the next start.
 	triggerProxyReload()
+}
+
+// replaceInlineProxyCredentials drops the stored inline entries that the new
+// entry supersedes. The password is not part of a proxy's identity (address
+// plus user, connect.ProxySettings.Key), so an inline entry with the same
+// address and user and a different password is the same proxy with a changed
+// credential. Left in place it would be read back as a second copy of one
+// identity, and which password reached the worker would depend on map order.
+// A different user at the same address is a different account and is kept.
+func replaceInlineProxyCredentials(proxyConfig *ProxyConfig, newKey string, entry proxyEntry) {
+	for storedKey, authKey := range proxyConfig.Servers {
+		if storedKey == newKey || authKey != "" {
+			continue
+		}
+		stored := parseProxyEntry(storedKey, proxyConfig.Auths)
+		if stored.key == "" && stored.address == entry.address && stored.user == entry.user {
+			delete(proxyConfig.Servers, storedKey)
+		}
+	}
 }
 
 // proxyEntry is one proxy list entry after parsing.
