@@ -134,7 +134,7 @@ func shortenRefusalGate(t *testing.T) {
 
 // Shutdown with a store that is gone and a journal that cannot be written
 // returns once the deadline passes, says what was lost in the log, and records
-// it in events.log where the next start can find it.
+// it in refusal-loss.log where the next start can find it.
 func TestShutdownIsBoundedWhenNothingCanHoldTheRefusal(t *testing.T) {
 	testExtenderState(t)
 	shortenRefusalGate(t)
@@ -155,13 +155,13 @@ func TestShutdownIsBoundedWhenNothingCanHoldTheRefusal(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		t.Fatal("shutdown never finished: the wait is unbounded")
 	}
-	path, err := critLogPath()
+	path, err := providerStatePath("refusal-loss.log")
 	if err != nil {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile(path)
 	if err != nil || !strings.Contains(string(data), "EXTENDER REFUSALS LOST at shutdown") {
-		t.Fatalf("events.log = %q (%v), want the lost refusal recorded", data, err)
+		t.Fatalf("refusal-loss.log = %q (%v), want the lost refusal recorded", data, err)
 	}
 }
 
