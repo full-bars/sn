@@ -1703,6 +1703,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			if captureDenied {
 				err = fmt.Errorf("%w: %w", captureRefusal, err)
 			}
+			// A proxy that refused our credentials is named as the cause, before
+			// the failure is recorded and reported, so the give-up history and
+			// the per-slot line say the same thing as the stop line below.
+			err = proxyAuthRejectionError(proxySettings, err)
 			// Fork hook: the ported v33 give-up/backoff accounting
 			// (proxy_manager_auth.go) records this identity's failed
 			// authentication, and gives up on it once it reaches the ceiling.
@@ -1720,7 +1724,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// decision that launch refused.
 				if captureDenied {
 					output.observe(captureEvent, index, true, err, 0, nil)
-				} else if !clientauth.IsRegistrationDisabled(err) {
+				} else if !clientauth.IsRegistrationDisabled(err) && !proxyAuthRejected(err) {
+					// A proxy refusal is not a custody event: the identity is
+					// intact, and recovery would send the operator to the wrong place.
 					output.observe(providerAuthenticationRecoveryEvent(err), index, true, err, 0, nil)
 				}
 				bringUp.authFailed(index, display, err, providerAuthRetryToken(giveUp))

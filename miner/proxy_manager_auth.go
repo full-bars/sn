@@ -3,7 +3,10 @@ package miner
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
+	"net"
+	"strings"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -119,6 +122,51 @@ func proxyAuthGiveUp(settings *connect.ProxySettings, urlSourced bool) proxyGive
 	result.retryIn = proxyURLGiveUpRetryDelay(result.giveUp)
 	globalProxyFailureHistory.SetBackoffUntil(key, time.Now().Add(result.retryIn))
 	return result
+}
+
+// proxyAuthRejectionMaxDepth bounds the cause walk in proxyAuthRejected.
+const proxyAuthRejectionMaxDepth = 64
+
+// proxyAuthRejected reports whether err holds a proxy refusing our SOCKS
+// username/password. The socks dialer wraps that refusal in a *net.OpError
+// whose Op names the socks command, and the exhausted-attempts error keeps the
+// leaf in its Unwrap() []error tree, so the walk reaches it through the retries.
+// A dial failure to the proxy itself is not a rejection and is not matched.
+func proxyAuthRejected(err error) bool {
+	return proxyAuthRejectedWithin(err, 0)
+}
+
+func proxyAuthRejectedWithin(err error, depth int) bool {
+	if err == nil || depth > proxyAuthRejectionMaxDepth {
+		return false
+	}
+	if opErr, ok := err.(*net.OpError); ok && strings.HasPrefix(opErr.Op, "socks") && opErr.Err != nil &&
+		strings.Contains(strings.ToLower(opErr.Err.Error()), "authentication failed") {
+		return true
+	}
+	switch wrapped := err.(type) {
+	case interface{ Unwrap() []error }:
+		for _, cause := range wrapped.Unwrap() {
+			if proxyAuthRejectedWithin(cause, depth+1) {
+				return true
+			}
+		}
+	case interface{ Unwrap() error }:
+		return proxyAuthRejectedWithin(wrapped.Unwrap(), depth+1)
+	}
+	return false
+}
+
+// proxyAuthRejectionError names the proxy as the cause when it refused our
+// credentials. The identity is not at fault in that case, so the wording says
+// the proxy rejected the proxy credentials and gives the address and obfuscated
+// user from the proxy key. Any other error is returned unchanged, and %w keeps
+// the chain for the classifiers that read it.
+func proxyAuthRejectionError(settings *connect.ProxySettings, err error) error {
+	if settings == nil || !proxyAuthRejected(err) {
+		return err
+	}
+	return fmt.Errorf("proxy %s rejected the proxy credentials: %w", proxyKeyDisplay(settings.Key()), err)
 }
 
 // proxyAuthSlowBackoff records a backoff WITHOUT give-up accounting, for the

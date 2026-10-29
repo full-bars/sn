@@ -226,6 +226,12 @@ func authenticateProviderWith(ctx context.Context, api *sdk.Api, networkPath, cl
 			return "", connect.Id{}, errors.Join(err, ctx.Err())
 		}
 		if !providerRegistrationRetryable(err, 0) {
+			// A proxy refusing our credentials says nothing about the identity,
+			// so it is not wrapped as an identity that requires recovery. The
+			// caller names the proxy instead (proxyAuthRejectionError).
+			if proxyAuthRejected(err) {
+				return "", connect.Id{}, err
+			}
 			return "", connect.Id{}, fmt.Errorf("provider client identity requires recovery: %w", err)
 		}
 		output.observe(providerAuthenticationWait, index, true, err, time.Second, nil)
