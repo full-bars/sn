@@ -81,11 +81,16 @@ func newH3PacketConnFactory(proxySettings *connect.ProxySettings, bw *bandwidth.
 		// reads it.
 		switch result := globalProxyUDPCheck.Check(ctx, proxySettings, time.Now()); result.Status {
 		case proxyUDPNoRelay, proxyUDPExitMismatch:
-			return nil, fmt.Errorf("h3 not used through proxy %s: udp check %s", proxySettings.Address, result.Status)
+			return nil, fmt.Errorf("h3 not used through proxy %s: udp check %s", redactedProxyAddress(proxySettings.Address), result.Status)
 		}
 		relayed, err := dialSocks5UDP(ctx, proxySettings.Network, proxySettings.Address, proxySettings.Auth)
 		if err != nil {
-			return nil, fmt.Errorf("h3 through proxy %s: %w", proxySettings.Address, err)
+			if !plainHostPort(proxySettings.Address) {
+				// the dial error quotes the address it was given, which for a
+				// malformed entry is the userinfo-bearing text itself
+				return nil, fmt.Errorf("h3 through proxy %s: dial failed", redactedProxyAddress(proxySettings.Address))
+			}
+			return nil, fmt.Errorf("h3 through proxy %s: %w", redactedProxyAddress(proxySettings.Address), err)
 		}
 		if bw != nil {
 			return bandwidth.NewPacketConn(relayed, bw, proxyAddr), nil
