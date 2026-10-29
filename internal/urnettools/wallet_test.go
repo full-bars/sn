@@ -1,6 +1,7 @@
 package urnettools
 
 import (
+	"bufio"
 	"strings"
 	"testing"
 
@@ -135,11 +136,11 @@ func TestWalletSetSeedFileRefusedOnFleetNode(t *testing.T) {
 	if len(calls) != 0 {
 		t.Fatal("a refused set must not delegate")
 	}
-	// No flag bypasses the guard any more: an unknown flag reaches the
-	// provider rather than silencing the refusal.
+	// No flag bypasses the guard any more: the removed flag is rejected by
+	// name before anything reaches the provider.
 	err = cmdWalletSet([]string{"-f", "--i-am-on-my-own-workstation", "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"})
-	if err == nil {
-		t.Fatal("a removed flag must not bypass the fleet-node guard")
+	if err == nil || !strings.Contains(err.Error(), "is gone") {
+		t.Fatalf("a removed flag must be rejected by name, got %v", err)
 	}
 	if len(calls) != 0 {
 		t.Fatal("a refused set must not delegate")
@@ -157,17 +158,110 @@ func TestWalletSetSeedFileRefusedOnFleetNode(t *testing.T) {
 
 func TestWalletFleetDetectionViaProviderEnv(t *testing.T) {
 	var calls [][]string
-	// no discovered providers, but the provider runtime environment is present
-	withWalletSeams(t, nil, &calls, "", "")
+	// A manual provider, so a refusal here can only come from the environment
+	// marker rather than from failing to resolve a target.
+	withWalletSeams(t, []Provider{walletWorkstationProvider()}, &calls, "", "")
+	forceNonInteractiveForTest(t)
 	t.Setenv("URNETWORK_PROFILE", "lowmem")
-	if err := cmdWalletSet([]string{"-f", "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"}); err == nil {
-		t.Fatal("the provider environment marker must count as a fleet node")
+	err := cmdWalletSet([]string{"-f", "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"})
+	if err == nil || !strings.Contains(err.Error(), "never a fleet node") {
+		t.Fatalf("the provider environment marker must count as a fleet node, got %v", err)
 	}
-	// The browser form signs in the extension and never reads a seed, so the
-	// workstation assertion must not be demanded here. It may still fail for
-	// want of a target provider, which is a different error.
-	if err := cmdWalletSign([]string{"5CvF...ss58"}); err != nil && strings.Contains(err.Error(), "OWN workstation") {
-		t.Fatalf("wallet sign must not demand the workstation assertion: %v", err)
+	if len(calls) != 0 {
+		t.Fatal("a refused set must not delegate")
+	}
+}
+
+// forceNonInteractiveForTest pins stdin as a pipe, so the guard refuses
+// instead of prompting.
+func forceNonInteractiveForTest(t *testing.T) {
+	t.Helper()
+	old := stdinIsInteractiveOverride
+	stdinIsInteractiveOverride = func() bool { return false }
+	t.Cleanup(func() { stdinIsInteractiveOverride = old })
+}
+
+// withWalletStdin feeds one answer to the guard as if stdin were a terminal.
+func withWalletStdin(t *testing.T, answer string) {
+	t.Helper()
+	forceInteractiveForTest(t)
+	old := stdinReader
+	stdinReader = bufio.NewReader(strings.NewReader(answer))
+	t.Cleanup(func() { stdinReader = old })
+}
+
+// The browser form signs in the extension and never reads a seed, so the
+// fleet-node guard must not apply to it even when the box looks like one.
+func TestWalletSignNotGatedOnFleetNode(t *testing.T) {
+	var calls [][]string
+	withWalletSeams(t, []Provider{walletTestProvider()}, &calls, "", "")
+	t.Setenv("URNETWORK_PROFILE", "lowmem")
+	if err := cmdWalletSign([]string{"-f", "5CvF...ss58", "--no-open"}); err != nil {
+		t.Fatalf("wallet sign must not be gated on a fleet node: %v", err)
+	}
+	if len(calls) != 1 {
+		t.Fatalf("wallet sign must delegate on a fleet node, got %v", calls)
+	}
+}
+
+// The seed-file form asks a human on a fleet node: yes proceeds, anything
+// else cancels and nothing is delegated.
+func TestWalletSetSeedFilePromptOnFleetNode(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		answer  string
+		proceed bool
+	}{
+		{"y", "y\n", true},
+		{"yes", "yes\n", true},
+		{"n", "n\n", false},
+		{"empty", "\n", false},
+		{"eof", "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var calls [][]string
+			withWalletSeams(t, []Provider{walletTestProvider()}, &calls, "", "")
+			t.Setenv("URNETWORK_PROFILE", "lowmem")
+			withWalletStdin(t, tc.answer)
+			err := cmdWalletSet([]string{"-f", "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"})
+			if tc.proceed {
+				if err != nil {
+					t.Fatalf("answering %q must proceed: %v", tc.answer, err)
+				}
+				if len(calls) != 1 {
+					t.Fatalf("answering %q must delegate, got %v", tc.answer, calls)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), "cancelled") {
+				t.Fatalf("answering %q must cancel, got %v", tc.answer, err)
+			}
+			if len(calls) != 0 {
+				t.Fatalf("a cancelled set must not delegate, got %v", calls)
+			}
+		})
+	}
+}
+
+// The removed flag is rejected by name, on every subcommand, and never
+// reaches the provider.
+func TestWalletRemovedWorkstationFlagRejected(t *testing.T) {
+	var calls [][]string
+	withWalletSeams(t, []Provider{walletWorkstationProvider()}, &calls, "", "")
+	forceNonInteractiveForTest(t)
+	for _, args := range [][]string{
+		{"-f", "--i-am-on-my-own-workstation", "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"},
+		{"-f", "5CvF...ss58", "--message=m", "--signature=0x00", "--i-am-on-my-own-workstation"},
+	} {
+		if err := cmdWalletSet(args); err == nil || !strings.Contains(err.Error(), "is gone") {
+			t.Fatalf("wallet set must reject the removed flag by name, got %v", err)
+		}
+	}
+	if err := cmdWalletSign([]string{"--i-am-on-my-own-workstation", "5CvF...ss58"}); err == nil || !strings.Contains(err.Error(), "is gone") {
+		t.Fatal("wallet sign must reject the removed flag by name")
+	}
+	if len(calls) != 0 {
+		t.Fatalf("a rejected call must not delegate, got %v", calls)
 	}
 }
 
