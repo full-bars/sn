@@ -49,25 +49,27 @@ provider_env_bool() {
   case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in
     ""|0|false|no|off|n) printf '0\n' ;;
     1|true|yes|on|y)     printf '1\n' ;;
-    *) return 2 ;;
+    *)
+      _provider_env_error "${2:-boolean} must be true/1/yes/y/on or false/0/no/n/off${3:+ or $3} (case-insensitive; got '${1:-}')"
+      return 2
+      ;;
   esac
 }
 
 # True when ALL_OPERATORS asks for provide --all-operators.
 provider_env_all_operators() {
-  [ "$(provider_env_bool "${ALL_OPERATORS:-}")" = "1" ]
+  [ "$(provider_env_bool "${ALL_OPERATORS:-}" ALL_OPERATORS)" = "1" ]
 }
 
 # Print the ALLOW_CLIENT_REGISTRATION mode: y, n or auto. Returns 2 for an
 # unknown value so the caller can fail closed.
 provider_env_allow_client_registration_mode() {
   case "$(printf '%s' "${ALLOW_CLIENT_REGISTRATION:-}" | tr '[:upper:]' '[:lower:]')" in
-    # Unset is the miner's default, and creation is permitted by default now
-    # that a slot heals its own identity; withholding it takes an explicit N.
-    ""|auto)         printf '%s\n' auto ;;
-    n|no|false|0)    printf '%s\n' n ;;
-    y|yes|true|1)    printf '%s\n' y ;;
-    *) return 2 ;;
+    ""|auto) printf '%s\n' auto ;;
+    *)
+      _pe_bool="$(provider_env_bool "$ALLOW_CLIENT_REGISTRATION" ALLOW_CLIENT_REGISTRATION auto)" || return 2
+      if [ "$_pe_bool" = 1 ]; then printf '%s\n' y; else printf '%s\n' n; fi
+      ;;
   esac
 }
 
@@ -87,12 +89,10 @@ _provider_env_error() {
 provider_env_flags() {
   _pe_state_dir="${1:-${HOME:-/root}/.urnetwork}"
 
-  if ! _pe_all="$(provider_env_bool "${ALL_OPERATORS:-}")"; then
-    _provider_env_error "ALL_OPERATORS must be 1/true/yes/on or 0/false/no/off (got '${ALL_OPERATORS:-}')"
+  if ! _pe_all="$(provider_env_bool "${ALL_OPERATORS:-}" ALL_OPERATORS)"; then
     return 1
   fi
-  if ! _pe_auto="$(provider_env_bool "${AUTO_REGISTER:-}")"; then
-    _provider_env_error "AUTO_REGISTER must be 1/true/yes/on or 0/false/no/off (got '${AUTO_REGISTER:-}')"
+  if ! _pe_auto="$(provider_env_bool "${AUTO_REGISTER:-}" AUTO_REGISTER)"; then
     return 1
   fi
 
@@ -132,7 +132,6 @@ provider_env_flags() {
   [ -z "$_pe_max_memory" ] || printf '%s\n' "--max-memory=$_pe_max_memory"
 
   if ! _pe_allow="$(provider_env_allow_client_registration_mode)"; then
-    _provider_env_error "ALLOW_CLIENT_REGISTRATION must be auto, Y or N (got '${ALLOW_CLIENT_REGISTRATION:-}')"
     return 1
   fi
   [ "$_pe_allow" = "y" ] && printf '%s\n' --allow-client-registration
@@ -147,4 +146,17 @@ provider_env_flags() {
 
   unset _pe_state_dir _pe_all _pe_auto _pe_hotkey _pe_max_memory _pe_allow _pe_glob_off
   return 0
+}
+
+# Validate before auth or any stored-session changes, including direct starts.
+provider_env_validate() {
+  provider_env_flags "${1:-}" >/dev/null || return 1
+  if [ -n "${OPERATORS_URL:-}" ] && [ -z "${OPERATOR:-}" ] && ! provider_env_all_operators; then
+    _provider_env_error "OPERATORS_URL requires operator-scoped auth (OPERATOR) or all-operators provide (ALL_OPERATORS=true); non-operator auth cannot use it"
+    return 1
+  fi
+  if [ -n "${OPERATOR:-}" ] && ! provider_env_all_operators; then
+    _provider_env_error "OPERATOR alone cannot provide: the miner has no single-operator provide mode; set ALL_OPERATORS=true to run all listed operators"
+    return 1
+  fi
 }

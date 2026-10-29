@@ -46,13 +46,24 @@ case "$1" in
   --version) echo "v0.0.0-stub"; exit 0 ;;
   auth)
     case "$STUB_JWT" in "$URNETWORK_STATE_DIR"/*) ;; *) echo "wrong exported state directory" >&2; exit 90 ;; esac
+    have_operator=0; have_url=0
+    for arg in "$@"; do
+      case "$arg" in --operator=*) have_operator=1 ;; --operators-url=*) have_url=1 ;; esac
+    done
+    if [ "$have_url" = 1 ] && [ "$have_operator" = 0 ]; then
+      echo 'auth: --operators-url only applies with --operator' >&2; exit 2
+    fi
     mkdir -p "$(dirname "$STUB_JWT")"
     printf '%s\n' "$STUB_JWT_VALUE" > "$STUB_JWT"
     echo "Jwt written to $STUB_JWT"
     exit 0
     ;;
   proxy) exit 0 ;;
-  provide) exit "${STUB_EXIT:-0}" ;;
+  provide)
+    for arg in "$@"; do
+      case "$arg" in --operator=*) echo 'provide has no --operator mode' >&2; exit 2 ;; esac
+    done
+    exit "${STUB_EXIT:-0}" ;;
 esac
 exit 0
 STUB
@@ -102,7 +113,7 @@ run_entry "$h" "-" "$VALID_JWT" "$tmp/l6" 0 \
   AUTH=authcode AUTHCODE="$FAKE_CODE" ALL_OPERATORS=Y AUTO_REGISTER=Y \
   HOTKEY_SEED_FILE="$tmp/seed.bin" ALLOW_CLIENT_REGISTRATION=Y MAX_MEMORY=1500mib \
   OPERATORS_URL=http://127.0.0.1:9/operators.yml PROVIDER_ARGS="--quarantine-rejected-sign-in"
-t "AUTHCODE is passed to auth" sh -c "grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l6'"
+t "AUTHCODE is passed to network auth without operators URL" sh -c "rg -q '^argv: auth $FAKE_CODE -f$' '$tmp/l6'"
 t "the operator flags are passed to provide" sh -c "grep -q 'argv: provide --all-operators --auto-register --hotkey_seed_file=$tmp/seed.bin --max-memory=1500mib --allow-client-registration --quarantine-rejected-sign-in --operators-url=http://127.0.0.1:9/operators.yml' '$tmp/l6'"
 t "the session file is created and reported" sh -c "[ -s '$h/.urnetwork/jwt' ] && grep -q 'Session written to' '$tmp/l6.out'"
 t "no auth code or password in the logs" sh -c "! grep -q '$FAKE_CODE' '$tmp/l6.out' && ! grep -q 'fake-password' '$tmp/l6.out'"
@@ -135,7 +146,7 @@ t "a missing HOTKEY_SEED_FILE is named" sh -c "grep -q 'HOTKEY_SEED_FILE=.*missi
 
 h="$tmp/h11"; mkdir -p "$h/.urnetwork"
 run_entry "$h" "-" "" "$tmp/l11" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" ALLOW_CLIENT_REGISTRATION=maybe; rc=$?
-t "an unknown ALLOW_CLIENT_REGISTRATION value is rejected" sh -c "grep -q 'ALLOW_CLIENT_REGISTRATION must be auto, Y or N' '$tmp/l11.out' && [ $rc -eq 1 ]"
+t "an unknown ALLOW_CLIENT_REGISTRATION value is rejected" sh -c "grep -q 'ALLOW_CLIENT_REGISTRATION must be true/1/yes/y/on or false/0/no/n/off' '$tmp/l11.out' && [ $rc -eq 1 ]"
 
 echo "--- stored session policy ---"
 h="$tmp/h12"; mkdir -p "$h/.urnetwork"; printf '%s\n' "$VALID_JWT" > "$h/.urnetwork/jwt"
@@ -161,12 +172,12 @@ t "an expired session with no code still reaches provide for the miner to report
 echo "--- operator mode ---"
 h="$tmp/h16"
 run_entry "$h" ".urnetwork/operators/example.invalid/jwt" "$VALID_JWT" "$tmp/l16" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" \
-  OPERATOR=example.invalid HOTKEY_SEED_FILE="$tmp/seed.bin" OPERATORS_URL=http://127.0.0.1:9/operators.yml
+  ALL_OPERATORS=Y OPERATOR=example.invalid HOTKEY_SEED_FILE="$tmp/seed.bin" OPERATORS_URL=http://127.0.0.1:9/operators.yml
 t "OPERATOR signs in with --operator and the code (the auth grammar takes one credential)" sh -c "grep -q 'argv: auth --operator=example.invalid --operators-url=http://127.0.0.1:9/operators.yml $FAKE_CODE -f' '$tmp/l16' && [ -s '$h/.urnetwork/operators/example.invalid/jwt' ]"
 
 h="$tmp/h19"
 run_entry "$h" ".urnetwork/operators/example.invalid/jwt" "$VALID_JWT" "$tmp/l19" 0 AUTH=authcode \
-  OPERATOR=example.invalid HOTKEY_SEED_FILE="$tmp/seed.bin"
+  ALL_OPERATORS=Y OPERATOR=example.invalid HOTKEY_SEED_FILE="$tmp/seed.bin"
 t "OPERATOR with only a seed signs in with --hotkey_seed_file" sh -c "grep -q 'argv: auth --operator=example.invalid --hotkey_seed_file=$tmp/seed.bin -f' '$tmp/l19' && [ -s '$h/.urnetwork/operators/example.invalid/jwt' ]"
 
 h="$tmp/h20"; mkdir -p "$h/.urnetwork"
@@ -181,6 +192,66 @@ t "auto-register delegates the sign-in to provide" sh -c "grep -q 'auto-register
 h="$tmp/h22"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l22" 0 AUTH=authcode ALL_OPERATORS=Y
 t "ALL_OPERATORS with no credential runs without a network sign-in" sh -c "grep -q \"uses each operator's stored session\" '$tmp/l22.out' && ! grep -q 'argv: auth' '$tmp/l22' && grep -q 'argv: provide --all-operators' '$tmp/l22'"
+
+echo "--- operator argv and boolean spellings ---"
+h="$tmp/url-refused"
+run_entry "$h" - "$VALID_JWT" "$tmp/url-refused.log" 0 URNETWORK_AUTH_CODE="$FAKE_CODE" OPERATORS_URL=http://127.0.0.1:9/operators.yml; rc=$?
+t "URL without an operator mode is refused before auth and names both modes" sh -c '[ "$1" -ne 0 ] && rg -q "OPERATORS_URL requires operator-scoped auth.*all-operators provide.*non-operator auth cannot use it" "$2.out" && [ ! -s "$2" ]' _ "$rc" "$tmp/url-refused.log"
+
+h="$tmp/operator-refused"
+run_entry "$h" .urnetwork/operators/example.invalid/jwt "$VALID_JWT" "$tmp/operator-refused.log" 0 URNETWORK_AUTH_CODE="$FAKE_CODE" OPERATOR=example.invalid; rc=$?
+t "OPERATOR alone is refused before auth because single-operator provide is unsupported" sh -c '[ "$1" -ne 0 ] && rg -q "OPERATOR alone cannot provide:.*no single-operator provide mode" "$2.out" && [ ! -s "$2" ]' _ "$rc" "$tmp/operator-refused.log"
+
+t "operator auth with URL starts all-operators provide with URL" sh -c 'rg -q "^argv: provide --all-operators --hotkey_seed_file=$2 --operators-url=http://127.0.0.1:9/operators.yml$" "$1"' _ "$tmp/l16" "$tmp/seed.bin"
+
+h="$tmp/on-code"; log="$tmp/on-code.log"
+run_entry "$h" - "$VALID_JWT" "$log" 0 ALL_OPERATORS=on URNETWORK_AUTH_CODE="$FAKE_CODE" OPERATORS_URL=http://127.0.0.1:9/operators.yml; rc=$?
+t "ALL_OPERATORS=on with network auth sends URL only to provide" sh -c '[ "$1" -eq 0 ] && rg -Fqx "argv: auth $3 -f" "$2" && rg -Fqx "argv: provide --all-operators --operators-url=http://127.0.0.1:9/operators.yml" "$2"' _ "$rc" "$log" "$FAKE_CODE"
+
+h="$tmp/refused-session"; mkdir -p "$h/.urnetwork/operators/example.invalid"
+printf '%s\n' "$EXPIRED_JWT" > "$h/.urnetwork/operators/example.invalid/jwt"
+run_entry "$h" .urnetwork/operators/example.invalid/jwt "$VALID_JWT" "$tmp/refused-session.log" 0 URNETWORK_AUTH_CODE="$FAKE_CODE" OPERATOR=example.invalid; rc=$?
+t "refusing single-operator provide preserves the existing expired session" sh -c '[ "$1" -ne 0 ] && [ "$(cat "$2")" = "$3" ] && [ ! -s "$4" ]' _ "$rc" "$h/.urnetwork/operators/example.invalid/jwt" "$EXPIRED_JWT" "$tmp/refused-session.log"
+
+h="$tmp/direct-refused"; log="$tmp/direct-refused.log"
+env -i PATH="$PATH" HOME="$h" APP_DIR="$APP" STUB_LOG="$log" STUB_JWT="$h/.urnetwork/jwt" STUB_JWT_VALUE="$VALID_JWT" URNETWORK_AUTH_CODE="$FAKE_CODE" OPERATORS_URL=http://127.0.0.1:9/operators.yml sh "$APP/start_miner.sh" > "$log.out" 2>&1; rc=$?
+t "direct start refuses URL without an operator mode" sh -c '[ "$1" -ne 0 ] && rg -q "OPERATORS_URL requires operator-scoped auth" "$2.out" && [ ! -s "$2" ]' _ "$rc" "$log"
+
+for spelling in true 1 yes y on TrUe ON; do
+  h="$tmp/all-$spelling"; log="$tmp/all-$spelling.log"
+  run_entry "$h" - "$VALID_JWT" "$log" 0 "ALL_OPERATORS=$spelling" OPERATORS_URL=http://127.0.0.1:9/operators.yml; rc=$?
+  t "ALL_OPERATORS=$spelling selects all operators without AUTH" sh -c '[ "$1" -eq 0 ] && rg -q "^argv: provide --all-operators --operators-url=http://127.0.0.1:9/operators.yml$" "$2" && ! rg -q "^argv: auth" "$2"' _ "$rc" "$log"
+done
+for spelling in false 0 no n off FaLsE OFF; do
+  h="$tmp/all-$spelling"; log="$tmp/all-$spelling.log"
+  run_entry "$h" - "$VALID_JWT" "$log" 0 URNETWORK_AUTH_CODE="$FAKE_CODE" "ALL_OPERATORS=$spelling"; rc=$?
+  t "ALL_OPERATORS=$spelling starts plain provide" sh -c '[ "$1" -eq 0 ] && rg -q "^argv: provide$" "$2"' _ "$rc" "$log"
+done
+for spelling in true 1 yes y on TrUe ON; do
+  h="$tmp/auto-$spelling"; log="$tmp/auto-$spelling.log"
+  run_entry "$h" - "$VALID_JWT" "$log" 0 ALL_OPERATORS=on "AUTO_REGISTER=$spelling" HOTKEY_SEED_FILE="$tmp/seed.bin"; rc=$?
+  t "AUTO_REGISTER=$spelling reaches provide" sh -c '[ "$1" -eq 0 ] && rg -q "^argv: provide --all-operators --auto-register --hotkey_seed_file=" "$2"' _ "$rc" "$log"
+done
+for spelling in false 0 no n off FaLsE OFF; do
+  h="$tmp/auto-$spelling"; log="$tmp/auto-$spelling.log"
+  run_entry "$h" - "$VALID_JWT" "$log" 0 ALL_OPERATORS=on "AUTO_REGISTER=$spelling"; rc=$?
+  t "AUTO_REGISTER=$spelling omits auto-registration" sh -c '[ "$1" -eq 0 ] && rg -q "^argv: provide --all-operators$" "$2"' _ "$rc" "$log"
+done
+for spelling in true 1 yes y on TrUe ON; do
+  h="$tmp/allow-$spelling"; log="$tmp/allow-$spelling.log"
+  run_entry "$h" - "$VALID_JWT" "$log" 0 URNETWORK_AUTH_CODE="$FAKE_CODE" "ALLOW_CLIENT_REGISTRATION=$spelling"; rc=$?
+  t "ALLOW_CLIENT_REGISTRATION=$spelling reaches provide" sh -c '[ "$1" -eq 0 ] && rg -q "^argv: provide --allow-client-registration$" "$2"' _ "$rc" "$log"
+done
+for spelling in false 0 no n off FaLsE OFF auto AuTo; do
+  h="$tmp/allow-$spelling"; log="$tmp/allow-$spelling.log"
+  run_entry "$h" - "$VALID_JWT" "$log" 0 URNETWORK_AUTH_CODE="$FAKE_CODE" "ALLOW_CLIENT_REGISTRATION=$spelling"; rc=$?
+  t "ALLOW_CLIENT_REGISTRATION=$spelling omits registration flag" sh -c '[ "$1" -eq 0 ] && rg -q "^argv: provide$" "$2"' _ "$rc" "$log"
+done
+for var in ALL_OPERATORS AUTO_REGISTER ALLOW_CLIENT_REGISTRATION; do
+  h="$tmp/invalid-$var"; log="$tmp/invalid-$var.log"
+  run_entry "$h" - "$VALID_JWT" "$log" 0 "$var=maybe"; rc=$?
+  t "$var=maybe is rejected before auth and lists accepted values" sh -c '[ "$1" -ne 0 ] && rg -Fq "$3 must be true/1/yes/y/on or false/0/no/n/off" "$2.out" && [ ! -s "$2" ]' _ "$rc" "$log" "$var"
+done
 
 echo "--- BUILD deprecation and conflict resolution (AUTH wins) ---"
 h="$tmp/h17"
@@ -256,7 +327,7 @@ t "the v33 operator set maps onto the miner's provide flags" [ "$out" = "$expect
 
 out="$(pe "$h" ALL_OPERATORS=maybe)"; rc=$?
 printf '%s' "$out" > "$tmp/pe-bool.out"
-t "an invalid ALL_OPERATORS value is refused" sh -c "grep -q 'ALL_OPERATORS must be 1/true/yes/on or 0/false/no/off' '$tmp/pe-bool.out' && [ $rc -ne 0 ]"
+t "an invalid ALL_OPERATORS value is refused" sh -c "grep -q 'ALL_OPERATORS must be true/1/yes/y/on or false/0/no/n/off' '$tmp/pe-bool.out' && [ $rc -ne 0 ]"
 
 out="$(pe "$h" MAX_MEMORY='2 gib')"; rc=$?
 printf '%s' "$out" > "$tmp/pe-max.out"
@@ -268,7 +339,7 @@ t "whitespace in HOTKEY_SEED_FILE is refused" sh -c "grep -q 'HOTKEY_SEED_FILE m
 
 out="$(pe "$h" ALLOW_CLIENT_REGISTRATION=maybe)"; rc=$?
 printf '%s' "$out" > "$tmp/pe-allow.out"
-t "the helper rejects an unknown ALLOW_CLIENT_REGISTRATION" sh -c "grep -q 'ALLOW_CLIENT_REGISTRATION must be auto, Y or N' '$tmp/pe-allow.out' && [ $rc -ne 0 ]"
+t "the helper rejects an unknown ALLOW_CLIENT_REGISTRATION" sh -c "grep -q 'ALLOW_CLIENT_REGISTRATION must be true/1/yes/y/on or false/0/no/n/off' '$tmp/pe-allow.out' && [ $rc -ne 0 ]"
 
 out="$(pe "$h" PROVIDER_ARGS='--flag=*')"
 t "PROVIDER_ARGS is split on whitespace and not globbed" [ "$out" = "--flag=*" ]
