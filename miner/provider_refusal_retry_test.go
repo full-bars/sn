@@ -59,3 +59,33 @@ func TestRefusalRetryRetainsEarlierAttempt(t *testing.T) {
 		t.Fatalf("redelivery double charged: %+v, %v", record, err)
 	}
 }
+
+// A refusal the store did not take is still a verdict. Once the store is back,
+// the first admission must charge it and stay closed, rather than pass on a
+// record that has not heard of it while the retry is still waiting.
+func TestPendingRefusalHoldsAdmissionUntilDurable(t *testing.T) {
+	testExtenderState(t)
+	if providerStoreInstance() == nil {
+		t.Fatal("store did not open")
+	}
+	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
+	releaseProviderStore()
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, LastActivationTime: 301, LastActivationError: "refused", LastActivationRefused: true})
+	if allow, _, _ := extenderActivationAllow(time.Now(), 1, extenderTestAccountA); allow {
+		t.Fatal("admitted while the refusal could not be kept")
+	}
+	if err := restoreProviderStoreAfterAbortedHandoff(); err != nil {
+		t.Fatal(err)
+	}
+	// The retry waits providerStoreRetryInterval; this admission comes first.
+	if allow, wait, _ := extenderActivationAllow(time.Now(), 1, extenderTestAccountA); allow || wait <= 0 {
+		t.Fatalf("admission after recovery = %t (wait %s), want held by the refusal", allow, wait)
+	}
+	record, err := readExtenderActivationRecord(extenderTestAccountA)
+	if err != nil || record.Accounts[extenderTestAccountA].Refusals != 1 {
+		t.Fatalf("refusal not kept by the admission that passed it: %+v, %v", record, err)
+	}
+	if held := extenderRefusalsHeldCount(); held != 0 {
+		t.Fatalf("%d refusals still held after they were kept", held)
+	}
+}

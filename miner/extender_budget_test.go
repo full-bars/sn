@@ -40,7 +40,11 @@ func testExtenderState(t *testing.T) {
 	t.Helper()
 	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	closeProviderStore()
-	t.Cleanup(closeProviderStore)
+	resetExtenderRefusals()
+	t.Cleanup(func() {
+		resetExtenderRefusals()
+		closeProviderStore()
+	})
 }
 
 // extenderTestAccount names the nth account of a test that churns sign-ins.

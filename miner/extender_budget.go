@@ -38,7 +38,6 @@ package miner
 // that can read and record the budget again.
 
 import (
-	"strconv"
 	"sync"
 	"time"
 
@@ -247,6 +246,9 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 	}
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
+	pending := snapshotExtenderRefusals()
+	now := time.Now()
+	var waits []time.Duration
 	var record extenderActivationRecord
 	err := store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
 		if !found {
@@ -256,12 +258,25 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 			record.Accounts = map[string]extenderActivationState{}
 		}
 		record.adoptLegacy(account)
+		waits = waits[:0]
+		// A refusal decided but not yet kept is charged before anything
+		// else decides, so no transaction can admit past it.
+		for _, refusal := range pending {
+			waits = append(waits, record.applyRefusal(extenderActivationAccountKey(refusal.account), refusal.attempt, now))
+		}
 		return mutate(&record)
 	})
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
+		return err
 	}
-	return err
+	settleExtenderRefusals(pending)
+	for _, wait := range waits {
+		if wait > 0 {
+			tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
+		}
+	}
+	return nil
 }
 
 // adoptLegacy moves a pre-account record onto the account. The old record
@@ -494,47 +509,11 @@ func recordExtenderActivationRefusedPersisted(now time.Time, userId string) (tim
 	return recordExtenderActivationRefusedOnce(now, userId, "")
 }
 
-func recordExtenderActivationAttemptRefused(now time.Time, userId string, attempt int64) (time.Duration, bool) {
-	return recordExtenderActivationRefusedOnce(now, userId, strconv.FormatInt(attempt, 10))
-}
-
 func recordExtenderActivationRefusedOnce(now time.Time, userId, attempt string) (time.Duration, bool) {
 	account := extenderActivationAccountKey(userId)
 	wait := extenderRefusalBackoff
 	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
-		state := record.Accounts[account]
-		if attempt != "" {
-			if state.RefusalAttempts == nil {
-				state.RefusalAttempts = make(map[string]int64)
-			}
-			for key, at := range state.RefusalAttempts {
-				if now.Sub(time.Unix(at, 0)) > extenderRefusalDecay {
-					delete(state.RefusalAttempts, key)
-				}
-			}
-			if _, exists := state.RefusalAttempts[attempt]; exists {
-				wait = 0
-				return nil
-			}
-			state.RefusalAttempts[attempt] = now.Unix()
-		}
-		// A streak that has gone quiet starts over: refusals spread across weeks
-		// are not one escalating incident.
-		if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
-			state.Refusals = 0
-		}
-		state.Refusals++
-		state.LastRefusalUnix = now.Unix()
-		wait = extenderRefusalBackoff
-		for i := 1; i < state.Refusals; i++ {
-			wait *= 2
-			if extenderRefusalBackoffMax <= wait {
-				wait = extenderRefusalBackoffMax
-				break
-			}
-		}
-		state.BackoffUntilUnix = now.Add(wait).Unix()
-		record.Accounts[account] = state
+		wait = record.applyRefusal(account, attempt, now)
 		return nil
 	})
 	if err != nil {
@@ -544,6 +523,44 @@ func recordExtenderActivationRefusedOnce(now time.Time, userId, attempt string) 
 		return extenderRefusalBackoff, false
 	}
 	return wait, true
+}
+
+// applyRefusal charges one refusal to account and returns the wait it sets. An
+// attempt already charged is not charged again and returns no wait.
+func (record *extenderActivationRecord) applyRefusal(account, attempt string, now time.Time) time.Duration {
+	state := record.Accounts[account]
+	if attempt != "" {
+		if state.RefusalAttempts == nil {
+			state.RefusalAttempts = make(map[string]int64)
+		}
+		for key, at := range state.RefusalAttempts {
+			if now.Sub(time.Unix(at, 0)) > extenderRefusalDecay {
+				delete(state.RefusalAttempts, key)
+			}
+		}
+		if _, exists := state.RefusalAttempts[attempt]; exists {
+			return 0
+		}
+		state.RefusalAttempts[attempt] = now.Unix()
+	}
+	// A streak that has gone quiet starts over: refusals spread across weeks
+	// are not one escalating incident.
+	if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
+		state.Refusals = 0
+	}
+	state.Refusals++
+	state.LastRefusalUnix = now.Unix()
+	wait := extenderRefusalBackoff
+	for i := 1; i < state.Refusals; i++ {
+		wait *= 2
+		if extenderRefusalBackoffMax <= wait {
+			wait = extenderRefusalBackoffMax
+			break
+		}
+	}
+	state.BackoffUntilUnix = now.Add(wait).Unix()
+	record.Accounts[account] = state
+	return wait
 }
 
 // recordExtenderActivationSucceeded clears refusal and spare state, adopts

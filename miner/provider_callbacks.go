@@ -4,6 +4,7 @@ package miner
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
@@ -138,14 +139,10 @@ type providerExtenderStatusListener struct {
 	observed  bool
 	last      providerExtenderObservation
 	// Remember every observed attempt so later redelivery cannot charge it twice.
-	failureSeen     map[int64]bool
-	pendingRefusals []pendingExtenderRefusal
-	failureMu       sync.Mutex
-	retryRunning    bool
-	retryContext    context.Context
-	retryInterval   time.Duration
-	diagnostics     *providerDiagnostics
-	provider        uint64
+	failureSeen map[int64]bool
+	failureMu   sync.Mutex
+	diagnostics *providerDiagnostics
+	provider    uint64
 	// account is the sign-in account this slot provides under
 	// (extenderActivationUserId), which is the identity the operator's
 	// ExtenderActivateRateLimit counts and the key the budget records a
@@ -156,17 +153,8 @@ type providerExtenderStatusListener struct {
 }
 
 // The provider borrows its enclosing run's explicitly supplied output budget.
-type pendingExtenderRefusal struct {
-	attempt int64
-	account string
-}
-
-func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, account string, contexts ...context.Context) *providerExtenderStatusListener {
-	ctx := context.Background()
-	if len(contexts) > 0 && contexts[0] != nil {
-		ctx = contexts[0]
-	}
-	return &providerExtenderStatusListener{diagnostics: output, provider: provider, account: account, retryContext: ctx, retryInterval: providerStoreRetryInterval}
+func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, account string) *providerExtenderStatusListener {
+	return &providerExtenderStatusListener{diagnostics: output, provider: provider, account: account}
 }
 
 // currentAccount is the account this observation is charged to. It resolves the
@@ -259,7 +247,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 			}
 		}
 	}
-	self.drainPendingRefusals()
+	flushExtenderRefusals()
 	if changed {
 		self.diagnostics.observe(providerExtenderObserved, self.provider, true, nil, 0, &observation)
 	}
@@ -277,50 +265,9 @@ func (self *providerExtenderStatusListener) chargeActivationFailure(observation 
 		tlog("[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held\n", observation.ActivatedV4, observation.ActivatedV6)
 		return
 	}
-	self.pendingRefusals = append(self.pendingRefusals, pendingExtenderRefusal{attempt: observation.ActivationTime, account: self.currentAccount()})
-}
-
-// drainPendingRefusals is called with failureMu held. One worker retries in
-// order, paced and tied to the provider run rather than to status redelivery.
-func (self *providerExtenderStatusListener) drainPendingRefusals() {
-	for len(self.pendingRefusals) > 0 {
-		pending := self.pendingRefusals[0]
-		wait, persisted := recordExtenderActivationAttemptRefused(time.Now(), pending.account, pending.attempt)
-		if !persisted {
-			if !self.retryRunning {
-				self.retryRunning = true
-				go self.retryPendingRefusals()
-			}
-			return
-		}
-		self.pendingRefusals = self.pendingRefusals[1:]
-		if wait > 0 {
-			tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
-		}
-	}
-}
-
-func (self *providerExtenderStatusListener) retryPendingRefusals() {
-	for {
-		timer := time.NewTimer(self.retryInterval)
-		select {
-		case <-self.retryContext.Done():
-			timer.Stop()
-			self.failureMu.Lock()
-			self.retryRunning = false
-			self.failureMu.Unlock()
-			return
-		case <-timer.C:
-		}
-		self.failureMu.Lock()
-		self.drainPendingRefusals()
-		if len(self.pendingRefusals) == 0 {
-			self.retryRunning = false
-			self.failureMu.Unlock()
-			return
-		}
-		self.failureMu.Unlock()
-	}
+	// Held for the process, not this listener, so admission sees it before
+	// the store has kept it and the listener's end does not drop it.
+	holdExtenderRefusal(self.currentAccount(), strconv.FormatInt(observation.ActivationTime, 10))
 }
 
 // activationPass is what the status says this pass did, per family. A pass
