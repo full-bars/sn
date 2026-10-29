@@ -34,13 +34,13 @@ Docs-only changes skip CI through `paths-ignore`.
 
 ## Release flow
 
-Releases follow the `v<date>-<unixtime>-sn` tag scheme, for example `v2026.10.29-1084715100-sn`.
+Releases follow the `v<date>-<build>-sn` tag scheme, where the build number is the seconds since the 2023-05-23 founding epoch times ten — not a raw unix stamp. For example `v2026.10.29-1084766765-sn`. `scripts/compute-sn-tag.sh` prints it.
 
 ### Cut a release
 
 1. Ensure `build.yml` is green on main.
 2. Write release notes at `releases/<tag>.md`.
-3. Push a signed tag: `git tag -s <tag> && git push origin <tag>`.
+3. Push a signed tag: `tag=$(scripts/compute-sn-tag.sh) && git tag -s "$tag" -m "$tag" && git push origin "$tag"`.
 4. Release Binaries builds the six-platform matrix, bundles the tarballs including the monitoring bundle and installers, and publishes with the notes from `releases/<tag>.md`. If the file is absent, GitHub auto-generates the notes.
 5. The shakedown and docker shakedown fire on the same tag and validate the published artifacts.
 
