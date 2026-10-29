@@ -2243,29 +2243,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// replacing this identity waits on it while holding the reloader's
 			// lock, and the cleanup asks for that lock.
 			defer close(slotDone)
-			// The warmth-derived base delay plus a jittered
-			// per-slot stagger; a zero delay starts immediately.
-			if !backoffPacerWithDelay(baseDelay, staggerDuration, ctx) {
+			// The warmth-derived base delay plus a jittered per-slot stagger,
+			// then the URL warmup hold. Both wait on the slot's own context:
+			// a reload that retires this identity cancels slotCtx, and a wait
+			// on the run context would keep the old worker (and the
+			// replacement waiting for it) alive until the delay ended.
+			if !awaitSlotLaunch(slotCtx, baseDelay, staggerDuration, self.proxySourceOf, proxySettings) {
 				return
-			}
-			if ctx.Err() != nil {
-				return
-			}
-			var source string
-			if proxySettings != nil {
-				source = self.proxySourceOf[proxySettings.Key()]
-			}
-			if warmupIsCurated(source) {
-				noteCuratedWarmupLaunch()
-			}
-			// An unproven URL-sourced identity holds until the curated
-			// ramp completes or the grace elapses (proxy_manager_warmup.go,
-			// the relay's warmup launch gate); its curated peers are
-			// unaffected because each slot waits in its own goroutine.
-			if source == "url" && shouldDeferURLWarmupLaunch(source, proxySettings.Key(), time.Now()) {
-				if !waitURLWarmupHold(ctx) {
-					return
-				}
 			}
 			if proxySettings != nil {
 				output.observe(providerStarted, uint64(index), true, nil, 0, nil)
@@ -3143,6 +3127,33 @@ func parseProxyEntry(keyAddress string, auths map[string]*ProxyAuth) proxyEntry 
 		}
 	}
 	return proxyEntry{address: keyAddress}
+}
+
+// awaitSlotLaunch holds a startup worker through its launch pacing and, for an
+// unproven URL-sourced proxy, the warmup hold. It reports false when slotCtx
+// ended first, and then the worker must not launch: its supervisor, or the
+// reload that retired it, has already given up on the slot.
+func awaitSlotLaunch(slotCtx context.Context, baseDelay, stagger time.Duration, sourceOf map[string]string, settings *connect.ProxySettings) bool {
+	if !backoffPacerWithDelay(baseDelay, stagger, slotCtx) || slotCtx.Err() != nil {
+		return false
+	}
+	var source string
+	if settings != nil {
+		source = sourceOf[settings.Key()]
+	}
+	if warmupIsCurated(source) {
+		noteCuratedWarmupLaunch()
+	}
+	// An unproven URL-sourced identity holds until the curated ramp completes
+	// or the grace elapses (proxy_manager_warmup.go, the relay's warmup launch
+	// gate); its curated peers are unaffected because each slot waits in its
+	// own goroutine.
+	if source == "url" && shouldDeferURLWarmupLaunch(source, settings.Key(), time.Now()) {
+		if !waitURLWarmupHold(slotCtx) {
+			return false
+		}
+	}
+	return slotCtx.Err() == nil
 }
 
 // canonicalProxyKey is the one shape stored in the proxy config for inline
