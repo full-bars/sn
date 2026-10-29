@@ -9,10 +9,12 @@
 #
 # Miner-image policy: the install step refuses to replace the image's
 # primary binary with a different program. full-bars/sn release assets
-# publish the relay (cmd/provider) as `provider`; the miner (cli/miner) is
-# shipped inside this image only, so installing the release binary over the
-# miner would silently swap the program. The guard keeps `urnet-tools
-# update` from doing that and points at the image stream instead.
+# publish the relay (cmd/provider) as `provider`. The miner is published
+# separately, in the `urnetwork-miner-<tag>-<os>-<arch>.tar.gz` archive,
+# whose single member is also named `provider`. Installing the relay asset
+# over the miner would silently swap the program, so the guard keeps
+# `urnet-tools update` from doing that and points at the miner archive and
+# the image stream instead.
 #
 # URNET_TOOLS_SOURCE_ONLY=1 defines the helpers and exits without
 # dispatching a command (used by docker/miner/test_miner_entrypoint.sh).
@@ -186,8 +188,9 @@ do_update() {
     # a different program than the one this image runs.
     if ! upd_install_compatible "$tmpdir/provider" "$provider_bin"; then
         echo "Update refused: the release asset is not the program this image runs."
-        echo "The miner image is updated by pulling a new ghcr.io/full-bars/sn:miner(-*) image"
-        echo "and recreating the container; no in-place miner binary is published in releases."
+        echo "This image runs the miner. Install the urnetwork-miner-* archive, whose"
+        echo "single member is the miner named provider, or pull a new"
+        echo "ghcr.io/full-bars/sn:miner(-*) image and recreate the container."
         rm -rf "$tmpdir"
         exit 1
     fi
