@@ -10,12 +10,14 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -586,7 +588,10 @@ func Run(args []string) {
 		} else if exclude, _ := opts.Bool("exclude"); exclude {
 			proxyExclude(opts)
 		} else if add, _ := opts.Bool("add"); add {
-			proxyAdd(opts)
+			if err := proxyAdd(opts); err != nil {
+				fmt.Fprintf(os.Stderr, "proxy add: %v\n", err)
+				os.Exit(1)
+			}
 		} else if removeDead, _ := opts.Bool("remove-dead"); removeDead {
 			proxyRemoveDead(opts)
 		} else if remove, _ := opts.Bool("remove"); remove {
@@ -2951,18 +2956,22 @@ func proxyAuthRemove(opts docopt.Opts) {
 	triggerProxyReload()
 }
 
-func proxyAdd(opts docopt.Opts) {
+func proxyAdd(opts docopt.Opts) error {
 	// File-backed providers (Workflow A: proxy.state.Source set by
 	// --proxy_file, C-10) re-read that file on every reload, so additions must
 	// land in THAT file; a write to the internal config is discarded by the
 	// next reload. The paste hand-off (`proxy add --proxy_file=<tmp> -f`)
 	// relies on this routing.
 	if state, err := readProxyState(); err == nil && state.Source != "" {
-		proxyAddFileBacked(state.Source, opts)
-		return
+		return proxyAddFileBacked(state.Source, opts)
 	}
 
 	allKeyAddress := proxyAddCollectAddresses(opts)
+	for _, raw := range allKeyAddress {
+		if _, err := checkedProxyAddEntry(raw, readProxyConfig().Auths); err != nil {
+			return err
+		}
+	}
 	force, _ := opts.Bool("-f")
 
 	// Confirmations wait on the operator, so they run on a throwaway copy
@@ -2972,29 +2981,36 @@ func proxyAdd(opts docopt.Opts) {
 	if !force {
 		if !applyProxyAdd(readProxyConfig(), allKeyAddress, false, func(address, user, password string) bool {
 			fmt.Printf(
-				"server %s (%s/%s) exists with different key. Change key? [yN]\n",
-				address,
-				obfuscateUser(user),
-				obfuscatePassword(password),
+				"server %s exists with different key. Change key? [yN]\n",
+				redactProxySource(canonicalProxyKey(address, user, password)),
 			)
 
 			reader := bufio.NewReader(os.Stdin)
 			confirm, _ := reader.ReadString('\n')
 			return strings.ToLower(strings.TrimSpace(confirm)) == "y"
 		}) {
-			return
+			return nil
 		}
 	}
 
+	var validationErr error
 	if err := updateProxyConfig(func(proxyConfig *ProxyConfig) bool {
+		for _, raw := range allKeyAddress {
+			if _, validationErr = checkedProxyAddEntry(raw, proxyConfig.Auths); validationErr != nil {
+				return false
+			}
+		}
 		return applyProxyAdd(proxyConfig, allKeyAddress, true, func(string, string, string) bool { return true })
 	}); err != nil {
-		fmt.Fprintf(os.Stderr, "proxy add: %v\n", err)
-		return
+		return err
+	}
+	if validationErr != nil {
+		return validationErr
 	}
 	// Tell a running provider: its reloader applies the stored list on the
 	// trigger, and without it the change waits for the next start.
 	triggerProxyReload()
+	return nil
 }
 
 // applyProxyAdd adds each entry to proxyConfig. confirmChange is asked before
@@ -3031,10 +3047,8 @@ func applyProxyAdd(proxyConfig *ProxyConfig, allKeyAddress []string, announce bo
 
 		if announce {
 			fmt.Printf(
-				"added server %s (%s/%s)\n",
-				address,
-				obfuscateUser(user),
-				obfuscatePassword(password),
+				"added server %s\n",
+				redactProxySource(canonicalProxyKey(address, user, password)),
 			)
 		}
 
@@ -3044,6 +3058,25 @@ func applyProxyAdd(proxyConfig *ProxyConfig, allKeyAddress []string, announce bo
 		proxyConfig.Servers[proxyKey] = entry.key
 	}
 	return true
+}
+
+// checkedProxyAddEntry rejects malformed addresses without echoing input.
+func checkedProxyAddEntry(raw string, auths map[string]*ProxyAuth) (proxyEntry, error) {
+	if i := strings.Index(raw, "@"); i >= 0 {
+		if _, found := auths[raw[:i]]; found && strings.Contains(raw[:i], ":") {
+			return proxyEntry{}, fmt.Errorf("ambiguous registered key and userinfo; use an unambiguous key")
+		}
+	}
+	entry := parseProxyEntry(raw, auths)
+	host, port, err := net.SplitHostPort(entry.address)
+	if err != nil || host == "" || strings.ContainsAny(host, "@ /\t\r\n") || !validProxyAddress(entry.address) {
+		return proxyEntry{}, fmt.Errorf("invalid proxy address; expected host:port with optional credentials")
+	}
+	n, err := strconv.Atoi(port)
+	if err != nil || n < 1 || n > 65535 {
+		return proxyEntry{}, fmt.Errorf("invalid proxy port; expected 1-65535")
+	}
+	return entry, nil
 }
 
 // replaceInlineProxyCredentials drops the stored inline entries that the new

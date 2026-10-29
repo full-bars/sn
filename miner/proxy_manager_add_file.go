@@ -25,15 +25,39 @@ import (
 // rather than sitting beside it; the file is written atomically, comments and blank lines are
 // preserved, and a reload trigger is fired so the additions take effect
 // without a restart.
-func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
+func proxyAddFileBacked(sourcePath string, opts docopt.Opts) error {
 	release, err := acquireProxyLockWithRetry()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "proxy add: could not acquire proxy lock: %v\n", err)
-		return
+		return fmt.Errorf("could not acquire proxy lock: %w", err)
 	}
 	defer release()
 
 	allKeyAddress := proxyAddCollectAddresses(opts)
+	auths := readProxyConfig().Auths
+	entries := make([]string, 0, len(allKeyAddress))
+	for _, raw := range allKeyAddress {
+		entry, err := checkedProxyAddEntry(raw, auths)
+		if err != nil {
+			return err
+		}
+		if entry.key != "" {
+			auth, ok := auths[entry.key]
+			if !ok || auth == nil {
+				return fmt.Errorf("unregistered key prefix cannot be used in a file-backed source")
+			}
+			if auth.User == "" || auth.Password == "" {
+				return fmt.Errorf("registered key has incomplete credentials")
+			}
+			encoded := canonicalProxyKey(entry.address, auth.User, auth.Password)
+			address, user, password := parseProxyAddress(encoded)
+			if address != entry.address || user != auth.User || password != auth.Password {
+				return fmt.Errorf("registered credentials cannot be represented unambiguously in a file-backed source")
+			}
+			entries = append(entries, encoded)
+		} else {
+			entries = append(entries, strings.TrimSpace(raw))
+		}
+	}
 
 	// Keep an existing source's permissions when replacing it. New sources
 	// contain credentials and must not be made world-readable.
@@ -43,8 +67,7 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 		perm = info.Mode().Perm()
 		owner, _ = sourceOwnerOf(info)
 	} else if !os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "proxy add: could not stat %s: %v\n", sourcePath, err)
-		return
+		return fmt.Errorf("could not stat source: %w", err)
 	}
 
 	// Read the existing file content, preserving comments and blank lines.
@@ -67,21 +90,11 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 			}
 		}
 	} else if !os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "proxy add: could not read %s: %v\n", sourcePath, err)
-		return
+		return fmt.Errorf("could not read source: %w", err)
 	}
 
 	added := 0
-	for _, keyAddress := range allKeyAddress {
-		// Strip a key@ prefix; the source file stores bare host:port:user:pass.
-		proxyAddress := keyAddress
-		if i := strings.Index(keyAddress, "@"); 0 <= i {
-			proxyAddress = keyAddress[i+1:]
-		}
-		trimmed := strings.TrimSpace(proxyAddress)
-		if trimmed == "" {
-			continue
-		}
+	for _, trimmed := range entries {
 		var changed bool
 		lines, changed = upsertProxyFileLine(lines, trimmed)
 		address, user, password := parseProxyAddress(trimmed)
@@ -89,13 +102,13 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 			fmt.Printf("server %s already present in %s\n", redactProxySource(trimmed), sourcePath)
 			continue
 		}
-		fmt.Printf("added server %s (%s/%s)\n", address, obfuscateUser(user), obfuscatePassword(password))
+		fmt.Printf("added server %s\n", redactProxySource(canonicalProxyKey(address, user, password)))
 		added++
 	}
 
 	if added == 0 {
 		fmt.Println("no new proxies to add")
-		return
+		return nil
 	}
 
 	out := make([]string, len(lines))
@@ -104,8 +117,7 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 	}
 	content := strings.Join(out, "\n") + "\n"
 	if err := atomicWriteFileOwned(sourcePath, []byte(content), perm, owner); err != nil {
-		fmt.Fprintf(os.Stderr, "proxy add: could not write %s: %v\n", sourcePath, err)
-		return
+		return fmt.Errorf("could not write source: %w", err)
 	}
 	fmt.Printf("appended %d proxy(ies) to %s\n", added, sourcePath)
 
@@ -118,6 +130,7 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 	} else if err := writeReloadTrigger(reloadPath); err != nil {
 		fmt.Fprintf(os.Stderr, "proxy refresh failed: %v\n", err)
 	}
+	return nil
 }
 
 // proxyAddCollectAddresses gathers the addresses `proxy add` was asked for:
