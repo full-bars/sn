@@ -2083,7 +2083,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				go func() {
 					defer join.done()
 					if err := provideWithProxy(slotCtx, index, settings); err != nil {
-						tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", settings.Key(), index, err)
+						tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", proxyKeyDisplay(settings.Key()), index, err)
 					}
 				}()
 				return slotCancel, nil
@@ -2108,7 +2108,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// this very worker.
 				close(slotDone)
 				if err != nil {
-					tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", settings.Key(), index, err)
+					tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", proxyKeyDisplay(settings.Key()), index, err)
 				}
 				if reloader.workerExited(settings.Key(), generation) && err != nil && slotCtx.Err() == nil {
 					retryFailedProxy(settings.Key())
