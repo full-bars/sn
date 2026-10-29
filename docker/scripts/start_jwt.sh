@@ -231,7 +231,7 @@ func_start_provider(){
     elif [ -n "$URNETWORK_AUTH_CODE" ]; then
         log "[INFO] Starting UrNetwork with provided auth code (environment)..."
         # We use -f to force overwrite and skip prompts.
-        if "$PROVIDER_BIN" auth "" -f; then
+        if "$PROVIDER_BIN" auth "$URNETWORK_AUTH_CODE" -f; then
             log "[INFO] UrNetwork authenticated successfully."
         else
             code=$?
@@ -304,7 +304,7 @@ func_start_provider(){
             fi
             if [ -n "$URNETWORK_AUTH_CODE" ]; then
                 log "[INFO] Re-authenticating with URNETWORK_AUTH_CODE (attempt $reauth_attempts)..."
-                if "$PROVIDER_BIN" auth "" -f && [ -s "$JWT_FILE" ]; then
+                if "$PROVIDER_BIN" auth "$URNETWORK_AUTH_CODE" -f && [ -s "$JWT_FILE" ]; then
                     log "[INFO] Re-authentication successful. Restarting provider..."
                     failures=0
                     reauth_attempts=0
