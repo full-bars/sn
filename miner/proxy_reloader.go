@@ -356,7 +356,7 @@ func (r *minerProxyReloader) reserveAddress(settings *connect.ProxySettings) err
 	key := settings.Key()
 	if existing, loaded := r.addressOwners.LoadOrStore(settings.Address, key); loaded {
 		if owner, _ := existing.(string); owner != key {
-			return fmt.Errorf("address %s is already served by identity %s in this run; a second identity at one address would share its slot identity (restart to re-key)", settings.Address, proxyKeyDisplay(owner))
+			return fmt.Errorf("address %s is already served by identity %s in this run; a second identity at one address would share its slot identity (restart to re-key)", redactedProxyAddress(settings.Address), proxyKeyDisplay(owner))
 		}
 	}
 	return nil
