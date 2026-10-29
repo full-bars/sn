@@ -162,8 +162,13 @@ func TestNoPrintSinkFormatsARawProxyKey(t *testing.T) {
 		t.Fatalf("run.go calls logReloadedSlotStopped %d times, want one per reload spawn path (2)", got)
 	}
 
-	sink := regexp.MustCompile(`\b(tlog|Printf|Fprintf|Sprintf|Errorf|Println|panic|Wrap)\(`)
-	rawKey := regexp.MustCompile(`\.Key\(\)|\bidentityKey\b`)
+	// A key or raw address reaches a print through a local as often as it does
+	// literally, so the scan follows one hop: a name assigned from a key or
+	// address source (within the same function) is as raw as the source.
+	sink := regexp.MustCompile(`\b(tlog|Printf|Fprintf|Sprintf|Errorf|Println|panic|Wrap|Infof|Warningf)\(|"proxy:"\s*\+`)
+	source := regexp.MustCompile(`\.Key\(\)|\bidentityKey\b|\.Ids\(\)|(?i:settings)\.Address\b|\bproxyAddr\b`)
+	redacted := regexp.MustCompile(`proxyKeyDisplay\(|redactedProxyAddress\(|providerSlotDisplay\(|obfuscateUser\(`)
+	assign := regexp.MustCompile(`^\s*(?:for\s+)?([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*(?::=|=)\s*(?:range\s+)?(.*)$`)
 	files, err := filepath.Glob("*.go")
 	if err != nil {
 		t.Fatal(err)
@@ -176,14 +181,58 @@ func TestNoPrintSinkFormatsARawProxyKey(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		tainted := map[string]bool{}
 		for number, line := range strings.Split(string(data), "\n") {
 			trimmed := strings.TrimSpace(line)
-			if strings.HasPrefix(trimmed, "//") || !sink.MatchString(line) || !rawKey.MatchString(line) {
+			if strings.HasPrefix(line, "func ") {
+				tainted = map[string]bool{}
+			}
+			if strings.HasPrefix(trimmed, "//") {
 				continue
 			}
-			if !strings.Contains(line, "proxyKeyDisplay(") {
-				t.Errorf("%s:%d formats a raw proxy key: %s", file, number+1, trimmed)
+			if m := assign.FindStringSubmatch(line); m != nil && source.MatchString(topLevelOnly(m[2])) && !redacted.MatchString(m[2]) && !sink.MatchString(m[2]) {
+				for _, name := range strings.Split(m[1], ",") {
+					if name = strings.TrimSpace(name); name != "_" {
+						tainted[name] = true
+					}
+				}
+			}
+			if !sink.MatchString(line) || redacted.MatchString(line) {
+				continue
+			}
+			raw := source.MatchString(line)
+			for name := range tainted {
+				if name != "err" && regexp.MustCompile(`\b`+name+`\b`).MatchString(line) {
+					raw = true
+				}
+			}
+			if raw {
+				t.Errorf("%s:%d formats a raw proxy key or address: %s", file, number+1, trimmed)
 			}
 		}
+	}
+}
+
+// topLevelOnly drops index expressions and the arguments of calls that only
+// consume a value (a lookup key, a dial address), so the assignment is tainted
+// by what it returns from its source and not by what it was handed. Calls that
+// build text from their arguments keep them.
+func topLevelOnly(rhs string) string {
+	index := regexp.MustCompile(`\[[^\[\]]*\]`)
+	call := regexp.MustCompile(`(\w+)\(([^()]+)\)`)
+	passThrough := map[string]bool{"Sprintf": true, "Errorf": true, "Join": true, "string": true, "Wrap": true}
+	for {
+		next := index.ReplaceAllString(rhs, "")
+		next = call.ReplaceAllStringFunc(next, func(m string) string {
+			sub := call.FindStringSubmatch(m)
+			if passThrough[sub[1]] {
+				return sub[2]
+			}
+			return sub[1] + "()"
+		})
+		if next == rhs {
+			return rhs
+		}
+		rhs = next
 	}
 }
