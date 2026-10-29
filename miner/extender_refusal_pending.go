@@ -216,7 +216,8 @@ var extenderRefusalsHeld struct {
 	// sealed is set once the process has committed to giving up its memory (a
 	// handoff past its gate): a refusal decided from then on is journaled at
 	// once, ignoring the pace, because the successor reads only files.
-	sealed bool
+	sealed    bool
+	sealToken uint64
 }
 
 // queueExtenderOpLocked appends one operation. The caller holds the barrier
@@ -703,26 +704,61 @@ func ensureExtenderRefusalsDurable() error {
 // its admission needs; none can sit in memory between the gate and the
 // successor's first decision. A refusal that cannot be journaled even then
 // stays counted at risk, which the wait below reports.
+var extenderSealSequence atomic.Uint64
+var extenderSealAttempts sync.WaitGroup
+
 func sealExtenderRefusals() error {
-	if err := ensureExtenderRefusalsDurable(); err != nil {
-		return err
+	deadline := time.Now().Add(extenderRefusalGateDeadline)
+	token := extenderSealSequence.Add(1)
+	var abandoned atomic.Bool
+	clear := func() {
+		extenderRefusalsHeld.mu.Lock()
+		if extenderRefusalsHeld.sealToken == token {
+			extenderRefusalsHeld.sealed = false
+		}
+		extenderRefusalsHeld.mu.Unlock()
 	}
-	release, err := lockExtenderRefusalBarrier()
-	defer release()
-	if err != nil {
-		// Without the lock file a journal written from here could appear
-		// after the candidate's read, so the seal promises nothing.
-		return fmt.Errorf("refusal barrier: %w", err)
+	done := make(chan error, 1)
+	extenderSealAttempts.Add(1)
+	go func() {
+		defer extenderSealAttempts.Done()
+		if err := ensureExtenderRefusalsDurable(); err != nil {
+			done <- err
+			return
+		}
+		release, err := lockExtenderRefusalBarrier()
+		defer release()
+		if err != nil {
+			done <- fmt.Errorf("refusal barrier: %w", err)
+			return
+		}
+		extenderRefusalsHeld.mu.Lock()
+		if abandoned.Load() || !time.Now().Before(deadline) {
+			extenderRefusalsHeld.mu.Unlock()
+			done <- errExtenderRefusalBarrierBusy
+			return
+		}
+		extenderRefusalsHeld.sealed = true
+		extenderRefusalsHeld.sealToken = token
+		extenderRefusalsHeld.mu.Unlock()
+		err = journalQueuedRefusals()
+		if err != nil || abandoned.Load() {
+			clear()
+		}
+		done <- err
+	}()
+	timer := time.NewTimer(time.Until(deadline))
+	defer timer.Stop()
+	select {
+	case err := <-done:
+		if time.Now().Before(deadline) {
+			return err
+		}
+	case <-timer.C:
 	}
-	extenderRefusalsHeld.mu.Lock()
-	extenderRefusalsHeld.sealed = true
-	extenderRefusalsHeld.mu.Unlock()
-	// A refusal queued between the gate and the seal.
-	if err := journalQueuedRefusals(); err != nil {
-		unsealExtenderRefusals()
-		return fmt.Errorf("%d decided activation refusals are neither in the state store nor in a durable file", extenderRefusalsAtRisk())
-	}
-	return nil
+	abandoned.Store(true)
+	go clear()
+	return fmt.Errorf("refusal seal timed out: %w", errExtenderRefusalBarrierBusy)
 }
 
 // unsealExtenderRefusals returns to paced journaling after a handoff is
