@@ -343,39 +343,52 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 // selected workflow, not proxy data, and a file-backed reload re-reads the
 // operator's file (v33 has the same behavior).
 //
-// The cross-process proxy lock serializes the state reset against a running
-// provider's health-snapshot write, which would otherwise clobber it and
-// silently revive the removed proxies (v33 finding #11).
+// The cross-process proxy lock covers all three stores. It serializes the reset
+// against a running provider's health-snapshot write and against a startup,
+// either of which would otherwise write an old snapshot back and silently
+// revive the removed proxies (v33 finding #11).
 func clearProxyStores() error {
+	_, err := clearProxyStoresReport()
+	return err
+}
+
+// clearProxyStoresReport is clearProxyStores that also reports whether a
+// provider had started when the reset ran. The lock is taken before any store
+// is read and held through all three writes, so a startup in another process
+// sees either every store as it was or every store empty, and the "started"
+// answer cannot go stale between the read and the trigger decision. A lock
+// failure fails the command: a reset that cannot exclude startup is not a
+// reset.
+func clearProxyStoresReport() (started bool, err error) {
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return false, fmt.Errorf("proxy state lock: %w", err)
+	}
+	defer release()
+	proxyStateMu.Lock()
+	defer proxyStateMu.Unlock()
+
 	proxyConfig := readProxyConfig()
 	clear(proxyConfig.Servers)
 	writeProxyConfig(proxyConfig)
 
-	if release, err := acquireProxyLockWithRetry(); err == nil {
-		proxyStateMu.Lock()
-		if state, err := readProxyState(); err == nil {
-			state.Proxies = map[string]ProxyEntry{}
-			state.NextID = 0
-			if err := writeProxyState(state); err != nil {
-				proxyStateMu.Unlock()
-				release()
-				return err
-			}
+	if state, err := readProxyState(); err == nil {
+		started = !state.StartedAt.IsZero()
+		state.Proxies = map[string]ProxyEntry{}
+		state.NextID = 0
+		if err := writeProxyState(state); err != nil {
+			return started, err
 		}
-		proxyStateMu.Unlock()
-		release()
-	} else {
-		fmt.Fprintf(os.Stderr, "note: could not acquire the proxy lock for the state reset (%v); the running provider will re-sync on its next snapshot\n", err)
 	}
 
 	if urlState, err := readProxyURLState(); err == nil {
 		urlState.Cache = map[string]ProxyURLEntry{}
 		urlState.Sources = nil
 		if err := writeProxyURLState(urlState); err != nil {
-			return err
+			return started, err
 		}
 	}
-	return nil
+	return started, nil
 }
 
 // proxyClear implements `provider proxy clear` - the v33 surface the shipped
@@ -384,12 +397,10 @@ func clearProxyStores() error {
 // then triggers a reload so a running provider applies the reset without a
 // restart.
 func proxyClear(opts docopt.Opts) {
-	state, stateErr := readProxyState()
-	running := stateErr == nil && !state.StartedAt.IsZero()
-
 	previousServers := len(readProxyConfig().Servers)
 
-	if err := clearProxyStores(); err != nil {
+	running, err := clearProxyStoresReport()
+	if err != nil {
 		proxyCommandFatal(77, "could not clear the proxy stores: %v", err)
 	}
 	fmt.Printf("proxy clear: removed %d internal server(s), the proxy state and the URL cache\n", previousServers)
