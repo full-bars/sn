@@ -137,13 +137,15 @@ type providerExtenderStatusListener struct {
 	stateLock sync.Mutex
 	observed  bool
 	last      providerExtenderObservation
-	// chargedAttempt is the LastActivationTime this listener already handled.
-	// The error stays set while the attempt stands, so without it a changed
-	// fact beside that error would be charged as a fresh failure.
-	chargedAttempt int64
-	failureCharged bool
-	diagnostics    *providerDiagnostics
-	provider       uint64
+	// Remember every observed attempt so later redelivery cannot charge it twice.
+	failureSeen     map[int64]bool
+	pendingRefusals []pendingExtenderRefusal
+	failureMu       sync.Mutex
+	retryRunning    bool
+	retryContext    context.Context
+	retryInterval   time.Duration
+	diagnostics     *providerDiagnostics
+	provider        uint64
 	// account is the sign-in account this slot provides under
 	// (extenderActivationUserId), which is the identity the operator's
 	// ExtenderActivateRateLimit counts and the key the budget records a
@@ -154,8 +156,17 @@ type providerExtenderStatusListener struct {
 }
 
 // The provider borrows its enclosing run's explicitly supplied output budget.
-func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, account string) *providerExtenderStatusListener {
-	return &providerExtenderStatusListener{diagnostics: output, provider: provider, account: account}
+type pendingExtenderRefusal struct {
+	attempt int64
+	account string
+}
+
+func newProviderExtenderStatusListener(output *providerDiagnostics, provider uint64, account string, contexts ...context.Context) *providerExtenderStatusListener {
+	ctx := context.Background()
+	if len(contexts) > 0 && contexts[0] != nil {
+		ctx = contexts[0]
+	}
+	return &providerExtenderStatusListener{diagnostics: output, provider: provider, account: account, retryContext: ctx, retryInterval: providerStoreRetryInterval}
 }
 
 // currentAccount is the account this observation is charged to. It resolves the
@@ -183,6 +194,8 @@ func (self *providerExtenderStatusListener) currentAccount() string {
 
 // A nil observation is unknown, separate from a known disabled extender.
 func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status *sdk.ExtenderProvideStatus) {
+	self.failureMu.Lock()
+	defer self.failureMu.Unlock()
 	observation := providerExtenderObservation{}
 	if status != nil {
 		observation = providerExtenderObservation{
@@ -208,10 +221,12 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		// not handled yet is handled again: a standing error re-read beside
 		// another changed fact is the same failure. An activated family does
 		// not clear it, because the two per-family flags are independent.
-		failed := observation.Known && observation.Enabled && observation.ActivationFailed &&
-			(!self.failureCharged || self.chargedAttempt != observation.ActivationTime)
+		failed := observation.Known && observation.Enabled && observation.ActivationFailed && !self.failureSeen[observation.ActivationTime]
 		if failed {
-			self.failureCharged, self.chargedAttempt = true, observation.ActivationTime
+			if self.failureSeen == nil {
+				self.failureSeen = make(map[int64]bool)
+			}
+			self.failureSeen[observation.ActivationTime] = true
 		}
 		return changed, failed
 	}()
@@ -244,6 +259,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 			}
 		}
 	}
+	self.drainPendingRefusals()
 	if changed {
 		self.diagnostics.observe(providerExtenderObserved, self.provider, true, nil, 0, &observation)
 	}
@@ -261,20 +277,49 @@ func (self *providerExtenderStatusListener) chargeActivationFailure(observation 
 		tlog("[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held\n", observation.ActivatedV4, observation.ActivatedV6)
 		return
 	}
-	wait, persisted := recordExtenderActivationRefusedPersisted(time.Now(), self.currentAccount())
-	if !persisted {
-		// The attempt was marked handled before the write, so a store that
-		// recovers would never be told. Unmark it: the next observation of
-		// this attempt charges it, and the spare it funded cannot be funded
-		// twice.
-		self.stateLock.Lock()
-		if self.chargedAttempt == observation.ActivationTime {
-			self.failureCharged = false
+	self.pendingRefusals = append(self.pendingRefusals, pendingExtenderRefusal{attempt: observation.ActivationTime, account: self.currentAccount()})
+}
+
+// drainPendingRefusals is called with failureMu held. One worker retries in
+// order, paced and tied to the provider run rather than to status redelivery.
+func (self *providerExtenderStatusListener) drainPendingRefusals() {
+	for len(self.pendingRefusals) > 0 {
+		pending := self.pendingRefusals[0]
+		wait, persisted := recordExtenderActivationAttemptRefused(time.Now(), pending.account, pending.attempt)
+		if !persisted {
+			if !self.retryRunning {
+				self.retryRunning = true
+				go self.retryPendingRefusals()
+			}
+			return
 		}
-		self.stateLock.Unlock()
+		self.pendingRefusals = self.pendingRefusals[1:]
+		if wait > 0 {
+			tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
+		}
 	}
-	if 0 < wait {
-		tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
+}
+
+func (self *providerExtenderStatusListener) retryPendingRefusals() {
+	for {
+		timer := time.NewTimer(self.retryInterval)
+		select {
+		case <-self.retryContext.Done():
+			timer.Stop()
+			self.failureMu.Lock()
+			self.retryRunning = false
+			self.failureMu.Unlock()
+			return
+		case <-timer.C:
+		}
+		self.failureMu.Lock()
+		self.drainPendingRefusals()
+		if len(self.pendingRefusals) == 0 {
+			self.retryRunning = false
+			self.failureMu.Unlock()
+			return
+		}
+		self.failureMu.Unlock()
 	}
 }
 
