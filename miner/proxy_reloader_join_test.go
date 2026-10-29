@@ -13,11 +13,22 @@ import (
 // joinTestPool drives a reloader whose workers finish only when the test lets
 // them, so the order of "old worker returned" and "replacement started" is
 // observable.
+type joinTestWorker struct {
+	done       chan struct{}
+	cancelled  chan struct{}
+	retireOnce sync.Once
+	cancelOnce sync.Once
+	address    string
+}
+
+func (w *joinTestWorker) retire() { w.retireOnce.Do(func() { close(w.done) }) }
+
 type joinTestPool struct {
 	mu      sync.Mutex
 	desired []*connect.ProxySettings
-	done    []chan struct{}
+	workers []*joinTestWorker
 	spawned []string
+	overlap bool
 }
 
 func (p *joinTestPool) reloader() *minerProxyReloader {
@@ -32,10 +43,19 @@ func (p *joinTestPool) reloader() *minerProxyReloader {
 	r.spawnGeneration = func(settings *connect.ProxySettings, gen uint64) (context.CancelFunc, <-chan struct{}, error) {
 		p.mu.Lock()
 		defer p.mu.Unlock()
-		done := make(chan struct{})
-		p.done = append(p.done, done)
+		for _, worker := range p.workers {
+			if worker.address == settings.Address {
+				select {
+				case <-worker.done:
+				default:
+					p.overlap = true
+				}
+			}
+		}
+		worker := &joinTestWorker{done: make(chan struct{}), cancelled: make(chan struct{}), address: settings.Address}
+		p.workers = append(p.workers, worker)
 		p.spawned = append(p.spawned, settings.Auth.Password)
-		return func() {}, done, nil
+		return func() { worker.cancelOnce.Do(func() { close(worker.cancelled) }) }, worker.done, nil
 	}
 	return r
 }
@@ -57,7 +77,7 @@ func TestReloadRotationWaitsForOldWorkerToFinish(t *testing.T) {
 
 	p.mu.Lock()
 	p.desired = []*connect.ProxySettings{reloadTestSettings("198.51.100.50:443", "u", "new")}
-	oldDone := p.done[0]
+	oldWorker := p.workers[0]
 	p.mu.Unlock()
 
 	finished := make(chan error, 1)
@@ -75,7 +95,7 @@ func TestReloadRotationWaitsForOldWorkerToFinish(t *testing.T) {
 		t.Fatalf("replacement started before the old worker returned: %v", got)
 	}
 
-	close(oldDone)
+	oldWorker.retire()
 	if err := <-finished; err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +116,7 @@ func TestReloadRotationDoesNotStartReplacementOverStuckWorker(t *testing.T) {
 
 	p.mu.Lock()
 	p.desired = []*connect.ProxySettings{reloadTestSettings("198.51.100.51:443", "u", "new")}
-	oldDone := p.done[0]
+	oldWorker := p.workers[0]
 	p.mu.Unlock()
 
 	summary, err := r.reload()
@@ -108,7 +128,7 @@ func TestReloadRotationDoesNotStartReplacementOverStuckWorker(t *testing.T) {
 	}
 
 	// Once the worker is gone the next reload brings the identity back.
-	close(oldDone)
+	oldWorker.retire()
 	if _, err := r.reload(); err != nil {
 		t.Fatal(err)
 	}
@@ -137,11 +157,48 @@ func TestReloadUsernameChangeAtLiveAddressSwapsInOneReload(t *testing.T) {
 
 	p.mu.Lock()
 	p.desired = []*connect.ProxySettings{reloadTestSettings("198.51.100.52:443", "bob", "pw")}
+	alice := p.workers[0]
 	p.mu.Unlock()
+	t.Cleanup(alice.retire)
 
-	summary, err := r.reload()
+	type reloadResult struct {
+		summary minerReloadSummary
+		err     error
+	}
+	finished := make(chan reloadResult, 1)
+	go func() {
+		summary, err := r.reload()
+		finished <- reloadResult{summary, err}
+	}()
+	select {
+	case <-alice.cancelled:
+	case result := <-finished:
+		t.Fatalf("reload returned before cancelling Alice: %+v", result)
+	case <-time.After(time.Second):
+		t.Fatal("reload did not cancel Alice")
+	}
+	select {
+	case result := <-finished:
+		t.Fatalf("reload returned while Alice was still running: %+v", result)
+	default:
+	}
+	if got := p.spawnedPasswords(); len(got) != 1 {
+		t.Fatalf("replacement started while Alice was still running: %v", got)
+	}
+	alice.retire()
+	result := <-finished
+	summary, err := result.summary, result.err
 	if err != nil {
 		t.Fatalf("username change at a live address failed: %v", err)
+	}
+	p.mu.Lock()
+	overlap := p.overlap
+	p.mu.Unlock()
+	if overlap {
+		t.Fatal("replacement started before Alice retired")
+	}
+	if summary.Added != 1 || summary.Removed != 1 || summary.Rotated != 0 {
+		t.Fatalf("username change summary = %+v, want one removal and one addition", summary)
 	}
 	want := []string{reloadTestSettings("198.51.100.52:443", "bob", "pw").Key()}
 	if got := r.runningKeys(); len(got) != 1 || got[0] != want[0] {

@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -47,6 +48,53 @@ func readReloadSeq(path string) (int, error) {
 	return n, nil
 }
 
+// startupReloadBaseline is the trigger sequence startup read before it took its
+// launch snapshot. The watcher starts later, after the workers are seeded, and
+// a clear that wrote its trigger in between would otherwise be adopted as the
+// watcher's baseline and never applied. path pins the value to the trigger
+// file it was read from.
+var startupReloadBaseline struct {
+	sync.Mutex
+	path string
+	seq  int
+	ok   bool
+}
+
+// recordStartupReloadBaseline reads the trigger sequence. Startup calls it
+// under the proxy lock, before the snapshot: every writer of the stores takes
+// that lock and triggers after releasing it, so a change the snapshot missed
+// always lands on a sequence above this one.
+func recordStartupReloadBaseline() {
+	path, err := proxyReloadPath()
+	if err != nil {
+		return
+	}
+	seq, err := readReloadSeq(path)
+	if err != nil {
+		return
+	}
+	startupReloadBaseline.Lock()
+	defer startupReloadBaseline.Unlock()
+	startupReloadBaseline.path, startupReloadBaseline.seq, startupReloadBaseline.ok = path, seq, true
+}
+
+// takeStartupReloadBaseline hands the recorded sequence to the watcher for
+// path, once.
+func takeStartupReloadBaseline(path string) (int, bool) {
+	startupReloadBaseline.Lock()
+	defer startupReloadBaseline.Unlock()
+	if !startupReloadBaseline.ok || startupReloadBaseline.path != path {
+		return 0, false
+	}
+	startupReloadBaseline.ok = false
+	return startupReloadBaseline.seq, true
+}
+
+// errProxyLockHeld is the only acquisition failure that waiting can cure: a
+// live holder owns the lock. Every other failure (an uncreatable or read-only
+// state directory, a failed lock write) is returned as it is.
+var errProxyLockHeld = errors.New("reload already in progress - try again in a moment")
+
 // acquireProxyLock creates the lock file at the default path. Returns an error
 // if a reload is already in progress (lock already held).
 func acquireProxyLock() (func(), error) {
@@ -69,6 +117,37 @@ func acquireProxyLockWithRetry() (func(), error) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	return nil, err
+}
+
+// proxyStartLockWait bounds how long provider startup waits for a live lock
+// holder (a slow reload, clear or health write in another process). A holder
+// that is gone is stolen by acquireProxyLockAt, so this only expires when a
+// live process genuinely never lets go, and startup then fails with that error.
+var proxyStartLockWait = 2 * time.Minute
+
+// acquireProxyLockWait polls for the proxy lock every 100 ms until it is held,
+// the context ends, or maxWait passes. Only a lock held by another process is
+// waited on; any other acquisition error is returned at once. The returned
+// error is the last acquisition error, or the context's.
+func acquireProxyLockWait(ctx context.Context, maxWait time.Duration) (func(), error) {
+	deadline := time.NewTimer(maxWait)
+	defer deadline.Stop()
+	for {
+		release, err := acquireProxyLock()
+		if err == nil {
+			return release, nil
+		}
+		if !errors.Is(err, errProxyLockHeld) {
+			return nil, fmt.Errorf("acquire proxy lock: %w", err)
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-deadline.C:
+			return nil, fmt.Errorf("proxy lock still held after %s: %w", maxWait, err)
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
 }
 
 // acquireProxyLockAt is the path-explicit form, for testing.
@@ -105,7 +184,7 @@ func acquireProxyLockAt(path string) (func(), error) {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0600)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			return nil, fmt.Errorf("reload already in progress - try again in a moment")
+			return nil, errProxyLockHeld
 		}
 		return nil, err
 	}

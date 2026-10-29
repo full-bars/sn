@@ -32,13 +32,13 @@ package miner
 // extenderActivationSpendSpare does.
 //
 // The record is a section of provider_state.db (state_store.go), not a file of
-// its own. A store that will not open, or a record that will not decode, is
-// logged on every failed attempt and holds the extender role rather than running unaccounted: the
-// provider keeps serving either way, and the role comes back on the first start
-// that can read and record the budget again.
+// its own. If the store is unavailable, one launch per process may proceed
+// without a recorded budget. That launch is forgotten on restart.
 
 import (
+	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/urfoundation/sn/clientauth"
@@ -168,12 +168,7 @@ func (legacy extenderActivationLegacy) present() bool {
 // small json decode, a map update and one bbolt transaction.
 var extenderActivationRecordMu sync.Mutex
 
-// warnExtenderBudgetUnavailable says the record could not be read or written,
-// and why. The role is held rather than run unrecorded, because the operator
-// counts every post it answers and a post this process did not count is one
-// the next start cannot see. This line is the only evidence the operator gets
-// while the store stays unusable, so it carries the store error: a record this
-// build cannot decode and a closed store need different recovery.
+// warnExtenderBudgetUnavailable reports why the record could not be used.
 func warnExtenderBudgetUnavailable(account string, err error) {
 	tlog("⚠️ [extender] activation budget unavailable for account %s: %v\n", account, err)
 }
@@ -230,22 +225,20 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 	return record, nil
 }
 
-// mutateExtenderActivationRecord is the budget's write path: it holds the
-// package lock for the whole decision and hands the record to mutate inside one
-// store transaction, so nothing can change the accounts between the read that
-// decided and the write that records it. A store that cannot be used leaves the
-// budget closed and says so, rather than
-// spending posts no one will remember.
-func mutateExtenderActivationRecord(account string, mutate func(*extenderActivationRecord) error) error {
-	store := providerStoreInstance()
+// mutateExtenderActivationRecord makes each decision and update in one store transaction.
+var mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
+	store, err := openProviderStoreForProcess()
 	if store == nil {
-		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
-		return errProviderStoreClosed
+		if err == nil {
+			err = errProviderStoreClosed
+		}
+		warnExtenderBudgetUnavailable(account, err)
+		return err
 	}
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
 	var record extenderActivationRecord
-	err := store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
+	err = store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
 		if !found {
 			record = extenderActivationRecord{}
 		}
@@ -311,7 +304,12 @@ func (record *extenderActivationRecord) adoptUnidentified(account string, now ti
 		return
 	}
 	delete(record.Accounts, extenderActivationUnidentifiedAccount)
-	state := record.Accounts[account]
+	record.Accounts[account] = mergeExtenderActivationState(record.Accounts[account], pending, now)
+}
+
+// mergeExtenderActivationState folds one account's pending spending into
+// another state of the same account.
+func mergeExtenderActivationState(state, pending extenderActivationState, now time.Time) extenderActivationState {
 	cutoff := now.Add(-extenderActivationWindow).Unix()
 	for _, at := range pending.Attempts {
 		if cutoff < at {
@@ -332,7 +330,7 @@ func (record *extenderActivationRecord) adoptUnidentified(account string, now ti
 		// longer live streak keeps its own count and its own timestamp.
 		state.Refusals, state.LastRefusalUnix = pending.Refusals, pending.LastRefusalUnix
 	}
-	record.Accounts[account] = state
+	return state
 }
 
 // extenderActivationAccountKey is the record key for one account. A start that
@@ -387,44 +385,61 @@ func pruneExtenderAttempts(state *extenderActivationState, now time.Time, window
 // already holds. It records this start's posts when it allows the role, so the
 // caller calls it once, before the slots are built. userId is the account the
 // direct slot signs in as (extenderActivationUserId).
-func extenderActivationAllow(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int) {
-	account := extenderActivationAccountKey(userId)
-	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
-		// The token resolves on this path, so this is where posts charged while
-		// it was unreadable first learn the account that spent them.
-		record.adoptUnidentified(account, now)
-		state := record.Accounts[account]
-		used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
-		switch {
-		case now.Unix() < state.BackoffUntilUnix:
-			wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
-		case extenderActivationBudget < used+posts:
-			// Wait for the oldest counted post to age out of the window.
-			oldest := state.Attempts[0]
-			for _, at := range state.Attempts[1:] {
-				if at < oldest {
-					oldest = at
-				}
+func extenderActivationAllow(now time.Time, posts int, userId string) (bool, time.Duration, int) {
+	allow, wait, used, _ := extenderActivationDecision(now, posts, userId)
+	return allow, wait, used
+}
+
+// decideExtenderActivationOn is the one decision rule, applied to whichever
+// ledger the caller holds. It records the launch's posts when it allows it.
+func decideExtenderActivationOn(record *extenderActivationRecord, account string, now time.Time, posts int) (allow bool, wait time.Duration, used int) {
+	// The token resolves on this path, so this is where posts charged while
+	// it was unreadable first learn the account that spent them.
+	record.adoptUnidentified(account, now)
+	state := record.Accounts[account]
+	used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
+	switch {
+	case now.Unix() < state.BackoffUntilUnix:
+		wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
+	case extenderActivationBudget < used+posts:
+		// Wait for the oldest counted post to age out of the window.
+		oldest := state.Attempts[0]
+		for _, at := range state.Attempts[1:] {
+			if at < oldest {
+				oldest = at
 			}
-			if wait = time.Unix(oldest, 0).Add(extenderActivationWindow).Sub(now); wait < 0 {
-				wait = 0
-			}
-		default:
-			for i := 0; i < posts; i++ {
-				state.Attempts = append(state.Attempts, now.Unix())
-			}
-			allow = true
 		}
-		record.Accounts[account] = state
+		if wait = time.Unix(oldest, 0).Add(extenderActivationWindow).Sub(now); wait < 0 {
+			wait = 0
+		}
+	default:
+		for i := 0; i < posts; i++ {
+			state.Attempts = append(state.Attempts, now.Unix())
+		}
+		allow = true
+	}
+	record.Accounts[account] = state
+	return allow, wait, used
+}
+
+// extenderActivationDecision distinguishes a withheld decision from a refusal.
+func extenderActivationDecision(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int, err error) {
+	account := extenderActivationAccountKey(userId)
+	decided := false
+	err = mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
+		allow, wait, used = decideExtenderActivationOn(record, account, now, posts)
+		decided = true
 		return nil
 	})
 	if err != nil {
-		// The posts this start would charge cannot be recorded, and an
-		// unrecorded post is what a restart loop replays as a burst. Hold
-		// the role and retry instead of spending what nothing remembers.
-		return false, providerStoreRetryInterval, 0
+		// A readable cap or backoff remains authoritative even if its
+		// unchanged record could not be written back.
+		if decided && !allow {
+			return false, wait, used, nil
+		}
+		return false, providerStoreRetryInterval, 0, err
 	}
-	return allow, wait, used
+	return allow, wait, used, nil
 }
 
 // extenderActivationSpendSpare funds one retry of the family a pass failed on
@@ -499,9 +514,6 @@ func recordExtenderActivationRefusedPersisted(now time.Time, userId string) (tim
 		return nil
 	})
 	if err != nil {
-		// The streak cannot be recorded, and a caller told to retry now
-		// would post again into the refusal. Hold for the first-level wait
-		// even though the store did not keep it.
 		return extenderRefusalBackoff, false
 	}
 	return wait, true
@@ -555,15 +567,23 @@ func newExtenderActivationGate() *extenderActivationGate {
 	return &extenderActivationGate{}
 }
 
-// decideAtStart charges this start's posts and keeps the verdict for the first
-// launch, so a hold is logged once, before the slots come up, and the launch
-// that follows does not charge the same posts again.
+type extenderLaunchDecision uint8
+
+const (
+	extenderLaunchWithheld extenderLaunchDecision = iota
+	extenderLaunchRefused
+	extenderLaunchAllowed
+)
+
+// decideAtStart caches only a real verdict; a withheld decision must be
+// retried by the first launch, while an allowed verdict must not charge twice.
 func (gate *extenderActivationGate) decideAtStart() bool {
-	allow := gate.allowLaunch()
+	decision := gate.allowLaunchFor(hostActivationPostsProbe(), extenderActivationUserId())
 	gate.mu.Lock()
-	gate.pending, gate.allow = true, allow
+	gate.pending = decision == extenderLaunchAllowed || decision == extenderLaunchRefused
+	gate.allow = decision == extenderLaunchAllowed
 	gate.mu.Unlock()
-	return allow
+	return decision == extenderLaunchAllowed
 }
 
 // allowLaunch reports whether this launch may run the extender role. It spends
@@ -578,10 +598,96 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	if pending {
 		return allow
 	}
-	allow, wait, used := extenderActivationAllow(time.Now(), hostActivationPosts(), extenderActivationUserId())
-	if !allow {
-		tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
-			used, extenderActivationBudget, formatDuration(wait))
+	posts := hostActivationPostsProbe()
+	userId := extenderActivationUserId()
+	decision, cause := gate.probeLaunch(posts, userId, launchProbeAttempts, launchProbeDelay)
+	if decision != extenderLaunchWithheld {
+		return decision == extenderLaunchAllowed
 	}
-	return allow
+	if errors.Is(cause, errProviderStoreReleased) {
+		// The hotswap candidate owns the store and counts from here; a launch
+		// this process made would be invisible to it.
+		tlog("[extender] extender role off: provider state was handed to the hotswap candidate, which counts activation posts now\n")
+		return false
+	}
+	return allowUncountedExtenderLaunch(cause)
+}
+
+// The allowance is shared by every gate in this process and is never persisted.
+var extenderUncountedLaunchUsed atomic.Bool
+
+func allowUncountedExtenderLaunch(cause error) bool {
+	if !extenderUncountedLaunchUsed.CompareAndSwap(false, true) {
+		tlog("[extender] extender role off: activation budget unavailable (%v); uncounted launch already used in this process\n", cause)
+		return false
+	}
+	tlog("[extender] extender role on: activation budget unavailable (%v); allowing one uncounted launch in this process\n", cause)
+	return true
+}
+
+// hostActivationPostsProbe is hostActivationPosts with the store opened once
+// at the probe timeout. A store that will not open is the unmeasured host, which
+// is charged the conservative two, rather than a second open at the ordinary
+// two-second timeout.
+func hostActivationPostsProbe() int {
+	if _, err := openProviderStoreForProcessRetry(true, true, probeOpenTimeout); err != nil {
+		return 2
+	}
+	return hostActivationPosts()
+}
+
+// The startup decision may spend a few hundred milliseconds waiting for a
+// store that another process is still releasing, because it runs once and
+// nothing else can start until it answers. The first launch runs moments
+// later and gets a single probe: the startup window has already waited, and
+// spending a second one would double the delay without new information.
+const (
+	startupProbeAttempts = 3
+	startupProbeDelay    = 1000 * time.Millisecond
+	launchProbeAttempts  = 1
+	launchProbeDelay     = 0
+	probeOpenTimeout     = 200 * time.Millisecond
+)
+
+// Retry the process-wide open after a withheld decision, then retry the
+// transaction. A real budget or refusal verdict is final.
+func (gate *extenderActivationGate) allowLaunchFor(posts int, userId string) extenderLaunchDecision {
+	return gate.allowLaunchForWith(posts, userId, startupProbeAttempts, startupProbeDelay)
+}
+
+// allowLaunchForWith retries the process-wide open and the transaction, with
+// the attempt budget the caller earned: the startup decision may wait, a later
+// launch may not, because it runs after the startup window already waited.
+func (gate *extenderActivationGate) allowLaunchForWith(posts int, userId string, attempts int, retryDelay time.Duration) extenderLaunchDecision {
+	decision, _ := gate.probeLaunch(posts, userId, attempts, retryDelay)
+	return decision
+}
+
+// probeLaunch is allowLaunchForWith with the reason a decision was withheld.
+func (gate *extenderActivationGate) probeLaunch(posts int, userId string, attempts int, retryDelay time.Duration) (extenderLaunchDecision, error) {
+	var cause error
+	for attempt := 0; attempt < attempts; attempt++ {
+		_, openErr := openProviderStoreForProcessRetry(true, true, probeOpenTimeout)
+		allow, wait, used, err := extenderActivationDecision(time.Now(), posts, userId)
+		if err != nil {
+			cause = err
+			if openErr != nil && !errors.Is(err, errProviderStoreReleased) {
+				cause = openErr
+			}
+			// A released store stays released; waiting cannot change it.
+			if attempt+1 < attempts && !errors.Is(cause, errProviderStoreReleased) {
+				time.Sleep(retryDelay)
+				continue
+			}
+			tlog("[extender] activation budget record could not be read or written; decision deferred: %v\n", cause)
+			return extenderLaunchWithheld, cause
+		}
+		if !allow {
+			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
+				used, extenderActivationBudget, formatDuration(wait))
+			return extenderLaunchRefused, nil
+		}
+		return extenderLaunchAllowed, nil
+	}
+	return extenderLaunchWithheld, cause
 }
