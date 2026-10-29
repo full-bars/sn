@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/urfoundation/sn/internal/durablesync"
 	"github.com/urnetwork/sdk"
 )
 
@@ -124,5 +125,35 @@ func TestDrainWaitsForALateRefusalToBeJournaled(t *testing.T) {
 	}
 	if onDisk, _, err := readExtenderRefusalJournal(time.Now()); err != nil || len(onDisk) != 1 {
 		t.Fatalf("journal at the parent's exit = %d refusals (%v), want the late refusal", len(onDisk), err)
+	}
+}
+
+// Where the platform cannot make a rename crash-durable (windows, for a rename
+// inside one volume) the journal cannot certify a file, so a refusal is never
+// reported durable by it. Only the store's commit counts there, and the
+// handoff gate holds until the store takes it.
+func TestRefusalIsNotJournaledWhereTheRenameIsNotCrashDurable(t *testing.T) {
+	testExtenderState(t)
+	original := providerStoreDurableRename
+	t.Cleanup(func() { providerStoreDurableRename = original })
+	providerStoreDurableRename = func(string, string) error { return durablesync.ErrNotCrashDurable }
+	holdExtenderRefusal(extenderTestAccountA, "scope.1301")
+
+	if at := extenderRefusalsAtRisk(); at != 1 {
+		t.Fatalf("refusals at risk = %d, want 1: the journal certified a rename the platform cannot", at)
+	}
+	dir, err := providerStateDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if left, _ := filepath.Glob(filepath.Join(dir, "*extender-refusal-*.json*")); len(left) != 0 {
+		t.Fatalf("files left behind by the refused rename: %v", left)
+	}
+	// The store takes it, which is the one durable place left.
+	if err := ensureExtenderRefusalsDurable(); err != nil {
+		t.Fatalf("a committed refusal should satisfy the gate: %v", err)
+	}
+	if got := readRefusals(t, extenderTestAccountA); got != 1 {
+		t.Fatalf("refusals = %d, want the refusal committed", got)
 	}
 }
