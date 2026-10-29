@@ -543,6 +543,11 @@ func (r *minerProxyReloader) reloadContext(ctx context.Context) (minerReloadSumm
 		var cancel context.CancelFunc
 		var done <-chan struct{}
 		spawnErr := r.awaitRetiredLocked(ctx, budget, key, settings)
+		if spawnErr == nil {
+			// The wait can end because the worker finished at the same moment
+			// the caller gave up; a slot must not start after that.
+			spawnErr = reloadInterrupted(ctx, r.stopCh)
+		}
 		switch {
 		case spawnErr != nil:
 		case r.spawnGeneration != nil:
