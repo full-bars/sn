@@ -53,8 +53,8 @@ RUN apk update && apk add --no-cache \
     gosu \
   && rm -rf /var/cache/apk/*
 
-# Primary binary: the miner, under the same file name convention the relay
-# image uses, and exposed on PATH as `provider`.
+# Primary binary: the miner, exposed on PATH as `provider`, the name the
+# update path and the platform archives use.
 COPY --from=builder /app/miner_bin /app/urnetwork_${TARGETARCH}_stable
 # Go client kept as urnet-tools-go; /usr/local/bin/urnet-tools is the
 # dispatcher below, which routes update/idle-update to the verified shell

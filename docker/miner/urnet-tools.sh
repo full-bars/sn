@@ -8,11 +8,11 @@
 # at that path carrying the do_update() below.
 #
 # Miner-image policy: the install step refuses to replace the image's
-# primary binary with a different program. full-bars/sn release assets
-# publish the relay (cmd/provider) as `provider`. The miner is published
-# separately, in the `urnetwork-miner-<tag>-<os>-<arch>.tar.gz` archive,
-# whose single member is also named `provider`. Installing the relay asset
-# over the miner would silently swap the program, so the guard keeps
+# primary binary with a different program. This fork ships one program, the
+# miner from `cli/miner`, under two release names: `provider` in the
+# platform archives, and a `urnetwork-miner-<tag>-<os>-<arch>.tar.gz` archive
+# whose single member is also named `provider`. Installing an archive that
+# is not this program would silently swap it, so the guard keeps
 # `urnet-tools update` from doing that and points at the miner archive and
 # the image stream instead.
 #

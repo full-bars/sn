@@ -468,8 +468,8 @@ jobs:
           # One archive per platform whose only member is the miner named
           # provider (provider.exe on Windows). That is exactly what the miner's
           # own update looks for and installs over the running binary. The
-          # urnetwork-provider-* archives above hold the relay, a different
-          # program, so the miner must never be pointed at them.
+          # urnetwork-provider-* archives above carry the same miner under its
+          # platform name, so a miner install should use these tarballs.
           mkdir -p per-miner
           for plat in linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 windows-amd64 windows-arm64 freebsd-amd64 freebsd-arm64; do
             member=provider

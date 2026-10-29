@@ -6,7 +6,7 @@ Besides the subnet code it inherits from upstream, this fork ships a provider th
 
 ## What you can run from here
 
-- **Miner image:** `ghcr.io/full-bars/sn:miner`, built from `Dockerfile.miner`. It bakes in the subnet miner as `provider`, the relay as `provider-relay`, and `urnet-tools`. See [Miner Image](docs/Miner-Image.md).
+- **Miner image:** `ghcr.io/full-bars/sn:miner`, built from `Dockerfile.miner`. It bakes in the subnet miner as `provider` and `urnet-tools`. See [Miner Image](docs/Miner-Image.md).
 - **Provider image:** `ghcr.io/full-bars/sn:latest`, with a Docker Hub mirror at `3cape/sn:latest`. Built from `Dockerfile` for linux/amd64 and linux/arm64. See [Docker Deployment](docs/Docker-Deployment.md).
 - **Provider binaries:** `urnetwork-provider-<tag>-<os>-<arch>.tar.gz` on the [releases page](https://github.com/full-bars/sn/releases), for Linux, macOS, Windows and FreeBSD on amd64 and arm64. The installer scripts in `scripts/` download these for you.
 - **`urnet-tools`:** the command line tool that starts, stops, checks and updates a provider on a host. Released as `urnet-tools-<os>-<arch>`.
