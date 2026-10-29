@@ -538,7 +538,7 @@ func legacyImportNarrateDisplay(settings *connect.ProxySettings) string {
 		return "direct"
 	}
 	if settings.Auth != nil && settings.Auth.User != "" {
-		return "proxy:" + settings.Address + " (user " + obfuscateUser(settings.Auth.User) + ")"
+		return "proxy:" + redactedProxyAddress(settings.Address) + " (user " + obfuscateUser(settings.Auth.User) + ")"
 	}
-	return "proxy:" + settings.Address
+	return "proxy:" + redactedProxyAddress(settings.Address)
 }
