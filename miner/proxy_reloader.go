@@ -466,11 +466,11 @@ func (r *minerProxyReloader) reload() (minerReloadSummary, error) {
 			if cancel != nil {
 				cancel()
 			}
-			errs = append(errs, fmt.Errorf("start %s: %w", key, spawnErr))
+			errs = append(errs, fmt.Errorf("start %s: %w", proxyKeyDisplay(key), spawnErr))
 			if ok {
 				// The old slot is gone and the replacement is not running.
 				summary.Lost++
-				errs = append(errs, fmt.Errorf("identity %s is no longer served after a failed rotation", key))
+				errs = append(errs, fmt.Errorf("identity %s is no longer served after a failed rotation", proxyKeyDisplay(key)))
 			}
 			// Keep reconciling: one bad identity must not freeze every other
 			// operator change.
@@ -557,7 +557,7 @@ func (r *minerProxyReloader) relaunchIdentity(key string) bool {
 	r.mu.Unlock()
 
 	if _, err := r.reload(); err != nil {
-		tlog("[h3] reload after detaching %s failed: %v\n", key, err)
+		tlog("[h3] reload after detaching %s failed: %v\n", proxyKeyDisplay(key), err)
 	}
 	return true
 }
