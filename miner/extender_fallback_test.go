@@ -378,3 +378,55 @@ func TestExtenderGateEntryPointsBoundedOnLockedStore(t *testing.T) {
 		t.Errorf("allowLaunch took %s against a locked store, want one fast probe", elapsed)
 	}
 }
+
+// The operator sees why the budget was out, not a generic closed store.
+func TestExtenderLaunchReportsCauseOfWithheldBudget(t *testing.T) {
+	t.Run("locked", func(t *testing.T) {
+		log, _ := fallbackTestSetup(t)
+		lockedStore(t)
+		newExtenderActivationGate().allowLaunch()
+		text := log.String()
+		if !strings.Contains(text, "timeout") || strings.Contains(text, "store is closed") {
+			t.Fatalf("log: %s", text)
+		}
+		if !strings.Contains(text, "unreadable (open ") {
+			t.Fatalf("final message omits the open error: %s", text)
+		}
+	})
+	t.Run("permission", func(t *testing.T) {
+		log, _ := fallbackTestSetup(t)
+		dir, _ := providerStateDir()
+		if err := os.MkdirAll(dir, 0700); err != nil {
+			t.Fatal(err)
+		}
+		db := filepath.Join(dir, providerStoreFileName)
+		if err := os.WriteFile(db, nil, 0o000); err != nil {
+			t.Fatal(err)
+		}
+		if f, err := os.Open(db); err == nil {
+			_ = f.Close()
+			t.Skip("file permissions are not enforced for this user")
+		}
+		newExtenderActivationGate().allowLaunch()
+		text := log.String()
+		if !strings.Contains(text, "permission denied") || strings.Contains(text, "store is closed") {
+			t.Fatalf("log: %s", text)
+		}
+	})
+	t.Run("released", func(t *testing.T) {
+		log, path := fallbackTestSetup(t)
+		globalProviderStoreMu.Lock()
+		globalProviderStoreReleased = true
+		globalProviderStoreMu.Unlock()
+		if newExtenderActivationGate().allowLaunch() {
+			t.Fatal("a released store must not launch uncounted")
+		}
+		text := log.String()
+		if !strings.Contains(text, "handed to the hotswap candidate") || strings.Contains(text, "store is closed") {
+			t.Fatalf("log: %s", text)
+		}
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Fatalf("released store wrote a fallback: %v", err)
+		}
+	})
+}

@@ -233,12 +233,15 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 // package lock and the cross-process ledger lock for the whole decision and
 // mutates inside one store transaction. A fallback ledger found under the lock
 // is merged into the record in the same transaction and removed once it
-// commits. A store that cannot be used is reported to the caller.
+// commits. A store that cannot be used is reported with its own error.
 var mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
-	store := providerStoreInstance()
+	store, err := openProviderStoreForProcess()
 	if store == nil {
-		warnExtenderBudgetUnavailable(account, errProviderStoreClosed)
-		return errProviderStoreClosed
+		if err == nil {
+			err = errProviderStoreClosed
+		}
+		warnExtenderBudgetUnavailable(account, err)
+		return err
 	}
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
@@ -635,11 +638,17 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	}
 	posts := hostActivationPostsProbe()
 	userId := extenderActivationUserId()
-	decision := gate.allowLaunchForWith(posts, userId, launchProbeAttempts, launchProbeDelay)
-	if decision == extenderLaunchWithheld {
-		return allowExtenderFallback(time.Now(), posts, userId, errProviderStoreClosed)
+	decision, cause := gate.probeLaunch(posts, userId, launchProbeAttempts, launchProbeDelay)
+	if decision != extenderLaunchWithheld {
+		return decision == extenderLaunchAllowed
 	}
-	return decision == extenderLaunchAllowed
+	if errors.Is(cause, errProviderStoreReleased) {
+		// The hotswap candidate owns the store and counts from here; a launch
+		// this process made would be invisible to it.
+		tlog("[extender] extender role off: provider state was handed to the hotswap candidate, which counts activation posts now\n")
+		return false
+	}
+	return allowExtenderFallback(time.Now(), posts, userId, cause)
 }
 
 // hostActivationPostsProbe is hostActivationPosts with the store opened once
@@ -676,24 +685,35 @@ func (gate *extenderActivationGate) allowLaunchFor(posts int, userId string) ext
 // the attempt budget the caller earned: the startup decision may wait, a later
 // launch may not, because it runs after the startup window already waited.
 func (gate *extenderActivationGate) allowLaunchForWith(posts int, userId string, attempts int, retryDelay time.Duration) extenderLaunchDecision {
-	const probeTimeout = probeOpenTimeout
+	decision, _ := gate.probeLaunch(posts, userId, attempts, retryDelay)
+	return decision
+}
+
+// probeLaunch is allowLaunchForWith with the reason a decision was withheld.
+func (gate *extenderActivationGate) probeLaunch(posts int, userId string, attempts int, retryDelay time.Duration) (extenderLaunchDecision, error) {
+	var cause error
 	for attempt := 0; attempt < attempts; attempt++ {
-		_, _ = openProviderStoreForProcessRetry(true, true, probeTimeout)
+		_, openErr := openProviderStoreForProcessRetry(true, true, probeOpenTimeout)
 		allow, wait, used, err := extenderActivationDecision(time.Now(), posts, userId)
 		if err != nil {
-			if attempt+1 < attempts {
+			cause = err
+			if openErr != nil && !errors.Is(err, errProviderStoreReleased) {
+				cause = openErr
+			}
+			// A released store stays released; waiting cannot change it.
+			if attempt+1 < attempts && !errors.Is(cause, errProviderStoreReleased) {
 				time.Sleep(retryDelay)
 				continue
 			}
-			tlog("[extender] activation budget record could not be read or written; decision deferred: %v\n", err)
-			return extenderLaunchWithheld
+			tlog("[extender] activation budget record could not be read or written; decision deferred: %v\n", cause)
+			return extenderLaunchWithheld, cause
 		}
 		if !allow {
 			tlog("[extender] activation held: %d of %d posts in the last hour, next in %s\n",
 				used, extenderActivationBudget, formatDuration(wait))
-			return extenderLaunchRefused
+			return extenderLaunchRefused, nil
 		}
-		return extenderLaunchAllowed
+		return extenderLaunchAllowed, nil
 	}
-	return extenderLaunchWithheld
+	return extenderLaunchWithheld, cause
 }
