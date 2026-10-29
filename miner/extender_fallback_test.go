@@ -359,3 +359,22 @@ func TestExtenderFallbackReadableCapWriteFailure(t *testing.T) {
 		t.Fatalf("fallback touched: %v", err)
 	}
 }
+
+// The probe's own timeout reaches the capability lookup: a launch against a
+// locked store must not pay a second, ordinary two-second open first.
+func TestExtenderGateEntryPointsBoundedOnLockedStore(t *testing.T) {
+	fallbackTestSetup(t)
+	lockedStore(t)
+	start := time.Now()
+	gate := newExtenderActivationGate()
+	gate.decideAtStart()
+	if elapsed := time.Since(start); elapsed >= 3*time.Second {
+		t.Errorf("decideAtStart took %s, want under 3s", elapsed)
+	}
+	closeProviderStore()
+	start = time.Now()
+	gate.allowLaunch()
+	if elapsed := time.Since(start); elapsed >= 1500*time.Millisecond {
+		t.Errorf("allowLaunch took %s against a locked store, want one fast probe", elapsed)
+	}
+}

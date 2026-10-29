@@ -614,7 +614,7 @@ const (
 // decideAtStart caches only a real verdict; a withheld decision must be
 // retried by the first launch, while an allowed verdict must not charge twice.
 func (gate *extenderActivationGate) decideAtStart() bool {
-	decision := gate.allowLaunchFor(hostActivationPosts(), extenderActivationUserId())
+	decision := gate.allowLaunchFor(hostActivationPostsProbe(), extenderActivationUserId())
 	gate.mu.Lock()
 	gate.pending, gate.allow = decision != extenderLaunchWithheld, decision == extenderLaunchAllowed
 	gate.mu.Unlock()
@@ -633,13 +633,24 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	if pending {
 		return allow
 	}
-	posts := hostActivationPosts()
+	posts := hostActivationPostsProbe()
 	userId := extenderActivationUserId()
 	decision := gate.allowLaunchForWith(posts, userId, launchProbeAttempts, launchProbeDelay)
 	if decision == extenderLaunchWithheld {
 		return allowExtenderFallback(time.Now(), posts, userId, errProviderStoreClosed)
 	}
 	return decision == extenderLaunchAllowed
+}
+
+// hostActivationPostsProbe is hostActivationPosts with the store opened once
+// at the probe timeout. A store that will not open is the unmeasured host, which
+// is charged the conservative two, rather than a second open at the ordinary
+// two-second timeout.
+func hostActivationPostsProbe() int {
+	if _, err := openProviderStoreForProcessRetry(true, true, probeOpenTimeout); err != nil {
+		return 2
+	}
+	return hostActivationPosts()
 }
 
 // The startup decision may spend a few hundred milliseconds waiting for a
@@ -649,7 +660,7 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 // spending a second one would double the delay without new information.
 const (
 	startupProbeAttempts = 3
-	startupProbeDelay    = 1100 * time.Millisecond
+	startupProbeDelay    = 1000 * time.Millisecond
 	launchProbeAttempts  = 1
 	launchProbeDelay     = 0
 	probeOpenTimeout     = 200 * time.Millisecond
