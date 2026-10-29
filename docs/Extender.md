@@ -5,7 +5,7 @@ An extender is a provider that also listens on a port the internet can reach, so
 ## Before you start
 
 - A host with a public IPv4 address where you control inbound TCP 443, both in the host firewall and in any router or cloud security group in front of it.
-- A free TCP 443 on that host. If another process holds it, the role stays off and the provider tries to bind again every three minutes.
+- A free TCP 443 on that host. If another process holds it, the role stays off while the provider keeps providing without listening.
 - A provider that runs direct. A provider with proxies configured never listens, because the role must bind this host's own ports and publish this host's own address, and a proxied identity can do neither.
 - A first-run auth code from [ur.io](https://ur.io), or a volume that already holds a signed-in provider.
 
@@ -60,7 +60,7 @@ Expected result: one line per carrier that bound, for example (the log may prefi
 [extender] listen udp 4053 (dns)
 ```
 
-A carrier that failed to bind logs `[extender] listen error (<carrier>): <reason>` instead. A failed UDP carrier leaves only that carrier down. If the TCP carrier fails, the role is off and the bind is retried every three minutes.
+A carrier that failed to bind logs `[extender] listen error (<carrier>): <reason>` instead. A failed UDP carrier leaves only that carrier down. If the TCP carrier fails, the role stays off while the provider keeps providing.
 
 Then, from a machine on a different network, check that the port answers:
 
