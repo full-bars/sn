@@ -591,18 +591,35 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	if pending {
 		return allow
 	}
-	return gate.allowLaunchFor(hostActivationPosts(), extenderActivationUserId()) == extenderLaunchAllowed
+	return gate.allowLaunchForWith(hostActivationPosts(), extenderActivationUserId(), launchProbeAttempts, launchProbeDelay) == extenderLaunchAllowed
 }
+
+// The startup decision may spend a few hundred milliseconds waiting for a
+// store that another process is still releasing, because it runs once and
+// nothing else can start until it answers. The first launch runs moments
+// later and gets a single probe: the startup window has already waited, and
+// spending a second one would double the delay without new information.
+const (
+	startupProbeAttempts = 3
+	startupProbeDelay    = 1100 * time.Millisecond
+	launchProbeAttempts  = 1
+	launchProbeDelay     = 0
+	probeOpenTimeout     = 200 * time.Millisecond
+)
 
 // Retry the process-wide open after a withheld decision, then retry the
 // transaction. A real budget or refusal verdict is final.
 func (gate *extenderActivationGate) allowLaunchFor(posts int, userId string) extenderLaunchDecision {
-	const attempts = 3
-	const retryDelay = 1100 * time.Millisecond
+	return gate.allowLaunchForWith(posts, userId, startupProbeAttempts, startupProbeDelay)
+}
+
+// allowLaunchForWith retries the process-wide open and the transaction, with
+// the attempt budget the caller earned: the startup decision may wait, a later
+// launch may not, because it runs after the startup window already waited.
+func (gate *extenderActivationGate) allowLaunchForWith(posts int, userId string, attempts int, retryDelay time.Duration) extenderLaunchDecision {
+	const probeTimeout = probeOpenTimeout
 	for attempt := 0; attempt < attempts; attempt++ {
-		if attempt > 0 {
-			_, _ = openProviderStoreForProcessRetry(true, true)
-		}
+		_, _ = openProviderStoreForProcessRetry(true, true, probeTimeout)
 		allow, wait, used, err := extenderActivationDecision(time.Now(), posts, userId)
 		if err != nil {
 			if attempt+1 < attempts {

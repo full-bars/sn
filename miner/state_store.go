@@ -72,6 +72,10 @@ type providerStore struct {
 }
 
 func openProviderStore(path string) (*providerStore, error) {
+	return openProviderStoreWithTimeout(path, providerStoreOpenTimeout)
+}
+
+func openProviderStoreWithTimeout(path string, timeout time.Duration) (*providerStore, error) {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
@@ -93,7 +97,7 @@ func openProviderStore(path string) (*providerStore, error) {
 	var openedFile *os.File
 	db, err := callProviderStore(func() (*bbolt.DB, error) {
 		d, err := bbolt.Open(path, 0o600, &bbolt.Options{
-			Timeout: providerStoreOpenTimeout,
+			Timeout: timeout,
 			OpenFile: func(name string, flag int, mode os.FileMode) (*os.File, error) {
 				file, err := os.OpenFile(name, flag, mode)
 				openedFile = file
@@ -548,12 +552,12 @@ func openProviderStoreForProcess() (*providerStore, error) {
 // would start an empty store, which resets the extender activation budget. The
 // damaged file stays where it is for the next normal open to quarantine.
 func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, error) {
-	return openProviderStoreForProcessRetry(allowQuarantine, false)
+	return openProviderStoreForProcessRetry(allowQuarantine, false, providerStoreOpenTimeout)
 }
 
 // A launch retry may bypass a cached open failure, but still uses the same
 // process-wide mutex, handle and hotswap release guard as ordinary opens.
-func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool) (*providerStore, error) {
+func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout time.Duration) (*providerStore, error) {
 	globalProviderStoreMu.Lock()
 	defer globalProviderStoreMu.Unlock()
 	if globalProviderStoreReleased {
@@ -576,7 +580,7 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool) (*provi
 		_ = globalProviderStore.Close()
 		globalProviderStore = nil
 	}
-	store, err := openProviderStore(path)
+	store, err := openProviderStoreWithTimeout(path, timeout)
 	if isProviderStoreCorrupt(err) {
 		IncrPersistentError(providerStoreCorruptCategory)
 	}
@@ -588,7 +592,7 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool) (*provi
 			tlog("[state] %s would not open (%v); left in place, the next normal open quarantines it\n", path, err)
 		} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
 			tlog("[state] %s would not open (%v); moved it to %s and started a fresh store\n", path, err, moved)
-			store, err = openProviderStore(path)
+			store, err = openProviderStoreWithTimeout(path, timeout)
 			if err == nil {
 				holdBudgetAfterQuarantine(store, time.Now())
 			}
