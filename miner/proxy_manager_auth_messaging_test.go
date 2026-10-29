@@ -70,3 +70,29 @@ func TestProxyAuthRejectionLeavesOtherFailuresUnnamed(t *testing.T) {
 		t.Fatalf("proxyAuthRejectionError() rewrapped a non-rejection: %v", got)
 	}
 }
+
+// A file-configured proxy has no eviction ceiling, so its give-up line must
+// not print "of M". The line states the count and when the next attempt runs.
+func TestProxyGiveUpLineOmitsDenominatorForFileProxy(t *testing.T) {
+	swapOutageTracker(t, false)
+	prevHistory := globalProxyFailureHistory
+	globalProxyFailureHistory = &proxyFailureHistory{failures: map[string]int{}}
+	t.Cleanup(func() { globalProxyFailureHistory = prevHistory })
+
+	settings := &connect.ProxySettings{Network: "tcp", Address: "198.51.100.44:1080"}
+	err := &testHttpRequestExhausted{causes: []error{socksRejection()}}
+
+	var out string
+	for i := 0; i < unprovenMaxAuthFailures; i++ {
+		out = captureTlog(t, func() {
+			noteProviderAuthFailure(settings, err)
+		})
+	}
+
+	if !strings.Contains(out, "give-up 1 after 3 failed authentications; will retry in ") {
+		t.Fatalf("give-up line = %q, want the no-denominator form", out)
+	}
+	if strings.Contains(out, " of ") {
+		t.Fatalf("give-up line %q prints a ceiling that does not apply to a file proxy", out)
+	}
+}

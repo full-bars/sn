@@ -254,7 +254,8 @@ func noteProviderAuthFailure(settings *connect.ProxySettings, err error) provide
 			proxyKeyDisplay(key), failures, formatDuration(retryIn))
 		return providerAuthGiveUpInfo{retryIn: retryIn}
 	}
-	result := proxyAuthGiveUp(settings, isURLSourcedProxyKey(key))
+	urlSourced := isURLSourcedProxyKey(key)
+	result := proxyAuthGiveUp(settings, urlSourced)
 	info := providerAuthGiveUpInfo{giveUp: result.giveUp, retryIn: result.retryIn, evicted: result.evicted}
 	if result.evicted {
 		tlog("[proxy][auth] %s give-up %d of %d: authentication failed %d times; evicted from the URL cache and will not be retried\n",
@@ -264,6 +265,14 @@ func noteProviderAuthFailure(settings *connect.ProxySettings, err error) provide
 	if result.evictFail != nil {
 		tlog("[proxy][auth] %s give-up %d: could not evict (%v); backing off %s\n",
 			proxyKeyDisplay(key), result.giveUp, result.evictFail, formatDuration(result.retryIn))
+		return info
+	}
+	// Only a URL-sourced address has an eviction ceiling. A file-configured
+	// proxy is never evicted, so the M in "N of M" would name a limit that
+	// does not apply; its line states the count and what happens next.
+	if !urlSourced {
+		tlog("[proxy][auth] %s give-up %d after %d failed authentications; will retry in %s\n",
+			proxyKeyDisplay(key), result.giveUp, failures, formatDuration(result.retryIn))
 		return info
 	}
 	tlog("[proxy][auth] %s give-up %d of %d after %d failed authentications; will retry in %s\n",
