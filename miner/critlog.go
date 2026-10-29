@@ -148,7 +148,13 @@ func critLogDurable(path, line string) error {
 	if err != nil {
 		return err
 	}
-	return durablesync.SyncParent(path)
+	if err := durablesync.SyncParent(path); err != nil {
+		return err
+	}
+	if runtime.GOOS == "windows" {
+		return durablesync.ErrNotCrashDurable
+	}
+	return nil
 }
 
 func critLogPanic(r any, stack []byte) {

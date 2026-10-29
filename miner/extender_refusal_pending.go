@@ -782,14 +782,29 @@ func awaitExtenderRefusalsDurable(deadline time.Time) error {
 // set. The wait is bounded: a store and a journal that stay unwritable (a full
 // or read-only disk, or a platform that cannot make the journal durable once
 // the store is released), or a call that hangs under the barrier, must not keep
-// the process from ending. At the deadline it records the loss
-// (recordExtenderRefusalsLost) and returns false.
+// the process from ending. Time is reserved for the recovery record, but a
+// blocked record is abandoned at the same deadline and may never reach disk.
+var extenderLossAttempts sync.WaitGroup
+
 func waitExtenderRefusalsDurable(what string) bool {
-	err := awaitExtenderRefusalsDurable(time.Now().Add(extenderRefusalGateDeadline))
+	deadline := time.Now().Add(extenderRefusalGateDeadline)
+	err := awaitExtenderRefusalsDurable(time.Now().Add(extenderRefusalGateDeadline * 2 / 3))
 	if err == nil {
 		return true
 	}
-	recordExtenderRefusalsLost(what, err)
+	done := make(chan struct{})
+	extenderLossAttempts.Add(1)
+	go func() {
+		defer extenderLossAttempts.Done()
+		recordExtenderRefusalsLost(what, err)
+		close(done)
+	}()
+	timer := time.NewTimer(time.Until(deadline))
+	defer timer.Stop()
+	select {
+	case <-done:
+	case <-timer.C:
+	}
 	return false
 }
 
@@ -812,7 +827,7 @@ func recordExtenderRefusalsLost(what string, cause error) {
 	line := fmt.Sprintf("EXTENDER REFUSALS LOST at %s: %d decided refusals neither in the state store nor in a durable file: %v; %s", what, at, cause, hold)
 	tlog("❌ [extender] %s\n", line)
 	if where, err := writeExtenderLossRecord(line); err != nil {
-		tlog("❌ [extender] the loss above is on no disk: %v\n", err)
+		tlog("❌ [extender] no crash-durable loss record confirmed: %v\n", err)
 	} else {
 		tlog("[extender] the loss above is recorded in %s\n", where)
 	}
