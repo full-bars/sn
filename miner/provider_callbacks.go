@@ -140,7 +140,7 @@ type providerExtenderStatusListener struct {
 	observed  bool
 	last      providerExtenderObservation
 	// Remember every observed attempt so later redelivery cannot charge it twice.
-	failureSeen map[int64]bool
+	failureSeen map[string]bool
 	// attemptScope makes an attempt's identity this listener's own. The status
 	// names an attempt only by its millisecond, which two devices of one
 	// account can share.
@@ -214,12 +214,12 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		// not handled yet is handled again: a standing error re-read beside
 		// another changed fact is the same failure. An activated family does
 		// not clear it, because the two per-family flags are independent.
-		failed := observation.Known && observation.Enabled && observation.ActivationFailed && !self.failureSeen[observation.ActivationTime]
+		failed := observation.Known && observation.Enabled && observation.ActivationFailed && !self.failureSeen[self.attemptKey(observation)]
 		if failed {
 			if self.failureSeen == nil {
-				self.failureSeen = make(map[int64]bool)
+				self.failureSeen = make(map[string]bool)
 			}
-			self.failureSeen[observation.ActivationTime] = true
+			self.failureSeen[self.attemptKey(observation)] = true
 		}
 		return changed, failed
 	}()
@@ -272,7 +272,18 @@ func (self *providerExtenderStatusListener) chargeActivationFailure(observation 
 	}
 	// Held for the process, not this listener, so admission sees it before
 	// the store has kept it and the listener's end does not drop it.
-	holdExtenderRefusal(self.currentAccount(), self.attemptScope+"."+strconv.FormatInt(observation.ActivationTime, 10))
+	holdExtenderRefusal(self.currentAccount(), self.attemptKey(observation))
+}
+
+// attemptKey names one activation attempt of this listener. The status carries
+// the attempt's millisecond and what each family did, and two attempts that
+// finish in one millisecond differ in the second: keying on the millisecond
+// alone merged them into one refusal. Two attempts that agree on both are
+// indistinguishable from one status delivered twice, so they stay one.
+func (self *providerExtenderStatusListener) attemptKey(observation providerExtenderObservation) string {
+	return self.attemptScope + "." + strconv.FormatInt(observation.ActivationTime, 10) +
+		".v4=" + strconv.FormatBool(observation.ActivatedV4) +
+		".v6=" + strconv.FormatBool(observation.ActivatedV6)
 }
 
 // activationPass is what the status says this pass did, per family. A pass
