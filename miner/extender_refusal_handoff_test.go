@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -89,19 +90,18 @@ func TestHandoffWaitsForARefusalOnlyMemoryHolds(t *testing.T) {
 }
 
 // A callback can decide a refusal after the store went to the candidate, when
-// only a file can carry it. The drain must not end the parent while that file
-// cannot be written.
-func TestDrainWaitsForALateRefusalToBeJournaled(t *testing.T) {
+// only a file can carry it. If that file cannot be written the drain waits a
+// bounded time and then ends the parent anyway: waiting forever left no
+// recovery short of killing it.
+func TestDrainEndsAfterTheDeadlineWhenALateRefusalCannotBeJournaled(t *testing.T) {
 	testExtenderState(t)
 	ResetHotSwapStateForTest()
 	t.Cleanup(ResetHotSwapStateForTest)
-	gate := extenderRefusalGateRetry
-	extenderRefusalGateRetry = 10 * time.Millisecond
-	t.Cleanup(func() { extenderRefusalGateRetry = gate })
+	shortenRefusalGate(t)
 	if providerStoreInstance() == nil {
 		t.Fatal("store did not open")
 	}
-	heal := failJournalRename(t)
+	failJournalRename(t)
 	releaseProviderStore()
 	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
 	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, LastActivationTime: 1201, LastActivationError: "refused", LastActivationRefused: true})
@@ -114,17 +114,54 @@ func TestDrainWaitsForALateRefusalToBeJournaled(t *testing.T) {
 	cancel()
 	handoffDrainParent(ctx, func() {}, &HotswapParentSession{}, os.Getpid())
 
-	if !blockedFor(exited, 300*time.Millisecond) {
-		t.Fatal("the parent exited with a decided refusal only in its memory")
-	}
-	heal()
 	select {
 	case <-exited:
 	case <-time.After(10 * time.Second):
-		t.Fatal("the parent never exited after the journal recovered")
+		t.Fatal("the parent never exited: the drain waits for a journal that will not come")
 	}
-	if onDisk, _, err := readExtenderRefusalJournal(time.Now()); err != nil || len(onDisk) != 1 {
-		t.Fatalf("journal at the parent's exit = %d refusals (%v), want the late refusal", len(onDisk), err)
+	if at := extenderRefusalsAtRisk(); at != 1 {
+		t.Fatalf("refusals at risk = %d, want the unwritten refusal still counted", at)
+	}
+}
+
+// shortenRefusalGate makes the wait for durability finish in milliseconds.
+func shortenRefusalGate(t *testing.T) {
+	t.Helper()
+	retry, deadline := extenderRefusalGateRetry, extenderRefusalGateDeadline
+	extenderRefusalGateRetry, extenderRefusalGateDeadline = 5*time.Millisecond, 150*time.Millisecond
+	t.Cleanup(func() { extenderRefusalGateRetry, extenderRefusalGateDeadline = retry, deadline })
+}
+
+// Shutdown with a store that is gone and a journal that cannot be written
+// returns once the deadline passes, says what was lost in the log, and records
+// it in events.log where the next start can find it.
+func TestShutdownIsBoundedWhenNothingCanHoldTheRefusal(t *testing.T) {
+	testExtenderState(t)
+	shortenRefusalGate(t)
+	if providerStoreInstance() == nil {
+		t.Fatal("store did not open")
+	}
+	failJournalRename(t)
+	releaseProviderStore()
+	holdExtenderRefusal(extenderTestAccountA, "scope.1401")
+
+	done := make(chan bool, 1)
+	go func() { done <- waitExtenderRefusalsDurable("shutdown") }()
+	select {
+	case durable := <-done:
+		if durable {
+			t.Fatal("reported durable with the store gone and the journal failing")
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("shutdown never finished: the wait is unbounded")
+	}
+	path, err := critLogPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil || !strings.Contains(string(data), "EXTENDER REFUSALS LOST at shutdown") {
+		t.Fatalf("events.log = %q (%v), want the lost refusal recorded", data, err)
 	}
 }
 

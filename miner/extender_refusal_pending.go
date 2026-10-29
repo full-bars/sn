@@ -542,9 +542,13 @@ func resetExtenderRefusals() {
 	extenderRefusalsHeld.generation++
 }
 
-// extenderRefusalGateRetry paces the wait of a process that cannot end yet. A
-// variable so a test can shorten it.
-var extenderRefusalGateRetry = time.Second
+// extenderRefusalGateRetry paces the wait of a process that cannot end yet,
+// and extenderRefusalGateDeadline bounds it. Variables so a test can shorten
+// them.
+var (
+	extenderRefusalGateRetry    = time.Second
+	extenderRefusalGateDeadline = 30 * time.Second
+)
 
 // extenderRefusalsAtRisk counts the refusals that are neither kept by the
 // store nor in a durable file, which is what a process end would lose.
@@ -575,15 +579,25 @@ func ensureExtenderRefusalsDurable() error {
 	return nil
 }
 
-// waitExtenderRefusalsDurable does not return while a decided refusal is only
-// in memory. A process that ends first would let its successor, or its own
-// next start, post into a wait the operator already set, and nothing would say
-// so; waiting is loud and an operator can still kill the process.
-func waitExtenderRefusalsDurable(what string) {
+// waitExtenderRefusalsDurable waits for a decided refusal that only memory
+// holds to reach the store or a file, because a process that ends first lets
+// its successor, or its own next start, post into a wait the operator already
+// set. The wait is bounded: a store and a journal that stay unwritable (a full
+// or read-only disk, or a platform that cannot make the journal durable once
+// the store is released) must not keep the process from ending. At the
+// deadline it says how many refusals are lost and for which step, to the log
+// and to events.log, and returns false.
+func waitExtenderRefusalsDurable(what string) bool {
+	deadline := time.Now().Add(extenderRefusalGateDeadline)
 	for {
 		err := ensureExtenderRefusalsDurable()
 		if err == nil {
-			return
+			return true
+		}
+		if !time.Now().Add(extenderRefusalGateRetry).Before(deadline) {
+			tlog("❌ [extender] %s is not waiting any longer: %v; the process ends and the next start may post into the operator's wait\n", what, err)
+			critLog("EXTENDER REFUSALS LOST at %s: %v", what, err)
+			return false
 		}
 		tlog("⚠️ [extender] %s is waiting: %v\n", what, err)
 		time.Sleep(extenderRefusalGateRetry)
