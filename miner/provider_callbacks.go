@@ -145,9 +145,15 @@ type providerExtenderStatusListener struct {
 	// names an attempt only by its millisecond, which two devices of one
 	// account can share.
 	attemptScope string
-	failureMu    sync.Mutex
-	diagnostics  *providerDiagnostics
-	provider     uint64
+	// standing is the error the status has kept reporting, and standingTime
+	// the attempt time this listener names it by (refusalTime).
+	standing        bool
+	standingDetail  uint64
+	standingRefused bool
+	standingTime    int64
+	failureMu       sync.Mutex
+	diagnostics     *providerDiagnostics
+	provider        uint64
 	// account is the sign-in account this slot provides under
 	// (extenderActivationUserId), which is the identity the operator's
 	// ExtenderActivateRateLimit counts and the key the budget records a
@@ -208,6 +214,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 	if status != nil {
 		detail = activationDetailDigest(status.LastActivationError)
 	}
+	var attempt string
 	changed, failed := func() (bool, bool) {
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
@@ -218,12 +225,13 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		// not handled yet is handled again: a standing error re-read beside
 		// another changed fact is the same failure. An activated family does
 		// not clear it, because the two per-family flags are independent.
-		failed := observation.Known && observation.Enabled && observation.ActivationFailed && !self.failureSeen[self.attemptKey(observation, detail)]
+		attempt = self.attemptKey(observation, detail)
+		failed := observation.Known && observation.Enabled && observation.ActivationFailed && !self.failureSeen[attempt]
 		if failed {
 			if self.failureSeen == nil {
 				self.failureSeen = make(map[string]bool)
 			}
-			self.failureSeen[self.attemptKey(observation, detail)] = true
+			self.failureSeen[attempt] = true
 		}
 		return changed, failed
 	}()
@@ -247,7 +255,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 					if family, failedFamily := observation.activationPass().failedFamily(); failedFamily {
 						holdExtenderSpare(self.currentAccount(), family)
 					}
-					self.chargeActivationFailure(observation, detail)
+					self.chargeActivationFailure(observation, attempt)
 				}
 			case observation.ActivatedV4 || observation.ActivatedV6:
 				// Reached only by a pass with no failed family, which is what
@@ -269,14 +277,14 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 // and a reset all set it, while LastActivationRefused is set only by an answer
 // that came back activated: false. Holding the next start for the former spends
 // this host's budget on a wait the operator never asked for.
-func (self *providerExtenderStatusListener) chargeActivationFailure(observation providerExtenderObservation, detail uint64) {
+func (self *providerExtenderStatusListener) chargeActivationFailure(observation providerExtenderObservation, attempt string) {
 	if !observation.ActivationRefused {
 		tlog("[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held\n", observation.ActivatedV4, observation.ActivatedV6)
 		return
 	}
 	// Held for the process, not this listener, so admission sees it before
 	// the store has kept it and the listener's end does not drop it.
-	holdExtenderRefusal(self.currentAccount(), self.attemptKey(observation, detail))
+	holdExtenderRefusal(self.currentAccount(), attempt)
 }
 
 // activationDetailDigest reduces the status's failure text to a number, so the
@@ -288,16 +296,41 @@ func activationDetailDigest(text string) uint64 {
 }
 
 // attemptKey names one activation attempt of this listener by what the attempt
-// reported: the status's millisecond and a digest of its failure text. The
+// reported: its time (refusalTime) and a digest of its failure text. The
 // per-family activated flags are not part of it, because they change on their
 // own while the same refusal stands, and a key that followed them would charge
 // that refusal again. Two distinct refusals that finish in one millisecond
-// differ in their text; two statuses that agree on both carry the same
-// payload, so they are one delivery.
+// differ in their text. The caller holds stateLock.
 func (self *providerExtenderStatusListener) attemptKey(observation providerExtenderObservation, detail uint64) string {
-	return self.attemptScope + "." + strconv.FormatInt(observation.ActivationTime, 10) +
+	return self.attemptScope + "." + strconv.FormatInt(self.refusalTime(observation, detail), 10) +
 		"." + strconv.FormatUint(detail, 16) +
 		".r=" + strconv.FormatBool(observation.ActivationRefused)
+}
+
+// refusalTime is the time that names the standing error. The status carries the
+// latest attempt of either family and the newest error separately, so its time
+// is the error's own only while no family is activated: a success activates its
+// family and clears its error, a failure deactivates it, and revocation (which
+// also deactivates) is excluded. Then a newer time is a newer failed attempt.
+// Once a family is activated, a newer time can be that family's success while
+// the other's refusal stands, and the status cannot tell that from the refusal
+// repeating with the same text. That case keeps the time the error was first
+// seen at: a repeated identical refusal beside an activated family is charged
+// once, which costs a shorter wait at the next start, where charging every
+// newer time would double the wait for a refusal that happened once. The caller
+// holds stateLock.
+func (self *providerExtenderStatusListener) refusalTime(observation providerExtenderObservation, detail uint64) int64 {
+	if !observation.Known || !observation.Enabled || !observation.ActivationFailed {
+		self.standing = false
+		return observation.ActivationTime
+	}
+	ownTime := !observation.ActivatedV4 && !observation.ActivatedV6 && !observation.Revoked
+	if ownTime || !self.standing || self.standingDetail != detail || self.standingRefused != observation.ActivationRefused {
+		self.standing = true
+		self.standingDetail, self.standingRefused = detail, observation.ActivationRefused
+		self.standingTime = observation.ActivationTime
+	}
+	return self.standingTime
 }
 
 // activationPass is what the status says this pass did, per family. A pass
