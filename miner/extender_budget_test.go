@@ -1053,7 +1053,7 @@ func TestExtenderGateRetryUnavailable(t *testing.T) {
 	if len(state.Attempts) != 0 {
 		t.Errorf("unavailable store recorded posts: %v", state.Attempts)
 	}
-	if !strings.Contains(writer.String(), "extender role off for this launch: activation budget record could not be read or written") {
+	if !strings.Contains(writer.String(), "activation budget record could not be read or written; decision deferred") {
 		t.Errorf("missing launch-specific store failure reason: %q", writer.String())
 	}
 }

@@ -32,10 +32,8 @@ package miner
 // extenderActivationSpendSpare does.
 //
 // The record is a section of provider_state.db (state_store.go), not a file of
-// its own. A store that will not open, or a record that will not decode, is
-// logged on every failed attempt and holds the extender role rather than running unaccounted: the
-// provider keeps serving either way, and the role comes back on the first start
-// that can read and record the budget again.
+// its own. When it cannot be used after bounded retries, a separate fallback
+// record counts launches until the real store can be read again.
 
 import (
 	"sync"
@@ -168,12 +166,7 @@ func (legacy extenderActivationLegacy) present() bool {
 // small json decode, a map update and one bbolt transaction.
 var extenderActivationRecordMu sync.Mutex
 
-// warnExtenderBudgetUnavailable says the record could not be read or written,
-// and why. The role is held rather than run unrecorded, because the operator
-// counts every post it answers and a post this process did not count is one
-// the next start cannot see. This line is the only evidence the operator gets
-// while the store stays unusable, so it carries the store error: a record this
-// build cannot decode and a closed store need different recovery.
+// warnExtenderBudgetUnavailable reports why the record could not be used.
 func warnExtenderBudgetUnavailable(account string, err error) {
 	tlog("⚠️ [extender] activation budget unavailable for account %s: %v\n", account, err)
 }
@@ -231,11 +224,8 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 }
 
 // mutateExtenderActivationRecord is the budget's write path: it holds the
-// package lock for the whole decision and hands the record to mutate inside one
-// store transaction, so nothing can change the accounts between the read that
-// decided and the write that records it. A store that cannot be used leaves the
-// budget closed and says so, rather than
-// spending posts no one will remember.
+// package lock for the whole decision and mutates inside one store transaction.
+// A store that cannot be used is reported to the caller.
 var mutateExtenderActivationRecord = func(account string, mutate func(*extenderActivationRecord) error) error {
 	store := providerStoreInstance()
 	if store == nil {
@@ -395,6 +385,7 @@ func extenderActivationAllow(now time.Time, posts int, userId string) (bool, tim
 // extenderActivationDecision distinguishes a withheld decision from a refusal.
 func extenderActivationDecision(now time.Time, posts int, userId string) (allow bool, wait time.Duration, used int, err error) {
 	account := extenderActivationAccountKey(userId)
+	decided := false
 	err = mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
 		// The token resolves on this path, so this is where posts charged while
 		// it was unreadable first learn the account that spent them.
@@ -422,12 +413,15 @@ func extenderActivationDecision(now time.Time, posts int, userId string) (allow 
 			allow = true
 		}
 		record.Accounts[account] = state
+		decided = true
 		return nil
 	})
 	if err != nil {
-		// The posts this start would charge cannot be recorded, and an
-		// unrecorded post is what a restart loop replays as a burst. Hold
-		// the role and retry instead of spending what nothing remembers.
+		// A readable cap or backoff remains authoritative even if its
+		// unchanged record could not be written back.
+		if decided && !allow {
+			return false, wait, used, nil
+		}
 		return false, providerStoreRetryInterval, 0, err
 	}
 	return allow, wait, used, nil
@@ -591,7 +585,12 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 	if pending {
 		return allow
 	}
-	return gate.allowLaunchForWith(hostActivationPosts(), extenderActivationUserId(), launchProbeAttempts, launchProbeDelay) == extenderLaunchAllowed
+	posts := hostActivationPosts()
+	decision := gate.allowLaunchForWith(posts, extenderActivationUserId(), launchProbeAttempts, launchProbeDelay)
+	if decision == extenderLaunchWithheld {
+		return allowExtenderFallback(time.Now(), posts)
+	}
+	return decision == extenderLaunchAllowed
 }
 
 // The startup decision may spend a few hundred milliseconds waiting for a
@@ -626,7 +625,7 @@ func (gate *extenderActivationGate) allowLaunchForWith(posts int, userId string,
 				time.Sleep(retryDelay)
 				continue
 			}
-			tlog("[extender] extender role off for this launch: activation budget record could not be read or written: %v\n", err)
+			tlog("[extender] activation budget record could not be read or written; decision deferred: %v\n", err)
 			return extenderLaunchWithheld
 		}
 		if !allow {
