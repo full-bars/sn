@@ -88,7 +88,7 @@ Good to know:
   ```bash
   provider wallet set <coldkey> --message='<printed text>' --signature=0x<128 hex characters>
   ```
-- **`urnet-tools wallet sign` refuses on a node on purpose.** If your desktop also runs a provider and the tool mistakes it for a fleet node, and you are sure it is your own computer, add `--i-am-on-my-own-workstation`.
+- **`urnet-tools wallet sign` needs no flag, anywhere.** It serves a page on 127.0.0.1 and the seed never leaves your wallet extension, so it does not care whether the box also runs a provider. The seed-file form is the one that asks: `wallet set --coldkey_seed_file` prompts when it can, and on a fleet node with no terminal to answer it refuses outright. There is no flag to skip that.
 
 ## Changing your wallet
 
@@ -105,7 +105,7 @@ The step is the same for everyone. Nothing changes on the nodes.
 |---|---|
 | **sn Docker image (`:latest`) or sn installer** | Nothing in the containers. Sign once on your own computer: `provider auth`, then `provider wallet sign <coldkey>`, with a current sn `provider` (from `v2026.10.21-1077735390-meso`) or a 3.23-fix or meso-miner one. |
 | **sn miner image (`:miner`)** | Nothing to change in the containers. Sign on your own computer like everyone else. The miner's signed `wallet set` stays one node per consent (see below) and wins over the account consent for that node, so prefer `wallet sign`. |
-| **3.23-fix or meso-miner nodes** | Nothing on the node. Sign from your own computer. `urnet-tools wallet sign` refuses on a node on purpose. |
+| **3.23-fix or meso-miner nodes** | Nothing on the node. Sign from your own computer with `wallet sign`, which needs no flag, or `provider wallet sign` from its provider. |
 | **The URnetwork app or ur.io** | The SDK the apps are built on can now request and submit a network consent (sdk `bf4076ff`). Whether the app version you have actually offers it is **not confirmed**. A plain "connect wallet" is **not enough**: it only makes a login-proof wallet. After using the app, run `provider wallet status` and do not assume a consent exists. |
 
 On Windows, use `provider.exe`. This has not been tested end to end on Windows yet, so check with `wallet status` afterwards.

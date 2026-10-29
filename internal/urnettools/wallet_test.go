@@ -129,21 +129,20 @@ func TestWalletSetSeedFileRefusedOnFleetNode(t *testing.T) {
 	var calls [][]string
 	withWalletSeams(t, []Provider{walletTestProvider()}, &calls, "", "")
 	err := cmdWalletSet([]string{"-f", "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"})
-	if err == nil || !strings.Contains(err.Error(), walletWorkstationFlag) {
-		t.Fatalf("the seed-file form on a fleet node must refuse and name the workstation flag, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "never a fleet node") {
+		t.Fatalf("the seed-file form on a fleet node must refuse, got %v", err)
 	}
 	if len(calls) != 0 {
 		t.Fatal("a refused set must not delegate")
 	}
-	// the explicit assertion allows it, and the tool flag is stripped before
-	// the provider sees the args
-	err = cmdWalletSet([]string{"-f", walletWorkstationFlag, "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"})
-	if err != nil {
-		t.Fatalf("wallet set with the workstation assertion: %v", err)
+	// No flag bypasses the guard any more: an unknown flag reaches the
+	// provider rather than silencing the refusal.
+	err = cmdWalletSet([]string{"-f", "--i-am-on-my-own-workstation", "5CvF...ss58", "--coldkey_seed_file=/tmp/seed"})
+	if err == nil {
+		t.Fatal("a removed flag must not bypass the fleet-node guard")
 	}
-	joined := strings.Join(calls[0], " ")
-	if joined != "wallet set 5CvF...ss58 --coldkey_seed_file=/tmp/seed" {
-		t.Fatalf("delegation args = %q (the tool flag must not reach the provider)", joined)
+	if len(calls) != 0 {
+		t.Fatal("a refused set must not delegate")
 	}
 	// the message/signature form is untouched by the fleet rule
 	calls = nil
