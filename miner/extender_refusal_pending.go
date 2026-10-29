@@ -1,6 +1,12 @@
 package miner
 
 import (
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -12,12 +18,30 @@ import (
 // only in memory: either the transaction keeps the refusal and sees its wait,
 // or it fails and holds the role. A worker retries while anything is held, so
 // a store that comes back with nothing else asking still keeps the refusal.
+//
+// Each held refusal is also written to its own file under
+// <state>/extender-refusals, because the process can end before the store
+// takes it: a restart, or a hotswap whose parent has released the store to
+// its candidate. The next process, or the candidate, reads those files in the
+// same transactions and removes each one only after the store has kept it. A
+// file read twice is charged once, because the record remembers each attempt.
 
 // extenderPendingRefusal is one refusal waiting to be kept.
 type extenderPendingRefusal struct {
 	account string
 	attempt string
+	// journaled is set once the refusal's file is durable.
+	journaled bool
 }
+
+// extenderRefusalJournalFile is one held refusal on disk.
+type extenderRefusalJournalFile struct {
+	Account string `json:"account"`
+	Attempt string `json:"attempt"`
+	AtUnix  int64  `json:"at_unix"`
+}
+
+const extenderRefusalJournalDir = "extender-refusals"
 
 // extenderRefusalRetryInterval paces the worker. A variable so a test can
 // shorten it.
@@ -38,26 +62,143 @@ func holdExtenderRefusal(account, attempt string) {
 	if extenderRefusalsHeld.items == nil {
 		extenderRefusalsHeld.items = make(map[string]extenderPendingRefusal)
 	}
-	extenderRefusalsHeld.items[attempt] = extenderPendingRefusal{account: account, attempt: attempt}
+	refusal := extenderPendingRefusal{account: account, attempt: attempt}
+	refusal.journaled = journalExtenderRefusal(refusal) == nil
+	extenderRefusalsHeld.items[attempt] = refusal
 }
 
-// snapshotExtenderRefusals is what the next transaction charges.
-func snapshotExtenderRefusals() []extenderPendingRefusal {
+// journalExtenderRefusal publishes one refusal's file by rename, so a reader
+// sees a whole file or none.
+func journalExtenderRefusal(refusal extenderPendingRefusal) error {
+	dir, err := providerStatePath(extenderRefusalJournalDir)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	data, err := json.Marshal(extenderRefusalJournalFile{Account: refusal.account, Attempt: refusal.attempt, AtUnix: time.Now().Unix()})
+	if err != nil {
+		return err
+	}
+	temp, err := os.CreateTemp(dir, ".tmp-*")
+	if err != nil {
+		return err
+	}
+	_, err = temp.Write(data)
+	if err == nil {
+		err = temp.Sync()
+	}
+	if closeErr := temp.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Rename(temp.Name(), filepath.Join(dir, extenderRefusalJournalName(refusal.attempt)))
+	}
+	if err != nil {
+		_ = os.Remove(temp.Name())
+		tlog("⚠️ [extender] could not write held refusal %s: %v\n", refusal.attempt, err)
+		return err
+	}
+	return providerStoreSyncDir(dir)
+}
+
+func extenderRefusalJournalName(attempt string) string {
+	return hex.EncodeToString([]byte(attempt)) + ".json"
+}
+
+// readExtenderRefusalJournal returns the refusals on disk. A directory that
+// cannot be read is an error, so the transaction fails and holds the role
+// rather than deciding without refusals it cannot see.
+func readExtenderRefusalJournal(now time.Time) ([]extenderPendingRefusal, error) {
+	dir, err := providerStatePath(extenderRefusalJournalDir)
+	if err != nil {
+		return nil, err
+	}
+	entries, err := os.ReadDir(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var refusals []extenderPendingRefusal
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
+			continue
+		}
+		path := filepath.Join(dir, entry.Name())
+		data, err := os.ReadFile(path)
+		if errors.Is(err, os.ErrNotExist) {
+			// Kept and removed by another process since the listing.
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		var file extenderRefusalJournalFile
+		if json.Unmarshal(data, &file) != nil || file.Attempt == "" {
+			tlog("⚠️ [extender] dropping unreadable held refusal %s\n", path)
+			_ = os.Remove(path)
+			continue
+		}
+		// Past the decay a refusal no longer escalates anything, and the
+		// record has forgotten the attempt, so charging it would count it
+		// twice.
+		if now.Sub(time.Unix(file.AtUnix, 0)) > extenderRefusalDecay {
+			_ = os.Remove(path)
+			continue
+		}
+		refusals = append(refusals, extenderPendingRefusal{account: file.Account, attempt: file.Attempt, journaled: true})
+	}
+	return refusals, nil
+}
+
+// snapshotExtenderRefusals is what the next transaction charges: what this
+// process holds and what any process left on disk.
+func snapshotExtenderRefusals(now time.Time) ([]extenderPendingRefusal, error) {
+	onDisk, err := readExtenderRefusalJournal(now)
+	if err != nil {
+		return nil, err
+	}
 	extenderRefusalsHeld.mu.Lock()
 	defer extenderRefusalsHeld.mu.Unlock()
-	pending := make([]extenderPendingRefusal, 0, len(extenderRefusalsHeld.items))
+	pending := make([]extenderPendingRefusal, 0, len(extenderRefusalsHeld.items)+len(onDisk))
 	for _, refusal := range extenderRefusalsHeld.items {
 		pending = append(pending, refusal)
 	}
-	return pending
+	for _, refusal := range onDisk {
+		if _, held := extenderRefusalsHeld.items[refusal.attempt]; !held {
+			pending = append(pending, refusal)
+		}
+	}
+	return pending, nil
 }
 
-// settleExtenderRefusals drops refusals a committed transaction has kept.
+// settleExtenderRefusals drops refusals a committed transaction has kept, the
+// file after the store, so no crash between them loses the refusal.
 func settleExtenderRefusals(kept []extenderPendingRefusal) {
+	dir, dirErr := providerStatePath(extenderRefusalJournalDir)
 	extenderRefusalsHeld.mu.Lock()
 	defer extenderRefusalsHeld.mu.Unlock()
 	for _, refusal := range kept {
 		delete(extenderRefusalsHeld.items, refusal.attempt)
+		if dirErr == nil {
+			_ = os.Remove(filepath.Join(dir, extenderRefusalJournalName(refusal.attempt)))
+		}
+	}
+}
+
+// journalHeldExtenderRefusals writes the files that failed when the refusal was
+// held, so a process that ends before the store returns still leaves them.
+func journalHeldExtenderRefusals() {
+	extenderRefusalsHeld.mu.Lock()
+	defer extenderRefusalsHeld.mu.Unlock()
+	for attempt, refusal := range extenderRefusalsHeld.items {
+		if !refusal.journaled && journalExtenderRefusal(refusal) == nil {
+			refusal.journaled = true
+			extenderRefusalsHeld.items[attempt] = refusal
+		}
 	}
 }
 
@@ -83,7 +224,10 @@ func flushExtenderRefusals() {
 
 // keepExtenderRefusals runs an empty transaction, which charges what is held.
 func keepExtenderRefusals() error {
-	pending := snapshotExtenderRefusals()
+	pending, err := snapshotExtenderRefusals(time.Now())
+	if err != nil {
+		return err
+	}
 	if len(pending) == 0 {
 		return nil
 	}
@@ -99,6 +243,7 @@ func retryExtenderRefusals(generation uint64) {
 			return
 		}
 		extenderRefusalsHeld.mu.Unlock()
+		journalHeldExtenderRefusals()
 		_ = keepExtenderRefusals()
 		extenderRefusalsHeld.mu.Lock()
 		if generation != extenderRefusalsHeld.generation || len(extenderRefusalsHeld.items) == 0 {

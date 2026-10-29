@@ -246,11 +246,15 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 	}
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
-	pending := snapshotExtenderRefusals()
 	now := time.Now()
+	pending, err := snapshotExtenderRefusals(now)
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+		return err
+	}
 	var waits []time.Duration
 	var record extenderActivationRecord
-	err := store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
+	err = store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
 		if !found {
 			record = extenderActivationRecord{}
 		}
