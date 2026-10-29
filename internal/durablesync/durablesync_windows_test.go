@@ -127,3 +127,22 @@ func TestWindowsAbsorbsOnlyTheDirectoryFlushRefusals(t *testing.T) {
 		t.Error("a non-errno failure must not be absorbed")
 	}
 }
+
+// Nothing documents a same-volume rename as crash-durable, so Rename must not
+// certify one, and must leave both names as they were.
+func TestWindowsRenameRefusesToCertifyASameVolumeRename(t *testing.T) {
+	dir := t.TempDir()
+	from, to := filepath.Join(dir, "from"), filepath.Join(dir, "to")
+	if err := os.WriteFile(from, []byte("new"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := Rename(from, to); !errors.Is(err, ErrNotCrashDurable) {
+		t.Fatalf("Rename = %v, want ErrNotCrashDurable", err)
+	}
+	if _, err := os.Stat(from); err != nil {
+		t.Fatalf("the refused rename moved the source: %v", err)
+	}
+	if _, err := os.Stat(to); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("the refused rename created the target: %v", err)
+	}
+}

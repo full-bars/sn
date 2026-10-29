@@ -28,9 +28,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/urfoundation/sn/internal/durablesync"
 	"go.etcd.io/bbolt"
 )
 
@@ -80,12 +85,6 @@ func openProviderStoreWithTimeout(path string, timeout time.Duration) (*provider
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
-	// A file that did not exist before this open is a new entry in its
-	// parent directory. bbolt syncs the database pages it writes, but not
-	// the directory block that names the file, so a power cut just after
-	// creation can leave the file unlinked or zero length.
-	_, statErr := os.Stat(path)
-	created := errors.Is(statErr, os.ErrNotExist)
 	// callProviderStore returns no value when fn panics, so the handle is kept
 	// in opened as soon as bbolt returns it. Otherwise a panic after the open
 	// would leave the file lock held by a handle nobody can close.
@@ -96,7 +95,7 @@ func openProviderStoreWithTimeout(path string, timeout time.Duration) (*provider
 	// still release the lock.
 	var openedFile *os.File
 	db, err := callProviderStore(func() (*bbolt.DB, error) {
-		d, err := bbolt.Open(path, 0o600, &bbolt.Options{
+		d, err := openProviderBolt(path, &bbolt.Options{
 			Timeout: timeout,
 			OpenFile: func(name string, flag int, mode os.FileMode) (*os.File, error) {
 				file, err := os.OpenFile(name, flag, mode)
@@ -130,20 +129,36 @@ func openProviderStoreWithTimeout(path string, timeout time.Duration) (*provider
 	// file that turns a quarantine into a crash. The store relies on open-time
 	// validation, on read errors, and on the same-goroutine panic containment
 	// in callProviderStore instead.
-	if created {
-		if syncErr := providerStoreSyncDir(dir); syncErr != nil {
-			// The database is open and its own pages are synced, so the
-			// process can use the store; what is missing is the guarantee
-			// that the directory entry survives a crash. That is worth a
-			// line, not refusing a store that works.
-			tlog("[state] created %s but could not sync %s: %s\n", path, dir, syncErr)
-		}
+	// Retry even on an existing file: a previous open may have created the
+	// name but failed its directory sync. Never publish that handle on error.
+	// Windows cannot guarantee directory-entry durability (see durablesync).
+	if syncErr := providerStoreSyncDir(dir); syncErr != nil {
+		return nil, errors.Join(fmt.Errorf("sync store directory %s: %w", dir, syncErr), db.Close())
 	}
 	store := &providerStore{db: db, path: path}
 	return store, nil
 }
 
 var errProviderStoreCorrupt = errors.New("provider state store is corrupt")
+
+// bbolt v1.4.3's internal/common.Page.FastCheck asserts these exact messages
+// when a loaded page's ID or page-type flags disagree with the expected file
+// structure. Restrict classification to string panics during bbolt.Open; other
+// panics, including runtime errors and failures after Open, remain ordinary errors.
+var providerStorePagePanic = regexp.MustCompile(`^assertion failed: (page [0-9]+: has unexpected type/flags: [0-9a-f]+|Page expected to be: [0-9]+, but self identifies as [0-9]+)$`)
+
+func openProviderBolt(path string, options *bbolt.Options) (db *bbolt.DB, err error) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			if message, ok := recovered.(string); ok && providerStorePagePanic.MatchString(message) {
+				err = fmt.Errorf("%w: provider state store panic: %s", errProviderStoreCorrupt, message)
+				return
+			}
+			panic(recovered)
+		}
+	}()
+	return bbolt.Open(path, 0o600, options)
+}
 
 // providerStoreOpenedHook runs inside the open closure once bbolt.Open has
 // returned a handle. Tests use it to force a panic after the file lock is held.
@@ -168,6 +183,10 @@ func runProviderStoreUpdate(db *bbolt.DB, fn func(*bbolt.Tx) error) error {
 	return err
 }
 
+// providerStoreWrites counts the write transactions begun on any handle, so a
+// test can bound what a burst of callers costs the disk.
+var providerStoreWrites atomic.Int64
+
 func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
 	if s.db == nil {
 		if s.released {
@@ -175,6 +194,7 @@ func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
 		}
 		return errProviderStoreClosed
 	}
+	providerStoreWrites.Add(1)
 	err := runProviderStoreUpdate(s.db, fn)
 	// A record that would not decode is counted where it was read; no write
 	// was attempted, so it is not also a failed write.
@@ -200,14 +220,7 @@ func (e *providerStoreDecodeError) Unwrap() error { return e.err }
 // providerStoreSyncDir flushes one directory entry, which is what makes a
 // freshly created database file durable before its first write. A variable so
 // a test can observe the sync and its failure without a crash.
-var providerStoreSyncDir = func(dir string) error {
-	handle, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer handle.Close()
-	return handle.Sync()
-}
+var providerStoreSyncDir = durablesync.SyncDir
 
 func (s *providerStore) Close() error {
 	if s == nil || s.db == nil {
@@ -590,12 +603,20 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 		// every thirty seconds for the life of the process.
 		if !allowQuarantine {
 			tlog("[state] %s would not open (%v); left in place, the next normal open quarantines it\n", path, err)
-		} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
-			tlog("[state] %s would not open (%v); moved it to %s and started a fresh store\n", path, err, moved)
-			store, err = openProviderStoreWithTimeout(path, timeout)
-			if err == nil {
-				holdBudgetAfterQuarantine(store, time.Now())
+		} else if isProviderStoreCorrupt(err) {
+			if markerErr := markProviderStoreRecovery(path, now.Add(extenderActivationWindow)); markerErr != nil {
+				err = markerErr
+			} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
+				tlog("[state] %s would not open (%v); moved it to %s\n", path, err, moved)
+				store, err = openProviderStoreWithTimeout(path, timeout)
 			}
+		}
+	}
+	if err == nil {
+		err = applyProviderStoreRecovery(store, path, time.Now())
+		if err != nil {
+			_ = store.Close()
+			store = nil
 		}
 	}
 	if err != nil {
@@ -612,18 +633,124 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 	return store, nil
 }
 
-// holdBudgetAfterQuarantine seeds the fresh store with a hold of one activation
-// window. The file it replaced may have held posts or a refusal that can no
-// longer be read, and an empty store would let the next start spend as though
-// none had happened. The hold sits on the unidentified account, which the first
-// start that resolves its account adopts.
-func holdBudgetAfterQuarantine(store *providerStore, now time.Time) {
-	record := extenderActivationRecord{Accounts: map[string]extenderActivationState{
-		extenderActivationUnidentifiedAccount: {BackoffUntilUnix: now.Add(extenderActivationWindow).Unix()},
-	}}
-	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
-		tlog("⚠️ [state] could not hold the activation budget after moving the store aside: %v\n", err)
+// The recovery marker says a quarantine happened and until when its hold runs.
+//
+// The marker is published by durablesync.Rename, which fails where the
+// platform cannot make a rename crash-durable (Windows, for a rename inside one
+// volume). That failure stops the quarantine: the damaged database stays where
+// it is and the store stays unavailable, so the extender role is held rather
+// than started on a store whose hold could be lost. On such a platform a
+// corrupt database needs the operator to move it aside.
+//
+// The fresh database's own name and the marker's removal are durable on Unix
+// only. So the marker is not removed once the hold is written; it stays until
+// the hold has run out, and every open while it stands re-asserts the hold. A
+// crash that loses the fresh database then reopens an empty one with the hold
+// still applied. After the hold has run out nothing is lost by forgetting: it
+// is as long as the window the budget counts posts in, and as long as the
+// longest refusal wait.
+
+// providerStoreDurableRename publishes the marker. A variable so a test can
+// make it fail.
+var providerStoreDurableRename = durablesync.Rename
+
+// applyProviderStoreRecovery re-asserts the hold a standing marker names, and
+// removes the marker once that hold has run out.
+func applyProviderStoreRecovery(store *providerStore, path string, now time.Time) error {
+	marker := path + ".recovery"
+	data, err := os.ReadFile(marker)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
 	}
+	if err != nil {
+		return err
+	}
+	until, parseErr := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
+	if parseErr != nil || until <= 0 {
+		// A marker without a time, as an older build wrote it, gets one now
+		// so it cannot hold forever.
+		until = now.Add(extenderActivationWindow).Unix()
+		if err := markProviderStoreRecovery(path, time.Unix(until, 0)); err != nil {
+			return err
+		}
+	}
+	if until <= now.Unix() {
+		_ = os.Remove(marker)
+		return nil
+	}
+	return holdBudgetAfterQuarantine(store, until)
+}
+
+// providerStoreRecoveryUntil is the hold a standing marker names, as a unix
+// time, and 0 when none stands. A marker without a time holds a window from
+// now; the open path gives it one (applyProviderStoreRecovery). Every budget
+// decision reads it, so a hold written while a process already has the store
+// open, as a lost refusal writes it, applies to that process too.
+func providerStoreRecoveryUntil(path string, now time.Time) (int64, error) {
+	data, err := os.ReadFile(path + ".recovery")
+	if errors.Is(err, os.ErrNotExist) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	until, parseErr := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
+	if parseErr != nil || until <= 0 {
+		return now.Add(extenderActivationWindow).Unix(), nil
+	}
+	return until, nil
+}
+
+// extendProviderStoreRecovery makes the marker hold at least until the given
+// time, and never shortens a hold that already stands.
+func extendProviderStoreRecovery(path string, until time.Time) error {
+	standing, err := providerStoreRecoveryUntil(path, time.Now())
+	if err != nil {
+		return err
+	}
+	if until.Unix() <= standing {
+		return nil
+	}
+	return markProviderStoreRecovery(path, until)
+}
+
+// holdBudgetAfterQuarantine holds every account until the given time. The file
+// the store replaced may have held posts or a refusal that can no longer be
+// read, and an empty store would let the next start spend as though none had
+// happened. It only ever lengthens the hold and keeps what the record holds,
+// because it runs again on every open while the marker stands.
+func holdBudgetAfterQuarantine(store *providerStore, untilUnix int64) error {
+	var record extenderActivationRecord
+	return store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(bool) error {
+		if record.QuarantineUntilUnix < untilUnix {
+			record.QuarantineUntilUnix = untilUnix
+		}
+		return nil
+	})
+}
+
+// markProviderStoreRecovery publishes the marker durably, before the damaged
+// database is renamed, so no crash can leave a fresh database without it.
+func markProviderStoreRecovery(path string, until time.Time) error {
+	temp := path + ".recovery.tmp"
+	file, err := os.OpenFile(temp, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
+	}
+	_, err = file.WriteString(strconv.FormatInt(until.Unix(), 10))
+	if err == nil {
+		err = file.Sync()
+	}
+	if closeErr := file.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = providerStoreDurableRename(temp, path+".recovery")
+	}
+	if err != nil {
+		_ = os.Remove(temp)
+	}
+	return err
 }
 
 // quarantineCorruptStore moves a database bbolt refuses to open out of the way,

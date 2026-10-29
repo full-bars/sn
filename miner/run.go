@@ -1143,6 +1143,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// On a clean return this is a no-op: finishControlRun flushes the same
 		// store a few lines later.
 		flushPersistentErrorsAtExit()
+		// A refusal decided during shutdown is kept before the process ends.
+		waitExtenderRefusalsDurable("shutdown")
 		if returnErr == nil {
 			finishControlRun("clean")
 			// events.log keeps the clean shutdown across a reboot that wipes

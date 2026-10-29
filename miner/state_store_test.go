@@ -202,10 +202,7 @@ func rawValue(t *testing.T, store *providerStore, key string) string {
 	return string(raw)
 }
 
-// A database file created by this open is a new directory entry, and bbolt
-// syncs only the pages it writes. Without the directory sync a crash just
-// after creation can leave the file unlinked or zero length, so the open has
-// to sync the parent once, for the creation and not for every reopen.
+// Every open syncs the parent, including retries after an earlier sync failure.
 func TestProviderStoreSyncsTheParentDirectoryOnCreation(t *testing.T) {
 	original := providerStoreSyncDir
 	t.Cleanup(func() { providerStoreSyncDir = original })
@@ -228,34 +225,61 @@ func TestProviderStoreSyncsTheParentDirectoryOnCreation(t *testing.T) {
 		t.Fatalf("close: %s", err)
 	}
 
-	// The entry already exists, so a reopen has nothing to make durable and
-	// must not pay for a directory sync.
+	// A previous creation may have failed its sync, so reopen retries it.
 	reopened, err := openProviderStore(path)
 	if err != nil {
 		t.Fatalf("reopen: %s", err)
 	}
 	defer reopened.Close()
-	if len(synced) != 1 {
-		t.Fatalf("directory syncs after reopening an existing %s = %v, want one", path, synced)
+	if len(synced) != 2 || synced[1] != dir {
+		t.Fatalf("directory syncs after reopening %s = %v, want two", path, synced)
 	}
 }
 
-// The sync is a durability guarantee, not an availability one: a directory
-// that will not sync must not take away a database the process can already
-// read and write, or a read-only directory would stop the provider.
-func TestProviderStoreKeepsAStoreWhoseDirectoryWillNotSync(t *testing.T) {
+func TestProviderStoreSyncFailureBlocksAdmission(t *testing.T) {
+	testExtenderState(t)
 	original := providerStoreSyncDir
 	t.Cleanup(func() { providerStoreSyncDir = original })
 	providerStoreSyncDir = func(string) error { return errors.New("sync failed") }
+	if allow, _, _ := extenderActivationAllow(time.Now(), 1, extenderTestAccountA); allow {
+		t.Fatal("admitted a post while the new database name was not synced")
+	}
+	closeProviderStore()
+	path, err := providerStatePath(providerStoreFileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Model the name disappearing after a crash before the failed sync.
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	providerStoreSyncDir = original
+	if allow, _, _ := extenderActivationAllow(time.Now(), 1, extenderTestAccountA); !allow {
+		t.Fatal("admission did not recover after directory sync succeeded")
+	}
+}
+
+func TestProviderStoreRejectsUnsyncedCreationAndRetries(t *testing.T) {
+	original := providerStoreSyncDir
+	t.Cleanup(func() { providerStoreSyncDir = original })
+	syncErr := errors.New("sync failed")
+	providerStoreSyncDir = func(string) error { return syncErr }
 
 	path := filepath.Join(t.TempDir(), providerStoreFileName)
+	for i := 0; i < 2; i++ {
+		store, err := openProviderStore(path)
+		if store != nil || !errors.Is(err, syncErr) {
+			t.Fatalf("open %d = %v, %v; want no store and sync error", i, store, err)
+		}
+	}
+	providerStoreSyncDir = original
 	store, err := openProviderStore(path)
 	if err != nil {
-		t.Fatalf("open with a failing directory sync: %s", err)
+		t.Fatalf("retry after directory sync recovers: %s", err)
 	}
 	defer store.Close()
 	if err := store.save(providerStoreBucketState, "probe", map[string]int{"count": 1}); err != nil {
-		t.Fatalf("save after a failed directory sync: %s", err)
+		t.Fatalf("save after successful directory sync: %s", err)
 	}
 }
 

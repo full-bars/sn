@@ -84,7 +84,8 @@ type extenderActivationState struct {
 	Refusals int `json:"refusals,omitempty"`
 	// LastRefusalUnix bounds the streak in time, so a refusal from weeks ago
 	// does not escalate today's.
-	LastRefusalUnix int64 `json:"last_refusal_unix,omitempty"`
+	LastRefusalUnix int64            `json:"last_refusal_unix,omitempty"`
+	RefusalAttempts map[string]int64 `json:"refusal_attempts,omitempty"`
 	// SpareFamily is the family the window's leftover post funded a retry
 	// for, and SpareAtUnix when, so one window funds one retry rather than a
 	// loop of them.
@@ -151,7 +152,8 @@ type extenderActivationLegacy struct {
 // is not bounded because an entry needs a distinct sign-in account on this
 // host, which the operator controls and a heal does not add to.
 type extenderActivationRecord struct {
-	Accounts map[string]extenderActivationState `json:"accounts,omitempty"`
+	Accounts            map[string]extenderActivationState `json:"accounts,omitempty"`
+	QuarantineUntilUnix int64                              `json:"quarantine_until_unix,omitempty"`
 	extenderActivationLegacy
 }
 
@@ -237,6 +239,31 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 	}
 	extenderActivationRecordMu.Lock()
 	defer extenderActivationRecordMu.Unlock()
+	// Held from the read of the refusals to the commit that charges them, so
+	// no refusal is published in between (lockExtenderRefusalBarrier).
+	release, err := lockExtenderRefusalBarrier()
+	defer release()
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+		return err
+	}
+	now := time.Now()
+	snapshot, err := snapshotExtenderRefusals(now)
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+		return err
+	}
+	pending := snapshot.ops
+	holdUntil, err := providerStoreRecoveryUntil(store.path, now)
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+		return err
+	}
+	if extenderAdmissionSnapshotHook != nil {
+		extenderAdmissionSnapshotHook()
+	}
+	var waits []time.Duration
+	var spares []extenderActivationFamily
 	var record extenderActivationRecord
 	err = store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
 		if !found {
@@ -246,12 +273,42 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 			record.Accounts = map[string]extenderActivationState{}
 		}
 		record.adoptLegacy(account)
+		if record.QuarantineUntilUnix < holdUntil {
+			record.QuarantineUntilUnix = holdUntil
+		}
+		waits, spares = waits[:0], spares[:0]
+		// What a callback decided but the store has not kept is applied
+		// before anything else decides, in the order it was decided, so no
+		// transaction can admit past a refusal.
+		for _, op := range pending {
+			key := extenderActivationAccountKey(op.account)
+			switch op.kind {
+			case extenderOpSpare:
+				if record.spendSpare(key, op.at, op.family) {
+					spares = append(spares, op.family)
+				}
+			case extenderOpSuccess:
+				record.clearRefusal(key, op.at)
+			default:
+				waits = append(waits, record.applyRefusal(key, op.attempt, now))
+			}
+		}
 		return mutate(&record)
 	})
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
+		return err
 	}
-	return err
+	settleExtenderRefusals(snapshot)
+	for _, family := range spares {
+		tlog("[extender] activation failed on %s; the leftover post funds one retry\n", family)
+	}
+	for _, wait := range waits {
+		if wait > 0 {
+			tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
+		}
+	}
+	return nil
 }
 
 // adoptLegacy moves a pre-account record onto the account. The old record
@@ -318,6 +375,16 @@ func mergeExtenderActivationState(state, pending extenderActivationState, now ti
 	}
 	if now.Unix() < pending.BackoffUntilUnix && state.BackoffUntilUnix < pending.BackoffUntilUnix {
 		state.BackoffUntilUnix = pending.BackoffUntilUnix
+	}
+	if len(pending.RefusalAttempts) > 0 {
+		if state.RefusalAttempts == nil {
+			state.RefusalAttempts = make(map[string]int64)
+		}
+		for attempt, at := range pending.RefusalAttempts {
+			if state.RefusalAttempts[attempt] < at {
+				state.RefusalAttempts[attempt] = at
+			}
+		}
 	}
 	stateLive := extenderRefusalStreakLive(state, now)
 	pendingLive := extenderRefusalStreakLive(pending, now)
@@ -399,6 +466,8 @@ func decideExtenderActivationOn(record *extenderActivationRecord, account string
 	state := record.Accounts[account]
 	used = pruneExtenderAttempts(&state, now, extenderActivationWindow)
 	switch {
+	case now.Unix() < record.QuarantineUntilUnix:
+		wait = time.Duration(record.QuarantineUntilUnix-now.Unix()) * time.Second
 	case now.Unix() < state.BackoffUntilUnix:
 		wait = time.Duration(state.BackoffUntilUnix-now.Unix()) * time.Second
 	case extenderActivationBudget < used+posts:
@@ -456,26 +525,35 @@ func extenderActivationSpendSpare(now time.Time, userId string, pass extenderAct
 	account := extenderActivationAccountKey(userId)
 	var spent bool
 	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
-		record.adoptUnidentified(account, now)
-		state := record.Accounts[account]
-		used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
-		switch {
-		case 0 < state.SpareAtUnix && now.Sub(time.Unix(state.SpareAtUnix, 0)) < extenderActivationWindow:
-		case now.Unix() < state.BackoffUntilUnix:
-		case extenderActivationBudget <= used:
-		default:
-			state.Attempts = append(state.Attempts, now.Unix())
-			state.SpareFamily = string(family)
-			state.SpareAtUnix = now.Unix()
-			spent = true
-		}
-		record.Accounts[account] = state
+		spent = record.spendSpare(account, now, family)
 		return nil
 	})
 	if err != nil || !spent {
 		return "", false
 	}
 	return family, true
+}
+
+// spendSpare is the budget's side of extenderActivationSpendSpare, run inside
+// the transaction that records it. It reports whether the spare was spent.
+func (record *extenderActivationRecord) spendSpare(account string, now time.Time, family extenderActivationFamily) bool {
+	record.adoptUnidentified(account, now)
+	state := record.Accounts[account]
+	used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
+	spent := false
+	switch {
+	case 0 < state.SpareAtUnix && now.Sub(time.Unix(state.SpareAtUnix, 0)) < extenderActivationWindow:
+	case now.Unix() < record.QuarantineUntilUnix:
+	case now.Unix() < state.BackoffUntilUnix:
+	case extenderActivationBudget <= used:
+	default:
+		state.Attempts = append(state.Attempts, now.Unix())
+		state.SpareFamily = string(family)
+		state.SpareAtUnix = now.Unix()
+		spent = true
+	}
+	record.Accounts[account] = state
+	return spent
 }
 
 // recordExtenderActivationRefused persists the wait a refusal implies for one
@@ -490,27 +568,14 @@ func recordExtenderActivationRefused(now time.Time, userId string) time.Duration
 // that also says whether the refusal reached the store. A caller that holds the
 // refusal in memory only can then try again when the store comes back.
 func recordExtenderActivationRefusedPersisted(now time.Time, userId string) (time.Duration, bool) {
+	return recordExtenderActivationRefusedOnce(now, userId, "")
+}
+
+func recordExtenderActivationRefusedOnce(now time.Time, userId, attempt string) (time.Duration, bool) {
 	account := extenderActivationAccountKey(userId)
 	wait := extenderRefusalBackoff
 	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
-		state := record.Accounts[account]
-		// A streak that has gone quiet starts over: refusals spread across weeks
-		// are not one escalating incident.
-		if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
-			state.Refusals = 0
-		}
-		state.Refusals++
-		state.LastRefusalUnix = now.Unix()
-		wait = extenderRefusalBackoff
-		for i := 1; i < state.Refusals; i++ {
-			wait *= 2
-			if extenderRefusalBackoffMax <= wait {
-				wait = extenderRefusalBackoffMax
-				break
-			}
-		}
-		state.BackoffUntilUnix = now.Add(wait).Unix()
-		record.Accounts[account] = state
+		wait = record.applyRefusal(account, attempt, now)
 		return nil
 	})
 	if err != nil {
@@ -519,30 +584,75 @@ func recordExtenderActivationRefusedPersisted(now time.Time, userId string) (tim
 	return wait, true
 }
 
+// applyRefusal charges one refusal to account and returns the wait it sets. An
+// attempt already charged is not charged again and returns no wait.
+func (record *extenderActivationRecord) applyRefusal(account, attempt string, now time.Time) time.Duration {
+	state := record.Accounts[account]
+	if attempt != "" {
+		if state.RefusalAttempts == nil {
+			state.RefusalAttempts = make(map[string]int64)
+		}
+		for key, at := range state.RefusalAttempts {
+			if now.Sub(time.Unix(at, 0)) > extenderRefusalDecay {
+				delete(state.RefusalAttempts, key)
+			}
+		}
+		if _, exists := state.RefusalAttempts[attempt]; exists {
+			return 0
+		}
+		state.RefusalAttempts[attempt] = now.Unix()
+	}
+	// A streak that has gone quiet starts over: refusals spread across weeks
+	// are not one escalating incident.
+	if state.LastRefusalUnix > 0 && now.Sub(time.Unix(state.LastRefusalUnix, 0)) > extenderRefusalDecay {
+		state.Refusals = 0
+	}
+	state.Refusals++
+	state.LastRefusalUnix = now.Unix()
+	wait := extenderRefusalBackoff
+	for i := 1; i < state.Refusals; i++ {
+		wait *= 2
+		if extenderRefusalBackoffMax <= wait {
+			wait = extenderRefusalBackoffMax
+			break
+		}
+	}
+	state.BackoffUntilUnix = now.Add(wait).Unix()
+	record.Accounts[account] = state
+	return wait
+}
+
 // recordExtenderActivationSucceeded clears refusal and spare state, adopts
 // unidentified attempts and preserves every counted post.
 func recordExtenderActivationSucceeded(userId string) {
 	account := extenderActivationAccountKey(userId)
+	now := time.Now()
 	_ = mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
-		// A success clears the refusal and the spare, not the window. The
-		// operator records every allowed attempt and only ages them out, so
-		// wiping Attempts here would tell the next gate it has a full budget
-		// while the operator still counts this hour's posts.
-		//
-		// Adopting comes first: it can restore a live hold from the
-		// unidentified entry, and the clear below has to be the last word on
-		// the refusal and backoff fields.
-		record.adoptUnidentified(account, time.Now())
-		if state, ok := record.Accounts[account]; ok {
-			state.Refusals = 0
-			state.LastRefusalUnix = 0
-			state.BackoffUntilUnix = 0
-			state.SpareFamily = ""
-			state.SpareAtUnix = 0
-			record.Accounts[account] = state
-		}
+		record.clearRefusal(account, now)
 		return nil
 	})
+}
+
+// clearRefusal is the budget's side of recordExtenderActivationSucceeded, run
+// inside the transaction that records it.
+func (record *extenderActivationRecord) clearRefusal(account string, now time.Time) {
+	// A success clears the refusal and the spare, not the window. The
+	// operator records every allowed attempt and only ages them out, so
+	// wiping Attempts here would tell the next gate it has a full budget
+	// while the operator still counts this hour's posts.
+	//
+	// Adopting comes first: it can restore a live hold from the
+	// unidentified entry, and the clear below has to be the last word on
+	// the refusal and backoff fields.
+	record.adoptUnidentified(account, now)
+	if state, ok := record.Accounts[account]; ok {
+		state.Refusals = 0
+		state.LastRefusalUnix = 0
+		state.BackoffUntilUnix = 0
+		state.SpareFamily = ""
+		state.SpareAtUnix = 0
+		record.Accounts[account] = state
+	}
 }
 
 // extenderActivationGate decides the direct slot's extender role once per
@@ -617,6 +727,19 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 var extenderUncountedLaunchUsed atomic.Bool
 
 func allowUncountedExtenderLaunch(cause error) bool {
+	release, err := lockExtenderRefusalBarrier()
+	defer release()
+	if err != nil {
+		tlog("[extender] extender role off: refusal barrier unavailable (%v)\n", err)
+		return false
+	}
+	// The allowance covers a budget nobody can read, not a refusal somebody
+	// decided: one that is held, journaled or replaced by a hold still sets
+	// the operator's wait.
+	if held := extenderRefusalBlocksUncountedLaunch(time.Now()); held != nil {
+		tlog("[extender] extender role off: activation budget unavailable (%v); no uncounted launch while %v\n", cause, held)
+		return false
+	}
 	if !extenderUncountedLaunchUsed.CompareAndSwap(false, true) {
 		tlog("[extender] extender role off: activation budget unavailable (%v); uncounted launch already used in this process\n", cause)
 		return false

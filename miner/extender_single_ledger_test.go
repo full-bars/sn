@@ -20,7 +20,7 @@ func resetUncountedExtenderForTest(t *testing.T) {
 	t.Cleanup(func() { extenderUncountedLaunchUsed.Store(false) })
 }
 
-func TestExtenderUnreadableLedgerAllowsOneLaunchPerProcess(t *testing.T) {
+func TestExtenderUnreadableLedgerWithholdsLaunch(t *testing.T) {
 	testExtenderState(t)
 	resetUncountedExtenderForTest(t)
 	dir, err := providerStateDir()
@@ -40,13 +40,10 @@ func TestExtenderUnreadableLedgerAllowsOneLaunchPerProcess(t *testing.T) {
 	if first.decideAtStart() {
 		t.Fatal("unavailable startup verdict was not withheld")
 	}
-	if !first.allowLaunch() {
-		t.Fatal("first uncounted launch refused")
+	if first.allowLaunch() || second.allowLaunch() || extenderUncountedLaunchUsed.Load() {
+		t.Fatal("an unavailable existing ledger allowed an uncounted launch")
 	}
-	if second.allowLaunch() || first.allowLaunch() {
-		t.Fatal("more than one uncounted launch allowed across gates")
-	}
-	if !strings.Contains(log.String(), "timeout") || !strings.Contains(log.String(), "uncounted launch") || strings.Contains(log.String(), "activation held:") {
+	if !strings.Contains(log.String(), "timeout") || !strings.Contains(log.String(), "unavailable state store") {
 		t.Fatalf("misleading log: %s", log.String())
 	}
 	if err := locked.Close(); err != nil {
@@ -71,6 +68,35 @@ func TestExtenderUnreadableLedgerAllowsOneLaunchPerProcess(t *testing.T) {
 	}
 }
 
+func TestUncountedLaunchCannotPassCommittedRefusalInLockedStore(t *testing.T) {
+	testExtenderState(t)
+	resetUncountedExtenderForTest(t)
+	store := providerStoreInstance()
+	if store == nil {
+		t.Fatal("open store")
+	}
+	now := time.Now()
+	record := extenderActivationRecord{Accounts: map[string]extenderActivationState{
+		extenderTestAccountA: {Refusals: 1, LastRefusalUnix: now.Unix(), BackoffUntilUnix: now.Add(time.Hour).Unix()},
+	}}
+	if err := store.save(providerStoreBucketState, providerStoreKeyExtenderActivation, record); err != nil {
+		t.Fatal(err)
+	}
+	closeProviderStore()
+	dir, err := providerStateDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	locked, err := bbolt.Open(filepath.Join(dir, providerStoreFileName), 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer locked.Close()
+	if newExtenderActivationGate().allowLaunch() {
+		t.Fatal("uncounted launch bypassed a committed refusal in an unavailable store")
+	}
+}
+
 func TestExtenderReadableLedgerRefusesAtCap(t *testing.T) {
 	testExtenderState(t)
 	resetUncountedExtenderForTest(t)
@@ -92,6 +118,7 @@ func TestExtenderReadableLedgerRefusesAtCap(t *testing.T) {
 }
 
 func TestExtenderUncountedAllowanceIsAtomic(t *testing.T) {
+	testExtenderState(t)
 	resetUncountedExtenderForTest(t)
 	var successes atomic.Int32
 	var wg sync.WaitGroup
@@ -174,5 +201,51 @@ func TestExtenderIgnoresObsoleteFallbackFile(t *testing.T) {
 	}
 	if extenderUncountedLaunchUsed.Load() {
 		t.Fatal("obsolete file caused uncounted launch")
+	}
+}
+
+// The barrier keeps a newly published refusal ahead of an uncounted decision.
+func TestUncountedLaunchWaitsForRefusalBarrier(t *testing.T) {
+	testExtenderState(t)
+	resetUncountedExtenderForTest(t)
+	release, err := lockExtenderRefusalBarrier()
+	if err != nil {
+		t.Fatal(err)
+	}
+	started := make(chan struct{})
+	done := make(chan bool, 1)
+	go func() {
+		close(started)
+		done <- allowUncountedExtenderLaunch(errors.New("unavailable"))
+	}()
+	<-started
+	extenderRefusalsHeld.mu.Lock()
+	queueExtenderOpLocked(extenderPendingOp{kind: extenderOpRefusal, account: extenderTestAccountA, attempt: "scope.barrier", at: time.Now()})
+	extenderRefusalsHeld.mu.Unlock()
+	release()
+	if <-done {
+		t.Fatal("uncounted launch passed a refusal published under the barrier")
+	}
+}
+
+func TestUncountedLaunchIsClosedByAHeldRefusal(t *testing.T) {
+	testExtenderState(t)
+	resetUncountedExtenderForTest(t)
+	dir, err := providerStateDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	locked, err := bbolt.Open(filepath.Join(dir, providerStoreFileName), 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer locked.Close()
+	failJournalRename(t)
+	holdExtenderRefusal(extenderTestAccountA, "scope.2501")
+	if newExtenderActivationGate().allowLaunch() {
+		t.Fatal("the uncounted launch posted past a refusal this process holds")
+	}
+	if extenderUncountedLaunchUsed.Load() {
+		t.Fatal("the held refusal spent the process's uncounted launch")
 	}
 }

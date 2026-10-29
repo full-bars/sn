@@ -119,3 +119,48 @@ func TestSyncReportsAClosedDescriptor(t *testing.T) {
 		t.Fatalf("a closed descriptor is not a directory-kind refusal: %v", err)
 	}
 }
+
+// Rename is the one call that assures a durable name on every platform, so it
+// must replace what is there and leave nothing under the old name.
+func TestRenamePublishesAndReplaces(t *testing.T) {
+	if !crashDurableRename {
+		t.Skip("this platform refuses Rename; see TestRenameRefusesWhereTheGuaranteeIsMissing")
+	}
+	dir := t.TempDir()
+	from, to := filepath.Join(dir, ".tmp-marker"), filepath.Join(dir, "marker")
+	if err := os.WriteFile(to, []byte("old"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(from, []byte("new"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := Rename(from, to); err != nil {
+		t.Fatal("rename:", err)
+	}
+	if data, err := os.ReadFile(to); err != nil || string(data) != "new" {
+		t.Fatalf("published %q, %v; want the new contents", data, err)
+	}
+	if _, err := os.Stat(from); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("old name still present: %v", err)
+	}
+	if err := Rename(from, to); err == nil {
+		t.Fatal("renaming a missing file was reported as durable")
+	}
+}
+
+// A platform without a crash-durable rename must fail the call before any
+// move, so a caller that needs the guarantee fails closed instead of reading
+// a nil as durable.
+func TestRenameRefusesWhereTheGuaranteeIsMissing(t *testing.T) {
+	moved := false
+	err := rename("from", "to", false, func(string, string) error { moved = true; return nil })
+	if !errors.Is(err, ErrNotCrashDurable) {
+		t.Fatalf("rename without the guarantee = %v, want ErrNotCrashDurable", err)
+	}
+	if moved {
+		t.Fatal("the refused rename still moved the file")
+	}
+	if err := rename("from", "to", true, func(string, string) error { moved = true; return nil }); err != nil || !moved {
+		t.Fatalf("rename with the guarantee = %v (moved %t), want it performed", err, moved)
+	}
+}

@@ -41,7 +41,16 @@ func testExtenderState(t *testing.T) {
 	t.Helper()
 	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	closeProviderStore()
-	t.Cleanup(closeProviderStore)
+	resetExtenderRefusals()
+	// A test that reads the record straight after a callback expects the
+	// callback to have written it; the tests of the pace set their own.
+	paced := extenderPersistPace.Load()
+	extenderPersistPace.Store(0)
+	t.Cleanup(func() {
+		extenderPersistPace.Store(paced)
+		resetExtenderRefusals()
+		closeProviderStore()
+	})
 }
 
 // extenderTestAccount names the nth account of a test that churns sign-ins.
@@ -862,7 +871,7 @@ func TestProviderStoreReleaseRefusesAReopenAndReportsLostWrites(t *testing.T) {
 
 // A refusal the store could not take must not be forgotten. The attempt is
 // marked handled before the write, so when the write fails and the store comes
-// back, the next observation of the same attempt has to charge it.
+// back, the refusal is still held and the next budget decision charges it.
 func TestExtenderActivationRefusalSurvivesATransientStoreFailure(t *testing.T) {
 	testExtenderState(t)
 	const account = extenderTestAccountA
@@ -887,6 +896,9 @@ func TestExtenderActivationRefusalSurvivesATransientStoreFailure(t *testing.T) {
 	redelivered := *status
 	redelivered.Listening = false
 	listener.ExtenderProvideStatusChanged(&redelivered)
+	// The redelivery is paced and does not write; the next admission keeps
+	// the refusal before it decides.
+	extenderActivationAllow(time.Now(), 1, account)
 
 	record, err := readExtenderActivationRecord(account)
 	if err != nil {

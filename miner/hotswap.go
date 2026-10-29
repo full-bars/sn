@@ -301,6 +301,15 @@ type readyResult struct {
 // ACK, confirming the candidate has assumed live traffic. Returns nil on
 // success, or kills the session and returns an error on failure/timeout.
 func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID int) error {
+	// A refusal decided but not yet kept is committed or journaled before the
+	// candidate can act: once the store is released this process cannot
+	// commit it, and the candidate reads only what is on disk. Sealing also
+	// has any refusal decided from here on journaled at once, so none waits
+	// in this process's memory while the candidate decides.
+	if err := sealExtenderRefusals(); err != nil {
+		hotswapLog("❌ [hotswap] Not handing off: %v. Aborting handoff; live provider retained.\n", err)
+		return errors.Join(err, abortBatonHandoff(session))
+	}
 	// Give provider_state.db up before the candidate can act on TAKEOVER. The
 	// candidate touches no provider state until this message (run.go runs the
 	// handshake before the provider run starts), so its first store open lands
@@ -353,6 +362,7 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 // serving, so leaving the store released would fail every state write for the
 // rest of its life.
 func abortBatonHandoff(session *HotswapParentSession) error {
+	unsealExtenderRefusals()
 	// Kill the candidate first: if it already opened the file, its exit
 	// releases the bbolt lock the reopen waits on.
 	session.Kill()
@@ -489,6 +499,9 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 		case <-ctx.Done():
 		}
 
+		// A refusal that arrived after the store was released is journaled
+		// before the parent goes, or the parent stays.
+		waitExtenderRefusalsDurable("hotswap drain")
 		flushRetentionEvents()
 		// Parent exits via os.Exit here, which skips the graceful shutdown
 		// persist: push any entries recorded during the drain window to
@@ -865,6 +878,16 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 	if getpidFunc() == 1 || isDocker {
 		hotswapLog("⚡ [hotswap] Docker container detected: candidate pre-flight verified -> preparing in-place execve\n")
 
+		// execve ends this image and its memory with it, so a decided refusal
+		// must be in the store or a file first, the same gate as the baton
+		// handoff. Nothing has been given up yet, so the canary is simply
+		// stopped and the live provider retained.
+		if err := sealExtenderRefusals(); err != nil {
+			hotswapLog("❌ [hotswap] Not handing off: %v. Aborting handoff; live provider retained.\n", err)
+			session.Kill()
+			return err
+		}
+
 		// 1. Tell canary child it's done so it exits cleanly (with bounded timeout)
 		if err := writeHotswapMessage(session.Writer, HotswapMessage{
 			Type:    HotswapMsgCanaryDone,
@@ -888,6 +911,16 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 			session.Kill()
 		}
 		session.Close()
+
+		// A refusal decided while the canary stopped was journaled as it
+		// arrived, or holds the barrier until it is (keepSealedRefusal).
+		// Nothing has been torn down yet, so one that is still only in memory
+		// stops the exec here and the live provider keeps serving.
+		if err := awaitExtenderRefusalsDurable(time.Now().Add(extenderRefusalGateDeadline)); err != nil {
+			hotswapLog("❌ [hotswap] Not executing: %v. Aborting handoff; live provider retained.\n", err)
+			unsealExtenderRefusals()
+			return err
+		}
 
 		// 2. Commit the handoff: record+flush before execve — execve
 		// replaces the process image, so the in-memory audit ring vanishes
@@ -936,7 +969,17 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		// image would die of SIGPIPE on its first write.
 		restoreStdioBeforeExecFunc()
 
-		if err := execInPlaceFunc(exe, args, cleanEnv); err != nil {
+		// Hold the barrier through exec. If teardown produced a refusal that
+		// cannot be kept, do not replace the image and discard it.
+		releaseRefusals, refusalsErr := quiesceExtenderRefusalsForExec(time.Now().Add(extenderRefusalGateDeadline))
+		if refusalsErr != nil {
+			releaseRefusals()
+			unsealExtenderRefusals()
+			return fmt.Errorf("in-place hotswap aborted after teardown: %w", refusalsErr)
+		}
+		err := execInPlaceFunc(exe, args, cleanEnv)
+		releaseRefusals()
+		if err != nil {
 			hotswapLog("CRITICAL [hotswap] syscall.Exec failed: %v\n", err)
 			critLog("FATAL: syscall.Exec failed during hotswap: %v", err)
 			captureIncidentBundle(incidentTriggerRestart, "syscall.Exec failed during hotswap: "+err.Error(), nil)

@@ -15,9 +15,10 @@ import (
 // flush; it is not a verdict on the caller's own access, which is why
 // elevation does not resolve it.
 //
-// This package makes no directory-durability claim on Windows. Absorbing the
-// refusal is how a caller is allowed to proceed rather than being stopped by a
-// primitive the platform does not have.
+// This package makes no directory-durability claim for Sync on Windows.
+// Absorbing the refusal is how a caller is allowed to proceed rather than being
+// stopped by a primitive the platform does not have. A caller that needs a
+// durable name uses Rename, which is write-through here.
 //
 // The descriptor is already known to be a directory; Sync refuses anything
 // else before reaching this point, so a file can never be certified here.
@@ -52,4 +53,16 @@ func absorbable(err error) bool {
 		}
 	}
 	return false
+}
+
+// crashDurableRename is false: no Windows call is documented to make a rename
+// inside one volume survive a power loss. MoveFileEx with
+// MOVEFILE_WRITE_THROUGH flushes a move done as copy and delete, and
+// FlushFileBuffers on a directory is refused, so a rename here could be
+// absent after a crash although it returned. Rename reports that instead of
+// certifying it.
+const crashDurableRename = false
+
+func renameDurably(oldpath, newpath string) error {
+	return ErrNotCrashDurable
 }
