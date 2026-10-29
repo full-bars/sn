@@ -153,9 +153,11 @@ type extenderActivationLegacy struct {
 // host, which the operator controls and a heal does not add to.
 type extenderActivationRecord struct {
 	Accounts map[string]extenderActivationState `json:"accounts,omitempty"`
-	// FallbackStamp is the newest fallback ledger already merged into Accounts
-	// (extender_fallback.go), so a merge is applied once.
-	FallbackStamp int64 `json:"fallback_stamp,omitempty"`
+	// FallbackEpoch and FallbackSeq are the last entry of the fallback log
+	// already merged into Accounts (extender_fallback.go), so an entry is
+	// applied once however the process that merged it ended.
+	FallbackEpoch string `json:"fallback_epoch,omitempty"`
+	FallbackSeq   int64  `json:"fallback_seq,omitempty"`
 	extenderActivationLegacy
 }
 
@@ -229,6 +231,10 @@ func extenderActivationRecordForAccount(account string) (extenderActivationRecor
 	return record, nil
 }
 
+// extenderFallbackMergedHook runs after a merge has committed and before the
+// fallback file is dealt with, the point a crash must survive. Tests only.
+var extenderFallbackMergedHook func()
+
 // mutateExtenderActivationRecord is the budget's write path: it holds the
 // package lock and the cross-process ledger lock for the whole decision and
 // mutates inside one store transaction. A fallback ledger found under the lock
@@ -251,7 +257,6 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 		return err
 	}
 	defer unlock()
-	// The real ledger decides even when the fallback file cannot be read.
 	var fallback extenderFallbackRecord
 	var fallbackPath string
 	var fallbackFound bool
@@ -279,6 +284,9 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
 		return err
+	}
+	if extenderFallbackMergedHook != nil {
+		extenderFallbackMergedHook()
 	}
 	if fallbackFound {
 		if rmErr := os.Remove(fallbackPath); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {

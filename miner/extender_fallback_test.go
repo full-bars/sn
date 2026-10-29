@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -40,7 +42,7 @@ func fallbackTestSetup(t *testing.T) (*bytes.Buffer, string) {
 
 func fallbackAttempts(t *testing.T, path, account string) int {
 	t.Helper()
-	return len(readFallbackTest(t, path).Accounts[account].Attempts)
+	return len(readFallbackTest(t, path).effective().Accounts[account].Attempts)
 }
 
 func realAttempts(t *testing.T, account string) (int, extenderActivationState) {
@@ -429,4 +431,109 @@ func TestExtenderLaunchReportsCauseOfWithheldBudget(t *testing.T) {
 			t.Fatalf("released store wrote a fallback: %v", err)
 		}
 	})
+}
+
+// A fallback file written by the first build is a launch log. Its launches
+// still count after an upgrade; reading it as empty would loosen the cap
+// exactly when the deployment lands.
+func TestExtenderFallbackLegacyFileCounted(t *testing.T) {
+	_, path := fallbackTestSetup(t)
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now()
+	legacy := fmt.Sprintf(`{"launches":[{"unix":%d,"posts":4}]}`, now.Unix())
+	if err := os.WriteFile(path, []byte(legacy), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if allow, _, used, err := decideExtenderFallback(now, 2, ""); err != nil || allow || used != 4 {
+		t.Fatalf("fallback ignored the legacy launches: allow=%v used=%d err=%v", allow, used, err)
+	}
+	if allow, _, used, err := extenderActivationDecision(now, 2, ""); err != nil || allow || used != 4 {
+		t.Fatalf("recovery dropped the legacy launches: allow=%v used=%d err=%v", allow, used, err)
+	}
+	if got, _ := realAttempts(t, extenderActivationUnidentifiedAccount); got != 4 {
+		t.Fatalf("real record holds %d posts, want the 4 the legacy file carried", got)
+	}
+}
+
+// A record whose shape is not understood is spending-unknown, not zero.
+func TestExtenderFallbackUnknownShapeCountedAsSpent(t *testing.T) {
+	for name, content := range map[string]string{
+		"garbage":        "not json",
+		"future version": `{"version":99,"epoch":"x"}`,
+		"empty object":   `{}`,
+		"oversize":       strings.Repeat(" ", extenderFallbackMaxBytes+1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, path := fallbackTestSetup(t)
+			if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, []byte(content), 0600); err != nil {
+				t.Fatal(err)
+			}
+			now := time.Now()
+			if allow, _, _, err := decideExtenderFallback(now, 1, ""); err != nil || allow {
+				t.Fatalf("fallback treated an unknown record as zero: allow=%v err=%v", allow, err)
+			}
+			if allow, _, _, err := extenderActivationDecision(now, 1, ""); err != nil || allow {
+				t.Fatalf("recovery treated an unknown record as zero: allow=%v err=%v", allow, err)
+			}
+			matches, _ := filepath.Glob(path + ".unknown.*")
+			if len(matches) != 0 {
+				t.Fatalf("unknown record kept without a write to replace it: %v", matches)
+			}
+		})
+	}
+}
+
+// The process dies after the merge committed and before the file was dealt
+// with. The log that is left must not count twice, even when a fallback launch
+// appends to it before the store returns.
+func TestExtenderLedgerMergeSurvivesKillBetweenCommitAndRemoval(t *testing.T) {
+	_, path := fallbackTestSetup(t)
+	now := time.Now()
+	locked := lockedStore(t)
+	if allow, _, _, err := decideExtenderFallback(now, 2, ""); err != nil || !allow {
+		t.Fatalf("fallback: allow=%v err=%v", allow, err)
+	}
+	_ = locked.Close()
+	closeProviderStore()
+
+	child := exec.Command(os.Args[0], "-test.run=^TestExtenderLedgerKillChild$", "-test.count=1")
+	child.Env = append(os.Environ(), "URNETWORK_TEST_EXTENDER_KILL_CHILD=1")
+	output, err := child.CombinedOutput()
+	var exit *exec.ExitError
+	if !errors.As(err, &exit) || exit.ExitCode() != 7 {
+		t.Fatalf("child did not die at the hook: %v\n%s", err, output)
+	}
+	if _, statErr := os.Stat(path); statErr != nil {
+		t.Fatalf("the killed merge left no file to replay: %v", statErr)
+	}
+
+	locked = lockedStore(t)
+	if allow, _, _, err := decideExtenderFallback(now, 1, ""); err != nil || !allow {
+		t.Fatalf("fallback after the crash: allow=%v err=%v", allow, err)
+	}
+	_ = locked.Close()
+	closeProviderStore()
+	if _, _, _, err := extenderActivationDecision(now, 0, ""); err != nil {
+		t.Fatal(err)
+	}
+	// 2 merged before the crash, 1 spent by the child, 1 spent after it.
+	if got, _ := realAttempts(t, extenderActivationUnidentifiedAccount); got != 4 {
+		t.Fatalf("real posts=%d want 4: an entry that was already merged counted again", got)
+	}
+}
+
+// The child decides one launch against the real store and is killed right after
+// the merge commits.
+func TestExtenderLedgerKillChild(t *testing.T) {
+	if os.Getenv("URNETWORK_TEST_EXTENDER_KILL_CHILD") == "" {
+		return
+	}
+	extenderFallbackMergedHook = func() { os.Exit(7) }
+	_, _, _, _ = extenderActivationDecision(time.Now(), 1, "")
+	t.Fatal("the hook did not end the process")
 }
