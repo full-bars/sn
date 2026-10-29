@@ -114,7 +114,7 @@ func TestHeldRefusalSurvivesTheProcess(t *testing.T) {
 	if err != nil || record.Accounts[extenderTestAccountA].Refusals != 1 {
 		t.Fatalf("the next process did not keep the refusal: %+v, %v", record, err)
 	}
-	if onDisk, err := readExtenderRefusalJournal(time.Now()); err != nil || len(onDisk) != 0 {
+	if onDisk, _, err := readExtenderRefusalJournal(time.Now()); err != nil || len(onDisk) != 0 {
 		t.Fatalf("held refusals left on disk after they were kept: %v, %v", onDisk, err)
 	}
 	// Charged once: a second process reading the same file again finds nothing.
@@ -153,6 +153,7 @@ func TestStatusCallbacksDoNotDriveRefusalWrites(t *testing.T) {
 	if providerStoreInstance() == nil {
 		t.Fatal("store did not open")
 	}
+	extenderPersistPace = time.Hour
 	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
 	releaseProviderStore()
 	before := extenderRefusalWriteAttempts.Load()

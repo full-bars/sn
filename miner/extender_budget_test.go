@@ -41,7 +41,12 @@ func testExtenderState(t *testing.T) {
 	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
 	closeProviderStore()
 	resetExtenderRefusals()
+	// A test that reads the record straight after a callback expects the
+	// callback to have written it; the tests of the pace set their own.
+	paced := extenderPersistPace
+	extenderPersistPace = 0
 	t.Cleanup(func() {
+		extenderPersistPace = paced
 		resetExtenderRefusals()
 		closeProviderStore()
 	})

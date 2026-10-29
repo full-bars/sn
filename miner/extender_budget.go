@@ -255,15 +255,17 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 		return err
 	}
 	now := time.Now()
-	pending, err := snapshotExtenderRefusals(now)
+	snapshot, err := snapshotExtenderRefusals(now)
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
 		return err
 	}
+	pending := snapshot.ops
 	if extenderAdmissionSnapshotHook != nil {
 		extenderAdmissionSnapshotHook()
 	}
 	var waits []time.Duration
+	var spares []extenderActivationFamily
 	var record extenderActivationRecord
 	err = store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
 		if !found {
@@ -273,11 +275,22 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 			record.Accounts = map[string]extenderActivationState{}
 		}
 		record.adoptLegacy(account)
-		waits = waits[:0]
-		// A refusal decided but not yet kept is charged before anything
-		// else decides, so no transaction can admit past it.
-		for _, refusal := range pending {
-			waits = append(waits, record.applyRefusal(extenderActivationAccountKey(refusal.account), refusal.attempt, now))
+		waits, spares = waits[:0], spares[:0]
+		// What a callback decided but the store has not kept is applied
+		// before anything else decides, in the order it was decided, so no
+		// transaction can admit past a refusal.
+		for _, op := range pending {
+			key := extenderActivationAccountKey(op.account)
+			switch op.kind {
+			case extenderOpSpare:
+				if record.spendSpare(key, op.at, op.family) {
+					spares = append(spares, op.family)
+				}
+			case extenderOpSuccess:
+				record.clearRefusal(key, op.at)
+			default:
+				waits = append(waits, record.applyRefusal(key, op.attempt, now))
+			}
 		}
 		return mutate(&record)
 	})
@@ -285,7 +298,10 @@ func mutateExtenderActivationRecord(account string, mutate func(*extenderActivat
 		warnExtenderBudgetUnavailable(account, err)
 		return err
 	}
-	settleExtenderRefusals(pending)
+	settleExtenderRefusals(snapshot)
+	for _, family := range spares {
+		tlog("[extender] activation failed on %s; the leftover post funds one retry\n", family)
+	}
 	for _, wait := range waits {
 		if wait > 0 {
 			tlog("[extender] activation refused; next attempt in %s\n", formatDuration(wait))
@@ -486,27 +502,35 @@ func extenderActivationSpendSpare(now time.Time, userId string, pass extenderAct
 	account := extenderActivationAccountKey(userId)
 	var spent bool
 	err := mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
-		record.adoptUnidentified(account, now)
-		state := record.Accounts[account]
-		used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
-		switch {
-		case 0 < state.SpareAtUnix && now.Sub(time.Unix(state.SpareAtUnix, 0)) < extenderActivationWindow:
-		case now.Unix() < record.QuarantineUntilUnix:
-		case now.Unix() < state.BackoffUntilUnix:
-		case extenderActivationBudget <= used:
-		default:
-			state.Attempts = append(state.Attempts, now.Unix())
-			state.SpareFamily = string(family)
-			state.SpareAtUnix = now.Unix()
-			spent = true
-		}
-		record.Accounts[account] = state
+		spent = record.spendSpare(account, now, family)
 		return nil
 	})
 	if err != nil || !spent {
 		return "", false
 	}
 	return family, true
+}
+
+// spendSpare is the budget's side of extenderActivationSpendSpare, run inside
+// the transaction that records it. It reports whether the spare was spent.
+func (record *extenderActivationRecord) spendSpare(account string, now time.Time, family extenderActivationFamily) bool {
+	record.adoptUnidentified(account, now)
+	state := record.Accounts[account]
+	used := pruneExtenderAttempts(&state, now, extenderActivationWindow)
+	spent := false
+	switch {
+	case 0 < state.SpareAtUnix && now.Sub(time.Unix(state.SpareAtUnix, 0)) < extenderActivationWindow:
+	case now.Unix() < record.QuarantineUntilUnix:
+	case now.Unix() < state.BackoffUntilUnix:
+	case extenderActivationBudget <= used:
+	default:
+		state.Attempts = append(state.Attempts, now.Unix())
+		state.SpareFamily = string(family)
+		state.SpareAtUnix = now.Unix()
+		spent = true
+	}
+	record.Accounts[account] = state
+	return spent
 }
 
 // recordExtenderActivationRefused persists the wait a refusal implies for one
@@ -582,26 +606,33 @@ func (record *extenderActivationRecord) applyRefusal(account, attempt string, no
 // unidentified attempts and preserves every counted post.
 func recordExtenderActivationSucceeded(userId string) {
 	account := extenderActivationAccountKey(userId)
+	now := time.Now()
 	_ = mutateExtenderActivationRecord(account, func(record *extenderActivationRecord) error {
-		// A success clears the refusal and the spare, not the window. The
-		// operator records every allowed attempt and only ages them out, so
-		// wiping Attempts here would tell the next gate it has a full budget
-		// while the operator still counts this hour's posts.
-		//
-		// Adopting comes first: it can restore a live hold from the
-		// unidentified entry, and the clear below has to be the last word on
-		// the refusal and backoff fields.
-		record.adoptUnidentified(account, time.Now())
-		if state, ok := record.Accounts[account]; ok {
-			state.Refusals = 0
-			state.LastRefusalUnix = 0
-			state.BackoffUntilUnix = 0
-			state.SpareFamily = ""
-			state.SpareAtUnix = 0
-			record.Accounts[account] = state
-		}
+		record.clearRefusal(account, now)
 		return nil
 	})
+}
+
+// clearRefusal is the budget's side of recordExtenderActivationSucceeded, run
+// inside the transaction that records it.
+func (record *extenderActivationRecord) clearRefusal(account string, now time.Time) {
+	// A success clears the refusal and the spare, not the window. The
+	// operator records every allowed attempt and only ages them out, so
+	// wiping Attempts here would tell the next gate it has a full budget
+	// while the operator still counts this hour's posts.
+	//
+	// Adopting comes first: it can restore a live hold from the
+	// unidentified entry, and the clear below has to be the last word on
+	// the refusal and backoff fields.
+	record.adoptUnidentified(account, now)
+	if state, ok := record.Accounts[account]; ok {
+		state.Refusals = 0
+		state.LastRefusalUnix = 0
+		state.BackoffUntilUnix = 0
+		state.SpareFamily = ""
+		state.SpareAtUnix = 0
+		record.Accounts[account] = state
+	}
 }
 
 // extenderActivationGate decides the direct slot's extender role once per

@@ -32,6 +32,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/urfoundation/sn/internal/durablesync"
@@ -178,6 +179,10 @@ func runProviderStoreUpdate(db *bbolt.DB, fn func(*bbolt.Tx) error) error {
 	return err
 }
 
+// providerStoreWrites counts the write transactions begun on any handle, so a
+// test can bound what a burst of callers costs the disk.
+var providerStoreWrites atomic.Int64
+
 func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
 	if s.db == nil {
 		if s.released {
@@ -185,6 +190,7 @@ func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
 		}
 		return errProviderStoreClosed
 	}
+	providerStoreWrites.Add(1)
 	err := runProviderStoreUpdate(s.db, fn)
 	// A record that would not decode is counted where it was read; no write
 	// was attempted, so it is not also a failed write.

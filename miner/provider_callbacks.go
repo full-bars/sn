@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
@@ -240,15 +239,15 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 					// The retry is funded before this failure's wait is
 					// recorded, so the wait that decides is the one already
 					// standing: a retry is not charged until it can run.
-					if family, spent := extenderActivationSpendSpare(time.Now(), self.currentAccount(), observation.activationPass()); spent {
-						tlog("[extender] activation failed on %s; the leftover post funds one retry\n", family)
+					if family, failedFamily := observation.activationPass().failedFamily(); failedFamily {
+						holdExtenderSpare(self.currentAccount(), family)
 					}
 					self.chargeActivationFailure(observation)
 				}
 			case observation.ActivatedV4 || observation.ActivatedV6:
 				// Reached only by a pass with no failed family, which is what
 				// makes a success safe to record.
-				recordExtenderActivationSucceeded(self.currentAccount())
+				holdExtenderSuccess(self.currentAccount())
 			}
 		}
 	}
