@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/docopt/docopt-go"
+	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 // proxy_manager_add_file.go ports the Workflow A half of the v33 proxyAdd
@@ -19,7 +21,8 @@ import (
 // (the --proxy_file=... the running provider reads on every reload) instead of
 // the internal config, which a file-backed reload discards. Lines already
 // present in the file are skipped (dedup by trimmed line, matching add-time
-// semantics); the file is written atomically, comments and blank lines are
+// semantics) and a line whose address and user match a stored one replaces it
+// rather than sitting beside it; the file is written atomically, comments and blank lines are
 // preserved, and a reload trigger is fired so the additions take effect
 // without a restart.
 func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
@@ -32,10 +35,23 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 
 	allKeyAddress := proxyAddCollectAddresses(opts)
 
-	// Read the existing file content, preserving comments/blank lines, and
-	// track which proxy lines are already present.
-	existing := map[string]bool{}
-	var out []string
+	// Keep an existing source's permissions when replacing it. New sources
+	// contain credentials and must not be made world-readable.
+	perm := os.FileMode(0600)
+	var owner *fileOwner
+	if info, err := os.Stat(sourcePath); err == nil {
+		perm = info.Mode().Perm()
+		owner, _ = sourceOwnerOf(info)
+	} else if !os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "proxy add: could not stat %s: %v\n", sourcePath, err)
+		return
+	}
+
+	// Read the existing file content, preserving comments and blank lines.
+	// Proxy lines are tracked by identity (address plus user): the password is
+	// not part of it, so a line with a new password is the same proxy with a
+	// changed credential and replaces the stored line.
+	var lines []proxyFileLine
 	if b, err := os.ReadFile(sourcePath); err == nil {
 		s := strings.TrimSuffix(string(b), "\n")
 		s = strings.TrimSuffix(s, "\r")
@@ -44,11 +60,10 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 				line = strings.TrimSuffix(line, "\r")
 				trimmed := strings.TrimSpace(line)
 				if trimmed == "" || strings.HasPrefix(trimmed, "#") {
-					out = append(out, line)
+					lines = append(lines, proxyFileLine{text: line})
 					continue
 				}
-				existing[trimmed] = true
-				out = append(out, line)
+				lines = append(lines, proxyFileLine{text: line, proxy: trimmed, id: proxyFileLineIdentity(trimmed)})
 			}
 		}
 	} else if !os.IsNotExist(err) {
@@ -67,13 +82,13 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 		if trimmed == "" {
 			continue
 		}
-		if existing[trimmed] {
+		var changed bool
+		lines, changed = upsertProxyFileLine(lines, trimmed)
+		address, user, password := parseProxyAddress(trimmed)
+		if !changed {
 			fmt.Printf("server %s already present in %s\n", redactProxySource(trimmed), sourcePath)
 			continue
 		}
-		existing[trimmed] = true
-		out = append(out, trimmed)
-		address, user, password := parseProxyAddress(trimmed)
 		fmt.Printf("added server %s (%s/%s)\n", address, obfuscateUser(user), obfuscatePassword(password))
 		added++
 	}
@@ -83,8 +98,12 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 		return
 	}
 
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		out[i] = l.text
+	}
 	content := strings.Join(out, "\n") + "\n"
-	if err := atomicWriteFile(sourcePath, []byte(content), 0644); err != nil {
+	if err := atomicWriteFileOwned(sourcePath, []byte(content), perm, owner); err != nil {
 		fmt.Fprintf(os.Stderr, "proxy add: could not write %s: %v\n", sourcePath, err)
 		return
 	}
@@ -123,4 +142,58 @@ func proxyAddCollectAddresses(opts docopt.Opts) []string {
 		}
 	}
 	return allKeyAddress
+}
+
+// proxyFileLine is one line of the source file. proxy is the trimmed proxy
+// entry, empty for comments and blank lines; id is its identity, empty when the
+// entry carries no user.
+type proxyFileLine struct {
+	text  string
+	proxy string
+	id    string
+}
+
+// proxyFileLineIdentity is the identity key (address plus user) of a proxy
+// line, or "" when the line has no user to tell accounts apart.
+func proxyFileLineIdentity(entry string) string {
+	address, user, _ := parseProxyAddress(entry)
+	if user == "" {
+		return ""
+	}
+	return (&connect.ProxySettings{Address: address, Auth: &proxy.Auth{User: user}}).Key()
+}
+
+// upsertProxyFileLine stores entry in lines and reports whether anything
+// changed. An entry whose identity is already stored replaces that line in
+// place and drops any other lines of the same identity; an identical single
+// line is left alone. Entries without a user are matched by exact text.
+func upsertProxyFileLine(lines []proxyFileLine, entry string) ([]proxyFileLine, bool) {
+	id := proxyFileLineIdentity(entry)
+	var matches []int
+	for i, l := range lines {
+		if l.proxy == "" {
+			continue
+		}
+		if (id != "" && l.id == id) || (id == "" && l.proxy == entry) {
+			matches = append(matches, i)
+		}
+	}
+	if len(matches) == 0 {
+		return append(lines, proxyFileLine{text: entry, proxy: entry, id: id}), true
+	}
+	if len(matches) == 1 && lines[matches[0]].proxy == entry {
+		return lines, false
+	}
+	lines[matches[0]] = proxyFileLine{text: entry, proxy: entry, id: id}
+	drop := map[int]bool{}
+	for _, i := range matches[1:] {
+		drop[i] = true
+	}
+	kept := lines[:0]
+	for i, l := range lines {
+		if !drop[i] {
+			kept = append(kept, l)
+		}
+	}
+	return kept, true
 }

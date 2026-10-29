@@ -2,6 +2,7 @@ package miner
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -521,6 +522,23 @@ func persistProxySlowRetryState(s *proxySlowRetryState) {
 // atomicWriteFile writes data to a temp file beside path and renames it into
 // place, so a crash mid-write never leaves a partial file.
 func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
+	return atomicWriteFileOwned(path, data, perm, nil)
+}
+
+// fileOwner is the uid and gid a replacement file must keep.
+type fileOwner struct {
+	uid, gid int
+}
+
+// chownFile hands a file to its owner; tests replace it.
+var chownFile = os.Chown
+
+// atomicWriteFileOwned is atomicWriteFile that also gives the replacement the
+// owner of the file it replaces. A replacement made by another user (root
+// running an admin command) would otherwise lock the original owner out of
+// its own file. If the owner cannot be set, nothing is replaced and the error
+// is returned.
+func atomicWriteFileOwned(path string, data []byte, perm os.FileMode, owner *fileOwner) error {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
@@ -542,6 +560,12 @@ func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
 	if err := os.Chmod(tmp, perm); err != nil {
 		os.Remove(tmp)
 		return err
+	}
+	if owner != nil {
+		if err := chownFile(tmp, owner.uid, owner.gid); err != nil {
+			os.Remove(tmp)
+			return fmt.Errorf("keep owner %d:%d of %s: %w", owner.uid, owner.gid, path, err)
+		}
 	}
 	return os.Rename(tmp, path)
 }

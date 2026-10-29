@@ -227,28 +227,41 @@ func proxyExclude(opts docopt.Opts) {
 		return
 	}
 
+	// The change is made on a fresh read under the proxy lock: the listing read
+	// above is only for display, and writing it back could undo a clear that
+	// ran in between.
 	if removeFlag {
-		if !removeExcludePattern(urlState, pattern) {
-			fmt.Printf("pattern %q is not in the exclude list\n", pattern)
-			if len(urlState.ExcludePatterns) > 0 {
-				fmt.Printf("current patterns: %s\n", strings.Join(urlState.ExcludePatterns, ", "))
-			}
+		var found bool
+		var current []string
+		if err := updateProxyURLState(func(st *ProxyURLState) bool {
+			found = removeExcludePattern(st, pattern)
+			current = st.ExcludePatterns
+			return found
+		}); err != nil {
+			fmt.Printf("could not update proxy_url.json: %v\n", err)
 			return
 		}
-		if err := writeProxyURLState(urlState); err != nil {
-			fmt.Printf("could not write proxy_url.json: %v\n", err)
+		if !found {
+			fmt.Printf("pattern %q is not in the exclude list\n", pattern)
+			if len(current) > 0 {
+				fmt.Printf("current patterns: %s\n", strings.Join(current, ", "))
+			}
 			return
 		}
 		fmt.Printf("removed exclude pattern %q - matching proxies may return on the next URL fetch\n", pattern)
 		return
 	}
 
-	if !addExcludePattern(urlState, pattern) {
-		fmt.Printf("pattern %q is already excluded\n", pattern)
+	var added bool
+	if err := updateProxyURLState(func(st *ProxyURLState) bool {
+		added = addExcludePattern(st, pattern)
+		return added
+	}); err != nil {
+		fmt.Printf("could not update proxy_url.json: %v\n", err)
 		return
 	}
-	if err := writeProxyURLState(urlState); err != nil {
-		fmt.Printf("could not write proxy_url.json: %v\n", err)
+	if !added {
+		fmt.Printf("pattern %q is already excluded\n", pattern)
 		return
 	}
 	fmt.Printf("added exclude pattern %q - future URL fetches will skip matching hosts\n", pattern)
@@ -285,7 +298,7 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 		urlState = &ProxyURLState{}
 	}
 
-	addrsBySource, display := collectMatchingProxies(
+	_, display := collectMatchingProxies(
 		pattern, proxyConfig, stateProxies, stateSource, urlState.Cache)
 
 	if len(display) == 0 {
@@ -313,24 +326,69 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 		return
 	}
 
-	if err := removeDeadProxies(state, addrsBySource); err != nil {
+	removed, err := removeMatchingProxies(pattern)
+	if err != nil {
 		fmt.Printf("removal failed: %v\n", err)
 		return
 	}
 
-	// Persist the exclude pattern so URL source refreshes cannot re-add
-	// matching proxies. Re-read to avoid clobbering the cache changes
-	// removeDeadProxies just wrote.
-	if urlState, err := readProxyURLState(); err == nil {
-		if addExcludePattern(urlState, pattern) {
-			if err := writeProxyURLState(urlState); err != nil {
-				fmt.Printf("warning: could not persist exclude pattern: %v\n", err)
-			}
+	fmt.Printf("Removed %d proxies matching %q. Pattern excluded from future URL fetches.\n", removed, pattern)
+	fmt.Println("The running provider will apply the change via hot reload (no restart).")
+}
+
+// removeMatchingProxies is the transaction behind `proxy remove --match`. The
+// proxy lock is held from the exclusion write through every removal, so a URL
+// fetch cannot merge a matching address back between the two. The exclusion is
+// written first: if the removal is interrupted, the pattern is already
+// excluded and a rerun finishes the job. The matches are collected under the
+// lock, so they reflect the stores as they are now rather than as the
+// operator's preview saw them. The reload trigger is written after unlocking
+// so the running provider can take the lock.
+func removeMatchingProxies(pattern string) (int, error) {
+	removed, err := removeMatchingProxiesLocked(pattern)
+	if err != nil {
+		return 0, err
+	}
+	if removed > 0 {
+		triggerProxyReload()
+	}
+	return removed, nil
+}
+
+// afterMatchRemovalHook runs inside the transaction once the matches are
+// gone. Tests use it to run a competing writer at that exact point.
+var afterMatchRemovalHook func()
+
+func removeMatchingProxiesLocked(pattern string) (int, error) {
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return 0, fmt.Errorf("could not acquire proxy lock: %w", err)
+	}
+	defer release()
+
+	urlState, err := readProxyURLState()
+	if err != nil {
+		return 0, fmt.Errorf("could not read the exclude patterns, nothing removed: %w", err)
+	}
+	if addExcludePattern(urlState, pattern) {
+		if err := writeProxyURLState(urlState); err != nil {
+			return 0, fmt.Errorf("could not persist exclude pattern: %w", err)
 		}
 	}
 
-	fmt.Printf("Removed %d proxies matching %q. Pattern excluded from future URL fetches.\n", len(display), pattern)
-	fmt.Println("The running provider will apply the change via hot reload (no restart).")
+	state, stateErr := readProxyState()
+	if stateErr != nil {
+		state = &ProxyState{}
+	}
+	addrsBySource, display := collectMatchingProxies(
+		pattern, readProxyConfig(), state.Proxies, state.Source, urlState.Cache)
+	if err := removeProxiesLocked(state, addrsBySource); err != nil {
+		return 0, err
+	}
+	if afterMatchRemovalHook != nil {
+		afterMatchRemovalHook()
+	}
+	return len(display), nil
 }
 
 // ---- proxy clear / remove --all ----
@@ -343,29 +401,34 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 // selected workflow, not proxy data, and a file-backed reload re-reads the
 // operator's file (v33 has the same behavior).
 //
-// The cross-process proxy lock serializes the state reset against a running
-// provider's health-snapshot write, which would otherwise clobber it and
-// silently revive the removed proxies (v33 finding #11).
+// The cross-process proxy lock covers all three stores. It serializes the reset
+// against a running provider's health-snapshot write and against a startup,
+// either of which would otherwise write an old snapshot back and silently
+// revive the removed proxies (v33 finding #11).
 func clearProxyStores() error {
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return fmt.Errorf("proxy state lock: %w", err)
+	}
+	defer release()
+	proxyStateMu.Lock()
+	defer proxyStateMu.Unlock()
+
 	proxyConfig := readProxyConfig()
 	clear(proxyConfig.Servers)
 	writeProxyConfig(proxyConfig)
 
-	if release, err := acquireProxyLockWithRetry(); err == nil {
-		proxyStateMu.Lock()
-		if state, err := readProxyState(); err == nil {
-			state.Proxies = map[string]ProxyEntry{}
-			state.NextID = 0
-			if err := writeProxyState(state); err != nil {
-				proxyStateMu.Unlock()
-				release()
-				return err
-			}
-		}
-		proxyStateMu.Unlock()
-		release()
+	// An unreadable proxy.state does not stop the URL cache reset, and it is
+	// returned: the caller must tell the operator the state was not cleared.
+	var stateErr error
+	if state, err := readProxyState(); err != nil {
+		stateErr = fmt.Errorf("proxy.state not cleared: %w", err)
 	} else {
-		fmt.Fprintf(os.Stderr, "note: could not acquire the proxy lock for the state reset (%v); the running provider will re-sync on its next snapshot\n", err)
+		state.Proxies = map[string]ProxyEntry{}
+		state.NextID = 0
+		if err := writeProxyState(state); err != nil {
+			return err
+		}
 	}
 
 	if urlState, err := readProxyURLState(); err == nil {
@@ -375,7 +438,7 @@ func clearProxyStores() error {
 			return err
 		}
 	}
-	return nil
+	return stateErr
 }
 
 // proxyClear implements `provider proxy clear` - the v33 surface the shipped
@@ -384,18 +447,17 @@ func clearProxyStores() error {
 // then triggers a reload so a running provider applies the reset without a
 // restart.
 func proxyClear(opts docopt.Opts) {
-	state, stateErr := readProxyState()
-	running := stateErr == nil && !state.StartedAt.IsZero()
-
 	previousServers := len(readProxyConfig().Servers)
 
-	if err := clearProxyStores(); err != nil {
+	err := clearProxyStores()
+	// A failed or partial clear still changed the stores a running provider
+	// reads, so the reload is triggered on every attempt, before any failure
+	// ends the command.
+	triggerProxyReload()
+	if err != nil {
 		proxyCommandFatal(77, "could not clear the proxy stores: %v", err)
 	}
 	fmt.Printf("proxy clear: removed %d internal server(s), the proxy state and the URL cache\n", previousServers)
-	if running {
-		triggerProxyReload()
-	}
 }
 
 // ---- proxy refresh ----
@@ -1016,4 +1078,42 @@ func proxyRemoveDead(opts docopt.Opts) {
 	}
 
 	fmt.Printf("Removed %d proxies. Reload triggered.\n", len(toRemove))
+}
+
+// updateProxyConfig runs change on a fresh read of the internal config while
+// holding the cross-process proxy lock, and writes it back when change reports
+// a modification. A command that reads the config before taking the lock can
+// write back a snapshot older than a clear or a startup's mirror, undoing it.
+func updateProxyConfig(change func(*ProxyConfig) bool) error {
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return fmt.Errorf("could not acquire proxy lock: %w", err)
+	}
+	defer release()
+	proxyConfig := readProxyConfig()
+	if change(proxyConfig) {
+		writeProxyConfig(proxyConfig)
+	}
+	return nil
+}
+
+// updateProxyURLState is updateProxyConfig for proxy_url.json: change sees the
+// state as it is under the lock, and a true result is written back.
+func updateProxyURLState(change func(*ProxyURLState) bool) error {
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return fmt.Errorf("could not acquire proxy lock: %w", err)
+	}
+	defer release()
+	urlState, err := readProxyURLState()
+	if err != nil {
+		return fmt.Errorf("could not read proxy_url.json: %w", err)
+	}
+	if !change(urlState) {
+		return nil
+	}
+	if err := writeProxyURLState(urlState); err != nil {
+		return fmt.Errorf("could not write proxy_url.json: %w", err)
+	}
+	return nil
 }
