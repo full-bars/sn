@@ -32,6 +32,8 @@
 * **[Miner Image](Miner-Image)**
 * **[Operator Discovery](OPERATOR-DISCOVERY)**
 * **[Network Wallet Consent](NETWORK-WALLET-CONSENT)**
+* **[Approve Your Payout Wallet](Wallet-Consent)**
+* **[Run as an Extender](Extender)**
 * **[Monitoring](Monitoring)**
 * **[Baseline Recorder](Baseline)**
 * **[Node Identity](Node-Identity)**
