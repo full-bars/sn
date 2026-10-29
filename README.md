@@ -13,7 +13,7 @@ Besides the subnet code it inherits from upstream, this fork ships a provider th
 - **`urnet-docker`:** the same kind of tool for providers that run in Docker containers. It runs on the Docker host. Released as `urnet-docker-<os>-<arch>` for Linux, macOS and Windows.
 - **Monitoring bundle:** `urnetwork-monitoring-<tag>.tar.gz` on each release, with Prometheus and Grafana for watching a fleet. See [Monitoring](docs/Monitoring.md).
 
-Release tags look like `v2026.10.22-1078667780`. Releases before the 2026.10.22 tag carried a `-meso` suffix.
+Release tags look like `v2026.10.29-1084715100-sn`. Releases before the 2026.10.22 tag carried a `-meso` suffix.
 
 ## Quick start
 

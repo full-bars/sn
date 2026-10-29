@@ -1,6 +1,6 @@
 # Changelog
 
-Releases of this fork are tagged `v<YYYY.M.D>-<build>`, where the build number derives from the tagged commit's time. Releases before 2026.10.22 carried a `-meso` suffix. Upstream (`urfoundation/sn`) publishes tags in the same shape, so the newest entry below the unreleased list, not the tag list, is the latest release of this fork.
+Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build number derives from the tagged commit's time. Releases before 2026.10.22 carried a `-meso` suffix; the `-sn` suffix marks a fork release since then (#260). Upstream (`urfoundation/sn`) publishes the same date and build shape without a suffix, so the newest entry below the unreleased list, not the tag list, is the latest release of this fork.
 
 ## [Unreleased]
 
