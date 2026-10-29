@@ -301,6 +301,13 @@ type readyResult struct {
 // ACK, confirming the candidate has assumed live traffic. Returns nil on
 // success, or kills the session and returns an error on failure/timeout.
 func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID int) error {
+	// A refusal decided but not yet kept is committed or journaled before the
+	// candidate can act: once the store is released this process cannot
+	// commit it, and the candidate reads only what is on disk.
+	if err := ensureExtenderRefusalsDurable(); err != nil {
+		hotswapLog("❌ [hotswap] Not handing off: %v. Aborting handoff; live provider retained.\n", err)
+		return errors.Join(err, abortBatonHandoff(session))
+	}
 	// Give provider_state.db up before the candidate can act on TAKEOVER. The
 	// candidate touches no provider state until this message (run.go runs the
 	// handshake before the provider run starts), so its first store open lands
@@ -489,6 +496,9 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 		case <-ctx.Done():
 		}
 
+		// A refusal that arrived after the store was released is journaled
+		// before the parent goes, or the parent stays.
+		waitExtenderRefusalsDurable("hotswap drain")
 		flushRetentionEvents()
 		// Parent exits via os.Exit here, which skips the graceful shutdown
 		// persist: push any entries recorded during the drain window to

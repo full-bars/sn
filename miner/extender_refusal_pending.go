@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -539,4 +540,52 @@ func resetExtenderRefusals() {
 	extenderRefusalsHeld.retryAt = time.Time{}
 	extenderRefusalsHeld.journalAt = time.Time{}
 	extenderRefusalsHeld.generation++
+}
+
+// extenderRefusalGateRetry paces the wait of a process that cannot end yet. A
+// variable so a test can shorten it.
+var extenderRefusalGateRetry = time.Second
+
+// extenderRefusalsAtRisk counts the refusals that are neither kept by the
+// store nor in a durable file, which is what a process end would lose.
+func extenderRefusalsAtRisk() int {
+	extenderRefusalsHeld.mu.Lock()
+	defer extenderRefusalsHeld.mu.Unlock()
+	count := 0
+	for _, op := range extenderRefusalsHeld.ops {
+		if op.kind == extenderOpRefusal && !op.journaled {
+			count++
+		}
+	}
+	return count
+}
+
+// ensureExtenderRefusalsDurable tries to commit what is held and, failing
+// that, to journal it, ignoring the pace. It fails while any refusal is still
+// neither, so a caller that is about to give up the store or the process does
+// not do it on top of a decision that only memory holds. Where the platform
+// cannot make a journal file crash-durable (durablesync.ErrNotCrashDurable)
+// only a committed refusal counts, so this fails until the store takes it.
+func ensureExtenderRefusalsDurable() error {
+	_ = keepExtenderRefusals()
+	_ = journalHeldExtenderRefusals()
+	if at := extenderRefusalsAtRisk(); at > 0 {
+		return fmt.Errorf("%d decided activation refusals are neither in the state store nor in a durable file", at)
+	}
+	return nil
+}
+
+// waitExtenderRefusalsDurable does not return while a decided refusal is only
+// in memory. A process that ends first would let its successor, or its own
+// next start, post into a wait the operator already set, and nothing would say
+// so; waiting is loud and an operator can still kill the process.
+func waitExtenderRefusalsDurable(what string) {
+	for {
+		err := ensureExtenderRefusalsDurable()
+		if err == nil {
+			return
+		}
+		tlog("⚠️ [extender] %s is waiting: %v\n", what, err)
+		time.Sleep(extenderRefusalGateRetry)
+	}
 }
