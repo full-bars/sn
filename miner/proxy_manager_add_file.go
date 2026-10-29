@@ -35,6 +35,16 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 
 	allKeyAddress := proxyAddCollectAddresses(opts)
 
+	// Keep an existing source's permissions when replacing it. New sources
+	// contain credentials and must not be made world-readable.
+	perm := os.FileMode(0600)
+	if info, err := os.Stat(sourcePath); err == nil {
+		perm = info.Mode().Perm()
+	} else if !os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "proxy add: could not stat %s: %v\n", sourcePath, err)
+		return
+	}
+
 	// Read the existing file content, preserving comments and blank lines.
 	// Proxy lines are tracked by identity (address plus user): the password is
 	// not part of it, so a line with a new password is the same proxy with a
@@ -91,7 +101,7 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 		out[i] = l.text
 	}
 	content := strings.Join(out, "\n") + "\n"
-	if err := atomicWriteFile(sourcePath, []byte(content), 0644); err != nil {
+	if err := atomicWriteFile(sourcePath, []byte(content), perm); err != nil {
 		fmt.Fprintf(os.Stderr, "proxy add: could not write %s: %v\n", sourcePath, err)
 		return
 	}

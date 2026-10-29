@@ -3,6 +3,7 @@ package miner
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -23,6 +24,15 @@ func TestProxyAddFileBackedRotatesPasswordAndBack(t *testing.T) {
 
 	for _, pw := range []string{"new", "old"} {
 		proxyAdd(parseArgsForTest(t, []string{"proxy", "add", "1.1.1.1:1080:alice:" + pw, "-f"}))
+		if runtime.GOOS != "windows" {
+			info, err := os.Stat(sourcePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := info.Mode().Perm(); got != 0600 {
+				t.Fatalf("after rotation to %s mode = %04o, want 0600", pw, got)
+			}
+		}
 
 		b, err := os.ReadFile(sourcePath)
 		if err != nil {
@@ -48,6 +58,25 @@ func TestProxyAddFileBackedRotatesPasswordAndBack(t *testing.T) {
 		if len(selected) != 1 || selected[0] != pw {
 			t.Fatalf("selected credentials for the account = %v, want just %q", selected, pw)
 		}
+	}
+}
+
+func TestProxyAddFileBackedCreatesPrivateSource(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix permission bits do not describe Windows ACLs")
+	}
+	withTempHome(t)
+	sourcePath := filepath.Join(t.TempDir(), "proxies.txt")
+	if err := writeProxyState(&ProxyState{Source: sourcePath, Proxies: map[string]ProxyEntry{}}); err != nil {
+		t.Fatal(err)
+	}
+	proxyAdd(parseArgsForTest(t, []string{"proxy", "add", "1.1.1.1:1080:alice:secret", "-f"}))
+	info, err := os.Stat(sourcePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := info.Mode().Perm(); got != 0600 {
+		t.Fatalf("new source mode = %04o, want 0600", got)
 	}
 }
 
