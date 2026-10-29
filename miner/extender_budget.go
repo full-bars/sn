@@ -254,6 +254,11 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 		return err
 	}
 	pending := snapshot.ops
+	holdUntil, err := providerStoreRecoveryUntil(store.path, now)
+	if err != nil {
+		warnExtenderBudgetUnavailable(account, err)
+		return err
+	}
 	if extenderAdmissionSnapshotHook != nil {
 		extenderAdmissionSnapshotHook()
 	}
@@ -268,6 +273,9 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 			record.Accounts = map[string]extenderActivationState{}
 		}
 		record.adoptLegacy(account)
+		if record.QuarantineUntilUnix < holdUntil {
+			record.QuarantineUntilUnix = holdUntil
+		}
 		waits, spares = waits[:0], spares[:0]
 		// What a callback decided but the store has not kept is applied
 		// before anything else decides, in the order it was decided, so no

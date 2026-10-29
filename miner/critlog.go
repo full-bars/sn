@@ -16,6 +16,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/urfoundation/sn/internal/durablesync"
 )
 
 const critLogMaxSize = 1 * 1024 * 1024
@@ -119,6 +121,34 @@ func rotateCritLog(path string) {
 	defer f.Close()
 	f.Write(b[start:])
 	f.Sync()
+}
+
+// critLogDurable appends one line to the log at path and reports whether it is
+// on disk: every write checked, the file synced, and its directory entry
+// synced, which a log the call may have created needs. On windows the directory
+// sync assures nothing (durablesync).
+func critLogDurable(path, line string) error {
+	critLogMu.Lock()
+	defer critLogMu.Unlock()
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		return err
+	}
+	ts := time.Now().UTC().Format("2006-01-02T15:04:05")
+	_, err = f.WriteString(ts + " " + line + "\n")
+	if err == nil {
+		err = f.Sync()
+	}
+	if closeErr := f.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		return err
+	}
+	return durablesync.SyncParent(path)
 }
 
 func critLogPanic(r any, stack []byte) {

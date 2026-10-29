@@ -722,14 +722,77 @@ func awaitExtenderRefusalsDurable(deadline time.Time) error {
 // set. The wait is bounded: a store and a journal that stay unwritable (a full
 // or read-only disk, or a platform that cannot make the journal durable once
 // the store is released), or a call that hangs under the barrier, must not keep
-// the process from ending. At the deadline it says how many refusals are lost
-// and for which step, to the log and to events.log, and returns false.
+// the process from ending. At the deadline it records the loss
+// (recordExtenderRefusalsLost) and returns false.
 func waitExtenderRefusalsDurable(what string) bool {
 	err := awaitExtenderRefusalsDurable(time.Now().Add(extenderRefusalGateDeadline))
 	if err == nil {
 		return true
 	}
-	tlog("❌ [extender] %s is not waiting any longer: %v; the process ends and the next start may post into the operator's wait\n", what, err)
-	critLog("EXTENDER REFUSALS LOST at %s: %v", what, err)
+	recordExtenderRefusalsLost(what, err)
 	return false
+}
+
+// recordExtenderRefusalsLost is what a process that ends past a refusal it could
+// not keep leaves behind. An elapsed deadline proves only that the attempts
+// failed until then, not that the disk stays unwritable, so first it writes the
+// recovery marker, which holds every account's extender role for the longest
+// refusal wait at the next decision of any process (providerStoreRecoveryUntil):
+// the lost refusal's wait is kept, over-long, rather than forgotten. Then it
+// records the loss on disk wherever a line can be made durable, the state
+// directory's events.log first. Where nothing can be written, stdout is all
+// that is left, and the next start may post into the operator's wait.
+func recordExtenderRefusalsLost(what string, cause error) {
+	at := extenderRefusalsAtRisk()
+	holdErr := holdExtenderRoleAfterLostRefusal(time.Now())
+	hold := "the extender role is held for " + formatDuration(extenderRefusalBackoffMax) + " instead"
+	if holdErr != nil {
+		hold = fmt.Sprintf("no hold could be written either (%v), so the next start may post into the operator's wait", holdErr)
+	}
+	line := fmt.Sprintf("EXTENDER REFUSALS LOST at %s: %d decided refusals neither in the state store nor in a durable file: %v; %s", what, at, cause, hold)
+	tlog("❌ [extender] %s\n", line)
+	if where, err := writeExtenderLossRecord(line); err != nil {
+		tlog("❌ [extender] the loss above is on no disk: %v\n", err)
+	} else {
+		tlog("[extender] the loss above is recorded in %s\n", where)
+	}
+}
+
+// holdExtenderRoleAfterLostRefusal extends the recovery marker to cover the
+// longest refusal wait from now.
+func holdExtenderRoleAfterLostRefusal(now time.Time) error {
+	path, err := providerStatePath(providerStoreFileName)
+	if err != nil {
+		return err
+	}
+	return extendProviderStoreRecovery(path, now.Add(extenderRefusalBackoffMax))
+}
+
+// extenderLossRecordFallbacks are where the loss is recorded when the state
+// directory takes nothing. A variable so a test can point it elsewhere.
+var extenderLossRecordFallbacks = func() []string {
+	paths := []string{filepath.Join(os.TempDir(), "urnetwork-miner-events.log")}
+	if cache, err := os.UserCacheDir(); err == nil {
+		paths = append(paths, filepath.Join(cache, "urnetwork-miner", "events.log"))
+	}
+	return paths
+}
+
+// writeExtenderLossRecord appends line to the first log that takes it durably,
+// and says which.
+func writeExtenderLossRecord(line string) (string, error) {
+	var paths []string
+	if path, err := critLogPath(); err == nil {
+		paths = append(paths, path)
+	}
+	paths = append(paths, extenderLossRecordFallbacks()...)
+	var errs []error
+	for _, path := range paths {
+		err := critLogDurable(path, line)
+		if err == nil {
+			return path, nil
+		}
+		errs = append(errs, fmt.Errorf("%s: %w", path, err))
+	}
+	return "", errors.Join(errs...)
 }

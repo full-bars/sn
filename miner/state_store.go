@@ -681,6 +681,39 @@ func applyProviderStoreRecovery(store *providerStore, path string, now time.Time
 	return holdBudgetAfterQuarantine(store, until)
 }
 
+// providerStoreRecoveryUntil is the hold a standing marker names, as a unix
+// time, and 0 when none stands. A marker without a time holds a window from
+// now; the open path gives it one (applyProviderStoreRecovery). Every budget
+// decision reads it, so a hold written while a process already has the store
+// open, as a lost refusal writes it, applies to that process too.
+func providerStoreRecoveryUntil(path string, now time.Time) (int64, error) {
+	data, err := os.ReadFile(path + ".recovery")
+	if errors.Is(err, os.ErrNotExist) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	until, parseErr := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
+	if parseErr != nil || until <= 0 {
+		return now.Add(extenderActivationWindow).Unix(), nil
+	}
+	return until, nil
+}
+
+// extendProviderStoreRecovery makes the marker hold at least until the given
+// time, and never shortens a hold that already stands.
+func extendProviderStoreRecovery(path string, until time.Time) error {
+	standing, err := providerStoreRecoveryUntil(path, time.Now())
+	if err != nil {
+		return err
+	}
+	if until.Unix() <= standing {
+		return nil
+	}
+	return markProviderStoreRecovery(path, until)
+}
+
 // holdBudgetAfterQuarantine holds every account until the given time. The file
 // the store replaced may have held posts or a refusal that can no longer be
 // read, and an empty store would let the next start spend as though none had
