@@ -2912,8 +2912,6 @@ func RequireVersion() string {
 }
 
 func proxyAuthAdd(opts docopt.Opts) {
-	proxyConfig := readProxyConfig()
-
 	key, _ := opts.String("<key>")
 	if key == "" {
 		key, _ = opts.String("key")
@@ -2927,11 +2925,10 @@ func proxyAuthAdd(opts docopt.Opts) {
 		password, _ = opts.String("proxy_password")
 	}
 
-	if proxyConfig.Auths == nil {
-		proxyConfig.Auths = map[string]*ProxyAuth{}
-	}
-
-	if _, ok := proxyConfig.Auths[key]; ok {
+	// The overwrite prompt waits on the operator, so it runs before the proxy
+	// lock is taken: holding the lock there would stall a startup for as long
+	// as the prompt sits unanswered. The write below re-reads under the lock.
+	if _, ok := readProxyConfig().Auths[key]; ok {
 		if force, _ := opts.Bool("-f"); !force {
 			fmt.Printf("auth key \"%s\" exists. Overwrite? [yN]\n", key)
 
@@ -2943,37 +2940,42 @@ func proxyAuthAdd(opts docopt.Opts) {
 		}
 	}
 
-	proxyConfig.Auths[key] = &ProxyAuth{
-		User:     user,
-		Password: password,
+	if err := updateProxyConfig(func(proxyConfig *ProxyConfig) bool {
+		if proxyConfig.Auths == nil {
+			proxyConfig.Auths = map[string]*ProxyAuth{}
+		}
+		proxyConfig.Auths[key] = &ProxyAuth{
+			User:     user,
+			Password: password,
+		}
+		return true
+	}); err != nil {
+		fmt.Fprintf(os.Stderr, "proxy auth add: %v\n", err)
+		return
 	}
-
-	writeProxyConfig(proxyConfig)
 	// Tell a running provider: its reloader applies the stored list on the
 	// trigger, and without it the change waits for the next start.
 	triggerProxyReload()
 }
 
 func proxyAuthRemove(opts docopt.Opts) {
-	proxyConfig := readProxyConfig()
-
-	if all, _ := opts.Bool("--all"); all {
-		clear(proxyConfig.Auths)
-	} else {
-
-		key, _ := opts.String("<key>")
-		if key == "" {
-			key, _ = opts.String("key")
-		}
-
-		if proxyConfig.Auths == nil {
-			proxyConfig.Auths = map[string]*ProxyAuth{}
-		}
-
-		delete(proxyConfig.Auths, key)
+	all, _ := opts.Bool("--all")
+	key, _ := opts.String("<key>")
+	if key == "" {
+		key, _ = opts.String("key")
 	}
 
-	writeProxyConfig(proxyConfig)
+	if err := updateProxyConfig(func(proxyConfig *ProxyConfig) bool {
+		if all {
+			clear(proxyConfig.Auths)
+		} else {
+			delete(proxyConfig.Auths, key)
+		}
+		return true
+	}); err != nil {
+		fmt.Fprintf(os.Stderr, "proxy auth remove: %v\n", err)
+		return
+	}
 	// Tell a running provider: its reloader applies the stored list on the
 	// trigger, and without it the change waits for the next start.
 	triggerProxyReload()
@@ -2990,10 +2992,45 @@ func proxyAdd(opts docopt.Opts) {
 		return
 	}
 
-	proxyConfig := readProxyConfig()
-
 	allKeyAddress := proxyAddCollectAddresses(opts)
+	force, _ := opts.Bool("-f")
 
+	// Confirmations wait on the operator, so they run on a throwaway copy
+	// before the proxy lock is taken: holding the lock across a prompt would
+	// stall a startup for as long as it sits unanswered. The stored list is
+	// then re-read and changed under the lock, with the answers already given.
+	if !force {
+		if !applyProxyAdd(readProxyConfig(), allKeyAddress, false, func(address, user, password string) bool {
+			fmt.Printf(
+				"server %s (%s/%s) exists with different key. Change key? [yN]\n",
+				address,
+				obfuscateUser(user),
+				obfuscatePassword(password),
+			)
+
+			reader := bufio.NewReader(os.Stdin)
+			confirm, _ := reader.ReadString('\n')
+			return strings.ToLower(strings.TrimSpace(confirm)) == "y"
+		}) {
+			return
+		}
+	}
+
+	if err := updateProxyConfig(func(proxyConfig *ProxyConfig) bool {
+		return applyProxyAdd(proxyConfig, allKeyAddress, true, func(string, string, string) bool { return true })
+	}); err != nil {
+		fmt.Fprintf(os.Stderr, "proxy add: %v\n", err)
+		return
+	}
+	// Tell a running provider: its reloader applies the stored list on the
+	// trigger, and without it the change waits for the next start.
+	triggerProxyReload()
+}
+
+// applyProxyAdd adds each entry to proxyConfig. confirmChange is asked before
+// an entry replaces a server stored under a different key; declining abandons
+// the whole add and returns false.
+func applyProxyAdd(proxyConfig *ProxyConfig, allKeyAddress []string, announce bool, confirmChange func(address, user, password string) bool) bool {
 	if proxyConfig.Servers == nil {
 		proxyConfig.Servers = map[string]string{}
 	}
@@ -3017,39 +3054,26 @@ func proxyAdd(opts docopt.Opts) {
 		}
 
 		if currentKey, ok := proxyConfig.Servers[proxyKey]; ok && currentKey != entry.key {
-			if force, _ := opts.Bool("-f"); !force {
-				fmt.Printf(
-					"server %s (%s/%s) exists with different key. Change key? [yN]\n",
-					address,
-					obfuscateUser(user),
-					obfuscatePassword(password),
-				)
-
-				reader := bufio.NewReader(os.Stdin)
-				confirm, _ := reader.ReadString('\n')
-				if strings.ToLower(strings.TrimSpace(confirm)) != "y" {
-					return
-				}
+			if !confirmChange(address, user, password) {
+				return false
 			}
 		}
 
-		fmt.Printf(
-			"added server %s (%s/%s)\n",
-			address,
-			obfuscateUser(user),
-			obfuscatePassword(password),
-		)
+		if announce {
+			fmt.Printf(
+				"added server %s (%s/%s)\n",
+				address,
+				obfuscateUser(user),
+				obfuscatePassword(password),
+			)
+		}
 
 		if entry.key == "" {
 			replaceInlineProxyCredentials(proxyConfig, proxyKey, entry)
 		}
 		proxyConfig.Servers[proxyKey] = entry.key
 	}
-
-	writeProxyConfig(proxyConfig)
-	// Tell a running provider: its reloader applies the stored list on the
-	// trigger, and without it the change waits for the next start.
-	triggerProxyReload()
+	return true
 }
 
 // replaceInlineProxyCredentials drops the stored inline entries that the new
@@ -3222,53 +3246,56 @@ func proxyRemove(opts docopt.Opts) {
 		return
 	}
 
-	proxyConfig := readProxyConfig()
-
 	allKeyAddress := []string{}
 	if allKeyAddressAny, ok := opts["<key_address>"]; ok {
 		allKeyAddress = append(allKeyAddress, allKeyAddressAny.([]string)...)
 	}
 
-	if proxyConfig.Servers == nil {
-		proxyConfig.Servers = map[string]string{}
-	}
+	if err := updateProxyConfig(func(proxyConfig *ProxyConfig) bool {
+		if proxyConfig.Servers == nil {
+			proxyConfig.Servers = map[string]string{}
+		}
 
-	for _, keyAddress := range allKeyAddress {
-		entry := parseProxyEntry(keyAddress, proxyConfig.Auths)
-		user, password := entry.user, entry.password
-		if proxyConfig.Auths != nil {
-			if auth, ok := proxyConfig.Auths[entry.key]; ok {
-				user = auth.User
-				password = auth.Password
+		for _, keyAddress := range allKeyAddress {
+			entry := parseProxyEntry(keyAddress, proxyConfig.Auths)
+			user, password := entry.user, entry.password
+			if proxyConfig.Auths != nil {
+				if auth, ok := proxyConfig.Auths[entry.key]; ok {
+					user = auth.User
+					password = auth.Password
+				}
 			}
-		}
 
-		// Delete by exact address or canonical address:user:password
-		delete(proxyConfig.Servers, entry.address)
-		if user != "" || password != "" {
-			delete(proxyConfig.Servers, canonicalProxyKey(entry.address, user, password))
-		}
+			// Delete by exact address or canonical address:user:password
+			delete(proxyConfig.Servers, entry.address)
+			if user != "" || password != "" {
+				delete(proxyConfig.Servers, canonicalProxyKey(entry.address, user, password))
+			}
 
-		// If removing by key@address, delete any server pointing to this key
-		if entry.key != "" {
-			for k, v := range proxyConfig.Servers {
-				if v == entry.key && (k == entry.address || strings.HasPrefix(k, entry.address+":")) {
-					delete(proxyConfig.Servers, k)
+			// If removing by key@address, delete any server pointing to this key
+			if entry.key != "" {
+				for k, v := range proxyConfig.Servers {
+					if v == entry.key && (k == entry.address || strings.HasPrefix(k, entry.address+":")) {
+						delete(proxyConfig.Servers, k)
+					}
+				}
+			}
+
+			// If removing by address alone, remove all entries matching that address
+			if entry.key == "" && entry.user == "" && entry.password == "" {
+				for k := range proxyConfig.Servers {
+					if k == entry.address || strings.HasPrefix(k, entry.address+":") {
+						delete(proxyConfig.Servers, k)
+					}
 				}
 			}
 		}
 
-		// If removing by address alone, remove all entries matching that address
-		if entry.key == "" && entry.user == "" && entry.password == "" {
-			for k := range proxyConfig.Servers {
-				if k == entry.address || strings.HasPrefix(k, entry.address+":") {
-					delete(proxyConfig.Servers, k)
-				}
-			}
-		}
+		return true
+	}); err != nil {
+		fmt.Fprintf(os.Stderr, "proxy remove: %v\n", err)
+		return
 	}
-
-	writeProxyConfig(proxyConfig)
 	// Tell a running provider: its reloader applies the stored list on the
 	// trigger, and without it the change waits for the next start.
 	triggerProxyReload()

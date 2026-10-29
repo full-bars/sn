@@ -227,28 +227,41 @@ func proxyExclude(opts docopt.Opts) {
 		return
 	}
 
+	// The change is made on a fresh read under the proxy lock: the listing read
+	// above is only for display, and writing it back could undo a clear that
+	// ran in between.
 	if removeFlag {
-		if !removeExcludePattern(urlState, pattern) {
-			fmt.Printf("pattern %q is not in the exclude list\n", pattern)
-			if len(urlState.ExcludePatterns) > 0 {
-				fmt.Printf("current patterns: %s\n", strings.Join(urlState.ExcludePatterns, ", "))
-			}
+		var found bool
+		var current []string
+		if err := updateProxyURLState(func(st *ProxyURLState) bool {
+			found = removeExcludePattern(st, pattern)
+			current = st.ExcludePatterns
+			return found
+		}); err != nil {
+			fmt.Printf("could not update proxy_url.json: %v\n", err)
 			return
 		}
-		if err := writeProxyURLState(urlState); err != nil {
-			fmt.Printf("could not write proxy_url.json: %v\n", err)
+		if !found {
+			fmt.Printf("pattern %q is not in the exclude list\n", pattern)
+			if len(current) > 0 {
+				fmt.Printf("current patterns: %s\n", strings.Join(current, ", "))
+			}
 			return
 		}
 		fmt.Printf("removed exclude pattern %q - matching proxies may return on the next URL fetch\n", pattern)
 		return
 	}
 
-	if !addExcludePattern(urlState, pattern) {
-		fmt.Printf("pattern %q is already excluded\n", pattern)
+	var added bool
+	if err := updateProxyURLState(func(st *ProxyURLState) bool {
+		added = addExcludePattern(st, pattern)
+		return added
+	}); err != nil {
+		fmt.Printf("could not update proxy_url.json: %v\n", err)
 		return
 	}
-	if err := writeProxyURLState(urlState); err != nil {
-		fmt.Printf("could not write proxy_url.json: %v\n", err)
+	if !added {
+		fmt.Printf("pattern %q is already excluded\n", pattern)
 		return
 	}
 	fmt.Printf("added exclude pattern %q - future URL fetches will skip matching hosts\n", pattern)
@@ -319,14 +332,12 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 	}
 
 	// Persist the exclude pattern so URL source refreshes cannot re-add
-	// matching proxies. Re-read to avoid clobbering the cache changes
-	// removeDeadProxies just wrote.
-	if urlState, err := readProxyURLState(); err == nil {
-		if addExcludePattern(urlState, pattern) {
-			if err := writeProxyURLState(urlState); err != nil {
-				fmt.Printf("warning: could not persist exclude pattern: %v\n", err)
-			}
-		}
+	// matching proxies. The state is re-read under the lock, so the cache
+	// changes removeDeadProxies just wrote are kept.
+	if err := updateProxyURLState(func(st *ProxyURLState) bool {
+		return addExcludePattern(st, pattern)
+	}); err != nil {
+		fmt.Printf("warning: could not persist exclude pattern: %v\n", err)
 	}
 
 	fmt.Printf("Removed %d proxies matching %q. Pattern excluded from future URL fetches.\n", len(display), pattern)
@@ -1027,4 +1038,42 @@ func proxyRemoveDead(opts docopt.Opts) {
 	}
 
 	fmt.Printf("Removed %d proxies. Reload triggered.\n", len(toRemove))
+}
+
+// updateProxyConfig runs change on a fresh read of the internal config while
+// holding the cross-process proxy lock, and writes it back when change reports
+// a modification. A command that reads the config before taking the lock can
+// write back a snapshot older than a clear or a startup's mirror, undoing it.
+func updateProxyConfig(change func(*ProxyConfig) bool) error {
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return fmt.Errorf("could not acquire proxy lock: %w", err)
+	}
+	defer release()
+	proxyConfig := readProxyConfig()
+	if change(proxyConfig) {
+		writeProxyConfig(proxyConfig)
+	}
+	return nil
+}
+
+// updateProxyURLState is updateProxyConfig for proxy_url.json: change sees the
+// state as it is under the lock, and a true result is written back.
+func updateProxyURLState(change func(*ProxyURLState) bool) error {
+	release, err := acquireProxyLockWithRetry()
+	if err != nil {
+		return fmt.Errorf("could not acquire proxy lock: %w", err)
+	}
+	defer release()
+	urlState, err := readProxyURLState()
+	if err != nil {
+		return fmt.Errorf("could not read proxy_url.json: %w", err)
+	}
+	if !change(urlState) {
+		return nil
+	}
+	if err := writeProxyURLState(urlState); err != nil {
+		return fmt.Errorf("could not write proxy_url.json: %w", err)
+	}
+	return nil
 }
