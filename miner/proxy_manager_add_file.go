@@ -38,8 +38,10 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 	// Keep an existing source's permissions when replacing it. New sources
 	// contain credentials and must not be made world-readable.
 	perm := os.FileMode(0600)
+	var owner *fileOwner
 	if info, err := os.Stat(sourcePath); err == nil {
 		perm = info.Mode().Perm()
+		owner, _ = sourceOwnerOf(info)
 	} else if !os.IsNotExist(err) {
 		fmt.Fprintf(os.Stderr, "proxy add: could not stat %s: %v\n", sourcePath, err)
 		return
@@ -101,7 +103,7 @@ func proxyAddFileBacked(sourcePath string, opts docopt.Opts) {
 		out[i] = l.text
 	}
 	content := strings.Join(out, "\n") + "\n"
-	if err := atomicWriteFile(sourcePath, []byte(content), perm); err != nil {
+	if err := atomicWriteFileOwned(sourcePath, []byte(content), perm, owner); err != nil {
 		fmt.Fprintf(os.Stderr, "proxy add: could not write %s: %v\n", sourcePath, err)
 		return
 	}
