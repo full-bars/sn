@@ -865,3 +865,32 @@ func quiesceExtenderRefusalsForExec(deadline time.Time) (func(), error) {
 	}
 	return release, nil
 }
+
+// extenderRefusalBlocksUncountedLaunch says why a launch made without the
+// budget would post into a refusal's wait, or nil when nothing says so: a
+// refusal this process holds, one in the journal, or a hold that stands in for
+// one. A journal or marker that cannot be read counts as one.
+func extenderRefusalBlocksUncountedLaunch(now time.Time) error {
+	if held := extenderRefusalsHeldCount(); held > 0 {
+		return fmt.Errorf("%d decided activation refusals are not yet in the state store", held)
+	}
+	onDisk, _, err := readExtenderRefusalJournal(now)
+	if err != nil {
+		return fmt.Errorf("the held refusals cannot be read: %w", err)
+	}
+	if len(onDisk) > 0 {
+		return fmt.Errorf("%d journaled activation refusals are not yet in the state store", len(onDisk))
+	}
+	path, err := providerStatePath(providerStoreFileName)
+	if err != nil {
+		return err
+	}
+	until, err := providerStoreRecoveryUntil(path, now)
+	if err != nil {
+		return fmt.Errorf("the recovery hold cannot be read: %w", err)
+	}
+	if now.Unix() < until {
+		return fmt.Errorf("a recovery hold stands for %s", formatDuration(time.Duration(until-now.Unix())*time.Second))
+	}
+	return nil
+}

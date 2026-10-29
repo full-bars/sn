@@ -176,3 +176,28 @@ func TestExtenderIgnoresObsoleteFallbackFile(t *testing.T) {
 		t.Fatal("obsolete file caused uncounted launch")
 	}
 }
+
+// The uncounted launch stands in for a budget nobody can read. A refusal this
+// process decided and could not keep still sets the operator's wait, so it
+// closes that launch too.
+func TestUncountedLaunchIsClosedByAHeldRefusal(t *testing.T) {
+	testExtenderState(t)
+	resetUncountedExtenderForTest(t)
+	dir, err := providerStateDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	locked, err := bbolt.Open(filepath.Join(dir, providerStoreFileName), 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer locked.Close()
+	failJournalRename(t)
+	holdExtenderRefusal(extenderTestAccountA, "scope.2501")
+	if newExtenderActivationGate().allowLaunch() {
+		t.Fatal("the uncounted launch posted past a refusal this process holds")
+	}
+	if extenderUncountedLaunchUsed.Load() {
+		t.Fatal("the held refusal spent the process's uncounted launch")
+	}
+}

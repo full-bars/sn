@@ -727,6 +727,13 @@ func (gate *extenderActivationGate) allowLaunch() bool {
 var extenderUncountedLaunchUsed atomic.Bool
 
 func allowUncountedExtenderLaunch(cause error) bool {
+	// The allowance covers a budget nobody can read, not a refusal somebody
+	// decided: one that is held, journaled or replaced by a hold still sets
+	// the operator's wait.
+	if held := extenderRefusalBlocksUncountedLaunch(time.Now()); held != nil {
+		tlog("[extender] extender role off: activation budget unavailable (%v); no uncounted launch while %v\n", cause, held)
+		return false
+	}
 	if !extenderUncountedLaunchUsed.CompareAndSwap(false, true) {
 		tlog("[extender] extender role off: activation budget unavailable (%v); uncounted launch already used in this process\n", cause)
 		return false
