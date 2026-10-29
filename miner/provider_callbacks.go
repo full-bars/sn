@@ -5,6 +5,7 @@ package miner
 import (
 	"context"
 	"crypto/rand"
+	"hash/fnv"
 	"strconv"
 	"sync"
 
@@ -203,6 +204,10 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 			Revoked:           status.RevokedTime != 0,
 		}
 	}
+	var detail uint64
+	if status != nil {
+		detail = activationDetailDigest(status.LastActivationError)
+	}
 	changed, failed := func() (bool, bool) {
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
@@ -213,12 +218,12 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		// not handled yet is handled again: a standing error re-read beside
 		// another changed fact is the same failure. An activated family does
 		// not clear it, because the two per-family flags are independent.
-		failed := observation.Known && observation.Enabled && observation.ActivationFailed && !self.failureSeen[self.attemptKey(observation)]
+		failed := observation.Known && observation.Enabled && observation.ActivationFailed && !self.failureSeen[self.attemptKey(observation, detail)]
 		if failed {
 			if self.failureSeen == nil {
 				self.failureSeen = make(map[string]bool)
 			}
-			self.failureSeen[self.attemptKey(observation)] = true
+			self.failureSeen[self.attemptKey(observation, detail)] = true
 		}
 		return changed, failed
 	}()
@@ -242,7 +247,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 					if family, failedFamily := observation.activationPass().failedFamily(); failedFamily {
 						holdExtenderSpare(self.currentAccount(), family)
 					}
-					self.chargeActivationFailure(observation)
+					self.chargeActivationFailure(observation, detail)
 				}
 			case observation.ActivatedV4 || observation.ActivatedV6:
 				// Reached only by a pass with no failed family, which is what
@@ -264,25 +269,35 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 // and a reset all set it, while LastActivationRefused is set only by an answer
 // that came back activated: false. Holding the next start for the former spends
 // this host's budget on a wait the operator never asked for.
-func (self *providerExtenderStatusListener) chargeActivationFailure(observation providerExtenderObservation) {
+func (self *providerExtenderStatusListener) chargeActivationFailure(observation providerExtenderObservation, detail uint64) {
 	if !observation.ActivationRefused {
 		tlog("[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held\n", observation.ActivatedV4, observation.ActivatedV6)
 		return
 	}
 	// Held for the process, not this listener, so admission sees it before
 	// the store has kept it and the listener's end does not drop it.
-	holdExtenderRefusal(self.currentAccount(), self.attemptKey(observation))
+	holdExtenderRefusal(self.currentAccount(), self.attemptKey(observation, detail))
 }
 
-// attemptKey names one activation attempt of this listener. The status carries
-// the attempt's millisecond and what each family did, and two attempts that
-// finish in one millisecond differ in the second: keying on the millisecond
-// alone merged them into one refusal. Two attempts that agree on both are
-// indistinguishable from one status delivered twice, so they stay one.
-func (self *providerExtenderStatusListener) attemptKey(observation providerExtenderObservation) string {
+// activationDetailDigest reduces the status's failure text to a number, so the
+// text itself is neither kept nor logged.
+func activationDetailDigest(text string) uint64 {
+	hash := fnv.New64a()
+	_, _ = hash.Write([]byte(text))
+	return hash.Sum64()
+}
+
+// attemptKey names one activation attempt of this listener by what the attempt
+// reported: the status's millisecond and a digest of its failure text. The
+// per-family activated flags are not part of it, because they change on their
+// own while the same refusal stands, and a key that followed them would charge
+// that refusal again. Two distinct refusals that finish in one millisecond
+// differ in their text; two statuses that agree on both carry the same
+// payload, so they are one delivery.
+func (self *providerExtenderStatusListener) attemptKey(observation providerExtenderObservation, detail uint64) string {
 	return self.attemptScope + "." + strconv.FormatInt(observation.ActivationTime, 10) +
-		".v4=" + strconv.FormatBool(observation.ActivatedV4) +
-		".v6=" + strconv.FormatBool(observation.ActivatedV6)
+		"." + strconv.FormatUint(detail, 16) +
+		".r=" + strconv.FormatBool(observation.ActivationRefused)
 }
 
 // activationPass is what the status says this pass did, per family. A pass

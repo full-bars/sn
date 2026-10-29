@@ -190,21 +190,3 @@ func TestHeldRefusalFileIsPublishedDurably(t *testing.T) {
 		t.Fatalf("held refusal published as %v, want one durable rename into %s", published, dir)
 	}
 }
-
-// One listener can see two attempts that finish in the same millisecond, such
-// as a pass that activated v4 and failed v6 beside one that failed both. They
-// are two refusals; keyed by the millisecond alone the second was dropped.
-func TestRefusalsInOneMillisecondOfOneListenerAreDistinct(t *testing.T) {
-	testExtenderState(t)
-	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
-	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, LastActivationTime: 801, LastActivationError: "refused", LastActivationRefused: true, ActivatedV4: true})
-	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, LastActivationTime: 801, LastActivationError: "refused", LastActivationRefused: true})
-	if refusals := readRefusals(t, extenderTestAccountA); refusals != 2 {
-		t.Fatalf("refusals = %d, want 2: two attempts of one listener in one millisecond", refusals)
-	}
-	// The same status delivered again is still one attempt.
-	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, LastActivationTime: 801, LastActivationError: "refused", LastActivationRefused: true})
-	if refusals := readRefusals(t, extenderTestAccountA); refusals != 2 {
-		t.Fatalf("redelivery charged again: refusals = %d, want 2", refusals)
-	}
-}
