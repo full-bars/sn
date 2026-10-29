@@ -11,6 +11,30 @@ trap 'rm -f "$eicar"' EXIT
 printf 'X5O!P%%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > "$eicar"
 printf '### ClamAV\n' > "$report"
 
+# The clamav package ships no signatures. Without them every scan returns
+# clean without examining anything, so fetch a database before trusting a
+# result, and say plainly when one cannot be fetched.
+db_dir=${CLAMAV_DB_DIR:-/var/lib/clamav}
+have_db() {
+  compgen -G "$db_dir/*.cvd" >/dev/null 2>&1 || compgen -G "$db_dir/*.cld" >/dev/null 2>&1
+}
+if ! have_db; then
+  echo "No ClamAV signature database in $db_dir; fetching"
+  for attempt in 1 2 3; do
+    if command -v freshclam >/dev/null 2>&1; then
+      if [ "$(id -u)" -eq 0 ]; then freshclam --stdout || true; else sudo freshclam --stdout || true; fi
+    fi
+    if have_db; then break; fi
+    echo "freshclam attempt $attempt produced no database; retrying"
+    sleep $((attempt * 10))
+  done
+fi
+if ! have_db; then
+  echo "::error::ClamAV database unavailable in $db_dir; a scan would report clean without checking anything"
+  printf 'Scanner failure: signature database unavailable.\n' >> "$report"
+  exit 1
+fi
+
 if self_output=$(clamscan --no-summary "$eicar" 2>&1); then
   self_rc=0
 else

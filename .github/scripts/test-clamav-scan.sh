@@ -3,7 +3,10 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
 tmp=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/clamav-test.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/bin" "$tmp/artifacts" "$tmp/empty"
+mkdir -p "$tmp/bin" "$tmp/artifacts" "$tmp/empty" "$tmp/db"
+# The scanner refuses to run without a database; the harness supplies one so
+# the case table tests verdict handling rather than signature freshness.
+printf 'test\n' > "$tmp/db/main.cvd"
 printf 'safe\n' > "$tmp/artifacts/provider"
 cat > "$tmp/bin/clamscan" <<'MOCK'
 #!/usr/bin/env bash
@@ -28,7 +31,7 @@ chmod +x "$tmp/bin/clamscan"
 
 for case_name in clean detection scanner-error self-clean self-error self-wrong inconsistent missing-detection error-with-detection; do
   report="$tmp/$case_name.report"
-  if output=$(PATH="$tmp/bin:$PATH" CASE="$case_name" CLAMAV_REPORT_FILE="$report" bash "$root/.github/scripts/clamav-scan.sh" "$tmp/artifacts" 2>&1); then
+  if output=$(PATH="$tmp/bin:$PATH" CASE="$case_name" CLAMAV_DB_DIR="$tmp/db" CLAMAV_REPORT_FILE="$report" bash "$root/.github/scripts/clamav-scan.sh" "$tmp/artifacts" 2>&1); then
     rc=0
   else
     rc=$?
