@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -219,7 +220,8 @@ func adoptLegacyProxyState(state *ProxyState, desired []*connect.ProxySettings) 
 //
 // The address is shown only when it is a plain host:port. The legacy config
 // parser can keep a malformed entry (a URI with userinfo or a token path) as
-// the address, so anything else renders as a placeholder instead of leaking.
+// the address, so anything else renders masked (first and last character kept)
+// instead of leaking.
 func proxyKeyDisplay(key string) string {
 	address, user := connect.SplitProxyKey(key)
 	address = redactedProxyAddress(address)
@@ -230,15 +232,26 @@ func proxyKeyDisplay(key string) string {
 }
 
 // redactedProxyAddress returns an address that is safe to print: the "direct"
-// sentinel or a plain host:port, and a placeholder for anything else. The
-// legacy parser keeps a malformed entry (userinfo, token path, trailing
-// parameters) verbatim as the address, so a bare Address field is never printed
-// without going through here.
+// sentinel or a plain host:port verbatim, and a masked form (first character,
+// a run of *, last character) for anything else. The legacy parser keeps a
+// malformed entry (userinfo, token path, trailing parameters) verbatim as the
+// address, so a bare Address field is never printed without going through here.
 func redactedProxyAddress(address string) string {
 	if address == "direct" || plainHostPort(address) {
 		return address
 	}
-	return "<unparsable proxy address>"
+	return maskSecret(address)
+}
+
+// maskSecret keeps the first and last character and replaces everything
+// between them with *, so an operator can still tell which entry a line refers
+// to without the value reaching the log.
+func maskSecret(s string) string {
+	r := []rune(s)
+	if len(r) <= 2 {
+		return strings.Repeat("*", len(r))
+	}
+	return string(r[0]) + strings.Repeat("*", len(r)-2) + string(r[len(r)-1])
 }
 
 // plainHostPort reports whether s is a bare host:port that cannot carry
@@ -252,7 +265,7 @@ func plainHostPort(s string) bool {
 	for _, c := range host {
 		switch {
 		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9',
-			c == '.', c == '-', c == '_', c == ':', c == '%':
+			c == '.', c == '-', c == '_', c == ':':
 		default:
 			return false
 		}
