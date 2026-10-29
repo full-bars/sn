@@ -2,6 +2,9 @@ package miner
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -134,5 +137,53 @@ func TestStoreClientErrorsDoNotEchoKeyOrUser(t *testing.T) {
 			t.Fatalf("%s: selected an identity", sink)
 		}
 		assertNoKeyLeak(t, "store-client "+sink, err.Error(), "expired-user")
+	}
+}
+
+// Sink: the slot-stop line, at the function both reload spawn paths call.
+func TestReloadedSlotStopLineUsesTheDisplayKey(t *testing.T) {
+	log := captureHeartbeatLog(t)
+	logReloadedSlotStopped(sinkTestSettings(), 7, errors.New("session ended"))
+	if !strings.Contains(log.String(), "(provider 7) stopped: session ended") {
+		t.Fatalf("slot-stop line changed shape: %q", log.String())
+	}
+	assertNoKeyLeak(t, "slot-stop log line", log.String())
+}
+
+// The real call sites cannot be driven without a full provide run, so pin them
+// by source: neither spawn path may log the stop itself, and no operator-facing
+// print may format a ProxySettings key without proxyKeyDisplay.
+func TestNoPrintSinkFormatsARawProxyKey(t *testing.T) {
+	run, err := os.ReadFile("run.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Count(string(run), "logReloadedSlotStopped(settings, index, err)"); got != 2 {
+		t.Fatalf("run.go calls logReloadedSlotStopped %d times, want one per reload spawn path (2)", got)
+	}
+
+	sink := regexp.MustCompile(`\b(tlog|Printf|Fprintf|Sprintf|Errorf|Println|panic|Wrap)\(`)
+	rawKey := regexp.MustCompile(`\.Key\(\)|\bidentityKey\b`)
+	files, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		data, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for number, line := range strings.Split(string(data), "\n") {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "//") || !sink.MatchString(line) || !rawKey.MatchString(line) {
+				continue
+			}
+			if !strings.Contains(line, "proxyKeyDisplay(") {
+				t.Errorf("%s:%d formats a raw proxy key: %s", file, number+1, trimmed)
+			}
+		}
 	}
 }

@@ -2083,7 +2083,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				go func() {
 					defer join.done()
 					if err := provideWithProxy(slotCtx, index, settings); err != nil {
-						tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", proxyKeyDisplay(settings.Key()), index, err)
+						logReloadedSlotStopped(settings, index, err)
 					}
 				}()
 				return slotCancel, nil
@@ -2108,7 +2108,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				// this very worker.
 				close(slotDone)
 				if err != nil {
-					tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", proxyKeyDisplay(settings.Key()), index, err)
+					logReloadedSlotStopped(settings, index, err)
 				}
 				if reloader.workerExited(settings.Key(), generation) && err != nil && slotCtx.Err() == nil {
 					retryFailedProxy(settings.Key())
@@ -3397,4 +3397,11 @@ func proxyIdentityBandwidthIndex(settings *connect.ProxySettings) int {
 		return 0
 	}
 	return int(addressHash(settings.Key()) & 0x7fffffff)
+}
+
+// logReloadedSlotStopped is the one place a runtime-added slot's exit is
+// reported. Both reload spawn paths call it, so the identity key never reaches
+// the line except through proxyKeyDisplay.
+func logReloadedSlotStopped(settings *connect.ProxySettings, index uint64, err error) {
+	tlog("❌ [proxy] reloaded slot %s (provider %d) stopped: %v\n", proxyKeyDisplay(settings.Key()), index, err)
 }
