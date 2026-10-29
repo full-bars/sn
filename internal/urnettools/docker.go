@@ -93,16 +93,41 @@ func parseDockerRepository(image string) string {
 	return image
 }
 
+// defaultDockerImageRepos is the source of truth for which images count as
+// provider containers. Container names are deliberately not consulted. Add a
+// repository here when a new image starts shipping; operators building an
+// image locally can extend the set at runtime with
+// URNET_DOCKER_IMAGE_REPOS=<repo>[,<repo>...].
+var defaultDockerImageRepos = []string{
+	"ghcr.io/full-bars/sn",
+	"ghcr.io/full-bars/meso-miner",
+	"ghcr.io/full-bars/urnetwork-3.23-fix", // cross-lineage: intentional
+	"ghcr.io/urfoundation/meso-miner",
+	"docker.io/3cape/sn",
+	"docker.io/3cape/urnetwork-3.23-fix", // cross-lineage: intentional
+}
+
+// dockerImageRepos merges the shipped allowlist with any operator-supplied
+// repositories. Parsed per call so a test can set the environment.
+func dockerImageRepos() map[string]bool {
+	repos := make(map[string]bool, len(defaultDockerImageRepos)+2)
+	for _, r := range defaultDockerImageRepos {
+		repos[parseDockerRepository(r)] = true
+	}
+	for _, r := range strings.Split(os.Getenv("URNET_DOCKER_IMAGE_REPOS"), ",") {
+		r = strings.TrimSpace(r)
+		if r != "" {
+			// Normalise the entry the same way an image reference is, so a
+			// bare "sn-smoke" matches what docker reports for that image.
+			repos[parseDockerRepository(r)] = true
+		}
+	}
+	return repos
+}
+
 // isDockerCandidate matches the image repository, never the container name.
 func isDockerCandidate(image, _ string) bool {
-	switch parseDockerRepository(image) {
-	case "ghcr.io/full-bars/sn", "ghcr.io/full-bars/meso-miner",
-		"ghcr.io/full-bars/urnetwork-3.23-fix", "ghcr.io/urfoundation/meso-miner", // cross-lineage: intentional
-		"docker.io/3cape/sn", "docker.io/3cape/urnetwork-3.23-fix": // cross-lineage: intentional
-		return true
-	default:
-		return false
-	}
+	return dockerImageRepos()[parseDockerRepository(image)]
 }
 
 // containerStateDir resolves the provider state dir inside the container: the

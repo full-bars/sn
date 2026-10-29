@@ -220,6 +220,10 @@ jobs:
     env:
       GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
       GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+      # The image here is built locally as sn-smoke:local, which is not one of
+      # the repositories urnet-docker recognises by default. Declaring it in the
+      # override keeps the shipped rule strict without blindfolding the tool.
+      URNET_DOCKER_IMAGE_REPOS: sn-smoke
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

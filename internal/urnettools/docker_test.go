@@ -11,6 +11,20 @@ import (
 )
 
 // TestIsDockerCandidate covers exact image repository matching, independent of name.
+func TestIsDockerCandidateEnvOverride(t *testing.T) {
+	// Locally built images are not in the shipped allowlist; an operator can
+	// extend the set instead of the rule being loosened for everyone.
+	t.Setenv("URNET_DOCKER_IMAGE_REPOS", "sn-smoke, example/local")
+	for _, image := range []string{"sn-smoke:local", "example/local:ci"} {
+		if !isDockerCandidate(image, "urnet-test") {
+			t.Errorf("isDockerCandidate(%q) = false, want true via URNET_DOCKER_IMAGE_REPOS", image)
+		}
+	}
+	if isDockerCandidate("other/local:ci", "urnet-test") {
+		t.Error("an unlisted repository matched without being in the environment")
+	}
+}
+
 func TestIsDockerCandidate(t *testing.T) {
 	cases := []struct {
 		image string
