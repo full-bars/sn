@@ -69,9 +69,9 @@ yet (the seed file must be mode 600 and 32 raw bytes or 64 hex characters):
   -e AUTO_REGISTER=Y
 ```
 
-No published ports and no added capabilities are required for relaying. If you
-run the baked `provider-relay` in direct mode, give it the relay image's flags
-(`--cap-add NET_ADMIN --cap-add NET_RAW`, `--sysctl net.ipv4.ip_forward=1`).
+The miner publishes no ports. Added capabilities are only needed if you want
+the provider to forward client traffic, in which case add `--cap-add NET_ADMIN`,
+`--cap-add NET_RAW` and `--sysctl net.ipv4.ip_forward=1`.
 
 ## Environment
 
@@ -118,11 +118,10 @@ conflict is logged and `AUTH` wins.
 | Path | What it is |
 |---|---|
 | `/app/urnetwork_<arch>_stable`, `provider` | the miner (the program whose usage is `provider ...`) |
-| `/app/urnetwork_<arch>_relay`, `provider-relay` | the relay |
 | `/app/urnet-tools.sh`, `urnet-tools-sh` | the verified shell update wrapper (`do_update`: release digest check, `update-pending` marker, respawn verification, Pelican refusal) |
 | `urnet-tools` | dispatcher: `update`/`idle-update` go to the shell wrapper, every other command goes to the Go client |
-| `urnet-tools-go` | the Go client (the `urnet-tools` of the relay image) |
-| `proxy-health`, `proxy-traffic`, `logs` | state-file helpers on PATH, as in the relay image |
+| `urnet-tools-go` | the Go client |
+| `proxy-health`, `proxy-traffic`, `logs` | state-file helpers on PATH |
 | `/app/{entrypoint,start_miner,provider_env,jwt_verify,update_verify}.sh` | startup scripts and their helpers |
 
 ## Updating the miner
@@ -130,10 +129,11 @@ conflict is logged and `AUTH` wins.
 `urnet-docker update <container>` works against a miner container: it
 sed-patches `/app/urnet-tools.sh` from the host and runs `docker exec <c>
 urnet-tools update`, which the dispatcher routes to the shell wrapper. The
-wrapper refuses to install a release binary that is not the program this
-image runs: full-bars/sn releases publish the relay as `provider`, while the
-miner ships only inside this image, so an in-place swap would replace the
-miner with the relay. It points at the image stream instead.
+wrapper refuses to install a release binary that is not the program this image
+runs. This fork ships one program: the platform archives carry it as `provider`
+and the miner archives carry the same binary as their only member, so the check
+is a guard against a future archive holding something else rather than a
+restriction on today's releases.
 
 Update a miner container by pulling and recreating it, or let Watchtower do
 it; the Quick start commands are safe to re-run against an existing state
