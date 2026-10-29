@@ -11,7 +11,7 @@
 #   ALLOW_CLIENT_REGISTRATION  -> Y passes --allow-client-registration, auto and N omit
 #   MAX_MEMORY=<mem>           -> --max-memory
 #   OPERATORS_URL=<url>        -> --operators-url (provide --all-operators, auth --operator)
-#   OPERATOR=<domain>          -> auth --operator=<domain>
+#   OPERATOR=<domain>          -> auth --operator=<domain> (requires ALL_OPERATORS)
 #   PROVIDER_ARGS="..."        -> appended to provide verbatim
 #   PROXY_FILE=<path>          -> provider proxy add --proxy_file (default /app/proxy.txt)
 #
@@ -32,13 +32,6 @@ POSITIONAL_CODE="${1:-}"
 
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> sn-miner >>> $*"
-}
-
-is_true() {
-  case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
-    y|yes|true|1) return 0 ;;
-    *) return 1 ;;
-  esac
 }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -72,7 +65,7 @@ func_get_architecture() {
 func_check_config() {
   # Validate the v33 operator environment once, before anything runs. The
   # same flags are emitted again for the actual provide command.
-  if ! provider_env_flags "$STATE_DIR" >/dev/null; then
+  if ! provider_env_validate "$STATE_DIR"; then
     log "[ERROR] Invalid provider environment; fix the setting logged above and restart"
     exit 1
   fi
@@ -82,13 +75,9 @@ func_check_config() {
       log "[ERROR] HOTKEY_SEED_FILE=$HOTKEY_SEED_FILE is missing or empty"
       exit 1
     fi
-    if ! is_true "${ALL_OPERATORS:-}"; then
+    if ! provider_env_all_operators; then
       log "[WARN] HOTKEY_SEED_FILE is only passed to provide when ALL_OPERATORS=Y; it is still used for auth --operator"
     fi
-  fi
-
-  if [ -n "$OPERATORS_URL" ] && ! is_true "${ALL_OPERATORS:-}"; then
-    log "[WARN] OPERATORS_URL is only passed to provide when ALL_OPERATORS=Y; it is still used for auth --operator"
   fi
 
   case "$(provider_env_allow_client_registration_mode)" in
@@ -119,7 +108,7 @@ func_authenticate() {
   if [ -n "$OPERATOR" ]; then
     set -- "$@" --operator="$OPERATOR"
   fi
-  if [ -n "$OPERATORS_URL" ]; then
+  if [ -n "$OPERATOR" ] && [ -n "$OPERATORS_URL" ]; then
     set -- "$@" --operators-url="$OPERATORS_URL"
   fi
   if [ "${AUTH:-}" = "userpass" ]; then
@@ -165,7 +154,7 @@ func_provide() {
   # shellcheck disable=SC2086  # deliberate word splitting of the flag list
   set -- "$@" $PROVIDER_ENV_ARGS
   # Miner-image addition with no v33 provider_env.sh mapping.
-  if is_true "${ALL_OPERATORS:-}" && [ -n "$OPERATORS_URL" ]; then
+  if provider_env_all_operators && [ -n "$OPERATORS_URL" ]; then
     set -- "$@" --operators-url="$OPERATORS_URL"
   fi
 
@@ -289,12 +278,12 @@ func_bootstrap() {
         log "[ERROR] Authentication failed"
         exit 1
       fi
-    elif is_true "${ALL_OPERATORS:-}"; then
+    elif provider_env_all_operators; then
       # No network sign-in is needed here: provide --all-operators works from
       # each operator's own session under <state>/operators/<domain>/jwt, and
       # --auto-register signs in with the hotkey seed where one is missing.
       log "[INFO] ALL_OPERATORS without an explicit credential: provide uses each operator's stored session under $STATE_DIR/operators/<domain>/jwt"
-      if is_true "${AUTO_REGISTER:-}" && [ -n "$HOTKEY_SEED_FILE" ]; then
+      if [ "$(provider_env_bool "${AUTO_REGISTER:-}" AUTO_REGISTER)" = 1 ] && [ -n "$HOTKEY_SEED_FILE" ]; then
         log "[INFO] --auto-register will sign in operators that have no session"
       fi
     elif [ -s "$SESSION_JWT" ]; then

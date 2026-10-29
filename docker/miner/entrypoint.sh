@@ -9,24 +9,25 @@
 # AUTH=authcode requires AUTHCODE (alias of URNETWORK_AUTH_CODE), a positional
 # code, or a stored session under the state directory.
 # OPERATOR=<domain> selects the per-operator sign-in (auth --operator) and the
-# per-operator session path <state>/operators/<domain>/jwt.
+# per-operator session path <state>/operators/<domain>/jwt. It requires
+# ALL_OPERATORS because the miner cannot provide for one selected operator.
 set -e
 
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> sn-miner >>> $*"
 }
 
-is_true() {
-  case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
-    y|yes|true|1) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -f "$SCRIPT_DIR/jwt_verify.sh" ]; then
   . "$SCRIPT_DIR/jwt_verify.sh"
 fi
+# Use the same validation as direct start_miner.sh invocations.
+if [ -f "$SCRIPT_DIR/provider_env.sh" ]; then
+  . "$SCRIPT_DIR/provider_env.sh"
+else
+  . /app/provider_env.sh
+fi
+provider_env_validate "${URNETWORK_STATE_DIR:-${HOME:-/root}/.urnetwork}" || exit 1
 
 STATE_DIR="${URNETWORK_STATE_DIR:-${HOME:-/root}/.urnetwork}"
 [ -d "$STATE_DIR" ] || STATE_DIR="${HOME:-/root}/.urnetwork"
@@ -67,7 +68,7 @@ if [ -z "$AUTH_LC" ]; then
     AUTH_LC="authcode"
   elif [ -s "$STATE_DIR/jwt" ]; then
     AUTH_LC="authcode"
-  elif is_true "${ALL_OPERATORS:-}"; then
+  elif provider_env_all_operators; then
     # All-operators mode works from the per-operator sessions (and can sign in
     # with the hotkey seed), so no network credential is required here.
     AUTH_LC="authcode"
@@ -94,7 +95,7 @@ case "$AUTH_LC" in
         stored="1"
       fi
       if [ -z "$stored" ]; then
-        if is_true "${ALL_OPERATORS:-}"; then
+        if provider_env_all_operators; then
           # provide --all-operators works from each operator's own session under
           # <state>/operators/<domain>/jwt, and --auto-register can sign in with
           # the hotkey seed. Missing sessions are reported as awaiting auth.
