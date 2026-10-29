@@ -68,6 +68,23 @@ The refresh reads your updated configuration and applies the diff to the
 running provider. Proxies that are unchanged keep serving without
 interruption.
 
+`proxy clear` always asks a running provider to reload, and it takes the same
+lock a provider takes while it starts, so a clear is never overwritten by a
+provider that was starting at the same moment. If another
+process holds that lock, a starting provider waits for it for up to two
+minutes before giving up. `proxy add` keeps the owner and permissions of an
+existing proxy file and creates a new one readable only by its owner; adding a
+proxy with a new password replaces the line for the same address and user
+instead of appending a second one.
+
+### How proxies are shown
+
+Logs, errors and `status` output never print a proxy password. A proxy that
+shares its address with others is identified by its username, shown
+obfuscated: `dc.example.com:10072 (user ab***yz)`. A source that is not a
+plain `host:port` is shown as `<unparsable proxy address>`, and
+`urnet-tools status` shows a configured proxy source as scheme and host only.
+
 ## Removing dead proxies interactively
 
 If you want to clean up failing proxies without manually editing files, use
@@ -136,6 +153,9 @@ docker exec -it urfix urnet-tools proxy remove --match=dc.decodo.com
 >    cache.
 > 2. Adds the pattern to a persistent exclude list, so future URL source
 >    refreshes silently skip matching proxies. They cannot sneak back in.
+>    The exclusion is saved and the matches are removed under one lock, so a
+>    URL fetch cannot merge an address back in between. If the URL cache
+>    (`proxy_url.json`) cannot be read, the command fails and removes nothing.
 > 3. Triggers a hot reload: the running provider drops only the removed
 >    proxies; everything else keeps serving.
 

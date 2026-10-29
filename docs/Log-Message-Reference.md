@@ -14,6 +14,7 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 | `[direct]` | Direct providing (no proxy) status |
 | `[earn]` | Per-minute earning windows: billable_1m, billable_5m, billable_15m, billable_60m |
 | `[encryption]` | Packet encryption subsystem events |
+| `[extender]` | Extender role activation: the hourly post allowance, refusals and the wait before the next attempt |
 | `[gossip]` | Extender mesh: node startup identity, peer connections, applied records |
 | `[health]` | Health heartbeat: uptime, profile, heap, sys, connections |
 | `[hot-restart]` | Hot-restart enablement and trigger events |
@@ -39,6 +40,7 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 | `[session]` | Identity session events |
 | `[profit]` | Profit heartbeat: earning yes/no, clients, rate |
 | `[startup]` | Startup phase markers and Ready summary |
+| `[state]` | The `provider_state.db` store: creation, a store that would not open, a damaged store moved aside |
 | `[status]` | Status server events |
 | `[systemd]` | systemd integration events |
 | `[traffic]` | Data-plane traffic: rx/tx rates, clients |
@@ -59,6 +61,8 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 - **Partial file ingest.** `[proxy] warning: /home/you/proxies.txt: loaded 480 proxies, skipped 3 malformed lines`. The per-line message no longer prints the source line: `[proxy] error: proxy 203.0.113.5:1080 (user=present, password=absent) missing credentials`, followed by the required `ip:port:user:pass` format and `skipping`. An unsupported URL-list scheme is reported the same way: `[proxy][url] unsupported scheme "http" (only socks5 is supported); skipping http://203.0.113.5:8080 (user=present, password=present)`.
 - **Cached identity refused.** `🔥 [hot-restart] <key>: stored client <id> disagrees with custody client <id>, minting through custody` and `🔥 [hot-restart] <key>: stored JWT client_id "<id>" disagrees with store client_id "<id>", minting fresh`. When the minted credential cannot be written to the store, the slot fails with `failed to persist minted client JWT for <key>` after the existing `⚠️ [jwt-store] failed to persist client JWT` warning, rather than running unrecorded.
 - **Aborted handoff.** `❌ [hotswap] Failed to restore control socket after aborted handoff: ...` follows an `Aborting handoff; live provider retained.` line when the parent could not rebind `provider.sock`.
+- **Extender activation.** The role posts at most five activation requests in any hour. `[extender] activation held: 5 of 5 posts in the last hour, next in 12m0s` means the allowance is spent and the role stays off until a post ages out. `[extender] activation refused; next attempt in 10m0s` means the platform refused a post; the wait doubles with each consecutive refusal, up to the one-hour window, and starts over after a day without one. `[extender] activation budget record could not be read or written; decision deferred: ...` means the state store could not be read after a few retries; the role stays off for this launch and the next launch asks again. A refusal is not recorded for a failure that was not a refusal (`activation failed without a refusal`).
+- **Damaged state store.** `[state] <path> would not open (...); moved it to <path> and started a fresh store` means `provider_state.db` failed validation and was set aside. The fresh store holds the extender role for the activation window rather than granting a new allowance.
 - **Gossip startup.** `[gossip] peer=<peer id> network=<network host> role=<member|extender> listen_addrs=N operator_addrs=N started`.
 - **Attributable token lines.** Every `[api-token]` line carries `client=<id>` parsed from the bearer, for example `[api-token] client=019f7191… jwt refresh failed. Will retry in 96.17s. err = http request attempts exhausted`. A legacy bearer without the claim prints no tag rather than a fabricated one.
 
