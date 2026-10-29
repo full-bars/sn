@@ -4,7 +4,9 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
 )
 
@@ -111,4 +113,26 @@ func TestRelaunchIdentityLogDoesNotPrintTheRawKey(t *testing.T) {
 		t.Fatalf("the relaunch failure was not logged: %q", log.String())
 	}
 	assertNoKeyLeak(t, "relaunchIdentity log", log.String())
+}
+
+// Sink: `provider claim --store-client`, whose errors go straight to stderr.
+func TestStoreClientErrorsDoNotEchoKeyOrUser(t *testing.T) {
+	typed := sinkTestAddress + "\x1f" + sinkTestUser
+	writeStoreTestStore(t, map[string]clientJWTStoreEntry{
+		typed:                             {ByClientJWT: storeTestNetworkJwt(t)},
+		"gw.example:1080\x1fexpired-user": {ByClientJWT: storeTestClientJwt(t, "00000000-0000-0000-0000-000000000201", "x", time.Now().Add(-time.Hour))},
+	})
+
+	cases := map[string]string{
+		"invalid stored credential": typed,
+		"expired stored credential": "gw.example:1080\x1fexpired-user",
+		"missing client":            "gone.example:1080\x1f" + sinkTestUser,
+	}
+	for sink, key := range cases {
+		_, err := snClaimCredentialFromOpts(docopt.Opts{"--store-client": key})
+		if err == nil {
+			t.Fatalf("%s: selected an identity", sink)
+		}
+		assertNoKeyLeak(t, "store-client "+sink, err.Error(), "expired-user")
+	}
 }
