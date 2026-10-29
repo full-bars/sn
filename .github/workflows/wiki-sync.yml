@@ -28,7 +28,7 @@ jobs:
             status=1
           # Only the pages the wiki publishes: top-level docs/*.md. The
           # archive, spec and design trees stay in the repository.
-          done < <(grep -noE '\]\([A-Za-z0-9_./-]+\.md[)#]?' docs/*.md \
+          done < <(grep -noE '\]\([A-Za-z0-9_./-]+\.md[)#]' docs/*.md \
                      | grep -vE '\]\((/|[a-z]+://)' || true)
           exit $status
 
