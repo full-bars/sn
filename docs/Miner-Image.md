@@ -6,8 +6,7 @@
 `Dockerfile.miner` builds the sn miner image. It bakes the miner (`cli/miner`)
 in as `provider`, the binary whose CLI carries `provide --all-operators`,
 `operators`, `auth --operator`, `wallet`, `claim`, `claim-daemon(-v2)` and
-`fleet`. It also bakes the relay (`cmd/provider`) as `provider-relay` for the
-proxy surface, direct mode and sn-status, plus `urnet-tools`: the Go client
+`fleet`, plus `urnet-tools`: the Go client
 (`urnet-tools-go`) behind a dispatcher that sends `update`/`idle-update` to
 the verified shell update wrapper.
 
@@ -15,9 +14,9 @@ The image publishes no ports and runs no status server. The miner dials
 outbound only.
 
 Published tags: `ghcr.io/full-bars/sn:miner` (built from main), `:miner-<tag>`
-for a version tag, and `:miner-<short-sha>`. The relay image keeps `:latest`
-and the Docker Hub mirror, so nothing about the existing relay deployments
-changes.
+for a version tag, and `:miner-<short-sha>`. The `miner` namespace leaves the
+`latest` tag and the Docker Hub mirror to other images, so existing
+deployments are unchanged.
 
 ## Quick start
 

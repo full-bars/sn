@@ -34,7 +34,7 @@ Docs-only changes skip CI through `paths-ignore`.
 
 ## Release flow
 
-Releases follow the `v2026.<date>-<unixtime>-meso` tag scheme, for example `v2026.9.17-1789646883-meso`.
+Releases follow the `v<date>-<unixtime>-sn` tag scheme, for example `v2026.10.29-1084715100-sn`.
 
 ### Cut a release
 
