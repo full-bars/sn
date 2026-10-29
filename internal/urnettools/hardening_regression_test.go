@@ -161,7 +161,8 @@ func TestIsDockerCandidateNarrow(t *testing.T) {
 	if !isDockerCandidate("ghcr.io/full-bars/urnetwork-3.23-fix:26.4", "ps") {
 		t.Error("urnetwork image must be a candidate")
 	}
-	if !isDockerCandidate("registry/whatever", "my-urnet-node") {
-		t.Error("urnet-named container must be a candidate")
+	// The rule now matches image repositories, not container names.
+	if isDockerCandidate("registry/whatever", "my-urnet-node") {
+		t.Error("unrelated image must not be a candidate regardless of container name")
 	}
 }

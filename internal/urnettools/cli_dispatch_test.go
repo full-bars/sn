@@ -279,12 +279,12 @@ func TestRunDockerNoContainers(t *testing.T) {
 		t.Errorf("RunDocker([exec urnet-tools status]) = %v, want \"no providers found\"", err)
 	}
 	// -- separator: everything after it is the container command (may
-	// contain its own flags); an explicit --unit target on a box with no
-	// containers errors as no-matching-provider (more precise than the
-	// no-target "no providers found").
+	// contain its own flags); an explicit --unit target on a box where
+	// docker cannot be listed reports that failure by name instead of
+	// pretending no provider matched.
 	err = RunDocker([]string{"exec", "--unit", "x", "--", "urnet-tools", "proxy", "add", "--proxy_file=/tmp/p.txt"})
-	if err == nil || !strings.Contains(err.Error(), "matches no provider") {
-		t.Errorf("RunDocker([exec --unit x -- cmd...]) = %v, want \"matches no provider\"", err)
+	if err == nil || !strings.Contains(err.Error(), "cannot resolve container") {
+		t.Errorf("RunDocker([exec --unit x -- cmd...]) = %v, want \"cannot resolve container\"", err)
 	}
 	// Unknown flag BEFORE the command must error loudly (was silently
 	// dropped before the -- separator fix), with a hint to use --.

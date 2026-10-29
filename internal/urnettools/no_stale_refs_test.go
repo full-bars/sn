@@ -49,9 +49,17 @@ func TestNoHardcodedRepoRefs(t *testing.T) {
 
 		scanner := bufio.NewScanner(f)
 		lineno := 0
+		// A line may name the old repository on purpose (the image allowlist
+		// has to match it); the marker makes that deliberate and keeps every
+		// other line checked.
+		const intentional = "// cross-lineage: intentional"
 		for scanner.Scan() {
 			lineno++
-			if strings.Contains(scanner.Text(), stale) {
+			line := scanner.Text()
+			if strings.Contains(line, intentional) {
+				continue
+			}
+			if strings.Contains(line, stale) {
 				violations = append(violations, fmt.Sprintf("%s:%d", path, lineno))
 			}
 		}
