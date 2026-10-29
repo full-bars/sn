@@ -33,6 +33,13 @@ func fallbackTestSetup(t *testing.T) (*bytes.Buffer, string) {
 		extenderUncountedLaunches = 0
 		extenderUncountedMu.Unlock()
 	})
+	resetHeld := func() {
+		extenderHeldMu.Lock()
+		extenderHeld = map[string]int64{}
+		extenderHeldMu.Unlock()
+	}
+	resetHeld()
+	t.Cleanup(resetHeld)
 	path, err := extenderFallbackPath()
 	if err != nil {
 		t.Fatal(err)
@@ -583,4 +590,89 @@ func TestExtenderLedgerSeamChild(t *testing.T) {
 	closeProviderStore()
 	t.Cleanup(closeProviderStore)
 	fmt.Printf("seam launch allowed=%v\n", newExtenderActivationGate().allowLaunch())
+}
+
+// With the store back but the fallback unreadable, the spending and the hold the
+// file may carry are unknown: the launch is held, and no uncounted launch is
+// spent on it.
+func TestExtenderLedgerUnreadableFallbackHoldsLaunch(t *testing.T) {
+	log, path := fallbackTestSetup(t)
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(path, 0700); err != nil {
+		t.Fatal(err)
+	}
+	gate := newExtenderActivationGate()
+	for i := 0; i < 4; i++ {
+		if gate.allowLaunch() {
+			t.Fatalf("launch %d proceeded past an unreadable fallback", i+1)
+		}
+	}
+	extenderUncountedMu.Lock()
+	uncounted := extenderUncountedLaunches
+	extenderUncountedMu.Unlock()
+	if uncounted != 0 {
+		t.Fatalf("%d uncounted launches spent on a store that is readable", uncounted)
+	}
+	if got := gate.allowLaunchFor(2, ""); got != extenderLaunchHeld {
+		t.Fatalf("decision=%v want held", got)
+	}
+	if gate.decideAtStart() || gate.pending {
+		t.Fatal("a held startup decision was cached as a verdict")
+	}
+	if got, _ := realAttempts(t, extenderActivationUnidentifiedAccount); got != 0 {
+		t.Fatalf("real record spent %d posts while held", got)
+	}
+	if !strings.Contains(log.String(), "held until it can be read") {
+		t.Fatalf("log: %s", log)
+	}
+
+	// Readable again, with a refusal hold the file carried.
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now()
+	closeProviderStore()
+	locked := lockedStore(t)
+	if err := holdExtenderFallback(now, "", extenderRefusalBackoff); err != nil {
+		t.Fatal(err)
+	}
+	_ = locked.Close()
+	closeProviderStore()
+	if gate.allowLaunch() {
+		t.Fatal("recovery bypassed the hold the fallback carried")
+	}
+}
+
+// A hold neither ledger could write is not lost: it refuses the launches that
+// follow and reaches the real record once it can be written.
+func TestExtenderLedgerFailedHoldWriteIsKept(t *testing.T) {
+	_, path := fallbackTestSetup(t)
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(path, 0700); err != nil {
+		t.Fatal(err)
+	}
+	locked := lockedStore(t)
+	now := time.Now()
+	if wait, persisted := recordExtenderActivationRefusedPersisted(now, ""); persisted || wait != extenderRefusalBackoff {
+		t.Fatalf("outage refusal = (%s, %v)", wait, persisted)
+	}
+	if allowExtenderFallback(now.Add(time.Minute), 2, "", errors.New("store out")) {
+		t.Fatal("a launch went through the hold that could not be written")
+	}
+	_ = locked.Close()
+	closeProviderStore()
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	allow, wait, _, err := extenderActivationDecision(now.Add(time.Minute), 1, "")
+	if err != nil || allow || wait <= 0 {
+		t.Fatalf("recovered record dropped the in-memory hold: allow=%v wait=%s err=%v", allow, wait, err)
+	}
+	if held := extenderHeldSnapshot(); len(held) != 0 {
+		t.Fatalf("hold still kept in memory after the record took it: %v", held)
+	}
 }

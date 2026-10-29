@@ -38,6 +38,7 @@ package miner
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -258,16 +259,19 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 		return err
 	}
 	defer unlock()
-	var fallback extenderFallbackRecord
-	var fallbackPath string
-	var fallbackFound bool
-	if path, pathErr := extenderFallbackPath(); pathErr == nil {
-		if loaded, found, loadErr := loadExtenderFallback(path); loadErr != nil {
-			tlog("⚠️ [extender] activation fallback record not merged: %v\n", loadErr)
-		} else {
-			fallback, fallbackFound, fallbackPath = loaded, found, path
-		}
+	// A fallback file that cannot be read may hold spending and a refusal hold
+	// the record does not, so the write waits for it rather than bypass it.
+	fallbackPath, pathErr := extenderFallbackPath()
+	if pathErr != nil {
+		warnExtenderBudgetUnavailable(account, pathErr)
+		return fmt.Errorf("%w: %v", errExtenderFallbackUnreadable, pathErr)
 	}
+	fallback, fallbackFound, loadErr := loadExtenderFallback(fallbackPath)
+	if loadErr != nil {
+		warnExtenderBudgetUnavailable(account, loadErr)
+		return fmt.Errorf("%w: %v", errExtenderFallbackUnreadable, loadErr)
+	}
+	held := extenderHeldSnapshot()
 	var record extenderActivationRecord
 	err = store.updateJSON(providerStoreBucketState, providerStoreKeyExtenderActivation, &record, func(found bool) error {
 		if !found {
@@ -280,25 +284,25 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 		if fallbackFound {
 			record.mergeFallback(fallback, time.Now())
 		}
+		applyExtenderHeld(&record, held)
 		return mutate(&record)
 	})
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
 		return err
 	}
+	releaseExtenderHeld(held)
 	if extenderFallbackMergedHook != nil {
 		extenderFallbackMergedHook()
 	}
-	if fallbackPath != "" {
-		// The file now mirrors the record it was merged into. Failing that, an
-		// already merged file is removed rather than left to be read as spending
-		// the store does not hold; the merge marks it as done either way.
-		if mirrorErr := mirrorExtenderFallback(fallbackPath, fallback, record, time.Now()); mirrorErr != nil {
-			tlog("⚠️ [extender] activation fallback mirror not written: %v\n", mirrorErr)
-			if fallbackFound {
-				if rmErr := os.Remove(fallbackPath); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {
-					tlog("⚠️ [extender] merged activation fallback record not removed: %v\n", rmErr)
-				}
+	// The file now mirrors the record it was merged into. Failing that, an
+	// already merged file is removed rather than left to be read as spending the
+	// store does not hold; the merge marks it as done either way.
+	if mirrorErr := mirrorExtenderFallback(fallbackPath, fallback, record, time.Now()); mirrorErr != nil {
+		tlog("⚠️ [extender] activation fallback mirror not written: %v\n", mirrorErr)
+		if fallbackFound {
+			if rmErr := os.Remove(fallbackPath); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {
+				tlog("⚠️ [extender] merged activation fallback record not removed: %v\n", rmErr)
 			}
 		}
 	}
@@ -629,6 +633,10 @@ const (
 	extenderLaunchWithheld extenderLaunchDecision = iota
 	extenderLaunchRefused
 	extenderLaunchAllowed
+	// extenderLaunchHeld is a launch refused because the fallback ledger could
+	// not be read. Like a withheld one it is decided again at the next launch,
+	// but the fallback cannot stand in for it.
+	extenderLaunchHeld
 )
 
 // decideAtStart caches only a real verdict; a withheld decision must be
@@ -636,7 +644,8 @@ const (
 func (gate *extenderActivationGate) decideAtStart() bool {
 	decision := gate.allowLaunchFor(hostActivationPostsProbe(), extenderActivationUserId())
 	gate.mu.Lock()
-	gate.pending, gate.allow = decision != extenderLaunchWithheld, decision == extenderLaunchAllowed
+	gate.pending = decision == extenderLaunchAllowed || decision == extenderLaunchRefused
+	gate.allow = decision == extenderLaunchAllowed
 	gate.mu.Unlock()
 	return decision == extenderLaunchAllowed
 }
@@ -712,6 +721,10 @@ func (gate *extenderActivationGate) probeLaunch(posts int, userId string, attemp
 	for attempt := 0; attempt < attempts; attempt++ {
 		_, openErr := openProviderStoreForProcessRetry(true, true, probeOpenTimeout)
 		allow, wait, used, err := extenderActivationDecision(time.Now(), posts, userId)
+		if errors.Is(err, errExtenderFallbackUnreadable) {
+			tlog("[extender] extender role off: %v; held until it can be read\n", err)
+			return extenderLaunchHeld, err
+		}
 		if err != nil {
 			cause = err
 			if openErr != nil && !errors.Is(err, errProviderStoreReleased) {

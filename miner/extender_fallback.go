@@ -89,10 +89,61 @@ type extenderFallbackLegacyLaunch struct {
 	Posts int   `json:"posts"`
 }
 
+// errExtenderFallbackUnreadable is why the real record was not used: the
+// fallback file may carry spending and a refusal hold the record does not have,
+// and a file that cannot be read cannot be shown to carry neither. The launch is
+// held, not allowed, until the file can be read.
+var errExtenderFallbackUnreadable = errors.New("activation fallback record unreadable")
+
 var (
 	extenderUncountedMu       sync.Mutex
 	extenderUncountedLaunches int
+
+	// extenderHeld is a refusal hold neither ledger could write, by account,
+	// kept for this process until the real record takes it.
+	extenderHeldMu sync.Mutex
+	extenderHeld   = map[string]int64{}
 )
+
+func holdExtenderInMemory(account string, until int64) {
+	extenderHeldMu.Lock()
+	defer extenderHeldMu.Unlock()
+	if extenderHeld[account] < until {
+		extenderHeld[account] = until
+	}
+}
+
+func extenderHeldSnapshot() map[string]int64 {
+	extenderHeldMu.Lock()
+	defer extenderHeldMu.Unlock()
+	out := make(map[string]int64, len(extenderHeld))
+	for account, until := range extenderHeld {
+		out[account] = until
+	}
+	return out
+}
+
+// applyExtenderHeld raises the holds of a record to the ones kept in memory.
+func applyExtenderHeld(record *extenderActivationRecord, held map[string]int64) {
+	for account, until := range held {
+		state := record.Accounts[account]
+		if state.BackoffUntilUnix < until {
+			state.BackoffUntilUnix = until
+			record.Accounts[account] = state
+		}
+	}
+}
+
+// releaseExtenderHeld forgets the holds a committed write carried.
+func releaseExtenderHeld(applied map[string]int64) {
+	extenderHeldMu.Lock()
+	defer extenderHeldMu.Unlock()
+	for account, until := range applied {
+		if extenderHeld[account] <= until {
+			delete(extenderHeld, account)
+		}
+	}
+}
 
 func extenderFallbackPath() (string, error) {
 	dir, err := providerStateDir()
@@ -390,6 +441,7 @@ func decideExtenderFallback(now time.Time, posts int, userId string) (allow bool
 	}
 	account := extenderActivationAccountKey(userId)
 	record := fallback.effective()
+	applyExtenderHeld(&record, extenderHeldSnapshot())
 	allow, wait, used = decideExtenderActivationOn(&record, account, now, posts)
 	if !allow {
 		return false, wait, used, nil
@@ -406,28 +458,35 @@ func decideExtenderFallback(now time.Time, posts int, userId string) (allow bool
 }
 
 // holdExtenderFallback keeps a refusal hold the real record could not take, so
-// the launches that follow honour it and the real record inherits it.
-func holdExtenderFallback(now time.Time, userId string, wait time.Duration) {
-	unlock, err := lockExtenderLedger()
+// the launches that follow honour it and the real record inherits it. A hold
+// the file cannot take either is kept in memory and reported.
+func holdExtenderFallback(now time.Time, userId string, wait time.Duration) error {
+	account := extenderActivationAccountKey(userId)
+	until := now.Add(wait).Unix()
+	err := func() error {
+		unlock, err := lockExtenderLedger()
+		if err != nil {
+			return err
+		}
+		defer unlock()
+		path, err := extenderFallbackPath()
+		if err != nil {
+			return err
+		}
+		fallback, _, err := loadExtenderFallback(path)
+		if err != nil {
+			return err
+		}
+		// The streak is counted by the retry that reaches the real record;
+		// only the hold travels, so it is not counted twice.
+		fallback.appendEntry(extenderFallbackEntry{Account: account, HoldUntilUnix: until})
+		return writeExtenderFallback(path, fallback, now)
+	}()
 	if err != nil {
-		return
+		holdExtenderInMemory(account, until)
+		tlog("⚠️ [extender] refusal hold could not be written (%v); holding it in memory\n", err)
 	}
-	defer unlock()
-	path, err := extenderFallbackPath()
-	if err != nil {
-		return
-	}
-	fallback, _, err := loadExtenderFallback(path)
-	if err != nil {
-		return
-	}
-	// The streak is counted by the retry that reaches the real record; only
-	// the hold travels, so it is not counted twice.
-	fallback.appendEntry(extenderFallbackEntry{
-		Account:       extenderActivationAccountKey(userId),
-		HoldUntilUnix: now.Add(wait).Unix(),
-	})
-	_ = writeExtenderFallback(path, fallback, now)
+	return err
 }
 
 // allowExtenderFallback decides a launch the real record could not. cause is
@@ -436,7 +495,7 @@ func holdExtenderFallback(now time.Time, userId string, wait time.Duration) {
 func allowExtenderFallback(now time.Time, posts int, userId string, cause error) bool {
 	allow, wait, used, err := decideExtenderFallback(now, posts, userId)
 	if err != nil {
-		return allowUncountedLaunch(cause, err)
+		return allowUncountedLaunch(now, userId, cause, err)
 	}
 	if !allow {
 		tlog("[extender] extender role off: fallback activation budget held: %d of %d posts in the last hour, next in %s\n",
@@ -447,7 +506,15 @@ func allowExtenderFallback(now time.Time, posts int, userId string, cause error)
 	return true
 }
 
-func allowUncountedLaunch(cause, fallbackErr error) bool {
+func allowUncountedLaunch(now time.Time, userId string, cause, fallbackErr error) bool {
+	held := extenderHeldSnapshot()
+	for _, account := range []string{extenderActivationAccountKey(userId), extenderActivationUnidentifiedAccount} {
+		if now.Unix() < held[account] {
+			tlog("[extender] extender role off: refusal hold kept in memory for %s\n",
+				formatDuration(time.Duration(held[account]-now.Unix())*time.Second))
+			return false
+		}
+	}
 	extenderUncountedMu.Lock()
 	defer extenderUncountedMu.Unlock()
 	if extenderUncountedLaunchMax <= extenderUncountedLaunches {
