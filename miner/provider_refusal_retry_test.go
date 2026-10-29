@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -165,5 +166,26 @@ func TestStatusCallbacksDoNotDriveRefusalWrites(t *testing.T) {
 	}
 	if held := extenderRefusalsHeldCount(); held != 10 {
 		t.Fatalf("held %d refusals, want all 10", held)
+	}
+}
+
+// A held refusal's file is what a restart inherits, so it is published by the
+// rename that is durable on every platform, straight into the state directory.
+func TestHeldRefusalFileIsPublishedDurably(t *testing.T) {
+	testExtenderState(t)
+	original := providerStoreDurableRename
+	t.Cleanup(func() { providerStoreDurableRename = original })
+	var published []string
+	providerStoreDurableRename = func(from, to string) error {
+		published = append(published, to)
+		return original(from, to)
+	}
+	holdExtenderRefusal(extenderTestAccountA, "scope.701")
+	dir, err := providerStateDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(published) != 1 || filepath.Dir(published[0]) != dir {
+		t.Fatalf("held refusal published as %v, want one durable rename into %s", published, dir)
 	}
 }

@@ -15,9 +15,10 @@ import (
 // flush; it is not a verdict on the caller's own access, which is why
 // elevation does not resolve it.
 //
-// This package makes no directory-durability claim on Windows. Absorbing the
-// refusal is how a caller is allowed to proceed rather than being stopped by a
-// primitive the platform does not have.
+// This package makes no directory-durability claim for Sync on Windows.
+// Absorbing the refusal is how a caller is allowed to proceed rather than being
+// stopped by a primitive the platform does not have. A caller that needs a
+// durable name uses Rename, which is write-through here.
 //
 // The descriptor is already known to be a directory; Sync refuses anything
 // else before reaching this point, so a file can never be certified here.
@@ -52,4 +53,21 @@ func absorbable(err error) bool {
 		}
 	}
 	return false
+}
+
+// MOVEFILE_WRITE_THROUGH is the documented guarantee: MoveFileEx does not
+// return until the move has been flushed to disk.
+func renameDurably(oldpath, newpath string) error {
+	from, err := windows.UTF16PtrFromString(oldpath)
+	if err != nil {
+		return err
+	}
+	to, err := windows.UTF16PtrFromString(newpath)
+	if err != nil {
+		return err
+	}
+	if err := windows.MoveFileEx(from, to, windows.MOVEFILE_REPLACE_EXISTING|windows.MOVEFILE_WRITE_THROUGH); err != nil {
+		return &os.LinkError{Op: "rename", Old: oldpath, New: newpath, Err: err}
+	}
+	return nil
 }

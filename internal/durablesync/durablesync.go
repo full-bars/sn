@@ -4,6 +4,20 @@
 // absorbed so a caller can proceed, while every real permission or I/O failure
 // still fails.
 //
+// What each call assures:
+//
+//   - Sync, SyncDir and SyncParent make a completed rename or creation in the
+//     directory durable on Unix. On Windows they assure nothing: a nil return
+//     there only means no real failure was seen.
+//   - Rename publishes a file under its new name durably on both: on Unix by
+//     renaming and then flushing the directories involved, on Windows by
+//     MoveFileEx with MOVEFILE_WRITE_THROUGH, which does not return until the
+//     move is on disk.
+//
+// A caller whose correctness depends on a name surviving a crash on every
+// platform publishes it with Rename. Creating or removing a name and then
+// calling SyncDir is durable on Unix only.
+//
 // The directory requirement and the verdict are shared. The platform files
 // differ only in the flush itself, which is where the platforms actually
 // differ.
@@ -57,4 +71,10 @@ func SyncDir(path string) error {
 // as durable as the entry naming it.
 func SyncParent(path string) error {
 	return SyncDir(filepath.Dir(path))
+}
+
+// Rename moves oldpath to newpath, replacing newpath, and returns once the move
+// is durable. See the package comment for what that means per platform.
+func Rename(oldpath, newpath string) error {
+	return renameDurably(oldpath, newpath)
 }

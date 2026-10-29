@@ -20,8 +20,8 @@ import (
 // or it fails and holds the role. A worker retries while anything is held, so
 // a store that comes back with nothing else asking still keeps the refusal.
 //
-// Each held refusal is also written to its own file under
-// <state>/extender-refusals, because the process can end before the store
+// Each held refusal is also written to its own file in the state directory,
+// named extender-refusal-<attempt>.json, because the process can end before the store
 // takes it: a restart, or a hotswap whose parent has released the store to
 // its candidate. The next process, or the candidate, reads those files in the
 // same transactions and removes each one only after the store has kept it. A
@@ -42,7 +42,10 @@ type extenderRefusalJournalFile struct {
 	AtUnix  int64  `json:"at_unix"`
 }
 
-const extenderRefusalJournalDir = "extender-refusals"
+// The files live in the state directory itself, which already exists: a
+// directory created for them would need its own name to be durable first,
+// which Windows cannot assure.
+const extenderRefusalJournalPrefix = "extender-refusal-"
 
 // extenderRefusalRetryInterval paces the worker. A variable so a test can
 // shorten it.
@@ -78,18 +81,15 @@ func holdExtenderRefusal(account, attempt string) {
 // journalExtenderRefusal publishes one refusal's file by rename, so a reader
 // sees a whole file or none.
 func journalExtenderRefusal(refusal extenderPendingRefusal) error {
-	dir, err := providerStatePath(extenderRefusalJournalDir)
+	dir, err := providerStateDir()
 	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
 	data, err := json.Marshal(extenderRefusalJournalFile{Account: refusal.account, Attempt: refusal.attempt, AtUnix: time.Now().Unix()})
 	if err != nil {
 		return err
 	}
-	temp, err := os.CreateTemp(dir, ".tmp-*")
+	temp, err := os.CreateTemp(dir, ".tmp-"+extenderRefusalJournalPrefix+"*")
 	if err != nil {
 		return err
 	}
@@ -101,25 +101,26 @@ func journalExtenderRefusal(refusal extenderPendingRefusal) error {
 		err = closeErr
 	}
 	if err == nil {
-		err = os.Rename(temp.Name(), filepath.Join(dir, extenderRefusalJournalName(refusal.attempt)))
+		// Durable on every platform, unlike a rename and a directory sync,
+		// which Windows cannot flush.
+		err = providerStoreDurableRename(temp.Name(), filepath.Join(dir, extenderRefusalJournalName(refusal.attempt)))
 	}
 	if err != nil {
 		_ = os.Remove(temp.Name())
 		tlog("⚠️ [extender] could not write held refusal %s: %v\n", refusal.attempt, err)
-		return err
 	}
-	return providerStoreSyncDir(dir)
+	return err
 }
 
 func extenderRefusalJournalName(attempt string) string {
-	return hex.EncodeToString([]byte(attempt)) + ".json"
+	return extenderRefusalJournalPrefix + hex.EncodeToString([]byte(attempt)) + ".json"
 }
 
 // readExtenderRefusalJournal returns the refusals on disk. A directory that
 // cannot be read is an error, so the transaction fails and holds the role
 // rather than deciding without refusals it cannot see.
 func readExtenderRefusalJournal(now time.Time) ([]extenderPendingRefusal, error) {
-	dir, err := providerStatePath(extenderRefusalJournalDir)
+	dir, err := providerStateDir()
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func readExtenderRefusalJournal(now time.Time) ([]extenderPendingRefusal, error)
 	}
 	var refusals []extenderPendingRefusal
 	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
+		if entry.IsDir() || !strings.HasPrefix(entry.Name(), extenderRefusalJournalPrefix) || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
 		}
 		path := filepath.Join(dir, entry.Name())
@@ -186,7 +187,7 @@ func snapshotExtenderRefusals(now time.Time) ([]extenderPendingRefusal, error) {
 // settleExtenderRefusals drops refusals a committed transaction has kept, the
 // file after the store, so no crash between them loses the refusal.
 func settleExtenderRefusals(kept []extenderPendingRefusal) {
-	dir, dirErr := providerStatePath(extenderRefusalJournalDir)
+	dir, dirErr := providerStateDir()
 	extenderRefusalsHeld.mu.Lock()
 	defer extenderRefusalsHeld.mu.Unlock()
 	for _, refusal := range kept {
