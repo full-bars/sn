@@ -182,12 +182,18 @@ func forceNonInteractiveForTest(t *testing.T) {
 }
 
 // withWalletStdin feeds one answer to the guard as if stdin were a terminal.
+// It sets the override directly rather than calling the linux-tagged test
+// helper, so this file still builds on FreeBSD and Windows.
 func withWalletStdin(t *testing.T, answer string) {
 	t.Helper()
-	forceInteractiveForTest(t)
-	old := stdinReader
+	oldInteractive := stdinIsInteractiveOverride
+	stdinIsInteractiveOverride = func() bool { return true }
+	oldReader := stdinReader
 	stdinReader = bufio.NewReader(strings.NewReader(answer))
-	t.Cleanup(func() { stdinReader = old })
+	t.Cleanup(func() {
+		stdinIsInteractiveOverride = oldInteractive
+		stdinReader = oldReader
+	})
 }
 
 // The browser form signs in the extension and never reads a seed, so the
