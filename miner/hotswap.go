@@ -303,8 +303,10 @@ type readyResult struct {
 func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID int) error {
 	// A refusal decided but not yet kept is committed or journaled before the
 	// candidate can act: once the store is released this process cannot
-	// commit it, and the candidate reads only what is on disk.
-	if err := ensureExtenderRefusalsDurable(); err != nil {
+	// commit it, and the candidate reads only what is on disk. Sealing also
+	// has any refusal decided from here on journaled at once, so none waits
+	// in this process's memory while the candidate decides.
+	if err := sealExtenderRefusals(); err != nil {
 		hotswapLog("❌ [hotswap] Not handing off: %v. Aborting handoff; live provider retained.\n", err)
 		return errors.Join(err, abortBatonHandoff(session))
 	}
@@ -360,6 +362,7 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 // serving, so leaving the store released would fail every state write for the
 // rest of its life.
 func abortBatonHandoff(session *HotswapParentSession) error {
+	unsealExtenderRefusals()
 	// Kill the candidate first: if it already opened the file, its exit
 	// releases the bbolt lock the reopen waits on.
 	session.Kill()

@@ -161,6 +161,10 @@ var extenderRefusalsHeld struct {
 	journalAt time.Time
 	// generation ends a worker started before a reset.
 	generation uint64
+	// sealed is set once the process has committed to giving up its memory (a
+	// handoff past its gate): a refusal decided from then on is journaled at
+	// once, ignoring the pace, because the successor reads only files.
+	sealed bool
 }
 
 // queueExtenderOpLocked appends one operation. The caller holds the barrier
@@ -187,7 +191,7 @@ func holdExtenderRefusal(account, attempt string) {
 	// Without the interprocess half of the barrier the file could appear
 	// after an admission read, so the refusal stays in memory, where this
 	// process's own admissions still charge it.
-	if barrierErr == nil && !time.Now().Before(extenderRefusalsHeld.journalAt) {
+	if barrierErr == nil && (extenderRefusalsHeld.sealed || !time.Now().Before(extenderRefusalsHeld.journalAt)) {
 		journalQueuedRefusalsLocked()
 	}
 	if hasUnjournaledRefusalLocked() {
@@ -539,6 +543,7 @@ func resetExtenderRefusals() {
 	extenderRefusalsHeld.worker = false
 	extenderRefusalsHeld.retryAt = time.Time{}
 	extenderRefusalsHeld.journalAt = time.Time{}
+	extenderRefusalsHeld.sealed = false
 	extenderRefusalsHeld.generation++
 }
 
@@ -577,6 +582,50 @@ func ensureExtenderRefusalsDurable() error {
 		return fmt.Errorf("%d decided activation refusals are neither in the state store nor in a durable file", at)
 	}
 	return nil
+}
+
+// sealExtenderRefusals is the gate a handoff passes before it gives up this
+// process's memory. It makes every decided refusal durable, and fails while one
+// is not. Under the barrier it then seals the queue, so a refusal decided after
+// the gate is journaled where the successor reads it, in the same barrier hold
+// its admission needs; none can sit in memory between the gate and the
+// successor's first decision. A refusal that cannot be journaled even then
+// stays counted at risk, which the wait below reports.
+func sealExtenderRefusals() error {
+	if err := ensureExtenderRefusalsDurable(); err != nil {
+		return err
+	}
+	release, _ := lockExtenderRefusalBarrier()
+	defer release()
+	extenderRefusalsHeld.mu.Lock()
+	defer extenderRefusalsHeld.mu.Unlock()
+	extenderRefusalsHeld.sealed = true
+	// A refusal queued between the gate and the seal.
+	if extenderRefusalsHeldAtRiskLocked() > 0 {
+		if err := journalQueuedRefusalsLocked(); err != nil {
+			extenderRefusalsHeld.sealed = false
+			return fmt.Errorf("%d decided activation refusals are neither in the state store nor in a durable file", extenderRefusalsHeldAtRiskLocked())
+		}
+	}
+	return nil
+}
+
+// unsealExtenderRefusals returns to paced journaling after a handoff is
+// abandoned and the process keeps serving.
+func unsealExtenderRefusals() {
+	extenderRefusalsHeld.mu.Lock()
+	defer extenderRefusalsHeld.mu.Unlock()
+	extenderRefusalsHeld.sealed = false
+}
+
+func extenderRefusalsHeldAtRiskLocked() int {
+	count := 0
+	for _, op := range extenderRefusalsHeld.ops {
+		if op.kind == extenderOpRefusal && !op.journaled {
+			count++
+		}
+	}
+	return count
 }
 
 // waitExtenderRefusalsDurable waits for a decided refusal that only memory
