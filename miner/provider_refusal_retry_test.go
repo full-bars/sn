@@ -144,3 +144,26 @@ func TestRefusalsInOneMillisecondAreDistinct(t *testing.T) {
 		t.Fatalf("refusals = %d, want 2: one attempt from each listener", refusals)
 	}
 }
+
+// Status callbacks arrive at whatever rate the device sends them. Against a
+// store that will not take a refusal, they must not each run a write.
+func TestStatusCallbacksDoNotDriveRefusalWrites(t *testing.T) {
+	testExtenderState(t)
+	if providerStoreInstance() == nil {
+		t.Fatal("store did not open")
+	}
+	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
+	releaseProviderStore()
+	before := extenderRefusalWriteAttempts.Load()
+	for i := 0; i < 20; i++ {
+		// New refusals and redeliveries of a standing one.
+		at := int64(601 + i/2)
+		listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: i%2 == 0, LastActivationTime: at, LastActivationError: "refused", LastActivationRefused: true})
+	}
+	if writes := extenderRefusalWriteAttempts.Load() - before; writes != 1 {
+		t.Fatalf("20 callbacks ran %d refusal writes against a failing store, want 1", writes)
+	}
+	if held := extenderRefusalsHeldCount(); held != 10 {
+		t.Fatalf("held %d refusals, want all 10", held)
+	}
+}

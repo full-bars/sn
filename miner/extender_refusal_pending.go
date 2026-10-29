@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -47,10 +48,17 @@ const extenderRefusalJournalDir = "extender-refusals"
 // shorten it.
 var extenderRefusalRetryInterval = providerStoreRetryInterval
 
+// extenderRefusalWriteAttempts counts the transactions run only to keep held
+// refusals.
+var extenderRefusalWriteAttempts atomic.Int64
+
 var extenderRefusalsHeld struct {
 	mu     sync.Mutex
 	items  map[string]extenderPendingRefusal
 	worker bool
+	// retryAt paces the callers: after a failed attempt none tries again
+	// before it, however many status callbacks arrive.
+	retryAt time.Time
 	// generation ends a worker started before a reset.
 	generation uint64
 }
@@ -209,13 +217,18 @@ func extenderRefusalsHeldCount() int {
 }
 
 // flushExtenderRefusals tries to keep what is held, and starts the worker when
-// the store will not take it.
+// the store will not take it. Status callbacks are not paced, so after a
+// failure this does nothing until the retry interval has passed.
 func flushExtenderRefusals() {
-	if keepExtenderRefusals() == nil {
+	extenderRefusalsHeld.mu.Lock()
+	paced := time.Now().Before(extenderRefusalsHeld.retryAt)
+	extenderRefusalsHeld.mu.Unlock()
+	if paced || keepExtenderRefusals() == nil {
 		return
 	}
 	extenderRefusalsHeld.mu.Lock()
 	defer extenderRefusalsHeld.mu.Unlock()
+	extenderRefusalsHeld.retryAt = time.Now().Add(extenderRefusalRetryInterval)
 	if !extenderRefusalsHeld.worker {
 		extenderRefusalsHeld.worker = true
 		go retryExtenderRefusals(extenderRefusalsHeld.generation)
@@ -231,6 +244,7 @@ func keepExtenderRefusals() error {
 	if len(pending) == 0 {
 		return nil
 	}
+	extenderRefusalWriteAttempts.Add(1)
 	return mutateExtenderActivationRecord(extenderActivationAccountKey(pending[0].account), func(*extenderActivationRecord) error { return nil })
 }
 
@@ -264,5 +278,6 @@ func resetExtenderRefusals() {
 	defer extenderRefusalsHeld.mu.Unlock()
 	extenderRefusalsHeld.items = nil
 	extenderRefusalsHeld.worker = false
+	extenderRefusalsHeld.retryAt = time.Time{}
 	extenderRefusalsHeld.generation++
 }

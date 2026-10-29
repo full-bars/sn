@@ -865,7 +865,7 @@ func TestProviderStoreReleaseRefusesAReopenAndReportsLostWrites(t *testing.T) {
 
 // A refusal the store could not take must not be forgotten. The attempt is
 // marked handled before the write, so when the write fails and the store comes
-// back, the next observation of the same attempt has to charge it.
+// back, the refusal is still held and the next budget decision charges it.
 func TestExtenderActivationRefusalSurvivesATransientStoreFailure(t *testing.T) {
 	testExtenderState(t)
 	const account = extenderTestAccountA
@@ -890,6 +890,9 @@ func TestExtenderActivationRefusalSurvivesATransientStoreFailure(t *testing.T) {
 	redelivered := *status
 	redelivered.Listening = false
 	listener.ExtenderProvideStatusChanged(&redelivered)
+	// The redelivery is paced and does not write; the next admission keeps
+	// the refusal before it decides.
+	extenderActivationAllow(time.Now(), 1, account)
 
 	record, err := readExtenderActivationRecord(account)
 	if err != nil {

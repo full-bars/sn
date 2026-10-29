@@ -2,6 +2,7 @@ package miner
 
 import (
 	"testing"
+	"time"
 
 	"github.com/urnetwork/sdk"
 )
@@ -20,6 +21,8 @@ func TestCallbackRefusalRetriesUnchangedObservation(t *testing.T) {
 		t.Fatal(err)
 	}
 	listener.ExtenderProvideStatusChanged(status)
+	// Paced: the redelivery does not write, the next admission does.
+	extenderActivationAllow(time.Now(), 1, account)
 	record, err := readExtenderActivationRecord(account)
 	if err != nil {
 		t.Fatal(err)
