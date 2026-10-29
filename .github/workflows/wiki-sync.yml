@@ -6,14 +6,46 @@ on:
       - main
     paths:
       - 'docs/**'
+      - '.github/workflows/wiki-sync.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  sync-wiki:
+  check-links:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # A relative "page.md" link inside the wiki resolves to a raw file and
+      # shows the operator unformatted markdown, which is how a rendered guide
+      # turns into a wall of text. Wiki pages are linked by page name.
+      - name: No relative markdown links
+        run: |
+          status=0
+          while IFS= read -r hit; do
+            echo "::error file=${hit%%:*}::relative markdown link; link the wiki page name instead: ${hit#*:}"
+            status=1
+          # Only the pages the wiki publishes: top-level docs/*.md. The
+          # archive, spec and design trees stay in the repository.
+          done < <(
+            for file in docs/*.md; do
+              [ -f "$file" ] || continue
+              sed -E -e "/^[[:space:]]*\`\`\`/,/^[[:space:]]*\`\`\`/s/.*//" \
+                     -e "/^[[:space:]]*~~~/,/^[[:space:]]*~~~/s/.*//" \
+                     -e "s/\`+[^\`]*\`+//g" "$file" \
+                | grep -noE '\]\([A-Za-z0-9_./-]+\.md[)#]' \
+                | grep -vE '\]\((/|[a-z]+://)' \
+                | sed "s|^|${file}:|" || true
+            done
+          )
+          exit $status
+
+  sync-wiki:
+    needs: check-links
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout main repository
         uses: actions/checkout@v4
@@ -27,26 +59,30 @@ jobs:
           repository: ${{ github.repository }}.wiki
           path: wiki-repo
           token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
 
       - name: Sync markdown files to wiki
         run: |
-          if [ -d "wiki-repo" ]; then
-            echo "Copying documentation pages to wiki repository..."
-            cp -v main-repo/docs/*.md wiki-repo/
-            if [ -f "main-repo/docs/urnet-tools-go.md" ]; then
-              cp -v main-repo/docs/urnet-tools-go.md wiki-repo/urnet-tools-Go.md
-            fi
-            cd wiki-repo
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            if [ -n "$(git status --porcelain)" ]; then
-              git add .
-              git commit -m "docs: automated sync from main docs/"
-              git push origin master || git push origin main
-            else
-              echo "Wiki is already in sync."
-            fi
+          echo "Copying documentation pages to wiki repository..."
+          cp -v main-repo/docs/*.md wiki-repo/
+          # The wiki predates the docs/ tree and its index links this page by
+          # its capitalised name, so keep that name working.
+          if [ -f "main-repo/docs/urnet-tools-go.md" ]; then
+            cp -v main-repo/docs/urnet-tools-go.md wiki-repo/urnet-tools-Go.md
+          fi
+          # Images and diagrams are documentation too: a page that
+          # references assets/ renders broken without them. The archive, spec
+          # and design trees are not published, so they are not copied.
+          if [ -d "main-repo/docs/assets" ]; then
+            rm -rf wiki-repo/assets
+            cp -rv main-repo/docs/assets wiki-repo/assets
+          fi
+          cd wiki-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "docs: automated sync from main docs/"
+            git push origin master || git push origin main
           else
-            echo "Wiki repo could not be checked out (check repository wiki settings)."
+            echo "Wiki is already in sync."
           fi
