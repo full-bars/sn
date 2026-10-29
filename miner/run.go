@@ -2089,6 +2089,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				return slotCancel, nil
 			},
 		)
+		reloader.slotIdentity = func(settings *connect.ProxySettings) string {
+			return providerRegistrationSlot(slotIdentities, settings)
+		}
 		reloader.spawnGeneration = func(settings *connect.ProxySettings, generation uint64) (context.CancelFunc, <-chan struct{}, error) {
 			if err := reloader.reserveAddress(settings); err != nil {
 				return nil, nil, err

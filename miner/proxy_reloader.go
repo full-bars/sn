@@ -41,8 +41,8 @@ type minerReloadSlot struct {
 }
 
 type minerRetiringSlot struct {
-	address string
-	done    <-chan struct{}
+	slot string
+	done <-chan struct{}
 }
 
 // minerRetireTimeout bounds how long a replacement waits for the worker it
@@ -92,10 +92,16 @@ type minerProxyReloader struct {
 	// returned, so a replacement for the same identity can wait for it.
 	spawnGeneration func(*connect.ProxySettings, uint64) (context.CancelFunc, <-chan struct{}, error)
 
-	// Retain the address as well as the identity: a username change can share
-	// the same platform slot even though its proxy key is different.
-	retiring          map[string]minerRetiringSlot
-	retiringByAddress map[string]map[string]struct{}
+	// retiring holds every cancelled slot whose worker may still be tearing
+	// down, by proxy key, with the platform slot it held. A new worker waits
+	// for the workers that held its own key and its own platform slot: one
+	// platform slot must never hold two sessions.
+	retiring       map[string]minerRetiringSlot
+	retiringBySlot map[string]map[string]struct{}
+	// slotIdentity names the platform slot of a proxy, the same way the
+	// worker's registration does (providerRegistrationSlot). The run installs
+	// its startup-fixed resolver; nil falls back to network plus address.
+	slotIdentity func(*connect.ProxySettings) string
 	// retireTimeout bounds that wait; zero means minerRetireTimeout.
 	retireTimeout time.Duration
 
@@ -162,11 +168,11 @@ func newMinerProxyReloader(
 	spawn func(*connect.ProxySettings) (context.CancelFunc, error),
 ) *minerProxyReloader {
 	return &minerProxyReloader{
-		desired:           desired,
-		spawn:             spawn,
-		running:           map[string]*minerReloadSlot{},
-		retiring:          map[string]minerRetiringSlot{},
-		retiringByAddress: map[string]map[string]struct{}{},
+		desired:        desired,
+		spawn:          spawn,
+		running:        map[string]*minerReloadSlot{},
+		retiring:       map[string]minerRetiringSlot{},
+		retiringBySlot: map[string]map[string]struct{}{},
 	}
 }
 
@@ -186,19 +192,28 @@ func (r *minerProxyReloader) retireLocked(key string, slot *minerReloadSlot) {
 	delete(r.running, key)
 	r.releaseAddress(slot.settings)
 	if slot.done != nil {
-		r.retiring[key] = minerRetiringSlot{address: slot.settings.Address, done: slot.done}
-		if slot.settings.Address != "" {
-			if r.retiringByAddress[slot.settings.Address] == nil {
-				r.retiringByAddress[slot.settings.Address] = map[string]struct{}{}
-			}
-			r.retiringByAddress[slot.settings.Address][key] = struct{}{}
+		id := r.platformSlot(slot.settings)
+		r.retiring[key] = minerRetiringSlot{slot: id, done: slot.done}
+		if r.retiringBySlot[id] == nil {
+			r.retiringBySlot[id] = map[string]struct{}{}
 		}
+		r.retiringBySlot[id][key] = struct{}{}
 	}
 }
 
-// awaitRetiredLocked waits for workers sharing the identity or address. One
-// deadline bounds the entire wait, and an incomplete worker remains recorded
-// so a later reload can retry without starting an overlapping session.
+// platformSlot is the identity the platform keys a session on for settings.
+func (r *minerProxyReloader) platformSlot(settings *connect.ProxySettings) string {
+	if r.slotIdentity != nil {
+		return r.slotIdentity(settings)
+	}
+	return settings.Network + "\x00" + settings.Address
+}
+
+// awaitRetiredLocked waits for the retiring workers that held key or the
+// platform slot of settings. One deadline bounds the entire wait, and an
+// incomplete worker remains recorded so a later reload can retry without
+// starting an overlapping session. Workers on other platform slots, even at the
+// same address, are not waited for.
 func (r *minerProxyReloader) awaitRetiredLocked(key string, settings *connect.ProxySettings) error {
 	timeout := r.retireTimeout
 	if timeout <= 0 {
@@ -206,12 +221,16 @@ func (r *minerProxyReloader) awaitRetiredLocked(key string, settings *connect.Pr
 	}
 	timer := time.NewTimer(timeout)
 	defer timer.Stop()
-	keys := make(map[string]struct{}, len(r.retiringByAddress[settings.Address])+1)
-	keys[key] = struct{}{}
-	for oldKey := range r.retiringByAddress[settings.Address] {
-		keys[oldKey] = struct{}{}
+	slotKeys := r.retiringBySlot[r.platformSlot(settings)]
+	keys := make([]string, 0, len(slotKeys)+1)
+	keys = append(keys, key)
+	for oldKey := range slotKeys {
+		if oldKey != key {
+			keys = append(keys, oldKey)
+		}
 	}
-	for oldKey := range keys {
+	sort.Strings(keys)
+	for _, oldKey := range keys {
 		retired, ok := r.retiring[oldKey]
 		if !ok {
 			continue
@@ -219,9 +238,9 @@ func (r *minerProxyReloader) awaitRetiredLocked(key string, settings *connect.Pr
 		select {
 		case <-retired.done:
 			delete(r.retiring, oldKey)
-			delete(r.retiringByAddress[retired.address], oldKey)
-			if len(r.retiringByAddress[retired.address]) == 0 {
-				delete(r.retiringByAddress, retired.address)
+			delete(r.retiringBySlot[retired.slot], oldKey)
+			if len(r.retiringBySlot[retired.slot]) == 0 {
+				delete(r.retiringBySlot, retired.slot)
 			}
 		case <-timer.C:
 			return fmt.Errorf("previous worker for %s is still shutting down after %s", proxyKeyDisplay(oldKey), timeout)
