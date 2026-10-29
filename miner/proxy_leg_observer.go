@@ -108,7 +108,7 @@ func proxyLegShadowSweep(now time.Time) {
 	for _, id := range minerProxyLeg.Ids() {
 		if minerProxyLeg.Flagged(id, now, lastOK) {
 			failures, _ := minerProxyLeg.Totals()
-			tlog("[proxy][leg] would shed %s: the platform dial fails inside the proxy connect step (%d in total); nothing is shed\n", id, failures)
+			tlog("[proxy][leg] would shed %s: the platform dial fails inside the proxy connect step (%d in total); nothing is shed\n", proxyKeyDisplay(id), failures)
 		}
 	}
 }
