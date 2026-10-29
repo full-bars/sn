@@ -78,11 +78,11 @@ docker run -d \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   --sysctl net.ipv4.ip_forward=1 \
-  -e BUILD=jwt \
+  -e AUTHCODE='YOUR_AUTH_CODE_HERE' \
   -e HOST_HOSTNAME=$(hostname) \
   -v urfix_config:/root/.urnetwork \
   -v /path/to/proxy.txt:/app/proxy.txt \
-  ghcr.io/full-bars/sn:latest AUTH_CODE_HERE
+  ghcr.io/full-bars/sn:latest
 ```
 
 Install `urnet-docker` once on the Docker host, then manage containers from outside:
