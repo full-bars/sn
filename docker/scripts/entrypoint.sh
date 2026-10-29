@@ -1,37 +1,75 @@
 #!/bin/sh
 set -e
 # Entrypoint script for selecting and starting the build of UrNetwork.
-# 
+#
 # Usage:
-#   BUILD=<stable|nightly|jwt> ./entrypoint.sh
+#   AUTH=<userpass|authcode> ./entrypoint.sh [AUTH_CODE]
 #
 # Environment Variables:
-#   BUILD  - Determines which startup script to run. Defaults to "stable".
-#              Accepted values: "stable", "nightly".
+#   AUTH  - Select userpass (USER_AUTH and PASSWORD) or authcode
+#           (URNETWORK_AUTH_CODE, AUTHCODE, a positional code or stored session).
+#   BUILD - Legacy selector: stable, jwt or nightly. Explicit BUILD wins over
+#           AUTH; nightly is available only through BUILD=nightly.
 #
-# Behavior:
-#   - Logs timestamped messages for visibility.
-#   - Normalizes BUILD to lowercase.
-#   - Executes the appropriate startup script based on BUILD.
-#   - Exits with error if BUILD is invalid.
+# With neither selector, an environment or positional auth code selects jwt;
+# otherwise stable is used. Selectors are case-insensitive.
 
 # === Logging Helper ===
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
-# Default BUILD: stable, unless an auth code is supplied — a positional JWT
-# argument or URNETWORK_AUTH_CODE means the caller is authenticating with a
-# code (not a user/password), so use jwt mode automatically. An explicit
-# BUILD= overrides this auto-selection.
-if [ -z "${BUILD:-}" ]; then
-  if [ "$#" -gt 0 ] || [ -n "${URNETWORK_AUTH_CODE:-}" ]; then
-    BUILD="jwt"
+ORIG_BUILD="${BUILD:-}"
+AUTH_RAW="${AUTH:-}"
+AUTH_LC="$(printf '%s' "$AUTH_RAW" | tr '[:upper:]' '[:lower:]')"
+AUTH_DERIVED_BUILD=""
+case "$AUTH_LC" in
+  "") ;;
+  userpass) AUTH_DERIVED_BUILD="stable" ;;
+  authcode) AUTH_DERIVED_BUILD="jwt" ;;
+  *)
+    log "ERROR: Invalid AUTH '$AUTH_RAW'. Valid options are: userpass, authcode; nightly is available only via BUILD=nightly"
+    exit 1
+    ;;
+esac
+
+if [ -n "$ORIG_BUILD" ]; then
+  BUILD="$(printf '%s' "$ORIG_BUILD" | tr '[:upper:]' '[:lower:]')"
+  if [ -z "$AUTH_LC" ]; then
+    log "BUILD is deprecated for auth selection; use AUTH=userpass or AUTH=authcode (nightly still requires BUILD=nightly)"
+  elif [ "$BUILD" != "$AUTH_DERIVED_BUILD" ]; then
+    log "WARNING: Conflicting AUTH='$AUTH_RAW' and BUILD='$ORIG_BUILD'; BUILD takes precedence"
+  fi
+elif [ -n "$AUTH_LC" ]; then
+  BUILD="$AUTH_DERIVED_BUILD"
+elif [ "$#" -gt 0 ] || [ -n "${URNETWORK_AUTH_CODE:-}" ]; then
+  BUILD="jwt"
+else
+  BUILD="stable"
+fi
+
+# Validate only when AUTH selects the effective build; a conflicting BUILD
+# must retain its existing behavior. Legacy BUILD and auto-selection are unchanged.
+if [ -n "$AUTH_LC" ] && [ "$BUILD" = "$AUTH_DERIVED_BUILD" ]; then
+  if [ "$AUTH_LC" = "userpass" ]; then
+    missing=""
+    [ -z "${USER_AUTH:-}" ] && missing="USER_AUTH"
+    [ -z "${PASSWORD:-}" ] && missing="${missing:+$missing and }PASSWORD"
+    if [ -n "$missing" ]; then
+      log "ERROR: AUTH=userpass requires $missing to be set"
+      exit 1
+    fi
   else
-    BUILD="stable"
+    # Match the miner image's AUTHCODE alias without changing legacy defaults.
+    if [ -z "${URNETWORK_AUTH_CODE:-}" ] && [ -n "${AUTHCODE:-}" ]; then
+      export URNETWORK_AUTH_CODE="$AUTHCODE"
+    fi
+    if [ -z "${URNETWORK_AUTH_CODE:-}" ] && [ "$#" -eq 0 ] && [ ! -s "$HOME/.urnetwork/jwt" ]; then
+      log "ERROR: AUTH=authcode requires AUTHCODE or URNETWORK_AUTH_CODE, a positional auth code or a stored session at $HOME/.urnetwork/jwt"
+      exit 1
+    fi
   fi
 fi
-BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
 # Translate TURBO=v4|v8 into URNETWORK_PROFILE so the binary picks it up.
 # GOGC is handled internally by the binary when turbo is active.
