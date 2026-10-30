@@ -74,6 +74,27 @@ Everything merged after `v2026.10.26-1793016775`. The miner is the program this 
 - **A transient activation error no longer starts a refusal backoff** ([#273](https://github.com/full-bars/sn/pull/273)): the status listener treated any `LastActivationError` as the operator refusing the post, so a dial timeout or a reset started the escalating wait and held the extender role on the next start. Only `LastActivationRefused` records the wait and spends the spare now; any other failure logs the family outcomes and records nothing.
 - **The release scan no longer reports detections and scanner errors as clean, and it covers the miner** ([#296](https://github.com/full-bars/sn/pull/296)): the ClamAV step piped `clamscan` into `grep FOUND` under `pipefail` and printed `ClamAV: clean` on the other branch, so a scanner that crashed, could not load its database or returned an error read as clean, and the EICAR self-test that was meant to prove the scanner worked only produced a warning when it did not. The verdict now lives in `.github/scripts/clamav-scan.sh`, which separates a detection (exit 1 with a `FOUND` line) from every other outcome: a failed or wrong self-test, an exit code that is neither 0 nor a detection, a `FOUND` line with exit 0, an exit 1 with no match, an empty target and a target it cannot read all fail, and `clean` is printed only when the scan exited 0 with no detection and the EICAR sample was detected first. The script writes a report that the verdict step appends to the release body beside the VirusTotal one, or notes that no report was produced. `.github/scripts/test-clamav-scan.sh` drives it against a mock `clamscan` through ten cases and runs in the `lint` job of `build.yml` on every pull request, as well as in the scan job, so a regression in the verdict logic no longer waits for a tag. The scan also did not cover the miner: only `provider`, `urnet-tools` and `urnet-docker` were staged, so the tarballs operators install were never scanned and the verdict claimed coverage it did not have. The scan job now downloads the `miner-*` artifacts and stages each platform's binary, failing when it stages none, and ClamAV scans every staged miner while the VirusTotal list now names the miner for all eight platforms.
 
+## [v2026.10.30-1085641150-sn] — 2026-10-30
+
+Changes between `v2026.10.29-1084846960-sn` and this tag. The Unreleased list above still carries the entries shipped in `v2026.10.29-1084846960-sn` and has not been cut into its own section. Full notes: `releases/v2026.10.30-1085641150-sn.md`.
+
+### Fixed
+
+- **The extender role gets the alt-host fix it needed to activate** (13d437b23, connect 579e90c55): a provider could bind TCP 443 and serve TLS, yet its activation posts failed with `http request attempts exhausted`. The pinned `connect` derived no alt host for the `api`, `api-v4` and `api-v6` names, so a post to `api-v4` went to the family-agnostic alt host rather than `alt-v4`. The new pin maps those names to `alt`, `alt-v4` and `alt-v6`, as it already did for the `connect` names. It answers issue 229 in `urnetwork/connect`. Read from the commit messages and `net_alt.go`; a live activation with this build has not been recorded here.
+- **Container discovery matches the image repository** ([#329](https://github.com/full-bars/sn/pull/329)): any container whose image or name contained a provider substring counted as a provider. The image repository, with tag and digest removed, is now compared against the repositories this project publishes, and `URNET_DOCKER_IMAGE_REPOS` adds more.
+- **The release scan fetches a ClamAV database** (64b32f65f): the package ships no signatures, so a clean runner had nothing to load. The scan fetches one with retries and names a database failure as such.
+
+### Changed
+
+- **A failed extender activation logs the cause of every attempt** (13d437b23, connect 04505b369): the `[extender]activate v<n> err =` and `[extender]activate hello err =` lines print the causes the exhausted request kept, a repeated cause once with a count, and never the URL, headers or token. The recorded status keeps the short message.
+- **`connect` and `sdk` pins moved** (13d437b23): `connect` from `cff307c11f6e` to `d0a4bb41c300` (a sync with upstream `89d943bb7`), `sdk` from `d9e2cd4f4c15` to `f17fc47e8bda` (upstream `215caab7` merged, fork commits kept).
+- **`urfoundation/sn` merged through `860762731`** (f085bf550): 50 upstream commits, mostly validator and protocol work. `provider status` now reads a sign-in made with `--all-operators` (758387b53). The fork's state store, single-operator identity read and consent recovery were kept.
+- **`--i-am-on-my-own-workstation` is removed** ([#331](https://github.com/full-bars/sn/pull/331)): seed signing asks a person or refuses, an old script gets a message naming the removed flag, and the browser signing form no longer asks for it.
+
+### Documentation
+
+- **An extender page and a wallet consent page** (d950c5b41, 4755198fb): the extender page covers the port 443 requirement and its log lines; the consent page carries the signing screenshot.
+
 ## [v2026.10.26-1793016775] — 2026-10-26
 
 ### Added
