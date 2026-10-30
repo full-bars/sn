@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -40,9 +41,105 @@ func ramLogPathsFor(p Provider) []string {
 	return paths
 }
 
+// ramlogPathsOpenByProcess returns the /dev/shm/*.log files the running
+// provider actually has open. The binary basename is only a guess at the
+// buffer name: a provider names its buffer from its own settings, so a binary
+// called "provider" can still write the shared /dev/shm/urnetwork.log, and a
+// guess-only check then reports "no ramlog" while the buffer is live. The
+// process itself is the fact, and /proc/<pid>/fd needs no privileges for the
+// provider's own user.
+func ramlogPathsOpenByProcess(pid int) []string {
+	if pid <= 0 {
+		return nil
+	}
+	entries, err := os.ReadDir(filepath.Join("/proc", strconv.Itoa(pid), "fd"))
+	if err != nil {
+		return nil
+	}
+	seen := make(map[string]bool, len(entries))
+	paths := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		dest, err := os.Readlink(filepath.Join("/proc", strconv.Itoa(pid), "fd", entry.Name()))
+		if err != nil {
+			continue
+		}
+		if !strings.HasPrefix(dest, "/dev/shm/") || !strings.HasSuffix(dest, ".log") {
+			continue
+		}
+		if seen[dest] {
+			continue
+		}
+		seen[dest] = true
+		paths = append(paths, dest)
+	}
+	return paths
+}
+
+// ramlogStreamPath returns the buffer to stream for a provider. It follows the
+// same order as ramlogFileActive so the file that was detected as active is the
+// file that gets streamed: the per-binary name first, then whatever the running
+// process actually has open, then the shared legacy path.
+func ramlogStreamPath(p Provider) string {
+	for _, path := range ramLogPathsFor(p) {
+		if ramlogFileFresh(path, p.Running) {
+			return path
+		}
+	}
+	for _, path := range ramlogPathsOpenByProcess(p.PID) {
+		if ramlogFileFresh(path, p.Running) {
+			return path
+		}
+	}
+	if p.Binary != "" {
+		if path := "/dev/shm/" + filepath.Base(p.Binary) + ".log"; pathExists(path) {
+			return path
+		}
+	}
+	return "/dev/shm/urnetwork.log"
+}
+
+// pathExists reports whether path exists at all, without the freshness rules.
+func pathExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+// ramlogSharedFallbackActive reports whether the legacy shared buffer is this
+// provider's log even though its binary name does not match it.
+//
+// This happens when the provider redirects to the shared path regardless of its
+// name, and the mismatch then has a second consequence: a binary carrying file
+// capabilities runs non-dumpable, so /proc/<pid>/fd is root-only and the process
+// cannot be asked which file it holds. The basename is the only hint left, and it
+// is wrong.
+//
+// The shared buffer is ambiguous on a multi-provider box, so it is used only
+// when the provider is running, the buffer is fresh, and no other running
+// provider has a fresh buffer of its own that could have written it.
+func ramlogSharedFallbackActive(p Provider, all []Provider) bool {
+	if !p.Running {
+		return false
+	}
+	shared := "/dev/shm/urnetwork.log"
+	if !ramlogFileFresh(shared, true) {
+		return false
+	}
+	for _, other := range all {
+		if other.PID == p.PID || !other.Running {
+			continue
+		}
+		for _, path := range ramLogPathsFor(other) {
+			if path != shared && ramlogFileFresh(path, other.Running) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // ramlogFileActive reports whether a RAM buffer for this provider exists and
 // has been written to recently.
-//
+
 // This is the provider's own observable behavior rather than an inference from
 // stored configuration, which is why it is consulted before the environment:
 // whatever the config says, a file being appended to twice a second is where
@@ -50,6 +147,15 @@ func ramLogPathsFor(p Provider) []string {
 // stopped one is not writing anywhere.
 func ramlogFileActive(p Provider) bool {
 	for _, path := range ramLogPathsFor(p) {
+		if ramlogFileFresh(path, p.Running) {
+			return true
+		}
+	}
+	// The buffer name above is derived from the binary basename, which only
+	// matches when the provider happens to name its buffer after its binary.
+	// Ask the process instead: a running provider has its buffer open, and that
+	// answers the question regardless of naming.
+	for _, path := range ramlogPathsOpenByProcess(p.PID) {
 		if ramlogFileFresh(path, p.Running) {
 			return true
 		}
