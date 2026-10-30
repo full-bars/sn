@@ -417,7 +417,7 @@ func (self *HTTPArtifactReader) readCommittedReleaseDecisionV2ArtifactAttempt(ct
 	if err != nil {
 		return nil, err
 	}
-	response, err := self.client.Do(request)
+	response, err := doReleaseApiHttpRequest(self.client, request)
 	if err != nil {
 		if response != nil && response.Body != nil {
 			err = errors.Join(err, self.closeCommittedReleaseDecisionV2Body(endpoint, response.Body))

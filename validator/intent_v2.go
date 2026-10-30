@@ -667,7 +667,14 @@ func (self *IntentStore) beginV2(ctx context.Context, intent SteeringIntent) (re
 	return &intent, nil
 }
 
-func (self *IntentStore) updateV2(ctx context.Context, vectorHash, status string, mutate func(*SteeringIntent) error) (resultErr error) {
+// Generic lifecycle changes keep the normal changed-entry replay requirement.
+func (self *IntentStore) updateV2(ctx context.Context, vectorHash, status string, mutate func(*SteeringIntent) error) error {
+	return self.updateV2WithOwnedApplication(ctx, vectorHash, status, mutate, false)
+}
+
+// Only the canonical application owner may retain its completed changed-entry
+// proof, after atomic publication and every actual custody close have passed.
+func (self *IntentStore) updateV2WithOwnedApplication(ctx context.Context, vectorHash, status string, mutate func(*SteeringIntent) error, ownedApplication bool) (resultErr error) {
 	release, err := self.acquireV2(ctx)
 	if err != nil {
 		return err
@@ -679,11 +686,20 @@ func (self *IntentStore) updateV2(ctx context.Context, vectorHash, status string
 	if err != nil {
 		return err
 	}
-	defer func() { resultErr = errors.Join(resultErr, read.custody.close(), ctx.Err()) }()
+	var applicationMemo *releaseIntentV2OwnedApplicationMemo
+	defer func() {
+		resultErr = errors.Join(resultErr, read.custody.close(), ctx.Err())
+		if resultErr == nil {
+			self.v2.rememberOwnedApplication(applicationMemo, read)
+		}
+	}()
 	if read.file.Current == nil || read.file.Current.VectorHash != vectorHash {
 		return errors.New("V2 intent differs from the current immutable vector")
 	}
 	current = read.file.Current
+	if ownedApplication && status == "applied" {
+		applicationMemo = self.v2.captureOwnedApplication(read)
+	}
 	if mutate != nil {
 		if err := mutate(read.file.Current); err != nil {
 			return err
@@ -693,9 +709,11 @@ func (self *IntentStore) updateV2(ctx context.Context, vectorHash, status string
 	if err := validateSteeringIntentLifecycle(read.file.Current, false); err != nil {
 		return err
 	}
-	if _, _, _, _, err := self.readMeasurementV2(ctx, read.custody, read.file.Current); err != nil {
+	_, _, _, options, err := self.readMeasurementV2(ctx, read.custody, read.file.Current)
+	if err != nil {
 		return err
 	}
+	applicationMemo.complete(read, options)
 	return self.writeV2(ctx, read)
 }
 
@@ -740,11 +758,11 @@ func (self *IntentStore) markFailedV2(ctx context.Context, vectorHash string, ca
 }
 
 func (self *IntentStore) markAppliedV2(ctx context.Context, vectorHash string, block uint64, blockHash string) error {
-	return self.updateV2(ctx, vectorHash, "applied", func(intent *SteeringIntent) error {
+	return self.updateV2WithOwnedApplication(ctx, vectorHash, "applied", func(intent *SteeringIntent) error {
 		if intent.Status != "finalized" || block < intent.RevealBlock || blockHash == "" {
 			return errors.New("V2 application receipt precedes finalized reveal")
 		}
 		intent.ApplicationBlock, intent.ApplicationBlockHash = block, blockHash
 		return nil
-	})
+	}, true)
 }

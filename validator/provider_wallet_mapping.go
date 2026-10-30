@@ -206,7 +206,7 @@ func readWalletMappingOriginals[T any](ctx context.Context, client *http.Client,
 	if err := evidenceReadContextError(ctx); err != nil {
 		return nil, err
 	}
-	response, err := client.Do(request)
+	response, err := doReleaseApiHttpRequest(client, request)
 	if err != nil {
 		return nil, errors.Join(err, evidenceReadContextError(ctx))
 	}

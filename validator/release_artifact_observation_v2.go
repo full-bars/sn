@@ -111,7 +111,7 @@ func readArtifactHttpExchangeV2Attempt(ctx context.Context, reader *HTTPArtifact
 	if err != nil {
 		return value, nil, err
 	}
-	response, err := reader.client.Do(request)
+	response, err := doReleaseApiHttpRequest(reader.client, request)
 	if err != nil {
 		if len(err.Error()) > 4096 {
 			return value, nil, errors.New("artifact HTTP transport error exceeds its finite observation bound")

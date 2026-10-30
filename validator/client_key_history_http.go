@@ -90,7 +90,7 @@ func (self *HTTPClientKeyHistoryReader) readAttempt(ctx context.Context, observa
 	}
 	request.Header.Set("Authorization", "Bearer "+credential)
 	request.Header.Set("Content-Type", "application/json")
-	response, err := client.Do(request)
+	response, err := doReleaseApiHttpRequest(client, request)
 	if err != nil {
 		return nil, errors.Join(err, ctx.Err())
 	}

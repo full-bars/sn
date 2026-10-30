@@ -62,6 +62,7 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 		return nil, verified, err
 	}
 	ctx, cancel := context.WithCancel(ctx)
+	diagnostic := newReleasePreparationDiagnostic(ctx, releasePreparationSealPrepare, 0, false, expected.Identity.NoID, true)
 	ownerCanceled := make(chan struct{})
 	stopOwner := context.AfterFunc(ledger.ctx, func() {
 		defer close(ownerCanceled)
@@ -75,6 +76,7 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 		if resultErr != nil {
 			result, verified = nil, AttemptCutV2ReplayResult{}
 		}
+		diagnostic.finish(resultErr)
 		cancel()
 		ledger.active.Done()
 	}()
@@ -158,6 +160,7 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 		if expected.PriorRoot != head.Root {
 			return nil, verified, errors.New("empty compact attempt cut differs from the checked prior root")
 		}
+		diagnostic.move(releasePreparationSealReplay)
 		verified, err = replayAttemptCutV2Contents(ctx, cut, expected, bounds, replayOptions, depth, hooks.Replay, nil)
 		if err != nil {
 			return nil, verified, err
@@ -189,6 +192,7 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 				return nil
 			})
 		}
+		diagnostic.move(releasePreparationSealRecords)
 		cut.Records, _, err = WriteAttemptStreamV2(ctx, AttemptStreamV2Records, recordSource, AttemptStreamV2WriteOptions{Bounds: bounds.Records, MaxRowBytes: options.ReplayBounds.MaxRecordBytes, Spool: recordSpool, WriteData: options.WriteRecords, WriteMetadata: options.WriteMetadata})
 		if err != nil {
 			return nil, verified, err
@@ -209,6 +213,7 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 				return visit(record.Sequence, append(encoded, '\n'))
 			})
 		}
+		diagnostic.move(releasePreparationSealProofs)
 		cut.Proofs, _, err = WriteAttemptStreamV2(ctx, AttemptStreamV2Proofs, proofSource, AttemptStreamV2WriteOptions{Bounds: bounds.Proofs, MaxRowBytes: options.ReplayBounds.MaxProofBytes, Spool: proofSpool, WriteData: options.WriteProofs, WriteMetadata: options.WriteMetadata})
 		if err != nil {
 			return nil, verified, err
@@ -216,6 +221,7 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 		if err := scratch.step("before-fetch-back", "replay"); err != nil {
 			return nil, verified, err
 		}
+		diagnostic.move(releasePreparationSealReplay)
 		verified, err = replayAttemptCutV2Contents(ctx, cut, expected, bounds, replayOptions, depth, hooks.Replay, scratch.root)
 		if err != nil {
 			return nil, verified, err

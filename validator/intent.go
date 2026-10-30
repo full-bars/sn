@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/urfoundation/sn/crv4"
+	"github.com/urfoundation/sn/protocol/headscore"
 )
 
 // SteeringIntentSchema identifies release intents that cryptographically bind
@@ -30,10 +31,9 @@ var (
 	ErrSteeringAlreadyFinal  = errors.New("weights for this subnet epoch are already finalized")
 )
 
-type RationalJSON struct {
-	Numerator   string `json:"numerator"`
-	Denominator string `json:"denominator"`
-}
+// RationalJSON is the canonical exact rational of integer_rational_v1, shared
+// with the operator through protocol/headscore.
+type RationalJSON = headscore.Rational
 
 type StaleHeadBinding struct {
 	NoID      uint64 `json:"no_id"`

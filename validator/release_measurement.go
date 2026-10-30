@@ -25,6 +25,7 @@ import (
 	"github.com/urnetwork/connect"
 
 	"github.com/urfoundation/sn/protocol"
+	"github.com/urfoundation/sn/protocol/headscore"
 )
 
 // ReleaseMeasurementSchema is the immutable release-1.0 transcript format.
@@ -502,21 +503,7 @@ func releaseMeasurementBindings(artifact *ReleaseMeasurementArtifact, statsByNO 
 
 // releaseRawHeadScores applies exact shared-prefix splitting by fleet identity.
 func releaseRawHeadScores(fleets map[FleetScoreKey]map[[32]byte]bool) map[FleetScoreKey]*big.Rat {
-	claims := map[[32]byte]uint64{}
-	for _, hashes := range fleets {
-		for hash := range hashes {
-			claims[hash]++
-		}
-	}
-	raw := make(map[FleetScoreKey]*big.Rat, len(fleets))
-	for key, hashes := range fleets {
-		score := new(big.Rat)
-		for hash := range hashes {
-			score.Add(score, new(big.Rat).SetFrac(big.NewInt(1), new(big.Int).SetUint64(claims[hash])))
-		}
-		raw[key] = score
-	}
-	return raw
+	return headscore.RawScores(fleets)
 }
 
 // releaseMeasurementHead verifies the EMA transcript against reconstructed

@@ -215,7 +215,8 @@ func writeSendRecord(path string, record sendRecord) error {
 }
 
 // Resolves one record against the EVM finalized block. A pending record whose
-// transaction is unknown is rebroadcast with its exact bytes.
+// transaction is unknown is rebroadcast with its exact bytes only outside a
+// dry run; dry runs retain receipt/status reads without changing any record.
 func (self *sender) reconcile(ctx context.Context, send pendingSend) (recordState, error) {
 	finalized, _, err := self.client.finalizedBlock(ctx)
 	if err != nil {
@@ -231,10 +232,15 @@ func (self *sender) reconcile(ctx context.Context, send pendingSend) (recordStat
 			// Another transaction finalized this nonce. The commitment is
 			// re-evaluated from the coordinator's finalized state.
 			self.logf("send %s nonce %d was consumed by another transaction; re-evaluating %s", send.record.TransactionHash, send.transaction.Nonce(), send.args)
+			if self.dryRun {
+				return recordDropped, nil
+			}
 			return recordDropped, os.Rename(send.path, fmt.Sprintf("%s.dropped-%d", send.path, send.transaction.Nonce()))
 		}
-		if err := self.client.sendTransaction(ctx, send.transaction); err != nil && !alreadyKnown(err) {
-			self.logf("rebroadcast %s: %v", send.record.TransactionHash, err)
+		if !self.dryRun {
+			if err := self.client.sendTransaction(ctx, send.transaction); err != nil && !alreadyKnown(err) {
+				self.logf("rebroadcast %s: %v", send.record.TransactionHash, err)
+			}
 		}
 		return recordPending, nil
 	}
@@ -253,7 +259,13 @@ func (self *sender) reconcile(ctx context.Context, send pendingSend) (recordStat
 	}
 	if receipt.Status != types.ReceiptStatusSuccessful {
 		self.logf("send %s reverted in finalized block %d; re-evaluating %s", send.record.TransactionHash, receipt.BlockNumber.Uint64(), send.args)
+		if self.dryRun {
+			return recordDropped, nil
+		}
 		return recordDropped, os.Rename(send.path, fmt.Sprintf("%s.dropped-%d", send.path, send.transaction.Nonce()))
+	}
+	if self.dryRun {
+		return recordDone, nil
 	}
 	send.record.Finalized = true
 	send.record.ReceiptBlock = receipt.BlockNumber.Uint64()

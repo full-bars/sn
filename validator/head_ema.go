@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/urfoundation/sn/protocol"
+	"github.com/urfoundation/sn/protocol/headscore"
 )
 
 const (
@@ -20,15 +21,14 @@ const (
 	headEMASchemaV2 = "urnetwork-validator-head-ema-v2"
 )
 
-type FleetScoreKey struct {
-	FleetID    [32]byte
-	Hotkey     [32]byte
-	Generation uint64
-	UID        uint16
-}
+// FleetScoreKey is one fleet identity (fleet, hotkey, generation, uid). The
+// head arithmetic, and this key's canonical String order and JSON form, are
+// protocol/headscore's, so the operator replicates them exactly.
+type FleetScoreKey = headscore.FleetKey
 
-func (k FleetScoreKey) String() string {
-	return fmt.Sprintf("%x:%x:%d:%d", k.FleetID, k.Hotkey, k.Generation, k.UID)
+// headEMAWeight is the policy EMA weight in the head arithmetic's form.
+func headEMAWeight(alpha protocol.Rational) headscore.Ratio {
+	return headscore.Ratio{Numerator: alpha.Numerator, Denominator: alpha.Denominator}
 }
 
 type headEMAEntry struct {
@@ -176,12 +176,11 @@ func (s *HeadEMAStore) saveLocked() error {
 }
 
 // verifyHeadEMAFold independently checks exact arithmetic and canonical order.
+// Each record's encoding is checked here; its arithmetic is headscore.Next.
 func verifyHeadEMAFold(records []HeadEMAMeasurement, alpha protocol.Rational) error {
 	if err := alpha.Validate("head_score_ema"); err != nil || alpha.Numerator > alpha.Denominator {
 		return errors.New("invalid head EMA policy")
 	}
-	a := new(big.Rat).SetFrac(new(big.Int).SetUint64(alpha.Numerator), new(big.Int).SetUint64(alpha.Denominator))
-	oneMinus := new(big.Rat).Sub(big.NewRat(1, 1), a)
 	priorKey := ""
 	for index, record := range records {
 		key := record.Key.String()
@@ -203,13 +202,8 @@ func verifyHeadEMAFold(records []HeadEMAMeasurement, alpha protocol.Rational) er
 		if err != nil {
 			return fmt.Errorf("head EMA record %d next value is invalid", index)
 		}
-		want := new(big.Rat)
-		if !record.HasPrior {
-			want.Set(raw)
-		} else {
-			want.Add(new(big.Rat).Mul(a, raw), new(big.Rat).Mul(oneMinus, prior))
-		}
-		if next.Cmp(want) != 0 {
+		want, err := headscore.Next(raw, prior, record.HasPrior, headEMAWeight(alpha))
+		if err != nil || next.Cmp(want) != 0 {
 			return fmt.Errorf("head EMA record %d next value does not match the exact fold", index)
 		}
 		priorKey = key
@@ -220,7 +214,7 @@ func verifyHeadEMAFold(records []HeadEMAMeasurement, alpha protocol.Rational) er
 // headEMAOutput returns only identities present in the raw live input. Missing
 // identities remain persisted while decaying but receive no live weight.
 func headEMAOutput(records []HeadEMAMeasurement) (map[uint16]*big.Rat, error) {
-	out := map[uint16]*big.Rat{}
+	live := make([]headscore.FoldRecord, 0, len(records))
 	for _, record := range records {
 		if !record.HasRaw {
 			continue
@@ -229,66 +223,42 @@ func headEMAOutput(records []HeadEMAMeasurement) (map[uint16]*big.Rat, error) {
 		if err != nil {
 			return nil, err
 		}
-		if next.Sign() == 0 {
-			continue
-		}
-		if out[record.Key.UID] == nil {
-			out[record.Key.UID] = new(big.Rat)
-		}
-		out[record.Key.UID].Add(out[record.Key.UID], next)
+		live = append(live, headscore.FoldRecord{Key: record.Key, HasRaw: true, Next: next})
 	}
-	return out, nil
+	return headscore.Scores(live), nil
 }
 
 // foldWithLock mutates the exact EMA state and returns its public arithmetic
-// transcript. The caller must hold the store state lock.
+// transcript. The caller must hold the store state lock. The fold itself is
+// headscore.Fold over the persisted state.
 func (s *HeadEMAStore) foldWithLock(raw map[FleetScoreKey]*big.Rat, alpha protocol.Rational) (map[uint16]*big.Rat, []HeadEMAMeasurement, error) {
 	if err := alpha.Validate("head_score_ema"); err != nil || alpha.Numerator > alpha.Denominator {
 		return nil, nil, errors.New("invalid head EMA policy")
 	}
-	a := new(big.Rat).SetFrac(new(big.Int).SetUint64(alpha.Numerator), new(big.Int).SetUint64(alpha.Denominator))
-	oneMinus := new(big.Rat).Sub(big.NewRat(1, 1), a)
-	all := map[string]FleetScoreKey{}
-	for key, entry := range s.values {
-		all[key] = entry.Key
-	}
-	for key, score := range raw {
+	for _, score := range raw {
 		if score == nil || score.Sign() < 0 {
 			return nil, nil, errors.New("head EMA raw score is nil or negative")
 		}
-		all[key.String()] = key
 	}
-	keys := make([]string, 0, len(all))
-	for key := range all {
-		keys = append(keys, key)
+	prior := make(map[FleetScoreKey]*big.Rat, len(s.values))
+	for _, entry := range s.values {
+		prior[entry.Key] = entryRat(entry)
 	}
-	sort.Strings(keys)
-	records := make([]HeadEMAMeasurement, 0, len(keys))
-	for _, id := range keys {
-		key := all[id]
-		prior := new(big.Rat)
-		priorEntry, hasPrior := s.values[id]
-		if hasPrior {
-			prior = entryRat(priorEntry)
-		}
-		current, hasRaw := raw[key]
-		if !hasRaw {
-			current = new(big.Rat)
-		}
-		next := new(big.Rat)
-		if !hasPrior {
-			next.Set(current)
-		} else {
-			next.Add(new(big.Rat).Mul(a, current), new(big.Rat).Mul(oneMinus, prior))
-		}
-		rawJSON, _ := encodeRationalJSON(current)
-		priorJSON, _ := encodeRationalJSON(prior)
-		nextJSON, _ := encodeRationalJSON(next)
-		records = append(records, HeadEMAMeasurement{Key: key, HasRaw: hasRaw, Raw: rawJSON, HasPrior: hasPrior, Prior: priorJSON, Next: nextJSON})
-		if next.Sign() == 0 {
+	folded, err := headscore.Fold(prior, raw, headEMAWeight(alpha))
+	if err != nil {
+		return nil, nil, err
+	}
+	records := make([]HeadEMAMeasurement, 0, len(folded))
+	for _, record := range folded {
+		rawJSON, _ := encodeRationalJSON(record.Raw)
+		priorJSON, _ := encodeRationalJSON(record.Prior)
+		nextJSON, _ := encodeRationalJSON(record.Next)
+		records = append(records, HeadEMAMeasurement{Key: record.Key, HasRaw: record.HasRaw, Raw: rawJSON, HasPrior: record.HasPrior, Prior: priorJSON, Next: nextJSON})
+		id := record.Key.String()
+		if record.Next.Sign() == 0 {
 			delete(s.values, id)
 		} else {
-			s.values[id] = headEMAEntry{Key: key, Numerator: next.Num().String(), Denominator: next.Denom().String()}
+			s.values[id] = headEMAEntry{Key: record.Key, Numerator: nextJSON.Numerator, Denominator: nextJSON.Denominator}
 		}
 	}
 	if err := verifyHeadEMAFold(records, alpha); err != nil {

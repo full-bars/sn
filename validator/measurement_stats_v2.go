@@ -192,6 +192,8 @@ func (self *StatsEngine) detachReleaseStatsMeasurementV2(ctx context.Context, di
 // The optional guard belongs to one retained journal owner, not global Stats
 // state. Real replay and snapshot writing remain the existing operations.
 func (self *StatsEngine) detachReleaseStatsMeasurementV2WithJournalGuard(ctx context.Context, dir string, boundary AttemptBoundary, options releaseStatsV2Options, persist func(ReleaseStatsMeasurement, AttemptCutV2) error, guard func(string) error) (resultMeasurement ReleaseStatsMeasurement, resultCut *AttemptCutV2, resultErr error) {
+	diagnostic := newReleasePreparationDiagnostic(ctx, releasePreparationStatsWrite, 0, false, 0, false)
+	defer func() { diagnostic.finish(resultErr) }()
 	if persist == nil {
 		return ReleaseStatsMeasurement{}, nil, errors.New("compact native journal writer is absent")
 	}
@@ -208,11 +210,16 @@ func (self *StatsEngine) detachReleaseStatsMeasurementV2WithJournalGuard(ctx con
 		return ReleaseStatsMeasurement{}, nil, err
 	}
 	defer func() { resultErr = errors.Join(resultErr, owner.finishSnapshot()) }()
+	diagnostic.move(releasePreparationStatsSnapshot)
 	if err := owner.prepareSnapshot(dir, true); err != nil {
 		return ReleaseStatsMeasurement{}, nil, err
 	}
 	candidate := owner.clone()
+	diagnostic.move(releasePreparationStatsSeal)
 	cut, err := candidate.detachReleaseStatsMeasurementV2OwnedWithJournalGuard(owner, dir, boundary, measurement, options, persist, guard)
+	if err == nil {
+		diagnostic.move(releasePreparationStatsSnapshot)
+	}
 	finishErr := owner.finishSnapshot()
 	if err == nil && finishErr != nil {
 		return ReleaseStatsMeasurement{}, nil, finishErr
@@ -245,7 +252,9 @@ func releaseStatsV2JournalPersist(owner *statsWriteOwner, guard func(string) err
 
 // Before/after-save custody checks run outside every Stats mutex. A late
 // guard error follows existing failed-Save rollback and reservation semantics.
-func (self *StatsEngine) detachReleaseStatsMeasurementV2OwnedWithJournalGuard(owner *statsWriteOwner, dir string, boundary AttemptBoundary, measurement ReleaseStatsMeasurement, options releaseStatsV2Options, persist func(ReleaseStatsMeasurement, AttemptCutV2) error, guard func(string) error) (*AttemptCutV2, error) {
+func (self *StatsEngine) detachReleaseStatsMeasurementV2OwnedWithJournalGuard(owner *statsWriteOwner, dir string, boundary AttemptBoundary, measurement ReleaseStatsMeasurement, options releaseStatsV2Options, persist func(ReleaseStatsMeasurement, AttemptCutV2) error, guard func(string) error) (resultCut *AttemptCutV2, resultErr error) {
+	var diagnostic *releasePreparationDiagnostic
+	defer func() { diagnostic.finish(resultErr) }()
 	if self.attemptSettlementCutPending {
 		return nil, errAttemptCutPending
 	}
@@ -267,6 +276,7 @@ func (self *StatsEngine) detachReleaseStatsMeasurementV2OwnedWithJournalGuard(ow
 	if err != nil {
 		return nil, err
 	}
+	diagnostic = newReleasePreparationDiagnostic(owner.ctx, releasePreparationStatsSeal, 0, false, expected.Identity.NoID, true)
 	cut, _, err := SealAttemptCutV2(owner.ctx, self.attemptLedger, expected, options.Policy, self.attemptLedger.vsk, options.Bounds, options.Seal)
 	if err != nil {
 		return nil, err
@@ -274,6 +284,7 @@ func (self *StatsEngine) detachReleaseStatsMeasurementV2OwnedWithJournalGuard(ow
 	if cut.LastSequence != head.LastSequence || cut.Root != head.Root {
 		return nil, errors.New("compact native sealer changed the owned applied prefix")
 	}
+	diagnostic.move(releasePreparationStatsVerify)
 	if _, _, err := VerifyReleaseStatsMeasurementWithAttemptCutV2(owner.ctx, measurement, *cut, expected, options.Policy, options.Bounds, options.Stats); err != nil {
 		return nil, err
 	}
@@ -296,6 +307,7 @@ func (self *StatsEngine) detachReleaseStatsMeasurementV2OwnedWithJournalGuard(ow
 	}
 	publication := *cut
 	publication.Signature = bytes.Clone(cut.Signature)
+	diagnostic.move(releasePreparationStatsJournal)
 	if err := persist(cloneReleaseStatsV2Measurement(measurement), publication); err != nil {
 		return nil, err
 	}
@@ -310,6 +322,7 @@ func (self *StatsEngine) detachReleaseStatsMeasurementV2OwnedWithJournalGuard(ow
 	}
 	priorEgress, priorGeneration, priorFirst := self.egress, self.egressGeneration, self.attemptEgressFirstSequence
 	self.egress, self.egressGeneration, self.attemptEgressFirstSequence = map[connect.Id]map[[32]byte]bool{}, priorGeneration+1, cut.LastSequence+1
+	diagnostic.move(releasePreparationStatsSnapshot)
 	if err := self.saveOwned(dir, releaseStatsV2JournalPersist(owner, guard)); err != nil {
 		self.egress, self.egressGeneration, self.attemptEgressFirstSequence = priorEgress, priorGeneration, priorFirst
 		return nil, err

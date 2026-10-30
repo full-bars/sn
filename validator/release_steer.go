@@ -53,6 +53,10 @@ type ReleaseSteerer struct {
 	headWindowEpoch uint64
 	headWindowKnown bool
 	headInputsByNO  map[uint64]ReleaseMeasurementInput
+
+	// Uploads each begun intent's head summary in the background. Nil
+	// uploads nothing; it never takes part in a steering decision.
+	headSummary *headSummaryUploader
 }
 
 func releaseAttemptClaimMatchesBinding(claim AttemptEgressClaim, binding stabi.STCoordinatorBindingRecord, uid uint16) bool {

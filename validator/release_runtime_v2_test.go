@@ -87,6 +87,7 @@ type releaseRuntimeV2HttpTestStore struct {
 	stateLock     sync.Mutex
 	objects       map[string][]byte
 	postsBySource map[uint64]int
+	requestHook   func(http.ResponseWriter, *http.Request) bool
 }
 
 func (self *releaseRuntimeV2HttpTestStore) counts() map[uint64]int {
@@ -148,6 +149,12 @@ func newReleaseRuntimeV2TestFixtureWithBounds(t *testing.T, bounds *ReleaseEvide
 		store := &releaseRuntimeV2HttpTestStore{objects: map[string][]byte{}, postsBySource: map[uint64]int{}}
 		credential := "runtime-v2-destination-" + strconv.Itoa(index+1)
 		apiEndpoint := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			store.stateLock.Lock()
+			requestHook := store.requestHook
+			store.stateLock.Unlock()
+			if requestHook != nil && requestHook(writer, request) {
+				return
+			}
 			if request.URL.Path == "/verify/keys" && request.Method == http.MethodGet {
 				value := sdk.VerifyKeysResult{}
 				for version, key := range startup.keys[input.Config.NoID] {

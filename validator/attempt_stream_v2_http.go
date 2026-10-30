@@ -156,7 +156,7 @@ func (self *HTTPAttemptStreamV2Reader) open(ctx context.Context, kind, contentHa
 	request.Header.Set("Accept-Encoding", "identity")
 	started := time.Now()
 	stopDeadline := attemptStreamV2HTTPDeadline(cancel, attemptStreamV2HttpReadIoTimeout)
-	response, err := self.client.Do(request)
+	response, err := doReleaseApiHttpRequest(self.client, request)
 	stopDeadline()
 	remainingIO := attemptStreamV2HttpReadIoTimeout - time.Since(started)
 	if remainingIO <= 0 {

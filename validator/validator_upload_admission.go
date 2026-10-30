@@ -170,7 +170,7 @@ type ValidatorUploadAdmission struct {
 	native           *crv4.Chain
 	config           ValidatorUploadAdmissionConfig
 	discoveryDigests [][32]byte
-	// The publication clock and report sink are fixed before the loop starts.
+	// The observation/publication clock and report sink are fixed before startup.
 	clock         func() time.Time
 	refreshReport func(validatorUploadRefreshReport)
 	// Only the owned refresh loop accesses verified immutable histories and the
@@ -481,14 +481,17 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 	if err != nil {
 		return err
 	}
-	report.evmHeadAge = now.Sub(time.Unix(int64(observer.Timestamp), 0))
-	report.nativeHeadAge = now.Sub(time.UnixMilli(int64(nativeObserver.TimestampMillis)))
+	// A finalized head may be minted while the preceding Rpc is in flight.
+	// Keep the original start for duration and judge both completed reads now.
+	observedAt := self.clock()
+	report.evmHeadAge = observedAt.Sub(time.Unix(int64(observer.Timestamp), 0))
+	report.nativeHeadAge = observedAt.Sub(time.UnixMilli(int64(nativeObserver.TimestampMillis)))
 	currentRuntime, err := self.config.Deployment.runtimeArtifactsAt(nativeObserver.Number, false)
 	if err != nil {
 		return err
 	}
-	if now.Unix() <= 0 || observer.Timestamp > uint64(now.Unix()) || uint64(now.Unix())-observer.Timestamp >= self.config.MaximumHeadAgeSeconds ||
-		nativeObserver.TimestampMillis > uint64(now.UnixMilli()) || uint64(now.UnixMilli())-nativeObserver.TimestampMillis >= self.config.MaximumHeadAgeSeconds*1000 {
+	if observedAt.Unix() <= 0 || observer.Timestamp > uint64(observedAt.Unix()) || uint64(observedAt.Unix())-observer.Timestamp >= self.config.MaximumHeadAgeSeconds ||
+		nativeObserver.TimestampMillis > uint64(observedAt.UnixMilli()) || uint64(observedAt.UnixMilli())-nativeObserver.TimestampMillis >= self.config.MaximumHeadAgeSeconds*1000 {
 		return errors.New("validator staging chain observer is stale or from the future")
 	}
 	start := self.config.Deployment.DeploymentBlock
@@ -655,11 +658,10 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 		validUntil = nativeValidUntil
 	}
 	report.validUntil = validUntil
-	// The observers were captured at the start, so a slow refresh can finish
-	// after its own window. Publishing that state would refuse every request
-	// with no recorded cause while it looked like a successful refresh.
+	// Time spent observing or refreshing never extends either head's absolute
+	// expiry. A slow refresh must refuse before publishing expired authority.
 	if published := self.clock(); !published.Before(validUntil) {
-		return fmt.Errorf("validator staging refresh finished after its freshness window: EVM head age %s and native head age %s at start, refresh took %s, maximum head age %ds",
+		return fmt.Errorf("validator staging refresh finished after its freshness window: EVM head age %s and native head age %s when observed, refresh took %s, maximum head age %ds",
 			report.evmHeadAge.Round(time.Millisecond), report.nativeHeadAge.Round(time.Millisecond), published.Sub(now).Round(time.Millisecond), self.config.MaximumHeadAgeSeconds)
 	}
 	var retired []context.CancelFunc

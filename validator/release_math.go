@@ -9,6 +9,7 @@ import (
 	"github.com/urnetwork/connect"
 
 	"github.com/urfoundation/sn/protocol"
+	"github.com/urfoundation/sn/protocol/headscore"
 )
 
 type ExactWeightInput struct {
@@ -170,22 +171,7 @@ func PoolQualityPPM(stats *StatsEngine, bound map[connect.Id]bool) uint32 {
 	return PoolQualityFromReleaseStats(verified, bound)
 }
 
+// ExactHeadScores is the shared-prefix raw score of a census keyed by UID.
 func ExactHeadScores(fleets map[uint16]map[[32]byte]bool) map[uint16]*big.Rat {
-	claims := map[[32]byte]uint64{}
-	for _, hashes := range fleets {
-		for hash := range hashes {
-			claims[hash]++
-		}
-	}
-	out := make(map[uint16]*big.Rat, len(fleets))
-	for uid, hashes := range fleets {
-		score := new(big.Rat)
-		for hash := range hashes {
-			if claims[hash] > 0 {
-				score.Add(score, new(big.Rat).SetFrac(big.NewInt(1), new(big.Int).SetUint64(claims[hash])))
-			}
-		}
-		out[uid] = score
-	}
-	return out
+	return headscore.RawScores(fleets)
 }

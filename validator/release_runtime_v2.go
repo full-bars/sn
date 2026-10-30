@@ -491,8 +491,10 @@ func (self *releaseRuntimeV2) closureForDecision(ctx context.Context, epoch uint
 // Real native detach owns drain, signed streams, immutable input publication
 // and durable egress rotation. Head selection and prepared native intent are
 // separate actual consumers, supplied independent contexts rather than verdicts.
-func (self *releaseRuntimeV2) collect(ctx context.Context, steerer *ReleaseSteerer, current *SteeringIntent, snapshot *ReleaseSnapshot, subnetEpoch, nativeBlock uint64, nativeHash string, hotkeys map[[32]byte]uint16) ([]ReleaseMeasurementInput, ReleaseMeasurementV2Options, error) {
+func (self *releaseRuntimeV2) collect(ctx context.Context, steerer *ReleaseSteerer, current *SteeringIntent, snapshot *ReleaseSnapshot, subnetEpoch, nativeBlock uint64, nativeHash string, hotkeys map[[32]byte]uint16) (resultInputs []ReleaseMeasurementInput, resultOptions ReleaseMeasurementV2Options, resultErr error) {
 	var zero ReleaseMeasurementV2Options
+	diagnostic := newReleasePreparationDiagnostic(ctx, releasePreparationCollectGate, subnetEpoch, true, 0, false)
+	defer func() { diagnostic.finish(resultErr) }()
 	release, err := self.acquire(ctx)
 	if err != nil {
 		return nil, zero, err
@@ -501,18 +503,21 @@ func (self *releaseRuntimeV2) collect(ctx context.Context, steerer *ReleaseSteer
 	if steerer == nil || steerer.runtimeV2 != self || nativeBlock == 0 || hotkeys == nil {
 		return nil, zero, errors.New("release V2 native collector owner differs")
 	}
+	diagnostic.move(releasePreparationCollectReconcile)
 	if err := self.reconcileNativeInputsOwned(ctx, snapshot); err != nil {
 		return nil, zero, err
 	}
 	if err := self.cancelExpiredNativeReservationOwned(ctx, current, subnetEpoch, snapshot); err != nil {
 		return nil, zero, err
 	}
+	diagnostic.move(releasePreparationCollectAdvance)
 	if err := self.advanceOwned(ctx, snapshot); err != nil {
 		return nil, zero, err
 	}
 	if err := self.history.provisionalClosedInputDeferral(ctx, current, subnetEpoch, nativeBlock, nativeHash, snapshot); err != nil {
 		return nil, zero, err
 	}
+	diagnostic.move(releasePreparationServerKeys)
 	if err := self.refreshServerKeys(ctx); err != nil {
 		return nil, zero, err
 	}
@@ -539,6 +544,7 @@ func (self *releaseRuntimeV2) collect(ctx context.Context, steerer *ReleaseSteer
 		err          error
 	}
 	tasks := make([]nativeInputTask, len(self.history.participants))
+	diagnostic.move(releasePreparationCollectInputs)
 	for index, participant := range self.history.participants {
 		noId, cursor := participant.NoID, self.history.current[participant.NoID]
 		boundary := AttemptBoundary{SettlementEpoch: snapshot.Epoch.Uint64(), EVMBlock: snapshot.BlockNumber, EVMBlockHash: attemptHex32(snapshot.BlockHash)}
@@ -605,6 +611,7 @@ func (self *releaseRuntimeV2) collect(ctx context.Context, steerer *ReleaseSteer
 		}()
 	}
 	joined.Wait()
+	diagnostic.move(releasePreparationCollectResults)
 	inputs := make([]ReleaseMeasurementInput, 0, len(tasks))
 	failures := make([]error, 0, len(tasks)+1)
 	for index := range tasks {
@@ -614,6 +621,7 @@ func (self *releaseRuntimeV2) collect(ctx context.Context, steerer *ReleaseSteer
 			failures = append(failures, fmt.Errorf("release V2 native operator %d: %w", noId, task.err))
 			continue
 		}
+		operatorDiagnostic := newReleasePreparationDiagnostic(ctx, releasePreparationInputRetain, subnetEpoch, true, noId, true)
 		err := func() error {
 			if err := self.retainNativeInputOwned(ctx, input, subnetEpoch, task.expected, task.inputOptions, task.retry); err != nil {
 				return err
@@ -628,6 +636,7 @@ func (self *releaseRuntimeV2) collect(ctx context.Context, steerer *ReleaseSteer
 			inputs = append(inputs, input)
 			return nil
 		}()
+		operatorDiagnostic.finish(err)
 		if err != nil {
 			failures = append(failures, fmt.Errorf("release V2 native operator %d result: %w", noId, err))
 		}

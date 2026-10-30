@@ -58,7 +58,8 @@ func newHttpAttemptStreamV2Writer(origin string, bounds AttemptCutV2Bounds, meta
 	// Stream readers pause their I/O budget while replay owns CPU work. An
 	// upload instead owns one request and acknowledgement, both under the
 	// original finite HTTP budget even when its release context is long lived.
-	reader.client.Timeout = attemptStreamV2HttpWriteIoTimeout
+	// Keep expiry in the request context: Client.Timeout replaces the original
+	// deadline with a private HTTP matcher that bounded capture must refuse.
 	return &HTTPAttemptStreamV2Writer{endpoint: reader.endpoint, metadataBytes: reader.metadataBytes, recordBytes: reader.recordBytes, proofBytes: reader.proofBytes, byJwt: byJwt, client: reader.client}, nil
 }
 
@@ -110,7 +111,13 @@ func (self *HTTPAttemptStreamV2Writer) write(ctx context.Context, kind, contentH
 	}
 	endpoint := self.endpoint
 	endpoint.RawQuery = url.Values{"kind": {kind}, "hash": {contentHash}}.Encode()
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint.String(), bytes.NewReader(owned))
+	requestCtx, cancel := context.WithTimeout(ctx, attemptStreamV2HttpWriteIoTimeout)
+	defer cancel()
+	diagnostic := newReleasePreparationHttpDiagnostic(requestCtx, releasePreparationHttpWrite)
+	defer func() { diagnostic.finish(resultErr) }()
+	// Observe expiry after the body closes and before our own cancellation.
+	defer func() { resultErr = errors.Join(resultErr, requestCtx.Err()) }()
+	request, err := http.NewRequestWithContext(requestCtx, http.MethodPost, endpoint.String(), bytes.NewReader(owned))
 	if err != nil {
 		return err
 	}
@@ -127,7 +134,7 @@ func (self *HTTPAttemptStreamV2Writer) write(ctx context.Context, kind, contentH
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	response, err := self.client.Do(request)
+	response, err := doReleaseApiHttpRequest(self.client, request)
 	if err != nil {
 		if response != nil && response.Body != nil {
 			err = errors.Join(err, response.Body.Close())

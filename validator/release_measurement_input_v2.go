@@ -182,6 +182,8 @@ func (self *ReleaseSteerer) loadOrDetachReleaseMeasurementInputV2WithReadHooks(c
 	if ctx == nil || self == nil || self.cfg == nil || snapshot == nil || snapshot.Epoch == nil || !snapshot.Epoch.IsUint64() {
 		return ReleaseMeasurementInput{}, errors.New("compact input decision context is incomplete")
 	}
+	diagnostic := newReleasePreparationDiagnostic(ctx, releasePreparationInputOwner, subnetEpoch, true, noID, noID != 0)
+	defer func() { diagnostic.finish(resultErr) }()
 	if err := ctx.Err(); err != nil {
 		return ReleaseMeasurementInput{}, err
 	}
@@ -218,8 +220,10 @@ func (self *ReleaseSteerer) loadOrDetachReleaseMeasurementInputV2WithReadHooks(c
 		}
 		return errors.New("compact input journal guard phase is invalid")
 	}
+	diagnostic.move(releasePreparationInputRead)
 	encoded, err := owner.read()
 	if err == nil {
+		diagnostic.move(releasePreparationInputDecode)
 		journal, err := decodeReleaseMeasurementInputV2(ctx, encoded, options)
 		if err != nil {
 			return ReleaseMeasurementInput{}, err
@@ -240,9 +244,11 @@ func (self *ReleaseSteerer) loadOrDetachReleaseMeasurementInputV2WithReadHooks(c
 				return ReleaseMeasurementInput{}, err
 			}
 		}
+		diagnostic.move(releasePreparationInputSync)
 		if err := owner.sync(); err != nil {
 			return ReleaseMeasurementInput{}, err
 		}
+		diagnostic.move(releasePreparationInputReconcile)
 		if err := measurement.Stats.reconcileReleaseStatsCutV2WithJournalGuard(ctx, measurementStateDir(self.cfg, noID), input.Stats, *cut, options.Stats, guard); err != nil {
 			return ReleaseMeasurementInput{}, fmt.Errorf("reconcile compact input: %w", err)
 		}
@@ -259,6 +265,7 @@ func (self *ReleaseSteerer) loadOrDetachReleaseMeasurementInputV2WithReadHooks(c
 	}
 	input := ReleaseMeasurementInput{NoID: noID, SettlementEpoch: snapshot.Epoch.Uint64(), CutNativeBlock: nativeBlock, CutNativeBlockHash: nativeHash, CutEVMSnapshotBlock: snapshot.BlockNumber, CutEVMSnapshotHash: releaseHex32(snapshot.BlockHash)}
 	boundary := AttemptBoundary{SettlementEpoch: input.SettlementEpoch, EVMBlock: snapshot.BlockNumber, EVMBlockHash: input.CutEVMSnapshotHash}
+	diagnostic.move(releasePreparationInputDetach)
 	_, _, err = measurement.Stats.detachReleaseStatsMeasurementV2WithJournalGuard(ctx, measurementStateDir(self.cfg, noID), boundary, options.Stats, func(stats ReleaseStatsMeasurement, cut AttemptCutV2) error {
 		if err := validateReleaseMeasurementInputV2Context(self.cfg, noID, cut.Context); err != nil {
 			return err

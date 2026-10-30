@@ -106,7 +106,7 @@ func (self *HTTPArtifactReader) getAttempt(ctx context.Context, endpoint string,
 	if err != nil {
 		return nil, err
 	}
-	response, err := self.client.Do(request)
+	response, err := doReleaseApiHttpRequest(self.client, request)
 	if err != nil {
 		if response != nil && response.Body != nil {
 			err = errors.Join(err, response.Body.Close())

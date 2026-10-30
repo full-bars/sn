@@ -62,10 +62,13 @@ info:
     claims, never proof that an already transferred reward can be clawed back.
     No replacement burn formula or actual Apex money-movement API is invented here.
     Six seven-day admission windows may have arbitrarily long grading drains.
-    Prospectively adopted winner_review_policy elected_winner_gpt54mini_xhigh_v1 makes
+    Prospectively adopted winner_review_policy elected_winner_snow_union_v2 makes
     integrity review part of automatic epoch closing, after public provisional
-    election. Only the elected winner is reviewed by the qualified GPT-5.4 mini xhigh
-    broker; a substantiated rejection publishes reasons and re-elects from the
+    election. The elected winner is reviewed serially by qwen3.8-27b,
+    and gemma-4-26b-a4b on the qualified Snow broker. Both must approve; every
+    member's six findings remain attributed in the union. Historical v1 retains
+    its original three-member identity and eighteen findings.
+    A substantiated rejection publishes reasons and re-elects from the
     original seal. Approval then gates the exact winner's isolated build and
     qualification before the successor opens. No eligible recipient means
     incumbent carry-forward. Missing/expired review or failed build/readiness
@@ -73,7 +76,8 @@ info:
     The review deadline is durable per elected decision and is not reset by a
     retry. Historical policies without this opt-in retain independent source
     choice and their original preparation schedule. Historical
-    elected_winner_sol61max_v1 records retain gpt-6.1-sol/max provenance; neither
+    elected_winner_gpt54mini_xhigh_v1 and elected_winner_sol61max_v1 records retain
+    gpt-5.4-mini/xhigh and gpt-6.1-sol/max provenance respectively; neither
     old policy nor review digests are relabeled by a provider upgrade.
   contact:
     name: URnetwork
@@ -947,26 +951,180 @@ components:
       additionalProperties: false
       required: [criterion, disposition, reason_code, explanation, evidence_sha256]
       properties:
+        model:
+          type: string
+          enum: ["", qwen3.8-27b, gemma-4-26b-a4b, muse-glimmer-30b]
+          description: Required exact member attribution for Snow union findings; absent or empty for retained single-model policies.
         criterion: {type: string, enum: [measurement_integrity, workload_generalization, containment, patch_scope, reproducibility, source_safety]}
-        disposition: {type: string, enum: [pass, fail, not_applicable]}
+        disposition: {type: string, enum: [pass, fail, not_applicable, uncertain], description: Uncertain is accepted only for a Snow disqualified/rejected union with a separately substantiated matched failure; it can never approve a source.}
         reason_code: {type: string}
         explanation: {type: string, minLength: 1, maxLength: 4096}
         evidence_sha256: {$ref: "#/components/schemas/Sha256"}
+    CompetitionSnowReviewFindings:
+      type: array
+      minItems: 18
+      maxItems: 18
+      description: Exactly one finding for each of six criteria under each of the three fixed Snow member IDs; no issue is merged away.
+      items:
+        allOf:
+          - $ref: "#/components/schemas/CompetitionReviewFinding"
+          - required: [model]
+            properties:
+              model: {enum: [qwen3.8-27b, gemma-4-26b-a4b, muse-glimmer-30b]}
+      allOf:
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: measurement_integrity}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: workload_generalization}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: containment}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: patch_scope}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: reproducibility}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: source_safety}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: measurement_integrity}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: workload_generalization}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: containment}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: patch_scope}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: reproducibility}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: source_safety}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: muse-glimmer-30b}, criterion: {const: measurement_integrity}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: muse-glimmer-30b}, criterion: {const: workload_generalization}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: muse-glimmer-30b}, criterion: {const: containment}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: muse-glimmer-30b}, criterion: {const: patch_scope}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: muse-glimmer-30b}, criterion: {const: reproducibility}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: muse-glimmer-30b}, criterion: {const: source_safety}}}
+          minContains: 1
+          maxContains: 1
+    CompetitionSnowTwoMemberReviewFindings:
+      type: array
+      minItems: 12
+      maxItems: 12
+      description: Exactly six criteria for each of Qwen and Gemma under the prospective two-member policy; historical three-member reviews retain their separate schema.
+      items:
+        allOf:
+          - $ref: "#/components/schemas/CompetitionReviewFinding"
+          - required: [model]
+            properties:
+              model: {enum: [qwen3.8-27b, gemma-4-26b-a4b]}
+      allOf:
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: measurement_integrity}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: workload_generalization}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: containment}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: patch_scope}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: reproducibility}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: qwen3.8-27b}, criterion: {const: source_safety}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: measurement_integrity}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: workload_generalization}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: containment}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: patch_scope}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: reproducibility}}}
+          minContains: 1
+          maxContains: 1
+        - contains: {type: object, required: [model, criterion], properties: {model: {const: gemma-4-26b-a4b}, criterion: {const: source_safety}}}
+          minContains: 1
+          maxContains: 1
     CompetitionIntegrityReviewRequest:
       type: object
       additionalProperties: false
       required: [idempotency_key, expected_revision, job_id, patch_sha256, base_source_lock_sha256, score_sha256, baseline_sha256, artifact_manifest_sha256, criteria_version, reward_disposition, source_disposition, reason_codes, public_explanation, withheld_evidence_explanation, private_evidence_sha256, findings]
       allOf:
         - if:
-            properties: {reviewer_model: {const: gpt-5.4-mini}}
             required: [reviewer_model]
+            properties:
+              reviewer_model: {enum: [snow-qwen-gemma-union, snow-qwen-gemma-muse-union]}
           then:
-            properties: {reviewer_reasoning: {const: xhigh}}
-        - if:
-            properties: {reviewer_model: {const: gpt-6.1-sol}}
-            required: [reviewer_model]
-          then:
-            properties: {reviewer_reasoning: {const: max}}
+            required: [expected_decision_sha256, reviewer_reasoning]
+            properties:
+              reviewer_reasoning: {const: provider-default}
+              reward_disposition: {enum: [approved, restored, disqualified]}
+              source_disposition: {enum: [approved, rejected]}
+            allOf:
+              - if:
+                  required: [reviewer_model]
+                  properties:
+                    reviewer_model: {const: snow-qwen-gemma-union}
+                then:
+                  properties:
+                    findings: {$ref: "#/components/schemas/CompetitionSnowTwoMemberReviewFindings"}
+                else:
+                  properties:
+                    findings: {$ref: "#/components/schemas/CompetitionSnowReviewFindings"}
+              - if:
+                  properties:
+                    reward_disposition: {const: disqualified}
+                then:
+                  properties:
+                    source_disposition: {const: rejected}
+                    reason_codes:
+                      items:
+                        not: {enum: [APPROVED, APPEAL_UPHELD, SOURCE_NOT_READY, PRODUCT_INTEGRATION_RISK, EVALUATION_INTEGRITY_INCIDENT]}
+                else:
+                  properties:
+                    source_disposition: {const: approved}
+                    findings:
+                      items:
+                        properties:
+                          disposition: {enum: [pass, not_applicable]}
+          else:
+            properties:
+              findings:
+                minItems: 6
+                maxItems: 6
+                items:
+                  properties:
+                    model: {const: ""}
+                    disposition: {enum: [pass, fail, not_applicable]}
       properties:
         idempotency_key: {type: string, minLength: 1, maxLength: 128}
         expected_revision: {type: integer, minimum: 1}
@@ -983,7 +1141,7 @@ components:
         public_explanation: {type: string, minLength: 1, maxLength: 4096}
         withheld_evidence_explanation: {type: string, minLength: 1}
         private_evidence_sha256: {$ref: "#/components/schemas/Sha256"}
-        findings: {type: array, minItems: 6, maxItems: 6, items: {$ref: "#/components/schemas/CompetitionReviewFinding"}}
+        findings: {type: array, minItems: 6, maxItems: 18, items: {$ref: "#/components/schemas/CompetitionReviewFinding"}, description: Exactly six un-attributed legacy findings, twelve Qwen/Gemma v2 pairs, or eighteen historical three-member v1 pairs; total request remains bounded to 64 KiB.}
         supersedes_review_id: {type: string, format: uuid}
         appeal_id: {type: string}
         expected_replacement_job_id: {type: string, format: uuid}
@@ -992,9 +1150,9 @@ components:
           description: Required by each elected-winner policy; binds the exact current reward decision and durable review window.
         reviewer_model:
           type: string
-          enum: [gpt-5.4-mini, gpt-6.1-sol]
-          description: Required broker provenance pinned by the frozen policy; new mini/xhigh and historical Sol/max cannot be mixed or relabeled. Not independent model attestation.
-        reviewer_reasoning: {type: string, enum: [xhigh, max]}
+          enum: [snow-qwen-gemma-union, snow-qwen-gemma-muse-union, gpt-5.4-mini, gpt-6.1-sol]
+          description: Required broker provenance pinned by the frozen policy. New Snow v2 reviews require both Qwen and Gemma; historical v1 retains three members. These aggregates and historical mini/xhigh or Sol/max tuples cannot be mixed or relabeled. Not independent model attestation.
+        reviewer_reasoning: {type: string, enum: [provider-default, xhigh, max]}
     CompetitionIntegrityReviewResult:
       type: object
       additionalProperties: false
@@ -1037,8 +1195,8 @@ components:
             idempotency_key: {type: string, const: ""}
             expected_revision: {type: integer}
             expected_decision_sha256: {$ref: "#/components/schemas/Sha256"}
-            reviewer_model: {type: string, enum: [gpt-5.4-mini, gpt-6.1-sol]}
-            reviewer_reasoning: {type: string, enum: [xhigh, max]}
+            reviewer_model: {type: string, enum: [snow-qwen-gemma-union, snow-qwen-gemma-muse-union, gpt-5.4-mini, gpt-6.1-sol]}
+            reviewer_reasoning: {type: string, enum: [provider-default, xhigh, max]}
             job_id: {type: string, format: uuid}
             patch_sha256: {$ref: "#/components/schemas/Sha256"}
             base_source_lock_sha256: {$ref: "#/components/schemas/Sha256"}
@@ -1060,6 +1218,7 @@ components:
                 type: object
                 additionalProperties: false
                 properties:
+                  model: {type: string, enum: ["", qwen3.8-27b, gemma-4-26b-a4b, muse-glimmer-30b]}
                   criterion: {type: string}
                   disposition: {type: string}
                   reason_code: {type: string}
@@ -1188,7 +1347,7 @@ components:
         review_id: {type: string, format: uuid}
         review_decision_digest: {$ref: "#/components/schemas/Sha256"}
         reward_decision_digest: {$ref: "#/components/schemas/Sha256"}
-        winner_review_policy: {type: string, enum: [elected_winner_gpt54mini_xhigh_v1, elected_winner_sol61max_v1]}
+        winner_review_policy: {type: string, enum: [elected_winner_snow_union_v2, elected_winner_snow_union_v1, elected_winner_gpt54mini_xhigh_v1, elected_winner_sol61max_v1]}
         winner_review: {$ref: "#/components/schemas/CompetitionWinnerReviewCheckpoint"}
         manifest_commit: {$ref: "#/components/schemas/GitSha"}
         manifest_sha256: {$ref: "#/components/schemas/Sha256"}
@@ -1307,11 +1466,22 @@ components:
           type: string
           format: date-time
 
+    CompetitionRuntimeStatus:
+      type: object
+      additionalProperties: false
+      required: [intake_ready, grading_ready, publication_held]
+      description: Mutable infrastructure and durable-hold status; never an assertion that calibration or reviewer qualification passed. intake_ready means infrastructure eligible for admission, not that the submission window is open; clients must also check the round status and opens_at/closes_at.
+      properties:
+        intake_ready: {type: boolean}
+        grading_ready: {type: boolean}
+        publication_held: {type: boolean}
+
     CompetitionReadinessResult:
       type: object
       additionalProperties: false
       required: [ready, checks, checked_at]
       properties:
+        runtime_status: {$ref: "#/components/schemas/CompetitionRuntimeStatus"}
         ready:
           type: boolean
         checks:
@@ -1336,6 +1506,7 @@ components:
         - evaluation_policy
         - season_policy
       properties:
+        runtime_status: {$ref: "#/components/schemas/CompetitionRuntimeStatus"}
         decision_mode: {$ref: "#/components/schemas/CompetitionDecisionMode"}
         required_api_capability: {$ref: "#/components/schemas/CompetitionRequiredCapability"}
         competition_id:
@@ -1405,8 +1576,8 @@ components:
         source_activation_generation: {type: integer, minimum: 1}
         winner_review_policy:
           type: string
-          enum: [elected_winner_gpt54mini_xhigh_v1, elected_winner_sol61max_v1]
-          description: New seasons use mini/xhigh; historical Sol/max records preserve their original provenance. Absent preserves the earlier independent source-choice flow. Requires zero source-choice/preparation delays and a fresh approved frozen policy.
+          enum: [elected_winner_snow_union_v2, elected_winner_snow_union_v1, elected_winner_gpt54mini_xhigh_v1, elected_winner_sol61max_v1]
+          description: New seasons use the Snow v2 Qwen/Gemma union. Historical three-member v1, mini/xhigh and Sol/max records preserve their original provenance. Absent preserves the earlier independent source-choice flow. Requires zero source-choice/preparation delays and a fresh approved frozen policy.
         winner_review_timeout_seconds: {type: integer, minimum: 60, maximum: 86400}
     CompetitionPatchPolicy:
       type: object
@@ -1821,13 +1992,16 @@ components:
             policies accept only regular 100644 modifications with matching
             `--- a/path` and `+++ b/path` headers. When the frozen policy explicitly
             uses `path_base: mono_root_v1` and its evaluator is qualified for that
-            mode, regular text files may also be created or deleted: use exactly
-            `new file mode 100644` or `deleted file mode 100644`, `/dev/null` only
+            mode, regular 100644 or 100755 text files may be modified, created,
+            or deleted. Existing execute modes must be preserved. Creation and
+            deletion use exactly `new file mode MODE` or `deleted file mode MODE`
+            with MODE equal to 100644 or 100755, `/dev/null` only
             on the absent side, and one complete hunk with zero lines on that
             side. Standard empty-file operations may instead contain only the
-            100644 mode and an index identifying the absent object and exact
+            regular mode and an index identifying the absent object and exact
             empty SHA-1 blob (canonical abbreviation of at least seven digits).
-            Binary files, symlinks, executable or submodule modes, mode changes,
+            Trusted source application checks actual pinned Git modes even when
+            optional index modes are omitted. Binary files, symlinks, submodules, mode changes,
             renames, copies, mixed/duplicate operation metadata, and protected
             paths remain refused. Preserve the final LF when
             encoding JSON; shell command substitution commonly removes it.

@@ -44,7 +44,12 @@ func TestValidatorUploadAdmissionRefusesBornExpiredPublication(t *testing.T) {
 	fixture := newValidatorUploadAuthorityTestFixture(t)
 	owner, reports := validatorUploadSilentDropTestState(t, fixture)
 	window := time.Duration(fixture.config().MaximumHeadAgeSeconds) * time.Second
-	owner.clock = func() time.Time { return fixture.now.Add(window) }
+	owner.clock = func() time.Time {
+		if fixture.logCalls.Load() == 0 {
+			return fixture.now
+		}
+		return fixture.now.Add(window)
+	}
 	err := owner.refresh(t.Context(), fixture.now)
 	if err == nil || !strings.Contains(err.Error(), "finished after its freshness window") {
 		t.Fatalf("refresh published a state that expired before publication: %v", err)

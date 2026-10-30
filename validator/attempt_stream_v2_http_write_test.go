@@ -60,8 +60,8 @@ func TestAttemptStreamV2HTTPWriteExactTypesAndRefreshedSession(t *testing.T) {
 	}))
 	defer endpoint.Close()
 	writer := newAttemptStreamV2HTTPTestWriter(t, endpoint.URL, func() string { return credential.Load().(string) })
-	if writer.client.Timeout != attemptStreamV2HttpWriteIoTimeout {
-		t.Fatal("typed upload lost its finite I/O allowance")
+	if writer.client.Timeout != 0 {
+		t.Fatal("typed upload replaced its owned request expiry with client timeout")
 	}
 	writer.client.Transport = attemptStreamV2HTTPTestTransport(func(request *http.Request) (*http.Response, error) {
 		deadline, bounded := request.Context().Deadline()

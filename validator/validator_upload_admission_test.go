@@ -108,6 +108,7 @@ func TestValidatorUploadAdmissionRejectsStaleNativeAndEVMClocks(t *testing.T) {
 		owner := validatorUploadAdmissionTestState(t, fixture)
 		header, sessionHash, digest := validatorUploadAdmissionTestHeader(t, fixture, fixture.authority.Expected, 0x41, "current-api-client", []byte("object"))
 		now := fixture.now
+		owner.clock = func() time.Time { return now }
 		switch fault {
 		case "native-old":
 			fixture.currentMillis -= 60000

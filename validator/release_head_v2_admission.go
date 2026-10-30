@@ -16,6 +16,7 @@ import (
 	"sort"
 
 	"github.com/urfoundation/sn/protocol"
+	"github.com/urfoundation/sn/protocol/headscore"
 	"github.com/urfoundation/sn/stabi"
 	"github.com/urnetwork/connect"
 )
@@ -663,24 +664,11 @@ func (self *HeadEMAStore) planReleaseHeadV2PreviewWithLock(ctx context.Context, 
 // The exact shared-prefix formula is unchanged; every arithmetic operand is
 // covered by the completed plan and each finite loop observes cancellation.
 func buildReleaseHeadV2Raw(ctx context.Context, fleets map[FleetScoreKey]map[[32]byte]bool, claims map[[32]byte]uint64) (map[FleetScoreKey]*big.Rat, error) {
-	raw := make(map[FleetScoreKey]*big.Rat, len(fleets))
-	for key, prefixes := range fleets {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		score := new(big.Rat)
-		for prefix := range prefixes {
-			if err := ctx.Err(); err != nil {
-				return nil, err
-			}
-			if claims[prefix] == 0 {
-				return nil, errors.New("compact head EMA prefix census is incomplete")
-			}
-			score.Add(score, new(big.Rat).SetFrac(big.NewInt(1), new(big.Int).SetUint64(claims[prefix])))
-		}
-		raw[key] = score
+	raw, err := headscore.RawScoresWithClaims(ctx, fleets, claims)
+	if errors.Is(err, headscore.ErrClaimCensusIncomplete) {
+		return nil, errors.New("compact head EMA prefix census is incomplete")
 	}
-	return raw, nil
+	return raw, err
 }
 
 // Exact completed output must fit both the shared allowance and its reserved

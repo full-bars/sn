@@ -77,7 +77,7 @@ func TestProductionRuntime481RetainsAuthorityAndInterfaceRefusals(t *testing.T) 
 			oldMeta, oldRuntime := native.Meta, native.Runtime
 			switch fault {
 			case "future-api3-spec":
-				fixture.successorVersion["specVersion"] = 482
+				fixture.successorVersion["specVersion"] = 487
 			case "owner-storage", "producer-storage", "producer-call":
 				metadata, _ := provisionalValidatorMetadataTest(t, "../crv4/testdata/runtime481-metadata.scale.gz.base64", productionSuccessorTest481Metadata)
 				changed := false

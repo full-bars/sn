@@ -69,7 +69,7 @@ func readReleaseServerKeysV2WithCaptureAndRetry(ctx context.Context, cfg *Releas
 			}
 			request.Header.Set("Accept", "application/json")
 			request.Header.Set("Accept-Encoding", "identity")
-			response, err := client.Do(request)
+			response, err := doReleaseApiHttpRequest(client, request)
 			if err != nil {
 				if response != nil && response.Body != nil {
 					err = errors.Join(err, response.Body.Close())

@@ -1152,6 +1152,11 @@ func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, 
 	if err != nil {
 		return fmt.Errorf("release V2 native startup: %w", err)
 	}
+	// Each tempo's head summary goes to every configured operator over its
+	// attempt-upload session, off the steering path (head-summary-v1).
+	headSummary := newReleaseHeadSummaryUploader(ctx, cfg, hotkey, runtimes)
+	defer headSummary.close()
+	steerer.headSummary = headSummary
 	if production {
 		fmt.Fprintf(os.Stderr, "validator: startup reused %d already verified history units\n", verified.skippedUnits())
 		if err := verified.flush(); err != nil {

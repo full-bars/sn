@@ -350,6 +350,8 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	if err := ownerRecycleProductionBoundary(self.cfg); err != nil {
 		return err
 	}
+	diagnostic := newReleasePreparationDiagnostic(ctx, releasePreparationRetainedIntent, 0, false, 0, false)
+	defer func() { diagnostic.finish(resultErr) }()
 	// Runtime authentication mutates a signing view, never the process-wide
 	// metadata pointer used concurrently by independent native observers.
 	owned := *self
@@ -398,6 +400,7 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	}()
 	var nativeHash types.Hash
 	var nativeState *crv4.EpochScheduleState
+	diagnostic.move(releasePreparationNativeSnapshot)
 	err := self.productionRead(ctx, productionReadPreparation, retained, func(readCtx context.Context) error {
 		var err error
 		nativeHash, err = authenticatePinnedNativeRuntimeContext(readCtx, self.native, self.cfg)
@@ -411,7 +414,11 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	if err != nil {
 		return err
 	}
+	if nativeState != nil {
+		diagnostic.setNativeEpoch(nativeState.SubnetEpochIndex)
+	}
 	var snapshot *ReleaseSnapshot
+	diagnostic.move(releasePreparationEvmSnapshot)
 	err = self.productionRead(ctx, productionReadPreparation, retained, func(readCtx context.Context) error {
 		var err error
 		snapshot, err = self.chain.ReleaseSnapshotContext(readCtx)
@@ -420,6 +427,7 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	if err != nil {
 		return err
 	}
+	diagnostic.move(releasePreparationPinnedChains)
 	if err := self.validatePinnedChains(ctx, snapshot, nativeState, nativeHash); err != nil {
 		return err
 	}
@@ -435,6 +443,7 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 		}
 		return nil
 	}
+	diagnostic.move(releasePreparationRetainedHead)
 	current, err := self.intents.currentV2(ctx)
 	if err != nil {
 		return err
@@ -489,15 +498,18 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	defer func() {
 		resultErr = classifyProvisionalNativeRead(allowReadRetry, nativeState.SubnetEpochIndex, resultErr)
 	}()
+	diagnostic.move(releasePreparationMetagraph)
 	if err := loadHotkeyUids(); err != nil {
 		return err
 	}
 	runtimeIdentity := releaseRuntimeIdentityV2(self.cfg)
+	diagnostic.move(releasePreparationNativeSchedule)
 	observed, err := crv4.ReadValidatorScheduleAtContext(ctx, self.native, crv4.ValidatorScheduleQuery{GenesisHash: self.native.GenesisHash, BlockHash: nativeHash, BlockNumber: nativeState.CurrentBlock, Netuid: self.cfg.Netuid, Hotkey: self.hotkey.PublicKey(), MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, runtimeIdentity)
 	scheduleMatches := observed.Stake.MeetsNonSelfStakeAndPermit() && observed.SubnetEpochIndex == nativeState.SubnetEpochIndex && hotkeyUids[self.hotkey.PublicKey()] == observed.Stake.Identity.UID
 	if err := releaseRpcObservationError(err, scheduleMatches, errors.New("V2 current native validator schedule/stake/permit differs from independent EVM registration")); err != nil {
 		return err
 	}
+	diagnostic.move(releasePreparationCollect)
 	inputs, options, err := self.runtimeV2.collect(ctx, self, current, snapshot, nativeState.SubnetEpochIndex, nativeState.CurrentBlock, nativeHash.Hex(), hotkeyUids)
 	if err != nil {
 		return err
@@ -510,10 +522,12 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 	options.treasuryReserveFallback = treasuryReserveFallbackConfig(self.cfg)
 	settlement := options.Settlement
 	options.Settlement = nil
+	diagnostic.move(releasePreparationGatherHead)
 	head, err := self.gatherHeadV2(ctx, snapshot, nativeState.SubnetEpochIndex, nativeState.CurrentBlock, nativeHash.Hex(), hotkeyUids, inputs, options)
 	if err != nil {
 		return err
 	}
+	diagnostic.move(releasePreparationMeasurement)
 	selfUid, found := hotkeyUids[self.hotkey.PublicKey()]
 	if !found {
 		return fmt.Errorf("self-mask: validator hotkey has no live UID on netuid %d", self.cfg.Netuid)
@@ -711,6 +725,9 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) 
 		return err
 	}
 	durableIntent = intent
+	// The decided head result goes to the operator in the background; this
+	// copies and returns at once, and cannot fail or change this commit.
+	self.offerHeadSummary(intent, measurementArtifact.HeadEMA)
 	if err := self.runtimeV2.publishDepositAuditV2(ctx, measurementArtifact); err != nil {
 		return err
 	}

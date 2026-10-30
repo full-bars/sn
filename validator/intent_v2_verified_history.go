@@ -16,6 +16,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
+	"maps"
+	"slices"
 )
 
 // The entries nearest the end keep their measurement options so a changed
@@ -135,4 +137,57 @@ func (self *releaseIntentV2Owner) rememberVerifiedHistory(authority releaseInten
 		}
 	}
 	self.verified = &releaseIntentV2VerifiedHistory{authority: authority, digests: digests, options: tail}
+}
+
+// A successful owned application has already reverified the changed measurement.
+// Keep its proof local until publication, late closes and cancellation finish.
+type releaseIntentV2OwnedApplicationMemo struct {
+	previous        *releaseIntentV2VerifiedHistory
+	authority       releaseIntentV2VerifiedAuthority
+	previousDigests [][32]byte
+	digests         [][32]byte
+	options         map[int]ReleaseMeasurementV2Options
+}
+
+// Missing or changed proof simply leaves the normal full-replay path in place.
+func (self *releaseIntentV2Owner) captureOwnedApplication(read *releaseIntentV2Read) *releaseIntentV2OwnedApplicationMemo {
+	if self == nil || read == nil || read.file == nil || read.file.Current == nil || read.file.Current.Status != "finalized" || len(read.all) == 0 || read.all[len(read.all)-1] != read.file.Current {
+		return nil
+	}
+	previous, authority := self.verified, self.verifiedAuthority()
+	digests, ok := releaseIntentV2EntryDigests(read.all)
+	if !ok || previous == nil || previous.authority != authority || len(digests) != len(previous.digests) || !slices.Equal(digests, previous.digests) {
+		return nil
+	}
+	return &releaseIntentV2OwnedApplicationMemo{previous: previous, authority: authority, previousDigests: slices.Clone(digests), options: maps.Clone(previous.options)}
+}
+
+// Only the same prefix and a newly verified applied tail form a candidate.
+func (self *releaseIntentV2OwnedApplicationMemo) complete(read *releaseIntentV2Read, options ReleaseMeasurementV2Options) {
+	if self == nil || read == nil || read.file == nil || read.file.Current == nil || read.file.Current.Status != "applied" || len(read.all) != len(self.previousDigests) || len(read.all) == 0 || read.all[len(read.all)-1] != read.file.Current {
+		return
+	}
+	digests, ok := releaseIntentV2EntryDigests(read.all)
+	last := len(digests) - 1
+	if !ok || last < 0 || !slices.Equal(digests[:last], self.previousDigests[:last]) || digests[last] == self.previousDigests[last] {
+		return
+	}
+	if self.options == nil {
+		self.options = make(map[int]ReleaseMeasurementV2Options)
+	}
+	self.options[last] = options
+	self.digests = digests
+}
+
+// Called while the intent owner is still held, after all physical close checks.
+// Retained-file identities are not transferred to the new lifecycle digest.
+func (self *releaseIntentV2Owner) rememberOwnedApplication(candidate *releaseIntentV2OwnedApplicationMemo, read *releaseIntentV2Read) {
+	if self == nil || candidate == nil || len(candidate.digests) == 0 || self.verified != candidate.previous || self.verifiedAuthority() != candidate.authority || !slices.Equal(self.verified.digests, candidate.previousDigests) {
+		return
+	}
+	digests, ok := releaseIntentV2EntryDigests(read.all)
+	if !ok || !slices.Equal(digests, candidate.digests) {
+		return
+	}
+	self.rememberVerifiedHistory(candidate.authority, digests, candidate.options)
 }

@@ -953,7 +953,9 @@ commitment-oracle run --netuid=25 --chain_id=964 \
 `--dry-run` reads, preflights and estimates every pending mirror and logs the
 exact call and calldata it would send, without signing; with
 `--oracle_address=0x56Dd…CF03` instead of the key file it needs no key. `--once`
-runs a single cycle and exits non-zero if it failed.
+runs a single cycle and exits non-zero if it failed. A dry run still observes
+retained transactions and their receipts, but never rebroadcasts them or
+rewrites or renames their signed-transaction records.
 
 ### Health gauges
 

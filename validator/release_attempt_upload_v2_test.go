@@ -21,6 +21,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
@@ -366,7 +367,8 @@ func TestReleaseEvidenceV2UploadReplicasRejectConcreteWriterMisbinding(t *testin
 		case "client":
 			writer.client = nil
 		case "timeout":
-			client.Timeout = 0
+			// Request contexts own the admitted deadline; zero is unchanged.
+			client.Timeout = time.Second
 		case "redirect":
 			client.CheckRedirect = nil
 		case "transport":
