@@ -311,7 +311,7 @@ func logsUnitlessProvider(p Provider, lines int) error {
 	fdPath := fmt.Sprintf("/proc/%d/fd/1", p.PID)
 	dest, err := os.Readlink(fdPath)
 	if err != nil {
-		return fmt.Errorf("provider %s has no systemd unit and its stdout cannot be read (%s: %v) — no log source. Run it under a systemd unit (or with a RAMLOGS profile) to get logs", providerLabel(p), fdPath, err)
+		return fmt.Errorf("%s", unreadableStdoutDiagnosis(p, fdPath, err))
 	}
 	if dest == "/dev/null" || strings.HasPrefix(dest, "/dev/null ") {
 		return fmt.Errorf("provider %s runs outside systemd with its output discarded (%s) — there is no log stream to show. Restart it under a systemd unit (or with a RAMLOGS/eco profile) to capture logs", providerLabel(p), dest)
@@ -324,6 +324,24 @@ func logsUnitlessProvider(p Provider, lines int) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+// unreadableStdoutDiagnosis explains why a unit-less provider has no log
+// source: which paths were checked and what would make the logs readable. It
+// names the cgroup unit when one was seen but not associated, so the message
+// never claims "no systemd unit" for a provider that has one.
+func unreadableStdoutDiagnosis(p Provider, fdPath string, readErr error) string {
+	checked := fmt.Sprintf("checked %s (%v)", fdPath, readErr)
+	cgPath := fmt.Sprintf("/proc/%d/cgroup", p.PID)
+	cg, err := os.ReadFile(cgPath)
+	if err != nil {
+		checked += fmt.Sprintf(" and %s (%v)", cgPath, err)
+	} else if unit, _ := unitFromCgroup(string(cg)); unit != "" {
+		checked += fmt.Sprintf(" and %s, which names %s but it could not be confirmed as this provider's unit", cgPath, unit)
+	} else {
+		checked += fmt.Sprintf(" and %s, which names no systemd unit", cgPath)
+	}
+	return fmt.Sprintf("no log source for provider %s: %s. Logs become readable when urnet-tools runs as the provider's owner (%s) or root, or when the provider runs under a systemd unit (or with a RAMLOGS profile)", providerLabel(p), checked, p.User)
 }
 
 // cmdRestart restarts the provider's owning unit (destructive gate applies).

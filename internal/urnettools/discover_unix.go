@@ -417,35 +417,83 @@ func discoverStopped(running []Provider) []Provider {
 	return out
 }
 
-// attachUnits assigns a systemd unit name to each running provider by
-// matching the unit's User= + ExecStart binary against the process. This is
-// best-effort: processes started outside systemd keep Unit="".
+// unitFromCgroup returns the .service unit that owns a process, taken from
+// the contents of /proc/<pid>/cgroup, and whether that unit lives in a user
+// manager (its path runs through user@<uid>.service). Only the cgroup v2
+// ("0::/path") and v1 name=systemd paths carry a unit; the innermost .service
+// path component is the process's own unit. Returns "" when none is present.
+func unitFromCgroup(cg string) (unit string, user bool) {
+	for _, line := range strings.Split(cg, "\n") {
+		i := strings.Index(line, "/")
+		if i < 0 {
+			continue
+		}
+		comps := strings.Split(line[i:], "/")
+		for j := len(comps) - 1; j >= 0; j-- {
+			if !strings.HasSuffix(comps[j], ".service") {
+				continue
+			}
+			for _, outer := range comps[:j] {
+				if strings.HasPrefix(outer, "user@") && strings.HasSuffix(outer, ".service") {
+					user = true
+				}
+			}
+			return comps[j], user
+		}
+	}
+	return "", false
+}
+
+// userUnitOwns confirms that a user-manager unit named by the cgroup is the
+// provider's. The unit name is operator-chosen (sn-canary.service), so it
+// cannot be vetted by name the way system units are; instead the owning
+// user's manager must know the unit by exactly that Id, and where its
+// ExecStart is readable it must run this provider's binary. Overridable so
+// tests need no systemd.
+var userUnitOwns = func(p Provider, unit string) bool {
+	if p.User == "" {
+		return false
+	}
+	scope := systemctlUserArgs(p.User)
+	if unitProperty(scope, unit, "Id") != unit {
+		return false
+	}
+	bin := parseExecStartPath(unitProperty(scope, unit, "ExecStart"))
+	return bin == "" || bin == p.Binary || isProviderArg(bin)
+}
+
+// attachUnits assigns a systemd unit name to each running provider from the
+// process's cgroup. This is best-effort: processes started outside systemd
+// keep Unit="". System units are accepted by provider-looking name; user
+// units, whose names are free-form, are accepted only when userUnitOwns
+// confirms them.
 func attachUnits(procs []Provider) {
 	for i := range procs {
 		p := &procs[i]
 		if p.PID == 0 {
 			continue
 		}
-		// Resolve the cgroup to find the owning unit.
 		cg, err := os.ReadFile(fmt.Sprintf("/proc/%d/cgroup", p.PID))
 		if err != nil {
 			continue
 		}
-		s := string(cg)
-		// cgroup v2 path ends with the unit name, e.g.
-		// .../system.slice/urnetwork-native.service. Only accept names that
-		// look like a provider unit (isProviderUnit) — on a GH runner the
-		// provider inherits the runner's cgroup, and an unfiltered name would
-		// make restart systemctl-restart the wrong unit.
-		if idx := strings.LastIndex(s, ".service"); idx >= 0 {
-			start := strings.LastIndex(s[:idx], "/")
-			if start >= 0 {
-				unit := s[start+1 : idx+len(".service")]
-				if isProviderUnit(unit) {
-					p.Unit = unit
-				}
-			}
-		}
+		attachUnitFromCgroup(p, string(cg))
+	}
+}
+
+// attachUnitFromCgroup sets p.Unit from the given /proc/<pid>/cgroup contents.
+func attachUnitFromCgroup(p *Provider, cg string) {
+	unit, user := unitFromCgroup(cg)
+	switch {
+	case unit == "":
+	case isProviderUnit(unit):
+		// Only accept names that look like a provider unit: on a GH
+		// runner the provider inherits the runner's cgroup, and an
+		// unfiltered name would make restart systemctl-restart the
+		// wrong unit.
+		p.Unit = unit
+	case user && userUnitOwns(*p, unit):
+		p.Unit = unit
 	}
 }
 
