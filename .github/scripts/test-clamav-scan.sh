@@ -50,7 +50,7 @@ for case_name in clean detection scanner-error self-clean self-error self-wrong 
   esac || { echo "FAIL $case_name: assertion failed (rc=$rc) $output"; exit 1; }
   printf 'PASS %s (exit %s)\n' "$case_name" "$rc"
 done
-if output=$(PATH="$tmp/bin:$PATH" CASE=clean CLAMAV_REPORT_FILE="$tmp/empty.report" bash "$root/.github/scripts/clamav-scan.sh" "$tmp/empty" 2>&1); then
+if output=$(PATH="$tmp/bin:$PATH" CASE=clean CLAMAV_DB_DIR="$tmp/db" CLAMAV_REPORT_FILE="$tmp/empty.report" bash "$root/.github/scripts/clamav-scan.sh" "$tmp/empty" 2>&1); then
   echo 'FAIL empty scan target was reported clean'
   exit 1
 fi

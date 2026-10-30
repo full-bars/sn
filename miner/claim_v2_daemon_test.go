@@ -294,20 +294,30 @@ func TestClaimV2RunsBesideV1(t *testing.T) {
 	if entry := v1Queue.Entries["70"]; v1Queue.Schema != "urnetwork-provider-claim-queue-v1" || entry.TxHash != signed.TxHash || entry.RawTxHex != signed.RawTxHex {
 		t.Fatalf("v1 queue changed beside v2: %+v", entry)
 	}
-	// Each daemon refuses the other's queue.
-	// A cancelled publication can leave an unanchored durable-head temporary
-	// behind, which the next Owner refuses by design; this block asserts the
-	// schema refusal, so reconcile those fixture leftovers first.
-	reconcileClaimV2TestTemporaries(t, v1.StateDir, v2Dir)
-	refused := claimQueueTestContext(t, t.Context(), v1.StateDir, v2Dir)
-	v2Store, err := newClaimQueueV2Store(refused, v1.StateDir)
+	// Check the published queues in fresh fixtures: cancellation can interrupt
+	// a later publication and leave the original directory requiring recovery.
+	v1SchemaDir, v2SchemaDir := t.TempDir(), t.TempDir()
+	for source, dest := range map[string]string{v1.StateDir: v1SchemaDir, v2Dir: v2SchemaDir} {
+		if err := os.Chmod(dest, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		raw, err := os.ReadFile(filepath.Join(source, "claim-queue.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dest, "claim-queue.json"), raw, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	refused := claimQueueTestContext(t, t.Context(), v1SchemaDir, v2SchemaDir)
+	v2Store, err := newClaimQueueV2Store(refused, v1SchemaDir)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := v2Store.load(); err == nil || !strings.Contains(err.Error(), "invalid v2 claim queue schema") {
 		t.Fatalf("v2 daemon accepted a v1 queue: %v", err)
 	}
-	v1Store, err := newClaimQueueStore(v2Dir, refused)
+	v1Store, err := newClaimQueueStore(v2SchemaDir, refused)
 	if err != nil {
 		t.Fatal(err)
 	}
