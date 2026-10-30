@@ -79,6 +79,8 @@ Run the same grep a few minutes later. The network dials your public address on 
 [extender] activation refused; next attempt in 10m
 ```
 
+A post that never got an answer is logged as `[extender]activate v4 err = http request attempts exhausted: <cause>`, where each cause is one reason an attempt failed (for example a dial or DNS error). Builds before this release printed only the fixed words.
+
 Expected result: no `refused` line. If you see one, the reason names the test that failed; the usual cause is that the network could not reach TCP 443 on your public address, so recheck step 2 from outside your network. A failure that never reached the network reads differently: `[extender] activation failed without a refusal ...` costs no hold and usually means the path to the network is flaky, not that the port is closed. Every extender line and what it means is listed in the [log message reference](https://github.com/full-bars/sn/wiki/Log-Message-Reference).
 
 **6. If the log says the launch was held, wait it out.**
