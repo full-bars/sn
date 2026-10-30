@@ -125,6 +125,8 @@ github.com/full-bars/sdk v0.0.0-20261026105612-d9e2cd4f4c15 h1:niFz3DNCtGqimbpeB
 github.com/full-bars/sdk v0.0.0-20261026105612-d9e2cd4f4c15/go.mod h1:WLi1Xb+RAlK/wQuIahzrRzjPbUCaVRBkWwdIeejxnNI=
 github.com/full-bars/sdk v0.0.0-20261030123422-f17fc47e8bda h1:TF4OQ/7vGzbgrZ68ozxHWsfxz7+5YlbONhVgAWXllws=
 github.com/full-bars/sdk v0.0.0-20261030123422-f17fc47e8bda/go.mod h1:WLi1Xb+RAlK/wQuIahzrRzjPbUCaVRBkWwdIeejxnNI=
+github.com/full-bars/sdk v0.0.0-20261030195315-6f4d35ee3486 h1:At4PBQ+JrY4eNPC24YRK7otCUKnoNUcEkaV3PPF2MUI=
+github.com/full-bars/sdk v0.0.0-20261030195315-6f4d35ee3486/go.mod h1:WLi1Xb+RAlK/wQuIahzrRzjPbUCaVRBkWwdIeejxnNI=
 github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7zvxg=
 github.com/gagliardetto/binary v0.8.0/go.mod h1:2tfj51g5o9dnvsc+fL3Jxr22MuWzYXwx9wEoN0XQ7/c=
 github.com/gagliardetto/solana-go v1.21.0 h1:ZswwwDOFuD/7Hk/k3b6dyLetmvEJuyLmQU7xIziCZgo=
