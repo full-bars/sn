@@ -193,7 +193,7 @@ func ramlogStreamChoice(p Provider, all []Provider) (bool, string) {
 
 // ramlogFileActive reports whether a RAM buffer for this provider exists and
 // has been written to recently.
-
+//
 // This is the provider's own observable behavior rather than an inference from
 // stored configuration, which is why it is consulted before the environment:
 // whatever the config says, a file being appended to twice a second is where
