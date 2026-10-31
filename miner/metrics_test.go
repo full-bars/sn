@@ -10,6 +10,9 @@ import (
 	"net/netip"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/urnetwork/sdk"
 )
 
 // stubMetricsAuto pins the auto bind path off the test box: no Tailscale
@@ -422,4 +425,60 @@ func TestYieldReleasesMetricsListener(t *testing.T) {
 		t.Fatalf("metrics address still held after the yield: %v", err)
 	}
 	ln.Close()
+}
+
+func TestExtenderMetricsTrackStatusAndOmitUnknownBudget(t *testing.T) {
+	testExtenderState(t)
+	extenderMetrics.activeKnown.Store(false)
+	extenderMetrics.active.Store(false)
+	extenderMetrics.activated.Store(0)
+	extenderMetrics.refused.Store(0)
+	extenderMetrics.error.Store(0)
+	extenderMetrics.lastSuccess.Store(0)
+	extenderMetrics.clearBudget()
+
+	before := minerExtraMetrics()
+	for _, family := range []string{
+		"urnet_extender_activation_budget_used",
+		"urnet_extender_activation_budget_limit",
+		"urnet_extender_activation_budget_reset_unixtime",
+	} {
+		if strings.Contains(before, family) {
+			t.Fatalf("unknown budget family %q was emitted before a record existed", family)
+		}
+	}
+
+	listener := newProviderExtenderStatusListener(nil, 0, extenderTestAccountA)
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{
+		Enabled: true, ActivatedV4: true, LastActivationTime: 1800000000000,
+	})
+	extenderActivationAllow(time.Now(), 1, extenderTestAccountA)
+	after := minerExtraMetrics()
+	for _, want := range []string{
+		"urnet_extender_active 1\n",
+		"urnet_extender_activation_attempts_total{outcome=\"activated\"} 1\n",
+		"urnet_extender_last_success_unixtime 1800000000\n",
+	} {
+		if !strings.Contains(after, want) {
+			t.Errorf("metrics missing %q", want)
+		}
+	}
+	for _, want := range []string{
+		"urnet_extender_activation_budget_used 1\n",
+		"urnet_extender_activation_budget_limit 5\n",
+		"urnet_extender_activation_budget_reset_unixtime ",
+	} {
+		if !strings.Contains(after, want) {
+			t.Fatalf("budget family missing %q after a budget record was created", want)
+		}
+	}
+
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{
+		Enabled: true, ActivatedV4: true, LastActivationTime: 1800000001000,
+	})
+	changed := minerExtraMetrics()
+	if !strings.Contains(changed, "urnet_extender_activation_attempts_total{outcome=\"activated\"} 2\n") ||
+		!strings.Contains(changed, "urnet_extender_last_success_unixtime 1800000001\n") {
+		t.Fatalf("activation metrics did not change after the next success: %s", changed)
+	}
 }

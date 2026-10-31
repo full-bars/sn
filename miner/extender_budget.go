@@ -297,7 +297,12 @@ var mutateExtenderActivationRecord = func(account string, mutate func(*extenderA
 	})
 	if err != nil {
 		warnExtenderBudgetUnavailable(account, err)
+		extenderMetrics.clearBudget()
 		return err
+	}
+	if state, ok := record.Accounts[account]; ok {
+		attempts := append([]int64(nil), state.Attempts...)
+		extenderMetrics.setBudget(attempts)
 	}
 	settleExtenderRefusals(snapshot)
 	for _, family := range spares {

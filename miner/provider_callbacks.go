@@ -215,10 +215,14 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		detail = activationDetailDigest(status.LastActivationError)
 	}
 	var attempt string
+	var activationAttemptChanged bool
 	changed, failed := func() (bool, bool) {
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
 		changed := !self.observed || self.last != observation
+		if status != nil && status.LastActivationTime > 0 {
+			activationAttemptChanged = self.last.ActivationTime != observation.ActivationTime
+		}
 		self.observed, self.last = true, observation
 		// A failure is the attempt's, not the observation's. The error stays
 		// set while the attempt stands, so only an attempt this listener has
@@ -235,6 +239,21 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		}
 		return changed, failed
 	}()
+	if status != nil {
+		extenderMetrics.activeKnown.Store(true)
+		extenderMetrics.active.Store(status.Enabled && (status.ActivatedV4 || status.ActivatedV6))
+		if activationAttemptChanged && status.Enabled {
+			switch {
+			case observation.ActivationFailed && observation.ActivationRefused:
+				extenderMetrics.refused.Add(1)
+			case observation.ActivationFailed:
+				extenderMetrics.error.Add(1)
+			case observation.ActivatedV4 || observation.ActivatedV6:
+				extenderMetrics.activated.Add(1)
+				extenderMetrics.lastSuccess.Store(status.LastActivationTime / 1000)
+			}
+		}
+	}
 	if changed || failed {
 		// The operator budgets activation posts per account per hour and its
 		// refusal already names the wait, so the wait is persisted here: the

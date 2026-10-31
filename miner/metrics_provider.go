@@ -8,6 +8,7 @@ import (
 	"runtime/metrics"
 	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -37,6 +38,95 @@ var (
 	controlCmdsGet   atomic.Int64
 	controlCmdsClear atomic.Int64
 )
+
+type extenderMetricsState struct {
+	activeKnown atomic.Bool
+	active      atomic.Bool
+	activated   atomic.Uint64
+	refused     atomic.Uint64
+	error       atomic.Uint64
+	lastSuccess atomic.Int64
+
+	budgetMu       sync.RWMutex
+	budgetKnown    bool
+	budgetAttempts []int64
+	budgetLimit    int
+}
+
+var extenderMetrics extenderMetricsState
+
+func (state *extenderMetricsState) setBudget(attempts []int64) {
+	state.budgetMu.Lock()
+	state.budgetKnown = true
+	state.budgetAttempts = append(state.budgetAttempts[:0], attempts...)
+	state.budgetLimit = extenderActivationBudget
+	state.budgetMu.Unlock()
+}
+
+func (state *extenderMetricsState) clearBudget() {
+	state.budgetMu.Lock()
+	state.budgetKnown = false
+	state.budgetAttempts = nil
+	state.budgetLimit = 0
+	state.budgetMu.Unlock()
+}
+
+func writeExtenderMetrics(b *strings.Builder) {
+	if extenderMetrics.activeKnown.Load() {
+		active := 0
+		if extenderMetrics.active.Load() {
+			active = 1
+		}
+		fmt.Fprintf(b, "# HELP urnet_extender_active 1 when this process has an activated extender.\n")
+		fmt.Fprintf(b, "# TYPE urnet_extender_active gauge\n")
+		fmt.Fprintf(b, "urnet_extender_active %d\n", active)
+	}
+	fmt.Fprintf(b, "# HELP urnet_extender_activation_attempts_total Extender activation outcomes observed in this process.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_activation_attempts_total counter\n")
+	for _, outcome := range []struct {
+		name  string
+		value uint64
+	}{
+		{"activated", extenderMetrics.activated.Load()},
+		{"refused", extenderMetrics.refused.Load()},
+		{"error", extenderMetrics.error.Load()},
+	} {
+		fmt.Fprintf(b, "urnet_extender_activation_attempts_total{outcome=%s} %d\n", prometheusLabelValue(outcome.name), outcome.value)
+	}
+	extenderMetrics.budgetMu.RLock()
+	if extenderMetrics.budgetKnown {
+		now := time.Now()
+		cutoff := now.Add(-extenderActivationWindow).Unix()
+		used := 0
+		reset := int64(0)
+		for _, at := range extenderMetrics.budgetAttempts {
+			if cutoff < at {
+				used++
+				freeAt := at + int64(extenderActivationWindow.Seconds())
+				if reset == 0 || freeAt < reset {
+					reset = freeAt
+				}
+			}
+		}
+		fmt.Fprintf(b, "# HELP urnet_extender_activation_budget_used Attempts spent in the current activation window.\n")
+		fmt.Fprintf(b, "# TYPE urnet_extender_activation_budget_used gauge\n")
+		fmt.Fprintf(b, "urnet_extender_activation_budget_used %d\n", used)
+		fmt.Fprintf(b, "# HELP urnet_extender_activation_budget_limit Attempts allowed in the current activation window.\n")
+		fmt.Fprintf(b, "# TYPE urnet_extender_activation_budget_limit gauge\n")
+		fmt.Fprintf(b, "urnet_extender_activation_budget_limit %d\n", extenderMetrics.budgetLimit)
+		if reset != 0 {
+			fmt.Fprintf(b, "# HELP urnet_extender_activation_budget_reset_unixtime Unix time when the oldest spent attempt leaves the window.\n")
+			fmt.Fprintf(b, "# TYPE urnet_extender_activation_budget_reset_unixtime gauge\n")
+			fmt.Fprintf(b, "urnet_extender_activation_budget_reset_unixtime %d\n", reset)
+		}
+	}
+	extenderMetrics.budgetMu.RUnlock()
+	if at := extenderMetrics.lastSuccess.Load(); at != 0 {
+		fmt.Fprintf(b, "# HELP urnet_extender_last_success_unixtime Unix time of the last successful activation.\n")
+		fmt.Fprintf(b, "# TYPE urnet_extender_last_success_unixtime gauge\n")
+		fmt.Fprintf(b, "urnet_extender_last_success_unixtime %d\n", at)
+	}
+}
 
 // IncrControlCmd increments the appropriate counter based on the command type.
 // The control socket calls it once per handled request, exactly as v33's
@@ -76,6 +166,7 @@ func minerExtraMetrics() string {
 
 	// --- Startup diagnostics (crash/restart/upgrade) ---
 	writeStartupMetrics(&b, version)
+	writeExtenderMetrics(&b)
 
 	// --- Control socket commands ---
 	fmt.Fprintf(&b, "# HELP urnet_control_commands_total Lifetime control socket commands acked.\n")
