@@ -113,6 +113,7 @@ func TestRamlogEntryPointsAgreeOnPrecedence(t *testing.T) {
 	}{
 		{"stale binary buffer, sole owner of shared", []Provider{p}, []string{sharedRamlogPath}, nil, []string{staleBinary}, sharedRamlogPath},
 		{"stale binary buffer, shared contested by rival", []Provider{p, rival}, []string{sharedRamlogPath}, nil, []string{staleBinary}, staleBinary},
+		{"contested shared, both hold it", []Provider{p, rival}, []string{sharedRamlogPath}, map[int][]string{10: {sharedRamlogPath}, 11: {sharedRamlogPath}}, nil, ""},
 		{"contested shared, only rival holds it", []Provider{p, rival}, []string{sharedRamlogPath}, map[int][]string{11: {sharedRamlogPath}}, nil, ""},
 		{"provider holds only the shared descriptor", []Provider{p}, []string{sharedRamlogPath}, map[int][]string{10: {sharedRamlogPath}}, nil, sharedRamlogPath},
 	}

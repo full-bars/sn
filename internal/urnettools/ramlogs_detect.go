@@ -116,14 +116,14 @@ func ramlogStreamPathWith(p Provider, all []Provider, probe ramlogProbe) string 
 	for _, path := range ramLogPathsFor(p) {
 		// The shared path is not a per-binary name, so a fresh file there is
 		// not evidence about this provider; ownership below decides it.
-		if probe.fresh(path, p.Running) {
+		if path != sharedRamlogPath && probe.fresh(path, p.Running) {
 			return path
 		}
 	}
 	for _, path := range probe.open(p.PID) {
 		// A descriptor on the shared file is not a buffer of its own; whether
 		// the provider owns it was settled above.
-		if probe.fresh(path, p.Running) {
+		if path != sharedRamlogPath && probe.fresh(path, p.Running) {
 			return path
 		}
 	}
