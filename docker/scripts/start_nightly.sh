@@ -332,6 +332,14 @@ func_check_update() {
         log "[INFO] Runtime updates disabled under Pelican (update by re-pulling the image)"
         return 0
     fi
+    # LATEST_VERSION_CHECK is a global that is only assigned further down, and
+    # only when the version probe succeeds. The update watcher calls this
+    # function repeatedly from one long-lived shell, so without this reset a
+    # failed probe leaves the PREVIOUS release's tag in place: the install
+    # step would then record that stale tag next to a different binary, and
+    # the next check would re-download. Keep it here, with the other per-call
+    # state; an empty value makes the install step refuse to proceed.
+    LATEST_VERSION_CHECK=""
     if [ -f "$VERSION_FILE" ]; then
         CURRENT_VERSION="$(cat "$VERSION_FILE")"
     else
@@ -359,13 +367,24 @@ func_check_update() {
     HTTP_CODE="$(curl -sfL -w '%{http_code}' -o "$RESP_VERSION_FILE" "$API_URL" 2>/dev/null)" || HTTP_CODE="000"
     VERSION_JSON="$(cat "$RESP_VERSION_FILE" 2>/dev/null)" || VERSION_JSON=""
     if [ "$HTTP_CODE" != "000" ] && [ -n "$VERSION_JSON" ]; then
-        LATEST_VERSION_CHECK="$(printf '%s\n' "$VERSION_JSON" \
-          | grep -oE '"browser_download_url": *"https://[^"]+"' \
-          | sed -E 's/.*"([^"]+)"$/\1/' \
-          | grep '/urnetwork-provider-[^/]*\.tar\.gz$' \
-          | grep -E -- "linux-${A_SYS_ARCH}\.tar\.gz$" \
-          | head -n1 \
-          | sed -E 's#.*/download/v([^/]+)/.*#\1#')"
+        # The tag identifies the release, whatever shape its asset urls take.
+        # Deriving the version from a url went blind on any url that was not
+        # /download/v<tag>/ (a mirror, a redirect, an api asset url): the sed
+        # passed the whole url through, which then failed this compare AND was
+        # written to version.txt, so the watcher re-downloaded the archive on
+        # every check. jq is in the image; the grep path is the same fallback
+        # shape the rest of this script uses.
+        if command -v jq >/dev/null 2>&1; then
+            LATEST_VERSION_CHECK="$(printf '%s\n' "$VERSION_JSON" \
+              | jq -r '.tag_name // empty' 2>/dev/null \
+              | sed 's/^v//')"
+        else
+            LATEST_VERSION_CHECK="$(printf '%s\n' "$VERSION_JSON" \
+              | grep -oE '"tag_name": *"[^"]+"' \
+              | head -n1 \
+              | sed -E 's/.*"([^"]+)"$/\1/' \
+              | sed 's/^v//')"
+        fi
         CURRENT_VERSION=""
         if [ -f "$VERSION_FILE" ]; then
             CURRENT_VERSION="$(cat "$VERSION_FILE")"
@@ -459,8 +478,17 @@ func_check_update() {
     }
     log "[INFO] Expected digest: $EXPECTED_DIGEST"
 
-    LATEST_VERSION="$(printf '%s\n' "$DOWNLOAD_URL" \
-      | sed -E 's#.*/download/v([^/]+)/.*#\1#')"
+    # The version we record comes from the release tag, never from the asset
+    # url: a url that did not match /download/v<tag>/ put the whole url into
+    # version.txt, so every later check compared garbage to the real tag and
+    # re-downloaded the archive. One source of truth, no url assumptions.
+    LATEST_VERSION="$LATEST_VERSION_CHECK"
+    if [ -z "$LATEST_VERSION" ]; then
+        log "[ERROR] Selected release carries no tag; refusing to install an unversioned provider." >&2
+        log "[INFO] Update aborted; existing provider left untouched."
+        rm -rf "$UPDATE_TMP"
+        return 0
+    fi
     log "[INFO] Updating provider to ( $LATEST_VERSION )"
 
     ARCHIVE="$UPDATE_TMP/urnetwork-provider.tar.gz"
