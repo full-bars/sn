@@ -48,11 +48,29 @@ func TestRamlogSelfHoldingNonSharedIsNotCandidate(t *testing.T) {
 	}
 }
 
+// A holder of a non-shared buffer has its own buffer even if that buffer has
+// not been written inside the freshness window.
+func TestRamlogOtherHoldingStaleNonSharedHasOwn(t *testing.T) {
+	p := Provider{PID: 10, User: "u", Binary: "/opt/a/provider", Running: true}
+	other := Provider{PID: 11, User: "v", Binary: "/opt/b/provider", Running: true}
+	open := func(pid int) []string {
+		if pid == 11 {
+			return []string{"/dev/shm/custom.log"}
+		}
+		return nil
+	}
+	// custom.log is stale: only the shared buffer is fresh.
+	if !ramlogSharedOwnedByOpen(p, []Provider{p, other}, freshness(sharedRamlogPath), open) {
+		t.Fatal("a stale-looking holder of a non-shared buffer must not be a rival")
+	}
+}
+
 // Both selection paths apply the same ownership rule: when it says the shared
 // buffer is ambiguous, neither returns it; when it says it is owned, both do.
 func TestRamlogSelectionPathsAgree(t *testing.T) {
 	p := Provider{PID: 10, User: "u", Binary: "/opt/a/provider", Running: true}
 	rival := Provider{PID: 11, User: "v", Binary: "/opt/b/provider", Running: true}
+	holder := Provider{PID: 11, User: "v", Binary: "/opt/b/provider", Running: true}
 	cases := []struct {
 		name string
 		all  []Provider
@@ -61,6 +79,7 @@ func TestRamlogSelectionPathsAgree(t *testing.T) {
 	}{
 		{"ambiguous", []Provider{p, rival}, nil, ""},
 		{"sole candidate", []Provider{p}, nil, sharedRamlogPath},
+		{"rival holds own buffer", []Provider{p, holder}, map[int][]string{11: {"/dev/shm/custom.log"}}, sharedRamlogPath},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

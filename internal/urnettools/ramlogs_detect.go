@@ -199,11 +199,13 @@ func ramlogSharedOwnedByOpen(p Provider, all []Provider, fresh func(path string,
 }
 
 // ramlogHasOwnBuffer reports whether a provider writes a buffer of its own
-// rather than the shared one: a fresh per-binary file, or a fresh non-shared
-// /dev/shm/*.log it holds open.
+// rather than the shared one: a fresh per-binary file, or any non-shared
+// /dev/shm/*.log it holds open. An open descriptor settles it regardless of
+// write freshness, since a holder that looks idle inside the window still has
+// somewhere other than the shared file to write.
 func ramlogHasOwnBuffer(p Provider, fresh func(path string, running bool) bool, opened []string, shared string) bool {
 	for _, path := range opened {
-		if path != shared && fresh(path, true) {
+		if path != shared {
 			return true
 		}
 	}
