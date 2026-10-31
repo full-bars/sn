@@ -132,6 +132,10 @@ func ramlogSharedFallbackActive(p Provider, all []Provider) bool {
 // injected, so the ownership rule can be exercised without writing into the
 // host's /dev/shm.
 func ramlogSharedOwnedBy(p Provider, all []Provider, fresh func(path string, running bool) bool) bool {
+	return ramlogSharedOwnedByOpen(p, all, fresh, ramlogPathsOpenByProcess)
+}
+
+func ramlogSharedOwnedByOpen(p Provider, all []Provider, fresh func(path string, running bool) bool, open func(int) []string) bool {
 	if !p.Running {
 		return false
 	}
@@ -144,6 +148,21 @@ func ramlogSharedOwnedBy(p Provider, all []Provider, fresh func(path string, run
 	for _, other := range all {
 		if !other.Running {
 			continue
+		}
+		if !sameProvider(other, p) {
+			// An open shared buffer blocks the claim even if another buffer is fresh.
+			hasOwn := false
+			for _, path := range open(other.PID) {
+				if path == shared {
+					return false
+				}
+				if fresh(path, true) {
+					hasOwn = true
+				}
+			}
+			if hasOwn {
+				continue
+			}
 		}
 		if ramlogHasOwnFresh(other, fresh, shared) {
 			continue

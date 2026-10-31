@@ -81,6 +81,33 @@ func TestRamlogSharedNeedsRunningProviderAndFreshBuffer(t *testing.T) {
 	}
 }
 
+func TestRamlogSharedAccountsForOtherOpenBuffers(t *testing.T) {
+	p := Provider{PID: 10, User: "u", Binary: "/opt/a/provider", Running: true}
+	other := Provider{PID: 11, User: "v", Binary: "/opt/b/other", Running: true}
+	cases := []struct {
+		name  string
+		open  []string
+		fresh []string
+		want  bool
+	}{
+		{"shared and named buffer open", []string{sharedRamlogPath, "/dev/shm/other.log"}, []string{sharedRamlogPath, "/dev/shm/other.log"}, false},
+		{"custom buffer open", []string{"/dev/shm/custom.log"}, []string{sharedRamlogPath, "/dev/shm/custom.log"}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			open := func(pid int) []string {
+				if pid == other.PID {
+					return tc.open
+				}
+				return nil
+			}
+			if got := ramlogSharedOwnedByOpen(p, []Provider{p, other}, freshness(tc.fresh...), open); got != tc.want {
+				t.Errorf("ownership = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 // Discovery can report a provider without a usable pid, so identity falls back to
 // user and binary rather than matching on a zero pid.
 func TestSameProviderFallsBackToIdentity(t *testing.T) {
