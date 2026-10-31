@@ -332,6 +332,14 @@ func_check_update() {
         log "[INFO] Runtime updates disabled under Pelican (update by re-pulling the image)"
         return 0
     fi
+    # LATEST_VERSION_CHECK is a global that is only assigned further down, and
+    # only when the version probe succeeds. The update watcher calls this
+    # function repeatedly from one long-lived shell, so without this reset a
+    # failed probe leaves the PREVIOUS release's tag in place: the install
+    # step would then record that stale tag next to a different binary, and
+    # the next check would re-download. Keep it here, with the other per-call
+    # state; an empty value makes the install step refuse to proceed.
+    LATEST_VERSION_CHECK=""
     if [ -f "$VERSION_FILE" ]; then
         CURRENT_VERSION="$(cat "$VERSION_FILE")"
     else
