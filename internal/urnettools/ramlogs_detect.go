@@ -22,6 +22,10 @@ const ramlogsFreshWindow = 2 * time.Minute
 // decide whether to redirect its output into /dev/shm.
 const ramlogsEnvKey = "URNETWORK_RAMLOGS"
 
+// sharedRamlogPath is the buffer older builds and some launches write regardless
+// of the binary name.
+const sharedRamlogPath = "/dev/shm/urnetwork.log"
+
 // ramLogPathsFor returns the RAM buffer paths to consider for a provider,
 // newest convention first. The provider writes /dev/shm/<binary basename>.log
 // so multi-provider boxes do not conflate outputs, and older builds wrote the
@@ -36,7 +40,7 @@ func ramLogPathsFor(p Provider) []string {
 	// already matches it; any other named binary must not fall back to the
 	// shared path because that causes multi-provider false positives.
 	if p.Binary == "" {
-		paths = append(paths, "/dev/shm/urnetwork.log")
+		paths = append(paths, sharedRamlogPath)
 	}
 	return paths
 }
@@ -95,7 +99,7 @@ func ramlogStreamPath(p Provider) string {
 			return path
 		}
 	}
-	return "/dev/shm/urnetwork.log"
+	return sharedRamlogPath
 }
 
 // pathExists reports whether path exists at all, without the freshness rules.
@@ -108,33 +112,83 @@ func pathExists(path string) bool {
 // provider's log even though its binary name does not match it.
 //
 // This happens when the provider redirects to the shared path regardless of its
-// name, and the mismatch then has a second consequence: a binary carrying file
+// name, and the mismatch has a second consequence: a binary carrying file
 // capabilities runs non-dumpable, so /proc/<pid>/fd is root-only and the process
 // cannot be asked which file it holds. The basename is the only hint left, and it
 // is wrong.
 //
-// The shared buffer is ambiguous on a multi-provider box, so it is used only
-// when the provider is running, the buffer is fresh, and no other running
-// provider has a fresh buffer of its own that could have written it.
+// The shared buffer is ambiguous when more than one running provider could be
+// writing it, so it is used only when exactly one could. A provider with a fresh
+// buffer of its own is writing that buffer and is not a candidate; what makes the
+// shared buffer ambiguous is a second provider that likewise has no buffer of its
+// own, because either of them could be the writer.
 func ramlogSharedFallbackActive(p Provider, all []Provider) bool {
+	return ramlogSharedOwnedBy(p, all, func(path string, running bool) bool {
+		return ramlogFileFresh(path, running)
+	})
+}
+
+// ramlogSharedOwnedBy is ramlogSharedFallbackActive with the freshness test
+// injected, so the ownership rule can be exercised without writing into the
+// host's /dev/shm.
+func ramlogSharedOwnedBy(p Provider, all []Provider, fresh func(path string, running bool) bool) bool {
 	if !p.Running {
 		return false
 	}
-	shared := "/dev/shm/urnetwork.log"
-	if !ramlogFileFresh(shared, true) {
+	shared := sharedRamlogPath
+	if !fresh(shared, true) {
 		return false
 	}
+	candidates := 0
+	soleCandidate := false
 	for _, other := range all {
-		if other.PID == p.PID || !other.Running {
+		if !other.Running {
 			continue
 		}
-		for _, path := range ramLogPathsFor(other) {
-			if path != shared && ramlogFileFresh(path, other.Running) {
-				return false
-			}
+		if ramlogHasOwnFresh(other, fresh, shared) {
+			continue
+		}
+		candidates += 1
+		if sameProvider(other, p) {
+			soleCandidate = true
 		}
 	}
-	return true
+	return candidates == 1 && soleCandidate
+}
+
+// ramlogHasOwnFresh reports whether a provider is writing a buffer of its own
+// rather than the shared one.
+func ramlogHasOwnFresh(p Provider, fresh func(path string, running bool) bool, shared string) bool {
+	for _, path := range ramLogPathsFor(p) {
+		if path != shared && fresh(path, p.Running) {
+			return true
+		}
+	}
+	return false
+}
+
+// sameProvider reports whether two discoveries describe the same provider. PIDs
+// are reused and can be zero for a provider that is not running, so fall back to
+// the identity discovery already proved.
+func sameProvider(a Provider, b Provider) bool {
+	if 0 < a.PID && 0 < b.PID {
+		return a.PID == b.PID
+	}
+	return a.User == b.User && a.Binary == b.Binary
+}
+
+// ramlogStreamChoice decides whether a RAM buffer should be streamed and which
+// one. When the shared buffer is this provider's, that is the file to stream: the
+// per-binary name is missing or stale, which is why the fallback was needed, so
+// preferring it here would silently follow an unrelated or dead file.
+func ramlogStreamChoice(p Provider, all []Provider) (bool, string) {
+	if ramlogSharedFallbackActive(p, all) {
+		return true, sharedRamlogPath
+	}
+	if providerUsesRamlogs(p) {
+		return true, ramlogStreamPath(p)
+	}
+	return false, ""
 }
 
 // ramlogFileActive reports whether a RAM buffer for this provider exists and

@@ -521,7 +521,7 @@ func cmdLogs(args []string) error {
 	if narrowed {
 		printNarrowedNote(len(providers), p, "logs")
 	}
-	if providerUsesRamlogs(p) || ramlogSharedFallbackActive(p, providers) {
+	if useRam, ramPath0 := ramlogStreamChoice(p, providers); useRam {
 		// The RAM buffer is provider-scoped: each provider gets its own
 		// /dev/shm/<basename>.log so multi-provider boxes don't conflate
 		// outputs (audit M15). ramlogStreamPath follows the same order as the
@@ -530,7 +530,7 @@ func cmdLogs(args []string) error {
 		// the running process actually has open, which is the only reliable
 		// answer when the provider names its buffer from settings rather than
 		// from its binary.
-		ramPath := ramlogStreamPath(p)
+		ramPath := ramPath0
 		fmt.Printf("Streaming from RAM disk (%s, %d lines) — provider %s\n", ramPath, lines, providerLabel(p))
 		if runtime.GOOS == "windows" {
 			return streamLogFile(nil, ramPath, lines, os.Stdout)
