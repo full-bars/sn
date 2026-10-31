@@ -80,3 +80,62 @@ func TestUserUnitBinaryIsProviderFailsClosed(t *testing.T) {
 		}
 	}
 }
+
+// stubUserUnitProperty replaces the systemctl lookup under userUnitOwns with
+// canned values and records every (scope, unit, prop) asked.
+func stubUserUnitProperty(t *testing.T, vals map[string]string) *[]string {
+	t.Helper()
+	var asked []string
+	old := userUnitProperty
+	userUnitProperty = func(scope []string, unit, prop string) string {
+		asked = append(asked, strings.Join(scope, " ")+"|"+unit+"|"+prop)
+		return vals[prop]
+	}
+	t.Cleanup(func() { userUnitProperty = old })
+	return &asked
+}
+
+// userUnitOwns itself, driven through the property seam.
+func TestUserUnitOwns(t *testing.T) {
+	const bin = "/home/user/sn-canary/provider"
+	cases := []struct {
+		name string
+		user string
+		vals map[string]string
+		want bool
+	}{
+		{"id and binary match", "user", map[string]string{"Id": "sn-canary.service", "ExecStart": "{ path=" + bin + " ; argv[]=" + bin + " provide ; }"}, true},
+		{"manager does not know the unit", "user", map[string]string{"Id": "", "ExecStart": "{ path=" + bin + " ; }"}, false},
+		{"id differs from the cgroup unit", "user", map[string]string{"Id": "other.service", "ExecStart": "{ path=" + bin + " ; }"}, false},
+		{"unreadable ExecStart fails closed", "user", map[string]string{"Id": "sn-canary.service"}, false},
+		{"unrelated binary", "user", map[string]string{"Id": "sn-canary.service", "ExecStart": "{ path=/usr/bin/curl ; argv[]=/usr/bin/curl ; }"}, false},
+	}
+	for _, c := range cases {
+		stubUserUnitProperty(t, c.vals)
+		p := Provider{User: c.user, Binary: bin}
+		if got := userUnitOwns(p, "sn-canary.service"); got != c.want {
+			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+// Pinned: a provider with no recorded owner is never confirmed, and systemd is
+// not even asked (there is no user manager to address, and "-M @" is not one).
+func TestUserUnitOwnsEmptyUserFailsClosed(t *testing.T) {
+	asked := stubUserUnitProperty(t, map[string]string{"Id": "sn-canary.service", "ExecStart": "{ path=/p ; }"})
+	if userUnitOwns(Provider{User: "", Binary: "/p"}, "sn-canary.service") {
+		t.Fatal("empty p.User was confirmed as owner")
+	}
+	if len(*asked) != 0 {
+		t.Errorf("systemd consulted with no owner: %v", *asked)
+	}
+}
+
+// The lookup is scoped to the owning user's manager, never the system one.
+func TestUserUnitOwnsQueriesOwnersManager(t *testing.T) {
+	asked := stubUserUnitProperty(t, map[string]string{"Id": "x.service"})
+	userUnitOwns(Provider{User: "definitely-not-me-xyz", Binary: "/p"}, "x.service")
+	if len(*asked) == 0 || !strings.HasPrefix((*asked)[0], "--user -M definitely-not-me-xyz@|x.service|Id") {
+		t.Errorf("unexpected scope: %v", *asked)
+	}
+}

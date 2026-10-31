@@ -426,16 +426,22 @@ func discoverStopped(running []Provider) []Provider {
 // binary, so accepting an unknown binary would associate whatever the unit runs
 // with this provider. Overridable so tests need no systemd.
 var userUnitOwns = func(p Provider, unit string) bool {
+	// No owner means no user manager to ask (systemctlUserArgs("") would build
+	// "-M @"), so ownership is unprovable: fail closed.
 	if p.User == "" {
 		return false
 	}
 	scope := systemctlUserArgs(p.User)
-	if unitProperty(scope, unit, "Id") != unit {
+	if userUnitProperty(scope, unit, "Id") != unit {
 		return false
 	}
-	bin := parseExecStartPath(unitProperty(scope, unit, "ExecStart"))
+	bin := parseExecStartPath(userUnitProperty(scope, unit, "ExecStart"))
 	return userUnitBinaryIsProvider(p, bin)
 }
+
+// userUnitProperty is the systemctl lookup behind userUnitOwns. Tests replace
+// it to drive userUnitOwns itself with canned property values.
+var userUnitProperty = unitProperty
 
 // userUnitBinaryIsProvider is the ExecStart half of ownership, split out because
 // it is the part worth testing and the lookup above needs a live systemd. An
