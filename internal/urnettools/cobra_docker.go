@@ -78,7 +78,7 @@ Batch / safety flags:
   -n, --dry-run               show what would happen without doing it
   -h, --help                  show help (never executes)
 
-Need help? Email support@fullbars.xyz or visit https://github.com/full-bars/sn
+Need help? Email support@fullbars.xyz, join https://discord.gg/urnetwork, or visit https://github.com/full-bars/sn
 `
 
 func buildDockerRootCmd() *cobra.Command {
