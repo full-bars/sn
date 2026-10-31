@@ -447,9 +447,11 @@ func unitFromCgroup(cg string) (unit string, user bool) {
 // userUnitOwns confirms that a user-manager unit named by the cgroup is the
 // provider's. The unit name is operator-chosen (sn-canary.service), so it
 // cannot be vetted by name the way system units are; instead the owning
-// user's manager must know the unit by exactly that Id, and where its
-// ExecStart is readable it must run this provider's binary. Overridable so
-// tests need no systemd.
+// user's manager must know the unit by exactly that Id, and its ExecStart must
+// resolve to this provider's binary. An unreadable ExecStart fails closed: the
+// cgroup proves which unit a process belongs to, not that the unit starts this
+// binary, so accepting an unknown binary would associate whatever the unit runs
+// with this provider. Overridable so tests need no systemd.
 var userUnitOwns = func(p Provider, unit string) bool {
 	if p.User == "" {
 		return false
@@ -459,7 +461,16 @@ var userUnitOwns = func(p Provider, unit string) bool {
 		return false
 	}
 	bin := parseExecStartPath(unitProperty(scope, unit, "ExecStart"))
-	return bin == "" || bin == p.Binary || isProviderArg(bin)
+	return userUnitBinaryIsProvider(p, bin)
+}
+
+// userUnitBinaryIsProvider is the ExecStart half of ownership, split out because
+// it is the part worth testing and the lookup above needs a live systemd. An
+// unreadable ExecStart ("") answers false: the cgroup proves which unit a
+// process belongs to, not that the unit starts this binary, so an unknown binary
+// must not be associated with this provider.
+func userUnitBinaryIsProvider(p Provider, bin string) bool {
+	return bin != "" && (bin == p.Binary || isProviderArg(bin))
 }
 
 // attachUnits assigns a systemd unit name to each running provider from the

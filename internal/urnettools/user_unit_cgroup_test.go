@@ -78,3 +78,23 @@ func TestUnreadableStdoutDiagnosisUnitless(t *testing.T) {
 		}
 	}
 }
+
+// An unreadable ExecStart must fail closed: the cgroup says which unit a process
+// belongs to, not that the unit starts this provider's binary.
+func TestUserUnitBinaryIsProviderFailsClosed(t *testing.T) {
+	p := Provider{User: "user", Binary: "/home/user/sn-canary/provider"}
+	cases := []struct {
+		name, bin string
+		want      bool
+	}{
+		{"unreadable ExecStart", "", false},
+		{"this provider's binary", "/home/user/sn-canary/provider", true},
+		{"provider argument form", "provider", true},
+		{"unrelated binary", "/usr/bin/curl", false},
+	}
+	for _, c := range cases {
+		if got := userUnitBinaryIsProvider(p, c.bin); got != c.want {
+			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
+		}
+	}
+}
