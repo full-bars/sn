@@ -106,14 +106,23 @@ func ramlogStreamPath(p Provider, all []Provider) string {
 }
 
 func ramlogStreamPathWith(p Provider, all []Provider, probe ramlogProbe) string {
+	// Ownership of the shared buffer is decided first and in this one place, so
+	// a stale per-binary file cannot outrank a shared buffer the provider owns.
+	// An owner has no fresh buffer of its own, so this never shadows the loops
+	// below for a provider that does.
+	if ramlogSharedOwnedByOpen(p, all, probe.fresh, probe.open) {
+		return sharedRamlogPath
+	}
 	for _, path := range ramLogPathsFor(p) {
 		// The shared path is not a per-binary name, so a fresh file there is
 		// not evidence about this provider; ownership below decides it.
-		if path != sharedRamlogPath && probe.fresh(path, p.Running) {
+		if probe.fresh(path, p.Running) {
 			return path
 		}
 	}
 	for _, path := range probe.open(p.PID) {
+		// A descriptor on the shared file is not a buffer of its own; whether
+		// the provider owns it was settled above.
 		if probe.fresh(path, p.Running) {
 			return path
 		}
@@ -122,9 +131,6 @@ func ramlogStreamPathWith(p Provider, all []Provider, probe ramlogProbe) string 
 		if path := "/dev/shm/" + filepath.Base(p.Binary) + ".log"; path != sharedRamlogPath && probe.exists(path) {
 			return path
 		}
-	}
-	if ramlogSharedOwnedByOpen(p, all, probe.fresh, probe.open) {
-		return sharedRamlogPath
 	}
 	return ""
 }
@@ -242,14 +248,12 @@ func ramlogStreamChoice(p Provider, all []Provider) (bool, string) {
 }
 
 func ramlogStreamChoiceWith(p Provider, all []Provider, probe ramlogProbe, usesRamlogs func(Provider) bool) (bool, string) {
-	if ramlogSharedOwnedByOpen(p, all, probe.fresh, probe.open) {
-		return true, sharedRamlogPath
-	}
-	if usesRamlogs(p) {
-		// No evidence for any buffer means the journal, not a guessed file.
-		if path := ramlogStreamPathWith(p, all, probe); path != "" {
-			return true, path
-		}
+	// The precedence lives in ramlogStreamPathWith; this only decides whether
+	// the provider is a candidate at all. An owned shared buffer is streamed
+	// even when the configuration does not say ramlogs are on.
+	path := ramlogStreamPathWith(p, all, probe)
+	if path == sharedRamlogPath || (path != "" && usesRamlogs(p)) {
+		return true, path
 	}
 	return false, ""
 }

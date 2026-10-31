@@ -95,3 +95,38 @@ func TestRamlogSelectionPathsAgree(t *testing.T) {
 		})
 	}
 }
+
+// The two entry points must give the same answer for the same inputs, in
+// precedence as well as in the ownership rule. This is the guard against the
+// order of checks drifting apart between them again.
+func TestRamlogEntryPointsAgreeOnPrecedence(t *testing.T) {
+	staleBinary := "/dev/shm/provider.log"
+	p := Provider{PID: 10, User: "u", Binary: "/opt/a/provider", Running: true}
+	rival := Provider{PID: 11, User: "v", Binary: "/opt/b/other", Running: true}
+	cases := []struct {
+		name   string
+		all    []Provider
+		fresh  []string
+		open   map[int][]string
+		exists []string
+		want   string
+	}{
+		{"stale binary buffer, sole owner of shared", []Provider{p}, []string{sharedRamlogPath}, nil, []string{staleBinary}, sharedRamlogPath},
+		{"stale binary buffer, shared contested by rival", []Provider{p, rival}, []string{sharedRamlogPath}, nil, []string{staleBinary}, staleBinary},
+		{"contested shared, only rival holds it", []Provider{p, rival}, []string{sharedRamlogPath}, map[int][]string{11: {sharedRamlogPath}}, nil, ""},
+		{"provider holds only the shared descriptor", []Provider{p}, []string{sharedRamlogPath}, map[int][]string{10: {sharedRamlogPath}}, nil, sharedRamlogPath},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			probe := probeFor(tc.fresh, tc.open, tc.exists...)
+			path := ramlogStreamPathWith(p, tc.all, probe)
+			use, choice := ramlogStreamChoiceWith(p, tc.all, probe, always(true))
+			if path != tc.want {
+				t.Errorf("stream path = %q, want %q", path, tc.want)
+			}
+			if choice != path || use != (path != "") {
+				t.Errorf("choice = %v %q disagrees with stream path %q", use, choice, path)
+			}
+		})
+	}
+}
