@@ -79,27 +79,54 @@ func ramlogPathsOpenByProcess(pid int) []string {
 	return paths
 }
 
-// ramlogStreamPath returns the buffer to stream for a provider. It follows the
-// same order as ramlogFileActive so the file that was detected as active is the
-// file that gets streamed: the per-binary name first, then whatever the running
-// process actually has open, then the shared legacy path.
-func ramlogStreamPath(p Provider) string {
+// ramlogProbe bundles the filesystem facts the buffer-selection rules read, so
+// the rules can be exercised without writing into the host's /dev/shm or
+// reading another process's descriptors.
+type ramlogProbe struct {
+	fresh  func(path string, running bool) bool
+	open   func(pid int) []string
+	exists func(path string) bool
+}
+
+var liveRamlogProbe = ramlogProbe{
+	fresh:  ramlogFileFresh,
+	open:   ramlogPathsOpenByProcess,
+	exists: pathExists,
+}
+
+// ramlogStreamPath returns the buffer to stream for a provider, or "" when no
+// evidence supports any buffer. It follows the same order as ramlogFileActive so
+// the file that was detected as active is the file that gets streamed: the
+// per-binary name first, then whatever the running process actually has open.
+// The shared legacy path is returned only when this provider owns it under the
+// same rule ramlogStreamChoice uses (ramlogSharedOwnedByOpen); it is never a
+// default, because handing it back unowned streams another provider's output.
+func ramlogStreamPath(p Provider, all []Provider) string {
+	return ramlogStreamPathWith(p, all, liveRamlogProbe)
+}
+
+func ramlogStreamPathWith(p Provider, all []Provider, probe ramlogProbe) string {
 	for _, path := range ramLogPathsFor(p) {
-		if ramlogFileFresh(path, p.Running) {
+		// The shared path is not a per-binary name, so a fresh file there is
+		// not evidence about this provider; ownership below decides it.
+		if path != sharedRamlogPath && probe.fresh(path, p.Running) {
 			return path
 		}
 	}
-	for _, path := range ramlogPathsOpenByProcess(p.PID) {
-		if ramlogFileFresh(path, p.Running) {
+	for _, path := range probe.open(p.PID) {
+		if probe.fresh(path, p.Running) {
 			return path
 		}
 	}
 	if p.Binary != "" {
-		if path := "/dev/shm/" + filepath.Base(p.Binary) + ".log"; pathExists(path) {
+		if path := "/dev/shm/" + filepath.Base(p.Binary) + ".log"; path != sharedRamlogPath && probe.exists(path) {
 			return path
 		}
 	}
-	return sharedRamlogPath
+	if ramlogSharedOwnedByOpen(p, all, probe.fresh, probe.open) {
+		return sharedRamlogPath
+	}
+	return ""
 }
 
 // pathExists reports whether path exists at all, without the freshness rules.
@@ -135,6 +162,8 @@ func ramlogSharedOwnedBy(p Provider, all []Provider, fresh func(path string, run
 	return ramlogSharedOwnedByOpen(p, all, fresh, ramlogPathsOpenByProcess)
 }
 
+// ramlogSharedOwnedByOpen is the single ownership rule for the shared buffer;
+// ramlogStreamChoice and ramlogStreamPath both reach it through here.
 func ramlogSharedOwnedByOpen(p Provider, all []Provider, fresh func(path string, running bool) bool, open func(int) []string) bool {
 	if !p.Running {
 		return false
@@ -149,22 +178,16 @@ func ramlogSharedOwnedByOpen(p Provider, all []Provider, fresh func(path string,
 		if !other.Running {
 			continue
 		}
+		opened := open(other.PID)
 		if !sameProvider(other, p) {
 			// An open shared buffer blocks the claim even if another buffer is fresh.
-			hasOwn := false
-			for _, path := range open(other.PID) {
+			for _, path := range opened {
 				if path == shared {
 					return false
 				}
-				if fresh(path, true) {
-					hasOwn = true
-				}
-			}
-			if hasOwn {
-				continue
 			}
 		}
-		if ramlogHasOwnFresh(other, fresh, shared) {
+		if ramlogHasOwnBuffer(other, fresh, opened, shared) {
 			continue
 		}
 		candidates += 1
@@ -173,6 +196,18 @@ func ramlogSharedOwnedByOpen(p Provider, all []Provider, fresh func(path string,
 		}
 	}
 	return candidates == 1 && soleCandidate
+}
+
+// ramlogHasOwnBuffer reports whether a provider writes a buffer of its own
+// rather than the shared one: a fresh per-binary file, or a fresh non-shared
+// /dev/shm/*.log it holds open.
+func ramlogHasOwnBuffer(p Provider, fresh func(path string, running bool) bool, opened []string, shared string) bool {
+	for _, path := range opened {
+		if path != shared && fresh(path, true) {
+			return true
+		}
+	}
+	return ramlogHasOwnFresh(p, fresh, shared)
 }
 
 // ramlogHasOwnFresh reports whether a provider is writing a buffer of its own
@@ -201,11 +236,18 @@ func sameProvider(a Provider, b Provider) bool {
 // per-binary name is missing or stale, which is why the fallback was needed, so
 // preferring it here would silently follow an unrelated or dead file.
 func ramlogStreamChoice(p Provider, all []Provider) (bool, string) {
-	if ramlogSharedFallbackActive(p, all) {
+	return ramlogStreamChoiceWith(p, all, liveRamlogProbe, providerUsesRamlogs)
+}
+
+func ramlogStreamChoiceWith(p Provider, all []Provider, probe ramlogProbe, usesRamlogs func(Provider) bool) (bool, string) {
+	if ramlogSharedOwnedByOpen(p, all, probe.fresh, probe.open) {
 		return true, sharedRamlogPath
 	}
-	if providerUsesRamlogs(p) {
-		return true, ramlogStreamPath(p)
+	if usesRamlogs(p) {
+		// No evidence for any buffer means the journal, not a guessed file.
+		if path := ramlogStreamPathWith(p, all, probe); path != "" {
+			return true, path
+		}
 	}
 	return false, ""
 }

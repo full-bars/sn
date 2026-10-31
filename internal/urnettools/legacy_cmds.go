@@ -524,12 +524,12 @@ func cmdLogs(args []string) error {
 	if useRam, ramPath0 := ramlogStreamChoice(p, providers); useRam {
 		// The RAM buffer is provider-scoped: each provider gets its own
 		// /dev/shm/<basename>.log so multi-provider boxes don't conflate
-		// outputs (audit M15). ramlogStreamPath follows the same order as the
-		// detection that got us here, and falls back to the shared legacy path
-		// when the per-provider buffer does not exist — and to whatever buffer
-		// the running process actually has open, which is the only reliable
+		// outputs (audit M15). ramlogStreamChoice follows the same order as the
+		// detection that got us here: the per-provider buffer, then whatever
+		// buffer the running process actually has open (the only reliable
 		// answer when the provider names its buffer from settings rather than
-		// from its binary.
+		// from its binary). The shared legacy path is chosen only when this
+		// provider owns it.
 		ramPath := ramPath0
 		fmt.Printf("Streaming from RAM disk (%s, %d lines) — provider %s\n", ramPath, lines, providerLabel(p))
 		if runtime.GOOS == "windows" {
