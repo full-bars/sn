@@ -55,6 +55,8 @@ docker run -d \
   ghcr.io/full-bars/sn:latest YOUR_AUTH_CODE_HERE
 ```
 
+`-e URNETWORK_NODE_NAME` is **not implemented in this line**: nothing reads it, so the label does not reach the dashboard. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity).
+
 The Docker image is multi-arch (linux/amd64 and linux/arm64) and is published to GitHub Container Registry as `ghcr.io/full-bars/sn`, and to Docker Hub as `3cape/sn`.
 
 ### Resource Usage Tips

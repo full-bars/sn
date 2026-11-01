@@ -10,7 +10,10 @@ Give each container its own config volume mounted at `/root/.urnetwork`. That di
 
 1. Get one auth code per node. An auth code is single-use, so the nodes cannot share one.
 2. Each node authenticates from its own `URNETWORK_AUTH_CODE` on its first start and keeps the resulting JWT in its own volume, so later restarts need no code.
-3. Each node registers its own distinct client identity with the backend and reports to your dashboard with its own label.
+3. Each node registers its own distinct client identity with the backend.
+
+> [!NOTE]
+> Node labels are **not implemented in this line**. Nothing reads `URNETWORK_NODE_NAME`, so the `URNETWORK_NODE_NAME` lines in the examples below are ignored and the dashboard does not show them. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity).
 
 Once a node has started once you can delete its `URNETWORK_AUTH_CODE` line; the stored JWT is used first and the code is never read again.
 
@@ -454,7 +457,7 @@ List running containers:
 docker compose ps
 ```
 
-Check your Client Manager. You should see one entry per node, identified by the names in `URNETWORK_NODE_NAME` and a redacted public IP for privacy, for example:
+Check your Client Manager. You should see one entry per node, identified by its client identity (not by `URNETWORK_NODE_NAME`, which this line does not read) and a redacted public IP for privacy, for example:
 
 ```text
 urfix-1 @ 69.x.x.96 [v2026.x]

@@ -4,7 +4,7 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Everything merged after `v2026.10.26-1793016775`. The miner is the program this fork ships; entries about the relay `provider` say so.
+Everything merged after `v2026.10.26-1793016775` that is not yet in a dated section. This list has not been reconciled: some entries already shipped in `v2026.10.29-1084846960-sn` (see `releases/v2026.10.29-1084846960-sn.md`), so do not read it as the diff from the latest tag. The miner is the program this fork ships; entries about the relay `provider` say so.
 
 ### Added
 

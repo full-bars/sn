@@ -89,8 +89,10 @@ docker run -d --name urfix \
 | Env var | Purpose |
 |---|---|
 | `PROXY_URL` | Live proxy list URL, fetched and merged on interval (see [Proxy URL Sources](/full-bars/sn/wiki/Proxy-URL-Sources)) |
-| `URNETWORK_PROXY_BENCHMARK=true` | Enables per-proxy latency probes (TCP connect every 5m, SOCKS5 every 15m) |
-| `URNETWORK_PROXY_BENCHMARK_ENDPOINT` | Target for SOCKS5 CONNECT probe (default `connect.bringyour.com:443`) |
+| `URNETWORK_PROXY_BENCHMARK=true` | **Not implemented in this line.** Nothing reads it; setting it changes nothing. |
+| `URNETWORK_PROXY_BENCHMARK_ENDPOINT` | **Not implemented in this line.** Nothing reads it. |
+
+The two `URNETWORK_PROXY_BENCHMARK*` variables in the example above are ignored by this image. See [Configuration.md](/full-bars/sn/wiki/Configuration).
 
 For additional containers, change the container name and volumes together.
 
@@ -122,11 +124,7 @@ Alternative method:
 -e URNETWORK_AUTH_CODE=YOUR_CODE
 ```
 
-To label this server in webhook alerts and health logs, add:
-
-```bash
--e URNETWORK_NODE_NAME=your-server-name
-```
+Node labels are **not implemented in this line**. `URNETWORK_NODE_NAME` is not read by anything in the tree, so it does not label this server in webhook alerts, health logs or the dashboard. The `-e URNETWORK_NODE_NAME=...` flags in the examples on this page are ignored. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity).
 
 ### ✉️ Email/Password Auth
 
@@ -475,7 +473,7 @@ docker exec -it <container> urnet-tools idle-update --window 0
 
 ## 📊 (Optional) Running with vnStat Bandwidth Monitor
 
-By default, production Docker deployments run with **zero listening ports** and vnStat disabled. The provider establishes all p2p tunnels and relay connections outbound, requiring no inbound port forwarding.
+vnStat is **enabled by default** (`ENABLE_VNSTAT` defaults to `true` in `docker/scripts/start_stable.sh` and `start_jwt.sh`), so the container listens on port 8080 unless you set `ENABLE_VNSTAT=false`, which turns off that listener only. The provider establishes all p2p tunnels and relay connections outbound, requiring no inbound port forwarding. The Prometheus `/metrics` endpoint is a separate listener, enabled by default on loopback (see [Configuration.md](/full-bars/sn/wiki/Configuration)).
 
 If you specifically want the web-based vnStat traffic monitor to view real-time throughput graphs:
 

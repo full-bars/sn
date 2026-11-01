@@ -7,6 +7,9 @@ The provider runs as an `rc.d` service named `urnetwork` under an unprivileged u
 > [!NOTE]
 > **Release artifacts on sn:** the FreeBSD provider binary and the `urnet-tools-freebsd-*` assets are published from `v2026.10.22-1078667780` onward. Release `v2026.10.6-1064742750-meso` and older do not ship them, so `install` cannot fetch FreeBSD binaries from those; install the newest release.
 
+> [!WARNING]
+> **FreeBSD is not a working provider target in this line.** Durable client registration is refused on FreeBSD with `durable client registration requires Unix custody support` (`clientauth/registration_store_unsupported.go:13`, the stub built for every platform except Linux, macOS and Windows). The release matrix records this gap as `TODO(freebsd-durable-registration)` in `docs/Distro-Matrix-CI.md`. Do not deploy FreeBSD nodes for production until that gap is closed.
+
 ## Before you start
 
 The base system has no `jq`, no `python3` and no `curl`. Downloads need none of them: the installer uses `curl` when it is installed, then `fetch` from the base system, then `wget`. The installer does need one JSON parser, though: the provider tarball is installed only after its SHA-256 is checked against the digest in the release metadata, and reading that metadata takes `jq` or `python3`. With neither, the install stops before downloading anything. Install `sudo` and `jq`:
