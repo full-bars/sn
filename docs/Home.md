@@ -24,7 +24,7 @@ The provider serves dual-stack IPv4 and IPv6 traffic, uses HTTP/3 (QUIC) for its
 ### Operating
 - [urnet-tools-go](urnet-tools-go) — the provider-aware fleet ops tool
 - [Monitoring](Monitoring) — Prometheus metrics and the Grafana stack
-- [Node Identity](Node-Identity) — dashboard labels, naming, and IP privacy
+- [Node Identity](Node-Identity) — why node labels are not implemented in this line
 - [Egress Security Policy](Egress-Security-Policy) — packet inspection: CFAA reputation, DMCA BitTorrent, web standards
 - [Bittensor Quick Start](Bittensor-Quick-Start): do I need to do anything? (start here)
 - [Bittensor Operations](Bittensor-Operations): Subnet overview and FAQ

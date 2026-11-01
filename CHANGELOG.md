@@ -4,7 +4,27 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Entries merged after `v2026.10.30-1085641150-sn` go here. Nothing is listed yet.
+Merged to `main` after `v2026.10.30-1085641150-sn`, not yet in a tagged release. Hashes are commits on `main`.
+
+### Fixed
+
+- **Per-carrier IPv6 verdicts reach the miner through a connect bump** ([#337](https://github.com/full-bars/sn/pull/337), 12efc46ba): an exit that cannot reach IPv6 stops costing a full dial timeout per attempt, and exits that can reach it keep IPv6. The miner consumes connect as a module, so the verdicts arrive through the pin.
+- **The release validator accepts the connect replacement that `go.mod` resolves to** ([#337](https://github.com/full-bars/sn/pull/337), 25f427890): pinned dependency mode rejected the new `full-bars/connect` replacement.
+- **A shared RAM log is streamed only when this provider owns it** ([#334](https://github.com/full-bars/sn/pull/334), 9188e09d7, eec1fd986): the stream path could return the shared buffer when nothing else matched, so a provider could be shown another provider's output. Ownership is now decided in one place, and a provider holding its own non-shared buffer is no longer treated as a rival for the shared one.
+- **User units are attached to their provider by the owning user's manager** ([#335](https://github.com/full-bars/sn/pull/335), 537e918ba): a user unit with a free-form name such as `sn-canary.service` was never attached, because discovery vetted the cgroup unit by name. The user manager itself is no longer reported as a workload unit (f377a2026).
+- **The nightly Docker updater takes the version from the release tag** ([#336](https://github.com/full-bars/sn/pull/336), b75ea3418): the version was scraped from an asset URL, so a URL not in `/download/v<tag>/` form passed through whole, and every check re-downloaded the archive. The update tag is also reset on each check (e0495e4d2), so a failed probe cannot reuse the previous release's tag.
+- **The FreeBSD installer clears the provider backup only when it is gone** ([#338](https://github.com/full-bars/sn/pull/338), c954820bd): a failed removal left a `.urnetwork.bak` file behind, and the cleanup ignored the result. The installer now keeps the warning that says where the stray copy is.
+
+### Changed
+
+- **`connect` and `sdk` pins moved** (12efc46ba, b1efe606d): `connect` from `d0a4bb41c300` to `ca8b9020201a`, and `sdk` from `f17fc47e8bda` to `6f4d35ee3486`, which carries the extender activation timeout fix.
+- **The `urnet-tools` help menus point at the community Discord** (cfa578c21).
+
+### Documentation
+
+- **Node labels and four environment variables are marked as not implemented in this line** (386831615, 68487a249): `URNETWORK_NODE_NAME`, `URNETWORK_PROXY_BENCHMARK`, `URNETWORK_PROXY_BENCHMARK_ENDPOINT`, `URNETWORK_ADAPTIVE_GC` and `URNETWORK_SHM_LOG` are read by nothing in the tree, so setting them changes nothing. See [Node Identity](docs/Node-Identity.md) and [Configuration](docs/Configuration.md).
+- **Release notes for `v2026.10.30-1085641150-sn`** ([#333](https://github.com/full-bars/sn/pull/333)).
+- **SN25 live numbers refreshed** (c61b28be8, 0c15d3974).
 
 ## [v2026.10.30-1085641150-sn] — 2026-10-30
 

@@ -8,7 +8,7 @@ The provider runs as an `rc.d` service named `urnetwork` under an unprivileged u
 > **Release artifacts on sn:** the FreeBSD provider binary and the `urnet-tools-freebsd-*` assets are published from `v2026.10.22-1078667780` onward. Release `v2026.10.6-1064742750-meso` and older do not ship them, so `install` cannot fetch FreeBSD binaries from those; install the newest release.
 
 > [!WARNING]
-> **FreeBSD is not a working provider target in this line.** Durable client registration is refused on FreeBSD with `durable client registration requires Unix custody support` (`clientauth/registration_store_unsupported.go:13`, the stub built for every platform except Linux, macOS and Windows). The release matrix records this gap as `TODO(freebsd-durable-registration)` in `docs/Distro-Matrix-CI.md`. Do not deploy FreeBSD nodes for production until that gap is closed.
+> **FreeBSD has no durable client registration in this line.** Durable client registration is refused on FreeBSD with `durable client registration requires Unix custody support` (`clientauth/registration_store_unsupported.go:13`, the stub built for every platform except Linux, macOS and Windows). The stub's own comment says legacy authentication remains available there. The release matrix records this gap as `TODO(freebsd-durable-registration)` in `docs/Distro-Matrix-CI.md`. Do not deploy FreeBSD nodes for production until that gap is closed.
 
 ## Before you start
 

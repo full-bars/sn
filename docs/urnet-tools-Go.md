@@ -43,13 +43,13 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 |---|---|
 | `auth <code> [target] [-f]` | Authenticate provider with an auth code. `-f` forces overwrite of an existing JWT. Drops privileges to run as target user when called by root. |
 | `direct [on\|off\|status] [target]` | Toggle or report direct/local IP providing state. Takes effect immediately via reload. Available across `provider`, `urnet-tools`, and `urnet-docker`. |
-| `show-ip [on\|off\|status] [target]` | Control whether the provider appends its public IP to the dashboard label set by `rename`. Renamed from `ip-detect`, which is kept as an alias. This is about what the dashboard shows, not which address the provider serves on; for that see `direct`. |
+| `show-ip [on\|off\|status] [target]` | Writes or removes the `~/.urnetwork/disable_ip_autodetect` marker. Renamed from `ip-detect`, which is kept as an alias. The miner does not read the marker, so in this line it changes no label and no address the miner reports. See [Node-Identity](Node-Identity). |
 | `sn-status [--json] [target]` | Query and display mining and node telemetry: global rank, tier eligibility, net bandwidth provided, registered coldkey, current epoch blocks, and finalized epoch pool payout share. Available across `urnet-tools`, `urnet-docker`, and `provider`. |
 | `usage [graphs\|graph <view>] [target]` | Display traffic and billing accounting: billable relay bytes vs control-plane protocol overhead, with rolling time-series summaries. |
 | `choose-network <api> <connect> [target]` | Point provider to custom API and WebSocket signaling endpoints. Use `--reset` to restore the default endpoints. |
 | `fast-auth [on\|off\|status] [target]` | Toggle or check `~/.urnetwork/fast_auth` marker to bypass the auth rate limiter. Confirm-gated. |
 | `set [help \| <key> <val> \| <key> off \| <key>] [target]` | Get, set, or clear runtime provider state overrides (`node-name`, `proxy-url-max`, `proxy-url-refresh`, `cleanup-scope`, `cleanup-interval`, `fast-auth`). Sent live over the provider control socket, or queued to `pending_overrides.json` if the provider is stopped. Confirm-gated. |
-| `rename <name> [target]` | Set the dashboard identity label on the backend. Alias for `set node-name <name>`. Writes `~/.urnetwork/node_name`, re-read on next tick. No restart. Use `off` to clear. |
+| `rename <name> [target]` | Alias for `set node-name <name>`. The miner persists the value but never reports it, so this changes nothing in this line. Use `off` to clear. See [Node-Identity](Node-Identity). |
 | `session save <file> [target]` | Export an encrypted identity bundle (AES-256-GCM) of provider JWT identity and state. Prompts for passphrase. |
 | `session load <file> [target] [--allow-different-account]` | Decrypt and load an identity bundle into the provider. Automatically backs up current state first. Verifies account identity unless bypassed. |
 | `self-heal [on\|off\|status] [target]` | Toggle or query the resource-pressure self-healing monitor (`~/.urnetwork/proxy_self_heal`). |
@@ -213,7 +213,7 @@ urnet-tools set proxy-url-refresh off
 
 Rejected changes log too, so a setting that did not take explains itself.
 
-`rename` and `show-ip` do not go through the socket. Both take effect at the next renewal, and the provider reports the resulting dashboard label when it changes.
+In this line `rename` and `show-ip` change no label the miner reports. See [Node-Identity](Node-Identity).
 
 Reads are deliberately not logged: `urnet-tools status` polls the socket on every invocation, so logging them would bury the writes that matter.
 

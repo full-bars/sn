@@ -473,7 +473,7 @@ docker exec -it <container> urnet-tools idle-update --window 0
 
 ## 📊 (Optional) Running with vnStat Bandwidth Monitor
 
-vnStat is **enabled by default** (`ENABLE_VNSTAT` defaults to `true` in `docker/scripts/start_stable.sh` and `start_jwt.sh`), so the container listens on port 8080 unless you set `ENABLE_VNSTAT=false`, which turns off that listener only. The provider establishes all p2p tunnels and relay connections outbound, requiring no inbound port forwarding. The Prometheus `/metrics` endpoint is a separate listener, enabled by default on loopback (see [Configuration.md](/full-bars/sn/wiki/Configuration)).
+vnStat is **enabled by default** (`ENABLE_VNSTAT` defaults to `true` in `docker/scripts/start_stable.sh` and `start_jwt.sh`), so the container listens on port 8080 unless you set `ENABLE_VNSTAT=false`, which turns off that listener only. The provider establishes all p2p tunnels and relay connections outbound, requiring no inbound port forwarding. The Prometheus `/metrics` endpoint is a separate listener, enabled by default. Inside a bridged container it binds `0.0.0.0` on port 9100 (9101-9103 if that port is taken), so publish it with `-p` to scrape it. A container that shares a publicly addressed network stays on loopback and Tailscale instead (see [Configuration.md](/full-bars/sn/wiki/Configuration)).
 
 If you specifically want the web-based vnStat traffic monitor to view real-time throughput graphs:
 
