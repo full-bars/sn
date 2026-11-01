@@ -6,9 +6,17 @@ The miner is a port of the provider, so a behaviour that exists in one tree and
 not the other is either an unfinished port or silent drift. Reading 350+ files
 by hand does not scale; this tool does the census.
 
+Run from the sn repository root, with the original sn provider tree as the baseline:
+
 ```sh
-go run ./scripts/parity-check
+git archive d79c04bf2^ provider | tar -x -C /path/to/baseline
+go run ./scripts/parity-check -provider /path/to/baseline/provider
 ```
+
+Create the baseline directory first. There is no provider tree in this repository
+now. Select the baseline explicitly; relative paths are resolved from `-root`.
+Comparing miner to itself is not a provider parity check. The included mappings
+were written for the old sn provider tree; other baselines may need new mappings.
 
 Exit status is `0` when every gap is allowlisted, `1` when an unlisted gap
 exists, and `2` when the tree or its configuration cannot be read. The output is
@@ -16,7 +24,7 @@ sorted and contains no paths or timestamps, so it can be diffed in CI.
 
 ## What counts as a gap
 
-The tool scans `provider/*.go` and `miner/*.go`, skipping `_test.go` by default.
+The tool scans the selected provider directory's `*.go` and `miner/*.go`, skipping `_test.go` by default.
 It compares:
 
 | Level | Provider side | Miner side |
@@ -124,7 +132,7 @@ compared.
 
 ```
 -root        repository root (default ".")
--provider    provider package directory, relative to -root (default "provider")
+-provider    provider package directory, absolute or relative to -root (required)
 -miner       miner package directory, relative to -root (default "miner")
 -allowlist   allowlist path, relative to -root
 -mappings    mappings path, relative to -root

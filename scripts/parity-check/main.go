@@ -578,7 +578,13 @@ func declaredInTestFiles(dir, kind, name string) (bool, error) {
 }
 
 func buildReport(opts options) (*report, error) {
-	providerDir := filepath.Join(opts.root, opts.provider)
+	if opts.provider == "" {
+		return nil, fmt.Errorf("-provider is required: select a provider package in a separate checkout")
+	}
+	providerDir := opts.provider
+	if !filepath.IsAbs(providerDir) {
+		providerDir = filepath.Join(opts.root, providerDir)
+	}
 	minerDir := filepath.Join(opts.root, opts.miner)
 	providerPkg, err := scanPackage(providerDir, opts.includeTests)
 	if err != nil {
@@ -844,7 +850,7 @@ func run(opts options) (string, int, error) {
 func main() {
 	opts := options{}
 	flag.StringVar(&opts.root, "root", ".", "repository root")
-	flag.StringVar(&opts.provider, "provider", "provider", "provider package directory, relative to -root")
+	flag.StringVar(&opts.provider, "provider", "", "provider package directory (required; absolute or relative to -root)")
 	flag.StringVar(&opts.miner, "miner", "miner", "miner package directory, relative to -root")
 	flag.StringVar(&opts.allowlist, "allowlist", "scripts/parity-check/allowlist.txt", "known-intentional gaps, relative to -root")
 	flag.StringVar(&opts.mappings, "mappings", "scripts/parity-check/mappings.txt", "explicit rename map, relative to -root")

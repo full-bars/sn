@@ -17,8 +17,8 @@ cd "$(dirname "$0")/.."
 
 # Some tests bind a unix socket under t.TempDir(), whose path embeds the test
 # name; a long TMPDIR pushes it past the 108 byte sun_path limit ("bind: invalid
-# argument"). A hosted runner uses /tmp, so use /tmp here too.
-export TMPDIR=/tmp
+# argument"). Default to /tmp, but allow a caller to select a short path.
+export TMPDIR=${TMPDIR:-/tmp}
 
 quick=0
 skip_docker=0
@@ -34,8 +34,8 @@ for arg in "$@"; do
   esac
 done
 
-echo "== gofmt (build.yml lint job scope: miner/)"
-unformatted=$(gofmt -l miner/)
+echo "== gofmt (build.yml lint job scope: miner/, cli/, cmd/, internal/)"
+unformatted=$(gofmt -l miner/ cli/ cmd/ internal/)
 if [ -n "$unformatted" ]; then
   echo "Files not gofmt-clean:"
   echo "$unformatted"
@@ -43,8 +43,8 @@ if [ -n "$unformatted" ]; then
 fi
 echo "  ok"
 
-echo "== go vet ./miner/... (build.yml lint job)"
-go vet ./miner/...
+echo "== go vet ./miner/... ./cli/... ./cmd/... (build.yml lint job)"
+go vet ./miner/... ./cli/... ./cmd/...
 echo "  ok"
 
 echo "== go vet ./internal/urnettools/ for freebsd (build.yml freebsd-vet job)"
@@ -56,8 +56,8 @@ done
 echo "== cross-build every shippable binary (build.yml cross-build job)"
 for goos in linux darwin windows; do
   for goarch in amd64 arm64; do
-    for bin in provider urnet-tools urnet-docker; do
-      GOOS=$goos GOARCH=$goarch CGO_ENABLED=0 go build -o /dev/null ./cmd/$bin
+    for pkg in ./cli/miner ./cmd/urnet-tools ./cmd/urnet-docker; do
+      GOOS=$goos GOARCH=$goarch CGO_ENABLED=0 go build -o /dev/null "$pkg"
     done
     echo "  ok $goos/$goarch (provider, urnet-tools, urnet-docker)"
   done

@@ -44,6 +44,27 @@ func fixture(t *testing.T, files map[string]string, allowlist, mappings string) 
 	}
 }
 
+func TestProviderBaselineSelection(t *testing.T) {
+	opts := fixture(t, map[string]string{
+		"provider/alpha.go": "package provider\nfunc Missing() {}\n",
+		"miner/alpha.go":    "package miner\nfunc Present() {}\n",
+	}, "", "")
+
+	opts.provider = ""
+	_, code, err := run(opts)
+	if code != exitError || err == nil || !strings.Contains(err.Error(), "-provider is required") {
+		t.Fatalf("missing provider: code=%d err=%v", code, err)
+	}
+
+	for _, path := range []string{"provider", filepath.Join(opts.root, "provider")} {
+		opts.provider = path
+		out, code, err := run(opts)
+		if err != nil || code != exitGap || !strings.Contains(out, "Missing") {
+			t.Fatalf("provider %q: code=%d err=%v output=%s", path, code, err, out)
+		}
+	}
+}
+
 func TestSameStemIsACounterpart(t *testing.T) {
 	opts := fixture(t, map[string]string{
 		"provider/alpha.go": "package provider\nfunc run() {}\ntype Config struct{}\n",
