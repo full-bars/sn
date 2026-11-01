@@ -69,23 +69,31 @@ fi
 AUTH_RAW="${AUTH:-}"
 AUTH_LC="$(printf '%s' "$AUTH_RAW" | tr '[:upper:]' '[:lower:]')"
 
-# BUILD deprecation hint and conflict resolution (the v33 entrypoint
-# contract). The 3.23-fix entrypoint derives the build from AUTH and lets an
-# explicit BUILD win a conflict; this image selects the auth path with AUTH
-# only, so BUILD is accepted, ignored, and AUTH always wins.
+# Legacy BUILD selector. The previous default image chose its start script
+# with BUILD=stable|jwt|nightly; this image selects the auth path with AUTH.
+# BUILD is still accepted so operators who never changed their compose file
+# keep working: stable maps to userpass and jwt to authcode, with one
+# deprecation warning. An explicit AUTH always wins over BUILD (the legacy
+# image let BUILD win a conflict; this image does not, so a conflict is
+# logged and AUTH is used). nightly has no miner equivalent and is ignored.
 if [ -n "${BUILD:-}" ]; then
-  case "$AUTH_LC" in
-    userpass) AUTH_EXPECTED_BUILD="stable" ;;
-    authcode) AUTH_EXPECTED_BUILD="jwt" ;;
-    *)        AUTH_EXPECTED_BUILD="" ;;
-  esac
   BUILD_LC="$(printf '%s' "$BUILD" | tr '[:upper:]' '[:lower:]')"
-  if [ -z "$AUTH_LC" ]; then
-    log "WARNING: BUILD is deprecated for auth selection, use AUTH=userpass|authcode (BUILD='$BUILD' is not supported by the miner image)"
-  elif [ -n "$AUTH_EXPECTED_BUILD" ] && [ "$BUILD_LC" != "$AUTH_EXPECTED_BUILD" ]; then
-    log "WARNING: Conflicting AUTH='$AUTH_RAW' and BUILD='$BUILD' specified; the miner image ignores BUILD and uses AUTH='$AUTH_LC'"
+  case "$BUILD_LC" in
+    stable) BUILD_AUTH="userpass" ;;
+    jwt)    BUILD_AUTH="authcode" ;;
+    *)      BUILD_AUTH="" ;;
+  esac
+  if [ -n "$AUTH_LC" ]; then
+    if [ -n "$BUILD_AUTH" ] && [ "$BUILD_AUTH" != "$AUTH_LC" ]; then
+      log "WARNING: BUILD='$BUILD' is deprecated and conflicts with AUTH='$AUTH_RAW'; using AUTH='$AUTH_LC'. Remove BUILD."
+    else
+      log "WARNING: BUILD is deprecated and ignored because AUTH='$AUTH_LC' is set. Remove BUILD."
+    fi
+  elif [ -n "$BUILD_AUTH" ]; then
+    log "WARNING: BUILD='$BUILD' is deprecated; treating it as AUTH=$BUILD_AUTH. Set AUTH=userpass|authcode instead."
+    AUTH_LC="$BUILD_AUTH"
   else
-    log "WARNING: BUILD is not supported by the miner image and is ignored (AUTH='$AUTH_LC' applies)"
+    log "WARNING: BUILD='$BUILD' is deprecated and has no equivalent in the miner image (there is no nightly build); ignoring it. Set AUTH=userpass|authcode."
   fi
 fi
 

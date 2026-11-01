@@ -20,7 +20,6 @@ on:
     paths:
       - 'docker/**'
       - 'Dockerfile'
-      - 'Dockerfile.miner'
       - 'cmd/urnet-docker/**'
       - '.github/workflows/docker-pr-build.yml'
   workflow_dispatch:
@@ -78,22 +77,27 @@ jobs:
           rc=$?
           set -e
           echo "$out"
-          [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 without USER_AUTH/PASSWORD, got $rc"; exit 1; }
-          echo "$out" | grep -qF "Script version:" \
-            || { echo "::error::entrypoint did not print its version banner"; exit 1; }
-          echo "$out" | grep -qF "USER_AUTH or PASSWORD not set" \
-            || { echo "::error::start_stable.sh did not report the missing credentials"; exit 1; }
+          [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 without AUTH or credentials, got $rc"; exit 1; }
+          echo "$out" | grep -qF "sn-miner >>>" \
+            || { echo "::error::entrypoint did not print its log prefix"; exit 1; }
+          echo "$out" | grep -qF "set AUTH=userpass|authcode" \
+            || { echo "::error::entrypoint did not report the missing AUTH"; exit 1; }
 
-      - name: Entrypoint rejects an unknown BUILD
+      - name: Legacy BUILD maps to AUTH with one deprecation warning
+        # :latest used to take BUILD=stable|jwt; the entrypoint must still
+        # accept it. Without credentials the mapped AUTH fails closed, which
+        # proves the mapping took effect.
         run: |
           set +e
-          out=$(docker run --rm -e BUILD=bogus "$IMG" 2>&1)
+          out=$(docker run --rm -e BUILD=stable "$IMG" 2>&1)
           rc=$?
           set -e
           echo "$out"
-          [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 for BUILD=bogus, got $rc"; exit 1; }
-          echo "$out" | grep -qF "Invalid build: bogus" \
-            || { echo "::error::entrypoint did not report the invalid build"; exit 1; }
+          [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 for BUILD=stable without credentials, got $rc"; exit 1; }
+          [ "$(echo "$out" | grep -cF "treating it as AUTH=userpass")" -eq 1 ] \
+            || { echo "::error::expected exactly one BUILD deprecation warning"; exit 1; }
+          echo "$out" | grep -qF "AUTH=userpass requires USER_AUTH and PASSWORD" \
+            || { echo "::error::BUILD=stable did not map to AUTH=userpass"; exit 1; }
 
       - name: Auth code reaches the provider binary
         # A real auth code cannot be used here, so the provider binary is

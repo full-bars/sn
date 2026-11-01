@@ -3,7 +3,7 @@
 > [!TIP]
 > **Most operators can stop here.** You do not need the miner image to get paid. Sign the one-time wallet consent from your own computer (see the [Bittensor Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start)). This page is for operators who want hotkey delegation, multi-operator mode, claim daemons or the head-tier fleet commands.
 
-`Dockerfile.miner` builds the sn miner image. It bakes the miner (`cli/miner`)
+`Dockerfile` builds the sn container image, published as `:latest` and, for one release, as the `:miner` alias. It bakes the miner (`cli/miner`)
 in as `provider`, the binary whose CLI carries `provide --all-operators`,
 `operators`, `auth --operator`, `wallet`, `claim`, `claim-daemon(-v2)` and
 `fleet`, plus `urnet-tools`: the Go client
@@ -13,10 +13,17 @@ the verified shell update wrapper.
 The image publishes no ports and runs no status server. The miner dials
 outbound only.
 
-Published tags: `ghcr.io/full-bars/sn:miner` (built from main), `:miner-<tag>`
-for a version tag, and `:miner-<short-sha>`. The `miner` namespace leaves the
-`latest` tag and the Docker Hub mirror to other images, so existing
-deployments are unchanged.
+Published tags: `ghcr.io/full-bars/sn:latest` (and the Docker Hub mirror) is
+this image. `:miner` (built from main), `:miner-<tag>` and `:miner-<short-sha>`
+are kept as aliases for one release.
+
+> [!WARNING]
+> `:latest` used to be the 3.23-style provider image. Moving to this image
+> drops the vnStat dashboard on port 8080 (`ENABLE_VNSTAT`), `TURBO`,
+> `ENABLE_IP_CHECKER`, `PELICAN=yes` panel mode and `BUILD=nightly`. The legacy
+> `BUILD=stable` and `BUILD=jwt` are still accepted and mapped to
+> `AUTH=userpass` and `AUTH=authcode` with a deprecation warning; an explicit
+> `AUTH` wins over `BUILD`.
 
 ## Quick start
 
@@ -157,7 +164,7 @@ because nothing in this image writes 3.23-fix state.
 ## Building locally
 
 ```bash
-docker build -f Dockerfile.miner -t urnetwork-miner:local .
+docker build -t urnetwork-miner:local .
 docker run --rm --network none -e AUTH=userpass urnetwork-miner:local    # fails closed, exit 1
 ```
 

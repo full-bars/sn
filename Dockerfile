@@ -1,3 +1,13 @@
+# sn miner image. Published as :latest (and the version tags) by build.yml,
+# and as the :miner alias by miner-image.yml for one release.
+#
+# Bakes the miner (cli/miner) in as the primary provider binary. The miner is
+# the program whose usage is written as `provider ...` and which carries
+# provide --all-operators, operators, auth --operator, wallet, claim,
+# claim-daemon(-v2) and fleet.
+#
+# No status server, no published port: the miner dials outbound only.
+
 # --- Build Stage ---
 FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine AS builder
 
@@ -8,32 +18,30 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache git gcc musl-dev file
 
-# Copy module manifests first so dependency download is a separate
-# cacheable layer (only invalidated when go.mod/go.sum change)
+# Module manifests first, then the local replace trees the go.mod requires
+# before `go mod download` (third_party/).
 COPY go.mod go.sum ./
-
-# Local replace targets (third_party/npipe) must exist before go mod download
 COPY third_party/ ./third_party/
 
-# Download modules once (cached across builds unless manifests change)
 RUN go mod download
 
 # Copy the rest of the source
 COPY . .
 
-# Build all three binaries for the target architecture with version injection
-RUN export GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
-    && go build -trimpath \
+RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
-    -o provider_bin ./cli/miner/ \
-    && go build -trimpath \
+    -o miner_bin ./cli/miner/ \
+    && GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
     -o urnet_tools_bin ./cmd/urnet-tools/ \
-    && go build -trimpath \
+    && GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
     -o urnet_docker_bin ./cmd/urnet-docker/ \
     && sh docker/check-elf-arch.sh "$TARGETARCH" \
-       provider_bin urnet_tools_bin urnet_docker_bin
+       miner_bin urnet_tools_bin urnet_docker_bin
 
 # --- Final Stage ---
 FROM alpine:latest
@@ -42,57 +50,54 @@ ARG TARGETARCH
 ARG VERSION=v.unknown
 WORKDIR /app
 
-# Install runtime dependencies (including vnStat, networking and diagnostic tools)
+# Runtime dependencies: no vnStat and no busybox-extras (the traffic monitor
+# was retired in the 3.23-fix line; telemetry is Prometheus via urnet-tools).
 RUN apk update && apk add --no-cache \
-    tzdata iputils vnstat dos2unix \
+    tzdata iputils dos2unix \
     jq tar curl htop wget procps \
     iptables net-tools bind-tools \
-    busybox-extras ca-certificates \
-    ca-certificates-bundle bash \
+    ca-certificates ca-certificates-bundle bash \
     gosu \
   && rm -rf /var/cache/apk/*
 
-# Setup directory structure
-RUN mkdir -p /app/cgi-bin /root/.urnetwork
-
-# Copy scripts from docker/scripts folder
-COPY docker/scripts/*.sh /app/
-COPY docker/scripts/stats /app/cgi-bin/
-
-# Copy compiled binaries
-COPY --from=builder /app/provider_bin /app/urnetwork_${TARGETARCH}_stable
-COPY --from=builder /app/urnet_tools_bin /usr/local/bin/urnet-tools
+# Primary binary: the miner, exposed on PATH as `provider`, the name the
+# update path and the platform archives use.
+COPY --from=builder /app/miner_bin /app/urnetwork_${TARGETARCH}_stable
+# Go client kept as urnet-tools-go; /usr/local/bin/urnet-tools is the
+# dispatcher below, which routes update/idle-update to the verified shell
+# update wrapper (/app/urnet-tools.sh) and everything else here.
+COPY --from=builder /app/urnet_tools_bin /usr/local/bin/urnet-tools-go
+# The previous default image shipped urnet-docker; kept so
+# `docker exec <c> urnet-docker ...` and `--entrypoint urnet-docker` still work.
+# It is a Docker-host tool and is normally installed on the host instead.
 COPY --from=builder /app/urnet_docker_bin /usr/local/bin/urnet-docker
 
-# Set permissions
-RUN dos2unix /app/*.sh /app/cgi-bin/stats && chmod +x /app/*.sh /app/cgi-bin/stats
+COPY docker/miner/entrypoint.sh /app/entrypoint.sh
+COPY docker/miner/start_miner.sh /app/start_miner.sh
+COPY docker/miner/jwt_verify.sh /app/jwt_verify.sh
+COPY docker/miner/provider_env.sh /app/provider_env.sh
+# The shell update wrapper urnet-docker's in-place update expects at
+# /app/urnet-tools.sh (it sed-patches it from the host).
+COPY docker/miner/urnet-tools.sh /app/urnet-tools.sh
+COPY docker/miner/urnet-tools-dispatch.sh /usr/local/bin/urnet-tools
 
-# Expose helper tools on PATH
-RUN ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health
-RUN ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic
-RUN ln -sf /app/logs.sh /usr/local/bin/logs
-# Shell wrapper kept as fallback for Docker-specific update logic
-RUN ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools-sh
+# Shared docker/scripts helpers: the wrapper sources update_verify.sh, and
+# the urnet-tools surface exposes proxy-health/proxy-traffic/logs.
+COPY docker/scripts/update_verify.sh /app/update_verify.sh
+COPY docker/scripts/proxy-health.sh /app/proxy-health.sh
+COPY docker/scripts/proxy-traffic.sh /app/proxy-traffic.sh
+COPY docker/scripts/logs.sh /app/logs.sh
 
-# update_verify.sh is sourced by urnet-tools for digest verification
-RUN ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh
+RUN dos2unix /app/*.sh /usr/local/bin/urnet-tools && chmod +x /app/*.sh /usr/local/bin/urnet-tools \
+    && ln -sf /app/urnetwork_${TARGETARCH}_stable /usr/local/bin/provider \
+    && ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health \
+    && ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic \
+    && ln -sf /app/logs.sh /usr/local/bin/logs \
+    && ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools-sh \
+    && ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh \
+    && ln -sf /app/jwt_verify.sh /usr/local/bin/jwt_verify.sh
 
-# Expose the provider binary on PATH as `provider` for `docker exec <c> provider <cmd>`
-RUN ln -sf /app/urnetwork_${TARGETARCH}_stable /usr/local/bin/provider
-
-# Configure vnStat
-RUN sed -i \
-  -e 's/^;*TimeSyncWait.*/TimeSyncWait 1/' \
-  -e 's/^;*TrafficlessEntries.*/TrafficlessEntries 1/' \
-  -e 's/^;*UpdateInterval.*/UpdateInterval 15/' \
-  -e 's/^;*PollInterval.*/PollInterval 15/' \
-  -e 's/^;*SaveInterval.*/SaveInterval 1/' \
-  -e 's/^;*UnitMode.*/UnitMode 1/' \
-  -e 's/^;*RateUnit.*/RateUnit 0/' \
-  -e 's/^;*RateUnitMode.*/RateUnitMode 0/' \
-  /etc/vnstat.conf
-
-# Setup volumes
+# State volume: a single known path an operator can mount.
 VOLUME ["/root/.urnetwork"]
 
 ENTRYPOINT ["/app/entrypoint.sh"]

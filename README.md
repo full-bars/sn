@@ -6,8 +6,7 @@ Besides the subnet code it inherits from upstream, this fork ships a provider th
 
 ## What you can run from here
 
-- **Miner image:** `ghcr.io/full-bars/sn:miner`, built from `Dockerfile.miner`. It bakes in the subnet miner as `provider` and `urnet-tools`. See [Miner Image](docs/Miner-Image.md).
-- **Provider image:** `ghcr.io/full-bars/sn:latest`, with a Docker Hub mirror at `3cape/sn:latest`. Built from `Dockerfile` for linux/amd64 and linux/arm64. See [Docker Deployment](docs/Docker-Deployment.md).
+- **Container image:** `ghcr.io/full-bars/sn:latest`, with a Docker Hub mirror at `3cape/sn:latest`, built from `Dockerfile` for linux/amd64 and linux/arm64. It bakes in the subnet miner as `provider` and `urnet-tools`. `:miner` is kept as an alias of the same image for one release. The legacy `BUILD=stable|jwt` variable still works (mapped to `AUTH=userpass|authcode`, with a deprecation warning). See [Miner Image](docs/Miner-Image.md) and [Docker Deployment](docs/Docker-Deployment.md).
 - **Provider binaries:** `urnetwork-provider-<tag>-<os>-<arch>.tar.gz` on the [releases page](https://github.com/full-bars/sn/releases), for Linux, macOS, Windows and FreeBSD on amd64 and arm64. The installer scripts in `scripts/` download these for you.
 - **`urnet-tools`:** the command line tool that starts, stops, checks and updates a provider on a host. Released as `urnet-tools-<os>-<arch>`.
 - **`urnet-docker`:** the same kind of tool for providers that run in Docker containers. It runs on the Docker host. Released as `urnet-docker-<os>-<arch>` for Linux, macOS and Windows.
@@ -141,7 +140,7 @@ Provider, miner and tooling:
 | `internal/` | Shared code, including `urnettools/` behind `urnet-tools` and `urnet-docker`. |
 | `cli/` | Command line programs: `miner`, `validator`, `snclaim`, `payoutroster`, `commitment-oracle`, `trail-probe`. |
 | `miner/` | The subnet miner library. |
-| `Dockerfile`, `Dockerfile.miner`, `docker/` | The provider image, the miner image, and their start scripts. |
+| `Dockerfile`, `docker/` | The container image and its start scripts. |
 | `scripts/` | Installers and uninstallers for each platform, plus build, release and test scripts. |
 | `deploy/` | The systemd unit for the provider, and mainnet and testnet deployment files. |
 | `monitoring/` | Prometheus and Grafana bundle. |

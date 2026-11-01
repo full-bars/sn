@@ -256,15 +256,27 @@ done
 echo "--- BUILD deprecation and conflict resolution (AUTH wins) ---"
 h="$tmp/h17"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l17" 0 BUILD=jwt AUTH=authcode AUTHCODE="$FAKE_CODE"
-t "a consistent BUILD still logs the unsupported warning" grep -q "BUILD is not supported by the miner image" "$tmp/l17.out"
+t "a consistent BUILD logs one deprecation warning and AUTH applies" sh -c "[ \$(grep -c 'BUILD is deprecated' '$tmp/l17.out') -eq 1 ] && grep -q \"ignored because AUTH='authcode'\" '$tmp/l17.out'"
 
 h="$tmp/h24"; mkdir -p "$h/.urnetwork"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l24" 0 BUILD=stable AUTH=authcode AUTHCODE="$FAKE_CODE"
-t "a conflicting BUILD and AUTH log the conflict and AUTH is used" sh -c "grep -q \"Conflicting AUTH='authcode' and BUILD='stable' specified\" '$tmp/l24.out' && grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l24' && grep -q 'argv: provide' '$tmp/l24'"
+t "a conflicting BUILD and AUTH log the conflict once and AUTH is used" sh -c "[ \$(grep -c 'BUILD=.stable. is deprecated' '$tmp/l24.out') -eq 1 ] && grep -q \"conflicts with AUTH='authcode'\" '$tmp/l24.out' && grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l24' && grep -q 'argv: provide' '$tmp/l24'"
 
 h="$tmp/h25"; mkdir -p "$h/.urnetwork"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l25" 0 BUILD=nightly AUTHCODE="$FAKE_CODE"
-t "BUILD alone logs the deprecation hint and AUTH is inferred from the code" sh -c "grep -q 'BUILD is deprecated for auth selection' '$tmp/l25.out' && grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l25'"
+t "BUILD=nightly has no miner equivalent: warned, ignored, AUTH inferred from the code" sh -c "grep -q 'no equivalent in the miner image' '$tmp/l25.out' && grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l25'"
+
+h="$tmp/h28"; mkdir -p "$h/.urnetwork"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/l28" 0 BUILD=stable USER_AUTH=fake-user PASSWORD="$FAKE_PW"
+t "BUILD=stable alone maps to AUTH=userpass" sh -c "[ \$(grep -c 'BUILD=.stable. is deprecated; treating it as AUTH=userpass' '$tmp/l28.out') -eq 1 ] && grep -q 'argv: auth --user_auth=fake-user --password=$FAKE_PW -f' '$tmp/l28'"
+
+h="$tmp/h29"; mkdir -p "$h/.urnetwork"
+run_entry "$h" "-" "" "$tmp/l29" 0 BUILD=stable; rc=$?
+t "BUILD=stable without credentials fails closed like AUTH=userpass" sh -c "grep -q 'ERROR: AUTH=userpass requires USER_AUTH and PASSWORD' '$tmp/l29.out' && [ $rc -eq 1 ]"
+
+h="$tmp/h30"; mkdir -p "$h/.urnetwork"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/l30" 0 BUILD=JWT AUTHCODE="$FAKE_CODE"
+t "BUILD=JWT alone (case-insensitive) maps to AUTH=authcode" sh -c "[ \$(grep -c 'treating it as AUTH=authcode' '$tmp/l30.out') -eq 1 ] && grep -q 'argv: auth .*$FAKE_CODE' '$tmp/l30'"
 
 h="$tmp/h26"; mkdir -p "$h/.urnetwork"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l26" 0 AUTH=UserPass USER_AUTH=fake-user PASSWORD="$FAKE_PW"
@@ -410,16 +422,16 @@ t "every other command keeps the Go client" [ "$out" = "go:status --json" ]
 out="$(env URNET_TOOLS_WRAPPER="$tmp/dd-wrapper" URNET_TOOLS_GO_BINARY="$tmp/dd-go" "$tmp/urnet-tools-dispatch")"
 t "a bare dispatcher call runs the Go client" [ "$out" = "go:" ]
 
-echo "--- Dockerfile.miner ships the image contract ---"
-t "the wrapper is copied to /app/urnet-tools.sh" grep -q 'COPY docker/miner/urnet-tools.sh /app/urnet-tools.sh' "$REPO/Dockerfile.miner"
-t "the dispatcher is installed as /usr/local/bin/urnet-tools" grep -q 'COPY docker/miner/urnet-tools-dispatch.sh /usr/local/bin/urnet-tools' "$REPO/Dockerfile.miner"
-t "the Go client is kept as urnet-tools-go" grep -q 'urnet_tools_bin /usr/local/bin/urnet-tools-go' "$REPO/Dockerfile.miner"
-t "proxy-health is symlinked onto PATH" grep -q 'ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health' "$REPO/Dockerfile.miner"
-t "proxy-traffic is symlinked onto PATH" grep -q 'ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic' "$REPO/Dockerfile.miner"
-t "logs is symlinked onto PATH" grep -q 'ln -sf /app/logs.sh /usr/local/bin/logs' "$REPO/Dockerfile.miner"
-t "urnet-tools-sh points at the wrapper" grep -q 'ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools-sh' "$REPO/Dockerfile.miner"
-t "update_verify.sh is symlinked onto PATH" grep -q 'ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh' "$REPO/Dockerfile.miner"
-t "jwt_verify.sh is symlinked onto PATH" grep -q 'ln -sf /app/jwt_verify.sh /usr/local/bin/jwt_verify.sh' "$REPO/Dockerfile.miner"
+echo "--- Dockerfile ships the image contract ---"
+t "the wrapper is copied to /app/urnet-tools.sh" grep -q 'COPY docker/miner/urnet-tools.sh /app/urnet-tools.sh' "$REPO/Dockerfile"
+t "the dispatcher is installed as /usr/local/bin/urnet-tools" grep -q 'COPY docker/miner/urnet-tools-dispatch.sh /usr/local/bin/urnet-tools' "$REPO/Dockerfile"
+t "the Go client is kept as urnet-tools-go" grep -q 'urnet_tools_bin /usr/local/bin/urnet-tools-go' "$REPO/Dockerfile"
+t "proxy-health is symlinked onto PATH" grep -q 'ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health' "$REPO/Dockerfile"
+t "proxy-traffic is symlinked onto PATH" grep -q 'ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic' "$REPO/Dockerfile"
+t "logs is symlinked onto PATH" grep -q 'ln -sf /app/logs.sh /usr/local/bin/logs' "$REPO/Dockerfile"
+t "urnet-tools-sh points at the wrapper" grep -q 'ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools-sh' "$REPO/Dockerfile"
+t "update_verify.sh is symlinked onto PATH" grep -q 'ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh' "$REPO/Dockerfile"
+t "jwt_verify.sh is symlinked onto PATH" grep -q 'ln -sf /app/jwt_verify.sh /usr/local/bin/jwt_verify.sh' "$REPO/Dockerfile"
 
 echo "--- jwt helpers ---"
 # shellcheck source=docker/miner/jwt_verify.sh

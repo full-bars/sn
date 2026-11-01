@@ -18,7 +18,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 | `internal/` (other folders) | Small shared helpers: terminal drawing (`tui`), memory size lookup (`connectx`) and crash-safe file writing (`durable*`). |
 | `diagnostics/` | Helpers that explain why something failed. |
 | `docker/` | Start scripts and settings for the provider and miner containers. |
-| `Dockerfile`, `Dockerfile.miner` | Build the provider image and the miner image. |
+| `Dockerfile` | Builds the container image (the miner packaging, published as `:latest` and `:miner`). |
 | `pelican/` | Egg file for the Pelican panel. |
 | `monitoring/` | Prometheus and Grafana bundle for watching a fleet (see [Monitoring](/full-bars/sn/wiki/Monitoring)). |
 | `scripts/` | Installers and uninstallers for Linux, macOS, Windows and FreeBSD, plus build and release check scripts. |
