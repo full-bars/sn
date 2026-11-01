@@ -76,7 +76,7 @@ func TestClientauthSourceGraphSelectsSdkSiblingOrPin(t *testing.T) {
 // Redirect ownership and exhaustion causes require the matching Connect
 // source: the Connect sibling, or the reviewed Connect pin.
 func TestClientauthSourceGraphSelectsConnectSiblingOrPin(t *testing.T) {
-	requireSiblingOrPin(t, "clientauth Connect", "github.com/urnetwork/connect", "connect", "github.com/urnetwork/connect", "v0.0.0-20261001021459-e1b5d77b5029")
+	requireSiblingOrPin(t, "clientauth Connect", "github.com/urnetwork/connect", "connect", "github.com/full-bars/connect", "v0.0.0-20261031120941-ca8b9020201a")
 }
 
 // A dependency's fork replacement is not inherited. The SCTP source is the fork

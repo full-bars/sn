@@ -139,7 +139,7 @@ type goModule struct {
 func validateReleaseModule(module goModule) error {
 	pins := map[string][4]string{
 		"github.com/urnetwork/sdk":     {"github.com/urnetwork/sdk", "v0.0.0-20261001021058-5d37be3876e5", "h1:PYuzGCWhMRuCnZS9qoSeMvwSZk9NQzX861Ir5xFFpHA=", "h1:IuPYnLZ5j1SP+gm3O4a4SxbOT4U/CPKEqONI1iLO5yk="},
-		"github.com/urnetwork/connect": {"github.com/urnetwork/connect", "v0.0.0-20261001021459-e1b5d77b5029", "h1:jcnGC6MmKNn2x6HU6RfYHM24V2//K6myMw9ajM0MQsg=", "h1:A88Ceqd8zbfpUB4+1pTsT1G3kiS9kgB22ZuljBZVw4k="},
+		"github.com/urnetwork/connect": {"github.com/full-bars/connect", "v0.0.0-20261031120941-ca8b9020201a", "h1:AdQWptvEl3WT67GgKKM4H97CZP3bwQcKRCPuRigV/fQ=", "h1:a/FXsgqF1lnCBs5Jg04URGus+4tiPSMRQ2dUoFu3WLM="},
 		"github.com/pion/sctp":         {"github.com/urnetwork/connect/sctp", "v0.0.0-20261001021459-e1b5d77b5029", "h1:GfovpOIWKd6TjkYsWLkMNE/zKEoGNC/5NfrPRCI+50A=", "h1:7KFmTwLcoYgJs/Z+99nJvsWL0qDpuyloSI0RbAqlrz0="},
 	}
 	if expected, ok := pins[module.Path]; ok {
