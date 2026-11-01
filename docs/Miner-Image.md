@@ -3,7 +3,7 @@
 > [!TIP]
 > **Most operators can stop here.** You do not need the miner image to get paid. Sign the one-time wallet consent from your own computer (see the [Bittensor Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start)). This page is for operators who want hotkey delegation, multi-operator mode, claim daemons or the head-tier fleet commands.
 
-`Dockerfile` builds the sn container image, published as `:latest` and, for one release, as the `:miner` alias. It bakes the miner (`cli/miner`)
+`Dockerfile` builds the sn container image, published as `:latest` and, for one release, as the `:miner` alias. Both tags use the same packaging and the same entrypoint; they are built by separate workflows, so `:miner` (moved on pushes to `main`) can point at a different commit than `:latest` (moved on stable tags). It bakes the miner (`cli/miner`)
 in as `provider`, the binary whose CLI carries `provide --all-operators`,
 `operators`, `auth --operator`, `wallet`, `claim`, `claim-daemon(-v2)` and
 `fleet`, plus `urnet-tools`: the Go client
@@ -18,7 +18,7 @@ this image. `:miner` (built from main), `:miner-<tag>` and `:miner-<short-sha>`
 are kept as aliases for one release.
 
 > [!WARNING]
-> `:latest` used to be the 3.23-style provider image. Moving to this image
+> **Upgrading an existing `:latest` container loses the vnStat dashboard.** `:latest` used to be the 3.23-style provider image. Moving to this image
 > drops the vnStat dashboard on port 8080 (`ENABLE_VNSTAT`), `TURBO`,
 > `ENABLE_IP_CHECKER`, `PELICAN=yes` panel mode and `BUILD=nightly`. The legacy
 > `BUILD=stable` and `BUILD=jwt` are still accepted and mapped to
@@ -97,9 +97,11 @@ the provider to forward client traffic, in which case add `--cap-add NET_ADMIN`,
 | `PROXY_FILE` | Proxy file added with `provider proxy add --proxy_file` at startup (default `/app/proxy.txt`). |
 | `URNETWORK_STATE_DIR` | State directory override; defaults to `$HOME/.urnetwork`. |
 
-`BUILD` is not supported by this image and logs a warning if set; when
-`BUILD` and `AUTH` are both set and would select different paths, the
-conflict is logged and `AUTH` wins.
+`BUILD` is deprecated but still accepted. `BUILD=stable` maps to
+`AUTH=userpass` and `BUILD=jwt` to `AUTH=authcode`, each with a deprecation
+warning; `BUILD=nightly` has no equivalent and is ignored. When `BUILD` and
+`AUTH` are both set and would select different paths, the conflict is logged
+and `AUTH` wins.
 
 ## Startup behavior
 

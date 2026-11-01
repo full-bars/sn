@@ -10,7 +10,7 @@
 
 - URnetwork is **Subnet 25 (SN25)** on Bittensor. Your nodes can earn the SN25 token (alpha, branded $UR) on top of normal URnetwork earnings.
 - You get paid by signing **one** consent with your Bittensor wallet (your coldkey). It says "pay every node on my URnetwork account to this coldkey". One signature covers every node on your URnetwork account, now and later.
-- **Every sn build from release `v2026.10.21-1077735390-meso` can sign**: the release `provider` download, the `:latest` image and the `:miner` image have `provider wallet sign` and `wallet status`. Older builds do not (`provider --help` will not list them); update, or sign with a 3.23-fix or meso-miner `provider`. Sign on your own computer, not inside a container. The consent covers your whole account whichever line the nodes run. Steps are in the [Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start).
+- **Every sn build from release `v2026.10.21-1077735390-meso` can sign**: the release `provider` download and the container image (`:latest`, and its `:miner` alias) have `provider wallet sign` and `wallet status`. Older builds do not (`provider --help` will not list them); update, or sign with a 3.23-fix or meso-miner `provider`. Sign on your own computer, not inside a container. The consent covers your whole account whichever line the nodes run. Steps are in the [Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start).
 - Check where you stand with `provider wallet status`, run with that same `provider`. Words you do not know are in the [Glossary](/full-bars/sn/wiki/Bittensor-Glossary).
 
 ## Pool or head: which one am I?
@@ -36,7 +36,7 @@ Your pool earnings are credited to your coldkey. A **claim** is a small blockcha
 - **Settlement v2** starts at epoch 3 (block 9,348,028, about 2026-10-23 18:10 UTC). Upstream's launch notes call that epoch decided but the launch **not sealed**, because it depends on release gates passing. In v2, credit **never expires**.
 - Before v2 (settlement v1, the earliest epochs), a claim stays open for 8 epochs plus 1 epoch of grace, and an expired claim is carried for the same operator (`claim_ttl_epochs`, `claim_grace_epochs` and `expired_claim_action` in upstream's `deploy/mainnet/policy-v1.yml`). What carrying means for one operator's payout is not documented here.
 - The SDK the apps are built on can sync pool claims (sdk `23b3c7dd`, `SnPoolClaimSync`). Whether the app you have shows a claim button is **not confirmed**.
-- Command-line claims exist for people who want automation. They need an EVM key with TAO for gas. See [Claiming by hand](#claiming-by-hand-advanced). Claim daemons are in the miner image.
+- Command-line claims exist for people who want automation. They need an EVM key with TAO for gas. See [Claiming by hand](#claiming-by-hand-advanced). Claim daemons are in the same `provider` the release and the container image carry.
 
 ## Signing the consent (reference)
 
@@ -65,7 +65,7 @@ Options on that binary:
 | `provider wallet set <coldkey> --legacy-network-wallet` | Old unsigned request. A login proof, **not paid**. |
 | `provider provide --wallet=<coldkey>` | The same unsigned request at startup. A failure is logged and the provider keeps providing. |
 | `provider wallet hotkey challenge|set|status` | Hotkey delegation. Not needed with one operator. `set` has `--replace-other-hotkey`. |
-| `provider wallet set <coldkey> --coldkey_seed_file=<path>` (miner image) | A signed consent for **one node's client** only. It wins over the account-wide consent for that node. |
+| `provider wallet set <coldkey> --coldkey_seed_file=<path>` | A signed consent for **one node's client** only. It wins over the account-wide consent for that node. |
 | `bind-head`, `unbind-head` (removed) | The older head path (`--hotkey`, `--registrant`, `--contract`). It belonged to the archived relay and the release `provider` no longer has it. Use `provider fleet bind`. |
 
 Docker users: you do not change the container command for this. A run that still passes `--wallet=<coldkey>` and `--legacy-network-wallet` can drop both.
@@ -76,8 +76,8 @@ Docker users: you do not change the container command for this. A run that still
 
 ## Other pages, only if you need them
 
-- [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier): the advanced head-tier path. The fleet commands live in the miner image.
-- Hotkey delegation, multi-operator mode (`provide --all-operators`) and claim daemons are in the miner image (`ghcr.io/full-bars/sn:miner`, see [Miner Image](/full-bars/sn/wiki/Miner-Image)). Most operators do not need them.
+- [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier): the advanced head-tier path. The fleet commands are in the release `provider` and the container image.
+- Hotkey delegation, multi-operator mode (`provide --all-operators`) and claim daemons are in the `provider` that the release and the container image (`ghcr.io/full-bars/sn:latest`, see [Miner Image](/full-bars/sn/wiki/Miner-Image)) both carry. Most operators do not need them.
 
 ## Claiming by hand (advanced)
 
@@ -138,7 +138,7 @@ No. It lasts 65,536 epochs. Sign again only to change the wallet.
 Nothing already signed is lost: signed entries are saved and finished after a restart. Unsigned settlement-v1 claims are different, because they stay subject to claimability and expiry rules while the daemon is stopped, so claim them inside their window.
 
 ### Is the head tier worth it?
-For most operators, no. See [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier) for what it takes and the current blockers. It needs `provider fleet ...`, which only the miner image (or a 3.23-fix or meso-miner `provider`) has.
+For most operators, no. See [Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier) for what it takes and the current blockers. It needs `provider fleet ...`, which the sn release `provider` and the container image have, as do 3.23-fix and meso-miner builds.
 
 ## Safety rules
 

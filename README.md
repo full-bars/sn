@@ -6,7 +6,7 @@ Besides the subnet code it inherits from upstream, this fork ships a provider th
 
 ## What you can run from here
 
-- **Container image:** `ghcr.io/full-bars/sn:latest`, with a Docker Hub mirror at `3cape/sn:latest`, built from `Dockerfile` for linux/amd64 and linux/arm64. It bakes in the subnet miner as `provider` and `urnet-tools`. `:miner` is kept as an alias of the same image for one release. The legacy `BUILD=stable|jwt` variable still works (mapped to `AUTH=userpass|authcode`, with a deprecation warning). See [Miner Image](docs/Miner-Image.md) and [Docker Deployment](docs/Docker-Deployment.md).
+- **Container image:** `ghcr.io/full-bars/sn:latest`, with a Docker Hub mirror at `3cape/sn:latest`, built from `Dockerfile` for linux/amd64 and linux/arm64. It bakes in the subnet miner as `provider` and `urnet-tools`. `:miner` is kept as an alias of the same packaging and entrypoint for one release. The image has no vnStat dashboard. The legacy `BUILD=stable|jwt` variable still works (mapped to `AUTH=userpass|authcode`, with a deprecation warning). See [Miner Image](docs/Miner-Image.md) and [Docker Deployment](docs/Docker-Deployment.md).
 - **Provider binaries:** `urnetwork-provider-<tag>-<os>-<arch>.tar.gz` on the [releases page](https://github.com/full-bars/sn/releases), for Linux, macOS, Windows and FreeBSD on amd64 and arm64. The installer scripts in `scripts/` download these for you.
 - **`urnet-tools`:** the command line tool that starts, stops, checks and updates a provider on a host. Released as `urnet-tools-<os>-<arch>`.
 - **`urnet-docker`:** the same kind of tool for providers that run in Docker containers. It runs on the Docker host. Released as `urnet-docker-<os>-<arch>` for Linux, macOS and Windows.
@@ -15,21 +15,6 @@ Besides the subnet code it inherits from upstream, this fork ships a provider th
 Release tags look like `v2026.10.29-1084715100-sn`. Releases before the 2026.10.22 tag carried a `-meso` suffix.
 
 ## Quick start
-
-### Miner container
-
-Name the container with `urnet` in it so `urnet-docker` can find it. Get an auth code from [ur.io](https://ur.io), then run:
-
-```bash
-docker run -d --name urnet-miner \
-  -v sn_miner_data:/root/.urnetwork \
-  -e AUTH=authcode \
-  -e AUTHCODE='YOUR_AUTH_CODE_HERE' \
-  -e ALL_OPERATORS=Y \
-  ghcr.io/full-bars/sn:miner
-```
-
-The volume keeps the identity, so the auth code is used once and later starts reuse the stored session. The image publishes no ports. Options such as `OPERATOR`, `HOTKEY_SEED_FILE` and `AUTO_REGISTER` are in [Miner Image](docs/Miner-Image.md).
 
 ### Provider install
 
@@ -65,24 +50,27 @@ urnet-tools status
 
 Windows Defender sometimes flags the Windows one-liner and the unsigned binaries. The workaround is in [Installation](docs/Installation.md).
 
-### Docker provider and `urnet-docker`
+### Container and `urnet-docker`
 
-Run the provider image. Auth codes are single-use, and the token is saved to the `urfix_config` volume on first run:
+There is one image, `ghcr.io/full-bars/sn:latest`. Name the container with `urnet` in it so `urnet-docker` can find it. Get an auth code from [ur.io](https://ur.io), then run:
 
 ```bash
 docker run -d \
-  --name=urfix \
+  --name=urnet-miner \
   --pull=always \
   --restart=unless-stopped \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   --sysctl net.ipv4.ip_forward=1 \
+  -e AUTH=authcode \
   -e AUTHCODE='YOUR_AUTH_CODE_HERE' \
   -e HOST_HOSTNAME=$(hostname) \
-  -v urfix_config:/root/.urnetwork \
+  -v sn_miner_data:/root/.urnetwork \
   -v /path/to/proxy.txt:/app/proxy.txt \
   ghcr.io/full-bars/sn:latest
 ```
+
+Auth codes are single-use, and the volume keeps the identity, so later starts reuse the stored session. The image publishes no ports and has no vnStat dashboard. Add `-e ALL_OPERATORS=Y` to mine every listed operator. Options such as `OPERATOR`, `HOTKEY_SEED_FILE` and `AUTO_REGISTER` are in [Miner Image](docs/Miner-Image.md). More run and compose examples are in [Docker Deployment](docs/Docker-Deployment.md).
 
 Install `urnet-docker` once on the Docker host, then manage containers from outside:
 
@@ -92,9 +80,9 @@ curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 
 ```bash
 urnet-docker providers
-urnet-docker status --unit urfix
-urnet-docker logs --unit urfix 100
-urnet-docker update --unit urfix
+urnet-docker status --unit urnet-miner
+urnet-docker logs --unit urnet-miner 100
+urnet-docker update --unit urnet-miner
 ```
 
 ### Uninstall

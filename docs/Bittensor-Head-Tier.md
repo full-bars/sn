@@ -74,7 +74,7 @@ _Live values · last changed 2026-10-30 20:40 UTC · checked hourly_
 
 ## Order of steps
 
-All `fleet` commands below are in the **miner image's** `provider` program (`ghcr.io/full-bars/sn:miner`, or a 3.23-fix or meso-miner `provider`). The old `bind-head` and `unbind-head` commands belonged to the archived relay and no longer exist; use `fleet bind`. Run fleet commands on your own computer, not on a mining node. Seed files must be private files (mode `0600`) and never go on a mining node.
+All `fleet` commands below are in the sn `provider` program, which the release download and the container image (`ghcr.io/full-bars/sn:latest`) both carry, and in 3.23-fix and meso-miner `provider` builds. The old `bind-head` and `unbind-head` commands belonged to the archived relay and no longer exist; use `fleet bind`. Run fleet commands on your own computer, not on a mining node. Seed files must be private files (mode `0600`) and never go on a mining node.
 
 0. **Keep the network consent signed.** It covers every node you do not bind, except a node with its own per-provider consent, which wins for that node.
 
@@ -118,7 +118,7 @@ All `fleet` commands below are in the **miner image's** `provider` program (`ghc
 
 6. **Rebind before the recorded `valid_to_epoch`,** with a few days of margin. Put the date in your calendar when you bind. An expired binding returns the node to the pool.
 
-Full flag details are in the miner README (`miner/README.md`) and `provider --help` on the miner image.
+Full flag details are in the miner README (`miner/README.md`) and `provider --help`.
 
 ## Leaving the head tier
 

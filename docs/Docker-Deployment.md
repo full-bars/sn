@@ -2,6 +2,15 @@
 
 This page keeps the copy-paste Docker examples from the README in one place. Use either `docker run` or Docker Compose, depending on how you prefer to manage containers.
 
+## What `:latest` is
+
+`ghcr.io/full-bars/sn:latest` (and the `3cape/sn:latest` mirror) is built from the repository `Dockerfile`: the subnet miner (`cli/miner`) installed as `provider`, plus `urnet-tools` and `urnet-docker`. `:miner` is the same packaging with the same entrypoint, kept as an alias for one release. The entrypoint is `docker/miner/entrypoint.sh`, which validates `AUTH` and then runs `docker/miner/start_miner.sh`. See [Miner Image](/full-bars/sn/wiki/Miner-Image) for the full variable list.
+
+> [!WARNING]
+> **vnStat is gone from this image.** The `Dockerfile` installs no vnStat, copies no vnStat startup path and publishes no port, so there is no dashboard on port 8080 and `ENABLE_VNSTAT` does nothing. An existing `:latest` container that you pull and recreate loses the dashboard. The old nightly updater (`start_nightly.sh`), the `start_stable.sh` and `start_jwt.sh` scripts and the Pelican panel script (`pelican_panel.sh`) are not in the image either. The same goes for `TURBO` and `ENABLE_IP_CHECKER`.
+
+Authentication is chosen with `AUTH=authcode` (with `AUTHCODE` or `URNETWORK_AUTH_CODE`, or a trailing auth-code argument) or `AUTH=userpass` (with `USER_AUTH` and `PASSWORD`). When `AUTH` is not set, it is inferred from what is present. The old `BUILD=stable` and `BUILD=jwt` still start: they map to `AUTH=userpass` and `AUTH=authcode` with a deprecation warning, and an explicit `AUTH` wins. `BUILD=nightly` has no equivalent and is ignored. The examples below use `AUTH`.
+
 ## 🛠️ Managing Containers with `urnet-docker`
 
 > [!IMPORTANT]
@@ -109,7 +118,7 @@ docker run -d \
   --log-driver=json-file \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
-  -e BUILD=jwt \
+  -e AUTH=authcode \
   -e HOST_HOSTNAME=$(hostname) \
   -v urfix_config:/root/.urnetwork \
   -v /path/to/proxy.txt:/app/proxy.txt \
@@ -139,7 +148,7 @@ docker run -d \
   --log-driver=json-file \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
-  -e BUILD=stable \
+  -e AUTH=userpass \
   -e USER_AUTH=you@example.com \
   -e PASSWORD=yourpassword \
   -e HOST_HOSTNAME=$(hostname) \
@@ -165,7 +174,7 @@ docker run -d \
   --log-driver=json-file \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
-  -e BUILD=jwt \
+  -e AUTH=authcode \
   -e HOST_HOSTNAME=$(hostname) \
   -v urfix_config:/root/.urnetwork \
   -v /path/to/proxy.txt:/app/proxy.txt \
@@ -191,7 +200,7 @@ docker run -d \
   --log-driver=json-file \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
-  -e BUILD=stable \
+  -e AUTH=userpass \
   -e USER_AUTH=you@example.com \
   -e PASSWORD=yourpassword \
   -e HOST_HOSTNAME=$(hostname) \
@@ -221,7 +230,7 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - BUILD=jwt
+      - AUTH=authcode
       - HOST_HOSTNAME=${HOSTNAME}
     volumes:
       - urfix_config:/root/.urnetwork
@@ -262,7 +271,7 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - BUILD=stable
+      - AUTH=userpass
       - USER_AUTH=you@example.com
       - PASSWORD=yourpassword
       - HOST_HOSTNAME=${HOSTNAME}
@@ -306,14 +315,11 @@ docker run -d \
   --sysctl net.ipv4.ip_forward=1 \
   -e URNETWORK_RAMLOGS=1 \
   -e URNETWORK_NODE_NAME=urfix \
-  -e BUILD=jwt \
-  -e ENABLE_VNSTAT=true \
+  -e AUTH=authcode \
   -e HOST_HOSTNAME=$(hostname) \
   -e PROXY_URL='https://example.com/your-proxy-list.txt' \
   -v urfix_config:/root/.urnetwork \
-  -v urfix_vnstat:/var/lib/vnstat \
   -v /path/to/proxy.txt:/app/proxy.txt \
-  -p 9001:8080 \
   ghcr.io/full-bars/sn:latest YOUR_AUTH_CODE
 ```
 
@@ -349,10 +355,9 @@ docker run -d \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   --sysctl net.ipv4.ip_forward=1 \
-  -e BUILD=jwt \
+  -e AUTH=authcode \
   -e URNETWORK_HOT_RESTART=0 \
   -v urfix_config:/root/.urnetwork \
-  -v urfix_vnstat:/var/lib/vnstat \
   -v /path/to/proxy.txt:/app/proxy.txt \
   ghcr.io/full-bars/sn:latest YOUR_AUTH_CODE
 ```
@@ -407,16 +412,13 @@ docker run -d \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   --sysctl net.ipv4.ip_forward=1 \
-  -e BUILD=jwt \
+  -e AUTH=authcode \
   -e URNETWORK_PROFILE=auto \
   -e URNETWORK_NODE_NAME=urfix \
-  -e ENABLE_VNSTAT=true \
   -e HOST_HOSTNAME=$(hostname) \
   -e PROXY_URL='https://example.com/your-proxy-list.txt' \
   -v urfix_config:/root/.urnetwork \
-  -v urfix_vnstat:/var/lib/vnstat \
   -v /path/to/proxy.txt:/app/proxy.txt \
-  -p 9001:8080 \
   ghcr.io/full-bars/sn:latest YOUR_AUTH_CODE
 ```
 
@@ -440,10 +442,10 @@ docker run -d \
 > [!IMPORTANT]
 > The `urfix_config` volume is required when using Watchtower. Without it, Watchtower will pull a new image, recreate the container, and the auth code will be consumed again, which fails because auth codes are single-use. With the volume mounted, the existing JWT is reused.
 >
-> **JWT Smart Refresh**: The container includes "smart refresh" logic. If the JWT stored in your volume expires, the provider will automatically detect this, delete the stale file, and attempt to re-authenticate using the `USER_AUTH` and `PASSWORD` environment variables if provided. This ensures your nodes stay online even if a JWT is revoked or corrupted during an update.
+> **JWT Smart Refresh**: The container includes "smart refresh" logic. If the JWT stored in your volume expires, the provider will automatically detect this, delete the stale file, and attempt to re-authenticate when `AUTH=userpass` (or an auth code is supplied) gives it a way to. This ensures your nodes stay online even if a JWT is revoked or corrupted during an update.
 
 > [!NOTE]
-> **Pelican Panel deployments**: When the image runs under a [Pelican panel](#-pelican-panel) with `PELICAN=yes`, the self-update scripts are disabled. The panel manages updates by re-pulling the published image. Runtime fetches are blocked to prevent silently replacing the audited fork binary mid-flight.
+> **Pelican Panel deployments**: With `PELICAN=yes`, `urnet-tools update` refuses to run (`docker/miner/urnet-tools.sh`), so the panel manages updates by re-pulling the published image. See [Pelican Panel](#-pelican-panel).
 
 ## ⏳ Idle Update
 
@@ -473,51 +475,18 @@ docker exec -it <container> urnet-tools idle-update --window 0
 
 ## 📊 (Optional) Running with vnStat Bandwidth Monitor
 
-vnStat is **enabled by default** (`ENABLE_VNSTAT` defaults to `true` in `docker/scripts/start_stable.sh` and `start_jwt.sh`), so the container listens on port 8080 unless you set `ENABLE_VNSTAT=false`, which turns off that listener only. The provider establishes all p2p tunnels and relay connections outbound, requiring no inbound port forwarding. The Prometheus `/metrics` endpoint is a separate listener, enabled by default. Inside a bridged container it binds `0.0.0.0` on port 9100 (9101-9103 if that port is taken), so publish it with `-p` to scrape it. A container that shares a publicly addressed network stays on loopback and Tailscale instead (see [Configuration.md](/full-bars/sn/wiki/Configuration)).
+**vnStat is not part of this image.** `:latest` used to start a vnStat web page on port 8080 (`ENABLE_VNSTAT`, default on). The current `Dockerfile` installs no vnStat and the miner entrypoint never starts one, so `ENABLE_VNSTAT`, `-p <port>:8080` and a `/var/lib/vnstat` volume have no effect. Remove them from existing run commands and compose files. The container makes all p2p tunnels and relay connections outbound and needs no inbound port.
 
-If you specifically want the web-based vnStat traffic monitor to view real-time throughput graphs:
+For traffic graphs use the Prometheus `/metrics` endpoint and the monitoring bundle below, or run vnStat on the Docker host. The `/metrics` endpoint is a separate listener, enabled by default. Inside a bridged container it binds `0.0.0.0` on port 9100 (9101-9103 if that port is taken), so publish it with `-p` to scrape it. A container that shares a publicly addressed network stays on loopback and Tailscale instead (see [Configuration.md](/full-bars/sn/wiki/Configuration)).
 
-### 1. Configuration Requirements
-- Set `-e ENABLE_VNSTAT=true`
-- Map a host port to container port `8080`: `-p <host_port>:8080`
-- Mount a persistent volume to preserve traffic history across restarts: `-v <name>_vnstat:/var/lib/vnstat`
+### Multi-Container Rules: Isolate Volumes
 
-### 2. Single-Container Example
-
-```bash
-docker run -d \
-  --name=urfix \
-  --pull=always \
-  --restart=unless-stopped \
-  --cap-add=NET_ADMIN \
-  --cap-add=NET_RAW \
-  --sysctl net.ipv4.ip_forward=1 \
-  -e BUILD=jwt \
-  -e ENABLE_VNSTAT=true \
-  -e HOST_HOSTNAME=$(hostname) \
-  -v urfix_config:/root/.urnetwork \
-  -v urfix_vnstat:/var/lib/vnstat \
-  -v /path/to/proxy.txt:/app/proxy.txt \
-  -p 127.0.0.1:9001:8080 \
-  ghcr.io/full-bars/sn:latest AUTH_CODE_HERE
-```
-
-Access the traffic page locally at `http://localhost:9001` (bind to `127.0.0.1` prevents exposing the unauthenticated vnStat web UI to the public internet; use a reverse proxy or SSH tunnel if accessing remotely).
-
----
-
-### 3. Multi-Container Rules: Offsetting Ports & Volumes
-
-When running more than one provider container on the same host with vnStat enabled, you **must adhere to three mandatory isolation rules**:
+When running more than one container on the same host:
 
 > [!CAUTION]
-> **1. Offset Host Ports:** The internal container port is always `:8080`. Every container running on the same Docker host must map to a **unique host port** (e.g. Node 1 on `127.0.0.1:9001`, Node 2 on `127.0.0.1:9002`). Attempting to reuse the same host port will cause a Docker daemon bind error (`bind: address already in use`).
+> **Isolate provider config volumes (`/root/.urnetwork`).** Never share `/root/.urnetwork` between multiple running containers. The provider maintains process-local SQLite databases (`proxy.state`, `.client_jwts.json`, `lifetime`) and identity keys inside this directory. Sharing it across containers leads to lock contention and state corruption. Each container requires its own config volume (`ur_config_1`, `ur_config_2`).
 >
-> **2. Offset vnStat Storage Volumes:** Never point multiple containers at the same vnStat volume. vnStat maintains an active database inside `/var/lib/vnstat`. Sharing a single volume causes concurrent write locks, data clobbering, and database corruption. Each container must have its own isolated volume (e.g. `urfix-1_vnstat`, `urfix-2_vnstat`).
->
-> **3. Isolate Provider Config Volumes (`/root/.urnetwork`):** Never share `/root/.urnetwork` between multiple running containers. The provider maintains process-local SQLite databases (`proxy.state`, `.client_jwts.json`, `lifetime`) and identity keys inside this directory. Sharing it across containers leads to lock contention and state corruption. Each container requires its own config volume (`ur_config_1`, `ur_config_2`).
-
-#### Multi-Container Compose Snippet:
+> If you publish `/metrics`, also give each container a unique host port (for example `9100:9100` and `9101:9100`).
 
 ```yaml
 services:
@@ -525,33 +494,23 @@ services:
     image: ghcr.io/full-bars/sn:latest
     container_name: urfix-1
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
+      - AUTH=authcode
     volumes:
       - ur_config_1:/root/.urnetwork    # ISOLATED identity & state volume
-      - urfix-1_vnstat:/var/lib/vnstat # DEDICATED vnStat volume
       - ./proxy-1.txt:/app/proxy.txt
-    ports:
-      - "127.0.0.1:9001:8080"          # OFFSET host port (localhost bound)
 
   node-2:
     image: ghcr.io/full-bars/sn:latest
     container_name: urfix-2
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
+      - AUTH=authcode
     volumes:
       - ur_config_2:/root/.urnetwork    # ISOLATED identity & state volume
-      - urfix-2_vnstat:/var/lib/vnstat # DEDICATED vnStat volume
       - ./proxy-2.txt:/app/proxy.txt
-    ports:
-      - "127.0.0.1:9002:8080"          # OFFSET host port (localhost bound)
 
 volumes:
   ur_config_1:
   ur_config_2:
-  urfix-1_vnstat:
-  urfix-2_vnstat:
 ```
 
 ---
@@ -579,51 +538,18 @@ See the [Configuration](/full-bars/sn/wiki/Configuration#-monitoring--telemetry)
 
 ## 🐦 Pelican Panel
 
-The provider image is importable into the [Pelican game-server panel](https://github.com/pelican-dev/panel) as a one-click egg. The egg ships with the audit-preferred defaults pinned: vnStat off, IP checker off, and runtime self-update disabled.
+The repository still carries a Pelican egg (`pelican/egg-urnetwork-h3.json`). It pulls `ghcr.io/full-bars/sn:latest` and starts `sh /app/entrypoint.sh`, which is the miner entrypoint. The egg was written for the previous image and has **not been re-verified against this one**.
 
-### Importing the egg
+What changed for a panel deployment:
 
-1. Download the egg JSON from the repo: `pelican/egg-urnetwork-h3.json`
-2. In Pelican admin, go to **Nests**, select or create a nest, and use **Import Egg** to upload the JSON.
-3. The egg pulls `ghcr.io/full-bars/sn:latest` (multi-arch amd64/arm64).
+- **No panel script.** `pelican_panel.sh` (the retry loop and the re-auth after 3 crashes) is not in the image. The miner's own supervisor in `start_miner.sh` runs instead.
+- **`BUILD` goes through the legacy mapping.** `BUILD=jwt` runs as `AUTH=authcode` with `AUTHCODE`, and `BUILD=stable` as `AUTH=userpass` with `USER_AUTH` and `PASSWORD`, each with a deprecation warning. `BUILD=nightly` is ignored and `AUTH` is inferred from what is set.
+- **`PELICAN=yes` has one effect left.** `urnet-tools update` refuses to run (`docker/miner/urnet-tools.sh`). Update by re-pulling the image through the panel (**Settings → Reinstall**) or `docker pull`.
+- **`ENABLE_VNSTAT` and `ENABLE_IP_CHECKER` are ignored.** The image has no vnStat and no IP checker.
 
-### Configuration variables
+The provider needs raw packet access on the node: container capability `NET_ADMIN` (and typically `NET_RAW`), IP forwarding on the host, and outbound UDP for WebRTC P2P transport. No inbound ports need to be forwarded.
 
-| Variable | Editable | Description |
-|---|---|---|
-| `BUILD` | Yes | `stable`, `nightly`, or `jwt` |
-| `USER_AUTH` | Yes | Email/phone for password-based auth. Required for `stable`/`nightly`, ignored for `jwt` |
-| `PASSWORD` | Admin-only | Password for password-based auth. Required for `stable`/`nightly` |
-| `AUTHCODE` | Admin-only | One-time auth code from [ur.io](https://ur.io). Required for `jwt` |
-| `PELICAN` | Hidden | Always `yes`: set by the egg, not editable |
-| `ENABLE_VNSTAT` | Hidden | Always `false` in the egg |
-| `ENABLE_IP_CHECKER` | Hidden | Always `false` in the egg |
-
-### Authentication modes
-
-- **`BUILD=jwt`**: Uses `AUTHCODE` (one-time auth code from [ur.io](https://ur.io)). `pelican_panel.sh` calls `auth-provide "$AUTHCODE" -f` once; it does not retry on failure.
-- **`BUILD=stable`** or **`BUILD=nightly`**: Uses `USER_AUTH` + `PASSWORD` for password-based authentication, with retry-on-failure and automatic JWT re-auth after 3 crashes.
-
-> [!NOTE]
-> Under Pelican, `BUILD=nightly` currently behaves identically to `BUILD=stable`: the panel always routes through `pelican_panel.sh`, which runs the stable provider binary regardless of `BUILD`. The nightly-vs-stable binary split only applies outside Pelican mode. Don't rely on `BUILD=nightly` to get nightly binary behavior when `PELICAN=yes`.
-
-### Resource requirements
-
-The provider needs raw packet access on the node running the egg:
-
-- Container capability `NET_ADMIN` (and typically `NET_RAW`)
-- IP forwarding enabled on the host
-- Outbound UDP allowed, for WebRTC P2P transport
-
-No inbound ports need to be forwarded: the provider dials out.
-
-### Update behavior
-
-Under Pelican (`PELICAN=yes`), the self-update checks in `start_nightly.sh` and `urnet-tools update` are **disabled**. The published image is the single source of truth; to update, re-pull the image via the panel (**Settings → Reinstall**) or `docker pull`.
-
-### Testing
-
-The egg ships with automated CI checks (`docker/scripts/test_pelican_gates.sh` for egg JSON structure, variable contracts, and PELICAN-gate behavior; `docker/scripts/test_pelican_smoke.sh` for a full boot smoke test against a fake provider binary). For a real-panel import walkthrough and log output to expect, see `pelican/README.md`.
+The egg's CI tests (`docker/scripts/test_pelican_gates.sh`, `docker/scripts/test_pelican_smoke.sh`) exercise the old panel script, not this image. For the old walkthrough see `pelican/README.md`.
 
 ## Letting the Thrash Watchdog Restart the Container's Provider
 
@@ -640,6 +566,6 @@ services:
       - ur_config_1:/root/.urnetwork   # the thrash cap and its 24h ceiling live here
 ```
 
-The start scripts (`start_stable.sh`, `start_nightly.sh`, `start_jwt.sh` and the provider loop of the Pelican egg) treat exit 75 as a planned restart: they wait 5 seconds, restart the provider and leave the JWT alone. Without a writable, persistent `~/.urnetwork` the watchdog logs `persist-failed` and never exits. On runtimes that do not create `/.dockerenv` (Podman, Kubernetes) also set `URNETWORK_CONTAINER=1`.
+The image's start script (`docker/miner/start_miner.sh`) treats exit 75 as a planned restart: they wait 5 seconds, restart the provider and leave the JWT alone. Without a writable, persistent `~/.urnetwork` the watchdog logs `persist-failed` and never exits. On runtimes that do not create `/.dockerenv` (Podman, Kubernetes) also set `URNETWORK_CONTAINER=1`.
 
-Exit 79 is the terminal stop after repeated authentication failures. The miner image's start script keeps the container up but parked: it logs one CRITICAL line and makes no further login attempt until the container is restarted, because a Docker restart policy ignores `RestartPreventExitStatus`. Fix `USER_AUTH`/`PASSWORD` and restart the container. An older start script that does not know 79 treats it as a crash and exits after three attempts; the Docker restart policy then starts it again, and the persisted streak waits 300 seconds before each login, so the loop is slow rather than tight.
+Exit 79 is the terminal stop after repeated authentication failures. The start script keeps the container up but parked: it logs one CRITICAL line and makes no further login attempt until the container is restarted, because a Docker restart policy ignores `RestartPreventExitStatus`. Fix `USER_AUTH`/`PASSWORD` and restart the container.
