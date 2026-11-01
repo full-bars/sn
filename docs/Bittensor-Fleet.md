@@ -199,7 +199,7 @@ Three flags read seed material, always by path: `--hotkey_seed_file` (sr25519 fl
 
 ## Recovery
 
-Mainnet fleet writes are crash-safe by retaining signed liabilities, not by trusting a single broadcast. The custody behavior is in `provider/fleet_recovery_store.go`, `provider/fleet_recovery_native.go` and `provider/fleet_recovery_evm.go`.
+Mainnet fleet writes are crash-safe by retaining signed liabilities, not by trusting a single broadcast. The custody behavior is in `miner/fleet_recovery_store.go`, `miner/fleet_recovery_native.go` and `miner/fleet_recovery_evm.go`.
 
 - The journal lives under the provider state in `fleet-mainnet-recovery/` (`journal.json` plus an initialized marker), is private to the owner (`0700`), and takes an exclusive lock, so a second fleet writer is refused instead of being interleaved. Register additionally journals under `fleet-native/` (exact SCALE bytes plus `native-transactions.jsonl`).
 - Every record retains the exact intent (action, canonical manifest bytes, client id, epochs, genesis), the original reviewed authority bytes and their sha256, the signer, the nonce, the exact signed transaction and a custody signature over the record. The journal is signed as a whole, so a removed record cannot pass validation, and a finalized record can never be replaced.

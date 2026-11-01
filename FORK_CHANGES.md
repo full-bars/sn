@@ -4,6 +4,9 @@
 
 This document tracks all modifications made to the upstream `sn` (connect v2026) codebase in this fork. Use this as a reference when rebasing to newer upstream versions.
 
+> [!NOTE]
+> Entries are history: each records what shipped when it did. The `provider/` and `cmd/provider/` paths named in the Files lists are gone. The program is now `cli/miner` (library `miner/`). Check any path or command against the tree before you use it.
+
 **Fork Based On**: urfoundation/sn (connect v2026: H3/QUIC transport + IPv6 dual-stack)
 **Repository**: github.com/full-bars/sn
 **Binary Versioning**: `v2026.<month>.<day>-<epoch>` for releases of this fork since 2026.10.22, which dropped the `-meso` suffix; upstream publishes tags in the same shape, so read the CHANGELOG entry rather than the tag to tell the two apart
@@ -189,7 +192,7 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 - Release pipeline: universal tarball bundles `Provider_Install_Linux.sh` as `urnet-tools`; per-platform tarballs carry their own installer; `urnetwork-monitoring-<ver>.tar.gz` ships the Prometheus/Grafana stack; release body reads `releases/<tag>.md` with auto-generated fallback; VirusTotal + ClamAV run in a parallel non-blocking scan job that posts the verdict and stages Defender submissions.
 - Shakedown workflows trigger on `v2026.*` tags (this repo's scheme), not `v3.23.0-fix.*`.
 - `cmd/fake-provider/`: a 123-line CI test double that listens on the control socket; lets the Windows lifecycle workflow exercise start/stop/restart/logs without a real provider binary.
-- Tool smoke CI builds `./cmd/provider/` (the new repo layout).
+- Tool smoke CI built `./cmd/provider/` (the repo layout at the time). History only: `cmd/provider/` no longer exists, and the program is `cli/miner`.
 
 **Status**: ✅ Shipped
 
@@ -213,8 +216,8 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 - Re-check `H3PacketConnFactory` / `WrapConnectSettings` against connect API changes (bandwidth wiring)
 - Confirm `RegisterProxy` / `UnregisterProxy` / `RecordProxyAuthFailure` still exist locally (they are NOT in the connect library)
 - Check `InitialContractTransferByteCount` (fork default 1 MiB)
-- Verify Docker build context: `.dockerignore` must never exclude `provider/`, only real binary output names
-- Run `go test -short -race -timeout 600s ./provider/...` and confirm zero ignored tests
+- Verify Docker build context: `.dockerignore` must never exclude `miner/` or `cli/miner/`, only real binary output names (`/provider_bin` and the like)
+- Run `go test -short -race -timeout 600s ./miner/... ./cli/miner/...` and confirm zero ignored tests (this replaces `./provider/...`, which no longer exists)
 
 ---
 

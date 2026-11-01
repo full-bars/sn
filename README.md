@@ -123,8 +123,8 @@ Provider, miner and tooling:
 
 | Path | What it is |
 |---|---|
-| `cmd/` | Entry points: `provider`, `urnet-tools`, `urnet-docker`, `fake-provider` (a test stand-in) and `sp2` (inherited from upstream). |
-| `provider/` | The provider itself: proxy handling, health checks, hot reload, metrics. |
+| `cmd/` | Entry points: `urnet-tools`, `urnet-docker`, `fake-provider` (a test stand-in) and `sp2` (inherited from upstream). |
+| `cli/miner/` | The `provider` program the image installs, the miner's command line. Its code lives in `miner/`. |
 | `internal/` | Shared code, including `urnettools/` behind `urnet-tools` and `urnet-docker`. |
 | `cli/` | Command line programs: `miner`, `validator`, `snclaim`, `payoutroster`, `commitment-oracle`, `trail-probe`. |
 | `miner/` | The subnet miner library. |

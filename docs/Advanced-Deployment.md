@@ -46,9 +46,12 @@ The `--cpus` flag caps the container's CPU quota so the provider can't monopoliz
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `ENABLE_VNSTAT` | `true` | Enables the web-based traffic monitor on port 8080. |
-| `ENABLE_IP_CHECKER` | `false` | If `true`, queries and logs your public IP on startup. Useful for debugging NAT issues. |
-| `BUILD` | `stable` | `stable`, `nightly`, or `jwt`: selects the startup script/auth mode. |
+| `AUTH` | inferred | `userpass` (with `USER_AUTH` and `PASSWORD`) or `authcode` (with `AUTHCODE` or `URNETWORK_AUTH_CODE`). Selects the auth path. An explicit `AUTH` always wins. |
+| `BUILD` | - | **Deprecated.** `stable` maps to `AUTH=userpass` and `jwt` maps to `AUTH=authcode`, each with a deprecation warning. `nightly` has no equivalent and is ignored. |
+| `ENABLE_VNSTAT` | - | **Removed.** The image installs no vnStat and serves no port 8080, so this does nothing. |
+| `ENABLE_IP_CHECKER` | - | **Not in this image.** Nothing in the packaged scripts reads it. |
+
+The image has no status page and publishes no port: the miner dials out only, so do not add `-p` mappings for it.
 
 For the complete env-var reference, see [Docker Deployment](Docker-Deployment).
 

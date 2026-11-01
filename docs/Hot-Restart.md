@@ -2,7 +2,7 @@
 
 Every connection slot authenticates with the platform once and receives a `client_id`. Hot restart keeps that signed client JWT on disk and reuses it across restarts, so a restart comes back as the same client instead of a brand new one.
 
-This fork carries two identity paths: the relay provider (`provider/`) and the Subnet 25 miner (`miner/`). Both reuse identities by default, and both are controlled by the same `hot_restart` key, but they store the credentials differently. This page covers each.
+This fork ships one program, the Subnet 25 miner (`cli/miner`, with its library in `miner/`). The image's `provider` binary is that miner. The relay provider is archived and is not in this tree. Reuse is on by default and the `hot_restart` key controls it. The sections below cover the toggle, the client JWT store and the per-slot credential files.
 
 ## Why reuse exists
 
@@ -16,7 +16,7 @@ This fork carries two identity paths: the relay provider (`provider/`) and the S
 
 ## The toggle
 
-Reuse is **on by default**. The setting resolves in this order, for the provider and for the miner:
+Reuse is **on by default**. The setting resolves in this order:
 
 1. Control state key `hot_restart`, when set (`on` or `off`).
 2. Environment variable `URNETWORK_HOT_RESTART`, where any value other than `0` means on.
@@ -134,7 +134,7 @@ Because the seed is shared per process, two slots from one process cannot both b
 | Restart, same state dir, same proxy target | Same `client_id` (reused) |
 | Stored token expired, server row still present | Renewed with the same `client_id` and `device_id` |
 | New proxy address | New slot, new `client_id` |
-| New proxy auth user at the same address | New slot on this fork's provider; same miner slot, because the miner derives its slot from the network and proxy address only; same slot on 3.23-fix and meso-miner |
+| New proxy auth user at the same address | New slot; same miner slot, because the miner derives its slot from the network and proxy address only; same slot on 3.23-fix and meso-miner |
 | Different account or network (`~/.urnetwork/jwt` replaced) | Fresh mint, logged as `network_id mismatch` |
 | The slot's custody credential names a different client than the store entry, or exists but cannot be read or names no client | Fresh mint through custody, logged as `stored client <id> disagrees with custody client <id>`. A custody file that is simply absent does not count as a disagreement |
 | The stored JWT's own `client_id` claim differs from the entry's `client_id` | Fresh mint, logged as `stored JWT client_id "<id>" disagrees with store client_id "<id>"` |

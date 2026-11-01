@@ -2,6 +2,9 @@
 
 You can run multiple independent nodes in a single `docker-compose.yml` file. Every node is a separate container with its own state volume, its own auth code and its own client identity.
 
+> [!WARNING]
+> This image has no dashboard. It installs no vnStat, serves no port 8080 and has no vnStat volume, so the templates below publish no ports. Moving an existing `:latest` container onto this image drops the old dashboard; read [Docker Deployment](/full-bars/sn/wiki/Docker-Deployment) first.
+
 Use the 3-node example if you want to understand the pattern. Use the 5-node or 10-node templates if you want a larger stack ready to copy.
 
 ## ⚙️ How It Works
@@ -13,7 +16,7 @@ Give each container its own config volume mounted at `/root/.urnetwork`. That di
 3. Each node registers its own distinct client identity with the backend.
 
 > [!NOTE]
-> Node labels are **not implemented in this line**. Nothing reads `URNETWORK_NODE_NAME`, so the `URNETWORK_NODE_NAME` lines in the examples below are ignored and the dashboard does not show them. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity).
+> Node labels are **not implemented in this line**. Nothing reads `URNETWORK_NODE_NAME`, so the templates below do not set it and the dashboard shows no label. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity).
 
 Once a node has started once you can delete its `URNETWORK_AUTH_CODE` line; the stored JWT is used first and the code is never read again.
 
@@ -25,13 +28,13 @@ Once a node has started once you can delete its `URNETWORK_AUTH_CODE` line; the 
 | 5 nodes | Moderate single-host scaling. |
 | 10 nodes | Larger hosts where you want a ready fleet file. |
 
-Each service needs a unique service name, container name, host port, config volume and vnStat volume. Replace each `AUTH_CODE_N` with that node's own auth code.
+Each service needs a unique service name, container name and config volume. No host port is needed: the miner dials out only, and the image serves no HTTP port. Replace each `AUTH_CODE_N` with that node's own auth code.
+
 
 ## 🚶 3-Node Walkthrough
 
 ```yaml
 services:
-  # Each node has its own auth code, state volume and vnStat volume
   node-1:
     image: ghcr.io/full-bars/sn:latest
     container_name: urfix-1
@@ -41,17 +44,11 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-1
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_1
     volumes:
       - ur_config_1:/root/.urnetwork
-      - urfix-1_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9001:8080"
     logging:
       driver: json-file
       options:
@@ -67,17 +64,11 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-2
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_2
     volumes:
       - ur_config_2:/root/.urnetwork
-      - urfix-2_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9002:8080"
     logging:
       driver: json-file
       options:
@@ -93,17 +84,11 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-3
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_3
     volumes:
       - ur_config_3:/root/.urnetwork
-      - urfix-3_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9003:8080"
     logging:
       driver: json-file
       options:
@@ -114,9 +99,6 @@ volumes:
   ur_config_1:
   ur_config_2:
   ur_config_3:
-  urfix-1_vnstat: # Unique traffic stats per node
-  urfix-2_vnstat:
-  urfix-3_vnstat:
 ```
 
 ## 🚀 Ready Templates
@@ -146,81 +128,51 @@ services:
     <<: *urnetwork-common
     container_name: urfix-1
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-1
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_1
     volumes:
       - ur_config_1:/root/.urnetwork
-      - urfix-1_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9001:8080"
 
   node-2:
     <<: *urnetwork-common
     container_name: urfix-2
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-2
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_2
     volumes:
       - ur_config_2:/root/.urnetwork
-      - urfix-2_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9002:8080"
 
   node-3:
     <<: *urnetwork-common
     container_name: urfix-3
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-3
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_3
     volumes:
       - ur_config_3:/root/.urnetwork
-      - urfix-3_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9003:8080"
 
   node-4:
     <<: *urnetwork-common
     container_name: urfix-4
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-4
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_4
     volumes:
       - ur_config_4:/root/.urnetwork
-      - urfix-4_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9004:8080"
 
   node-5:
     <<: *urnetwork-common
     container_name: urfix-5
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-5
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_5
     volumes:
       - ur_config_5:/root/.urnetwork
-      - urfix-5_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9005:8080"
 
 volumes:
   ur_config_1:
@@ -228,11 +180,6 @@ volumes:
   ur_config_3:
   ur_config_4:
   ur_config_5:
-  urfix-1_vnstat:
-  urfix-2_vnstat:
-  urfix-3_vnstat:
-  urfix-4_vnstat:
-  urfix-5_vnstat:
 ```
 
 ### 🔟 10 Nodes
@@ -256,161 +203,101 @@ services:
     <<: *urnetwork-common
     container_name: urfix-1
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-1
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_1
     volumes:
       - ur_config_1:/root/.urnetwork
-      - urfix-1_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9001:8080"
 
   node-2:
     <<: *urnetwork-common
     container_name: urfix-2
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-2
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_2
     volumes:
       - ur_config_2:/root/.urnetwork
-      - urfix-2_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9002:8080"
 
   node-3:
     <<: *urnetwork-common
     container_name: urfix-3
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-3
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_3
     volumes:
       - ur_config_3:/root/.urnetwork
-      - urfix-3_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9003:8080"
 
   node-4:
     <<: *urnetwork-common
     container_name: urfix-4
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-4
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_4
     volumes:
       - ur_config_4:/root/.urnetwork
-      - urfix-4_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9004:8080"
 
   node-5:
     <<: *urnetwork-common
     container_name: urfix-5
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-5
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_5
     volumes:
       - ur_config_5:/root/.urnetwork
-      - urfix-5_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9005:8080"
 
   node-6:
     <<: *urnetwork-common
     container_name: urfix-6
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-6
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_6
     volumes:
       - ur_config_6:/root/.urnetwork
-      - urfix-6_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9006:8080"
 
   node-7:
     <<: *urnetwork-common
     container_name: urfix-7
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-7
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_7
     volumes:
       - ur_config_7:/root/.urnetwork
-      - urfix-7_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9007:8080"
 
   node-8:
     <<: *urnetwork-common
     container_name: urfix-8
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-8
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_8
     volumes:
       - ur_config_8:/root/.urnetwork
-      - urfix-8_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9008:8080"
 
   node-9:
     <<: *urnetwork-common
     container_name: urfix-9
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-9
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_9
     volumes:
       - ur_config_9:/root/.urnetwork
-      - urfix-9_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9009:8080"
 
   node-10:
     <<: *urnetwork-common
     container_name: urfix-10
     environment:
-      - BUILD=jwt
-      - ENABLE_VNSTAT=true
-      - HOST_HOSTNAME=${HOSTNAME}
-      - URNETWORK_NODE_NAME=urfix-10
+      - AUTH=authcode
       - URNETWORK_AUTH_CODE=AUTH_CODE_10
     volumes:
       - ur_config_10:/root/.urnetwork
-      - urfix-10_vnstat:/var/lib/vnstat
       - ./proxy.txt:/app/proxy.txt
-    ports:
-      - "9010:8080"
 
 volumes:
   ur_config_1:
@@ -423,16 +310,6 @@ volumes:
   ur_config_8:
   ur_config_9:
   ur_config_10:
-  urfix-1_vnstat:
-  urfix-2_vnstat:
-  urfix-3_vnstat:
-  urfix-4_vnstat:
-  urfix-5_vnstat:
-  urfix-6_vnstat:
-  urfix-7_vnstat:
-  urfix-8_vnstat:
-  urfix-9_vnstat:
-  urfix-10_vnstat:
 ```
 
 ## ▶️ Start the Stack

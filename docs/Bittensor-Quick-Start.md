@@ -104,7 +104,7 @@ The step is the same for everyone. Nothing changes on the nodes.
 | You run your nodes with | What to do |
 |---|---|
 | **sn Docker image (`:latest`) or sn installer** | Nothing in the containers. Sign once on your own computer: `provider auth`, then `provider wallet sign <coldkey>`, with a current sn `provider` (from `v2026.10.21-1077735390-meso`) or a 3.23-fix or meso-miner one. |
-| **sn miner image (`:miner`)** | Nothing to change in the containers. Sign on your own computer like everyone else. The miner's signed `wallet set` stays one node per consent (see below) and wins over the account consent for that node, so prefer `wallet sign`. |
+| **sn miner image (`:latest` or `:miner`)** | Nothing to change in the containers. Sign on your own computer like everyone else. The miner's signed `wallet set` stays one node per consent (see below) and wins over the account consent for that node, so prefer `wallet sign`. |
 | **3.23-fix or meso-miner nodes** | Nothing on the node. Sign from your own computer with `wallet sign`, which needs no flag, or `provider wallet sign` from its provider. |
 | **The URnetwork app or ur.io** | The SDK the apps are built on can now request and submit a network consent (sdk `bf4076ff`). Whether the app version you have actually offers it is **not confirmed**. A plain "connect wallet" is **not enough**: it only makes a login-proof wallet. After using the app, run `provider wallet status` and do not assume a consent exists. |
 
@@ -125,7 +125,7 @@ The `urnet-tools wallet ...` group in this fork calls `provider wallet status|si
 
 ## One note on the miner image
 
-The `:miner` image's `provider` can do `wallet set <coldkey> --coldkey_seed_file=<path>` (or `--message` with `--signature`). That is a signed consent, but for **one node's client only**, and it wins over the account-wide consent for that node. Most operators do not want that. It also needs a coldkey seed file, which must never sit on a node. `provider wallet sign` makes the **account-wide** consent instead; use that one, on your own computer, unless you specifically want a per-node consent.
+The `provider` in the sn image (`:latest` and `:miner` are the same packaging) can do `wallet set <coldkey> --coldkey_seed_file=<path>` (or `--message` with `--signature`). That is a signed consent, but for **one node's client only**, and it wins over the account-wide consent for that node. Most operators do not want that. It also needs a coldkey seed file, which must never sit on a node. `provider wallet sign` makes the **account-wide** consent instead; use that one, on your own computer, unless you specifically want a per-node consent.
 
 ## Troubleshooting
 

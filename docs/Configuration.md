@@ -31,14 +31,15 @@ Quick jump:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `BUILD` | `stable` | Set to `jwt` for auth code login, or `stable` for email/password auth. |
-| `USER_AUTH` | - | Your email. Required if `BUILD=stable`. Also used for **self-healing** in `BUILD=jwt` mode to refresh expired tokens. |
-| `PASSWORD` | - | Your password. Required if `BUILD=stable`. Also used for **self-healing** in `BUILD=jwt` mode to refresh expired tokens. |
-| `URNETWORK_AUTH_CODE` | - | First-run auth code for `BUILD=jwt`. Use this instead of passing the code as a trailing command argument. Ignored once a JWT exists in the volume. |
+| `AUTH` | inferred | `userpass` (with `USER_AUTH` and `PASSWORD`) or `authcode` (with `AUTHCODE` or `URNETWORK_AUTH_CODE`). An explicit `AUTH` always wins over `BUILD`. |
+| `BUILD` | - | **Deprecated.** `stable` maps to `AUTH=userpass` and `jwt` maps to `AUTH=authcode`, each with a deprecation warning. `nightly` is ignored. See [Docker Deployment](/full-bars/sn/wiki/Docker-Deployment). |
+| `USER_AUTH` | - | Your email. Required with `AUTH=userpass`. Only `userpass` mode uses it to re-authenticate; `authcode` mode does not. |
+| `PASSWORD` | - | Your password. Required with `AUTH=userpass`. Only `userpass` mode uses it to re-authenticate; `authcode` mode does not. |
+| `URNETWORK_AUTH_CODE` | - | First-run auth code for `AUTH=authcode` (alias `AUTHCODE`). Use this instead of passing the code as a trailing command argument. Ignored once a JWT exists in the volume. |
 | `UR_API_URL` | `https://api.bringyour.com` | Custom API URL, for operators running their own backend. Must be set together with `UR_CONNECT_URL`. Applied once at startup and persisted to `~/.urnetwork/network.json`, so it survives restarts if that directory is on a volume, same as the JWT. |
 | `UR_CONNECT_URL` | `wss://connect.bringyour.com` | Custom connect (WebSocket signaling) URL, for operators running their own backend. Must be set together with `UR_API_URL`. See `UR_API_URL`. |
 | `URNETWORK_NODE_NAME` | - | **Not implemented in this line.** Nothing in the tree reads this variable, and the miner publishes no node name, so setting it changes nothing. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity). |
-| `HOST_HOSTNAME` | - | Pass the host server name into the container. Use `-e HOST_HOSTNAME=$(hostname)` with `docker run` or `HOST_HOSTNAME=${HOSTNAME}` in Compose. |
+| `HOST_HOSTNAME` | - | **Not read by this image.** Only the removed vnStat-era scripts used it. |
 
 ### ⚡ Performance & Hardware Profiles
 
@@ -73,8 +74,8 @@ Quick jump:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `ENABLE_VNSTAT` | `true` | Enables the traffic monitor on port 8080. |
-| `ENABLE_IP_CHECKER` | `false` | Diagnostic only. Prints your full public IP to container logs on startup via an external script. Distinct from dashboard identity reporting, which sends only a redacted IP. |
+| `ENABLE_VNSTAT` | - | **Removed.** The image installs no vnStat and serves no port 8080, so this does nothing. See [Docker Deployment](/full-bars/sn/wiki/Docker-Deployment). |
+| `ENABLE_IP_CHECKER` | - | **Not in this image.** The IP-checker script is not packaged, so nothing prints your public IP at startup. |
 | `/metrics` endpoint | auto (`9100`-`9103`) | The Prometheus metrics endpoint is enabled by default. In auto mode the listener binds loopback plus every Tailscale IPv4 address on bare metal, and every interface inside a container only when every address it holds is private or unique-local (a container that shares a publicly addressed network stays on loopback plus Tailscale), trying the first free port in `9100`-`9103`. Scrape `http://<host>:<port>/metrics` from Prometheus or any compatible collector. Override the bind address with `URNETWORK_METRICS=ip:port`; disable with `urnet-tools metrics off`. |
 | `URNETWORK_PUBLIC_IP` | `<auto-detected>` | Set by the Docker startup scripts from `ip.me`. No Go code in this tree reads it, so it changes no dashboard label and no reported address, and it does not change the actual egress IP. Node labels are not implemented in this line; see [Node-Identity.md](/full-bars/sn/wiki/Node-Identity). |
 | `URNETWORK_HEALTH_INTERVAL` | `5m` | How often the health heartbeat pulses: one `[health]` log line per pulse, plus the `heartbeat:` line it publishes into `proxy_health.state` (the stamp an external monitor checks to tell a wedged process from a quiet one — a heartbeat older than its own `stale_after` means the pulse loop stopped). Carries uptime, heap/sys MiB, goroutine, proxy and client counts. Accepts Go duration strings such as `10m` or `1h`. Minimum `1m`: a smaller duration is raised to `1m`, and only an unparseable value falls back to `5m`. |
