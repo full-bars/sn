@@ -52,7 +52,7 @@ The two tools split the provider world by how the provider runs:
 - `urnet-tools` manages **systemd or native** providers on the host.
 - `urnet-docker` manages **containerized** providers.
 
-The same targeting concepts and safety model apply to both. See [urnet-tools (Go)](urnet-tools-Go) for the full tool reference.
+The same targeting concepts and safety model apply to both. See [urnet-tools (Go)](urnet-tools-go) for the full tool reference.
 
 ## Safety
 
