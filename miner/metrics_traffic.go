@@ -42,6 +42,7 @@ func writeTrafficMetrics(b *strings.Builder) {
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"dead\"} %d\n", counts.Dead)
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"degraded\"} %d\n", counts.Degraded)
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"connecting\"} %d\n", counts.Connecting)
+	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"parked\"} %d\n", counts.Parked)
 	// The aggregate that composition cannot express: whether the pool failed as
 	// a unit or a few members did, and how low it got in the last hour.
 	writeProxyPoolHealthMetrics(b, proxyPoolHealth(time.Now(), comp))
