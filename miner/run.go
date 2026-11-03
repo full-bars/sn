@@ -1831,7 +1831,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// competes for one role, and only the direct slot can honestly hold it
 		// -- the same rule the swarm members and hosted devices follow. The
 		// remaining slots still provide; they just do not listen.
-		settings.ProvideExtenderEnabled = proxySettings == nil && extenderGate != nil && extenderGate.allowLaunch()
+		// The capability is the direct slot's alone. Whether the role runs now
+		// is the activation budget's answer, and that answer is held rather
+		// than baked into the switch: the settings are this launch's own copy,
+		// so clearing the switch here would keep the extender off for the life
+		// of the process. Holding is reversible and the recheck below releases
+		// it as soon as the budget allows a post (sdk HoldProvideExtenderSession).
+		extenderRoleCapable := proxySettings == nil && extenderGate != nil
+		settings.ProvideExtenderEnabled = extenderRoleCapable
+		extenderRoleAllowed := !extenderRoleCapable || extenderGate.allowLaunch()
 		// A proxied identity runs one family-agnostic transport, not the
 		// v4-pinned/v6-pinned/standby group: a pinned transport dials from
 		// this host, and behind a SOCKS proxy that dial cannot leave the
@@ -1881,6 +1889,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				output.observe(captureEvent, index, true, err, 0, nil)
 			}
 			return err
+		}
+		if extenderRoleCapable && !extenderRoleAllowed {
+			// The budget withheld the post at launch. Hold the role and ask
+			// again on a timer: otherwise this launch keeps the extender off
+			// for the whole process, which a start inside the window would
+			// turn into hours.
+			device.HoldProvideExtenderSession(true)
+			defer startExtenderBudgetRecheck(proxyCtx, device, extenderGate.allowLaunch)()
 		}
 		defer func() {
 			returnErr = errors.Join(returnErr, device.CloseAndWait(context.Background()))
