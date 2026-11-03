@@ -1925,16 +1925,6 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			returnErr = errors.Join(returnErr, device.CloseAndWait(context.Background()))
 		}()
 
-		// Fork hook: drive this identity's live health from its platform
-		// transport's real connection state (proxy_transport_health.go). The
-		// provider marks a proxy up only once its transport has registered
-		// routes and down when that connection drops; without the same watch
-		// here, a proxy that authenticated and then lost its relay stayed "up"
-		// and kept its slot. Registered after the close defer above, so the
-		// stop runs first and the close itself is never read as a drop.
-		if proxySettings != nil {
-			defer watchProxyTransportHealth(proxyCtx, proxySettings.Key(), device, proxyTransportWatchInterval)()
-		}
 		// Step 2: a proxied slot whose proxy has proven IPv6 egress also runs
 		// an IPv6-pinned transport, so the platform records it dual-stack;
 		// every other slot keeps its one transport and pays only a periodic
@@ -1942,19 +1932,21 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// slot, which keeps the family group) registers nothing. Deferred
 		// after the device close, so it stops first.
 		defer v6Pins.register(proxyCtx, proxySettings, display, device, networkSpace.GetPlatformUrlV6(), v6ControlPlatformUrl(networkSpace))()
-		// Fork hook: charge this slot's relayed bytes to its counters, and its
-		// open provider contracts to the same counter's live client count, from
-		// the accounting the SDK keeps inside the device (provider_billing.go).
-		// Without the bytes, BillableRx/Tx and ContractUsed* never move and
-		// every billable and settled series this node publishes is a structural
-		// zero. Without the contracts, `clients` has no source at all: the
-		// network space's own dials are the node's control plane and are counted
-		// total-only (h3_packet_conn.go), not as clients.
-		// Registered after the close defer above, so the watch stops before the
-		// device it reads is closed. Every slot gets it, the direct identity
-		// included: it relays traffic and its bytes are part of the node's
-		// aggregate in the same scrape.
-		defer watchProxyBilling(proxyCtx, bw, device, providerBillingSampleInterval)()
+
+		// Fork hook: drive this slot's platform transport health and billing
+		// sampling from a single per-slot ticker (proxy_slot_sampler.go).
+		// Collapses two per-slot 5-second tickers into one, cutting ticker
+		// goroutines in half across the pool (1 per slot instead of 2).
+		// Direct slot passes proxySettings == nil, so only billing is sampled.
+		// Registered after the device close defer above, so the stop runs first
+		// and teardown is never read as a transport drop or client leak.
+		proxyKey := ""
+		var proxyTransport proxyTransportState
+		if proxySettings != nil {
+			proxyKey = proxySettings.Key()
+			proxyTransport = device
+		}
+		defer watchProxySlotSampler(proxyCtx, proxyKey, proxyTransport, bw, device, providerBillingSampleInterval)()
 
 		// Fork hook: count this slot's acquired contracts for
 		// urnet_contracts_total. The provider reads its own per-index registry,
