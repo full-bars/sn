@@ -140,12 +140,15 @@ zero before the first failure, so panels and alerts have a stable series.
 proxies in that state at the moment of the tick:
 
 ```
-❤️ [health][proxies] up=482 down=551 dead=127 degraded=424 connecting=44 members=1077 target=500 floor=482 dips=60 verdict="mostly healthy" scope=isolated
+❤️ [health][proxies] up=482 dead=127 degraded=424 connecting=44 members=1077 target=500 floor=482 dips=60 verdict="mostly healthy" scope=isolated
 ```
 
-`up` is serving and reachable now. `down` is `degraded` plus `dead`, where
-`dead` failed outright and `degraded` is reachable but failing some checks.
-`connecting` is registered and not yet observed either way. `members` is every
+`up` is serving and reachable now. `dead` failed outright and `degraded` is
+reachable but failing some checks; together they are the failed count, and there
+is no `down` field, because a single field summing the two read as a separate
+population and invited `members - up` arithmetic that counts `connecting` as a
+failure when it is not. `connecting` is registered and not yet observed either
+way. `members` is every
 proxy the registry knows. `target` is the size the pool is asked to run: the
 curated proxies from the operator file or the internal config, plus the URL
 source's admission cap (the tighter of `proxy_url_max` and the self-heal

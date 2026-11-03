@@ -321,7 +321,8 @@ func TestProxyPoolHealthMetricsCarryTheAggregate(t *testing.T) {
 }
 
 // TestProxyPoolHealthLineMatchesProviderFieldNames pins the machine line's
-// vocabulary: the provider's [health][proxies] fields, plus floor/dips/scope.
+// vocabulary: the provider's shared [health][proxies] fields, plus pool-specific
+// fields (floor/dips/scope).
 func TestProxyPoolHealthLineMatchesProviderFieldNames(t *testing.T) {
 	w := newProxyPoolHealthWindow(time.Minute)
 	r := w.observe(proxyPoolMemberCounts{Up: 3, Dead: 1, Connecting: 1}, time.Minute)
@@ -331,12 +332,15 @@ func TestProxyPoolHealthLineMatchesProviderFieldNames(t *testing.T) {
 		t.Errorf("line prefix = %q, want the provider's [health][proxies] prefix", line)
 	}
 	for _, want := range []string{
-		"up=3", "down=1", "dead=1", "degraded=0", "connecting=1", "members=5",
+		"up=3", "dead=1", "degraded=0", "connecting=1", "members=5",
 		"floor=3", "dips=1", `verdict="needs attention"`, "scope=isolated",
 	} {
 		if !strings.Contains(line, want) {
 			t.Errorf("line missing %q: %s", want, line)
 		}
+	}
+	if strings.Contains(line, "down=") {
+		t.Errorf("line contains dropped down= field: %s", line)
 	}
 }
 
