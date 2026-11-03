@@ -92,6 +92,11 @@ const (
 	proxyPoolHealthDegraded   = "degraded"
 	proxyPoolHealthDead       = "dead"
 	proxyPoolHealthConnecting = "connecting"
+	// proxyPoolHealthParked is its own bucket: a parked member is held out
+	// deliberately (the audit parked it for a backoff window), which is not a
+	// health failure. Counting it as degraded made a deliberate hold-out read
+	// as a broken proxy and dragged the verdict down with it.
+	proxyPoolHealthParked = "parked"
 )
 
 // proxyPoolMemberBucket classifies one member's persisted-or-live health the way
@@ -110,7 +115,9 @@ func proxyPoolMemberBucket(health string) string {
 		return proxyPoolHealthUp
 	case "dead", "inactive":
 		return proxyPoolHealthDead
-	case "recently_offline", "offline", "long_offline", "parked":
+	case "parked":
+		return proxyPoolHealthParked
+	case "recently_offline", "offline", "long_offline":
 		return proxyPoolHealthDegraded
 	default:
 		return proxyPoolHealthConnecting
@@ -123,6 +130,7 @@ type proxyPoolMemberCounts struct {
 	Degraded   int
 	Dead       int
 	Connecting int
+	Parked     int
 	Held       int
 }
 
@@ -131,7 +139,7 @@ func (c proxyPoolMemberCounts) admittedMembers() int {
 }
 
 func (c proxyPoolMemberCounts) members() int {
-	return c.admittedMembers() + c.Held
+	return c.admittedMembers() + c.Parked + c.Held
 }
 
 func (c proxyPoolMemberCounts) down() int { return c.Degraded + c.Dead }
@@ -146,6 +154,8 @@ func countProxyPoolMembers(members map[string]string) proxyPoolMemberCounts {
 			counts.Degraded++
 		case proxyPoolHealthDead:
 			counts.Dead++
+		case proxyPoolHealthParked:
+			counts.Parked++
 		default:
 			counts.Connecting++
 		}
@@ -365,6 +375,10 @@ type proxyPoolHealthReading struct {
 	Degraded   int
 	Dead       int
 	Connecting int
+	// Parked counts members the audit is deliberately holding out for a
+	// backoff window. They are not a health failure, so they are excluded from
+	// Down, Degraded and the judged denominator, and reported on their own.
+	Parked int
 	// Target is the pool size the operator asked for; 0 means unknown.
 	Target int
 
@@ -412,6 +426,7 @@ func (w *proxyPoolHealthWindow) observeFor(counts proxyPoolMemberCounts, target 
 		Degraded:   counts.Degraded,
 		Dead:       counts.Dead,
 		Connecting: counts.Connecting,
+		Parked:     counts.Parked,
 		Target:     target,
 		Floor:      counts.Up,
 	}
@@ -594,8 +609,8 @@ func (r proxyPoolHealthReading) judged() int {
 // connecting, members, target, floor, dips, verdict and scope.
 func proxyPoolHealthLine(r proxyPoolHealthReading) string {
 	line := fmt.Sprintf(
-		"❤️ [health][proxies] up=%d dead=%d degraded=%d connecting=%d held=%d members=%d target=%d floor=%d dips=%d verdict=%q scope=%s",
-		r.Up, r.Dead, r.Degraded, r.Connecting, r.Held, r.Members, r.Target, r.Floor, r.Dips, r.Verdict, r.Scope,
+		"❤️ [health][proxies] up=%d dead=%d degraded=%d connecting=%d parked=%d held=%d members=%d target=%d floor=%d dips=%d verdict=%q scope=%s",
+		r.Up, r.Dead, r.Degraded, r.Connecting, r.Parked, r.Held, r.Members, r.Target, r.Floor, r.Dips, r.Verdict, r.Scope,
 	)
 	if r.StateError != "" {
 		line += fmt.Sprintf(" state_error=%q", r.StateError)

@@ -332,7 +332,7 @@ func TestProxyPoolHealthLineMatchesProviderFieldNames(t *testing.T) {
 		t.Errorf("line prefix = %q, want the provider's [health][proxies] prefix", line)
 	}
 	for _, want := range []string{
-		"up=3", "dead=1", "degraded=0", "connecting=1", "held=0", "members=5",
+		"up=3", "dead=1", "degraded=0", "connecting=1", "parked=0", "held=0", "members=5",
 		"floor=3", "dips=1", `verdict="needs attention"`, "scope=isolated",
 	} {
 		if !strings.Contains(line, want) {
@@ -342,7 +342,7 @@ func TestProxyPoolHealthLineMatchesProviderFieldNames(t *testing.T) {
 	if strings.Contains(line, "down=") {
 		t.Errorf("line contains dropped down= field: %s", line)
 	}
-	if !strings.Contains(line, "connecting=1 held=0 members=5") {
+	if !strings.Contains(line, "connecting=1 parked=0 held=0 members=5") {
 		t.Errorf("held is not placed between connecting and members: %s", line)
 	}
 }
@@ -748,7 +748,7 @@ func TestProxyPoolTargetCountsCuratedMembers(t *testing.T) {
 		t.Fatalf("healthy pool at trim cap verdict = %q, want %q; counts=%+v reading=%+v",
 			r.Verdict, poolVerdictHealthy, trimmed.Counts, r)
 	}
-	if line := proxyPoolHealthLine(r); !strings.Contains(line, "connecting=0 held=70 members=110") {
+	if line := proxyPoolHealthLine(r); !strings.Contains(line, "connecting=0 parked=0 held=70 members=110") {
 		t.Fatalf("trim line does not reconcile held members: %s", line)
 	}
 
@@ -788,5 +788,59 @@ func TestProxyPoolTargetCountsCuratedMembers(t *testing.T) {
 	}
 	if got := readProxyPoolComposition().Target; got != 0 {
 		t.Fatalf("curated-only target = %d, want unknown (0): the URL cap describes a half this host does not run", got)
+	}
+}
+
+// TestParkedIsNotDegraded pins the classification rule: a parked member is held
+// out deliberately by the audit, so it must not read as a health failure or drag
+// the verdict down, while still reconciling into the pool total.
+func TestParkedIsNotDegraded(t *testing.T) {
+	// Feed real health values through the classifier the way proxyPoolMembers
+	// does; passing bucket names straight to the counter would test the switch
+	// below and skip the classification this test exists to pin.
+	healths := map[string]string{
+		"a:1": "up",
+		"b:2": "up",
+		"c:3": "up",
+		"d:4": "parked",
+		"e:5": "parked",
+	}
+	buckets := make(map[string]string, len(healths))
+	for key, health := range healths {
+		buckets[key] = proxyPoolMemberBucket(health)
+	}
+	counts := countProxyPoolMembers(buckets)
+	if counts.Parked != 2 {
+		t.Fatalf("parked = %d, want 2", counts.Parked)
+	}
+	if counts.Degraded != 0 {
+		t.Fatalf("a parked member was counted degraded: %+v", counts)
+	}
+	if counts.down() != 0 {
+		t.Fatalf("a parked member was counted down: %+v", counts)
+	}
+	if got := counts.members(); got != 5 {
+		t.Fatalf("members = %d, want 5 (parked still belongs to the configured pool)", got)
+	}
+	if got := counts.admittedMembers(); got != 3 {
+		t.Fatalf("admitted = %d, want 3 (parked is not in the judged denominator)", got)
+	}
+
+	w := newProxyPoolHealthWindow(time.Minute)
+	r := w.observe(counts, time.Minute)
+	if r.Parked != 2 {
+		t.Fatalf("reading parked = %d, want 2", r.Parked)
+	}
+	if r.Down != 0 || r.Degraded != 0 {
+		t.Fatalf("parked leaked into down/degraded: %+v", r)
+	}
+	if r.Members != 5 {
+		t.Fatalf("reading members = %d, want 5", r.Members)
+	}
+	if r.Verdict == poolVerdictNeedsAttention {
+		t.Fatalf("parked members made the pool unhealthy: %+v", r)
+	}
+	if line := proxyPoolHealthLine(r); !strings.Contains(line, "parked=2") {
+		t.Fatalf("line does not report parked: %s", line)
 	}
 }
