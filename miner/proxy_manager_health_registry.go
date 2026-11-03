@@ -235,11 +235,30 @@ func resetLiveProxyHealthDownClock(keys []string, now time.Time) {
 	}
 }
 
+// restartLiveProxyHealthDownClock moves a running down clock to at for the given
+// identities. Entries with no clock are left alone: only a new failure may start
+// one (see resetLiveProxyHealthDownClock).
+func restartLiveProxyHealthDownClock(keys []string, at time.Time) {
+	proxyLiveHealthRegistry.Lock()
+	defer proxyLiveHealthRegistry.Unlock()
+	for _, key := range keys {
+		entry, ok := proxyLiveHealthRegistry.byKey[key]
+		if !ok || entry.DownSince.IsZero() {
+			continue
+		}
+		entry.DownSince = at
+		proxyLiveHealthRegistry.byKey[key] = entry
+	}
+}
+
 // noteLiveProxyHealth records an observed health state for an identity (used
 // when a cycle learns health from the persisted state or a probe result).
 func noteLiveProxyHealth(key, health string, downSince time.Time) {
 	if key == "" || health == "" {
 		return
+	}
+	if isDegradedHealth(health) && downSince.IsZero() {
+		downSince = time.Now()
 	}
 	proxyLiveHealthRegistry.Lock()
 	defer proxyLiveHealthRegistry.Unlock()
@@ -303,6 +322,13 @@ func seedLiveProxyHealthFromState(state *ProxyState) int {
 				downSince = t
 			}
 		}
+		if downSince.IsZero() && isDegradedHealth(entry.Health) {
+			downSince = now
+			if entry.DownSince == "" {
+				entry.DownSince = downSince.UTC().Format(time.RFC3339)
+				state.Proxies[key] = entry
+			}
+		}
 		proxyLiveHealthRegistry.byKey[key] = proxyLiveHealthEntry{
 			Health:         entry.Health,
 			DownSince:      downSince,
@@ -347,6 +373,12 @@ func overlayLiveProxyHealth(proxies map[string]ProxyEntry) int {
 		downSince := ""
 		if !live.DownSince.IsZero() {
 			downSince = live.DownSince.Format(time.RFC3339)
+		} else if isDegradedHealth(health) {
+			// The registry has no clock: a release from a reap hold cleared it
+			// on purpose (resetLiveProxyHealthDownClock). Keep the persisted
+			// stamp for the state copy and leave the registry alone, so an
+			// overlay cannot restart a clock that only a new failure may start.
+			downSince = entry.DownSince
 		}
 		if entry.Health == health && entry.DownSince == downSince && entry.AuthFailures == live.AuthFailures && entry.ProxyLegFailures == live.ProxyLegFailures && entry.TransportDrops == live.TransportDrops {
 			continue
