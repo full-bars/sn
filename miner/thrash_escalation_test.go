@@ -7,6 +7,7 @@ package miner
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -321,8 +322,8 @@ func mustOOMCapPath(t *testing.T) string {
 	return dir + "/oom_cap.json"
 }
 
-// Pure sizing and window helpers, including the expiry that relaxes the cap
-// after a clean day.
+// Pure sizing and window helpers, including health-based expiry and staged
+// relaxation (+20% per window until target capacity is reached).
 func TestThrashCapSizesAndExpires(t *testing.T) {
 	if got := thrashCapForNextStart(500); got != 300 {
 		t.Fatalf("cap for 500 running: got %d, want 300", got)
@@ -339,18 +340,115 @@ func TestThrashCapSizesAndExpires(t *testing.T) {
 	if err := recordThrashEscalation(300, now); err != nil {
 		t.Fatal(err)
 	}
+	// Before 24h: cap holds.
 	if cap, ok := activeThrashCap(now.Add(thrashCapHold - time.Minute)); !ok || cap != 300 {
 		t.Fatalf("the cap holds for 24h, got %d ok=%v", cap, ok)
 	}
-	if cap, ok := activeThrashCap(now.Add(thrashCapHold + time.Minute)); ok || cap != 0 {
-		t.Fatalf("a quiet day must relax the cap, got %d ok=%v", cap, ok)
+
+	// At 24h mark, if the box is still sick (e.g. watchdog thrashing), the cap
+	// must NOT expire on a clock: it stays in force.
+	origSnapFn := thrashWatchdogSnapshotFn
+	t.Cleanup(func() { thrashWatchdogSnapshotFn = origSnapFn })
+	thrashWatchdogSnapshotFn = func() *swapThrashSnapshot {
+		return &swapThrashSnapshot{State: "thrashing"}
 	}
+	tSick := now.Add(thrashCapHold + time.Minute)
+	if cap, ok := activeThrashCap(tSick); !ok || cap != 300 {
+		t.Fatalf("sick box at 24h must not relax or expire: got %d ok=%v, want 300/true", cap, ok)
+	}
+	thrashWatchdogSnapshotFn = origSnapFn
+
+	// When healthy, the cap relaxes in STAGES (+20%): stage 1 goes from 300 to 360,
+	// NOT releasing the full pre-cut load at once.
+	t1 := now.Add(thrashCapHold + time.Minute)
+	if cap, ok := activeThrashCap(t1); !ok || cap != 360 {
+		t.Fatalf("stage 1 relaxation: got %d ok=%v, want 360/true", cap, ok)
+	}
+
+	// Inside the next hold window, stage 1 holds.
+	if cap, ok := activeThrashCap(t1.Add(time.Hour)); !ok || cap != 360 {
+		t.Fatalf("stage 1 hold: got %d ok=%v, want 360/true", cap, ok)
+	}
+
+	// Stage 2 (after 24h quiet at stage 1): relaxes from 360 to 432.
+	t2 := t1.Add(thrashCapHold + time.Minute)
+	if cap, ok := activeThrashCap(t2); !ok || cap != 432 {
+		t.Fatalf("stage 2 relaxation: got %d ok=%v, want 432/true", cap, ok)
+	}
+
+	// Stage 3 (after 24h quiet at stage 2): 432 * 1.2 = 518 >= 500 (target).
+	// Target reached: cap cleared (stops applying on demonstrated recovery).
+	t3 := t2.Add(thrashCapHold + time.Minute)
+	if cap, ok := activeThrashCap(t3); ok || cap != 0 {
+		t.Fatalf("stage 3 target reached: got %d ok=%v, want 0/false", cap, ok)
+	}
+
 	// A later escalation re-arms it.
-	if err := recordThrashEscalation(250, now.Add(thrashCapHold+2*time.Minute)); err != nil {
+	if err := recordThrashEscalation(250, t3.Add(time.Minute)); err != nil {
 		t.Fatal(err)
 	}
-	if cap, ok := activeThrashCap(now.Add(thrashCapHold + 3*time.Minute)); !ok || cap != 250 {
+	if cap, ok := activeThrashCap(t3.Add(2 * time.Minute)); !ok || cap != 250 {
 		t.Fatalf("a new escalation must re-arm the cap, got %d ok=%v", cap, ok)
+	}
+}
+
+// Low memory headroom prevents relaxation even if the box has been quiet for 24h.
+func TestThrashCapHeadroomGatesRelaxation(t *testing.T) {
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
+	now := time.Now()
+	if err := recordThrashEscalation(300, now); err != nil {
+		t.Fatal(err)
+	}
+
+	origHeadroomFn := thrashHeadroomFn
+	t.Cleanup(func() { thrashHeadroomFn = origHeadroomFn })
+
+	// Free RAM is 100 MiB, below the 200 MiB threshold -> low headroom.
+	thrashHeadroomFn = func() (int64, int64) {
+		return 100, 200
+	}
+
+	tCheck := now.Add(thrashCapHold + time.Minute)
+	if cap, ok := activeThrashCap(tCheck); !ok || cap != 300 {
+		t.Fatalf("low headroom must prevent relaxation: got %d ok=%v, want 300/true", cap, ok)
+	}
+
+	// Headroom recovers: 300 MiB available (well above 200 * 1.25 = 250 MiB).
+	thrashHeadroomFn = func() (int64, int64) {
+		return 300, 200
+	}
+	if cap, ok := activeThrashCap(tCheck); !ok || cap != 360 {
+		t.Fatalf("healthy headroom allows staged relaxation: got %d ok=%v, want 360/true", cap, ok)
+	}
+}
+
+// Staged relaxation towards an operator trim of 1500 (the incident scenario):
+// A box that thrashed at ~605 and was cut to 363 does NOT jump to 1500 on expiry.
+// It relaxes in stages (363 -> 435 -> 522), preventing several hundred slots in one launch.
+func TestThrashCapRelaxesInStagesTowardsOperatorTrim(t *testing.T) {
+	stateDir := shortStateDir(t)
+	t.Setenv("URNETWORK_STATE_DIR", stateDir)
+
+	// Write operator trim of 1500.
+	if err := os.WriteFile(filepath.Join(stateDir, "proxy_trim"), []byte("1500\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	now := time.Now()
+	if err := recordThrashEscalation(363, now); err != nil {
+		t.Fatal(err)
+	}
+
+	// 24h later: box is healthy.
+	t1 := now.Add(thrashCapHold + time.Minute)
+	if cap, ok := activeThrashCap(t1); !ok || cap != 435 {
+		t.Fatalf("stage 1 relaxation towards 1500: got %d ok=%v, want 435/true", cap, ok)
+	}
+
+	// Next stage 24h later: relaxes from 435 to 522, NOT releasing 1500 at once.
+	t2 := t1.Add(thrashCapHold + time.Minute)
+	if cap, ok := activeThrashCap(t2); !ok || cap != 522 {
+		t.Fatalf("stage 2 relaxation towards 1500: got %d ok=%v, want 522/true", cap, ok)
 	}
 }
 
