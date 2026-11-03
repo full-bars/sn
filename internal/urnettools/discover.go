@@ -1,7 +1,10 @@
 package urnettools
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -9,6 +12,26 @@ import (
 	"strings"
 	"time"
 )
+
+// systemdDiscoveryCutShort records whether the unit discovery pass ran out of
+// its budget. It is declared here, untagged, because the read sites (cli, target,
+// top, discover) build on every platform while only the linux file sets it.
+var systemdDiscoveryCutShort bool
+
+// discoveryCutShortWarning is the one-line notice shown whenever a discovery
+// pass ran out of budget yet still returned providers. found is how many.
+func discoveryCutShortWarning(found int) string {
+	return fmt.Sprintf("systemd unit discovery ran out of budget; the list may be incomplete (%d found)", found)
+}
+
+// warnIfDiscoveryCutShort writes the warning to w when the last pass was cut
+// short and found at least one provider. An empty list is reported by
+// noProvidersError instead, so it is not repeated here.
+func warnIfDiscoveryCutShort(w io.Writer, found int) {
+	if systemdDiscoveryCutShort && found > 0 {
+		fmt.Fprintln(w, "warning: "+discoveryCutShortWarning(found))
+	}
+}
 
 // knownBinaries are the binary basenames the tool recognizes as URnetwork
 // providers. provider_beta is the beta-test build name used on fleet boxes.
@@ -24,8 +47,8 @@ var knownBinaries = map[string]bool{
 // ~/.config/systemd/user or a ~/.urnetwork state dir. Best-effort.
 // Usernames are returned (not home paths) because discoverUserUnits uses
 // them as `systemctl --user -M <user>@` selectors.
-func providerCandidateUsers() ([]string, error) {
-	b, err := execWithTimeout(5*time.Second, "getent", "passwd")
+func providerCandidateUsers(ctx context.Context) ([]string, error) {
+	b, err := execWithTimeout(ctx, 5*time.Second, "getent", "passwd")
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +183,7 @@ var (
 // users plus stopped systemd units. Sorted by user then unit for stable
 // output.
 func Discover() []Provider {
+	systemdDiscoveryCutShort = false
 	all := discoverProcessesFn()
 	// Platform hook for stopped-unit / lifecycle-based discovery. On Linux
 	// this attaches systemd unit names to running providers and adds

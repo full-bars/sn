@@ -208,10 +208,23 @@ func fetchSnapshotRaw(p Provider) (*NodeSnapshot, json.RawMessage, error) {
 
 // printSnapshotJSON prints the provider's raw snapshot for scripts. When no
 // snapshot is available it says why and returns an error (non-zero exit).
-func printSnapshotJSON(p Provider) error {
+// When discoveryCutShort is set the document also carries
+// "discovery_cut_short": true; it is absent otherwise, so existing consumers
+// see the provider's snapshot byte for byte.
+func printSnapshotJSON(p Provider, discoveryCutShort bool) error {
 	_, raw, err := fetchSnapshotFn(p)
 	if err != nil {
 		return fmt.Errorf("no live status from %s: %w (is the provider running and new enough to answer \"snapshot\"?)", providerLabel(p), err)
+	}
+	if discoveryCutShort {
+		var doc map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &doc); err != nil {
+			return fmt.Errorf("live status from %s is not valid JSON: %w", providerLabel(p), err)
+		}
+		doc["discovery_cut_short"] = json.RawMessage("true")
+		if raw, err = json.Marshal(doc); err != nil {
+			return err
+		}
 	}
 	var out bytes.Buffer
 	if err := json.Indent(&out, raw, "", "  "); err != nil {

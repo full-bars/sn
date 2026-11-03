@@ -83,6 +83,17 @@ const urnetElevatedEnv = "URNET_TOOLS_ELEVATED"
 // test must never spawn a real sudo.
 var elevateSelfFunc = elevateSelf
 
+// crossUserElevationNeeded reports whether maybeElevateForCrossUser would
+// re-execute for p: the caller is not root, has not already elevated, and p
+// belongs to someone else. Callers use it to hand back a terminal before the
+// re-exec, without starting the re-exec.
+func crossUserElevationNeeded(p Provider) bool {
+	if isPrivileged() || os.Getenv(urnetElevatedEnv) == "1" {
+		return false
+	}
+	return p.User != "" && p.User != currentUserName()
+}
+
 // maybeElevateForCrossUser re-executes a command under sudo when its resolved
 // provider belongs to another OS user and the caller is unprivileged — the
 // binary lives on a per-user path, so a plain `sudo urnet-tools ...` would be
@@ -98,10 +109,7 @@ var elevateSelfFunc = elevateSelf
 // arguments exactly as the operator typed them (including any --user bob), so
 // the elevated child re-resolves the same target as root.
 func maybeElevateForCrossUser(sub string, p Provider, args []string, force, dryRun bool) (bool, error) {
-	if isPrivileged() || os.Getenv(urnetElevatedEnv) == "1" {
-		return false, nil
-	}
-	if p.User == "" || p.User == currentUserName() {
+	if !crossUserElevationNeeded(p) {
 		return false, nil
 	}
 	// Rebuild the argv the elevated child needs: the original args plus
@@ -195,7 +203,7 @@ func selectTargets(providers []Provider, t Target, include, exclude []string, in
 		// single-provider box popped a pointless picker; reported 2026-09-20.)
 		chosen = providers
 	case len(providers) == 0:
-		return nil, fmt.Errorf("no providers found on this box")
+		return nil, noProvidersError()
 	case interactive:
 		chosen, err = interactivePick(providers)
 		if err != nil {
@@ -341,7 +349,7 @@ func selectTargetInteractive(providers []Provider, t Target) (Provider, error) {
 	}
 	switch len(providers) {
 	case 0:
-		return Provider{}, fmt.Errorf("no providers found on this box")
+		return Provider{}, noProvidersError()
 	case 1:
 		return providers[0], nil
 	default:

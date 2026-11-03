@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -550,7 +551,7 @@ func TestContainerHelpersNoDocker(t *testing.T) {
 // skip branch — 8.3% coverage before this.
 func TestAttachUnitsSelfProcess(t *testing.T) {
 	procs := []Provider{{PID: os.Getpid()}, {PID: 0}}
-	attachUnits(procs) // must not panic regardless of cgroup contents
+	attachUnits(context.Background(), procs) // must not panic regardless of cgroup contents
 	// The test process is not running under a systemd unit in this sandbox,
 	// so Unit should remain empty; this still exercises the /proc/<pid>/cgroup
 	// read and the ".service" search miss.

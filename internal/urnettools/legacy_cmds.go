@@ -353,6 +353,12 @@ func cmdRestart(args []string, force, dryRun bool) error {
 	if err != nil {
 		return err
 	}
+	if p.Unit == "" {
+		if systemdDiscoveryCutShort {
+			return fmt.Errorf("provider %s has no owning systemd unit (unit discovery ran out of budget)", providerLabel(p))
+		}
+		return fmt.Errorf("provider %s has no owning systemd unit", providerLabel(p))
+	}
 	ok, err := confirmGate("restart "+providerLabel(p), p, force, dryRun)
 	if err != nil {
 		return err
@@ -572,11 +578,16 @@ func cmdLogs(args []string) error {
 			return err
 		}
 	}
-	// No systemd unit but the provider is a live process: the process's own
-	// stdout is the only possible log stream. Windows has no /proc, so stay
-	// unitless-first but never on windows — the check below handles that.
-	if p.Unit == "" && p.Running && runtime.GOOS != "windows" {
-		return logsUnitlessProvider(p, lines)
+	// No systemd unit: on a cut discovery pass refuse rather than taking
+	// the unitless path with no warning.
+	if p.Unit == "" {
+		if systemdDiscoveryCutShort {
+			return fmt.Errorf("provider %s has no systemd unit (unit discovery ran out of budget)", providerLabel(p))
+		}
+		if p.Running && runtime.GOOS != "windows" {
+			return logsUnitlessProvider(p, lines)
+		}
+		return validateLogsTarget(p)
 	}
 	// Windows has no systemd/journalctl — print a diagnostic and exit cleanly.
 	if runtime.GOOS == "windows" {

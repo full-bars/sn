@@ -104,6 +104,15 @@ func defaultProvider(providers []Provider) (Provider, error) {
 	}
 }
 
+// noProvidersError reports that no providers were found, distinguishing a true
+// empty box from a systemd discovery pass that timed out and may have missed units.
+func noProvidersError() error {
+	if systemdDiscoveryCutShort {
+		return fmt.Errorf("systemd could not be scanned in time and stopped units may be missing (scan did not finish)")
+	}
+	return fmt.Errorf("no providers found on this box")
+}
+
 // selectTarget resolves the providers list against a target (or no target).
 //
 // Rules:
@@ -137,7 +146,7 @@ func selectTarget(providers []Provider, t Target) (Provider, error) {
 	var defaultReason string
 	switch len(providers) {
 	case 0:
-		return Provider{}, fmt.Errorf("no providers found on this box")
+		return Provider{}, noProvidersError()
 	case 1:
 		return providers[0], nil
 	default:
