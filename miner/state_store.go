@@ -571,6 +571,10 @@ func openProviderStoreForProcessWith(allowQuarantine bool) (*providerStore, erro
 // A launch retry may bypass a cached open failure, but still uses the same
 // process-wide mutex, handle and hotswap release guard as ordinary opens.
 func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout time.Duration) (*providerStore, error) {
+	// The startup extender head start skips its hold when a store open was
+	// already slow (extender_head_start.go): a start that had to wait this
+	// long must not be given another delay.
+	start := time.Now()
 	globalProviderStoreMu.Lock()
 	defer globalProviderStoreMu.Unlock()
 	if globalProviderStoreReleased {
@@ -630,6 +634,7 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 	globalProviderStoreFailedPath = ""
 	globalProviderStoreFailedErr = nil
 	globalProviderStore, globalProviderStorePath = store, path
+	providerStoreLastOpenDuration.Store(int64(time.Since(start)))
 	return store, nil
 }
 

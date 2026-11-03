@@ -228,6 +228,10 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 	if status != nil {
 		detail = activationDetailDigest(status.LastActivationError)
 	}
+	// This listener is built inside the slot worker, so the startup head start
+	// has no handle on it: publish the newest observation at package level for
+	// the hold to read (extender_head_start.go).
+	publishProviderExtenderObservation(observation)
 	var attempt string
 	changed, failed := func() (bool, bool) {
 		self.stateLock.Lock()

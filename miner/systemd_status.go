@@ -163,6 +163,13 @@ const maxStatusReasonLen = 60
 // systemdStatusLine renders the current state. Split out from the send so it
 // can be asserted directly in tests without a NOTIFY_SOCKET.
 func systemdStatusLine() string {
+	// A deliberate hold for the extender's head start is not proxy resolution:
+	// nothing is being resolved, and the proxies are waiting on a bounded
+	// activation attempt. The line says which, so it never reads "resolving
+	// proxies" while proxies are deliberately held.
+	if extenderHeadStartHeld.Load() {
+		return extenderHeadStartStatusLine()
+	}
 	live := proxiesAuthenticated.Load()
 	total := proxiesConfigured.Load()
 

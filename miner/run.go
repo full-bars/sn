@@ -1840,6 +1840,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		extenderRoleCapable := proxySettings == nil && extenderGate != nil
 		settings.ProvideExtenderEnabled = extenderRoleCapable
 		extenderRoleAllowed := !extenderRoleCapable || extenderGate.allowLaunch()
+		if proxySettings == nil {
+			// The startup head start is waiting on this verdict: a role the
+			// activation budget withheld will never complete an attempt, so
+			// the hold ends now instead of running out its cap
+			// (extender_head_start.go).
+			publishExtenderHeadStartRole(extenderRoleCapable && extenderRoleAllowed)
+		}
 		// A proxied identity runs one family-agnostic transport, not the
 		// v4-pinned/v6-pinned/standby group: a pinned transport dials from
 		// this host, and behind a SOCKS proxy that dial cannot leave the
@@ -1885,6 +1892,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			contractProfile,
 		)
 		if err != nil {
+			if proxySettings == nil {
+				// The verdict above said the direct slot would run, and the
+				// startup hold is waiting on it. This slot will never publish a
+				// status, so withdraw the verdict: otherwise the hold waits out
+				// its whole cap for an answer that cannot come.
+				publishExtenderHeadStartRole(false)
+			}
 			if workProfile != nil || contractProfile != nil {
 				output.observe(captureEvent, index, true, err, 0, nil)
 			}
@@ -2191,7 +2205,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	bringUp.start()
 	defer bringUp.shutdown()
 	results := make(chan error, len(providers))
-	for _, slot := range launchSlots {
+	launchSlot := func(slot proxyLaunchSlot) {
 		index := slot.Index
 		proxySettings := slot.Settings
 		baseDelay := slot.Delay
@@ -2272,6 +2286,37 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			}
 			result = direct.serve()
 		}()
+	}
+
+	// The direct slot launches first, so the extender has this box to itself
+	// for one activation attempt, and the proxy slots are held for at most
+	// extenderHeadStartCap after it (extender_head_start.go). Both halves sit
+	// after READY=1 above, so the hold can never make systemd time the start
+	// job out; a failure, the cap or a shutdown releases the proxies at once.
+	// The proxies keep their scheduled order, delays and stagger; only the
+	// direct slot moves ahead of them.
+	var directLaunch *proxyLaunchSlot
+	proxyLaunchSlots := make([]proxyLaunchSlot, 0, len(launchSlots))
+	for i := range launchSlots {
+		if launchSlots[i].Settings == nil {
+			directLaunch = &launchSlots[i]
+			continue
+		}
+		proxyLaunchSlots = append(proxyLaunchSlots, launchSlots[i])
+	}
+	if directLaunch != nil {
+		launchSlot(*directLaunch)
+	}
+	extenderHeadStartWait(ctx, extenderHeadStartSources{
+		directSlot:       directLaunch != nil,
+		directEnabled:    directLaunch != nil && isDirectEnabled(),
+		hotSwapCandidate: self.hotSwapCandidate,
+		proxies:          len(proxyLaunchSlots),
+		legacyAdopted:    len(legacyImport.adopted),
+		storeOpen:        providerStoreOpenDuration(),
+	})
+	for _, slot := range proxyLaunchSlots {
+		launchSlot(slot)
 	}
 	// Apply reload triggers for the rest of the run, and stop whatever it
 	// started on the way out: the reloader's slots are outside the launch
