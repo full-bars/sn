@@ -95,20 +95,10 @@ var proxyTransportDropConfirm = 10 * time.Second
 // identity key and returns a stop that cancels the watch and waits for it to
 // exit. A caller that defers stop before it defers the device close cannot have
 // the close itself read as a drop.
+//
+// Driven by watchProxySlotSampler (proxy_slot_sampler.go).
 func watchProxyTransportHealth(ctx context.Context, key string, transport proxyTransportState, interval time.Duration) (stop func()) {
-	if key == "" || transport == nil {
-		return func() {}
-	}
-	watchCtx, cancel := context.WithCancel(ctx)
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		watchProxyTransportConnection(watchCtx, key, transport, interval)
-	}()
-	return func() {
-		cancel()
-		<-done
-	}
+	return watchProxySlotSampler(ctx, key, transport, nil, nil, interval)
 }
 
 // watchProxyTransportConnection marks the identity up on each transition to
@@ -123,39 +113,12 @@ func watchProxyTransportConnection(ctx context.Context, key string, transport pr
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	connected := false
-	var disconnectedSince time.Time
+	tracker := &proxyTransportTracker{key: key, transport: transport}
 	for {
-		// Teardown is not a drop: the slot leaving (reload, reaper, shutdown)
-		// closes the device, which reads as disconnected.
 		if ctx.Err() != nil {
 			return
 		}
-		now := transport.GetProviderConnected()
-		switch {
-		case now:
-			disconnectedSince = time.Time{}
-			if !connected {
-				connected = true
-				noteLiveProxyTransportUp(key)
-			}
-		case connected:
-			if disconnectedSince.IsZero() {
-				disconnectedSince = time.Now()
-			}
-			// Hold the disconnected read: one sample is not a drop. A
-			// migration cannot appear here (see the file comment: the
-			// platform-directed paths never release the live carrier), so
-			// this window is sized for sampling noise, not for a swap.
-			if time.Since(disconnectedSince) >= proxyTransportDropConfirm {
-				if ctx.Err() != nil {
-					return
-				}
-				connected = false
-				disconnectedSince = time.Time{}
-				noteLiveProxyHealthDrop(key)
-			}
-		}
+		tracker.sample(ctx)
 		select {
 		case <-ctx.Done():
 			return

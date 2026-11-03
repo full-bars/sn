@@ -221,38 +221,8 @@ func (s *proxyBillingSampler) fold(last *uint64, reading int64, counter *atomic.
 // It is also the slot's client-count watch: the sampler maintains bw.Clients
 // from the open provider contracts (sampleClients), and the stop releases them,
 // so a slot that exits counts nothing after it is gone.
+//
+// Driven by watchProxySlotSampler (proxy_slot_sampler.go).
 func watchProxyBilling(ctx context.Context, bw *bandwidth.ProxyBandwidth, src slotBillingSource, interval time.Duration) (stop func()) {
-	if bw == nil || src == nil {
-		return func() {}
-	}
-	if interval <= 0 {
-		interval = providerBillingSampleInterval
-	}
-	sampler := &proxyBillingSampler{bw: bw}
-	watchCtx, cancel := context.WithCancel(ctx)
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		ticker := time.NewTicker(interval)
-		defer ticker.Stop()
-		for {
-			// A slot on its way out is closed while this watch still holds a
-			// reference to its device; stop reading before the close, not
-			// after it.
-			if watchCtx.Err() != nil {
-				return
-			}
-			sampler.sample(src)
-			select {
-			case <-watchCtx.Done():
-				return
-			case <-ticker.C:
-			}
-		}
-	}()
-	return func() {
-		cancel()
-		<-done
-		sampler.releaseClients()
-	}
+	return watchProxySlotSampler(ctx, "", nil, bw, src, interval)
 }
