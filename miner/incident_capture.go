@@ -142,6 +142,10 @@ const (
 	// authentication refusals: one bundle records what the node was doing
 	// when it parked.
 	incidentTriggerAuthStop incidentTrigger = "auth_stop"
+	// incidentTriggerShutdown is a shutdown whose workers did not drain within
+	// the grace. It is captured before run's deferred calls, which can block,
+	// so its goroutines.txt is the state the stuck workers were in.
+	incidentTriggerShutdown incidentTrigger = "shutdown"
 )
 
 // Pacing, from the provider: one capture per trigger per cooldown, and a

@@ -1041,8 +1041,11 @@ func provideWith(opts docopt.Opts, start bool) {
 		stopSignals()
 		// A refused or quarantined startup is a fatal exit: the process is
 		// about to disappear with the evidence of what the run saw. The
-		// bundle is bounded and best effort, and cannot change the code.
-		captureIncidentBundle(incidentTriggerFatal, fmt.Sprintf("exit %d: %v", code, err), nil)
+		// bundle is bounded and best effort, and cannot change the code. A
+		// shutdown timeout already wrote its bundle before the defers ran.
+		if !errors.Is(err, errProviderShutdownTimeout) {
+			captureIncidentBundle(incidentTriggerFatal, fmt.Sprintf("exit %d: %v", code, err), nil)
+		}
 		if errors.Is(err, errProviderStartupRefused) {
 			// The documented startup_recovery_required JSON is emitted by the
 			// run, but its diagnostic stream is best effort (a redirected
@@ -2101,7 +2104,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				slotCtx, slotCancel := context.WithCancel(ctx)
 				go func() {
 					defer join.done()
-					if err := provideWithProxy(slotCtx, index, settings); err != nil {
+					err := runReloadedSlot(bringUp, index, func() error {
+						return provideWithProxy(slotCtx, index, settings)
+					})
+					if err != nil {
 						logReloadedSlotStopped(settings, index, err)
 					}
 				}()
@@ -2125,7 +2131,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			slotDone := make(chan struct{})
 			go func() {
 				defer join.done()
-				err := provideWithProxy(slotCtx, index, settings)
+				err := runReloadedSlot(bringUp, index, func() error {
+					return provideWithProxy(slotCtx, index, settings)
+				})
 				// Closed before the bookkeeping below asks the reloader for its
 				// lock: a reload may be holding that lock while it waits for
 				// this very worker.
@@ -2372,9 +2380,24 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			<-reloadWatchDone
 		}()
 	}
-	join.wait(func() {
+	if err := join.waitBounded(ctx, func() {
 		quiesceForRun(ctx, reloader)
-	})
+	}, providerShutdownGrace, tlog); err != nil {
+		// A worker ignored the cancel. Stop waiting: `results` may still be
+		// written, so it is left open, and the exit code makes the supervisor
+		// start a clean process instead of leaving this one half-dead. The
+		// watchdog is armed first, so the defers below cannot hold the process.
+		exitCode := providerShutdownExitCode(quarantined.Load())
+		providerShutdownExpire(fmt.Sprintf("workers did not drain within %s", providerShutdownGrace), exitCode)
+		critLog("SHUTDOWN: workers did not drain within %s; exiting\n", providerShutdownGrace)
+		if quarantined.Load() {
+			// the early return below skips the quarantine join further down, so
+			// carry the same error here for a run that exits before the watchdog
+			returnErr = errors.Join(returnErr, errProviderNetworkSignInQuarantined)
+		}
+		cancel()
+		return errors.Join(returnErr, err)
+	}
 	cancel()
 	close(results)
 	var slotResults []error
@@ -2626,6 +2649,9 @@ func providerRunExitCode(err error) (int, bool) {
 	if errors.Is(err, errProviderAuthStopped) {
 		return minerExitAuthStopped, true
 	}
+	if errors.Is(err, errProviderShutdownTimeout) {
+		return providerShutdownTimeoutExitCode, true
+	}
 	if errors.Is(err, errProviderNoSlotAuthenticated) {
 		return providerNoSlotAuthenticatedExitCode, true
 	}
@@ -2645,8 +2671,27 @@ func providerRunExitCode(err error) (int, bool) {
 //
 // exitFunc is the package's exit seam (hotswap.go's test hooks), so a test can
 // drive this path and observe the code without taking the test binary down.
+// providerShutdownExitCode picks the code the shutdown watchdog uses when a
+// drain times out. Quarantine wins: 75 is the only code the supervisor reads as
+// a deliberate quarantine, and exiting 1 would make it treat the incident as a
+// generic crash and restart on the wrong policy.
+func providerShutdownExitCode(quarantined bool) int {
+	if quarantined {
+		return providerQuarantinedExitCode
+	}
+	return providerShutdownTimeoutExitCode
+}
+
 func exitProviderRun(code int) {
 	flushPersistentErrorsAtExit()
+	exitFunc(code)
+}
+
+// exitProviderRunImmediate ends the process without the persistent-error flush.
+// A shutdown that has already passed its bound must not be extended by a
+// best-effort write: the flush waits up to persistentErrorExitFlushTimeout, and
+// the incident bundle was captured before the watchdog is armed.
+func exitProviderRunImmediate(code int) {
 	exitFunc(code)
 }
 

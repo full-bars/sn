@@ -817,6 +817,16 @@ func (self *providerBringUpTracker) slotStopped(index uint64) {
 	}
 }
 
+// runReloadedSlot runs one reloaded slot's worker and takes the slot out of the
+// running tally on every way out, a panic included. The launch loop does the
+// same in its deferred exit; a reload starts its workers elsewhere, and
+// without this a slot cancelled before it reached the control plane stayed
+// "running and not connected" for the life of the process.
+func runReloadedSlot(bringUp *providerBringUpTracker, index uint64, work func() error) error {
+	defer bringUp.slotStopped(index)
+	return work()
+}
+
 // apply updates one slot under the lock, prints its line (when any), and emits
 // the final tally exactly once when the last pending slot resolves.
 func (self *providerBringUpTracker) apply(index uint64, state string, print func()) {
