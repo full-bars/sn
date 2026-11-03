@@ -530,13 +530,13 @@ func (r proxyPoolHealthReading) judged() int {
 }
 
 // proxyPoolHealthLine renders the machine-readable aggregate. It uses the same
-// prefix and the same field names as provider/health_heartbeat.go's
-// [health][proxies] line, then the two facts that line has no field for: the
-// hour's floor and the scope.
+// prefix and the shared status field names (up, dead, degraded) as the
+// provider's [health][proxies] line, then the facts that line has no field for:
+// connecting, members, target, floor, dips, verdict and scope.
 func proxyPoolHealthLine(r proxyPoolHealthReading) string {
 	line := fmt.Sprintf(
-		"❤️ [health][proxies] up=%d down=%d dead=%d degraded=%d connecting=%d members=%d target=%d floor=%d dips=%d verdict=%q scope=%s",
-		r.Up, r.Down, r.Dead, r.Degraded, r.Connecting, r.Members, r.Target, r.Floor, r.Dips, r.Verdict, r.Scope,
+		"❤️ [health][proxies] up=%d dead=%d degraded=%d connecting=%d members=%d target=%d floor=%d dips=%d verdict=%q scope=%s",
+		r.Up, r.Dead, r.Degraded, r.Connecting, r.Members, r.Target, r.Floor, r.Dips, r.Verdict, r.Scope,
 	)
 	if r.StateError != "" {
 		line += fmt.Sprintf(" state_error=%q", r.StateError)
