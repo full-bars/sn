@@ -977,6 +977,10 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 			unsealExtenderRefusals()
 			return fmt.Errorf("in-place hotswap aborted after teardown: %w", refusalsErr)
 		}
+		// The successor inherits the carrier listeners, so the port it needs
+		// is held by an image that will not exist. Release it here, after the
+		// teardown is final and before exec.
+		releaseExtenderCarriersForExec()
 		err := execInPlaceFunc(exe, args, cleanEnv)
 		releaseRefusals()
 		if err != nil {

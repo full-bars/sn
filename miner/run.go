@@ -1898,6 +1898,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			device.HoldProvideExtenderSession(true)
 			defer startExtenderBudgetRecheck(proxyCtx, device, extenderGate.allowLaunch)()
 		}
+		if extenderRoleCapable {
+			// The in-place hot swap inherits the carrier listeners, so the
+			// outgoing image releases them before it execs (extender_handover.go).
+			setExtenderRoleReleaser(device)
+			defer setExtenderRoleReleaser(nil)
+		}
 		defer func() {
 			returnErr = errors.Join(returnErr, device.CloseAndWait(context.Background()))
 		}()
