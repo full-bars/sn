@@ -1944,6 +1944,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// the listeners stop before the device does.
 		defer registerContractOutcomes(device)()
 
+		// one line per change, so the activation prints once it settles and
+		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
+		extenderStatusListener := newProviderExtenderStatusListener(output, index, extenderActivationUserId())
+		extenderStatusSub := device.AddExtenderProvideStatusChangeListener(extenderStatusListener)
+		defer extenderStatusSub.Close()
+		// The device's status watch ends here, and nothing would replace the
+		// reading it published, so the reading must not outlive it: this is
+		// `provider direct off` and every slot teardown.
+		defer retireProviderExtenderObservation(extenderStatusListener)
+
 		// Always-on public mode includes network and friends/family service,
 		// matching the SDK's hierarchical provide contract.
 		device.SetProvideControlMode(sdk.ProvideControlModeAlways)
@@ -1970,15 +1980,6 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		}
 		persistProviderAuxiliaryKeyMaterial(output, index, slotIdentities, proxySettings, keyMaterial)
 		observeProviderExtenderIdentity(output, index, keyMaterial.GetExtenderKeySeed())
-		// one line per change, so the activation prints once it settles and
-		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
-		extenderStatusListener := newProviderExtenderStatusListener(output, index, extenderActivationUserId())
-		extenderStatusSub := device.AddExtenderProvideStatusChangeListener(extenderStatusListener)
-		defer extenderStatusSub.Close()
-		// The device's status watch ends here, and nothing would replace the
-		// reading it published, so the reading must not outlive it: this is
-		// `provider direct off` and every slot teardown.
-		defer clearProviderExtenderObservation(extenderStatusListener)
 
 		select {
 		case <-proxyCtx.Done():

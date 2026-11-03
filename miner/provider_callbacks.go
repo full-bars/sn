@@ -139,6 +139,9 @@ type providerExtenderStatusListener struct {
 	stateLock sync.Mutex
 	observed  bool
 	last      providerExtenderObservation
+	// retired is guarded by extenderObservationLock. Once set, this listener
+	// cannot publish a reading.
+	retired bool
 	// Remember every observed attempt so later redelivery cannot charge it twice.
 	failureSeen map[string]bool
 	// attemptScope makes an attempt's identity this listener's own. The status

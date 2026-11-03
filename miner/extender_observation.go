@@ -24,9 +24,28 @@ var extenderObservationState providerExtenderObservation
 func setProviderExtenderObservation(listener *providerExtenderStatusListener, observation providerExtenderObservation) {
 	extenderObservationLock.Lock()
 	defer extenderObservationLock.Unlock()
+	if listener != nil && listener.retired {
+		return
+	}
 	extenderObservationListener = listener
 	extenderObservationState = observation
 	extenderObservationKnown = true
+}
+
+// retireProviderExtenderObservation stops this listener from publishing and
+// drops its reading if it is the published one. A late callback that already
+// started cannot store a reading after this returns.
+func retireProviderExtenderObservation(listener *providerExtenderStatusListener) {
+	extenderObservationLock.Lock()
+	defer extenderObservationLock.Unlock()
+	if listener != nil {
+		listener.retired = true
+	}
+	if extenderObservationKnown && extenderObservationListener == listener {
+		extenderObservationKnown = false
+		extenderObservationListener = nil
+		extenderObservationState = providerExtenderObservation{}
+	}
 }
 
 // clearProviderExtenderObservation drops the published reading when it belongs

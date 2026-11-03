@@ -280,3 +280,29 @@ func TestExtenderObservationClearedOnTeardown(t *testing.T) {
 		t.Fatalf("the publisher's teardown must clear it, got %+v", *latest)
 	}
 }
+
+// Retiring a listener drops its reading and stops late callbacks from publishing.
+func TestExtenderObservationRetiredListener(t *testing.T) {
+	resetProviderExtenderObservation()
+	t.Cleanup(resetProviderExtenderObservation)
+
+	direct := newProviderExtenderStatusListener(nil, 0, "")
+	other := newProviderExtenderStatusListener(nil, 2, "")
+	direct.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true})
+
+	retireProviderExtenderObservation(other)
+	if providerExtenderObservationLatest() == nil {
+		t.Fatal("another listener's retirement cleared the direct reading")
+	}
+
+	retireProviderExtenderObservation(direct)
+	if latest := providerExtenderObservationLatest(); latest != nil {
+		t.Fatalf("the publisher's retirement must clear it, got %+v", *latest)
+	}
+
+	// A late callback from the retired listener must not publish.
+	direct.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true})
+	if latest := providerExtenderObservationLatest(); latest != nil {
+		t.Fatalf("a retired listener's late callback must not publish, got %+v", *latest)
+	}
+}
