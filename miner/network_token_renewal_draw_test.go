@@ -95,6 +95,23 @@ func TestNetworkTokenRenewalDrawPrefersTheId(t *testing.T) {
 	}
 }
 
+// A token with an expiration but no usable issued time renews on the first
+// pass: a point measured from the read time would move later with every
+// restart, so a token that restarts often could keep deferring it.
+func TestNetworkTokenRenewerRenewsATokenWithoutIssuedTime(t *testing.T) {
+	day := 24 * time.Hour
+	noIssued := renewalTestJwt(t, time.Time{}, renewalTestBase.Add(30*day), "no issued time")
+	fixture := newRenewalTestFixture(t, noIssued)
+	fixture.refresh.answer = renewalTestAnswer(renewalTestJwt(t, renewalTestBase, renewalTestBase.Add(30*day), "renewed"))
+	if wait := fixture.renewer.pass(t.Context()); wait != fixture.renewer.settings.MaximumWait {
+		t.Fatalf("a token without an issued time waits %s, want it renewed at once", wait)
+	}
+	fixture.event(t)
+	if fixture.refresh.count() != 1 {
+		t.Fatalf("renewals %d, want 1", fixture.refresh.count())
+	}
+}
+
 // A sign-in that replaces the token file starts a new schedule: a token
 // already past its point renews at once even a minute after the previous
 // renewal, while the same token is still held by the floor.

@@ -145,11 +145,13 @@ func networkTokenDueAtOnce(byJwt string, now time.Time) bool {
 }
 
 // When the scheduled renewal of a network token falls, for a window draw in
-// [0, 1]: now for a token due at once, and any
-// other at its point of the lifetime from `iat` (from now without a
-// sensible `iat`), which is in the past for a token read late in its life.
-// The renewer holds each renewal to at least RenewalFloor after the previous
-// one.
+// [0, 1]: now for a token due at once, now for a token without a usable `iat`,
+// and any other at its point of the lifetime from `iat`, which is in the past
+// for a token read late in its life. A point measured from the read time when
+// there is no `iat` would move later with every restart, so a token that
+// restarts often could keep deferring its renewal up to its expiration; it is
+// renewed at once instead. The renewer holds each renewal to at least
+// RenewalFloor after the previous one.
 func networkTokenRenewalTime(byJwt string, now time.Time, draw float64, settings *networkTokenRenewalSettings) time.Time {
 	if networkTokenDueAtOnce(byJwt, now) {
 		return now
@@ -162,10 +164,11 @@ func networkTokenRenewalTime(byJwt string, now time.Time, draw float64, settings
 	if err != nil || expiration == nil {
 		return now
 	}
-	start := now
-	if issued, err := claims.GetIssuedAt(); err == nil && issued != nil && issued.Time.Before(expiration.Time) {
-		start = issued.Time
+	issued, err := claims.GetIssuedAt()
+	if err != nil || issued == nil || !issued.Time.Before(expiration.Time) {
+		return now
 	}
+	start := issued.Time
 	lifetime := float64(expiration.Time.Sub(start))
 	return start.Add(time.Duration(settings.renewalFraction(draw) * lifetime))
 }

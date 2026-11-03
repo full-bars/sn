@@ -182,8 +182,8 @@ func TestNetworkTokenRenewalTime(t *testing.T) {
 		"near expiry":              {renewalTestJwt(t, now.Add(-30*day), now.Add(time.Minute), ""), 1, -15*day + 30*time.Second},
 		"expired":                  {renewalTestJwt(t, now.Add(-40*day), now.Add(-10*day), ""), 1, 0},
 		"no expiration":            {renewalTestJwt(t, now, time.Time{}, ""), 1, 0},
-		"no issued time":           {renewalTestJwt(t, time.Time{}, now.Add(30*day), ""), 1, 15 * day},
-		"issued after":             {renewalTestJwt(t, now.Add(40*day), now.Add(30*day), ""), 1, 15 * day},
+		"no issued time":           {renewalTestJwt(t, time.Time{}, now.Add(30*day), ""), 1, 0},
+		"issued after":             {renewalTestJwt(t, now.Add(40*day), now.Add(30*day), ""), 1, 0},
 		"not a jwt":                {"network-jwt", 1, 0},
 		"short lifetime":           {renewalTestJwt(t, now, now.Add(4*time.Minute), ""), 0, 96 * time.Second},
 	} {
