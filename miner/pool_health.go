@@ -123,10 +123,15 @@ type proxyPoolMemberCounts struct {
 	Degraded   int
 	Dead       int
 	Connecting int
+	Held       int
+}
+
+func (c proxyPoolMemberCounts) admittedMembers() int {
+	return c.Up + c.Degraded + c.Dead + c.Connecting
 }
 
 func (c proxyPoolMemberCounts) members() int {
-	return c.Up + c.Degraded + c.Dead + c.Connecting
+	return c.admittedMembers() + c.Held
 }
 
 func (c proxyPoolMemberCounts) down() int { return c.Degraded + c.Dead }
@@ -170,7 +175,7 @@ const proxyPoolURLSource = "url"
 // empty pool; the reading carries the error so the line can say the composition
 // may be missing members. The URL count is 0 then: the registry does not carry
 // provenance, and a guess would be a share of the pool the target cannot use.
-func proxyPoolMembers() (map[string]string, int, string) {
+func proxyPoolMembers() (map[string]string, int, string, *ProxyState) {
 	members := map[string]string{}
 	urlMembers := 0
 	live := liveProxyHealthByKey()
@@ -182,19 +187,23 @@ func proxyPoolMembers() (map[string]string, int, string) {
 			}
 			members[key] = proxyPoolMemberBucket(status.Health)
 		}
-		return members, 0, err.Error()
+		return members, 0, err.Error(), nil
 	}
 	for key, entry := range state.Proxies {
 		health := entry.Health
 		if status, ok := live[key]; ok && status.Health != "" {
 			health = status.Health
+			// The trim ranking reads the same live health overlay as the pool
+			// cross-section. This is an in-memory snapshot; it is not persisted.
+			entry.Health = health
+			state.Proxies[key] = entry
 		}
 		members[key] = proxyPoolMemberBucket(health)
 		if entry.Source == proxyPoolURLSource {
 			urlMembers++
 		}
 	}
-	return members, urlMembers, ""
+	return members, urlMembers, "", state
 }
 
 // proxyPoolComposition is one read of the pool's member list: proxy.state with
@@ -217,18 +226,58 @@ type proxyPoolComposition struct {
 // readProxyPoolComposition performs the single proxy.state read a caller needs
 // for both the composition and the aggregate.
 func readProxyPoolComposition() proxyPoolComposition {
-	members, urlMembers, stateErr := proxyPoolMembers()
+	members, urlMembers, stateErr, state := proxyPoolMembers()
+	trimCap := 0
+	if stateErr == "" {
+		if cap, _, err := effectiveTrimCapSource(); err == nil {
+			trimCap = cap
+		}
+	}
+	held := proxyPoolTrimHeldMembers(members, state, trimCap)
+	admitted := make(map[string]string, len(members)-len(held))
+	for key, bucket := range members {
+		if _, isHeld := held[key]; !isHeld {
+			admitted[key] = bucket
+		}
+	}
+	counts := countProxyPoolMembers(admitted)
+	counts.Held = len(held)
 	comp := proxyPoolComposition{
-		Counts:   countProxyPoolMembers(members),
+		Counts:   counts,
 		StateErr: stateErr,
 	}
 	// A pool whose composition could not be read cannot say how many members
 	// are curated, so it has no target to judge against; the reading says so
 	// through StateError instead of inventing one.
 	if stateErr == "" {
-		comp.Target = proxyPoolTarget(len(members)-urlMembers, urlMembers)
+		comp.Target = proxyPoolTargetWithTrimCap(len(members)-urlMembers, urlMembers, trimCap)
 	}
 	return comp
+}
+
+// proxyPoolTrimHeldMembers applies the same worst-first selector as startup and
+// live trim, over the exact member snapshot this health reading counts.
+func proxyPoolTrimHeldMembers(members map[string]string, state *ProxyState, cap int) map[string]struct{} {
+	if cap <= 0 || len(members) <= cap || state == nil {
+		return nil
+	}
+	urlState, _ := readProxyURLState()
+	gradeFor := buildTrimGradeResolver(state, urlState)
+	traffic := make(map[string]uint64, len(members))
+	now := time.Now()
+	keys := make([]string, 0, len(members))
+	for key := range members {
+		keys = append(keys, key)
+		if earned := proxyEarningsScore(key, now); earned > 0 {
+			traffic[key] = uint64(earned)
+		}
+	}
+	worst := selectWorstRunningProxies(state.Proxies, gradeFor, traffic, keys, len(members)-cap)
+	held := make(map[string]struct{}, len(worst))
+	for _, key := range worst {
+		held[key] = struct{}{}
+	}
+	return held
 }
 
 // proxyPoolTarget is the number of proxies the pool actually intends to serve:
@@ -245,6 +294,14 @@ func readProxyPoolComposition() proxyPoolComposition {
 // That covers a curated-only pool (no URL half to cap) and a URL pool with no
 // cap set: adding a cap there would invent a shortfall nothing asked to fill.
 func proxyPoolTarget(curated, urlMembers int) int {
+	trimCap, _, err := effectiveTrimCapSource()
+	if err != nil {
+		trimCap = 0
+	}
+	return proxyPoolTargetWithTrimCap(curated, urlMembers, trimCap)
+}
+
+func proxyPoolTargetWithTrimCap(curated, urlMembers, trimCap int) int {
 	if urlMembers == 0 {
 		return 0
 	}
@@ -253,7 +310,7 @@ func proxyPoolTarget(curated, urlMembers int) int {
 		return 0
 	}
 	target := curated + urlMax
-	if trimCap, _, err := effectiveTrimCapSource(); err == nil && trimCap > 0 && target > trimCap {
+	if trimCap > 0 && target > trimCap {
 		// Admission launches the trim cap's worth and holds the rest, so the
 		// held members are a decision already taken rather than a shortfall.
 		target = trimCap
@@ -302,6 +359,7 @@ type proxyPoolHealthReading struct {
 	Scope string
 
 	Members    int
+	Held       int
 	Up         int
 	Down       int
 	Degraded   int
@@ -341,13 +399,14 @@ func (w *proxyPoolHealthWindow) observeFor(counts proxyPoolMemberCounts, target 
 		interval = proxyPoolHealthInterval
 	}
 	w.samples = appendCappedPoolSamples(w.samples, proxyPoolSample{
-		members: counts.members(),
+		members: counts.admittedMembers(),
 		up:      counts.Up,
 		down:    counts.down(),
 	}, w.window)
 
 	r := proxyPoolHealthReading{
 		Members:    counts.members(),
+		Held:       counts.Held,
 		Up:         counts.Up,
 		Down:       counts.down(),
 		Degraded:   counts.Degraded,
@@ -369,7 +428,7 @@ func (w *proxyPoolHealthWindow) observeFor(counts proxyPoolMemberCounts, target 
 	// ring length would claim an hour of history for a window one tick old.
 	matching := 0
 	for _, s := range w.samples {
-		if s.members != r.Members {
+		if s.members != r.Members-r.Held {
 			continue
 		}
 		matching++
@@ -535,8 +594,8 @@ func (r proxyPoolHealthReading) judged() int {
 // connecting, members, target, floor, dips, verdict and scope.
 func proxyPoolHealthLine(r proxyPoolHealthReading) string {
 	line := fmt.Sprintf(
-		"❤️ [health][proxies] up=%d dead=%d degraded=%d connecting=%d members=%d target=%d floor=%d dips=%d verdict=%q scope=%s",
-		r.Up, r.Dead, r.Degraded, r.Connecting, r.Members, r.Target, r.Floor, r.Dips, r.Verdict, r.Scope,
+		"❤️ [health][proxies] up=%d dead=%d degraded=%d connecting=%d held=%d members=%d target=%d floor=%d dips=%d verdict=%q scope=%s",
+		r.Up, r.Dead, r.Degraded, r.Connecting, r.Held, r.Members, r.Target, r.Floor, r.Dips, r.Verdict, r.Scope,
 	)
 	if r.StateError != "" {
 		line += fmt.Sprintf(" state_error=%q", r.StateError)

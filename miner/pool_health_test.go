@@ -332,7 +332,7 @@ func TestProxyPoolHealthLineMatchesProviderFieldNames(t *testing.T) {
 		t.Errorf("line prefix = %q, want the provider's [health][proxies] prefix", line)
 	}
 	for _, want := range []string{
-		"up=3", "dead=1", "degraded=0", "connecting=1", "members=5",
+		"up=3", "dead=1", "degraded=0", "connecting=1", "held=0", "members=5",
 		"floor=3", "dips=1", `verdict="needs attention"`, "scope=isolated",
 	} {
 		if !strings.Contains(line, want) {
@@ -341,6 +341,9 @@ func TestProxyPoolHealthLineMatchesProviderFieldNames(t *testing.T) {
 	}
 	if strings.Contains(line, "down=") {
 		t.Errorf("line contains dropped down= field: %s", line)
+	}
+	if !strings.Contains(line, "connecting=1 held=0 members=5") {
+		t.Errorf("held is not placed between connecting and members: %s", line)
 	}
 }
 
@@ -669,7 +672,9 @@ func TestProxyPoolTargetFollowsAdmission(t *testing.T) {
 func TestProxyPoolTargetCountsCuratedMembers(t *testing.T) {
 	home := withTempHome(t)
 	resetGlobalControlStateForTest()
+	resetProxyPoolHealthForTest()
 	t.Cleanup(resetGlobalControlStateForTest)
+	t.Cleanup(resetProxyPoolHealthForTest)
 
 	// The URL half is capped at 50 and self-heal is off, so the configured
 	// ceiling is what admission runs to.
@@ -693,10 +698,16 @@ func TestProxyPoolTargetCountsCuratedMembers(t *testing.T) {
 		state.Proxies[fmt.Sprintf("10.1.0.%d:1080", i)] = ProxyEntry{ID: i, Health: "up", Source: "file"}
 	}
 	for i := 0; i < 50; i++ {
-		state.Proxies[fmt.Sprintf("10.2.0.%d:1080", i)] = ProxyEntry{ID: 100 + i, Health: "dead", Source: proxyPoolURLSource}
+		state.Proxies[fmt.Sprintf("10.2.0.%d:1080", i)] = ProxyEntry{ID: 100 + i, Health: "recently_offline", Source: proxyPoolURLSource}
 	}
 	if err := writeProxyState(state); err != nil {
 		t.Fatal(err)
+	}
+
+	uncapped := readProxyPoolComposition()
+	if uncapped.Counts.Held != 0 || uncapped.Counts.Up != 60 || uncapped.Counts.Degraded != 50 || uncapped.Counts.members() != 110 {
+		t.Fatalf("uncapped counts = %+v (members %d), want held=0, up=60, degraded=50, members=110",
+			uncapped.Counts, uncapped.Counts.members())
 	}
 
 	comp := readProxyPoolComposition()
@@ -721,8 +732,48 @@ func TestProxyPoolTargetCountsCuratedMembers(t *testing.T) {
 	if err := os.WriteFile(trim, []byte("40"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	if got := readProxyPoolComposition().Target; got != 40 {
-		t.Fatalf("trimmed target = %d, want the 40 the trim launches", got)
+	trimmed := readProxyPoolComposition()
+	if trimmed.Counts.Held != 70 || trimmed.Counts.Up != 40 || trimmed.Counts.Degraded != 0 || trimmed.Counts.members() != 110 {
+		t.Fatalf("trimmed counts = %+v (members %d), want held=70, up=40, degraded=0, members=110",
+			trimmed.Counts, trimmed.Counts.members())
+	}
+	if got := trimmed.Counts.admittedMembers() + trimmed.Counts.Held; got != 110 {
+		t.Fatalf("admitted + held = %d, want configured pool 110", got)
+	}
+	if trimmed.Target != 40 {
+		t.Fatalf("trimmed target = %d, want the 40 the trim launches", trimmed.Target)
+	}
+	r = proxyPoolHealth(time.Now().Add(2*time.Minute), trimmed)
+	if r.Verdict != poolVerdictHealthy {
+		t.Fatalf("healthy pool at trim cap verdict = %q, want %q; counts=%+v reading=%+v",
+			r.Verdict, poolVerdictHealthy, trimmed.Counts, r)
+	}
+	if line := proxyPoolHealthLine(r); !strings.Contains(line, "connecting=0 held=70 members=110") {
+		t.Fatalf("trim line does not reconcile held members: %s", line)
+	}
+
+	// When more failures exist than the cap can hold back, the admitted pool
+	// still carries its shortfall and the verdict must remain unhealthy.
+	i := 0
+	for key, entry := range state.Proxies {
+		if i < 80 {
+			entry.Health = "recently_offline"
+		} else {
+			entry.Health = "up"
+		}
+		state.Proxies[key] = entry
+		i++
+	}
+	if err := writeProxyState(state); err != nil {
+		t.Fatal(err)
+	}
+	belowFloor := readProxyPoolComposition()
+	if belowFloor.Counts.Up != 30 || belowFloor.Counts.Degraded != 10 || belowFloor.Counts.Held != 70 {
+		t.Fatalf("below-floor counts = %+v, want up=30 degraded=10 held=70", belowFloor.Counts)
+	}
+	r = proxyPoolHealth(time.Now().Add(4*time.Minute), belowFloor)
+	if r.Verdict != poolVerdictNeedsAttention {
+		t.Fatalf("below-floor verdict = %q, want %q", r.Verdict, poolVerdictNeedsAttention)
 	}
 
 	// A curated-only pool has no URL half, so the URL cap is not a target it
