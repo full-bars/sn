@@ -3,6 +3,8 @@ package urnettools
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -15,6 +17,21 @@ import (
 // its budget. It is declared here, untagged, because the read sites (cli, target,
 // top, discover) build on every platform while only the linux file sets it.
 var systemdDiscoveryCutShort bool
+
+// discoveryCutShortWarning is the one-line notice shown whenever a discovery
+// pass ran out of budget yet still returned providers. found is how many.
+func discoveryCutShortWarning(found int) string {
+	return fmt.Sprintf("systemd unit discovery ran out of budget; the list may be incomplete (%d found)", found)
+}
+
+// warnIfDiscoveryCutShort writes the warning to w when the last pass was cut
+// short and found at least one provider. An empty list is reported by
+// noProvidersError instead, so it is not repeated here.
+func warnIfDiscoveryCutShort(w io.Writer, found int) {
+	if systemdDiscoveryCutShort && found > 0 {
+		fmt.Fprintln(w, "warning: "+discoveryCutShortWarning(found))
+	}
+}
 
 // knownBinaries are the binary basenames the tool recognizes as URnetwork
 // providers. provider_beta is the beta-test build name used on fleet boxes.

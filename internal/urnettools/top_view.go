@@ -147,6 +147,12 @@ func (m *topModel) drawHeader(h *tui.Buffer) {
 }
 
 func (m *topModel) drawFooter(f *tui.Buffer) {
+	// The warning takes the footer row's start and the keys follow it, so no
+	// row is added and the panels keep their columns.
+	x := 0
+	if m.discoveryNote != "" {
+		x = f.Put(tui.Truncate(" "+m.discoveryNote, f.Width(), m.theme.ASCII), 0, 0, m.theme.Warn)
+	}
 	keys := " q quit"
 	if len(m.providers) > 1 {
 		keys += "   tab provider"
@@ -159,7 +165,7 @@ func (m *topModel) drawFooter(f *tui.Buffer) {
 		keys += "   g goroutines"
 	}
 	keys += "   - " + topIntervalText(m.interval) + " +"
-	f.Put(tui.Truncate(keys, f.Width(), m.theme.ASCII), 0, 0, m.theme.Dim)
+	f.Put(tui.Truncate(keys, max(f.Width()-x, 0), m.theme.ASCII), x, 0, m.theme.Dim)
 }
 
 // topIntervalText is 100ms, 250ms, 500ms, 1s, 2s.

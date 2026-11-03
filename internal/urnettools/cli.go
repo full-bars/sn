@@ -389,6 +389,7 @@ func cmdProviders(args []string) error {
 		fmt.Printf("no providers found for user %s (run 'urnet-tools providers --all' as root to see every user's)\n", currentUserName())
 		return nil
 	}
+	warnIfDiscoveryCutShort(os.Stderr, len(providers))
 	if !all && !isPrivileged() {
 		fmt.Printf("providers for user %s (%d):\n", currentUserName(), len(providers))
 	}
@@ -498,6 +499,11 @@ func cmdStatus(args []string) error {
 		return err
 	}
 	providers := discoverStatusFn()
+	// Read before anything else can run another discovery pass.
+	cutShort := systemdDiscoveryCutShort && len(providers) > 0
+	if !jsonMode {
+		warnIfDiscoveryCutShort(os.Stderr, len(providers))
+	}
 	p, narrowed, err := selectTargetOrSoleAccessible(providers, t, false)
 	if err != nil {
 		// Several providers and no target used to be refused with an
@@ -515,7 +521,7 @@ func cmdStatus(args []string) error {
 		return err
 	}
 	if jsonMode {
-		return printSnapshotJSON(p)
+		return printSnapshotJSON(p, cutShort)
 	}
 	if narrowed {
 		printNarrowedNote(len(providers), p, "status")

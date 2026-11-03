@@ -144,6 +144,9 @@ type topModel struct {
 	providers []Provider
 	cur       int
 	interval  time.Duration
+	// discoveryNote is the warning shown on the footer row when the provider
+	// list came from a pass that ran out of budget. Empty when it did not.
+	discoveryNote string
 	retry     time.Duration // pause between attempts on a silent provider
 	now       func() time.Time
 
