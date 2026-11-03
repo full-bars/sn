@@ -139,6 +139,9 @@ type providerExtenderStatusListener struct {
 	stateLock sync.Mutex
 	observed  bool
 	last      providerExtenderObservation
+	// retired is guarded by extenderObservationLock. Once set, this listener
+	// cannot publish a reading.
+	retired bool
 	// Remember every observed attempt so later redelivery cannot charge it twice.
 	failureSeen map[string]bool
 	// attemptScope makes an attempt's identity this listener's own. The status
@@ -191,6 +194,17 @@ func (self *providerExtenderStatusListener) currentAccount() string {
 	return self.account
 }
 
+// observation returns a copy of the latest observation under stateLock.
+func (self *providerExtenderStatusListener) observation() providerExtenderObservation {
+	self.stateLock.Lock()
+	defer self.stateLock.Unlock()
+	return self.last
+}
+
+func (self *providerExtenderStatusListener) Observation() providerExtenderObservation {
+	return self.observation()
+}
+
 // A nil observation is unknown, separate from a known disabled extender.
 func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status *sdk.ExtenderProvideStatus) {
 	self.failureMu.Lock()
@@ -235,6 +249,18 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		}
 		return changed, failed
 	}()
+	switch {
+	case observation.Known && observation.Enabled:
+		// Publish the reading process-wide so the scrape and the control reply
+		// see the direct slot's state without reaching into a slot's listener.
+		// The listener is stored with it: a proxy slot's reading must not
+		// overwrite this one.
+		setProviderExtenderObservation(self, observation)
+	case observation.Known:
+		// The role reported off. The listener that published an enabled
+		// reading drops it here, because nothing else would replace it.
+		clearProviderExtenderObservation(self)
+	}
 	if changed || failed {
 		// The operator budgets activation posts per account per hour and its
 		// refusal already names the wait, so the wait is persisted here: the

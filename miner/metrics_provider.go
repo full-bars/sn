@@ -155,6 +155,13 @@ func minerExtraMetrics() string {
 	// --- Supervised background loops ---
 	writeSeamLoops(&b)
 
+	// --- Extender role ---
+	if metricsSeamExtender != nil {
+		if obs := metricsSeamExtender(); obs != nil {
+			writeExtenderMetrics(&b, *obs)
+		}
+	}
+
 	// --- Enforcement log ---
 	writeSeamBlock(&b, metricsSeamEnforcement)
 
@@ -670,4 +677,53 @@ func writeSeamDiskBench(b *strings.Builder) {
 	fmt.Fprintf(b, "# HELP urnet_disk_bench_age_seconds Age of the last disk benchmark result.\n")
 	fmt.Fprintf(b, "# TYPE urnet_disk_bench_age_seconds gauge\n")
 	fmt.Fprintf(b, "urnet_disk_bench_age_seconds %d\n", d.AgeSeconds)
+}
+
+// writeExtenderMetrics emits the extender families when observation.Known is true.
+func writeExtenderMetrics(b *strings.Builder, observation providerExtenderObservation) {
+	if !observation.Known {
+		return
+	}
+	b2i := func(v bool) int {
+		if v {
+			return 1
+		}
+		return 0
+	}
+	fmt.Fprintf(b, "# HELP urnet_extender_enabled 1 while the extender role is enabled.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_enabled gauge\n")
+	fmt.Fprintf(b, "urnet_extender_enabled %d\n", b2i(observation.Enabled))
+
+	fmt.Fprintf(b, "# HELP urnet_extender_listening 1 while the extender is listening for inbound connections.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_listening gauge\n")
+	fmt.Fprintf(b, "urnet_extender_listening %d\n", b2i(observation.Listening))
+
+	fmt.Fprintf(b, "# HELP urnet_extender_listen_failed 1 when the extender listen port failed to bind or serve.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_listen_failed gauge\n")
+	fmt.Fprintf(b, "urnet_extender_listen_failed %d\n", b2i(observation.ListenFailed))
+
+	fmt.Fprintf(b, "# HELP urnet_extender_activated Whether the extender is activated on the network per address family.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_activated gauge\n")
+	fmt.Fprintf(b, "urnet_extender_activated{family=\"ipv4\"} %d\n", b2i(observation.ActivatedV4))
+	fmt.Fprintf(b, "urnet_extender_activated{family=\"ipv6\"} %d\n", b2i(observation.ActivatedV6))
+
+	fmt.Fprintf(b, "# HELP urnet_extender_activation_failed 1 when the last extender activation attempt failed.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_activation_failed gauge\n")
+	fmt.Fprintf(b, "urnet_extender_activation_failed %d\n", b2i(observation.ActivationFailed))
+
+	fmt.Fprintf(b, "# HELP urnet_extender_activation_refused 1 when the network explicitly refused the extender activation.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_activation_refused gauge\n")
+	fmt.Fprintf(b, "urnet_extender_activation_refused %d\n", b2i(observation.ActivationRefused))
+
+	fmt.Fprintf(b, "# HELP urnet_extender_revoked 1 when the extender identity has been revoked.\n")
+	fmt.Fprintf(b, "# TYPE urnet_extender_revoked gauge\n")
+	fmt.Fprintf(b, "urnet_extender_revoked %d\n", b2i(observation.Revoked))
+
+	if observation.ActivationTime > 0 {
+		// The last attempt, not the last success: a failed attempt moves this
+		// too. The per-family success times arrive with the attempt counters.
+		fmt.Fprintf(b, "# HELP urnet_extender_last_activation_attempt_seconds When the last activation attempt finished, unix seconds, whatever its outcome.\n")
+		fmt.Fprintf(b, "# TYPE urnet_extender_last_activation_attempt_seconds gauge\n")
+		fmt.Fprintf(b, "urnet_extender_last_activation_attempt_seconds %d\n", observation.ActivationTime/1000)
+	}
 }
