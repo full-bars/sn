@@ -50,7 +50,7 @@ func recordLivenessStall(note func(format string, args ...any)) func() {
 	now := time.Now()
 	prev := readThrashCapState()
 	cap := 0
-	if _, capped := activeThrashCap(now); !capped {
+	if _, capped := standingThrashCap(); !capped {
 		// The relay reads lastRunningProxyCount here; the miner's equivalent
 		// number is the launch count the pool opened with (oomCapRunning), the
 		// same one the OOM cap and the live `set oom-cap on` shed use.

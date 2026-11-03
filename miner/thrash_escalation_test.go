@@ -322,9 +322,31 @@ func mustOOMCapPath(t *testing.T) string {
 	return dir + "/oom_cap.json"
 }
 
+// stubHealthyThrashBox pins both health seams to a calm, roomy box so the
+// staged-relaxation assertions exercise the logic under test rather than host
+// memory or the live watchdog. The originals are restored by t.Cleanup. A test
+// that needs a sick box stubs thrashWatchdogSnapshotFn again on top of this.
+func stubHealthyThrashBox(t *testing.T) {
+	t.Helper()
+	origSnapFn := thrashWatchdogSnapshotFn
+	origHeadroomFn := thrashHeadroomFn
+	t.Cleanup(func() {
+		thrashWatchdogSnapshotFn = origSnapFn
+		thrashHeadroomFn = origHeadroomFn
+	})
+	thrashWatchdogSnapshotFn = func() *swapThrashSnapshot {
+		return &swapThrashSnapshot{State: "calm"}
+	}
+	// 300 MiB available against a 200 MiB low threshold: above the 1.25x gate.
+	thrashHeadroomFn = func() (int64, int64) {
+		return 300, 200
+	}
+}
+
 // Pure sizing and window helpers, including health-based expiry and staged
 // relaxation (+20% per window until target capacity is reached).
 func TestThrashCapSizesAndExpires(t *testing.T) {
+	stubHealthyThrashBox(t)
 	if got := thrashCapForNextStart(500); got != 300 {
 		t.Fatalf("cap for 500 running: got %d, want 300", got)
 	}
@@ -426,6 +448,7 @@ func TestThrashCapHeadroomGatesRelaxation(t *testing.T) {
 // A box that thrashed at ~605 and was cut to 363 does NOT jump to 1500 on expiry.
 // It relaxes in stages (363 -> 435 -> 522), preventing several hundred slots in one launch.
 func TestThrashCapRelaxesInStagesTowardsOperatorTrim(t *testing.T) {
+	stubHealthyThrashBox(t)
 	stateDir := shortStateDir(t)
 	t.Setenv("URNETWORK_STATE_DIR", stateDir)
 
@@ -449,6 +472,44 @@ func TestThrashCapRelaxesInStagesTowardsOperatorTrim(t *testing.T) {
 	t2 := t1.Add(thrashCapHold + time.Minute)
 	if cap, ok := activeThrashCap(t2); !ok || cap != 522 {
 		t.Fatalf("stage 2 relaxation towards 1500: got %d ok=%v, want 522/true", cap, ok)
+	}
+}
+
+// seedRecoveredThrashCap stores a 300 cap whose escalation is older than the
+// hold window, on a healthy box. The next mutating check would relax it to 360,
+// so the stall and escalation tests below can observe the cap as stored only
+// because their paths read it without relaxing.
+func seedRecoveredThrashCap(t *testing.T) {
+	t.Helper()
+	stubHealthyThrashBox(t)
+	t.Setenv("URNETWORK_STATE_DIR", shortStateDir(t))
+	prevRunning := oomCapRunningProxies.Load()
+	t.Cleanup(func() { oomCapRunningProxies.Store(prevRunning) })
+	oomCapRunningProxies.Store(500)
+	if err := recordThrashEscalation(300, time.Now().Add(-(thrashCapHold + time.Minute))); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// A stall reads the stored cap through standingThrashCap, so it neither relaxes
+// nor re-persists it, even on a healthy box past the hold window.
+func TestStandingThrashCapHoldsThroughAStall(t *testing.T) {
+	seedRecoveredThrashCap(t)
+	recordLivenessStall(critLog)
+	if got := readThrashCapState().Cap; got != 300 {
+		t.Fatalf("a stall relaxed the stored cap: got %d, want 300", got)
+	}
+}
+
+// An escalation reads the stored cap through standingThrashCapLocked, so the
+// tighter of the stored 300 and the new 400 is kept, not a relaxed 360.
+func TestStandingThrashCapHoldsThroughAnEscalation(t *testing.T) {
+	seedRecoveredThrashCap(t)
+	if err := recordThrashEscalation(400, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if got := readThrashCapState().Cap; got != 300 {
+		t.Fatalf("an escalation relaxed the stored cap: got %d, want 300", got)
 	}
 }
 

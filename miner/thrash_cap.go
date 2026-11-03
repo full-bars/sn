@@ -203,6 +203,29 @@ func readThrashCapState() thrashCapState {
 	return st
 }
 
+// standingThrashCap reports the stored cap, if any, without relaxing, clearing
+// or persisting it. The stall and escalation paths read it through here, so a
+// stored cap stays in force during a stall or an escalation even after the box
+// has recovered. Only a later mutating check (activeThrashCap, on the start
+// path) relaxes or clears it. This direction is deliberate: a stall or an
+// escalation is evidence the box could not hold its load, so the conservative
+// answer is to keep the brake on until a mutating check has seen recovery.
+func standingThrashCap() (int, bool) {
+	thrashCapMu.Lock()
+	defer thrashCapMu.Unlock()
+	return standingThrashCapLocked()
+}
+
+// standingThrashCapLocked is standingThrashCap for callers that already hold
+// thrashCapMu, such as recordThrashEscalation.
+func standingThrashCapLocked() (int, bool) {
+	st := readThrashCapState()
+	if st.Cap <= 0 {
+		return 0, false
+	}
+	return st.Cap, true
+}
+
 // activeThrashCap returns the cap in force at now, if any.
 //
 // The cap expires on HEALTH, not on a wall-clock timer: a timer releases the
@@ -355,7 +378,7 @@ func recordThrashEscalation(cap int, now time.Time) error {
 	writeCap := cap
 	// Preserve/inherit the previous cap only while it is still active, and
 	// never loosen: the tighter of the two wins ("tighter automatic wins").
-	if prevCap, ok := activeThrashCapLocked(now); ok && prevCap > 0 && (writeCap <= 0 || prevCap < writeCap) {
+	if prevCap, ok := standingThrashCapLocked(); ok && prevCap > 0 && (writeCap <= 0 || prevCap < writeCap) {
 		writeCap = prevCap
 	}
 	targetCap := int(math.Round(float64(writeCap) / thrashCapFraction))
