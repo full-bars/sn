@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+// systemdDiscoveryCutShort records whether the unit discovery pass ran out of
+// its budget. It is declared here, untagged, because the read sites (cli, target,
+// top, discover) build on every platform while only the linux file sets it.
+var systemdDiscoveryCutShort bool
+
 // knownBinaries are the binary basenames the tool recognizes as URnetwork
 // providers. provider_beta is the beta-test build name used on fleet boxes.
 var knownBinaries = map[string]bool{

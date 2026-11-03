@@ -402,7 +402,6 @@ func narrowToAccessible(providers []Provider) []Provider {
 
 // systemdDiscoveryCutShort records whether the most recent systemd discovery
 // pass was cut short by the deadline before finishing its scan.
-var systemdDiscoveryCutShort bool
 
 // readCgroupFn reads a process's cgroup file. A var seam so tests can stub
 // cgroup contents without touching /proc.
