@@ -205,15 +205,15 @@ func TestExtenderStatusListenerObservationMethod(t *testing.T) {
 	}
 
 	status := &sdk.ExtenderProvideStatus{
-		Enabled:             true,
-		Listening:           true,
-		ListenError:         "listen err",
-		ActivatedV4:         true,
-		ActivatedV6:         false,
-		LastActivationError: "refused",
+		Enabled:               true,
+		Listening:             true,
+		ListenError:           "listen err",
+		ActivatedV4:           true,
+		ActivatedV6:           false,
+		LastActivationError:   "refused",
 		LastActivationRefused: true,
-		LastActivationTime:  1800000000000,
-		RevokedTime:         1800000001000,
+		LastActivationTime:    1800000000000,
+		RevokedTime:           1800000001000,
 	}
 	listener.ExtenderProvideStatusChanged(status)
 
