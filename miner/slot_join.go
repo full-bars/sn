@@ -86,7 +86,23 @@ func (j *slotJoin) wait(quiesce func()) {
 // the process in a half-stopped state forever: the supervisor's stop becomes a
 // SIGKILL of a process that was still draining, or nothing at all. A variable
 // so tests can shorten it.
-var providerShutdownGrace = 90 * time.Second
+//
+// 35s, not the 90s systemd default stop timeout: a clean drain finishes well
+// inside it, and the expiry path (grace plus providerShutdownExitBound, 40s in
+// total) still ends the process before systemd would SIGKILL it.
+var providerShutdownGrace = 35 * time.Second
+
+// providerShutdownExitBound is how long after the grace expires the process is
+// ended whatever run's deferred calls are doing. It bounds the defer chain, not
+// only the worker wait: see providerShutdownExpire.
+var providerShutdownExitBound = 5 * time.Second
+
+// providerShutdownWatchdog arms the process exit after the grace has expired.
+// A variable so tests can observe the arming without taking the test binary
+// down.
+var providerShutdownWatchdog = func(after time.Duration, code int) {
+	time.AfterFunc(after, func() { exitProviderRun(code) })
+}
 
 // providerShutdownTimeoutExitCode ends a run whose workers did not drain within
 // providerShutdownGrace. It is a failure, so a supervisor (systemd
@@ -136,4 +152,25 @@ func (j *slotJoin) waitBounded(ctx context.Context, quiesce func(), grace time.D
 	}
 	logf("%s\n", buf.String())
 	return errProviderShutdownTimeout
+}
+
+// providerShutdownExpire runs on the timeout path, once the grace has expired
+// and before run's deferred calls. It arms the exit watchdog first, then writes
+// the incident bundle, whose goroutines.txt is the dump that matters.
+//
+// Why the watchdog comes first: the bundle is captured in run's caller only
+// after run has returned, and run returns through every defer it registered.
+// Those can block. The ones that matter here are reloader.stop (takes r.mu,
+// which a reload stuck on a worker holds), <-reloadWatchDone,
+// controlSocket.finish, bringUp.shutdown, joinRenewal, keyOwner.Close,
+// status.close and progress.close. None of them is skipped. Skipping one would
+// drop its persistence (keys, control state, status), and a clean one still
+// needs to run. The watchdog ends the process with
+// providerShutdownTimeoutExitCode at providerShutdownExitBound whether or not
+// the chain has finished, so no defer can keep this process alive past the
+// grace. flushPersistentErrorsAtExit and waitExtenderRefusalsDurable were
+// already bounded by their own timers.
+func providerShutdownExpire(detail string) {
+	providerShutdownWatchdog(providerShutdownExitBound, providerShutdownTimeoutExitCode)
+	captureIncidentBundle(incidentTriggerShutdown, detail, nil)
 }
