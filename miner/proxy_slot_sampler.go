@@ -65,6 +65,12 @@ func proxySlotSamplerLoop(
 		if ctx.Err() != nil {
 			return
 		}
+		// Both samples are local reads: the tracker reads the transport's
+		// connected flag and the billing sampler folds packet and contract
+		// counters. Neither performs network or disk I/O, so running them in
+		// sequence on one goroutine cannot starve either job for the slot.
+		// This ordering is only safe while that holds: a sample that could
+		// block must be given its own goroutine rather than added here.
 		if tracker != nil {
 			tracker.sample(ctx)
 		}
