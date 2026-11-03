@@ -3,12 +3,14 @@
 package urnettools
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	osuser "os/user"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -404,8 +406,15 @@ func narrowToAccessible(providers []Provider) []Provider {
 // duplicating providers already represented by a process (unitIn checks the
 // attached Unit field).
 func discoverStopped(running []Provider) []Provider {
-	attachUnits(running)
-	out := discoverSystemdUnits(running)
+	var out []Provider
+	// Without systemd as init there are no units to attach or list. The
+	// systemctl and getent probes would only fail or hang, and on a box whose
+	// provider runs outside any unit they are the whole cost of `top`, `status`
+	// and `providers`. The marker is checked once per pass.
+	if systemdRunningFn() {
+		attachUnits(running)
+		out = discoverSystemdUnits(running)
+	}
 	// A stopped OpenRC service is invisible to both process scan and systemd
 	// unit scan, so it is discovered from its init script. Without this, every
 	// command that selects a target (auth, update, uninstall, set, logs) fails
@@ -498,9 +507,57 @@ func attachUnitFromCgroup(p *Provider, cg string) {
 // that plausibly run a provider (a user unit that looks like a provider, or
 // a .urnetwork state dir), bounded to those users.
 func discoverSystemdUnits(running []Provider) []Provider {
-	out := discoverSystemUnits(running)
-	out = append(out, discoverUserUnits(running)...)
-	return out
+	ctx, cancel := context.WithTimeout(context.Background(), systemdDiscoveryBudget)
+	defer cancel()
+	// The system listing and the user-candidate lookup are independent, so
+	// they run together. The per-user listings need the candidate list, so
+	// they start after it.
+	system := startProbe(func() []Provider { return discoverSystemUnits(running) })
+	candidates := startProbe(candidateUserNames)
+	out, _ := awaitProbe(ctx, system)
+	users, _ := awaitProbe(ctx, candidates)
+	return append(out, discoverUserUnits(ctx, running, users)...)
+}
+
+// systemdDiscoveryBudget caps the systemd half of one discovery pass. Every
+// probe runs under this one deadline, so a wedged manager costs at most this
+// long. Serially, each probe's own timeout (5s, or 10s for a cross-user
+// manager) would add up. A probe still running at the deadline contributes
+// nothing to this pass; its goroutine ends on its own timeout. A var so tests
+// can shrink it.
+var systemdDiscoveryBudget = 2 * time.Second
+
+// startProbe runs fn on its own goroutine and returns the channel its result
+// arrives on. The channel is buffered, so a probe that outlives its wait does
+// not block forever.
+func startProbe[T any](fn func() T) <-chan T {
+	ch := make(chan T, 1)
+	go func() { ch <- fn() }()
+	return ch
+}
+
+// awaitProbe waits for a probe's result until ctx ends. ok is false when the
+// budget ran out first. A result that is already waiting wins over an expired
+// context, so the outcome does not depend on which select case Go picks.
+func awaitProbe[T any](ctx context.Context, ch <-chan T) (v T, ok bool) {
+	select {
+	case v = <-ch:
+		return v, true
+	case <-ctx.Done():
+		select {
+		case v = <-ch:
+			return v, true
+		default:
+			return v, false
+		}
+	}
+}
+
+// candidateUserNames adapts providerCandidateUsers to a probe: a failed
+// getent means no candidates, which is the same as before.
+func candidateUserNames() []string {
+	users, _ := providerCandidateUsers()
+	return users
 }
 
 // discoverSystemUnits scans the system manager's unit listing.
@@ -661,7 +718,7 @@ func parseUnitLines(text string, running []Provider, userFor, binaryFor func(uni
 // the CURRENT user, where plain `systemctl --user` is used: the -M form goes
 // through machined/loginctl and can fail on CI runners (no cross-user
 // session bus) even when the local user manager is fully functional.
-func discoverUserUnits(running []Provider) []Provider {
+func discoverUserUnits(ctx context.Context, running []Provider, candidates []string) []Provider {
 	users := map[string]bool{}
 	for _, p := range running {
 		if p.User != "" {
@@ -670,57 +727,73 @@ func discoverUserUnits(running []Provider) []Provider {
 	}
 	// Broaden to any user with provider-ish files in their home (bounded:
 	// only users with evidence, never all of /etc/passwd).
-	if usersByFile, err := providerCandidateUsers(); err == nil {
-		for _, u := range usersByFile {
-			users[u] = true
-		}
+	for _, u := range candidates {
+		users[u] = true
 	}
 	// The current user's manager is reachable via the session bus /
 	// XDG_RUNTIME_DIR socket; other users require -M <user>@ (machined).
 	current := currentUserName()
-	var out []Provider
+	// Sorted, so the probes start and their results are merged in the same
+	// order on every run.
+	names := make([]string, 0, len(users))
 	for user := range users {
-		var b []byte
-		var err error
-		if user == current {
-			// --plain strips the leading "●"/space state column so
-			// fields[0] is the unit name (see discoverSystemUnits).
-			b, err = execWithTimeout(5*time.Second, "systemctl", "--user", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
-			if err == nil {
-				// list-units --all misses never-started units that exist
-				// on disk (a fresh fake/stopped provider); list-unit-files
-				// scans the unit paths and sees them. Merge both.
-				if fb, ferr := execWithTimeout(5*time.Second, "systemctl", "--user", "--plain", "list-unit-files", "--no-legend", "--no-pager"); ferr == nil {
-					b = append(b, '\n')
-					b = append(b, fb...)
-				}
-			}
-		} else {
-			// Cross-user query goes through machined/loginctl. If -M
-			// fails (no machined, no lingering session — the norm for
-			// service accounts), skip this user entirely. The old code
-			// fell back to the current user's manager and labelled every
-			// unit with the wrong user, creating ghost providers.
-			b, err = execWithTimeout(10*time.Second, "systemctl", "--user", "-M", user+"@", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
-			if err != nil {
-				continue
-			}
-		}
-		if err != nil {
-			continue // no session bus / user manager for this user
-		}
-		// Same systemctl scope the listing above used, so ExecStart is
-		// read from the manager that actually owns the unit.
-		scope := []string{"--user"}
-		if user != current {
-			scope = append(scope, "-M", user+"@")
-		}
-		out = append(out, parseUnitLines(string(b), running,
-			func(string) string { return user },
-			func(unit string) string { return parseExecStartPath(unitProperty(scope, unit, "ExecStart")) },
-		)...)
+		names = append(names, user)
+	}
+	sort.Strings(names)
+	probes := make([]<-chan []Provider, 0, len(names))
+	for _, user := range names {
+		probes = append(probes, startProbe(func() []Provider {
+			return userManagerUnits(user, current, running)
+		}))
+	}
+	var out []Provider
+	for _, ch := range probes {
+		units, _ := awaitProbe(ctx, ch)
+		out = append(out, units...)
 	}
 	return out
+}
+
+// userManagerUnits lists one user's manager and returns its provider units.
+// Each user's listing is one probe, so a slow manager delays only its own
+// units.
+func userManagerUnits(user, current string, running []Provider) []Provider {
+	var b []byte
+	var err error
+	if user == current {
+		// --plain strips the leading "●"/space state column so
+		// fields[0] is the unit name (see discoverSystemUnits).
+		b, err = execWithTimeout(5*time.Second, "systemctl", "--user", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
+		if err == nil {
+			// list-units --all misses never-started units that exist
+			// on disk (a fresh fake/stopped provider); list-unit-files
+			// scans the unit paths and sees them. Merge both.
+			if fb, ferr := execWithTimeout(5*time.Second, "systemctl", "--user", "--plain", "list-unit-files", "--no-legend", "--no-pager"); ferr == nil {
+				b = append(b, '\n')
+				b = append(b, fb...)
+			}
+		}
+	} else {
+		// Cross-user query goes through machined/loginctl. If -M
+		// fails (no machined, no lingering session — the norm for
+		// service accounts), skip this user entirely. The old code
+		// fell back to the current user's manager and labelled every
+		// unit with the wrong user, creating ghost providers.
+		b, err = execWithTimeout(10*time.Second, "systemctl", "--user", "-M", user+"@", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
+	}
+	if err != nil {
+		return nil // no session bus / user manager for this user
+	}
+	// Same systemctl scope the listing above used, so ExecStart is
+	// read from the manager that actually owns the unit.
+	scope := []string{"--user"}
+	if user != current {
+		scope = append(scope, "-M", user+"@")
+	}
+	return parseUnitLines(string(b), running,
+		func(string) string { return user },
+		func(unit string) string { return parseExecStartPath(unitProperty(scope, unit, "ExecStart")) },
+	)
 }
 
 // currentUserName returns the invoking user's login name, used to decide
