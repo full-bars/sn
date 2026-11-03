@@ -137,7 +137,7 @@ func TestShutdownTimeoutWritesIncidentBundle(t *testing.T) {
 	if err := join.waitBounded(ctx, nil, 50*time.Millisecond, out.logf); err != errProviderShutdownTimeout {
 		t.Fatalf("waitBounded = %v, want errProviderShutdownTimeout", err)
 	}
-	providerShutdownExpire("workers did not drain")
+	providerShutdownExpire("workers did not drain", providerShutdownTimeoutExitCode)
 
 	if len(armed) != 1 || armed[0] != providerShutdownTimeoutExitCode {
 		t.Fatalf("watchdog armed with %v, want one arming with code %d", armed, providerShutdownTimeoutExitCode)
@@ -203,7 +203,7 @@ func TestShutdownWatchdogEndsRunWhenDeferBlocks(t *testing.T) {
 			cancel()
 			var out shutdownLog
 			if err := join.waitBounded(ctx, nil, providerShutdownGrace, out.logf); err != nil {
-				providerShutdownExpire("workers did not drain")
+				providerShutdownExpire("workers did not drain", providerShutdownTimeoutExitCode)
 				return err
 			}
 			return nil

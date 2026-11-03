@@ -101,7 +101,7 @@ var providerShutdownExitBound = 5 * time.Second
 // A variable so tests can observe the arming without taking the test binary
 // down.
 var providerShutdownWatchdog = func(after time.Duration, code int) {
-	time.AfterFunc(after, func() { exitProviderRun(code) })
+	time.AfterFunc(after, func() { exitProviderRunImmediate(code) })
 }
 
 // providerShutdownTimeoutExitCode ends a run whose workers did not drain within
@@ -170,7 +170,7 @@ func (j *slotJoin) waitBounded(ctx context.Context, quiesce func(), grace time.D
 // the chain has finished, so no defer can keep this process alive past the
 // grace. flushPersistentErrorsAtExit and waitExtenderRefusalsDurable were
 // already bounded by their own timers.
-func providerShutdownExpire(detail string) {
-	providerShutdownWatchdog(providerShutdownExitBound, providerShutdownTimeoutExitCode)
+func providerShutdownExpire(detail string, exitCode int) {
+	providerShutdownWatchdog(providerShutdownExitBound, exitCode)
 	captureIncidentBundle(incidentTriggerShutdown, detail, nil)
 }

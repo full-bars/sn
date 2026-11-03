@@ -2387,8 +2387,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		// written, so it is left open, and the exit code makes the supervisor
 		// start a clean process instead of leaving this one half-dead. The
 		// watchdog is armed first, so the defers below cannot hold the process.
-		providerShutdownExpire(fmt.Sprintf("workers did not drain within %s", providerShutdownGrace))
+		exitCode := providerShutdownExitCode(quarantined.Load())
+		providerShutdownExpire(fmt.Sprintf("workers did not drain within %s", providerShutdownGrace), exitCode)
 		critLog("SHUTDOWN: workers did not drain within %s; exiting\n", providerShutdownGrace)
+		if quarantined.Load() {
+			// the early return below skips the quarantine join further down, so
+			// carry the same error here for a run that exits before the watchdog
+			returnErr = errors.Join(returnErr, errProviderNetworkSignInQuarantined)
+		}
 		cancel()
 		return errors.Join(returnErr, err)
 	}
@@ -2665,8 +2671,27 @@ func providerRunExitCode(err error) (int, bool) {
 //
 // exitFunc is the package's exit seam (hotswap.go's test hooks), so a test can
 // drive this path and observe the code without taking the test binary down.
+// providerShutdownExitCode picks the code the shutdown watchdog uses when a
+// drain times out. Quarantine wins: 75 is the only code the supervisor reads as
+// a deliberate quarantine, and exiting 1 would make it treat the incident as a
+// generic crash and restart on the wrong policy.
+func providerShutdownExitCode(quarantined bool) int {
+	if quarantined {
+		return providerQuarantinedExitCode
+	}
+	return providerShutdownTimeoutExitCode
+}
+
 func exitProviderRun(code int) {
 	flushPersistentErrorsAtExit()
+	exitFunc(code)
+}
+
+// exitProviderRunImmediate ends the process without the persistent-error flush.
+// A shutdown that has already passed its bound must not be extended by a
+// best-effort write: the flush waits up to persistentErrorExitFlushTimeout, and
+// the incident bundle was captured before the watchdog is armed.
+func exitProviderRunImmediate(code int) {
 	exitFunc(code)
 }
 
