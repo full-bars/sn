@@ -422,6 +422,12 @@ func TestThrashCapHeadroomGatesRelaxation(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Stub BOTH seams. thrashBoxRecovered reads the watchdog snapshot before
+	// headroom, so a non-calm global (for example memory PSI on the CI host)
+	// holds the cap at 300 and fails the relaxed assertion below for a reason
+	// unrelated to headroom.
+	stubHealthyThrashBox(t)
+
 	origHeadroomFn := thrashHeadroomFn
 	t.Cleanup(func() { thrashHeadroomFn = origHeadroomFn })
 
@@ -491,8 +497,10 @@ func seedRecoveredThrashCap(t *testing.T) {
 	}
 }
 
-// A stall reads the stored cap through standingThrashCap, so it neither relaxes
-// nor re-persists it, even on a healthy box past the hold window.
+// A stall reads the stored cap through standingThrashCap, so it does not relax
+// or clear it, even on a healthy box past the hold window. It does re-persist
+// the state: recordLivenessStall calls recordThrashEscalation, which rewrites
+// thrash_cap.json to append the restart ring entry and refresh the hold window.
 func TestStandingThrashCapHoldsThroughAStall(t *testing.T) {
 	seedRecoveredThrashCap(t)
 	recordLivenessStall(critLog)
