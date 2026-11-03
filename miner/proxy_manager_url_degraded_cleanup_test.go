@@ -66,7 +66,7 @@ func TestDegradedCleanup_UnsetThresholdRetiresNothing(t *testing.T) {
 }
 
 // TestDegradedCleanup_ExplicitThresholdWins verifies that an explicitly configured
-// threshold wins over the 6-hour default, both when shorter and when longer.
+// threshold is honoured as given, both when shorter and when longer.
 func TestDegradedCleanup_ExplicitThresholdWins(t *testing.T) {
 	withTempHome(t)
 
@@ -627,5 +627,77 @@ func TestDegradedCleanup_UptimeGuardHolds(t *testing.T) {
 	urlState2, _ := readProxyURLState()
 	if _, ok := urlState2.Cache[addr]; ok {
 		t.Fatalf("degraded member %s was not evicted after warmup elapsed", addr)
+	}
+}
+
+// TestDegradedCleanup_FrozenPoolDoesNotAgeTheClock: a degraded member that
+// ages past the window while the reaper is frozen has not been able to recover,
+// so releasing the freeze must not collect it on that age. It starts a fresh
+// window and is collected only once that window expires unfrozen.
+func TestDegradedCleanup_FrozenPoolDoesNotAgeTheClock(t *testing.T) {
+	withTempHome(t)
+
+	addr := "21.0.0.10:1080"
+	if err := writeProxyURLState(&ProxyURLState{
+		DegradedCleanupThreshold: "6h",
+		Cache:                    map[string]ProxyURLEntry{addr: {}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-48 * time.Hour).UTC().Format(time.RFC3339)
+	if err := writeProxyState(&ProxyState{
+		Proxies: map[string]ProxyEntry{addr: {Health: "recently_offline", Source: "url", DownSince: old}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// The live registry carries the same old clock; a later health write would
+	// copy it back over the restarted stamp if the freeze left it alone.
+	noteLiveProxyHealth(addr, "recently_offline", time.Now().Add(-48*time.Hour))
+	t.Cleanup(func() {
+		proxyLiveHealthRegistry.Lock()
+		delete(proxyLiveHealthRegistry.byKey, addr)
+		proxyLiveHealthRegistry.Unlock()
+	})
+
+	prev := degradedReaperFrozen
+	t.Cleanup(func() { degradedReaperFrozen = prev })
+	degradedReaperFrozen = func() bool { return true }
+	if removed := runProxyURLCleanupOnce("url"); removed != 0 {
+		t.Fatalf("frozen pass removed %d, want 0", removed)
+	}
+	proxyLiveHealthRegistry.Lock()
+	liveDown := proxyLiveHealthRegistry.byKey[addr].DownSince
+	proxyLiveHealthRegistry.Unlock()
+	if time.Since(liveDown) > time.Minute {
+		t.Fatalf("live registry DownSince = %v after a frozen pass, want it restarted to now", liveDown)
+	}
+	st, err := readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds, err := time.Parse(time.RFC3339, st.Proxies[addr].DownSince)
+	if err != nil || time.Since(ds) > time.Minute {
+		t.Fatalf("DownSince after a frozen pass = %q, want it restarted to now (was %q)", st.Proxies[addr].DownSince, old)
+	}
+
+	degradedReaperFrozen = func() bool { return false }
+	if removed := runProxyURLCleanupOnce("url"); removed != 0 {
+		t.Fatalf("release collected a member on age it accrued while frozen: removed = %d, want 0", removed)
+	}
+
+	// The fresh window expires with the reaper unfrozen.
+	st, err = readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := st.Proxies[addr]
+	e.DownSince = time.Now().Add(-7 * time.Hour).UTC().Format(time.RFC3339)
+	st.Proxies[addr] = e
+	if err := writeProxyState(st); err != nil {
+		t.Fatal(err)
+	}
+	if removed := runProxyURLCleanupOnce("url"); removed != 1 {
+		t.Fatalf("member past its fresh window removed = %d, want 1", removed)
 	}
 }

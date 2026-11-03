@@ -235,6 +235,22 @@ func resetLiveProxyHealthDownClock(keys []string, now time.Time) {
 	}
 }
 
+// restartLiveProxyHealthDownClock moves a running down clock to at for the given
+// identities. Entries with no clock are left alone: only a new failure may start
+// one (see resetLiveProxyHealthDownClock).
+func restartLiveProxyHealthDownClock(keys []string, at time.Time) {
+	proxyLiveHealthRegistry.Lock()
+	defer proxyLiveHealthRegistry.Unlock()
+	for _, key := range keys {
+		entry, ok := proxyLiveHealthRegistry.byKey[key]
+		if !ok || entry.DownSince.IsZero() {
+			continue
+		}
+		entry.DownSince = at
+		proxyLiveHealthRegistry.byKey[key] = entry
+	}
+}
+
 // noteLiveProxyHealth records an observed health state for an identity (used
 // when a cycle learns health from the persisted state or a probe result).
 func noteLiveProxyHealth(key, health string, downSince time.Time) {

@@ -1468,14 +1468,6 @@ func getCleanupProcessStart() time.Time {
 	return cleanupProcessStart
 }
 
-// DefaultDegradedCleanupThreshold is the fallback duration for degraded
-// URL-proxy cleanup when proxy_url.json leaves degraded_cleanup_threshold
-// empty, unparsable or not positive. An unset key means the operator
-// accepted the default retirement schedule, not that degraded members
-// should accumulate forever: abandoned URL proxies must age out so the
-// pool does not bloat indefinitely.
-const DefaultDegradedCleanupThreshold = 6 * time.Hour
-
 // cleanupWriteState persists the pass's down_since edits. A var so a test can
 // fail the write without depending on filesystem permissions.
 var cleanupWriteState = writeProxyState
@@ -1537,6 +1529,52 @@ func restartHeldDownClock(state *ProxyState, held map[string]bool, at time.Time)
 	return changed
 }
 
+// restartDegradedDownClocks restarts the down clock of every degraded member in
+// scope to at, in one locked read-modify-write, and mirrors it into the live
+// health registry so the next health write does not put the older stamp back.
+// It runs on every frozen pass: while the backend is failing no member can
+// recover, so that time must not count toward a retirement window. A member
+// genuinely down before the freeze, with the freeze outlasting the window,
+// therefore starts a fresh window on release rather than being collected in
+// the first unfrozen pass. That is intended.
+func restartDegradedDownClocks(scope string, at time.Time) {
+	release, err := acquireProxyLock()
+	if err != nil {
+		tlog("[proxy][cleanup] warning: could not acquire proxy lock: %v\n", err)
+		return
+	}
+	defer release()
+	proxyStateMu.Lock()
+	defer proxyStateMu.Unlock()
+	state, err := readProxyState()
+	if err != nil {
+		tlog("[proxy][cleanup] warning: could not read proxy.state: %v\n", err)
+		return
+	}
+	keys := map[string]bool{}
+	for k, e := range state.Proxies {
+		if e.Source == "" || (scope == "url" && e.Source != "url") {
+			continue
+		}
+		if isDegradedHealth(e.Health) {
+			keys[k] = true
+		}
+	}
+	if len(keys) == 0 {
+		return
+	}
+	liveKeys := make([]string, 0, len(keys))
+	for k := range keys {
+		liveKeys = append(liveKeys, k)
+	}
+	restartLiveProxyHealthDownClock(liveKeys, at)
+	if restartHeldDownClock(state, keys, at) {
+		if err := cleanupWriteState(state); err != nil {
+			tlog("[proxy][cleanup] warning: could not persist down_since changes to proxy.state: %v\n", err)
+		}
+	}
+}
+
 // runProxyURLCleanupOnce removes dead/inactive/degraded proxies whose source
 // matches scope ("url" removes only url-sourced proxies; "all" removes any
 // source; any other value, including "none", removes nothing and returns 0).
@@ -1554,6 +1592,7 @@ func runProxyURLCleanupOnce(scope string) (removed int) {
 	// then would empty the pool of good proxies. Hold off until it heals.
 	if degradedReaperFrozen() {
 		outageEvictionHoldLog("url cleanup")
+		restartDegradedDownClocks(scope, time.Now())
 		return 0
 	}
 
