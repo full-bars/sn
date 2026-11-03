@@ -32,6 +32,12 @@ func TestParseGlobalFlagsCombos(t *testing.T) {
 	if err != nil || !force || !dryRun || len(rest) != 2 {
 		t.Errorf("-f -n --unit x: force=%v dryRun=%v rest=%v err=%v", force, dryRun, rest, err)
 	}
+	// --preview is the same switch as -n: it previews instead of applying, and
+	// it must not swallow the argument that follows it.
+	force, dryRun, rest, err = parseGlobalFlags([]string{"--preview", "off"})
+	if err != nil || force || !dryRun || len(rest) != 1 || rest[0] != "off" {
+		t.Errorf("--preview off: force=%v dryRun=%v rest=%v err=%v", force, dryRun, rest, err)
+	}
 	force, dryRun, rest, err = parseGlobalFlags(nil)
 	if err != nil || force || dryRun || len(rest) != 0 {
 		t.Errorf("empty: force=%v dryRun=%v rest=%v err=%v", force, dryRun, rest, err)

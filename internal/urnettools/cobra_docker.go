@@ -47,7 +47,7 @@ Proxy Management (inside the container):
   proxy clear                     Remove all configured proxies
   proxy remove                    Remove proxies (by addr/match, or all)
   proxy refresh [--force]         Re-read configs and hot-reload
-  proxy trim <N>                  Hold running proxies at N, shed worst first
+  proxy trim <N>|off              Hold running proxies at N, off clears it, -n previews
   proxy add-source <url>          Add a URL proxy source
   proxy remove-source <url>       Remove a URL proxy source
   proxy health                    Show dead/degraded proxies

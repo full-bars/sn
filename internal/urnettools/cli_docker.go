@@ -112,7 +112,7 @@ Proxy Management [target]:
   proxy health              show dead/degraded proxy health and live event log
   proxy traffic             real-time bandwidth & client session load
   proxy remove-dead         prune dead/degraded proxies
-  proxy trim <N>            hold running proxies at N, shed worst first (F -> A)
+  proxy trim <N>|off        hold running proxies at N, off clears it, -n previews
   proxy audit [action]      manage automated proxy audit engine (status|on|off|release)
   proxy exclude [<pattern>] exclude proxies matching pattern
 

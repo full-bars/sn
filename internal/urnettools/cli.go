@@ -53,7 +53,7 @@ func parseGlobalFlags(args []string) (force, dryRun bool, rest []string, err err
 		switch args[i] {
 		case "-f", "--force", "-y", "--yes":
 			force = true
-		case "-n", "--dry-run":
+		case "-n", "--dry-run", "--preview":
 			dryRun = true
 		case "-h", "--help":
 			usage()
@@ -156,7 +156,7 @@ Proxy Management [target]:
   proxy health                    ❤   show dead/degraded proxies + live event log
   proxy traffic                   📈  real-time bandwidth + client session load
   proxy remove-dead               💀  interactively prune dead/degraded/failing
-  proxy trim <N>                  ✂   hold running proxies at N, shed worst first (F -> A)
+  proxy trim <N>|off              ✂   hold running proxies at N, off clears it, -n previews
 
 Wallet Consent [target]:
   wallet status                   🪪  show the network wallet consent (read-only)

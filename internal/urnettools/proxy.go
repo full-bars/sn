@@ -28,6 +28,27 @@ func containsAny(args []string, tokens ...string) bool {
 // legacy shell tool uses ("$provider_bin proxy add --proxy_file=X -f") — the
 // Go tool resolves WHICH provider, then hands the operation to that binary.
 // Never runs against the wrong provider: target selection happens first.
+// trimProviderArgs is the provider command line for a trim request: the
+// operator's positionals as given, plus --preview when they only want to see
+// what would be shed.
+func trimProviderArgs(positionals []string, preview bool) []string {
+	args := append([]string{"proxy", "trim"}, positionals...)
+	if preview {
+		args = append(args, "--preview")
+	}
+	return args
+}
+
+// trimConfirmPrompt is the question the gate asks before a trim. Clearing the
+// cap is not "trim to off running proxies": it undoes the cap, and the prompt
+// has to say so or the operator is agreeing to something that reads wrong.
+func trimConfirmPrompt(p Provider, target string) string {
+	if strings.EqualFold(target, "off") {
+		return fmt.Sprintf("clear the trim cap on %s", providerLabel(p))
+	}
+	return fmt.Sprintf("trim %s to %s running proxies", providerLabel(p), target)
+}
+
 func providerSubcommand(p Provider, args ...string) error {
 	if p.Binary == "" {
 		return fmt.Errorf("provider %s has no resolvable binary path", providerLabel(p))
@@ -254,7 +275,7 @@ Subcommands:
   traffic                proxy traffic from state files (single target)
   ids                    client_id per proxy from JWT store (single target)
   remove-dead            remove dead/degraded proxies (single target)
-  trim [<N>]             show the trim cap, or hold running proxies at N (off clears)
+  trim [<N>|off]         show the trim cap, hold running proxies at N, or clear it with off (-n previews)
   audit [action]         inspect or toggle automated proxy audit engine (status|on|off|release)
   exclude                targeting flag, not a subcommand (see 'urnet-tools help')
 
@@ -548,16 +569,16 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 		// --dry-run shows the plan: run the provider in preview (lists what would
 		// be shed) without touching state or prompting.
 		if dryRun {
-			return providerSubcommand(p, append(append([]string{"proxy", "trim"}, positionals...), "--preview")...)
+			return providerSubcommand(p, trimProviderArgs(positionals, true)...)
 		}
-		ok, err := confirmGate(fmt.Sprintf("trim %s to %s running proxies", providerLabel(p), positionals[0]), p, force, dryRun)
+		ok, err := confirmGate(trimConfirmPrompt(p, positionals[0]), p, force, dryRun)
 		if err != nil {
 			return err
 		}
 		if !ok {
 			return nil // declined
 		}
-		return providerSubcommand(p, append([]string{"proxy", "trim"}, positionals...)...)
+		return providerSubcommand(p, trimProviderArgs(positionals, false)...)
 
 	case "paste":
 		// Paste proxies from stdin/file: normalizes formats, fetches URL sources, adds + refreshes.
