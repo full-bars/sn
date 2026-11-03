@@ -254,7 +254,7 @@ Subcommands:
   traffic                proxy traffic from state files (single target)
   ids                    client_id per proxy from JWT store (single target)
   remove-dead            remove dead/degraded proxies (single target)
-  trim [<N>]             show the trim cap, or hold running proxies at N (off clears)
+  trim [<N>|off]         show the trim cap, hold running proxies at N, or clear it with off (-n previews)
   audit [action]         inspect or toggle automated proxy audit engine (status|on|off|release)
   exclude                targeting flag, not a subcommand (see 'urnet-tools help')
 

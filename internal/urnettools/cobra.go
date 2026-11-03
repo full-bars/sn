@@ -72,7 +72,7 @@ Proxy Management:
   proxy add-source <url>  Add a URL proxy source (fetched + cached)
   proxy remove-source <url> Remove a URL proxy source
   proxy refresh [--force] Re-read configs and hot-reload proxies
-  proxy trim <N>          Hold running proxies at N, shed worst first
+  proxy trim <N>|off      Hold running proxies at N, off clears it, -n previews
   proxy health            Show dead/degraded proxies + live event log
   proxy traffic           Real-time bandwidth & client session load
   proxy ids               Client IDs for each proxy (from JWT store)
