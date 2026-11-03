@@ -411,8 +411,9 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	left := 0
 	imported := 0
 	newFallbacks := 0
+	storedAdopted := 0
 	summary := func(result string) {
-		opts.narrator.summary(imported, newFallbacks, skipped, left, time.Since(importStart), result)
+		opts.narrator.summaryWithStored(imported, newFallbacks, skipped, left, time.Since(importStart), result, storedAdopted)
 	}
 
 	journal, err := readLegacyImportJournal(opts.stateDir)
@@ -430,6 +431,12 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		providers = []*connect.ProxySettings{nil}
 	}
 	identities := newProviderSlotIdentities(providers)
+	public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
+	proofs := loadLegacyImportProofStore(opts.stateDir)
+	if proofs.corrupt != "" || proofs.dropped > 0 {
+		// Today's behaviour, said once: nothing in the file is trusted.
+		opts.narrator.line("proofs: stored proofs not used (file=%s dropped=%d); proving live", proofs.corrupt, proofs.dropped)
+	}
 	var slots []*legacyImportSlot
 	custodied := 0
 	noStoreEntry := 0
@@ -473,7 +480,12 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 				// The slot's choice was the saved identity and its file is
 				// gone. Re-importing could resurrect a deliberately removed
 				// identity, so the slot is left to the normal startup gate.
-				continue
+				// The exception is a slot adopted on a stored proof that the
+				// platform then rejected: nothing live ever vouched for it, so
+				// it is proven live now rather than trusted again.
+				if !(recorded.Proof == legacyImportStoredProof && proofs.rejected(filepath.Base(target))) {
+					continue
+				}
 			case "fallback":
 				// Sticky: never import this slot again. The new client is
 				// registered by the normal durable path below.
@@ -514,6 +526,22 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		}
 	}
 
+	// A slot with a stored, still-usable proof of exactly this identity is
+	// adopted without a live call. Nothing is re-validated here: a proof the
+	// platform rejects is caught when the identity is first used.
+	if !adopt {
+		for _, slot := range slots {
+			if slot.state == "prove" && proofs.usable(legacyImportProofKey(slot), legacyImportProofClaimFor(slot, public)) {
+				slot.state = "commit"
+				slot.proof = legacyImportStoredProof
+				storedAdopted++
+			}
+		}
+		if storedAdopted > 0 {
+			opts.narrator.line("proofs: %d slots adopted from stored proofs (no live proof)", storedAdopted)
+		}
+	}
+
 	// Proof phase, bounded and narrated. Tier 1 compares the retained public
 	// key with the key the server holds for the client_id; a null or
 	// unreachable read is inconclusive, not a refusal, and tier 2 runs the
@@ -545,8 +573,10 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			summary("proof_unavailable")
 			return result
 		}
-		public := ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)
-		phaseResult, left = legacyImportProveAll(ctx, opts.narrator, prover, public, prove, opts.proveOptions())
+		proveOptions := opts.proveOptions()
+		proveOptions.proofs = proofs
+		proveOptions.public = public
+		phaseResult, left = legacyImportProveAll(ctx, opts.narrator, prover, public, prove, proveOptions)
 		closeProver()
 		if phaseResult == legacyImportResultCanceled {
 			summary(legacyImportResultCanceled)
@@ -567,9 +597,25 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	// stays unavailable, three answered failed starts or thirty minutes since
 	// the first one fall back to the documented mint. A total outage never
 	// counts and keeps deferring.
+	//
+	// A slot whose own read timed out while the same phase got answers for
+	// other slots is not a total outage: the API demonstrably answers, so its
+	// unavailability counts toward the same bound instead of deferring forever.
+	apiAnswered := false
+	if phaseResult == legacyImportResultComplete {
+		for _, slot := range slots {
+			if slot.attempted && slot.proof != legacyImportStoredProof && (slot.state == "commit" || slot.state == "fallback") {
+				apiAnswered = true
+				break
+			}
+		}
+	}
 	now := time.Now()
 	for _, slot := range slots {
-		if slot.state != "defer" || slot.unreachable {
+		if slot.state != "defer" {
+			continue
+		}
+		if slot.unreachable && !(apiAnswered && slot.attempted && !slot.left && slot.reason == "refresh_unavailable") {
 			continue
 		}
 		if slot.firstDeferredAt == 0 {
@@ -878,32 +924,7 @@ func writeLegacyImportJournal(stateDir string, journal legacyImportJournal) erro
 	if err != nil {
 		return err
 	}
-	path := filepath.Join(stateDir, legacyImportJournalName)
-	tmp, err := os.CreateTemp(stateDir, "."+legacyImportJournalName+".tmp-*")
-	if err != nil {
-		return err
-	}
-	tmpPath := tmp.Name()
-	defer func() { _ = os.Remove(tmpPath) }()
-	if err := tmp.Chmod(0600); err != nil {
-		tmp.Close()
-		return err
-	}
-	if _, err := tmp.Write(raw); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Sync(); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		return err
-	}
-	if err := os.Rename(tmpPath, path); err != nil {
-		return err
-	}
-	return durablesync.SyncParent(path)
+	return writeLegacyImportStateFile(stateDir, legacyImportJournalName, raw)
 }
 
 // readLegacyImportJournal returns the journal, empty when it does not exist.

@@ -1707,6 +1707,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// launch's own admission failures go.
 			var refused *clientauth.RegistrationRefusedError
 			captureDenied := captureRefusal != nil && errors.As(err, &refused)
+			// The first real use of an identity the import adopted on a stored
+			// proof: if the platform refuses it, the proof is withdrawn so the
+			// next start proves this slot live instead of trusting it again.
+			if clientauth.IsClientRevoked(err) {
+				if noteErr := noteLegacyImportProofRejected(filepath.Dir(clientJwtPath), filepath.Base(clientJwtPath), "client_revoked"); noteErr != nil {
+					tlog("⚠️ [import] could not withdraw a rejected stored proof for %s: %v\n", display, noteErr)
+				}
+			}
 			if captureDenied {
 				err = fmt.Errorf("%w: %w", captureRefusal, err)
 			}
