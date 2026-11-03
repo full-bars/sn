@@ -191,6 +191,17 @@ func (self *providerExtenderStatusListener) currentAccount() string {
 	return self.account
 }
 
+// observation returns a copy of the latest observation under stateLock.
+func (self *providerExtenderStatusListener) observation() providerExtenderObservation {
+	self.stateLock.Lock()
+	defer self.stateLock.Unlock()
+	return self.last
+}
+
+func (self *providerExtenderStatusListener) Observation() providerExtenderObservation {
+	return self.observation()
+}
+
 // A nil observation is unknown, separate from a known disabled extender.
 func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status *sdk.ExtenderProvideStatus) {
 	self.failureMu.Lock()
@@ -235,6 +246,13 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		}
 		return changed, failed
 	}()
+	if observation.Known && observation.Enabled {
+		// Publish the reading process-wide so the scrape and the control reply
+		// see the direct slot's state without reaching into a slot's listener.
+		// Only an enabled reading is published: every slot has its own
+		// listener, so a proxy slot's reading would overwrite this one.
+		setProviderExtenderObservation(observation)
+	}
 	if changed || failed {
 		// The operator budgets activation posts per account per hour and its
 		// refusal already names the wait, so the wait is persisted here: the

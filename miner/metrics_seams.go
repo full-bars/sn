@@ -114,6 +114,12 @@ var (
 	// would advertise an identity set the scrape cannot measure, so the family
 	// stays absent as a whole.
 	metricsSeamH3 func(b *strings.Builder) bool
+
+	// Wired by extender_observation.go: the direct slot's listener publishes its
+	// reading process-wide (provider_callbacks.go) and this hook reads it. Only an
+	// enabled reading is published, so a box whose extender is off reports no
+	// families rather than zeros that would read as "tried and failed".
+	metricsSeamExtender func() *providerExtenderObservation
 )
 
 // The typed seam payloads are the shapes the v33 writer functions consume;
