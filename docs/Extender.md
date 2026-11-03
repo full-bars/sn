@@ -93,6 +93,12 @@ The provider limits how often it asks the network to activate: five activation p
 
 Expected result: the role comes back on its own when the time shown has passed, without a restart.
 
+## If the role does not come up after a restart
+
+TCP 443 is the one port the role cannot do without. While it cannot bind, the role is fully off: no UDP carrier, no node, no activation.
+
+After a restart another process may still hold that port for a moment. The miner retries quickly at first, seconds apart, and then every three minutes, so the role comes back on its own once the port is free. Restarting again before it settles only adds another wait: restart once and leave it.
+
 ## What this does not tell you
 
 - `[extender] listen tcp 443` means the process bound the port inside the container. It does not mean the internet can reach it. Only the absence of a refusal after the network's own probe tells you that, and a probe that fails is retried only after the hold in step 6.
