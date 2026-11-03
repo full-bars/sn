@@ -356,6 +356,12 @@ func cmdSet(args []string, force, dryRun bool) error {
 	if err != nil {
 		return err
 	}
+	if p.Unit == "" {
+		if systemdDiscoveryCutShort {
+			return fmt.Errorf("provider %s has no owning unit (unit discovery ran out of budget)", providerLabel(p))
+		}
+		return fmt.Errorf("provider %s has no owning unit", providerLabel(p))
+	}
 	// Cross-user elevation: an unprivileged caller targeting another user's
 	// provider must re-exec under sudo BEFORE trying to write its state dir,
 	// or the mutation fails with a raw permission error. Mirror the

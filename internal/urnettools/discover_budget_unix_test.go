@@ -327,3 +327,54 @@ func TestDiscoverCancelledPassLeavesNoSubprocessRunning(t *testing.T) {
 		t.Fatalf("expected 0 running subprocesses after cancellation, got %d lingering", remaining)
 	}
 }
+
+// A cut pass must not return half-built entries as normal rows. When unitProperty
+// hits a budget expiry on an exact-name unit, the degraded entry with empty binary
+// and empty user is dropped, and the cut-short flag is set.
+func TestDiscoverDropsDegradedEntryOnBudgetExpiry(t *testing.T) {
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+	stubSystemd(t, true)
+	noOpenRC(t)
+	origBudget := systemdDiscoveryBudget
+	systemdDiscoveryBudget = 50 * time.Millisecond
+	t.Cleanup(func() { systemdDiscoveryBudget = origBudget })
+
+	recordSubprocesses(t, func(ctx context.Context, name string, args ...string) ([]byte, error) {
+		if name == "systemctl" && len(args) > 0 {
+			if args[0] == "--plain" && len(args) > 1 && args[1] == "list-units" {
+				return []byte("urnetwork.service loaded active running URnetwork Provider\n"), nil
+			}
+			if args[0] == "show" {
+				<-ctx.Done()
+				return nil, ctx.Err()
+			}
+		}
+		return nil, errors.New("not matched")
+	})
+
+	out := discoverStopped(nil)
+	if len(out) != 0 {
+		t.Fatalf("expected degraded entry to be dropped, got: %+v", out)
+	}
+	if !systemdDiscoveryCutShort {
+		t.Fatal("expected systemdDiscoveryCutShort to be true after property budget expiry")
+	}
+}
+
+// attachUnits sets systemdDiscoveryCutShort when the budget expires during attach.
+func TestAttachUnitsSetsCutShortOnBudgetExpiry(t *testing.T) {
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // already expired
+
+	procs := []Provider{{PID: 1234, User: "u", Binary: "/opt/urnetwork/bin/urnetwork"}}
+	attachUnits(ctx, procs)
+
+	if !systemdDiscoveryCutShort {
+		t.Fatal("expected systemdDiscoveryCutShort to be true after attachUnits with expired ctx")
+	}
+	if procs[0].Unit != "" {
+		t.Fatalf("unit should not be attached on expired ctx, got %q", procs[0].Unit)
+	}
+}
+

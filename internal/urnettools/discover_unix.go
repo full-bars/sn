@@ -426,6 +426,7 @@ func discoverStopped(running []Provider) []Provider {
 		systemdDiscoveryCutShort = false
 		ctx, cancel := context.WithTimeout(context.Background(), systemdDiscoveryBudget)
 		defer cancel()
+		t0 := time.Now()
 		attachUnits(ctx, running)
 		if ctx.Err() != nil {
 			systemdDiscoveryCutShort = true
@@ -434,6 +435,11 @@ func discoverStopped(running []Provider) []Provider {
 			if ctx.Err() != nil {
 				systemdDiscoveryCutShort = true
 			}
+		}
+		if os.Getenv("URNET_DEBUG") != "" {
+			d, _ := ctx.Deadline()
+			fmt.Fprintf(os.Stderr, "systemd discovery: elapsed=%v remaining=%v cut=%v\n",
+				time.Since(t0), time.Until(d), systemdDiscoveryCutShort)
 		}
 	}
 	// A stopped OpenRC service is invisible to both process scan and systemd
@@ -490,6 +496,7 @@ func userUnitBinaryIsProvider(p Provider, bin string) bool {
 func attachUnits(ctx context.Context, procs []Provider) {
 	for i := range procs {
 		if ctx.Err() != nil {
+			systemdDiscoveryCutShort = true
 			return
 		}
 		p := &procs[i]
@@ -502,11 +509,15 @@ func attachUnits(ctx context.Context, procs []Provider) {
 		}
 		attachUnitFromCgroup(ctx, p, cg)
 	}
+	if ctx.Err() != nil {
+		systemdDiscoveryCutShort = true
+	}
 }
 
 // attachUnitFromCgroup sets p.Unit from the given /proc/<pid>/cgroup contents.
 func attachUnitFromCgroup(ctx context.Context, p *Provider, cg string) {
 	if ctx.Err() != nil {
+		systemdDiscoveryCutShort = true
 		return
 	}
 	unit, user := unitFromCgroup(cg)
@@ -520,6 +531,9 @@ func attachUnitFromCgroup(ctx context.Context, p *Provider, cg string) {
 		p.Unit = unit
 	case user && userUnitOwns(ctx, *p, unit):
 		p.Unit = unit
+	}
+	if ctx.Err() != nil {
+		systemdDiscoveryCutShort = true
 	}
 }
 
@@ -798,6 +812,9 @@ func inspectCandidateUnit(unit string, running []Provider, userFor, binaryFor fu
 		}
 	}
 	user := getUser()
+	if isExactProviderBinary(unit) && binary == "" && user == "" {
+		return nil
+	}
 	p := providerFromUnit(unit, user, binary)
 	return &p
 }

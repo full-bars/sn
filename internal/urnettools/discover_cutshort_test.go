@@ -155,3 +155,40 @@ func TestCmdTopShowsWarningOnCutPassWithProviders(t *testing.T) {
 		t.Fatal("top did not return after ctrl-c")
 	}
 }
+
+// A cut pass must not return half-built entries as normal rows; restart, logs
+// and set must refuse an entry with no unit rather than silently taking the
+// unitless path.
+func TestRestartLogsSetRefuseUnitlessEntryOnCutPass(t *testing.T) {
+	dir := t.TempDir()
+	p := Provider{User: currentUserName(), StateDir: dir, PID: 1234, Running: true}
+	stubDiscovery(t, []Provider{p}, nil)
+	discoverStoppedFn = func(running []Provider) []Provider {
+		cutShortSeen(t, nil)
+		return nil
+	}
+	discoverSystemdFn = func() []Provider {
+		cutShortSeen(t, nil)
+		return []Provider{p}
+	}
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+
+	// cmdRestart refuses
+	errRestart := cmdRestart(nil, false, true)
+	if errRestart == nil || !strings.Contains(errRestart.Error(), "ran out of budget") {
+		t.Fatalf("cmdRestart must refuse unitless provider on cut pass, got: %v", errRestart)
+	}
+
+	// cmdLogs refuses
+	errLogs := cmdLogs(nil)
+	if errLogs == nil || !strings.Contains(errLogs.Error(), "ran out of budget") {
+		t.Fatalf("cmdLogs must refuse unitless provider on cut pass, got: %v", errLogs)
+	}
+
+	// cmdSet refuses
+	errSet := cmdSet([]string{"node-name", "edge01"}, false, true)
+	if errSet == nil || !strings.Contains(errSet.Error(), "ran out of budget") {
+		t.Fatalf("cmdSet must refuse unitless provider on cut pass, got: %v", errSet)
+	}
+}
+
