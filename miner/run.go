@@ -2101,7 +2101,10 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				slotCtx, slotCancel := context.WithCancel(ctx)
 				go func() {
 					defer join.done()
-					if err := provideWithProxy(slotCtx, index, settings); err != nil {
+					err := runReloadedSlot(bringUp, index, func() error {
+						return provideWithProxy(slotCtx, index, settings)
+					})
+					if err != nil {
 						logReloadedSlotStopped(settings, index, err)
 					}
 				}()
@@ -2125,7 +2128,9 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			slotDone := make(chan struct{})
 			go func() {
 				defer join.done()
-				err := provideWithProxy(slotCtx, index, settings)
+				err := runReloadedSlot(bringUp, index, func() error {
+					return provideWithProxy(slotCtx, index, settings)
+				})
 				// Closed before the bookkeeping below asks the reloader for its
 				// lock: a reload may be holding that lock while it waits for
 				// this very worker.

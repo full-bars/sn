@@ -2,7 +2,9 @@ package miner
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -195,5 +197,65 @@ func TestControlReachedCountsEachSlotOnce(t *testing.T) {
 	tracker.controlReached(7, "proxy:198.51.100.1:1080", 10*time.Millisecond, "proxy")
 	if got := controlReachedCount(); got != 2 {
 		t.Fatalf("after a reload re-reached the same proxy, reached=%d, want 2 (index-keyed counting would say 3)", got)
+	}
+}
+
+// A reloaded slot cancelled before it reached the control plane must leave the
+// not-connected tally. reportOverdue records the count it saw in
+// lastNotConnected, so the test reads what the operator's line would say.
+func TestSlotReloadedCancelledBeforeControlLeavesTally(t *testing.T) {
+	tracker := newProviderBringUpTracker(0)
+	t.Cleanup(tracker.shutdown)
+	tracker.authReused(7, connect.NewId(), "proxy:10.0.0.1:1081")
+
+	tracker.reportOverdue()
+	tracker.mu.Lock()
+	before := tracker.lastNotConnected
+	tracker.mu.Unlock()
+	if before != 1 {
+		t.Fatalf("setup: not-connected = %d, want 1", before)
+	}
+
+	err := runReloadedSlot(tracker, 7, func() error { return context.Canceled })
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("runReloadedSlot returned %v, want the worker's error", err)
+	}
+
+	tracker.reportOverdue()
+	tracker.mu.Lock()
+	after := tracker.lastNotConnected
+	tracker.mu.Unlock()
+	if after != 0 {
+		t.Fatalf("not-connected after the slot was cancelled = %d, want 0", after)
+	}
+}
+
+// A panicking worker must still leave the tally, or the leak just moves.
+func TestSlotReloadedPanicLeavesTally(t *testing.T) {
+	tracker := newProviderBringUpTracker(0)
+	t.Cleanup(tracker.shutdown)
+	tracker.authNew(3, connect.NewId(), "proxy:10.0.0.2:1081")
+	func() {
+		defer func() { _ = recover() }()
+		_ = runReloadedSlot(tracker, 3, func() error { panic("boom") })
+	}()
+	tracker.reportOverdue()
+	tracker.mu.Lock()
+	n := tracker.lastNotConnected
+	tracker.mu.Unlock()
+	if n != 0 {
+		t.Fatalf("not-connected after a panicking slot = %d, want 0", n)
+	}
+}
+
+// Both reload paths must go through the helper: the helper is only half the
+// fix if a spawn path starts its worker without it.
+func TestSlotReloadPathsUseStopHelper(t *testing.T) {
+	src, err := os.ReadFile("run.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := strings.Count(string(src), "runReloadedSlot(bringUp, index,"); n != 2 {
+		t.Fatalf("run.go uses runReloadedSlot %d times, want 2 (spawn and spawnGeneration)", n)
 	}
 }
