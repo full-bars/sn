@@ -242,9 +242,11 @@ func TestDiscoverCutShortPassReported(t *testing.T) {
 
 // Many units stay inside the budget: with N units whose property lookups each
 // take a fixed delay, discovery completes inside the budget for N that would
-// fail when serialised.
+// fail when serialised. Concurrency is asserted structurally (concurrent calls
+// overlap) and via a budget with enough headroom that host load cannot trip it,
+// while remaining strictly below the serial execution floor.
 func TestDiscoverManyUnitsStayInsideBudget(t *testing.T) {
-	const n = 16
+	const n = 24
 	const fixedDelay = 25 * time.Millisecond
 	var lines []string
 	for i := 0; i < n; i++ {
@@ -252,15 +254,31 @@ func TestDiscoverManyUnitsStayInsideBudget(t *testing.T) {
 	}
 	text := strings.Join(lines, "\n")
 
+	// Serial execution of N units would take at least n * fixedDelay (600ms).
+	// Under 8 concurrent workers, ideal duration is 3 * fixedDelay (75ms).
+	// Budget of 400ms provides >5x headroom for scheduling delay under host contention,
+	// while remaining well below the 600ms serial bound so serial execution cannot pass.
+	serialBound := time.Duration(n) * fixedDelay
 	origBudget := systemdDiscoveryBudget
-	systemdDiscoveryBudget = 200 * time.Millisecond
+	systemdDiscoveryBudget = 400 * time.Millisecond
 	t.Cleanup(func() { systemdDiscoveryBudget = origBudget })
+
+	var active atomic.Int32
+	var maxConcurrent atomic.Int32
 
 	start := time.Now()
 	providers := parseUnitLines(text, nil,
 		func(unit string) string { return "user" },
 		func(unit string) string {
+			cur := active.Add(1)
+			for {
+				m := maxConcurrent.Load()
+				if cur <= m || maxConcurrent.CompareAndSwap(m, cur) {
+					break
+				}
+			}
 			time.Sleep(fixedDelay)
+			active.Add(-1)
 			return "/opt/urnetwork/bin/urnetwork"
 		},
 	)
@@ -269,9 +287,15 @@ func TestDiscoverManyUnitsStayInsideBudget(t *testing.T) {
 	if len(providers) != n {
 		t.Fatalf("expected %d providers, got %d", n, len(providers))
 	}
+	if maxConcurrent.Load() < 2 {
+		t.Fatalf("expected concurrent unit property lookups, max concurrency was %d", maxConcurrent.Load())
+	}
+	if elapsed >= serialBound {
+		t.Fatalf("discovery took %v, exceeding serial bound %v", elapsed, serialBound)
+	}
 	if elapsed > systemdDiscoveryBudget {
-		t.Fatalf("discovery took %v, exceeding budget %v (concurrent worker cap should finish in ~%v)",
-			elapsed, systemdDiscoveryBudget, fixedDelay*2)
+		t.Fatalf("discovery took %v, exceeding budget %v (serial bound %v, concurrent ideal ~%v)",
+			elapsed, systemdDiscoveryBudget, serialBound, time.Duration(n/parseUnitWorkerCap)*fixedDelay)
 	}
 }
 
