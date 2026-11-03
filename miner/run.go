@@ -2377,9 +2377,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			<-reloadWatchDone
 		}()
 	}
-	join.wait(func() {
+	if err := join.waitBounded(ctx, func() {
 		quiesceForRun(ctx, reloader)
-	})
+	}, providerShutdownGrace, tlog); err != nil {
+		// A worker ignored the cancel. Stop waiting: `results` may still be
+		// written, so it is left open, and the exit code makes the supervisor
+		// start a clean process instead of leaving this one half-dead.
+		critLog("SHUTDOWN: workers did not drain within %s; exiting\n", providerShutdownGrace)
+		cancel()
+		return errors.Join(returnErr, err)
+	}
 	cancel()
 	close(results)
 	var slotResults []error
@@ -2630,6 +2637,9 @@ func providerRunExitCode(err error) (int, bool) {
 	}
 	if errors.Is(err, errProviderAuthStopped) {
 		return minerExitAuthStopped, true
+	}
+	if errors.Is(err, errProviderShutdownTimeout) {
+		return providerShutdownTimeoutExitCode, true
 	}
 	if errors.Is(err, errProviderNoSlotAuthenticated) {
 		return providerNoSlotAuthenticatedExitCode, true

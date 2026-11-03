@@ -1,6 +1,13 @@
 package miner
 
-import "sync"
+import (
+	"bytes"
+	"context"
+	"errors"
+	"runtime/pprof"
+	"sync"
+	"time"
+)
 
 // slotJoin counts every worker the provide run is waiting on: the slots it
 // launched at start, the slots a reload started later, and the retries it has
@@ -72,4 +79,61 @@ func (j *slotJoin) wait(quiesce func()) {
 		}
 		j.mu.Unlock()
 	}
+}
+
+// providerShutdownGrace is how long the run waits for its workers after the run
+// context is cancelled. A worker that ignores cancellation would otherwise pin
+// the process in a half-stopped state forever: the supervisor's stop becomes a
+// SIGKILL of a process that was still draining, or nothing at all. A variable
+// so tests can shorten it.
+var providerShutdownGrace = 90 * time.Second
+
+// providerShutdownTimeoutExitCode ends a run whose workers did not drain within
+// providerShutdownGrace. It is a failure, so a supervisor (systemd
+// Restart=on-failure, the image's own supervisor) restarts a clean process.
+const providerShutdownTimeoutExitCode = 1
+
+// errProviderShutdownTimeout marks a run that gave up waiting for its workers.
+// It only selects the exit code; see providerRunExitCode.
+var errProviderShutdownTimeout = errors.New("provider shutdown did not complete")
+
+// providerShutdownDumpMarker starts the goroutine dump a timed-out shutdown
+// writes, so the next incident is diagnosable from the log alone.
+const providerShutdownDumpMarker = "[provider] shutdown incomplete: goroutine dump follows"
+
+// waitBounded is wait with a deadline that starts only once ctx is cancelled:
+// a live run waits as long as it always did. When the grace expires with
+// workers still registered it writes the goroutine dump through logf and
+// returns errProviderShutdownTimeout; the blocked wait is abandoned, which is
+// safe because the caller exits the process.
+func (j *slotJoin) waitBounded(ctx context.Context, quiesce func(), grace time.Duration, logf func(format string, args ...any)) error {
+	drained := make(chan struct{})
+	go func() {
+		j.wait(quiesce)
+		close(drained)
+	}()
+	select {
+	case <-drained:
+		return nil
+	case <-ctx.Done():
+	}
+	timer := time.NewTimer(grace)
+	defer timer.Stop()
+	select {
+	case <-drained:
+		return nil
+	case <-timer.C:
+	}
+	j.mu.Lock()
+	remaining := j.n
+	j.mu.Unlock()
+	logf("%s (%d workers still running after %s)\n", providerShutdownDumpMarker, remaining, grace)
+	var buf bytes.Buffer
+	if p := pprof.Lookup("goroutine"); p != nil {
+		// Grouped by stack with counts: a fleet box holds tens of thousands
+		// of goroutines, and the full per-goroutine form is too large to log.
+		_ = p.WriteTo(&buf, 1)
+	}
+	logf("%s\n", buf.String())
+	return errProviderShutdownTimeout
 }
