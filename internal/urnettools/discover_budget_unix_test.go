@@ -378,3 +378,63 @@ func TestAttachUnitsSetsCutShortOnBudgetExpiry(t *testing.T) {
 	}
 }
 
+// Attach and probe share a single budget: if attach consumes most of the budget,
+// the probe stage must be cut rather than receiving a fresh full budget.
+func TestDiscoverAttachAndProbeShareSingleBudget(t *testing.T) {
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+	stubSystemd(t, true)
+	noOpenRC(t)
+	origBudget := systemdDiscoveryBudget
+	systemdDiscoveryBudget = 100 * time.Millisecond
+	t.Cleanup(func() { systemdDiscoveryBudget = origBudget })
+
+	origCgroup := readCgroupFn
+	t.Cleanup(func() { readCgroupFn = origCgroup })
+	readCgroupFn = func(pid int) (string, error) {
+		return userUnitCgroup, nil
+	}
+
+	origOwns := userUnitOwns
+	t.Cleanup(func() { userUnitOwns = origOwns })
+	// Attach consumes 60ms of the 100ms budget (~60%).
+	userUnitOwns = func(ctx context.Context, p Provider, unit string) bool {
+		select {
+		case <-time.After(60 * time.Millisecond):
+			return true
+		case <-ctx.Done():
+			return false
+		}
+	}
+
+	// Probe stage wants 60ms. With a shared 100ms clock only ~40ms remains,
+	// so it must be cut by ctx.Done() rather than finishing cleanly under
+	// a fresh 100ms clock.
+	var probeOnce sync.Once
+	recordSubprocesses(t, func(ctx context.Context, name string, args ...string) ([]byte, error) {
+		probeOnce.Do(func() {
+			select {
+			case <-time.After(60 * time.Millisecond):
+			case <-ctx.Done():
+			}
+		})
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if name == "systemctl" && len(args) > 1 && args[1] == "list-units" {
+			return []byte("urnetwork.service loaded active running URnetwork\n"), nil
+		}
+		return nil, nil
+	})
+
+	procs := []Provider{{PID: 99999, User: "alice", Binary: "/opt/urnetwork/bin/provider"}}
+	out := discoverStopped(procs)
+
+	if !systemdDiscoveryCutShort {
+		t.Fatal("expected systemdDiscoveryCutShort to be true when attach and probe exceed shared budget")
+	}
+	if len(out) != 0 {
+		t.Fatalf("expected probe stage to be cut and return no stopped units, got %+v", out)
+	}
+}
+
+
