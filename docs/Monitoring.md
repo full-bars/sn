@@ -140,7 +140,7 @@ zero before the first failure, so panels and alerts have a stable series.
 proxies in that state at the moment of the tick:
 
 ```
-❤️ [health][proxies] up=482 dead=127 degraded=424 connecting=44 members=1077 target=500 floor=482 dips=60 verdict="mostly healthy" scope=isolated
+❤️ [health][proxies] up=482 dead=127 degraded=424 connecting=44 parked=0 held=0 members=1077 target=500 floor=482 dips=60 verdict="mostly healthy" scope=isolated
 ```
 
 `up` is serving and reachable now. `dead` failed outright and `degraded` is
@@ -148,7 +148,27 @@ reachable but failing some checks; together they are the failed count, and there
 is no `down` field, because a single field summing the two read as a separate
 population and invited `members - up` arithmetic that counts `connecting` as a
 failure when it is not. `connecting` is registered and not yet observed either
-way. `members` is every
+way. `parked` is held out by the audit for a backoff window: it is not a health
+failure, it does not count against the verdict, and because it is marked
+`parked` rather than `inactive` it is not collected by dead-proxy cleanup or by
+`proxy remove-dead` (a parked proxy is resting, not dead). `held` is the members the trim cap keeps the pool from running:
+they are a decision already taken, not a shortfall, and they are left out of the
+judged totals for the same reason. Together `parked` and `held` are why `members`
+can exceed what the pool is actually trying to serve, and the line always
+reconciles:
+
+    members = up + degraded + dead + connecting + parked + held
+
+A trimmed pool therefore looks like this, and none of it is a failure:
+
+```
+❤️ [health][proxies] up=329 dead=60 degraded=80 connecting=31 parked=0 held=577 members=1077 target=500 floor=482 dips=60 verdict="mostly healthy" scope=isolated
+```
+
+`degraded` counts only the members the pool is actually running, so a member the
+trim holds back never inflates it. Before `held` existed those members kept
+whatever label their last attempt left, which is why a trimmed box read as mostly
+degraded. `members` is every
 proxy the registry knows. `target` is the size the pool is asked to run: the
 curated proxies from the operator file or the internal config, plus the URL
 source's admission cap (the tighter of `proxy_url_max` and the self-heal
