@@ -358,10 +358,11 @@ func overlayLiveProxyHealth(proxies map[string]ProxyEntry) int {
 		if !live.DownSince.IsZero() {
 			downSince = live.DownSince.Format(time.RFC3339)
 		} else if isDegradedHealth(health) {
-			now := time.Now()
-			live.DownSince = now
-			proxyLiveHealthRegistry.byKey[key] = live
-			downSince = now.UTC().Format(time.RFC3339)
+			// The registry has no clock: a release from a reap hold cleared it
+			// on purpose (resetLiveProxyHealthDownClock). Keep the persisted
+			// stamp for the state copy and leave the registry alone, so an
+			// overlay cannot restart a clock that only a new failure may start.
+			downSince = entry.DownSince
 		}
 		if entry.Health == health && entry.DownSince == downSince && entry.AuthFailures == live.AuthFailures && entry.ProxyLegFailures == live.ProxyLegFailures && entry.TransportDrops == live.TransportDrops {
 			continue

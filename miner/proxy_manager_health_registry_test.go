@@ -472,3 +472,26 @@ func TestHealthRegistry_DegradedStampsDownSinceInPersistedState(t *testing.T) {
 		t.Fatalf("persisted DownSince = %q, want recent time", entry.DownSince)
 	}
 }
+
+// TestHealthRegistry_OverlayDoesNotRestartReleasedDownClock verifies that
+// releasing a reap hold clears the down clock for good: an overlay (every
+// metrics scrape and heartbeat runs one) must not re-arm it, or the reaper sees
+// the member as degraded again with no new failure.
+func TestHealthRegistry_OverlayDoesNotRestartReleasedDownClock(t *testing.T) {
+	resetProxyHealthReportStateForTest()
+
+	const key = "198.51.100.77:1080"
+	noteLiveProxyHealthFailure(key)
+	if !minerProxyStillDegraded(key) {
+		t.Fatal("premise broken: failure should leave the identity degraded")
+	}
+	resetLiveProxyHealthDownClock([]string{key}, time.Now())
+	if minerProxyStillDegraded(key) {
+		t.Fatal("premise broken: release should clear the down clock")
+	}
+
+	overlayLiveProxyHealth(map[string]ProxyEntry{key: {Health: "recently_offline"}})
+	if minerProxyStillDegraded(key) {
+		t.Fatal("overlay re-armed the down clock after a hold release with no new failure")
+	}
+}
