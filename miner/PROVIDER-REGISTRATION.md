@@ -144,7 +144,8 @@ upkeep. So every `provide` process renews its state directory's network JWT
 (`miner/network_token_renewal.go`):
 
 - **When:** at the token's point between 40% and 50% of its lifetime, measured
-  from its `iat`, so never later than its half-life: the schedule of the SDK's
+  from its `iat` (from the time it is read when it has no usable `iat`), so the
+  scheduled point is never later than its half-life: the schedule of the SDK's
   token refreshes. The point is a hash of the token's id (`jti`), else of its
   signature, else of its whole text (an unsigned token without an id, or text
   that is not a JWT), so points are uniform across tokens: every renewal answers
@@ -157,7 +158,8 @@ upkeep. So every `provide` process renews its state directory's network JWT
   directory, so a process restarted right after a renewal that answered a token
   already past its point (a clock far ahead of the server's) can renew it once
   more at once. A token without an expiration, or an expired one, is renewed at
-  once while the server still accepts it.
+  once while the server still accepts it. The floor and a failure's backoff can
+  hold an attempt past the half-life; a 30-day token has room for both.
 - **How:** `POST /auth/network-refresh` with the network JWT, over the first
   provider's transport (direct, or the first proxy). The renewal must name the
   same network, user, roles and principal, and no client.
