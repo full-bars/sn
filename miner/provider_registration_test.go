@@ -83,7 +83,7 @@ func providerRegistrationPrivateDir(t *testing.T) string {
 // binding, while the local synthetic HTTP server represents API admission.
 func providerRegistrationTestToken(t *testing.T, client, marker string) string {
 	t.Helper()
-	claims := gojwt.MapClaims{"network_id": "00000000-0000-0000-0000-000000000301", "user_id": "00000000-0000-0000-0000-000000000401", "roles": []string{"provider"}, "principal": "synthetic-provider-owner", "marker": marker, "exp": time.Now().Add(30 * 24 * time.Hour).Unix()}
+	claims := gojwt.MapClaims{"network_id": "00000000-0000-0000-0000-000000000301", "user_id": "00000000-0000-0000-0000-000000000401", "roles": []string{"provider"}, "principal": "synthetic-provider-owner", "marker": marker, "iat": time.Now().Unix(), "exp": time.Now().Add(30 * 24 * time.Hour).Unix()}
 	if client != "" {
 		claims["client_id"], claims["device_id"] = client, "00000000-0000-0000-0000-000000000202"
 	}
