@@ -246,12 +246,17 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		}
 		return changed, failed
 	}()
-	if observation.Known && observation.Enabled {
+	switch {
+	case observation.Known && observation.Enabled:
 		// Publish the reading process-wide so the scrape and the control reply
 		// see the direct slot's state without reaching into a slot's listener.
-		// Only an enabled reading is published: every slot has its own
-		// listener, so a proxy slot's reading would overwrite this one.
-		setProviderExtenderObservation(observation)
+		// The listener is stored with it: a proxy slot's reading must not
+		// overwrite this one.
+		setProviderExtenderObservation(self, observation)
+	case observation.Known:
+		// The role reported off. The listener that published an enabled
+		// reading drops it here, because nothing else would replace it.
+		clearProviderExtenderObservation(self)
 	}
 	if changed || failed {
 		// The operator budgets activation posts per account per hour and its

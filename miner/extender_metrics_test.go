@@ -216,6 +216,9 @@ func TestExtenderStatusListenerObservationMethod(t *testing.T) {
 		RevokedTime:           1800000001000,
 	}
 	listener.ExtenderProvideStatusChanged(status)
+	// The listener publishes process-wide, so this test's extender must not be
+	// readable by the next scrape in the package.
+	t.Cleanup(resetProviderExtenderObservation)
 
 	obs := listener.observation()
 	if !obs.Known {
@@ -228,5 +231,52 @@ func TestExtenderStatusListenerObservationMethod(t *testing.T) {
 	// Verify Observation() alias returns identical result
 	if listener.Observation() != obs {
 		t.Fatalf("Observation() did not match observation()")
+	}
+}
+
+// A posted role that reports off, or a device that is torn down, must stop being
+// published. Nothing else replaces an enabled reading, so the scrape would
+// otherwise keep claiming an extender that has stopped. A listener that is not
+// the publisher clears nothing.
+func TestExtenderObservationClearedByItsOwnListener(t *testing.T) {
+	resetProviderExtenderObservation()
+	t.Cleanup(resetProviderExtenderObservation)
+
+	direct := newProviderExtenderStatusListener(nil, 0, "")
+	proxy := newProviderExtenderStatusListener(nil, 1, "")
+
+	direct.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true, ActivatedV4: true})
+	if providerExtenderObservationLatest() == nil {
+		t.Fatal("an enabled reading must be published")
+	}
+
+	proxy.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: false})
+	if providerExtenderObservationLatest() == nil {
+		t.Fatal("a proxy slot's disabled reading erased the direct slot's reading")
+	}
+
+	direct.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: false})
+	if latest := providerExtenderObservationLatest(); latest != nil {
+		t.Fatalf("a disabled reading from the publisher must clear it, got %+v", *latest)
+	}
+}
+
+// The teardown path clears what its own listener published, and only that.
+func TestExtenderObservationClearedOnTeardown(t *testing.T) {
+	resetProviderExtenderObservation()
+	t.Cleanup(resetProviderExtenderObservation)
+
+	direct := newProviderExtenderStatusListener(nil, 0, "")
+	other := newProviderExtenderStatusListener(nil, 2, "")
+	direct.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true})
+
+	clearProviderExtenderObservation(other)
+	if providerExtenderObservationLatest() == nil {
+		t.Fatal("another listener's teardown cleared the direct reading")
+	}
+
+	clearProviderExtenderObservation(direct)
+	if latest := providerExtenderObservationLatest(); latest != nil {
+		t.Fatalf("the publisher's teardown must clear it, got %+v", *latest)
 	}
 }
