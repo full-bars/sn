@@ -36,6 +36,7 @@ package miner
 // without a recorded budget. That launch is forgotten on restart.
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"sync/atomic"
@@ -813,4 +814,48 @@ func (gate *extenderActivationGate) probeLaunch(posts int, userId string, attemp
 		return extenderLaunchAllowed, nil
 	}
 	return extenderLaunchWithheld, cause
+}
+
+// extenderSessionHolder is the device the extender role runs on, as far as the
+// budget recheck needs it.
+type extenderSessionHolder interface {
+	HoldProvideExtenderSession(held bool)
+}
+
+// extenderBudgetRecheckInterval is how often a held extender role asks the
+// activation budget again.
+var extenderBudgetRecheckInterval = 2 * time.Minute
+
+// startExtenderBudgetRecheck releases the session hold on the extender role as
+// soon as the activation budget allows a post, and returns the stop function.
+//
+// A launch inside the budget window is withheld, and without this the role
+// stays off for the life of the process: the settings a slot passes are its own
+// copy, so the verdict cannot be revised there. Restarting to revise it spends
+// another post, which is what makes the window self-perpetuating.
+func startExtenderBudgetRecheck(ctx context.Context, holder extenderSessionHolder, allowed func() bool) func() {
+	stop := make(chan struct{})
+	var once sync.Once
+	go func() {
+		ticker := time.NewTicker(extenderBudgetRecheckInterval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-stop:
+				return
+			case <-ticker.C:
+			}
+			if !allowed() {
+				continue
+			}
+			holder.HoldProvideExtenderSession(false)
+			tlog("[extender] the activation budget allows a post now, enabling the extender role\n")
+			return
+		}
+	}()
+	return func() {
+		once.Do(func() { close(stop) })
+	}
 }
