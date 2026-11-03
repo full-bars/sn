@@ -241,6 +241,9 @@ func noteLiveProxyHealth(key, health string, downSince time.Time) {
 	if key == "" || health == "" {
 		return
 	}
+	if isDegradedHealth(health) && downSince.IsZero() {
+		downSince = time.Now()
+	}
 	proxyLiveHealthRegistry.Lock()
 	defer proxyLiveHealthRegistry.Unlock()
 	entry := proxyLiveHealthRegistry.byKey[key]
@@ -303,6 +306,13 @@ func seedLiveProxyHealthFromState(state *ProxyState) int {
 				downSince = t
 			}
 		}
+		if downSince.IsZero() && isDegradedHealth(entry.Health) {
+			downSince = now
+			if entry.DownSince == "" {
+				entry.DownSince = downSince.UTC().Format(time.RFC3339)
+				state.Proxies[key] = entry
+			}
+		}
 		proxyLiveHealthRegistry.byKey[key] = proxyLiveHealthEntry{
 			Health:         entry.Health,
 			DownSince:      downSince,
@@ -347,6 +357,11 @@ func overlayLiveProxyHealth(proxies map[string]ProxyEntry) int {
 		downSince := ""
 		if !live.DownSince.IsZero() {
 			downSince = live.DownSince.Format(time.RFC3339)
+		} else if isDegradedHealth(health) {
+			now := time.Now()
+			live.DownSince = now
+			proxyLiveHealthRegistry.byKey[key] = live
+			downSince = now.UTC().Format(time.RFC3339)
 		}
 		if entry.Health == health && entry.DownSince == downSince && entry.AuthFailures == live.AuthFailures && entry.ProxyLegFailures == live.ProxyLegFailures && entry.TransportDrops == live.TransportDrops {
 			continue

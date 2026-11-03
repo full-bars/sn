@@ -426,3 +426,49 @@ func TestRunProxyHealthLog_WritesOnStart(t *testing.T) {
 	cancel()
 	<-done
 }
+
+// TestHealthRegistry_DegradedStampsDownSinceInPersistedState verifies that when
+// health transitions to degraded in the live health registry, DownSince is stamped
+// in the registry and persisted into proxy.state by the snapshot write.
+func TestHealthRegistry_DegradedStampsDownSinceInPersistedState(t *testing.T) {
+	withTempHome(t)
+	resetProxyHealthReportStateForTest()
+
+	const key = "198.51.100.99:1080"
+	if err := writeProxyState(&ProxyState{
+		Proxies: map[string]ProxyEntry{
+			key: {ID: 1, Health: "up"},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	noteLiveProxyHealthUp(key)
+
+	// Proxy drops/fails: health becomes recently_offline.
+	noteLiveProxyHealthFailure(key)
+
+	// Write health snapshot: overlayLiveProxyHealth persists health and DownSince into proxy.state.
+	now := time.Now()
+	if !writeProxyHealthSnapshot(now) {
+		t.Fatal("health snapshot write failed")
+	}
+
+	st, err := readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	entry, ok := st.Proxies[key]
+	if !ok {
+		t.Fatalf("entry %s missing from proxy.state", key)
+	}
+	if entry.Health != "recently_offline" {
+		t.Fatalf("health = %q, want recently_offline", entry.Health)
+	}
+	if entry.DownSince == "" {
+		t.Fatalf("DownSince was not stamped and persisted in state write")
+	}
+	ds, err := time.Parse(time.RFC3339, entry.DownSince)
+	if err != nil || time.Since(ds) > 10*time.Second {
+		t.Fatalf("persisted DownSince = %q, want recent time", entry.DownSince)
+	}
+}

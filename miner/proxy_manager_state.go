@@ -84,6 +84,13 @@ type ProxyEntry struct {
 	Pending     bool      `json:"pending,omitempty"`      // reached but not decidable on the last stage-1 pass
 }
 
+// isDegradedHealth reports whether health belongs to the degraded family
+// (recently_offline, offline, long_offline), distinct from up, dead, inactive,
+// or parked.
+func isDegradedHealth(health string) bool {
+	return health == "recently_offline" || health == "offline" || health == "long_offline"
+}
+
 func proxyStatePath() (string, error) {
 	return providerStatePath("proxy.state")
 }
@@ -110,6 +117,25 @@ func readProxyStateFrom(path string) (*ProxyState, error) {
 	}
 	if s.Proxies == nil {
 		s.Proxies = map[string]ProxyEntry{}
+	}
+	// Backfill DownSince for degraded members loaded without a down timestamp.
+	// LastGraded must never be used: it indicates when a member was last alive
+	// and working, not when it went down. DownSince starts from the read moment
+	// and is immediately persisted so the normal cleanup window ages the member
+	// into removal instead of either deleting on sight or staying immortal.
+	readAt := time.Now()
+	var stampedLegacy bool
+	for k, e := range s.Proxies {
+		if isDegradedHealth(e.Health) && e.DownSince == "" {
+			e.DownSince = readAt.UTC().Format(time.RFC3339)
+			s.Proxies[k] = e
+			stampedLegacy = true
+		}
+	}
+	if stampedLegacy {
+		if err := writeProxyStateTo(path, &s); err != nil {
+			tlog("[proxy] warning: could not persist legacy down_since stamp: %v\n", err)
+		}
 	}
 	return &s, nil
 }
