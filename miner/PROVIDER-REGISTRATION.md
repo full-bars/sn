@@ -144,9 +144,10 @@ upkeep. So every `provide` process renews its state directory's network JWT
 (`miner/network_token_renewal.go`):
 
 - **When:** at the token's point between 40% and 50% of its lifetime, measured
-  from its `iat` (from the time it is read when it has no usable `iat`), so the
-  scheduled point is never later than its half-life: the schedule of the SDK's
-  token refreshes. The point is a hash of the token's id (`jti`), else of its
+  from its `iat`, so the scheduled point is never later than its half-life: the
+  schedule of the SDK's token refreshes. A token without a usable `iat` is
+  renewed at once, because a point measured from the read time would move later
+  with every restart. The point is a hash of the token's id (`jti`), else of its
   signature, else of its whole text (an unsigned token without an id, or text
   that is not a JWT), so points are uniform across tokens: every renewal answers
   a token with its own point, providers that renewed together (after an outage
