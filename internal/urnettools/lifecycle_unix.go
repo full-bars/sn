@@ -3,6 +3,7 @@
 package urnettools
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -32,7 +33,7 @@ func setAutoStart(p Provider, on bool) error {
 		// enable reports success but the unit never runs. The linger check
 		// is only relevant on the enable path — disabling does not need it.
 		if on {
-			if linger, err := execWithTimeout(5*time.Second, "loginctl", "show-user", p.User, "-p", "Linger", "--value"); err == nil {
+			if linger, err := execWithTimeout(context.Background(), 5*time.Second, "loginctl", "show-user", p.User, "-p", "Linger", "--value"); err == nil {
 				if strings.TrimSpace(string(linger)) != "yes" {
 					return fmt.Errorf("linger is not enabled for %s; run sudo loginctl enable-linger %s before enabling this unit", p.User, p.User)
 				}

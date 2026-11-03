@@ -1,6 +1,7 @@
 package urnettools
 
 import (
+	"context"
 	"errors"
 	"io/fs"
 	"os"
@@ -24,8 +25,8 @@ var knownBinaries = map[string]bool{
 // ~/.config/systemd/user or a ~/.urnetwork state dir. Best-effort.
 // Usernames are returned (not home paths) because discoverUserUnits uses
 // them as `systemctl --user -M <user>@` selectors.
-func providerCandidateUsers() ([]string, error) {
-	b, err := execWithTimeout(5*time.Second, "getent", "passwd")
+func providerCandidateUsers(ctx context.Context) ([]string, error) {
+	b, err := execWithTimeout(ctx, 5*time.Second, "getent", "passwd")
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +161,7 @@ var (
 // users plus stopped systemd units. Sorted by user then unit for stable
 // output.
 func Discover() []Provider {
+	systemdDiscoveryCutShort = false
 	all := discoverProcessesFn()
 	// Platform hook for stopped-unit / lifecycle-based discovery. On Linux
 	// this attaches systemd unit names to running providers and adds

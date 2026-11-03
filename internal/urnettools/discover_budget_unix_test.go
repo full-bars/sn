@@ -5,9 +5,11 @@ package urnettools
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -17,16 +19,25 @@ import (
 // probe goroutines, so the record is guarded.
 func recordSubprocesses(t *testing.T, fn func(ctx context.Context, name string, args ...string) ([]byte, error)) func() []string {
 	t.Helper()
+	execMu.Lock()
 	orig := execCommandFn
-	t.Cleanup(func() { execCommandFn = orig })
+	execMu.Unlock()
+	t.Cleanup(func() {
+		execMu.Lock()
+		execCommandFn = orig
+		execMu.Unlock()
+	})
 	var mu sync.Mutex
 	var calls []string
-	execCommandFn = func(ctx context.Context, name string, args ...string) ([]byte, error) {
+	wrapped := func(ctx context.Context, name string, args ...string) ([]byte, error) {
 		mu.Lock()
 		calls = append(calls, strings.Join(append([]string{name}, args...), " "))
 		mu.Unlock()
 		return fn(ctx, name, args...)
 	}
+	execMu.Lock()
+	execCommandFn = wrapped
+	execMu.Unlock()
 	return func() []string {
 		mu.Lock()
 		defer mu.Unlock()
@@ -106,6 +117,9 @@ func TestDiscoverStoppedWithSystemdStillRunsSystemctlProbes(t *testing.T) {
 // 5 seconds, so only the budget can end the pass this early. The failure
 // guard is generous and fires only when the budget is broken.
 func TestDiscoverSystemdReturnsWithinBudgetWhileAProbeHangs(t *testing.T) {
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+	stubSystemd(t, true)
+	noOpenRC(t)
 	origBudget := systemdDiscoveryBudget
 	systemdDiscoveryBudget = 50 * time.Millisecond
 	t.Cleanup(func() { systemdDiscoveryBudget = origBudget })
@@ -117,7 +131,10 @@ func TestDiscoverSystemdReturnsWithinBudgetWhileAProbeHangs(t *testing.T) {
 	entered := make(chan struct{}, 1)
 	recordSubprocesses(t, func(_ context.Context, name string, args ...string) ([]byte, error) {
 		if name == "systemctl" && len(args) > 0 && args[0] == "--plain" {
-			entered <- struct{}{}
+			select {
+			case entered <- struct{}{}:
+			default:
+			}
 			<-release // ignores its context, like a wedged systemctl
 			return nil, errors.New("released")
 		}
@@ -125,7 +142,7 @@ func TestDiscoverSystemdReturnsWithinBudgetWhileAProbeHangs(t *testing.T) {
 	})
 
 	done := make(chan []Provider, 1)
-	go func() { done <- discoverSystemdUnits(nil) }()
+	go func() { done <- discoverStopped(nil) }()
 	select {
 	case out := <-done:
 		if len(out) != 0 {
@@ -134,5 +151,155 @@ func TestDiscoverSystemdReturnsWithinBudgetWhileAProbeHangs(t *testing.T) {
 		<-entered
 	case <-time.After(10 * time.Second):
 		t.Fatal("discovery did not return within its budget while a probe hung")
+	}
+}
+
+// attachUnits cannot exceed the budget: a stubbed userUnitOwns that blocks
+// longer than a shrunk systemdDiscoveryBudget must not extend discoverStopped
+// past the budget, and the caller still gets the process records.
+func TestDiscoverAttachUnitsCannotExceedBudget(t *testing.T) {
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+	stubSystemd(t, true)
+	noOpenRC(t)
+	origBudget := systemdDiscoveryBudget
+	systemdDiscoveryBudget = 50 * time.Millisecond
+	t.Cleanup(func() { systemdDiscoveryBudget = origBudget })
+
+	origCgroup := readCgroupFn
+	t.Cleanup(func() { readCgroupFn = origCgroup })
+	readCgroupFn = func(pid int) (string, error) {
+		return userUnitCgroup, nil
+	}
+
+	origOwns := userUnitOwns
+	t.Cleanup(func() { userUnitOwns = origOwns })
+	userUnitOwns = func(ctx context.Context, p Provider, unit string) bool {
+		select {
+		case <-time.After(2 * time.Second):
+			return true
+		case <-ctx.Done():
+			return false
+		}
+	}
+
+	procs := []Provider{{PID: 99999, User: "alice", Binary: "/opt/urnetwork/bin/provider"}}
+	done := make(chan []Provider, 1)
+	go func() { done <- discoverStopped(procs) }()
+
+	select {
+	case <-done:
+		// Completed within budget. Process records are preserved.
+		if len(procs) != 1 || procs[0].PID != 99999 || procs[0].User != "alice" {
+			t.Fatalf("caller process records lost: %+v", procs)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("attachUnits exceeded systemdDiscoveryBudget")
+	}
+}
+
+// A cut-short pass is reported: after a timed-out discovery, the flag is set
+// and the user-facing message says the scan did not finish.
+func TestDiscoverCutShortPassReported(t *testing.T) {
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+	stubSystemd(t, true)
+	noOpenRC(t)
+	origBudget := systemdDiscoveryBudget
+	systemdDiscoveryBudget = 50 * time.Millisecond
+	t.Cleanup(func() { systemdDiscoveryBudget = origBudget })
+
+	recordSubprocesses(t, func(ctx context.Context, name string, args ...string) ([]byte, error) {
+		<-ctx.Done()
+		return nil, ctx.Err()
+	})
+
+	out := discoverStopped(nil)
+	if len(out) != 0 {
+		t.Fatalf("expected no units, got %+v", out)
+	}
+	if !systemdDiscoveryCutShort {
+		t.Fatal("expected systemdDiscoveryCutShort to be true after a timed-out discovery")
+	}
+
+	// selectTarget with no providers must report the timeout
+	_, err := selectTarget(nil, Target{})
+	if err == nil {
+		t.Fatal("expected selectTarget to fail with no providers")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "systemd could not be scanned in time") || !strings.Contains(msg, "stopped units may be missing") || !strings.Contains(msg, "scan did not finish") {
+		t.Fatalf("expected message to say systemd could not be scanned in time and stopped units may be missing (scan did not finish), got %q", msg)
+	}
+
+	// cmdStatus must also report this error
+	origDisc := discoverStatusFn
+	t.Cleanup(func() { discoverStatusFn = origDisc })
+	discoverStatusFn = func() []Provider { return nil }
+	statusErr := cmdStatus(nil)
+	if statusErr == nil || !strings.Contains(statusErr.Error(), "scan did not finish") {
+		t.Fatalf("cmdStatus expected cut-short error, got %v", statusErr)
+	}
+}
+
+// Many units stay inside the budget: with N units whose property lookups each
+// take a fixed delay, discovery completes inside the budget for N that would
+// fail when serialised.
+func TestDiscoverManyUnitsStayInsideBudget(t *testing.T) {
+	const n = 16
+	const fixedDelay = 25 * time.Millisecond
+	var lines []string
+	for i := 0; i < n; i++ {
+		lines = append(lines, fmt.Sprintf("urnetwork-node%d.service loaded active running", i))
+	}
+	text := strings.Join(lines, "\n")
+
+	origBudget := systemdDiscoveryBudget
+	systemdDiscoveryBudget = 200 * time.Millisecond
+	t.Cleanup(func() { systemdDiscoveryBudget = origBudget })
+
+	start := time.Now()
+	providers := parseUnitLines(text, nil,
+		func(unit string) string { return "user" },
+		func(unit string) string {
+			time.Sleep(fixedDelay)
+			return "/opt/urnetwork/bin/urnetwork"
+		},
+	)
+	elapsed := time.Since(start)
+
+	if len(providers) != n {
+		t.Fatalf("expected %d providers, got %d", n, len(providers))
+	}
+	if elapsed > systemdDiscoveryBudget {
+		t.Fatalf("discovery took %v, exceeding budget %v (concurrent worker cap should finish in ~%v)",
+			elapsed, systemdDiscoveryBudget, fixedDelay*2)
+	}
+}
+
+// A cancelled pass leaves no subprocess running: after the budget expires,
+// the subprocess count returns to zero rather than lingering.
+func TestDiscoverCancelledPassLeavesNoSubprocessRunning(t *testing.T) {
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+	stubSystemd(t, true)
+	noOpenRC(t)
+	origBudget := systemdDiscoveryBudget
+	systemdDiscoveryBudget = 50 * time.Millisecond
+	t.Cleanup(func() { systemdDiscoveryBudget = origBudget })
+
+	var activeSubprocesses atomic.Int32
+	recordSubprocesses(t, func(ctx context.Context, name string, args ...string) ([]byte, error) {
+		activeSubprocesses.Add(1)
+		defer activeSubprocesses.Add(-1)
+		<-ctx.Done()
+		return nil, ctx.Err()
+	})
+
+	discoverStopped(nil)
+
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) && activeSubprocesses.Load() > 0 {
+		time.Sleep(5 * time.Millisecond)
+	}
+	if remaining := activeSubprocesses.Load(); remaining != 0 {
+		t.Fatalf("expected 0 running subprocesses after cancellation, got %d lingering", remaining)
 	}
 }

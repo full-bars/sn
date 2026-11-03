@@ -364,6 +364,10 @@ func cmdProviders(args []string) error {
 		providers = mine
 	}
 	if len(providers) == 0 {
+		if systemdDiscoveryCutShort {
+			fmt.Println(noProvidersError().Error())
+			return nil
+		}
 		if all || isPrivileged() {
 			docker := DiscoverDocker()
 			if len(docker) == 0 {

@@ -203,7 +203,7 @@ func selectTargets(providers []Provider, t Target, include, exclude []string, in
 		// single-provider box popped a pointless picker; reported 2026-09-20.)
 		chosen = providers
 	case len(providers) == 0:
-		return nil, fmt.Errorf("no providers found on this box")
+		return nil, noProvidersError()
 	case interactive:
 		chosen, err = interactivePick(providers)
 		if err != nil {
@@ -349,7 +349,7 @@ func selectTargetInteractive(providers []Provider, t Target) (Provider, error) {
 	}
 	switch len(providers) {
 	case 0:
-		return Provider{}, fmt.Errorf("no providers found on this box")
+		return Provider{}, noProvidersError()
 	case 1:
 		return providers[0], nil
 	default:

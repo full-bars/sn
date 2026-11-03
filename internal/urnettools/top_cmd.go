@@ -115,6 +115,7 @@ const topDiscoverRedraw = 250 * time.Millisecond
 // the wait, as they do in the main view. ok is false when the operator or a
 // signal ended the wait first.
 func discoverWhileDrawing(ctx context.Context, scr tcellui.Screen) (providers []Provider, ok bool) {
+	systemdDiscoveryCutShort = false
 	// The seam is read here, before the goroutine starts, so the goroutine
 	// never reads a package variable that someone else may be replacing.
 	discover := discoverStatusFn

@@ -175,7 +175,7 @@ func freebsdProcessOwner(c procstatCreds) (username, home string) {
 // discovery then reports no providers, which is the honest outcome when the
 // process table cannot be read, and keeps the caller free of error plumbing.
 func runProcstat(args ...string) string {
-	out, err := execWithTimeout(5*time.Second, "procstat", args...)
+	out, err := execWithTimeout(context.Background(), 5*time.Second, "procstat", args...)
 	if err != nil {
 		return ""
 	}

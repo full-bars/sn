@@ -3,6 +3,7 @@
 package urnettools
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -12,7 +13,7 @@ func stubUserUnitOwns(t *testing.T, ok bool) *[]string {
 	t.Helper()
 	var asked []string
 	old := userUnitOwns
-	userUnitOwns = func(p Provider, unit string) bool {
+	userUnitOwns = func(_ context.Context, p Provider, unit string) bool {
 		asked = append(asked, p.User+":"+unit)
 		return ok
 	}
@@ -25,7 +26,7 @@ func stubUserUnitOwns(t *testing.T, ok bool) *[]string {
 func TestAttachUnitFromCgroupUserUnit(t *testing.T) {
 	asked := stubUserUnitOwns(t, true)
 	p := Provider{User: "user", PID: 1, Binary: "/home/user/sn-canary/provider"}
-	attachUnitFromCgroup(&p, userUnitCgroup)
+	attachUnitFromCgroup(context.Background(), &p, userUnitCgroup)
 	if p.Unit != "sn-canary.service" {
 		t.Fatalf("Unit = %q, want sn-canary.service", p.Unit)
 	}
@@ -38,12 +39,12 @@ func TestAttachUnitFromCgroupUserUnit(t *testing.T) {
 func TestAttachUnitFromCgroupUnconfirmed(t *testing.T) {
 	stubUserUnitOwns(t, false)
 	p := Provider{User: "user", PID: 1}
-	attachUnitFromCgroup(&p, userUnitCgroup)
+	attachUnitFromCgroup(context.Background(), &p, userUnitCgroup)
 	if p.Unit != "" {
 		t.Errorf("unconfirmed user unit attached: %q", p.Unit)
 	}
 	stubUserUnitOwns(t, true)
-	attachUnitFromCgroup(&p, "0::/system.slice/sn-canary.service\n")
+	attachUnitFromCgroup(context.Background(), &p, "0::/system.slice/sn-canary.service\n")
 	if p.Unit != "" {
 		t.Errorf("system unit with a non-provider name attached: %q", p.Unit)
 	}
@@ -87,7 +88,7 @@ func stubUserUnitProperty(t *testing.T, vals map[string]string) *[]string {
 	t.Helper()
 	var asked []string
 	old := userUnitProperty
-	userUnitProperty = func(scope []string, unit, prop string) string {
+	userUnitProperty = func(_ context.Context, scope []string, unit, prop string) string {
 		asked = append(asked, strings.Join(scope, " ")+"|"+unit+"|"+prop)
 		return vals[prop]
 	}
@@ -113,7 +114,7 @@ func TestUserUnitOwns(t *testing.T) {
 	for _, c := range cases {
 		stubUserUnitProperty(t, c.vals)
 		p := Provider{User: c.user, Binary: bin}
-		if got := userUnitOwns(p, "sn-canary.service"); got != c.want {
+		if got := userUnitOwns(context.Background(), p, "sn-canary.service"); got != c.want {
 			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
 		}
 	}
@@ -123,7 +124,7 @@ func TestUserUnitOwns(t *testing.T) {
 // not even asked (there is no user manager to address, and "-M @" is not one).
 func TestUserUnitOwnsEmptyUserFailsClosed(t *testing.T) {
 	asked := stubUserUnitProperty(t, map[string]string{"Id": "sn-canary.service", "ExecStart": "{ path=/p ; }"})
-	if userUnitOwns(Provider{User: "", Binary: "/p"}, "sn-canary.service") {
+	if userUnitOwns(context.Background(), Provider{User: "", Binary: "/p"}, "sn-canary.service") {
 		t.Fatal("empty p.User was confirmed as owner")
 	}
 	if len(*asked) != 0 {
@@ -134,7 +135,7 @@ func TestUserUnitOwnsEmptyUserFailsClosed(t *testing.T) {
 // The lookup is scoped to the owning user's manager, never the system one.
 func TestUserUnitOwnsQueriesOwnersManager(t *testing.T) {
 	asked := stubUserUnitProperty(t, map[string]string{"Id": "x.service"})
-	userUnitOwns(Provider{User: "definitely-not-me-xyz", Binary: "/p"}, "x.service")
+	userUnitOwns(context.Background(), Provider{User: "definitely-not-me-xyz", Binary: "/p"}, "x.service")
 	if len(*asked) == 0 || !strings.HasPrefix((*asked)[0], "--user -M definitely-not-me-xyz@|x.service|Id") {
 		t.Errorf("unexpected scope: %v", *asked)
 	}

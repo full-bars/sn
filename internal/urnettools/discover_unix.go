@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -399,6 +400,17 @@ func narrowToAccessible(providers []Provider) []Provider {
 	return out
 }
 
+// systemdDiscoveryCutShort records whether the most recent systemd discovery
+// pass was cut short by the deadline before finishing its scan.
+var systemdDiscoveryCutShort bool
+
+// readCgroupFn reads a process's cgroup file. A var seam so tests can stub
+// cgroup contents without touching /proc.
+var readCgroupFn = func(pid int) (string, error) {
+	b, err := os.ReadFile(fmt.Sprintf("/proc/%d/cgroup", pid))
+	return string(b), err
+}
+
 // discoverStopped on Linux restores the F2 stopped-provider discovery: it
 // attaches systemd unit names to the running providers, then scans the
 // system and user managers for provider units that are not backed by a live
@@ -412,8 +424,18 @@ func discoverStopped(running []Provider) []Provider {
 	// provider runs outside any unit they are the whole cost of `top`, `status`
 	// and `providers`. The marker is checked once per pass.
 	if systemdRunningFn() {
-		attachUnits(running)
-		out = discoverSystemdUnits(running)
+		systemdDiscoveryCutShort = false
+		ctx, cancel := context.WithTimeout(context.Background(), systemdDiscoveryBudget)
+		defer cancel()
+		attachUnits(ctx, running)
+		if ctx.Err() != nil {
+			systemdDiscoveryCutShort = true
+		} else {
+			out = discoverSystemdUnits(ctx, running)
+			if ctx.Err() != nil {
+				systemdDiscoveryCutShort = true
+			}
+		}
 	}
 	// A stopped OpenRC service is invisible to both process scan and systemd
 	// unit scan, so it is discovered from its init script. Without this, every
@@ -434,17 +456,17 @@ func discoverStopped(running []Provider) []Provider {
 // cgroup proves which unit a process belongs to, not that the unit starts this
 // binary, so accepting an unknown binary would associate whatever the unit runs
 // with this provider. Overridable so tests need no systemd.
-var userUnitOwns = func(p Provider, unit string) bool {
+var userUnitOwns = func(ctx context.Context, p Provider, unit string) bool {
 	// No owner means no user manager to ask (systemctlUserArgs("") would build
 	// "-M @"), so ownership is unprovable: fail closed.
 	if p.User == "" {
 		return false
 	}
 	scope := systemctlUserArgs(p.User)
-	if userUnitProperty(scope, unit, "Id") != unit {
+	if userUnitProperty(ctx, scope, unit, "Id") != unit {
 		return false
 	}
-	bin := parseExecStartPath(userUnitProperty(scope, unit, "ExecStart"))
+	bin := parseExecStartPath(userUnitProperty(ctx, scope, unit, "ExecStart"))
 	return userUnitBinaryIsProvider(p, bin)
 }
 
@@ -466,22 +488,28 @@ func userUnitBinaryIsProvider(p Provider, bin string) bool {
 // keep Unit="". System units are accepted by provider-looking name; user
 // units, whose names are free-form, are accepted only when userUnitOwns
 // confirms them.
-func attachUnits(procs []Provider) {
+func attachUnits(ctx context.Context, procs []Provider) {
 	for i := range procs {
+		if ctx.Err() != nil {
+			return
+		}
 		p := &procs[i]
 		if p.PID == 0 {
 			continue
 		}
-		cg, err := os.ReadFile(fmt.Sprintf("/proc/%d/cgroup", p.PID))
+		cg, err := readCgroupFn(p.PID)
 		if err != nil {
 			continue
 		}
-		attachUnitFromCgroup(p, string(cg))
+		attachUnitFromCgroup(ctx, p, cg)
 	}
 }
 
 // attachUnitFromCgroup sets p.Unit from the given /proc/<pid>/cgroup contents.
-func attachUnitFromCgroup(p *Provider, cg string) {
+func attachUnitFromCgroup(ctx context.Context, p *Provider, cg string) {
+	if ctx.Err() != nil {
+		return
+	}
 	unit, user := unitFromCgroup(cg)
 	switch {
 	case unit == "":
@@ -491,7 +519,7 @@ func attachUnitFromCgroup(p *Provider, cg string) {
 		// unfiltered name would make restart systemctl-restart the
 		// wrong unit.
 		p.Unit = unit
-	case user && userUnitOwns(*p, unit):
+	case user && userUnitOwns(ctx, *p, unit):
 		p.Unit = unit
 	}
 }
@@ -506,16 +534,29 @@ func attachUnitFromCgroup(p *Provider, cg string) {
 // below never shows. So this also enumerates per-user managers for users
 // that plausibly run a provider (a user unit that looks like a provider, or
 // a .urnetwork state dir), bounded to those users.
-func discoverSystemdUnits(running []Provider) []Provider {
-	ctx, cancel := context.WithTimeout(context.Background(), systemdDiscoveryBudget)
-	defer cancel()
+func discoverSystemdUnits(ctx context.Context, running []Provider) []Provider {
+	if ctx == nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.Background(), systemdDiscoveryBudget)
+		defer cancel()
+	}
+	if ctx.Err() != nil {
+		systemdDiscoveryCutShort = true
+		return nil
+	}
 	// The system listing and the user-candidate lookup are independent, so
 	// they run together. The per-user listings need the candidate list, so
 	// they start after it.
-	system := startProbe(func() []Provider { return discoverSystemUnits(running) })
-	candidates := startProbe(candidateUserNames)
-	out, _ := awaitProbe(ctx, system)
-	users, _ := awaitProbe(ctx, candidates)
+	system := startProbe(ctx, func(pctx context.Context) []Provider { return discoverSystemUnits(pctx, running) })
+	candidates := startProbe(ctx, func(pctx context.Context) []string { return candidateUserNames(pctx) })
+	out, ok1 := awaitProbe(ctx, system)
+	if !ok1 {
+		systemdDiscoveryCutShort = true
+	}
+	users, ok2 := awaitProbe(ctx, candidates)
+	if !ok2 {
+		systemdDiscoveryCutShort = true
+	}
 	return append(out, discoverUserUnits(ctx, running, users)...)
 }
 
@@ -530,9 +571,9 @@ var systemdDiscoveryBudget = 2 * time.Second
 // startProbe runs fn on its own goroutine and returns the channel its result
 // arrives on. The channel is buffered, so a probe that outlives its wait does
 // not block forever.
-func startProbe[T any](fn func() T) <-chan T {
+func startProbe[T any](ctx context.Context, fn func(context.Context) T) <-chan T {
 	ch := make(chan T, 1)
-	go func() { ch <- fn() }()
+	go func() { ch <- fn(ctx) }()
 	return ch
 }
 
@@ -555,34 +596,34 @@ func awaitProbe[T any](ctx context.Context, ch <-chan T) (v T, ok bool) {
 
 // candidateUserNames adapts providerCandidateUsers to a probe: a failed
 // getent means no candidates, which is the same as before.
-func candidateUserNames() []string {
-	users, _ := providerCandidateUsers()
+func candidateUserNames(ctx context.Context) []string {
+	users, _ := providerCandidateUsers(ctx)
 	return users
 }
 
 // discoverSystemUnits scans the system manager's unit listing.
-func discoverSystemUnits(running []Provider) []Provider {
+func discoverSystemUnits(ctx context.Context, running []Provider) []Provider {
 	// --plain strips the leading "●"/space state column so fields[0] is the
 	// unit name; without it a loaded-failed unit parses as "●" and is never
 	// matched (CI unix-lifecycle: fake unit installed but undiscoverable).
-	out, err := execWithTimeout(5*time.Second, "systemctl", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
+	out, err := execWithTimeout(ctx, 5*time.Second, "systemctl", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
 	if err != nil {
 		return nil // no systemd (container/other init) — process scan is enough
 	}
 	// list-units --all misses never-started units that exist on disk;
 	// list-unit-files scans the unit paths and sees them. Merge both so a
 	// freshly-installed (stopped) provider is discoverable.
-	if fb, ferr := execWithTimeout(5*time.Second, "systemctl", "--plain", "list-unit-files", "--no-legend", "--no-pager"); ferr == nil {
+	if fb, ferr := execWithTimeout(ctx, 5*time.Second, "systemctl", "--plain", "list-unit-files", "--no-legend", "--no-pager"); ferr == nil {
 		out = append(out, '\n')
 		out = append(out, fb...)
 	}
 	// unitUser maps unit name -> User= value, resolved on demand.
 	unitUser := func(unit string) string {
-		return unitProperty(nil, unit, "User")
+		return unitProperty(ctx, nil, unit, "User")
 	}
 	// unitBinary maps unit name -> ExecStart executable, resolved on demand.
 	unitBinary := func(unit string) string {
-		return parseExecStartPath(unitProperty(nil, unit, "ExecStart"))
+		return parseExecStartPath(unitProperty(ctx, nil, unit, "ExecStart"))
 	}
 	return parseUnitLines(string(out), running, unitUser, unitBinary)
 }
@@ -590,9 +631,9 @@ func discoverSystemUnits(running []Provider) []Provider {
 // unitProperty returns a single `systemctl show` property value for a unit.
 // scope is the systemctl scope prefix ("--user", or "--user -M <user>@") and
 // may be nil for the system manager.
-func unitProperty(scope []string, unit, prop string) string {
+func unitProperty(ctx context.Context, scope []string, unit, prop string) string {
 	args := append(append([]string{}, scope...), "show", unit, "-p", prop, "--value")
-	b, err := execWithTimeout(5*time.Second, "systemctl", args...)
+	b, err := execWithTimeout(ctx, 5*time.Second, "systemctl", args...)
 	if err != nil {
 		return ""
 	}
@@ -636,6 +677,9 @@ func parseExecStartPath(raw string) string {
 	return ""
 }
 
+// parseUnitWorkerCap bounds concurrent systemd property queries during unit parsing.
+var parseUnitWorkerCap = 8
+
 // parseUnitLines parses `systemctl list-units`/`list-unit-files` output
 // (one unit per line, unit name in the first field) into deduplicated
 // Provider entries, skipping non-provider units and units already backed by
@@ -649,8 +693,8 @@ func parseExecStartPath(raw string) string {
 // box: every enabled-but-inactive unit doubled in `urnet-tools logs`'s
 // ambiguity list).
 func parseUnitLines(text string, running []Provider, userFor, binaryFor func(unit string) string) []Provider {
-	var out []Provider
 	seen := map[string]bool{}
+	var candidates []string
 	for _, line := range strings.Split(text, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 0 {
@@ -660,54 +704,103 @@ func parseUnitLines(text string, running []Provider, userFor, binaryFor func(uni
 		if !isProviderUnit(unit) {
 			continue
 		}
-		// Skip units already backed by a running process (matched by unit
-		// name via the provider's Unit field, set below).  Also catches
-		// duplicates from user-level systemd where attachUnits cannot
-		// parse the cgroup to set Unit — falls back to state-dir match.
-		if alreadyBackedByRunning(running, unit, userFor) {
-			continue
-		}
 		if seen[unit] {
 			continue
 		}
 		seen[unit] = true
-		binary := ""
-		if binaryFor != nil {
-			binary = binaryFor(unit)
-			// Corroborate the name match against what the unit actually
-			// runs. Matching on name alone requires a deny-list of every
-			// sibling program that shares the provider prefix (update,
-			// dashboard, sentinel, ...), which is unbounded: each new one is
-			// a fresh false positive that floods the same-user candidate
-			// list and blocks narrowToAccessible's auto-pick, as
-			// provider-dashboard did on 2026-08-17 and urnetwork-sentinel
-			// did on 2026-09-09. ExecStart is evidence rather than a guess,
-			// so where it is readable it decides. Where it is not (empty),
-			// require a .urnetwork state dir as secondary evidence — a
-			// name-only match is not enough when we cannot verify the
-			// binary (prevents urnetwork-rebind-*, urnetwork-custom-*, etc.
-			// from appearing as phantom providers).
-			if binary != "" && !isProviderArg(binary) {
-				continue
-			}
-			if binary == "" {
-				// ExecStart not readable.  An exact name match
-				// (e.g. "urnetwork") is a provider by definition;
-				// a prefix match (e.g. "urnetwork-rebind-*") needs
-				// corroborating evidence — require a .urnetwork
-				// state dir.  Prevents phantom providers from
-				// non-provider siblings that share the prefix.
-				if !isExactProviderBinary(unit) {
-					user := userFor(unit)
-					if sd := unitStateDir(user); !dirExists(sd) {
-						continue
-					}
+		if unitIn(running, unit) {
+			continue
+		}
+		candidates = append(candidates, unit)
+	}
+	if len(candidates) == 0 {
+		return nil
+	}
+
+	results := make([]*Provider, len(candidates))
+	sem := make(chan struct{}, parseUnitWorkerCap)
+	var wg sync.WaitGroup
+
+	for i, unit := range candidates {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(idx int, u string) {
+			defer func() {
+				<-sem
+				wg.Done()
+			}()
+			results[idx] = inspectCandidateUnit(u, running, userFor, binaryFor)
+		}(i, unit)
+	}
+	wg.Wait()
+
+	var out []Provider
+	for _, r := range results {
+		if r != nil {
+			out = append(out, *r)
+		}
+	}
+	return out
+}
+
+func inspectCandidateUnit(unit string, running []Provider, userFor, binaryFor func(unit string) string) *Provider {
+	var cachedUser *string
+	getUser := func() string {
+		if cachedUser != nil {
+			return *cachedUser
+		}
+		u := ""
+		if userFor != nil {
+			u = userFor(unit)
+		}
+		cachedUser = &u
+		return u
+	}
+
+	// Skip units already backed by a running process (matched by unit
+	// name via the provider's Unit field, set below). Also catches
+	// duplicates from user-level systemd where attachUnits cannot
+	// parse the cgroup to set Unit — falls back to state-dir match.
+	if alreadyBackedByRunning(running, unit, func(string) string { return getUser() }) {
+		return nil
+	}
+	binary := ""
+	if binaryFor != nil {
+		binary = binaryFor(unit)
+		// Corroborate the name match against what the unit actually
+		// runs. Matching on name alone requires a deny-list of every
+		// sibling program that shares the provider prefix (update,
+		// dashboard, sentinel, ...), which is unbounded: each new one is
+		// a fresh false positive that floods the same-user candidate
+		// list and blocks narrowToAccessible's auto-pick, as
+		// provider-dashboard did on 2026-08-17 and urnetwork-sentinel
+		// did on 2026-09-09. ExecStart is evidence rather than a guess,
+		// so where it is readable it decides. Where it is not (empty),
+		// require a .urnetwork state dir as secondary evidence — a
+		// name-only match is not enough when we cannot verify the
+		// binary (prevents urnetwork-rebind-*, urnetwork-custom-*, etc.
+		// from appearing as phantom providers).
+		if binary != "" && !isProviderArg(binary) {
+			return nil
+		}
+		if binary == "" {
+			// ExecStart not readable. An exact name match
+			// (e.g. "urnetwork") is a provider by definition;
+			// a prefix match (e.g. "urnetwork-rebind-*") needs
+			// corroborating evidence — require a .urnetwork
+			// state dir. Prevents phantom providers from
+			// non-provider siblings that share the prefix.
+			if !isExactProviderBinary(unit) {
+				user := getUser()
+				if sd := unitStateDir(user); !dirExists(sd) {
+					return nil
 				}
 			}
 		}
-		out = append(out, providerFromUnit(unit, userFor(unit), binary))
 	}
-	return out
+	user := getUser()
+	p := providerFromUnit(unit, user, binary)
+	return &p
 }
 
 // discoverUserUnits enumerates user-manager units for users that plausibly
@@ -742,13 +835,17 @@ func discoverUserUnits(ctx context.Context, running []Provider, candidates []str
 	sort.Strings(names)
 	probes := make([]<-chan []Provider, 0, len(names))
 	for _, user := range names {
-		probes = append(probes, startProbe(func() []Provider {
-			return userManagerUnits(user, current, running)
+		u := user
+		probes = append(probes, startProbe(ctx, func(pctx context.Context) []Provider {
+			return userManagerUnits(pctx, u, current, running)
 		}))
 	}
 	var out []Provider
 	for _, ch := range probes {
-		units, _ := awaitProbe(ctx, ch)
+		units, ok := awaitProbe(ctx, ch)
+		if !ok {
+			systemdDiscoveryCutShort = true
+		}
 		out = append(out, units...)
 	}
 	return out
@@ -757,18 +854,18 @@ func discoverUserUnits(ctx context.Context, running []Provider, candidates []str
 // userManagerUnits lists one user's manager and returns its provider units.
 // Each user's listing is one probe, so a slow manager delays only its own
 // units.
-func userManagerUnits(user, current string, running []Provider) []Provider {
+func userManagerUnits(ctx context.Context, user, current string, running []Provider) []Provider {
 	var b []byte
 	var err error
 	if user == current {
 		// --plain strips the leading "●"/space state column so
 		// fields[0] is the unit name (see discoverSystemUnits).
-		b, err = execWithTimeout(5*time.Second, "systemctl", "--user", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
+		b, err = execWithTimeout(ctx, 5*time.Second, "systemctl", "--user", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
 		if err == nil {
 			// list-units --all misses never-started units that exist
 			// on disk (a fresh fake/stopped provider); list-unit-files
 			// scans the unit paths and sees them. Merge both.
-			if fb, ferr := execWithTimeout(5*time.Second, "systemctl", "--user", "--plain", "list-unit-files", "--no-legend", "--no-pager"); ferr == nil {
+			if fb, ferr := execWithTimeout(ctx, 5*time.Second, "systemctl", "--user", "--plain", "list-unit-files", "--no-legend", "--no-pager"); ferr == nil {
 				b = append(b, '\n')
 				b = append(b, fb...)
 			}
@@ -779,7 +876,7 @@ func userManagerUnits(user, current string, running []Provider) []Provider {
 		// service accounts), skip this user entirely. The old code
 		// fell back to the current user's manager and labelled every
 		// unit with the wrong user, creating ghost providers.
-		b, err = execWithTimeout(10*time.Second, "systemctl", "--user", "-M", user+"@", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
+		b, err = execWithTimeout(ctx, 10*time.Second, "systemctl", "--user", "-M", user+"@", "--plain", "list-units", "--all", "--no-legend", "--no-pager")
 	}
 	if err != nil {
 		return nil // no session bus / user manager for this user
@@ -792,7 +889,7 @@ func userManagerUnits(user, current string, running []Provider) []Provider {
 	}
 	return parseUnitLines(string(b), running,
 		func(string) string { return user },
-		func(unit string) string { return parseExecStartPath(unitProperty(scope, unit, "ExecStart")) },
+		func(unit string) string { return parseExecStartPath(unitProperty(ctx, scope, unit, "ExecStart")) },
 	)
 }
 
