@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/urnetwork/sdk"
 )
 
 // shortHeadStart makes the hold's cap and poll fast for a test.
@@ -267,5 +269,70 @@ func TestStartupPhaseNeverDisagreesWithTheSystemdLine(t *testing.T) {
 				t.Fatalf("configured proxies line = %q", line)
 			}
 		})
+	}
+}
+
+// A role that reports off must release the hold at once. The published
+// observation cannot carry that verdict — the status callback clears it so no
+// stale enabled reading survives — so the hold reads the callback's own marker.
+// Without that marker this test waits out the whole cap, which is the startup
+// stall a box whose 443 is already taken used to pay on every launch.
+func TestExtenderHeadStartReleasedWhenTheRoleReportsOff(t *testing.T) {
+	resetExtenderHeadStartForTest(t)
+	shortHeadStart(t, 10*time.Second, 5*time.Millisecond)
+
+	listener := &providerExtenderStatusListener{}
+	// The role is allowed, so only the disabled status can release the gate:
+	// without this the withheld-role path would release it and the test would
+	// pass without exercising the fix.
+	publishExtenderHeadStartRole(true)
+	listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: true, Listening: true})
+	go func() {
+		time.Sleep(30 * time.Millisecond)
+		listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{Enabled: false})
+	}()
+
+	start := time.Now()
+	result := extenderHeadStartWait(context.Background(), directHeadStartSources())
+	elapsed := time.Since(start)
+
+	if result.end != extenderHeadStartDisabled {
+		t.Fatalf("end = %v, want disabled", result.end)
+	}
+	if 2*time.Second < elapsed {
+		t.Fatalf("a role that reported off held the proxies for %s", elapsed)
+	}
+	// The verdict the gate acts on is the published one: it must say the role is
+	// known and off, which is what makes the check in the gate fire.
+	if latest := latestProviderExtenderObservation(); !latest.Known || latest.Enabled {
+		t.Fatalf("the gate cannot see the off verdict: %+v", latest)
+	}
+}
+
+// A listen that failed cannot lead to an activation, so it is an attempt as far
+// as the hold is concerned: waiting for an activation time that will never come
+// only spends the cap.
+func TestExtenderHeadStartReleasedWhenTheBindFails(t *testing.T) {
+	resetExtenderHeadStartForTest(t)
+	shortHeadStart(t, 10*time.Second, 5*time.Millisecond)
+
+	listener := &providerExtenderStatusListener{}
+	publishExtenderHeadStartRole(true)
+	go func() {
+		time.Sleep(30 * time.Millisecond)
+		listener.ExtenderProvideStatusChanged(&sdk.ExtenderProvideStatus{
+			Enabled: true, Listening: false, ListenError: "bind: address already in use",
+		})
+	}()
+
+	start := time.Now()
+	result := extenderHeadStartWait(context.Background(), directHeadStartSources())
+	elapsed := time.Since(start)
+
+	if result.end != extenderHeadStartAttempted {
+		t.Fatalf("end = %v, want attempted", result.end)
+	}
+	if 2*time.Second < elapsed {
+		t.Fatalf("a failed bind held the proxies for %s", elapsed)
 	}
 }

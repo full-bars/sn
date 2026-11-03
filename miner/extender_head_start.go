@@ -153,7 +153,11 @@ func latestProviderExtenderObservation() providerExtenderObservation {
 // its family flag; a failure leaves the attempt's time. Both are the attempt,
 // so either releases the proxies.
 func (observation providerExtenderObservation) attempted() bool {
-	return observation.ActivationTime != 0 || observation.ActivatedV4 || observation.ActivatedV6
+	// A listen or bind failure is an attempt in the only sense the hold cares
+	// about: the SDK cannot activate, so waiting for an activation time that
+	// will never arrive only spends the cap.
+	return observation.ActivationTime != 0 || observation.ActivatedV4 || observation.ActivatedV6 ||
+		observation.ListenFailed
 }
 
 // publishExtenderHeadStartRole records the direct launch's extender verdict.

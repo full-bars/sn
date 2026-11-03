@@ -1892,6 +1892,13 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			contractProfile,
 		)
 		if err != nil {
+			if proxySettings == nil {
+				// The verdict above said the direct slot would run, and the
+				// startup hold is waiting on it. This slot will never publish a
+				// status, so withdraw the verdict: otherwise the hold waits out
+				// its whole cap for an answer that cannot come.
+				publishExtenderHeadStartRole(false)
+			}
 			if workProfile != nil || contractProfile != nil {
 				output.observe(captureEvent, index, true, err, 0, nil)
 			}
