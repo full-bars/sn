@@ -319,6 +319,7 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 	// finishes its drain without the file rather than reopening what the
 	// candidate owns, and a save that still arrives reports the lost write.
 	// Every abort below takes the file back, because the parent keeps serving.
+	flushSettingsBeforeRelease()
 	releaseProviderStore()
 	hotswapLog("⚡ [hotswap] Released %s for the candidate\n", providerStoreFileName)
 
