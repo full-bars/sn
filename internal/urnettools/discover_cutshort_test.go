@@ -191,4 +191,3 @@ func TestRestartLogsSetRefuseUnitlessEntryOnCutPass(t *testing.T) {
 		t.Fatalf("cmdSet must refuse unitless provider on cut pass, got: %v", errSet)
 	}
 }
-
