@@ -67,16 +67,28 @@ const providerNetworkSignInGuidance = "Run `provider auth` to sign in again (for
 // the same booleans after a new attempt is still a new refusal, while a
 // standing error re-read beside another changed fact is the same attempt.
 type providerExtenderObservation struct {
-	Known             bool  `json:"known"`
-	Enabled           bool  `json:"enabled"`
-	Listening         bool  `json:"listening"`
-	ListenFailed      bool  `json:"listen_failed"`
-	ActivatedV4       bool  `json:"activated_v4"`
-	ActivatedV6       bool  `json:"activated_v6"`
-	ActivationFailed  bool  `json:"activation_failed"`
-	ActivationTime    int64 `json:"activation_time"`
-	ActivationRefused bool  `json:"activation_refused"`
-	Revoked           bool  `json:"revoked"`
+	Known                 bool   `json:"known"`
+	Enabled               bool   `json:"enabled"`
+	Listening             bool   `json:"listening"`
+	ListenFailed          bool   `json:"listen_failed"`
+	ActivatedV4           bool   `json:"activated_v4"`
+	ActivatedV6           bool   `json:"activated_v6"`
+	ActivationFailed      bool   `json:"activation_failed"`
+	ActivationTime        int64  `json:"activation_time"`
+	ActivationRefused     bool   `json:"activation_refused"`
+	Revoked               bool   `json:"revoked"`
+	Ipv4                  string `json:"ipv4,omitempty"`
+	Ipv6                  string `json:"ipv6,omitempty"`
+	LastActivationError   string `json:"last_activation_error,omitempty"`
+	DnsPorts              string `json:"dns_ports,omitempty"`
+	ConnectionCount       int    `json:"connection_count,omitempty"`
+	PeerPingCount         int    `json:"peer_ping_count,omitempty"`
+	PeerPingCosignedCount int    `json:"peer_ping_cosigned_count,omitempty"`
+	PeerPingRejectedCount int    `json:"peer_ping_rejected_count,omitempty"`
+	PeerPingUnknownCount  int    `json:"peer_ping_unknown_count,omitempty"`
+	LastPeerPingTime      int64  `json:"last_peer_ping_time,omitempty"`
+	LimitedBySubnetsCount int    `json:"limited_by_subnets_count,omitempty"`
+	LimitedBySourceCount  int    `json:"limited_by_source_count,omitempty"`
 }
 
 // Optional operational delivery evidence is independent of status=ok, which

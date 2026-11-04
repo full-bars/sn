@@ -118,8 +118,9 @@ type controlResponse struct {
 	Goroutines *goroutineGroups `json:"goroutines,omitempty"`
 	// ProxyAudit is the proxy audit engine's last completed tick. Nil when
 	// the provider has no audit engine.
-	ProxyAudit *proxyAuditStatus `json:"proxy_audit,omitempty"`
-	Audit      *proxyAuditStatus `json:"audit,omitempty"`
+	ProxyAudit *proxyAuditStatus            `json:"proxy_audit,omitempty"`
+	Audit      *proxyAuditStatus            `json:"audit,omitempty"`
+	Extender   *providerExtenderObservation `json:"extender,omitempty"`
 }
 
 // startControlSocket opens the control socket and serves it until ctx is
@@ -856,7 +857,10 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		// Status only: an unreadable measurement is reported as the zero
 		// value here and nowhere written back.
 		hostCap, _ := readHostCapability()
-		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, HostCapability: &hostCap}
+		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, HostCapability: &hostCap, Extender: providerExtenderObservationLatest()}
+
+	case "extender":
+		return controlResponse{OK: true, Extender: providerExtenderObservationLatest()}
 
 	case "audit":
 		switch req.Action {

@@ -212,16 +212,28 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 	observation := providerExtenderObservation{}
 	if status != nil {
 		observation = providerExtenderObservation{
-			Known:             true,
-			Enabled:           status.Enabled,
-			Listening:         status.Listening,
-			ListenFailed:      status.ListenError != "",
-			ActivatedV4:       status.ActivatedV4,
-			ActivatedV6:       status.ActivatedV6,
-			ActivationFailed:  status.LastActivationError != "",
-			ActivationTime:    status.LastActivationTime,
-			ActivationRefused: status.LastActivationRefused,
-			Revoked:           status.RevokedTime != 0,
+			Known:                 true,
+			Enabled:               status.Enabled,
+			Listening:             status.Listening,
+			ListenFailed:          status.ListenError != "",
+			ActivatedV4:           status.ActivatedV4,
+			ActivatedV6:           status.ActivatedV6,
+			ActivationFailed:      status.LastActivationError != "",
+			ActivationTime:        status.LastActivationTime,
+			ActivationRefused:     status.LastActivationRefused,
+			Revoked:               status.RevokedTime != 0,
+			Ipv4:                  status.Ipv4,
+			Ipv6:                  status.Ipv6,
+			LastActivationError:   status.LastActivationError,
+			DnsPorts:              status.DnsPorts,
+			ConnectionCount:       status.ConnectionCount,
+			PeerPingCount:         status.PeerPingCount,
+			PeerPingCosignedCount: status.PeerPingCosignedCount,
+			PeerPingRejectedCount: status.PeerPingRejectedCount,
+			PeerPingUnknownCount:  status.PeerPingUnknownCount,
+			LastPeerPingTime:      status.LastPeerPingTime,
+			LimitedBySubnetsCount: status.LimitedBySubnetsCount,
+			LimitedBySourceCount:  status.LimitedBySourceCount,
 		}
 	}
 	var detail uint64
