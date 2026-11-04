@@ -703,8 +703,11 @@ func (m *topModel) drawExtender(b *tui.Buffer) {
 			y++
 		}
 	}
+	if ex.Source != SourceControlSocket {
+		row("status", "unavailable", th.Dim)
+		return
+	}
 	row("source", ex.Source, th.Dim)
-	row("preference", ex.Preference, tui.Style{})
 	roleStyle := th.OK
 	if ex.RoleState == "stopped" || ex.RoleState == "disabled" || ex.RoleState == "unknown" {
 		roleStyle = th.Dim
@@ -712,11 +715,10 @@ func (m *topModel) drawExtender(b *tui.Buffer) {
 		roleStyle = th.Bad
 	}
 	row("role state", ex.RoleState, roleStyle)
-	carriers := ex.CarriersBound
-	if carriers == "" {
-		carriers = "none"
+	row("listening", strconv.FormatBool(ex.Bound), th.Dim)
+	if ex.DnsPorts != "" {
+		row("dns ports", ex.DnsPorts, th.Dim)
 	}
-	row("carriers", carriers, th.Dim)
 
 	v4 := "inactive"
 	if ex.ActivatedV4 {
@@ -745,10 +747,7 @@ func (m *topModel) drawExtender(b *tui.Buffer) {
 	row("ipv6", v6, th.Dim)
 
 	if ex.LastRefusal != "" && ex.LastRefusal != "none" {
-		row("refusal", ex.LastRefusal, th.Warn)
-	}
-	if ex.NextAttempt != "" && ex.NextAttempt != "none" {
-		row("next try", ex.NextAttempt, th.Dim)
+		row("error", ex.LastRefusal, th.Warn)
 	}
 	if ex.ConnectionCount > 0 {
 		row("conns", strconv.Itoa(ex.ConnectionCount), th.Dim)
