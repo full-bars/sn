@@ -535,6 +535,12 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		slots = append(slots, slot)
 	}
 
+	activeKeys := make(map[string]bool, len(slots))
+	for _, slot := range slots {
+		activeKeys[legacyImportProofKey(slot)] = true
+	}
+	proofs.setActiveKeys(activeKeys)
+
 	// Validate every candidate entry before any proof or write. A slot already
 	// decided (sticky fallback from a previous start) keeps that decision.
 	adopt := legacyImportAdoptUnproven()

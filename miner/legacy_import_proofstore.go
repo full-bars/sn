@@ -19,6 +19,13 @@
 // The file is keyed by the slot's credential file name (a hash of the slot
 // identity, the same name the journal records as the target), so it carries no
 // proxy address, user or token: only fingerprints of them.
+//
+// Boundary Note: This proof store (.provider.import-proofs.json) sits outside the
+// provider state store's (state_store.go) transactional and schema boundary. It
+// is an independent JSON cache of import proofs rather than part of the bbolt
+// state store, and is not covered by the state store's schema migrations or
+// transactional locks. Pruning of entries for proxies that no longer exist and
+// bounding of total file size are enforced directly within this store.
 package miner
 
 import (
@@ -29,6 +36,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
 
@@ -43,6 +51,10 @@ const (
 	// legacyImportStoredProof is the journal proof name of a slot adopted from
 	// the store without a live call.
 	legacyImportStoredProof = "stored"
+
+	// legacyImportProofStoreMaxEntries bounds the maximum number of proof records
+	// stored on disk to prevent unbounded file growth.
+	legacyImportProofStoreMaxEntries = 4096
 )
 
 const (
@@ -148,6 +160,7 @@ type legacyImportProofStore struct {
 	slots    map[string]legacyImportProofRecord
 	dirty    map[string]bool
 	reproved map[string]bool
+	activeKeys map[string]bool
 	// corrupt names why the file could not be used (empty when it was read or
 	// absent); dropped counts records discarded as malformed.
 	corrupt string
@@ -197,6 +210,15 @@ func readLegacyImportProofFile(path string) (map[string]legacyImportProofRecord,
 		}
 	}
 	return file.Slots, dropped, ""
+}
+
+func (self *legacyImportProofStore) setActiveKeys(keys map[string]bool) {
+	if self == nil {
+		return
+	}
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.activeKeys = keys
 }
 
 // usable reports whether key holds a proof of exactly claim that is still
@@ -292,6 +314,44 @@ func (self *legacyImportProofStore) flush() error {
 			merged[key] = record
 		}
 	}
+
+	// Prune entries for proxies that no longer exist, and prune expired records.
+	now := self.now()
+	for key, rec := range merged {
+		if self.activeKeys != nil && !self.activeKeys[key] {
+			delete(merged, key)
+			delete(self.slots, key)
+			continue
+		}
+		if rec.ProvenAt > 0 {
+			age := now.Sub(time.Unix(rec.ProvenAt, 0))
+			if age > legacyImportProofMaxAge {
+				delete(merged, key)
+				delete(self.slots, key)
+			}
+		}
+	}
+
+	// Bound total file size: prune oldest entries if capacity is exceeded.
+	if len(merged) > legacyImportProofStoreMaxEntries {
+		type entryAge struct {
+			key string
+			ts  int64
+		}
+		entries := make([]entryAge, 0, len(merged))
+		for k, r := range merged {
+			entries = append(entries, entryAge{key: k, ts: r.ProvenAt})
+		}
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].ts < entries[j].ts
+		})
+		excess := len(merged) - legacyImportProofStoreMaxEntries
+		for i := 0; i < excess; i++ {
+			delete(merged, entries[i].key)
+			delete(self.slots, entries[i].key)
+		}
+	}
+
 	raw, err := json.Marshal(legacyImportProofFile{
 		Schema:                 legacyImportProofStoreSchema,
 		CredentialValidityOnly: true,
