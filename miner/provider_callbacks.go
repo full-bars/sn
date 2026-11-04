@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/rand"
 	"hash/fnv"
+	"path/filepath"
 	"strconv"
 	"sync"
 
@@ -68,6 +69,11 @@ func (self *providerAuthenticationCallbacks) AuthLogout() {
 	if self.identityKey != "" {
 		if delErr := loadGlobalClientJWTStore().Delete(self.identityKey); delErr != nil {
 			tlog("⚠️ [jwt-store] failed to evict rejected identity for %s: %v\n", proxyKeyDisplay(self.identityKey), delErr)
+		}
+	}
+	if self.clientJwtPath != "" {
+		if noteErr := noteLegacyImportProofRejected(filepath.Dir(self.clientJwtPath), filepath.Base(self.clientJwtPath), "client_revoked"); noteErr != nil {
+			tlog("⚠️ [import] failed to withdraw stored proof on auth logout for %s: %v\n", filepath.Base(self.clientJwtPath), noteErr)
 		}
 	}
 	self.cancel()

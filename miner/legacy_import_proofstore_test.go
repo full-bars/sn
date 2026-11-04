@@ -553,5 +553,40 @@ func TestProofAdoptionCredentialValidityNotProxyReachability(t *testing.T) {
 	}
 }
 
+// A rejection observed at USE time (e.g. AuthLogout) must be recorded in the
+// proof store immediately, not ignored until restart.
+func TestProofStoreUseTimeRejectionRecorded(t *testing.T) {
+	dir := t.TempDir()
+	store := loadLegacyImportProofStore(dir)
+	claim := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("test-key-material-0123456789012345")),
+		TokenFP:   legacyImportFingerprint([]byte("test-token-jwt-material-0123456789")),
+	}
+	key := "use-time-rejected.jwt"
+	store.record(key, claim, "server_key")
+	if err := store.flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	clientPath := filepath.Join(dir, key)
+	if err := os.WriteFile(clientPath, []byte("dummy-token"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	callbacks := &providerAuthenticationCallbacks{
+		clientJwtPath: clientPath,
+		cancel:        func() {},
+	}
+	callbacks.AuthLogout()
+
+	reloaded := loadLegacyImportProofStore(dir)
+	if !reloaded.rejected(key) {
+		t.Fatalf("FAIL: use-time rejection via AuthLogout was not recorded in proof store: %+v", reloaded.slots[key])
+	}
+}
+
+
 
 
