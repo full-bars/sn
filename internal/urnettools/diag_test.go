@@ -128,7 +128,14 @@ func TestDiagCmdSocketMissing(t *testing.T) {
 	if out != "" || progress != "" {
 		t.Errorf("announced a capture that could not start: %q %q", out, progress)
 	}
-	for _, want := range []string{"control socket " + filepath.Join(dir, "provider.sock") + " is not available", "urnet-tools status"} {
+	// On Windows the provider is a service with no resolvable systemd state
+	// directory, so that error comes before the socket check. Other platforms
+	// have the directory and fail on the missing socket itself.
+	wantErr := []string{"control socket " + filepath.Join(dir, "provider.sock") + " is not available", "urnet-tools status"}
+	if runtime.GOOS == "windows" {
+		wantErr = []string{"no resolvable state directory", "urnet-tools status"}
+	}
+	for _, want := range wantErr {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error lacks %q: %v", want, err)
 		}
