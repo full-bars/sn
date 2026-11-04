@@ -1715,15 +1715,17 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 				if noteErr := noteLegacyImportProofRejected(filepath.Dir(clientJwtPath), filepath.Base(clientJwtPath), "client_revoked"); noteErr != nil {
 					tlog("⚠️ [import] could not withdraw a rejected stored proof for %s: %v\n", display, noteErr)
 				}
-				if !captureDenied && allowCreate {
-					tlog("⚠️ [import] stored proof for %s was revoked; re-proving with fresh identity immediately\n", display)
-					if freshJwt, freshId, freshErr := authenticateProviderFresh(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, output, index); freshErr == nil {
-						byClientJwt = freshJwt
-						clientId = freshId
-						reused = false
+				if !captureDenied {
+					tlog("⚠️ [import] stored proof for %s was revoked; re-proving existing identity immediately\n", display)
+					if reprovedJwt, reprovedId, reprovedErr := reproveRevokedStoredProof(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, retained, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
+						bringUp.identityOutcome(index, slotDisplay, outcome, reason)
+					}); reprovedErr == nil {
+						byClientJwt = reprovedJwt
+						clientId = reprovedId
+						reused = true
 						err = nil
 					} else {
-						tlog("⚠️ [import] immediate fresh identity fallback failed for %s: %v\n", display, freshErr)
+						tlog("⚠️ [import] immediate existing identity re-proof failed for %s: %v\n", display, reprovedErr)
 					}
 				}
 			}
