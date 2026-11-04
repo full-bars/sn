@@ -910,6 +910,9 @@ func provideWith(opts docopt.Opts, start bool) {
 		if err := runHotSwapChildHandshake(hotSwapIPC, opts, apiUrl); err != nil {
 			fmt.Fprintf(os.Stderr, "[hotswap] candidate pre-flight failed: %s\n", err)
 			hotSwapIPC.Close()
+			if errors.Is(err, errProviderStoreNewer) {
+				os.Exit(providerStartupRefusedExitCode)
+			}
 			os.Exit(2)
 		}
 	}
@@ -1160,6 +1163,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			critLog("PROVIDER EXIT: normal shutdown (code=0)")
 		}
 	}()
+	// A store that opens with a newer stamp refuses the start; one that cannot
+	// be opened degrades it. A hotswap candidate cannot open the store while the
+	// parent holds the lock, so it judged the parent's stamp before READY.
+	if !self.hotSwapCandidate {
+		if err := providerStartupStoreVerdict(ctx); err != nil {
+			return err
+		}
+	}
 	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
 		return startupRefusal(ctx, err)

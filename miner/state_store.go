@@ -601,6 +601,7 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 	if isProviderStoreCorrupt(err) {
 		IncrPersistentError(providerStoreCorruptCategory)
 	}
+	replacedFrom := ""
 	if err != nil {
 		// A database bbolt can never load is moved aside once, and the run
 		// starts from an empty store, rather than warning about the same file
@@ -612,24 +613,43 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 				err = markerErr
 			} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
 				tlog("[state] %s would not open (%v); moved it to %s\n", path, err, moved)
+				replacedFrom = moved
 				store, err = openProviderStoreWithTimeout(path, timeout)
 			}
 		}
 	}
 	if err == nil {
-		err = applyProviderStoreRecovery(store, path, time.Now())
+		// The guard runs before anything else touches the file, the recovery
+		// hold included: a store a newer build stamped is refused untouched.
+		err = checkProviderStoreSchema(store)
+		if err == nil {
+			err = applyProviderStoreRecovery(store, path, time.Now())
+		}
 		if err != nil {
+			if errors.Is(err, errProviderStoreNewer) {
+				IncrPersistentError(providerStoreSchemaNewerCategory)
+			}
 			_ = store.Close()
 			store = nil
 		}
 	}
 	if err != nil {
-		tlog("[state] store unavailable: %s\n", err)
-		IncrPersistentError(providerStoreUnavailableCategory)
+		if errors.Is(err, errProviderStoreNewer) {
+			// The file was read and its stamp judged; it is not unavailable.
+			tlog("[state] store refused: %s\n", err)
+		} else {
+			tlog("[state] store unavailable: %s\n", err)
+			IncrPersistentError(providerStoreUnavailableCategory)
+		}
 		globalProviderStoreFailedPath = path
 		globalProviderStoreFailedErr = err
 		globalProviderStoreRetryAt = now.Add(providerStoreRetryInterval)
 		return nil, err
+	}
+	if replacedFrom != "" {
+		// The run is on an empty store the old one's contents are missing
+		// from: not a failure, but not the state the operator left either.
+		noteProviderStoreDegradedFor(fmt.Sprintf("corrupt state store moved to %s, running on a fresh store", replacedFrom))
 	}
 	globalProviderStoreFailedPath = ""
 	globalProviderStoreFailedErr = nil
