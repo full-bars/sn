@@ -55,6 +55,10 @@ const legacyImportTransientAttempts = 3
 
 var legacyImportTransientBackoff = 2 * time.Second
 
+// legacyImportTransientFallbackCooldown is how long a transient fallback (such as
+// proof_unavailable_bound) holds before the slot is re-admitted to prove again.
+var legacyImportTransientFallbackCooldown = 15 * time.Minute
+
 // legacyImportAdoptUnproven reports whether saved credentials are committed
 // without the two-tier network proof. The saved JWT is this node's own
 // credential and the connect layer's sign-in is the real gate, so proving
@@ -99,6 +103,7 @@ type legacyImportJournalSlot struct {
 	// bound; a total outage records the deferral without counting.
 	Deferrals       int   `json:"deferrals,omitempty"`
 	FirstDeferredAt int64 `json:"first_deferred_at,omitempty"`
+	FallbackAt      int64 `json:"fallback_at,omitempty"`
 }
 
 type legacyImportJournal struct {
@@ -248,6 +253,7 @@ type legacyImportSlot struct {
 	// fallbackRecorded marks a sticky fallback loaded from the journal: the
 	// decision is replayed quietly, not announced again.
 	fallbackRecorded bool
+	fallbackAt       int64
 	// attempted is set when the proof phase actually read the server for this
 	// slot; left marks a slot the phase stopped before attempting (budget or
 	// API-unreachable short circuit). A left slot is deferred bookkeeping
@@ -490,13 +496,34 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 					continue
 				}
 			case "fallback":
-				// Sticky: never import this slot again. The new client is
-				// registered by the normal durable path below.
-				slot.state = "fallback"
-				slot.fallbackRecorded = true
-				slot.reason = recorded.Reason
-				if slot.reason == "" {
-					slot.reason = "import_declined_earlier"
+				// Only causes that cannot heal are permanently sticky (server_key_differs,
+				// refresh_rejected, client_revoked, legacy_unparseable, etc.).
+				// A transient failure (proof_unavailable_bound) can heal; after a bounded
+				// cooldown delay, the slot is re-admitted to prove again rather than retired forever.
+				if legacyImportIsPermanentReason(recorded.Reason) {
+					slot.state = "fallback"
+					slot.fallbackRecorded = true
+					slot.reason = recorded.Reason
+					if slot.reason == "" {
+						slot.reason = "import_declined_earlier"
+					}
+				} else {
+					fallbackAge := time.Duration(0)
+					if recorded.FallbackAt > 0 {
+						fallbackAge = time.Since(time.Unix(recorded.FallbackAt, 0))
+					}
+					if recorded.FallbackAt > 0 && fallbackAge >= legacyImportTransientFallbackCooldown {
+						// Cooldown elapsed: re-admit the slot so it can prove again!
+						slot.state = "prove"
+						slot.deferrals = 0
+						slot.firstDeferredAt = 0
+					} else {
+						// Still in cooldown: keep the fallback for this start.
+						slot.state = "fallback"
+						slot.fallbackRecorded = true
+						slot.reason = recorded.Reason
+						slot.fallbackAt = recorded.FallbackAt
+					}
 				}
 			case "defer":
 				// Retry bookkeeping, not a decision: prove again, keeping the
@@ -731,11 +758,16 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	// from the journal keeps the mint allowed but is not announced again.
 	newFallbacks = 0
 	for _, slot := range fallback {
+		fallbackAt := slot.fallbackAt
+		if fallbackAt == 0 {
+			fallbackAt = now.Unix()
+		}
 		journal.Slots[slot.storeKey] = legacyImportJournalSlot{
-			State:    "fallback",
-			ClientID: slot.entry.ClientID,
-			Reason:   slot.reason,
-			Target:   filepath.Base(slot.target),
+			State:      "fallback",
+			ClientID:   slot.entry.ClientID,
+			Reason:     slot.reason,
+			Target:     filepath.Base(slot.target),
+			FallbackAt: fallbackAt,
 		}
 		result.mintSlots[slot.storeKey] = true
 		if !slot.fallbackRecorded {
@@ -766,6 +798,19 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	}
 	summary(phaseResult)
 	return result
+}
+
+// legacyImportIsPermanentReason reports whether a fallback reason is a fatal,
+// permanent refusal (cryptographic key mismatch, server revocation, unparseable
+// data) that can never heal, as opposed to a transient partial outage or 429
+// storm that should be allowed an automatic way back after a cooldown delay.
+func legacyImportIsPermanentReason(reason string) bool {
+	switch reason {
+	case "server_key_differs", "refresh_rejected", "client_revoked", "legacy_unparseable", "legacy_not_ours", "retained_client_unbound", "retained_client_mismatch", "import_declined_earlier":
+		return true
+	default:
+		return false
+	}
 }
 
 // legacyImportProofRetryable reports whether a proof error is a transient
