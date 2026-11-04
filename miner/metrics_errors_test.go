@@ -22,11 +22,13 @@ func resetPersistentErrorStore(t *testing.T) {
 	persistentErrStoreOnce = sync.Once{}
 	t.Cleanup(func() {
 		persistentErrStore = prev
-		// Leave the Once spent rather than open: restoring the store must not
-		// let a later test trigger a load from whatever directory the
-		// environment names then (a developer's real ~/.urnetwork, for one).
+		// Leave the Once spent only if we restored a non-nil store; if the
+		// previous store was nil, reset the Once so a subsequent test can
+		// initialize it.
 		persistentErrStoreOnce = sync.Once{}
-		persistentErrStoreOnce.Do(func() {})
+		if prev != nil {
+			persistentErrStoreOnce.Do(func() {})
+		}
 	})
 }
 

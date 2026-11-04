@@ -270,6 +270,9 @@ func persistentErrorStore() *persistentErrors {
 			persistentErrStore = loadPersistentErrors(persistentErrorsPath())
 		}
 	})
+	if persistentErrStore == nil {
+		return loadPersistentErrors(persistentErrorsPath())
+	}
 	return persistentErrStore
 }
 
