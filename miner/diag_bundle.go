@@ -263,8 +263,10 @@ func runDiag(ctx context.Context, env diagEnv) (res diagResult, err error) {
 	// is the leftover of a crashed or interrupted one.
 	removeDiagOrphans(root)
 	// Pruning is here, before the capture, and never during it. It also runs
-	// before the free-space check, because pruning is what frees space.
-	res.Pruned = pruneDiagBundles(root, env.keep)
+	// before the free-space check, because pruning is what frees space. It
+	// keeps one slot for the bundle this capture is about to write, so the
+	// total stays at keep rather than keep+1.
+	res.Pruned = pruneDiagBundles(root, max(env.keep-1, 0))
 
 	before := env.stats()
 	need := uint64(diagMinFreeBytes)
@@ -560,8 +562,9 @@ func removeDiagOrphans(root string) {
 		return
 	}
 	for _, e := range entries {
-		if e.IsDir() && strings.HasSuffix(e.Name(), diagPartialExt) {
-			os.RemoveAll(filepath.Join(root, e.Name()))
+		name := e.Name()
+		if e.IsDir() && strings.HasSuffix(name, diagPartialExt) && diagStampRe.MatchString(strings.TrimSuffix(name, diagPartialExt)) {
+			os.RemoveAll(filepath.Join(root, name))
 		}
 	}
 }
