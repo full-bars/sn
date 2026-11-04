@@ -22,7 +22,7 @@ func TestShutdownExpireArmsTheGivenExitCode(t *testing.T) {
 	origWatchdog := providerShutdownWatchdog
 	t.Cleanup(func() { providerShutdownWatchdog = origWatchdog })
 
-	// providerShutdownExpire also captures an incident bundle, and that capture
+	// providerShutdownCapture also captures an incident bundle, and that capture
 	// stamps process-wide pacing (a total budget plus a per-trigger interval).
 	// Give both back, or a later test that asserts on its own bundle is either
 	// starved or paced out by this one.

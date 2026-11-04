@@ -291,10 +291,15 @@ func TestShutdownCleanDrainArmsNoWatchdog(t *testing.T) {
 		t.Fatal("add refused")
 	}
 	go join.done()
-	ctx, cancel := context.WithCancel(t.Context())
-	cancel()
-	if err := join.waitBounded(ctx, nil, 5*time.Second, nil, (&shutdownLog{}).logf); err != nil {
+	// A clean drain is a live run whose workers finished: do not cancel, or the
+	// wait can also leave through the cancellation path and the test stops
+	// proving that the drain path skips the timeout.
+	timeoutCalls := 0
+	if err := join.waitBounded(t.Context(), nil, 5*time.Second, func() { timeoutCalls++ }, (&shutdownLog{}).logf); err != nil {
 		t.Fatalf("waitBounded = %v, want nil", err)
+	}
+	if timeoutCalls != 0 {
+		t.Fatalf("a clean drain called the timeout path %d times", timeoutCalls)
 	}
 	if len(armed) != 0 {
 		t.Fatalf("a clean drain armed the watchdog with %v", armed)
