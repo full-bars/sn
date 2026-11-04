@@ -46,7 +46,8 @@ func TestShutdownExpireArmsTheGivenExitCode(t *testing.T) {
 	}
 
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
-	providerShutdownExpire("workers did not drain", providerQuarantinedExitCode)
+	providerShutdownArmWatchdog(providerQuarantinedExitCode)
+	providerShutdownCapture("workers did not drain")
 
 	if gotCode != providerQuarantinedExitCode {
 		t.Fatalf("watchdog armed with code %d, want %d", gotCode, providerQuarantinedExitCode)

@@ -34,7 +34,7 @@ func TestShutdownTimesOutOnWorkerIgnoringCancel(t *testing.T) {
 	var out shutdownLog
 
 	started := time.Now()
-	err := join.waitBounded(ctx, nil, 50*time.Millisecond, out.logf)
+	err := join.waitBounded(ctx, nil, 50*time.Millisecond, nil, out.logf)
 	if elapsed := time.Since(started); 5*time.Second < elapsed {
 		t.Fatalf("shutdown took %s, want about the 50ms grace", elapsed)
 	}
@@ -66,7 +66,7 @@ func TestShutdownCleanDrainExitsZeroWithoutDump(t *testing.T) {
 	go join.done()
 	var out shutdownLog
 
-	err := join.waitBounded(ctx, nil, 5*time.Second, out.logf)
+	err := join.waitBounded(ctx, nil, 5*time.Second, nil, out.logf)
 	if err != nil {
 		t.Fatalf("waitBounded = %v, want nil", err)
 	}
@@ -87,7 +87,7 @@ func TestShutdownDoesNotTimeOutWhileRunIsLive(t *testing.T) {
 	}
 	var out shutdownLog
 	done := make(chan error, 1)
-	go func() { done <- join.waitBounded(t.Context(), nil, 10*time.Millisecond, out.logf) }()
+	go func() { done <- join.waitBounded(t.Context(), nil, 10*time.Millisecond, nil, out.logf) }()
 	select {
 	case err := <-done:
 		t.Fatalf("a live run's wait returned %v", err)
@@ -134,10 +134,12 @@ func TestShutdownTimeoutWritesIncidentBundle(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 	var out shutdownLog
-	if err := join.waitBounded(ctx, nil, 50*time.Millisecond, out.logf); err != errProviderShutdownTimeout {
+	if err := join.waitBounded(ctx, nil, 50*time.Millisecond, func() {
+		providerShutdownArmWatchdog(providerShutdownTimeoutExitCode)
+	}, out.logf); err != errProviderShutdownTimeout {
 		t.Fatalf("waitBounded = %v, want errProviderShutdownTimeout", err)
 	}
-	providerShutdownExpire("workers did not drain", providerShutdownTimeoutExitCode)
+	providerShutdownCapture("workers did not drain")
 
 	if len(armed) != 1 || armed[0] != providerShutdownTimeoutExitCode {
 		t.Fatalf("watchdog armed with %v, want one arming with code %d", armed, providerShutdownTimeoutExitCode)
@@ -158,6 +160,43 @@ func TestShutdownTimeoutWritesIncidentBundle(t *testing.T) {
 	goroutines, err := os.ReadFile(filepath.Join(dir, "goroutines.txt"))
 	if err != nil || !strings.Contains(string(goroutines), "TestShutdownTimeoutWritesIncidentBundle") {
 		t.Fatalf("bundle goroutines.txt does not show the stuck worker: %v", err)
+	}
+}
+
+// The dump can block on pprof, so the exit watchdog must be armed before it.
+// This test fails if the arming moves back after the logf call.
+func TestShutdownArmsWatchdogBeforeDump(t *testing.T) {
+	var armed []int
+	origWatchdog := providerShutdownWatchdog
+	t.Cleanup(func() { providerShutdownWatchdog = origWatchdog })
+	providerShutdownWatchdog = func(after time.Duration, code int) { armed = append(armed, code) }
+
+	join := newSlotJoin()
+	if !join.add() {
+		t.Fatal("add refused")
+	}
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release); join.done() })
+	go func() { <-release }()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	armedBeforeDump := true
+	logf := func(format string, args ...any) {
+		if len(armed) == 0 {
+			armedBeforeDump = false
+		}
+	}
+	if err := join.waitBounded(ctx, nil, 20*time.Millisecond, func() {
+		providerShutdownArmWatchdog(providerShutdownTimeoutExitCode)
+	}, logf); err != errProviderShutdownTimeout {
+		t.Fatalf("waitBounded = %v, want errProviderShutdownTimeout", err)
+	}
+	if !armedBeforeDump {
+		t.Fatal("the goroutine dump was written before the exit watchdog was armed")
+	}
+	if len(armed) != 1 || armed[0] != providerShutdownTimeoutExitCode {
+		t.Fatalf("watchdog armed with %v, want one arming with code %d", armed, providerShutdownTimeoutExitCode)
 	}
 }
 
@@ -202,8 +241,10 @@ func TestShutdownWatchdogEndsRunWhenDeferBlocks(t *testing.T) {
 			ctx, cancel := context.WithCancel(t.Context())
 			cancel()
 			var out shutdownLog
-			if err := join.waitBounded(ctx, nil, providerShutdownGrace, out.logf); err != nil {
-				providerShutdownExpire("workers did not drain", providerShutdownTimeoutExitCode)
+			if err := join.waitBounded(ctx, nil, providerShutdownGrace, func() {
+				providerShutdownArmWatchdog(providerShutdownTimeoutExitCode)
+			}, out.logf); err != nil {
+				providerShutdownCapture("workers did not drain")
 				return err
 			}
 			return nil
@@ -252,7 +293,7 @@ func TestShutdownCleanDrainArmsNoWatchdog(t *testing.T) {
 	go join.done()
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
-	if err := join.waitBounded(ctx, nil, 5*time.Second, (&shutdownLog{}).logf); err != nil {
+	if err := join.waitBounded(ctx, nil, 5*time.Second, nil, (&shutdownLog{}).logf); err != nil {
 		t.Fatalf("waitBounded = %v, want nil", err)
 	}
 	if len(armed) != 0 {

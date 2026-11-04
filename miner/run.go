@@ -2385,13 +2385,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	if err := join.waitBounded(ctx, func() {
 		quiesceForRun(ctx, reloader)
-	}, providerShutdownGrace, tlog); err != nil {
-		// A worker ignored the cancel. Stop waiting: `results` may still be
-		// written, so it is left open, and the exit code makes the supervisor
-		// start a clean process instead of leaving this one half-dead. The
-		// watchdog is armed first, so the defers below cannot hold the process.
-		exitCode := providerShutdownExitCode(quarantined.Load())
-		providerShutdownExpire(fmt.Sprintf("workers did not drain within %s", providerShutdownGrace), exitCode)
+	}, providerShutdownGrace, func() {
+		providerShutdownArmWatchdog(providerShutdownExitCode(quarantined.Load()))
+	}, tlog); err != nil {
+		// A worker ignored the cancel. The exit watchdog was armed before the
+		// dump, so the defers below cannot hold the process. Stop waiting:
+		// `results` may still be written, so it is left open, and the exit code
+		// makes the supervisor start a clean process instead of leaving this one
+		// half-dead.
+		providerShutdownCapture(fmt.Sprintf("workers did not drain within %s", providerShutdownGrace))
 		critLog("SHUTDOWN: workers did not drain within %s; exiting\n", providerShutdownGrace)
 		if quarantined.Load() {
 			// the early return below skips the quarantine join further down, so
