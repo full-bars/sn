@@ -719,6 +719,62 @@ func TestProofStoreEntryBound(t *testing.T) {
 	}
 }
 
+// (2) reprove-tie: a store that loaded a rejection reproves, a NEW rejection lands same second.
+func TestVerify2ReproveTie(t *testing.T) {
+	dir := t.TempDir()
+	c := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("k")),
+		TokenFP:   legacyImportFingerprint([]byte("t")),
+	}
+	a := loadLegacyImportProofStore(dir)
+	a.record("k.jwt", c, "refresh")
+	if err := a.flush(); err != nil {
+		t.Fatal(err)
+	}
+	if err := noteLegacyImportProofRejected(dir, "k.jwt", "client_revoked"); err != nil {
+		t.Fatal(err)
+	}
+	b := loadLegacyImportProofStore(dir)
+	b.record("k.jwt", c, "refresh") // reproved=true
+	// rejection of the reproved identity lands (written by other path) within the same second
+	if err := noteLegacyImportProofRejected(dir, "k.jwt", "client_revoked"); err != nil {
+		t.Fatal(err)
+	}
+	if err := b.flush(); err != nil {
+		t.Fatal(err)
+	}
+	d := loadLegacyImportProofStore(dir)
+	if d.usable("k.jwt", c) {
+		t.Fatalf("second rejection lost on same-second tie: %+v", d.slots["k.jwt"])
+	}
+}
+
+// (2) rejection against a proof only in memory (not yet on disk) is dropped.
+func TestVerify2RejectBeforeFlush(t *testing.T) {
+	dir := t.TempDir()
+	c := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("k")),
+		TokenFP:   legacyImportFingerprint([]byte("t")),
+	}
+	a := loadLegacyImportProofStore(dir)
+	a.record("k.jwt", c, "refresh")
+	// no file yet
+	if err := noteLegacyImportProofRejected(dir, "k.jwt", "client_revoked"); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.flush(); err != nil {
+		t.Fatal(err)
+	}
+	if loadLegacyImportProofStore(dir).usable("k.jwt", c) {
+		t.Fatal("rejection before first flush lost (proof usable)")
+	}
+}
+
+
 
 
 
