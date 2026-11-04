@@ -6,6 +6,10 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 Merged to `main` after `v2026.10.30-1085641150-sn`, not yet in a tagged release. Hashes are commits on `main`.
 
+### Added
+
+- **The `urnet-tools diag` command captures running diagnostics**: captures heap, goroutines and a 30s CPU profile to `<state dir>/diag/<UTC stamp>/` without restarting the provider; writes a plain summary.txt; owner-only, 0600 files in a 0700 dir, 5-bundle retention, free-space floor = max(256 MiB, 8x heap).
+
 ### Fixed
 
 - **Per-carrier IPv6 verdicts reach the miner through a connect bump** ([#337](https://github.com/full-bars/sn/pull/337), 12efc46ba): an exit that cannot reach IPv6 stops costing a full dial timeout per attempt, and exits that can reach it keep IPv6. The miner consumes connect as a module, so the verdicts arrive through the pin.
