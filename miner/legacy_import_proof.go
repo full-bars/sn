@@ -423,6 +423,7 @@ func legacyImportProveAll(
 			flushLegacyImportProofs(narrator, opts.proofs)
 		}
 	}
+	flushLegacyImportProofs(narrator, opts.proofs)
 	return legacyImportResultComplete, 0
 }
 
