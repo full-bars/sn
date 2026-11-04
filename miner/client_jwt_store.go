@@ -48,6 +48,22 @@ type clientJWTStore struct {
 	// re-encodes and fsyncs the whole file, so callers that change many
 	// entries at once must batch them into a single flush.
 	flushes int
+	// clock is the time source for durations and logs; nil means time.Now.
+	clock func() time.Time
+}
+
+// sameAs compares by value; MintedAt goes through Equal because a time read
+// back from JSON carries no monotonic reading and so never == the original.
+func (e clientJWTEntry) sameAs(o clientJWTEntry) bool {
+	return e.ByClientJWT == o.ByClientJWT && e.ClientID == o.ClientID &&
+		e.NetworkID == o.NetworkID && e.MintedAt.Equal(o.MintedAt)
+}
+
+func (s *clientJWTStore) now() time.Time {
+	if s.clock != nil {
+		return s.clock()
+	}
+	return time.Now()
 }
 
 func newClientJWTStore(path string) *clientJWTStore {
@@ -431,6 +447,7 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 	if s.path == "" {
 		return nil
 	}
+	start := s.now()
 	s.flushes++
 	dir := filepath.Dir(s.path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
@@ -448,10 +465,15 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 	// Reload the durable store now, under the lock, so any entries a
 	// concurrent process wrote since we last loaded are preserved.
 	merged := s.entries
+	var baseline map[string]clientJWTEntry
 	if data, err := os.ReadFile(s.path); err == nil && len(data) > 0 {
 		var onDisk map[string]clientJWTEntry
 		if jsonErr := json.Unmarshal(data, &onDisk); jsonErr == nil {
 			merged = onDisk
+			baseline = make(map[string]clientJWTEntry, len(onDisk))
+			for k, v := range onDisk {
+				baseline[k] = v
+			}
 		}
 		// A corrupt on-disk file falls back to this process's in-memory
 		// entries (merged stays s.entries) rather than failing the flush —
@@ -464,18 +486,58 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 	// write the stale entries straight back to disk on the next flush of any
 	// key, forever undoing the prune.
 	merged = pruneStaleEntries(merged)
+
+	var added, replaced, removed int
+	var hasExpiredReplacement bool
 	for _, key := range deletes {
+		if _, ok := baseline[key]; ok {
+			removed++
+		}
 		delete(merged, key)
 	}
 	for key, entry := range upserts {
+		prev, ok := baseline[key]
+		switch {
+		case !ok:
+			added++
+		case !prev.sameAs(entry):
+			replaced++
+			if validateJWTExpiry(prev.ByClientJWT) != nil {
+				hasExpiredReplacement = true
+			}
+		}
 		merged[key] = entry
 	}
 	s.entries = merged
+
+	cause := "initial"
+	if len(baseline) > 0 {
+		switch {
+		case replaced > 0:
+			if hasExpiredReplacement {
+				cause = "expired"
+			} else {
+				cause = "refreshed"
+			}
+		case added > 0:
+			cause = "added"
+		case removed > 0:
+			cause = "removed"
+		default:
+			cause = "initial"
+		}
+	}
 
 	data, err := json.MarshalIndent(s.entries, "", "  ")
 	if err != nil {
 		return err
 	}
+
+	dur := s.now().Sub(start)
+	if dur < 0 {
+		dur = 0
+	}
+	tlog("client_jwt_store: save %d entries cause=%s replaced=%d duration=%dms\n", len(merged), cause, replaced, dur.Milliseconds())
 
 	// Use unpredictable temp file to prevent collisions with concurrent writers (F-9)
 	tmpFile, err := os.CreateTemp(dir, ".client_jwts-*.tmp")
