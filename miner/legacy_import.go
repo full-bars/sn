@@ -827,8 +827,13 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		}
 	}
 	if err := writeLegacyImportJournal(opts.stateDir, journal); err != nil {
-		// The mint may proceed without the audit record, but an unreadable
-		// journal must not silently become a decision again.
+		// A transient fallback must have a durable decision before the mint
+		// path can protect the original entry across this and later starts.
+		for _, slot := range fallback {
+			if !legacyImportIsPermanentReason(slot.reason) {
+				delete(result.mintSlots, slot.storeKey)
+			}
+		}
 		skip("journal_write_failed", err.Error())
 	}
 	if imported > 0 || newFallbacks > 0 || skipped > 0 {

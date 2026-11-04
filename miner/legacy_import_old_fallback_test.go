@@ -3,13 +3,51 @@ package miner
 import (
 	"context"
 	"encoding/json"
+	"net"
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 
 	"github.com/urnetwork/connect"
 )
+
+func TestImportFallbackJournalFailureMustNotPermitMint(t *testing.T) {
+	oldBackoff := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = oldBackoff }()
+	f := newLegacyImportFixture(t, true, 2)
+	slot := f.proxySettings[0]
+	store, err := readLegacyStoreRaw(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	delete(f.prover.serviceKey, f.proxyClientIDs[slot.Key()])
+	f.prover.refreshErr[store[slot.Key()].ByClientJWT] = &net.OpError{Op: "dial", Net: "tcp", Err: syscall.ETIMEDOUT}
+	j := newLegacyImportJournal()
+	j.Slots[slot.Key()] = legacyImportJournalSlot{State: "defer", Deferrals: legacyImportDeferralStarts - 1, FirstDeferredAt: time.Now().Unix()}
+	if err := writeLegacyImportJournal(f.dir, j); err != nil {
+		t.Fatal(err)
+	}
+	result := f.run(legacyImportHooks{afterMarkerWrite: func() error {
+		path := filepath.Join(f.dir, legacyImportJournalName)
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+		return os.Mkdir(path, 0700)
+	}})
+	if result.mintAllowed(slot.Key()) {
+		t.Fatal("transient fallback allowed mint without a durable decision")
+	}
+	defer withGlobalStore(t, filepath.Join(f.dir, legacyClientJwtStoreName))()
+	setHotRestart(t, false)
+	mint := func(context.Context) (string, connect.Id, error) { return "minted", connect.NewId(), nil }
+	_, _, _, err = provideClientJWT(context.Background(), clientJWTProvideConfig{ClientJwtPath: f.target(slot), ProxySettings: slot, Mint: mint, FreshMint: mint})
+	if err == nil {
+		t.Fatal("mint proceeded with unreadable import journal")
+	}
+}
 
 func TestImportFallbackLogoutKeepsDifferentOriginalIdentity(t *testing.T) {
 	f := newLegacyImportFixture(t, true, 1)

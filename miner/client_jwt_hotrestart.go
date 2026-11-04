@@ -381,11 +381,12 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 	preserveLegacy := false
 	if cfg.ClientJwtPath != "" {
 		journal, journalErr := readLegacyImportJournal(filepath.Dir(cfg.ClientJwtPath))
-		if journalErr == nil {
-			if recorded, ok := journal.Slots[identityKey]; ok && recorded.State == "fallback" && !legacyImportIsPermanentReason(recorded.Reason) {
-				if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok && entry.ClientID == recorded.ClientID {
-					preserveLegacy = true
-				}
+		if journalErr != nil {
+			return "", connect.Id{}, false, fmt.Errorf("read legacy import decisions: %w", journalErr)
+		}
+		if recorded, ok := journal.Slots[identityKey]; ok && recorded.State == "fallback" && !legacyImportIsPermanentReason(recorded.Reason) {
+			if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok && entry.ClientID == recorded.ClientID {
+				preserveLegacy = true
 			}
 		}
 	}
