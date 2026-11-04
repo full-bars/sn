@@ -306,6 +306,10 @@ func (self *legacyImportProofStore) flush() error {
 	merged, _, _ := readLegacyImportProofFile(self.path)
 	for key := range self.dirty {
 		if record, ok := self.slots[key]; ok {
+			if existing, onDisk := merged[key]; onDisk && existing.RejectionSeq > record.RejectionSeq {
+				self.slots[key] = existing
+				continue
+			}
 			if existing, onDisk := merged[key]; onDisk && (existing.Rejections > 0 || existing.ProvenAt == 0) {
 				// Rejection is sticky and authoritative against stale in-memory records.
 				// A proof record carrying a rejection can never be replaced by a proof record
