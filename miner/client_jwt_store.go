@@ -127,7 +127,7 @@ func (s *clientJWTStore) pruneStaleEntries(entries map[string]clientJWTEntry) ma
 		return entries
 	}
 	for key, recorded := range journal.Slots {
-		if entry, ok := entries[key]; ok && recorded.State == "fallback" && !legacyImportIsPermanentReason(recorded.Reason) && entry.ClientID == recorded.ClientID {
+		if entry, ok := entries[key]; ok && legacyImportPreservesEntry(recorded) && entry.ClientID == recorded.ClientID {
 			pruned[key] = entry
 		}
 	}

@@ -449,10 +449,27 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	var slots []*legacyImportSlot
 	custodied := 0
 	noStoreEntry := 0
+	journalSettled := false
 	for _, settings := range providers {
 		storeKey := legacyImportStoreKey(settings)
 		target := legacyImportTargetPath(opts.stateDir, identities, settings)
+		recorded, recordedOK := journal.Slots[storeKey]
 		if _, err := os.Stat(target); err == nil {
+			if recordedOK && recorded.State == "fallback" {
+				if entry, ok := store[storeKey]; ok && entry.ClientID != "" && entry.ClientID == recorded.ClientID {
+					if token, err := clientauth.ReadToken(target); err == nil {
+						if clientID := jwtClientId(token); clientID != "" && clientID != entry.ClientID {
+							// Record the provider's serving choice, not ownership of its sidecars.
+							recorded.State = "imported"
+							recorded.Reason = "minted_identity_serving"
+							journal.Slots[storeKey] = recorded
+							journalSettled = true
+							custodied++
+							continue
+						}
+					}
+				}
+			}
 			// A minted fallback credential from a previous start lands on target.
 			// If this slot fell back due to a transient failure, do not permanently skip it:
 			// check if its cooldown has elapsed so it can re-admit and re-prove its old identity.
@@ -503,6 +520,10 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		if recorded, ok := journal.Slots[storeKey]; ok {
 			switch recorded.State {
 			case "imported":
+				if recorded.Reason == "minted_identity_serving" {
+					result.mintSlots[storeKey] = true
+					continue
+				}
 				// The slot's choice was the saved identity and its file is
 				// gone. Re-importing could resurrect a deliberately removed
 				// identity, so the slot is left to the normal startup gate.
@@ -550,6 +571,14 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 			}
 		}
 		slots = append(slots, slot)
+	}
+
+	if journalSettled {
+		if err := writeLegacyImportJournal(opts.stateDir, journal); err != nil {
+			skip("journal_write_failed", err.Error())
+			summary("journal_write_failed")
+			return result
+		}
 	}
 
 	activeKeys := make(map[string]bool, len(providers))
@@ -841,6 +870,12 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	}
 	summary(phaseResult)
 	return result
+}
+
+// legacyImportPreservesEntry keeps recoverable fallback identities after settlement.
+func legacyImportPreservesEntry(recorded legacyImportJournalSlot) bool {
+	return recorded.State == "fallback" && !legacyImportIsPermanentReason(recorded.Reason) ||
+		recorded.State == "imported" && recorded.Reason == "minted_identity_serving"
 }
 
 // legacyImportIsPermanentReason reports whether a fallback reason is a fatal,

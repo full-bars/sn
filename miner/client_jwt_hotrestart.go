@@ -384,7 +384,7 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 		if journalErr != nil {
 			return "", connect.Id{}, false, fmt.Errorf("read legacy import decisions: %w", journalErr)
 		}
-		if recorded, ok := journal.Slots[identityKey]; ok && recorded.State == "fallback" && !legacyImportIsPermanentReason(recorded.Reason) {
+		if recorded, ok := journal.Slots[identityKey]; ok && legacyImportPreservesEntry(recorded) {
 			if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok && entry.ClientID == recorded.ClientID {
 				preserveLegacy = true
 			}

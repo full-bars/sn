@@ -74,7 +74,7 @@ func (self *providerAuthenticationCallbacks) AuthLogout() {
 		preserveLegacy := false
 		journal, journalErr := readLegacyImportJournal(filepath.Dir(self.clientJwtPath))
 		if journalErr == nil {
-			if recorded, ok := journal.Slots[self.identityKey]; ok && recorded.State == "fallback" && !legacyImportIsPermanentReason(recorded.Reason) && recorded.ClientID != rejectedID {
+			if recorded, ok := journal.Slots[self.identityKey]; ok && legacyImportPreservesEntry(recorded) && recorded.ClientID != rejectedID {
 				if entry, ok := loadGlobalClientJWTStore().Get(self.identityKey); ok && entry.ClientID == recorded.ClientID {
 					preserveLegacy = true
 				}

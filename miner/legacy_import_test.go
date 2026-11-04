@@ -1249,17 +1249,11 @@ func TestVerify4CooldownMootAfterMint(t *testing.T) {
 	delete(f.prover.refreshErr, store[stuck.Key()].ByClientJWT)
 	f.resetProverCounts()
 	f.run(legacyImportHooks{})
-	if _, refresh := f.proverCounts(); refresh == 0 {
-		t.Fatalf("old identity never re-proved once minted file exists; journal=%+v", f.journal().Slots[stuck.Key()])
+	if public, refresh := f.proverCounts(); public != 0 || refresh != 0 {
+		t.Fatalf("serving minted identity was re-proved: public=%d refresh=%d", public, refresh)
 	}
-	// The original identity was proven, but the minted identity owns the
-	// credential file and must not be replaced without matching custody.
-	proof := f.proofFile().Slots[filepath.Base(f.target(stuck))]
-	if proof.ClientID != store[stuck.Key()].ClientID || proof.ProvenAt == 0 {
-		t.Fatalf("cooldown proved the wrong identity: %+v", proof)
-	}
-	if r := f.journal().Slots[stuck.Key()]; r.State != "fallback" {
-		t.Fatalf("want custody conflict to retain fallback, got: %+v", r)
+	if r := f.journal().Slots[stuck.Key()]; r.State != "imported" || r.Reason != "minted_identity_serving" {
+		t.Fatalf("want settled serving choice, got: %+v", r)
 	}
 	targetData, err := os.ReadFile(f.target(stuck))
 	if err != nil {
@@ -1280,24 +1274,19 @@ func TestImportCooldownPreservesDifferentCustodiedIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	marker, err := clientauth.ProviderKeyIdentityMarker(f.seed)
-	if err != nil {
-		t.Fatal(err)
-	}
-	f.write(legacyProviderMarkerName, marker)
 	minted := legacyTestClientToken(f.networkID, connect.NewId().String(), connect.NewId().String())
-	if err := os.WriteFile(f.target(slot), []byte(minted), 0600); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(f.target(slot)+".registration", []byte("minted custody"), 0600); err != nil {
-		t.Fatal(err)
-	}
 	journal := newLegacyImportJournal()
 	journal.Slots[slot.Key()] = legacyImportJournalSlot{State: "fallback", Reason: "proof_unavailable_bound", ClientID: store[slot.Key()].ClientID, FallbackAt: time.Now().Add(-time.Hour).Unix()}
 	if err := writeLegacyImportJournal(f.dir, journal); err != nil {
 		t.Fatal(err)
 	}
-	f.run(legacyImportHooks{})
+	// Custody appearing after mapping must still block the proven write.
+	f.run(legacyImportHooks{afterMarkerWrite: func() error {
+		if err := os.WriteFile(f.target(slot), []byte(minted), 0600); err != nil {
+			return err
+		}
+		return os.WriteFile(f.target(slot)+".registration", []byte("minted custody"), 0600)
+	}})
 	got, err := os.ReadFile(f.target(slot))
 	if err != nil || string(got) != minted {
 		t.Fatalf("recovery replaced another identity's custody: %v", err)
