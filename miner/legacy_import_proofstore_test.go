@@ -587,6 +587,64 @@ func TestProofStoreUseTimeRejectionRecorded(t *testing.T) {
 	}
 }
 
+// A transient failure (such as proof_unavailable_bound from an outage or 429 storm)
+// must not retire a good identity permanently: after a cooldown, the slot must have
+// an automatic way back and be re-admitted for proof.
+func TestProofTransientFallbackReAdmittedAfterCooldown(t *testing.T) {
+	oldCooldown := legacyImportTransientFallbackCooldown
+	legacyImportTransientFallbackCooldown = 0
+	defer func() { legacyImportTransientFallbackCooldown = oldCooldown }()
+
+	oldBackoff := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = oldBackoff }()
+
+	fixture := newLegacyImportFixture(t, true, 2)
+	stuck := fixture.proxySettings[0]
+	companion := fixture.proxySettings[1]
+
+	store, err := readLegacyStoreRaw(fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Stuck slot gets a transient timeout; companion succeeds so API answered.
+	delete(fixture.prover.serviceKey, fixture.proxyClientIDs[stuck.Key()])
+	fixture.prover.refreshErr[store[stuck.Key()].ByClientJWT] = &net.OpError{Op: "dial", Net: "tcp", Err: syscall.ETIMEDOUT}
+
+	// Run until stuck slot reaches proof_unavailable_bound.
+	for start := 1; start <= legacyImportDeferralStarts; start++ {
+		journal := fixture.journal()
+		delete(journal.Slots, companion.Key())
+		_ = os.Remove(fixture.target(companion))
+		_ = os.Remove(filepath.Join(fixture.dir, legacyImportProofStoreName))
+		if err := writeLegacyImportJournal(fixture.dir, journal); err != nil {
+			t.Fatal(err)
+		}
+		_ = fixture.run(legacyImportHooks{})
+	}
+
+	recorded := fixture.journal().Slots[stuck.Key()]
+	if recorded.State != "fallback" || recorded.Reason != "proof_unavailable_bound" {
+		t.Fatalf("expected proof_unavailable_bound, got %+v", recorded)
+	}
+
+	// Now the transient outage heals: refresh succeeds.
+	delete(fixture.prover.refreshErr, store[stuck.Key()].ByClientJWT)
+	fixture.resetProverCounts()
+
+	// On the next start (after cooldown), the slot must be re-admitted and proven!
+	laterResult := fixture.run(legacyImportHooks{})
+	if _, refresh := fixture.proverCounts(); refresh == 0 {
+		t.Fatalf("FAIL: transient failure was permanently discarded; want slot re-admitted and proven after cooldown")
+	}
+	afterSlot := fixture.journal().Slots[stuck.Key()]
+	if afterSlot.State != "imported" {
+		t.Fatalf("FAIL: slot was not imported after healing: %+v (mintSlots=%v)", afterSlot, laterResult.mintSlots)
+	}
+}
+
+
 
 
 
