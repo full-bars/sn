@@ -52,9 +52,15 @@ type providerStoreNewerError struct {
 	// stamp this build cannot read is treated as newer, not as absent: reading
 	// on would mis-read the layout, and writing would overwrite the stamp.
 	unreadable error
+	// relayed is the guard's message as a hotswap parent produced it, for a
+	// candidate that cannot open the store to repeat unchanged.
+	relayed string
 }
 
 func (e *providerStoreNewerError) Error() string {
+	if e.relayed != "" {
+		return e.relayed
+	}
 	if e.unreadable != nil {
 		return fmt.Sprintf("state store %s has a schema stamp this build cannot read (%v); it may have been written by a newer build, refusing to start slots or mint new identities",
 			e.path, e.unreadable)

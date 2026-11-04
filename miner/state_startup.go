@@ -38,6 +38,7 @@ const (
 	hotSwapStampNone             = "none"
 	hotSwapStampUnavailable      = "unavailable"
 	hotSwapStampPrefix           = "stamp:"
+	hotSwapStampRefusedPrefix    = "refused:"
 	hotSwapStampUnreadablePrefix = "unreadable:"
 )
 
@@ -110,6 +111,10 @@ func providerStartupStoreVerdict(ctx context.Context) error {
 func hotSwapParentStoreStamp() string {
 	store, err := openProviderStoreForProcess()
 	switch {
+	case errors.Is(err, errProviderStoreNewer):
+		// A refusal is not an availability failure: the candidate must
+		// refuse too, with the guard's own message.
+		return hotSwapStampRefusedPrefix + err.Error()
 	case err != nil || store == nil:
 		return hotSwapStampUnavailable
 	}
@@ -155,6 +160,11 @@ func hotSwapCandidateStoreVerdict() error {
 	case value == hotSwapStampUnavailable:
 		noteProviderStoreDegraded(errors.New("the parent could not open the store"))
 		return nil
+	case strings.HasPrefix(value, hotSwapStampRefusedPrefix):
+		err := &providerStoreNewerError{relayed: strings.TrimPrefix(value, hotSwapStampRefusedPrefix)}
+		IncrPersistentError(providerStoreSchemaNewerCategory)
+		critLog("PROVIDER REFUSED: %v", err)
+		return err
 	case strings.HasPrefix(value, hotSwapStampUnreadablePrefix):
 		noteProviderStoreDegradedFor(fmt.Sprintf("the parent could not read the store's schema stamp (%s); its schema was not checked",
 			strings.TrimPrefix(value, hotSwapStampUnreadablePrefix)))

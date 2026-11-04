@@ -187,6 +187,51 @@ func TestStateHotswapParentSendsItsStampAtSpawn(t *testing.T) {
 	}
 }
 
+// Hole D: a parent whose own open refuses a newer store must say so. Reporting
+// it as "unavailable" would let the candidate continue degraded, turning the
+// refusal into availability.
+func TestStateHotswapParentReportsARefusalAsARefusal(t *testing.T) {
+	h := startupTestHarness(t)
+	writeStampDirect(t, h.path(providerStoreFileName), `{"version":2,"min_reader":2}`)
+	report := hotSwapParentStoreStamp()
+	if !strings.HasPrefix(report, hotSwapStampRefusedPrefix) {
+		t.Fatalf("parent report = %q, want a %q report", report, hotSwapStampRefusedPrefix)
+	}
+	if report == hotSwapStampUnavailable {
+		t.Fatal("a refusal was laundered into unavailable")
+	}
+}
+
+// Hole D end to end: that report reaches the candidate, which refuses before
+// READY with the guard's message and a normal start's exit code.
+func TestStateHotswapCandidateRefusesWhatTheParentRefused(t *testing.T) {
+	h := startupTestHarness(t)
+	writeStampDirect(t, h.path(providerStoreFileName), `{"version":2,"min_reader":2}`)
+	report := hotSwapParentStoreStamp()
+	startErr := providerStartupStoreVerdict(context.Background())
+	if startErr == nil {
+		t.Fatal("a normal start did not refuse")
+	}
+
+	err, wire := candidateHandshake(t, &report)
+	if !errors.Is(err, errProviderStoreNewer) {
+		t.Fatalf("candidate err = %v, want a newer-store refusal", err)
+	}
+	if err.Error() != startErr.Error() {
+		t.Fatalf("candidate message %q differs from a normal start's %q", err, startErr)
+	}
+	if strings.Contains(wire, `"READY"`) || !strings.Contains(wire, `"ERROR"`) {
+		t.Fatalf("candidate wrote %q, want ERROR and no READY", wire)
+	}
+	wantCode, _ := providerRunExitCode(startErr)
+	if code, ok := providerRunExitCode(startupRefusal(context.Background(), err)); !ok || code != wantCode || code == 0 {
+		t.Fatalf("exit code = %d ok=%v, want %d", code, ok, wantCode)
+	}
+	if providerStoreRunningDegraded() {
+		t.Fatal("a refusal also raised the degraded flag")
+	}
+}
+
 // Hole B and C: a parent whose read of the stamp failed must not send "none".
 // The candidate records a degraded run with the reason.
 func TestStateHotswapUnreadableStampIsNotNone(t *testing.T) {
