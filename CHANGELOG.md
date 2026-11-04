@@ -4,7 +4,40 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Merged to `main` after `v2026.10.30-1085641150-sn`, not yet in a tagged release. Hashes are commits on `main`.
+Merged to `main` after `v2026.11.1-1087168030-sn`, not yet in a tagged release. Hashes are commits on `main`.
+
+### Added
+
+- **Extender status is available on the metrics endpoint** ([#340](https://github.com/full-bars/sn/pull/340), c36c13e01): the exporter reports the observed role. It clears the reading when the role stops.
+
+### Changed
+
+- **Private settings use the state store** ([#357](https://github.com/full-bars/sn/pull/357), 0a64b6527): on non-Windows systems, the miner imports error counts, metric counters and the direct grade into `provider_state.db`. Shared operator files remain separate.
+- **A thrash cap checks recovery instead of expiring on a clock** ([#352](https://github.com/full-bars/sn/pull/352), 7898efd07, 8e299b401): after the hold, it checks for recent restarts and any available watchdog and memory signals. The cap then relaxes in stages.
+- **Shutdown has a bounded drain** ([#350](https://github.com/full-bars/sn/pull/350), 520508abc, 924b9b2cf): the miner waits 35 seconds for workers, writes a dump and arms a five-second exit watchdog. The dump precedes the watchdog and can delay it; a quarantine retains exit 75.
+- **One sampler serves both jobs per proxied slot** ([#353](https://github.com/full-bars/sn/pull/353), de7cc5e78): billing and transport health share a ticker instead of running two loops.
+- **Network tokens schedule renewal before half their lifetime** ([#341](https://github.com/full-bars/sn/pull/341), 4c9f9a8ec, b5d46fa6e): each token draws a point between 40% and 50% of its life. A token without a usable issue time is due immediately, subject to retry spacing.
+- **The extender gets a chance to activate before proxy launch** ([#342](https://github.com/full-bars/sn/pull/342), 70165f940, 625273c64): the direct slot gets a short head start. The gate releases when the role cannot attempt activation.
+- **The dependency pins carry the extender fixes** ([#339](https://github.com/full-bars/sn/pull/339), bf64baf3f; [#354](https://github.com/full-bars/sn/pull/354), b74cb1076): `connect` moves to `0995412c628f` and `sdk` to `0ec902c4a110`. Proxy slots that opt out no longer build an extender directory.
+
+### Fixed
+
+- **Newer state stores are refused before slots start** ([#357](https://github.com/full-bars/sn/pull/357), 04955d0d1, 1bb2ebe9e): the guard also passes a refusal across HotSwap. An unreadable or replaced store instead reports degraded operation.
+- **Reloaded slots are marked stopped on every exit** ([#350](https://github.com/full-bars/sn/pull/350), ef80beb79): a slot that ended after reload could otherwise remain recorded as running.
+- **Provider discovery no longer blocks status tools indefinitely** ([#346](https://github.com/full-bars/sn/pull/346), b2b1d2106, 7f719fc5d): discovery has a shared budget and bounded property lookups. Incomplete results report the timeout.
+- **The health line separates admitted, parked and held proxies** ([#347](https://github.com/full-bars/sn/pull/347), d243d8ecb; [#348](https://github.com/full-bars/sn/pull/348), fe1362721; [#343](https://github.com/full-bars/sn/pull/343), c45c7f90e): parked entries are not degraded and the duplicated down field is gone.
+- **Held proxies survive degraded URL cleanup** ([#344](https://github.com/full-bars/sn/pull/344), c721cd0d1, 13c1e0e08): a trim-held proxy cannot recover while it is held. A pool-wide outage also restarts the down clock instead of consuming its retirement window.
+- **The extender retries after a restart or budget hold** (d7634fc8f, 88eb5014d, 58454832b): the role rechecks its budget, and an in-place exec releases the old carrier ports. Initial port retries run quickly.
+- **The trim prompt exposes the clear action** ([#345](https://github.com/full-bars/sn/pull/345), 67c2f3f05, a98e428d2): operators can find and preview the clear operation.
+
+### Documentation
+
+- **Pressure and pool documentation matches the current behaviour** ([#356](https://github.com/full-bars/sn/pull/356), b1424909f; [#349](https://github.com/full-bars/sn/pull/349), c9d9a1f62): the pages describe bounded shutdown, cap recovery, sampling and the pool counts.
+- **SN25 live numbers are refreshed** (c5eb2921a, 1a096c302, 64a3111ac, 52470e456, 3ab278a17, cd821f0e5): the table tracks the latest published values.
+
+## [v2026.11.1-1087168030-sn] — 2026-11-01
+
+Changes between `v2026.10.30-1085641150-sn` and this tag. Full notes: `releases/v2026.11.1-1087168030-sn.md`.
 
 ### Fixed
 
@@ -17,10 +50,6 @@ Merged to `main` after `v2026.10.30-1085641150-sn`, not yet in a tagged release.
 
 ### Changed
 
-- **A thrash cap expires on demonstrated health, not on a wall clock** ([#352](https://github.com/full-bars/sn/pull/352), 8e299b401): the cap carried a 24-hour expiry and released the operator's full trim when the timer ran out, whatever the box was doing, which is how a still-thrashing box got 1500 slots in one launch. Expiry now needs a calm watchdog and memory headroom 25% above the low-headroom threshold, and a recovered box relaxes in stages, +20% per clean window, towards the capacity it held before the cut. The cap stops applying only when relaxation reaches that target.
-- **Shutdown is bounded, and a quarantined run still exits 75** ([#350](https://github.com/full-bars/sn/pull/350), 924b9b2cf): a worker that ignored cancellation left the process draining forever, which on ATL1 became 9.5 hours of a half-dead provider. The join now has a grace and a 5-second watchdog that ends the process without waiting on the remaining defers or the error flush. A drain timeout keeps the quarantine exit code, so the supervisor does not read a deliberate quarantine as a crash worth restarting.
-- **One ticker per proxied slot instead of two** ([#353](https://github.com/full-bars/sn/pull/353), abbc4afb8): billing and transport-health sampling ran on separate 5-second tickers; they now share one per-slot loop, which is one goroutine per slot back on a dense box.
-- **A space that opts out of the extender network builds no directory** (full-bars/sdk#7, [#354](https://github.com/full-bars/sn/pull/354), 0ec902c4a110): the opt-out was only half applied, so every proxied slot still ran a directory loop, status watcher, release fetcher and seed bootstrap. The pin bump carries the gate, and it clears a directory a caller supplied.
 - **The `connect` and `sdk` pins moved** (12efc46ba, b1efe606d): `connect` from `d0a4bb41c300` to `ca8b9020201a`, and `sdk` from `f17fc47e8bda` to `6f4d35ee3486`, which carries the extender activation timeout fix.
 - **The `urnet-tools` help menus point at the community Discord** (cfa578c21).
 
@@ -66,10 +95,6 @@ Changes merged after `v2026.10.26-1793016775` through the `v2026.10.29-108484696
 
 ### Fixed
 
-- **The extender role asks again when the activation budget opens** ([d7634fc8](https://github.com/full-bars/sn/commit/d7634fc8f)): a launch inside the budget window used to keep the extender off for the life of the process, because the slot's settings are its own copy. The role is now held for the session and released on a two-minute recheck once a post is allowed.
-- **The extender carrier is retried within seconds of a restart** ([88eb5014](https://github.com/full-bars/sn/commit/88eb5014d), sdk [df86454b](https://github.com/full-bars/sdk/commit/df86454b)): while tcp 443 is held by the outgoing process the role is off entirely. The first retries are now 2s, 4s, 8s, 15s and 30s before the normal three-minute cadence, so a restart costs seconds rather than minutes.
-- **The sdk lets an embedder hold and release the extender role for one session** (sdk [9a1e3e49](https://github.com/full-bars/sdk/commit/9a1e3e49), [df86454b](https://github.com/full-bars/sdk/commit/df86454b)): `HoldProvideExtenderSession` holds the role without touching the user's stored preference, and `ReleaseExtenderCarriers` frees the carrier ports at handover.
-- **The sdk and connect pins sit on main** (connect [0995412c](https://github.com/full-bars/connect/commit/0995412c6), sdk [9a1e3e49](https://github.com/full-bars/sdk/commit/9a1e3e49)): both forks' main now carry the extender, so the pins no longer name branch commits.
 - **A provider holding only its direct identity can set a numeric `h3` again** ([#310](https://github.com/full-bars/sn/pull/310)): the direct identity is a nil candidate, ranking called `Key()` on it, and the control handler panicked after persisting the value and before replying, so `urnet-tools set h3 3` failed with `control socket …: EOF` and no reason. This is the failure the distro features cell has carried, unexplained, for two releases.
 - **Five state-store defects that let a damaged store lie** ([#311](https://github.com/full-bars/sn/pull/311)): the file lock survived a bbolt panic during open, an undecodable record counted as a failed write, a stored empty value read as missing, a refusal whose write failed was never retried, and a quarantined store read as a fresh budget window.
 - **Six proxy slot defects** ([#312](https://github.com/full-bars/sn/pull/312)): a reload wrote state under a process-local lock while a clear used the filesystem lock, URL probes graded credentials they never tried, a failed candidate's grade poisoned the working entry, rotation cancelled without joining, removed proxies were not retired before additions, and the run could end before a scheduled retry fired.
