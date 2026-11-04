@@ -1160,6 +1160,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			critLog("PROVIDER EXIT: normal shutdown (code=0)")
 		}
 	}()
+	// Refuse a newer store before starting slots or opening the provider key.
+	// A hotswap candidate cannot open it while the parent holds the lock.
+	if !self.hotSwapCandidate {
+		if _, err := openProviderStoreForProcess(); errors.Is(err, errProviderStoreNewer) {
+			critLog("PROVIDER REFUSED: %v", err)
+			return startupRefusal(ctx, err)
+		}
+	}
 	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
 		return startupRefusal(ctx, err)

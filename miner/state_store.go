@@ -617,8 +617,16 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 		}
 	}
 	if err == nil {
-		err = applyProviderStoreRecovery(store, path, time.Now())
+		// The guard runs before anything else touches the file, the recovery
+		// hold included: a store a newer build stamped is refused untouched.
+		err = checkProviderStoreSchema(store)
+		if err == nil {
+			err = applyProviderStoreRecovery(store, path, time.Now())
+		}
 		if err != nil {
+			if errors.Is(err, errProviderStoreNewer) {
+				IncrPersistentError(providerStoreSchemaNewerCategory)
+			}
 			_ = store.Close()
 			store = nil
 		}
