@@ -100,18 +100,25 @@ func checkProviderStoreSchema(store *providerStore) error {
 				MinReader: providerStoreSchemaVersion,
 			})
 		}
-		var stamp providerStoreSchema
-		if err := json.Unmarshal(raw, &stamp); err != nil {
-			return &providerStoreNewerError{path: store.path, unreadable: err}
-		}
-		if stamp.minReaderOf() < 1 {
-			return &providerStoreNewerError{path: store.path, unreadable: errors.New("no version")}
-		}
-		if need := stamp.minReaderOf(); need > providerStoreSchemaSupported {
-			return &providerStoreNewerError{path: store.path, minReader: need}
-		}
-		return nil
+		return providerStoreStampVerdict(raw, store.path)
 	})
+}
+
+// providerStoreStampVerdict judges a stamp's raw bytes against what this build
+// reads. It is the one place a stamp is classified, so a hotswap candidate that
+// is handed the parent's stamp reaches the same verdict as an open would.
+func providerStoreStampVerdict(raw []byte, path string) error {
+	var stamp providerStoreSchema
+	if err := json.Unmarshal(raw, &stamp); err != nil {
+		return &providerStoreNewerError{path: path, unreadable: err}
+	}
+	if stamp.minReaderOf() < 1 {
+		return &providerStoreNewerError{path: path, unreadable: errors.New("no version")}
+	}
+	if need := stamp.minReaderOf(); need > providerStoreSchemaSupported {
+		return &providerStoreNewerError{path: path, minReader: need}
+	}
+	return nil
 }
 
 func putProviderStoreSchema(tx *bbolt.Tx, stamp providerStoreSchema) error {
