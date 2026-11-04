@@ -22,7 +22,7 @@ func TestShutdownExpireArmsTheGivenExitCode(t *testing.T) {
 	origWatchdog := providerShutdownWatchdog
 	t.Cleanup(func() { providerShutdownWatchdog = origWatchdog })
 
-	// providerShutdownExpire also captures an incident bundle, and that capture
+	// providerShutdownCapture also captures an incident bundle, and that capture
 	// stamps process-wide pacing (a total budget plus a per-trigger interval).
 	// Give both back, or a later test that asserts on its own bundle is either
 	// starved or paced out by this one.
@@ -46,7 +46,8 @@ func TestShutdownExpireArmsTheGivenExitCode(t *testing.T) {
 	}
 
 	t.Setenv("URNETWORK_STATE_DIR", t.TempDir())
-	providerShutdownExpire("workers did not drain", providerQuarantinedExitCode)
+	providerShutdownArmWatchdog(providerQuarantinedExitCode)
+	providerShutdownCapture("workers did not drain")
 
 	if gotCode != providerQuarantinedExitCode {
 		t.Fatalf("watchdog armed with code %d, want %d", gotCode, providerQuarantinedExitCode)
