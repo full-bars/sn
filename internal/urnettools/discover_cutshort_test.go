@@ -236,10 +236,10 @@ func TestRestartSetAcceptUnitlessEntryOnCompletedPass(t *testing.T) {
 	stubDiscovery(t, []Provider{p}, nil)
 	t.Cleanup(func() { systemdDiscoveryCutShort = false })
 
-	if err := cmdRestart(nil, false, true); err != nil && strings.Contains(err.Error(), "no owning systemd unit") {
+	if err := cmdRestart(nil, false, true); err != nil {
 		t.Fatalf("cmdRestart refused a unitless provider on a completed pass: %v", err)
 	}
-	if err := cmdSet([]string{"node-name", "edge01"}, false, true); err != nil && strings.Contains(err.Error(), "no owning unit") {
+	if err := cmdSet([]string{"node-name", "edge01"}, false, true); err != nil {
 		t.Fatalf("cmdSet refused a unitless provider on a completed pass: %v", err)
 	}
 }
@@ -265,7 +265,7 @@ func TestUnitlessRefusalDoesNotOutliveCutPass(t *testing.T) {
 	}
 	cut = false
 	err = cmdSet([]string{"node-name", "edge01"}, false, true)
-	if err != nil && strings.Contains(err.Error(), "no owning unit") {
+	if err != nil {
 		t.Fatalf("stale cut flag leaked into the next pass: %v", err)
 	}
 	if systemdDiscoveryCutShort {
