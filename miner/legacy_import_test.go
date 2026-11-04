@@ -1227,8 +1227,23 @@ func TestVerify4CooldownMootAfterMint(t *testing.T) {
 	if r := f.journal().Slots[stuck.Key()]; r.Reason != "proof_unavailable_bound" {
 		t.Fatalf("setup %+v", r)
 	}
-	// the serving path now mints the new identity into the slot's credential file
-	if err := os.WriteFile(f.target(stuck), []byte("minted"), 0o600); err != nil {
+	// The serving path mints a different identity and normally writes the same
+	// store key. Exercise that writer, not just the per-slot credential file.
+	defer withGlobalStore(t, filepath.Join(f.dir, legacyClientJwtStoreName))()
+	setHotRestart(t, false)
+	mintedID := connect.NewId()
+	mintedJWT := legacyTestClientToken(f.networkID, mintedID.String(), connect.NewId().String())
+	mint := func(context.Context) (string, connect.Id, error) {
+		if err := os.WriteFile(f.target(stuck), []byte(mintedJWT), 0o600); err != nil {
+			return "", connect.Id{}, err
+		}
+		return mintedJWT, mintedID, nil
+	}
+	_, _, _, err := provideClientJWT(context.Background(), clientJWTProvideConfig{
+		NetworkJwtPath: filepath.Join(f.dir, "jwt"), ClientJwtPath: f.target(stuck),
+		ProxySettings: stuck, Mint: mint, FreshMint: mint,
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 	delete(f.prover.refreshErr, store[stuck.Key()].ByClientJWT)
