@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"syscall"
 	"testing"
@@ -410,3 +411,108 @@ func canceledContext() context.Context {
 	cancel()
 	return ctx
 }
+
+// Concurrent writers must never overwrite a recorded rejection with an older
+// dirty proof: a recorded rejection is sticky and authoritative against any
+// stale in-memory record.
+func TestProofStoreRejectionRaceConcurrentFlush(t *testing.T) {
+	dir := t.TempDir()
+	store1 := loadLegacyImportProofStore(dir)
+	claim := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("test-key-material-0123456789012345")),
+		TokenFP:   legacyImportFingerprint([]byte("test-token-jwt-material-0123456789")),
+	}
+	key := "proxy-slot-1.jwt"
+	store1.record(key, claim, "server_key")
+	if err := store1.flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Stale in-memory copy: store2 loads the store while key has a valid proof.
+	store2 := loadLegacyImportProofStore(dir)
+	if !store2.usable(key, claim) {
+		t.Fatal("store2 should see usable proof initially")
+	}
+	// store2 has an older dirty record in memory.
+	store2.dirty[key] = true
+
+	// Concurrent writer notes a rejection on disk.
+	if err := noteLegacyImportProofRejected(dir, key, "client_revoked"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Concurrently flush store2 with its stale dirty proof.
+	if err := store2.flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	// On disk and in memory, the rejection must not have been overwritten!
+	diskStore := loadLegacyImportProofStore(dir)
+	if diskStore.usable(key, claim) {
+		t.Fatalf("FAIL: stale flush revived rejected proof: usable=true, proof=%+v", diskStore.slots[key])
+	}
+	if !diskStore.rejected(key) {
+		t.Fatalf("FAIL: rejection on disk was overwritten: %+v", diskStore.slots[key])
+	}
+	if store2.usable(key, claim) {
+		t.Fatalf("FAIL: in-memory store still reports usable after flush: %+v", store2.slots[key])
+	}
+}
+
+// Concurrently writing rejections while background flushers run with stale records
+// must never resurrect a rejected proof.
+func TestProofStoreRejectionRaceConcurrentGoroutines(t *testing.T) {
+	dir := t.TempDir()
+	claim := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("test-key-material-0123456789012345")),
+		TokenFP:   legacyImportFingerprint([]byte("test-token-jwt-material-0123456789")),
+	}
+	key := "concurrent-slot.jwt"
+	initial := loadLegacyImportProofStore(dir)
+	initial.record(key, claim, "server_key")
+	if err := initial.flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	var stop atomic.Bool
+	var wg sync.WaitGroup
+
+	// Goroutines repeatedly flushing stale in-memory store
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for !stop.Load() {
+				stale := loadLegacyImportProofStore(dir)
+				stale.mu.Lock()
+				stale.dirty[key] = true
+				stale.mu.Unlock()
+				_ = stale.flush()
+			}
+		}()
+	}
+
+	// Reject the proof on disk while flushes are running.
+	if err := noteLegacyImportProofRejected(dir, key, "client_revoked"); err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(50 * time.Millisecond)
+	stop.Store(true)
+	wg.Wait()
+
+	// Verify the rejection remained sticky on disk and was not overwritten.
+	finalStore := loadLegacyImportProofStore(dir)
+	if finalStore.usable(key, claim) {
+		t.Fatalf("FAIL: concurrent flush revived rejected proof: usable=true, proof=%+v", finalStore.slots[key])
+	}
+	if !finalStore.rejected(key) {
+		t.Fatalf("FAIL: rejection was lost under concurrent writers: %+v", finalStore.slots[key])
+	}
+}
+
+

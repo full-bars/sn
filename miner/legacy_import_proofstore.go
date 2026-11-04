@@ -133,9 +133,10 @@ type legacyImportProofStore struct {
 	path string
 	now  func() time.Time
 
-	mu    sync.Mutex
-	slots map[string]legacyImportProofRecord
-	dirty map[string]bool
+	mu       sync.Mutex
+	slots    map[string]legacyImportProofRecord
+	dirty    map[string]bool
+	reproved map[string]bool
 	// corrupt names why the file could not be used (empty when it was read or
 	// absent); dropped counts records discarded as malformed.
 	corrupt string
@@ -147,10 +148,11 @@ type legacyImportProofStore struct {
 // so, which is exactly today's behaviour (every slot proves live).
 func loadLegacyImportProofStore(stateDir string) *legacyImportProofStore {
 	store := &legacyImportProofStore{
-		path:  filepath.Join(stateDir, legacyImportProofStoreName),
-		now:   time.Now,
-		slots: map[string]legacyImportProofRecord{},
-		dirty: map[string]bool{},
+		path:     filepath.Join(stateDir, legacyImportProofStoreName),
+		now:      time.Now,
+		slots:    map[string]legacyImportProofRecord{},
+		dirty:    map[string]bool{},
+		reproved: map[string]bool{},
 	}
 	slots, dropped, corrupt := readLegacyImportProofFile(store.path)
 	store.slots = slots
@@ -225,6 +227,12 @@ func (self *legacyImportProofStore) record(key string, claim legacyImportProofCl
 	}
 	self.mu.Lock()
 	defer self.mu.Unlock()
+	if prev, ok := self.slots[key]; ok && (prev.Rejections > 0 || prev.ProvenAt == 0) {
+		if self.reproved == nil {
+			self.reproved = map[string]bool{}
+		}
+		self.reproved[key] = true
+	}
 	self.slots[key] = legacyImportProofRecord{
 		ClientID:  claim.ClientID,
 		NetworkID: claim.NetworkID,
@@ -260,6 +268,16 @@ func (self *legacyImportProofStore) flush() error {
 	merged, _, _ := readLegacyImportProofFile(self.path)
 	for key := range self.dirty {
 		if record, ok := self.slots[key]; ok {
+			if existing, onDisk := merged[key]; onDisk && (existing.Rejections > 0 || existing.ProvenAt == 0) {
+				// Rejection is sticky and authoritative against stale in-memory records.
+				// A proof record carrying a rejection can never be replaced by a proof record
+				// without one, unless it was a fresh live proof explicitly executed to reprove
+				// after seeing that rejection and no newer rejection has landed on disk.
+				if !self.reproved[key] || existing.LastRejectionAt > record.ProvenAt {
+					self.slots[key] = existing
+					continue
+				}
+			}
 			merged[key] = record
 		}
 	}
