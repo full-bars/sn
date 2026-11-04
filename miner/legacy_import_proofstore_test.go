@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/proxy"
+
 	"github.com/urnetwork/connect"
 )
 
@@ -514,5 +516,42 @@ func TestProofStoreRejectionRaceConcurrentGoroutines(t *testing.T) {
 		t.Fatalf("FAIL: rejection was lost under concurrent writers: %+v", finalStore.slots[key])
 	}
 }
+
+// An adopted proof means the credential was valid at some point, not that the
+// proxy works. The import phase dials the API directly without proxy traversal,
+// so a slot with an unreachable proxy address is adopted on credential validity
+// alone without testing proxy reachability.
+func TestProofAdoptionCredentialValidityNotProxyReachability(t *testing.T) {
+	unreachable := &connect.ProxySettings{
+		Network: "tcp",
+		Address: "192.0.2.1:1",
+		Auth:    &proxy.Auth{User: "fakeuser1", Password: "fakepass"},
+	}
+	fixture := newLegacyImportFixtureWithSettings(t, []*connect.ProxySettings{unreachable})
+	fixture.interruptedStart()
+
+	file := fixture.proofFile()
+	if !file.CredentialValidityOnly {
+		t.Fatalf("FAIL: proof file did not specify that proofs establish credential validity only, not proxy reachability")
+	}
+	record := file.Slots[filepath.Base(fixture.target(unreachable))]
+	if record.ProvesProxyReachability() {
+		t.Fatalf("FAIL: proof record claimed proxy reachability when proxy was never traversed")
+	}
+
+	// Warm start adopts the slot from disk without live proof and without testing the proxy.
+	fixture.resetProverCounts()
+	result := fixture.run(legacyImportHooks{})
+	if public, refresh := fixture.proverCounts(); public != 0 || refresh != 0 {
+		t.Fatalf("warm start dialed live proofs: public=%d refresh=%d", public, refresh)
+	}
+	if slot := fixture.journal().Slots[unreachable.Key()]; slot.State != "imported" || slot.Proof != legacyImportStoredProof {
+		t.Fatalf("unreachable proxy slot was not adopted on credential proof: %+v", slot)
+	}
+	if len(result.mintSlots) != 0 {
+		t.Fatalf("unreachable proxy unexpectedly minted: %v", result.mintSlots)
+	}
+}
+
 
 

@@ -8,10 +8,13 @@
 //
 // A stored proof is a cache of a verdict, never the verdict itself. It is only
 // consulted for the exact claim it was made about (client, network, retained
-// key, saved token) and only while it is young. Validation is lazy: nothing
-// re-checks a proof eagerly. When the platform rejects an adopted identity at
-// the first real use, noteLegacyImportProofRejected drops the proof and the
-// slot is proven live again, never trusted from the cache a second time.
+// key, saved token) and only while it is young. An adopted proof means only
+// that the credential was valid at some point in time; it does not test or
+// guarantee proxy reachability or health, as proofs are performed via direct
+// control-plane reads without per-slot proxy traversal. Validation is lazy:
+// nothing re-checks a proof eagerly. When the platform rejects an adopted
+// identity at the first real use, noteLegacyImportProofRejected drops the proof
+// and the slot is proven live again, never trusted from the cache a second time.
 //
 // The file is keyed by the slot's credential file name (a hash of the slot
 // identity, the same name the journal records as the target), so it carries no
@@ -68,9 +71,17 @@ type legacyImportProofRecord struct {
 	LastRejectionAt int64  `json:"last_rejection_at,omitempty"`
 }
 
+// ProvesProxyReachability reports whether this proof record verifies proxy health.
+// It returns false: stored proofs establish credential validity only, not that
+// the slot's proxy works or is reachable.
+func (self legacyImportProofRecord) ProvesProxyReachability() bool {
+	return false
+}
+
 type legacyImportProofFile struct {
-	Schema string                             `json:"schema"`
-	Slots  map[string]legacyImportProofRecord `json:"slots"`
+	Schema                 string                             `json:"schema"`
+	CredentialValidityOnly bool                               `json:"credential_validity_only,omitempty"`
+	Slots                  map[string]legacyImportProofRecord `json:"slots"`
 }
 
 // legacyImportProofClaim is what a proof is a proof of. A record is usable only
@@ -281,7 +292,11 @@ func (self *legacyImportProofStore) flush() error {
 			merged[key] = record
 		}
 	}
-	raw, err := json.Marshal(legacyImportProofFile{Schema: legacyImportProofStoreSchema, Slots: merged})
+	raw, err := json.Marshal(legacyImportProofFile{
+		Schema:                 legacyImportProofStoreSchema,
+		CredentialValidityOnly: true,
+		Slots:                  merged,
+	})
 	if err != nil {
 		return err
 	}
