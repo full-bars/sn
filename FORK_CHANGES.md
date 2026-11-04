@@ -9,7 +9,7 @@ This document tracks all modifications made to the upstream `sn` (connect v2026)
 
 **Fork Based On**: urfoundation/sn (connect v2026: H3/QUIC transport + IPv6 dual-stack)
 **Repository**: github.com/full-bars/sn
-**Binary Versioning**: `v2026.<month>.<day>-<epoch>` for releases of this fork since 2026.10.22, which dropped the `-meso` suffix; upstream publishes tags in the same shape, so read the CHANGELOG entry rather than the tag to tell the two apart
+**Binary Versioning**: releases of this fork use `v<YYYY.M.D>-<build>-sn`. Earlier fork releases used `-meso`; upstream tags have no fork suffix.
 
 ---
 
@@ -22,6 +22,23 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 - `syscall.Umask` split into platform-specific files (`umask_unix.go` / `umask_windows.go`) for Windows cross-compile
 - `NewPlatformTransport` (with custom settings) replaces `NewPlatformTransportWithDefaults` so UDP bandwidth federation can be injected
 - Connect v2026 ships no `internal/` directory; `internal/urnettools` (urnet-tools CLI) is fork-owned
+
+---
+
+## Changes after v2026.11.1
+
+**Files**: `miner/state_schema.go`, `miner/state_settings.go`, `miner/state_startup.go`, `miner/state_store.go`, `miner/slot_join.go`, `miner/thrash_cap.go`, `miner/proxy_slot_sampler.go`, `miner/pool_health.go`, `miner/proxy_manager_url_source.go`, `miner/extender_budget.go`, `miner/extender_handover.go`, `miner/extender_head_start.go`, `miner/extender_observation.go`, `miner/network_token_renewal.go`, `internal/urnettools/discover_unix.go`, `internal/urnettools/top_cmd.go`.
+
+**Changes**:
+- Guard the state-store schema before starting slots and carry a refusal across a HotSwap. Report an unavailable or replaced store as degraded.
+- Import private error counters, metric counters and direct grade into the store on non-Windows systems. Keep shared operator files outside it.
+- Bound shutdown, retain quarantine exit 75 and check available recovery signals before relaxing a thrash cap. Combine billing and transport sampling into one per-slot loop.
+- Count held and parked pool members separately. Retire degraded URL proxies only when a window is configured and freeze the down clock during a pool outage.
+- Bound unit discovery for `urnet-tools`. Expose the trim-clear action in its prompt.
+- Recheck the extender budget, release carrier ports before an in-place exec and give the direct slot an activation head start. Publish extender metrics and stagger token renewal.
+- Pin `connect` at `0995412c628f` and `sdk` at `0ec902c4a110`. The SDK pin completes the extender-network opt-out.
+
+**Status**: Merged to main; pending the next fork release. The ported program is `cli/miner` with library `miner/`; the management implementation remains in `internal/urnettools/`.
 
 ---
 
@@ -461,7 +478,7 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 
 **Purpose**: The automatic proxy cap written during swap thrash expired on a 24-hour timer and checked nothing else. On ATL1 the timer ran out while the box was still thrashing, the next reload read the operator's own trim of 1500, and 1500 slots were launched onto a 2 GB box; twelve minutes later the process was cancelled and the resulting half-dead provider earned nothing for 9.5 hours. A brake that releases on a clock is not a brake.
 
-Expiry now requires demonstrated health: no watchdog escalation in force, and memory headroom with a 25% margin above the low-headroom threshold, taken as the tighter of host `MemAvailable` and the cgroup headroom. A recovered box does not jump to full capacity either. It relaxes in stages, +20% per sustained clean window, towards the target capacity it held before the cut, and the cap stops applying only once relaxation reaches that target. If the box turns marginal at any stage, the same signals halt further relaxation.
+After the hold, the miner checks for recent restarts and any available watchdog and memory readings. Measurable headroom must have a 25% margin above the low-headroom threshold. If headroom is unavailable, the miner checks the heap limit when it can; with no memory signals, it relies on the quiet hold. A passing cap relaxes by about 20% per clean window toward the operator trim or the pre-cut target.
 
 A read of the cap no longer relaxes, clears or persists it: `standingThrashCap` reports the stored value for the stall and escalation paths, and only the mutating checks relax or clear.
 
@@ -477,7 +494,7 @@ A read of the cap no longer relaxes, clears or persists it: `standingThrashCap` 
 
 **Purpose**: A cancelled provider drained forever. One worker that ignored cancellation blocked the join with no deadline, so `cancel()` became a zombie: 317 threads, `clients=0`, no exit, and systemd's stop turned into a SIGKILL of a process already trying to leave. The same run leaked its slot accounting, because a slot cancelled before it reached the control plane was never marked stopped, which is why the not-connected count only ever grew.
 
-Three changes. Both slot spawn sites go through `runReloadedSlot`, which defers `slotStopped` so every exit path including a panic is accounted. The join has a grace (35-40 s, inside systemd's 90 s stop timeout) and a five-second watchdog that ends the process without waiting on the remaining defers or the persistent-error flush, with the incident bundle captured before the arming so the dump survives. A drain timeout on a quarantined run exits 75, not 1: the supervisor reads only 75 as a deliberate quarantine, and exiting 1 turned one into a restart on the wrong policy.
+Both slot spawn sites use `runReloadedSlot`, which records the stop on every exit. After 35 seconds, the join writes a goroutine dump and arms a five-second exit watchdog. The watchdog is armed before the incident bundle and deferred cleanup, but the dump precedes it and can delay the bound. A quarantined run retains exit 75.
 
 **Files Modified**: `miner/run.go`, `miner/slot_join.go`, `miner/incident_capture.go`, `miner/provider_bringup.go`, plus their tests.
 
