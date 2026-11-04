@@ -218,15 +218,21 @@ func runDiagTracked(env diagEnv) (diagResult, error) {
 	defer cancel()
 	cctx, ccancel := context.WithCancelCause(ctx)
 	run := &diagRun{cancel: ccancel, done: make(chan struct{})}
+	// Only the run that takes the empty slot is registered. A second request is
+	// refused as busy by runDiag and must not displace, or later clear, the
+	// registration of the capture that is really running.
 	diagActiveMu.Lock()
-	diagActive = run
+	ownsSlot := diagActive == nil
+	if ownsSlot {
+		diagActive = run
+	}
 	diagActiveMu.Unlock()
 	defer func() {
-		diagActiveMu.Lock()
-		if diagActive == run {
+		if ownsSlot {
+			diagActiveMu.Lock()
 			diagActive = nil
+			diagActiveMu.Unlock()
 		}
-		diagActiveMu.Unlock()
 		ccancel(nil)
 		close(run.done)
 	}()

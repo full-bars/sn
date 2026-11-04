@@ -461,3 +461,43 @@ func TestDiagEmptyProfileIsAFailedCapture(t *testing.T) {
 		t.Fatalf("left %v behind", got)
 	}
 }
+
+// A second request that is refused as busy must leave the running capture
+// registered, or the hot swap abort no longer sees it.
+func TestDiagSecondRequestDoesNotUnregisterFirst(t *testing.T) {
+	env, _ := newDiagTestEnv(t)
+	env.cpuFor = time.Minute
+	started := make(chan struct{})
+	env.startCPU = func(w io.Writer) error { close(started); _, err := w.Write([]byte("cpu")); return err }
+
+	done := make(chan error, 1)
+	go func() { _, err := runDiagTracked(env); done <- err }()
+	<-started
+
+	diagActiveMu.Lock()
+	first := diagActive
+	diagActiveMu.Unlock()
+	if first == nil {
+		t.Fatal("first capture is not registered")
+	}
+
+	if _, err := runDiagTracked(env); err == nil {
+		t.Fatal("second request ran while the first held the lock")
+	}
+	diagActiveMu.Lock()
+	still := diagActive
+	diagActiveMu.Unlock()
+	if still != first {
+		t.Fatal("a refused second request displaced or cleared the first capture")
+	}
+
+	quiesceControlSocket() // the abort must still reach the first capture
+	select {
+	case err := <-done:
+		if !errors.Is(err, errDiagHotSwap) {
+			t.Fatalf("err = %v, want errDiagHotSwap", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("hot swap abort did not reach the first capture")
+	}
+}
