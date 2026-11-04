@@ -454,3 +454,47 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 **How to Identify in New Upstream**: `providerBringUpTracker.emit` and `emitStartupSummary` in `miner/provider_bringup.go`, `recordSendSequenceExit` in `full-bars/connect` (`transfer_sequence_exit.go`), the `[api-token]` logger in `full-bars/sdk` (`device_token_manager.go`), `readMinerOperatorIdentity` in `miner/cli_state.go`, and the `allOf` block on `CompetitionIntegrityReviewRequest` in `api/competition.yml`.
 
 **Status**: shipping in this release. The last five are corrections to files the upstream sync brought in, so they are candidates to send upstream rather than carry as fork divergence.
+
+---
+
+## 34. The Thrash Cap Expires on Health and Relaxes in Stages (PR #352)
+
+**Purpose**: The automatic proxy cap written during swap thrash expired on a 24-hour timer and checked nothing else. On ATL1 the timer ran out while the box was still thrashing, the next reload read the operator's own trim of 1500, and 1500 slots were launched onto a 2 GB box; twelve minutes later the process was cancelled and the resulting half-dead provider earned nothing for 9.5 hours. A brake that releases on a clock is not a brake.
+
+Expiry now requires demonstrated health: no watchdog escalation in force, and memory headroom with a 25% margin above the low-headroom threshold, taken as the tighter of host `MemAvailable` and the cgroup headroom. A recovered box does not jump to full capacity either. It relaxes in stages, +20% per sustained clean window, towards the target capacity it held before the cut, and the cap stops applying only once relaxation reaches that target. If the box turns marginal at any stage, the same signals halt further relaxation.
+
+A read of the cap no longer relaxes, clears or persists it: `standingThrashCap` reports the stored value for the stall and escalation paths, and only the mutating checks relax or clear.
+
+**Files Modified**: `miner/thrash_cap.go`, `miner/thrash_escalation_test.go`
+
+**How to Identify in New Upstream**: `thrashBoxRecovered`, `standingThrashCap`, `thrashCapRelaxNumerator`/`thrashCapRelaxDenom` and the `TargetCap` field of `thrashCapState`.
+
+**Status**: shipping in this release.
+
+---
+
+## 35. Shutdown Is Bounded and Keeps the Quarantine Exit Code (PR #350)
+
+**Purpose**: A cancelled provider drained forever. One worker that ignored cancellation blocked the join with no deadline, so `cancel()` became a zombie: 317 threads, `clients=0`, no exit, and systemd's stop turned into a SIGKILL of a process already trying to leave. The same run leaked its slot accounting, because a slot cancelled before it reached the control plane was never marked stopped, which is why the not-connected count only ever grew.
+
+Three changes. Both slot spawn sites go through `runReloadedSlot`, which defers `slotStopped` so every exit path including a panic is accounted. The join has a grace (35-40 s, inside systemd's 90 s stop timeout) and a five-second watchdog that ends the process without waiting on the remaining defers or the persistent-error flush, with the incident bundle captured before the arming so the dump survives. A drain timeout on a quarantined run exits 75, not 1: the supervisor reads only 75 as a deliberate quarantine, and exiting 1 turned one into a restart on the wrong policy.
+
+**Files Modified**: `miner/run.go`, `miner/slot_join.go`, `miner/incident_capture.go`, `miner/provider_bringup.go`, plus their tests.
+
+**How to Identify in New Upstream**: `providerShutdownGrace`, `providerShutdownExitBound`, `providerShutdownExitCode`, `exitProviderRunImmediate` and `runReloadedSlot`.
+
+**Status**: shipping in this release.
+
+---
+
+## 36. One Per-Slot Sampler Instead of Two Tickers (PR #353)
+
+**Purpose**: Every proxied slot ran two independent five-second tickers, one folding billing counters and one reading platform transport health. On a box holding 900 slots that is 1,800 goroutines doing two small jobs on the same cadence, against a measured 45.5 goroutines per slot.
+
+Both jobs now run from one per-slot sampler loop with a single five-second ticker, cancelling and joining before the device closes. A pool-wide shared loop was rejected: serialising slot calls would let one slow slot delay every other slot across a 900-slot pool, and dispatching async workers to avoid that reintroduces unbounded goroutines during a stall. Both samples are local reads, so one cannot starve the other on the shared loop; that invariant is written at the loop, and any future sample that could block must get its own goroutine.
+
+**Files Modified**: `miner/proxy_slot_sampler.go`, `miner/provider_billing.go`, `miner/proxy_transport_health.go`, `miner/run.go`, plus tests.
+
+**How to Identify in New Upstream**: `proxySlotSamplerLoop`, `proxyTransportTracker`, `proxyBillingSampler`.
+
+**Status**: shipping in this release.

@@ -563,7 +563,7 @@ services:
     environment:
       URNETWORK_SELF_HEAL: "1"
     volumes:
-      - ur_config_1:/root/.urnetwork   # the thrash cap and its 24h ceiling live here
+      - ur_config_1:/root/.urnetwork   # the thrash cap and its restart ring live here
 ```
 
 The image's start script (`docker/miner/start_miner.sh`) treats exit 75 as a planned restart: they wait 5 seconds, restart the provider and leave the JWT alone. Without a writable, persistent `~/.urnetwork` the watchdog logs `persist-failed` and never exits. On runtimes that do not create `/.dockerenv` (Podman, Kubernetes) also set `URNETWORK_CONTAINER=1`.

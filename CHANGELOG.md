@@ -17,7 +17,11 @@ Merged to `main` after `v2026.10.30-1085641150-sn`, not yet in a tagged release.
 
 ### Changed
 
-- **`connect` and `sdk` pins moved** (12efc46ba, b1efe606d): `connect` from `d0a4bb41c300` to `ca8b9020201a`, and `sdk` from `f17fc47e8bda` to `6f4d35ee3486`, which carries the extender activation timeout fix.
+- **A thrash cap expires on demonstrated health, not on a wall clock** ([#352](https://github.com/full-bars/sn/pull/352), 8e299b401): the cap carried a 24-hour expiry and released the operator's full trim when the timer ran out, whatever the box was doing, which is how a still-thrashing box got 1500 slots in one launch. Expiry now needs a calm watchdog and memory headroom 25% above the low-headroom threshold, and a recovered box relaxes in stages, +20% per clean window, towards the capacity it held before the cut. The cap stops applying only when relaxation reaches that target.
+- **Shutdown is bounded, and a quarantined run still exits 75** ([#350](https://github.com/full-bars/sn/pull/350), 924b9b2cf): a worker that ignored cancellation left the process draining forever, which on ATL1 became 9.5 hours of a half-dead provider. The join now has a grace and a 5-second watchdog that ends the process without waiting on the remaining defers or the error flush. A drain timeout keeps the quarantine exit code, so the supervisor does not read a deliberate quarantine as a crash worth restarting.
+- **One ticker per proxied slot instead of two** ([#353](https://github.com/full-bars/sn/pull/353), abbc4afb8): billing and transport-health sampling ran on separate 5-second tickers; they now share one per-slot loop, which is one goroutine per slot back on a dense box.
+- **A space that opts out of the extender network builds no directory** (full-bars/sdk#7, [#354](https://github.com/full-bars/sn/pull/354), 0ec902c4a110): the opt-out was only half applied, so every proxied slot still ran a directory loop, status watcher, release fetcher and seed bootstrap. The pin bump carries the gate, and it clears a directory a caller supplied.
+- **The `connect` and `sdk` pins moved** (12efc46ba, b1efe606d): `connect` from `d0a4bb41c300` to `ca8b9020201a`, and `sdk` from `f17fc47e8bda` to `6f4d35ee3486`, which carries the extender activation timeout fix.
 - **The `urnet-tools` help menus point at the community Discord** (cfa578c21).
 
 ### Documentation
