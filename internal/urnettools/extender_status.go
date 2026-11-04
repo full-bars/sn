@@ -54,8 +54,8 @@ type ExtenderReading struct {
 	LimitedBySubnetsCount int    `json:"limited_by_subnets_count,omitempty"`
 	LimitedBySourceCount  int    `json:"limited_by_source_count,omitempty"`
 
-	// Placeholders for serve counters in unmerged SDK PR #357 (sdk6):
-	// TODO(sdk#357): Connected, ServedProcess, ServedLifetime, PeakConnected, LastServed
+	// Placeholders for serve counters in unmerged SDK PR #6:
+	// TODO(sdk#6): Connected, ServedProcess, ServedLifetime, PeakConnected, LastServed
 	// live in an unmerged sdk PR and are not in the pinned module.
 	ServeCountersAvailable    bool  `json:"serve_counters_available"`
 	ConnectedPlaceholder      int   `json:"connected_placeholder,omitempty"`
