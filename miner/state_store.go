@@ -601,6 +601,7 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 	if isProviderStoreCorrupt(err) {
 		IncrPersistentError(providerStoreCorruptCategory)
 	}
+	replacedFrom := ""
 	if err != nil {
 		// A database bbolt can never load is moved aside once, and the run
 		// starts from an empty store, rather than warning about the same file
@@ -612,6 +613,7 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 				err = markerErr
 			} else if moved, quarantined := quarantineCorruptStore(path, err); quarantined {
 				tlog("[state] %s would not open (%v); moved it to %s\n", path, err, moved)
+				replacedFrom = moved
 				store, err = openProviderStoreWithTimeout(path, timeout)
 			}
 		}
@@ -643,6 +645,11 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 		globalProviderStoreFailedErr = err
 		globalProviderStoreRetryAt = now.Add(providerStoreRetryInterval)
 		return nil, err
+	}
+	if replacedFrom != "" {
+		// The run is on an empty store the old one's contents are missing
+		// from: not a failure, but not the state the operator left either.
+		noteProviderStoreDegradedFor(fmt.Sprintf("corrupt state store moved to %s, running on a fresh store", replacedFrom))
 	}
 	globalProviderStoreFailedPath = ""
 	globalProviderStoreFailedErr = nil

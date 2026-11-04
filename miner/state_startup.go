@@ -30,33 +30,62 @@ import (
 // own reader level, before it announces READY.
 const EnvHotSwapStoreStamp = "URNETWORK_HOTSWAP_STORE_STAMP"
 
+// The parent's report is one of these. "none" means only that the store was
+// read and carries no stamp. A stamp the parent could not read is never "none":
+// it is "refused:" (the open refused a newer store, carrying the guard's own
+// message) or "unreadable:" (the read failed, carrying why).
 const (
-	hotSwapStampNone        = "none"
-	hotSwapStampUnavailable = "unavailable"
-	hotSwapStampPrefix      = "stamp:"
+	hotSwapStampNone             = "none"
+	hotSwapStampUnavailable      = "unavailable"
+	hotSwapStampPrefix           = "stamp:"
+	hotSwapStampUnreadablePrefix = "unreadable:"
 )
 
 var (
-	providerStoreDegraded     atomic.Bool
-	providerStoreDegradedOnce sync.Once
+	providerStoreDegraded        atomic.Bool
+	providerStoreDegradedMu      sync.Mutex
+	providerStoreDegradedReasons []string
 )
 
 // providerStoreRunningDegraded reports that this run started without a state
-// store it could open.
+// store it could open, or on one it could not fully trust.
 func providerStoreRunningDegraded() bool { return providerStoreDegraded.Load() }
 
-// noteProviderStoreDegraded raises the flag and logs the loud line, once per
-// process.
-func noteProviderStoreDegraded(cause error) {
+// providerStoreDegradedReasonList lists why the run is degraded, in the order the
+// reasons were first noted.
+func providerStoreDegradedReasonList() []string {
+	providerStoreDegradedMu.Lock()
+	defer providerStoreDegradedMu.Unlock()
+	return append([]string(nil), providerStoreDegradedReasons...)
+}
+
+// noteProviderStoreDegradedFor raises the flag and logs the loud line the first
+// time each distinct reason is noted, so a second cause is not hidden behind
+// the first.
+func noteProviderStoreDegradedFor(reason string) {
 	providerStoreDegraded.Store(true)
-	providerStoreDegradedOnce.Do(func() {
-		critLog("PROVIDER DEGRADED: state store unavailable, continuing without it (%v); its schema was not checked", cause)
-	})
+	providerStoreDegradedMu.Lock()
+	for _, seen := range providerStoreDegradedReasons {
+		if seen == reason {
+			providerStoreDegradedMu.Unlock()
+			return
+		}
+	}
+	providerStoreDegradedReasons = append(providerStoreDegradedReasons, reason)
+	providerStoreDegradedMu.Unlock()
+	critLog("PROVIDER DEGRADED: %s", reason)
+}
+
+// noteProviderStoreDegraded is the store-could-not-be-opened case.
+func noteProviderStoreDegraded(cause error) {
+	noteProviderStoreDegradedFor(fmt.Sprintf("state store unavailable, continuing without it (%v); its schema was not checked", cause))
 }
 
 func resetProviderStoreDegradedForTest() {
 	providerStoreDegraded.Store(false)
-	providerStoreDegradedOnce = sync.Once{}
+	providerStoreDegradedMu.Lock()
+	providerStoreDegradedReasons = nil
+	providerStoreDegradedMu.Unlock()
 }
 
 // providerStartupStoreVerdict is the normal start's check. A nil return lets
@@ -77,35 +106,44 @@ func providerStartupStoreVerdict(ctx context.Context) error {
 }
 
 // hotSwapParentStoreStamp is what a parent tells its candidate about the store
-// it holds open.
+// it holds open. Only a store that was read and has no stamp reports "none".
 func hotSwapParentStoreStamp() string {
 	store, err := openProviderStoreForProcess()
-	if err != nil || store == nil {
+	switch {
+	case err != nil || store == nil:
 		return hotSwapStampUnavailable
 	}
 	var raw []byte
+	var found bool
 	store.mu.Lock()
 	if store.db == nil {
 		store.mu.Unlock()
 		return hotSwapStampUnavailable
 	}
-	_ = store.db.View(func(tx *bbolt.Tx) error {
+	viewErr := store.db.View(func(tx *bbolt.Tx) error {
 		if b := tx.Bucket([]byte(providerStoreBucketMeta)); b != nil {
-			raw = append([]byte(nil), b.Get([]byte(providerStoreKeySchema))...)
+			if v := b.Get([]byte(providerStoreKeySchema)); v != nil {
+				found = true
+				raw = append([]byte(nil), v...)
+			}
 		}
 		return nil
 	})
 	store.mu.Unlock()
-	if len(raw) == 0 {
+	if viewErr != nil {
+		return hotSwapStampUnreadablePrefix + viewErr.Error()
+	}
+	if !found {
 		return hotSwapStampNone
 	}
 	return hotSwapStampPrefix + string(raw)
 }
 
 // hotSwapCandidateStoreVerdict runs in the candidate before READY. A newer
-// stamp is the same refusal a normal start gives. A parent that could not read
-// its store, or an older parent that sent nothing, leaves the schema unchecked:
-// the candidate goes on degraded rather than turning a handoff into downtime.
+// stamp, or a refusal the parent itself met, is the same refusal a normal start
+// gives. A parent that could not open or read its store, or an older parent that
+// sent nothing, leaves the schema unchecked: the candidate goes on degraded,
+// with the reason recorded, rather than turning a handoff into downtime.
 func hotSwapCandidateStoreVerdict() error {
 	value, set := os.LookupEnv(EnvHotSwapStoreStamp)
 	switch {
@@ -116,6 +154,10 @@ func hotSwapCandidateStoreVerdict() error {
 		return nil
 	case value == hotSwapStampUnavailable:
 		noteProviderStoreDegraded(errors.New("the parent could not open the store"))
+		return nil
+	case strings.HasPrefix(value, hotSwapStampUnreadablePrefix):
+		noteProviderStoreDegradedFor(fmt.Sprintf("the parent could not read the store's schema stamp (%s); its schema was not checked",
+			strings.TrimPrefix(value, hotSwapStampUnreadablePrefix)))
 		return nil
 	case !strings.HasPrefix(value, hotSwapStampPrefix):
 		noteProviderStoreDegraded(fmt.Errorf("unrecognised store stamp report %q", value))
@@ -144,7 +186,7 @@ func writeStateStoreMetrics(b *strings.Builder) {
 	if providerStoreRunningDegraded() {
 		degraded = 1
 	}
-	fmt.Fprintf(b, "# HELP urnet_state_store_degraded 1 when this run started without a state store it could open.\n")
+	fmt.Fprintf(b, "# HELP urnet_state_store_degraded 1 when this run started without a state store it could open, or on one it could not fully trust.\n")
 	fmt.Fprintf(b, "# TYPE urnet_state_store_degraded gauge\n")
 	fmt.Fprintf(b, "urnet_state_store_degraded %d\n", degraded)
 }

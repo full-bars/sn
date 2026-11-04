@@ -186,3 +186,74 @@ func TestStateHotswapParentSendsItsStampAtSpawn(t *testing.T) {
 		t.Fatalf("the parent's own stamp is refused by this build: %v", err)
 	}
 }
+
+// Hole B and C: a parent whose read of the stamp failed must not send "none".
+// The candidate records a degraded run with the reason.
+func TestStateHotswapUnreadableStampIsNotNone(t *testing.T) {
+	startupTestHarness(t)
+	store, err := openProviderStoreForProcess()
+	if err != nil {
+		t.Fatal(err)
+	}
+	store.mu.Lock()
+	_ = store.db.Close() // the handle is still set, so every View fails
+	store.mu.Unlock()
+
+	report := hotSwapParentStoreStamp()
+	if report == hotSwapStampNone {
+		t.Fatal("a failed read was reported as no store")
+	}
+	if !strings.HasPrefix(report, hotSwapStampUnreadablePrefix) {
+		t.Fatalf("parent report = %q, want %q", report, hotSwapStampUnreadablePrefix)
+	}
+
+	resetProviderStoreDegradedForTest()
+	err, _ = candidateHandshake(t, &report)
+	if errors.Is(err, errProviderStoreNewer) {
+		t.Fatalf("an I/O failure refused the start: %v", err)
+	}
+	if !providerStoreRunningDegraded() {
+		t.Fatal("candidate accepted an unreadable report without going degraded")
+	}
+	reasons := strings.Join(providerStoreDegradedReasonList(), "|")
+	if !strings.Contains(reasons, "could not read the store's schema stamp") {
+		t.Fatalf("degraded reason = %q", reasons)
+	}
+}
+
+// "none" stays what it was: a store that was read and carries no stamp.
+func TestStateHotswapNoneMeansNoStamp(t *testing.T) {
+	startupTestHarness(t)
+	resetProviderStoreDegradedForTest()
+	if err, _ := candidateHandshake(t, ptr(hotSwapStampNone)); errors.Is(err, errProviderStoreNewer) || providerStoreRunningDegraded() {
+		t.Fatalf("none: err=%v degraded=%v", err, providerStoreRunningDegraded())
+	}
+}
+
+// Hole C: a corrupt store that is quarantined and replaced is not silent.
+func TestStateQuarantineReplaceIsVisibleAsDegraded(t *testing.T) {
+	h := startupTestHarness(t)
+	path := h.path(providerStoreFileName)
+	if err := os.WriteFile(path, []byte("damaged database"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := providerStartupStoreVerdict(context.Background()); err != nil {
+		t.Fatalf("quarantine refused the start: %v", err)
+	}
+	if !providerStoreRunningDegraded() {
+		t.Fatal("a quarantined and replaced store did not set degraded")
+	}
+	reasons := strings.Join(providerStoreDegradedReasonList(), "|")
+	if !strings.Contains(reasons, "corrupt state store moved to") {
+		t.Fatalf("degraded reason = %q", reasons)
+	}
+	var b strings.Builder
+	writeStateStoreMetrics(&b)
+	if !strings.Contains(b.String(), "urnet_state_store_degraded 1\n") {
+		t.Fatalf("scrape does not show it:\n%s", b.String())
+	}
+	events, _ := os.ReadFile(h.path("events.log"))
+	if !strings.Contains(string(events), "PROVIDER DEGRADED: corrupt state store moved to") {
+		t.Fatalf("events.log lacks the line:\n%s", events)
+	}
+}
