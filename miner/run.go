@@ -1713,6 +1713,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			},
 		})
 		release()
+		captureDenied := false
 		if err != nil {
 			// Creation withheld for a capture launch surfaces as the
 			// registration path's refusal: name the identity the profile
@@ -1720,7 +1721,31 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// switch that no longer exists, and record it where the capture
 			// launch's own admission failures go.
 			var refused *clientauth.RegistrationRefusedError
-			captureDenied := captureRefusal != nil && errors.As(err, &refused)
+			captureDenied = captureRefusal != nil && errors.As(err, &refused)
+			// The first real use of an identity the import adopted on a stored
+			// proof: if the platform refuses it, the proof is withdrawn and the
+			// slot re-proves immediately with a fresh mint rather than deferring
+			// to the next start.
+			if clientauth.IsClientRevoked(err) {
+				if noteErr := noteLegacyImportProofRejected(filepath.Dir(clientJwtPath), filepath.Base(clientJwtPath), "client_revoked"); noteErr != nil {
+					tlog("⚠️ [import] could not withdraw a rejected stored proof for %s: %v\n", display, noteErr)
+				}
+				if !captureDenied {
+					tlog("⚠️ [import] stored proof for %s was revoked; re-proving existing identity immediately\n", display)
+					if reprovedJwt, reprovedId, reprovedErr := reproveRevokedStoredProof(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, retained, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
+						bringUp.identityOutcome(index, slotDisplay, outcome, reason)
+					}); reprovedErr == nil {
+						byClientJwt = reprovedJwt
+						clientId = reprovedId
+						reused = true
+						err = nil
+					} else {
+						tlog("⚠️ [import] immediate existing identity re-proof failed for %s: %v\n", display, reprovedErr)
+					}
+				}
+			}
+		}
+		if err != nil {
 			if captureDenied {
 				err = fmt.Errorf("%w: %w", captureRefusal, err)
 			}
