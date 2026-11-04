@@ -45,7 +45,6 @@ func newDiagTestEnv(t *testing.T) (diagEnv, *diagTestClock) {
 		startCPU:        func(w io.Writer) error { _, err := w.Write([]byte("cpu")); return err },
 		stopCPU:         func() {},
 	}
-	// Small heap so the default free-space floor is the 256 MiB minimum.
 	env.stats = func() func() diagStats {
 		inner := env.stats
 		return func() diagStats {
@@ -120,8 +119,8 @@ func TestDiagRefusesWithoutFreeSpace(t *testing.T) {
 	if err == nil {
 		t.Fatal("runDiag succeeded with 100 MiB free; want a refusal")
 	}
-	// floor is max(256 MiB, 8 x 40 MiB) = 320 MiB, so 220 MiB short
-	for _, want := range []string{"not enough free space", "need 320.0 MiB", "have 100.0 MiB", "short by 220.0 MiB"} {
+	// the floor is a fixed 512 MiB, so 412 MiB short
+	for _, want := range []string{"not enough free space", "need 512.0 MiB", "have 100.0 MiB", "short by 412.0 MiB"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error %q lacks %q", err, want)
 		}
@@ -131,14 +130,30 @@ func TestDiagRefusesWithoutFreeSpace(t *testing.T) {
 	}
 }
 
-func TestDiagFloorScalesWithHeap(t *testing.T) {
+func TestDiagFloorIsFixed(t *testing.T) {
 	env, _ := newDiagTestEnv(t)
-	// 4.6 GB heap: floor is 8x, 36.8 GB, far above the 256 MiB minimum.
+	// 4.6 GB heap with 30 GB free: the floor does not scale with the heap.
 	env.stats = func() diagStats { return diagStats{HeapInuse: 4600 << 20} }
 	env.freeBytes = func(string) (uint64, error) { return 30 << 30, nil }
 	_, err := runDiag(context.Background(), env)
-	if err == nil || !strings.Contains(err.Error(), "not enough free space") {
-		t.Fatalf("err = %v, want a free-space refusal at 8x the heap", err)
+	if err != nil && strings.Contains(err.Error(), "not enough free space") {
+		t.Fatalf("a 4.6 GiB heap with 30 GiB free was refused: %v", err)
+	}
+}
+
+func TestDiagFloorNoLongerScalesWithHeap(t *testing.T) {
+	env, _ := newDiagTestEnv(t)
+	env.stats = func() diagStats { return diagStats{HeapInuse: 4600 << 20} }
+
+	env.freeBytes = func(string) (uint64, error) { return 600 << 20, nil }
+	if _, err := runDiag(context.Background(), env); err != nil {
+		t.Fatalf("600 MiB free with a 4.6 GiB heap should pass the 512 MiB floor: %v", err)
+	}
+
+	env.freeBytes = func(string) (uint64, error) { return 100 << 20, nil }
+	_, err := runDiag(context.Background(), env)
+	if err == nil || !strings.Contains(err.Error(), "need 512.0 MiB") {
+		t.Fatalf("err = %v, want a refusal at the fixed 512 MiB floor", err)
 	}
 }
 

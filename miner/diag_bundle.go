@@ -49,8 +49,11 @@ const (
 	// diagTotalDeadline, so five minutes is far past any live one.
 	diagStaleLockAge = 5 * time.Minute
 
-	diagMinFreeBytes = 256 << 20
-	diagFreeHeapMult = 8
+	// diagMinFreeBytes is the free space required to start. The profiles are
+	// profile-sized (tens of MB), not heap-sized, so the floor is fixed rather
+	// than scaled by the heap: a multiple of a multi-GiB heap would refuse the
+	// very box the command exists for.
+	diagMinFreeBytes = 512 << 20
 )
 
 var (
@@ -264,14 +267,14 @@ func runDiag(ctx context.Context, env diagEnv) (res diagResult, err error) {
 	res.Pruned = pruneDiagBundles(root, env.keep)
 
 	before := env.stats()
-	need := max(uint64(diagMinFreeBytes), before.HeapInuse*diagFreeHeapMult)
+	need := uint64(diagMinFreeBytes)
 	avail, ferr := env.freeBytes(root)
 	if ferr != nil {
 		return res, fmt.Errorf("diag: cannot measure free space on the filesystem holding %s (%v); refusing to start a capture it cannot check. Check that the state directory exists and is readable by the provider", root, ferr)
 	}
 	if avail < need {
-		return res, fmt.Errorf("diag: not enough free space on the filesystem holding %s: need %s (the larger of 256 MiB and 8 x the %s heap in use), have %s, short by %s. Free some space (or delete old bundles in %s) and run it again",
-			root, diagBytes(need), diagBytes(before.HeapInuse), diagBytes(avail), diagBytes(need-avail), root)
+		return res, fmt.Errorf("diag: not enough free space on the filesystem holding %s: need %s (512 MiB, enough for the bundle), have %s, short by %s. Free some space (or delete old bundles in %s) and run it again",
+			root, diagBytes(need), diagBytes(avail), diagBytes(need-avail), root)
 	}
 
 	stamp := env.now().UTC().Format(diagStampLayout)
