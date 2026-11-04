@@ -105,9 +105,9 @@ func (fm *FirewallManager) detectLinux() FirewallStatus {
 			str := string(out)
 			if strings.Contains(str, "Status: active") {
 				// Check rules
-				tcpOpen := strings.Contains(str, "443/tcp") && strings.Contains(str, "ALLOW")
-				udp443Open := strings.Contains(str, "443/udp") && strings.Contains(str, "ALLOW")
-				udp4053Open := strings.Contains(str, "4053/udp") && strings.Contains(str, "ALLOW")
+				tcpOpen := ufwAllows(str, "443/tcp")
+				udp443Open := ufwAllows(str, "443/udp")
+				udp4053Open := ufwAllows(str, "4053/udp")
 				open := tcpOpen && udp443Open && udp4053Open
 				rules := []string{
 					"ufw allow 443/tcp",
@@ -175,6 +175,16 @@ func (fm *FirewallManager) detectLinux() FirewallStatus {
 		},
 		Message: "no active firewall service detected (firewalld, ufw, nftables, iptables); verify host firewall manually",
 	}
+}
+
+func ufwAllows(status, port string) bool {
+	for _, line := range strings.Split(status, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) >= 3 && fields[0] == port && fields[1] == "ALLOW" && fields[2] == "Anywhere" {
+			return true
+		}
+	}
+	return false
 }
 
 func (fm *FirewallManager) isSystemdServiceActive(service string) bool {
@@ -247,10 +257,8 @@ func (fm *FirewallManager) detectDarwin() FirewallStatus {
 }
 
 func (fm *FirewallManager) detectWindows() FirewallStatus {
-	// Check if netsh rule exists
 	ruleName := "URnetwork Extender"
-	out, err := fm.ExecCmd("netsh", "advfirewall", "firewall", "show", "rule", "name="+ruleName)
-	ruleExists := err == nil && strings.Contains(string(out), ruleName)
+	ruleExists := windowsRuleExists(fm.ExecCmd, ruleName) && windowsRuleExists(fm.ExecCmd, ruleName+" UDP")
 
 	rules := []string{
 		fmt.Sprintf(`netsh advfirewall firewall add rule name="%s" dir=in action=allow protocol=TCP localport=443`, ruleName),
@@ -269,6 +277,41 @@ func (fm *FirewallManager) detectWindows() FirewallStatus {
 		SuggestedRules: rules,
 		Message:        msg,
 	}
+}
+
+func windowsRuleExists(run func(string, ...string) ([]byte, error), name string) bool {
+	out, err := run("netsh", "advfirewall", "firewall", "show", "rule", "name="+name)
+	if err != nil {
+		return false
+	}
+	for _, line := range strings.Split(string(out), "\n") {
+		line = strings.TrimSpace(line)
+		if i := strings.Index(line, ":"); i >= 0 {
+			line = strings.TrimSpace(line[i+1:])
+		}
+		if line == name {
+			return true
+		}
+	}
+	return false
+}
+
+func applyWindowsRules(run func(string, ...string) ([]byte, error)) (bool, error) {
+	applied := false
+	for _, rule := range []struct{ name, protocol, ports string }{
+		{"URnetwork Extender", "TCP", "443"},
+		{"URnetwork Extender UDP", "UDP", "443,4053"},
+	} {
+		if windowsRuleExists(run, rule.name) {
+			continue
+		}
+		out, err := run("netsh", "advfirewall", "firewall", "add", "rule", "name="+rule.name, "dir=in", "action=allow", "protocol="+rule.protocol, "localport="+rule.ports)
+		if err != nil {
+			return applied, fmt.Errorf("netsh add %s rule failed: %s: %w", rule.protocol, strings.TrimSpace(string(out)), err)
+		}
+		applied = true
+	}
+	return applied, nil
 }
 
 // Apply attempts to apply the firewall configuration if possible with root/admin privileges.
@@ -302,19 +345,7 @@ func (fm *FirewallManager) Apply(status FirewallStatus) (applied bool, err error
 		if status.PortsOpen {
 			return false, nil
 		}
-		ruleName := "URnetwork Extender"
-		// Check again before adding
-		out, _ := fm.ExecCmd("netsh", "advfirewall", "firewall", "show", "rule", "name="+ruleName)
-		if strings.Contains(string(out), ruleName) {
-			return false, nil // already exists
-		}
-		if _, err := fm.ExecCmd("netsh", "advfirewall", "firewall", "add", "rule", "name="+ruleName, "dir=in", "action=allow", "protocol=TCP", "localport=443"); err != nil {
-			return false, fmt.Errorf("netsh add TCP rule failed: %w", err)
-		}
-		if _, err := fm.ExecCmd("netsh", "advfirewall", "firewall", "add", "rule", "name="+ruleName+" UDP", "dir=in", "action=allow", "protocol=UDP", "localport=443,4053"); err != nil {
-			return false, fmt.Errorf("netsh add UDP rule failed: %w", err)
-		}
-		return true, nil
+		return applyWindowsRules(fm.ExecCmd)
 
 	default:
 		// For nftables, iptables, pf, ipfw, or unknown: do not silently succeed.
