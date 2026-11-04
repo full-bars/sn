@@ -501,3 +501,30 @@ func TestDiagSecondRequestDoesNotUnregisterFirst(t *testing.T) {
 		t.Fatal("hot swap abort did not reach the first capture")
 	}
 }
+
+// The control socket must be closed before the in-flight capture is aborted,
+// or a diag accepted in between starts after the abort has returned.
+func TestQuiesceClosesSocketBeforeAbortingDiag(t *testing.T) {
+	env, _ := newDiagTestEnv(t)
+	env.cpuFor = time.Minute
+	started := make(chan struct{})
+	env.startCPU = func(w io.Writer) error { close(started); _, err := w.Write([]byte("cpu")); return err }
+	done := make(chan error, 1)
+	go func() { _, err := runDiagTracked(env); done <- err }()
+	<-started
+
+	var capturePendingAtClose bool
+	setQuiesceHook(func() {
+		select {
+		case <-done:
+		default:
+			capturePendingAtClose = true
+		}
+	})
+	t.Cleanup(func() { setQuiesceHook(nil) })
+	quiesceControlSocket()
+	if !capturePendingAtClose {
+		t.Fatal("the capture was aborted before the control socket was closed")
+	}
+	<-done
+}

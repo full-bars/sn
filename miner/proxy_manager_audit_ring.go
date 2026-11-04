@@ -451,14 +451,15 @@ func setQuiesceHook(f func()) {
 
 // quiesceControlSocket runs the installed hook, if any.
 func quiesceControlSocket() {
-	// A diagnostic capture in flight must not be exec'd away half-written.
-	abortDiagForHotSwap()
 	quiesceMu.Lock()
 	f := controlSocketQuiesceForHotSwap
 	quiesceMu.Unlock()
 	if f != nil {
 		f()
 	}
+	// A diagnostic capture in flight must not be exec'd away half-written. The
+	// socket is closed first so no new diag can be accepted after the abort.
+	abortDiagForHotSwap()
 }
 
 // recordHotSwapAndFlush records the handoff in the audit ring and flushes
