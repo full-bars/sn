@@ -1,0 +1,310 @@
+package urnettools
+
+import (
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
+)
+
+// ExtenderSetupOptions controls the behavior of `urnet-tools extender setup`.
+type ExtenderSetupOptions struct {
+	Enable         bool
+	NonInteractive bool
+	Force          bool
+	DryRun         bool
+	Target         Target
+	Stdout         io.Writer
+	Stderr         io.Writer
+
+	// Injectable dependencies for deterministic testing
+	Platform    string
+	PortChecker *PortChecker
+	PlatformCfg PlatformConfigurer
+	FirewallMgr *FirewallManager
+	IsRoot      func() bool
+	LookPath    func(string) (string, error)
+	ElevateFunc func(args []string) error
+	Argv        []string
+}
+
+// RunExtenderSetup executes the extender setup workflow in order:
+// 1. Check ports first (TCP 443 conflict aborts; UDP conflict warns & continues)
+// 2. Detect platform requirement (if already configured, reports and changes nothing)
+// 3. Check privileges (if not root and sudo unavailable/declined, prints exact command and exits non-zero)
+// 4. Apply platform requirement
+// 5. Detect and configure firewall (or print exact rules if unknown)
+// 6. Verify with a real bind
+// 7. If --enable, set provider role preference to "on"
+func RunExtenderSetup(opts ExtenderSetupOptions) error {
+	out := opts.Stdout
+	if out == nil {
+		out = os.Stdout
+	}
+	errOut := opts.Stderr
+	if errOut == nil {
+		errOut = os.Stderr
+	}
+
+	platform := opts.Platform
+	if platform == "" {
+		platform = runtime.GOOS
+	}
+
+	checker := opts.PortChecker
+	if checker == nil {
+		checker = DefaultPortChecker(platform)
+	}
+
+	platformCfg := opts.PlatformCfg
+	if platformCfg == nil {
+		platformCfg = NewSystemPlatformConfigurer(platform)
+	}
+
+	fwMgr := opts.FirewallMgr
+	if fwMgr == nil {
+		fwMgr = DefaultFirewallManager(platform)
+	}
+
+	isRootFn := opts.IsRoot
+	if isRootFn == nil {
+		isRootFn = func() bool {
+			return os.Geteuid() == 0
+		}
+	}
+
+	lookPathFn := opts.LookPath
+	if lookPathFn == nil {
+		lookPathFn = exec.LookPath
+	}
+
+	// Resolve provider target (if any)
+	providers := Discover()
+	var p Provider
+	var err error
+	if len(providers) > 0 {
+		p, _, err = selectTargetOrSoleAccessible(providers, opts.Target, false)
+		if err != nil && opts.Target.Network != "" {
+			return fmt.Errorf("resolving target provider: %w", err)
+		}
+	}
+	if p.Binary == "" {
+		p.Binary = findProviderBinary(p)
+	}
+
+	// STEP 1: Check ports first
+	ports, err := checker.CheckPorts()
+	if err != nil {
+		return fmt.Errorf("checking port occupancy: %w", err)
+	}
+
+	// TCP 443 busy check: stop, name process, change nothing, exit non-zero. Never kill anything.
+	if ports.TCP443.Held {
+		isTargetHolder := false
+		if p.Running {
+			if p.PID > 0 && ports.TCP443.PID == p.PID {
+				isTargetHolder = true
+			} else if p.Binary != "" && filepath.Base(p.Binary) == ports.TCP443.Process {
+				isTargetHolder = true
+			}
+		}
+		if !isTargetHolder {
+			proc := ports.TCP443.Process
+			if proc == "" && ports.TCP443.PID > 0 {
+				proc = fmt.Sprintf("PID %d", ports.TCP443.PID)
+			} else if proc != "" && ports.TCP443.PID > 0 {
+				proc = fmt.Sprintf("%s (PID %d)", proc, ports.TCP443.PID)
+			}
+			if proc == "" {
+				proc = "another process"
+			}
+			return fmt.Errorf("port TCP 443 is held by %s; extender role cannot run without it; please stop or reconfigure %s to free TCP 443", proc, proc)
+		}
+	}
+
+	// UDP busy: warn and continue
+	for _, w := range ports.UDPWarnings() {
+		fmt.Fprintf(errOut, "warn: %s\n", w)
+	}
+
+	// STEP 2: Detect platform requirement
+	configured, desc, err := platformCfg.CheckRequirement(p.Binary, p.User)
+	if err != nil {
+		return fmt.Errorf("checking platform requirement: %w", err)
+	}
+
+	fwStatus := fwMgr.Detect()
+	fwConfigured := !fwStatus.Active || fwStatus.PortsOpen || fwStatus.Kind == FirewallUnknown || fwStatus.Kind == FirewallNone
+
+	// Check if already configured on host
+	if configured && fwConfigured {
+		// If already configured, handle --enable if needed
+		if opts.Enable && p.StateDir != "" {
+			if curPref := ReadRolePreference(p.StateDir); curPref != "on" {
+				if opts.DryRun {
+					fmt.Fprintf(out, "[dry-run] would set extender role preference to on for %s\n", providerLabel(p))
+				} else {
+					if err := WriteRolePreference(p.StateDir, true); err != nil {
+						return fmt.Errorf("writing role preference: %w", err)
+					}
+					fmt.Fprintf(out, "extender: role preference enabled for %s\n", providerLabel(p))
+				}
+			}
+		}
+		fmt.Fprintf(out, "extender: already configured (%s)\n", desc)
+		return nil
+	}
+
+	// STEP 3: Privilege check
+	if !isRootFn() {
+		// Not root
+		exactCommand := formatSetupSudoCommand(opts)
+		_, sudoErr := lookPathFn("sudo")
+		sudoAvailable := sudoErr == nil && platform != "windows"
+
+		if opts.NonInteractive || !stdinIsInteractive() || !sudoAvailable {
+			fmt.Fprintf(errOut, "extender setup requires root privileges. Run:\n  %s\n", exactCommand)
+			return fmt.Errorf("extender setup requires root privileges; run: %s", exactCommand)
+		}
+
+		// Interactive with sudo available: prompt operator
+		if !opts.Force {
+			fmt.Fprintf(errOut, "Extender setup requires privileged access to configure port binding and firewall rules.\n")
+			ans, err := confirmStdinRead("Re-run under sudo now? [y/N] ")
+			if err != nil || (strings.ToLower(strings.TrimSpace(ans)) != "y" && strings.ToLower(strings.TrimSpace(ans)) != "yes") {
+				fmt.Fprintf(errOut, "Declined. You can run the setup command manually:\n  %s\n", exactCommand)
+				return fmt.Errorf("declined privilege elevation; run manually: %s", exactCommand)
+			}
+		}
+
+		// Re-exec under sudo
+		elevateFn := opts.ElevateFunc
+		if elevateFn == nil {
+			elevateFn = elevateSelf
+		}
+		args := opts.Argv
+		if len(args) == 0 {
+			args = []string{"extender", "setup"}
+			if opts.Enable {
+				args = append(args, "--enable")
+			}
+		}
+		return elevateFn(args)
+	}
+
+	// STEP 4: Apply platform requirement
+	if opts.DryRun {
+		fmt.Fprintf(out, "[dry-run] would apply platform requirement on %s\n", platform)
+	} else {
+		applied, applyDesc, err := platformCfg.ApplyRequirement(p.Binary, p.User)
+		if err != nil {
+			return fmt.Errorf("applying platform requirement: %w", err)
+		}
+		if applied {
+			fmt.Fprintf(out, "extender: %s\n", applyDesc)
+		}
+	}
+
+	// STEP 5: Apply firewall rules
+	if opts.DryRun {
+		fmt.Fprintf(out, "[dry-run] would configure firewall (%s)\n", fwStatus.Kind)
+	} else {
+		fwApplied, err := fwMgr.Apply(fwStatus)
+		if err != nil {
+			fmt.Fprintf(errOut, "warn: firewall configuration failed: %v\n", err)
+		} else if fwApplied {
+			fmt.Fprintf(out, "extender: firewall rules added (%s)\n", fwStatus.Kind)
+		} else if !fwStatus.PortsOpen && len(fwStatus.SuggestedRules) > 0 {
+			fmt.Fprintf(out, "extender: no automated firewall modification for %s; add these rules manually:\n", fwStatus.Kind)
+			for _, r := range fwStatus.SuggestedRules {
+				fmt.Fprintf(out, "  %s\n", r)
+			}
+		}
+	}
+
+	// STEP 6: Verify with real bind
+	if !opts.DryRun {
+		ok, err := platformCfg.VerifyBind(p.User)
+		if !ok || err != nil {
+			return fmt.Errorf("bind verification failed on TCP 443: %w", err)
+		}
+		fmt.Fprintf(out, "extender: verified TCP 443 listener\n")
+	}
+
+	// STEP 7: Set role preference if --enable
+	if opts.Enable {
+		if p.StateDir == "" {
+			home, _ := os.UserHomeDir()
+			p.StateDir = filepath.Join(home, ".urnetwork")
+		}
+		if opts.DryRun {
+			fmt.Fprintf(out, "[dry-run] would set extender role preference to on in %s\n", p.StateDir)
+		} else {
+			if err := WriteRolePreference(p.StateDir, true); err != nil {
+				return fmt.Errorf("writing role preference: %w", err)
+			}
+			fmt.Fprintf(out, "extender: role preference set to on for %s\n", providerLabel(p))
+		}
+	}
+
+	fmt.Fprintf(out, "extender: setup complete\n")
+	return nil
+}
+
+func formatSetupSudoCommand(opts ExtenderSetupOptions) string {
+	exe := resolvedExecutablePath()
+	cmd := fmt.Sprintf("sudo %s extender setup", exe)
+	if opts.Enable {
+		cmd += " --enable"
+	}
+	if opts.Target.Unit != "" {
+		cmd += " --unit " + opts.Target.Unit
+	}
+	if opts.Target.Network != "" {
+		cmd += " --network " + opts.Target.Network
+	}
+	return cmd
+}
+
+func findProviderBinary(p Provider) string {
+	if p.Binary != "" {
+		return p.Binary
+	}
+	candidates := []string{
+		"/usr/local/bin/urnetwork",
+		"/usr/bin/urnetwork",
+		"/usr/local/bin/provider",
+		"/usr/bin/provider",
+		"/usr/local/bin/miner",
+		"/usr/bin/miner",
+	}
+	home, _ := os.UserHomeDir()
+	if home != "" {
+		candidates = append(candidates,
+			filepath.Join(home, ".local", "share", "urnetwork-provider", "bin", "urnetwork"),
+			filepath.Join(home, ".local", "bin", "urnetwork"),
+			filepath.Join(home, ".urnetwork", "urnetwork"),
+		)
+	}
+	if p.User != "" && p.User != "root" {
+		candidates = append(candidates,
+			filepath.Join("/home", p.User, ".local", "share", "urnetwork-provider", "bin", "urnetwork"),
+			filepath.Join("/home", p.User, ".local", "bin", "urnetwork"),
+			filepath.Join("/home", p.User, ".urnetwork", "urnetwork"),
+		)
+	}
+	for _, c := range candidates {
+		if _, err := os.Stat(c); err == nil {
+			return c
+		}
+	}
+	for _, name := range []string{"urnetwork", "provider", "miner"} {
+		if path, err := exec.LookPath(name); err == nil {
+			return path
+		}
+	}
+	return ""
+}

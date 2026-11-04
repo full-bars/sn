@@ -39,6 +39,7 @@ Core Commands:
   autopilot log [limit]   Show the capacity decisions the provider made (OOM-aware cap, trim)
   enforcement [history N] Show what the governors enforced (counts per day; or the newest N events)
   baseline [show|mark|compare]  Show this box's recorded behaviour, and compare an upgrade
+  extender <status|setup> Extender role status and one-time privileged setup
 
 Performance & Tuning:
   turbo <v4|v8|off>       RAISE throughput limits for RAM-rich boxes
@@ -200,6 +201,7 @@ func buildRootCmd() *cobra.Command {
 		newProfileCmd(),
 		newDashboardCmd(),
 		newConfigCmd(),
+		newExtenderCmd(),
 	)
 	// Force every subcommand (however it was constructed) back to Cobra's
 	// default per-command help page. The root's curated menu must only ever

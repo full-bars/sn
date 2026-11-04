@@ -531,7 +531,14 @@ func cmdStatus(args []string) error {
 	}
 	printHostCapability(p)
 	printLiveBlock(p)
+	printExtenderBlock(p)
 	return nil
+}
+
+// printExtenderBlock appends the extender status block to urnet-tools status output.
+func printExtenderBlock(p Provider) {
+	reading := ReadExtenderStatus(p)
+	formatExtenderBlock(os.Stdout, reading)
 }
 
 // printHostCapability asks the provider what it measured about this host and
