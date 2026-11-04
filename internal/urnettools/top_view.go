@@ -63,7 +63,7 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 	th := m.theme
 	footerRows := 1
 	if m.discoveryNote != "" {
-		footerRows = max(1, len(wrapText(" "+m.discoveryNote, b.Width(), b.Height(), th.ASCII)))
+		footerRows = 1 + max(1, len(wrapText(m.discoveryNote, b.Width(), b.Height(), th.ASCII)))
 	}
 	rows := tui.SplitRows(b.Rect(), tui.Fixed(1), tui.Flex(1), tui.Fixed(footerRows))
 	m.drawHeader(b.Sub(rows[0]))
@@ -151,12 +151,12 @@ func (m *topModel) drawHeader(h *tui.Buffer) {
 }
 
 func (m *topModel) drawFooter(f *tui.Buffer) {
-	// Wrap the warning rather than hiding its end on narrower full layouts.
-	x, y := 0, 0
+	// The warning renders on its own rows so keys are never pushed off or clipped.
+	y := 0
 	if m.discoveryNote != "" {
-		for i, line := range wrapText(m.discoveryNote, f.Width(), f.Height(), m.theme.ASCII) {
-			y = i
-			x = f.Put(line, 0, y, m.theme.Warn)
+		for _, line := range wrapText(m.discoveryNote, f.Width(), max(1, f.Height()-1), m.theme.ASCII) {
+			f.Put(line, 0, y, m.theme.Warn)
+			y++
 		}
 	}
 	keys := " q quit"
@@ -171,7 +171,9 @@ func (m *topModel) drawFooter(f *tui.Buffer) {
 		keys += "   g goroutines"
 	}
 	keys += "   - " + topIntervalText(m.interval) + " +"
-	f.Put(tui.Truncate(keys, max(f.Width()-x, 0), m.theme.ASCII), x, y, m.theme.Dim)
+	if y < f.Height() {
+		f.Put(tui.Truncate(keys, f.Width(), m.theme.ASCII), 0, y, m.theme.Dim)
+	}
 }
 
 // topIntervalText is 100ms, 250ms, 500ms, 1s, 2s.

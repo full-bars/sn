@@ -154,6 +154,16 @@ func TestTopDiscoveryWarningFitsLayouts(t *testing.T) {
 		if !strings.Contains(strings.Join(text, " "), m.discoveryNote) {
 			t.Errorf("%dx%d: warning missing or truncated:\n%s", size.w, size.h, b.String())
 		}
+		if topMin.FitsRect(b.Rect()) {
+			if !strings.Contains(b.String(), "- 1s +") {
+				t.Errorf("%dx%d: key line missing or truncated:\n%s", size.w, size.h, b.String())
+			}
+		}
+		if size.w == 40 && size.h == 8 {
+			if !strings.Contains(b.String(), "q quit") {
+				t.Errorf("%dx%d: quit hint missing:\n%s", size.w, size.h, b.String())
+			}
+		}
 	}
 }
 
