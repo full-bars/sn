@@ -112,7 +112,7 @@ func newExtenderSetupCmd() *cobra.Command {
 					Target:         t,
 					Stdout:         os.Stdout,
 					Stderr:         os.Stderr,
-					Argv:           args,
+					Argv:           append([]string{"extender", "setup"}, args...),
 				}
 				return RunExtenderSetup(opts)
 			})

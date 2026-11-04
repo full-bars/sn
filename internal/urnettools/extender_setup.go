@@ -71,9 +71,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 
 	isRootFn := opts.IsRoot
 	if isRootFn == nil {
-		isRootFn = func() bool {
-			return os.Geteuid() == 0
-		}
+		isRootFn = platformIsPrivileged
 	}
 
 	lookPathFn := opts.LookPath
@@ -85,9 +83,9 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	providers := Discover()
 	var p Provider
 	var err error
-	if len(providers) > 0 {
+	if len(providers) > 0 || opts.Target != (Target{}) {
 		p, _, err = selectTargetOrSoleAccessible(providers, opts.Target, false)
-		if err != nil && opts.Target.Network != "" {
+		if err != nil {
 			return fmt.Errorf("resolving target provider: %w", err)
 		}
 	}
@@ -137,10 +135,15 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	}
 
 	fwStatus := fwMgr.Detect()
-	fwConfigured := !fwStatus.Active || fwStatus.PortsOpen || fwStatus.Kind == FirewallUnknown || fwStatus.Kind == FirewallNone
+	fwConfigured := fwStatus.Kind != FirewallUnknown && (fwStatus.PortsOpen || (!fwStatus.Active && fwStatus.Kind == FirewallNone))
 
 	// Check if already configured on host
 	if configured && fwConfigured {
+		if !opts.DryRun {
+			if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {
+				return err
+			}
+		}
 		// If already configured, handle --enable if needed
 		if opts.Enable && p.StateDir != "" {
 			if curPref := ReadRolePreference(p.StateDir); curPref != "on" {
@@ -214,7 +217,7 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	} else {
 		fwApplied, err := fwMgr.Apply(fwStatus)
 		if err != nil {
-			fmt.Fprintf(errOut, "warn: firewall configuration failed: %v\n", err)
+			return fmt.Errorf("firewall configuration failed: %w", err)
 		} else if fwApplied {
 			fmt.Fprintf(out, "extender: firewall rules added (%s)\n", fwStatus.Kind)
 		} else if !fwStatus.PortsOpen && len(fwStatus.SuggestedRules) > 0 {
@@ -222,16 +225,15 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 			for _, r := range fwStatus.SuggestedRules {
 				fmt.Fprintf(out, "  %s\n", r)
 			}
+			return fmt.Errorf("firewall configuration unverified for %s; verify inbound rules manually", fwStatus.Kind)
 		}
 	}
 
 	// STEP 6: Verify with real bind
 	if !opts.DryRun {
-		ok, err := platformCfg.VerifyBind(p.User)
-		if !ok || err != nil {
-			return fmt.Errorf("bind verification failed on TCP 443: %w", err)
+		if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {
+			return err
 		}
-		fmt.Fprintf(out, "extender: verified TCP 443 listener\n")
 	}
 
 	// STEP 7: Set role preference if --enable
@@ -251,6 +253,23 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	}
 
 	fmt.Fprintf(out, "extender: setup complete\n")
+	return nil
+}
+
+func reportExtenderBind(out io.Writer, cfg PlatformConfigurer, p Provider, occupied bool) error {
+	if occupied {
+		fmt.Fprintln(out, "extender: TCP 443 bind unverified (port already held)")
+		return nil
+	}
+	ok, err := cfg.VerifyBind(p.Binary, p.User)
+	if err != nil {
+		return fmt.Errorf("bind verification failed on TCP 443: %w", err)
+	}
+	if !ok {
+		fmt.Fprintln(out, "extender: TCP 443 bind unverified (provider context unavailable)")
+		return nil
+	}
+	fmt.Fprintln(out, "extender: verified TCP 443 listener as provider user")
 	return nil
 }
 

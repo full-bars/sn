@@ -5,6 +5,8 @@
 package main
 
 import (
+	"fmt"
+	"net"
 	"os"
 
 	"github.com/urfoundation/sn/miner"
@@ -16,6 +18,16 @@ import (
 var Version string
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "--extender-bind-probe" {
+		ln, err := net.Listen("tcp", ":443")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "extender-bind-probe: failed:", err)
+			os.Exit(1)
+		}
+		ln.Close()
+		fmt.Println("extender-bind-probe: proven")
+		return
+	}
 	if Version != "" {
 		miner.Version = Version
 	}
