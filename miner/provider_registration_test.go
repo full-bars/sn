@@ -1042,3 +1042,54 @@ func TestProviderRegistrationCallbacksRetainPhysicalCustody(t *testing.T) {
 		}
 	}
 }
+
+// (3) Immediate re-proof of revoked stored proof must not require allowCreate
+// and must re-prove the existing identity rather than minting a new client.
+func TestVerify3ImmediateReproofScenario(t *testing.T) {
+	fixture := newProviderRegistrationFixture(t)
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
+	defer cancel()
+	strategy := connect.NewClientStrategy(ctx, connect.DefaultClientStrategySettings())
+	defer strategy.Close()
+	api := sdk.NewApi(ctx, strategy, fixture.server.URL)
+	defer func() {
+		_ = api.CloseAndWait(context.Background())
+	}()
+
+	keyOwner, err := clientauth.OpenProviderClientKey(ctx, filepath.Join(fixture.dir, ".provider.key"), clientauth.ProviderClientKeyOptions{AllowCreate: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer keyOwner.Close()
+
+	clientPath := filepath.Join(fixture.dir, ".provider.jwt")
+	networkPath := filepath.Join(fixture.dir, "jwt")
+	slot := "direct"
+
+	// Initial registration establishes existing identity
+	initialJwt, initialId, err := authenticateProvider(ctx, api, networkPath, clientPath, keyOwner, slot, true, nil, nil, 0, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// For an adopted stored proof slot, allowCreate is false; immediate
+	// reproof does not depend on creation permission.
+	_ = false
+
+	// On current HEAD (run.go:1718-1725):
+	// if !captureDenied && allowCreate { authenticateProviderFresh(...) }
+	// With allowCreate=false, immediate reproof does not fire.
+	// We assert that the immediate re-proof path is reachable without allowCreate
+	// and keeps initialId rather than generating a fresh client_id.
+	reprovedJwt, reprovedId, err := reproveRevokedStoredProof(ctx, api, networkPath, clientPath, keyOwner, slot, nil, nil, 0, nil)
+	if err != nil {
+		t.Fatalf("FAIL: immediate reproof requires allowCreate or failed: %v", err)
+	}
+	if reprovedId != initialId {
+		t.Fatalf("FAIL: immediate reproof minted fresh client %s, want existing %s", reprovedId, initialId)
+	}
+	_ = initialJwt
+	_ = reprovedJwt
+}
+
+

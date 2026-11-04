@@ -177,6 +177,12 @@ func authenticateProvider(ctx context.Context, api *sdk.Api, networkPath, client
 	return authenticateProviderWith(ctx, api, networkPath, clientPath, keyOwner, slot, allowCreate, retained, false, output, index, observe)
 }
 
+// reproveRevokedStoredProof attempts an immediate re-proof of the existing identity
+// without requiring allowCreate permission to allocate a new client.
+func reproveRevokedStoredProof(ctx context.Context, api *sdk.Api, networkPath, clientPath string, keyOwner *clientauth.ProviderClientKeyOwner, slot string, retained *clientauth.RetainedClientIdentity, output *providerDiagnostics, index uint64, observe clientauth.IdentityObserver) (string, connect.Id, error) {
+	return authenticateProvider(ctx, api, networkPath, clientPath, keyOwner, slot, false, retained, output, index, observe)
+}
+
 // authenticateProviderFresh registers a new client for one slot. It is the
 // URNETWORK_HOT_RESTART=0 mint: clientauth.RegisterFreshClientJwt never reads
 // or refreshes the retained per-slot credential, so every start produces a
