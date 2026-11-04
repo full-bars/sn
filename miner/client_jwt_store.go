@@ -493,45 +493,48 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 	// key, forever undoing the prune.
 	merged = pruneStaleEntries(merged)
 
-	var added, replaced, removed int
-	var hasExpiredReplacement bool
 	for _, key := range deletes {
-		if _, ok := baseline[key]; ok {
-			removed++
-		}
 		delete(merged, key)
 	}
 	for key, entry := range upserts {
-		prev, ok := baseline[key]
-		switch {
-		case !ok:
-			added++
-		case !prev.sameAs(entry):
-			replaced++
-			if validateJWTExpiry(prev.ByClientJWT) != nil {
-				hasExpiredReplacement = true
-			}
-		}
 		merged[key] = entry
 	}
 	s.entries = merged
 
-	cause := "initial"
-	if len(baseline) > 0 {
-		switch {
-		case replaced > 0:
-			if hasExpiredReplacement {
-				cause = "expired"
-			} else {
-				cause = "refreshed"
+	// Classify the actual before/after maps, including stale pruning. Replacement
+	// takes precedence, followed by combined additions and removals.
+	var added, replaced, removed int
+	var hasExpiredReplacement bool
+	for key, previous := range baseline {
+		entry, ok := merged[key]
+		if !ok {
+			removed++
+		} else if !previous.sameAs(entry) {
+			replaced++
+			if validateJWTExpiry(previous.ByClientJWT) != nil {
+				hasExpiredReplacement = true
 			}
-		case added > 0:
-			cause = "added"
-		case removed > 0:
-			cause = "removed"
-		default:
-			cause = "initial"
 		}
+	}
+	for key := range merged {
+		if _, ok := baseline[key]; !ok {
+			added++
+		}
+	}
+	cause := "normalized"
+	switch {
+	case len(baseline) == 0 && len(merged) > 0:
+		cause = "initial"
+	case replaced > 0 && hasExpiredReplacement:
+		cause = "expired"
+	case replaced > 0:
+		cause = "refreshed"
+	case added > 0 && removed > 0:
+		cause = "added_removed"
+	case added > 0:
+		cause = "added"
+	case removed > 0:
+		cause = "removed"
 	}
 
 	data, err := json.MarshalIndent(s.entries, "", "  ")
