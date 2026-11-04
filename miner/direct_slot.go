@@ -75,15 +75,14 @@ func newDirectSlot(
 // included. Proxies are additional egress, not a replacement for the direct
 // path: a run with proxies still serves from this host's address unless the
 // operator turned direct off, and the direct slot is the only one that can hold
-// the extender role. The nil entry is appended last so every proxy keeps the
-// index its settings were published under.
+// the extender role. The nil entry comes first so direct is slot 0 and proxies
+// follow in their configured order.
 func withDirectSlot(proxies []*connect.ProxySettings, directEnabled bool) []*connect.ProxySettings {
 	if !directEnabled && 0 < len(proxies) {
 		return proxies
 	}
-	out := make([]*connect.ProxySettings, 0, len(proxies)+1)
-	out = append(out, proxies...)
-	return append(out, nil)
+	out := make([]*connect.ProxySettings, 1, len(proxies)+1)
+	return append(out, proxies...)
 }
 
 // directSlotIndex returns the direct slot's position in the launch list and

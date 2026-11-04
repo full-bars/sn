@@ -1444,7 +1444,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		return startupRefusal(ctx, err)
 	}
 	var quarantined atomic.Bool
-	stopRenewal := startNetworkTokenRenewal(ctx, self.apiUrl, providers[0], self.testEgressDialer, networkJwtPath, output, self.quarantineRejectedSignIn, func(clientauth.NetworkTokenQuarantine) {
+	stopRenewal := startNetworkTokenRenewal(ctx, self.apiUrl, networkTokenRenewalProxy(providers), self.testEgressDialer, networkJwtPath, output, self.quarantineRejectedSignIn, func(clientauth.NetworkTokenQuarantine) {
 		// the supervisor signs in again once this child has exited
 		quarantined.Store(true)
 		cancel()
@@ -2211,8 +2211,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// start in and the per-tier stagger between them, so the scarce auth-mint
 	// slots go to the identities that can dial with a stored client JWT or
 	// renew one in a single step, and within a tier the proven earners go
-	// first. The direct slot keeps its relative place at the end of the list
-	// (it is not a proxy and carries no warmth). Each slot keeps its original
+	// first. The direct slot is scheduled last (it is not a proxy and carries
+	// no warmth), while retaining index 0. Each slot keeps its original
 	// index, so the diagnostics label a provider by the slot it was
 	// configured as, exactly as before.
 	// Startup grading gate readiness hook (proxy_manager_gate.go): the

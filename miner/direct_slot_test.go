@@ -173,6 +173,9 @@ func TestDirectSlotIndexFindsTheNilEntry(t *testing.T) {
 	if index, ok := directSlotIndex([]*connect.ProxySettings{nil}); !ok || index != 0 {
 		t.Fatalf("direct-only list index = (%d, %v), want (0, true)", index, ok)
 	}
+	if index, ok := directSlotIndex(withDirectSlot([]*connect.ProxySettings{proxy}, true)); !ok || index != 0 {
+		t.Fatalf("direct slot before one proxy index = (%d, %v), want (0, true)", index, ok)
+	}
 	if index, ok := directSlotIndex([]*connect.ProxySettings{proxy, nil}); !ok || index != 1 {
 		t.Fatalf("direct slot after one proxy index = (%d, %v), want (1, true)", index, ok)
 	}
@@ -201,19 +204,62 @@ func TestWithDirectSlotKeepsTheDirectSlotBesideProxies(t *testing.T) {
 		if len(got) != tc.wantLen {
 			t.Fatalf("%s: len=%d want %d", tc.name, len(got), tc.wantLen)
 		}
-		last := got[len(got)-1]
-		if (last == nil) != tc.wantNil {
-			t.Fatalf("%s: last entry nil=%v want %v", tc.name, last == nil, tc.wantNil)
+		offset := 0
+		if tc.wantNil {
+			offset = 1
 		}
-		if _, ok := directSlotIndex(got); ok != tc.wantNil {
-			t.Fatalf("%s: direct slot present=%v want %v", tc.name, ok, tc.wantNil)
+		if index, ok := directSlotIndex(got); ok != tc.wantNil || (ok && index != 0) {
+			t.Fatalf("%s: direct slot = (%d, %v), want index 0, present %v", tc.name, index, ok, tc.wantNil)
 		}
-		// A proxy keeps the position its settings were published under.
 		for i := range tc.proxies {
-			if got[i] != tc.proxies[i] {
-				t.Fatalf("%s: proxy %d moved", tc.name, i)
+			if got[i+offset] != tc.proxies[i] {
+				t.Fatalf("%s: proxy %d not at index %d", tc.name, i, i+offset)
 			}
 		}
+	}
+}
+
+func TestDirectSlotNumberingWith540Proxies(t *testing.T) {
+	proxies := make([]*connect.ProxySettings, 540)
+	for i := range proxies {
+		proxies[i] = &connect.ProxySettings{Address: "198.51.100.1:1080"}
+	}
+	providers := withDirectSlot(proxies, true)
+	index, ok := directSlotIndex(providers)
+	if !ok || index != 0 {
+		t.Fatalf("direct slot = (%d, %v), want (0, true)", index, ok)
+	}
+	if got := slotSelectLabel(index, ""); got != "[direct] provider=0" {
+		t.Fatalf("direct label = %q", got)
+	}
+	for i, proxy := range proxies {
+		if providers[i+1] != proxy {
+			t.Fatalf("proxy %d is not at index %d", i, i+1)
+		}
+	}
+	if got := slotSelectLabel(1, providers[1].Address); got != "proxy[1] (198.51.100.1:1080)" {
+		t.Fatalf("first proxy label = %q", got)
+	}
+}
+
+func TestNetworkTokenRenewalProxyPreservesEgress(t *testing.T) {
+	first := &connect.ProxySettings{Address: "first"}
+	second := &connect.ProxySettings{Address: "second"}
+	for _, tc := range []struct {
+		name      string
+		providers []*connect.ProxySettings
+		want      *connect.ProxySettings
+	}{
+		{"direct and proxies", withDirectSlot([]*connect.ProxySettings{first, second}, true), first},
+		{"proxies only", withDirectSlot([]*connect.ProxySettings{first, second}, false), first},
+		{"direct only", withDirectSlot(nil, true), nil},
+		{"empty", nil, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := networkTokenRenewalProxy(tc.providers); got != tc.want {
+				t.Fatalf("renewal proxy = %p, want %p", got, tc.want)
+			}
+		})
 	}
 }
 
