@@ -1713,6 +1713,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			},
 		})
 		release()
+		captureDenied := false
 		if err != nil {
 			// Creation withheld for a capture launch surfaces as the
 			// registration path's refusal: name the identity the profile
@@ -1720,7 +1721,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// switch that no longer exists, and record it where the capture
 			// launch's own admission failures go.
 			var refused *clientauth.RegistrationRefusedError
-			captureDenied := captureRefusal != nil && errors.As(err, &refused)
+			captureDenied = captureRefusal != nil && errors.As(err, &refused)
 			// The first real use of an identity the import adopted on a stored
 			// proof: if the platform refuses it, the proof is withdrawn and the
 			// slot re-proves immediately with a fresh mint rather than deferring
@@ -1743,6 +1744,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 					}
 				}
 			}
+		}
+		if err != nil {
 			if captureDenied {
 				err = fmt.Errorf("%w: %w", captureRefusal, err)
 			}
