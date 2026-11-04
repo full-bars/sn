@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"encoding/json"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -197,9 +198,15 @@ func TestRestartLogsSetRefuseUnitlessEntryOnCutPass(t *testing.T) {
 		t.Fatalf("cmdRestart must refuse unitless provider on cut pass, got: %v", errRestart)
 	}
 
-	// cmdLogs refuses
+	// cmdLogs refuses where a journal exists. On Windows there is no journal at
+	// all, so the command prints its not-supported notice and succeeds; a cut
+	// pass does not change that.
 	errLogs := cmdLogs(nil)
-	if errLogs == nil || !strings.Contains(errLogs.Error(), "ran out of budget") {
+	if runtime.GOOS == "windows" {
+		if errLogs != nil {
+			t.Fatalf("cmdLogs on Windows = %v, want the not-supported notice and nil", errLogs)
+		}
+	} else if errLogs == nil || !strings.Contains(errLogs.Error(), "ran out of budget") {
 		t.Fatalf("cmdLogs must refuse unitless provider on cut pass, got: %v", errLogs)
 	}
 
