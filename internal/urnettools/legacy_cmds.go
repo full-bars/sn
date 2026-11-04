@@ -357,7 +357,6 @@ func cmdRestart(args []string, force, dryRun bool) error {
 		if systemdDiscoveryCutShort {
 			return fmt.Errorf("provider %s has no owning systemd unit (unit discovery ran out of budget)", providerLabel(p))
 		}
-		return fmt.Errorf("provider %s has no owning systemd unit", providerLabel(p))
 	}
 	ok, err := confirmGate("restart "+providerLabel(p), p, force, dryRun)
 	if err != nil {
