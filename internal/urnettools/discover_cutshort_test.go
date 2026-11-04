@@ -226,3 +226,49 @@ func TestRestartLogsSetRefuseUnitlessEntryOnCutPass(t *testing.T) {
 		t.Fatalf("cmdSet must refuse unitless provider on cut pass, got: %v", errSet)
 	}
 }
+
+// A bare provider (container or manual launch) has no owning unit, and on a
+// completed pass that is a valid target: restart and set must get past the
+// unit guard instead of refusing it.
+func TestRestartSetAcceptUnitlessEntryOnCompletedPass(t *testing.T) {
+	dir := t.TempDir()
+	p := Provider{User: currentUserName(), StateDir: dir, PID: 1234, Running: true}
+	stubDiscovery(t, []Provider{p}, nil)
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+
+	if err := cmdRestart(nil, false, true); err != nil && strings.Contains(err.Error(), "no owning systemd unit") {
+		t.Fatalf("cmdRestart refused a unitless provider on a completed pass: %v", err)
+	}
+	if err := cmdSet([]string{"node-name", "edge01"}, false, true); err != nil && strings.Contains(err.Error(), "no owning unit") {
+		t.Fatalf("cmdSet refused a unitless provider on a completed pass: %v", err)
+	}
+}
+
+// The cut flag belongs to one discovery pass: a refusal on a cut pass must not
+// leak into the next call, which runs a fresh pass that completes.
+func TestUnitlessRefusalDoesNotOutliveCutPass(t *testing.T) {
+	dir := t.TempDir()
+	p := Provider{User: currentUserName(), StateDir: dir, PID: 1234, Running: true}
+	stubDiscovery(t, []Provider{p}, nil)
+	cut := true
+	discoverStoppedFn = func([]Provider) []Provider {
+		if cut {
+			cutShortSeen(t, nil)
+		}
+		return nil
+	}
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+
+	err := cmdSet([]string{"node-name", "edge01"}, false, true)
+	if err == nil || !strings.Contains(err.Error(), cutShortWant) {
+		t.Fatalf("cut pass must refuse with the budget message, got: %v", err)
+	}
+	cut = false
+	err = cmdSet([]string{"node-name", "edge01"}, false, true)
+	if err != nil && strings.Contains(err.Error(), "no owning unit") {
+		t.Fatalf("stale cut flag leaked into the next pass: %v", err)
+	}
+	if systemdDiscoveryCutShort {
+		t.Fatal("cut flag still set after a completed pass")
+	}
+}
