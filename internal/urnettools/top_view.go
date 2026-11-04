@@ -61,7 +61,8 @@ func (m *topModel) render(b *tui.Buffer) {
 
 func (m *topModel) drawFull(b *tui.Buffer) {
 	th := m.theme
-	rows := tui.SplitRows(b.Rect(), tui.Fixed(1), tui.Flex(1), tui.Fixed(1))
+	footerRows, _ := m.footerPlan(b.Width(), b.Height())
+	rows := tui.SplitRows(b.Rect(), tui.Fixed(1), tui.Flex(1), tui.Fixed(footerRows))
 	m.drawHeader(b.Sub(rows[0]))
 	m.drawFooter(b.Sub(rows[2]))
 
@@ -159,25 +160,66 @@ func (m *topModel) drawHeader(h *tui.Buffer) {
 }
 
 func (m *topModel) drawFooter(f *tui.Buffer) {
-	// The warning takes the footer row's start and the keys follow it, so no
-	// row is added and the panels keep their columns.
-	x := 0
-	if m.discoveryNote != "" {
-		x = f.Put(tui.Truncate(" "+m.discoveryNote, f.Width(), m.theme.ASCII), 0, 0, m.theme.Warn)
+	note := m.discoveryNote
+	if note != "" {
+		lines := wrapText(note, f.Width(), max(1, f.Height()-1), m.theme.ASCII)
+		// A one-line warning shares its row with a compact key line when both
+		// fit, so the table keeps every row it had without the warning.
+		if len(lines) == 1 {
+			keys := m.footerKeys(true)
+			if len(note)+1+len(keys) <= f.Width() {
+				f.Put(note+" ", 0, 0, m.theme.Warn)
+				f.Put(keys, len(note)+1, 0, m.theme.Dim)
+				return
+			}
+		}
+		y := 0
+		for _, line := range lines {
+			f.Put(line, 0, y, m.theme.Warn)
+			y++
+		}
+		if y < f.Height() {
+			f.Put(tui.Truncate(m.footerKeys(false), f.Width(), m.theme.ASCII), 0, y, m.theme.Dim)
+		}
+		return
+	}
+	f.Put(tui.Truncate(m.footerKeys(false), f.Width(), m.theme.ASCII), 0, 0, m.theme.Dim)
+}
+
+// footerKeys is the key line. compact uses single spaces so a one-line warning
+// and the keys can share the footer row without shrinking the table.
+func (m *topModel) footerKeys(compact bool) string {
+	sep := "   "
+	if compact {
+		sep = " "
 	}
 	keys := " q quit"
 	if len(m.providers) > 1 {
-		keys += "   tab provider"
+		keys += sep + "tab provider"
 	}
-	keys += "   ? help   m menu"
+	keys += sep + "? help" + sep + "m menu"
 	if m.trafficOK {
-		keys += "   w zoom" // the zoom window is built from the live counters
+		keys += sep + "w zoom" // the zoom window is built from the live counters
 	}
 	if m.rt.ok && m.rt.gOK && m.hasInternals() {
-		keys += "   g goroutines"
+		keys += sep + "g goroutines"
 	}
-	keys += "   - " + topIntervalText(m.interval) + " +"
-	f.Put(tui.Truncate(keys, max(f.Width()-x, 0), m.theme.ASCII), x, 0, m.theme.Dim)
+	keys += sep + "- " + topIntervalText(m.interval) + " +"
+	return keys
+}
+
+// footerPlan reports how many rows the footer needs and whether a one-line
+// warning shares its row with the keys. Sharing is what keeps the table from
+// losing a row when a warning appears on a wide layout.
+func (m *topModel) footerPlan(width, height int) (int, bool) {
+	if m.discoveryNote == "" {
+		return 1, false
+	}
+	lines := wrapText(m.discoveryNote, width, max(1, height-1), m.theme.ASCII)
+	if len(lines) == 1 && len(m.discoveryNote)+1+len(m.footerKeys(true)) <= width {
+		return 1, true
+	}
+	return 1 + max(1, len(lines)), false
 }
 
 // topIntervalText is 100ms, 250ms, 500ms, 1s, 2s.
@@ -739,6 +781,20 @@ func (m *topModel) drawCompact(b *tui.Buffer) {
 	}
 	if in.Height() > 3 {
 		in.Put(tui.Truncate("q quit, enlarge for the full view", in.Width(), th.ASCII), 0, in.Height()-1, th.Dim)
+	}
+	if m.discoveryNote != "" {
+		// Keep the quit hint when there is room, and give the warning the
+		// remaining rows even if it must replace compact statistics.
+		end := in.Height()
+		if end > 3 {
+			end--
+		}
+		lines := wrapText(m.discoveryNote, in.Width(), end, th.ASCII)
+		for i, line := range lines {
+			row := in.Sub(tui.Rect{Y: end - len(lines) + i, W: in.Width(), H: 1})
+			row.Fill(row.Rect(), ' ', tui.Style{})
+			row.Put(line, 0, 0, th.Warn)
+		}
 	}
 }
 

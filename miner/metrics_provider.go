@@ -95,6 +95,7 @@ func minerExtraMetrics() string {
 	// Counts only; proxy addresses stay on the control socket. Emitted at zero
 	// before the first tick so panels and alerts have a stable series.
 	writeProxyAuditMetrics(&b)
+	writeStateStoreMetrics(&b)
 
 	// --- Hotswap decline/success counters (written by the urnet-tools CLI) ---
 	if hsCounts := readHotswapDeclinesFromDisk(); len(hsCounts) > 0 {

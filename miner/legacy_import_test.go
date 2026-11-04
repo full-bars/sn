@@ -1202,3 +1202,134 @@ func TestLegacyImportDoesNothingOnACaptureLaunch(t *testing.T) {
 	}
 	fixture.assertOriginalsUntouched()
 }
+
+// (4) after fallback, the mint writes the credential => cooldown re-admit moot?
+func TestVerify4CooldownMootAfterMint(t *testing.T) {
+	oc := legacyImportTransientFallbackCooldown
+	legacyImportTransientFallbackCooldown = 0
+	defer func() { legacyImportTransientFallbackCooldown = oc }()
+	ob := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = ob }()
+	f := newLegacyImportFixture(t, true, 2)
+	stuck, comp := f.proxySettings[0], f.proxySettings[1]
+	store, _ := readLegacyStoreRaw(f)
+	delete(f.prover.serviceKey, f.proxyClientIDs[stuck.Key()])
+	f.prover.refreshErr[store[stuck.Key()].ByClientJWT] = &net.OpError{Op: "dial", Net: "tcp", Err: syscall.ETIMEDOUT}
+	for s := 1; s <= legacyImportDeferralStarts; s++ {
+		j := f.journal()
+		delete(j.Slots, comp.Key())
+		_ = os.Remove(f.target(comp))
+		_ = os.Remove(filepath.Join(f.dir, legacyImportProofStoreName))
+		writeLegacyImportJournal(f.dir, j)
+		f.run(legacyImportHooks{})
+	}
+	if r := f.journal().Slots[stuck.Key()]; r.Reason != "proof_unavailable_bound" {
+		t.Fatalf("setup %+v", r)
+	}
+	// The serving path mints a different identity and normally writes the same
+	// store key. Exercise that writer, not just the per-slot credential file.
+	defer withGlobalStore(t, filepath.Join(f.dir, legacyClientJwtStoreName))()
+	setHotRestart(t, false)
+	mintedID := connect.NewId()
+	mintedJWT := legacyTestClientToken(f.networkID, mintedID.String(), connect.NewId().String())
+	mint := func(context.Context) (string, connect.Id, error) {
+		if err := os.WriteFile(f.target(stuck), []byte(mintedJWT), 0o600); err != nil {
+			return "", connect.Id{}, err
+		}
+		return mintedJWT, mintedID, nil
+	}
+	_, _, _, err := provideClientJWT(context.Background(), clientJWTProvideConfig{
+		NetworkJwtPath: filepath.Join(f.dir, "jwt"), ClientJwtPath: f.target(stuck),
+		ProxySettings: stuck, Mint: mint, FreshMint: mint,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	delete(f.prover.refreshErr, store[stuck.Key()].ByClientJWT)
+	f.resetProverCounts()
+	f.run(legacyImportHooks{})
+	if public, refresh := f.proverCounts(); public != 0 || refresh != 0 {
+		t.Fatalf("serving minted identity was re-proved: public=%d refresh=%d", public, refresh)
+	}
+	if r := f.journal().Slots[stuck.Key()]; r.State != "imported" || r.Reason != "minted_identity_serving" {
+		t.Fatalf("want settled serving choice, got: %+v", r)
+	}
+	targetData, err := os.ReadFile(f.target(stuck))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(targetData) != mintedJWT {
+		t.Fatal("recovery replaced the minted credential")
+	}
+}
+
+func TestImportCooldownPreservesDifferentCustodiedIdentity(t *testing.T) {
+	oldCooldown := legacyImportTransientFallbackCooldown
+	legacyImportTransientFallbackCooldown = 0
+	defer func() { legacyImportTransientFallbackCooldown = oldCooldown }()
+	f := newLegacyImportFixture(t, true, 1)
+	slot := f.proxySettings[0]
+	store, err := readLegacyStoreRaw(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	minted := legacyTestClientToken(f.networkID, connect.NewId().String(), connect.NewId().String())
+	journal := newLegacyImportJournal()
+	journal.Slots[slot.Key()] = legacyImportJournalSlot{State: "fallback", Reason: "proof_unavailable_bound", ClientID: store[slot.Key()].ClientID, FallbackAt: time.Now().Add(-time.Hour).Unix()}
+	if err := writeLegacyImportJournal(f.dir, journal); err != nil {
+		t.Fatal(err)
+	}
+	// Custody appearing after mapping must still block the proven write.
+	f.run(legacyImportHooks{afterMarkerWrite: func() error {
+		if err := os.WriteFile(f.target(slot), []byte(minted), 0600); err != nil {
+			return err
+		}
+		return os.WriteFile(f.target(slot)+".registration", []byte("minted custody"), 0600)
+	}})
+	got, err := os.ReadFile(f.target(slot))
+	if err != nil || string(got) != minted {
+		t.Fatalf("recovery replaced another identity's custody: %v", err)
+	}
+	if got := f.journal().Slots[slot.Key()]; got.State != "fallback" {
+		t.Fatalf("custody conflict was journaled as imported: %+v", got)
+	}
+}
+
+// (5) An already-custodied slot's proof must not be pruned when another slot flushes
+func TestVerify5LiveProxyNotPruned(t *testing.T) {
+	f := newLegacyImportFixture(t, false, 2)
+	marker, err := clientauth.ProviderKeyIdentityMarker(f.seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(f.dir, legacyProviderMarkerName), marker, 0600); err != nil {
+		t.Fatal(err)
+	}
+	custodiedSlot := f.proxySettings[0]
+	if err := os.WriteFile(f.target(custodiedSlot), []byte("custodied"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	claim := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("k")),
+		TokenFP:   legacyImportFingerprint([]byte("t")),
+	}
+	custodiedKey := filepath.Base(f.target(custodiedSlot))
+	ps := loadLegacyImportProofStore(f.dir)
+	ps.record(custodiedKey, claim, "server_key")
+	if err := ps.flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	// comp (proxySettings[1]) will prove live, causing opts.proofs to flush.
+	// In the un-fixed code, activeKeys is built from slots (excluding custodiedSlot),
+	// so custodiedKey is pruned during the flush!
+	f.run(legacyImportHooks{})
+
+	reloaded := loadLegacyImportProofStore(f.dir)
+	if _, ok := reloaded.slots[custodiedKey]; !ok {
+		t.Fatalf("FAIL: live custodied proxy %s was pruned from proof store because activeKeys excluded it", custodiedKey)
+	}
+}

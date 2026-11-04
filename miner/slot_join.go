@@ -94,7 +94,8 @@ var providerShutdownGrace = 35 * time.Second
 
 // providerShutdownExitBound is how long after the grace expires the process is
 // ended whatever run's deferred calls are doing. It bounds the defer chain, not
-// only the worker wait: see providerShutdownExpire.
+// only the worker wait: see providerShutdownArmWatchdog and
+// providerShutdownCapture.
 var providerShutdownExitBound = 5 * time.Second
 
 // providerShutdownWatchdog arms the process exit after the grace has expired.
@@ -122,7 +123,7 @@ const providerShutdownDumpMarker = "[provider] shutdown incomplete: goroutine du
 // workers still registered it writes the goroutine dump through logf and
 // returns errProviderShutdownTimeout; the blocked wait is abandoned, which is
 // safe because the caller exits the process.
-func (j *slotJoin) waitBounded(ctx context.Context, quiesce func(), grace time.Duration, logf func(format string, args ...any)) error {
+func (j *slotJoin) waitBounded(ctx context.Context, quiesce func(), grace time.Duration, onTimeout func(), logf func(format string, args ...any)) error {
 	drained := make(chan struct{})
 	go func() {
 		j.wait(quiesce)
@@ -140,6 +141,13 @@ func (j *slotJoin) waitBounded(ctx context.Context, quiesce func(), grace time.D
 		return nil
 	case <-timer.C:
 	}
+	// Arm the exit watchdog before the dump. pprof takes locks and can block on
+	// a large goroutine set, and the dump is the only work between the grace and
+	// the caller's expiry path. Without a bound armed first, a blocked dump would
+	// hold the process past the grace with nothing left to end it.
+	if onTimeout != nil {
+		onTimeout()
+	}
 	j.mu.Lock()
 	remaining := j.n
 	j.mu.Unlock()
@@ -154,9 +162,9 @@ func (j *slotJoin) waitBounded(ctx context.Context, quiesce func(), grace time.D
 	return errProviderShutdownTimeout
 }
 
-// providerShutdownExpire runs on the timeout path, once the grace has expired
-// and before run's deferred calls. It arms the exit watchdog first, then writes
-// the incident bundle, whose goroutines.txt is the dump that matters.
+// providerShutdownArmWatchdog and providerShutdownCapture run on the timeout
+// path, once the grace has expired. The arm happens inside waitBounded, before
+// the goroutine dump; the capture happens in run's caller after run returns.
 //
 // Why the watchdog comes first: the bundle is captured in run's caller only
 // after run has returned, and run returns through every defer it registered.
@@ -170,7 +178,16 @@ func (j *slotJoin) waitBounded(ctx context.Context, quiesce func(), grace time.D
 // the chain has finished, so no defer can keep this process alive past the
 // grace. flushPersistentErrorsAtExit and waitExtenderRefusalsDurable were
 // already bounded by their own timers.
-func providerShutdownExpire(detail string, exitCode int) {
+// providerShutdownArmWatchdog arms the process exit at the timeout code. It is
+// called from waitBounded's timeout path, before the goroutine dump, so a dump
+// that blocks on pprof cannot hold the process past the grace.
+func providerShutdownArmWatchdog(exitCode int) {
 	providerShutdownWatchdog(providerShutdownExitBound, exitCode)
+}
+
+// providerShutdownCapture writes the incident bundle on the timeout path. The
+// watchdog is already armed by the time this runs, so a blocked capture is
+// bounded too.
+func providerShutdownCapture(detail string) {
 	captureIncidentBundle(incidentTriggerShutdown, detail, nil)
 }

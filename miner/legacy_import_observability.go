@@ -116,7 +116,18 @@ func (self *legacyImportNarrator) heartbeat(p legacyImportProgress, elapsed time
 }
 
 func (self *legacyImportNarrator) summary(imported, fallback, skipped, left int, elapsed time.Duration, result string) {
-	self.line("%s", legacyImportSummaryLine(imported, fallback, skipped, left, elapsed, result))
+	self.summaryWithStored(imported, fallback, skipped, left, elapsed, result, 0)
+}
+
+// summaryWithStored is the summary with the stored-proof count appended when
+// any slot was adopted from the proof store. The leading fields keep their
+// names and order, and a start that adopted nothing prints exactly the old line.
+func (self *legacyImportNarrator) summaryWithStored(imported, fallback, skipped, left int, elapsed time.Duration, result string, stored int) {
+	line := legacyImportSummaryLine(imported, fallback, skipped, left, elapsed, result)
+	if stored > 0 {
+		line += fmt.Sprintf(" stored=%d", stored)
+	}
+	self.line("%s", line)
 }
 
 // --- pure line helpers ------------------------------------------------------

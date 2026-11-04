@@ -61,7 +61,7 @@ func controlSocketPath() (string, error) {
 
 // controlRequest is one line of the socket protocol.
 type controlRequest struct {
-	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "version", "snapshot", "traffic", "internals", "goroutines", "trim_preview", "ledger", "shutdown", "audit", "hotswap"
+	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "version", "snapshot", "traffic", "internals", "goroutines", "trim_preview", "ledger", "diag", "shutdown", "audit", "hotswap"
 	Key     string `json:"key"`
 	Value   string `json:"value,omitempty"`
 	Limit   int    `json:"limit,omitempty"`   // for "history" and "ledger"
@@ -298,6 +298,11 @@ func handleControlConn(conn net.Conn, state *controlState) {
 		}
 
 		resp := handleControlRequest(state, req)
+		// A slow handler (diag runs for about 40 seconds) has used up the
+		// deadlines set above. Without a fresh write deadline its reply would
+		// fail on a connection that is perfectly healthy.
+		conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+		conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 		if req.V >= 1 {
 			resp.Version = 1
 		}
@@ -1032,6 +1037,25 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		}
 		return controlResponse{OK: true, Value: text}
 
+	case "diag":
+		// Writes a profile bundle to <state dir>/diag/ from inside this process.
+		// No listener is opened; this socket is the only way in. The reply is
+		// held until the capture ends (about 40 seconds), bounded by
+		// diagTotalDeadline.
+		dir, err := providerStateDir()
+		if err != nil {
+			return controlResponse{OK: false, Error: fmt.Sprintf("diag: cannot find the state directory: %v", err)}
+		}
+		res, err := diagRunner(dir)
+		if err != nil {
+			return controlResponse{OK: false, Error: err.Error()}
+		}
+		b, err := json.Marshal(res)
+		if err != nil {
+			return controlResponse{OK: false, Error: fmt.Sprintf("diag: %v", err)}
+		}
+		return controlResponse{OK: true, Value: string(b)}
+
 	case "shutdown":
 		// Record the operator's remote stop in the audit ring.
 		recordControlAudit(CommandAudit{
@@ -1076,6 +1100,10 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		return controlResponse{OK: false, Error: fmt.Sprintf("unknown command %q", req.Cmd)}
 	}
 }
+
+// diagRunner is the capture the "diag" command runs; a variable so a test can
+// stand in a slow one without waiting out a real 30 second CPU window.
+var diagRunner = handleDiagRequest
 
 // applyControlLiveSideEffect runs the immediate, no-restart-needed part of a
 // socket set. Keys with no miner consumer are logged explicitly and left for
@@ -1317,6 +1345,15 @@ var errNoProviderControlSocket = errors.New("no provider listening on control so
 // by `proxy trim --preview` so the preview is computed by the running
 // provider, the only process that knows its running set.
 func dialControlSocket(req controlRequest) (controlResponse, error) {
+	timeout := 5 * time.Second
+	if req.Cmd == "diag" {
+		timeout = 95 * time.Second
+	}
+	return dialControlSocketTimeout(req, timeout)
+}
+
+// dialControlSocketTimeout sends one request with a configurable deadline.
+func dialControlSocketTimeout(req controlRequest, timeout time.Duration) (controlResponse, error) {
 	path, err := controlSocketPath()
 	if err != nil {
 		return controlResponse{}, err
@@ -1330,7 +1367,9 @@ func dialControlSocket(req controlRequest) (controlResponse, error) {
 	}
 	defer conn.Close()
 
-	_ = conn.SetDeadline(time.Now().Add(5 * time.Second))
+	if timeout > 0 {
+		_ = conn.SetDeadline(time.Now().Add(timeout))
+	}
 	if err := json.NewEncoder(conn).Encode(req); err != nil {
 		return controlResponse{}, err
 	}

@@ -910,6 +910,9 @@ func provideWith(opts docopt.Opts, start bool) {
 		if err := runHotSwapChildHandshake(hotSwapIPC, opts, apiUrl); err != nil {
 			fmt.Fprintf(os.Stderr, "[hotswap] candidate pre-flight failed: %s\n", err)
 			hotSwapIPC.Close()
+			if errors.Is(err, errProviderStoreNewer) {
+				os.Exit(providerStartupRefusedExitCode)
+			}
 			os.Exit(2)
 		}
 	}
@@ -1160,6 +1163,14 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			critLog("PROVIDER EXIT: normal shutdown (code=0)")
 		}
 	}()
+	// A store that opens with a newer stamp refuses the start; one that cannot
+	// be opened degrades it. A hotswap candidate cannot open the store while the
+	// parent holds the lock, so it judged the parent's stamp before READY.
+	if !self.hotSwapCandidate {
+		if err := providerStartupStoreVerdict(ctx); err != nil {
+			return err
+		}
+	}
 	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
 		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
 		return startupRefusal(ctx, err)
@@ -1702,6 +1713,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			},
 		})
 		release()
+		captureDenied := false
 		if err != nil {
 			// Creation withheld for a capture launch surfaces as the
 			// registration path's refusal: name the identity the profile
@@ -1709,7 +1721,31 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// switch that no longer exists, and record it where the capture
 			// launch's own admission failures go.
 			var refused *clientauth.RegistrationRefusedError
-			captureDenied := captureRefusal != nil && errors.As(err, &refused)
+			captureDenied = captureRefusal != nil && errors.As(err, &refused)
+			// The first real use of an identity the import adopted on a stored
+			// proof: if the platform refuses it, the proof is withdrawn and the
+			// slot re-proves immediately with a fresh mint rather than deferring
+			// to the next start.
+			if clientauth.IsClientRevoked(err) {
+				if noteErr := noteLegacyImportProofRejected(filepath.Dir(clientJwtPath), filepath.Base(clientJwtPath), "client_revoked"); noteErr != nil {
+					tlog("⚠️ [import] could not withdraw a rejected stored proof for %s: %v\n", display, noteErr)
+				}
+				if !captureDenied {
+					tlog("⚠️ [import] stored proof for %s was revoked; re-proving existing identity immediately\n", display)
+					if reprovedJwt, reprovedId, reprovedErr := reproveRevokedStoredProof(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, retained, output, index, func(outcome clientauth.IdentityOutcome, reason string) {
+						bringUp.identityOutcome(index, slotDisplay, outcome, reason)
+					}); reprovedErr == nil {
+						byClientJwt = reprovedJwt
+						clientId = reprovedId
+						reused = true
+						err = nil
+					} else {
+						tlog("⚠️ [import] immediate existing identity re-proof failed for %s: %v\n", display, reprovedErr)
+					}
+				}
+			}
+		}
+		if err != nil {
 			if captureDenied {
 				err = fmt.Errorf("%w: %w", captureRefusal, err)
 			}
@@ -2374,13 +2410,15 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	}
 	if err := join.waitBounded(ctx, func() {
 		quiesceForRun(ctx, reloader)
-	}, providerShutdownGrace, tlog); err != nil {
-		// A worker ignored the cancel. Stop waiting: `results` may still be
-		// written, so it is left open, and the exit code makes the supervisor
-		// start a clean process instead of leaving this one half-dead. The
-		// watchdog is armed first, so the defers below cannot hold the process.
-		exitCode := providerShutdownExitCode(quarantined.Load())
-		providerShutdownExpire(fmt.Sprintf("workers did not drain within %s", providerShutdownGrace), exitCode)
+	}, providerShutdownGrace, func() {
+		providerShutdownArmWatchdog(providerShutdownExitCode(quarantined.Load()))
+	}, tlog); err != nil {
+		// A worker ignored the cancel. The exit watchdog was armed before the
+		// dump, so the defers below cannot hold the process. Stop waiting:
+		// `results` may still be written, so it is left open, and the exit code
+		// makes the supervisor start a clean process instead of leaving this one
+		// half-dead.
+		providerShutdownCapture(fmt.Sprintf("workers did not drain within %s", providerShutdownGrace))
 		critLog("SHUTDOWN: workers did not drain within %s; exiting\n", providerShutdownGrace)
 		if quarantined.Load() {
 			// the early return below skips the quarantine join further down, so

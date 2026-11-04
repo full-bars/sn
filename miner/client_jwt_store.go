@@ -102,7 +102,32 @@ func pruneStaleEntries(entries map[string]clientJWTEntry) map[string]clientJWTEn
 	now := time.Now()
 	pruned := make(map[string]clientJWTEntry, len(entries))
 	for key, entry := range entries {
-		if now.Sub(entry.MintedAt) < clientJWTStaleAfter {
+		// A zero MintedAt means the entry predates this field: it came from a
+		// store written before mint times were recorded, or from a caller that
+		// only knows the credential. Do not call it stale. Dropping it would
+		// discard every identity on the first start after an upgrade and force
+		// a re-auth for every proxy.
+		if entry.MintedAt.IsZero() || now.Sub(entry.MintedAt) < clientJWTStaleAfter {
+			pruned[key] = entry
+		}
+	}
+	return pruned
+}
+
+// Keep transient fallback identities eligible for their later live proof even
+// when their original mint date exceeds the hot-restart cache's age limit.
+func (s *clientJWTStore) pruneStaleEntries(entries map[string]clientJWTEntry) map[string]clientJWTEntry {
+	pruned := pruneStaleEntries(entries)
+	if s.path == "" {
+		return pruned
+	}
+	journal, err := readLegacyImportJournal(filepath.Dir(s.path))
+	if err != nil {
+		// An unreadable identity decision must not cause irreversible pruning.
+		return entries
+	}
+	for key, recorded := range journal.Slots {
+		if entry, ok := entries[key]; ok && legacyImportPreservesEntry(recorded) && entry.ClientID == recorded.ClientID {
 			pruned[key] = entry
 		}
 	}
@@ -235,7 +260,7 @@ func (s *clientJWTStore) loadLocked() {
 	// the previous identity set the operator had before this restart.
 	s.snapshotLocked(data, len(entries))
 
-	pruned := pruneStaleEntries(entries)
+	pruned := s.pruneStaleEntries(entries)
 	s.entries = pruned
 
 	// Log how many identities we're carrying forward — gives the operator a
@@ -463,7 +488,7 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 	// it writes the whole merged map, so skipping the filter here would
 	// write the stale entries straight back to disk on the next flush of any
 	// key, forever undoing the prune.
-	merged = pruneStaleEntries(merged)
+	merged = s.pruneStaleEntries(merged)
 	for _, key := range deletes {
 		delete(merged, key)
 	}

@@ -108,26 +108,26 @@ var (
 // to relax its thrash cap.
 //
 // What evidence counts as "recovered" and why:
-// 1. Sustained period without escalations:
-//    The box must have run at the current cap level for at least thrashCapHold
-//    (24h) and have no restart entries in the last 24h (thrashRestartsWithin empty).
-//    An escalation in the window proves the box could not hold its load.
-// 2. Watchdog state is calm:
-//    If the swap-thrash watchdog is running, it must not be in "thrashing",
-//    "critical", or "under-pressure", and its memory PSI stall fraction must be
-//    below the mild threshold (swapThrashMildFrac = 10%). A box under memory
-//    pressure is not recovered even if it hasn't escalated to a restart yet.
-// 3. Healthy memory headroom:
-//    If available RAM (the tighter of host MemAvailable and cgroup headroom) is
-//    measurable, it must be at or above the recovery threshold defined by the
-//    memory-headroom guard (avail * 4 >= low * 5, i.e., 25% above the low-headroom
-//    threshold). A box short of free RAM is on the edge of swap thrash.
-// 4. Fallback for uninstrumented platforms:
-//    When host/cgroup free memory is unreadable and no watchdog snapshot exists
-//    (e.g., non-Linux hosts or restricted containers), the Go runtime heap against
-//    its soft limit is checked (must be < 1.0). If the platform exposes no memory
-//    signals at all, the sustained hold period without restarts is the least bad
-//    measurable proxy available, rather than inventing an ungrounded signal.
+//  1. Sustained period without escalations:
+//     The box must have run at the current cap level for at least thrashCapHold
+//     (24h) and have no restart entries in the last 24h (thrashRestartsWithin empty).
+//     An escalation in the window proves the box could not hold its load.
+//  2. Watchdog state is calm:
+//     If the swap-thrash watchdog is running, it must not be in "thrashing",
+//     "critical", or "under-pressure", and its memory PSI stall fraction must be
+//     below the mild threshold (swapThrashMildFrac = 10%). A box under memory
+//     pressure is not recovered even if it hasn't escalated to a restart yet.
+//  3. Healthy memory headroom:
+//     If available RAM (the tighter of host MemAvailable and cgroup headroom) is
+//     measurable, it must be at or above the recovery threshold defined by the
+//     memory-headroom guard (avail * 4 >= low * 5, i.e., 25% above the low-headroom
+//     threshold). A box short of free RAM is on the edge of swap thrash.
+//  4. Fallback for uninstrumented platforms:
+//     When host/cgroup free memory is unreadable and no watchdog snapshot exists
+//     (e.g., non-Linux hosts or restricted containers), the Go runtime heap against
+//     its soft limit is checked (must be < 1.0). If the platform exposes no memory
+//     signals at all, the sustained hold period without restarts is the least bad
+//     measurable proxy available, rather than inventing an ungrounded signal.
 func thrashBoxRecovered(st thrashCapState, now time.Time) bool {
 	if len(thrashRestartsWithin(st, now)) > 0 {
 		return false

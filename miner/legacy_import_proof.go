@@ -73,6 +73,11 @@ type legacyImportProveOptions struct {
 	heartbeat    time.Duration
 	shortCircuit int
 	attempts     int
+	// proofs, when set, keeps every live proof the moment it resolves (public
+	// is the retained key the claims name), so a start that ends before the
+	// commit does not throw the work away.
+	proofs *legacyImportProofStore
+	public ed25519.PublicKey
 }
 
 func (self legacyImportProveOptions) withDefaults() legacyImportProveOptions {
@@ -313,6 +318,8 @@ func legacyImportProveAll(
 ) (string, int) {
 	opts = opts.withDefaults()
 	start := time.Now()
+	// Publish whatever was proven even when the phase ends early.
+	defer func() { flushLegacyImportProofs(narrator, opts.proofs) }()
 	tracker := &legacyImportProofTracker{total: len(prove)}
 	stopHeartbeat := startLegacyImportHeartbeat(narrator, tracker, opts.heartbeat, start)
 	defer stopHeartbeat()
@@ -335,6 +342,9 @@ func legacyImportProveAll(
 			return
 		}
 		collector.apply(outcome)
+		if outcome.state == "commit" && opts.proofs != nil {
+			opts.proofs.record(legacyImportProofKey(outcome.slot), legacyImportProofClaimFor(outcome.slot, opts.public), outcome.proof)
+		}
 		tracker.record(outcome.state)
 		resolved[outcome.slot] = true
 	}
@@ -410,9 +420,19 @@ func legacyImportProveAll(
 		case <-tick.C:
 			pending := tracker.progress()
 			narrator.wait("proof slot", fmt.Sprintf("resolved=%d of %d, pending=%d", pending.resolved(), len(prove), pending.pending))
+			flushLegacyImportProofs(narrator, opts.proofs)
 		}
 	}
+	flushLegacyImportProofs(narrator, opts.proofs)
 	return legacyImportResultComplete, 0
+}
+
+// flushLegacyImportProofs publishes the proofs recorded so far. A failed write
+// costs only the saving: the proofs held in memory still commit this start.
+func flushLegacyImportProofs(narrator *legacyImportNarrator, store *legacyImportProofStore) {
+	if err := store.flush(); err != nil {
+		narrator.line("proofs: could not save proofs (%s); they will be proven again next start", err)
+	}
 }
 
 // legacyImportStop classifies the stop and marks the slots that never got an
