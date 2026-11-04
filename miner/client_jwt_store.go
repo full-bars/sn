@@ -48,6 +48,13 @@ type clientJWTStore struct {
 	// re-encodes and fsyncs the whole file, so callers that change many
 	// entries at once must batch them into a single flush.
 	flushes int
+	// skipped counts flushes whose merged result was byte-identical to the
+	// file already on disk, so nothing was written.
+	skipped int
+	// lastSkipLog is the timestamp when skip was last logged.
+	lastSkipLog time.Time
+	// skipsSinceLog counts skips since the last skip log was emitted.
+	skipsSinceLog int
 	// clock is the time source for durations and logs; nil means time.Now.
 	clock func() time.Time
 }
@@ -448,7 +455,6 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 		return nil
 	}
 	start := s.now()
-	s.flushes++
 	dir := filepath.Dir(s.path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
@@ -465,11 +471,13 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 	// Reload the durable store now, under the lock, so any entries a
 	// concurrent process wrote since we last loaded are preserved.
 	merged := s.entries
+	var diskBytes []byte
 	var baseline map[string]clientJWTEntry
 	if data, err := os.ReadFile(s.path); err == nil && len(data) > 0 {
 		var onDisk map[string]clientJWTEntry
 		if jsonErr := json.Unmarshal(data, &onDisk); jsonErr == nil {
 			merged = onDisk
+			diskBytes = data
 			baseline = make(map[string]clientJWTEntry, len(onDisk))
 			for k, v := range onDisk {
 				baseline[k] = v
@@ -533,6 +541,13 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 		return err
 	}
 
+	if diskBytes != nil && bytes.Equal(data, diskBytes) {
+		s.skipped++
+		s.logSkipLocked(len(merged))
+		return nil
+	}
+	s.flushes++
+
 	dur := s.now().Sub(start)
 	if dur < 0 {
 		dur = 0
@@ -567,4 +582,18 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 	}
 
 	return os.Rename(tmpPath, s.path)
+}
+
+// logSkipLocked rate-limits the skipped-write log line to at most once per
+// minute so rapid repeated no-op flushes do not flood the journal.
+func (s *clientJWTStore) logSkipLocked(entries int) {
+	s.skipsSinceLog++
+	now := s.now()
+	if !s.lastSkipLog.IsZero() && now.Sub(s.lastSkipLog) < time.Minute {
+		return
+	}
+	suppressed := s.skipsSinceLog - 1
+	s.lastSkipLog = now
+	s.skipsSinceLog = 0
+	tlog("client_jwt_store: skip write %d entries (identical content, %d suppressed)\n", entries, suppressed)
 }
