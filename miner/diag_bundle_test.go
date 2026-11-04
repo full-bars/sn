@@ -354,8 +354,35 @@ func TestDiagStuckStopCPUProfileIsBounded(t *testing.T) {
 	if !strings.Contains(string(summary), "StopCPUProfile did not return within 50ms") {
 		t.Fatalf("summary.txt does not say the CPU capture overran:\n%s", summary)
 	}
-	if _, err := os.Stat(filepath.Join(res.Dir, "cpu.pb.gz")); err != nil {
-		t.Fatalf("the overrunning CPU profile was not kept: %v", err)
+	if _, err := os.Stat(filepath.Join(res.Dir, "cpu.pb.gz")); !os.IsNotExist(err) {
+		t.Fatalf("the unfinalized CPU profile was committed: %v", err)
+	}
+}
+
+// A StopCPUProfile that outlives the grace period must not leave an open,
+// still-growing cpu.pb.gz in the committed bundle.
+func TestDiagGraceTimeoutDropsCPU(t *testing.T) {
+	env, _ := newDiagTestEnv(t)
+	env.cpuStopGrace = 50 * time.Millisecond
+	stuck := make(chan struct{})
+	t.Cleanup(func() { close(stuck) })
+	env.stopCPU = func() { <-stuck }
+
+	res, err := runDiag(context.Background(), env)
+	if err != nil {
+		t.Fatalf("runDiag: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(res.Dir, "cpu.pb.gz")); !os.IsNotExist(err) {
+		t.Fatalf("cpu.pb.gz is in the committed bundle: %v", err)
+	}
+	for _, f := range res.Files {
+		if f == "cpu.pb.gz" {
+			t.Fatalf("Files lists cpu.pb.gz: %v", res.Files)
+		}
+	}
+	summary, _ := os.ReadFile(filepath.Join(res.Dir, "summary.txt"))
+	if !strings.Contains(string(summary), "NOT CAPTURED") {
+		t.Fatalf("summary.txt does not say the CPU profile was not captured:\n%s", summary)
 	}
 }
 

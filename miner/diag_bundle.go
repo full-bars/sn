@@ -440,7 +440,13 @@ func captureDiagCPU(ctx context.Context, env diagEnv, path string) (note string,
 	select {
 	case <-stopped:
 	case <-grace.C:
-		note = fmt.Sprintf("StopCPUProfile did not return within %s; cpu.pb.gz was kept as written and is incomplete", env.cpuStopGrace)
+		// The profile is still being written and the profiler is still busy, so
+		// the file is not a usable capture. Unlink it (best effort) rather than
+		// commit a bundle holding an open file. The goroutine above keeps its
+		// descriptor and finishes Sync/Close on the unlinked file whenever
+		// StopCPUProfile returns.
+		os.Remove(path)
+		return fmt.Sprintf("StopCPUProfile did not return within %s; cpu.pb.gz was dropped because the profile could not be finalized", env.cpuStopGrace), false, nil
 	}
 	return note, true, nil
 }
