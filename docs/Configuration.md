@@ -264,13 +264,19 @@ These combine into a single smoothed pressure score in `[0, 1]`. A self-inflicte
 - The dead-proxy cleanup job and the reaper's stale re-probe window both run *more* often under pressure (6h → 1h and 3h → 1h respectively): cleanup and the reaper shed load, so pressure is exactly when they should run harder, not less
 - An AIMD pool controller adjusts a persisted `TargetPoolSize` (stored in `proxy_url.json`) every 5 minutes: +25 proxies when calm, ×0.7 after two consecutive high-pressure samples (floor 50, capped by `PROXY_URL_MAX`). Shrinks evict the worst URL-sourced proxies first (dead, then degraded tiers, then healthy ones by ascending traffic) with a 1h re-admission backoff. This learned target only caps admission while self-heal is enabled.
 
+### Provider state store
+
+The provider keeps its machine state in `provider_state.db` in the state directory. On non-Windows systems, it now imports `error_counts.json`, `.metrics-counters.json` and `direct_grade.json` into the store. Older builds read those settings from separate files. Files shared with `urnet-tools` stay separate; Windows also keeps the three settings as files.
+
+Back up the state directory before an upgrade if a rollback is required. Older builds cannot read the imported settings from the database. A build with the schema guard refuses a store that requires a newer reader. If the store is unavailable, the provider reports degraded mode and continues without a schema check. See [Monitoring](/full-bars/sn/wiki/Monitoring).
+
 ### Swap-thrash watchdog
 
 Memory pressure alone does not mean the box is thrashing. The watchdog watches for the signs that it is: PSI memory `full` (tasks stalled on memory), swap activity (`pswpout`/`pswpin` rates), page refaults, and direct reclaim. It keeps one state, `calm -> under-pressure -> thrashing -> critical`, and acts in steps:
 
 - **Freeze growth** first: no new pool admissions while the condition holds. Nothing is lost yet.
 - If the condition persists, the watchdog **restarts the provider** in a supervised way: the process exits with status 75 and the service manager restarts it. This is the only automatic restart the watchdog performs. It is capped at 3 restarts per 24 hours with a growing backoff (30m, 2h — a third rung is reserved for if the daily ceiling ever rises), skipped while a hot-swap is draining, and it refuses to act when the swap belongs to another process on the box.
-- A restart leaves a **thrash cap** (`~/.urnetwork/thrash_cap.json`): the next start begins with a smaller pool so it fits in RAM — about 60% of what was running before the restart, at least one proxy — and the cap holds until the box shows it has recovered. Once the hold window elapses, the cap lifts only if the watchdog is calm and memory headroom sits 25% above the low-headroom threshold; a recovered box then relaxes in stages (+20% per clean window) towards the capacity it held before the cut, and clears when it reaches it. A box that is still thrashing keeps the cap however much time passes. Nothing running before the restart sets no new cap (there is nothing to protect).
+- A restart leaves a **thrash cap** (`~/.urnetwork/thrash_cap.json`). The next start begins at about 60% of the running pool, with a floor of one proxy. After a 24-hour hold, the miner checks for recent restarts and the watchdog and memory signals it can read. It relaxes a passing cap in stages toward the operator trim or pre-cut target. If memory signals are unavailable, the quiet hold is the remaining evidence. See [Proxy Management](/full-bars/sn/wiki/Proxy-Management#how-an-automatic-cap-ends). Nothing running before the restart sets no new cap.
 
 The supervised restart needs a service unit that restarts on exit status 75. The shipped units use `Restart=on-failure`, which covers it. If you override the unit with a drop-in, use `Restart=on-failure` or `Restart=always`, keep 75 (or its name `TEMPFAIL`) out of `RestartPreventExitStatus`, and do not mark 75 a success in `SuccessExitStatus` — under `Restart=on-failure` systemd would then treat the watchdog exit as a clean stop. The installer warns when a drop-in weakens any of this.
 

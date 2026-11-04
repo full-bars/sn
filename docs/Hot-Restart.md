@@ -123,7 +123,7 @@ The miner does not use one shared store. Its identity unit is a durable registra
 - With `URNETWORK_HOT_RESTART=0` this fork takes a fresh-mint path: it registers a new client for the slot, overwrites the credential file, and publishes custody for the new identity. Upstream has no such path.
 - A refused identity is tombstoned in a `.rejected` file beside its credential and is not reused.
 - A renewal that fails before the platform gives a verdict (dropped connection, timeout, 5xx, 408, 429) keeps the identity and retries. This fork does not throw the identity away on a transient error; the relay provider forks mint fresh in that situation.
-- Starting the miner on a state directory written by 3.23-fix triggers an automatic import: the retained seed is proved against the platform for each saved client id, and only then are the per-slot credential files written. Decisions land in `.provider.legacy-import.json`, and the old files are never modified, so going back to the relay provider still finds its identities.
+- Starting with a 3.23-fix state directory triggers an automatic legacy import. The provider offers each saved identity to the platform. The decisions land in `.provider.legacy-import.json`, and the old files remain untouched.
 
 Because the seed is shared per process, two slots from one process cannot both be members of the same fleet manifest: the manifest validation refuses a repeated client key. Swarm mode gives every member its own state directory and its own seed.
 

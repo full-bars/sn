@@ -62,6 +62,16 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 - **Gossip startup.** `[gossip] peer=<peer id> network=<network host> role=<member|extender> listen_addrs=N operator_addrs=N started`.
 - **Attributable token lines.** Every `[api-token]` line carries `client=<id>` parsed from the bearer, for example `[api-token] client=019f7191… jwt refresh failed. Will retry in 96.17s. err = http request attempts exhausted`. A legacy bearer without the claim prints no tag rather than a fabricated one.
 
+## State store and shutdown
+
+- `state store ... was written by a newer build` means this build cannot read the store's required schema. It refuses to start slots or mint identities. Use a compatible build and keep the store for recovery.
+- `state store unavailable, continuing without it` means the provider continues in degraded mode without checking the schema. A corrupt store that was moved aside also marks the run degraded. Check `urnet_state_store_degraded` and the accompanying reason.
+- `[state] settings stay on their files` means the store did not open, so private settings remain in their files.
+- `[provider] shutdown incomplete: goroutine dump follows` means workers did not drain within 35 seconds. After the dump, a five-second watchdog bounds deferred cleanup. If the dump blocks, the watchdog starts late. A normal timeout exits 1; a quarantine retains exit 75.
+- `[thrashcap] relaxed automatic start cap` reports one recovery step. `[thrashcap] automatic start cap ... cleared (recovered)` reports the final release. Older builds used a time expiry without recovery checks. If memory signals are unavailable, the quiet hold is the remaining evidence.
+
+The per-slot sampler has no new routine log line. It uses one ticker for billing and transport health instead of two.
+
 ## Extender lines
 
 The extender role has its own small vocabulary, and the difference between "bound a port" and "accepted by the network" is the whole of it.
@@ -74,8 +84,8 @@ The extender role has its own small vocabulary, and the difference between "boun
 - `[extender] activation failed without a refusal (v4 activated=%t, v6 activated=%t); the next attempt is not held` is a failure that never reached the network, such as a dns failure, a dial timeout or a reset. It is deliberately not treated as a refusal and earns no hold, so a flaky path does not spend the account's activation budget.
 - `[extender] activation held: <n> of <m> posts in the last hour, next in <duration>` is the rate limit rather than a refusal: the account may post a bounded number of activations per hour, and this attempt was held before it was sent.
 - `[extender] activation failed on <family>; the leftover post funds one retry` says the previous attempt left one post unused, so one more try follows without waiting for the hourly window.
-- `[extender] extender role off: <reason>` means the role did not start in this process at all. The reason names which precondition failed: an unavailable activation budget, an unavailable refusal barrier, or a hotswap candidate that took the provider state. A role that never started prints no `listen` line either, so look for this line first when the carrier lines are missing entirely.
-- The machine-readable form is the diagnostics event: `{"schema":"urnetwork-provider-diagnostics-v1","domain":"extender","event":"observed",...}` carrying `activated_v4`, `activated_v6`, `activation_refused` and `revoked`. It is the only place that records an acceptance as a value rather than as the absence of a refusal.
+- `[extender] extender role off: <reason>` means the role did not start for the reason logged. An activation-budget hold is now rechecked, so the role can return without a process restart.
+- The machine-readable form is the diagnostics event: `{"schema":"urnetwork-provider-diagnostics-v1","domain":"extender","event":"observed",...}` carrying `activated_v4`, `activated_v6`, `activation_refused` and `revoked`. The metrics endpoint also reports the observed activation by family; see [Monitoring](/full-bars/sn/wiki/Monitoring).
 
 ## Exit codes
 
@@ -92,6 +102,7 @@ All nonzero exit codes write `FATAL [exit N]: ...` to stderr and the shm log.
 | 60-62 | Proxy remove-dead failures: provider not running, dead-confirmation threshold, source update |
 | 70-76 | URL-source and direct-providing failures: missing URL (70), proxy lock (71, 75), direct providing enable/disable (72), proxy_url.json write (73-74), proxy_url.json read (76) |
 | 72 | Could not enable or disable direct providing |
+| 75 | A quarantined miner run also exits 75 so its supervisor can act on the quarantine. This is separate from tool-specific error codes |
 | 78 | JWT expired or invalid; startup scripts intercept this code to re-authenticate |
 | 79 | Authentication stopped after 30 failed logins over at least 2 hours; fix the credentials and restart. The shipped units set `RestartPreventExitStatus=79`, so systemd does not restart it |
 | 80-82 | Proxy paste failures: input file, temp file, executable path |

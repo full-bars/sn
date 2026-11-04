@@ -169,20 +169,15 @@ up/connecting/dropped/dead counts. `urnet-tools status` shows the same as a
 
 ### How an automatic cap ends
 
-A cap written automatically (by the swap-thrash watchdog or by the OOM route)
-is a brake, and it releases on evidence rather than on a timer. Once its hold
-window elapses the provider asks the box whether it has recovered: the watchdog
-must be calm, and memory headroom must sit at least 25% above the low-headroom
-threshold, measured as the tighter of host `MemAvailable` and the cgroup
-headroom.
+The swap-thrash cap previously expired after a fixed time, even when the host had not recovered. After the 24-hour hold, the provider checks for recent thrash restarts. When a watchdog reading exists, it must be calm. When headroom is measurable, it must be at least 25% above the low-headroom threshold.
 
-A box that fails either check keeps its cap for as long as it is sick, however
-much time passes. A box that passes relaxes in stages: +20% per sustained clean
-window, towards the capacity it held before the cut, and the cap stops applying
-only once that target is reached. A box that turns marginal mid-relaxation
-stops there. An operator trim set with `urnet-tools proxy trim` is separate and
-always applies as an upper bound, so the effective cap is the tighter of the
-two.
+If headroom is unavailable, the miner checks its heap against the Go soft limit when that reading exists. If no memory signals exist, the quiet hold is the remaining evidence.
+
+A box that fails a recovery check keeps its cap. A box that passes relaxes in stages: about 20% per clean window, toward the operator trim or the pre-cut target. The cap stops applying when it reaches that target. An operator trim set with `urnet-tools proxy trim` remains a separate upper bound.
+
+### URL proxy cleanup
+
+A degraded URL proxy is retired only when `degraded_cleanup_threshold` is set to a positive duration, as before. Cleanup now protects members held by a trim cap and gives them a fresh window after release. During a pool-wide outage freeze, the down clock restarts. A parked proxy is not treated as degraded.
 
 ### Docker (host-side)
 

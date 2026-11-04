@@ -134,6 +134,19 @@ The auth series are read from `auth_backoff.json` in the state directory, so
 the counters survive a restart without a second store. They are exported at
 zero before the first failure, so panels and alerts have a stable series.
 
+## State store and extender metrics
+
+`urnet_state_store_degraded` is 1 when the run could not open or fully trust its store. Older builds did not expose this run-level warning. Check the provider log for the reason.
+
+The extender gauges are emitted when an observation is available:
+
+- `urnet_extender_enabled`, `urnet_extender_listening` and `urnet_extender_listen_failed` describe the local role.
+- `urnet_extender_activated{family="ipv4"}` and `urnet_extender_activated{family="ipv6"}` report activation by family.
+- `urnet_extender_activation_failed`, `urnet_extender_activation_refused` and `urnet_extender_revoked` report the observed outcomes.
+- `urnet_extender_last_activation_attempt_seconds` is absent until an attempt time exists.
+
+The provider clears the observation when the role stops. An absent series is not an activation failure.
+
 ## Reading the pool health line
 
 `[health][proxies]` is one line per interval, and every field is a count of

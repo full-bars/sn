@@ -1,8 +1,7 @@
-# Provider identity, and why there is nothing to set
+# Provider identity and registration flags
 
 If you have ever wondered what `--allow-client-registration` is for, this page
-is the answer. It is the least self-explanatory flag in the provider, and as of
-this release it does nothing at all.
+is the answer. It is the least self-explanatory flag in the provider. It no longer gates client registration, but it can permit replacement of an unusable provider key.
 
 ## What a provider client is
 

@@ -6,14 +6,14 @@ An extender is a provider that also listens on a port the internet can reach, so
 
 - A host with a public IPv4 address where you control inbound TCP 443, both in the host firewall and in any router or cloud security group in front of it.
 - A free TCP 443 on that host. If another process holds it, the role stays off while the provider keeps providing without listening.
-- A provider that runs direct. A provider with proxies configured never listens, because the role must bind this host's own ports and publish this host's own address, and a proxied identity can do neither.
+- Direct providing enabled. The direct slot can hold the role even when proxy slots also run. Proxy slots cannot hold the role.
 - A first-run auth code from [ur.io](https://ur.io), or a volume that already holds a signed-in provider.
 
 ## Steps
 
-**1. Remove any proxy configuration from this provider.**
+**1. Enable direct providing.**
 
-Only the direct slot can hold the role, so a container that is given proxies serves through them and does not listen. Start from a container with no `proxy.txt` mounted and no `PROXY_URL` set.
+Only the direct slot can hold the role. Proxy slots can run alongside it. This example starts without proxy slots.
 
 Expected result: the container starts and provides as before, with no proxy slots.
 
@@ -102,7 +102,7 @@ After a restart another process may still hold that port for a moment. The miner
 ## What this does not tell you
 
 - `[extender] listen tcp 443` means the process bound the port inside the container. It does not mean the internet can reach it. Only the absence of a refusal after the network's own probe tells you that, and a probe that fails is retried only after the hold in step 6.
-- The provider's own log has no line that confirms an accepted activation, so a quiet log is the absence of a refusal, not a report of success.
+- The provider's own log has no line that confirms an accepted activation. The metrics endpoint reports the observed activation by address family. See [Monitoring](/full-bars/sn/wiki/Monitoring).
 - An accepted activation does not mean clients will use you. The network publishes your address and clients choose among the addresses it lists.
 - UDP 443 and UDP 4053 do not gate activation. A host with TCP 443 and no UDP is accepted; a host with both UDP ports and no TCP 443 is not.
 - A host without inbound TCP 443 cannot run this role today. The network's design describes a peer-to-peer webrtc path for hosts behind NAT, but the provider has no switch for it and does not offer that carrier.

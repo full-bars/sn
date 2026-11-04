@@ -10,6 +10,7 @@ This page lists the top-level folders, grouped by what they are for. The sibling
 |---|---|
 | `cli/miner/` | Entry point of the provider program (`main.go`). The Docker image and the release archives ship this binary as `provider`. |
 | `miner/` | The library behind `cli/miner/`: proxy handling, health checks, hot reload, hot swap, metrics and the control socket. It also holds the subnet miner code. |
+| `miner/state_schema.go`, `miner/state_settings.go`, `miner/state_startup.go` | State-store schema guard, private settings migration and startup degradation reporting. |
 | `cmd/urnet-tools/` | Entry point of `urnet-tools`, the command line tool that starts, stops, updates and checks a provider. |
 | `cmd/urnet-docker/` | Entry point of `urnet-docker`, the same kind of tool for providers that run in Docker containers. |
 | `cmd/fake-provider/` | A stand-in provider used by the CI lifecycle tests. |

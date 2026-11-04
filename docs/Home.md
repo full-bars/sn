@@ -7,35 +7,38 @@ The provider serves dual-stack IPv4 and IPv6 traffic, uses HTTP/3 (QUIC) for its
 ## Documentation Index
 
 ### Getting Started
-- [Installation](Installation) — native install on Linux, macOS, and Windows, plus the one-line installer
-- [Configuration](Configuration) — environment variables and runtime flags
-- [Docker Deployment](Docker-Deployment) — production Docker guide: images, env vars, upgrades
-- [Advanced Deployment](Advanced-Deployment) — security hardening and system-level networking
-- [Multi-Container Scaling](Multi-Container-Scaling) — multiple provider containers per host
-- [urnet-docker](urnet-docker) — the host-side tool for managing provider containers
+- [Installation](/full-bars/sn/wiki/Installation) — native install
+- [Configuration](/full-bars/sn/wiki/Configuration) — environment variables and runtime settings
+- [Docker Deployment](/full-bars/sn/wiki/Docker-Deployment) — images and upgrades
+- [Advanced Deployment](/full-bars/sn/wiki/Advanced-Deployment) — security and networking
+- [Multi-Container Scaling](/full-bars/sn/wiki/Multi-Container-Scaling) — multiple containers per host
+- [urnet-docker](/full-bars/sn/wiki/urnet-docker) — container management
 
 ### Proxies
-- [Adding Proxies](Adding-Proxies) — first proxy list, quick start
-- [Proxy Management](Proxy-Management) — file lists, add, remove, health, traffic views
-- [Proxy URL Sources](Proxy-URL-Sources) — live proxy-list URLs with scheduled fetches
-- [Proxy Hot-Reload](Proxy-Hot-Reload) — add and remove proxies without a restart
-- [Proxy Admission Pipeline](Proxy-Admission-Pipeline) — probing, verification, and grading before admission
+- [Adding Proxies](/full-bars/sn/wiki/Adding-Proxies) — first proxy list
+- [Proxy Management](/full-bars/sn/wiki/Proxy-Management) — lists, health and traffic
+- [Proxy URL Sources](/full-bars/sn/wiki/Proxy-URL-Sources) — scheduled URL fetches
+- [Proxy Hot-Reload](/full-bars/sn/wiki/Proxy-Hot-Reload) — update a running pool
+- [Proxy Admission Pipeline](/full-bars/sn/wiki/Proxy-Admission-Pipeline) — probing and grading
 
 ### Operating
-- [urnet-tools-go](urnet-tools-go) — the provider-aware fleet ops tool
-- [Monitoring](Monitoring) — Prometheus metrics and the Grafana stack
-- [Node Identity](Node-Identity) — why node labels are not implemented in this line
-- [Egress Security Policy](Egress-Security-Policy) — packet inspection: CFAA reputation, DMCA BitTorrent, web standards
-- [Bittensor Quick Start](Bittensor-Quick-Start): do I need to do anything? (start here)
-- [Bittensor Operations](Bittensor-Operations): Subnet overview and FAQ
-- [Bittensor Head Tier](Bittensor-Head-Tier): optional and advanced
-- [Bittensor Glossary](Bittensor-Glossary): plain meanings of the words
+- [urnet-tools-go](/full-bars/sn/wiki/urnet-tools-go) — provider management
+- [Monitoring](/full-bars/sn/wiki/Monitoring) — metrics and dashboards
+- [Extender](/full-bars/sn/wiki/Extender) — direct-slot activation
+- [Hot Restart](/full-bars/sn/wiki/Hot-Restart) — client identity reuse
+- [Node Identity](/full-bars/sn/wiki/Node-Identity) — node labels
+- [Egress Security Policy](/full-bars/sn/wiki/Egress-Security-Policy) — packet inspection
+- [Bittensor Quick Start](/full-bars/sn/wiki/Bittensor-Quick-Start) — start here
+- [Bittensor Operations](/full-bars/sn/wiki/Bittensor-Operations) — subnet overview
+- [Bittensor Head Tier](/full-bars/sn/wiki/Bittensor-Head-Tier) — optional advanced setup
+- [Bittensor Glossary](/full-bars/sn/wiki/Bittensor-Glossary) — terms
 
 ### Reference
-- [Project Structure](Project-Structure) — what lives where in the repository
-- [Log Message Reference](Log-Message-Reference) — what provider log lines mean
-- [Troubleshooting](Troubleshooting) — common errors and their fixes
-- [CI and Release Process](CI-and-Release-Process) — workflows, tags, and cutting a release
+- [Provider Flags](/full-bars/sn/wiki/Provider-Flags) — provider identity and registration
+- [Project Structure](/full-bars/sn/wiki/Project-Structure) — repository layout
+- [Log Message Reference](/full-bars/sn/wiki/Log-Message-Reference) — log lines
+- [Troubleshooting](/full-bars/sn/wiki/Troubleshooting) — common failures
+- [CI and Release Process](/full-bars/sn/wiki/CI-and-Release-Process) — workflows and releases
 
 ## Quickstart
 
@@ -49,20 +52,20 @@ docker run -d \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   --sysctl net.ipv4.ip_forward=1 \
-  -e URNETWORK_NODE_NAME=my-provider \
+  -e URNETWORK_AUTH_CODE=YOUR_AUTH_CODE_HERE \
   -v urnetwork_config:/root/.urnetwork \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
-  ghcr.io/full-bars/sn:latest YOUR_AUTH_CODE_HERE
+  ghcr.io/full-bars/sn:latest
 ```
 
-`-e URNETWORK_NODE_NAME` is **not implemented in this line**: nothing reads it, so the label does not reach the dashboard. See [Node-Identity.md](/full-bars/sn/wiki/Node-Identity).
+The auth code is single-use. Keep the state volume to retain the sign-in and provider identity. See [Node Identity](/full-bars/sn/wiki/Node-Identity) for node labels.
 
 The Docker image is multi-arch (linux/amd64 and linux/arm64) and is published to GitHub Container Registry as `ghcr.io/full-bars/sn`, and to Docker Hub as `3cape/sn`.
 
 ### Resource Usage Tips
 - **Log management**: use `--log-driver=json-file` with `--log-opt max-size=100m` and `--log-opt max-file=3` to keep logs from filling the disk. This is recommended for long-running containers.
-- **Monitoring**: turn on the built-in metrics endpoint and point the bundled Grafana stack at your providers. See [Monitoring](Monitoring).
+- **Monitoring**: use the built-in metrics endpoint and point the bundled Grafana stack at your providers. See [Monitoring](/full-bars/sn/wiki/Monitoring).
 
 ## Support
 
-For troubleshooting input, see the [Troubleshooting](Troubleshooting) guide. For log line meanings, see the [Log Message Reference](Log-Message-Reference).
+For troubleshooting input, see the [Troubleshooting](/full-bars/sn/wiki/Troubleshooting) guide. For log line meanings, see the [Log Message Reference](/full-bars/sn/wiki/Log-Message-Reference).
