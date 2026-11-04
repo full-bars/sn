@@ -266,6 +266,7 @@ func (self *legacyImportProofStore) record(key string, claim legacyImportProofCl
 	}
 	self.mu.Lock()
 	defer self.mu.Unlock()
+	previous := self.slots[key]
 	if prev, ok := self.slots[key]; ok && (prev.Rejections > 0 || prev.ProvenAt == 0) {
 		if self.reproved == nil {
 			self.reproved = map[string]int64{}
@@ -275,14 +276,16 @@ func (self *legacyImportProofStore) record(key string, claim legacyImportProofCl
 			seq = int64(prev.Rejections)
 		}
 		self.reproved[key] = seq
+		previous.RejectionSeq = seq
 	}
 	self.slots[key] = legacyImportProofRecord{
-		ClientID:  claim.ClientID,
-		NetworkID: claim.NetworkID,
-		KeyFP:     claim.KeyFP,
-		TokenFP:   claim.TokenFP,
-		Proof:     proof,
-		ProvenAt:  self.now().Unix(),
+		ClientID:     claim.ClientID,
+		NetworkID:    claim.NetworkID,
+		KeyFP:        claim.KeyFP,
+		TokenFP:      claim.TokenFP,
+		Proof:        proof,
+		ProvenAt:     self.now().Unix(),
+		RejectionSeq: previous.RejectionSeq,
 	}
 	self.dirty[key] = true
 }
