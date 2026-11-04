@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -643,6 +644,82 @@ func TestProofTransientFallbackReAdmittedAfterCooldown(t *testing.T) {
 		t.Fatalf("FAIL: slot was not imported after healing: %+v (mintSlots=%v)", afterSlot, laterResult.mintSlots)
 	}
 }
+
+// Entries for proxies that no longer exist and expired records must be pruned,
+// and the store file must stay bounded.
+func TestProofStorePruningAndBound(t *testing.T) {
+	dir := t.TempDir()
+	store := loadLegacyImportProofStore(dir)
+	claim := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("test-key-material-0123456789012345")),
+		TokenFP:   legacyImportFingerprint([]byte("test-token-jwt-material-0123456789")),
+	}
+
+	activeKey := "active-proxy.jwt"
+	removedKey := "removed-proxy.jwt"
+	expiredKey := "expired-proxy.jwt"
+
+	store.record(activeKey, claim, "server_key")
+	store.record(removedKey, claim, "server_key")
+	store.record(expiredKey, claim, "server_key")
+
+	// Make expiredKey older than max age.
+	store.mu.Lock()
+	rec := store.slots[expiredKey]
+	rec.ProvenAt = store.now().Add(-legacyImportProofMaxAge - 24*time.Hour).Unix()
+	store.slots[expiredKey] = rec
+	store.mu.Unlock()
+
+	// Active proxies only include activeKey.
+	store.setActiveKeys(map[string]bool{activeKey: true})
+
+	if err := store.flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	reloaded := loadLegacyImportProofStore(dir)
+	if _, ok := reloaded.slots[removedKey]; ok {
+		t.Fatalf("FAIL: proof store retained entries for removed proxies; want pruned: %+v", reloaded.slots[removedKey])
+	}
+	if _, ok := reloaded.slots[expiredKey]; ok {
+		t.Fatalf("FAIL: proof store retained expired entries; want pruned: %+v", reloaded.slots[expiredKey])
+	}
+	if _, ok := reloaded.slots[activeKey]; !ok {
+		t.Fatalf("FAIL: active proxy entry was unexpectedly pruned")
+	}
+}
+
+// When entries exceed the maximum allowed capacity, the oldest records are pruned
+// so the store file stays strictly bounded.
+func TestProofStoreEntryBound(t *testing.T) {
+	dir := t.TempDir()
+	store := loadLegacyImportProofStore(dir)
+	claim := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("test-key-material-0123456789012345")),
+		TokenFP:   legacyImportFingerprint([]byte("test-token-jwt-material-0123456789")),
+	}
+
+	const total = legacyImportProofStoreMaxEntries + 50
+	for i := 0; i < total; i++ {
+		key := fmt.Sprintf("proxy-%d.jwt", i)
+		store.record(key, claim, "server_key")
+	}
+
+	if err := store.flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	reloaded := loadLegacyImportProofStore(dir)
+	if len(reloaded.slots) > legacyImportProofStoreMaxEntries {
+		t.Fatalf("FAIL: proof store entry count %d exceeds max %d", len(reloaded.slots), legacyImportProofStoreMaxEntries)
+	}
+}
+
+
 
 
 
