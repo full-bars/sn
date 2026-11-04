@@ -81,6 +81,7 @@ type legacyImportProofRecord struct {
 	Rejections      int    `json:"rejections,omitempty"`
 	LastRejection   string `json:"last_rejection,omitempty"`
 	LastRejectionAt int64  `json:"last_rejection_at,omitempty"`
+	RejectionSeq    int64  `json:"rejection_seq,omitempty"`
 }
 
 // ProvesProxyReachability reports whether this proof record verifies proxy health.
@@ -128,6 +129,11 @@ func legacyImportProofKey(slot *legacyImportSlot) string {
 // wellFormed rejects a record that cannot be a proof this code wrote. Nothing
 // malformed is ever trusted; it is dropped and proven live.
 func (self legacyImportProofRecord) wellFormed() bool {
+	if self.ProvenAt == 0 && self.Rejections > 0 {
+		if self.ClientID == "" && self.NetworkID == "" {
+			return self.LastRejectionAt >= 0 && self.RejectionSeq >= 0
+		}
+	}
 	if id, err := connect.ParseId(self.ClientID); err != nil || id.String() != self.ClientID {
 		return false
 	}
@@ -156,10 +162,10 @@ type legacyImportProofStore struct {
 	path string
 	now  func() time.Time
 
-	mu       sync.Mutex
-	slots    map[string]legacyImportProofRecord
-	dirty    map[string]bool
-	reproved map[string]bool
+	mu         sync.Mutex
+	slots      map[string]legacyImportProofRecord
+	dirty      map[string]bool
+	reproved   map[string]int64
 	activeKeys map[string]bool
 	// corrupt names why the file could not be used (empty when it was read or
 	// absent); dropped counts records discarded as malformed.
@@ -176,7 +182,7 @@ func loadLegacyImportProofStore(stateDir string) *legacyImportProofStore {
 		now:      time.Now,
 		slots:    map[string]legacyImportProofRecord{},
 		dirty:    map[string]bool{},
-		reproved: map[string]bool{},
+		reproved: map[string]int64{},
 	}
 	slots, dropped, corrupt := readLegacyImportProofFile(store.path)
 	store.slots = slots
@@ -262,9 +268,13 @@ func (self *legacyImportProofStore) record(key string, claim legacyImportProofCl
 	defer self.mu.Unlock()
 	if prev, ok := self.slots[key]; ok && (prev.Rejections > 0 || prev.ProvenAt == 0) {
 		if self.reproved == nil {
-			self.reproved = map[string]bool{}
+			self.reproved = map[string]int64{}
 		}
-		self.reproved[key] = true
+		seq := prev.RejectionSeq
+		if seq == 0 && prev.Rejections > 0 {
+			seq = int64(prev.Rejections)
+		}
+		self.reproved[key] = seq
 	}
 	self.slots[key] = legacyImportProofRecord{
 		ClientID:  claim.ClientID,
@@ -306,7 +316,8 @@ func (self *legacyImportProofStore) flush() error {
 				// A proof record carrying a rejection can never be replaced by a proof record
 				// without one, unless it was a fresh live proof explicitly executed to reprove
 				// after seeing that rejection and no newer rejection has landed on disk.
-				if !self.reproved[key] || existing.LastRejectionAt > record.ProvenAt {
+				reprovedSeq, wasReproved := self.reproved[key]
+				if !wasReproved || existing.RejectionSeq > reprovedSeq || (existing.RejectionSeq == 0 && existing.Rejections > int(reprovedSeq)) || existing.LastRejectionAt > record.ProvenAt || (existing.LastRejectionAt == record.ProvenAt && existing.Rejections > int(reprovedSeq)) {
 					self.slots[key] = existing
 					continue
 				}
@@ -376,10 +387,10 @@ func noteLegacyImportProofRejected(stateDir, key, reason string) error {
 	if stateDir == "" || key == "" {
 		return nil
 	}
-	path := filepath.Join(stateDir, legacyImportProofStoreName)
-	if _, err := os.Stat(path); err != nil {
-		return nil
+	if err := os.MkdirAll(stateDir, 0o700); err != nil {
+		return err
 	}
+	path := filepath.Join(stateDir, legacyImportProofStoreName)
 	release, err := acquireFileLock(path)
 	if err != nil {
 		return err
@@ -388,14 +399,25 @@ func noteLegacyImportProofRejected(stateDir, key, reason string) error {
 	slots, _, _ := readLegacyImportProofFile(path)
 	record, ok := slots[key]
 	if !ok {
-		return nil
+		tlog("⚠️ [import] proof rejection recorded for slot without prior stored proof: %s (%s)\n", key, reason)
+	}
+	var maxSeq int64
+	for _, r := range slots {
+		if r.RejectionSeq > maxSeq {
+			maxSeq = r.RejectionSeq
+		}
 	}
 	record.ProvenAt = 0
 	record.Rejections++
 	record.LastRejection = reason
 	record.LastRejectionAt = time.Now().Unix()
+	record.RejectionSeq = maxSeq + 1
 	slots[key] = record
-	raw, err := json.Marshal(legacyImportProofFile{Schema: legacyImportProofStoreSchema, Slots: slots})
+	raw, err := json.Marshal(legacyImportProofFile{
+		Schema:                 legacyImportProofStoreSchema,
+		CredentialValidityOnly: true,
+		Slots:                  slots,
+	})
 	if err != nil {
 		return err
 	}
