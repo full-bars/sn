@@ -84,17 +84,9 @@ type legacyImportProofRecord struct {
 	RejectionSeq    int64  `json:"rejection_seq,omitempty"`
 }
 
-// ProvesProxyReachability reports whether this proof record verifies proxy health.
-// It returns false: stored proofs establish credential validity only, not that
-// the slot's proxy works or is reachable.
-func (self legacyImportProofRecord) ProvesProxyReachability() bool {
-	return false
-}
-
 type legacyImportProofFile struct {
-	Schema                 string                             `json:"schema"`
-	CredentialValidityOnly bool                               `json:"credential_validity_only,omitempty"`
-	Slots                  map[string]legacyImportProofRecord `json:"slots"`
+	Schema string                             `json:"schema"`
+	Slots  map[string]legacyImportProofRecord `json:"slots"`
 }
 
 // legacyImportProofClaim is what a proof is a proof of. A record is usable only
@@ -367,9 +359,8 @@ func (self *legacyImportProofStore) flush() error {
 	}
 
 	raw, err := json.Marshal(legacyImportProofFile{
-		Schema:                 legacyImportProofStoreSchema,
-		CredentialValidityOnly: true,
-		Slots:                  merged,
+		Schema: legacyImportProofStoreSchema,
+		Slots:  merged,
 	})
 	if err != nil {
 		return err
@@ -417,9 +408,8 @@ func noteLegacyImportProofRejected(stateDir, key, reason string) error {
 	record.RejectionSeq = maxSeq + 1
 	slots[key] = record
 	raw, err := json.Marshal(legacyImportProofFile{
-		Schema:                 legacyImportProofStoreSchema,
-		CredentialValidityOnly: true,
-		Slots:                  slots,
+		Schema: legacyImportProofStoreSchema,
+		Slots:  slots,
 	})
 	if err != nil {
 		return err
