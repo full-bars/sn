@@ -453,8 +453,25 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		storeKey := legacyImportStoreKey(settings)
 		target := legacyImportTargetPath(opts.stateDir, identities, settings)
 		if _, err := os.Stat(target); err == nil {
-			custodied++
-			continue
+			// A minted fallback credential from a previous start lands on target.
+			// If this slot fell back due to a transient failure, do not permanently skip it:
+			// check if its cooldown has elapsed so it can re-admit and re-prove its old identity.
+			isTransientFallback := false
+			if recorded, ok := journal.Slots[storeKey]; ok && recorded.State == "fallback" && !legacyImportIsPermanentReason(recorded.Reason) {
+				if _, present := store[storeKey]; present {
+					fallbackAge := time.Duration(0)
+					if recorded.FallbackAt > 0 {
+						fallbackAge = time.Since(time.Unix(recorded.FallbackAt, 0))
+					}
+					if recorded.FallbackAt > 0 && fallbackAge >= legacyImportTransientFallbackCooldown {
+						isTransientFallback = true
+					}
+				}
+			}
+			if !isTransientFallback {
+				custodied++
+				continue
+			}
 		}
 		entry, present := store[storeKey]
 		if !present {
@@ -731,11 +748,18 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	imported = 0
 	for _, slot := range commit {
 		data := []byte(strings.TrimSpace(slot.entry.ByClientJWT))
-		if err := writeLegacyImportNewFile(slot.target, data); err != nil {
-			if errors.Is(err, os.ErrExist) {
+		var writeErr error
+		if _, statErr := os.Stat(slot.target); statErr == nil {
+			// A transient fallback recovery replaces the temporary minted fallback credential.
+			writeErr = writeLegacyImportStateFile(filepath.Dir(slot.target), filepath.Base(slot.target), data)
+		} else {
+			writeErr = writeLegacyImportNewFile(slot.target, data)
+		}
+		if writeErr != nil {
+			if errors.Is(writeErr, os.ErrExist) {
 				skip("credential_exists", filepath.Base(slot.target))
 			} else {
-				skip("credential_write_failed", filepath.Base(slot.target)+": "+err.Error())
+				skip("credential_write_failed", filepath.Base(slot.target)+": "+writeErr.Error())
 			}
 			continue
 		}

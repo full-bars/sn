@@ -1202,3 +1202,51 @@ func TestLegacyImportDoesNothingOnACaptureLaunch(t *testing.T) {
 	}
 	fixture.assertOriginalsUntouched()
 }
+
+// (4) after fallback, the mint writes the credential => cooldown re-admit moot?
+func TestVerify4CooldownMootAfterMint(t *testing.T) {
+	oc := legacyImportTransientFallbackCooldown
+	legacyImportTransientFallbackCooldown = 0
+	defer func() { legacyImportTransientFallbackCooldown = oc }()
+	ob := legacyImportTransientBackoff
+	legacyImportTransientBackoff = 0
+	defer func() { legacyImportTransientBackoff = ob }()
+	f := newLegacyImportFixture(t, true, 2)
+	stuck, comp := f.proxySettings[0], f.proxySettings[1]
+	store, _ := readLegacyStoreRaw(f)
+	delete(f.prover.serviceKey, f.proxyClientIDs[stuck.Key()])
+	f.prover.refreshErr[store[stuck.Key()].ByClientJWT] = &net.OpError{Op: "dial", Net: "tcp", Err: syscall.ETIMEDOUT}
+	for s := 1; s <= legacyImportDeferralStarts; s++ {
+		j := f.journal()
+		delete(j.Slots, comp.Key())
+		_ = os.Remove(f.target(comp))
+		_ = os.Remove(filepath.Join(f.dir, legacyImportProofStoreName))
+		writeLegacyImportJournal(f.dir, j)
+		f.run(legacyImportHooks{})
+	}
+	if r := f.journal().Slots[stuck.Key()]; r.Reason != "proof_unavailable_bound" {
+		t.Fatalf("setup %+v", r)
+	}
+	// the serving path now mints the new identity into the slot's credential file
+	if err := os.WriteFile(f.target(stuck), []byte("minted"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	delete(f.prover.refreshErr, store[stuck.Key()].ByClientJWT)
+	f.resetProverCounts()
+	f.run(legacyImportHooks{})
+	if _, refresh := f.proverCounts(); refresh == 0 {
+		t.Fatalf("old identity never re-proved once minted file exists; journal=%+v", f.journal().Slots[stuck.Key()])
+	}
+	// Verify that the old identity was successfully committed and imported
+	if r := f.journal().Slots[stuck.Key()]; r.State != "imported" {
+		t.Fatalf("want slot imported after healing, got: %+v", r)
+	}
+	targetData, err := os.ReadFile(f.target(stuck))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(targetData) != store[stuck.Key()].ByClientJWT {
+		t.Fatalf("target credential was not restored to old identity: got %q, want %q", string(targetData), store[stuck.Key()].ByClientJWT)
+	}
+}
+
