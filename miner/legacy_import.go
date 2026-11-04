@@ -160,6 +160,9 @@ func (self *sdkLegacyImportProver) RefreshAccepted(ctx context.Context, token st
 // builds one direct control-plane API whose dials prefer the host's working
 // family and are bounded at every step. A per-slot proxy is deliberately not
 // used so a dead proxy slot cannot silently discard the other slots.
+// Because the proof client dials the API directly, neither fresh live proofs
+// nor stored proofs test the slot's proxy: a proof establishes only that the
+// credential was valid at some point, not that the proxy works.
 
 // legacyImportHooks fail only at real durable write boundaries. Tests use
 // them to interrupt a commit and prove the next start recovers.
@@ -527,8 +530,11 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 	}
 
 	// A slot with a stored, still-usable proof of exactly this identity is
-	// adopted without a live call. Nothing is re-validated here: a proof the
-	// platform rejects is caught when the identity is first used.
+	// adopted without a live call. An adopted proof means only that the
+	// credential was valid at some point, not that the proxy works: the proof
+	// phase dials the control plane directly and does not test proxy reachability.
+	// Reachability and server-side revocation are observed when the identity
+	// and proxy are actually used.
 	if !adopt {
 		for _, slot := range slots {
 			if slot.state == "prove" && proofs.usable(legacyImportProofKey(slot), legacyImportProofClaimFor(slot, public)) {
