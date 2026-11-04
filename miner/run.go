@@ -1708,11 +1708,23 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			var refused *clientauth.RegistrationRefusedError
 			captureDenied := captureRefusal != nil && errors.As(err, &refused)
 			// The first real use of an identity the import adopted on a stored
-			// proof: if the platform refuses it, the proof is withdrawn so the
-			// next start proves this slot live instead of trusting it again.
+			// proof: if the platform refuses it, the proof is withdrawn and the
+			// slot re-proves immediately with a fresh mint rather than deferring
+			// to the next start.
 			if clientauth.IsClientRevoked(err) {
 				if noteErr := noteLegacyImportProofRejected(filepath.Dir(clientJwtPath), filepath.Base(clientJwtPath), "client_revoked"); noteErr != nil {
 					tlog("⚠️ [import] could not withdraw a rejected stored proof for %s: %v\n", display, noteErr)
+				}
+				if !captureDenied && allowCreate {
+					tlog("⚠️ [import] stored proof for %s was revoked; re-proving with fresh identity immediately\n", display)
+					if freshJwt, freshId, freshErr := authenticateProviderFresh(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, slot, allowCreate, output, index); freshErr == nil {
+						byClientJwt = freshJwt
+						clientId = freshId
+						reused = false
+						err = nil
+					} else {
+						tlog("⚠️ [import] immediate fresh identity fallback failed for %s: %v\n", display, freshErr)
+					}
 				}
 			}
 			if captureDenied {
