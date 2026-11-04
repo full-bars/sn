@@ -69,6 +69,30 @@ show_help ()
     echo "Need help? Email support@fullbars.xyz or visit <https://github.com/full-bars/sn>"
 }
 
+# Standalone installer: keep this helper in sync with the container wrappers.
+ensure_extender_cap ()
+(
+    [ "$(uname -s)" = Linux ] || return 0
+    cap_file=$1
+    cap_present() {
+        command -v getcap >/dev/null 2>&1 || return 1
+        getcap "$cap_file" 2>/dev/null | awk '
+            { for (i=2; i<=NF; i++) {
+                split($i, parts, "="); split(parts[1], caps, ",")
+                for (c in caps) if (caps[c] == "cap_net_bind_service" && parts[2] ~ /e/ && parts[2] ~ /p/) found=1
+            } } END { exit !found }'
+    }
+    if cap_present; then
+        return 0
+    fi
+    if command -v setcap >/dev/null 2>&1 && ${SUDO:-} setcap cap_net_bind_service=+ep "$cap_file" 2>/dev/null && cap_present; then
+        return 0
+    fi
+    quoted_file=$(printf '%s' "$cap_file" | sed "s/'/'\\\\''/g")
+    printf "WARNING: extender capability missing or unverified; run: sudo setcap cap_net_bind_service=+ep '%s'\n" "$quoted_file" >&2
+    return 0
+)
+
 get_arch ()
 {
     if command -v arch > /dev/null; then
@@ -1180,6 +1204,7 @@ EOF
                 # Check the restore before restarting: starting the service with
                 # the new binary still in place would only repeat the failure.
                 if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork"; then
+                    ensure_extender_cap "$install_path/bin/urnetwork"
                     pr_warn "Restored the previous provider binary; the update did not apply."
                     systemctl --user daemon-reload 2>/dev/null || true
                     if systemctl --user start urnetwork.service 2>/dev/null; then
@@ -1602,6 +1627,7 @@ openrc_rollback_binary_swap ()
     restore_failed=0
     if [ -f "$install_path/bin/urnetwork.old" ]; then
         if ${SUDO:-} mv -f "$install_path/bin/urnetwork.old" "$install_path/bin/urnetwork" 2>/dev/null; then
+            ensure_extender_cap "$install_path/bin/urnetwork"
             pr_warn "Restored the previous provider binary; the update did not apply."
         else
             restore_failed=1
@@ -1682,6 +1708,8 @@ openrc_finalize_root_paths ()
     # provider. The root dir is pinned 0755, not mode-dependent.
     ${SUDO:-} chmod -R go-w,a+rX "$install_path" 2>/dev/null || pr_warn "could not relax permissions on %s" "$install_path"
     ${SUDO:-} chmod 0755 "$install_path" 2>/dev/null || pr_warn "could not set mode on %s" "$install_path"
+    # Recursive chown clears file capabilities, even if ownership is unchanged.
+    [ ! -f "$install_path/bin/urnetwork" ] || ensure_extender_cap "$install_path/bin/urnetwork"
 
     # The STATE dir is the one thing that must stay somewhere the service
     # user can write — the provider writes its JWT and live state there.
@@ -2866,6 +2894,7 @@ do_install ()
             openrc_rollback_binary_swap
             exit 1
         fi
+        ensure_extender_cap "$install_path/bin/urnetwork"
     fi
 
     cd "$script_rundir" || exit 1
@@ -3387,6 +3416,7 @@ do_install ()
             openrc_rollback_binary_swap
             exit 1
         fi
+        ensure_extender_cap "$install_path/bin/urnetwork"
     fi
 
     cd "$script_rundir" || exit 1
