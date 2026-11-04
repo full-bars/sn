@@ -163,6 +163,9 @@ func runTop(ctx context.Context, scr tcellui.Screen, m *topModel, src topSource,
 				m.applyGroups(r.gen, r.groups, r.err)
 			default:
 				m.apply(r.gen, r.snap, r.err)
+				if m.showExtender {
+					m.refreshExtender()
+				}
 			}
 		case <-ticker.C:
 		}

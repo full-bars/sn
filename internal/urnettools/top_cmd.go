@@ -95,6 +95,7 @@ func cmdTop(args []string) error {
 		}
 	}
 	m := newTopModel(providers, cur, interval, tui.ThemeFromEnv(os.Getenv), time.Now)
+	m.refreshExtender()
 	if !demo && systemdDiscoveryCutShort {
 		m.discoveryNote = discoveryCutShortWarning(len(providers))
 	}

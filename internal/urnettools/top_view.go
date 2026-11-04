@@ -76,8 +76,11 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 	// rows and Internals takes the rest.
 	resRows := m.resourceRows() + 2
 	withInternals := m.hasInternals() && cols[1].H >= nowRows+resRows+topInternalsRows
+	withExtender := m.showExtender || m.extender.Source != ""
 	var side []tui.Rect
-	if withInternals {
+	if withExtender && withInternals && cols[1].H >= nowRows+resRows+topInternalsRows+m.extenderRows() {
+		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(resRows), tui.Fixed(m.extenderRows()), tui.Flex(1))
+	} else if withInternals {
 		side = tui.SplitRows(cols[1], tui.Fixed(nowRows), tui.Fixed(resRows), tui.Flex(1))
 	} else {
 		// Resources takes its content, not the rest of the column: a box of blank
@@ -104,12 +107,21 @@ func (m *topModel) drawFull(b *tui.Buffer) {
 	m.drawEvents(box(left[2], "Events"))
 	m.drawNow(box(side[0], "Now"))
 	m.drawResources(box(side[1], "Resources"))
-	if withInternals {
+	if withExtender && withInternals && len(side) > 3 {
+		m.drawExtender(box(side[2], "Extender"))
+		title := "Internals"
+		if m.rt.showing {
+			title = "Goroutines"
+		}
+		m.drawInternals(box(side[3], title))
+	} else if withInternals {
 		title := "Internals"
 		if m.rt.showing {
 			title = "Goroutines"
 		}
 		m.drawInternals(box(side[2], title))
+	} else if withExtender && len(side) > 2 && side[2].H >= 3 {
+		m.drawExtender(box(side[2], "Extender"))
 	}
 }
 
@@ -363,7 +375,38 @@ func (m *topModel) drawNow(b *tui.Buffer) {
 	th := m.theme
 	s := m.snap
 	if s == nil {
-		b.Put("no data", 0, 0, th.Dim)
+		if !m.showExtender && m.extender.Source == "" {
+			b.Put("no data", 0, 0, th.Dim)
+			return
+		}
+		p := m.provider()
+		y := 0
+		row := func(key, value string, style tui.Style) {
+			if y < b.Height() {
+				m.kv(b, y, key, value, style)
+				y++
+			}
+		}
+		statusVal := "socket offline"
+		if !p.Running {
+			statusVal = "stopped"
+		}
+		row("status", statusVal, th.Warn)
+		if p.Unit != "" {
+			row("unit", p.Unit, th.Dim)
+		}
+		if p.PID > 0 {
+			row("pid", strconv.Itoa(p.PID), th.Dim)
+		}
+		if p.User != "" {
+			row("user", p.User, th.Dim)
+		}
+		if p.Network != "" {
+			row("network", p.Network, th.Dim)
+		}
+		if p.StateDir != "" {
+			row("state-dir", p.StateDir, th.Dim)
+		}
 		return
 	}
 	stale := m.conn == topDisconnected
@@ -440,7 +483,16 @@ func (m *topModel) resourceRows() int {
 func (m *topModel) drawResources(b *tui.Buffer) {
 	th := m.theme
 	if m.snap == nil {
-		b.Put("no data", 0, 0, th.Dim)
+		if !m.showExtender && m.extender.Source == "" {
+			b.Put("no data", 0, 0, th.Dim)
+			return
+		}
+		p := m.provider()
+		if p.PID > 0 {
+			m.kvAt(b, 6, 0, "pid", strconv.Itoa(p.PID), th.Dim)
+		} else {
+			b.Put("socket offline", 0, 0, th.Dim)
+		}
 		return
 	}
 	r := m.snap.Resources
@@ -598,6 +650,69 @@ func topBytesPair(used, limit float64) string {
 	return fmt.Sprintf("%.0f/%.0f MiB", used/mib, limit/mib)
 }
 
+// drawExtender draws the extender role and activation status.
+func (m *topModel) drawExtender(b *tui.Buffer) {
+	th := m.theme
+	ex := m.extender
+	y := 0
+	row := func(key, value string, style tui.Style) {
+		if y < b.Height() {
+			m.kvAt(b, 12, y, key, value, style)
+			y++
+		}
+	}
+	row("source", ex.Source, th.Dim)
+	row("preference", ex.Preference, tui.Style{})
+	roleStyle := th.OK
+	if ex.RoleState == "stopped" || ex.RoleState == "disabled" || ex.RoleState == "unknown" {
+		roleStyle = th.Dim
+	} else if strings.Contains(ex.RoleState, "refused") || strings.Contains(ex.RoleState, "failed") {
+		roleStyle = th.Bad
+	}
+	row("role state", ex.RoleState, roleStyle)
+	carriers := ex.CarriersBound
+	if carriers == "" {
+		carriers = "none"
+	}
+	row("carriers", carriers, th.Dim)
+
+	v4 := "inactive"
+	if ex.ActivatedV4 {
+		v4 = "active"
+		if ex.Ipv4 != "" {
+			v4 += " (" + ex.Ipv4 + ")"
+		}
+	} else if ex.Ipv4 != "" {
+		v4 = "inactive (" + ex.Ipv4 + ")"
+	} else if ex.Source == SourceUnknown {
+		v4 = "unknown"
+	}
+	row("ipv4", v4, th.Dim)
+
+	v6 := "inactive"
+	if ex.ActivatedV6 {
+		v6 = "active"
+		if ex.Ipv6 != "" {
+			v6 += " (" + ex.Ipv6 + ")"
+		}
+	} else if ex.Ipv6 != "" {
+		v6 = "inactive (" + ex.Ipv6 + ")"
+	} else if ex.Source == SourceUnknown {
+		v6 = "unknown"
+	}
+	row("ipv6", v6, th.Dim)
+
+	if ex.LastRefusal != "" && ex.LastRefusal != "none" {
+		row("refusal", ex.LastRefusal, th.Warn)
+	}
+	if ex.NextAttempt != "" && ex.NextAttempt != "none" {
+		row("next try", ex.NextAttempt, th.Dim)
+	}
+	if ex.ConnectionCount > 0 {
+		row("conns", strconv.Itoa(ex.ConnectionCount), th.Dim)
+	}
+}
+
 // drawCompact is the single-panel view for terminals below topMin.
 func (m *topModel) drawCompact(b *tui.Buffer) {
 	th := m.theme
@@ -618,6 +733,9 @@ func (m *topModel) drawCompact(b *tui.Buffer) {
 			}
 			in.Put(tui.Spark(vals, in.Width(), th.ASCII), 0, 2, th.Graph)
 		}
+	}
+	if (m.showExtender || m.extender.Source != "") && in.Height() > 3 {
+		in.Put(tui.Truncate(fmt.Sprintf("extender: %s (%s)", m.extender.RoleState, m.extender.Source), in.Width(), th.ASCII), 0, in.Height()-2, th.Dim)
 	}
 	if in.Height() > 3 {
 		in.Put(tui.Truncate("q quit, enlarge for the full view", in.Width(), th.ASCII), 0, in.Height()-1, th.Dim)

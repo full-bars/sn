@@ -8,6 +8,7 @@
 package tcellui
 
 import (
+	"os"
 	"sync"
 	"sync/atomic"
 
@@ -90,6 +91,9 @@ type screen struct {
 // Open takes over the controlling terminal with the alternate screen and raw
 // input. It fails when there is no usable terminal.
 func Open() (Screen, error) {
+	if os.Getenv("TERM") == "" || os.Getenv("TERM") == "dumb" {
+		_ = os.Setenv("TERM", "xterm")
+	}
 	s, err := tcell.NewScreen()
 	if err != nil {
 		return nil, err

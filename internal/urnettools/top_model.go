@@ -147,8 +147,8 @@ type topModel struct {
 	// discoveryNote is the warning shown on the footer row when the provider
 	// list came from a pass that ran out of budget. Empty when it did not.
 	discoveryNote string
-	retry     time.Duration // pause between attempts on a silent provider
-	now       func() time.Time
+	retry         time.Duration // pause between attempts on a silent provider
+	now           func() time.Time
 
 	conn      topConn
 	snap      *NodeSnapshot // last good snapshot of the current provider
@@ -203,6 +203,9 @@ type topModel struct {
 	menuSel      int
 	menuNote     string
 
+	extender     ExtenderReading
+	showExtender bool
+
 	help bool
 	quit bool
 }
@@ -227,6 +230,17 @@ func (m *topModel) provider() Provider {
 		return Provider{}
 	}
 	return m.providers[m.cur]
+}
+
+func (m *topModel) refreshExtender() {
+	if len(m.providers) > 0 && m.cur < len(m.providers) {
+		m.extender = ReadExtenderStatus(m.providers[m.cur])
+		m.showExtender = true
+	}
+}
+
+func (m *topModel) extenderRows() int {
+	return 6
 }
 
 // wantFetch reports whether a snapshot should be requested now and, if so,
@@ -609,6 +623,9 @@ func (m *topModel) selectProvider(delta int) topEffect {
 	showing := m.rt.showing
 	m.rt.reset()
 	m.rt.showing = showing // the view choice is the user's, not the provider's
+	if m.showExtender {
+		m.refreshExtender()
+	}
 	return topRefetch
 }
 
