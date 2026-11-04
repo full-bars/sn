@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/urfoundation/sn/internal/tui"
-	"go.etcd.io/bbolt"
 )
 
 // mockPlatformConfigurer records calls and simulates platform checks.
@@ -778,30 +777,13 @@ func TestExtender_RealFilesFallbackIntegration(t *testing.T) {
 		t.Fatalf("expected ipv4 198.51.100.5, got %q", reading.Ipv4)
 	}
 
-	// 3. Add provider_state.db (bbolt) -> state takes precedence over events.log
-	dbPath := filepath.Join(dir, "provider_state.db")
-	db, err := bbolt.Open(dbPath, 0600, nil)
-	if err != nil {
+	// 3. A provider_state.db beside the log is never opened by urnet-tools, so
+	// the log still answers.
+	if err := os.WriteFile(filepath.Join(dir, "provider_state.db"), []byte("not a database"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	err = db.Update(func(tx *bbolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte("state"))
-		if err != nil {
-			return err
-		}
-		rec := `{"last_refusal_unix":1700000000,"backoff_until_unix":1700000600,"refusals":1}`
-		return b.Put([]byte("extender_activation"), []byte(rec))
-	})
-	db.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	reading = ReadExtenderStatus(p)
-	if reading.Source != SourcePersistedState {
-		t.Fatalf("expected SourcePersistedState over log, got %q", reading.Source)
-	}
-	if !strings.Contains(reading.LastRefusal, "1 refusals") {
-		t.Fatalf("expected refusal detail in persisted state reading, got %q", reading.LastRefusal)
+	if reading.Source != SourceLog {
+		t.Fatalf("expected SourceLog with a state db present, got %q", reading.Source)
 	}
 }

@@ -12,8 +12,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"go.etcd.io/bbolt"
 )
 
 // Extender reading source names.
@@ -224,111 +222,16 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 	}, nil
 }
 
-// readExtenderFromState reads extender activation records from persisted state (provider_state.db).
+// readExtenderFromState is the persisted-state tier of the fallback order.
+//
+// urnet-tools never opens provider_state.db: the provider holds it under an
+// exclusive lock and a second reader either blocks or contends with it, so the
+// store is out of reach for this package (miner.TestStateUrnetToolsDoesNotImportProviderStore
+// enforces that no file here imports bbolt). The tier stays as a seam, and
+// reports unavailable until the provider publishes its activation budget some
+// other way; the fallback then continues to events.log.
 func readExtenderFromState(p Provider) (*ExtenderReading, error) {
-	if p.StateDir == "" {
-		return nil, errors.New("no state directory")
-	}
-	dbPath := filepath.Join(p.StateDir, "provider_state.db")
-	db, err := bbolt.Open(dbPath, 0600, &bbolt.Options{ReadOnly: true, Timeout: 100 * time.Millisecond})
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	var recordBytes []byte
-	err = db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("state"))
-		if b == nil {
-			return errors.New("no state bucket")
-		}
-		v := b.Get([]byte("extender_activation"))
-		if v == nil {
-			return errors.New("no extender_activation key")
-		}
-		recordBytes = make([]byte, len(v))
-		copy(recordBytes, v)
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	type activationRecord struct {
-		Accounts map[string]struct {
-			Attempts         []int64 `json:"attempts,omitempty"`
-			BackoffUntilUnix int64   `json:"backoff_until_unix,omitempty"`
-			Refusals         int     `json:"refusals,omitempty"`
-			LastRefusalUnix  int64   `json:"last_refusal_unix,omitempty"`
-		} `json:"accounts,omitempty"`
-		QuarantineUntilUnix int64   `json:"quarantine_until_unix,omitempty"`
-		Attempts            []int64 `json:"attempts,omitempty"`
-		BackoffUntilUnix    int64   `json:"backoff_until_unix,omitempty"`
-		Refusals            int     `json:"refusals,omitempty"`
-		LastRefusalUnix     int64   `json:"last_refusal_unix,omitempty"`
-	}
-
-	var rec activationRecord
-	if err := json.Unmarshal(recordBytes, &rec); err != nil {
-		return nil, err
-	}
-
-	lastRefusalUnix := rec.LastRefusalUnix
-	backoffUntilUnix := rec.BackoffUntilUnix
-	refusals := rec.Refusals
-	totalAttempts := len(rec.Attempts)
-
-	for _, acc := range rec.Accounts {
-		if acc.LastRefusalUnix > lastRefusalUnix {
-			lastRefusalUnix = acc.LastRefusalUnix
-		}
-		if acc.BackoffUntilUnix > backoffUntilUnix {
-			backoffUntilUnix = acc.BackoffUntilUnix
-		}
-		refusals += acc.Refusals
-		totalAttempts += len(acc.Attempts)
-	}
-
-	if lastRefusalUnix == 0 && backoffUntilUnix == 0 && totalAttempts == 0 && len(rec.Accounts) == 0 {
-		return nil, errors.New("empty extender activation record")
-	}
-
-	pref := ReadRolePreference(p.StateDir)
-	roleState := "stopped"
-	nowUnix := time.Now().Unix()
-	if backoffUntilUnix > nowUnix {
-		roleState = "refused (persisted backoff)"
-	} else if p.Running {
-		roleState = "inactive (persisted state)"
-	}
-
-	lastRefusal := "none"
-	if lastRefusalUnix > 0 {
-		lastRefusal = time.Unix(lastRefusalUnix, 0).Format("2006-01-02 15:04:05")
-		if refusals > 0 {
-			lastRefusal += fmt.Sprintf(" (%d refusals)", refusals)
-		}
-	}
-
-	nextAttempt := "immediate"
-	if backoffUntilUnix > nowUnix {
-		wait := time.Duration(backoffUntilUnix-nowUnix) * time.Second
-		nextAttempt = fmt.Sprintf("in %s", wait.Round(time.Second))
-	} else if backoffUntilUnix > 0 {
-		nextAttempt = "immediate (backoff elapsed)"
-	}
-
-	return &ExtenderReading{
-		Source:        SourcePersistedState,
-		Preference:    pref,
-		RoleState:     roleState,
-		Bound:         false,
-		CarriersBound: "none",
-		ActivatedV4:   false,
-		ActivatedV6:   false,
-		LastRefusal:   lastRefusal,
-		NextAttempt:   nextAttempt,
-	}, nil
+	return nil, errors.New("persisted state is read only by the provider")
 }
 
 // readExtenderFromLog reads the most recent extender observation from events.log.
