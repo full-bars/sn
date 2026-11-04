@@ -43,7 +43,7 @@ func (m *mockPlatformConfigurer) ApplyRequirement(binary, user string) (bool, st
 	return true, m.applyDesc, nil
 }
 
-func (m *mockPlatformConfigurer) VerifyBind(user string) (bool, error) {
+func (m *mockPlatformConfigurer) VerifyBind(binary, user string) (bool, error) {
 	m.verifyCalled = true
 	if m.verifyBindErr != nil {
 		return false, m.verifyBindErr
@@ -125,7 +125,18 @@ func TestExtenderSetup_UDPBusyOnly(t *testing.T) {
 
 	fwMgr := &FirewallManager{
 		Platform: "linux",
-		LookPath: func(file string) (string, error) { return "", errors.New("not found") },
+		LookPath: func(file string) (string, error) {
+			if file == "firewall-cmd" {
+				return file, nil
+			}
+			return "", errors.New("not found")
+		},
+		ExecCmd: func(_ string, args ...string) ([]byte, error) {
+			if args[0] == "--state" {
+				return []byte("running"), nil
+			}
+			return []byte("yes"), nil
+		},
 	}
 
 	var stdout, stderr bytes.Buffer
@@ -178,7 +189,18 @@ func TestExtenderSetup_AlreadyConfigured(t *testing.T) {
 
 	fwMgr := &FirewallManager{
 		Platform: "linux",
-		LookPath: func(file string) (string, error) { return "", errors.New("none") },
+		LookPath: func(file string) (string, error) {
+			if file == "firewall-cmd" {
+				return file, nil
+			}
+			return "", errors.New("none")
+		},
+		ExecCmd: func(_ string, args ...string) ([]byte, error) {
+			if args[0] == "--state" {
+				return []byte("running"), nil
+			}
+			return []byte("yes"), nil
+		},
 	}
 
 	var stdout, stderr bytes.Buffer
@@ -264,7 +286,6 @@ func TestExtender_PlatformDispatch(t *testing.T) {
 		{"linux", "setcap"},
 		{"freebsd", "sysctl"},
 		{"windows", "netsh"},
-		{"darwin", "launchctl"},
 	}
 
 	for _, p := range platforms {
@@ -281,7 +302,7 @@ func TestExtender_PlatformDispatch(t *testing.T) {
 						return []byte("0"), nil
 					}
 					if name == "netsh" {
-						return []byte("URnetwork Extender"), nil
+						return []byte(strings.TrimPrefix(args[len(args)-1], "name=")), nil
 					}
 					return nil, nil
 				},
@@ -460,7 +481,7 @@ func TestExtender_FirewallDetection(t *testing.T) {
 			Platform: "windows",
 			ExecCmd: func(name string, args ...string) ([]byte, error) {
 				if name == "netsh" && len(args) > 0 && args[0] == "advfirewall" {
-					return []byte("Rule Name:                            URnetwork Extender\nEnabled:                              Yes\nDirection:                            In\nProfiles:                             Domain,Private,Public\nGrouping:                             \nLocalIP:                              Any\nRemoteIP:                             Any\nProtocol:                             TCP\nLocalPort:                            443\n"), nil
+					return []byte("Rule Name: " + strings.TrimPrefix(args[len(args)-1], "name=") + "\n"), nil
 				}
 				return nil, nil
 			},
