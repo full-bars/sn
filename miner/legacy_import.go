@@ -552,9 +552,10 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		slots = append(slots, slot)
 	}
 
-	activeKeys := make(map[string]bool, len(slots))
-	for _, slot := range slots {
-		activeKeys[legacyImportProofKey(slot)] = true
+	activeKeys := make(map[string]bool, len(providers))
+	for _, settings := range providers {
+		target := legacyImportTargetPath(opts.stateDir, identities, settings)
+		activeKeys[filepath.Base(target)] = true
 	}
 	proofs.setActiveKeys(activeKeys)
 

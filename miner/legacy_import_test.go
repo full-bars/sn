@@ -1250,3 +1250,42 @@ func TestVerify4CooldownMootAfterMint(t *testing.T) {
 	}
 }
 
+// (5) An already-custodied slot's proof must not be pruned when another slot flushes
+func TestVerify5LiveProxyNotPruned(t *testing.T) {
+	f := newLegacyImportFixture(t, false, 2)
+	marker, err := clientauth.ProviderKeyIdentityMarker(f.seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(f.dir, legacyProviderMarkerName), marker, 0600); err != nil {
+		t.Fatal(err)
+	}
+	custodiedSlot := f.proxySettings[0]
+	if err := os.WriteFile(f.target(custodiedSlot), []byte("custodied"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	claim := legacyImportProofClaim{
+		ClientID:  connect.NewId().String(),
+		NetworkID: connect.NewId().String(),
+		KeyFP:     legacyImportFingerprint([]byte("k")),
+		TokenFP:   legacyImportFingerprint([]byte("t")),
+	}
+	custodiedKey := filepath.Base(f.target(custodiedSlot))
+	ps := loadLegacyImportProofStore(f.dir)
+	ps.record(custodiedKey, claim, "server_key")
+	if err := ps.flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	// comp (proxySettings[1]) will prove live, causing opts.proofs to flush.
+	// In the un-fixed code, activeKeys is built from slots (excluding custodiedSlot),
+	// so custodiedKey is pruned during the flush!
+	f.run(legacyImportHooks{})
+
+	reloaded := loadLegacyImportProofStore(f.dir)
+	if _, ok := reloaded.slots[custodiedKey]; !ok {
+		t.Fatalf("FAIL: live custodied proxy %s was pruned from proof store because activeKeys excluded it", custodiedKey)
+	}
+}
+
+
