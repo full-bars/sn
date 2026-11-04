@@ -143,6 +143,23 @@ func TestLogsPlatformCheck(t *testing.T) {
 	}
 }
 
+// A Windows provider never carries a systemd unit. cmdLogs must print the
+// "not supported" notice and succeed, not fall into the unitless error: the
+// Windows check has to run before the unit lookup.
+func TestCmdLogsOnWindowsWithoutUnitSucceeds(t *testing.T) {
+	origGOOS := logsGOOS
+	logsGOOS = "windows"
+	t.Cleanup(func() { logsGOOS = origGOOS })
+
+	dir := t.TempDir()
+	p := Provider{User: currentUserName(), StateDir: dir, Running: true}
+	stubDiscovery(t, []Provider{p}, nil)
+
+	if err := cmdLogs(nil); err != nil {
+		t.Fatalf("cmdLogs on Windows without a unit = %v, want nil", err)
+	}
+}
+
 // The root help must describe what `logs` actually accepts: a target and an
 // optional line count. `all`, `dump` and `-i` were documented but never
 // implemented, and cmdLogs rejects them as unexpected arguments.
