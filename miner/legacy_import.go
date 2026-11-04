@@ -751,7 +751,14 @@ func runLegacyProviderImport(ctx context.Context, opts legacyImportOptions) lega
 		data := []byte(strings.TrimSpace(slot.entry.ByClientJWT))
 		var writeErr error
 		if _, statErr := os.Stat(slot.target); statErr == nil {
-			// A transient fallback recovery replaces the temporary minted fallback credential.
+			// Never replace a different credential or any registration custody.
+			// A matching token with no sidecars can safely be refreshed in place.
+			current, readErr := clientauth.ReadToken(slot.target)
+			custody, globErr := filepath.Glob(slot.target + ".*")
+			if readErr != nil || jwtClientId(current) != slot.entry.ClientID || globErr != nil || len(custody) != 0 {
+				skip("sn_custody_present", filepath.Base(slot.target))
+				continue
+			}
 			writeErr = writeLegacyImportStateFile(filepath.Dir(slot.target), filepath.Base(slot.target), data)
 		} else {
 			writeErr = writeLegacyImportNewFile(slot.target, data)

@@ -1252,16 +1252,58 @@ func TestVerify4CooldownMootAfterMint(t *testing.T) {
 	if _, refresh := f.proverCounts(); refresh == 0 {
 		t.Fatalf("old identity never re-proved once minted file exists; journal=%+v", f.journal().Slots[stuck.Key()])
 	}
-	// Verify that the old identity was successfully committed and imported
-	if r := f.journal().Slots[stuck.Key()]; r.State != "imported" {
-		t.Fatalf("want slot imported after healing, got: %+v", r)
+	// The original identity was proven, but the minted identity owns the
+	// credential file and must not be replaced without matching custody.
+	proof := f.proofFile().Slots[filepath.Base(f.target(stuck))]
+	if proof.ClientID != store[stuck.Key()].ClientID || proof.ProvenAt == 0 {
+		t.Fatalf("cooldown proved the wrong identity: %+v", proof)
+	}
+	if r := f.journal().Slots[stuck.Key()]; r.State != "fallback" {
+		t.Fatalf("want custody conflict to retain fallback, got: %+v", r)
 	}
 	targetData, err := os.ReadFile(f.target(stuck))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(targetData) != store[stuck.Key()].ByClientJWT {
-		t.Fatalf("target credential was not restored to old identity: got %q, want %q", string(targetData), store[stuck.Key()].ByClientJWT)
+	if string(targetData) != mintedJWT {
+		t.Fatal("recovery replaced the minted credential")
+	}
+}
+
+func TestImportCooldownPreservesDifferentCustodiedIdentity(t *testing.T) {
+	oldCooldown := legacyImportTransientFallbackCooldown
+	legacyImportTransientFallbackCooldown = 0
+	defer func() { legacyImportTransientFallbackCooldown = oldCooldown }()
+	f := newLegacyImportFixture(t, true, 1)
+	slot := f.proxySettings[0]
+	store, err := readLegacyStoreRaw(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	marker, err := clientauth.ProviderKeyIdentityMarker(f.seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.write(legacyProviderMarkerName, marker)
+	minted := legacyTestClientToken(f.networkID, connect.NewId().String(), connect.NewId().String())
+	if err := os.WriteFile(f.target(slot), []byte(minted), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(f.target(slot)+".registration", []byte("minted custody"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	journal := newLegacyImportJournal()
+	journal.Slots[slot.Key()] = legacyImportJournalSlot{State: "fallback", Reason: "proof_unavailable_bound", ClientID: store[slot.Key()].ClientID, FallbackAt: time.Now().Add(-time.Hour).Unix()}
+	if err := writeLegacyImportJournal(f.dir, journal); err != nil {
+		t.Fatal(err)
+	}
+	f.run(legacyImportHooks{})
+	got, err := os.ReadFile(f.target(slot))
+	if err != nil || string(got) != minted {
+		t.Fatalf("recovery replaced another identity's custody: %v", err)
+	}
+	if got := f.journal().Slots[slot.Key()]; got.State != "fallback" {
+		t.Fatalf("custody conflict was journaled as imported: %+v", got)
 	}
 }
 
@@ -1302,5 +1344,3 @@ func TestVerify5LiveProxyNotPruned(t *testing.T) {
 		t.Fatalf("FAIL: live custodied proxy %s was pruned from proof store because activeKeys excluded it", custodiedKey)
 	}
 }
-
-
