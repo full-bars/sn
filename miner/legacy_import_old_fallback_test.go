@@ -3,12 +3,42 @@ package miner
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/urnetwork/connect"
 )
+
+func TestImportFallbackLogoutKeepsDifferentOriginalIdentity(t *testing.T) {
+	f := newLegacyImportFixture(t, true, 1)
+	slot := f.proxySettings[0]
+	store, err := readLegacyStoreRaw(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := store[slot.Key()]
+	j := newLegacyImportJournal()
+	j.Slots[slot.Key()] = legacyImportJournalSlot{State: "fallback", Reason: "proof_unavailable_bound", ClientID: original.ClientID, FallbackAt: time.Now().Unix()}
+	if err := writeLegacyImportJournal(f.dir, j); err != nil {
+		t.Fatal(err)
+	}
+	minted := legacyTestClientToken(f.networkID, connect.NewId().String(), connect.NewId().String())
+	if err := os.WriteFile(f.target(slot), []byte(minted), 0600); err != nil {
+		t.Fatal(err)
+	}
+	defer withGlobalStore(t, filepath.Join(f.dir, legacyClientJwtStoreName))()
+	callbacks := &providerAuthenticationCallbacks{clientJwtPath: f.target(slot), networkJwtPath: filepath.Join(f.dir, "jwt"), identityKey: slot.Key(), cancel: func() {}}
+	callbacks.AuthLogout()
+	got, err := readLegacyStoreRaw(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got[slot.Key()].ClientID != original.ClientID {
+		t.Fatal("minted identity logout deleted the original fallback identity")
+	}
+}
 
 func TestImportFallbackPreservesOldStoreEntryAcrossMintAndOtherWrites(t *testing.T) {
 	f := newLegacyImportFixture(t, true, 1)
