@@ -22,6 +22,13 @@ func TestJWTStoreFailedRenameIsNotLoggedAsSave(t *testing.T) {
 	if strings.Contains(out, "client_jwt_store: save") || s.flushes != 0 || s.attempts != 1 {
 		t.Fatalf("failed rename counted as save: attempts=%d flushes=%d log=%s", s.attempts, s.flushes, out)
 	}
+	left, err := filepath.Glob(filepath.Join(filepath.Dir(path), ".client_jwts-*.tmp"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(left) != 0 {
+		t.Fatalf("temp files left after failed rename: %v", left)
+	}
 	if err := os.Remove(path); err != nil {
 		t.Fatal(err)
 	}
