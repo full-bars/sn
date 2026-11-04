@@ -382,7 +382,9 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 	if cfg.ClientJwtPath != "" {
 		journal, journalErr := readLegacyImportJournal(filepath.Dir(cfg.ClientJwtPath))
 		if journalErr != nil {
-			return "", connect.Id{}, false, fmt.Errorf("read legacy import decisions: %w", journalErr)
+			// An unreadable journal can hide a fallback even when no proof exists.
+			// Refuse every slot rather than guess which identities are involved.
+			return "", connect.Id{}, false, fmt.Errorf("provider refuses to authenticate until legacy import journal %s is readable: %w", filepath.Join(filepath.Dir(cfg.ClientJwtPath), legacyImportJournalName), journalErr)
 		}
 		if recorded, ok := journal.Slots[identityKey]; ok && legacyImportPreservesEntry(recorded) {
 			if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok && entry.ClientID == recorded.ClientID {
