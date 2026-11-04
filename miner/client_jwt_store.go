@@ -51,10 +51,8 @@ type clientJWTStore struct {
 	// skipped counts flushes whose merged result was byte-identical to the
 	// file already on disk, so nothing was written.
 	skipped int
-	// lastSkipLog is the timestamp when skip was last logged.
-	lastSkipLog time.Time
-	// skipsSinceLog counts skips since the last skip log was emitted.
-	skipsSinceLog int
+	// attempts counts rewrite attempts, including failed writes.
+	attempts int
 	// clock is the time source for durations and logs; nil means time.Now.
 	clock func() time.Time
 }
@@ -543,16 +541,10 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 
 	if diskBytes != nil && bytes.Equal(data, diskBytes) {
 		s.skipped++
-		s.logSkipLocked(len(merged))
+		tlog("client_jwt_store: skip write %d entries (identical content)\n", len(merged))
 		return nil
 	}
-	s.flushes++
-
-	dur := s.now().Sub(start)
-	if dur < 0 {
-		dur = 0
-	}
-	tlog("client_jwt_store: save %d entries cause=%s replaced=%d duration=%dms\n", len(merged), cause, replaced, dur.Milliseconds())
+	s.attempts++
 
 	// Use unpredictable temp file to prevent collisions with concurrent writers (F-9)
 	tmpFile, err := os.CreateTemp(dir, ".client_jwts-*.tmp")
@@ -581,19 +573,15 @@ func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, del
 		return err
 	}
 
-	return os.Rename(tmpPath, s.path)
-}
-
-// logSkipLocked rate-limits the skipped-write log line to at most once per
-// minute so rapid repeated no-op flushes do not flood the journal.
-func (s *clientJWTStore) logSkipLocked(entries int) {
-	s.skipsSinceLog++
-	now := s.now()
-	if !s.lastSkipLog.IsZero() && now.Sub(s.lastSkipLog) < time.Minute {
-		return
+	if err := os.Rename(tmpPath, s.path); err != nil {
+		os.Remove(tmpPath)
+		return err
 	}
-	suppressed := s.skipsSinceLog - 1
-	s.lastSkipLog = now
-	s.skipsSinceLog = 0
-	tlog("client_jwt_store: skip write %d entries (identical content, %d suppressed)\n", entries, suppressed)
+	s.flushes++
+	dur := s.now().Sub(start)
+	if dur < 0 {
+		dur = 0
+	}
+	tlog("client_jwt_store: save %d entries cause=%s replaced=%d duration=%dms attempts=%d completed=%d\n", len(merged), cause, replaced, dur.Milliseconds(), s.attempts, s.flushes)
+	return nil
 }

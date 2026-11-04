@@ -3,7 +3,6 @@ package miner
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 )
@@ -213,64 +212,5 @@ func TestClientJWTStoreDeleteAlreadyMissingKeyWritesNothing(t *testing.T) {
 	}
 	if store.flushes != flushesBefore || store.skipped != skipsBefore+1 {
 		t.Fatalf("flushes=%d (want %d) skipped=%d (want %d)", store.flushes, flushesBefore, store.skipped, skipsBefore+1)
-	}
-}
-
-// Tests that skip logging is rate-limited to at most once per minute and suppresses bursts.
-func TestClientJWTStoreSkipLoggingRateLimited(t *testing.T) {
-	dir := t.TempDir()
-	path := filepath.Join(dir, "client_jwts.json")
-	store := newClientJWTStore(path)
-
-	baseTime := time.Date(2026, 11, 3, 12, 0, 0, 0, time.UTC)
-	clock := baseTime
-	store.clock = func() time.Time {
-		return clock
-	}
-
-	entry := clientJWTEntry{
-		ByClientJWT: "token-stable",
-		ClientID:    testClientId,
-		NetworkID:   "net-1",
-		MintedAt:    baseTime,
-	}
-
-	// Initial write
-	if err := store.Put("proxy-1", entry); err != nil {
-		t.Fatal(err)
-	}
-
-	// First skip logs immediately with 0 suppressed
-	out := captureTlog(t, func() {
-		if err := store.Put("proxy-1", entry); err != nil {
-			t.Fatal(err)
-		}
-	})
-	if !strings.Contains(out, "client_jwt_store: skip write 1 entries (identical content, 0 suppressed)") {
-		t.Fatalf("expected first skip log, got:\n%s", out)
-	}
-
-	// Next 4 identical puts within the minute must be suppressed (no log output)
-	out = captureTlog(t, func() {
-		for i := 0; i < 4; i++ {
-			clock = clock.Add(5 * time.Second)
-			if err := store.Put("proxy-1", entry); err != nil {
-				t.Fatal(err)
-			}
-		}
-	})
-	if strings.Contains(out, "skip write") {
-		t.Fatalf("expected suppressed skips to produce no log output within 1m, got:\n%s", out)
-	}
-
-	// Advance clock past 1 minute; next skip must report the 4 suppressed writes
-	clock = clock.Add(2 * time.Minute)
-	out = captureTlog(t, func() {
-		if err := store.Put("proxy-1", entry); err != nil {
-			t.Fatal(err)
-		}
-	})
-	if !strings.Contains(out, "client_jwt_store: skip write 1 entries (identical content, 4 suppressed)") {
-		t.Fatalf("expected skip log reporting 4 suppressed, got:\n%s", out)
 	}
 }
