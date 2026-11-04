@@ -769,11 +769,3 @@ func TestVerify2RejectBeforeFlush(t *testing.T) {
 		t.Fatal("rejection before first flush lost (proof usable)")
 	}
 }
-
-
-
-
-
-
-
-

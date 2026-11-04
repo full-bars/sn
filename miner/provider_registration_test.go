@@ -1117,5 +1117,3 @@ func TestVerify3ImmediateReproofScenario(t *testing.T) {
 	_ = initialJwt
 	_ = reprovedJwt
 }
-
-
