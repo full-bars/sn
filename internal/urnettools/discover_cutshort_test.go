@@ -138,6 +138,24 @@ func TestTopFooterWarnsWithoutShiftingTheTable(t *testing.T) {
 	}
 }
 
+// The warning must remain complete in both compact and full layouts, even
+// when it takes more than one row.
+func TestTopDiscoveryWarningFitsLayouts(t *testing.T) {
+	for _, size := range []struct{ w, h int }{{60, 10}, {40, 8}, {72, 20}, {120, 40}} {
+		m := newTestModel(tui.DefaultTheme(), topProviders(1), &fakeClock{t: topBase})
+		m.discoveryNote = discoveryCutShortWarning(1)
+		b := tui.New(size.w, size.h)
+		m.render(b)
+		var text []string
+		for _, line := range strings.Split(b.String(), "\n") {
+			text = append(text, strings.Trim(line, " │"))
+		}
+		if !strings.Contains(strings.Join(text, " "), m.discoveryNote) {
+			t.Errorf("%dx%d: warning missing or truncated:\n%s", size.w, size.h, b.String())
+		}
+	}
+}
+
 // End to end: a cut pass with one provider puts the warning on the screen.
 func TestCmdTopShowsWarningOnCutPassWithProviders(t *testing.T) {
 	scr := newFrameScreen()

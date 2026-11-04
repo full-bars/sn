@@ -61,7 +61,11 @@ func (m *topModel) render(b *tui.Buffer) {
 
 func (m *topModel) drawFull(b *tui.Buffer) {
 	th := m.theme
-	rows := tui.SplitRows(b.Rect(), tui.Fixed(1), tui.Flex(1), tui.Fixed(1))
+	footerRows := 1
+	if m.discoveryNote != "" {
+		footerRows = max(1, len(wrapText(" "+m.discoveryNote, b.Width(), b.Height(), th.ASCII)))
+	}
+	rows := tui.SplitRows(b.Rect(), tui.Fixed(1), tui.Flex(1), tui.Fixed(footerRows))
 	m.drawHeader(b.Sub(rows[0]))
 	m.drawFooter(b.Sub(rows[2]))
 
@@ -147,11 +151,13 @@ func (m *topModel) drawHeader(h *tui.Buffer) {
 }
 
 func (m *topModel) drawFooter(f *tui.Buffer) {
-	// The warning takes the footer row's start and the keys follow it, so no
-	// row is added and the panels keep their columns.
-	x := 0
+	// Wrap the warning rather than hiding its end on narrower full layouts.
+	x, y := 0, 0
 	if m.discoveryNote != "" {
-		x = f.Put(tui.Truncate(" "+m.discoveryNote, f.Width(), m.theme.ASCII), 0, 0, m.theme.Warn)
+		for i, line := range wrapText(m.discoveryNote, f.Width(), f.Height(), m.theme.ASCII) {
+			y = i
+			x = f.Put(line, 0, y, m.theme.Warn)
+		}
 	}
 	keys := " q quit"
 	if len(m.providers) > 1 {
@@ -165,7 +171,7 @@ func (m *topModel) drawFooter(f *tui.Buffer) {
 		keys += "   g goroutines"
 	}
 	keys += "   - " + topIntervalText(m.interval) + " +"
-	f.Put(tui.Truncate(keys, max(f.Width()-x, 0), m.theme.ASCII), x, 0, m.theme.Dim)
+	f.Put(tui.Truncate(keys, max(f.Width()-x, 0), m.theme.ASCII), x, y, m.theme.Dim)
 }
 
 // topIntervalText is 100ms, 250ms, 500ms, 1s, 2s.
@@ -621,6 +627,20 @@ func (m *topModel) drawCompact(b *tui.Buffer) {
 	}
 	if in.Height() > 3 {
 		in.Put(tui.Truncate("q quit, enlarge for the full view", in.Width(), th.ASCII), 0, in.Height()-1, th.Dim)
+	}
+	if m.discoveryNote != "" {
+		// Keep the quit hint when there is room, and give the warning the
+		// remaining rows even if it must replace compact statistics.
+		end := in.Height()
+		if end > 3 {
+			end--
+		}
+		lines := wrapText(m.discoveryNote, in.Width(), end, th.ASCII)
+		for i, line := range lines {
+			row := in.Sub(tui.Rect{Y: end - len(lines) + i, W: in.Width(), H: 1})
+			row.Fill(row.Rect(), ' ', tui.Style{})
+			row.Put(line, 0, 0, th.Warn)
+		}
 	}
 }
 
