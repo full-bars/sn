@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -375,7 +376,24 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 	// stamps it.
 	currentNetworkId, haveCurrentNetworkId := jwtNetworkId(networkJwt)
 
-	if hotRestartEnabled() {
+	// Keep the legacy entry available for a transient fallback's next proof.
+	// It is not a serving credential until the importer proves it again.
+	preserveLegacy := false
+	if cfg.ClientJwtPath != "" {
+		journal, journalErr := readLegacyImportJournal(filepath.Dir(cfg.ClientJwtPath))
+		if journalErr != nil {
+			// An unreadable journal can hide a fallback even when no proof exists.
+			// Refuse every slot rather than guess which identities are involved.
+			return "", connect.Id{}, false, fmt.Errorf("provider refuses to authenticate until legacy import journal %s is readable: %w", filepath.Join(filepath.Dir(cfg.ClientJwtPath), legacyImportJournalName), journalErr)
+		}
+		if recorded, ok := journal.Slots[identityKey]; ok && legacyImportPreservesEntry(recorded) {
+			if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok && entry.ClientID == recorded.ClientID {
+				preserveLegacy = true
+			}
+		}
+	}
+
+	if hotRestartEnabled() && !preserveLegacy {
 		if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok && !clientJWTRejected(cfg.ClientJwtPath) {
 			// A custody credential that exists but cannot be read, or that carries
 			// no client id, is not evidence the stored identity is still ours.
@@ -506,6 +524,9 @@ func provideClientJWT(ctx context.Context, cfg clientJWTProvideConfig) (byClient
 	byClientJwt, clientId, err := mint(ctx)
 	if err != nil {
 		return "", connect.Id{}, false, err
+	}
+	if preserveLegacy {
+		return byClientJwt, clientId, false, nil
 	}
 	// Always persist client JWTs so the store is ready the moment hot-restart
 	// is enabled — no warmup or re-auth cycle needed. The read/reuse path

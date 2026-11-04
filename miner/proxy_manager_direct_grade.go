@@ -185,13 +185,20 @@ func directGradePath() (string, error) {
 // written (never graded, unreadable, or corrupt - all "no evidence", never an
 // error the caller must handle).
 func readDirectGrade() (directGrade, bool) {
-	p, err := directGradePath()
-	if err != nil {
-		return directGrade{}, false
-	}
-	b, err := os.ReadFile(p)
-	if err != nil {
-		return directGrade{}, false
+	var b []byte
+	if settingArmed(settingDirectGrade) {
+		var err error
+		if b, err = readSetting(settingDirectGrade); err != nil {
+			return directGrade{}, false
+		}
+	} else {
+		p, err := directGradePath()
+		if err != nil {
+			return directGrade{}, false
+		}
+		if b, err = os.ReadFile(p); err != nil {
+			return directGrade{}, false
+		}
 	}
 	var g directGrade
 	if json.Unmarshal(b, &g) != nil {
@@ -205,11 +212,14 @@ func readDirectGrade() (directGrade, bool) {
 // wraps its payload in a checksum envelope, which a plain reader would decode
 // into a zero value - the writer and reader must agree on the shape.)
 func writeDirectGrade(g directGrade) error {
-	p, err := directGradePath()
+	b, err := json.Marshal(g)
 	if err != nil {
 		return err
 	}
-	b, err := json.Marshal(g)
+	if settingArmed(settingDirectGrade) {
+		return writeSetting(settingDirectGrade, b)
+	}
+	p, err := directGradePath()
 	if err != nil {
 		return err
 	}

@@ -1043,6 +1043,32 @@ func TestProviderRegistrationCallbacksRetainPhysicalCustody(t *testing.T) {
 	}
 }
 
+func TestImmediateReproofContinuesProviderStartup(t *testing.T) {
+	fixture := newProviderRegistrationFixture(t)
+	defer withGlobalStore(t, filepath.Join(fixture.dir, legacyClientJwtStoreName))()
+	setHotRestart(t, true)
+	var calls atomic.Int32
+	var reached atomic.Bool
+	stop := errors.New("stopped after authenticated startup")
+	hooks := providerRegistrationHooks{
+		afterAuthenticated: func(string, connect.Id, []byte) error {
+			if calls.Add(1) == 1 {
+				return &clientauth.RegistrationRefusedError{Code: "client_revoked"}
+			}
+			return nil
+		},
+		afterWallet: func(error) error { reached.Store(true); return stop },
+	}
+	settings := fixture.settings(true)
+	settings.wallet = "invalid-synthetic-wallet"
+	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
+	defer cancel()
+	err := settings.run(context.WithValue(ctx, providerRegistrationHooksKey{}, hooks), &providerRefusedWriter{})
+	if calls.Load() != 2 || !reached.Load() || !errors.Is(err, stop) {
+		t.Fatalf("reproof did not continue startup: calls=%d reached=%v err=%v", calls.Load(), reached.Load(), err)
+	}
+}
+
 // (3) Immediate re-proof of revoked stored proof must not require allowCreate
 // and must re-prove the existing identity rather than minting a new client.
 func TestVerify3ImmediateReproofScenario(t *testing.T) {
@@ -1091,5 +1117,3 @@ func TestVerify3ImmediateReproofScenario(t *testing.T) {
 	_ = initialJwt
 	_ = reprovedJwt
 }
-
-

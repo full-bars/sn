@@ -8,9 +8,15 @@ package miner
 // start cap that the launch path and the reload trim honour through
 // effectiveTrimCapSource (the tighter of operator trim, OOM cap, thrash cap).
 //
-// State lives at <state dir>/thrash_cap.json and expires 24h after the last
-// escalation: a clean day relaxes the cap. A new escalation re-arms it, appends
-// to the restarts ring, and pushes the expiry out.
+// State lives at <state dir>/thrash_cap.json.
+// The cap expires on HEALTH, not on a wall-clock timer: a timer releases the
+// brake on a box that is still sick, causing it to reload the full operator
+// trim and thrash again. When health is demonstrated (sustained period at the
+// capped level with no new escalation and healthy headroom), the cap relaxes in
+// STAGES (+20% per window) rather than jumping immediately to the full operator
+// trim. The cap stops applying only when relaxation reaches the operator trim
+// or the pre-escalation capacity. A new escalation re-arms the cap, appends
+// to the restarts ring, and resets the hold window.
 //
 // Difference from the relay: the state directory resolves through
 // providerStateDir (URNETWORK_STATE_DIR honoured) instead of ~/.urnetwork, the
@@ -19,10 +25,12 @@ package miner
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -51,6 +59,12 @@ const (
 	// thrashMaxRestarts24h is the hard ceiling on escapes per day. Past it the
 	// watchdog logs and stops acting (the cap stays in force from the last one).
 	thrashMaxRestarts24h = 3
+
+	// thrashCapRelaxNumerator and thrashCapRelaxDenom define the staged release
+	// rate (+20% per sustained healthy window): relaxing in stages prevents a box
+	// that is still marginal from receiving several hundred new slots in one launch.
+	thrashCapRelaxNumerator = 12
+	thrashCapRelaxDenom     = 10
 )
 
 // thrashRestartBackoff is the re-arm schedule between escapes, indexed by how
@@ -65,10 +79,109 @@ var thrashRestartBackoff = []time.Duration{
 
 // thrashCapState is the persisted escape memory.
 type thrashCapState struct {
-	Cap         int     `json:"cap"`          // next-start running-proxy cap; 0 = none
-	SetUnix     int64   `json:"set_unix"`     // when the cap was last (re-)armed
-	ExpiresUnix int64   `json:"expires_unix"` // the cap stops applying after this
-	Restarts    []int64 `json:"restarts"`     // unix seconds of recent escapes
+	Cap         int     `json:"cap"`                  // next-start running-proxy cap; 0 = none
+	SetUnix     int64   `json:"set_unix"`             // when the cap was last (re-)armed or relaxed
+	ExpiresUnix int64   `json:"expires_unix"`         // hold window for the current stage ends after this
+	Restarts    []int64 `json:"restarts"`             // unix seconds of recent escapes
+	TargetCap   int     `json:"target_cap,omitempty"` // pre-cut baseline or target to relax towards
+}
+
+var thrashCapMu sync.Mutex
+
+// Seams for health observation in tests.
+var (
+	thrashWatchdogSnapshotFn = func() *swapThrashSnapshot {
+		return swapThrashWatchGlobal.snapshot()
+	}
+	thrashHeadroomFn = func() (availMiB, lowMiB int64) {
+		avail := hostAvailMiB()
+		low := headroomLowForRAMLimit(effectiveRAMLimitBytes())
+		return avail, low
+	}
+	thrashHeapReadingFn = func() (float64, bool) {
+		frac, _, _, ok := swapThrashHeapReading()
+		return frac, ok
+	}
+)
+
+// thrashBoxRecovered decides whether the box has demonstrated sufficient health
+// to relax its thrash cap.
+//
+// What evidence counts as "recovered" and why:
+//  1. Sustained period without escalations:
+//     The box must have run at the current cap level for at least thrashCapHold
+//     (24h) and have no restart entries in the last 24h (thrashRestartsWithin empty).
+//     An escalation in the window proves the box could not hold its load.
+//  2. Watchdog state is calm:
+//     If the swap-thrash watchdog is running, it must not be in "thrashing",
+//     "critical", or "under-pressure", and its memory PSI stall fraction must be
+//     below the mild threshold (swapThrashMildFrac = 10%). A box under memory
+//     pressure is not recovered even if it hasn't escalated to a restart yet.
+//  3. Healthy memory headroom:
+//     If available RAM (the tighter of host MemAvailable and cgroup headroom) is
+//     measurable, it must be at or above the recovery threshold defined by the
+//     memory-headroom guard (avail * 4 >= low * 5, i.e., 25% above the low-headroom
+//     threshold). A box short of free RAM is on the edge of swap thrash.
+//  4. Fallback for uninstrumented platforms:
+//     When host/cgroup free memory is unreadable and no watchdog snapshot exists
+//     (e.g., non-Linux hosts or restricted containers), the Go runtime heap against
+//     its soft limit is checked (must be < 1.0). If the platform exposes no memory
+//     signals at all, the sustained hold period without restarts is the least bad
+//     measurable proxy available, rather than inventing an ungrounded signal.
+func thrashBoxRecovered(st thrashCapState, now time.Time) bool {
+	if len(thrashRestartsWithin(st, now)) > 0 {
+		return false
+	}
+
+	if snap := thrashWatchdogSnapshotFn(); snap != nil {
+		if snap.State != "" && snap.State != "calm" {
+			return false
+		}
+		if snap.PSIFull != nil && *snap.PSIFull >= swapThrashMildFrac {
+			return false
+		}
+	}
+
+	avail, low := thrashHeadroomFn()
+	if avail >= 0 && low > 0 {
+		if avail*4 < low*5 {
+			return false
+		}
+		return true
+	}
+
+	if frac, ok := thrashHeapReadingFn(); ok {
+		if frac >= 1.0 {
+			return false
+		}
+	}
+
+	return true
+}
+
+func thrashTargetCap(st thrashCapState) int {
+	operator, err := readTrimTarget()
+	if err == nil && operator > 0 {
+		return operator
+	}
+	if st.TargetCap > 0 {
+		return st.TargetCap
+	}
+	if st.Cap > 0 {
+		return int(math.Round(float64(st.Cap) / thrashCapFraction))
+	}
+	return 0
+}
+
+func writeThrashCapState(st thrashCapState) error {
+	path, err := thrashCapPath()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return err
+	}
+	return oomWriteJSON(path, st)
 }
 
 // thrashCapPath returns the state file path, beside oom_cap.json.
@@ -90,17 +203,95 @@ func readThrashCapState() thrashCapState {
 	return st
 }
 
-// activeThrashCap returns the cap in force at now, if any. Expiry is checked
-// here so every reader agrees on when a quiet day has relaxed the cap.
-func activeThrashCap(now time.Time) (int, bool) {
+// standingThrashCap reports the stored cap, if any, without relaxing, clearing
+// or persisting it. The stall and escalation paths read it through here, so a
+// stored cap stays in force during a stall or an escalation even after the box
+// has recovered. Only a later mutating check (activeThrashCap, on the start
+// path) relaxes or clears it. This direction is deliberate: a stall or an
+// escalation is evidence the box could not hold its load, so the conservative
+// answer is to keep the brake on until a mutating check has seen recovery.
+func standingThrashCap() (int, bool) {
+	thrashCapMu.Lock()
+	defer thrashCapMu.Unlock()
+	return standingThrashCapLocked()
+}
+
+// standingThrashCapLocked is standingThrashCap for callers that already hold
+// thrashCapMu, such as recordThrashEscalation.
+func standingThrashCapLocked() (int, bool) {
 	st := readThrashCapState()
-	if st.Cap <= 0 || st.ExpiresUnix <= 0 {
-		return 0, false
-	}
-	if now.Unix() >= st.ExpiresUnix {
+	if st.Cap <= 0 {
 		return 0, false
 	}
 	return st.Cap, true
+}
+
+// activeThrashCap returns the cap in force at now, if any.
+//
+// The cap expires on HEALTH, not on a wall-clock timer: a timer releases the
+// brake on a box that is still sick, causing it to reload the full operator
+// trim and thrash again. When health is demonstrated (sustained period at the
+// capped level with no new escalation and healthy headroom), the cap relaxes in
+// STAGES (+20% per window) rather than jumping immediately to the full operator
+// trim. The cap stops applying only when relaxation reaches the operator trim
+// or the pre-escalation capacity.
+func activeThrashCap(now time.Time) (int, bool) {
+	thrashCapMu.Lock()
+	defer thrashCapMu.Unlock()
+	return activeThrashCapLocked(now)
+}
+
+func activeThrashCapLocked(now time.Time) (int, bool) {
+	st := readThrashCapState()
+	if st.Cap <= 0 {
+		return 0, false
+	}
+
+	setAt := time.Unix(st.SetUnix, 0)
+	if st.SetUnix <= 0 {
+		if st.ExpiresUnix > 0 {
+			setAt = time.Unix(st.ExpiresUnix, 0).Add(-thrashCapHold)
+		} else {
+			setAt = now
+		}
+	}
+
+	// While inside the hold window, the standing cap holds.
+	if now.Sub(setAt) < thrashCapHold {
+		return st.Cap, true
+	}
+
+	// The hold window has elapsed. Check evidence of recovery:
+	if !thrashBoxRecovered(st, now) {
+		// Box is still sick. The cap continues to apply without relaxing.
+		return st.Cap, true
+	}
+
+	// The box is healthy. Relax in stages.
+	next := max(st.Cap+1, st.Cap*thrashCapRelaxNumerator/thrashCapRelaxDenom)
+	target := thrashTargetCap(st)
+
+	if target > 0 && next >= target {
+		prevCap := st.Cap
+		st.Cap = 0
+		st.SetUnix = now.Unix()
+		st.ExpiresUnix = 0
+		if err := writeThrashCapState(st); err != nil {
+			importantLogf("[thrashcap] warn: could not persist cleared cap state: %v\n", err)
+		}
+		importantLogf("[thrashcap] automatic start cap %d cleared (recovered)\n", prevCap)
+		return 0, false
+	}
+
+	prevCap := st.Cap
+	st.Cap = next
+	st.SetUnix = now.Unix()
+	st.ExpiresUnix = now.Add(thrashCapHold).Unix()
+	if err := writeThrashCapState(st); err != nil {
+		importantLogf("[thrashcap] warn: could not persist relaxed cap state: %v\n", err)
+	}
+	importantLogf("[thrashcap] relaxed automatic start cap %d -> %d\n", prevCap, next)
+	return next, true
 }
 
 // thrashRestartsWithin prunes the restarts ring to the 24h window ending at
@@ -174,15 +365,9 @@ func thrashCapForNextStart(running int) int {
 // thrash exit marker below (see requestThrashExit), which is written only at
 // the exit and is keyed by pid.
 func recordThrashEscalation(cap int, now time.Time) error {
-	path, err := thrashCapPath()
-	if err != nil {
-		return err
-	}
-	// The write lock lives beside the file: the directory must exist before
-	// oomWriteJSON tries to lock (same order oomCapDecide uses).
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		return err
-	}
+	thrashCapMu.Lock()
+	defer thrashCapMu.Unlock()
+
 	prev := readThrashCapState()
 	recent := thrashRestartsWithin(prev, now)
 	// The restart is ALWAYS appended: the ring is the anti-loop's accounting,
@@ -191,18 +376,23 @@ func recordThrashEscalation(cap int, now time.Time) error {
 	// escalation left standing instead of erasing it — the next start still
 	// benefits from fitting better.
 	writeCap := cap
-	// Preserve/inherit the previous cap only while it is still UNEXPIRED, and
+	// Preserve/inherit the previous cap only while it is still active, and
 	// never loosen: the tighter of the two wins ("tighter automatic wins").
-	if prev.Cap > 0 && prev.ExpiresUnix > now.Unix() && (writeCap <= 0 || prev.Cap < writeCap) {
-		writeCap = prev.Cap
+	if prevCap, ok := standingThrashCapLocked(); ok && prevCap > 0 && (writeCap <= 0 || prevCap < writeCap) {
+		writeCap = prevCap
+	}
+	targetCap := int(math.Round(float64(writeCap) / thrashCapFraction))
+	if prev.TargetCap > targetCap {
+		targetCap = prev.TargetCap
 	}
 	st := thrashCapState{
 		Cap:         writeCap,
 		SetUnix:     now.Unix(),
 		ExpiresUnix: now.Add(thrashCapHold).Unix(),
 		Restarts:    append(recent, now.Unix()),
+		TargetCap:   targetCap,
 	}
-	return oomWriteJSON(path, st)
+	return writeThrashCapState(st)
 }
 
 // thrashExitMarkerPath is this file's one-shot exit marker for one pid:
@@ -299,10 +489,9 @@ func clearThrashExitMarkers(dir string) {
 // added in between survives. The liveness self-exit uses it when a stall
 // resolves itself before the supervisor acts.
 func undoThrashEscalation(now time.Time, prev thrashCapState) {
-	path, err := thrashCapPath()
-	if err != nil {
-		return
-	}
+	thrashCapMu.Lock()
+	defer thrashCapMu.Unlock()
+
 	st := readThrashCapState()
 	kept := st.Restarts[:0:0]
 	removed := false
@@ -316,8 +505,9 @@ func undoThrashEscalation(now time.Time, prev thrashCapState) {
 	st.Restarts = kept
 	if st.SetUnix == now.Unix() {
 		st.Cap, st.SetUnix, st.ExpiresUnix = prev.Cap, prev.SetUnix, prev.ExpiresUnix
+		st.TargetCap = prev.TargetCap
 	}
-	if err := oomWriteJSON(path, st); err != nil {
+	if err := writeThrashCapState(st); err != nil {
 		critLog("[liveness] could not restore the start cap after progress resumed: %v\n", err)
 	}
 }

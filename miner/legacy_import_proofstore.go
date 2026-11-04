@@ -84,17 +84,9 @@ type legacyImportProofRecord struct {
 	RejectionSeq    int64  `json:"rejection_seq,omitempty"`
 }
 
-// ProvesProxyReachability reports whether this proof record verifies proxy health.
-// It returns false: stored proofs establish credential validity only, not that
-// the slot's proxy works or is reachable.
-func (self legacyImportProofRecord) ProvesProxyReachability() bool {
-	return false
-}
-
 type legacyImportProofFile struct {
-	Schema                 string                             `json:"schema"`
-	CredentialValidityOnly bool                               `json:"credential_validity_only,omitempty"`
-	Slots                  map[string]legacyImportProofRecord `json:"slots"`
+	Schema string                             `json:"schema"`
+	Slots  map[string]legacyImportProofRecord `json:"slots"`
 }
 
 // legacyImportProofClaim is what a proof is a proof of. A record is usable only
@@ -266,6 +258,7 @@ func (self *legacyImportProofStore) record(key string, claim legacyImportProofCl
 	}
 	self.mu.Lock()
 	defer self.mu.Unlock()
+	previous := self.slots[key]
 	if prev, ok := self.slots[key]; ok && (prev.Rejections > 0 || prev.ProvenAt == 0) {
 		if self.reproved == nil {
 			self.reproved = map[string]int64{}
@@ -275,14 +268,16 @@ func (self *legacyImportProofStore) record(key string, claim legacyImportProofCl
 			seq = int64(prev.Rejections)
 		}
 		self.reproved[key] = seq
+		previous.RejectionSeq = seq
 	}
 	self.slots[key] = legacyImportProofRecord{
-		ClientID:  claim.ClientID,
-		NetworkID: claim.NetworkID,
-		KeyFP:     claim.KeyFP,
-		TokenFP:   claim.TokenFP,
-		Proof:     proof,
-		ProvenAt:  self.now().Unix(),
+		ClientID:     claim.ClientID,
+		NetworkID:    claim.NetworkID,
+		KeyFP:        claim.KeyFP,
+		TokenFP:      claim.TokenFP,
+		Proof:        proof,
+		ProvenAt:     self.now().Unix(),
+		RejectionSeq: previous.RejectionSeq,
 	}
 	self.dirty[key] = true
 }
@@ -311,6 +306,10 @@ func (self *legacyImportProofStore) flush() error {
 	merged, _, _ := readLegacyImportProofFile(self.path)
 	for key := range self.dirty {
 		if record, ok := self.slots[key]; ok {
+			if existing, onDisk := merged[key]; onDisk && existing.RejectionSeq > record.RejectionSeq {
+				self.slots[key] = existing
+				continue
+			}
 			if existing, onDisk := merged[key]; onDisk && (existing.Rejections > 0 || existing.ProvenAt == 0) {
 				// Rejection is sticky and authoritative against stale in-memory records.
 				// A proof record carrying a rejection can never be replaced by a proof record
@@ -326,47 +325,16 @@ func (self *legacyImportProofStore) flush() error {
 		}
 	}
 
-	// Prune entries for proxies that no longer exist, and prune expired records.
-	now := self.now()
-	for key, rec := range merged {
-		if self.activeKeys != nil && !self.activeKeys[key] {
-			delete(merged, key)
+	pruneLegacyImportProofs(merged, self.activeKeys, self.now(), "")
+	for key := range self.slots {
+		if _, ok := merged[key]; !ok {
 			delete(self.slots, key)
-			continue
-		}
-		if rec.ProvenAt > 0 {
-			age := now.Sub(time.Unix(rec.ProvenAt, 0))
-			if age > legacyImportProofMaxAge {
-				delete(merged, key)
-				delete(self.slots, key)
-			}
-		}
-	}
-
-	// Bound total file size: prune oldest entries if capacity is exceeded.
-	if len(merged) > legacyImportProofStoreMaxEntries {
-		type entryAge struct {
-			key string
-			ts  int64
-		}
-		entries := make([]entryAge, 0, len(merged))
-		for k, r := range merged {
-			entries = append(entries, entryAge{key: k, ts: r.ProvenAt})
-		}
-		sort.Slice(entries, func(i, j int) bool {
-			return entries[i].ts < entries[j].ts
-		})
-		excess := len(merged) - legacyImportProofStoreMaxEntries
-		for i := 0; i < excess; i++ {
-			delete(merged, entries[i].key)
-			delete(self.slots, entries[i].key)
 		}
 	}
 
 	raw, err := json.Marshal(legacyImportProofFile{
-		Schema:                 legacyImportProofStoreSchema,
-		CredentialValidityOnly: true,
-		Slots:                  merged,
+		Schema: legacyImportProofStoreSchema,
+		Slots:  merged,
 	})
 	if err != nil {
 		return err
@@ -376,6 +344,44 @@ func (self *legacyImportProofStore) flush() error {
 	}
 	self.dirty = map[string]bool{}
 	return nil
+}
+
+// pruneLegacyImportProofs applies the common age and capacity limits. Active
+// slots are only pruned when their complete set is available to the caller.
+func pruneLegacyImportProofs(slots map[string]legacyImportProofRecord, active map[string]bool, now time.Time, protect string) {
+	for key, rec := range slots {
+		if key != protect && ((active != nil && !active[key]) || (rec.ProvenAt > 0 && now.Sub(time.Unix(rec.ProvenAt, 0)) > legacyImportProofMaxAge)) {
+			delete(slots, key)
+		}
+	}
+	if len(slots) <= legacyImportProofStoreMaxEntries {
+		return
+	}
+	type entryAge struct {
+		key string
+		ts  int64
+	}
+	entries := make([]entryAge, 0, len(slots))
+	for key, rec := range slots {
+		if key == protect {
+			continue
+		}
+		ts := rec.ProvenAt
+		if rec.LastRejectionAt > ts {
+			ts = rec.LastRejectionAt
+		}
+		entries = append(entries, entryAge{key, ts})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].ts == entries[j].ts {
+			return entries[i].key < entries[j].key
+		}
+		return entries[i].ts < entries[j].ts
+	})
+	excess := len(slots) - legacyImportProofStoreMaxEntries
+	for i := 0; i < excess; i++ {
+		delete(slots, entries[i].key)
+	}
 }
 
 // noteLegacyImportProofRejected is the lazy validation: the platform refused an
@@ -413,10 +419,10 @@ func noteLegacyImportProofRejected(stateDir, key, reason string) error {
 	record.LastRejectionAt = time.Now().Unix()
 	record.RejectionSeq = maxSeq + 1
 	slots[key] = record
+	pruneLegacyImportProofs(slots, nil, time.Now(), key)
 	raw, err := json.Marshal(legacyImportProofFile{
-		Schema:                 legacyImportProofStoreSchema,
-		CredentialValidityOnly: true,
-		Slots:                  slots,
+		Schema: legacyImportProofStoreSchema,
+		Slots:  slots,
 	})
 	if err != nil {
 		return err

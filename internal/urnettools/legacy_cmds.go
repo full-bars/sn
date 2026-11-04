@@ -507,6 +507,10 @@ func journalctlArgsGuard(p Provider) error {
 	return nil
 }
 
+// logsGOOS is runtime.GOOS, overridable in tests so the Windows branch of
+// cmdLogs can be exercised on a Linux runner.
+var logsGOOS = runtime.GOOS
+
 // cmdLogs streams logs for the provider: RAMLOGS-aware (reads the provider's
 // own RAM buffer) when the unit has URNETWORK_RAMLOGS=1 / a RAM profile,
 // else journald. An optional trailing positional N (e.g. `logs --unit foo
@@ -578,21 +582,24 @@ func cmdLogs(args []string) error {
 			return err
 		}
 	}
+	// Windows has no systemd/journalctl — print a diagnostic and exit cleanly.
+	// Checked before the unit lookup: a Windows provider never carries a unit,
+	// so the unitless branch below would turn the intended notice into a hard
+	// error. The RAM path above still streams a buffer when one exists.
+	if logsGOOS == "windows" {
+		fmt.Println("urnet-tools: journalctl is not available on Windows — logs are not supported via this command.")
+		return nil
+	}
 	// No systemd unit: on a cut discovery pass refuse rather than taking
 	// the unitless path with no warning.
 	if p.Unit == "" {
 		if systemdDiscoveryCutShort {
 			return fmt.Errorf("provider %s has no systemd unit (unit discovery ran out of budget)", providerLabel(p))
 		}
-		if p.Running && runtime.GOOS != "windows" {
+		if p.Running {
 			return logsUnitlessProvider(p, lines)
 		}
 		return validateLogsTarget(p)
-	}
-	// Windows has no systemd/journalctl — print a diagnostic and exit cleanly.
-	if runtime.GOOS == "windows" {
-		fmt.Println("urnet-tools: journalctl is not available on Windows — logs are not supported via this command.")
-		return nil
 	}
 	if handled, err := logsPlatformCheck(p, runtime.GOOS); handled || err != nil {
 		return err

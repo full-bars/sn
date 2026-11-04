@@ -202,7 +202,7 @@ func newMetricsCounterStore(path string) *metricsCounterStore {
 	return &metricsCounterStore{
 		path:       path,
 		now:        time.Now,
-		write:      writeMetricsCounterFileAtomic,
+		write:      writeMetricsCounterBytes,
 		snapshot:   metricsCounterLiveSnapshot,
 		addControl: addMinerControlCounters,
 		base:       map[int]minerMetricsProxyCounters{},
@@ -237,7 +237,7 @@ func (s *metricsCounterStore) load() (minerMetricsCountersFile, error) {
 	if path == "" {
 		return file, fmt.Errorf("metrics counters: empty path")
 	}
-	raw, err := os.ReadFile(path)
+	raw, err := readMetricsCounterBytes(path)
 	if err != nil {
 		return file, err
 	}
@@ -957,6 +957,27 @@ func clampToUint64(v int64) uint64 {
 	return uint64(v)
 }
 
+// readMetricsCounterBytes reads the stored counters from the provider store
+// once it holds them, and from the file before that. An absent record is
+// fs.ErrNotExist either way, which restore treats as "nothing to restore".
+func readMetricsCounterBytes(path string) ([]byte, error) {
+	if settingArmed(settingMetricsCounter) && path == mustStatePathQuiet(metricsCounterStoreName) {
+		return readSetting(settingMetricsCounter)
+	}
+	return os.ReadFile(path)
+}
+
+// writeMetricsCounterBytes is the store's default write: one store transaction
+// once the store holds the counters, the atomic file write before that. The
+// store transaction replaces the temp file, fsync, rename and directory fsync
+// of the file write; it is atomic and durable on its own.
+func writeMetricsCounterBytes(path string, data []byte, perm os.FileMode) error {
+	if settingArmed(settingMetricsCounter) && path == mustStatePathQuiet(metricsCounterStoreName) {
+		return writeSetting(settingMetricsCounter, data)
+	}
+	return writeMetricsCounterFileAtomic(path, data, perm)
+}
+
 // writeMetricsCounterFileAtomic replaces path with data: temp file, fsync,
 // rename, then a best-effort directory fsync so the rename is durable. This is
 // the write the unchanged check exists to avoid.
@@ -1049,6 +1070,12 @@ func metricsCounterProxySeedFunc(index int) bandwidth.ProxySeed {
 // the first scrape already sees the continued series. A second call (a hotswap
 // takeover) restores nothing and keeps the one writer.
 func startMetricsCounterPersistence() {
+	// The counters are read below, so the store has to hold them first. A
+	// refusal by the schema guard is the run's to report (run.go); here it only
+	// means the counters stay on their file.
+	if err := startProviderSettings(); err != nil {
+		tlog("[metrics] counters stay on their file: %v\n", err)
+	}
 	path := mustStatePathQuiet(metricsCounterStoreName)
 	if path == "" {
 		return

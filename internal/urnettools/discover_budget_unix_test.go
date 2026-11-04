@@ -436,5 +436,3 @@ func TestDiscoverAttachAndProbeShareSingleBudget(t *testing.T) {
 		t.Fatalf("expected probe stage to be cut and return no stopped units, got %+v", out)
 	}
 }
-
-

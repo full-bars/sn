@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
@@ -49,9 +50,20 @@ type persistentErrors struct {
 	// errors instead of the family vanishing.
 	path string
 
+	// base is what the load found in the file. When the store takes over,
+	// counts becomes stored + (counts - base): what the store holds plus what
+	// this process counted since it loaded, whichever of the two the file
+	// import brought in.
+	base map[string]uint64
+
 	dirty      bool
 	lastFlush  time.Time
 	flushEvery time.Duration
+
+	// flushMu keeps two flushes from interleaving their snapshot and write.
+	// mu is NOT held across the write: a store write that fails counts its own
+	// failure through Incr, and Incr takes mu.
+	flushMu sync.Mutex
 }
 
 // persistentErrorsPath returns <state>/error_counts.json, or "" when no state
@@ -65,6 +77,7 @@ func persistentErrorsPath() string {
 func loadPersistentErrors(path string) *persistentErrors {
 	pe := &persistentErrors{
 		counts:     map[string]uint64{},
+		base:       map[string]uint64{},
 		path:       path,
 		flushEvery: persistentErrorFlushInterval,
 		lastFlush:  time.Now(),
@@ -78,6 +91,7 @@ func loadPersistentErrors(path string) *persistentErrors {
 	if ok, err := loadJSONWithRecovery(path, &loaded); ok {
 		for cat, n := range loaded {
 			pe.counts[cat] = n
+			pe.base[cat] = n
 		}
 	} else if err != nil {
 		tlog("[metrics] error loading persistent error counts: %v\n", err)
@@ -105,21 +119,12 @@ func (pe *persistentErrors) MaybeFlush(now time.Time) bool {
 	if pe == nil {
 		return false
 	}
-	pe.mu.Lock()
-	defer pe.mu.Unlock()
-	if !pe.dirty || pe.path == "" {
-		return false
-	}
-	if !pe.lastFlush.IsZero() && now.Sub(pe.lastFlush) < pe.flushEvery {
-		return false
-	}
-	if err := pe.writeLocked(); err != nil {
+	wrote, err := pe.flush(now, false)
+	if err != nil {
 		tlog("[metrics] periodic error flush failed: %v\n", err)
 		return false // keep dirty; retry on the next tick
 	}
-	pe.dirty = false
-	pe.lastFlush = now
-	return true
+	return wrote
 }
 
 // Flush forces a write (shutdown, hotswap, and the fatal exit path). It keeps
@@ -128,17 +133,44 @@ func (pe *persistentErrors) Flush() {
 	if pe == nil {
 		return
 	}
-	pe.mu.Lock()
-	defer pe.mu.Unlock()
-	if !pe.dirty || pe.path == "" {
-		return
-	}
-	if err := pe.writeLocked(); err != nil {
+	if _, err := pe.flush(time.Now(), true); err != nil {
 		tlog("[metrics] shutdown error flush failed: %v\n", err)
-		return
 	}
+}
+
+func (pe *persistentErrors) flush(now time.Time, force bool) (bool, error) {
+	pe.flushMu.Lock()
+	defer pe.flushMu.Unlock()
+	pe.mu.Lock()
+	if !pe.dirty || (pe.path == "" && !settingArmed(settingErrorCounts)) {
+		pe.mu.Unlock()
+		return false, nil
+	}
+	if !force && !pe.lastFlush.IsZero() && now.Sub(pe.lastFlush) < pe.flushEvery {
+		pe.mu.Unlock()
+		return false, nil
+	}
+	snapshot := make(map[string]uint64, len(pe.counts))
+	for cat, n := range pe.counts {
+		snapshot[cat] = n
+	}
+	// Cleared before the write so an increment that lands during it keeps the
+	// store dirty; a failed write sets it again.
 	pe.dirty = false
-	pe.lastFlush = time.Now()
+	pe.mu.Unlock()
+
+	err := pe.write(snapshot)
+
+	pe.mu.Lock()
+	if err != nil {
+		pe.dirty = true
+	} else {
+		pe.lastFlush = now
+		// What this write holds is the new baseline for the store handover.
+		pe.base = snapshot
+	}
+	pe.mu.Unlock()
+	return err == nil, err
 }
 
 // Snapshot returns a copy of the counts for the scrape.
@@ -155,13 +187,61 @@ func (pe *persistentErrors) Snapshot() map[string]uint64 {
 	return out
 }
 
-// writeLocked persists the counts. Caller holds mu.
-func (pe *persistentErrors) writeLocked() error {
-	snapshot := make(map[string]uint64, len(pe.counts))
-	for cat, n := range pe.counts {
-		snapshot[cat] = n
+// write persists the counts: to the store once it has taken the counts over,
+// otherwise to the file.
+func (pe *persistentErrors) write(snapshot map[string]uint64) error {
+	if settingArmed(settingErrorCounts) {
+		blob, err := encodeChecksummedJSON(snapshot)
+		if err != nil {
+			return err
+		}
+		return writeSetting(settingErrorCounts, blob)
 	}
 	return atomicWriteJSON(pe.path, snapshot)
+}
+
+// armPersistentErrorsOnStore makes the store the home of the error counts. The
+// counts become what the store holds plus what this process counted since it
+// loaded, so a store that already carries history (a restart after the first
+// migration) and a file that was just imported both continue the series
+// instead of one overwriting the other. It runs under the flush lock, so no
+// write can land between reading the store and switching to it.
+func armPersistentErrorsOnStore(store *providerStore) error {
+	pe := persistentErrorStore()
+	pe.flushMu.Lock()
+	defer pe.flushMu.Unlock()
+	stored := map[string]uint64{}
+	raw, found, err := store.getSetting(settingErrorCounts)
+	if err != nil {
+		return err
+	}
+	if found && !decodeChecksummedJSON(raw, &stored) {
+		return errors.New("stored error counts do not verify")
+	}
+	pe.mu.Lock()
+	defer pe.mu.Unlock()
+	merged := make(map[string]uint64, len(stored)+len(pe.counts))
+	for cat, n := range stored {
+		merged[cat] = n
+	}
+	if !found {
+		// With no imported record, the pre-store load may have recovered a
+		// backup. Preserve that baseline as well as this process's increments.
+		for cat, n := range pe.counts {
+			merged[cat] = n
+		}
+	} else {
+		for cat, n := range pe.counts {
+			if n >= pe.base[cat] {
+				merged[cat] += n - pe.base[cat]
+			}
+		}
+	}
+	pe.counts = merged
+	pe.base = stored
+	pe.dirty = true
+	armSetting(settingErrorCounts)
+	return nil
 }
 
 // persistentErrStore is the process's lifetime per-category error store. The

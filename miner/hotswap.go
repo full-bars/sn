@@ -319,6 +319,7 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 	// finishes its drain without the file rather than reopening what the
 	// candidate owns, and a save that still arrives reports the lost write.
 	// Every abort below takes the file back, because the parent keeps serving.
+	flushSettingsBeforeRelease()
 	releaseProviderStore()
 	hotswapLog("⚡ [hotswap] Released %s for the candidate\n", providerStoreFileName)
 
@@ -730,7 +731,13 @@ func runHotSwapChildPreflight(opts docopt.Opts, apiUrl string) error {
 func runHotSwapChildHandshake(ipcConn io.ReadWriter, opts docopt.Opts, apiUrl string) error {
 	hotswapLog("⚡ [hotswap] Candidate process (PID %d, version %s) running pre-flight checks...\n", os.Getpid(), RequireVersion())
 
-	if err := runHotSwapChildPreflight(opts, apiUrl); err != nil {
+	// The schema verdict comes first and is fatal: a store this build cannot
+	// read must stop the handoff before READY, while the parent still serves.
+	err := hotSwapCandidateStoreVerdict()
+	if err == nil {
+		err = runHotSwapChildPreflight(opts, apiUrl)
+	}
+	if err != nil {
 		_ = writeHotswapMessage(ipcConn, HotswapMessage{
 			Type:    HotswapMsgError,
 			PID:     os.Getpid(),
@@ -807,7 +814,11 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 	parentPID := getpidFunc()
 	hotswapLog("⚡ [hotswap] Initiating zero-downtime handoff (live parent PID %d, binary %s)...\n", parentPID, exe)
 
+	// The candidate cannot open the store while this process holds its lock,
+	// so it is told the stamp this process read and judges it itself.
+	_ = os.Setenv(EnvHotSwapStoreStamp, hotSwapParentStoreStamp())
 	session, err := spawnCandidateFunc(exe, os.Args[1:])
+	_ = os.Unsetenv(EnvHotSwapStoreStamp)
 	if err != nil {
 		hotswapLog("❌ [hotswap] Failed to spawn candidate: %v. Live provider retained untouched.\n", err)
 		return err

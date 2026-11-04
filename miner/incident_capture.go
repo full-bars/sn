@@ -142,6 +142,10 @@ const (
 	// authentication refusals: one bundle records what the node was doing
 	// when it parked.
 	incidentTriggerAuthStop incidentTrigger = "auth_stop"
+	// incidentTriggerShutdown is a shutdown whose workers did not drain within
+	// the grace. It is captured before run's deferred calls, which can block,
+	// so its goroutines.txt is the state the stuck workers were in.
+	incidentTriggerShutdown incidentTrigger = "shutdown"
 )
 
 // Pacing, from the provider: one capture per trigger per cooldown, and a
@@ -845,6 +849,24 @@ func incidentSecretStateName(name string) bool {
 // evidence", "the file was a symlink", and "the file could not be read" mean
 // different things to the operator: a read failure and a truncated read are
 // named in incomplete.txt as well.
+// incidentReadStateFile reads one whitelisted state record. A setting the
+// provider store holds is read from the store: its file was removed when it
+// moved, and the bundle must carry the live value, not the absence of a file.
+func incidentReadStateFile(dir, name string) ([]byte, bool, error) {
+	if key := providerSettingKeyForFile(name); key != "" && settingArmed(key) {
+		data, err := readSetting(key)
+		if err == nil {
+			truncated := false
+			if int64(len(data)) > incidentStateFileMaxBytes {
+				data, truncated = data[:incidentStateFileMaxBytes], true
+			}
+			return data, truncated, nil
+		}
+		return nil, false, err
+	}
+	return readCapped(filepath.Join(dir, name), incidentStateFileMaxBytes)
+}
+
 func incidentCopyState(b *incidentBundle) {
 	dir, err := providerStateDir()
 	if err != nil {
@@ -874,7 +896,7 @@ func incidentCopyState(b *incidentBundle) {
 			status[name] = "withheld:credential-file"
 			continue
 		}
-		data, truncated, err := readCapped(filepath.Join(dir, name), incidentStateFileMaxBytes)
+		data, truncated, err := incidentReadStateFile(dir, name)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				// A whitelist names what may be evidence, not what exists.
@@ -918,6 +940,13 @@ func incidentCopyState(b *incidentBundle) {
 			line = s
 		}
 		fmt.Fprintf(&inventory, "%s bytes=%d mode=%s %s\n", name, info.Size(), info.Mode().Perm(), line)
+	}
+	// A record in provider_state.db has no file to list, so the inventory
+	// names it, or its absence from the listing would read as "never written".
+	for _, setting := range providerSettings {
+		if settingArmed(setting.key) {
+			fmt.Fprintf(&inventory, "%s held in %s (setting %s)\n", setting.file, providerStoreFileName, setting.key)
+		}
 	}
 	b.write("state/inventory.txt", []byte(inventory.String()))
 }

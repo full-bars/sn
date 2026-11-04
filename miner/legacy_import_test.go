@@ -1227,26 +1227,72 @@ func TestVerify4CooldownMootAfterMint(t *testing.T) {
 	if r := f.journal().Slots[stuck.Key()]; r.Reason != "proof_unavailable_bound" {
 		t.Fatalf("setup %+v", r)
 	}
-	// the serving path now mints the new identity into the slot's credential file
-	if err := os.WriteFile(f.target(stuck), []byte("minted"), 0o600); err != nil {
+	// The serving path mints a different identity and normally writes the same
+	// store key. Exercise that writer, not just the per-slot credential file.
+	defer withGlobalStore(t, filepath.Join(f.dir, legacyClientJwtStoreName))()
+	setHotRestart(t, false)
+	mintedID := connect.NewId()
+	mintedJWT := legacyTestClientToken(f.networkID, mintedID.String(), connect.NewId().String())
+	mint := func(context.Context) (string, connect.Id, error) {
+		if err := os.WriteFile(f.target(stuck), []byte(mintedJWT), 0o600); err != nil {
+			return "", connect.Id{}, err
+		}
+		return mintedJWT, mintedID, nil
+	}
+	_, _, _, err := provideClientJWT(context.Background(), clientJWTProvideConfig{
+		NetworkJwtPath: filepath.Join(f.dir, "jwt"), ClientJwtPath: f.target(stuck),
+		ProxySettings: stuck, Mint: mint, FreshMint: mint,
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 	delete(f.prover.refreshErr, store[stuck.Key()].ByClientJWT)
 	f.resetProverCounts()
 	f.run(legacyImportHooks{})
-	if _, refresh := f.proverCounts(); refresh == 0 {
-		t.Fatalf("old identity never re-proved once minted file exists; journal=%+v", f.journal().Slots[stuck.Key()])
+	if public, refresh := f.proverCounts(); public != 0 || refresh != 0 {
+		t.Fatalf("serving minted identity was re-proved: public=%d refresh=%d", public, refresh)
 	}
-	// Verify that the old identity was successfully committed and imported
-	if r := f.journal().Slots[stuck.Key()]; r.State != "imported" {
-		t.Fatalf("want slot imported after healing, got: %+v", r)
+	if r := f.journal().Slots[stuck.Key()]; r.State != "imported" || r.Reason != "minted_identity_serving" {
+		t.Fatalf("want settled serving choice, got: %+v", r)
 	}
 	targetData, err := os.ReadFile(f.target(stuck))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(targetData) != store[stuck.Key()].ByClientJWT {
-		t.Fatalf("target credential was not restored to old identity: got %q, want %q", string(targetData), store[stuck.Key()].ByClientJWT)
+	if string(targetData) != mintedJWT {
+		t.Fatal("recovery replaced the minted credential")
+	}
+}
+
+func TestImportCooldownPreservesDifferentCustodiedIdentity(t *testing.T) {
+	oldCooldown := legacyImportTransientFallbackCooldown
+	legacyImportTransientFallbackCooldown = 0
+	defer func() { legacyImportTransientFallbackCooldown = oldCooldown }()
+	f := newLegacyImportFixture(t, true, 1)
+	slot := f.proxySettings[0]
+	store, err := readLegacyStoreRaw(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	minted := legacyTestClientToken(f.networkID, connect.NewId().String(), connect.NewId().String())
+	journal := newLegacyImportJournal()
+	journal.Slots[slot.Key()] = legacyImportJournalSlot{State: "fallback", Reason: "proof_unavailable_bound", ClientID: store[slot.Key()].ClientID, FallbackAt: time.Now().Add(-time.Hour).Unix()}
+	if err := writeLegacyImportJournal(f.dir, journal); err != nil {
+		t.Fatal(err)
+	}
+	// Custody appearing after mapping must still block the proven write.
+	f.run(legacyImportHooks{afterMarkerWrite: func() error {
+		if err := os.WriteFile(f.target(slot), []byte(minted), 0600); err != nil {
+			return err
+		}
+		return os.WriteFile(f.target(slot)+".registration", []byte("minted custody"), 0600)
+	}})
+	got, err := os.ReadFile(f.target(slot))
+	if err != nil || string(got) != minted {
+		t.Fatalf("recovery replaced another identity's custody: %v", err)
+	}
+	if got := f.journal().Slots[slot.Key()]; got.State != "fallback" {
+		t.Fatalf("custody conflict was journaled as imported: %+v", got)
 	}
 }
 
@@ -1287,5 +1333,3 @@ func TestVerify5LiveProxyNotPruned(t *testing.T) {
 		t.Fatalf("FAIL: live custodied proxy %s was pruned from proof store because activeKeys excluded it", custodiedKey)
 	}
 }
-
-

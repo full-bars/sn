@@ -167,6 +167,23 @@ cap, how many proxies the cap is holding back, and the live
 up/connecting/dropped/dead counts. `urnet-tools status` shows the same as a
 `trim` row on its live block whenever a cap applies.
 
+### How an automatic cap ends
+
+A cap written automatically (by the swap-thrash watchdog or by the OOM route)
+is a brake, and it releases on evidence rather than on a timer. Once its hold
+window elapses the provider asks the box whether it has recovered: the watchdog
+must be calm, and memory headroom must sit at least 25% above the low-headroom
+threshold, measured as the tighter of host `MemAvailable` and the cgroup
+headroom.
+
+A box that fails either check keeps its cap for as long as it is sick, however
+much time passes. A box that passes relaxes in stages: +20% per sustained clean
+window, towards the capacity it held before the cut, and the cap stops applying
+only once that target is reached. A box that turns marginal mid-relaxation
+stops there. An operator trim set with `urnet-tools proxy trim` is separate and
+always applies as an upper bound, so the effective cap is the tighter of the
+two.
+
 ### Docker (host-side)
 
 ```sh

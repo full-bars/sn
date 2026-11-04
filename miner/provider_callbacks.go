@@ -53,6 +53,10 @@ func (self *providerAuthenticationCallbacks) JwtRefreshed(jwt string) {
 // A rejected credential is tombstoned before requesting shutdown. A failed
 // tombstone is retained, without blocking cancellation on an output write.
 func (self *providerAuthenticationCallbacks) AuthLogout() {
+	// The serving fallback may differ from the legacy identity retained for
+	// cooldown. Capture it before rejection removes the credential file.
+	rejectedToken, _ := clientauth.ReadToken(self.clientJwtPath)
+	rejectedID := jwtClientId(rejectedToken)
 	var err error
 	if self.custody != nil {
 		err = self.custody.RejectClientJwt(self.clientJwtPath)
@@ -67,8 +71,24 @@ func (self *providerAuthenticationCallbacks) AuthLogout() {
 	// path; evicting the hot-restart store entry is what stops provideClientJWT
 	// from handing the same poisoned identity straight back.
 	if self.identityKey != "" {
-		if delErr := loadGlobalClientJWTStore().Delete(self.identityKey); delErr != nil {
-			tlog("⚠️ [jwt-store] failed to evict rejected identity for %s: %v\n", proxyKeyDisplay(self.identityKey), delErr)
+		preserveLegacy := false
+		journal, journalErr := readLegacyImportJournal(filepath.Dir(self.clientJwtPath))
+		if journalErr == nil {
+			if recorded, ok := journal.Slots[self.identityKey]; ok && legacyImportPreservesEntry(recorded) && recorded.ClientID != rejectedID {
+				if entry, ok := loadGlobalClientJWTStore().Get(self.identityKey); ok && entry.ClientID == recorded.ClientID {
+					preserveLegacy = true
+				}
+			}
+		}
+		if !preserveLegacy {
+			if delErr := loadGlobalClientJWTStore().Delete(self.identityKey); delErr != nil {
+				tlog("⚠️ [jwt-store] failed to evict rejected identity for %s: %v\n", proxyKeyDisplay(self.identityKey), delErr)
+			}
+		}
+	}
+	if self.clientJwtPath != "" {
+		if noteErr := noteLegacyImportProofRejected(filepath.Dir(self.clientJwtPath), filepath.Base(self.clientJwtPath), "client_revoked"); noteErr != nil {
+			tlog("⚠️ [import] failed to withdraw stored proof on auth logout for %s: %v\n", filepath.Base(self.clientJwtPath), noteErr)
 		}
 	}
 	if self.clientJwtPath != "" {
