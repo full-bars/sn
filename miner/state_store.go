@@ -632,8 +632,13 @@ func openProviderStoreForProcessRetry(allowQuarantine, retryFailed bool, timeout
 		}
 	}
 	if err != nil {
-		tlog("[state] store unavailable: %s\n", err)
-		IncrPersistentError(providerStoreUnavailableCategory)
+		if errors.Is(err, errProviderStoreNewer) {
+			// The file was read and its stamp judged; it is not unavailable.
+			tlog("[state] store refused: %s\n", err)
+		} else {
+			tlog("[state] store unavailable: %s\n", err)
+			IncrPersistentError(providerStoreUnavailableCategory)
+		}
 		globalProviderStoreFailedPath = path
 		globalProviderStoreFailedErr = err
 		globalProviderStoreRetryAt = now.Add(providerStoreRetryInterval)
