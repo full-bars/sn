@@ -72,7 +72,7 @@ func openProviderClientKey(ctx context.Context, keyPath string, options Provider
 		if !options.AllowCreate {
 			return nil, &RegistrationRefusedError{Code: "provider_key_requires_explicit_recovery"}
 		}
-		names, err := store.names(4096)
+		names, err := store.names(4096, ".provider")
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +198,7 @@ func ProviderKeyIdentityMarker(seed []byte) ([]byte, error) {
 // separate first-upgrade assertion can adopt only legacy JWTs and legacy side
 // files, never a retained versioned operation or evidence of an earlier upgrade.
 func admitProviderKeyMarker(store *registrationStore, adoptLegacy bool) error {
-	names, err := store.names(4096)
+	names, err := store.names(4096, ".provider")
 	if err != nil {
 		return err
 	}

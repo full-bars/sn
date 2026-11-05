@@ -224,7 +224,7 @@ func networkRenewalLeftoverPrefix(name string) string {
 // was never installed, so it is removed; the lineage member it added names a
 // file that never existed and blocks nothing on its own.
 func (self *registrationStore) removeNetworkRenewalLeftovers(name string) error {
-	names, err := self.names(4096)
+	names, err := self.names(4096, networkRenewalLeftoverPrefix(name))
 	if err != nil {
 		return err
 	}
@@ -302,7 +302,7 @@ func QuarantineNetworkToken(path string, rejected string, now time.Time) (_ Netw
 	if current != rejected {
 		return NetworkTokenQuarantine{}, false, nil
 	}
-	names, err := store.names(4096)
+	names, err := store.names(4096, networkTokenQuarantinePrefix(name))
 	if err != nil {
 		return NetworkTokenQuarantine{}, false, err
 	}

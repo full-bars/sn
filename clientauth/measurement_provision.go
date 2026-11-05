@@ -71,7 +71,7 @@ func provisionValidatorMeasurementClientKey(ctx context.Context, keyPath string,
 			returnErr = errors.Join(returnErr, self.Close())
 		}
 	}()
-	names, err := store.names(4096)
+	names, err := store.names(4096, ".validator")
 	if err != nil {
 		return nil, err
 	}
