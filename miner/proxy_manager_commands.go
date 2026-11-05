@@ -506,17 +506,33 @@ func classifyHealth(e ProxyEntry) string {
 	return "starting"
 }
 
-// proxyRefreshDesired reads the curated half of the desired set the way v33's
-// proxyRefresh does: the proxy.state Source file when one is configured
-// (workflow A), else the miner's internal <state>/proxy config. URL-sourced
-// entries are not part of this read, exactly as in v33, so a refresh against a
-// curated-only list still reports URL-cached proxies as removals.
+// proxyRefreshDesired combines the selected curated source with the URL cache,
+// using the same precedence and admission rules as the live reloader.
 func proxyRefreshDesired(state *ProxyState) ([]*connect.ProxySettings, error) {
+	var primary []*connect.ProxySettings
 	if state.Source != "" {
-		settings, _, err := readProxySettingsFromFile(state.Source)
-		return settings, err
+		var err error
+		primary, _, err = readProxySettingsFromFile(state.Source)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		primary = readProxySettingsLegacy()
 	}
-	return readProxySettingsLegacy(), nil
+	urlState, err := readProxyURLState()
+	if err != nil {
+		return nil, err
+	}
+	desired := make(map[string]*connect.ProxySettings, len(primary))
+	for _, settings := range primary {
+		desired[settings.Key()] = settings
+	}
+	mergeProxyURLCache(desired, make(map[string]string), urlState)
+	result := make([]*connect.ProxySettings, 0, len(desired))
+	for _, settings := range desired {
+		result = append(result, settings)
+	}
+	return result, nil
 }
 
 // proxyRefresh implements `provider proxy refresh [--force]`: diff the desired
@@ -550,7 +566,7 @@ func proxyRefresh(opts docopt.Opts) {
 
 	desired, err := proxyRefreshDesired(state)
 	if err != nil {
-		proxyCommandFatal(54, "could not read proxy file %s: %v", state.Source, err)
+		proxyCommandFatal(54, "could not read desired proxies: %v", err)
 	}
 
 	// Diff by proxy identity (proxy.state keys are identity keys).
