@@ -134,16 +134,42 @@ PH_ORIG=""
 say()   { printf '%s\n' "$*" | tee -a "$REPORT"; }
 head1() { printf '\n== %s ==\n' "$*" | tee -a "$REPORT"; }
 
+# Skip policy. A skip only stays green when the check is explicitly optional:
+# the checks that depend on third-party public list hosts, and the exit-75
+# observation, which needs the environment to reject a sign-in. Any other
+# SKIP-NO-NETWORK means a mandatory check was not graded, so it is recorded as
+# a FAIL that keeps the original reason. MANDATORY_CAPS names capabilities whose
+# absence (SKIP-UNSUPPORTED) is a FAIL rather than an owning-port skip: the
+# CI job installs netcat, so a missing nc -U leg is a harness gap, not a head gap.
+OPTIONAL_CHECKS=" url-fetch-source1 url-fetch-source2 url-state-coherence url-cached-skip url-remove-source url-log-vocabulary exit-75-quarantine "
+MANDATORY_CAPS=" control-keys-live-raw control-key-live-runtime "
+MSKIP_N=0
+SKIP_ITEMS=""
+
 record() { # $1=verdict $2=name $3..=detail
     v="$1"; n="$2"; shift 2
+    case "$v" in
+        SKIP-NO-NETWORK)
+            case "$OPTIONAL_CHECKS" in
+                *" $n "*) : ;;
+                *) set -- "MANDATORY-SKIPPED (was SKIP-NO-NETWORK): $*"; v=FAIL; MSKIP_N=$((MSKIP_N + 1)) ;;
+            esac ;;
+        SKIP-UNSUPPORTED)
+            case "$MANDATORY_CAPS" in
+                *" $n "*) set -- "MANDATORY-SKIPPED (was SKIP-UNSUPPORTED): $*"; v=FAIL; MSKIP_N=$((MSKIP_N + 1)) ;;
+            esac ;;
+    esac
     printf '%s %s: %s\n' "$v" "$n" "$*" | tee -a "$REPORT"
     case "$v" in
         PASS) PASS_N=$((PASS_N + 1)) ;;
         FAIL) FAIL_N=$((FAIL_N + 1)); FAIL_ITEMS="$FAIL_ITEMS$n: $*
 " ;;
-        SKIP-UNSUPPORTED) SKIPU_N=$((SKIPU_N + 1)) ;;
-        SKIP-NO-NETWORK) SKIPN_N=$((SKIPN_N + 1)) ;;
-        SKIP-UNSAFE) SKIPX_N=$((SKIPX_N + 1)) ;;
+        SKIP-UNSUPPORTED) SKIPU_N=$((SKIPU_N + 1)); SKIP_ITEMS="$SKIP_ITEMS$v $n
+" ;;
+        SKIP-NO-NETWORK) SKIPN_N=$((SKIPN_N + 1)); SKIP_ITEMS="$SKIP_ITEMS$v $n
+" ;;
+        SKIP-UNSAFE) SKIPX_N=$((SKIPX_N + 1)); SKIP_ITEMS="$SKIP_ITEMS$v $n
+" ;;
     esac
 }
 
@@ -1674,6 +1700,7 @@ b2_url_sources() {
         return 0
     fi
     if ! ensure_live miner-url; then
+        record SKIP-NO-NETWORK url-provider-live "provider not live; URL pipeline cannot run"
         record SKIP-NO-NETWORK url-fetch-source1 "provider not live; URL pipeline cannot run"
         record SKIP-NO-NETWORK url-fetch-source2 "provider not live"
         record SKIP-NO-NETWORK url-cached-skip "provider not live"
@@ -2129,7 +2156,11 @@ group_fresh_state() { # $1=group
 # ---------------------------------------------------------------------------
 summary() {
     head1 "SUMMARY"
-    say "PASS=$PASS_N FAIL=$FAIL_N SKIP-UNSUPPORTED=$SKIPU_N SKIP-NO-NETWORK=$SKIPN_N SKIP-UNSAFE=$SKIPX_N"
+    say "PASS=$PASS_N FAIL=$FAIL_N (of which MANDATORY-SKIPPED=$MSKIP_N) SKIP-UNSUPPORTED=$SKIPU_N SKIP-NO-NETWORK(optional)=$SKIPN_N SKIP-UNSAFE=$SKIPX_N"
+    if [ -n "$SKIP_ITEMS" ]; then
+        say "SKIPPED, not verified (green only because optional or owned by another port):"
+        printf '%s\n' "$SKIP_ITEMS" | sed '/^$/d; s/^/  /' | tee -a "$REPORT"
+    fi
     if [ "$FAIL_N" -gt 0 ]; then
         say "FAIL items:"
         printf '%s\n' "$FAIL_ITEMS" | sed '/^$/d' | tee -a "$REPORT"
