@@ -126,7 +126,11 @@ func providerSlotDialSettings(base *connect.DialContextSettings, proxySettings *
 		// dial must fail closed; falling back to the base/direct dial is the
 		// egress leak this wiring prevents.
 		forward := &net.Dialer{Timeout: socks5HandshakeTimeout}
-		next.DialContext = proxySettings.NewDialContext(context.Background(), forward)
+		// Client udp for this identity leaves through the proxy's udp relay,
+		// one association per flow, gated on the proxy's udp check
+		// (proxy_udp_egress.go). The nat's udp sockets dial through this same
+		// settings object, and the CONNECT dialer cannot carry udp.
+		next.DialContext = proxiedUdpDialContext(proxySettings.NewDialContext(context.Background(), forward), proxySettings, globalProxyUDPCheck)
 		base = next
 	}
 	return bandwidth.WrapDialContextSettings(base, bw, proxyAddr)

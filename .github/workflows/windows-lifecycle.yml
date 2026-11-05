@@ -272,19 +272,11 @@ jobs:
           }
           Write-Host "OK: restart succeeded (old=$oldPid, new=$newPid)"
 
-      - name: Focused unit tests (shutdown, terminate)
+      - name: Focused unit test (Windows shutdown)
         shell: bash
         env:
           GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
-        run: |
-          # Only run if the test names exist; skip gracefully otherwise.
-          for pattern in TestShutdown TestTerminateProcess; do
-            if go test -run "$pattern" -count=1 -timeout 30s ./internal/urnettools/ -v 2>&1 | head -1; then
-              echo "ran $pattern"
-            else
-              echo "skip: $pattern not found"
-            fi
-          done
+        run: sh .github/scripts/run-focused-test.sh ./internal/urnettools/ TestCmdStopWindows_PIDZero
 
       - name: Cleanup lifecycle test artifacts
         if: always()
