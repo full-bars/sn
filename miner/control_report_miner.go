@@ -45,6 +45,15 @@ type snapshotCollector struct {
 	build    func() (*nodeSnapshot, error)
 }
 
+// reset drops the cached snapshot so the next request rebuilds it. A control
+// mutation or a test reset changes the state this snapshot reports, and leaving
+// the cache standing would serve the previous answer for up to one second.
+func (c *snapshotCollector) reset() {
+	c.mu.Lock()
+	c.cached, c.cachedAt = nil, time.Time{}
+	c.mu.Unlock()
+}
+
 func (c *snapshotCollector) get(now time.Time) (*nodeSnapshot, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
