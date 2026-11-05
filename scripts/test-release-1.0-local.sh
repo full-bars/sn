@@ -248,7 +248,7 @@ release_gate_shard() {
   if [[ -n "$skips" ]]; then
     printf '[release-1.0] %s shards skip by name: %s\n' "$package" "$skips"
   fi
-  selector="$(go test "${build[@]}" -list . "$package" | release_gate_shard_selector "$package" "$shard" "$shards" "$skips")" || return 1
+  selector="$(go test -count=1 "${build[@]}" -list . "$package" | release_gate_shard_selector "$package" "$shard" "$shards" "$skips")" || return 1
   go test "${build[@]}" "$package" -run "$selector" -count=1 "$@" -skip "$release_gate_aggregate_skip"
 }
 # ./mainnet runs in its own jobs. Its tests run one at a time, bound by fsync
@@ -657,7 +657,7 @@ release_phase_server_unit() {
   server_package_list="$(go list ./... | grep -Ev '^github[.]com/urnetwork/server/connect/sim-latency(/|$)')"
   [[ -n "$server_package_list" ]]
   mapfile -t server_packages <<<"$server_package_list"
-  go test "${server_packages[@]}" -run '^$'
+  go test -count=1 "${server_packages[@]}" -run '^$'
 }
 release_gate_start server-unit release_phase_server_unit
 
@@ -667,7 +667,7 @@ release_phase_connect() {
   client_key_registration_tests='^Test(ClientKeyRegistration|ApiOutOfBandControl|ControlSyncOob|ClientKeyManager|VerifyClientKeySignature|CanonicalCertChainBytes|ClientCloseAndWaitJoinsClientKeyPublisher)'
   go test . -run "$client_key_registration_tests" -count=1
   go test -race . -run "$client_key_registration_tests" -count=1
-  go test ./... -run '^$'
+  go test -count=1 ./... -run '^$'
   go test . -run '^Test(Verify|Sn)' -count=1
 
   transport_identity_tests='^Test(PlatformTransportAuthSnapshotsAreAtomicAndOwned|PlatformTransportH[13]ReconnectUsesUpdatedAuthSnapshot|TunTcpInboundFlowUsesStableBoundedShards|TunTcpInboundShardHandoffCadenceIsBounded|TunWriteCompletesFiniteTcpInboundHandoffBeforeReturn|TunWriteRetainsTcpInboundYieldCadence|TunWriteBatchFinishesEveryTcpInboundHandoff)$'
@@ -844,7 +844,7 @@ release_phase_sdk() {
   provider_registration_tests='^Test(DeviceLocalProviderRegistration|DeviceLocalProviderConnected)'
   go test . -run "$provider_registration_tests" -count=1
   go test -race . -run "$provider_registration_tests" -count=1
-  go test ./... -run '^$'
+  go test -count=1 ./... -run '^$'
   go test . -run '^Test(ApiSubnet|ProviderLocalUserNatSettings)' -count=1
   token_transport_tests='^Test(ApiTokenManager|DeviceRemoteRpcPublicationWakesOnlyOutstandingRefresh|ApiCloseAndWaitJoinsRefreshWorker|DeviceLocalAppliesApiRefreshAndLogout|DeviceRemoteAppliesStandaloneApiRefreshAndLogout)'
   go test . -run "$token_transport_tests" -count=1

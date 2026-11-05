@@ -58,7 +58,11 @@ jobs:
           echo "tracked files clean of merge conflict markers"
 
   test:
-    name: test
+    name: test (${{ matrix.shard }})
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
     # Hosted, not self-hosted. The self-hosted box runs the suite in 4 to 5
     # minutes but the job waits a median of 15 to 20 minutes for it, and once
     # 46, so the queue is the cost and not the run. The repo is public, which
@@ -134,33 +138,53 @@ jobs:
           echo "module cache relocated: $fallback"
 
 
-      - name: Run Go Unit Tests
+      - name: Census and run uncached test shard
+        shell: bash
+        env:
+          SHARD: ${{ matrix.shard }}
         run: |
-          for attempt in 1 2 3; do
-            echo "=== go test attempt $attempt/3 ==="
-            set +e
-            go test -short -race -timeout 600s ./miner/bandwidth/... 2>&1 | tee /tmp/gotest.out
-            rc=${PIPESTATUS[0]}
-            set -e
-            if [ "$rc" -eq 0 ]; then
-              echo "go test passed (attempt $attempt)"
-              exit 0
-            fi
-            # Retry ONLY the known cache-restore flake
-            if grep -qE "Cannot open: File exists|tar:.*Cannot open" /tmp/gotest.out; then
-              echo "cache-restore flake detected; clearing build cache and retrying"
-              go clean -cache
-              sleep 5
-              continue
-            fi
-            echo "genuine test failure — not retrying"
-            exit "$rc"
-          done
-          echo "go test still flaking after 3 attempts"
-          exit 1
+          set -euo pipefail
+          python3 .github/scripts/test_test_census.py
+          .github/scripts/test_shard.sh --verify
+          shard_packages=$(.github/scripts/test_shard.sh "$SHARD")
+          mapfile -t packages <<< "$shard_packages"
+          ((${#packages[@]} > 0))
+          go test -short -count=1 -timeout 600s "${packages[@]}"
 
-      - name: Run one-program (miner) tests
-        run: go test -short -timeout 900s ./miner/... ./internal/urnettools/... ./cli/... ./cmd/...
+  race:
+    name: shared-state race tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.3'
+          cache: true
+          cache-dependency-path: go.sum
+      - name: Race bandwidth, durable state and concurrent client capacity
+        run: go test -short -race -count=1 -timeout 600s ./miner/bandwidth ./internal/durablehead ./internal/durablesync ./crv4
+      - name: Race miner proxy, budget and state paths
+        if: ${{ !cancelled() }}
+        run: go test -short -race -count=1 -timeout 600s -run 'Test.*(Proxy|Budget|Concurrent|State)' ./miner
+
+  windows-test:
+    name: native Windows service tests
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.3'
+          cache: true
+          cache-dependency-path: go.sum
+      - name: Run Windows service suite
+        run: go test -short -count=1 -timeout 600s -v ./internal/winservice
 
   lint:
     runs-on: ubuntu-latest
@@ -493,7 +517,7 @@ jobs:
           done
 
   build-and-push:
-    needs: [test, lint]
+    needs: [test, race, windows-test, lint]
     runs-on: ubuntu-latest
     permissions:
       contents: read
