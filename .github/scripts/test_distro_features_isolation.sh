@@ -51,5 +51,35 @@ rc=$?
 if [ "$rc" = 0 ]; then ok "mandatory SKIP-NO-NETWORK -> FAIL, optional stays a skip"
 else fail "skip policy: $(tail -1 "$T/pol.out")"; fi
 
+# ---- 3. a failed reset step fails the group instead of passing it
+reset_case() { # $1=label $2=injection; prints rc, first verdict, whether the seed survives
+  (
+    BIN_DIR=/nonexistent STATE_HOME="$T/$1/home" FEATURE_WORK="$T/$1/work" FEATURE_REPORT="$T/$1/report"
+    export BIN_DIR STATE_HOME FEATURE_WORK FEATURE_REPORT
+    mkdir -p "$STATE_HOME"
+    . "$T/h.sh" >/dev/null 2>&1
+    mkdir -p "$STATE_DIR" "$WORK"
+    stop_miner() { :; }
+    printf 'seed\n' >"$STATE_DIR/proxy"
+    case "$2" in
+      cp)    cp() { [ "$1" = -a ] && return 1; command cp "$@"; } ;;
+      rm)    printf 'old\n' >"$STATE_DIR/jwt"
+             rm() { if [ "${2:-}" = "$STATE_DIR" ]; then command rm -f "$STATE_DIR/proxy"; return 1; fi; command rm "$@"; } ;;
+      mkdir) mkdir() { return 1; } ;;
+    esac
+    group_fresh_state url >"$T/$1.rec" 2>/dev/null; rc=$?
+    seed=lost
+    if [ -e "$STATE_DIR/proxy" ] || [ -e "$WORK/state-before-url/proxy" ]; then seed=kept; fi
+    printf 'rc=%s %s seed=%s\n' "$rc" "$(awk '$1 == "PASS" || $1 == "FAIL" { print $1; exit }' "$T/$1.rec")" "$seed"
+  )
+}
+for inj in cp rm mkdir; do
+  out="$(reset_case "reset-$inj" "$inj")"
+  case "$out" in
+    "rc=1 FAIL seed=kept") ok "reset step '$inj' failing -> state-isolation FAIL, previous state kept" ;;
+    *) fail "reset step '$inj' failing: $out" ;;
+  esac
+done
+
 printf 'self-test: %s failure(s)\n' "$FAILS"
 [ "$FAILS" = 0 ]

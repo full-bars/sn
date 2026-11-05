@@ -2187,15 +2187,28 @@ b3_surface() {
 # Each independent check group starts from a state directory created fresh at
 # the same path (SOCK, discovery and the passwd-home trust all key on it). The
 # previous contents are moved to $WORK/state-before-<group> for diagnosis and
-# are never visible to the group. Only the JWT is staged again.
+# are never visible to the group. Only the JWT is staged again. If any reset
+# step fails the group is recorded as a state-isolation FAIL and not run.
 group_fresh_state() { # $1=group
     stop_miner 15 >/dev/null 2>&1
     LIVE=0
     gdir="$WORK/state-before-$1"
-    rm -rf "$gdir"
-    if [ -d "$STATE_DIR" ]; then cp -a "$STATE_DIR" "$gdir" 2>/dev/null || true; fi
-    rm -rf "$STATE_DIR"
-    mkdir -p "$STATE_DIR" && chmod 700 "$STATE_DIR"
+    if ! rm -rf "$gdir"; then
+        record FAIL "state-isolation-$1" "could not clear the old archive $gdir; previous state left in place"
+        return 1
+    fi
+    if [ -d "$STATE_DIR" ] && ! cp -a "$STATE_DIR" "$gdir" 2>/dev/null; then
+        record FAIL "state-isolation-$1" "could not archive the previous state dir to $gdir; previous state left in place"
+        return 1
+    fi
+    if ! rm -rf "$STATE_DIR"; then
+        record FAIL "state-isolation-$1" "could not remove the previous state dir (archived at $gdir)"
+        return 1
+    fi
+    if ! { mkdir -p "$STATE_DIR" && chmod 700 "$STATE_DIR"; }; then
+        record FAIL "state-isolation-$1" "could not create a fresh state dir at $STATE_DIR"
+        return 1
+    fi
     if [ -n "$JWT_FILE" ] && [ -r "$JWT_FILE" ]; then
         cp "$JWT_FILE" "$STATE_DIR/jwt" && chmod 600 "$STATE_DIR/jwt"
     fi
