@@ -1,6 +1,7 @@
 package urnettools
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"os/exec"
@@ -94,22 +95,23 @@ func (c *PortChecker) CheckPorts() (ExtenderPorts, error) {
 		UDP4053: PortHolder{Port: ExtenderPortUDP4053, Proto: "udp"},
 	}
 
+	var err error
 	switch c.Platform {
 	case "windows":
-		c.checkWindows(&result)
+		err = c.checkWindows(&result)
 	case "darwin", "freebsd":
-		c.checkBSDOrDarwin(&result)
+		err = c.checkBSDOrDarwin(&result)
 	default: // "linux" and other unix
-		c.checkLinux(&result)
+		err = c.checkLinux(&result)
 	}
 
-	return result, nil
+	return result, err
 }
 
 // ssUserRegex parses `users:(("name",pid=123,fd=4))` from ss output.
 var ssUserRegex = regexp.MustCompile(`users:\(\("([^"]+)",pid=(\d+)`)
 
-func (c *PortChecker) checkLinux(ports *ExtenderPorts) {
+func (c *PortChecker) checkLinux(ports *ExtenderPorts) error {
 	// TCP 443 check
 	if out, err := c.ExecCmd("ss", "-tlnp"); err == nil {
 		lines := strings.Split(string(out), "\n")
@@ -123,6 +125,8 @@ func (c *PortChecker) checkLinux(ports *ExtenderPorts) {
 				break
 			}
 		}
+	} else {
+		return fmt.Errorf("ss TCP inspection: %w", err)
 	}
 
 	// UDP 443 and 4053 check
@@ -144,7 +148,10 @@ func (c *PortChecker) checkLinux(ports *ExtenderPorts) {
 				}
 			}
 		}
+	} else {
+		return fmt.Errorf("ss UDP inspection: %w", err)
 	}
+	return nil
 }
 
 func parseSSLineForPort(line string, targetPort int) bool {
@@ -163,17 +170,24 @@ func parseSSLineForPort(line string, targetPort int) bool {
 	return err == nil && p == targetPort
 }
 
-func (c *PortChecker) checkBSDOrDarwin(ports *ExtenderPorts) {
-	// TCP 443 via lsof
-	if out, err := c.ExecCmd("lsof", "-nP", "-iTCP:443", "-sTCP:LISTEN"); err == nil {
-		parseLsofOutput(string(out), &ports.TCP443, 443)
+func (c *PortChecker) checkBSDOrDarwin(ports *ExtenderPorts) error {
+	out, err := c.ExecCmd("lsof", "-nP", "-iTCP:443", "-sTCP:LISTEN")
+	if err != nil && !lsofNoMatches(out, err) {
+		return fmt.Errorf("lsof TCP inspection: %w", err)
 	}
+	parseLsofOutput(string(out), &ports.TCP443, 443)
+	out, err = c.ExecCmd("lsof", "-nP", "-iUDP:443,4053")
+	if err != nil && !lsofNoMatches(out, err) {
+		return fmt.Errorf("lsof UDP inspection: %w", err)
+	}
+	parseLsofOutput(string(out), &ports.UDP443, 443)
+	parseLsofOutput(string(out), &ports.UDP4053, 4053)
+	return nil
+}
 
-	// UDP 443 and 4053 via lsof
-	if out, err := c.ExecCmd("lsof", "-nP", "-iUDP:443,4053"); err == nil {
-		parseLsofOutput(string(out), &ports.UDP443, 443)
-		parseLsofOutput(string(out), &ports.UDP4053, 4053)
-	}
+func lsofNoMatches(out []byte, err error) bool {
+	var exitErr *exec.ExitError
+	return errors.As(err, &exitErr) && exitErr.ExitCode() == 1 && len(strings.TrimSpace(string(out))) == 0
 }
 
 func parseLsofOutput(out string, holder *PortHolder, targetPort int) {
@@ -203,13 +217,15 @@ func parseLsofOutput(out string, holder *PortHolder, targetPort int) {
 	}
 }
 
-func (c *PortChecker) checkWindows(ports *ExtenderPorts) {
+func (c *PortChecker) checkWindows(ports *ExtenderPorts) error {
 	// TCP
 	if out, err := c.ExecCmd("netstat", "-ano", "-p", "tcp"); err == nil {
 		parseNetstatOutput(string(out), &ports.TCP443, 443, "TCP", "LISTENING")
 		if ports.TCP443.Held && ports.TCP443.PID > 0 {
 			ports.TCP443.Process = c.lookupWindowsProcessName(ports.TCP443.PID)
 		}
+	} else {
+		return fmt.Errorf("netstat TCP inspection: %w", err)
 	}
 
 	// UDP
@@ -222,7 +238,10 @@ func (c *PortChecker) checkWindows(ports *ExtenderPorts) {
 		if ports.UDP4053.Held && ports.UDP4053.PID > 0 {
 			ports.UDP4053.Process = c.lookupWindowsProcessName(ports.UDP4053.PID)
 		}
+	} else {
+		return fmt.Errorf("netstat UDP inspection: %w", err)
 	}
+	return nil
 }
 
 func parseNetstatOutput(out string, holder *PortHolder, targetPort int, proto, wantState string) {

@@ -2,11 +2,15 @@ package urnettools
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // PlatformConfigurer defines the operations needed to configure and verify extender requirements.
@@ -14,7 +18,7 @@ type PlatformConfigurer interface {
 	Platform() string
 	CheckRequirement(binary, user string) (configured bool, desc string, err error)
 	ApplyRequirement(binary, user string) (applied bool, desc string, err error)
-	VerifyBind(user string) (ok bool, err error)
+	VerifyBind(binary, user string) (ok bool, err error)
 }
 
 // SystemPlatformConfigurer is the default implementation that talks to OS binaries and kernel APIs.
@@ -33,6 +37,11 @@ func NewSystemPlatformConfigurer(platform string) *SystemPlatformConfigurer {
 	return &SystemPlatformConfigurer{
 		PlatformName: platform,
 		ExecCmd: func(name string, args ...string) ([]byte, error) {
+			if name == "sudo" && len(args) > 0 && args[len(args)-1] == "--extender-bind-probe" {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				return exec.CommandContext(ctx, name, args...).CombinedOutput()
+			}
 			cmd := exec.Command(name, args...)
 			return cmd.CombinedOutput()
 		},
@@ -82,18 +91,23 @@ func (sp *SystemPlatformConfigurer) ApplyRequirement(binary, user string) (bool,
 	}
 }
 
-// VerifyBind verifies that port TCP 443 can be opened as the provider user.
-func (sp *SystemPlatformConfigurer) VerifyBind(user string) (bool, error) {
-	ln, err := sp.ListenTCP("tcp", ":443")
-	if err != nil {
-		if strings.Contains(err.Error(), "address already in use") {
-			// If already in use, check if it's already bound
-			return true, nil
-		}
-		return false, err
+// VerifyBind runs the provider's probe as its user; false without error is unverified.
+func (sp *SystemPlatformConfigurer) VerifyBind(binary, user string) (bool, error) {
+	if sp.PlatformName != "linux" || binary == "" || user == "" || sp.LookupPath == nil || sp.ExecCmd == nil {
+		return false, nil
 	}
-	_ = ln.Close()
-	return true, nil
+	if _, err := sp.LookupPath("sudo"); err != nil {
+		return false, nil
+	}
+	out, err := sp.ExecCmd("sudo", "-n", "-u", user, "--", binary, "--extender-bind-probe")
+	text := strings.TrimSpace(string(out))
+	if err == nil && text == "extender-bind-probe: proven" {
+		return true, nil
+	}
+	if strings.HasPrefix(text, "extender-bind-probe: failed:") {
+		return false, fmt.Errorf("%s", text)
+	}
+	return false, nil
 }
 
 // --- Linux implementation ---
@@ -138,7 +152,7 @@ func (sp *SystemPlatformConfigurer) applyLinux(binary string) (bool, string, err
 // --- FreeBSD implementation ---
 
 func (sp *SystemPlatformConfigurer) checkFreeBSD(user string) (bool, string, error) {
-	if user == "root" || (sp.IsRoot != nil && sp.IsRoot()) {
+	if user == "root" {
 		return true, "provider running as root (no portrange.reservedhigh sysctl needed)", nil
 	}
 	out, err := sp.ExecCmd("sysctl", "-n", "net.inet.ip.portrange.reservedhigh")
@@ -163,8 +177,18 @@ func (sp *SystemPlatformConfigurer) checkFreeBSD(user string) (bool, string, err
 }
 
 func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, error) {
-	// Read current value
-	curOut, _ := sp.ExecCmd("sysctl", "-n", "net.inet.ip.portrange.reservedhigh")
+	// Read the existing file before changing either the kernel or the file. A
+	// file that does not exist yet is empty; any other read failure stops here,
+	// because writing back over a file we could not read would drop its contents.
+	sysctlConf := "/etc/sysctl.conf"
+	data, err := sp.ReadFile(sysctlConf)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return false, "", fmt.Errorf("reading %s: %w", sysctlConf, err)
+	}
+	curOut, err := sp.ExecCmd("sysctl", "-n", "net.inet.ip.portrange.reservedhigh")
+	if err != nil {
+		return false, "", fmt.Errorf("reading sysctl net.inet.ip.portrange.reservedhigh: %w", err)
+	}
 	curVal := strings.TrimSpace(string(curOut))
 
 	// Set sysctl
@@ -180,8 +204,6 @@ func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, err
 	afterVal := strings.TrimSpace(string(afterOut))
 
 	// Persist in /etc/sysctl.conf
-	sysctlConf := "/etc/sysctl.conf"
-	data, _ := sp.ReadFile(sysctlConf)
 	content := string(data)
 	if !strings.Contains(content, "net.inet.ip.portrange.reservedhigh=0") {
 		var buf bytes.Buffer
@@ -202,66 +224,27 @@ func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, err
 // --- Windows implementation ---
 
 func (sp *SystemPlatformConfigurer) checkWindows() (bool, string, error) {
-	ruleName := "URnetwork Extender"
-	out, err := sp.ExecCmd("netsh", "advfirewall", "firewall", "show", "rule", "name="+ruleName)
-	if err == nil && strings.Contains(string(out), ruleName) {
-		return true, fmt.Sprintf("inbound firewall rule %q already exists", ruleName), nil
-	}
-	return false, fmt.Sprintf("inbound firewall rule %q does not exist", ruleName), nil
+	tcp := windowsRuleExists(sp.ExecCmd, "URnetwork Extender")
+	udp := windowsRuleExists(sp.ExecCmd, "URnetwork Extender UDP")
+	return tcp && udp, fmt.Sprintf("Windows firewall rules: TCP present=%t, UDP present=%t", tcp, udp), nil
 }
 
 func (sp *SystemPlatformConfigurer) applyWindows() (bool, string, error) {
-	ruleName := "URnetwork Extender"
-	// Double check identically named rule does not already exist
-	out, _ := sp.ExecCmd("netsh", "advfirewall", "firewall", "show", "rule", "name="+ruleName)
-	if strings.Contains(string(out), ruleName) {
-		return false, fmt.Sprintf("firewall rule %q already exists", ruleName), nil
+	applied, err := applyWindowsRules(sp.ExecCmd)
+	if err != nil {
+		return applied, "", err
 	}
-
-	// Add TCP rule
-	if out, err := sp.ExecCmd("netsh", "advfirewall", "firewall", "add", "rule", "name="+ruleName, "dir=in", "action=allow", "protocol=TCP", "localport=443"); err != nil {
-		return false, "", fmt.Errorf("netsh advfirewall add TCP 443 rule failed: %s: %w", strings.TrimSpace(string(out)), err)
-	}
-
-	// Add UDP rule
-	udpRuleName := ruleName + " UDP"
-	if out, err := sp.ExecCmd("netsh", "advfirewall", "firewall", "add", "rule", "name="+udpRuleName, "dir=in", "action=allow", "protocol=UDP", "localport=443,4053"); err != nil {
-		return false, "", fmt.Errorf("netsh advfirewall add UDP 443,4053 rule failed: %s: %w", strings.TrimSpace(string(out)), err)
-	}
-
-	return true, fmt.Sprintf("added Windows Firewall inbound rules %q (TCP 443) and %q (UDP 443, 4053)", ruleName, udpRuleName), nil
+	return applied, "Windows Firewall TCP 443 and UDP 443,4053 rules configured", nil
 }
 
 // --- macOS (darwin) implementation ---
 
 func (sp *SystemPlatformConfigurer) checkDarwin() (bool, string, error) {
-	plist := "/Library/LaunchDaemons/com.urnetwork.provider.plist"
-	if _, err := sp.ReadFile(plist); err == nil {
-		out, err := sp.ExecCmd("launchctl", "list", "com.urnetwork.provider")
-		if err == nil && !strings.Contains(string(out), "Could not find") {
-			return true, fmt.Sprintf("root LaunchDaemon %s is installed and loaded", plist), nil
-		}
-		return false, fmt.Sprintf("root LaunchDaemon %s exists but is not active", plist), nil
-	}
-	return false, "root LaunchDaemon (/Library/LaunchDaemons/com.urnetwork.provider.plist) not found", nil
+	return false, "", fmt.Errorf("macOS extender setup cannot verify or install a root LaunchDaemon; configure and verify the provider service manually")
 }
 
 func (sp *SystemPlatformConfigurer) applyDarwin() (bool, string, error) {
-	plist := "/Library/LaunchDaemons/com.urnetwork.provider.plist"
-	// Check if already root
-	if sp.IsRoot != nil && !sp.IsRoot() {
-		return false, "", fmt.Errorf("macOS requires root privileges to install LaunchDaemon for port 443")
-	}
-
-	desc := fmt.Sprintf("macOS has no file capabilities; extender role requires running as root under %s rather than a user LaunchAgent. Note: macOS Application Firewall may prompt to allow inbound connections", plist)
-	// If plist doesn't exist, verify guidance is printed
-	if _, err := sp.ReadFile(plist); err != nil {
-		return false, desc, fmt.Errorf("root LaunchDaemon %s must be installed with root privileges", plist)
-	}
-
-	// If it exists, ensure it is loaded
-	_, _ = sp.ExecCmd("launchctl", "load", "-w", plist)
-	return true, desc, nil
+	return sp.checkDarwin()
 }
 
 // UserCanBindTCP443 determines whether the current user on the platform can bind port 443.
