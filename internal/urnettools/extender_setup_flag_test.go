@@ -26,6 +26,7 @@ func TestExtenderSetupRejectsFlags(t *testing.T) {
 
 func TestExtenderStatusNoSocketExitsNonzero(t *testing.T) {
 	if os.Getenv("TEST_EXTENDER_STATUS_CHILD") == "1" {
+		discoverProvidersFn = func() []Provider { return nil } // a host with no provider
 		if err := Run([]string{"extender", "status"}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -64,7 +65,11 @@ func TestExtenderSocketAndTop(t *testing.T) {
 	}{{p, "active"}, {Provider{StateDir: t.TempDir()}, "unavailable"}} {
 		m := newTestModel(tui.DefaultTheme(), []Provider{tc.p}, &fakeClock{t: topBase})
 		m.showExtender = true
-		m.refreshExtender()
+		gen, p, ok := m.wantExtender(m.now())
+		if !ok {
+			t.Fatal("no extender fetch requested")
+		}
+		m.applyExtender(gen, ReadExtenderStatus(p))
 		b := tui.New(120, 40)
 		m.render(b)
 		if s := b.String(); !strings.Contains(s, tc.want) {

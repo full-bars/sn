@@ -203,8 +203,13 @@ type topModel struct {
 	menuSel      int
 	menuNote     string
 
+	// extender is the last reading the control socket gave for the current
+	// provider. It is fetched off the UI loop (see wantExtender) and shown only
+	// once a reading, available or not, has arrived for this selection.
 	extender     ExtenderReading
 	showExtender bool
+	extenderBusy bool
+	lastExtender time.Time
 
 	help bool
 	quit bool
@@ -232,15 +237,37 @@ func (m *topModel) provider() Provider {
 	return m.providers[m.cur]
 }
 
-func (m *topModel) refreshExtender() {
-	if len(m.providers) > 0 && m.cur < len(m.providers) {
-		m.extender = ReadExtenderStatus(m.providers[m.cur])
-		m.showExtender = true
-	}
+// extenderRows is the box height: every line the reading can show plus the
+// frame, so the addresses are never the rows that get cut.
+func (m *topModel) extenderRows() int {
+	return len(m.extenderLines()) + 2
 }
 
-func (m *topModel) extenderRows() int {
-	return 6
+// wantExtender reports whether an extender reading should be requested now
+// and, if so, marks one in flight. The socket round trip can take seconds on a
+// slow or absent provider, so it runs on its own goroutine like every other
+// top poll and never on the UI loop.
+func (m *topModel) wantExtender(now time.Time) (gen int, p Provider, ok bool) {
+	if m.extenderBusy || len(m.providers) == 0 || m.cur >= len(m.providers) {
+		return 0, Provider{}, false
+	}
+	if !m.lastExtender.IsZero() && now.Sub(m.lastExtender) < max(m.interval, topSnapshotEvery) {
+		return 0, Provider{}, false
+	}
+	m.extenderBusy = true
+	m.lastExtender = now
+	return m.gen, m.provider(), true
+}
+
+// applyExtender stores one extender reading. A reading fetched for an earlier
+// selection is dropped.
+func (m *topModel) applyExtender(gen int, reading ExtenderReading) {
+	if gen != m.gen {
+		return
+	}
+	m.extenderBusy = false
+	m.extender = reading
+	m.showExtender = true
 }
 
 // wantFetch reports whether a snapshot should be requested now and, if so,
@@ -623,9 +650,10 @@ func (m *topModel) selectProvider(delta int) topEffect {
 	showing := m.rt.showing
 	m.rt.reset()
 	m.rt.showing = showing // the view choice is the user's, not the provider's
-	if m.showExtender {
-		m.refreshExtender()
-	}
+	// The reading belongs to the provider just left: drop it, free the poll and
+	// let the next tick fetch the new provider's.
+	m.extender, m.showExtender = ExtenderReading{}, false
+	m.extenderBusy, m.lastExtender = false, time.Time{}
 	return topRefetch
 }
 

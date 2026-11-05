@@ -692,65 +692,63 @@ func topBytesPair(used, limit float64) string {
 	return fmt.Sprintf("%.0f/%.0f MiB", used/mib, limit/mib)
 }
 
-// drawExtender draws the extender role and activation status.
-func (m *topModel) drawExtender(b *tui.Buffer) {
+// extenderLine is one key/value row of the Extender box.
+type extenderLine struct {
+	key, value string
+	style      tui.Style
+}
+
+// extenderLines is every row the Extender box can show for the current
+// reading, in priority order (addresses before counters), so the box height
+// and its content come from one place and cannot disagree.
+func (m *topModel) extenderLines() []extenderLine {
 	th := m.theme
 	ex := m.extender
-	y := 0
-	row := func(key, value string, style tui.Style) {
-		if y < b.Height() {
-			m.kvAt(b, 12, y, key, value, style)
-			y++
-		}
-	}
 	if ex.Source != SourceControlSocket {
-		row("status", "unavailable", th.Dim)
-		return
+		return []extenderLine{{"status", "unavailable", th.Dim}}
 	}
-	row("source", ex.Source, th.Dim)
 	roleStyle := th.OK
 	if ex.RoleState == "stopped" || ex.RoleState == "disabled" || ex.RoleState == "unknown" {
 		roleStyle = th.Dim
-	} else if strings.Contains(ex.RoleState, "refused") || strings.Contains(ex.RoleState, "failed") {
+	} else if strings.Contains(ex.RoleState, "refused") || strings.Contains(ex.RoleState, "failed") || ex.RoleState == "revoked" {
 		roleStyle = th.Bad
 	}
-	row("role state", ex.RoleState, roleStyle)
-	row("listening", strconv.FormatBool(ex.Bound), th.Dim)
+	addr := func(active bool, ip string) string {
+		switch {
+		case active && ip != "":
+			return "active (" + ip + ")"
+		case active:
+			return "active"
+		case ip != "":
+			return "inactive (" + ip + ")"
+		}
+		return "inactive"
+	}
+	lines := []extenderLine{
+		{"role state", ex.RoleState, roleStyle},
+		{"listening", strconv.FormatBool(ex.Bound), th.Dim},
+		{"ipv4", addr(ex.ActivatedV4, ex.Ipv4), th.Dim},
+		{"ipv6", addr(ex.ActivatedV6, ex.Ipv6), th.Dim},
+	}
 	if ex.DnsPorts != "" {
-		row("dns ports", ex.DnsPorts, th.Dim)
+		lines = append(lines, extenderLine{"dns ports", ex.DnsPorts, th.Dim})
 	}
-
-	v4 := "inactive"
-	if ex.ActivatedV4 {
-		v4 = "active"
-		if ex.Ipv4 != "" {
-			v4 += " (" + ex.Ipv4 + ")"
-		}
-	} else if ex.Ipv4 != "" {
-		v4 = "inactive (" + ex.Ipv4 + ")"
-	} else if ex.Source == SourceUnknown {
-		v4 = "unknown"
-	}
-	row("ipv4", v4, th.Dim)
-
-	v6 := "inactive"
-	if ex.ActivatedV6 {
-		v6 = "active"
-		if ex.Ipv6 != "" {
-			v6 += " (" + ex.Ipv6 + ")"
-		}
-	} else if ex.Ipv6 != "" {
-		v6 = "inactive (" + ex.Ipv6 + ")"
-	} else if ex.Source == SourceUnknown {
-		v6 = "unknown"
-	}
-	row("ipv6", v6, th.Dim)
-
 	if ex.LastRefusal != "" && ex.LastRefusal != "none" {
-		row("error", ex.LastRefusal, th.Warn)
+		lines = append(lines, extenderLine{"error", ex.LastRefusal, th.Warn})
 	}
 	if ex.ConnectionCount > 0 {
-		row("conns", strconv.Itoa(ex.ConnectionCount), th.Dim)
+		lines = append(lines, extenderLine{"conns", strconv.Itoa(ex.ConnectionCount), th.Dim})
+	}
+	return lines
+}
+
+// drawExtender draws the extender role and activation status.
+func (m *topModel) drawExtender(b *tui.Buffer) {
+	for y, l := range m.extenderLines() {
+		if y >= b.Height() {
+			break
+		}
+		m.kvAt(b, 12, y, l.key, l.value, l.style)
 	}
 }
 
