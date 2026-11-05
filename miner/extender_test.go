@@ -21,6 +21,32 @@ import (
 
 // The seed survives a write and a read, is kept private to the owner, and a
 // provider that has never been an extender reads none rather than failing.
+func TestProviderExtenderSeedReplacesAtomically(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("URNETWORK_STATE_DIR", dir)
+	path := filepath.Join(dir, ".provider.extender.key")
+	old := []byte("the old identity")
+	seed := bytes.Repeat([]byte{0x42}, 32)
+	if err := os.WriteFile(path, old, 0600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "old-copy")
+	if err := os.Link(path, link); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeProviderExtenderKeySeed(providerSlotIdentities{}, nil, seed); err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(got, seed) {
+		t.Fatalf("new seed incomplete: %v", err)
+	}
+	got, err = os.ReadFile(link)
+	if err != nil || !bytes.Equal(got, old) {
+		t.Fatalf("existing inode changed instead of replacement: %v", err)
+	}
+}
+
 func TestProviderExtenderKeySeedRoundTrips(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("URNETWORK_STATE_DIR", stateDir)
