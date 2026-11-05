@@ -12,7 +12,6 @@ import (
 
 // ExtenderSetupOptions controls the behavior of `urnet-tools extender setup`.
 type ExtenderSetupOptions struct {
-	Enable         bool
 	NonInteractive bool
 	Force          bool
 	DryRun         bool
@@ -38,7 +37,6 @@ type ExtenderSetupOptions struct {
 // 4. Apply platform requirement
 // 5. Detect and configure firewall (or print exact rules if unknown)
 // 6. Verify with a real bind
-// 7. If --enable, set provider role preference to "on"
 func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	out := opts.Stdout
 	if out == nil {
@@ -144,19 +142,6 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 				return err
 			}
 		}
-		// If already configured, handle --enable if needed
-		if opts.Enable && p.StateDir != "" {
-			if curPref := ReadRolePreference(p.StateDir); curPref != "on" {
-				if opts.DryRun {
-					fmt.Fprintf(out, "[dry-run] would set extender role preference to on for %s\n", providerLabel(p))
-				} else {
-					if err := WriteRolePreference(p.StateDir, true); err != nil {
-						return fmt.Errorf("writing role preference: %w", err)
-					}
-					fmt.Fprintf(out, "extender: role preference enabled for %s\n", providerLabel(p))
-				}
-			}
-		}
 		fmt.Fprintf(out, "extender: already configured (%s)\n", desc)
 		return nil
 	}
@@ -191,9 +176,6 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		args := opts.Argv
 		if len(args) == 0 {
 			args = []string{"extender", "setup"}
-			if opts.Enable {
-				args = append(args, "--enable")
-			}
 		}
 		return elevateFn(args)
 	}
@@ -236,22 +218,6 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		}
 	}
 
-	// STEP 7: Set role preference if --enable
-	if opts.Enable {
-		if p.StateDir == "" {
-			home, _ := os.UserHomeDir()
-			p.StateDir = filepath.Join(home, ".urnetwork")
-		}
-		if opts.DryRun {
-			fmt.Fprintf(out, "[dry-run] would set extender role preference to on in %s\n", p.StateDir)
-		} else {
-			if err := WriteRolePreference(p.StateDir, true); err != nil {
-				return fmt.Errorf("writing role preference: %w", err)
-			}
-			fmt.Fprintf(out, "extender: role preference set to on for %s\n", providerLabel(p))
-		}
-	}
-
 	fmt.Fprintf(out, "extender: setup complete\n")
 	return nil
 }
@@ -276,9 +242,6 @@ func reportExtenderBind(out io.Writer, cfg PlatformConfigurer, p Provider, occup
 func formatSetupSudoCommand(opts ExtenderSetupOptions) string {
 	exe := resolvedExecutablePath()
 	cmd := fmt.Sprintf("sudo %s extender setup", exe)
-	if opts.Enable {
-		cmd += " --enable"
-	}
 	if opts.Target.Unit != "" {
 		cmd += " --unit " + opts.Target.Unit
 	}
