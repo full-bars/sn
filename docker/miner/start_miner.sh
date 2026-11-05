@@ -27,6 +27,10 @@ HOTKEY_SEED_FILE="${HOTKEY_SEED_FILE:-}"
 OPERATORS_URL="${OPERATORS_URL:-}"
 MAX_MEMORY="${MAX_MEMORY:-}"
 PROVIDER_ARGS="${PROVIDER_ARGS:-}"
+# The shell treats unset or empty as auto; pass that same mode to the miner's
+# identity gate rather than leaving it with no explicit registration signal.
+ALLOW_CLIENT_REGISTRATION="${ALLOW_CLIENT_REGISTRATION:-auto}"
+export ALLOW_CLIENT_REGISTRATION
 PROXY_FILE="${PROXY_FILE:-/app/proxy.txt}"
 POSITIONAL_CODE="${1:-}"
 
@@ -85,7 +89,7 @@ func_check_config() {
       log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: passing --allow-client-registration"
       ;;
     n)
-      log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: accepted for compatibility; a slot always mints the client it needs"
+      log "[INFO] ALLOW_CLIENT_REGISTRATION=$ALLOW_CLIENT_REGISTRATION: new identities require explicit permission"
       ;;
     auto)
       log "[INFO] ALLOW_CLIENT_REGISTRATION=auto: nothing to set, a slot mints the client it needs"

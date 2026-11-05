@@ -60,6 +60,7 @@ case "$1" in
     ;;
   proxy) exit 0 ;;
   provide)
+    printf 'registration-env: %s\n' "${ALLOW_CLIENT_REGISTRATION-<unset>}" >> "$STUB_LOG"
     for arg in "$@"; do
       case "$arg" in --operator=*) echo 'provide has no --operator mode' >&2; exit 2 ;; esac
     done
@@ -123,12 +124,16 @@ echo "--- ALLOW_CLIENT_REGISTRATION and validation ---"
 h="$tmp/h7"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l7" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" ALL_OPERATORS=Y
 t "auto omits --allow-client-registration" sh -c "grep -q 'argv: provide --all-operators$' '$tmp/l7'"
+t "unset container registration mode reaches the miner as auto" sh -c "rg -q '^registration-env: auto$' '$tmp/l7'"
+h="$tmp/h7empty"
+run_entry "$h" "-" "$VALID_JWT" "$tmp/l7empty" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" ALLOW_CLIENT_REGISTRATION=
+t "empty container registration mode reaches the miner as auto" sh -c "rg -q '^registration-env: auto$' '$tmp/l7empty'"
 
-# Creation is never gated, so N is a no-op: the flag it used to withhold no
-# longer exists. The test pins that N adds nothing and does not resurrect it.
+# N passes through without permission, and adds no registration flag.
 h="$tmp/h7n"
 run_entry "$h" "-" "$VALID_JWT" "$tmp/l7n" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" ALL_OPERATORS=Y ALLOW_CLIENT_REGISTRATION=N
 t "N adds no registration flag" sh -c "grep -q 'argv: provide --all-operators$' '$tmp/l7n'"
+t "N reaches the miner without being changed to auto" sh -c "rg -q '^registration-env: N$' '$tmp/l7n'"
 
 h="$tmp/h8"; mkdir -p "$h/.urnetwork"
 run_entry "$h" "-" "" "$tmp/l8" 0 AUTH=authcode AUTHCODE="$FAKE_CODE" AUTO_REGISTER=Y; rc=$?

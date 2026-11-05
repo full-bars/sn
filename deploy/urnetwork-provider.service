@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/urnetwork provide
+ExecStart=/usr/local/bin/urnetwork provide --allow-client-registration
 Restart=on-failure
 RestartSec=5
 # 79 is minerExitAuthStopped: the persisted streak reached 30 refusals over
