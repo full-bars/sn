@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -468,4 +469,50 @@ func stateInspectControl(action string) (string, error) {
 	}
 	b, err := json.Marshal(v)
 	return string(b), err
+}
+
+// openStateInspectOffline opens an existing store file READ ONLY with a short
+// bounded timeout, for use when no provider is running. It never creates the
+// file or its directory, never stamps, recovers or quarantines, and does not
+// go through providerStoreInstance. bbolt takes a shared flock in this mode,
+// so a live owner (exclusive) makes it time out and the caller reports
+// "locked" instead of waiting. An empty or unstamped file is NOT initialised:
+// a read-only bbolt open refuses it.
+func openStateInspectOffline(path string, timeout time.Duration) (*providerStore, error) {
+	if _, err := os.Stat(path); err != nil {
+		return nil, errStateStoreNotOpen
+	}
+	var opened *bbolt.DB
+	db, err := callProviderStore(func() (*bbolt.DB, error) {
+		d, err := openProviderBolt(path, &bbolt.Options{ReadOnly: true, Timeout: timeout})
+		opened = d
+		return d, err
+	})
+	if err != nil {
+		if opened != nil {
+			_ = opened.Close()
+		}
+		return nil, err
+	}
+	return &providerStore{db: db, path: path}, nil
+}
+
+// stateInspectOffline answers "verify" or "identities" from the file alone.
+// Failures become statuses in the report, never error text.
+func stateInspectOffline(action, path string, timeout time.Duration) (string, error) {
+	store, err := openStateInspectOffline(path, timeout)
+	if store != nil {
+		defer store.db.Close()
+	}
+	var v any
+	switch strings.TrimSpace(action) {
+	case "verify":
+		v = buildStateVerifyReport(store, err, stateIdentityFileSide)
+	case "identities":
+		v = buildStateIdentitiesReport(store, err)
+	default:
+		return "", errors.New("state: unknown action (want verify or identities)")
+	}
+	b, merr := json.Marshal(v)
+	return string(b), merr
 }

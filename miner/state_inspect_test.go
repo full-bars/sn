@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -392,5 +393,94 @@ func TestVerifyReadsFileSideOutsideTransaction(t *testing.T) {
 	}
 	if identityFamilyOf(t, r).Status != stateClean {
 		t.Fatalf("matching sides should read clean: %+v", r)
+	}
+}
+
+// Offline inspection: the provider is stopped, so the file is opened read only
+// with a short timeout. It never creates, stamps, recovers or quarantines.
+func TestOfflineVerifyLeavesFileUnchanged(t *testing.T) {
+	s := inspectFixture(t)
+	path := s.path
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	infoBefore, _ := os.Stat(path)
+	entriesBefore, _ := os.ReadDir(filepath.Dir(path))
+	v, err := stateInspectOffline("verify", path, 200*time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	i, err := stateInspectOffline("identities", path, 200*time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var vr stateVerifyReport
+	if json.Unmarshal([]byte(v), &vr) != nil || vr.Store != stateClean || vr.Schema != "supported" || vr.Records == 0 && len(vr.Families) == 0 {
+		t.Fatalf("offline verify did not read the store: %s", v)
+	}
+	if !strings.Contains(i, `"slot-`) || strings.Contains(i, inspectSecretPass) {
+		t.Fatalf("offline identities wrong: %s", i)
+	}
+	after, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	infoAfter, _ := os.Stat(path)
+	entriesAfter, _ := os.ReadDir(filepath.Dir(path))
+	if !bytes.Equal(before, after) || !infoBefore.ModTime().Equal(infoAfter.ModTime()) || len(entriesBefore) != len(entriesAfter) {
+		t.Fatal("offline inspection changed the file or the directory")
+	}
+}
+
+func TestOfflineVerifyRefusesLockedFile(t *testing.T) {
+	s := inspectStore(t) // the owner: holds the exclusive file lock
+	start := time.Now()
+	out, err := stateInspectOffline("verify", s.path, 100*time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var r stateVerifyReport
+	if json.Unmarshal([]byte(out), &r) != nil || r.Status != stateLocked || r.Store != stateLocked {
+		t.Fatalf("locked file must report locked, got %s", out)
+	}
+	if time.Since(start) > 5*time.Second {
+		t.Fatal("offline open was not bounded")
+	}
+	if strings.Contains(out, s.path) {
+		t.Fatalf("report leaks the path: %s", out)
+	}
+}
+
+func TestOfflineVerifyMissingAndEmptyFileAreNotCreatedOrStamped(t *testing.T) {
+	dir := t.TempDir()
+	missing := filepath.Join(dir, "sub", providerStoreFileName)
+	out, err := stateInspectOffline("verify", missing, 100*time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var r stateVerifyReport
+	if json.Unmarshal([]byte(out), &r) != nil || r.Status != stateUnavailable {
+		t.Fatalf("missing file must be unavailable: %s", out)
+	}
+	if _, err := os.Stat(filepath.Dir(missing)); !os.IsNotExist(err) {
+		t.Fatal("offline inspection created a directory")
+	}
+	empty := filepath.Join(dir, "empty.db")
+	if err := os.WriteFile(empty, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, err = stateInspectOffline("verify", empty, 100*time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if json.Unmarshal([]byte(out), &r) != nil || r.Status == stateClean {
+		t.Fatalf("empty file must not read clean: %s", out)
+	}
+	if info, _ := os.Stat(empty); info.Size() != 0 {
+		t.Fatal("offline inspection initialised an empty file")
 	}
 }
