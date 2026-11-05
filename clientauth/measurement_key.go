@@ -70,7 +70,7 @@ func OpenValidatorMeasurementClientKey(ctx context.Context, keyPath string, adop
 		if !adoptLegacyKey {
 			return nil, &RegistrationRefusedError{Code: "measurement_key_requires_legacy_adoption"}
 		}
-		names, err := store.names(4096)
+		names, err := store.names(4096, ".validator")
 		if err != nil {
 			return nil, err
 		}

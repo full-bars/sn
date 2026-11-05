@@ -42,9 +42,8 @@ const providerStoreBucketSettings = "settings"
 // The setting then keeps running from its file, exactly as before.
 const settingMigrateSkippedCategory = "state_migrate_skipped"
 
-// settingMigrateConflictCategory counts a file that sits beside a stored value
-// it does not equal. The store wins and the file is left alone: it is never
-// overwritten and never deleted (section 2.3, "Both a file and a key exist").
+// settingMigrateConflictCategory counts a conflicting file preserved aside.
+// The stored value wins without discarding the legacy data.
 const settingMigrateConflictCategory = "state_migrate_conflict"
 
 // settingMigrateRemoveFailedCategory counts an imported file that could not be
@@ -296,12 +295,33 @@ func migrateProviderSetting(store *providerStore, setting providerSetting) setti
 		stateMigrateHook("after-commit", setting.key)
 	}
 	if outcome == settingConflict {
+		// The recovery backup goes first, durably, while the primary still
+		// stands. Removed after the primary, a crash between the two leaves a
+		// lone backup that loadJSONWithRecovery restores on the next start, which
+		// is a second conflict that never happened. The backup is only an older
+		// copy of the losing file, and that file is kept: archived, or left in
+		// place when the archive is full.
+		removeSettingRecoveryBackup(path)
+		backup, err := preserveSettingConflict(path, info)
+		if err != nil {
+			critLog("STATE MIGRATE conflict %s: could not preserve %s: %v; the store wins and the file remains", setting.key, setting.file, err)
+			return settingConflict
+		}
 		IncrPersistentError(settingMigrateConflictCategory)
-		critLog("STATE MIGRATE conflict %s: %s differs from the stored value; the store wins and the file is left alone", setting.key, setting.file)
+		critLog("STATE MIGRATE conflict %s: the store wins; the legacy file was preserved as %s", setting.key, backup)
 		return settingConflict
 	}
-	// The primary file is redundant once the database commit succeeds. Keep
-	// backups and temporary files: they are not part of this migration.
+	// The primary file is redundant once the database commit succeeds, and so
+	// is its recovery backup: left behind, loadJSONWithRecovery restores old
+	// data over the store on the next start. The backup goes first, durably, so
+	// a crash between the two removals leaves the primary, which the next start
+	// finds equal to the store and removes, never a lone backup that it would
+	// restore and count as a conflict. Temporary files are not part of this
+	// migration.
+	removeSettingRecoveryBackup(path)
+	if stateMigrateHook != nil {
+		stateMigrateHook("before-remove", setting.key)
+	}
 	if err := os.Remove(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		IncrPersistentError(settingMigrateRemoveFailedCategory)
 		tlog("[state] imported %s but could not remove %s: %v\n", setting.key, path, err)
@@ -309,6 +329,51 @@ func migrateProviderSetting(store *providerStore, setting providerSetting) setti
 	}
 	_ = providerStoreSyncDir(filepath.Dir(path))
 	return outcome
+}
+
+// removeSettingRecoveryBackup drops the recovery copy a setting writer leaves
+// beside its file. Once the store owns the setting the backup is stale, and
+// loadJSONWithRecovery would restore it over the store on the next start.
+// The removal is synced before the caller touches the primary, so a crash
+// cannot keep the backup on disk while losing the primary's removal.
+func removeSettingRecoveryBackup(path string) {
+	err := os.Remove(path + ".bak")
+	if errors.Is(err, fs.ErrNotExist) {
+		return
+	}
+	if err != nil {
+		tlog("[state] could not remove the recovery backup of %s: %v\n", path, err)
+		return
+	}
+	if err := providerStoreSyncDir(filepath.Dir(path)); err != nil {
+		tlog("[state] removed the recovery backup of %s but could not sync its directory: %v\n", path, err)
+	}
+}
+
+// Preserve up to eight conflicts without ever replacing or deleting a backup.
+// A full archive leaves the original in place for the operator to resolve.
+// A linked backup found on retry completes an interrupted link/unlink safely.
+func preserveSettingConflict(path string, original os.FileInfo) (string, error) {
+	for i := 1; i <= 8; i++ {
+		backup := fmt.Sprintf("%s.conflict.%d", path, i)
+		err := os.Link(path, backup)
+		if errors.Is(err, fs.ErrExist) {
+			info, statErr := os.Lstat(backup)
+			if statErr != nil || !os.SameFile(original, info) {
+				continue
+			}
+		} else if err != nil {
+			return "", err
+		}
+		if err := providerStoreSyncDir(filepath.Dir(path)); err != nil {
+			return "", err
+		}
+		if err := os.Remove(path); err != nil {
+			return "", err
+		}
+		return backup, providerStoreSyncDir(filepath.Dir(path))
+	}
+	return "", errors.New("conflict archive is full")
 }
 
 // importSetting stores data under key unless the key exists. One transaction,

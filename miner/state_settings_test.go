@@ -195,8 +195,10 @@ func TestStateMigrationOnAPopulatedDirectory(t *testing.T) {
 			t.Errorf("%s survived the migration", name)
 		}
 	}
-	if got := h.read("error_counts.json.bak"); !bytes.Equal(got, errorsFile) {
-		t.Fatal("the backup was changed")
+	if h.exists("error_counts.json.bak") {
+		// the recovery copy is stale once the store owns the setting: restoring
+		// it on the next start is the conflict that never settles
+		t.Fatal("the stale recovery backup survived the migration")
 	}
 	if got := persistentErrorStore().Snapshot()["auth_refused"]; got != 4 {
 		t.Errorf("error counts through the store = %d, want 4", got)
@@ -243,7 +245,7 @@ func TestStateMigrationIsIdempotent(t *testing.T) {
 func TestStateMigrationResumesAfterAKillAtEveryPoint(t *testing.T) {
 	type killed struct{}
 	for _, key := range []string{settingErrorCounts, settingMetricsCounter, settingDirectGrade} {
-		for _, point := range []string{"before-commit", "after-commit"} {
+		for _, point := range []string{"before-commit", "after-commit", "before-remove"} {
 			t.Run(point+"/"+key, func(t *testing.T) {
 				h := newSettingsHarness(t)
 				want := map[string][]byte{
@@ -449,8 +451,200 @@ func TestStateMigrationSkipsWhatItCannotTrust(t *testing.T) {
 	}
 }
 
+// Conflicts settle on the first start without losing either version.
+func TestStateMigrationConflictSettlesAcrossStarts(t *testing.T) {
+	h := newSettingsHarness(t)
+	store := providerStoreInstance()
+	if err := store.putSetting(settingDirectGrade, []byte(`{"graded":true,"score":90}`)); err != nil {
+		t.Fatal(err)
+	}
+	other := []byte(`{"graded":true,"score":10}`)
+	if err := os.WriteFile(h.path("direct_grade.json"), other, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if h.exists("direct_grade.json") {
+		t.Fatal("conflicting file still at legacy path")
+	}
+	matches, err := filepath.Glob(h.path("direct_grade.json.conflict.*"))
+	if err != nil || len(matches) != 1 {
+		t.Fatalf("conflict copies: %v, %v", matches, err)
+	}
+	got, err := os.ReadFile(matches[0])
+	if err != nil || !bytes.Equal(got, other) {
+		t.Fatalf("conflict data not preserved: %v", err)
+	}
+	count := h.errCount(settingMigrateConflictCategory)
+	if count != 1 {
+		t.Fatalf("conflict count = %d, want 1", count)
+	}
+	FlushPersistentErrors()
+	h.restart()
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.errCount(settingMigrateConflictCategory); got != count {
+		t.Fatalf("conflict count after restart = %d, want %d", got, count)
+	}
+}
+
+// The production shape: a setting writer leaves <file>.bak beside <file>. The
+// import removes the primary, so the backup has to go with it — otherwise the
+// recovery loader restores stale data over the store on the next start and the
+// conflict count climbs forever without a real conflict.
+func TestStateMigrationRemovesTheRecoveryBackupWithThePrimary(t *testing.T) {
+	h := newSettingsHarness(t)
+	value := []byte(`{"graded":true,"score":42}`)
+	if err := os.WriteFile(h.path("direct_grade.json"), value, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(h.path("direct_grade.json.bak"), value, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if h.exists("direct_grade.json.bak") {
+		t.Fatal("recovery backup left behind after a clean import")
+	}
+	FlushPersistentErrors()
+	h.restart()
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.errCount(settingMigrateConflictCategory); got != 0 {
+		t.Fatalf("conflict after a clean import = %d, want 0", got)
+	}
+}
+
+// A real conflict on the error counts, with the recovery backup the setting
+// writer always leaves. The conflict is counted once: the backup goes with the
+// archived file, so the error-count loader has nothing stale to restore and
+// the next starts find no file to conflict with.
+func TestStateMigrationErrorCountsConflictWithItsBackupCountsOnce(t *testing.T) {
+	h := newSettingsHarness(t)
+	stored, err := encodeChecksummedJSON(map[string]uint64{"auth_refused": 99})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := providerStoreInstance().putSetting(settingErrorCounts, stored); err != nil {
+		t.Fatal(err)
+	}
+	h.writeErrorCounts(map[string]uint64{"auth_refused": 3})
+	losing := h.writeErrorCounts(map[string]uint64{"auth_refused": 4})
+	if !h.exists("error_counts.json.bak") {
+		t.Fatal("the setting writer left no recovery backup to test with")
+	}
+	for start := 1; start <= 3; start++ {
+		if err := startProviderSettings(); err != nil {
+			t.Fatal(err)
+		}
+		if got := h.errCount(settingMigrateConflictCategory); got != 1 {
+			t.Fatalf("start %d: conflict count = %d, want 1", start, got)
+		}
+		if h.exists("error_counts.json") || h.exists("error_counts.json.bak") {
+			t.Fatalf("start %d: the legacy file or its backup is still beside the store", start)
+		}
+		FlushPersistentErrors()
+		h.restart()
+	}
+	if got := h.read("error_counts.json.conflict.1"); !bytes.Equal(got, losing) {
+		t.Fatal("the losing file was not preserved whole")
+	}
+	if h.exists("error_counts.json.conflict.2") {
+		t.Fatal("a later start archived a second conflict")
+	}
+}
+
+// The recovery backup is removed before the primary, so a kill between the
+// two removals leaves the primary, which the next start finds equal to the
+// store and removes. Removed the other way round, the same kill leaves a lone
+// backup that the error-count loader restores and the migration counts as a
+// conflict that never happened.
+func TestStateMigrationRemovesTheRecoveryBackupBeforeThePrimary(t *testing.T) {
+	type killed struct{}
+	h := newSettingsHarness(t)
+	h.writeErrorCounts(map[string]uint64{"auth_refused": 3})
+	h.writeErrorCounts(map[string]uint64{"auth_refused": 4})
+	if !h.exists("error_counts.json.bak") {
+		t.Fatal("the setting writer left no recovery backup to test with")
+	}
+	stateMigrateHook = func(point, key string) {
+		if point != "before-remove" || key != settingErrorCounts {
+			return
+		}
+		if h.exists("error_counts.json.bak") {
+			t.Error("the recovery backup was still there when the primary was removed")
+		}
+		if !h.exists("error_counts.json") {
+			t.Error("the primary was gone before its recovery backup")
+		}
+		panic(killed{})
+	}
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if _, ok := r.(killed); !ok {
+					panic(r)
+				}
+			}
+		}()
+		_ = startProviderSettings()
+		t.Fatal("the hook did not fire")
+	}()
+	stateMigrateHook = nil
+	h.restart()
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.errCount(settingMigrateConflictCategory); got != 0 {
+		t.Fatalf("conflicts after a kill between the removals = %d, want 0", got)
+	}
+	if h.exists("error_counts.json") || h.exists("error_counts.json.bak") {
+		t.Fatal("the restart left the legacy file or its backup behind")
+	}
+	if got := persistentErrorStore().Snapshot()["auth_refused"]; got != 4 {
+		t.Fatalf("error counts after the restart = %d, want 4", got)
+	}
+}
+
 // A file beside a stored value it does not equal: the store wins, the file is
 // left alone and counted. An equal file is just removed.
+func TestStateMigrationConflictArchiveFullPreservesFiles(t *testing.T) {
+	h := newSettingsHarness(t)
+	store := providerStoreInstance()
+	if err := store.putSetting(settingDirectGrade, []byte(`{"graded":true,"score":90}`)); err != nil {
+		t.Fatal(err)
+	}
+	other := []byte(`{"graded":true,"score":10}`)
+	if err := os.WriteFile(h.path("direct_grade.json"), other, 0600); err != nil {
+		t.Fatal(err)
+	}
+	for i := 1; i <= 8; i++ {
+		if err := os.WriteFile(h.path(fmt.Sprintf("direct_grade.json.conflict.%d", i)), []byte("retained"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i := 0; i < 2; i++ {
+		if got := migrateProviderSetting(store, providerSettings[2]); got != settingConflict {
+			t.Fatalf("outcome %s", got)
+		}
+	}
+	if got := h.read("direct_grade.json"); !bytes.Equal(got, other) {
+		t.Fatal("original changed")
+	}
+	if got := h.errCount(settingMigrateConflictCategory); got != 0 {
+		t.Fatalf("unresolved conflict counted %d times", got)
+	}
+	for i := 1; i <= 8; i++ {
+		if got := h.read(fmt.Sprintf("direct_grade.json.conflict.%d", i)); string(got) != "retained" {
+			t.Fatal("backup changed")
+		}
+	}
+}
+
 func TestStateMigrationBothFileAndKeyExist(t *testing.T) {
 	h := newSettingsHarness(t)
 	store := providerStoreInstance()
@@ -479,8 +673,11 @@ func TestStateMigrationBothFileAndKeyExist(t *testing.T) {
 	if outcome := migrateProviderSetting(store, providerSettings[2]); outcome != settingConflict {
 		t.Fatalf("differing file reported %s", outcome)
 	}
-	if got := h.read("direct_grade.json"); !bytes.Equal(got, other) {
-		t.Fatal("a conflicting file was changed or removed")
+	if h.exists("direct_grade.json") {
+		t.Fatal("a conflicting file remained at its legacy path")
+	}
+	if got := h.read("direct_grade.json.conflict.1"); !bytes.Equal(got, other) {
+		t.Fatal("a conflicting file was not preserved")
 	}
 	if data, _ := h.stored(settingDirectGrade); !bytes.Equal(data, stored) {
 		t.Fatal("a conflicting file overwrote the store")

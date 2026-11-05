@@ -34,8 +34,13 @@ func (self *registrationStore) write(string, []byte) error {
 }
 
 // Unsupported platforms cannot inspect or create provider custody.
-func (self *registrationStore) names(int) ([]string, error) {
+func (self *registrationStore) names(int, ...string) ([]string, error) {
 	return nil, errors.New("durable client registration custody is unavailable")
+}
+
+// Unsupported platforms cannot scan provider custody either.
+func (self *registrationStore) scanNames([]string, func(string) error) error {
+	return errors.New("durable client registration custody is unavailable")
 }
 
 func (self *registrationStore) close() error { return nil }
