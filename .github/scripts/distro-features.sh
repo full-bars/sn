@@ -1272,15 +1272,16 @@ gogc_runtime_scrape() {
 b1_gogc_runtime() {
     TS set gogc 250 -f >/dev/null 2>&1
     g_rt="$(gogc_runtime_scrape)"
-    TS set gogc off -f >/dev/null 2>&1 || true
+    g_clear_rc=0
+    TS set gogc off -f >/dev/null 2>&1 || g_clear_rc=$?
     g_back="$(gogc_runtime_scrape)"
     TS metrics off -f >/dev/null 2>&1 || true
     if [ -z "$g_rt" ]; then
         record SKIP-UNSUPPORTED control-key-live-runtime "urnet_gc_gogc not scrapable (no exporter or no HTTP fetch tool); the gogc check above is control-plane evidence only"
-    elif [ "$g_rt" = "250" ] && [ "$g_back" != "250" ]; then
-        record PASS control-key-live-runtime "runtime GOGC read 250 after set gogc=250 and left 250 after clear (now '${g_back:-unreadable}')"
+    elif [ "$g_rt" = "250" ] && [ "$g_clear_rc" = "0" ] && [ -n "$g_back" ] && [ "$g_back" != "250" ]; then
+        record PASS control-key-live-runtime "runtime GOGC read 250 after set gogc=250 and left 250 after clear (now '$g_back')"
     else
-        record FAIL control-key-live-runtime "runtime urnet_gc_gogc after set=250 was '$g_rt', after clear '${g_back:-unreadable}'"
+        record FAIL control-key-live-runtime "runtime urnet_gc_gogc after set=250 was '$g_rt', after clear '${g_back:-unreadable}' (clear rc=$g_clear_rc)"
     fi
 }
 
