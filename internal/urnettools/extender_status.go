@@ -58,8 +58,12 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 		switch {
 		case ex.ActivatedV4 || ex.ActivatedV6:
 			roleState = "active"
+		case ex.Revoked:
+			roleState = "revoked"
 		case ex.ActivationRefused:
 			roleState = "refused"
+		case ex.ActivationFailed:
+			roleState = "activation failed"
 		case ex.ListenFailed:
 			roleState = "listen failed"
 		case ex.Listening:
