@@ -39,6 +39,18 @@ func trimProviderArgs(positionals []string, preview bool) []string {
 	return args
 }
 
+// removeDeadProviderArgs is the provider command line for remove-dead. The
+// dispatcher consumes --preview/--dry-run/-n as the global dry-run flag, so
+// without re-adding it here the provider never saw it and the operator got a
+// one-line stub instead of the candidate list the provider's --preview prints.
+func removeDeadProviderArgs(positionals []string, preview bool) []string {
+	args := append([]string{"proxy", "remove-dead"}, positionals...)
+	if preview {
+		args = append(args, "--preview")
+	}
+	return args
+}
+
 // trimConfirmPrompt is the question the gate asks before a trim. Clearing the
 // cap is not "trim to off running proxies": it undoes the cap, and the prompt
 // has to say so or the operator is agreeing to something that reads wrong.
@@ -630,11 +642,9 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 			}
 			return providerSubcommand(p, append([]string{"proxy", "exclude"}, positionals...)...)
 		default: // remove-dead
-			if dryRun {
-				fmt.Printf("[dry-run] would remove dead/degraded proxies on %s\n", providerLabel(p))
-				return nil
-			}
-			return providerSubcommand(p, append([]string{"proxy", "remove-dead"}, positionals...)...)
+			// --preview is the provider's own write-nothing listing (and its
+			// warmup gate); delegate to it like trim does.
+			return providerSubcommand(p, removeDeadProviderArgs(positionals, dryRun)...)
 		}
 	case "audit":
 		if all || len(include) > 0 || len(exclude) > 0 {

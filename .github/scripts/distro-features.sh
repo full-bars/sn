@@ -1132,9 +1132,10 @@ b1_ramlogs() {
     fi
 }
 
-# registration identity gate: a fresh dir without --allow-client-registration
-# must not allocate; --adopt-legacy-provider-key on a fresh dir must not
-# allocate either (it is an adoption flag, not a bootstrap flag).
+# registration identity: a bare provide on a fresh dir mints its own identity
+# (creation is unconditional; --allow-client-registration is accepted and
+# ignored); --adopt-legacy-provider-key on a fresh dir must not allocate
+# (it is an adoption flag, not a bootstrap flag).
 b1_identity_gate() {
     gate_home="$WORK/gate-home"
     rm -rf "$gate_home"; mkdir -p "$gate_home/.urnetwork" "$gate_home/bin"
@@ -1159,11 +1160,18 @@ b1_identity_gate() {
         wait "$gp" 2>/dev/null || true
         GATE_EXITED="$exited"; GATE_SOCK="$sock_up"
     }
+    # Creation is unconditional since 1cdce1351 (the identity withholder was
+    # dropped; --allow-client-registration is accepted and ignored), so a bare
+    # provide on a fresh dir MUST come up and mint its own identity. The old
+    # assertion (no socket) pinned the removed gate.
     gate_probe "" "$WORK/gate-fresh.log"
-    if [ "$GATE_SOCK" = "no" ]; then
-        record PASS identity-gate-fresh "fresh state dir without the registration flag produced no socket (exited=$GATE_EXITED)"
+    gate_id=""; [ -f "$gate_home/.urnetwork/.provider.jwt" ] && gate_id="$gate_home/.urnetwork/.provider.jwt"
+    if [ "$GATE_SOCK" = "yes" ] && [ -n "$gate_id" ]; then
+        record PASS identity-gate-fresh "bare provide on a fresh dir minted its own identity ($(basename "$gate_id")) and served the socket; --allow-client-registration is no longer required"
+    elif [ "$GATE_SOCK" = "yes" ]; then
+        record FAIL identity-gate-fresh "socket came up on a fresh dir but no provider identity file was written: $(ls -A "$gate_home/.urnetwork" | tr '\n' ' ')"
     else
-        record FAIL identity-gate-fresh "bare provide started against a fresh dir without the explicit flag"
+        record FAIL identity-gate-fresh "bare provide on a fresh dir did not come up (exited=$GATE_EXITED); creation is unconditional, so it must mint: $(tail -n 1 "$WORK/gate-fresh.log" 2>/dev/null | firstline)"
     fi
     if miner_help | grep -q -- '--adopt-legacy-provider-key'; then
         gate_probe "--adopt-legacy-provider-key" "$WORK/gate-adopt.log"
@@ -1898,16 +1906,20 @@ b2_manipulations() {
         record FAIL remove-match "rc=$rc: $(printf '%s' "$out" | firstline)"
     fi
 
-    # refresh: the curated diff must be add-only (nothing removed) and a
-    # non-interactive run must not write.
+    # refresh: the provider diffs the desired list against proxy.state in BOTH
+    # directions (planProxyRefresh: "N proxies will be removed, M will be
+    # added") and asks before applying. It was never add-only; the old
+    # "0 proxies will be removed" assertion pinned a contract the code does not
+    # have. What must hold is that a non-interactive run (no tty, so the
+    # confirmation reads EOF) reports the plan and writes nothing.
     pre="$(fingerprint_files)"
     out="$(TS proxy refresh -f 2>&1)"; rc=$?
     post="$(fingerprint_files)"
     if [ "$rc" = "0" ] && printf '%s' "$out" | grep -q 'already up to date'; then
-        record PASS refresh-add-only "refresh reports the curated list up to date; no writes ($(printf '%s' "$out" | firstline))"
-    elif [ "$rc" = "0" ] && printf '%s' "$out" | grep -q '0 proxies will be removed'; then
+        record PASS refresh-add-only "refresh reports the list up to date; no writes ($(printf '%s' "$out" | firstline))"
+    elif [ "$rc" = "0" ] && printf '%s' "$out" | grep -qE 'proxy refresh: [0-9]+ proxies will be removed, [0-9]+ will be added'; then
         if [ "$pre" = "$post" ]; then
-            record PASS refresh-add-only "diff is add-only (0 removals) and the non-interactive run wrote nothing: $(printf '%s' "$out" | grep 'proxy refresh:' | firstline)"
+            record PASS refresh-add-only "refresh reported its two-way plan and the non-interactive run wrote nothing: $(printf '%s' "$out" | grep 'proxy refresh:' | firstline)"
         else
             record FAIL refresh-add-only "non-interactive refresh wrote state: $pre -> $post"
         fi
