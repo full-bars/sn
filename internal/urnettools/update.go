@@ -1005,9 +1005,22 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 	return fmt.Errorf("update %s: binary swapped to %s but restart did not take effect — the running process is still the old version or the unit failed to start; check the provider's logs", providerLabel(p), cfg.Tag)
 }
 
+// restartGOOS and restartProviderWindowsFn are seams so the Windows routing
+// can be tested on any platform.
+var (
+	restartGOOS              = runtime.GOOS
+	restartProviderWindowsFn = restartProviderWindows
+)
+
 // restartProvider restarts the systemd unit (system or user level) that owns
 // the provider process. Falls back gracefully when systemd is unavailable.
+// On Windows it restarts the per-user supervisor instead.
 func restartProvider(p Provider) error {
+	if restartGOOS == "windows" {
+		// No systemd here. The provider is a per-user supervisor that must
+		// be restarted as a whole (see restartProviderWindows).
+		return restartProviderWindowsFn(p)
+	}
 	if runtime.GOOS == "freebsd" {
 		// rc.d owns the service on FreeBSD; systemd never exists there. Without
 		// this branch an update swaps the binary and then fails to restart,
