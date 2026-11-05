@@ -41,7 +41,7 @@ ensure_extender_cap ()
         command -v getcap >/dev/null 2>&1 || return 1
         getcap "$cap_file" 2>/dev/null | awk '
             { for (i=2; i<=NF; i++) {
-                split($i, parts, "="); split(parts[1], caps, ",")
+                split($i, parts, /[=+]/); split(parts[1], caps, ",")
                 for (c in caps) if (caps[c] == "cap_net_bind_service" && parts[2] ~ /e/ && parts[2] ~ /p/) found=1
             } } END { exit !found }'
     }

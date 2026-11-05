@@ -24,7 +24,7 @@ def helper(path):
 
 
 class ExtenderCapabilityTest(unittest.TestCase):
-    def run_helper(self, script, initial, mode="success", platform="Linux"):
+    def run_helper(self, script, initial, mode="success", platform="Linux", uid="0", sudo="none", env_sudo=""):
         with tempfile.TemporaryDirectory() as tmp:
             state = Path(tmp) / "state"
             calls = Path(tmp) / "calls"
@@ -39,7 +39,7 @@ class ExtenderCapabilityTest(unittest.TestCase):
                     raise RuntimeError(f"missing test dependency: {tool}")
                 (mock_path / tool).symlink_to(executable)
             env = dict(os.environ, STATE=str(state), CALLS=str(calls), PATH=str(mock_path),
-                       MODE=mode, PLATFORM=platform, BINARY=str(binary), SUDO="")
+                       MODE=mode, PLATFORM=platform, BINARY=str(binary), SUDO=env_sudo, UID_=uid, SUDO_MODE=sudo)
             harness = r'''
 set -eu
 uname() { printf '%s\n' "$PLATFORM"; }
@@ -50,6 +50,13 @@ setcap() {
     [ "$MODE" != unverified ] || return 0
     printf '%s' 'cap_net_bind_service=ep' > "$STATE"
 }
+id() { printf '%s\n' "$UID_"; }
+sudo() {
+    [ "$SUDO_MODE" = passwordless ] || return 1
+    [ "$1" = -n ] && { shift; [ "$1" = true ] && return 0; }
+    printf 'sudo ' >> "$CALLS"; "$@"
+}
+[ "$SUDO_MODE" != none ] || unset -f sudo
 [ "$MODE" != missing-setcap ] || unset -f setcap
 [ "$MODE" != missing-getcap ] || unset -f getcap
 ''' + helper(script) + '\nensure_extender_cap "$BINARY"\n'
@@ -80,6 +87,20 @@ setcap() {
                         self.assertEqual(len(result.stderr.splitlines()), 1)
                         quoted = "'" + binary.replace("'", "'\\''") + "'"
                         self.assertIn("sudo setcap cap_net_bind_service=+ep " + quoted, result.stderr)
+
+    def test_legacy_getcap_format_is_recognised(self):
+        # libcap 2.2x (Ubuntu 16.04/18.04) prints "<file> = <caps>+<flags>".
+        for script in SCRIPTS:
+            for initial, expect_call in (
+                ("= cap_net_bind_service+ep", False),
+                ("= cap_chown,cap_net_bind_service+ep", False),
+                ("= cap_net_bind_service+p", True),
+                ("= cap_chown+ep", True),
+            ):
+                with self.subTest(script=script, initial=initial):
+                    result, calls, _ = self.run_helper(script, initial)
+                    self.assertEqual(bool(calls), expect_call)
+                    self.assertEqual(result.stderr, "")
 
     def test_swap_sites_and_openrc_finalization(self):
         installer = (ROOT / SCRIPTS[0]).read_text()
