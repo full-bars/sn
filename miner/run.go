@@ -990,13 +990,8 @@ func provideWith(opts docopt.Opts, start bool) {
 	// applyPoolAutoSize for the pinned-connect adaptation.
 	applyPoolAutoSize(maxMemory)
 
-	// Fork: a provider slot must be able to start on a host migrated from the
-	// 3.23-fix provider without a flag on the unit. Creating a client is
-	// always permitted: a slot that cannot use its saved identity mints one,
-	// so there is no off switch and nothing to set. The old
-	// --allow-client-registration spelling still parses and is ignored.
-	allowClientRegistration := true
-	explicitClientRegistration, _ := opts.Bool("--allow-client-registration")
+	explicitClientRegistration := providerClientRegistrationAllowed(opts)
+	allowClientRegistration := explicitClientRegistration
 	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
 	noLegacyImport, _ := opts.Bool("--no-legacy-import")
 	legacyImportBudget := parseLegacyImportBudget(opts)
@@ -1077,28 +1072,14 @@ func provideWith(opts docopt.Opts, start bool) {
 	}
 }
 
-// A first provider key needs no flag on a new install, but a directory that
-// already holds provider history keeps its identity decision explicit: a lost
-// or unreadable key is never silently replaced, and an operator who deletes a
-// key does not get a different provider identity without asking.
-func providerKeyCreatePermitted(explicit bool, keyPath string) bool {
-	if explicit {
-		return true
-	}
-	entries, err := os.ReadDir(filepath.Dir(keyPath))
-	if err != nil {
-		return false
-	}
-	for _, entry := range entries {
-		name := entry.Name()
-		if name == ".provider.key.registration.lock" || name == ".provider_version" {
-			continue
-		}
-		if strings.HasPrefix(name, ".provider") {
-			return false
-		}
-	}
-	return true
+// Creating a provider identity (its key and its client) is allowed only when
+// the operator passes --allow-client-registration. A bare provide on a fresh
+// state dir refuses instead of allocating; an identity already on disk starts
+// without the flag because nothing is created. Contract:
+// docs/Feature-Matrix-CI.md, identity-gate-fresh.
+func providerClientRegistrationAllowed(opts docopt.Opts) bool {
+	allow, _ := opts.Bool("--allow-client-registration")
+	return allow
 }
 
 // Each invocation owns its output, status server and provider children. The
@@ -1419,7 +1400,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			return newSdkLegacyImportProver(ctx, self.apiUrl, wait)
 		},
 	})
-	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: providerKeyCreatePermitted(self.explicitClientRegistration, keyPath) && !captureLaunch, AdoptLegacyKey: self.adoptLegacyProviderKey})
+	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: self.explicitClientRegistration && !captureLaunch, AdoptLegacyKey: self.adoptLegacyProviderKey})
 	if err != nil {
 		if ctx.Err() == nil {
 			output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)

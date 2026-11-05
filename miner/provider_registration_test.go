@@ -117,7 +117,7 @@ func newProviderRegistrationFixtureIn(t *testing.T, dir string) *providerRegistr
 // Even the public runner's transport can dial only this exact local listener.
 // Direct and proxy workers retain their real independent scope/custody paths.
 func (self *providerRegistrationFixture) settings(allow bool, members ...*connect.ProxySettings) providerRunSettings {
-	return providerRunSettings{apiUrl: self.server.URL, connectUrl: self.server.URL, allowClientRegistration: allow, proxySettings: members,
+	return providerRunSettings{apiUrl: self.server.URL, connectUrl: self.server.URL, allowClientRegistration: allow, explicitClientRegistration: allow, proxySettings: members,
 		testEgressDialer: &connect.DialContextSettings{DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
 			if address != self.server.Listener.Addr().String() {
 				return nil, errors.New("synthetic provider fixture refuses nonlocal egress")
