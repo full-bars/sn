@@ -1185,7 +1185,24 @@ b1_identity_gate() {
         wait "$gp" 2>/dev/null || true
         GATE_EXITED="$exited"; GATE_SOCK="$sock_up"
     }
+    # A refusal must leave no identity behind: no key material or client JWT on
+    # disk, and no registration call in the provider's own log. The harness has
+    # no API stub, so "no call" is evidenced by the log vocabulary plus the
+    # artifacts a successful registration always writes; it cannot see the wire.
+    gate_negatives() { # $1=check name  $2=log
+        made=""
+        for gf in .provider.key .provider.jwt .client_jwts.json; do
+            [ -e "$gate_home/.urnetwork/$gf" ] && made="$made $gf"
+        done
+        regcalls="$(grep -ciE 'register-client|registering (a )?(new )?client|minted' "$2" 2>/dev/null || true)"
+        if [ -z "$made" ] && [ "$(as_num "$regcalls")" = "0" ]; then
+            record PASS "$1-no-side-effects" "refusal created no .provider.key/.provider.jwt/.client_jwts.json and logged no registration call"
+        else
+            record FAIL "$1-no-side-effects" "refused start left identity artifacts:${made:- none} registration log lines=$(as_num "$regcalls")"
+        fi
+    }
     gate_probe "" "$WORK/gate-fresh.log"
+    gate_negatives identity-gate-fresh "$WORK/gate-fresh.log"
     if [ "$GATE_SOCK" = "no" ]; then
         record PASS identity-gate-fresh "fresh state dir without the registration flag produced no socket (exited=$GATE_EXITED)"
     else
@@ -1193,6 +1210,7 @@ b1_identity_gate() {
     fi
     if miner_help | grep -q -- '--adopt-legacy-provider-key'; then
         gate_probe "--adopt-legacy-provider-key" "$WORK/gate-adopt.log"
+        gate_negatives identity-gate-adopt "$WORK/gate-adopt.log"
         if [ "$GATE_SOCK" = "no" ]; then
             record PASS identity-gate-adopt "fresh dir + --adopt-legacy-provider-key refused to allocate (no socket)"
         else
