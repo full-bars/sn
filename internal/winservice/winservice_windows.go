@@ -296,6 +296,15 @@ func lockSupervisor(file *os.File) (bool, error) {
 	}
 }
 
+// SupervisorPid is the process id of the running supervisor of this service,
+// 0 when none is running.
+func SupervisorPid(name string) int {
+	if running, _ := Running(name); !running {
+		return 0
+	}
+	return supervisorPid(name)
+}
+
 func supervisorPid(name string) int {
 	path, err := lockPath(name)
 	if err != nil {

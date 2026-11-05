@@ -156,6 +156,16 @@ var stopProviderServiceFn = stopProviderService
 // so tests never touch the real machine's artifacts.
 var cleanupLifecycleFn = cleanupLifecycle
 
+// providerOwnedByServiceFn, stopBareProviderFn and removeProviderServiceFilesFn
+// are the seams for the Windows supervisor ownership check. Uninstall only
+// stops the supervisor and deletes its shortcut and config when the selected
+// provider belongs to it; any other provider is stopped by itself.
+var (
+	providerOwnedByServiceFn     = providerOwnedByService
+	stopBareProviderFn           = stopBareProvider
+	removeProviderServiceFilesFn = removeProviderServiceFiles
+)
+
 // uninstallProvider does the work after target selection and confirmation:
 // stop whatever supervises the provider, disable the unit, then remove files.
 func uninstallProvider(p Provider) error {
@@ -163,8 +173,16 @@ func uninstallProvider(p Provider) error {
 	// supervisor that restarts its miner, so killing only the miner (or just
 	// deleting files) fails with "Access is denied". If it will not stop it is
 	// still holding the files; do not delete state under a live provider.
-	if err := stopProviderServiceFn(p); err != nil {
-		return fmt.Errorf("uninstall %s: could not stop the provider service: %w", providerLabel(p), err)
+	// Another provider's supervisor is not ours to stop, and a bare provider
+	// is stopped through its own pid. Decide before anything is stopped: the
+	// proof (supervisor lock, process ancestry) is gone once it has stopped.
+	serviceOwned := providerOwnedByServiceFn(p)
+	if serviceOwned {
+		if err := stopProviderServiceFn(p); err != nil {
+			return fmt.Errorf("uninstall %s: could not stop the provider service: %w", providerLabel(p), err)
+		}
+	} else if err := stopBareProviderFn(p); err != nil {
+		return fmt.Errorf("uninstall %s: could not stop the provider: %w", providerLabel(p), err)
 	}
 	// systemd only exists on Linux. Windows has no unit (p.Unit is empty
 	// there today), and the guard keeps a stray value from reaching systemctl.
@@ -183,6 +201,9 @@ func uninstallProvider(p Provider) error {
 	// Clean up platform lifecycle artifacts: on Unix the auto-update timer,
 	// on Windows the scheduled tasks (heavyweight review S7).
 	cleanupLifecycleFn(p)
+	if serviceOwned {
+		removeProviderServiceFilesFn()
+	}
 	// Only remove paths that look like real install paths — never "/" or
 	// a bare relative path.
 	// Both guards clean the path so "/" and "/./" are caught identically.

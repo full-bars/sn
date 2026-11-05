@@ -10,6 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unsafe"
+
+	"golang.org/x/sys/windows"
 
 	"github.com/urfoundation/sn/internal/winservice"
 )
@@ -134,11 +137,12 @@ func cleanupLifecycle(p Provider) {
 			fmt.Fprintf(os.Stderr, "warning: could not remove scheduled task %q: %v\n", taskName, err)
 		}
 	}
-	removeProviderServiceFiles()
 }
 
 // removeProviderServiceFiles deletes the supervisor's Startup shortcut and its
-// saved config and lock. Left behind, the shortcut starts a supervisor at the
+// saved config and lock. Uninstall calls it only for a provider the service
+// owns (providerOwnedByService); another provider's supervisor keeps them.
+// Left behind, the shortcut starts a supervisor at the
 // next sign-in whose executable is gone. The supervisor is already stopped
 // (stopProviderService), as winservice.Remove requires.
 func removeProviderServiceFiles() {
@@ -168,11 +172,53 @@ const windowsProviderServiceName = "urnetwork-provider"
 const windowsServiceStopWait = 45 * time.Second
 
 // stopProviderService stops the per-user supervisor and, through its job
-// object, the miner it runs. Killing only the miner is not enough: the
+// object, the miner it runs. Callers check providerOwnedByService first. Killing only the miner is not enough: the
 // supervisor starts it again 15 seconds later. winservice.Stop works by
 // service name and checks the supervisor's lock, so it never touches another
 // process, and it does nothing when no supervisor is running. The separate
 // Windows service "urnetworkd" is not involved.
 func stopProviderService(_ Provider) error {
 	return winservice.Stop(windowsProviderServiceName, windowsServiceStopWait)
+}
+
+// providerOwnedByService reports whether the saved provider service owns the
+// selected provider, so a restart or uninstall of the service cannot hit an
+// unrelated supervisor. No saved service, or an unreadable one, owns nothing.
+func providerOwnedByService(p Provider) bool {
+	config, err := winservice.Load(windowsProviderServiceName)
+	if err != nil {
+		return false
+	}
+	return providerOwnedByConfig(p, config.Executable)
+}
+
+func providerOwnedByConfig(p Provider, configExecutable string) bool {
+	return serviceOwnsProvider(p, configExecutable, winservice.SupervisorPid(windowsProviderServiceName), processParent)
+}
+
+// processParent looks up a process's parent id in a toolhelp snapshot.
+func processParent(pid int) (int, bool) {
+	snapshot, err := windows.CreateToolhelp32Snapshot(windows.TH32CS_SNAPPROCESS, 0)
+	if err != nil {
+		return 0, false
+	}
+	defer windows.CloseHandle(snapshot)
+	var entry windows.ProcessEntry32
+	entry.Size = uint32(unsafe.Sizeof(entry))
+	for err = windows.Process32First(snapshot, &entry); err == nil; err = windows.Process32Next(snapshot, &entry) {
+		if int(entry.ProcessID) == pid {
+			return int(entry.ParentProcessID), true
+		}
+	}
+	return 0, false
+}
+
+// stopBareProvider stops a running provider the service does not own. It goes
+// by pid: the control socket is shared by every provider of this user, so a
+// graceful shutdown request could reach the other provider instead.
+func stopBareProvider(p Provider) error {
+	if !p.Running || p.PID <= 0 {
+		return nil
+	}
+	return cmdStopWindows(p, true, false)
 }

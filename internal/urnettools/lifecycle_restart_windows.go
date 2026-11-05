@@ -48,7 +48,10 @@ func providerSocketPath(p Provider) string {
 // supervisor as a whole, the same way "provider service restart" does.
 //
 // A provider that was not started by the supervisor has no saved service
-// config; there is nothing safe to restart, so say so.
+// config, and one that runs beside a saved service is not that service's
+// miner; restarting the service would bounce a different provider and leave
+// the selected one on its old image. Either way there is nothing safe to
+// restart, so say so.
 func restartProviderWindows(p Provider) error {
 	config, err := winservice.Load(windowsProviderServiceName)
 	if err != nil {
@@ -56,6 +59,9 @@ func restartProviderWindows(p Provider) error {
 			return fmt.Errorf("no provider service is installed for %s; restart it manually", providerLabel(p))
 		}
 		return fmt.Errorf("read the provider service config: %w", err)
+	}
+	if !providerOwnedByConfig(p, config.Executable) {
+		return fmt.Errorf("%s is not managed by the %s service; restart it manually", providerLabel(p), windowsProviderServiceName)
 	}
 	if err := stopProviderService(p); err != nil {
 		return fmt.Errorf("stop the provider service: %w", err)
