@@ -1165,11 +1165,16 @@ b1_identity_gate() {
     # provide on a fresh dir MUST come up and mint its own identity. The old
     # assertion (no socket) pinned the removed gate.
     gate_probe "" "$WORK/gate-fresh.log"
-    gate_id=""; [ -f "$gate_home/.urnetwork/.provider.jwt" ] && gate_id="$gate_home/.urnetwork/.provider.jwt"
+    # The identity minted unconditionally is the ed25519 seed .provider.key
+    # (gate_reset leaves only the network jwt, so it cannot pre-exist).
+    # .provider.jwt is the registered client credential: it appears only after
+    # the backend accepts the registration, which is asynchronous, so it is not
+    # a creation signal and must not be required here.
+    gate_id=""; [ -s "$gate_home/.urnetwork/.provider.key" ] && gate_id="$gate_home/.urnetwork/.provider.key"
     if [ "$GATE_SOCK" = "yes" ] && [ -n "$gate_id" ]; then
         record PASS identity-gate-fresh "bare provide on a fresh dir minted its own identity ($(basename "$gate_id")) and served the socket; --allow-client-registration is no longer required"
     elif [ "$GATE_SOCK" = "yes" ]; then
-        record FAIL identity-gate-fresh "socket came up on a fresh dir but no provider identity file was written: $(ls -A "$gate_home/.urnetwork" | tr '\n' ' ')"
+        record FAIL identity-gate-fresh "socket came up on a fresh dir but no .provider.key seed was minted: $(ls -A "$gate_home/.urnetwork" | tr '\n' ' ')"
     else
         record FAIL identity-gate-fresh "bare provide on a fresh dir did not come up (exited=$GATE_EXITED); creation is unconditional, so it must mint: $(tail -n 1 "$WORK/gate-fresh.log" 2>/dev/null | firstline)"
     fi
