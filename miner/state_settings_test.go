@@ -245,7 +245,7 @@ func TestStateMigrationIsIdempotent(t *testing.T) {
 func TestStateMigrationResumesAfterAKillAtEveryPoint(t *testing.T) {
 	type killed struct{}
 	for _, key := range []string{settingErrorCounts, settingMetricsCounter, settingDirectGrade} {
-		for _, point := range []string{"before-commit", "after-commit"} {
+		for _, point := range []string{"before-commit", "after-commit", "before-remove"} {
 			t.Run(point+"/"+key, func(t *testing.T) {
 				h := newSettingsHarness(t)
 				want := map[string][]byte{
@@ -516,6 +516,58 @@ func TestStateMigrationRemovesTheRecoveryBackupWithThePrimary(t *testing.T) {
 	}
 	if got := h.errCount(settingMigrateConflictCategory); got != 0 {
 		t.Fatalf("conflict after a clean import = %d, want 0", got)
+	}
+}
+
+// The recovery backup is removed before the primary, so a kill between the
+// two removals leaves the primary, which the next start finds equal to the
+// store and removes. Removed the other way round, the same kill leaves a lone
+// backup that the error-count loader restores and the migration counts as a
+// conflict that never happened.
+func TestStateMigrationRemovesTheRecoveryBackupBeforeThePrimary(t *testing.T) {
+	type killed struct{}
+	h := newSettingsHarness(t)
+	h.writeErrorCounts(map[string]uint64{"auth_refused": 3})
+	h.writeErrorCounts(map[string]uint64{"auth_refused": 4})
+	if !h.exists("error_counts.json.bak") {
+		t.Fatal("the setting writer left no recovery backup to test with")
+	}
+	stateMigrateHook = func(point, key string) {
+		if point != "before-remove" || key != settingErrorCounts {
+			return
+		}
+		if h.exists("error_counts.json.bak") {
+			t.Error("the recovery backup was still there when the primary was removed")
+		}
+		if !h.exists("error_counts.json") {
+			t.Error("the primary was gone before its recovery backup")
+		}
+		panic(killed{})
+	}
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if _, ok := r.(killed); !ok {
+					panic(r)
+				}
+			}
+		}()
+		_ = startProviderSettings()
+		t.Fatal("the hook did not fire")
+	}()
+	stateMigrateHook = nil
+	h.restart()
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.errCount(settingMigrateConflictCategory); got != 0 {
+		t.Fatalf("conflicts after a kill between the removals = %d, want 0", got)
+	}
+	if h.exists("error_counts.json") || h.exists("error_counts.json.bak") {
+		t.Fatal("the restart left the legacy file or its backup behind")
+	}
+	if got := persistentErrorStore().Snapshot()["auth_refused"]; got != 4 {
+		t.Fatalf("error counts after the restart = %d, want 4", got)
 	}
 }
 

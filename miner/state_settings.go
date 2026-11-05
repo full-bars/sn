@@ -295,39 +295,58 @@ func migrateProviderSetting(store *providerStore, setting providerSetting) setti
 		stateMigrateHook("after-commit", setting.key)
 	}
 	if outcome == settingConflict {
+		// The recovery backup goes first, durably, while the primary still
+		// stands. Removed after the primary, a crash between the two leaves a
+		// lone backup that loadJSONWithRecovery restores on the next start, which
+		// is a second conflict that never happened. The backup is only an older
+		// copy of the losing file, and that file is kept: archived, or left in
+		// place when the archive is full.
+		removeSettingRecoveryBackup(path)
 		backup, err := preserveSettingConflict(path, info)
 		if err != nil {
 			critLog("STATE MIGRATE conflict %s: could not preserve %s: %v; the store wins and the file remains", setting.key, setting.file, err)
 			return settingConflict
 		}
-		// the recovery backup is archived with the file it backs; leaving it
-		// behind makes loadJSONWithRecovery restore stale data over the store on
-		// the next start, which is the conflict this migration exists to settle
-		removeSettingRecoveryBackup(path)
 		IncrPersistentError(settingMigrateConflictCategory)
 		critLog("STATE MIGRATE conflict %s: the store wins; the legacy file was preserved as %s", setting.key, backup)
 		return settingConflict
 	}
-	// The primary file is redundant once the database commit succeeds. Keep
-	// backups and temporary files: they are not part of this migration.
+	// The primary file is redundant once the database commit succeeds, and so
+	// is its recovery backup: left behind, loadJSONWithRecovery restores old
+	// data over the store on the next start. The backup goes first, durably, so
+	// a crash between the two removals leaves the primary, which the next start
+	// finds equal to the store and removes, never a lone backup that it would
+	// restore and count as a conflict. Temporary files are not part of this
+	// migration.
+	removeSettingRecoveryBackup(path)
+	if stateMigrateHook != nil {
+		stateMigrateHook("before-remove", setting.key)
+	}
 	if err := os.Remove(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		IncrPersistentError(settingMigrateRemoveFailedCategory)
 		tlog("[state] imported %s but could not remove %s: %v\n", setting.key, path, err)
 		return outcome
 	}
 	_ = providerStoreSyncDir(filepath.Dir(path))
-	// the recovery copy beside it is stale now: leaving it lets
-	// loadJSONWithRecovery restore old data over the store on the next start
-	removeSettingRecoveryBackup(path)
 	return outcome
 }
 
 // removeSettingRecoveryBackup drops the recovery copy a setting writer leaves
 // beside its file. Once the store owns the setting the backup is stale, and
 // loadJSONWithRecovery would restore it over the store on the next start.
+// The removal is synced before the caller touches the primary, so a crash
+// cannot keep the backup on disk while losing the primary's removal.
 func removeSettingRecoveryBackup(path string) {
-	if err := os.Remove(path + ".bak"); err != nil && !errors.Is(err, fs.ErrNotExist) {
+	err := os.Remove(path + ".bak")
+	if errors.Is(err, fs.ErrNotExist) {
+		return
+	}
+	if err != nil {
 		tlog("[state] could not remove the recovery backup of %s: %v\n", path, err)
+		return
+	}
+	if err := providerStoreSyncDir(filepath.Dir(path)); err != nil {
+		tlog("[state] removed the recovery backup of %s but could not sync its directory: %v\n", path, err)
 	}
 }
 
