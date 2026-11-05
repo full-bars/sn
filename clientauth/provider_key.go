@@ -72,14 +72,19 @@ func openProviderClientKey(ctx context.Context, keyPath string, options Provider
 		if !options.AllowCreate {
 			return nil, &RegistrationRefusedError{Code: "provider_key_requires_explicit_recovery"}
 		}
-		names, err := store.names(4096, ".provider")
-		if err != nil {
-			return nil, err
-		}
-		for _, name := range names {
+		retainedHistory := false
+		scanErr := store.scanNames([]string{".provider"}, func(name string) error {
 			if strings.HasPrefix(name, ".provider") && name != ".provider.key.registration.lock" && name != ".provider_version" {
-				return nil, &RegistrationRefusedError{Code: "provider_key_missing_with_retained_history"}
+				retainedHistory = true
+				return errScanStopped
 			}
+			return nil
+		})
+		if scanErr != nil && !errors.Is(scanErr, errScanStopped) {
+			return nil, scanErr
+		}
+		if retainedHistory {
+			return nil, &RegistrationRefusedError{Code: "provider_key_missing_with_retained_history"}
 		}
 		seed = make([]byte, ed25519.SeedSize)
 		if _, err := rand.Read(seed); err != nil {
@@ -198,24 +203,20 @@ func ProviderKeyIdentityMarker(seed []byte) ([]byte, error) {
 // separate first-upgrade assertion can adopt only legacy JWTs and legacy side
 // files, never a retained versioned operation or evidence of an earlier upgrade.
 func admitProviderKeyMarker(store *registrationStore, adoptLegacy bool) error {
-	names, err := store.names(4096, ".provider")
-	if err != nil {
-		return err
-	}
 	var history, credentials bool
-	for _, name := range names {
+	scanErr := store.scanNames([]string{".provider"}, func(name string) error {
 		// .provider_version is the fork's plain version stamp, not provider
 		// identity: the 3.23 line writes it beside the key, and it must not
 		// turn a bare seed into retained history in either scan.
 		if !strings.HasPrefix(name, ".provider") || name == ".provider.key" || name == ".provider.key.registration.lock" || name == ".provider_version" {
-			continue
+			return nil
 		}
 		history = true
 		if !adoptLegacy {
 			return &RegistrationRefusedError{Code: "provider_key_identity_missing_with_retained_history"}
 		}
 		if name == ".provider.cert" || name == ".provider.extender.key" {
-			continue
+			return nil
 		}
 		if !providerClientCredentialName(name) {
 			return &RegistrationRefusedError{Code: "provider_key_legacy_adoption_has_nonlegacy_history"}
@@ -229,6 +230,10 @@ func admitProviderKeyMarker(store *registrationStore, adoptLegacy bool) error {
 			return errors.New("provider legacy key adoption requires retained client identity")
 		}
 		credentials = true
+		return nil
+	})
+	if scanErr != nil {
+		return scanErr
 	}
 	if history && !credentials {
 		return &RegistrationRefusedError{Code: "provider_key_legacy_adoption_lacks_credential"}

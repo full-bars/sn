@@ -300,6 +300,10 @@ func migrateProviderSetting(store *providerStore, setting providerSetting) setti
 			critLog("STATE MIGRATE conflict %s: could not preserve %s: %v; the store wins and the file remains", setting.key, setting.file, err)
 			return settingConflict
 		}
+		// the recovery backup is archived with the file it backs; leaving it
+		// behind makes loadJSONWithRecovery restore stale data over the store on
+		// the next start, which is the conflict this migration exists to settle
+		removeSettingRecoveryBackup(path)
 		IncrPersistentError(settingMigrateConflictCategory)
 		critLog("STATE MIGRATE conflict %s: the store wins; the legacy file was preserved as %s", setting.key, backup)
 		return settingConflict
@@ -312,7 +316,19 @@ func migrateProviderSetting(store *providerStore, setting providerSetting) setti
 		return outcome
 	}
 	_ = providerStoreSyncDir(filepath.Dir(path))
+	// the recovery copy beside it is stale now: leaving it lets
+	// loadJSONWithRecovery restore old data over the store on the next start
+	removeSettingRecoveryBackup(path)
 	return outcome
+}
+
+// removeSettingRecoveryBackup drops the recovery copy a setting writer leaves
+// beside its file. Once the store owns the setting the backup is stale, and
+// loadJSONWithRecovery would restore it over the store on the next start.
+func removeSettingRecoveryBackup(path string) {
+	if err := os.Remove(path + ".bak"); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		tlog("[state] could not remove the recovery backup of %s: %v\n", path, err)
+	}
 }
 
 // Preserve up to eight conflicts without ever replacing or deleting a backup.

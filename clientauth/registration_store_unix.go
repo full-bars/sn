@@ -213,6 +213,47 @@ func (self *registrationStore) names(maximum int, prefixes ...string) ([]string,
 	return names, self.check()
 }
 
+// errScanStopped ends a scanNames visit early without reporting a failure.
+var errScanStopped = errors.New("registration directory scan stopped")
+
+// scanNames visits matching names without retaining them. A caller that only
+// decides something per name must not be bounded by how many names match: the
+// state directory holds about three identity files per slot, so a bound that
+// counts matching names is a bound on slots. A visitor that returns an error
+// stops the scan.
+func (self *registrationStore) scanNames(prefixes []string, visit func(string) error) error {
+	if err := self.check(); err != nil {
+		return err
+	}
+	if _, err := self.directory.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+	for {
+		batch, err := self.directory.Readdirnames(256)
+		for _, name := range batch {
+			match := len(prefixes) == 0
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(name, prefix) {
+					match = true
+					break
+				}
+			}
+			if match {
+				if visitErr := visit(name); visitErr != nil {
+					return visitErr
+				}
+			}
+		}
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return self.check()
+}
+
 // Deletion uses the same owned directory as publication. A missing leaf is
 // already absent; a successful unlink is durable before the caller proceeds.
 func (self *registrationStore) remove(name string) error {

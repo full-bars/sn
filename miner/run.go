@@ -2903,6 +2903,12 @@ func writeProviderExtenderKeySeed(identities providerSlotIdentities, proxySettin
 	if err := os.MkdirAll(filepath.Dir(p), 0700); err != nil {
 		return err
 	}
+	// the seed is written on every slot start, and it almost never changes; an
+	// unconditional durable write costs a temp file, two fsyncs and a directory
+	// sync on a directory holding thousands of entries
+	if existing, err := os.ReadFile(p); err == nil && bytes.Equal(existing, extenderKeySeed) {
+		return nil
+	}
 	return writeLegacyImportStateFile(filepath.Dir(p), filepath.Base(p), extenderKeySeed)
 }
 

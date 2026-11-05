@@ -195,8 +195,10 @@ func TestStateMigrationOnAPopulatedDirectory(t *testing.T) {
 			t.Errorf("%s survived the migration", name)
 		}
 	}
-	if got := h.read("error_counts.json.bak"); !bytes.Equal(got, errorsFile) {
-		t.Fatal("the backup was changed")
+	if h.exists("error_counts.json.bak") {
+		// the recovery copy is stale once the store owns the setting: restoring
+		// it on the next start is the conflict that never settles
+		t.Fatal("the stale recovery backup survived the migration")
 	}
 	if got := persistentErrorStore().Snapshot()["auth_refused"]; got != 4 {
 		t.Errorf("error counts through the store = %d, want 4", got)
@@ -485,6 +487,35 @@ func TestStateMigrationConflictSettlesAcrossStarts(t *testing.T) {
 	}
 	if got := h.errCount(settingMigrateConflictCategory); got != count {
 		t.Fatalf("conflict count after restart = %d, want %d", got, count)
+	}
+}
+
+// The production shape: a setting writer leaves <file>.bak beside <file>. The
+// import removes the primary, so the backup has to go with it — otherwise the
+// recovery loader restores stale data over the store on the next start and the
+// conflict count climbs forever without a real conflict.
+func TestStateMigrationRemovesTheRecoveryBackupWithThePrimary(t *testing.T) {
+	h := newSettingsHarness(t)
+	value := []byte(`{"graded":true,"score":42}`)
+	if err := os.WriteFile(h.path("direct_grade.json"), value, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(h.path("direct_grade.json.bak"), value, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if h.exists("direct_grade.json.bak") {
+		t.Fatal("recovery backup left behind after a clean import")
+	}
+	FlushPersistentErrors()
+	h.restart()
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.errCount(settingMigrateConflictCategory); got != 0 {
+		t.Fatalf("conflict after a clean import = %d, want 0", got)
 	}
 }
 
