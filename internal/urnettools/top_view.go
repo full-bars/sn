@@ -716,22 +716,22 @@ func (m *topModel) extenderLines() []extenderLine {
 	addr := func(active bool, ip string) string {
 		switch {
 		case active && ip != "":
-			return "active (" + ip + ")"
+			return "up " + ip
 		case active:
-			return "active"
+			return "up"
 		case ip != "":
-			return "inactive (" + ip + ")"
+			return "off " + ip
 		}
-		return "inactive"
+		return "off"
 	}
 	lines := []extenderLine{
-		{"role state", ex.RoleState, roleStyle},
-		{"listening", strconv.FormatBool(ex.Bound), th.Dim},
+		{"role", ex.RoleState, roleStyle},
+		{"listen", strconv.FormatBool(ex.Bound), th.Dim},
 		{"ipv4", addr(ex.ActivatedV4, ex.Ipv4), th.Dim},
 		{"ipv6", addr(ex.ActivatedV6, ex.Ipv6), th.Dim},
 	}
 	if ex.DnsPorts != "" {
-		lines = append(lines, extenderLine{"dns ports", ex.DnsPorts, th.Dim})
+		lines = append(lines, extenderLine{"dns", ex.DnsPorts, th.Dim})
 	}
 	if ex.LastRefusal != "" && ex.LastRefusal != "none" {
 		lines = append(lines, extenderLine{"error", ex.LastRefusal, th.Warn})
@@ -748,7 +748,7 @@ func (m *topModel) drawExtender(b *tui.Buffer) {
 		if y >= b.Height() {
 			break
 		}
-		m.kvAt(b, 12, y, l.key, l.value, l.style)
+		m.kvAt(b, 7, y, l.key, l.value, l.style) // narrow key column: the side box is 28 wide and an address must fit
 	}
 }
 

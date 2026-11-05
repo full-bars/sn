@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"errors"
+	"github.com/gdamore/tcell/v2"
 	"strings"
 	"testing"
 	"time"
@@ -68,9 +69,55 @@ func TestTopExtenderBoxHeightShowsAddresses(t *testing.T) {
 	b := tui.New(40, rows-2)
 	m.drawExtender(b)
 	out := b.String()
-	for _, want := range []string{"198.51.100.7", "2001:db8::7", "4053", "boom", "conns"} {
+	// Every row fits the 28-column side box without cutting the address.
+	b = tui.New(26, rows-2)
+	m.drawExtender(b)
+	out = b.String()
+	for _, want := range []string{"up 198.51.100.7", "up 2001:db8::7", "4053", "boom", "conns"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("box of %d content rows hides %q:\n%s", rows-2, want, out)
 		}
+	}
+}
+
+type blockingExtenderSource struct {
+	topSource
+	release chan struct{}
+	started chan struct{}
+}
+
+func (s blockingExtenderSource) FetchExtender(Provider) ExtenderReading {
+	select {
+	case s.started <- struct{}{}:
+	default:
+	}
+	<-s.release
+	return ExtenderReading{Source: SourceControlSocket, RoleState: "active", Ipv4: "198.51.100.7", ActivatedV4: true}
+}
+
+// A socket that never answers must not stop top drawing or taking keys: the
+// reading arrives later and then appears in the Extender box.
+func TestTopLoopExtenderSlowSocketDoesNotFreezeTheUI(t *testing.T) {
+	src, _ := fakeSource(t)
+	slow := blockingExtenderSource{topSource: src, release: make(chan struct{}), started: make(chan struct{}, 1)}
+	rig := startLoop(t, newTestModel(tui.DefaultTheme(), topProviders(1), &fakeClock{t: topBase}), slow, 120, 50)
+	rig.waitFor(t, "live data while the extender socket is stuck", func(s string) bool {
+		return strings.Contains(s, "FLOWING") && !strings.Contains(s, "Extender")
+	})
+	select {
+	case <-slow.started:
+	case <-time.After(3 * time.Second):
+		t.Fatal("extender fetch never started")
+	}
+	rig.sim.InjectKey(tcell.KeyRune, '?', 0) // the UI still takes keys
+	rig.waitFor(t, "help drawn while the fetch is stuck", func(s string) bool {
+		return strings.Contains(strings.ToLower(s), "help") && !strings.Contains(s, "Extender")
+	})
+	rig.sim.InjectKey(tcell.KeyRune, '?', 0)
+	close(slow.release)
+	rig.waitFor(t, "the Extender box", func(s string) bool { return strings.Contains(s, "Extender") && strings.Contains(s, "198.51.100.7") })
+	rig.sim.InjectKey(tcell.KeyRune, 'q', 0)
+	if err := rig.wait(t); err != nil {
+		t.Fatal(err)
 	}
 }

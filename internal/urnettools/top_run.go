@@ -120,6 +120,7 @@ func runTop(ctx context.Context, scr tcellui.Screen, m *topModel, src topSource,
 		}()
 	}
 
+	extSrc, hasExtender := src.(topExtenderSource)
 	fetchExtenderFn := func(gen int, p Provider) {
 		go func() {
 			res := topResult{gen: gen, isExtender: true, extender: ExtenderReading{Source: SourceUnknown, RoleState: "unavailable"}}
@@ -132,7 +133,7 @@ func runTop(ctx context.Context, scr tcellui.Screen, m *topModel, src topSource,
 				case <-ctx.Done():
 				}
 			}()
-			res.extender = ReadExtenderStatus(p)
+			res.extender = extSrc.FetchExtender(p)
 		}()
 	}
 
@@ -143,8 +144,10 @@ func runTop(ctx context.Context, scr tcellui.Screen, m *topModel, src topSource,
 		if gen, p, ok := m.wantFetch(m.now()); ok {
 			fetch(gen, p)
 		}
-		if gen, p, ok := m.wantExtender(m.now()); ok {
-			fetchExtenderFn(gen, p)
+		if hasExtender {
+			if gen, p, ok := m.wantExtender(m.now()); ok {
+				fetchExtenderFn(gen, p)
+			}
 		}
 		if hasTraffic {
 			if gen, p, ok := m.wantTraffic(m.now()); ok {

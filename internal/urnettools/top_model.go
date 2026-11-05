@@ -88,6 +88,13 @@ type topInternalsSource interface {
 	FetchGoroutines(p Provider) (*GoroutineGroups, error)
 }
 
+// topExtenderSource is the optional fourth half of a source: the extender
+// reading of the control socket. A source without it leaves top without an
+// Extender box, so a test source stays deterministic.
+type topExtenderSource interface {
+	FetchExtender(p Provider) ExtenderReading
+}
+
 // topSourceFunc adapts a function to topSource.
 type topSourceFunc func(Provider) (*NodeSnapshot, error)
 
@@ -100,6 +107,10 @@ type socketTopSource struct{}
 func (socketTopSource) Fetch(p Provider) (*NodeSnapshot, error) {
 	snap, _, err := fetchSnapshotFn(p)
 	return snap, err
+}
+
+func (socketTopSource) FetchExtender(p Provider) ExtenderReading {
+	return ReadExtenderStatus(p)
 }
 
 func (socketTopSource) FetchTraffic(p Provider) (*LiveTraffic, error) {
