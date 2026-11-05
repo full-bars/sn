@@ -506,35 +506,6 @@ func classifyHealth(e ProxyEntry) string {
 	return "starting"
 }
 
-// proxyRefreshDesired combines the selected curated source with the URL cache,
-// using the same precedence and admission rules as the live reloader.
-func proxyRefreshDesired(state *ProxyState) ([]*connect.ProxySettings, error) {
-	var primary []*connect.ProxySettings
-	if state.Source != "" {
-		var err error
-		primary, _, err = readProxySettingsFromFile(state.Source)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		primary = readProxySettingsLegacy()
-	}
-	urlState, err := readProxyURLState()
-	if err != nil {
-		return nil, err
-	}
-	desired := make(map[string]*connect.ProxySettings, len(primary))
-	for _, settings := range primary {
-		desired[settings.Key()] = settings
-	}
-	mergeProxyURLCache(desired, make(map[string]string), urlState)
-	result := make([]*connect.ProxySettings, 0, len(desired))
-	for _, settings := range desired {
-		result = append(result, settings)
-	}
-	return result, nil
-}
-
 // proxyRefresh implements `provider proxy refresh [--force]`: diff the desired
 // list against proxy.state and, after confirmation, write the reload trigger
 // so the running provider applies the change. The 8-hour warmup gate protects
@@ -564,7 +535,9 @@ func proxyRefresh(opts docopt.Opts) {
 	}
 	defer release()
 
-	desired, err := proxyRefreshDesired(state)
+	// The reloader's own computation (trim cap, give-up backoff, empty-source
+	// refusal, strict URL cache read), so the preview cannot disagree with it.
+	desired, _, err := newProxyManager(defaultProxyManagerConfig()).desiredForPreview()
 	if err != nil {
 		proxyCommandFatal(54, "could not read desired proxies: %v", err)
 	}
