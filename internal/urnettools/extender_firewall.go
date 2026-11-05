@@ -279,21 +279,54 @@ func (fm *FirewallManager) detectWindows() FirewallStatus {
 	}
 }
 
+// windowsRuleExists reports whether the named inbound rule is present and
+// usable. A rule that exists but is disabled or set to block is present and
+// not usable: it must be repaired, not counted as configured.
 func windowsRuleExists(run func(string, ...string) ([]byte, error), name string) bool {
+	present, usable := windowsRuleState(run, name)
+	return present && usable
+}
+
+// windowsRuleState parses `netsh advfirewall firewall show rule`. Only the
+// fields it can read are judged: on a localized Windows the labels differ, and
+// a field that cannot be found is not held against the rule.
+func windowsRuleState(run func(string, ...string) ([]byte, error), name string) (present, usable bool) {
 	out, err := run("netsh", "advfirewall", "firewall", "show", "rule", "name="+name)
 	if err != nil {
-		return false
+		return false, false
 	}
+	usable = true
+	inRule := false
 	for _, line := range strings.Split(string(out), "\n") {
 		line = strings.TrimSpace(line)
-		if i := strings.Index(line, ":"); i >= 0 {
-			line = strings.TrimSpace(line[i+1:])
+		i := strings.Index(line, ":")
+		if i < 0 {
+			if line == name {
+				present, inRule = true, true
+			}
+			continue
 		}
-		if line == name {
-			return true
+		key, val := strings.TrimSpace(line[:i]), strings.TrimSpace(line[i+1:])
+		if val == name && (strings.EqualFold(key, "Rule Name")) {
+			present, inRule = true, true
+			continue
+		}
+		if !inRule {
+			if val == name {
+				present, inRule = true, true
+			}
+			continue
+		}
+		switch {
+		case strings.EqualFold(key, "Enabled") && strings.EqualFold(val, "No"):
+			usable = false
+		case strings.EqualFold(key, "Action") && strings.EqualFold(val, "Block"):
+			usable = false
+		case strings.EqualFold(key, "Direction") && strings.EqualFold(val, "Out"):
+			usable = false
 		}
 	}
-	return false
+	return present, present && usable
 }
 
 func applyWindowsRules(run func(string, ...string) ([]byte, error)) (bool, error) {
@@ -302,8 +335,15 @@ func applyWindowsRules(run func(string, ...string) ([]byte, error)) (bool, error
 		{"URnetwork Extender", "TCP", "443"},
 		{"URnetwork Extender UDP", "UDP", "443,4053"},
 	} {
-		if windowsRuleExists(run, rule.name) {
+		present, usable := windowsRuleState(run, rule.name)
+		if present && usable {
 			continue
+		}
+		if present {
+			// Disabled or blocking: remove it so the repaired rule is the only one.
+			if out, err := run("netsh", "advfirewall", "firewall", "delete", "rule", "name="+rule.name); err != nil {
+				return applied, fmt.Errorf("netsh delete unusable %s rule failed: %s: %w", rule.protocol, strings.TrimSpace(string(out)), err)
+			}
 		}
 		out, err := run("netsh", "advfirewall", "firewall", "add", "rule", "name="+rule.name, "dir=in", "action=allow", "protocol="+rule.protocol, "localport="+rule.ports)
 		if err != nil {
