@@ -607,7 +607,7 @@ func TestProxyUDPLogNamesSlotAndNextAction(t *testing.T) {
 	logProxyUDPResult(settings, nil, proxyUDPResult{Status: proxyUDPOK, UDPExit: "65.111.8.178"})
 
 	text := buffer.String()
-	want := "[proxy][udp] slot=proxy:65.111.8.178:1081 udp relay unavailable (socks5: authentication failed); h3 disabled for this slot, tcp only; action: check proxy credentials\n"
+	want := "[proxy][udp] slot=proxy:65.111.8.178:1081 udp relay unavailable (socks5: authentication failed); h3 and client udp disabled for this slot, tcp only; action: check proxy credentials\n"
 	if !strings.Contains(text, want) {
 		t.Fatalf("missing the no-relay line:\n%s", text)
 	}
