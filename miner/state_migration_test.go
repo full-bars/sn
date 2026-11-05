@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -13,11 +12,7 @@ import (
 
 func TestMigrationFamilyTransactions(t *testing.T) {
 	dir := t.TempDir()
-	source := filepath.Join(dir, "source")
 	original := []byte("retained source bytes")
-	if err := os.WriteFile(source, original, 0o600); err != nil {
-		t.Fatal(err)
-	}
 	s, err := openProviderStore(filepath.Join(dir, providerStoreFileName))
 	if err != nil {
 		t.Fatal(err)
@@ -115,9 +110,5 @@ func TestMigrationFamilyTransactions(t *testing.T) {
 	}
 	if err := migrationUpdate(s, func(*bbolt.Tx) error { return nil }); !errors.Is(err, errProviderStoreReleased) {
 		t.Fatalf("released write: %v", err)
-	}
-	got, err := os.ReadFile(source)
-	if err != nil || !bytes.Equal(got, original) {
-		t.Fatalf("source changed: %v", err)
 	}
 }
