@@ -28,6 +28,10 @@
 
 #### Operating
 * **[urnet-tools (Go)](urnet-tools-go)**
+* **[urnet-tools (legacy page)](urnet-tools-Go)**
+* **[Hot Restart](Hot-Restart)**
+* **[Provider Flags](Provider-Flags)**
+* **[Project Structure](Project-Structure)**
 * **[urnet-docker](urnet-docker)**
 * **[Miner Image](Miner-Image)**
 * **[Operator Discovery](OPERATOR-DISCOVERY)**
@@ -42,6 +46,7 @@
 * **[LAUNCH](LAUNCH)**
 
 #### Diagnostics and Reference
+* **[Capture Diagnostics](Capture-Diagnostics)**
 * **[Troubleshooting](Troubleshooting)**
 * **[Log Message Reference](Log-Message-Reference)**
 * **[CI and Release Process](CI-and-Release-Process)**

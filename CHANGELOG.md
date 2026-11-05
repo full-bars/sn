@@ -4,11 +4,41 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Merged to `main` after `v2026.10.30-1085641150-sn`, not yet in a tagged release. Hashes are commits on `main`.
+Merged to `main` after `v2026.11.1-1087168030-sn`, not yet in a tagged release. Hashes are commits on `main`.
 
 ### Added
 
-- **The `urnet-tools diag` command captures running diagnostics**: captures heap, goroutines and a 30s CPU profile to `<state dir>/diag/<UTC stamp>/` without restarting the provider; writes a plain summary.txt; owner-only, 0600 files in a 0700 dir, 5-bundle retention, free-space floor = max(256 MiB, 8x heap).
+- **Capture diagnostics from a running provider.** `urnet-tools diag` writes heap and goroutine profiles, a summary and, when available, a 30-second CPU profile without a restart. The capture requires 512 MiB free and contains sensitive data. (#360, 30e7c6b40)
+- **Inspect and configure the extender.** `urnet-tools extender status` reports the running role and `extender setup` checks the host and configures supported binding and firewall requirements. `top` and metrics expose its state. (#358, #340)
+- **The state store has migration and reconciliation primitives.** S1 adds inert migration records and a non-mutating file/store comparison; it does not add operator migration commands. (#376)
+- **Persist legacy identity proofs.** The miner saves proofs and adopts them on restart, while re-proving revoked identities and retaining custody through fallback. (#351)
+
+### Fixed
+
+- **A fresh state directory needs explicit authority to create the provider identity.** Interactive start asks; unattended starts use the registration flag or environment setting. Restore missing existing state instead of allocating a replacement. (#378)
+- **Refresh preview includes cached URL proxies.** It uses the manager's desired-set read so the preview reflects the same cached inputs as refresh. (#379)
+- **Updates restore extender bind capability.** The Go update path reapplies a previously held capability after replacing the binary. Installer capability restoration is not part of this release. (#365)
+- **State recovery preserves identities and settings.** Extender identity is durable, conflicting migrations are recorded once, stale recovery backups are cleared and the provider-key census streams on supported platforms. Newer state-store schemas refuse startup rather than minting identities. (#374, #357)
+- **Extender setup handles platform failures.** It verifies binding in the provider context, repairs Windows firewall rules and handles a missing FreeBSD sysctl configuration. (#358)
+- **Discovery and actions fail safely on incomplete scans.** Status and top remain responsive, show warnings and refuse unit-dependent actions when the owning service cannot be found. (#346, #367)
+- **The direct slot is numbered zero.** Proxy slots begin at one. (#369)
+- **macOS forwards proxy maintenance arguments.** Refresh and remove-dead receive the arguments passed to the wrapper. (#372)
+- **Unhealthy URL proxies retire only when cleanup is configured.** Parked proxies are no longer counted as degraded and pool health counts admitted proxies. (#344, #348, #347)
+- **Shutdown and memory pressure recovery are bounded.** The shutdown watchdog starts before the dump and retains the quarantine exit code; the thrash cap relaxes only on demonstrated health. (#363, #350, #352)
+- **Extender startup and handover recover faster.** Carrier ports are released before replacement, activation budget availability is rechecked, and the direct slot gets a short head start. (#342, 58454832b, d7634fc8f)
+
+### Changed
+
+- **Private settings and counters can move into the state store.** Schema stamps prevent older builds from silently consuming newer state; file fallback remains when the store is unavailable. (#357)
+- **Control snapshots and state writes avoid redundant work.** Snapshots are cached briefly, invalidated on control changes and unchanged records skip writes. (#375)
+- **Network token renewal is staggered.** Renewal is drawn within 40 to 50 percent of token lifetime; a token without a usable issue time renews immediately. (#341)
+- **Per-slot billing and transport sampling share a ticker.** This removes one recurring loop per proxied slot. (#353)
+- **Connect and SDK pins follow their fork mains.** The updates carry extender and networking changes. (#339, #354, #364, #371, #373)
+- **Proxy health and discovery output is clearer.** Held and parked slots are reported separately and `top` shows discovery warnings. (#343, #349, #362)
+
+## [v2026.11.1-1087168030-sn] — 2026-11-01
+
+Changes shipped after `v2026.10.30-1085641150-sn` through this tag.
 
 ### Fixed
 
@@ -21,10 +51,6 @@ Merged to `main` after `v2026.10.30-1085641150-sn`, not yet in a tagged release.
 
 ### Changed
 
-- **A thrash cap expires on demonstrated health, not on a wall clock** ([#352](https://github.com/full-bars/sn/pull/352), 8e299b401): the cap carried a 24-hour expiry and released the operator's full trim when the timer ran out, whatever the box was doing, which is how a still-thrashing box got 1500 slots in one launch. Expiry now needs a calm watchdog and memory headroom 25% above the low-headroom threshold, and a recovered box relaxes in stages, +20% per clean window, towards the capacity it held before the cut. The cap stops applying only when relaxation reaches that target.
-- **Shutdown is bounded, and a quarantined run still exits 75** ([#350](https://github.com/full-bars/sn/pull/350), 924b9b2cf): a worker that ignored cancellation left the process draining forever, which on ATL1 became 9.5 hours of a half-dead provider. The join now has a grace and a 5-second watchdog that ends the process without waiting on the remaining defers or the error flush. A drain timeout keeps the quarantine exit code, so the supervisor does not read a deliberate quarantine as a crash worth restarting.
-- **One ticker per proxied slot instead of two** ([#353](https://github.com/full-bars/sn/pull/353), abbc4afb8): billing and transport-health sampling ran on separate 5-second tickers; they now share one per-slot loop, which is one goroutine per slot back on a dense box.
-- **A space that opts out of the extender network builds no directory** (full-bars/sdk#7, [#354](https://github.com/full-bars/sn/pull/354), 0ec902c4a110): the opt-out was only half applied, so every proxied slot still ran a directory loop, status watcher, release fetcher and seed bootstrap. The pin bump carries the gate, and it clears a directory a caller supplied.
 - **The `connect` and `sdk` pins moved** (12efc46ba, b1efe606d): `connect` from `d0a4bb41c300` to `ca8b9020201a`, and `sdk` from `f17fc47e8bda` to `6f4d35ee3486`, which carries the extender activation timeout fix.
 - **The `urnet-tools` help menus point at the community Discord** (cfa578c21).
 

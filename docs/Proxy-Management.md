@@ -50,7 +50,8 @@ To update your proxy list:
 
 1. Edit your proxy configuration file (for example `proxies.txt` or
    `proxy.txt`) as you normally would.
-2. Run the `refresh` command to apply the changes live.
+2. Run the `refresh` command to inspect the proposed additions and removals.
+3. Review the list. Confirm the prompts to apply it, or decline to leave it unchanged. The preview includes cached URL proxies and applies the current trim and backoff rules. A refresh within eight hours of startup needs `--force` to pass the warmup guard.
 
 ### Binary / Linux service
 

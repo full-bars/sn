@@ -77,7 +77,7 @@ The JWT is stored inside the container at `/root/.urnetwork/jwt`. Without a pers
 All examples below mount a config volume at `/root/.urnetwork`. With this volume in place, the startup script detects the existing JWT and skips authentication on later starts. Auth codes are only consumed once: on first run or after manually removing the config volume.
 
 > [!WARNING]
-> The same volume holds the provider identity (`.provider.key` and the custody files). A container that starts with an empty `/root/.urnetwork` is treated as a first run and registers a **new** provider, so losing the volume costs you the identity, not just the JWT. Back the volume up before recreating a container, and never point a second container at a fresh volume expecting it to continue the first one's provider.
+> The same volume holds the provider identity (`.provider.key` and the custody files). Back up and retain the volume. If an existing identity is missing, restore the original volume rather than registering a replacement. For a deliberately new provider on an empty volume, set `ALLOW_CLIENT_REGISTRATION=Y` in the container configuration. The default `auto` does not authorize first registration.
 
 ## 🏃 Docker Run - GHCR
 
@@ -119,6 +119,7 @@ docker run -d \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
   -e AUTH=authcode \
+  -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
   -v urfix_config:/root/.urnetwork \
   -v /path/to/proxy.txt:/app/proxy.txt \
@@ -175,6 +176,7 @@ docker run -d \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
   -e AUTH=authcode \
+  -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
   -v urfix_config:/root/.urnetwork \
   -v /path/to/proxy.txt:/app/proxy.txt \
@@ -316,6 +318,7 @@ docker run -d \
   -e URNETWORK_RAMLOGS=1 \
   -e URNETWORK_NODE_NAME=urfix \
   -e AUTH=authcode \
+  -e ALLOW_CLIENT_REGISTRATION=Y \
   -e HOST_HOSTNAME=$(hostname) \
   -e PROXY_URL='https://example.com/your-proxy-list.txt' \
   -v urfix_config:/root/.urnetwork \

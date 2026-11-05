@@ -25,6 +25,8 @@ curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 
 After installation, source your terminal profile so the new commands are available in the terminal you installed from (new terminals, `ssh host urnet-tools ...`, cron and root find them without this step: the installer links `urnet-tools` and `urnetwork` into `~/.local/bin` and `/usr/local/bin` and writes the PATH block to `~/.bashrc`, `~/.profile` and `~/.zshenv`), and authenticate the provider. Then you can load your proxy list:
 
+A direct unattended start on a new state directory needs `--allow-client-registration` or `ALLOW_CLIENT_REGISTRATION=Y`. Do not authorize a replacement when an existing identity is missing: restore the original state directory. The interactive `provider start` asks before a first registration. The supplied systemd provider unit passes the flag; other service wrappers can differ.
+
 ```bash
 source ~/.bashrc
 urnetwork auth
