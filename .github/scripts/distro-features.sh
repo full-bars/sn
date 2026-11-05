@@ -2099,6 +2099,32 @@ b3_surface() {
 }
 
 # ---------------------------------------------------------------------------
+# per-group state isolation
+# ---------------------------------------------------------------------------
+# Each independent check group starts from a state directory created fresh at
+# the same path (SOCK, discovery and the passwd-home trust all key on it). The
+# previous contents are moved to $WORK/state-before-<group> for diagnosis and
+# are never visible to the group. Only the JWT is staged again.
+group_fresh_state() { # $1=group
+    stop_miner 15 >/dev/null 2>&1
+    LIVE=0
+    gdir="$WORK/state-before-$1"
+    rm -rf "$gdir"
+    if [ -d "$STATE_DIR" ]; then cp -a "$STATE_DIR" "$gdir" 2>/dev/null || true; fi
+    rm -rf "$STATE_DIR"
+    mkdir -p "$STATE_DIR" && chmod 700 "$STATE_DIR"
+    if [ -n "$JWT_FILE" ] && [ -r "$JWT_FILE" ]; then
+        cp "$JWT_FILE" "$STATE_DIR/jwt" && chmod 600 "$STATE_DIR/jwt"
+    fi
+    left="$(ls -A "$STATE_DIR" 2>/dev/null | grep -v '^jwt$' | tr '\n' ' ')"
+    if [ -n "$left" ]; then
+        record FAIL "state-isolation-$1" "group state dir not fresh, leftover: $left"
+        return 1
+    fi
+    record PASS "state-isolation-$1" "group started from a freshly created state dir (previous state archived at $gdir)"
+}
+
+# ---------------------------------------------------------------------------
 # summary
 # ---------------------------------------------------------------------------
 summary() {
@@ -2149,6 +2175,7 @@ main() {
             CHK_ORDER="url manip surface"
         fi
         for g in $CHK_ORDER; do
+            group_fresh_state "$g" || continue
             case "$g" in
                 url)     b2_url_sources ;;
                 manip)   b2_manipulations ;;
