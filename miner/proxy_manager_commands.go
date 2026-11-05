@@ -506,19 +506,6 @@ func classifyHealth(e ProxyEntry) string {
 	return "starting"
 }
 
-// proxyRefreshDesired reads the curated half of the desired set the way v33's
-// proxyRefresh does: the proxy.state Source file when one is configured
-// (workflow A), else the miner's internal <state>/proxy config. URL-sourced
-// entries are not part of this read, exactly as in v33, so a refresh against a
-// curated-only list still reports URL-cached proxies as removals.
-func proxyRefreshDesired(state *ProxyState) ([]*connect.ProxySettings, error) {
-	if state.Source != "" {
-		settings, _, err := readProxySettingsFromFile(state.Source)
-		return settings, err
-	}
-	return readProxySettingsLegacy(), nil
-}
-
 // proxyRefresh implements `provider proxy refresh [--force]`: diff the desired
 // list against proxy.state and, after confirmation, write the reload trigger
 // so the running provider applies the change. The 8-hour warmup gate protects
@@ -548,9 +535,11 @@ func proxyRefresh(opts docopt.Opts) {
 	}
 	defer release()
 
-	desired, err := proxyRefreshDesired(state)
+	// The reloader's own computation (trim cap, give-up backoff, empty-source
+	// refusal, strict URL cache read), so the preview cannot disagree with it.
+	desired, _, err := newProxyManager(defaultProxyManagerConfig()).desiredForPreview()
 	if err != nil {
-		proxyCommandFatal(54, "could not read proxy file %s: %v", state.Source, err)
+		proxyCommandFatal(54, "could not read desired proxies: %v", err)
 	}
 
 	// Diff by proxy identity (proxy.state keys are identity keys).

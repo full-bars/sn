@@ -312,7 +312,19 @@ func (m *proxyManager) primarySource(state *ProxyState) (tag string, settings []
 // plain read also records nothing: computing the same selection a reload would
 // apply is not the same as applying it.
 func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
-	return m.desiredWith(importLegacy, false)
+	return m.desiredWith(importLegacy, false, false)
+}
+
+// desiredForPreview is the read `proxy refresh` diffs against proxy.state. It
+// is the reloader's computation (desiredForReload) minus the writes: the same
+// primary source, URL cache merge, empty-source refusal, give-up backoff and
+// trim cap, and the same strict failure when proxy_url.json cannot be read.
+// The caller already holds the cross-process proxy lock, so it must not take
+// it again, and nothing is persisted or recorded. Keeping one body behind both
+// readers is what stops the preview from drifting from the reload it promises.
+func (m *proxyManager) desiredForPreview() (launch []*connect.ProxySettings, held []*connect.ProxySettings, err error) {
+	launch, held, _, err = m.desiredWith(false, false, true)
+	return launch, held, err
 }
 
 // desiredForReload is desired(false) for the reloader, whose caller applies the
@@ -321,13 +333,17 @@ func (m *proxyManager) desired(importLegacy bool) (launch []*connect.ProxySettin
 // in startupTrimSelection, so without this the pool shrinks with no entry in
 // the timeline. The command readers keep desired(false), which stays silent.
 func (m *proxyManager) desiredForReload() (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
-	return m.desiredWith(false, true)
+	return m.desiredWith(false, true, true)
 }
 
 // desiredWith is the shared body of desired/desiredForReload. liveApply says
 // the caller is the reload path and will apply `launch` to a running pool, so a
 // binding trim cap is a capacity decision taken now.
-func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
+//
+// strictURL makes an unreadable proxy_url.json an error instead of a launch
+// without the URL proxies: a reload, and the preview of it, must abort rather
+// than act on or report a set that silently lost every URL-sourced proxy.
+func (m *proxyManager) desiredWith(importLegacy, liveApply, strictURL bool) (launch []*connect.ProxySettings, held []*connect.ProxySettings, writeState bool, err error) {
 	if liveApply {
 		// APPLY may create persistent identity/provenance rows. Serialize that
 		// read-modify-write with health, grading, audit, and command writers.
@@ -402,7 +418,7 @@ func (m *proxyManager) desiredWith(importLegacy, liveApply bool) (launch []*conn
 		urlState, urlErr = readProxyURLState()
 	}
 	if urlErr != nil {
-		if liveApply {
+		if strictURL {
 			return nil, nil, false, fmt.Errorf("read proxy_url.json: %w", urlErr)
 		}
 		tlog("[proxy][url] warning: could not read proxy_url.json, launching without the URL-sourced proxies: %v\n", urlErr)
