@@ -29,6 +29,7 @@ jobs:
       # footprint small and contained (ToS-conscious), while still loading
       # enough of a real pool to observe admission/grading/stabilization.
       PROXY_URL_MAX: "25"
+      URNETWORK_METRICS: "127.0.0.1:19100"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -101,7 +102,7 @@ jobs:
           nohup /tmp/provider provide --allow-client-registration > /tmp/provider.log 2>&1 &
           echo $! > /tmp/provider.pid
           sleep 30
-          if kill -0 $(cat /tmp/provider.pid) 2>/dev/null; then
+          if kill -0 "$(cat /tmp/provider.pid)" 2>/dev/null; then
             echo "provider running (pid $(cat /tmp/provider.pid))"
           else
             tail -30 /tmp/provider.log; exit 1
@@ -121,7 +122,11 @@ jobs:
             /tmp/urnet-tools proxy health 2>/dev/null | head -5 || true
             /tmp/urnet-tools providers
             sleep 300
+            if [ "$i" -eq 1 ]; then
+              sh .github/scripts/soak-growth.sh baseline "$(cat /tmp/provider.pid)" http://127.0.0.1:19100/metrics /tmp/soak-baseline
+            fi
           done
+          sh .github/scripts/soak-growth.sh check "$(cat /tmp/provider.pid)" http://127.0.0.1:19100/metrics /tmp/soak-baseline
 
       - name: Restart cycle 1 (client-ID reuse check)
         run: |
@@ -156,7 +161,11 @@ jobs:
             /tmp/urnet-tools proxy health 2>/dev/null | head -5 || true
             /tmp/urnet-tools providers
             sleep 300
+            if [ "$i" -eq 1 ]; then
+              sh .github/scripts/soak-growth.sh baseline "$(cat /tmp/provider.pid)" http://127.0.0.1:19100/metrics /tmp/soak-baseline
+            fi
           done
+          sh .github/scripts/soak-growth.sh check "$(cat /tmp/provider.pid)" http://127.0.0.1:19100/metrics /tmp/soak-baseline
 
       - name: Restart cycle 2 (client-ID reuse check)
         run: |
@@ -191,7 +200,11 @@ jobs:
             /tmp/urnet-tools proxy health 2>/dev/null | head -5 || true
             /tmp/urnet-tools providers
             sleep 300
+            if [ "$i" -eq 1 ]; then
+              sh .github/scripts/soak-growth.sh baseline "$(cat /tmp/provider.pid)" http://127.0.0.1:19100/metrics /tmp/soak-baseline
+            fi
           done
+          sh .github/scripts/soak-growth.sh check "$(cat /tmp/provider.pid)" http://127.0.0.1:19100/metrics /tmp/soak-baseline
 
       - name: Remint cycle (new client ID check)
         run: |
@@ -230,7 +243,7 @@ jobs:
           # Full teardown: SIGTERM lets the provider deregister, then the
           # state dir is wiped so the client JWT cannot resurrect the same
           # client_id on a later run. Runs even when the job fails.
-          kill -TERM $(cat /tmp/provider.pid) 2>/dev/null || true
+          kill -TERM "$(cat /tmp/provider.pid)" 2>/dev/null || true
           sleep 3
           rm -rf "$HOME/.urnetwork" /tmp/mint 2>/dev/null || true
           echo "--- provider log tail ---"
@@ -295,6 +308,7 @@ jobs:
                 - URNETWORK_PROFILE=auto
                 # Cap URL-sourced proxies at 25 (ToS-conscious, small footprint).
                 - PROXY_URL_MAX=25
+                - URNETWORK_METRICS=127.0.0.1:19100
               volumes:
                 - ur_config:/root/.urnetwork
           volumes:
@@ -312,6 +326,7 @@ jobs:
             docker logs urfix-soak 2>&1 | tail -20
             exit 1
           fi
+          docker cp .github/scripts/soak-growth.sh urfix-soak:/tmp/soak-growth.sh
           echo "OK: provider authenticated"
 
       - name: Add URL source via urnet-docker (host-side, Design 2)
@@ -331,7 +346,11 @@ jobs:
             /tmp/urnet-docker exec --unit urfix-soak -- urnet-tools proxy summary 2>/dev/null | head -5 || true
             /tmp/urnet-docker providers
             sleep 300
+            if [ "$i" -eq 1 ]; then
+              docker exec urfix-soak sh -c 'sh /tmp/soak-growth.sh baseline "$(pgrep -f "[u]rnetwork_.*_stable provide")" http://127.0.0.1:19100/metrics /tmp/soak-baseline'
+            fi
           done
+          docker exec urfix-soak sh -c 'sh /tmp/soak-growth.sh check "$(pgrep -f "[u]rnetwork_.*_stable provide")" http://127.0.0.1:19100/metrics /tmp/soak-baseline'
 
       - name: proxy clear (tests the wrapper fix) + refresh
         run: |
@@ -350,7 +369,11 @@ jobs:
             /tmp/urnet-docker exec --unit urfix-soak -- urnet-tools proxy summary 2>/dev/null | head -5 || true
             /tmp/urnet-docker providers
             sleep 300
+            if [ "$i" -eq 1 ]; then
+              docker exec urfix-soak sh -c 'sh /tmp/soak-growth.sh baseline "$(pgrep -f "[u]rnetwork_.*_stable provide")" http://127.0.0.1:19100/metrics /tmp/soak-baseline'
+            fi
           done
+          docker exec urfix-soak sh -c 'sh /tmp/soak-growth.sh check "$(pgrep -f "[u]rnetwork_.*_stable provide")" http://127.0.0.1:19100/metrics /tmp/soak-baseline'
 
       - name: Container restart (client-ID reuse check)
         run: |
@@ -365,7 +388,11 @@ jobs:
             /tmp/urnet-docker exec --unit urfix-soak -- urnet-tools proxy summary 2>/dev/null | head -5 || true
             /tmp/urnet-docker providers
             sleep 300
+            if [ "$i" -eq 1 ]; then
+              docker exec urfix-soak sh -c 'sh /tmp/soak-growth.sh baseline "$(pgrep -f "[u]rnetwork_.*_stable provide")" http://127.0.0.1:19100/metrics /tmp/soak-baseline'
+            fi
           done
+          docker exec urfix-soak sh -c 'sh /tmp/soak-growth.sh check "$(pgrep -f "[u]rnetwork_.*_stable provide")" http://127.0.0.1:19100/metrics /tmp/soak-baseline'
 
       - name: Teardown
         run: |
