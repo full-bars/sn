@@ -263,6 +263,13 @@ func buildStateVerifyReport(store *providerStore, storeErr error, fileSide func(
 		report.Status = report.Store
 		return report
 	}
+	// The file side is read BEFORE the read transaction: inspectView holds the
+	// store mutex, and file I/O under it would stall every other store user
+	// and can delay a writer's remap behind an open read transaction.
+	var file migrationSide
+	if fileSide != nil {
+		file = fileSide()
+	}
 	err := inspectView(store, func(tx *bbolt.Tx) error {
 		// schema
 		meta := tx.Bucket([]byte(providerStoreBucketMeta))
@@ -313,7 +320,7 @@ func buildStateVerifyReport(store *providerStore, storeErr error, fileSide func(
 		}
 		sort.Strings(keys)
 		for _, name := range keys {
-			report.Families = append(report.Families, inspectFamily(tx, name, fileSide))
+			report.Families = append(report.Families, inspectFamily(tx, name, file))
 		}
 		return nil
 	})
@@ -340,7 +347,7 @@ func buildStateVerifyReport(store *providerStore, storeErr error, fileSide func(
 	return report
 }
 
-func inspectFamily(tx *bbolt.Tx, name string, fileSide func() migrationSide) stateFamilyReport {
+func inspectFamily(tx *bbolt.Tx, name string, file migrationSide) stateFamilyReport {
 	out := stateFamilyReport{Name: name, Mode: string(migrationUninitialized), Seal: "none", Decodable: "yes", Reconcile: string(stateUnchecked), Status: stateUnchecked}
 	family, found, err := readMigrationFamily(tx, name)
 	if err != nil {
@@ -372,7 +379,7 @@ func inspectFamily(tx *bbolt.Tx, name string, fileSide func() migrationSide) sta
 	default:
 		store.Present, store.Record = present, rec
 	}
-	cmp := compareMigrationRecords(fileSide(), store, pending)
+	cmp := compareMigrationRecords(file, store, pending)
 	out.Reconcile = string(cmp)
 	out.Status = comparisonStatus(cmp)
 	if out.Decodable == "no" {

@@ -369,3 +369,28 @@ func TestIdentitiesOutcomeIsWhitelisted(t *testing.T) {
 		t.Fatalf("unknown outcome not reported as %q: %+v", stateOutcomeUnknown, r.Slots)
 	}
 }
+
+// The identity file is read with no read transaction open and the store mutex
+// free, so a slow or large file cannot stall other store users or a writer.
+func TestVerifyReadsFileSideOutsideTransaction(t *testing.T) {
+	s := inspectStore(t)
+	rec := migrationRecord{Format: "f", Bytes: []byte("x")}
+	inspectFamilyRecord(t, s, migrationShadow, &migrationOperation{Generation: 1, State: migrationCommitted}, &rec)
+	calls := 0
+	probe := func() migrationSide {
+		calls++
+		if !s.mu.TryLock() {
+			t.Error("file side read while the store mutex is held (inside the read transaction)")
+		} else {
+			s.mu.Unlock()
+		}
+		return migrationSide{Present: true, Record: rec}
+	}
+	r := buildStateVerifyReport(s, nil, probe)
+	if calls == 0 {
+		t.Fatal("file side never read")
+	}
+	if identityFamilyOf(t, r).Status != stateClean {
+		t.Fatalf("matching sides should read clean: %+v", r)
+	}
+}
