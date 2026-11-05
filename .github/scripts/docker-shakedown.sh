@@ -27,6 +27,20 @@
 #    31.0-rc1 -> 31.1-rc1, never EXPECTED_VERSION -> 31.1-rc1, or the version
 #    gate declines before the unit/PID-1 gate is ever reached.
 set -u
+
+# Accept sn's date tags and its historical 3.23 tags, not sibling-fork tags.
+valid_version() {
+  [[ "$1" =~ ^v20[0-9]{2}\.[0-9]{1,2}\.[0-9]{1,2}-[0-9]+(-sn)?$ || "$1" =~ ^v3\.23\.0-fix\.[0-9]+(\.[0-9]+)?(-rc[0-9]+)?$ ]]
+}
+if [ "${1:-}" = "--validate-version" ]; then
+  if valid_version "${2:-}"; then
+    echo "ACCEPT: ${2:-}"
+    exit 0
+  fi
+  echo "REJECT: ${2:-}"
+  exit 75
+fi
+
 JWT_FILE="${1:-/tmp/gauntlet.jwt}"
 REPORT="/tmp/docker-shakedown-report.txt"
 PASS=0; FAIL=0; SKIP=0
@@ -161,9 +175,8 @@ if [ -z "${EXPECTED_VERSION:-}" ]; then
   echo "FAIL: EXPECTED_VERSION not set (workflow must pass it)" | tee -a "$REPORT"
   exit 75
 fi
-EXPECTED_BASE=$(echo "$EXPECTED_VERSION" | grep -oE "v3\.23\.0-fix\.[0-9]+" | head -1)
-if [ -z "$EXPECTED_BASE" ]; then
-  echo "FAIL: EXPECTED_VERSION $EXPECTED_VERSION does not match v3.23.0-fix.N pattern" | tee -a "$REPORT"
+if ! valid_version "$EXPECTED_VERSION"; then
+  echo "FAIL: EXPECTED_VERSION $EXPECTED_VERSION is not an sn release tag" | tee -a "$REPORT"
   exit 75
 fi
 echo "EXPECTED_VERSION: $EXPECTED_VERSION" >> "$REPORT"
