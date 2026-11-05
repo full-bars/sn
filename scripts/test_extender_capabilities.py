@@ -102,6 +102,20 @@ sudo() {
                     self.assertEqual(bool(calls), expect_call)
                     self.assertEqual(result.stderr, "")
 
+    def test_installer_elevates_with_passwordless_sudo_when_SUDO_unset(self):
+        installer = SCRIPTS[0]
+        _, calls, binary = self.run_helper(installer, "", uid="1000", sudo="passwordless")
+        self.assertEqual(calls, f"sudo cap_net_bind_service=+ep {binary}\n")
+        # no passwordless sudo: plain setcap, as before
+        _, calls, binary = self.run_helper(installer, "", uid="1000", sudo="none")
+        self.assertEqual(calls, f"cap_net_bind_service=+ep {binary}\n")
+        # root never wraps in sudo
+        _, calls, binary = self.run_helper(installer, "", uid="0", sudo="passwordless")
+        self.assertEqual(calls, f"cap_net_bind_service=+ep {binary}\n")
+        # sudo needing a password must not be used
+        _, calls, _ = self.run_helper(installer, "", uid="1000", sudo="password")
+        self.assertNotIn("sudo", calls)
+
     def test_swap_sites_and_openrc_finalization(self):
         installer = (ROOT / SCRIPTS[0]).read_text()
         self.assertEqual(installer.count('ensure_extender_cap "$install_path/bin/urnetwork"'), 5)

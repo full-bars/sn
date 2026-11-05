@@ -85,7 +85,14 @@ ensure_extender_cap ()
     if cap_present; then
         return 0
     fi
-    if command -v setcap >/dev/null 2>&1 && ${SUDO:-} setcap cap_net_bind_service=+ep "$cap_file" 2>/dev/null && cap_present; then
+    # SUDO is only set when a dependency install needed it; with the
+    # downloader and parser already present it is empty. Elevate here when
+    # passwordless sudo exists (this subshell leaves the caller's SUDO alone).
+    elevate=${SUDO:-}
+    if [ -z "$elevate" ] && [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+        elevate=sudo
+    fi
+    if command -v setcap >/dev/null 2>&1 && $elevate setcap cap_net_bind_service=+ep "$cap_file" 2>/dev/null && cap_present; then
         return 0
     fi
     quoted_file=$(printf '%s' "$cap_file" | sed "s/'/'\\\\''/g")
