@@ -1,6 +1,12 @@
 package miner
 
-import "github.com/urnetwork/sdk"
+import (
+	"strings"
+	"unicode"
+	"unicode/utf8"
+
+	"github.com/urnetwork/sdk"
+)
 
 // extender_detail.go carries the extender's descriptive fields for the control
 // reply only.
@@ -39,11 +45,36 @@ type providerExtenderControlReading struct {
 	providerExtenderDetail
 }
 
+// extenderDetailText makes one descriptive field safe to put on the control
+// reply: control characters (a terminal escape in an error string would be
+// executed by the reader's terminal) become spaces, runs of whitespace
+// collapse, and the length is bounded without cutting a UTF-8 sequence.
 func extenderDetailText(s string) string {
+	s = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return ' '
+		}
+		return r
+	}, s)
+	s = strings.Join(strings.Fields(s), " ")
 	if len(s) <= extenderDetailTextMax {
 		return s
 	}
-	return s[:extenderDetailTextMax]
+	cut := extenderDetailTextMax
+	for cut > 0 && !utf8.RuneStart(s[cut]) {
+		cut--
+	}
+	return s[:cut]
+}
+
+// extenderDetailError is extenderDetailText for the SDK's activation error,
+// which is arbitrary text from outside this process (a server reply, a
+// network error quoting a URL). It is redacted with the same rules the
+// incident bundle uses before it can reach `extender status` or `top`.
+// Redaction runs on the full text first so a secret straddling the length
+// bound is not left half-visible.
+func extenderDetailError(s string) string {
+	return extenderDetailText(incidentRedact(s))
 }
 
 func extenderDetailFromStatus(status *sdk.ExtenderProvideStatus) providerExtenderDetail {
@@ -53,7 +84,7 @@ func extenderDetailFromStatus(status *sdk.ExtenderProvideStatus) providerExtende
 	return providerExtenderDetail{
 		Ipv4:                  extenderDetailText(status.Ipv4),
 		Ipv6:                  extenderDetailText(status.Ipv6),
-		LastActivationError:   extenderDetailText(status.LastActivationError),
+		LastActivationError:   extenderDetailError(status.LastActivationError),
 		DnsPorts:              extenderDetailText(status.DnsPorts),
 		ConnectionCount:       status.ConnectionCount,
 		PeerPingCount:         status.PeerPingCount,
