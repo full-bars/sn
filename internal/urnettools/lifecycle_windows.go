@@ -8,6 +8,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/urfoundation/sn/internal/winservice"
 )
 
 // Windows lifecycle uses Task Scheduler (schtasks.exe) instead of systemd.
@@ -130,4 +133,23 @@ func cleanupLifecycle(p Provider) {
 			fmt.Fprintf(os.Stderr, "warning: could not remove scheduled task %q: %v\n", taskName, err)
 		}
 	}
+}
+
+// windowsProviderServiceName is the supervisor's service name, the one
+// "provider service install" saves and the Startup shortcut runs as
+// "service run urnetwork-provider" (miner minerServiceDefaultName).
+const windowsProviderServiceName = "urnetwork-provider"
+
+// windowsServiceStopWait mirrors the miner's own stop wait: the supervisor
+// gives its miner 30 seconds to end.
+const windowsServiceStopWait = 45 * time.Second
+
+// stopProviderService stops the per-user supervisor and, through its job
+// object, the miner it runs. Killing only the miner is not enough: the
+// supervisor starts it again 15 seconds later. winservice.Stop works by
+// service name and checks the supervisor's lock, so it never touches another
+// process, and it does nothing when no supervisor is running. The separate
+// Windows service "urnetworkd" is not involved.
+func stopProviderService(_ Provider) error {
+	return winservice.Stop(windowsProviderServiceName, windowsServiceStopWait)
 }

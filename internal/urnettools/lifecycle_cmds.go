@@ -144,7 +144,26 @@ func cmdUninstall(args []string, force, dryRun bool) error {
 		return nil
 	}
 
-	if p.Unit != "" {
+	return uninstallProvider(p)
+}
+
+// stopProviderServiceFn is the seam for the platform service stop, so the
+// uninstall ordering can be tested on every platform.
+var stopProviderServiceFn = stopProviderService
+
+// uninstallProvider does the work after target selection and confirmation:
+// stop whatever supervises the provider, disable the unit, then remove files.
+func uninstallProvider(p Provider) error {
+	// Stop the supervisor first. On Windows the provider is a per-user
+	// supervisor that restarts its miner, so killing only the miner (or just
+	// deleting files) fails with "Access is denied". If it will not stop it is
+	// still holding the files; do not delete state under a live provider.
+	if err := stopProviderServiceFn(p); err != nil {
+		return fmt.Errorf("uninstall %s: could not stop the provider service: %w", providerLabel(p), err)
+	}
+	// systemd only exists on Linux. Windows has no unit (p.Unit is empty
+	// there today), and the guard keeps a stray value from reaching systemctl.
+	if p.Unit != "" && runtime.GOOS != "windows" {
 		if isUserUnit(p.Unit) && p.User != "" {
 			args := append(systemctlUserArgs(p.User), "disable", "--now", p.Unit)
 			if out, err := exec.Command("systemctl", args...).CombinedOutput(); err != nil {
