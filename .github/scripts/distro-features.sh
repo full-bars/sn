@@ -1981,6 +1981,40 @@ b3_cli_tree() {
     fi
 }
 
+# Health follows its event log indefinitely when one exists. Capture to a file
+# and stop the whole session, including tail, rather than leaving a pipe open.
+probe_health() {
+    health_log="$WORK/surface-proxy-health.log"
+    health_marker="$WORK/surface-proxy-health.timeout"
+    rm -f "$health_marker"
+    if ! have setsid; then
+        printf '%s\n' 'setsid is required to bound the streaming health probe' >"$health_log"
+        HEALTH_RC=1; HEALTH_TIMED_OUT=0
+        return
+    fi
+    HOME="$STATE_HOME" setsid "$TOOLS_BIN" proxy health --state-dir "$STATE_DIR" >"$health_log" 2>&1 &
+    health_pid=$!
+    (
+        sleep "${FEATURE_HEALTH_TIMEOUT:-5}"
+        if kill -0 "$health_pid" 2>/dev/null; then
+            : >"$health_marker"
+            kill -TERM "-$health_pid" 2>/dev/null || true
+            sleep 1
+            kill -KILL "-$health_pid" 2>/dev/null || true
+        fi
+    ) &
+    health_watch=$!
+    if wait "$health_pid"; then HEALTH_RC=0; else HEALTH_RC=$?; fi
+    if [ -f "$health_marker" ]; then
+        wait "$health_watch" 2>/dev/null || true
+        HEALTH_TIMED_OUT=1
+    else
+        kill "$health_watch" 2>/dev/null || true
+        wait "$health_watch" 2>/dev/null || true
+        HEALTH_TIMED_OUT=0
+    fi
+}
+
 b3_surface() {
     head1 "BLOCK 3 — broad surface"
     if [ "$CLIENT_SAFE" != "1" ]; then
@@ -2007,7 +2041,20 @@ b3_surface() {
         record FAIL surface-status "rc=$rc: $(printf '%s' "$out" | firstline)"
     fi
 
-    for sub in health traffic ids; do
+    probe_health
+    out="$(cat "$health_log")"; rc=$HEALTH_RC
+    if [ "$HEALTH_TIMED_OUT" = "1" ] && printf '%s' "$out" | grep -q 'Streaming proxy health events'; then
+        record PASS surface-proxy-health "health report opened the event stream; stopped after ${FEATURE_HEALTH_TIMEOUT:-5}s"
+    elif [ "$HEALTH_TIMED_OUT" = "1" ]; then
+        record FAIL surface-proxy-health "health command timed out without opening its event stream: $(printf '%s' "$out" | firstline)"
+    elif [ "$rc" = "0" ] && [ -n "$out" ]; then
+        record PASS surface-proxy-health "$(printf '%s' "$out" | head -2 | tr '\n' ' ' | firstline)"
+    elif printf '%s' "$out" | grep -qi 'unknown'; then
+        record SKIP-UNSUPPORTED surface-proxy-health "not exposed by this urnet-tools: $(printf '%s' "$out" | firstline)"
+    else
+        record FAIL surface-proxy-health "rc=$rc: $(printf '%s' "$out" | firstline)"
+    fi
+    for sub in traffic ids; do
         out="$(TS proxy $sub 2>&1)"; rc=$?
         if [ "$rc" = "0" ] && [ -n "$out" ]; then
             record PASS "surface-proxy-$sub" "$(printf '%s' "$out" | head -2 | tr '\n' ' ' | firstline)"
