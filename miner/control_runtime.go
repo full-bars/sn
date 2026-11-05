@@ -470,6 +470,9 @@ func resetControlRuntimeForTest() {
 	controlRuntime.hadPriorRun = false
 	controlRuntime.lastStartedVersion = ""
 	controlRuntime.rate = controlRateSampler{}
+	// the cached snapshot describes the run state cleared above; a test that
+	// switches state directories must not read the previous one's snapshot
+	minerSnapshot.reset()
 }
 
 // runSampler takes one rate sample per second until ctx is done.

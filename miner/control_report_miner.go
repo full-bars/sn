@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -24,13 +25,47 @@ import (
 // invented, and every builder returns an error rather than a zeroed reply
 // when it has no source at all.
 
+var minerSnapshot = &snapshotCollector{build: buildMinerSnapshot}
+
 func init() {
-	minerControlSnapshot = buildMinerSnapshot
+	minerControlSnapshot = func() (*nodeSnapshot, error) { return minerSnapshot.get(time.Now()) }
 	minerControlTraffic = buildMinerTraffic
 	minerControlInternals = buildMinerInternals
 	minerControlGoroutines = buildMinerGoroutines
 	minerControlTrimPreview = buildMinerTrimPreview
 	minerControlAuditStatus = buildMinerAuditStatus
+}
+
+const snapshotCacheTTL = time.Second
+
+type snapshotCollector struct {
+	mu       sync.Mutex
+	cached   *nodeSnapshot
+	cachedAt time.Time
+	build    func() (*nodeSnapshot, error)
+}
+
+// reset drops the cached snapshot so the next request rebuilds it. A control
+// mutation or a test reset changes the state this snapshot reports, and leaving
+// the cache standing would serve the previous answer for up to one second.
+func (c *snapshotCollector) reset() {
+	c.mu.Lock()
+	c.cached, c.cachedAt = nil, time.Time{}
+	c.mu.Unlock()
+}
+
+func (c *snapshotCollector) get(now time.Time) (*nodeSnapshot, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.cached != nil && now.Sub(c.cachedAt) < snapshotCacheTTL {
+		return c.cached, nil
+	}
+	snapshot, err := c.build()
+	if err != nil {
+		return nil, err
+	}
+	c.cached, c.cachedAt = snapshot, now
+	return snapshot, nil
 }
 
 // snapshotStateThresholds mirror the 3.23-fix provider's derivation.

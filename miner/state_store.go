@@ -22,6 +22,7 @@ package miner
 // bbolt's own single-writer transaction is all the serialization needed.
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -186,6 +187,8 @@ func runProviderStoreUpdate(db *bbolt.DB, fn func(*bbolt.Tx) error) error {
 // providerStoreWrites counts the write transactions begun on any handle, so a
 // test can bound what a burst of callers costs the disk.
 var providerStoreWrites atomic.Int64
+var providerStoreCommits atomic.Int64
+var errProviderStoreUnchanged = errors.New("provider state record unchanged")
 
 func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
 	if s.db == nil {
@@ -196,10 +199,13 @@ func (s *providerStore) write(fn func(*bbolt.Tx) error) error {
 	}
 	providerStoreWrites.Add(1)
 	err := runProviderStoreUpdate(s.db, fn)
+	if err == nil {
+		providerStoreCommits.Add(1)
+	}
 	// A record that would not decode is counted where it was read; no write
 	// was attempted, so it is not also a failed write.
 	var undecodable *providerStoreDecodeError
-	if err != nil && !errors.Is(err, errProviderStoreReleased) && !errors.As(err, &undecodable) {
+	if err != nil && !errors.Is(err, errProviderStoreReleased) && !errors.Is(err, errProviderStoreUnchanged) && !errors.As(err, &undecodable) {
 		IncrPersistentError(providerStoreWriteFailedCategory)
 	}
 	return err
@@ -358,13 +364,14 @@ func (s *providerStore) updateJSON(bucket, key string, out any, mutate func(foun
 		}
 		return errProviderStoreClosed
 	}
-	return s.write(func(tx *bbolt.Tx) error {
+	err := s.write(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
 			return err
 		}
 		var found bool
-		if val := b.Get([]byte(key)); val != nil {
+		val := b.Get([]byte(key))
+		if val != nil {
 			if err := json.Unmarshal(val, out); err != nil {
 				// A value this build cannot decode holds the role forever, so the
 				// retry loop would otherwise be the only trace. Count it so the
@@ -381,8 +388,15 @@ func (s *providerStore) updateJSON(bucket, key string, out any, mutate func(foun
 		if err != nil {
 			return err
 		}
+		if found && bytes.Equal(raw, val) {
+			return errProviderStoreUnchanged
+		}
 		return b.Put([]byte(key), raw)
 	})
+	if errors.Is(err, errProviderStoreUnchanged) {
+		return nil
+	}
+	return err
 }
 
 func (s *providerStore) delete(bucket, key string) error {

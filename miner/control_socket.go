@@ -709,6 +709,14 @@ func resolveHotRestartEnabled() bool {
 func handleControlRequest(state *controlState, req controlRequest) controlResponse {
 	IncrControlCmd(req.Cmd)
 
+	// these commands change what a snapshot reports, so the cached one must not
+	// answer the next request: an operator who sets a key and asks for status
+	// would otherwise see the previous state for up to a second
+	switch req.Cmd {
+	case "set", "clear", "audit":
+		defer minerSnapshot.reset()
+	}
+
 	switch req.Cmd {
 	case "version":
 		return controlResponse{OK: true, BuildVersion: minerControlVersion()}
