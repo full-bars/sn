@@ -449,8 +449,80 @@ func TestStateMigrationSkipsWhatItCannotTrust(t *testing.T) {
 	}
 }
 
+// Conflicts settle on the first start without losing either version.
+func TestStateMigrationConflictSettlesAcrossStarts(t *testing.T) {
+	h := newSettingsHarness(t)
+	store := providerStoreInstance()
+	if err := store.putSetting(settingDirectGrade, []byte(`{"graded":true,"score":90}`)); err != nil {
+		t.Fatal(err)
+	}
+	other := []byte(`{"graded":true,"score":10}`)
+	if err := os.WriteFile(h.path("direct_grade.json"), other, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if h.exists("direct_grade.json") {
+		t.Fatal("conflicting file still at legacy path")
+	}
+	matches, err := filepath.Glob(h.path("direct_grade.json.conflict.*"))
+	if err != nil || len(matches) != 1 {
+		t.Fatalf("conflict copies: %v, %v", matches, err)
+	}
+	got, err := os.ReadFile(matches[0])
+	if err != nil || !bytes.Equal(got, other) {
+		t.Fatalf("conflict data not preserved: %v", err)
+	}
+	count := h.errCount(settingMigrateConflictCategory)
+	if count != 1 {
+		t.Fatalf("conflict count = %d, want 1", count)
+	}
+	FlushPersistentErrors()
+	h.restart()
+	if err := startProviderSettings(); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.errCount(settingMigrateConflictCategory); got != count {
+		t.Fatalf("conflict count after restart = %d, want %d", got, count)
+	}
+}
+
 // A file beside a stored value it does not equal: the store wins, the file is
 // left alone and counted. An equal file is just removed.
+func TestStateMigrationConflictArchiveFullPreservesFiles(t *testing.T) {
+	h := newSettingsHarness(t)
+	store := providerStoreInstance()
+	if err := store.putSetting(settingDirectGrade, []byte(`{"graded":true,"score":90}`)); err != nil {
+		t.Fatal(err)
+	}
+	other := []byte(`{"graded":true,"score":10}`)
+	if err := os.WriteFile(h.path("direct_grade.json"), other, 0600); err != nil {
+		t.Fatal(err)
+	}
+	for i := 1; i <= 8; i++ {
+		if err := os.WriteFile(h.path(fmt.Sprintf("direct_grade.json.conflict.%d", i)), []byte("retained"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i := 0; i < 2; i++ {
+		if got := migrateProviderSetting(store, providerSettings[2]); got != settingConflict {
+			t.Fatalf("outcome %s", got)
+		}
+	}
+	if got := h.read("direct_grade.json"); !bytes.Equal(got, other) {
+		t.Fatal("original changed")
+	}
+	if got := h.errCount(settingMigrateConflictCategory); got != 0 {
+		t.Fatalf("unresolved conflict counted %d times", got)
+	}
+	for i := 1; i <= 8; i++ {
+		if got := h.read(fmt.Sprintf("direct_grade.json.conflict.%d", i)); string(got) != "retained" {
+			t.Fatal("backup changed")
+		}
+	}
+}
+
 func TestStateMigrationBothFileAndKeyExist(t *testing.T) {
 	h := newSettingsHarness(t)
 	store := providerStoreInstance()
@@ -479,8 +551,11 @@ func TestStateMigrationBothFileAndKeyExist(t *testing.T) {
 	if outcome := migrateProviderSetting(store, providerSettings[2]); outcome != settingConflict {
 		t.Fatalf("differing file reported %s", outcome)
 	}
-	if got := h.read("direct_grade.json"); !bytes.Equal(got, other) {
-		t.Fatal("a conflicting file was changed or removed")
+	if h.exists("direct_grade.json") {
+		t.Fatal("a conflicting file remained at its legacy path")
+	}
+	if got := h.read("direct_grade.json.conflict.1"); !bytes.Equal(got, other) {
+		t.Fatal("a conflicting file was not preserved")
 	}
 	if data, _ := h.stored(settingDirectGrade); !bytes.Equal(data, stored) {
 		t.Fatal("a conflicting file overwrote the store")

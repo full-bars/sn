@@ -42,9 +42,8 @@ const providerStoreBucketSettings = "settings"
 // The setting then keeps running from its file, exactly as before.
 const settingMigrateSkippedCategory = "state_migrate_skipped"
 
-// settingMigrateConflictCategory counts a file that sits beside a stored value
-// it does not equal. The store wins and the file is left alone: it is never
-// overwritten and never deleted (section 2.3, "Both a file and a key exist").
+// settingMigrateConflictCategory counts a conflicting file preserved aside.
+// The stored value wins without discarding the legacy data.
 const settingMigrateConflictCategory = "state_migrate_conflict"
 
 // settingMigrateRemoveFailedCategory counts an imported file that could not be
@@ -296,8 +295,13 @@ func migrateProviderSetting(store *providerStore, setting providerSetting) setti
 		stateMigrateHook("after-commit", setting.key)
 	}
 	if outcome == settingConflict {
+		backup, err := preserveSettingConflict(path, info)
+		if err != nil {
+			critLog("STATE MIGRATE conflict %s: could not preserve %s: %v; the store wins and the file remains", setting.key, setting.file, err)
+			return settingConflict
+		}
 		IncrPersistentError(settingMigrateConflictCategory)
-		critLog("STATE MIGRATE conflict %s: %s differs from the stored value; the store wins and the file is left alone", setting.key, setting.file)
+		critLog("STATE MIGRATE conflict %s: the store wins; the legacy file was preserved as %s", setting.key, backup)
 		return settingConflict
 	}
 	// The primary file is redundant once the database commit succeeds. Keep
@@ -309,6 +313,32 @@ func migrateProviderSetting(store *providerStore, setting providerSetting) setti
 	}
 	_ = providerStoreSyncDir(filepath.Dir(path))
 	return outcome
+}
+
+// Preserve up to eight conflicts without ever replacing or deleting a backup.
+// A full archive leaves the original in place for the operator to resolve.
+// A linked backup found on retry completes an interrupted link/unlink safely.
+func preserveSettingConflict(path string, original os.FileInfo) (string, error) {
+	for i := 1; i <= 8; i++ {
+		backup := fmt.Sprintf("%s.conflict.%d", path, i)
+		err := os.Link(path, backup)
+		if errors.Is(err, fs.ErrExist) {
+			info, statErr := os.Lstat(backup)
+			if statErr != nil || !os.SameFile(original, info) {
+				continue
+			}
+		} else if err != nil {
+			return "", err
+		}
+		if err := providerStoreSyncDir(filepath.Dir(path)); err != nil {
+			return "", err
+		}
+		if err := os.Remove(path); err != nil {
+			return "", err
+		}
+		return backup, providerStoreSyncDir(filepath.Dir(path))
+	}
+	return "", errors.New("conflict archive is full")
 }
 
 // importSetting stores data under key unless the key exists. One transaction,
