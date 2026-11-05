@@ -117,8 +117,12 @@ SKIP-NO-NETWORK <name>: <detail>
 ```
 
 - **PASS** — the documented behavior was observed.
-- **FAIL** — a product defect. Every FAIL is a finding: the detail carries the
-  raw tool output and the state fingerprints that back it.
+- **FAIL** — a product defect, unless the detail starts with
+  `MANDATORY-SKIPPED` or the check is a `state-isolation-<group>` row. Those
+  mean a mandatory check was not graded (no network, no readable JWT, a
+  missing capability) or the harness could not reset its state: fix the
+  environment or the harness, not the product. Every FAIL carries the raw
+  tool output and the state fingerprints that back it.
 - **SKIP-UNSUPPORTED** — runtime-detected absence at this head. The detail
   names the owning port when one exists (see the table below), so a skip reads
   as "another port owns this", never as a silent pass.
@@ -148,7 +152,8 @@ mandatory check that was not graded is not a pass. `control-keys-live-raw` and
 `control-key-live-runtime` are mandatory capabilities: their `SKIP-UNSUPPORTED`
 is also a `FAIL`. The summary lists every remaining skip by name.
 `sh .github/scripts/test_distro_features_isolation.sh .github/scripts/distro-features.sh`
-checks the isolation and the skip policy without a miner.
+checks the isolation, the reset failure paths and the skip policy without a
+miner.
 
 ## Conditional map (owning ports)
 
