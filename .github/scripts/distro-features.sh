@@ -1132,10 +1132,8 @@ b1_ramlogs() {
     fi
 }
 
-# registration identity: a bare provide on a fresh dir mints its own identity
-# (creation is unconditional; --allow-client-registration is accepted and
-# ignored for client identity creation); --adopt-legacy-provider-key on a fresh dir must not allocate
-# (it is an adoption flag, not a bootstrap flag).
+# A fresh bare provide must refuse registration without creating a key or
+# contacting the registration endpoint. Adoption on a fresh dir must not allocate.
 b1_identity_gate() {
     gate_home="$WORK/gate-home"
     rm -rf "$gate_home"; mkdir -p "$gate_home/.urnetwork" "$gate_home/bin"
@@ -1169,25 +1167,53 @@ b1_identity_gate() {
         wait "$gp" 2>/dev/null || true
         GATE_EXITED="$exited"; GATE_SOCK="$sock_up"
     }
-    # Creation is unconditional since 1cdce1351 (the identity withholder was
-    # dropped; --allow-client-registration is accepted and ignored for client
-    # identity creation), so a bare
-    # provide on a fresh dir MUST come up and mint its own identity. The old
-    # assertion (no socket) pinned the removed gate.
-    gate_probe "" "$WORK/gate-fresh.log" "$gate_home/.urnetwork/.provider.key"
-    # The identity minted unconditionally is the ed25519 seed .provider.key
-    # (gate_reset leaves only the network jwt, so it cannot pre-exist).
-    # .provider.jwt is the registered client credential: it appears only after
-    # the backend accepts the registration, which is asynchronous, so it is not
-    # a creation signal and must not be required here.
-    gate_id=""; [ -s "$gate_home/.urnetwork/.provider.key" ] && gate_id="$gate_home/.urnetwork/.provider.key"
-    if [ "$GATE_SOCK" = "yes" ] && [ -n "$gate_id" ]; then
-        record PASS identity-gate-fresh "bare provide on a fresh dir minted its own identity ($(basename "$gate_id")) and served the socket; --allow-client-registration is no longer required"
-    elif [ "$GATE_SOCK" = "yes" ]; then
-        record FAIL identity-gate-fresh "socket came up on a fresh dir but no .provider.key seed was minted: $(ls -A "$gate_home/.urnetwork" | tr '\n' ' ')"
-    else
-        record FAIL identity-gate-fresh "bare provide on a fresh dir did not come up (exited=$GATE_EXITED); creation is unconditional, so it must mint: $(tail -n 1 "$WORK/gate-fresh.log" 2>/dev/null | firstline)"
+    # The control socket can precede the gate. Wait for a natural process exit,
+    # and count registration requests at a local endpoint rather than inferring
+    # them from files, logs or socket readiness.
+    gate_reset
+    gate_addr="$WORK/gate-api.addr"
+    rm -f "$gate_addr" "$WORK/gate-api-server"
+    # Artifact downloads lose executable bits; use a private copy.
+    cp "${GATE_SERVER_BIN:-$BIN_DIR/release-server}" "$WORK/gate-api-server" && chmod +x "$WORK/gate-api-server"
+    "$WORK/gate-api-server" -identity-gate-addr-file "$gate_addr" >"$WORK/gate-api.log" 2>&1 &
+    gate_server=$!
+    i=0
+    while [ ! -s "$gate_addr" ] && kill -0 "$gate_server" 2>/dev/null && [ "$i" -lt 10 ]; do
+        sleep 1; i=$((i + 1))
+    done
+    gate_api=""; [ -s "$gate_addr" ] && gate_api="$(cat "$gate_addr")"
+    # Prove the counter detects the actual registration route before resetting.
+    gate_control=""
+    if [ -n "$gate_api" ]; then
+        curl -sS --max-time 3 -X POST "$gate_api/network/register-client-v1" >/dev/null 2>&1 &&
+            gate_control="$(curl -fsS --max-time 3 "$gate_api/__calls")"
     fi
+    if [ "$gate_control" != 1 ] || [ "$(curl -fsS --max-time 3 -X DELETE "$gate_api/__calls" 2>/dev/null)" != 0 ]; then
+        record FAIL identity-gate-fresh "registration counter did not pass its positive control"
+    else
+        HOME="$gate_home" "$gate_home/bin/provider" provide --port=0 "--api_url=$gate_api" >"$WORK/gate-fresh.log" 2>&1 &
+        gp=$!
+        i=0
+        while kill -0 "$gp" 2>/dev/null && [ "$i" -lt 25 ]; do
+            sleep 1; i=$((i + 1))
+        done
+        gate_timeout=no
+        if kill -0 "$gp" 2>/dev/null; then
+            gate_timeout=yes
+            kill -KILL "$gp" 2>/dev/null || true
+        fi
+        gate_rc=0; wait "$gp" 2>/dev/null || gate_rc=$?
+        gate_calls="$(curl -fsS --max-time 3 "$gate_api/__calls" 2>/dev/null)" || gate_calls=unavailable
+        gate_key=no; { [ -e "$gate_home/.urnetwork/.provider.key" ] || [ -L "$gate_home/.urnetwork/.provider.key" ]; } && gate_key=yes
+        gate_hint=no; grep -F -q -- '--allow-client-registration' "$WORK/gate-fresh.log" && gate_hint=yes
+        if [ "$gate_timeout" = no ] && [ "$gate_rc" -ne 0 ] && [ "$gate_key" = no ] && [ "$gate_calls" = 0 ] && [ "$gate_hint" = yes ]; then
+            record PASS identity-gate-fresh "bare provide exited nonzero without creating a key or calling registration (rc=$gate_rc)"
+        else
+            record FAIL identity-gate-fresh "bare provide: rc=$gate_rc timeout=$gate_timeout key=$gate_key registration-calls=$gate_calls gate-hint=$gate_hint"
+        fi
+    fi
+    kill "$gate_server" 2>/dev/null || true
+    wait "$gate_server" 2>/dev/null || true
     if miner_help | grep -q -- '--adopt-legacy-provider-key'; then
         gate_probe "--adopt-legacy-provider-key" "$WORK/gate-adopt.log"
         if [ "$GATE_SOCK" = "no" ]; then

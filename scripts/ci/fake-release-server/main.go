@@ -50,13 +50,18 @@ type release struct {
 
 func main() {
 	var (
-		dir   = flag.String("dir", ".", "directory holding the release assets")
-		addr  = flag.String("addr", "127.0.0.1:18080", "listen address")
-		tag   = flag.String("tag", "", "release tag to advertise (required)")
-		owner = flag.String("owner", "full-bars", "repository owner in the API path")
-		repo  = flag.String("repo", "sn", "repository name in the API path")
+		dir          = flag.String("dir", ".", "directory holding the release assets")
+		addr         = flag.String("addr", "127.0.0.1:18080", "listen address")
+		tag          = flag.String("tag", "", "release tag to advertise (required)")
+		owner        = flag.String("owner", "full-bars", "repository owner in the API path")
+		repo         = flag.String("repo", "sn", "repository name in the API path")
+		gateAddrFile = flag.String("identity-gate-addr-file", "", "run the identity-gate registration counter")
 	)
 	flag.Parse()
+	if *gateAddrFile != "" {
+		identityGateServer(*gateAddrFile)
+		return
+	}
 
 	if *tag == "" {
 		log.Fatal("fake-release-server: -tag is required")

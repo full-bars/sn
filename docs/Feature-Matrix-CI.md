@@ -58,7 +58,7 @@ release blocker in them is not masked by proxy churn.
 | `logging-events` | at default verbosity, `events.log` records `STARTUP: version=…`, and a clean SIGTERM records `SIGNAL: context cancelled` + `PROVIDER EXIT: normal shutdown` |
 | `ramlog-routing` | `URNETWORK_RAMLOGS=1` and `URNETWORK_PROFILE=lowmem` each redirect the long-running provide's stdio to `/dev/shm/urnetwork.log` with the `[ramlogs] Active at …` banner |
 | `key-ramlogs` | `set ramlogs on` reports the restart-required semantics and, on the NEXT start, the persisted key beats an explicit `URNETWORK_RAMLOGS=0`: the banner appears and the important buffer (`important.log`) exists |
-| `identity-gate-fresh` | a bare `provide` on a fresh state dir mints its own identity (the `.provider.key` seed; `.provider.jwt` appears only after backend registration) and serves the socket; creation is unconditional and `--allow-client-registration` is accepted and ignored for client identity creation (it still governs rotating an unusable `.provider.key`); the harness waits, bounded, for the seed while the provider runs |
+| `identity-gate-fresh` | a bare `provide` on a fresh state dir exits nonzero without creating `.provider.key` or calling the registration endpoint; the harness waits for process exit and counts calls at a local fixture |
 | `identity-gate-adopt` | `--adopt-legacy-provider-key` against a fresh dir must not allocate (refresh only, no new client) |
 | `exit-75-quarantine` | a rejected sign-in with `--quarantine-rejected-sign-in` exits 75 (EX_TEMPFAIL; environmental when not reproducible) |
 | `state-paths` | provider state exists under `STATE_DIR` |
