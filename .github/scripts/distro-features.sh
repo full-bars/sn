@@ -2193,6 +2193,15 @@ group_fresh_state() { # $1=group
     stop_miner 15 >/dev/null 2>&1
     LIVE=0
     gdir="$WORK/state-before-$1"
+    # JWT_FILE may live inside STATE_DIR, so copy it out before the reset.
+    jstage=""
+    if [ -n "$JWT_FILE" ] && [ -r "$JWT_FILE" ]; then
+        jstage="$WORK/jwt-stage"
+        if ! { cp "$JWT_FILE" "$jstage" && chmod 600 "$jstage"; }; then
+            record FAIL "state-isolation-$1" "could not stage the JWT outside the state dir; previous state left in place"
+            return 1
+        fi
+    fi
     if ! rm -rf "$gdir"; then
         record FAIL "state-isolation-$1" "could not clear the old archive $gdir; previous state left in place"
         return 1
@@ -2209,8 +2218,12 @@ group_fresh_state() { # $1=group
         record FAIL "state-isolation-$1" "could not create a fresh state dir at $STATE_DIR"
         return 1
     fi
-    if [ -n "$JWT_FILE" ] && [ -r "$JWT_FILE" ]; then
-        cp "$JWT_FILE" "$STATE_DIR/jwt" && chmod 600 "$STATE_DIR/jwt"
+    if [ -n "$jstage" ]; then
+        if ! { cp "$jstage" "$STATE_DIR/jwt" && chmod 600 "$STATE_DIR/jwt"; }; then
+            record FAIL "state-isolation-$1" "could not stage the JWT into the fresh state dir"
+            return 1
+        fi
+        rm -f "$jstage"
     fi
     left="$(ls -A "$STATE_DIR" 2>/dev/null | grep -v '^jwt$' | tr '\n' ' ')"
     if [ -n "$left" ]; then

@@ -81,5 +81,21 @@ for inj in cp rm mkdir; do
   esac
 done
 
+# ---- 4. a JWT_FILE that lives inside STATE_DIR survives the reset
+(
+  BIN_DIR=/nonexistent STATE_HOME="$T/jin/home" FEATURE_WORK="$T/jin/work" FEATURE_REPORT="$T/jin/report"
+  export BIN_DIR STATE_HOME FEATURE_WORK FEATURE_REPORT
+  mkdir -p "$STATE_HOME"
+  . "$T/h.sh" >/dev/null 2>&1
+  mkdir -p "$STATE_DIR" "$WORK"
+  stop_miner() { :; }
+  printf 'tok\n' >"$STATE_DIR/jwt"; JWT_FILE="$STATE_DIR/jwt"
+  group_fresh_state url >/dev/null 2>&1 || { echo "group_fresh_state rc=$?"; exit 1; }
+  [ "$(cat "$STATE_DIR/jwt" 2>/dev/null)" = tok ] || { echo "jwt missing after reset"; exit 1; }
+  exit 0
+) >"$T/jin.out" 2>&1
+if [ "$?" = 0 ]; then ok "JWT_FILE inside STATE_DIR is restaged after the reset"
+else fail "JWT_FILE inside STATE_DIR: $(tail -1 "$T/jin.out")"; fi
+
 printf 'self-test: %s failure(s)\n' "$FAILS"
 [ "$FAILS" = 0 ]
