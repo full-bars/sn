@@ -3,7 +3,9 @@ package urnettools
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"os"
 	"os/exec"
@@ -175,10 +177,12 @@ func (sp *SystemPlatformConfigurer) checkFreeBSD(user string) (bool, string, err
 }
 
 func (sp *SystemPlatformConfigurer) applyFreeBSD(user string) (bool, string, error) {
-	// Read the existing file before changing either the kernel or the file.
+	// Read the existing file before changing either the kernel or the file. A
+	// file that does not exist yet is empty; any other read failure stops here,
+	// because writing back over a file we could not read would drop its contents.
 	sysctlConf := "/etc/sysctl.conf"
 	data, err := sp.ReadFile(sysctlConf)
-	if err != nil {
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return false, "", fmt.Errorf("reading %s: %w", sysctlConf, err)
 	}
 	curOut, err := sp.ExecCmd("sysctl", "-n", "net.inet.ip.portrange.reservedhigh")
