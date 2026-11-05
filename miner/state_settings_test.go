@@ -519,6 +519,45 @@ func TestStateMigrationRemovesTheRecoveryBackupWithThePrimary(t *testing.T) {
 	}
 }
 
+// A real conflict on the error counts, with the recovery backup the setting
+// writer always leaves. The conflict is counted once: the backup goes with the
+// archived file, so the error-count loader has nothing stale to restore and
+// the next starts find no file to conflict with.
+func TestStateMigrationErrorCountsConflictWithItsBackupCountsOnce(t *testing.T) {
+	h := newSettingsHarness(t)
+	stored, err := encodeChecksummedJSON(map[string]uint64{"auth_refused": 99})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := providerStoreInstance().putSetting(settingErrorCounts, stored); err != nil {
+		t.Fatal(err)
+	}
+	h.writeErrorCounts(map[string]uint64{"auth_refused": 3})
+	losing := h.writeErrorCounts(map[string]uint64{"auth_refused": 4})
+	if !h.exists("error_counts.json.bak") {
+		t.Fatal("the setting writer left no recovery backup to test with")
+	}
+	for start := 1; start <= 3; start++ {
+		if err := startProviderSettings(); err != nil {
+			t.Fatal(err)
+		}
+		if got := h.errCount(settingMigrateConflictCategory); got != 1 {
+			t.Fatalf("start %d: conflict count = %d, want 1", start, got)
+		}
+		if h.exists("error_counts.json") || h.exists("error_counts.json.bak") {
+			t.Fatalf("start %d: the legacy file or its backup is still beside the store", start)
+		}
+		FlushPersistentErrors()
+		h.restart()
+	}
+	if got := h.read("error_counts.json.conflict.1"); !bytes.Equal(got, losing) {
+		t.Fatal("the losing file was not preserved whole")
+	}
+	if h.exists("error_counts.json.conflict.2") {
+		t.Fatal("a later start archived a second conflict")
+	}
+}
+
 // The recovery backup is removed before the primary, so a kill between the
 // two removals leaves the primary, which the next start finds equal to the
 // store and removes. Removed the other way round, the same kill leaves a lone
