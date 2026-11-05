@@ -244,6 +244,23 @@ func TestRestartSetAcceptUnitlessEntryOnCompletedPass(t *testing.T) {
 	}
 }
 
+// The nil checks above would also catch a failure further in, but only if the
+// completed pass can produce one. Here the state dir is unresolvable, a
+// non-guard error, and cmdSet must return it rather than the unit-guard text.
+func TestRestartSetCompletedPassSurfacesNonGuardError(t *testing.T) {
+	p := Provider{User: currentUserName(), StateDir: "", PID: 1234, Running: true}
+	stubDiscovery(t, []Provider{p}, nil)
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+
+	err := cmdSet([]string{"node-name", "edge01"}, false, true)
+	if err == nil || !strings.Contains(err.Error(), "no resolvable state dir") {
+		t.Fatalf("cmdSet must surface the state-dir error on a completed pass, got: %v", err)
+	}
+	if strings.Contains(err.Error(), cutShortWant) {
+		t.Fatalf("a completed pass must not report the budget refusal, got: %v", err)
+	}
+}
+
 // The cut flag belongs to one discovery pass: a refusal on a cut pass must not
 // leak into the next call, which runs a fresh pass that completes.
 func TestUnitlessRefusalDoesNotOutliveCutPass(t *testing.T) {
