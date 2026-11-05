@@ -1072,14 +1072,31 @@ func provideWith(opts docopt.Opts, start bool) {
 	}
 }
 
-// Creating a provider identity (its key and its client) is allowed only when
-// the operator passes --allow-client-registration. A bare provide on a fresh
-// state dir refuses instead of allocating; an identity already on disk starts
-// without the flag because nothing is created. Contract:
+// Creating a provider identity (its key and its client) is allowed only on an
+// explicit operator signal: --allow-client-registration, or the
+// ALLOW_CLIENT_REGISTRATION environment setting. A bare provide on a fresh
+// state dir with neither refuses instead of allocating; an identity already on
+// disk starts without either because nothing is created. Contract:
 // docs/Feature-Matrix-CI.md, identity-gate-fresh.
 func providerClientRegistrationAllowed(opts docopt.Opts) bool {
-	allow, _ := opts.Bool("--allow-client-registration")
-	return allow
+	if allow, _ := opts.Bool("--allow-client-registration"); allow {
+		return true
+	}
+	return clientRegistrationEnvAllowed(os.Getenv("ALLOW_CLIENT_REGISTRATION"))
+}
+
+// ALLOW_CLIENT_REGISTRATION is parsed in docker/miner/provider_env.sh, which
+// turns Y into the flag and deliberately leaves `auto` (the image default) as
+// a bare environment value, so the gate reads the same spellings here. `auto`
+// permits: shipping it is our statement that a container registers. Unset,
+// empty, false-like and unrecognised values refuse (the shell rejects an
+// unrecognised value at startup, so refusing is the matching fail-closed).
+func clientRegistrationEnvAllowed(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "1", "true", "yes", "y", "on", "auto":
+		return true
+	}
+	return false
 }
 
 // Each invocation owns its output, status server and provider children. The
