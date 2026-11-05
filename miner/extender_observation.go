@@ -17,11 +17,12 @@ var extenderObservationLock sync.Mutex
 var extenderObservationKnown bool
 var extenderObservationListener *providerExtenderStatusListener
 var extenderObservationState providerExtenderObservation
+var extenderDetailState providerExtenderDetail
 
 // setProviderExtenderObservation records an enabled reading and the listener it
 // came from. A newer direct listener replaces an older one, which is what
 // `provider direct off` followed by `provider direct on` produces.
-func setProviderExtenderObservation(listener *providerExtenderStatusListener, observation providerExtenderObservation) {
+func setProviderExtenderObservation(listener *providerExtenderStatusListener, observation providerExtenderObservation, detail providerExtenderDetail) {
 	extenderObservationLock.Lock()
 	defer extenderObservationLock.Unlock()
 	if listener != nil && listener.retired {
@@ -29,6 +30,7 @@ func setProviderExtenderObservation(listener *providerExtenderStatusListener, ob
 	}
 	extenderObservationListener = listener
 	extenderObservationState = observation
+	extenderDetailState = detail
 	extenderObservationKnown = true
 }
 
@@ -45,6 +47,7 @@ func retireProviderExtenderObservation(listener *providerExtenderStatusListener)
 		extenderObservationKnown = false
 		extenderObservationListener = nil
 		extenderObservationState = providerExtenderObservation{}
+		extenderDetailState = providerExtenderDetail{}
 	}
 }
 
@@ -65,6 +68,7 @@ func clearProviderExtenderObservation(listener *providerExtenderStatusListener) 
 	extenderObservationKnown = false
 	extenderObservationListener = nil
 	extenderObservationState = providerExtenderObservation{}
+	extenderDetailState = providerExtenderDetail{}
 }
 
 // providerExtenderObservationLatest returns the latest enabled reading, or nil
@@ -88,9 +92,21 @@ func resetProviderExtenderObservation() {
 	extenderObservationKnown = false
 	extenderObservationListener = nil
 	extenderObservationState = providerExtenderObservation{}
+	extenderDetailState = providerExtenderDetail{}
 }
 
 // The metrics seam reads what the listener published.
 func init() {
 	metricsSeamExtender = providerExtenderObservationLatest
+}
+
+// providerExtenderControlLatest returns the published reading with its detail
+// for the control reply, or nil when none has been published.
+func providerExtenderControlLatest() *providerExtenderControlReading {
+	extenderObservationLock.Lock()
+	defer extenderObservationLock.Unlock()
+	if !extenderObservationKnown {
+		return nil
+	}
+	return &providerExtenderControlReading{providerExtenderObservation: extenderObservationState, providerExtenderDetail: extenderDetailState}
 }

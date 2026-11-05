@@ -285,7 +285,7 @@ func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(status 
 		// see the direct slot's state without reaching into a slot's listener.
 		// The listener is stored with it: a proxy slot's reading must not
 		// overwrite this one.
-		setProviderExtenderObservation(self, observation)
+		setProviderExtenderObservation(self, observation, extenderDetailFromStatus(status))
 	case observation.Known:
 		// The role reported off. The listener that published an enabled
 		// reading drops it here, because nothing else would replace it.

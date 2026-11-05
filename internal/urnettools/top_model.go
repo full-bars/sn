@@ -88,6 +88,13 @@ type topInternalsSource interface {
 	FetchGoroutines(p Provider) (*GoroutineGroups, error)
 }
 
+// topExtenderSource is the optional fourth half of a source: the extender
+// reading of the control socket. A source without it leaves top without an
+// Extender box, so a test source stays deterministic.
+type topExtenderSource interface {
+	FetchExtender(p Provider) ExtenderReading
+}
+
 // topSourceFunc adapts a function to topSource.
 type topSourceFunc func(Provider) (*NodeSnapshot, error)
 
@@ -100,6 +107,10 @@ type socketTopSource struct{}
 func (socketTopSource) Fetch(p Provider) (*NodeSnapshot, error) {
 	snap, _, err := fetchSnapshotFn(p)
 	return snap, err
+}
+
+func (socketTopSource) FetchExtender(p Provider) ExtenderReading {
+	return ReadExtenderStatus(p)
 }
 
 func (socketTopSource) FetchTraffic(p Provider) (*LiveTraffic, error) {
@@ -203,6 +214,14 @@ type topModel struct {
 	menuSel      int
 	menuNote     string
 
+	// extender is the last reading the control socket gave for the current
+	// provider. It is fetched off the UI loop (see wantExtender) and shown only
+	// once a reading, available or not, has arrived for this selection.
+	extender     ExtenderReading
+	showExtender bool
+	extenderBusy bool
+	lastExtender time.Time
+
 	help bool
 	quit bool
 }
@@ -227,6 +246,39 @@ func (m *topModel) provider() Provider {
 		return Provider{}
 	}
 	return m.providers[m.cur]
+}
+
+// extenderRows is the box height: every line the reading can show plus the
+// frame, so the addresses are never the rows that get cut.
+func (m *topModel) extenderRows() int {
+	return len(m.extenderLines()) + 2
+}
+
+// wantExtender reports whether an extender reading should be requested now
+// and, if so, marks one in flight. The socket round trip can take seconds on a
+// slow or absent provider, so it runs on its own goroutine like every other
+// top poll and never on the UI loop.
+func (m *topModel) wantExtender(now time.Time) (gen int, p Provider, ok bool) {
+	if m.extenderBusy || len(m.providers) == 0 || m.cur >= len(m.providers) {
+		return 0, Provider{}, false
+	}
+	if !m.lastExtender.IsZero() && now.Sub(m.lastExtender) < max(m.interval, topSnapshotEvery) {
+		return 0, Provider{}, false
+	}
+	m.extenderBusy = true
+	m.lastExtender = now
+	return m.gen, m.provider(), true
+}
+
+// applyExtender stores one extender reading. A reading fetched for an earlier
+// selection is dropped.
+func (m *topModel) applyExtender(gen int, reading ExtenderReading) {
+	if gen != m.gen {
+		return
+	}
+	m.extenderBusy = false
+	m.extender = reading
+	m.showExtender = true
 }
 
 // wantFetch reports whether a snapshot should be requested now and, if so,
@@ -609,6 +661,10 @@ func (m *topModel) selectProvider(delta int) topEffect {
 	showing := m.rt.showing
 	m.rt.reset()
 	m.rt.showing = showing // the view choice is the user's, not the provider's
+	// The reading belongs to the provider just left: drop it, free the poll and
+	// let the next tick fetch the new provider's.
+	m.extender, m.showExtender = ExtenderReading{}, false
+	m.extenderBusy, m.lastExtender = false, time.Time{}
 	return topRefetch
 }
 

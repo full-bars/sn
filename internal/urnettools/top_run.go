@@ -28,6 +28,9 @@ type topResult struct {
 	internals   *NodeInternals
 	isGroups    bool
 	groups      *GoroutineGroups
+	// The extender reading, fetched off the UI loop.
+	isExtender bool
+	extender   ExtenderReading
 }
 
 // runTop drives the model on a screen until the user quits, ctx is cancelled
@@ -117,12 +120,34 @@ func runTop(ctx context.Context, scr tcellui.Screen, m *topModel, src topSource,
 		}()
 	}
 
+	extSrc, hasExtender := src.(topExtenderSource)
+	fetchExtenderFn := func(gen int, p Provider) {
+		go func() {
+			res := topResult{gen: gen, isExtender: true, extender: ExtenderReading{Source: SourceUnknown, RoleState: "unavailable"}}
+			defer func() {
+				if r := recover(); r != nil {
+					res.extender = ExtenderReading{Source: SourceUnknown, RoleState: "unavailable"}
+				}
+				select {
+				case results <- res:
+				case <-ctx.Done():
+				}
+			}()
+			res.extender = extSrc.FetchExtender(p)
+		}()
+	}
+
 	ticker := time.NewTicker(tick)
 	defer ticker.Stop()
 	buf := tui.New(0, 0)
 	for {
 		if gen, p, ok := m.wantFetch(m.now()); ok {
 			fetch(gen, p)
+		}
+		if hasExtender {
+			if gen, p, ok := m.wantExtender(m.now()); ok {
+				fetchExtenderFn(gen, p)
+			}
 		}
 		if hasTraffic {
 			if gen, p, ok := m.wantTraffic(m.now()); ok {
@@ -155,6 +180,8 @@ func runTop(ctx context.Context, scr tcellui.Screen, m *topModel, src topSource,
 			}
 		case r := <-results:
 			switch {
+			case r.isExtender:
+				m.applyExtender(r.gen, r.extender)
 			case r.isTraffic:
 				m.applyTraffic(r.gen, r.traffic, r.err)
 			case r.isInternals:
