@@ -19,6 +19,8 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 | `[hot-restart]` | Hot-restart enablement and trigger events |
 | `[hotswap]` | Zero-downtime binary reload handoff: candidate, promos, takeovers |
 | `[hourly-maintenance]` | Hourly maintenance tasks |
+| `[identity]` | Identity outcome tally at startup: minted, replaced, adopted, revoked. Warns when too many saved identities were replaced or refused |
+| `[import]` | Legacy import proof store: rejection, revocation, withdrawal, re-proof |
 | `[init]` | Startup initialization phases |
 | `[jwt]` | JWT lifecycle: mint, refresh, expiry warnings |
 | `[jwt-store]` | Client JWT store: persist, prune, reload |
@@ -34,13 +36,16 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 | `[provider]` | Provider identity and version lines |
 | `[proxy]` | Proxy lifecycle: add, remove, health, reload |
 | `[proxy-quality]` | Proxy quality grading events |
+| `[proxy][cleanup]` | Proxy cleanup pass: automatic removal, degraded threshold, proxy lock and state write warnings |
 | `[relay]` | Relay connection events |
 | `[report]` | Leftover bandwidth report posts. The hub that received them was removed, so you should not see these on a normal setup. |
 | `[session]` | Identity session events |
 | `[profit]` | Profit heartbeat: earning yes/no, clients, rate |
-| `[startup]` | Startup phase markers and Ready summary |
+| `[startup]` | Startup phase markers, the Ready summary, and the extender head-start line |
+| `[state]` | State store: settings and stage recording, store refused or unavailable, recovery backup removal |
 | `[status]` | Status server events |
 | `[systemd]` | systemd integration events |
+| `[thrashcap]` | Swap-thrash cap: cleared on recovery, relaxed in stages, persistence warnings |
 | `[traffic]` | Data-plane traffic: rx/tx rates, clients |
 
 ## Verbosity
@@ -61,6 +66,17 @@ This page lists the log line prefixes the provider emits. Prefixes mirror the su
 - **Aborted handoff.** `❌ [hotswap] Failed to restore control socket after aborted handoff: ...` follows an `Aborting handoff; live provider retained.` line when the parent could not rebind `provider.sock`.
 - **Gossip startup.** `[gossip] peer=<peer id> network=<network host> role=<member|extender> listen_addrs=N operator_addrs=N started`.
 - **Attributable token lines.** Every `[api-token]` line carries `client=<id>` parsed from the bearer, for example `[api-token] client=019f7191… jwt refresh failed. Will retry in 96.17s. err = http request attempts exhausted`. A legacy bearer without the claim prints no tag rather than a fabricated one.
+- **Extender head start.** `[startup] extender head start 3.2s: activated v4 and v6, releasing proxies`. The line is printed once when the hold ends. The other endings are `attempt failed`, `no attempt yet` (the 20 second cap), `shutting down`, and `extender role off`, each followed by `releasing proxies`. A skipped hold prints `[startup] extender head start skipped: <reason>` with one of: `no direct slot`, `direct transport off`, `the hotswap candidate must authenticate at once`, `no proxy slots to hold`, `legacy import adopted N identities`, or a message saying the state store took the measured time to open (over 10 seconds). A slow store or a legacy adoption skips the hold on purpose, so the proxies are not delayed by startup work that is already slow.
+- **Direct slot is slot 0.** The direct connection is launch slot 0 and proxies follow as slots 1 and up in their configured order. Earlier builds numbered the direct slot after the last proxy, so a log line's slot number changes for every proxy in a run with direct on. Compare slot numbers only within one release.
+- **Shutdown timeout.** A shutdown whose workers do not drain within about 35 seconds writes `[provider] shutdown incomplete: goroutine dump follows`, then the goroutine dump, and the process exits 1 after a five-second watchdog. A run in network-sign-in quarantine keeps exit 75. See [Troubleshooting](/full-bars/sn/wiki/Troubleshooting) for the restart behaviour.
+- **Health line.** `❤️ [health][proxies] up=… dead=… degraded=… connecting=… parked=… held=… members=… target=… floor=… dips=… verdict=… scope=…` counts only the proxies the pool runs. A parked proxy is counted under `parked` and not under `degraded`, and the duplicate `down` field is gone. The field meanings are in [Monitoring](/full-bars/sn/wiki/Monitoring#reading-the-pool-health-line).
+- **Thrash cap recovery.** `[thrashcap] automatic start cap N cleared (recovered)` when the cap clears on recovery, and `[thrashcap] relaxed automatic start cap A -> B` for each stage in between. A failed write of the cap state prints `[thrashcap] warn: could not persist cleared cap state: <error>` or `[thrashcap] warn: could not persist relaxed cap state: <error>`.
+- **Proxy cleanup.** `[proxy][cleanup] automatically removed N dead/inactive/degraded proxies (scope=…, degraded_threshold=…)` runs only when `degraded_cleanup_threshold` is set. An unparseable or negative threshold prints `[proxy][cleanup] warning: unparseable or negative degraded_cleanup_threshold "<value>", leaving degraded eviction off`. A pass that cannot take the proxy lock or read `proxy.state` prints a `[proxy][cleanup] warning: ...` line and stops; a failed write of the down clocks prints the same kind of warning.
+- **State store and settings.** `[state] store refused: <error>` means the store is newer than this build and was not opened. `[state] store unavailable: <error>` means it could not be opened. `[state] imported <key> but could not remove <path>: <error>` means the value reached the store but the old settings file could not be removed, so that file is still on disk. `[state] could not remove the recovery backup of <path>` and `[state] removed the recovery backup of <path> but could not sync its directory` name the file that was left behind. `[state] settings stage not recorded: <error>` means the settings stage could not be written to the store. `[state] error counts stay on their file: <error>` means the error counters could not move into the store and stay on their file.
+- **Import proof store.** `⚠️ [import] proof rejection recorded for slot without prior stored proof: <key> (<reason>)` records a rejection that had no earlier proof to revoke. `⚠️ [import] failed to withdraw stored proof on auth logout for <file>` and `⚠️ [import] could not withdraw a rejected stored proof for <key>` mean a proof that should have been withdrawn is still in the proof store. `⚠️ [import] immediate existing identity re-proof failed for <key>` means the identity was not re-proved right after its stored proof was revoked.
+- **Metrics flush.** `[metrics] shutdown error flush failed: <error>` means the persisted error counters were not written at shutdown. `[metrics] counters stay on their file: <error>` means the counters could not move off their file.
+- **Identity eviction.** `⚠️ [jwt-store] failed to evict rejected identity for <key>: <error>` means the store refused to delete a rejected identity. The next rejection tries again.
+- **Hotswap carrier release.** `⚡ [hotswap] released the extender carrier ports for the successor` is printed when a handoff gives the extender's listen ports to the new process.
 
 ## Extender lines
 
