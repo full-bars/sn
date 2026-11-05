@@ -1254,6 +1254,36 @@ b1_exit75() {
 # and h3 (the limit key the integrated head wires live). The full live-apply /
 # needs-restart matrix is b1_control_key_semantics below; ramlogs' restart
 # semantics are asserted end-to-end by b1_ramlogs.
+# gogc_runtime_scrape prints the runtime's GOGC from /metrics (empty when not
+# obtainable). Metrics are switched on for the read and off again afterwards.
+gogc_runtime_scrape() {
+    g_out="$(TS metrics on -f 2>&1)"
+    case "$g_out" in *"not implement"*) return 0 ;; esac
+    detect_http_fetch || return 0
+    g_addrs="$(TS metrics status 2>&1 | sed -n 's/.*listening  http:\/\/\([^/]*\)\/metrics.*/\1/p' | sort -u | tr '\n' ' ')"
+    for g_a in $g_addrs; do
+        g_body="$(metrics_fetch_any "$g_a")" || continue
+        printf '%s' "$g_body" | sed -n 's/^urnet_gc_gogc \([0-9-][0-9]*\).*/\1/p' | head -1
+        return 0
+    done
+    return 0
+}
+
+b1_gogc_runtime() {
+    TS set gogc 250 -f >/dev/null 2>&1
+    g_rt="$(gogc_runtime_scrape)"
+    TS set gogc off -f >/dev/null 2>&1 || true
+    g_back="$(gogc_runtime_scrape)"
+    TS metrics off -f >/dev/null 2>&1 || true
+    if [ -z "$g_rt" ]; then
+        record SKIP-UNSUPPORTED control-key-live-runtime "urnet_gc_gogc not scrapable (no exporter or no HTTP fetch tool); the gogc check above is control-plane evidence only"
+    elif [ "$g_rt" = "250" ] && [ "$g_back" != "250" ]; then
+        record PASS control-key-live-runtime "runtime GOGC read 250 after set gogc=250 and left 250 after clear (now '${g_back:-unreadable}')"
+    else
+        record FAIL control-key-live-runtime "runtime urnet_gc_gogc after set=250 was '$g_rt', after clear '${g_back:-unreadable}'"
+    fi
+}
+
 b1_control_keys() {
     if [ "$CLIENT_SAFE" != "1" ]; then
         client_skip control-key-live key-h3-limit
@@ -1272,6 +1302,13 @@ b1_control_keys() {
         record FAIL control-key-live "set gogc=250 rc=$rc readback='$(printf '%s' "$rb" | firstline)' loglines=$logged state=$st_before->$st_after"
     fi
     TS set gogc off -f >/dev/null 2>&1 || true
+
+    # The readback, the log line and the persisted file above are all the control
+    # plane talking about itself. The Go runtime's own GOGC (urnet_gc_gogc is read
+    # from runtime/metrics /gc/gogc:percent) is the behaviour: set, scrape, clear.
+    # h3 has no equivalent runtime series at this head (urnet_h3_set_size is not
+    # exposed), so key-h3-limit below stays a control-plane check.
+    b1_gogc_runtime
 
     # h3 limit key (feat/p2-h3): must apply live, read back, be logged and
     # persisted. A head without the live port answers "requires a restart" or
