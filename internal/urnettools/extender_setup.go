@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+// setupDiscoverFn is Discover behind a seam for tests.
+var setupDiscoverFn = Discover
+
 // ExtenderSetupOptions controls the behavior of `urnet-tools extender setup`.
 type ExtenderSetupOptions struct {
 	NonInteractive bool
@@ -77,18 +80,14 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 		lookPathFn = exec.LookPath
 	}
 
-	// Resolve provider target (if any)
-	providers := Discover()
-	var p Provider
-	var err error
-	if len(providers) > 0 || opts.Target != (Target{}) {
-		p, _, err = selectTargetOrSoleAccessible(providers, opts.Target, false)
-		if err != nil {
-			return fmt.Errorf("resolving target provider: %w", err)
-		}
-	}
-	if p.Binary == "" {
-		p.Binary = findProviderBinary(p)
+	// Resolve the provider(s) this setup acts on. The command takes no flags,
+	// so a host with several providers cannot be narrowed by the operator:
+	// capabilities and the bind probe are per provider binary and user, so every
+	// distinct provider is configured instead of refusing with an inventory the
+	// operator has no flag to answer.
+	targets, err := setupTargets(setupDiscoverFn(), opts.Target)
+	if err != nil {
+		return fmt.Errorf("resolving target provider: %w", err)
 	}
 
 	// STEP 1: Check ports first
@@ -100,7 +99,10 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	// TCP 443 busy check: stop, name process, change nothing, exit non-zero. Never kill anything.
 	if ports.TCP443.Held {
 		isTargetHolder := false
-		if p.Running {
+		for _, p := range targets {
+			if !p.Running {
+				continue
+			}
 			if p.PID > 0 && ports.TCP443.PID == p.PID {
 				isTargetHolder = true
 			} else if p.Binary != "" && filepath.Base(p.Binary) == ports.TCP443.Process {
@@ -127,10 +129,17 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	}
 
 	// STEP 2: Detect platform requirement
-	configured, desc, err := platformCfg.CheckRequirement(p.Binary, p.User)
-	if err != nil {
-		return fmt.Errorf("checking platform requirement: %w", err)
+	configured := true
+	var descs []string
+	for _, p := range targets {
+		ok, desc, err := platformCfg.CheckRequirement(p.Binary, p.User)
+		if err != nil {
+			return fmt.Errorf("checking platform requirement: %w", err)
+		}
+		configured = configured && ok
+		descs = append(descs, desc)
 	}
+	desc := strings.Join(descs, "; ")
 
 	fwStatus := fwMgr.Detect()
 	fwConfigured := fwStatus.Kind != FirewallUnknown && (fwStatus.PortsOpen || (!fwStatus.Active && fwStatus.Kind == FirewallNone))
@@ -138,8 +147,10 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	// Check if already configured on host
 	if configured && fwConfigured {
 		if !opts.DryRun {
-			if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {
-				return err
+			for _, p := range targets {
+				if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {
+					return err
+				}
 			}
 		}
 		fmt.Fprintf(out, "extender: already configured (%s)\n", desc)
@@ -184,12 +195,14 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 	if opts.DryRun {
 		fmt.Fprintf(out, "[dry-run] would apply platform requirement on %s\n", platform)
 	} else {
-		applied, applyDesc, err := platformCfg.ApplyRequirement(p.Binary, p.User)
-		if err != nil {
-			return fmt.Errorf("applying platform requirement: %w", err)
-		}
-		if applied {
-			fmt.Fprintf(out, "extender: %s\n", applyDesc)
+		for _, p := range targets {
+			applied, applyDesc, err := platformCfg.ApplyRequirement(p.Binary, p.User)
+			if err != nil {
+				return fmt.Errorf("applying platform requirement: %w", err)
+			}
+			if applied {
+				fmt.Fprintf(out, "extender: %s\n", applyDesc)
+			}
 		}
 	}
 
@@ -213,8 +226,10 @@ func RunExtenderSetup(opts ExtenderSetupOptions) error {
 
 	// STEP 6: Verify with real bind
 	if !opts.DryRun {
-		if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {
-			return err
+		for _, p := range targets {
+			if err := reportExtenderBind(out, platformCfg, p, ports.TCP443.Held); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -239,16 +254,53 @@ func reportExtenderBind(out io.Writer, cfg PlatformConfigurer, p Provider, occup
 	return nil
 }
 
-func formatSetupSudoCommand(opts ExtenderSetupOptions) string {
-	exe := resolvedExecutablePath()
-	cmd := fmt.Sprintf("sudo %s extender setup", exe)
-	if opts.Target.Unit != "" {
-		cmd += " --unit " + opts.Target.Unit
+// formatSetupSudoCommand is the exact command to run by hand. `extender setup`
+// takes no flags, so the command is the same on every host.
+func formatSetupSudoCommand(ExtenderSetupOptions) string {
+	return fmt.Sprintf("sudo %s extender setup", resolvedExecutablePath())
+}
+
+// setupTargets lists the providers setup configures: the explicit target when
+// one is set (a resolution failure is an error, never a silent fallback), else
+// the sole/sole-accessible/default provider, else every discovered provider
+// once per distinct binary and user, else one anonymous provider whose binary
+// is looked up in the usual install locations.
+func setupTargets(providers []Provider, t Target) ([]Provider, error) {
+	var out []Provider
+	switch {
+	case t != (Target{}):
+		p, _, err := selectTargetOrSoleAccessible(providers, t, false)
+		if err != nil {
+			return nil, err
+		}
+		out = []Provider{p}
+	case len(providers) == 0:
+		out = []Provider{{}}
+	default:
+		if p, _, err := selectTargetOrSoleAccessible(providers, t, false); err == nil {
+			out = []Provider{p}
+		} else {
+			seen := map[string]bool{}
+			for _, p := range providers {
+				bin := p.Binary
+				if bin == "" {
+					bin = findProviderBinary(p)
+				}
+				key := bin + "\x00" + p.User
+				if seen[key] {
+					continue
+				}
+				seen[key] = true
+				out = append(out, p)
+			}
+		}
 	}
-	if opts.Target.Network != "" {
-		cmd += " --network " + opts.Target.Network
+	for i := range out {
+		if out[i].Binary == "" {
+			out[i].Binary = findProviderBinary(out[i])
+		}
 	}
-	return cmd
+	return out, nil
 }
 
 func findProviderBinary(p Provider) string {
