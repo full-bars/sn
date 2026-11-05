@@ -170,9 +170,16 @@ func writeMigrationFamily(tx *bbolt.Tx, family string, value migrationFamily) er
 	if err := value.validate(); err != nil {
 		return err
 	}
-	// Refuse to overwrite a damaged or newer record.
-	if _, _, err := readMigrationFamily(tx, family); err != nil {
+	// Refuse to overwrite a damaged or newer record, and any write that moves
+	// the family backwards (a stale or replayed writer).
+	old, found, err := readMigrationFamily(tx, family)
+	if err != nil {
 		return err
+	}
+	if found {
+		if err := checkMigrationTransition(old, value); err != nil {
+			return err
+		}
 	}
 	raw, err := json.Marshal(value)
 	if err != nil {
@@ -183,4 +190,51 @@ func writeMigrationFamily(tx *bbolt.Tx, family string, value migrationFamily) er
 		return err
 	}
 	return b.Put([]byte(family), raw)
+}
+
+// errMigrationTransition marks a refused backwards or replayed write.
+var errMigrationTransition = errors.New("illegal migration transition")
+
+func migrationModeRank(m migrationMode) int {
+	switch m {
+	case migrationUninitialized:
+		return 0
+	case migrationShadow:
+		return 1
+	case migrationVerified:
+		return 2
+	case migrationReadDB:
+		return 3
+	}
+	return -1
+}
+
+// checkMigrationTransition allows only forward moves: the mode never drops, a
+// recorded operation is never dropped, its generation never decreases, a
+// pending operation may only be committed or superseded by a higher
+// generation, and a committed operation is final.
+func checkMigrationTransition(old, next migrationFamily) error {
+	if migrationModeRank(next.Mode) < migrationModeRank(old.Mode) {
+		return fmt.Errorf("%w: mode %s to %s", errMigrationTransition, old.Mode, next.Mode)
+	}
+	if old.Operation == nil {
+		return nil
+	}
+	if next.Operation == nil {
+		return fmt.Errorf("%w: operation dropped", errMigrationTransition)
+	}
+	switch {
+	case next.Operation.Generation < old.Operation.Generation:
+		return fmt.Errorf("%w: generation %d to %d", errMigrationTransition, old.Operation.Generation, next.Operation.Generation)
+	case next.Operation.Generation > old.Operation.Generation:
+		return nil
+	}
+	// Same generation.
+	if old.Operation.State == migrationCommitted {
+		return fmt.Errorf("%w: generation %d is already committed", errMigrationTransition, old.Operation.Generation)
+	}
+	if next.Operation.Hash != old.Operation.Hash {
+		return fmt.Errorf("%w: generation %d changed its hash", errMigrationTransition, old.Operation.Generation)
+	}
+	return nil
 }
