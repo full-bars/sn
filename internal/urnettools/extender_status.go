@@ -44,10 +44,7 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 	sockPath := filepath.Join(p.StateDir, "provider.sock")
 	resp, err := sendSocketRequest(sockPath, controlRequest{Cmd: "extender"})
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) || errors.Is(err, syscall.ECONNREFUSED) {
-			return nil, fmt.Errorf("provider not running: no control socket: %w", err)
-		}
-		return nil, fmt.Errorf("control socket unavailable: %w", err)
+		return nil, extenderSocketError(sockPath, err)
 	}
 	if !resp.OK || resp.Extender == nil || !resp.Extender.Known {
 		return nil, errors.New("extender observation unavailable on control socket")
@@ -82,6 +79,15 @@ func queryExtenderFromSocket(p Provider) (*ExtenderReading, error) {
 		LastPeerPingTime: ex.LastPeerPingTime, LimitedBySubnetsCount: ex.LimitedBySubnetsCount,
 		LimitedBySourceCount: ex.LimitedBySourceCount,
 	}, nil
+}
+
+// Windows can report a network error when the Unix socket path does not exist.
+func extenderSocketError(sockPath string, err error) error {
+	_, statErr := os.Stat(sockPath)
+	if errors.Is(err, os.ErrNotExist) || errors.Is(err, syscall.ECONNREFUSED) || errors.Is(statErr, os.ErrNotExist) {
+		return fmt.Errorf("provider not running: no control socket: %w", err)
+	}
+	return fmt.Errorf("control socket unavailable: %w", err)
 }
 
 func ReadExtenderStatus(p Provider) ExtenderReading {
