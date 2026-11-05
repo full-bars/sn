@@ -522,6 +522,7 @@ miner_crashed() { grep -qE 'panic:|SIGSEGV|fatal error' "$WORK/miner-main.log" "
 start_miner() { # $1=logfile; extra args passed through
     log="$1"; shift
     : >"$log"
+    MINER_LOG="$log"
     HOME="$STATE_HOME" "$MINER_WRAPPER" provide --port=0 $START_FLAGS "$@" >"$log" 2>&1 &
     MINER_PID=$!
     MINER_LAST_RC=""
@@ -671,6 +672,35 @@ fingerprint_files() { # fingerprints the state files without a tag prefix
 fingerprint_core() { # files the manipulation checks must not disturb
     printf 'proxy=%s proxy.state=%s trim=%s' \
         "$(fsum "$STATE_DIR/proxy")" "$(fsum "$STATE_DIR/proxy.state")" "$(fsum "$STATE_DIR/proxy_trim")"
+}
+
+# Barrier for the asynchronous reload that `proxy add` triggers. The add
+# command only writes the proxy file and the trigger; the running provider's
+# watcher (2s tick, 30s trigger debounce) assigns the new entries their
+# proxy.state identities later. A state fingerprint taken before that lands
+# overlaps the reload's own write, which is not what a "preview wrote state"
+# check is meant to catch. The applied sequence is memory-only, so the barrier
+# is the two things the provider does expose: every added address is present in
+# proxy.state (the reload's write), and the miner log shows as many
+# "reload complete" lines as "reload requested" lines (no reload in flight).
+# Bounded by FEATURE_RELOAD_TIMEOUT (> debounce + tick); returns 1 on timeout.
+FEATURE_RELOAD_TIMEOUT="${FEATURE_RELOAD_TIMEOUT:-45}"
+reload_settled() { # $1=expected synthetic entries in proxy.state
+    have="$(grep -o '192\.0\.2\.[0-9]*:1080' "$STATE_DIR/proxy.state" 2>/dev/null | sort -u | wc -l | tr -d ' ')"
+    [ "$(as_num "$have")" -ge "$1" ] || return 1
+    req="$(grep -c 'reload requested (trigger #' "$MINER_LOG" 2>/dev/null || true)"
+    done_n="$(grep -c 'reload complete:' "$MINER_LOG" 2>/dev/null || true)"
+    [ "$(as_num "$req")" -ge 1 ] && [ "$(as_num "$req")" -eq "$(as_num "$done_n")" ]
+}
+wait_reload_settled() { # $1=expected synthetic entries
+    i=0
+    while [ "$i" -lt "$FEATURE_RELOAD_TIMEOUT" ]; do
+        reload_settled "$1" && return 0
+        kill -0 "$MINER_PID" 2>/dev/null || return 1
+        sleep 1
+        i=$((i + 1))
+    done
+    reload_settled "$1"
 }
 
 # ---------------------------------------------------------------------------
@@ -1873,6 +1903,11 @@ b2_manipulations() {
         record FAIL proxy-add "rc=$rc file-entries=$nfile added-lines=$added_lines: $(printf '%s' "$out" | firstline)"
     fi
 
+    # The add's reload must have applied before the fingerprint is taken, or the
+    # reload's own proxy.state write lands inside the preview window.
+    if ! wait_reload_settled 4; then
+        record FAIL trim-preview-no-write "the reload triggered by proxy add did not settle in ${FEATURE_RELOAD_TIMEOUT}s; state fingerprint not comparable"
+    else
     pre="$(fingerprint_files)"
     out="$(TS proxy trim 2 --dry-run 2>&1)"; rc=$?
     post="$(fingerprint_files)"
@@ -1884,6 +1919,7 @@ b2_manipulations() {
         fi
     else
         record FAIL trim-preview-no-write "trim --dry-run rc=$rc: $(printf '%s' "$out" | firstline)"
+    fi
     fi
 
     out="$(TS proxy trim 2 -f 2>&1)"; rc=$?
