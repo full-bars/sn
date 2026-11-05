@@ -119,6 +119,21 @@ func redactSlot(raw string) redactedSlot {
 	return redactedSlot("slot-" + hex.EncodeToString(sum[:4]))
 }
 
+// stateOutcomeUnknown is shown for any stored outcome that is not one of the
+// recorded constants. The stored string is never echoed.
+const stateOutcomeUnknown = "unknown"
+
+// knownIdentityOutcome returns the outcome as one of the four recorded
+// constants, or false. The returned value is a constant, not the input.
+func knownIdentityOutcome(raw string) (string, bool) {
+	for _, o := range []minerIdentityOutcome{identityOutcomeMintedNew, identityOutcomeMintedReplacement, identityOutcomeAdopted, identityOutcomeRevoked} {
+		if raw == string(o) {
+			return string(o), true
+		}
+	}
+	return stateOutcomeUnknown, false
+}
+
 type stateIdentitySlot struct {
 	Slot    redactedSlot `json:"slot"`
 	Outcome string       `json:"outcome"`
@@ -394,15 +409,20 @@ func buildStateIdentitiesReport(store *providerStore, storeErr error) stateIdent
 				report.Undecodable++
 				continue
 			}
-			report.Events++
+			outcome, known := knownIdentityOutcome(event.Outcome)
 			id := redactSlot(event.Slot)
 			a := slots[id]
 			if a == nil {
 				a = &agg{}
 				slots[id] = a
 			}
+			a.outcome = outcome
+			if !known {
+				report.Undecodable++
+				continue
+			}
+			report.Events++
 			a.events++
-			a.outcome = event.Outcome
 		}
 		return nil
 	})

@@ -335,3 +335,37 @@ func TestInspectionNeverOpensTheStore(t *testing.T) {
 		t.Fatalf("an inspection created the store (stat err %v)", err)
 	}
 }
+
+// A stored outcome is not trusted text: only the four recorded outcomes are
+// ever shown, anything else is reported as unknown and counted undecodable.
+func TestIdentitiesOutcomeIsWhitelisted(t *testing.T) {
+	s := inspectStore(t)
+	const leak = "eyJSECRET.jwt"
+	events := []any{
+		providerIdentityEvent{Slot: "direct", Outcome: leak},
+		providerIdentityEvent{Slot: "other", Outcome: "adopted"},
+	}
+	if err := s.appendBoundedMany(providerStoreBucketIdentityEvents, events, 100); err != nil {
+		t.Fatal(err)
+	}
+	r := buildStateIdentitiesReport(s, nil)
+	raw, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), leak) || strings.Contains(string(raw), "SECRET") {
+		t.Fatalf("stored outcome echoed: %s", raw)
+	}
+	if r.Status == stateClean || r.Undecodable != 1 {
+		t.Fatalf("unknown outcome must count undecodable and not read clean: %+v", r)
+	}
+	found := false
+	for _, slot := range r.Slots {
+		if slot.Outcome == stateOutcomeUnknown {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("unknown outcome not reported as %q: %+v", stateOutcomeUnknown, r.Slots)
+	}
+}
