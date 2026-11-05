@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -13,11 +12,7 @@ import (
 
 func TestMigrationFamilyTransactions(t *testing.T) {
 	dir := t.TempDir()
-	source := filepath.Join(dir, "source")
 	original := []byte("retained source bytes")
-	if err := os.WriteFile(source, original, 0o600); err != nil {
-		t.Fatal(err)
-	}
 	s, err := openProviderStore(filepath.Join(dir, providerStoreFileName))
 	if err != nil {
 		t.Fatal(err)
@@ -116,8 +111,74 @@ func TestMigrationFamilyTransactions(t *testing.T) {
 	if err := migrationUpdate(s, func(*bbolt.Tx) error { return nil }); !errors.Is(err, errProviderStoreReleased) {
 		t.Fatalf("released write: %v", err)
 	}
-	got, err := os.ReadFile(source)
-	if err != nil || !bytes.Equal(got, original) {
-		t.Fatalf("source changed: %v", err)
+}
+
+// The family only moves forward: a mode never regresses, a generation never
+// decreases, and a committed operation is final. A refused write leaves the
+// stored bytes exactly as they were.
+func TestMigrationFamilyRefusesIllegalTransitions(t *testing.T) {
+	op := func(gen uint64, state migrationOperationState, hash byte) *migrationOperation {
+		return &migrationOperation{Generation: gen, State: state, Hash: [sha256.Size]byte{hash}}
+	}
+	fam := func(mode migrationMode, o *migrationOperation) migrationFamily {
+		return migrationFamily{Version: 1, Mode: mode, Operation: o}
+	}
+	cases := []struct {
+		name     string
+		start    migrationFamily
+		next     migrationFamily
+		wantFail bool
+	}{
+		{"forward mode and commit", fam(migrationShadow, op(1, migrationPending, 1)), fam(migrationVerified, op(1, migrationCommitted, 1)), false},
+		{"same pending retry", fam(migrationShadow, op(1, migrationPending, 1)), fam(migrationShadow, op(1, migrationPending, 1)), false},
+		{"new higher generation", fam(migrationVerified, op(1, migrationCommitted, 1)), fam(migrationVerified, op(2, migrationPending, 2)), false},
+		{"read-db back to uninitialized", fam(migrationReadDB, op(3, migrationCommitted, 1)), fam(migrationUninitialized, nil), true},
+		{"verified back to shadow", fam(migrationVerified, op(1, migrationCommitted, 1)), fam(migrationShadow, op(1, migrationCommitted, 1)), true},
+		{"generation decreases", fam(migrationShadow, op(5, migrationPending, 1)), fam(migrationShadow, op(4, migrationPending, 1)), true},
+		{"generation decreases with higher mode", fam(migrationShadow, op(5, migrationPending, 1)), fam(migrationVerified, op(4, migrationCommitted, 1)), true},
+		{"committed back to pending", fam(migrationVerified, op(2, migrationCommitted, 1)), fam(migrationVerified, op(2, migrationPending, 1)), true},
+		{"replay of a committed operation", fam(migrationVerified, op(2, migrationCommitted, 1)), fam(migrationVerified, op(2, migrationCommitted, 1)), true},
+		{"operation dropped", fam(migrationShadow, op(1, migrationPending, 1)), fam(migrationShadow, nil), true},
+		{"same generation different hash", fam(migrationShadow, op(1, migrationPending, 1)), fam(migrationShadow, op(1, migrationPending, 2)), true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			s, err := openProviderStore(filepath.Join(t.TempDir(), providerStoreFileName))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer s.Close()
+			if err := checkProviderStoreSchema(s); err != nil {
+				t.Fatal(err)
+			}
+			if err := migrationUpdate(s, func(tx *bbolt.Tx) error { return writeMigrationFamily(tx, "identities", c.start) }); err != nil {
+				t.Fatalf("seed: %v", err)
+			}
+			var before []byte
+			read := func() []byte {
+				var raw []byte
+				if err := migrationView(s, func(tx *bbolt.Tx) error {
+					raw = append([]byte(nil), tx.Bucket([]byte(providerMigrationBucket)).Get([]byte("identities"))...)
+					return nil
+				}); err != nil {
+					t.Fatal(err)
+				}
+				return raw
+			}
+			before = read()
+			err = migrationUpdate(s, func(tx *bbolt.Tx) error { return writeMigrationFamily(tx, "identities", c.next) })
+			if !c.wantFail {
+				if err != nil {
+					t.Fatalf("legal transition refused: %v", err)
+				}
+				return
+			}
+			if !errors.Is(err, errMigrationTransition) {
+				t.Fatalf("want errMigrationTransition, got %v", err)
+			}
+			if after := read(); !bytes.Equal(before, after) {
+				t.Fatalf("refused write changed the record: %s -> %s", before, after)
+			}
+		})
 	}
 }
