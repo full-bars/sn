@@ -1134,7 +1134,7 @@ b1_ramlogs() {
 
 # registration identity: a bare provide on a fresh dir mints its own identity
 # (creation is unconditional; --allow-client-registration is accepted and
-# ignored); --adopt-legacy-provider-key on a fresh dir must not allocate
+# ignored for client identity creation); --adopt-legacy-provider-key on a fresh dir must not allocate
 # (it is an adoption flag, not a bootstrap flag).
 b1_identity_gate() {
     gate_home="$WORK/gate-home"
@@ -1144,7 +1144,7 @@ b1_identity_gate() {
         rm -rf "$gate_home/.urnetwork"; mkdir -p "$gate_home/.urnetwork"
         if [ -r "$JWT_FILE" ]; then cp "$JWT_FILE" "$gate_home/.urnetwork/jwt" && chmod 600 "$gate_home/.urnetwork/jwt"; fi
     }
-    gate_probe() { # $1=extra flag  $2=log
+    gate_probe() { # $1=extra flag  $2=log  $3=optional file the running provider must write
         gate_reset
         : >"$2"
         HOME="$gate_home" "$gate_home/bin/provider" provide --port=0 $1 >"$2" 2>&1 &
@@ -1156,15 +1156,25 @@ b1_identity_gate() {
             sleep 1; i=$((i + 1))
         done
         sock_up=no; [ -S "$gate_home/.urnetwork/provider.sock" ] && sock_up=yes
+        # The socket can come up before the identity is written. Wait on the
+        # real condition (a non-empty $3, while the provider is still alive),
+        # bounded by GATE_IDENTITY_TIMEOUT seconds, then stop it.
+        if [ "$sock_up" = yes ] && [ -n "${3:-}" ]; then
+            i=0
+            while [ ! -s "$3" ] && kill -0 "$gp" 2>/dev/null && [ "$i" -lt "${GATE_IDENTITY_TIMEOUT:-20}" ]; do
+                sleep 1; i=$((i + 1))
+            done
+        fi
         if kill -0 "$gp" 2>/dev/null; then kill -TERM "$gp" 2>/dev/null; sleep 1; kill -KILL "$gp" 2>/dev/null; fi
         wait "$gp" 2>/dev/null || true
         GATE_EXITED="$exited"; GATE_SOCK="$sock_up"
     }
     # Creation is unconditional since 1cdce1351 (the identity withholder was
-    # dropped; --allow-client-registration is accepted and ignored), so a bare
+    # dropped; --allow-client-registration is accepted and ignored for client
+    # identity creation), so a bare
     # provide on a fresh dir MUST come up and mint its own identity. The old
     # assertion (no socket) pinned the removed gate.
-    gate_probe "" "$WORK/gate-fresh.log"
+    gate_probe "" "$WORK/gate-fresh.log" "$gate_home/.urnetwork/.provider.key"
     # The identity minted unconditionally is the ed25519 seed .provider.key
     # (gate_reset leaves only the network jwt, so it cannot pre-exist).
     # .provider.jwt is the registered client credential: it appears only after
