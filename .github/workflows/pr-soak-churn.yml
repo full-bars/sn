@@ -13,6 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 .github/scripts/test-soak-growth.py
+      - run: bash .github/scripts/test-stop-provider.sh
 
   churn:
     # Only this job uses the shared test account, so only it serializes with
@@ -88,6 +89,8 @@ jobs:
           sh .github/scripts/soak-growth.sh check "$pid" http://127.0.0.1:19100/metrics /tmp/churn-baseline
       - name: Teardown
         if: always()
+        # Cleanup never decides the result; the churn step does. Wait for the
+        # provider to exit first, as it writes state while shutting down.
         run: |
-          if [ -f /tmp/provider.pid ]; then kill -TERM "$(cat /tmp/provider.pid)" 2>/dev/null || true; fi
-          rm -rf "$HOME/.urnetwork" /tmp/mint
+          sh .github/scripts/stop-provider.sh /tmp/provider.pid 30 || echo "::warning::provider did not exit"
+          rm -rf "$HOME/.urnetwork" /tmp/mint || echo "::warning::state cleanup incomplete"
