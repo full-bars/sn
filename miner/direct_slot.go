@@ -85,6 +85,23 @@ func withDirectSlot(proxies []*connect.ProxySettings, directEnabled bool) []*con
 	return append(out, proxies...)
 }
 
+// splitDirectLaunch separates the direct slot from a scheduled launch list. The
+// scheduler leaves direct last (scheduleProxyLaunch), but the run starts it
+// first so the extender has this box to itself for one activation attempt
+// (extender_head_start.go), and then starts the proxies in their scheduled
+// order. direct is nil when the list has no direct slot.
+func splitDirectLaunch(launchSlots []proxyLaunchSlot) (direct *proxyLaunchSlot, proxies []proxyLaunchSlot) {
+	proxies = make([]proxyLaunchSlot, 0, len(launchSlots))
+	for i := range launchSlots {
+		if launchSlots[i].Settings == nil {
+			direct = &launchSlots[i]
+			continue
+		}
+		proxies = append(proxies, launchSlots[i])
+	}
+	return direct, proxies
+}
+
 // directSlotIndex returns the direct slot's position in the launch list and
 // whether the run has one at all.
 func directSlotIndex(providers []*connect.ProxySettings) (uint64, bool) {

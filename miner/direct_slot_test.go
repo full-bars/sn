@@ -242,6 +242,47 @@ func TestDirectSlotNumberingWith540Proxies(t *testing.T) {
 	}
 }
 
+// The scheduler leaves direct last, but the run launches direct before any
+// proxy (run.go: launchSlot(*directLaunch) ahead of the proxy loop). The split
+// is what the run uses for that order.
+func TestSplitDirectLaunchStartsDirectBeforeScheduledProxies(t *testing.T) {
+	p1 := &connect.ProxySettings{Address: "proxy-1"}
+	p2 := &connect.ProxySettings{Address: "proxy-2"}
+	p3 := &connect.ProxySettings{Address: "proxy-3"}
+	// warmth reordered the proxies to original indexes 1, 0, 2; direct is last
+	scheduled := []proxyLaunchSlot{
+		{Index: 1, Settings: p2},
+		{Index: 0, Settings: p1},
+		{Index: 2, Settings: p3},
+		{Index: 3, Settings: nil},
+	}
+	direct, proxies := splitDirectLaunch(scheduled)
+	if direct == nil || direct.Index != 3 || direct.Settings != nil {
+		t.Fatalf("direct = %+v, want index 3 with nil settings", direct)
+	}
+	wantSettings := []*connect.ProxySettings{p2, p1, p3}
+	wantIndexes := []int{1, 0, 2}
+	if len(proxies) != len(wantSettings) {
+		t.Fatalf("proxies = %d, want %d", len(proxies), len(wantSettings))
+	}
+	for i, slot := range proxies {
+		if slot.Settings != wantSettings[i] || slot.Index != wantIndexes[i] {
+			t.Fatalf("proxy %d = (index %d, %p), want (index %d, %p)", i, slot.Index, slot.Settings, wantIndexes[i], wantSettings[i])
+		}
+	}
+}
+
+func TestSplitDirectLaunchWithoutDirectKeepsEveryProxy(t *testing.T) {
+	p1 := &connect.ProxySettings{Address: "proxy-1"}
+	direct, proxies := splitDirectLaunch([]proxyLaunchSlot{{Index: 0, Settings: p1}})
+	if direct != nil {
+		t.Fatalf("direct = %+v, want nil when the run has no direct slot", direct)
+	}
+	if len(proxies) != 1 || proxies[0].Settings != p1 {
+		t.Fatalf("proxies = %+v, want the one proxy unchanged", proxies)
+	}
+}
+
 func TestNetworkTokenRenewalProxyPreservesEgress(t *testing.T) {
 	first := &connect.ProxySettings{Address: "first"}
 	second := &connect.ProxySettings{Address: "second"}

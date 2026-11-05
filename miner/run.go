@@ -2211,10 +2211,12 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// start in and the per-tier stagger between them, so the scarce auth-mint
 	// slots go to the identities that can dial with a stored client JWT or
 	// renew one in a single step, and within a tier the proven earners go
-	// first. The direct slot is scheduled last (it is not a proxy and carries
-	// no warmth), while retaining index 0. Each slot keeps its original
-	// index, so the diagnostics label a provider by the slot it was
-	// configured as, exactly as before.
+	// first. The direct slot is last in this schedule (it is not a proxy and
+	// carries no warmth); the launch below starts it ahead of the proxies
+	// (splitDirectLaunch), so scheduled order is not launch order for direct.
+	// Each slot keeps its original index (direct stays index 0), so the
+	// diagnostics label a provider by the slot it was configured as, exactly
+	// as before.
 	// Startup grading gate readiness hook (proxy_manager_gate.go): the
 	// manager's active probe loops are held until the workers launched below
 	// are up, and this is the moment their clocks (plateau, deadline) start
@@ -2331,15 +2333,7 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	// job out; a failure, the cap or a shutdown releases the proxies at once.
 	// The proxies keep their scheduled order, delays and stagger; only the
 	// direct slot moves ahead of them.
-	var directLaunch *proxyLaunchSlot
-	proxyLaunchSlots := make([]proxyLaunchSlot, 0, len(launchSlots))
-	for i := range launchSlots {
-		if launchSlots[i].Settings == nil {
-			directLaunch = &launchSlots[i]
-			continue
-		}
-		proxyLaunchSlots = append(proxyLaunchSlots, launchSlots[i])
-	}
+	directLaunch, proxyLaunchSlots := splitDirectLaunch(launchSlots)
 	if directLaunch != nil {
 		launchSlot(*directLaunch)
 	}
