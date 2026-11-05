@@ -48,9 +48,23 @@ func uninstallFixture(t *testing.T) Provider {
 	return Provider{Binary: bin, StateDir: state}
 }
 
+// stubServiceOwned makes the fixture a provider the supervisor owns, the case
+// where uninstall stops the service. Without it the real Windows ownership
+// check sees no saved service and takes the bare-provider path. The service
+// files removal is stubbed too, so a test never deletes the real Startup
+// shortcut or service config.
+func stubServiceOwned(t *testing.T) {
+	t.Helper()
+	stubOwnership(t, true, func(Provider) error {
+		t.Error("an owned provider is stopped through its service, not by pid")
+		return nil
+	}, func() {})
+}
+
 func TestUninstallStopsServiceBeforeRemovingFiles(t *testing.T) {
 	p := uninstallFixture(t)
 	stubCleanup(t)
+	stubServiceOwned(t)
 	called := 0
 	stubStopService(t, func(got Provider) error {
 		called++
@@ -84,6 +98,7 @@ func TestUninstallStopsServiceBeforeRemovingFiles(t *testing.T) {
 func TestUninstallAbortsWhenServiceWillNotStop(t *testing.T) {
 	p := uninstallFixture(t)
 	stubCleanup(t)
+	stubServiceOwned(t)
 	stubStopService(t, func(Provider) error { return errors.New("the service didn't stop") })
 	err := uninstallProvider(p)
 	if err == nil {
