@@ -21,6 +21,16 @@ func stubStopService(t *testing.T, fn func(Provider) error) {
 	t.Cleanup(func() { stopProviderServiceFn = prev })
 }
 
+// stubCleanup keeps the tests off the machine's real lifecycle artifacts; on
+// Windows the real cleanup deletes the user's Startup shortcut and service
+// config.
+func stubCleanup(t *testing.T) {
+	t.Helper()
+	prev := cleanupLifecycleFn
+	cleanupLifecycleFn = func(Provider) {}
+	t.Cleanup(func() { cleanupLifecycleFn = prev })
+}
+
 func uninstallFixture(t *testing.T) Provider {
 	t.Helper()
 	root := t.TempDir()
@@ -40,6 +50,7 @@ func uninstallFixture(t *testing.T) Provider {
 
 func TestUninstallStopsServiceBeforeRemovingFiles(t *testing.T) {
 	p := uninstallFixture(t)
+	stubCleanup(t)
 	called := 0
 	stubStopService(t, func(got Provider) error {
 		called++
@@ -72,6 +83,7 @@ func TestUninstallStopsServiceBeforeRemovingFiles(t *testing.T) {
 // error and leave everything in place.
 func TestUninstallAbortsWhenServiceWillNotStop(t *testing.T) {
 	p := uninstallFixture(t)
+	stubCleanup(t)
 	stubStopService(t, func(Provider) error { return errors.New("the service didn't stop") })
 	err := uninstallProvider(p)
 	if err == nil {

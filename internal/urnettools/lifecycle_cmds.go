@@ -151,6 +151,11 @@ func cmdUninstall(args []string, force, dryRun bool) error {
 // uninstall ordering can be tested on every platform.
 var stopProviderServiceFn = stopProviderService
 
+// cleanupLifecycleFn is the seam for the platform lifecycle cleanup (timers on
+// Unix; scheduled tasks, the Startup shortcut and service config on Windows),
+// so tests never touch the real machine's artifacts.
+var cleanupLifecycleFn = cleanupLifecycle
+
 // uninstallProvider does the work after target selection and confirmation:
 // stop whatever supervises the provider, disable the unit, then remove files.
 func uninstallProvider(p Provider) error {
@@ -177,7 +182,7 @@ func uninstallProvider(p Provider) error {
 	}
 	// Clean up platform lifecycle artifacts: on Unix the auto-update timer,
 	// on Windows the scheduled tasks (heavyweight review S7).
-	cleanupLifecycle(p)
+	cleanupLifecycleFn(p)
 	// Only remove paths that look like real install paths — never "/" or
 	// a bare relative path.
 	// Both guards clean the path so "/" and "/./" are caught identically.
