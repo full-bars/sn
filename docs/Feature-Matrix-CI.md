@@ -60,6 +60,9 @@ release blocker in them is not masked by proxy churn.
 | `key-ramlogs` | `set ramlogs on` reports the restart-required semantics and, on the NEXT start, the persisted key beats an explicit `URNETWORK_RAMLOGS=0`: the banner appears and the important buffer (`important.log`) exists |
 | `identity-gate-fresh` | a fresh state dir without `--allow-client-registration` must not allocate (no socket) |
 | `identity-gate-adopt` | `--adopt-legacy-provider-key` against a fresh dir must not allocate either |
+| `identity-gate-*-no-side-effects` | a refused start leaves no `.provider.key`, `.provider.jwt` or `.client_jwts.json` and logs no registration call (the harness cannot see the wire; this is artifact and log evidence) |
+| `control-key-live-runtime` | after `set gogc 250` the runtime's own `urnet_gc_gogc` reads 250, and not 250 after the clear |
+| `state-isolation-<group>` | each independent group (url, manip, surface) starts from a freshly created state dir; the previous one is archived under the work dir |
 | `exit-75-quarantine` | a rejected sign-in with `--quarantine-rejected-sign-in` exits 75 (EX_TEMPFAIL; environmental when not reproducible) |
 | `state-paths` | provider state exists under `STATE_DIR` |
 | `state-paths-sandbox` | no `.urnetwork` grows under the pre-adaptation passwd home (the sandbox-leak canary) |
@@ -135,8 +138,17 @@ The summary block prints the counts and repeats every FAIL item, so a CI log
 is self-contained:
 
 ```
-PASS=34 FAIL=0 SKIP-UNSUPPORTED=8 SKIP-NO-NETWORK=0
+PASS=34 FAIL=0 (of which MANDATORY-SKIPPED=0) SKIP-UNSUPPORTED=8 SKIP-NO-NETWORK(optional)=0 SKIP-UNSAFE=0
 ```
+
+A `SKIP-NO-NETWORK` is green only for the explicitly optional checks (the
+public-list URL checks and `exit-75-quarantine`). Any other one is recorded as
+a `FAIL` prefixed `MANDATORY-SKIPPED`, with the original reason kept, because a
+mandatory check that was not graded is not a pass. `control-keys-live-raw` and
+`control-key-live-runtime` are mandatory capabilities: their `SKIP-UNSUPPORTED`
+is also a `FAIL`. The summary lists every remaining skip by name.
+`sh .github/scripts/test_distro_features_isolation.sh .github/scripts/distro-features.sh`
+checks the isolation and the skip policy without a miner.
 
 ## Conditional map (owning ports)
 
