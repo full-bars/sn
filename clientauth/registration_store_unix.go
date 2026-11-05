@@ -213,9 +213,6 @@ func (self *registrationStore) names(maximum int, prefixes ...string) ([]string,
 	return names, self.check()
 }
 
-// errScanStopped ends a scanNames visit early without reporting a failure.
-var errScanStopped = errors.New("registration directory scan stopped")
-
 // scanNames visits matching names without retaining them. A caller that only
 // decides something per name must not be bounded by how many names match: the
 // state directory holds about three identity files per slot, so a bound that

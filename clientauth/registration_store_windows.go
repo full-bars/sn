@@ -401,6 +401,43 @@ func (self *registrationStore) names(maximum int, prefixes ...string) ([]string,
 	return names, self.check()
 }
 
+// scanNames visits matching names without retaining them, exactly as the unix
+// scan does: a caller that decides per name is not bounded by how many names
+// match, so a state directory holding about three identity files per slot is
+// not a bound on slots. A visitor that returns an error stops the scan.
+func (self *registrationStore) scanNames(prefixes []string, visit func(string) error) error {
+	if err := self.check(); err != nil {
+		return err
+	}
+	if _, err := self.directory.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+	for {
+		batch, err := self.directory.Readdirnames(256)
+		for _, name := range batch {
+			match := len(prefixes) == 0
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(name, prefix) {
+					match = true
+					break
+				}
+			}
+			if match {
+				if visitErr := visit(name); visitErr != nil {
+					return visitErr
+				}
+			}
+		}
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return self.check()
+}
+
 // Deletion uses the same owned directory as publication: one handle opened
 // through the custody handle, marked for deletion with POSIX semantics before
 // its close. A leaf that is a symlink is deleted as the link, exactly as unix
