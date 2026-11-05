@@ -7,6 +7,7 @@ import (
 
 // An unchanged update must not commit again, while a changed record must commit.
 func TestProviderStoreSkipsAnUnchangedJSONRecord(t *testing.T) {
+	counts := withPersistentErrorStore(t)
 	store, err := openProviderStore(filepath.Join(t.TempDir(), providerStoreFileName))
 	if err != nil {
 		t.Fatal(err)
@@ -37,6 +38,11 @@ func TestProviderStoreSkipsAnUnchangedJSONRecord(t *testing.T) {
 	if err != nil || !found || got["posts"] != 1 {
 		t.Fatalf("the skipped write changed the stored value: found=%t %#v %v", found, got, err)
 	}
+	// a skipped write is not a failure: counting it would make an operator chase
+	// state_store_write_failed on a provider that is behaving correctly
+	if failed := counts.Snapshot()[providerStoreWriteFailedCategory]; failed != 0 {
+		t.Fatalf("the skipped write was counted as a failure: %d", failed)
+	}
 
 	// a real change must still commit
 	if err := store.updateJSON(providerStoreBucketState, key, &record, func(bool) error {
@@ -47,5 +53,11 @@ func TestProviderStoreSkipsAnUnchangedJSONRecord(t *testing.T) {
 	}
 	if after := providerStoreCommits.Load(); after != committed+1 {
 		t.Fatalf("a changed record did not commit: want %d, got %d", committed+1, after)
+	}
+	// and the change must be readable, not merely counted
+	var changed map[string]int
+	found, err = store.load(providerStoreBucketState, key, &changed)
+	if err != nil || !found || changed["posts"] != 2 {
+		t.Fatalf("the changed record was not stored: found=%t %#v %v", found, changed, err)
 	}
 }
