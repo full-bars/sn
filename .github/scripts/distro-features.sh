@@ -681,16 +681,20 @@ fingerprint_core() { # files the manipulation checks must not disturb
 # overlaps the reload's own write, which is not what a "preview wrote state"
 # check is meant to catch. The applied sequence is memory-only, so the barrier
 # is the two things the provider does expose: every added address is present in
-# proxy.state (the reload's write), and the miner log shows as many
-# "reload complete" lines as "reload requested" lines (no reload in flight).
+# proxy.state (the reload's write), and the latest reload the miner log shows
+# has completed (no reload in flight). A failed attempt logs "reload requested"
+# with no "reload complete" and is retried on the next tick, so lifetime counts
+# can differ for good; only the newest request/complete line decides.
 # Bounded by FEATURE_RELOAD_TIMEOUT (> debounce + tick); returns 1 on timeout.
 FEATURE_RELOAD_TIMEOUT="${FEATURE_RELOAD_TIMEOUT:-45}"
 reload_settled() { # $1=expected synthetic entries in proxy.state
     have="$(grep -o '192\.0\.2\.[0-9]*:1080' "$STATE_DIR/proxy.state" 2>/dev/null | sort -u | wc -l | tr -d ' ')"
     [ "$(as_num "$have")" -ge "$1" ] || return 1
-    req="$(grep -c 'reload requested (trigger #' "$MINER_LOG" 2>/dev/null || true)"
-    done_n="$(grep -c 'reload complete:' "$MINER_LOG" 2>/dev/null || true)"
-    [ "$(as_num "$req")" -ge 1 ] && [ "$(as_num "$req")" -eq "$(as_num "$done_n")" ]
+    last="$(grep -e 'reload requested (trigger #' -e 'reload complete:' "$MINER_LOG" 2>/dev/null | tail -1)"
+    case "$last" in
+        *'reload complete:'*) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 wait_reload_settled() { # $1=expected synthetic entries
     i=0
