@@ -224,7 +224,7 @@ replace github.com/urnetwork/proxy => github.com/urnetwork/proxy v0.0.0-20260923
 
 replace github.com/urnetwork/userwireguard => github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f
 
-replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20261105000905-5d033ccdffed
+replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20261105025326-dea9292ccca0
 
 replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9
 
