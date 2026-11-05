@@ -121,7 +121,10 @@ func newH3PacketConnFactory(proxySettings *connect.ProxySettings, bw *bandwidth.
 // a test-egress run keeps its bound source address on the H3 carriers too.
 func providerSlotDialSettings(base *connect.DialContextSettings, proxySettings *connect.ProxySettings, bw *bandwidth.ProxyBandwidth, proxyAddr string) *connect.DialContextSettings {
 	if factory := newH3PacketConnFactory(proxySettings, bw, proxyAddr); factory != nil {
-		next := &connect.DialContextSettings{PacketConnFactory: factory}
+		next := &connect.DialContextSettings{
+			PacketConnFactory: factory,
+			UdpIdleTimeout:    proxiedUdpFlowIdleTimeout,
+		}
 		// SOCKS5 is the sole stream route for a proxied slot. A failed proxy
 		// dial must fail closed; falling back to the base/direct dial is the
 		// egress leak this wiring prevents.
