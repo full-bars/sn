@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Exercise the actual distro check against deterministic provider fixtures.
 # Usage: GATE_SERVER_BIN=/path/to/release-server sh test_identity_gate_wait.sh MODE
-# MODE: old, request-only, key-only, zero-exit, gated.
+# MODE: old, request-only, key-only, zero-exit, gated, no-curl.
+# no-curl runs the gated fixture with curl removed from PATH; the check must
+# report SKIP-UNSUPPORTED instead of a product FAIL.
 set -u
 here=$(cd "$(dirname "$0")" && pwd)
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
@@ -32,12 +34,36 @@ chmod +x "$work/fake-provider"
 WORK=$work MINER_BIN=$work/fake-provider JWT_FILE=/nonexistent BIN_DIR=''
 GATE_FIXTURE_MODE=$mode
 export WORK MINER_BIN JWT_FILE BIN_DIR GATE_SERVER_BIN GATE_FIXTURE_MODE
+if [ "$mode" = no-curl ]; then
+    GATE_FIXTURE_MODE=gated
+    # A PATH that holds every tool except curl (wget may stay available).
+    mkdir "$work/nocurl-bin"
+    old_ifs=$IFS; IFS=:
+    for d in $PATH; do
+        [ -d "$d" ] || continue
+        for f in "$d"/*; do
+            b=${f##*/}
+            [ "$b" = curl ] && continue
+            [ -x "$f" ] && [ ! -e "$work/nocurl-bin/$b" ] && ln -s "$f" "$work/nocurl-bin/$b"
+        done
+    done
+    IFS=$old_ifs
+    PATH=$work/nocurl-bin
+    if command -v curl >/dev/null 2>&1; then echo "curl still on PATH" >&2; exit 2; fi
+fi
 result=0
+skipped=0
 record() {
     printf '%s %s: %s\n' "$1" "$2" "$3"
     [ "$1" != FAIL ] || result=1
+    [ "$1:$2" != SKIP-UNSUPPORTED:identity-gate-fresh ] || skipped=1
 }
+have() { command -v "$1" >/dev/null 2>&1; }
 miner_help() { return 1; }
 . "$work/fn.sh"
 b1_identity_gate
+if [ "$mode" = no-curl ] && [ "$skipped" != 1 ]; then
+    echo "no-curl: identity-gate-fresh was not reported as SKIP-UNSUPPORTED" >&2
+    result=1
+fi
 exit "$result"

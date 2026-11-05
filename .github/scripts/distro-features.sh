@@ -1213,12 +1213,19 @@ b1_identity_gate() {
     done
     gate_api=""; [ -s "$gate_addr" ] && gate_api="$(cat "$gate_addr")"
     # Prove the counter detects the actual registration route before resetting.
+    # The counter is queried with curl only. Without it the control cannot run,
+    # which is a missing tool in the image, not a product failure.
     gate_control=""
-    if [ -n "$gate_api" ]; then
+    gate_skip=0
+    if [ -n "$gate_api" ] && ! have curl; then
+        gate_skip=1
+    elif [ -n "$gate_api" ]; then
         curl -sS --max-time 3 -X POST "$gate_api/network/register-client-v1" >/dev/null 2>&1 &&
             gate_control="$(curl -fsS --max-time 3 "$gate_api/__calls")"
     fi
-    if [ "$gate_control" != 1 ] || [ "$(curl -fsS --max-time 3 -X DELETE "$gate_api/__calls" 2>/dev/null)" != 0 ]; then
+    if [ "$gate_skip" = 1 ]; then
+        record SKIP-UNSUPPORTED identity-gate-fresh "curl not available; the registration counter cannot be queried"
+    elif [ "$gate_control" != 1 ] || [ "$(curl -fsS --max-time 3 -X DELETE "$gate_api/__calls" 2>/dev/null)" != 0 ]; then
         record FAIL identity-gate-fresh "registration counter did not pass its positive control"
     else
         HOME="$gate_home" "$gate_home/bin/provider" provide --port=0 "--api_url=$gate_api" >"$WORK/gate-fresh.log" 2>&1 &
