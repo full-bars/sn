@@ -61,7 +61,7 @@ func controlSocketPath() (string, error) {
 
 // controlRequest is one line of the socket protocol.
 type controlRequest struct {
-	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "version", "snapshot", "traffic", "internals", "goroutines", "trim_preview", "ledger", "diag", "shutdown", "audit", "hotswap"
+	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "version", "snapshot", "traffic", "internals", "goroutines", "trim_preview", "ledger", "diag", "shutdown", "audit", "hotswap", "state"
 	Key     string `json:"key"`
 	Value   string `json:"value,omitempty"`
 	Limit   int    `json:"limit,omitempty"`   // for "history" and "ledger"
@@ -1063,6 +1063,16 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			return controlResponse{OK: false, Error: fmt.Sprintf("diag: %v", err)}
 		}
 		return controlResponse{OK: true, Value: string(b)}
+
+	case "state":
+		// Read-only: answered from the handle this process already holds, so
+		// an inspection can never be the open that creates or recovers the
+		// store. Actions: verify, identities.
+		value, err := stateInspectControl(req.Action)
+		if err != nil {
+			return controlResponse{OK: false, Error: err.Error()}
+		}
+		return controlResponse{OK: true, Value: value}
 
 	case "shutdown":
 		// Record the operator's remote stop in the audit ring.
