@@ -506,11 +506,20 @@ func networkTokenRenewalStrategySettings(proxySettings *connect.ProxySettings, d
 	return strategySettings
 }
 
+// networkTokenRenewalProxy preserves the first proxy's transport for renewal,
+// falling back to direct when the run has no proxies.
+func networkTokenRenewalProxy(providers []*connect.ProxySettings) *connect.ProxySettings {
+	for _, settings := range providers {
+		if settings != nil {
+			return settings
+		}
+	}
+	return nil
+}
+
 // startNetworkTokenRenewal renews the state directory's network token for as
-// long as the run lasts. Its requests use the first provider's transport, the
-// direct one or the first proxy, so the renewal reaches the API the way that
-// provider's registration does. The returned stop joins the renewer and its
-// API.
+// long as the run lasts. Its requests use the first proxy's transport, or direct
+// when there are no proxies. The returned stop joins the renewer and its API.
 func startNetworkTokenRenewal(ctx context.Context, apiUrl string, proxySettings *connect.ProxySettings, dialer *connect.DialContextSettings, networkJwtPath string, output *providerDiagnostics, quarantineRejected bool, onQuarantined func(clientauth.NetworkTokenQuarantine)) (stop func() error) {
 	renewalCtx, cancel := context.WithCancel(ctx)
 	strategySettings := networkTokenRenewalStrategySettings(proxySettings, dialer)

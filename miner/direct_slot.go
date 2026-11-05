@@ -75,15 +75,31 @@ func newDirectSlot(
 // included. Proxies are additional egress, not a replacement for the direct
 // path: a run with proxies still serves from this host's address unless the
 // operator turned direct off, and the direct slot is the only one that can hold
-// the extender role. The nil entry is appended last so every proxy keeps the
-// index its settings were published under.
+// the extender role. The nil entry comes first so direct is slot 0 and proxies
+// follow in their configured order.
 func withDirectSlot(proxies []*connect.ProxySettings, directEnabled bool) []*connect.ProxySettings {
 	if !directEnabled && 0 < len(proxies) {
 		return proxies
 	}
-	out := make([]*connect.ProxySettings, 0, len(proxies)+1)
-	out = append(out, proxies...)
-	return append(out, nil)
+	out := make([]*connect.ProxySettings, 1, len(proxies)+1)
+	return append(out, proxies...)
+}
+
+// splitDirectLaunch separates the direct slot from a scheduled launch list. The
+// scheduler leaves direct last (scheduleProxyLaunch), but the run starts it
+// first so the extender has this box to itself for one activation attempt
+// (extender_head_start.go), and then starts the proxies in their scheduled
+// order. direct is nil when the list has no direct slot.
+func splitDirectLaunch(launchSlots []proxyLaunchSlot) (direct *proxyLaunchSlot, proxies []proxyLaunchSlot) {
+	proxies = make([]proxyLaunchSlot, 0, len(launchSlots))
+	for i := range launchSlots {
+		if launchSlots[i].Settings == nil {
+			direct = &launchSlots[i]
+			continue
+		}
+		proxies = append(proxies, launchSlots[i])
+	}
+	return direct, proxies
 }
 
 // directSlotIndex returns the direct slot's position in the launch list and
