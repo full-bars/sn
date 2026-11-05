@@ -21,7 +21,7 @@ import (
 
 // controlRequest is one line of the control socket protocol.
 type controlRequest struct {
-	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "snapshot", "diag", or "audit"
+	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "snapshot", "diag", "audit", or "state"
 	Key     string `json:"key,omitempty"`
 	Value   string `json:"value,omitempty"`
 	Limit   int    `json:"limit,omitempty"`
