@@ -484,3 +484,50 @@ func TestOfflineVerifyMissingAndEmptyFileAreNotCreatedOrStamped(t *testing.T) {
 		t.Fatal("offline inspection initialised an empty file")
 	}
 }
+
+// The real stateIdentityFileSide, not a stub: raw bytes of the retained file,
+// no load/prune, and failures carry no path.
+func TestStateIdentityFileSideReal(t *testing.T) {
+	prev := loadGlobalClientJWTStore()
+	t.Cleanup(func() { storeGlobalClientJWTStore(prev) })
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".client_jwts.json")
+
+	storeGlobalClientJWTStore(newClientJWTStore(""))
+	if side := stateIdentityFileSide(); side.Present || side.Err != nil {
+		t.Fatalf("in-memory store must read as absent: %+v", side)
+	}
+
+	storeGlobalClientJWTStore(newClientJWTStore(path))
+	if side := stateIdentityFileSide(); side.Present || side.Err != nil {
+		t.Fatalf("missing file must read as absent: %+v", side)
+	}
+
+	// Stale-looking content must come back byte for byte and stay on disk.
+	raw := []byte(`{"k":{"jwt":"` + inspectSecretJWT + `","minted_at":"2000-01-01T00:00:00Z"}}`)
+	if err := os.WriteFile(path, raw, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	side := stateIdentityFileSide()
+	if !side.Present || side.Err != nil || !bytes.Equal(side.Record.Bytes, raw) || side.Record.Format == "" {
+		t.Fatalf("file side wrong: %+v", side)
+	}
+	if after, _ := os.ReadFile(path); !bytes.Equal(after, raw) {
+		t.Fatal("reading the file side changed the file")
+	}
+
+	// A path that cannot be read as a file is an error, without the path.
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(path, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	side = stateIdentityFileSide()
+	if side.Err == nil || side.Present {
+		t.Fatalf("unreadable file must be an error: %+v", side)
+	}
+	if strings.Contains(side.Err.Error(), dir) {
+		t.Fatalf("error leaks the path: %v", side.Err)
+	}
+}
