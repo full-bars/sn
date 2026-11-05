@@ -3,6 +3,7 @@
 package urnettools
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -132,6 +133,28 @@ func cleanupLifecycle(p Provider) {
 		if err := deleteTaskIfExists(taskName, runSchtasks); err != nil {
 			fmt.Fprintf(os.Stderr, "warning: could not remove scheduled task %q: %v\n", taskName, err)
 		}
+	}
+	removeProviderServiceFiles()
+}
+
+// removeProviderServiceFiles deletes the supervisor's Startup shortcut and its
+// saved config and lock. Left behind, the shortcut starts a supervisor at the
+// next sign-in whose executable is gone. The supervisor is already stopped
+// (stopProviderService), as winservice.Remove requires.
+func removeProviderServiceFiles() {
+	shortcut, err := winservice.ShortcutPath(windowsProviderServiceName)
+	if err == nil {
+		if rmErr := os.Remove(shortcut); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {
+			err = rmErr
+		} else {
+			err = nil
+		}
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not remove the startup shortcut: %v\n", err)
+	}
+	if err := winservice.Remove(windowsProviderServiceName); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not remove the service config: %v\n", err)
 	}
 }
 
