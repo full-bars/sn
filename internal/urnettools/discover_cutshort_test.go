@@ -236,11 +236,28 @@ func TestRestartSetAcceptUnitlessEntryOnCompletedPass(t *testing.T) {
 	stubDiscovery(t, []Provider{p}, nil)
 	t.Cleanup(func() { systemdDiscoveryCutShort = false })
 
-	if err := cmdRestart(nil, false, true); err != nil && strings.Contains(err.Error(), "no owning systemd unit") {
+	if err := cmdRestart(nil, false, true); err != nil {
 		t.Fatalf("cmdRestart refused a unitless provider on a completed pass: %v", err)
 	}
-	if err := cmdSet([]string{"node-name", "edge01"}, false, true); err != nil && strings.Contains(err.Error(), "no owning unit") {
+	if err := cmdSet([]string{"node-name", "edge01"}, false, true); err != nil {
 		t.Fatalf("cmdSet refused a unitless provider on a completed pass: %v", err)
+	}
+}
+
+// The nil checks above would also catch a failure further in, but only if the
+// completed pass can produce one. Here the state dir is unresolvable, a
+// non-guard error, and cmdSet must return it rather than the unit-guard text.
+func TestRestartSetCompletedPassSurfacesNonGuardError(t *testing.T) {
+	p := Provider{User: currentUserName(), StateDir: "", PID: 1234, Running: true}
+	stubDiscovery(t, []Provider{p}, nil)
+	t.Cleanup(func() { systemdDiscoveryCutShort = false })
+
+	err := cmdSet([]string{"node-name", "edge01"}, false, true)
+	if err == nil || !strings.Contains(err.Error(), "no resolvable state dir") {
+		t.Fatalf("cmdSet must surface the state-dir error on a completed pass, got: %v", err)
+	}
+	if strings.Contains(err.Error(), cutShortWant) {
+		t.Fatalf("a completed pass must not report the budget refusal, got: %v", err)
 	}
 }
 
@@ -265,7 +282,7 @@ func TestUnitlessRefusalDoesNotOutliveCutPass(t *testing.T) {
 	}
 	cut = false
 	err = cmdSet([]string{"node-name", "edge01"}, false, true)
-	if err != nil && strings.Contains(err.Error(), "no owning unit") {
+	if err != nil {
 		t.Fatalf("stale cut flag leaked into the next pass: %v", err)
 	}
 	if systemdDiscoveryCutShort {
