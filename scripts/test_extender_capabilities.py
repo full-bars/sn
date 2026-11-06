@@ -101,6 +101,7 @@ sudo() {
                     else:
                         self.assertEqual(calls, "")
                     self.assertIn("bounding set", result.stderr)
+                    self.assertNotIn("would fail to start", result.stderr)
 
     def test_blocked_cap_does_not_remove_other_capabilities(self):
         for script in SCRIPTS:
