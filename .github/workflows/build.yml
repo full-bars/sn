@@ -138,6 +138,14 @@ jobs:
           echo "module cache relocated: $fallback"
 
 
+      - name: Give Git fixtures a global identity
+        # Release and qualification fixtures commit with the caller's global
+        # Git identity and refuse any override, by design. A hosted runner has
+        # none, so every fixture commit failed with "Author identity unknown".
+        run: |
+          git config --global user.name "sn ci fixture"
+          git config --global user.email "sn-ci-fixture@users.noreply.github.com"
+
       - name: Census and run uncached test shard
         shell: bash
         env:
