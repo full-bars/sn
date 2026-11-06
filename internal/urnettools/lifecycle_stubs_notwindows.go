@@ -31,4 +31,8 @@ func providerOwnedByService(_ Provider) bool { return true }
 
 func stopBareProvider(_ Provider) error { return nil }
 
+func startProviderService(_ Provider) error {
+	return errors.New("not supported on this platform")
+}
+
 func removeProviderServiceFiles() {}

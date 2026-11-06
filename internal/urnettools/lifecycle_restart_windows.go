@@ -77,20 +77,45 @@ func restartProviderWindows(p Provider) error {
 	if err := stopProviderService(p); err != nil {
 		return fail("stop the provider service: %v", err)
 	}
+	if err := launchProviderService(config); err != nil {
+		return fail("%v", err)
+	}
+	fmt.Printf("restarted %s\n", providerLabel(p))
+	return nil
+}
+
+// launchProviderService starts the saved supervisor and waits up to 10
+// seconds for it to report running.
+func launchProviderService(config *winservice.Config) error {
 	if err := winservice.Launch(config.Executable, "service", "run", windowsProviderServiceName); err != nil {
-		return fail("start the provider service: %v", err)
+		return fmt.Errorf("start the provider service: %w", err)
 	}
 	deadline := time.Now().Add(10 * time.Second)
 	for {
 		if running, _ := winservice.Running(windowsProviderServiceName); running {
-			fmt.Printf("restarted %s\n", providerLabel(p))
 			return nil
 		}
 		if time.Now().After(deadline) {
-			return fail("the provider service did not start; see %s", filepath.Join(config.StateDir, winservice.LogName))
+			return fmt.Errorf("the provider service did not start; see %s", filepath.Join(config.StateDir, winservice.LogName))
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
+}
+
+// startProviderService starts the per-user supervisor for a provider it owns
+// (plain "urnet-tools start"). Launching "provide" directly would run a bare
+// provider that the supervisor does not manage, and a second one once the
+// supervisor starts at the next sign-in. A supervisor that is already
+// running is left alone.
+func startProviderService(_ Provider) error {
+	config, err := winservice.Load(windowsProviderServiceName)
+	if err != nil {
+		return fmt.Errorf("read the provider service config: %w", err)
+	}
+	if running, _ := winservice.Running(windowsProviderServiceName); running {
+		return nil
+	}
+	return launchProviderService(config)
 }
 
 // windowsPathMissing reports a missing file or folder. Besides os.ErrNotExist

@@ -170,7 +170,7 @@ func cmdStart(args []string, force, dryRun bool) error {
 		return nil
 	}
 	if runtime.GOOS == "windows" {
-		return cmdStartWindows(p, force, dryRun)
+		return startWindowsProvider(p, force, dryRun)
 	}
 	if runtime.GOOS == "freebsd" {
 		fmt.Printf("starting %s...\n", providerLabel(p))
@@ -202,7 +202,7 @@ func cmdStop(args []string, force, dryRun bool) error {
 		return nil
 	}
 	if runtime.GOOS == "windows" {
-		return cmdStopWindows(p, force, dryRun)
+		return stopWindowsProvider(p, force, dryRun)
 	}
 	if runtime.GOOS == "freebsd" {
 		// rc.d, not systemd: go through the service so the provider drains
@@ -368,7 +368,7 @@ func cmdRestart(args []string, force, dryRun bool) error {
 	// Leave the reason for the provider's next start (best effort).
 	recordRestartReason(p, restartReasonManual)
 	if runtime.GOOS == "windows" {
-		return cmdRestartWindows(p, force, dryRun)
+		return restartWindowsProvider(p, force, dryRun)
 	}
 	if runtime.GOOS == "freebsd" {
 		fmt.Printf("restarting %s...\n", providerLabel(p))

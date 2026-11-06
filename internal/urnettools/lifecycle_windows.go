@@ -162,11 +162,6 @@ func removeProviderServiceFiles() {
 	}
 }
 
-// windowsProviderServiceName is the supervisor's service name, the one
-// "provider service install" saves and the Startup shortcut runs as
-// "service run urnetwork-provider" (miner minerServiceDefaultName).
-const windowsProviderServiceName = "urnetwork-provider"
-
 // windowsServiceStopWait mirrors the miner's own stop wait: the supervisor
 // gives its miner 30 seconds to end.
 const windowsServiceStopWait = 45 * time.Second
