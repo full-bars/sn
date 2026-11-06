@@ -46,13 +46,24 @@ jobs:
             else echo "Build failed after 3 attempts"; exit 1; fi
           done
 
-      - name: Prepare per-mode proxy files (10 each)
+      - name: Build and pin the candidate image
+        run: |
+          docker build --build-arg VERSION="$GITHUB_SHA" -t ci-smokes-candidate:local .
+          image=$(docker image inspect ci-smokes-candidate:local --format '{{.Id}}')
+          echo "CANDIDATE_IMAGE=$image" >> "$GITHUB_ENV"
+          # The discovery allowlist normally matches repository names. Docker
+          # reports an image-ID reference as sha256:<id> when --no-trunc is set.
+          echo 'URNET_DOCKER_IMAGE_REPOS=sha256' >> "$GITHUB_ENV"
+          echo "Candidate image ID: $image"
+
+      - name: Prepare distinct proxy configuration fixtures
         run: |
           mkdir -p /tmp/multi
-          for i in $(seq 1 10); do echo "127.0.0.1:$((20000+i))"; done > /tmp/multi/turbo.txt
-          for i in $(seq 1 10); do echo "127.0.0.1:$((21000+i))"; done > /tmp/multi/auto.txt
-          for i in $(seq 1 10); do echo "127.0.0.1:$((22000+i))"; done > /tmp/multi/lowmem.txt
-          echo "proxy files ready: $(wc -l /tmp/multi/*.txt | tail -1)"
+          # TEST-NET addresses are configuration fixtures, not working proxies.
+          # No file is mounted at startup: every add must change an empty set.
+          for i in $(seq 1 10); do echo "192.0.2.$i:20001"; done | LC_ALL=C sort > /tmp/multi/turbo.txt
+          for i in $(seq 1 10); do echo "198.51.100.$i:20001"; done | LC_ALL=C sort > /tmp/multi/auto.txt
+          for i in $(seq 1 10); do echo "203.0.113.$i:20001"; done | LC_ALL=C sort > /tmp/multi/lowmem.txt
 
       - name: Start 3 provider containers (turbo-v8 / auto / lowmem) via compose
         # Username/password auth: BUILD=stable + USER_AUTH + PASSWORD
@@ -64,7 +75,7 @@ jobs:
           cat > /tmp/docker-compose.yml << 'EOF'
           services:
             urfix-turbo:
-              image: ghcr.io/full-bars/sn:main
+              image: ${CANDIDATE_IMAGE}
               container_name: urfix-turbo
               restart: unless-stopped
               cap_add: [NET_ADMIN, NET_RAW]
@@ -78,9 +89,8 @@ jobs:
                 - URNETWORK_PROFILE=turbo-v8
               volumes:
                 - ur_config_turbo:/root/.urnetwork
-                - /tmp/multi/turbo.txt:/app/proxy.txt
             urfix-auto:
-              image: ghcr.io/full-bars/sn:main
+              image: ${CANDIDATE_IMAGE}
               container_name: urfix-auto
               restart: unless-stopped
               cap_add: [NET_ADMIN, NET_RAW]
@@ -94,9 +104,8 @@ jobs:
                 - URNETWORK_PROFILE=auto
               volumes:
                 - ur_config_auto:/root/.urnetwork
-                - /tmp/multi/auto.txt:/app/proxy.txt
             urfix-lowmem:
-              image: ghcr.io/full-bars/sn:main
+              image: ${CANDIDATE_IMAGE}
               container_name: urfix-lowmem
               restart: unless-stopped
               cap_add: [NET_ADMIN, NET_RAW]
@@ -110,13 +119,14 @@ jobs:
                 - URNETWORK_PROFILE=lowmem
               volumes:
                 - ur_config_lowmem:/root/.urnetwork
-                - /tmp/multi/lowmem.txt:/app/proxy.txt
           volumes:
             ur_config_turbo:
             ur_config_auto:
             ur_config_lowmem:
           EOF
-          cd /tmp && docker compose -f docker-compose.yml up -d
+          cd /tmp && docker compose -f docker-compose.yml up -d --pull never
+          # This fixed delay allows the existing username/password login to
+          # complete before the JWT check below; it is not a readiness proof.
           echo "containers started; waiting for auth..."
           sleep 90
           docker ps --filter name=urfix --format "{{.Names}} {{.Status}}"
@@ -141,30 +151,14 @@ jobs:
           # a multi-container no-flag command must refuse, never guess.
           /tmp/urnet-docker proxy add /tmp/multi/turbo.txt 2>&1 | head -3
           rc=${PIPESTATUS[0]}
-          if [ $rc -eq 0 ]; then
+          if [ "$rc" -eq 0 ]; then
             echo "REFUSAL FAILED: no-flag multi-container add succeeded (should refuse)"
             exit 1
           fi
           echo "OK: no-flag multi-container add refused (exit $rc)"
 
-      - name: Flag-targeted proxy add (each mode container)
-        run: |
-          /tmp/urnet-docker proxy add --unit urfix-turbo /tmp/multi/turbo.txt 
-          /tmp/urnet-docker proxy add --unit urfix-auto /tmp/multi/auto.txt 
-          /tmp/urnet-docker proxy add --unit urfix-lowmem /tmp/multi/lowmem.txt 
-
-      - name: Verify per-container state (status on each)
-        # Bare container names resolve as targets now (status [target]);
-        # no head pipe — the pipeline would mask the exit code.
-        run: |
-          /tmp/urnet-docker status urfix-turbo
-          /tmp/urnet-docker status urfix-auto
-          /tmp/urnet-docker status urfix-lowmem
-
-      - name: urnet-docker proxy clear (flag-targeted)
-        run: |
-          /tmp/urnet-docker proxy clear --unit urfix-turbo -y
-          /tmp/urnet-docker proxy clear --unit urfix-lowmem -y 
+      - name: Verify targeted proxy changes and container isolation
+        run: sh .github/scripts/docker-multi-container-proxy-check.sh
 
       - name: Multi-container logs via flag target
         # logs follows by design; bound it with timeout in CI (exit 124
