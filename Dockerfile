@@ -57,6 +57,7 @@ RUN apk update && apk add --no-cache \
     jq tar curl htop wget procps \
     iptables net-tools bind-tools \
     ca-certificates ca-certificates-bundle bash \
+    libcap-setcap libcap-getcap \
     gosu \
   && rm -rf /var/cache/apk/*
 

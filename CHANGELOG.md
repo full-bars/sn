@@ -4,7 +4,20 @@ Releases of this fork are tagged `v<YYYY.M.D>-<build>-sn`, where the build numbe
 
 ## [Unreleased]
 
-Merged to `main` after `v2026.11.1-1087168030-sn`, not yet in a tagged release. Hashes are commits on `main`.
+Merged to `main` after `v2026.11.6-1091584480-sn`, not yet in a tagged release.
+
+### Fixed
+
+- **Uninstall and capability checks fail safely.** The Windows PowerShell uninstaller refuses to remove data if another provider is running or process checks fail. Linux updates check the bounding set and preserve unrelated file capabilities. The miner image includes the capability tools. (#391)
+
+### CI and documentation
+
+- **Proxied UDP guidance reflects unknown checks.** Unknown checks may allow an unverified proxy exit; failed checks and known mismatches do not fall back to the host. ([d2b00edd9](https://github.com/full-bars/sn/commit/d2b00edd9c22f44b0036fd708a8f3c045f06b2b2))
+- **SN25 live numbers refreshed.** ([10e388054](https://github.com/full-bars/sn/commit/10e388054))
+
+## [v2026.11.6-1091584480-sn] — 2026-11-06
+
+Changes after `v2026.11.1-1087168030-sn` through this tag. Hashes are commits on `main`.
 
 ### Added
 

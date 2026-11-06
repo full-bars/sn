@@ -24,13 +24,16 @@ def helper(path):
 
 
 class ExtenderCapabilityTest(unittest.TestCase):
-    def run_helper(self, script, initial, mode="success", platform="Linux", uid="0", sudo="none", env_sudo=""):
+    def run_helper(self, script, initial, mode="success", platform="Linux", uid="0", sudo="none", env_sudo="", capbnd=None):
         with tempfile.TemporaryDirectory() as tmp:
             state = Path(tmp) / "state"
             calls = Path(tmp) / "calls"
             binary = Path(tmp) / "fake provider's binary"
             binary.touch()
             state.write_text(initial)
+            status = Path(tmp) / "status"
+            if capbnd is not None:
+                status.write_text("CapBnd:\t" + capbnd + "\n")
             mock_path = Path(tmp) / "bin"
             mock_path.mkdir()
             for tool in ("sh", "awk", "cat", "sed"):
@@ -39,16 +42,22 @@ class ExtenderCapabilityTest(unittest.TestCase):
                     raise RuntimeError(f"missing test dependency: {tool}")
                 (mock_path / tool).symlink_to(executable)
             env = dict(os.environ, STATE=str(state), CALLS=str(calls), PATH=str(mock_path),
-                       MODE=mode, PLATFORM=platform, BINARY=str(binary), SUDO=env_sudo, UID_=uid, SUDO_MODE=sudo)
+                       MODE=mode, PLATFORM=platform, BINARY=str(binary), SUDO=env_sudo, UID_=uid, SUDO_MODE=sudo, GETCAP_COUNT=str(Path(tmp) / "getcap_count"))
             harness = r'''
 set -eu
 uname() { printf '%s\n' "$PLATFORM"; }
-getcap() { printf '%s %s\n' "$1" "$(cat "$STATE")"; }
+getcap() {
+    if [ "$MODE" = disappearing-getcap ]; then
+        [ ! -e "$GETCAP_COUNT" ] || return 1
+        : > "$GETCAP_COUNT"
+    fi
+    printf '%s %s\n' "$1" "$(cat "$STATE")"
+}
 setcap() {
     printf '%s\n' "$*" >> "$CALLS"
     [ "$MODE" != fail ] || return 1
     [ "$MODE" != unverified ] || return 0
-    printf '%s' 'cap_net_bind_service=ep' > "$STATE"
+    if [ "$1" = -r ]; then printf '%s' '' > "$STATE"; else printf '%s' 'cap_net_bind_service=ep' > "$STATE"; fi
 }
 id() { printf '%s\n' "$UID_"; }
 sudo() {
@@ -59,9 +68,9 @@ sudo() {
 [ "$SUDO_MODE" != none ] || unset -f sudo
 [ "$MODE" != missing-setcap ] || unset -f setcap
 [ "$MODE" != missing-getcap ] || unset -f getcap
-''' + helper(script) + '\nensure_extender_cap "$BINARY"\n'
+''' + helper(script).replace('/proc/self/status', str(status)) + '\nensure_extender_cap "$BINARY"\n'
             result = subprocess.run(["/bin/sh", "-c", harness], env=env,
-                                    text=True, capture_output=True, check=True)
+                                    text=True, capture_output=True, check=False)
             return result, calls.read_text() if calls.exists() else "", str(binary)
 
     def test_scenarios(self):
@@ -88,6 +97,48 @@ sudo() {
                         quoted = "'" + binary.replace("'", "'\\''") + "'"
                         self.assertIn("sudo setcap cap_net_bind_service=+ep " + quoted, result.stderr)
 
+    def test_excluded_bounding_set_warns(self):
+        for script in SCRIPTS:
+            for initial in ("", "cap_net_bind_service=ep"):
+                with self.subTest(script=script, initial=initial):
+                    result, calls, _ = self.run_helper(script, initial, capbnd="00000000a80421fb")
+                    if initial:
+                        self.assertTrue(calls.startswith("-r "))
+                    else:
+                        self.assertEqual(calls, "")
+                    self.assertIn("bounding set", result.stderr)
+                    self.assertNotIn("would fail to start", result.stderr)
+
+    def test_blocked_cap_does_not_remove_other_capabilities(self):
+        for script in SCRIPTS:
+            with self.subTest(script=script):
+                result, calls, _ = self.run_helper(script, "cap_chown,cap_net_bind_service=ep", capbnd="00000000a80421fb")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(calls, "")
+                self.assertIn("other capabilities", result.stderr)
+
+    def test_caller_stops_when_capability_safety_check_fails(self):
+        for script in SCRIPTS:
+            for line in (ROOT / script).read_text().splitlines():
+                if 'ensure_extender_cap "' in line:
+                    self.assertIn(" || {", line, f"unguarded safety check in {script}: {line}")
+
+    def test_failed_reinspection_does_not_remove_capabilities(self):
+        for script in SCRIPTS:
+            with self.subTest(script=script):
+                result, calls, _ = self.run_helper(script, "cap_net_bind_service=ep", mode="disappearing-getcap", capbnd="00000000a80421fb")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(calls, "")
+
+    def test_allowed_bounding_set(self):
+        for script in SCRIPTS:
+            for mask in ("000001ffffffffff", "00000000a80425fb"):
+                for initial in ("", "cap_net_bind_service=ep"):
+                    with self.subTest(script=script, mask=mask, initial=initial):
+                        result, calls, binary = self.run_helper(script, initial, capbnd=mask)
+                        self.assertEqual(calls, "" if initial else f"cap_net_bind_service=+ep {binary}\n")
+                        self.assertEqual(result.stderr, "")
+
     def test_legacy_getcap_format_is_recognised(self):
         # libcap 2.2x (Ubuntu 16.04/18.04) prints "<file> = <caps>+<flags>".
         for script in SCRIPTS:
@@ -101,6 +152,11 @@ sudo() {
                     result, calls, _ = self.run_helper(script, initial)
                     self.assertEqual(bool(calls), expect_call)
                     self.assertEqual(result.stderr, "")
+
+    def test_blocked_cap_removal_uses_passwordless_sudo(self):
+        result, calls, binary = self.run_helper(SCRIPTS[0], "cap_net_bind_service=ep", uid="1000", sudo="passwordless", capbnd="00000000a80421fb")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(calls, f"sudo -r {binary}\n")
 
     def test_installer_elevates_with_passwordless_sudo_when_SUDO_unset(self):
         installer = SCRIPTS[0]

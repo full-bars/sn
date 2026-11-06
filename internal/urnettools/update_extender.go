@@ -5,8 +5,22 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 )
+
+// bindCapabilityBlocked reports an explicitly excluded CAP_NET_BIND_SERVICE.
+// Missing or unreadable proc status retains the previous best-effort behavior.
+func bindCapabilityBlocked(status []byte) bool {
+	for _, line := range strings.Split(string(status), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) == 2 && fields[0] == "CapBnd:" {
+			mask, err := strconv.ParseUint(fields[1], 16, 64)
+			return err == nil && mask&(1<<10) == 0
+		}
+	}
+	return false
+}
 
 // installProviderBinary restores the Linux extender capability before restart.
 // Tool self-updates use installBinary directly and do not need this capability.
@@ -15,10 +29,18 @@ func installProviderBinary(src, dst, user string) error {
 }
 
 func installProviderBinaryWithConfig(src, dst, user, platform string, cfg PlatformConfigurer, warnings io.Writer) error {
+	return installProviderBinaryWithConfigAndStatus(src, dst, user, platform, cfg, warnings, "/proc/self/status")
+}
+
+func installProviderBinaryWithConfigAndStatus(src, dst, user, platform string, cfg PlatformConfigurer, warnings io.Writer, statusPath string) error {
 	if err := installBinary(src, dst, user); err != nil {
 		return err
 	}
 	if platform != "linux" {
+		return nil
+	}
+	if data, err := os.ReadFile(statusPath); err == nil && bindCapabilityBlocked(data) {
+		fmt.Fprintln(warnings, "WARNING: extender capability blocked by the process bounding set")
 		return nil
 	}
 	configured, _, err := cfg.CheckRequirement(dst, user)
