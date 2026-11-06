@@ -276,7 +276,26 @@ func reportExtenderBind(out io.Writer, cfg PlatformConfigurer, p Provider, occup
 		return nil
 	}
 	fmt.Fprintln(out, "extender: verified TCP 443 listener as provider user")
+	warnUnitNoNewPrivileges(out, cfg, p)
 	return nil
+}
+
+// warnUnitNoNewPrivileges says so when the bind probe above cannot speak for
+// the service: the probe ran outside the unit, and a unit with
+// NoNewPrivileges makes the kernel ignore the file capability setup granted.
+// Only a provider running as a non-root user depends on that capability.
+func warnUnitNoNewPrivileges(out io.Writer, cfg PlatformConfigurer, p Provider) {
+	if p.Unit == "" || p.User == "" || p.User == "root" {
+		return
+	}
+	c, ok := cfg.(unitNoNewPrivileges)
+	if !ok {
+		return
+	}
+	if nnp, err := c.UnitNoNewPrivileges(p.Unit); err == nil && nnp {
+		fmt.Fprintf(out, "warn: %s sets NoNewPrivileges, so the service will not receive the file capability that was just verified outside it; "+
+			"TCP 443 may still fail to bind. Add AmbientCapabilities=CAP_NET_BIND_SERVICE to the unit (it works with NoNewPrivileges), or drop NoNewPrivileges\n", p.Unit)
+	}
 }
 
 // formatSetupSudoCommand is the exact command to run by hand. `extender setup`

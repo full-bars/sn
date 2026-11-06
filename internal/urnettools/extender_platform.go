@@ -110,6 +110,31 @@ func (sp *SystemPlatformConfigurer) VerifyBind(binary, user string) (bool, error
 	return false, nil
 }
 
+// unitNoNewPrivileges is implemented by configurers that can ask systemd
+// whether a unit sets NoNewPrivileges. It is optional so test doubles of
+// PlatformConfigurer need not grow a method.
+type unitNoNewPrivileges interface {
+	UnitNoNewPrivileges(unit string) (bool, error)
+}
+
+// UnitNoNewPrivileges reports whether the systemd unit has NoNewPrivileges
+// set. With it, the kernel ignores file capabilities on exec, so the
+// cap_net_bind_service that setup grants does not reach the service.
+func (sp *SystemPlatformConfigurer) UnitNoNewPrivileges(unit string) (bool, error) {
+	if sp.PlatformName != "linux" || unit == "" || sp.ExecCmd == nil {
+		return false, nil
+	}
+	out, err := sp.ExecCmd("systemctl", "show", "-p", "NoNewPrivileges", "--value", unit)
+	if err != nil {
+		return false, err
+	}
+	switch strings.TrimSpace(string(out)) {
+	case "yes", "true", "1", "on":
+		return true, nil
+	}
+	return false, nil
+}
+
 // --- Linux implementation ---
 
 func (sp *SystemPlatformConfigurer) checkLinux(binary string) (bool, string, error) {

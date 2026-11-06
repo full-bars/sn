@@ -55,3 +55,62 @@ func TestExtenderFirewallUFWUnreadableIsNotNoFirewall(t *testing.T) {
 		t.Fatalf("unreadable ufw misclassified: %+v", st)
 	}
 }
+
+type nnpConfigurer struct {
+	mockPlatformConfigurer
+	nnp bool
+}
+
+func (n *nnpConfigurer) VerifyBind(string, string) (bool, error) { return true, nil }
+func (n *nnpConfigurer) UnitNoNewPrivileges(string) (bool, error) {
+	return n.nnp, nil
+}
+
+// The bind probe runs outside the unit, so "verified" must not stand alone
+// when the unit's NoNewPrivileges would make the service ignore the capability.
+func TestReportExtenderBindWarnsWhenUnitSetsNoNewPrivileges(t *testing.T) {
+	user := Provider{Unit: "urnetwork-provider.service", User: "provider", Binary: "/usr/local/bin/urnetwork"}
+	cases := []struct {
+		name string
+		cfg  *nnpConfigurer
+		p    Provider
+		warn bool
+	}{
+		{"non-root with NoNewPrivileges", &nnpConfigurer{nnp: true}, user, true},
+		{"non-root without it", &nnpConfigurer{nnp: false}, user, false},
+		{"root needs no capability", &nnpConfigurer{nnp: true}, Provider{Unit: user.Unit, User: "root"}, false},
+		{"no unit", &nnpConfigurer{nnp: true}, Provider{User: "provider"}, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var out bytes.Buffer
+			if err := reportExtenderBind(&out, c.cfg, c.p, false); err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(out.String(), "verified TCP 443 listener") {
+				t.Fatalf("missing verified line: %q", out.String())
+			}
+			if got := strings.Contains(out.String(), "NoNewPrivileges"); got != c.warn {
+				t.Fatalf("warned=%v want %v: %q", got, c.warn, out.String())
+			}
+		})
+	}
+}
+
+func TestUnitNoNewPrivilegesParsesSystemctl(t *testing.T) {
+	for out, want := range map[string]bool{"yes\n": true, "no\n": false, "\n": false} {
+		sp := &SystemPlatformConfigurer{PlatformName: "linux", ExecCmd: func(name string, args ...string) ([]byte, error) {
+			if name != "systemctl" || args[0] != "show" {
+				t.Fatalf("unexpected call %s %v", name, args)
+			}
+			return []byte(out), nil
+		}}
+		if got, err := sp.UnitNoNewPrivileges("u.service"); err != nil || got != want {
+			t.Fatalf("%q: got %v err %v", out, got, err)
+		}
+	}
+	sp := &SystemPlatformConfigurer{PlatformName: "linux", ExecCmd: func(string, ...string) ([]byte, error) { return nil, errors.New("no systemd") }}
+	if _, err := sp.UnitNoNewPrivileges("u.service"); err == nil {
+		t.Fatal("systemctl failure must surface")
+	}
+}
