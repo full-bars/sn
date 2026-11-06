@@ -30,6 +30,18 @@ func setExtenderRoleReleaser(releaser extenderCarrierReleaser) {
 	extenderRoleReleaser.releaser = releaser
 }
 
+// clearExtenderRoleReleaser clears the registration when it is still the given
+// slot's, and leaves it alone otherwise. A slot that ends while a relaunch has
+// already registered its successor must not wipe the successor's releaser, or
+// the next hot swap would release nothing.
+func clearExtenderRoleReleaser(releaser extenderCarrierReleaser) {
+	extenderRoleReleaser.Lock()
+	defer extenderRoleReleaser.Unlock()
+	if extenderRoleReleaser.releaser == releaser {
+		extenderRoleReleaser.releaser = nil
+	}
+}
+
 // releaseExtenderCarriersForSuccessor frees the carrier ports for the
 // successor, on either hand-off path.
 //

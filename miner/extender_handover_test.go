@@ -96,3 +96,30 @@ func TestBatonAbortKeepsTheExtenderCarriers(t *testing.T) {
 		t.Fatalf("an aborted handoff released the carriers %d times", releaser.released)
 	}
 }
+
+// A slot that ends after its relaunch has registered must not wipe the
+// relaunch's releaser: the next swap would release nothing.
+func TestClearExtenderRoleReleaserKeepsALaterSlot(t *testing.T) {
+	first, second := &fakeCarrierReleaser{}, &fakeCarrierReleaser{}
+	setExtenderRoleReleaser(first)
+	setExtenderRoleReleaser(second) // the relaunch registers
+	t.Cleanup(func() { setExtenderRoleReleaser(nil) })
+
+	clearExtenderRoleReleaser(first) // the old slot's defer runs late
+
+	releaseExtenderCarriersForSuccessor()
+	if second.released != 1 || first.released != 0 {
+		t.Fatalf("released first=%d second=%d, want 0 and 1", first.released, second.released)
+	}
+}
+
+func TestClearExtenderRoleReleaserClearsItsOwn(t *testing.T) {
+	only := &fakeCarrierReleaser{}
+	setExtenderRoleReleaser(only)
+	clearExtenderRoleReleaser(only)
+
+	releaseExtenderCarriersForSuccessor()
+	if only.released != 0 {
+		t.Fatalf("a cleared registration released %d times", only.released)
+	}
+}

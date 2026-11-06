@@ -1949,15 +1949,18 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			device.HoldProvideExtenderSession(true)
 			defer startExtenderBudgetRecheck(proxyCtx, device, extenderGate.allowLaunch)()
 		}
-		if extenderRoleCapable {
-			// The in-place hot swap inherits the carrier listeners, so the
-			// outgoing image releases them before it execs (extender_handover.go).
-			setExtenderRoleReleaser(device)
-			defer setExtenderRoleReleaser(nil)
-		}
 		defer func() {
 			returnErr = errors.Join(returnErr, device.CloseAndWait(context.Background()))
 		}()
+		if extenderRoleCapable {
+			// A hot swap releases the carrier ports for its successor, in place
+			// or by baton (extender_handover.go). Registered after the close
+			// defer so it is cleared first: a swap must not release a device
+			// that is already closing. Cleared only if still this device's, so
+			// a slot relaunched in the meantime keeps its own registration.
+			setExtenderRoleReleaser(device)
+			defer clearExtenderRoleReleaser(device)
+		}
 
 		// Step 2: a proxied slot whose proxy has proven IPv6 egress also runs
 		// an IPv6-pinned transport, so the platform records it dual-stack;
