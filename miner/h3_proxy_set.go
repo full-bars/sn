@@ -352,12 +352,18 @@ func relaunchH3ProxiesNowPaced(setting h3Setting, interval time.Duration) {
 	if relauncher == nil {
 		return
 	}
-	go func() {
+	pass := func() {
 		defer func() {
 			if cause := recover(); cause != nil {
 				importantLogf("[h3] relaunch pass panicked: %v\n", cause)
 			}
 		}()
 		relaunchH3ProxiesPaced(relauncher.runContext(), relauncher, setting, interval)
-	}()
+	}
+	// The provide run joins its passes on the way out.
+	if run, ok := relauncher.(*minerH3Relauncher); ok {
+		run.goPass(pass)
+		return
+	}
+	go pass()
 }
