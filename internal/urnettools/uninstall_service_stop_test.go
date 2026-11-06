@@ -17,7 +17,7 @@ import (
 func stubStopService(t *testing.T, fn func(Provider) error) {
 	t.Helper()
 	prev := stopProviderServiceFn
-	stopProviderServiceFn = fn
+	stopProviderServiceFn = func(p Provider, _ bool) error { return fn(p) }
 	t.Cleanup(func() { stopProviderServiceFn = prev })
 }
 

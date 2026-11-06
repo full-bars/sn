@@ -73,14 +73,7 @@ func restartProviderWindows(p Provider) error {
 	case !owner.owned():
 		return fail("it is not managed by the %s service; restart it manually", windowsProviderServiceName)
 	}
-	if err := stopOwnedProviderService(p, owner, "restart"); err != nil {
-		return fail("%v", err)
-	}
-	if err := launchProviderService(owner.Executable, owner.LogPath); err != nil {
-		return fail("%v", err)
-	}
-	fmt.Printf("restarted %s\n", providerLabel(p))
-	return nil
+	return restartOwnedProvider(p, owner, false)
 }
 
 // launchProviderService starts the saved supervisor and waits up to 10

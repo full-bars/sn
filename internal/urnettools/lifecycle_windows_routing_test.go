@@ -16,6 +16,7 @@ import (
 type windowsLifecycleCalls struct {
 	directStop, directStart, directRestart    int
 	serviceStop, serviceStart, serviceRestart int
+	forcedStop                                bool
 }
 
 func stubWindowsLifecycle(t *testing.T, state serviceOwnership, serviceErr error) *windowsLifecycleCalls {
@@ -28,7 +29,7 @@ func stubWindowsLifecycle(t *testing.T, state serviceOwnership, serviceErr error
 		cmdStopWindowsFn, cmdStartWindowsFn, cmdRestartWindowsFn = ds, dst, dr
 	})
 	providerOwnedByServiceFn = func(Provider) providerServiceOwnership { return testOwnership(state) }
-	stopProviderServiceFn = func(Provider) error { c.serviceStop++; return serviceErr }
+	stopProviderServiceFn = func(_ Provider, force bool) error { c.serviceStop++; c.forcedStop = force; return serviceErr }
 	startProviderServiceFn = func(Provider) error { c.serviceStart++; return serviceErr }
 	restartProviderWindowsFn = func(Provider) error { c.serviceRestart++; return serviceErr }
 	cmdStopWindowsFn = func(Provider, bool, bool) error { c.directStop++; return nil }
@@ -107,8 +108,8 @@ func TestWindowsRestartOwnedProviderRestartsTheService(t *testing.T) {
 	if err := restartWindowsProvider(windowsRoutingFixture(), false, false); err != nil {
 		t.Fatalf("restartWindowsProvider: %v", err)
 	}
-	if c.serviceRestart != 1 || c.directRestart != 0 || c.directStop != 0 {
-		t.Fatalf("service restarts = %d, direct restarts = %d, pid stops = %d; want 1, 0, 0", c.serviceRestart, c.directRestart, c.directStop)
+	if c.serviceStop != 1 || c.serviceStart != 1 || c.directRestart != 0 || c.directStop != 0 {
+		t.Fatalf("service stops = %d, service starts = %d, direct restarts = %d, pid stops = %d; want 1, 1, 0, 0", c.serviceStop, c.serviceStart, c.directRestart, c.directStop)
 	}
 }
 

@@ -163,8 +163,13 @@ func removeProviderServiceFiles() {
 }
 
 // windowsServiceStopWait mirrors the miner's own stop wait: the supervisor
-// gives its miner 30 seconds to end.
-const windowsServiceStopWait = 45 * time.Second
+// gives its miner 30 seconds to end. A forced stop waits only
+// windowsServiceForceWait before it ends the supervisor, and its job the
+// miner.
+const (
+	windowsServiceStopWait  = 45 * time.Second
+	windowsServiceForceWait = 5 * time.Second
+)
 
 // stopProviderService stops the per-user supervisor and, through its job
 // object, the miner it runs. Callers check providerOwnedByService first. Killing only the miner is not enough: the
@@ -172,8 +177,12 @@ const windowsServiceStopWait = 45 * time.Second
 // service name and checks the supervisor's lock, so it never touches another
 // process, and it does nothing when no supervisor is running. The separate
 // Windows service "urnetworkd" is not involved.
-func stopProviderService(_ Provider) error {
-	return winservice.Stop(windowsProviderServiceName, windowsServiceStopWait)
+func stopProviderService(_ Provider, force bool) error {
+	wait := windowsServiceStopWait
+	if force {
+		wait = windowsServiceForceWait
+	}
+	return winservice.Stop(windowsProviderServiceName, wait)
 }
 
 // providerOwnedByService reports whether the saved provider service owns the

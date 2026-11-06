@@ -15,10 +15,14 @@ type fakeServiceProcess struct {
 	endsOnTerminate bool
 	terminated      int
 	closed          bool
+	waits           []time.Duration
 }
 
-func (f *fakeServiceProcess) Pid() int                  { return f.pid }
-func (f *fakeServiceProcess) Exited(time.Duration) bool { return !f.alive }
+func (f *fakeServiceProcess) Pid() int { return f.pid }
+func (f *fakeServiceProcess) Exited(wait time.Duration) bool {
+	f.waits = append(f.waits, wait)
+	return !f.alive
+}
 func (f *fakeServiceProcess) Terminate() error {
 	f.terminated++
 	if !f.endsOnTerminate {

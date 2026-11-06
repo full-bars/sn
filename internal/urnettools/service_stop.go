@@ -36,8 +36,9 @@ var (
 
 // stopOwnedProviderService stops the supervisor that owns p and proves that
 // the provider processes under it ended. action names the command for the
-// next-step hint.
-func stopOwnedProviderService(p Provider, owner providerServiceOwnership, action string) error {
+// next-step hint. force gives the supervisor a short wait instead of the
+// graceful one, and ends a miner still running without a grace period.
+func stopOwnedProviderService(p Provider, owner providerServiceOwnership, action string, force bool) error {
 	var held []serviceProcessHandle
 	for _, pid := range owner.ServicePids {
 		if process, err := openServiceProcessFn(pid); err == nil {
@@ -49,12 +50,17 @@ func stopOwnedProviderService(p Provider, owner providerServiceOwnership, action
 			process.Close()
 		}
 	}()
-	if err := stopProviderServiceFn(p); err != nil {
+	grace := serviceProcessExitGrace
+	if force {
+		fmt.Printf("force: stopping the %s service without its graceful wait, then ending its miner if it still runs\n", windowsProviderServiceName)
+		grace = 0
+	}
+	if err := stopProviderServiceFn(p, force); err != nil {
 		return fmt.Errorf("stop the %s service: %w", windowsProviderServiceName, err)
 	}
 	var stillRunning []int
 	for _, process := range held {
-		if process.Exited(serviceProcessExitGrace) {
+		if process.Exited(grace) {
 			continue
 		}
 		pid := process.Pid()

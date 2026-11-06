@@ -24,7 +24,7 @@ func TestOwnedStopEndsARealSurvivingProcess(t *testing.T) {
 
 	owner := testOwnership(serviceOwned)
 	owner.SupervisorPid, owner.MinerPid, owner.ServicePids = 1, child.Process.Pid, []int{child.Process.Pid}
-	if err := stopOwnedProviderService(windowsRoutingFixture(), owner, "stop"); err != nil {
+	if err := stopOwnedProviderService(windowsRoutingFixture(), owner, "stop", false); err != nil {
 		t.Fatalf("stopOwnedProviderService: %v", err)
 	}
 	if pidIsAlive(child.Process.Pid) {

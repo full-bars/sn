@@ -18,6 +18,8 @@ const windowsProviderServiceName = "urnetwork-provider"
 // provider, the saved config's executable and state dir for a stopped one).
 // When it cannot tell (the saved service or the process list could not be
 // read), the command refuses rather than guess: either path could be wrong.
+// --force on an owned provider still goes through the service, with a short
+// wait instead of the graceful one; a pid kill alone would be undone.
 
 // Seams so the routing below can be tested on any platform.
 var (
@@ -37,8 +39,12 @@ func stopWindowsProvider(p Provider, force, dryRun bool) error {
 		return cmdStopWindowsFn(p, force, dryRun)
 	}
 	fmt.Printf("stopping the %s service, which runs %s...\n", windowsProviderServiceName, providerLabel(p))
-	if err := stopOwnedProviderService(p, owner, "stop"); err != nil {
+	if err := stopOwnedProviderService(p, owner, "stop", force); err != nil {
 		return fmt.Errorf("could not stop provider %s: %w", providerLabel(p), err)
+	}
+	if force {
+		fmt.Printf("force-stopped %s through its %s service. Run \"urnet-tools start\" to start it again.\n", providerLabel(p), windowsProviderServiceName)
+		return nil
 	}
 	fmt.Printf("stopped %s and its %s service. Run \"urnet-tools start\" to start it again.\n", providerLabel(p), windowsProviderServiceName)
 	return nil
@@ -73,5 +79,21 @@ func restartWindowsProvider(p Provider, force, dryRun bool) error {
 		return cmdRestartWindowsFn(p, force, dryRun)
 	}
 	fmt.Printf("restarting the %s service, which runs %s...\n", windowsProviderServiceName, providerLabel(p))
-	return restartProviderWindowsFn(p)
+	return restartOwnedProvider(p, owner, force)
+}
+
+// restartOwnedProvider restarts the supervisor that owns p as a whole: plain
+// restart, and update and tune through restartProviderWindows.
+func restartOwnedProvider(p Provider, owner providerServiceOwnership, force bool) error {
+	fail := func(err error) error {
+		return fmt.Errorf("could not restart provider %s: %w", providerLabel(p), err)
+	}
+	if err := stopOwnedProviderService(p, owner, "restart", force); err != nil {
+		return fail(err)
+	}
+	if err := startProviderServiceFn(p); err != nil {
+		return fail(err)
+	}
+	fmt.Printf("restarted %s\n", providerLabel(p))
+	return nil
 }
