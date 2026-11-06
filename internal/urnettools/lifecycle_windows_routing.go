@@ -37,8 +37,8 @@ func stopWindowsProvider(p Provider, force, dryRun bool) error {
 		return cmdStopWindowsFn(p, force, dryRun)
 	}
 	fmt.Printf("stopping the %s service, which runs %s...\n", windowsProviderServiceName, providerLabel(p))
-	if err := stopProviderServiceFn(p); err != nil {
-		return fmt.Errorf("could not stop provider %s: stop the %s service: %w", providerLabel(p), windowsProviderServiceName, err)
+	if err := stopOwnedProviderService(p, owner, "stop"); err != nil {
+		return fmt.Errorf("could not stop provider %s: %w", providerLabel(p), err)
 	}
 	fmt.Printf("stopped %s and its %s service. Run \"urnet-tools start\" to start it again.\n", providerLabel(p), windowsProviderServiceName)
 	return nil

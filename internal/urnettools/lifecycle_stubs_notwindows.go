@@ -38,3 +38,9 @@ func startProviderService(_ Provider) error {
 }
 
 func removeProviderServiceFiles() {}
+
+// openServiceProcess has nothing to open: no platform but Windows has a
+// per-user supervisor whose processes a stop must check.
+func openServiceProcess(_ int) (serviceProcessHandle, error) {
+	return nil, errors.New("not supported on this platform")
+}

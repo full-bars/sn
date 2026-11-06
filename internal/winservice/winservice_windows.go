@@ -85,6 +85,39 @@ func lockPath(name string) (string, error) {
 	return filepath.Join(dir, name+".lock"), nil
 }
 
+func minerPidPath(name string) (string, error) {
+	dir, err := Dir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, name+".miner"), nil
+}
+
+func recordMinerPid(name string, pid int) error {
+	path, err := minerPidPath(name)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, []byte(strconv.Itoa(pid)), 0600)
+}
+
+// MinerPid is the process id of the miner the supervisor started last, 0
+// when none is recorded. It may name a miner that has since exited, or a
+// later process that reused the id, so callers check it is still a child
+// of the running supervisor.
+func MinerPid(name string) int {
+	path, err := minerPidPath(name)
+	if err != nil {
+		return 0
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return 0
+	}
+	pid, _ := strconv.Atoi(strings.TrimSpace(string(raw)))
+	return pid
+}
+
 // Load reads a saved service. A missing one is os.ErrNotExist.
 func Load(name string) (*Config, error) {
 	path, err := configPath(name)
@@ -136,7 +169,8 @@ func Save(config Config) error {
 	return nil
 }
 
-// Remove deletes a service's config and lock. The caller stops it first.
+// Remove deletes a service's config, lock and recorded miner id. The caller
+// stops it first.
 func Remove(name string) error {
 	config, err := configPath(name)
 	if err != nil {
@@ -146,8 +180,12 @@ func Remove(name string) error {
 	if err != nil {
 		return err
 	}
+	miner, err := minerPidPath(name)
+	if err != nil {
+		return err
+	}
 	var all error
-	for _, path := range []string{config, lock} {
+	for _, path := range []string{config, lock, miner} {
 		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 			all = errors.Join(all, err)
 		}
@@ -698,6 +736,10 @@ func (self *Supervisor) startMiner(job windows.Handle, environment []string) (*e
 	if err := command.Start(); err != nil {
 		windows.CloseHandle(childStop)
 		return nil, nil, 0, err
+	}
+	// a stop has to prove the miner ended, also one that isn't in the job
+	if err := recordMinerPid(self.Config.Name, command.Process.Pid); err != nil {
+		self.logf("can't record the miner's process id (%s)", err)
 	}
 	if process, err := windows.OpenProcess(windows.PROCESS_SET_QUOTA|windows.PROCESS_TERMINATE, false, uint32(command.Process.Pid)); err == nil {
 		if err := windows.AssignProcessToJobObject(job, process); err != nil {

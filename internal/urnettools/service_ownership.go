@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -83,6 +84,11 @@ type providerServiceOwnership struct {
 	StateDir      string
 	LogPath       string
 	SupervisorPid int
+	// MinerPid is the service's miner, 0 when it can't be told. ServicePids
+	// are the provider processes running under the supervisor, the miner
+	// among them. A stop must see every one of them end.
+	MinerPid    int
+	ServicePids []int
 }
 
 func (o providerServiceOwnership) owned() bool { return o.State == serviceOwned }
@@ -112,6 +118,8 @@ type serviceLookup struct {
 	// read only while a supervisor runs
 	Processes    map[int]serviceProcessEntry
 	ProcessesErr error
+	// the miner pid the supervisor recorded, 0 when none
+	RecordedMinerPid int
 }
 
 func classifyServiceOwnership(p Provider, l serviceLookup) providerServiceOwnership {
@@ -138,8 +146,34 @@ func classifyServiceOwnership(p Provider, l serviceLookup) providerServiceOwners
 		entry, ok := l.Processes[pid]
 		return entry.Parent, ok
 	}
-	if serviceOwnsProvider(p, l.Executable, l.StateDir, l.SupervisorPid, parentOf) {
-		o.State = serviceOwned
+	if !serviceOwnsProvider(p, l.Executable, l.StateDir, l.SupervisorPid, parentOf) {
+		return o
+	}
+	o.State = serviceOwned
+	if l.SupervisorPid <= 0 {
+		return o
+	}
+	under := func(pid int) bool {
+		return pid != l.SupervisorPid && processDescendsFrom(pid, l.SupervisorPid, parentOf)
+	}
+	exeName := l.Executable[strings.LastIndexAny(l.Executable, `\/`)+1:]
+	for pid, entry := range l.Processes {
+		if under(pid) && (isProviderArg(entry.Name) || strings.EqualFold(entry.Name, exeName)) {
+			o.ServicePids = append(o.ServicePids, pid)
+		}
+	}
+	slices.Sort(o.ServicePids)
+	// the recorded miner, unless it has exited (or its id was reused);
+	// else the selected provider when it is the miner and not the supervisor
+	switch {
+	case under(l.RecordedMinerPid):
+		o.MinerPid = l.RecordedMinerPid
+	case under(p.PID):
+		o.MinerPid = p.PID
+	}
+	if o.MinerPid > 0 && !slices.Contains(o.ServicePids, o.MinerPid) {
+		o.ServicePids = append(o.ServicePids, o.MinerPid)
+		slices.Sort(o.ServicePids)
 	}
 	return o
 }

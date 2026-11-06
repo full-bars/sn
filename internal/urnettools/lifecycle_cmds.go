@@ -183,8 +183,8 @@ func uninstallProvider(p Provider) error {
 	}
 	serviceOwned := owner.owned()
 	if serviceOwned {
-		if err := stopProviderServiceFn(p); err != nil {
-			return fmt.Errorf("uninstall %s: could not stop the provider service: %w", providerLabel(p), err)
+		if err := stopOwnedProviderService(p, owner, "uninstall"); err != nil {
+			return fmt.Errorf("uninstall %s: could not stop the provider service: %w. Nothing was removed", providerLabel(p), err)
 		}
 	} else if err := stopBareProviderFn(p); err != nil {
 		return fmt.Errorf("uninstall %s: could not stop the provider: %w", providerLabel(p), err)

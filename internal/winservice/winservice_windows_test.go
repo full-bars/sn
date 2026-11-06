@@ -226,8 +226,14 @@ func TestSupervisorStopsTheMinerGracefully(t *testing.T) {
 		m := readMarks(t, marks)
 		return count(m, "start") == 1 && count(m, "update") == 1
 	})
+	if got, want := MinerPid(name), markedPid(t, readMarks(t, marks)); got != want {
+		t.Fatalf("MinerPid = %d, want the running miner %d", got, want)
+	}
 	if running, err := Running(name); err != nil || !running {
 		t.Fatalf("Running = %v, %v while supervising", running, err)
+	}
+	if pid, err := SupervisorPid(name); err != nil || pid <= 0 {
+		t.Fatalf("SupervisorPid = %d, %v while supervising", pid, err)
 	}
 	if err := Stop(name, 10*time.Second); err != nil {
 		t.Fatal(err)

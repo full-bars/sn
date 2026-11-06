@@ -196,6 +196,7 @@ func providerOwnedByService(p Provider) providerServiceOwnership {
 	l.SupervisorPid, l.SupervisorErr = windowsServiceSupervisorPid(windowsProviderServiceName)
 	if l.SupervisorErr == nil && l.SupervisorPid > 0 {
 		l.Processes, l.ProcessesErr = windowsProcessSnapshot()
+		l.RecordedMinerPid = windowsServiceMinerPid(windowsProviderServiceName)
 	}
 	return classifyServiceOwnership(p, l)
 }
@@ -207,6 +208,7 @@ var (
 	loadWindowsProviderService  = winservice.Load
 	windowsServiceSupervisorPid = winservice.SupervisorPid
 	windowsProcessSnapshot      = processSnapshot
+	windowsServiceMinerPid      = winservice.MinerPid
 )
 
 // processSnapshot reads every process's parent id and image name from a
@@ -238,3 +240,32 @@ func stopBareProvider(p Provider) error {
 	}
 	return cmdStopWindows(p, true, false)
 }
+
+// windowsServiceProcess is a service process held open by handle. While the
+// handle is open the process id can't be reused, so Terminate can only hit
+// the process that was seen under the supervisor.
+type windowsServiceProcess struct {
+	pid    int
+	handle windows.Handle
+}
+
+func openServiceProcess(pid int) (serviceProcessHandle, error) {
+	handle, err := windows.OpenProcess(windows.PROCESS_TERMINATE|windows.SYNCHRONIZE|windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
+	if err != nil {
+		return nil, err
+	}
+	return &windowsServiceProcess{pid: pid, handle: handle}, nil
+}
+
+func (self *windowsServiceProcess) Pid() int { return self.pid }
+
+func (self *windowsServiceProcess) Exited(wait time.Duration) bool {
+	event, err := windows.WaitForSingleObject(self.handle, uint32(wait/time.Millisecond))
+	return err == nil && event == windows.WAIT_OBJECT_0
+}
+
+func (self *windowsServiceProcess) Terminate() error {
+	return windows.TerminateProcess(self.handle, 1)
+}
+
+func (self *windowsServiceProcess) Close() { windows.CloseHandle(self.handle) }

@@ -73,8 +73,8 @@ func restartProviderWindows(p Provider) error {
 	case !owner.owned():
 		return fail("it is not managed by the %s service; restart it manually", windowsProviderServiceName)
 	}
-	if err := stopProviderService(p); err != nil {
-		return fail("stop the provider service: %v", err)
+	if err := stopOwnedProviderService(p, owner, "restart"); err != nil {
+		return fail("%v", err)
 	}
 	if err := launchProviderService(owner.Executable, owner.LogPath); err != nil {
 		return fail("%v", err)
