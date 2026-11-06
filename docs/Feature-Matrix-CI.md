@@ -117,12 +117,19 @@ SKIP-NO-NETWORK <name>: <detail>
 ```
 
 - **PASS** — the documented behavior was observed.
-- **FAIL** — a product defect, unless the detail starts with
-  `MANDATORY-SKIPPED` or the check is a `state-isolation-<group>` row. Those
-  mean a mandatory check was not graded (no network, no readable JWT, a
-  missing capability) or the harness could not reset its state: fix the
-  environment or the harness, not the product. Every FAIL carries the raw
-  tool output and the state fingerprints that back it.
+- **FAIL** — an assertion failed. Use the check name and the detail to tell
+  a product failure from an environment failure. These are environment or
+  harness failures, so fix the runner, not the product:
+  - the detail starts with `MANDATORY-SKIPPED`: a mandatory check was not
+    graded (no network, no readable JWT, a missing capability).
+  - `state-isolation-<group>`: the harness could not reset its state.
+  - `client-targeting`: client targeting resolved outside the sandbox (the
+    passwd home does not match the sandbox HOME).
+  - `binaries` with a detail of `... not executable at <path>`: a required
+    binary is missing or not executable on the runner.
+
+  Any other FAIL is a product failure. Every FAIL carries the raw tool output
+  and the state fingerprints that back it.
 - **SKIP-UNSUPPORTED** — runtime-detected absence at this head. The detail
   names the owning port when one exists (see the table below), so a skip reads
   as "another port owns this", never as a silent pass.
