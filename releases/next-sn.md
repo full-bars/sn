@@ -1,4 +1,4 @@
-# v2026.11.5-1090871960-sn
+# Next sn release
 
 ## Quick start
 
@@ -43,14 +43,16 @@ Keep the state volume. If an existing identity is missing, restore its original 
 
 ### Downloads
 
+Asset names use the release tag in place of `<tag>`. Download them from the release's Assets section.
+
 | What | Asset |
 | --- | --- |
-| Provider, Linux amd64 | `urnetwork-provider-v2026.11.5-1090871960-sn-linux-amd64.tar.gz` |
-| Provider, Linux arm64 | `urnetwork-provider-v2026.11.5-1090871960-sn-linux-arm64.tar.gz` |
-| Miner, Linux amd64 | `urnetwork-miner-v2026.11.5-1090871960-sn-linux-amd64.tar.gz` |
-| Miner, Linux arm64 | `urnetwork-miner-v2026.11.5-1090871960-sn-linux-arm64.tar.gz` |
+| Provider, Linux amd64 | `urnetwork-provider-<tag>-linux-amd64.tar.gz` |
+| Provider, Linux arm64 | `urnetwork-provider-<tag>-linux-arm64.tar.gz` |
+| Miner, Linux amd64 | `urnetwork-miner-<tag>-linux-amd64.tar.gz` |
+| Miner, Linux arm64 | `urnetwork-miner-<tag>-linux-arm64.tar.gz` |
 | Linux amd64 tools | `urnet-tools-linux-amd64`, `urnet-docker-linux-amd64` |
-| Monitoring configuration | `urnetwork-monitoring-v2026.11.5-1090871960-sn.tar.gz` |
+| Monitoring configuration | `urnetwork-monitoring-<tag>.tar.gz` |
 
 ## What changed
 

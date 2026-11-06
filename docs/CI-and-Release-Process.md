@@ -39,10 +39,11 @@ Releases follow the `v<date>-<build>-sn` tag scheme, where the build number is t
 ### Cut a release
 
 1. Ensure `build.yml` is green on main.
-2. Write release notes at `releases/<tag>.md`.
-3. Push a signed tag: `tag=$(scripts/compute-sn-tag.sh) && git tag -s "$tag" -m "$tag" && git push origin "$tag"`.
-4. Release Binaries builds the six-platform matrix, bundles the tarballs including the monitoring bundle and installers, and publishes with the notes from `releases/<tag>.md`. If the file is absent, GitHub auto-generates the notes.
-5. The shakedown and docker shakedown fire on the same tag and validate the published artifacts.
+2. Compute the tag once with `tag=$(scripts/compute-sn-tag.sh)` and keep that value for every remaining step. The value changes with time.
+3. Copy the prepared `releases/next-sn.md` to `releases/<tag>.md`, replacing `<tag>` in the filename with that exact value. Update its heading and asset names using the same value. Commit the final notes to main before tagging.
+4. Push a signed tag of that commit with the same value: `git tag -s "$tag" -m "$tag" && git push origin "$tag"`.
+5. Release Binaries builds the six-platform matrix, bundles the tarballs including the monitoring bundle and installers, and publishes with the notes from `releases/<tag>.md`. If the file is absent, GitHub auto-generates the notes.
+6. The shakedown and docker shakedown fire on the same tag and validate the published artifacts.
 
 ### Scanning
 
