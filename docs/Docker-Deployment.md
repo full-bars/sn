@@ -77,7 +77,7 @@ The JWT is stored inside the container at `/root/.urnetwork/jwt`. Without a pers
 All examples below mount a config volume at `/root/.urnetwork`. With this volume in place, the startup script detects the existing JWT and skips authentication on later starts. Auth codes are only consumed once: on first run or after manually removing the config volume.
 
 > [!WARNING]
-> The same volume holds the provider identity (`.provider.key` and the custody files). Back up and retain the volume. If an existing identity is missing, restore the original volume rather than registering a replacement. For a deliberately new provider on an empty volume, set `ALLOW_CLIENT_REGISTRATION=Y` in the container configuration. The default `auto` does not authorize first registration.
+> The same volume holds the provider identity (`.provider.key` and the custody files). Back up and retain the volume. If an existing identity is missing, stop and restore the original volume rather than registering a replacement. An unset or empty `ALLOW_CLIENT_REGISTRATION` defaults to `auto`, which permits the unattended container to register a new identity when one is missing. Set `ALLOW_CLIENT_REGISTRATION=N` to withhold that permission; an explicit registration flag can still grant it.
 
 ## 🏃 Docker Run - GHCR
 

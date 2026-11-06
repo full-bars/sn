@@ -15,7 +15,7 @@ Merged to `main` after `v2026.11.1-1087168030-sn`, not yet in a tagged release. 
 
 ### Fixed
 
-- **A fresh state directory needs explicit authority to create the provider identity.** Interactive start asks; unattended starts use the registration flag or environment setting. Restore missing existing state instead of allocating a replacement. (#378)
+- **A fresh state directory needs authority to create the provider identity.** Interactive start asks. A direct unattended `provide` needs the registration flag or an allowing environment setting. Docker defaults to `auto`, which permits registration without a prompt. Restore missing existing state instead of allocating a replacement. (#378)
 - **Refresh preview includes cached URL proxies.** It uses the manager's desired-set read so the preview reflects the same cached inputs as refresh. (#379)
 - **Updates restore extender bind capability.** The Go update path reapplies a previously held capability after replacing the binary. The Linux installer and container wrappers also restore it after a swap when possible. (#365, #366)
 - **Proxied client UDP uses the proxy relay.** Each flow uses its own SOCKS5 UDP association; a failed relay check refuses the flow rather than falling back to the host. IPv6 destinations are refused because the check only proves IPv4. Idle proxied flows close after 120 seconds; direct flows keep their 300-second default. (#387, #388)

@@ -92,7 +92,7 @@ the provider to forward client traffic, in which case add `--cap-add NET_ADMIN`,
 | `HOTKEY_SEED_FILE` | sr25519 hotkey seed for operator sign-in and `--auto-register`. |
 | `ALL_OPERATORS` | `Y` passes `provide --all-operators` (mines every listed operator). |
 | `AUTO_REGISTER` | `Y` passes `--auto-register` (requires `ALL_OPERATORS=Y` and a seed). |
-| `ALLOW_CLIENT_REGISTRATION` | Set to `Y` to authorize a new provider identity on a fresh state directory. The default `auto` does not grant that permission. Preserve and restore existing state instead of registering again when an existing identity is missing. |
+| `ALLOW_CLIENT_REGISTRATION` | Unset or empty defaults to `auto`, which permits unattended `provide` to register a missing identity. `Y` also permits registration; `N` withholds permission unless an explicit flag grants it. Preserve and restore existing state instead of registering again when an existing identity is missing. |
 | `OPERATORS_URL` | Operator list URL for `provide --all-operators` and `auth --operator`. |
 | `MAX_MEMORY` | Passed through as `--max-memory` (for example `1500mib`). |
 | `PROVIDER_ARGS` | Extra flags appended to `provide` verbatim. |
@@ -117,7 +117,7 @@ and `AUTH` wins.
    custody checks with a bare `startup_recovery_required` diagnostic. An empty,
    unmounted state directory logs a new-identity warning, and one wallet
    reminder line is always logged.
-4. Authentication runs once when no session exists. A fresh state directory needs explicit registration permission, as shown in the examples above. If an existing identity is missing, stop and restore its state volume instead of authorizing a replacement. Then `provide` runs under a
+4. Authentication runs once when no session exists. The default `auto` permits `provide` to register a missing identity without a prompt. If an existing identity is missing, stop and restore its state volume instead of registering a replacement. Then `provide` runs under a
    small supervisor: exit 75 restarts after 5s, exit 78 clears the session and
    re-authenticates (up to 3 times), exit 79 parks the container (it stays up
    but makes no further login attempt) until the credentials are fixed, and
