@@ -76,7 +76,7 @@ Asset names use the release tag in place of `<tag>`. Download them from the rele
 
 **We pinned connect and sdk to the 2026-11-05 fork mains.** [redeploy] The pins include the carrier-flap guard and the extender activation budget. (#364, #371, #373)
 
-**We carry client UDP through proxied slots.** [redeploy] Client UDP now uses the proxy's SOCKS5 UDP relay. A failed relay check refuses the flow rather than falling back to the host, and IPv6 destinations are refused because the check proves only IPv4. Idle proxied flows close after 120 seconds; direct flows keep their 300-second default. (#387, #388)
+**We carry client UDP through proxied slots.** [redeploy] Client UDP now uses the proxy's SOCKS5 UDP relay. A failed relay check refuses the flow rather than falling back to the host, and IPv6 destinations are refused because the check proves only IPv4. Proxied flows close after 120 seconds without sends or without replies; direct flows keep their 300-second default. An unknown check result can allow an unverified proxy exit, but the flow never falls back to the host address. (#387, #388)
 
 **We made proxy refresh previews reflect cached sources.** [redeploy] Review additions and removals before confirming the refresh. Cached URL proxies and current admission rules are included. (#379)
 
