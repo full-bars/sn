@@ -144,7 +144,69 @@ func cmdUninstall(args []string, force, dryRun bool) error {
 		return nil
 	}
 
-	if p.Unit != "" {
+	return uninstallProvider(p)
+}
+
+// stopProviderServiceFn is the seam for the platform service stop, so the
+// uninstall ordering can be tested on every platform.
+var stopProviderServiceFn = stopProviderService
+
+// cleanupLifecycleFn is the seam for the platform lifecycle cleanup (timers on
+// Unix; scheduled tasks, the Startup shortcut and service config on Windows),
+// so tests never touch the real machine's artifacts.
+var cleanupLifecycleFn = cleanupLifecycle
+
+// providerOwnedByServiceFn, stopBareProviderFn and removeProviderServiceFilesFn
+// are the seams for the Windows supervisor ownership check. Uninstall only
+// stops the supervisor and deletes its shortcut and config when the selected
+// provider belongs to it; any other provider is stopped by itself.
+var (
+	providerOwnedByServiceFn     = providerOwnedByService
+	stopBareProviderFn           = stopBareProvider
+	removeProviderServiceFilesFn = removeProviderServiceFiles
+)
+
+// runningProviderProcessesFn lists every running provider process, one row
+// each (Windows only; elsewhere uninstall does not check for co-located
+// providers).
+var runningProviderProcessesFn = runningProviderProcesses
+
+// uninstallProvider does the work after target selection and confirmation:
+// stop whatever supervises the provider, disable the unit, then remove files.
+func uninstallProvider(p Provider) error {
+	// Stop the supervisor first. On Windows the provider is a per-user
+	// supervisor that restarts its miner, so killing only the miner (or just
+	// deleting files) fails with "Access is denied". If it will not stop it is
+	// still holding the files; do not delete state under a live provider.
+	// Another provider's supervisor is not ours to stop, and a bare provider
+	// is stopped through its own pid. Decide before anything is stopped: the
+	// proof (supervisor lock, process ancestry) is gone once it has stopped.
+	// When the owner can't be told, neither path is safe: refuse.
+	owner := providerOwnedByServiceFn(p)
+	if owner.State == serviceOwnershipUnknown {
+		return ownershipUnknownError("uninstall", p, owner)
+	}
+	serviceOwned := owner.owned()
+	// Uninstall removes the binary and the state dir; another live provider
+	// that uses either would break, and its socket would go with the state.
+	// The guard cannot prove safety from a list it could not read: fail closed.
+	running, err := runningProviderProcessesFn()
+	if err != nil {
+		return fmt.Errorf("uninstall %s: refused: could not list running provider processes to check that no other provider uses the same binary or state dir: %v. Nothing was changed. Check the process list, then run \"urnet-tools uninstall\" again", providerLabel(p), err)
+	}
+	if other, ok := colocatedLiveProvider(p, owner, running); ok {
+		return fmt.Errorf("uninstall %s: refused: another running provider (pid %d, binary %s, state dir %s) uses the same binary or state dir, and removing them would break it. Nothing was changed. Stop that provider first, then run \"urnet-tools uninstall\" again", providerLabel(p), other.PID, other.Binary, other.StateDir)
+	}
+	if serviceOwned {
+		if err := stopOwnedProviderService(p, owner, "uninstall", false); err != nil {
+			return fmt.Errorf("uninstall %s: could not stop the provider service: %w. Nothing was removed", providerLabel(p), err)
+		}
+	} else if err := stopBareProviderFn(p); err != nil {
+		return fmt.Errorf("uninstall %s: could not stop the provider: %w", providerLabel(p), err)
+	}
+	// systemd only exists on Linux. Windows has no unit (p.Unit is empty
+	// there today), and the guard keeps a stray value from reaching systemctl.
+	if p.Unit != "" && runtime.GOOS != "windows" {
 		if isUserUnit(p.Unit) && p.User != "" {
 			args := append(systemctlUserArgs(p.User), "disable", "--now", p.Unit)
 			if out, err := exec.Command("systemctl", args...).CombinedOutput(); err != nil {
@@ -158,7 +220,10 @@ func cmdUninstall(args []string, force, dryRun bool) error {
 	}
 	// Clean up platform lifecycle artifacts: on Unix the auto-update timer,
 	// on Windows the scheduled tasks (heavyweight review S7).
-	cleanupLifecycle(p)
+	cleanupLifecycleFn(p)
+	if serviceOwned {
+		removeProviderServiceFilesFn()
+	}
 	// Only remove paths that look like real install paths — never "/" or
 	// a bare relative path.
 	// Both guards clean the path so "/" and "/./" are caught identically.

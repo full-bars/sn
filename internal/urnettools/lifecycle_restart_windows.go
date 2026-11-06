@@ -3,8 +3,14 @@
 package urnettools
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
+	"syscall"
+	"time"
+
+	"github.com/urfoundation/sn/internal/winservice"
 )
 
 // cmdRestartWindows restarts the provider on Windows. HotSwap is not
@@ -35,11 +41,86 @@ func providerSocketPath(p Provider) string {
 	return filepath.Join(p.StateDir, "provider.sock")
 }
 
-// restartProviderWindows restarts the provider during an update. Unlike
-// cmdRestartWindows, it does NOT attempt HotSwap — updateProvider already
-// tried that and failed. This performs only stop + start to avoid the
-// double-hotswap / state-tracking bypass that routing back to
-// cmdRestartWindows would cause.
+// restartProviderWindows restarts the provider during an update or tuning
+// change. The provider is a per-user supervisor ("service run
+// urnetwork-provider") that restarts its miner whenever it dies, so stopping
+// only the miner (what stopStartFallback does by PID) races the supervisor,
+// and launching "provide" by hand starts a second provider. Restart the
+// supervisor as a whole, the same way "provider service restart" does.
+//
+// A provider that was not started by the supervisor has no saved service
+// config, and one that runs beside a saved service is not that service's
+// miner; restarting the service would bounce a different provider and leave
+// the selected one on its old image. Either way there is nothing safe to
+// restart, so say so. Every failure carries restartProvider's "could not
+// restart provider" wording, the same as the other platforms.
 func restartProviderWindows(p Provider) error {
-	return stopStartFallback(p, false, false)
+	fail := func(format string, a ...any) error {
+		return fmt.Errorf("could not restart provider %s: %s", providerLabel(p), fmt.Sprintf(format, a...))
+	}
+	// Ownership needs a running pid or a binary path to match. Without
+	// either nothing ties the provider to the service, so decide that
+	// before touching the machine's service state.
+	if p.PID <= 0 && p.Binary == "" {
+		return fail("no process or binary ties it to the %s service; restart it manually", windowsProviderServiceName)
+	}
+	owner := providerOwnedByServiceFn(p)
+	switch {
+	case !owner.Installed:
+		return fail("no provider service is installed; restart it manually")
+	case owner.State == serviceOwnershipUnknown:
+		return fail("could not tell whether the %s service runs it: %v. Nothing was changed. Fix that, then try again", windowsProviderServiceName, owner.Err)
+	case !owner.owned():
+		return fail("it is not managed by the %s service; restart it manually", windowsProviderServiceName)
+	}
+	return restartOwnedProvider(p, owner, false)
+}
+
+// launchProviderService starts the saved supervisor and waits up to 10
+// seconds for it to report running.
+func launchProviderService(executable, logPath string) error {
+	if err := winservice.Launch(executable, "service", "run", windowsProviderServiceName); err != nil {
+		return fmt.Errorf("start the provider service: %w", err)
+	}
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		if running, _ := winservice.Running(windowsProviderServiceName); running {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("the provider service did not start; see %s", logPath)
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+// startProviderService starts the per-user supervisor for a provider it owns
+// (plain "urnet-tools start"). Launching "provide" directly would run a bare
+// provider that the supervisor does not manage, and a second one once the
+// supervisor starts at the next sign-in. A supervisor that is already
+// running is left alone.
+func startProviderService(_ Provider) error {
+	config, err := loadWindowsProviderService(windowsProviderServiceName)
+	if err != nil {
+		return fmt.Errorf("read the provider service config: %w", err)
+	}
+	if running, _ := winservice.Running(windowsProviderServiceName); running {
+		return nil
+	}
+	return launchProviderService(config.Executable, filepath.Join(config.StateDir, winservice.LogName))
+}
+
+// windowsPathMissing reports a missing file or folder. Besides os.ErrNotExist
+// it matches the HRESULT forms (0x80070002, 0x80070003) that known-folder
+// lookups return: errors.Is does not map those to os.ErrNotExist, so a
+// missing profile folder used to read as a damaged service config.
+func windowsPathMissing(err error) bool {
+	if errors.Is(err, os.ErrNotExist) {
+		return true
+	}
+	var errno syscall.Errno
+	if errors.As(err, &errno) {
+		return errno == 0x80070002 || errno == 0x80070003
+	}
+	return false
 }

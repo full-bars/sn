@@ -19,3 +19,35 @@ func cmdRestartWindows(_ Provider, _, _ bool) error {
 func restartProviderWindows(_ Provider) error {
 	return errors.New("not supported on this platform")
 }
+
+// stopProviderService stops the per-user supervisor that owns the provider.
+// Only Windows has one outside systemd/rc.d/OpenRC, which the unit handling
+// already covers, so this is a no-op elsewhere.
+func stopProviderService(_ Provider, _ bool) error { return nil }
+
+// Only Windows has a per-user supervisor to own a provider. Elsewhere the
+// service seams are inert: everything is "owned", so nothing extra is stopped.
+func providerOwnedByService(_ Provider) providerServiceOwnership {
+	return providerServiceOwnership{State: serviceOwned, Installed: true}
+}
+
+func stopBareProvider(_ Provider) error { return nil }
+
+func startProviderService(_ Provider) error {
+	return errors.New("not supported on this platform")
+}
+
+func removeProviderServiceFiles() {}
+
+// openServiceProcess has nothing to open: no platform but Windows has a
+// per-user supervisor whose processes a stop must check.
+func openServiceProcess(_ int) (serviceProcessHandle, error) {
+	return nil, errors.New("not supported on this platform")
+}
+
+func runningProviderProcesses() ([]Provider, error) { return nil, nil }
+
+// providerServiceUp has no service to look at off Windows.
+func providerServiceUp(_ providerServiceOwnership) providerUpState {
+	return providerUpState{Up: true, ServiceRunning: true}
+}

@@ -3,11 +3,19 @@
 package urnettools
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
+	"time"
+	"unsafe"
+
+	"golang.org/x/sys/windows"
+
+	"github.com/urfoundation/sn/internal/winservice"
 )
 
 // Windows lifecycle uses Task Scheduler (schtasks.exe) instead of systemd.
@@ -130,4 +138,188 @@ func cleanupLifecycle(p Provider) {
 			fmt.Fprintf(os.Stderr, "warning: could not remove scheduled task %q: %v\n", taskName, err)
 		}
 	}
+}
+
+// removeProviderServiceFiles deletes the supervisor's Startup shortcut and its
+// saved config and lock. Uninstall calls it only for a provider the service
+// owns (providerOwnedByService); another provider's supervisor keeps them.
+// Left behind, the shortcut starts a supervisor at the
+// next sign-in whose executable is gone. The supervisor is already stopped
+// (stopProviderService), as winservice.Remove requires.
+func removeProviderServiceFiles() {
+	shortcut, err := winservice.ShortcutPath(windowsProviderServiceName)
+	if err == nil {
+		if rmErr := os.Remove(shortcut); rmErr != nil && !errors.Is(rmErr, os.ErrNotExist) {
+			err = rmErr
+		} else {
+			err = nil
+		}
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not remove the startup shortcut: %v\n", err)
+	}
+	if err := winservice.Remove(windowsProviderServiceName); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not remove the service config: %v\n", err)
+	}
+}
+
+// windowsServiceStopWait mirrors the miner's own stop wait: the supervisor
+// gives its miner 30 seconds to end. A forced stop waits only
+// windowsServiceForceWait before it ends the supervisor, and its job the
+// miner.
+const (
+	windowsServiceStopWait  = 45 * time.Second
+	windowsServiceForceWait = 5 * time.Second
+)
+
+// stopProviderService stops the per-user supervisor and, through its job
+// object, the miner it runs. Callers check providerOwnedByService first. Killing only the miner is not enough: the
+// supervisor starts it again 15 seconds later. winservice.Stop works by
+// service name and checks the supervisor's lock, so it never touches another
+// process, and it does nothing when no supervisor is running. The separate
+// Windows service "urnetworkd" is not involved.
+func stopProviderService(_ Provider, force bool) error {
+	wait := windowsServiceStopWait
+	if force {
+		wait = windowsServiceForceWait
+	}
+	return winservice.Stop(windowsProviderServiceName, wait)
+}
+
+// providerOwnedByService reports whether the saved provider service owns the
+// selected provider, so a lifecycle command or uninstall of the service
+// cannot hit an unrelated supervisor. No saved service owns nothing; a lookup
+// that failed in any other way leaves ownership unknown.
+func providerOwnedByService(p Provider) providerServiceOwnership {
+	var l serviceLookup
+	config, err := loadWindowsProviderService(windowsProviderServiceName)
+	if err != nil {
+		if windowsPathMissing(err) {
+			l.NotInstalled = true
+		} else {
+			l.LoadErr = err
+		}
+		return classifyServiceOwnership(p, l)
+	}
+	l.Executable, l.StateDir = config.Executable, config.StateDir
+	l.LogPath = filepath.Join(config.StateDir, winservice.LogName)
+	l.SupervisorPid, l.SupervisorErr = windowsServiceSupervisorPid(windowsProviderServiceName)
+	if l.SupervisorErr == nil && l.SupervisorPid > 0 {
+		l.Processes, l.ProcessesErr = windowsProcessSnapshot()
+		l.RecordedMinerPid = windowsServiceMinerPid(windowsProviderServiceName)
+	}
+	return classifyServiceOwnership(p, l)
+}
+
+// The saved service lookups, replaced by tests so they never read or create
+// files in the real profile folder (Running creates the lock file) or depend
+// on the machine's processes.
+var (
+	loadWindowsProviderService  = winservice.Load
+	windowsServiceSupervisorPid = winservice.SupervisorPid
+	windowsProcessSnapshot      = processSnapshot
+	windowsServiceMinerPid      = winservice.MinerPid
+)
+
+// processSnapshot reads every process's parent id and image name from a
+// toolhelp snapshot.
+func processSnapshot() (map[int]serviceProcessEntry, error) {
+	snapshot, err := windows.CreateToolhelp32Snapshot(windows.TH32CS_SNAPPROCESS, 0)
+	if err != nil {
+		return nil, fmt.Errorf("list processes: %w", err)
+	}
+	defer windows.CloseHandle(snapshot)
+	out := map[int]serviceProcessEntry{}
+	var entry windows.ProcessEntry32
+	entry.Size = uint32(unsafe.Sizeof(entry))
+	for err = windows.Process32First(snapshot, &entry); err == nil; err = windows.Process32Next(snapshot, &entry) {
+		out[int(entry.ProcessID)] = serviceProcessEntry{Parent: int(entry.ParentProcessID), Name: windows.UTF16ToString(entry.ExeFile[:])}
+	}
+	if !errors.Is(err, windows.ERROR_NO_MORE_FILES) {
+		return nil, fmt.Errorf("list processes: %w", err)
+	}
+	return out, nil
+}
+
+// stopBareProvider stops a running provider the service does not own. It goes
+// by pid: the control socket is shared by every provider of this user, so a
+// graceful shutdown request could reach the other provider instead.
+func stopBareProvider(p Provider) error {
+	if !p.Running || p.PID <= 0 {
+		return nil
+	}
+	return cmdStopWindows(p, true, false)
+}
+
+// windowsServiceProcess is a service process held open by handle. While the
+// handle is open the process id can't be reused, so Terminate can only hit
+// the process that was seen under the supervisor.
+type windowsServiceProcess struct {
+	pid    int
+	handle windows.Handle
+}
+
+func openServiceProcess(pid int) (serviceProcessHandle, error) {
+	handle, err := windows.OpenProcess(windows.PROCESS_TERMINATE|windows.SYNCHRONIZE|windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
+	if err != nil {
+		return nil, err
+	}
+	return &windowsServiceProcess{pid: pid, handle: handle}, nil
+}
+
+func (self *windowsServiceProcess) Pid() int { return self.pid }
+
+func (self *windowsServiceProcess) Exited(wait time.Duration) bool {
+	event, err := windows.WaitForSingleObject(self.handle, uint32(wait/time.Millisecond))
+	return err == nil && event == windows.WAIT_OBJECT_0
+}
+
+func (self *windowsServiceProcess) Terminate() error {
+	return windows.TerminateProcess(self.handle, 1)
+}
+
+func (self *windowsServiceProcess) Close() { windows.CloseHandle(self.handle) }
+
+// runningProviderProcesses is the raw process scan, one row per running
+// provider process, before discovery folds rows that share a state dir.
+// An enumeration failure is an error, not an empty list: callers use the
+// list to prove that no other provider is running.
+func runningProviderProcesses() ([]Provider, error) {
+	processes, err := windowsProcessSnapshot()
+	if err != nil {
+		return nil, err
+	}
+	var out []Provider
+	for pid, entry := range processes {
+		if !isProviderArg(entry.Name) {
+			continue
+		}
+		out = append(out, Provider{
+			User:     currentUser(),
+			StateDir: windowsStateDir(),
+			Binary:   resolveProcessExe(pid, entry.Name),
+			PID:      pid,
+			Running:  true,
+		})
+	}
+	slices.SortFunc(out, func(a, b Provider) int { return a.PID - b.PID })
+	return out, nil
+}
+
+// providerServiceUp looks once at the service starting for owner: up when a
+// miner runs under the supervisor (see observeProviderServiceUp).
+func providerServiceUp(owner providerServiceOwnership) providerUpState {
+	pid, err := windowsServiceSupervisorPid(windowsProviderServiceName)
+	if err != nil {
+		// can't tell yet; keep waiting
+		return providerUpState{ServiceRunning: true}
+	}
+	if pid <= 0 {
+		return providerUpState{}
+	}
+	processes, err := windowsProcessSnapshot()
+	if err != nil {
+		return providerUpState{ServiceRunning: true}
+	}
+	return observeProviderServiceUp(owner, pid, processes, windowsServiceMinerPid(windowsProviderServiceName))
 }
