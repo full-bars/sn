@@ -18,7 +18,7 @@ func TestConfigUsesDiscoveredStateDir(t *testing.T) {
 		t.Skip("Unix domain sockets not supported on Windows CI")
 	}
 	t.Setenv("HOME", t.TempDir())
-	stateDir := t.TempDir()
+	stateDir := shortSocketDir(t)
 	stubDiscovery(t, []Provider{{StateDir: stateDir, Running: true}}, nil)
 
 	cleanup := startMockStatusServer(t, filepath.Join(stateDir, "provider.sock"), controlResponse{
