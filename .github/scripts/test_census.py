@@ -51,7 +51,20 @@ SPLITS = {
 
 # Tests the PR gate skips by exact name, by module-relative package path, each
 # with the reason. Every entry needs an operator decision.
-QUARANTINE = {}
+QUARANTINE = {
+    "scripts/source-graph": {
+        name: "go.mod and the release builder pins in "
+              "scripts/mainnet-release-build/sources.go disagree: the sdk and "
+              "connect pins moved, and pion/sctp and gvisor have no fork "
+              "replacement; which pins are right is an operator decision"
+        for name in (
+            "TestClientauthSourceGraphSelectsSdkSiblingOrPin",
+            "TestClientauthSourceGraphSelectsConnectSiblingOrPin",
+            "TestClientauthSourceGraphSelectsSctpForkSiblingOrPin",
+            "TestSourceGraphSelectsGvisorForkSiblingOrPin",
+        )
+    },
+}
 SHARDS = 3
 # A -run selector is one argument; Linux caps one argument at 128 KiB.
 MAX_SELECTOR = 120_000
