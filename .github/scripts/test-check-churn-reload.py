@@ -67,6 +67,7 @@ def main():
         run('another slot stopped fails', '', complete(), 'removed', False, add_before=stopped(OTHER)),
         run('slot stopped but no reload applied fails', '', '', 'removed', False, add_before=stopped(PROXY)),
         run('a stopped slot never excuses an add', '', complete(), 'added', False, add_before=stopped(PROXY)),
+        run('slot stopped only after the removal fails', '', complete() + stopped(PROXY), 'removed', False),
     ]
     failures = sum(1 for good, _ in results if not good)
     print(f'{len(results) - failures}/{len(results)} cases ok')

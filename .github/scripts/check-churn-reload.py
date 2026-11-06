@@ -14,7 +14,7 @@ worker fails (for example, the public proxy stops answering) withdraws itself
 from the running set, so the operator's removal then has nothing to stop and
 the watcher truthfully logs `removed 0`. ADD_START is the offset taken before
 the matching add: the removal also passes when the watcher applied the change
-and the churn slot is logged as stopped since that add. That case prints a
+and the churn slot is logged as stopped between that add and START. That case prints a
 warning, as it did not exercise a live removal.
 
 CHURN_RELOAD_TIMEOUT and CHURN_RELOAD_INTERVAL (seconds) tune the poll.
@@ -27,10 +27,11 @@ import time
 COMPLETE = re.compile(r'reload complete: [^\n]*')
 
 
-def read_from(path, offset):
+def read_from(path, offset, end=None):
     with open(path, 'rb') as f:
         f.seek(offset)
-        return f.read().decode(errors='replace')
+        data = f.read() if end is None else f.read(max(0, end - offset))
+        return data.decode(errors='replace')
 
 
 def verdict(path, start, expected, proxy, add_start):
@@ -46,7 +47,10 @@ def verdict(path, start, expected, proxy, add_start):
     if not complete:
         return False, None
     stopped = re.compile(r'reloaded slot ' + re.escape(proxy) + r' \(provider [0-9]+\) stopped:[^\n]*')
-    died = stopped.search(read_from(path, add_start))
+    # Only a stop between the add and the removal excuses `removed 0`. A stop
+    # logged after START happened after the operator's removal, so it cannot
+    # be why that removal found nothing to stop.
+    died = stopped.search(read_from(path, add_start, start))
     if died:
         return True, ('::warning::churn slot had already stopped before its removal, so the reload '
                       'had nothing to remove (' + died.group(0).strip() + '; ' + complete.group(0) + ')')
