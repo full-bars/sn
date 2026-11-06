@@ -30,14 +30,17 @@ func setExtenderRoleReleaser(releaser extenderCarrierReleaser) {
 	extenderRoleReleaser.releaser = releaser
 }
 
-// releaseExtenderCarriersForExec frees the carrier ports before the image is
-// replaced.
+// releaseExtenderCarriersForSuccessor frees the carrier ports for the
+// successor, on either hand-off path.
 //
-// The listeners are inherited across execve, so without this the successor
-// cannot bind tcp 443: the port it needs is held by a descriptor it does not
-// know it owns. Releasing here hands the port to the successor instead of
-// waiting for a process exit that an in-place swap never performs.
-func releaseExtenderCarriersForExec() {
+// In place, the listeners are inherited across execve, so without this the
+// successor cannot bind tcp 443: the port it needs is held by a descriptor it
+// does not know it owns, and an in-place swap never performs the process exit
+// that would free it. On the baton path the successor is a separate process,
+// but the carriers are bound without SO_REUSEPORT, so it cannot bind until
+// this process lets go; releasing at the ACK hands the port over without
+// waiting for the end of the drain.
+func releaseExtenderCarriersForSuccessor() {
 	extenderRoleReleaser.Lock()
 	releaser := extenderRoleReleaser.releaser
 	extenderRoleReleaser.Unlock()
