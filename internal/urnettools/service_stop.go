@@ -25,8 +25,7 @@ type serviceProcessHandle interface {
 }
 
 var (
-	// openServiceProcessFn opens a process by pid; an error means it is
-	// already gone (or never was this service's).
+	// openServiceProcessFn opens a process by pid; failures do not prove exit.
 	openServiceProcessFn = openServiceProcess
 	// how long a service process gets to end on its own after the supervisor
 	// stopped, and how long a miner gets after it was ended
@@ -40,16 +39,18 @@ var (
 // graceful one, and ends a miner still running without a grace period.
 func stopOwnedProviderService(p Provider, owner providerServiceOwnership, action string, force bool) error {
 	var held []serviceProcessHandle
-	for _, pid := range owner.ServicePids {
-		if process, err := openServiceProcessFn(pid); err == nil {
-			held = append(held, process)
-		}
-	}
 	defer func() {
 		for _, process := range held {
 			process.Close()
 		}
 	}()
+	for _, pid := range owner.ServicePids {
+		process, err := openServiceProcessFn(pid)
+		if err != nil {
+			return fmt.Errorf("cannot verify service process %d before %s: %w", pid, action, err)
+		}
+		held = append(held, process)
+	}
 	grace := serviceProcessExitGrace
 	if force {
 		fmt.Printf("force: stopping the %s service without its graceful wait, then ending its miner if it still runs\n", windowsProviderServiceName)

@@ -81,6 +81,25 @@ func TestOwnedStopEndsAMinerThatOutlivesTheService(t *testing.T) {
 	}
 }
 
+// An inaccessible miner is not proof that it has exited. Stop must not begin
+// when opening any captured service process fails.
+func TestOwnedStopRefusesWhenProcessCannotBeOpened(t *testing.T) {
+	calls := stubWindowsLifecycle(t, serviceOwned, nil)
+	stubOwner(t, ownedWithMiner(4243))
+	previous := openServiceProcessFn
+	t.Cleanup(func() { openServiceProcessFn = previous })
+	openServiceProcessFn = func(int) (serviceProcessHandle, error) {
+		return nil, errors.New("access is denied")
+	}
+	err := stopWindowsProvider(windowsRoutingFixture(), false, false)
+	if err == nil || !strings.Contains(err.Error(), "4243") || !strings.Contains(err.Error(), "access is denied") {
+		t.Fatalf("err = %v, want refusal naming the inaccessible process", err)
+	}
+	if calls.serviceStop != 0 {
+		t.Fatal("the service must not be stopped without a process handle")
+	}
+}
+
 // A miner that can't be ended means the provider did not stop: say so.
 func TestOwnedStopFailsWhenTheMinerWillNotEnd(t *testing.T) {
 	stubWindowsLifecycle(t, serviceOwned, nil)
