@@ -154,10 +154,7 @@ jobs:
           set -euo pipefail
           python3 .github/scripts/test_test_census.py
           .github/scripts/test_shard.sh --verify
-          shard_packages=$(.github/scripts/test_shard.sh "$SHARD")
-          mapfile -t packages <<< "$shard_packages"
-          ((${#packages[@]} > 0))
-          go test -short -count=1 -timeout 600s "${packages[@]}"
+          .github/scripts/test_shard.sh run "$SHARD"
 
   race:
     name: shared-state race tests
